@@ -203,6 +203,7 @@ fn main() -> eframe::Result {
         "Tselatra",
         options,
         Box::new(move |cc| {
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "tselatra", name: "Tselatra" }, &cc.egui_ctx);
             match &cc.wgpu_render_state {
                 Some(rs) => log::info!("graphics: {:?}", rs.adapter.get_info()),
                 None => log::info!("graphics: no wgpu device"),
@@ -431,6 +432,7 @@ impl eframe::App for Desktop {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         self.app.ui(ui, frame);
         self.window.frame(ui.ctx(), self.app.session.config.as_deref());
         if !self.drawn {

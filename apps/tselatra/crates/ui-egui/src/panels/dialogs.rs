@@ -275,43 +275,12 @@ fn about(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut cmd: Option<&str> = None;
     let tab_id = egui::Id::new("about_tab");
     modal(ctx, "About Tselatra", vec2(680.0, 520.0), t, |ui| {
-        let mut tab = ui.data_mut(|d| d.get_temp::<usize>(tab_id)).unwrap_or(0);
-        ui.horizontal(|ui| {
-            for (i, (label, id)) in ABOUT_TABS.iter().enumerate() {
-                let r = ui.selectable_label(tab == i, *label);
-                app.auto.add(&format!("about.tab.{id}"), r.rect, label);
-                if r.clicked() {
-                    tab = i;
-                }
-            }
-        });
-        ui.data_mut(|d| d.insert_temp(tab_id, tab));
-        ui.separator();
-        match tab {
-            1 | 2 => {
-                let h = CREDITS_HEIGHT.min(ui.available_height().max(120.0));
-                ui.allocate_ui(vec2(ui.available_width(), h), |ui| {
-                    ui.set_max_height(h);
-                    if tab == 1 {
-                        crate::credits::contributors_ui(ui, &mut app.auto);
-                    } else {
-                        crate::credits::models_ui(ui);
-                    }
-                });
-            }
-            _ => about_main(app, ui, t, &mut cmd),
-        }
+        let _ = tab_id;
+        mahay_about::page(ui, mahay_about::AppInfo { id: "tselatra", name: "Tselatra" });
         ui.add_space(8.0);
-        ui.horizontal(|ui| {
-            ui.label(egui::RichText::new(tr("MIT OR Apache-2.0 • Fonts: Inter, JetBrains Mono (OFL)")).small().color(t.text_faint));
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                let r = ui.button(tr("Close"));
-                app.auto.add("about.close", r.rect, "Close");
-                if r.clicked() {
-                    close = true;
-                }
-            });
-        });
+        if ui.button(tr("Close")).clicked() {
+            close = true;
+        }
     });
     if let Some(c) = cmd {
         let _ = app.session.execute(c, json!({}));

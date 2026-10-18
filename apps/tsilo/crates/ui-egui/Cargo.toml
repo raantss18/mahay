@@ -9,6 +9,7 @@ description = "Tsilo egui frontend (menus, panels, tools and canvas); swappable 
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui = { workspace = true }
 tsilo-geom = { workspace = true }
 tsilo-color = { workspace = true }

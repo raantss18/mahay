@@ -17,6 +17,7 @@ accessibility = ["eframe/accesskit"]
 windows7 = ["eframe/glow"]
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 tsilo-engine = { workspace = true }
 tsilo-ui-egui = { workspace = true }
 tsilo-text = { workspace = true }

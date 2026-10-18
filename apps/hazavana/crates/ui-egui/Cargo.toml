@@ -10,6 +10,7 @@ description = "Hazavana egui frontend (Lightroom-style UI); swappable — nothin
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui = { workspace = true }
 hazavana-geom = { workspace = true }
 hazavana-meta = { workspace = true }

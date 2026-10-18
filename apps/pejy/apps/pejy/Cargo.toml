@@ -11,6 +11,7 @@ default-run = "pejy"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 pejy-engine = { workspace = true }
 pejy-ui-egui = { workspace = true }
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11", "links"] }

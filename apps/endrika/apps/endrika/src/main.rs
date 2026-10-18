@@ -102,6 +102,7 @@ impl eframe::App for App {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         let ctx = ui.ctx().clone();
         services::parented(frame, || with_app(|fig| endrika_ui_egui::windows::guard(fig, &ctx, |fig| fig.ui(ui))));
     }
@@ -239,6 +240,7 @@ fn main() -> eframe::Result {
         "Endrika",
         options,
         Box::new(move |_cc| {
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "endrika", name: "Endrika" }, &_cc.egui_ctx);
             #[cfg(target_os = "linux")]
             if linux_window::needs_native_frame(_cc, linux_display) {
                 let _ = with_app(|fig| fig.ui.title_bar = endrika_ui_egui::TitleBar::Native);

@@ -15,6 +15,7 @@ workspace = true
 asio = ["feo-playback/asio"]
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 feo-engine.workspace = true
 feo-ui-egui.workspace = true
 feo-playback.workspace = true

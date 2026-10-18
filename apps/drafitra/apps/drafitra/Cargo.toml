@@ -11,6 +11,7 @@ default-run = "drafitra"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 drafitra-engine = { workspace = true }
 drafitra-ui-egui = { workspace = true }
 drafitra-io = { workspace = true }

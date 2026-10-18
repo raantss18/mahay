@@ -306,31 +306,8 @@ fn about(ctx: &egui::Context, open: &mut bool) {
         .default_size(vec2(640.0, 420.0))
         .collapsible(false)
         .show(ctx, |ui| {
-            let mut tab = ui.data_mut(|d| d.get_temp::<u8>(tab_id)).unwrap_or(0);
-            ui.horizontal(|ui| {
-                for (i, l) in ["About", "Contributors", "Models"].iter().enumerate() {
-                    if ui.selectable_label(tab == i as u8, crate::i18n::t(l)).clicked() {
-                        tab = i as u8;
-                    }
-                }
-            });
-            ui.data_mut(|d| d.insert_temp(tab_id, tab));
-            ui.separator();
-            match tab {
-                1 => crate::credits::contributors_ui(ui),
-                2 => crate::credits::models_ui(ui),
-                _ => {
-                    ui.heading(crate::tl!("Drafitra"));
-                    ui.label(crate::tf!("Version {version}", version = env!("CARGO_PKG_VERSION")));
-                    ui.label(crate::tl!("Computer-aided design and drafting: an open-source, clean-room CAD application written in pure Rust."));
-                    ui.add_space(6.0);
-                    ui.label(RichText::new(crate::tl!("One of the Mahay apps by the Mahay team and community.")).color(t.text_dim));
-                    ui.hyperlink_to("mahay.com/apps/drafitra", "https://github.com/raantss18/mahay");
-                    ui.hyperlink_to(crate::tl!("Join the discussions"), "https://github.com/raantss18/mahay/discussions");
-                    ui.add_space(6.0);
-                    ui.label(RichText::new(crate::tl!("MIT OR Apache-2.0. Not affiliated with Autodesk, Inc.")).small().color(t.text_faint));
-                }
-            }
+            let _ = (tab_id, &t);
+            mahay_about::page(ui, mahay_about::AppInfo { id: "drafitra", name: "Drafitra" });
         });
 }
 

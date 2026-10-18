@@ -90,6 +90,7 @@ impl eframe::App for App {
         self.0.raw_input_hook(raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         self.0.guarded(|app| app.ui(ui));
     }
     fn on_exit(&mut self) {
@@ -267,6 +268,7 @@ fn main() -> eframe::Result {
         "Feo",
         options,
         Box::new(move |cc| {
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "feo", name: "Feo" }, &cc.egui_ctx);
             let player =
                 if no_audio { None } else { Some(feo_playback::Player::with_config(Arc::new(engine.session().clone()), &prefs.audio)) };
             let mut app = SoundApp::new(engine, player, services());

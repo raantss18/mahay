@@ -18,6 +18,7 @@ whisper = ["hetsika-engine/whisper", "hetsika-engine/speech-download"]
 neural-voices = ["hetsika-engine/neural-voices"]
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 hetsika-engine = { workspace = true }
 hetsika-export = { workspace = true }
 hetsika-project = { workspace = true }

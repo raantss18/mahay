@@ -8,6 +8,7 @@ rust-version = "1.95"
 repository.workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui.workspace = true
 feo-time.workspace = true
 feo-audio-io.workspace = true

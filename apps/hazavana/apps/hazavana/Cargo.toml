@@ -18,6 +18,7 @@ rawnind-model = ["denoise", "hazavana-engine/rawnind-model"]
 heif = ["hazavana-codecs/heif"]
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 hazavana-engine = { workspace = true, features = ["sam"] }
 hazavana-sysmem = { workspace = true }
 hazavana-ui-egui = { workspace = true }

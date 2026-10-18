@@ -77,6 +77,7 @@ impl eframe::App for App {
         self.0.raw_input_hook(raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         self.0.perf.host_frame_ms = frame.info().cpu_usage.map(|s| f64::from(s) * 1000.0);
         self.0.ui(ui);
     }
@@ -958,6 +959,7 @@ fn main() -> eframe::Result {
             "Hazavana",
             options,
             Box::new(move |cc| {
+                mahay_about::register_desktop(mahay_about::AppInfo { id: "hazavana", name: "Hazavana" }, &cc.egui_ctx);
                 // the window's renderer is up (eframe calls this after creating it)
                 win_files_app.started(window_renderer);
                 came_up_app.store(true, std::sync::atomic::Ordering::Relaxed);

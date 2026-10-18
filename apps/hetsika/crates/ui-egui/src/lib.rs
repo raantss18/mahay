@@ -2099,6 +2099,9 @@ impl eframe::App for HetsikaApp {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        // Mahay's update bar (an overlay; Android's shell draws its own).
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        mahay_about::banner(ui.ctx());
         if !self.fonts_ready {
             ui.ctx().request_repaint();
             return;

@@ -10,6 +10,7 @@ rust-version = "1.95"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui = { workspace = true }
 drafitra-geom = { workspace = true }
 drafitra-color = { workspace = true }

@@ -10,6 +10,7 @@ description = "Pejy egui frontend (InDesign-style UI); swappable — nothing bel
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui = { workspace = true }
 pejy-geom = { workspace = true }
 pejy-color = { workspace = true }

@@ -1266,53 +1266,8 @@ pub fn show(app: &mut HazavanaApp, ctx: &egui::Context) {
                     );
                 }
                 Dialog::About => {
-                    ui.set_min_width(680.0);
-                    let tab_id = egui::Id::new("about_tab");
-                    let mut tab = ui.data_mut(|d| d.get_temp::<u8>(tab_id)).unwrap_or(0);
-                    ui.horizontal(|ui| {
-                        ui.spacing_mut().item_spacing.x = 4.0;
-                        for (i, (id, label)) in ABOUT_TABS.iter().enumerate() {
-                            if crate::widgets::text_button(ui, &format!("aboutTab-{id}"), label, usize::from(tab) == i).clicked() {
-                                tab = u8::try_from(i).unwrap_or(0);
-                            }
-                        }
-                    });
-                    ui.data_mut(|d| d.insert_temp(tab_id, tab));
-                    ui.separator();
-                    match tab {
-                        1 => crate::credits::contributors_ui(app, ui),
-                        2 => crate::credits::models_ui(ui),
-                        _ => {
-                            ui.label(egui::RichText::new("Hazavana").font(t.semibold(20.0)).color(t.text));
-                            ui.label(crate::i18n::tr_format!("Version {} — a clean-room, pure-Rust photo library and raw developer.", env!("CARGO_PKG_VERSION")));
-                            ui.label(crate::i18n::tr_format!(
-                                "MIT OR Apache-2.0. Fonts: {} (OFL). Icons: original.",
-                                crate::theme::font_credits(app.chinese_font.is_some())
-                            ));
-                            ui.add_space(10.0);
-                            let r = crate::button::Button::new("Join the Mahay discussions")
-                                .primary()
-                                .large()
-                                .min_width(260.0)
-                                .widget("button:aboutDiscord")
-                                .tooltip(crate::links::DISCORD)
-                                .show(ui);
-                            if r.clicked() {
-                                let _ = crate::links::open(app, crate::links::DISCORD);
-                            }
-                            ui.add_space(6.0);
-                            for (label, url) in [
-                                ("Hazavana website", crate::links::APP_PAGE),
-                                ("Source code on GitHub", crate::links::GITHUB),
-                                ("Mahay — more creative apps", crate::links::WEBSITE),
-                            ] {
-                                let r = ui.link(crate::i18n::tr(label)).on_hover_text(url);
-                                if r.clicked() {
-                                    let _ = crate::links::open(app, url);
-                                }
-                            }
-                        }
-                    }
+                    ui.set_min_width(560.0);
+                    mahay_about::page(ui, mahay_about::AppInfo { id: "hazavana", name: "Hazavana" });
                 }
                 Dialog::Shortcuts => crate::panels::keymap::body(app, ui, &t),
                 Dialog::Print => crate::print_view::body(app, ui, &t),

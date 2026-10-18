@@ -83,6 +83,7 @@ impl eframe::App for App {
         self.app.raw_input_hook(raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         self.startup.enter();
         self.app.ui(ui);
         self.startup.leave();
@@ -464,6 +465,7 @@ fn main() -> std::process::ExitCode {
             "Pejy",
             options,
             Box::new(move |cc| {
+                mahay_about::register_desktop(mahay_about::AppInfo { id: "pejy", name: "Pejy" }, &cc.egui_ctx);
                 let mut restarted = None;
                 let mut device = None;
                 if let Some(rs) = &cc.wgpu_render_state {

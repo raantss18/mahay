@@ -10,6 +10,7 @@ default-run = "tselatra"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 tselatra-engine = { workspace = true }
 tselatra-host = { workspace = true }
 tselatra-ui-egui = { workspace = true }

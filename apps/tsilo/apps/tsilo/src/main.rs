@@ -93,6 +93,7 @@ impl eframe::App for App {
     }
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         #[cfg(target_os = "macos")]
         {
             let bar = tsilo_ui_egui::chrome::APP_BAR_HEIGHT;
@@ -881,6 +882,7 @@ fn main() -> std::process::ExitCode {
             "Tsilo",
             options,
             Box::new(move |cc| {
+                mahay_about::register_desktop(mahay_about::AppInfo { id: "tsilo", name: "Tsilo" }, &cc.egui_ctx);
                 let mut session = Session::new();
                 // The profiles loaded before come back before the preferences name any of them.
                 prefs_dir::attach_profile_store(&mut session);

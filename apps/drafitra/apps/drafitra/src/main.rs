@@ -89,6 +89,7 @@ impl eframe::App for App {
         drafitra_ui_egui::cmdline::capture_tab(ctx, raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        mahay_about::banner(ui.ctx());
         self.cad.ui(ui);
         self.persist_workspace(false);
     }
@@ -308,6 +309,7 @@ fn main() -> eframe::Result {
         "Drafitra",
         options,
         Box::new(move |cc| {
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "drafitra", name: "Drafitra" }, &cc.egui_ctx);
             let mut app = CadApp::new(Session::empty(), services());
             let (workspace, restored, workspace_error) = workspace::Workspace::load();
             if let Some(ui) = restored {

@@ -186,13 +186,7 @@ pub fn show(app: &mut FigApp, ctx: &Context) {
         let mut open = true;
         window(tr("About Endrika"), ctx).open(&mut open).show(ctx, |ui| {
             ui.set_width(ABOUT_WIDTH);
-            tab_strip(ui, &t, &AboutTab::ALL, AboutTab::label, &mut app.ui.about_tab);
-            ui.add_space(12.0);
-            match app.ui.about_tab {
-                AboutTab::About => about_body(ui, &t),
-                AboutTab::Contributors => crate::credits::contributors_ui(ui),
-                AboutTab::Models => crate::credits::models_ui(ui),
-            }
+            mahay_about::page(ui, mahay_about::AppInfo { id: "endrika", name: "Endrika" });
         });
         if !open {
             app.ui.about = false;

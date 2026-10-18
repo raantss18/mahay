@@ -189,6 +189,7 @@ fn native_options(agent: bool) -> eframe::NativeOptions {
 fn app_creator(launch: Launch, graphics: graphics::GraphicsStart, created: Arc<AtomicBool>) -> eframe::AppCreator<'static> {
     let Launch { control_port, control_input_only, files, demo, startup_flag, recover, data_dir, graphics: _ } = launch;
     Box::new(move |cc| {
+        mahay_about::register_desktop(mahay_about::AppInfo { id: "hetsika", name: "Hetsika" }, &cc.egui_ctx);
         created.store(true, Ordering::Relaxed);
         // A fallback graphics mode says so in the window, with a button back to the default.
         let notice = graphics.degraded().then(|| {

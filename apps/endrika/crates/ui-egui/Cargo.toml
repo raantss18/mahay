@@ -9,6 +9,7 @@ description = "Endrika egui frontend (the Figma-style UI: canvas, toolbar, layer
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 endrika-geom = { workspace = true }
 endrika-color = { workspace = true }
 endrika-doc = { workspace = true }
