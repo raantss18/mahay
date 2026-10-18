@@ -5,23 +5,23 @@ on 2026-10-18. Licenses come from each repo's `LICENSE-*` files and `Cargo.toml`
 the website. All the app repos ship `LICENSE-MIT` + `LICENSE-APACHE`, and the workspace
 `license` field reads `MIT OR Apache-2.0`.
 
-| #  | Upstream repo         | Mahay name | Path in Mahay   | License            | Upstream commit                            | Date       | In release 1 |
+| #  | Upstream repo         | Mahay name | Path in Mahay   | License            | Upstream commit                            | Date       | Since        |
 |----|-----------------------|------------|-----------------|--------------------|--------------------------------------------|------------|--------------|
-| –  | craft-libs            | (core)     | `libs/core`     | MIT OR Apache-2.0  | `82a24b006eefa036b43c09a67fb9a3fbd17ffe63` | 2026-10-17 | yes          |
-| –  | craft-launcher        | Trano      | `apps/trano`    | MIT OR Apache-2.0  | `ad7f24a912d6f6cd586f5306d85ab22ef9bf2cbe` | 2026-10-18 | yes          |
-| 1  | photocraft            | Sary       | `apps/sary`     | MIT OR Apache-2.0  | `8d2e615ab93d424c4ec25ab15b4edb5368d1f9a6` | 2026-10-18 | yes          |
-| 5  | pdfcraft              | Taratasy   | `apps/taratasy` | MIT OR Apache-2.0  | `50f261d70c8e199600a82dbaa6912c6fbc4b4612` | 2026-10-18 | yes          |
-| 9  | wordcraft             | Soratra    | `apps/soratra`  | MIT OR Apache-2.0  | `4a251d4b9c724a5bd3dd75f7c91c6aae77c6650e` | 2026-10-18 | yes          |
-| 13 | gridcraft             | Tabilao    | `apps/tabilao`  | MIT OR Apache-2.0  | `c30fa3f1cf324603f3bfc0171689b1d4083b40e5` | 2026-10-17 | yes          |
-| 11 | deckcraft             | Seho       | `apps/seho`     | MIT OR Apache-2.0  | `22db9261f9d1a214c296fd390173130c45d76d66` | 2026-10-17 | yes          |
-| 2  | vectorcraft           | Tsilo    | –               | MIT OR Apache-2.0  | `2cdb0d2d53a0ff3c4ae994bf4808ae53a5799505` | 2026-10-18 | later        |
-| 8  | figcraft              | Endrika    | –               | MIT OR Apache-2.0  | `d8ff1441b1cd47cb45f1e58b030409ef6f1e24bf` | 2026-10-18 | later        |
-| 7  | designcraft           | Pejy       | –               | MIT OR Apache-2.0  | `7cb8b12507def48fb9346e5004340b5e8e4cfcb7` | 2026-10-17 | later        |
-| 4  | lightcraft            | Hazavana   | –               | MIT OR Apache-2.0  | `4f0b110bcbd2e350c6d97b47f1d824c2222295c4` | 2026-10-17 | later        |
-| 10 | soundcraft            | Feo        | –               | MIT OR Apache-2.0  | `c1bf044a85b55e9aa083624c39fabddbb08dadeb` | 2026-10-17 | later        |
-| 3  | filmcraft             | Hetsika    | –               | MIT OR Apache-2.0  | `48088e3a8e50bd4a7a71d1ebdfde0835b01a3051` | 2026-10-18 | later        |
-| 6  | effectcraft           | Tselatra   | –               | MIT OR Apache-2.0  | `f36b2b3e6bd121dc52b00503cdf8d60f42ac242a` | 2026-10-17 | later        |
-| 12 | cadcraft              | Drafitra   | –               | MIT OR Apache-2.0  | `b23d362f6af1dd77e319728f1d85882b098626fe` | 2026-10-17 | later        |
+| –  | craft-libs            | (core)     | `libs/core`     | MIT OR Apache-2.0  | `82a24b006eefa036b43c09a67fb9a3fbd17ffe63` | 2026-10-17 | 0.1.0        |
+| –  | craft-launcher        | Trano      | `apps/trano`    | MIT OR Apache-2.0  | `ad7f24a912d6f6cd586f5306d85ab22ef9bf2cbe` | 2026-10-18 | 0.1.0        |
+| 1  | photocraft            | Sary       | `apps/sary`     | MIT OR Apache-2.0  | `8d2e615ab93d424c4ec25ab15b4edb5368d1f9a6` | 2026-10-18 | 0.1.0        |
+| 5  | pdfcraft              | Taratasy   | `apps/taratasy` | MIT OR Apache-2.0  | `50f261d70c8e199600a82dbaa6912c6fbc4b4612` | 2026-10-18 | 0.1.0        |
+| 9  | wordcraft             | Soratra    | `apps/soratra`  | MIT OR Apache-2.0  | `4a251d4b9c724a5bd3dd75f7c91c6aae77c6650e` | 2026-10-18 | 0.1.0        |
+| 13 | gridcraft             | Tabilao    | `apps/tabilao`  | MIT OR Apache-2.0  | `c30fa3f1cf324603f3bfc0171689b1d4083b40e5` | 2026-10-17 | 0.1.0        |
+| 11 | deckcraft             | Seho       | `apps/seho`     | MIT OR Apache-2.0  | `22db9261f9d1a214c296fd390173130c45d76d66` | 2026-10-17 | 0.1.0        |
+| 2  | vectorcraft           | Tsilo      | `apps/tsilo`     | MIT OR Apache-2.0  | `73f921fa0a96eeebeba48ca0bf7c2b59ffce4ac9` | 2026-10-18 | 0.2.0        |
+| 8  | figcraft              | Endrika    | `apps/endrika`   | MIT OR Apache-2.0  | `d8ff1441b1cd47cb45f1e58b030409ef6f1e24bf` | 2026-10-18 | 0.2.0        |
+| 7  | designcraft           | Pejy       | `apps/pejy`      | MIT OR Apache-2.0  | `7141a68f1850255e079e3089c448c499cd45e896` | 2026-10-18 | 0.2.0        |
+| 4  | lightcraft            | Hazavana   | `apps/hazavana`  | MIT OR Apache-2.0  | `31a677fe3dbf4bc1042f8f6346e83b0afd1b04e8` | 2026-10-18 | 0.2.0        |
+| 10 | soundcraft            | Feo        | `apps/feo`       | MIT OR Apache-2.0  | `31f038939715e055dc24d09d613e206d397d5fd4` | 2026-10-18 | 0.2.0        |
+| 3  | filmcraft             | Hetsika    | `apps/hetsika`   | MIT OR Apache-2.0  | `48088e3a8e50bd4a7a71d1ebdfde0835b01a3051` | 2026-10-18 | 0.2.0        |
+| 6  | effectcraft           | Tselatra   | `apps/tselatra`  | MIT OR Apache-2.0  | `22072d9f25846dbf8a3bf10105fdb51c3c0db4c1` | 2026-10-18 | 0.2.0        |
+| 12 | cadcraft              | Drafitra   | `apps/drafitra`  | MIT OR Apache-2.0  | `3370a91fe96d0f8752622d041b7fed199a2bbac0` | 2026-10-18 | 0.2.0        |
 
 Other upstream repos, not imported:
 

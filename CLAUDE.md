@@ -5,8 +5,9 @@ Guidance for Claude Code (and other agents) working in this repository.
 ## What this is
 
 **Mahay**: a fork of the ArtCraft crafting apps, renamed (Malagasy names) and ported to Android
-phones and tablets, plus Linux. Native Rust (egui/eframe + wgpu), no WebView. Release 1 ships
-Trano (hub), Sary, Taratasy, Soratra, Tabilao and Seho. Read `docs/DECISIONS.md`,
+phones and tablets, plus Linux. Native Rust (egui/eframe + wgpu), no WebView. Trano (hub) + 13 apps; one version for
+the suite (`VERSION`), automatic signed updates (`libs/core/crates/update`), shared About page
+and update bar (`libs/core/crates/about`). Trano is the only file users download by hand. Read `docs/DECISIONS.md`,
 `docs/STATUS.md` and `docs/PORTING_AUDIT.md` before changing anything structural.
 
 ## Layout
@@ -21,6 +22,9 @@ android/                    Gradle project: one flavour per app; android/shell =
 brand/                      icon family generator (generate.py) and applier (apply.py)
 scripts/rebrand.py          the upstream → Mahay rename; rerun it after importing upstream
 scripts/android-build.sh    Rust .so + Gradle APK/AAB per app
+scripts/bump-version.py     one version for every app
+scripts/stage-release.sh    release files, signed SHA256SUMS.txt, release page (release-notes.py)
+release-keys/               signing keys: LOCAL ONLY, git-ignored, never push
 docs/                       DECISIONS, STATUS, PORTING_AUDIT, APPS_INVENTORY, BRAND, BUILDING
 ```
 

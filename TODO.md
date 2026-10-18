@@ -6,39 +6,46 @@ polish).
 
 ## 0.2.0 — Centralisation et mises à jour (principes de Tontolo)
 
-- [ ] **Une seule version pour toute la suite** (comme Tontolo) : chaque app, le hub, les APK et
+- [x] **Une seule version pour toute la suite** (comme Tontolo) : chaque app, le hub, les APK et
       les AppImage portent la version Mahay (`VERSION`) ; noms de fichiers stables, jamais changés :
       `<app>-<v>-android-<abi>.apk`, `<app>-<v>-linux-<arch>.AppImage`, `SHA256SUMS`, `SHA256SUMS.sig`.
-- [ ] **Releases signées** : `SHA256SUMS` signé en Ed25519 (`SHA256SUMS.sig`), clé privée dans
+- [x] **Releases signées** : `SHA256SUMS` signé en Ed25519 (`SHA256SUMS.sig`), clé privée dans
       `release-keys/` (ignoré par git), clé publique embarquée dans les apps ; la release échoue
       sans signature.
-- [ ] **`mahay-update`** (crate partagé, testé) : dernière release via l'API GitHub, repli sur la
+- [x] **`mahay-update`** (crate partagé, testé) : dernière release via l'API GitHub, repli sur la
       redirection `releases/latest` (limite de 60 requêtes/h) ; https + hôtes GitHub uniquement ;
       SHA-256 + signature obligatoires ; jamais de rétrogradation ; notes cumulées du CHANGELOG
       depuis la version installée ; une seule mise à jour gardée en cache.
-- [ ] **Trano télécharge et installe directement** : « Télécharger » récupère l'APK vérifié et
+- [x] **Trano télécharge et installe directement** : « Télécharger » récupère l'APK vérifié et
       ouvre l'installeur Android, sans passer par la page GitHub ; barre de progression.
-- [ ] **Trano met tout à jour** : version installée de chaque app (PackageManager) comparée à la
+- [x] **Trano met tout à jour** : version installée de chaque app (PackageManager) comparée à la
       dernière release ; « Mettre à jour » par app et « Tout mettre à jour ».
-- [ ] **Chaque app se met à jour seule** : vérification au démarrage puis toutes les 24 h
+- [x] **Chaque app se met à jour seule** : vérification au démarrage puis toutes les 24 h
       (désactivable), téléchargement en arrière-plan, bandeau « Version x.y prête — Installer »
       avec les nouveautés ; installation par l'installeur système (un appui, Android interdit
       l'installation silencieuse).
-- [ ] **Linux** : remplacement atomique de l'AppImage puis redémarrage (comme Tontolo) ; paquets
+- [x] **Linux** : remplacement atomique de l'AppImage puis redémarrage (comme Tontolo) ; paquets
       .deb : on signale seulement.
-- [ ] **« À propos » façon Tontolo** dans Trano et dans chaque app : icône, nom et version, slogan,
+- [x] **« À propos » façon Tontolo** dans Trano et dans chaque app : icône, nom et version, slogan,
       lien GitHub, QR code de la dernière version, carte de l'auteur, attributions des
       bibliothèques, licences ; **aucune mention d'ArtCraft dans l'interface** (les mentions de
       copyright exigées par la licence MIT restent dans `LICENSE-*`/`NOTICE`).
-- [ ] Permissions Android ajoutées et justifiées : `INTERNET` (mises à jour),
+- [x] Permissions Android ajoutées et justifiées : `INTERNET` (mises à jour),
       `REQUEST_INSTALL_PACKAGES` (installer les apps et leurs mises à jour) ; audit mis à jour.
-- [ ] **Trano est le seul fichier à télécharger** : la page de chaque release (générée par
+- [x] **Trano est le seul fichier à télécharger** : la page de chaque release (générée par
       `scripts/release-notes.py`) commence, comme Tontolo, par « ⬇️ Télécharger » avec Trano en
       gras (APK Android arm64 = le bon choix dans 95 % des cas, AppImage Linux), puis
       « Déjà installé ? Mahay se met à jour tout seul », les nouveautés, et en bas, repliés, les
       fichiers des autres apps que Trano télécharge lui-même, `SHA256SUMS` et sa signature.
-- [ ] README (fr/en/mg) : « Installez Trano, il installe le reste ».
-- [ ] `docs/RELEASING.md` : procédure de release (version, signature, vérification).
+- [x] README (fr/en/mg) : « Installez Trano, il installe le reste ».
+- [x] `docs/RELEASING.md` : procédure de release (version, signature, vérification).
+
+- [x] **Huit autres apps** importées, renommées et portées sur Android : Tsilo, Endrika, Pejy,
+      Hazavana, Feo, Hetsika, Tselatra, Drafitra.
+- [ ] Tester sur l'émulateur la chaîne complète : Trano télécharge et installe une app depuis la
+      release 0.2.0, puis une mise à jour 0.2.1 arrive dans une app.
+- [ ] Tester les huit nouvelles apps sur tablette et téléphone ; mode compact pour leurs panneaux.
+- [ ] Tselatra : passer aux crates média de Hetsika au lieu de FilmCraft épinglé (D17).
 
 ## Now (0.1.x)
 

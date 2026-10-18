@@ -3,6 +3,35 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [0.2.0] — 2026-10-18 (alpha)
+
+### Added
+
+- **Eight more apps**, on Linux and Android: Tsilo (vector illustration), Endrika (interface
+  design), Pejy (page layout), Hazavana (photo library and raw), Feo (audio), Hetsika (video),
+  Tselatra (motion graphics) and Drafitra (CAD). Mahay now has 14 apps.
+- **Trano installs everything**: "Download" fetches an app's APK straight from the release,
+  checks it and opens Android's installer, without going through GitHub's page. "Update" and
+  "Update all" keep every app current. Trano is the only file to download by hand.
+- **Automatic updates in every app**: checked at start-up and every day, downloaded in the
+  background, then a bar offers "Install" with the release notes. On Linux the AppImage replaces
+  itself and restarts.
+- **Signed releases**: `SHA256SUMS.txt` is signed with Mahay's Ed25519 key; apps refuse
+  unsigned, altered or older files.
+- **A new About page in every app**: version, updates, QR code to install Mahay on another
+  device, author, licences, in English, French and Malagasy.
+
+### Changed
+
+- One version for the whole suite (0.2.0); release files keep stable names.
+- Android permissions: `INTERNET` (updates) and `REQUEST_INSTALL_PACKAGES` (installing apps and
+  updates), both explained in `docs/SECURITY_AUDIT.md`.
+- Releases are published as "latest" (not pre-releases), so apps can find them.
+
+### Removed
+
+- Upstream names, links and contributor lists from the About pages.
+
 ## [0.1.0] — 2026-10-18 (alpha)
 
 First release of Mahay, a fork of the ArtCraft crafting apps.

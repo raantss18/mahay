@@ -27,23 +27,26 @@ sur Android. Voir [NOTICE](NOTICE).
 | **Soratra**  | traitement de texte (DOCX, ODT)                 | oui   | alpha   |
 | **Tabilao**  | tableur (XLSX, ODS, CSV)                        | oui   | alpha   |
 | **Seho**     | présentations (PPTX)                            | oui   | alpha   |
+| **Tsilo**    | illustration vectorielle                        | oui   | alpha   |
+| **Endrika**  | design d'interfaces et prototypes               | oui   | alpha   |
+| **Pejy**     | mise en page et publication                     | oui   | alpha   |
+| **Hazavana** | photothèque et développement RAW                | oui   | alpha   |
+| **Feo**      | enregistrement, montage et mixage audio         | oui   | alpha   |
+| **Hetsika**  | montage vidéo                                   | oui   | alpha   |
+| **Tselatra** | animation et effets visuels                     | oui   | alpha   |
+| **Drafitra** | dessin technique (CAO)                          | oui   | alpha   |
 
-Huit autres arrivent : Tsilo (vectoriel), Endrika (design d'interfaces), Pejy (mise en page),
-Hazavana (photothèque), Feo (audio), Hetsika (vidéo), Tselatra (animation), Drafitra (CAO).
 
-## Installer
+## Installer : seulement Trano
 
-**Android 8.0 ou plus récent.** Téléchargez l'APK depuis la
-[dernière version](https://github.com/raantss18/mahay/releases/latest) : `arm64-v8a` pour les
-téléphones et tablettes, `x86_64` pour les émulateurs et Chromebooks. N'installez que les apps
-dont vous avez besoin ; Trano les ouvre.
-
-**Linux** (x86_64) : téléchargez le `.AppImage`, rendez-le exécutable, lancez-le. Des paquets
-`.deb` sont aussi fournis.
+Téléchargez **Trano**, l'accueil de Mahay, depuis la [dernière version](https://github.com/raantss18/mahay/releases/latest) :
+`trano-…-android-arm64-v8a.apk` sur Android 8+ (téléphones et tablettes), `trano-…-linux-x86_64.AppImage`
+sous Linux. **Trano installe, ouvre et met à jour toutes les autres apps**, directement.
+Chaque app se met aussi à jour toute seule (vérification quotidienne, fichiers signés, vous confirmez l'installation).
 
 ## Léger par conception
 
-- Un APK par app : vous ne téléchargez que ce que vous utilisez (de 5 à 23 Mo : Trano 4,8, Tabilao 8,5, Seho 12, Soratra 17, Taratasy 18, Sary 23 Mo en arm64).
+- Un APK par app : vous ne téléchargez que ce que vous utilisez (d'environ 5 Mo pour Trano à environ 25 Mo pour les plus grosses apps).
 - Code natif optimisé de bout en bout, aucun moteur de navigateur embarqué.
 - Fonctionne entièrement hors ligne. Les documents s'ouvrent depuis, et s'enregistrent vers,
   l'endroit où vous les rangez (Fichiers, Drive, clé USB) via le sélecteur de documents d'Android.

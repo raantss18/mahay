@@ -1,4 +1,4 @@
-# Security audit: release 0.1.0
+# Security audit: releases 0.1.0 and 0.2.0
 
 Date: 2026-10-18. Scope: the code Mahay adds (Android glue, Java shell, vendored backends, build
 and release scripts), the dependency trees of all seven Cargo workspaces, and the built APKs.
@@ -29,9 +29,16 @@ CI now runs `cargo audit` on every workspace (`.github/workflows/ci.yml`, job "S
 
 ## 2. Android attack surface (checked on the built APKs with `aapt2 dump`)
 
-- **Permissions:** none requested. The apps have no network access on Android at all (no
-  `INTERNET`). The only declared permission is AndroidX's own
-  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (signature-level).
+- **Permissions (since 0.2.0):** `INTERNET`, only for automatic updates (GitHub releases of
+  `raantss18/mahay`, https, GitHub hosts only), and `REQUEST_INSTALL_PACKAGES`, to hand a verified
+  APK to Android's installer (every install is confirmed by the user; Android also asks once to
+  allow installs from the app). AndroidX's own `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+  (signature-level). No storage, camera, location or contacts permission.
+- **Update chain:** `SHA256SUMS.txt` is signed with Ed25519 (private key kept off the
+  repository in `release-keys/`); the apps embed the public key and refuse a missing or bad
+  signature, a file missing from the list, a hash mismatch, a non-GitHub or non-https URL and any
+  version not newer than the installed one. The installer only accepts `.apk` files inside the
+  app's own storage (canonical path check), and the install-status receiver is not exported.
 - **Exported components:** `MahayActivity` (launcher, required); AndroidX `ProfileInstallReceiver`
   (guarded by `android.permission.DUMP`, system only). AndroidX's startup provider is not
   exported.

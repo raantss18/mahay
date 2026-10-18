@@ -27,17 +27,22 @@ nampandehanina tamin'ny Android. Jereo ny [NOTICE](NOTICE).
 | **Soratra**  | fanoratana lahatsoratra (DOCX, ODT)                 | eny   | alpha   |
 | **Tabilao**  | tabilao kajy (XLSX, ODS, CSV)                       | eny   | alpha   |
 | **Seho**     | fampisehoana (PPTX)                                 | eny   | alpha   |
+| **Tsilo**    | sary vektoraly                                      | eny   | alpha   |
+| **Endrika**  | famolavolana endrika                                | eny   | alpha   |
+| **Pejy**     | fandaminana pejy                                    | eny   | alpha   |
+| **Hazavana** | tahirin-tsary sy RAW                                | eny   | alpha   |
+| **Feo**      | fandraisam-peo sy fampifangaroana                   | eny   | alpha   |
+| **Hetsika**  | fanamboarana horonantsary                           | eny   | alpha   |
+| **Tselatra** | sary mihetsika sy effets                            | eny   | alpha   |
+| **Drafitra** | sary teknika (CAO)                                  | eny   | alpha   |
 
-Mbola ho avy ny valo hafa: Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra.
 
 ## Fametrahana
 
-**Android 8.0 na vaovao kokoa.** Alaivo ny APK ao amin'ny
-[dikan-teny farany](https://github.com/raantss18/mahay/releases/latest): `arm64-v8a` ho an'ny
-finday sy takelaka, `x86_64` ho an'ny emulateur. Ny rindranasa ilainao ihany no apetraho; Trano
-no manokatra azy ireo.
-
-**Linux** (x86_64): alaivo ny `.AppImage`, ataovy azo alefa, dia alefaso.
+Alaivo ihany i **Trano** ao amin'ny [dikan-teny farany](https://github.com/raantss18/mahay/releases/latest)
+(`trano-…-android-arm64-v8a.apk` ho an'ny Android, `trano-…-linux-x86_64.AppImage` ho an'ny Linux).
+**Trano no mametraka, manokatra ary manavao ny rindranasa hafa rehetra.** Manavao ny tenany koa
+ny rindranasa tsirairay.
 
 ## Maivana
 

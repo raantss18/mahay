@@ -154,3 +154,45 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   vector drawables (no PNG mipmaps), and no WebView.
 - **Measured:** Tabilao x86_64 APK 11.5 MB. Taratasy 25.7 MB (it carries OCR, a JavaScript
   engine for PDF forms and signature crypto); trimming it is tracked in STATUS.
+
+## D14 — One version for the whole suite
+
+- **Decision:** every app, the hub, the APKs and the Linux packages carry the repository's
+  `VERSION` (0.2.0 now); `scripts/bump-version.py` sets it everywhere.
+- **Why:** Tontolo's rule, and what makes automatic updates simple: an app compares its own
+  version with the latest release's, and Trano compares installed versions with it.
+
+## D15 — Automatic updates, Tontolo's model
+
+- **Decision:** `mahay-update` checks GitHub releases at start-up (at most hourly) and every 24
+  hours, downloads the file for this app and device, and installs it only when the user says
+  so: Android's installer (one tap; Android forbids silent installs), or the AppImage replaced
+  in place then restarted. `SHA256SUMS.txt` must be signed with Mahay's Ed25519 key
+  (`.github/update-signing.pub`, private half in `release-keys/`); hosts other than GitHub over
+  https, a bad signature, a wrong hash or an older version are refused. File names never change.
+- **Trano is the only download:** the release page puts it first; it installs every other app
+  directly (no browser, no GitHub page), and "Update all" updates them.
+- **Cost:** two Android permissions, `INTERNET` and `REQUEST_INSTALL_PACKAGES`, both declared
+  and explained (SECURITY_AUDIT).
+
+## D16 — Tsilo, not Tsipika
+
+- **Decision:** the vector illustration app (upstream VectorCraft) is **Tsilo** (lamp, torch),
+  at the user's request (2026-10-18).
+
+## D17 — Tselatra keeps upstream FilmCraft's media crates
+
+- **Decision:** Tselatra depends on FilmCraft's media crates at the commit it was written against
+  (`storytold/filmcraft@2c5ba7a`), under their published names, instead of the newer copies in
+  `apps/hetsika`.
+- **Alternatives:** port Tselatra to Hetsika's current API (several API changes); vendor the
+  old crates (a second copy of a large codec tree).
+- **Why:** it builds unchanged and stays a plain source dependency (no upstream service). To be
+  revisited when Tselatra moves to Hetsika's crates.
+
+## D18 — About pages
+
+- **Decision:** every app's About is the shared `mahay-about` page (Tontolo's layout: version,
+  updates, QR code to install on another device, author, licences). No upstream names, links or
+  contributor lists in the interface; the copyright notices the MIT licence requires stay in
+  `LICENSE-*`/`NOTICE` and the upstream contributor files stay in the repository.
