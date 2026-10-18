@@ -1,0 +1,25 @@
+[package]
+name = "craft-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Reusable egui controls and icon catalogs for Craft frontends"
+
+[lints]
+workspace = true
+
+[dependencies]
+egui = { workspace = true }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+serde = ["dep:serde"]
+
+[dev-dependencies]
+egui = { workspace = true, features = ["default_fonts"] }
+serde_json = "1"
+egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+egui_kittest = { version = "0.36", features = ["wgpu"] }
+image = { version = "0.25", default-features = false, features = ["png"] }

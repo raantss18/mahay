@@ -1,0 +1,34 @@
+# Windows on ARM: package the ARM64 release the way release.yml does (cross-compiled on an x64
+# runner, unsigned here), then install that per-user MSI on a Windows 11 ARM64 runner: once with
+# the defaults (default folder, Start Menu and desktop shortcuts) and once into a chosen folder
+# without the desktop shortcut, checking the binary is ARM64 and that each uninstall removes
+# everything. The launcher is a GUI app, so it isn't run here.
+name: Windows ARM64
+
+# Nightly on main (dependency and runner-image drift shows up within a day), and on PRs that
+# change the Windows packaging itself.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/windows-arm64.yml
+      - packaging/windows/**
+  schedule:
+    - cron: "47 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: windows-arm64-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows-arm64:
+    # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
+    uses: storytold/craft-common-actions/.github/workflows/windows-arm64.yml@main
+    with:
+      app-name: craft-launcher
+      app-dir: ArtCraft Launcher
+      is-per-user: true
+      main-binary: artcraft-launcher.exe

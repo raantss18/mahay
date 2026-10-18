@@ -1,0 +1,35 @@
+name: Atomic file writes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['crates/atomic/**', 'crates/settings/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/atomic.yml']
+  pull_request:
+    paths: ['crates/atomic/**', 'crates/settings/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/atomic.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  atomic:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install ACL tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y acl
+      - run: cargo fmt --check
+      - run: cargo clippy -p craft-atomic -p craft-settings --all-targets --locked -- -D warnings
+      - run: cargo test -p craft-atomic -p craft-settings --locked -- --nocapture
+      - name: Check inherited Linux ACLs
+        if: runner.os == 'Linux'
+        run: cargo test -p craft-atomic --locked -- --ignored --nocapture

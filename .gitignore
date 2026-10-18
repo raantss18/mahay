@@ -1,0 +1,11 @@
+target/
+dist/
+fuzz-out/
+plan/
+*.keystore
+*.jks
+keystore.properties
+local.properties
+.gradle/
+build/
+.DS_Store
