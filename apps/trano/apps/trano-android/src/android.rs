@@ -34,9 +34,9 @@ fn icon_of(id: &str) -> Option<egui::ImageSource<'static>> {
         icon!("tselatra"),
         icon!("drafitra"),
     ]
-        .into_iter()
-        .find(|(i, _)| *i == id)
-        .map(|(_, src)| src)
+    .into_iter()
+    .find(|(i, _)| *i == id)
+    .map(|(_, src)| src)
 }
 
 #[unsafe(no_mangle)]
@@ -74,57 +74,58 @@ impl Hub {
         self.installed = ON_ANDROID.into_iter().filter(|id| mahay_android::is_installed(&format!("org.mahay.{id}"))).collect();
         ctx.request_repaint_after(Duration::from_secs(3));
     }
-
 }
 
 fn tile(ui: &mut egui::Ui, lang: Lang, installed_ids: &[&str], app: &MahayApp, width: f32) {
-        let t = text(lang);
-        let available = ON_ANDROID.contains(&app.id);
-        let installed = installed_ids.contains(&app.id);
-        let [r, g, b] = app.color;
-        let accent = egui::Color32::from_rgb(r, g, b);
-        let frame = egui::Frame::new()
-            .fill(ui.visuals().faint_bg_color)
-            .corner_radius(16.0)
-            .inner_margin(14.0)
-            .stroke(ui.visuals().widgets.noninteractive.bg_stroke);
-        frame.show(ui, |ui| {
-            ui.set_width(width - 28.0);
-            ui.set_min_height(150.0);
-            ui.vertical(|ui| {
-                ui.horizontal(|ui| {
-                    match icon_of(app.id) {
-                        Some(src) => {
-                            // Apps not on Android yet are shown faded.
-                            let tint = if available { egui::Color32::WHITE } else { egui::Color32::from_white_alpha(110) };
-                            ui.add(egui::Image::new(src).tint(tint).fit_to_exact_size(egui::vec2(52.0, 52.0)));
-                        }
-                        None => {
-                            let (rect, _) = ui.allocate_exact_size(egui::vec2(52.0, 52.0), egui::Sense::hover());
-                            ui.painter().rect_filled(rect, 12.0, accent.gamma_multiply(0.35));
-                        }
+    let t = text(lang);
+    let available = ON_ANDROID.contains(&app.id);
+    let installed = installed_ids.contains(&app.id);
+    let [r, g, b] = app.color;
+    let accent = egui::Color32::from_rgb(r, g, b);
+    let frame = egui::Frame::new()
+        .fill(ui.visuals().faint_bg_color)
+        .corner_radius(16.0)
+        .inner_margin(14.0)
+        .stroke(ui.visuals().widgets.noninteractive.bg_stroke);
+    frame.show(ui, |ui| {
+        ui.set_width(width - 28.0);
+        ui.set_min_height(150.0);
+        ui.vertical(|ui| {
+            ui.horizontal(|ui| {
+                match icon_of(app.id) {
+                    Some(src) => {
+                        // Apps not on Android yet are shown faded.
+                        let tint = if available { egui::Color32::WHITE } else { egui::Color32::from_white_alpha(110) };
+                        ui.add(egui::Image::new(src).tint(tint).fit_to_exact_size(egui::vec2(52.0, 52.0)));
                     }
-                    ui.vertical(|ui| {
-                        ui.label(egui::RichText::new(app.name).size(20.0).strong());
-                        ui.label(egui::RichText::new(tagline(lang, app.id, app.tagline)).size(14.0).weak());
-                    });
-                });
-                ui.add_space(10.0);
-                if !available {
-                    ui.label(egui::RichText::new(t.soon).size(14.0).weak());
-                } else if installed {
-                    let button = egui::Button::new(egui::RichText::new(t.open).size(16.0).color(egui::Color32::WHITE)).fill(accent).min_size(egui::vec2(120.0, 44.0));
-                    if ui.add(button).clicked() {
-                        mahay_android::launch_app(&format!("org.mahay.{}", app.id));
-                    }
-                } else {
-                    let button = egui::Button::new(egui::RichText::new(t.get).size(16.0)).min_size(egui::vec2(120.0, 44.0));
-                    if ui.add(button).clicked() {
-                        mahay_android::open_url(RELEASES);
+                    None => {
+                        let (rect, _) = ui.allocate_exact_size(egui::vec2(52.0, 52.0), egui::Sense::hover());
+                        ui.painter().rect_filled(rect, 12.0, accent.gamma_multiply(0.35));
                     }
                 }
+                ui.vertical(|ui| {
+                    ui.label(egui::RichText::new(app.name).size(20.0).strong());
+                    ui.label(egui::RichText::new(tagline(lang, app.id, app.tagline)).size(14.0).weak());
+                });
             });
+            ui.add_space(10.0);
+            if !available {
+                ui.label(egui::RichText::new(t.soon).size(14.0).weak());
+            } else if installed {
+                let button = egui::Button::new(egui::RichText::new(t.open).size(16.0).color(egui::Color32::WHITE))
+                    .fill(accent)
+                    .min_size(egui::vec2(120.0, 44.0));
+                if ui.add(button).clicked() {
+                    mahay_android::launch_app(&format!("org.mahay.{}", app.id));
+                }
+            } else {
+                let button = egui::Button::new(egui::RichText::new(t.get).size(16.0)).min_size(egui::vec2(120.0, 44.0));
+                if ui.add(button).clicked() {
+                    mahay_android::open_url(RELEASES);
+                }
+            }
         });
+    });
 }
 
 impl eframe::App for Hub {

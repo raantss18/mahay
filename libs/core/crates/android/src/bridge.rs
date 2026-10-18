@@ -116,9 +116,8 @@ impl EguiBridge {
                 self.ime_seen = now;
             }
         }
-        let paste_key = raw.events.iter().any(|e| {
-            matches!(e, egui::Event::Key { key: egui::Key::V, pressed: true, modifiers, .. } if modifiers.command)
-        });
+        let paste_key =
+            raw.events.iter().any(|e| matches!(e, egui::Event::Key { key: egui::Key::V, pressed: true, modifiers, .. } if modifiers.command));
         if paste_key
             && !raw.events.iter().any(|e| matches!(e, egui::Event::Paste(_)))
             && let Some(text) = crate::clipboard_text()
@@ -138,13 +137,7 @@ fn ime_events(before: &str, after: &str) -> Vec<egui::Event> {
     let mut events = Vec::new();
     for _ in 0..removed {
         for pressed in [true, false] {
-            events.push(egui::Event::Key {
-                key: egui::Key::Backspace,
-                physical_key: None,
-                pressed,
-                repeat: false,
-                modifiers: egui::Modifiers::NONE,
-            });
+            events.push(egui::Event::Key { key: egui::Key::Backspace, physical_key: None, pressed, repeat: false, modifiers: egui::Modifiers::NONE });
         }
     }
     // Enter comes through the buffer as a line break: send it as the key.

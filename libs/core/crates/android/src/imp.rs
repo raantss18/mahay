@@ -148,7 +148,8 @@ fn answer(request: i32, picked: Option<Picked>) {
 /// the user where to put the document (`ACTION_CREATE_DOCUMENT`), and later writes are copied
 /// to that place.
 pub fn save_target(suggested: &str) -> PathBuf {
-    let name = Path::new(suggested).file_name().map(|n| n.to_string_lossy().into_owned()).filter(|n| !n.is_empty()).unwrap_or_else(|| "Document".into());
+    let name =
+        Path::new(suggested).file_name().map(|n| n.to_string_lossy().into_owned()).filter(|n| !n.is_empty()).unwrap_or_else(|| "Document".into());
     let path = fresh_dir().join(&name);
     with_state(|s| {
         s.tracked.insert(path.clone(), Tracked { link: Link::PendingExport { name }, synced: None });

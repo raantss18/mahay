@@ -3,7 +3,7 @@
 //! web build does. Sound plays through the desktop app's cpal output (AAudio on Android).
 
 #[cfg(target_os = "android")]
+mod android;
+#[cfg(target_os = "android")]
 #[path = "../../seho/src/audio.rs"]
 mod audio;
-#[cfg(target_os = "android")]
-mod android;

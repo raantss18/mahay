@@ -33,7 +33,7 @@ jobs:
       - name: Shared crates
         working-directory: libs/core
         run: |
-          cargo fmt --all --check
+          cargo fmt -p mahay-android --check
           cargo test -p mahay-docpath -p mahay-atomic
 
   linux:

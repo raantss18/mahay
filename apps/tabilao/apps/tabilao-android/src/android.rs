@@ -6,7 +6,6 @@ use mahay_android::{AndroidApp, EguiBridge};
 use tabilao_engine::Session;
 use tabilao_ui_egui::{Inbox, Services, SheetApp};
 
-
 /// Spreadsheet MIME types for the open picker.
 const OPEN_MIMES: &[&str] = &[
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
