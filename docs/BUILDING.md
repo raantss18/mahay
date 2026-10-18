@@ -55,21 +55,38 @@ MahayActivity (Java, GameActivity)  ── JNI ──  mahay-android (Rust)
   android-activity ── winit ── eframe ── <app>-ui-egui (the same UI as on desktop)
 ```
 
-### Signing
+### Signing and secrets
 
-Release APKs are signed when a keystore is available, in `android/keystore.properties`
-(git-ignored):
+All keys live in **`release-keys/`** at the root of the checkout. The folder is listed in
+`.gitignore`: it stays on the maintainer's machine and is never pushed. Back it up (an encrypted
+USB key, a password manager). Losing it means Android refuses updates of installed apps.
 
-```properties
-storeFile=/home/you/.mahay/release.jks
-storePassword=…
-keyAlias=mahay
-keyPassword=…
-```
+| File                               | What it is                                                      |
+|------------------------------------|-----------------------------------------------------------------|
+| `release-keys/mahay.jks`           | Android signing keystore (PKCS12, RSA 4096, alias `mahay`)      |
+| `release-keys/signing.env`         | `MAHAY_KEYSTORE`, `MAHAY_KEYSTORE_PASSWORD`, `MAHAY_KEY_ALIAS`, `MAHAY_KEY_PASSWORD` |
+| `release-keys/keystore.properties` | the same for Gradle (`android/keystore.properties` links to it)  |
+| `release-keys/update-signing.pem`  | Ed25519 private key that signs `SHA256SUMS` → `SHA256SUMS.sig`   |
+| `release-keys/SECRETS.md`          | the values below, filled in, and the certificate fingerprints   |
+| `release-keys/set-github-secrets.sh` | uploads the five secrets to GitHub Actions                    |
 
-or from the environment (CI): `MAHAY_KEYSTORE`, `MAHAY_KEYSTORE_PASSWORD`, `MAHAY_KEY_ALIAS`,
-`MAHAY_KEY_PASSWORD`. Without one, release builds use the debug key. Keep the keystore
-**outside** the repository and back it up: Android refuses updates signed with another key.
+The public half of the update key is committed: `.github/update-signing.pub`, and embedded in
+the apps (`libs/core/crates/update/src/key.rs`). Apps refuse any update whose `SHA256SUMS` isn't
+signed by it.
+
+GitHub Actions secrets (Settings ▸ Secrets and variables ▸ Actions), set with
+`release-keys/set-github-secrets.sh`:
+
+| Secret                    | Content                                       |
+|---------------------------|-----------------------------------------------|
+| `MAHAY_KEYSTORE_B64`      | `base64 -w0 release-keys/mahay.jks`           |
+| `MAHAY_KEYSTORE_PASSWORD` | keystore password (`release-keys/signing.env`)|
+| `MAHAY_KEY_ALIAS`         | `mahay`                                       |
+| `MAHAY_KEY_PASSWORD`      | key password (`release-keys/signing.env`)     |
+| `UPDATE_SIGNING_KEY`      | `release-keys/update-signing.pem` (PEM text)  |
+
+Local builds read `android/keystore.properties`; without it, release APKs get the debug key
+(and installed apps then refuse them as updates).
 
 ### Emulator
 
@@ -84,17 +101,3 @@ adb install -r dist/android/app-tabilao-x86_64-release.apk
 ```bash
 python3 -I brand/generate.py && python3 -I brand/apply.py
 ```
-
-### Signing in CI
-
-To let the Release workflow sign, add four repository secrets (Settings ▸ Secrets and
-variables ▸ Actions), from your machine:
-
-```bash
-gh secret set MAHAY_KEYSTORE_B64 --repo raantss18/mahay < <(base64 -w0 ~/.mahay/release.jks)
-gh secret set MAHAY_KEYSTORE_PASSWORD --repo raantss18/mahay   # paste storePassword from ~/.mahay/keystore.properties
-gh secret set MAHAY_KEY_ALIAS --repo raantss18/mahay --body mahay
-gh secret set MAHAY_KEY_PASSWORD --repo raantss18/mahay        # paste keyPassword
-```
-
-Then run Actions ▸ Release ▸ Run workflow with the tag to publish.

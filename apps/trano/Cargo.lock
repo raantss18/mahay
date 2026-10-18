@@ -4734,7 +4734,7 @@ dependencies = [
 
 [[package]]
 name = "trano"
-version = "0.5.1"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -4759,7 +4759,7 @@ dependencies = [
 
 [[package]]
 name = "trano-android"
-version = "0.5.1"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -4771,7 +4771,7 @@ dependencies = [
 
 [[package]]
 name = "trano-core"
-version = "0.5.1"
+version = "0.2.0"
 dependencies = [
  "semver",
  "serde",
@@ -4780,7 +4780,7 @@ dependencies = [
 
 [[package]]
 name = "trano-native"
-version = "0.5.1"
+version = "0.2.0"
 dependencies = [
  "dirs 6.0.0",
  "dunce",
@@ -4800,7 +4800,7 @@ dependencies = [
 
 [[package]]
 name = "trano-ui-egui"
-version = "0.5.1"
+version = "0.2.0"
 dependencies = [
  "egui",
  "egui_extras",
@@ -4816,7 +4816,7 @@ dependencies = [
 
 [[package]]
 name = "trano-web"
-version = "0.5.1"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -5990,7 +5990,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xtask"
-version = "0.5.1"
+version = "0.2.0"
 
 [[package]]
 name = "yoke"

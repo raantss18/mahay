@@ -5986,7 +5986,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -6011,7 +6011,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-a11y"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "taratasy-content",
  "taratasy-cos",
@@ -6023,7 +6023,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-android"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -6034,7 +6034,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-annot"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "hayro-syntax",
  "taratasy-cos",
@@ -6045,7 +6045,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-audit"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "taratasy-content",
  "taratasy-cos",
@@ -6056,7 +6056,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-automation"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "base64 0.22.1",
  "flate2",
@@ -6077,7 +6077,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-cli"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "base64 0.22.1",
  "rustix 1.1.5",
@@ -6093,18 +6093,18 @@ dependencies = [
 
 [[package]]
 name = "taratasy-compare"
-version = "0.9.0"
+version = "0.2.0"
 
 [[package]]
 name = "taratasy-content"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "taratasy-cos",
 ]
 
 [[package]]
 name = "taratasy-cos"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "hayro-syntax",
  "proptest",
@@ -6118,7 +6118,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-create"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "encoding_rs",
  "hayro-syntax",
@@ -6134,7 +6134,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-crypt"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "aes",
  "md-5",
@@ -6146,7 +6146,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-edit"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "hayro-syntax",
  "kurbo 0.13.1",
@@ -6161,7 +6161,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-engine"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "icu_properties",
@@ -6200,14 +6200,14 @@ dependencies = [
 
 [[package]]
 name = "taratasy-export"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "flate2",
 ]
 
 [[package]]
 name = "taratasy-filters"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "flate2",
  "proptest",
@@ -6217,7 +6217,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-fonts"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "harfrust",
  "skrifa 0.44.0",
@@ -6227,7 +6227,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-forms"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "hayro-syntax",
  "taratasy-content",
@@ -6239,18 +6239,18 @@ dependencies = [
 
 [[package]]
 name = "taratasy-geom"
-version = "0.9.0"
+version = "0.2.0"
 
 [[package]]
 name = "taratasy-js"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "boa_engine",
 ]
 
 [[package]]
 name = "taratasy-measure"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "taratasy-annot",
@@ -6263,14 +6263,14 @@ dependencies = [
 
 [[package]]
 name = "taratasy-model"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "taratasy-cos",
 ]
 
 [[package]]
 name = "taratasy-ocr"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "ocrs",
  "rten",
@@ -6280,7 +6280,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-optimize"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "image",
  "taratasy-annot",
@@ -6293,11 +6293,11 @@ dependencies = [
 
 [[package]]
 name = "taratasy-oracle"
-version = "0.9.0"
+version = "0.2.0"
 
 [[package]]
 name = "taratasy-organize"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "hayro-syntax",
  "taratasy-content",
@@ -6308,7 +6308,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-platform"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "async-channel",
  "futures-lite",
@@ -6318,7 +6318,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-preflight"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "taratasy-content",
  "taratasy-cos",
@@ -6327,7 +6327,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-print"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "mahay-print",
  "taratasy-content",
@@ -6338,7 +6338,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-redact"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "taratasy-annot",
  "taratasy-content",
@@ -6354,7 +6354,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-render"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "bytemuck",
  "flate2",
@@ -6373,7 +6373,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-sign"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "aes",
  "aws-lc-rs",
@@ -6407,11 +6407,11 @@ dependencies = [
 
 [[package]]
 name = "taratasy-testkit"
-version = "0.9.0"
+version = "0.2.0"
 
 [[package]]
 name = "taratasy-ui-egui"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "arboard",
  "base64 0.22.1",
@@ -6455,7 +6455,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-web"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "eframe",
  "egui",
@@ -6467,7 +6467,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-xfa"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "base64 0.22.1",
  "image",
@@ -6481,7 +6481,7 @@ dependencies = [
 
 [[package]]
 name = "taratasy-xfdf"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
  "roxmltree",
  "taratasy-annot",

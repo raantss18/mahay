@@ -10,3 +10,6 @@ local.properties
 build/
 .DS_Store
 android/app/src/*/jniLibs/
+
+# Secrets: signing keys and passwords stay on this machine, never in git.
+release-keys/
