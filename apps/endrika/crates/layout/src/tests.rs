@@ -1,5 +1,5 @@
 use super::*;
-use figcraft_doc::{AutoLayout, Document, NodeKind};
+use endrika_doc::{AutoLayout, Document, NodeKind};
 
 fn setup(mode: LayoutMode) -> (Document, NodeId, Vec<NodeId>) {
     let mut d = Document::new("t");
@@ -132,9 +132,9 @@ fn constraints_on_resize() {
     let p = d.first_page().unwrap();
     let f = d.create(p, NodeKind::Frame, "F", 0.0, 0.0, 100.0, 100.0).unwrap();
     let r = d.create(f, NodeKind::Rectangle, "R", 80.0, 10.0, 10.0, 10.0).unwrap();
-    d.get_mut(r).unwrap().constraints = figcraft_doc::Constraints { horizontal: HConstraint::Right, vertical: VConstraint::TopBottom };
+    d.get_mut(r).unwrap().constraints = endrika_doc::Constraints { horizontal: HConstraint::Right, vertical: VConstraint::TopBottom };
     let c = d.create(f, NodeKind::Rectangle, "C", 45.0, 45.0, 10.0, 10.0).unwrap();
-    d.get_mut(c).unwrap().constraints = figcraft_doc::Constraints { horizontal: HConstraint::Center, vertical: VConstraint::Scale };
+    d.get_mut(c).unwrap().constraints = endrika_doc::Constraints { horizontal: HConstraint::Center, vertical: VConstraint::Scale };
     set_size(&mut d, f, 200.0, 200.0);
     apply_constraints(&mut d, f, 100.0, 100.0);
     assert_eq!(pos(&d, r), (180.0, 10.0, 10.0, 110.0));
@@ -181,7 +181,7 @@ impl Measure for FakeMeasure {
 }
 
 pub(super) fn text(d: &mut Document, parent: NodeId, name: &str) -> NodeId {
-    d.create(parent, NodeKind::Text(figcraft_doc::TextData::new(name)), name, 0.0, 0.0, 10.0, 10.0).unwrap()
+    d.create(parent, NodeKind::Text(endrika_doc::TextData::new(name)), name, 0.0, 0.0, 10.0, 10.0).unwrap()
 }
 
 #[test]
@@ -274,7 +274,7 @@ fn absolute_children_follow_constraints() {
     {
         let n = d.get_mut(abs).unwrap();
         n.child_layout.absolute = true;
-        n.constraints = figcraft_doc::Constraints { horizontal: HConstraint::Right, vertical: VConstraint::Top };
+        n.constraints = endrika_doc::Constraints { horizontal: HConstraint::Right, vertical: VConstraint::Top };
     }
     d.get_mut(f).unwrap().child_layout.sizing_h = Sizing::Hug;
     layout_frame(&mut d, f, &NoMeasure);
@@ -343,7 +343,7 @@ fn grid_frame(cols: u32, w: f64, h: f64) -> (Document, NodeId) {
 
 #[test]
 fn grid_tracks_fixed_hug_fr() {
-    use figcraft_doc::GridTrack;
+    use endrika_doc::GridTrack;
     let (mut d, f) = grid_frame(4, 400.0, 100.0);
     d.get_mut(f).unwrap().layout.as_mut().unwrap().column_tracks =
         vec![GridTrack::fixed(50.0), GridTrack::hug(), GridTrack::fill(1.0), GridTrack::fill(2.0)];
@@ -397,7 +397,7 @@ fn grid_cells_spans_and_anchors() {
 
 #[test]
 fn grid_hug_with_span() {
-    use figcraft_doc::GridTrack;
+    use endrika_doc::GridTrack;
     let (mut d, f) = grid_frame(2, 10.0, 10.0);
     {
         let n = d.get_mut(f).unwrap();
@@ -417,7 +417,7 @@ fn grid_hug_with_span() {
 
 #[test]
 fn grid_hostile_values() {
-    use figcraft_doc::GridTrack;
+    use endrika_doc::GridTrack;
     let (mut d, f) = grid_frame(0, f64::NAN, -5.0);
     {
         let l = d.get_mut(f).unwrap().layout.as_mut().unwrap();

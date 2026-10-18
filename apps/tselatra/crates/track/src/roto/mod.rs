@@ -14,12 +14,12 @@
 //!   Banded Graph Cuts Method for Fast Image Segmentation", ICCV 2005).
 //! - **Propagation** (in the spirit of X. Bai et al., "Video SnapCut", SIGGRAPH 2009): the
 //!   previous frame's matte is warped to the next frame by optical flow
-//!   (`effectcraft_raster::flow::block_flow`), and the frame re-segmented by graph cut only in a
+//!   (`tselatra_raster::flow::block_flow`), and the frame re-segmented by graph cut only in a
 //!   band of **Search Radius** pixels around the warped boundary, with the previous frame's
 //!   colour models and the warped matte as a shape prior. Correction strokes on a frame re-cut
 //!   the whole frame with the warped matte as a soft prior, and propagation restarts from there.
 //!
-//! - **Trained models** (optional, swappable: `effectcraft_segment::MaskModel`, e.g. MobileSAM):
+//! - **Trained models** (optional, swappable: `tselatra_segment::MaskModel`, e.g. MobileSAM):
 //!   [`segment_with`] / [`propagate_with`] prompt the model with points along the strokes, or with
 //!   the warped matte (its box, points deep inside it and the matte itself), and its foreground
 //!   probability becomes a strong prior for the same graph cut, so strokes stay hard constraints
@@ -39,8 +39,8 @@ pub mod rle;
 
 use std::collections::BTreeMap;
 
-use effectcraft_raster::Image;
-use effectcraft_segment::{MaskModel, Prompt};
+use tselatra_raster::Image;
+use tselatra_segment::{MaskModel, Prompt};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -764,7 +764,7 @@ fn finish(_img: &Image, rgb: &[[f32; 3]], labels: Vec<u8>, strokes: &[&Stroke], 
 /// with Motion Threshold / Damping applied to the vectors.
 pub fn warp_prior(prev_img: &Image, prev: &FrameSeg, next_img: &Image, opts: &SegOpts) -> Prior {
     let (w, h) = (next_img.width as usize, next_img.height as usize);
-    let flow = effectcraft_raster::flow::block_flow(next_img, prev_img, 8, 4);
+    let flow = tselatra_raster::flow::block_flow(next_img, prev_img, 8, 4);
     let thr = (opts.motion_threshold / 100.0 * opts.search_radius * opts.scale).max(0.0);
     let damp = (1.0 - opts.motion_damping / 100.0).clamp(0.0, 1.0);
     let src: Vec<f32> = prev.matte.iter().map(|v| *v as f32).collect();

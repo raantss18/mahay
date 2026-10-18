@@ -10,8 +10,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use effectcraft_media::{MediaPool, probe};
-use effectcraft_time::Tick;
+use tselatra_media::{MediaPool, probe};
+use tselatra_time::Tick;
 
 const PADDING: u64 = 256 << 20;
 
@@ -94,7 +94,7 @@ fn a_long_movie_is_read_in_place_not_whole() {
     eprintln!("peak RSS growth: {} KiB", growth >> 10);
     assert!(growth < 64 << 20, "probing and decoding a {} MiB movie grew peak RSS by {} MiB", PADDING >> 20, growth >> 20);
     // Same movie, same results.
-    assert_eq!(footage, effectcraft_project::Footage { path: footage.path.clone(), ..small_footage });
+    assert_eq!(footage, tselatra_project::Footage { path: footage.path.clone(), ..small_footage });
     assert_eq!(frame, small_frame);
     assert_eq!(audio, small_audio);
     assert!(audio.iter().any(|s| s.abs() > 0.1), "the tone decodes");

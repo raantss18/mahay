@@ -1,35 +1,35 @@
-//! Import of documents written in code with FilmCraft's writers, and export → re-import.
+//! Import of documents written in code with Hetsika's writers, and export → re-import.
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::{Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, Project};
-use effectcraft_time::{FrameRate, Tick};
-use filmcraft_project as fp;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::{Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, Project};
+use tselatra_time::{FrameRate, Tick};
+use hetsika_project as fp;
 
 use crate::*;
 
 const W: u32 = 640;
 const H: u32 = 360;
 
-fn secs(s: f64) -> filmcraft_time::Tick {
-    filmcraft_time::Tick::from_seconds_f64(s)
+fn secs(s: f64) -> hetsika_time::Tick {
+    hetsika_time::Tick::from_seconds_f64(s)
 }
 
 fn t(s: f64) -> Tick {
     Tick::from_seconds_f64(s)
 }
 
-fn info(kind: filmcraft_media::MediaKind, video: bool, audio: bool) -> filmcraft_media::MediaInfo {
-    filmcraft_media::MediaInfo {
+fn info(kind: hetsika_media::MediaKind, video: bool, audio: bool) -> hetsika_media::MediaInfo {
+    hetsika_media::MediaInfo {
         name: String::new(),
         kind,
         duration: secs(20.0),
-        video: video.then(|| filmcraft_media::VideoStreamInfo {
+        video: video.then(|| hetsika_media::VideoStreamInfo {
             width: W,
             height: H,
-            frame_rate: filmcraft_time::FrameRate { num: 25, den: 1 },
+            frame_rate: hetsika_time::FrameRate { num: 25, den: 1 },
             par: (1, 1),
             codec: "png".into(),
             pixel_format: String::new(),
@@ -37,14 +37,14 @@ fn info(kind: filmcraft_media::MediaKind, video: bool, audio: bool) -> filmcraft
             has_alpha: false,
             bitrate: None,
         }),
-        audio: audio.then(|| filmcraft_media::AudioStreamInfo { sample_rate: 48_000, channels: 2, codec: "pcm".into(), bits_per_sample: Some(16) }),
+        audio: audio.then(|| hetsika_media::AudioStreamInfo { sample_rate: 48_000, channels: 2, codec: "pcm".into(), bits_per_sample: Some(16) }),
         container: String::new(),
         start_timecode: None,
         file_size: None,
     }
 }
 
-fn media(p: &mut fp::Project, name: &str, path: &str, kind: filmcraft_media::MediaKind, video: bool, audio: bool, bin: Option<fp::BinId>) -> fp::ItemId {
+fn media(p: &mut fp::Project, name: &str, path: &str, kind: hetsika_media::MediaKind, video: bool, audio: bool, bin: Option<fp::BinId>) -> fp::ItemId {
     let clip = fp::MediaClip {
         media: fp::MediaRef::File { path: path.into() },
         info: info(kind, video, audio),
@@ -59,12 +59,12 @@ fn media(p: &mut fp::Project, name: &str, path: &str, kind: filmcraft_media::Med
     p.add_item(name, fp::Label::Iris, fp::ItemKind::Media(clip), bin)
 }
 
-fn rate() -> filmcraft_time::FrameRate {
-    filmcraft_time::FrameRate { num: 25, den: 1 }
+fn rate() -> hetsika_time::FrameRate {
+    hetsika_time::FrameRate { num: 25, den: 1 }
 }
 
 fn item(p: &mut fp::Project, it: fp::ItemId, kind: fp::TrackKind, start: f64, src: f64, dur: f64) -> fp::TrackItem {
-    p.make_track_item(it, kind, secs(start), filmcraft_time::TimeRange::new(secs(src), secs(dur)), rate()).unwrap()
+    p.make_track_item(it, kind, secs(start), hetsika_time::TimeRange::new(secs(src), secs(dur)), rate()).unwrap()
 }
 
 /// A Premiere-like edit: two clips with a cross dissolve on V1, a speed-changed, scaled and
@@ -72,9 +72,9 @@ fn item(p: &mut fp::Project, it: fp::ItemId, kind: fp::TrackKind, start: f64, sr
 fn edit() -> (fp::Project, fp::ItemId) {
     let mut p = fp::Project::new("Edit");
     let bin = p.add_bin("Footage", None);
-    let a = media(&mut p, "a.png", "/media/a.mov", filmcraft_media::MediaKind::Movie, true, false, Some(bin));
-    let b = media(&mut p, "b.png", "/media/b.mov", filmcraft_media::MediaKind::Movie, true, false, Some(bin));
-    let s = media(&mut p, "tone.wav", "/media/tone.wav", filmcraft_media::MediaKind::AudioOnly, false, true, Some(bin));
+    let a = media(&mut p, "a.png", "/media/a.mov", hetsika_media::MediaKind::Movie, true, false, Some(bin));
+    let b = media(&mut p, "b.png", "/media/b.mov", hetsika_media::MediaKind::Movie, true, false, Some(bin));
+    let s = media(&mut p, "tone.wav", "/media/tone.wav", hetsika_media::MediaKind::AudioOnly, false, true, Some(bin));
     let settings = fp::SequenceSettings { width: W, height: H, frame_rate: rate(), ..Default::default() };
     let nested = p.new_sequence("Nested", settings.clone(), 1, 0, None);
     let n_clip = item(&mut p, a, fp::TrackKind::Video, 0.0, 0.0, 2.0);
@@ -98,10 +98,10 @@ fn edit() -> (fp::Project, fp::ItemId) {
     let m = cc.effect_mut("motion").unwrap();
     m.params.insert("scale".into(), fp::Param::new(fp::ParamValue::Float(50.0)));
     m.params.insert("rotation".into(), fp::Param::new(fp::ParamValue::Float(30.0)));
-    let mut pos = fp::Param::new(fp::ParamValue::Vec2(filmcraft_geom::Vec2 { x: 100.0, y: 100.0 }));
+    let mut pos = fp::Param::new(fp::ParamValue::Vec2(hetsika_geom::Vec2 { x: 100.0, y: 100.0 }));
     pos.keyframes = vec![
-        fp::Keyframe::new(secs(0.0), fp::ParamValue::Vec2(filmcraft_geom::Vec2 { x: 100.0, y: 100.0 })),
-        fp::Keyframe::new(secs(1.0), fp::ParamValue::Vec2(filmcraft_geom::Vec2 { x: 300.0, y: 200.0 })),
+        fp::Keyframe::new(secs(0.0), fp::ParamValue::Vec2(hetsika_geom::Vec2 { x: 100.0, y: 100.0 })),
+        fp::Keyframe::new(secs(1.0), fp::ParamValue::Vec2(hetsika_geom::Vec2 { x: 300.0, y: 200.0 })),
     ];
     m.params.insert("position".into(), pos);
     cc.effect_mut("opacity").unwrap().params.insert("opacity".into(), fp::Param::new(fp::ParamValue::Float(50.0)));
@@ -371,11 +371,11 @@ fn rejects_unknown_documents() {
 
 fn footage_item(p: &mut Project, path: &str) -> ItemId {
     let f = probe(path).unwrap();
-    p.add_item(path.rsplit('/').next().unwrap(), effectcraft_color::Label::Aqua, None, ItemKind::Footage(f))
+    p.add_item(path.rsplit('/').next().unwrap(), tselatra_color::Label::Aqua, None, ItemKind::Footage(f))
 }
 
 fn comp_item(p: &mut Project, name: &str, c: Comp) -> ItemId {
-    p.add_item(name, effectcraft_color::Label::Sandstone, None, ItemKind::Comp(Arc::new(c)))
+    p.add_item(name, tselatra_color::Label::Sandstone, None, ItemKind::Comp(Arc::new(c)))
 }
 
 /// A comp with a stretched, keyframed footage layer, a text layer, a precomp and an audio layer.
@@ -384,11 +384,11 @@ fn ae_project() -> (Project, ItemId) {
     let a = footage_item(&mut p, "/media/a.mov");
     let s = footage_item(&mut p, "/media/tone.wav");
     let mut inner = Comp::new(W, H, FrameRate::new(25, 1), t(4.0));
-    let li = effectcraft_project::build::layer(&mut p, &inner, "inner a", LayerSource::Footage { item: a }, (W, H), None);
+    let li = tselatra_project::build::layer(&mut p, &inner, "inner a", LayerSource::Footage { item: a }, (W, H), None);
     inner.layers.push(li);
     let inner_id = comp_item(&mut p, "Inner", inner);
     let mut c = Comp::new(W, H, FrameRate::new(25, 1), t(5.0));
-    let mut la = effectcraft_project::build::layer(&mut p, &c, "clip a", LayerSource::Footage { item: a }, (W, H), None);
+    let mut la = tselatra_project::build::layer(&mut p, &c, "clip a", LayerSource::Footage { item: a }, (W, H), None);
     la.stretch = 200.0; // half speed
     la.start_time = t(-1.0); // layer time 1 s at comp 3 s… source 1 s at comp 1 s
     la.in_point = t(1.0);
@@ -401,14 +401,14 @@ fn ae_project() -> (Project, ItemId) {
         tr.get_mut("rotation").unwrap().value = Value::Scalar(-15.0);
         tr.get_mut("opacity").unwrap().value = Value::Scalar(75.0);
     }
-    let mut lt = effectcraft_project::build::layer(&mut p, &c, "Title", LayerSource::Text, (W, H), None);
+    let mut lt = tselatra_project::build::layer(&mut p, &c, "Title", LayerSource::Text, (W, H), None);
     lt.in_point = t(0.6);
     lt.out_point = t(2.6);
-    let mut lp = effectcraft_project::build::layer(&mut p, &c, "Inner", LayerSource::Comp { item: inner_id }, (W, H), None);
+    let mut lp = tselatra_project::build::layer(&mut p, &c, "Inner", LayerSource::Comp { item: inner_id }, (W, H), None);
     lp.start_time = t(2.0);
     lp.in_point = t(2.0);
     lp.out_point = t(5.0);
-    let mut ls = effectcraft_project::build::layer(&mut p, &c, "tone", LayerSource::Footage { item: s }, (0, 0), None);
+    let mut ls = tselatra_project::build::layer(&mut p, &c, "tone", LayerSource::Footage { item: s }, (0, 0), None);
     ls.out_point = t(3.0);
     ls.props.prop_mut("audio/levels").unwrap().value = Value::Vec2([-3.0, -3.0]);
     c.layers = vec![lt, lp, la, ls];
@@ -476,7 +476,7 @@ fn export_then_reimport_keeps_the_timeline() {
     }
 }
 
-fn tr_orig(l: &Layer) -> &effectcraft_project::Property {
+fn tr_orig(l: &Layer) -> &tselatra_project::Property {
     l.transform().unwrap().get("position").unwrap()
 }
 

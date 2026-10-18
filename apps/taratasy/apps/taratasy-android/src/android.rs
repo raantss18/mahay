@@ -20,7 +20,7 @@ fn android_main(app: AndroidApp) {
             if let Some(dir) = RecoveryStore::default_dir() {
                 app.enable_recovery(RecoveryStore::new(dir));
             }
-            Ok(Box::new(Shell { app, bridge: EguiBridge::new(&cc.egui_ctx) }))
+            Ok(Box::new(Shell { app, bridge: EguiBridge::new(&cc.egui_ctx, mahay_about::AppInfo { id: "taratasy", name: "Taratasy" }) }))
         }),
     );
     if let Err(e) = result {

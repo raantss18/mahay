@@ -1,20 +1,20 @@
 [package]
-name = "vectorcraft-pdf"
+name = "tsipika-pdf"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft PDF export and import"
+description = "Tsipika PDF export and import"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-text = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-doc = { workspace = true }
+tsipika-effects = { workspace = true }
+tsipika-brush = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-text = { workspace = true }
 skrifa = { workspace = true }
 kurbo = { workspace = true }
 thiserror = { workspace = true }
@@ -22,7 +22,7 @@ flate2 = { workspace = true, features = ["zlib-rs"] }
 image = { workspace = true }
 # CMYK JPEGs (the image crate writes RGB and grey ones only).
 jpeg-encoder = { workspace = true }
-craft-pdf = { workspace = true }
+mahay-pdf = { workspace = true }
 log = { workspace = true }
 smallvec = "1"
 weezl = "0.1"
@@ -35,9 +35,9 @@ md-5 = { version = "0.10", default-features = false }
 sha2 = { version = "0.10", default-features = false }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+tsipika-text = { workspace = true, features = ["test-fonts"] }
 serde_json = { workspace = true }
 # `draw_text`, to write test files with live text as other writers do.
 krilla = { workspace = true, features = ["simple-text"] }

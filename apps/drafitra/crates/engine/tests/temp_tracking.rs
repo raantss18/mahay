@@ -2,11 +2,11 @@
 //! tracking modifier typed at any point prompt, PolarSnap, polar angles relative to the last
 //! segment and Extension on elliptical arcs and splines, all driven without the UI.
 
-use cadcraft_doc::EntityKind;
-use cadcraft_engine::Session;
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::snap;
-use cadcraft_engine::snap::tracking::{Acquired, CursorQuery, DWELL, PathKind, PathShape};
+use drafitra_doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::snap;
+use drafitra_engine::snap::tracking::{Acquired, CursorQuery, DWELL, PathKind, PathShape};
 use serde_json::json;
 
 fn v(x: f64, y: f64) -> Vec2 {
@@ -120,7 +120,7 @@ fn enter_at_the_first_tracking_point_and_hostile_input_are_harmless() {
     s.cmdline("1e308").unwrap();
     s.cancel();
     assert!(s.running.is_none());
-    assert!(s.tracking.acquired.len() <= cadcraft_engine::snap::tracking::MAX_ACQUIRED);
+    assert!(s.tracking.acquired.len() <= drafitra_engine::snap::tracking::MAX_ACQUIRED);
 }
 
 // PolarSnap, polar angles relative to the last segment, Extension on ellipse and spline ends.

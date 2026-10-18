@@ -3,10 +3,10 @@
 //! it on or off per item; renders follow Render Settings ▸ Proxy Use (the viewer uses each
 //! item's switch).
 
-use effectcraft_project::render_queue::{Channels, OutputFormat, OutputModule, PostRenderAction, ProResProfile, RenderQuality, RenderQueueItem, TimeSpan};
-use effectcraft_project::render_templates::TemplateSlot;
-use effectcraft_project::{Footage, ItemId, ItemKind, Proxy};
-use effectcraft_time::Tick;
+use tselatra_project::render_queue::{Channels, OutputFormat, OutputModule, PostRenderAction, ProResProfile, RenderQuality, RenderQueueItem, TimeSpan};
+use tselatra_project::render_templates::TemplateSlot;
+use tselatra_project::{Footage, ItemId, ItemKind, Proxy};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, has_project_selection, str_p};

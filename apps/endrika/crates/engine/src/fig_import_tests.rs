@@ -1,15 +1,15 @@
 //! `.fig` files through the file commands. The importer's own tests (fixtures built in code) are
-//! in `figcraft_format::fig`; the local check here runs only when `FIGCRAFT_FIG_SAMPLES` names a
+//! in `endrika_format::fig`; the local check here runs only when `ENDRIKA_FIG_SAMPLES` names a
 //! folder of `.fig` files with their frames' PNG exports next to them.
 
-use figcraft_doc::{ExportFormat, NodeKind};
+use endrika_doc::{ExportFormat, NodeKind};
 use serde_json::json;
 
 use crate::Session;
 
 #[test]
 fn damaged_fig_files_fail_cleanly() {
-    let dir = std::env::temp_dir().join(format!("figcraft-fig-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-fig-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("broken.fig");
     std::fs::write(&path, b"fig-kiwi\x65\0\0\0\xff\xff\xff\x7fjunk").unwrap();
@@ -19,11 +19,11 @@ fn damaged_fig_files_fail_cleanly() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Local only (`FIGCRAFT_FIG_SAMPLES`): each file opens without warnings, instances link to their
+/// Local only (`ENDRIKA_FIG_SAMPLES`): each file opens without warnings, instances link to their
 /// mains, and each top frame's 1× PNG export is close to the export saved next to the file.
 #[test]
 fn local_samples_match_their_exports() {
-    let Some(dir) = std::env::var_os("FIGCRAFT_FIG_SAMPLES") else { return };
+    let Some(dir) = std::env::var_os("ENDRIKA_FIG_SAMPLES") else { return };
     let Ok(dir) = std::fs::read_dir(dir) else { return };
     for p in dir.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "fig")) {
         let mut s = Session::new();
@@ -58,7 +58,7 @@ fn local_samples_match_their_exports() {
 fn opened_fig_links_instance_layers_by_identity_not_by_name() {
     use base64::Engine as _;
     let mut s = Session::new();
-    let make = |s: &mut Session, cmd: &str, p: serde_json::Value| s.execute(cmd, &p).unwrap()["id"].as_u64().map(figcraft_doc::NodeId).unwrap();
+    let make = |s: &mut Session, cmd: &str, p: serde_json::Value| s.execute(cmd, &p).unwrap()["id"].as_u64().map(endrika_doc::NodeId).unwrap();
     let body = make(&mut s, "frame.create", json!({"x": 0, "y": 0, "width": 40, "height": 20, "name": "Inner"}));
     let label = make(&mut s, "text.create", json!({"text": "Label", "x": 2, "y": 2, "parent": body, "props": {"name": "Label"}}));
     let inner = make(&mut s, "component.create", json!({"ids": [body]}));
@@ -74,7 +74,7 @@ fn opened_fig_links_instance_layers_by_identity_not_by_name() {
     let _ = label;
 
     let exported = s.execute("file.export", &json!({"format": "fig"})).unwrap();
-    let path = std::env::temp_dir().join(format!("figcraft-slots-{}.fig", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-slots-{}.fig", std::process::id()));
     std::fs::write(&path, base64::engine::general_purpose::STANDARD.decode(exported["data"].as_str().unwrap()).unwrap()).unwrap();
     let mut opened = Session::new();
     let result = opened.execute("file.open", &json!({"path": path.to_string_lossy()}));

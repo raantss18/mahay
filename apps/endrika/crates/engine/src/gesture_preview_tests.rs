@@ -9,7 +9,7 @@ use serde_json::json;
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 
 fn rect(s: &mut Session, parent: Option<NodeId>) -> NodeId {
     let mut p = json!({"x": 40, "y": 40, "width": 80, "height": 60});

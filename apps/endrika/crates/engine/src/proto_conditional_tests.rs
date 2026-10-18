@@ -1,8 +1,8 @@
 //! Building conditionals and editing nested actions one at a time (`proto.action.*`,
 //! `proto.conditional.*`), expressions given as text, and the presenter's hotspots.
 
-use figcraft_doc::proto::{Action, ConditionalBlock, Expr, ExprOp};
-use figcraft_doc::{NodeId, VariableValue};
+use endrika_doc::proto::{Action, ConditionalBlock, Expr, ExprOp};
+use endrika_doc::{NodeId, VariableValue};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -259,7 +259,7 @@ fn default_condition_uses_a_boolean_first() {
     let mut only_text = vars.clone();
     only_text.variables.retain(|v| v.name == "label");
     assert_eq!(default_condition(&only_text).display(&only_text), "label == \"Hi\"");
-    let none = figcraft_doc::Variables::default();
+    let none = endrika_doc::Variables::default();
     assert_eq!(default_condition(&none), Expr::Value(VariableValue::Boolean(true)));
 }
 

@@ -14,18 +14,18 @@
 //! Every change runs an engine command (`text.*`, `layer.setText`, `edit.*`), so it's undoable and
 //! agents can do the same over the control channel.
 
-use effectcraft_engine::commands::text_edit::layer_doc;
-use effectcraft_engine::geom::{Mat3, vec2 as gv2};
-use effectcraft_engine::keyframe::{Kerning, TextDoc};
-use effectcraft_engine::project::{Layer, LayerId, LayerSource};
-use effectcraft_engine::render::EvalCtx;
-use effectcraft_engine::text::kurbo::Point;
-use effectcraft_engine::text::{TextLayout, layout_doc};
+use tselatra_engine::commands::text_edit::layer_doc;
+use tselatra_engine::geom::{Mat3, vec2 as gv2};
+use tselatra_engine::keyframe::{Kerning, TextDoc};
+use tselatra_engine::project::{Layer, LayerId, LayerSource};
+use tselatra_engine::render::EvalCtx;
+use tselatra_engine::text::kurbo::Point;
+use tselatra_engine::text::{TextLayout, layout_doc};
 use egui::{Color32, Pos2, Rect, Stroke, StrokeKind, vec2};
 use serde_json::{Value, json};
 
 use super::viewer::ViewerMap;
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::dock::PanelKind;
 use crate::state::Tool;
 
@@ -105,7 +105,7 @@ impl Edited {
     }
 }
 
-fn edited(app: &EffectcraftApp, ectx: &EvalCtx, lid: LayerId) -> Option<Edited> {
+fn edited(app: &TselatraApp, ectx: &EvalCtx, lid: LayerId) -> Option<Edited> {
     let layer = ectx.comp.layer(lid)?.clone();
     if !matches!(layer.source, LayerSource::Text) {
         return None;
@@ -114,13 +114,13 @@ fn edited(app: &EffectcraftApp, ectx: &EvalCtx, lid: LayerId) -> Option<Edited> 
     let lay = layout_doc(&doc);
     let m = super::viewer::l2c(ectx, &layer).0;
     let inv = m.inverse()?;
-    let carets = effectcraft_engine::render::text::caret_maps(ectx, &layer, lay.chars);
+    let carets = tselatra_engine::render::text::caret_maps(ectx, &layer, lay.chars);
     Some(Edited { layer, doc, lay, m, inv, carets })
 }
 
 /// Type-tool clicks prefer a selected text layer, as viewer dragging does (#230).
 /// Double-clicks retain topmost picking. Both use the same visibility/lock/time/solo filter.
-fn text_layer_at(app: &EffectcraftApp, ectx: &EvalCtx, map: &ViewerMap, s: Pos2, prefer_selected: bool) -> Option<Edited> {
+fn text_layer_at(app: &TselatraApp, ectx: &EvalCtx, map: &ViewerMap, s: Pos2, prefer_selected: bool) -> Option<Edited> {
     let mut topmost = None;
     for e in super::viewer::selectable_layers(ectx.comp, ectx.time)
         .filter(|l| matches!(l.source, LayerSource::Text))
@@ -137,7 +137,7 @@ fn text_layer_at(app: &EffectcraftApp, ectx: &EvalCtx, map: &ViewerMap, s: Pos2,
     topmost
 }
 
-fn exec(app: &mut EffectcraftApp, id: &str, p: Value) -> Option<Value> {
+fn exec(app: &mut TselatraApp, id: &str, p: Value) -> Option<Value> {
     match app.session.execute(id, p) {
         Ok(v) => Some(v),
         Err(e) => {
@@ -155,7 +155,7 @@ fn keeps_text_edit(p: PanelKind) -> bool {
 
 /// A click in panel `p`. Any other panel (the Timeline, the Project panel, …) ends the edit, as a
 /// click outside the text does, and gives the keyboard back to the app (#831).
-pub fn panel_clicked(app: &mut EffectcraftApp, ctx: &egui::Context, p: PanelKind) {
+pub fn panel_clicked(app: &mut TselatraApp, ctx: &egui::Context, p: PanelKind) {
     if app.session.state.text_edit.is_some() && !keeps_text_edit(p) {
         exec(app, "text.endEdit", json!({}));
         ctx.memory_mut(|m| m.surrender_focus(focus_id()));
@@ -176,7 +176,7 @@ fn typing_key(ui: &egui::Ui, bump: bool) -> String {
 /// Viewer hook: draws the edit overlay and handles text pointer and keyboard input. Returns
 /// true when it owns this frame's pointer interaction (the viewer then skips its own gestures).
 pub fn hook(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     map: &ViewerMap,
@@ -331,7 +331,7 @@ pub fn hook(
         let cur2 = app.session.state.text_edit.clone().and_then(|s| edited(app, ectx, s.layer));
         match cur2 {
             Some(e) if e.contains(map, p) => {
-                let r = effectcraft_engine::keyframe::text_doc::word_at(&e.doc.text, e.hit(map, p));
+                let r = tselatra_engine::keyframe::text_doc::word_at(&e.doc.text, e.hit(map, p));
                 exec(app, "text.setSelection", json!({"anchor": r.start, "caret": r.end}));
                 owns = true;
             }
@@ -391,7 +391,7 @@ pub fn hook(
 /// This frame's keys, in order, into the edited text, up to a press outside the `viewer`: the
 /// panel it lands in decides (after this frame's panels) whether the edit ends, so the keys after
 /// it in this frame are neither typed nor run as shortcuts (#831).
-fn keyboard(app: &mut EffectcraftApp, ui: &mut egui::Ui, viewer: Rect) {
+fn keyboard(app: &mut TselatraApp, ui: &mut egui::Ui, viewer: Rect) {
     let events = ui.input(|i| i.events.clone());
     let ctx = ui.ctx().clone();
     for ev in events {
@@ -432,7 +432,7 @@ fn keyboard(app: &mut EffectcraftApp, ui: &mut egui::Ui, viewer: Rect) {
             egui::Event::Key { key, pressed: true, modifiers: m, .. } => {
                 use egui::Key;
                 let cmd = m.command;
-                let mv = |app: &mut EffectcraftApp, to: &str| {
+                let mv = |app: &mut TselatraApp, to: &str| {
                     exec(app, "text.moveCaret", json!({"to": to, "extend": m.shift}));
                 };
                 match key {
@@ -510,7 +510,7 @@ fn keyboard(app: &mut EffectcraftApp, ui: &mut egui::Ui, viewer: Rect) {
     }
 }
 
-fn draw(app: &mut EffectcraftApp, ui: &mut egui::Ui, painter: &egui::Painter, map: &ViewerMap, e: &Edited, sel: std::ops::Range<usize>, caret: usize) {
+fn draw(app: &mut TselatraApp, ui: &mut egui::Ui, painter: &egui::Painter, map: &ViewerMap, e: &Edited, sel: std::ops::Range<usize>, caret: usize) {
     let t = app.tokens;
     let to_s = |p: Point| e.to_screen(map, (p.x, p.y));
     // Paragraph box and its handles.

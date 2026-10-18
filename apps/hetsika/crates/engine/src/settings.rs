@@ -14,8 +14,8 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use filmcraft_project::Label;
-use filmcraft_time::{FrameRate, Tick};
+use hetsika_project::Label;
+use hetsika_time::{FrameRate, Tick};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -37,7 +37,7 @@ pub struct GeneralPrefs {
     /// `zh-cn`, `de`, `ru`, `fr`, `id`, `it`, or `system` (the default: the operating system's preferred language when the
     /// interface has it, otherwise English).
     pub interface_language: String,
-    /// "At Startup": `showHome` (FilmCraft: the demo project), `openMostRecent`, `emptyProject`.
+    /// "At Startup": `showHome` (Hetsika: the demo project), `openMostRecent`, `emptyProject`.
     pub at_startup: String,
     /// "When Opening a Project": `showOpenDialog` | `showHome`.
     pub when_opening_project: String,
@@ -376,8 +376,8 @@ impl LabelPrefs {
         self.colors.get(&label_id(l)).map(|c| c.name.trim()).filter(|n| !n.is_empty()).unwrap_or(l.name()).to_string()
     }
     /// The label a new media item of `kind` gets.
-    pub fn for_media(&self, kind: filmcraft_media::MediaKind, has_video: bool, has_audio: bool) -> Label {
-        use filmcraft_media::MediaKind as K;
+    pub fn for_media(&self, kind: hetsika_media::MediaKind, has_video: bool, has_audio: bool) -> Label {
+        use hetsika_media::MediaKind as K;
         match kind {
             K::AudioOnly => self.defaults.audio,
             K::Still | K::ImageSequence => self.defaults.still,
@@ -399,7 +399,7 @@ impl LabelPrefs {
     }
 }
 
-/// The label colour preset FilmCraft ships with: the labels' own names and colours.
+/// The label colour preset Hetsika ships with: the labels' own names and colours.
 pub const DEFAULT_LABEL_PRESET: &str = "Default";
 /// The folder of label colour presets, beside `preferences.json`.
 pub const LABEL_PRESETS_DIR: &str = "Label Presets";
@@ -549,7 +549,7 @@ impl LabelPreset {
 
     pub fn write(&self, path: &Path) -> std::result::Result<(), String> {
         let bytes = serde_json::to_vec_pretty(self).map_err(|e| e.to_string())?;
-        filmcraft_format::atomic_write(path, &bytes).map_err(|e| format!("{}: {e}", path.display()))
+        hetsika_format::atomic_write(path, &bytes).map_err(|e| format!("{}: {e}", path.display()))
     }
 
     /// Save `labels`' names and colours to `path` as a preset named after the file.
@@ -648,7 +648,7 @@ impl Default for MediaAnalysisPrefs {
             speaker_labeling: "on".into(),
             language_auto_detect: false,
             default_language: "en".into(),
-            whisper_model: filmcraft_speech::models::DEFAULT_MODEL.into(),
+            whisper_model: hetsika_speech::models::DEFAULT_MODEL.into(),
         }
     }
 }
@@ -857,7 +857,7 @@ pub struct Field {
     pub indent: bool,
     /// Only editable while this boolean key is on.
     pub enabled_by: Option<&'static str>,
-    /// Whether FilmCraft acts on the value (false = remembered for parity, no effect yet).
+    /// Whether Hetsika acts on the value (false = remembered for parity, no effect yet).
     pub wired: bool,
 }
 
@@ -1121,7 +1121,7 @@ static CATEGORIES: &[Category] = &[
                     b("autoSave.recoveryJournal", "Keep a recovery copy of unsaved changes", true),
                     sub("autoSave.recoveryIntervalSeconds", "Update it at least every", int(1.0, 600.0, "second(s)"), "autoSave.recoveryJournal", true),
                     Row::Note(
-                        "Changes are copied in the background a moment after each edit. If FilmCraft quits unexpectedly, they are offered the next time it starts.",
+                        "Changes are copied in the background a moment after each edit. If Hetsika quits unexpectedly, they are offered the next time it starts.",
                     ),
                     Row::Custom("autoSaveStatus"),
                 ],
@@ -1277,7 +1277,7 @@ static CATEGORIES: &[Category] = &[
                 ],
             ),
             Row::Note(
-                "The media cache holds render previews of unsaved projects and other files FilmCraft can recreate. Deleting them is always safe; FilmCraft rebuilds them as needed.",
+                "The media cache holds render previews of unsaved projects and other files Hetsika can recreate. Deleting them is always safe; Hetsika rebuilds them as needed.",
             ),
         ],
     },
@@ -1303,7 +1303,7 @@ static CATEGORIES: &[Category] = &[
             b("playback.draftDecode", "Draft decoding at reduced playback resolution (H.264: faster, some frames less filtered)", true),
             f("playback.hardwareDecoding", "Hardware decoding", Kind::Choice(HW_DECODE), true),
             Row::Note(
-                "Hardware decoding: Auto uses the system's video decoder (VideoToolbox on macOS, Media Foundation on Windows, VA-API or NVDEC for H.264 and HEVC on Linux) for the streams it supports, and FilmCraft's own decoder for everything else or if the hardware fails. Media that is already open keeps its decoder until it is reopened.",
+                "Hardware decoding: Auto uses the system's video decoder (VideoToolbox on macOS, Media Foundation on Windows, VA-API or NVDEC for H.264 and HEVC on Linux) for the streams it supports, and Hetsika's own decoder for everything else or if the hardware fails. Media that is already open keeps its decoder until it is reopened.",
             ),
         ],
     },
@@ -1312,7 +1312,7 @@ static CATEGORIES: &[Category] = &[
         title: "Plugins",
         rows: &[
             Row::Group("Plugins", &[b("plugins.developerMode", "Enable developer mode", false)]),
-            Row::Note("No plugins are installed. Changes will take effect the next time you start FilmCraft."),
+            Row::Note("No plugins are installed. Changes will take effect the next time you start Hetsika."),
         ],
     },
     Category {
@@ -1506,7 +1506,7 @@ impl crate::autosave::Preferences {
     /// Settings ▸ Playback ▸ Hardware decoding as the process-wide switch the hardware decoder
     /// factories consult (new decoders only).
     pub fn apply_hardware_decoding(&self) {
-        filmcraft_codecs::hw::set_hardware_decoding(self.playback.hardware_decoding != "off");
+        hetsika_codecs::hw::set_hardware_decoding(self.playback.hardware_decoding != "off");
     }
 
     /// Values of one category as a JSON object.
@@ -1580,9 +1580,9 @@ pub fn map_output(left: &[f32], right: &[f32], out: &mut [f32], ch: usize, map: 
 
 /// Settings ▸ Media ▸ Default Media Scaling for a clip placed in a `frame`-sized sequence. `src`
 /// is the clip's size at its display aspect in sequence pixels
-/// ([`filmcraft_project::conformed_size`]): `scaleToFrameSize` turns on Scale to Frame Size
+/// ([`hetsika_project::conformed_size`]): `scaleToFrameSize` turns on Scale to Frame Size
 /// (rasterised at frame size), `setToFrameSize` sets Motion ▸ Scale so the picture fits the frame.
-pub fn apply_media_scaling(ti: &mut filmcraft_project::TrackItem, scaling: &str, frame: (u32, u32), src: (f64, f64)) {
+pub fn apply_media_scaling(ti: &mut hetsika_project::TrackItem, scaling: &str, frame: (u32, u32), src: (f64, f64)) {
     if !(src.0 >= 1e-9 && src.1 >= 1e-9 && src.0.is_finite() && src.1.is_finite()) {
         return;
     }
@@ -1591,7 +1591,7 @@ pub fn apply_media_scaling(ti: &mut filmcraft_project::TrackItem, scaling: &str,
         "setToFrameSize" => {
             let fit = (frame.0 as f64 / src.0).min(frame.1 as f64 / src.1);
             if let Some(m) = ti.effects.iter_mut().find(|e| e.effect == "motion") {
-                m.params.insert("scale".into(), filmcraft_project::Param::new(filmcraft_project::ParamValue::Float((fit * 1000.0).round() / 10.0)));
+                m.params.insert("scale".into(), hetsika_project::Param::new(hetsika_project::ParamValue::Float((fit * 1000.0).round() / 10.0)));
             }
         }
         _ => {}

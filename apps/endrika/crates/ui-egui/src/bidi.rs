@@ -1,7 +1,7 @@
 //! Names in right-to-left and mixed-direction scripts (Hebrew, Arabic…) in the panels: layer, page,
 //! style, component and file names. egui has no bidi: it shapes each run of one font on its own,
 //! reversing right-to-left runs but leaving the words and runs of a name in logical order. So
-//! names go through [`figcraft_text::display`] (visual order, Arabic letters joined, mirrored
+//! names go through [`endrika_text::display`] (visual order, Arabic letters joined, mirrored
 //! brackets) and every shown cluster is laid out as its own section, which egui's shaper leaves as
 //! it is. Names are elided at their end (the left end of a right-to-left name) and edited by
 //! [`single_line`], whose caret, clicks and selection follow the shown text (the arrow keys move
@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use egui::text::{ByteIndex, CCursor, CCursorRange, LayoutJob, LayoutSection, TextFormat, TextWrapping};
 use egui::{Color32, FontId, Galley, Id, Painter, Pos2, Rect, Response, Stroke, Ui, pos2, vec2};
-use figcraft_text::display::{self, VisualLine};
+use endrika_text::display::{self, VisualLine};
 
 /// Shown (visual, elided) lines by name, font and width: elision measures many candidates, so the
 /// result is kept between frames (cleared when it grows large).
@@ -276,7 +276,7 @@ fn word_at(text: &str, i: usize) -> (usize, usize) {
 
 /// Faces the UI adds for scripts its own fonts lack (desktop: from the system), as egui font data;
 /// `taken` as for [`crate::theme::system_fallbacks`].
-pub fn script_fallbacks(have: &dyn Fn(char) -> bool, taken: &mut Vec<Arc<figcraft_text::Face>>) -> Vec<(String, egui::FontData)> {
+pub fn script_fallbacks(have: &dyn Fn(char) -> bool, taken: &mut Vec<Arc<endrika_text::Face>>) -> Vec<(String, egui::FontData)> {
     // Hebrew, Arabic letters, Arabic presentation forms (what joined names are drawn with).
     const SAMPLES: [char; 3] = ['\u{05D0}', '\u{0628}', '\u{FE91}'];
     const FAMILIES: [&str; 11] = [

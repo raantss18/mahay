@@ -1,6 +1,6 @@
 [package]
-name = "soundcraft-playback"
-description = "SoundCraft audio device I/O: realtime playback and recording through the mix engine"
+name = "feo-playback"
+description = "Feo audio device I/O: realtime playback and recording through the mix engine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,11 +8,11 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-soundcraft-time.workspace = true
-soundcraft-audio-io.workspace = true
-soundcraft-model.workspace = true
-soundcraft-mix.workspace = true
-soundcraft-dsp.workspace = true
+feo-time.workspace = true
+feo-audio-io.workspace = true
+feo-model.workspace = true
+feo-mix.workspace = true
+feo-dsp.workspace = true
 log.workspace = true
 serde.workspace = true
 
@@ -24,7 +24,7 @@ cpal = { workspace = true, features = ["wasm-bindgen"] }
 
 [features]
 # ASIO on Windows (cpal's ASIO host). Off by default: building it downloads Steinberg's ASIO SDK
-# (its own licence) and needs LLVM (libclang) for the bindings. `cargo build -p soundcraft --features asio`.
+# (its own licence) and needs LLVM (libclang) for the bindings. `cargo build -p feo --features asio`.
 asio = ["cpal/asio"]
 
 [dev-dependencies]

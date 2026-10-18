@@ -9,12 +9,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{
     Appearance, CharStyle, ColumnDesign, ColumnType, Document, Fractions, GraphDesign, GraphKind, GraphSpec, Justify, Node, NodeId, NodeKind,
     TextObject, TickLength, ValueAxisSide,
 };
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, shapes};
+use tsipika_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, shapes};
 
 use super::typecmd::refresh_bounds;
 use super::*;
@@ -320,7 +320,7 @@ struct Gen<'a> {
     d: &'a mut Document,
     out: Vec<Arc<Node>>,
     /// The labels' kept character styles.
-    styles: &'a vectorcraft_doc::LabelStyles,
+    styles: &'a tsipika_doc::LabelStyles,
     /// What the column designs may still add.
     columns: Allowance,
 }
@@ -334,7 +334,7 @@ pub(crate) enum Role {
 }
 
 /// The character style labels of `role` are set in: the kept one, else 9 pt black.
-fn label_style(styles: &vectorcraft_doc::LabelStyles, role: Role) -> CharStyle {
+fn label_style(styles: &tsipika_doc::LabelStyles, role: Role) -> CharStyle {
     let kept = match role {
         Role::Value => &styles.values,
         Role::Category => &styles.categories,
@@ -355,7 +355,7 @@ fn label_style(styles: &vectorcraft_doc::LabelStyles, role: Role) -> CharStyle {
 }
 
 /// How big labels of `role` are set: a kept style's size, else 9 pt. The labels' spacing follows it.
-fn label_size(styles: &vectorcraft_doc::LabelStyles, role: Role) -> f64 {
+fn label_size(styles: &tsipika_doc::LabelStyles, role: Role) -> f64 {
     label_style(styles, role).size
 }
 
@@ -392,7 +392,7 @@ impl Gen<'_> {
     /// Filled Lines a band FILLED_LINE_WIDTH wide filled with it and outlined in black.
     fn data_line(&mut self, g: &GraphSpec, s: usize, pd: PathData, filled: bool) -> Arc<Node> {
         let band = if filled {
-            vectorcraft_pathops::outline_stroke(&pd, FILLED_LINE_WIDTH, vectorcraft_pathops::Cap::Butt, vectorcraft_pathops::Join::Miter, 4.0)
+            tsipika_pathops::outline_stroke(&pd, FILLED_LINE_WIDTH, tsipika_pathops::Cap::Butt, tsipika_pathops::Join::Miter, 4.0)
         } else {
             PathData::default()
         };
@@ -460,7 +460,7 @@ fn shadow_of(d: &mut Document, n: &Node) -> Arc<Node> {
 }
 
 /// How wide label `s` is set (its widest line), without adding it to a document.
-fn label_width(styles: &vectorcraft_doc::LabelStyles, s: &str) -> f64 {
+fn label_width(styles: &tsipika_doc::LabelStyles, s: &str) -> f64 {
     let style = label_style(styles, Role::Legend);
     let mut t = TextObject::point(Point::ZERO, &s.replace('|', "\n"), style);
     refresh_bounds(&mut t);
@@ -508,7 +508,7 @@ const MARKER_BUDGET: usize = 200_000;
 
 /// Each series' marker design art, when the document has the design.
 fn marker_designs(d: &Document, g: &GraphSpec) -> Vec<Option<Arc<Node>>> {
-    let nser = g.rows.iter().map(Vec::len).max().unwrap_or(0).clamp(1, vectorcraft_doc::MAX_GRAPH_SERIES);
+    let nser = g.rows.iter().map(Vec::len).max().unwrap_or(0).clamp(1, tsipika_doc::MAX_GRAPH_SERIES);
     (0..nser)
         .map(|s| {
             let name = g.series_markers.get(s)?.as_deref()?;
@@ -519,7 +519,7 @@ fn marker_designs(d: &Document, g: &GraphSpec) -> Vec<Option<Arc<Node>>> {
 
 /// How many objects the marker designs `designs` add to graph `g`: a copy per data point and legend swatch.
 fn marker_cost(g: &GraphSpec, designs: &[Option<Arc<Node>>]) -> usize {
-    let points = g.rows.len().min(vectorcraft_doc::MAX_GRAPH_CATEGORIES) + 1;
+    let points = g.rows.len().min(tsipika_doc::MAX_GRAPH_CATEGORIES) + 1;
     designs.iter().flatten().map(|a| a.count().saturating_mul(points)).fold(0, usize::saturating_add)
 }
 
@@ -572,7 +572,7 @@ fn without_guides(art: &Node) -> Node {
 
 /// Each series' column design, when the document has the design.
 fn column_designs(d: &Document, g: &GraphSpec) -> Vec<Option<ColumnArt>> {
-    let nser = g.rows.iter().map(Vec::len).max().unwrap_or(0).clamp(1, vectorcraft_doc::MAX_GRAPH_SERIES);
+    let nser = g.rows.iter().map(Vec::len).max().unwrap_or(0).clamp(1, tsipika_doc::MAX_GRAPH_SERIES);
     (0..nser)
         .map(|s| {
             let options = g.series_columns.get(s)?.as_ref()?;
@@ -647,10 +647,10 @@ fn column_art(
         let art = left.take(cost + 2).then(|| d.reid(&super::place::transformed(c.art.clone(), a)))?;
         // The box of the copy and of each object in it that isn't a group or layer, as the brush art past a brushed
         // stroke counts only in its own object's box.
-        let mut b = vectorcraft_render::painted_bounds(d, &art);
+        let mut b = tsipika_render::painted_bounds(d, &art);
         art.walk(&mut |n| {
             if !matches!(n.kind, NodeKind::Group { .. } | NodeKind::Layer { .. }) {
-                b = vectorcraft_geom::union_opt(b, vectorcraft_render::painted_bounds(d, n));
+                b = tsipika_geom::union_opt(b, tsipika_render::painted_bounds(d, n));
             }
         });
         let b = b.or_else(|| art.geometric_bounds())?;
@@ -824,11 +824,11 @@ fn generate_with(d: &mut Document, g: &GraphSpec, column_looks: &[Option<ColumnA
             // (Even) or sized by their totals (Ratio, by area), or stacked on one centre, the largest at the back.
             let totals: Vec<f64> = (0..ncat).map(|c| (0..nser).map(|s| val(c, s).max(0.0)).sum()).collect();
             let biggest = totals.iter().copied().fold(0.0, f64::max);
-            let stacked = g.pie_position == vectorcraft_doc::PiePosition::Stacked;
+            let stacked = g.pie_position == tsipika_doc::PiePosition::Stacked;
             let w = if stacked { r.width() } else { r.width() / ncat as f64 };
             let full = (w.min(r.height()) / 2.0 * 0.9).max(1.0);
             let radius = |total: f64| match g.pie_position {
-                vectorcraft_doc::PiePosition::Even => full,
+                tsipika_doc::PiePosition::Even => full,
                 _ if biggest > 0.0 && biggest.is_finite() => (full * (total / biggest).sqrt()).max(1.0),
                 _ => full,
             };
@@ -836,9 +836,9 @@ fn generate_with(d: &mut Document, g: &GraphSpec, column_looks: &[Option<ColumnA
             let order = |c: usize| {
                 let mut o: Vec<usize> = (0..nser).collect();
                 let by = match g.pie_sort {
-                    vectorcraft_doc::PieSort::None => return o,
-                    vectorcraft_doc::PieSort::All => c,
-                    vectorcraft_doc::PieSort::First => 0,
+                    tsipika_doc::PieSort::None => return o,
+                    tsipika_doc::PieSort::All => c,
+                    tsipika_doc::PieSort::First => 0,
                 };
                 o.sort_by(|a, b| val(by, *b).max(0.0).total_cmp(&val(by, *a).max(0.0)));
                 o
@@ -870,14 +870,14 @@ fn generate_with(d: &mut Document, g: &GraphSpec, column_looks: &[Option<ColumnA
                     }
                     let sweep = v / total * std::f64::consts::TAU;
                     let mut bp = BezPath::new();
-                    let dir = |a: f64| vectorcraft_geom::Vec2::new(a.cos(), a.sin());
-                    let arc = vectorcraft_geom::kurbo::Arc::new(centre, (rad, rad), a0, sweep, 0.0);
+                    let dir = |a: f64| tsipika_geom::Vec2::new(a.cos(), a.sin());
+                    let arc = tsipika_geom::kurbo::Arc::new(centre, (rad, rad), a0, sweep, 0.0);
                     if hole > 0.0 {
                         // A ring segment: out along the outer arc, back along the inner one.
                         bp.move_to(centre + dir(a0) * rad);
                         arc.to_cubic_beziers(0.1, |p1, p2, p| bp.curve_to(p1, p2, p));
                         bp.line_to(centre + dir(a0 + sweep) * hole);
-                        let back = vectorcraft_geom::kurbo::Arc::new(centre, (hole, hole), a0 + sweep, -sweep, 0.0);
+                        let back = tsipika_geom::kurbo::Arc::new(centre, (hole, hole), a0 + sweep, -sweep, 0.0);
                         back.to_cubic_beziers(0.1, |p1, p2, p| bp.curve_to(p1, p2, p));
                     } else {
                         bp.move_to(centre);
@@ -931,7 +931,7 @@ fn generate_with(d: &mut Document, g: &GraphSpec, column_looks: &[Option<ColumnA
             let (lo, hi, step) = value_axis(g.ticks, g.axis_min, g.axis_max, 0.0, g.rows.iter().flatten().copied().fold(0.0, f64::max));
             let at = |c: usize, v: f64| {
                 let a = -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * c as f64 / ncat as f64;
-                centre + vectorcraft_geom::Vec2::new(a.cos(), a.sin()) * (rad * ((v - lo) / (hi - lo)).clamp(0.0, 1.0))
+                centre + tsipika_geom::Vec2::new(a.cos(), a.sin()) * (rad * ((v - lo) / (hi - lo)).clamp(0.0, 1.0))
             };
             let mut axes = vec![];
             for c in 0..ncat {
@@ -1545,7 +1545,7 @@ fn series_members(doc: &Document) -> HashMap<NodeId, SeriesRef> {
     let mut out = HashMap::new();
     doc.walk(|n| {
         let Some(spec) = n.extras().graph.as_deref() else { return };
-        let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).clamp(1, vectorcraft_doc::MAX_GRAPH_SERIES);
+        let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).clamp(1, tsipika_doc::MAX_GRAPH_SERIES);
         for group in n.children().into_iter().flatten() {
             let Some(index) = group.extras().series_index.and_then(|i| usize::try_from(i).ok()).filter(|i| *i < count) else { continue };
             let r = SeriesRef { graph: n.id, group: group.id, index };
@@ -1609,7 +1609,7 @@ pub(crate) fn capture_series_paints(doc: &mut Document, ids: &[NodeId], fill: bo
         let was = spec.series_paints.clone();
         // `index` is below the graph's series count (`series_members`).
         if spec.series_paints.len() <= index {
-            spec.series_paints.resize(index + 1, vectorcraft_doc::SeriesPaint::default());
+            spec.series_paints.resize(index + 1, tsipika_doc::SeriesPaint::default());
         }
         let Some(slot) = spec.series_paints.get_mut(index) else { continue };
         if fill {
@@ -1733,10 +1733,10 @@ fn set_data(s: &mut Session, p: &Value) -> Result<Value> {
     let changed = apply_data(&mut spec, p);
     if flip {
         // The categories become series: at most as many as a graph has series.
-        if spec.cells().len() > vectorcraft_doc::MAX_GRAPH_SERIES {
+        if spec.cells().len() > tsipika_doc::MAX_GRAPH_SERIES {
             return Err(bad(
                 C,
-                format!("a graph has at most {} series, so it transposes with at most that many categories", vectorcraft_doc::MAX_GRAPH_SERIES),
+                format!("a graph has at most {} series, so it transposes with at most that many categories", tsipika_doc::MAX_GRAPH_SERIES),
             ));
         }
         transpose(&mut spec);
@@ -1781,7 +1781,7 @@ fn picked_series(s: &Session, p: &Value, id: NodeId, count: usize, cmd: &str) ->
 }
 
 /// Select the series groups `indexes` of graph `id` (they are new nodes after a regeneration).
-fn reselect_series(d: &Document, sel: &mut vectorcraft_doc::Selection, id: NodeId, indexes: &[u32]) {
+fn reselect_series(d: &Document, sel: &mut tsipika_doc::Selection, id: NodeId, indexes: &[u32]) {
     let groups: Vec<NodeId> = d
         .node(id)
         .and_then(Node::children)
@@ -1958,7 +1958,7 @@ fn set_marker(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "graph.marker";
     let id = target(s, p, C)?;
     let mut spec = spec_of(s, id)?;
-    let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).min(vectorcraft_doc::MAX_GRAPH_SERIES);
+    let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).min(tsipika_doc::MAX_GRAPH_SERIES);
     let picked = picked_series(s, p, id, count, C)?;
     let names = design_names(&s.doc()?.doc);
     let Some(v) = p.get("design") else {
@@ -2005,7 +2005,7 @@ fn set_column(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "graph.column";
     let id = target(s, p, C)?;
     let mut spec = spec_of(s, id)?;
-    let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).min(vectorcraft_doc::MAX_GRAPH_SERIES);
+    let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).min(tsipika_doc::MAX_GRAPH_SERIES);
     let picked = picked_series(s, p, id, count, C)?;
     let names = design_names(&s.doc()?.doc);
     let all: Vec<usize> = if picked.is_empty() { (0..count).collect() } else { picked.clone() };
@@ -2075,7 +2075,7 @@ fn set_type(s: &mut Session, p: &Value) -> Result<Value> {
     let mut spec = spec_of(s, id)?;
     // The series to retype: `seriesIndexes`, else, with no `id`, a selection made only of this graph's series (Group
     // Selection). Anything else selected, the graph itself for one, is the whole graph.
-    let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).min(vectorcraft_doc::MAX_GRAPH_SERIES);
+    let count = spec.rows.iter().map(Vec::len).max().unwrap_or(0).min(tsipika_doc::MAX_GRAPH_SERIES);
     // A file's list of right-axis series, kept to series the graph has, at most once each.
     spec.right_series.retain(|i| *i < count);
     spec.right_series.sort_unstable();
@@ -2229,10 +2229,10 @@ fn set_type(s: &mut Session, p: &Value) -> Result<Value> {
     spec.ticks_between_labels = bool_or(p, "ticksBetweenLabels", spec.ticks_between_labels);
     if let Some(v) = str_param(p, "piePosition") {
         spec.pie_position =
-            vectorcraft_doc::PiePosition::parse(v).ok_or_else(|| bad(C, format!("unknown piePosition `{v}` (even, ratio or stacked)")))?;
+            tsipika_doc::PiePosition::parse(v).ok_or_else(|| bad(C, format!("unknown piePosition `{v}` (even, ratio or stacked)")))?;
     }
     if let Some(v) = str_param(p, "pieSort") {
-        spec.pie_sort = vectorcraft_doc::PieSort::parse(v).ok_or_else(|| bad(C, format!("unknown pieSort `{v}` (none, all or first)")))?;
+        spec.pie_sort = tsipika_doc::PieSort::parse(v).ok_or_else(|| bad(C, format!("unknown pieSort `{v}` (none, all or first)")))?;
     }
     for (key, slot) in
         [("prefix", &mut spec.prefix), ("suffix", &mut spec.suffix), ("rightPrefix", &mut spec.right_prefix), ("rightSuffix", &mut spec.right_suffix)]
@@ -2295,8 +2295,8 @@ fn set_type(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_color::Paint;
-    use vectorcraft_doc::{CharStyle, ColumnDesign, ColumnType, Fractions, GraphKind, GraphSpec, NodeKind};
+    use tsipika_color::Paint;
+    use tsipika_doc::{CharStyle, ColumnDesign, ColumnType, Fractions, GraphKind, GraphSpec, NodeKind};
 
     use crate::{NodeId, Session};
 
@@ -2319,12 +2319,12 @@ mod tests {
         )
     }
 
-    fn group<'a>(n: &'a vectorcraft_doc::Node, name: &str) -> &'a vectorcraft_doc::Node {
+    fn group<'a>(n: &'a tsipika_doc::Node, name: &str) -> &'a tsipika_doc::Node {
         n.children().unwrap().iter().find(|c| c.name.as_deref() == Some(name)).unwrap_or_else(|| panic!("no {name}"))
     }
 
     /// The generated group stored for series `index`, not a sibling that happens to share its name.
-    fn series(n: &vectorcraft_doc::Node, index: u32) -> &vectorcraft_doc::Node {
+    fn series(n: &tsipika_doc::Node, index: u32) -> &tsipika_doc::Node {
         n.children().unwrap().iter().find(|c| c.extras().series_index == Some(index)).unwrap_or_else(|| panic!("no series {index}"))
     }
 
@@ -2370,7 +2370,7 @@ mod tests {
         assert!((s.doc().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap().x0 - x0).abs() < 1.0);
         // Type change keeps the data; undo restores the columns.
         s.execute("graph.setType", &json!({"type": "pie"})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.node(id).unwrap().extras().graph.as_ref().unwrap().kind, vectorcraft_doc::GraphKind::Pie);
+        assert_eq!(s.doc().unwrap().doc.node(id).unwrap().extras().graph.as_ref().unwrap().kind, tsipika_doc::GraphKind::Pie);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.execute("graph.setType", &json!({})).unwrap()["type"], json!("column"));
         // Selecting a bar inside still targets the graph.
@@ -2492,7 +2492,7 @@ mod tests {
             let spec = s.doc().unwrap().doc.node(id).unwrap().extras().graph.as_deref().unwrap().clone();
             let restored: GraphSpec = serde_json::from_value(serde_json::to_value(&spec).unwrap()).unwrap();
             assert_eq!(spec, restored);
-            let red = Paint::solid(vectorcraft_color::Color::rgb(1.0, 0.0, 0.0));
+            let red = Paint::solid(tsipika_color::Color::rgb(1.0, 0.0, 0.0));
             assert_eq!(spec.series_paints.first().and_then(|p| p.fill.clone()), Some(red.clone()), "{ty:?}");
             let selected_group = group(s.doc().unwrap().doc.node(id).unwrap(), "2024");
             assert!(selected_group.children().unwrap().iter().all(|n| n.appearance.fill_paint() == red), "{ty:?}");
@@ -2556,7 +2556,7 @@ mod tests {
             s.edit("Forget", |d, _| {
                 let g = d.node_mut(id).unwrap().extras_if_any().unwrap().graph.as_deref_mut().unwrap();
                 g.series_paints.clear();
-                g.label_styles = vectorcraft_doc::LabelStyles::default();
+                g.label_styles = tsipika_doc::LabelStyles::default();
                 Ok(())
             })
             .unwrap();
@@ -2582,7 +2582,7 @@ mod tests {
         s.execute("paint.setFill", &json!({"ids": [bar.0], "color": "#12ab34"})).unwrap();
         s.execute("graph.setData", &json!({"rows": [[1, 2], [3, 4]]})).unwrap();
         let node = s.doc().unwrap().doc.node(id).unwrap();
-        let green = vectorcraft_color::Color::rgb(18.0 / 255.0, 171.0 / 255.0, 52.0 / 255.0);
+        let green = tsipika_color::Color::rgb(18.0 / 255.0, 171.0 / 255.0, 52.0 / 255.0);
         assert_eq!(node.extras().graph.as_ref().unwrap().series_paints[0].fill.as_ref().and_then(Paint::color), Some(green));
         assert!(group(node, "2024").children().unwrap().iter().all(|n| n.appearance.fill_paint().color() == Some(green)));
     }
@@ -2614,7 +2614,7 @@ mod tests {
         let id = graph(&mut s, "line");
         let series_id = group(s.doc().unwrap().doc.node(id).unwrap(), "2024").id;
         s.execute("paint.setStroke", &json!({"ids": [series_id.0], "color": "#3751c8"})).unwrap();
-        let blue = vectorcraft_color::Color::rgb(55.0 / 255.0, 81.0 / 255.0, 200.0 / 255.0);
+        let blue = tsipika_color::Color::rgb(55.0 / 255.0, 81.0 / 255.0, 200.0 / 255.0);
         assert_eq!(
             s.doc().unwrap().doc.node(id).unwrap().extras().graph.as_ref().unwrap().series_paints[0].stroke.as_ref().and_then(Paint::color),
             Some(blue)
@@ -2639,8 +2639,8 @@ mod tests {
         let second = group(s.doc().unwrap().doc.node(id).unwrap(), "2025").id;
         s.execute("paint.setFill", &json!({"ids": [first.0], "color": "#f00"})).unwrap();
         s.execute("paint.setFill", &json!({"ids": [second.0], "color": "#008080"})).unwrap();
-        let dir = vectorcraft_testkit::temp_dir("graph-palette");
-        let path = dir.join("palette.vectorcraft");
+        let dir = tsipika_testkit::temp_dir("graph-palette");
+        let path = dir.join("palette.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         let paints = &s.doc().unwrap().doc.node(id).unwrap().extras().graph.as_ref().unwrap().series_paints;
@@ -2673,7 +2673,7 @@ mod tests {
         s.execute("paint.setStroke", &json!({"ids": [series_id.0], "color": "#0000ff"})).unwrap();
         s.execute("graph.setData", &json!({"rows": [[1, 2], [3, 4]]})).unwrap();
         let spec = s.doc().unwrap().doc.node(id).unwrap().extras().graph.as_deref().unwrap().clone();
-        let blue = Paint::solid(vectorcraft_color::Color::rgb(0.0, 0.0, 1.0));
+        let blue = Paint::solid(tsipika_color::Color::rgb(0.0, 0.0, 1.0));
         assert_eq!(spec.series_paints[0].stroke, Some(blue.clone()));
         assert!(spec.series_paints[0].fill.is_none());
         let bar = &group(s.doc().unwrap().doc.node(id).unwrap(), "2024").children().unwrap()[0];
@@ -2688,7 +2688,7 @@ mod tests {
         assert!(spec.series_paints[0].stroke.is_none());
         let series = group(s.doc().unwrap().doc.node(id).unwrap(), "2024").children().unwrap();
         assert_eq!(series[0].appearance.stroke_paint().color(), Some(super::default_series_color(0)));
-        assert_eq!(series[1].appearance.fill_paint().color(), Some(vectorcraft_color::Color::rgb(1.0, 0.0, 0.0)));
+        assert_eq!(series[1].appearance.fill_paint().color(), Some(tsipika_color::Color::rgb(1.0, 0.0, 0.0)));
     }
 
     #[test]
@@ -2848,8 +2848,8 @@ mod tests {
 
     #[test]
     fn a_huge_ragged_grid_is_capped() {
-        let g = GraphSpec { rows: vec![vec![0.0; vectorcraft_doc::MAX_GRAPH_SERIES + 10]; 3], ..GraphSpec::default() };
-        assert!(g.cells().iter().all(|r| r.len() == vectorcraft_doc::MAX_GRAPH_SERIES));
+        let g = GraphSpec { rows: vec![vec![0.0; tsipika_doc::MAX_GRAPH_SERIES + 10]; 3], ..GraphSpec::default() };
+        assert!(g.cells().iter().all(|r| r.len() == tsipika_doc::MAX_GRAPH_SERIES));
     }
 
     #[test]
@@ -2902,7 +2902,7 @@ mod tests {
     }
 
     /// Bounds of a series' marks, without its legend swatch (the last child).
-    fn marks(s: &Session, id: NodeId, index: u32) -> Vec<vectorcraft_geom::Rect> {
+    fn marks(s: &Session, id: NodeId, index: u32) -> Vec<tsipika_geom::Rect> {
         let n = s.doc().unwrap().doc.node(id).unwrap().clone();
         let ch = series(&n, index).children().unwrap().to_vec();
         ch[..ch.len() - 1].iter().map(|c| c.geometric_bounds().unwrap()).collect()
@@ -3057,7 +3057,7 @@ mod tests {
         s.execute("file.new", &json!({})).unwrap();
         let id = graph(&mut s, "column");
         s.execute("graph.setType", &json!({"seriesIndexes": [1], "type": "line"})).unwrap();
-        let path = vectorcraft_testkit::temp_dir("graph-kinds").join("kinds.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-kinds").join("kinds.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         assert_eq!(spec(&s, id).series_kinds, [None, Some(GraphKind::Line)]);
@@ -3070,7 +3070,7 @@ mod tests {
     }
 
     /// The value axis labels: text and bounds of the texts in the Axes group that read as numbers.
-    fn value_labels(s: &Session, id: NodeId) -> Vec<(String, vectorcraft_geom::Rect)> {
+    fn value_labels(s: &Session, id: NodeId) -> Vec<(String, tsipika_geom::Rect)> {
         let n = s.doc().unwrap().doc.node(id).unwrap().clone();
         group(&n, "Axes")
             .children()
@@ -3161,7 +3161,7 @@ mod tests {
         assert!(s.execute("graph.setType", &json!({"valueAxis": "both"})).is_err(), "a series takes one axis");
         s.execute("graph.setType", &json!({"valueAxis": "right"})).unwrap();
         let g = spec(&s, id);
-        assert_eq!((g.right_series.clone(), g.value_axis), (vec![1], vectorcraft_doc::ValueAxisSide::Left));
+        assert_eq!((g.right_series.clone(), g.value_axis), (vec![1], tsipika_doc::ValueAxisSide::Left));
         assert_eq!(s.execute("graph.setType", &json!({})).unwrap()["valueAxis"], "right");
         s.execute("graph.setType", &json!({"valueAxis": "left"})).unwrap();
         assert!(spec(&s, id).right_series.is_empty());
@@ -3185,13 +3185,13 @@ mod tests {
         let id = two_scale_graph(&mut s);
         s.execute("graph.setType", &json!({"valueAxis": "both", "separateScales": true, "rightAxisMin": 0, "rightAxisMax": 2000})).unwrap();
         s.execute("graph.setType", &json!({"seriesIndexes": [1], "valueAxis": "right"})).unwrap();
-        let path = vectorcraft_testkit::temp_dir("graph-axes").join("axes.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-axes").join("axes.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         let g = spec(&s, id);
         assert_eq!(
             (g.value_axis, g.separate_scales, g.right_series, g.right_axis_max),
-            (vectorcraft_doc::ValueAxisSide::Both, true, vec![1], Some(2000.0))
+            (tsipika_doc::ValueAxisSide::Both, true, vec![1], Some(2000.0))
         );
         let v = serde_json::to_value(GraphSpec::default()).unwrap();
         for k in ["valueAxis", "separateScales", "rightSeries", "rightTicks", "rightAxisMin", "rightAxisMax"] {
@@ -3282,7 +3282,7 @@ mod tests {
     }
 
     /// Bounds of the straight lines in the Axes group.
-    fn axis_lines(s: &Session, id: NodeId) -> Vec<vectorcraft_geom::Rect> {
+    fn axis_lines(s: &Session, id: NodeId) -> Vec<tsipika_geom::Rect> {
         let n = s.doc().unwrap().doc.node(id).unwrap().clone();
         group(&n, "Axes")
             .children()
@@ -3393,13 +3393,13 @@ mod tests {
             &json!({"tickLength": "full", "tickMarks": 3, "categoryTickLength": "short", "ticksBetweenLabels": true, "suffix": "%"}),
         )
         .unwrap();
-        let path = vectorcraft_testkit::temp_dir("graph-ticks").join("ticks.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-ticks").join("ticks.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         let g = spec(&s, id);
         assert_eq!(
             (g.tick_length, g.tick_marks, g.category_tick_length, g.ticks_between_labels, g.suffix.as_str()),
-            (vectorcraft_doc::TickLength::Full, 3, vectorcraft_doc::TickLength::Short, true, "%")
+            (tsipika_doc::TickLength::Full, 3, tsipika_doc::TickLength::Short, true, "%")
         );
         let v = serde_json::to_value(GraphSpec::default()).unwrap();
         for k in [
@@ -3419,7 +3419,7 @@ mod tests {
         }
         // A file's huge values draw within the caps.
         let g: GraphSpec = serde_json::from_value(json!({"rows": [[1.0]], "tickMarks": 1_000_000_000u64, "prefix": "y".repeat(10_000)})).unwrap();
-        let mut d = vectorcraft_doc::Document::new(800.0, 800.0);
+        let mut d = tsipika_doc::Document::new(800.0, 800.0);
         let art = super::generate(&mut d, &g);
         let axes = art.iter().find(|n| n.name.as_deref() == Some("Axes")).unwrap().children().unwrap().to_vec();
         assert!(axes.len() < 200, "{} axis parts", axes.len());
@@ -3495,14 +3495,14 @@ mod tests {
         assert_eq!(fields["rightTickMarks"], 20);
         fields["tickLength"] = json!("full");
         s.execute("graph.setType", &fields).unwrap();
-        assert_eq!(spec(&s, id).tick_length, vectorcraft_doc::TickLength::Full);
+        assert_eq!(spec(&s, id).tick_length, tsipika_doc::TickLength::Full);
     }
 
     #[test]
     fn a_long_category_axis_is_ticked_all_the_way_within_the_cap() {
         let rows: Vec<Vec<f64>> = (0..5000).map(|i| vec![i as f64]).collect();
-        let g = GraphSpec { rows, category_tick_length: vectorcraft_doc::TickLength::Short, category_tick_marks: 20, ..GraphSpec::default() };
-        let mut d = vectorcraft_doc::Document::new(800.0, 800.0);
+        let g = GraphSpec { rows, category_tick_length: tsipika_doc::TickLength::Short, category_tick_marks: 20, ..GraphSpec::default() };
+        let mut d = tsipika_doc::Document::new(800.0, 800.0);
         let art = super::generate(&mut d, &g);
         let axes = art.iter().find(|n| n.name.as_deref() == Some("Axes")).unwrap();
         let ticks: Vec<f64> = axes
@@ -3526,7 +3526,7 @@ mod tests {
     }
 
     /// The marks of series `index` (legend swatch last) and their bounds.
-    fn series_parts(s: &Session, id: NodeId, index: u32) -> Vec<vectorcraft_doc::Node> {
+    fn series_parts(s: &Session, id: NodeId, index: u32) -> Vec<tsipika_doc::Node> {
         let n = s.doc().unwrap().doc.node(id).unwrap().clone();
         series(&n, index).children().unwrap().iter().map(|c| (**c).clone()).collect()
     }
@@ -3625,7 +3625,7 @@ mod tests {
         save_design(&mut s, "Pill");
         let id = graph(&mut s, "line");
         s.execute("graph.marker", &json!({"seriesIndexes": [0], "design": "Pill"})).unwrap();
-        let path = vectorcraft_testkit::temp_dir("graph-designs").join("designs.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-designs").join("designs.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         assert_eq!(s.execute("graph.design", &json!({})).unwrap()["designs"], json!(["Pill"]));
@@ -3633,9 +3633,9 @@ mod tests {
         assert!(serde_json::to_value(GraphSpec::default()).unwrap().get("seriesMarkers").is_none());
         // A design whose art has no area draws the default square.
         let g = GraphSpec { kind: GraphKind::Line, series_markers: vec![Some("Dot".into())], ..GraphSpec::default() };
-        let mut d = vectorcraft_doc::Document::new(800.0, 800.0);
-        let dot = vectorcraft_doc::Node::group(d.alloc_id(), vec![]);
-        d.graph_designs.push(vectorcraft_doc::GraphDesign { name: "Dot".into(), art: std::sync::Arc::new(dot) });
+        let mut d = tsipika_doc::Document::new(800.0, 800.0);
+        let dot = tsipika_doc::Node::group(d.alloc_id(), vec![]);
+        d.graph_designs.push(tsipika_doc::GraphDesign { name: "Dot".into(), art: std::sync::Arc::new(dot) });
         let art = super::generate(&mut d, &g);
         let s0 = art.iter().find(|n| n.extras().series_index == Some(0)).unwrap();
         assert!(s0.children().unwrap().iter().all(|n| matches!(n.kind, NodeKind::Path { .. })));
@@ -3702,15 +3702,15 @@ mod tests {
 
     #[test]
     fn a_files_designs_are_tidied() {
-        let mut d = vectorcraft_doc::Document::new(100.0, 100.0);
-        let art = |d: &mut vectorcraft_doc::Document| std::sync::Arc::new(vectorcraft_doc::Node::group(d.alloc_id(), vec![]));
-        let mut graphy = vectorcraft_doc::Node::group(d.alloc_id(), vec![]);
+        let mut d = tsipika_doc::Document::new(100.0, 100.0);
+        let art = |d: &mut tsipika_doc::Document| std::sync::Arc::new(tsipika_doc::Node::group(d.alloc_id(), vec![]));
+        let mut graphy = tsipika_doc::Node::group(d.alloc_id(), vec![]);
         graphy.extras_mut().graph = Some(Box::new(GraphSpec::default()));
         for name in ["  A\u{7}  ", "A", "", "   ", &"x".repeat(100)] {
             let a = art(&mut d);
-            d.graph_designs.push(vectorcraft_doc::GraphDesign { name: name.into(), art: a });
+            d.graph_designs.push(tsipika_doc::GraphDesign { name: name.into(), art: a });
         }
-        d.graph_designs.push(vectorcraft_doc::GraphDesign { name: "G".into(), art: std::sync::Arc::new(graphy) });
+        d.graph_designs.push(tsipika_doc::GraphDesign { name: "G".into(), art: std::sync::Arc::new(graphy) });
         d.tidy_graph_designs();
         let names: Vec<_> = d.graph_designs.iter().map(|x| x.name.clone()).collect();
         assert_eq!(names, ["A".to_string(), "x".repeat(64), "G".to_string()]);
@@ -3830,11 +3830,11 @@ mod tests {
     }
 
     /// The bounds of the backmost object (the frame) of each copy of a design inside `n`, a column drawn with it.
-    fn frames(n: &vectorcraft_doc::Node) -> Vec<vectorcraft_geom::Rect> {
+    fn frames(n: &tsipika_doc::Node) -> Vec<tsipika_geom::Rect> {
         n.children().unwrap().iter().filter_map(|c| c.children()?.first()?.geometric_bounds()).collect()
     }
 
-    fn near(a: vectorcraft_geom::Rect, b: [f64; 4]) -> bool {
+    fn near(a: tsipika_geom::Rect, b: [f64; 4]) -> bool {
         [a.x0 - b[0], a.y0 - b[1], a.x1 - b[2], a.y1 - b[3]].iter().all(|d| d.abs() < 1e-6)
     }
 
@@ -3857,24 +3857,24 @@ mod tests {
         let NodeKind::Group { clip: true, children } = &parts[3].kind else { panic!("the last copy is clipped: {:?}", parts[3].kind) };
         assert!(near(frames(&parts[3])[0], at(140.0, 180.0)), "a whole copy");
         let (clip, copy) =
-            (children[0].geometric_bounds().unwrap(), vectorcraft_render::painted_bounds(&s.doc().unwrap().doc, &children[1]).unwrap());
+            (children[0].geometric_bounds().unwrap(), tsipika_render::painted_bounds(&s.doc().unwrap().doc, &children[1]).unwrap());
         assert_eq!(clip.y0, 160.0, "cut off at the value");
         // Its sides and its foot, strokes included, are not cut.
         assert!(clip.x0 <= copy.x0 && clip.x1 >= copy.x1 && clip.y1 >= copy.y1 && copy.x0 < plain.x0, "{clip:?} {copy:?}");
         // Nor is the brush art of a brushed path inside a group of the design.
-        let mut d = vectorcraft_doc::Document::new(800.0, 800.0);
-        let square = |x0: f64, x1: f64| vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(x0, 0.0, x1, 10.0));
-        let frame = vectorcraft_doc::Node::path(d.alloc_id(), square(0.0, 10.0), vectorcraft_doc::Appearance::basic(Paint::None, Paint::None, 0.0));
-        let mut look = vectorcraft_doc::Appearance::basic(Paint::None, Paint::solid(vectorcraft_color::Color::BLACK), 1.0);
+        let mut d = tsipika_doc::Document::new(800.0, 800.0);
+        let square = |x0: f64, x1: f64| tsipika_geom::shapes::rectangle(tsipika_geom::Rect::new(x0, 0.0, x1, 10.0));
+        let frame = tsipika_doc::Node::path(d.alloc_id(), square(0.0, 10.0), tsipika_doc::Appearance::basic(Paint::None, Paint::None, 0.0));
+        let mut look = tsipika_doc::Appearance::basic(Paint::None, Paint::solid(tsipika_color::Color::BLACK), 1.0);
         for item in &mut look.items {
-            if let vectorcraft_doc::AppearanceItem::Stroke(st) = item {
+            if let tsipika_doc::AppearanceItem::Stroke(st) = item {
                 st.brush = Some("Wide".into());
             }
         }
-        let brushed = vectorcraft_doc::Node::path(d.alloc_id(), square(4.0, 6.0), look);
-        let inner = vectorcraft_doc::Node::group(d.alloc_id(), vec![std::sync::Arc::new(brushed)]);
-        let art = vectorcraft_doc::Node::group(d.alloc_id(), vec![std::sync::Arc::new(frame), std::sync::Arc::new(inner)]);
-        d.graph_designs.push(vectorcraft_doc::GraphDesign { name: "Brushed".into(), art: std::sync::Arc::new(art) });
+        let brushed = tsipika_doc::Node::path(d.alloc_id(), square(4.0, 6.0), look);
+        let inner = tsipika_doc::Node::group(d.alloc_id(), vec![std::sync::Arc::new(brushed)]);
+        let art = tsipika_doc::Node::group(d.alloc_id(), vec![std::sync::Arc::new(frame), std::sync::Arc::new(inner)]);
+        d.graph_designs.push(tsipika_doc::GraphDesign { name: "Brushed".into(), art: std::sync::Arc::new(art) });
         let options = ColumnDesign { design: "Brushed".into(), column_type: ColumnType::Repeating, ..ColumnDesign::default() };
         let g = GraphSpec {
             rows: vec![vec![35.0]],
@@ -3890,8 +3890,8 @@ mod tests {
         let clip = children[0].geometric_bounds().unwrap();
         let mut reach = None;
         children[1].walk(&mut |n| {
-            if vectorcraft_brush::has_brush(n) {
-                reach = vectorcraft_render::painted_bounds(&d, n);
+            if tsipika_brush::has_brush(n) {
+                reach = tsipika_render::painted_bounds(&d, n);
             }
         });
         let reach = reach.unwrap();
@@ -4029,7 +4029,7 @@ mod tests {
         assert!(series_parts(&s, id, 1).iter().all(|n| matches!(n.kind, NodeKind::Path { .. })), "the line series");
         let v = s.execute("graph.column", &json!({"id": id.0, "seriesIndexes": [0]})).unwrap();
         assert_eq!(v, json!({"designs": ["Coin"], "design": "Coin", "columnType": "repeating", "each": 2.5, "fractions": "scale"}));
-        let path = vectorcraft_testkit::temp_dir("graph-column-designs").join("columns.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-column-designs").join("columns.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         let options = ColumnDesign { design: "Coin".into(), column_type: ColumnType::Repeating, each: 2.5, fractions: Fractions::Scale };
@@ -4240,7 +4240,7 @@ mod tests {
         // The labels are drawn over the wedges, and on the black first wedge in white.
         let order: Vec<_> = n.children().unwrap().iter().map(|c| c.name.clone().unwrap_or_default()).collect();
         assert_eq!(order.last().map(String::as_str), Some("Legend"), "{order:?}");
-        let colour = |l: &vectorcraft_doc::Node| match &l.kind {
+        let colour = |l: &tsipika_doc::Node| match &l.kind {
             NodeKind::Text(t) => t.runs[0].style.fill.color().unwrap().to_hex(),
             _ => panic!(),
         };
@@ -4251,14 +4251,14 @@ mod tests {
         s.execute("graph.setType", &json!({"legend": true})).unwrap();
         assert!(!spec(&s, id).pie_legend_in_wedges);
         assert!(s.execute("graph.setType", &json!({"pieLegend": "inside"})).is_err());
-        let path = vectorcraft_testkit::temp_dir("graph-pie").join("pie.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-pie").join("pie.tsipika");
         s.execute("graph.setType", &json!({"pieLegend": "wedges", "piePosition": "stacked", "pieSort": "all"})).unwrap();
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         let g = spec(&s, id);
         assert_eq!(
             (g.pie_legend_in_wedges, g.pie_position, g.pie_sort),
-            (true, vectorcraft_doc::PiePosition::Stacked, vectorcraft_doc::PieSort::All)
+            (true, tsipika_doc::PiePosition::Stacked, tsipika_doc::PieSort::All)
         );
         let v = serde_json::to_value(GraphSpec::default()).unwrap();
         for k in ["pieLegendInWedges", "piePosition", "pieSort"] {
@@ -4395,7 +4395,7 @@ mod tests {
         assert!(ys.iter().all(|y| *y + 8.0 <= 100.0 - 8.0 + 1e-6), "{ys:?}");
         let xs: Vec<f64> = (0..6).map(|i| swatch(&s, i).x1).collect();
         assert!(xs.iter().all(|x| *x <= 400.0), "{xs:?}");
-        let path = vectorcraft_testkit::temp_dir("graph-top").join("top.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-top").join("top.tsipika");
         s.execute("graph.setType", &json!({"dropShadow": true})).unwrap();
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
@@ -4515,7 +4515,7 @@ mod tests {
         s.execute("paint.setFill", &json!({"ids": [grp.0], "color": "#ff0000"})).unwrap();
         s.execute("graph.setData", &json!({"id": id.0, "rows": [[2], [3], [2]]})).unwrap();
         assert_eq!(series_parts(&s, id, 0)[0].appearance.fill_paint().color().unwrap().to_hex(), "#ff0000");
-        let path = vectorcraft_testkit::temp_dir("graph-filled").join("filled.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-filled").join("filled.tsipika");
         s.execute("graph.setType", &json!({"firstRowInFront": true, "firstColumnInFront": true})).unwrap();
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
@@ -4607,7 +4607,7 @@ mod tests {
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(spec(&s, id).label_styles.values.is_some());
         s.execute("edit.undo", &json!({})).unwrap();
-        assert_eq!(spec(&s, id).label_styles, vectorcraft_doc::LabelStyles::default());
+        assert_eq!(spec(&s, id).label_styles, tsipika_doc::LabelStyles::default());
     }
 
     #[test]
@@ -4634,7 +4634,7 @@ mod tests {
         assert_eq!(look("0").2, "#0000ff", "every value axis number");
         assert_eq!(look("0").1, 9.0);
         // Kept through save and open; nothing written when unset.
-        let path = vectorcraft_testkit::temp_dir("graph-labels").join("labels.vectorcraft");
+        let path = tsipika_testkit::temp_dir("graph-labels").join("labels.tsipika");
         s.execute("document.save", &json!({"path": path})).unwrap();
         s.execute("document.open", &json!({"path": path})).unwrap();
         assert_eq!(spec(&s, id).label_styles.categories.as_ref().unwrap().size, 14.0);

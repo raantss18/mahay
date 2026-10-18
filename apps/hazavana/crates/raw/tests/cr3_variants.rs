@@ -17,7 +17,7 @@
 //! this API: plane validation rejects any gain on the low-frequency bands first. It is defence in
 //! depth, not a contract, and has no test here.
 
-use lightcraft_raw::{RawData, RawError, decode, probe_info};
+use hazavana_raw::{RawData, RawError, decode, probe_info};
 
 // --- minimal CR3 container -------------------------------------------------
 

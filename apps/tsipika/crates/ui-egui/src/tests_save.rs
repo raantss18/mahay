@@ -5,19 +5,19 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use tsipika_engine::Session;
+use tsipika_geom::Point;
 
-use crate::{Services, VectorcraftApp, dialogs, io, menus, palette, theme};
+use crate::{Services, TsipikaApp, dialogs, io, menus, palette, theme};
 
 /// An app that reads and writes real files.
-fn app() -> VectorcraftApp {
+fn app() -> TsipikaApp {
     let services = Services {
         read: Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string()))),
         write: Some(Box::new(|p: &str, b: &[u8]| std::fs::write(p, b).map_err(|e| e.to_string()))),
         ..Default::default()
     };
-    VectorcraftApp::new(Session::new(), services)
+    TsipikaApp::new(Session::new(), services)
 }
 
 /// A fresh folder for one test.
@@ -28,16 +28,16 @@ fn dir(tag: &str) -> std::path::PathBuf {
     d
 }
 
-fn rect(app: &mut VectorcraftApp) {
+fn rect(app: &mut TsipikaApp) {
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
 }
 
-fn objects(app: &VectorcraftApp) -> usize {
+fn objects(app: &TsipikaApp) -> usize {
     app.session.doc().unwrap().doc.node_count()
 }
 
 /// One headless frame of the dialog layer with Enter pressed (OK).
-fn press_ok(app: &mut VectorcraftApp) {
+fn press_ok(app: &mut TsipikaApp) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     let key = egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
@@ -48,7 +48,7 @@ fn press_ok(app: &mut VectorcraftApp) {
 #[test]
 fn revert_asks_then_reloads_in_the_same_tab_keeping_every_zoom() {
     let d = dir("revert");
-    let path = d.join("a.vectorcraft").to_string_lossy().to_string();
+    let path = d.join("a.tsipika").to_string_lossy().to_string();
     let mut app = app();
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     rect(&mut app);
@@ -97,7 +97,7 @@ fn recent_files_show_as_many_as_the_preference_keeps() {
     for i in 0..35 {
         io::note_recent(&mut app, &format!("/art/{i}.svg"));
     }
-    let listed = |app: &VectorcraftApp| {
+    let listed = |app: &TsipikaApp| {
         menus::menu_entries(app).iter().filter(|e| e.command.as_deref().is_some_and(|c| c.starts_with("file.openRecent"))).count()
     };
     assert_eq!((io::recent_files(&app).len(), listed(&app)), (20, 20), "the default");
@@ -120,15 +120,15 @@ fn show_in_folder_needs_a_saved_document_and_a_file_manager() {
     let mut app = app();
     app.run("file.new", json!({})).unwrap();
     assert!(!menus::enabled(&app, "file.reveal"));
-    app.session.doc_mut().unwrap().path = Some("/art/a.vectorcraft".into());
+    app.session.doc_mut().unwrap().path = Some("/art/a.tsipika".into());
     assert!(!menus::enabled(&app, "file.reveal"), "no file manager (web)");
     app.services.reveal = Some(Box::new(move |p: &str| {
         s.borrow_mut().push(p.to_string());
         Ok(())
     }));
     assert!(menus::enabled(&app, "file.reveal"));
-    assert_eq!(app.run("file.reveal", json!({})).unwrap()["path"], "/art/a.vectorcraft");
-    assert_eq!(*shown.borrow(), ["/art/a.vectorcraft"]);
+    assert_eq!(app.run("file.reveal", json!({})).unwrap()["path"], "/art/a.tsipika");
+    assert_eq!(*shown.borrow(), ["/art/a.tsipika"]);
 }
 
 #[test]
@@ -147,7 +147,7 @@ fn the_palette_lists_document_color_mode_once() {
 #[test]
 fn a_document_reopens_at_its_saved_view() {
     let d = dir("view");
-    let path = d.join("v.vectorcraft").to_string_lossy().to_string();
+    let path = d.join("v.tsipika").to_string_lossy().to_string();
     let mut app = app();
     app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
     {
@@ -170,7 +170,7 @@ fn a_document_reopens_at_its_saved_view() {
 #[test]
 fn replacing_a_file_that_opening_left_things_out_of_asks_first() {
     let d = dir("lossy");
-    let path = d.join("a.vectorcraft").to_string_lossy().to_string();
+    let path = d.join("a.tsipika").to_string_lossy().to_string();
     let mut app = app();
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     rect(&mut app);
@@ -219,12 +219,12 @@ fn native_saves_stream_into_the_file() {
     }));
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     rect(&mut app);
-    let native = d.join("a.vectorcraft").to_string_lossy().to_string();
+    let native = d.join("a.tsipika").to_string_lossy().to_string();
     let r = app.run("file.saveAs", json!({"path": native, "compress": true})).unwrap();
     let bytes = std::fs::read(&native).unwrap();
     assert_eq!(r["bytes"], bytes.len(), "{r}");
-    assert!(vectorcraft_format::is_compressed(&bytes));
-    assert_eq!(vectorcraft_format::load(&bytes).unwrap().node_count(), objects(&app));
+    assert!(tsipika_format::is_compressed(&bytes));
+    assert_eq!(tsipika_format::load(&bytes).unwrap().node_count(), objects(&app));
     assert!(!app.session.doc().unwrap().is_dirty(), "the file is the document's own");
     assert_eq!(*streamed.lock().unwrap(), [native]);
     let _ = std::fs::remove_dir_all(&d);

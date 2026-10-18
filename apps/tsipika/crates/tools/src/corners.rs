@@ -8,10 +8,10 @@
 //! geometry.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::{Document, LiveCorners, LiveShape, NodeId, NodeKind, Selection};
-use vectorcraft_geom::corners::{Corner, cut_corners};
-use vectorcraft_geom::shapes::CornerKind;
-use vectorcraft_geom::{Affine, BezPath, PathData, Point, Vec2};
+use tsipika_doc::{Document, LiveCorners, LiveShape, NodeId, NodeKind, Selection};
+use tsipika_geom::corners::{Corner, cut_corners};
+use tsipika_geom::shapes::CornerKind;
+use tsipika_geom::{Affine, BezPath, PathData, Point, Vec2};
 
 use crate::{Action, Overlay, PointerEvent, ToolContext};
 
@@ -387,7 +387,7 @@ mod tests {
     use super::*;
     use crate::testutil::*;
     use crate::{Mods, PointerKind};
-    use vectorcraft_doc::{Appearance, Node};
+    use tsipika_doc::{Appearance, Node};
 
     /// A live 100 × 100 rectangle at (100, 100) with corner radius `r`.
     fn live_rect(r: f64, xf: Affine) -> (Document, NodeId) {
@@ -415,7 +415,7 @@ mod tests {
 
     /// A five-pointed star at (200, 200) of radii 60 and 30 (#511): a plain path.
     fn star() -> (Document, NodeId) {
-        doc_with(vectorcraft_geom::shapes::star(Point::new(200.0, 200.0), 60.0, 30.0, 5, 0.0), None)
+        doc_with(tsipika_geom::shapes::star(Point::new(200.0, 200.0), 60.0, 30.0, 5, 0.0), None)
     }
 
     fn selected(id: NodeId) -> Selection {
@@ -528,7 +528,7 @@ mod tests {
         // The four arcs, each a quarter circle of radius 40 starting on a side.
         let arcs = red(t.as_ref()).expect("the limit shows");
         let starts: Vec<_> =
-            arcs.elements().iter().filter_map(|e| if let vectorcraft_geom::PathEl::MoveTo(p) = e { Some(*p) } else { None }).collect();
+            arcs.elements().iter().filter_map(|e| if let tsipika_geom::PathEl::MoveTo(p) = e { Some(*p) } else { None }).collect();
         assert_eq!(starts, [Point::new(260.0, 100.0), Point::new(300.0, 140.0), Point::new(140.0, 180.0), Point::new(100.0, 140.0)]);
         // Back below the limit, the outline goes.
         assert_eq!(radius(&t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 130.0, 130.0))[0]), 30.0);
@@ -740,7 +740,7 @@ mod tests {
         let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, tip.x, tip.y + 10.0));
         assert_eq!(a[0], Action::Begin("Corner Radius".into()));
         // The widget follows the arc's centre: r / sin(angle / 2) along the bisector.
-        let c = vectorcraft_geom::corners::path_corners(&star_path(&d, id))[0];
+        let c = tsipika_geom::corners::path_corners(&star_path(&d, id))[0];
         let want = 10.0 * (c.angle_deg() / 2.0).to_radians().sin();
         assert!((radius(&a[1]) - want).abs() < 1e-9, "{a:?} want {want}");
         assert!(matches!(&a[1], Action::Preview(_, v) if v["id"] == id.0 && v.get("corners").is_none()), "every corner: {a:?}");
@@ -807,7 +807,7 @@ mod tests {
     /// A pen path's corners show widgets, curved ones too (#1144); its ends don't.
     #[test]
     fn a_pen_path_shows_widgets_on_its_corners_only() {
-        let mut sp = vectorcraft_geom::SubPath::polyline(
+        let mut sp = tsipika_geom::SubPath::polyline(
             &[Point::new(100.0, 100.0), Point::new(300.0, 100.0), Point::new(300.0, 300.0), Point::new(100.0, 300.0)],
             false,
         );

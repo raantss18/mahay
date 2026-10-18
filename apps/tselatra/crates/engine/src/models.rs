@@ -1,5 +1,5 @@
 //! Trained models (Settings ▸ Roto Brush and Settings ▸ Face Tracking; `roto.model*` and
-//! `face.model*` commands): which models the registry offers (`effectcraft_segment::MODELS`, all
+//! `face.model*` commands): which models the registry offers (`tselatra_segment::MODELS`, all
 //! open source), which are installed (in the `models` folder), installing one from a file or
 //! downloading the official weights (verified against the registry's SHA-256 either way, and kept
 //! with a notice naming their authors and licence), choosing one per task, and loading it in the
@@ -8,15 +8,15 @@
 //!
 //! Weights are never bundled: the install stays small and nothing is fetched unless asked for.
 //! Downloads use the system's `curl` (shipped with Windows 10+, macOS and most Linux systems),
-//! so no networking code is linked into EffectCraft; without it, the file can be downloaded in a
+//! so no networking code is linked into Tselatra; without it, the file can be downloaded in a
 //! browser and installed with Install from File. The browser build uses the built-in engines
 //! only, for now.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_segment::face::FaceModel;
-use effectcraft_segment::{self as seg, Loaded, ModelInfo, Task};
+use tselatra_segment::face::FaceModel;
+use tselatra_segment::{self as seg, Loaded, ModelInfo, Task};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, always, b_p, bad, str_p};

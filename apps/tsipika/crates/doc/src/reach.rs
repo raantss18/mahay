@@ -2,10 +2,10 @@
 //! visual bounds and the clicks of a stroke take in its alignment, its width profile, miter spikes
 //! up to the miter limit, projecting caps and arrowheads.
 
-use vectorcraft_geom::bez::{CORNER_COS, kink, segments, subpaths, tangent, unit};
-use vectorcraft_geom::hit::fill_contains;
-use vectorcraft_geom::kurbo::{ParamCurveArclen, ParamCurveNearest};
-use vectorcraft_geom::{BezPath, FillRule, ParamCurve, PathSeg, Point, Rect, Shape, Vec2};
+use tsipika_geom::bez::{CORNER_COS, kink, segments, subpaths, tangent, unit};
+use tsipika_geom::hit::fill_contains;
+use tsipika_geom::kurbo::{ParamCurveArclen, ParamCurveNearest};
+use tsipika_geom::{BezPath, FillRule, ParamCurve, PathSeg, Point, Rect, Shape, Vec2};
 
 use crate::appearance::HEAD_REACH;
 use crate::{Appearance, ArrowAlign, Dash, LineCap, LineJoin, StrokeAlign, StrokeLayer, WidthProfile};
@@ -15,7 +15,7 @@ const ARCLEN_ACCURACY: f64 = 1e-3;
 
 /// The segments of a subpath that have length (zero-length ones, all of whose points coincide,
 /// have no direction).
-fn drawn(els: &[vectorcraft_geom::PathEl]) -> Vec<PathSeg> {
+fn drawn(els: &[tsipika_geom::PathEl]) -> Vec<PathSeg> {
     let moves = |s: &PathSeg| match s {
         PathSeg::Line(l) => l.p1 != l.p0,
         PathSeg::Quad(q) => q.p1 != q.p0 || q.p2 != q.p0,
@@ -290,8 +290,8 @@ impl Appearance {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_color::{Color, Paint};
-    use vectorcraft_geom::{PathData, shapes};
+    use tsipika_color::{Color, Paint};
+    use tsipika_geom::{PathData, shapes};
 
     use super::*;
     use crate::{Arrowhead, Document, Node, StrokeAlign, hit};

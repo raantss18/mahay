@@ -47,15 +47,15 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use kurbo::{Affine, BezPath, PathEl, Point, Rect};
-use vectorcraft_color::gradient::Gradient;
-use vectorcraft_color::swatch::Swatch;
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::cmyk::Inks;
-use vectorcraft_doc::{
+use tsipika_color::gradient::Gradient;
+use tsipika_color::swatch::Swatch;
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::cmyk::Inks;
+use tsipika_doc::{
     Appearance, AppearanceItem, Artboard, ColorMode, Dash, Document, FillLayer, ImageBlob, ImageObject, Knockout, LayerColor, LineCap, LineJoin,
     LinkInfo, Node, NodeId, NodeKind, OpacityMask, PatternDef, StrokeLayer,
 };
-use vectorcraft_geom::{FillRule, PathData};
+use tsipika_geom::{FillRule, PathData};
 
 use super::super::ate::CANVAS_CENTRE;
 use super::lex::{Lexer, Tok};
@@ -189,7 +189,7 @@ fn artboards_read(data: &[u8]) -> Vec<(String, Rect)> {
 /// How many variables and data sets the variable library of the editing data has: XML nodes
 /// (`/XMLNode`) of the `/Document` dictionary, a `variableSets` element holding `variableSet`s, each
 /// with its `variables` (`variable` elements) and `sampleDataSets` (`sampleDataSet` elements).
-/// VectorCraft doesn't read them.
+/// Tsipika doesn't read them.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct VariableLibrary {
     pub variables: usize,
@@ -301,7 +301,7 @@ struct GState {
 
 impl Default for GState {
     fn default() -> Self {
-        let black = Paint::solid(vectorcraft_color::Color::BLACK);
+        let black = Paint::solid(tsipika_color::Color::BLACK);
         Self {
             fill: black.clone(),
             stroke: black,
@@ -576,7 +576,7 @@ const SKIPPED: &[(&str, &str)] = &[
 
 /// The note for a `/ForeignObject` (non-native art, the content of a placed PDF, which the editor
 /// shows but doesn't edit) whose PDF can't be read.
-pub const NON_NATIVE_ART_UNREAD: &str = "non-native art (a placed PDF's content) that VectorCraft can't read is left out";
+pub const NON_NATIVE_ART_UNREAD: &str = "non-native art (a placed PDF's content) that Tsipika can't read is left out";
 /// The name of the group a `/ForeignObject`'s art comes in as.
 pub const NON_NATIVE_ART: &str = "Non-native art";
 
@@ -1459,8 +1459,8 @@ impl<'a> Reader<'a> {
             return Ok(());
         }
         let target = self.space().transform_rect_bbox(art_box);
-        let opts = vectorcraft_pdf::ImportOptions { layers: false, ..Default::default() };
-        let read = match vectorcraft_pdf::import_with_report(&pdf, &opts) {
+        let opts = tsipika_pdf::ImportOptions { layers: false, ..Default::default() };
+        let read = match tsipika_pdf::import_with_report(&pdf, &opts) {
             Ok(r) => r,
             Err(e) => {
                 self.warn(&format!("{NON_NATIVE_ART_UNREAD} ({e})"));
@@ -1468,7 +1468,7 @@ impl<'a> Reader<'a> {
             }
         };
         let mut art: Vec<Node> = read.document.layers.iter().filter_map(|l| l.children()).flatten().map(|n| n.as_ref().clone()).collect();
-        let Some(bbox) = art.iter().fold(None, |acc, n| vectorcraft_geom::union_opt(acc, n.geometric_bounds())) else { return Ok(()) };
+        let Some(bbox) = art.iter().fold(None, |acc, n| tsipika_geom::union_opt(acc, n.geometric_bounds())) else { return Ok(()) };
         if bbox.width() <= 0.0 || bbox.height() <= 0.0 {
             return Ok(());
         }
@@ -1630,7 +1630,7 @@ impl<'a> Reader<'a> {
         let at = if n.len() <= 10 { 6 } else { 7 };
         let index = n.get(at).copied().unwrap_or(0.0);
         let rgb = |i: usize| n.get(at + i).map_or(0, |v| v.clamp(0.0, 255.0) as u8);
-        a.color = Some(if (0.0..vectorcraft_doc::LAYER_COLORS.len() as f64).contains(&index) && index.fract() == 0.0 {
+        a.color = Some(if (0.0..tsipika_doc::LAYER_COLORS.len() as f64).contains(&index) && index.fract() == 0.0 {
             LayerColor::Preset(index as u8)
         } else {
             LayerColor::Custom([rgb(1), rgb(2), rgb(3)])
@@ -1670,8 +1670,8 @@ impl<'a> Reader<'a> {
     fn color(&mut self, w: &str, vals: &[V]) {
         let Some((p, named)) = paint::color_op(w, vals) else { return };
         match p.color() {
-            Some(vectorcraft_color::Color::Rgb { .. }) => self.rgb_colors += 1,
-            Some(vectorcraft_color::Color::Cmyk { .. }) => self.cmyk_colors += 1,
+            Some(tsipika_color::Color::Rgb { .. }) => self.rgb_colors += 1,
+            Some(tsipika_color::Color::Cmyk { .. }) => self.cmyk_colors += 1,
             _ => {}
         }
         if let Some(n) = named {
@@ -2013,17 +2013,17 @@ impl<'a> Reader<'a> {
     fn image_from(&mut self, vals: Vec<V>, data: &[u8]) -> Result<(), String> {
         let space = self.raster.as_ref().and_then(|r| r.space.clone()).unwrap_or_default();
         let Some(m) = vals.iter().find_map(|v| if let V::Arr(a) = v { Some(Self::nums(a)) } else { None }) else {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         };
         let n = Self::nums(&vals);
         let [_, _, _, _, w, h, bits, kind, alpha, _, binary, ..] = n.as_slice() else {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         };
         let (w, h) = (*w as u64, *h as u64);
         if w == 0 || h == 0 || w.saturating_mul(h) > MAX_PIXELS || ![1.0, 8.0].contains(bits) {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         }
         let channels: usize = match space.as_str() {
@@ -2087,12 +2087,12 @@ impl<'a> Reader<'a> {
             }
         }
         let Some(img) = image::RgbaImage::from_raw(w as u32, h as u32, rgba) else {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         };
         let mut png = vec![];
         if img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).is_err() {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         }
         self.add_raster(ImageBlob::new("image/png", png), None, &m, (w as u32, h as u32))
@@ -2106,13 +2106,13 @@ impl<'a> Reader<'a> {
         // downwards, (u, -v): pixels → (u, -v) → art space. Flipping the matrix's result instead
         // gives the same place only when the image isn't rotated (b = c = 0).
         let [a, b, c, d, tx, ty] = m else {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         };
         let to_doc = self.space();
         let xf = to_doc * Affine::new([*a, *b, *c, *d, *tx, *ty]) * FLIP;
         if !xf.as_coeffs().iter().all(|v| v.is_finite()) || xf.determinant().abs() < 1e-12 {
-            self.warn("an image VectorCraft can't read was left out");
+            self.warn("an image Tsipika can't read was left out");
             return Ok(());
         }
         let mask = alpha.and_then(|a| self.alpha_mask(a, w, h, xf));
@@ -2239,11 +2239,11 @@ impl<'a> Reader<'a> {
     fn finish(mut self) -> Result<Structure, String> {
         if !self.unknown.is_empty() {
             let ops: Vec<String> = self.unknown.iter().map(|o| format!("`{o}`")).collect();
-            self.unsupported.insert(format!("operators VectorCraft doesn't know ({})", ops.join(", ")));
+            self.unsupported.insert(format!("operators Tsipika doesn't know ({})", ops.join(", ")));
         }
         if !self.unsupported.is_empty() {
             let list: Vec<&str> = self.unsupported.iter().map(String::as_str).collect();
-            return Err(format!("it has {}, which VectorCraft doesn't read from it yet", join_and(&list)));
+            return Err(format!("it has {}, which Tsipika doesn't read from it yet", join_and(&list)));
         }
         if self.doc.layers.is_empty() {
             return Err("it has no layers".into());
@@ -2274,7 +2274,7 @@ impl<'a> Reader<'a> {
         }
         if self.color_model.unwrap_or(self.cmyk_colors > self.rgb_colors) {
             doc.color_mode = ColorMode::Cmyk;
-            let (swatches, groups) = vectorcraft_color::default_swatches(ColorMode::Cmyk.model());
+            let (swatches, groups) = tsipika_color::default_swatches(ColorMode::Cmyk.model());
             (doc.swatches, doc.swatch_groups) = (swatches.into(), groups.into());
         }
         for n in &self.spots {
@@ -2514,7 +2514,7 @@ fn two(v: &str) -> Option<(f64, f64)> {
 /// A CMYK sample in RGB.
 fn cmyk_rgb([c, m, y, k]: [u8; 4]) -> [u8; 3] {
     let f = |v: u8| f32::from(v) / 255.0;
-    let rgb = vectorcraft_color::Color::cmyk(f(c), f(m), f(y), f(k)).to_rgba8(1.0);
+    let rgb = tsipika_color::Color::cmyk(f(c), f(m), f(y), f(k)).to_rgba8(1.0);
     [rgb[0], rgb[1], rgb[2]]
 }
 

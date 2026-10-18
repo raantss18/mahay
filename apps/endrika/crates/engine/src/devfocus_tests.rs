@@ -3,7 +3,7 @@
 use crate::Session;
 use crate::components::tests::{ex, idv};
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::json;
 
 fn frame(s: &mut Session, x: f64, name: &str) -> NodeId {

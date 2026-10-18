@@ -411,7 +411,7 @@ mod tests {
         }
     }
 
-    /// PVQ decoder of RFC 6716 §4.3.4.2 (as in FilmCraft's decoder).
+    /// PVQ decoder of RFC 6716 §4.3.4.2 (as in Hetsika's decoder).
     fn decode_pulses(n: usize, k: usize, dec: &mut RangeDecoder) -> Vec<i32> {
         let w = k + 1;
         let mut v = vec![0u64; (n + 1) * w];

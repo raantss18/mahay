@@ -34,7 +34,7 @@ const ASSET_EXT: &[&str] = &[
     "idml",
     "aco",
     "abr",
-    "designcraft",
+    "pejy",
     "mp4",
     "wav",
     "mp3",

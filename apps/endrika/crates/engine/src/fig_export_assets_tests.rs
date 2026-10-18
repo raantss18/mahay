@@ -1,9 +1,9 @@
 //! `.fig` export through `file.export` and back through `file.open`: variables with their modes,
 //! the layers bound to them (also inside instances shown in another mode), shared styles, and
 //! instances that are resized, fill an auto layout or were scaled come back as they were. The
-//! format's own tests (written fields, damaged files) are in `figcraft_format::fig`.
+//! format's own tests (written fields, damaged files) are in `endrika_format::fig`.
 
-use figcraft_doc::{Document, NodeKind};
+use endrika_doc::{Document, NodeKind};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -98,7 +98,7 @@ fn variables_styles_and_instance_sizes_come_back() {
     // What the outline shows: the instance in the dark frame takes the dark values.
     assert!(before.iter().any(|l| l.contains("\"In the dark\"") && l.contains("111827")), "{before:#?}");
     assert!(before.iter().any(|l| l.contains("\"Resized\"") && l.contains("200.0×120.0")), "{before:#?}");
-    let path = std::env::temp_dir().join(format!("figcraft-fig-assets-{}.fig", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-fig-assets-{}.fig", std::process::id()));
     let r = run(&mut s, "file.export", json!({"format": "fig", "path": path.to_string_lossy()}));
     assert_eq!(r["warnings"], json!([]));
     let r = run(&mut s, "file.open", json!({"path": path.to_string_lossy()}));
@@ -126,13 +126,13 @@ fn variables_styles_and_instance_sizes_come_back() {
 fn every_example_keeps_its_variables_and_styles() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples");
     let Ok(files) = std::fs::read_dir(dir) else { return };
-    for p in files.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "figcraft")) {
+    for p in files.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "endrika")) {
         let mut s = Session::new();
         run(&mut s, "file.open", json!({"path": p.to_string_lossy()}));
         let before = outline(s.doc().unwrap());
         let counts = |d: &Document| (d.variables.collections.len(), d.variables.variables.len(), d.styles.len());
         let had = counts(s.doc().unwrap());
-        let out = std::env::temp_dir().join(format!("figcraft-fig-assets-{}-{}.fig", std::process::id(), p.file_stem().unwrap().to_string_lossy()));
+        let out = std::env::temp_dir().join(format!("endrika-fig-assets-{}-{}.fig", std::process::id(), p.file_stem().unwrap().to_string_lossy()));
         let r = run(&mut s, "file.export", json!({"format": "fig", "path": out.to_string_lossy()}));
         let warnings = r["warnings"].to_string();
         assert!(!warnings.contains("variable") && !warnings.contains("style"), "{}: {warnings}", p.display());
@@ -178,10 +178,10 @@ fn nested_instances_of_variants_link_to_their_mains_layers() {
     run(&mut s, "node.set", json!({"ids": [first], "name": "First"}));
     run(&mut s, "node.set", json!({"ids": [second], "name": "Second"}));
     // The second one shows the other variant.
-    let nested = s.doc().unwrap().node(figcraft_doc::NodeId(second)).unwrap().children[0].0;
+    let nested = s.doc().unwrap().node(endrika_doc::NodeId(second)).unwrap().children[0].0;
     run(&mut s, "instance.swap", json!({"ids": [nested], "component": dusk}));
     let before = outline(s.doc().unwrap());
-    let path = std::env::temp_dir().join(format!("figcraft-fig-nested-{}.fig", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-fig-nested-{}.fig", std::process::id()));
     run(&mut s, "file.export", json!({"format": "fig", "path": path.to_string_lossy()}));
     let r = run(&mut s, "file.open", json!({"path": path.to_string_lossy()}));
     assert_eq!(r["warnings"], json!([]));

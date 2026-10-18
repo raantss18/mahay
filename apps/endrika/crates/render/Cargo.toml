@@ -1,19 +1,19 @@
 [package]
-name = "figcraft-render"
+name = "endrika-render"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "FigCraft renderer: the scene graph to pixels on tiny-skia (fills, gradients, images, aligned strokes, shadows, blurs, masks, blend modes, text)"
+description = "Endrika renderer: the scene graph to pixels on tiny-skia (fills, gradients, images, aligned strokes, shadows, blurs, masks, blend modes, text)"
 
 [lints]
 workspace = true
 
 [dependencies]
-figcraft-geom = { workspace = true }
-figcraft-color = { workspace = true }
-figcraft-doc = { workspace = true }
-figcraft-text = { workspace = true }
-figcraft-pathops = { workspace = true }
+endrika-geom = { workspace = true }
+endrika-color = { workspace = true }
+endrika-doc = { workspace = true }
+endrika-text = { workspace = true }
+endrika-pathops = { workspace = true }
 tiny-skia = { workspace = true }
 image = { workspace = true }
 moxcms = { workspace = true }

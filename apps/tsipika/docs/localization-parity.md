@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-16 · **Change:** minor (Georgian (`ka`) interface catalog; Bulgarian (`bg`) and Greek (`el`) catalogs complete under the tests, #1909, #2076; Finnish (`fi`) catalog added, complete under the tests; Swedish (`sv`) catalog added, complete under the tests; scores and estimates unchanged; Brazilian Portuguese (`pt-br`) catalog completed under the tests: menus, `tl!` literals and messages; 12-language score 71% → 74%; #1914) · **Target:** Adobe Illustrator 2026 (30.x)
 
-Per-language status of VectorCraft's interface. How the catalogs work and how to add a language:
+Per-language status of Tsipika's interface. How the catalogs work and how to add a language:
 [`development.md` › Localisation](development.md#localisation). Part of
 [target-app-parity.md](target-app-parity.md).
 
@@ -24,7 +24,7 @@ Chinese by `imachus`). Only Georgian is recorded as reviewed by a native speaker
 | Language | Code | UI strings translated | Dialogs / tooltips / messages | Script support | Native review | Status | To `full` (h) |
 |---|---|---|---|---|---|---|---|
 | English | `en` | source, 100% | all | Latin | — | full | — |
-| Simplified Chinese (Mandarin) | `zh-hans` | 4,761 rows, 714 of them `@msg` (counted 2026-10-16): menus, `tl!` literals and messages complete (tests) | all | CJK UI font from craft-fonts (BIZ UDPGothic) when embedded, else a system font; IME with marked text at the caret; vertical type partial ([type-parity.md](type-parity.md)) | no | full | — (review) |
+| Simplified Chinese (Mandarin) | `zh-hans` | 4,761 rows, 714 of them `@msg` (counted 2026-10-16): menus, `tl!` literals and messages complete (tests) | all | CJK UI font from mahay-fonts (BIZ UDPGothic) when embedded, else a system font; IME with marked text at the caret; vertical type partial ([type-parity.md](type-parity.md)) | no | full | — (review) |
 | Spanish | `es` | 4,009 / 4,020 (99.7%) | all (604 messages) | Latin | no | full | — (review) |
 | Hindi | `hi` | 0 | none | Devanagari: the document's text shapes (HarfRust), with tests of conjuncts, reph, pre-base matras, nukta forms and caret stops that run when an OpenType Devanagari font is installed, but the egui interface does no complex shaping | no | none | 20–30 |
 | Arabic | `ar` | 0 | none | document text: bidi layout and Paragraph Direction; interface: no right-to-left layout, no Arabic shaping in egui | no | none | 25–40 |
@@ -33,7 +33,7 @@ Chinese by `imachus`). Only Georgian is recorded as reviewed by a native speaker
 | Indonesian | `id` | 0 | none | Latin | no | none | 5–8 |
 | Japanese | `ja` | 4,004 / 4,020 (99.6%) | all | CJK UI font as above; Japanese IME; vertical type partial; Japanese crop marks and composition settings | no | full | — (review) |
 | German | `de` | 3,952 / 4,020 (98%; tests hold menus, literals and messages complete) | all (602 of 604 message rows; landed 2026-10-10) | Latin | contributor-written, not reviewed | full | — (review) |
-| Korean | `ko` | 4,151 rows: menus, `tl!` literals and messages complete (tests); one plural form | all | Hangul from an installed system font on the desktop (Apple SD Gothic Neo, Malgun Gothic, Noto Sans CJK KR…); the web build has no Korean UI font yet (craft-fonts); IME path exists | no (AI-drafted) | full | — (review; web font) |
+| Korean | `ko` | 4,151 rows: menus, `tl!` literals and messages complete (tests); one plural form | all | Hangul from an installed system font on the desktop (Apple SD Gothic Neo, Malgun Gothic, Noto Sans CJK KR…); the web build has no Korean UI font yet (mahay-fonts); IME path exists | no (AI-drafted) | full | — (review; web font) |
 | Vietnamese | `vi` | 4,225 rows: menus, `tl!` literals and messages complete (tests); one plural form; 3,548 plain + 13 `@plural` + 12 contextual + 652 `@msg` | all | Latin with Vietnamese diacritics (precomposed forms; glyph tests pass) | contributor is a Vietnamese speaker; AI-assisted draft, further native review welcome | full | — (review) |
 
 **12-language score: ~74%** (equal weights: 100 + 85 + 100 + 0 + 0 + 100 + 100 + 0 + 100 + 98 + 100 + 100, over 12).

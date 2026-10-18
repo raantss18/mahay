@@ -4,10 +4,10 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_color::harmony::{Harmony, THEME_SIZE};
-use vectorcraft_color::recolor::ColorKey;
-use vectorcraft_tools::params::color_json;
+use tsipika_color::Color;
+use tsipika_color::harmony::{Harmony, THEME_SIZE};
+use tsipika_color::recolor::ColorKey;
+use tsipika_tools::params::color_json;
 
 use super::*;
 

@@ -1,7 +1,7 @@
 //! Audio mixdown of a composition: every audible layer (footage with audio, precomps, and any
 //! layer with a sound-generating effect such as Tone) summed with its Audio Levels (dB, per
 //! channel), respecting in/out points, the Audio switch and solo. Layer audio effects
-//! (Effect > Audio, see [`effectcraft_effects::audio_fx`]) run on each layer's audio before
+//! (Effect > Audio, see [`tselatra_effects::audio_fx`]) run on each layer's audio before
 //! its levels; Backwards plays the layer's [in, out) span reversed.
 //!
 //! Callers mix in short blocks (one video frame, or an audio device buffer). Effects and levels
@@ -12,10 +12,10 @@
 //! Time-stretched layers are resampled nearest-sample; reversed (negative stretch) layers are
 //! silent for now.
 
-use effectcraft_effects::Params;
-use effectcraft_effects::audio_fx;
-use effectcraft_project::{Comp, GroupKind, ItemId, ItemKind, Layer, LayerSource, Node, Project};
-use effectcraft_time::{TICKS_PER_SECOND, Tick};
+use tselatra_effects::Params;
+use tselatra_effects::audio_fx;
+use tselatra_project::{Comp, GroupKind, ItemId, ItemKind, Layer, LayerSource, Node, Project};
+use tselatra_time::{TICKS_PER_SECOND, Tick};
 
 use crate::{EvalCtx, ExprHost, FootageSource};
 
@@ -51,7 +51,7 @@ pub fn comp_has_audio(project: &Project, comp: ItemId) -> bool {
 }
 
 /// Enabled audio effects of a layer (in stack order) with their effect ids.
-fn audio_effect_groups(l: &Layer) -> impl Iterator<Item = (&str, &effectcraft_project::PropGroup)> {
+fn audio_effect_groups(l: &Layer) -> impl Iterator<Item = (&str, &tselatra_project::PropGroup)> {
     l.effects().filter(|_| l.switches.effects).into_iter().flat_map(|fx| fx.groups()).filter(|g| g.enabled).filter_map(|g| match &g.kind {
         GroupKind::Effect { effect } if audio_fx::is_audio_effect(effect) => Some((effect.as_str(), g)),
         _ => None,
@@ -174,7 +174,7 @@ impl MixEnv<'_> {
     }
 
     /// Effect parameters at comp time `t`.
-    fn params(&self, l: &Layer, g: &effectcraft_project::PropGroup, t: Tick) -> Params {
+    fn params(&self, l: &Layer, g: &tselatra_project::PropGroup, t: Tick) -> Params {
         let ctx = self.ctx(t);
         let mut p = Params::default();
         for c in &g.children {
@@ -278,7 +278,7 @@ pub fn peak_summary(samples: &[f32], bin: usize) -> Vec<[f32; 4]> {
 
 /// Peak summary of a footage item's audio from source time 0 over `duration`, `bins_per_sec`
 /// entries per second (rendered at a low internal rate, fetched in one-second chunks).
-pub fn footage_peaks(footage: &dyn FootageSource, item: ItemId, f: &effectcraft_project::Footage, duration: Tick, bins_per_sec: u32) -> Vec<[f32; 4]> {
+pub fn footage_peaks(footage: &dyn FootageSource, item: ItemId, f: &tselatra_project::Footage, duration: Tick, bins_per_sec: u32) -> Vec<[f32; 4]> {
     let bins_per_sec = bins_per_sec.max(1);
     // Enough samples per bin to catch peaks of audible content, without decoding at full rate.
     let bin = (64usize).max(4000 / bins_per_sec as usize);
@@ -300,8 +300,8 @@ pub fn footage_peaks(footage: &dyn FootageSource, item: ItemId, f: &effectcraft_
 mod tests {
     use std::sync::Arc;
 
-    use effectcraft_project::{Footage, FootageKind, build};
-    use effectcraft_time::FrameRate;
+    use tselatra_project::{Footage, FootageKind, build};
+    use tselatra_time::FrameRate;
 
     use super::*;
     use crate::Image;
@@ -340,7 +340,7 @@ mod tests {
             color_profile: None,
             ..Default::default()
         };
-        let fid = p.add_item("x.wav", effectcraft_color::Label::SeaFoam, None, ItemKind::Footage(f));
+        let fid = p.add_item("x.wav", tselatra_color::Label::SeaFoam, None, ItemKind::Footage(f));
         let comp = Comp::new(64, 64, FrameRate::new(25, 1), Tick::from_seconds_f64(2.0));
         let mut l1 = build::layer(&mut p, &comp, "a", LayerSource::Footage { item: fid }, (0, 0), None);
         l1.in_point = Tick::from_seconds_f64(1.0);
@@ -348,11 +348,11 @@ mod tests {
         if let Some(g) = l2.props.sub_mut("audio")
             && let Some(pr) = g.get_mut("levels")
         {
-            pr.value = effectcraft_project::Value::Vec2([-6.0206, -96.0]);
+            pr.value = tselatra_project::Value::Vec2([-6.0206, -96.0]);
         }
         let mut comp = comp;
         comp.layers = vec![l1, l2];
-        let cid = p.add_item("C", effectcraft_color::Label::Sandstone, None, ItemKind::Comp(comp.into()));
+        let cid = p.add_item("C", tselatra_color::Label::Sandstone, None, ItemKind::Comp(comp.into()));
         assert!(comp_has_audio(&p, cid));
         let rate = 1000;
         let m = mix_comp(&p, &Dc, None, cid, Tick::from_seconds_f64(0.5), 1000, rate);
@@ -393,16 +393,16 @@ mod tests {
             duration: Tick::from_seconds_f64(10.0),
             ..Default::default()
         };
-        let fid = p.add_item("tone.wav", effectcraft_color::Label::SeaFoam, None, ItemKind::Footage(f));
+        let fid = p.add_item("tone.wav", tselatra_color::Label::SeaFoam, None, ItemKind::Footage(f));
         let base = Comp::new(64, 64, FrameRate::new(25, 1), Tick::from_seconds_f64(2.0));
         let tone = build::layer(&mut p, &base, "tone", LayerSource::Footage { item: fid }, (0, 0), None);
         let mut inner = base.clone();
         inner.layers = vec![tone];
-        let inner_id = p.add_item("Inner", effectcraft_color::Label::Sandstone, None, ItemKind::Comp(inner.into()));
+        let inner_id = p.add_item("Inner", tselatra_color::Label::Sandstone, None, ItemKind::Comp(inner.into()));
         let pre = build::layer(&mut p, &base, "pre", LayerSource::Comp { item: inner_id }, (64, 64), None);
         let mut outer = base.clone();
         outer.layers = vec![pre];
-        let outer_id = p.add_item("Outer", effectcraft_color::Label::Sandstone, None, ItemKind::Comp(outer.into()));
+        let outer_id = p.add_item("Outer", tselatra_color::Label::Sandstone, None, ItemKind::Comp(outer.into()));
         let rate = 8000;
         let t = Tick::from_seconds_f64(0.5);
         let direct = mix_comp(&p, &Tone, None, inner_id, t, 4000, rate);
@@ -423,13 +423,13 @@ mod tests {
             duration: Tick::from_seconds_f64(10.0),
             ..Default::default()
         };
-        let fid = p.add_item("tone.wav", effectcraft_color::Label::SeaFoam, None, ItemKind::Footage(f));
+        let fid = p.add_item("tone.wav", tselatra_color::Label::SeaFoam, None, ItemKind::Footage(f));
         let base = Comp::new(64, 64, FrameRate::new(25, 1), Tick::from_seconds_f64(2.0));
         let mut tone = build::layer(&mut p, &base, "tone", LayerSource::Footage { item: fid }, (0, 0), None);
         tone.stretch = stretch;
         let mut comp = base.clone();
         comp.layers = vec![tone];
-        let cid = p.add_item("C", effectcraft_color::Label::Sandstone, None, ItemKind::Comp(comp.into()));
+        let cid = p.add_item("C", tselatra_color::Label::Sandstone, None, ItemKind::Comp(comp.into()));
         let n = 2000usize;
         let t = Tick::from_seconds_f64(0.5);
         let m = mix_comp(&p, &Tone, None, cid, t, n, rate);

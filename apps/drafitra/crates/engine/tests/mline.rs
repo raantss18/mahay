@@ -1,10 +1,10 @@
 //! Multilines (#510): the MLINE entity with its style's elements, MLSTYLE, MLEDIT, and the
 //! edits, grips, snaps, selection and rendering every object gets.
 
-use cadcraft_doc::{EntityKind, Handle, MLine, Space};
-use cadcraft_engine::Session;
-use cadcraft_engine::snap::{self, mode};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{EntityKind, Handle, MLine, Space};
+use drafitra_engine::Session;
+use drafitra_engine::snap::{self, mode};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 fn h(v: &Value) -> Handle {
@@ -210,7 +210,7 @@ fn transforms_grips_explode() {
     // Grips are the vertices.
     let k = s.doc().unwrap().entity(a).unwrap().kind.clone();
     assert!(near(&k.grips(), &mline(&s, a).points()));
-    let moved = cadcraft_engine::grips::stretch_grip(&k, 1, Vec2::new(5.0, 21.0)).unwrap();
+    let moved = drafitra_engine::grips::stretch_grip(&k, 1, Vec2::new(5.0, 21.0)).unwrap();
     let EntityKind::MLine(m) = moved else { panic!() };
     assert_eq!(m.points()[1], Vec2::new(5.0, 21.0));
 
@@ -227,7 +227,7 @@ fn transforms_grips_explode() {
     let lines = d.model.iter().filter(|e| matches!(e.kind, EntityKind::Line(_))).count();
     let arcs = d.model.iter().filter(|e| matches!(e.kind, EntityKind::Arc(_))).count();
     assert_eq!((lines, arcs), (3, 1));
-    assert!(d.model.iter().any(|e| e.common.color == cadcraft_color::Color::Index(1)));
+    assert!(d.model.iter().any(|e| e.common.color == drafitra_color::Color::Index(1)));
     assert!(!d.model.iter().any(|e| matches!(e.kind, EntityKind::MLine(_))));
 }
 
@@ -243,15 +243,15 @@ fn snaps_selection_extents_and_render() {
     let hit = snap::osnap(d, &Space::Model, Vec2::new(5.05, 0.45), 0.3, mode::MID, None, false).unwrap();
     assert_eq!(hit.point, Vec2::new(5.0, 0.5));
     // Picking an element picks the multiline.
-    assert_eq!(cadcraft_engine::select::pick(d, &Space::Model, Vec2::new(3.0, 0.52), 0.1), Some(a));
+    assert_eq!(drafitra_engine::select::pick(d, &Space::Model, Vec2::new(3.0, 0.52), 0.1), Some(a));
     let ext = d.extents(&Space::Model);
     assert!(ext.min.near(Vec2::new(0.0, -0.5), 1e-9) && ext.max.near(Vec2::new(10.0, 0.5), 1e-9), "{ext:?}");
     // Drawn: the fill, and each element in its own colour.
-    let list = cadcraft_render::build(d, &Space::Model, &cadcraft_render::Options::default());
-    let red = cadcraft_color::aci_rgb(1);
-    let blue = cadcraft_color::aci_rgb(5);
-    assert!(list.prims.iter().any(|p| p.color == red && matches!(p.kind, cadcraft_render::Kind::Polyline)));
-    assert!(list.prims.iter().any(|p| p.color == blue && matches!(p.kind, cadcraft_render::Kind::Tris)));
+    let list = drafitra_render::build(d, &Space::Model, &drafitra_render::Options::default());
+    let red = drafitra_color::aci_rgb(1);
+    let blue = drafitra_color::aci_rgb(5);
+    assert!(list.prims.iter().any(|p| p.color == red && matches!(p.kind, drafitra_render::Kind::Polyline)));
+    assert!(list.prims.iter().any(|p| p.color == blue && matches!(p.kind, drafitra_render::Kind::Tris)));
 }
 
 #[test]
@@ -282,5 +282,5 @@ fn hostile_mline_params_never_panic() {
     }
     // Everything left draws.
     let d = s.doc().unwrap();
-    let _ = cadcraft_render::build(d, &Space::Model, &cadcraft_render::Options::default());
+    let _ = drafitra_render::build(d, &Space::Model, &drafitra_render::Options::default());
 }

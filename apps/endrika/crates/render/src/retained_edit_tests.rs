@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Blur, Document, Effect, EffectKind, NodeId, NodeKind};
-use figcraft_geom::Affine;
+use endrika_color::{Color, Paint};
+use endrika_doc::{Blur, Document, Effect, EffectKind, NodeId, NodeKind};
+use endrika_geom::Affine;
 
 use crate::retained_tests::assert_same;
 use crate::{Options, Retained, View, Work, render_view};
@@ -22,7 +22,7 @@ fn moving_a_child_of_a_rotated_frame() {
     let mut d = Document::new("rot");
     let page = d.first_page().unwrap();
     let f = d.create(page, NodeKind::Frame, "F", 100.0, 100.0, 300.0, 200.0).unwrap();
-    d.get_mut(f).unwrap().transform = figcraft_geom::set_rotation_about_center(d.node(f).unwrap().transform, 300.0, 200.0, 25.0);
+    d.get_mut(f).unwrap().transform = endrika_geom::set_rotation_about_center(d.node(f).unwrap().transform, 300.0, 200.0, 25.0);
     let c = d.create(f, NodeKind::Rectangle, "C", 40.0, 40.0, 80.0, 60.0).unwrap();
     d.get_mut(c).unwrap().fills = vec![Paint::solid(Color::from_hex("E03030").unwrap())];
     let doc = Arc::new(d);

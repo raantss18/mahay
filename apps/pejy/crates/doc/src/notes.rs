@@ -73,7 +73,7 @@ pub struct NoteRule {
 
 impl Default for NoteRule {
     fn default() -> Self {
-        NoteRule { on: true, weight: 1.0, color: designcraft_color::swatch::BLACK.into(), tint: 1.0, width: 72.0, offset: 0.0, left_indent: 0.0 }
+        NoteRule { on: true, weight: 1.0, color: pejy_color::swatch::BLACK.into(), tint: 1.0, width: 72.0, offset: 0.0, left_indent: 0.0 }
     }
 }
 

@@ -1990,6 +1990,9 @@ impl eframe::App for SaryApp {
 
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        // Mahay's update bar (an overlay; Android's shell draws its own).
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        mahay_about::banner(&ctx);
         self.hover_layer = None;
         i18n::set_current(i18n::Lang::from_pref(&self.session.prefs().interface.language));
         // Fonts registered via set_fonts only take effect next frame; named families would panic now.

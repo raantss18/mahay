@@ -1,6 +1,6 @@
 //! Render-fidelity commands: project colour settings, footage colour profile, slip edit.
 
-use effectcraft_project::{BitDepth, ColorSpace};
+use tselatra_project::{BitDepth, ColorSpace};
 use serde_json::json;
 
 use crate::Session;
@@ -31,9 +31,9 @@ fn project_colour_settings_are_undoable() {
 fn footage_colour_profile_is_interpreted() {
     let mut s = Session::default();
     let id = s.execute("file.importPlaceholder", json!({"name": "clip", "width": 64, "height": 36, "frameRate": 24, "duration": 2})).unwrap();
-    let item = id["item"].as_u64().or_else(|| id.as_u64()).map(effectcraft_project::ItemId).unwrap_or_else(|| *s.project.items.keys().last().unwrap());
+    let item = id["item"].as_u64().or_else(|| id.as_u64()).map(tselatra_project::ItemId).unwrap_or_else(|| *s.project.items.keys().last().unwrap());
     let profile = |s: &Session| match &s.project.item(item).unwrap().kind {
-        effectcraft_project::ItemKind::Footage(f) => f.color_profile,
+        tselatra_project::ItemKind::Footage(f) => f.color_profile,
         _ => panic!("not footage"),
     };
     s.execute("file.interpretFootage", json!({"items": [item.0], "colorProfile": "rec2020"})).unwrap();
@@ -46,7 +46,7 @@ fn footage_colour_profile_is_interpreted() {
 
 #[test]
 fn slip_moves_the_source_under_fixed_in_and_out() {
-    use effectcraft_time::Tick;
+    use tselatra_time::Tick;
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 100, "height": 100, "frameRate": 30, "duration": 10})).unwrap();
     let nested = s.execute("comp.new", json!({"name": "Nested", "duration": 4, "open": false})).unwrap()["comp"].as_u64().unwrap();

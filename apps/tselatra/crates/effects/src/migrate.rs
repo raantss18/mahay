@@ -14,9 +14,9 @@
 //!
 //! Animation, expressions and values are kept.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::build::Ids;
-use effectcraft_project::{Node, ParamUi, PropGroup, Property};
+use tselatra_keyframe::Value;
+use tselatra_project::build::Ids;
+use tselatra_project::{Node, ParamUi, PropGroup, Property};
 
 use crate::{EffectSpec, ParamSpec, default_value, group_name, layer_source_id};
 
@@ -417,7 +417,7 @@ enum Data {
     Point,
     /// Liquify's Distortion Mesh text (`distort4::LiquifyStroke` lines).
     Liquify,
-    /// Roto Brush's Strokes JSON ([`effectcraft_track::roto::RotoData`]).
+    /// Roto Brush's Strokes JSON ([`tselatra_track::roto::RotoData`]).
     Roto,
 }
 
@@ -443,7 +443,7 @@ fn shift_value(v: &mut Value, kind: Data, d: [f64; 2]) {
         }
         (Data::Roto, Value::Str(s)) => {
             // Unreadable data is kept as it is.
-            if let Ok(mut r) = serde_json::from_str::<effectcraft_track::roto::RotoData>(s) {
+            if let Ok(mut r) = serde_json::from_str::<tselatra_track::roto::RotoData>(s) {
                 r.strokes.iter_mut().flat_map(|st| st.points.iter_mut()).for_each(add);
                 *s = r.to_json();
             }
@@ -638,7 +638,7 @@ mod tests {
         let c = twirl.get_mut("center").unwrap();
         c.value = Value::Vec2([-30.0, -10.0]);
         let key = |t: i64, v: Value| {
-            let mut k = effectcraft_keyframe::Keyframe::new(Default::default(), v);
+            let mut k = tselatra_keyframe::Keyframe::new(Default::default(), v);
             k.time.0 = t;
             k
         };
@@ -714,15 +714,15 @@ not a stroke",
 
         // Roto Brush strokes.
         let (spec, mut roto) = instance(crate::roto::ID, &mut next);
-        let data = effectcraft_track::roto::RotoData {
+        let data = tselatra_track::roto::RotoData {
             base: Some(0),
             span: [0, 10],
-            strokes: vec![effectcraft_track::roto::Stroke { kind: effectcraft_track::roto::StrokeKind::Fg, frame: 0, radius: 5.0, points: vec![[2.0, 2.0]] }],
+            strokes: vec![tselatra_track::roto::Stroke { kind: tselatra_track::roto::StrokeKind::Fg, frame: 0, radius: 5.0, points: vec![[2.0, 2.0]] }],
         };
         roto.get_mut(crate::roto::STROKES).unwrap().value = Value::Str(data.to_json());
         to_effect_space(spec, &mut roto, SIZE, D, &own);
         let Value::Str(text) = &roto.get(crate::roto::STROKES).unwrap().value else { panic!("no strokes") };
-        assert_eq!(effectcraft_track::roto::RotoData::from_json(text).strokes[0].points, vec![[102.0, 52.0]]);
+        assert_eq!(tselatra_track::roto::RotoData::from_json(text).strokes[0].points, vec![[102.0, 52.0]]);
     }
 
     #[test]

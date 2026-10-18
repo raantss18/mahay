@@ -1,7 +1,7 @@
-use cadcraft_doc::{Common, EntityKind, Space, Viewport};
-use cadcraft_engine::Session;
-use cadcraft_geom::Vec2;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_doc::{Common, EntityKind, Space, Viewport};
+use drafitra_engine::Session;
+use drafitra_geom::Vec2;
+use drafitra_ui_egui::{CadApp, Services};
 use egui::vec2;
 use egui_kittest::Harness;
 use serde_json::json;
@@ -15,7 +15,7 @@ fn double_click_viewport_does_not_leave_pending_window() {
     let paper = Space::Paper("Layout1".into());
     let vp = Viewport {
         id: 2,
-        center: cadcraft_geom::Vec3::new(70.0, 60.0, 0.0),
+        center: drafitra_geom::Vec3::new(70.0, 60.0, 0.0),
         width: 100.0,
         height: 80.0,
         view_center: Vec2::new(500.0, 250.0),

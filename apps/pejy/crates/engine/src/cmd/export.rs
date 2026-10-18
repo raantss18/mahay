@@ -1,6 +1,6 @@
 //! File › Export PDF (Print).
 
-use designcraft_pdf::{Marks, PdfOptions, Standard};
+use pejy_pdf::{Marks, PdfOptions, Standard};
 use serde_json::{Value, json};
 use std::{borrow::Cow, sync::Arc};
 
@@ -27,7 +27,7 @@ pub fn specs() -> Vec<CommandSpec> {
         "{path?, title?, language?} — one self-contained page (styles inline, images embedded), stories and graphics in reading order → {path, bytes, warnings} (no path: {text, bytes, warnings})",
         has_doc, export_html),
         cmd!(noundo "file.exportPptx", "Export PowerPoint…", ["File"], None,
-        "{path?, pages?: \"1-3,5\" | [1,3] (1-based positions; default all), lineBreaks?: keep|reflow (keep: DesignCraft's lines, spacing and leading; reflow: one box per frame, PowerPoint sets the lines), rasterize?: bool (default true: objects PowerPoint can't show — placed PDF/EPS, type on a path, some effects — go in as 300 ppi images), embedFonts?: bool (default true: the TrueType fonts whose licences allow it), title?, author?} — every page as a slide of editable shapes, pictures, text boxes and tables → {path, bytes, slides, warnings} (no path: {base64, …})",
+        "{path?, pages?: \"1-3,5\" | [1,3] (1-based positions; default all), lineBreaks?: keep|reflow (keep: Pejy's lines, spacing and leading; reflow: one box per frame, PowerPoint sets the lines), rasterize?: bool (default true: objects PowerPoint can't show — placed PDF/EPS, type on a path, some effects — go in as 300 ppi images), embedFonts?: bool (default true: the TrueType fonts whose licences allow it), title?, author?} — every page as a slide of editable shapes, pictures, text boxes and tables → {path, bytes, slides, warnings} (no path: {base64, …})",
         has_doc, export_pptx),
         cmd!(noundo "file.exportText", "Export Text…", ["File"], None,
         "{path?, format?: \"txt\"|\"rtf\"|\"tagged\" (Tagged Text; default from the path, else txt), story?, frame?} — the story being edited or of the selected frame → {path, bytes} (no path: {text, bytes})",
@@ -38,13 +38,13 @@ pub fn specs() -> Vec<CommandSpec> {
 fn print_booklet(s: &mut Session, p: &Value) -> Result<Value> {
     const ID: &str = "file.printBooklet";
     let kind = match str_param(p, "type").unwrap_or("saddleStitch") {
-        "saddleStitch" => designcraft_pdf::BookletKind::SaddleStitch,
-        "twoUpConsecutive" | "twoUp" => designcraft_pdf::BookletKind::TwoUpConsecutive,
+        "saddleStitch" => pejy_pdf::BookletKind::SaddleStitch,
+        "twoUpConsecutive" | "twoUp" => pejy_pdf::BookletKind::TwoUpConsecutive,
         t => return Err(bad(ID, format!("unknown type `{t}` (saddleStitch, twoUpConsecutive)"))),
     };
-    let opts = designcraft_pdf::BookletOptions { kind, space_between: p.get("spaceBetween").and_then(Value::as_f64).unwrap_or(0.0), title: None };
+    let opts = pejy_pdf::BookletOptions { kind, space_between: p.get("spaceBetween").and_then(Value::as_f64).unwrap_or(0.0), title: None };
     let st = s.doc()?;
-    let r = designcraft_pdf::export_booklet(&super::interchange::with_pdf_boxes(&st.doc), &s.cache, &opts)
+    let r = pejy_pdf::export_booklet(&super::interchange::with_pdf_boxes(&st.doc), &s.cache, &opts)
         .map_err(|e| EngineError::Other(e.to_string()))?;
     match str_param(p, "path") {
         Some(path) => {
@@ -57,16 +57,16 @@ fn print_booklet(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// HTML and reflowable EPUB embed the EPS preview; keep the session's source bytes intact.
-fn eps_previews(d: &designcraft_doc::Document) -> (Cow<'_, designcraft_doc::Document>, Vec<String>) {
+fn eps_previews(d: &pejy_doc::Document) -> (Cow<'_, pejy_doc::Document>, Vec<String>) {
     // Match the exporter's reading order (including Article exclusions), not every asset
     // in the document: unused or hidden graphics must not prevent an export.
     let mut used = std::collections::BTreeSet::new();
-    for block in designcraft_epub::reading_order(d) {
-        let designcraft_epub::Block::Image(id) = block else { continue };
+    for block in pejy_epub::reading_order(d) {
+        let pejy_epub::Block::Image(id) = block else { continue };
         let Some(it) = d.item(id) else { continue };
-        let designcraft_doc::Content::Graphic(g) = &it.content else { continue };
+        let pejy_doc::Content::Graphic(g) = &it.content else { continue };
         used.insert(g.asset);
-        if d.assets.get(&g.asset).is_some_and(|a| designcraft_doc::media_kind(&a.mime).is_some())
+        if d.assets.get(&g.asset).is_some_and(|a| pejy_doc::media_kind(&a.mime).is_some())
             && let Some(poster) = it.media.as_ref().and_then(|m| m.poster)
         {
             used.insert(poster);
@@ -75,8 +75,8 @@ fn eps_previews(d: &designcraft_doc::Document) -> (Cow<'_, designcraft_doc::Docu
     let mut out = Cow::Borrowed(d);
     let mut warnings = Vec::new();
     for id in used {
-        let Some(a) = d.assets.get(&id).filter(|a| designcraft_images::is_eps(&a.data)) else { continue };
-        let png = designcraft_images::eps_png(&a.data);
+        let Some(a) = d.assets.get(&id).filter(|a| pejy_images::is_eps(&a.data)) else { continue };
+        let png = pejy_images::eps_png(&a.data);
         if png.is_none() {
             warnings.push(format!("{}: unusable EPS preview; graphic omitted", a.name));
         }
@@ -91,13 +91,13 @@ fn eps_previews(d: &designcraft_doc::Document) -> (Cow<'_, designcraft_doc::Docu
 
 fn export_html(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
-    let opts = designcraft_epub::HtmlOptions {
+    let opts = pejy_epub::HtmlOptions {
         title: str_param(p, "title").map(str::to_string),
         language: str_param(p, "language").map(str::to_string),
         generic_families: generic_families(&st.doc),
     };
     let (doc, warnings) = eps_previews(&st.doc);
-    let text = designcraft_epub::export_html(&doc, &opts);
+    let text = pejy_epub::export_html(&doc, &opts);
     match str_param(p, "path") {
         Some(path) => {
             #[cfg(not(target_arch = "wasm32"))]
@@ -112,11 +112,11 @@ fn export_pptx(s: &mut Session, p: &Value) -> Result<Value> {
     const ID: &str = "file.exportPptx";
     let st = s.doc()?;
     let line_breaks = match str_param(p, "lineBreaks") {
-        None | Some("keep") => designcraft_pptx::LineBreaks::Keep,
-        Some("reflow") => designcraft_pptx::LineBreaks::Reflow,
+        None | Some("keep") => pejy_pptx::LineBreaks::Keep,
+        Some("reflow") => pejy_pptx::LineBreaks::Reflow,
         Some(x) => return Err(bad(ID, format!("unknown lineBreaks `{x}` (keep, reflow)"))),
     };
-    let opts = designcraft_pptx::PptxOptions {
+    let opts = pejy_pptx::PptxOptions {
         pages: pages_param(ID, p, st.doc.page_count())?,
         line_breaks,
         title: str_param(p, "title").map(str::to_string),
@@ -128,10 +128,10 @@ fn export_pptx(s: &mut Session, p: &Value) -> Result<Value> {
     // stays text: a picture of it would drop the rest of its story).
     let auto = p.get("rasterize").and_then(Value::as_bool).unwrap_or(true);
     let (raster, rasterized) = rasterize_where(&st.doc, &s.cache, 300.0, true, |it| {
-        !threaded(&st.doc, it) && (it.export_options.rasterize || (auto && designcraft_pptx::needs_raster(&st.doc, it)))
+        !threaded(&st.doc, it) && (it.export_options.rasterize || (auto && pejy_pptx::needs_raster(&st.doc, it)))
     });
-    let doc: &designcraft_doc::Document = raster.as_ref().unwrap_or(&st.doc);
-    let mut r = designcraft_pptx::export_pptx(doc, &s.cache, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+    let doc: &pejy_doc::Document = raster.as_ref().unwrap_or(&st.doc);
+    let mut r = pejy_pptx::export_pptx(doc, &s.cache, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
     if rasterized > 0 {
         r.warnings.push(format!("{rasterized} object(s) went in as images"));
     }
@@ -163,9 +163,9 @@ fn export_text(s: &mut Session, p: &Value) -> Result<Value> {
         None => "txt",
     };
     let text = match format {
-        "rtf" => designcraft_textimport::export::rtf(doc, story),
-        "tagged" => designcraft_textimport::tagged::tagged_text(doc, story),
-        _ => designcraft_textimport::export::plain_text(story),
+        "rtf" => pejy_textimport::export::rtf(doc, story),
+        "tagged" => pejy_textimport::tagged::tagged_text(doc, story),
+        _ => pejy_textimport::export::plain_text(story),
     };
     match path {
         Some(path) => {
@@ -178,7 +178,7 @@ fn export_text(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// Text of the frames on page `abs`, in line order (for fixed-layout pages).
-fn page_text(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, abs: usize) -> String {
+fn page_text(d: &pejy_doc::Document, cache: &pejy_compose::Cache, abs: usize) -> String {
     let mut out = String::new();
     for st in d.stories.values() {
         let cs = cache.get(d, st.id, None);
@@ -201,11 +201,11 @@ fn page_text(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, 
 
 /// The CSS generic family of each font family the EPUB/HTML stylesheet names, from the fonts'
 /// classification (PANOSE, OS/2 class, name), for the `font-family` fallbacks.
-fn generic_families(d: &designcraft_doc::Document) -> std::collections::BTreeMap<String, String> {
-    use designcraft_fonts::FontClass;
-    let db = designcraft_fonts::FontDb::global().scoped(d.font_scope);
+fn generic_families(d: &pejy_doc::Document) -> std::collections::BTreeMap<String, String> {
+    use pejy_fonts::FontClass;
+    let db = pejy_fonts::FontDb::global().scoped(d.font_scope);
     let mut out = std::collections::BTreeMap::new();
-    for (family, _) in designcraft_epub::stylesheet_fonts(d) {
+    for (family, _) in pejy_epub::stylesheet_fonts(d) {
         if out.contains_key(&family) {
             continue;
         }
@@ -224,10 +224,10 @@ fn generic_families(d: &designcraft_doc::Document) -> std::collections::BTreeMap
 
 /// The faces the EPUB stylesheet names, to package with it; `warnings` gets the ones left out
 /// (not available, a licence that forbids embedding, or part of a font collection).
-fn embedded_fonts(d: &designcraft_doc::Document, warnings: &mut Vec<String>) -> Vec<designcraft_epub::EmbeddedFont> {
-    let db = designcraft_fonts::FontDb::global().scoped(d.font_scope);
+fn embedded_fonts(d: &pejy_doc::Document, warnings: &mut Vec<String>) -> Vec<pejy_epub::EmbeddedFont> {
+    let db = pejy_fonts::FontDb::global().scoped(d.font_scope);
     let mut out = Vec::new();
-    for (family, style) in designcraft_epub::stylesheet_fonts(d) {
+    for (family, style) in pejy_epub::stylesheet_fonts(d) {
         let face = db.face(&family, &style);
         if !face.family.eq_ignore_ascii_case(&family) {
             warnings.push(format!("font `{family} {style}` is not available; not embedded"));
@@ -236,7 +236,7 @@ fn embedded_fonts(d: &designcraft_doc::Document, warnings: &mut Vec<String>) -> 
         } else if face.data().starts_with(b"ttcf") {
             warnings.push(format!("font `{family} {style}` is part of a font collection; not embedded"));
         } else {
-            out.push(designcraft_epub::EmbeddedFont { family, style: face.style.clone(), data: face.data().to_vec() });
+            out.push(pejy_epub::EmbeddedFont { family, style: face.style.clone(), data: face.data().to_vec() });
         }
     }
     out
@@ -246,12 +246,12 @@ fn export_epub(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
     // Object Export Options › Rasterize: those objects go in as images.
     let (raster, _) = rasterize_where(&st.doc, &s.cache, 144.0, false, |it| it.export_options.rasterize && !threaded(&st.doc, it));
-    let epub_doc: &designcraft_doc::Document = raster.as_ref().unwrap_or(&st.doc);
+    let epub_doc: &pejy_doc::Document = raster.as_ref().unwrap_or(&st.doc);
     let fixed = p.get("fixedLayout").and_then(Value::as_bool).unwrap_or(false);
     let want_cover = p.get("cover").and_then(Value::as_bool).unwrap_or(false);
-    let mut rr = designcraft_render::Renderer::new();
-    rr.threads = designcraft_render::default_threads();
-    let ropts = designcraft_render::RenderOptions { printing_only: true, ..Default::default() };
+    let mut rr = pejy_render::Renderer::new();
+    rr.threads = pejy_render::default_threads();
+    let ropts = pejy_render::RenderOptions { printing_only: true, ..Default::default() };
     let mut warnings: Vec<String> = Vec::new();
     // A cover image file (PNG or JPEG), else the first page rendered when `cover` asks for it.
     let cover = match p.get("coverImage").and_then(Value::as_str).filter(|_| !fixed) {
@@ -263,7 +263,7 @@ fn export_epub(s: &mut Session, p: &Value) -> Result<Value> {
     {
         return Err(crate::EngineError::Other("the cover image must be a PNG or JPEG file".into()));
     }
-    let opts = designcraft_epub::EpubOptions {
+    let opts = pejy_epub::EpubOptions {
         title: p.get("title").and_then(Value::as_str).map(str::to_string),
         author: p.get("author").and_then(Value::as_str).map(str::to_string),
         language: p.get("language").and_then(Value::as_str).unwrap_or("en").to_string(),
@@ -289,9 +289,9 @@ fn export_epub(s: &mut Session, p: &Value) -> Result<Value> {
             let Some((si, pi)) = d.page_loc(i) else { continue };
             let b = d.spreads[si].pages[pi].bounds();
             let Some(img) = rr.render_page(d, &s.cache, i, 2.0, false, &ropts) else { continue };
-            pages.push(designcraft_epub::FixedPage { png: img.to_png(), width: b.width(), height: b.height(), text: page_text(d, &s.cache, i) });
+            pages.push(pejy_epub::FixedPage { png: img.to_png(), width: b.width(), height: b.height(), text: page_text(d, &s.cache, i) });
         }
-        let bytes = designcraft_epub::export_fixed_epub(d, &pages, &opts).map_err(|e| crate::EngineError::Other(e.to_string()))?;
+        let bytes = pejy_epub::export_fixed_epub(d, &pages, &opts).map_err(|e| crate::EngineError::Other(e.to_string()))?;
         return match p.get("path").and_then(Value::as_str) {
             Some(path) => {
                 write_file(path, &bytes)?;
@@ -302,9 +302,9 @@ fn export_epub(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let (epub_doc, eps_warnings) = eps_previews(epub_doc);
     warnings.extend(eps_warnings);
-    let bytes = designcraft_epub::export_epub(&epub_doc, &opts).map_err(|e| crate::EngineError::Other(e.to_string()))?;
+    let bytes = pejy_epub::export_epub(&epub_doc, &opts).map_err(|e| crate::EngineError::Other(e.to_string()))?;
     warnings.extend(
-        designcraft_epub::images_without_alt(&epub_doc)
+        pejy_epub::images_without_alt(&epub_doc)
             .into_iter()
             .map(|name| format!("{name}: no alt text (Object Export Options); exported as decorative (alt=\"\")")),
     );
@@ -322,7 +322,7 @@ fn export_epub(s: &mut Session, p: &Value) -> Result<Value> {
 fn pages_param(id: &str, p: &Value, page_count: usize) -> Result<Option<Vec<usize>>> {
     Ok(match p.get("pages") {
         None | Some(Value::Null) => None,
-        Some(Value::String(s)) => Some(designcraft_pdf::parse_page_range(s, page_count).map_err(|e| bad(id, e.to_string()))?),
+        Some(Value::String(s)) => Some(pejy_pdf::parse_page_range(s, page_count).map_err(|e| bad(id, e.to_string()))?),
         Some(Value::Array(a)) => {
             let mut v = Vec::new();
             for x in a {
@@ -387,7 +387,7 @@ pub(crate) fn options(p: &Value, page_count: usize) -> Result<PdfOptions> {
 }
 
 /// Does this object (or anything in it) need the transparency flattener?
-fn transparent(it: &designcraft_doc::Item) -> bool {
+fn transparent(it: &pejy_doc::Item) -> bool {
     it.involves_transparency()
 }
 
@@ -395,20 +395,20 @@ fn transparent(it: &designcraft_doc::Item) -> bool {
 /// area as it looks over what's beneath it (so the rest stays vector); spreads whose parent items
 /// involve transparency are rasterised whole. Works on a copy of the document made for export.
 /// Returns the copy and the number of rasterised regions.
-fn flatten(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, ppi: f64) -> (designcraft_doc::Document, usize) {
-    use designcraft_doc::{Asset, AssetId, Content, Graphic, Item, ItemId, Shape, SpreadRef};
+fn flatten(d: &pejy_doc::Document, cache: &pejy_compose::Cache, ppi: f64) -> (pejy_doc::Document, usize) {
+    use pejy_doc::{Asset, AssetId, Content, Graphic, Item, ItemId, Shape, SpreadRef};
     let mut out = d.clone();
     let mut n = 0;
-    let mut rr = designcraft_render::Renderer::new();
-    rr.threads = designcraft_render::default_threads();
+    let mut rr = pejy_render::Renderer::new();
+    rr.threads = pejy_render::default_threads();
     let k = ppi / 72.0;
-    let parent_transparent = |pid: Option<designcraft_doc::SpreadId>| {
+    let parent_transparent = |pid: Option<pejy_doc::SpreadId>| {
         pid.and_then(|id| d.parent_index(id))
             .is_some_and(|pi| d.parent_chain(pi).iter().filter_map(|&i| d.parents.get(i)).any(|p| p.items.iter().any(|it| transparent(it))))
     };
     // An opaque image item showing `img` over `r`.
     let image_item =
-        |out: &mut designcraft_doc::Document, r: designcraft_geom::Rect, img: designcraft_render::Rendered, layer: designcraft_doc::LayerId| {
+        |out: &mut pejy_doc::Document, r: pejy_geom::Rect, img: pejy_render::Rendered, layer: pejy_doc::LayerId| {
             let (w, h) = (img.width, img.height);
             let aid = AssetId(out.alloc());
             out.assets.insert(
@@ -422,12 +422,12 @@ fn flatten(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, pp
                     ..Default::default()
                 }),
             );
-            let mut it = Item::new(ItemId(out.alloc()), layer, Shape::Rectangle, designcraft_geom::shapes::rectangle(r));
+            let mut it = Item::new(ItemId(out.alloc()), layer, Shape::Rectangle, pejy_geom::shapes::rectangle(r));
             it.content = Content::Graphic(Graphic {
                 asset: aid,
                 size: (w as f64, h as f64),
-                xf: designcraft_geom::Affine::translate((r.x0, r.y0))
-                    * designcraft_geom::Affine::scale_non_uniform(r.width() / w as f64, r.height() / h as f64),
+                xf: pejy_geom::Affine::translate((r.x0, r.y0))
+                    * pejy_geom::Affine::scale_non_uniform(r.width() / w as f64, r.height() / h as f64),
                 clip: None,
                 auto_fit: Default::default(),
                 fit_align: 4,
@@ -468,8 +468,8 @@ fn flatten(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, pp
                 continue;
             }
             let reach = it.bounds().inflate(
-                designcraft_render::effect_outset(it) + it.stroke.extent() + 1.0,
-                designcraft_render::effect_outset(it) + it.stroke.extent() + 1.0,
+                pejy_render::effect_outset(it) + it.stroke.extent() + 1.0,
+                pejy_render::effect_outset(it) + it.stroke.extent() + 1.0,
             );
             // Only the part on the spread's pages and pasteboard that prints.
             let (w, h) = ((reach.width() * k).ceil().max(1.0) as u32, (reach.height() * k).ceil().max(1.0) as u32);
@@ -479,12 +479,12 @@ fn flatten(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, pp
             // The stack up to and including this object.
             let mut below = d.clone();
             std::sync::Arc::make_mut(&mut below.spreads[si]).items.truncate(idx + 1);
-            let view = designcraft_geom::Affine::scale(k) * designcraft_geom::Affine::translate((-reach.x0, -reach.y0));
-            let opts = designcraft_render::RenderOptions { printing_only: true, ..Default::default() };
+            let view = pejy_geom::Affine::scale(k) * pejy_geom::Affine::translate((-reach.x0, -reach.y0));
+            let opts = pejy_render::RenderOptions { printing_only: true, ..Default::default() };
             let img = rr.render(
                 &below,
                 cache,
-                &[designcraft_render::Placed { spread: SpreadRef::Doc(si), xf: designcraft_geom::Affine::translate(designcraft_geom::Vec2::ZERO) }],
+                &[pejy_render::Placed { spread: SpreadRef::Doc(si), xf: pejy_geom::Affine::translate(pejy_geom::Vec2::ZERO) }],
                 w,
                 h,
                 view,
@@ -506,12 +506,12 @@ fn flatten(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache, pp
 }
 
 /// A text frame in a story that runs through other frames (replacing it would reflow the story).
-fn threaded(d: &designcraft_doc::Document, it: &designcraft_doc::Item) -> bool {
+fn threaded(d: &pejy_doc::Document, it: &pejy_doc::Item) -> bool {
     it.text_frame().and_then(|t| d.story(t.story)).is_some_and(|st| st.frames.len() > 1)
 }
 
 /// Soft effects other than the gradient feather (which PDF export draws itself).
-fn raster_effects(it: &designcraft_doc::Item) -> bool {
+fn raster_effects(it: &pejy_doc::Item) -> bool {
     let e = &it.effects;
     // Knockout groups too: PDF output here has no knockout transparency groups.
     it.knockout
@@ -527,7 +527,7 @@ fn raster_effects(it: &designcraft_doc::Item) -> bool {
 
 /// A copy of `d` where spread-level objects with soft effects are 300 ppi images of their whole
 /// appearance (transparent around them, so they composite over what's behind).
-fn rasterize_effects(d: &designcraft_doc::Document, cache: &designcraft_compose::Cache) -> (Option<designcraft_doc::Document>, usize) {
+fn rasterize_effects(d: &pejy_doc::Document, cache: &pejy_compose::Cache) -> (Option<pejy_doc::Document>, usize) {
     rasterize_where(d, cache, 300.0, true, |it| raster_effects(it) && !threaded(d, it))
 }
 
@@ -535,28 +535,28 @@ fn rasterize_effects(d: &designcraft_doc::Document, cache: &designcraft_compose:
 /// `ppi` (transparent around them). With `keep_wrap`, each object also stays behind as a
 /// nonprinting [`wrap_stand_in`], so text wraps around it as before.
 fn rasterize_where(
-    d: &designcraft_doc::Document,
-    cache: &designcraft_compose::Cache,
+    d: &pejy_doc::Document,
+    cache: &pejy_compose::Cache,
     ppi: f64,
     keep_wrap: bool,
-    pred: impl Fn(&designcraft_doc::Item) -> bool,
-) -> (Option<designcraft_doc::Document>, usize) {
-    use designcraft_doc::{Asset, AssetId, Content, Graphic, Item, ItemId, Shape, SpreadRef};
+    pred: impl Fn(&pejy_doc::Item) -> bool,
+) -> (Option<pejy_doc::Document>, usize) {
+    use pejy_doc::{Asset, AssetId, Content, Graphic, Item, ItemId, Shape, SpreadRef};
     let todo: Vec<(usize, ItemId)> =
         d.spreads.iter().enumerate().flat_map(|(si, sp)| sp.items.iter().filter(|it| !it.hidden && pred(it)).map(move |it| (si, it.id))).collect();
     if todo.is_empty() {
         return (None, 0);
     }
     let mut out = d.clone();
-    let mut rr = designcraft_render::Renderer::new();
-    rr.threads = designcraft_render::default_threads();
+    let mut rr = pejy_render::Renderer::new();
+    rr.threads = pejy_render::default_threads();
     let k = ppi / 72.0;
     let mut n = 0;
     for (si, id) in todo {
         let Some(it) = d.item(id) else { continue };
         let reach = it.bounds().inflate(
-            designcraft_render::effect_outset(it) + it.stroke.extent() + 2.0,
-            designcraft_render::effect_outset(it) + it.stroke.extent() + 2.0,
+            pejy_render::effect_outset(it) + it.stroke.extent() + 2.0,
+            pejy_render::effect_outset(it) + it.stroke.extent() + 2.0,
         );
         // Just this object on its spread, no paper.
         let mut solo = d.clone();
@@ -569,12 +569,12 @@ fn rasterize_where(
         if w as u64 * h as u64 > 60_000_000 {
             continue;
         }
-        let view = designcraft_geom::Affine::scale(k) * designcraft_geom::Affine::translate((-reach.x0, -reach.y0));
-        let opts = designcraft_render::RenderOptions { paper: false, background: None, printing_only: true, ..Default::default() };
+        let view = pejy_geom::Affine::scale(k) * pejy_geom::Affine::translate((-reach.x0, -reach.y0));
+        let opts = pejy_render::RenderOptions { paper: false, background: None, printing_only: true, ..Default::default() };
         let img = rr.render(
             &solo,
             cache,
-            &[designcraft_render::Placed { spread: SpreadRef::Doc(si), xf: designcraft_geom::Affine::translate(designcraft_geom::Vec2::ZERO) }],
+            &[pejy_render::Placed { spread: SpreadRef::Doc(si), xf: pejy_geom::Affine::translate(pejy_geom::Vec2::ZERO) }],
             w,
             h,
             view,
@@ -592,11 +592,11 @@ fn rasterize_where(
                 ..Default::default()
             }),
         );
-        let mut img_item = Item::new(ItemId(out.alloc()), it.layer, Shape::Rectangle, designcraft_geom::shapes::rectangle(reach));
+        let mut img_item = Item::new(ItemId(out.alloc()), it.layer, Shape::Rectangle, pejy_geom::shapes::rectangle(reach));
         img_item.content = Content::Graphic(Graphic {
             asset: aid,
             size: (w as f64, h as f64),
-            xf: designcraft_geom::Affine::translate((reach.x0, reach.y0)) * designcraft_geom::Affine::scale(1.0 / k),
+            xf: pejy_geom::Affine::translate((reach.x0, reach.y0)) * pejy_geom::Affine::scale(1.0 / k),
             clip: None,
             auto_fit: Default::default(),
             fit_align: 4,
@@ -621,8 +621,8 @@ fn rasterize_where(
 }
 
 /// Whether `it`, its placed graphic or an item in it wraps text.
-fn has_wrap(it: &designcraft_doc::Item, depth: usize) -> bool {
-    use designcraft_doc::{Content, WrapMode};
+fn has_wrap(it: &pejy_doc::Item, depth: usize) -> bool {
+    use pejy_doc::{Content, WrapMode};
     if depth > MAX_STAND_IN_DEPTH {
         return false;
     }
@@ -640,8 +640,8 @@ const MAX_STAND_IN_DEPTH: usize = 64;
 /// A nonprinting copy of `it` that keeps its text wrap (and its graphic's and its items') and
 /// nothing else that reaches the PDF: no text, form field, button or media. The image of the
 /// object stands in for all of that, as it does without the copy.
-fn wrap_stand_in(it: &designcraft_doc::Item, depth: usize) -> designcraft_doc::Item {
-    use designcraft_doc::Content;
+fn wrap_stand_in(it: &pejy_doc::Item, depth: usize) -> pejy_doc::Item {
+    use pejy_doc::Content;
     let mut c = it.clone();
     c.nonprinting = true;
     c.form_field = None;
@@ -659,8 +659,8 @@ fn wrap_stand_in(it: &designcraft_doc::Item, depth: usize) -> designcraft_doc::I
 }
 
 /// A copy of `d` where placed PDFs with Object Layer Options hidden layers are 300 ppi images.
-fn rasterize_layered(d: &designcraft_doc::Document) -> (Option<designcraft_doc::Document>, usize) {
-    let ids: Vec<designcraft_doc::ItemId> =
+fn rasterize_layered(d: &pejy_doc::Document) -> (Option<pejy_doc::Document>, usize) {
+    let ids: Vec<pejy_doc::ItemId> =
         d.all_items().into_iter().filter(|id| d.item(*id).is_some_and(|it| !it.pdf_hidden_layers.is_empty() && it.graphic().is_some())).collect();
     if ids.is_empty() {
         return (None, 0);
@@ -670,20 +670,20 @@ fn rasterize_layered(d: &designcraft_doc::Document) -> (Option<designcraft_doc::
     for id in ids {
         let Some((g, hidden)) = out.item(id).and_then(|it| Some((it.graphic()?.clone(), it.pdf_hidden_layers.clone()))) else { continue };
         let Some(a) = out.assets.get(&g.asset).cloned() else { continue };
-        if !designcraft_render::is_pdf(&a.data) {
+        if !pejy_render::is_pdf(&a.data) {
             continue;
         }
         // The whole page at 300 ppi (the graphic may show only a box of it).
-        let shown = designcraft_render::shown_box(&a);
+        let shown = pejy_render::shown_box(&a);
         let [l, t, r, b] = shown.unwrap_or([0.0, 0.0, 1.0, 1.0]);
         let page_side = (g.size.0 / (r - l)).max(g.size.1 / (b - t));
         let side = (page_side * 300.0 / 72.0).clamp(64.0, 8000.0) as u32;
-        let Some(png) = designcraft_render::pdf_page_png(&a.data, a.page as usize, side, &hidden, shown) else { continue };
-        let px = designcraft_render::image_size(&png);
-        let aid = designcraft_doc::AssetId(out.alloc());
+        let Some(png) = pejy_render::pdf_page_png(&a.data, a.page as usize, side, &hidden, shown) else { continue };
+        let px = pejy_render::image_size(&png);
+        let aid = pejy_doc::AssetId(out.alloc());
         out.assets.insert(
             aid,
-            std::sync::Arc::new(designcraft_doc::Asset {
+            std::sync::Arc::new(pejy_doc::Asset {
                 id: aid,
                 name: format!("{}.png", a.name),
                 mime: "image/png".into(),
@@ -692,7 +692,7 @@ fn rasterize_layered(d: &designcraft_doc::Document) -> (Option<designcraft_doc::
                 ..Default::default()
             }),
         );
-        if let Some(designcraft_doc::Content::Graphic(gg)) = out.item_mut(id).map(|it| &mut it.content) {
+        if let Some(pejy_doc::Content::Graphic(gg)) = out.item_mut(id).map(|it| &mut it.content) {
             gg.asset = aid;
         }
         n += 1;
@@ -723,20 +723,20 @@ fn export_pdf(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let flattened = ppi.map(|ppi| flatten(&st.doc, &s.cache, ppi));
     // Placed PDFs with hidden layers go out as images showing just their visible layers.
-    let base: &designcraft_doc::Document = flattened.as_ref().map_or(&st.doc, |f| &f.0);
+    let base: &pejy_doc::Document = flattened.as_ref().map_or(&st.doc, |f| &f.0);
     let (layered, layer_count) = rasterize_layered(base);
-    let base2: &designcraft_doc::Document = layered.as_ref().unwrap_or(base);
+    let base2: &pejy_doc::Document = layered.as_ref().unwrap_or(base);
     let (fx_doc, fx_count) = rasterize_effects(base2, &s.cache);
-    let doc: &designcraft_doc::Document = fx_doc.as_ref().unwrap_or(base2);
+    let doc: &pejy_doc::Document = fx_doc.as_ref().unwrap_or(base2);
     let boxed = super::interchange::with_pdf_boxes(doc);
-    let doc: &designcraft_doc::Document = &boxed;
-    let r = designcraft_pdf::export_pdf_with_report(doc, &s.cache, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+    let doc: &pejy_doc::Document = &boxed;
+    let r = pejy_pdf::export_pdf_with_report(doc, &s.cache, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
     let mut r = r;
     // Transparency Blend Space: the page group of pages with transparency.
-    let spreads = designcraft_pdf::sheet_spreads(doc, &opts);
+    let spreads = pejy_pdf::sheet_spreads(doc, &opts);
     let blended: Vec<bool> = spreads.iter().map(|si| doc.spreads.get(*si).is_some_and(|sp| sp.items.iter().any(|it| transparent(it)))).collect();
     if blended.iter().any(|b| *b) {
-        match designcraft_pdf::add_blend_space(&r.bytes, &blended, doc.settings.blend_space == designcraft_doc::BlendSpace::Cmyk) {
+        match pejy_pdf::add_blend_space(&r.bytes, &blended, doc.settings.blend_space == pejy_doc::BlendSpace::Cmyk) {
             Some(b) => r.bytes = b,
             None => r.warnings.push("the transparency blend space couldn't be set".into()),
         }
@@ -770,25 +770,25 @@ fn export_pdf(s: &mut Session, p: &Value) -> Result<Value> {
         }
     }
     if !cat.is_empty() {
-        match designcraft_pdf::add_catalog_entries(&r.bytes, &cat) {
+        match pejy_pdf::add_catalog_entries(&r.bytes, &cat) {
             Some(b) => r.bytes = b,
             None => r.warnings.push("the PDF view options couldn't be set".into()),
         }
     }
     // Flip pages every N seconds (presentation).
     if let Some(secs) = p.get("advanceSeconds").and_then(Value::as_f64).filter(|s| *s > 0.0) {
-        let n = designcraft_pdf::sheet_spreads(doc, &opts).len();
+        let n = pejy_pdf::sheet_spreads(doc, &opts).len();
         let dur: Vec<Option<String>> = (0..n).map(|_| Some(format!("/Dur {secs:.2}"))).collect();
-        match designcraft_pdf::add_page_entries(&r.bytes, &dur) {
+        match pejy_pdf::add_page_entries(&r.bytes, &dur) {
             Some(b) => r.bytes = b,
             None => r.warnings.push("page timings couldn't be set".into()),
         }
     }
     // Page transitions (each spread's first page holds them).
-    let trans: Vec<Option<designcraft_doc::PageTransition>> =
+    let trans: Vec<Option<pejy_doc::PageTransition>> =
         spreads.into_iter().map(|si| doc.spreads.get(si).and_then(|sp| sp.pages.first()).and_then(|pg| pg.transition)).collect();
     if trans.iter().any(Option::is_some) {
-        match designcraft_pdf::add_transitions(&r.bytes, &trans) {
+        match pejy_pdf::add_transitions(&r.bytes, &trans) {
             Some(b) => r.bytes = b,
             None => r.warnings.push("page transitions couldn't be added to this PDF".into()),
         }
@@ -922,10 +922,10 @@ mod text_tests {
     /// and a Semibold style asks for the Semibold face's weight, not Bold's.
     #[test]
     fn epub_embedding_follows_bitmap_only_licences_and_weights() {
-        use designcraft_fonts::testing::{font_with, with_fs_type};
+        use pejy_fonts::testing::{font_with, with_fs_type};
         const BITMAP: &str = "DocFont Epub Bitmap Only";
         for fs_type in [0x0200, 0x0208] {
-            designcraft_fonts::FontDb::global()
+            pejy_fonts::FontDb::global()
                 .add_font(with_fs_type(font_with(&format!("{BITMAP} {fs_type:04x}"), &['W']).unwrap(), fs_type).unwrap());
         }
         let mut s = Session::new();
@@ -990,9 +990,9 @@ mod text_tests {
         assert!(r["warnings"].as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("flattened: 1 ")), "{r}");
         assert_eq!(r["pages"], 3);
         let bytes = super::super::file::base64_decode(r["base64"].as_str().unwrap());
-        assert_eq!(designcraft_render::pdf_page_count(&bytes), Some(3));
+        assert_eq!(pejy_render::pdf_page_count(&bytes), Some(3));
         // The document itself is untouched.
-        assert!(s.doc().unwrap().doc.item(designcraft_doc::ItemId(id.as_u64().unwrap())).is_some());
+        assert!(s.doc().unwrap().doc.item(pejy_doc::ItemId(id.as_u64().unwrap())).is_some());
         assert!(s.execute("file.exportPdf", &json!({"flatten": 5})).is_err());
         // Interactive view options land in the catalog and on the pages.
         let r = s.execute("file.exportPdf", &json!({"fullScreen": true, "pageLayout": "single", "view": "fitPage", "advanceSeconds": 5})).unwrap();
@@ -1021,20 +1021,20 @@ mod text_tests {
         s.execute("object.fill", &json!({"swatch": "[Black]", "ids": [a]})).unwrap();
         s.execute("object.textWrap", &json!({"ids": [a], "mode": "contour", "contour": "sameAsClipping", "offset": 6})).unwrap();
         // A feathered frame whose placed graphic has a bounding-box wrap.
-        let png = designcraft_render::Rendered { width: 40, height: 40, pixels: vec![90; 40 * 40 * 4] }.to_png();
+        let png = pejy_render::Rendered { width: 40, height: 40, pixels: vec![90; 40 * 40 * 4] }.to_png();
         let b = s.execute("frame.create", &json!({"rect": [300, 400, 400, 500]})).unwrap()["id"].as_u64().unwrap();
         s.execute("file.place", &json!({"base64": super::super::file::base64_encode(&png), "name": "a.png", "frame": b})).unwrap();
         s.execute("object.textWrap", &json!({"ids": [b], "content": true, "mode": "boundingBox", "offset": 6})).unwrap();
         s.execute("object.feather", &json!({"ids": [a, b], "width": 14})).unwrap();
 
         let d = &s.doc().unwrap().doc;
-        let sid = d.item(designcraft_doc::ItemId(t)).and_then(|it| it.text_frame()).unwrap().story;
-        let before = designcraft_compose::frame_specs(d, sid)[0].exclusions.clone();
+        let sid = d.item(pejy_doc::ItemId(t)).and_then(|it| it.text_frame()).unwrap().story;
+        let before = pejy_compose::frame_specs(d, sid)[0].exclusions.clone();
         assert_eq!(before.len(), 2);
         let (fx, n) = super::rasterize_effects(d, &s.cache);
         assert_eq!(n, 2);
         let fx = fx.unwrap();
-        assert_eq!(designcraft_compose::frame_specs(&fx, sid)[0].exclusions, before);
+        assert_eq!(pejy_compose::frame_specs(&fx, sid)[0].exclusions, before);
         // The objects that keep the wrap don't print; their images do.
         let sp = &fx.spreads[0];
         assert_eq!(sp.items.iter().filter(|it| it.nonprinting).count(), 2);
@@ -1095,7 +1095,7 @@ mod variable_font_tests {
     #[test]
     fn variable_font_instance_exports_to_pdf() {
         let Ok(data) = std::fs::read("/System/Library/Fonts/Supplemental/Skia.ttf") else { return };
-        designcraft_fonts::FontDb::global().add_font(data);
+        pejy_fonts::FontDb::global().add_font(data);
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Variable"})).unwrap();
@@ -1116,7 +1116,7 @@ mod booklet_tests {
 
     #[test]
     fn booklet_imposes_pages_in_pairs() {
-        use designcraft_pdf::{BookletKind, booklet_pairs};
+        use pejy_pdf::{BookletKind, booklet_pairs};
         assert_eq!(booklet_pairs(8, BookletKind::SaddleStitch), [(Some(7), Some(0)), (Some(1), Some(6)), (Some(5), Some(2)), (Some(3), Some(4))]);
         assert_eq!(booklet_pairs(6, BookletKind::SaddleStitch)[0], (None, Some(0)), "padded with blanks");
         assert_eq!(booklet_pairs(3, BookletKind::TwoUpConsecutive), [(Some(0), Some(1)), (Some(2), None)]);
@@ -1133,7 +1133,7 @@ mod booklet_tests {
         s.execute("object.fill", &json!({"swatch": "[Black]", "ids": [id]})).unwrap();
         let r = s.execute("file.printBooklet", &json!({})).unwrap();
         let bytes = super::super::file::base64_decode(r["base64"].as_str().unwrap());
-        let px = designcraft_render::decode_pixmap_page(&bytes, 0).expect("rasterised");
+        let px = pejy_render::decode_pixmap_page(&bytes, 0).expect("rasterised");
         let (w, h) = (px.width() as f64, px.height() as f64);
         let at = |x: f64, y: f64| px.sample((x / 1224.0 * w) as u16, (y / 792.0 * h) as u16);
         let (ink, blank) = (at(612.0 + 200.0, 200.0), at(200.0, 200.0));
@@ -1149,7 +1149,7 @@ mod placed_pdf_print_tests {
     use crate::Session;
     use crate::cmd::{base64_decode, base64_encode};
 
-    /// A one-page PDF 1.7 with a black box, as VectorCraft writes a logo.
+    /// A one-page PDF 1.7 with a black box, as Tsipika writes a logo.
     fn logo() -> Vec<u8> {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 100, "height": 50})).unwrap();
@@ -1231,7 +1231,7 @@ mod print_group_tests {
     use crate::Session;
     use crate::cmd::{base64_decode, base64_encode};
 
-    /// A one-page PDF 1.7 with a black box, as VectorCraft writes a logo.
+    /// A one-page PDF 1.7 with a black box, as Tsipika writes a logo.
     fn logo() -> Vec<u8> {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 100, "height": 50})).unwrap();
@@ -1260,7 +1260,7 @@ mod print_group_tests {
         let t = text(&mut s);
         assert!(t.contains("/S/Transparency/I true/CS/DeviceCMYK>>"), "CMYK group");
         assert!(!t.contains("DeviceRGB"), "no RGB left");
-        assert!(!designcraft_pdf::has_rgb_groups(t.as_bytes()));
+        assert!(!pejy_pdf::has_rgb_groups(t.as_bytes()));
         // The file still reads, with the same page.
         let r = s.execute("file.exportPdf", &json!({})).unwrap();
         let bytes = base64_decode(r["base64"].as_str().unwrap());
@@ -1268,7 +1268,7 @@ mod print_group_tests {
         // An RGB blend space keeps RGB groups.
         s.execute("edit.transparencyBlendSpace", &json!({"space": "rgb"})).unwrap();
         let t = text(&mut s);
-        assert!(t.contains("/CS/DeviceRGB") && designcraft_pdf::has_rgb_groups(t.as_bytes()));
+        assert!(t.contains("/CS/DeviceRGB") && pejy_pdf::has_rgb_groups(t.as_bytes()));
     }
 }
 

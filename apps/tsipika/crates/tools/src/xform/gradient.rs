@@ -23,11 +23,11 @@
 //! On a freeform gradient the tool edits its points instead (see `freeform`).
 
 use serde_json::{Value, json};
-use vectorcraft_color::gradient::{duplicate_stop, insert_stop, midpoint_from_pos, midpoint_pos, move_stop, remove_stop, set_midpoint};
-use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientStop};
-use vectorcraft_doc::NodeId;
-use vectorcraft_doc::hit::hit_test;
-use vectorcraft_geom::{Affine, Point, Shape, Vec2, constrain_angle_from};
+use tsipika_color::gradient::{duplicate_stop, insert_stop, midpoint_from_pos, midpoint_pos, move_stop, remove_stop, set_midpoint};
+use tsipika_color::{Gradient, GradientGeom, GradientKind, GradientStop};
+use tsipika_doc::NodeId;
+use tsipika_doc::hit::hit_test;
+use tsipika_geom::{Affine, Point, Shape, Vec2, constrain_angle_from};
 
 use super::freeform::{self, Annotator as FreeformAnnotator};
 use super::paint_owner;
@@ -246,11 +246,11 @@ fn annotator_overlays(cx: &ToolContext, a: &Annotator) -> Vec<Overlay> {
     let mut o = vec![];
     if let Some(m) = a.geom.unit_frame().filter(|_| a.radial()) {
         // Dark dashes over a light line: readable on any art.
-        let path = vectorcraft_geom::kurbo::Ellipse::from_affine(m).to_path(cx.tol(0.25));
+        let path = tsipika_geom::kurbo::Ellipse::from_affine(m).to_path(cx.tol(0.25));
         o.push(Overlay::Path { path: path.clone(), color: LIGHT, width: 1.0, dashed: false });
         o.push(Overlay::Path { path, color: BAR, width: 1.0, dashed: true });
         o.push(Overlay::Handle { p: a.aspect_point(), color: BAR });
-        let ring = vectorcraft_geom::kurbo::Circle::new(s, cx.tol(CENTRE)).to_path(cx.tol(0.25));
+        let ring = tsipika_geom::kurbo::Circle::new(s, cx.tol(CENTRE)).to_path(cx.tol(0.25));
         o.push(Overlay::Path { path: ring, color: BAR, width: 1.5, dashed: false });
     }
     o.extend([
@@ -587,8 +587,8 @@ impl Tool for GradientTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_color::{GradientPaint, Paint};
-    use vectorcraft_doc::{Document, Selection};
+    use tsipika_color::{GradientPaint, Paint};
+    use tsipika_doc::{Document, Selection};
 
     fn ev(kind: PointerKind, p: Point) -> PointerEvent {
         PointerEvent::new(kind, p.x, p.y)

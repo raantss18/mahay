@@ -1,6 +1,6 @@
 use super::*;
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, NodeKind};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, NodeKind};
 
 #[test]
 fn export_basic_shapes() {
@@ -84,9 +84,9 @@ fn nested_frame_paint_is_clipped_in_page_space() {
 }
 
 /// "ab" in black with a green second character, as outlines and as live text.
-fn two_colour_text() -> (Document, figcraft_doc::NodeId) {
-    use figcraft_doc::{StyleRun, TextData};
-    figcraft_text::scan_system_fonts();
+fn two_colour_text() -> (Document, endrika_doc::NodeId) {
+    use endrika_doc::{StyleRun, TextData};
+    endrika_text::scan_system_fonts();
     let mut d = Document::new("t");
     let page = d.first_page().unwrap();
     let mut text = TextData::new("ab");
@@ -118,8 +118,8 @@ fn text_run_fill_survives_live_text_export() {
 
 #[test]
 fn point_joins_equal_to_the_layer_join_keep_a_plain_stroke() {
-    use figcraft_doc::{StrokeJoin, VectorNetwork};
-    use figcraft_geom::kurbo::Point;
+    use endrika_doc::{StrokeJoin, VectorNetwork};
+    use endrika_geom::kurbo::Point;
     let svg_with = |join: StrokeJoin| {
         let mut network = VectorNetwork::from_points(&[Point::new(0.0, 0.0), Point::new(50.0, 50.0), Point::new(100.0, 0.0)], false);
         for v in &mut network.vertices {

@@ -4,9 +4,9 @@
 //! fallback to the preview. No generator's files or prologs are copied: these reproduce the
 //! PostScript constructs only.
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{ColorMode, Document, Node, NodeKind};
-use vectorcraft_geom::{FillRule, Point, Rect};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{ColorMode, Document, Node, NodeKind};
+use tsipika_geom::{FillRule, Point, Rect};
 
 use super::tests::{all, bounds, fill, near, objects, read, stroke};
 use crate::import::{Imported, import};
@@ -735,7 +735,7 @@ fn errors_name_the_operator_and_the_procedures() {
     let r = read("{ 1 (a) add } stopped pop 0 0 10 10 rectfill /inner { 1 (a) add } def /outer { inner } def outer");
     assert!(r.warnings[0].contains("(typecheck in `add`), in `inner` in `outer`"), "{:?}", r.warnings);
     let r = read("0 0 10 10 rectfill /p { frobnicate } def p");
-    assert!(r.warnings[0].contains("it uses `frobnicate`, which VectorCraft's PostScript reader doesn't know, in `p`"), "{:?}", r.warnings);
+    assert!(r.warnings[0].contains("it uses `frobnicate`, which Tsipika's PostScript reader doesn't know, in `p`"), "{:?}", r.warnings);
     let r = read("0 0 10 10 rectfill 0 0 moveto (x) cvn moveto");
     assert!(r.warnings[0].contains("typecheck in `moveto`: a number"), "{:?}", r.warnings);
 }
@@ -960,7 +960,7 @@ fn a_gradient_with_a_functions_array_past_the_cap_is_sampled() {
 /// A stitching function (type 3) whose `Functions` array holds the function itself must not
 /// recurse without end: `linear_points` (depth- and visit-bounded) and `eval` (depth-bounded)
 /// both stop, so the shading raises an error instead of overflowing the stack (an abort
-/// `vectorcraft_engine::guard` can't catch, and on wasm there is no net at all).
+/// `tsipika_engine::guard` can't catch, and on wasm there is no net at all).
 #[test]
 fn a_stitching_function_that_refers_to_itself_is_rejected_not_crashed() {
     let r = read(
@@ -1022,7 +1022,7 @@ showpage"##;
     let r = open("Example Generator 1.0", program);
     let d = &r.document;
     let Some(Paint::Gradient(g)) = all(d).into_iter().find_map(|n| fill(&n).cloned()) else { panic!("no gradient") };
-    assert_eq!(g.gradient.kind, vectorcraft_color::GradientKind::Radial);
+    assert_eq!(g.gradient.kind, tsipika_color::GradientKind::Radial);
     // `act` ran the procedure under key 0 (green); there is none under key 2.
     assert!(all(d).iter().any(|n| fill(n).and_then(Paint::color) == Some(Color::rgb(0.0, 1.0, 0.0))));
     assert_eq!(objects(d).len(), 3);

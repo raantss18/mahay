@@ -1,27 +1,27 @@
 //! The menu bar from the keyboard, and the app's shortcuts waiting while a menu is open (#279)
 //! (egui_kittest, UI logic only).
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Event, Key, Modifiers, Pos2, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
 use serde_json::json;
 
-fn harness() -> Harness<'static, EffectcraftApp> {
+fn harness() -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("file.openDemoProject", json!({})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
@@ -30,7 +30,7 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
 }
 
 /// Press and release `key` (one frame each), then let the UI settle.
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.step();
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers: Modifiers::NONE });
@@ -38,11 +38,11 @@ fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key) {
 }
 
 /// The label of the widget with keyboard focus (the highlighted menu entry).
-fn focused(h: &Harness<'_, EffectcraftApp>) -> String {
+fn focused(h: &Harness<'_, TselatraApp>) -> String {
     h.query_by(|n| n.is_focused()).and_then(|n| n.accesskit_node().label()).unwrap_or_default().trim().to_string()
 }
 
-fn shown(h: &Harness<'_, EffectcraftApp>, label: &str) -> bool {
+fn shown(h: &Harness<'_, TselatraApp>, label: &str) -> bool {
     h.query_by_label_contains(label).is_some()
 }
 
@@ -110,13 +110,13 @@ fn enter_chooses_the_highlighted_entry() {
     if cfg!(target_os = "macos") {
         assert!(focused(&h).starts_with("Keyboard Shortcuts"), "Up went to the last entry: {:?}", focused(&h));
         key(&mut h, Key::Enter);
-        assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::Shortcuts), "Enter chose it");
+        assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::Shortcuts), "Enter chose it");
     } else {
         assert!(focused(&h).starts_with("Preferences"), "Up went to the last entry: {:?}", focused(&h));
         key(&mut h, Key::Enter);
         assert!(focused(&h).starts_with("General"), "Enter opened the submenu: {:?}", focused(&h));
         key(&mut h, Key::Enter);
-        assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::Settings), "Enter chose General...");
+        assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::Settings), "Enter chose General...");
     }
     assert!(!shown(&h, "Quick Apply"), "and closed the menu");
 }
@@ -126,8 +126,8 @@ fn relink_menu_uses_engine_availability_and_folder_picker_cancel_is_a_noop() {
     use std::cell::Cell;
     use std::rc::Rc;
 
-    let mut app = EffectcraftApp::new(Session::default());
-    let menu = effectcraft_ui_egui::menus::menu_items(&app);
+    let mut app = TselatraApp::new(Session::default());
+    let menu = tselatra_ui_egui::menus::menu_items(&app);
     let entry = menu.iter().find(|e| e.id == "file.relinkFootage").unwrap();
     assert_eq!(entry.path, ["File", "Dependencies"]);
     assert_eq!(entry.enabled, app.session.is_enabled("file.relinkFootage"));
@@ -139,7 +139,7 @@ fn relink_menu_uses_engine_availability_and_folder_picker_cancel_is_a_noop() {
         None
     }));
     let revision = app.session.revision;
-    let result = effectcraft_ui_egui::menus::invoke(&mut app, &egui::Context::default(), "file.relinkFootage", json!({})).unwrap();
+    let result = tselatra_ui_egui::menus::invoke(&mut app, &egui::Context::default(), "file.relinkFootage", json!({})).unwrap();
     assert!(picked.get());
     assert!(result.is_null());
     assert_eq!(app.session.revision, revision);
@@ -165,7 +165,7 @@ fn relink_is_reachable_through_the_dependencies_menu() {
     h.input_mut().events.push(Event::PointerMoved(dependencies.center()));
     h.run_steps(8);
     let relink = h.query_by_label_contains("Relink Missing Footage").unwrap().rect();
-    if let Some(path) = std::env::var_os("EFFECTCRAFT_RELINK_MENU_SNAPSHOT") {
+    if let Some(path) = std::env::var_os("TSELATRA_RELINK_MENU_SNAPSHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     click_at(&mut h, relink.center());
@@ -175,16 +175,16 @@ fn relink_is_reachable_through_the_dependencies_menu() {
 
 #[test]
 fn relink_restores_decoded_pixels_and_invalidates_viewer_content() {
-    use effectcraft_engine::project::{ItemId, ItemKind};
-    use effectcraft_engine::render::RenderOpts;
-    use effectcraft_engine::time::Tick;
+    use tselatra_engine::project::{ItemId, ItemKind};
+    use tselatra_engine::render::RenderOpts;
+    use tselatra_engine::time::Tick;
 
     let dir = std::env::temp_dir().join(format!("ec-ui-relink-{}", std::process::id()));
     std::fs::create_dir_all(dir.join("old")).unwrap();
     std::fs::create_dir_all(dir.join("new/deep")).unwrap();
     let old = dir.join("old/plate.png");
     image::RgbaImage::from_pixel(32, 32, image::Rgba([230, 40, 80, 255])).save(&old).unwrap();
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let item = s.execute("file.import", json!({"paths": [old], "sequence": false})).unwrap()["items"][0].as_u64().unwrap();
     s.execute("comp.new", json!({"name": "Relink", "width": 32, "height": 32, "duration": 1})).unwrap();
     s.execute("layer.addItem", json!({"item": item})).unwrap();
@@ -195,12 +195,12 @@ fn relink_restores_decoded_pixels_and_invalidates_viewer_content() {
     s.execute("footage.check", json!({"wait": true})).unwrap();
     let ItemKind::Footage(f) = &s.project.item(ItemId(item)).unwrap().kind else { panic!("footage") };
     assert!(f.missing);
-    let missing_content = effectcraft_ui_egui::frames::comp_content(&s.project, cid);
+    let missing_content = tselatra_ui_egui::frames::comp_content(&s.project, cid);
     let missing = s.render(cid, Tick::ZERO, RenderOpts::default());
     assert_ne!(missing.data, expected.data);
     let r = s.execute("file.relinkFootage", json!({"folder": dir.join("new"), "wait": true})).unwrap();
     assert_eq!(r["relinked"], 1);
-    assert_ne!(effectcraft_ui_egui::frames::comp_content(&s.project, cid), missing_content);
+    assert_ne!(tselatra_ui_egui::frames::comp_content(&s.project, cid), missing_content);
     assert_eq!(s.render(cid, Tick::ZERO, RenderOpts::default()).data, expected.data);
     std::fs::remove_dir_all(dir).unwrap();
 }
@@ -212,14 +212,14 @@ fn import_dialog_offers_mxf() {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     let offered = Rc::new(RefCell::new(Vec::<String>::new()));
     let seen = offered.clone();
     app.hooks.pick_files = Some(Box::new(move |exts: &[&str]| {
         *seen.borrow_mut() = exts.iter().map(|e| e.to_string()).collect();
         Vec::new()
     }));
-    let result = effectcraft_ui_egui::menus::invoke(&mut app, &egui::Context::default(), "file.import", json!({})).unwrap();
+    let result = tselatra_ui_egui::menus::invoke(&mut app, &egui::Context::default(), "file.import", json!({})).unwrap();
     assert!(result.is_null(), "cancelled: nothing imported");
     let offered = offered.borrow();
     assert!(offered.iter().any(|e| e == "mxf"), "offered {offered:?}");
@@ -232,7 +232,7 @@ fn import_dialog_offers_mxf() {
 fn space_previews_after_opening_the_demo_from_home() {
     let mut h = {
         let s = Session::default();
-        let mut app = EffectcraftApp::new(s);
+        let mut app = TselatraApp::new(s);
         app.ui.start_screen = true;
         Harness::builder().with_size(vec2(1400.0, 900.0)).build_eframe(|_| app)
     };

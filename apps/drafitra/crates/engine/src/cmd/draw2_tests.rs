@@ -1,5 +1,5 @@
-use cadcraft_doc::EntityKind;
-use cadcraft_geom::{Arc, Vec2};
+use drafitra_doc::EntityKind;
+use drafitra_geom::{Arc, Vec2};
 use serde_json::json;
 
 use crate::{Input, Session};
@@ -272,7 +272,7 @@ fn divide_and_measure_json() {
     s.execute("block", &json!({"name": "TICK", "base": [0, 0], "handles": [tick], "keep": "delete"})).unwrap();
     let arc = h(&s.execute("arc", &json!({"center": [0, 20], "radius": 2, "start": 0, "end": 180})).unwrap());
     let r = s.execute("divide", &json!({"handle": arc, "segments": 2, "block": "TICK"})).unwrap();
-    let ins = s.doc().unwrap().entity(cadcraft_doc::Handle::parse_hex(r["handles"][0].as_str().unwrap()).unwrap()).unwrap().kind.clone();
+    let ins = s.doc().unwrap().entity(drafitra_doc::Handle::parse_hex(r["handles"][0].as_str().unwrap()).unwrap()).unwrap().kind.clone();
     assert!(matches!(ins, EntityKind::Insert(i) if near(i.insert.xy(), 0.0, 22.0) && (i.rotation - std::f64::consts::PI).abs() < 1e-6));
     assert!(s.execute("divide", &json!({"handle": l, "segments": 3, "block": "NOPE"})).is_err());
     assert!(s.execute("divide", &json!({"handle": l, "segments": 1})).is_err());
@@ -445,13 +445,13 @@ fn rectang_options_json() {
     s.execute("rectang", &json!({"p1": [0, 0], "p2": [4, 3]})).unwrap();
     assert!(near(rect_pts(&s)[2], 4.0, 3.0));
     s.execute("rectang", &json!({"p1": [0, 0], "dimensions": [3, 2], "p2": [-1, -1]})).unwrap();
-    let b = cadcraft_geom::Bounds2::from_points(rect_pts(&s));
+    let b = drafitra_geom::Bounds2::from_points(rect_pts(&s));
     assert!(near(b.min, -3.0, -2.0) && near(b.max, 0.0, 0.0));
     s.execute("rectang", &json!({"p1": [0, 0], "area": 20, "length": 5})).unwrap();
-    let b = cadcraft_geom::Bounds2::from_points(rect_pts(&s));
+    let b = drafitra_geom::Bounds2::from_points(rect_pts(&s));
     assert!(near(b.max, 5.0, 4.0));
     s.execute("rectang", &json!({"p1": [0, 0], "dimensions": [2, 1], "rotation": 90})).unwrap();
-    let b = cadcraft_geom::Bounds2::from_points(rect_pts(&s));
+    let b = drafitra_geom::Bounds2::from_points(rect_pts(&s));
     assert!(near(b.min, -1.0, 0.0) && near(b.max, 0.0, 2.0), "{b:?}");
     s.execute("rectang", &json!({"p1": [0, 0], "p2": [4, 4], "fillet": 1, "width": 0.1, "thickness": 2})).unwrap();
     assert_eq!(rect_pts(&s).len(), 8);
@@ -465,13 +465,13 @@ fn rectang_options_command_line() {
     let mut s = Session::new();
     s.cmdline("rectang 0,0 a 20 l 5").unwrap();
     assert!(s.running.is_none(), "{}", s.prompt_text());
-    assert!(near(cadcraft_geom::Bounds2::from_points(rect_pts(&s)).max, 5.0, 4.0));
+    assert!(near(drafitra_geom::Bounds2::from_points(rect_pts(&s)).max, 5.0, 4.0));
     s.cmdline("rectang 0,0 a 12 w 3").unwrap();
-    assert!(near(cadcraft_geom::Bounds2::from_points(rect_pts(&s)).max, 4.0, 3.0));
+    assert!(near(drafitra_geom::Bounds2::from_points(rect_pts(&s)).max, 4.0, 3.0));
     s.cmdline("rectang 0,0 d 3 2 -1,-1").unwrap();
-    assert!(near(cadcraft_geom::Bounds2::from_points(rect_pts(&s)).min, -3.0, -2.0));
+    assert!(near(drafitra_geom::Bounds2::from_points(rect_pts(&s)).min, -3.0, -2.0));
     s.cmdline("rectang 0,0 r 90 2,1").unwrap();
-    let b = cadcraft_geom::Bounds2::from_points(rect_pts(&s));
+    let b = drafitra_geom::Bounds2::from_points(rect_pts(&s));
     assert!(near(b.min, 0.0, 0.0) && near(b.max, 2.0, 1.0), "{b:?}");
     s.cmdline("rectang 0,0 r p 0,0 1,1 d 2 2 5,5").unwrap();
     let pts = rect_pts(&s);

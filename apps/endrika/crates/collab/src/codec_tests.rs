@@ -1,6 +1,6 @@
 //! Message encodings: round trips, hostile input, and the sizes of typical messages.
 
-use figcraft_doc::{Document, NodeId, NodeKind};
+use endrika_doc::{Document, NodeId, NodeKind};
 
 use crate::change::{Change, Json, Prop};
 use crate::message::{
@@ -19,7 +19,7 @@ fn moved_layer() -> ClientMsg {
     let r = doc.create(page, NodeKind::Rectangle, "Rectangle 1", 120.0, 80.0, 100.0, 60.0).unwrap();
     let a = Replica::new(doc);
     let mut b = a.document().clone();
-    b.get_mut(r).unwrap().transform = figcraft_geom::Affine::translate((164.5, 92.25));
+    b.get_mut(r).unwrap().transform = endrika_geom::Affine::translate((164.5, 92.25));
     ClientMsg::Changes { base_seq: 1234, batch_id: 56, changes: diff(&a, &b).unwrap().changes }
 }
 

@@ -1,24 +1,24 @@
 //! Plotter configurations: PLOTTERMANAGER / -PLOTTERMANAGER, and the device and paper a page
 //! setup or a plot uses.
 //!
-//! The built-in devices (`CADCraft PDF`, `CADCraft PNG`, `CADCraft SVG`) come first. They offer
+//! The built-in devices (`Drafitra PDF`, `Drafitra PNG`, `Drafitra SVG`) come first. They offer
 //! the standard ISO and ANSI/ARCH paper sizes with 5 mm (ISO) or quarter-inch (inch sizes)
-//! margins. User devices are `*.plotter.json` files ([`cadcraft_doc::PlotterConfig`],
+//! margins. User devices are `*.plotter.json` files ([`drafitra_doc::PlotterConfig`],
 //! `docs/plotters.md`) in a folder the host provides through [`set_plotter_store`]. Without
-//! one, native builds use the `plotters` folder of the CADCraft settings directory and the web
+//! one, native builds use the `plotters` folder of the Drafitra settings directory and the web
 //! keeps them for the session.
 
 use std::sync::{Mutex, OnceLock};
 
-use cadcraft_doc::{DevicePaper, Orientation, PageSetup, PlotOutput, PlotterConfig};
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_doc::{DevicePaper, Orientation, PageSetup, PlotOutput, PlotterConfig};
+use drafitra_geom::{Bounds2, Vec2};
 use serde_json::{Value, json};
 
 use super::*;
 use crate::{Accept, EngineError, Input, Interactive, Prompt, Session, Step};
 
 /// Where plotter configuration files live. Names are file names ending in
-/// [`cadcraft_doc::PLOTTER_FILE_EXT`]; the engine never passes paths.
+/// [`drafitra_doc::PLOTTER_FILE_EXT`]; the engine never passes paths.
 #[derive(Clone, Copy)]
 pub struct PlotterStore {
     /// File names in the folder.
@@ -60,27 +60,27 @@ impl PlotterStore {
         }
     }
 
-    /// The `plotters` folder of the CADCraft settings directory (`CADCRAFT_CONFIG_DIR`, else
+    /// The `plotters` folder of the Drafitra settings directory (`DRAFITRA_CONFIG_DIR`, else
     /// the platform's settings directory).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn settings_folder() -> PlotterStore {
         fn dir() -> std::result::Result<std::path::PathBuf, String> {
             use std::path::PathBuf;
             let get = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
-            let root = match std::env::var_os("CADCRAFT_CONFIG_DIR") {
+            let root = match std::env::var_os("DRAFITRA_CONFIG_DIR") {
                 Some(r) if !r.is_empty() => Some(PathBuf::from(r)),
                 Some(_) => None,
                 None => match std::env::consts::OS {
-                    "macos" => get("HOME").map(|h| h.join("Library/Application Support/CADCraft")),
-                    "windows" => get("APPDATA").map(|r| r.join("CADCraft")),
-                    _ => get("XDG_CONFIG_HOME").map(|r| r.join("cadcraft")).or_else(|| get("HOME").map(|h| h.join(".config/cadcraft"))),
+                    "macos" => get("HOME").map(|h| h.join("Library/Application Support/Drafitra")),
+                    "windows" => get("APPDATA").map(|r| r.join("Drafitra")),
+                    _ => get("XDG_CONFIG_HOME").map(|r| r.join("drafitra")).or_else(|| get("HOME").map(|h| h.join(".config/drafitra"))),
                 },
             };
             root.map(|r| r.join("plotters")).ok_or_else(|| "there is no settings folder for plotter configurations".to_string())
         }
         /// A plain file name of ours (no separators, no parent references).
         fn file(n: &str) -> std::result::Result<std::path::PathBuf, String> {
-            let ok = n.ends_with(cadcraft_doc::PLOTTER_FILE_EXT) && !n.starts_with('.') && !n.contains(['/', '\\', ':']);
+            let ok = n.ends_with(drafitra_doc::PLOTTER_FILE_EXT) && !n.starts_with('.') && !n.contains(['/', '\\', ':']);
             if !ok {
                 return Err(format!("`{n}` is not a plotter configuration file name"));
             }
@@ -95,14 +95,14 @@ impl PlotterStore {
                 };
                 Ok(rd
                     .filter_map(|e| e.ok()?.file_name().into_string().ok())
-                    .filter(|n| n.ends_with(cadcraft_doc::PLOTTER_FILE_EXT))
+                    .filter(|n| n.ends_with(drafitra_doc::PLOTTER_FILE_EXT))
                     .take(MAX_DEVICES)
                     .collect())
             },
             read: |n| {
                 let p = file(n)?;
                 let len = std::fs::metadata(&p).map_err(|e| format!("{n}: {e}"))?.len();
-                if len > cadcraft_doc::MAX_PLOTTER_FILE as u64 {
+                if len > drafitra_doc::MAX_PLOTTER_FILE as u64 {
                     return Err(format!("{n}: the plotter configuration file is too large"));
                 }
                 std::fs::read_to_string(&p).map_err(|e| format!("{n}: {e}"))
@@ -110,7 +110,7 @@ impl PlotterStore {
             write: |n, t| {
                 let p = file(n)?;
                 std::fs::create_dir_all(dir()?).map_err(|e| e.to_string())?;
-                let tmp = p.with_extension("json.cadcraft-tmp");
+                let tmp = p.with_extension("json.drafitra-tmp");
                 std::fs::write(&tmp, t).map_err(|e| format!("{n}: {e}"))?;
                 std::fs::rename(&tmp, &p).map_err(|e| format!("{n}: {e}"))
             },
@@ -137,20 +137,20 @@ const MAX_DEVICES: usize = 1000;
 
 /// The built-in devices: name, output, description.
 const BUILTIN: [(&str, PlotOutput, &str); 3] = [
-    ("CADCraft PDF", PlotOutput::Pdf, "Vector PDF"),
-    ("CADCraft PNG", PlotOutput::Png, "Raster PNG image"),
-    ("CADCraft SVG", PlotOutput::Svg, "Vector SVG image"),
+    ("Drafitra PDF", PlotOutput::Pdf, "Vector PDF"),
+    ("Drafitra PNG", PlotOutput::Png, "Raster PNG image"),
+    ("Drafitra SVG", PlotOutput::Svg, "Vector SVG image"),
 ];
 
 /// A page setup's "no device" name.
 const NO_DEVICE: &str = "None";
 
 fn builtin(name: &str, output: PlotOutput, description: &str) -> PlotterConfig {
-    let papers = cadcraft_render::PAPER_SIZES
+    let papers = drafitra_render::PAPER_SIZES
         .iter()
         .map(|p| DevicePaper { name: p.name.into(), width: p.width_mm, height: p.height_mm, margins: p.margins_mm() })
         .collect();
-    let default_paper = cadcraft_render::paper_size("A4").map(|p| p.name.to_string()).unwrap_or_default();
+    let default_paper = drafitra_render::paper_size("A4").map(|p| p.name.to_string()).unwrap_or_default();
     PlotterConfig {
         name: name.into(),
         description: description.into(),
@@ -200,7 +200,7 @@ pub fn device_names() -> Vec<String> {
 /// The device called `name` (any case; a `.plotter.json` suffix is ignored).
 pub fn find_device(name: &str) -> Option<PlotterConfig> {
     let n = name.trim();
-    let n = n.strip_suffix(cadcraft_doc::PLOTTER_FILE_EXT).unwrap_or(n);
+    let n = n.strip_suffix(drafitra_doc::PLOTTER_FILE_EXT).unwrap_or(n);
     if n.is_empty() || n.eq_ignore_ascii_case(NO_DEVICE) {
         return None;
     }
@@ -208,13 +208,13 @@ pub fn find_device(name: &str) -> Option<PlotterConfig> {
         return Some(builtin(b, *o, d));
     }
     let st = store();
-    let direct = cadcraft_doc::plotter_file_name(n).and_then(|f| PlotterConfig::from_file_text(&(st.read)(&f).ok()?).ok());
+    let direct = drafitra_doc::plotter_file_name(n).and_then(|f| PlotterConfig::from_file_text(&(st.read)(&f).ok()?).ok());
     direct.filter(|c| c.name.eq_ignore_ascii_case(n)).or_else(|| user_devices().into_iter().find(|c| c.name.eq_ignore_ascii_case(n)))
 }
 
 /// The paper of `dev` called `name`, also by a standard size's short name (`A3`, `Letter`…).
 fn device_paper<'a>(dev: &'a PlotterConfig, name: &str) -> Option<&'a DevicePaper> {
-    dev.paper(name).or_else(|| dev.paper(cadcraft_render::paper_size(name)?.name))
+    dev.paper(name).or_else(|| dev.paper(drafitra_render::paper_size(name)?.name))
 }
 
 fn set_paper(page: &mut PageSetup, p: &DevicePaper) {
@@ -382,7 +382,7 @@ impl Interactive for PlotWindowM {
             _ => Ok(Step::Continue),
         }
     }
-    fn preview(&self, _s: &Session, c: Vec2) -> Vec<cadcraft_doc::EntityKind> {
+    fn preview(&self, _s: &Session, c: Vec2) -> Vec<drafitra_doc::EntityKind> {
         let Some(a) = self.first else { return Vec::new() };
         let corners = [a, Vec2::new(c.x, a.y), c, Vec2::new(a.x, c.y), a];
         corners
@@ -433,12 +433,12 @@ fn summary(c: &PlotterConfig) -> Value {
 
 fn device_name(cmd: &str, p: &Value) -> Result<String> {
     let n = str_param(p, "name").map(str::trim).filter(|n| !n.is_empty()).ok_or_else(|| bad(cmd, "`name` (a plotter name) is required"))?;
-    Ok(n.chars().take(cadcraft_doc::MAX_PLOTTER_NAME).collect())
+    Ok(n.chars().take(drafitra_doc::MAX_PLOTTER_NAME).collect())
 }
 
 /// Write a user device to the store.
 fn save_device(cmd: &str, c: &PlotterConfig) -> Result<()> {
-    let file = cadcraft_doc::plotter_file_name(&c.name).ok_or_else(|| bad(cmd, "the plotter has no name"))?;
+    let file = drafitra_doc::plotter_file_name(&c.name).ok_or_else(|| bad(cmd, "the plotter has no name"))?;
     (store().write)(&file, &c.to_file_text()).map_err(|e| bad(cmd, e))
 }
 
@@ -446,8 +446,8 @@ fn mm_param(cmd: &str, v: &Value, key: &str) -> Result<Option<f64>> {
     match v.get(key) {
         None => Ok(None),
         Some(x) => {
-            let f = x.as_f64().filter(|f| f.is_finite() && *f > 0.0 && *f <= cadcraft_doc::MAX_PAPER_MM);
-            f.map(Some).ok_or_else(|| bad(cmd, format!("`{key}` must be a size in mm, up to {}", cadcraft_doc::MAX_PAPER_MM)))
+            let f = x.as_f64().filter(|f| f.is_finite() && *f > 0.0 && *f <= drafitra_doc::MAX_PAPER_MM);
+            f.map(Some).ok_or_else(|| bad(cmd, format!("`{key}` must be a size in mm, up to {}", drafitra_doc::MAX_PAPER_MM)))
         }
     }
 }
@@ -507,7 +507,7 @@ fn edit_device(cmd: &str, c: &mut PlotterConfig, p: &Value) -> Result<()> {
                     *slot = new;
                 }
             }
-            None if c.papers.len() >= cadcraft_doc::MAX_DEVICE_PAPERS => return Err(bad(cmd, "the plotter has too many papers")),
+            None if c.papers.len() >= drafitra_doc::MAX_DEVICE_PAPERS => return Err(bad(cmd, "the plotter has too many papers")),
             None => c.papers.push(new),
         }
     }
@@ -537,7 +537,7 @@ fn run_plottermanager(_s: &mut Session, p: &Value) -> Result<Value> {
             if find_device(&name).is_some() {
                 return Err(bad(cmd, format!("plotter `{name}` already exists")));
             }
-            let file = cadcraft_doc::plotter_file_name(&name).ok_or_else(|| bad(cmd, "`name` is empty"))?;
+            let file = drafitra_doc::plotter_file_name(&name).ok_or_else(|| bad(cmd, "`name` is empty"))?;
             if (store().list)().unwrap_or_default().iter().any(|f| f.eq_ignore_ascii_case(&file)) {
                 return Err(bad(cmd, format!("a plotter file `{file}` already exists")));
             }
@@ -549,7 +549,7 @@ fn run_plottermanager(_s: &mut Session, p: &Value) -> Result<Value> {
                         Some(o) => o.as_str().and_then(PlotOutput::parse).ok_or_else(|| bad(cmd, "`output` must be pdf, png or svg"))?,
                         None => PlotOutput::Pdf,
                     };
-                    let (b, o, _) = BUILTIN.iter().find(|(_, o, _)| *o == output).copied().unwrap_or(("CADCraft PDF", PlotOutput::Pdf, ""));
+                    let (b, o, _) = BUILTIN.iter().find(|(_, o, _)| *o == output).copied().unwrap_or(("Drafitra PDF", PlotOutput::Pdf, ""));
                     builtin(b, o, "")
                 }
             };
@@ -580,7 +580,7 @@ fn run_plottermanager(_s: &mut Session, p: &Value) -> Result<Value> {
                 return Err(bad(cmd, format!("`{name}` is built in and can't be deleted")));
             }
             let c = find_device(&name).ok_or_else(|| unknown_device(cmd, &name))?;
-            let file = cadcraft_doc::plotter_file_name(&c.name).ok_or_else(|| bad(cmd, "the plotter has no name"))?;
+            let file = drafitra_doc::plotter_file_name(&c.name).ok_or_else(|| bad(cmd, "the plotter has no name"))?;
             (store().delete)(&file).map_err(|e| bad(cmd, e))?;
             Ok(json!({ "deleted": c.name }))
         }
@@ -588,7 +588,7 @@ fn run_plottermanager(_s: &mut Session, p: &Value) -> Result<Value> {
             let text = str_param(p, "text").ok_or_else(|| bad(cmd, "`text` (the file's contents) is required"))?;
             let mut c = PlotterConfig::from_file_text(text).map_err(|e| bad(cmd, e))?;
             if let Some(n) = str_param(p, "name").map(str::trim).filter(|n| !n.is_empty()) {
-                c.name = n.chars().take(cadcraft_doc::MAX_PLOTTER_NAME).collect();
+                c.name = n.chars().take(drafitra_doc::MAX_PLOTTER_NAME).collect();
             }
             if is_builtin(&c.name) {
                 return Err(bad(cmd, format!("`{}` is a built-in plotter's name: pass another `name`", c.name)));

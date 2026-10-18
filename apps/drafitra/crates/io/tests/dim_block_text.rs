@@ -2,8 +2,8 @@
 //! the height it is drawn at: the dimension's overrides and DIMSCALE (0 = the drawing's) count
 //! (issue #367).
 
-use cadcraft_doc::{Common, DimKind, Dimension, Drawing, EntityKind, Space};
-use cadcraft_geom::Vec3;
+use drafitra_doc::{Common, DimKind, Dimension, Drawing, EntityKind, Space};
+use drafitra_geom::Vec3;
 
 /// The group 40 (height) of the first MTEXT in the BLOCKS section.
 fn block_mtext_height(dxf: &str) -> f64 {
@@ -36,7 +36,7 @@ fn height_written(style_scale: f64, overrides: serde_json::Value) -> f64 {
         marks: Default::default(),
     };
     d.add(&Space::Model, Common::default(), EntityKind::Dimension(dm)).unwrap();
-    block_mtext_height(&cadcraft_io::write_dxf(&d))
+    block_mtext_height(&drafitra_io::write_dxf(&d))
 }
 
 #[test]

@@ -3,7 +3,7 @@
 Choose **Edit → Interface Language** and select **Auto (system language)**, **English**,
 **Українська**, **Português (Brasil)**, **Deutsch**, **Español**, **Čeština** (Czech), **Русский**, **Français**, **简体中文**, **Italiano**, **한국어** (Korean), **Svenska** (Swedish), or **العربية** (Arabic).
 The interface updates without restarting, including the native macOS menus.
-The choice is saved with the other interface preferences (`cadcraft.prefs`, beside the theme):
+The choice is saved with the other interface preferences (`drafitra.prefs`, beside the theme):
 eframe storage on the desktop, browser local storage on the web. Installations without a saved
 choice use Auto.
 
@@ -12,7 +12,7 @@ browser's `navigator.languages` on the web. BCP 47 and POSIX tags select their p
 `uk-UA` → `uk`, `de_AT.UTF-8` → `de`, `es-MX` → `es`, `pt_BR.UTF-8` → `pt-BR`,
 `cs-CZ` and `cs_CZ.UTF-8` → `cs`, `it-IT` and `it_CH.UTF-8` → `it`, `ko-KR` and `ko_KR.UTF-8` → `ko`,
 `sv-SE`, `sv-FI` and `sv_SE.UTF-8` → `sv`. Unsupported languages fall back to English.
-Set `CADCRAFT_LOCALE=cs-CZ` to override the desktop's locale for a launch.
+Set `DRAFITRA_LOCALE=cs-CZ` to override the desktop's locale for a launch.
 An explicit saved language choice takes precedence over that override.
 
 Automation can select the language through the existing control channel:
@@ -67,7 +67,7 @@ The translations add no font assets and work on the web without system fonts.
 Korean needs a font that covers **every Hangul character in its catalog** and the language
 picker label. The CJK font loaded in every language (Noto Sans CJK, Microsoft YaHei, PingFang)
 usually covers Hangul already, and then nothing more is loaded. Otherwise, only when Korean is
-chosen, desktop builds look for a `Hang`/`Kore` face from the optional `CRAFT_FONTS_DIR` input,
+chosen, desktop builds look for a `Hang`/`Kore` face from the optional `MAHAY_FONTS_DIR` input,
 then installed fonts: Malgun Gothic/Gulim on Windows, Apple SD Gothic Neo/AppleGothic on macOS,
 and Nanum Gothic or Noto CJK on Linux/FreeBSD. Collection faces are checked individually, and
 file reads/face scans are bounded. No system fonts or new font assets are redistributed.
@@ -81,9 +81,9 @@ Hangul can't be shown. This change does not fix platform IME issues or localize 
 ## Adding translations
 
 The implementation follows the display-time catalog pattern used by
-[VectorCraft #205](https://github.com/storytold/vectorcraft/pull/205),
-[PdfCraft #106](https://github.com/storytold/pdfcraft/pull/106), and
-[FilmCraft #238](https://github.com/storytold/filmcraft/pull/238). Its code is local to CADCraft.
+[Tsipika #205](https://github.com/storytold/vectorcraft/pull/205),
+[Taratasy #106](https://github.com/storytold/pdfcraft/pull/106), and
+[Hetsika #238](https://github.com/storytold/filmcraft/pull/238). Its code is local to Drafitra.
 
 - `crates/ui-egui/src/i18n/*.tsv` are UTF-8 with three tab-separated columns:
   `context`, `English source`, and `translation`. Ordinary labels have an empty context.
@@ -107,10 +107,10 @@ The implementation follows the display-time catalog pattern used by
   command needs a row in one language, not in all of them.
 - Catalogs are embedded and parsed once. Missing or malformed rows cannot crash the app;
   tests reject invalid rows, duplicate keys, changed placeholders, and mismatched ellipses.
-- `cargo test -p cadcraft-ui-egui i18n` checks menu/command/tool/snap coverage, every marked
+- `cargo test -p drafitra-ui-egui i18n` checks menu/command/tool/snap coverage, every marked
   UI literal, locale resolution, preferences, integer plurals, bundled glyphs and actual
   egui renders with language switching. `cargo xtask assets` checks asset attribution;
   `cargo xtask ci` runs the workspace quality gates.
 
 Translations are original work under `MIT OR Apache-2.0`, written from the meaning of
-CADCraft's English strings. Do not copy proprietary localization resources.
+Drafitra's English strings. Do not copy proprietary localization resources.

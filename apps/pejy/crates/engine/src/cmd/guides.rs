@@ -3,8 +3,8 @@
 //! Guides are stored on their page in spread coordinates; a spread guide (dropped on the
 //! pasteboard) lives on the spread's first page with `spread: true` and crosses the pasteboard.
 
-use designcraft_doc::{Document, Guide, Orientation, SpreadRef};
-use designcraft_geom::Rect;
+use pejy_doc::{Document, Guide, Orientation, SpreadRef};
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -436,7 +436,7 @@ mod layer_tests {
 
     #[test]
     fn create_guides_goes_to_the_named_spread_and_page_only() {
-        use designcraft_doc::SpreadRef;
+        use pejy_doc::SpreadRef;
         let mut s = Session::new();
         s.execute("file.new", &json!({"pages": 3})).unwrap();
         // The UI passes the spread/page being worked on as a serialised SpreadRef (page 3).
@@ -451,7 +451,7 @@ mod layer_tests {
 
     #[test]
     fn guides_on_a_parent_page_show_on_the_pages_that_use_it() {
-        use designcraft_doc::{PageSide, SpreadRef};
+        use pejy_doc::{PageSide, SpreadRef};
         let mut s = Session::new();
         s.execute("file.new", &json!({"pages": 4, "facingPages": true})).unwrap();
         // A vertical guide 88 pt inside the parent's right page, and a horizontal one.
@@ -471,10 +471,10 @@ mod layer_tests {
             }
             seen += 1;
             assert_eq!(page.side, PageSide::Right);
-            let v = inherited.iter().find(|g| g.orientation == designcraft_doc::Orientation::Vertical).unwrap();
+            let v = inherited.iter().find(|g| g.orientation == pejy_doc::Orientation::Vertical).unwrap();
             // Moved to this page's own place in its spread: still 88 pt inside the page.
             assert!((v.position - (page.x + 88.0)).abs() < 1e-6, "page {abs}: {v:?} vs x {}", page.x);
-            let h = inherited.iter().find(|g| g.orientation == designcraft_doc::Orientation::Horizontal).unwrap();
+            let h = inherited.iter().find(|g| g.orientation == pejy_doc::Orientation::Horizontal).unwrap();
             assert!((h.position - 200.0).abs() < 1e-6);
         }
         assert!(seen >= 2, "pages on the parent's right side inherit: {seen}");

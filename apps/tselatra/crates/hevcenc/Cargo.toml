@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-hevcenc"
+name = "tselatra-hevcenc"
 description = "Clean-room pure-Rust HEVC (H.265) encoder (Main / Main 10, I and P slices, CABAC) for MP4 export, from ITU-T H.265"
 version.workspace = true
 edition.workspace = true
@@ -12,4 +12,4 @@ workspace = true
 [dependencies]
 
 [dev-dependencies]
-filmcraft-hevc = { workspace = true }
+hetsika-hevc = { workspace = true }

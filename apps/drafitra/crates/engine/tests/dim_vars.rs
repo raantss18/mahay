@@ -3,10 +3,10 @@
 //! DIMTVP, DIMTMOVE, DIMTOLJ, DIMAZIN, DIMARCSYM, DIMLDRBLK and the dimension and extension
 //! line linetypes and lineweights. They are SETVAR overrides, DIMOVERRIDE values and style fields.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{DimStyle, Dimension, EntityKind, Linetype};
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::render::{DimGeometry, LineRole};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{DimStyle, Dimension, EntityKind, Linetype};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::render::{DimGeometry, LineRole};
 use serde_json::{Value, json};
 
 fn set(s: &mut Session, name: &str, value: Value) {
@@ -24,7 +24,7 @@ fn last_dim(s: &Session) -> (Dimension, DimGeometry) {
         })
         .last()
         .unwrap();
-    let g = cadcraft_engine::render::dimension_in(d, &dm);
+    let g = drafitra_engine::render::dimension_in(d, &dm);
     (dm, g)
 }
 
@@ -245,8 +245,8 @@ fn linetypes_and_lineweights_of_dimension_and_extension_lines() {
     let mut s = Session::new();
     s.doc_mut().unwrap().linetypes.push(Linetype::simple("DASHED", "", &[0.5, -0.25]));
     linear(&mut s, 10.0);
-    let opts = cadcraft_engine::render::Options { lineweights: true, ..Default::default() };
-    let count = |s: &Session| cadcraft_engine::render::build(s.doc().unwrap(), &cadcraft_engine::doc::Space::Model, &opts).prims.len();
+    let opts = drafitra_engine::render::Options { lineweights: true, ..Default::default() };
+    let count = |s: &Session| drafitra_engine::render::build(s.doc().unwrap(), &drafitra_engine::doc::Space::Model, &opts).prims.len();
     let plain = count(&s);
     let h = s.doc().unwrap().model.last().unwrap().handle.hex();
     s.execute("dimoverride", &json!({ "handles": [h], "DIMLTEX2": "DASHED" })).unwrap();
@@ -257,8 +257,8 @@ fn linetypes_and_lineweights_of_dimension_and_extension_lines() {
     // Lineweights: 0.50 mm dimension lines, 0.13 mm extension lines.
     s.execute("dimoverride", &json!({ "handles": [h], "clear": true })).unwrap();
     s.execute("dimoverride", &json!({ "handles": [h], "DIMLWD": 50, "DIMLWE": 13 })).unwrap();
-    let dl = cadcraft_engine::render::build(s.doc().unwrap(), &cadcraft_engine::doc::Space::Model, &opts);
-    let lws: Vec<f32> = dl.prims.iter().filter(|p| p.kind == cadcraft_engine::render::Kind::Polyline).map(|p| p.lw).collect();
+    let dl = drafitra_engine::render::build(s.doc().unwrap(), &drafitra_engine::doc::Space::Model, &opts);
+    let lws: Vec<f32> = dl.prims.iter().filter(|p| p.kind == drafitra_engine::render::Kind::Polyline).map(|p| p.lw).collect();
     assert!(lws.contains(&0.5) && lws.contains(&0.13), "{lws:?}");
 }
 
@@ -270,8 +270,8 @@ fn leaders_use_the_leader_arrow() {
     }
     s.execute("leader", &json!({ "points": [[0, 0], [5, 5]], "text": "A" })).unwrap();
     let tris = |s: &Session| {
-        let dl = cadcraft_engine::render::build(s.doc().unwrap(), &cadcraft_engine::doc::Space::Model, &Default::default());
-        dl.prims.iter().filter(|p| p.kind == cadcraft_engine::render::Kind::Tris).map(|p| p.len).sum::<u32>()
+        let dl = drafitra_engine::render::build(s.doc().unwrap(), &drafitra_engine::doc::Space::Model, &Default::default());
+        dl.prims.iter().filter(|p| p.kind == drafitra_engine::render::Kind::Tris).map(|p| p.len).sum::<u32>()
     };
     // DIMLDRBLK "" is a closed filled arrow (one triangle) whatever DIMBLK is.
     assert_eq!(tris(&s), 3);

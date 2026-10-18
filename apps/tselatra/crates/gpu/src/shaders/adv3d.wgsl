@@ -1,5 +1,5 @@
 // Advanced 3D on the GPU after the rasteriser (`advanced3d.wgsl`): the steps of
-// `effectcraft_render::three_d::adv::render_prepared` on GPU-resident buffers, operation for
+// `tselatra_render::three_d::adv::render_prepared` on GPU-resident buffers, operation for
 // operation:
 //
 //   resolve   box-filter the 2×2 supersampled colour and camera depth of one motion-blur

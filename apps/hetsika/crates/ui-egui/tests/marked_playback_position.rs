@@ -1,7 +1,7 @@
 use egui_kittest::Harness;
-use filmcraft_engine::Session;
-use filmcraft_time::Tick;
-use filmcraft_ui_egui::{FilmcraftApp, menus};
+use hetsika_engine::Session;
+use hetsika_time::Tick;
+use hetsika_ui_egui::{HetsikaApp, menus};
 use serde_json::json;
 
 #[test]
@@ -14,7 +14,7 @@ fn program_range_playback_rests_on_inclusive_out_frame() {
     session.execute("markers.markIn", json!({"time": 0})).unwrap();
     session.execute("markers.markOut", json!({"time": out.0})).unwrap();
 
-    let mut harness = Harness::builder().with_size(egui::vec2(1280.0, 800.0)).with_step_dt(0.25).build_eframe(move |_cc| FilmcraftApp::new(session));
+    let mut harness = Harness::builder().with_size(egui::vec2(1280.0, 800.0)).with_step_dt(0.25).build_eframe(move |_cc| HetsikaApp::new(session));
     harness.step();
     let ctx = harness.ctx.clone();
 

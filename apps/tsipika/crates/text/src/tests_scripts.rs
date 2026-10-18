@@ -1,7 +1,7 @@
 //! Superscript, subscript and synthesized small caps (Character panel, Document Setup → Type).
 
 use kurbo::Shape;
-use vectorcraft_doc::{CharPosition, CharStyle, ScriptMetrics, TextObject};
+use tsipika_doc::{CharPosition, CharStyle, ScriptMetrics, TextObject};
 
 use super::*;
 

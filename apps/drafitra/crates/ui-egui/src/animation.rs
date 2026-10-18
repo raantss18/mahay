@@ -1,6 +1,6 @@
 //! Animation effects: the interface's fades and glides, and the choice to show them.
 //!
-//! None of the motion is CADCraft's own; it is egui's. Windows, menus, tooltips and popups fade in
+//! None of the motion is Drafitra's own; it is egui's. Windows, menus, tooltips and popups fade in
 //! over [`egui::Style::animation_time`], collapsing sections and toggles slide over it, scroll
 //! areas glide to a scroll target, and each mouse-wheel notch is spread over several frames. With
 //! animation effects off all of that happens at once.

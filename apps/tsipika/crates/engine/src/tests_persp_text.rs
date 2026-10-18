@@ -3,10 +3,10 @@
 //! perspective (flare, spiral, polar grid, click-to-size dialogs).
 
 use serde_json::json;
-use vectorcraft_doc::NodeKind;
-use vectorcraft_geom::{Point, Rect};
-use vectorcraft_tools::Mods;
-use vectorcraft_tools::distort::perspective::{self as persp, Plane};
+use tsipika_doc::NodeKind;
+use tsipika_geom::{Point, Rect};
+use tsipika_tools::Mods;
+use tsipika_tools::distort::perspective::{self as persp, Plane};
 
 use super::tests_persp_select::{attached, drag, grid, persp_session, undo_len};
 use super::*;
@@ -19,14 +19,14 @@ fn persp_text(s: &mut Session) -> NodeId {
     id
 }
 
-fn node(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> tsipika_doc::Node {
     s.doc().unwrap().doc.node(id).unwrap().clone()
 }
 
 /// The art the renderer and exporters draw for `id` (its outlines, projected).
 fn drawn_bounds(s: &Session, id: NodeId) -> Rect {
     let n = node(s, id);
-    vectorcraft_render::effects::reshape(&n, None).unwrap().geometric_bounds().unwrap()
+    tsipika_render::effects::reshape(&n, None).unwrap().geometric_bounds().unwrap()
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn type_in_perspective_is_projected_and_stays_type() {
     let h = n.projection().expect("drawn through a projection");
     // Really foreshortened: the right plane recedes to the right, so the letters' far end is
     // shorter than their near end.
-    let out = vectorcraft_render::effects::reshape(&n, None).unwrap();
+    let out = tsipika_render::effects::reshape(&n, None).unwrap();
     let mut pts = vec![];
     out.walk(&mut |c| {
         if let Some(p) = c.path_data() {
@@ -54,7 +54,7 @@ fn type_in_perspective_is_projected_and_stays_type() {
     // Bounds, hit testing and the selection box follow the drawn type.
     let gb = n.geometric_bounds().unwrap();
     assert!((gb.x0 - b.x0).abs() < 12.0 && (gb.x1 - b.x1).abs() < 12.0, "{gb:?} {b:?}");
-    let hit = vectorcraft_doc::hit::hit_test(&s.doc().unwrap().doc, b.center(), Default::default()).unwrap();
+    let hit = tsipika_doc::hit::hit_test(&s.doc().unwrap().doc, b.center(), Default::default()).unwrap();
     assert_eq!(hit.leaf, id);
     let _ = h;
 }
@@ -65,9 +65,9 @@ fn type_in_perspective_exports_projected_outlines() {
     let id = persp_text(&mut s);
     let b = drawn_bounds(&s, id);
     let doc = s.doc().unwrap().doc.clone();
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
+    let svg = tsipika_svg::export(&doc, &Default::default());
     assert!(!svg.contains("HELLO"), "no flat text in the SVG");
-    let pdf = vectorcraft_render::effects::bake_document(&doc).unwrap();
+    let pdf = tsipika_render::effects::bake_document(&doc).unwrap();
     let baked = pdf.node(id).unwrap();
     assert!(!matches!(baked.kind, NodeKind::Text(_)));
     let bb = baked.geometric_bounds().unwrap();
@@ -84,7 +84,7 @@ fn type_in_perspective_in_a_group_with_a_geometry_effect_exports_projected() {
     // Offset Path 0 on the group leaves every path as it is.
     s.execute("effect.apply", &json!({"effect": "path.offsetPath", "params": {"offset": 0}})).unwrap();
     let doc = s.doc().unwrap().doc.clone();
-    let baked = vectorcraft_render::effects::bake_document(&doc).unwrap();
+    let baked = tsipika_render::effects::bake_document(&doc).unwrap();
     let bb = baked.node(id).unwrap().geometric_bounds().unwrap();
     assert!((bb.x0 - b.x0).abs() < 1e-6 && (bb.y1 - b.y1).abs() < 1e-6, "{bb:?} {b:?}");
 }
@@ -152,7 +152,7 @@ fn ending_edit_text_during_a_save_leaves_the_document_saved() {
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.execute("perspective.editText", &json!({})).unwrap();
     let uid = s.doc().unwrap().uid;
-    let plan = save_plan(&s, SaveMode::SaveAs, &json!({"path": "/x/type.vectorcraft", "modified": 777})).unwrap();
+    let plan = save_plan(&s, SaveMode::SaveAs, &json!({"path": "/x/type.tsipika", "modified": 777})).unwrap();
     let job = save_job(&mut s, plan).unwrap();
     s.execute("object.exitIsolation", &json!({})).unwrap();
     job.write(|_, _| Ok(())).unwrap();
@@ -185,7 +185,7 @@ fn symbols_in_perspective_stay_instances() {
     let n = node(&s, id);
     assert!(matches!(n.kind, NodeKind::SymbolInstance { .. }));
     assert!(n.projection().is_some());
-    let baked = vectorcraft_render::effects::bake_document(&s.doc().unwrap().doc).unwrap();
+    let baked = tsipika_render::effects::bake_document(&s.doc().unwrap().doc).unwrap();
     assert!(!matches!(baked.node(id).unwrap().kind, NodeKind::SymbolInstance { .. }), "exports draw the projected art");
 }
 
@@ -278,7 +278,7 @@ fn the_canvas_draws_type_in_perspective_foreshortened() {
     s.execute("edit.clear", &json!({"ids": [rect.0]})).ok();
     let id = persp_text(&mut s);
     let b = drawn_bounds(&s, id);
-    let img = vectorcraft_render::Renderer::new().render_region(&s.doc().unwrap().doc, b, 2.0, true);
+    let img = tsipika_render::Renderer::new().render_region(&s.doc().unwrap().doc, b, 2.0, true);
     // The inked height of a strip of columns near each end of the line.
     let height = |x0: f64, x1: f64| {
         let (mut lo, mut hi) = (u32::MAX, 0);
@@ -301,16 +301,16 @@ fn double_clicking_type_in_perspective_edits_it_and_projections_round_trip() {
     let (mut s, _) = persp_session();
     let id = persp_text(&mut s);
     // Saved and opened again: still type, still projected.
-    let doc = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let doc = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(doc.node(id).unwrap().projection(), node(&s, id).projection());
     let v = ViewInfo::default();
     s.select_tool("perspectiveSelection", v).unwrap();
     let c = node(&s, id).geometric_bounds().unwrap().center();
-    let r = s.pointer(&vectorcraft_tools::PointerEvent::new(vectorcraft_tools::PointerKind::DoubleClick, c.x, c.y), v).unwrap();
+    let r = s.pointer(&tsipika_tools::PointerEvent::new(tsipika_tools::PointerKind::DoubleClick, c.x, c.y), v).unwrap();
     assert_eq!(r, vec![crate::UiRequest::SwitchTool("type".into())]);
     assert_eq!(s.doc().unwrap().isolation, Some(id));
     // Saved while editing: the file has it projected.
-    let doc = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let doc = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert!(doc.node(id).unwrap().projection().is_some());
     s.execute("object.exitIsolation", &json!({})).unwrap();
     assert!(node(&s, id).projection().is_some());

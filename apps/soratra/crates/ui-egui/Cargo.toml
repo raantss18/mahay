@@ -9,6 +9,7 @@ description = "Soratra egui front end (Word-style ribbon UI); swappable: nothing
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui = { path = "../../../../libs/core/crates/ui" }
 soratra-geom = { workspace = true }
 soratra-doc = { workspace = true }

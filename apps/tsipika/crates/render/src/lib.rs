@@ -1,9 +1,9 @@
-//! VectorCraft renderer: document → premultiplied RGBA pixels.
+//! Tsipika renderer: document → premultiplied RGBA pixels.
 //!
 //! The backend is `vello_cpu` (SIMD, sparse strips). Callers give a *view transform* mapping
 //! document points to output pixels; the renderer culls by bounds, evaluates appearance stacks
 //! (multiple fills/strokes, opacity, blend modes, stroke alignment, dashes), clip groups,
-//! gradients, images and text (via `vectorcraft-text` glyph outlines).
+//! gradients, images and text (via `tsipika-text` glyph outlines).
 #![forbid(unsafe_code)]
 
 mod brush_fx;
@@ -24,8 +24,8 @@ pub mod proof;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use vectorcraft_doc::{AppearanceItem, Document, Node, NodeId, NodeKind, StrokeAlign, StrokeLayer, SymbolBoxes, TextObject, TraceView};
-use vectorcraft_geom::{Affine, BezPath, FillRule, Rect, Shape};
+use tsipika_doc::{AppearanceItem, Document, Node, NodeId, NodeKind, StrokeAlign, StrokeLayer, SymbolBoxes, TextObject, TraceView};
+use tsipika_geom::{Affine, BezPath, FillRule, Rect, Shape};
 use vello_cpu::kurbo;
 use vello_cpu::peniko::{self, BlendMode, Compose, Mix};
 use vello_cpu::{Pixmap, RenderContext, Resources};
@@ -39,7 +39,7 @@ pub use effects::stroke::width_outline;
 pub use images::{IMAGE_CACHE_MAX, image_cache_bytes, set_image_cache_budget};
 pub use live::expand_live;
 pub use pattern::render_pattern_swatch;
-pub use vectorcraft_effects as effects;
+pub use tsipika_effects as effects;
 pub use vello_cpu;
 
 /// Bounds of everything `n` paints, as the renderer culls it: its members, strokes, brush art and
@@ -59,7 +59,7 @@ pub fn effect_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
         NodeKind::Layer { children, clip: false, .. } | NodeKind::Group { children, clip: false } if !fx::has_object_fx(n) => children
             .iter()
             .skip(usize::from(n.extras().shaper.is_some()))
-            .fold(None, |acc, c| vectorcraft_geom::union_opt(acc, effect_bounds(symbols, c))),
+            .fold(None, |acc, c| tsipika_geom::union_opt(acc, effect_bounds(symbols, c))),
         _ => fx::cull_bounds(symbols, n),
     }
 }
@@ -246,7 +246,7 @@ impl Default for RenderOptions {
             trim: false,
             skip_templates: false,
             hide_templates: false,
-            tile_edge: vectorcraft_doc::LAYER_COLORS[0].1,
+            tile_edge: tsipika_doc::LAYER_COLORS[0].1,
             guide: ([0x4a, 0xd8, 0xff], false),
             mask_view: None,
             highlight_substitutions: false,
@@ -386,7 +386,7 @@ struct StrokeEntry {
 }
 
 /// The slices of a stroke whose gradient runs along or across it, each with its paint and bounds.
-type Slices = Arc<Vec<(BezPath, vectorcraft_color::Paint, Rect)>>;
+type Slices = Arc<Vec<(BezPath, tsipika_color::Paint, Rect)>>;
 
 /// [`Slices`] cached for a stroke: (owning node, slices, last frame used).
 struct SliceEntry {
@@ -424,7 +424,7 @@ struct PlacedEntry {
     art: std::sync::Weak<Node>,
     /// The art placed, or `None` for art placed again in every frame ([`depends_on_document`]).
     placed: Option<Arc<Node>>,
-    /// The font generation ([`vectorcraft_text::FontDb::generation`]) the art was placed in, when
+    /// The font generation ([`tsipika_text::FontDb::generation`]) the art was placed in, when
     /// it holds type: the art is placed again when the fonts change.
     fonts: Option<u64>,
 }
@@ -434,7 +434,7 @@ struct PlacedEntry {
 pub struct Renderer {
     /// Glyph geometry per text object, keyed by `Arc` identity like `geom` (see [`Self::text_geom_of`]).
     texts: FrameCache<usize, (Arc<Node>, Arc<TextGeom>)>,
-    /// The [`vectorcraft_text::FontDb::generation`] `texts` was laid out with: type lays out
+    /// The [`tsipika_text::FontDb::generation`] `texts` was laid out with: type lays out
     /// again when fonts are added or rescanned.
     text_fonts: u64,
     /// Clip regions per clipping path (see [`Self::clip_of`]).
@@ -521,7 +521,7 @@ pub struct Renderer {
     stroke_slices: PtrMap<(usize, usize, i32), SliceEntry>,
     /// What the image keys colour adjustments give their recoloured images name: the image
     /// recoloured and the adjustment, with its hash (see [`Self::adjusted_image`]).
-    adjusts: HashMap<String, (String, u64, vectorcraft_effects::ColorMap)>,
+    adjusts: HashMap<String, (String, u64, tsipika_effects::ColorMap)>,
     /// Layer Options → Dim Images to, of the layer being drawn (screen views only): images show
     /// faded to this opacity over white.
     dim_images: Option<f32>,
@@ -938,7 +938,7 @@ impl Renderer {
                 let source = a.extras().trace.is_some().then(|| children.first()).flatten();
                 for c in children {
                     if c.visible || source.is_some_and(|s| Arc::ptr_eq(s, c)) {
-                        acc = vectorcraft_geom::union_opt(acc, self.bounds_of(symbols, c));
+                        acc = tsipika_geom::union_opt(acc, self.bounds_of(symbols, c));
                     }
                 }
                 acc
@@ -1064,7 +1064,7 @@ impl Renderer {
         {
             // A masked object is a non-isolated group of its own.
             let mask = Some(self.opacity_mask(f, m, ctx.width(), ctx.height()));
-            let blends = a.blend != vectorcraft_color::BlendMode::Normal || (!a.isolate && self.blends_through(a));
+            let blends = a.blend != tsipika_color::BlendMode::Normal || (!a.isolate && self.blends_through(a));
             let bounds = if blends { self.bounds_of(f.symbols, a) } else { None };
             self.group(ctx, f, Composite { mask, blends, bounds, ..Default::default() }, &mut |r, c, fr| r.draw_arc_body(c, fr, a));
             return;
@@ -1073,13 +1073,13 @@ impl Renderer {
     }
 
     /// Render an opacity mask's art offscreen and turn its luminance into a coverage mask.
-    fn opacity_mask(&mut self, f: &Frame, m: &vectorcraft_doc::OpacityMask, w: u16, h: u16) -> vello_cpu::Mask {
+    fn opacity_mask(&mut self, f: &Frame, m: &tsipika_doc::OpacityMask, w: u16, h: u16) -> vello_cpu::Mask {
         vello_cpu::Mask::from_parts(self.mask_values(f, m, w, h), w, h)
     }
 
     /// The coverage of opacity mask `m` per output pixel (row-major): its art rendered offscreen,
     /// as luminance ([`mask_value`]).
-    fn mask_values(&mut self, f: &Frame, m: &vectorcraft_doc::OpacityMask, w: u16, h: u16) -> Vec<u8> {
+    fn mask_values(&mut self, f: &Frame, m: &tsipika_doc::OpacityMask, w: u16, h: u16) -> Vec<u8> {
         let mut mctx = f.offscreen_context(w, h);
         // Mask art is a picture of its own: it takes no part in a knockout group around the object,
         // and its luminance is that of its screen colours.
@@ -1101,7 +1101,7 @@ impl Renderer {
         // Fast path for plain paths: cached geometry, opacity folded into the paint.
         // A blend mode on a single plain fill applies per draw (exact for one paint operation);
         // a blend layer would composite the whole viewport.
-        let blended = a.blend != vectorcraft_color::BlendMode::Normal;
+        let blended = a.blend != tsipika_color::BlendMode::Normal;
         if let NodeKind::Path { rule, guide: false, .. } = &a.kind
             && !f.opts.outline
             && (!blended || single_plain_fill(a))
@@ -1117,7 +1117,7 @@ impl Renderer {
             }
             self.draw_shape(ctx, f, a, &bp, *rule);
             if blended {
-                ctx.set_blend_mode(blend_mode(vectorcraft_color::BlendMode::Normal));
+                ctx.set_blend_mode(blend_mode(tsipika_color::BlendMode::Normal));
             }
             self.cur = None;
             self.alpha = 1.0;
@@ -1129,7 +1129,7 @@ impl Renderer {
         }
         if let NodeKind::Text(t) = &a.kind
             && self.opacity_of(a) >= 1.0
-            && a.blend == vectorcraft_color::BlendMode::Normal
+            && a.blend == tsipika_color::BlendMode::Normal
             && !fx::has_fx(a)
         {
             let t = &*f.doc.inline_resolved(t);
@@ -1141,7 +1141,7 @@ impl Renderer {
             self.stats.drawn += 1;
             return;
         }
-        if vectorcraft_doc::live::is_live(a) || effects::has_pathfinder(a) {
+        if tsipika_doc::live::is_live(a) || effects::has_pathfinder(a) {
             return self.draw_live(ctx, f, a);
         }
         // Its live-effect geometry depends on the node alone, and for plug-in effects on the
@@ -1156,7 +1156,7 @@ impl Renderer {
             return;
         }
         // A cancelled export stops drawing; whoever asked for the picture drops it (see `cancel`).
-        if vectorcraft_doc::cancel::is_cancelled() {
+        if tsipika_doc::cancel::is_cancelled() {
             return;
         }
         if force {
@@ -1251,7 +1251,7 @@ impl Renderer {
         // Whether this container's children knock each other out.
         let knockout = !outline && n.knocks_out(self.knockout);
         let enclosing = std::mem::replace(&mut self.knockout, knockout);
-        if !outline && (opacity < 1.0 || n.blend != vectorcraft_color::BlendMode::Normal || n.isolate || knockout) {
+        if !outline && (opacity < 1.0 || n.blend != tsipika_color::BlendMode::Normal || n.isolate || knockout) {
             let blends = self.blends_through(n);
             let bounds = if blends { self.node_bounds(f.symbols, n) } else { None };
             let comp = Composite { blend: n.blend, opacity, isolated: n.isolate, blends, bounds, ..Default::default() };
@@ -1489,7 +1489,7 @@ impl Renderer {
             return;
         }
         // Bounds only matter to gradients and patterns (their geometry is relative to the object).
-        let solid = |p: &vectorcraft_color::Paint| matches!(p, vectorcraft_color::Paint::Solid { .. } | vectorcraft_color::Paint::None);
+        let solid = |p: &tsipika_color::Paint| matches!(p, tsipika_color::Paint::Solid { .. } | tsipika_color::Paint::None);
         let needs_bounds = n.appearance.items.iter().any(|i| match i {
             AppearanceItem::Fill(fl) => !solid(&fl.paint),
             AppearanceItem::Stroke(st) => !solid(&st.paint),
@@ -1501,7 +1501,7 @@ impl Renderer {
                     if !fl.visible || fl.paint.is_none() {
                         continue;
                     }
-                    let layered = fl.opacity < 1.0 || fl.blend != vectorcraft_color::BlendMode::Normal;
+                    let layered = fl.opacity < 1.0 || fl.blend != tsipika_color::BlendMode::Normal;
                     if layered {
                         ctx.set_transform(Affine::IDENTITY);
                         ctx.push_layer(None, Some(blend_mode(fl.blend)), Some(fl.opacity), None, None);
@@ -1530,9 +1530,9 @@ impl Renderer {
     }
 
     /// Multiply the folded object opacity into a solid paint.
-    fn fold_alpha(&self, ctx: &mut RenderContext, ink: Ink, p: &vectorcraft_color::Paint) {
+    fn fold_alpha(&self, ctx: &mut RenderContext, ink: Ink, p: &tsipika_color::Paint) {
         if self.alpha < 1.0
-            && let vectorcraft_color::Paint::Solid { color, .. } = p
+            && let tsipika_color::Paint::Solid { color, .. } = p
         {
             ctx.set_paint(ink.color(color, self.alpha));
         }
@@ -1547,7 +1547,7 @@ impl Renderer {
         // each folding it into its paint.
         let folded = if pieces.heads.is_empty() { 1.0 } else { std::mem::replace(&mut self.alpha, 1.0) };
         let opacity = st.opacity * folded;
-        let layered = opacity < 1.0 || st.blend != vectorcraft_color::BlendMode::Normal || st.align == StrokeAlign::Outside;
+        let layered = opacity < 1.0 || st.blend != tsipika_color::BlendMode::Normal || st.align == StrokeAlign::Outside;
         if layered {
             ctx.set_transform(Affine::IDENTITY);
             ctx.push_layer(None, Some(blend_mode(st.blend)), Some(opacity), None, None);
@@ -1609,7 +1609,7 @@ impl Renderer {
         st: &StrokeLayer,
         pieces: &effects::stroke::StrokePieces,
         width: f64,
-        g: &vectorcraft_color::Gradient,
+        g: &tsipika_color::Gradient,
     ) {
         let level = (f.px * 0.25).log2().floor() as i32;
         let make = || -> Slices {
@@ -1745,11 +1745,11 @@ impl Renderer {
         if !matches!(art.kind, NodeKind::Group { .. } | NodeKind::Layer { .. }) || fx::has_object_fx(art) {
             return (place(art, xf, scale_strokes, inst), false);
         }
-        let stain = stain_bits(inst.and_then(vectorcraft_brush::stain));
+        let stain = stain_bits(inst.and_then(tsipika_brush::stain));
         let key = (Arc::as_ptr(art) as usize, xf.as_coeffs().map(f64::to_bits), scale_strokes, stain);
         if let Some(e) = self.placed_arts.get(&key, self.stamp)
             && std::ptr::eq(e.art.as_ptr(), Arc::as_ptr(art))
-            && e.fonts.is_none_or(|g| g == vectorcraft_text::FontDb::global().generation())
+            && e.fonts.is_none_or(|g| g == tsipika_text::FontDb::global().generation())
         {
             return match &e.placed {
                 Some(placed) => (placed.clone(), true),
@@ -1759,7 +1759,7 @@ impl Renderer {
         let placed = place(art, xf, scale_strokes, inst);
         let kept = (!depends_on_document(art)).then(|| placed.clone());
         let keeps = kept.is_some();
-        let fonts = (keeps && holds_type(art)).then(|| vectorcraft_text::FontDb::global().generation());
+        let fonts = (keeps && holds_type(art)).then(|| tsipika_text::FontDb::global().generation());
         // The bytes count the key and the entry, the art's allocation that the weak reference
         // keeps, and the kept art.
         let bytes = size_of::<(PlacedKey, PlacedEntry, Node)>() + kept.as_deref().map_or(0, lru::node_bytes);
@@ -1774,7 +1774,7 @@ impl Renderer {
         if !matches!(&a.kind, NodeKind::Text(own) if std::ptr::eq(&**own, t)) {
             return Arc::new(text_geom(t));
         }
-        let fonts = vectorcraft_text::FontDb::global().generation();
+        let fonts = tsipika_text::FontDb::global().generation();
         if fonts != self.text_fonts {
             self.texts.clear();
             self.text_fonts = fonts;
@@ -1808,7 +1808,7 @@ impl Renderer {
         let overprints = proof::overprints(f.opts);
         let overprint = |ctx: &mut RenderContext, on: bool| {
             if overprints {
-                ctx.set_blend_mode(if on { blend_mode(vectorcraft_color::BlendMode::Darken) } else { BlendMode::default() });
+                ctx.set_blend_mode(if on { blend_mode(tsipika_color::BlendMode::Darken) } else { BlendMode::default() });
             }
         };
         // The object's own fills and strokes paint the whole outline: those below the Characters
@@ -1872,7 +1872,7 @@ impl Renderer {
         for item in items.iter().filter(|i| i.visible() && !i.paint().is_none()) {
             match item {
                 AppearanceItem::Fill(fl) => {
-                    let layered = fl.opacity < 1.0 || fl.blend != vectorcraft_color::BlendMode::Normal;
+                    let layered = fl.opacity < 1.0 || fl.blend != tsipika_color::BlendMode::Normal;
                     if layered {
                         ctx.set_transform(Affine::IDENTITY);
                         ctx.push_layer(None, Some(blend_mode(fl.blend)), Some(fl.opacity), None, None);
@@ -1896,13 +1896,13 @@ impl Renderer {
         }
     }
 
-    fn draw_image(&mut self, ctx: &mut RenderContext, f: &Frame, im: &vectorcraft_doc::ImageObject) {
+    fn draw_image(&mut self, ctx: &mut RenderContext, f: &Frame, im: &tsipika_doc::ImageObject) {
         self.draw_image_in(ctx, f, im, None);
     }
 
     /// Draw an image, or with `area` (a region in the document inside the image's frame, see
     /// [`plain_image`]) the image painted into that region.
-    fn draw_image_in(&mut self, ctx: &mut RenderContext, f: &Frame, im: &vectorcraft_doc::ImageObject, area: Option<&(BezPath, FillRule)>) {
+    fn draw_image_in(&mut self, ctx: &mut RenderContext, f: &Frame, im: &tsipika_doc::ImageObject, area: Option<&(BezPath, FillRule)>) {
         let rect = Rect::new(0.0, 0.0, im.width as f64, im.height as f64);
         // Outline mode draws the image's frame, and with Document Setup → Show Images in Outline
         // Mode its pixels in greyscale under the frame.
@@ -1959,7 +1959,7 @@ impl Renderer {
     /// art's image takes): drawing `derived` draws the recoloured pixels, made when first drawn and
     /// kept with the decoded images. Names past a limit drop the art made with them too, so it is
     /// made again.
-    fn adjusted_image(&mut self, key: &str, derived: String, hash: u64, map: &vectorcraft_effects::ColorMap) {
+    fn adjusted_image(&mut self, key: &str, derived: String, hash: u64, map: &tsipika_effects::ColorMap) {
         if self.adjusts.contains_key(&derived) {
             return;
         }
@@ -2026,7 +2026,7 @@ fn lookup(key: &images::ImageKey, touch: bool) -> Option<Arc<Pixmap>> {
 
 /// The decoded pixels of `blob` (a CMYK image's inks shown through the working CMYK profile, again
 /// when the colour settings change), from the shared store, and their key there.
-fn blob_pixmap(blob: &vectorcraft_doc::ImageBlob, touch: bool) -> Option<(images::ImageKey, Arc<Pixmap>)> {
+fn blob_pixmap(blob: &tsipika_doc::ImageBlob, touch: bool) -> Option<(images::ImageKey, Arc<Pixmap>)> {
     let id = images::blob_id(blob);
     let lut = id.cmyk.then(ink::display_lut);
     let key =
@@ -2072,7 +2072,7 @@ fn image_mip(key: &images::ImageKey, pm: Arc<Pixmap>, m: Affine) -> Arc<Pixmap> 
 /// Can image node `n` (`im`) clipped by `region` be painted straight into the region: visible,
 /// with no transparency, effects or paint of its own, and the region inside the image's frame
 /// (within a pixel), so no paint past the image's edge shows?
-fn plain_image(n: &Node, im: &vectorcraft_doc::ImageObject, region: &BezPath) -> bool {
+fn plain_image(n: &Node, im: &tsipika_doc::ImageObject, region: &BezPath) -> bool {
     if !(n.visible && n.has_default_transparency() && n.appearance.items.is_empty() && n.appearance.effects.is_empty()) {
         return false;
     }
@@ -2087,7 +2087,7 @@ fn plain_image(n: &Node, im: &vectorcraft_doc::ImageObject, region: &BezPath) ->
 /// Opacity-mask coverage of one premultiplied pixel: luminance, with the area outside the mask
 /// art black (clip) or white (no clip), optionally inverted.
 fn mask_value(r: u8, g: u8, b: u8, a: u8, clip: bool, invert: bool) -> u8 {
-    let [kr, kg, kb] = vectorcraft_color::blend::MASK_LUM;
+    let [kr, kg, kb] = tsipika_color::blend::MASK_LUM;
     let mut l = (kr * r as f32 + kg * g as f32 + kb * b as f32) / 255.0;
     if !clip {
         l += 1.0 - a as f32 / 255.0;
@@ -2126,7 +2126,7 @@ fn single_plain_fill(n: &Node) -> bool {
         AppearanceItem::Fill(f) => f.visible && !f.paint.is_none(),
         AppearanceItem::Stroke(s) => s.visible && !s.paint.is_none() && s.width > 0.0,
     });
-    matches!((painted.next(), painted.next()), (Some(AppearanceItem::Fill(f)), None) if f.blend == vectorcraft_color::BlendMode::Normal && f.opacity >= 1.0 && !matches!(f.paint, vectorcraft_color::Paint::Pattern { .. }))
+    matches!((painted.next(), painted.next()), (Some(AppearanceItem::Fill(f)), None) if f.blend == tsipika_color::BlendMode::Normal && f.opacity >= 1.0 && !matches!(f.paint, tsipika_color::Paint::Pattern { .. }))
 }
 
 /// Number of visible painted fill/stroke items (opacity folding is exact only for one).
@@ -2135,11 +2135,11 @@ fn painted_items(n: &Node) -> usize {
         .items
         .iter()
         .filter(|i| match i {
-            AppearanceItem::Fill(f) => f.visible && !f.paint.is_none() && matches!(f.paint, vectorcraft_color::Paint::Solid { .. }),
-            AppearanceItem::Stroke(s) => s.visible && !s.paint.is_none() && s.width > 0.0 && matches!(s.paint, vectorcraft_color::Paint::Solid { .. }) && s.dash.is_none(),
+            AppearanceItem::Fill(f) => f.visible && !f.paint.is_none() && matches!(f.paint, tsipika_color::Paint::Solid { .. }),
+            AppearanceItem::Stroke(s) => s.visible && !s.paint.is_none() && s.width > 0.0 && matches!(s.paint, tsipika_color::Paint::Solid { .. }) && s.dash.is_none(),
         })
         .count()
-        .max(if n.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Fill(f) if f.visible && !matches!(f.paint, vectorcraft_color::Paint::Solid { .. } | vectorcraft_color::Paint::None)) || matches!(i, AppearanceItem::Stroke(s) if s.visible && !matches!(s.paint, vectorcraft_color::Paint::Solid { .. } | vectorcraft_color::Paint::None))) { 2 } else { 0 })
+        .max(if n.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Fill(f) if f.visible && !matches!(f.paint, tsipika_color::Paint::Solid { .. } | tsipika_color::Paint::None)) || matches!(i, AppearanceItem::Stroke(s) if s.visible && !matches!(s.paint, tsipika_color::Paint::Solid { .. } | tsipika_color::Paint::None))) { 2 } else { 0 })
 }
 
 /// Whether `st` is one of `n`'s own strokes (the strokes of the brush art drawn for `n` are not).
@@ -2162,7 +2162,7 @@ fn place(art: &Node, xf: Affine, scale_strokes: bool, inst: Option<&Node>) -> Ar
 /// with an inline graphic, an image, a placed document, a blend, an envelope, a repeat, or an
 /// object or a fill or stroke with a visible raster effect?
 fn depends_on_document(n: &Node) -> bool {
-    let raster = |fx: &[vectorcraft_doc::Effect]| fx.iter().any(|e| e.visible && effects::is_raster(&e.id));
+    let raster = |fx: &[tsipika_doc::Effect]| fx.iter().any(|e| e.visible && effects::is_raster(&e.id));
     let mut depends = false;
     n.walk(&mut |c| {
         depends |= match &c.kind {
@@ -2204,10 +2204,10 @@ fn holds_plugin_effect(n: &Node) -> bool {
     holds
 }
 
-/// A symbol instance's stain ([`vectorcraft_brush::stain`]) as bits for a cache key: its color
+/// A symbol instance's stain ([`tsipika_brush::stain`]) as bits for a cache key: its color
 /// model, the color's components and the amount (all 0 without a stain).
-fn stain_bits(stain: Option<(vectorcraft_color::Color, f32)>) -> [u32; 6] {
-    use vectorcraft_color::Color;
+fn stain_bits(stain: Option<(tsipika_color::Color, f32)>) -> [u32; 6] {
+    use tsipika_color::Color;
     let Some((color, amount)) = stain else { return [0; 6] };
     let (model, [p, q, r, s]) = match color {
         Color::Rgb { r, g, b } => (1, [r, g, b, 0.0]),
@@ -2240,8 +2240,8 @@ pub fn default_threads() -> u16 {
         if o >= 0 {
             return o.min(64) as u16;
         }
-        if std::env::var_os("VECTORCRAFT_RENDER_THREADS").is_some() {
-            return std::env::var("VECTORCRAFT_RENDER_THREADS").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+        if std::env::var_os("TSIPIKA_RENDER_THREADS").is_some() {
+            return std::env::var("TSIPIKA_RENDER_THREADS").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
         }
         std::thread::available_parallelism().map(|n| (n.get().saturating_sub(1)).min(8) as u16).unwrap_or(0)
     }
@@ -2266,7 +2266,7 @@ struct TextGeom {
     /// shows them.
     alternate_glyphs: std::sync::OnceLock<BezPath>,
     /// Inline graphics placed by the layout.
-    inlines: Vec<vectorcraft_text::InlineGlyph>,
+    inlines: Vec<tsipika_text::InlineGlyph>,
 }
 
 impl TextGeom {
@@ -2314,7 +2314,7 @@ impl TextGeom {
             + self.alternate_candidates.iter().map(|c| size_of::<AlternateCandidate>() + lru::path_bytes(&c.cell)).sum::<usize>()
             + self.alternate_glyphs.get().map_or(0, lru::path_bytes)
             + self.spans.len() * size_of::<(usize, usize, usize)>()
-            + self.inlines.len() * size_of::<vectorcraft_text::InlineGlyph>()
+            + self.inlines.len() * size_of::<tsipika_text::InlineGlyph>()
     }
 }
 
@@ -2345,7 +2345,7 @@ fn required_shaping(t: &TextObject) -> std::collections::HashMap<(usize, usize),
     for run in &mut plain.runs {
         run.style.features = vec!["-liga".into(), "-calt".into()];
     }
-    let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &plain);
+    let layout = tsipika_text::layout(tsipika_text::FontDb::global(), &plain);
     let mut glyphs: std::collections::HashMap<(usize, usize), Vec<(u32, u32)>> = std::collections::HashMap::new();
     for g in &layout.glyphs {
         glyphs.entry((g.byte, g.len)).or_default().push((g.font_id, g.gid));
@@ -2359,8 +2359,8 @@ fn text_geom(t: &TextObject) -> TextGeom {
 
 /// Glyph geometry of `t`; `snap` (text space → device pixels) puts the glyphs on whole pixels.
 fn text_geom_snapped(t: &TextObject, snap: Option<Affine>) -> TextGeom {
-    let db = vectorcraft_text::FontDb::global();
-    let mut layout = vectorcraft_text::layout(db, t);
+    let db = tsipika_text::FontDb::global();
+    let mut layout = tsipika_text::layout(db, t);
     if let Some(xf) = snap {
         layout.snap_to_pixels(xf);
     }
@@ -2388,7 +2388,7 @@ fn text_geom_snapped(t: &TextObject, snap: Option<Affine>) -> TextGeom {
             // Variable Font settings (see `FontDb::style_face`).
             Some((f, m)) => {
                 let face = db.style_face(&r.style).unwrap_or(f);
-                (m == vectorcraft_text::FontMatch::Missing, Some(face.id()))
+                (m == tsipika_text::FontMatch::Missing, Some(face.id()))
             }
             None => (true, None),
         })
@@ -2419,7 +2419,7 @@ fn text_geom_snapped(t: &TextObject, snap: Option<Affine>) -> TextGeom {
         }
     }
     // Underline and strikethrough bars, painted as their run's type is (#847).
-    for (run, bar) in vectorcraft_text::decorations(&layout, db, t) {
+    for (run, bar) in tsipika_text::decorations(&layout, db, t) {
         push(&mut all, run, &bar);
     }
     TextGeom {
@@ -2452,8 +2452,8 @@ fn fill_rule(r: FillRule) -> peniko::Fill {
     }
 }
 
-pub(crate) fn blend_mode(b: vectorcraft_color::BlendMode) -> BlendMode {
-    use vectorcraft_color::BlendMode as B;
+pub(crate) fn blend_mode(b: tsipika_color::BlendMode) -> BlendMode {
+    use tsipika_color::BlendMode as B;
     let mix = match b {
         B::Normal => Mix::Normal,
         B::Darken => Mix::Darken,

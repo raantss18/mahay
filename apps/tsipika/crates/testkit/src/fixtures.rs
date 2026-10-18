@@ -3,10 +3,10 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind};
-use vectorcraft_engine::Session;
-use vectorcraft_geom::{PathData, Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node, NodeId, NodeKind};
+use tsipika_engine::Session;
+use tsipika_geom::{PathData, Rect, shapes};
 
 /// Execute a command and panic with context on error.
 #[track_caller]
@@ -112,7 +112,7 @@ pub fn rich_session() -> Session {
     exec(&mut s, "effect.apply", json!({"effect": "distort.roughen", "params": {"size": 3, "detail": 5, "seed": 7}}));
     let l = id_of(&exec(&mut s, "shape.line", json!({"x1": 20, "y1": 300, "x2": 200, "y2": 350})));
     exec(&mut s, "stroke.set", json!({"weight": 3, "endArrow": "Arrow"}));
-    let tx = id_of(&exec(&mut s, "text.create", json!({"x": 250, "y": 300, "text": "VectorCraft", "size": 30})));
+    let tx = id_of(&exec(&mut s, "text.create", json!({"x": 250, "y": 300, "text": "Tsipika", "size": 30})));
     // A non-default paragraph composer, so format round trips cover it.
     exec(&mut s, "text.setFormat", json!({"ids": [tx.0], "composer": "singleLine"}));
     // Area type with non-default Area Type Options (vertical alignment, inset).

@@ -13,7 +13,7 @@ pub mod inpaint;
 pub mod scopes;
 pub mod warp;
 
-use effectcraft_color::{BlendMode, blend_pixel};
+use tselatra_color::{BlendMode, blend_pixel};
 use rayon::prelude::*;
 
 pub use blur::{box_blur, directional_blur, gaussian_blur, radial_blur};

@@ -1,6 +1,6 @@
 //! The `print.*` commands: state, cells, templates and the PDF.
 
-use lightcraft_catalog::MemStore;
+use hazavana_catalog::MemStore;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -180,7 +180,7 @@ fn media_box(pdf: &[u8]) -> (f64, f64) {
 }
 
 fn temp_pdf(name: &str) -> String {
-    std::env::temp_dir().join(format!("lightcraft-print-{name}-{}.pdf", std::process::id())).to_string_lossy().to_string()
+    std::env::temp_dir().join(format!("hazavana-print-{name}-{}.pdf", std::process::id())).to_string_lossy().to_string()
 }
 
 #[test]
@@ -217,10 +217,10 @@ fn export_pdf_prints_the_current_settings() {
 fn export_pdf_with_a_printer_profile() {
     let mut s = Session::with_demo();
     let ids: Vec<u64> = s.catalog.photos().take(1).map(|p| p.id.0).collect();
-    let dir = std::env::temp_dir().join(format!("lightcraft-print-icc-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("hazavana-print-icc-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let icc = dir.join("Fine Art Matte.icc");
-    std::fs::write(&icc, lightcraft_codecs::icc::write_named(lightcraft_codecs::NamedSpace::AdobeRgb)).unwrap();
+    std::fs::write(&icc, hazavana_codecs::icc::write_named(hazavana_codecs::NamedSpace::AdobeRgb)).unwrap();
     let color = json!({"profile": {"kind": "icc", "path": icc}, "intent": "relative", "sharpen": "high", "media": "matte", "brightness": 10});
     run(
         &mut s,

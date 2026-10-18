@@ -12,7 +12,7 @@ use crate::{Result, Session};
 pub struct LibraryItem {
     pub name: String,
     pub description: String,
-    /// A `.designcraft` snippet, base64.
+    /// A `.pejy` snippet, base64.
     pub snippet: String,
 }
 
@@ -125,7 +125,7 @@ pub fn specs() -> Vec<CommandSpec> {
             for id in ids {
                 let name = s.doc()?.doc.item(id).map(|it| it.default_label().trim_matches(|c| c == '<' || c == '>').to_string()).unwrap_or_default();
                 if let Ok(st) = s.doc_mut() {
-                    st.selection = designcraft_doc::Selection::items(vec![id]);
+                    st.selection = pejy_doc::Selection::items(vec![id]);
                 }
                 let snip = super::file::snippet_bytes(s)?;
                 s.conveyor.push((name, snip));
@@ -187,7 +187,7 @@ mod tests {
         t.execute("library.open", &json!({"path": path})).unwrap();
         assert_eq!(t.execute("library.list", &json!({})).unwrap()[0]["name"], "Logo block");
         let placed = t.execute("library.place", &json!({"index": 0, "x": 300, "y": 300})).unwrap();
-        let id = designcraft_doc::ItemId(placed["ids"][0].as_u64().unwrap());
+        let id = pejy_doc::ItemId(placed["ids"][0].as_u64().unwrap());
         let d = &t.doc().unwrap().doc;
         let it = d.item(id).unwrap();
         assert_eq!((it.bounds().x0, it.bounds().y0), (300.0, 300.0));
@@ -208,10 +208,10 @@ mod tests {
         let b = s.execute("frame.create", &json!({"rect": [200, 72, 260, 122]})).unwrap()["id"].clone();
         assert_eq!(s.execute("conveyor.collect", &json!({"ids": [a, b]})).unwrap()["count"], 2);
         let r = s.execute("conveyor.place", &json!({"spread": 1, "x": 300, "y": 300})).unwrap();
-        let id = designcraft_doc::ItemId(r["ids"][0].as_u64().unwrap());
+        let id = pejy_doc::ItemId(r["ids"][0].as_u64().unwrap());
         let d = &s.doc().unwrap().doc;
         assert_eq!(d.item(id).unwrap().bounds().x0, 300.0);
-        assert!(d.find(id).is_some_and(|l| l.spread == designcraft_doc::SpreadRef::Doc(1)));
+        assert!(d.find(id).is_some_and(|l| l.spread == pejy_doc::SpreadRef::Doc(1)));
         assert_eq!(s.execute("conveyor.list", &json!({})).unwrap().as_array().unwrap().len(), 1, "placed objects leave the conveyor");
         s.execute("conveyor.place", &json!({"keep": true})).unwrap();
         assert_eq!(s.execute("conveyor.list", &json!({})).unwrap().as_array().unwrap().len(), 1);

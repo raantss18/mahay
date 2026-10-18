@@ -3,21 +3,21 @@
 //!
 //! The engine holds what everyone sees ([`Live`]: status, peers and their presence, who you
 //! follow) and the `collab.*` commands. The networking lives in a higher layer
-//! (`figcraft-collab-net`), which the app installs as a [`LiveLink`]: the engine never opens a
+//! (`endrika-collab-net`), which the app installs as a [`LiveLink`]: the engine never opens a
 //! socket, so nothing below the UI layer depends on networking. Without a link (the CLI, tests)
 //! the commands say live sessions aren't available.
 //!
 //! Peers, presence and document changes are the wire types of the collaboration core
-//! ([`figcraft_collab::message`]). Each participant runs a core [`Client`]: the host's session
+//! ([`endrika_collab::message`]). Each participant runs a core [`Client`]: the host's session
 //! document is the one it shared, a guest gets the host's file as a new tab from the welcome.
 //! Every command, gesture or group on the session document is synced as one batch and is one step
 //! of the user's own undo history ([`Session::record`]); undo and redo there take back only the
-//! user's own steps ([`figcraft_collab::Client::undo`]). Batches from the host's server are applied
+//! user's own steps ([`endrika_collab::Client::undo`]). Batches from the host's server are applied
 //! through the client and installed with [`Session::apply_remote`], which never touches the undo
 //! history. After a dropped connection the client resumes with its id and catches up; what it
 //! made meanwhile goes out then.
 //!
-//! A file can also live on a `figcraft-server`: `collab.publish` uploads the open document and
+//! A file can also live on a `endrika-server`: `collab.publish` uploads the open document and
 //! syncs that tab through the server, whose share links let others edit or only view. A view link
 //! makes the synced document read-only here (every edit is refused before it is sent; the server
 //! refuses it too).
@@ -31,7 +31,7 @@
 //! Sharing with a join code (`collab.share`): online, the open document is published to the
 //! server in Preferences and the server names its links with short codes; on the local network
 //! the app hosts and the code carries the host's address and the session's secret
-//! ([`figcraft_collab::code`]). `collab.join` takes a code of either kind, or an invite link.
+//! ([`endrika_collab::code`]). `collab.join` takes a code of either kind, or an invite link.
 //!
 //! Cursor chat (`collab.cursorChat`) and spotlights (`collab.spotlight`) travel as signals:
 //! short-lived presence the host passes on to everyone, never stored. A spotlight makes everyone
@@ -41,17 +41,17 @@ use std::collections::BTreeMap;
 use std::net::IpAddr;
 use std::sync::Arc;
 
-use figcraft_collab::Client;
-use figcraft_collab::code::{self, Code};
-pub use figcraft_collab::message::Signal;
-use figcraft_collab::message::{Admin, AdminReply, ClientMsg, EditingText, LibraryReply, LibraryReq, PluginReply, PluginReq, ServerMsg};
+use endrika_collab::Client;
+use endrika_collab::code::{self, Code};
+pub use endrika_collab::message::Signal;
+use endrika_collab::message::{Admin, AdminReply, ClientMsg, EditingText, LibraryReply, LibraryReq, PluginReply, PluginReq, ServerMsg};
 
-pub use figcraft_collab::message::{Access, HostInfo, Resume, utc_date};
-use figcraft_doc::{Document, NodeId};
+pub use endrika_collab::message::{Access, HostInfo, Resume, utc_date};
+use endrika_doc::{Document, NodeId};
 use serde::Serialize;
 use serde_json::{Value, json};
 
-pub use figcraft_collab::message::{Peer, Presence};
+pub use endrika_collab::message::{Peer, Presence};
 
 use crate::cmd::CommandSpec;
 use crate::collab::EngineRecompute;
@@ -62,10 +62,10 @@ use crate::{DocState, EngineError, Result, Session, TextEdit, ViewState, bad, sp
 /// The server files are shared through online unless Preferences name another: the only place
 /// its address is written.
 ///
-/// A build can ship another one, or none: set `FIGCRAFT_DEFAULT_SERVER` when compiling to a
-/// server's address (`wss://host/`), or to nothing (`FIGCRAFT_DEFAULT_SERVER=`) for a build whose
+/// A build can ship another one, or none: set `ENDRIKA_DEFAULT_SERVER` when compiling to a
+/// server's address (`wss://host/`), or to nothing (`ENDRIKA_DEFAULT_SERVER=`) for a build whose
 /// online sharing stays off until the user enters a server in Preferences.
-pub const DEFAULT_SERVER: &str = match option_env!("FIGCRAFT_DEFAULT_SERVER") {
+pub const DEFAULT_SERVER: &str = match option_env!("ENDRIKA_DEFAULT_SERVER") {
     Some(server) => server,
     None => "wss://collab.craftapps.dev/",
 };
@@ -158,7 +158,7 @@ pub struct SessionInfo {
     /// The shared file's name and pages (the host's).
     pub file_name: String,
     pub pages: Vec<PageInfo>,
-    /// The invite link (`figcraft://join?host=…&file=…&token=…`) and the same as a plain
+    /// The invite link (`endrika://join?host=…&file=…&token=…`) and the same as a plain
     /// WebSocket URL. Both carry the session's secret token: share them only with people you
     /// invite.
     pub link: String,
@@ -266,7 +266,7 @@ pub fn join_target(server: &str, typed: &str) -> std::result::Result<String, Str
     match code::parse(typed)? {
         Code::Local(local) => Ok(local.link()),
         Code::Online(_) if server.trim().is_empty() => Err(format!("that is an online join code, and {ONLINE_OFF}")),
-        Code::Online(code) => Ok(format!("figcraft://join?server={}&code={code}", server.trim())),
+        Code::Online(code) => Ok(format!("endrika://join?server={}&code={code}", server.trim())),
     }
 }
 
@@ -648,7 +648,7 @@ pub struct Lives {
     last: SessionId,
     /// What a document that isn't in a session shows.
     off: Live,
-    /// Registers the app as the opener of `figcraft://` invite links (the desktop app on Windows
+    /// Registers the app as the opener of `endrika://` invite links (the desktop app on Windows
     /// installs one; see [`crate::invite_links`]).
     pub links: Option<Box<dyn crate::invite_links::LinkRegistrar>>,
     /// The recorded online files changed since the app last saved the preferences (it saves them
@@ -1341,7 +1341,7 @@ impl Session {
         }
         let doc = Arc::new(client.document().clone());
         // Edits the server refused were rolled back: say why (the UI's toast).
-        let notices: Vec<String> = client.take_notices().iter().map(figcraft_collab::Notice::message).collect();
+        let notices: Vec<String> = client.take_notices().iter().map(endrika_collab::Notice::message).collect();
         live.synced = Some(doc.clone());
         if !notices.is_empty() {
             self.message = Some(notices.join("; "));
@@ -1817,7 +1817,7 @@ fn report(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let live = s.live();
     if live.status != Status::Live || live.role() != Some(Role::Guest) {
-        return Err(bad(CMD, "join a file on a FigCraft server first: reports go to that server's operator"));
+        return Err(bad(CMD, "join a file on a Endrika server first: reports go to that server's operator"));
     }
     if live.hosting.is_none() {
         return Err(bad(CMD, "this server doesn't take reports (it is older than this app); contact its operator another way"));
@@ -2008,7 +2008,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "collab.join",
             "Join live session",
-            "{code: a join code (K7M-2QX-9TD from a server, asked at the server in Preferences; a longer one for the local network; spaces, dashes and case don't matter, O reads as 0 and I or L as 1) | link: figcraft://join?host=…&file=…&token=…, figcraft://join?server=ws(s)://…&file=…&token=… or ws(s)://host:port/?file=…&token=… (a session an app hosts, or a server's share link; a code here works too)} → the new session: {session, status: \"connecting\", …}; its file opens in a tab of its own (other files' sessions go on) and `collab.peers` tells when it's live (`sessions` lists it until then, and if it fails)",
+            "{code: a join code (K7M-2QX-9TD from a server, asked at the server in Preferences; a longer one for the local network; spaces, dashes and case don't matter, O reads as 0 and I or L as 1) | link: endrika://join?host=…&file=…&token=…, endrika://join?server=ws(s)://…&file=…&token=… or ws(s)://host:port/?file=…&token=… (a session an app hosts, or a server's share link; a code here works too)} → the new session: {session, status: \"connecting\", …}; its file opens in a tab of its own (other files' sessions go on) and `collab.peers` tells when it's live (`sessions` lists it until then, and if it fails)",
             false,
             join
         ),
@@ -2022,7 +2022,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "collab.publish",
             "Publish to server",
-            "{server: ws://host:port/?key=… or wss://host/path/?key=… (the server's address with its key; `figcraft-server key` prints it; without a key on a server open to the public), key? (when the address has none), name? (default: the file's name)} → status \"connecting\": the open file is uploaded as a new file and this tab syncs through the server; `collab.peers` then has `published: {server, file, name, edit, view, owner (published without a key: the owner token, shown once), expires (seconds since 1970, or null)}` and `hosting` (the server's operator, terms and idle expiry)",
+            "{server: ws://host:port/?key=… or wss://host/path/?key=… (the server's address with its key; `endrika-server key` prints it; without a key on a server open to the public), key? (when the address has none), name? (default: the file's name)} → status \"connecting\": the open file is uploaded as a new file and this tab syncs through the server; `collab.peers` then has `published: {server, file, name, edit, view, owner (published without a key: the owner token, shown once), expires (seconds since 1970, or null)}` and `hosting` (the server's operator, terms and idle expiry)",
             false,
             publish
         ),

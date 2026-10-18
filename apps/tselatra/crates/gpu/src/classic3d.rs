@@ -1,14 +1,14 @@
 //! Classic 3D runs on the GPU (`classic3d.wgsl`): the CPU prepares the planes
-//! ([`Renderer::prepare_3d_run`](effectcraft_render::Renderer::prepare_3d_run): layer buffers,
+//! ([`Renderer::prepare_3d_run`](tselatra_render::Renderer::prepare_3d_run): layer buffers,
 //! homographies, materials, lights, track mattes, bokeh depth of field), the GPU packs the
 //! buffers into one atlas texture and runs the per-pixel depth sort, lighting, ray-cast shadows
 //! and blending of `render::three_d::compose` in one kernel.
 
 use std::collections::HashMap;
 
-use effectcraft_geom::Mat4;
-use effectcraft_project::LightKind;
-use effectcraft_render::three_d::{LightState, PlaneGeo, Run3d};
+use tselatra_geom::Mat4;
+use tselatra_project::LightKind;
+use tselatra_render::three_d::{LightState, PlaneGeo, Run3d};
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::ops::mode_id;

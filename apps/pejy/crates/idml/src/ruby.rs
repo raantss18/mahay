@@ -1,7 +1,7 @@
 //! IDML ruby settings (`Ruby*` attributes of styles and character ranges). `RubyFlag` and
 //! `RubyString` are read and written with the other character attributes.
-use designcraft_doc::CharAttrs;
-use designcraft_doc::ruby::{RubyAlignment, RubyOverhang, RubyParentSpacing, RubyPosition, RubyType};
+use pejy_doc::CharAttrs;
+use pejy_doc::ruby::{RubyAlignment, RubyOverhang, RubyParentSpacing, RubyPosition, RubyType};
 
 use crate::cjk::{overprint_in, overprint_out};
 use crate::names::num;

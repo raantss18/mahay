@@ -1,7 +1,7 @@
 //! Essential Graphics Font and uniform Scale controls, Composition ▸ Open in Essential Graphics.
 
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::essential::{self, ControlType};
+use tselatra_keyframe::Value as KV;
+use tselatra_project::essential::{self, ControlType};
 use serde_json::json;
 
 use crate::{Event, Session};
@@ -58,7 +58,7 @@ fn font_and_scale_controls_override_per_instance() {
     assert_eq!(i["controls"][2]["value"][0], 50.0);
     assert_eq!(i["controls"][2]["value"][1], 50.0);
     // What the instance renders: the overridden text with the overridden font, scaled.
-    let layer = s.active_comp().unwrap().layer(effectcraft_project::LayerId(inst)).unwrap().clone();
+    let layer = s.active_comp().unwrap().layer(tselatra_project::LayerId(inst)).unwrap().clone();
     let over: Vec<essential::Override> = {
         let g = essential::group(&layer).unwrap();
         let mut v = vec![];
@@ -70,7 +70,7 @@ fn font_and_scale_controls_override_per_instance() {
         v
     };
     let p = essential::with_overrides(&s.project, title, &over).unwrap();
-    let src = p.comp(title).unwrap().layer(effectcraft_project::LayerId(text)).unwrap();
+    let src = p.comp(title).unwrap().layer(tselatra_project::LayerId(text)).unwrap();
     match src.props.prop("text/sourceText").map(|x| &x.value) {
         Some(KV::Text(d)) => assert_eq!((d.text.as_str(), d.font.as_str(), d.size), ("Bye", "Serif Test", 40.0)),
         o => panic!("{o:?}"),
@@ -78,7 +78,7 @@ fn font_and_scale_controls_override_per_instance() {
     // Push to Comp with only the font: the source keeps its own text.
     s.execute("essential.revert", json!({"layer": inst, "control": t})).unwrap();
     s.execute("essential.pushToComp", json!({"layer": inst, "control": f})).unwrap();
-    let srcl = s.project.comp(title).unwrap().layer(effectcraft_project::LayerId(text)).unwrap();
+    let srcl = s.project.comp(title).unwrap().layer(tselatra_project::LayerId(text)).unwrap();
     match srcl.props.prop("text/sourceText").map(|x| &x.value) {
         Some(KV::Text(d)) => assert_eq!((d.text.as_str(), d.font.as_str()), ("Hello", "Serif Test")),
         o => panic!("{o:?}"),

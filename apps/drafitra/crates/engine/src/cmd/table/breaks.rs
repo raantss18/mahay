@@ -1,7 +1,7 @@
 //! Table breaking (`table.break`) and data links (DATALINK, DATALINKUPDATE: cells filled from a
 //! CSV file).
 
-use cadcraft_doc::{BreakDirection, DataLink, EntityKind, Handle, Table, TableBreak, TableCell};
+use drafitra_doc::{BreakDirection, DataLink, EntityKind, Handle, Table, TableBreak, TableCell};
 use serde_json::{Value, json};
 
 use super::cells::cell_of;
@@ -47,7 +47,7 @@ fn run_break(s: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => None,
         Some(Value::Array(a)) => Some(
             a.iter()
-                .take(cadcraft_doc::MAX_TABLE_PARTS)
+                .take(drafitra_doc::MAX_TABLE_PARTS)
                 .map(|v| v.as_f64().filter(|x| x.is_finite() && *x >= 0.0 && *x <= 1e12))
                 .collect::<Option<Vec<f64>>>()
                 .ok_or_else(|| bad(id, "`heights` must be non-negative numbers"))?,

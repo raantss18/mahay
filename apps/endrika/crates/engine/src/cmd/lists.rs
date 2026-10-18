@@ -6,7 +6,7 @@
 //! Every list is stored bottom first: index 0 paints (or applies) first, the last one is on top;
 //! the Design panel shows them in reverse, the topmost row first.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::Value;
 
 use super::{CommandSpec, ok};
@@ -112,8 +112,8 @@ pub fn stop_binding(field: &str) -> Option<usize> {
 /// Keep the gradient stop bindings of paint `index` of `n`'s fills (or strokes) on their stops after
 /// the paint changed from `old`: one stop removed shifts the later ones down (the removed one's
 /// binding goes); a paint that is no longer a gradient drops them. Other edits keep stop indices.
-pub(crate) fn remap_stop_bindings(n: &mut Node, fills: bool, index: usize, old: &figcraft_color::Paint) {
-    use figcraft_color::PaintKind;
+pub(crate) fn remap_stop_bindings(n: &mut Node, fills: bool, index: usize, old: &endrika_color::Paint) {
+    use endrika_color::PaintKind;
     let list = if fills { BoundList::Fills } else { BoundList::Strokes };
     let new = if fills { n.fills.get(index) } else { n.strokes.get(index) };
     // Some(k): stop k was removed; None: the paint has no stops any more.

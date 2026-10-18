@@ -1,6 +1,6 @@
 ---
 title: Create a new document
-description: Start a new DesignCraft document from a preset or with your own page size, margins and columns.
+description: Start a new Pejy document from a preset or with your own page size, margins and columns.
 order: 10
 verified: 0.7.1
 ---
@@ -36,8 +36,8 @@ The start screen also shows a tile for each print preset under **Start a new doc
 
 ## See a finished layout
 
-Click **Open sample magazine** on the start screen. It opens a magazine with a cover, styled pages, threaded columns, text wrap and swatches, which is a good way to see what DesignCraft can do.
+Click **Open sample magazine** on the start screen. It opens a magazine with a cover, styled pages, threaded columns, text wrap and swatches, which is a good way to see what Pejy can do.
 
 ## Next
 
-Save your work with **File**, then **Save** (Ctrl+S). The first save asks where to put the file and suggests a name ending in `.designcraft`.
+Save your work with **File**, then **Save** (Ctrl+S). The first save asks where to put the file and suggests a name ending in `.pejy`.

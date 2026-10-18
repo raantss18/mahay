@@ -3,10 +3,10 @@
 use crate::theme::mono;
 use egui::{Id, RichText, TextEdit, Ui, vec2};
 use serde_json::{Value, json};
-use soundcraft_engine::cmd::MAX_POSITION;
-use soundcraft_engine::edit::first_movable;
-use soundcraft_model::{ClipId, Session, SourceId, TrackId};
-use soundcraft_time::{Samples, TimeFormat, format_length};
+use feo_engine::cmd::MAX_POSITION;
+use feo_engine::edit::first_movable;
+use feo_model::{ClipId, Session, SourceId, TrackId};
+use feo_time::{Samples, TimeFormat, format_length};
 
 #[derive(Debug, Clone)]
 pub enum Target {

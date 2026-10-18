@@ -25,13 +25,13 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_color::blend::{cmyk_planes, composite, planes_cmyk};
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::appearance::{AppearanceItem, FillLayer};
-use vectorcraft_doc::{Appearance, ColorMode, Document, Effect, ImageBlob, ImageObject, Knockout, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Affine, FillRule, PathData, Rect, shapes};
-use vectorcraft_pathops as po;
-use vectorcraft_render::effects;
+use tsipika_color::blend::{cmyk_planes, composite, planes_cmyk};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::appearance::{AppearanceItem, FillLayer};
+use tsipika_doc::{Appearance, ColorMode, Document, Effect, ImageBlob, ImageObject, Knockout, Node, NodeId, NodeKind};
+use tsipika_geom::{Affine, FillRule, PathData, Rect, shapes};
+use tsipika_pathops as po;
+use tsipika_render::effects;
 
 use super::edit::roots_of;
 use super::menucmds::{MAX_PIXELS, isolated_doc, unique_key};
@@ -259,7 +259,7 @@ fn flatten(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(EngineError::Other("Flatten Transparency: select objects to flatten".into()));
     }
     let src = s.doc()?.doc.clone();
-    let failed = vectorcraft_render::decode_failures();
+    let failed = tsipika_render::decode_failures();
     let plan = plan(&src, &roots, &o, true)?;
     let warning = super::rasterfx::undecoded_warning(failed);
     let options = serde_json::to_value(&o).unwrap_or_default();
@@ -422,7 +422,7 @@ fn presets_import(s: &mut Session, p: &Value) -> Result<Value> {
     let bytes = match (str_param(p, "path"), str_param(p, "data"), str_param(p, "dataBase64")) {
         (Some(path), ..) => super::fileio::read_file(path)?,
         (None, Some(text), _) => text.as_bytes().to_vec(),
-        (None, None, Some(b64)) => vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(C, "bad dataBase64"))?,
+        (None, None, Some(b64)) => tsipika_format::base64_decode(b64).ok_or_else(|| bad(C, "bad dataBase64"))?,
         _ => return Err(bad(C, "give `path`, `data` or `dataBase64`")),
     };
     let file: PresetFile = serde_json::from_slice(&bytes).map_err(|e| bad(C, format!("not a flattener presets file: {e}")))?;
@@ -818,16 +818,16 @@ fn plan(src: &Document, roots: &[NodeId], o: &FlattenOptions, render: bool) -> R
     // Geometry effects first: what is left on the art are raster effects.
     let baked = effects::bake_document(&tmp).unwrap_or(tmp);
     let art: Vec<Node> = baked.layers[0].children().into_iter().flatten().map(|a| (**a).clone()).collect();
-    let mut sc = Scratch { brushes: vectorcraft_brush::library(&baked), doc: baked.clone() };
+    let mut sc = Scratch { brushes: tsipika_brush::library(&baked), doc: baked.clone() };
     let plain: Vec<Node> = art.iter().map(|n| sc.plain(n)).collect();
     let reaches: Vec<Option<Rect>> = plain.iter().map(reach).collect();
     let see_through: Vec<bool> = plain.iter().map(|n| n.shows_transparency() || o.draws_see_through_image(n)).collect();
     let cmyk = src.color_mode == ColorMode::Cmyk;
     let mut out = Plan { flat: vec![], kept: vec![], transparent: roots.iter().zip(&see_through).filter(|(_, t)| **t).map(|(id, _)| *id).collect() };
     // Baking above stopped early when cancelled; each group is a place to stop (a plan changes nothing).
-    vectorcraft_doc::cancel::check()?;
+    tsipika_doc::cancel::check()?;
     for g in overlapping(&reaches) {
-        vectorcraft_doc::cancel::check()?;
+        tsipika_doc::cancel::check()?;
         let ids: Vec<NodeId> = g.iter().map(|&i| roots[i]).collect();
         let group = g.iter().any(|&i| see_through[i]).then(|| {
             let plain: Vec<&Node> = g.iter().map(|&i| &plain[i]).collect();
@@ -957,10 +957,10 @@ fn render_raster(doc: &Document, art: &[Node], rect: Rect, ppi: f64, clip: Optio
         rect.x0 + (rect.width() * scale).ceil().max(1.0) / scale,
         rect.y0 + (rect.height() * scale).ceil().max(1.0) / scale,
     );
-    let mut r = vectorcraft_render::Renderer::new();
+    let mut r = tsipika_render::Renderer::new();
     let mut img = r.render_region(&isolated_doc(doc, art.to_vec()), region, scale, !o.preserve_alpha);
     // The drawing stops early when cancelled: this image is not whole.
-    vectorcraft_doc::cancel::check()?;
+    tsipika_doc::cancel::check()?;
     if o.no_transparency.is_some() && clip.is_some() && !o.preserve_alpha {
         // Without transparency the clip alone shapes the image: it is opaque, over white (its
         // edge pixels too).
@@ -1041,13 +1041,13 @@ pub(crate) fn flatten_document(doc: &Document, o: &FlattenOptions) -> Result<Opt
         return Ok(None);
     }
     let mut d = doc.clone();
-    apply(&mut d, &mut vectorcraft_doc::Selection::default(), plan, o)?;
+    apply(&mut d, &mut tsipika_doc::Selection::default(), plan, o)?;
     Ok(Some(d))
 }
 
 // ---------- apply ----------
 
-fn apply(d: &mut Document, sel: &mut vectorcraft_doc::Selection, plan: Plan, o: &FlattenOptions) -> Result<(Vec<NodeId>, usize, usize)> {
+fn apply(d: &mut Document, sel: &mut tsipika_doc::Selection, plan: Plan, o: &FlattenOptions) -> Result<(Vec<NodeId>, usize, usize)> {
     let (mut vector, mut rasterized) = (0, 0);
     let (mut ids, mut flat) = (vec![], vec![]);
     // The groups replace their objects in one pass at the end. When an object is listed twice or
@@ -1091,7 +1091,7 @@ fn apply(d: &mut Document, sel: &mut vectorcraft_doc::Selection, plan: Plan, o: 
     if !flat.is_empty() {
         d.insert_beside(flat, true)?;
     }
-    let brushes = if o.strokes_to_outlines { vectorcraft_brush::library(d) } else { vec![] };
+    let brushes = if o.strokes_to_outlines { tsipika_brush::library(d) } else { vec![] };
     for mut id in plan.kept {
         if o.text_to_outlines {
             id = outline_texts_under(d, id)?;
@@ -1192,7 +1192,7 @@ fn drop_overprints(n: &mut Node) {
 struct Scratch {
     /// A copy of the document the art comes from (outlining allocates ids in it).
     doc: Document,
-    brushes: Vec<vectorcraft_brush::Brush>,
+    brushes: Vec<tsipika_brush::Brush>,
 }
 
 impl Scratch {
@@ -1206,14 +1206,14 @@ impl Scratch {
         let made = match &n.kind {
             NodeKind::Text(_) => outlined_text(n),
             NodeKind::SymbolInstance { symbol, .. } => {
-                let art = self.doc.symbols.iter().find(|s| &s.name == symbol).map(|s| vectorcraft_render::instance_art(&s.art, n));
+                let art = self.doc.symbols.iter().find(|s| &s.name == symbol).map(|s| tsipika_render::instance_art(&s.art, n));
                 art.and_then(|a| effects::outline_art(n, Some(&a))).map(|g| carry(n, g))
             }
             // A placed document stays one: its art's resources aren't the document's.
             NodeKind::PlacedDocument(_) => None,
             NodeKind::Blend { .. } | NodeKind::Envelope { .. } | NodeKind::Repeat(_) => {
                 let hook: &dyn Fn(&Node) -> Option<Node> = &effects::outline_text;
-                Some(carry(n, vectorcraft_doc::live::expanded_group(n, Some(hook))))
+                Some(carry(n, tsipika_doc::live::expanded_group(n, Some(hook))))
             }
             NodeKind::Path { guide: false, .. } | NodeKind::Compound { .. } => outline_strokes(&mut self.doc, &self.brushes, n),
             _ => None,
@@ -1396,7 +1396,7 @@ impl Builder {
     /// What colour `c` composites as ([`Fill::planes`]).
     fn planes(&self, c: &Color) -> [[f32; 3]; 2] {
         if self.cmyk {
-            let cms = vectorcraft_color::cms::active();
+            let cms = tsipika_color::cms::active();
             cmyk_planes(cms.to_cmyk(c, cms.settings().intent))
         } else {
             [c.to_rgb(); 2]

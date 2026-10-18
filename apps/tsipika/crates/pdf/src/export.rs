@@ -1,11 +1,11 @@
-//! Document → PDF (krilla). Mirrors the tree walk of `vectorcraft-render`.
+//! Document → PDF (krilla). Mirrors the tree walk of `tsipika-render`.
 
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use craft_pdf::write::backend as krilla;
-use craft_pdf::write::{self, Metadata};
+use mahay_pdf::write::backend as krilla;
+use mahay_pdf::write::{self, Metadata};
 use krilla::color::separation::{Color as SepColor, SeparationColorant, SeparationSpace};
 use krilla::color::{cmyk, luma, rgb};
 use krilla::configure::{Archival, PdfVersion};
@@ -17,12 +17,12 @@ use krilla::paint::{Fill, LinearGradient, RadialGradient, SpreadMethod, Stop, St
 use krilla::surface::Surface;
 use krilla::text::{Glyph, GlyphId, KrillaGlyph};
 use kurbo::{PathEl, Shape, Vec2};
-use vectorcraft_color::{BlendMode, Color, GradientKind, Paint};
-use vectorcraft_doc::{AppearanceItem, Document, LineCap, LineJoin, Node, NodeKind, StrokeAlign, StrokeLayer, SymbolBoxes, TextObject};
-use vectorcraft_effects::stroke::{self, WrittenShape};
-use vectorcraft_geom::{Affine, BezPath, FillRule, Rect};
-use vectorcraft_text::TextLayout;
-use vectorcraft_text::embed::Embedding;
+use tsipika_color::{BlendMode, Color, GradientKind, Paint};
+use tsipika_doc::{AppearanceItem, Document, LineCap, LineJoin, Node, NodeKind, StrokeAlign, StrokeLayer, SymbolBoxes, TextObject};
+use tsipika_effects::stroke::{self, WrittenShape};
+use tsipika_geom::{Affine, BezPath, FillRule, Rect};
+use tsipika_text::TextLayout;
+use tsipika_text::embed::Embedding;
 
 use crate::forms::Mark;
 use crate::lab_spot::{find, rfind};
@@ -60,20 +60,20 @@ pub(crate) fn leaving_out_undecodable<T>(mut write: impl FnMut(&mut HashSet<Stri
 fn export_with_report_inner(doc: &Document, opts: &PdfOptions, left_out: &mut HashSet<String>) -> Result<ExportReport, PdfError> {
     let set = &opts.settings;
     set.check()?;
-    vectorcraft_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
+    tsipika_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
     // Live geometry effects export as their result; raster effects are reported below.
-    let baked = vectorcraft_effects::bake_document(doc);
+    let baked = tsipika_effects::bake_document(doc);
     // Baking stops early when cancelled, leaving a half-baked copy that must not be written.
-    vectorcraft_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
+    tsipika_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
     let doc = baked.as_ref().unwrap_or(doc);
     let pages = pages(doc, opts)?;
 
     let title = crate::pdfx::title(set.standard, opts.title.clone().unwrap_or_else(|| doc.title.clone()));
     // The time of writing (none on the web) dates the editing data and the page information.
-    let now = vectorcraft_doc::metadata::output_time();
+    let now = tsipika_doc::metadata::output_time();
     let created_at = opts.created.or(now);
     crate::pdfx::require_date(set.standard, created_at)?;
-    let mut w = Writer::new(doc, set, &title, created_at, doc.color_mode == vectorcraft_doc::ColorMode::Cmyk)?;
+    let mut w = Writer::new(doc, set, &title, created_at, doc.color_mode == tsipika_doc::ColorMode::Cmyk)?;
     // Preserve Editing: the native document as an embedded file (`check` refused PDF/A with it).
     let mut warnings = set.warnings();
     let native = opts.native.as_deref().filter(|_| set.preserve_editing);
@@ -102,8 +102,8 @@ fn export_with_report_inner(doc: &Document, opts: &PdfOptions, left_out: &mut Ha
     let total = pages.len() as u64;
     for (written, (i, boxes)) in pages.into_iter().enumerate() {
         // The page count and the page being written, for a client that asked for progress.
-        vectorcraft_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
-        vectorcraft_doc::cancel::progress(written as u64 + 1, total, &format!("Writing page {} of {total}", written + 1));
+        tsipika_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
+        tsipika_doc::cancel::progress(written as u64 + 1, total, &format!("Writing page {} of {total}", written + 1));
         let (m, r) = (boxes.media, boxes.bleed);
         let info = if marks.page_info { crate::marks::page_info(doc, &title, i, now) } else { String::new() };
         let art = crate::marks::art(doc, &marks, &boxes, bleed, &info);
@@ -129,7 +129,7 @@ fn export_with_report_inner(doc: &Document, opts: &PdfOptions, left_out: &mut Ha
         };
         w.page(&mut ex, &sheet).map_err(|_| PdfError::BadArtboard(i))?;
     }
-    vectorcraft_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
+    tsipika_doc::cancel::check().map_err(|_| PdfError::Cancelled)?;
     let (layers, overprinted) = (ex.layers, ex.overprinted);
     w.absorb(ex);
     let (bytes, more) = w.finish(left_out)?;
@@ -225,7 +225,7 @@ pub(crate) struct Writer {
     /// `cmyk_blending`).
     cmyk: bool,
     /// Spot colours written with a Lab alternate, gathered from the exporters ([`Self::absorb`]).
-    lab_spots: Vec<(String, vectorcraft_color::cms::Lab)>,
+    lab_spots: Vec<(String, tsipika_color::cms::Lab)>,
     warnings: Vec<String>,
     /// RGB content of a CMYK document, gathered from the exporters ([`Self::absorb`]).
     rgb_in_cmyk: RgbInCmyk,
@@ -298,8 +298,8 @@ impl Writer {
         let info = &doc.metadata;
         let given = |s: &str| Some(s.trim()).filter(|s| !s.is_empty()).map(str::to_string);
         let metadata = Metadata {
-            creator: "VectorCraft".into(),
-            producer: "VectorCraft".into(),
+            creator: "Tsipika".into(),
+            producer: "Tsipika".into(),
             title: Some(title.to_owned()),
             authors: given(&info.author).into_iter().collect(),
             description: given(&info.description),
@@ -539,7 +539,7 @@ fn number(digits: &[u8]) -> Option<u32> {
 
 /// Unix seconds (UTC) → krilla date.
 fn date_time(t: i64) -> krilla::metadata::DateTime {
-    let [year, month, day, hour, minute, second] = vectorcraft_doc::metadata::civil(t);
+    let [year, month, day, hour, minute, second] = tsipika_doc::metadata::civil(t);
     krilla::metadata::DateTime::new(year as u16)
         .month(month as u8)
         .day(day as u8)
@@ -560,11 +560,11 @@ pub(crate) struct Exporter<'a> {
     warnings: Vec<String>,
     images: HashMap<String, Option<Image>>,
     /// The brush library, parsed when the first brushed stroke is written.
-    brushes: Option<Vec<vectorcraft_brush::Brush>>,
+    brushes: Option<Vec<tsipika_brush::Brush>>,
     /// Whether the group being written is a knockout group (what its neutral children inherit).
     knockout: bool,
     /// Spot colours written with a Lab alternate ([`crate::lab_spot`]): colorant name, Lab values.
-    lab_spots: Vec<(String, vectorcraft_color::cms::Lab)>,
+    lab_spots: Vec<(String, tsipika_color::cms::Lab)>,
     /// Images may ask viewers to smooth them (not in PDF/A).
     interpolate: bool,
     /// How images are resampled and compressed.
@@ -572,7 +572,7 @@ pub(crate) struct Exporter<'a> {
     /// Layers whose Print option is off are written too.
     pub non_printing: bool,
     /// How colours are separated into CMYK (the colour settings' intent unless print sets one).
-    pub intent: vectorcraft_color::cms::Intent,
+    pub intent: tsipika_color::cms::Intent,
     /// Whether a layer shows transparency (found out on the first page that asks).
     transparent: Option<bool>,
     /// How colours are written (the Output settings; print writes them as they are).
@@ -609,7 +609,7 @@ pub(crate) struct Exporter<'a> {
 const MAX_INLINE_DEPTH: u32 = 4;
 
 /// The warning for an image left out because it can't be decoded: the note raster exports give
-/// (`vectorcraft-engine`'s `rasterfx::undecoded_warning`).
+/// (`tsipika-engine`'s `rasterfx::undecoded_warning`).
 const UNDECODED: &str = "an image couldn't be decoded and is missing from the picture";
 
 impl<'a> Exporter<'a> {
@@ -627,7 +627,7 @@ impl<'a> Exporter<'a> {
             interpolate: set.standard != Standard::PdfA2b,
             compression: &set.compression,
             non_printing: false,
-            intent: vectorcraft_color::cms::active().settings().intent,
+            intent: tsipika_color::cms::active().settings().intent,
             transparent: None,
             out: Arc::default(),
             convert: true,
@@ -757,7 +757,7 @@ fn color(c: &Color) -> krilla::color::Color {
     match *c {
         Color::Rgb { r, g, b } => rgb::Color::new(q(r), q(g), q(b)).into(),
         Color::Cmyk { c, m, y, k } => cmyk::Color::new(q(c), q(m), q(y), q(k)).into(),
-        // VectorCraft grey is ink coverage (0 = white); PDF DeviceGray is lightness.
+        // Tsipika grey is ink coverage (0 = white); PDF DeviceGray is lightness.
         Color::Gray { k } => luma::Color::new(q(1.0 - k)).into(),
         Color::Lab { .. } => {
             let [r, g, b] = c.to_rgb();
@@ -800,7 +800,7 @@ impl Exporter<'_> {
     /// conversion, RGB and Lab colours of CMYK documents are separated into CMYK through the
     /// document's colour spaces, so the file carries press values.
     fn col(&mut self, c: &Color) -> krilla::color::Color {
-        let cmyk_doc = self.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk;
+        let cmyk_doc = self.doc.color_mode == tsipika_doc::ColorMode::Cmyk;
         if let (true, true, Color::Rgb { r, g, b }) = (cmyk_doc, self.convert, c) {
             self.rgb_in_cmyk.colours.insert([r.to_bits(), g.to_bits(), b.to_bits()]);
         }
@@ -822,7 +822,7 @@ impl Exporter<'_> {
         if let Color::Lab { l, a, b } = color
             && !self.lab_spots.iter().any(|(n, _)| n == name)
         {
-            self.lab_spots.push((name.to_string(), vectorcraft_color::cms::Lab::new(l, a, b)));
+            self.lab_spots.push((name.to_string(), tsipika_color::cms::Lab::new(l, a, b)));
         }
         let full = self.out.cmyk(&color, self.intent);
         let alt = krilla::color::RegularColor::Cmyk(cmyk::Color::new(q(full[0]), q(full[1]), q(full[2]), q(full[3])));
@@ -832,7 +832,7 @@ impl Exporter<'_> {
     /// A solid paint, in the Separation colour space at its tint when it's linked to a spot swatch
     /// or to Registration (`/All`: every plate).
     fn solid(&mut self, c: &Color, link: Option<&str>, tint: f32) -> krilla::color::Color {
-        if link == Some(vectorcraft_color::swatch::REGISTRATION) {
+        if link == Some(tsipika_color::swatch::REGISTRATION) {
             let alt = krilla::color::RegularColor::Cmyk(cmyk::Color::new(255, 255, 255, 255));
             return SepColor::new(q(tint), SeparationSpace::new(SeparationColorant::AllColorants, alt)).into();
         }
@@ -846,7 +846,7 @@ impl Exporter<'_> {
     /// it) as tints of that ink — a Separation shading — with midpoints as explicit stops (the
     /// tint and opacity there are halfway). `None` for other gradients; one that mixes a spot ink
     /// with other colours is written in process colours (the PDF writer has no DeviceN).
-    fn spot_stops(&mut self, g: &vectorcraft_color::Gradient) -> Option<Vec<(f32, krilla::color::Color, f32)>> {
+    fn spot_stops(&mut self, g: &tsipika_color::Gradient) -> Option<Vec<(f32, krilla::color::Color, f32)>> {
         let ink = g.stops.iter().find_map(|s| s.swatch.as_deref().filter(|n| self.doc.swatch(n).is_some_and(|w| w.spot)))?;
         let paper = |c: &Color| c.to_rgba8(1.0)[..3] == [255; 3];
         let tints: Option<Vec<f32>> = g
@@ -878,10 +878,10 @@ impl Exporter<'_> {
     }
 
     /// Warn when `effects` (an object's, a fill's or a stroke's) has a visible raster effect: the
-    /// app renders them to images before export (`vectorcraft_engine::export_pdf`), so the ones
+    /// app renders them to images before export (`tsipika_engine::export_pdf`), so the ones
     /// still here (on `what`) can't be written.
-    fn warn_raster(&mut self, effects: &[vectorcraft_doc::Effect], what: impl FnOnce() -> String) {
-        if effects.iter().any(|e| e.visible && vectorcraft_effects::is_raster(&e.id)) {
+    fn warn_raster(&mut self, effects: &[tsipika_doc::Effect], what: impl FnOnce() -> String) {
+        if effects.iter().any(|e| e.visible && tsipika_effects::is_raster(&e.id)) {
             self.warn(format!("raster effects (shadows, glows, blur, feather) on {} are left out of the PDF", what()));
         }
     }
@@ -916,10 +916,10 @@ impl Exporter<'_> {
                         // models (midpoints sample in RGB) go through RGB, or stay CMYK in a CMYK
                         // document, where `col` separates the rest.
                         let mixed = stops.windows(2).any(|w| w[0].1.model() != w[1].1.model());
-                        let cmyk_doc = self.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk;
+                        let cmyk_doc = self.doc.color_mode == tsipika_doc::ColorMode::Cmyk;
                         let one = |c: Color| match c {
                             Color::Cmyk { .. } if cmyk_doc => c,
-                            _ if mixed => c.in_model(vectorcraft_color::cms::Model::Rgb),
+                            _ if mixed => c.in_model(tsipika_color::cms::Model::Rgb),
                             _ => c,
                         };
                         stops.into_iter().map(|(o, c, a)| (o, self.col(&one(c)), a)).collect()
@@ -1010,7 +1010,7 @@ impl Exporter<'_> {
 
     /// Opacity mask → luminosity soft mask. Outside the art the backdrop is black (clip) or white;
     /// invert is a white Difference rect on top (luminance is linear, so luma(1 − c) = 1 − luma(c)).
-    fn soft_mask(&mut self, s: &mut Surface, m: &vectorcraft_doc::OpacityMask, page: Rect) -> krilla::mask::Mask {
+    fn soft_mask(&mut self, s: &mut Surface, m: &tsipika_doc::OpacityMask, page: Rect) -> krilla::mask::Mask {
         let mut sb = s.stream_builder();
         let mut ms = sb.surface();
         // An opaque backdrop when it matters: white outside the art (no clip), or black for the
@@ -1156,7 +1156,7 @@ impl Exporter<'_> {
                 // The region every output clips to; nothing to clip by hides the clipped art. The
                 // clipping path's fill paints behind the clipped art and its stroke over it, unclipped.
                 if let Some((clip, rest)) = children.split_first()
-                    && let Some((p, r)) = vectorcraft_effects::clip_outline(clip).and_then(|(bp, r)| to_path(s, &bp).map(|p| (p, r)))
+                    && let Some((p, r)) = tsipika_effects::clip_outline(clip).and_then(|(bp, r)| to_path(s, &bp).map(|p| (p, r)))
                 {
                     let paint = clip.clip_paint();
                     s.push_clip_path(&p, &rule(r));
@@ -1200,7 +1200,7 @@ impl Exporter<'_> {
             | NodeKind::Repeat(_)
             | NodeKind::PlacedDocument(_)
             | NodeKind::Intertwine { .. } => {
-                let g = vectorcraft_effects::expand_live_deep(Some(self.doc), n);
+                let g = tsipika_effects::expand_live_deep(Some(self.doc), n);
                 for c in g.children().into_iter().flatten() {
                     self.node(s, c, page, false);
                 }
@@ -1256,7 +1256,7 @@ impl Exporter<'_> {
     /// `overprints`, paints and overprints are kept (but not a white one with Discard White
     /// Overprint).
     fn overprinting(&mut self, s: &mut Surface, overprints: bool, paint: &Paint, draw: impl FnOnce(&mut Self, &mut Surface)) {
-        let white = || self.doc.setup.discard_white_overprint && vectorcraft_doc::overprint::is_white(paint);
+        let white = || self.doc.setup.discard_white_overprint && tsipika_doc::overprint::is_white(paint);
         if overprints && self.overprint && !paint.is_none() && !white() {
             self.overprinted = true;
             crate::forms::form(s, Mark::Overprint, |s| draw(self, s));
@@ -1323,8 +1323,8 @@ impl Exporter<'_> {
 
     /// Draw freeform gradient `g`, placed on `bounds`, as an image of its colour field over `area`,
     /// sampled at the document's raster effects resolution (at most [`MAX_FIELD_PX`] a side).
-    fn field_image(&mut self, s: &mut Surface, g: &vectorcraft_color::GradientPaint, bounds: Rect, area: Rect) {
-        use vectorcraft_color::freeform::{painted_box, spread_scale};
+    fn field_image(&mut self, s: &mut Surface, g: &tsipika_color::GradientPaint, bounds: Rect, area: Rect) {
+        use tsipika_color::freeform::{painted_box, spread_scale};
         let Some(b) = painted_box(bounds) else { return };
         let area = area.abs();
         let long = area.width().max(area.height());
@@ -1358,7 +1358,7 @@ impl Exporter<'_> {
         if self.area_paint(&st.paint) {
             // The area the stroke paints (dashes, caps, joins, profile, arrowheads, alignment), as
             // Outline Stroke makes it, painted with the pattern's tiles or the freeform's image.
-            let region = stroke::outline_region(&vectorcraft_geom::PathData::from_bezpath(bp), r, st).to_bezpath();
+            let region = stroke::outline_region(&tsipika_geom::PathData::from_bezpath(bp), r, st).to_bezpath();
             if let Some(clip) = to_path(s, &region) {
                 let area = region.bounding_box();
                 self.area(s, &clip, krilla::paint::FillRule::NonZero, &st.paint, (st.opacity, st.blend), st.paint_bounds(bounds), area);
@@ -1478,9 +1478,9 @@ impl Exporter<'_> {
     /// over all of it). False when it has no known brush.
     fn brush_art(&mut self, s: &mut Surface, bp: &BezPath, st: &StrokeLayer, page: Rect) -> bool {
         let doc = self.doc;
-        let brushes = self.brushes.get_or_insert_with(|| vectorcraft_brush::library(doc));
+        let brushes = self.brushes.get_or_insert_with(|| tsipika_brush::library(doc));
         let Some(b) = st.brush.as_deref().and_then(|name| brushes.iter().find(|b| b.name == name)) else { return false };
-        let art = vectorcraft_brush::stroke_pieces(doc, b, bp, st);
+        let art = tsipika_brush::stroke_pieces(doc, b, bp, st);
         let mut pushes = 0;
         if st.blend != BlendMode::Normal {
             s.push_blend_mode(blend(st.blend));
@@ -1500,21 +1500,21 @@ impl Exporter<'_> {
     }
 
     ///
-    /// Inline graphics ([`vectorcraft_doc::TextRun::inline`]) are drawn as their symbols' art
+    /// Inline graphics ([`tsipika_doc::TextRun::inline`]) are drawn as their symbols' art
     /// (vector paths, like symbol instances) where the layout placed them; their characters
     /// write no glyph.
     fn text(&mut self, s: &mut Surface, n: &Node, t: &TextObject, page: Rect) {
         let doc = self.doc;
         let resolved = doc.inline_resolved(t);
         let t = &*resolved;
-        let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+        let layout = tsipika_text::layout(tsipika_text::FontDb::global(), t);
         let tb = t.xf.transform_rect_bbox(layout.bounds);
         // The object's own fills and strokes paint the whole outline: those below the Characters
         // row under the characters, the others over them.
         let (below, above) = n.appearance.split_contents();
         let all = (!n.appearance.items.is_empty()).then(|| {
             let mut all = layout.to_bezpath();
-            for (_, bar) in vectorcraft_text::decorations(&layout, vectorcraft_text::FontDb::global(), t) {
+            for (_, bar) in tsipika_text::decorations(&layout, tsipika_text::FontDb::global(), t) {
                 all.extend(bar.iter());
             }
             all.apply_affine(t.xf);
@@ -1529,7 +1529,7 @@ impl Exporter<'_> {
         // stroke overprints.
         let text_space = xf(t.xf);
         let plain = (!self.outline_text).then(|| t.plain_text());
-        let bars = vectorcraft_text::decorations(&layout, vectorcraft_text::FontDb::global(), t);
+        let bars = tsipika_text::decorations(&layout, tsipika_text::FontDb::global(), t);
         for (i, run) in t.runs.iter().enumerate() {
             let mut bp = BezPath::new();
             for g in layout.glyphs.iter().filter(|g| g.run == i) {
@@ -1713,7 +1713,7 @@ impl Exporter<'_> {
         if let Some(f) = self.fonts.get(&id) {
             return f.clone();
         }
-        let Some(face) = vectorcraft_text::FontDb::global().face_by_id(id) else {
+        let Some(face) = tsipika_text::FontDb::global().face_by_id(id) else {
             self.fonts.insert(id, None);
             return None;
         };
@@ -1761,7 +1761,7 @@ impl Exporter<'_> {
         let out = self.out.clone();
         let img = doc.images.get(key).filter(|_| !self.left_out.contains(key)).and_then(|blob| {
             let cmyk_image = blob.is_cmyk();
-            if !cmyk_image && self.convert && doc.color_mode == vectorcraft_doc::ColorMode::Cmyk {
+            if !cmyk_image && self.convert && doc.color_mode == tsipika_doc::ColorMode::Cmyk {
                 self.rgb_in_cmyk.images.insert(key.to_string());
             }
             let r = if cmyk_image {
@@ -1786,7 +1786,7 @@ impl Exporter<'_> {
     /// image's soft mask, as an RGBA image's is, rather than as a luminosity soft mask over it,
     /// through which CoreGraphics draws CMYK images on black boxes (#2159). `None` for other
     /// images and masks; cached like [`Self::load_image`].
-    fn masked_image(&mut self, im: &vectorcraft_doc::ImageObject, m: &vectorcraft_doc::OpacityMask) -> Option<Image> {
+    fn masked_image(&mut self, im: &tsipika_doc::ImageObject, m: &tsipika_doc::OpacityMask) -> Option<Image> {
         let art = &m.art;
         let NodeKind::Image(mi) = &art.kind else { return None };
         let plain =
@@ -1813,7 +1813,7 @@ impl Exporter<'_> {
     }
 
     /// Draw image `im`: `img` when given (its pixels already written), else as it is loaded.
-    fn image(&mut self, s: &mut Surface, im: &vectorcraft_doc::ImageObject, img: Option<Image>) {
+    fn image(&mut self, s: &mut Surface, im: &tsipika_doc::ImageObject, img: Option<Image>) {
         // An image placed or sized beyond [`MAX_COORD`] is left out.
         if !writable(s, im.xf, Rect::new(0.0, 0.0, im.width.max(1).into(), im.height.max(1).into())) {
             return;
@@ -1827,14 +1827,14 @@ impl Exporter<'_> {
 }
 
 /// The size image `im` is placed at: its pixel grid's sides through its transform.
-fn placed_size(im: &vectorcraft_doc::ImageObject) -> (f64, f64) {
+fn placed_size(im: &tsipika_doc::ImageObject) -> (f64, f64) {
     let [a, b, c, d, ..] = im.xf.as_coeffs();
     (im.width as f64 * a.hypot(b), im.height as f64 * c.hypot(d))
 }
 
 /// Image `blob` as it is: PNG, JPEG, GIF and WebP through the PDF writer (JPEG data unchanged),
 /// other formats decoded.
-fn embed(blob: &vectorcraft_doc::ImageBlob, interpolate: bool) -> Option<Image> {
+fn embed(blob: &tsipika_doc::ImageBlob, interpolate: bool) -> Option<Image> {
     let bytes = blob.bytes.as_ref().clone();
     let direct = match blob.mime.as_str() {
         "image/png" => Image::from_png(bytes.clone().into(), interpolate).ok(),

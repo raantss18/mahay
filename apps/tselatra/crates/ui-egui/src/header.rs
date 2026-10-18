@@ -9,13 +9,13 @@ use crate::icons::{self, Icon};
 use crate::state::Tool;
 use crate::theme::Tokens;
 use crate::widgets;
-use crate::{Dialog, EffectcraftApp};
-use effectcraft_color::BlendMode;
-use effectcraft_engine::commands::shape_tool::{PaintKind, ToolPaint};
-use effectcraft_engine::project::{LayerId, LayerSource, PropGroup};
-use effectcraft_engine::viewer as vw;
+use crate::{Dialog, TselatraApp};
+use tselatra_color::BlendMode;
+use tselatra_engine::commands::shape_tool::{PaintKind, ToolPaint};
+use tselatra_engine::project::{LayerId, LayerSource, PropGroup};
+use tselatra_engine::viewer as vw;
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().clone();
     p.rect_filled(rect, 0.0, t.header_bg);
@@ -27,9 +27,9 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     let brand = Rect::from_min_size(pos2(x, cy - 12.0), vec2(24.0, 24.0));
     paint_logo(&p, brand);
     let bresp = ui.interact(brand, egui::Id::new("brand"), Sense::click());
-    app.auto.add_response("header.about", &bresp, "About EffectCraft");
+    app.auto.add_response("header.about", &bresp, "About Tselatra");
     widgets::focus_outline(ui, &bresp, &t);
-    if bresp.on_hover_text(tr("About EffectCraft")).clicked() {
+    if bresp.on_hover_text(tr("About Tselatra")).clicked() {
         app.dialog = Some(Dialog::About);
     }
     x += 32.0;
@@ -135,7 +135,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         .unwrap_or_default();
     let layer_paint = shape_layers.first().and_then(|id| app.session.active_comp()?.layer(LayerId(*id))).map(|l| {
         let lt = l.layer_time(app.session.time());
-        (effectcraft_engine::commands::shape_stroke::first_paint(l, lt), effectcraft_engine::commands::shape_stroke::first_paint_kinds(l, lt))
+        (tselatra_engine::commands::shape_stroke::first_paint(l, lt), tselatra_engine::commands::shape_stroke::first_paint_kinds(l, lt))
     });
     if let Some(((fill, stroke, width), (fill_kind, stroke_kind))) = layer_paint {
         let rgb = |c: [f64; 4]| [c[0] as f32, c[1] as f32, c[2] as f32];
@@ -193,13 +193,13 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     p.rect_filled(discord, 13.0, if dresp.hovered() { dc.gamma_multiply(1.2) } else { dc });
     icons::paint(&p, Rect::from_center_size(pos2(discord.min.x + 17.0, cy), vec2(14.0, 14.0)), Icon::Chat, Color32::WHITE);
     p.galley(pos2(discord.min.x + 30.0, cy - label.size().y / 2.0), label, Color32::WHITE);
-    app.auto.add("header.discord", discord, "Join the ArtCraft Discord");
-    if dresp.on_hover_text(tr("Join the ArtCraft community on Discord")).clicked() {
+    app.auto.add("header.discord", discord, "Join the Mahay discussions");
+    if dresp.on_hover_text(tr("Join the Mahay community on GitHub")).clicked() {
         let _ = app.session.execute("help.discord", json!({}));
     }
     rx = discord.min.x - 6.0;
     for (id, icon, tip, cmd) in
-        [("hdr-github", Icon::Code, "EffectCraft on GitHub", "help.github"), ("hdr-web", Icon::Globe, "EffectCraft on getartcraft.com", "help.appPage")]
+        [("hdr-github", Icon::Code, "Tselatra on GitHub", "help.github"), ("hdr-web", Icon::Globe, "Tselatra on mahay.com", "help.appPage")]
     {
         let r = Rect::from_min_max(pos2(rx - 26.0, cy - 13.0), pos2(rx, cy + 13.0));
         if widgets::icon_button(ui, r, icon, false, &t, egui::Id::new(id)).on_hover_text(tip).clicked() {
@@ -228,7 +228,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
             ui.close();
         }
         let favorites = app.session.prefs.appearance.favorite_themes.clone();
-        for options in [effectcraft_engine::prefs::LIGHT_THEMES, effectcraft_engine::prefs::DARK_THEMES] {
+        for options in [tselatra_engine::prefs::LIGHT_THEMES, tselatra_engine::prefs::DARK_THEMES] {
             let group: Vec<_> = options.iter().filter(|(_, id)| favorites.iter().any(|saved| saved == id)).collect();
             if !group.is_empty() {
                 ui.separator();
@@ -303,7 +303,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 
 /// The Snapping options menu beside the checkbox: After Effects' Snap Edges Extended and Snap to
 /// Features in Collapsed Compositions and Text Layers (`view.snappingOptions`).
-fn snapping_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, r: Rect) {
+fn snapping_options(app: &mut TselatraApp, ui: &mut egui::Ui, r: Rect) {
     let t = app.tokens;
     let pop = egui::Id::new("snap-options");
     if widgets::icon_button(ui, r, Icon::ChevronDown, false, &t, egui::Id::new("snap-options-button")).on_hover_text(tr("Snapping options")).clicked() {
@@ -323,7 +323,7 @@ fn snapping_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, r: Rect) {
 }
 
 /// Set the shape tools' options (`shape.toolOptions`).
-fn tool_options(app: &mut EffectcraftApp, v: serde_json::Value) {
+fn tool_options(app: &mut TselatraApp, v: serde_json::Value) {
     if let Err(e) = app.session.execute("shape.toolOptions", v) {
         app.ui.status = e.to_string();
     }
@@ -332,7 +332,7 @@ fn tool_options(app: &mut EffectcraftApp, v: serde_json::Value) {
 /// The Colors property of the first Gradient Fill (`gfill`) or Gradient Stroke (`gstroke`) on the
 /// shape `layers`, in contents order through nested groups: (layer, property uid). The toolbar's
 /// gradient swatch edits it in the Gradient Editor.
-fn gradient_colors(app: &EffectcraftApp, layers: &[u64], paint: &str) -> Option<(u64, u64)> {
+fn gradient_colors(app: &TselatraApp, layers: &[u64], paint: &str) -> Option<(u64, u64)> {
     fn find(g: &PropGroup, paint: &str, depth: usize) -> Option<u64> {
         if depth >= 16 {
             return None;
@@ -354,7 +354,7 @@ fn picker_id(key: &str) -> egui::Id {
 
 /// Tool Creates Shape / Tool Creates Mask: with a shape layer selected, whether the shape tools
 /// and the Pen draw shapes into it or masks on it. Returns the next x.
-fn creates_buttons(app: &mut EffectcraftApp, ui: &mut egui::Ui, mut x: f32, cy: f32) -> f32 {
+fn creates_buttons(app: &mut TselatraApp, ui: &mut egui::Ui, mut x: f32, cy: f32) -> f32 {
     let t = app.tokens;
     for (mask, icon, tip, key) in [(false, Icon::ShapeLayer, "Tool Creates Shape", "createsShape"), (true, Icon::MaskVis, "Tool Creates Mask", "createsMask")] {
         let r = Rect::from_min_size(pos2(x, cy - 13.0), vec2(26.0, 26.0));
@@ -370,11 +370,11 @@ fn creates_buttons(app: &mut EffectcraftApp, ui: &mut egui::Ui, mut x: f32, cy: 
 
 /// Fill and Stroke (the words open Fill Options / Stroke Options), their swatches and the
 /// Stroke Width: for new shapes, and for the selected shape layers. Returns the next x.
-fn fill_stroke_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, shape_layers: &[u64], mut x: f32, cy: f32) -> f32 {
+fn fill_stroke_options(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, shape_layers: &[u64], mut x: f32, cy: f32) -> f32 {
     let t = app.tokens;
     // The selected shape layers take the colours and the width too, one undo step per picker
     // session or drag.
-    let paint = |app: &mut EffectcraftApp, key: &str, v: serde_json::Value| {
+    let paint = |app: &mut TselatraApp, key: &str, v: serde_json::Value| {
         if shape_layers.is_empty() {
             return;
         }
@@ -446,7 +446,7 @@ fn fill_stroke_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Pa
 
 /// A Fill or Stroke kind: for new shapes, and (as in After Effects) for the selected shape
 /// layers' fills or strokes, which None switches off (#732).
-fn paint_kind(app: &mut EffectcraftApp, shape_layers: &[u64], key: &str, kind: PaintKind) {
+fn paint_kind(app: &mut TselatraApp, shape_layers: &[u64], key: &str, kind: PaintKind) {
     let k_type = format!("{key}Type");
     tool_options(app, json!({&k_type: kind.id()}));
     if shape_layers.is_empty() {
@@ -465,7 +465,7 @@ fn paint_kind(app: &mut EffectcraftApp, shape_layers: &[u64], key: &str, kind: P
 
 /// Fill Options / Stroke Options: None, Solid Color, Linear Gradient or Radial Gradient, and the
 /// blend mode and opacity new shapes get (After Effects' dialogs, applied as they change).
-fn paint_options_popup(app: &mut EffectcraftApp, ui: &mut egui::Ui, shape_layers: &[u64], key: &str, title: &str, pos: egui::Pos2) {
+fn paint_options_popup(app: &mut TselatraApp, ui: &mut egui::Ui, shape_layers: &[u64], key: &str, title: &str, pos: egui::Pos2) {
     let id = egui::Id::new(("tool-paint-options", key));
     if !widgets::popup_is_open(ui, id) {
         return;
@@ -565,7 +565,7 @@ fn paint_swatch(p: &egui::Painter, r: Rect, paint: &ToolPaint, hovered: bool, t:
 
 /// Roto Brush / Refine Edge tool options: the brush Diameter (⌘/Ctrl-drag in the Layer panel
 /// sets it too, as in After Effects). Returns the next x.
-fn roto_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, mut x: f32, cy: f32) -> f32 {
+fn roto_options(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, mut x: f32, cy: f32) -> f32 {
     let t = app.tokens;
     let refine = app.ui.tool.roto_kind(false).is_some_and(|k| k.starts_with("refine"));
     let o = &app.session.state.roto;
@@ -585,7 +585,7 @@ fn roto_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, 
 
 /// Puppet tool options: Mesh: Show, Expansion, Density (for new meshes and the selected
 /// layer's meshes). Returns the next x.
-fn puppet_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, mut x: f32, cy: f32) -> f32 {
+fn puppet_options(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, mut x: f32, cy: f32) -> f32 {
     let t = app.tokens;
     let o = app.session.state.puppet.clone();
     p.text(pos2(x, cy), Align2::LEFT_CENTER, tr("Mesh:"), Tokens::ui(12.0), t.text_dim);
@@ -639,7 +639,7 @@ fn puppet_options(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter
     r.max.x + 16.0
 }
 
-fn ws_menu(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
+fn ws_menu(app: &mut TselatraApp, ui: &mut egui::Ui) {
     for w in app.workspace_names() {
         if ui.selectable_label(app.ui.workspace == w, &w).clicked() {
             app.set_workspace(&w);
@@ -654,20 +654,20 @@ fn ws_menu(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
     }
 }
 
-/// The ArtCraft mark as supplied in `docs/brand` (the README's and getartcraft.com's logo; used
+/// The Mahay mark as supplied in `docs/brand` (the README's and mahay.com's logo; used
 /// unmodified, see `docs/brand/LICENSE-brand.txt`).
-static ARTCRAFT_MARK: &[u8] = include_bytes!("../../../docs/brand/artcraft-mark.png");
+static MAHAY_MARK: &[u8] = include_bytes!("../../../docs/brand/mahay-mark.png");
 
-/// The ArtCraft mark in `r` (decoded once into a mipmapped texture, so it stays crisp from the
+/// The Mahay mark in `r` (decoded once into a mipmapped texture, so it stays crisp from the
 /// 24 px Tools bar to the About dialog). Nothing is drawn if it can't be decoded.
 pub fn paint_logo(p: &egui::Painter, r: Rect) {
     let ctx = p.ctx();
-    let id = egui::Id::new("artcraft-mark");
+    let id = egui::Id::new("mahay-mark");
     let tex = ctx.data(|d| d.get_temp::<Option<egui::TextureHandle>>(id)).unwrap_or_else(|| {
-        let tex = image::load_from_memory_with_format(ARTCRAFT_MARK, image::ImageFormat::Png).ok().map(|img| {
+        let tex = image::load_from_memory_with_format(MAHAY_MARK, image::ImageFormat::Png).ok().map(|img| {
             let img = img.to_rgba8();
             let ci = egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw());
-            ctx.load_texture("artcraft-mark", ci, egui::TextureOptions::LINEAR.with_mipmap_mode(Some(egui::TextureFilter::Linear)))
+            ctx.load_texture("mahay-mark", ci, egui::TextureOptions::LINEAR.with_mipmap_mode(Some(egui::TextureFilter::Linear)))
         });
         ctx.data_mut(|d| d.insert_temp(id, tex.clone()));
         tex
@@ -681,7 +681,7 @@ pub fn paint_logo(p: &egui::Painter, r: Rect) {
 mod tests {
     use super::*;
 
-    fn frame(app: &mut EffectcraftApp, ctx: &egui::Context, time: f64, events: Vec<egui::Event>) {
+    fn frame(app: &mut TselatraApp, ctx: &egui::Context, time: f64, events: Vec<egui::Event>) {
         app.auto.begin_frame();
         let mut out = ctx.run_ui(
             egui::RawInput { time: Some(time), events, screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(1400.0, 500.0))), ..Default::default() },
@@ -694,7 +694,7 @@ mod tests {
 
     #[test]
     fn long_press_type_keeps_the_tool_until_vertical_is_selected() {
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         let ctx = egui::Context::default();
         crate::theme::install(&ctx, &app.tokens, crate::i18n::language(&app));
         frame(&mut app, &ctx, 0.0, vec![]);

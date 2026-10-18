@@ -2,12 +2,12 @@
 //! (scale and move them in time and value), key-time snapping, and Alt-drag of a key group's
 //! first or last key in the timeline to scale the group in time. Edits are `keys.transform`.
 
-use effectcraft_engine::project::Comp;
+use tselatra_engine::project::Comp;
 use egui::{Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Value, json};
 
 use super::timeline::TMap;
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 
 type Actions = Vec<(String, Value)>;
 
@@ -61,7 +61,7 @@ fn handle_points(r: Rect) -> [Pos2; 8] {
 /// the inside moves the keys; times land on frames.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn transform_box(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     keys: &[SelKey],
@@ -189,7 +189,7 @@ pub(crate) fn transform_box(
 
 /// Graph Editor ▸ Snap: a dragged key time (comp s) snaps to the current time, another key's
 /// time, a layer's in or out point, a comp or layer marker or the work area within 6 points.
-pub(crate) fn snap_time(app: &EffectcraftApp, tm: TMap, t: f64, others: &[f64]) -> f64 {
+pub(crate) fn snap_time(app: &TselatraApp, tm: TMap, t: f64, others: &[f64]) -> f64 {
     if !app.ui.timeline.graph_snap {
         return t;
     }
@@ -226,7 +226,7 @@ mod snap_tests {
 
     #[test]
     fn graph_snap_targets_markers_and_layer_ends() {
-        use effectcraft_engine::Session;
+        use tselatra_engine::Session;
         let mut s = Session::default();
         s.execute("comp.new", json!({"name": "S", "width": 100, "height": 100, "frameRate": 30, "duration": 4})).unwrap();
         s.execute("layer.newSolid", json!({"color": "#ffffff", "width": 10, "height": 10})).unwrap();
@@ -259,7 +259,7 @@ fn alt_id() -> egui::Id {
 }
 
 /// Selected keys' comp-time range.
-fn sel_range(app: &EffectcraftApp, comp: &Comp) -> Option<(f64, f64)> {
+fn sel_range(app: &TselatraApp, comp: &Comp) -> Option<(f64, f64)> {
     let ts: Vec<f64> = app.session.state.selected_keys.iter().filter_map(|k| comp.layer(k.layer).map(|l| l.comp_time(k.time).seconds())).collect();
     if ts.len() < 2 {
         return None;
@@ -271,7 +271,7 @@ fn sel_range(app: &EffectcraftApp, comp: &Comp) -> Option<(f64, f64)> {
 
 /// Alt-drag on the first or last key of a selected group starts scaling the group in time
 /// about the other end. Returns true when it took the drag.
-pub(crate) fn alt_scale_begin(app: &EffectcraftApp, ctx: &egui::Context, comp: &Comp, key_ct: f64) -> bool {
+pub(crate) fn alt_scale_begin(app: &TselatraApp, ctx: &egui::Context, comp: &Comp, key_ct: f64) -> bool {
     let Some((lo, hi)) = sel_range(app, comp) else { return false };
     let st = if (key_ct - hi).abs() < 1e-6 {
         AltScale { anchor: lo, end_is_max: true, span: None }
@@ -285,7 +285,7 @@ pub(crate) fn alt_scale_begin(app: &EffectcraftApp, ctx: &egui::Context, comp: &
 }
 
 /// While an Alt-drag scale is active: scale the group so its dragged end follows the pointer.
-pub(crate) fn alt_scale_update(app: &EffectcraftApp, ctx: &egui::Context, comp: &Comp, tm: TMap, actions: &mut Actions) {
+pub(crate) fn alt_scale_update(app: &TselatraApp, ctx: &egui::Context, comp: &Comp, tm: TMap, actions: &mut Actions) {
     let Some(st) = ctx.data(|d| d.get_temp::<AltScale>(alt_id())) else { return };
     if !ctx.input(|i| i.pointer.primary_down()) {
         ctx.data_mut(|d| d.remove::<AltScale>(alt_id()));
@@ -294,7 +294,7 @@ pub(crate) fn alt_scale_update(app: &EffectcraftApp, ctx: &egui::Context, comp: 
     }
     let (Some((lo, hi)), Some(px)) = (sel_range(app, comp), ctx.input(|i| i.pointer.latest_pos())) else { return };
     let fr = comp.frame_rate;
-    let target = fr.snap_nearest(effectcraft_engine::time::Tick::from_seconds_f64(tm.t(px.x).max(0.0))).seconds();
+    let target = fr.snap_nearest(tselatra_engine::time::Tick::from_seconds_f64(tm.t(px.x).max(0.0))).seconds();
     // The group's span when the drag started: every step sends the whole scale since then.
     let span = st.span.unwrap_or((if st.end_is_max { hi } else { lo }) - st.anchor);
     if st.span.is_none() {

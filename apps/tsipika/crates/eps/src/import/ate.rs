@@ -23,9 +23,9 @@
 use std::collections::BTreeMap;
 
 use kurbo::{BezPath, CubicBez, ParamCurve, ParamCurveArclen};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{CharStyle, Justify, Node, NodeId, NodeKind, ParaStyle, TextKind, TextObject, TextRun};
-use vectorcraft_geom::{Affine, PathData, Point, Rect};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{CharStyle, Justify, Node, NodeId, NodeKind, ParaStyle, TextKind, TextObject, TextRun};
+use tsipika_geom::{Affine, PathData, Point, Rect};
 
 /// Longest story read (bytes).
 const MAX_STORY: usize = 1 << 20;
@@ -683,9 +683,9 @@ impl Story {
     /// Area type that the file lays lines out in, in a frame too short for its first line as it is
     /// laid out here: a font that isn't available shows in the fallback font, whose lines may be
     /// taller, and type that doesn't fit its frame isn't drawn. The frame is made taller, from its
-    /// top, by what the first line needs (`vectorcraft_text::fit_first_line`). Whether it was.
+    /// top, by what the first line needs (`tsipika_text::fit_first_line`). Whether it was.
     pub(super) fn fit_first_line(&self, t: &mut TextObject) -> bool {
-        !self.lines.is_empty() && vectorcraft_text::fit_first_line(vectorcraft_text::FontDb::global(), t)
+        !self.lines.is_empty() && tsipika_text::fit_first_line(tsipika_text::FontDb::global(), t)
     }
 
     /// The leading the file's own line positions imply: the distance from one line to the next, less
@@ -775,7 +775,7 @@ fn para_style(p: &Para, scale: f64) -> ParaStyle {
 
 fn char_style(s: &Style, scale: f64, leading: Option<f64>) -> CharStyle {
     let (family, style) = s.font.as_deref().map_or_else(|| (CharStyle::default().font_family, "Regular".to_string()), crate::family_style);
-    let family = vectorcraft_text::FontDb::global().find_family(&family).unwrap_or(family);
+    let family = tsipika_text::FontDb::global().find_family(&family).unwrap_or(family);
     CharStyle {
         font_family: family,
         font_style: style,
@@ -928,12 +928,12 @@ mod tests {
         let s = story("Heading\r", &[0.0], &Para::default());
         let area = |height: f64| {
             let mut t = TextObject::point(Point::ZERO, "Heading", CharStyle { size: 13.0, ..CharStyle::default() });
-            t.kind = TextKind::Area { frame: vectorcraft_geom::shapes::rectangle(Rect::new(10.0, 20.0, 210.0, 20.0 + height)) };
+            t.kind = TextKind::Area { frame: tsipika_geom::shapes::rectangle(Rect::new(10.0, 20.0, 210.0, 20.0 + height)) };
             t
         };
         let height =
             |t: &TextObject| if let TextKind::Area { frame } = &t.kind { frame.bounds().map(|b| (b.x0, b.y0, b.x1, b.height())) } else { None };
-        let lines = |t: &TextObject| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).lines.len();
+        let lines = |t: &TextObject| tsipika_text::layout(tsipika_text::FontDb::global(), t).lines.len();
         let mut t = area(13.0);
         assert_eq!(lines(&t), 0, "nothing of it shows");
         assert!(s.fit_first_line(&mut t));

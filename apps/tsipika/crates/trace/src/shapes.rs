@@ -5,7 +5,7 @@
 //! its own area, middle and extents describe: nothing is taken for a shape that it merely
 //! resembles.
 
-use vectorcraft_geom::{Affine, ParamCurve, PathData, Point, Rect, SubPath, shapes};
+use tsipika_geom::{Affine, ParamCurve, PathData, Point, Rect, SubPath, shapes};
 
 /// A shape an outline was found to be (pixel coordinates; angles in degrees, clockwise on screen).
 #[derive(Clone, Copy, Debug, PartialEq)]

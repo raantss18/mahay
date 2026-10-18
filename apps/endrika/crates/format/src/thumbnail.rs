@@ -1,4 +1,4 @@
-//! The picture a saved file carries of itself: `thumbnail.png` inside a `.figcraft` or `.fig` zip
+//! The picture a saved file carries of itself: `thumbnail.png` inside a `.endrika` or `.fig` zip
 //! (the home screen's recent files show it), and the colour of the page it sits on. Image files are
 //! their own picture. Everything is read within caps: a missing, damaged or oversized picture gives
 //! `None`, never an error or a panic.
@@ -26,7 +26,7 @@ pub struct Thumbnail {
     pub rgba: Vec<u8>,
 }
 
-/// The bytes of `thumbnail.png` in a zip archive (`.figcraft`, `.fig`); `None` when it isn't a zip,
+/// The bytes of `thumbnail.png` in a zip archive (`.endrika`, `.fig`); `None` when it isn't a zip,
 /// has no thumbnail, or the thumbnail is larger than [`MAX_THUMBNAIL_BYTES`].
 pub fn thumbnail_png<R: Read + Seek>(archive: R) -> Option<Vec<u8>> {
     let mut z = zip::ZipArchive::new(archive).ok()?;
@@ -55,8 +55,8 @@ pub fn decode_thumbnail(bytes: &[u8], fit: u32) -> Option<Thumbnail> {
 /// What kind of file `path` is, for its picture and its icon.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FileKind {
-    /// `.figcraft`
-    FigCraft,
+    /// `.endrika`
+    Endrika,
     /// `.fig`
     Fig,
     /// `.svg`
@@ -70,7 +70,7 @@ impl FileKind {
     pub fn of(path: &Path) -> FileKind {
         let ext = path.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
         match ext.as_str() {
-            "figcraft" => FileKind::FigCraft,
+            "endrika" => FileKind::Endrika,
             "fig" => FileKind::Fig,
             "svg" => FileKind::Svg,
             "png" | "jpg" | "jpeg" | "webp" | "gif" | "bmp" | "tif" | "tiff" => FileKind::Image,
@@ -80,11 +80,11 @@ impl FileKind {
 }
 
 /// The picture of the file at `path`, at most `fit` pixels on its longer side: the thumbnail a
-/// `.figcraft` or `.fig` file carries, or an image file itself (up to [`MAX_IMAGE_FILE_BYTES`]).
+/// `.endrika` or `.fig` file carries, or an image file itself (up to [`MAX_IMAGE_FILE_BYTES`]).
 /// `None` for anything else, and for a file that is missing, unreadable or damaged.
 pub fn file_thumbnail(path: &Path, fit: u32) -> Option<Thumbnail> {
     match FileKind::of(path) {
-        FileKind::FigCraft | FileKind::Fig => {
+        FileKind::Endrika | FileKind::Fig => {
             let file = std::fs::File::open(path).ok()?;
             let png = thumbnail_png(std::io::BufReader::new(file))?;
             decode_thumbnail(&png, fit)
@@ -115,7 +115,7 @@ pub struct Preview {
 /// Empty for a file that is missing, unreadable, damaged or of another kind.
 pub fn file_preview(path: &Path, fit: u32) -> Preview {
     match FileKind::of(path) {
-        FileKind::FigCraft | FileKind::Fig => {
+        FileKind::Endrika | FileKind::Fig => {
             let Ok(file) = std::fs::File::open(path) else { return Preview::default() };
             archive_preview(std::io::BufReader::new(file), fit)
         }
@@ -124,21 +124,21 @@ pub fn file_preview(path: &Path, fit: u32) -> Preview {
     }
 }
 
-/// The [`Preview`] of a `.figcraft` or `.fig` archive: `thumbnail.png`, and the first page's colour
-/// from `document.json` (`.figcraft`) or `meta.json` (`.fig`).
+/// The [`Preview`] of a `.endrika` or `.fig` archive: `thumbnail.png`, and the first page's colour
+/// from `document.json` (`.endrika`) or `meta.json` (`.fig`).
 pub fn archive_preview<R: Read + Seek>(archive: R, fit: u32) -> Preview {
     let Ok(mut z) = zip::ZipArchive::new(archive) else { return Preview::default() };
     let picture = crate::read_member(&mut z, "thumbnail.png", MAX_THUMBNAIL_BYTES).ok().and_then(|png| decode_thumbnail(&png, fit));
     let page = if z.file_names().any(|n| n == "document.json") {
-        crate::read_member(&mut z, "document.json", MAX_DOCUMENT_BYTES).ok().and_then(|json| figcraft_page(&json))
+        crate::read_member(&mut z, "document.json", MAX_DOCUMENT_BYTES).ok().and_then(|json| endrika_page(&json))
     } else {
         crate::read_member(&mut z, "meta.json", MAX_META_BYTES).ok().and_then(|json| fig_page(&json))
     };
     Preview { page, picture }
 }
 
-/// The first page's background in a `.figcraft` `document.json`.
-fn figcraft_page(json: &[u8]) -> Option<[f32; 4]> {
+/// The first page's background in a `.endrika` `document.json`.
+fn endrika_page(json: &[u8]) -> Option<[f32; 4]> {
     #[derive(serde::Deserialize)]
     struct Head {
         #[serde(default)]

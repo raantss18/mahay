@@ -2,16 +2,16 @@
 
 use serde_json::json;
 
-use crate::{VectorcraftApp, canvas};
+use crate::{TsipikaApp, canvas};
 
-fn app_with_doc() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+fn app_with_doc() -> TsipikaApp {
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({})).unwrap();
     app
 }
 
 /// Draw one canvas frame; whether it drew the document (else the Home screen).
-fn shows_document(app: &mut VectorcraftApp) -> bool {
+fn shows_document(app: &mut TsipikaApp) -> bool {
     app.canvas_rect = None;
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
@@ -41,7 +41,7 @@ fn home_shows_over_open_documents_until_a_document_is_chosen() {
 
 /// Draw one canvas frame; whether it drew any text (the Home screen's labels; an empty window
 /// draws none).
-fn draws_text(app: &mut VectorcraftApp) -> bool {
+fn draws_text(app: &mut TsipikaApp) -> bool {
     fn has_text(s: &egui::Shape) -> bool {
         match s {
             egui::Shape::Text(_) => true,
@@ -62,7 +62,7 @@ fn draws_text(app: &mut VectorcraftApp) -> bool {
 /// shows an empty window instead of the Home screen, and the Home button still opens it.
 #[test]
 fn home_screen_without_documents_follows_its_preference() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     assert!(app.session.active().is_none());
     assert!(draws_text(&mut app), "Home with no document open (the default)");
     assert!(crate::menus::home_showing(&app));
@@ -92,7 +92,7 @@ fn cmd_n_opens_the_new_document_dialog() {
 }
 
 /// One Home screen frame (no document open) with `events`: the texts drawn and where.
-fn home_texts(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+fn home_texts(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
     fn walk(s: &egui::Shape, out: &mut Vec<(String, egui::Rect)>) {
         match s {
             egui::Shape::Text(t) => out.push((t.galley.text().to_string(), t.visual_bounding_rect())),
@@ -113,12 +113,12 @@ fn home_texts(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::E
 /// and one that can't be opened says so. With none, there is no Recent Files section.
 #[test]
 fn home_lists_recent_files_and_a_click_opens_one() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let has = |texts: &[(String, egui::Rect)], s: &str| texts.iter().any(|(t, _)| t == s);
     assert!(!has(&home_texts(&mut app, &ctx, vec![]), "Recent Files"), "none: no section");
-    let dir = std::env::temp_dir().join("vectorcraft-home-recent");
+    let dir = std::env::temp_dir().join("tsipika-home-recent");
     let missing = dir.join("Gone.svg").to_string_lossy().into_owned();
     app.ui.recent_files = (0..9).map(|i| dir.join(format!("Drawing {i}.svg")).to_string_lossy().into_owned()).collect();
     app.ui.recent_files.insert(0, missing);

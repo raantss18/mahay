@@ -1,16 +1,16 @@
 //! Cutting tools' commands: Mirror & Cut, Line Cut and Rectangle Cut.
 //!
 //! They work on the selected paths and compound paths (inside groups too; a compound path is cut
-//! as one shape): filled shapes through `vectorcraft-pathops` booleans against a half-plane or a
+//! as one shape): filled shapes through `tsipika-pathops` booleans against a half-plane or a
 //! rectangle, open paths by splitting them where they cross the line or the rectangle's edge (the
 //! Knife and Path Eraser helpers). Each command is one undo step; the tools in
-//! `vectorcraft_tools::cut` preview it live while dragging.
+//! `tsipika_tools::cut` preview it live while dragging.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Affine, Anchor, FillRule, PathData, Point, Rect, SubPath, Vec2};
-use vectorcraft_pathops as po;
-use vectorcraft_pathops::BoolOp;
+use tsipika_doc::{Document, Node, NodeId, NodeKind};
+use tsipika_geom::{Affine, Anchor, FillRule, PathData, Point, Rect, SubPath, Vec2};
+use tsipika_pathops as po;
+use tsipika_pathops::BoolOp;
 
 use super::draw2::{components, erase_outline, ids_json, replace_with_pieces};
 use super::edit::selected_roots;

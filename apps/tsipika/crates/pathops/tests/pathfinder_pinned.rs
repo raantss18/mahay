@@ -3,8 +3,8 @@
 //! non-zero, repeated keys for Merge) at a few counts.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_geom::{FillRule, PathData, Point, Rect, SubPath, shapes};
-use vectorcraft_pathops::{PathfinderOp, Shape, pathfinder};
+use tsipika_geom::{FillRule, PathData, Point, Rect, SubPath, shapes};
+use tsipika_pathops::{PathfinderOp, Shape, pathfinder};
 
 fn shapes_of(n: usize, seed: u64) -> Vec<Shape> {
     let mut r = seed | 1;

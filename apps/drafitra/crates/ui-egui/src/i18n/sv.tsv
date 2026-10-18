@@ -1,6 +1,6 @@
-# CADCraft Swedish interface catalog — original translations by the CADCraft contributors.
+# Drafitra Swedish interface catalog — original translations by the Drafitra contributors.
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # Clean room: every entry is written from the plain meaning of the English label in ordinary
 # computing vocabulary. No other product's Swedish interface, string table or terminology
 # database was consulted, and no other catalog is used as a source.
@@ -34,7 +34,7 @@
 	A drawing opened from a file keeps that file's format.	En ritning som öppnats från en fil behåller filens format.
 	A variable name starts with a letter and has only letters, digits and _	Ett variabelnamn börjar med en bokstav och innehåller bara bokstäver, siffror och _
 	About	Om
-	About CADCraft	Om CADCraft
+	About Drafitra	Om Drafitra
 	Absolute	Absolut
 	Add Current Scale	Lägg till aktuell skala
 	Add Leader	Lägg till hänvisningslinje
@@ -109,9 +109,9 @@
 	ByBlock	Enligt block
 	ByColor	Enligt färg
 	ByLayer	Enligt lager
-	CADCraft	CADCraft
-	CADCraft Help	Hjälp för CADCraft
-	CADCraft keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	CADCraft sparar de här inställningarna, objektfästena och ritlägena för ditt användarkonto och återställer dem när programmet startar.
+	Drafitra	Drafitra
+	Drafitra Help	Hjälp för Drafitra
+	Drafitra keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	Drafitra sparar de här inställningarna, objektfästena och ritlägena för ditt användarkonto och återställer dem när programmet startar.
 	Cancel	Avbryt
 	Cartesian (x, y)	Kartesisk (x, y)
 	Center	Centrum
@@ -459,8 +459,8 @@
 	Jogged	Bruten
 	Jogged Linear	Brutet linjärt
 	Join	Foga samman
-	Join the ArtCraft Discord…	Gå med i ArtCrafts Discord…
-	Join us on Discord	Gå med i ArtCrafts community på Discord
+	Join the Mahay Discord…	Gå med i Mahays Discord…
+	Join us on Discord	Gå med i Mahays community på Discord
 	Keep the system cursor visible over the drawing area	Visa systemets muspekare över ritytan
 	Language	Språk
 	Largest array	Största mönster
@@ -612,7 +612,7 @@
 	Offset	Förskjut
 	On	På
 	On/Off	På/av
-	One of the Crafting Apps by the ArtCraft team and community.	En av Crafting Apps, gjord av ArtCraft-teamet och dess community.
+	One of the Mahay apps by the Mahay team and community.	En av Mahay apps, gjord av Mahay-teamet och dess community.
 	Only in this drawing: {n}	Bara i den här ritningen: {n}
 	Only in {name}: {n}	Bara i {name}: {n}
 	Open	Öppna
@@ -793,7 +793,7 @@
 	Quick Select Properties	Egenskaper för snabbmarkering
 	Quick Select...	Snabbmarkering...
 	QuickCalc	Snabbkalkyl
-	Quit CADCraft	Avsluta CADCraft
+	Quit Drafitra	Avsluta Drafitra
 	Radius	Radie
 	Raster Image	Rasterbild
 	Ray	Stråle
@@ -1214,7 +1214,7 @@
 @plural	{n} contributor	{n} bidragsgivare|{n} bidragsgivare
 	Drawing as bytes	Ritningen som byte
 	Services	Tjänster
-	Hide CADCraft	Dölj CADCraft
+	Hide Drafitra	Dölj Drafitra
 	Hide Others	Dölj övriga
 	Accessibility	Tillgänglighet
 	Show System Cursor	Visa systemets muspekare

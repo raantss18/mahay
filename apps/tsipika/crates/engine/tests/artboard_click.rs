@@ -4,10 +4,10 @@
 #![allow(clippy::unwrap_used)]
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::{Session, UiRequest, ViewInfo};
-use vectorcraft_geom::Rect;
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_doc::NodeId;
+use tsipika_engine::{Session, UiRequest, ViewInfo};
+use tsipika_geom::Rect;
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 fn fixture(x: f64, y: f64) -> (Session, NodeId) {
     let mut s = Session::new();

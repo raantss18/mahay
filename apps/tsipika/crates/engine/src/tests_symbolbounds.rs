@@ -7,9 +7,9 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Effect, Node, NodeId, NodeKind, Symbol};
-use vectorcraft_geom::{Affine, Point, Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Effect, Node, NodeId, NodeKind, Symbol};
+use tsipika_geom::{Affine, Point, Rect, shapes};
 
 use super::*;
 
@@ -32,7 +32,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 /// `svg` opened, and its symbol instance.
 fn open(svg: &str) -> (Session, NodeId) {
     let mut s = Session::new();
-    run(&mut s, "document.open", json!({"name": "symbols.svg", "dataBase64": vectorcraft_format::base64_encode(svg.as_bytes())}));
+    run(&mut s, "document.open", json!({"name": "symbols.svg", "dataBase64": tsipika_format::base64_encode(svg.as_bytes())}));
     let mut found = None;
     s.doc().unwrap().doc.walk(|n| {
         if matches!(n.kind, NodeKind::SymbolInstance { .. }) {
@@ -134,7 +134,7 @@ fn set_bounds_with_use_preview_bounds_keeps_the_strokes_in_the_symbol_at_their_w
     // center, (44, 44) to (64, 64), and the stroke in the symbol keeps its weight.
     let mut d = Document::new(200.0, 120.0);
     let mut round = Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 2.0);
-    round.stroke_mut().unwrap().join = vectorcraft_doc::LineJoin::Round;
+    round.stroke_mut().unwrap().join = tsipika_doc::LineJoin::Round;
     let art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 8.0, 8.0)), round);
     d.symbols.push(Symbol { name: "Ring".into(), art: Arc::new(art) });
     let instance = Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Ring".into(), xf: Affine::translate((50.0, 50.0)) });
@@ -406,8 +406,8 @@ fn lock_and_hide_all_artwork_above_measure_the_instances_art() {
 fn eps_of_the_art_bounds_and_writes_an_instances_art() {
     let (mut s, _) = open(FAR);
     let r = run(&mut s, "document.export", json!({"format": "eps", "previewFormat": "none", "cmykPostScript": false}));
-    let bytes = vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
-    let ps = String::from_utf8(vectorcraft_eps::sections(&bytes).unwrap().0.to_vec()).unwrap();
+    let bytes = tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
+    let ps = String::from_utf8(tsipika_eps::sections(&bytes).unwrap().0.to_vec()).unwrap();
     let bbox = ps.lines().find_map(|l| l.strip_prefix("%%BoundingBox:")).map(str::trim);
     // The art, 60 to 80 down from the artboard's top, is 40 to 60 up from its bottom (120 high).
     assert_eq!(bbox, Some("100 40 140 60"), "{ps}");
@@ -428,12 +428,12 @@ fn an_artboards_svg_keeps_an_instance_whose_brush_art_is_on_it() {
     // nib. Drawn from (-5, 0), the line lies left of the artboard, and the nib paints 10 pt either
     // side of it, onto the artboard.
     let mut d = Document::new(200.0, 120.0);
-    let mut lib = vectorcraft_brush::library(&d);
-    let Some(vectorcraft_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
+    let mut lib = tsipika_brush::library(&d);
+    let Some(tsipika_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
         panic!("the 3 pt. Round brush")
     };
     c.size = 20.0;
-    vectorcraft_brush::store(&mut d, &lib);
+    tsipika_brush::store(&mut d, &lib);
     let mut stroke = Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 1.0);
     stroke.stroke_mut().unwrap().brush = Some("3 pt. Round".into());
     let line = Node::path(d.alloc_id(), shapes::line((0.0, 40.0).into(), (0.0, 60.0).into()), stroke);
@@ -505,7 +505,7 @@ fn a_copied_instances_png_is_cropped_to_its_art() {
     run(&mut s, "edit.copy", json!({}));
     let r = run(&mut s, "clipboard.exportPng", json!({}));
     assert_eq!((r["width"].as_u64(), r["height"].as_u64()), (Some(40), Some(20)));
-    let png = vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
+    let png = tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
     let img = image::load_from_memory(&png).unwrap().to_rgba8();
     assert_eq!(img.get_pixel(20, 10).0, [0, 0, 0, 255], "the art fills the picture");
 }
@@ -523,7 +523,7 @@ fn an_instance_pasted_at_a_point_has_its_art_centered_there() {
 fn svg_markup_on_the_clipboard_is_centered_by_the_instances_art() {
     let mut s = Session::new();
     run(&mut s, "file.new", json!({"width": 400, "height": 300}));
-    run(&mut s, "clipboard.importSvg", json!({"dataBase64": vectorcraft_format::base64_encode(FAR.as_bytes()), "center": [200, 150]}));
+    run(&mut s, "clipboard.importSvg", json!({"dataBase64": tsipika_format::base64_encode(FAR.as_bytes()), "center": [200, 150]}));
     let pasted = ids(&run(&mut s, "edit.pasteInPlace", json!({})));
     assert!(close(bounds(&s, &pasted), Rect::new(180.0, 140.0, 220.0, 160.0)), "{:?}", bounds(&s, &pasted));
 }

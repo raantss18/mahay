@@ -3,11 +3,11 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use effectcraft_engine::{
+use tselatra_engine::{
     Session,
     media_browser::{Browser, Entry, VirtualTree},
 };
-use effectcraft_ui_egui::{EffectcraftApp, dock::PanelKind};
+use tselatra_ui_egui::{TselatraApp, dock::PanelKind};
 use egui::{Event, Modifiers, PointerButton, pos2};
 use egui_kittest::Harness;
 use serde_json::{Value, json};
@@ -40,7 +40,7 @@ impl Browser for MutableBrowser {
 
 type Listing = (f64, Arc<Result<Vec<Entry>, String>>);
 
-fn listing(h: &Harness<'_, EffectcraftApp>, only: bool) -> Listing {
+fn listing(h: &Harness<'_, TselatraApp>, only: bool) -> Listing {
     let dir = h.state().session.state.media_browser.folder.clone().unwrap_or_else(|| "/Shoot".into());
     h.ctx.data(|d| d.get_temp(egui::Id::new(("mb-list", dir, only)))).unwrap()
 }
@@ -49,7 +49,7 @@ fn names(list: &Arc<Result<Vec<Entry>, String>>) -> Vec<&str> {
     list.as_ref().as_ref().unwrap().iter().map(|e| e.name.as_str()).collect()
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("missing {id}"));
     let pos = pos2(e.rect[0] + 8.0, e.rect[1] + e.rect[3] / 2.0);
     h.input_mut().events.push(Event::PointerMoved(pos));
@@ -61,7 +61,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
     h.run_steps(2);
 }
 
-fn at(h: &mut Harness<'_, EffectcraftApp>, time: f64) {
+fn at(h: &mut Harness<'_, TselatraApp>, time: f64) {
     h.input_mut().time = Some(time);
     h.step();
     h.input_mut().time = Some(time);
@@ -81,7 +81,7 @@ fn browser_cache_refreshes_filters_navigates_and_recovers_from_errors() {
     let mut session = Session { browser: Some(browser.clone()), ..Default::default() };
     session.prefs.general.language = "en".into();
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| {
-        let mut app = EffectcraftApp::new(session);
+        let mut app = TselatraApp::new(session);
         app.ui.start_screen = false;
         app.show_panel(PanelKind::MediaBrowser);
         app.ui.maximized = Some(PanelKind::MediaBrowser);

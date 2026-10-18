@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
-use vectorcraft_doc::Effect;
-use vectorcraft_geom::{Affine, PathData, Point, Rect, Shape, SubPath, shapes};
+use tsipika_doc::Effect;
+use tsipika_geom::{Affine, PathData, Point, Rect, Shape, SubPath, shapes};
 
 use super::*;
 
@@ -250,7 +250,7 @@ fn stacked_transform_copies_stay_within_the_anchor_budget() {
 fn stacked_transform_copies_stay_within_the_image_budget() {
     use std::sync::Arc;
 
-    use vectorcraft_doc::{ImageObject, NodeId};
+    use tsipika_doc::{ImageObject, NodeId};
     let id = NodeId(9);
     let image = || {
         Node::new(
@@ -299,7 +299,7 @@ fn transform_copies_stop_before_they_overflow() {
 fn transform_on_a_group_moves_and_copies_its_images() {
     use std::sync::Arc;
 
-    use vectorcraft_doc::{Appearance, ImageObject, Node, NodeId, NodeKind};
+    use tsipika_doc::{Appearance, ImageObject, Node, NodeId, NodeKind};
     let id = NodeId(9);
     let sq = Node::path(id, square(), Appearance::default());
     let image = Node::new(
@@ -350,7 +350,7 @@ fn transform_on_a_group_moves_and_copies_its_images() {
 fn transform_on_a_group_moves_and_copies_its_symbol_instances() {
     use std::sync::Arc;
 
-    use vectorcraft_doc::{Appearance, Node, NodeId, NodeKind};
+    use tsipika_doc::{Appearance, Node, NodeId, NodeKind};
     let id = NodeId(9);
     let instance = || Node::new(id, NodeKind::SymbolInstance { symbol: "s".into(), xf: Affine::translate((5.0, 40.0)) });
     let xs = |art: &Node| {
@@ -373,7 +373,7 @@ fn transform_on_a_group_moves_and_copies_its_symbol_instances() {
 fn images_and_symbol_instances_share_the_copy_budget() {
     use std::sync::Arc;
 
-    use vectorcraft_doc::{ImageObject, NodeId};
+    use tsipika_doc::{ImageObject, NodeId};
     let id = NodeId(9);
     let image = Node::new(
         id,
@@ -402,7 +402,7 @@ fn images_and_symbol_instances_share_the_copy_budget() {
 fn transform_copies_of_images_stop_at_the_reach_limit() {
     use std::sync::Arc;
 
-    use vectorcraft_doc::{ImageObject, NodeId};
+    use tsipika_doc::{ImageObject, NodeId};
     let id = NodeId(9);
     let image = Node::new(
         id,
@@ -515,7 +515,7 @@ fn zigzag_spaces_ridges_evenly_along_a_straight_line() {
 /// follows a cosine, even where the ridges are much taller than they are apart.
 #[test]
 fn zigzag_smooth_is_a_wave() {
-    use vectorcraft_geom::kurbo::ParamCurve;
+    use tsipika_geom::kurbo::ParamCurve;
     let line = PathData::single(SubPath::polyline(&[Point::new(0.0, 0.0), Point::new(100.0, 0.0)], false));
     for size in [3.0, 30.0] {
         let out = run("distort.zigZag", json!({"ridges": 9, "points": "smooth", "size": size}), &line);
@@ -556,12 +556,12 @@ fn zigzag_on_a_circle_is_regular() {
 /// #1554 on an uneven curve: the ridges divide its length, not its parameter, into equal parts.
 #[test]
 fn zigzag_spaces_ridges_by_length_on_an_uneven_curve() {
-    use vectorcraft_geom::kurbo::{ParamCurve, ParamCurveArclen, ParamCurveNearest};
+    use tsipika_geom::kurbo::{ParamCurve, ParamCurveArclen, ParamCurveNearest};
     let (a, b) = (Point::new(0.0, 0.0), Point::new(300.0, 0.0));
     let curve = PathData::single(SubPath::new(
         vec![
-            vectorcraft_geom::Anchor::with_handles(a, a, Point::new(10.0, 40.0)),
-            vectorcraft_geom::Anchor::with_handles(b, Point::new(100.0, 200.0), b),
+            tsipika_geom::Anchor::with_handles(a, a, Point::new(10.0, 40.0)),
+            tsipika_geom::Anchor::with_handles(b, Point::new(100.0, 200.0), b),
         ],
         false,
     ));
@@ -585,7 +585,7 @@ fn offset_path_grows_and_shrinks() {
 
 #[test]
 fn outline_stroke_uses_context_stroke() {
-    let st = vectorcraft_doc::StrokeLayer::new(vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK), 10.0);
+    let st = tsipika_doc::StrokeLayer::new(tsipika_color::Paint::solid(tsipika_color::Color::BLACK), 10.0);
     let ctx = GeomContext { stroke: Some(&st), ..Default::default() };
     let out = apply_geometry_with(&[fx("path.outlineStroke", json!({}))], &square(), Rect::new(0.0, 0.0, 100.0, 100.0), &ctx);
     let b = out.bounds().unwrap();
@@ -634,7 +634,7 @@ fn round_corners_replaces_corners() {
 /// A D: a straight back, a curved bowl, and two corners where the bowl meets the straight
 /// sides (the anchors there carry the bowl's handles).
 fn d_shape() -> PathData {
-    use vectorcraft_geom::Anchor;
+    use tsipika_geom::Anchor;
     let p = Point::new;
     PathData::new(vec![SubPath::new(
         vec![
@@ -655,7 +655,7 @@ fn round_corners_also_rounds_where_a_curve_meets_a_line() {
     assert_eq!(out.anchor_count(), 8);
     assert!(all_finite(&out));
     // Every cut leaves both sides smoothly: no corner is left anywhere.
-    assert!(vectorcraft_geom::corners::path_corners(&out).is_empty(), "{out:?}");
+    assert!(tsipika_geom::corners::path_corners(&out).is_empty(), "{out:?}");
     let (before, after) = (d.to_bezpath().area().abs(), out.to_bezpath().area().abs());
     assert!(after < before && after > before - 4.0 * 8.0 * 8.0, "{before} -> {after}");
     // The cut at a curve-line corner meets the straight side 8 from the corner.
@@ -667,7 +667,7 @@ fn round_corners_also_rounds_where_a_curve_meets_a_line() {
 fn round_corners_keeps_straight_corners_as_they_were() {
     // The D's straight corners are rounded as before, next to the new cuts: same anchors, same
     // quarter-circle handles, and the path still starts at its first corner's rounding.
-    use vectorcraft_geom::Anchor;
+    use tsipika_geom::Anchor;
     let p = Point::new;
     let k = 8.0 * shapes::KAPPA;
     let out = stylize::round_corners(&d_shape(), 8.0);
@@ -711,11 +711,11 @@ fn scribble_does_not_cross_holes() {
     let out = run("stylize.scribble", params, &u).to_bezpath();
     for x in [40.0, 50.0, 60.0] {
         for y in [12.5, 32.5, 52.5] {
-            assert_eq!(vectorcraft_geom::kurbo::Shape::winding(&out, Point::new(x, y)), 0, "scribble covers the notch at ({x}, {y})");
+            assert_eq!(tsipika_geom::kurbo::Shape::winding(&out, Point::new(x, y)), 0, "scribble covers the notch at ({x}, {y})");
         }
     }
     // The bar below the notch is still hatched.
-    assert_ne!(vectorcraft_geom::kurbo::Shape::winding(&out, Point::new(50.0, 82.5)), 0);
+    assert_ne!(tsipika_geom::kurbo::Shape::winding(&out, Point::new(50.0, 82.5)), 0);
 }
 
 #[test]
@@ -807,7 +807,7 @@ fn raster_effects_parse_and_outset() {
     assert_eq!(r.len(), 5);
     match &r[0] {
         RasterFx::DropShadow { mode, opacity, dx, dy, blur, color, darkness } => {
-            assert_eq!(*mode, vectorcraft_doc::color::BlendMode::Multiply);
+            assert_eq!(*mode, tsipika_doc::color::BlendMode::Multiply);
             assert!(close(*opacity as f64, 0.5, 1e-6));
             assert_eq!((*dx, *dy, *blur), (10.0, -4.0, 6.0));
             assert_eq!(color.to_rgb(), [1.0, 0.0, 0.0]);
@@ -816,8 +816,8 @@ fn raster_effects_parse_and_outset() {
         other => panic!("{other:?}"),
     }
     assert!(matches!(r[2], RasterFx::InnerGlow { center: true, .. }));
-    assert!(close(outset(&list, vectorcraft_geom::Rect::ZERO), 10.0 + 9.0, 1e-9));
-    assert_eq!(outset(&[], vectorcraft_geom::Rect::ZERO), 0.0);
+    assert!(close(outset(&list, tsipika_geom::Rect::ZERO), 10.0 + 9.0, 1e-9));
+    assert_eq!(outset(&[], tsipika_geom::Rect::ZERO), 0.0);
 }
 
 #[test]
@@ -880,7 +880,7 @@ fn rasterize_compose_leaves_the_raster_alone_when_the_sizes_do_not_fit() {
 
 #[test]
 fn blend_mode_names() {
-    use vectorcraft_doc::color::BlendMode;
+    use tsipika_doc::color::BlendMode;
     assert_eq!(raster::blend_mode("Color-Burn"), BlendMode::ColorBurn);
     assert_eq!(raster::blend_mode("screen"), BlendMode::Screen);
     assert_eq!(raster::blend_mode("???"), BlendMode::Normal);

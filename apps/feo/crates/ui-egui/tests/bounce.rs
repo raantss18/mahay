@@ -2,12 +2,12 @@
 use egui::vec2;
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
-use soundcraft_ui_egui::dialogs::Dialog;
-use soundcraft_ui_egui::{Services, SoundApp};
+use feo_ui_egui::dialogs::Dialog;
+use feo_ui_egui::{Services, SoundApp};
 use std::path::{Path, PathBuf};
 
 fn harness() -> Harness<'static, SoundApp> {
-    let app = SoundApp::new(soundcraft_engine::demo::demo_engine(), None, Services::default());
+    let app = SoundApp::new(feo_engine::demo::demo_engine(), None, Services::default());
     let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).with_max_steps(1_000).build_ui_state(
         |ui, app: &mut SoundApp| {
             app.logic(&ui.ctx().clone());
@@ -20,7 +20,7 @@ fn harness() -> Harness<'static, SoundApp> {
 }
 
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("soundcraft-ui-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("feo-ui-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -55,7 +55,7 @@ fn a_bounce_renders_across_frames_with_progress_until_its_file_is_written() {
     h.run();
     assert!(h.state().bounce.is_none());
     assert!(h.state().ui.status.starts_with("Bounced Mix.wav (peak"), "{}", h.state().ui.status);
-    let (_, file) = soundcraft_audio_io::decode(&std::fs::read(dir.join("Mix.wav")).unwrap(), None).unwrap();
+    let (_, file) = feo_audio_io::decode(&std::fs::read(dir.join("Mix.wav")).unwrap(), None).unwrap();
     assert_eq!(file.frames() as i64, frames);
     assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 1);
     let _ = std::fs::remove_dir_all(&dir);

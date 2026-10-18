@@ -1,10 +1,10 @@
 //! Layer and colour set on one attribute of a block reference: -ATTEDIT Layer/Color, drawn in
 //! place of the definition's, reset by ATTSYNC.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::color::{Color, Rgb};
-use cadcraft_engine::doc::{AttribProps, EntityKind, Handle, Space};
-use cadcraft_engine::render::{Options, build};
+use drafitra_engine::Session;
+use drafitra_engine::doc::color::{Color, Rgb};
+use drafitra_engine::doc::{AttribProps, EntityKind, Handle, Space};
+use drafitra_engine::render::{Options, build};
 use serde_json::json;
 
 /// Block B (attributes T and U on layer 0) inserted at 100,0; layer A exists.

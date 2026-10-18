@@ -14,7 +14,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use effectcraft_project::Project;
+use tselatra_project::Project;
 use serde::Serialize;
 
 use crate::Session;

@@ -2,8 +2,8 @@
 //! status flags (group 90: 16384 locked, 65536 non-rectangular clipping, 131072 off), status 68
 //! (0 = off) and the clip boundary entity (group 340), per the public DXF Reference.
 
-use cadcraft_doc::*;
-use cadcraft_geom::{PolyVertex, Vec2, Vec3};
+use drafitra_doc::*;
+use drafitra_geom::{PolyVertex, Vec2, Vec3};
 
 /// A metric drawing with model lines and, on its first layout, an L-shaped closed polyline
 /// clipping a viewport.
@@ -59,8 +59,8 @@ fn viewport(d: &Drawing, h: Handle) -> Viewport {
 fn clip_boundary_lock_and_off_roundtrip() {
     for (locked, on) in [(false, true), (true, false), (true, true)] {
         let (d, v, b) = drawing(locked, on);
-        let text = cadcraft_io::write_dxf(&d);
-        let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+        let text = drafitra_io::write_dxf(&d);
+        let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
         let got = viewport(&back, v);
         assert_eq!(got.clip, Some(b));
         assert_eq!((got.locked, got.on), (locked, on));
@@ -76,35 +76,35 @@ fn clip_boundary_lock_and_off_roundtrip() {
 #[test]
 fn clipped_viewport_plots_through_its_outline() {
     let (d, _, _) = drawing(false, true);
-    let back = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&d).as_bytes()).unwrap();
+    let back = drafitra_io::read_dxf(drafitra_io::write_dxf(&d).as_bytes()).unwrap();
     let sheet = Space::Paper(back.layouts[0].name.clone());
     // PNG, SVG and PDF all draw from this list.
-    let l = cadcraft_render::build_plot(&back, &sheet, &cadcraft_render::Options::default());
-    let pts: Vec<Vec2> = l.prims.iter().filter(|p| p.handle == cadcraft_render::VIEWPORT_CONTENT).flat_map(|p| l.points(p).to_vec()).collect();
+    let l = drafitra_render::build_plot(&back, &sheet, &drafitra_render::Options::default());
+    let pts: Vec<Vec2> = l.prims.iter().filter(|p| p.handle == drafitra_render::VIEWPORT_CONTENT).flat_map(|p| l.points(p).to_vec()).collect();
     assert!(!pts.is_empty());
     assert!(pts.iter().all(|p| !(p.x > 60.0 + 1e-6 && p.y > 60.0 + 1e-6)), "content in the notch");
     for name in ["out.svg", "out.pdf", "out.png"] {
-        assert!(!cadcraft_io::write(&back, name).unwrap().is_empty(), "{name}");
+        assert!(!drafitra_io::write(&back, name).unwrap().is_empty(), "{name}");
     }
 }
 
 #[test]
 fn hostile_clip_handles_do_not_panic() {
     let (d, v, b) = drawing(false, true);
-    let gs = groups(&cadcraft_io::write_dxf(&d));
+    let gs = groups(&drafitra_io::write_dxf(&d));
     let at = gs.iter().position(|g| *g == ("340".to_string(), b.hex())).unwrap();
     for bad in ["0", "ZZZ", "", "FFFFFFFFFFFFFFFFFFFF", "-1", "7FFFFFFFFFFFFFFF", &v.hex()] {
         let mut g = gs.clone();
         g[at].1 = bad.to_string();
-        let back = cadcraft_io::read_dxf(text_of(&g).as_bytes()).unwrap();
+        let back = drafitra_io::read_dxf(text_of(&g).as_bytes()).unwrap();
         let got = viewport(&back, v);
         let sheet = Space::Paper(back.layouts[0].name.clone());
         // A boundary that isn't there clips nothing: the rectangle shows model space.
-        let l = cadcraft_render::build(&back, &sheet, &cadcraft_render::Options::default());
-        assert!(l.prims.iter().any(|p| p.handle == cadcraft_render::VIEWPORT_CONTENT), "{bad}");
+        let l = drafitra_render::build(&back, &sheet, &drafitra_render::Options::default());
+        assert!(l.prims.iter().any(|p| p.handle == drafitra_render::VIEWPORT_CONTENT), "{bad}");
         // And it writes again without a dangling 340.
         if got.clip.is_none_or(|h| back.entity(h).is_none() || h == v) {
-            let again = groups(&cadcraft_io::write_dxf(&back));
+            let again = groups(&drafitra_io::write_dxf(&back));
             let start = again.iter().position(|g| *g == ("5".to_string(), v.hex())).unwrap();
             let record = again[start..].iter().take_while(|(c, _)| c != "0");
             assert!(!record.into_iter().any(|(c, _)| c == "340"), "{bad}");
@@ -113,5 +113,5 @@ fn hostile_clip_handles_do_not_panic() {
     // The clipping flag without a 340 group: a rectangular viewport.
     let mut g = gs.clone();
     g.remove(at);
-    assert_eq!(viewport(&cadcraft_io::read_dxf(text_of(&g).as_bytes()).unwrap(), v).clip, None);
+    assert_eq!(viewport(&drafitra_io::read_dxf(text_of(&g).as_bytes()).unwrap(), v).clip, None);
 }

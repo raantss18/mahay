@@ -1,10 +1,10 @@
 //! `ui.audio_device`: the audio device choice is kept only once the devices reopen with it.
 use serde_json::json;
-use soundcraft_ui_egui::{Services, SoundApp};
+use feo_ui_egui::{Services, SoundApp};
 
 #[test]
 fn the_audio_device_choice_is_kept_only_when_it_is_applied() {
-    let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+    let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
     let before = app.ui.audio.clone();
 
     let r = app.run("ui.audio_device", json!({})).unwrap();

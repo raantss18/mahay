@@ -8,7 +8,7 @@
 //! (`[#####]`) that becomes the zero-padded frame number. A relative result is resolved against the
 //! project's folder (or the working directory for unsaved projects).
 
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_time::{FrameRate, Tick};
 use serde::{Deserialize, Serialize};
 
 use crate::{Comp, ItemId};
@@ -1059,7 +1059,7 @@ pub struct OutputModule {
     /// WebM Opus audio bitrate (stereo total), kbit/s.
     pub opus_bitrate_kbps: u32,
     pub opus_application: OpusApplication,
-    /// Include Project Link: kept for parity; EffectCraft's writers have no place to store a
+    /// Include Project Link: kept for parity; Tselatra's writers have no place to store a
     /// link back to the project, so it changes nothing in the file.
     pub include_project_link: bool,
 }

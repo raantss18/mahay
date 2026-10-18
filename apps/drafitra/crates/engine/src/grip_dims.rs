@@ -11,8 +11,8 @@
 //! The UI reads [`grip_dims`] and sends the resolved point as a plain point input, so the edit
 //! itself is the GRIP command's.
 
-use cadcraft_doc::EntityKind;
-use cadcraft_geom::{TAU, Vec2};
+use drafitra_doc::EntityKind;
+use drafitra_geom::{TAU, Vec2};
 use serde::Serialize;
 
 use crate::Session;
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn a_line_end_measures_from_the_other_end() {
-        let l = EntityKind::Line(cadcraft_doc::Line { a: Vec2::new(0.0, 0.0).to3(0.0), b: Vec2::new(10.0, 0.0).to3(0.0) });
+        let l = EntityKind::Line(drafitra_doc::Line { a: Vec2::new(0.0, 0.0).to3(0.0), b: Vec2::new(10.0, 0.0).to3(0.0) });
         let d = dims_of(&l, 2);
         let kinds: Vec<_> = d.iter().map(|d| d.kind).collect();
         assert_eq!(kinds, [GripDimKind::Length, GripDimKind::LengthChange, GripDimKind::Angle, GripDimKind::AngleChange]);

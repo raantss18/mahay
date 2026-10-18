@@ -2,10 +2,10 @@
 //! Character panel use while editing), creating area / on-path type from a path, and Fit Headline.
 
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{Appearance, CharStyle, Node, NodeId, NodeKind, TextKind, TextObject, TextRun};
-use vectorcraft_geom::{Affine, Point, Vec2};
-use vectorcraft_text::edit;
+use tsipika_color::Paint;
+use tsipika_doc::{Appearance, CharStyle, Node, NodeId, NodeKind, TextKind, TextObject, TextRun};
+use tsipika_geom::{Affine, Point, Vec2};
+use tsipika_text::edit;
 
 use super::stroke::StrokeChange;
 use super::typecmd::refresh_bounds;
@@ -142,7 +142,7 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
-fn text_mut(d: &mut vectorcraft_doc::Document, id: NodeId) -> Option<&mut TextObject> {
+fn text_mut(d: &mut tsipika_doc::Document, id: NodeId) -> Option<&mut TextObject> {
     match d.node_mut(id).map(|n| &mut n.kind) {
         Some(NodeKind::Text(t)) => Some(t),
         _ => None,
@@ -161,7 +161,7 @@ fn text_ref(s: &Session, id: NodeId) -> Result<TextObject> {
 /// style and paragraph styles follow, exactly as `text.editRange` over the full
 /// range does. Dataset apply and friends share this so Variables edits behave
 /// like Type tool edits.
-pub(crate) fn set_plain_text(d: &mut vectorcraft_doc::Document, id: NodeId, text: &str) -> Result<()> {
+pub(crate) fn set_plain_text(d: &mut tsipika_doc::Document, id: NodeId, text: &str) -> Result<()> {
     let len = match d.node(id).map(|n| &n.kind) {
         Some(NodeKind::Text(t)) => edit::runs_len(&t.runs),
         Some(_) => return Err(EngineError::Other(format!("node {} is not text", id.0))),
@@ -250,17 +250,17 @@ pub(crate) struct CharChange {
     strikethrough: Option<bool>,
     all_caps: Option<bool>,
     features: Option<Vec<String>>,
-    position: Option<vectorcraft_doc::CharPosition>,
+    position: Option<tsipika_doc::CharPosition>,
     small_caps: Option<Option<f64>>,
-    char_align: Option<vectorcraft_doc::CharAlign>,
+    char_align: Option<tsipika_doc::CharAlign>,
     proportional_metrics: Option<bool>,
-    digits: Option<vectorcraft_doc::Digits>,
+    digits: Option<tsipika_doc::Digits>,
     font_axes: Option<AxisChange>,
 }
 
 /// `digits: "default"|"arabic"|"hindi"|"farsi"` → the numeral system the digits are drawn in.
-pub(crate) fn digits_param(p: &Value, cmd: &str) -> Result<Option<vectorcraft_doc::Digits>> {
-    use vectorcraft_doc::Digits;
+pub(crate) fn digits_param(p: &Value, cmd: &str) -> Result<Option<tsipika_doc::Digits>> {
+    use tsipika_doc::Digits;
     let Some(v) = p.get("digits").filter(|v| !v.is_null()) else { return Ok(None) };
     Ok(Some(match v.as_str() {
         Some("default") => Digits::Default,
@@ -298,9 +298,9 @@ pub(crate) fn font_axes_param(p: &Value, cmd: &str) -> Result<Option<AxisChange>
 /// clamped to its axis's range, a tag its font has no axis for is left out, and a value equal to
 /// the style's own setting is removed; with the font missing, the values are kept as given.
 pub(crate) fn change_font_axes(st: &mut CharStyle, change: &AxisChange) {
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     let face = match db.resolve(&st.font_family, &st.font_style) {
-        Some((f, m)) if m != vectorcraft_text::FontMatch::Missing => {
+        Some((f, m)) if m != tsipika_text::FontMatch::Missing => {
             Some(db.face_version(&st.font_family, &st.font_style, st.font_version.as_deref()).unwrap_or(f))
         }
         _ => None,
@@ -329,7 +329,7 @@ pub(crate) fn change_font_axes(st: &mut CharStyle, change: &AxisChange) {
 pub(crate) fn features_param(p: &Value, cmd: &str) -> Result<Option<Vec<String>>> {
     let Some(v) = p.get("features").filter(|v| !v.is_null()) else { return Ok(None) };
     let tags: Vec<&str> = v.as_array().ok_or_else(|| bad(cmd, "features must be a list of tags"))?.iter().filter_map(Value::as_str).collect();
-    if let Some(t) = tags.iter().find(|t| !vectorcraft_text::OtFeatures::known_tag(t)) {
+    if let Some(t) = tags.iter().find(|t| !tsipika_text::OtFeatures::known_tag(t)) {
         return Err(bad(
             cmd,
             format!(
@@ -337,12 +337,12 @@ pub(crate) fn features_param(p: &Value, cmd: &str) -> Result<Option<Vec<String>>
             ),
         ));
     }
-    Ok(Some(vectorcraft_text::OtFeatures::default().with_tags(tags).to_tags()))
+    Ok(Some(tsipika_text::OtFeatures::default().with_tags(tags).to_tags()))
 }
 
 /// `charAlign: "romanBaseline"|"emBoxTop"|"emBoxCenter"|"emBoxBottom"|"icfTop"|"icfBottom"` (Character Alignment).
-pub(crate) fn char_align_param(p: &Value, cmd: &str) -> Result<Option<vectorcraft_doc::CharAlign>> {
-    use vectorcraft_doc::CharAlign;
+pub(crate) fn char_align_param(p: &Value, cmd: &str) -> Result<Option<tsipika_doc::CharAlign>> {
+    use tsipika_doc::CharAlign;
     let Some(v) = p.get("charAlign").filter(|v| !v.is_null()) else { return Ok(None) };
     Ok(Some(match v.as_str() {
         Some("romanBaseline") => CharAlign::RomanBaseline,
@@ -378,7 +378,7 @@ fn auto_or_num(p: &Value, k: &str, cmd: &str) -> Result<Option<Option<f64>>> {
 
 impl CharChange {
     /// `setup` gives the superscript, subscript and small caps proportions.
-    pub(crate) fn parse(p: &Value, cmd: &str, setup: &vectorcraft_doc::DocSetup) -> Result<Self> {
+    pub(crate) fn parse(p: &Value, cmd: &str, setup: &tsipika_doc::DocSetup) -> Result<Self> {
         let num = |k: &str| p.get(k).and_then(Value::as_f64);
         let (position, small_caps) = super::docsetup::script_params(p, setup, cmd)?;
         let flag = |k: &str| p.get(k).and_then(Value::as_bool);
@@ -471,10 +471,10 @@ impl CharChange {
             st.font_family = f.clone();
             // Keep the style when the new family has it, else its closest match.
             if self.style.is_none() {
-                let styles = vectorcraft_text::FontDb::global().styles(f);
+                let styles = tsipika_text::FontDb::global().styles(f);
                 if !styles.is_empty()
                     && !styles.iter().any(|s| s.eq_ignore_ascii_case(&st.font_style))
-                    && let Some(face) = vectorcraft_text::FontDb::global().face(f, &st.font_style)
+                    && let Some(face) = tsipika_text::FontDb::global().face(f, &st.font_style)
                 {
                     st.font_style = face.style.clone();
                 }
@@ -567,7 +567,7 @@ pub(crate) fn protect_missing_glyphs(before: &[TextRun], runs: &mut Vec<TextRun>
             })
             .flatten()
     }
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     let mut faces = std::collections::HashMap::new();
     let mut covers = |st: &CharStyle, c: char| {
         let face = faces
@@ -637,8 +637,8 @@ fn set_range_style(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// The em a laid-out glyph's kerning and tracking are measured in, in text space: the size it
 /// was shaped at (superscript, small caps and Shrink Text to Fit included).
-fn glyph_em(t: &TextObject, g: &vectorcraft_text::PositionedGlyph) -> Option<f64> {
-    let face = vectorcraft_text::FontDb::global().face_by_id(g.font_id)?;
+fn glyph_em(t: &TextObject, g: &tsipika_text::PositionedGlyph) -> Option<f64> {
+    let face = tsipika_text::FontDb::global().face_by_id(g.font_id)?;
     let h_scale = edit::slice_runs(&t.runs, g.byte, g.byte + g.len).first()?.style.h_scale / 100.0;
     let [a, b, ..] = g.xf.as_coeffs();
     Some(a.hypot(b) * face.units_per_em() / h_scale).filter(|em| em.is_finite() && *em > 0.0)
@@ -661,7 +661,7 @@ fn touch_type(s: &mut Session, p: &Value) -> Result<Value> {
     let t = text_ref(s, id)?;
     change.localize(&t, C)?;
     let points = t.style_scale().ok_or_else(|| bad(C, "text transform is collapsed or unrepresentable"))?.points;
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     let g = lay.glyphs.iter().find(|g| g.byte <= start && start < g.byte + g.len).ok_or_else(|| bad(C, format!("no character at byte {start}")))?;
     let (a, b) = (g.byte, g.byte + g.len);
     // The line's direction in reading order.
@@ -729,7 +729,7 @@ fn touch_type(s: &mut Session, p: &Value) -> Result<Value> {
         let pen_at = |to: f64| {
             let mut trial = t.clone();
             touch(&mut trial, None, None, to - shift);
-            let l = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &trial);
+            let l = tsipika_text::layout(tsipika_text::FontDb::global(), &trial);
             l.glyphs.iter().find(|h| h.byte == a).map(|h| h.xf * Point::ZERO)
         };
         let per_step = match (pen_at(from + step), pen_at(from + 2.0 * step)) {
@@ -742,12 +742,12 @@ fn touch_type(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(C, "the character's size can't be measured"));
     }
     // Where a glyph starts along the line.
-    let pen = |h: &vectorcraft_text::PositionedGlyph| h.origin.to_vec2().dot(along);
+    let pen = |h: &tsipika_text::PositionedGlyph| h.origin.to_vec2().dot(along);
     // How much further the character's new scales advance it along the line: the character laid
     // out alone, in point type of the same orientation, before and after the change.
     let grown = {
         let mut alone = TextObject { kind: TextKind::Point, runs: edit::slice_runs(&t.runs, a, b), paras: Vec::new(), ..t.clone() };
-        let advance = |o: &TextObject| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), o).glyphs.iter().map(|h| h.advance).sum::<f64>();
+        let advance = |o: &TextObject| tsipika_text::layout(tsipika_text::FontDb::global(), o).glyphs.iter().map(|h| h.advance).sum::<f64>();
         let old = advance(&alone);
         edit::style_range(&mut alone.runs, 0, b - a, |st| change.apply(st));
         (advance(&alone) - old) * lay.fit_scale
@@ -761,7 +761,7 @@ fn touch_type(s: &mut Session, p: &Value) -> Result<Value> {
     let miss = |k: (Option<f64>, Option<f64>)| {
         let mut trial = t.clone();
         touch(&mut trial, k.0, k.1, raise);
-        let l = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &trial);
+        let l = tsipika_text::layout(tsipika_text::FontDb::global(), &trial);
         let h = l.glyphs.iter().find(|h| h.byte == a)?;
         let next = match (l.glyphs.iter().find(|n| n.byte == b && n.line == h.line), next_goal) {
             (Some(n), Some(at)) => pen(n) - at,
@@ -833,7 +833,7 @@ fn create_in_path(s: &mut Session, p: &Value) -> Result<Value> {
     let style = super::create::new_type_style(s, p);
     let text = str_param(p, "text").unwrap_or("").to_string();
     let start = match point_param(p, "at") {
-        Some(at) if on_path => vectorcraft_geom::ArcPath::new(path).fraction_at(at).unwrap_or(0.0),
+        Some(at) if on_path => tsipika_geom::ArcPath::new(path).fraction_at(at).unwrap_or(0.0),
         _ => 0.0,
     };
     let kind = if on_path { TextKind::OnPath { path: path.clone(), start, end: None } } else { TextKind::Area { frame: path.clone() } };
@@ -1076,7 +1076,7 @@ fn headline_tracking(t: &TextObject, target: f64) -> Option<f64> {
         for r in &mut h.runs {
             r.style.tracking = tr;
         }
-        let l = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &h);
+        let l = tsipika_text::layout(tsipika_text::FontDb::global(), &h);
         l.lines.first().map_or(0.0, |li| li.x1 - li.x0)
     };
     // Width is linear in tracking: w(tr) = w0 + tr * slope.
@@ -1105,7 +1105,7 @@ fn fit_headline(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit("Fit Headline", |d, _| {
         for id in &ids {
             let Some(t) = text_mut(d, *id) else { continue };
-            let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
             let Some(first) = lay.lines.first() else { continue };
             let target = first.avail.1 - first.avail.0;
             let Some(tr) = headline_tracking(t, target) else { continue };

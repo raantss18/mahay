@@ -1,11 +1,11 @@
-//! The engine's side of real-time collaboration (`figcraft_collab`): its normalize pass as the
+//! The engine's side of real-time collaboration (`endrika_collab`): its normalize pass as the
 //! recompute hook, and `collab.diff`, which shows the change batch an edit syncs as.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use figcraft_collab::{Recompute, Replica, diff, message};
-use figcraft_doc::{Document, NodeId};
+use endrika_collab::{Recompute, Replica, diff, message};
+use endrika_doc::{Document, NodeId};
 use serde_json::{Value, json};
 
 use crate::cmd::CommandSpec;

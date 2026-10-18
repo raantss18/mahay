@@ -6,7 +6,7 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
@@ -15,7 +15,7 @@ const EDITED: [(&str, f64); 2] = [("light.exposure", 1.25), ("light.contrast", 4
 
 /// The demo library in Detail with the Edit panel's Light section open.
 fn edit_panel() -> Headless {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let id = h.app.session.visible_cloned()[0].0;
     assert_eq!(h.request("engine.execute", json!({"command": "library.select", "params": {"ids": [id]}}), T)["ok"], true);
@@ -31,11 +31,11 @@ fn widget(h: &Headless, id: &str) -> egui::Rect {
 
 fn value(h: &Headless, control: &str) -> f64 {
     let id = h.app.session.selection.active.unwrap();
-    lightcraft_develop::controls::get(&h.app.session.develop_of(id).unwrap_or_default(), control).unwrap()
+    hazavana_develop::controls::get(&h.app.session.develop_of(id).unwrap_or_default(), control).unwrap()
 }
 
 fn default(control: &str) -> f64 {
-    lightcraft_develop::controls::find(control).unwrap().default
+    hazavana_develop::controls::find(control).unwrap().default
 }
 
 fn ask(h: &mut Headless, method: &str, params: serde_json::Value) {
@@ -50,7 +50,7 @@ fn set(h: &mut Headless, control: &str, value: f64) {
 
 /// The thumb's place along the track (0..1), plus `dx` points: a hand lands near its centre, not on it.
 fn thumb_fx(h: &Headless, control: &str, dx: f32) -> f32 {
-    let spec = lightcraft_develop::controls::find(control).unwrap();
+    let spec = hazavana_develop::controls::find(control).unwrap();
     let track = widget(h, &format!("slider:{control}"));
     spec.position(value(h, control)) as f32 + dx / track.width()
 }

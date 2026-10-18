@@ -16,8 +16,8 @@
 
 use std::collections::HashMap;
 
-use cadcraft_doc::{Drawing, EntityKind, GeomRef, Handle, Insert, Sub};
-use cadcraft_geom::{Spline as GSpline, Vec2, ccw_sweep};
+use drafitra_doc::{Drawing, EntityKind, GeomRef, Handle, Insert, Sub};
+use drafitra_geom::{Spline as GSpline, Vec2, ccw_sweep};
 
 use crate::curves::{Ell, Frame, clamped, spline_end};
 
@@ -103,7 +103,7 @@ pub fn rigid_points(d: &Drawing, ins: &Insert) -> Vec<Vec2> {
         let pts: Vec<Vec2> = match &e.kind {
             EntityKind::Line(l) => vec![l.a.xy(), l.b.xy()],
             EntityKind::Arc(a) => {
-                let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+                let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
                 vec![g.start_point(), g.end_point(), g.center]
             }
             EntityKind::Circle(c) => vec![c.center.xy()],
@@ -186,7 +186,7 @@ impl Model {
                     Shape::Point
                 }
                 EntityKind::Ellipse(el) => {
-                    let ell = cadcraft_geom::Ellipse { center: el.center.xy(), major: el.major.xy(), ratio: el.ratio, start: el.start, end: el.end };
+                    let ell = drafitra_geom::Ellipse { center: el.center.xy(), major: el.major.xy(), ratio: el.ratio, start: el.start, end: el.end };
                     let arc = !ell.is_full();
                     m.x0.extend([el.center.x, el.center.y, el.major.x, el.major.y, el.ratio]);
                     if arc {
@@ -506,8 +506,8 @@ impl Model {
                         a.center.x = *cx;
                         a.center.y = *cy;
                         a.radius = r.abs().max(1e-12);
-                        a.start = cadcraft_geom::norm_angle(*s0 + turn);
-                        a.end = cadcraft_geom::norm_angle(*s1 + turn);
+                        a.start = drafitra_geom::norm_angle(*s0 + turn);
+                        a.end = drafitra_geom::norm_angle(*s1 + turn);
                     }
                 }
                 (EntityKind::LwPolyline(p), Shape::Poly { n, .. }) if p.vertices.len() == n => {
@@ -546,8 +546,8 @@ impl Model {
                             el.major.y = major.y;
                             el.ratio = ratio.clamp(1e-9, 1.0);
                             if arc {
-                                el.start = cadcraft_geom::norm_angle(t0);
-                                el.end = cadcraft_geom::norm_angle(t1);
+                                el.start = drafitra_geom::norm_angle(t0);
+                                el.end = drafitra_geom::norm_angle(t1);
                             }
                         }
                     }
@@ -561,7 +561,7 @@ impl Model {
                     if let [ix, iy, rot] = new {
                         ins.insert.x = *ix;
                         ins.insert.y = *iy;
-                        ins.rotation = cadcraft_geom::norm_angle(*rot);
+                        ins.rotation = drafitra_geom::norm_angle(*rot);
                     }
                 }
                 _ => {}

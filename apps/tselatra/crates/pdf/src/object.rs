@@ -304,7 +304,7 @@ pub fn parse_num(w: &[u8]) -> Option<f64> {
 /// The most bytes one stream filter may decode to. Deflate expands up to about 1000:1, so
 /// unbounded, a few MB of PDF ask for gigabytes and a failed allocation aborts the process. The
 /// largest image `image::decode` accepts (64 Mi pixels) of four 16-bit components is 512 MiB;
-/// 1 GiB leaves room for more components and is PdfCraft's ceiling for one stream. 32-bit
+/// 1 GiB leaves room for more components and is Taratasy's ceiling for one stream. 32-bit
 /// targets (the web build) get a quarter: their whole address space is 4 GiB, and the inflater's
 /// growing buffer can reserve about twice the limit.
 const MAX_INFLATED: usize = if cfg!(target_pointer_width = "32") { 256 << 20 } else { 1 << 30 };

@@ -1,8 +1,8 @@
 //! Where something dropped at a page point lands: the frame under the point (or the page) and, in
 //! an auto layout frame, the child slot by pointer position plus the insertion line to draw.
 
-use figcraft_doc::*;
-use figcraft_geom::Point;
+use endrika_doc::*;
+use endrika_geom::Point;
 use serde::Serialize;
 
 /// A drop destination.
@@ -49,22 +49,22 @@ pub fn auto_layout_slot(doc: &Document, parent: NodeId, p: Point, exclude: &[Nod
 }
 
 /// The insertion line `off` before a child with page bounds `b` (above it in a column).
-pub fn line_before(b: figcraft_geom::Rect, vertical: bool, off: f64) -> [f64; 4] {
+pub fn line_before(b: endrika_geom::Rect, vertical: bool, off: f64) -> [f64; 4] {
     if vertical { [b.x0, b.y0 - off, b.x1, b.y0 - off] } else { [b.x0 - off, b.y0, b.x0 - off, b.y1] }
 }
 
 /// `r` with x and y swapped when `vertical`: a vertical wrap (columns) is a horizontal one (rows)
 /// turned on its side.
-pub fn flip(r: figcraft_geom::Rect, vertical: bool) -> figcraft_geom::Rect {
-    if vertical { figcraft_geom::Rect::new(r.y0, r.x0, r.y1, r.x1) } else { r }
+pub fn flip(r: endrika_geom::Rect, vertical: bool) -> endrika_geom::Rect {
+    if vertical { endrika_geom::Rect::new(r.y0, r.x0, r.y1, r.x1) } else { r }
 }
 
 /// The visual rows (columns when `vertical`) of a wrapping layout's placed children `kids`, each
 /// child as (its index in `kids`, its page bounds [`flip`]ped so the flow runs along x). Children
 /// wrap in flow order, so a new row starts where a child sits before the one before, or where it
 /// does not follow the one before along the flow but sits past it across (one child per line).
-pub fn wrap_rows(doc: &Document, kids: &[NodeId], vertical: bool) -> Vec<Vec<(usize, figcraft_geom::Rect)>> {
-    let mut rows: Vec<Vec<(usize, figcraft_geom::Rect)>> = Vec::new();
+pub fn wrap_rows(doc: &Document, kids: &[NodeId], vertical: bool) -> Vec<Vec<(usize, endrika_geom::Rect)>> {
+    let mut rows: Vec<Vec<(usize, endrika_geom::Rect)>> = Vec::new();
     for (i, b) in kids.iter().enumerate().filter_map(|(i, c)| doc.world_bounds(*c).map(|b| (i, flip(b, vertical)))) {
         match rows.last_mut() {
             Some(row) if row.last().is_some_and(|(_, prev)| b.x0 >= prev.x0 - 0.5 && !(b.x0 < prev.x1 - 0.5 && b.y0 >= prev.y1 - 0.5)) => {
@@ -83,12 +83,12 @@ fn wrap_slot(doc: &Document, kids: &[NodeId], p: Point, vertical: bool) -> (usiz
 }
 
 /// [`wrap_slot`] in rows that run along x.
-fn wrap_slot_rows(rows: &[Vec<(usize, figcraft_geom::Rect)>], p: Point) -> (usize, Option<[f64; 4]>) {
+fn wrap_slot_rows(rows: &[Vec<(usize, endrika_geom::Rect)>], p: Point) -> (usize, Option<[f64; 4]>) {
     let span =
-        |row: &[(usize, figcraft_geom::Rect)]| row.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), (_, b)| (lo.min(b.y0), hi.max(b.y1)));
+        |row: &[(usize, endrika_geom::Rect)]| row.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), (_, b)| (lo.min(b.y0), hi.max(b.y1)));
     // The row containing the pointer, else the nearest one.
     let Some(row) = rows.iter().min_by(|a, b| {
-        let d = |r: &[(usize, figcraft_geom::Rect)]| {
+        let d = |r: &[(usize, endrika_geom::Rect)]| {
             let (lo, hi) = span(r);
             if p.y < lo {
                 lo - p.y
@@ -115,7 +115,7 @@ fn wrap_slot_rows(rows: &[Vec<(usize, figcraft_geom::Rect)>], p: Point) -> (usiz
 /// The grid cell of auto layout grid `parent` under page point `p` (the nearest one): (column,
 /// row, the cell's page-space bounds).
 pub fn grid_cell_at(doc: &Document, parent: NodeId, p: Point) -> Option<(u32, u32, [f64; 4])> {
-    let g = figcraft_layout::grid_geometry(doc, parent)?;
+    let g = endrika_layout::grid_geometry(doc, parent)?;
     let lp = doc.world_transform(parent).inverse() * p;
     let nearest = |tracks: &[(f64, f64)], v: f64| {
         tracks
@@ -137,7 +137,7 @@ pub fn grid_cell_at(doc: &Document, parent: NodeId, p: Point) -> Option<(u32, u3
     };
     let (ci, (cx0, cx1)) = nearest(&g.columns, lp.x)?;
     let (ri, (ry0, ry1)) = nearest(&g.rows, lp.y)?;
-    let r = figcraft_geom::transform_rect_bbox(doc.world_transform(parent), figcraft_geom::Rect::new(cx0, ry0, cx1, ry1));
+    let r = endrika_geom::transform_rect_bbox(doc.world_transform(parent), endrika_geom::Rect::new(cx0, ry0, cx1, ry1));
     Some((u32::try_from(ci).ok()?, u32::try_from(ri).ok()?, [r.x0, r.y0, r.x1, r.y1]))
 }
 

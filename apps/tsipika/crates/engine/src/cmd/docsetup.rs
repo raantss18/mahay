@@ -2,8 +2,8 @@
 //! paper, output options and the document's type options.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::setup::{DEFAULT_FLATTENER, GRID_COLOR_PRESETS, LANGUAGES, MAX_BLEED};
-use vectorcraft_doc::{Background, CharPosition, CharStyle, DocSetup, Document, ExportText, GridSize, NodeKind, Quotes, ScriptMetrics};
+use tsipika_doc::setup::{DEFAULT_FLATTENER, GRID_COLOR_PRESETS, LANGUAGES, MAX_BLEED};
+use tsipika_doc::{Background, CharPosition, CharStyle, DocSetup, Document, ExportText, GridSize, NodeKind, Quotes, ScriptMetrics};
 
 use super::flatten::{FlattenOptions, FlattenerPreset};
 
@@ -97,9 +97,9 @@ fn percent(k: &str, v: &Value, min: f64, max: f64) -> Result<f64> {
     v.as_f64().filter(|x| (min..=max).contains(x)).ok_or_else(|| bad(C, format!("{k} must be a number from {min} to {max}")))
 }
 
-fn apply(s: &mut DocSetup, units: &mut vectorcraft_doc::Unit, k: &str, v: &Value, saved: &[FlattenerPreset]) -> Result<()> {
+fn apply(s: &mut DocSetup, units: &mut tsipika_doc::Unit, k: &str, v: &Value, saved: &[FlattenerPreset]) -> Result<()> {
     match k {
-        "units" => *units = v.as_str().and_then(vectorcraft_doc::Unit::named).ok_or_else(|| bad(C, "unknown units"))?,
+        "units" => *units = v.as_str().and_then(tsipika_doc::Unit::named).ok_or_else(|| bad(C, "unknown units"))?,
         "bleed" => s.bleed = bleed_param(v, s.bleed, C)?,
         "outlineImages" => s.outline_images = flag(k, v)?,
         "highlightSubstitutedFonts" => s.highlight_substituted_fonts = flag(k, v)?,
@@ -121,7 +121,7 @@ fn apply(s: &mut DocSetup, units: &mut vectorcraft_doc::Unit, k: &str, v: &Value
         "typographersQuotes" => s.typographers_quotes = flag(k, v)?,
         "superscript" => s.superscript = script_param(k, v, s.superscript)?,
         "subscript" => s.subscript = script_param(k, v, s.subscript)?,
-        "smallCapsSize" => s.small_caps_size = percent(k, v, 1.0, vectorcraft_doc::setup::MAX_SMALL_CAPS)?,
+        "smallCapsSize" => s.small_caps_size = percent(k, v, 1.0, tsipika_doc::setup::MAX_SMALL_CAPS)?,
         "exportText" => s.export_text = v.as_str().and_then(ExportText::parse).ok_or_else(|| bad(C, "exportText must be editable or appearance"))?,
         "backgroundContents" => s.background = background_param(v, C)?,
         // Read-only values `document.setup` reports.
@@ -181,7 +181,7 @@ pub(crate) fn bleed_param(v: &Value, current: [f64; 4], cmd: &str) -> Result<[f6
     }
 }
 
-fn grid_colors(v: &Value) -> Result<[vectorcraft_color::Color; 2]> {
+fn grid_colors(v: &Value) -> Result<[tsipika_color::Color; 2]> {
     if let Some(name) = v.as_str() {
         return GRID_COLOR_PRESETS.iter().find(|(n, _)| n.eq_ignore_ascii_case(name)).map(|(_, c)| *c).ok_or_else(|| {
             bad(C, format!("unknown grid colours `{name}` (one of {})", GRID_COLOR_PRESETS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ")))
@@ -223,8 +223,8 @@ fn script_param(k: &str, v: &Value, mut m: ScriptMetrics) -> Result<ScriptMetric
     let o = v.as_object().ok_or_else(|| bad(C, format!("{k} must be {{size?, position?}}")))?;
     for (key, x) in o {
         match key.as_str() {
-            "size" => m.size = percent(&format!("{k}.size"), x, 1.0, vectorcraft_doc::setup::MAX_SCRIPT)?,
-            "position" => m.position = percent(&format!("{k}.position"), x, -vectorcraft_doc::setup::MAX_SCRIPT, vectorcraft_doc::setup::MAX_SCRIPT)?,
+            "size" => m.size = percent(&format!("{k}.size"), x, 1.0, tsipika_doc::setup::MAX_SCRIPT)?,
+            "position" => m.position = percent(&format!("{k}.position"), x, -tsipika_doc::setup::MAX_SCRIPT, tsipika_doc::setup::MAX_SCRIPT)?,
             _ => return Err(bad(C, format!("unknown {k} key `{key}` (size, position)"))),
         }
     }

@@ -2,16 +2,16 @@
 //!
 //! - **Face Track Points** holds one point control per facial landmark (eyebrows, eyes and
 //!   pupils, nose, nostrils, mouth, chin and jaw), keyed on every tracked frame by the engine's
-//!   mask tracker ([`effectcraft_track::face`]); expressions and other layers can follow them.
+//!   mask tracker ([`tselatra_track::face`]); expressions and other layers can follow them.
 //! - **Face Measurements** holds the measurements derived from those points (head position,
 //!   scale and orientation, eye openness, eyebrow raise, mouth openness, width and offset), keyed
 //!   by Extract & Copy Face Measurements (`track.extractFaceMeasurements`).
 //!
 //! Both pass their input through unchanged: they are data, like expression controls.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_track::face::{LANDMARKS, MEASUREMENTS};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_track::face::{LANDMARKS, MEASUREMENTS};
 
 use crate::{Buf, EffectCtx, EffectSpec, ParamSpec, num, p, slider};
 

@@ -1,11 +1,11 @@
 //! Auto-orient (along path / towards camera) and camera parenting.
 
-use effectcraft_color::Label;
-use effectcraft_geom::vec3;
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::build;
-use effectcraft_project::{AutoOrient, Comp, ItemId, ItemKind, Layer, LayerSource, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_geom::vec3;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::build;
+use tselatra_project::{AutoOrient, Comp, ItemId, ItemKind, Layer, LayerSource, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 use super::active_camera;
 use crate::EvalCtx;
@@ -118,7 +118,7 @@ fn layer_cache_is_independent_of_camera_lights_and_view() {
     let mut cam = build::layer(&mut p, &comp, "Camera", LayerSource::Camera, (200, 100), None);
     cam.props.prop_mut("cameraOptions/dof").unwrap().value = Value::Bool(true);
     cam.props.prop_mut("cameraOptions/aperture").unwrap().value = Value::Scalar(40.0);
-    let light = build::layer(&mut p, &comp, "Light", LayerSource::Light { kind: effectcraft_project::LightKind::Point }, (200, 100), None);
+    let light = build::layer(&mut p, &comp, "Light", LayerSource::Light { kind: tselatra_project::LightKind::Point }, (200, 100), None);
     let a = solid(&mut p, &comp, true, [80.0, 50.0, 0.0]);
     let b = solid(&mut p, &comp, true, [120.0, 50.0, 150.0]);
     let c = p.comp_mut(cid).unwrap();

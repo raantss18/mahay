@@ -2,7 +2,7 @@
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|other" source, and a
 # single translated form: Hungarian uses the singular after a number, see `plural_none`).
 #
-# Clean-room: every entry was written from the meaning of VectorCraft's English label, using the
+# Clean-room: every entry was written from the meaning of Tsipika's English label, using the
 # general Hungarian vocabulary of vector illustration (rajztábla, útvonal, horgonypont, fogantyú,
 # körvonal, kitöltés, színátmenet, színminta, mintázat, réteg, vágómaszk, átlátszatlanság,
 # keverési mód, összemosás, Útvonalkezelő, előbeállítás, effektus). No proprietary localisation
@@ -144,7 +144,7 @@
 	[Press Quality]	[Nyomdai minőség]
 	[Smallest File Size]	[Legkisebb fájlméret]
 	[Unnamed]	[Névtelen]
-	[VectorCraft Default]	[VectorCraft alapértelmezés]
+	[Tsipika Default]	[Tsipika alapértelmezés]
 	A file dialog is open: choose there first	Egy fájlválasztó ablak nyitva van: előbb ott válassz
 	A File…	Fájlba…
 	A lower value follows the stroke closely; a higher one gives fewer points and smoother curves.	Kisebb értéknél az útvonal szorosan követi a vonást, nagyobbnál kevesebb pont és simább görbék keletkeznek.
@@ -155,7 +155,7 @@
 	A5	A5
 	A6	A6
 	About	Névjegy
-	About VectorCraft	A VectorCraft névjegye
+	About Tsipika	A Tsipika névjegye
 	above	fölötte
 	Above Text	Szöveg fölött
 	Absolute	Abszolút
@@ -282,7 +282,7 @@
 	Appearance of Black	A fekete megjelenése
 	Appearance panel	Megjelenés panel
 	Appearance Panel	Megjelenés panel
-	Applies the next time VectorCraft starts.	A VectorCraft következő indításakor lép életbe.
+	Applies the next time Tsipika starts.	A Tsipika következő indításakor lép életbe.
 	Applies when the linked file is relinked or updated.	A csatolt fájl újracsatolásakor vagy frissítésekor érvényes.
 	Apply	Alkalmaz
 	Apply Brush	Ecset alkalmazása
@@ -333,8 +333,8 @@
 	Artboard:	Rajztábla:
 	Artboards	Rajztáblák
 	Artboards: {n}	Rajztáblák: {n}
-	ArtCraft Website	Az ArtCraft webhelye
-	ArtCraft website	Az ArtCraft webhelye
+	Mahay Website	Az Mahay webhelye
+	Mahay website	Az Mahay webhelye
 	Artwork Colors	Grafika színei
 	As Multiple Assets	Több elemként
 	As Single Asset	Egy elemként
@@ -537,7 +537,7 @@
 	Check Script	Szkript ellenőrzése
 	Check Script…	Szkript ellenőrzése…
 	Copy Report	Jelentés másolása
-	VectorCraft read this script without running it.	A VectorCraft futtatás nélkül olvasta be ezt a szkriptet.
+	Tsipika read this script without running it.	A Tsipika futtatás nélkül olvasta be ezt a szkriptet.
 	Needs nothing beyond plain JavaScript	Csak egyszerű JavaScript kell hozzá
 	Needs the script language's own objects or directives	A szkriptnyelv saját objektumai vagy direktívái kellenek hozzá
 	Needs the document model	A dokumentummodell kell hozzá
@@ -970,7 +970,7 @@
 	Diamond (open)	Rombusz (nyitott)
 	Difference	Különbség
 	Differences from [Default]:	Eltérések az [Alapértelmezett] beállítástól:
-	Differences from VectorCraft Default:	Eltérések a VectorCraft alapértelmezésétől:
+	Differences from Tsipika Default:	Eltérések a Tsipika alapértelmezésétől:
 	Differences from {preset}:	Eltérések ettől: {preset}:
 	Diffuse Glow	Szórt ragyogás
 	Diffuse Glow…	Szórt ragyogás…
@@ -1431,7 +1431,7 @@ file-filter	PDF presets	PDF-előbeállítások
 file-filter	Print presets	Nyomtatási előbeállítások
 file-filter	SVG Compressed	Tömörített SVG
 file-filter	PDF-compatible .ai	PDF-kompatibilis .ai
-file-filter	VectorCraft Template	VectorCraft-sablon
+file-filter	Tsipika Template	Tsipika-sablon
 file-filter	Templates	Sablonok
 	Flattener Preview	Lapítás előnézete
 	Flip	Tükrözés
@@ -1701,7 +1701,7 @@ file-filter	Templates	Sablonok
 	Hide Thumbnail	Bélyegkép elrejtése
 	Hide Thumbnails	Bélyegképek elrejtése
 	Hide Transparency Grid	Átlátszósági rács elrejtése
-	Hide VectorCraft	VectorCraft elrejtése
+	Hide Tsipika	Tsipika elrejtése
 	High	Magas
 	High (300 ppi)	Magas (300 ppi)
 	High Contrast	Erős kontraszt
@@ -1932,7 +1932,7 @@ file-filter	Templates	Sablonok
 	Join	Összekapcsolás
 	Join Our Discord	Csatlakozz a Discordunkhoz
 	Join our Discord	Csatlakozz a Discordunkhoz
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Csatlakozz az ArtCraft-közösséghez a Discordon (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Csatlakozz az Mahay-közösséghez a Discordon (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Bekezdések sorainak összefűzése
 	Join Tool	Összekapcsolás
 	Joins	Csatlakozások
@@ -1953,7 +1953,7 @@ file-filter	Templates	Sablonok
 	Keep this row's colors (exclude)	A sor színeinek megtartása (kizárás)
 	Keep visible surfaces only when expanding	Kibontáskor csak a látható felületek megtartása
 	Keep:	Megtartás:
-	Keeps the document editable: VectorCraft reopens the PDF with nothing lost. For files you'll edit again.	Szerkeszthető marad a dokumentum: a VectorCraft veszteség nélkül nyitja meg újra a PDF-et. Azokhoz a fájlokhoz, amelyeket még szerkesztesz.
+	Keeps the document editable: Tsipika reopens the PDF with nothing lost. For files you'll edit again.	Szerkeszthető marad a dokumentum: a Tsipika veszteség nélkül nyitja meg újra a PDF-et. Azokhoz a fájlokhoz, amelyeket még szerkesztesz.
 	Kerning (0 = Auto)	Alávágás (0 = automatikus)
 	Key Color:	Kulcsszín:
 	Keyboard Increment	Billentyűzetes lépésköz
@@ -1964,7 +1964,7 @@ file-filter	Templates	Sablonok
 # Import Shortcut Set (Keyboard Shortcuts › Import…, File › Open of a .kys file) and its commands.
 	Import Shortcut Set	Billentyűparancs-készlet importálása
 	Import Shortcut Set…	Billentyűparancs-készlet importálása…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	A VectorCraft a fájl minden bejegyzését megfelelteti valamelyik eszközének, parancsának vagy paneljének. Ellenőrizd a megfeleltetéseket, és válaszolj a még nyitott kérdésekre.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	A Tsipika a fájl minden bejegyzését megfelelteti valamelyik eszközének, parancsának vagy paneljének. Ellenőrizd a megfeleltetéseket, és válaszolj a még nyitott kérdésekre.
 	Keys	Billentyűk
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	A fájl a billentyűket és a módosítóbillentyűket kódként tárolja. Ellenőrizd a javasolt jelentéseket, és add meg a még ismeretlen kódok jelentését.
 	Click, then press the key this code stands for (Esc cancels)	Kattints, majd nyomd le azt a billentyűt, amelyet ez a kód jelöl (Esc: mégse)
@@ -1974,7 +1974,7 @@ file-filter	Templates	Sablonok
 	not known yet	még ismeretlen
 	Shortcuts	Billentyűparancsok
 	In the File	A fájlban
-	In VectorCraft	A VectorCraftban
+	In Tsipika	A Tsipikaban
 	Needs Attention Only	Csak a figyelmet igénylő sorok
 	Ready	Kész
 	Needs a choice	Választás szükséges
@@ -1983,7 +1983,7 @@ file-filter	Templates	Sablonok
 	Tools take a single key (optionally with Shift)	Eszközhöz egyetlen billentyű rendelhető (Shifttel vagy anélkül)
 	A later row takes this shortcut	Ezt a billentyűparancsot egy későbbi sor kapja meg
 	Same item as a later row	Ugyanaz az elem, mint egy későbbi sorban
-	Start from VectorCraft Defaults	Kiindulás a VectorCraft-alapértékekből
+	Start from Tsipika Defaults	Kiindulás a Tsipika-alapértékekből
 	Add to the Current Shortcuts	Hozzáadás a jelenlegi billentyűparancsokhoz
 	Remember My Choices	Választásaim megjegyzése
 	{ready} of {total} ready	Kész: {ready}/{total}
@@ -1997,7 +1997,7 @@ file-filter	Templates	Sablonok
 	Forget Import Matches	Importálási megfeleltetések elfelejtése
 @plural	agrees with {n} default shortcut|agrees with {n} default shortcuts	{n} alapértelmezett billentyűparanccsal egyezik
 @plural	{n} part of the file wasn't read|{n} parts of the file weren't read	Be nem olvasott fájlrész: {n}
-@msg	This shortcut file is in a form VectorCraft can't read.	Ez a billentyűparancsfájl olyan formátumú, amelyet a VectorCraft nem tud beolvasni.
+@msg	This shortcut file is in a form Tsipika can't read.	Ez a billentyűparancsfájl olyan formátumú, amelyet a Tsipika nem tud beolvasni.
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	nem billentyűparancs-készlet: a szöveg nem perjeles névvel és nyitó kapcsos zárójellel kezdődik
 	Keywords:	Kulcsszavak:
 	Kind	Típus
@@ -2580,9 +2580,9 @@ file-filter	Templates	Sablonok
 	Open Swatch Library	Színminta-könyvtár megnyitása
 	Open the URL in the web browser	URL megnyitása a böngészőben
 	Opened with {} note(s): {}	Megnyitva, megjegyzések: {}. {}
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Megnyitáskor kimaradt, amit a VectorCraft még nem tud beolvasni ({what}), ezért a fájl felülírásával ez végleg elvész. A megtartásához mentsd más néven.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Megnyitáskor kimaradt, amit a Tsipika még nem tud beolvasni ({what}), ezért a fájl felülírásával ez végleg elvész. A megtartásához mentsd más néven.
 	“{name}” already exists. Replace it?	„{name}” már létezik. Felülírod?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	A mentési panelen megadott név ez volt: „{typed}”, a VectorCraft pedig hozzáadta a fájltípus kiterjesztését. A fájl felülírásakor a tartalma elvész.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	A mentési panelen megadott név ez volt: „{typed}”, a Tsipika pedig hozzáadta a fájltípus kiterjesztését. A fájl felülírásakor a tartalma elvész.
 	Open…	Megnyitás…
 	Optical Margin Alignment	Optikai margóigazítás
 	Optimize for fast web view	Optimalizálás gyors webes megtekintéshez
@@ -2670,8 +2670,8 @@ file-filter	Templates	Sablonok
 	Paragraph Style Options	Bekezdésstílus beállításai
 	Paragraph Styles	Bekezdésstílusok
 	Paragraph Symbol	Bekezdésjel
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	Az ArtCraft része. MIT OR Apache-2.0. Betűtípusok: Source Sans 3, Inter, JetBrains Mono (OFL). Ikonok: Lucide (ISC) + VectorCraft.
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + VectorCraft.	Az ArtCraft része. MIT OR Apache-2.0. Betűtípusok: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikonok: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Az Mahay része. MIT OR Apache-2.0. Betűtípusok: Source Sans 3, Inter, JetBrains Mono (OFL). Ikonok: Lucide (ISC) + Tsipika.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Tsipika.	Az Mahay része. MIT OR Apache-2.0. Betűtípusok: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikonok: Lucide (ISC) + Tsipika.
 	Password	Jelszó
 	Paste	Beillesztés
 	Paste in Back	Beillesztés mögé
@@ -2898,7 +2898,7 @@ mark-style	Japanese	Japán
 	Quarter Space	Negyedkvirt-szóköz
 	Quick Actions	Gyorsműveletek
 	Quickly start a new file	Új fájl gyors létrehozása
-	Quit VectorCraft	Kilépés a VectorCraftból
+	Quit Tsipika	Kilépés a Tsipikaból
 	Radar Graph Tool	Sugárdiagram
 	Radial	Körkörös
 	Radial Blur	Körkörös elmosás
@@ -3316,7 +3316,7 @@ mark-style	Japanese	Japán
 	Saves the current bars, toolbar and panel layout.	Menti a sávok, az eszköztár és a panelek aktuális elrendezését.
 	Save…	Mentés…
 	Saving	Mentés
-	Saving Poster.vectorcraft	Mentés: Poster.vectorcraft
+	Saving Poster.tsipika	Mentés: Poster.tsipika
 	Saving recovery data for {}	Helyreállítási adatok mentése: {}
 	Saving {}	Mentés: {}
 	Scale	Méretezés
@@ -4115,16 +4115,16 @@ mark-style	Japanese	Japán
 	Vector Halftone	Vektoros rácspontos raszter
 	Vector Halftone…	Vektoros rácspontos raszter…
 	Vector illustration — fast, open, scriptable.	Vektoros illusztráció – gyors, nyílt, szkriptelhető.
-	VectorCraft copies the fonts to {folder}.	A VectorCraft ide másolja a betűtípusokat: {folder}.
-	VectorCraft Default	VectorCraft alapértelmezés
-	VectorCraft Defaults	VectorCraft-alapértékek
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	A VectorCraft legutóbb nem szabályosan lépett ki. Ezekben a dokumentumokban mentetlen módosítások voltak:
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft-dokumentumok: egyetlen zárolt objektum, amely a fájl változásakor frissül.
-	VectorCraft Generic CMYK (SWOP-like)	VectorCraft általános CMYK (SWOP-szerű)
-	VectorCraft Help…	VectorCraft súgó…
-	VectorCraft on getartcraft.com	A VectorCraft a getartcraft.com oldalon
-	VectorCraft on GitHub	A VectorCraft a GitHubon
-	VectorCraft Swatches (.vcswatches)	VectorCraft-színminták (.vcswatches)
+	Tsipika copies the fonts to {folder}.	A Tsipika ide másolja a betűtípusokat: {folder}.
+	Tsipika Default	Tsipika alapértelmezés
+	Tsipika Defaults	Tsipika-alapértékek
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	A Tsipika legutóbb nem szabályosan lépett ki. Ezekben a dokumentumokban mentetlen módosítások voltak:
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika-dokumentumok: egyetlen zárolt objektum, amely a fájl változásakor frissül.
+	Tsipika Generic CMYK (SWOP-like)	Tsipika általános CMYK (SWOP-szerű)
+	Tsipika Help…	Tsipika súgó…
+	Tsipika on mahay.com	A Tsipika a mahay.com oldalon
+	Tsipika on GitHub	A Tsipika a GitHubon
+	Tsipika Swatches (.vcswatches)	Tsipika-színminták (.vcswatches)
 	Vectors	Vektorok
 	Version	Verzió
 	Version {version} — open-source vector illustration in pure Rust.	Verzió: {version} – nyílt forráskódú vektoros illusztráció, tisztán Rustban.
@@ -4190,7 +4190,7 @@ mark-style	Japanese	Japán
 	WebP	WebP
 	Weight	Vastagság
 	Weight:	Vastagság:
-	Welcome to VectorCraft	Üdvözöl a VectorCraft
+	Welcome to Tsipika	Üdvözöl a Tsipika
 	When pasting text	Szöveg beillesztésekor
 	White	Fehér
 	White Intensity	Fehér erőssége
@@ -4380,7 +4380,7 @@ imageTrace	Outline	Körvonal
 @msg	action is required	az action kötelező
 @msg	add a format to export	adj meg egy exportálási formátumot
 @msg	already editing a pattern	már folyik egy mintázat szerkesztése
-@msg	an image VectorCraft can't read was left out	kimaradt egy kép, amelyet a VectorCraft nem tud olvasni
+@msg	an image Tsipika can't read was left out	kimaradt egy kép, amelyet a Tsipika nem tud olvasni
 @msg	an image whose data is cut short was left out	kimaradt egy csonka adatú kép
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	a csatolt képek a fájlban mentett kis felbontású előnézetet mutatják, amíg a fájljaik elő nem kerülnek: csatold őket újra a Csatolások panelen
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	a túl alacsony keretben lévő területszöveg, amelybe a megjelenítő betűtípus egy sora sem fér el, magasabb keretet kapott ({_1}): különben nem látszana
@@ -4420,7 +4420,7 @@ imageTrace	Outline	Körvonal
 @msg	can't encode the document: {0}	a dokumentum nem kódolható: {0}
 @msg	can't parse shortcut `{c}`	a billentyűparancs nem értelmezhető: `{c}`
 @msg	can't parse shortcut `{s}` for `{k}`	a billentyűparancs nem értelmezhető: `{s}` (ehhez: `{k}`)
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	ez a verzió nem menthető: {0}; a VectorCraft ezeket a verziókat írja: {MIN_VERSION}–{VERSION}
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	ez a verzió nem menthető: {0}; a Tsipika ezeket a verziókat írja: {MIN_VERSION}–{VERSION}
 @msg	can't write .{ext} images	ilyen kép nem írható: .{ext}
 @msg	cannot distort a zero-size bounding box	nulla méretű befoglaló keret nem torzítható
 @msg	cannot read PDF: {0}	a PDF nem olvasható: {0}
@@ -4490,7 +4490,7 @@ imageTrace	Outline	Körvonal
 @msg	Exported {what}	Exportálva: {what}
 @msg	Exported {what} with {_1} note(s): {first}	Exportálva: {what}; megjegyzések: {_1}, az első: {first}
 @msg	Exporting {_1}	Exportálás: {_1}
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	a fájl verziója újabb, mint amit ez a VectorCraft támogat: {0} (támogatott: {VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	a fájl verziója újabb, mint amit ez a Tsipika támogat: {0} (támogatott: {VERSION})
 @msg	Flatten Transparency: select objects to flatten	Átlátszóság lapítása: jelöld ki a lapítandó objektumokat
 @msg	Flatten Transparency: {e}	Átlátszóság lapítása: {e}
 @msg	freeform line {i} must be an array of point indices	a szabad formájú vonal pontindexek tömbje kell legyen: {i}
@@ -4526,7 +4526,7 @@ imageTrace	Outline	Körvonal
 @msg	invalid parameters for `{cmd}`: {msg}	érvénytelen paraméterek (`{cmd}`): {msg}
 @msg	invalid PDF setting: {0}	érvénytelen PDF-beállítás: {0}
 @msg	invalid restored panel group	érvénytelen visszaállított panelcsoport
-@msg	is not an image VectorCraft reads	nem olyan kép, amelyet a VectorCraft olvas
+@msg	is not an image Tsipika reads	nem olyan kép, amelyet a Tsipika olvas
 @msg	it ends inside a layer	egy rétegen belül ér véget
 @msg	it has art outside its layers	a rétegein kívül is van grafikája
 @msg	it has more than one artboard	egynél több rajztáblája van
@@ -4536,9 +4536,9 @@ imageTrace	Outline	Körvonal
 @msg	it has too many text objects	túl sok szövegobjektumot tartalmaz
 @msg	it has too many values in a row	túl sok érték áll benne egymás után
 @msg	it has too much text	túl sok szöveget tartalmaz
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	olyat tartalmaz, amelyet a VectorCraft még nem olvas be belőle: {_1}
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	olyan elemet használ, amelyet a VectorCraft PostScript-olvasója nem ismer: `{at}`
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	olyan elemet használ, amelyet a VectorCraft PostScript-olvasója nem ismer: `{at}` (itt: {procs})
+@msg	it has {_1}, which Tsipika doesn't read from it yet	olyat tartalmaz, amelyet a Tsipika még nem olvas be belőle: {_1}
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	olyan elemet használ, amelyet a Tsipika PostScript-olvasója nem ismer: `{at}`
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	olyan elemet használ, amelyet a Tsipika PostScript-olvasója nem ismer: `{at}` (itt: {procs})
 @msg	its editing data doesn't say where its art is	a szerkesztési adataiból nem derül ki, hol van a grafikája
 @msg	its editing data doesn't say where its artboard is	a szerkesztési adataiból nem derül ki, hol van a rajztáblája
 @msg	its editing data has no layers	a szerkesztési adataiban nincsenek rétegek
@@ -4563,7 +4563,7 @@ imageTrace	Outline	Körvonal
 @msg	Live Paint Merge: select a Live Paint group and the paths to add	Élő festés egyesítése: jelölj ki egy élőfestés-csoportot és a hozzáadandó útvonalakat
 @msg	Live Paint: select paths or compound paths	Élő festés: jelölj ki útvonalakat vagy összetett útvonalakat
 @msg	Live Paint: these paths are too degenerate to paint	Élő festés: ezek az útvonalak túlságosan elfajultak a festéshez
-@msg	Loading VectorCraft…	A VectorCraft betöltése…
+@msg	Loading Tsipika…	A Tsipika betöltése…
 @msg	Make Guides: select paths	Segédvonalak létrehozása: jelölj ki útvonalakat
 @msg	missing `folder`	hiányzik: `folder`
 @msg	missing `id` (see plugin.list)	hiányzik: `id` (lásd: plugin.list)
@@ -4681,8 +4681,8 @@ imageTrace	Outline	Körvonal
 @msg	not a PSD file	nem PSD-fájl
 @msg	not a stored central record	nem tárolt központi rekord
 @msg	not a valid plug-in module: {0}	nem érvényes bővítménymodul: {0}
-@msg	not a VectorCraft file: {0}	nem VectorCraft-fájl: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	nem VectorCraft-billentyűparancskészlet (hiányzik: `overrides`)
+@msg	not a Tsipika file: {0}	nem Tsipika-fájl: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	nem Tsipika-billentyűparancskészlet (hiányzik: `overrides`)
 @msg	not a blend	nem összemosás
 @msg	not an EMF or WMF file	nem EMF- vagy WMF-fájl
 @msg	not found	nem található
@@ -4853,9 +4853,9 @@ imageTrace	Outline	Körvonal
 @msg	the file was read up to an error ({why}): what follows it was left out	a fájl beolvasása egy hibáig jutott ({why}): az utána következő rész kimaradt
 @msg	the file's preview header points outside the file	a fájl előnézeti fejléce a fájlon kívülre mutat
 @msg	the files come to more than 1 GB: add fewer at a time	a fájlok együtt nagyobbak 1 GB-nál: egyszerre kevesebbet adj hozzá
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	Az először kipróbált grafikus processzor nem tudta megjeleníteni az ablakot, ezért a VectorCraft újraindult ezen: {summary}
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	A VectorCraft legutóbbi indítása még az ablak megjelenése előtt véget ért ezen: {name}, ezért most ezen indult el: {summary}. Ha újra ki szeretnéd próbálni ezt a grafikus processzort, módosítsd a Beállítások › Teljesítmény › Grafikus processzor értékét, vagy indítsd a WGPU_BACKEND változó beállításával
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	A VectorCraft legutóbbi indítása a grafikus processzorok listázása közben ért véget, ezért most csak OpenGL-lel indult el ezen: {summary}. Ha újra ki szeretnéd próbálni a többi grafikus felületet, módosítsd a Beállítások › Teljesítmény › Grafikus processzor értékét, vagy indítsd a WGPU_BACKEND változó beállításával
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	Az először kipróbált grafikus processzor nem tudta megjeleníteni az ablakot, ezért a Tsipika újraindult ezen: {summary}
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	A Tsipika legutóbbi indítása még az ablak megjelenése előtt véget ért ezen: {name}, ezért most ezen indult el: {summary}. Ha újra ki szeretnéd próbálni ezt a grafikus processzort, módosítsd a Beállítások › Teljesítmény › Grafikus processzor értékét, vagy indítsd a WGPU_BACKEND változó beállításával
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	A Tsipika legutóbbi indítása a grafikus processzorok listázása közben ért véget, ezért most csak OpenGL-lel indult el ezen: {summary}. Ha újra ki szeretnéd próbálni a többi grafikus felületet, módosítsd a Beállítások › Teljesítmény › Grafikus processzor értékét, vagy indítsd a WGPU_BACKEND változó beállításával
 @msg	The graphics were lost and couldn't be restarted.	A grafikus megjelenítés megszakadt, és nem sikerült újraindítani.
 @msg	The graphics were lost and have been restarted	A grafikus megjelenítés megszakadt, és újraindult
 @msg	the guide is on a hidden or locked layer	a segédvonal rejtett vagy zárolt rétegen van
@@ -4941,10 +4941,10 @@ imageTrace	Outline	Körvonal
 @msg	Updated {_1} image(s)	Frissített képek: {_1}
 @msg	Updated {_1} linked file(s) changed on disk	Frissített, a lemezen módosult csatolt fájlok: {_1}
 @msg	variables are locked	a változók zárolva vannak
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	a VectorCraft nem keres más alkalmazások és a rendszer mappáiban: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	a VectorCraft nem keres a Users alatti Shared és Public mappában: {path}
-@msg	VectorCraft failed to start: {e}	A VectorCraft nem tudott elindulni: {e}
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	a VectorCraft Fonts mappája itt nincs beállítva: az asztali alkalmazás és a vectorcraft-cli állítja be
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	a Tsipika nem keres más alkalmazások és a rendszer mappáiban: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	a Tsipika nem keres a Users alatti Shared és Public mappában: {path}
+@msg	Tsipika failed to start: {e}	A Tsipika nem tudott elindulni: {e}
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	a Tsipika Fonts mappája itt nincs beállítva: az asztali alkalmazás és a tsipika-cli állítja be
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	ilyen verziójú fájl nem tömöríthető: {0}; tömörített fájlt csak ez a verzió és az újabbak nyitnak meg: {COMPRESSED_SINCE}
 @msg	width and height are at least 1 pixel	a szélesség és a magasság legalább 1 pixel
 @msg	workspace name can't be empty	a munkaterület neve nem lehet üres
@@ -4989,7 +4989,7 @@ imageTrace	Outline	Körvonal
 @msg	{path}: {e}	{path}: {e}
 @msg	{status} ({e})	{status} ({e})
 @msg	{tool} isn't in a toolbar group of several tools	az eszköz nincs többeszközös eszköztár-csoportban: {tool}
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	a tömörített fájl kicsomagolva nagyobb lenne, mint amennyit a VectorCraft beolvas ({_1} MB dokumentum, képenként {_2} MB)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	a tömörített fájl kicsomagolva nagyobb lenne, mint amennyit a Tsipika beolvas ({_1} MB dokumentum, képenként {_2} MB)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	a dokumentum túl nagy a tömörített mentéshez ({0}): mentsd a Tömörítés használata beállítás kikapcsolásával
 @msg	the file stopped being read (please report this bug)	a fájl beolvasása megszakadt (kérjük, jelentsd ezt a hibát)
 	Concentric Dividers:	Koncentrikus osztók:

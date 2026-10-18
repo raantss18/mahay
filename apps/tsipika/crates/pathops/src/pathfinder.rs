@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use kurbo::{BezPath, Line, ParamCurve, ParamCurveNearest, PathSeg, Point, Shape as _};
 use linesweeper::topology::ContourIdx;
-use vectorcraft_geom::{FillRule, PathData};
+use tsipika_geom::{FillRule, PathData};
 
 use crate::boolean::{
     Arrangement, Multi, Seg, Tidy, all_contours_to_path, contours_to_path, eps_for, fill_bezpath, normalize_bez, segs_to_subpath, to_seg, unite_all,
@@ -433,10 +433,10 @@ fn snap_points(raw: &BezPath, tol: f64) -> (BezPath, bool) {
     // Each contour's pieces, each with the segment it was and the indices of the two points it runs
     // between.
     let mut contours: Vec<Vec<(PathSeg, PathSeg, [usize; 2])>> = Vec::new();
-    for (range, closed) in vectorcraft_geom::bez::subpaths(raw) {
+    for (range, closed) in tsipika_geom::bez::subpaths(raw) {
         let Some(els) = raw.elements().get(range) else { continue };
         let mut pieces = Vec::new();
-        for s in vectorcraft_geom::bez::segments(els) {
+        for s in tsipika_geom::bez::segments(els) {
             let ((i, a), (j, b)) = (snap(s.start()), snap(s.end()));
             let mut seg = to_seg(s);
             crate::planar::pin_ends(std::slice::from_mut(&mut seg), a, b);
@@ -679,7 +679,7 @@ fn mid_point(c: &[Seg]) -> Point {
 mod tests {
     use super::*;
     use proptest::prelude::*;
-    use vectorcraft_geom::{Rect, SubPath, shapes};
+    use tsipika_geom::{Rect, SubPath, shapes};
 
     /// The faces one contour pass per mask finds: what [`regions_of`] must match exactly.
     fn regions_one_mask_at_a_time(arr: &Arrangement) -> Vec<Region> {

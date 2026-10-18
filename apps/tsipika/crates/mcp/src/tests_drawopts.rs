@@ -2,7 +2,7 @@
 //! `dash`, `cap`, `join` and `effects` (#2112).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{LineCap, LineJoin, Node, NodeId};
+use tsipika_doc::{LineCap, LineJoin, Node, NodeId};
 
 use crate::{Backend, Headless, Server, call_tool};
 

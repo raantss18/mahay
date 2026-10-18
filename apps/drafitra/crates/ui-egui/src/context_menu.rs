@@ -15,9 +15,9 @@
 //! commands as they land. Choosing an item ([`choose`]) starts its command like the menu bar, or
 //! gives the running command the same input as typing it on the command line.
 
-use cadcraft_doc::EntityKind;
-use cadcraft_engine::snap::mode;
-use cadcraft_engine::{Input, find_command};
+use drafitra_doc::EntityKind;
+use drafitra_engine::snap::mode;
+use drafitra_engine::{Input, find_command};
 
 use crate::CadApp;
 use crate::menus::{Entry, activate, entry_ui};
@@ -167,7 +167,7 @@ pub fn command_entries(app: &CadApp) -> Option<Vec<Vec<Entry>>> {
     let recent: Vec<Entry> = app.cmd.recent_input.iter().rev().take(RECENT).map(|t| typed(t, format!("{TYPE}{t}"))).collect();
     push(&mut groups, sub("Recent Input", recent).into_iter().collect());
     push(&mut groups, prompt.keywords.iter().map(|k| typed(k, format!("{KEYWORD}{k}"))).collect());
-    if cadcraft_engine::pointmod::accepts(&prompt) {
+    if drafitra_engine::pointmod::accepts(&prompt) {
         let mut snaps = Vec::new();
         for g in snap_entries(app) {
             for e in g {
@@ -249,7 +249,7 @@ const OSNAP_SETTINGS: &str = "dsettings";
 /// Points, Point Filters, the snap modes, None and Osnap Settings. An item's id is the text it
 /// types; the modifiers are only available at a point prompt.
 pub fn snap_entries(app: &CadApp) -> Vec<Vec<Entry>> {
-    let on = app.session.current_prompt().is_some_and(|p| cadcraft_engine::pointmod::accepts(&p));
+    let on = app.session.current_prompt().is_some_and(|p| drafitra_engine::pointmod::accepts(&p));
     let typed = |label: &str, id: &str| Entry::Item { label: label.into(), id: id.into(), shortcut: None, enabled: on };
     let name = |m: u32| mode::ALL.iter().find(|(b, _)| *b == m).map_or("", |(_, n)| *n);
     let mut groups = vec![vec![

@@ -11,6 +11,7 @@ description = "Soratra desktop app"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 soratra-doc = { workspace = true }
 soratra-engine = { workspace = true }
 soratra-proof = { workspace = true }

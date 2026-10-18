@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::message::ClientMsg;
+use endrika_collab::message::ClientMsg;
 use serde_json::json;
 
 use crate::live::{Event, Peer, Presence, Role, Signal};
@@ -21,7 +21,7 @@ fn sent(script: &Arc<Mutex<Script>>) -> Vec<Signal> {
 /// Joined as client 2 with Hana (1) and Ada (3) in the session; `ready`: the host reads signals.
 fn joined(ready: bool) -> (Session, Arc<Mutex<Script>>) {
     let (mut s, script) = session();
-    s.execute("collab.join", &json!({"link": "figcraft://join?host=a:1&file=f&token=t"})).unwrap();
+    s.execute("collab.join", &json!({"link": "endrika://join?host=a:1&file=f&token=t"})).unwrap();
     let mut events = vec![Event::Welcome { info: info(Role::Guest, 2), peers: vec![peer(1, "Hana"), peer(3, "Ada")] }];
     if ready {
         events.push(Event::Signal(2, Signal::ready()));

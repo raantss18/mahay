@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of New Color Group.
 pub const KIND: &str = "newColorGroup";
@@ -19,7 +19,7 @@ pub(super) const SPEC: DialogSpec = DialogSpec { heading: |_| tl!("New Color Gro
 
 /// Open New Color Group for the swatches selected in the panel. It starts from the artwork when
 /// art is selected and no swatches are.
-pub fn open(app: &mut VectorcraftApp, swatches: Vec<String>) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, swatches: Vec<String>) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document open")?;
     let art = !st.selection.is_empty();
     let fields = json!({
@@ -34,7 +34,7 @@ pub fn open(app: &mut VectorcraftApp, swatches: Vec<String>) -> Result<Value, St
     Ok(Value::Null)
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let art = d.bool("fromArtwork");
     let set = |d: &mut Dialog, key: &str, v: bool| {
         d.fields.insert(key.into(), json!(v));
@@ -77,6 +77,6 @@ fn params(d: &Dialog) -> Value {
     }
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     run_and_close(app, "swatch.newGroup", params(d))
 }

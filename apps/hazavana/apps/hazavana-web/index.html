@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hazavana</title>
+  <link rel="icon" href="data:,">
+  <meta name="description" content="Hazavana: open-source photo library and raw developer, running in your browser (WASM).">
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1c1c1c; }
+    canvas#hazavana_canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #hazavana_loading {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #b8b8b8; font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; pointer-events: none;
+    }
+    #hazavana_status { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <canvas id="hazavana_canvas"></canvas>
+  <div id="hazavana_loading">Loading Hazavana…</div>
+  <div id="hazavana_status" aria-live="polite"></div>
+  <script type="module">
+    import init, { start, command } from "./hazavana_web.js";
+    (async () => {
+      // The Chinese font is a separate file: embedding it would exceed the host's WASM size limit.
+      // Font-free development builds can still run, with the same missing-glyph warning as before.
+      const chineseFont = fetch("./hazavana_zh_hans.otf")
+        .then(async response => response.ok ? new Uint8Array(await response.arrayBuffer()) : new Uint8Array())
+        .catch(() => new Uint8Array());
+      // Compile once; the render workers (worker.js) instantiate the same compiled module.
+      const [module, font] = await Promise.all([
+        WebAssembly.compileStreaming(fetch("./hazavana_web_bg.wasm")),
+        chineseFont,
+      ]);
+      globalThis.hazavanaModule = module;
+      await init({ module_or_path: module });
+      // automation: `await hazavana.command("library.info", "{}")` → JSON text
+      globalThis.hazavana = { command };
+      start(font);
+    })().catch((e) => {
+      console.error(e);
+      const el = document.getElementById("hazavana_loading");
+      if (el) el.textContent = "Hazavana failed to load: " + e;
+    });
+  </script>
+</body>
+</html>

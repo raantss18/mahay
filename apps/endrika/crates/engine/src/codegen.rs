@@ -5,8 +5,8 @@
 //! variables bound to a layer become CSS custom properties. The output is a starting point, not a
 //! pixel-exact translation.
 
-use figcraft_color::{Color, PaintKind};
-use figcraft_doc::*;
+use endrika_color::{Color, PaintKind};
+use endrika_doc::*;
 use serde_json::json;
 
 use crate::cmd::CommandSpec;
@@ -429,12 +429,12 @@ pub(crate) fn css_decls(doc: &Document, n: &Node, t: &mut Tokens, hug: (bool, bo
     if n.opacity < 1.0 {
         put("opacity", tok(doc, n, &["opacity"], num(f64::from(n.opacity)), t));
     }
-    if !matches!(n.blend, figcraft_color::BlendMode::Normal | figcraft_color::BlendMode::PassThrough) {
+    if !matches!(n.blend, endrika_color::BlendMode::Normal | endrika_color::BlendMode::PassThrough) {
         put("mix-blend-mode", n.blend.css().into());
     }
     // Rotation turns counter-clockwise about the top-left corner (the position given); CSS
     // rotate turns clockwise.
-    let rot = figcraft_geom::rotation_degrees(n.transform);
+    let rot = endrika_geom::rotation_degrees(n.transform);
     if rot.abs() > 0.01 && rot.is_finite() {
         put("transform", format!("rotate({}deg)", num(-rot)));
         put("transform-origin", "top left".into());
@@ -527,9 +527,9 @@ pub(crate) fn css_decls(doc: &Document, n: &Node, t: &mut Tokens, hug: (bool, bo
                 LineHeight::Percent(p) => Some(format!("{}%", num(p))),
             };
             match l.style {
-                figcraft_doc::DecorationStyle::Solid => {}
-                figcraft_doc::DecorationStyle::Dotted => put("text-decoration-style", "dotted".into()),
-                figcraft_doc::DecorationStyle::Wavy => put("text-decoration-style", "wavy".into()),
+                endrika_doc::DecorationStyle::Solid => {}
+                endrika_doc::DecorationStyle::Dotted => put("text-decoration-style", "dotted".into()),
+                endrika_doc::DecorationStyle::Wavy => put("text-decoration-style", "wavy".into()),
             }
             if let Some(v) = len(l.thickness) {
                 put("text-decoration-thickness", v);
@@ -547,7 +547,7 @@ pub(crate) fn css_decls(doc: &Document, n: &Node, t: &mut Tokens, hug: (bool, bo
                 }
             }
         }
-        if tx.leading_trim == figcraft_doc::LeadingTrim::CapHeight {
+        if tx.leading_trim == endrika_doc::LeadingTrim::CapHeight {
             put("text-box", "trim-both cap alphabetic".into());
         }
     }
@@ -557,20 +557,20 @@ pub(crate) fn css_decls(doc: &Document, n: &Node, t: &mut Tokens, hug: (bool, bo
 /// A gradient fill on a `w`×`h` box as a CSS background: linear along its handles' direction
 /// (CSS angles: 0deg up, 90deg right), radial with its handles' radii, angular as a conic
 /// gradient from its start direction.
-fn css_gradient(g: &figcraft_color::Gradient, w: f64, h: f64) -> String {
+fn css_gradient(g: &endrika_color::Gradient, w: f64, h: f64) -> String {
     let stops = g.sorted_stops().iter().map(|s| format!("{} {}%", s.color.to_css(), (s.position * 100.0).round())).collect::<Vec<_>>().join(", ");
     let (dx, dy) = ((g.to.0 - g.from.0) * w, (g.to.1 - g.from.1) * h);
     let angle = if dx == 0.0 && dy == 0.0 { 180.0 } else { dx.atan2(-dy).to_degrees().rem_euclid(360.0) };
     let pct = |v: f64| format!("{}%", num(v * 100.0));
     let at = format!("at {} {}", pct(g.from.0), pct(g.from.1));
     match g.kind {
-        figcraft_color::GradientKind::Linear => format!("linear-gradient({}deg, {stops})", num(angle)),
-        figcraft_color::GradientKind::Radial | figcraft_color::GradientKind::Diamond => {
+        endrika_color::GradientKind::Linear => format!("linear-gradient({}deg, {stops})", num(angle)),
+        endrika_color::GradientKind::Radial | endrika_color::GradientKind::Diamond => {
             let (rx, ry) = (((g.width.0 - g.from.0) * w).hypot((g.width.1 - g.from.1) * h), dx.hypot(dy));
             let rel = |r: f64, side: f64| if side > 0.0 { pct(r / side) } else { "50%".into() };
             format!("radial-gradient({} {} {at}, {stops})", rel(rx, w), rel(ry, h))
         }
-        figcraft_color::GradientKind::Angular => format!("conic-gradient(from {}deg {at}, {stops})", num(angle)),
+        endrika_color::GradientKind::Angular => format!("conic-gradient(from {}deg {at}, {stops})", num(angle)),
     }
 }
 
@@ -730,7 +730,7 @@ impl<'c, 'a> Markup<'c, 'a> {
         } else {
             let c = n.transform.as_coeffs();
             decls.push_str(&format!("position: absolute;\nleft: {}px;\ntop: {}px;\n", num(c[4]), num(c[5])));
-            let rot = figcraft_geom::rotation_degrees(n.transform);
+            let rot = endrika_geom::rotation_degrees(n.transform);
             if rot.abs() > 0.01 {
                 decls.push_str(&format!("transform: rotate({}deg);\ntransform-origin: 0 0;\n", num(-rot)));
             }

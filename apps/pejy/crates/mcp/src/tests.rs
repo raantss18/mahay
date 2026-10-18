@@ -1,6 +1,6 @@
 use std::io::{BufRead, BufReader, Write};
 
-use designcraft_engine::cmd::{base64_decode, base64_encode};
+use pejy_engine::cmd::{base64_decode, base64_encode};
 use serde_json::{Value, json};
 
 use crate::{Backend, Headless, PROTOCOL_VERSION, Remote, Server, control_addr, tool_definitions};
@@ -42,7 +42,7 @@ fn image_of(result: &Value) -> Vec<u8> {
 }
 
 fn tmp(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("designcraft-mcp-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("pejy-mcp-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir.join(name)
 }
@@ -85,7 +85,7 @@ fn protocol_round_trip_over_serve() {
         json!({"jsonrpc":"2.0","id":2,"method":"tools/list"}),
         json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_commands","arguments":{"filter":"frame.create"}}}),
         json!({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"execute","arguments":{"command":"frame.create","params":{"rect":[36,36,300,200],"content":"text","text":"Hi"}}}}),
-        json!({"jsonrpc":"2.0","id":5,"method":"resources/read","params":{"uri":"designcraft://document"}}),
+        json!({"jsonrpc":"2.0","id":5,"method":"resources/read","params":{"uri":"pejy://document"}}),
     ]
     .map(|v| v.to_string())
     .join("\n");
@@ -94,7 +94,7 @@ fn protocol_round_trip_over_serve() {
     let lines: Vec<Value> = String::from_utf8(out).unwrap().lines().map(|l| serde_json::from_str(l).unwrap()).collect();
     assert_eq!(lines.len(), 5, "one reply per request, none for the notification");
     assert_eq!(lines[0]["result"]["protocolVersion"], PROTOCOL_VERSION);
-    assert_eq!(lines[0]["result"]["serverInfo"]["name"], "designcraft");
+    assert_eq!(lines[0]["result"]["serverInfo"]["name"], "pejy");
     assert!(lines[0]["result"]["capabilities"]["tools"].is_object());
     assert!(lines[0]["result"]["instructions"].as_str().unwrap().contains("headless"));
     let tools = lines[1]["result"]["tools"].as_array().unwrap();
@@ -319,7 +319,7 @@ fn ui_only_tools_explain_how_to_connect() {
 fn files_place_and_export() {
     let mut s = server();
     // A 4×2 red PNG made by the renderer's encoder.
-    let px = designcraft_render::Rendered { width: 4, height: 2, pixels: [255, 0, 0, 255].repeat(8) };
+    let px = pejy_render::Rendered { width: 4, height: 2, pixels: [255, 0, 0, 255].repeat(8) };
     let png = px.to_png();
     let placed = ok(&mut s, "place_image", json!({"base64": base64_encode(&png), "name": "red.png", "x": 50, "y": 60, "width": 100}));
     assert!(placed["id"].is_u64() && placed["asset"].is_u64(), "{placed}");
@@ -338,7 +338,7 @@ fn files_place_and_export() {
     assert_eq!(r["isError"], false);
     assert!(std::fs::read(tmp("render.png")).unwrap().starts_with(PNG_MAGIC));
 
-    let doc_path = tmp("saved.designcraft");
+    let doc_path = tmp("saved.pejy");
     let saved = ok(&mut s, "save_document", json!({"path": doc_path}));
     assert_eq!(saved["path"], doc_path.to_string_lossy().as_ref());
     let opened = ok(&mut s, "open_document", json!({"path": doc_path}));
@@ -385,7 +385,7 @@ fn fake_app() -> (String, std::sync::mpsc::Receiver<Value>) {
             let p = &req["params"];
             let reply = match req["method"].as_str().unwrap() {
                 "ui.screenshot" => {
-                    let px = designcraft_render::Rendered { width: 3, height: 3, pixels: vec![0; 36] };
+                    let px = pejy_render::Rendered { width: 3, height: 3, pixels: vec![0; 36] };
                     std::fs::write(p["path"].as_str().unwrap(), px.to_png()).unwrap();
                     json!({"ok": true, "result": {"path": p["path"], "width": 3, "height": 3}})
                 }
@@ -615,8 +615,8 @@ fn every_forwarded_key_is_in_the_tool_schema() {
             every.entry(k).or_insert(v);
         }
     }
-    for spec in designcraft_engine::command_specs() {
-        for k in designcraft_engine::cmd::params::doc_keys(spec.params).map(|d| d.keys).unwrap_or_default() {
+    for spec in pejy_engine::command_specs() {
+        for k in pejy_engine::cmd::params::doc_keys(spec.params).map(|d| d.keys).unwrap_or_default() {
             every.entry(k.to_string()).or_insert(json!(1));
         }
     }
@@ -645,8 +645,8 @@ fn every_forwarded_key_is_in_the_tool_schema() {
     }
 
     let new_document = defs.iter().find(|t| t["name"] == "new_document").map(props).unwrap();
-    let spec = designcraft_engine::find_command("file.new").unwrap();
-    for k in designcraft_engine::cmd::params::doc_keys(spec.params).unwrap().keys {
+    let spec = pejy_engine::find_command("file.new").unwrap();
+    for k in pejy_engine::cmd::params::doc_keys(spec.params).unwrap().keys {
         if !new_document.contains_key(k) {
             missing.push(format!("new_document: file.new takes `{k}`"));
         }

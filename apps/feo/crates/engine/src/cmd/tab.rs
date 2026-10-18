@@ -3,8 +3,8 @@
 use super::*;
 use crate::{TransportRequest, cmd};
 use serde_json::json;
-use soundcraft_model::{Clip, ClipContent, Session, SourceAudio};
-use soundcraft_time::SampleRate;
+use feo_model::{Clip, ClipContent, Session, SourceAudio};
+use feo_time::SampleRate;
 use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 /// Transients are found in fixed blocks of each clip, so a long clip costs a block per press and
@@ -176,10 +176,10 @@ fn analysed(s: &Session, t: TrackId, around: Range) -> Vec<Samples> {
 mod tests {
     use crate::Engine;
     use serde_json::json;
-    use soundcraft_audio_io::{AudioBuffer, FileFormat};
-    use soundcraft_midi::{Note, Sequence};
-    use soundcraft_model::{ChannelFormat, Clip, Session, TrackId, TrackKind};
-    use soundcraft_time::{SampleRate, TICKS_PER_QUARTER};
+    use feo_audio_io::{AudioBuffer, FileFormat};
+    use feo_midi::{Note, Sequence};
+    use feo_model::{ChannelFormat, Clip, Session, TrackId, TrackKind};
+    use feo_time::{SampleRate, TICKS_PER_QUARTER};
 
     const SR: f64 = 48_000.0;
 

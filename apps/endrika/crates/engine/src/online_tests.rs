@@ -8,7 +8,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::message::{Admin, AdminReply, ClientMsg, HostInfo, OwnedFile, Peer};
+use endrika_collab::message::{Admin, AdminReply, ClientMsg, HostInfo, OwnedFile, Peer};
 use serde_json::{Value, json};
 
 use crate::live::{Access, Event, HostOptions, LiveLink, Presence, PublishOptions, Published, Role, SessionInfo, Shared, SharedLink, Status};
@@ -105,7 +105,7 @@ impl LiveLink for Link {
 fn links(file: &str, n: usize) -> Shared {
     let link = |what: &str, code: String| SharedLink {
         id: format!("{what}{n}"),
-        link: format!("figcraft://join?server={SERVER}&file={file}&token=Shared{what}Shared{what}0{n}"),
+        link: format!("endrika://join?server={SERVER}&file={file}&token=Shared{what}Shared{what}0{n}"),
         code: Some(code),
     };
     Shared { edit: link("edit", format!("NEWED1T0{n}")), view: Some(link("view", format!("NEWV1EW0{n}"))) }
@@ -133,7 +133,7 @@ fn err(s: &mut Session, cmd: &str, p: Value) -> String {
 }
 
 fn edit_link(server: &str, file: &str) -> String {
-    format!("figcraft://join?server={server}&file={file}&token={EDIT_TOKEN}")
+    format!("endrika://join?server={server}&file={file}&token={EDIT_TOKEN}")
 }
 
 fn info(role: Role, name: &str, link: &str) -> SessionInfo {
@@ -162,7 +162,7 @@ fn shared_online(s: &mut Session, script: &Arc<Mutex<Script>>, file: &str) {
         file: file.into(),
         name: "Homepage".into(),
         edit: edit_link(SERVER, file),
-        view: format!("figcraft://join?server={SERVER}&file={file}&token=ViewSecretViewSecret00"),
+        view: format!("endrika://join?server={SERVER}&file={file}&token=ViewSecretViewSecret00"),
         owner: Some(OWNER.into()),
         expires: Some(1_900_000_000),
     };

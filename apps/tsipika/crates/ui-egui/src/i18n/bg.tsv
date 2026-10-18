@@ -2,7 +2,7 @@
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|other" English forms,
 # translated as two Bulgarian forms "one|other"; see `plural` in i18n/mod.rs).
 #
-# Clean-room: every entry is written from the plain meaning of VectorCraft's English labels, in
+# Clean-room: every entry is written from the plain meaning of Tsipika's English labels, in
 # ordinary Bulgarian vocabulary of vector illustration (работна област, път, опорна точка,
 # дръжка…); no Illustrator (or any other application's) Bulgarian UI, string table or localisation
 # resource was consulted or copied. Drafted with AI assistance (Gemini) from the English meaning;
@@ -77,7 +77,7 @@
 	A lower value follows the stroke closely; a higher one gives fewer points and smoother curves.	По-ниската стойност следва щриха отблизо; по-високата дава по-малко опорни точки и по-плавни криви.
 	A new preset starting from the selected one	Нова предварителна настройка въз основа на избраната
 	A saved copy of the selected preset	Запазено копие на избраната предварителна настройка
-	About VectorCraft	Относно VectorCraft
+	About Tsipika	Относно Tsipika
 	above	над
 	Absolute Position	Абсолютна позиция
 	Accurate	Точно
@@ -180,7 +180,7 @@
 	Appearance Panel	Панел „Външен вид“
 	Appearance panel	Панел „Външен вид“
 	Applies when the linked file is relinked or updated.	Прилага се, когато свързаният файл бъде пресвързан или актуализиран.
-	Applies the next time VectorCraft starts.	Прилага се при следващото стартиране на VectorCraft.
+	Applies the next time Tsipika starts.	Прилага се при следващото стартиране на Tsipika.
 	Apply	Прилагане
 	Apply Brush	Прилагане на четка
 	Apply Character Style	Прилагане на стил на знаци
@@ -218,8 +218,8 @@
 	Artboard {number}	Работна област {number}
 	Artboard:	Работна област:
 	Artboards	Работни области
-	ArtCraft Website	Уебсайт на ArtCraft
-	ArtCraft website	Уебсайт на ArtCraft
+	Mahay Website	Уебсайт на Mahay
+	Mahay website	Уебсайт на Mahay
 	Artwork Colors	Цветове на произведението
 	As Multiple Assets	Като множество активи
 	As Single Asset	Като един актив
@@ -363,7 +363,7 @@
 	Check Script	Проверка на скрипт
 	Check Script…	Проверка на скрипт…
 	Copy Report	Копиране на отчет
-	VectorCraft read this script without running it.	VectorCraft прочете този скрипт, без да го изпълнява.
+	Tsipika read this script without running it.	Tsipika прочете този скрипт, без да го изпълнява.
 	Needs nothing beyond plain JavaScript	Не изисква нищо извън обикновения JavaScript
 	Needs the script language's own objects or directives	Изисква собствени обекти или директиви на езика за скриптове
 	Needs the document model	Изисква документалния модел
@@ -1506,7 +1506,7 @@
 	Join	Свързване
 	Join Our Discord	Присъединете се към нашия Discord
 	Join our Discord	Присъединете се към нашия Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Присъединете се към общността на ArtCraft в Discord (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Присъединете се към общността на Mahay в Discord (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Свързване на редовете на всеки параграф
 	Join Tool	Инструмент „Свързване“
 	Justification…	Подравняване…
@@ -1529,7 +1529,7 @@
 	Keyboard Shortcuts…	Клавишни комбинации…
 	Import Shortcut Set	Импортиране на набор от клавишни комбинации
 	Import Shortcut Set…	Импортиране на набор от клавишни комбинации…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	Всеки запис във файла се съпоставя с инструмент, команда или панел на VectorCraft. Проверете съответствията и отговорете на останалите.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	Всеки запис във файла се съпоставя с инструмент, команда или панел на Tsipika. Проверете съответствията и отговорете на останалите.
 	Keys	Клавиши
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	Файлът записва клавишите и модификаторите като кодове. Проверете предложения смисъл и отговорете на все още неизвестните кодове.
 	Click, then press the key this code stands for (Esc cancels)	Кликнете, след което натиснете клавиша, съответстващ на този код (Esc отменя)
@@ -1539,7 +1539,7 @@
 	not known yet	все още не е известно
 	Shortcuts	Пряк пътища
 	In the File	Във файла
-	In VectorCraft	Във VectorCraft
+	In Tsipika	Във Tsipika
 	Needs Attention Only	Само изискващи внимание
 	Ready	Готово
 	Needs a choice	Изисква избор
@@ -1548,7 +1548,7 @@
 	Tools take a single key (optionally with Shift)	Инструментите използват един клавиш (по избор със Shift)
 	A later row takes this shortcut	По-късен ред заема тази клавишна комбинация
 	Same item as a later row	Същият елемент като по-късен ред
-	Start from VectorCraft Defaults	Започни от стандартните настройки на VectorCraft
+	Start from Tsipika Defaults	Започни от стандартните настройки на Tsipika
 	Add to the Current Shortcuts	Добавяне към текущите клавишни комбинации
 	Remember My Choices	Запомни изборите ми
 	{ready} of {total} ready	{ready} от {total} готови
@@ -2137,7 +2137,7 @@
 	Paragraph Style Options	Опции за стил на абзац
 	Paragraph Styles	Стилове на абзац
 	Paragraph Symbol	Символ за абзац
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	Част от ArtCraft. MIT ИЛИ Apache-2.0. Шрифтове: Source Sans 3, Inter, JetBrains Mono (OFL). Икони: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Част от Mahay. MIT ИЛИ Apache-2.0. Шрифтове: Source Sans 3, Inter, JetBrains Mono (OFL). Икони: Lucide (ISC) + Tsipika.
 	Password	Парола
 	Paste	Поставяне
 	Paste in Back	Поставяне отзад
@@ -2315,7 +2315,7 @@
 	Quarter Space	Четвъртинка интервал
 	Quick Actions	Бързи действия
 	Quickly start a new file	Бързо стартиране на нов файл
-	Quit VectorCraft	Изход от VectorCraft
+	Quit Tsipika	Изход от Tsipika
 	Radar Graph Tool	Инструмент „Радарна диаграма“
 	Radial	Радиален
 	Radial Glows	Лъчисти сияния
@@ -2440,7 +2440,7 @@
 	{count} folder(s) or file(s) couldn't be read	{count} папки или файла не можаха да бъдат прочетени
 	The search stopped at its limit: search a smaller folder.	Търсенето спре поради достигане на лимита: потърсете в по-малка папка.
 	Copy only fonts you own or are licensed to install.	Копирайте само шрифтове, които притежавате или имате лиценз да инсталирате.
-	VectorCraft copies the fonts to {folder}.	VectorCraft копира шрифтовете в {folder}.
+	Tsipika copies the fonts to {folder}.	Tsipika копира шрифтовете в {folder}.
 	Registered Trademark Symbol	Символ за регистрирана търговска марка
 	Registration marks	Знаци за регистрация
 	Registry name:	Име на системния регистър:
@@ -2548,9 +2548,9 @@
 	Revert	Връщане към запазеното
 	Revert to the saved version of “{name}”?	Връщане към запазената версия на „{name}“?
 	Replace “{name}”, the file this document was opened from?	Замяна на „{name}“, файла, от който беше отворен този документ?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Отварянето му пропусна това, което VectorCraft все още не може да прочете ({what}), така че замяната му го губи завинаги. Запазете под друго име, за да го запазите.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Отварянето му пропусна това, което Tsipika все още не може да прочете ({what}), така че замяната му го губи завинаги. Запазете под друго име, за да го запазите.
 	“{name}” already exists. Replace it?	„{name}“ вече съществува. Да бъде ли заменен?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Името в панела за запазване беше „{typed}“, а VectorCraft добави разширението на типа файл. Замяната на файла презаписва съдържанието му.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	Името в панела за запазване беше „{typed}“, а Tsipika добави разширението на типа файл. Замяната на файла презаписва съдържанието му.
 	Revolve…	Завъртане…
 	RGB Color	RGB цвят
 	Right	Вдясно
@@ -2691,7 +2691,7 @@
 	Saves the current bars, toolbar and panel layout.	Запазва текущите ленти, лентата с инструменти и подредбата на панелите.
 	Save…	Запази…
 	Saving	Запазване
-	Saving Poster.vectorcraft	Запазване на Poster.vectorcraft
+	Saving Poster.tsipika	Запазване на Poster.tsipika
 	Saving recovery data for {}	Запазване на данни за възстановяване за {}
 	Saving {}	Запазване на {}
 	Scale	Мащабиране
@@ -3383,10 +3383,10 @@
 	Vector Halftone	Векторен полутон
 	Vector Halftone…	Векторен полутон…
 	Vector illustration — fast, open, scriptable.	Векторна илюстрация — бърза, отворена, скриптуема.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft не се затвори нормално последния път. Тези документи съдържаха незапазени промени:
-	VectorCraft Help…	Помощ за VectorCraft…
-	VectorCraft on getartcraft.com	VectorCraft в getartcraft.com
-	VectorCraft on GitHub	VectorCraft в GitHub
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika не се затвори нормално последния път. Тези документи съдържаха незапазени промени:
+	Tsipika Help…	Помощ за Tsipika…
+	Tsipika on mahay.com	Tsipika в mahay.com
+	Tsipika on GitHub	Tsipika в GitHub
 	Vectors	Вектори
 	Version {version} — open-source vector illustration in pure Rust.	Версия {version} — векторна илюстрация с отворен код на чист Rust.
 	Version:	Версия:
@@ -3426,7 +3426,7 @@
 	Web Snap:	Прилепване в уеб:
 	Weight	Дебелина
 	Weight:	Дебелина:
-	Welcome to VectorCraft	Добре дошли във VectorCraft
+	Welcome to Tsipika	Добре дошли във Tsipika
 	When pasting text	При поставяне на текст
 	White	Бяло
 	Widget Position:	Позиция на джаджата:
@@ -3704,7 +3704,7 @@ axis	Both	И двете
 @msg	Split Into Grid: select paths large enough for the grid	Разделяне на мрежа: изберете пътища, достатъчно големи за мрежата
 @msg	Targa files are RGB: colorModel rgb	Файловете Targa са RGB: colorModel rgb
 @msg	Text Wrap: select a wrap object	Обгръщане на текст: изберете обгръщащ обект
-@msg	This shortcut file is in a form VectorCraft can't read.	 Този файл с преки пътища е във формат, който VectorCraft не може да прочете.
+@msg	This shortcut file is in a form Tsipika can't read.	 Този файл с преки пътища е във формат, който Tsipika не може да прочете.
 @msg	`aspect` must be a number (%)	`aspect` трябва да бъде число (%)
 @msg	`at` must be [x, y]	`at` трябва да бъде [x, y]
 @msg	`color` must be a colour	`color` трябва да бъде цвят
@@ -3793,7 +3793,7 @@ axis	Both	И двете
 @msg	can't encode the document: {0}	документът не може да бъде кодиран: {0}
 @msg	can't parse shortcut `{c}`	клавишният бърз път `{c}` не може да бъде разпознат
 @msg	can't parse shortcut `{s}` for `{k}`	клавишният бърз път `{s}` за `{k}` не може да бъде разпознат
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	версия {0} не може да бъде запазена: VectorCraft записва версии от {MIN_VERSION} до {VERSION}
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	версия {0} не може да бъде запазена: Tsipika записва версии от {MIN_VERSION} до {VERSION}
 @msg	can't write .{ext} images	не могат да се записват .{ext} изображения
 @msg	cannot distort a zero-size bounding box	не може да се деформира ограничителна кутия с нулев размер
 @msg	cannot read PDF: {0}	PDF файлът не може да бъде прочетен: {0}
@@ -3819,7 +3819,7 @@ axis	Both	И двете
 @msg	empty brush stroke	празен щрих с четка
 @msg	empty cutter	празен нож
 @msg	empty path	празен път
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	версия на файла {0} е по-нова от поддържаната от този VectorCraft ({VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	версия на файла {0} е по-нова от поддържаната от този Tsipika ({VERSION})
 @msg	freeform point {i} needs `at` [x, y] and a valid `color`	свободна точка {i} се нуждае от `at` [x, y] и валиден `color`
 @msg	freeform line {i} must be an array of point indices	свободна линия {i} трябва да бъде масив от индекси на точки
 @msg	give both `start` and `end` [x, y] (or neither)	задайте както `start`, така и `end` [x, y] (или нито едното)
@@ -3840,9 +3840,9 @@ axis	Both	И двете
 @msg	invalid PDF setting: {0}	невалидна настройка за PDF: {0}
 @msg	invalid image data for `{0}`	невалидни данни за изображение за `{0}`
 @msg	invalid parameters for `{cmd}`: {msg}	невалидни параметри за `{cmd}`: {msg}
-@msg	is not an image VectorCraft reads	не е изображение, което VectorCraft разчита
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	използва `{at}`, който четецът на PostScript на VectorCraft не разпознава
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	използва `{at}`, който четецът на PostScript на VectorCraft не разпознава, в {procs}
+@msg	is not an image Tsipika reads	не е изображение, което Tsipika разчита
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	използва `{at}`, който четецът на PostScript на Tsipika не разпознава
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	използва `{at}`, който четецът на PostScript на Tsipika не разпознава, в {procs}
 @msg	its Windows metafile preview was opened instead, which may simplify the art	вместо това беше отворен неговият преглед на Windows метафайл, което може да опрости илюстрацията
 @msg	its preview was placed instead, at screen resolution	вместо това беше поставен неговият преглед с разделителна способност за екран
 @msg	join needs open paths	обединяването изисква отворени пътища
@@ -3950,8 +3950,8 @@ axis	Both	И двете
 @msg	no user workspace `{from}`	няма потребителско работно пространство „{from}“
 @msg	node {_1} is not text	възелът {_1} не е текст
 @msg	not a DXF drawing	не е DXF чертеж
-@msg	not a VectorCraft file: {0}	не е файл на VectorCraft: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	не е набор от клавишни комбинации на VectorCraft (липсват `overrides`)
+@msg	not a Tsipika file: {0}	не е файл на Tsipika: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	не е набор от клавишни комбинации на Tsipika (липсват `overrides`)
 @msg	not a blend	не е преливане
 @msg	not a graphic style library (format `{_1}`)	не е библиотека със стилове на графики (формат `{_1}`)
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	 не е набор от преки пътища: текстът не започва с име със слъш и отваряща скоба
@@ -4188,11 +4188,11 @@ axis	Both	И двете
 @msg	Sent to {_1}	Изпратено към {_1}
 @msg	{_1} files	{_1} файла
 @msg	The graphics were lost and have been restarted	Графиката беше загубена и рестартирана
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	Първият опит на графичния процесор да покаже прозореца не успя, затова VectorCraft стартира отново на {summary}
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Последното стартиране на VectorCraft прекъсна на {name}, преди прозорецът да се появи, затова VectorCraft стартира на {summary}. За да опитате отново с този графичен процесор, променете Настройки › Производителност › Графичен процесор или стартирайте със зададена променлива WGPU_BACKEND
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Последното стартиране на VectorCraft прекъсна, докато се изброяваха графичните процесори, затова VectorCraft стартира на {summary} само с OpenGL. За да опитате отново другите графични интерфейси, променете Настройки › Производителност › Графичен процесор или стартирайте със зададена променлива WGPU_BACKEND
-@msg	Loading VectorCraft…	Зареждане на VectorCraft…
-@msg	VectorCraft failed to start: {e}	VectorCraft не успя да стартира: {e}
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	Първият опит на графичния процесор да покаже прозореца не успя, затова Tsipika стартира отново на {summary}
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Последното стартиране на Tsipika прекъсна на {name}, преди прозорецът да се появи, затова Tsipika стартира на {summary}. За да опитате отново с този графичен процесор, променете Настройки › Производителност › Графичен процесор или стартирайте със зададена променлива WGPU_BACKEND
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Последното стартиране на Tsipika прекъсна, докато се изброяваха графичните процесори, затова Tsipika стартира на {summary} само с OpenGL. За да опитате отново другите графични интерфейси, променете Настройки › Производителност › Графичен процесор или стартирайте със зададена променлива WGPU_BACKEND
+@msg	Loading Tsipika…	Зареждане на Tsipika…
+@msg	Tsipika failed to start: {e}	Tsipika не успя да стартира: {e}
 @msg	A browser with WebGPU or WebGL2 is required.	Изисква се браузър с поддръжка на WebGPU или WebGL2.
 @msg	The graphics were lost and couldn't be restarted.	Графиката беше загубена и не можа да бъде рестартирана.
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	Незаписаните ви промени се пазят в този браузър: презаредете страницата, за да ги си върнете.
@@ -4214,25 +4214,25 @@ axis	Both	И двете
 @msg	it has more than {MAX_NODES} objects	той има повече от {MAX_NODES} обекта
 @msg	it has no layers	той няма слоеве
 @msg	it has too many values in a row	той има твърде много стойности на ред
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	той съдържа {_1}, който VectorCraft все още не може да разчете
+@msg	it has {_1}, which Tsipika doesn't read from it yet	той съдържа {_1}, който Tsipika все още не може да разчете
 @msg	its objects are nested too deeply	обектите му са вложени твърде дълбоко
 @msg	its section ending with `%{end}` doesn't end	разделът му, завършващ на `%{end}`, няма край
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	обектите с множество запълвания или щрихове, ефекти или четки се появиха във вид на изрисувания си изглед ({_1}): тяхната поява все още не подлежи на редактиране
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	градиентът „{name}“ не е дефиниран във файла: заменен е с обикновен цвят
-@msg	an image VectorCraft can't read was left out	изображение, което VectorCraft не може да разчете, беше пропуснато
+@msg	an image Tsipika can't read was left out	изображение, което Tsipika не може да разчете, беше пропуснато
 @msg	an image whose data is cut short was left out	изображение с непълни данни беше пропуснато
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	свързаните картини показват записания във файла предварителен преглед с ниска резолюция, докато файловете им бъдат намерени: презакачете ги в панела „Връзки“
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	текстовите рамки за област в редове, твърде къси за шрифта, в който се показват, получиха по-високи рамки ({_1}): текстът им иначе нямаше да се види
 @msg	its editing data doesn't say where its art is	данните му за редактиране не посочват къде се намира неговата графика
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	този файл е записан без съвместимост с PDF и данните му за редактиране не могат да бъдат прочетени ({why})
 @msg	No fonts are missing in this document	В този документ няма липсващи шрифтове
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft не търси в папките на други приложения или на системата: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft не търси в папките Shared или Public в Users: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika не търси в папките на други приложения или на системата: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika не търси в папките Shared или Public в Users: {path}
 @msg	{path} is not a folder	{path} не е папка
 @msg	the search couldn't start: try again in a moment	търсенето не можа да стартира: опитайте отново след малко
 @msg	searching a folder isn't available on the web	търсенето в папка не е достъпно в уеб версията
 @msg	every search thread stopped on an internal error (please report this bug)	всяка нишка за търсене спря поради вътрешна грешка (моля, докладвайте този бъг)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	Папката със шрифтове на VectorCraft не е зададена тук: десктоп приложението и vectorcraft-cli я задават
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	Папката със шрифтове на Tsipika не е зададена тук: десктоп приложението и tsipika-cli я задават
 @msg	choose the font files to add	изберете шрифтовите файлове за добавяне
 @msg	{n} font file(s) are now in {folder}	{n} шрифтов(и) файл(а) вече са в {folder}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	{n} шрифтов(и) файл(а) вече са в {folder}; {failed} не можаха да бъдат добавени: {reason}
@@ -4247,7 +4247,7 @@ axis	Both	И двете
 @msg	No linked files to look for	Няма свързани файлове за търсене
 @msg	Relinked {n} image(s); {name} couldn't be relinked: {reason}	Превързани са {n} изображения; {name} не можа да бъде превързан: {reason}
 	Services	Услуги
-	Hide VectorCraft	Скриване на VectorCraft
+	Hide Tsipika	Скриване на Tsipika
 	Zoom	Мащабиране
 	Bring All to Front	Извеждане на всички отпред
 	Settings	Настройки
@@ -4255,7 +4255,7 @@ axis	Both	И двете
 	On: one locked object showing the document, updated when it changes.	Вкл.: един заключен обект, показващ документа, който се обновява при промяна.
 	Off: an editable copy of its art, embedded in this document.	Изкл.: редактируемо копие на неговата графика, вградено в този документ.
 	Images: link to the file instead of only embedding it.	Изображения: връзка към файла вместо само вграждане.
-	VectorCraft documents: one locked object, updated when the file changes.	Документи на VectorCraft: един заключен обект, който се обновява при промяна на файла.
+	Tsipika documents: one locked object, updated when the file changes.	Документи на Tsipika: един заключен обект, който се обновява при промяна на файла.
 	A file dialog is open: choose there first	Диалоговият прозорец за файл е отворен: изберете първо там
 	The document was closed while its file dialog was open	Документът беше затворен, докато диалоговият му прозорец за файл беше отворен
 	The dialog was closed before its file dialog answered	Диалоговият прозорец беше затворен, преди диалоговият прозорец за файл да отговори
@@ -4497,7 +4497,7 @@ lighting	Light	Светлина
 	Edge Intensity	Интензивност на ръбовете
 	Posterization	Постеризация
 	Highlight Area	Зона на осветяване
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	компресираният файл се разпакетира до повече, отколкото VectorCraft чете ({_1} МБ документ, {_2} МБ на изображение)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	компресираният файл се разпакетира до повече, отколкото Tsipika чете ({_1} МБ документ, {_2} МБ на изображение)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	документът е твърде голям за запазване в компресиран вид ({0}): запазете го с изключена опция „Използване на компресия“
 @msg	the file stopped being read (please report this bug)	четенето на файла беше прекъснато (моля, докладвайте тази грешка)
 	Concentric Dividers:	Концентрични делители:
@@ -4645,7 +4645,7 @@ lighting	Light	Светлина
 	DWG (use DXF)	DWG (използване на DXF)
 	Default Graphic Style	Стил на графика по подразбиране
 	Diamond (open)	Диамант (отворен)
-	Differences from VectorCraft Default:	Разлики от настройките по подразбиране на VectorCraft:
+	Differences from Tsipika Default:	Разлики от настройките по подразбиране на Tsipika:
 	Differences from [Default]:	Разлики от [По подразбиране]:
 	Diffusion	Дифузия
 	Direct Selection	Директно избиране
@@ -4713,7 +4713,7 @@ lighting	Light	Светлина
 	Inserting, deleting and rotating pages	Вмъкване, изтриване и завъртане на страници
 	Joins:	Съединения:
 	Justify	Двустранно подравняване
-	Keeps the document editable: VectorCraft reopens the PDF with nothing lost. For files you'll edit again.	Запазва документа редактируем: VectorCraft отваря PDF файла отново без загуба на данни. За файлове, които ще редактирате отново.
+	Keeps the document editable: Tsipika reopens the PDF with nothing lost. For files you'll edit again.	Запазва документа редактируем: Tsipika отваря PDF файла отново без загуба на данни. За файлове, които ще редактирате отново.
 	Keyboard Shortcuts	Клавишни комбинации
 	Kite	Хвърчило
 	LF (macOS, Linux)	LF (macOS, Linux)
@@ -4763,7 +4763,7 @@ lighting	Light	Светлина
 	PDF/X-4:2010	PDF/X-4:2010
 	PRs	ПР-и
 	Page Cover 1640×624	Корица на страница 1640×624
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + VectorCraft.	Част от ArtCraft. MIT ИЛИ Apache-2.0. Шрифтове: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Икони: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Tsipika.	Част от Mahay. MIT ИЛИ Apache-2.0. Шрифтове: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Икони: Lucide (ISC) + Tsipika.
 	Pattern Swatches	Образци на мостри
 	Pen	Перо
 	Pentagram	Петограм
@@ -4901,10 +4901,10 @@ lighting	Light	Светлина
 	Up (right reading)	Нагоре (четливо отдясно)
 	Use Default	Използване по подразбиране
 	Variation	Вариант
-	VectorCraft Default	По подразбиране за VectorCraft
-	VectorCraft Defaults	Стандартни настройки на VectorCraft
-	VectorCraft Generic CMYK (SWOP-like)	Общ CMYK за VectorCraft (подобен на SWOP)
-	VectorCraft Swatches (.vcswatches)	Образци на VectorCraft (.vcswatches)
+	Tsipika Default	По подразбиране за Tsipika
+	Tsipika Defaults	Стандартни настройки на Tsipika
+	Tsipika Generic CMYK (SWOP-like)	Общ CMYK за Tsipika (подобен на SWOP)
+	Tsipika Swatches (.vcswatches)	Образци на Tsipika (.vcswatches)
 	Vertical Align	Вертикално подравняване
 	Vertical Area Type	Вертикално въвеждане в област
 	Vertical Type	Вертикален текст
@@ -4941,7 +4941,7 @@ lighting	Light	Светлина
 	[PDF/X-4:2010]	[PDF/X-4:2010]
 	[Press Quality]	[Качество за печат]
 	[Smallest File Size]	[Най-малък размер на файл]
-	[VectorCraft Default]	[По подразбиране за VectorCraft]
+	[Tsipika Default]	[По подразбиране за Tsipika]
 	of	от
 	sRGB IEC61966-2.1	sRGB IEC61966-2.1
 	x Height	Височина на x
@@ -4969,7 +4969,7 @@ file-filter	Print presets	Предварителни настройки за п�
 file-filter	SVG Compressed	Компресиран SVG
 file-filter	Swatch libraries	Библиотеки с образци
 file-filter	Templates	Шаблони
-file-filter	VectorCraft Template	Шаблон на VectorCraft
+file-filter	Tsipika Template	Шаблон на Tsipika
 gradient-kind	Radial	Радиален
 mark-style	Japanese	Японски
 theme	Appearance	Външен вид
@@ -5010,7 +5010,7 @@ theme	Appearance	Външен вид
 	Printing and Proofing	Печат и пробно отпечатване
 	Tracing	Трасиране
 	Typography	Типография
-	VectorCraft	VectorCraft
+	Tsipika	Tsipika
 	Web	Уеб
 	[1P-High View]	[Висок изглед (1P)]
 	[1P-Low View]	[Нисък изглед (1P)]

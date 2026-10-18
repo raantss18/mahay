@@ -4,9 +4,9 @@
 //! above the scale to add a stop, drag a stop to move it, drag it off the ruler to delete it; the
 //! triangles on the scale are the first-line (top), left and right (bottom) indents.
 
-use designcraft_doc::{TabAlign, TabStop};
-use designcraft_engine::cmd::tabs::MAX_POSITION;
-use designcraft_geom::{Point, Unit};
+use pejy_doc::{TabAlign, TabStop};
+use pejy_engine::cmd::tabs::MAX_POSITION;
+use pejy_geom::{Point, Unit};
 use egui::{Color32, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
@@ -282,14 +282,14 @@ fn column_on_screen(app: &DesignApp, frame: u64, col: [f64; 4]) -> Option<(Pos2,
     let v = app.view()?;
     let rect = app.canvas_rect?;
     let xf = crate::canvas::Xf::new(rect, v);
-    let id = designcraft_doc::ItemId(frame);
+    let id = pejy_doc::ItemId(frame);
     let loc = st.doc.find(id)?;
     let it = st.doc.item_at(&loc)?;
     let story = it.text_frame().and_then(|tf| st.doc.story(tf.story))?;
     if story.vertical {
         return None;
     }
-    let layout = designcraft_tools::CanvasLayout::new(&st.doc, st.editing_parents);
+    let layout = pejy_tools::CanvasLayout::new(&st.doc, st.editing_parents);
     let m = layout.xf(loc.spread) * st.doc.parent_xf(&loc) * st.doc.text_xf(it);
     let a = xf.to_screen(m * Point::new(col[0], col[1]));
     let b = xf.to_screen(m * Point::new(col[2], col[1]));
@@ -428,7 +428,7 @@ mod tests {
 
     #[test]
     fn shortcut_opens_the_panel_and_a_click_on_the_ruler_adds_a_stop() {
-        let mut app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let r = app.run("frame.create", json!({"rect": [72, 72, 372, 300], "content": "text", "text": "Name\tPrice"})).unwrap();
         app.run("text.select", json!({"story": r["story"], "anchor": 0, "focus": 0})).unwrap();

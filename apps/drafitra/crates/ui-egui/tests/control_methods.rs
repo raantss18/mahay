@@ -3,9 +3,9 @@
 
 use std::collections::BTreeSet;
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::control::{ControlRequest, Outcome, handle};
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_ui_egui::control::{ControlRequest, Outcome, handle};
+use drafitra_ui_egui::{CadApp, Services};
 use serde_json::{Value, json};
 
 fn call(app: &mut CadApp, method: &str, params: Value) -> Value {
@@ -50,7 +50,7 @@ fn control_methods_matches_the_documented_table() {
 #[test]
 fn every_listed_method_is_answered() {
     let mut app = app();
-    let missing = std::env::temp_dir().join("cadcraft-843-no-such-dir").join("x.dxf");
+    let missing = std::env::temp_dir().join("drafitra-843-no-such-dir").join("x.dxf");
     let params = json!({"path": missing.to_string_lossy()});
     for m in listed(&mut app) {
         let name = m["method"].as_str().unwrap_or_default();

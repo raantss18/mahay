@@ -2,8 +2,8 @@
 //! design, render and export without a window.
 
 use base64::Engine as _;
-use figcraft_doc::{ExportFormat, NodeId};
-use figcraft_engine::{PointerEvent, PointerKind, Session, textedit};
+use endrika_doc::{ExportFormat, NodeId};
+use endrika_engine::{PointerEvent, PointerKind, Session, textedit};
 use serde_json::{Value, json};
 
 use crate::backend::Backend;
@@ -23,7 +23,7 @@ impl Default for Headless {
 const MAX_SIDE: f64 = 4096.0;
 
 fn b(p: &Value, k: &str) -> bool {
-    figcraft_engine::params::boolean(p, k).unwrap_or(false)
+    endrika_engine::params::boolean(p, k).unwrap_or(false)
 }
 
 /// Pen pressure `k` (0..1), if given.
@@ -32,11 +32,11 @@ fn pressure(p: &Value, k: &str) -> Option<f32> {
 }
 
 fn f(p: &Value, k: &str) -> Option<f64> {
-    figcraft_engine::params::num(p, k)
+    endrika_engine::params::num(p, k)
 }
 
 fn ids_of(p: &Value) -> Vec<NodeId> {
-    p.get("ids").and_then(Value::as_array).map(|a| a.iter().filter_map(figcraft_engine::params::id_of).collect()).unwrap_or_default()
+    p.get("ids").and_then(Value::as_array).map(|a| a.iter().filter_map(endrika_engine::params::id_of).collect()).unwrap_or_default()
 }
 
 impl Headless {
@@ -49,7 +49,7 @@ impl Headless {
     /// its own cursor, `collab.cursor`).
     pub fn with_session(mut session: Session) -> Self {
         if !session.live.available() {
-            session.live.install(Box::new(figcraft_collab_net::NetLink::new(std::sync::Arc::new(|| {}))));
+            session.live.install(Box::new(endrika_collab_net::NetLink::new(std::sync::Arc::new(|| {}))));
         }
         Self { session }
     }
@@ -102,8 +102,8 @@ impl Headless {
             }
             "drag" => {
                 let to = p.get("to").and_then(Value::as_array).ok_or("drag needs `to: [x, y]`")?;
-                let tx = to.first().and_then(figcraft_engine::params::f64_of).ok_or("bad `to`: expected [x, y]")?;
-                let ty = to.get(1).and_then(figcraft_engine::params::f64_of).ok_or("bad `to`: expected [x, y]")?;
+                let tx = to.first().and_then(endrika_engine::params::f64_of).ok_or("bad `to`: expected [x, y]")?;
+                let ty = to.get(1).and_then(endrika_engine::params::f64_of).ok_or("bad `to`: expected [x, y]")?;
                 let steps = p.get("steps").and_then(Value::as_u64).unwrap_or(8).clamp(1, 200);
                 events.push(mk(PointerKind::Down, x, y));
                 for i in 1..=steps {
@@ -116,7 +116,7 @@ impl Headless {
             other => return Err(format!("unknown pointer kind `{other}` (down|move|up|click|double|hover|drag)")),
         }
         for ev in &events {
-            let r = figcraft_engine::guard::run("ui.pointer", || self.session.pointer(ev));
+            let r = endrika_engine::guard::run("ui.pointer", || self.session.pointer(ev));
             self.session.ui_requests.clear();
             r.map_err(|e| e.to_string())?;
         }
@@ -126,7 +126,7 @@ impl Headless {
     }
 
     fn key(&mut self, p: &Value) -> Result<Value, String> {
-        use figcraft_engine::keymap::{Context, Mods, Platform, lookup, normalize};
+        use endrika_engine::keymap::{Context, Mods, Platform, lookup, normalize};
         let key = p.get("key").and_then(Value::as_str).ok_or("`key` required")?;
         let m = Mods { shift: b(p, "shift"), alt: b(p, "alt"), cmd: b(p, "cmd"), ctrl: b(p, "ctrl") };
         let platform = Platform::current();
@@ -138,7 +138,7 @@ impl Headless {
                 return Ok(json!({"command": bd.id}));
             }
             if !(m.cmd && key.len() == 1) {
-                let (word, line) = figcraft_engine::keymap::text_motion(platform, key, m);
+                let (word, line) = endrika_engine::keymap::text_motion(platform, key, m);
                 textedit::key(&mut self.session, key, m.shift, word, line).map_err(|e| e.to_string())?;
                 return Ok(json!({"ok": true, "textEdit": true}));
             }
@@ -196,14 +196,14 @@ impl Headless {
     /// The selected layer when exactly one text layer is selected.
     /// The selected layers Enter edits as vectors (see `vectoredit::enter_targets`).
     fn vector_targets(&self) -> Option<Vec<NodeId>> {
-        figcraft_engine::vectoredit::enter_targets(self.session.doc().ok()?, &self.session.selection())
+        endrika_engine::vectoredit::enter_targets(self.session.doc().ok()?, &self.session.selection())
     }
 
     fn single_text(&self) -> Option<NodeId> {
         let sel = self.session.selection();
         let doc = self.session.doc().ok()?;
         match sel.as_slice() {
-            [id] if doc.node(*id).is_some_and(|n| matches!(n.kind, figcraft_doc::NodeKind::Text(_))) => Some(*id),
+            [id] if doc.node(*id).is_some_and(|n| matches!(n.kind, endrika_doc::NodeKind::Text(_))) => Some(*id),
             _ => None,
         }
     }
@@ -215,7 +215,7 @@ impl Headless {
         let (w, h) = crate::png_size(&bytes).unwrap_or((0, 0));
         match p.get("path").and_then(Value::as_str) {
             Some(path) => {
-                figcraft_engine::file_access::write(path, &bytes).map_err(|e| e.to_string())?;
+                endrika_engine::file_access::write(path, &bytes).map_err(|e| e.to_string())?;
                 Ok(json!({"path": path, "width": w, "height": h, "bytes": bytes.len()}))
             }
             None => Ok(json!({"format": "png", "width": w, "height": h, "data": base64::engine::general_purpose::STANDARD.encode(&bytes)})),
@@ -246,20 +246,20 @@ impl Backend for Headless {
                 self.execute(&cmd, &params)
             }
             "engine.commands" => Ok(Value::Array(
-                figcraft_engine::all_commands().iter().map(|c| json!({"id": c.id, "label": c.label, "params": c.params, "menu": c.menu(), "shortcut": c.shortcut(), "undoable": c.history})).collect(),
+                endrika_engine::all_commands().iter().map(|c| json!({"id": c.id, "label": c.label, "params": c.params, "menu": c.menu(), "shortcut": c.shortcut(), "undoable": c.history})).collect(),
             )),
             "document.inspect" => {
                 let depth = p.get("depth").and_then(Value::as_u64).unwrap_or(8).min(64) as usize;
-                Ok(figcraft_engine::inspect::document(&self.session, depth, b(&p, "allPages")))
+                Ok(endrika_engine::inspect::document(&self.session, depth, b(&p, "allPages")))
             }
             "node.get" => {
-                let id = p.get("id").and_then(figcraft_engine::params::id_of).ok_or("`id` required (a node id)")?;
+                let id = p.get("id").and_then(endrika_engine::params::id_of).ok_or("`id` required (a node id)")?;
                 let depth = p.get("depth").and_then(Value::as_u64).unwrap_or(1).min(64) as usize;
                 let doc = self.session.doc().map_err(|e| e.to_string())?;
                 if !doc.contains(id) {
                     return Err(format!("no such node {id}"));
                 }
-                Ok(figcraft_engine::inspect::node_json(doc, id, depth))
+                Ok(endrika_engine::inspect::node_json(doc, id, depth))
             }
             "ui.inspect" => Ok(self.inspect_ui()),
             "ui.pointer" => self.pointer(&p),
@@ -278,7 +278,7 @@ impl Backend for Headless {
                 let (w, h) = crate::png_size(&bytes).unwrap_or((0, 0));
                 match p.get("path").and_then(Value::as_str) {
                     Some(path) => {
-                        figcraft_engine::file_access::write(path, &bytes).map_err(|e| e.to_string())?;
+                        endrika_engine::file_access::write(path, &bytes).map_err(|e| e.to_string())?;
                         Ok(json!({"path": path, "width": w, "height": h}))
                     }
                     None => Ok(json!({"format": "png", "width": w, "height": h, "data": base64::engine::general_purpose::STANDARD.encode(&bytes)})),
@@ -308,35 +308,35 @@ impl Backend for Headless {
                     return Err(format!("no such node {i}"));
                 }
             }
-            return figcraft_engine::cmd::file::export_bytes(doc, &ids, ExportFormat::Png, scale).map_err(|e| e.to_string());
+            return endrika_engine::cmd::file::export_bytes(doc, &ids, ExportFormat::Png, scale).map_err(|e| e.to_string());
         }
         let bounds = doc.page_content_bounds(page).ok_or("the current page is empty: nothing to render")?;
         let side = bounds.width().max(bounds.height()).max(1.0);
         let scale = scale.min(MAX_SIDE / side);
-        let view = figcraft_render::View {
+        let view = endrika_render::View {
             origin: (bounds.x0, bounds.y0),
             scale,
             width: (bounds.width() * scale).ceil().max(1.0) as u32,
             height: (bounds.height() * scale).ceil().max(1.0) as u32,
         };
-        let pix = figcraft_render::render_view(doc, page, &view, &Default::default()).ok_or("render failed")?;
-        figcraft_render::encode_png(&pix)
+        let pix = endrika_render::render_view(doc, page, &view, &Default::default()).ok_or("render failed")?;
+        endrika_render::encode_png(&pix)
     }
 
     fn screenshot_png(&mut self) -> Result<Vec<u8>, String> {
         // No window: the page with a margin, zoomed to fit 1600 px.
         let page = self.session.page().map_err(|e| e.to_string())?;
         let doc = self.session.doc().map_err(|e| e.to_string())?;
-        let b = doc.page_content_bounds(page).unwrap_or(figcraft_geom::Rect::new(0.0, 0.0, 800.0, 600.0));
+        let b = doc.page_content_bounds(page).unwrap_or(endrika_geom::Rect::new(0.0, 0.0, 800.0, 600.0));
         let b = b.inflate(32.0, 32.0);
         let scale = (1600.0 / b.width().max(b.height()).max(1.0)).min(2.0);
-        let view = figcraft_render::View {
+        let view = endrika_render::View {
             origin: (b.x0, b.y0),
             scale,
             width: (b.width() * scale).ceil().max(1.0) as u32,
             height: (b.height() * scale).ceil().max(1.0) as u32,
         };
-        let pix = figcraft_render::render_view(doc, page, &view, &Default::default()).ok_or("render failed")?;
-        figcraft_render::encode_png(&pix)
+        let pix = endrika_render::render_view(doc, page, &view, &Default::default()).ok_or("render failed")?;
+        endrika_render::encode_png(&pix)
     }
 }

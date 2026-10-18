@@ -11,9 +11,9 @@
 
 use std::fmt::Write as _;
 
-use designcraft_compose::{ComposedStory, FrameText, Line, PlacedGlyph, RunStyle};
-use designcraft_doc::{Align, Item, TextFrame};
-use designcraft_geom::{Affine, Rect};
+use pejy_compose::{ComposedStory, FrameText, Line, PlacedGlyph, RunStyle};
+use pejy_doc::{Align, Item, TextFrame};
+use pejy_geom::{Affine, Rect};
 
 use crate::LineBreaks;
 use crate::slide::{Exporter, XfrmBox, box_of};
@@ -26,7 +26,7 @@ const BASELINE_IN_LINE: f64 = 0.75;
 /// Largest drift (points) a run's character spacing may leave before a new run starts.
 const TOLERANCE: f64 = 0.3;
 
-/// Private-use characters DesignCraft stores for markers (page numbers, section markers, breaks).
+/// Private-use characters Pejy stores for markers (page numbers, section markers, breaks).
 fn is_marker(c: char) -> bool {
     ('\u{E000}'..='\u{E1FF}').contains(&c)
 }
@@ -36,7 +36,7 @@ fn is_marker(c: char) -> bool {
 struct Unit {
     text: String,
     style: u32,
-    face: designcraft_fonts::FaceRef,
+    face: pejy_fonts::FaceRef,
     size: f64,
     /// Baseline shift (points, down positive).
     y: f64,
@@ -53,7 +53,7 @@ struct Unit {
 struct Run {
     text: String,
     style: u32,
-    face: designcraft_fonts::FaceRef,
+    face: pejy_fonts::FaceRef,
     size: f64,
     y: f64,
     /// Character spacing, points.
@@ -490,7 +490,7 @@ fn rpr(ex: &mut Exporter, run: Option<&Run>, size: f64, k: f64, opacity: f32, ta
     }
     a.push_str(" dirty=\"0\">");
     if let Some(st) = cs {
-        if st.stroke != designcraft_color::swatch::NONE
+        if st.stroke != pejy_color::swatch::NONE
             && st.stroke_weight > 0.0
             && let Some(c) = ex.color(&st.stroke, st.stroke_tint, opacity)
         {
@@ -529,10 +529,10 @@ fn reflow(ex: &mut Exporter, it: &Item, tfr: &TextFrame, ft: &FrameText, cs: &Co
         s.push_str(" vert=\"eaVert\"");
     }
     let anchor = match o.vertical_justification {
-        designcraft_doc::VerticalJustification::Center => "ctr",
-        designcraft_doc::VerticalJustification::Bottom => "b",
-        designcraft_doc::VerticalJustification::Justify => "just",
-        designcraft_doc::VerticalJustification::Top => "t",
+        pejy_doc::VerticalJustification::Center => "ctr",
+        pejy_doc::VerticalJustification::Bottom => "b",
+        pejy_doc::VerticalJustification::Justify => "just",
+        pejy_doc::VerticalJustification::Top => "t",
     };
     let _ = write!(s, " anchor=\"{anchor}\"><a:noAutofit/></a:bodyPr><a:lstStyle/>");
     // The paragraphs this frame shows, with the runs of their composed glyphs.

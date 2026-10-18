@@ -23,7 +23,7 @@
 //!    ([`synth_shape`]: eye and mouth openness, mouth width, brow raise, head yaw and pitch) by
 //!    principal component analysis — no external data or weights.
 //!
-//! With a trained model (Settings ▸ Face Tracking: an `effectcraft_segment::face::FaceModel` such
+//! With a trained model (Settings ▸ Face Tracking: an `tselatra_segment::face::FaceModel` such
 //! as MediaPipe Face Landmarker), the model finds the face in the mask and follows it; its
 //! outline and named points replace steps 1–4, and chin and jaw come from its outline the same
 //! way, so measurements mean the same with either engine ([`FaceTracker::new_with`]). When the
@@ -34,8 +34,8 @@
 
 use std::sync::{Arc, OnceLock};
 
-use effectcraft_raster::Image;
-use effectcraft_segment::face::{Face, FaceModel, Topology};
+use tselatra_raster::Image;
+use tselatra_segment::face::{Face, FaceModel, Topology};
 
 use crate::Frame;
 use crate::camtrack::linalg::{cholesky_solve, sym_eigen};
@@ -722,7 +722,7 @@ impl FaceTracker {
     }
 
     /// The trained model following the face (`None`: the classical tracker).
-    pub fn model(&self) -> Option<&'static effectcraft_segment::ModelInfo> {
+    pub fn model(&self) -> Option<&'static tselatra_segment::ModelInfo> {
         self.learned.as_ref().map(|l| l.model.info())
     }
 
@@ -1276,7 +1276,7 @@ mod tests {
         a
     };
     static FAKE_TOPOLOGY: Topology = Topology { outline: &FAKE_OUTLINE, landmarks: &FAKE_LANDMARKS };
-    static FAKE_INFO: effectcraft_segment::ModelInfo = effectcraft_segment::ModelInfo { id: "fake", name: "Fake", ..effectcraft_segment::FACE_LANDMARKER };
+    static FAKE_INFO: tselatra_segment::ModelInfo = tselatra_segment::ModelInfo { id: "fake", name: "Fake", ..tselatra_segment::FACE_LANDMARKER };
 
     impl Fake {
         fn face(t: usize) -> Face {
@@ -1292,18 +1292,18 @@ mod tests {
     }
 
     impl FaceModel for Fake {
-        fn info(&self) -> &'static effectcraft_segment::ModelInfo {
+        fn info(&self) -> &'static tselatra_segment::ModelInfo {
             &FAKE_INFO
         }
         fn topology(&self) -> &'static Topology {
             &FAKE_TOPOLOGY
         }
-        fn find(&self, _: &[[f32; 3]], _: usize, _: usize, r: [f32; 4]) -> effectcraft_segment::Result<Option<Face>> {
+        fn find(&self, _: &[[f32; 3]], _: usize, _: usize, r: [f32; 4]) -> tselatra_segment::Result<Option<Face>> {
             let c = frame_params(0).center;
             let inside = (r[0] as f64) < c[0] && c[0] < r[2] as f64 && (r[1] as f64) < c[1] && c[1] < r[3] as f64;
             Ok((inside && !self.blind).then(|| Fake::face(0)))
         }
-        fn follow(&self, _: &[[f32; 3]], _: usize, _: usize, _: &Face) -> effectcraft_segment::Result<Option<Face>> {
+        fn follow(&self, _: &[[f32; 3]], _: usize, _: usize, _: &Face) -> tselatra_segment::Result<Option<Face>> {
             let t = self.frame.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
             Ok((t < self.lose_at).then(|| Fake::face(t)))
         }
@@ -1356,15 +1356,15 @@ mod tests {
         assert!((f.landmarks[EYE[0][4]][0] - (truth[EYE[0][4]][0] - 10.0)).abs() < 1e-3);
     }
 
-    /// With the official MediaPipe Face Landmarker (`EFFECTCRAFT_FACE_LANDMARKER` = path to
+    /// With the official MediaPipe Face Landmarker (`TSELATRA_FACE_LANDMARKER` = path to
     /// `face_landmarker.task`, else skipped): it recognises the synthetic face and follows it
     /// through the moving, rolling clip. Brows and lips are drawn differently from where a real
     /// face's mesh points sit, so only the points both agree on are held to ground truth: eyes and
     /// chin tightly, the mouth corners (the cartoon mouth's ends, as it turns) more loosely.
     #[test]
     fn mediapipe_follows_the_synthetic_face() {
-        let Ok(path) = std::env::var("EFFECTCRAFT_FACE_LANDMARKER") else { return };
-        let Ok(effectcraft_segment::Loaded::Face(model)) = effectcraft_segment::load("mediapipe-face", &std::fs::read(path).unwrap()) else {
+        let Ok(path) = std::env::var("TSELATRA_FACE_LANDMARKER") else { return };
+        let Ok(tselatra_segment::Loaded::Face(model)) = tselatra_segment::load("mediapipe-face", &std::fs::read(path).unwrap()) else {
             panic!("not a face model")
         };
         let (w, h) = (320, 240);

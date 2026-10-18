@@ -1,7 +1,7 @@
 //! The PDF export warnings for raster effects whose images the 64 million pixel cap rendered below
 //! the document's raster effects resolution, one per object of the document.
 
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
+use tsipika_doc::{Document, Node, NodeId, NodeKind};
 
 use super::Which;
 
@@ -79,8 +79,8 @@ impl FlattenReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::ImageObject;
-    use vectorcraft_geom::Affine;
+    use tsipika_doc::ImageObject;
+    use tsipika_geom::Affine;
 
     fn image(ppi: f64) -> Node {
         Node::new(

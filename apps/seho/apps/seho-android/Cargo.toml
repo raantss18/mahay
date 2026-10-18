@@ -22,3 +22,4 @@ serde_json = { workspace = true }
 log = { workspace = true }
 cpal = "0.16"
 mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }

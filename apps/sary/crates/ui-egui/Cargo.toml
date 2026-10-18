@@ -8,6 +8,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-print = { workspace = true }
 mahay-ui = { workspace = true }
 sary-geom = { workspace = true }

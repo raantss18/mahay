@@ -1,5 +1,5 @@
 //! Learn: the Home screen's tutorial list and the coach card that walks through a running
-//! tutorial (engine model in `effectcraft_engine::learn`). The coach highlights the step's target
+//! tutorial (engine model in `tselatra_engine::learn`). The coach highlights the step's target
 //! (an automation id) and moves on when the user performs the step's command; "Show me" runs it.
 
 use crate::i18n::{tr, tr_args};
@@ -7,10 +7,10 @@ use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::json;
 
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 /// The Learn tab of the Home screen: one card per tutorial with its steps and a Start button.
-pub fn home_tab(app: &mut EffectcraftApp, ui: &mut egui::Ui, area: Rect) {
+pub fn home_tab(app: &mut TselatraApp, ui: &mut egui::Ui, area: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(area);
     let (x, mut y, w) = (area.min.x, area.min.y, area.width());
@@ -18,12 +18,12 @@ pub fn home_tab(app: &mut EffectcraftApp, ui: &mut egui::Ui, area: Rect) {
     p.text(
         pos2(x, y + 26.0),
         Align2::LEFT_CENTER,
-        "Hands-on tutorials that run inside EffectCraft. Do each step yourself, or press Show me.",
+        "Hands-on tutorials that run inside Tselatra. Do each step yourself, or press Show me.",
         Tokens::ui(11.5),
         t.text_faint,
     );
     y += 44.0;
-    let tutorials = effectcraft_engine::learn::tutorials();
+    let tutorials = tselatra_engine::learn::tutorials();
     let running = app.session.learn.as_ref().map(|l| l.tutorial.clone());
     let card_h = 128.0;
     for tut in &tutorials {
@@ -66,18 +66,18 @@ pub fn home_tab(app: &mut EffectcraftApp, ui: &mut egui::Ui, area: Rect) {
 }
 
 /// The automation element a step's target pattern points at (last frame's registry).
-fn target_rect(app: &EffectcraftApp, pattern: &str) -> Option<Rect> {
+fn target_rect(app: &TselatraApp, pattern: &str) -> Option<Rect> {
     let lid = app.session.state.selected_layers.first().map(|l| l.0);
-    let pat = effectcraft_engine::learn::resolve_target(pattern, lid);
+    let pat = tselatra_engine::learn::resolve_target(pattern, lid);
     app.auto
         .previous
         .iter()
-        .find(|e| effectcraft_engine::learn::target_matches(&pat, &e.id) && e.rect[2] > 0.0 && e.rect[3] > 0.0)
+        .find(|e| tselatra_engine::learn::target_matches(&pat, &e.id) && e.rect[2] > 0.0 && e.rect[3] > 0.0)
         .map(|e| Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3])))
 }
 
 /// The coach card (bottom right) and the highlight around the current step's target.
-pub fn coach(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn coach(app: &mut TselatraApp, ctx: &egui::Context) {
     let Some((tut, i)) = app.session.learn_current() else { return };
     let t = app.tokens;
     let n = tut.steps.len();

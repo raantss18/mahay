@@ -27,7 +27,7 @@ pub mod triangulate;
 
 use std::sync::Arc;
 
-pub use effectcraft_geom::{Mat4, Vec3, vec3};
+pub use tselatra_geom::{Mat4, Vec3, vec3};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelError {

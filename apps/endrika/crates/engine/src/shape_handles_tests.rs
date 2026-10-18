@@ -1,7 +1,7 @@
 //! On-canvas corner radius and star ratio handles (see `shape_handles.rs`).
 
-use figcraft_doc::{NodeId, NodeKind};
-use figcraft_geom::Point;
+use endrika_doc::{NodeId, NodeKind};
+use endrika_geom::Point;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -66,7 +66,7 @@ fn polygon_and_star_handles() {
     assert_eq!(kinds, vec![ShapeHandle::Radius { corner: 0 }, ShapeHandle::Ratio], "a star has a radius and a ratio handle");
     // The ratio handle sits on the first inner point; dragging it to the centre's side shrinks it.
     let ratio_at = hs[1].1;
-    let inner = figcraft_geom::star_points(200.0, 200.0, 5, 0.38)[1];
+    let inner = endrika_geom::star_points(200.0, 200.0, 5, 0.38)[1];
     assert!((Point::new(ratio_at[0], ratio_at[1]) - inner).hypot() < 1e-6);
     let towards = Point::new(100.0, 100.0) + (inner - Point::new(100.0, 100.0)) * (0.5 / 0.38);
     drag(&mut s, (ratio_at[0], ratio_at[1]), (towards.x, towards.y), false);

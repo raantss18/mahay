@@ -1,25 +1,25 @@
 //! Real files: probing (dimensions + metadata for import) and loading (decode → linear Rec.2020,
-//! oriented, downscaled to the requested level). Standard formats go through `lightcraft-codecs`,
-//! camera raws through `lightcraft-raw` (demosaic + DNG colour model).
+//! oriented, downscaled to the requested level). Standard formats go through `hazavana-codecs`,
+//! camera raws through `hazavana-raw` (demosaic + DNG colour model).
 
 use std::sync::Arc;
 
-use lightcraft_catalog::{MediaKind, Meta};
-use lightcraft_color::cct::xy_to_temp_tint;
-use lightcraft_geom::Orientation;
-use lightcraft_pipeline::SourceInfo;
-use lightcraft_raster::Rgb32f;
-use lightcraft_raster::resample::{Filter, fit};
+use hazavana_catalog::{MediaKind, Meta};
+use hazavana_color::cct::xy_to_temp_tint;
+use hazavana_geom::Orientation;
+use hazavana_pipeline::SourceInfo;
+use hazavana_raster::Rgb32f;
+use hazavana_raster::resample::{Filter, fit};
 
 use crate::media::{DenoiseSpec, FileLoader, FileProbe, PairLoader, PreviewLoader, ProbeInfo};
 
-fn meta_of(m: &lightcraft_meta::Metadata) -> (Meta, Option<String>) {
+fn meta_of(m: &hazavana_meta::Metadata) -> (Meta, Option<String>) {
     let shutter = m.exposure_time.map(|t| if t >= 1.0 { format!("{t:.0}") } else { format!("1/{:.0}", 1.0 / t) }).unwrap_or_default();
     let camera = [m.make.clone().unwrap_or_default(), m.model.clone().unwrap_or_default()].join(" ").trim().to_string();
     let meta = Meta {
         camera,
         // (a camera that writes no lens name, like Nikon's DSLRs, still says what range the lens covers)
-        lens: m.lens_model.clone().or_else(|| m.lens_spec.and_then(lightcraft_meta::lens_spec_name)).unwrap_or_default(),
+        lens: m.lens_model.clone().or_else(|| m.lens_spec.and_then(hazavana_meta::lens_spec_name)).unwrap_or_default(),
         focal_mm: m.focal_length.map(|f| f as f32),
         aperture: m.f_number.map(|f| f as f32),
         shutter,
@@ -34,12 +34,12 @@ fn meta_of(m: &lightcraft_meta::Metadata) -> (Meta, Option<String>) {
         title: m.title.clone().unwrap_or_default(),
         caption: m.caption.clone().unwrap_or_default(),
         copyright: m.copyright.clone().unwrap_or_default(),
-        copyright_status: lightcraft_catalog::CopyrightStatus::from_marked(m.copyright_marked),
+        copyright_status: hazavana_catalog::CopyrightStatus::from_marked(m.copyright_marked),
         usage_terms: m.usage_terms.clone().unwrap_or_default(),
         copyright_url: m.copyright_url.clone().unwrap_or_default(),
         creator: m.artist.clone().unwrap_or_default(),
         // paths from `lr:hierarchicalSubject`, names from `dc:subject` that aren't their levels
-        keywords: lightcraft_catalog::keywords::from_file(&m.keywords, &m.hierarchical_keywords),
+        keywords: hazavana_catalog::keywords::from_file(&m.keywords, &m.hierarchical_keywords),
         regions: m.regions.clone(),
         focus: m.focus.clone(),
     };
@@ -48,11 +48,11 @@ fn meta_of(m: &lightcraft_meta::Metadata) -> (Meta, Option<String>) {
 
 /// Lens corrections embedded in a raw's `OpcodeList3` (`WarpRectilinear`, `WarpRectilinear2`, `FixVignetteRadial`: a DNG's own, or the
 /// raw reader's equivalent of the camera's correction, e.g. Panasonic / Leica RW2 distortion), re-expressed for the
-/// default-cropped, EXIF-oriented image. These are the only "profile" corrections LightCraft applies.
-pub fn embedded_lens(raw: &lightcraft_raw::RawInfo) -> Option<lightcraft_develop::EmbeddedLens> {
-    use lightcraft_develop::{EmbeddedLens, EmbeddedVignette, EmbeddedWarp, EmbeddedWarpStage, WARP_STAGES};
-    use lightcraft_geom::Point;
-    use lightcraft_raw::Opcode;
+/// default-cropped, EXIF-oriented image. These are the only "profile" corrections Hazavana applies.
+pub fn embedded_lens(raw: &hazavana_raw::RawInfo) -> Option<hazavana_develop::EmbeddedLens> {
+    use hazavana_develop::{EmbeddedLens, EmbeddedVignette, EmbeddedWarp, EmbeddedWarpStage, WARP_STAGES};
+    use hazavana_geom::Point;
+    use hazavana_raw::Opcode;
     let (aw, ah) = (raw.active_area.width as f64, raw.active_area.height as f64);
     if aw < 2.0 || ah < 2.0 {
         return None;
@@ -74,7 +74,7 @@ pub fn embedded_lens(raw: &lightcraft_raw::RawInfo) -> Option<lightcraft_develop
     let mut lens = EmbeddedLens::default();
     // opcodes in list order, minus the ones the DNG 1.6 skip rule drops (a WarpRectilinear that follows an optional
     // WarpRectilinear2)
-    let ops: Vec<&Opcode> = lightcraft_raw::opcodes::applied_ops(&raw.opcodes.list3).collect();
+    let ops: Vec<&Opcode> = hazavana_raw::opcodes::applied_ops(&raw.opcodes.list3).collect();
     // A DNG with a WarpRectilinear2 keeps every warp opcode as a chain of stages (each warps the one before's output);
     // without one the first WarpRectilinear is the lens warp, as it always was.
     let chain = ops.iter().any(|op| matches!(op, Opcode::WarpRectilinear2 { .. }));
@@ -91,7 +91,7 @@ pub fn embedded_lens(raw: &lightcraft_raw::RawInfo) -> Option<lightcraft_develop
                 let (center, radius) = centre(*center);
                 let p = |i: usize| {
                     let k = planes[i.min(planes.len() - 1)];
-                    let mut s = [0.0; lightcraft_raw::opcodes::WR2_LEN];
+                    let mut s = [0.0; hazavana_raw::opcodes::WR2_LEN];
                     s[0] = k[0];
                     s[2] = k[1];
                     s[4] = k[2];
@@ -122,7 +122,7 @@ pub fn embedded_lens(raw: &lightcraft_raw::RawInfo) -> Option<lightcraft_develop
     if lens.warp.is_none() && lens.vignette.is_none() && !lens.has_stages() {
         return None;
     }
-    Some(lightcraft_pipeline::optics::reorient_lens(&lens, raw.orientation, cw, ch))
+    Some(hazavana_pipeline::optics::reorient_lens(&lens, raw.orientation, cw, ch))
 }
 
 fn ext_upper(name: &str) -> String {
@@ -130,15 +130,15 @@ fn ext_upper(name: &str) -> String {
 }
 
 /// Probe a file's bytes: kind, dimensions (oriented), metadata. No pixel data is decompressed:
-/// raws are described from their headers ([`lightcraft_raw::probe_info`]), other images too
-/// ([`lightcraft_codecs::read_header`], which refuses truncated files but can't see damage inside
+/// raws are described from their headers ([`hazavana_raw::probe_info`]), other images too
+/// ([`hazavana_codecs::read_header`], which refuses truncated files but can't see damage inside
 /// compressed data that is all there: such a file imports and shows as unreadable when rendered).
 pub fn probe_bytes(name: &str, bytes: &[u8]) -> Result<ProbeInfo, String> {
-    let content_hash = Some(lightcraft_preview::hash_bytes(bytes).to_string());
-    let m = lightcraft_meta::extract(bytes);
+    let content_hash = Some(hazavana_preview::hash_bytes(bytes).to_string());
+    let m = hazavana_meta::extract(bytes);
     let (meta, captured) = meta_of(&m);
-    if lightcraft_raw::probe(bytes).is_some() {
-        let raw = match lightcraft_raw::probe_info(bytes).map_err(|e| preview_reason(bytes, e)) {
+    if hazavana_raw::probe(bytes).is_some() {
+        let raw = match hazavana_raw::probe_info(bytes).map_err(|e| preview_reason(bytes, e)) {
             Ok(r) => r,
             Err(Ok(why)) => {
                 // a raw variant we can't decode yet: describe it from its embedded preview
@@ -153,7 +153,7 @@ pub fn probe_bytes(name: &str, bytes: &[u8]) -> Result<ProbeInfo, String> {
                     meta,
                     as_shot_wb: None,
                     content_hash,
-                    xmp: lightcraft_meta::embedded(bytes).xmp,
+                    xmp: hazavana_meta::embedded(bytes).xmp,
                     preview_only: Some(why),
                     ..Default::default()
                 });
@@ -166,7 +166,7 @@ pub fn probe_bytes(name: &str, bytes: &[u8]) -> Result<ProbeInfo, String> {
             std::mem::swap(&mut w, &mut h);
         }
         let scale = WbScaleOf::new(raw.format, &raw.color, raw.wb_multipliers, &raw.metadata);
-        let as_shot_wb = Some(scale.as_shot(lightcraft_raw::color::as_shot_white_xy_of(&raw)));
+        let as_shot_wb = Some(scale.as_shot(hazavana_raw::color::as_shot_white_xy_of(&raw)));
         let embedded_lens = crate::lens_profiles::for_raw(&raw, || m.clone());
         return Ok(ProbeInfo {
             embedded_lens,
@@ -180,17 +180,17 @@ pub fn probe_bytes(name: &str, bytes: &[u8]) -> Result<ProbeInfo, String> {
             meta,
             as_shot_wb,
             content_hash,
-            xmp: lightcraft_meta::embedded(bytes).xmp,
+            xmp: hazavana_meta::embedded(bytes).xmp,
             preview_only: None,
         });
     }
-    let fmt = lightcraft_codecs::sniff(bytes).ok_or("unrecognized file format")?;
+    let fmt = hazavana_codecs::sniff(bytes).ok_or("unrecognized file format")?;
     if let Some(why) = fmt.not_decodable() {
-        // e.g. "Heif files can't be opened: HEIC/HEIF support isn't included in this build of LightCraft"
+        // e.g. "Heif files can't be opened: HEIC/HEIF support isn't included in this build of Hazavana"
         return Err(format!("{fmt:?} files can't be opened: {why}"));
     }
     // headers only (issue #367: decoding the pixels was nearly all of an import's CPU time)
-    let header = lightcraft_codecs::read_header(bytes).map_err(|e| e.to_string())?;
+    let header = hazavana_codecs::read_header(bytes).map_err(|e| e.to_string())?;
     let o = Orientation::from_exif(header.orientation);
     let (mut w, mut h) = (header.width, header.height);
     if o.swaps_axes() {
@@ -223,11 +223,11 @@ pub fn probe_bytes(name: &str, bytes: &[u8]) -> Result<ProbeInfo, String> {
 /// decoder is verified on few bodies, and every CR3 opened from its embedded JPEG before it existed.
 /// So does any other failure of a recognised raw (damaged or oversized raw data, unreadable TIFF
 /// structure): its preview may still be intact. Only a file that is not a raw reports an error.
-fn preview_reason(bytes: &[u8], e: lightcraft_raw::RawError) -> Result<String, String> {
-    use lightcraft_raw::RawError;
+fn preview_reason(bytes: &[u8], e: hazavana_raw::RawError) -> Result<String, String> {
+    use hazavana_raw::RawError;
     match e {
         RawError::Unsupported(why) => Ok(why),
-        e if lightcraft_raw::probe(bytes) == Some(lightcraft_raw::RawFormat::Cr3) => Ok(format!("CR3 {e}")),
+        e if hazavana_raw::probe(bytes) == Some(hazavana_raw::RawFormat::Cr3) => Ok(format!("CR3 {e}")),
         RawError::NotRaw => Err(RawError::NotRaw.to_string()),
         e => Ok(e.to_string()),
     }
@@ -241,11 +241,11 @@ pub(crate) struct CameraColourModel<'a> {
     /// White-balance multipliers (as shot).
     pub wb: [f32; 3],
     /// White-balanced camera RGB → linear Rec.2020: the camera matrix, or a look fitted to the camera's JPEG on top.
-    pub matrix: lightcraft_color::Mat3,
+    pub matrix: hazavana_color::Mat3,
     /// Baseline exposure, as a gain.
     pub gain: f32,
     /// A DNG profile's hue/saturation map and look table.
-    pub tables: Option<&'a lightcraft_raw::profile::ProfileTables>,
+    pub tables: Option<&'a hazavana_raw::profile::ProfileTables>,
     /// A fitted camera look's hue/saturation table.
     pub hue_sat: Option<&'a crate::camera_preview::HueSat<'a>>,
 }
@@ -254,13 +254,13 @@ impl CameraColourModel<'_> {
     /// Rebuild sensor-clipped channels; fully clipped highlights become [`clipped_white`] of the matrix, so they
     /// come out of [`Self::apply`] neutral.
     pub fn rebuild_highlights(&self, img: &mut Rgb32f) {
-        lightcraft_raw::highlight::reconstruct_with(img, self.wb, HIGHLIGHT_CLIP, clipped_white(&self.matrix));
+        hazavana_raw::highlight::reconstruct_with(img, self.wb, HIGHLIGHT_CLIP, clipped_white(&self.matrix));
     }
 
     /// [`Self::rebuild_highlights`] for a binned image whose clipped channels `mask` tells
-    /// ([`lightcraft_raw::RawImage::develop_binned_masked`]).
+    /// ([`hazavana_raw::RawImage::develop_binned_masked`]).
     pub fn rebuild_highlights_masked(&self, img: &mut Rgb32f, mask: &[u8]) {
-        lightcraft_raw::highlight::reconstruct_masked(img, self.wb, HIGHLIGHT_CLIP, clipped_white(&self.matrix), mask);
+        hazavana_raw::highlight::reconstruct_masked(img, self.wb, HIGHLIGHT_CLIP, clipped_white(&self.matrix), mask);
     }
 
     /// White balance, matrix, tables and baseline exposure, in place.
@@ -269,7 +269,7 @@ impl CameraColourModel<'_> {
         if let (None, Some(hue_sat)) = (self.tables, self.hue_sat) {
             // a fitted camera look: `pixel`, `LANES` pixels at a time so the table step vectorises (same bits)
             const LANES: usize = 16;
-            lightcraft_raster::par_rows(&mut img.data, img.width, |_, row| {
+            hazavana_raster::par_rows(&mut img.data, img.width, |_, row| {
                 for chunk in row.chunks_mut(LANES) {
                     let mut rgb = [[0.0f32; LANES]; 3];
                     for (l, p) in chunk.iter().enumerate() {
@@ -313,13 +313,13 @@ impl CameraColourModel<'_> {
 /// `[1, 1, 1]` (the camera's own neutral, as before this existed) when the model can't be trusted with it: not
 /// invertible or nearly so, an answer far from the camera's neutral (a sane colour model moves white by a few per
 /// cent), or one that isn't neutral through the `f32` matrix the decode applies.
-pub(crate) fn clipped_white(model: &lightcraft_color::Mat3) -> [f32; 3] {
+pub(crate) fn clipped_white(model: &hazavana_color::Mat3) -> [f32; 3] {
     const CAMERA: [f32; 3] = [1.0; 3];
     /// Largest condition number (max row sum norm) of a model trusted for this.
     const CONDITION: f64 = 1e3;
     /// Largest factor between the answer and the camera's neutral, per channel.
     const SPREAD: f64 = 4.0;
-    let norm = |m: &lightcraft_color::Mat3| m.0.iter().map(|row| row.iter().map(|v| v.abs()).sum::<f64>()).fold(0.0, f64::max);
+    let norm = |m: &hazavana_color::Mat3| m.0.iter().map(|row| row.iter().map(|v| v.abs()).sum::<f64>()).fold(0.0, f64::max);
     let Some(inverse) = model.inverse() else { return CAMERA };
     let condition = norm(model) * norm(&inverse);
     if !condition.is_finite() || condition > CONDITION {
@@ -327,7 +327,7 @@ pub(crate) fn clipped_white(model: &lightcraft_color::Mat3) -> [f32; 3] {
     }
     let luma = |v: [f64; 3]| {
         let c = model.apply(v);
-        (0..3).map(|i| c[i] * f64::from(lightcraft_color::LUMA_2020[i])).sum::<f64>()
+        (0..3).map(|i| c[i] * f64::from(hazavana_color::LUMA_2020[i])).sum::<f64>()
     };
     let n = inverse.apply([1.0; 3]);
     let (target, own) = (luma([1.0; 3]), luma(n));
@@ -352,7 +352,7 @@ pub(crate) fn clipped_white(model: &lightcraft_color::Mat3) -> [f32; 3] {
 /// cost of Bayer's, so 3× is accepted down to 75 % (a 24 MP X-Trans preview is then ~2000 px
 /// instead of a ~1.2 s full demosaic; zooming in still uses the full-size source).
 /// `None` = demosaic at full size.
-pub fn bin_factor(raw: &lightcraft_raw::RawImage, max_edge: usize) -> Option<usize> {
+pub fn bin_factor(raw: &hazavana_raw::RawImage, max_edge: usize) -> Option<usize> {
     let c = raw.crop.clipped(raw.active_area.width, raw.active_area.height);
     let long = if c.width > 1 && c.height > 1 { c.width.max(c.height) } else { raw.active_area.width.max(raw.active_area.height) };
     let need = (max_edge.saturating_mul(9) / 10).max(1);
@@ -386,8 +386,8 @@ pub fn load_vec_pair(bytes: Vec<u8>, max_edge: usize, spec: &DenoiseSpec) -> Res
 /// crop, and `factor` × `factor` blocks averaged into one pixel when the plain one was binned (plain means: the
 /// plain development's clip mask tells highlight reconstruction which of them held clipped samples). `None` when
 /// the product is missing, damaged, made from something else or not the size of this raw's active area.
-fn denoised_camera_rgb(raw: &lightcraft_raw::RawImage, spec: &DenoiseSpec, factor: usize) -> Option<Rgb32f> {
-    use lightcraft_denoise::product::{self, Window};
+fn denoised_camera_rgb(raw: &hazavana_raw::RawImage, spec: &DenoiseSpec, factor: usize) -> Option<Rgb32f> {
+    use hazavana_denoise::product::{self, Window};
     let a = raw.active_area;
     let header = product::read_header_at(&spec.product).ok()?;
     if header.key != spec.key || (header.width, header.height) != (a.width, a.height) {
@@ -409,8 +409,8 @@ fn load_bytes_now(
     max_edge: usize,
     denoise: Option<&DenoiseSpec>,
 ) -> Result<(Rgb32f, Option<Rgb32f>, SourceInfo), String> {
-    if lightcraft_raw::probe(&bytes).is_some() {
-        let mut raw = match lightcraft_raw::decode(&bytes).map_err(|e| preview_reason(&bytes, e)) {
+    if hazavana_raw::probe(&bytes).is_some() {
+        let mut raw = match hazavana_raw::decode(&bytes).map_err(|e| preview_reason(&bytes, e)) {
             Ok(r) => r,
             Err(Ok(why)) => {
                 // show the camera's embedded JPEG (rendered, not raw) until the variant is supported
@@ -423,7 +423,7 @@ fn load_bytes_now(
         // Embedded lens corrections are applied by the pipeline ("Enable Profile Corrections"), not baked in
         // (removed before the camera look's binned sensor proxy too, which needs an empty `OpcodeList3`).
         let info = raw.info();
-        let lens = crate::lens_profiles::for_raw(&info, || lightcraft_meta::extract(&bytes));
+        let lens = crate::lens_profiles::for_raw(&info, || hazavana_meta::extract(&bytes));
         // (the camera look still pairs the sensor with the camera JPEG through the warp the camera applied to it)
         let lens_geometry = crate::camera_preview::lens_geometry(&raw.opcodes.list3);
         raw.opcodes.list3.retain(|op| !op.is_lens_correction());
@@ -449,17 +449,17 @@ fn load_bytes_now(
         let (img, clip_mask) = match binned {
             Some((img, mask)) => (img, Some(mask)),
             None => {
-                let method = if max_edge <= 600 { lightcraft_raw::Method::Bilinear } else { lightcraft_raw::Method::Ahd };
+                let method = if max_edge <= 600 { hazavana_raw::Method::Bilinear } else { hazavana_raw::Method::Ahd };
                 (raw.develop(method).map_err(|e| e.to_string())?, None)
             }
         };
         // the same development from the denoised mosaic, when the photo has been denoised
         let twin = denoise.and_then(|spec| denoised_camera_rgb(&raw, spec, factor)).filter(|d| d.width == img.width && d.height == img.height);
         // the samples aren't needed any more (the colour model below reads only the tags)
-        raw.data = lightcraft_raw::RawData::U16(Vec::new());
+        raw.data = hazavana_raw::RawData::U16(Vec::new());
         let hue_sat = camera_look.as_ref().and_then(|p| p.hue_sat.as_ref()).and_then(crate::camera_preview::HueSat::new);
         // A DNG's own profile look (hue/saturation map, look table), DNG spec chapter 6.
-        let tables = lightcraft_raw::profile::ProfileTables::new(&raw.color.profile, lightcraft_raw::color::illuminant_weight(&raw.color, xy));
+        let tables = hazavana_raw::profile::ProfileTables::new(&raw.color.profile, hazavana_raw::color::illuminant_weight(&raw.color, xy));
         let colour = CameraColourModel {
             wb: t.wb,
             matrix: camera_look.as_ref().map(|p| p.matrix.mul(&t.matrix)).unwrap_or(t.matrix),
@@ -487,7 +487,7 @@ fn load_bytes_now(
             (img, stages)
         };
         let (img, stages) = finish(img);
-        if lightcraft_pipeline::profiling() {
+        if hazavana_pipeline::profiling() {
             let mut prev = std::time::Duration::ZERO;
             let parts: Vec<String> = stages
                 .iter()
@@ -503,11 +503,11 @@ fn load_bytes_now(
         // White balance re-evaluates the file's own colour model (when it has one and no file-local look matrix sits
         // on top of it). A model's measured matrices never do: they only give the Kelvin scale its numbers, and the
         // picture is adapted from the as-shot white as every fitted look is (so settings from before that scale
-        // existed render exactly as they did, `lightcraft_pipeline::local::legacy_white`).
-        let camera_color = (scale.own_matrix && !t.matrix_is_fallback && (camera_look.is_none() || raw.format == lightcraft_raw::RawFormat::Dng))
+        // existed render exactly as they did, `hazavana_pipeline::local::legacy_white`).
+        let camera_color = (scale.own_matrix && !t.matrix_is_fallback && (camera_look.is_none() || raw.format == hazavana_raw::RawFormat::Dng))
             .then(|| {
-                let tags = lightcraft_raw::ColorData { profile: Default::default(), ..raw.color.clone() };
-                Arc::new(lightcraft_pipeline::CameraColor { tags, developed_for: xy })
+                let tags = hazavana_raw::ColorData { profile: Default::default(), ..raw.color.clone() };
+                Arc::new(hazavana_pipeline::CameraColor { tags, developed_for: xy })
             });
         let camera_tone = camera_look.as_ref().map(|p| p.tone).or_else(|| raw.color.profile.tone_curve.as_ref().and_then(dng_tone_curve));
         let local_tone = local_tone(&raw);
@@ -531,7 +531,7 @@ fn load_bytes_now(
             },
         ));
     }
-    let d = lightcraft_codecs::decode(&bytes, fit_box(max_edge)).map_err(|e| e.to_string())?;
+    let d = hazavana_codecs::decode(&bytes, fit_box(max_edge)).map_err(|e| e.to_string())?;
     drop(bytes);
     let img = d.to_working();
     let img = if img.width.max(img.height) > max_edge { fit(&img, max_edge, max_edge, Filter::Mitchell) } else { img };
@@ -539,12 +539,12 @@ fn load_bytes_now(
 }
 
 /// Which white-balance scale a raw is edited on, decided from the file alone, the way the catalog decides it from
-/// the photo's format and camera (`lightcraft_catalog::relative_wb_camera`; a test keeps the two in step).
+/// the photo's format and camera (`hazavana_catalog::relative_wb_camera`; a test keeps the two in step).
 ///
 /// A file with colour matrices of its own (DNG) has an absolute scale from its tags. A file without
 /// (`camera_preview::file_local_look`) has one when its camera's matrices are measured
-/// (`lightcraft_raw::spectral`), else when its camera's white-balance presets give one
-/// (`lightcraft_raw::kelvin_presets`): either turns its as-shot multipliers into Kelvin and tint, nothing else — the
+/// (`hazavana_raw::spectral`), else when its camera's white-balance presets give one
+/// (`hazavana_raw::kelvin_presets`): either turns its as-shot multipliers into Kelvin and tint, nothing else — the
 /// look stays the file's fit. Any other raw is edited relative to its as-shot look (6500 K / 0 means as shot).
 pub(crate) struct WbScaleOf {
     own_matrix: bool,
@@ -552,35 +552,35 @@ pub(crate) struct WbScaleOf {
     /// Kelvin through the camera's measured matrices or presets: edited on the relative scale before those were used.
     legacy_relative: bool,
     /// The as-shot white through the measured matrices or the presets, when that is where the scale comes from.
-    scale_white: Option<lightcraft_color::Xy>,
+    scale_white: Option<hazavana_color::Xy>,
     /// The camera's measured matrices, when they give the scale.
-    camera: Option<&'static lightcraft_raw::spectral::Camera>,
+    camera: Option<&'static hazavana_raw::spectral::Camera>,
 }
 
 /// The white balance a DNG of a raw's camera RGB (Photo Merge) declares so that it shows as its source does
 /// ([`WbScaleOf::dng_white`]).
 pub(crate) enum DngWhite {
     /// Colour tags with the camera's measured matrices: the DNG reads every white through them, as the source does.
-    Matrices(Box<lightcraft_raw::ColorData>),
+    Matrices(Box<hazavana_raw::ColorData>),
     /// The white the source's scale shows at As Shot.
-    At(lightcraft_color::Xy),
+    At(hazavana_color::Xy),
 }
 
 impl WbScaleOf {
     pub(crate) fn new(
-        format: lightcraft_raw::RawFormat,
-        color: &lightcraft_raw::ColorData,
+        format: hazavana_raw::RawFormat,
+        color: &hazavana_raw::ColorData,
         wb_multipliers: Option<[f32; 3]>,
-        meta: &lightcraft_meta::Metadata,
+        meta: &hazavana_meta::Metadata,
     ) -> Self {
-        let own_matrix = lightcraft_raw::color::has_matrix(color);
+        let own_matrix = hazavana_raw::color::has_matrix(color);
         let fitted = crate::camera_preview::file_local_look(format) && !own_matrix;
         let model = meta.model.as_deref().filter(|_| fitted);
-        let camera = model.and_then(|model| lightcraft_raw::spectral::find(meta.make.as_deref(), model));
-        let presets = camera.is_none() && model.is_some_and(|model| lightcraft_raw::kelvin_presets::covers(meta.make.as_deref(), model));
+        let camera = model.and_then(|model| hazavana_raw::spectral::find(meta.make.as_deref(), model));
+        let presets = camera.is_none() && model.is_some_and(|model| hazavana_raw::kelvin_presets::covers(meta.make.as_deref(), model));
         let scale_white = match camera {
-            Some(c) => lightcraft_raw::spectral::as_shot_white_through(c, color, wb_multipliers),
-            None if presets => lightcraft_raw::kelvin_presets::as_shot_white(color, wb_multipliers),
+            Some(c) => hazavana_raw::spectral::as_shot_white_through(c, color, wb_multipliers),
+            None if presets => hazavana_raw::kelvin_presets::as_shot_white(color, wb_multipliers),
             None => None,
         };
         let covered = camera.is_some() || presets;
@@ -590,15 +590,15 @@ impl WbScaleOf {
     /// What a DNG of this raw's camera RGB declares so that it shows the white balance as this scale does: the
     /// camera's measured matrices when they give the scale, else the white the scale shows at As Shot (the presets'
     /// reading; 6500 K / 0 on the relative scale; else `own`, the white the file's tags give).
-    pub(crate) fn dng_white(&self, color: &lightcraft_raw::ColorData, own: lightcraft_color::Xy) -> DngWhite {
+    pub(crate) fn dng_white(&self, color: &hazavana_raw::ColorData, own: hazavana_color::Xy) -> DngWhite {
         if let Some(camera) = self.camera {
-            let mut c = lightcraft_raw::ColorData { profile: Default::default(), kelvin_presets: None, ..color.clone() };
+            let mut c = hazavana_raw::ColorData { profile: Default::default(), kelvin_presets: None, ..color.clone() };
             if camera.fill(&mut c) {
                 return DngWhite::Matrices(Box::new(c));
             }
         }
         if self.relative {
-            return DngWhite::At(lightcraft_color::cct::temp_tint_to_xy(6500.0, 0.0));
+            return DngWhite::At(hazavana_color::cct::temp_tint_to_xy(6500.0, 0.0));
         }
         DngWhite::At(self.scale_white.unwrap_or(own))
     }
@@ -606,7 +606,7 @@ impl WbScaleOf {
     /// the measured matrices or the presets, else `own` (the white the file's own tags give). Whole numbers, as the
     /// catalog keeps them. A covered camera whose file names no white (no multipliers, or no presets) falls back to
     /// `own`, D65.
-    fn as_shot(&self, own: lightcraft_color::Xy) -> (f64, f64) {
+    fn as_shot(&self, own: hazavana_color::Xy) -> (f64, f64) {
         if self.relative {
             return (6500.0, 0.0);
         }
@@ -617,26 +617,26 @@ impl WbScaleOf {
 
 /// The raw's gain table map with where its developed picture (the default crop, oriented) sits in
 /// the active area: rendered when the photo's "Camera local tone mapping" option is on.
-fn local_tone(raw: &lightcraft_raw::RawImage) -> Option<Arc<lightcraft_pipeline::local_tone::LocalTone>> {
+fn local_tone(raw: &hazavana_raw::RawImage) -> Option<Arc<hazavana_pipeline::local_tone::LocalTone>> {
     let map = raw.color.profile.gain_table_map.clone()?;
     let a = raw.active_area;
     let (aw, ah) = (a.width.max(1) as f64, a.height.max(1) as f64);
     let c = raw.develop_crop(a.width, a.height);
     let rect = [c.x as f64 / aw, c.y as f64 / ah, c.width as f64 / aw, c.height as f64 / ah];
-    let placement = lightcraft_raw::gaintable::SourcePlacement { rect, orientation: raw.orientation };
-    Some(Arc::new(lightcraft_pipeline::local_tone::LocalTone { map, placement }))
+    let placement = hazavana_raw::gaintable::SourcePlacement { rect, orientation: raw.orientation };
+    Some(Arc::new(hazavana_pipeline::local_tone::LocalTone { map, placement }))
 }
 
 /// The semantic masks of a DNG that AI masks understand, over the developed image (default crop,
 /// oriented like it). Person mattes without a confidently selected pixel are left out (the
 /// Subject mask then falls back to its heuristic); a sky matte counts even when empty (no sky).
-fn dng_mattes(bytes: &[u8], raw: &lightcraft_raw::RawInfo) -> Option<Arc<lightcraft_pipeline::masks::Mattes>> {
-    use lightcraft_pipeline::masks::{MatteKind, Mattes};
-    if raw.format != lightcraft_raw::RawFormat::Dng {
+fn dng_mattes(bytes: &[u8], raw: &hazavana_raw::RawInfo) -> Option<Arc<hazavana_pipeline::masks::Mattes>> {
+    use hazavana_pipeline::masks::{MatteKind, Mattes};
+    if raw.format != hazavana_raw::RawFormat::Dng {
         return None;
     }
     let mut mattes = Mattes::default();
-    for m in lightcraft_raw::semantic_masks(bytes) {
+    for m in hazavana_raw::semantic_masks(bytes) {
         let Some(kind) = matte_kind(&m.name) else { continue };
         let Some(img) = m.developed(raw.active_area, raw.crop) else { continue };
         if kind != MatteKind::Sky && !img.data.iter().any(|&v| v >= 128) {
@@ -649,8 +649,8 @@ fn dng_mattes(bytes: &[u8], raw: &lightcraft_raw::RawInfo) -> Option<Arc<lightcr
 
 /// What a semantic mask selects, by its `SemanticName`: Apple's (iPhone ProRAW) are named after
 /// their auxiliary image types, `urn:com:apple:photo:<year>:aux:<type>`. Other names: `None`.
-fn matte_kind(name: &str) -> Option<lightcraft_pipeline::masks::MatteKind> {
-    use lightcraft_pipeline::masks::MatteKind::*;
+fn matte_kind(name: &str) -> Option<hazavana_pipeline::masks::MatteKind> {
+    use hazavana_pipeline::masks::MatteKind::*;
     let kind = name.strip_prefix("urn:com:apple:photo:")?.rsplit(':').next()?;
     Some(match kind {
         "semanticskymatte" => Sky,
@@ -666,12 +666,12 @@ fn matte_kind(name: &str) -> Option<lightcraft_pipeline::masks::MatteKind> {
 /// A DNG `ProfileToneCurve` (linear in, linear out, 1.0 = white after exposure compensation) as the
 /// finish stage's camera tone curve: 32 knots, log-spaced over 12 stops below white; above white
 /// the camera tone's shoulder continues it.
-pub(crate) fn dng_tone_curve(curve: &lightcraft_raw::profile::ToneCurve) -> Option<lightcraft_pipeline::tone::CameraTone> {
+pub(crate) fn dng_tone_curve(curve: &hazavana_raw::profile::ToneCurve) -> Option<hazavana_pipeline::tone::CameraTone> {
     let knots: [[f32; 2]; 32] = std::array::from_fn(|i| {
         let x = 2f32.powf(-12.0 + 12.0 * i as f32 / 31.0);
         [x, curve.eval(x).min(0.9995)]
     });
-    lightcraft_pipeline::tone::CameraTone::new(knots)
+    hazavana_pipeline::tone::CameraTone::new(knots)
 }
 
 /// Orientation for an embedded preview: its own EXIF orientation when it has one, else the raw file's.
@@ -679,23 +679,23 @@ fn preview_orientation(raw_bytes: &[u8], jpeg_orientation: u16) -> Orientation {
     if jpeg_orientation > 1 {
         return Orientation::from_exif(jpeg_orientation);
     }
-    lightcraft_meta::extract(raw_bytes).orientation.unwrap_or(Orientation::Normal)
+    hazavana_meta::extract(raw_bytes).orientation.unwrap_or(Orientation::Normal)
 }
 
 /// What stands in for a raw file we can't decode: its largest embedded JPEG (with `covering`, the smallest one that is
-/// at least that big, [`lightcraft_raw::embedded_preview_covering`]), else, for a TIFF-based raw, the file's own first
+/// at least that big, [`hazavana_raw::embedded_preview_covering`]), else, for a TIFF-based raw, the file's own first
 /// image when the TIFF reader can show it (a reduced RGB copy: the only preview some containers carry). Returns image
-/// bytes for [`lightcraft_codecs::decode`].
+/// bytes for [`hazavana_codecs::decode`].
 fn stand_in_image(bytes: &[u8], covering: Option<usize>) -> Option<std::borrow::Cow<'_, [u8]>> {
     let jpeg = match covering {
-        Some(edge) => lightcraft_raw::embedded_preview_covering(bytes, u32::try_from(edge).unwrap_or(u32::MAX)),
-        None => lightcraft_raw::embedded_preview(bytes),
+        Some(edge) => hazavana_raw::embedded_preview_covering(bytes, u32::try_from(edge).unwrap_or(u32::MAX)),
+        None => hazavana_raw::embedded_preview(bytes),
     };
     if let Some(jpeg) = jpeg {
         return Some(std::borrow::Cow::Owned(jpeg));
     }
-    let undecodable = lightcraft_raw::probe(bytes).is_some_and(|f| !f.is_supported());
-    (undecodable && lightcraft_codecs::sniff(bytes).is_some_and(|f| f == lightcraft_codecs::Format::Tiff))
+    let undecodable = hazavana_raw::probe(bytes).is_some_and(|f| !f.is_supported());
+    (undecodable && hazavana_codecs::sniff(bytes).is_some_and(|f| f == hazavana_codecs::Format::Tiff))
         .then_some(std::borrow::Cow::Borrowed(bytes))
 }
 
@@ -703,22 +703,22 @@ fn stand_in_image(bytes: &[u8], covering: Option<usize>) -> Option<std::borrow::
 /// [`stand_in_image`]).
 pub(crate) fn decode_raw_preview(
     bytes: &[u8],
-    opts: lightcraft_codecs::DecodeOptions,
+    opts: hazavana_codecs::DecodeOptions,
     covering: Option<usize>,
-) -> Option<lightcraft_codecs::Decoded> {
+) -> Option<hazavana_codecs::Decoded> {
     let jpeg = stand_in_image(bytes, covering)?;
     // the colour space is a property of the JPEG; a TIFF stand-in (the file itself, or a Hasselblad RGB preview
     // wrapped as a TIFF) and a JPEG XL preview are read by their own decoders
     let is_jpeg = jpeg.starts_with(&[0xff, 0xd8]);
-    match lightcraft_raw::embedded_preview_color_space(bytes).filter(|_| is_jpeg) {
+    match hazavana_raw::embedded_preview_color_space(bytes).filter(|_| is_jpeg) {
         Some(space) => {
             let space = match space {
-                lightcraft_raw::PreviewColorSpace::Srgb => lightcraft_codecs::NamedSpace::Srgb,
-                lightcraft_raw::PreviewColorSpace::AdobeRgb => lightcraft_codecs::NamedSpace::AdobeRgb,
+                hazavana_raw::PreviewColorSpace::Srgb => hazavana_codecs::NamedSpace::Srgb,
+                hazavana_raw::PreviewColorSpace::AdobeRgb => hazavana_codecs::NamedSpace::AdobeRgb,
             };
-            lightcraft_codecs::decode_jpeg_with_fallback(&jpeg, opts, space).ok()
+            hazavana_codecs::decode_jpeg_with_fallback(&jpeg, opts, space).ok()
         }
-        None => lightcraft_codecs::decode(&jpeg, opts).ok(),
+        None => hazavana_codecs::decode(&jpeg, opts).ok(),
     }
 }
 
@@ -727,10 +727,10 @@ fn embedded_preview_size(bytes: &[u8]) -> Option<(u32, u32)> {
     let jpeg = stand_in_image(bytes, None)?;
     // headers only, as for other images (issue #367): decoding a full-size preview just for its
     // size took about a second per file in an import; a decode remains the fallback
-    let (mut w, mut h, orientation) = match lightcraft_codecs::read_header(&jpeg) {
+    let (mut w, mut h, orientation) = match hazavana_codecs::read_header(&jpeg) {
         Ok(header) => (header.width, header.height, header.orientation),
         Err(_) => {
-            let d = lightcraft_codecs::decode(&jpeg, lightcraft_codecs::DecodeOptions::fit(64, 64)).ok()?;
+            let d = hazavana_codecs::decode(&jpeg, hazavana_codecs::DecodeOptions::fit(64, 64)).ok()?;
             (d.source_width, d.source_height, d.orientation)
         }
     };
@@ -752,7 +752,7 @@ pub fn load_embedded_preview(bytes: &[u8], max_edge: usize) -> Option<(Rgb32f, S
 /// The embedded preview of a raw file for display (sRGB, oriented, no larger than `max_edge`): the
 /// loupe and grid show it until the raw itself has been developed ([`crate::media::QuickJob`]). The smallest
 /// embedded JPEG that covers `max_edge` is decoded, not the largest.
-pub fn embedded_preview_srgb(bytes: &[u8], max_edge: usize) -> Option<lightcraft_raster::Rgba8> {
+pub fn embedded_preview_srgb(bytes: &[u8], max_edge: usize) -> Option<hazavana_raster::Rgba8> {
     let mut d = decode_raw_preview(bytes, fit_box(max_edge), Some(max_edge))?;
     if d.image.width.max(d.image.height) > max_edge {
         d.image = fit(&d.image, max_edge, max_edge, Filter::Box);
@@ -764,16 +764,16 @@ pub fn embedded_preview_srgb(bytes: &[u8], max_edge: usize) -> Option<lightcraft
 
 /// Decode options fitting into a `max_edge` square; `usize::MAX` (a full-size load) or any edge past
 /// `u32::MAX` asks for the largest box rather than wrapping to a small one.
-fn fit_box(max_edge: usize) -> lightcraft_codecs::DecodeOptions {
+fn fit_box(max_edge: usize) -> hazavana_codecs::DecodeOptions {
     let e = u32::try_from(max_edge).unwrap_or(u32::MAX);
-    lightcraft_codecs::DecodeOptions::fit(e, e)
+    hazavana_codecs::DecodeOptions::fit(e, e)
 }
 
 /// Filesystem-backed embedded-preview hook (native).
 ///
 /// The quick path reads the file's header and its embedded preview and nothing else (see
 /// [`preview_window`]); a container the header cannot point into is planned from its tags
-/// (`lightcraft_raw::sparse::preview_plan`, the same module the import path probes with), and only a
+/// (`hazavana_raw::sparse::preview_plan`, the same module the import path probes with), and only a
 /// file the planner cannot describe falls back to the whole-file path. The memory gate still counts
 /// the whole file, which is what the decode of one can hold.
 pub fn fs_preview_loader() -> PreviewLoader {
@@ -825,7 +825,7 @@ impl PreviewRead {
 /// preview bytes, what was read)`. `None` when the header points at no preview this build can find,
 /// which is the caller's cue to read the file whole. `max_edge` is the size the preview is for: where a file keeps
 /// several JPEGs (the plan route), the window is the one [`embedded_preview_srgb`] decodes for that size, the smallest
-/// that covers it ([`lightcraft_raw::embedded_preview_covering`]).
+/// that covers it ([`hazavana_raw::embedded_preview_covering`]).
 ///
 /// Why it exists: a 56 MB Fuji RAF keeps its JPEG in the first 5.6 MB (measured: `DSCF9492.RAF`),
 /// so reading the file whole to extract it costs ten times the bytes — and on a network share ten
@@ -850,7 +850,7 @@ pub fn preview_window(path: &str, max_edge: usize) -> Result<Option<(Vec<u8>, Ve
     {
         prefix = read_prefix_at(&mut file, path, extent.min(total))?;
     }
-    let Some(range) = lightcraft_raw::bounded_preview(&prefix) else {
+    let Some(range) = hazavana_raw::bounded_preview(&prefix) else {
         // The header carries no pointer this path reads — a Canon CR3's boxes, a TIFF raw whose
         // preview tag sits past the prefix, the containers whose preview only a scan finds: ask the
         // sparse planner which ranges `embedded_preview` reads before handing the caller the
@@ -875,13 +875,13 @@ pub fn preview_window(path: &str, max_edge: usize) -> Result<Option<(Vec<u8>, Ve
     };
 
     // A lying pointer must not cost the user their preview: hand the caller the whole-file fallback.
-    if lightcraft_raw::embedded_preview_from_range(&window, range).is_none() {
+    if hazavana_raw::embedded_preview_from_range(&window, range).is_none() {
         return Ok(None);
     }
     let read = PreviewRead { read: bytes_read, total, header_path: true, planned: false, adobe_rgb: false };
     // On a network share the bytes are the wait, so say what this preview actually cost. A window
     // taken from the prefix cost nothing beyond the prefix itself.
-    if lightcraft_pipeline::profiling() {
+    if hazavana_pipeline::profiling() {
         eprintln!("[profile] preview {path}: read {} of {} bytes (header {}, window {})", read.read, total, prefix_len, window.len());
     }
     Ok(Some((prefix, window, read)))
@@ -904,7 +904,7 @@ const MAX_PREVIEW_PLAN_BYTES: u64 = 1 << 30;
 const PLAN_PREFIX: u64 = 64 * 1024;
 
 /// The preview of a container the header-only path cannot answer for, from the byte ranges
-/// [`lightcraft_raw::sparse::preview_plan`] says [`lightcraft_raw::embedded_preview`] reads.
+/// [`hazavana_raw::sparse::preview_plan`] says [`hazavana_raw::embedded_preview`] reads.
 ///
 /// The planner is asked about a buffer of the file's whole length in which only the ranges named so
 /// far hold bytes, and only those ranges are read: the sensor data in the bulk ranges is not. The
@@ -931,11 +931,11 @@ fn planned_preview(file: &mut std::fs::File, path: &str, total: u64, max_edge: u
     let header = read_prefix_at(file, path, PLAN_PREFIX.min(total))?;
     let Some(head) = buf.get_mut(..header.len()) else { return Ok(None) };
     head.copy_from_slice(&header);
-    let mut loaded = lightcraft_raw::sparse::Ranges::new();
+    let mut loaded = hazavana_raw::sparse::Ranges::new();
     loaded.insert(0, header.len() as u64);
     for _ in 0..MAX_PREVIEW_PLAN_ROUNDS {
-        match lightcraft_raw::sparse::preview_plan(&buf, &loaded) {
-            lightcraft_raw::sparse::HeaderPlan::Need(ranges) => {
+        match hazavana_raw::sparse::preview_plan(&buf, &loaded) {
+            hazavana_raw::sparse::HeaderPlan::Need(ranges) => {
                 let wanted = loaded.total().saturating_add(ranges.total());
                 if wanted.saturating_mul(10) > total.saturating_mul(MAX_PREVIEW_PLAN_SHARE) {
                     return Ok(None);
@@ -948,10 +948,10 @@ fn planned_preview(file: &mut std::fs::File, path: &str, total: u64, max_edge: u
                     loaded.insert(start, end);
                 }
             }
-            lightcraft_raw::sparse::HeaderPlan::Ready => {
+            hazavana_raw::sparse::HeaderPlan::Ready => {
                 // the plan loads every preview's strips, so the JPEG picked for `max_edge` is the whole file's pick
                 let edge = u32::try_from(max_edge).unwrap_or(u32::MAX);
-                let Some(window) = lightcraft_raw::embedded_preview_covering(&buf, edge) else { return Ok(None) };
+                let Some(window) = hazavana_raw::embedded_preview_covering(&buf, edge) else { return Ok(None) };
                 // The quick path hands the JPEG to the decoder alone, so what the *container* says
                 // about the preview has to be something the bytes it is handed can show. Two container
                 // facts change the pixels and are not in the JPEG: the preview's colour space (which
@@ -962,19 +962,19 @@ fn planned_preview(file: &mut std::fs::File, path: &str, total: u64, max_edge: u
                 // that says sRGB agrees with the JPEG-only decode (its own declaration, else sRGB).
                 // Where the orientation is present and the header cannot answer for it, the
                 // whole-file path keeps the preview.
-                let adobe_rgb = lightcraft_raw::embedded_preview_color_space(&buf) == Some(lightcraft_raw::PreviewColorSpace::AdobeRgb);
+                let adobe_rgb = hazavana_raw::embedded_preview_color_space(&buf) == Some(hazavana_raw::PreviewColorSpace::AdobeRgb);
                 // `extract` copies a TIFF's bytes to hand on its Exif block, so ask the cheap side
                 // first: a JPEG that carries its own orientation needs nothing from the container.
-                if lightcraft_meta::extract(&window).orientation.is_none()
-                    && lightcraft_meta::extract(&header).orientation.is_none()
-                    && lightcraft_meta::extract(&buf).orientation.is_some()
+                if hazavana_meta::extract(&window).orientation.is_none()
+                    && hazavana_meta::extract(&header).orientation.is_none()
+                    && hazavana_meta::extract(&buf).orientation.is_some()
                 {
                     return Ok(None);
                 }
                 let read = PreviewRead { read: loaded.total(), total, header_path: true, planned: true, adobe_rgb };
                 // A plan-driven preview is the one that used to cost the whole file, so it is worth
                 // saying what it cost now too.
-                if lightcraft_pipeline::profiling() {
+                if hazavana_pipeline::profiling() {
                     eprintln!("[profile] preview {path}: read {} of {} bytes (plan, window {})", read.read, total, window.len());
                 }
                 // The planner's buffer is the file's length, so give its pages back the way a decode
@@ -983,16 +983,16 @@ fn planned_preview(file: &mut std::fs::File, path: &str, total: u64, max_edge: u
                 crate::memory::release();
                 return Ok(Some((header, window, read)));
             }
-            lightcraft_raw::sparse::HeaderPlan::Whole(_) => return Ok(None),
+            hazavana_raw::sparse::HeaderPlan::Whole(_) => return Ok(None),
         }
     }
     Ok(None)
 }
 
-/// The file's first [`lightcraft_raw::PREVIEW_PREFIX`] bytes (or the whole file when it is shorter),
-/// which is what every format [`lightcraft_raw::bounded_preview`] covers keeps its pointer in.
+/// The file's first [`hazavana_raw::PREVIEW_PREFIX`] bytes (or the whole file when it is shorter),
+/// which is what every format [`hazavana_raw::bounded_preview`] covers keeps its pointer in.
 fn read_prefix(file: &mut std::fs::File, path: &str, total: u64) -> Result<Vec<u8>, String> {
-    let len = lightcraft_raw::PREVIEW_PREFIX.min(usize::try_from(total).unwrap_or(usize::MAX));
+    let len = hazavana_raw::PREVIEW_PREFIX.min(usize::try_from(total).unwrap_or(usize::MAX));
     read_prefix_at(file, path, len as u64)
 }
 
@@ -1007,7 +1007,7 @@ fn read_prefix_at(file: &mut std::fs::File, path: &str, len: u64) -> Result<Vec<
 }
 
 /// The end of a Fuji RAF's preview block, from the two big-endian u32s every RAF header carries at
-/// 84 (offset) and 88 (length) — the same fields `lightcraft_raw`'s RAF reader uses, read here
+/// 84 (offset) and 88 (length) — the same fields `hazavana_raw`'s RAF reader uses, read here
 /// without the rest of the file so the prefix can be made big enough first.
 fn raf_preview_extent(prefix: &[u8]) -> Option<u64> {
     if !prefix.starts_with(b"FUJIFILMCCD-RAW") {
@@ -1022,11 +1022,11 @@ fn raf_preview_extent(prefix: &[u8]) -> Option<u64> {
 /// [`embedded_preview_srgb`] for [`preview_window`], which does not re-read the container.
 /// `adobe_rgb`: the container declares the preview Adobe RGB ([`PreviewRead::adobe_rgb`]), applied
 /// as [`decode_raw_preview`] applies it. `None` when the bytes are not a decodable image.
-fn quick_image_srgb(header: &[u8], window: &[u8], adobe_rgb: bool, max_edge: usize) -> Option<lightcraft_raster::Rgba8> {
+fn quick_image_srgb(header: &[u8], window: &[u8], adobe_rgb: bool, max_edge: usize) -> Option<hazavana_raster::Rgba8> {
     let decoded = if adobe_rgb && window.starts_with(&[0xff, 0xd8]) {
-        lightcraft_codecs::decode_jpeg_with_fallback(window, fit_box(max_edge), lightcraft_codecs::NamedSpace::AdobeRgb)
+        hazavana_codecs::decode_jpeg_with_fallback(window, fit_box(max_edge), hazavana_codecs::NamedSpace::AdobeRgb)
     } else {
-        lightcraft_codecs::decode(window, fit_box(max_edge))
+        hazavana_codecs::decode(window, fit_box(max_edge))
     };
     let mut d = decoded.ok()?;
     if d.image.width.max(d.image.height) > max_edge {
@@ -1110,25 +1110,25 @@ impl crate::Session {
 #[cfg(test)]
 pub(crate) mod tests {
     /// Keywords from a file keep their hierarchy: the paths of `lr:hierarchicalSubject`, not the
-    /// flat names of `dc:subject` that LightCraft's exports (and Lightroom Classic) write besides
+    /// flat names of `dc:subject` that Hazavana's exports (and Lightroom Classic) write besides
     /// them; an exported `travel|Italy|Rome` comes back as itself.
     #[test]
     fn a_lens_without_a_name_is_shown_by_its_range() {
         // a Nikon DSLR raw: no LensModel, the range from the maker note
-        let m = lightcraft_meta::Metadata { lens_spec: Some([18.0, 135.0, 3.5, 5.6]), ..Default::default() };
+        let m = hazavana_meta::Metadata { lens_spec: Some([18.0, 135.0, 3.5, 5.6]), ..Default::default() };
         assert_eq!(super::meta_of(&m).0.lens, "18.0-135.0 mm f/3.5-5.6");
-        let named = lightcraft_meta::Metadata {
+        let named = hazavana_meta::Metadata {
             lens_model: Some("NIKKOR Z 24-70mm f/4 S".into()),
             lens_spec: Some([24.0, 70.0, 4.0, 4.0]),
             ..Default::default()
         };
         assert_eq!(super::meta_of(&named).0.lens, "NIKKOR Z 24-70mm f/4 S");
-        assert_eq!(super::meta_of(&lightcraft_meta::Metadata::default()).0.lens, "");
+        assert_eq!(super::meta_of(&hazavana_meta::Metadata::default()).0.lens, "");
     }
 
     #[test]
     fn imported_keywords_keep_their_hierarchy() {
-        let m = lightcraft_meta::Metadata {
+        let m = hazavana_meta::Metadata {
             keywords: vec!["Rome".into(), "Italy".into(), "travel".into(), "beach".into()],
             hierarchical_keywords: vec!["travel|Italy|Rome".into()],
             ..Default::default()
@@ -1137,7 +1137,7 @@ pub(crate) mod tests {
     }
 
     use super::*;
-    use lightcraft_codecs::{ChromaSubsampling, EncodeImage, EncodeMeta, Samples, encode_jpeg};
+    use hazavana_codecs::{ChromaSubsampling, EncodeImage, EncodeMeta, Samples, encode_jpeg};
 
     /// Which white-balance scale a raw gets (issue #730): a file with matrices of its own is absolute from them; a
     /// fitted-look file is absolute through its camera's measured matrices, which only read the as-shot
@@ -1145,16 +1145,16 @@ pub(crate) mod tests {
     /// format and camera string agrees.
     #[test]
     fn white_balance_scale_follows_the_files_matrices_then_the_cameras() {
-        use lightcraft_raw::{ColorData, RawFormat};
-        let meta = |make: &str, model: &str| lightcraft_meta::Metadata { make: Some(make.into()), model: Some(model.into()), ..Default::default() };
+        use hazavana_raw::{ColorData, RawFormat};
+        let meta = |make: &str, model: &str| hazavana_meta::Metadata { make: Some(make.into()), model: Some(model.into()), ..Default::default() };
         let mul = Some([2.2f32, 1.0, 1.6]);
-        let d65 = lightcraft_color::D65;
+        let d65 = hazavana_color::D65;
         // a covered camera: Kelvin through the spectral matrices, near the daylight these multipliers describe
         let a7m3 = WbScaleOf::new(RawFormat::Arw, &ColorData::default(), mul, &meta("SONY", "ILCE-7M3"));
         assert!(!a7m3.own_matrix && !a7m3.relative && a7m3.legacy_relative && a7m3.scale_white.is_some());
         let (t, tint) = a7m3.as_shot(d65);
         assert!((3500.0..7000.0).contains(&t) && t != 6500.0 && tint.abs() < 30.0 && t.fract() == 0.0 && tint.fract() == 0.0, "{t} {tint}");
-        assert!(!lightcraft_catalog::relative_wb_camera("ARW", "SONY ILCE-7M3"));
+        assert!(!hazavana_catalog::relative_wb_camera("ARW", "SONY ILCE-7M3"));
         // the same camera without multipliers: the scale is Kelvin still, the white falls back to the tags' (D65)
         let bare = WbScaleOf::new(RawFormat::Arw, &ColorData::default(), None, &meta("SONY", "ILCE-7M3"));
         assert!(bare.legacy_relative && bare.scale_white.is_none());
@@ -1166,11 +1166,11 @@ pub(crate) mod tests {
         let a7m2 = WbScaleOf::new(RawFormat::Arw, &ColorData::default(), mul, &meta("SONY", "ILCE-7M2"));
         assert!(a7m2.relative && !a7m2.legacy_relative && a7m2.scale_white.is_none());
         assert_eq!(a7m2.as_shot(d65), (6500.0, 0.0));
-        assert!(lightcraft_catalog::relative_wb_camera("ARW", "SONY ILCE-7M2"));
+        assert!(hazavana_catalog::relative_wb_camera("ARW", "SONY ILCE-7M2"));
         // a camera without matrices whose presets give the scale: Kelvin through them, Sony's daylight preset as
         // 5500 K or so; without presets in the file the scale is Kelvin still, the white the tags' (D65)
         let g = |r: f32, b: f32| [r / 1024.0, 1.0, b / 1024.0];
-        let presets = lightcraft_raw::kelvin_presets::KelvinPresets::new([
+        let presets = hazavana_raw::kelvin_presets::KelvinPresets::new([
             (2500.0, g(1336.0, 3672.0)),
             (3200.0, g(1720.0, 2620.0)),
             (4500.0, g(2256.0, 1880.0)),
@@ -1182,21 +1182,21 @@ pub(crate) mod tests {
         assert!(!a99m2.own_matrix && !a99m2.relative && a99m2.legacy_relative && a99m2.scale_white.is_some());
         let (t, tint) = a99m2.as_shot(d65);
         assert!((5000.0..6000.0).contains(&t) && tint.abs() < 10.0 && t.fract() == 0.0, "{t} {tint}");
-        assert!(!lightcraft_catalog::relative_wb_camera("ARW", "SONY ILCA-99M2"));
+        assert!(!hazavana_catalog::relative_wb_camera("ARW", "SONY ILCA-99M2"));
         let bare = WbScaleOf::new(RawFormat::Arw, &ColorData::default(), mul, &meta("SONY", "ILCA-99M2"));
         assert!(bare.legacy_relative && bare.scale_white.is_none());
         // presets in a file of a camera not listed: relative, as the catalog decides from the camera alone
         let other = WbScaleOf::new(RawFormat::Arw, &with, mul, &meta("SONY", "ILCE-1"));
         assert!(other.relative && other.scale_white.is_none());
-        let unknown = WbScaleOf::new(RawFormat::Nef, &ColorData::default(), mul, &lightcraft_meta::Metadata::default());
+        let unknown = WbScaleOf::new(RawFormat::Nef, &ColorData::default(), mul, &hazavana_meta::Metadata::default());
         assert!(unknown.relative && unknown.as_shot(d65) == (6500.0, 0.0));
         // a file with matrices of its own (DNG): absolute from them, no matter whose camera
-        let own = ColorData { illuminant: [21, 0], color_matrix: [Some(lightcraft_color::Mat3::IDENTITY), None], ..Default::default() };
+        let own = ColorData { illuminant: [21, 0], color_matrix: [Some(hazavana_color::Mat3::IDENTITY), None], ..Default::default() };
         let dng = WbScaleOf::new(RawFormat::Dng, &own, mul, &meta("SONY", "ILCE-7M3"));
         assert!(dng.own_matrix && !dng.relative && !dng.legacy_relative && dng.scale_white.is_none());
-        let xy = lightcraft_color::cct::temp_tint_to_xy(4200.0, 12.0);
+        let xy = hazavana_color::cct::temp_tint_to_xy(4200.0, 12.0);
         assert_eq!(dng.as_shot(xy), (4200.0, 12.0));
-        assert!(!lightcraft_catalog::relative_wb_camera("DNG", "SONY ILCE-7M3"));
+        assert!(!hazavana_catalog::relative_wb_camera("DNG", "SONY ILCE-7M3"));
     }
 
     /// A merged DNG (Photo Merge) of a raw without colour matrices shows the As Shot temperature and tint its source
@@ -1205,10 +1205,10 @@ pub(crate) mod tests {
     /// opened at 6113–7307 K / +115 where the ARWs show 3932–5268 K / +7.
     #[test]
     fn a_merged_dng_shows_the_white_balance_its_source_shows() {
-        use lightcraft_raw::{ColorData, RawFormat};
-        let meta = |make: &str, model: &str| lightcraft_meta::Metadata { make: Some(make.into()), model: Some(model.into()), ..Default::default() };
+        use hazavana_raw::{ColorData, RawFormat};
+        let meta = |make: &str, model: &str| hazavana_meta::Metadata { make: Some(make.into()), model: Some(model.into()), ..Default::default() };
         let g = |r: f32, b: f32| [r / 1024.0, 1.0, b / 1024.0];
-        let presets = lightcraft_raw::kelvin_presets::KelvinPresets::new([
+        let presets = hazavana_raw::kelvin_presets::KelvinPresets::new([
             (2500.0, g(1336.0, 3672.0)),
             (3200.0, g(1720.0, 2620.0)),
             (4500.0, g(2256.0, 1880.0)),
@@ -1223,13 +1223,13 @@ pub(crate) mod tests {
             (RawFormat::Rw2, ColorData::default(), [2.0, 1.0, 1.4], meta("Panasonic", "DC-G9")),
         ];
         for (format, color, mul, meta) in cases {
-            let own = lightcraft_raw::color::as_shot_white_of(&color, Some(mul));
+            let own = hazavana_raw::color::as_shot_white_of(&color, Some(mul));
             let source = WbScaleOf::new(format, &color, Some(mul), &meta);
-            let t = lightcraft_raw::color::camera_transform_of(&color, own);
+            let t = hazavana_raw::color::camera_transform_of(&color, own);
             let dng = crate::camera_preview::dng_colour(&color, &source.dng_white(&color, own), &t, None).unwrap();
             let merged = WbScaleOf::new(RawFormat::Dng, &dng, None, &meta);
             let shown = source.as_shot(own);
-            assert_eq!(merged.as_shot(lightcraft_raw::color::as_shot_white_of(&dng, None)), shown, "{:?}", meta.model);
+            assert_eq!(merged.as_shot(hazavana_raw::color::as_shot_white_of(&dng, None)), shown, "{:?}", meta.model);
         }
     }
 
@@ -1263,7 +1263,7 @@ pub(crate) mod tests {
         let max_edge = 512;
 
         let (header, window, read) = preview_window(&path, max_edge).expect("the file reads").expect("it has a preview");
-        assert_eq!(header.len(), lightcraft_raw::PREVIEW_PREFIX, "the header prefix is bounded");
+        assert_eq!(header.len(), hazavana_raw::PREVIEW_PREFIX, "the header prefix is bounded");
         assert!(read.header_path, "the header path is what answered");
         assert!(!read.planned, "a RAF pointer in the header needs no planner");
         assert_eq!(read.total, file.len() as u64);
@@ -1306,7 +1306,7 @@ pub(crate) mod tests {
     /// [`tiff_with_preview_strip`] that also keeps the `smaller` JPEGs in sub-IFDs of IFD0, as an ARW keeps its
     /// 1616 px preview beside the full-size one.
     fn tiff_with_preview_strips(strip: &[u8], smaller: &[&[u8]], tail: usize, what: Fixture) -> Vec<u8> {
-        use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+        use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
         let mut preview = IfdBuilder::new();
         if what.dng {
             preview.set(t::DNG_VERSION, Value::Byte(vec![1, 4, 0, 0]));
@@ -1443,9 +1443,9 @@ pub(crate) mod tests {
         std::fs::write(&path, &file).unwrap();
         let path = path.to_string_lossy().into_owned();
 
-        assert_eq!(lightcraft_meta::extract(&file).orientation, Some(Orientation::from_exif(6)), "the fixture states an orientation");
-        assert!(lightcraft_meta::extract(&file[..PLAN_PREFIX as usize]).orientation.is_none(), "which the bounded header cannot see");
-        assert!(lightcraft_meta::extract(&jpeg).orientation.is_none(), "and the preview JPEG carries none of its own");
+        assert_eq!(hazavana_meta::extract(&file).orientation, Some(Orientation::from_exif(6)), "the fixture states an orientation");
+        assert!(hazavana_meta::extract(&file[..PLAN_PREFIX as usize]).orientation.is_none(), "which the bounded header cannot see");
+        assert!(hazavana_meta::extract(&jpeg).orientation.is_none(), "and the preview JPEG carries none of its own");
         assert!(preview_window(&path, usize::MAX).expect("the file reads").is_none(), "the whole-file path keeps it");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -1457,7 +1457,7 @@ pub(crate) mod tests {
     /// that declares sRGB (what most bodies write) keeps the fast path as before.
     #[test]
     fn preview_loading_applies_a_container_colour_space() {
-        use lightcraft_raw::PreviewColorSpace;
+        use hazavana_raw::PreviewColorSpace;
         let (w, h) = (48u32, 32u32);
         let rgb: Vec<u8> = (0..w * h * 3).map(|i| (i * 23 % 233) as u8).collect();
         let img = EncodeImage::new(w, h, 3, Samples::U8(&rgb));
@@ -1467,7 +1467,7 @@ pub(crate) mod tests {
         let path = path.to_string_lossy().into_owned();
 
         let adobe = tiff_with_preview_strip(&jpeg, 400_000, Fixture { sony: true, color_space: Some(0xFFFF), ..Default::default() });
-        assert_eq!(lightcraft_raw::embedded_preview_color_space(&adobe), Some(PreviewColorSpace::AdobeRgb), "the fixture declares Adobe RGB");
+        assert_eq!(hazavana_raw::embedded_preview_color_space(&adobe), Some(PreviewColorSpace::AdobeRgb), "the fixture declares Adobe RGB");
         std::fs::write(&path, &adobe).unwrap();
         let (header, window, read) = preview_window(&path, usize::MAX).expect("the file reads").expect("the plan answers for Adobe RGB too");
         assert!(read.planned && read.adobe_rgb, "{read:?}");
@@ -1479,7 +1479,7 @@ pub(crate) mod tests {
         assert_ne!(plain.data, whole.data, "and it changes the pixels (the fixture's colours are saturated enough)");
 
         let srgb = tiff_with_preview_strip(&jpeg, 400_000, Fixture { sony: true, color_space: Some(1), ..Default::default() });
-        assert_eq!(lightcraft_raw::embedded_preview_color_space(&srgb), Some(PreviewColorSpace::Srgb), "the fixture declares sRGB");
+        assert_eq!(hazavana_raw::embedded_preview_color_space(&srgb), Some(PreviewColorSpace::Srgb), "the fixture declares sRGB");
         std::fs::write(&path, &srgb).unwrap();
         let (_, window, read) = preview_window(&path, usize::MAX).expect("the file reads").expect("sRGB is what the JPEG-only decode assumes");
         assert!(read.planned && !read.adobe_rgb, "the plan still answers");
@@ -1490,7 +1490,7 @@ pub(crate) mod tests {
     /// in Lightroom, instead of grouping under "Unknown Date"; a dated one keeps its capture time.
     #[test]
     fn undated_files_take_the_file_date() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-undated-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-undated-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let rgb = vec![128u8; 16 * 16 * 3];
         let img = EncodeImage::new(16, 16, 3, Samples::U8(&rgb));
@@ -1506,7 +1506,7 @@ pub(crate) mod tests {
         assert_eq!(info.file_modified.as_deref(), Some(want.as_str()));
         let mut s = crate::Session::new().with_fs();
         let r = crate::import::import(&mut s, &[path], crate::import::ImportMode::Add).unwrap();
-        let id = lightcraft_catalog::PhotoId(r.imported[0]);
+        let id = hazavana_catalog::PhotoId(r.imported[0]);
         assert_eq!(s.catalog.photo(id).unwrap().captured.as_deref(), Some(want.as_str()));
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -1520,14 +1520,14 @@ pub(crate) mod tests {
         let rgb: Vec<u8> = (0..w * h * 3).map(|i| (i * 7 % 251) as u8).collect();
         let img = EncodeImage::new(w, h, 3, Samples::U8(&rgb));
         for o in [None, Some(1), Some(6), Some(3), Some(8)] {
-            let exif = o.map(lightcraft_codecs::exif::minimal_exif);
+            let exif = o.map(hazavana_codecs::exif::minimal_exif);
             let meta = EncodeMeta { exif: exif.as_deref(), ..Default::default() };
             let jpeg = encode_jpeg(&img, 90, ChromaSubsampling::S420, &meta).unwrap();
-            let png = lightcraft_codecs::encode_png(&img, &meta).unwrap();
+            let png = hazavana_codecs::encode_png(&img, &meta).unwrap();
             for (name, bytes) in [("a.jpg", &jpeg), ("a.png", &png)] {
                 let p = probe_bytes(name, bytes).unwrap();
                 // what the probe computed from a decode before
-                let d = lightcraft_codecs::decode(bytes, lightcraft_codecs::DecodeOptions::fit(64, 64)).unwrap();
+                let d = hazavana_codecs::decode(bytes, hazavana_codecs::DecodeOptions::fit(64, 64)).unwrap();
                 let swap = Orientation::from_exif(d.orientation).swaps_axes();
                 let want = if swap { (d.source_height, d.source_width) } else { (d.source_width, d.source_height) };
                 assert_eq!((p.width, p.height), want, "{name} {o:?}");
@@ -1547,7 +1547,7 @@ pub(crate) mod tests {
     #[test]
     fn transparent_png_develops_on_white() {
         let rgba = [200, 40, 40, 255, 0, 0, 0, 0];
-        let png = lightcraft_codecs::encode_png(&EncodeImage::new(2, 1, 4, Samples::U8(&rgba)), &EncodeMeta::default()).unwrap();
+        let png = hazavana_codecs::encode_png(&EncodeImage::new(2, 1, 4, Samples::U8(&rgba)), &EncodeMeta::default()).unwrap();
         let (img, _) = load_bytes(&png, 64).unwrap();
         assert!(img.get(0, 0)[0] > 0.3 && img.get(0, 0)[1] < 0.1, "{:?}", img.get(0, 0));
         assert!(img.get(1, 0).iter().all(|&c| (c - 1.0).abs() < 1e-4), "{:?}", img.get(1, 0));
@@ -1561,7 +1561,7 @@ pub(crate) mod tests {
         let (w, h) = (256usize, 192usize);
         // grey after the file's white balance (as-shot neutral 0.5 : 1 : 0.7), brighter to the right
         let neutral = [0.5f32, 1.0, 0.7];
-        let cfa = lightcraft_raw::Cfa::bayer("RGGB").unwrap();
+        let cfa = hazavana_raw::Cfa::bayer("RGGB").unwrap();
         let mut data: Vec<u16> = (0..w * h)
             .map(|i| {
                 let (x, y) = (i % w, i / w);
@@ -1576,7 +1576,7 @@ pub(crate) mod tests {
             }
         }
         let bytes = crate::tests_xmp::synthetic_dng_of(w, h, "RGGB", data, None, Default::default());
-        let raw = lightcraft_raw::decode(&bytes).unwrap();
+        let raw = hazavana_raw::decode(&bytes).unwrap();
         assert_eq!(bin_factor(&raw, 32), Some(8));
         let (img, _) = load_bytes(&bytes, 32).unwrap();
         assert_eq!((img.width, img.height), (32, 24));
@@ -1586,17 +1586,17 @@ pub(crate) mod tests {
 
     #[test]
     fn cached_denoise_uses_the_same_white_balance_profile_and_orientation_as_plain_raw() {
-        use lightcraft_denoise::product;
-        use lightcraft_raw::{DngWriteOptions, Method, Orientation, profile::HsvTable, write_dng};
+        use hazavana_denoise::product;
+        use hazavana_raw::{DngWriteOptions, Method, Orientation, profile::HsvTable, write_dng};
         let dir = crate::tests_xmp::temp_dir("denoise-color-finish");
         let fixture = crate::tests_xmp::synthetic_dng_with(None, Default::default());
-        let mut raw = lightcraft_raw::decode(&fixture).unwrap();
+        let mut raw = hazavana_raw::decode(&fixture).unwrap();
         raw.orientation = Orientation::Rotate90;
         raw.color.baseline_exposure = 0.5;
         raw.color.profile.look_table =
             Some(HsvTable { hue_divisions: 1, sat_divisions: 2, val_divisions: 1, data: vec![[23.0, 0.65, 0.8]; 2], srgb_value: false });
         let bytes = write_dng(&raw, &DngWriteOptions::default()).unwrap();
-        let decoded = lightcraft_raw::decode(&bytes).unwrap();
+        let decoded = hazavana_raw::decode(&bytes).unwrap();
         assert!(decoded.color.profile.look_table.is_some());
         // A cache containing the ordinary demosaic must undergo the identical downstream finish.
         let camera_rgb = decoded.develop(Method::Ahd).unwrap();
@@ -1665,12 +1665,12 @@ pub(crate) mod tests {
     /// lenses is far off. A file shot with the camera's correction off (DMC-GH1) carries no correction.
     #[test]
     fn corpus_rw2_distortion_matches_the_camera_jpeg() {
-        let dir = std::env::var_os("LIGHTCRAFT_CORPUS")
+        let dir = std::env::var_os("HAZAVANA_CORPUS")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
             .join("raw");
         let Ok(gh1) = std::fs::read(dir.join("rw2-panasonic-gh1.rw2")) else {
-            lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+            hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
             return;
         };
         assert_eq!(probe_bytes("gh1.rw2", &gh1).unwrap().embedded_lens, None, "correction off: nothing to apply");
@@ -1695,11 +1695,11 @@ pub(crate) mod tests {
             let (src, info) = load_bytes(&bytes, 2 * EDGE).unwrap();
             assert_eq!(info.lens, probed.embedded_lens, "{name}: probe and decode disagree");
             // Convert to DNG keeps it: the same correction, as the DNG's own `WarpRectilinear`
-            let dng = lightcraft_raw::write_dng(&lightcraft_raw::decode(&bytes).unwrap(), &Default::default()).unwrap();
+            let dng = hazavana_raw::write_dng(&hazavana_raw::decode(&bytes).unwrap(), &Default::default()).unwrap();
             assert_eq!(probe_bytes("x.dng", &dng).unwrap().embedded_lens, probed.embedded_lens, "{name}: lost in the DNG");
-            let mut s = lightcraft_develop::DevelopSettings::default();
-            let render = |s: &lightcraft_develop::DevelopSettings| {
-                lightcraft_pipeline::render(&src, &info, s, &lightcraft_pipeline::RenderRequest::fit(EDGE, EDGE)).image
+            let mut s = hazavana_develop::DevelopSettings::default();
+            let render = |s: &hazavana_develop::DevelopSettings| {
+                hazavana_pipeline::render(&src, &info, s, &hazavana_pipeline::RenderRequest::fit(EDGE, EDGE)).image
             };
             let before = render(&s);
             s.optics.lens_profile = true;
@@ -1711,9 +1711,9 @@ pub(crate) mod tests {
             let (cw, ch) = (cam.width as f64, cam.height as f64);
             let (sw, sh) = if cw / ch > w as f64 / h as f64 { (ch * w as f64 / h as f64, ch) } else { (cw, cw * h as f64 / w as f64) };
             let cam = cam.crop(((cw - sw) / 2.0).round() as usize, ((ch - sh) / 2.0).round() as usize, sw.round() as usize, sh.round() as usize);
-            let cam = lightcraft_raster::resample::resize(&cam, w, h, Filter::Mitchell);
+            let cam = hazavana_raster::resample::resize(&cam, w, h, Filter::Mitchell);
             let lin = |v: u8| (v as f32 / 255.0).powf(2.2);
-            let lum8 = |im: &lightcraft_raster::Rgba8, x: usize, y: usize| {
+            let lum8 = |im: &hazavana_raster::Rgba8, x: usize, y: usize| {
                 let p = im.data[y * im.width + x];
                 0.3 * lin(p[0]) + 0.6 * lin(p[1]) + 0.1 * lin(p[2])
             };
@@ -1778,8 +1778,8 @@ pub(crate) mod tests {
     #[test]
     fn corrupt_cr3_falls_back_to_embedded_preview() {
         let b = cr3_with_corrupt_raw(48, 32);
-        let err = lightcraft_raw::decode(&b).expect_err("the fixture's raw data is corrupt");
-        assert!(!matches!(err, lightcraft_raw::RawError::Unsupported(_)), "{err}");
+        let err = hazavana_raw::decode(&b).expect_err("the fixture's raw data is corrupt");
+        assert!(!matches!(err, hazavana_raw::RawError::Unsupported(_)), "{err}");
         let p = probe_bytes("x.cr3", &b).unwrap();
         assert_eq!((p.width, p.height, p.kind, p.format.as_str()), (48, 32, MediaKind::Raw, "CR3"));
         assert!(p.preview_only.is_some_and(|why| why.contains("CR3")));
@@ -1796,9 +1796,9 @@ pub(crate) mod tests {
     /// applied when it's developed — Lightroom-converted DNGs rendered flat and muted without it.
     #[test]
     fn dng_profile_look_is_applied() {
-        use lightcraft_raw::profile::{HsvTable, ProfileLook, ToneCurve};
+        use hazavana_raw::profile::{HsvTable, ProfileLook, ToneCurve};
         let plain = crate::tests_xmp::synthetic_dng_with(None, Default::default());
-        let mut raw = lightcraft_raw::decode(&plain).unwrap();
+        let mut raw = hazavana_raw::decode(&plain).unwrap();
         let sat = |img: &Rgb32f| {
             img.data.iter().map(|p| (p[0].max(p[1]).max(p[2]) - p[0].min(p[1]).min(p[2])) / p[0].max(p[1]).max(p[2]).max(1e-6)).sum::<f32>()
                 / img.data.len() as f32
@@ -1814,7 +1814,7 @@ pub(crate) mod tests {
             tone_curve: ToneCurve::from_tag(&[0.0, 0.0, 0.18, 0.3, 1.0, 1.0]),
             gain_table_map: None,
         };
-        let with = lightcraft_raw::write_dng(&raw, &Default::default()).unwrap();
+        let with = hazavana_raw::write_dng(&raw, &Default::default()).unwrap();
         let (after, info) = load_bytes(&with, 64).unwrap();
         assert!(sat(&after) < 1e-3, "saturation {} → {}", sat(&before), sat(&after));
         // a saturation-only map keeps brightness roughly (HSV value is kept in ProPhoto RGB)
@@ -1827,14 +1827,14 @@ pub(crate) mod tests {
             look_table: Some(HsvTable { hue_divisions: 1, sat_divisions: 2, val_divisions: 1, data: vec![[0.0, 1.0, 0.5]; 2], srgb_value: false }),
             ..Default::default()
         };
-        let (dim, _) = load_bytes(&lightcraft_raw::write_dng(&raw, &Default::default()).unwrap(), 64).unwrap();
+        let (dim, _) = load_bytes(&hazavana_raw::write_dng(&raw, &Default::default()).unwrap(), 64).unwrap();
         assert!((mean(&dim) / mean(&before) - 0.5).abs() < 0.02, "{} vs {}", mean(&dim), mean(&before));
     }
 
     /// A look fitted to a camera's JPEG, as `camera_preview` makes them: its rows don't sum to one, so the camera's
     /// own white-balanced neutral comes out yellow (blue 12 % low).
-    fn yellowing_look() -> lightcraft_color::Mat3 {
-        lightcraft_color::Mat3([[0.42, 0.548, 0.04], [0.246, 0.728, 0.033], [-0.247, 0.679, 0.447]])
+    fn yellowing_look() -> hazavana_color::Mat3 {
+        hazavana_color::Mat3([[0.42, 0.548, 0.04], [0.246, 0.728, 0.033], [-0.247, 0.679, 0.447]])
     }
 
     /// A fitted camera look applied in lanes, on rows that aren't a whole number of them, gives the bits of the
@@ -1842,7 +1842,7 @@ pub(crate) mod tests {
     #[test]
     fn camera_look_in_lanes_matches_pixel_by_pixel() {
         let data = (0..72 * 5 * 5).map(|i| [((i * 37) % 61) as f32 - 30.0, 0.6 + ((i * 11) % 13) as f32 / 13.0, 1.0]).collect();
-        let table = lightcraft_raw::profile::HsvTable { hue_divisions: 72, sat_divisions: 5, val_divisions: 5, data, srgb_value: true };
+        let table = hazavana_raw::profile::HsvTable { hue_divisions: 72, sat_divisions: 5, val_divisions: 5, data, srgb_value: true };
         let hue_sat = crate::camera_preview::HueSat::new(&table).unwrap();
         let colour = CameraColourModel { wb: [2.1, 1.0, 1.5], matrix: yellowing_look(), gain: 1.3, tables: None, hue_sat: Some(&hue_sat) };
         let special = [0.0, -0.0, -0.01, 1e-30, 0.3, 1.0, 5.0, 1e30, f32::INFINITY, f32::NAN];
@@ -1864,7 +1864,7 @@ pub(crate) mod tests {
 
     #[test]
     fn clipped_white_renders_neutral_through_the_colour_model() {
-        use lightcraft_color::{LUMA_2020, Mat3};
+        use hazavana_color::{LUMA_2020, Mat3};
         let look = yellowing_look();
         let white = clipped_white(&look);
         let out = look.apply(white.map(f64::from));
@@ -1898,7 +1898,7 @@ pub(crate) mod tests {
     /// Highlights -100, or the issue's edit (Exposure -0.88, Highlights -75…), showed it.
     #[test]
     fn clipped_highlights_stay_neutral_when_darkened() {
-        use lightcraft_pipeline::{RenderRequest, render};
+        use hazavana_pipeline::{RenderRequest, render};
         let wb = [2.4f32, 1.0, 1.6];
         let colour = CameraColourModel { wb, matrix: yellowing_look(), gain: 1.0, tables: None, hue_sat: None };
         // a grey wall (camera neutral) with a fully clipped light and a light clipped in green only
@@ -1915,10 +1915,10 @@ pub(crate) mod tests {
         colour.rebuild_highlights(&mut img);
         colour.apply(&mut img);
         let info = SourceInfo { raw: true, ..Default::default() };
-        let mut issue = lightcraft_develop::DevelopSettings::default();
+        let mut issue = hazavana_develop::DevelopSettings::default();
         let l = &mut issue.light;
         (l.exposure, l.contrast, l.highlights, l.shadows, l.whites, l.blacks) = (-0.88, 5.0, -75.0, 52.0, 6.0, -37.0);
-        let mut h100 = lightcraft_develop::DevelopSettings::default();
+        let mut h100 = hazavana_develop::DevelopSettings::default();
         h100.light.highlights = -100.0;
         for (name, s) in [("Highlights -100", h100), ("#523's edit", issue)] {
             let out = render(&img, &info, &s, &RenderRequest::fit(96, 64)).image;
@@ -1934,9 +1934,9 @@ pub(crate) mod tests {
     /// near black, rebuilt and rendered at Exposure -2. Returns the rendered colour of the middle row's last
     /// unclipped pixel and the next two, and the largest step between neighbouring pixels along that row.
     fn darkened_ramp(rows: std::ops::Range<usize>, height: usize) -> ([[u8; 4]; 3], u8) {
-        use lightcraft_pipeline::{RenderRequest, render};
+        use hazavana_pipeline::{RenderRequest, render};
         let wb = [2.5f32, 1.0, 1.6];
-        let colour = CameraColourModel { wb, matrix: lightcraft_color::Mat3::IDENTITY, gain: 1.0, tables: None, hue_sat: None };
+        let colour = CameraColourModel { wb, matrix: hazavana_color::Mat3::IDENTITY, gain: 1.0, tables: None, hue_sat: None };
         let w = 1600usize;
         let k = |x: usize| 0.8 + 0.55 * x as f32 / (w - 1) as f32;
         let sensor =
@@ -1946,7 +1946,7 @@ pub(crate) mod tests {
         let mut img = sensor.clone();
         colour.rebuild_highlights(&mut img);
         colour.apply(&mut img);
-        let mut s = lightcraft_develop::DevelopSettings::default();
+        let mut s = hazavana_develop::DevelopSettings::default();
         s.light.exposure = -2.0;
         let out = render(&img, &SourceInfo { raw: true, ..Default::default() }, &s, &RenderRequest::fit(w, height)).image;
         let step = |x: usize| {
@@ -1992,9 +1992,9 @@ pub(crate) mod tests {
     /// rendered colour on either side of where red clips on the band's middle row, and the largest step between
     /// neighbouring pixels along that row.
     fn second_clip(top: usize, strip: usize, band: usize) -> ([[u8; 4]; 2], u8) {
-        use lightcraft_pipeline::{RenderRequest, render};
+        use hazavana_pipeline::{RenderRequest, render};
         let wb = [2.5f32, 1.0, 1.6];
-        let colour = CameraColourModel { wb, matrix: lightcraft_color::Mat3::IDENTITY, gain: 1.0, tables: None, hue_sat: None };
+        let colour = CameraColourModel { wb, matrix: hazavana_color::Mat3::IDENTITY, gain: 1.0, tables: None, hue_sat: None };
         let (w, h) = (320usize, top + strip + band);
         let sensor = Rgb32f::from_fn(w, h, |x, y| {
             if y < top {
@@ -2010,7 +2010,7 @@ pub(crate) mod tests {
         let mut img = sensor.clone();
         colour.rebuild_highlights(&mut img);
         colour.apply(&mut img);
-        let mut s = lightcraft_develop::DevelopSettings::default();
+        let mut s = hazavana_develop::DevelopSettings::default();
         s.light.exposure = -2.0;
         let out = render(&img, &SourceInfo { raw: true, ..Default::default() }, &s, &RenderRequest::fit(w, h)).image;
         let step = |x: usize| {
@@ -2041,17 +2041,17 @@ pub(crate) mod tests {
     /// on one side of the tree and a magenta one on the other (Highlights -100 or the issue's edit show them).
     #[test]
     fn corpus_clipped_sky_beside_a_tree_has_no_coloured_halo() {
-        let dir = std::env::var_os("LIGHTCRAFT_CORPUS")
+        let dir = std::env::var_os("HAZAVANA_CORPUS")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
             .join("raw");
         let Ok(bytes) = std::fs::read(dir.join("arw-sony-a7rm4-14bit-compressed.arw")) else {
-            lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+            hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
             return;
         };
         let (img, _) = load_bytes(&bytes, 1600).unwrap();
         let (w, h) = (img.width, img.height);
-        let lum = |p: [f32; 3]| lightcraft_color::luminance_2020(p);
+        let lum = |p: [f32; 3]| hazavana_color::luminance_2020(p);
         let chroma = |p: [f32; 3]| {
             let s = (p[0] + p[1] + p[2]).max(1e-6);
             [p[0] / s, p[2] / s]
@@ -2095,10 +2095,10 @@ pub(crate) mod tests {
     /// heuristic would never look) is used; a matte with an unknown name is ignored.
     #[test]
     fn dng_sky_matte_drives_the_sky_mask() {
-        use lightcraft_develop::{DevelopSettings, LocalAdjustments, Mask, MaskComponent, MaskOp, MaskShape};
-        use lightcraft_pipeline::{RenderRequest, render};
-        use lightcraft_tiff::tags::{self as t, photometric};
-        use lightcraft_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value};
+        use hazavana_develop::{DevelopSettings, LocalAdjustments, Mask, MaskComponent, MaskOp, MaskShape};
+        use hazavana_pipeline::{RenderRequest, render};
+        use hazavana_tiff::tags::{self as t, photometric};
+        use hazavana_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value};
         let (w, h) = (16u32, 8u32);
         let image = |ifd: &mut IfdBuilder, w: u32, h: u32, cpp: u16, bits: u16, data: Vec<u8>| {
             ifd.set(t::IMAGE_WIDTH, Value::Long(vec![w]));
@@ -2160,16 +2160,16 @@ pub(crate) mod tests {
     /// from the Bradford adaptation it replaces.
     #[test]
     fn dng_white_balance_uses_the_camera_colour_model() {
-        use lightcraft_pipeline::{RenderRequest, render};
+        use hazavana_pipeline::{RenderRequest, render};
         let dng = crate::tests_xmp::synthetic_dng_with(None, Default::default());
-        let raw = lightcraft_raw::decode(&dng).unwrap();
+        let raw = hazavana_raw::decode(&dng).unwrap();
         let (img, info) = load_bytes(&dng, 64).unwrap();
         let cc = info.camera_color.as_ref().expect("a DNG with a colour matrix");
-        assert_eq!(cc.developed_for, lightcraft_raw::color::as_shot_white_xy(&raw));
+        assert_eq!(cc.developed_for, hazavana_raw::color::as_shot_white_xy(&raw));
         assert!(cc.tags.profile.is_empty());
         assert_eq!(cc.tags.color_matrix, raw.color.color_matrix);
-        let mut s = lightcraft_develop::DevelopSettings::default();
-        (s.wb.mode, s.wb.temp, s.wb.tint) = (lightcraft_develop::WbMode::Custom, 3000.0, 20.0);
+        let mut s = hazavana_develop::DevelopSettings::default();
+        (s.wb.mode, s.wb.temp, s.wb.tint) = (hazavana_develop::WbMode::Custom, 3000.0, 20.0);
         let req = RenderRequest::fit(32, 32);
         let camera = render(&img, &info, &s, &req).image;
         let adapted = render(&img, &SourceInfo { camera_color: None, ..info.clone() }, &s, &req).image;
@@ -2181,10 +2181,10 @@ pub(crate) mod tests {
     /// changes nothing.
     #[test]
     fn dng_gain_table_map_is_not_rendered() {
-        use lightcraft_raw::gaintable::GainTableMap;
+        use hazavana_raw::gaintable::GainTableMap;
         let plain = crate::tests_xmp::synthetic_dng_with(None, Default::default());
-        let mut raw = lightcraft_raw::decode(&plain).unwrap();
-        let (before, _) = load_bytes(&lightcraft_raw::write_dng(&raw, &Default::default()).unwrap(), 64).unwrap();
+        let mut raw = hazavana_raw::decode(&plain).unwrap();
+        let (before, _) = load_bytes(&hazavana_raw::write_dng(&raw, &Default::default()).unwrap(), 64).unwrap();
         raw.color.profile.gain_table_map = Some(GainTableMap {
             points_v: 1,
             points_h: 1,
@@ -2197,8 +2197,8 @@ pub(crate) mod tests {
             gamma: 1.0,
             gains: vec![2.0],
         });
-        let with_map = lightcraft_raw::write_dng(&raw, &Default::default()).unwrap();
-        assert!(lightcraft_raw::decode(&with_map).unwrap().color.profile.gain_table_map.is_some(), "the map is kept");
+        let with_map = hazavana_raw::write_dng(&raw, &Default::default()).unwrap();
+        assert!(hazavana_raw::decode(&with_map).unwrap().color.profile.gain_table_map.is_some(), "the map is kept");
         let (after, _) = load_bytes(&with_map, 64).unwrap();
         assert_eq!(before.data, after.data);
     }
@@ -2207,10 +2207,10 @@ pub(crate) mod tests {
     /// active area, whatever the photo's orientation), and only when it's on.
     #[test]
     fn dng_gain_table_map_renders_when_asked() {
-        use lightcraft_pipeline::{RenderRequest, render};
-        use lightcraft_raw::gaintable::GainTableMap;
+        use hazavana_pipeline::{RenderRequest, render};
+        use hazavana_raw::gaintable::GainTableMap;
         let plain = crate::tests_xmp::synthetic_dng_with(None, Default::default());
-        let mut raw = lightcraft_raw::decode(&plain).unwrap();
+        let mut raw = hazavana_raw::decode(&plain).unwrap();
         // ×1 at the active area's left edge rising to ×4 at its right edge, whatever the colour
         raw.color.profile.gain_table_map = Some(GainTableMap {
             points_v: 1,
@@ -2224,12 +2224,12 @@ pub(crate) mod tests {
             gamma: 1.0,
             gains: vec![1.0, 4.0],
         });
-        let with_map = lightcraft_raw::write_dng(&raw, &Default::default()).unwrap();
+        let with_map = hazavana_raw::write_dng(&raw, &Default::default()).unwrap();
         let (img, info) = load_bytes(&with_map, 64).unwrap();
         let (_, plain_info) = load_bytes(&plain, 64).unwrap();
         assert!(info.local_tone.is_some() && plain_info.local_tone.is_none());
         let req = RenderRequest::fit(64, 64);
-        let mut s = lightcraft_develop::DevelopSettings::default();
+        let mut s = hazavana_develop::DevelopSettings::default();
         // (darker, so that ×4 never reaches white)
         s.light.exposure = -3.0;
         let off = render(&img, &info, &s, &req).image;
@@ -2238,13 +2238,13 @@ pub(crate) mod tests {
         assert!(s.to_json().to_string().contains("camera_local_tone"), "the option is part of the settings (and their hash)");
         let on = render(&img, &info, &s, &req).image;
         // brightness gained, per column: none at the left edge, most at the right
-        let column = |im: &lightcraft_raster::Rgba8, x: usize| (0..im.height).map(|y| im.data[y * im.width + x][1] as f32).sum::<f32>();
+        let column = |im: &hazavana_raster::Rgba8, x: usize| (0..im.height).map(|y| im.data[y * im.width + x][1] as f32).sum::<f32>();
         let gain = |x: usize| column(&on, x) / column(&off, x).max(1.0);
         let last = on.width - 1;
         assert!((gain(0) - 1.0).abs() < 0.08, "left ×{}", gain(0));
         assert!(gain(last) > 1.4 && gain(last) > gain(last / 2) && gain(last / 2) > gain(0), "{} {} {}", gain(0), gain(last / 2), gain(last));
         // the photo turned upside down: the map follows the raw, so the brightened side swaps
-        s.orientation = lightcraft_geom::Orientation::Rotate180;
+        s.orientation = hazavana_geom::Orientation::Rotate180;
         s.profile.camera_local_tone = false;
         let off = render(&img, &info, &s, &req).image;
         s.profile.camera_local_tone = true;
@@ -2253,7 +2253,7 @@ pub(crate) mod tests {
         assert!(gain(0) > 1.4 && (gain(last) - 1.0).abs() < 0.08, "rotated: {} … {}", gain(0), gain(last));
         // a rendered (non-raw) source never gets it
         let jpeg = SourceInfo { raw: false, ..info.clone() };
-        assert!(!lightcraft_pipeline::local_tone::enabled(&jpeg, &s));
+        assert!(!hazavana_pipeline::local_tone::enabled(&jpeg, &s));
     }
 
     #[test]
@@ -2286,18 +2286,18 @@ pub(crate) mod tests {
         let scan = s.execute("library.importPreview", &json!({"paths": [path.to_string_lossy()]})).unwrap();
         assert!(scan["candidates"][0]["previewOnly"].as_str().is_some_and(|w| !w.is_empty()), "{scan}");
         let r = s.execute("library.import", &json!({"paths": [path.to_string_lossy()]})).unwrap();
-        let id = lightcraft_catalog::PhotoId(r["imported"][0].as_u64().unwrap());
+        let id = hazavana_catalog::PhotoId(r["imported"][0].as_u64().unwrap());
         let p = s.catalog.photo(id).unwrap().clone();
         let why = p.preview_only.clone().expect("marked preview only");
         assert!(why.to_uppercase().contains("CR3"), "the decoder's reason: {why}");
         // stamped with the version that decided it, so a later version rechecks it (#662)
-        assert_eq!(p.preview_checked, lightcraft_catalog::APP_VERSION);
+        assert_eq!(p.preview_checked, hazavana_catalog::APP_VERSION);
         assert!(!p.preview_only_stale());
         assert_eq!(p.kind, MediaKind::Raw, "still a raw file (filters, Convert to DNG…)");
         assert!(!p.develops_raw());
         // rendered like the JPEG it is: relative white balance, display tone curve, no raw defaults
         assert_eq!(SourceInfo { native_long: None, ..crate::media::source_info(&p) }, SourceInfo::default());
-        assert_eq!(*p.develop, lightcraft_develop::DevelopSettings::default());
+        assert_eq!(*p.develop, hazavana_develop::DevelopSettings::default());
         assert!(s.render_job(id, 48, 48, false, true).unwrap().run().rendered.is_ok());
         // agents see it
         let q = s.execute("catalog.query", &json!({"filter": {}})).unwrap();
@@ -2310,9 +2310,9 @@ pub(crate) mod tests {
         let mut s = crate::Session::new().with_fs();
         s.open_library(&lib, false).unwrap();
         assert_eq!(s.catalog.photo(id).unwrap().preview_only.as_deref(), Some(why.as_str()));
-        assert_eq!(s.catalog.photo(id).unwrap().preview_checked, lightcraft_catalog::APP_VERSION);
+        assert_eq!(s.catalog.photo(id).unwrap().preview_checked, hazavana_catalog::APP_VERSION);
         // the file decodes now (here: replaced by a DNG): Reload clears it, undo brings it back
-        std::fs::write(&path, crate::tests_xmp::synthetic_dng_with(None, lightcraft_meta::Metadata::default())).unwrap();
+        std::fs::write(&path, crate::tests_xmp::synthetic_dng_with(None, hazavana_meta::Metadata::default())).unwrap();
         let r = s.execute("photo.reload", &json!({"ids": [id.0]})).unwrap();
         assert_eq!(r["reloaded"], json!([id.0]), "{r}");
         assert!(s.catalog.photo(id).unwrap().develops_raw());
@@ -2320,10 +2320,10 @@ pub(crate) mod tests {
         assert!(crate::media::source_info(s.catalog.photo(id).unwrap()).raw);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.catalog.photo(id).unwrap().preview_only.as_deref(), Some(why.as_str()));
-        assert_eq!(s.catalog.photo(id).unwrap().preview_checked, lightcraft_catalog::APP_VERSION);
+        assert_eq!(s.catalog.photo(id).unwrap().preview_checked, hazavana_catalog::APP_VERSION);
         // relinking to a file that decodes clears it too
         let dng = files.join("DSC_0001.dng");
-        std::fs::write(&dng, crate::tests_xmp::synthetic_dng_with(None, lightcraft_meta::Metadata::default())).unwrap();
+        std::fs::write(&dng, crate::tests_xmp::synthetic_dng_with(None, hazavana_meta::Metadata::default())).unwrap();
         s.execute("photo.relink", &json!({"id": id.0, "path": dng.to_string_lossy()})).unwrap();
         assert_eq!(s.catalog.photo(id).unwrap().preview_only, None);
         drop(s);
@@ -2333,7 +2333,7 @@ pub(crate) mod tests {
     /// A raw whose TIFF shell holds only a small RGB image (IFD0) next to a private block, as Exif
     /// declares a picture 25x its size.
     fn tiff_shell(w: u32, h: u32, shell: bool) -> Vec<u8> {
-        use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+        use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
         let mut ifd0 = IfdBuilder::new();
         ifd0.set(t::IMAGE_WIDTH, Value::Long(vec![w]));
         ifd0.set(t::IMAGE_LENGTH, Value::Long(vec![h]));
@@ -2370,11 +2370,11 @@ pub(crate) mod tests {
         // the same pixels without the private block are a small ordinary image
         let plain = probe_bytes("small.tif", &tiff_shell(24, 16, false)).unwrap();
         assert_eq!((plain.kind, plain.preview_only, plain.width, plain.height), (MediaKind::Image, None, 24, 16));
-        assert!(lightcraft_raw::probe(&tiff_shell(24, 16, false)).is_none());
+        assert!(hazavana_raw::probe(&tiff_shell(24, 16, false)).is_none());
 
         // TIFFs preserving camera Make tags (SONY, NIKON, etc.) are ordinary images, not raws (#281)
         for make in ["SONY", "NIKON CORPORATION", "PENTAX", "RICOH", "SAMSUNG"] {
-            use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+            use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
             let mut ifd0 = IfdBuilder::new();
             ifd0.set(t::IMAGE_WIDTH, Value::Long(vec![24]));
             ifd0.set(t::IMAGE_LENGTH, Value::Long(vec![16]));
@@ -2418,7 +2418,7 @@ pub(crate) mod tests {
     /// holds the preview) imports as a raw shown from its preview, not as a greyscale image of the mosaic.
     #[test]
     fn uncompressed_leaf_mos_imports_as_a_preview_only_raw() {
-        use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+        use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
         let px: Vec<u8> = (0..40 * 30).flat_map(|i| [(i % 251) as u8, 128, 200]).collect();
         let jpeg = encode_jpeg(&EncodeImage::new(40, 30, 3, Samples::U8(&px)), 90, ChromaSubsampling::S444, &EncodeMeta::default()).unwrap();
         let mos = |leaf_data: bool| {
@@ -2449,7 +2449,7 @@ pub(crate) mod tests {
     /// headers; loading it says what is wrong instead of naming a bare TIFF compression number.
     #[test]
     fn gopro_vc5_dng_imports_and_fails_to_load_with_a_clear_reason() {
-        use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+        use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
         let mut ifd = IfdBuilder::new();
         ifd.set(t::NEW_SUBFILE_TYPE, Value::Long(vec![0]));
         ifd.set(t::IMAGE_WIDTH, Value::Long(vec![32]));
@@ -2473,12 +2473,12 @@ pub(crate) mod tests {
     /// CR3 keeps its own wording.
     #[test]
     fn decode_failures_of_recognised_raws_may_fall_back_to_the_preview() {
-        use lightcraft_raw::RawError;
+        use hazavana_raw::RawError;
         let cr3 = b"\0\0\0\x18ftypcrx \0\0\0\x01";
         assert_eq!(preview_reason(b"x", RawError::Unsupported("x".into())), Ok("x".to_string()));
         assert!(preview_reason(b"x", RawError::Corrupt("bad strip".into())).is_ok_and(|w| w.contains("bad strip")));
         assert!(preview_reason(b"x", RawError::Limit("too big")).is_ok());
-        assert!(preview_reason(b"x", RawError::Tiff(lightcraft_tiff::TiffError::MissingTag(256))).is_ok());
+        assert!(preview_reason(b"x", RawError::Tiff(hazavana_tiff::TiffError::MissingTag(256))).is_ok());
         assert!(preview_reason(b"x", RawError::NotRaw).is_err());
         assert!(preview_reason(cr3, RawError::Corrupt("bad".into())).is_ok_and(|w| w.starts_with("CR3 ")));
     }
@@ -2492,7 +2492,7 @@ pub(crate) mod tests {
         std::fs::write(&path, cr3_with_preview(96, 64)).unwrap();
         let mut s = crate::Session::new().with_fs();
         let r = s.execute("library.import", &serde_json::json!({"paths": [path.to_string_lossy()]})).unwrap();
-        let id = lightcraft_catalog::PhotoId(r["imported"][0].as_u64().unwrap());
+        let id = hazavana_catalog::PhotoId(r["imported"][0].as_u64().unwrap());
         // loupe: an unedited raw opens on its embedded preview…
         let q = s.quick_view_job(id, 1600, true).unwrap().run();
         assert_eq!(q.quick, Some(QuickSource::Embedded));
@@ -2531,7 +2531,7 @@ pub(crate) mod tests {
         std::fs::write(&path, cr3_with_preview(96, 64)).unwrap();
         let mut s = crate::Session::new().with_fs();
         let r = s.execute("library.import", &serde_json::json!({"paths": [path.to_string_lossy()]})).unwrap();
-        let id = lightcraft_catalog::PhotoId(r["imported"][0].as_u64().unwrap());
+        let id = hazavana_catalog::PhotoId(r["imported"][0].as_u64().unwrap());
         s.media.preview_loader = Some(std::sync::Arc::new(|_: &str, _| None));
         let job = s.thumb_job(id, 128).unwrap();
         let q = s.quick_thumb_job(&job).unwrap().run();
@@ -2543,8 +2543,8 @@ pub(crate) mod tests {
     /// A Sony ARW of `model`: a 64 × 48 uncompressed 14-bit CFA strip in a SubIFD (as `crates/raw/tests/vendor_robust.rs`
     /// lays it out) whose IFD carries the full-frame 16–35 mm distortion table (tag 0x7037).
     fn sony_arw(model: &str) -> Vec<u8> {
-        use lightcraft_tiff::tags::{self as t, photometric};
-        use lightcraft_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value};
+        use hazavana_tiff::tags::{self as t, photometric};
+        use hazavana_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value};
         // 3:2, the aspect Sony's lens opcodes are limited to
         let (w, h) = (72u32, 48u32);
         let mut raw = IfdBuilder::new();
@@ -2577,7 +2577,7 @@ pub(crate) mod tests {
             let path = dir.join(format!("{model}.arw"));
             std::fs::write(&path, sony_arw(model)).unwrap();
             let r = s.execute("library.import", &serde_json::json!({"paths": [path.to_string_lossy()]})).unwrap();
-            let p = s.catalog.photo(lightcraft_catalog::PhotoId(r["imported"][0].as_u64().unwrap())).unwrap();
+            let p = s.catalog.photo(hazavana_catalog::PhotoId(r["imported"][0].as_u64().unwrap())).unwrap();
             assert_eq!((p.format.as_str(), p.embedded_lens.is_some(), p.develop.optics.lens_profile), ("ARW", on, on), "{model}");
             assert!(!p.is_edited(), "{model}: as imported");
         }
@@ -2588,9 +2588,9 @@ pub(crate) mod tests {
     /// opcodes), off when it doesn't.
     #[test]
     fn rw2_and_dng_defaults_unchanged() {
-        use lightcraft_catalog::{Photo, PhotoId, Source};
+        use hazavana_catalog::{Photo, PhotoId, Source};
         let s = crate::Session::new();
-        let lens = lightcraft_develop::EmbeddedLens { warp: Some(Default::default()), ..Default::default() };
+        let lens = hazavana_develop::EmbeddedLens { warp: Some(Default::default()), ..Default::default() };
         for format in ["RW2", "DNG"] {
             for embedded in [None, Some(lens)] {
                 let name = format!("x.{format}");
@@ -2608,7 +2608,7 @@ pub(crate) mod tests {
     /// correction off keeps it off.
     #[test]
     fn existing_photo_settings_are_not_rewritten() {
-        use lightcraft_catalog::{Op, PhotoId};
+        use hazavana_catalog::{Op, PhotoId};
         let dir = std::env::temp_dir().join(format!("lc-arw-lens-existing-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let (lib, files) = (dir.join("lib"), dir.join("files"));

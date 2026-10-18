@@ -3,14 +3,14 @@
 //! ([`crate::slide_overlay`], `slideshow.overlays`) and render jobs that compose a photo into its
 //! slide ([`SlideCompose`], [`crate::media::RenderJob::with_slide`]).
 //!
-//! The composer itself is `lightcraft-slideshow` (no UI, no catalog): playback, the Settings
+//! The composer itself is `hazavana-slideshow` (no UI, no catalog): playback, the Settings
 //! preview and `slideshow.preview` all compose through it, so they draw the same pixels.
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use lightcraft_catalog::PhotoId;
-use lightcraft_raster::Rgba8;
-pub use lightcraft_slideshow::{Aspect, Layout, SlideSettings};
+use hazavana_catalog::PhotoId;
+use hazavana_raster::Rgba8;
+pub use hazavana_slideshow::{Aspect, Layout, SlideSettings};
 
 use crate::media::RenderJob;
 
@@ -65,14 +65,14 @@ impl SlideCompose {
             ^ self.overlays.as_ref().map_or(0, |o| o.key().rotate_left(43))
     }
 
-    /// The slide showing `photo` (rendered at [`lightcraft_slideshow::photo_size`], or any size).
+    /// The slide showing `photo` (rendered at [`hazavana_slideshow::photo_size`], or any size).
     pub fn compose(&self, photo: &Rgba8) -> Rgba8 {
         let bg = self.backdrop.as_ref().and_then(Backdrop::image);
         let Some(o) = &self.overlays else {
-            return lightcraft_slideshow::compose(photo, bg.as_deref(), &self.settings, self.width, self.height);
+            return hazavana_slideshow::compose(photo, bg.as_deref(), &self.settings, self.width, self.height);
         };
         let (mut img, l) =
-            lightcraft_slideshow::compose_with(photo, bg.as_deref(), &self.settings, self.width, self.height, &mut |img, l| o.draw_behind(img, l));
+            hazavana_slideshow::compose_with(photo, bg.as_deref(), &self.settings, self.width, self.height, &mut |img, l| o.draw_behind(img, l));
         o.draw_front(&mut img, &l);
         img
     }
@@ -82,7 +82,7 @@ impl crate::Session {
     /// The aspect (width / height) photo `id` shows at: cropped, straightened, lens-corrected.
     pub fn slide_photo_aspect(&self, id: PhotoId) -> Option<f64> {
         let p = self.catalog.photo(id)?;
-        let frame = lightcraft_pipeline::geometry::Frame::with_lens(
+        let frame = hazavana_pipeline::geometry::Frame::with_lens(
             p.width.max(1) as usize,
             p.height.max(1) as usize,
             &p.develop,
@@ -122,7 +122,7 @@ impl crate::Session {
             let aspect = self.slide_photo_aspect(id)?;
             let fill =
                 SlideSettings { zoom_to_fill: true, margin_left: 0.0, margin_right: 0.0, margin_top: 0.0, margin_bottom: 0.0, ..settings.clone() };
-            let (w, h) = lightcraft_slideshow::photo_size(&fill, aspect, width, height);
+            let (w, h) = hazavana_slideshow::photo_size(&fill, aspect, width, height);
             let job = self.render_job(id, w, h, false, true)?;
             Some(Backdrop { photo: id, job: Box::new(job), cache: self.slide_backdrop.clone() })
         });
@@ -170,7 +170,7 @@ impl crate::Session {
         view: bool,
     ) -> Option<RenderJob> {
         let aspect = self.slide_photo_aspect(id)?;
-        let (mut w, mut h) = lightcraft_slideshow::photo_size(settings, aspect, width, height);
+        let (mut w, mut h) = hazavana_slideshow::photo_size(settings, aspect, width, height);
         if let Some(edge) = photo_edge.filter(|e| *e > 0 && w.max(h) > *e) {
             let k = edge as f64 / w.max(h) as f64;
             (w, h) = (((w as f64 * k).round() as usize).max(1), ((h as f64 * k).round() as usize).max(1));

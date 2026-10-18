@@ -298,12 +298,12 @@ mod tests {
         assert_eq!(weighted_nms(vec![n, z, d]).len(), 3);
     }
 
-    /// The official bundle (`EFFECTCRAFT_FACE_LANDMARKER` = path to `face_landmarker.task`) on a
+    /// The official bundle (`TSELATRA_FACE_LANDMARKER` = path to `face_landmarker.task`) on a
     /// fixed input matches TensorFlow Lite's own interpreter (`ai-edge-litert` 2.2.0, run once
     /// to record these sums).
     #[test]
     fn matches_tensorflow_lite_on_the_official_weights() {
-        let Some(path) = std::env::var_os("EFFECTCRAFT_FACE_LANDMARKER") else { return };
+        let Some(path) = std::env::var_os("TSELATRA_FACE_LANDMARKER") else { return };
         let bytes = std::fs::read(path).unwrap();
         let m = FaceLandmarker::from_task(&bytes).unwrap();
         let input = |n: usize| -> Vec<f32> { (0..n).map(|i| ((i as f32) * 0.013).sin() * 0.5).collect() };

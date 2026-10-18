@@ -5,15 +5,15 @@
 //! channels: by bisection over the window up to radius [`MEDIAN_BISECT_R`], above that with the
 //! CPU's sliding 512-bin histogram per channel (one invocation per row segment). Fractal and
 //! Turbulent Noise resolve every per-octave term on the CPU in the CPU's f32 order
-//! (`effectcraft_effects::fractal_gpu`) and evaluate the pixels on the GPU. Echo and Posterize
+//! (`tselatra_effects::fractal_gpu`) and evaluate the pixels on the GPU. Echo and Posterize
 //! Time fetch the layer's other frames through the effect host like the CPU does, then
 //! accumulate on the GPU. Remove Grain measures the grain level in its sample boxes on the CPU
 //! (one readback) and runs the guided filters, Texture, Unsharp Mask and Preview on the GPU;
 //! Temporal Filtering and the Noise Samples / Blending Matte views render on the CPU.
 
-use effectcraft_color::BlendMode;
-use effectcraft_effects::{Buf, EffectCtx};
-use effectcraft_keyframe::Value;
+use tselatra_color::BlendMode;
+use tselatra_effects::{Buf, EffectCtx};
+use tselatra_keyframe::Value;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, box_passes, gaussian_blur};
@@ -132,7 +132,7 @@ pub(crate) fn fractal_extra(ctx: &EffectCtx) -> bool {
 
 /// noise3::render.
 pub(crate) fn fractal(e: &mut Enc, ctx: &EffectCtx, b: GBuf, turbulent: bool) -> Option<GBuf> {
-    let fr = effectcraft_effects::fractal_gpu(ctx, b.offset, b.scale, turbulent);
+    let fr = tselatra_effects::fractal_gpu(ctx, b.offset, b.scale, turbulent);
     let mode = match fr.mode {
         None => 255,
         Some(m) => BlendMode::ALL.iter().position(|&x| x == m).unwrap_or(0) as u32,
@@ -209,7 +209,7 @@ fn remove_grain(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     // The grain level measured in the sample boxes (CPU; only the smoothing uses it).
     let level = if amt > 0.0 {
         let img = e.download(&b.img)?;
-        effectcraft_effects::remove_grain_level(ctx, &Buf { img, offset: b.offset, scale: b.scale })
+        tselatra_effects::remove_grain_level(ctx, &Buf { img, offset: b.offset, scale: b.scale })
     } else {
         1.0
     };
@@ -561,7 +561,7 @@ fn echo(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let op = ctx.params.e("echoOperator");
     let times: Vec<f64> = (0..=n).map(|i| ctx.time + i as f64 * dt).collect();
     // Without the effect host (or the frames) the layer passes through, as on the CPU.
-    let Some((grid, imgs)) = effectcraft_effects::time_frames(ctx, &times) else { return Some(b) };
+    let Some((grid, imgs)) = tselatra_effects::time_frames(ctx, &times) else { return Some(b) };
     let (w, h) = (grid.img.width, grid.img.height);
     let mut acc = [e.image(w, h), e.image(w, h)];
     for (i, img) in imgs.iter().enumerate() {
@@ -582,8 +582,8 @@ fn posterize_time(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     if ctx.env.host.is_none() {
         return Some(b);
     }
-    let tt = effectcraft_effects::posterized_time(ctx.time, ctx.params.f("frameRate"));
-    match effectcraft_effects::time_frames(ctx, &[tt]) {
+    let tt = tselatra_effects::posterized_time(ctx.time, ctx.params.f("frameRate"));
+    match tselatra_effects::time_frames(ctx, &[tt]) {
         Some((grid, mut imgs)) => {
             let img = e.g.upload_image(&imgs.pop().unwrap_or_default())?;
             Some(GBuf { img, offset: grid.offset, scale: grid.scale })

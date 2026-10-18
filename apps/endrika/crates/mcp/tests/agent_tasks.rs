@@ -202,7 +202,7 @@ fn task_boolean_subtract_then_flatten() {
     let shot = c.call("export", json!({"ids": [vid], "format": "png"}));
     use base64::Engine as _;
     let bytes = base64::engine::general_purpose::STANDARD.decode(shot["content"][0]["data"].as_str().unwrap()).unwrap();
-    let (w, h) = figcraft_mcp::png_size(&bytes).unwrap();
+    let (w, h) = endrika_mcp::png_size(&bytes).unwrap();
     assert!((100..=101).contains(&w) && (100..=101).contains(&h), "{w}x{h}");
     let img = image::load_from_memory(&bytes).unwrap().to_rgba8();
     assert_eq!(img.get_pixel(w / 2, h / 2)[3], 0, "the hole is transparent");
@@ -220,11 +220,11 @@ fn task_export_png_and_svg() {
     assert_eq!(r["content"][0]["type"], "image");
     assert_eq!(r["content"][0]["mimeType"], "image/png");
     assert_eq!(png_dims(r["content"][0]["data"].as_str().unwrap()), (320, 180));
-    let dir = std::env::temp_dir().join(format!("figcraft-mcp-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-mcp-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("banner.png");
     c.ok("export", json!({"ids": [f], "path": path.to_string_lossy(), "scale": 1}));
-    assert_eq!(figcraft_mcp::png_size(&std::fs::read(&path).unwrap()), Some((160, 90)));
+    assert_eq!(endrika_mcp::png_size(&std::fs::read(&path).unwrap()), Some((160, 90)));
     let svg = c.ok("export", json!({"ids": [f], "format": "svg"}));
     let svg = svg.as_str().unwrap();
     assert!(svg.starts_with("<svg") || svg.starts_with("<?xml"), "{}", &svg[..svg.len().min(80)]);
@@ -233,7 +233,7 @@ fn task_export_png_and_svg() {
     let (w, h) = png_dims(shot["content"][0]["data"].as_str().unwrap());
     assert!(w <= 80 && h <= 80 && w > 0, "{w}x{h}");
     // Save and reopen round-trip.
-    let file = dir.join("banner.figcraft");
+    let file = dir.join("banner.endrika");
     c.ok("save_file", json!({"path": file.to_string_lossy()}));
     let opened = c.ok("open_file", json!({"path": file.to_string_lossy()}));
     assert!(opened["document"]["pages"][0]["children"].to_string().contains("Banner"));

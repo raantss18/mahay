@@ -1,4 +1,4 @@
-//! Intra sample prediction (8.4.4.2), mirrored from the filmcraft-hevc decoder so the encoder
+//! Intra sample prediction (8.4.4.2), mirrored from the hetsika-hevc decoder so the encoder
 //! reconstructs exactly like a decoder: reference substitution, filtering (incl. strong intra
 //! smoothing), planar, DC and the 33 angular modes.
 

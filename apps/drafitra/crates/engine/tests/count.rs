@@ -4,9 +4,9 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use cadcraft_engine::doc::geom::Vec3;
-use cadcraft_engine::doc::{Block, Circle, Common, Entity, EntityKind, Handle, Insert, Space};
-use cadcraft_engine::{Input, Session};
+use drafitra_engine::doc::geom::Vec3;
+use drafitra_engine::doc::{Block, Circle, Common, Entity, EntityKind, Handle, Insert, Space};
+use drafitra_engine::{Input, Session};
 use serde_json::{Value, json};
 
 fn insert(block: &str, x: f64, cols: u32, rows: u32) -> EntityKind {

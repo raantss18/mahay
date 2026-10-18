@@ -3,9 +3,9 @@
 
 use super::*;
 use serde_json::json;
-use soundcraft_audio_io::{AudioBuffer, FileFormat};
-use soundcraft_model::{Clip, ClipContent, EditState, Session, SourceId, TrackId};
-use soundcraft_time::Samples;
+use feo_audio_io::{AudioBuffer, FileFormat};
+use feo_model::{Clip, ClipContent, EditState, Session, SourceId, TrackId};
+use feo_time::Samples;
 
 /// Toggle (or set from `value`) a flag in `edit.flags`; returns the new state.
 pub fn toggle_flag(e: &mut Engine, p: &Value, id: &str) -> Result<Value> {
@@ -135,7 +135,7 @@ pub fn set_clip_env(c: &mut Clip, mut pts: Vec<(Samples, f32)>) {
 /// Longest audio we render in one stretch: one hour at the session rate, and no more than
 /// `time_stretch` makes.
 fn max_render(s: &Session) -> Samples {
-    s.sample_rate.samples(3600.0).min(soundcraft_dsp::offline::MAX_OFFLINE_SAMPLES as Samples)
+    s.sample_rate.samples(3600.0).min(feo_dsp::offline::MAX_OFFLINE_SAMPLES as Samples)
 }
 
 /// Render the audio a clip plays, time-stretched (pitch preserved) to `out_len` samples, into a new
@@ -167,7 +167,7 @@ pub fn render_stretched(s: &mut Session, cmd: &str, c: &Clip, out_len: Samples) 
         })
         .collect();
     let sr = s.sample_rate;
-    let mut out = soundcraft_dsp::offline::time_stretch(&ch, ratio, sr.as_f64() as f32);
+    let mut out = feo_dsp::offline::time_stretch(&ch, ratio, sr.as_f64() as f32);
     let want = usize::try_from(out_len).unwrap_or(0);
     for o in &mut out {
         o.resize(want, 0.0);
@@ -177,7 +177,7 @@ pub fn render_stretched(s: &mut Session, cmd: &str, c: &Clip, out_len: Samples) 
 }
 
 /// Replace clip `old` on track `t` with `new` (overwriting whatever `new` covers).
-pub fn replace_clip(s: &mut Session, t: TrackId, old: soundcraft_model::ClipId, new: Clip) {
+pub fn replace_clip(s: &mut Session, t: TrackId, old: feo_model::ClipId, new: Clip) {
     if let Some(pl) = s.track_mut(t).and_then(|tr| tr.playlist_mut()) {
         pl.clips.retain(|c| c.id != old);
     }
@@ -210,7 +210,7 @@ mod tests {
     fn stretches_are_no_longer_than_time_stretch_makes() {
         let mut s = Session::default();
         assert_eq!(max_render(&s), s.sample_rate.samples(3600.0));
-        s.sample_rate = soundcraft_time::SampleRate::new(96_000).unwrap();
-        assert_eq!(max_render(&s), soundcraft_dsp::offline::MAX_OFFLINE_SAMPLES as Samples);
+        s.sample_rate = feo_time::SampleRate::new(96_000).unwrap();
+        assert_eq!(max_render(&s), feo_dsp::offline::MAX_OFFLINE_SAMPLES as Samples);
     }
 }

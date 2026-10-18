@@ -1,9 +1,9 @@
 //! The DXF reader drops the paper-space viewport the writer adds (marked `1000 PAPERVIEW` in
-//! CADCraft xdata) but keeps a real viewport whose frozen or recoloured layer is named PAPERVIEW.
+//! Drafitra xdata) but keeps a real viewport whose frozen or recoloured layer is named PAPERVIEW.
 
-use cadcraft_color::Color;
-use cadcraft_doc::*;
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_color::Color;
+use drafitra_doc::*;
+use drafitra_geom::{Vec2, Vec3};
 
 fn viewport(id: u32, frozen_layers: Vec<String>, layer_colors: Vec<(String, Color)>) -> EntityKind {
     EntityKind::Viewport(Viewport {
@@ -33,8 +33,8 @@ fn viewport_with_a_layer_named_paperview_survives_dxf_roundtrip() {
     d.add(&sheet, Common::default(), viewport(2, vec!["PAPERVIEW".into()], vec![])).unwrap();
     d.add(&sheet, Common::default(), viewport(3, vec![], vec![("PAPERVIEW".into(), Color::Index(1))])).unwrap();
 
-    let text = cadcraft_io::write_dxf(&d);
-    let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let text = drafitra_io::write_dxf(&d);
+    let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     let vps = viewports(&back.layouts[0]);
     assert_eq!(vps.iter().map(|v| v.id).collect::<Vec<_>>(), [2, 3], "only the added sheet viewport is dropped");
     assert_eq!(vps[0].frozen_layers, ["PAPERVIEW"]);

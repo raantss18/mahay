@@ -12,14 +12,14 @@
 
 use std::sync::Arc;
 
-use effectcraft_color::BlendMode;
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Gradient, Justify, ShapePath, TextDoc, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::styles::{self, STYLE_BLEND_MODES};
-use effectcraft_project::{AlphaMode, Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, MaskMode, Project, PropGroup, Solid, SourceLayer};
-use effectcraft_psd::{Adjustment, DValue, Descriptor, Node, Psd};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::BlendMode;
+use tselatra_color::Label;
+use tselatra_keyframe::{Gradient, Justify, ShapePath, TextDoc, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::styles::{self, STYLE_BLEND_MODES};
+use tselatra_project::{AlphaMode, Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, MaskMode, Project, PropGroup, Solid, SourceLayer};
+use tselatra_psd::{Adjustment, DValue, Descriptor, Node, Psd};
+use tselatra_time::{FrameRate, Tick};
 
 /// Photoshop blend mode key → compositor mode (`pass` = pass through, handled by collapsing).
 pub fn blend_mode(key: &str) -> BlendMode {
@@ -114,7 +114,7 @@ pub fn import(proj: &mut Project, psd: &Psd, path: &str, name: &str, retain: boo
     cx.warnings.extend(psd.warnings.iter().cloned());
     let (tree, flattened) = psd.tree_report();
     if flattened > 0 {
-        cx.warnings.push(format!("{flattened} group(s) nested deeper than {} levels were flattened into their parent", effectcraft_psd::MAX_GROUP_DEPTH));
+        cx.warnings.push(format!("{flattened} group(s) nested deeper than {} levels were flattened into their parent", tselatra_psd::MAX_GROUP_DEPTH));
     }
     let comp =
         if psd.layers.is_empty() && !psd.warnings.is_empty() { flattened_comp(proj, &mut cx, name) } else { build_comp(proj, &mut cx, name, &tree, None) };
@@ -153,7 +153,7 @@ fn flattened_comp(proj: &mut Project, cx: &mut Ctx, name: &str) -> ItemId {
 
 fn new_comp(cx: &Ctx) -> Comp {
     // A PSB can be 300,000 px a side; a composition is at most 30,000 (#788).
-    let size = |v: u32| effectcraft_project::limits::size(v.into());
+    let size = |v: u32| tselatra_project::limits::size(v.into());
     Comp::new(size(cx.psd.width), size(cx.psd.height), cx.rate, cx.duration)
 }
 
@@ -206,11 +206,11 @@ fn footage_item(proj: &mut Project, cx: &mut Ctx, index: usize, name: &str) -> (
 
 /// Size of an embedded file's image: the smart object's recorded size, else the embedded
 /// document's header (Photoshop, PNG).
-fn embedded_size(so: &effectcraft_psd::SmartObject, data: &[u8]) -> Option<(u32, u32)> {
+fn embedded_size(so: &tselatra_psd::SmartObject, data: &[u8]) -> Option<(u32, u32)> {
     if let Some([w, h]) = so.size.filter(|s| s[0] >= 1.0 && s[1] >= 1.0) {
         return Some((w.round() as u32, h.round() as u32));
     }
-    if effectcraft_psd::is_psd(data) && data.len() >= 22 {
+    if tselatra_psd::is_psd(data) && data.len() >= 22 {
         let h = u32::from_be_bytes([data[14], data[15], data[16], data[17]]);
         let w = u32::from_be_bytes([data[18], data[19], data[20], data[21]]);
         return Some((w, h));
@@ -254,7 +254,7 @@ fn smart_object_layer(proj: &mut Project, cx: &mut Ctx, comp: &Comp, index: usiz
         has_video: true,
         alpha: AlphaMode::Straight,
         loop_count: 1,
-        codec: if effectcraft_psd::is_psd(data) { "PSD".into() } else { "PSD (embedded image)".into() },
+        codec: if tselatra_psd::is_psd(data) { "PSD".into() } else { "PSD (embedded image)".into() },
         layer: Some(SourceLayer { index: index as u32, name: name.to_string(), layer_size: true, embedded: Some(so.uuid.clone()), placed: bake }),
         ..Default::default()
     };
@@ -360,7 +360,7 @@ fn build_layer(proj: &mut Project, cx: &mut Ctx, comp: &Comp, n: &Node) -> Optio
 }
 
 /// Where layer space's origin sits in document pixels.
-fn layer_origin(pl: &effectcraft_psd::Layer, retain: bool, layer: &Layer) -> [f64; 2] {
+fn layer_origin(pl: &tselatra_psd::Layer, retain: bool, layer: &Layer) -> [f64; 2] {
     if let Some(t) = &pl.text {
         return [t.transform[4], t.transform[5]];
     }
@@ -401,7 +401,7 @@ fn font_names(ps: &str) -> (String, String) {
     }
 }
 
-fn text_doc(t: &effectcraft_psd::TextInfo) -> TextDoc {
+fn text_doc(t: &tselatra_psd::TextInfo) -> TextDoc {
     let mut d = TextDoc::default();
     d.set_text(&t.text);
     let [xx, xy, yx, yy, _, _] = t.transform;
@@ -446,7 +446,7 @@ fn text_doc(t: &effectcraft_psd::TextInfo) -> TextDoc {
     d
 }
 
-fn text_layer(proj: &mut Project, comp: &Comp, name: &str, t: &effectcraft_psd::TextInfo) -> Layer {
+fn text_layer(proj: &mut Project, comp: &Comp, name: &str, t: &tselatra_psd::TextInfo) -> Layer {
     let mut l = build::layer(proj, comp, name, LayerSource::Text, (0, 0), None);
     if let Some(p) = l.props.prop_mut("text/sourceText") {
         p.value = Value::Text(Box::new(text_doc(t)));
@@ -475,9 +475,9 @@ fn adjustment_layer(proj: &mut Project, comp: &Comp, name: &str) -> Layer {
 }
 
 fn add_effect(proj: &mut Project, l: &mut Layer, effect: &str, comp: &Comp, params: &[(&str, Value)]) {
-    let Some(spec) = effectcraft_effects::lookup(effect) else { return };
+    let Some(spec) = tselatra_effects::lookup(effect) else { return };
     let mut ids = Ids(&mut proj.next_id);
-    let mut g = effectcraft_effects::instantiate(spec, &mut ids, spec.name, [comp.width as f64, comp.height as f64]);
+    let mut g = tselatra_effects::instantiate(spec, &mut ids, spec.name, [comp.width as f64, comp.height as f64]);
     for (k, v) in params {
         // Paths reach parameters in twirl-down groups (`master/exposure`).
         if let Some(p) = g.prop_mut(k) {
@@ -747,7 +747,7 @@ pub fn editable_text(proj: &mut Project, comp: &Comp, layer: &Layer, psd: &Psd, 
     l.out_point = layer.out_point;
     l.start_time = layer.start_time;
     if let (Some(o), Some(p)) = (layer.props.prop("transform/opacity"), l.props.prop_mut("transform/opacity")) {
-        *p = effectcraft_project::Property { uid: p.uid, ..o.clone() };
+        *p = tselatra_project::Property { uid: p.uid, ..o.clone() };
     }
     Some(l)
 }
@@ -767,13 +767,13 @@ mod tests {
 
     #[test]
     fn non_finite_text_values_never_reach_the_layer() {
-        let style = effectcraft_psd::engine_data::TextStyle {
+        let style = tselatra_psd::engine_data::TextStyle {
             size: Some(f64::NAN),
             tracking: Some(f64::INFINITY),
             leading: Some(f64::NEG_INFINITY),
             ..Default::default()
         };
-        let t = effectcraft_psd::TextInfo {
+        let t = tselatra_psd::TextInfo {
             text: "x".into(),
             transform: [f64::INFINITY, 0.0, 0.0, 1.0, f64::NAN, 1.0],
             style,

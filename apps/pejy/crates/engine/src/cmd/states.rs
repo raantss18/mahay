@@ -1,6 +1,6 @@
 //! Window › Interactive › Object States: a group whose objects are alternative states, one shown.
 
-use designcraft_doc::{ItemId, Shape};
+use pejy_doc::{ItemId, Shape};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_selection};
@@ -110,7 +110,7 @@ mod tests {
         assert_eq!(r["states"].as_array().unwrap().len(), 2);
         let px = |s: &Session| {
             let d = s.doc().unwrap().doc.clone();
-            let mut rr = designcraft_render::Renderer::new();
+            let mut rr = pejy_render::Renderer::new();
             rr.threads = 0;
             rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap().pixel(150, 150)
         };

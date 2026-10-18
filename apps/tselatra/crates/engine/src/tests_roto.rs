@@ -1,10 +1,10 @@
 //! Roto Brush & Refine Edge end to end through the commands, on synthetic footage: a textured
 //! disk moving over a textured background.
 
-use effectcraft_project::LayerId;
-use effectcraft_raster::Image;
-use effectcraft_render::RenderOpts;
-use effectcraft_track::roto::rle;
+use tselatra_project::LayerId;
+use tselatra_raster::Image;
+use tselatra_render::RenderOpts;
+use tselatra_track::roto::rle;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -124,7 +124,7 @@ fn painted(path: fn(u32) -> [f64; 2], name: &str) -> (Session, LayerId, u64) {
     s.edit("remove solid", None, |p, _| {
         p.comp_mut(cid).unwrap().layers.retain(|l| l.id != solid);
         for it in p.items.values_mut() {
-            if let effectcraft_project::ItemKind::Footage(f) = &mut it.kind {
+            if let tselatra_project::ItemKind::Footage(f) = &mut it.kind {
                 f.path = name.into();
             }
         }
@@ -150,8 +150,8 @@ fn forget(s: &Session, clip: LayerId, uid: u64) {
     let l = comp.layer(clip).unwrap();
     let g = l.props.find_group(uid).unwrap();
     let size = crate::roto::layer_size(&s.project, comp, l);
-    let ch = effectcraft_effects::roto::Chain::new(&crate::roto::params_static(g), size, comp.frame_rate.as_f64(), 1.0);
-    effectcraft_effects::roto::forget(ch.keys.values().copied());
+    let ch = tselatra_effects::roto::Chain::new(&crate::roto::params_static(g), size, comp.frame_rate.as_f64(), 1.0);
+    tselatra_effects::roto::forget(ch.keys.values().copied());
 }
 
 fn iou_at(s: &mut Session, clip: LayerId, f: u32, c: [f64; 2]) -> f64 {
@@ -198,9 +198,9 @@ fn roto_brush_segments_and_propagates() {
     assert!(iou_at(&mut s, clip, 24, center(24)) > 0.9);
     // Undo / redo of strokes and the span.
     let n = |s: &Session| {
-        let st = s.active_comp().unwrap().layer(clip).unwrap().props.find_group(uid).unwrap().get(effectcraft_effects::roto::STROKES).unwrap().value.clone();
+        let st = s.active_comp().unwrap().layer(clip).unwrap().props.find_group(uid).unwrap().get(tselatra_effects::roto::STROKES).unwrap().value.clone();
         match st {
-            effectcraft_keyframe::Value::Str(j) => effectcraft_track::roto::RotoData::from_json(&j),
+            tselatra_keyframe::Value::Str(j) => tselatra_track::roto::RotoData::from_json(&j),
             _ => panic!(),
         }
     };
@@ -215,7 +215,7 @@ fn roto_brush_segments_and_propagates() {
     assert_eq!(n(&s).strokes.len(), 3);
     assert_eq!(n(&s).span, [0, 24]);
     // Serde keeps the strokes; the reopened project renders the same matte.
-    let back = effectcraft_project::Project::from_json(&s.project.to_json()).unwrap();
+    let back = tselatra_project::Project::from_json(&s.project.to_json()).unwrap();
     let g = back.comp(s.active_comp_id().unwrap()).unwrap().layer(clip).unwrap().props.find_group(uid).unwrap().clone();
     assert_eq!(
         crate::roto::params_static(&g).get("strokes"),
@@ -334,7 +334,7 @@ fn propagation_is_deterministic_and_runs_in_background() {
 
 /// Runs offloaded jobs at once in a second session sharing the footage, through JSON (what the
 /// browser's Web Worker does, minus the thread).
-struct InlineWorker(std::sync::Arc<dyn effectcraft_render::FootageSource>);
+struct InlineWorker(std::sync::Arc<dyn tselatra_render::FootageSource>);
 
 impl crate::offload::Offload for InlineWorker {
     fn start(&self, req: crate::offload::WorkerRequest, inbox: std::sync::Arc<crate::offload::Inbox>) -> Result<(), String> {
@@ -391,7 +391,7 @@ fn object_matte_from_a_click() {
     s.edit("remove solid", None, |p, _| {
         p.comp_mut(cid).unwrap().layers.retain(|l| l.id != solid);
         for it in p.items.values_mut() {
-            if let effectcraft_project::ItemKind::Footage(f) = &mut it.kind {
+            if let tselatra_project::ItemKind::Footage(f) = &mut it.kind {
                 f.path = "object-matte.mov".into();
             }
         }
@@ -406,10 +406,10 @@ fn object_matte_from_a_click() {
     let uid = r["effect"].as_u64().unwrap();
     let key = |s: &Session| {
         let g = s.active_comp().unwrap().layer(clip).unwrap().props.find_group(uid).unwrap().clone();
-        crate::roto::params_static(&g).get(effectcraft_effects::roto::INPUT_KEY).cloned()
+        crate::roto::params_static(&g).get(tselatra_effects::roto::INPUT_KEY).cloned()
     };
     let k0 = key(&s);
-    assert!(matches!(&k0, Some(effectcraft_keyframe::Value::Str(k)) if !k.is_empty()), "{k0:?}");
+    assert!(matches!(&k0, Some(tselatra_keyframe::Value::Str(k)) if !k.is_empty()), "{k0:?}");
     let wrong = |s: &Session, f: u32| {
         let c = center(f);
         alpha_at(s, f)
@@ -430,7 +430,7 @@ fn object_matte_from_a_click() {
     // Other frames under the effect: a new Input Key (the mattes are recomputed).
     s.edit("swap clip", None, |p, _| {
         for it in p.items.values_mut() {
-            if let effectcraft_project::ItemKind::Footage(f) = &mut it.kind {
+            if let tselatra_project::ItemKind::Footage(f) = &mut it.kind {
                 f.path = "object-matte-2.mov".into();
             }
         }
@@ -484,13 +484,13 @@ fn object_matte_reprompt_updates_the_instance() {
     assert_eq!(count(&s), 1);
     assert_eq!(s.history.undo.len(), undo0 + 1);
     let p = ps(&s);
-    assert_eq!(p.get("objectPoint"), Some(&effectcraft_keyframe::Value::Vec2([c[0] + 4.0, c[1]])));
-    assert_eq!(p.get("useBox"), Some(&effectcraft_keyframe::Value::Bool(false)));
-    assert_eq!(effectcraft_effects::object_matte::reference_frame(&p), 2);
-    assert_eq!(effectcraft_effects::object_matte::reach(&p), [30, 6]);
+    assert_eq!(p.get("objectPoint"), Some(&tselatra_keyframe::Value::Vec2([c[0] + 4.0, c[1]])));
+    assert_eq!(p.get("useBox"), Some(&tselatra_keyframe::Value::Bool(false)));
+    assert_eq!(tselatra_effects::object_matte::reference_frame(&p), 2);
+    assert_eq!(tselatra_effects::object_matte::reach(&p), [30, 6]);
     // Undo restores the first prompt.
     s.execute("edit.undo", json!({})).unwrap();
-    assert_eq!(ps(&s).get("useBox"), Some(&effectcraft_keyframe::Value::Bool(true)));
+    assert_eq!(ps(&s).get("useBox"), Some(&tselatra_keyframe::Value::Bool(true)));
     // An unknown or non-Object Matte effect is refused.
     assert!(s.execute_checked("objectMatte.apply", json!({"layer": clip.0, "effect": 999_999, "point": c})).is_err());
 }
@@ -507,7 +507,7 @@ fn object_matte_background_job_cancel_and_freeze() {
     s.edit("remove solid", None, |p, _| {
         p.comp_mut(cid).unwrap().layers.retain(|l| l.id != solid);
         for it in p.items.values_mut() {
-            if let effectcraft_project::ItemKind::Footage(f) = &mut it.kind {
+            if let tselatra_project::ItemKind::Footage(f) = &mut it.kind {
                 f.path = "object-matte-job.mov".into();
             }
         }
@@ -560,7 +560,7 @@ fn object_matte_background_job_cancel_and_freeze() {
     assert_eq!(r["frozen"], true, "{r}");
     let keys: Vec<u64> = s.roto_keys(cid, clip, uid).unwrap().into_iter().map(|(_, k)| k).collect();
     assert_eq!(keys.len(), 25);
-    effectcraft_effects::roto::forget(keys.iter().copied());
+    tselatra_effects::roto::forget(keys.iter().copied());
     let frozen = alpha_at(&s, 4);
     let diff = before.iter().zip(&frozen).filter(|(a, b)| (**a - **b).abs() > 0.02).count();
     assert!(diff < 30, "{diff} pixels differ from the computed matte");
@@ -581,10 +581,10 @@ fn object_matte_background_job_cancel_and_freeze() {
 /// here), and another prompt (other keys) finds nothing.
 #[test]
 fn object_matte_mattes_persist_in_the_disk_cache() {
-    use effectcraft_effects::object_matte as om;
-    use effectcraft_render::disk_cache::Kind;
+    use tselatra_effects::object_matte as om;
+    use tselatra_render::disk_cache::Kind;
     hold_roto_cache_test_lock();
-    let dir = std::env::temp_dir().join(format!("effectcraft-om-disk-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tselatra-om-disk-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let enable = |s: &mut Session| {
         s.execute_checked("prefs.set", json!({"values": {"disk.diskCacheFolder": dir.to_string_lossy(), "disk.diskCacheEnabled": true}})).unwrap();
@@ -595,7 +595,7 @@ fn object_matte_mattes_persist_in_the_disk_cache() {
     s.edit("remove solid", None, |p, _| {
         p.comp_mut(cid).unwrap().layers.retain(|l| l.id != solid);
         for it in p.items.values_mut() {
-            if let effectcraft_project::ItemKind::Footage(f) = &mut it.kind {
+            if let tselatra_project::ItemKind::Footage(f) = &mut it.kind {
                 f.path = "object-matte-disk.mov".into();
             }
         }
@@ -615,7 +615,7 @@ fn object_matte_mattes_persist_in_the_disk_cache() {
     let saved = s.project.clone();
     drop(dc);
     drop(s);
-    effectcraft_effects::roto::forget(keys.iter().map(|(_, k)| *k));
+    tselatra_effects::roto::forget(keys.iter().map(|(_, k)| *k));
 
     // "Reopen": a new session on the same folder and project.
     let (mut s2, _, _) = setup(|f| draw(center(f)));
@@ -637,7 +637,7 @@ fn object_matte_mattes_persist_in_the_disk_cache() {
     assert_eq!(again, before, "the disk-cached matte renders the same");
     // Another prompt: other keys, nothing on disk.
     let mut moved = ps.clone();
-    moved.values.insert("objectPoint".into(), effectcraft_keyframe::Value::Vec2([c[0] + 3.0, c[1]]));
+    moved.values.insert("objectPoint".into(), tselatra_keyframe::Value::Vec2([c[0] + 3.0, c[1]]));
     assert!(om::ensure(&moved, size, 25.0, 0, None, &mut |_| None, &|| false).is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }

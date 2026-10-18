@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 pub(super) const KIND: &str = "actionBatch";
 const LABEL: f32 = 130.0;
@@ -15,7 +15,7 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Batch").into(), body, confirm, ok: Some("OK"), min_width: 420.0, max_width: Some(460.0), ..DialogSpec::FORM };
 
 /// Open the Batch dialog for the selected action (`set`, `action` indexes into `action_sets`).
-pub fn open(app: &mut VectorcraftApp, set: usize, action: usize) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, set: usize, action: usize) -> Result<Value, String> {
     let a = app.ui.action_sets.get(set).and_then(|s| s.actions.get(action)).ok_or("no such action")?;
     if a.steps.is_empty() {
         return Err("the action has no steps".into());
@@ -41,7 +41,7 @@ pub fn open(app: &mut VectorcraftApp, set: usize, action: usize) -> Result<Value
     Ok(Value::Null)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     ui.label(egui::RichText::new(d.str("actionName")).color(t.text_strong));
     ui.add_space(8.0);
@@ -79,7 +79,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let set = d.fields.get("set").and_then(Value::as_u64).unwrap_or(0) as usize;
     let action = d.fields.get("action").and_then(Value::as_u64).unwrap_or(0) as usize;
     let a = app.ui.action_sets.get(set).and_then(|s| s.actions.get(action)).ok_or("no such action")?.clone();

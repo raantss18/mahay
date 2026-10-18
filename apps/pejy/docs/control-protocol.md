@@ -1,13 +1,13 @@
 # Control protocol
 
-Start the app with `--control <port>` (or `DESIGNCRAFT_CONTROL_PORT`). The server listens on
+Start the app with `--control <port>` (or `PEJY_CONTROL_PORT`). The server listens on
 `127.0.0.1` only and speaks JSON lines: one request object per line, one reply per line.
 
-For an isolated native test profile, set `DESIGNCRAFT_CONFIG_DIR` to a dedicated directory before
+For an isolated native test profile, set `PEJY_CONFIG_DIR` to a dedicated directory before
 launch. UI/engine preferences and the `Recovery` directory then live under that root. An unset
-override preserves the usual platform paths (or `DesignCraftData` next to the executable when a
+override preserves the usual platform paths (or `PejyData` next to the executable when a
 `portable.txt` sits there); an explicitly empty override disables those paths.
-`DESIGNCRAFT_NO_PREFS` still disables preference reads/writes independently of recovery.
+`PEJY_NO_PREFS` still disables preference reads/writes independently of recovery.
 
 Control pointer and key input is queued across native frames. After a drag, wait for both the
 expected document state and `document.inspect.canUndo` before testing undo; an object can appear
@@ -23,7 +23,7 @@ an object without `method`, invalid UTF-8, and a line longer than 4 MiB. An HTTP
 web page's cross-origin `fetch` to `127.0.0.1:<port>`) therefore can't smuggle a command in its body:
 its request line is rejected first. At most 16 connections are served at once; further ones get an error
 line and are closed. Clients that get an error reply should reconnect. The port has no authentication,
-so only enable it while you use it. Transport: `apps/designcraft/src/control_server.rs`.
+so only enable it while you use it. Transport: `apps/pejy/src/control_server.rs`.
 
 ```json
 {"id": 1, "method": "engine.execute", "params": {"command": "frame.create", "params": {"rect": [36, 36, 300, 200], "content": "text"}}}
@@ -41,7 +41,7 @@ so only enable it while you use it. Transport: `apps/designcraft/src/control_ser
 | `ui.pointer` | `{events:[{kind: down\|drag\|up\|move\|doubleclick, x, y, space?: "screen"\|"canvas", clicks?}], mods?}` | Drive the active tool through the same code path as the mouse; `clicks` on a `down` is the press count (3 = triple click); returns the selection, the tool and its cursor at the last event (e.g. `LoadedText`, `ThreadLink`, `Unthread`) |
 | `ui.key` / `ui.text` | `{key, shift?, alt?, cmd?}` / `{text}` | Synthetic keyboard input (typing into a text frame) |
 | `ui.ime` | `{preedit?, active?: [start, end], commit?}` | Input method events as the system IME sends them: marked text (shown in place, `active` is the clause being converted, in characters) and the committed text (typed as one `text.insert`) |
-| `ui.paste` | `{text}` | What Ctrl/Cmd+V delivers from the system clipboard: text into the text being edited, or SVG markup (vector art copied in Illustrator, VectorCraft or Figma) as editable paths in the middle of the view |
+| `ui.paste` | `{text}` | What Ctrl/Cmd+V delivers from the system clipboard: text into the text being edited, or SVG markup (vector art copied in Illustrator, Tsipika or Figma) as editable paths in the middle of the view |
 | `ui.move` / `ui.click` / `ui.drag` | screen points, `button?: left\|right\|middle`, `count?: 1–255` (click/drag, default 1), `steps?: positive integer` (drag, default 8) | Real egui pointer input — reaches every widget, menu and panel |
 | `ui.set` | `{brightness?, panel?, rulers?, guides?, frameEdges?, baselineGrid?, documentGrid?, textThreads?, screenMode?, zoom?, page?, fit?}` | UI state |
 | `ui.dialog.open` | `{id, fields?}` | Open a dialog by id (e.g. `paragraphStyleOptions` or `characterStyleOptions` with `{name, section}`, or `{new: true}` for a new style) |
@@ -56,9 +56,9 @@ Data merge runs through `engine.execute` like any command: `data.source.select`,
 `.remove`, `data.options`, `data.preview` / `data.preview.stop`, `data.merge`. `data.merge` creates and activates a new
 merged document; the template stays as it was ([agents.md](agents.md#data-merge)).
 
-Headless window screenshots (locked screen, hidden window): `cargo run -p designcraft-ui-egui --example ui_shot -- script.jsonl`, where each line is one of the requests above, `{"shot": "/abs/out.png"}` or `{"steps": n}` (renders the whole UI offscreen with wgpu).
+Headless window screenshots (locked screen, hidden window): `cargo run -p pejy-ui-egui --example ui_shot -- script.jsonl`, where each line is one of the requests above, `{"shot": "/abs/out.png"}` or `{"steps": n}` (renders the whole UI offscreen with wgpu).
 
-The MCP server (`designcraft-cli mcp`) wraps the same methods for Claude and other agents.
+The MCP server (`pejy-cli mcp`) wraps the same methods for Claude and other agents.
 
 ### Click and drag limits
 

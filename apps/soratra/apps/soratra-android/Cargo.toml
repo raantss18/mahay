@@ -25,3 +25,4 @@ rfd = { workspace = true }
 arboard = { workspace = true, features = ["image-data"] }
 pollster = "0.4"
 mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }

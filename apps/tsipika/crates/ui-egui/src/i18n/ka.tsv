@@ -1,8 +1,8 @@
 # Georgian (ka) catalog. Same format as zh-hant.tsv:  context <TAB> source <TAB> translation
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|other" forms).
 #
-# Clean-room: every entry is written from the meaning of VectorCraft's English label, following
-# the shared Georgian glossary of the Craft apps (commands as verbal nouns: შენახვა, გახსნა; no
+# Clean-room: every entry is written from the meaning of Tsipika's English label, following
+# the shared Georgian glossary of the Mahay apps (commands as verbal nouns: შენახვა, გახსნა; no
 # capitals, Georgian has none); no other application's Georgian localisation was consulted or
 # copied. Drafted with AI assistance (Claude); not yet reviewed by a native speaker.
 # Vocabulary: სამუშაო დაფა (artboard), ტრაექტორია (path), საყრდენი წერტილი (anchor point),
@@ -16,7 +16,7 @@
 # OpenType, the built-in workspace names and the bracketed perspective grid preset names. Keep
 # placeholders, ellipses and the leading/trailing spaces of fragments when editing.
 	Glowing Edges…	მანათობელი კიდეები…
-	About VectorCraft	VectorCraft-ის შესახებ
+	About Tsipika	Tsipika-ის შესახებ
 	Align to Path	ტრაექტორიაზე სწორება
 	Cut Path at Selected Anchor Points	ტრაექტორიის გაჭრა მონიშნულ საყრდენ წერტილებზე
 	Join Our Discord	შემოგვიერთდით Discord-ზე
@@ -26,7 +26,7 @@
 	Medium Dark	საშუალოდ ბნელი
 	Medium Light	საშუალოდ ღია
 	Light	ღია
-	Quit VectorCraft	VectorCraft-იდან გასვლა
+	Quit Tsipika	Tsipika-იდან გასვლა
 	File	ფაილი
 	New…	ახალი…
 	New from Template…	შაბლონიდან შექმნა…
@@ -587,11 +587,11 @@
 	Save Swatch Library…	ფერის ნიმუშების ბიბლიოთეკის შენახვა…
 	Symbol Libraries	სიმბოლოების ბიბლიოთეკები
 	Help	დახმარება
-	ArtCraft Website	ArtCraft-ის ვებსაიტი
-	VectorCraft on getartcraft.com	VectorCraft getartcraft.com-ზე
-	VectorCraft on GitHub	VectorCraft GitHub-ზე
+	Mahay Website	Mahay-ის ვებსაიტი
+	Tsipika on mahay.com	Tsipika mahay.com-ზე
+	Tsipika on GitHub	Tsipika GitHub-ზე
 	Search Commands…	ბრძანებების ძიება…
-	VectorCraft Help…	VectorCraft-ის დახმარება…
+	Tsipika Help…	Tsipika-ის დახმარება…
 	Automatic	ავტომატური
 	Isolate Selected Group	მონიშნული ჯგუფის იზოლირება
 	Exit Isolation Mode	იზოლაციის რეჟიმიდან გამოსვლა
@@ -640,7 +640,7 @@
 	Dock Panel	პანელის მიმაგრება
 	Float Tool Group	მცურავი ხელსაწყოთა ჯგუფი
 	Services	სერვისები
-	Hide VectorCraft	VectorCraft-ის დამალვა
+	Hide Tsipika	Tsipika-ის დამალვა
 	Hide Others	სხვების დამალვა
 	Minimize	ჩაკეცვა
 	Zoom	მასშტაბი
@@ -1709,7 +1709,7 @@ lighting	Light	სინათლე
 	Select All Bound Objects	ყველა დაკავშირებული ობიექტის მონიშვნა
 	Multiple objects	რამდენიმე ობიექტი
 	Graphics: {adapter}	გრაფიკა: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	ArtCraft-ის ნაწილი. MIT OR Apache-2.0. შრიფტები: Source Sans 3, Inter, JetBrains Mono (OFL). ხატულები: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Mahay-ის ნაწილი. MIT OR Apache-2.0. შრიფტები: Source Sans 3, Inter, JetBrains Mono (OFL). ხატულები: Lucide (ISC) + Tsipika.
 	Version {version} — open-source vector illustration in pure Rust.	ვერსია {version} — ღია კოდის ვექტორული ილუსტრაცია სუფთა Rust-ზე.
 	Align to Page	გვერდზე სწორება
 	Smooth Color	ფერის გლუვი გადასვლა
@@ -2007,7 +2007,7 @@ lighting	Light	სინათლე
 	{count} folder(s) or file(s) couldn't be read	ვერ წაიკითხა საქაღალდეები ან ფაილები: {count}
 	The search stopped at its limit: search a smaller folder.	ძიება ზღვარზე შეჩერდა: მოძებნეთ უფრო პატარა საქაღალდეში.
 	Copy only fonts you own or are licensed to install.	დააკოპირეთ მხოლოდ ის შრიფტები, რომლებიც გეკუთვნით ან რომელთა დაყენების ლიცენზია გაქვთ.
-	VectorCraft copies the fonts to {folder}.	VectorCraft შრიფტებს აკოპირებს აქ: {folder}.
+	Tsipika copies the fonts to {folder}.	Tsipika შრიფტებს აკოპირებს აქ: {folder}.
 	Apply to All ({count} more missing)	ყველაზე გამოყენება (კიდევ დაკარგული: {count})
 	Ignore	უგულებელყოფა
 	Linked File Not Found	დაკავშირებული ფაილი ვერ მოიძებნა
@@ -2095,7 +2095,7 @@ lighting	Light	სინათლე
 	On: one locked object showing the document, updated when it changes.	ჩართული: ერთი ჩაკეტილი ობიექტი, რომელიც დოკუმენტს აჩვენებს და მისი ცვლილებისას ახლდება.
 	Off: an editable copy of its art, embedded in this document.	გამორთული: მისი ნახატის რედაქტირებადი ასლი, ჩაშენებული ამ დოკუმენტში.
 	Images: link to the file instead of only embedding it.	გამოსახულებები: ფაილის ბმული მხოლოდ ჩაშენების ნაცვლად.
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft-ის დოკუმენტები: ერთი ჩაკეტილი ობიექტი, რომელიც ფაილის ცვლილებისას ახლდება.
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika-ის დოკუმენტები: ერთი ჩაკეტილი ობიექტი, რომელიც ფაილის ცვლილებისას ახლდება.
 	Alignment:	სწორება:
 	Applies when the linked file is relinked or updated.	მოქმედებს, როცა დაკავშირებული ფაილი ხელახლა უკავშირდება ან ახლდება.
 	Bounds (Fill Proportionally)	საზღვრები (პროპორციული შევსება)
@@ -2221,7 +2221,7 @@ lighting	Light	სინათლე
 	3 Color Job	3-ფერიანი ბეჭდვა
 	Recover Documents	დოკუმენტების აღდგენა
 	Restored documents open unsaved: save them to keep them.	აღდგენილი დოკუმენტები შეუნახავად იხსნება: შესანარჩუნებლად შეინახეთ ისინი.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft ბოლოს ნორმალურად არ დახურულა. ამ დოკუმენტებს შეუნახავი ცვლილებები ჰქონდა:
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika ბოლოს ნორმალურად არ დახურულა. ამ დოკუმენტებს შეუნახავი ცვლილებები ჰქონდა:
 	Do you want to save the changes you made to “{name}”?	შევინახო „{name}“-ში შეტანილი ცვლილებები?
 	Don't Save	არ შეინახო
 	Your changes will be lost if you don't save them.	თუ ცვლილებებს არ შეინახავთ, ისინი დაიკარგება.
@@ -3261,7 +3261,7 @@ axis	Both	ორივე
 	Width	სიგანე
 	:	:
 effect	Regular	ჩვეულებრივი
-	Saving Poster.vectorcraft	Poster.vectorcraft-ის შენახვა
+	Saving Poster.tsipika	Poster.tsipika-ის შენახვა
 	Community	საზოგადოება
 	Hide Bar	ზოლის დამალვა
 	More Options	მეტი პარამეტრი
@@ -3273,11 +3273,11 @@ effect	Regular	ჩვეულებრივი
 	Quickly start a new file	ახალი ფაილის სწრაფად შექმნა
 	Recent Files	ბოლოს გახსნილი ფაილები
 	Vector illustration — fast, open, scriptable.	ვექტორული ილუსტრაცია — სწრაფი, ღია, სკრიპტებით მართვადი.
-	Welcome to VectorCraft	კეთილი იყოს თქვენი მობრძანება VectorCraft-ში
-	ArtCraft website	ArtCraft-ის ვებსაიტი
+	Welcome to Tsipika	კეთილი იყოს თქვენი მობრძანება Tsipika-ში
+	Mahay website	Mahay-ის ვებსაიტი
 	Discord	Discord
 	Join our Discord	შემოგვიერთდით Discord-ზე
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	შემოუერთდით ArtCraft-ის საზოგადოებას Discord-ზე (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	შემოუერთდით Mahay-ის საზოგადოებას Discord-ზე (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	საწყისი კოდი GitHub-ზე
 	All Tools	ყველა ხელსაწყო
 	Draw	ხატვა
@@ -3320,7 +3320,7 @@ effect	Regular	ჩვეულებრივი
 	Opened with {} note(s): {}	გაიხსნა, შენიშვნა ({}): {}
 	Revert to the saved version of “{name}”?	დაბრუნდეს „{name}“-ის შენახული ვერსია?
 	Replace “{name}”, the file this document was opened from?	ჩანაცვლდეს „{name}“, ფაილი, რომლიდანაც ეს დოკუმენტი გაიხსნა?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	გახსნისას გამოტოვდა ის, რისი წაკითხვაც VectorCraft-ს ჯერ არ შეუძლია ({what}), ამიტომ ჩანაცვლება მას სამუდამოდ დაკარგავს. შესანარჩუნებლად შეინახეთ სხვა სახელით.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	გახსნისას გამოტოვდა ის, რისი წაკითხვაც Tsipika-ს ჯერ არ შეუძლია ({what}), ამიტომ ჩანაცვლება მას სამუდამოდ დაკარგავს. შესანარჩუნებლად შეინახეთ სხვა სახელით.
 	Saved {path}	შენახულია: {path}
 	Saved {path} with {} note(s): {first}	შენახულია: {path}, შენიშვნა ({}): {first}
 	Saving	შენახვა
@@ -3329,7 +3329,7 @@ effect	Regular	ჩვეულებრივი
 	Dashed Line	ტირეებიანი ხაზი
 	Panel menu	პანელის მენიუ
 	Unembed…	ჩაშენების მოხსნა…
-	Applies the next time VectorCraft starts.	ძალაში შევა VectorCraft-ის მომდევნო გაშვებისას.
+	Applies the next time Tsipika starts.	ძალაში შევა Tsipika-ის მომდევნო გაშვებისას.
 	Enable Contextual Task Bar	კონტექსტური ამოცანების ზოლის ჩართვა
 	Next	შემდეგი
 	OK	OK
@@ -3682,7 +3682,7 @@ effect	Regular	ჩვეულებრივი
 @msg	can't encode the document: {0}	დოკუმენტის კოდირება ვერ ხერხდება: {0}
 @msg	can't parse shortcut `{c}`	მალსახმობის `{c}` ანალიზი ვერ ხერხდება
 @msg	can't parse shortcut `{s}` for `{k}`	მალსახმობის `{s}` ანალიზი `{k}`-სთვის ვერ ხერხდება
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	ვერსიის {0} შენახვა ვერ ხერხდება: VectorCraft წერს ვერსიებს {MIN_VERSION}-დან {VERSION}-მდე
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	ვერსიის {0} შენახვა ვერ ხერხდება: Tsipika წერს ვერსიებს {MIN_VERSION}-დან {VERSION}-მდე
 @msg	can't write .{ext} images	.{ext} გამოსახულებების ჩაწერა ვერ ხერხდება
 @msg	cannot distort a zero-size bounding box	ნულოვანი ზომის შემომსაზღვრელი ჩარჩოს დეფორმაცია შეუძლებელია
 @msg	cannot read PDF: {0}	PDF-ის წაკითხვა ვერ ხერხდება: {0}
@@ -3706,7 +3706,7 @@ effect	Regular	ჩვეულებრივი
 @msg	empty brush stroke	ცარიელი ფუნჯის შტრიხი
 @msg	empty cutter	ცარიელი საჭრელი
 @msg	empty path	ცარიელი ტრაექტორია
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	ფაილის ვერსია {0} უფრო ახალია, ვიდრე ამ VectorCraft-ის მხარდაჭერილი ({VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	ფაილის ვერსია {0} უფრო ახალია, ვიდრე ამ Tsipika-ის მხარდაჭერილი ({VERSION})
 @msg	freeform point {i} needs `at` [x, y] and a valid `color`	თავისუფალ წერტილს {i} სჭირდება `at` [x, y] და სწორი `color`
 @msg	freeform line {i} must be an array of point indices	თავისუფალი ხაზი {i} უნდა იყოს წერტილების ინდექსების მასივი
 @msg	give both `start` and `end` [x, y] (or neither)	მიუთითეთ `start` და `end` [x, y] ორივე (ან არცერთი)
@@ -3725,9 +3725,9 @@ effect	Regular	ჩვეულებრივი
 @msg	invalid PDF setting: {0}	PDF-ის არასწორი პარამეტრი: {0}
 @msg	invalid image data for `{0}`	არასწორი გამოსახულების მონაცემები `{0}`-სთვის
 @msg	invalid parameters for `{cmd}`: {msg}	არასწორი პარამეტრები `{cmd}`-სთვის: {msg}
-@msg	is not an image VectorCraft reads	ეს არ არის გამოსახულება, რომელსაც VectorCraft კითხულობს
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	ის იყენებს `{at}`-ს, რომელიც VectorCraft-ის PostScript-ის წამკითხველმა არ იცის
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	ის იყენებს `{at}`-ს, რომელიც VectorCraft-ის PostScript-ის წამკითხველმა არ იცის, {procs}-ში
+@msg	is not an image Tsipika reads	ეს არ არის გამოსახულება, რომელსაც Tsipika კითხულობს
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	ის იყენებს `{at}`-ს, რომელიც Tsipika-ის PostScript-ის წამკითხველმა არ იცის
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	ის იყენებს `{at}`-ს, რომელიც Tsipika-ის PostScript-ის წამკითხველმა არ იცის, {procs}-ში
 @msg	its Windows metafile preview was opened instead, which may simplify the art	სამაგიეროდ გაიხსნა მისი Windows metafile გადახედვა, რამაც შეიძლება ნახატი გაამარტივოს
 @msg	its preview was placed instead, at screen resolution	სამაგიეროდ განთავსდა მისი გადახედვა, ეკრანის გარჩევადობით
 @msg	join needs open paths	შეერთებას ღია ტრაექტორიები სჭირდება
@@ -3830,8 +3830,8 @@ effect	Regular	ჩვეულებრივი
 @msg	no user workspace `{from}`	მომხმარებლის სამუშაო სივრცე `{from}` არ არის
 @msg	node {_1} is not text	კვანძი {_1} ტექსტი არ არის
 @msg	not a DXF drawing	ეს არ არის DXF ნახაზი
-@msg	not a VectorCraft file: {0}	ეს არ არის VectorCraft-ის ფაილი: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	ეს არ არის VectorCraft-ის მალსახმობების ნაკრები (აკლია `overrides`)
+@msg	not a Tsipika file: {0}	ეს არ არის Tsipika-ის ფაილი: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	ეს არ არის Tsipika-ის მალსახმობების ნაკრები (აკლია `overrides`)
 @msg	not a graphic style library (format `{_1}`)	ეს არ არის გრაფიკული სტილების ბიბლიოთეკა (ფორმატი `{_1}`)
 @msg	not a stored central record	ეს არ არის შენახული ცენტრალური ჩანაწერი
 @msg	not a valid plug-in module: {0}	ეს არ არის პლაგინის სწორი მოდული: {0}
@@ -4053,9 +4053,9 @@ effect	Regular	ჩვეულებრივი
 @msg	Sent to {_1}	გაგზავნილია: {_1}
 @msg	{_1} files	ფაილები: {_1}
 @msg	The graphics were lost and have been restarted	გრაფიკა დაიკარგა და ხელახლა გაეშვა
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	პირველად ნაცდმა გრაფიკულმა პროცესორმა ფანჯარა ვერ აჩვენა, ამიტომ VectorCraft ხელახლა გაეშვა: {summary}
-@msg	Loading VectorCraft…	VectorCraft იტვირთება…
-@msg	VectorCraft failed to start: {e}	VectorCraft-ის გაშვება ვერ მოხერხდა: {e}
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	პირველად ნაცდმა გრაფიკულმა პროცესორმა ფანჯარა ვერ აჩვენა, ამიტომ Tsipika ხელახლა გაეშვა: {summary}
+@msg	Loading Tsipika…	Tsipika იტვირთება…
+@msg	Tsipika failed to start: {e}	Tsipika-ის გაშვება ვერ მოხერხდა: {e}
 @msg	A browser with WebGPU or WebGL2 is required.	საჭიროა ბრაუზერი WebGPU-ით ან WebGL2-ით.
 @msg	The graphics were lost and couldn't be restarted.	გრაფიკა დაიკარგა და ხელახლა ვერ გაეშვა.
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	შეუნახავი ცვლილებები ამ ბრაუზერშია შენახული: დასაბრუნებლად გადატვირთეთ გვერდი.
@@ -4077,23 +4077,23 @@ effect	Regular	ჩვეულებრივი
 @msg	it has more than {MAX_NODES} objects	მას {MAX_NODES}-ზე მეტი ობიექტი აქვს
 @msg	it has no layers	მას შრეები არ აქვს
 @msg	it has too many values in a row	მას ერთ რიგში ზედმეტად ბევრი მნიშვნელობა აქვს
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	მას აქვს {_1}, რასაც VectorCraft მისგან ჯერ ვერ კითხულობს
+@msg	it has {_1}, which Tsipika doesn't read from it yet	მას აქვს {_1}, რასაც Tsipika მისგან ჯერ ვერ კითხულობს
 @msg	its objects are nested too deeply	მისი ობიექტები ზედმეტად ღრმადაა ჩადგმული
 @msg	its section ending with `%{end}` doesn't end	მისი სექცია, რომელიც `%{end}`-ით მთავრდება, არ სრულდება
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	რამდენიმე შევსების ან კონტურის, ეფექტის ან ფუნჯის მქონე ობიექტები შემოვიდა დახატული სახით ({_1}): მათი იერსახე ჯერ არ რედაქტირდება
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	გრადიენტი „{name}“ ფაილში განსაზღვრული არ არის: მის ნაცვლად ერთგვაროვანი ფერია
-@msg	an image VectorCraft can't read was left out	გამოსახულება, რომელსაც VectorCraft ვერ კითხულობს, გამოტოვებულია
+@msg	an image Tsipika can't read was left out	გამოსახულება, რომელსაც Tsipika ვერ კითხულობს, გამოტოვებულია
 @msg	an image whose data is cut short was left out	გამოსახულება, რომლის მონაცემებიც შეკვეცილია, გამოტოვებულია
 @msg	its editing data doesn't say where its art is	მისი რედაქტირების მონაცემები არ მიუთითებს, სად არის მისი ნახატი
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	ეს ფაილი PDF-თავსებადობის გარეშეა შენახული და მისი რედაქტირების მონაცემების წაკითხვა ვერ ხერხდება ({why})
 @msg	No fonts are missing in this document	ამ დოკუმენტში შრიფტები არ აკლია
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft არ ეძებს სხვა აპების ან სისტემის საქაღალდეებში: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft არ ეძებს Users-ის Shared ან Public საქაღალდეში: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika არ ეძებს სხვა აპების ან სისტემის საქაღალდეებში: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika არ ეძებს Users-ის Shared ან Public საქაღალდეში: {path}
 @msg	{path} is not a folder	{path} საქაღალდე არ არის
 @msg	the search couldn't start: try again in a moment	ძიება ვერ დაიწყო: ცოტა ხანში სცადეთ ხელახლა
 @msg	searching a folder isn't available on the web	საქაღალდეში ძიება ვებში მიუწვდომელია
 @msg	every search thread stopped on an internal error (please report this bug)	ძიების ყველა ნაკადი შიდა შეცდომით შეჩერდა (გთხოვთ, შეგვატყობინოთ ეს ხარვეზი)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	VectorCraft-ის შრიფტების საქაღალდე აქ დაყენებული არ არის: მას აყენებს სამაგიდო აპი და vectorcraft-cli
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	Tsipika-ის შრიფტების საქაღალდე აქ დაყენებული არ არის: მას აყენებს სამაგიდო აპი და tsipika-cli
 @msg	choose the font files to add	აირჩიეთ დასამატებელი შრიფტის ფაილები
 @msg	{n} font file(s) are now in {folder}	შრიფტის ფაილები ({n}) ახლა აქ არის: {folder}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	შრიფტის ფაილები ({n}) ახლა აქ არის: {folder}; ვერ დაემატა {failed}: {reason}
@@ -4217,7 +4217,7 @@ effect	Regular	ჩვეულებრივი
 	All shortcuts reset to defaults.	ყველა მალსახმობი ნაგულისხმევზე დაბრუნდა.
 	Imported. Press OK to keep the imported set.	შემოტანილია. შემოტანილი ნაკრების შესანარჩუნებლად დააჭირეთ OK-ს.
 	⚠ {chord} was already used by {names} — it has been removed there.	{chord} უკვე გამოიყენებოდა აქ: {names} — იქიდან მოცილებულია.
-	VectorCraft Defaults	VectorCraft-ის ნაგულისხმევი
+	Tsipika Defaults	Tsipika-ის ნაგულისხმევი
 @plural	{n} shortcut is assigned more than once|{n} shortcuts are assigned more than once	ერთზე მეტჯერ მინიჭებული მალსახმობები: {n}
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	„სიმულაცია“ ბეჭდავს ზედდაბეჭდვებს ისე, როგორც ზედდაბეჭდვის გადახედვა აჩვენებს; სეპარაცია მათ ყოველთვის ინარჩუნებს. პრესეტი ბეჭდვამდე აბრტყელებს გამჭვირვალობას (PostScript ფაილები მას ყოველთვის აბრტყელებს).
 	Preserve	შენარჩუნება
@@ -4446,7 +4446,7 @@ effect	Regular	ჩვეულებრივი
 	Artistic	მხატვრული
 	Film Grain…	ფირის მარცვლოვნება…
 	Highlight Area	ნათელი არე
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	შეკუმშული ფაილი იმაზე მეტად იშლება, ვიდრე VectorCraft კითხულობს ({_1} მბ დოკუმენტი, {_2} მბ თითო გამოსახულებაზე)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	შეკუმშული ფაილი იმაზე მეტად იშლება, ვიდრე Tsipika კითხულობს ({_1} მბ დოკუმენტი, {_2} მბ თითო გამოსახულებაზე)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	დოკუმენტი შეკუმშვით შესანახად ზედმეტად დიდია ({0}): შეინახეთ გამორთული „შეკუმშვის გამოყენებით“
 @msg	the file stopped being read (please report this bug)	ფაილის წაკითხვა შეწყდა (გთხოვთ, შეგვატყობინოთ ამ შეცდომის შესახებ)
 	Concentric Dividers:	კონცენტრული გამყოფები:
@@ -4507,7 +4507,7 @@ file-filter	PDF presets	PDF-ის პრესეტები
 file-filter	Print presets	ბეჭდვის პრესეტები
 file-filter	SVG Compressed	შეკუმშული SVG
 file-filter	PDF-compatible .ai	PDF-თან თავსებადი .ai
-file-filter	VectorCraft Template	VectorCraft-ის შაბლონი
+file-filter	Tsipika Template	Tsipika-ის შაბლონი
 file-filter	Templates	შაბლონები
 diagnostics	render	რენდერი
 diagnostics	ui	ინტერფეისი
@@ -4549,7 +4549,7 @@ mark-style	Japanese	იაპონური
 	High Fidelity Photo	მაღალი სიზუსტის ფოტო
 	Image Trace (Make and Expand)	გამოსახულების ვექტორიზაცია (შექმნა და გაშლა)
 	Joins:	შეერთებები:
-	Keeps the document editable: VectorCraft reopens the PDF with nothing lost. For files you'll edit again.	დოკუმენტს რედაქტირებადს ტოვებს: VectorCraft PDF-ს ხელახლა ხსნის ყველაფრის შენარჩუნებით. ფაილებისთვის, რომლებსაც კიდევ დაარედაქტირებთ.
+	Keeps the document editable: Tsipika reopens the PDF with nothing lost. For files you'll edit again.	დოკუმენტს რედაქტირებადს ტოვებს: Tsipika PDF-ს ხელახლა ხსნის ყველაფრის შენარჩუნებით. ფაილებისთვის, რომლებსაც კიდევ დაარედაქტირებთ.
 	Lab Spot Colors	Lab სპოტ-ფერები
 	Lasso	ლასო
 	Length:	სიგრძე:
@@ -4589,9 +4589,9 @@ mark-style	Japanese	იაპონური
 	Touch Type	სენსორული ტექსტი
 	UTF-16 (Unicode)	UTF-16 (Unicode)
 	Variation	ვარიაცია
-	VectorCraft Default	VectorCraft-ის ნაგულისხმევი
-	VectorCraft Generic CMYK (SWOP-like)	VectorCraft-ის ზოგადი CMYK (SWOP-ის მსგავსი)
-	VectorCraft Swatches (.vcswatches)	VectorCraft-ის ფერის ნიმუშები (.vcswatches)
+	Tsipika Default	Tsipika-ის ნაგულისხმევი
+	Tsipika Generic CMYK (SWOP-like)	Tsipika-ის ზოგადი CMYK (SWOP-ის მსგავსი)
+	Tsipika Swatches (.vcswatches)	Tsipika-ის ფერის ნიმუშები (.vcswatches)
 	Vertical Area Type	ვერტიკალური არის ტექსტი
 	Vertical Type	ვერტიკალური ტექსტი
 	Vertical Type on a Path	ვერტიკალური ტექსტი ტრაექტორიაზე
@@ -4605,7 +4605,7 @@ mark-style	Japanese	იაპონური
 	Check Script	სკრიპტის შემოწმება
 	Check Script…	სკრიპტის შემოწმება…
 	Copy Report	ანგარიშის კოპირება
-	VectorCraft read this script without running it.	VectorCraft-მა ეს სკრიპტი წაიკითხა მისი გაშვების გარეშე.
+	Tsipika read this script without running it.	Tsipika-მა ეს სკრიპტი წაიკითხა მისი გაშვების გარეშე.
 	Needs nothing beyond plain JavaScript	საკმარისია ჩვეულებრივი JavaScript
 	Needs the script language's own objects or directives	სჭირდება სკრიპტის ენის საკუთარი ობიექტები ან დირექტივები
 	Needs the document model	სჭირდება დოკუმენტის მოდელი
@@ -4675,14 +4675,14 @@ imageTrace	Outline	კონტური
 	Coloring Controls	ფერის მართვის ელემენტები
 	Draw Mode Controls	ხატვის რეჟიმის მართვის ელემენტები
 	Drawer menu	ხელსაწყოების ჩამოსაშლელი მენიუ
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	ფაილის თითოეულ ჩანაწერს შეესაბამება VectorCraft-ის ხელსაწყო, ბრძანება ან პანელი. შეამოწმეთ შესაბამისობები და უპასუხეთ დარჩენილს.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	ფაილის თითოეულ ჩანაწერს შეესაბამება Tsipika-ის ხელსაწყო, ბრძანება ან პანელი. შეამოწმეთ შესაბამისობები და უპასუხეთ დარჩენილს.
 	Enhanced	გაუმჯობესებული
 	Fill and Stroke Controls	შევსებისა და კონტურის მართვის ელემენტები
 	Forget Import Matches	იმპორტის შესაბამისობების დავიწყება
 	Import Matches	იმპორტის შესაბამისობები
 	Import Shortcut Set	მალსახმობების ნაკრების იმპორტი
 	Import Shortcut Set…	მალსახმობების ნაკრების იმპორტი…
-	In VectorCraft	VectorCraft-ში
+	In Tsipika	Tsipika-ში
 	In the File	ფაილში
 	Keys	კლავიშები
 	Light behind the object	სინათლე ობიექტის უკან
@@ -4704,7 +4704,7 @@ imageTrace	Outline	კონტური
 	Shortcuts	მალსახმობები
 	Single Corner Radius	კუთხის ერთიანი რადიუსი
 	Softness	სირბილე
-	Start from VectorCraft Defaults	VectorCraft-ის ნაგულისხმევიდან დაწყება
+	Start from Tsipika Defaults	Tsipika-ის ნაგულისხმევიდან დაწყება
 	The file is too large to read in full, so only its first part is listed.	ფაილი სრულად წასაკითხად ზედმეტად დიდია, ამიტომ მხოლოდ მისი პირველი ნაწილია ნაჩვენები.
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	ფაილი კლავიშებსა და მოდიფიკატორებს კოდებით წერს. შეამოწმეთ შემოთავაზებული მნიშვნელობები და უპასუხეთ ჯერ უცნობ კოდებს.
 	Toolbar: Show Controls	ხელსაწყოთა ზოლი: მართვის ელემენტების ჩვენება
@@ -4715,7 +4715,7 @@ imageTrace	Outline	კონტური
 	from your earlier imports	თქვენი წინა იმპორტებიდან
 	not known yet	ჯერ უცნობია
 	{ready} of {total} ready	მზადაა: {ready} / {total}
-@msg	This shortcut file is in a form VectorCraft can't read.	მალსახმობების ეს ფაილი ისეთ ფორმატშია, რომელსაც VectorCraft ვერ კითხულობს.
+@msg	This shortcut file is in a form Tsipika can't read.	მალსახმობების ეს ფაილი ისეთ ფორმატშია, რომელსაც Tsipika ვერ კითხულობს.
 @msg	control must be fillStroke, coloring, drawMode or screenMode	control უნდა იყოს fillStroke, coloring, drawMode ან screenMode
 @msg	give a fraction `t` from 0 to 1	მიუთითეთ წილი `t` 0-დან 1-მდე
 @msg	give the path `id`	მიუთითეთ ტრაექტორიის `id`
@@ -4914,8 +4914,8 @@ imageTrace	Outline	კონტური
 @msg	name is empty	სახელი ცარიელია
 @msg	no symbol named `{n}`	სიმბოლო სახელით `{n}` არ არის
 @msg	no saved selection recalled	შენახული მონიშვნა გამოძახებული არ არის
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	VectorCraft-ის ბოლო გაშვება ფანჯრის გამოჩენამდე შეწყდა (გრაფიკული პროცესორი: {name}), ამიტომ VectorCraft გაეშვა: {summary}. ამ გრაფიკული პროცესორის ხელახლა საცდელად შეცვალეთ პარამეტრები › წარმადობა › გრაფიკული პროცესორი ან გაუშვით WGPU_BACKEND ცვლადის მითითებით
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	VectorCraft-ის ბოლო გაშვება გრაფიკული პროცესორების ჩამოთვლისას შეწყდა, ამიტომ VectorCraft გაეშვა მხოლოდ OpenGL-ით: {summary}. სხვა გრაფიკული ინტერფეისების ხელახლა საცდელად შეცვალეთ პარამეტრები › წარმადობა › გრაფიკული პროცესორი ან გაუშვით WGPU_BACKEND ცვლადის მითითებით
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Tsipika-ის ბოლო გაშვება ფანჯრის გამოჩენამდე შეწყდა (გრაფიკული პროცესორი: {name}), ამიტომ Tsipika გაეშვა: {summary}. ამ გრაფიკული პროცესორის ხელახლა საცდელად შეცვალეთ პარამეტრები › წარმადობა › გრაფიკული პროცესორი ან გაუშვით WGPU_BACKEND ცვლადის მითითებით
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Tsipika-ის ბოლო გაშვება გრაფიკული პროცესორების ჩამოთვლისას შეწყდა, ამიტომ Tsipika გაეშვა მხოლოდ OpenGL-ით: {summary}. სხვა გრაფიკული ინტერფეისების ხელახლა საცდელად შეცვალეთ პარამეტრები › წარმადობა › გრაფიკული პროცესორი ან გაუშვით WGPU_BACKEND ცვლადის მითითებით
 @msg	the image can't be read as a texture	გამოსახულების ტექსტურად წაკითხვა ვერ ხერხდება
 # Upstream sync 2026-10-18 (5e681065): SVG Interactivity, Live Paint gaps, graph column designs, Cutout/Neon Glow/Poster Edges, undo step names, blend spine errors.
 	Add Event	მოვლენის დამატება
@@ -5048,7 +5048,7 @@ imageTrace	Outline	კონტური
 	Symbol Stainer	სიმბოლოების შეფერადება
 	Symbol Styler	სიმბოლოების სტილიზაცია
 	Text Orientation	ტექსტის ორიენტაცია
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	შენახვის პანელში სახელი იყო „{typed}“; VectorCraft-მა ფაილის ტიპის გაფართოება დაამატა. ფაილის ჩანაცვლება მის შიგთავსს გადააწერს.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	შენახვის პანელში სახელი იყო „{typed}“; Tsipika-მა ფაილის ტიპის გაფართოება დაამატა. ფაილის ჩანაცვლება მის შიგთავსს გადააწერს.
 	Thread Text	ტექსტის დაკავშირება
 	Trackpad Gesture to Rotate View	ხედის შემობრუნება ტრეკპადის ჟესტით
 	Typing	აკრეფა

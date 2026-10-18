@@ -5,18 +5,18 @@
 
 use egui::Ui;
 use serde_json::{Value, json};
-use vectorcraft_doc::pattern::{PatternDef, RepeatKind, TileType};
-use vectorcraft_doc::{NodeKind, Unit};
+use tsipika_doc::pattern::{PatternDef, RepeatKind, TileType};
+use tsipika_doc::{NodeKind, Unit};
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets::{self, menu_item};
 
 const TILE_LABELS: [&str; 5] = ["Grid", "Brick by Row", "Brick by Column", "Hex by Column", "Hex by Row"];
 const BRICK: [(&str, f64); 4] = [("1/2", 0.5), ("1/3", 1.0 / 3.0), ("1/4", 0.25), ("1/5", 0.2)];
 const COPIES: [(&str, u32); 4] = [("3 x 3", 3), ("5 x 5", 5), ("7 x 7", 7), ("9 x 9", 9)];
 
-fn editing(app: &VectorcraftApp) -> Option<(PatternDef, Unit)> {
+fn editing(app: &TsipikaApp) -> Option<(PatternDef, Unit)> {
     let st = app.session.active()?;
     let pe = st.doc.pattern_edit.as_ref()?;
     Some((st.doc.pattern(&pe.pattern)?.clone(), app.session.general_unit()))
@@ -26,14 +26,14 @@ fn row(ui: &mut Ui, label: &str, add: impl FnOnce(&mut Ui)) {
     widgets::label_row(ui, label, 96.0, add);
 }
 
-fn set(app: &mut VectorcraftApp, name: &str, mut p: Value) {
+fn set(app: &mut TsipikaApp, name: &str, mut p: Value) {
     p["name"] = json!(name);
     if let Err(e) = app.run("pattern.options", p) {
         app.status(e);
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     if app.session.active().is_none() {
         super::empty_state(ui, "swatch-book", tl!("No document"), tl!("Open a document to edit its patterns."));
         return;
@@ -156,7 +156,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Not editing: the document's patterns, one to pick and edit.
-fn idle(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn idle(app: &mut TsipikaApp, ui: &mut Ui) {
     let names: Vec<String> = app.session.active().map(|st| st.doc.patterns.iter().map(|p| p.name.clone()).collect()).unwrap_or_default();
     widgets::dim_label(ui, tl!("Pattern options are available in pattern editing mode."));
     ui.add_space(4.0);
@@ -181,7 +181,7 @@ fn idle(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let editing = editing(app).is_some();
     if menu_item(ui, tl!("Save a Copy"), editing, false) {
         app.run("object.pattern.saveCopy", json!({})).ok();
@@ -195,7 +195,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Current values of the selected repeat as Repeat Options dialog fields.
-pub fn repeat_fields(app: &VectorcraftApp) -> Option<Value> {
+pub fn repeat_fields(app: &TsipikaApp) -> Option<Value> {
     let st = app.session.active()?;
     let spec = st.selection.objects.iter().find_map(|id| {
         st.doc.ancestry(*id)?.into_iter().rev().find_map(|a| match &st.doc.node(a)?.kind {
@@ -217,10 +217,10 @@ pub fn repeat_fields(app: &VectorcraftApp) -> Option<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// One headless frame of the panel with `events`: where each text was drawn.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui));
         out.textures_delta.clear();
         let mut v = vec![];
@@ -236,13 +236,13 @@ mod tests {
     /// selected; Enter then renames it again and ends the editing.
     #[test]
     fn shift_enter_in_the_name_field_renames_the_pattern_and_keeps_the_focus() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
         app.run("object.pattern.make", json!({"name": "Dots"})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let named = |app: &VectorcraftApp, name: &str| app.session.active().unwrap().doc.pattern(name).is_some();
+        let named = |app: &TsipikaApp, name: &str| app.session.active().unwrap().doc.pattern(name).is_some();
         let key = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
         let texts = frame(&mut app, &ctx, vec![]);
         let at = texts.iter().find(|(t, _)| t == "Dots").expect("the Name field").1.center();
@@ -264,7 +264,7 @@ mod tests {
 
     #[test]
     fn show_swatch_bounds_toggles_the_pattern_option() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
         app.run("object.pattern.make", json!({"name": "Dots"})).unwrap();

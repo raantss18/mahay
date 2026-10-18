@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use super::{pstate, set_pstate};
 use crate::theme::Tokens;
 use crate::widgets::{self, dim_label};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Action {
@@ -45,14 +45,14 @@ pub fn default_sets() -> Vec<ActionSet> {
 }
 
 /// Run an action as a single undoable batch.
-pub fn play(app: &mut VectorcraftApp, set: usize, idx: usize) -> Result<Value, String> {
+pub fn play(app: &mut TsipikaApp, set: usize, idx: usize) -> Result<Value, String> {
     let Some(a) = app.ui.action_sets.get(set).and_then(|s| s.actions.get(idx)).cloned() else { return Err("no such action".into()) };
     let commands: Vec<Value> = a.steps.iter().map(|(c, p)| json!({"command": c, "params": p})).collect();
     app.run("command.batch", json!({"label": a.name, "commands": commands}))
 }
 
 /// The panel's (≡) menu.
-pub fn menu(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut egui::Ui) {
     let selected: Option<(usize, usize)> = pstate(ui.ctx(), "actions-selected");
     let has = selected.and_then(|(s, a)| app.ui.action_sets.get(s).and_then(|set| set.actions.get(a))).is_some();
     if widgets::menu_item(ui, tl!("Batch…"), has, false)
@@ -69,7 +69,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     // The selected action as (set, action). Read as the type it is stored as: egui keeps a
     // value per type, so reading the bare pair never found it and no action stayed selected (#1629).
@@ -168,14 +168,14 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     #[test]
     fn defaults_are_valid_commands() {
         for set in default_sets() {
             for a in set.actions {
                 for (c, _) in a.steps {
-                    assert!(vectorcraft_engine::find_command(&c).is_some(), "{c}");
+                    assert!(tsipika_engine::find_command(&c).is_some(), "{c}");
                 }
             }
         }
@@ -186,10 +186,10 @@ mod tests {
     #[test]
     fn a_clicked_action_stays_selected_for_play_and_delete() {
         use super::super::tests_appearance::{click, frame_events, text_rect};
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
-        let id = vectorcraft_doc::NodeId(id);
+        let id = tsipika_doc::NodeId(id);
         let ctx = egui::Context::default();
         let texts = frame_events(&ctx, &mut app, vec![], show);
         click(&ctx, &mut app, text_rect(&texts, "Reflect Horizontal").center(), show);
@@ -203,7 +203,7 @@ mod tests {
         click(&ctx, &mut app, play.center(), show);
         assert_eq!(app.session.active().unwrap().selection.len(), 1);
         assert_ne!(app.session.active().unwrap().selection.objects, [id], "played: the copy is selected");
-        let names = |app: &VectorcraftApp| app.ui.action_sets[0].actions.iter().map(|a| a.name.clone()).collect::<Vec<_>>();
+        let names = |app: &TsipikaApp| app.ui.action_sets[0].actions.iter().map(|a| a.name.clone()).collect::<Vec<_>>();
         let before = names(&app);
         click(&ctx, &mut app, delete.center(), show);
         assert_eq!(names(&app), before[1..], "the selected action is deleted");
@@ -216,14 +216,14 @@ mod tests {
     /// recorded.
     #[test]
     fn actions_play_on_the_artboard_active_when_they_play() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
         let r = app.run("shape.rectangle", json!({"x": boards[1].x0 + 10.0, "y": boards[1].y0 + 15.0, "width": 20, "height": 20})).unwrap();
-        let rect = vectorcraft_doc::NodeId(r["id"].as_u64().unwrap());
-        let bounds = |app: &VectorcraftApp, ids: &[vectorcraft_doc::NodeId]| app.session.active().unwrap().doc.bounds_of(ids, false).unwrap();
+        let rect = tsipika_doc::NodeId(r["id"].as_u64().unwrap());
+        let bounds = |app: &TsipikaApp, ids: &[tsipika_doc::NodeId]| app.session.active().unwrap().doc.bounds_of(ids, false).unwrap();
         // Each recorded as the panel records an action, with artboard 0 active.
-        let record = |app: &mut VectorcraftApp, name: &str, id: &str, params: Value| {
+        let record = |app: &mut TsipikaApp, name: &str, id: &str, params: Value| {
             let start = app.session.journal.len();
             app.run(id, params).unwrap();
             let steps = app.session.journal_for_action(start);
@@ -238,11 +238,11 @@ mod tests {
         app.run("select.set", json!({"ids": [rect.0]})).unwrap();
         play(&mut app, 0, align).unwrap();
         assert_eq!(bounds(&app, &[rect]).x0, boards[2].x0, "aligned to artboard 2, active when the action plays");
-        let ids: Vec<vectorcraft_doc::NodeId> = play(&mut app, 0, paste).unwrap()["results"][0]["ids"]
+        let ids: Vec<tsipika_doc::NodeId> = play(&mut app, 0, paste).unwrap()["results"][0]["ids"]
             .as_array()
             .unwrap()
             .iter()
-            .map(|v| vectorcraft_doc::NodeId(v.as_u64().unwrap()))
+            .map(|v| tsipika_doc::NodeId(v.as_u64().unwrap()))
             .collect();
         let b = bounds(&app, &ids);
         assert_eq!((b.x0, b.y0), (boards[2].x0 + 10.0, boards[2].y0 + 15.0), "pasted onto artboard 2, where it was on artboard 1");
@@ -257,22 +257,22 @@ mod tests {
     /// the artboard active when they play, not on the one active when they were recorded.
     #[test]
     fn distribute_actions_play_on_the_artboard_active_when_they_play() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
         // The rectangles are 20, 40 and 20 pt wide, and they are on artboard 1.
-        let ids: Vec<vectorcraft_doc::NodeId> = [(10.0, 20.0), (50.0, 40.0), (120.0, 20.0)]
+        let ids: Vec<tsipika_doc::NodeId> = [(10.0, 20.0), (50.0, 40.0), (120.0, 20.0)]
             .into_iter()
             .map(|(x, w)| {
                 let r = app.run("shape.rectangle", json!({"x": boards[1].x0 + x, "y": boards[1].y0 + 15.0, "width": w, "height": 20})).unwrap();
-                vectorcraft_doc::NodeId(r["id"].as_u64().unwrap())
+                tsipika_doc::NodeId(r["id"].as_u64().unwrap())
             })
             .collect();
         app.run("select.set", json!({"ids": ids.iter().map(|id| id.0).collect::<Vec<_>>()})).unwrap();
         let lefts =
-            |app: &VectorcraftApp| ids.iter().map(|id| app.session.active().unwrap().doc.bounds_of(&[*id], false).unwrap().x0).collect::<Vec<_>>();
+            |app: &TsipikaApp| ids.iter().map(|id| app.session.active().unwrap().doc.bounds_of(&[*id], false).unwrap().x0).collect::<Vec<_>>();
         // Each step is recorded as the panel records an action, while artboard 0 is active.
-        let record = |app: &mut VectorcraftApp, name: &str, id: &str, params: Value| {
+        let record = |app: &mut TsipikaApp, name: &str, id: &str, params: Value| {
             let start = app.session.journal.len();
             app.run(id, params).unwrap();
             let steps = app.session.journal_for_action(start);

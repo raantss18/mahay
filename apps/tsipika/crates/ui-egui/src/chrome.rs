@@ -4,15 +4,15 @@ use std::borrow::Cow;
 
 use egui::{CornerRadius, Sense, Stroke, Ui, vec2};
 use serde_json::json;
-use vectorcraft_doc::NodeKind;
+use tsipika_doc::NodeKind;
 
 use crate::panels::stroke as stroke_panel;
 use crate::state::{ROTATE_VIEW_ANGLES, ZOOM_STOPS, zoom_label};
 use crate::theme::{self, Tokens};
 use crate::widgets;
-use crate::{VectorcraftApp, icons, menus, titlebar};
+use crate::{TsipikaApp, icons, menus, titlebar};
 
-/// The application bar's height, in points (compact, as in PhotoCraft).
+/// The application bar's height, in points (compact, as in Sary).
 pub const APP_BAR_HEIGHT: f32 = 32.0;
 /// The brand mark's side.
 const MARK: f32 = 18.0;
@@ -20,12 +20,12 @@ const MARK: f32 = 18.0;
 const WIDGET_H: f32 = 22.0;
 
 /// The application bar: brand mark, Home, menus, then Discord, search and the workspace switcher
-/// at the right. With [`VectorcraftApp::custom_titlebar`] it is also the window's title bar
+/// at the right. With [`TsipikaApp::custom_titlebar`] it is also the window's title bar
 /// ([`titlebar`]): the caption buttons take the right end and the rest of the bar drags the window.
 /// On macOS, under the system's transparent title bar, its empty space drags and zooms the window
 /// too ([`titlebar::drag_area`]). With the system title bar (Windows and Linux, `system_title_bar`) the OS draws its own icon and
 /// title, so the in-app bar shows Home, menus and workspace controls only: no brand mark.
-pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn app_bar(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let custom = app.custom_titlebar;
     let system = system_title_bar(app);
@@ -64,7 +64,7 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
             let ws = ui.painter().layout_no_wrap(ws_name, egui::FontId::proportional(12.0), t.text);
             let ws_w = (ws.size().x + 36.0).clamp(112.0, 190.0);
             let gap = ui.spacing().item_spacing.x;
-            // The search icon, as in PhotoCraft: shown while a minimal switcher fits beside it.
+            // The search icon, as in Sary: shown while a minimal switcher fits beside it.
             let icon = 28.0;
             let search = room >= 64.0 + 8.0 + gap + icon;
             let ws_w = ws_w.min(room - 8.0 - gap - if search { icon } else { 0.0 }).max(64.0);
@@ -95,7 +95,7 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                 crate::community::discord_button(app, ui, false);
             }
             if app.services.native_menu.is_some() {
-                let title = ui.painter().layout_no_wrap("VectorCraft".into(), egui::FontId::proportional(13.5), t.text);
+                let title = ui.painter().layout_no_wrap("Tsipika".into(), egui::FontId::proportional(13.5), t.text);
                 let title_rect = egui::Rect::from_center_size(full.center(), title.size());
                 // Keep the title centered only while the interactive groups leave room for it.
                 if title_rect.left() >= menus_end + 8.0 && title_rect.right() <= ui.min_rect().left() - 8.0 {
@@ -114,23 +114,23 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// decorations, but keeps the in-app brand mark, so it never counts as system mode here; nor
 /// does the web build (the browser tab has no document title), nor an embedder that never
 /// turned the preference on.
-pub fn system_title_bar(app: &VectorcraftApp) -> bool {
+pub fn system_title_bar(app: &TsipikaApp) -> bool {
     !app.custom_titlebar && app.session.prefs.system_title_bar && !cfg!(any(target_os = "macos", target_arch = "wasm32"))
 }
 
 /// The OS window title: the active document's name suffixed with the app name (a `*` prefix
 /// marks unsaved changes, like the `*` in the document tabs), or just the app name with no
 /// document open.
-pub fn window_title(app: &VectorcraftApp) -> String {
+pub fn window_title(app: &TsipikaApp) -> String {
     app.session
         .active()
-        .map(|d| format!("{}{} \u{2014} VectorCraft", if d.is_dirty() { "*" } else { "" }, d.title()))
-        .unwrap_or_else(|| "VectorCraft".into())
+        .map(|d| format!("{}{} \u{2014} Tsipika", if d.is_dirty() { "*" } else { "" }, d.title()))
+        .unwrap_or_else(|| "Tsipika".into())
 }
 
 /// Keep the OS window title (and the taskbar / Alt-Tab entry) on the active file. Sends
 /// `ViewportCommand::Title` only when the title changed since the last frame.
-pub fn sync_window_title(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn sync_window_title(app: &mut TsipikaApp, ctx: &egui::Context) {
     let want = window_title(app);
     if app.last_window_title != want {
         app.last_window_title = want.clone();
@@ -157,7 +157,7 @@ pub enum AnchorControls {
 }
 
 /// Which anchor controls show for the selection and the active tool.
-pub fn anchor_controls(app: &VectorcraftApp) -> AnchorControls {
+pub fn anchor_controls(app: &TsipikaApp) -> AnchorControls {
     let Some(st) = app.session.active() else {
         return AnchorControls::None;
     };
@@ -165,13 +165,13 @@ pub fn anchor_controls(app: &VectorcraftApp) -> AnchorControls {
         return AnchorControls::All;
     }
     let paths = st.selection.objects.iter().any(|id| st.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Path { .. })));
-    if paths && vectorcraft_tools::catalog::edits_anchors(app.session.tool_id()) { AnchorControls::Convert } else { AnchorControls::None }
+    if paths && tsipika_tools::catalog::edits_anchors(app.session.tool_id()) { AnchorControls::Convert } else { AnchorControls::None }
 }
 
 /// What the Control bar and the Properties panel offer for selected anchors ([`anchor_controls`]):
 /// "Convert:" corner or smooth, then "Anchors:" remove, connect (Join) and cut. Each group is a
 /// row of its own: inline in the Control bar, one under the other in a panel.
-pub fn anchor_buttons(app: &mut VectorcraftApp, ui: &mut Ui, controls: AnchorControls) {
+pub fn anchor_buttons(app: &mut TsipikaApp, ui: &mut Ui, controls: AnchorControls) {
     let t = Tokens::get(ui.ctx());
     let mut run = None;
     let groups: [(&str, &[AnchorButton]); 2] = [
@@ -216,10 +216,10 @@ const ISOLATION_BUTTON: &str = "cb-isolation";
 
 /// The Control bar's isolation button. In isolation mode it is Exit Isolation Mode, except while a
 /// pattern is edited (the isolation bar's Done and Cancel end that). Otherwise, with one object
-/// selected that [`vectorcraft_tools::select::isolates`], it is Isolate Selected Object, which
+/// selected that [`tsipika_tools::select::isolates`], it is Isolate Selected Object, which
 /// also isolates a path inside a group that Direct Selection selected. An envelope's contents
 /// get no button: the envelope's Edit Envelope and Edit Contents buttons show instead.
-fn isolation_button(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn isolation_button(app: &mut TsipikaApp, ui: &mut Ui) {
     let Some(st) = app.session.active() else { return };
     let (icon, tip, id) = if st.isolation.is_some() {
         if st.doc.pattern_edit.is_some() {
@@ -227,8 +227,8 @@ fn isolation_button(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
         ("chevron-left", tl!("Exit Isolation Mode"), "object.exitIsolation")
     } else if let [one] = st.selection.objects[..]
-        && st.doc.node(one).is_some_and(|n| vectorcraft_tools::select::isolates(&n.kind))
-        && vectorcraft_doc::live::envelope_of(&st.doc, one).is_none()
+        && st.doc.node(one).is_some_and(|n| tsipika_tools::select::isolates(&n.kind))
+        && tsipika_doc::live::envelope_of(&st.doc, one).is_none()
     {
         ("square-dashed", tl!("Isolate Selected Object"), "object.isolate")
     } else {
@@ -245,7 +245,7 @@ fn isolation_button(app: &mut VectorcraftApp, ui: &mut Ui) {
 const INLINE_TRANSFORM_WIDTH: f32 = 440.0;
 
 /// The Control bar (Window → Control), context-sensitive like Illustrator's.
-pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn control_bar(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::top("control_bar")
         .exact_size(34.0)
@@ -270,7 +270,7 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     Some(_) if sel.len() == 1 && anchors != AnchorControls::None => {
                         tl!("Anchor Point")
                     }
-                    Some(vectorcraft_doc::Node { kind: NodeKind::Image(im), .. }) if sel.len() == 1 => {
+                    Some(tsipika_doc::Node { kind: NodeKind::Image(im), .. }) if sel.len() == 1 => {
                         if im.link.is_some() {
                             tl!("Linked File")
                         } else {
@@ -390,11 +390,11 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// A document tab's title: "Name* @ 66.67 % (RGB/Preview)", or while an opacity mask is edited
 /// "Name* @ 66.67 % (<Opacity Mask>/Opacity Mask)".
-fn tab_title(d: &vectorcraft_engine::DocState, zoom: f64, outline: bool, display_print_size: bool) -> String {
+fn tab_title(d: &tsipika_engine::DocState, zoom: f64, outline: bool, display_print_size: bool) -> String {
     let mode = if d.doc.mask_edit.is_some() {
         format!("<{0}>/{0}", tl!("Opacity Mask"))
     } else {
-        let color = if d.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk { "CMYK" } else { "RGB" };
+        let color = if d.doc.color_mode == tsipika_doc::ColorMode::Cmyk { "CMYK" } else { "RGB" };
         format!("{color}/{}", if outline { tl!("Outline") } else { tl!("Preview") })
     };
     format!("{}{} @ {} ({mode})", d.title(), if d.is_dirty() { "*" } else { "" }, zoom_label(zoom, display_print_size).replace('%', " %"))
@@ -418,7 +418,7 @@ fn first_tab_shown(widths: &[f32], active: Option<usize>, room: f32) -> usize {
 /// Document tab strip: "Name* @ 66.67% (RGB/Preview)". User Interface › Large Tabs makes the tabs
 /// taller, with larger titles. Tabs that don't fit are reached from a » button at the strip's
 /// right end, which lists every open document, and the active tab is always in view (#746).
-pub fn doc_tabs(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn doc_tabs(app: &mut TsipikaApp, ui: &mut Ui) {
     /// The width of the » button.
     const MORE: f32 = 30.0;
     let t = Tokens::get(ui.ctx());
@@ -564,7 +564,7 @@ pub fn doc_tabs(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// name. The field's list shows every artboard by number and name, as the Artboards panel lists
 /// them, and opens with the active artboard's row in view. The list lays out only the rows in view
 /// and at most one more. Returns the artboard chosen in the list.
-fn artboard_list(app: &VectorcraftApp, ui: &mut Ui, cur: usize) -> Option<usize> {
+fn artboard_list(app: &TsipikaApp, ui: &mut Ui, cur: usize) -> Option<usize> {
     /// The width of the field.
     const FIELD_W: f32 = 140.0;
     /// The least width of the list.
@@ -645,7 +645,7 @@ fn artboard_list(app: &VectorcraftApp, ui: &mut Ui, cur: usize) -> Option<usize>
     .inner
 }
 
-pub fn status_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn status_bar(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::bottom("status_bar")
         .exact_size(24.0)
@@ -712,7 +712,7 @@ pub fn status_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     app.status(e);
                 }
                 ui.separator();
-                let tool = vectorcraft_tools::tool_info(app.session.tool_id())
+                let tool = tsipika_tools::tool_info(app.session.tool_id())
                     .map(|t| {
                         // The catalog keys carry the full label ("Selection Tool"); only English drops the suffix.
                         let shown = tl!(t.label);
@@ -942,7 +942,7 @@ fn hint_for(tool: &str) -> Option<&'static [(&'static str, bool)]> {
 /// can insist a complete language covers them.
 pub fn hint_strings() -> Vec<&'static str> {
     let mut v = Vec::new();
-    for tool in vectorcraft_tools::catalog::all_tools().map(|t| t.id).chain([ANIMATED_ZOOM_HINT]) {
+    for tool in tsipika_tools::catalog::all_tools().map(|t| t.id).chain([ANIMATED_ZOOM_HINT]) {
         for &(text, bold) in hint_for(tool).unwrap_or(&[]) {
             let text = if bold { text.rsplit_once('+').map_or(text, |(_, k)| k) } else { text };
             if !text.is_empty() && !text.chars().all(|c| c.is_ascii_digit()) && !v.contains(&text) {
@@ -985,7 +985,7 @@ fn hint_segments(tool: &str) -> Vec<(Cow<'static, str>, bool)> {
         .collect()
 }
 
-pub fn hint_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn hint_bar(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let panel = egui::Panel::bottom("hint_bar")
         .exact_size(28.0)
@@ -1027,12 +1027,12 @@ mod tests {
         assert_eq!(super::first_tab_shown(&widths, Some(4), 50.0), 4, "a tab wider than the room still shows");
     }
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     #[test]
     fn hints_name_keys_as_the_menus_do() {
         let text = |tool: &str| super::hint_segments(tool).into_iter().map(|(s, _)| s).collect::<String>();
-        for tool in vectorcraft_tools::catalog::all_tools().map(|t| t.id) {
+        for tool in tsipika_tools::catalog::all_tools().map(|t| t.id) {
             let hint = text(tool);
             assert!(!hint.contains("Option"), "{tool}: {hint}");
             assert!(cfg!(target_os = "macos") || !hint.contains("Cmd"), "{tool}: {hint}");
@@ -1054,13 +1054,13 @@ mod tests {
     /// Linux and the web, before it on macOS; clicking it closes that document.
     #[test]
     fn a_tabs_close_box_sits_where_the_platform_puts_it() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 200.0));
-        let frame = |app: &mut crate::VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut crate::TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::doc_tabs(app, ui));
             out.textures_delta.clear();
             let mut titles = vec![];
@@ -1090,7 +1090,7 @@ mod tests {
 
     /// One headless frame of the status bar; returns the artboard navigator's buttons, left to
     /// right: first, previous, next, last.
-    fn navigator(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
+    fn navigator(app: &mut crate::TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 300.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::status_bar(app, ui));
         out.textures_delta.clear();
@@ -1103,8 +1103,8 @@ mod tests {
 
     #[test]
     fn the_artboard_navigator_goes_to_artboards_and_fitting_shows_the_current_one() {
-        use vectorcraft_geom::Point;
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        use tsipika_geom::Point;
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         // Three 200 × 100 artboards in a row, centred at x = 100, 320 and 540.
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("artboard.new", json!({})).unwrap();
@@ -1113,7 +1113,7 @@ mod tests {
         let ctx = egui::Context::default();
         let buttons = navigator(&mut app, &ctx, vec![]);
         assert_eq!(buttons.len(), 4);
-        let click = |app: &mut crate::VectorcraftApp, r: egui::Rect| {
+        let click = |app: &mut crate::TsipikaApp, r: egui::Rect| {
             let b = |pressed| egui::Event::PointerButton {
                 pos: r.center(),
                 button: egui::PointerButton::Primary,
@@ -1124,7 +1124,7 @@ mod tests {
             navigator(app, &ctx, vec![b(true)]);
             navigator(app, &ctx, vec![b(false)]);
         };
-        let at = |app: &crate::VectorcraftApp| (app.view().unwrap().artboard, app.view().unwrap().center);
+        let at = |app: &crate::TsipikaApp| (app.view().unwrap().artboard, app.view().unwrap().center);
         click(&mut app, buttons[2]);
         assert_eq!(at(&app), (1, Point::new(320.0, 50.0)), "next");
         click(&mut app, buttons[3]);
@@ -1144,10 +1144,10 @@ mod tests {
         assert!(app.run("view.goToArtboard", json!({"index": "sideways"})).is_err());
     }
 
-    /// storytold/vectorcraft#2719: status-bar 100% matches Actual Size when Display Print Size is on.
+    /// raantss18/tsipika#2719: status-bar 100% matches Actual Size when Display Print Size is on.
     #[test]
     fn set_zoom_100_matches_actual_size_with_display_print_size() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.session.execute("prefs.set", &json!({"key": "displayPrintSize", "value": true})).unwrap();
         app.run("view.setZoom", json!({"zoom": 100})).unwrap();
@@ -1159,7 +1159,7 @@ mod tests {
     #[test]
     fn screen_readers_name_the_artboard_navigators_buttons() {
         use crate::widgets::accessibility_tests::{named, tree};
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         let tree = tree(|ui| super::status_bar(&mut app, ui));
         for (label, enabled) in [("First Artboard", false), ("Previous Artboard", false), ("Next Artboard", true), ("Last Artboard", true)] {
@@ -1170,7 +1170,7 @@ mod tests {
 
     /// One headless frame of the status bar, with room above it for the artboard list; returns the
     /// texts painted and where they are.
-    fn status_texts(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn status_texts(app: &mut crate::TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 600.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::status_bar(app, ui));
         out.textures_delta.clear();
@@ -1184,7 +1184,7 @@ mod tests {
     }
 
     /// A click at `at` in the status bar; returns the texts of the frame after it.
-    fn status_click(app: &mut crate::VectorcraftApp, ctx: &egui::Context, at: egui::Pos2) -> Vec<(String, egui::Rect)> {
+    fn status_click(app: &mut crate::TsipikaApp, ctx: &egui::Context, at: egui::Pos2) -> Vec<(String, egui::Rect)> {
         let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
         for event in [egui::Event::PointerMoved(at), button(true), button(false)] {
             status_texts(app, ctx, vec![event]);
@@ -1198,7 +1198,7 @@ mod tests {
     /// centers on it, and the list closes.
     #[test]
     fn the_artboard_navigator_lists_the_artboards_by_number_and_name() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         app.run("artboard.setProps", json!({"index": 0, "name": "Front"})).unwrap();
         app.run("artboard.setProps", json!({"index": 1, "name": "Back"})).unwrap();
@@ -1232,7 +1232,7 @@ mod tests {
     /// artboard's row, a swipe scrolls it to the last artboard, and choosing that row goes there.
     #[test]
     fn the_artboard_list_lays_out_only_the_rows_near_the_view() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100, "artboards": 1000})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(460.0, 260.0)));
         app.run("view.goToArtboard", json!({"index": 699})).unwrap();
@@ -1261,19 +1261,19 @@ mod tests {
         assert_eq!(app.view().unwrap().artboard, 999);
     }
 
-    fn artboard_navigation_app(tool: &str) -> (crate::VectorcraftApp, vectorcraft_doc::NodeId) {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    fn artboard_navigation_app(tool: &str) -> (crate::TsipikaApp, tsipika_doc::NodeId) {
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap();
         app.run("select.set", json!({"ids": [id]})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(460.0, 260.0)));
         app.select_tool(tool);
         crate::i18n::set_current(crate::i18n::Lang::EN);
-        (app, vectorcraft_doc::NodeId(id))
+        (app, tsipika_doc::NodeId(id))
     }
 
     /// Click the actual status-bar Next control, without sending a canvas pointer event.
-    fn artboard_navigation_next(app: &mut crate::VectorcraftApp, ctx: &egui::Context) {
+    fn artboard_navigation_next(app: &mut crate::TsipikaApp, ctx: &egui::Context) {
         let buttons = navigator(app, ctx, vec![]);
         assert_eq!(buttons.len(), 4);
         let at = buttons[2].center();
@@ -1285,7 +1285,7 @@ mod tests {
     }
 
     fn artboard_navigation_properties_frame(
-        app: &mut crate::VectorcraftApp,
+        app: &mut crate::TsipikaApp,
         ctx: &egui::Context,
         events: Vec<egui::Event>,
     ) -> Vec<(String, egui::Rect)> {
@@ -1437,7 +1437,7 @@ mod tests {
     }
 
     /// One headless frame of the Control bar; returns the isolation button's rectangle, if it shows.
-    fn isolation_button(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Option<egui::Rect> {
+    fn isolation_button(app: &mut crate::TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Option<egui::Rect> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 300.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::control_bar(app, ui));
         out.textures_delta.clear();
@@ -1450,10 +1450,10 @@ mod tests {
     /// editing gets no exit button.
     #[test]
     fn the_control_bar_isolates_the_selected_object_and_exits_isolation_mode() {
-        use vectorcraft_doc::NodeId;
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        use tsipika_doc::NodeId;
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
-        let rect = |app: &mut crate::VectorcraftApp, x: f64| {
+        let rect = |app: &mut crate::TsipikaApp, x: f64| {
             app.run("shape.rectangle", json!({"x": x, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap()
         };
         let (a, b) = (rect(&mut app, 10.0), rect(&mut app, 50.0));
@@ -1463,7 +1463,7 @@ mod tests {
         app.run("select.anchors", json!({"id": a, "anchors": [[0, 0]]})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let click = |app: &mut crate::VectorcraftApp| {
+        let click = |app: &mut crate::TsipikaApp| {
             let r = isolation_button(app, &ctx, vec![]).expect("the bar shows the isolation button");
             let press = |pressed| egui::Event::PointerButton {
                 pos: r.center(),
@@ -1517,11 +1517,11 @@ mod tests {
                 _ => {}
             }
         }
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.select_tool("zoom");
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let hint = |app: &mut crate::VectorcraftApp| {
+        let hint = |app: &mut crate::TsipikaApp| {
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::hint_bar(app, ui));
             out.textures_delta.clear();
             let mut shown = String::new();
@@ -1535,8 +1535,8 @@ mod tests {
         assert!(off.contains(" to zoom into an area") && !off.contains("Hold"), "{off}");
     }
 
-    fn title_test_app(custom_titlebar: bool) -> crate::VectorcraftApp {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    fn title_test_app(custom_titlebar: bool) -> crate::TsipikaApp {
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.custom_titlebar = custom_titlebar;
         // The preference that makes the shell launch without its own title bar.
         app.run("prefs.set", json!({"key": "systemTitleBar", "value": !custom_titlebar})).unwrap();
@@ -1546,23 +1546,23 @@ mod tests {
     #[test]
     fn without_the_preference_the_mark_stays() {
         // The default (e.g. the web build): no custom bar, no preference.
-        let app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let app = crate::TsipikaApp::new(Session::new(), Default::default());
         assert!(!super::system_title_bar(&app));
     }
 
     #[test]
     fn window_title_with_no_document_is_the_app_name() {
-        assert_eq!(super::window_title(&title_test_app(true)), "VectorCraft");
+        assert_eq!(super::window_title(&title_test_app(true)), "Tsipika");
     }
 
     #[test]
     fn window_title_follows_the_active_file() {
         let mut app = title_test_app(true);
         app.run("file.new", json!({"width": 100, "height": 100, "name": "foo.svg"})).unwrap();
-        assert_eq!(super::window_title(&app), "foo.svg \u{2014} VectorCraft");
+        assert_eq!(super::window_title(&app), "foo.svg \u{2014} Tsipika");
         // Unsaved changes gain a `*` prefix, like the `*` in the document tabs.
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
-        assert_eq!(super::window_title(&app), "*foo.svg \u{2014} VectorCraft");
+        assert_eq!(super::window_title(&app), "*foo.svg \u{2014} Tsipika");
     }
 
     #[test]
@@ -1596,11 +1596,11 @@ mod tests {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         super::sync_window_title(&mut app, &ctx);
-        assert_eq!(app.last_window_title, "VectorCraft");
+        assert_eq!(app.last_window_title, "Tsipika");
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
         out.textures_delta.clear();
         let cmds = out.viewport_output.remove(&egui::ViewportId::ROOT).map(|v| v.commands).unwrap_or_default();
-        assert!(cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(t) if t == "VectorCraft")), "{cmds:?}");
+        assert!(cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(t) if t == "Tsipika")), "{cmds:?}");
         // Same document state again: the cached title stops a repeat command.
         super::sync_window_title(&mut app, &ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -1609,10 +1609,10 @@ mod tests {
         assert!(!cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(_))), "repeat Title: {cmds:?}");
         app.run("file.new", json!({"width": 100, "height": 100, "name": "foo.svg"})).unwrap();
         super::sync_window_title(&mut app, &ctx);
-        assert_eq!(app.last_window_title, "foo.svg \u{2014} VectorCraft");
+        assert_eq!(app.last_window_title, "foo.svg \u{2014} Tsipika");
     }
     /// Draw actual tabs, including the same per-frame view synchronization as the app.
-    fn artboard_document_tabs_frame(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
+    fn artboard_document_tabs_frame(app: &mut crate::TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
         app.sync_views();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 700.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::doc_tabs(app, ui));
@@ -1629,7 +1629,7 @@ mod tests {
         titles
     }
 
-    fn artboard_document_click_tab(app: &mut crate::VectorcraftApp, ctx: &egui::Context, index: usize) {
+    fn artboard_document_click_tab(app: &mut crate::TsipikaApp, ctx: &egui::Context, index: usize) {
         let titles = artboard_document_tabs_frame(app, ctx, vec![]);
         assert_eq!(titles.len(), 2, "both real document tabs must be visible");
         let at = titles[index].center();
@@ -1641,8 +1641,8 @@ mod tests {
         assert_eq!(app.session.active_index(), Some(index), "the actual tab click must activate its document");
     }
 
-    fn artboard_document_app() -> (crate::VectorcraftApp, egui::Context) {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    fn artboard_document_app() -> (crate::TsipikaApp, egui::Context) {
+        let mut app = crate::TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 2})).unwrap();
         app.run("artboard.setProps", json!({"index": 0, "name": "Keep"})).unwrap();
         app.run("artboard.setProps", json!({"index": 1, "name": "Shown"})).unwrap();
@@ -1772,13 +1772,13 @@ mod tests {
     #[test]
     fn artboard_close_active_tab_properties_delete_uses_shown_board() {
         let (mut app, ctx) = artboard_document_app();
-        let history = |st: &vectorcraft_engine::DocState| {
-            let entries = |items: &[vectorcraft_engine::HistoryEntry]| {
+        let history = |st: &tsipika_engine::DocState| {
+            let entries = |items: &[tsipika_engine::HistoryEntry]| {
                 items.iter().map(|e| (e.label.clone(), e.doc.clone(), e.selection.clone())).collect::<Vec<_>>()
             };
             (entries(&st.history.undo), entries(&st.history.redo))
         };
-        let outside_canvas = |app: &crate::VectorcraftApp| {
+        let outside_canvas = |app: &crate::TsipikaApp| {
             let p = ctx.input(|i| i.pointer.hover_pos()).expect("a real chrome or panel pointer position");
             assert!(!app.canvas_rect.unwrap().contains(p), "the pointer must stay outside the canvas: {p:?}");
         };
@@ -1942,20 +1942,20 @@ mod visual_regressions {
 
     #[test]
     fn capture_chrome_visual_fixtures() {
-        let Some(directory) = std::env::var_os("CRAFT_UI_VISUAL_FIXTURES").map(std::path::PathBuf::from) else {
+        let Some(directory) = std::env::var_os("MAHAY_UI_VISUAL_FIXTURES").map(std::path::PathBuf::from) else {
             return;
         };
         std::fs::create_dir_all(&directory).unwrap();
         for brightness in theme::Brightness::ALL {
             for width in [800.0, 1280.0] {
                 for scale in [1.0, 1.5, 2.0] {
-                    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+                    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
                     app.services.native_menu = Some(crate::native_menu::NativeMenu::new(Box::new(NativeMenus)));
                     app.ui.status = format!("Saved /Users/example/Documents/{}/illustration.svg", "long-folder-name/".repeat(10));
                     let mut ready = false;
                     let mut harness =
                         egui_kittest::Harness::builder().with_size(vec2(width, 200.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
-                            move |ui, app: &mut VectorcraftApp| {
+                            move |ui, app: &mut TsipikaApp| {
                                 if !ready {
                                     egui_extras::install_image_loaders(ui.ctx());
                                     theme::install_fonts(ui.ctx());
@@ -1970,7 +1970,7 @@ mod visual_regressions {
                         );
                     harness.input_mut().max_texture_side = Some(8192);
                     harness.run_steps(4);
-                    let stem = format!("vectorcraft-chrome-{brightness:?}-{width}-{scale}x");
+                    let stem = format!("tsipika-chrome-{brightness:?}-{width}-{scale}x");
                     harness.render().unwrap().save(directory.join(format!("{stem}.png"))).unwrap();
                     let mut regions = serde_json::Map::new();
                     for id in ["app_bar", "status_bar"] {
@@ -2011,7 +2011,7 @@ mod visual_regressions {
                     egui_extras::install_image_loaders(&ctx);
                     theme::install_fonts(&ctx);
                     theme::apply(&ctx, brightness);
-                    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+                    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
                     app.services.native_menu = Some(crate::native_menu::NativeMenu::new(Box::new(NativeMenus)));
                     let mut output = ctx.run_ui(scaled_input(vec2(width, 640.0), scale), |ui| app_bar(&mut app, ui));
                     output.textures_delta.clear();
@@ -2025,12 +2025,12 @@ mod visual_regressions {
                             _ => None,
                         })
                         .collect();
-                    let title = texts.iter().find(|text| text.galley.job.text == "VectorCraft");
+                    let title = texts.iter().find(|text| text.galley.job.text == "Tsipika");
                     if width >= 1280.0 {
                         assert!(title.is_some(), "the title remains visible when the header has room");
                     }
                     if let Some(title) = title {
-                        for text in texts.iter().filter(|text| text.galley.job.text != "VectorCraft") {
+                        for text in texts.iter().filter(|text| text.galley.job.text != "Tsipika") {
                             assert!(
                                 !title.visual_bounding_rect().intersects(text.visual_bounding_rect()),
                                 "{width}: title overlaps {:?}",
@@ -2052,7 +2052,7 @@ mod visual_regressions {
                     egui_extras::install_image_loaders(&ctx);
                     theme::install_fonts(&ctx);
                     theme::apply(&ctx, brightness);
-                    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+                    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
                     app.ui.status = format!("Saved /Users/example/Documents/{}/illustration.svg", "long-folder-name/".repeat(10));
                     let mut output = ctx.run_ui(scaled_input(vec2(width, 640.0), scale), |ui| status_bar(&mut app, ui));
                     output.textures_delta.clear();

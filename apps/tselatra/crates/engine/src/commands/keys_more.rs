@@ -1,11 +1,11 @@
 //! Keyframe features of M14.5: Animation ▸ Keyframe Assistant ▸ Convert Audio to Keyframes and
 //! RPF Camera Import, and Edit ▸ Label on selected keyframes.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Keyframe, Value as KV};
-use effectcraft_project::LayerId;
-use effectcraft_project::build::Ids;
-use effectcraft_time::Tick;
+use tselatra_color::Label;
+use tselatra_keyframe::{Keyframe, Value as KV};
+use tselatra_project::LayerId;
+use tselatra_project::build::Ids;
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::app_more::grouped;
@@ -80,10 +80,10 @@ fn audio_to_keys(s: &mut Session, p: &Value) -> Result<Value> {
     let mut rows = vec![];
     for f in f0..f1 {
         let t = fr.tick_of(f);
-        let buf = effectcraft_render::audio::mix_comp(&s.project, s.footage.as_ref(), s.expr.as_deref(), cid, t, per, RATE);
+        let buf = tselatra_render::audio::mix_comp(&s.project, s.footage.as_ref(), s.expr.as_deref(), cid, t, per, RATE);
         rows.push((t, amplitudes(&buf)));
     }
-    let spec = effectcraft_effects::lookup("ec.control.slider").ok_or_else(|| EngineError::Other("Slider Control is missing".into()))?;
+    let spec = tselatra_effects::lookup("ec.control.slider").ok_or_else(|| EngineError::Other("Slider Control is missing".into()))?;
     let peak = rows.iter().map(|(_, (_, _, both))| *both).fold(0.0, f64::max);
     let r = grouped(s, "Convert Audio to Keyframes", |s| {
         let nl = s.execute("layer.newNull", json!({"comp": cid.0, "name": "Audio Amplitude"}))?["layer"].as_u64().unwrap_or(0);
@@ -94,7 +94,7 @@ fn audio_to_keys(s: &mut Session, p: &Value) -> Result<Value> {
             let start = l.start_time;
             let fx = l.props.sub_mut("effects").ok_or_else(|| bad("keys.audioToKeyframes", "the null has no effects group"))?;
             for (i, name) in ["Left Channel", "Right Channel", "Both Channels"].into_iter().enumerate() {
-                let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), name, [comp.width as f64, comp.height as f64]);
+                let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), name, [comp.width as f64, comp.height as f64]);
                 if let Some(pr) = g.get_mut("slider") {
                     pr.keys = rows
                         .iter()
@@ -133,11 +133,11 @@ fn zoom_of(fov: Option<f64>, zoom: Option<f64>, comp_w: f64) -> Option<f64> {
 /// Parse camera data: JSON `{frameRate?, frames: [{frame | time, position, orientation |
 /// rotation, zoom? | fov?}]}` or CSV with a header naming `frame`/`time`, `px py pz`
 /// (or `x y z`), `rx ry rz` and `zoom`/`fov` columns.
-pub fn parse_camera(text: &str, rate: effectcraft_time::FrameRate, comp_w: f64) -> std::result::Result<Vec<CamSample>, String> {
+pub fn parse_camera(text: &str, rate: tselatra_time::FrameRate, comp_w: f64) -> std::result::Result<Vec<CamSample>, String> {
     let t = text.trim_start();
     if t.starts_with('{') || t.starts_with('[') {
         let v: Value = serde_json::from_str(t).map_err(|e| format!("camera JSON: {e}"))?;
-        let rate = v.get("frameRate").and_then(Value::as_f64).map(effectcraft_time::FrameRate::from_f64).unwrap_or(rate);
+        let rate = v.get("frameRate").and_then(Value::as_f64).map(tselatra_time::FrameRate::from_f64).unwrap_or(rate);
         let frames = v.get("frames").or(Some(&v)).and_then(Value::as_array).ok_or("camera JSON: expected `frames`")?;
         let v3 = |x: Option<&Value>| -> Option<[f64; 3]> {
             let a = x?.as_array()?;
@@ -192,7 +192,7 @@ pub fn parse_camera(text: &str, rate: effectcraft_time::FrameRate, comp_w: f64) 
 }
 
 /// Animation ▸ Keyframe Assistant ▸ RPF Camera Import: a camera layer keyed from camera data.
-/// RPF/RLA files carry their camera in an undocumented block, so EffectCraft reads the same data
+/// RPF/RLA files carry their camera in an undocumented block, so Tselatra reads the same data
 /// from JSON or CSV exports (see `docs/preferences.md` ▸ RPF Camera Import). One undo step.
 fn rpf_camera_import(s: &mut Session, p: &Value) -> Result<Value> {
     let path = str_p(p, "path").ok_or_else(|| bad("keys.rpfCameraImport", "missing `path` (.json or .csv camera data)"))?;

@@ -13,8 +13,8 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{Cursor, Handle, PointerEvent, PointerKind, handle_at, handle_cursor, resized_box, selection_box};
-use figcraft_doc::{NodeId, TextAutoResize};
-use figcraft_geom::{Point, Rect, is_flipped, rotation_degrees};
+use endrika_doc::{NodeId, TextAutoResize};
+use endrika_geom::{Point, Rect, is_flipped, rotation_degrees};
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -143,7 +143,7 @@ fn resizing_and_flipping_one_layer() {
     ex(&mut s, "select.set", json!({"ids": [t]}));
     let (c, from) = (Point::new(50.0, 250.0), Point::new(110.0, 190.0));
     let a = (from - c).atan2() + 37f64.to_radians();
-    let to = c + figcraft_geom::Vec2::from_angle(a) * 80.0;
+    let to = c + endrika_geom::Vec2::from_angle(a) * 80.0;
     drag(&mut s, from, to, NONE);
     assert!(near(rotation(&s, t).abs(), 37.0), "a free turn: {}", rotation(&s, t));
     ex(&mut s, "edit.undo", json!({}));

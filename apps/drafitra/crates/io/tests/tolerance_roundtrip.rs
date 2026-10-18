@@ -1,9 +1,9 @@
 //! TOLERANCE entities (feature control frames, DXF Reference group codes 3, 10, 1, 11) are read,
 //! drawn, written and read back; hostile frame strings never panic.
 
-use cadcraft_doc::*;
-use cadcraft_geom::Vec3;
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_doc::*;
+use drafitra_geom::Vec3;
+use drafitra_io::{read_dxf, write_dxf};
 
 const FRAME: &str = "{\\Fgdt;j}%%v{\\Fgdt;n}0.1{\\Fgdt;m}%%vA%%vB{\\Fgdt;l}%%vC^J{\\Fgdt;j}%%v0.05%%vA";
 
@@ -36,7 +36,7 @@ fn tolerance_reads_draws_and_roundtrips() {
 
     // Drawn: boxes, symbols and text, turned a quarter turn about the insertion point: the frame
     // grows along +Y from it, its first line straddles x = 5 and the second lies at larger x.
-    let list = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+    let list = drafitra_render::build(&d, &Space::Model, &drafitra_render::Options::default());
     assert!(list.prims.len() > 20, "{} prims", list.prims.len());
     let b = d.extents(&Space::Model);
     let (h, _) = t.text_size(&d);
@@ -70,7 +70,7 @@ fn hostile_tolerance_does_not_panic() {
         ("{\\H1e308x;\\Fgdt;jjjjjjjjjjjjjjjjjjjjjjjjjj}", ("1", "0")),
     ] {
         if let Ok(d) = read_dxf(dxf(text, dir).as_bytes()) {
-            let _ = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+            let _ = drafitra_render::build(&d, &Space::Model, &drafitra_render::Options::default());
             let _ = d.extents(&Space::Model);
             let _ = read_dxf(write_dxf(&d).as_bytes());
         }

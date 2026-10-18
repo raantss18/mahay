@@ -169,7 +169,7 @@ pub struct Tokens {
 impl Tokens {
     pub fn for_brightness(b: Brightness) -> Self {
         let hex = |s: u32| Color32::from_rgb((s >> 16) as u8, (s >> 8) as u8, s as u8);
-        // The Craft look: cool slate greys, flat faces with soft corners, and one accent (the app
+        // The Mahay look: cool slate greys, flat faces with soft corners, and one accent (the app
         // icon's coral) for what is on, chosen or focused. The four brightness levels share the
         // style and differ only in their greys.
         let base = Tokens {
@@ -522,27 +522,27 @@ pub fn install_fonts(ctx: &egui::Context) {
     let mut mono = vec!["JetBrainsMono".to_string()];
     mono.extend(fallback);
     fonts.families.insert(FontFamily::Name(FONT_MONO.into()), mono);
-    add_craft_fonts(&mut fonts);
+    add_mahay_fonts(&mut fonts);
     ctx.set_fonts(fonts);
 }
 
-/// The egui name of a craft-fonts face.
-pub(crate) fn craft_font_name(f: &vectorcraft_text::CraftFont) -> String {
-    format!("craft-fonts {} {}", f.family, f.style)
+/// The egui name of a mahay-fonts face.
+pub(crate) fn mahay_font_name(f: &tsipika_text::MahayFont) -> String {
+    format!("mahay-fonts {} {}", f.family, f.style)
 }
 
-/// The Japanese and Georgian craft-fonts faces (when built with `CRAFT_FONTS_DIR`) as fallbacks at
+/// The Japanese and Georgian mahay-fonts faces (when built with `MAHAY_FONTS_DIR`) as fallbacks at
 /// the end of every family, after the app's own fonts and before the installed fonts `ui_fonts`
 /// adds: BIZ UDPGothic first (bold first in the semibold family), then the Mincho faces, then Noto
 /// Sans Georgian.
-fn add_craft_fonts(fonts: &mut FontDefinitions) {
-    for f in vectorcraft_text::CRAFT_FONTS.iter().filter(|f| f.is_japanese() || f.is_georgian()) {
-        fonts.font_data.insert(craft_font_name(f), Arc::new(FontData::from_static(f.bytes)));
+fn add_mahay_fonts(fonts: &mut FontDefinitions) {
+    for f in tsipika_text::MAHAY_FONTS.iter().filter(|f| f.is_japanese() || f.is_georgian()) {
+        fonts.font_data.insert(mahay_font_name(f), Arc::new(FontData::from_static(f.bytes)));
     }
     for (family, stack) in fonts.families.iter_mut() {
         let bold = *family == FontFamily::Name(FONT_UI_SEMIBOLD.into());
-        stack.extend(vectorcraft_text::craft_fonts::japanese_ui_fonts(bold).into_iter().map(craft_font_name));
-        stack.extend(vectorcraft_text::craft_fonts::georgian_ui_fonts().into_iter().map(craft_font_name));
+        stack.extend(tsipika_text::mahay_fonts::japanese_ui_fonts(bold).into_iter().map(mahay_font_name));
+        stack.extend(tsipika_text::mahay_fonts::georgian_ui_fonts().into_iter().map(mahay_font_name));
     }
 }
 
@@ -570,7 +570,7 @@ pub fn apply_with(ctx: &egui::Context, b: Brightness, accent: Accent, scheme: Sc
     v.popup_shadow = egui::epaint::Shadow { offset: [0, 4], blur: 14, spread: 0, color: Color32::from_black_alpha(if t.dark { 120 } else { 60 }) };
     v.window_shadow = egui::epaint::Shadow { offset: [0, 8], blur: 28, spread: 0, color: Color32::from_black_alpha(if t.dark { 140 } else { 70 }) };
     let w = &mut v.widgets;
-    craft_ui::theme::WidgetPalette { noninteractive: t.panel, inactive: t.button, hovered: t.hover, active: t.tool_active, open: t.hover }.apply_to(
+    mahay_ui::theme::WidgetPalette { noninteractive: t.panel, inactive: t.button, hovered: t.hover, active: t.tool_active, open: t.hover }.apply_to(
         w,
         t.cr(),
         Stroke::new(1.0, t.text),

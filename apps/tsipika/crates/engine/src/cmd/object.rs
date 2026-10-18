@@ -5,11 +5,11 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::corners::set_corners;
-use vectorcraft_doc::{Appearance, Document, Knockout, LiveCorners, LiveShape, Node, NodeId, NodeKind, OrientedBox, Scaling};
-use vectorcraft_geom::shapes::CornerKind;
-use vectorcraft_geom::{Affine, FillRule, PathData, Point, Rect, Vec2};
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::corners::set_corners;
+use tsipika_doc::{Appearance, Document, Knockout, LiveCorners, LiveShape, Node, NodeId, NodeKind, OrientedBox, Scaling};
+use tsipika_geom::shapes::CornerKind;
+use tsipika_geom::{Affine, FillRule, PathData, Point, Rect, Vec2};
 
 use super::edit::{duplicate_in, outermost, selected_roots, selected_roots_to_transform};
 use super::opacitymask::percent;
@@ -311,7 +311,7 @@ pub(crate) fn scaling(s: &mut Session, p: &Value) -> Scaling {
     s.note_journal("corners", json!(corners));
     Scaling {
         strokes,
-        effects: strokes.then_some(vectorcraft_render::effects::scale_effect),
+        effects: strokes.then_some(tsipika_render::effects::scale_effect),
         keep_type_strokes: !strokes,
         keep_corners: !corners,
         ..Scaling::default()
@@ -327,7 +327,7 @@ pub(crate) fn transform_patterns(s: &mut Session, p: &Value, ids: &[NodeId]) -> 
     let mut uses = false;
     let paths = d.index_paths(ids.iter().copied());
     for n in ids.iter().filter_map(|id| paths.get(id)).filter_map(|p| d.node_at(p)) {
-        n.walk(&mut |c| uses |= vectorcraft_doc::pattern::uses_pattern(c, None));
+        n.walk(&mut |c| uses |= tsipika_doc::pattern::uses_pattern(c, None));
     }
     if uses {
         s.note_journal("patterns", json!(on));
@@ -346,7 +346,7 @@ pub(crate) fn transform_node(n: &mut Node, xf: Affine, sc: Scaling, objects: boo
     if objects {
         n.transform(xf, sc);
     } else if sc.patterns {
-        vectorcraft_doc::pattern::transform_patterns_only(n, xf);
+        tsipika_doc::pattern::transform_patterns_only(n, xf);
     }
 }
 
@@ -538,7 +538,7 @@ fn rotate(s: &mut Session, p: &Value) -> Result<Value> {
     let o = origin_of(s, p, &ids)?;
     let mut angle = f64_or(p, "angle", 0.0);
     if bool_or(p, "absolute", false) {
-        angle = vectorcraft_geom::normalize_deg(angle - s.doc()?.doc.bbox_angle(&ids));
+        angle = tsipika_geom::normalize_deg(angle - s.doc()?.doc.bbox_angle(&ids));
     }
     // Angles are counter-clockwise; y is down, so negate.
     let a = about(o, Affine::rotate(-angle.to_radians()));
@@ -631,7 +631,7 @@ fn arrange(s: &mut Session, how: Arrange) -> Result<Value> {
     super::overprint::edit_counted(s, label, |d| {
         let mut moved = 0;
         // Arrange within each parent independently (selections may span layers/groups).
-        let mut by_parent: Vec<(Option<vectorcraft_doc::NodeId>, Vec<vectorcraft_doc::NodeId>)> = vec![];
+        let mut by_parent: Vec<(Option<tsipika_doc::NodeId>, Vec<tsipika_doc::NodeId>)> = vec![];
         for id in &ids {
             let par = d.parent_of(*id);
             match by_parent.iter_mut().find(|(p, _)| *p == par) {
@@ -882,7 +882,7 @@ fn compound_make(s: &mut Session, _: &Value) -> Result<Value> {
 /// the backmost found so far: the path's own, or its compound path's, which is what painted it. A
 /// group has no paint of its own to give: a group of outlined type made a compound path that drew
 /// nothing.
-fn compound_members(n: &Node, paint: &mut Option<vectorcraft_doc::Shared<Appearance>>, out: &mut Vec<Vec<Arc<Node>>>) {
+fn compound_members(n: &Node, paint: &mut Option<tsipika_doc::Shared<Appearance>>, out: &mut Vec<Vec<Arc<Node>>>) {
     match (&n.kind, n.children()) {
         (NodeKind::Path { .. }, _) => out.push(vec![Arc::new(n.clone())]),
         (NodeKind::Compound { .. }, Some(paths)) if !paths.is_empty() => out.push(paths.clone()),
@@ -1591,7 +1591,7 @@ fn set_bounds(s: &mut Session, p: &Value) -> Result<Value> {
     let (m, all) = (margins(vs), margins(v));
     let fixed = [all[0] - m[0], all[1] - m[1], all[2] - m[2], all[3] - m[3]];
     let refi = p.get("reference").and_then(Value::as_u64).unwrap_or(4) as usize;
-    let rp = vectorcraft_geom::reference_point(v, refi);
+    let rp = tsipika_geom::reference_point(v, refi);
     let (w, h) = wanted_size(p, v);
     // The geometric scale that gives the visual size: margins grow by the strokes' scale `f`. It is
     // exact for proportional scales of one path; [`Spans::refit`] checks it, and solves for the
@@ -1617,8 +1617,8 @@ fn set_bounds(s: &mut Session, p: &Value) -> Result<Value> {
     // Move the new visual box's reference point to x, y (default: where it was): the geometric
     // box's reference point moves with the art, the margin from it to `vs`'s by `f`, and the
     // margin from that one to the visual box's stays.
-    let gp = vectorcraft_geom::reference_point(g, refi);
-    let sp = vectorcraft_geom::reference_point(vs, refi);
+    let gp = tsipika_geom::reference_point(g, refi);
+    let sp = tsipika_geom::reference_point(vs, refi);
     let new_rp = scale * gp + (sp - gp) * f(sx, sy) + (rp - sp);
     // x, y place the reference point on the page.
     let page = frame.to_doc() * rp;
@@ -1662,7 +1662,7 @@ fn wanted_size(p: &Value, b: Rect) -> (f64, f64) {
 /// the anchors, their handles with them, and those objects move or scale.
 fn set_anchor_bounds(s: &mut Session, p: &Value, ids: Vec<NodeId>, b: Rect) -> Result<Value> {
     let refi = p.get("reference").and_then(Value::as_u64).unwrap_or(4) as usize;
-    let rp = vectorcraft_geom::reference_point(b, refi);
+    let rp = tsipika_geom::reference_point(b, refi);
     let (w, h) = wanted_size(p, b);
     // A single anchor, or anchors in a line, have no size to scale on that side.
     let ratio = |size: f64, now: f64| if now > 1e-9 { size / now } else { 1.0 };
@@ -1673,13 +1673,13 @@ fn set_anchor_bounds(s: &mut Session, p: &Value, ids: Vec<NodeId>, b: Rect) -> R
 
 /// The visual box of `ids` square to `frame`, as [`Document::oriented_bounds`] measures it, with
 /// symbol instances measured without the strokes in their art
-/// ([`vectorcraft_doc::SymbolBoxes::without_art_strokes`]).
+/// ([`tsipika_doc::SymbolBoxes::without_art_strokes`]).
 fn scaling_box(d: &Document, ids: &[NodeId], frame: &OrientedBox) -> Option<Rect> {
     let symbols = d.symbol_boxes().without_art_strokes();
     let to_local = frame.to_doc().inverse();
     ids.iter().filter_map(|id| d.node(*id)).fold(None, |acc, n| {
         let b = if frame.angle == 0.0 { n.visual_bounds_with(&symbols) } else { n.bounds_in(&symbols, to_local, true) };
-        vectorcraft_geom::union_opt(acc, b)
+        tsipika_geom::union_opt(acc, b)
     })
 }
 
@@ -1724,7 +1724,7 @@ impl Spans {
     fn measure(d: &Document, ids: &[NodeId], frame: &OrientedBox, strokes: bool) -> Self {
         let (symbols, without, art) = (d.symbol_boxes(), d.symbol_boxes().without_art_strokes(), d.symbol_boxes().quick());
         let to_local = frame.to_doc().inverse();
-        let measure = |n: &Node, s: &vectorcraft_doc::SymbolBoxes, visual: bool| match (frame.angle == 0.0, visual) {
+        let measure = |n: &Node, s: &tsipika_doc::SymbolBoxes, visual: bool| match (frame.angle == 0.0, visual) {
             (true, false) => n.geometric_bounds_with(s),
             (true, true) => n.visual_bounds_with(s),
             (false, _) => n.bounds_in(s, to_local, visual),
@@ -1780,7 +1780,7 @@ impl Spans {
     fn refit(&self, c: Point, refi: usize, size: [f64; 2], closed: (f64, f64, Point)) -> Option<(f64, f64, Point)> {
         let ([w, h], (sx, sy, at)) = (size, closed);
         let b = self.visual(c, sx, sy)?;
-        let p = vectorcraft_geom::reference_point(b, refi);
+        let p = tsipika_geom::reference_point(b, refi);
         let tolerance = 1e-12 * [b.x0, b.y0, b.x1, b.y1, w, h, at.x, at.y].iter().fold(1.0, |m: f64, v| m.max(v.abs()));
         let near = |a: f64, b: f64| (a - b).abs() <= tolerance;
         let placed = near(p.x, at.x) && near(p.y, at.y);
@@ -1793,7 +1793,7 @@ impl Spans {
             return None;
         }
         let b = self.visual(c, tx, ty)?;
-        Some((tx, ty, vectorcraft_geom::reference_point(b, refi)))
+        Some((tx, ty, tsipika_geom::reference_point(b, refi)))
     }
 
     /// The scales of 0 or more along x and y that give the visual box the size `w` × `h`, each
@@ -1854,7 +1854,7 @@ enum Part<'a> {
 /// measures it, it is not in perspective, and its transform keeps the art square to the frame (a
 /// turned or slanted instance is measured by the box around its turned art box). Anything else is
 /// one part. Returns false when the parts pass [`MAX_SPANS`].
-fn open<'a>(n: &'a Node, grow: f64, d: &'a Document, symbols: &vectorcraft_doc::SymbolBoxes, to_local: Affine, parts: &mut Vec<Part<'a>>) -> bool {
+fn open<'a>(n: &'a Node, grow: f64, d: &'a Document, symbols: &tsipika_doc::SymbolBoxes, to_local: Affine, parts: &mut Vec<Part<'a>>) -> bool {
     if opens(n) {
         match &n.kind {
             NodeKind::Group { children, .. } => {
@@ -1896,7 +1896,7 @@ fn open_art<'a>(n: &'a Node, xf: Affine, grow: f64, kept: f64, parts: &mut Vec<P
 /// Whether [`open`] opens `n`: a group without a clip, a Shaper construction, effects or an opacity
 /// mask of its own, or a symbol instance without effects or an opacity mask of its own.
 fn opens(n: &Node) -> bool {
-    let visible = |effects: &[vectorcraft_doc::Effect]| effects.iter().any(|e| e.visible);
+    let visible = |effects: &[tsipika_doc::Effect]| effects.iter().any(|e| e.visible);
     let effects = visible(&n.appearance.effects) || n.appearance.items.iter().any(|i| visible(i.effects()));
     let kind = match n.kind {
         NodeKind::Group { clip, .. } => !clip && n.extras().shaper.is_none(),

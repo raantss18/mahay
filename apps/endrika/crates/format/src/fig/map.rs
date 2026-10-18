@@ -9,9 +9,9 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::rc::Rc;
 
-use figcraft_doc::VectorNetwork;
-use figcraft_doc::geom::{Affine, Point};
-use figcraft_doc::proto::{MAX_ACTION_DEPTH, MAX_EXPR_DEPTH};
+use endrika_doc::VectorNetwork;
+use endrika_doc::geom::{Affine, Point};
+use endrika_doc::proto::{MAX_ACTION_DEPTH, MAX_EXPR_DEPTH};
 use serde_json::{Map, Value, json};
 
 use super::kiwi::Kv;
@@ -284,7 +284,7 @@ impl Fit {
     fn apply(self, w: f64, h: f64, t: Affine, h_con: Option<&str>, v_con: Option<&str>) -> ((f64, f64), Affine) {
         let [a, b, c, d, _, _] = t.as_coeffs();
         let lin = Affine::new([a, b, c, d, 0.0, 0.0]);
-        let bb = figcraft_doc::geom::transform_rect_bbox(t, figcraft_doc::geom::Rect::new(0.0, 0.0, w, h));
+        let bb = endrika_doc::geom::transform_rect_bbox(t, endrika_doc::geom::Rect::new(0.0, 0.0, w, h));
         // Where the new box goes: its top-left (constraints) or its centre (a group's scale).
         let (kx, ky, x0, y0, centred) = match self {
             Fit::Frame { from, to } => {
@@ -308,8 +308,8 @@ impl Fit {
             if len > 1e-12 && k.is_finite() { k } else { fallback }
         };
         let size = (w * along(a, b, kx), h * along(c, d, ky));
-        let nb = figcraft_doc::geom::transform_rect_bbox(lin, figcraft_doc::geom::Rect::new(0.0, 0.0, size.0, size.1));
-        let at = if centred { nb.center() } else { figcraft_doc::geom::Point::new(nb.x0, nb.y0) };
+        let nb = endrika_doc::geom::transform_rect_bbox(lin, endrika_doc::geom::Rect::new(0.0, 0.0, size.0, size.1));
+        let at = if centred { nb.center() } else { endrika_doc::geom::Point::new(nb.x0, nb.y0) };
         (size, Affine::translate((x0 - at.x, y0 - at.y)) * lin)
     }
 }

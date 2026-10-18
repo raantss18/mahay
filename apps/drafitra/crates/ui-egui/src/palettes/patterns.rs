@@ -5,8 +5,8 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::{Input, PatternChoice, Picker, pattern_choices};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::{Input, PatternChoice, Picker, pattern_choices};
 use egui::{Align2, Rect, Sense, Stroke, pos2, vec2};
 
 use crate::CadApp;
@@ -52,7 +52,7 @@ fn swatches() -> Arc<Vec<Swatch>> {
 
 fn swatch(c: PatternChoice) -> Swatch {
     let solid = c.lines.is_empty();
-    Swatch { runs: cadcraft_engine::render::pattern_swatch(&c.lines, 1.0), name: c.name, description: c.description, solid }
+    Swatch { runs: drafitra_engine::render::pattern_swatch(&c.lines, 1.0), name: c.name, description: c.description, solid }
 }
 
 /// Draw one swatch in `r` (the square and the name under it).

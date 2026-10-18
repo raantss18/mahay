@@ -31,7 +31,7 @@ pub mod solve;
 pub mod stabilize;
 pub mod subspace;
 
-use effectcraft_raster::Image;
+use tselatra_raster::Image;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 

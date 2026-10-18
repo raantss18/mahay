@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use egui::{Align2, Color32, CornerRadius, Id, Key, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_engine::Prefs;
-use figcraft_format::thumbnail::{FileKind, Preview};
+use endrika_engine::Prefs;
+use endrika_format::thumbnail::{FileKind, Preview};
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -355,7 +355,7 @@ fn run(job: Job) -> Reply {
             Reply::Stat(path, stat)
         }
         Job::Preview(path, modified) => {
-            let preview = figcraft_format::thumbnail::file_preview(Path::new(&path), PICTURE_PX);
+            let preview = endrika_format::thumbnail::file_preview(Path::new(&path), PICTURE_PX);
             Reply::Preview(path, modified, preview)
         }
     }
@@ -376,7 +376,7 @@ impl Loader {
             let (tx, jobs) = std::sync::mpsc::channel::<Job>();
             let (done_tx, rx) = std::sync::mpsc::channel::<Reply>();
             let ctx = ctx.clone();
-            let spawned = std::thread::Builder::new().name("figcraft-recents".into()).spawn(move || {
+            let spawned = std::thread::Builder::new().name("endrika-recents".into()).spawn(move || {
                 while let Ok(job) = jobs.recv() {
                     let reply = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(job)));
                     if let Ok(reply) = reply
@@ -458,7 +458,7 @@ impl Recents {
                             let image = egui::ColorImage::from_rgba_unmultiplied(size, &p.rgba);
                             ctx.load_texture(format!("recent-file:{path}"), image, egui::TextureOptions::LINEAR)
                         });
-                        let page = preview.page.map(|[r, g, b, a]| crate::theme::c32(figcraft_color::Color { r, g, b, a }));
+                        let page = preview.page.map(|[r, g, b, a]| crate::theme::c32(endrika_color::Color { r, g, b, a }));
                         // A changed file's new picture shows at once; a first one fades in.
                         let arrived = if k.shown.is_some() { f64::NEG_INFINITY } else { time };
                         k.shown = Some(Ready { modified, page, texture, arrived });
@@ -528,7 +528,7 @@ impl Recents {
 /// The recent files that may be listed: all of them, or, when the app runs confined to automation
 /// roots, those inside them (no name or picture of another file is shown).
 pub(crate) fn listed(recents: &[String]) -> impl Iterator<Item = &String> {
-    recents.iter().filter(|p| figcraft_engine::file_access::allowed(p, figcraft_engine::file_access::Access::Read))
+    recents.iter().filter(|p| endrika_engine::file_access::allowed(p, endrika_engine::file_access::Access::Read))
 }
 
 /// The recent files for `ui.inspect`: `{view, sort, order, files: [{path, name, exists, picture,
@@ -562,7 +562,7 @@ pub fn section(app: &mut FigApp, ui: &mut Ui, t: &Tokens, query: &str) -> usize 
     // A search reaches every recent file; the files shown without one stay known through it.
     let paths: Vec<String> = listed(&app.session.prefs.recent_files).take(if searching { usize::MAX } else { SHOWN }).cloned().collect();
     let time = ui.input(|i| i.time);
-    let now = figcraft_engine::cmd::comment::now_secs();
+    let now = endrika_engine::cmd::comment::now_secs();
     let reduce_motion = app.reduce_motion();
     let (view, sort) = (View::of(&app.session.prefs), Sort::of(&app.session.prefs));
     let state = &mut app.ui.home_view.recents;
@@ -737,7 +737,7 @@ fn arrows(ui: &Ui, recents: &mut Recents, files: &[Shown], across: usize, down: 
 fn file_icon(ui: &Ui, t: &Tokens, center: egui::Pos2, path: &str) {
     let r = Rect::from_center_size(center, vec2(16.0, 16.0));
     match FileKind::of(Path::new(path)) {
-        FileKind::FigCraft | FileKind::Fig => {
+        FileKind::Endrika | FileKind::Fig => {
             ui.painter().rect_filled(r, CornerRadius::same(4), ACCENT);
             icons::paint(ui.painter(), r.shrink(3.0), Icon::Logo, Color32::WHITE);
         }

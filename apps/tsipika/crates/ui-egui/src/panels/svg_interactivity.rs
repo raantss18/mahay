@@ -8,10 +8,10 @@
 
 use egui::Ui;
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, SVG_EVENTS};
+use tsipika_doc::{NodeId, SVG_EVENTS};
 
 use super::{pstate, selection_len, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets::{self, menu_item};
 
 pub const ID: &str = "svgInteractivity";
@@ -27,7 +27,7 @@ struct Info {
 }
 
 /// `svgInteractivity.info`, read again only when the document or the selection changes.
-fn state(app: &mut VectorcraftApp, ctx: &egui::Context) -> Info {
+fn state(app: &mut TsipikaApp, ctx: &egui::Context) -> Info {
     type Key = (u64, u64, usize, Option<NodeId>, Option<NodeId>);
     let Some(st) = app.session.active() else { return Info::default() };
     let sel = &st.selection.objects;
@@ -53,7 +53,7 @@ fn picked(ctx: &egui::Context) -> &'static str {
     SVG_EVENTS.iter().find(|n| **n == e).copied().unwrap_or(SVG_EVENTS[0])
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
     let info = state(app, &ctx);
     let event = picked(&ctx);
@@ -109,7 +109,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// The panel (≡) menu: Clear Events.
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let info = state(app, ui.ctx());
     // (Where the objects' events differ, some of them have events.)
     let any = info.has && info.events.as_ref().is_none_or(|l| !l.is_empty());
@@ -119,17 +119,17 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// `ui.javascriptFilesDialog {}`: open the JavaScript Files dialog for the active document.
-pub(crate) fn files_dialog(app: &mut VectorcraftApp, _p: &Value) -> Result<Value, String> {
+pub(crate) fn files_dialog(app: &mut TsipikaApp, _p: &Value) -> Result<Value, String> {
     crate::dialogs::javascript_files::open(app)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// Run the panel and its menu for one headless frame of `ctx`: the texts drawn.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<String> {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -147,14 +147,14 @@ mod tests {
         v
     }
 
-    fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+    fn run(app: &mut TsipikaApp, id: &str, p: Value) -> Value {
         app.session.execute(id, &p).unwrap()
     }
 
     /// Window › SVG Interactivity opens the panel, as Window's other panel items do.
     #[test]
     fn window_svg_interactivity_opens_the_panel() {
-        let app = VectorcraftApp::new(Session::new(), Default::default());
+        let app = TsipikaApp::new(Session::new(), Default::default());
         let entries = crate::menus::menu_entries(&app);
         let panel = entries
             .iter()
@@ -167,7 +167,7 @@ mod tests {
     // alongside change the language the labels are drawn in.)
     #[test]
     fn panel_lists_the_selections_events() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         run(&mut app, "file.new", json!({"width": 100, "height": 100}));
         let texts = frame(&mut app, &ctx);

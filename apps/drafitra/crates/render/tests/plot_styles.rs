@@ -4,10 +4,10 @@
 
 use std::sync::Arc;
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::{Common, Drawing, EntityKind, Line, Lineweight, PlotStyle, PlotStyleKind, PlotStyleTable, Space};
-use cadcraft_geom::Vec3;
-use cadcraft_render::{DisplayList, Options, build, build_plot};
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::{Common, Drawing, EntityKind, Line, Lineweight, PlotStyle, PlotStyleKind, PlotStyleTable, Space};
+use drafitra_geom::Vec3;
+use drafitra_render::{DisplayList, Options, build, build_plot};
 
 const BLACK: Rgb = Rgb(0, 0, 0);
 
@@ -118,7 +118,7 @@ fn hostile_tables_do_not_panic() {
 
 #[test]
 fn named_styles_by_layer_by_block_and_name() {
-    use cadcraft_doc::{Block, Entity, Handle, Insert, Layer};
+    use drafitra_doc::{Block, Entity, Handle, Insert, Layer};
     let mut d = Drawing::new_metric();
     d.layers.push(Layer { name: "Walls".into(), color: Color::Index(1), plot_style: "Black".into(), ..Layer::new("Walls") });
     let red = |plot_style: &str| Common { layer: "Walls".into(), plot_style: plot_style.into(), ..Default::default() };

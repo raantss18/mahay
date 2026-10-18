@@ -5,7 +5,7 @@ Measured 2026-10-17 for PR #2706 on one macOS machine.
 ## Method
 
 - Apple M1 Pro, 10 cores, 16 GiB RAM, macOS 26.5.1 (arm64).
-- `cargo build --release -p vectorcraft-cli`, the workspace release profile (thin LTO, one codegen unit), without bundled fonts.
+- `cargo build --release -p tsipika-cli`, the workspace release profile (thin LTO, one codegen unit), without bundled fonts.
 - Before: published PR head `f63fafdb`. After: the reviewed implementation rebased on main `f7de3d6a`, with legacy white-light Inflate restored and colored solid-fill channel groups batched per surface. The main update is included in this comparison.
 - Both executables were retained separately. No compilation ran during measurement. Three paired repetitions alternate before/after for each fixture. Each `bench` invocation warms its renderer once, then averages five frames for each thread setting. The table reports the median of the three reported averages.
 - `bench` renders a 400 x 400 pt artboard at 1200 x 1200 pixels, fitting it to 95% of the viewport. The scene contains one white-filled ellipse, centered at (200, 200), with radii 110 and 140 pt, no stroke, Inflate volume 50%, depth 0, solid cap, one side, view rotation (-20, 25, 0), no perspective, and 15% neutral ambient.
@@ -19,17 +19,17 @@ Measured 2026-10-17 for PR #2706 on one macOS machine.
 Create the two-light scene using the updated CLI, then use the same saved file with both executables:
 
 ```sh
-vectorcraft-cli run \
+tsipika-cli run \
   --cmd file.new --params '{"width":400,"height":400}' \
   --cmd document.setup --params '{"backgroundContents":"white"}' \
   --cmd path.create --params '{"d":"M310.0 200.0C310.0 277.3198649763111 260.7513224813873 340.0 200.0 340.0C139.2486775186127 340.0 90.0 277.3198649763111 90.0 200.0C90.0 122.6801350236889 139.2486775186127 60.0 200.0 60.0C260.7513224813873 60.0 310.0 122.6801350236889 310.0 200.0Z"}' \
   --cmd paint.setFill --params '{"color":"#ffffff"}' \
   --cmd paint.setStroke --params '{"none":true}' \
   --cmd effect.apply --params '{"effect":"threeD.inflate","item":null,"params":{"rotationX":-20,"rotationY":25,"rotationZ":0,"ambient":15,"volume":50,"depth":0,"cap":true,"bothSides":false,"lights":[{"color":"#ff8040","intensity":70,"rotation":135,"height":35,"softness":15},{"color":"#4080ff","intensity":65,"rotation":-35,"height":25,"softness":10}]}}' \
-  --cmd document.save --params '{"path":"/tmp/inflate-two-lights.vectorcraft"}'
+  --cmd document.save --params '{"path":"/tmp/inflate-two-lights.tsipika"}'
 
-vectorcraft-cli bench /tmp/inflate-two-lights.vectorcraft --size 1200x1200 --iters 5
-vectorcraft-cli perf
+tsipika-cli bench /tmp/inflate-two-lights.tsipika --size 1200x1200 --iters 5
+tsipika-cli perf
 ```
 
 ## Measurements
@@ -53,8 +53,8 @@ All six `perf` runs exited successfully, with no busy-machine warning and every 
 | render: background refresh after a pan | 48.18 | 46.71 | 100 |
 | render: 400% zoom, 2880×1800 | 13.45 | 13.68 | 16 |
 | hit test (per click) | 0.43 | 0.42 | 2 |
-| save .vectorcraft | 52.78 | 52.15 | 300 |
-| open .vectorcraft | 143.84 | 142.55 | 300 |
+| save .tsipika | 52.78 | 52.15 | 300 |
+| open .tsipika | 143.84 | 142.55 | 300 |
 | export SVG | 207.37 | 206.25 | 500 |
 | Pathfinder Unite, 1,000 paths | 43.18 | 43.29 | 150 |
 | handle drag, 5,000-anchor path (per move) | 0.94 | 0.84 | 8 |

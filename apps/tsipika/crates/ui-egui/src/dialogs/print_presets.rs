@@ -7,14 +7,14 @@
 //! Field: `selected` (a preset's name).
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::printpresets::{DEFAULT_PRESET, PRESET_EXTS, PRESET_FORMAT, changes};
+use tsipika_engine::cmd::printpresets::{DEFAULT_PRESET, PRESET_EXTS, PRESET_FORMAT, changes};
 
 use super::DialogSpec;
 use super::print::{open_preset, option_label, section_of};
 use super::save_pdf::option_rows;
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Print Presets.
 pub const KIND: &str = "printPresets";
@@ -32,7 +32,7 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 };
 
 /// Open the presets manager on `selected` (default: [Default]).
-pub fn open(app: &mut VectorcraftApp, selected: Option<&str>) {
+pub fn open(app: &mut TsipikaApp, selected: Option<&str>) {
     app.ui.dialog = Some(Dialog::new(KIND, json!({ "selected": selected.unwrap_or(DEFAULT_PRESET) })));
 }
 
@@ -46,7 +46,7 @@ pub(super) enum Action {
     Export,
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let saved = &app.session.prefs.print_presets;
     let selected = d.str("selected");
@@ -132,7 +132,7 @@ fn select(d: &mut Dialog, name: &str) {
     d.fields.insert("selected".into(), json!(name));
 }
 
-pub(super) fn run(app: &mut VectorcraftApp, d: &mut Dialog, act: Action, current: &str) -> Result<(), String> {
+pub(super) fn run(app: &mut TsipikaApp, d: &mut Dialog, act: Action, current: &str) -> Result<(), String> {
     match act {
         Action::Select(name) => select(d, &name),
         // The editor replaces this dialog; its OK comes back here.

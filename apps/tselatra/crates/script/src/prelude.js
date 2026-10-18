@@ -1,4 +1,4 @@
-// EffectCraft scripting: an After Effects-style object model over the engine.
+// Tselatra scripting: an After Effects-style object model over the engine.
 //
 // Written from the behaviour the After Effects Scripting Guide documents (object names,
 // attributes, methods). Reads go through `__query(kind, json)`; every edit runs an engine command
@@ -138,8 +138,8 @@ var $ = {
   level: 0,
   engineName: "boa",
   get fileName() { return __get("app").scriptName; },
-  get os() { return "EffectCraft"; },
-  get version() { return "EffectCraft scripting"; },
+  get os() { return "Tselatra"; },
+  get version() { return "Tselatra scripting"; },
   get locale() { return "en_US"; },
   // Evaluates the file in the global scope and returns its last value (`timeout` is ignored).
   evalFile: function (file, timeout) { return __evalFile(__str(file)); },
@@ -148,7 +148,7 @@ var $ = {
 // ------------------------------------------------------------------ BridgeTalk
 
 // Which application a script runs in, for scripts and frameworks that ask during initialisation.
-// EffectCraft names itself rather than posing as another application; messages to other
+// Tselatra names itself rather than posing as another application; messages to other
 // applications aren't supported.
 function BridgeTalk() {
   if (!(this instanceof BridgeTalk)) return new BridgeTalk();
@@ -164,22 +164,22 @@ function BridgeTalk() {
   this.onTimeout = null;
 }
 BridgeTalk.prototype.send = function () {
-  throw __err("BridgeTalk: sending messages to other applications is not supported in EffectCraft");
+  throw __err("BridgeTalk: sending messages to other applications is not supported in Tselatra");
 };
 BridgeTalk.prototype.sendResult = BridgeTalk.prototype.send;
 BridgeTalk.prototype.toString = function () { return "[object BridgeTalk]"; };
-BridgeTalk.appName = "effectcraft";
+BridgeTalk.appName = "tselatra";
 Object.defineProperty(BridgeTalk, "appVersion", { get: function () { return __get("app").buildName; } });
-Object.defineProperty(BridgeTalk, "appSpecifier", { get: function () { return "effectcraft-" + BridgeTalk.appVersion; } });
+Object.defineProperty(BridgeTalk, "appSpecifier", { get: function () { return "tselatra-" + BridgeTalk.appVersion; } });
 BridgeTalk.appLocale = "en_US";
 BridgeTalk.appInstance = "";
 BridgeTalk.appStatus = "idle";
 BridgeTalk.onReceive = null;
-BridgeTalk.__isSelf = function (spec) { return String(spec === undefined || spec === null ? "" : spec).split("-")[0].toLowerCase() === "effectcraft"; };
+BridgeTalk.__isSelf = function (spec) { return String(spec === undefined || spec === null ? "" : spec).split("-")[0].toLowerCase() === "tselatra"; };
 BridgeTalk.isRunning = function (spec) { return BridgeTalk.__isSelf(spec); };
 BridgeTalk.launch = function (spec) { return BridgeTalk.__isSelf(spec); };
 BridgeTalk.getSpecifier = function (name) { return BridgeTalk.__isSelf(name) ? BridgeTalk.appSpecifier : null; };
-BridgeTalk.getDisplayName = function (spec) { return BridgeTalk.__isSelf(spec) ? "EffectCraft" : null; };
+BridgeTalk.getDisplayName = function (spec) { return BridgeTalk.__isSelf(spec) ? "Tselatra" : null; };
 BridgeTalk.getTargets = function () { return [BridgeTalk.appName]; };
 BridgeTalk.getStatus = function (spec) { return spec === undefined || BridgeTalk.__isSelf(spec) ? "IDLE" : "ISNOTINSTALLED"; };
 BridgeTalk.bringToFront = function () {};
@@ -279,7 +279,7 @@ File.openDialog = function () { return null; };
 File.saveDialog = function () { return null; };
 File.decode = function (s) { return decodeURIComponent(s); };
 File.encode = function (s) { return encodeURIComponent(s); };
-File.fs = "EffectCraft";
+File.fs = "Tselatra";
 
 function Folder(path) {
   if (!(this instanceof Folder)) return new Folder(path);
@@ -939,7 +939,7 @@ Property.prototype.property = function () { return null; };
     return __call(id, params);
   };
   P.removeKey = function (i) { this.__keyCmd(i, "keys.delete"); };
-  // EffectCraft extension: remove an inclusive range with one engine edit instead of
+  // Tselatra extension: remove an inclusive range with one engine edit instead of
   // cloning the project for every removed key. Indices are one-based as in removeKey.
   P.removeKeys = function (first, last) {
     var keys = this.__keys();
@@ -1599,7 +1599,7 @@ CompItem.prototype.constructor = CompItem;
   };
   P.openInViewer = function () { __call("comp.open", { comp: this.__id }); return null; };
   P.duplicate = function () { return __item(__call("project.duplicate", { items: [this.__id] }).items[0]); };
-  // Essential Graphics (templates are EffectCraft's open .ectemplate files).
+  // Essential Graphics (templates are Tselatra's open .ectemplate files).
   P.__eg = function () { return __call("essential.list", { comp: this.__id }); };
   P.__controllers = function () {
     var out = [];
@@ -1993,7 +1993,7 @@ var app = {
   endSuppressDialogs: function () {},
   purge: function () { __call("edit.purge", { what: "all" }); },
   findMenuCommandId: function (name) {
-    // Well-known After Effects ids must not shift when EffectCraft registers a command.
+    // Well-known After Effects ids must not shift when Tselatra registers a command.
     if (String(name) === "Undo") return 16;
     return __get("menuCommandId", { name: String(name) });
   },
@@ -2013,7 +2013,7 @@ var app = {
   pauseWatchFolder: function () {},
   endWatchFolder: function () {},
   parseSwatchFile: function () { throw __err("parseSwatchFile is not supported"); },
-  // EffectCraft: run any engine command by id with parameters (see `command.list`).
+  // Tselatra: run any engine command by id with parameters (see `command.list`).
   run: function (id, params) { return __call(String(id), params || {}); },
   toString: function () { return "[object Application]"; },
 };

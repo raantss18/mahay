@@ -8,14 +8,14 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms::Model;
-use vectorcraft_color::harmony::{Guide, GuideOptions, Harmony, Variation};
-use vectorcraft_color::{Color, Paint, keep_model};
-use vectorcraft_doc::live::lerp_color;
-use vectorcraft_doc::pattern::PatternDef;
-pub(crate) use vectorcraft_doc::recolor::map_paint;
-use vectorcraft_doc::recolor::{ColorVisitor, Reach, map_links, recolor_node};
-use vectorcraft_doc::{Document, ImageBlob, Node, NodeId, NodeKind};
+use tsipika_color::cms::Model;
+use tsipika_color::harmony::{Guide, GuideOptions, Harmony, Variation};
+use tsipika_color::{Color, Paint, keep_model};
+use tsipika_doc::live::lerp_color;
+use tsipika_doc::pattern::PatternDef;
+pub(crate) use tsipika_doc::recolor::map_paint;
+use tsipika_doc::recolor::{ColorVisitor, Reach, map_links, recolor_node};
+use tsipika_doc::{Document, ImageBlob, Node, NodeId, NodeKind};
 
 use super::edit::selected_roots;
 use super::*;

@@ -38,7 +38,7 @@ fn android_main(app: AndroidApp) {
             {
                 app.set_status(format!("Recovered {n} unsaved presentation{} from the last session", if n == 1 { "" } else { "s" }));
             }
-            Ok(Box::new(Shell { app, bridge: EguiBridge::new(&cc.egui_ctx) }))
+            Ok(Box::new(Shell { app, bridge: EguiBridge::new(&cc.egui_ctx, mahay_about::AppInfo { id: "seho", name: "Seho" }) }))
         }),
     );
     if let Err(e) = result {

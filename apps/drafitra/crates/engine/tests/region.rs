@@ -2,9 +2,9 @@
 //! them; UNION, SUBTRACT and INTERSECT combine regions whose boundaries don't meet; they move,
 //! explode and snap like other objects.
 
-use cadcraft_doc::{EntityKind, Handle, Region, Space};
-use cadcraft_engine::Session;
-use cadcraft_geom::{PI, Vec2};
+use drafitra_doc::{EntityKind, Handle, Region, Space};
+use drafitra_engine::Session;
+use drafitra_geom::{PI, Vec2};
 use serde_json::{Value, json};
 
 fn h(v: &Value) -> Handle {
@@ -147,13 +147,13 @@ fn regions_move_grip_explode_and_snap() {
     // One grip in the middle; dragging it moves the region.
     let k = s.doc().unwrap().entity(a).unwrap().kind.clone();
     assert_eq!(k.grips(), vec![Vec2::new(3.0, 6.0)]);
-    let EntityKind::Region(m) = cadcraft_engine::grips::stretch_grip(&k, 0, Vec2::new(4.0, 6.0)).unwrap() else { panic!() };
+    let EntityKind::Region(m) = drafitra_engine::grips::stretch_grip(&k, 0, Vec2::new(4.0, 6.0)).unwrap() else { panic!() };
     assert!(m.bounds().min.near(Vec2::new(2.0, 1.0), 1e-9));
     // A corner snaps; a pick on the edge picks it.
     let d = s.doc().unwrap();
-    let hit = cadcraft_engine::snap::osnap(d, &Space::Model, Vec2::new(5.05, 11.05), 0.3, cadcraft_engine::snap::mode::END, None, false).unwrap();
+    let hit = drafitra_engine::snap::osnap(d, &Space::Model, Vec2::new(5.05, 11.05), 0.3, drafitra_engine::snap::mode::END, None, false).unwrap();
     assert!(hit.point.near(Vec2::new(5.0, 11.0), 1e-9));
-    assert_eq!(cadcraft_engine::select::pick(d, &Space::Model, Vec2::new(3.0, 1.0), 0.1), Some(a));
+    assert_eq!(drafitra_engine::select::pick(d, &Space::Model, Vec2::new(3.0, 1.0), 0.1), Some(a));
     // EXPLODE: the boundary's lines and arcs.
     s.execute("explode", &json!({"handles": [a.hex()]})).unwrap();
     let d = s.doc().unwrap();

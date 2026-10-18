@@ -3,8 +3,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Comment, DevSnapshot, Document, ImageData, Message, Node, NodeId, NodeKind, Style, StyleKind};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Comment, DevSnapshot, Document, ImageData, Message, Node, NodeId, NodeKind, Style, StyleKind};
 
 use crate::change::{Change, DocProp, Entry, Json, Prop};
 use crate::replica::{Mode, Replica};
@@ -104,7 +104,7 @@ fn kind_changes_and_transforms_round_trip() {
     let mut b = a.document().clone();
     b.get_mut(frame).unwrap().kind = NodeKind::Component { description: "A card".into(), props: BTreeMap::new() };
     b.get_mut(kids[0]).unwrap().kind = NodeKind::Ellipse { start: 0.0, sweep: 3.0, inner: 0.25 };
-    b.get_mut(kids[0]).unwrap().transform = figcraft_geom::Affine::new([0.5, 0.1, -0.1, 2.0, 1.0 / 3.0, -7.25]);
+    b.get_mut(kids[0]).unwrap().transform = endrika_geom::Affine::new([0.5, 0.1, -0.1, 2.0, 1.0 / 3.0, -7.25]);
     round_trip(&a, &b);
 }
 

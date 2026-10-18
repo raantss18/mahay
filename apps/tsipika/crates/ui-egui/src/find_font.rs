@@ -8,49 +8,49 @@ use serde_json::{Value, json};
 use crate::state::Dialog;
 use crate::theme::Tokens;
 use crate::widgets;
-use crate::{VectorcraftApp, font_menu};
+use crate::{TsipikaApp, font_menu};
 
 /// Open the dialog.
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     open_at(app, 0);
 }
 
 /// Open the dialog on the first font the document misses, to replace it (Missing Fonts' Find
 /// Fonts).
-pub fn open_on_missing(app: &mut VectorcraftApp) {
+pub fn open_on_missing(app: &mut TsipikaApp) {
     let first = fonts(app).iter().position(|f| matches!(f["status"].as_str(), Some("missing" | "substitute")));
     open_at(app, first.unwrap_or(0));
 }
 
 /// Open the dialog with the document's font `selected` (an index into `text.fonts`) chosen.
-fn open_at(app: &mut VectorcraftApp, selected: usize) {
+fn open_at(app: &mut TsipikaApp, selected: usize) {
     app.ui.dialog = Some(Dialog::new("findFont", json!({ "selected": selected, "family": "Source Sans 3", "style": "", "selectionOnly": false })));
 }
 
-fn fonts(app: &mut VectorcraftApp) -> Vec<Value> {
+fn fonts(app: &mut TsipikaApp) -> Vec<Value> {
     app.session.execute("text.fonts", &json!({})).ok().and_then(|v| v.as_array().cloned()).unwrap_or_default()
 }
 
-pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn confirm(app: &mut TsipikaApp) -> Result<Value, String> {
     app.ui.dialog = None;
     Ok(Value::Null)
 }
 
 /// Replace the selected document font with the chosen one (`all`: everywhere, else the selection).
-fn change(app: &mut VectorcraftApp, d: &Dialog, from: &Value, all: bool) -> Result<Value, String> {
+fn change(app: &mut TsipikaApp, d: &Dialog, from: &Value, all: bool) -> Result<Value, String> {
     let style = d.str("style");
     let to = if style.is_empty() { json!({ "family": d.str("family") }) } else { json!({ "family": d.str("family"), "style": style }) };
     app.run("text.replaceFont", json!({ "from": { "family": from["family"], "style": from["style"] }, "to": to, "selectionOnly": !all }))
 }
 
-pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut TsipikaApp, ctx: &egui::Context) {
     let Some(mut d) = app.ui.dialog.clone() else { return };
     let t = Tokens::get(ctx);
     let list = fonts(app);
     let sample = font_menu::sample_text(app);
     // Find in Folder… shows when the document misses fonts, fonts used only in its symbols included.
     let offer_folder = crate::picks::can(app, &crate::picks::PickRequest::Folder)
-        && app.session.active().is_some_and(|st| !vectorcraft_engine::cmd::fontfiles::missing_fonts(&st.doc).is_empty());
+        && app.session.active().is_some_and(|st| !tsipika_engine::cmd::fontfiles::missing_fonts(&st.doc).is_empty());
     let mut close = false;
     let mut find_in_folder = false;
     let mut act: Option<&str> = None;
@@ -89,7 +89,7 @@ pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
                 d.fields.insert("family".into(), json!(f));
                 d.fields.insert("style".into(), json!(style.unwrap_or_default()));
             }
-            let styles = vectorcraft_text::FontDb::global().styles(&d.str("family"));
+            let styles = tsipika_text::FontDb::global().styles(&d.str("family"));
             // "(closest)" is ours; the font's style names are shown as they are.
             let closest = tl!("(closest)");
             let mut opts: Vec<&str> = vec![closest];
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn dialog_draws_and_changes_all() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 40, "text": "Hi", "font": "Missing Family"})).unwrap();
         open(&mut app);
@@ -184,9 +184,9 @@ mod tests {
 
     #[test]
     fn find_in_folder_puts_the_missing_fonts_dialog_in_find_fonts_place() {
-        let dir = std::fs::canonicalize(vectorcraft_testkit::temp_dir("find-font-folder")).unwrap();
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
-        app.session.search_rules = Some(vectorcraft_engine::cmd::findfiles::Rules { user_content: vec![dir.clone()], ..Default::default() });
+        let dir = std::fs::canonicalize(tsipika_testkit::temp_dir("find-font-folder")).unwrap();
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
+        app.session.search_rules = Some(tsipika_engine::cmd::findfiles::Rules { user_content: vec![dir.clone()], ..Default::default() });
         app.session.search_threads = Some(1);
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         assert!(!crate::menus::enabled(&app, "ui.findFontsInFolder"), "no folder picker (the web)");

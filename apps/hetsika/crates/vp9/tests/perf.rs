@@ -1,9 +1,9 @@
 //! Decode speed (ignored by default; run with
-//! `cargo test --release -p filmcraft-vp9 --test perf -- --ignored --nocapture`).
+//! `cargo test --release -p hetsika-vp9 --test perf -- --ignored --nocapture`).
 
 mod common;
 
-use filmcraft_vp9::Decoder;
+use hetsika_vp9::Decoder;
 use std::time::Instant;
 
 fn bench(frames: &[&[u8]], threads: usize, iters: usize) -> (usize, f64) {

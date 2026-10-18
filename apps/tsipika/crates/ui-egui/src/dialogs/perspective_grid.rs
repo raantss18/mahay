@@ -13,14 +13,14 @@
 //! Preset… returns to Define Grid) and `__original` (the saved preset an edit changes).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_tools::distort::perspective::define::is_builtin;
-use vectorcraft_tools::distort::perspective::{GridDefinition, Rgb};
+use tsipika_doc::Unit;
+use tsipika_tools::distort::perspective::define::is_builtin;
+use tsipika_tools::distort::perspective::{GridDefinition, Rgb};
 
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Define Perspective Grid.
 pub const KIND: &str = "perspectiveGrid";
@@ -76,26 +76,26 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 };
 
 /// Open the dialog on `def`'s fields as `mode` (`""`, `save` or `edit`).
-fn open_on(app: &mut VectorcraftApp, mut def: Value, mode: &str) {
+fn open_on(app: &mut TsipikaApp, mut def: Value, mode: &str) {
     def[SHOWN] = def["units"].clone();
     def[MODE] = json!(mode);
     app.ui.dialog = Some(Dialog::new(KIND, def));
 }
 
 /// The active document's grid as Define Grid fields.
-fn grid_fields(app: &mut VectorcraftApp) -> Result<Value, String> {
+fn grid_fields(app: &mut TsipikaApp) -> Result<Value, String> {
     Ok(app.session.execute("perspective.grid.get", &json!({})).map_err(|e| e.to_string())?["define"].take())
 }
 
 /// Open Define Grid on the active document's grid.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let fields = grid_fields(app)?;
     open_on(app, fields, "");
     Ok(Value::Null)
 }
 
 /// View → Perspective Grid → Save Grid as Preset…: the grid's fields under a new preset name.
-pub fn open_save(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open_save(app: &mut TsipikaApp) -> Result<Value, String> {
     let mut fields = grid_fields(app)?;
     fields["name"] = json!(app.session.new_perspective_preset_name());
     open_on(app, fields, "save");
@@ -104,7 +104,7 @@ pub fn open_save(app: &mut VectorcraftApp) -> Result<Value, String> {
 
 /// The preset editor: the saved preset `original` (Edit…), or a new preset starting from `base`
 /// (New…). Its OK returns to Edit → Perspective Grid Presets.
-pub fn open_edit(app: &mut VectorcraftApp, original: Option<&str>, base: &str) -> Result<(), String> {
+pub fn open_edit(app: &mut TsipikaApp, original: Option<&str>, base: &str) -> Result<(), String> {
     let name = original.unwrap_or(base);
     let mut def = json!(app.session.perspective_preset(name).ok_or_else(|| format!("no perspective grid preset named `{name}`"))?);
     match original {
@@ -115,7 +115,7 @@ pub fn open_edit(app: &mut VectorcraftApp, original: Option<&str>, base: &str) -
     Ok(())
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut params = form::params(d);
     match d.str(MODE).as_str() {
         "save" | "edit" => {
@@ -203,7 +203,7 @@ fn color(ui: &mut egui::Ui, d: &mut Dialog, key: &str, label: &str) {
 
 /// The Name row: in Define Grid the Preset menu (choosing a preset loads its fields) and Save
 /// Preset…, else the preset's name.
-fn name_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn name_row(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     if !d.str(MODE).is_empty() {
         widgets::label_row(ui, tl!("Name:"), LABEL, |ui| {
             form::text(ui, d, "name", 200.0);
@@ -240,7 +240,7 @@ fn name_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
     ui.add_space(8.0);
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     name_row(app, ui, d);
     widgets::subheader(ui, tl!("Perspective Grid Settings"));

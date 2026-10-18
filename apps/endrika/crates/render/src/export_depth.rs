@@ -1,6 +1,6 @@
 //! Preflight for vector exports, including subtrees rendered into embedded images.
 
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 
 /// Maximum descendant depth for SVG/PDF export; each selected root is at depth zero.
 pub const MAX_EXPORT_DEPTH: usize = 256;
@@ -57,7 +57,7 @@ pub fn check_export_depth(doc: &Document, roots: &[NodeId]) -> Result<(), Export
 #[cfg(test)]
 mod tests {
     use super::*;
-    use figcraft_doc::NodeKind;
+    use endrika_doc::NodeKind;
 
     #[test]
     fn export_depth_preflight_refuses_a_cyclic_subtree() {

@@ -18,9 +18,9 @@ use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::Arc;
 
-use designcraft_doc::notes::NoteRestart;
-use designcraft_doc::{Document, FOOTNOTE_REF, ItemId, Story, TextFrameOptions};
-use designcraft_geom::{Point, Rect};
+use pejy_doc::notes::NoteRestart;
+use pejy_doc::{Document, FOOTNOTE_REF, ItemId, Story, TextFrameOptions};
+use pejy_geom::{Point, Rect};
 
 use crate::shape::{Glyph, SubstCtx};
 use crate::{ComposeOptions, ComposedStory, Deco, FrameSpec, PlacedNote};
@@ -73,7 +73,7 @@ pub(crate) struct Notes {
     pub placed: Vec<Placed>,
     /// Composed footnote text by (index, label, width).
     cache: HashMap<(usize, String, u64), (Arc<ComposedStory>, NoteMetrics)>,
-    notes: Vec<Arc<designcraft_doc::Footnote>>,
+    notes: Vec<Arc<pejy_doc::Footnote>>,
     /// Footnotes span the columns of their frame.
     span: bool,
     /// Room a frame's earlier columns had to leave for spanning notes placed in a later column;
@@ -134,7 +134,7 @@ impl Notes {
             sub.notes.insert(self.refs[k], o.label(self.numbers[k], false));
         }
         sub.note_position = o.ref_position;
-        sub.note_style = (o.ref_char_style != designcraft_doc::NO_CHAR_STYLE).then(|| o.ref_char_style.clone());
+        sub.note_style = (o.ref_char_style != pejy_doc::NO_CHAR_STYLE).then(|| o.ref_char_style.clone());
     }
 
     /// Footnote indices referenced by a line's glyphs.

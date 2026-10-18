@@ -168,7 +168,7 @@ mod tests {
     fn start_timecode_only_relabels_source_time() {
         // Override Start changes the timecode shown, not the frames (After Effects).
         let at = |f: &Footage, i| f.sequence_file(i).map(|p| frame_number(p).unwrap_or(-1));
-        let mut f = Footage { frame_rate: effectcraft_time::FrameRate::from_f64(24.0), ..seq(&[1001, 1002, 1003]) };
+        let mut f = Footage { frame_rate: tselatra_time::FrameRate::from_f64(24.0), ..seq(&[1001, 1002, 1003]) };
         assert_eq!(f.timecode(0), "0:00:00:00");
         f.start_timecode = Some(1001);
         assert_eq!((f.sequence_frames(), at(&f, 0), at(&f, 2)), (3, Some(1001), Some(1003)));
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn duration_follows_frames_and_rate() {
         let mut f = seq(&[1, 2, 5]);
-        f.frame_rate = effectcraft_time::FrameRate::from_f64(10.0);
+        f.frame_rate = tselatra_time::FrameRate::from_f64(10.0);
         f.sync_sequence_duration();
         assert!((f.duration.seconds() - 0.5).abs() < 1e-9);
         assert_eq!(Footage::default().sequence_frames(), 0);

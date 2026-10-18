@@ -5,7 +5,7 @@ use serde_json::json;
 use crate::Session;
 use crate::params::id_of;
 
-fn id(v: serde_json::Value) -> figcraft_doc::NodeId {
+fn id(v: serde_json::Value) -> endrika_doc::NodeId {
     id_of(&v["id"]).unwrap()
 }
 
@@ -35,7 +35,7 @@ fn resize_to_fit_keeps_contents_in_place() {
     s.execute("node.set", &json!({"id": f, "props": {"width": 600}})).unwrap();
     s.execute("object.resizeToFit", &json!({"ids": [f]})).unwrap();
     let n = s.doc().unwrap().node(f).unwrap().clone();
-    assert_eq!(n.child_layout.sizing_h, figcraft_doc::Sizing::Hug);
+    assert_eq!(n.child_layout.sizing_h, endrika_doc::Sizing::Hug);
     assert!(n.width < 600.0);
 }
 
@@ -44,7 +44,7 @@ fn dev_status_prop() {
     let mut s = Session::new();
     let f = id(s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 40, "height": 40})).unwrap());
     s.execute("node.set", &json!({"id": f, "props": {"devStatus": "readyForDev"}})).unwrap();
-    assert_eq!(s.doc().unwrap().node(f).unwrap().dev_status, figcraft_doc::DevStatus::ReadyForDev);
+    assert_eq!(s.doc().unwrap().node(f).unwrap().dev_status, endrika_doc::DevStatus::ReadyForDev);
     assert_eq!(s.execute("node.get", &json!({"id": f})).unwrap()["devStatus"], json!("readyForDev"));
     s.execute("node.set", &json!({"id": f, "props": {"devStatus": null}})).unwrap();
     assert!(s.doc().unwrap().node(f).unwrap().dev_status.is_none());

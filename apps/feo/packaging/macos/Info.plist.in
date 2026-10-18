@@ -7,13 +7,13 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>SoundCraft</string>
+  <string>Feo</string>
   <key>CFBundleName</key>
-  <string>SoundCraft</string>
+  <string>Feo</string>
   <key>CFBundleExecutable</key>
-  <string>SoundCraft</string>
+  <string>Feo</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.soundcraft</string>
+  <string>org.mahay.feo</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -24,12 +24,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>SoundCraftVersion</key>
+  <key>FeoVersion</key>
   <string>@VERSION@</string>
-  <key>SoundCraftBuildCommit</key>
+  <key>FeoBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>SoundCraft</string>
+  <string>Feo</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.music</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
@@ -42,33 +42,33 @@
   <true/>
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
-  <!-- Shown by macOS the first time SoundCraft opens an input device (recording). -->
+  <!-- Shown by macOS the first time Feo opens an input device (recording). -->
   <key>NSMicrophoneUsageDescription</key>
-  <string>SoundCraft records audio from the input you choose.</string>
+  <string>Feo records audio from the input you choose.</string>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © the SoundCraft authors. MIT OR Apache-2.0.</string>
+  <string>Copyright © the Feo authors. MIT OR Apache-2.0.</string>
 
-  <!-- SoundCraft's own format: a JSON session file next to an "Audio Files" folder. -->
+  <!-- Feo's own format: a JSON session file next to an "Audio Files" folder. -->
   <key>UTExportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.soundcraft.session</string>
+      <string>org.mahay.feo.session</string>
       <key>UTTypeDescription</key>
-      <string>SoundCraft Session</string>
+      <string>Feo Session</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
         <string>public.content</string>
       </array>
       <key>UTTypeIconFile</key>
-      <string>SoundCraft</string>
+      <string>Feo</string>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
         <array><string>scraft</string></array>
         <key>public.mime-type</key>
-        <array><string>application/x-soundcraft-session</string></array>
+        <array><string>application/x-feo-session</string></array>
       </dict>
     </dict>
   </array>
@@ -77,15 +77,15 @@
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>SoundCraft Session</string>
+      <string>Feo Session</string>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>LSHandlerRank</key>
       <string>Owner</string>
       <key>CFBundleTypeIconFile</key>
-      <string>SoundCraft</string>
+      <string>Feo</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.soundcraft.session</string></array>
+      <array><string>org.mahay.feo.session</string></array>
     </dict>
     <!-- Audio and MIDI: offered under "Open With" (imported into a session), never taking over
          the user's default player. -->

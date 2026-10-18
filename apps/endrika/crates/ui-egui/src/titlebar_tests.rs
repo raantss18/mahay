@@ -3,7 +3,7 @@
 //! resize it. A system-drawn title bar leaves all of that to the system.
 
 use egui::{Event, PointerButton, Pos2, RawInput, Rect, ResizeDirection, ViewportCommand, ViewportId, pos2, vec2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::{FigApp, NoServices, TitleBar};

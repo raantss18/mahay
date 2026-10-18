@@ -4,8 +4,8 @@
 //! file. The corner rotation handles, the rotation field, `transform.rotate` and the 90° and 180°
 //! rotations turn about it.
 
-use figcraft_doc::{Document, NodeId};
-use figcraft_geom::Point;
+use endrika_doc::{Document, NodeId};
+use endrika_geom::Point;
 
 use crate::cmd::edit::roots;
 use crate::tools::{SNAP_PX, selection_box};

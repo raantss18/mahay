@@ -1,24 +1,24 @@
 #!/bin/sh
-# FigCraft AppImage entry point (packaging/linux/AppRun; installed by package.sh).
+# Endrika AppImage entry point (packaging/linux/AppRun; installed by package.sh).
 #
 # On Wayland the compositor resolves a window's dock icon by taking the window's
-# app_id (ai.storyteller.figcraft) and looking up an installed .desktop file.
+# app_id (org.mahay.endrika) and looking up an installed .desktop file.
 # An AppImage installs nothing, so every AppImage run would otherwise show the
 # generic "Wayland" icon. Best-effort desktop integration: on first run
 # (and whenever the AppImage's path changes) install the .desktop entry and the
 # hicolor icons into $XDG_DATA_HOME, then launch. Every failure here must leave
-# the launch untouched. Opt out with FIGCRAFT_NO_DESKTOP_INTEGRATION=1.
+# the launch untouched. Opt out with ENDRIKA_NO_DESKTOP_INTEGRATION=1.
 #
-# `FigCraft.AppImage cli <args>` runs the bundled headless figcraft-cli with <args>
+# `Endrika.AppImage cli <args>` runs the bundled headless endrika-cli with <args>
 # (e.g. `cli mcp`) instead of the app, without touching the desktop.
 
 set -u
 
 APPDIR="$(dirname "$(readlink -f "$0")")"
-DESK_ID=ai.storyteller.figcraft
+DESK_ID=org.mahay.endrika
 
 integrate() {
-  case "${FIGCRAFT_NO_DESKTOP_INTEGRATION:-}" in
+  case "${ENDRIKA_NO_DESKTOP_INTEGRATION:-}" in
     1 | true | yes) return 0 ;;
   esac
   # The AppImage runtime exports $APPIMAGE; without it (an extracted AppDir) there
@@ -75,13 +75,13 @@ integrate() {
 # desktop integration, straight to the binary.
 if [ "${1:-}" = cli ]; then
   shift
-  cli="$APPDIR/usr/bin/figcraft-cli"
+  cli="$APPDIR/usr/bin/endrika-cli"
   if [ ! -x "$cli" ]; then
-    echo "figcraft: this AppImage was built without figcraft-cli" >&2
+    echo "endrika: this AppImage was built without endrika-cli" >&2
     exit 127
   fi
   exec "$cli" "$@"
 fi
 
 integrate
-exec "$APPDIR/usr/bin/figcraft" "$@"
+exec "$APPDIR/usr/bin/endrika" "$@"

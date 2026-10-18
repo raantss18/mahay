@@ -1,6 +1,6 @@
 [package]
-name = "filmcraft-ui-egui"
-description = "The FilmCraft egui frontend (swappable): panels, docking, timeline, monitors, control channel"
+name = "hetsika-ui-egui"
+description = "The Hetsika egui frontend (swappable): panels, docking, timeline, monitors, control channel"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,22 +10,22 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-craft-ui = { workspace = true }
-filmcraft-time = { workspace = true }
-filmcraft-geom = { workspace = true }
-filmcraft-color = { workspace = true }
-filmcraft-frame = { workspace = true }
-filmcraft-media = { workspace = true }
-filmcraft-project = { workspace = true }
-filmcraft-tts = { workspace = true }
-filmcraft-edit = { workspace = true }
-filmcraft-render = { workspace = true }
-filmcraft-text = { workspace = true }
-filmcraft-audio-dsp = { workspace = true }
-filmcraft-engine = { workspace = true }
-filmcraft-export = { workspace = true }
-filmcraft-gpu = { workspace = true }
-filmcraft-scopes = { workspace = true }
+mahay-ui = { workspace = true }
+hetsika-time = { workspace = true }
+hetsika-geom = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-frame = { workspace = true }
+hetsika-media = { workspace = true }
+hetsika-project = { workspace = true }
+hetsika-tts = { workspace = true }
+hetsika-edit = { workspace = true }
+hetsika-render = { workspace = true }
+hetsika-text = { workspace = true }
+hetsika-audio-dsp = { workspace = true }
+hetsika-engine = { workspace = true }
+hetsika-export = { workspace = true }
+hetsika-gpu = { workspace = true }
+hetsika-scopes = { workspace = true }
 egui = { workspace = true }
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit"] }
 serde = { workspace = true }
@@ -35,7 +35,7 @@ rayon = { workspace = true }
 web-time = "1"
 # Unicode Bidirectional Algorithm for Arabic and Hebrew captions in reading order (MIT OR Apache-2.0).
 unicode-bidi = "0.3.18"
-# ArtCraft wordmark (PNG) for the About dialog and Home screen.
+# Mahay wordmark (PNG) for the About dialog and Home screen.
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 # Thread/process CPU clocks for frame-job profiling (safe wrappers; see frames.rs).
@@ -47,11 +47,11 @@ cpu-time = "1"
 
 [dev-dependencies]
 pollster = "0.4"
-filmcraft-codecs = { workspace = true }
+hetsika-codecs = { workspace = true }
 # the bench registers OS hardware decoders as the desktop app does (dev-dependency only: ui-egui
 # itself stays OS-independent and web-portable)
-filmcraft-platform = { workspace = true }
-filmcraft-interchange = { workspace = true }
+hetsika-platform = { workspace = true }
+hetsika-interchange = { workspace = true }
 egui_kittest = { workspace = true, features = ["eframe", "wgpu"] }
 
 # build.rs bakes contributors/contributors.json into the binary (About ▸ Contributors).

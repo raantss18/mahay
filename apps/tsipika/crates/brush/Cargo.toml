@@ -1,17 +1,17 @@
 [package]
-name = "vectorcraft-brush"
+name = "tsipika-brush"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft brushes: calligraphic, scatter, art, pattern and bristle brush definitions and stroke geometry"
+description = "Tsipika brushes: calligraphic, scatter, art, pattern and bristle brush definitions and stroke geometry"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-doc = { workspace = true }
 kurbo = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

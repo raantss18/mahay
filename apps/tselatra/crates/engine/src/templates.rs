@@ -24,9 +24,9 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use effectcraft_keyframe::{Keyframe, Value as KV};
-use effectcraft_project::{ItemId, LayerId, Project};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, Value as KV};
+use tselatra_project::{ItemId, LayerId, Project};
+use tselatra_time::Tick;
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -160,9 +160,9 @@ fn shape(s: &mut Session, name: &str, kind: &str, size: [f64; 2], fill: &str, po
 
 fn gradient(s: &mut Session, l: LayerId, start: [f64; 2], end: [f64; 2], a: &str, b: &str, radial: bool) -> Result<()> {
     ex(s, "effect.apply", json!({"layers": [l.0], "effect": "ec.generate.gradientramp"}))?;
-    let hex = |h: &str| effectcraft_color::Rgba::from_hex(h).map(|c| [c.r as f64, c.g as f64, c.b as f64, 1.0]).unwrap_or([1.0; 4]);
+    let hex = |h: &str| tselatra_color::Rgba::from_hex(h).map(|c| [c.r as f64, c.g as f64, c.b as f64, 1.0]).unwrap_or([1.0; 4]);
     edit_layer(s, l, |ly| {
-        let set = |ly: &mut effectcraft_project::Layer, k: &str, v: KV| {
+        let set = |ly: &mut tselatra_project::Layer, k: &str, v: KV| {
             if let Some(p) = ly.props.prop_mut(&format!("effects/#1/{k}")) {
                 p.value = v;
             }
@@ -176,7 +176,7 @@ fn gradient(s: &mut Session, l: LayerId, start: [f64; 2], end: [f64; 2], a: &str
     Ok(())
 }
 
-fn edit_layer(s: &mut Session, l: LayerId, f: impl FnOnce(&mut effectcraft_project::Layer)) {
+fn edit_layer(s: &mut Session, l: LayerId, f: impl FnOnce(&mut tselatra_project::Layer)) {
     let Some(cid) = s.active_comp_id() else { return };
     if let Some(ly) = Arc::make_mut(&mut s.project).comp_mut(cid).and_then(|c| c.layer_mut(l)) {
         f(ly);
@@ -185,7 +185,7 @@ fn edit_layer(s: &mut Session, l: LayerId, f: impl FnOnce(&mut effectcraft_proje
 
 /// Eased keyframes at seconds (layer time = comp time: template layers start at 0).
 fn keys(s: &mut Session, l: LayerId, path: &str, list: &[(f64, KV)]) {
-    let rate = s.active_comp().map(|c| c.frame_rate).unwrap_or(effectcraft_time::FrameRate::FPS_30);
+    let rate = s.active_comp().map(|c| c.frame_rate).unwrap_or(tselatra_time::FrameRate::FPS_30);
     edit_layer(s, l, |ly| {
         if let Some(p) = ly.props.prop_mut(path) {
             p.keys = list.iter().map(|(t, v)| Keyframe::new(rate.snap_nearest(Tick::from_seconds_f64(*t)), v.clone()).eased()).collect();
@@ -209,7 +209,7 @@ fn expose(s: &mut Session, l: LayerId, path: &str, name: &str) -> Result<()> {
 fn finish(s: &mut Session, eg_name: &str, poster: f64) -> Result<()> {
     ex(s, "essential.setName", json!({"name": eg_name}))?;
     if let Some(cid) = s.active_comp_id() {
-        let rate = s.active_comp().map(|c| c.frame_rate).unwrap_or(effectcraft_time::FrameRate::FPS_30);
+        let rate = s.active_comp().map(|c| c.frame_rate).unwrap_or(tselatra_time::FrameRate::FPS_30);
         if let Some(c) = Arc::make_mut(&mut s.project).comp_mut(cid) {
             c.poster_time = rate.snap_nearest(Tick::from_seconds_f64(poster));
         }
@@ -384,7 +384,7 @@ fn text_orbit(s: &mut Session) -> Result<()> {
             (8.0 * i as f64 / n as f64, KV::Vec3([960.0 + 1500.0 * a.sin(), 380.0, -1500.0 * a.cos()]))
         })
         .collect();
-    let rate = s.active_comp().map(|c| c.frame_rate).unwrap_or(effectcraft_time::FrameRate::FPS_30);
+    let rate = s.active_comp().map(|c| c.frame_rate).unwrap_or(tselatra_time::FrameRate::FPS_30);
     edit_layer(s, cam, |ly| {
         if let Some(p) = ly.props.prop_mut("transform/position") {
             p.keys = list.iter().map(|(t, v)| Keyframe::new(rate.snap_nearest(Tick::from_seconds_f64(*t)), v.clone())).collect();
@@ -506,7 +506,7 @@ pub fn render_thumb(p: &Project) -> Option<String> {
 pub fn thumbnail(s: &Session, id: &str) -> Result<String> {
     if let Some(name) = id.strip_prefix("user/") {
         let bytes = read_user(s, name)?;
-        let entries = effectcraft_lottie::zip::read_stored(&bytes);
+        let entries = tselatra_lottie::zip::read_stored(&bytes);
         if let Some((_, t)) = entries.iter().find(|(k, _)| k == "thumb.txt") {
             return Ok(String::from_utf8_lossy(t).into_owned());
         }
@@ -557,7 +557,7 @@ fn read_user(s: &Session, file: &str) -> Result<Vec<u8>> {
         Some(d) => s.services.read_file(&d.join(file).to_string_lossy()).map_err(|e| EngineError::Other(format!("cannot read template {file}: {e}"))),
         None => cfg
             .read(&format!("{TEMPLATES_DIR}/{file}"))
-            .and_then(|t| effectcraft_track::roto::rle::base64_decode(&t))
+            .and_then(|t| tselatra_track::roto::rle::base64_decode(&t))
             .ok_or_else(|| bad("templates", format!("no user template `{file}`"))),
     }
 }
@@ -573,7 +573,7 @@ fn write_user(s: &Session, file: &str, bytes: &[u8]) -> Result<String> {
         }
         None => {
             let name = format!("{TEMPLATES_DIR}/{file}");
-            cfg.write(&name, &effectcraft_track::roto::rle::base64_encode(bytes)).map_err(|e| EngineError::Other(format!("cannot write {name}: {e}")))?;
+            cfg.write(&name, &tselatra_track::roto::rle::base64_encode(bytes)).map_err(|e| EngineError::Other(format!("cannot write {name}: {e}")))?;
             Ok(name)
         }
     }
@@ -664,7 +664,7 @@ fn embed_footage(s: &Session, proj: &mut Project, entries: &mut Vec<(String, Vec
     for id in ids {
         let Some(it) = proj.items.get_mut(&id) else { continue };
         let name = it.name.clone();
-        let effectcraft_project::ItemKind::Footage(f) = &mut it.kind else { continue };
+        let tselatra_project::ItemKind::Footage(f) = &mut it.kind else { continue };
         if f.data.is_some() || f.path.is_empty() {
             continue;
         }
@@ -749,7 +749,7 @@ fn extract_footage(s: &Session, proj: &mut Project, entries: &[(String, Vec<u8>)
         written.insert(k.clone(), out);
     }
     for it in proj.items.values_mut() {
-        if let effectcraft_project::ItemKind::Footage(f) = &mut it.kind {
+        if let tselatra_project::ItemKind::Footage(f) = &mut it.kind {
             if let Some(w) = written.get(&f.path) {
                 f.path = w.clone();
             }
@@ -835,7 +835,7 @@ fn save_as(s: &mut Session, p: &Value) -> Result<Value> {
         "format": TEMPLATE_FORMAT,
         "version": TEMPLATE_VERSION,
         "kind": "project",
-        "generator": format!("EffectCraft {}", env!("CARGO_PKG_VERSION")),
+        "generator": format!("Tselatra {}", env!("CARGO_PKG_VERSION")),
         "name": name,
         "description": str_p(p, "description").unwrap_or_default(),
         "category": str_p(p, "category").filter(|c| !c.is_empty()).unwrap_or("My Templates"),
@@ -875,7 +875,7 @@ fn save_as(s: &mut Session, p: &Value) -> Result<Value> {
         }
         entries.push(("thumb.txt".into(), encode_thumb(w, h, &rgba).into_bytes()));
     }
-    let bytes = effectcraft_lottie::zip::store(&entries);
+    let bytes = tselatra_lottie::zip::store(&entries);
     let at = write_user(s, &file, &bytes)?;
     match &warning {
         Some(w) => s.events.push(crate::Event::Toast { message: format!("Saved template “{name}”: {w}"), error: false }),
@@ -1051,8 +1051,8 @@ mod tests {
     }
 
     fn add_footage(s: &mut Session, name: &str, path: &str, sequence: Vec<String>) -> ItemId {
-        let f = effectcraft_project::Footage { path: path.into(), width: 4, height: 4, has_video: true, sequence, ..Default::default() };
-        Arc::make_mut(&mut s.project).add_item(name, effectcraft_color::Label::Aqua, None, effectcraft_project::ItemKind::Footage(f))
+        let f = tselatra_project::Footage { path: path.into(), width: 4, height: 4, has_video: true, sequence, ..Default::default() };
+        Arc::make_mut(&mut s.project).add_item(name, tselatra_color::Label::Aqua, None, tselatra_project::ItemKind::Footage(f))
     }
 
     fn footage_paths(s: &Session) -> Vec<(String, String, Vec<String>)> {
@@ -1061,7 +1061,7 @@ mod tests {
             .items
             .values()
             .filter_map(|i| match &i.kind {
-                effectcraft_project::ItemKind::Footage(f) => Some((i.name.clone(), f.path.clone(), f.sequence.clone())),
+                tselatra_project::ItemKind::Footage(f) => Some((i.name.clone(), f.path.clone(), f.sequence.clone())),
                 _ => None,
             })
             .collect();
@@ -1101,7 +1101,7 @@ mod tests {
         assert!(s.events.iter().any(|e| matches!(e, crate::Event::Toast { message, .. } if message.contains("embedding limit"))));
         // The archive holds the files under media/<item>/.
         let bytes = read_user(&s, "With Footage.ectemplate").unwrap();
-        let entries = effectcraft_lottie::zip::read_stored(&bytes);
+        let entries = tselatra_lottie::zip::read_stored(&bytes);
         let names: Vec<&str> = entries.iter().map(|(k, _)| k.as_str()).filter(|k| k.starts_with("media/")).collect();
         assert_eq!(names.len(), 4, "{names:?}");
         assert!(names.iter().any(|n| n.ends_with("/still.png")) && names.iter().any(|n| n.ends_with("/shot_002.png")));
@@ -1138,7 +1138,7 @@ mod tests {
         // Not embedding: no media entries.
         let r = s.execute("templates.saveAs", json!({"name": "Linked", "embedFootage": false})).unwrap();
         assert_eq!(r["embedded"], 0);
-        let entries = effectcraft_lottie::zip::read_stored(&read_user(&s, "Linked.ectemplate").unwrap());
+        let entries = tselatra_lottie::zip::read_stored(&read_user(&s, "Linked.ectemplate").unwrap());
         assert!(entries.iter().all(|(k, _)| !k.starts_with("media/")));
         let _ = std::fs::remove_dir_all(&root);
     }
@@ -1167,7 +1167,7 @@ mod tests {
         }
         struct Imp(Arc<Mem>);
         impl crate::Importer for Imp {
-            fn probe(&self, path: &str) -> std::result::Result<effectcraft_project::Footage, String> {
+            fn probe(&self, path: &str) -> std::result::Result<tselatra_project::Footage, String> {
                 Err(path.into())
             }
             fn register(&self, path: &str, _: &[u8]) {

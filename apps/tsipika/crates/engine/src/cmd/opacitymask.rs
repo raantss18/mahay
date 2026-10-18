@@ -1,7 +1,7 @@
 //! Opacity masks (Transparency panel): make, release, enable/disable, link/unlink, clip, invert,
 //! and the panel's state (`transparency.info`).
 //!
-//! The mask art is stored on the masked object ([`vectorcraft_doc::OpacityMask`]), outside the
+//! The mask art is stored on the masked object ([`tsipika_doc::OpacityMask`]), outside the
 //! layer tree, so it is never hit-tested or selected. Its luminance sets the object's opacity.
 //! Every command here (and `transparency.set`) acts on [`transparency_targets`]: explicit ids, else
 //! the object whose mask is being edited, else the selection.
@@ -9,8 +9,8 @@
 use std::collections::HashSet;
 
 use serde_json::{Value, json};
-use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{Document, Knockout, Node, NodeId, OpacityMask, Selection};
+use tsipika_color::BlendMode;
+use tsipika_doc::{Document, Knockout, Node, NodeId, OpacityMask, Selection};
 
 use super::maskedit::{begin, finish, mask_group, mask_parts, show_editing};
 use super::pathops::{Beside, separate};
@@ -500,8 +500,8 @@ mod tests {
         select(&mut s, &[a, b]);
         s.execute("transparency.makeOpacityMask", &json!({"invert": true})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let bytes = vectorcraft_format::save(&d, false);
-        let back = vectorcraft_format::load(&bytes).unwrap();
+        let bytes = tsipika_format::save(&d, false);
+        let back = tsipika_format::load(&bytes).unwrap();
         assert_eq!(back.node(NodeId(a)).unwrap().extras().mask, d.node(NodeId(a)).unwrap().extras().mask);
     }
 }

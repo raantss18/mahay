@@ -4,7 +4,7 @@
 use std::io::Write;
 
 use base64::Engine as _;
-use figcraft_doc::Document;
+use endrika_doc::Document;
 
 use super::budget::Limits;
 use super::{import_svg, import_within};

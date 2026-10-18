@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use filmcraft_time::Tick;
+use hetsika_time::Tick;
 
 fn chunk(id: &[u8; 4], body: &[u8]) -> Vec<u8> {
     let mut out = id.to_vec();
@@ -53,12 +53,12 @@ fn fixture(rf64: bool, trailing: bool) -> Vec<u8> {
 fn rf64_metadata_stays_outside_audio() {
     for (name, rf64, trailing) in [("rf64.wav", true, false), ("riff_ixml.wav", false, true), ("rf64_ixml.wav", true, true)] {
         let bytes: Arc<[u8]> = fixture(rf64, trailing).into();
-        let src = filmcraft_codecs::open_bytes(name, bytes.clone()).unwrap();
-        let stream = filmcraft_media::reader::open_reader(
+        let src = hetsika_codecs::open_bytes(name, bytes.clone()).unwrap();
+        let stream = hetsika_media::reader::open_reader(
             name,
-            Arc::new(filmcraft_media::reader::MemReader(bytes)),
-            &filmcraft_codecs::reader_openers(),
-            &filmcraft_codecs::openers(),
+            Arc::new(hetsika_media::reader::MemReader(bytes)),
+            &hetsika_codecs::reader_openers(),
+            &hetsika_codecs::openers(),
         )
         .unwrap();
         for s in [&src, &stream] {

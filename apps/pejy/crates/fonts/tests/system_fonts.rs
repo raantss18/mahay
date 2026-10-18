@@ -3,7 +3,7 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use designcraft_fonts::{FontDb, system_font_dirs};
+use pejy_fonts::{FontDb, system_font_dirs};
 
 #[test]
 fn a_fresh_session_finds_installed_fonts_by_name() {

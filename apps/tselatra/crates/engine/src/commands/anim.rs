@@ -1,9 +1,9 @@
 //! Keyframe clipboard, selection, nudging, direct key/ease edits (Graph Editor handles) and key
 //! inspection for the Keyframe Velocity / Keyframe Interpolation dialogs.
 
-use effectcraft_keyframe::{Ease, Interp, Keyframe, ShapePath, Value as KValue, key_at, retime_roving, side_ease};
-use effectcraft_project::{ItemId, LayerId, Property, Uid};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Ease, Interp, Keyframe, ShapePath, Value as KValue, key_at, retime_roving, side_ease};
+use tselatra_project::{ItemId, LayerId, Property, Uid};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::prop::{KeyTimeBase, key_time, key_timing, prop_ref};
@@ -51,7 +51,7 @@ fn copy(s: &mut Session, _: &Value) -> Result<Value> {
 }
 
 /// Values of the same kind (and dimensionality) can receive each other's keys.
-fn compatible(a: &Property, b: &effectcraft_keyframe::Value) -> bool {
+fn compatible(a: &Property, b: &tselatra_keyframe::Value) -> bool {
     a.value.kind_name() == b.kind_name() && a.value.components().len() == b.components().len()
 }
 
@@ -352,7 +352,7 @@ fn set_ease(s: &mut Session, p: &Value) -> Result<Value> {
         let pr = l.props.find_mut(uid).ok_or_else(|| bad("keys.setEase", "no property"))?;
         let i = nearest_key(&pr.keys, t).ok_or_else(|| bad("keys.setEase", "no keyframes"))?;
         let spatial = pr.spatial;
-        let n = if spatial && matches!(pr.keys[i].value, effectcraft_keyframe::Value::Vec2(_) | effectcraft_keyframe::Value::Vec3(_)) {
+        let n = if spatial && matches!(pr.keys[i].value, tselatra_keyframe::Value::Vec2(_) | tselatra_keyframe::Value::Vec3(_)) {
             1
         } else {
             pr.keys[i].value.dims().max(1)
@@ -400,7 +400,7 @@ fn set_ease(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Speed units for a property (Keyframe Velocity dialog).
 fn units(pr: &Property) -> &'static str {
-    use effectcraft_project::ParamUi;
+    use tselatra_project::ParamUi;
     if pr.spatial {
         return "pixels/sec";
     }
@@ -441,7 +441,7 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
         let Some(pr) = l.props.find(r.prop) else { continue };
         let Some(i) = nearest_key(&pr.keys, r.time) else { continue };
         let k = &pr.keys[i];
-        let spatial = pr.spatial && matches!(k.value, effectcraft_keyframe::Value::Vec2(_) | effectcraft_keyframe::Value::Vec3(_));
+        let spatial = pr.spatial && matches!(k.value, tselatra_keyframe::Value::Vec2(_) | tselatra_keyframe::Value::Vec3(_));
         let dims = if spatial { 1 } else { k.value.dims().max(1).min(if pr.shown_dims > 0 && !l.is_3d() { pr.shown_dims as usize } else { 4 }) };
         let side = |out: bool| -> Value {
             json!(
@@ -497,7 +497,7 @@ fn time_reverse(s: &mut Session, _: &Value) -> Result<Value> {
         for ((lid, uid), times) in groups {
             let Some(pr) = comp.layer_mut(lid).and_then(|l| l.props.find_mut(uid)) else { continue };
             let (mut picked, rest): (Vec<Keyframe>, Vec<Keyframe>) = pr.keys.drain(..).partition(|k| times.contains(&k.time));
-            effectcraft_keyframe::time_reverse(&mut picked);
+            tselatra_keyframe::time_reverse(&mut picked);
             new_sel.extend(picked.iter().map(|k| KeyRef { layer: lid, prop: uid, time: k.time }));
             pr.keys = rest;
             for k in picked {

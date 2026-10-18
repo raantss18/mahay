@@ -15,9 +15,9 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use filmcraft_media::MediaInfo;
-use filmcraft_project::{ItemId, ItemKind, MediaIdentity, MediaRef, Project};
-use filmcraft_time::Tick;
+use hetsika_media::MediaInfo;
+use hetsika_project::{ItemId, ItemKind, MediaIdentity, MediaRef, Project};
+use hetsika_time::Tick;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -194,7 +194,7 @@ pub struct Candidate {
     #[serde(skip)]
     pub identity: Option<MediaIdentity>,
     #[serde(skip)]
-    pub source: Option<filmcraft_media::SharedSource>,
+    pub source: Option<hetsika_media::SharedSource>,
 }
 
 /// Check `path` as the new file of media item `item`. Opening the file (needed for duration,
@@ -323,7 +323,7 @@ struct Plan {
 /// Apply planned relinks as one undo step.
 fn apply(s: &mut Session, plans: Vec<Plan>, align_timecode: bool, label: &str) -> Result<Vec<Value>> {
     let rows: Vec<Value> = plans.iter().map(|p| json!({"item": p.item.0, "path": p.cand.path})).collect();
-    let sources: Vec<(ItemId, String, filmcraft_media::SharedSource)> =
+    let sources: Vec<(ItemId, String, hetsika_media::SharedSource)> =
         plans.iter().filter_map(|p| p.cand.source.clone().map(|src| (p.item, p.cand.path.clone(), src))).collect();
     s.edit(label, |proj, _| {
         for p in &plans {
@@ -585,7 +585,7 @@ fn status_json(s: &Session, id: ItemId) -> Option<Value> {
         Some(_) if m.offline => "offline",
         Some(p) if s.services.file_size(p).is_err() => "missing",
         Some(_) => match s.media.offline_status(id) {
-            Some(o) if o.reason == filmcraft_render::offline::OfflineReason::Unreadable => "unreadable",
+            Some(o) if o.reason == hetsika_render::offline::OfflineReason::Unreadable => "unreadable",
             _ => "online",
         },
     };

@@ -12,13 +12,13 @@ fn pointer(pos: egui::Pos2, pressed: bool, modifiers: egui::Modifiers) -> egui::
 }
 
 /// One frame of the Appearance panel with `events` and `modifiers` held.
-fn panel_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>, modifiers: egui::Modifiers) -> Vec<(String, egui::Rect)> {
+fn panel_frame(ctx: &egui::Context, app: &mut TsipikaApp, events: Vec<egui::Event>, modifiers: egui::Modifiers) -> Vec<(String, egui::Rect)> {
     let events = std::iter::once(egui::Event::ModifiersChanged(modifiers)).chain(events).collect();
     frame_raw(ctx, app, egui::RawInput { events, ..Default::default() }, appearance::show)
 }
 
 /// Drag from `from` to `to` in the Appearance panel, `modifiers` held on release.
-fn drag(ctx: &egui::Context, app: &mut VectorcraftApp, from: egui::Pos2, to: egui::Pos2, modifiers: egui::Modifiers) {
+fn drag(ctx: &egui::Context, app: &mut TsipikaApp, from: egui::Pos2, to: egui::Pos2, modifiers: egui::Modifiers) {
     let none = egui::Modifiers::NONE;
     panel_frame(ctx, app, vec![egui::Event::PointerMoved(from)], none);
     panel_frame(ctx, app, vec![pointer(from, true, none)], none);
@@ -29,7 +29,7 @@ fn drag(ctx: &egui::Context, app: &mut VectorcraftApp, from: egui::Pos2, to: egu
 }
 
 /// Click `pos` with `modifiers` held.
-fn click_with(ctx: &egui::Context, app: &mut VectorcraftApp, pos: egui::Pos2, modifiers: egui::Modifiers) {
+fn click_with(ctx: &egui::Context, app: &mut TsipikaApp, pos: egui::Pos2, modifiers: egui::Modifiers) {
     for e in [egui::Event::PointerMoved(pos), pointer(pos, true, modifiers), pointer(pos, false, modifiers)] {
         panel_frame(ctx, app, vec![e], modifiers);
     }
@@ -46,7 +46,7 @@ fn menu_item(texts: &[(String, egui::Rect)], s: &str) -> egui::Rect {
     texts.iter().find(|(t, _)| t.trim_start() == s).unwrap_or_else(|| panic!("`{s}` not in the menu: {texts:?}")).1
 }
 
-fn effects(app: &VectorcraftApp, item: Option<usize>) -> Vec<vectorcraft_doc::Effect> {
+fn effects(app: &TsipikaApp, item: Option<usize>) -> Vec<tsipika_doc::Effect> {
     first_selected(app).unwrap().appearance.effects_at(item).cloned().unwrap_or_default()
 }
 
@@ -80,7 +80,7 @@ fn the_inline_editor_shows_a_loaded_texture_by_its_size() {
     image::GrayImage::from_fn(5, 3, |x, _| image::Luma([(x * 60) as u8]))
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    let file = json!({"name": "t.png", "dataBase64": vectorcraft_format::base64_encode(&png)});
+    let file = json!({"name": "t.png", "dataBase64": tsipika_format::base64_encode(&png)});
     run(&mut app, "effect.apply", json!({"effect": "distort.glass", "params": {"textureImage": file}}));
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
@@ -141,7 +141,7 @@ fn effect_rows_drag_to_reorder_and_into_an_item() {
     // Twist below Roughen.
     let below = text_rect(&texts, "Roughen").center() + egui::vec2(60.0, 9.0);
     drag(&ctx, &mut app, row_of(&texts, "Twist"), below, egui::Modifiers::NONE);
-    let ids = |fx: Vec<vectorcraft_doc::Effect>| fx.into_iter().map(|e| e.id).collect::<Vec<_>>();
+    let ids = |fx: Vec<tsipika_doc::Effect>| fx.into_iter().map(|e| e.id).collect::<Vec<_>>();
     assert_eq!(ids(effects(&app, None)), ["distort.roughen", "distort.twist"]);
     // Alt-dragging Twist onto the stroke row copies it into the stroke's effects.
     let texts = panel_frame(&ctx, &mut app, vec![], egui::Modifiers::NONE);
@@ -160,7 +160,7 @@ fn alt_dragging_an_item_duplicates_it_and_several_items_delete_together() {
     let ctx = egui::Context::default();
     let texts = panel_frame(&ctx, &mut app, vec![], egui::Modifiers::NONE);
     drag(&ctx, &mut app, row_of(&texts, "Fill:"), row_of(&texts, "Stroke:"), egui::Modifiers::ALT);
-    let kinds = |app: &VectorcraftApp| first_selected(app).unwrap().appearance.items.iter().map(|i| i.kind_name()).collect::<Vec<_>>();
+    let kinds = |app: &TsipikaApp| first_selected(app).unwrap().appearance.items.iter().map(|i| i.kind_name()).collect::<Vec<_>>();
     assert_eq!(kinds(&app), ["fill", "stroke", "fill"]);
     // Click the stroke, Cmd-click the top fill: both go with Remove Item.
     let texts = panel_frame(&ctx, &mut app, vec![], egui::Modifiers::NONE);
@@ -185,7 +185,7 @@ fn stroke_rows_note_dashes_brushes_and_show_all_hidden_attributes() {
     let texts = frame_events(&ctx, &mut app, vec![], appearance::show);
     assert!(texts.iter().any(|(t, _)| *t == format!("{brush}, Dashed")), "{texts:?}");
     // Show All Hidden Attributes is enabled once something is hidden, and shows it.
-    let enabled = |app: &mut VectorcraftApp| {
+    let enabled = |app: &mut TsipikaApp| {
         let menu = frame_events(&ctx, app, vec![], appearance::menu);
         let r = menu_item(&menu, "Show All Hidden Attributes");
         click(&ctx, app, r.center(), appearance::menu);

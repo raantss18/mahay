@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use crate::bundle::{Asset, Bundle, MAGIC, MAX_ASSETS, check_asset_name, compare_versions, newer, parse_version, sha256_hex};
 
 fn wasm() -> Vec<u8> {
-    wat::parse_str(r#"(module (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) i32.const 0))"#).unwrap()
+    wat::parse_str(r#"(module (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) i32.const 0))"#).unwrap()
 }
 
 fn manifest(version: &str, api: u32) -> String {
@@ -82,7 +82,7 @@ fn checking_refuses_bad_plugins() {
         assert!(with(&|b| b.manifest = manifest(v, 1)).contains("version"), "{v}");
     }
     assert!(with(&|b| b.wasm = b"MZ not wasm".to_vec()).contains("WebAssembly"));
-    let wasi = wat::parse_str(r#"(module (import "wasi_snapshot_preview1" "fd_write" (func (param i32 i32 i32 i32) (result i32))) (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) i32.const 0))"#).unwrap();
+    let wasi = wat::parse_str(r#"(module (import "wasi_snapshot_preview1" "fd_write" (func (param i32 i32 i32 i32) (result i32))) (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) i32.const 0))"#).unwrap();
     assert!(with(&|b| b.wasm = wasi.clone()).contains("imports"));
     for name in ["../x", "a/b", "a\\b", ".hidden", "con", "NUL.txt", "com1.png", "x.", "", "é.png"] {
         assert!(check_asset_name(name).is_err(), "{name}");

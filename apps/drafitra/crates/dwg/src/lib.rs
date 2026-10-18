@@ -1,9 +1,9 @@
 //! DWG support through a DXF bridge.
 //!
 //! DWG files are read with the `acadrust` crate (MPL-2.0, used unmodified as a dependency) and
-//! converted to DXF bytes, which CADCraft's own DXF reader maps to its document model; saving
+//! converted to DXF bytes, which Drafitra's own DXF reader maps to its document model; saving
 //! goes the other way. Keeping the dependency behind this byte-level API isolates it: nothing
-//! else in CADCraft depends on its types. Native targets only (it memory-maps files).
+//! else in Drafitra depends on its types. Native targets only (it memory-maps files).
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
@@ -70,7 +70,7 @@ mod native {
     /// passes for a complete one.
     pub fn dwg_to_dxf_noted(bytes: &[u8], limits: Limits) -> Result<(Vec<u8>, Vec<String>), String> {
         if bytes.len() > limits.max_dwg_bytes {
-            return Err(format!("DWG: the file is {}, larger than the {} CADCraft opens", mb(bytes.len() as u64), mb(limits.max_dwg_bytes as u64)));
+            return Err(format!("DWG: the file is {}, larger than the {} Drafitra opens", mb(bytes.len() as u64), mb(limits.max_dwg_bytes as u64)));
         }
         let outcome = std::panic::catch_unwind(|| {
             acadrust::DwgReader::from_stream_with_options(Cursor::new(bytes), acadrust::DwgReadOptions::failsafe()).read_with_stats()
@@ -210,7 +210,7 @@ mod native {
     /// merged cells into the table's `merged_ranges` only, while its DXF writer writes each cell's
     /// own merge groups (173, 175, 176), so without this the merges would be lost. Tables whose
     /// cells already carry merges are left alone. Each range's first cell gets the span; the
-    /// cells it covers are marked merged with no span of their own, as CADCraft's DXF writer does.
+    /// cells it covers are marked merged with no span of their own, as Drafitra's DXF writer does.
     fn table_merges(doc: &mut acadrust::CadDocument) {
         for e in doc.entities_mut() {
             let acadrust::entities::EntityType::Table(t) = e else { continue };
@@ -267,7 +267,7 @@ mod native {
 
     /// Leave out what acadrust can't write as this DWG version: other programs' custom entities
     /// and objects without raw DWG data of that version. acadrust 0.6.4 refuses the whole file
-    /// for one of them (0.6.3 left them out); CADCraft already tells the user which entity types
+    /// for one of them (0.6.3 left them out); Drafitra already tells the user which entity types
     /// a DWG doesn't keep (`not_saved`), so the rest of the drawing is written. Returns how many.
     fn drop_unwritable(doc: &mut acadrust::CadDocument) -> usize {
         let version = doc.version;
@@ -409,11 +409,11 @@ mod native {
 #[cfg(not(target_arch = "wasm32"))]
 pub use native::{dwg_to_dxf, dwg_to_dxf_noted, dwg_to_dxf_with, dxf_to_dwg, dxf_to_dwg_as};
 
-/// The error for a DWG version CADCraft can't write.
+/// The error for a DWG version Drafitra can't write.
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 fn unsupported(version: &str) -> String {
     let list: Vec<&str> = VERSIONS.iter().map(|(_, year)| *year).collect();
-    format!("DWG version `{version}` can't be written (CADCraft writes {})", list.join(", "))
+    format!("DWG version `{version}` can't be written (Drafitra writes {})", list.join(", "))
 }
 
 #[cfg(target_arch = "wasm32")]

@@ -5,7 +5,7 @@ use kurbo::{Point, Shape};
 use skrifa::MetadataProvider;
 use skrifa::instance::{LocationRef, Size};
 use skrifa::raw::TableProvider;
-use vectorcraft_doc::CharStyle;
+use tsipika_doc::CharStyle;
 
 use super::test_fonts::{VARIABLE_CHARS, VARIABLE_FAMILY as FAMILY, VARIABLE_WIDEN, name_table, variable_font};
 use super::*;

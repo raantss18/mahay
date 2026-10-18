@@ -2,10 +2,10 @@
 //! Viewer, Use Display Color Management, Simulate Output; Project Settings ▸ Color Engine,
 //! ACES working spaces, HDR compand / tone mapping, Rec. 2100 output, Feet + Frames.
 
-use effectcraft_project::{ColorEngine, ColorSpace, HdrMode, Project, TimeDisplayStyle};
-use effectcraft_render::RenderOpts;
-use effectcraft_render::three_d::View3D;
-use effectcraft_time::Tick;
+use tselatra_project::{ColorEngine, ColorSpace, HdrMode, Project, TimeDisplayStyle};
+use tselatra_render::RenderOpts;
+use tselatra_render::three_d::View3D;
+use tselatra_time::Tick;
 use serde_json::json;
 
 use crate::Session;
@@ -27,7 +27,7 @@ fn default_3d_view_ignores_camera_layers() {
     assert_eq!(vs.current, View3D::Default);
     // The comp's default camera: at −zoom looking at the centre, not the camera layer.
     let cam = s.view_camera(cid).unwrap();
-    let zoom = effectcraft_geom::default_camera_zoom(64.0);
+    let zoom = tselatra_geom::default_camera_zoom(64.0);
     assert!((cam.eye.z + zoom).abs() < 1e-9 && (cam.eye.x - 32.0).abs() < 1e-9 && !cam.ortho, "{:?}", cam.eye);
     // Orbitable like a custom view; Reset 3D View restores it; Last view goes back.
     s.execute("camera.orbit", json!({"yaw": 30})).unwrap();
@@ -179,7 +179,7 @@ fn color_engine_aces_working_spaces_and_hdr() {
     for k in ["color_engine", "hdr", "output_space"] {
         v.as_object_mut().unwrap().remove(k);
     }
-    let old: effectcraft_project::ProjectSettings = serde_json::from_value(v).unwrap();
+    let old: tselatra_project::ProjectSettings = serde_json::from_value(v).unwrap();
     assert_eq!((old.color_engine, old.hdr, old.output_space), (ColorEngine::Adobe, HdrMode::Clip, None));
 }
 
@@ -192,7 +192,7 @@ fn aces_working_space_matches_the_ocio_config() {
     let cid = s.active_comp_id().unwrap();
     // Authored ACEScg values (0.5 linear AP1 grey) → sRGB display.
     let out = s.render(cid, Tick::ZERO, RenderOpts::default()).data[0];
-    let want = effectcraft_color::linear_to_srgb(128.0 / 255.0);
+    let want = tselatra_color::linear_to_srgb(128.0 / 255.0);
     assert!((out[0] - want).abs() < 0.01 && (out[1] - want).abs() < 0.01, "{out:?} vs {want}");
 }
 
@@ -257,7 +257,7 @@ fn my_custom_rgb_simulation() {
     assert_eq!(s.prefs.custom_rgb.red, [0.708, 0.292]);
     // An ICC profile: the primaries, white and curve come from the file.
     let p3 = [[0.680, 0.320], [0.265, 0.690], [0.150, 0.060]];
-    let icc = effectcraft_color::icc::write_matrix_profile("Studio Monitor", p3, [0.3127, 0.3290], 2.4);
+    let icc = tselatra_color::icc::write_matrix_profile("Studio Monitor", p3, [0.3127, 0.3290], 2.4);
     let path = std::env::temp_dir().join(format!("ec-custom-{}.icc", std::process::id()));
     std::fs::write(&path, icc).unwrap();
     let r = s.execute("view.customRgb", json!({"icc": path.to_string_lossy()})).unwrap();
@@ -291,8 +291,8 @@ fn my_custom_rgb_simulation() {
 /// (baked into a 3D LUT) and matches the same device described as a matrix/TRC profile.
 #[test]
 fn my_custom_rgb_lut_profiles() {
-    use effectcraft_color::icc::{D50, LutKind, write_lut_profile};
-    use effectcraft_color::space;
+    use tselatra_color::icc::{D50, LutKind, write_lut_profile};
+    use tselatra_color::space;
     let mut s = session();
     s.config = Some(std::sync::Arc::new(crate::config::MemoryConfig::default()));
     s.execute("file.projectSettings", json!({"workingSpace": "srgb"})).unwrap();

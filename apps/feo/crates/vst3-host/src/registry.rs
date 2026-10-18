@@ -4,7 +4,7 @@ use crate::ffi::{Bundle, Instance, PARAM_BYPASS, PARAM_HIDDEN, PARAM_READ_ONLY, 
 use crate::plugin::Vst3Plugin;
 use crate::scan as paths;
 use crate::{AUDIO_MODULE_CLASS, Vst3Descriptor, Vst3Error, parse_id};
-use soundcraft_dsp::{ParamInfo, Plugin, PluginInfo, Taper, Unit};
+use feo_dsp::{ParamInfo, Plugin, PluginInfo, Taper, Unit};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock, PoisonError};
@@ -118,7 +118,7 @@ fn leak(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
-/// Maps a VST3 unit label to a SoundCraft display unit.
+/// Maps a VST3 unit label to a Feo display unit.
 pub(crate) fn unit_from_label(units: &str) -> Unit {
     match units.trim().to_ascii_lowercase().as_str() {
         "db" => Unit::Db,

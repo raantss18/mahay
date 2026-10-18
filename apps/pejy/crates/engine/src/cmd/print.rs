@@ -1,4 +1,4 @@
-//! File › Print: the pages go to a printer through the system print spooler (craft-print), as PDF.
+//! File › Print: the pages go to a printer through the system print spooler (mahay-print), as PDF.
 
 use serde_json::{Value, json};
 
@@ -25,7 +25,7 @@ pub fn specs() -> Vec<CommandSpec> {
 }
 
 fn printers() -> Value {
-    let printers = craft_print::printers();
+    let printers = mahay_print::printers();
     let default = printers.iter().find(|p| p.default).map(|p| p.name.clone());
     let names: Vec<_> = printers.into_iter().map(|p| p.name).collect();
     json!({"printers": names, "default": default})
@@ -38,28 +38,28 @@ fn print(s: &mut Session, p: &Value) -> Result<Value> {
         Err(bad("file.print", "printing isn't available on the web: export a PDF and print it"))
     }
     #[cfg(not(target_arch = "wasm32"))]
-    print_with(s, p, craft_print::submit)
+    print_with(s, p, mahay_print::submit)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn print_with(
     s: &mut Session,
     p: &Value,
-    submit: impl FnOnce(&[u8], &craft_print::Job) -> std::result::Result<String, craft_print::Error>,
+    submit: impl FnOnce(&[u8], &mahay_print::Job) -> std::result::Result<String, mahay_print::Error>,
 ) -> Result<Value> {
     let d = &s.doc()?.doc;
     let opts = super::export::options(p, d.page_count())?;
     let copies = p.get("copies").and_then(Value::as_u64).unwrap_or(1).clamp(1, 999) as u32;
-    let job = craft_print::Job {
+    let job = mahay_print::Job {
         printer: str_param(p, "printer").map(str::to_string),
         copies,
-        scaling: craft_print::Scaling::ShrinkToFit,
+        scaling: mahay_print::Scaling::ShrinkToFit,
         title: d.title.clone(),
-        ..craft_print::Job::default()
+        ..mahay_print::Job::default()
     };
     let dry = p.get("dryRun").and_then(Value::as_bool).unwrap_or(false);
-    let pdf = designcraft_pdf::export_pdf(&super::interchange::with_pdf_boxes(d), &s.cache, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
-    let command = craft_print::command_preview(&job).map_err(|e| bad("file.print", e.to_string()))?;
+    let pdf = pejy_pdf::export_pdf(&super::interchange::with_pdf_boxes(d), &s.cache, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+    let command = mahay_print::command_preview(&job).map_err(|e| bad("file.print", e.to_string()))?;
     let pages = opts.pages.as_ref().map_or(d.page_count(), |v| v.len());
     let out = json!({"printer": job.printer, "copies": copies, "pages": pages, "command": command, "bytes": pdf.len()});
     if !dry {
@@ -79,7 +79,7 @@ mod tests {
         let r = s.execute("file.print", &json!({"printer": "Office", "copies": 2, "pages": "2-3", "dryRun": true})).unwrap();
         assert_eq!(r["pages"], 2);
         let command: Vec<&str> = r["command"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
-        if craft_print::backend() == Some(craft_print::Backend::Cups) {
+        if mahay_print::backend() == Some(mahay_print::Backend::Cups) {
             assert_eq!(&command[..5], ["lp", "-d", "Office", "-n", "2"]);
             assert!(command.contains(&"print-scaling=auto-fit"));
             assert!(!command.iter().any(|a| a.starts_with("sides=")));
@@ -99,7 +99,7 @@ mod tests {
         let expected = {
             let d = &s.doc().unwrap().doc;
             let options = super::super::export::options(&params, d.page_count()).unwrap();
-            designcraft_pdf::export_pdf(&super::super::interchange::with_pdf_boxes(d), &s.cache, &options).unwrap()
+            pejy_pdf::export_pdf(&super::super::interchange::with_pdf_boxes(d), &s.cache, &options).unwrap()
         };
         let r = print_with(&mut s, &params, |pdf, job| {
             // The production export options and full bytes reach the shared spooler boundary.
@@ -108,13 +108,13 @@ mod tests {
             assert_eq!(job.printer.as_deref(), Some("Office (east)"));
             assert_eq!(job.copies, 2);
             assert_eq!(job.duplex, None);
-            assert_eq!(job.scaling, craft_print::Scaling::ShrinkToFit);
+            assert_eq!(job.scaling, mahay_print::Scaling::ShrinkToFit);
             assert!(!job.title.is_empty());
             Ok("request id is Office-1".into())
         })
         .unwrap();
         assert_eq!(r["pages"], 2);
-        let refusal = print_with(&mut s, &params, |_, _| Err(craft_print::Error::Spool("printer offline".into()))).unwrap_err();
+        let refusal = print_with(&mut s, &params, |_, _| Err(mahay_print::Error::Spool("printer offline".into()))).unwrap_err();
         assert!(refusal.to_string().contains("printer offline"));
         print_with(&mut s, &json!({"dryRun": true}), |_, _| panic!("dry runs must not spool")).unwrap();
         assert!(print_with(&mut s, &json!({"pages": "9"}), |_, _| panic!("invalid ranges must not spool")).is_err());

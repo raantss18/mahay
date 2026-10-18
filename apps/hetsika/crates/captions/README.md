@@ -1,10 +1,10 @@
-# filmcraft-captions
+# hetsika-captions
 
-Caption files and caption burn-in for FilmCraft (layer L2: depends on `filmcraft-time`,
-`filmcraft-color`, `filmcraft-project`, `filmcraft-text` and `roxmltree` for TTML).
+Caption files and caption burn-in for Hetsika (layer L2: depends on `hetsika-time`,
+`hetsika-color`, `hetsika-project`, `hetsika-text` and `roxmltree` for TTML).
 
 The caption *model* (caption tracks in a sequence, captions, track style) lives in
-`filmcraft-project` (`caption.rs`) because it is part of the `.fcproj` document. This crate reads
+`hetsika-project` (`caption.rs`) because it is part of the `.fcproj` document. This crate reads
 and writes caption files, converts them to and from caption tracks, and draws captions.
 
 ## Formats
@@ -44,7 +44,7 @@ TTaf1 draft namespaces. Agent IDs use `xml:id`, except in the April draft, which
 `id`. Agent definitions from unrelated application metadata are ignored. Recognized `ttm:agent`
 attributes take precedence over the legacy local-name `agent` fallback. A full name is preferred,
 otherwise the first nonempty name (or an explicitly empty name) is used. Multiple agent references become one display label, joined with `, ` in
-reference order; the project does not retain the individual agent identities. Older FilmCraft
+reference order; the project does not retain the individual agent identities. Older Hetsika
 files without agent definitions remain readable through the previous underscore-to-space
 fallback. Other agent metadata, including actor relationships, is not retained.
 
@@ -69,11 +69,11 @@ before its in point (for example a caption at 00:00:00:00), it appears as soon a
 `burn::render_caption` lays out a caption with the track style (font size relative to a 1080-line
 frame, colour, background box, outline, alignment, top/middle/bottom anchor and margin; WebVTT
 `line:N%` and `align:` settings override them), wraps lines to 90% of the frame width and
-rasterises it to a small premultiplied linear-light RGBA overlay. `filmcraft-render` composites the
+rasterises it to a small premultiplied linear-light RGBA overlay. `hetsika-render` composites the
 overlays of visible caption tracks over the finished frame (Program monitor and export burn-in).
 
 Text is set in **Inter SemiBold** (`assets/fonts/Inter-SemiBold.ttf`, SIL OFL 1.1, attributed in
-`ATTRIBUTION.md`) by the `filmcraft-text` engine: shaped with kerning and ligatures, bidi-ordered,
+`ATTRIBUTION.md`) by the `hetsika-text` engine: shaped with kerning and ligatures, bidi-ordered,
 and drawn from its sub-pixel positioned glyph cache.
 
 Specifications used: SMPTE ST 334-2 (CDP structure), CEA-608 / CEA-708 (public descriptions of

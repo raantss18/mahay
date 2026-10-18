@@ -1,10 +1,10 @@
 //! Inline graphics in text: document symbols placed in a run of text, flowing like a glyph
-//! (beyond Illustrator; InDesign's inline anchored objects). See [`vectorcraft_doc::InlineArt`].
+//! (beyond Illustrator; InDesign's inline anchored objects). See [`tsipika_doc::InlineArt`].
 
 use serde_json::{Value, json};
-use vectorcraft_doc::text::INLINE_MAX_SCALE;
-use vectorcraft_doc::{Document, InlineArt, NodeId, NodeKind, TextRun};
-use vectorcraft_text::edit;
+use tsipika_doc::text::INLINE_MAX_SCALE;
+use tsipika_doc::{Document, InlineArt, NodeId, NodeKind, TextRun};
+use tsipika_text::edit;
 
 use super::typecmd::refresh_bounds;
 use super::*;

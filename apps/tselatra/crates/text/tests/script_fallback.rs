@@ -1,7 +1,7 @@
 //! Font fallback for characters of scripts with usual families gives the same face whatever earlier
 //! lookups read. Its own test binary, so no installed font has been read when it starts.
 
-use effectcraft_text::{fonts, variable};
+use tselatra_text::{fonts, variable};
 
 #[test]
 fn script_fallback_does_not_depend_on_earlier_lookups() {

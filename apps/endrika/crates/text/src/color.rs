@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::PoisonError;
 
-use figcraft_geom::Affine;
+use endrika_geom::Affine;
 use skrifa::bitmap::{BitmapData, BitmapGlyph, BitmapStrikes, Origin};
 use skrifa::color::ColorPalettes;
 use skrifa::instance::Size;

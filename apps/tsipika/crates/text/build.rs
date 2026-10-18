@@ -1,7 +1,7 @@
-//! The optional craft-fonts build input (https://github.com/storytold/craft-fonts,
-//! `docs/integration.md`): with `CRAFT_FONTS_DIR=<checkout>` set, every font in its
-//! `fonts/manifest.txt` is embedded as `CRAFT_FONTS`; unset, `CRAFT_FONTS` is empty and the app
-//! uses its own and the installed fonts. `CRAFT_FONTS_REQUIRED=1` turns a bad checkout into a build
+//! The optional mahay-fonts build input (https://github.com/raantss18/mahay,
+//! `docs/integration.md`): with `MAHAY_FONTS_DIR=<checkout>` set, every font in its
+//! `fonts/manifest.txt` is embedded as `MAHAY_FONTS`; unset, `MAHAY_FONTS` is empty and the app
+//! uses its own and the installed fonts. `MAHAY_FONTS_REQUIRED=1` turns a bad checkout into a build
 //! error (release builds). Nothing is fetched: the build reads only the local checkout.
 //!
 //! Web (wasm32) builds embed only the UI font, BIZ UDPGothic Regular (~4.7 MB): the browser has no
@@ -10,7 +10,7 @@
 //!
 //! It also writes `WEB_FONTS`: the faces listed in `web-fonts.txt`, which web builds fetch from
 //! `fonts/<sha16>/` beside the wasm instead of embedding (`cargo xtask web-fonts` copies them
-//! there; `apps/vectorcraft-web/src/fonts.rs` fetches them). A list line the manifest lacks is left
+//! there; `apps/tsipika-web/src/fonts.rs` fetches them). A list line the manifest lacks is left
 //! out with a warning, never an error, and never costs the desktop its fonts.
 
 use std::fmt::Write as _;
@@ -20,37 +20,37 @@ use std::path::{Path, PathBuf};
 mod web_fonts;
 
 fn main() {
-    println!("cargo::rerun-if-env-changed=CRAFT_FONTS_DIR");
-    println!("cargo::rerun-if-env-changed=CRAFT_FONTS_REQUIRED");
+    println!("cargo::rerun-if-env-changed=MAHAY_FONTS_DIR");
+    println!("cargo::rerun-if-env-changed=MAHAY_FONTS_REQUIRED");
     println!("cargo::rerun-if-changed=web-fonts.txt");
     println!("cargo::rerun-if-changed=build/web_fonts.rs");
-    let required = std::env::var_os("CRAFT_FONTS_REQUIRED").is_some();
+    let required = std::env::var_os("MAHAY_FONTS_REQUIRED").is_some();
     let (mut fonts, mut web) = (String::new(), String::new());
-    if let Some(dir) = std::env::var_os("CRAFT_FONTS_DIR").filter(|d| !d.is_empty()).map(PathBuf::from) {
+    if let Some(dir) = std::env::var_os("MAHAY_FONTS_DIR").filter(|d| !d.is_empty()).map(PathBuf::from) {
         let dir = from_workspace(dir);
-        match craft_fonts(&dir) {
+        match mahay_fonts(&dir) {
             Ok(entries) => fonts = entries,
-            Err(e) if required => println!("cargo::error=CRAFT_FONTS_DIR={}: {e}", dir.display()),
-            Err(e) => println!("cargo::warning=building without craft-fonts: CRAFT_FONTS_DIR={}: {e}", dir.display()),
+            Err(e) if required => println!("cargo::error=MAHAY_FONTS_DIR={}: {e}", dir.display()),
+            Err(e) => println!("cargo::warning=building without mahay-fonts: MAHAY_FONTS_DIR={}: {e}", dir.display()),
         }
-        // Separately: a bad web list must not cost the desktop build its craft fonts. A listed face
-        // the checkout lacks (an older craft-fonts pin) is left out with a warning, never an error,
-        // so the apps don't depend on which craft-fonts commit CI pins: that build just fetches
+        // Separately: a bad web list must not cost the desktop build its Mahay fonts. A listed face
+        // the checkout lacks (an older mahay-fonts pin) is left out with a warning, never an error,
+        // so the apps don't depend on which mahay-fonts commit CI pins: that build just fetches
         // fewer fonts.
         match web_font_entries(&dir) {
             Ok((entries, missing)) => {
                 web = entries;
                 if !missing.is_empty() {
-                    let msg = format!("{} not in CRAFT_FONTS_DIR={} (an older craft-fonts?)", missing.join(", "), dir.display());
+                    let msg = format!("{} not in MAHAY_FONTS_DIR={} (an older mahay-fonts?)", missing.join(", "), dir.display());
                     println!("cargo::warning=web build won't fetch: {msg}");
                 }
             }
             Err(e) if required => println!("cargo::error=web-fonts.txt: {e}"),
-            Err(e) => println!("cargo::warning=web build fetches no craft fonts: web-fonts.txt: {e}"),
+            Err(e) => println!("cargo::warning=web build fetches no Mahay fonts: web-fonts.txt: {e}"),
         }
     }
-    let src = format!("pub static CRAFT_FONTS: &[CraftFont] = &[\n{fonts}];\npub static WEB_FONTS: &[WebFont] = &[\n{web}];\n");
-    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("craft_fonts.rs");
+    let src = format!("pub static MAHAY_FONTS: &[MahayFont] = &[\n{fonts}];\npub static WEB_FONTS: &[WebFont] = &[\n{web}];\n");
+    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("mahay_fonts.rs");
     // Unchanged output keeps its mtime. Rewritten just before this crate compiles, it can read as
     // newer than that compile where cargo's recorded times lose their sub-second part (ecryptfs
     // home directories), and the next build would compile this crate and everything above it again.
@@ -62,7 +62,7 @@ fn main() {
     }
 }
 
-/// A relative `CRAFT_FONTS_DIR` is taken from the workspace root (where `cargo` is usually run),
+/// A relative `MAHAY_FONTS_DIR` is taken from the workspace root (where `cargo` is usually run),
 /// not from this crate's directory, which is where build scripts run.
 fn from_workspace(dir: PathBuf) -> PathBuf {
     if dir.is_absolute() {
@@ -72,11 +72,11 @@ fn from_workspace(dir: PathBuf) -> PathBuf {
     crate_dir.join("../..").join(dir)
 }
 
-/// The one craft-fonts face web builds embed (family, style).
+/// The one mahay-fonts face web builds embed (family, style).
 const WEB_FONT: (&str, &str) = ("BIZ UDPGothic", "Regular");
 
-/// One `CraftFont { .. }` initialiser per manifest line.
-fn craft_fonts(dir: &Path) -> Result<String, String> {
+/// One `MahayFont { .. }` initialiser per manifest line.
+fn mahay_fonts(dir: &Path) -> Result<String, String> {
     let manifest = dir.join("fonts/manifest.txt");
     println!("cargo::rerun-if-changed={}", manifest.display());
     let text = std::fs::read_to_string(&manifest).map_err(|e| format!("{}: {e}", manifest.display()))?;
@@ -95,7 +95,7 @@ fn craft_fonts(dir: &Path) -> Result<String, String> {
         let scripts: Vec<String> = scripts.split(',').map(|s| format!("{:?}", s.trim())).collect();
         let _ = writeln!(
             out,
-            "    CraftFont {{ family: {family:?}, style: {style:?}, scripts: &[{}], bytes: include_bytes!({:?}) }},",
+            "    MahayFont {{ family: {family:?}, style: {style:?}, scripts: &[{}], bytes: include_bytes!({:?}) }},",
             scripts.join(", "),
             path.display().to_string(),
         );
@@ -103,8 +103,8 @@ fn craft_fonts(dir: &Path) -> Result<String, String> {
     Ok(out)
 }
 
-/// One `WebFont { .. }` initialiser per `web-fonts.txt` line, from its craft-fonts manifest row, and
-/// the listed faces the manifest lacks (an older craft-fonts checkout), which are left out.
+/// One `WebFont { .. }` initialiser per `web-fonts.txt` line, from its mahay-fonts manifest row, and
+/// the listed faces the manifest lacks (an older mahay-fonts checkout), which are left out.
 fn web_font_entries(dir: &Path) -> Result<(String, Vec<String>), String> {
     let list_path = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap_or_default()).join("web-fonts.txt");
     let list = std::fs::read_to_string(&list_path).map_err(|e| format!("{}: {e}", list_path.display()))?;

@@ -1,12 +1,12 @@
 //! IDML round-trip tests (the sample magazine) and the interchange commands.
 
-use designcraft_doc::{Document, ItemId};
+use pejy_doc::{Document, ItemId};
 use serde_json::json;
 
 use crate::Session;
 
 /// Every item of a spread list in order, flattened (pre-order).
-fn items(spreads: &[std::sync::Arc<designcraft_doc::Spread>]) -> Vec<(ItemId, designcraft_geom::Rect)> {
+fn items(spreads: &[std::sync::Arc<pejy_doc::Spread>]) -> Vec<(ItemId, pejy_geom::Rect)> {
     let mut v = Vec::new();
     for sp in spreads {
         for it in &sp.items {
@@ -25,8 +25,8 @@ fn positions(d: &Document) -> Vec<Vec<usize>> {
 #[test]
 fn magazine_round_trips_through_idml() {
     let d = crate::sample::magazine();
-    let bytes = designcraft_idml::export_idml(&d);
-    let back = designcraft_idml::import_idml(&bytes).unwrap();
+    let bytes = pejy_idml::export_idml(&d);
+    let back = pejy_idml::import_idml(&bytes).unwrap();
     assert_eq!(back.page_count(), d.page_count());
     assert_eq!(back.spreads.len(), d.spreads.len());
     assert_eq!(back.parents.len(), d.parents.len());
@@ -51,7 +51,7 @@ fn magazine_round_trips_through_idml() {
     // Styles and swatches by name.
     for s in &d.styles.paragraph {
         let b = back.styles.para(&s.name).unwrap_or_else(|| panic!("paragraph style {}", s.name));
-        if s.name != designcraft_doc::NO_PARA_STYLE {
+        if s.name != pejy_doc::NO_PARA_STYLE {
             assert_eq!(b.chars, s.chars, "{}", s.name);
             assert_eq!(b.para, s.para, "{}", s.name);
         }
@@ -87,7 +87,7 @@ fn magazine_round_trips_through_idml() {
         assert_eq!(a.pixels, b.pixels);
     }
     // A second round trip is stable.
-    let again = designcraft_idml::import_idml(&designcraft_idml::export_idml(&back)).unwrap();
+    let again = pejy_idml::import_idml(&pejy_idml::export_idml(&back)).unwrap();
     assert_eq!(items(&again.spreads).len(), items(&back.spreads).len());
 }
 
@@ -143,7 +143,7 @@ fn keep_lines_idml(body_attrs: &str, lines: &[usize]) -> Vec<u8> {
 /// Lines of paragraph `para` in each frame of the story.
 fn para_lines_per_frame(d: &Document, para: usize) -> Vec<usize> {
     let sid = *d.stories.keys().next().unwrap();
-    let cs = designcraft_compose::compose_story(d, sid, &Default::default());
+    let cs = pejy_compose::compose_story(d, sid, &Default::default());
     cs.frames.iter().map(|f| f.lines.iter().filter(|l| l.para == para).count()).collect()
 }
 
@@ -152,11 +152,11 @@ fn para_lines_per_frame(d: &Document, para: usize) -> Vec<usize> {
 #[test]
 fn idml_keep_lines_without_mode_split_at_start_and_end() {
     let keep = r#"KeepLinesTogether="true" KeepFirstLines="2" KeepLastLines="2""#;
-    let d = designcraft_idml::import_idml(&keep_lines_idml(keep, &[13, 10, 2])).unwrap();
+    let d = pejy_idml::import_idml(&keep_lines_idml(keep, &[13, 10, 2])).unwrap();
     assert_eq!(para_lines_per_frame(&d, 0), [13, 0]);
     assert_eq!(para_lines_per_frame(&d, 1), [6, 4]);
     // All lines in paragraph, written explicitly: the paragraph moves whole.
-    let d = designcraft_idml::import_idml(&keep_lines_idml(&format!(r#"{keep} KeepAllLinesTogether="true""#), &[13, 10, 2])).unwrap();
+    let d = pejy_idml::import_idml(&keep_lines_idml(&format!(r#"{keep} KeepAllLinesTogether="true""#), &[13, 10, 2])).unwrap();
     assert_eq!(para_lines_per_frame(&d, 1), [0, 10]);
 }
 
@@ -165,15 +165,15 @@ fn idml_keep_lines_without_mode_split_at_start_and_end() {
 #[test]
 fn format_1_keep_lines_without_mode_lays_out_all_lines() {
     use std::io::Write;
-    let d = designcraft_idml::import_idml(&keep_lines_idml(r#"KeepLinesTogether="true""#, &[13, 10, 2])).unwrap();
+    let d = pejy_idml::import_idml(&keep_lines_idml(r#"KeepLinesTogether="true""#, &[13, 10, 2])).unwrap();
     let mut w = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
     w.start_file("meta.json", zip::write::SimpleFileOptions::default()).unwrap();
-    w.write_all(br#"{"format": "designcraft", "version": 1}"#).unwrap();
+    w.write_all(br#"{"format": "pejy", "version": 1}"#).unwrap();
     w.start_file("document.json", zip::write::SimpleFileOptions::default()).unwrap();
     w.write_all(&serde_json::to_vec(&d).unwrap()).unwrap();
-    let v1 = designcraft_format::load(&w.finish().unwrap().into_inner()).unwrap();
+    let v1 = pejy_format::load(&w.finish().unwrap().into_inner()).unwrap();
     assert_eq!(para_lines_per_frame(&v1, 1), [0, 10]);
-    let now = designcraft_format::load(&designcraft_format::save(&d).unwrap()).unwrap();
+    let now = pejy_format::load(&pejy_format::save(&d).unwrap()).unwrap();
     assert_eq!(para_lines_per_frame(&now, 1), [6, 4]);
 }
 
@@ -210,7 +210,7 @@ fn gradient_vector_round_trips_through_idml() {
     s.execute("object.gradient", &json!({"from": [120, 180], "to": [280, 120]})).unwrap();
     let d = s.doc().unwrap().doc.clone();
     let v = d.item(ItemId(id)).unwrap().fill.gradient_vector.unwrap();
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
     let it = back.spreads.iter().flat_map(|sp| sp.items.iter()).find(|i| i.fill.gradient_vector.is_some()).expect("a gradient item");
     let w = it.fill.gradient_vector.unwrap();
     for k in 0..4 {
@@ -228,15 +228,15 @@ fn open_type_features_round_trip_through_idml() {
     s.execute("type.openType", &json!({"feature": "frac"})).unwrap();
     s.execute("type.openType", &json!({"figures": "tabularOldstyle", "stylisticSets": [3]})).unwrap();
     let d = s.doc().unwrap().doc.clone();
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
     let st = back.stories.values().find(|st| st.text.starts_with("1/2")).unwrap();
     let f = st.format_after(0).over.otf_features.clone().unwrap_or_default();
-    assert!(designcraft_doc::otf::is_on(&f, "frac"), "{f:?}");
-    assert_eq!(designcraft_doc::otf::figures(&f), "tabularOldstyle");
-    assert_eq!(designcraft_doc::otf::stylistic_sets(&f), 0b100);
+    assert!(pejy_doc::otf::is_on(&f, "frac"), "{f:?}");
+    assert_eq!(pejy_doc::otf::figures(&f), "tabularOldstyle");
+    assert_eq!(pejy_doc::otf::stylistic_sets(&f), 0b100);
     // Text after the selection has no features of its own.
     let after = st.format_after(5).over.otf_features.clone().unwrap_or_default();
-    assert!(!designcraft_doc::otf::is_on(&after, "frac") && designcraft_doc::otf::stylistic_sets(&after) == 0, "{after:?}");
+    assert!(!pejy_doc::otf::is_on(&after, "frac") && pejy_doc::otf::stylistic_sets(&after) == 0, "{after:?}");
 }
 
 #[test]
@@ -249,19 +249,19 @@ fn underline_options_render_and_round_trip() {
     s.execute("type.char", &json!({"attrs": {"underline": true, "underlineWeight": 3, "underlineOffset": 4, "underlineColor": "C=100 M=0 Y=0 K=0"}}))
         .unwrap();
     let d = s.doc().unwrap().doc.clone();
-    let cs = designcraft_compose::compose_story(&d, designcraft_doc::StoryId(sid), &Default::default());
+    let cs = pejy_compose::compose_story(&d, pejy_doc::StoryId(sid), &Default::default());
     let st = cs.styles.iter().find(|st| st.underline).unwrap();
     assert_eq!((st.underline_rule.weight, st.underline_rule.offset), (3.0, 4.0));
     assert_eq!(st.underline_rule.color, "C=100 M=0 Y=0 K=0");
     // Drawn in cyan, 4–7 pt under the baseline.
     let l = &cs.frames[0].lines[0];
-    let mut rr = designcraft_render::Renderer::new();
+    let mut rr = pejy_render::Renderer::new();
     rr.threads = 0;
     let img = rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
     let x = l.glyphs[2].x as u32;
     let p = img.pixel(x, (l.baseline + 5.5) as u32);
     assert!(p[0] < 80 && p[2] > 150, "cyan underline: {p:?}");
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
     let story = back.stories.values().find(|x| x.text.starts_with("Underlined")).unwrap();
     let f = story.format_after(0);
     assert_eq!(f.over.underline_weight, Some(Some(3.0)));
@@ -294,12 +294,12 @@ fn newer_features_round_trip_through_idml() {
     let line = s.execute("line.create", &json!({"a": [100, 500], "b": [400, 500]})).unwrap()["id"].as_u64().unwrap();
     s.execute("type.onPath", &json!({"id": line, "text": "On the line", "start": 12, "flip": true, "align": "center"})).unwrap();
     let d = s.doc().unwrap().doc.clone();
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
     let intro = back.styles.para("Intro").unwrap();
     let ns = intro.para.nested_styles.clone().unwrap();
     assert_eq!(ns[0].style, "Lead");
     assert_eq!((ns[0].through, ns[0].count), (false, 2));
-    assert_eq!(ns[0].until, designcraft_doc::NestedUntil::Chars(":".into()));
+    assert_eq!(ns[0].until, pejy_doc::NestedUntil::Chars(":".into()));
     assert_eq!(intro.para.grep_styles.clone().unwrap()[0].pattern, "\\d+");
     let head = back.styles.cell.iter().find(|c| c.name == "Head").unwrap();
     assert_eq!((head.fill.as_deref(), head.insets, head.paragraph_style.as_deref()), (Some("[Black]"), Some([5.0; 4]), Some("Intro")));
@@ -314,11 +314,11 @@ fn newer_features_round_trip_through_idml() {
         .iter()
         .flat_map(|sp| sp.items.iter())
         .find_map(|it| match &it.content {
-            designcraft_doc::Content::Text(tf) => tf.options.path.clone().map(|p| (p, tf.story)),
+            pejy_doc::Content::Text(tf) => tf.options.path.clone().map(|p| (p, tf.story)),
             _ => None,
         })
         .expect("type on a path");
-    assert_eq!((pt.0.start, pt.0.flip, pt.0.align), (12.0, true, designcraft_doc::PathAlign::Center));
+    assert_eq!((pt.0.start, pt.0.flip, pt.0.align), (12.0, true, pejy_doc::PathAlign::Center));
     assert_eq!(back.story(pt.1).unwrap().text, "On the line");
 }
 
@@ -331,8 +331,8 @@ fn named_lists_round_trip_through_idml() {
     s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 3})).unwrap();
     s.execute("type.para", &json!({"attrs": {"listType": "numbers", "listName": "Steps", "startAt": 5}})).unwrap();
     let d = s.doc().unwrap().doc.clone();
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
-    assert_eq!(back.settings.lists, vec![designcraft_doc::NumberedList { name: "Steps".into(), continue_across_stories: false }]);
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
+    assert_eq!(back.settings.lists, vec![pejy_doc::NumberedList { name: "Steps".into(), continue_across_stories: false }]);
     let st = back.stories.values().find(|st| st.text.starts_with("One")).unwrap();
     assert_eq!(st.paras[0].para.list_name.as_deref(), Some("Steps"));
     assert_eq!(st.paras[0].para.start_at, Some(Some(5)));
@@ -355,9 +355,9 @@ fn placed_pdf_page_and_crop_round_trip_through_idml() {
     let item = d.item(ItemId(r["id"].as_u64().unwrap())).unwrap();
     let (bounds, g) = (item.bounds(), item.graphic().unwrap().clone());
     assert_eq!(d.assets[&g.asset].page, 1);
-    assert_eq!(d.assets[&g.asset].pdf_crop, designcraft_doc::PdfCrop::Trim);
+    assert_eq!(d.assets[&g.asset].pdf_crop, pejy_doc::PdfCrop::Trim);
 
-    let bytes = designcraft_idml::export_idml(&d);
+    let bytes = pejy_idml::export_idml(&d);
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes.as_slice())).unwrap();
     let mut spreads = String::new();
     for i in 0..zip.len() {
@@ -374,7 +374,7 @@ fn placed_pdf_page_and_crop_round_trip_through_idml() {
     let bi = back.spreads.iter().flat_map(|sp| sp.items.iter()).find(|i| i.graphic().is_some()).unwrap();
     let bg = bi.graphic().unwrap();
     let ba = &back.assets[&bg.asset];
-    assert_eq!((ba.page, ba.pdf_crop), (1, designcraft_doc::PdfCrop::Trim));
+    assert_eq!((ba.page, ba.pdf_crop), (1, pejy_doc::PdfCrop::Trim));
     let (want, got) = (d.assets[&g.asset].shown_box().unwrap(), ba.shown_box().expect("the trim box found on the page"));
     assert!(want.iter().zip(got).all(|(a, b)| (a - b).abs() < 1e-9), "{got:?} vs {want:?}");
     let bb = bi.bounds();
@@ -393,7 +393,7 @@ fn placed_pdf_page_and_crop_round_trip_through_idml() {
         out.start_file(f.name(), zip::write::SimpleFileOptions::default()).unwrap();
         std::io::Write::write_all(&mut out, body.replace(r#"PageNumber="2""#, r#"PageNumber="4294967295""#).as_bytes()).unwrap();
     }
-    let hostile = designcraft_idml::import_idml(&out.finish().unwrap().into_inner()).unwrap();
+    let hostile = pejy_idml::import_idml(&out.finish().unwrap().into_inner()).unwrap();
     assert_eq!(hostile.assets.values().map(|a| a.page).collect::<Vec<_>>(), [u32::MAX - 1]);
     t.edit(|doc, _| {
         *doc = hostile;
@@ -415,7 +415,7 @@ fn idml_placed_pdf_cropped_to_its_media_box_gets_media_box_bounds() {
     let mut t = Session::new();
     t.execute("file.new", &json!({})).unwrap();
     t.execute("file.place", &json!({"base64": b64, "name": "a.pdf", "pdfCrop": "trim", "width": 630, "x": 0, "y": 0})).unwrap();
-    let bytes = designcraft_idml::export_idml(&t.doc().unwrap().doc);
+    let bytes = pejy_idml::export_idml(&t.doc().unwrap().doc);
 
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes.as_slice())).unwrap();
     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
@@ -438,7 +438,7 @@ fn idml_placed_pdf_cropped_to_its_media_box_gets_media_box_bounds() {
     let back = crate::cmd::interchange::import(&out.finish().unwrap().into_inner(), None).unwrap();
     let g = back.spreads.iter().flat_map(|sp| sp.items.iter()).find_map(|i| i.graphic().cloned()).unwrap();
     let a = &back.assets[&g.asset];
-    assert_eq!(a.pdf_crop, designcraft_doc::PdfCrop::Media);
+    assert_eq!(a.pdf_crop, pejy_doc::PdfCrop::Media);
     assert!((g.size.0 - 630.0).abs() < 1e-3 && (g.size.1 - 810.0).abs() < 1e-3, "{:?}", g.size);
     let b = a.shown_box().unwrap_or([0.0, 0.0, 1.0, 1.0]);
     assert!(b.iter().zip([0.0, 0.0, 1.0, 1.0]).all(|(x, y)| (x - y).abs() < 1e-6), "{b:?}");
@@ -460,13 +460,13 @@ fn idml_bounding_box_crop_is_measured_when_drawn_not_on_import() {
     let placed = t.doc().unwrap().doc.assets.values().next().unwrap().shown_box().expect("placing measures the box");
     assert!(placed[0] > 0.1 && placed[2] < 0.6, "the drawn rectangle, not the page: {placed:?}");
 
-    let bytes = designcraft_idml::export_idml(&t.doc().unwrap().doc);
+    let bytes = pejy_idml::export_idml(&t.doc().unwrap().doc);
     let back = crate::cmd::interchange::import(&bytes, None).unwrap();
     let a = back.assets.values().next().unwrap();
-    assert_eq!(a.pdf_crop, designcraft_doc::PdfCrop::ContentVisible);
+    assert_eq!(a.pdf_crop, pejy_doc::PdfCrop::ContentVisible);
     assert!(a.content_box_pending(), "import didn't render the page: {:?}", a.pdf_box);
     let close = |b: [f64; 4]| b.iter().zip(placed).all(|(x, y)| (x - y).abs() < 1e-9);
-    let drawn = designcraft_render::shown_box(a).expect("drawing measures the box");
+    let drawn = pejy_render::shown_box(a).expect("drawing measures the box");
     assert!(close(drawn), "{drawn:?} vs {placed:?}");
     let boxed = crate::cmd::interchange::with_pdf_boxes(&back);
     let exported = boxed.assets.values().next().unwrap().shown_box().expect("PDF export gets the box");
@@ -484,20 +484,20 @@ fn type_para_sets_a_drop_cap_that_survives_idml() {
     s.execute("text.select", &json!({"story": sid, "anchor": 3, "focus": 3})).unwrap();
     s.execute("type.para", &json!({"attrs": {"dropCapLines": 3, "dropCapChars": 1, "dropCapStyle": "Initial", "dropCapAlignLeft": false}})).unwrap();
     let d = s.doc().unwrap().doc.clone();
-    let cs = designcraft_compose::compose_story(&d, designcraft_doc::StoryId(sid), &Default::default());
+    let cs = pejy_compose::compose_story(&d, pejy_doc::StoryId(sid), &Default::default());
     let lines = &cs.frames[0].lines;
     let dc = &lines[0].glyphs[0];
     assert_eq!(dc.byte, 0);
     assert!((lines[0].baseline + dc.y - lines[2].baseline).abs() < 1e-6, "on line 3's baseline");
     assert!(lines[0].drop_cap.is_some_and(|b| b.end == 1));
-    let p = &d.story(designcraft_doc::StoryId(sid)).unwrap().paras[0].para;
+    let p = &d.story(pejy_doc::StoryId(sid)).unwrap().paras[0].para;
     assert_eq!((p.drop_cap_lines, p.drop_cap_chars, p.drop_cap_style.as_deref()), (Some(3), Some(1), Some("Initial")));
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
     let p = &back.stories.values().find(|st| st.text.starts_with("Once")).unwrap().paras[0].para;
     assert_eq!((p.drop_cap_lines, p.drop_cap_chars, p.drop_cap_align_left), (Some(3), Some(1), Some(false)));
     // The drop cap's character style goes through IDML as a leading Dropcap nested style.
     assert_eq!(p.drop_cap_style.as_deref(), Some("Initial"));
-    assert_eq!(p.nested_styles, Some(vec![designcraft_doc::NestedStyle::drop_cap("Initial")]));
+    assert_eq!(p.nested_styles, Some(vec![pejy_doc::NestedStyle::drop_cap("Initial")]));
 }
 
 #[test]
@@ -506,7 +506,7 @@ fn table_of_contents_definition_round_trips_through_idml_and_updates() {
     s.execute("file.newSample", &json!({})).unwrap();
     let page = s.doc().unwrap().doc.page_count() + 1;
     s.execute("layout.pages.insert", &json!({"count": 1})).unwrap();
-    let basic = designcraft_doc::story::BASIC_PARAGRAPH;
+    let basic = pejy_doc::story::BASIC_PARAGRAPH;
     s.execute(
         "toc.generate",
         &json!({"page": page, "title": "Inside", "titleStyle": basic, "entries": [
@@ -536,7 +536,7 @@ fn parent_and_page_margins_round_trip_through_idml() {
     s.execute("file.new", &json!({"pages": 3})).unwrap();
     s.execute("layout.marginsAndColumns", &json!({"parent": "A", "margins": 48, "columns": 2})).unwrap();
     s.execute("layout.marginsAndColumns", &json!({"pages": [2], "margins": 100})).unwrap();
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
     let pages: Vec<(f64, u32, bool)> =
         (0..back.page_count()).filter_map(|i| back.page(i)).map(|p| (p.margins.top, p.columns.count, p.local_margins)).collect();
     assert_eq!(pages, vec![(48.0, 2, false), (48.0, 2, false), (100.0, 2, true)]);

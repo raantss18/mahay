@@ -26,7 +26,7 @@ mod texture;
 mod video;
 
 use serde_json::Value;
-use vectorcraft_geom::{Affine, Point, Rect};
+use tsipika_geom::{Affine, Point, Rect};
 
 use crate::util::{flag, num, text};
 
@@ -230,7 +230,7 @@ pub(crate) fn parse(id: &str, p: &Value) -> Option<PixelFx> {
         "artistic.neonGlow" => PixelFx::NeonGlow {
             size: num(p, "glowSize", 5.0).clamp(-24.0, 24.0),
             brightness: num(p, "glowBrightness", 15.0).clamp(0.0, 50.0),
-            colour: crate::raster::color_param(p, vectorcraft_doc::color::Color::rgb(0.3, 0.65, 1.0)).to_rgb(),
+            colour: crate::raster::color_param(p, tsipika_doc::color::Color::rgb(0.3, 0.65, 1.0)).to_rgb(),
         },
         "artistic.posterEdges" => PixelFx::PosterEdges {
             thickness: num(p, "edgeThickness", 2.0).clamp(0.0, 10.0),

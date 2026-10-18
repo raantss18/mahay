@@ -10,7 +10,7 @@
 //! - Rectangle Cut: the drag draws the rectangle (Shift: a square, Alt: from its centre).
 
 use serde_json::{Value, json};
-use vectorcraft_geom::{Point, Vec2, constrain_angle_from};
+use tsipika_geom::{Point, Vec2, constrain_angle_from};
 
 use crate::draw2::FEEDBACK;
 use crate::shape::drag_rect;
@@ -220,7 +220,7 @@ impl Tool for CutTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     fn drag(t: &mut CutTool, cx: &ToolContext, from: (f64, f64), to: (f64, f64), m: Mods) -> Vec<Action> {
         let mut out = t.pointer(cx, &PointerEvent::new(PointerKind::Down, from.0, from.1));

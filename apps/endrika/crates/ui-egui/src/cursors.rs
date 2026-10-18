@@ -1,14 +1,14 @@
-//! The pointer on the canvas: each engine cursor ([`figcraft_engine::tools::Cursor`]) as one of
-//! the system's cursors, or as a small glyph FigCraft draws at the pointer with the system's
+//! The pointer on the canvas: each engine cursor ([`endrika_engine::tools::Cursor`]) as one of
+//! the system's cursors, or as a small glyph Endrika draws at the pointer with the system's
 //! hidden (a rotate cursor turned to its corner, the pen's states, the eyedropper, the comment
 //! pin). The glyphs are original, drawn from lines and the code-drawn icons: no cursor images.
 
 use egui::{Color32, CursorIcon, Painter, Pos2, Shape, Stroke, pos2, vec2};
-use figcraft_engine::tools::{Cursor, PenCursor};
+use endrika_engine::tools::{Cursor, PenCursor};
 
 use crate::icons::{self, Icon};
 
-/// A cursor FigCraft draws.
+/// A cursor Endrika draws.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Glyph {
     /// A curved double arrow about the direction (degrees, 0 = right, 90 = down) from the box's

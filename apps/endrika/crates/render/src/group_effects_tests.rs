@@ -4,8 +4,8 @@
 //! one shape, the pixels must match that shape (or a frame filled like it) carrying the effect.
 //! Scenes are small and synthetic, drawn on a white page at 1×.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Blur, Document, Effect, EffectKind, NodeId, NodeKind, Shadow};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Blur, Document, Effect, EffectKind, NodeId, NodeKind, Shadow};
 
 use super::paint_behaviour_tests::{hex, near, page, px, rect, render, solid_at};
 use super::*;

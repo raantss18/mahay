@@ -6,7 +6,7 @@
 
 use std::sync::OnceLock;
 
-use vectorcraft_geom::{Affine, Point};
+use tsipika_geom::{Affine, Point};
 
 use super::{Channels, PixelSpace, Px16, gaussian, pick, to16};
 use crate::util::noise;

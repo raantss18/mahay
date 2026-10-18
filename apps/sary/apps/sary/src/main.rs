@@ -554,6 +554,7 @@ fn main() -> eframe::Result {
         Box::new(move |cc| {
             created_in_callback.store(true, std::sync::atomic::Ordering::Relaxed);
             let automation = control.as_ref().map(|(_, _, workspace)| workspace.clone());
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "sary", name: "Sary" }, &cc.egui_ctx);
             let mut services = services::native(automation);
             services.preset_store = presets;
             #[cfg(target_os = "linux")]

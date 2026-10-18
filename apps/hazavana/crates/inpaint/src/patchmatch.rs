@@ -14,7 +14,7 @@
 //!   W. Freeman, *Image Quilting for Texture Synthesis and Transfer*, SIGGRAPH 2001 (blocks picked from
 //!   random candidates by overlap error, feathered overlap instead of a min-cut seam).
 //!
-//! Ported from PhotoCraft's `algo::inpaint` (MIT OR Apache-2.0); its proximity match and texture
+//! Ported from Sary's `algo::inpaint` (MIT OR Apache-2.0); its proximity match and texture
 //! synthesis are left out.
 //!
 //! All functions take interleaved `w × h × ch` normalised floats (any colour model/depth) and a

@@ -3,7 +3,7 @@
 //! stay with it when it is merged or archived; merging adds a version to the main file's history.
 //! Also fills merging item by item through real commands.
 
-use figcraft_doc::{NodeId, NodeKind};
+use endrika_doc::{NodeId, NodeKind};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -62,9 +62,9 @@ fn versions_saved_on_a_branch_are_the_branchs_own() {
 
 #[test]
 fn branch_versions_save_with_the_file_and_survive_merging() {
-    let dir = std::env::temp_dir().join(format!("figcraft-branch-versions-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-branch-versions-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("file.figcraft").to_string_lossy().to_string();
+    let path = dir.join("file.endrika").to_string_lossy().to_string();
     let (mut s, id, r) = branched();
     ok(&mut s, "node.set", json!({"id": r, "props": {"name": "On the branch"}}));
     ok(&mut s, "file.saveVersion", json!({"name": "Branch v1"}));

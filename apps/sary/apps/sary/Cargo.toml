@@ -16,6 +16,7 @@ heif = ["sary-codecs/heif"]
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 sary-doc = { workspace = true }
 sary-color = { workspace = true }
 sary-raster = { workspace = true }

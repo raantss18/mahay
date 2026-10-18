@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use super::*;
 use crate::{CadApp, Services};
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 use serde_json::json;
 
 fn placeholders(text: &str) -> BTreeSet<&str> {
@@ -60,7 +60,7 @@ fn missing_commands_menus_tools_and_snap_labels(language: &str) -> Vec<String> {
     let catalog = catalog(language).unwrap();
     let mut sources = BTreeSet::new();
     sources.extend(crate::menus::MENUS.iter().copied());
-    for c in cadcraft_engine::command_specs() {
+    for c in drafitra_engine::command_specs() {
         sources.insert(c.label);
         sources.extend(c.menu.iter().copied());
     }
@@ -74,7 +74,7 @@ fn missing_commands_menus_tools_and_snap_labels(language: &str) -> Vec<String> {
             sources.extend(large.iter().chain(*small).map(|(_, _, label)| *label));
         }
     }
-    sources.extend(cadcraft_engine::snap::mode::ALL.iter().map(|(_, name)| *name));
+    sources.extend(drafitra_engine::snap::mode::ALL.iter().map(|(_, name)| *name));
     sources.into_iter().filter(|s| !s.is_empty() && !catalog.contains_key(&("", *s))).map(str::to_string).collect()
 }
 
@@ -134,7 +134,7 @@ fn missing_marked_ui_literals(language: &str) -> BTreeSet<String> {
                     .unwrap();
                 let key: String = serde_json::from_str(&rest[..end]).unwrap();
                 // Coordinate axes, glyph buttons and product names are not translated.
-                if !["X", "Y", "B", "CADCraft"].contains(&key.as_str()) && !catalog.contains_key(&("", key.as_str())) {
+                if !["X", "Y", "B", "Drafitra"].contains(&key.as_str()) && !catalog.contains_key(&("", key.as_str())) {
                     missing.insert(key);
                 }
             }
@@ -345,7 +345,7 @@ fn live_switch_translates_the_shell_without_mutating_drawing_or_automation() {
 fn dialogs_render_in_ukrainian_and_keep_their_source_ids() {
     for (dialog, heading) in [
         ("dsettings", "Налаштування креслення"),
-        ("about", "Про CADCraft"),
+        ("about", "Про Drafitra"),
         ("commands", "Довідник команд"),
         ("blocks", "Блоки"),
         ("layers", "Диспетчер властивостей шарів"),
@@ -495,7 +495,7 @@ fn live_czech_switch_preserves_drawing_command_and_saved_choice() {
 fn czech_dialogs_render_with_stable_ids() {
     for (dialog, heading) in [
         ("dsettings", "Nastavení kreslení"),
-        ("about", "O aplikaci CADCraft"),
+        ("about", "O aplikaci Drafitra"),
         ("commands", "Přehled příkazů"),
         ("blocks", "Bloky"),
         ("layers", "Správce vlastností hladin"),
@@ -721,7 +721,7 @@ fn korean_dialogs_keep_source_ids() {
     }
     for (dialog, source) in [
         ("dsettings", "Drafting Settings"),
-        ("about", "About CADCraft"),
+        ("about", "About Drafitra"),
         ("commands", "Command Reference"),
         ("blocks", "Blocks"),
         ("layers", "Layer Properties Manager"),
@@ -850,7 +850,7 @@ fn live_swedish_switch_preserves_drawing_command_and_saved_choice() {
 fn swedish_dialogs_render_with_stable_ids() {
     for (dialog, heading) in [
         ("dsettings", "Ritinställningar"),
-        ("about", "Om CADCraft"),
+        ("about", "Om Drafitra"),
         ("blocks", "Block"),
         ("layers", "Hantera lageregenskaper"),
         ("qselect", "Snabbmarkering"),

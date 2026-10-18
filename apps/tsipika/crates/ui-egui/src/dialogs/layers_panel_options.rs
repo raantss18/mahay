@@ -10,7 +10,7 @@ use super::DialogSpec;
 use super::swatch_options::{grid, label};
 use crate::panels::layers::{PanelOptions, ROW_LARGE, ROW_MEDIUM, ROW_SMALL};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of the Layers Panel Options.
 pub const KIND: &str = "layersPanelOptions";
@@ -21,7 +21,7 @@ pub(super) const SPEC: DialogSpec =
 const SIZES: [(&str, &str, f32); 3] = [("small", "Small", ROW_SMALL), ("medium", "Medium", ROW_MEDIUM), ("large", "Large", ROW_LARGE)];
 
 /// `ui.layersPanelOptions`: open the dialog on the panel's options.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let o = &app.ui.layers_panel;
     let size = SIZES.iter().find(|s| (s.2 - o.row()).abs() < 0.01).map_or("other", |s| s.0);
     let fields = json!({
@@ -39,7 +39,7 @@ fn check(ui: &mut egui::Ui, d: &mut Dialog, key: &str, text: &str) {
     }
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     check(ui, d, "layersOnly", tl!("Show Layers Only"));
     ui.add_space(8.0);
     grid(ui, |ui| {
@@ -80,7 +80,7 @@ pub(crate) fn options(d: &Dialog) -> PanelOptions {
     }
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     app.ui.layers_panel = options(d);
     app.ui.dialog = None;
     Ok(serde_json::to_value(&app.ui.layers_panel).unwrap_or_default())
@@ -89,11 +89,11 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     #[test]
     fn panel_options_round_trip_and_apply() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.run("ui.layersPanelOptions", json!({})).unwrap();
         assert_eq!(app.ui.dialog.as_ref().unwrap().str("rowSize"), "medium");

@@ -10,9 +10,9 @@
 //! The points live in the stroke's [`WidthProfile`] and apply to every subpath (positions are
 //! fractions of each subpath's length).
 
-use figcraft_doc::*;
-use figcraft_geom::{Point, Vec2};
-use figcraft_pathops::width::{Polyline, nearest, polylines};
+use endrika_doc::*;
+use endrika_geom::{Point, Vec2};
+use endrika_pathops::width::{Polyline, nearest, polylines};
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -72,7 +72,7 @@ struct Stroked {
 
 fn stroked(doc: &Document, id: NodeId) -> Option<Stroked> {
     let n = doc.node(id)?;
-    let path = figcraft_doc::geometry::stroke_geometry(n)?;
+    let path = endrika_doc::geometry::stroke_geometry(n)?;
     Some(Stroked { lines: polylines(&path)?, weight: n.stroke.weight, profile: n.stroke.profile().cloned() })
 }
 

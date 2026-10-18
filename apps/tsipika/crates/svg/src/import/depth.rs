@@ -16,16 +16,16 @@ use usvg::roxmltree;
 use super::css::{Styles, XNode, parse_decls};
 
 /// The deepest an SVG's elements may nest, references followed. Far beyond what drawing apps
-/// write, and deeper than a document's objects may nest ([`vectorcraft_doc::MAX_DEPTH`]: wrappers
+/// write, and deeper than a document's objects may nest ([`tsipika_doc::MAX_DEPTH`]: wrappers
 /// that hold one object aren't kept, and what is still deeper is merged into the group around
 /// it). usvg uses about 15 kB of stack for each level: the importer runs on a thread with 16 MB
-/// ([`vectorcraft_doc::depth::with_deep_stack`]), except on the web, where there is the one
+/// ([`tsipika_doc::depth::with_deep_stack`]), except on the web, where there is the one
 /// stack: [`WEB_DEPTH`] there.
 pub const MAX_ELEMENT_DEPTH: usize = if cfg!(target_arch = "wasm32") { WEB_DEPTH } else { 256 };
 
 /// The stack of the web build: rustc links `wasm32-unknown-unknown` with
 /// `-z stack-size=1048576` (`rustc --print link-args` shows it), and the web app gives the linker
-/// no arguments of its own (`apps/vectorcraft-web`: `Trunk.toml`, `index.html`, no rustflags).
+/// no arguments of its own (`apps/tsipika-web`: `Trunk.toml`, `index.html`, no rustflags).
 const WEB_STACK: usize = 1 << 20;
 
 /// The stack usvg uses for each level of elements: about 70 levels overflowed the 1 MB main

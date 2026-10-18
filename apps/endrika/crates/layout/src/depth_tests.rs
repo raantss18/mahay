@@ -3,7 +3,7 @@
 //! Each case runs on a 1 MB stack, the main thread's on Windows; thousands of levels overflowed it.
 
 use super::*;
-use figcraft_doc::{AutoLayout, Constraints, Document, HConstraint, NodeKind, VConstraint};
+use endrika_doc::{AutoLayout, Constraints, Document, HConstraint, NodeKind, VConstraint};
 
 /// Far deeper than the nesting the layout follows.
 const DEEP: usize = 5000;

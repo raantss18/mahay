@@ -1,13 +1,13 @@
 //! The About window's credits: every contributor (GitHub login always; display and real names only
 //! with recorded consent) and the AI models that helped. The tables are baked into the binary by
-//! build.rs from contributors/contributors.json (craftrules standards/contributors.md); nothing is
+//! build.rs from contributors/contributors.json (mahay-rules standards/contributors.md); nothing is
 //! read at run time.
 
 use std::cmp::Ordering;
 
 use egui::RichText;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Contributor {
@@ -225,7 +225,7 @@ impl Default for View {
 }
 
 /// About ▸ Contributors: a name toggle, a sort, and the list as a grab bag or a table.
-pub fn contributors_ui(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+pub fn contributors_ui(app: &mut TsipikaApp, ui: &mut egui::Ui) {
     let id = egui::Id::new("credits_view");
     let mut v = ui.data_mut(|d| d.get_temp::<View>(id)).unwrap_or_default();
     ui.horizontal_wrapped(|ui| {
@@ -280,7 +280,7 @@ pub fn contributors_ui(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
     ui.data_mut(|d| d.insert_temp(id, v));
 }
 
-fn link(app: &mut VectorcraftApp, ui: &mut egui::Ui, c: &Contributor, names: NameMode) -> egui::Response {
+fn link(app: &mut TsipikaApp, ui: &mut egui::Ui, c: &Contributor, names: NameMode) -> egui::Response {
     let url = format!("https://github.com/{}", c.login);
     let r = ui.add(egui::Link::new(c.name(names))).on_hover_text(c.summary());
     if r.clicked() {
@@ -289,7 +289,7 @@ fn link(app: &mut VectorcraftApp, ui: &mut egui::Ui, c: &Contributor, names: Nam
     r
 }
 
-fn table(app: &mut VectorcraftApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View) {
+fn table(app: &mut TsipikaApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View) {
     egui::Grid::new("credits_table").striped(true).num_columns(SortKey::ALL.len()).show(ui, |ui| {
         for k in SortKey::ALL {
             let arrow = if v.key == k { if v.ascending { " ▲" } else { " ▼" } } else { "" };

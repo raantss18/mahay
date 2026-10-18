@@ -1,8 +1,8 @@
 //! Groups (#417) survive a DWG round trip through the DXF bridge (the DXF round trip is in
 //! `tables_objects_roundtrip`).
 
-use cadcraft_doc::{Common, Drawing, EntityKind, Group, Line, Space};
-use cadcraft_geom::Vec3;
+use drafitra_doc::{Common, Drawing, EntityKind, Group, Line, Space};
+use drafitra_geom::Vec3;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
@@ -14,8 +14,8 @@ fn groups_survive_dwg_round_trip() {
     let (a, b) = (line(0.0), line(5.0));
     d.groups.push(Group { name: "Doors".into(), description: "front".into(), selectable: false, members: vec![b, a] });
     d.groups.push(Group { name: "*A1".into(), description: String::new(), selectable: true, members: vec![a] });
-    let bytes = cadcraft_io::write(&d, "groups.dwg").expect("write dwg");
-    let r = cadcraft_io::read(&bytes, "groups.dwg").expect("read dwg");
+    let bytes = drafitra_io::write(&d, "groups.dwg").expect("write dwg");
+    let r = drafitra_io::read(&bytes, "groups.dwg").expect("read dwg");
     let got: Vec<(&str, &str, bool, Vec<f64>)> = r
         .groups
         .iter()

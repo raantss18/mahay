@@ -1,7 +1,7 @@
 //! The property tree: groups and properties with stable uids and match ids, addressed by paths.
 
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 
 pub type Uid = u64;
@@ -127,7 +127,7 @@ impl Property {
         if self.keys.is_empty() {
             return self.value.clone();
         }
-        effectcraft_keyframe::evaluate(&self.keys, t, self.spatial).unwrap_or_else(|| self.value.clone())
+        tselatra_keyframe::evaluate(&self.keys, t, self.spatial).unwrap_or_else(|| self.value.clone())
     }
     /// Set the value at `t`: adds/replaces a key when animated, else sets the static value.
     pub fn set_value_at(&mut self, t: Tick, v: Value) {
@@ -138,7 +138,7 @@ impl Property {
             if self.hold_only {
                 k = k.hold();
             }
-            effectcraft_keyframe::set_key(&mut self.keys, k);
+            tselatra_keyframe::set_key(&mut self.keys, k);
         }
     }
     /// Toggle the stopwatch: on → one key at `t` with the current value; off → keep value at `t`.
@@ -258,7 +258,7 @@ pub struct PropGroup {
     /// An effect's colour label (After Effects 26.5), shown in Effect Controls and the Timeline;
     /// `None` is unlabelled. Absent in older projects.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<effectcraft_color::Label>,
+    pub label: Option<tselatra_color::Label>,
     #[serde(default)]
     pub children: Vec<Node>,
 }

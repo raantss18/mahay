@@ -11,7 +11,7 @@ use egui::{Color32, vec2};
 use serde_json::Value;
 
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 /// The deletion waiting on the prompt: its params and what it takes with it.
 #[derive(Clone, Debug, Default)]
@@ -25,7 +25,7 @@ fn plural(n: u64, one: &str, many: &str) -> String {
 
 /// Whether `id` needs the prompt first. When it does, the prompt opens holding the command and
 /// the caller must not run it (it runs once the user answers Delete).
-pub fn guard(app: &mut EffectcraftApp, id: &str, params: &Value) -> bool {
+pub fn guard(app: &mut TselatraApp, id: &str, params: &Value) -> bool {
     if id != "project.delete" {
         return false;
     }
@@ -38,7 +38,7 @@ pub fn guard(app: &mut EffectcraftApp, id: &str, params: &Value) -> bool {
     true
 }
 
-pub fn show(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn show(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let Some((params, usage)) = app.dialog_state.delete_items.command.clone() else {
         app.dialog = None;
         return;
@@ -90,7 +90,7 @@ pub fn show(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
 /// Run `project.delete` with `params` without the prompt: this request is already confirmed (the
 /// prompt's Delete, or Delete Project Items Without Confirmation). The confirmation goes with the
 /// request, so it can't carry over to a later deletion.
-pub fn delete_confirmed(app: &mut EffectcraftApp, ctx: &egui::Context, params: Value) -> Result<Value, String> {
+pub fn delete_confirmed(app: &mut TselatraApp, ctx: &egui::Context, params: Value) -> Result<Value, String> {
     crate::menus::run_engine(app, ctx, "project.delete", params)
 }
 
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn cmd_d_is_delete_and_enter_is_not() {
         let ctx = egui::Context::default();
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         crate::theme::install(&ctx, &app.tokens, crate::i18n::language(&app));
         app.dialog_state.delete_items.command = Some((json!({"items": []}), json!({"items": 1, "layers": 1, "comps": 1})));
         app.dialog = Some(Dialog::DeleteItems);

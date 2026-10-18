@@ -1,8 +1,8 @@
 //! Undo and redo keep the session on a layout that exists (#371): undoing a rename of the current
 //! layout stays on that tab under its old name; undoing its creation returns to the Model tab.
 
-use cadcraft_doc::Space;
-use cadcraft_engine::Session;
+use drafitra_doc::Space;
+use drafitra_engine::Session;
 use serde_json::json;
 
 fn paper(n: &str) -> Space {
@@ -22,7 +22,7 @@ fn undo_and_redo_of_a_rename_follow_the_current_layout() {
     assert_eq!(s.layout_space(), paper("Layout1"));
     assert_eq!(s.state().unwrap().paper_view(), paper_view, "the sheet view is kept");
     // The layout is shown again: its sheet is drawn.
-    let list = cadcraft_render::build(s.doc().unwrap(), &s.layout_space(), &cadcraft_render::Options::default());
+    let list = drafitra_render::build(s.doc().unwrap(), &s.layout_space(), &drafitra_render::Options::default());
     assert!(list.sheet.is_some());
 
     s.redo().unwrap();

@@ -14,8 +14,8 @@
 //! and pure functions over the drawing, so scripts and tests drive it without the UI
 //! ([`crate::Session::snap_cursor`]).
 
-use cadcraft_doc::{Drawing, Prim, Space};
-use cadcraft_geom::{Ellipse, Line, PI, Segment, TAU, Vec2, angle_in_sweep, intersect_ext, norm_angle};
+use drafitra_doc::{Drawing, Prim, Space};
+use drafitra_geom::{Ellipse, Line, PI, Segment, TAU, Vec2, angle_in_sweep, intersect_ext, norm_angle};
 use serde::Serialize;
 
 use super::{SnapHit, mode};
@@ -81,7 +81,7 @@ impl PathShape {
     /// Whether `p` (a point of the path's line or circle) is on the path.
     fn contains(&self, p: Vec2) -> bool {
         match *self {
-            PathShape::Ray { origin, dir } => (p - origin).dot(dir) >= -cadcraft_geom::EPS,
+            PathShape::Ray { origin, dir } => (p - origin).dot(dir) >= -drafitra_geom::EPS,
             PathShape::Line { .. } => true,
             PathShape::Circle { center, gap, .. } => gap.is_none_or(|(s, e)| !angle_in_sweep(center.angle_to(p), s, e)),
             PathShape::Ellipse { center, major, ratio, gap } => {
@@ -95,7 +95,7 @@ impl PathShape {
     fn segments(&self) -> Vec<Segment> {
         match *self {
             PathShape::Ray { origin, dir } | PathShape::Line { origin, dir } => vec![Segment::Line(Line::new(origin, origin + dir))],
-            PathShape::Circle { center, radius, .. } => vec![Segment::Arc { arc: cadcraft_geom::Arc::new(center, radius, 0.0, PI), ccw: true }],
+            PathShape::Circle { center, radius, .. } => vec![Segment::Arc { arc: drafitra_geom::Arc::new(center, radius, 0.0, PI), ccw: true }],
             PathShape::Ellipse { center, major, ratio, gap } => {
                 let (start, end) = gap.map_or((0.0, TAU), |(s, e)| (e, s));
                 let mut pts = Vec::new();
@@ -114,9 +114,9 @@ impl PathShape {
     fn is_finite(&self) -> bool {
         match *self {
             PathShape::Ray { origin, dir } | PathShape::Line { origin, dir } => origin.is_finite() && dir.is_finite() && dir != Vec2::ZERO,
-            PathShape::Circle { center, radius, .. } => center.is_finite() && radius.is_finite() && radius > cadcraft_geom::EPS,
+            PathShape::Circle { center, radius, .. } => center.is_finite() && radius.is_finite() && radius > drafitra_geom::EPS,
             PathShape::Ellipse { center, major, ratio, .. } => {
-                center.is_finite() && major.is_finite() && major.len() > cadcraft_geom::EPS && ratio.is_finite() && ratio > 1e-9 && ratio <= 1e9
+                center.is_finite() && major.is_finite() && major.len() > drafitra_geom::EPS && ratio.is_finite() && ratio > 1e-9 && ratio <= 1e9
             }
         }
     }
@@ -514,7 +514,7 @@ impl Tracker {
         };
         for (i, (a, _, _)) in near.iter().enumerate() {
             for (b, _, _) in near.iter().skip(i + 1) {
-                if a.from.dist(b.from) <= cadcraft_geom::EPS {
+                if a.from.dist(b.from) <= drafitra_geom::EPS {
                     continue;
                 }
                 for sa in a.shape.segments() {
@@ -624,7 +624,7 @@ fn candidate_from_prims(
     let hit = hit.filter(|h| h.deferred.is_none() && h.mode != mode::NEA && h.point.is_finite());
     let ext_end = if cfg.running(mode::EXT) { extension_near(prims, hit.map_or(cursor, |h| h.point), aperture) } else { None };
     if let Some((at, ext)) = ext_end
-        && hit.is_none_or(|h| h.point.dist(at) <= cadcraft_geom::EPS * (1.0 + at.len()))
+        && hit.is_none_or(|h| h.point.dist(at) <= drafitra_geom::EPS * (1.0 + at.len()))
     {
         return Some(Acquired::Point { at, name: hit.map_or("Endpoint", |h| h.name), ext: Some(ext) });
     }
@@ -690,7 +690,7 @@ fn extension_ends(prim: &Prim) -> Vec<(Vec2, PathShape)> {
                 return Vec::new();
             }
             let (a, b) = (sp.eval(t0), sp.eval(t1));
-            if a.dist(b) <= cadcraft_geom::EPS * (1.0 + a.len()) {
+            if a.dist(b) <= drafitra_geom::EPS * (1.0 + a.len()) {
                 return Vec::new();
             }
             // The tangent at each end, pointing out of the curve: along the end leg of the control
@@ -699,7 +699,7 @@ fn extension_ends(prim: &Prim) -> Vec<(Vec2, PathShape)> {
             let clamped = |ks: &[f64]| ks.windows(2).all(|w| w.first() == w.get(1));
             let leg = |i: usize, j: usize, ks: Option<&[f64]>| {
                 let (p, q) = (sp.control.get(i)?, sp.control.get(j)?);
-                (ks.is_some_and(clamped) && p.dist(*q) > cadcraft_geom::EPS).then(|| (*p - *q).normalized())
+                (ks.is_some_and(clamped) && p.dist(*q) > drafitra_geom::EPS).then(|| (*p - *q).normalized())
             };
             let d = sp.degree;
             let start = leg(0, 1, sp.knots.get(..=d)).unwrap_or_else(|| (a - sp.eval(t0 + h)).normalized());

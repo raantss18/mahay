@@ -1,5 +1,5 @@
 //! Uncompressed QuickTime video (`raw `): 8-bit RGB ("Millions of Colors", depth 24) or ARGB
-//! ("Millions of Colors+", depth 32), one frame per sample, muxed by FilmCraft's QuickTime writer
+//! ("Millions of Colors+", depth 32), one frame per sample, muxed by Hetsika's QuickTime writer
 //! next to PCM audio like ProRes.
 //!
 //! Layout from the QuickTime File Format specification (Apple, "Video Sample Description" and
@@ -7,7 +7,7 @@
 //! A R G B / R G B order, and each row is padded to an even number of bytes (only depth 24 at odd
 //! widths needs it).
 
-use filmcraft_isobmff::{CodecConfig, FourCc, SampleEntry, VideoParams};
+use hetsika_isobmff::{CodecConfig, FourCc, SampleEntry, VideoParams};
 
 use crate::encode::{Packet, VideoEncoder};
 use crate::{ExportError, Result};

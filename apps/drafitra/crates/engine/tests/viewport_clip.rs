@@ -1,9 +1,9 @@
 //! Clipped layout viewports and MVIEW's options (#453): MVIEW Polygonal / Object / ON / OFF /
 //! Lock / Restore / 2 / 3 / 4, VPCLIP, and model space drawn through a clip outline.
 
-use cadcraft_doc::{EntityKind, Handle, Space, Viewport};
-use cadcraft_engine::Session;
-use cadcraft_geom::Vec2;
+use drafitra_doc::{EntityKind, Handle, Space, Viewport};
+use drafitra_engine::Session;
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 fn layout_viewports(s: &Session) -> Vec<(Handle, Viewport)> {
@@ -44,8 +44,8 @@ fn session() -> Session {
 /// Model-space vertices drawn on Layout1 (through viewports).
 fn content(s: &Session) -> Vec<Vec2> {
     let d = s.doc().unwrap();
-    let l = cadcraft_render::build(d, &Space::Paper("Layout1".into()), &cadcraft_render::Options::default());
-    l.prims.iter().filter(|p| p.handle == cadcraft_render::VIEWPORT_CONTENT).flat_map(|p| l.points(p).to_vec()).collect()
+    let l = drafitra_render::build(d, &Space::Paper("Layout1".into()), &drafitra_render::Options::default());
+    l.prims.iter().filter(|p| p.handle == drafitra_render::VIEWPORT_CONTENT).flat_map(|p| l.points(p).to_vec()).collect()
 }
 
 /// An L-shaped outline: 10..110 × 10..110 without the top-right quarter.
@@ -69,7 +69,7 @@ fn polygonal_viewport_clips_model_space() {
     assert!(pts.iter().any(|p| p.x > 100.0 && p.y < 60.0), "content in the lower right");
     // No rectangle border is drawn for a clipped viewport (its boundary draws itself).
     let d = s.doc().unwrap();
-    let l = cadcraft_render::build(d, &Space::Paper("Layout1".into()), &cadcraft_render::Options::default());
+    let l = drafitra_render::build(d, &Space::Paper("Layout1".into()), &drafitra_render::Options::default());
     assert!(l.prims.iter().all(|p| p.handle.hex() != vh));
     // MSPACE at a point in the notch finds no viewport; inside the L it does.
     assert!(s.execute("mspace", &json!({"at": [100, 100]})).is_err());

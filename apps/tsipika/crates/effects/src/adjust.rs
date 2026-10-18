@@ -4,7 +4,7 @@
 //! They recolour what an object paints with, non-destructively: its fills and strokes (solid
 //! colours and gradient stops), type, gradient meshes, embedded images and, on a group or layer,
 //! every member — through the colour visitor the Edit Colors commands use
-//! ([`vectorcraft_doc::recolor`]). Each colour keeps its colour model. An effect on one fill or
+//! ([`tsipika_doc::recolor`]). Each colour keeps its colour model. An effect on one fill or
 //! stroke recolours that paint only. [`adjust`] evaluates them, innermost first and each list in
 //! stack order; the renderer draws the result (caching recoloured copies of embedded images) and
 //! [`crate::bake_document`] writes it for export, recoloured images as new embedded images.
@@ -13,9 +13,9 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use vectorcraft_doc::color::{Color, Paint, keep_model};
-use vectorcraft_doc::recolor::{ColorVisitor, Reach, map_paint, recolor_node};
-use vectorcraft_doc::{Document, Effect, Node, NodeKind};
+use tsipika_doc::color::{Color, Paint, keep_model};
+use tsipika_doc::recolor::{ColorVisitor, Reach, map_paint, recolor_node};
+use tsipika_doc::{Document, Effect, Node, NodeKind};
 
 use crate::merged_params;
 use crate::raster::color_param;
@@ -433,8 +433,8 @@ pub fn adjust_in_document(d: &mut Document, n: &Node) -> Option<Node> {
 mod tests {
     use super::*;
     use serde_json::json;
-    use vectorcraft_doc::{Appearance, NodeId};
-    use vectorcraft_geom::{Rect, shapes};
+    use tsipika_doc::{Appearance, NodeId};
+    use tsipika_geom::{Rect, shapes};
 
     fn map(id: &str, params: Value) -> ColorMap {
         color_map(&[Effect { id: id.into(), params, visible: true }]).unwrap()
@@ -507,7 +507,7 @@ mod tests {
 
     #[test]
     fn adjust_recolours_the_points_of_a_freeform_gradient() {
-        use vectorcraft_doc::color::{Freeform, FreeformPoint, Gradient, GradientKind, GradientPaint};
+        use tsipika_doc::color::{Freeform, FreeformPoint, Gradient, GradientKind, GradientPaint};
         let mut gp = GradientPaint::new(Gradient { kind: GradientKind::Freeform, ..Gradient::default() });
         let pt = |x, c| FreeformPoint::new(kurbo::Point::new(x, 5.0), c);
         gp.set_freeform(Freeform { points: vec![pt(2.0, Color::rgb(1.0, 0.0, 0.0)), pt(8.0, Color::rgb(0.0, 0.0, 1.0))], ..Default::default() });

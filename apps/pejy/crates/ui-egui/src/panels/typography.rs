@@ -76,7 +76,7 @@ const SWITCH_SECTIONS: &[&[Switch]] = &[LIGATURES, ALTERNATES, FRACTION_AND_ORDI
 /// The character format's on/off features (`otf::TOGGLES`) no other section shows, so each one the
 /// character style dialog and IDML carry has a control here too.
 fn other_toggles() -> Vec<Switch> {
-    designcraft_doc::otf::TOGGLES
+    pejy_doc::otf::TOGGLES
         .iter()
         .filter(|(tag, ..)| !SWITCH_SECTIONS.iter().any(|section| section.iter().any(|(t, _)| t == tag)))
         .map(|(tag, label, _)| (*tag, *label))
@@ -316,7 +316,7 @@ mod tests {
 
     /// A Typography panel over "office" (all selected), its fonts installed before the first frame.
     fn harness() -> Harness<'static, DesignApp> {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [72, 72, 300, 200], "content": "text", "text": "office 1024", "caret": true})).unwrap();
         app.run("edit.selectAll", json!({})).unwrap();
@@ -347,7 +347,7 @@ mod tests {
 
     /// Every `OTFFigureStyle` the stories' IDML export writes is `expected`.
     fn assert_idml_figures(h: &Harness<'static, DesignApp>, expected: &str, why: &str) {
-        let idml = designcraft_idml::export_idml(&h.state().session.active().unwrap().doc);
+        let idml = pejy_idml::export_idml(&h.state().session.active().unwrap().doc);
         let mut z = zip::ZipArchive::new(std::io::Cursor::new(idml)).unwrap();
         let mut stories = String::new();
         for i in 0..z.len() {
@@ -364,7 +364,7 @@ mod tests {
     fn every_character_format_toggle_has_a_control() {
         let mut tags: Vec<&str> = SWITCH_SECTIONS.iter().flat_map(|s| s.iter().map(|(t, _)| *t)).collect();
         tags.extend(other_toggles().iter().map(|(t, _)| *t));
-        for (tag, ..) in designcraft_doc::otf::TOGGLES {
+        for (tag, ..) in pejy_doc::otf::TOGGLES {
             assert!(tags.contains(tag), "{tag} has no Typography panel control");
         }
         assert_eq!(tags.len(), tags.iter().collect::<std::collections::BTreeSet<_>>().len(), "a feature shown twice: {tags:?}");

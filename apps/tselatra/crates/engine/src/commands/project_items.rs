@@ -1,7 +1,7 @@
 //! Project panel item edits: select, rename, move into / out of folders, label and comment.
 //! Every edit is undoable.
 
-use effectcraft_project::{ItemId, Project};
+use tselatra_project::{ItemId, Project};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, str_p};
@@ -111,7 +111,7 @@ fn set_label(s: &mut Session, p: &Value) -> Result<Value> {
     let c = "project.setLabel";
     let ids = items_p(s, p, c)?;
     let lab = match p.get("label") {
-        Some(Value::Number(n)) => effectcraft_color::Label::ALL.get(n.as_u64().unwrap_or(0) as usize).copied(),
+        Some(Value::Number(n)) => tselatra_color::Label::ALL.get(n.as_u64().unwrap_or(0) as usize).copied(),
         Some(Value::String(name)) => s.prefs.label_from_name(name),
         _ => None,
     }
@@ -202,7 +202,7 @@ fn delete(s: &mut Session, p: &Value) -> Result<Value> {
                 continue;
             }
             if let Some(comp) = proj.comp_mut(cid) {
-                let gone: Vec<effectcraft_project::LayerId> =
+                let gone: Vec<tselatra_project::LayerId> =
                     comp.layers.iter().filter(|l| l.source.item().is_some_and(|i| doomed.contains(&i))).map(|l| l.id).collect();
                 comp.layers.retain(|l| !gone.contains(&l.id));
                 for l in &mut comp.layers {
@@ -237,11 +237,11 @@ fn duplicate(s: &mut Session, p: &Value) -> Result<Value> {
             }
             let name = proj.numbered_item_name(&it.name, |_| false);
             let mut kind = it.kind.clone();
-            if let effectcraft_project::ItemKind::Comp(comp) = &mut kind {
+            if let tselatra_project::ItemKind::Comp(comp) = &mut kind {
                 let comp = std::sync::Arc::make_mut(comp);
                 let mut map = std::collections::HashMap::new();
                 for l in &mut comp.layers {
-                    let new = effectcraft_project::LayerId(proj.alloc());
+                    let new = tselatra_project::LayerId(proj.alloc());
                     map.insert(l.id, new);
                     l.id = new;
                     let mut next = proj.next_id;

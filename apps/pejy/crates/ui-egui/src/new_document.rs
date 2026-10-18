@@ -3,10 +3,10 @@
 //! other. Every value lives in the dialog's fields, so the control channel sets them
 //! (`ui.dialog.set`) like a user would; `confirm` turns them into `file.new`.
 
-use designcraft_doc::Intent;
-use designcraft_doc::build::{NewDocument, PRESETS};
-use designcraft_geom::units::{PT_PER_MM, parse_measure};
-use designcraft_geom::{Unit, format_measure};
+use pejy_doc::Intent;
+use pejy_doc::build::{NewDocument, PRESETS};
+use pejy_geom::units::{PT_PER_MM, parse_measure};
+use pejy_geom::{Unit, format_measure};
 use egui::{Align, Align2, Color32, FontId, Layout, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::{Map, Value, json};
 
@@ -878,7 +878,7 @@ mod tests {
     use super::*;
 
     fn app() -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("app.newDocumentDialog", json!({})).unwrap();
         app
     }
@@ -1054,7 +1054,7 @@ mod tests {
     /// popup open.
     fn window_with_preset_popup() -> egui_kittest::Harness<'static, crate::test_window::Window> {
         use egui_kittest::kittest::Queryable as _;
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("app.newDocumentDialog", json!({})).unwrap();
         let mut h = crate::test_window::open(app, vec2(1440.0, 900.0));
         // The dialog takes a couple of frames to settle where it opens.
@@ -1123,8 +1123,8 @@ mod tests {
     }
 
     /// Documents A and B with A active, and the New Document window open over them.
-    fn two_documents() -> (DesignApp, egui::Context, designcraft_engine::DocState) {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+    fn two_documents() -> (DesignApp, egui::Context, pejy_engine::DocState) {
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"title": "A"})).unwrap();
         app.run("file.new", json!({"title": "B"})).unwrap();
         app.session.set_active(0);
@@ -1219,7 +1219,7 @@ mod tests {
 
     #[test]
     fn create_keeps_the_previewed_document_with_the_final_settings() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"title": "A"})).unwrap();
         app.run("app.newDocumentDialog", json!({})).unwrap();
         let ctx = context();

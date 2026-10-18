@@ -1,8 +1,8 @@
 //! Accepting a library update that changes only a paint style refreshes the layers linked to it.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::disallowed_methods)]
 
-use figcraft_doc::{NodeId, StyleKind};
-use figcraft_engine::Session;
+use endrika_doc::{NodeId, StyleKind};
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
@@ -30,10 +30,10 @@ impl Drop for Fixture {
 
 #[test]
 fn accepted_library_paint_reaches_linked_layer() {
-    let fixture = Fixture(std::env::temp_dir().join(format!("figcraft-style-accept-{}", std::process::id())));
+    let fixture = Fixture(std::env::temp_dir().join(format!("endrika-style-accept-{}", std::process::id())));
     let _ = std::fs::remove_dir_all(&fixture.0);
     std::fs::create_dir(&fixture.0).unwrap();
-    let path = fixture.0.join("library.figcraft");
+    let path = fixture.0.join("library.endrika");
     let mut publisher = Session::new();
     run(&mut publisher, "style.create", json!({"type":"paint","name":"Brand","value":"#0000ff"}));
     let publication = run(&mut publisher, "library.publish", json!({}));

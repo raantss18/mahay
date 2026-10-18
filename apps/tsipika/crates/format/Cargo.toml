@@ -1,15 +1,15 @@
 [package]
-name = "vectorcraft-format"
+name = "tsipika-format"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft native .vectorcraft format (versioned JSON, embedded images)"
+description = "Tsipika native .tsipika format (versioned JSON, embedded images)"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-doc = { workspace = true }
+tsipika-doc = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -21,6 +21,6 @@ flate2 = { workspace = true }
 rustix = { workspace = true, features = ["std", "fs"] }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 proptest = { workspace = true }
-vectorcraft-geom = { workspace = true }
+tsipika-geom = { workspace = true }

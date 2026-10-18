@@ -15,8 +15,8 @@
 //! - Artwork points (anchors and handles) follow the mesh through barycentric coordinates in
 //!   their rest triangle.
 
-use vectorcraft_geom::kurbo::ParamCurveNearest;
-use vectorcraft_geom::{BezPath, Point, Rect, Shape, Vec2};
+use tsipika_geom::kurbo::ParamCurveNearest;
+use tsipika_geom::{BezPath, Point, Rect, Shape, Vec2};
 
 /// Banded symmetric positive definite matrix (lower band stored row by row).
 #[derive(Clone, Debug)]
@@ -376,12 +376,12 @@ fn closed_winding(o: &BezPath, p: Point) -> i32 {
     };
     for el in o.elements() {
         match el {
-            vectorcraft_geom::PathEl::MoveTo(_) => {
+            tsipika_geom::PathEl::MoveTo(_) => {
                 flush(&mut cur, closed, &mut total);
                 closed = false;
                 cur.push(*el);
             }
-            vectorcraft_geom::PathEl::ClosePath => {
+            tsipika_geom::PathEl::ClosePath => {
                 closed = true;
                 cur.push(*el);
             }
@@ -638,7 +638,7 @@ fn spread_pins(mesh: &Mesh, out: &mut Vec<Point>, count: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_geom::shapes;
+    use tsipika_geom::shapes;
 
     #[test]
     fn band_cholesky_solves_spd_systems() {
@@ -783,13 +783,13 @@ mod tests {
         xs.sort_by(f64::total_cmp);
         assert!(xs[0] < 25.0 && xs[1] > 175.0, "{p:?}");
         // A five-pointed star: the centre and its five tips.
-        let star = vectorcraft_geom::shapes::star(Point::new(100.0, 100.0), 100.0, 35.0, 5, 0.0).to_bezpath();
+        let star = tsipika_geom::shapes::star(Point::new(100.0, 100.0), 100.0, 35.0, 5, 0.0).to_bezpath();
         let sm = Mesh::build(std::slice::from_ref(&star), star.bounding_box(), MeshOptions { resolution: 30, expand: 0.0 });
         let p = default_pins(&sm);
         assert_eq!(p.len(), 6, "{p:?}");
         assert!(p[1..].iter().all(|q| q.distance(Point::new(100.0, 100.0)) > 55.0), "{p:?}");
         // A disc has no limbs: the centre, topped up to three.
-        let disc = vectorcraft_geom::kurbo::Circle::new((50.0, 50.0), 50.0).to_path(0.1);
+        let disc = tsipika_geom::kurbo::Circle::new((50.0, 50.0), 50.0).to_path(0.1);
         let dm = Mesh::build(std::slice::from_ref(&disc), disc.bounding_box(), MeshOptions::default());
         assert_eq!(default_pins(&dm).len(), 3);
         // A point with a wide Expand stays a small grid.

@@ -1,8 +1,8 @@
-//! FigCraft text: fonts, shaping and layout.
+//! Endrika text: fonts, shaping and layout.
 //!
-//! Fonts come from the optional craft-fonts build input (Inter and friends, embedded at build time)
+//! Fonts come from the optional mahay-fonts build input (Inter and friends, embedded at build time)
 //! and, on desktop, from the system's font folders. [`layout`] turns a text node's
-//! [`TextData`](figcraft_doc::TextData) into positioned glyphs, lines and decorations; the renderer
+//! [`TextData`](endrika_doc::TextData) into positioned glyphs, lines and decorations; the renderer
 //! fills [`Glyph::path`]s and the editor uses [`TextLayout::caret`] / [`TextLayout::hit`].
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -16,17 +16,17 @@ mod onpath;
 pub use breaks::grapheme_step;
 pub use color::{ColorBitmap, ColorInk, ColorLayer};
 pub use fontdb::{
-    Axis, CRAFT_FONTS, Coords, Face, FontDb, NamedInstance, axis_label, db, face_with_char, family_names, family_styles, find_face, has_family,
+    Axis, MAHAY_FONTS, Coords, Face, FontDb, NamedInstance, axis_label, db, face_with_char, family_names, family_styles, find_face, has_family,
     installed_fonts_known, no_coords, scan_system_fonts, scan_system_fonts_on_demand, system_fonts_scanned,
 };
 pub use layout::{Decoration, Glyph, Line, TextLayout, layout};
 pub use onpath::OnPath;
 
-use figcraft_doc::{Node, NodeKind, TextAlignV, TextAutoResize};
+use endrika_doc::{Node, NodeKind, TextAlignV, TextAutoResize};
 
 /// One cached layout: the exact text and box it was made for.
 struct Cached {
-    text: figcraft_doc::TextData,
+    text: endrika_doc::TextData,
     w: Option<u64>,
     h: Option<u64>,
     layout: std::sync::Arc<TextLayout>,
@@ -65,7 +65,7 @@ pub fn layout_generation() -> u64 {
 }
 
 /// The parts of a text that usually tell texts apart, hashed cheaply (no formatting).
-fn fingerprint(t: &figcraft_doc::TextData, w: Option<u64>, h: Option<u64>) -> u64 {
+fn fingerprint(t: &endrika_doc::TextData, w: Option<u64>, h: Option<u64>) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hs = std::collections::hash_map::DefaultHasher::new();
     t.characters.hash(&mut hs);
@@ -78,7 +78,7 @@ fn fingerprint(t: &figcraft_doc::TextData, w: Option<u64>, h: Option<u64>) -> u6
 }
 
 /// Layout with a process-wide cache keyed by the text content/style and box size.
-pub fn layout_cached(t: &figcraft_doc::TextData, w: Option<f64>, h: Option<f64>) -> std::sync::Arc<TextLayout> {
+pub fn layout_cached(t: &endrika_doc::TextData, w: Option<f64>, h: Option<f64>) -> std::sync::Arc<TextLayout> {
     let (wb, hb) = (w.map(f64::to_bits), h.map(f64::to_bits));
     let key = fingerprint(t, wb, hb);
     let hit = |c: &Cached| c.w == wb && c.h == hb && c.text == *t;

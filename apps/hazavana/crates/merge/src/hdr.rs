@@ -24,8 +24,8 @@
 //!    are dilated and feathered (Gaussian), upsampled, and remove the frame's weight. Their union
 //!    is the deghost overlay.
 
-use lightcraft_raster::blur::gaussian;
-use lightcraft_raster::{Plane, Rgb32f};
+use hazavana_raster::blur::gaussian;
+use hazavana_raster::{Plane, Rgb32f};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -84,11 +84,11 @@ pub struct HdrResult {
     pub alignments: Vec<Alignment>,
     pub color: FrameColor,
     pub raw: bool,
-    pub orientation: lightcraft_geom::Orientation,
-    pub metadata: lightcraft_meta::Metadata,
+    pub orientation: hazavana_geom::Orientation,
+    pub metadata: hazavana_meta::Metadata,
     pub baseline_exposure: f64,
     /// The reference frame's lens corrections, for `radiance` ([`Frame::lens`]).
-    pub lens: Vec<lightcraft_raw::Opcode>,
+    pub lens: Vec<hazavana_raw::Opcode>,
     /// The inputs' as-shot white-balance multipliers they agree on ([`crate::frame::consensus_multipliers`]), already in
     /// `color`; kept so merged brackets stitched into a panorama can vote as frames of their own.
     pub wb_multipliers: Option<[f32; 3]>,

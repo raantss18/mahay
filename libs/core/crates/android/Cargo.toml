@@ -13,10 +13,12 @@ repository.workspace = true
 
 [features]
 # `EguiBridge`: soft keyboard and clipboard for an eframe app.
-egui = ["dep:egui"]
+egui = ["dep:egui", "dep:mahay-about", "dep:mahay-update"]
 
 [target.'cfg(target_os = "android")'.dependencies]
 egui = { workspace = true, optional = true }
+mahay-about = { workspace = true, optional = true }
+mahay-update = { workspace = true, optional = true }
 android-activity = { version = "0.6", features = ["game-activity"] }
 android_logger = { version = "0.15", default-features = false }
 jni = "0.21"

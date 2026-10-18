@@ -35,7 +35,7 @@ const MAX_UNREAD: usize = 1000;
 const UNREAD_SHOWN: usize = 80;
 
 /// What `shortcutSet.read` says about a file that isn't a text shortcut set.
-pub const NOT_READABLE: &str = "This shortcut file is in a form VectorCraft can't read.";
+pub const NOT_READABLE: &str = "This shortcut file is in a form Tsipika can't read.";
 
 /// The extensions of shortcut sets other apps save (File › Open lists them).
 pub const EXTS: &[&str] = &["kys"];
@@ -330,7 +330,7 @@ fn decode_head(b64: &str) -> Option<Vec<u8>> {
             kept > chars
         })
         .unwrap_or(b64.len());
-    vectorcraft_format::base64_decode(b64.get(..end)?)
+    tsipika_format::base64_decode(b64.get(..end)?)
 }
 
 fn read(s: &mut Session, p: &Value) -> Result<Value> {

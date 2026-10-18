@@ -1,4 +1,4 @@
-//! The EffectCraft compositor (CPU reference path).
+//! The Tselatra compositor (CPU reference path).
 //!
 //! `Renderer::comp_frame` renders a composition at a time:
 //! bottom-to-top over visible layers → **source** (solid, footage, text, shapes, precomp) →
@@ -27,13 +27,13 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 pub use auto::{AutoKey, AutoPick};
 pub use cache::{CacheStats, LayerCache, LayerStore, PrefetchStore};
-use effectcraft_color::BlendMode;
-use effectcraft_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params};
-use effectcraft_geom::{Mat3, Mat4, vec2};
-use effectcraft_project::{Comp, Footage, FootageKind, FrameBlend, GroupKind, ItemId, ItemKind, Layer, LayerSource, MatteKind, Project, Quality, Sampling};
-pub use effectcraft_raster::Image;
-use effectcraft_raster::{WarpOpts, composite_warp};
-use effectcraft_time::{FrameRate, TICKS_PER_SECOND, Tick};
+use tselatra_color::BlendMode;
+use tselatra_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params};
+use tselatra_geom::{Mat3, Mat4, vec2};
+use tselatra_project::{Comp, Footage, FootageKind, FrameBlend, GroupKind, ItemId, ItemKind, Layer, LayerSource, MatteKind, Project, Quality, Sampling};
+pub use tselatra_raster::Image;
+use tselatra_raster::{WarpOpts, composite_warp};
+use tselatra_time::{FrameRate, TICKS_PER_SECOND, Tick};
 pub use eval::{EvalCtx, ExprHost, effect_bounds, source_size};
 use rayon::prelude::*;
 
@@ -58,8 +58,8 @@ pub trait FootageSource: Send + Sync {
     fn frame(&self, item: ItemId, footage: &Footage, t: Tick) -> Option<Arc<Image>>;
     /// [`FootageSource::frame`] for a render that shows it at `width` × `height`, at most half its
     /// size: either that frame or, when the source can make it more cheaply than the whole frame
-    /// (movies, see `effectcraft-media`), the frame already resampled to that size as
-    /// [`effectcraft_raster::resample`] would.
+    /// (movies, see `tselatra-media`), the frame already resampled to that size as
+    /// [`tselatra_raster::resample`] would.
     fn frame_at_size(&self, item: ItemId, footage: &Footage, t: Tick, _width: u32, _height: u32) -> Option<Arc<Image>> {
         self.frame(item, footage, t)
     }
@@ -82,11 +82,11 @@ pub trait FootageSource: Send + Sync {
     /// Auxiliary 3D channels of `item` at source time `t` (multi-layer OpenEXR: depth, IDs,
     /// Cryptomatte, any named channel), with `scale` relative to the file's pixels. `None` when
     /// the footage has none.
-    fn aux(&self, _item: ItemId, _footage: &Footage, _t: Tick) -> Option<Arc<effectcraft_raster::AuxChannels>> {
+    fn aux(&self, _item: ItemId, _footage: &Footage, _t: Tick) -> Option<Arc<tselatra_raster::AuxChannels>> {
         None
     }
-    /// The parsed 3D model of a [`effectcraft_project::FootageKind::Model`] item (Advanced 3D).
-    fn model(&self, _item: ItemId, _footage: &Footage) -> Option<Arc<effectcraft_model::Model>> {
+    /// The parsed 3D model of a [`tselatra_project::FootageKind::Model`] item (Advanced 3D).
+    fn model(&self, _item: ItemId, _footage: &Footage) -> Option<Arc<tselatra_model::Model>> {
         None
     }
     /// Set the decoded-frame cache budget in bytes (Settings ▸ Memory & CPU); sources without
@@ -162,10 +162,10 @@ impl FootageSource for CancellableFootage<'_> {
     fn audio(&self, item: ItemId, footage: &Footage, t: Tick, frames: usize, rate: u32) -> Option<Vec<f32>> {
         self.inner.audio(item, footage, t, frames, rate)
     }
-    fn aux(&self, item: ItemId, footage: &Footage, t: Tick) -> Option<Arc<effectcraft_raster::AuxChannels>> {
+    fn aux(&self, item: ItemId, footage: &Footage, t: Tick) -> Option<Arc<tselatra_raster::AuxChannels>> {
         self.inner.aux(item, footage, t)
     }
-    fn model(&self, item: ItemId, footage: &Footage) -> Option<Arc<effectcraft_model::Model>> {
+    fn model(&self, item: ItemId, footage: &Footage) -> Option<Arc<tselatra_model::Model>> {
         self.inner.model(item, footage)
     }
     fn set_cache_budget(&self, bytes: usize) {
@@ -205,7 +205,7 @@ pub fn is_vector_footage(f: &Footage) -> bool {
     matches!(f.codec.as_str(), "SVG" | "PDF" | "AI" | "EPS")
 }
 
-/// Layer parameters and audio for effects (see [`effectcraft_effects::EffectHost`]). What it
+/// Layer parameters and audio for effects (see [`tselatra_effects::EffectHost`]). What it
 /// hands out is in effect space (see [`effect_bounds`]): the other layer's for its pixels, the
 /// running layer's for its own frames and the comp scene.
 struct FxHost<'r, 'a, 'c> {
@@ -236,7 +236,7 @@ impl FxHost<'_, '_, '_> {
 /// [`EffectHost::comp_scene`]): the comp camera's view of the layer (as if 3D at its transform),
 /// brought back into the layer's own pixel grid through the inverse of how the layer itself
 /// composites.
-pub(crate) fn comp_scene(ctx: &EvalCtx, layer: &Layer) -> Option<effectcraft_effects::CompScene> {
+pub(crate) fn comp_scene(ctx: &EvalCtx, layer: &Layer) -> Option<tselatra_effects::CompScene> {
     let world = ctx.world_matrix(layer);
     let (cam, _, _) = ctx.camera();
     let p = (cam * world).0;
@@ -250,14 +250,14 @@ pub(crate) fn comp_scene(ctx: &EvalCtx, layer: &Layer) -> Option<effectcraft_eff
         let dir = inv.apply_vec(l.dir);
         let len = (dir.x * dir.x + dir.y * dir.y + dir.z * dir.z).sqrt().max(1e-12);
         let kind = match l.kind {
-            effectcraft_project::LightKind::Parallel => 0,
-            effectcraft_project::LightKind::Ambient => 2,
+            tselatra_project::LightKind::Parallel => 0,
+            tselatra_project::LightKind::Ambient => 2,
             _ => 1,
         };
-        Some(effectcraft_effects::CompLight { pos: [pos.x, pos.y, pos.z], dir: [dir.x / len, dir.y / len, dir.z / len], color: l.color, kind })
+        Some(tselatra_effects::CompLight { pos: [pos.x, pos.y, pos.z], dir: [dir.x / len, dir.y / len, dir.z / len], color: l.color, kind })
     });
     let camera_layer = ctx.comp.active_camera(ctx.time).is_some();
-    Some(effectcraft_effects::CompScene { camera: Some(camera), camera_layer, light })
+    Some(tselatra_effects::CompScene { camera: Some(camera), camera_layer, light })
 }
 
 /// Nesting limit for effects that render layers (other layers, other times).
@@ -268,11 +268,11 @@ impl EffectHost for FxHost<'_, '_, '_> {
         self.original
     }
 
-    fn particles(&self) -> Option<&dyn effectcraft_effects::psim::ParticleSim> {
+    fn particles(&self) -> Option<&dyn tselatra_effects::psim::ParticleSim> {
         self.r.active_accel().and_then(|a| a.particles())
     }
     fn layer(&self, id: u64, masks_and_effects: bool) -> Option<LayerPixels> {
-        let other = self.ctx.layer(effectcraft_project::LayerId(id))?;
+        let other = self.ctx.layer(tselatra_project::LayerId(id))?;
         if (other.id == self.layer.id && masks_and_effects) || self.r.depth > MAX_FX_DEPTH {
             return None;
         }
@@ -283,7 +283,7 @@ impl EffectHost for FxHost<'_, '_, '_> {
     }
 
     fn layer_masks(&self, id: u64) -> Option<LayerPixels> {
-        let other = self.ctx.layer(effectcraft_project::LayerId(id))?;
+        let other = self.ctx.layer(tselatra_project::LayerId(id))?;
         if self.r.depth > MAX_FX_DEPTH {
             return None;
         }
@@ -293,7 +293,7 @@ impl EffectHost for FxHost<'_, '_, '_> {
     }
 
     fn audio(&self, id: u64, start: f64, frames: usize, rate: u32) -> Option<Vec<f32>> {
-        let other = self.ctx.layer(effectcraft_project::LayerId(id))?;
+        let other = self.ctx.layer(tselatra_project::LayerId(id))?;
         let LayerSource::Footage { item } = &other.source else { return None };
         let ItemKind::Footage(f) = &self.r.project.item(*item)?.kind else { return None };
         if !f.has_audio {
@@ -313,7 +313,7 @@ impl EffectHost for FxHost<'_, '_, '_> {
         sub.layer_input(&self.ctx.at(t), self.layer, n).map(|b| (*b).clone())
     }
 
-    fn aux(&self) -> Option<Arc<effectcraft_raster::AuxChannels>> {
+    fn aux(&self) -> Option<Arc<tselatra_raster::AuxChannels>> {
         match &self.layer.source {
             LayerSource::Footage { item } => {
                 let ItemKind::Footage(f) = &self.r.project.item(*item)?.kind else { return None };
@@ -339,15 +339,15 @@ impl EffectHost for FxHost<'_, '_, '_> {
     fn params_at(&self, layer_time: f64) -> Option<Params> {
         let g = self.layer.effects()?.groups().nth(self.index)?;
         let ctx = self.ctx.at(self.layer.comp_time(Tick::from_seconds_f64(layer_time)));
-        Some(effectcraft_effects::flatten_params(g, &mut |pr| ctx.value(self.layer, pr)))
+        Some(tselatra_effects::flatten_params(g, &mut |pr| ctx.value(self.layer, pr)))
     }
 
-    fn comp_scene(&self) -> Option<effectcraft_effects::CompScene> {
+    fn comp_scene(&self) -> Option<tselatra_effects::CompScene> {
         Some(comp_scene(self.ctx, self.layer)?.rebased(self.origin))
     }
 
     fn layer_at(&self, id: u64, comp_time: f64, masks_and_effects: bool) -> Option<LayerPixels> {
-        let other = self.ctx.layer(effectcraft_project::LayerId(id))?;
+        let other = self.ctx.layer(tselatra_project::LayerId(id))?;
         if (other.id == self.layer.id && masks_and_effects) || !comp_time.is_finite() || self.r.depth > MAX_FX_DEPTH {
             return None;
         }
@@ -365,8 +365,8 @@ impl EffectHost for FxHost<'_, '_, '_> {
 }
 
 /// The Essential Properties overrides of a precomp layer, evaluated at the context time.
-pub fn essential_overrides(ctx: &EvalCtx, layer: &Layer) -> Vec<effectcraft_project::essential::Override> {
-    use effectcraft_project::essential;
+pub fn essential_overrides(ctx: &EvalCtx, layer: &Layer) -> Vec<tselatra_project::essential::Override> {
+    use tselatra_project::essential;
     let over = essential::overridden(layer);
     let Some(g) = essential::group(layer).filter(|_| !over.is_empty()) else { return vec![] };
     let mut out = vec![];
@@ -415,13 +415,13 @@ impl Backend {
 
 /// One effect of a GPU effect chain (see [`Accelerator::effects`]).
 pub struct FxStep<'x> {
-    pub spec: &'static effectcraft_effects::EffectSpec,
+    pub spec: &'static tselatra_effects::EffectSpec,
     pub ctx: EffectCtx<'x>,
 }
 
 /// A GPU (or other hardware) backend for the compositor. The CPU [`Renderer`] stays the
 /// reference: an accelerator renders what it supports and returns `None` for the rest, which
-/// then runs on the CPU. Implemented by `effectcraft-gpu`.
+/// then runs on the CPU. Implemented by `tselatra-gpu`.
 pub trait Accelerator: Send + Sync {
     /// Adapter / backend name for status readouts ("Apple M2 (Metal)").
     fn name(&self) -> String;
@@ -447,7 +447,7 @@ pub trait Accelerator: Send + Sync {
     }
     /// A particle simulation backend (GPU particles) for the stepped particle effects, with
     /// the CPU simulation's semantics. `None` = they simulate on the CPU.
-    fn particles(&self) -> Option<&dyn effectcraft_effects::psim::ParticleSim> {
+    fn particles(&self) -> Option<&dyn tselatra_effects::psim::ParticleSim> {
         None
     }
     /// Timing history [`Backend::Auto`] uses to send each comp's top-level frames to the
@@ -496,7 +496,7 @@ pub trait FxTarget {
     /// Run one CPU effect: `f` maps the buffer.
     fn cpu(&mut self, f: &mut dyn FnMut(Buf) -> Buf);
     /// Grow the buffer to cover its whole layer rectangle (`size` layer pixels from its own
-    /// corner, the `layer_size` handed to effects), as [`effectcraft_effects::Buf::cover`].
+    /// corner, the `layer_size` handed to effects), as [`tselatra_effects::Buf::cover`].
     /// Authored buffers (text, shapes) only span their painted content; this gives the stack
     /// the room a sized source's buffer already has (#659).
     fn cover(&mut self, size: [f64; 2]) {
@@ -552,7 +552,7 @@ pub struct RenderOpts {
     /// just this rectangle, and only its pixels are composited.
     pub roi: Option<[f64; 4]>,
     /// Which proxies stand in for footage and compositions (Render Settings ▸ Proxy Use).
-    pub proxy: effectcraft_project::render_queue::ProxyUse,
+    pub proxy: tselatra_project::render_queue::ProxyUse,
     /// Switches Affect Nested Comps (Settings ▸ General): a precomp layer's Quality and Motion
     /// Blur switches also limit the layers of the nested comp (Draft/Wireframe or motion blur off
     /// propagate down; they never raise a nested layer's own setting).
@@ -580,7 +580,7 @@ impl Default for RenderOpts {
             backend: Backend::Cpu,
             nested_switches: true,
             draft_shadows: true,
-            proxy: effectcraft_project::render_queue::ProxyUse::CurrentSettings,
+            proxy: tselatra_project::render_queue::ProxyUse::CurrentSettings,
         }
     }
 }
@@ -811,7 +811,7 @@ impl<'a> Renderer<'a> {
             return None;
         }
         // Instance overrides (Essential Properties) need the nested comp rendered on its own.
-        if !effectcraft_project::essential::overridden(layer).is_empty() {
+        if !tselatra_project::essential::overridden(layer).is_empty() {
             return None;
         }
         Some(*item)
@@ -1008,7 +1008,7 @@ impl<'a> Renderer<'a> {
         if self.depth == 0
             && let Some(r) = self.opts.roi
             && comp.has_3d()
-            && (roi_inside(r, comp.width, comp.height) || comp.renderer == effectcraft_project::Renderer::Advanced3D)
+            && (roi_inside(r, comp.width, comp.height) || comp.renderer == tselatra_project::Renderer::Advanced3D)
         {
             let full = Renderer { opts: RenderOpts { roi: None, ..self.opts }, ..*self }.comp_frame(comp_id, t);
             let (x0, y0) = ((r[0] * s).round() as i64, (r[1] * s).round() as i64);
@@ -1090,9 +1090,9 @@ impl<'a> Renderer<'a> {
     }
 
     /// Evaluate an effect instance's parameters.
-    fn effect_params(&self, ctx: &EvalCtx, layer: &Layer, g: &effectcraft_project::PropGroup) -> Params {
+    fn effect_params(&self, ctx: &EvalCtx, layer: &Layer, g: &tselatra_project::PropGroup) -> Params {
         // Nested groups (Paint strokes, Puppet meshes and pins) are flattened too.
-        effectcraft_effects::flatten_params(g, &mut |pr| ctx.value(layer, pr))
+        tselatra_effects::flatten_params(g, &mut |pr| ctx.value(layer, pr))
     }
 
     fn apply_effects(&self, ctx: &EvalCtx, layer: &Layer, buf: Buf, adjustment: bool) -> Buf {
@@ -1155,7 +1155,7 @@ impl<'a> Renderer<'a> {
         // of losing them at its edge. Only when something will actually run, and not for an
         // adjustment layer, whose buffer is the comp below and already spans it.
         if !adjustment
-            && fx.groups().any(|g| g.enabled && matches!(&g.kind, GroupKind::Effect { effect } if effectcraft_effects::find(effect).is_some_and(|s| !effectcraft_effects::audio_fx::is_audio_effect(s.id)))) {
+            && fx.groups().any(|g| g.enabled && matches!(&g.kind, GroupKind::Effect { effect } if tselatra_effects::find(effect).is_some_and(|s| !tselatra_effects::audio_fx::is_audio_effect(s.id)))) {
             target.cover(layer_size);
         }
         let mut mask_shapes = masks::shapes(ctx, layer);
@@ -1187,16 +1187,16 @@ impl<'a> Renderer<'a> {
             shutter: self.mb_on(ctx, layer).then_some((ctx.comp.shutter_angle, ctx.comp.shutter_phase, ctx.comp.motion_blur_samples)),
         };
         // Video effects in stack order (index, group, spec); disabled and audio effects skipped.
-        let stack: Vec<(usize, &effectcraft_project::PropGroup, &'static effectcraft_effects::EffectSpec)> = fx
+        let stack: Vec<(usize, &tselatra_project::PropGroup, &'static tselatra_effects::EffectSpec)> = fx
             .groups()
             .enumerate()
             .take_while(|(i, _)| *i < limit)
             .filter(|(_, g)| g.enabled)
             .filter_map(|(i, g)| match &g.kind {
-                GroupKind::Effect { effect } => effectcraft_effects::find(effect).map(|s| (i, g, s)),
+                GroupKind::Effect { effect } => tselatra_effects::find(effect).map(|s| (i, g, s)),
                 _ => None,
             })
-            .filter(|(_, _, s)| !effectcraft_effects::audio_fx::is_audio_effect(s.id))
+            .filter(|(_, _, s)| !tselatra_effects::audio_fx::is_audio_effect(s.id))
             .collect();
         let accel = self.active_accel();
         let mut k = 0;
@@ -1243,7 +1243,7 @@ impl<'a> Renderer<'a> {
             let ectx = EffectCtx { params: &params, time: lt.seconds(), layer_size, seed: g.uid as u32, adjustment, env };
             let t0 = web_time::Instant::now();
             target.cpu(&mut |buf| {
-                let mut buf = effectcraft_effects::apply(spec, &ectx, buf);
+                let mut buf = tselatra_effects::apply(spec, &ectx, buf);
                 // 8/16 bpc effects write integer pixels.
                 self.pipe.quantize(&mut buf.img);
                 buf
@@ -1291,7 +1291,7 @@ impl<'a> Renderer<'a> {
                 // Essential Properties overrides render the nested comp with this instance's
                 // values.
                 let ov = essential_overrides(ctx, layer);
-                let tmp = if ov.is_empty() { None } else { effectcraft_project::essential::with_overrides(self.project, *item, &ov) };
+                let tmp = if ov.is_empty() { None } else { tselatra_project::essential::with_overrides(self.project, *item, &ov) };
                 // Preserve resolution when nested: drawn at full size even when this comp renders
                 // smaller (the buffer's scale places it).
                 let full = s < 1.0 && self.project.comp(*item).is_some_and(|nc| nc.preserve_resolution);
@@ -1363,7 +1363,7 @@ impl<'a> Renderer<'a> {
         let mut buf = match self.reduced_size(w, h) {
             // The source resampled it already (`FootageSource::frame_at_size`).
             Some(size) if (img.width, img.height) == size => Buf { img: img.clone(), offset: [0.0; 2], scale: s },
-            Some((rw, rh)) if k <= 1.0 + 1e-9 => Buf { img: effectcraft_raster::resample(img, rw, rh), offset: [0.0; 2], scale: s },
+            Some((rw, rh)) if k <= 1.0 + 1e-9 => Buf { img: tselatra_raster::resample(img, rw, rh), offset: [0.0; 2], scale: s },
             _ => Buf { img: img.clone(), offset: [0.0; 2], scale: 1.0 / k },
         };
         if let Some(c) = self.pipe.media_in(f) {
@@ -1393,11 +1393,11 @@ impl<'a> Renderer<'a> {
     /// `size`: a plain frame may come resampled to it ([`FootageSource::frame_at_size`]).
     fn footage_frame(&self, ctx: &EvalCtx, layer: &Layer, item: ItemId, f: &Footage, t: Tick, size: Option<(u32, u32)>) -> Option<Arc<Image>> {
         // Interpret Footage ▸ Separate Fields: each field is a frame at twice the rate.
-        if f.fields != effectcraft_project::FieldOrder::Off && matches!(f.kind, FootageKind::Video | FootageKind::Sequence) {
+        if f.fields != tselatra_project::FieldOrder::Off && matches!(f.kind, FootageKind::Video | FootageKind::Sequence) {
             let field_rate = FrameRate::new(f.frame_rate.num * 2, f.frame_rate.den);
             let i = field_rate.frame_at(t).max(0);
             let img = self.footage.frame_with(item, f, f.frame_rate.tick_of(i / 2), None, self.pipe.float_curve(f))?;
-            let dominant_upper = f.fields == effectcraft_project::FieldOrder::UpperFirst;
+            let dominant_upper = f.fields == tselatra_project::FieldOrder::UpperFirst;
             // Upper field = even lines (0, 2, …).
             let parity = if (i % 2 == 0) == dominant_upper { 0 } else { 1 };
             return Some(Arc::new(interpret_pixels(&field_frame(&img, parity), f, self.pipe.linear_footage_space(f))));
@@ -1604,16 +1604,16 @@ impl<'a> Renderer<'a> {
         StyledLayer { passes, body, content, ..st }
     }
 
-    fn sampling(&self, layer: &Layer) -> effectcraft_raster::Sampling {
+    fn sampling(&self, layer: &Layer) -> tselatra_raster::Sampling {
         if self.quality(layer) == Quality::Draft {
             // Draft quality: no interpolation (nearest neighbour), as After Effects' Draft.
-            effectcraft_raster::Sampling::Nearest
+            tselatra_raster::Sampling::Nearest
         } else if self.opts.draft {
-            effectcraft_raster::Sampling::Bilinear
+            tselatra_raster::Sampling::Bilinear
         } else if layer.switches.sampling == Sampling::Bicubic {
-            effectcraft_raster::Sampling::Bicubic
+            tselatra_raster::Sampling::Bicubic
         } else {
-            effectcraft_raster::Sampling::Bilinear
+            tselatra_raster::Sampling::Bilinear
         }
     }
 
@@ -1750,7 +1750,7 @@ impl<'a> Renderer<'a> {
         let k = 1.0 / bufs.len() as f32;
         for b in &bufs {
             let m = Mat3::translate(vec2(off[0] - b.offset[0], off[1] - b.offset[1]));
-            effectcraft_raster::accumulate_warp(&mut acc, &b.img, &m, effectcraft_raster::Sampling::Bilinear, k);
+            tselatra_raster::accumulate_warp(&mut acc, &b.img, &m, tselatra_raster::Sampling::Bilinear, k);
         }
         Some(Buf { img: acc, offset: off, scale })
     }
@@ -1805,7 +1805,7 @@ impl<'a> Renderer<'a> {
         let (w, h) = (buf.img.width as f64, buf.img.height as f64);
         let corners = [(0.0, 0.0), (w, 0.0), (0.0, h), (w, h), (w * 0.5, h * 0.5)];
         const PROBES: usize = 8;
-        let mut prev: Option<Vec<effectcraft_geom::Vec2>> = None;
+        let mut prev: Option<Vec<tselatra_geom::Vec2>> = None;
         let mut travel = vec![0.0f64; corners.len()];
         for i in 0..PROBES {
             let m = self.buf_matrix_at(ctx, layer, buf, sh.offset(i, PROBES));
@@ -1884,7 +1884,7 @@ impl<'a> Renderer<'a> {
         let mut acc = Image::new(target.width, target.height);
         let k = 1.0 / pl.matrices.len() as f32;
         for m in &pl.matrices {
-            effectcraft_raster::accumulate_warp(&mut acc, &buf.img, m, opts.sampling, k);
+            tselatra_raster::accumulate_warp(&mut acc, &buf.img, m, opts.sampling, k);
         }
         target.blend_from(&acc, mode, opacity, pl.seed);
     }
@@ -2017,8 +2017,8 @@ impl<'a> Renderer<'a> {
                 let k = match kind {
                     MatteKind::Alpha => q[3],
                     MatteKind::AlphaInverted => 1.0 - q[3],
-                    MatteKind::Luma => effectcraft_color::luminance(q[0], q[1], q[2]),
-                    MatteKind::LumaInverted => 1.0 - effectcraft_color::luminance(q[0], q[1], q[2]),
+                    MatteKind::Luma => tselatra_color::luminance(q[0], q[1], q[2]),
+                    MatteKind::LumaInverted => 1.0 - tselatra_color::luminance(q[0], q[1], q[2]),
                 }
                 .clamp(0.0, 1.0);
                 for c in p.iter_mut() {
@@ -2078,12 +2078,12 @@ pub struct StyledLayer {
 pub struct Placement {
     /// Buffer pixel → output pixel; several = motion-blur sub-samples (equal weights).
     pub matrices: Vec<Mat3>,
-    pub sampling: effectcraft_raster::Sampling,
+    pub sampling: tselatra_raster::Sampling,
     /// Dissolve noise seed.
     pub seed: u32,
 }
 
-/// Hooks for accelerated compositors (`effectcraft-gpu`): the pieces of the CPU walk they reuse
+/// Hooks for accelerated compositors (`tselatra-gpu`): the pieces of the CPU walk they reuse
 /// or fall back to. The CPU compositor itself is [`Renderer::comp_frame_cpu`].
 impl<'a> Renderer<'a> {
     /// The project's colour pipeline.
@@ -2098,7 +2098,7 @@ impl<'a> Renderer<'a> {
 
     /// The auxiliary 3D channels of comp `comp_id` at comp time `t` (depth, layer IDs, normals,
     /// UVs, Cryptomatte; see `three_d::compose::aux_pass`), at the renderer's output scale.
-    pub fn comp_aux(&self, comp_id: ItemId, t: Tick) -> Option<effectcraft_raster::AuxChannels> {
+    pub fn comp_aux(&self, comp_id: ItemId, t: Tick) -> Option<tselatra_raster::AuxChannels> {
         let ctx = self.eval_ctx(comp_id, t)?;
         Some(three_d::compose::aux_pass(self, &ctx))
     }
@@ -2289,7 +2289,7 @@ pub fn field_frame(img: &Image, parity: usize) -> Image {
 
 /// Interpret Footage ▸ Invert Alpha and Interpret As Linear Light on decoded (premultiplied)
 /// pixels; linear light is encoded in `space` ([`color::Pipe::linear_footage_space`]).
-pub fn interpret_pixels(img: &Image, f: &Footage, space: effectcraft_color::ColorSpace) -> Image {
+pub fn interpret_pixels(img: &Image, f: &Footage, space: tselatra_color::ColorSpace) -> Image {
     let linear = f.linear_light_applies();
     if !f.invert_alpha && !linear {
         return img.clone();
@@ -2325,8 +2325,8 @@ pub fn frame_position(t: Tick, rate: FrameRate) -> (i64, f64) {
 /// motion-compensated interpolation (Pixel Motion).
 pub fn blend_frames(mode: FrameBlend, a: &Image, b: &Image, w: f32) -> Image {
     match mode {
-        FrameBlend::PixelMotion => effectcraft_raster::flow::interpolate(a, b, w),
-        _ => effectcraft_raster::flow::mix(a, b, w),
+        FrameBlend::PixelMotion => tselatra_raster::flow::interpolate(a, b, w),
+        _ => tselatra_raster::flow::mix(a, b, w),
     }
 }
 
@@ -2381,12 +2381,12 @@ mod tests_styles;
 /// Layer-space bounds `[x0, y0, x1, y1]` of a layer's content at the context time (source size
 /// for solids/footage/precomps, glyph bounds for text, painted bounds for shapes). Used for viewer
 /// handles and hit testing.
-pub fn content_bounds(ctx: &EvalCtx, layer: &effectcraft_project::Layer) -> Option<[f64; 4]> {
+pub fn content_bounds(ctx: &EvalCtx, layer: &tselatra_project::Layer) -> Option<[f64; 4]> {
     match &layer.source {
         LayerSource::Text => {
             let glyphs = text::glyph_paths(ctx, layer);
             let paths: Vec<_> = glyphs.into_iter().map(|g| g.0).collect();
-            effectcraft_path::bounds(&paths).map(|r| [r.x0, r.y0, r.x1, r.y1])
+            tselatra_path::bounds(&paths).map(|r| [r.x0, r.y0, r.x1, r.y1])
         }
         LayerSource::Shape => layer.props.sub("contents").and_then(|c| shapes::content_bounds(ctx, layer, c)).map(|r| [r.x0, r.y0, r.x1, r.y1]),
         LayerSource::Camera | LayerSource::Light { .. } => None,
@@ -2398,8 +2398,8 @@ pub fn content_bounds(ctx: &EvalCtx, layer: &effectcraft_project::Layer) -> Opti
 }
 
 /// A mask/shape path as a kurbo path (for drawing overlays).
-pub fn kurbo_path(sp: &effectcraft_keyframe::ShapePath) -> kurbo::BezPath {
-    effectcraft_path::to_kurbo(sp)
+pub fn kurbo_path(sp: &tselatra_keyframe::ShapePath) -> kurbo::BezPath {
+    tselatra_path::to_kurbo(sp)
 }
 #[cfg(test)]
 mod tests_audio_fx;

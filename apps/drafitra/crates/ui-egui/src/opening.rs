@@ -6,7 +6,7 @@
 use std::sync::mpsc::{Receiver, TryRecvError, channel};
 use std::time::{Duration, Instant};
 
-use cadcraft_engine::cmd::file::{ReadFile, read_file};
+use drafitra_engine::cmd::file::{ReadFile, read_file};
 
 use crate::theme::Tokens;
 
@@ -29,7 +29,7 @@ impl Opening {
     pub fn start(&mut self, path: &str) {
         let (tx, rx) = channel();
         let p = path.to_string();
-        let spawned = std::thread::Builder::new().name("cadcraft-open".into()).spawn(move || {
+        let spawned = std::thread::Builder::new().name("drafitra-open".into()).spawn(move || {
             let _ = tx.send(read_file(&p));
         });
         if spawned.is_err() {
@@ -102,7 +102,7 @@ impl Opening {
 mod tests {
     use std::time::{Duration, Instant};
 
-    use cadcraft_engine::Session;
+    use drafitra_engine::Session;
 
     use crate::{CadApp, Services};
 
@@ -112,7 +112,7 @@ mod tests {
     fn open_path_reads_in_the_background_and_reports_failure() {
         let mut app = CadApp::new(Session::new(), Services { pick_open: None, pick_save: None });
         let before = app.session.docs.len();
-        let missing = std::env::temp_dir().join(format!("cadcraft-missing-{}.dxf", std::process::id()));
+        let missing = std::env::temp_dir().join(format!("drafitra-missing-{}.dxf", std::process::id()));
         let p = missing.to_string_lossy().to_string();
         app.open_path(&p);
         assert!(app.opening.busy() || app.status.is_some(), "the read starts in the background");

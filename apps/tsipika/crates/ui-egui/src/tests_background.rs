@@ -5,11 +5,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_engine::Session;
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_engine::Session;
+use tsipika_geom::{Rect, shapes};
 
-use crate::{Services, VectorcraftApp, background, io};
+use crate::{Services, TsipikaApp, background, io};
 
 type Files = Arc<Mutex<Vec<(String, Vec<u8>)>>>;
 
@@ -29,7 +29,7 @@ impl Gate {
 }
 
 /// An app whose thread-safe writer records files once `gate` opens.
-fn app(gate: Gate) -> (VectorcraftApp, Files) {
+fn app(gate: Gate) -> (TsipikaApp, Files) {
     let files = Files::default();
     let f = files.clone();
     let services = Services {
@@ -41,7 +41,7 @@ fn app(gate: Gate) -> (VectorcraftApp, Files) {
         })),
         ..Default::default()
     };
-    (VectorcraftApp::new(Session::new(), services), files)
+    (TsipikaApp::new(Session::new(), services), files)
 }
 
 /// A document of `n` paths.
@@ -65,23 +65,23 @@ fn a_50k_path_save_returns_at_once_and_the_file_appears_later() {
     let gate = Gate::default();
     let (mut app, files) = app(gate.clone());
     app.session.add_document(paths(50_000), None);
-    let r = app.run("file.save", json!({"path": "/docs/big.vectorcraft"})).unwrap();
-    assert_eq!((r["background"].as_bool(), r["path"].as_str()), (Some(true), Some("/docs/big.vectorcraft")));
+    let r = app.run("file.save", json!({"path": "/docs/big.tsipika"})).unwrap();
+    assert_eq!((r["background"].as_bool(), r["path"].as_str()), (Some(true), Some("/docs/big.tsipika")));
     assert!(written(&files).is_empty(), "nothing written yet");
     assert_eq!(app.background.jobs.len(), 1);
-    assert!(app.ui.status.starts_with("Saving big.vectorcraft"));
+    assert!(app.ui.status.starts_with("Saving big.tsipika"));
     // The file is the document's once it is written (and its dates are stamped then, #1721: until
     // then this document, never edited, is as it was).
     assert!(!app.session.doc().unwrap().is_dirty() && app.session.doc().unwrap().path.is_none());
     gate.open();
     background::wait_all(&mut app);
-    assert_eq!(written(&files), ["/docs/big.vectorcraft"]);
+    assert_eq!(written(&files), ["/docs/big.tsipika"]);
     let st = app.session.doc().unwrap();
     assert!(!st.is_dirty());
-    assert_eq!(st.path.as_deref(), Some("/docs/big.vectorcraft"));
-    assert_eq!(app.ui.status, "Saved /docs/big.vectorcraft");
+    assert_eq!(st.path.as_deref(), Some("/docs/big.tsipika"));
+    assert_eq!(app.ui.status, "Saved /docs/big.tsipika");
     let bytes = files.lock().unwrap()[0].1.clone();
-    assert_eq!(vectorcraft_format::load(&bytes).unwrap().node_count(), 50_001);
+    assert_eq!(tsipika_format::load(&bytes).unwrap().node_count(), 50_001);
 }
 
 #[test]
@@ -90,13 +90,13 @@ fn the_dirty_state_follows_the_snapshot() {
     let (mut app, files) = app(gate.clone());
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
-    app.run("file.save", json!({"path": "/docs/a.vectorcraft"})).unwrap();
+    app.run("file.save", json!({"path": "/docs/a.tsipika"})).unwrap();
     // Edited while the file is written: still modified afterwards.
     app.run("shape.rectangle", json!({"x": 20, "y": 0, "width": 10, "height": 10})).unwrap();
     gate.open();
     background::wait_all(&mut app);
     assert!(app.session.doc().unwrap().is_dirty(), "the edit came after the snapshot");
-    let saved = vectorcraft_format::load(&files.lock().unwrap()[0].1).unwrap();
+    let saved = tsipika_format::load(&files.lock().unwrap()[0].1).unwrap();
     assert_eq!(saved.node_count(), 2, "the file holds the snapshot");
     // Undoing back to the snapshot is clean again.
     app.run("edit.undo", json!({})).unwrap();
@@ -117,7 +117,7 @@ fn exports_run_in_the_background_and_the_preference_turns_both_off() {
     // Preferences off: at once, through the ordinary writer (which this app refuses).
     app.session.execute("prefs.set", &json!({"values": {"backgroundSave": false, "backgroundExport": false}})).unwrap();
     assert!(io::export(&mut app, Some("svg"), Some("/out/b.svg".into()), &json!({})).is_err());
-    assert!(app.run("file.save", json!({"path": "/docs/x.vectorcraft"})).is_err());
+    assert!(app.run("file.save", json!({"path": "/docs/x.tsipika"})).is_err());
     assert!(app.background.jobs.is_empty());
 }
 
@@ -135,7 +135,7 @@ fn a_cancelled_export_writes_nothing() {
         })),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     // The first export holds the worker at the gate, past its last check: it still writes.
     io::export(&mut app, Some("svg"), Some("/out/first.svg".into()), &json!({})).unwrap();
@@ -154,7 +154,7 @@ fn quitting_waits_for_background_saves() {
     let gate = Gate::default();
     let (mut app, files) = app(gate.clone());
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
-    app.run("file.save", json!({"path": "/docs/q.vectorcraft"})).unwrap();
+    app.run("file.save", json!({"path": "/docs/q.tsipika"})).unwrap();
     let opener = gate.clone();
     let release = std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(50));
@@ -165,11 +165,11 @@ fn quitting_waits_for_background_saves() {
     release.join().unwrap();
     assert!(r.is_null(), "{r}");
     assert_eq!(app.ui.status, "quit");
-    assert_eq!(written(&files), ["/docs/q.vectorcraft"]);
+    assert_eq!(written(&files), ["/docs/q.tsipika"]);
 }
 
 /// The status bar's texts in one headless frame.
-pub(super) fn status_bar_texts(app: &mut VectorcraftApp) -> Vec<String> {
+pub(super) fn status_bar_texts(app: &mut TsipikaApp) -> Vec<String> {
     fn texts(s: &egui::Shape, out: &mut Vec<String>) {
         match s {
             egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -190,10 +190,10 @@ fn the_status_bar_shows_progress() {
     let gate = Gate::default();
     let (mut app, _) = app(gate.clone());
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
-    app.run("file.save", json!({"path": "/docs/p.vectorcraft"})).unwrap();
+    app.run("file.save", json!({"path": "/docs/p.tsipika"})).unwrap();
     io::export(&mut app, Some("svg"), Some("/out/p.svg".into()), &json!({})).unwrap();
     let busy = status_bar_texts(&mut app);
-    assert!(busy.iter().any(|t| t == "Saving p.vectorcraft… (+1)"), "{busy:?}");
+    assert!(busy.iter().any(|t| t == "Saving p.tsipika… (+1)"), "{busy:?}");
     gate.open();
     background::wait_all(&mut app);
     let done = status_bar_texts(&mut app);
@@ -204,7 +204,7 @@ fn the_status_bar_shows_progress() {
 fn bad_options_fail_before_going_to_the_background() {
     let (mut app, files) = app(Gate::default());
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
-    for bad in [json!({"path": "/docs/v.vectorcraft", "version": 9}), json!({"path": "/docs/v.vectorcraft", "version": 1, "compress": true})] {
+    for bad in [json!({"path": "/docs/v.tsipika", "version": 9}), json!({"path": "/docs/v.tsipika", "version": 1, "compress": true})] {
         assert!(app.run("file.save", bad.clone()).is_err(), "{bad}");
     }
     assert!(app.background.jobs.is_empty() && written(&files).is_empty());

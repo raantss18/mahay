@@ -3,8 +3,8 @@
 use super::*;
 use crate::cmd;
 use serde_json::json;
-use soundcraft_model::{Session, TrackKind};
-use soundcraft_time::SampleRate;
+use feo_model::{Session, TrackKind};
+use feo_time::SampleRate;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -88,19 +88,19 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!(noundo "file.bounce_stems", "Bounce Stems...", [], None, "{dir, format?: wav|aiff|flac, bit_depth?: 16|24|32f, start?, end?, fold_down?: stereo}", has_tracks, |e, p| {
             let dir = str_param(p, "dir").ok_or_else(|| bad("file.bounce_stems", "`dir` required"))?.to_string();
             let r = range_param(e, "file.bounce_stems", p)?;
-            let r = if r.is_empty() { soundcraft_time::Range::new(0, e.session().content_end().max(1)) } else { r };
+            let r = if r.is_empty() { feo_time::Range::new(0, e.session().content_end().max(1)) } else { r };
             let format = match str_param(p, "format") {
-                Some("aiff") | Some("aif") => soundcraft_audio_io::FileFormat::Aiff,
-                Some("flac") => soundcraft_audio_io::FileFormat::Flac,
-                _ => soundcraft_audio_io::FileFormat::Wav,
+                Some("aiff") | Some("aif") => feo_audio_io::FileFormat::Aiff,
+                Some("flac") => feo_audio_io::FileFormat::Flac,
+                _ => feo_audio_io::FileFormat::Wav,
             };
             let bit_depth = match p.get("bit_depth").map(|b| b.to_string().trim_matches('"').to_string()).as_deref() {
-                Some("16") => soundcraft_audio_io::BitDepth::Int16,
-                Some("32") | Some("32f") => soundcraft_audio_io::BitDepth::Float32,
-                _ => soundcraft_audio_io::BitDepth::Int24,
+                Some("16") => feo_audio_io::BitDepth::Int16,
+                Some("32") | Some("32f") => feo_audio_io::BitDepth::Float32,
+                _ => feo_audio_io::BitDepth::Int24,
             };
             let fold = fold_down_param(p, "file.bounce_stems")?;
-            let files = crate::io::bounce_stems_with(e, &dir, r, &soundcraft_audio_io::EncodeOptions { format, bit_depth, dither: true, bwf: None }, fold)?;
+            let files = crate::io::bounce_stems_with(e, &dir, r, &feo_audio_io::EncodeOptions { format, bit_depth, dither: true, bwf: None }, fold)?;
             Ok(json!({"files": files}))
         }),
         cmd!(noundo "file.export_midi", "MIDI...", ["File", "Export"], None, "{path, tracks?}", always, |e, p| {
@@ -135,7 +135,7 @@ pub fn specs() -> Vec<CommandSpec> {
             refuse_replacing(e, "file.export_selected_tracks_as_session", &crate::io::session_file(&path), p)?;
             let keep = tracks_required(e, "file.export_selected_tracks_as_session", p)?;
             let mut s = e.session().clone();
-            s.tracks.retain(|t| keep.contains(&t.id) || t.kind == soundcraft_model::TrackKind::Master);
+            s.tracks.retain(|t| keep.contains(&t.id) || t.kind == feo_model::TrackKind::Master);
             let mut tmp = crate::Engine::new(s);
             crate::io::save_session(&mut tmp, &path)?;
             Ok(json!({"path": path}))
@@ -214,9 +214,9 @@ fn new_session(e: &mut Engine, p: &Value) -> Result<Value> {
     s.name = name;
     if let Some(b) = p.get("bit_depth") {
         s.bit_depth = match b.to_string().trim_matches('"') {
-            "16" => soundcraft_model::BitDepthSetting::Int16,
-            "32" | "32f" => soundcraft_model::BitDepthSetting::Float32,
-            _ => soundcraft_model::BitDepthSetting::Int24,
+            "16" => feo_model::BitDepthSetting::Int16,
+            "32" | "32f" => feo_model::BitDepthSetting::Float32,
+            _ => feo_model::BitDepthSetting::Int24,
         };
     }
     e.replace_session(s);
@@ -261,7 +261,7 @@ fn import_audio_target(e: &Engine, p: &Value) -> Result<Option<TrackId>> {
 }
 
 /// `source` omitted or `main` is the main mix. Any other name is a bus, and an unknown bus is an error.
-fn bounce_bus(e: &Engine, p: &Value) -> Result<Option<soundcraft_model::BusId>> {
+fn bounce_bus(e: &Engine, p: &Value) -> Result<Option<feo_model::BusId>> {
     let Some(name) = str_param(p, "source").map(str::trim).filter(|s| !s.is_empty()) else {
         return Ok(None);
     };
@@ -298,18 +298,18 @@ fn bounce(e: &mut Engine, p: &Value) -> Result<Value> {
 pub fn bounce_job(e: &Engine, p: &Value) -> Result<crate::io::Bounce> {
     let path = str_param(p, "path").ok_or_else(|| bad("file.bounce_mix", "`path` required"))?.to_string();
     let r = range_param(e, "file.bounce_mix", p)?;
-    let r = if r.is_empty() { soundcraft_time::Range::new(0, e.session().content_end().max(1)) } else { r };
+    let r = if r.is_empty() { feo_time::Range::new(0, e.session().content_end().max(1)) } else { r };
     let ext = std::path::Path::new(&path).extension().and_then(|x| x.to_str()).unwrap_or("wav").to_ascii_lowercase();
     let format_name = str_param(p, "format").unwrap_or(ext.as_str());
-    let format = soundcraft_audio_io::encode_format_for(format_name).ok_or_else(|| {
-        bad("file.bounce_mix", format!("cannot write `{format_name}` files (supported: {})", soundcraft_audio_io::ENCODE_EXTENSIONS))
+    let format = feo_audio_io::encode_format_for(format_name).ok_or_else(|| {
+        bad("file.bounce_mix", format!("cannot write `{format_name}` files (supported: {})", feo_audio_io::ENCODE_EXTENSIONS))
     })?;
     let bit_depth = match p.get("bit_depth").map(|b| b.to_string().trim_matches('"').to_string()).as_deref() {
-        Some("16") => soundcraft_audio_io::BitDepth::Int16,
-        Some("32") | Some("32f") => soundcraft_audio_io::BitDepth::Float32,
-        _ => soundcraft_audio_io::BitDepth::Int24,
+        Some("16") => feo_audio_io::BitDepth::Int16,
+        Some("32") | Some("32f") => feo_audio_io::BitDepth::Float32,
+        _ => feo_audio_io::BitDepth::Int24,
     };
-    let opts = soundcraft_audio_io::EncodeOptions { format, bit_depth, dither: bool_or(p, "dither", true), bwf: None };
+    let opts = feo_audio_io::EncodeOptions { format, bit_depth, dither: bool_or(p, "dither", true), bwf: None };
     let normalize = bool_or(p, "normalize", false);
     let fold = fold_down_param(p, "file.bounce_mix")?;
     let bus = bounce_bus(e, p)?;
@@ -338,13 +338,13 @@ fn write_score(e: &mut Engine, p: &Value, id: &str, svg: bool) -> Result<Value> 
 mod tests {
     use super::*;
     use crate::Engine;
-    use soundcraft_audio_io::{AudioBuffer, EncodeOptions};
-    use soundcraft_model::ChannelFormat;
+    use feo_audio_io::{AudioBuffer, EncodeOptions};
+    use feo_model::ChannelFormat;
 
     fn tone_wav(dir: &std::path::Path, name: &str) -> String {
         let tone: Vec<f32> = (0..4_800).map(|i| (i as f32 * 0.1).sin() * 0.2).collect();
         let buf = AudioBuffer { sample_rate: 48_000, channels: vec![tone] };
-        let bytes = soundcraft_audio_io::encode(&buf, &EncodeOptions::default()).unwrap();
+        let bytes = feo_audio_io::encode(&buf, &EncodeOptions::default()).unwrap();
         let path = dir.join(name);
         std::fs::write(&path, bytes).unwrap();
         path.to_string_lossy().into_owned()
@@ -427,7 +427,7 @@ mod tests {
         let track = e.session().tracks[0].id;
         {
             let tr = e.session_mut().track_mut(track).unwrap();
-            let mut send = soundcraft_model::SendSlot::new(soundcraft_model::Route::Bus(stem));
+            let mut send = feo_model::SendSlot::new(feo_model::Route::Bus(stem));
             send.level_db = -12.0;
             tr.mixer.sends[0] = Some(send);
         }
@@ -475,7 +475,7 @@ mod tests {
     #[test]
     fn session_open_reports_missing_media() {
         let mut e = crate::demo::demo_engine();
-        let dir = std::env::temp_dir().join(format!("soundcraft-open-missing-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-open-missing-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let path = dir.join("Gone.scraft").to_string_lossy().into_owned();
         e.execute("session.save_as", &json!({"path": path})).unwrap();
@@ -490,7 +490,7 @@ mod tests {
 
     #[test]
     fn saving_a_session_without_audio_creates_its_folder() {
-        let dir = std::env::temp_dir().join(format!("soundcraft-new-folder-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-new-folder-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let path = dir.join("Song").join("Song.scraft");
         Engine::default().execute("session.save_as", &json!({"path": path.to_string_lossy()})).unwrap();
@@ -504,9 +504,9 @@ mod tests {
         let track = e.session().tracks[0].id;
         let tone: Vec<f32> = (0..4_800).map(|i| (i as f32 * 0.05).sin() * 0.5).collect();
         let buf = AudioBuffer { sample_rate: 48_000, channels: vec![tone] };
-        let src = crate::io::add_source(e.session_mut(), "tone", buf, None, soundcraft_audio_io::FileFormat::Wav);
+        let src = crate::io::add_source(e.session_mut(), "tone", buf, None, feo_audio_io::FileFormat::Wav);
         let id = e.session_mut().new_clip_id();
-        crate::edit::place_clip(e.session_mut(), track, soundcraft_model::Clip::audio(id, "tone", src, 0, 0, 4_800));
+        crate::edit::place_clip(e.session_mut(), track, feo_model::Clip::audio(id, "tone", src, 0, 0, 4_800));
         e.session_mut().edit.selected_tracks = vec![track];
         (e, track.0)
     }
@@ -519,8 +519,8 @@ mod tests {
         let second = e.session_mut().new_clip_id();
         crate::edit::place_clip(
             e.session_mut(),
-            soundcraft_model::TrackId(track),
-            soundcraft_model::Clip::audio(second, "tone", src, 0, 10_000, 4_800),
+            feo_model::TrackId(track),
+            feo_model::Clip::audio(second, "tone", src, 0, 10_000, 4_800),
         );
         for id in [first, second] {
             e.session_mut().find_clip_mut(id).unwrap().name = "Take".into();
@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn exports_the_selected_clips_and_refuses_an_empty_selection() {
         let mut e = crate::demo::demo_engine();
-        let dir = std::env::temp_dir().join(format!("soundcraft-clips-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-clips-{}", std::process::id()));
         let p = json!({"dir": dir.to_string_lossy()});
         e.execute("edit.select_none", &json!({})).unwrap();
         assert!(e.execute("file.export_clips", &p).is_err());
@@ -551,8 +551,8 @@ mod tests {
     }
 
     fn midi_engine() -> Engine {
-        use soundcraft_midi::{CtrlEvent, CtrlKind, Note, Sequence};
-        use soundcraft_model::{ChannelFormat, Clip, TrackKind};
+        use feo_midi::{CtrlEvent, CtrlKind, Note, Sequence};
+        use feo_model::{ChannelFormat, Clip, TrackKind};
         let mut s = Session::default();
         let keys = s.add_track(TrackKind::Midi, ChannelFormat::Mono, Some("Keys"));
         let drums = s.add_track(TrackKind::Midi, ChannelFormat::Mono, Some("Drums"));
@@ -571,11 +571,11 @@ mod tests {
     }
 
     fn cc_numbers(bytes: &[u8]) -> Vec<(String, u8, i32)> {
-        let smf = soundcraft_midi::read_smf(bytes).unwrap();
+        let smf = feo_midi::read_smf(bytes).unwrap();
         let mut out = Vec::new();
         for t in &smf.tracks {
             for c in &t.sequence.ctrls {
-                if let soundcraft_midi::CtrlKind::Cc(n) = c.kind {
+                if let feo_midi::CtrlKind::Cc(n) = c.kind {
                     out.push((t.name.clone(), n, c.value));
                 }
             }
@@ -611,7 +611,7 @@ mod tests {
     fn import_surround_creates_a_matching_track() {
         let channels: Vec<Vec<f32>> = (0..6).map(|ch| vec![0.1 * (ch as f32 + 1.0); 32]).collect();
         let buf = AudioBuffer { sample_rate: 48_000, channels };
-        let bytes = soundcraft_audio_io::encode(&buf, &EncodeOptions::default()).unwrap();
+        let bytes = feo_audio_io::encode(&buf, &EncodeOptions::default()).unwrap();
         let mut e = Engine::default();
         let v = crate::io::import_audio_bytes(&mut e, "bed.wav", &bytes, None, None, 0).unwrap();
         assert_eq!(v["channels"], 6);

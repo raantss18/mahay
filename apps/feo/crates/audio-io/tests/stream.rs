@@ -1,4 +1,4 @@
-use soundcraft_audio_io::{AudioBuffer, AudioError, BitDepth, BwfInfo, EncodeOptions, FileEncoder, FileFormat, encode, encode_with_channel_mask};
+use feo_audio_io::{AudioBuffer, AudioError, BitDepth, BwfInfo, EncodeOptions, FileEncoder, FileFormat, encode, encode_with_channel_mask};
 use std::io::Cursor;
 
 fn tone(channels: usize, frames: usize) -> AudioBuffer {

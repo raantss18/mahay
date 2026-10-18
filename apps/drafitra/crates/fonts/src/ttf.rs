@@ -11,14 +11,14 @@
 //! - [`fallback_fonts`] (`FONTFALLBACK`): fonts tried first for characters the text's font
 //!   lacks (CJK in an SHX big font, for example), before the automatic system font search.
 //!
-//! On native builds both start from the `CADCRAFT_FONTALT` / `CADCRAFT_FONTFALLBACK`
+//! On native builds both start from the `DRAFITRA_FONTALT` / `DRAFITRA_FONTFALLBACK`
 //! environment variables.
 
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock, PoisonError, RwLock};
 
-use cadcraft_geom::Vec2;
+use drafitra_geom::Vec2;
 use skrifa::instance::{LocationRef, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
 use skrifa::raw::FileRef;
@@ -200,7 +200,7 @@ struct Fallback {
 enum Source {
     /// An installed font file, read on first use.
     File(PathBuf),
-    /// A font compiled into the binary ([`crate::CRAFT_FONTS`]), copied on first use.
+    /// A font compiled into the binary ([`crate::MAHAY_FONTS`]), copied on first use.
     Static(&'static [u8]),
 }
 
@@ -210,8 +210,8 @@ fn lock() -> MutexGuard<'static, Db> {
     if !g.scanned {
         g.scanned = true;
         g.paths = scan().into_iter().map(|(stem, p)| (stem, Source::File(p))).collect();
-        // Embedded craft-fonts fonts take the place of an installed file with the same stem.
-        for f in crate::CRAFT_FONTS {
+        // Embedded mahay-fonts fonts take the place of an installed file with the same stem.
+        for f in crate::MAHAY_FONTS {
             g.paths.insert(f.stem(), Source::Static(f.bytes));
         }
     }
@@ -454,9 +454,9 @@ pub(crate) fn rank_fallback(stems: &[String]) -> Vec<String> {
         .map(|s| {
             let n = norm(s);
             let pref = PREFERRED_FALLBACK.iter().position(|p| n.contains(p)).unwrap_or(PREFERRED_FALLBACK.len());
-            // Embedded craft-fonts fonts come right after the installed wide-coverage (CJK) fonts,
+            // Embedded mahay-fonts fonts come right after the installed wide-coverage (CJK) fonts,
             // before the general-purpose ones, so the bounded search always reaches them.
-            let pref = if crate::craft_fonts::is_embedded(s) { pref.min(embedded_rank) } else { pref };
+            let pref = if crate::mahay_fonts::is_embedded(s) { pref.min(embedded_rank) } else { pref };
             (pref, weight_penalty(s, ""), s.clone())
         })
         .collect();
@@ -474,7 +474,7 @@ pub fn register(name: &str, bytes: Vec<u8>) {
 }
 
 /// Register font bytes that live for the whole process under a name; they are copied only when
-/// the font is first used, the way the embedded craft-fonts fonts are listed.
+/// the font is first used, the way the embedded mahay-fonts fonts are listed.
 #[cfg(test)]
 pub(crate) fn register_static(name: &str, bytes: &'static [u8]) {
     let mut g = lock();
@@ -527,7 +527,7 @@ fn prefs() -> MutexGuard<'static, Prefs> {
         let env = |k: &str| std::env::var(k).unwrap_or_default();
         #[cfg(target_arch = "wasm32")]
         let env = |_: &str| String::new();
-        Mutex::new(Prefs { alt: clean_name(&env("CADCRAFT_FONTALT")), fallback: split_list(&env("CADCRAFT_FONTFALLBACK")) })
+        Mutex::new(Prefs { alt: clean_name(&env("DRAFITRA_FONTALT")), fallback: split_list(&env("DRAFITRA_FONTFALLBACK")) })
     })
     .lock()
     .unwrap_or_else(PoisonError::into_inner)

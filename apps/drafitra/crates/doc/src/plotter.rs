@@ -18,7 +18,7 @@ pub const MAX_PLOTTER_NAME: usize = 100;
 /// Largest paper side (mm), as for page setups.
 pub const MAX_PAPER_MM: f64 = 5080.0;
 
-const FILE_MARKER: &str = "cadcraftPlotter";
+const FILE_MARKER: &str = "drafitraPlotter";
 const FILE_VERSION: u64 = 1;
 
 /// What a device writes.
@@ -191,11 +191,11 @@ impl PlotterConfig {
         if text.len() > MAX_PLOTTER_FILE {
             return Err("the plotter configuration file is too large".into());
         }
-        let v: serde_json::Value = serde_json::from_str(text).map_err(|e| format!("not a CADCraft plotter configuration: {e}"))?;
+        let v: serde_json::Value = serde_json::from_str(text).map_err(|e| format!("not a Drafitra plotter configuration: {e}"))?;
         match v.get(FILE_MARKER).and_then(serde_json::Value::as_u64) {
             Some(FILE_VERSION) => {}
-            Some(n) => return Err(format!("plotter configuration format version {n} is newer than this CADCraft reads")),
-            None => return Err(format!("not a CADCraft plotter configuration (no `{FILE_MARKER}`)")),
+            Some(n) => return Err(format!("plotter configuration format version {n} is newer than this Drafitra reads")),
+            None => return Err(format!("not a Drafitra plotter configuration (no `{FILE_MARKER}`)")),
         }
         let c: PlotterConfig = serde_json::from_value(v).map_err(|e| format!("bad plotter configuration: {e}"))?;
         let c = c.sanitized();
@@ -245,8 +245,8 @@ mod tests {
         assert_eq!(wide.margins, [0.0; 4], "margins wider than the paper are dropped");
         assert!(back.paper("a3 BORDERLESS").is_some());
         assert!(PlotterConfig::from_file_text("{}").is_err());
-        assert!(PlotterConfig::from_file_text(r#"{"cadcraftPlotter": 1}"#).is_err(), "needs a name");
-        assert!(PlotterConfig::from_file_text(r#"{"cadcraftPlotter": 9, "name": "x"}"#).is_err());
+        assert!(PlotterConfig::from_file_text(r#"{"drafitraPlotter": 1}"#).is_err(), "needs a name");
+        assert!(PlotterConfig::from_file_text(r#"{"drafitraPlotter": 9, "name": "x"}"#).is_err());
         assert_eq!(plotter_file_name("../a/b:c").as_deref(), Some("___a_b_c.plotter.json"));
         assert_eq!(plotter_file_name("  "), None);
     }

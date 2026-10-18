@@ -2,7 +2,7 @@
 //!
 //! The analysis renders the layer's input to the effect (source → masks → the effects above
 //! the Warp Stabilizer, `Renderer::layer_input`) for every frame between the layer's In and Out
-//! points on a background thread, and feeds the frames to `effectcraft_track::stabilize`'s
+//! points on a background thread, and feeds the frames to `tselatra_track::stabilize`'s
 //! analyzer (step 1 of 2, "Analyzing in background"); step 2 ("Stabilizing") derives the
 //! stabilization plan once to validate the result. When the job finishes, the analysis is
 //! written into the effect's hidden Analysis parameter as one undo step, together with a key of
@@ -15,13 +15,13 @@ use crate::offload::{JobKind, rate};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_effects::warp_stab::{self, ANALYSIS, ANALYSIS_KEY};
-use effectcraft_keyframe::Value;
-use effectcraft_project::{GroupKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Project, PropGroup, Uid};
-use effectcraft_raster::Image;
-use effectcraft_render::{EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
-use effectcraft_time::Tick;
-use effectcraft_track::stabilize::{AnalyzeOpts, Analyzer, StabSettings, WarpAnalysis};
+use tselatra_effects::warp_stab::{self, ANALYSIS, ANALYSIS_KEY};
+use tselatra_keyframe::Value;
+use tselatra_project::{GroupKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Project, PropGroup, Uid};
+use tselatra_raster::Image;
+use tselatra_render::{EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
+use tselatra_time::Tick;
+use tselatra_track::stabilize::{AnalyzeOpts, Analyzer, StabSettings, WarpAnalysis};
 use serde::Serialize;
 
 use crate::tracking::lock;
@@ -188,7 +188,7 @@ fn input_frame(r: &Renderer, ctx: &EvalCtx, layer: &Layer, effect_index: usize) 
         let w = (buf.img.width as f64 / buf.scale).round().max(1.0) as u32;
         let h = (buf.img.height as f64 / buf.scale).round().max(1.0) as u32;
         let off = [buf.offset[0] / buf.scale, buf.offset[1] / buf.scale];
-        return Some((Arc::new(effectcraft_raster::resample(&buf.img, w, h)), off));
+        return Some((Arc::new(tselatra_raster::resample(&buf.img, w, h)), off));
     }
     Some((Arc::new(buf.img.clone()), buf.offset))
 }
@@ -230,7 +230,7 @@ async fn run_work(w: WarpWork, shared: &WarpShared) {
         let Some(cur) = next.take() else { return fail(&format!("no frame at {:.3} s", w.times[k].seconds())) };
         let ((), nf) = crate::offload::join_fetch(
             accel.is_some(),
-            || an.push(&effectcraft_track::Frame { img: &cur.0, offset: cur.1 }),
+            || an.push(&tselatra_track::Frame { img: &cur.0, offset: cur.1 }),
             || async { if k + 1 < w.times.len() { frame_at(w.times[k + 1]).await } else { None } },
         )
         .await;
@@ -246,7 +246,7 @@ async fn run_work(w: WarpWork, shared: &WarpShared) {
     let fd = if w.times.len() > 1 { layer.layer_time(w.times[1]).seconds() - lt0 } else { comp.frame_duration().seconds() };
     let a = an.finish(lt0, fd);
     // Step 2: derive a plan once (validates the motion and warms nothing else up).
-    let plan = effectcraft_track::stabilize::plan(&a, &StabSettings { fps: if fd > 0.0 { 1.0 / fd } else { 30.0 }, ..Default::default() });
+    let plan = tselatra_track::stabilize::plan(&a, &StabSettings { fps: if fd > 0.0 { 1.0 / fd } else { 30.0 }, ..Default::default() });
     if plan.warps.len() != a.frames.len() || plan.warps.iter().any(|h| h.0.iter().flatten().any(|v| !v.is_finite())) {
         return fail("the stabilization could not be computed");
     }
@@ -257,7 +257,7 @@ async fn run_work(w: WarpWork, shared: &WarpShared) {
 }
 
 /// Frames to analyse: every comp frame from the layer's In to its Out point (inside the comp).
-pub(crate) fn analysis_times(comp: &effectcraft_project::Comp, layer: &Layer) -> Vec<Tick> {
+pub(crate) fn analysis_times(comp: &tselatra_project::Comp, layer: &Layer) -> Vec<Tick> {
     let fd = comp.frame_duration();
     let lo = comp.frame_rate.snap_nearest(layer.in_point.max(Tick::ZERO));
     let hi = layer.out_point.min(comp.duration);
@@ -324,7 +324,7 @@ impl Session {
         if times.len() < 2 {
             return Err("the layer must be at least two frames long".into());
         }
-        let size = effectcraft_render::effect_bounds(&self.project, c, l).0;
+        let size = tselatra_render::effect_bounds(&self.project, c, l).0;
         let detailed = g.prop("advanced/detailedAnalysis").is_some_and(|p| p.value.as_bool());
         let n = times.len();
         let work = WarpWork {
@@ -358,7 +358,7 @@ impl Session {
             Some(
                 std::thread::Builder::new()
                     .name("warp-analyze".into())
-                    .spawn(move || effectcraft_render::passes::block_on(run_work(work, &sh)))
+                    .spawn(move || tselatra_render::passes::block_on(run_work(work, &sh)))
                     .map_err(|e| e.to_string())?,
             )
         };

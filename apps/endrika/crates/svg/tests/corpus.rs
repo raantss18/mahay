@@ -1,14 +1,14 @@
 //! The SVG import corpus: synthetic files covering what design and illustration tools write.
 //!
 //! Each `tests/corpus/*.svg` carries its expected pixels as `<!-- probe X Y #RRGGBBAA ~TOL -->`
-//! comments, worked out by hand from the SVG. The import is rendered with FigCraft's renderer and
+//! comments, worked out by hand from the SVG. The import is rendered with Endrika's renderer and
 //! every probe checked; the layer structure is checked per file; and every file must survive an
 //! export and a second import looking the same.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use figcraft_doc::{Document, NodeId, NodeKind};
-use figcraft_render::{View, to_rgba8};
-use figcraft_svg::{SvgOptions, export_svg, import_svg};
+use endrika_doc::{Document, NodeId, NodeKind};
+use endrika_render::{View, to_rgba8};
+use endrika_svg::{SvgOptions, export_svg, import_svg};
 
 const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/corpus");
 
@@ -42,8 +42,8 @@ fn render(d: &Document, frame: NodeId) -> (Vec<u8>, u32, u32) {
     let (w, h) = (n.width.ceil().max(1.0) as u32, n.height.ceil().max(1.0) as u32);
     let o = d.world_transform(frame).translation();
     let view = View { origin: (o.x, o.y), scale: 1.0, width: w, height: h };
-    let mut pix = figcraft_render::Pixmap::new(w, h).unwrap();
-    figcraft_render::render_nodes_into(d, &[frame], &view, &mut pix);
+    let mut pix = endrika_render::Pixmap::new(w, h).unwrap();
+    endrika_render::render_nodes_into(d, &[frame], &view, &mut pix);
     (to_rgba8(&pix), w, h)
 }
 
@@ -161,7 +161,7 @@ fn dump() {
 }
 
 fn image_png(px: &[u8], w: u32, h: u32) -> Vec<u8> {
-    let mut pix = figcraft_render::Pixmap::new(w, h).unwrap();
+    let mut pix = endrika_render::Pixmap::new(w, h).unwrap();
     for (i, c) in px.chunks(4).enumerate() {
         let a = u32::from(c[3]);
         let pm = |v: u8| ((u32::from(v) * a + 127) / 255) as u8;
@@ -171,7 +171,7 @@ fn image_png(px: &[u8], w: u32, h: u32) -> Vec<u8> {
         d[i * 4 + 2] = pm(c[2]);
         d[i * 4 + 3] = c[3];
     }
-    figcraft_render::encode_png(&pix).unwrap()
+    endrika_render::encode_png(&pix).unwrap()
 }
 
 fn outline(d: &Document, id: NodeId, depth: usize, out: &mut String) {
@@ -212,7 +212,7 @@ fn imported(name: &str) -> (Document, NodeId) {
 }
 
 /// The first layer called `name` under `f`.
-fn layer<'a>(d: &'a Document, f: NodeId, name: &str) -> &'a figcraft_doc::Node {
+fn layer<'a>(d: &'a Document, f: NodeId, name: &str) -> &'a endrika_doc::Node {
     d.subtree(f).into_iter().filter_map(|i| d.node(i)).find(|n| n.name == name).unwrap_or_else(|| panic!("no layer {name:?}"))
 }
 
@@ -259,7 +259,7 @@ fn basic_shapes_stay_rectangles_ellipses_and_lines() {
 
 #[test]
 fn strokes_keep_dashes_caps_and_joins() {
-    use figcraft_doc::{StrokeCap, StrokeJoin};
+    use endrika_doc::{StrokeCap, StrokeJoin};
     let (d, f) = imported("strokes");
     assert_eq!(layer(&d, f, "dashed").stroke.dashes, vec![20.0, 10.0]);
     assert_eq!(layer(&d, f, "round-cap").stroke.cap_end, StrokeCap::Round);
@@ -272,7 +272,7 @@ fn strokes_keep_dashes_caps_and_joins() {
 
 #[test]
 fn gradients_stay_gradients() {
-    use figcraft_color::{GradientKind, PaintKind};
+    use endrika_color::{GradientKind, PaintKind};
     let (d, f) = imported("gradients");
     for (name, kind) in
         [("bbox-units", GradientKind::Linear), ("rotated", GradientKind::Linear), ("radial", GradientKind::Radial), ("focal", GradientKind::Radial)]
@@ -287,7 +287,7 @@ fn gradients_stay_gradients() {
 
 #[test]
 fn clip_paths_and_masks_become_mask_layers() {
-    use figcraft_doc::MaskType;
+    use endrika_doc::MaskType;
     let (d, f) = imported("clip_mask");
     let mask_of = |name: &str| {
         let id = d.subtree(f).into_iter().find(|i| d.node(*i).is_some_and(|n| n.name == name)).unwrap();
@@ -307,7 +307,7 @@ fn clip_paths_and_masks_become_mask_layers() {
 
 #[test]
 fn filters_become_effects() {
-    use figcraft_doc::EffectKind;
+    use endrika_doc::EffectKind;
     let (d, f) = imported("filters");
     let fx = |name: &str| layer(&d, f, name).effects.iter().map(|e| e.kind.clone()).collect::<Vec<_>>();
     assert!(matches!(&fx("blurred")[..], [EffectKind::LayerBlur(b)] if (b.radius - 8.0).abs() < 1e-6));
@@ -326,15 +326,15 @@ fn filters_become_effects() {
 fn unsupported_parts_are_reported() {
     let mut d = Document::new("t");
     let p = d.first_page().unwrap();
-    let imported = figcraft_svg::import_svg_with_notes(&mut d, source("filters").as_bytes(), p, 0.0, 0.0, "x").unwrap();
+    let imported = endrika_svg::import_svg_with_notes(&mut d, source("filters").as_bytes(), p, 0.0, 0.0, "x").unwrap();
     assert!(imported.notes.iter().any(|n| n.contains("noise")), "{:?}", imported.notes);
-    let clean = figcraft_svg::import_svg_with_notes(&mut d, source("primitives").as_bytes(), p, 0.0, 0.0, "x").unwrap();
+    let clean = endrika_svg::import_svg_with_notes(&mut d, source("primitives").as_bytes(), p, 0.0, 0.0, "x").unwrap();
     assert!(clean.notes.is_empty(), "{:?}", clean.notes);
 }
 
 #[test]
 fn blend_modes_opacity_and_hidden_layers() {
-    use figcraft_color::BlendMode;
+    use endrika_color::BlendMode;
     let (d, f) = imported("blend_visibility");
     assert_eq!(layer(&d, f, "multiplied").blend, BlendMode::Multiply);
     assert_eq!(layer(&d, f, "screened").blend, BlendMode::Screen);
@@ -374,7 +374,7 @@ fn use_and_symbols_resolve_without_extra_wrappers() {
 
 #[test]
 fn images_are_image_fills() {
-    use figcraft_color::{ImageScaleMode, PaintKind};
+    use endrika_color::{ImageScaleMode, PaintKind};
     let (d, f) = imported("image");
     let photo = layer(&d, f, "photo");
     assert_eq!((photo.kind.type_name(), photo.width, photo.height), ("RECTANGLE", 40.0, 20.0));
@@ -392,10 +392,10 @@ fn images_are_image_fills() {
 
 #[test]
 fn text_becomes_text_layers() {
-    use figcraft_doc::{LetterSpacing, LineHeight, TextAlignH};
+    use endrika_doc::{LetterSpacing, LineHeight, TextAlignH};
     let (d, f) = imported("text");
-    let texts: Vec<&figcraft_doc::Node> = d.subtree(f).into_iter().filter_map(|i| d.node(i)).filter(|n| n.kind.text().is_some()).collect();
-    if figcraft_text::fontdb::find_face("Inter", "Regular").is_none() {
+    let texts: Vec<&endrika_doc::Node> = d.subtree(f).into_iter().filter_map(|i| d.node(i)).filter(|n| n.kind.text().is_some()).collect();
+    if endrika_text::fontdb::find_face("Inter", "Regular").is_none() {
         // Without any font usvg can't lay text out (CI without fonts).
         return;
     }
@@ -421,7 +421,7 @@ fn text_becomes_text_layers() {
     for (name, x, y) in [("title", 10.0, 40.0), ("Centered", 150.0, 80.0), ("End", 290.0, 120.0)] {
         let id = d.subtree(f).into_iter().find(|i| d.node(*i).is_some_and(|n| n.name == name)).unwrap();
         let n = d.node(id).unwrap();
-        let (l, _) = figcraft_text::layout_node(n).unwrap();
+        let (l, _) = endrika_text::layout_node(n).unwrap();
         let o = d.world_transform(id).translation();
         let k = match n.kind.text().unwrap().align_h {
             TextAlignH::Center => 0.5,

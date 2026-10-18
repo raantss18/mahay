@@ -8,12 +8,12 @@ use crate::Session;
 fn a_library_is_opened_only_from_this_computer() {
     let mut s = Session::new();
     for path in [
-        r"\\attacker.example\share\lib.figcraft",
-        "//attacker.example/share/lib.figcraft",
-        "file://attacker.example/share/lib.figcraft",
-        r"\\?\UNC\attacker.example\share\lib.figcraft",
+        r"\\attacker.example\share\lib.endrika",
+        "//attacker.example/share/lib.endrika",
+        "file://attacker.example/share/lib.endrika",
+        r"\\?\UNC\attacker.example\share\lib.endrika",
         r"\\.\pipe\lib",
-        "https://attacker.example/lib.figcraft",
+        "https://attacker.example/lib.endrika",
     ] {
         let e = s.fetch_library(path, false).expect_err(&format!("{path} must be refused"));
         assert!(e.to_string().contains("only from this computer"), "{path}: {e}");
@@ -24,7 +24,7 @@ fn a_library_is_opened_only_from_this_computer() {
 fn a_local_library_path_is_still_followed() {
     let mut s = Session::new();
     // Refused for being absent, not for where it is: the gate let it through.
-    let missing = std::env::temp_dir().join("figcraft-no-such-library.figcraft");
+    let missing = std::env::temp_dir().join("endrika-no-such-library.endrika");
     let e = s.fetch_library(&missing.to_string_lossy(), false).expect_err("the file does not exist");
     assert!(!e.to_string().contains("only from this computer"), "a local path must not be refused as remote: {e}");
 }

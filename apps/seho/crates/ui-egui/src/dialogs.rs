@@ -2603,22 +2603,7 @@ fn pretty_equation(s: &str) -> String {
 }
 
 pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
-    let t = Tokens::get(ui.ctx());
-    ui.vertical_centered(|ui| {
-        let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
-        paint_logo(ui.painter(), r);
-        ui.label(egui::RichText::new("Seho").font(theme::bold(22.0)));
-        ui.label(egui::RichText::new(version_line()).color(t.text_dim));
-        ui.add_space(6.0);
-        ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
-        ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
-        ui.add_space(6.0);
-        ui.hyperlink_to("Join the community on GitHub", seho_engine::links::DISCORD);
-        ui.hyperlink_to("mahay.com/apps/seho", seho_engine::links::APP_PAGE);
-        ui.hyperlink_to("Source on GitHub", seho_engine::links::GITHUB);
-        ui.add_space(6.0);
-        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 Mahay Team and the Seho contributors").size(11.0).color(t.text_faint));
-    });
+    mahay_about::page(ui, mahay_about::AppInfo { id: "seho", name: "Seho" });
 }
 
 /// "Version X.Y.Z" plus, for release builds, the short commit and build date. The version comes

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Check the macOS release artifacts exactly as users download them:
 #
-#   $DIST/figcraft-<version>-macos-<arch>.dmg       signed, notarized, ticket stapled
-#   $DIST/figcraft-cli-<version>-macos-<arch>.zip   (when apps/figcraft-cli exists) unpacked here; the binary inside must be
+#   $DIST/endrika-<version>-macos-<arch>.dmg       signed, notarized, ticket stapled
+#   $DIST/endrika-cli-<version>-macos-<arch>.zip   (when apps/endrika-cli exists) unpacked here; the binary inside must be
 #                                                    Developer ID signed with the hardened runtime,
 #                                                    timestamped and notarized
 #
@@ -37,8 +37,8 @@ case "$ARCH" in
   *) echo "unknown --arch $ARCH" >&2; exit 2 ;;
 esac
 
-DMG="$DIST/figcraft-$VERSION-macos-$ARCH.dmg"
-CLI_ZIP="$DIST/figcraft-cli-$VERSION-macos-$ARCH.zip"
+DMG="$DIST/endrika-$VERSION-macos-$ARCH.dmg"
+CLI_ZIP="$DIST/endrika-cli-$VERSION-macos-$ARCH.zip"
 IDENTITY="${MACOS_SIGN_IDENTITY:--}"
 STRICT=0
 if [ "$IDENTITY" != "-" ] && [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
@@ -79,16 +79,16 @@ for f in "${FILES[@]}"; do
   fi
 done
 
-WORK="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/figcraft-verify.XXXXXX")"
+WORK="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/endrika-verify.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
-# ---- CLI zip (when apps/figcraft-cli exists) ----------------------------------------------------
+# ---- CLI zip (when apps/endrika-cli exists) ----------------------------------------------------
 if [ "$HAS_CLI" = 1 ]; then
   echo "==> $(basename "$CLI_ZIP")"
   ditto -x -k "$CLI_ZIP" "$WORK/cli"
-  CLI="$WORK/cli/figcraft-cli-$VERSION-macos-$ARCH/figcraft-cli"
+  CLI="$WORK/cli/endrika-cli-$VERSION-macos-$ARCH/endrika-cli"
   if [ ! -x "$CLI" ]; then
-    echo "error: $(basename "$CLI_ZIP") has no executable figcraft-cli-$VERSION-macos-$ARCH/figcraft-cli" >&2
+    echo "error: $(basename "$CLI_ZIP") has no executable endrika-cli-$VERSION-macos-$ARCH/endrika-cli" >&2
     exit 1
   fi
 
@@ -96,7 +96,7 @@ if [ "$HAS_CLI" = 1 ]; then
   for a in $WANT_ARCHS; do
     case " $archs " in
       *" $a "*) ;;
-      *) echo "error: figcraft-cli lacks $a (has: $archs)" >&2; exit 1 ;;
+      *) echo "error: endrika-cli lacks $a (has: $archs)" >&2; exit 1 ;;
     esac
   done
 
@@ -106,22 +106,22 @@ if [ "$HAS_CLI" = 1 ]; then
   printf '%s\n' "$details" | grep -E '^(Identifier|Format|CodeDirectory|Authority|Timestamp|TeamIdentifier)[= ]' || true
 
   printf '%s\n' "$details" | grep -Eq '^CodeDirectory .*flags=0x[0-9a-f]+\([^)]*runtime' \
-    || fail "figcraft-cli is not signed with the hardened runtime"
+    || fail "endrika-cli is not signed with the hardened runtime"
   printf '%s\n' "$details" | grep -q '^Authority=Developer ID Application:' \
-    || fail "figcraft-cli is not signed with a Developer ID Application identity"
+    || fail "endrika-cli is not signed with a Developer ID Application identity"
   printf '%s\n' "$details" | grep -q '^Timestamp=' \
-    || fail "figcraft-cli signature has no secure timestamp"
+    || fail "endrika-cli signature has no secure timestamp"
   if [ -n "${APPLE_TEAM_ID:-}" ]; then
     printf '%s\n' "$details" | grep -qx "TeamIdentifier=$APPLE_TEAM_ID" \
-      || fail "figcraft-cli is signed by a different team"
+      || fail "endrika-cli is signed by a different team"
   fi
   if gk="$(assess --assess --type install -vv "$CLI")"; then
     printf '%s\n' "$gk"
     printf '%s\n' "$gk" | grep -q 'source=Notarized Developer ID' \
-      || fail "Gatekeeper accepts figcraft-cli but not as notarized"
+      || fail "Gatekeeper accepts endrika-cli but not as notarized"
   else
     printf '%s\n' "$gk"
-    fail "Gatekeeper rejects figcraft-cli (not notarized?)"
+    fail "Gatekeeper rejects endrika-cli (not notarized?)"
   fi
   "$CLI" --version
 fi

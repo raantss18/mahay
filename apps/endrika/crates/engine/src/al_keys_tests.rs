@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -82,7 +82,7 @@ fn single_item_wrapped_lines_move_and_drop_by_line() {
     set(&mut s, row, json!({"wrap": true}));
     let k: Vec<NodeId> = (0..2).map(|_| rect(&mut s, row, 160.0, 20.0)).collect();
     assert_eq!(s.doc().unwrap().world_bounds(k[1]).unwrap().y0, 30.0, "second row");
-    let slot = crate::drop::auto_layout_slot(s.doc().unwrap(), row, figcraft_geom::Point::new(10.0, 35.0), &[]);
+    let slot = crate::drop::auto_layout_slot(s.doc().unwrap(), row, endrika_geom::Point::new(10.0, 35.0), &[]);
     assert_eq!(slot, Some((1, Some([-2.0, 30.0, -2.0, 50.0]))));
     arrow(&mut s, &[k[1]], 0, -1);
     assert_eq!(kids(&s, row), vec![k[1], k[0]]);
@@ -136,7 +136,7 @@ fn grid_arrows_move_between_cells() {
     assert_eq!(kids(&s, g), vec![b, c, a, d], "Down: the cell below (A lands at column 0, row 1)");
     let cell = |s: &Session, n: NodeId| {
         let doc = s.doc().unwrap();
-        let (cells, _) = figcraft_layout::grid_place(doc, doc.node(g).unwrap().layout.as_ref().unwrap(), &kids(s, g));
+        let (cells, _) = endrika_layout::grid_place(doc, doc.node(g).unwrap().layout.as_ref().unwrap(), &kids(s, g));
         cells.iter().find(|x| x.id == n).map(|x| (x.column, x.row)).unwrap()
     };
     assert_eq!(cell(&s, a), (0, 1));

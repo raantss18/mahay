@@ -1,9 +1,9 @@
 //! QDIM modes: Continuous, Staggered, Baseline, Ordinate, Radius and Diameter, the datum point,
 //! Edit (add and remove dimension points) and the prompt sequence.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{DimKind, Dimension, EntityKind, Handle};
-use cadcraft_engine::geom::Vec2;
+use drafitra_engine::Session;
+use drafitra_engine::doc::{DimKind, Dimension, EntityKind, Handle};
+use drafitra_engine::geom::Vec2;
 use serde_json::{Value, json};
 
 fn dims(s: &Session, r: &Value) -> Vec<Dimension> {
@@ -75,7 +75,7 @@ fn ordinate_radius_diameter_and_edit() {
     assert_eq!(o.len(), 4);
     assert!(o.iter().all(|d| matches!(d.kind, DimKind::Ordinate { x_type: true }) && (d.p14.y - 5.0).abs() < 1e-9 && d.defpt.xy() == Vec2::ZERO));
     let r = s.execute("qdim", &json!({ "handles": hs, "at": [0, 5], "mode": "ordinate", "datum": [10, 0] })).unwrap();
-    let v: Vec<String> = dims(&s, &r).iter().map(|d| cadcraft_engine::render::dimension_in(s.doc().unwrap(), d).value).collect();
+    let v: Vec<String> = dims(&s, &r).iter().map(|d| drafitra_engine::render::dimension_in(s.doc().unwrap(), d).value).collect();
     assert_eq!(v, vec!["10.0000", "0.0000", "20.0000", "50.0000"]);
 
     // Edit: remove a point, add one.

@@ -2,7 +2,7 @@
 //! effect, mask, shape item or text animator (what scripting's `PropertyGroup.name`, `enabled`,
 //! `remove()`, `duplicate()` and `moveTo()` do, and what agents need without a UI selection).
 
-use effectcraft_project::{ItemId, LayerId, LayerSource, Node, PropGroup, Uid};
+use tselatra_project::{ItemId, LayerId, LayerSource, Node, PropGroup, Uid};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, has_layers, layer_mut, layer_p, layers_p, str_p};

@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use super::*;
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 fn warnings(v: &Value) -> Vec<String> {
@@ -29,17 +29,17 @@ fn export_pdf_create_layers_writes_layers_that_reopen_as_layers() {
     let mut s = session();
     let v = s.execute("document.exportPdf", &json!({"createLayers": true, "preserveEditing": false})).unwrap();
     assert!(warnings(&v).is_empty(), "{:?}", warnings(&v));
-    let back = vectorcraft_pdf::import(&b64(&v)).unwrap();
+    let back = tsipika_pdf::import(&b64(&v)).unwrap();
     let layers: Vec<(String, bool, bool)> = back
         .layers
         .iter()
-        .map(|l| (l.name.clone().unwrap_or_default(), l.visible, matches!(l.kind, vectorcraft_doc::NodeKind::Layer { printable: true, .. })))
+        .map(|l| (l.name.clone().unwrap_or_default(), l.visible, matches!(l.kind, tsipika_doc::NodeKind::Layer { printable: true, .. })))
         .collect();
     assert_eq!(layers, [("Layer 1".to_string(), true, true), ("Notes".to_string(), false, false)]);
     // The default preset carries the editing data too.
     let v = s.execute("document.exportPdf", &json!({"createLayers": true})).unwrap();
     assert!(warnings(&v).is_empty(), "{:?}", warnings(&v));
-    assert!(vectorcraft_pdf::editing(&b64(&v)).is_some_and(|e| e.intact));
+    assert!(tsipika_pdf::editing(&b64(&v)).is_some_and(|e| e.intact));
     // At PDF 1.4 there are no PDF layers.
     let v = s.execute("document.exportPdf", &json!({"createLayers": true, "compatibility": "1.4"})).unwrap();
     assert!(warnings(&v).iter().any(|w| w.contains("PDF 1.5")), "{:?}", warnings(&v));
@@ -71,7 +71,7 @@ fn ai_files_write_their_layers_and_sublayers_as_pdf_layers() {
     s.execute("shape.ellipse", &json!({"x": 10, "y": 40, "width": 20, "height": 20})).unwrap();
     s.execute("layer.setProps", &json!({"id": sub, "visible": false})).unwrap();
     // Name, shown and what it holds (sublayers by name), top-level layers in paint order.
-    fn rows(layers: &[std::sync::Arc<vectorcraft_doc::Node>]) -> Vec<(String, bool, Vec<String>)> {
+    fn rows(layers: &[std::sync::Arc<tsipika_doc::Node>]) -> Vec<(String, bool, Vec<String>)> {
         layers
             .iter()
             .map(|l| {
@@ -82,12 +82,12 @@ fn ai_files_write_their_layers_and_sublayers_as_pdf_layers() {
             .collect()
     }
     let v = s.execute("document.export", &json!({"format": "ai"})).unwrap();
-    let back = vectorcraft_pdf::import(&b64(&v)).unwrap();
+    let back = tsipika_pdf::import(&b64(&v)).unwrap();
     let art = || "art".to_string();
     assert_eq!(rows(&back.layers), [("Layer 1".to_string(), true, vec![art(), "Sketch".into()]), ("Notes".to_string(), false, vec![art()])]);
     let sketch = back.layers.first().and_then(|l| l.children()?.last().cloned()).unwrap();
     assert_eq!(rows(&[sketch]), [("Sketch".to_string(), false, vec![art()])]);
     // Asked not to, it writes none.
     let v = s.execute("document.export", &json!({"format": "ai", "createLayers": false})).unwrap();
-    assert_eq!(vectorcraft_pdf::import(&b64(&v)).unwrap().layers.len(), 1);
+    assert_eq!(tsipika_pdf::import(&b64(&v)).unwrap().layers.len(), 1);
 }

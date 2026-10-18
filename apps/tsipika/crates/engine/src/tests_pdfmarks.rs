@@ -2,7 +2,7 @@
 //! boxes, printer's marks print in Registration, non-printing layers are left out unless asked.
 
 use serde_json::{Value, json};
-use vectorcraft_pdf::CropTo;
+use tsipika_pdf::CropTo;
 
 use super::*;
 
@@ -16,12 +16,12 @@ fn session() -> Session {
 /// The PDF `document.exportPdf {p}` writes, and its warnings.
 fn export(s: &mut Session, p: Value) -> (Vec<u8>, Vec<String>) {
     let v = s.execute("document.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (bytes, serde_json::from_value(v["warnings"].clone()).unwrap())
 }
 
 fn boxes(bytes: &[u8]) -> (kurbo::Rect, kurbo::Rect, kurbo::Rect) {
-    let page = &vectorcraft_pdf::info(bytes, None).unwrap().pages[0];
+    let page = &tsipika_pdf::info(bytes, None).unwrap().pages[0];
     let get = |c: CropTo| page.boxes.iter().find(|(b, _)| *b == c).unwrap().1;
     (get(CropTo::Media), get(CropTo::Bleed), get(CropTo::Trim))
 }
@@ -61,7 +61,7 @@ fn non_printing_layers_are_left_out_unless_included() {
     s.execute("layer.setProps", &json!({"id": layer, "printable": false})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 60, "y": 40, "width": 20, "height": 20})).unwrap();
     let paths = |s: &mut Session, p| {
-        let doc = vectorcraft_pdf::import(&export(s, p).0).unwrap();
+        let doc = tsipika_pdf::import(&export(s, p).0).unwrap();
         let mut n = 0;
         doc.walk(|x| n += usize::from(x.path_data().is_some()));
         n

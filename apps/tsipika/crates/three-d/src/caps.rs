@@ -1,6 +1,6 @@
 //! Curved projected rings shared by a cap and its adjoining body faces.
 
-use vectorcraft_geom::{CubicBez, Shape};
+use tsipika_geom::{CubicBez, Shape};
 
 use super::*;
 

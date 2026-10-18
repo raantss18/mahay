@@ -2,13 +2,13 @@
 //! finds; damaged or oversized files are skipped, never fatal.
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms;
+use tsipika_color::cms;
 
 use crate::Session;
 use crate::store::{MAX_PRESET_FILE, file_stem};
 
 fn fresh_dir(tag: &str) -> std::path::PathBuf {
-    let dir = vectorcraft_testkit::temp_dir(&format!("store-{tag}"));
+    let dir = tsipika_testkit::temp_dir(&format!("store-{tag}"));
     let _ = std::fs::remove_dir_all(&dir);
     dir
 }
@@ -188,7 +188,7 @@ fn stored_profiles_register_again_and_removing_one_removes_its_copy() {
 
     // A profile loaded from elsewhere is copied in, whatever the file is called.
     let other = "StoreRGB-2";
-    let loose = vectorcraft_testkit::temp_dir("store-loose").join("whatever.icm");
+    let loose = tsipika_testkit::temp_dir("store-loose").join("whatever.icm");
     std::fs::write(&loose, icc_named(other)).unwrap();
     let r = s.execute("color.loadProfile", &json!({"path": loose.to_str().unwrap()})).unwrap();
     assert_eq!((r["name"].as_str(), r["remembered"].as_bool()), (Some(other), Some(true)));

@@ -1,8 +1,8 @@
-//! The VP9 intra encoder (`effectcraft-vp9enc`) round-trips through FilmCraft's VP9 decoder (and
+//! The VP9 intra encoder (`tselatra-vp9enc`) round-trips through Hetsika's VP9 decoder (and
 //! ffmpeg as an external oracle when installed): sizes, lossless exactness, PSNR.
 
-use effectcraft_vp9enc::{EncoderConfig, Vp9Encoder};
-use filmcraft_vp9::{Decoder, Plane};
+use tselatra_vp9enc::{EncoderConfig, Vp9Encoder};
+use hetsika_vp9::{Decoder, Plane};
 
 fn plane_u8(p: &Plane) -> Vec<u8> {
     match p {
@@ -40,7 +40,7 @@ fn source(w: usize, h: usize, kind: u32) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
     (y, u, v)
 }
 
-fn decode(frame: &[u8]) -> filmcraft_vp9::Picture {
+fn decode(frame: &[u8]) -> hetsika_vp9::Picture {
     let mut d = Decoder::new();
     let mut pics = d.decode(frame, 0).expect("decode");
     assert_eq!(pics.len(), 1);
@@ -130,7 +130,7 @@ fn ffmpeg_decodes_our_stream() {
     ivf.extend_from_slice(&(frame.len() as u32).to_le_bytes());
     ivf.extend_from_slice(&0u64.to_le_bytes());
     ivf.extend_from_slice(&frame);
-    let dir = std::env::temp_dir().join(format!("effectcraft-vp9-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tselatra-vp9-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("a.ivf");
     std::fs::write(&path, &ivf).unwrap();
@@ -179,7 +179,7 @@ fn moving(w: usize, h: usize, t: usize, kind: u32) -> (Vec<u8>, Vec<u8>, Vec<u8>
     (y, u, v)
 }
 
-fn planes_of(p: &filmcraft_vp9::Picture, w: usize, h: usize) -> [Vec<u8>; 3] {
+fn planes_of(p: &hetsika_vp9::Picture, w: usize, h: usize) -> [Vec<u8>; 3] {
     let (cw, ch) = (w.div_ceil(2), h.div_ceil(2));
     [crop(&plane_u8(&p.y), p.y_stride, w, h), crop(&plane_u8(&p.u), p.uv_stride, cw, ch), crop(&plane_u8(&p.v), p.uv_stride, cw, ch)]
 }
@@ -291,7 +291,7 @@ fn ffmpeg_matches(w: usize, h: usize, frames: &[Vec<u8>], recon: &[[Vec<u8>; 3]]
         ivf.extend_from_slice(&(t as u64).to_le_bytes());
         ivf.extend_from_slice(f);
     }
-    let dir = std::env::temp_dir().join(format!("effectcraft-vp9-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tselatra-vp9-{name}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("a.ivf");
     std::fs::write(&path, &ivf).unwrap();
@@ -343,7 +343,7 @@ fn frames_never_end_in_a_superframe_marker() {
         }
     }
     let Some((w, h, q, frames, recon)) = padded else { panic!("no frame needed the padding: widen the search") };
-    // The padded frames decode exactly, with FilmCraft's decoder and with ffmpeg.
+    // The padded frames decode exactly, with Hetsika's decoder and with ffmpeg.
     let mut d = Decoder::new();
     for (t, (f, r)) in frames.iter().zip(&recon).enumerate() {
         let mut pics = d.decode(f, t as i64).unwrap_or_else(|e| panic!("{w}x{h} q{q} frame {t}: {e:?}"));

@@ -14,9 +14,9 @@ use std::sync::Arc;
 use egui::{Color32, Sense, Ui, vec2};
 use serde_json::json;
 
-use vectorcraft_text::FontClass;
+use tsipika_text::FontClass;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 use crate::widgets;
 
@@ -54,7 +54,7 @@ impl Default for MenuLook<'static> {
 }
 
 impl<'a> MenuLook<'a> {
-    pub fn of(app: &'a VectorcraftApp) -> Self {
+    pub fn of(app: &'a TsipikaApp) -> Self {
         let row = match app.session.prefs.font_preview_size.as_str() {
             "small" => 20.0,
             "large" => 32.0,
@@ -98,7 +98,7 @@ fn script_label(i: usize) -> &'static str {
 
 /// Does a family of `traits` pass script filter `script` ([`SCRIPTS`])? Latin: neither Japanese
 /// nor Thai.
-fn script_matches(script: usize, traits: vectorcraft_text::FontTraits) -> bool {
+fn script_matches(script: usize, traits: tsipika_text::FontTraits) -> bool {
     match script {
         1 => traits.japanese,
         2 => !traits.japanese && !traits.thai,
@@ -273,7 +273,7 @@ fn list(ui: &mut Ui, state_id: egui::Id, st: &mut MenuState, current: &str, samp
         }
     });
     let enter = ui.input(|i| i.key_pressed(egui::Key::Enter));
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     // The current family by its own name (a document may name it in Japanese: ヒラギノ角ゴシック),
     // as it was before any preview.
     let current = db.canonical(&st.current, "").0;
@@ -597,8 +597,8 @@ const MAX_ASPECT: f32 = 10.0;
 /// `text` (or [`FALLBACK_SAMPLE`] when the font lacks some of its characters) set in `family`,
 /// `px` pixels high: a coverage mask as white with alpha.
 fn render_sample(family: &str, style: &str, text: &str, px: u32) -> Option<egui::ColorImage> {
-    let db = vectorcraft_text::FontDb::global();
-    let face: Arc<vectorcraft_text::FontFace> = db.face(family, style)?;
+    let db = tsipika_text::FontDb::global();
+    let face: Arc<tsipika_text::FontFace> = db.face(family, style)?;
     let covers = |s: &str| !s.trim().is_empty() && s.chars().filter(|c| !c.is_whitespace()).all(|c| face.covers(c));
     let text = if covers(text) { text } else { FALLBACK_SAMPLE };
     if !covers(text) && !face.family.eq_ignore_ascii_case(family) {
@@ -608,16 +608,16 @@ fn render_sample(family: &str, style: &str, text: &str, px: u32) -> Option<egui:
     let em = (asc + desc).max(1.0) / face.units_per_em();
     // The em box fills the height with a little air.
     let size = px as f64 * 0.8 / em;
-    let style = vectorcraft_doc::CharStyle { font_family: face.family.clone(), font_style: face.style.clone(), size, ..Default::default() };
-    let t = vectorcraft_doc::TextObject::point(vectorcraft_geom::Point::ZERO, text, style);
-    let layout = vectorcraft_text::layout(db, &t);
+    let style = tsipika_doc::CharStyle { font_family: face.family.clone(), font_style: face.style.clone(), size, ..Default::default() };
+    let t = tsipika_doc::TextObject::point(tsipika_geom::Point::ZERO, text, style);
+    let layout = tsipika_text::layout(db, &t);
     let mut path = layout.to_bezpath();
     let b = layout.bounds;
     let w = (b.width().ceil() as u32 + 2).clamp(1, (px as f32 * MAX_ASPECT) as u32) as usize;
     let h = px as usize;
     // Baseline where the ascent fits the top (with the air above it).
     let baseline = px as f64 * 0.1 + asc / face.units_per_em() * size;
-    path.apply_affine(vectorcraft_geom::Affine::translate((1.0 - b.x0.min(0.0), baseline)));
+    path.apply_affine(tsipika_geom::Affine::translate((1.0 - b.x0.min(0.0), baseline)));
     let mask = crate::panels::glyphs::rasterize(&path, w, h);
     Some(egui::ColorImage::new([w, h], mask.iter().map(|&a| Color32::from_rgba_premultiplied(a, a, a, a)).collect()))
 }
@@ -641,7 +641,7 @@ fn open_id() -> egui::Id {
 /// closed) or is closing (Escape, a press outside the menu), before anything else sees this
 /// frame's input: the canvas must not act inside the preview's interaction (a drag would be
 /// rolled back with the preview). The shell calls it at the start of each frame.
-pub(crate) fn end_stale_preview(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub(crate) fn end_stale_preview(app: &mut TsipikaApp, ctx: &egui::Context) {
     if !crate::panels::pstate::<bool>(ctx, PREVIEWING) {
         return;
     }
@@ -661,7 +661,7 @@ pub(crate) fn end_stale_preview(app: &mut VectorcraftApp, ctx: &egui::Context) {
 
 /// What the font menus preview on and apply to: the Type tool's selected range while it edits
 /// text (the whole text when nothing is selected), else the selected text objects.
-pub(crate) fn apply(app: &mut VectorcraftApp, ctx: &egui::Context, pick: FontPick) {
+pub(crate) fn apply(app: &mut TsipikaApp, ctx: &egui::Context, pick: FontPick) {
     let previewing = crate::panels::pstate::<bool>(ctx, PREVIEWING);
     match pick {
         FontPick::Preview(f, style) => {
@@ -699,7 +699,7 @@ pub(crate) fn apply(app: &mut VectorcraftApp, ctx: &egui::Context, pick: FontPic
 }
 
 /// Star `family`, or take its star off (any case).
-fn toggle_favorite(app: &mut VectorcraftApp, family: String) {
+fn toggle_favorite(app: &mut TsipikaApp, family: String) {
     let favs = &mut app.ui.favorite_fonts;
     match favs.iter().position(|x| x.eq_ignore_ascii_case(&family)) {
         Some(i) => {
@@ -712,7 +712,7 @@ fn toggle_favorite(app: &mut VectorcraftApp, family: String) {
 /// For a font menu that only picks a font and never changes the document (Find Font's Replace
 /// With, the Glyphs panel): the family (and style) chosen, if any. A star is toggled here; the
 /// highlighted row is not previewed.
-pub(crate) fn picked(app: &mut VectorcraftApp, pick: Option<FontPick>) -> Option<(String, Option<String>)> {
+pub(crate) fn picked(app: &mut TsipikaApp, pick: Option<FontPick>) -> Option<(String, Option<String>)> {
     match pick? {
         FontPick::Chosen(f, style) => Some((f, style)),
         FontPick::Favorite(f) => {
@@ -725,7 +725,7 @@ pub(crate) fn picked(app: &mut VectorcraftApp, pick: Option<FontPick>) -> Option
 
 /// The command that sets font `family` (and `style`, else the closest the family has) on what the
 /// menus act on.
-fn font_command(app: &VectorcraftApp, family: &str, style: Option<&str>) -> (&'static str, serde_json::Value) {
+fn font_command(app: &TsipikaApp, family: &str, style: Option<&str>) -> (&'static str, serde_json::Value) {
     let mut p = json!({"font": family});
     if let Some(s) = style {
         p["style"] = json!(s);
@@ -745,15 +745,15 @@ fn font_command(app: &VectorcraftApp, family: &str, style: Option<&str>) -> (&'s
 
 /// The text the menus sample: the Type tool's selected characters, else the first line of the
 /// first selected text object, at most a dozen characters.
-pub(crate) fn sample_text(app: &VectorcraftApp) -> Option<String> {
+pub(crate) fn sample_text(app: &TsipikaApp) -> Option<String> {
     let doc = &app.session.active()?.doc;
     let text = match crate::panels::character::text_editing(app) {
         Some((id, a, b)) if b > a => match &doc.node(id)?.kind {
-            vectorcraft_doc::NodeKind::Text(t) => t.plain_text().get(a..b).map(str::to_string),
+            tsipika_doc::NodeKind::Text(t) => t.plain_text().get(a..b).map(str::to_string),
             _ => None,
         },
         _ => app.session.active()?.selection.objects.iter().find_map(|id| match &doc.node(*id)?.kind {
-            vectorcraft_doc::NodeKind::Text(t) => Some(t.plain_text()),
+            tsipika_doc::NodeKind::Text(t) => Some(t.plain_text()),
             _ => None,
         }),
     }?;
@@ -768,7 +768,7 @@ mod tests {
     /// Japanese.
     #[test]
     fn the_thai_filter_lists_fonts_with_thai() {
-        use vectorcraft_text::FontTraits;
+        use tsipika_text::FontTraits;
         let (thai, japanese, latin) =
             (FontTraits { thai: true, ..Default::default() }, FontTraits { japanese: true, ..Default::default() }, FontTraits::default());
         let passing = |t: FontTraits| (0..super::SCRIPTS).filter(|s| super::script_matches(*s, t)).collect::<Vec<_>>();
@@ -783,7 +783,7 @@ mod tests {
     #[test]
     fn the_scroll_bar_leaves_the_stars_clear() {
         // Every family starred, so each row draws its star.
-        let all = vectorcraft_text::FontDb::global().families();
+        let all = tsipika_text::FontDb::global().families();
         let families = all.len();
         let ctx = egui::Context::default();
         let area = egui::Rect::from_min_size(egui::pos2(0.0, 0.0), egui::vec2(300.0, 160.0));

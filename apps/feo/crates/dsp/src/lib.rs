@@ -1,5 +1,5 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
-//! SoundCraft DSP.
+//! Feo DSP.
 //!
 //! Realtime plugins (EQ, dynamics, reverb, delay, modulation, harmonic, pitch, utilities and three
 //! instruments), metering (peak, RMS, ITU-R BS.1770 loudness), spectrum analysis and offline
@@ -270,10 +270,10 @@ pub trait PluginEditor: Send {
     fn is_open(&self) -> bool;
     /// Call every UI frame while open: services the plugin's GUI requests, notices a window the
     /// user closed, and returns parameter edits made in the editor as `(param id, value)` in
-    /// SoundCraft units (ids and ranges of [`PluginInfo::params`]).
+    /// Feo units (ids and ranges of [`PluginInfo::params`]).
     fn idle(&mut self) -> Vec<(String, f32)>;
     /// Tells the editor that a parameter changed elsewhere (generic editor, automation), so the
-    /// GUI shows it. Values are in SoundCraft units.
+    /// GUI shows it. Values are in Feo units.
     fn set_param(&mut self, _id: &str, _value: f32) {}
 }
 

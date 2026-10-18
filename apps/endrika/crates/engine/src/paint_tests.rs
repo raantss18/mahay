@@ -5,15 +5,15 @@ use serde_json::json;
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_color::{Color, ColorProfile};
+use endrika_color::{Color, ColorProfile};
 
-fn red_rect(s: &mut Session) -> figcraft_doc::NodeId {
+fn red_rect(s: &mut Session) -> endrika_doc::NodeId {
     let r = id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 20, "height": 10})).unwrap()["id"]).unwrap();
     s.execute("fill.set", &json!({"ids": [r], "color": "#FF0000"})).unwrap();
     r
 }
 
-fn fill(s: &Session, id: figcraft_doc::NodeId) -> Color {
+fn fill(s: &Session, id: endrika_doc::NodeId) -> Color {
     s.doc().unwrap().node(id).unwrap().fills[0].solid_color().unwrap()
 }
 
@@ -82,19 +82,19 @@ fn color_profile_survives_save_and_load() {
     let mut s = Session::new();
     s.execute("file.colorProfile", &json!({"profile": "displayP3", "convert": false})).unwrap();
     let bytes = crate::cmd::file::file_bytes(s.ds().unwrap()).unwrap();
-    let (doc, _) = figcraft_format::load_bytes(&bytes).unwrap();
+    let (doc, _) = endrika_format::load_bytes(&bytes).unwrap();
     assert_eq!(doc.color_profile, ColorProfile::DisplayP3);
 }
 
-fn image_rect(s: &mut Session) -> figcraft_doc::NodeId {
+fn image_rect(s: &mut Session) -> endrika_doc::NodeId {
     let r = red_rect(s);
     s.execute("fill.add", &json!({"ids": [r], "paint": {"type": "image", "image": "img"}})).unwrap();
     r
 }
 
-fn filters(s: &Session, id: figcraft_doc::NodeId) -> figcraft_color::ImageFilters {
+fn filters(s: &Session, id: endrika_doc::NodeId) -> endrika_color::ImageFilters {
     match &s.doc().unwrap().node(id).unwrap().fills[1].kind {
-        figcraft_color::PaintKind::Image(img) => img.filters,
+        endrika_color::PaintKind::Image(img) => img.filters,
         _ => panic!("not an image"),
     }
 }
@@ -150,10 +150,10 @@ fn saved_image_presets() {
     let list = s.execute("image.presets", &json!({})).unwrap();
     assert_eq!(list["saved"].as_array().unwrap().len(), 1);
     assert_eq!(list["saved"][0]["filters"]["exposure"], -0.5);
-    assert_eq!(list["builtIn"].as_array().unwrap().len(), figcraft_color::ImageFilters::PRESETS.len());
+    assert_eq!(list["builtIn"].as_array().unwrap().len(), endrika_color::ImageFilters::PRESETS.len());
     // Saved presets travel with the file.
     let bytes = crate::cmd::file::file_bytes(s.ds().unwrap()).unwrap();
-    assert_eq!(figcraft_format::load_bytes(&bytes).unwrap().0.image_presets.len(), 1);
+    assert_eq!(endrika_format::load_bytes(&bytes).unwrap().0.image_presets.len(), 1);
     s.execute("image.deletePreset", &json!({"name": "Moody"})).unwrap();
     assert!(s.execute("image.deletePreset", &json!({"name": "Moody"})).is_err());
     assert!(s.execute("image.savePreset", &json!({"name": " "})).is_err());

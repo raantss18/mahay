@@ -11,8 +11,8 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_color::{Color, Gradient, GradientKind, Paint, PaintKind};
-use figcraft_doc::{LetterSpacing, LineHeight, NodeId};
+use endrika_color::{Color, Gradient, GradientKind, Paint, PaintKind};
+use endrika_doc::{LetterSpacing, LineHeight, NodeId};
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -239,7 +239,7 @@ fn asset_list_holds_exports_images_and_icons() {
     let f = id(&ex(&mut s, "frame.create", json!({"x": 0, "y": 0, "width": 400, "height": 400})));
     let marked = rect(&mut s, 10.0, 10.0, 50.0, 50.0, Some(f));
     ex(&mut s, "export.add", json!({"ids": [marked]}));
-    let png = figcraft_render::encode_png(&figcraft_render::Pixmap::new(2, 2).unwrap()).unwrap();
+    let png = endrika_render::encode_png(&endrika_render::Pixmap::new(2, 2).unwrap()).unwrap();
     use base64::Engine as _;
     let data = base64::engine::general_purpose::STANDARD.encode(png);
     let photo = id(&ex(&mut s, "file.placeImage", json!({"data": data, "x": 500, "y": 0})));

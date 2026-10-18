@@ -3,12 +3,12 @@
 
 use std::sync::Arc;
 
-use craft_pdf::syntax::Pdf;
+use mahay_pdf::syntax::Pdf;
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Cms, ColorSettings, DEVICE_CMYK, GENERIC_CMYK, Intent};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::cms::{self, Cms, ColorSettings, DEVICE_CMYK, GENERIC_CMYK, Intent};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_geom::{Rect, shapes};
 
 use crate::*;
 

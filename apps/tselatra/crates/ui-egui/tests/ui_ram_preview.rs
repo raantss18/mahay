@@ -1,13 +1,13 @@
 //! RAM preview frames are keyed by content: editing one comp keeps the cached frames of another,
 //! and undo finds the frames of the state it returns to.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::ItemId;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::project::ItemId;
+use tselatra_ui_egui::TselatraApp;
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn settle(h: &mut Harness<'_, EffectcraftApp>) {
+fn settle(h: &mut Harness<'_, TselatraApp>) {
     for _ in 0..600 {
         h.step();
         if h.state().frames.inflight() == 0 && h.state().frames.last_ms.lock().map(|v| *v > 0.0).unwrap_or(false) {
@@ -18,9 +18,9 @@ fn settle(h: &mut Harness<'_, EffectcraftApp>) {
     h.run_steps(2);
 }
 
-fn shown_cached(h: &Harness<'_, EffectcraftApp>, comp: u64) -> bool {
+fn shown_cached(h: &Harness<'_, TselatraApp>, comp: u64) -> bool {
     let app = h.state();
-    let key = effectcraft_ui_egui::frames::FrameKey { frame: 0, ..app.shown_series(ItemId(comp)) };
+    let key = tselatra_ui_egui::frames::FrameKey { frame: 0, ..app.shown_series(ItemId(comp)) };
     app.frames.is_cached(&key)
 }
 
@@ -30,7 +30,7 @@ fn an_edit_in_another_comp_keeps_the_cached_frames_and_undo_finds_them_again() {
     let b = s.execute("comp.new", json!({"name": "B", "width": 64, "height": 36, "duration": 1})).unwrap()["comp"].as_u64().unwrap();
     let a = s.execute("comp.new", json!({"name": "A", "width": 64, "height": 36, "duration": 1})).unwrap()["comp"].as_u64().unwrap();
     s.execute("layer.newSolid", json!({"color": "#3080ff"})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| TselatraApp::new(s));
     settle(&mut h);
     assert!(shown_cached(&h, a), "A's frame rendered");
     // Edit B (open it, add a layer), then come back to A: its frame is still in RAM.
@@ -49,7 +49,7 @@ fn an_edit_in_another_comp_keeps_the_cached_frames_and_undo_finds_them_again() {
     assert_eq!(h.state().shown_series(ItemId(a)), before);
     assert!(shown_cached(&h, a), "undo finds the earlier frame");
     // B's frame is still there too.
-    assert!(h.state().frames.is_cached(&effectcraft_ui_egui::frames::FrameKey { frame: 0, ..b_frame }));
+    assert!(h.state().frames.is_cached(&tselatra_ui_egui::frames::FrameKey { frame: 0, ..b_frame }));
 }
 
 /// #284: the Timeline shows the cached frames as a green line under the work area bar, from
@@ -59,7 +59,7 @@ fn the_timeline_shows_the_cached_frames_in_green() {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Cache", "width": 64, "height": 36, "duration": 2})).unwrap();
     s.execute("layer.newSolid", json!({"color": "#3080ff"})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| TselatraApp::new(s));
     settle(&mut h);
     h.run_steps(2);
     let green = h.state().tokens.cache_green;
@@ -91,9 +91,9 @@ fn prefetch_waits_while_edits_keep_coming() {
     let c = s.execute("comp.new", json!({"name": "Drag", "width": 64, "height": 36, "duration": 2})).unwrap()["comp"].as_u64().unwrap();
     let solid = s.execute("layer.newSolid", json!({"color": "#3080ff", "width": 16, "height": 16})).unwrap()["layer"].as_u64().unwrap();
     // Short steps: input time advances 50 ms per frame.
-    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(0.05).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(0.05).build_eframe(|_| TselatraApp::new(s));
     settle(&mut h);
-    let frame = |h: &Harness<'_, EffectcraftApp>| {
+    let frame = |h: &Harness<'_, TselatraApp>| {
         let app = h.state();
         let comp = app.session.project.comp(ItemId(c)).unwrap();
         comp.frame_rate.frame_at(app.session.time())
@@ -131,7 +131,7 @@ fn prefetch_waits_while_edits_keep_coming() {
 /// (333 → 0.333), whose render options hashed apart from the frames rendered at 0.3333….
 #[test]
 fn cached_frames_are_counted_at_one_third_resolution() {
-    use effectcraft_ui_egui::state::Resolution;
+    use tselatra_ui_egui::state::Resolution;
     for res in [Resolution::Third, Resolution::Custom(7)] {
         let mut s = Session::default();
         let c = s.execute("comp.new", json!({"name": "Third", "width": 64, "height": 36, "duration": 1})).unwrap()["comp"].as_u64().unwrap();
@@ -140,7 +140,7 @@ fn cached_frames_are_counted_at_one_third_resolution() {
         if let Some(comp) = std::sync::Arc::make_mut(&mut s.project).comp_mut(ItemId(c)) {
             comp.resolution = res;
         }
-        let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| TselatraApp::new(s));
         settle(&mut h);
         let series = h.state().shown_series(ItemId(c));
         assert_eq!(series.scale, (res.scale(1.0, 1.0) * 1000.0).round() as u32, "{res:?}");

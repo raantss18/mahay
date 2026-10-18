@@ -1,7 +1,7 @@
 //! Footage paths stored in a document (the project file, an imported project, the New Project
 //! template) reach the file system only through [`resolve`]: a relative path is taken from the
 //! document's folder, and only local files, or files on the network share the document itself is
-//! on, are followed (see `craft_docpath`).
+//! on, are followed (see `mahay_docpath`).
 //!
 //! Loading a document resolves its footage paths once ([`resolve_footage`]): followed paths are
 //! replaced by the resolved path, and an item with a refused path is marked missing, so the media
@@ -15,8 +15,8 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-pub use craft_docpath::Refused;
-use effectcraft_project::{Footage, ItemId, ItemKind, Project};
+pub use mahay_docpath::Refused;
+use tselatra_project::{Footage, ItemId, ItemKind, Project};
 
 /// Why a stored path is not followed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,7 +46,7 @@ pub fn resolve(stored: &str, project: Option<&str>) -> Result<PathBuf, NotFollow
         let p = Path::new(p);
         std::path::absolute(p).unwrap_or_else(|_| p.to_path_buf())
     });
-    let path = craft_docpath::resolve(stored, project.as_deref()).map_err(NotFollowed::Refused)?;
+    let path = mahay_docpath::resolve(stored, project.as_deref()).map_err(NotFollowed::Refused)?;
     // A path that is still relative would be taken from the working directory, which the
     // project does not choose.
     if path.is_relative() {

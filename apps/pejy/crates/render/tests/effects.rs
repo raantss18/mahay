@@ -3,13 +3,13 @@
 //!
 //! Goldens live in `tests/golden/*.png` and are compared with a tolerance (antialiasing and blur
 //! rounding may differ by a few levels between SIMD levels). Regenerate them after an intended
-//! change with `DESIGNCRAFT_BLESS=1 cargo test -p designcraft-render --test effects`.
+//! change with `PEJY_BLESS=1 cargo test -p pejy-render --test effects`.
 
-use designcraft_compose::Cache;
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{Document, Fill, Item, ItemId, ParaFormat, Shape, SpreadRef};
-use designcraft_geom::{Affine, Rect, Vec2, shapes};
-use designcraft_render::{Placed, RenderOptions, Rendered, Renderer};
+use pejy_compose::Cache;
+use pejy_doc::build::NewDocument;
+use pejy_doc::{Document, Fill, Item, ItemId, ParaFormat, Shape, SpreadRef};
+use pejy_geom::{Affine, Rect, Vec2, shapes};
+use pejy_render::{Placed, RenderOptions, Rendered, Renderer};
 
 const SIZE: u32 = 160;
 
@@ -46,7 +46,7 @@ const WHITE: u32 = 765;
 /// Tolerant comparison with `tests/golden/{name}.png` (written when missing or when blessing).
 fn golden(name: &str, img: &Rendered) {
     let path = format!("{}/tests/golden/{name}.png", env!("CARGO_MANIFEST_DIR"));
-    let bless = std::env::var_os("DESIGNCRAFT_BLESS").is_some();
+    let bless = std::env::var_os("PEJY_BLESS").is_some();
     let Ok(bytes) = std::fs::read(&path).map_err(|_| ()).and_then(|b| if bless { Err(()) } else { Ok(b) }) else {
         std::fs::create_dir_all(format!("{}/tests/golden", env!("CARGO_MANIFEST_DIR"))).unwrap();
         std::fs::write(&path, img.to_png()).unwrap();
@@ -68,7 +68,7 @@ fn golden(name: &str, img: &Rendered) {
     let n = (img.width * img.height) as usize;
     let mean = sum as f64 / n as f64;
     if bad * 200 > n || mean > 1.0 {
-        let out = std::env::temp_dir().join(format!("designcraft-golden-{name}.png"));
+        let out = std::env::temp_dir().join(format!("pejy-golden-{name}.png"));
         let _ = std::fs::write(&out, img.to_png());
         panic!("{name}: {bad} pixels differ by > 8 (worst {worst}, mean {mean:.2}); got {}", out.display());
     }
@@ -219,7 +219,7 @@ fn a_wide_feather_keeps_the_object_sharp_at_high_zoom() {
         fill: Fill::swatch("[Black]"),
         ..Item::new(ItemId(d.alloc()), d.default_layer(), Shape::Rectangle, shapes::rectangle(Rect::new(78.0, 78.0, 82.0, 82.0)))
     };
-    d.item_mut(id).unwrap().content = designcraft_doc::Content::Group { items: vec![std::sync::Arc::new(kid)] };
+    d.item_mut(id).unwrap().content = pejy_doc::Content::Group { items: vec![std::sync::Arc::new(kid)] };
     let plain = render_zoomed(&d);
     // 3σ of a 1,000 pt feather is 6,000 px here, so its mask is drawn at about 1/6 resolution.
     d.item_mut(id).unwrap().effects.feather = 1000.0;
@@ -293,7 +293,7 @@ fn pasted_into(d: &mut Document) -> ItemId {
         fill: Fill::swatch("[Black]"),
         ..Item::new(ItemId(d.alloc()), d.default_layer(), Shape::Rectangle, shapes::rectangle(Rect::new(0.0, 0.0, 160.0, 160.0)))
     };
-    d.item_mut(id).unwrap().content = designcraft_doc::Content::Group { items: vec![std::sync::Arc::new(kid)] };
+    d.item_mut(id).unwrap().content = pejy_doc::Content::Group { items: vec![std::sync::Arc::new(kid)] };
     assert!(d.item(id).unwrap().has_nested_items());
     id
 }
@@ -346,11 +346,11 @@ fn inner_glow_mode_and_technique() {
     // Screen (the default) can't darken white paper; Multiply can.
     let screen = render(&d);
     assert!(lum(screen.pixel(32, 80)) > 740, "{:?}", screen.pixel(32, 80));
-    d.item_mut(id).unwrap().effects.inner_glow.mode = designcraft_color::BlendMode::Multiply;
+    d.item_mut(id).unwrap().effects.inner_glow.mode = pejy_color::BlendMode::Multiply;
     let soft = render(&d);
     assert!(lum(soft.pixel(32, 80)) + 150 < lum(screen.pixel(32, 80)), "a dark edge: {:?}", soft.pixel(32, 80));
     // Precise keeps the glow nearer the edge than Softer.
-    d.item_mut(id).unwrap().effects.inner_glow.technique = designcraft_doc::GlowTechnique::Precise;
+    d.item_mut(id).unwrap().effects.inner_glow.technique = pejy_doc::GlowTechnique::Precise;
     let precise = render(&d);
     assert!(lum(precise.pixel(42, 80)) > lum(soft.pixel(42, 80)) + 30, "{:?} vs {:?}", precise.pixel(42, 80), soft.pixel(42, 80));
 }
@@ -368,9 +368,9 @@ fn feather_choke_and_corners() {
     assert!(lum(choked.pixel(38, 80)) + 60 < lum(diffused.pixel(38, 80)), "{:?} vs {:?}", choked.pixel(38, 80), diffused.pixel(38, 80));
     assert!(lum(choked.pixel(30, 80)) > 500, "still transparent at the path");
     // Sharp corners keep more of the corner than Rounded ones (past the fade, near the corner).
-    d.item_mut(id).unwrap().effects.feather_options = designcraft_doc::FeatherOptions { choke: 0.0, corners: designcraft_doc::FeatherCorners::Sharp };
+    d.item_mut(id).unwrap().effects.feather_options = pejy_doc::FeatherOptions { choke: 0.0, corners: pejy_doc::FeatherCorners::Sharp };
     let sharp = render(&d);
-    d.item_mut(id).unwrap().effects.feather_options.corners = designcraft_doc::FeatherCorners::Rounded;
+    d.item_mut(id).unwrap().effects.feather_options.corners = pejy_doc::FeatherCorners::Rounded;
     let rounded = render(&d);
     assert!(lum(sharp.pixel(41, 41)) + 20 < lum(rounded.pixel(41, 41)), "{:?} vs {:?}", sharp.pixel(41, 41), rounded.pixel(41, 41));
 }

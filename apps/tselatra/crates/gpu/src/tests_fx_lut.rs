@@ -2,11 +2,11 @@
 //! Color Profile Converter and Lumetri's Input LUT / Look, direct on a buffer (full and half
 //! resolution, as adjustment) and composited at 8 and 32 bpc.
 
-use effectcraft_keyframe::Value;
+use tselatra_keyframe::Value;
 
-use effectcraft_project::BitDepth;
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_project::BitDepth;
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
 
 use crate::tests::{Scene, check, compare_at, effect_case, effect_direct, n, opts, set};
 
@@ -121,9 +121,9 @@ fn ocio_cdl_space_display_look() {
     effect_case("ec.color.ociocdl", &[cdl.as_slice(), &[("style", e(1)), ("offsetRed", n(-0.1))]].concat());
     effect_case("ec.color.ociocdl", &[cdl.as_slice(), &[("direction", e(1))]].concat());
     effect_case("ec.color.ociocdl", &[cdl.as_slice(), &[("direction", e(1)), ("style", e(1))]].concat());
-    let spaces = effectcraft_effects::find("ec.color.ociocolorspace").unwrap();
+    let spaces = tselatra_effects::find("ec.color.ociocolorspace").unwrap();
     let names = match &spaces.params.iter().find(|p| p.id == "source").unwrap().ui {
-        effectcraft_project::ParamUi::Popup { options } => options.clone(),
+        tselatra_project::ParamUi::Popup { options } => options.clone(),
         _ => vec![],
     };
     for (a, z) in [("sRGB", "ACEScg"), ("ACEScct", "Display P3"), ("Gamma 2.4 Rec.2020", "ACES2065-1"), ("CIE-XYZ-D65", "sRGB"), ("Raw", "sRGB")] {

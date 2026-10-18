@@ -27,7 +27,7 @@ fn platform_entries(mac: bool) -> Vec<(Vec<String>, MenuEntry)> {
 fn top_level_order_matches_after_effects() {
     let mac: Vec<String> =
         parse(TREE, true).unwrap().iter().filter_map(|n| if let MenuNode::Submenu { label, .. } = n { Some(label.clone()) } else { None }).collect();
-    assert_eq!(mac, ["EffectCraft", "File", "Edit", "Composition", "Layer", "Effect", "Animation", "View", "Window", "Help"]);
+    assert_eq!(mac, ["Tselatra", "File", "Edit", "Composition", "Layer", "Effect", "Animation", "View", "Window", "Help"]);
     let other: Vec<String> =
         parse(TREE, false).unwrap().iter().filter_map(|n| if let MenuNode::Submenu { label, .. } = n { Some(label.clone()) } else { None }).collect();
     assert_eq!(other, ["File", "Edit", "Composition", "Layer", "Effect", "Animation", "View", "Window", "Help"]);
@@ -140,7 +140,7 @@ fn checked_reflects_layer_state() {
     assert_eq!(checked(&s, "file.save", &serde_json::json!({})), None);
 }
 
-/// `cargo test -p effectcraft-engine dump_specs -- --ignored --nocapture`: every command as TSV.
+/// `cargo test -p tselatra-engine dump_specs -- --ignored --nocapture`: every command as TSV.
 #[test]
 #[ignore]
 fn dump_specs() {

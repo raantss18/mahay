@@ -1,4 +1,4 @@
-use designcraft_doc::vars::{Use, VarKind, format_date, now, var_char};
+use pejy_doc::vars::{Use, VarKind, format_date, now, var_char};
 
 use super::*;
 
@@ -55,7 +55,7 @@ const XMP: &str = r#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="htt
 /// Glyph ids of the story's first frame, and those of its spaces.
 fn glyphs(d: &Document) -> (Vec<u32>, Vec<u32>) {
     let sid = *d.stories.keys().next().unwrap();
-    let cs = designcraft_compose::compose_story(d, sid, &Default::default());
+    let cs = pejy_compose::compose_story(d, sid, &Default::default());
     let text = &d.stories[&sid].text;
     let all: Vec<_> = cs.frames[0].lines.iter().flat_map(|l| l.glyphs.iter()).collect();
     (all.iter().map(|g| g.gid).collect(), all.iter().filter(|g| text[g.byte..].starts_with(' ')).map(|g| g.gid).collect())
@@ -120,7 +120,7 @@ fn text_variables_show_their_values_and_round_trip() {
 #[test]
 fn predefined_variables_round_trip() {
     let mut d = Document::new(&NewDocument::default());
-    d.text_variables.push(designcraft_doc::vars::TextVariable::new(
+    d.text_variables.push(pejy_doc::vars::TextVariable::new(
         "Chapter Head",
         VarKind::RunningHeader { style: "Strong".into(), use_: Use::FirstOnPage, character: true },
     ));

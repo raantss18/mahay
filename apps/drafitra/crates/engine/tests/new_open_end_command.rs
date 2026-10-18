@@ -1,9 +1,9 @@
 //! NEW and OPEN end a command left waiting for input (#715): it belongs to the drawing it started
 //! in, so its changes are undone there, and undo in the new drawing never brings back the other.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::Drawing;
 use serde_json::json;
 
 fn count(s: &Session) -> usize {

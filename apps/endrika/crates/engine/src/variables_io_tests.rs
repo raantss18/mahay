@@ -2,8 +2,8 @@
 //! export (JSON round trip, merging by name, CSS, junk), gradient stops bound to variables and
 //! variant properties driven by string variables.
 
-use figcraft_color::{Color, ColorStop, Gradient, GradientKind, Paint, PaintKind};
-use figcraft_doc::*;
+use endrika_color::{Color, ColorStop, Gradient, GradientKind, Paint, PaintKind};
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -43,9 +43,9 @@ fn healthy(s: &Session) {
 
 #[test]
 fn extended_collections_override_follow_updates_and_reset() {
-    let d = std::env::temp_dir().join(format!("figcraft-extvars-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("endrika-extvars-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
-    let lib_path = d.join("theme.figcraft").to_string_lossy().into_owned();
+    let lib_path = d.join("theme.endrika").to_string_lossy().into_owned();
     let mut lib = Session::new();
     ex(&mut lib, "variable.createCollection", json!({"name": "Theme", "modes": ["Light", "Dark"]}));
     ex(
@@ -115,7 +115,7 @@ fn extended_collections_override_follow_updates_and_reset() {
     healthy(&s);
 
     // Saved and reopened, it is the same; removing the library keeps what it extends.
-    let user = d.join("app.figcraft").to_string_lossy().into_owned();
+    let user = d.join("app.endrika").to_string_lossy().into_owned();
     ex(&mut s, "file.saveAs", json!({"path": user}));
     let mut t = Session::empty();
     ex(&mut t, "file.open", json!({"path": user}));
@@ -179,7 +179,7 @@ fn variables_export_and_import_round_trip() {
     theme(&mut s);
     let text = ex(&mut s, "variable.export", json!({}))["text"].as_str().unwrap().to_string();
     let parsed: Value = serde_json::from_str(&text).unwrap();
-    assert!(figcraft_format::rest::is_variables_json(&parsed));
+    assert!(endrika_format::rest::is_variables_json(&parsed));
 
     // Into another file: the same collections, variables, values, aliases and scopes.
     let mut t = Session::new();
@@ -223,7 +223,7 @@ fn variables_export_and_import_round_trip() {
         assert!(css.contains(want), "{want:?} in\n{css}");
     }
     // Written to a file and read back from it.
-    let path = std::env::temp_dir().join(format!("figcraft-vars-io-{}.json", std::process::id())).to_string_lossy().into_owned();
+    let path = std::env::temp_dir().join(format!("endrika-vars-io-{}.json", std::process::id())).to_string_lossy().into_owned();
     ex(&mut s, "variable.export", json!({"path": path}));
     let mut u = Session::new();
     ex(&mut u, "variable.import", json!({"variables": path}));

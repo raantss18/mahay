@@ -9,7 +9,7 @@ use egui::{Color32, vec2};
 use serde_json::{Map, Value, json};
 
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 #[derive(Clone, Debug)]
 pub enum FieldKind {
@@ -112,13 +112,13 @@ impl Form {
 }
 
 /// Open a form dialog.
-pub fn form(app: &mut EffectcraftApp, title: &str, command: &str, base: Value, fields: Vec<Field>) {
+pub fn form(app: &mut TselatraApp, title: &str, command: &str, base: Value, fields: Vec<Field>) {
     app.dialog_state.form = Form { title: title.into(), command: command.into(), base, fields };
     app.dialog = Some(Dialog::Form);
 }
 
 /// Open a message box.
-pub fn info(app: &mut EffectcraftApp, title: &str, body: &str) {
+pub fn info(app: &mut TselatraApp, title: &str, body: &str) {
     app.dialog_state.info = (title.into(), body.into());
     app.dialog = Some(Dialog::Info);
 }
@@ -157,11 +157,11 @@ fn is_pdf(p: &Value) -> bool {
 /// parameters. Returns whether the dialog opened. The checkbox starts off, as in After Effects:
 /// unticked, the picked files import as stills. Dropped files and agents' `file.import` don't
 /// ask (files import as stills, folders' runs as sequences).
-pub fn open_import_sequence(app: &mut EffectcraftApp, p: &Value) -> bool {
+pub fn open_import_sequence(app: &mut TselatraApp, p: &Value) -> bool {
     if has(p, &["sequence", "alphabetical"]) {
         return false;
     }
-    let runs = effectcraft_engine::sequence::sequences(app.session.services.as_ref(), &import_paths(p), false);
+    let runs = tselatra_engine::sequence::sequences(app.session.services.as_ref(), &import_paths(p), false);
     if runs.is_empty() {
         return false;
     }
@@ -171,13 +171,13 @@ pub fn open_import_sequence(app: &mut EffectcraftApp, p: &Value) -> bool {
 }
 
 /// The Import Image Sequence dialog's fields for `runs` (each a sequence's files).
-fn sequence_fields(app: &EffectcraftApp, runs: &[Vec<String>]) -> Vec<Field> {
-    use effectcraft_engine::project::sequence::sequence_name;
+fn sequence_fields(app: &TselatraApp, runs: &[Vec<String>]) -> Vec<Field> {
+    use tselatra_engine::project::sequence::sequence_name;
     let first = runs.first().map(Vec::as_slice).unwrap_or_default();
     let ext = first.first().and_then(|f| f.rsplit_once('.')).map(|(_, e)| e.to_ascii_uppercase()).unwrap_or_default();
     let what = |files: &[String]| {
         let name = sequence_name(files).unwrap_or_default();
-        match effectcraft_engine::sequence::missing_report(files) {
+        match tselatra_engine::sequence::missing_report(files) {
             Some(gaps) => format!("{name}: {} files, {gaps}", files.len()),
             None => format!("{name}: {} files", files.len()),
         }
@@ -196,8 +196,8 @@ fn sequence_fields(app: &EffectcraftApp, runs: &[Vec<String>]) -> Vec<Field> {
 }
 
 /// Fields to type a numeric property value in (`value`, or `value[0]`… per dimension).
-fn value_fields(name: &str, v: &effectcraft_engine::keyframe::Value) -> Option<Vec<Field>> {
-    use effectcraft_engine::keyframe::Value as KV;
+fn value_fields(name: &str, v: &tselatra_engine::keyframe::Value) -> Option<Vec<Field>> {
+    use tselatra_engine::keyframe::Value as KV;
     Some(match v {
         KV::Scalar(v) => vec![Field::num("value", name, *v)],
         KV::Vec2(v) => vec![Field::num("value[0]", "X", v[0]), Field::num("value[1]", "Y", v[1])],
@@ -207,7 +207,7 @@ fn value_fields(name: &str, v: &effectcraft_engine::keyframe::Value) -> Option<V
 }
 
 /// If `id` is a dialog command invoked without its parameters, open its form and return true.
-pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
+pub fn open_form(app: &mut TselatraApp, id: &str, p: &Value) -> bool {
     let s = &app.session;
     let comp = s.active_comp();
     let layer = comp.and_then(|c| s.state.selected_layers.first().and_then(|l| c.layer(*l)));
@@ -266,9 +266,9 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
         // Double-click a keyframe (or its context menu ▸ Edit Value…): the property's value at
         // that key, like After Effects' value dialog.
         "keys.set" if !has(p, &["value", "newTime"]) => {
-            let l = p.get("layer").and_then(Value::as_u64).and_then(|l| comp?.layer(effectcraft_engine::project::LayerId(l)));
+            let l = p.get("layer").and_then(Value::as_u64).and_then(|l| comp?.layer(tselatra_engine::project::LayerId(l)));
             let pr = l.and_then(|l| l.props.find(p.get("prop").and_then(Value::as_u64)?));
-            let t = p.get("time").and_then(Value::as_f64).map(effectcraft_engine::time::Tick::from_seconds_f64);
+            let t = p.get("time").and_then(Value::as_f64).map(tselatra_engine::time::Tick::from_seconds_f64);
             let Some((pr, t)) = pr.zip(t) else { return false };
             let Some(k) = pr.keys.iter().min_by_key(|k| (k.time.0 - t.0).abs()) else { return false };
             let Some(fields) = value_fields(&pr.name, &k.value) else { return false };
@@ -276,7 +276,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
         }
         // A property's context menu ▸ Edit Value…: its value at the current time.
         "prop.set" if !has(p, &["value"]) => {
-            let l = p.get("layer").and_then(Value::as_u64).and_then(|l| comp?.layer(effectcraft_engine::project::LayerId(l)));
+            let l = p.get("layer").and_then(Value::as_u64).and_then(|l| comp?.layer(tselatra_engine::project::LayerId(l)));
             let Some((l, pr)) = l.and_then(|l| Some((l, l.props.find(p.get("prop").and_then(Value::as_u64)?)?))) else { return false };
             let Some(fields) = value_fields(&pr.name, &pr.value_at(l.layer_time(t))) else { return false };
             (pr.name.clone(), fields)
@@ -323,7 +323,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
             (title.into(), vec![Field::num("value", label, first.unwrap_or(d))])
         }
         "layer.mask.shape" if !has(p, &["rect"]) => {
-            let (w, h) = layer.map(|l| effectcraft_engine::render::source_size(&s.project, l)).unwrap_or((100, 100));
+            let (w, h) = layer.map(|l| tselatra_engine::render::source_size(&s.project, l)).unwrap_or((100, 100));
             (
                 "Mask Shape".into(),
                 vec![
@@ -427,7 +427,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
             let proxy = id == "file.interpretProxy";
             let f = s.state.project_selection.first().and_then(|i| s.project.item(*i)).and_then(|it| match (&it.kind, &it.proxy) {
                 (_, Some(px)) if proxy => Some(px.footage.clone()),
-                (effectcraft_engine::project::ItemKind::Footage(f), _) if !proxy => Some(f.clone()),
+                (tselatra_engine::project::ItemKind::Footage(f), _) if !proxy => Some(f.clone()),
                 _ => None,
             });
             let Some(f) = f else { return false };
@@ -472,7 +472,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                         ("Rec. 2100 PQ", json!("rec2100pq")),
                         ("Rec. 2100 HLG", json!("rec2100hlg")),
                     ],
-                    f.color_profile.map_or(0, |c| 1 + effectcraft_engine::project::ColorSpace::ALL.iter().position(|x| *x == c).unwrap_or(0)),
+                    f.color_profile.map_or(0, |c| 1 + tselatra_engine::project::ColorSpace::ALL.iter().position(|x| *x == c).unwrap_or(0)),
                 ),
                 Field::bool("preserveRgb", "Preserve RGB", f.preserve_rgb),
                 Field::bool("linearLight", "Interpret As Linear Light", f.linear_light),
@@ -480,15 +480,15 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
             // After Frame Rate: an image sequence's frames (missing ones show colour bars, as in
             // After Effects), then Start Timecode.
             let mut timing = Vec::new();
-            if f.kind == effectcraft_engine::project::FootageKind::Sequence {
-                let gaps = match effectcraft_engine::sequence::missing_report(&f.sequence) {
+            if f.kind == tselatra_engine::project::FootageKind::Sequence {
+                let gaps = match tselatra_engine::sequence::missing_report(&f.sequence) {
                     _ if f.alphabetical => "files in alphabetical order".into(),
                     Some(gaps) => format!("{gaps} shown as color bars"),
                     None => "no missing frames".into(),
                 };
                 timing.push(Field::note("sequenceInfo", &format!("Image sequence: {} files, {} frames; {gaps}.", f.sequence.len(), f.sequence_frames())));
             }
-            if f.kind != effectcraft_engine::project::FootageKind::Still {
+            if f.kind != tselatra_engine::project::FootageKind::Still {
                 timing.push(Field::choice(
                     "overrideStart",
                     "Start Timecode",
@@ -533,7 +533,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                             ("Feet + Frames (16mm)", json!("feet16")),
                         ],
                         {
-                            use effectcraft_engine::project::TimeDisplayStyle as T;
+                            use tselatra_engine::project::TimeDisplayStyle as T;
                             match st.time_display {
                                 T::Timecode => 0,
                                 T::Frames => 1,
@@ -546,7 +546,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                         "colorEngine",
                         "Color engine",
                         &[("Adobe-style built-in", json!("adobe")), ("OCIO (built-in ACES config)", json!("ocio"))],
-                        usize::from(st.color_engine == effectcraft_engine::project::ColorEngine::Ocio),
+                        usize::from(st.color_engine == tselatra_engine::project::ColorEngine::Ocio),
                     ),
                     Field::choice(
                         "workingSpace",
@@ -560,7 +560,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                             ("ACEScg", json!("acescg")),
                             ("ACES2065-1", json!("aces2065")),
                         ],
-                        st.working_space.map_or(0, |c| 1 + effectcraft_engine::project::ColorSpace::WORKING.iter().position(|x| *x == c).unwrap_or(0)),
+                        st.working_space.map_or(0, |c| 1 + tselatra_engine::project::ColorSpace::WORKING.iter().position(|x| *x == c).unwrap_or(0)),
                     ),
                     // With Working Space None (After Effects' Working Gamma, 2.2 or 2.4).
                     Field::choice("workingGamma", "Working gamma", &[("2.2", json!(2.2)), ("2.4", json!(2.4))], usize::from(st.working_gamma_24())),
@@ -584,7 +584,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                             ("Rec. 2100 HLG (HDR)", json!("rec2100hlg")),
                         ],
                         {
-                            use effectcraft_engine::project::ColorSpace as C;
+                            use tselatra_engine::project::ColorSpace as C;
                             match st.output_space {
                                 Some(C::Rec709) => 1,
                                 Some(C::Rec2020) => 2,
@@ -641,7 +641,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                 .project
                 .items
                 .values()
-                .filter(|i| matches!(&i.kind, effectcraft_engine::project::ItemKind::Footage(f) if f.kind == effectcraft_engine::project::FootageKind::Data))
+                .filter(|i| matches!(&i.kind, tselatra_engine::project::ItemKind::Footage(f) if f.kind == tselatra_engine::project::FootageKind::Data))
                 .map(|i| (i.name.clone(), json!(i.id.0)))
                 .collect();
             if data.is_empty() {
@@ -733,7 +733,7 @@ pub fn open_form(app: &mut EffectcraftApp, id: &str, p: &Value) -> bool {
                     Field::text("description", "Description", ""),
                     Field::text("category", "Category", "My Templates"),
                     Field::bool("embedFootage", "Embed footage files", true),
-                    Field::num("embedLimitMB", "Embed up to (MB)", effectcraft_engine::templates::EMBED_LIMIT_MB),
+                    Field::num("embedLimitMB", "Embed up to (MB)", tselatra_engine::templates::EMBED_LIMIT_MB),
                 ],
             )
         }
@@ -847,7 +847,7 @@ fn form_grid(ui: &mut egui::Ui, f: &mut Form, regs: &mut Vec<(String, egui::Rect
     });
 }
 
-pub fn show_form(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn show_form(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut f = app.dialog_state.form.clone();
     let (mut ok, mut close) = (false, false);
     // Rows are 30 px; a note wraps at about 40 characters a line, so OK and Cancel stay in view.
@@ -926,11 +926,11 @@ pub fn show_form(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
 }
 
 /// Close the information dialog without abandoning a pending Settings transaction.
-pub(crate) fn close_info(app: &mut EffectcraftApp) {
+pub(crate) fn close_info(app: &mut TselatraApp) {
     app.dialog = app.dialog_state.prefs_snapshot.is_some().then_some(Dialog::Settings);
 }
 
-pub fn show_info(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn show_info(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let (title, body) = app.dialog_state.info.clone();
     // Enter presses OK, the default (and only) button.
     let mut close = !ctx.egui_wants_keyboard_input() && ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
@@ -949,7 +949,7 @@ pub fn show_info(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
     }
 }
 
-pub fn show_view_options(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn show_view_options(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut close = false;
     super::dialogs::modal(ctx, "View Options", vec2(360.0, 330.0), t, |ui| {
         let v = &mut app.ui.viewer;
@@ -995,7 +995,7 @@ mod tests {
     /// and selected: typing replaces it, and one Enter confirms.
     #[test]
     fn a_numeric_form_opens_with_its_first_number_selected() {
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         let ctx = egui::Context::default();
         crate::theme::install(&ctx, &app.tokens, crate::i18n::language(&app));
         app.dialog_state.form = Form {
@@ -1005,7 +1005,7 @@ mod tests {
             fields: vec![Field::num("value[0]", "X", 960.0), Field::num("value[1]", "Y", 540.0)],
         };
         app.dialog = Some(Dialog::Form);
-        let frame = |app: &mut EffectcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TselatraApp, events: Vec<egui::Event>| {
             let raw = egui::RawInput { events, ..Default::default() };
             ctx.run_ui(raw, |ui| {
                 app.auto.begin_frame();
@@ -1026,7 +1026,7 @@ mod tests {
     /// XML; its fields register automation ids and OK runs `file.exportTimeline`.
     #[test]
     fn premiere_export_dialog() {
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         let ctx = egui::Context::default();
         crate::theme::install(&ctx, &app.tokens, crate::i18n::language(&app));
         app.session.execute("comp.new", json!({"name": "Spot", "width": 64, "height": 36, "frameRate": 25, "duration": 1})).unwrap();
@@ -1036,7 +1036,7 @@ mod tests {
         let f = &app.dialog_state.form;
         assert_eq!(f.command, "file.exportTimeline");
         assert!(matches!(&f.fields[0].kind, FieldKind::Note(t) if t.contains("Final Cut Pro XML (.xml)")));
-        let dir = std::env::temp_dir().join(format!("effectcraft-ui-premiere-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tselatra-ui-premiere-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("Spot.xml").to_string_lossy().to_string();
         app.dialog_state.form.fields[1].kind = FieldKind::SavePath(path.clone());

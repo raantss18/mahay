@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::dialogs::file_saved;
@@ -30,7 +30,7 @@ impl Temp {
     fn new() -> Self {
         static NEXT: AtomicU64 = AtomicU64::new(0);
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let path = std::env::temp_dir().join(format!("figcraft-save-as-{}-{stamp}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+        let path = std::env::temp_dir().join(format!("endrika-save-as-{}-{stamp}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
         std::fs::create_dir(&path).unwrap();
         Self(path)
     }
@@ -73,7 +73,7 @@ fn toast(app: &FigApp) -> &str {
 }
 
 fn expected_picker() -> Vec<(String, String, Vec<String>)> {
-    vec![("Save as".into(), "Prototype.figcraft".into(), vec!["figcraft".into(), "fig".into()])]
+    vec![("Save as".into(), "Prototype.endrika".into(), vec!["endrika".into(), "fig".into()])]
 }
 
 #[test]
@@ -111,7 +111,7 @@ fn a_pathless_engine_request_uses_the_same_platform_picker() {
 #[test]
 fn native_paths_and_an_extensionless_default_save_native_files_and_show_the_written_name() {
     let temp = Temp::new();
-    for (chosen, written) in [("native", "native.figcraft"), ("saved.figcraft", "saved.figcraft"), ("upper.FIGCRAFT", "upper.FIGCRAFT")] {
+    for (chosen, written) in [("native", "native.endrika"), ("saved.endrika", "saved.endrika"), ("upper.ENDRIKA", "upper.ENDRIKA")] {
         let (mut app, picks) = app(Some(temp.path(chosen)));
         app.save_as_dialog();
         app.poll_dialog(&egui::Context::default());
@@ -134,7 +134,7 @@ fn returned_fig_paths_export_real_copies_without_changing_native_save_state() {
     for name in ["copy.fig", "upper.FIG"] {
         let path = temp.path(name);
         let (mut app, picks) = app(Some(path.clone()));
-        let native = temp.path("working.figcraft").to_string_lossy().into_owned();
+        let native = temp.path("working.endrika").to_string_lossy().into_owned();
         app.session.ds_mut().unwrap().path = Some(native.clone());
         let before = app.session.doc().unwrap().clone();
         app.save_as_dialog();
@@ -170,7 +170,7 @@ fn a_fig_copy_reports_actual_engine_warnings_and_keeps_the_original_content() {
 #[test]
 fn cancelling_the_platform_dialog_preserves_document_selection_path_and_dirty_state() {
     let (mut app, picks) = app(None);
-    app.session.ds_mut().unwrap().path = Some("working.figcraft".into());
+    app.session.ds_mut().unwrap().path = Some("working.endrika".into());
     let before = app.session.doc().unwrap().clone();
     let selection = app.session.ds().unwrap().selection.clone();
     app.save_as_dialog();
@@ -178,7 +178,7 @@ fn cancelling_the_platform_dialog_preserves_document_selection_path_and_dirty_st
     assert_eq!(*picks.lock().unwrap(), expected_picker());
     assert_eq!(app.session.doc().unwrap(), &before);
     assert_eq!(app.session.ds().unwrap().selection, selection);
-    assert_eq!(app.session.ds().unwrap().path.as_deref(), Some("working.figcraft"));
+    assert_eq!(app.session.ds().unwrap().path.as_deref(), Some("working.endrika"));
     assert!(app.session.ds().unwrap().is_dirty());
     assert!(app.ui.toast.is_none());
 }
@@ -197,14 +197,14 @@ fn unsupported_extensions_are_rejected_without_overwriting_the_chosen_file() {
         assert_eq!(app.session.doc().unwrap(), &before);
         assert!(app.session.ds().unwrap().path.is_none());
         assert!(app.session.ds().unwrap().is_dirty());
-        assert_eq!(toast(&app), "Use the .figcraft or .fig extension.");
+        assert_eq!(toast(&app), "Use the .endrika or .fig extension.");
     }
 }
 
 #[test]
 fn adding_the_default_extension_never_overwrites_another_existing_path_without_confirmation() {
     let temp = Temp::new();
-    let path = temp.path("existing.figcraft");
+    let path = temp.path("existing.endrika");
     std::fs::write(&path, b"existing document").unwrap();
     let (mut app, _) = app(Some(temp.path("existing")));
     app.save_as_dialog();
@@ -213,18 +213,18 @@ fn adding_the_default_extension_never_overwrites_another_existing_path_without_c
     assert!(!temp.path("existing").exists());
     assert!(app.session.ds().unwrap().path.is_none());
     assert!(app.session.ds().unwrap().is_dirty());
-    assert_eq!(toast(&app), "A .figcraft file with this name already exists. Choose its full name to confirm replacement.");
+    assert_eq!(toast(&app), "A .endrika file with this name already exists. Choose its full name to confirm replacement.");
 }
 
 #[test]
 fn fig_save_results_report_the_actual_name_and_plural_warning_count_without_marking_native_state_saved() {
     let (mut app, _) = app(None);
     let before = app.session.doc().unwrap().clone();
-    app.session.ds_mut().unwrap().path = Some("working.figcraft".into());
+    app.session.ds_mut().unwrap().path = Some("working.endrika".into());
     file_saved(&mut app, &json!({"format": "fig", "path": "written.fig", "warnings": ["synthetic warning", "another synthetic warning"]}));
     assert_eq!(toast(&app), "Exported written.fig; 2 kinds of content were left out");
     assert_eq!(app.session.doc().unwrap(), &before);
-    assert_eq!(app.session.ds().unwrap().path.as_deref(), Some("working.figcraft"));
+    assert_eq!(app.session.ds().unwrap().path.as_deref(), Some("working.endrika"));
     assert!(app.session.ds().unwrap().is_dirty());
 }
 
@@ -232,7 +232,7 @@ fn fig_save_results_report_the_actual_name_and_plural_warning_count_without_mark
 fn save_with_a_native_path_keeps_using_it_without_a_dialog() {
     let temp = Temp::new();
     let (mut app, picks) = app(None);
-    let path = temp.path("working.figcraft");
+    let path = temp.path("working.endrika");
     app.run("file.saveAs", json!({"path": path})).unwrap();
     app.run("shape.rectangle", json!({"width": 10, "height": 20})).unwrap();
     assert!(app.session.ds().unwrap().is_dirty());
@@ -246,12 +246,12 @@ fn save_with_a_native_path_keeps_using_it_without_a_dialog() {
 #[test]
 fn saving_legacy_fig_paths_keeps_the_success_toast_and_original_source_bytes() {
     for legacy_name in ["legacy.fig", "legacy.FIG"] {
-        for destination in ["corrected.figcraft", "copy.fig"] {
+        for destination in ["corrected.endrika", "copy.fig"] {
             let temp = Temp::new();
             let target = temp.path(destination);
             let legacy = temp.path(legacy_name);
             let (mut app, picks) = app(Some(target.clone()));
-            let original = temp.path("original.figcraft");
+            let original = temp.path("original.endrika");
             app.run("file.saveAs", json!({"path": original})).unwrap();
             std::fs::rename(&original, &legacy).unwrap();
             let legacy_path = legacy.to_string_lossy().into_owned();
@@ -266,8 +266,8 @@ fn saving_legacy_fig_paths_keeps_the_success_toast_and_original_source_bytes() {
             assert!(target.is_file());
             assert!(app.ui.last_error.is_none());
             assert_eq!(app.session.doc().unwrap(), &before);
-            if destination == "corrected.figcraft" {
-                assert_eq!(toast(&app), "Saved corrected.figcraft");
+            if destination == "corrected.endrika" {
+                assert_eq!(toast(&app), "Saved corrected.endrika");
                 assert_eq!(app.session.ds().unwrap().path.as_deref(), target.to_str());
                 assert!(!app.session.ds().unwrap().is_dirty());
             } else {
@@ -282,7 +282,7 @@ fn saving_legacy_fig_paths_keeps_the_success_toast_and_original_source_bytes() {
 #[test]
 fn failed_writes_surface_the_engine_error_and_keep_the_document_dirty() {
     let temp = Temp::new();
-    for extension in ["figcraft", "fig"] {
+    for extension in ["endrika", "fig"] {
         let path = temp.path(&format!("missing/copy.{extension}"));
         let (mut app, _) = app(Some(path.clone()));
         let before = app.session.doc().unwrap().clone();
@@ -306,7 +306,7 @@ fn an_empty_destination_is_rejected_without_writing_or_changing_save_state() {
     assert_eq!(app.session.doc().unwrap(), &before);
     assert!(app.session.ds().unwrap().path.is_none());
     assert!(app.session.ds().unwrap().is_dirty());
-    assert_eq!(toast(&app), "Use the .figcraft or .fig extension.");
+    assert_eq!(toast(&app), "Use the .endrika or .fig extension.");
 }
 
 #[test]

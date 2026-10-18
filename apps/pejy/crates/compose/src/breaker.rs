@@ -278,7 +278,7 @@ fn korean_letter(g: &Glyph) -> bool {
     let c = g.ch as u32;
     let hangul = matches!(c, 0x1100..=0x11FF | 0x3130..=0x318F | 0xA960..=0xA97F | 0xAC00..=0xD7FF);
     let han = matches!(c, 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xF900..=0xFAFF | 0x20000..=0x3FFFF);
-    hangul || (han && g.lang.is_some_and(|t| designcraft_doc::language_subtag(t) == "ko"))
+    hangul || (han && g.lang.is_some_and(|t| pejy_doc::language_subtag(t) == "ko"))
 }
 
 /// Is the place between glyphs `a` and `b` one where CJK text may break (next to an ideograph, kana
@@ -295,7 +295,7 @@ fn cjk_break(a: &Glyph, b: &Glyph, sp: &Spacing) -> bool {
 }
 
 pub fn is_forced(c: char) -> bool {
-    use designcraft_doc::story::*;
+    use pejy_doc::story::*;
     c == FORCED_LINE_BREAK || is_break_char(c)
 }
 
@@ -336,7 +336,7 @@ fn hyphen_width(g: &Glyph, cache: &mut Vec<(u32, f64)>) -> f64 {
     let units = match cache.iter().find(|c| c.0 == id) {
         Some(c) => c.1,
         None => {
-            let gid = designcraft_fonts::first_glyph(&g.face, &['-', '\u{2010}']);
+            let gid = pejy_fonts::first_glyph(&g.face, &['-', '\u{2010}']);
             let u = g.face.advance(gid);
             cache.push((id, u));
             u
@@ -836,7 +836,7 @@ fn breaks_from_positions(items: &[Item], ig: &[usize], glyphs: &[Glyph], chain: 
     }
     // Lines produced past the paragraph end are dropped, except the empty line after a trailing
     // forced line break (a trailing column, frame or page break ends the paragraph).
-    let trailing_forced = glyphs.last().is_some_and(|g| g.ch == designcraft_doc::story::FORCED_LINE_BREAK);
+    let trailing_forced = glyphs.last().is_some_and(|g| g.ch == pejy_doc::story::FORCED_LINE_BREAK);
     out.retain(|b| b.start < n || (b.start == n && trailing_forced));
     out
 }
@@ -964,7 +964,7 @@ pub fn greedy(
     // A forced line break as the very last glyph leaves an empty final line (InDesign shows it);
     // a column, frame or page break there ends the paragraph.
     if let Some(last) = glyphs.last()
-        && last.ch == designcraft_doc::story::FORCED_LINE_BREAK
+        && last.ch == pejy_doc::story::FORCED_LINE_BREAK
     {
         out.push(Break { start: n, end: n, next: n, hyphen: false, forced: true });
     }

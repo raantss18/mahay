@@ -1,9 +1,9 @@
 [package]
-name = "designcraft-geom"
+name = "pejy-geom"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft geometry: anchor paths, shapes, units and measurements, hit testing"
+description = "Pejy geometry: anchor paths, shapes, units and measurements, hit testing"
 
 [lints]
 workspace = true

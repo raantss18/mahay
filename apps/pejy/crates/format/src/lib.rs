@@ -1,7 +1,7 @@
-//! The native `.designcraft` format: a zip archive holding
+//! The native `.pejy` format: a zip archive holding
 //!
-//! - `mimetype` (stored first, uncompressed): `application/vnd.designcraft+zip`
-//! - `document.json`: the [`Document`] (pretty JSON, documented by the serde model in `designcraft-doc`)
+//! - `mimetype` (stored first, uncompressed): `application/vnd.pejy+zip`
+//! - `document.json`: the [`Document`] (pretty JSON, documented by the serde model in `pejy-doc`)
 //! - `assets/<id>.<ext>`: embedded placed files, byte-for-byte: one per distinct file, and only
 //!   the ones the document references (see [`Document::compact_assets`])
 //! - `meta.json`: format version and generator
@@ -17,19 +17,19 @@ use std::hash::BuildHasher;
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use designcraft_doc::{AssetId, Document, ParaAttrs, Story};
+use pejy_doc::{AssetId, Document, ParaAttrs, Story};
 use serde_json::{Value, json};
 
-pub const MIME: &str = "application/vnd.designcraft+zip";
+pub const MIME: &str = "application/vnd.pejy+zip";
 /// Latest reader capability. Version 2 pinned the Keep Lines Together and drop cap defaults;
 /// version 3 adds rendering of retained EPS source assets.
 pub const VERSION: u32 = 3;
 
 #[derive(Debug, thiserror::Error)]
 pub enum FormatError {
-    #[error("not a DesignCraft document: {0}")]
+    #[error("not a Pejy document: {0}")]
     NotOurs(String),
-    #[error("document is from a newer DesignCraft (format {0}); please update")]
+    #[error("document is from a newer Pejy (format {0}); please update")]
     TooNew(u64),
     #[error("{0}")]
     Io(String),
@@ -52,7 +52,7 @@ fn ext_for(mime: &str) -> &'static str {
     }
 }
 
-/// Serialize a document to `.designcraft` bytes. The file holds each distinct placed file once
+/// Serialize a document to `.pejy` bytes. The file holds each distinct placed file once
 /// and leaves out assets nothing references; `doc` itself keeps them (undo can bring them back).
 pub fn save(doc: &Document) -> Result<Vec<u8>, FormatError> {
     save_with_preview(doc, None)
@@ -87,8 +87,8 @@ fn save_with_large_entries_from(doc: &Document, preview: Option<&[u8]>, large_en
         // Older readers would silently omit EPS artwork. Preview-only legacy assets and
         // documents without EPS stay at 2 so their existing readers keep working; writing 1
         // would make a reader re-run the version 2 paragraph upgrade over current defaults.
-        let version = if doc.assets.values().any(|a| designcraft_images::is_eps(&a.data)) { VERSION } else { 2 };
-        let meta = json!({"format": "designcraft", "version": version, "generator": concat!("DesignCraft ", env!("CARGO_PKG_VERSION"))});
+        let version = if doc.assets.values().any(|a| pejy_images::is_eps(&a.data)) { VERSION } else { 2 };
+        let meta = json!({"format": "pejy", "version": version, "generator": concat!("Pejy ", env!("CARGO_PKG_VERSION"))});
         z.write_all(meta.to_string().as_bytes()).map_err(|e| FormatError::Io(e.to_string()))?;
         if let Some(png) = preview {
             z.start_file(PREVIEW, stored).map_err(io)?;
@@ -112,19 +112,19 @@ fn save_with_large_entries_from(doc: &Document, preview: Option<&[u8]>, large_en
     Ok(buf.into_inner())
 }
 
-/// The file name extension of a DesignCraft document.
-pub const EXTENSION: &str = "designcraft";
+/// The file name extension of a Pejy document.
+pub const EXTENSION: &str = "pejy";
 
-/// Whether `bytes` are a DesignCraft document package: a zip holding `document.json`. Files
+/// Whether `bytes` are a Pejy document package: a zip holding `document.json`. Files
 /// without an extension are recognised by this (the legacy JSON form is too generic to sniff).
-pub fn is_designcraft(bytes: &[u8]) -> bool {
+pub fn is_pejy(bytes: &[u8]) -> bool {
     bytes.starts_with(b"PK") && zip::ZipArchive::new(Cursor::new(bytes)).is_ok_and(|z| z.index_for_name("document.json").is_some())
 }
 
-/// Whether `prefix`, the start of a file, opens a DesignCraft package: a zip whose first, stored
+/// Whether `prefix`, the start of a file, opens a Pejy package: a zip whose first, stored
 /// entry is the `mimetype` naming this format. Packages saved before they had one are recognised
-/// only whole ([`is_designcraft`]).
-pub fn starts_designcraft(prefix: &[u8]) -> bool {
+/// only whole ([`is_pejy`]).
+pub fn starts_pejy(prefix: &[u8]) -> bool {
     prefix.starts_with(b"PK\x03\x04") && prefix.get(26..28) == Some(&8u16.to_le_bytes()[..]) && prefix.get(30..38) == Some(b"mimetype") && {
         let extra = prefix.get(28..30).map_or(0, |e| usize::from(u16::from_le_bytes([e[0], e[1]])));
         prefix.get(38 + extra..).is_some_and(|rest| rest.starts_with(MIME.as_bytes()))
@@ -134,7 +134,7 @@ pub fn starts_designcraft(prefix: &[u8]) -> bool {
 /// The zip entry holding the first page's picture.
 pub const PREVIEW: &str = "preview.png";
 
-/// The PNG bytes of a `.designcraft` file's preview, reading only the zip's directory and that
+/// The PNG bytes of a `.pejy` file's preview, reading only the zip's directory and that
 /// entry. None for files without one (saved before previews, or legacy JSON) or that aren't ours.
 pub fn read_preview<R: Read + std::io::Seek>(file: R) -> Option<Vec<u8>> {
     let mut z = zip::ZipArchive::new(file).ok()?;
@@ -152,7 +152,7 @@ pub fn read_preview<R: Read + std::io::Seek>(file: R) -> Option<Vec<u8>> {
 /// The largest preview read back (a first-page PNG is far smaller).
 const MAX_PREVIEW_BYTES: u64 = 4 << 20;
 
-/// Read `.designcraft` bytes (zip, or the legacy single JSON file).
+/// Read `.pejy` bytes (zip, or the legacy single JSON file).
 pub fn load(bytes: &[u8]) -> Result<Document, FormatError> {
     if bytes.starts_with(b"PK") {
         return load_zip(bytes);
@@ -160,7 +160,7 @@ pub fn load(bytes: &[u8]) -> Result<Document, FormatError> {
     load_legacy_json(bytes)
 }
 
-/// Most entries a `.designcraft` archive may hold.
+/// Most entries a `.pejy` archive may hold.
 const MAX_ENTRIES: usize = 100_000;
 /// Most bytes `meta.json` or `document.json` may expand to.
 const MAX_JSON_BYTES: u64 = 256 << 20;
@@ -380,9 +380,9 @@ fn base64_decode(s: &str) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use designcraft_doc::build::NewDocument;
-    use designcraft_doc::geom::Rect;
-    use designcraft_doc::{Asset, ParaFormat, SpreadRef};
+    use pejy_doc::build::NewDocument;
+    use pejy_doc::geom::Rect;
+    use pejy_doc::{Asset, ParaFormat, SpreadRef};
 
     fn png_asset(d: &mut Document, data: &[u8]) -> AssetId {
         let aid = AssetId(d.alloc());
@@ -398,9 +398,9 @@ mod tests {
         aid
     }
 
-    fn place(d: &mut Document, asset: AssetId, crop: f64) -> designcraft_doc::ItemId {
-        use designcraft_doc::geom::{Affine, shapes};
-        use designcraft_doc::{Content, Graphic, Item, ItemId, Shape};
+    fn place(d: &mut Document, asset: AssetId, crop: f64) -> pejy_doc::ItemId {
+        use pejy_doc::geom::{Affine, shapes};
+        use pejy_doc::{Content, Graphic, Item, ItemId, Shape};
         let id = ItemId(d.alloc());
         let mut it = Item::new(id, d.default_layer(), Shape::Rectangle, shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)));
         it.content = Content::Graphic(Graphic {
@@ -492,18 +492,18 @@ mod tests {
     fn save_v1(doc: &Document) -> Vec<u8> {
         let mut z = zip::ZipWriter::new(Cursor::new(Vec::new()));
         z.start_file("meta.json", zip::write::SimpleFileOptions::default()).unwrap();
-        z.write_all(br#"{"format": "designcraft", "version": 1}"#).unwrap();
+        z.write_all(br#"{"format": "pejy", "version": 1}"#).unwrap();
         z.start_file("document.json", zip::write::SimpleFileOptions::default()).unwrap();
         z.write_all(&serde_json::to_vec(doc).unwrap()).unwrap();
         z.finish().unwrap().into_inner()
     }
 
-    fn para_style(name: &str, based_on: Option<&str>, keep_all_lines: Option<bool>) -> designcraft_doc::ParagraphStyle {
-        designcraft_doc::ParagraphStyle {
+    fn para_style(name: &str, based_on: Option<&str>, keep_all_lines: Option<bool>) -> pejy_doc::ParagraphStyle {
+        pejy_doc::ParagraphStyle {
             name: name.into(),
             based_on: based_on.map(str::to_string),
             next_style: None,
-            para: designcraft_doc::ParaAttrs { keep_lines_together: Some(true), keep_all_lines, ..Default::default() },
+            para: pejy_doc::ParaAttrs { keep_lines_together: Some(true), keep_all_lines, ..Default::default() },
             chars: Default::default(),
             shortcut: String::new(),
         }
@@ -522,7 +522,7 @@ mod tests {
         st.paragraph.push(para_style("Loop A", Some("Loop B"), None));
         st.paragraph.push(para_style("Loop B", Some("Loop A"), None));
         let lid = d.default_layer();
-        let names = [designcraft_doc::story::BASIC_PARAGRAPH, "Root", "Child", "Explicit", "Under explicit", "Loop A", "Loop B", "Missing"];
+        let names = [pejy_doc::story::BASIC_PARAGRAPH, "Root", "Child", "Explicit", "Under explicit", "Loop A", "Loop B", "Missing"];
         let text = names.join("\n");
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(10.0, 10.0, 200.0, 200.0), lid, &text, ParaFormat::default()).unwrap();
         {
@@ -551,7 +551,7 @@ mod tests {
         let now = load(&save(&d).unwrap()).unwrap();
         let p = &now.story(sid).unwrap().paras[0];
         assert!(!now.styles.resolve_para(p).0.keep_all_lines);
-        assert!(!designcraft_doc::ParaProps::default().keep_all_lines);
+        assert!(!pejy_doc::ParaProps::default().keep_all_lines);
     }
 
     /// Format 1 wrote paragraph rules, text frame options and numbered lists in full, so their
@@ -561,18 +561,18 @@ mod tests {
     fn format_1_rules_frames_and_lists_load_as_saved() {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
-        let old_rule = designcraft_doc::Rule { on: true, color: designcraft_doc::color::swatch::BLACK.into(), ..Default::default() };
+        let old_rule = pejy_doc::Rule { on: true, color: pejy_doc::color::swatch::BLACK.into(), ..Default::default() };
         let (fid, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(10.0, 10.0, 200.0, 200.0), lid, "Ruled", ParaFormat::default()).unwrap();
         d.story_mut(sid).unwrap().paras[0].para.rule_above = Some(old_rule.clone());
         d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.auto_size_ref = 1;
-        d.settings.lists.push(designcraft_doc::NumberedList { name: "Steps".into(), continue_across_stories: true });
+        d.settings.lists.push(pejy_doc::NumberedList { name: "Steps".into(), continue_across_stories: true });
         let back = load(&save_v1(&d)).unwrap();
         assert_eq!(back.story(sid).unwrap().paras[0].para.rule_above, Some(old_rule));
         assert_eq!(back.item(fid).unwrap().text_frame().unwrap().options.auto_size_ref, 1);
         assert!(back.settings.lists[0].continue_across_stories);
-        assert_eq!(designcraft_doc::Rule::default().color, designcraft_doc::TEXT_COLOR);
-        assert_eq!(designcraft_doc::TextFrameOptions::default().auto_size_ref, 4);
-        assert!(!designcraft_doc::NumberedList::default().continue_across_stories);
+        assert_eq!(pejy_doc::Rule::default().color, pejy_doc::TEXT_COLOR);
+        assert_eq!(pejy_doc::TextFrameOptions::default().auto_size_ref, 4);
+        assert!(!pejy_doc::NumberedList::default().continue_across_stories);
     }
 
     /// Format 1 set drop caps without Align Left Edge: those documents still do where nothing set
@@ -582,8 +582,8 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let st = d.styles_mut();
         st.paragraph.push(para_style("Opener", None, None));
-        st.paragraph.push(designcraft_doc::ParagraphStyle {
-            para: designcraft_doc::ParaAttrs { drop_cap_align_left: Some(true), ..Default::default() },
+        st.paragraph.push(pejy_doc::ParagraphStyle {
+            para: pejy_doc::ParaAttrs { drop_cap_align_left: Some(true), ..Default::default() },
             ..para_style("Aligned", None, None)
         });
         let lid = d.default_layer();
@@ -762,7 +762,7 @@ mod tests {
     /// position (saved as `null`) dropped, positions clamped, leaders cut, the count capped.
     #[test]
     fn saved_tab_lists_load_sanitized() {
-        use designcraft_doc::{MAX_TAB_LEADER, MAX_TAB_POSITION, MAX_TAB_STOPS, TabAlign, TabStop};
+        use pejy_doc::{MAX_TAB_LEADER, MAX_TAB_POSITION, MAX_TAB_STOPS, TabAlign, TabStop};
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(72.0, 72.0, 300.0, 300.0), lid, "a\tb", ParaFormat::default()).unwrap();
@@ -826,7 +826,7 @@ mod tests {
     }
 
     fn r7a_nullable_document(local_clear: bool, style_clear: bool) -> Document {
-        use designcraft_doc::{CharAttrs, ParaAttrs};
+        use pejy_doc::{CharAttrs, ParaAttrs};
         let mut d = Document::new(&NewDocument { pages: 1, ..Default::default() });
         let base = d.styles.default_paragraph.clone();
         let chars = CharAttrs {
@@ -863,7 +863,7 @@ mod tests {
         };
         let clear_para = ParaAttrs { start_at: Some(None), paragraph_kashida_width: Some(None), kinsoku: Some(None), ..Default::default() };
         let selected = if style_clear {
-            std::sync::Arc::make_mut(&mut d.styles).paragraph.push(designcraft_doc::styles::ParagraphStyle {
+            std::sync::Arc::make_mut(&mut d.styles).paragraph.push(pejy_doc::styles::ParagraphStyle {
                 name: "Defaults".into(),
                 based_on: Some(base.clone()),
                 next_style: None,
@@ -891,7 +891,7 @@ mod tests {
         d
     }
 
-    fn r7a_nullable_resolution(d: &Document) -> (designcraft_doc::ParaProps, designcraft_doc::CharProps) {
+    fn r7a_nullable_resolution(d: &Document) -> (pejy_doc::ParaProps, pejy_doc::CharProps) {
         let s = d.stories.values().find(|s| s.text == "clear").unwrap();
         d.styles.resolve_para(s.paras.first().unwrap())
     }
@@ -935,9 +935,9 @@ mod tests {
                 assert_eq!(back, d);
             }
         }
-        let attrs: designcraft_doc::CharAttrs = serde_json::from_value(json!({"size":null})).unwrap();
+        let attrs: pejy_doc::CharAttrs = serde_json::from_value(json!({"size":null})).unwrap();
         assert!(attrs.size.is_none(), "nonnullable fields retain their existing null contract");
-        let props: designcraft_doc::CharProps = serde_json::from_value(json!({"leadingAki":null})).unwrap();
+        let props: pejy_doc::CharProps = serde_json::from_value(json!({"leadingAki":null})).unwrap();
         assert_eq!(props.leading_aki, None);
     }
 

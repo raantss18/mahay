@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 const CONTROL_LIMIT: usize = 16 * 1024;
 const RESPONSE_LIMIT: usize = 4 * 1024 * 1024;
 const TIMEOUT: Duration = Duration::from_secs(9 * 60);
-pub const ENV: &str = "LIGHTCRAFT_SAM3_REMOTE";
+pub const ENV: &str = "HAZAVANA_SAM3_REMOTE";
 
 #[derive(Serialize, Deserialize)]
 pub enum Operation {

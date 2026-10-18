@@ -8,7 +8,7 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
@@ -18,7 +18,7 @@ const BAND: [u8; 4] = [255, 0, 255, 255];
 
 fn loupe() -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let mut app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let mut app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     app.ui.settings.gpu = false;
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail", "right": "edit"}), T);
@@ -32,8 +32,8 @@ fn cover(tag: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!("lc-layout-image-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let img = lightcraft_raster::Rgba8::from_fn(300, 400, |_, y| if y < 100 { BAND } else { [0, 0, 0, 0] });
-    let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&img), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+    let img = hazavana_raster::Rgba8::from_fn(300, 400, |_, y| if y < 100 { BAND } else { [0, 0, 0, 0] });
+    let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&img), &hazavana_codecs::EncodeMeta::default()).unwrap();
     let path = dir.join("cover.png");
     std::fs::write(&path, png).unwrap();
     path

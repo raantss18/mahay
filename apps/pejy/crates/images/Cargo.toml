@@ -1,23 +1,23 @@
 [package]
-name = "designcraft-images"
+name = "pejy-images"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft placed-graphic decoding: raster formats (PNG, JPEG, GIF, WebP, TIFF, BMP, PSD) and SVG"
+description = "Pejy placed-graphic decoding: raster formats (PNG, JPEG, GIF, WebP, TIFF, BMP, PSD) and SVG"
 
 [lints]
 workspace = true
 
 [dependencies]
-designcraft-color = { workspace = true }
-designcraft-fonts = { workspace = true }
+pejy-color = { workspace = true }
+pejy-fonts = { workspace = true }
 image = { workspace = true }
 tiff = { workspace = true }
 resvg = { workspace = true }
 log = { workspace = true }
-craft-cms = { workspace = true }
+mahay-cms = { workspace = true }
 zune-core = { version = "0.5", default-features = false }
 zune-jpeg = "0.5"
 
 [dev-dependencies]
-designcraft-fonts = { workspace = true, features = ["testing"] }
+pejy-fonts = { workspace = true, features = ["testing"] }

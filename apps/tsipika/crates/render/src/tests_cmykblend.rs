@@ -1,10 +1,10 @@
 //! Blending in CMYK documents ([`crate::ink`]): blend modes and opacity composite inks.
 
 use super::*;
-use vectorcraft_color::blend::MASK_LUM;
-use vectorcraft_color::{BlendMode as Blend, Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{Appearance, ColorMode, ImageBlob, ImageObject, Node, OpacityMask};
-use vectorcraft_geom::shapes;
+use tsipika_color::blend::MASK_LUM;
+use tsipika_color::{BlendMode as Blend, Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::{Appearance, ColorMode, ImageBlob, ImageObject, Node, OpacityMask};
+use tsipika_geom::shapes;
 
 fn rect(d: &mut Document, r: Rect, c: Color) -> Node {
     Node::path(d.alloc_id(), shapes::rectangle(r), Appearance::basic(Paint::solid(c), Paint::None, 0.0))
@@ -118,7 +118,7 @@ fn the_transparency_test_is_kept_while_the_art_stays_the_same() {
     // A symbol whose art shows transparency, placed nowhere, makes the page draw by ink planes again.
     let mut art = rect(&mut e, Rect::new(0.0, 0.0, 5.0, 5.0), CYAN);
     art.opacity = 0.5;
-    e.symbols.push(vectorcraft_doc::Symbol { name: "S".into(), art: Arc::new(art) });
+    e.symbols.push(tsipika_doc::Symbol { name: "S".into(), art: Arc::new(art) });
     assert!(frame(&mut r, &e) == frame(&mut Renderer::new(), &e));
     assert_eq!(kept(&r).map(|(_, shows)| shows), Some(true));
 }
@@ -151,7 +151,7 @@ fn busy_page() -> Document {
     add(&mut d, masked);
     let mut shadowed = rect(&mut d, Rect::new(110.0, 20.0, 170.0, 60.0), Color::cmyk(0.0, 0.2, 0.9, 0.0));
     let shadow = serde_json::json!({"x": 6.0, "y": 6.0, "blur": 4.0, "opacity": 75.0, "mode": "multiply"});
-    shadowed.appearance.effects.push(vectorcraft_doc::Effect { id: "stylize.dropShadow".into(), params: shadow, visible: true });
+    shadowed.appearance.effects.push(tsipika_doc::Effect { id: "stylize.dropShadow".into(), params: shadow, visible: true });
     add(&mut d, shadowed);
     let stops = vec![GradientStop::new(0.0, CYAN), GradientStop { opacity: 0.3, ..GradientStop::new(1.0, MAGENTA) }];
     let ramp = Paint::Gradient(Box::new(GradientPaint::new(Gradient { kind: GradientKind::Linear, stops })));
@@ -226,7 +226,7 @@ fn placed_images_are_separated_not_blackened() {
     );
     add(&mut d, n);
     let got = Renderer::new().render_region(&d, d.artboards[0].rect, 1.0, true).pixel(1, 1);
-    let cms = vectorcraft_color::cms::active();
+    let cms = tsipika_color::cms::active();
     let [r, g, b] = cms.cmyk_to_srgb(cms.srgb_to_cmyk([1.0, 0.0, 0.0], cms.settings().intent), false).map(|v| (v * 255.0).round() as u8);
     assert!(near(got, [r, g, b, 255], 4), "{got:?} ≠ {:?}", [r, g, b]);
 }

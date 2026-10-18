@@ -1,7 +1,7 @@
 //! Menu and Actions entries that need an input must collect it in the UI, not send `{}` to the
 //! engine (which would show a parameter error or silently use a default).
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::dialogs::MenuInput;

@@ -5,7 +5,7 @@
 //! - `assets`  every file under assets/ and docs/ has a row in ATTRIBUTION.md
 //! - `parity`  menu-catalog coverage → docs/parity-checklist.md
 //! - `version` print the version, or `version set X.Y.Z`
-//! - `icon`    regenerate the app icon PNGs/ICO from assets/app-icon/figcraft.svg (needs resvg)
+//! - `icon`    regenerate the app icon PNGs/ICO from assets/app-icon/endrika.svg (needs resvg)
 //! - `wasm`    check the core crates and web app for wasm32, and build the plugin SDK and examples
 //! - `plugins` format-check, lint, test and build the plugin SDK and example plugins (`plugins/`, a
 //!   workspace of its own) for wasm32: `<target>/plugins/dist/<example>/` holds each manifest and
@@ -67,15 +67,15 @@ fn wasm() -> bool {
         "--target",
         "wasm32-unknown-unknown",
         "-p",
-        "figcraft-collab",
+        "endrika-collab",
         "-p",
-        "figcraft-collab-net",
+        "endrika-collab-net",
         "-p",
-        "figcraft-engine",
+        "endrika-engine",
         "-p",
-        "figcraft-ui-egui",
+        "endrika-ui-egui",
         "-p",
-        "figcraft-web",
+        "endrika-web",
     ])) && plugins()
 }
 
@@ -106,7 +106,7 @@ fn plugins() -> bool {
         let module = format!("{}.wasm", name.replace('-', "_"));
         let dist = target.join("dist").join(name);
         let copied = std::fs::create_dir_all(&dist)
-            .and_then(|()| std::fs::copy(root.join("plugins/examples").join(name).join("figcraft-plugin.json"), dist.join("figcraft-plugin.json")))
+            .and_then(|()| std::fs::copy(root.join("plugins/examples").join(name).join("endrika-plugin.json"), dist.join("endrika-plugin.json")))
             .and_then(|_| std::fs::copy(target.join("wasm32-unknown-unknown/release").join(&module), dist.join(&module)));
         match copied {
             Ok(bytes) => eprintln!("plugins: {} ({} KB)", dist.display(), bytes / 1024),
@@ -119,15 +119,15 @@ fn plugins() -> bool {
     true
 }
 
-/// Engine/render timings (`figcraft-cli perf`) and UI frame timings (an ignored test driving the
+/// Engine/render timings (`endrika-cli perf`) and UI frame timings (an ignored test driving the
 /// whole UI headless), release builds, for each comma-separated document size in layers.
 fn bench(sizes: &str) -> bool {
-    run(cargo().args(["run", "--release", "-p", "figcraft-cli", "--", "perf", "--layers", sizes]))
-        && run(cargo().env("FIGCRAFT_BENCH_LAYERS", sizes).args([
+    run(cargo().args(["run", "--release", "-p", "endrika-cli", "--", "perf", "--layers", sizes]))
+        && run(cargo().env("ENDRIKA_BENCH_LAYERS", sizes).args([
             "test",
             "--release",
             "-p",
-            "figcraft-ui-egui",
+            "endrika-ui-egui",
             "--lib",
             "perf_ui_frames",
             "--",
@@ -198,7 +198,7 @@ fn parity() -> bool {
         "edit.copyAsPng",
         "edit.copyLink",
     ];
-    let (done, total, missing) = figcraft_engine::catalog::parity(&extra);
+    let (done, total, missing) = endrika_engine::catalog::parity(&extra);
     let pct = done as f64 * 100.0 / total.max(1) as f64;
     // The generation date: the date of the last commit (no clock dependency in xtask).
     let date = Command::new("git")
@@ -210,8 +210,8 @@ fn parity() -> bool {
         .map(|d| d.trim().to_string())
         .unwrap_or_default();
     let mut md = format!(
-        "# Parity checklist\n\n> **Generated:** {date} by `cargo xtask parity`. Do not edit by hand.\n\nFigCraft commands registered for the incumbent's main menu and toolbar ({} commands in the engine).\n\n**{done} / {total} menu items ({pct:.1}%)**\n\n",
-        figcraft_engine::all_commands().len()
+        "# Parity checklist\n\n> **Generated:** {date} by `cargo xtask parity`. Do not edit by hand.\n\nEndrika commands registered for the incumbent's main menu and toolbar ({} commands in the engine).\n\n**{done} / {total} menu items ({pct:.1}%)**\n\n",
+        endrika_engine::all_commands().len()
     );
     if missing.is_empty() {
         md.push_str("Every catalog item has a command.\n");

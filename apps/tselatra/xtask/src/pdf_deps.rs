@@ -6,7 +6,7 @@ use std::process::Command;
 use serde_json::Value;
 
 const REV: &str = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d";
-const PACKAGES: &[(&str, &str)] = &[("craft-pdf", "0.1.0"), ("hayro-syntax", "0.7.2")];
+const PACKAGES: &[(&str, &str)] = &[("mahay-pdf", "0.1.0"), ("hayro-syntax", "0.7.2")];
 
 pub fn run(root: &Path) -> Result<(), String> {
     let output = Command::new(std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
@@ -26,14 +26,14 @@ pub fn run(root: &Path) -> Result<(), String> {
 fn validate(metadata: &Value) -> Result<(), String> {
     let packages = metadata.get("packages").and_then(Value::as_array).ok_or("cargo metadata has no packages")?;
     let nodes = metadata.pointer("/resolve/nodes").and_then(Value::as_array).ok_or("cargo metadata has no resolved nodes")?;
-    let source = format!("git+https://github.com/storytold/craft-libs?rev={REV}#{REV}");
+    let source = format!("git+https://github.com/raantss18/mahay?rev={REV}#{REV}");
     for (name, version) in PACKAGES {
         let matches: Vec<_> = packages.iter().filter(|p| p["name"] == *name).collect();
         if matches.len() != 1 || matches[0]["version"] != *version || matches[0]["source"] != source {
             return Err(format!("{name}: expected exactly {version} from {source}"));
         }
     }
-    for (name, allowed) in [("craft-pdf", "read"), ("hayro-syntax", "std")] {
+    for (name, allowed) in [("mahay-pdf", "read"), ("hayro-syntax", "std")] {
         let package = packages.iter().find(|p| p["name"] == name).ok_or_else(|| format!("missing {name}"))?;
         let node = nodes.iter().find(|n| n["id"] == package["id"]).ok_or_else(|| format!("{name}: missing resolved node"))?;
         let features = node["features"].as_array().ok_or_else(|| format!("{name}: missing resolved features"))?;
@@ -45,7 +45,7 @@ fn validate(metadata: &Value) -> Result<(), String> {
         let name = package["name"].as_str().unwrap_or("");
         let active = nodes.iter().any(|node| node["id"] == package["id"]);
         if active && matches!(name, "hayro" | "hayro-interpret" | "hayro-cmap" | "krilla") {
-            return Err(format!("{name}: EffectCraft must use craft-pdf with only the read feature"));
+            return Err(format!("{name}: Tselatra must use mahay-pdf with only the read feature"));
         }
     }
     Ok(())
@@ -58,10 +58,10 @@ mod tests {
 
     fn metadata() -> Value {
         let packages: Vec<_> = PACKAGES.iter().map(|(name, version)| {
-            json!({"id": name, "name": name, "version": version, "source": format!("git+https://github.com/storytold/craft-libs?rev={REV}#{REV}")})
+            json!({"id": name, "name": name, "version": version, "source": format!("git+https://github.com/raantss18/mahay?rev={REV}#{REV}")})
         }).collect();
         json!({"packages": packages, "resolve": {"nodes": [
-            {"id": "hayro-syntax", "features": ["std"]}, {"id": "craft-pdf", "features": ["read"]}
+            {"id": "hayro-syntax", "features": ["std"]}, {"id": "mahay-pdf", "features": ["read"]}
         ]}})
     }
 

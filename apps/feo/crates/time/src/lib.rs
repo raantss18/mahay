@@ -1,4 +1,4 @@
-//! SoundCraft timebases.
+//! Feo timebases.
 //!
 //! Every position in a session is an absolute sample index (`i64`) at the session sample rate.
 //! This crate converts those positions to and from the five Pro Tools-style timebases

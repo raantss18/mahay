@@ -1,10 +1,10 @@
-//! FCPXML point markers: a one-frame `<marker>` is a FilmCraft point (duration 0), not a range.
+//! FCPXML point markers: a one-frame `<marker>` is a Hetsika point (duration 0), not a range.
 
 mod support;
 
-use filmcraft_interchange::{ExportOptions, Format, import};
-use filmcraft_project::{Label, Marker, MarkerId, MarkerKind, Project, TrackKind};
-use filmcraft_time::{FrameRate, Tick};
+use hetsika_interchange::{ExportOptions, Format, import};
+use hetsika_project::{Label, Marker, MarkerId, MarkerKind, Project, TrackKind};
+use hetsika_time::{FrameRate, Tick};
 use support::*;
 
 fn fcpxml_with_markers(frame: &str, point_dur: &str, range_dur: &str) -> String {

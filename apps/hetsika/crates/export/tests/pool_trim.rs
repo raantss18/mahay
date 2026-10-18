@@ -1,17 +1,17 @@
 //! A standalone export gives back the float images it left on the frame pool
-//! (`filmcraft_frame::pool`) when it ends, however it ends; one part of a batch keeps them. One test in this file on purpose: the pool is shared by every test of a binary,
+//! (`hetsika_frame::pool`) when it ends, however it ends; one part of a batch keeps them. One test in this file on purpose: the pool is shared by every test of a binary,
 //! and its numbers mean something only while nothing else renders.
 
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
-use filmcraft_export::{ExportSettings, Exporter, Format, Progress, Step, export};
-use filmcraft_frame::pool;
-use filmcraft_media::generators::GeneratorSource;
-use filmcraft_media::{Generator, MediaSource};
-use filmcraft_project::{ItemId, ItemKind, Label, MediaClip, MediaRef, Project, SequenceSettings, TrackKind};
-use filmcraft_render::SourceMap;
-use filmcraft_time::{FrameRate, TICKS_PER_SECOND, Tick, TimeRange};
+use hetsika_export::{ExportSettings, Exporter, Format, Progress, Step, export};
+use hetsika_frame::pool;
+use hetsika_media::generators::GeneratorSource;
+use hetsika_media::{Generator, MediaSource};
+use hetsika_project::{ItemId, ItemKind, Label, MediaClip, MediaRef, Project, SequenceSettings, TrackKind};
+use hetsika_render::SourceMap;
+use hetsika_time::{FrameRate, TICKS_PER_SECOND, Tick, TimeRange};
 
 /// A red matte filling a 320×180 sequence for a second.
 fn project() -> (Arc<Project>, ItemId, SourceMap) {

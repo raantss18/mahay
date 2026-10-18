@@ -11,10 +11,10 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use vectorcraft_doc::hit::{HitOptions, hit_test};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind, OrientedBox, Selection};
-use vectorcraft_geom::kurbo::ParamCurveNearest;
-use vectorcraft_geom::{Affine, Line, ParamCurve, PathSeg, Point, Rect, SubPath, Vec2, constrain_angle_from};
+use tsipika_doc::hit::{HitOptions, hit_test};
+use tsipika_doc::{Document, Node, NodeId, NodeKind, OrientedBox, Selection};
+use tsipika_geom::kurbo::ParamCurveNearest;
+use tsipika_geom::{Affine, Line, ParamCurve, PathSeg, Point, Rect, SubPath, Vec2, constrain_angle_from};
 
 use crate::bbox::Handle;
 use crate::{Overlay, ScreenFrame, ToolContext};
@@ -95,7 +95,7 @@ struct Ruler {
     vertical: bool,
     pos: f64,
     /// Where it runs along its line: an artboard guide across its artboard (see
-    /// [`vectorcraft_doc::Document::guide_span`]), else (None) the whole canvas.
+    /// [`tsipika_doc::Document::guide_span`]), else (None) the whole canvas.
     span: Option<(f64, f64)>,
 }
 
@@ -428,11 +428,11 @@ impl Targets {
     }
 
     /// The gridlines (one every `step` from the page's origin, as
-    /// [`vectorcraft_geom::snap::snap_to_grid`] places them) at and either side of the nearest one
+    /// [`tsipika_geom::snap::snap_to_grid`] places them) at and either side of the nearest one
     /// to each of `points`, as lines to line up with.
     fn grid_lines(points: impl IntoIterator<Item = Point>, step: f64) -> Self {
         let mut t = Targets::default();
-        let line = |v: f64, k: i32| vectorcraft_geom::snap::snap_to_grid(v, step, 0.0) + f64::from(k) * step;
+        let line = |v: f64, k: i32| tsipika_geom::snap::snap_to_grid(v, step, 0.0) + f64::from(k) * step;
         for p in points {
             for k in -1..=1 {
                 let (x, y) = (line(p.x, k), line(p.y, k));
@@ -1069,7 +1069,7 @@ impl PointSnap {
             return (keep(Point::new(p.x.round(), p.y.round())), vec![]);
         }
         if cx.snap_to_grid {
-            return (keep(vectorcraft_geom::snap::snap_point_to_grid(p, cx.grid_step())), vec![]);
+            return (keep(tsipika_geom::snap::snap_point_to_grid(p, cx.grid_step())), vec![]);
         }
         match &self.targets {
             Some((t, tol)) => t.snap_from(p, from, cx.tol(*tol)),
@@ -1417,12 +1417,12 @@ mod tests {
     #[test]
     fn scale_snap_lands_the_handle_on_anchors() {
         use crate::bbox::scale_for_drag;
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
         // A triangle whose apex (320, 400) lines up with none of the edges or centres on x.
-        let tri = vectorcraft_geom::PathData::single(SubPath::polyline(
+        let tri = tsipika_geom::PathData::single(SubPath::polyline(
             &[Point::new(300.0, 300.0), Point::new(380.0, 300.0), Point::new(320.0, 400.0)],
             true,
         ));
@@ -1462,7 +1462,7 @@ mod tests {
             Rect::new(400.0, 80.0, 440.0, 110.0),
         ] {
             let id = d.alloc_id();
-            d.insert(Some(l), 0, Node::path(id, vectorcraft_geom::shapes::rectangle(r), Default::default())).unwrap();
+            d.insert(Some(l), 0, Node::path(id, tsipika_geom::shapes::rectangle(r), Default::default())).unwrap();
         }
         let (s, p) = (Selection::default(), paint());
         let lines = |ov: &[Overlay]| ov.iter().filter(|o| matches!(o, Overlay::Line { color, .. } if *color == MAGENTA)).count();
@@ -1476,7 +1476,7 @@ mod tests {
         // Halfway between B and a box at 220–260: 50 either side.
         let mut wide = d.clone();
         let id = wide.alloc_id();
-        wide.insert(Some(l), 0, Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(220.0, 300.0, 260.0, 340.0)), Default::default()))
+        wide.insert(Some(l), 0, Node::path(id, tsipika_geom::shapes::rectangle(Rect::new(220.0, 300.0, 260.0, 340.0)), Default::default()))
             .unwrap();
         let (dv, ov) = Targets::for_move(&cx(&wide, &s, &p), &s.objects).snap_rect(Rect::new(148.0, 305.0, 188.0, 345.0), 4.0);
         assert_eq!(dv, Vec2::new(2.0, 0.0));
@@ -1583,7 +1583,7 @@ mod tests {
     /// end; with two anchors moving there is none to keep to.
     #[test]
     fn dragged_end_of_a_slanted_line_keeps_to_its_extension() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
@@ -1591,7 +1591,7 @@ mod tests {
         d.insert(
             Some(l),
             1,
-            Node::path(id, vectorcraft_geom::shapes::line(Point::new(300.0, 400.0), Point::new(380.0, 340.0)), Appearance::default_art()),
+            Node::path(id, tsipika_geom::shapes::line(Point::new(300.0, 400.0), Point::new(380.0, 340.0)), Appearance::default_art()),
         )
         .unwrap();
         let (mut s, p) = (Selection::default(), paint());
@@ -1607,7 +1607,7 @@ mod tests {
         // Two anchors moving, the middle one staying put: no telling which one the pointer drags,
         // so neither keeps to the extension of its segment.
         let id = d.alloc_id();
-        let bent = vectorcraft_geom::PathData::single(SubPath::polyline(
+        let bent = tsipika_geom::PathData::single(SubPath::polyline(
             &[Point::new(250.0, 450.0), Point::new(300.0, 400.0), Point::new(380.0, 340.0)],
             false,
         ));
@@ -1623,14 +1623,14 @@ mod tests {
     /// the other one; along its own direction, farther from level, it keeps to its extension.
     #[test]
     fn a_nearly_level_segment_still_lines_up_with_its_other_end() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
         d.insert(
             Some(l),
             1,
-            Node::path(id, vectorcraft_geom::shapes::line(Point::new(100.0, 300.0), Point::new(300.0, 301.0)), Appearance::default_art()),
+            Node::path(id, tsipika_geom::shapes::line(Point::new(100.0, 300.0), Point::new(300.0, 301.0)), Appearance::default_art()),
         )
         .unwrap();
         let (mut s, p) = (Selection::default(), paint());
@@ -1700,8 +1700,8 @@ mod tests {
     /// where two ruler guides cross, labelled "intersect"; an anchor nearby still wins.
     #[test]
     fn drawn_points_land_on_intersections() {
-        use vectorcraft_doc::{Appearance, Node};
-        use vectorcraft_geom::shapes;
+        use tsipika_doc::{Appearance, Node};
+        use tsipika_geom::shapes;
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         // A slanted line through the rect's top side (y = 100) at x = 150, and a circle across its
@@ -1710,9 +1710,9 @@ mod tests {
             let id = d.alloc_id();
             d.insert(Some(l), 1, Node::path(id, path, Appearance::default_art())).unwrap();
         }
-        d.guides.push(vectorcraft_doc::Guide::new(true, 400.0));
-        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
-        d.guides.push(vectorcraft_doc::Guide::new(false, 150.0));
+        d.guides.push(tsipika_doc::Guide::new(true, 400.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 300.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 150.0));
         let (s, p) = (Selection::default(), paint());
         let c = ToolContext { guides: true, ..cx(&d, &s, &p) };
         let t = Targets::for_drawing(&d, &[], None).styled(&c).with_rulers(&c);
@@ -1747,12 +1747,12 @@ mod tests {
     /// gathered them.
     #[test]
     fn bisection_finds_what_a_scan_finds() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, id) = doc_with_rect();
         let l = d.layers[0].id;
         for i in 0..60 {
             let (x, y) = ((i * 37 % 450) as f64, (i * 53 % 430) as f64);
-            let tri = vectorcraft_geom::PathData::single(SubPath::polyline(
+            let tri = tsipika_geom::PathData::single(SubPath::polyline(
                 &[Point::new(x, y), Point::new(x + 13.0, y + 3.0), Point::new(x + 5.0, y + 17.0)],
                 true,
             ));
@@ -1782,8 +1782,8 @@ mod tests {
     #[test]
     fn drawn_points_snap_to_ruler_guides_with_smart_guides_on() {
         let (mut d, _) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 313.0));
-        d.guides.push(vectorcraft_doc::Guide::new(true, 331.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 313.0));
+        d.guides.push(tsipika_doc::Guide::new(true, 331.0));
         let (s, p) = (Selection::default(), paint());
         let c = cx(&d, &s, &p);
         let mut snap = DrawSnap::default();
@@ -1803,7 +1803,7 @@ mod tests {
     #[test]
     fn draw_snap_gathers_once_per_document_state() {
         let (d, _) = doc_with_rect();
-        let empty = vectorcraft_doc::Document::new(500.0, 500.0);
+        let empty = tsipika_doc::Document::new(500.0, 500.0);
         let (s, p) = (Selection::default(), paint());
         let at = Point::new(202.0, 198.0);
         let mut snap = DrawSnap::default();

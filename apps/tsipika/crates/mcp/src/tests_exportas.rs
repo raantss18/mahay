@@ -19,7 +19,7 @@ fn three_boards() -> Headless {
 #[test]
 fn export_with_a_range_writes_one_file_per_artboard() {
     let mut h = three_boards();
-    let dir = std::env::temp_dir().join(format!("vectorcraft-mcp-exportas-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tsipika-mcp-exportas-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("icon.png").to_string_lossy().to_string();
     let args = json!({"path": path, "range": "1, 3", "options": {"useArtboards": true, "ppi": 144, "background": "white"}});

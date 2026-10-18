@@ -2,12 +2,12 @@
 
 use std::sync::Arc;
 
-use cadcraft_constraints::{DofStatus, SolveError, SolveOptions, add, all_satisfied, dof, solve};
-use cadcraft_doc::{
+use drafitra_constraints::{DofStatus, SolveError, SolveOptions, add, all_satisfied, dof, solve};
+use drafitra_doc::{
     Arc as DArc, Block, Circle as DCircle, Common, Constraint, ConstraintKind as K, DistAxis, Drawing, Ellipse as DEllipse, Entity, EntityKind,
     GeomRef, Handle, Insert, Line as DLine, Point as DPoint, Space, Sub,
 };
-use cadcraft_geom::{Spline as GSpline, Vec2, Vec3};
+use drafitra_geom::{Spline as GSpline, Vec2, Vec3};
 
 fn v(x: f64, y: f64) -> Vec3 {
     Vec3::new(x, y, 0.0)
@@ -53,9 +53,9 @@ fn ends(d: &Drawing, h: Handle) -> (Vec2, Vec2) {
         _ => panic!("not a line"),
     }
 }
-fn ell(d: &Drawing, h: Handle) -> cadcraft_geom::Ellipse {
+fn ell(d: &Drawing, h: Handle) -> drafitra_geom::Ellipse {
     match &d.entity(h).unwrap().kind {
-        EntityKind::Ellipse(e) => cadcraft_geom::Ellipse { center: e.center.xy(), major: e.major.xy(), ratio: e.ratio, start: e.start, end: e.end },
+        EntityKind::Ellipse(e) => drafitra_geom::Ellipse { center: e.center.xy(), major: e.major.xy(), ratio: e.ratio, start: e.start, end: e.end },
         _ => panic!("not an ellipse"),
     }
 }

@@ -1,4 +1,4 @@
-//! The native `.figcraft` format.
+//! The native `.endrika` format.
 //!
 //! A zip archive holding `document.json` (the [`Document`] as JSON, with a `format`/`version`
 //! header; layer fields at their default values are left out and read back as those defaults),
@@ -28,14 +28,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Seek, Write};
 use std::sync::Arc;
 
-use figcraft_doc::{Document, ImageData};
+use endrika_doc::{Document, ImageData};
 use serde::de::{Deserializer, IgnoredAny, MapAccess, Visitor};
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{Value, json};
 use sha2::Digest;
 
-pub const EXTENSION: &str = "figcraft";
-pub const FORMAT: &str = "figcraft";
+pub const EXTENSION: &str = "endrika";
+pub const FORMAT: &str = "endrika";
 pub const VERSION: u32 = 1;
 /// Largest archive member we read (guards against zip bombs).
 const MAX_MEMBER: u64 = 512 * 1024 * 1024;
@@ -75,8 +75,8 @@ impl std::fmt::Display for FormatError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FormatError::Io(e) => write!(f, "{e}"),
-            FormatError::Corrupt(e) => write!(f, "not a valid FigCraft file: {e}"),
-            FormatError::Newer(v) => write!(f, "this file was saved by a newer FigCraft (format version {v})"),
+            FormatError::Corrupt(e) => write!(f, "not a valid Endrika file: {e}"),
+            FormatError::Newer(v) => write!(f, "this file was saved by a newer Endrika (format version {v})"),
         }
     }
 }
@@ -284,7 +284,7 @@ impl<'de> Deserialize<'de> for Header {
         impl<'de> Visitor<'de> for HeaderVisitor {
             type Value = Header;
             fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                f.write_str("a FigCraft document object")
+                f.write_str("a Endrika document object")
             }
             fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Header, A::Error> {
                 let mut h = Header::default();
@@ -358,17 +358,17 @@ pub(crate) fn json_options() -> zip::write::SimpleFileOptions {
     zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated).compression_level(Some(JSON_LEVEL))
 }
 
-/// Write a `.figcraft` archive to bytes.
+/// Write a `.endrika` archive to bytes.
 pub fn save_bytes(doc: &Document, thumbnail_png: Option<&[u8]>) -> Result<Vec<u8>, FormatError> {
     save_bytes_with_versions(doc, thumbnail_png, &[])
 }
 
-/// Write a `.figcraft` archive with a version history (oldest first) to bytes.
+/// Write a `.endrika` archive with a version history (oldest first) to bytes.
 pub fn save_bytes_with_versions(doc: &Document, thumbnail_png: Option<&[u8]>, versions: &[Version]) -> Result<Vec<u8>, FormatError> {
     save_bytes_with_history(doc, thumbnail_png, versions, &[])
 }
 
-/// Write a `.figcraft` archive with a version history (oldest first) and branches to bytes.
+/// Write a `.endrika` archive with a version history (oldest first) and branches to bytes.
 pub fn save_bytes_with_history(
     doc: &Document,
     thumbnail_png: Option<&[u8]>,
@@ -444,7 +444,7 @@ fn put_versions<W: Write + Seek>(z: &mut zip::ZipWriter<W>, dir: &str, versions:
     Ok(())
 }
 
-/// Read a `.figcraft` archive (or bare JSON) from bytes. Returns the document and any repairs made.
+/// Read a `.endrika` archive (or bare JSON) from bytes. Returns the document and any repairs made.
 pub fn load_bytes(bytes: &[u8]) -> Result<(Document, Vec<String>), FormatError> {
     load_bytes_with_versions(bytes).map(|l| (l.doc, l.issues))
 }
@@ -476,7 +476,7 @@ pub(crate) struct ImageBudget {
     pub bytes: u64,
 }
 
-/// Read a `.figcraft` archive (or bare JSON) with its version history.
+/// Read a `.endrika` archive (or bare JSON) with its version history.
 pub fn load_bytes_with_versions(bytes: &[u8]) -> Result<Loaded, FormatError> {
     load_within(bytes, IMAGE_BUDGET)
 }
@@ -717,7 +717,7 @@ pub fn save_file(doc: &Document, path: &std::path::Path, thumbnail_png: Option<&
 
 /// Write `bytes` to `path` through a staging file and one atomic rename, so a reader of `path`
 /// sees either the previous file or the complete new one, never a partial write. The staging file
-/// is a uniquely named sibling (`<path>.tmp-figcraft-<process id>-<counter>`) created exclusively
+/// is a uniquely named sibling (`<path>.tmp-endrika-<process id>-<counter>`) created exclusively
 /// (`create_new`) and written through its own handle: a file or symlink that already exists at a
 /// staging name is never truncated or followed, and separate writers (also of separate processes)
 /// never share a staging file. On failure only the staging file this call created is removed, and
@@ -733,7 +733,7 @@ pub fn write_file_atomic(path: &std::path::Path, bytes: &[u8]) -> std::io::Resul
     // of a dead process that now shares our process id can collide, and the next counter won't.
     for _ in 0..3 {
         let mut name = path.as_os_str().to_os_string();
-        name.push(format!(".tmp-figcraft-{}-{}", std::process::id(), STAGING.fetch_add(1, Relaxed)));
+        name.push(format!(".tmp-endrika-{}-{}", std::process::id(), STAGING.fetch_add(1, Relaxed)));
         let tmp = std::path::PathBuf::from(name);
         match std::fs::OpenOptions::new().write(true).create_new(true).open(&tmp) {
             Ok(mut file) => {
@@ -781,7 +781,7 @@ mod version_tests;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use figcraft_doc::NodeKind;
+    use endrika_doc::NodeKind;
 
     fn png() -> Vec<u8> {
         let img = image::RgbaImage::from_pixel(3, 2, image::Rgba([255, 0, 0, 255]));

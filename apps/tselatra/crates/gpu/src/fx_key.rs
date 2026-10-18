@@ -10,9 +10,9 @@
 //! finds the dominant key primary with a GPU sum reduction (`fxk_reduce`). Other layers (layer
 //! parameters) are resampled into the buffer like `util::fit_layer` (`fxk_fit`).
 
-use effectcraft_color::rgb_to_hsl;
-use effectcraft_effects::EffectCtx;
-use effectcraft_effects::util::{SRC_ORDER, Src};
+use tselatra_color::rgb_to_hsl;
+use tselatra_effects::EffectCtx;
+use tselatra_effects::util::{SRC_ORDER, Src};
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, box_passes, gaussian_blur};
@@ -445,7 +445,7 @@ const MATTE_ORDER: [Src; 10] = [Src::Red, Src::Green, Src::Blue, Src::Alpha, Src
 
 fn set_channels(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let pr = ctx.params;
-    let s = ["setRedTo", "setGreenTo", "setBlueTo", "setAlphaTo"].map(|id| src_index(effectcraft_effects::util::src_at(pr.e(id))));
+    let s = ["setRedTo", "setGreenTo", "setBlueTo", "setAlphaTo"].map(|id| src_index(tselatra_effects::util::src_at(pr.e(id))));
     let stretch = pr.b("stretchLayersToFit");
     let mut layers = vec![];
     for id in SET_CHANNEL_LAYERS {
@@ -506,7 +506,7 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
                 return Some(b);
             }
             let accurate = pr.e("colorMatchingAccuracy") == 1;
-            let lin = |c: [f32; 3]| if accurate { c.map(|v| effectcraft_color::srgb_to_linear(v.clamp(0.0, 1.0))) } else { c };
+            let lin = |c: [f32; 3]| if accurate { c.map(|v| tselatra_color::srgb_to_linear(v.clamp(0.0, 1.0))) } else { c };
             let k = pr.color("keyColor");
             let key = lin([k[0], k[1], k[2]]);
             let ix = primary([key[0], key[1], key[2], 1.0]);
@@ -539,8 +539,8 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
             p.f[0] = [f("redValue") / 255.0, f("greenValue") / 255.0, f("blueValue") / 255.0, 0.0];
         }
         "ec.channel.solidcomposite" => {
-            const MODES: [effectcraft_color::BlendMode; 12] = {
-                use effectcraft_color::BlendMode::*;
+            const MODES: [tselatra_color::BlendMode; 12] = {
+                use tselatra_color::BlendMode::*;
                 [Normal, Add, Multiply, Screen, Overlay, SoftLight, HardLight, Darken, Lighten, Difference, Color, Luminosity]
             };
             let c = pr.color("color");
@@ -577,8 +577,8 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
             p.f[0][0] = orig;
         }
         "ec.channel.calculations" => {
-            const MODES: [effectcraft_color::BlendMode; 22] = {
-                use effectcraft_color::BlendMode::*;
+            const MODES: [tselatra_color::BlendMode; 22] = {
+                use tselatra_color::BlendMode::*;
                 [
                     Normal,
                     Darken,

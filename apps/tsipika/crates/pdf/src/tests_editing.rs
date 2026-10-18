@@ -2,9 +2,9 @@
 //! name) and checked against the pages it was written with.
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_geom::{Rect, shapes};
 
 use crate::*;
 
@@ -52,10 +52,10 @@ fn the_native_document_comes_back_intact() {
 #[test]
 fn the_native_documents_modification_date_is_the_time_of_writing() {
     // Created in 1970: the information dictionary's dates say so, the embedded file's doesn't.
-    let year = |t: Option<i64>| vectorcraft_doc::metadata::civil(t.unwrap())[0];
-    let before = year(vectorcraft_doc::metadata::output_time());
+    let year = |t: Option<i64>| tsipika_doc::metadata::civil(t.unwrap())[0];
+    let before = year(tsipika_doc::metadata::output_time());
     let text = String::from_utf8_lossy(&pdf_with(Some(b"native"), false).bytes).into_owned();
-    let after = year(vectorcraft_doc::metadata::output_time());
+    let after = year(tsipika_doc::metadata::output_time());
     assert!(text.contains("/CreationDate(D:1970"), "the file's creation date");
     assert!([before, after].iter().any(|y| text.contains(&format!("/ModDate(D:{y:04}"))), "the embedded file is dated when it is written");
 }
@@ -76,7 +76,7 @@ fn changed_pages_are_noticed() {
 /// held, in the text string encoding `bom` starts (UTF-16BE or UTF-8), padded with spaces to its
 /// length.
 fn described(pdf: &[u8], bom: &[u8]) -> Vec<u8> {
-    let from = b"(VectorCraft editing data; page hash ";
+    let from = b"(Tsipika editing data; page hash ";
     let at = pdf.windows(from.len()).position(|w| w == from).unwrap_or_else(|| panic!("no description"));
     let (hash, len) = (&pdf[at + from.len()..at + from.len() + 16], from.len() + 17);
     let mut desc = [b"(", bom].concat();

@@ -1,10 +1,10 @@
 //! Strokes a PDF stroke can't draw — width profiles, brushes — are written as the canvas's filled
 //! outlines; aligned strokes are clipped like on the canvas, open paths stroke centred.
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Document, LineJoin, Node, NodeId, StrokeAlign, StrokeLayer, WidthProfile};
-use vectorcraft_geom::{PathData, Point, SubPath};
-use vectorcraft_testkit::raster::render_artboard;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, Document, LineJoin, Node, NodeId, StrokeAlign, StrokeLayer, WidthProfile};
+use tsipika_geom::{PathData, Point, SubPath};
+use tsipika_testkit::raster::render_artboard;
 
 use crate::tests_stroke::{line_doc, painted_boxes};
 use crate::*;
@@ -31,7 +31,7 @@ fn an_open_path_with_inside_alignment_strokes_centred() {
     let back = import(&export(&d, &PdfOptions::default()).unwrap()).unwrap();
     let mut widths = vec![];
     back.walk(|m| {
-        assert!(!matches!(m.kind, vectorcraft_doc::NodeKind::Group { clip: true, .. }), "no clip");
+        assert!(!matches!(m.kind, tsipika_doc::NodeKind::Group { clip: true, .. }), "no clip");
         widths.extend(m.appearance.items.iter().filter_map(|i| if let AppearanceItem::Stroke(s) = i { Some(s.width) } else { None }));
     });
     assert_eq!(widths.len(), 1);

@@ -1,4 +1,4 @@
-//! Matching a name another app's file writes (a shortcut set's entry name) against VectorCraft's
+//! Matching a name another app's file writes (a shortcut set's entry name) against Tsipika's
 //! commands, tools and panels, by their ids and labels only. A match is proposed when one candidate
 //! scores well and clearly ahead of the next; otherwise the best few are offered to choose from.
 

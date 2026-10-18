@@ -1,8 +1,8 @@
 //! Develop commands. All operate on the active photo unless `ids` are given (sync).
 
-use lightcraft_catalog::{Op, PhotoId, Version};
-use lightcraft_develop::{DevelopSettings, Preset, ProcessVersion, Section, SettingsGroup, Treatment, Upright, WbMode, controls};
-use lightcraft_geom::{CropGeometry, CropHandle, Point, Rect, crop_fit_angle, drag_crop};
+use hazavana_catalog::{Op, PhotoId, Version};
+use hazavana_develop::{DevelopSettings, Preset, ProcessVersion, Section, SettingsGroup, Treatment, Upright, WbMode, controls};
+use hazavana_geom::{CropGeometry, CropHandle, Point, Rect, crop_fit_angle, drag_crop};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, bool_or, cmd, f64_or, f64_req, has_active, has_clipboard, has_selection, index_req, ok, str_param};
@@ -65,7 +65,7 @@ fn aspect_tuple(c: &str, x: f64, y: f64) -> Result<(u32, u32)> {
         && x > 0.0
         && y > 0.0
         && ratio.is_finite()
-        && (1.0 / lightcraft_geom::MAX_RATIO..=lightcraft_geom::MAX_RATIO).contains(&ratio))
+        && (1.0 / hazavana_geom::MAX_RATIO..=hazavana_geom::MAX_RATIO).contains(&ratio))
     {
         return Err(bad(c, "aspect needs two positive numbers with a ratio between 1:20 and 20:1"));
     }
@@ -182,10 +182,10 @@ pub fn specs() -> Vec<CommandSpec> {
                 }
                 let label = if vals.len() == 1 { controls::find(&vals[0].0).map(|c| c.label).unwrap_or("Edit").to_string() } else { "Edit".into() };
                 let angle = vals.iter().any(|(k, _)| k == CROP_ANGLE);
-                let apply = |d: &mut DevelopSettings, info: &lightcraft_pipeline::SourceInfo, dims: (f64, f64)| {
+                let apply = |d: &mut DevelopSettings, info: &hazavana_pipeline::SourceInfo, dims: (f64, f64)| {
                     let before = d.crop.geometry;
                     if vals.iter().any(|(k, _)| k == "wb.temp" || k == "wb.tint") {
-                        lightcraft_pipeline::local::normalize_wb(d, info);
+                        hazavana_pipeline::local::normalize_wb(d, info);
                         if d.wb.mode == WbMode::AsShot {
                             d.wb.temp = info.as_shot_temp;
                             d.wb.tint = info.as_shot_tint;
@@ -232,7 +232,7 @@ pub fn specs() -> Vec<CommandSpec> {
             edit(s, "develop.adjust", spec.label, |d| {
                 let before = d.crop.geometry;
                 if c == "wb.temp" || c == "wb.tint" {
-                    lightcraft_pipeline::local::normalize_wb(d, &info);
+                    hazavana_pipeline::local::normalize_wb(d, &info);
                     if d.wb.mode == WbMode::AsShot {
                         d.wb.temp = info.as_shot_temp;
                         d.wb.tint = info.as_shot_tint;
@@ -270,7 +270,7 @@ pub fn specs() -> Vec<CommandSpec> {
                             let info = s.source_info(id);
                             let defaults = s.catalog.photo(id).map(|p| p.camera_defaults()).unwrap_or_default();
                             let mut fresh = DevelopSettings {
-                                wb: lightcraft_develop::WhiteBalance {
+                                wb: hazavana_develop::WhiteBalance {
                                     mode: WbMode::AsShot,
                                     temp: info.as_shot_temp,
                                     tint: info.as_shot_tint,
@@ -278,7 +278,7 @@ pub fn specs() -> Vec<CommandSpec> {
                                 },
                                 ..defaults
                             };
-                            lightcraft_pipeline::local::normalize_wb(&mut fresh, &info);
+                            hazavana_pipeline::local::normalize_wb(&mut fresh, &info);
                             fresh
                         }
                     };
@@ -366,7 +366,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let src = s.source_now(id, SourceLevel::Thumb).map_err(|e| bad("develop.autoBwMix", e))?;
                 let info = s.source_info(id);
                 let d = s.develop_of(id).unwrap_or_default();
-                let m = lightcraft_pipeline::auto::auto_bw_mix(&src, &info, &d);
+                let m = hazavana_pipeline::auto::auto_bw_mix(&src, &info, &d);
                 edit(s, "develop.autoBwMix", "Auto B&W Mix", |d| {
                     d.treatment = Treatment::Bw;
                     let b = &mut d.bw_mix;
@@ -381,7 +381,7 @@ pub fn specs() -> Vec<CommandSpec> {
             let src = s.source_now(id, SourceLevel::Thumb).map_err(|e| bad("develop.auto", e))?;
             let info = s.source_info(id);
             let d = s.develop_of(id).unwrap_or_default();
-            let a = lightcraft_pipeline::auto::auto_tone(&src, &info, &d);
+            let a = hazavana_pipeline::auto::auto_tone(&src, &info, &d);
             edit(s, "develop.auto", "Auto", |d| {
                 d.light.exposure = a.exposure;
                 d.light.contrast = a.contrast;
@@ -411,7 +411,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     WbMode::AsShot => (info.as_shot_temp, info.as_shot_tint),
                     WbMode::Auto => {
                         let src = s.source_now(id, SourceLevel::Thumb).map_err(|e| bad("develop.wb", e))?;
-                        lightcraft_pipeline::auto::auto_wb(&src, &info)
+                        hazavana_pipeline::auto::auto_wb(&src, &info)
                     }
                     m => m
                         .preset()
@@ -426,7 +426,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 // The resolved temperature/tint is stored, so rendering never depends on the mode; the
                 // mode is kept for the UI's WB dropdown.
                 edit(s, "develop.wb", "White Balance", |d| {
-                    lightcraft_pipeline::local::normalize_wb(d, &info);
+                    hazavana_pipeline::local::normalize_wb(d, &info);
                     d.wb.mode = mode;
                     d.wb.temp = t.clamp(2000.0, 50000.0);
                     d.wb.tint = tint.clamp(-150.0, 150.0);
@@ -453,10 +453,10 @@ pub fn specs() -> Vec<CommandSpec> {
                     }
                 }
             }
-            let patch = lightcraft_raster::Rgb32f::filled(4, 4, acc);
-            let (t, tint) = lightcraft_pipeline::auto::auto_wb(&patch, &info);
+            let patch = hazavana_raster::Rgb32f::filled(4, 4, acc);
+            let (t, tint) = hazavana_pipeline::auto::auto_wb(&patch, &info);
             edit(s, "develop.wbPick", "White Balance", |d| {
-                lightcraft_pipeline::local::normalize_wb(d, &info);
+                hazavana_pipeline::local::normalize_wb(d, &info);
                 d.wb.mode = WbMode::Custom;
                 d.wb.temp = t;
                 d.wb.tint = tint;
@@ -613,7 +613,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let src = s.source_now(id, SourceLevel::Preview).map_err(|e| bad("crop.autoStraighten", e))?;
                 let info = s.source_info(id);
                 let d = s.develop_of(id).unwrap_or_default();
-                let Some(level) = lightcraft_pipeline::upright::level_degrees(&src, &info, &d) else {
+                let Some(level) = hazavana_pipeline::upright::level_degrees(&src, &info, &d) else {
                     return Ok(json!({"changed": false, "reason": "no dominant horizontal or vertical lines"}));
                 };
                 // Same convention as the crop angle (verified: a horizon descending 6° to the right
@@ -712,7 +712,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 edit(s, "develop.hdr", label, |d| {
                     d.hdr.enabled = enabled;
                     if let Some(m) = max_ev {
-                        d.hdr.max_ev = m.clamp(0.0, lightcraft_develop::Hdr::MAX_EV_LIMIT);
+                        d.hdr.max_ev = m.clamp(0.0, hazavana_develop::Hdr::MAX_EV_LIMIT);
                     }
                     Ok(())
                 })?;
@@ -737,7 +737,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     m => {
                         let src = s.source_now(id, SourceLevel::Preview).map_err(|e| bad("geometry.upright", e))?;
                         let info = s.source_info(id);
-                        Some(lightcraft_pipeline::upright::auto_transform(&src, &info, &d, m))
+                        Some(hazavana_pipeline::upright::auto_transform(&src, &info, &d, m))
                     }
                 };
                 edit(s, "geometry.upright", "Upright", |d| {
@@ -794,7 +794,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     s.copy_groups = g;
                 }
                 let d = s.develop_of(id).unwrap_or_default();
-                s.clipboard = Some(lightcraft_develop::extract_groups(&d, &s.copy_groups));
+                s.clipboard = Some(hazavana_develop::extract_groups(&d, &s.copy_groups));
                 Ok(json!({"groups": s.copy_groups}))
             }
         ),
@@ -810,12 +810,12 @@ pub fn specs() -> Vec<CommandSpec> {
                 let prev =
                     s.previous_active.filter(|id| s.catalog.photo(*id).is_some_and(|ph| !ph.deleted)).ok_or_else(|| bad(c, "no previous photo"))?;
                 let groups = groups_param(p, c)?.unwrap_or_else(|| s.copy_groups.clone());
-                let partial = lightcraft_develop::extract_groups(&s.develop_of(prev).unwrap_or_default(), &groups);
+                let partial = hazavana_develop::extract_groups(&s.develop_of(prev).unwrap_or_default(), &groups);
                 let ids: Vec<PhotoId> = s.targets(p)?.into_iter().filter(|id| *id != prev).collect();
                 let ops = ids
                     .iter()
                     .filter_map(|id| s.develop_of(*id).map(|d| (*id, d)))
-                    .filter_map(|(id, d)| s.develop_op(id, lightcraft_develop::apply_partial(&d, &partial, 1.0), "Paste from Previous"))
+                    .filter_map(|(id, d)| s.develop_op(id, hazavana_develop::apply_partial(&d, &partial, 1.0), "Paste from Previous"))
                     .collect::<Vec<_>>();
                 let n = ops.len();
                 s.commit("Paste from Previous", Op::Batch { ops })?;
@@ -835,14 +835,14 @@ pub fn specs() -> Vec<CommandSpec> {
                 if let Some(only) = groups_param(p, c)? {
                     // the clipboard holds whole groups: rebuild it with just the chosen (copied) ones
                     let only: Vec<_> = only.into_iter().filter(|g| s.copy_groups.contains(g)).collect();
-                    let full = lightcraft_develop::apply_partial(&DevelopSettings::default(), &clip, 1.0);
-                    clip = lightcraft_develop::extract_groups(&full, &only);
+                    let full = hazavana_develop::apply_partial(&DevelopSettings::default(), &clip, 1.0);
+                    clip = hazavana_develop::extract_groups(&full, &only);
                 }
                 let ids = s.targets(p)?;
                 let ops = ids
                     .iter()
                     .filter_map(|id| s.develop_of(*id).map(|d| (*id, d)))
-                    .filter_map(|(id, d)| s.develop_op(id, lightcraft_develop::apply_partial(&d, &clip, 1.0), "Paste Settings"))
+                    .filter_map(|(id, d)| s.develop_op(id, hazavana_develop::apply_partial(&d, &clip, 1.0), "Paste Settings"))
                     .collect::<Vec<_>>();
                 let n = ops.len();
                 s.commit("Paste Settings", Op::Batch { ops })?;
@@ -861,7 +861,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let id = active(s, c)?;
                 let groups = groups_param(p, c)?.unwrap_or_else(SettingsGroup::default_copy);
                 let d = s.develop_of(id).unwrap_or_default();
-                let partial = lightcraft_develop::extract_groups(&d, &groups);
+                let partial = hazavana_develop::extract_groups(&d, &groups);
                 let ops = s
                     .selection
                     .ids
@@ -869,7 +869,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     .into_iter()
                     .filter(|x| *x != id)
                     .filter_map(|x| s.develop_of(x).map(|d| (x, d)))
-                    .filter_map(|(x, dd)| s.develop_op(x, lightcraft_develop::apply_partial(&dd, &partial, 1.0), "Sync Settings"))
+                    .filter_map(|(x, dd)| s.develop_op(x, hazavana_develop::apply_partial(&dd, &partial, 1.0), "Sync Settings"))
                     .collect::<Vec<_>>();
                 let n = ops.len();
                 s.commit("Sync Settings", Op::Batch { ops })?;
@@ -898,7 +898,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         if ctl == "wb.temp" || ctl == "wb.tint" {
                             // each photo on its own scale: Kelvin (an old relative value converted first) or relative
                             let info = s.source_info(id);
-                            lightcraft_pipeline::local::normalize_wb(&mut nd, &info);
+                            hazavana_pipeline::local::normalize_wb(&mut nd, &info);
                             if nd.wb.mode == WbMode::AsShot {
                                 nd.wb.temp = info.as_shot_temp;
                                 nd.wb.tint = info.as_shot_tint;
@@ -1040,7 +1040,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let groups = groups_param(p, c)?;
                 let pr = user_preset(s, p, c)?;
                 pr.settings = match groups {
-                    Some(g) => lightcraft_develop::extract_groups(&serde_json::from_value(current).unwrap_or_default(), &g),
+                    Some(g) => hazavana_develop::extract_groups(&serde_json::from_value(current).unwrap_or_default(), &g),
                     // the same keys as before, with the current values
                     None => {
                         let keys: Vec<String> = pr.settings.as_object().map(|o| o.keys().cloned().collect()).unwrap_or_default();
@@ -1089,7 +1089,7 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("history.clear", "Clear History", [], None, "{} — keeps the current settings as the only step", has_active, |s, _| {
             let id = active(s, "history.clear")?;
             let d = s.develop_of(id).unwrap_or_default();
-            let history = vec![lightcraft_catalog::HistoryStep { label: "Cleared History".into(), settings: d }];
+            let history = vec![hazavana_catalog::HistoryStep { label: "Cleared History".into(), settings: d }];
             s.commit("Clear History", Op::Batch { ops: vec![Op::SetHistory { id, history }, Op::SetHistoryCursor { id, cursor: None }] })?;
             ok()
         }),

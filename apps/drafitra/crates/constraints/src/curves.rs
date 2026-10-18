@@ -5,7 +5,7 @@
 //! derivative control points (Piegl & Tiller, *The NURBS Book*, ch. 3–4), rational curves through
 //! the quotient rule on homogeneous coordinates.
 
-use cadcraft_geom::{Spline as GSpline, Vec2};
+use drafitra_geom::{Spline as GSpline, Vec2};
 
 /// `v <= lim`, or NaN.
 pub(crate) fn not_above(v: f64, lim: f64) -> bool {

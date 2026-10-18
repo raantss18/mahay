@@ -2,8 +2,8 @@
 //! folders, Force Alphabetical Order, the import frame rate, Replace Footage, missing frames
 //! (placeholders, as in After Effects) and Interpret Footage ▸ Start Timecode.
 
-use effectcraft_project::{Footage, FootageKind, ItemId, ItemKind};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_project::{Footage, FootageKind, ItemId, ItemKind};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -150,7 +150,7 @@ fn interpret_footage_start_timecode_relabels_source_time() {
     let item = s.execute("file.import", json!({"paths": [at(&dir, "shot_0001.png")], "sequence": true})).unwrap()["items"][0].clone();
     s.execute("comp.new", json!({"name": "Main", "width": 64, "height": 32, "frameRate": 30, "duration": 10})).unwrap();
     let layer = s.execute("layer.addItem", json!({"item": item})).unwrap()["layer"].as_u64().unwrap();
-    let out = |s: &Session| s.active_comp().unwrap().layer(effectcraft_project::LayerId(layer)).unwrap().out_point;
+    let out = |s: &Session| s.active_comp().unwrap().layer(tselatra_project::LayerId(layer)).unwrap().out_point;
     assert_eq!(out(&s), FrameRate::FPS_30.tick_of(5));
     // Override Start changes the timecode the Footage panel shows, not the frames (After Effects).
     let r = s.execute("file.interpretFootage", json!({"items": [item], "overrideStart": true, "startTimecode": "0:00:01:10"})).unwrap();

@@ -2,14 +2,14 @@
 //!
 //! Reading a file whole before opening it made a clip cost its full size in memory (twice while
 //! probing: the file's bytes plus the demuxer's copy), so a 45-minute movie took gigabytes just to
-//! import. FilmCraft's reader openers (MP4/MOV, Matroska/WebM, MXF, Ogg, MPEG-PS/TS) open from a
+//! import. Hetsika's reader openers (MP4/MOV, Matroska/WebM, MXF, Ogg, MPEG-PS/TS) open from a
 //! random-access [`ByteReader`]; [`FileReader`] serves them positional reads from the open file.
 //! Formats decoded in one go (stills, WAV, FLAC, MP3…) still read the whole file, as before.
 //! Builds without a native file system (wasm32) keep using in-memory bytes.
 
 use std::path::Path;
 
-use filmcraft_media::SharedSource;
+use hetsika_media::SharedSource;
 
 use crate::Result;
 
@@ -34,7 +34,7 @@ impl FileReader {
 }
 
 #[cfg(any(unix, windows))]
-impl filmcraft_media::ByteReader for FileReader {
+impl hetsika_media::ByteReader for FileReader {
     fn len(&self) -> u64 {
         self.len
     }
@@ -75,8 +75,8 @@ fn name_of(path: &Path) -> String {
 #[cfg(any(unix, windows))]
 pub(crate) fn open_source(path: &Path) -> Option<Result<SharedSource>> {
     let reader = FileReader::open(path).ok()?;
-    let reader: filmcraft_media::SharedReader = std::sync::Arc::new(reader);
-    let opened = filmcraft_media::reader::open_reader(&name_of(path), reader, &filmcraft_codecs::reader_openers(), &filmcraft_codecs::openers());
+    let reader: hetsika_media::SharedReader = std::sync::Arc::new(reader);
+    let opened = hetsika_media::reader::open_reader(&name_of(path), reader, &hetsika_codecs::reader_openers(), &hetsika_codecs::openers());
     Some(opened.map_err(Into::into))
 }
 
@@ -146,14 +146,14 @@ pub(crate) fn probe_source(path: &Path) -> Option<Result<SharedSource>> {
         return None;
     }
     let reader = FileReader::open(path).ok()?;
-    let reader: filmcraft_media::SharedReader = std::sync::Arc::new(reader);
-    let head = filmcraft_media::reader::read_range(&*reader, 0, filmcraft_media::reader::HEAD_LEN).ok()?;
+    let reader: hetsika_media::SharedReader = std::sync::Arc::new(reader);
+    let head = hetsika_media::reader::read_range(&*reader, 0, hetsika_media::reader::HEAD_LEN).ok()?;
     let name = path.to_string_lossy();
     if crate::layered::sniff(&name, &head) || image::guess_format(&head).is_ok() {
         return None;
     }
     let name = name_of(path);
-    filmcraft_codecs::reader_openers().into_iter().find_map(|open| open(&name, &head, &reader)).map(|r| r.map_err(Into::into))
+    hetsika_codecs::reader_openers().into_iter().find_map(|open| open(&name, &head, &reader)).map(|r| r.map_err(Into::into))
 }
 
 #[cfg(not(any(unix, windows)))]

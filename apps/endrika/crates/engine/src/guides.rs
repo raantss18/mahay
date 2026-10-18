@@ -3,8 +3,8 @@
 //! across the whole canvas. Only top-level frames (on the page or in sections) have guides: a
 //! frame moved into another keeps its guides, but they stop showing and snapping until it's back.
 
-use figcraft_doc::{Document, NodeId};
-use figcraft_geom::{Affine, Point};
+use endrika_doc::{Document, NodeId};
+use endrika_geom::{Affine, Point};
 
 /// Whether `owner`'s guides apply: it's a page or a top-level frame.
 pub fn keeps_guides(doc: &Document, owner: NodeId) -> bool {

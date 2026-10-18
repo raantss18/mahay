@@ -10,15 +10,15 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use effectcraft_project::{ItemId, Layer};
-use effectcraft_render::{EvalCtx, NoFootage, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_project::{ItemId, Layer};
+use tselatra_render::{EvalCtx, NoFootage, RenderOpts, Renderer};
+use tselatra_time::Tick;
 
 /// A rendered layer buffer: straight-from-the-renderer premultiplied pixels with the layer
 /// space → buffer pixel mapping.
 #[derive(Clone)]
 struct Sampled {
-    img: Arc<effectcraft_render::Image>,
+    img: Arc<tselatra_render::Image>,
     offset: [f64; 2],
     scale: f64,
 }
@@ -59,7 +59,7 @@ fn render(ctx: EvalCtx, comp: ItemId, layer: &Layer, post: bool, t: f64) -> Opti
         }
     }
     let _pop = Pop;
-    let footage: &dyn effectcraft_render::FootageSource = ctx.footage.unwrap_or(&NoFootage);
+    let footage: &dyn tselatra_render::FootageSource = ctx.footage.unwrap_or(&NoFootage);
     let mut r = Renderer::new(ctx.project, footage, RenderOpts { motion_blur: false, ..Default::default() });
     r.expr = ctx.expr;
     let ectx = r.eval_ctx(comp, Tick::from_seconds_f64(t))?;

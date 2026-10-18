@@ -3,8 +3,8 @@
 //! frame scrolls inside the device's screen with the wheel and by dragging.
 
 use egui::{Event, Key, Pos2, RawInput, Rect, pos2, vec2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::{FigApp, NoServices};

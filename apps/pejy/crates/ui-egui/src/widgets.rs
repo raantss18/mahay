@@ -4,8 +4,8 @@
 //! buttons, underlined link labels, `•••` more-options, 21 pt icon toggles in a `#303030` well,
 //! section headers and 1.5 pt section rules.
 
-use designcraft_geom::Unit;
-use designcraft_geom::units::{format_measure, parse_measure};
+use pejy_geom::Unit;
+use pejy_geom::units::{format_measure, parse_measure};
 use egui::{Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 
 use crate::theme::Tokens;
@@ -510,12 +510,12 @@ pub fn paint_stroke_chip(p: &egui::Painter, r: egui::Rect, color: Option<Color32
 }
 
 /// Resolve a swatch to a display colour (and gradient end colours).
-pub fn swatch_colors(doc: &designcraft_doc::Document, name: &str, tint: f32) -> (Option<Color32>, Option<(Color32, Color32)>) {
-    let conv = |c: designcraft_color::Color| {
+pub fn swatch_colors(doc: &pejy_doc::Document, name: &str, tint: f32) -> (Option<Color32>, Option<(Color32, Color32)>) {
+    let conv = |c: pejy_color::Color| {
         let [r, g, b, _] = c.to_rgba8(1.0);
         Color32::from_rgb(r, g, b)
     };
-    if let Some(g) = designcraft_color::swatch::resolve_gradient(&doc.swatches, name)
+    if let Some(g) = pejy_color::swatch::resolve_gradient(&doc.swatches, name)
         && let (Some(a), Some(b)) = (g.stops.first(), g.stops.last())
     {
         return (None, Some((conv(a.color), conv(b.color))));

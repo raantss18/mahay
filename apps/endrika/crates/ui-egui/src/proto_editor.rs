@@ -5,9 +5,9 @@
 //! `proto.conditional.*` command (one undo step each).
 
 use egui::{Align2, CornerRadius, Id, Rect, Sense, Stroke, Ui, pos2, vec2};
-use figcraft_doc::proto::{Action, ConditionalBlock, Expr, ExprOp};
-use figcraft_doc::{Document, NodeId, VariableType, VariableValue, Variables};
-use figcraft_engine::cmd::proto_actions::{action_at, start_value};
+use endrika_doc::proto::{Action, ConditionalBlock, Expr, ExprOp};
+use endrika_doc::{Document, NodeId, VariableType, VariableValue, Variables};
+use endrika_engine::cmd::proto_actions::{action_at, start_value};
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -178,7 +178,7 @@ pub fn action_list(app: &mut FigApp, ui: &mut Ui, cx: &Cx, list: &[Action], pref
                 && next.starts_with(prefix)
                 && let Some(at) = next.get_mut(prefix.len())
             {
-                *at = figcraft_engine::cmd::lists::moved_index(*at, from, to);
+                *at = endrika_engine::cmd::lists::moved_index(*at, from, to);
                 set_open(ui.ctx(), cx, next);
             }
         }
@@ -532,10 +532,10 @@ fn literal_field(ui: &mut Ui, id: Id, cur: &VariableValue, w: f32) -> Option<Var
         }
         VariableValue::Color(c) => {
             let swatch = 16.0;
-            widgets::swatch(ui, &figcraft_color::Paint::solid(*c), swatch);
+            widgets::swatch(ui, &endrika_color::Paint::solid(*c), swatch);
             let hex = c.to_hex();
             widgets::text_field(ui, id, &hex, (w - swatch - 8.0).max(32.0), "")
-                .and_then(|h| figcraft_color::Color::from_hex_or_name(&h))
+                .and_then(|h| endrika_color::Color::from_hex_or_name(&h))
                 .filter(|n| n.to_hex() != hex)
                 .map(VariableValue::Color)
         }
@@ -597,7 +597,7 @@ fn set_variable_fields(app: &mut FigApp, ui: &mut Ui, cx: &Cx, slot: &Slot, vari
             }
         }
         None => {
-            let cur = figcraft_engine::proto_run::literal(var.kind, value).unwrap_or_else(|| start_value(vars, var));
+            let cur = endrika_engine::proto_run::literal(var.kind, value).unwrap_or_else(|| start_value(vars, var));
             row(ui, 32.0, |ui| {
                 let w = ui.available_width() - 32.0;
                 if let Some(v) = literal_field(ui, slot.id("proto_set_value"), &cur, w) {

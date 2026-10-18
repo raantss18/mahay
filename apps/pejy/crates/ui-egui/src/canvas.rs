@@ -1,11 +1,11 @@
-//! The document canvas: pasteboard, spreads (rendered by `designcraft-render`), guides, frame edges,
+//! The document canvas: pasteboard, spreads (rendered by `pejy-render`), guides, frame edges,
 //! selection, text ports and threads, the text caret, rulers, and pointer/keyboard input.
 
-use designcraft_compose as compose;
-use designcraft_doc::{Content, Document, Item, SpreadRef};
-use designcraft_engine::doc::Selection;
-use designcraft_geom::{Affine, Point, Rect as DRect, Vec2 as DVec2};
-use designcraft_tools::{CanvasLayout, Cursor, Mods, Overlay, PointerEvent, PointerKind, ToolKey};
+use pejy_compose as compose;
+use pejy_doc::{Content, Document, Item, SpreadRef};
+use pejy_engine::doc::Selection;
+use pejy_geom::{Affine, Point, Rect as DRect, Vec2 as DVec2};
+use pejy_tools::{CanvasLayout, Cursor, Mods, Overlay, PointerEvent, PointerKind, ToolKey};
 use egui::{Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Value, json};
 
@@ -105,7 +105,7 @@ pub fn fit(app: &mut DesignApp, rect: Rect, what: &str) {
     }
     if what == "selection" {
         // Fit Selection in Window: the selected objects (on their spread's slot).
-        let sel: Vec<designcraft_geom::Rect> = st
+        let sel: Vec<pejy_geom::Rect> = st
             .selection
             .items
             .iter()
@@ -382,7 +382,7 @@ fn spring_zoom_mode(app: &DesignApp, ctx: &egui::Context, space: bool) -> bool {
 
 #[derive(Clone, Default)]
 struct SpringZoom {
-    tool: designcraft_tools::ZoomTool,
+    tool: pejy_tools::ZoomTool,
     down: bool,
 }
 
@@ -487,7 +487,7 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
     }
     // Paper under the rendered content: a page scrolled or jumped to shows its paper colour,
     // not the shadow's black, until its render arrives.
-    let [r, g, b, _] = doc.resolve_color(designcraft_color::swatch::PAPER, 1.0).unwrap_or(designcraft_color::Color::WHITE).to_rgba8(1.0);
+    let [r, g, b, _] = doc.resolve_color(pejy_color::swatch::PAPER, 1.0).unwrap_or(pejy_color::Color::WHITE).to_rgba8(1.0);
     let paper = Color32::from_rgb(r, g, b);
     for slot in &layout.slots {
         for page in doc.spread(slot.spread).map(|sp| sp.pages.as_slice()).unwrap_or_default() {
@@ -534,8 +534,8 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
         {
             let col = Color32::from_rgb(74, 227, 255);
             let (a, b) = match g.orientation {
-                designcraft_doc::Orientation::Horizontal => (pos2(rect.min.x, p.y), pos2(rect.max.x, p.y)),
-                designcraft_doc::Orientation::Vertical => (pos2(p.x, rect.min.y), pos2(p.x, rect.max.y)),
+                pejy_doc::Orientation::Horizontal => (pos2(rect.min.x, p.y), pos2(rect.max.x, p.y)),
+                pejy_doc::Orientation::Vertical => (pos2(p.x, rect.min.y), pos2(p.x, rect.max.y)),
             };
             // A new guide from the rulers with the Page tool is a liquid guide: dashed.
             if g.from.is_none() && app.session.tool_id() == "page" {
@@ -636,8 +636,8 @@ fn draw_cursor_badge(painter: &egui::Painter, p: Pos2, c: Cursor, t: &Tokens) {
 }
 
 /// Render options for the canvas texture.
-fn screen_options(app: &DesignApp, layout: &CanvasLayout, preview: bool, ppp: f64) -> designcraft_render::RenderOptions {
-    designcraft_render::RenderOptions {
+fn screen_options(app: &DesignApp, layout: &CanvasLayout, preview: bool, ppp: f64) -> pejy_render::RenderOptions {
+    pejy_render::RenderOptions {
         printing_only: preview,
         greek_below_px: 3.0 * ppp,
         highlight_missing_fonts: !preview && app.session.prefs.highlight_substituted_fonts,
@@ -661,7 +661,7 @@ fn screen_options(app: &DesignApp, layout: &CanvasLayout, preview: bool, ppp: f6
 /// The area each spread's document grid covers, in spread coordinates: the full-width band of
 /// the pasteboard nearest that spread, the band in which `CanvasLayout::spread_at` (and so
 /// snapping) picks it.
-fn grid_areas(layout: &CanvasLayout) -> Vec<(designcraft_doc::SpreadRef, DRect)> {
+fn grid_areas(layout: &CanvasLayout) -> Vec<(pejy_doc::SpreadRef, DRect)> {
     let pb = layout.pasteboard;
     let slots = &layout.slots;
     slots
@@ -678,7 +678,7 @@ fn grid_areas(layout: &CanvasLayout) -> Vec<(designcraft_doc::SpreadRef, DRect)>
 /// The display options that change how the canvas texture looks without touching the document.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DisplayKey {
-    quality: designcraft_render::DisplayQuality,
+    quality: pejy_render::DisplayQuality,
     separation: Option<u8>,
     rich_black: bool,
     overprint_preview: bool,
@@ -772,8 +772,8 @@ fn render_texture(app: &mut DesignApp, ctx: &egui::Context, rect: Rect, xf: &Xf,
     let zoom_same = app.canvas.shown.is_some_and(|s| (s.zoom - xf.zoom).abs() < 1e-9);
     let job = |app: &DesignApp| {
         let st = app.session.active()?;
-        let placed: Vec<designcraft_render::Placed> =
-            layout.slots.iter().map(|s| designcraft_render::Placed { spread: s.spread, xf: s.xf }).collect();
+        let placed: Vec<pejy_render::Placed> =
+            layout.slots.iter().map(|s| pejy_render::Placed { spread: s.spread, xf: s.xf }).collect();
         let w = (target.size.0 as f64 * ppp).round().max(1.0) as u32;
         let h = (target.size.1 as f64 * ppp).round().max(1.0) as u32;
         let view = Affine::scale(ppp) * Affine::scale(xf.zoom) * Affine::translate((-target.origin.x, -target.origin.y));
@@ -846,7 +846,7 @@ fn patch_texture(app: &mut DesignApp, layout: &CanvasLayout, ppp: f64, doc_key: 
         return false;
     }
     let new = st.doc.clone();
-    let Some(regions) = designcraft_render::damage::damage_with(&old, &new, Some(&app.session.cache)) else { return false };
+    let Some(regions) = pejy_render::damage::damage_with(&old, &new, Some(&app.session.cache)) else { return false };
     let t0 = crate::now_ms();
     let k = sh.zoom * ppp;
     let mut px: Option<(i64, i64, i64, i64)> = None;
@@ -877,7 +877,7 @@ fn patch_texture(app: &mut DesignApp, layout: &CanvasLayout, ppp: f64, doc_key: 
     if ((x1 - x0) * (y1 - y0)) as f64 > 0.5 * (tw * th) as f64 {
         return false;
     }
-    let placed: Vec<designcraft_render::Placed> = layout.slots.iter().map(|s| designcraft_render::Placed { spread: s.spread, xf: s.xf }).collect();
+    let placed: Vec<pejy_render::Placed> = layout.slots.iter().map(|s| pejy_render::Placed { spread: s.spread, xf: s.xf }).collect();
     let view = Affine::translate((-(x0 as f64), -(y0 as f64)))
         * Affine::scale(ppp)
         * Affine::scale(sh.zoom)
@@ -896,19 +896,19 @@ fn patch_texture(app: &mut DesignApp, layout: &CanvasLayout, ppp: f64, doc_key: 
 
 #[cfg(not(target_arch = "wasm32"))]
 fn render_worker_spawn(ctx: &egui::Context) -> Option<crate::render_worker::Worker> {
-    if std::env::var_os("DESIGNCRAFT_SYNC_RENDER").is_some() {
+    if std::env::var_os("PEJY_SYNC_RENDER").is_some() {
         return None;
     }
     crate::render_worker::Worker::spawn(ctx.clone())
 }
 
-fn upload(app: &mut DesignApp, ctx: &egui::Context, mut img: designcraft_render::Rendered) {
+fn upload(app: &mut DesignApp, ctx: &egui::Context, mut img: pejy_render::Rendered) {
     if app.ui.proof_colors {
-        designcraft_render::proof_view(&mut img, &app.ui.proof_setup);
+        pejy_render::proof_view(&mut img, &app.ui.proof_setup);
     }
     // Plates render from source colours; the ink limit is estimated from the composite.
     if app.ui.separation.is_none() && app.ui.ink_limit.is_some() {
-        designcraft_render::separation_view(&mut img, None, app.ui.ink_limit);
+        pejy_render::separation_view(&mut img, None, app.ui.ink_limit);
     }
     let ci = egui::ColorImage::from_rgba_premultiplied([img.width as usize, img.height as usize], &img.pixels);
     let ci = crate::widgets::fit_texture(ci, ctx.input(|i| i.max_texture_side));
@@ -992,8 +992,8 @@ fn draw_guides(app: &DesignApp, painter: &egui::Painter, xf: &Xf, doc: &Document
                 // Spread guides cross the pasteboard; page guides their page.
                 let span = if g.spread { pasteboard } else { pr };
                 let (a, bb) = match g.orientation {
-                    designcraft_doc::Orientation::Horizontal => (Point::new(span.x0, g.position), Point::new(span.x1, g.position)),
-                    designcraft_doc::Orientation::Vertical => {
+                    pejy_doc::Orientation::Horizontal => (Point::new(span.x0, g.position), Point::new(span.x1, g.position)),
+                    pejy_doc::Orientation::Vertical => {
                         let span = if g.spread { sp.bounds().inflate(0.0, 36.0) } else { pr };
                         (Point::new(g.position, span.y0), Point::new(g.position, span.y1))
                     }
@@ -1012,7 +1012,7 @@ fn draw_guides(app: &DesignApp, painter: &egui::Painter, xf: &Xf, doc: &Document
 }
 
 /// Spread-space → canvas transform for an item at `loc`.
-fn item_canvas_xf(doc: &Document, layout: &CanvasLayout, id: designcraft_doc::ItemId) -> Option<(Affine, &'static str)> {
+fn item_canvas_xf(doc: &Document, layout: &CanvasLayout, id: pejy_doc::ItemId) -> Option<(Affine, &'static str)> {
     let loc = doc.find(id)?;
     Some((layout.xf(loc.spread) * doc.parent_xf(&loc), ""))
 }
@@ -1022,8 +1022,8 @@ fn path_screen(it: &Item, xf: &Xf, a: Affine) -> Vec<Vec<Pos2>> {
     let full = a * it.xf;
     let mut out = Vec::new();
     let mut cur: Vec<Pos2> = Vec::new();
-    designcraft_geom::kurbo::flatten(&bp, 0.25 / xf.zoom.max(0.01), |el| {
-        use designcraft_geom::PathEl::*;
+    pejy_geom::kurbo::flatten(&bp, 0.25 / xf.zoom.max(0.01), |el| {
+        use pejy_geom::PathEl::*;
         match el {
             MoveTo(p) => {
                 if cur.len() > 1 {
@@ -1082,7 +1082,7 @@ fn draw_frames(app: &DesignApp, painter: &egui::Painter, xf: &Xf, doc: &Document
         // to miss while laying out).
         for (it, c) in overset_marks(app, doc, layout, &sp.items, xf.zoom, &ported) {
             let c = xf.to_screen(c);
-            let s = designcraft_tools::thread::PORT_SIZE_PX as f32;
+            let s = pejy_tools::thread::PORT_SIZE_PX as f32;
             painter.rect_filled(Rect::from_center_size(c, vec2(s, s)), 0.0, Color32::WHITE);
             painter.rect_stroke(Rect::from_center_size(c, vec2(s, s)), 0.0, Stroke::new(hair(painter), layer_color(doc, it)), StrokeKind::Inside);
             let red = Color32::from_rgb(230, 20, 20);
@@ -1128,7 +1128,7 @@ fn draw_item_edges(painter: &egui::Painter, xf: &Xf, doc: &Document, it: &Item, 
         }
     }
     // Empty graphic frame: the X.
-    if it.object_style == designcraft_doc::BASIC_GRAPHICS_FRAME && matches!(it.content, Content::Unassigned) {
+    if it.object_style == pejy_doc::BASIC_GRAPHICS_FRAME && matches!(it.content, Content::Unassigned) {
         let r = it.inner_bounds();
         let m = a * it.xf;
         let p = |x: f64, y: f64| xf.to_screen(m * Point::new(x, y));
@@ -1195,7 +1195,7 @@ fn draw_selection(app: &DesignApp, painter: &egui::Painter, xf: &Xf, doc: &Docum
             painter.rect_stroke(gb, 0.0, Stroke::new(1.0, brown), StrokeKind::Middle);
             // Its own handles resize the graphic (InDesign's brown content bounding box).
             if sel.items.len() == 1 {
-                for h in designcraft_tools::select::handles(DRect::new(gb.min.x as f64, gb.min.y as f64, gb.max.x as f64, gb.max.y as f64)) {
+                for h in pejy_tools::select::handles(DRect::new(gb.min.x as f64, gb.min.y as f64, gb.max.x as f64, gb.max.y as f64)) {
                     let r = Rect::from_center_size(pos2(h.x as f32, h.y as f32), vec2(6.5, 6.5));
                     painter.rect_filled(r, 0.0, Color32::WHITE);
                     painter.rect_stroke(r, 0.0, Stroke::new(hair(painter), brown), StrokeKind::Inside);
@@ -1239,7 +1239,7 @@ fn draw_selection(app: &DesignApp, painter: &egui::Painter, xf: &Xf, doc: &Docum
         // A selected placed graphic has its own handles instead of the frame's.
         let graphic_selected =
             sel.content && sel.items.len() == 1 && doc.item(sel.items[0]).is_some_and(|i| matches!(i.content, Content::Graphic(_)));
-        for h in designcraft_tools::select::handles(DRect::new(u.min.x as f64, u.min.y as f64, u.max.x as f64, u.max.y as f64))
+        for h in pejy_tools::select::handles(DRect::new(u.min.x as f64, u.min.y as f64, u.max.x as f64, u.max.y as f64))
             .into_iter()
             .filter(|_| !graphic_selected)
         {
@@ -1268,7 +1268,7 @@ const PORT_GROUP_DEPTH: usize = 32;
 
 /// The text frames whose ports `draw_selection` draws: the selected text frames and the text
 /// frames inside selected groups.
-fn ported_frames(app: &DesignApp, doc: &Document) -> std::collections::HashSet<designcraft_doc::ItemId> {
+fn ported_frames(app: &DesignApp, doc: &Document) -> std::collections::HashSet<pejy_doc::ItemId> {
     let mut frames = Vec::new();
     if let Some(st) = app.session.active() {
         for it in st.selection.items.iter().filter_map(|id| doc.item(*id)) {
@@ -1287,14 +1287,14 @@ fn overset_marks<'a>(
     layout: &CanvasLayout,
     items: &'a [std::sync::Arc<Item>],
     zoom: f64,
-    ported: &std::collections::HashSet<designcraft_doc::ItemId>,
+    ported: &std::collections::HashSet<pejy_doc::ItemId>,
 ) -> Vec<(&'a Item, Point)> {
     let mut frames = Vec::new();
     overset_frames(app, doc, items, 0, &mut frames);
     frames
         .into_iter()
         .filter(|it| !ported.contains(&it.id))
-        .filter_map(|it| Some((it, designcraft_tools::thread::port_center(doc, layout, it.id, true, zoom)?)))
+        .filter_map(|it| Some((it, pejy_tools::thread::port_center(doc, layout, it.id, true, zoom)?)))
         .collect()
 }
 
@@ -1322,7 +1322,7 @@ fn overset_frames<'a>(app: &DesignApp, doc: &Document, items: &'a [std::sync::Ar
 
 /// `it` when it is a text frame, or every text frame nested in it when it is a group, each with
 /// its story.
-fn text_frames_in<'a>(it: &'a Item, depth: usize, out: &mut Vec<(&'a Item, designcraft_doc::StoryId)>) {
+fn text_frames_in<'a>(it: &'a Item, depth: usize, out: &mut Vec<(&'a Item, pejy_doc::StoryId)>) {
     match &it.content {
         Content::Text(tf) => out.push((it, tf.story)),
         Content::Group { items } if depth < PORT_GROUP_DEPTH => {
@@ -1335,7 +1335,7 @@ fn text_frames_in<'a>(it: &'a Item, depth: usize, out: &mut Vec<(&'a Item, desig
 }
 
 /// Port location (canvas): out port at bottom-right, in port at top-left.
-fn port_pos(doc: &Document, layout: &CanvasLayout, id: designcraft_doc::ItemId, out: bool) -> Option<Point> {
+fn port_pos(doc: &Document, layout: &CanvasLayout, id: pejy_doc::ItemId, out: bool) -> Option<Point> {
     let it = doc.item(id)?;
     let (a, _) = item_canvas_xf(doc, layout, id)?;
     let r = it.inner_bounds();
@@ -1351,7 +1351,7 @@ fn draw_ports(
     doc: &Document,
     layout: &CanvasLayout,
     it: &Item,
-    sid: designcraft_doc::StoryId,
+    sid: pejy_doc::StoryId,
     color: Color32,
 ) {
     let Some(story) = doc.story(sid) else { return };
@@ -1359,10 +1359,10 @@ fn draw_ports(
     let is_last = pos + 1 == story.frames.len();
     let cs = app.session.cache.get(doc, sid, None);
     let overset = is_last && cs.is_overset();
-    let s = designcraft_tools::thread::PORT_SIZE_PX as f32;
+    let s = pejy_tools::thread::PORT_SIZE_PX as f32;
     // In port on the left edge below the top-left corner; out port on the right edge above the
     // bottom-right corner. The Selection tool hit-tests the same places.
-    let port = |out: bool| designcraft_tools::thread::port_center(doc, layout, it.id, out, xf.zoom).map(|c| xf.to_screen(c));
+    let port = |out: bool| pejy_tools::thread::port_center(doc, layout, it.id, out, xf.zoom).map(|c| xf.to_screen(c));
     let (Some(inp), Some(outp)) = (port(false), port(true)) else { return };
     for (c, has_link, is_out) in [(inp, pos > 0, false), (outp, !is_last, true)] {
         let pr = Rect::from_center_size(c, vec2(s, s));
@@ -1384,8 +1384,8 @@ fn draw_text_selection(
     xf: &Xf,
     doc: &Document,
     layout: &CanvasLayout,
-    ts: designcraft_doc::TextSel,
-    cells: Option<designcraft_doc::TableSel>,
+    ts: pejy_doc::TextSel,
+    cells: Option<pejy_doc::TableSel>,
 ) {
     let cs = app.session.cache.get(doc, ts.story, None);
     let range = ts.range();
@@ -1520,8 +1520,8 @@ fn draw_cell_selection(
     doc: &Document,
     layout: &CanvasLayout,
     cs: &compose::ComposedStory,
-    ts: designcraft_doc::TextSel,
-    cell: designcraft_doc::CellAddr,
+    ts: pejy_doc::TextSel,
+    cell: pejy_doc::CellAddr,
 ) {
     // Footnote text or a cell: its composed story and where it sits in the frame.
     let found = match cell.footnote_id() {
@@ -1531,7 +1531,7 @@ fn draw_cell_selection(
     let Some((fi, origin, text)) = found else { return };
     let Some(ft) = cs.frames.get(fi) else { return };
     let (Some((a, _)), Some(it)) = (item_canvas_xf(doc, layout, ft.frame), doc.item(ft.frame)) else { return };
-    let m = a * doc.text_xf(it) * designcraft_geom::Affine::translate(origin.to_vec2());
+    let m = a * doc.text_xf(it) * pejy_geom::Affine::translate(origin.to_vec2());
     let range = ts.range();
     if !range.is_empty()
         && let Some(cft) = text.frames.first()
@@ -1574,10 +1574,10 @@ fn draw_inverse_highlight(
     xf: &Xf,
     doc: &Document,
     cs: &compose::ComposedStory,
-    story: designcraft_doc::StoryId,
+    story: pejy_doc::StoryId,
     runs: &[(usize, Affine, Vec<[Point; 4]>, Vec<(usize, usize)>)],
 ) {
-    use designcraft_render::vello_cpu::{self, kurbo, peniko};
+    use pejy_render::vello_cpu::{self, kurbo, peniko};
     let ctx = painter.ctx();
     let ppp = ctx.pixels_per_point();
     let to_screen = |m: Affine, p: Point| xf.to_screen(m * p);
@@ -1623,7 +1623,7 @@ fn draw_inverse_highlight(
                     rc.fill_path(&bp);
                 }
             }
-            let db = designcraft_fonts::FontDb::global();
+            let db = pejy_fonts::FontDb::global();
             for (fi, m, _, glyphs) in runs {
                 let Some(ft) = cs.frames.get(*fi) else { continue };
                 for &(li, gi) in glyphs {
@@ -1659,7 +1659,7 @@ fn draw_tool_overlays(app: &mut DesignApp, painter: &egui::Painter, xf: &Xf) {
     if let (Some((z, c)), Some(rect)) = (app.power_zoom, app.canvas_rect) {
         // The view that releasing returns to.
         let (w, h) = (rect.width() as f64 / z, rect.height() as f64 / z);
-        let r = xf.rect(designcraft_geom::Rect::new(c.x - w / 2.0, c.y - h / 2.0, c.x + w / 2.0, c.y + h / 2.0));
+        let r = xf.rect(pejy_geom::Rect::new(c.x - w / 2.0, c.y - h / 2.0, c.x + w / 2.0, c.y + h / 2.0));
         painter.rect_stroke(r, 0.0, egui::Stroke::new(1.5, Color32::from_rgb(230, 40, 40)), egui::StrokeKind::Middle);
     }
     let tok = Tokens::get(painter.ctx());
@@ -1761,11 +1761,11 @@ fn draw_tool_overlays(app: &mut DesignApp, painter: &egui::Painter, xf: &Xf) {
 
 /// A path overlay (canvas coordinates; the Pencil's stroke while drawing, the Smooth and Erase
 /// drags) as screen polylines, its curves flattened to about a quarter of a screen pixel.
-fn draw_path_overlay(painter: &egui::Painter, xf: &Xf, path: &designcraft_geom::BezPath, color: Color32, dashed_line: bool) {
-    use designcraft_geom::PathEl;
+fn draw_path_overlay(painter: &egui::Painter, xf: &Xf, path: &pejy_geom::BezPath, color: Color32, dashed_line: bool) {
+    use pejy_geom::PathEl;
     let stroke = Stroke::new(1.0, color);
     let mut runs: Vec<Vec<Pos2>> = Vec::new();
-    designcraft_geom::kurbo::flatten(path, 0.25 / xf.zoom.max(1e-9), |el| match el {
+    pejy_geom::kurbo::flatten(path, 0.25 / xf.zoom.max(1e-9), |el| match el {
         PathEl::MoveTo(p) => runs.push(vec![xf.to_screen(p)]),
         PathEl::LineTo(p) => {
             if let Some(run) = runs.last_mut() {
@@ -1793,7 +1793,7 @@ fn draw_path_overlay(painter: &egui::Painter, xf: &Xf, path: &designcraft_geom::
 
 /// A frame's whole content drawn faintly over the canvas, the part outside the frame included,
 /// with its bounds outlined (while the content moves inside the frame).
-fn draw_content_ghost(painter: &egui::Painter, xf: &Xf, doc: &Document, layout: &CanvasLayout, id: designcraft_doc::ItemId) {
+fn draw_content_ghost(painter: &egui::Painter, xf: &Xf, doc: &Document, layout: &CanvasLayout, id: pejy_doc::ItemId) {
     let Some(it) = doc.item(id) else { return };
     let Some((a, _)) = item_canvas_xf(doc, layout, id) else { return };
     let outline = Stroke::new(1.0, Color32::from_rgb(196, 111, 43));
@@ -1823,14 +1823,14 @@ fn draw_content_ghost(painter: &egui::Painter, xf: &Xf, doc: &Document, layout: 
 }
 
 /// A screen-resolution proxy of a placed graphic for the ghost, cached per asset.
-fn ghost_texture(ctx: &egui::Context, doc: &Document, g: &designcraft_doc::Graphic) -> Option<egui::TextureHandle> {
+fn ghost_texture(ctx: &egui::Context, doc: &Document, g: &pejy_doc::Graphic) -> Option<egui::TextureHandle> {
     let asset = doc.assets.get(&g.asset)?;
     let key = egui::Id::new(("content_ghost", std::sync::Arc::as_ptr(&asset.data) as usize, asset.data.len(), asset.page));
     if let Some(t) = ctx.data(|d| d.get_temp::<egui::TextureHandle>(key)) {
         return Some(t);
     }
     // A 72 ppi proxy is enough for a faint preview.
-    let pm = designcraft_render::images::mip(&asset.data, asset.page, g.size.0, 1.0)?;
+    let pm = pejy_render::images::mip(&asset.data, asset.page, g.size.0, 1.0)?;
     let (pw, ph) = (pm.width() as usize, pm.height() as usize);
     if pw == 0 || ph == 0 {
         return None;
@@ -1857,7 +1857,7 @@ fn draw_liquid_pins(painter: &egui::Painter, o: Rect, page: Rect, pins: [bool; 4
     for m in mids {
         painter.circle_filled(m, 3.5, col);
     }
-    let (po, lo) = (designcraft_tools::PIN_OFFSET_PX as f32, designcraft_tools::LOCK_OFFSET_PX as f32);
+    let (po, lo) = (pejy_tools::PIN_OFFSET_PX as f32, pejy_tools::LOCK_OFFSET_PX as f32);
     let outward = [vec2(0.0, -1.0), vec2(1.0, 0.0), vec2(0.0, 1.0), vec2(-1.0, 0.0)];
     let edge = [pos2(c.x, page.min.y), pos2(page.max.x, c.y), pos2(c.x, page.max.y), pos2(page.min.x, c.y)];
     for i in 0..4 {
@@ -2042,8 +2042,8 @@ enum RulerMenu {
 }
 
 /// The units a ruler's menu offers, in InDesign's order.
-const RULER_UNITS: [designcraft_geom::Unit; 9] = {
-    use designcraft_geom::Unit::*;
+const RULER_UNITS: [pejy_geom::Unit; 9] = {
+    use pejy_geom::Unit::*;
     [Points, Picas, Inches, InchesDecimal, Millimeters, Centimeters, Ciceros, Agates, Pixels]
 };
 
@@ -2051,7 +2051,7 @@ const RULER_UNITS: [designcraft_geom::Unit; 9] = {
 /// ruler, Delete All Guides on Spread. The corner's menu (`Both`) starts with Lock Zero Point
 /// (`locked` = the zero point is locked). Picking a unit sets `horizontalUnits`,
 /// `verticalUnits` or both through `document.preferences`.
-fn ruler_units_menu(app: &mut DesignApp, ui: &mut egui::Ui, which: RulerMenu, cur: Option<designcraft_geom::Unit>, locked: bool) {
+fn ruler_units_menu(app: &mut DesignApp, ui: &mut egui::Ui, which: RulerMenu, cur: Option<pejy_geom::Unit>, locked: bool) {
     let lang = app.ui.language.clone();
     let tr = |s: &str| crate::i18n::tr(&lang, s).to_string();
     if which == RulerMenu::Both {
@@ -2174,13 +2174,13 @@ fn context_target(app: &mut DesignApp, p: Point, zoom: f64) -> crate::menus::Con
 }
 
 /// The frontmost item under canvas point `p` and that point in its spread, hit as the tools do.
-fn item_at(app: &DesignApp, p: Point, zoom: f64) -> Option<(designcraft_doc::ItemId, Point)> {
+fn item_at(app: &DesignApp, p: Point, zoom: f64) -> Option<(pejy_doc::ItemId, Point)> {
     let st = app.session.active()?;
     let (sr, sp) = CanvasLayout::new(&st.doc, st.editing_parents).spread_at(p)?;
     let tol = 4.0 / zoom.max(1e-6);
     let id = match sr {
         SpreadRef::Doc(si) => st.doc.hit_item(si, sp, tol)?,
-        _ => st.doc.spread(sr)?.items.iter().rev().find(|it| !it.locked && designcraft_doc::edit_hit(it, sp, tol))?.id,
+        _ => st.doc.spread(sr)?.items.iter().rev().find(|it| !it.locked && pejy_doc::edit_hit(it, sp, tol))?.id,
     };
     Some((id, sp))
 }
@@ -2532,7 +2532,7 @@ fn keyboard_pane(app: &DesignApp) -> bool {
 }
 
 /// One input method event for the text caret: marked text previews in the story, a commit types.
-fn ime_event(app: &mut DesignApp, e: egui::ImeEvent, vi: designcraft_engine::ViewInfo) {
+fn ime_event(app: &mut DesignApp, e: egui::ImeEvent, vi: pejy_engine::ViewInfo) {
     let r = match e {
         egui::ImeEvent::Preedit { text, active_range_chars } => {
             app.ime_marked = Some(text.clone()).filter(|t| !t.is_empty());
@@ -2662,7 +2662,7 @@ fn draw_flattener_preview(painter: &egui::Painter, xf: &Xf, doc: &Document, layo
     for slot in &layout.slots {
         let Some(sp) = doc.spread(slot.spread) else { continue };
         for it in sp.items.iter().filter(|it| !it.hidden && transparent(it)) {
-            let r = it.bounds().inflate(designcraft_render::effect_outset(it), designcraft_render::effect_outset(it));
+            let r = it.bounds().inflate(pejy_render::effect_outset(it), pejy_render::effect_outset(it));
             painter.rect_filled(xf.rect(slot.xf.transform_rect_bbox(r)), 0.0, red);
         }
     }
@@ -2676,7 +2676,7 @@ fn draw_dynamic_spelling(app: &DesignApp, ctx: &egui::Context, painter: &egui::P
         let bad: std::sync::Arc<Vec<std::ops::Range<usize>>> = match ctx.data(|d| d.get_temp(key)) {
             Some(v) => v,
             None => {
-                let v = std::sync::Arc::new(designcraft_engine::cmd::spelling::misspellings(doc, story, &doc.user_words));
+                let v = std::sync::Arc::new(pejy_engine::cmd::spelling::misspellings(doc, story, &doc.user_words));
                 ctx.data_mut(|d| d.insert_temp(key, v.clone()));
                 v
             }
@@ -2717,7 +2717,7 @@ pub fn selected_text(app: &DesignApp) -> Option<String> {
     if s.is_empty() {
         return None;
     }
-    Some(s.replace(designcraft_doc::story::FORCED_LINE_BREAK, "\n"))
+    Some(s.replace(pejy_doc::story::FORCED_LINE_BREAK, "\n"))
 }
 
 /// One device pixel, the width InDesign uses for guides and frame edges.
@@ -2815,14 +2815,14 @@ const GUIDE_DRAG: &str = "canvas_guide_drag";
 /// A ruler guide being dragged: out of a ruler (`from` None) or an existing one.
 #[derive(Clone, Debug)]
 struct GuideDrag {
-    orientation: designcraft_doc::Orientation,
-    from: Option<(designcraft_doc::SpreadRef, usize, usize)>,
+    orientation: pejy_doc::Orientation,
+    from: Option<(pejy_doc::SpreadRef, usize, usize)>,
     /// Pointer position (screen).
     at: Option<Pos2>,
 }
 
 /// The guide under a screen point (within 3 px), as (spread, page, index, orientation).
-fn guide_at(app: &DesignApp, xf: &Xf, p: Pos2) -> Option<(designcraft_doc::SpreadRef, usize, usize, designcraft_doc::Orientation)> {
+fn guide_at(app: &DesignApp, xf: &Xf, p: Pos2) -> Option<(pejy_doc::SpreadRef, usize, usize, pejy_doc::Orientation)> {
     let st = app.session.active()?;
     let layout = CanvasLayout::new(&st.doc, st.editing_parents);
     let cp = xf.to_canvas(p);
@@ -2838,8 +2838,8 @@ fn guide_at(app: &DesignApp, xf: &Xf, p: Pos2) -> Option<(designcraft_doc::Sprea
                 }
                 let r = if g.spread { pr } else { pg.bounds() };
                 let hit = match g.orientation {
-                    designcraft_doc::Orientation::Horizontal => (local.y - g.position).abs() <= tol && local.x >= r.x0 && local.x <= r.x1,
-                    designcraft_doc::Orientation::Vertical => (local.x - g.position).abs() <= tol && local.y >= r.y0 - tol && local.y <= r.y1 + tol,
+                    pejy_doc::Orientation::Horizontal => (local.y - g.position).abs() <= tol && local.x >= r.x0 && local.x <= r.x1,
+                    pejy_doc::Orientation::Vertical => (local.x - g.position).abs() <= tol && local.y >= r.y0 - tol && local.y <= r.y1 + tol,
                 };
                 if hit && !g.locked {
                     return Some((slot.spread, pi, gi, g.orientation));
@@ -2863,9 +2863,9 @@ fn guide_drag(app: &mut DesignApp, ui: &mut egui::Ui, resp: &egui::Response, rec
         if full.contains(o) && !rect.contains(o) {
             // In a ruler (not the corner).
             let orientation = if o.y < rect.min.y && o.x >= rect.min.x {
-                Some(designcraft_doc::Orientation::Horizontal)
+                Some(pejy_doc::Orientation::Horizontal)
             } else if o.x < rect.min.x && o.y >= rect.min.y {
-                Some(designcraft_doc::Orientation::Vertical)
+                Some(pejy_doc::Orientation::Vertical)
             } else {
                 None
             };
@@ -2880,7 +2880,7 @@ fn guide_drag(app: &mut DesignApp, ui: &mut egui::Ui, resp: &egui::Response, rec
             let over_item = app.session.active().is_some_and(|st| {
                 let layout = CanvasLayout::new(&st.doc, st.editing_parents);
                 layout.spread_at(xf.to_canvas(o)).is_some_and(|(sr, p)| match sr {
-                    designcraft_doc::SpreadRef::Doc(si) => st.doc.hit_item(si, p, 3.0 / xf.zoom).is_some(),
+                    pejy_doc::SpreadRef::Doc(si) => st.doc.hit_item(si, p, 3.0 / xf.zoom).is_some(),
                     _ => false,
                 })
             });
@@ -2895,8 +2895,8 @@ fn guide_drag(app: &mut DesignApp, ui: &mut egui::Ui, resp: &egui::Response, rec
     }
     if !released {
         ui.ctx().set_cursor_icon(match g.orientation {
-            designcraft_doc::Orientation::Horizontal => egui::CursorIcon::ResizeVertical,
-            designcraft_doc::Orientation::Vertical => egui::CursorIcon::ResizeHorizontal,
+            pejy_doc::Orientation::Horizontal => egui::CursorIcon::ResizeVertical,
+            pejy_doc::Orientation::Vertical => egui::CursorIcon::ResizeHorizontal,
         });
         ui.data_mut(|d| d.insert_temp(id, g));
         return true;
@@ -2912,12 +2912,12 @@ fn guide_drag(app: &mut DesignApp, ui: &mut egui::Ui, resp: &egui::Response, rec
         Some((r, sp, on_page))
     });
     let pos_of = |sp: Point| match g.orientation {
-        designcraft_doc::Orientation::Horizontal => sp.y,
-        designcraft_doc::Orientation::Vertical => sp.x,
+        pejy_doc::Orientation::Horizontal => sp.y,
+        pejy_doc::Orientation::Vertical => sp.x,
     };
     let orient = match g.orientation {
-        designcraft_doc::Orientation::Horizontal => "horizontal",
-        designcraft_doc::Orientation::Vertical => "vertical",
+        pejy_doc::Orientation::Horizontal => "horizontal",
+        pejy_doc::Orientation::Vertical => "vertical",
     };
     match (g.from, on_canvas, target) {
         // Dropped back on a ruler: delete.
@@ -2973,7 +2973,7 @@ mod parent_canvas_tests;
 
 #[cfg(test)]
 mod tests {
-    use designcraft_geom::Unit;
+    use pejy_geom::Unit;
     use egui_kittest::{Harness, kittest::Queryable};
 
     use super::*;
@@ -2998,7 +2998,7 @@ mod tests {
     /// While a page's render is on its way the page shows paper, not the black of its shadow.
     #[test]
     fn pages_show_paper_under_their_render() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", serde_json::json!({"pages": 3, "facingPages": true})).unwrap();
         let ctx = egui::Context::default();
         let mut shapes = Vec::new();
@@ -3012,7 +3012,7 @@ mod tests {
         let layout = CanvasLayout::new(&st.doc, false);
         let xf = Xf::new(app.canvas_rect.unwrap(), app.view().unwrap());
         // The paper swatch on screen (white, as the colour settings show it).
-        let [r, g, b, _] = st.doc.resolve_color(designcraft_color::swatch::PAPER, 1.0).unwrap().to_rgba8(1.0);
+        let [r, g, b, _] = st.doc.resolve_color(pejy_color::swatch::PAPER, 1.0).unwrap().to_rgba8(1.0);
         let paper: Vec<Rect> = shapes
             .iter()
             .filter_map(|c| match &c.shape {
@@ -3043,7 +3043,7 @@ mod tests {
 
     #[test]
     fn display_option_change_drops_the_render_in_flight() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let shown = crate::Shown { doc: (1, 2, 3, false), origin: Point::new(0.0, 0.0), zoom: 1.0, size: (10.0, 10.0), editing_parents: false };
         invalidate_on_display_change(&mut app);
         app.canvas.shown = Some(shown);
@@ -3052,7 +3052,7 @@ mod tests {
         invalidate_on_display_change(&mut app);
         assert!(app.canvas.shown.is_some() && app.canvas.pending.is_some());
         // A display option changed while the render ran: its result must not be accepted.
-        app.ui.display_quality = designcraft_render::DisplayQuality::Fast;
+        app.ui.display_quality = pejy_render::DisplayQuality::Fast;
         invalidate_on_display_change(&mut app);
         assert!(app.canvas.shown.is_none() && app.canvas.pending.is_none() && app.canvas.pending_doc.is_none());
         // The document grid is drawn into the texture too.
@@ -3080,7 +3080,7 @@ mod tests {
     fn the_page_tool_draws_liquid_guides_from_the_rulers() {
         // Chris Cicchino's Page Tool and Liquid Layout video (11:00): with the Page tool, a guide
         // dragged from the ruler is a liquid guide (dashed).
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.session.set_tool("page");
         let mut h = harness(app);
@@ -3089,7 +3089,7 @@ mod tests {
         drag(&mut h, pos2(r.center().x, r.min.y - 8.0), r.center());
         let g = guides(&h);
         assert_eq!(g.len(), 1, "{g:?}");
-        assert!(g[0].liquid && g[0].orientation == designcraft_doc::Orientation::Horizontal);
+        assert!(g[0].liquid && g[0].orientation == pejy_doc::Orientation::Horizontal);
         // With the Selection tool it's a ruler guide.
         h.state_mut().session.set_tool("selection");
         drag(&mut h, pos2(r.center().x, r.min.y - 8.0), r.center() + vec2(0.0, 40.0));
@@ -3108,7 +3108,7 @@ mod tests {
     }
 
     fn new_document() -> Harness<'static, DesignApp> {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         harness(app)
     }
@@ -3193,7 +3193,7 @@ mod tests {
     }
 
     fn zoom_app(tool: &str) -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.select_tool(tool);
         app.ui.rulers = false;
@@ -3410,7 +3410,7 @@ mod tests {
 
     #[test]
     fn parent_guides_on_a_page_are_not_picked_there() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         // 100 pt into A's right page, which page 1 (a right page at x = 0) shows.
         let parent_guide = json!({"spread": {"kind": "parent", "index": 0}, "page": 1, "orientation": "vertical", "position": 712});
@@ -3430,9 +3430,9 @@ mod tests {
 
     #[test]
     fn mouse_double_clicking_a_frame_handle_fits_with_one_undo_step() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
-        let id = designcraft_doc::ItemId(
+        let id = pejy_doc::ItemId(
             app.run("frame.create", json!({"rect": [100, 100, 400, 300], "content": "text", "text": "Fit this text"})).unwrap()["id"]
                 .as_u64()
                 .unwrap(),
@@ -3475,7 +3475,7 @@ mod tests {
 
     #[test]
     fn pasting_svg_from_another_app_places_editable_paths_in_the_middle_of_the_view() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let mut h = harness(app);
         h.run_steps(2);
@@ -3487,7 +3487,7 @@ mod tests {
         assert_eq!(st.history.undo.len(), undo + 1, "one undo step");
         let id = *st.selection.items.first().expect("the pasted path is selected");
         let it = st.doc.item(id).unwrap();
-        assert_eq!(it.shape, designcraft_doc::Shape::Path);
+        assert_eq!(it.shape, pejy_doc::Shape::Path);
         assert_eq!(it.path.subpaths[0].anchors.len(), 2);
         assert!((it.stroke.weight - 2.0).abs() < 1e-9);
         // Centred where text from another app would go: the middle of the view.
@@ -3498,13 +3498,13 @@ mod tests {
     #[test]
     fn edit_paste_from_the_menu_pastes_svg_on_the_system_clipboard_as_paths() {
         let services = crate::Services { clipboard_text: Some(Box::new(|| Some(ART.to_string()))), ..Default::default() };
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), services);
+        let mut app = DesignApp::new(pejy_engine::Session::new(), services);
         app.native_menu = true;
         app.run("file.new", json!({})).unwrap();
         crate::menus::activate(&mut app, "edit.paste", &Value::Null);
         let st = app.session.doc().unwrap();
         let id = *st.selection.items.first().expect("the pasted path is selected");
-        assert_eq!(st.doc.item(id).unwrap().shape, designcraft_doc::Shape::Path);
+        assert_eq!(st.doc.item(id).unwrap().shape, pejy_doc::Shape::Path);
         assert!(st.selection.text.is_none(), "paths, not a text frame of markup");
         // With an insertion point, the markup is text like any other.
         let story = app.run("frame.create", json!({"rect": [10, 10, 300, 300], "content": "text"})).unwrap()["story"].clone();
@@ -3518,7 +3518,7 @@ mod tests {
     fn selected_merged_owners_paint_the_same_row_and_column_targets() {
         for column in [true, false] {
             for merged in [false, true] {
-                let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+                let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
                 app.run("file.new", json!({"pages": 1})).unwrap();
                 app.run("frame.create", json!({"rect": [36, 36, 300, 300], "content": "text"})).unwrap();
                 app.run("table.insert", json!({"rows": 2, "cols": 2})).unwrap();
@@ -3535,7 +3535,7 @@ mod tests {
                 let selected = selection.cells.unwrap();
                 assert_eq!(
                     selected.range,
-                    if column { designcraft_doc::CellRange::new(0, 1, 1, 1) } else { designcraft_doc::CellRange::new(1, 0, 1, 1) }
+                    if column { pejy_doc::CellRange::new(0, 1, 1, 1) } else { pejy_doc::CellRange::new(1, 0, 1, 1) }
                 );
                 let layout = CanvasLayout::new(&st.doc, st.editing_parents);
                 let cs = app.session.cache.get(&st.doc, ts.story, None);
@@ -3590,14 +3590,14 @@ mod tests {
     /// A selected group lists the text frames inside it for ports.
     #[test]
     fn grouped_text_frames_get_ports() {
-        let mut s = designcraft_engine::Session::new();
+        let mut s = pejy_engine::Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let a = s.execute("frame.create", &json!({"rect": [10, 10, 110, 60], "content": "text"})).unwrap()["id"].as_u64().unwrap();
         let b = s.execute("frame.create", &json!({"rect": [10, 80, 110, 130]})).unwrap()["id"].as_u64().unwrap();
         s.execute("selection.set", &json!({"ids": [a, b]})).unwrap();
         let g = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
         let doc = &s.doc().unwrap().doc;
-        let group = doc.item(designcraft_doc::ItemId(g)).unwrap();
+        let group = doc.item(pejy_doc::ItemId(g)).unwrap();
         let mut out = Vec::new();
         text_frames_in(group, 0, &mut out);
         assert_eq!(out.iter().map(|(it, _)| it.id.0).collect::<Vec<_>>(), vec![a], "one text frame in the group");
@@ -3611,7 +3611,7 @@ mod tests {
     /// group's own selection marks.
     #[test]
     fn a_selected_group_paints_both_ports_of_its_text_frame() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let s = &mut app.session;
         let text = "far too much text for a frame this small, over and over again ".repeat(8);
@@ -3638,24 +3638,24 @@ mod tests {
             })
             .collect();
         for out in [false, true] {
-            let c = xf.to_screen(designcraft_tools::thread::port_center(&doc, &layout, designcraft_doc::ItemId(a), out, xf.zoom).unwrap());
+            let c = xf.to_screen(pejy_tools::thread::port_center(&doc, &layout, pejy_doc::ItemId(a), out, xf.zoom).unwrap());
             let port = white.iter().position(|r| (r.center() - c).length() < 0.01).unwrap_or_else(|| panic!("port (out: {out}) at {c:?}"));
             assert!(!white[port + 1..].iter().any(|r| r.contains(c)), "nothing painted later covers the port (out: {out})");
         }
     }
 
     fn out_frame(doc: &Document, id: u64) -> &Item {
-        doc.item(designcraft_doc::ItemId(id)).unwrap()
+        doc.item(pejy_doc::ItemId(id)).unwrap()
     }
 
     /// An overset frame inside a group is listed for the red mark even when nothing is
     /// selected; a frame with room, or a hidden one, is not.
     #[test]
     fn overset_frames_are_found_inside_groups() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let s = &mut app.session;
-        let frame_with = |s: &mut designcraft_engine::Session, rect: [f64; 4], text: &str| {
+        let frame_with = |s: &mut pejy_engine::Session, rect: [f64; 4], text: &str| {
             s.execute("frame.create", &json!({"rect": rect, "content": "text", "text": text})).unwrap()["id"].as_u64().unwrap()
         };
         let tiny = frame_with(s, [10.0, 10.0, 40.0, 16.0], "far too much text for a frame this small, over and over again");
@@ -3680,7 +3680,7 @@ mod tests {
     /// selected overset frame gets only the mark its ports draw.
     #[test]
     fn overset_mark_sits_on_the_out_port_once() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let s = &mut app.session;
         let id = s
@@ -3712,7 +3712,7 @@ mod tests {
 
     #[test]
     fn right_clicking_a_ruler_sets_that_rulers_units() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let mut h = harness(app);
         let rect = h.state().canvas_rect.unwrap();
@@ -3759,7 +3759,7 @@ mod tests {
     /// The live-corner widget draws on a selected rectangle frame; clicking it draws the diamonds.
     #[test]
     fn live_corner_widget_and_diamonds_draw() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [100, 100, 300, 250], "content": "graphic"})).unwrap();
         let id = app.session.doc().unwrap().doc.spreads[0].items[0].id;
@@ -3855,7 +3855,7 @@ mod tests {
 
     #[test]
     fn the_ruler_corner_drags_resets_and_locks_the_zero_point() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 3})).unwrap();
         let mut h = fast_harness(app);
         let rect = h.state().canvas_rect.unwrap();
@@ -3912,7 +3912,7 @@ mod tests {
 
     #[test]
     fn cmd_dragging_the_ruler_corner_makes_a_guide_each_way() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let mut h = harness(app);
         let rect = h.state().canvas_rect.unwrap();
@@ -3931,16 +3931,16 @@ mod tests {
         let doc = h.state().session.doc().unwrap().doc.clone();
         let guides: Vec<_> = doc.spread(r).unwrap().pages.iter().flat_map(|p| p.guides.clone()).collect();
         assert_eq!(guides.len(), 2, "{guides:?}");
-        let pos = |o: designcraft_doc::Orientation| guides.iter().find(|g| g.orientation == o).map(|g| g.position).unwrap();
-        assert!((pos(designcraft_doc::Orientation::Horizontal) - at.y).abs() < 0.5);
-        assert!((pos(designcraft_doc::Orientation::Vertical) - at.x).abs() < 0.5);
+        let pos = |o: pejy_doc::Orientation| guides.iter().find(|g| g.orientation == o).map(|g| g.position).unwrap();
+        assert!((pos(pejy_doc::Orientation::Horizontal) - at.y).abs() < 0.5);
+        assert!((pos(pejy_doc::Orientation::Vertical) - at.x).abs() < 0.5);
         assert!(guides.iter().all(|g| g.spread));
         assert_eq!(doc.settings.zero_point, [0.0, 0.0], "the zero point stays");
     }
 
     #[test]
     fn rulers_and_xy_fields_measure_from_the_zero_point_on_every_spread() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         // Spread 0: page 1; spread 1: pages 2 and 3.
         app.run("file.new", json!({"pages": 3})).unwrap();
         app.run("view.zeroPoint", json!({"at": [100, 50]})).unwrap();
@@ -4006,7 +4006,7 @@ mod tests {
 
     #[test]
     fn right_clicking_an_object_selects_it_and_its_menu_arranges_it() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let a = app.run("frame.create", json!({"rect": [36, 36, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         let b = app.run("frame.create", json!({"rect": [150, 150, 300, 300]})).unwrap()["id"].as_u64().unwrap();
@@ -4030,7 +4030,7 @@ mod tests {
 
     #[test]
     fn right_clicking_empty_canvas_offers_paste_after_a_copy() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let a = app.run("frame.create", json!({"rect": [36, 36, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         app.run("edit.copy", json!({})).unwrap();
@@ -4056,7 +4056,7 @@ mod tests {
 
     #[test]
     fn right_clicking_another_object_while_the_menu_is_open_reopens_it_there() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let a = app.run("frame.create", json!({"rect": [36, 36, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         let b = app.run("frame.create", json!({"rect": [36, 600, 200, 760]})).unwrap()["id"].as_u64().unwrap();
@@ -4073,7 +4073,7 @@ mod tests {
 
     #[test]
     fn a_context_menu_in_one_pane_keeps_the_keys_from_the_other() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let a = app.run("frame.create", json!({"rect": [36, 36, 100, 100]})).unwrap()["id"].as_u64().unwrap();
         app.select_tool("rectangleFrame");
@@ -4092,7 +4092,7 @@ mod tests {
 
     #[test]
     fn right_clicking_text_keeps_the_selected_text_or_places_the_caret() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [36, 36, 400, 200], "content": "text"})).unwrap();
         app.select_tool("type");
@@ -4117,7 +4117,7 @@ mod tests {
 
     #[test]
     fn rows_hidden_in_the_menu_bar_are_hidden_in_context_menus() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [36, 36, 200, 200]})).unwrap();
         app.ui.hidden_menu_items.push(crate::menus::menu_key("Object/Arrange", "Bring to Front"));
@@ -4133,7 +4133,7 @@ mod tests {
 
     #[test]
     fn a_secondary_drag_neither_moves_marquees_nor_draws() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let a = app.run("frame.create", json!({"rect": [36, 36, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         let mut h = harness(app);
@@ -4151,7 +4151,7 @@ mod tests {
             h.event(egui::Event::PointerButton { pos: to, button: egui::PointerButton::Secondary, pressed: false, modifiers: Default::default() });
             h.run_steps(3);
         };
-        let xf = |h: &Harness<'_, DesignApp>| h.state().session.doc().unwrap().doc.item(designcraft_doc::ItemId(a)).unwrap().xf;
+        let xf = |h: &Harness<'_, DesignApp>| h.state().session.doc().unwrap().doc.item(pejy_doc::ItemId(a)).unwrap().xf;
         let before = xf(&h);
         // Selection tool: on the object (no move), and from empty page across it (no marquee).
         drag(&mut h, (100.0, 100.0), (300.0, 300.0));
@@ -4168,7 +4168,7 @@ mod tests {
     /// A text frame holding `text`, the Type tool, and a harness stepping at 60 fps (clicks in a
     /// row must land within the double-click delay).
     fn typing(text: &str) -> (Harness<'static, DesignApp>, u64) {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let r = app.run("frame.create", json!({"rect": [72, 72, 400, 400], "content": "text", "text": text})).unwrap();
         let id = r["id"].as_u64().unwrap();
@@ -4278,7 +4278,7 @@ mod tests {
     #[test]
     fn an_edit_repaints_a_canvas_texture_sampled_down_to_the_gpu_limit_whole() {
         for (width, sampled_down) in [(1440.0, false), (2600.0, true)] {
-            let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+            let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({})).unwrap();
             let frame = app.run("frame.create", json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Text"})).unwrap();
             let mut h = Harness::builder().with_size(vec2(width, 900.0)).build_ui_state(
@@ -4340,7 +4340,7 @@ mod tests {
 
     #[test]
     fn tools_show_their_own_cursors_over_the_page() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let mut h = harness(app);
         let p = h.state().canvas_rect.unwrap().center();
@@ -4367,8 +4367,8 @@ mod tests {
 
     #[test]
     fn document_grid_is_drawn_where_points_snap_to_it() {
-        use designcraft_tools::{SnapView, ToolContext};
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        use pejy_tools::{SnapView, ToolContext};
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let doc = app.session.active().unwrap().doc.clone();
         let layout = CanvasLayout::new(&doc, false);
@@ -4387,19 +4387,19 @@ mod tests {
             unit: Unit::Points,
             stroke_in_front: false,
         };
-        let (snapped, _) = designcraft_tools::snap::snap_point(&cx, sr, Point::new(page.x0 + 31.3, page.y0 + 47.9));
+        let (snapped, _) = pejy_tools::snap::snap_point(&cx, sr, Point::new(page.x0 + 31.3, page.y0 + 47.9));
         assert_eq!((snapped.x - page.x0, snapped.y - page.y0), (27.0, 45.0));
         // Render 40 × 40 pt around it at 4 px/pt.
         let scale = 4.0;
         let corner = layout.xf(sr) * Point::new(snapped.x - 20.0, snapped.y - 20.0);
         let view = Affine::scale(scale) * Affine::translate((-corner.x, -corner.y));
-        let placed: Vec<_> = layout.slots.iter().map(|s| designcraft_render::Placed { spread: s.spread, xf: s.xf }).collect();
+        let placed: Vec<_> = layout.slots.iter().map(|s| pejy_render::Placed { spread: s.spread, xf: s.xf }).collect();
         let render = |app: &DesignApp| {
             let opts = screen_options(app, &layout, false, 1.0);
-            designcraft_render::Renderer::new().render(&doc, &app.session.cache, &placed, 160, 160, view, &opts)
+            pejy_render::Renderer::new().render(&doc, &app.session.cache, &placed, 160, 160, view, &opts)
         };
         // The snapped point is at pixel (80, 80); halfway to the next line is 18 px further.
-        let darkest = |img: &designcraft_render::Rendered, xs: [u32; 2], ys: [u32; 2]| {
+        let darkest = |img: &pejy_render::Rendered, xs: [u32; 2], ys: [u32; 2]| {
             (xs[0]..xs[1]).flat_map(|x| (ys[0]..ys[1]).map(move |y| (x, y))).map(|(x, y)| img.pixel(x, y)[0]).min().unwrap()
         };
         let off = render(&app);
@@ -4418,7 +4418,7 @@ mod tests {
     /// focused widget (e.g. the status bar's spread buttons) while typing still reaches the text.
     #[test]
     fn arrow_keys_and_tab_keep_keyboard_focus_on_the_canvas() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 3})).unwrap();
         let f = app.run("frame.create", json!({"rect": [36, 36, 300, 200], "content": "text", "text": "Hello"})).unwrap();
         app.select_tool("type");
@@ -4456,7 +4456,7 @@ mod tests {
 
     #[test]
     fn rulers_open_no_units_menu_without_a_document() {
-        let mut h = harness(DesignApp::new(designcraft_engine::Session::new(), crate::Services::default()));
+        let mut h = harness(DesignApp::new(pejy_engine::Session::new(), crate::Services::default()));
         let Some(rect) = h.state().canvas_rect else { return };
         right_click(&mut h, pos2(rect.center().x, rect.min.y - RULER / 2.0));
         assert!(h.query_by_label("   Points").is_none());
@@ -4479,7 +4479,7 @@ mod tests {
     #[test]
     fn edits_patch_the_canvas_only_at_full_resolution() {
         for (max_side, patches) in [(None, true), (Some(1024), false)] {
-            let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+            let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
             let ctx = egui::Context::default();
             let frame = |app: &mut DesignApp| {
                 // Wider than the limit (egui's font atlas needs at least 1024).
@@ -4537,14 +4537,14 @@ mod tests {
     #[test]
     #[allow(deprecated)] // `ImeEvent::Enabled` / `Disabled`: egui no longer sends them, other integrations may.
     fn ime_events_compose_in_the_story_with_the_candidate_window_at_the_caret() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let ctx = egui::Context::default();
         let sid = typing_app(&mut app, &ctx, "曲:");
         // At a text caret the IME is allowed, its window on the caret as the canvas draws it.
         let ime = ime_frame(&mut app, &ctx, vec![]).expect("IME allowed at a text caret");
         let (top, bottom) = {
             let st = app.session.active().unwrap();
-            let cs = app.session.cache.get(&st.doc, designcraft_doc::StoryId(sid.as_u64().unwrap()), None);
+            let cs = app.session.cache.get(&st.doc, pejy_doc::StoryId(sid.as_u64().unwrap()), None);
             let (fi, x, bl, asc, desc) = compose::caret(&cs, "曲:".len()).unwrap();
             let fid = cs.frames[fi].frame;
             let (a, _) = item_canvas_xf(&st.doc, &CanvasLayout::new(&st.doc, st.editing_parents), fid).unwrap();
@@ -4595,7 +4595,7 @@ mod tests {
     /// types them.
     #[test]
     fn a_split_window_types_once() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let ctx = egui::Context::default();
         let sid = typing_app(&mut app, &ctx, "ab");
         app.run("window.split", json!({"on": true})).unwrap();
@@ -4618,7 +4618,7 @@ mod tests {
 
     #[test]
     fn clicking_away_mid_composition_keeps_the_text_and_interrupts_the_ime() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let ctx = egui::Context::default();
         let sid = typing_app(&mut app, &ctx, "");
         ime_frame(&mut app, &ctx, vec![preedit("しょうこ", 4)]);
@@ -4660,7 +4660,7 @@ mod tests {
     #[test]
     fn enter_or_tab_in_a_panel_field_leave_the_selected_text_alone() {
         for key in [egui::Key::Enter, egui::Key::Tab] {
-            let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+            let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({})).unwrap();
             let f = app.run("frame.create", json!({"rect": [36, 36, 300, 200], "content": "text", "text": "Hello"})).unwrap();
             app.select_tool("type");
@@ -4704,7 +4704,7 @@ mod pencil_preview_tests {
 
     #[test]
     fn the_pencil_stroke_shows_while_drawing() {
-        let mut app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", serde_json::json!({})).unwrap();
         app.run("tool.select", serde_json::json!({"tool": "pencil"})).unwrap();
         let mut h = crate::test_window::open(app, vec2(1400.0, 900.0));
@@ -4748,7 +4748,7 @@ mod scrollbar_tests {
     use crate::test_window::{Window, open, wheel};
 
     fn window() -> Harness<'static, Window> {
-        let mut h = open(DesignApp::new(designcraft_engine::Session::new(), crate::Services::default()), vec2(1440.0, 900.0));
+        let mut h = open(DesignApp::new(pejy_engine::Session::new(), crate::Services::default()), vec2(1440.0, 900.0));
         // Zoomed in so both axes scroll.
         set_zoom(&mut h.state_mut().app, 2.0);
         h.run_steps(3);

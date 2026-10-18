@@ -1,6 +1,6 @@
 //! The server's ordering and validation, and the client's reconciliation, message by message.
 
-use figcraft_doc::{Document, Node, NodeId, NodeKind};
+use endrika_doc::{Document, Node, NodeId, NodeKind};
 
 use crate::change::{Change, Json, Prop};
 use crate::message::{ClientMsg, Hello, PROTOCOL, Presence, ServerMsg};
@@ -225,7 +225,7 @@ fn remote_batches_apply_under_pending_ones() {
     let mut b = join(&mut s);
     // a renames the frame and b moves it, at the same time; b's lands first.
     let rename = edit(&mut a, |d| d.get_mut(frame).unwrap().name = "A's name".into());
-    let mv = edit(&mut b, |d| d.get_mut(frame).unwrap().transform = figcraft_geom::Affine::translate((50.0, 0.0)));
+    let mv = edit(&mut b, |d| d.get_mut(frame).unwrap().transform = endrika_geom::Affine::translate((50.0, 0.0)));
     let out_b = s.receive(b.id(), mv);
     for m in for_client(&out_b, a.id()) {
         a.receive(m, &NoRecompute).unwrap();

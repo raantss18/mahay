@@ -13,12 +13,12 @@ fn session(width: f64, height: f64, artboards: usize) -> Session {
 }
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 /// The PostScript of an EPS file (behind its preview header, if any).
 fn postscript(bytes: &[u8]) -> String {
-    String::from_utf8(vectorcraft_eps::sections(bytes).unwrap().0.to_vec()).unwrap()
+    String::from_utf8(tsipika_eps::sections(bytes).unwrap().0.to_vec()).unwrap()
 }
 
 fn dsc(ps: &str, key: &str) -> Option<String> {
@@ -49,7 +49,7 @@ fn eps_covers_the_art_y_up_from_the_first_artboard_with_a_preview_and_the_docume
     assert_eq!(r["format"], "eps");
     let bytes = b64(&r);
     // The default TIFF preview sits behind the binary header.
-    let (_, tiff) = vectorcraft_eps::sections(&bytes).unwrap();
+    let (_, tiff) = tsipika_eps::sections(&bytes).unwrap();
     let preview = image::load_from_memory_with_format(tiff.unwrap(), image::ImageFormat::Tiff).unwrap();
     assert_eq!((preview.width(), preview.height()), (100, 40));
     let ps = postscript(&bytes);
@@ -59,15 +59,15 @@ fn eps_covers_the_art_y_up_from_the_first_artboard_with_a_preview_and_the_docume
     // RGB documents are written in CMYK by default.
     assert!(!ps.contains(" rg\n") && ps.contains(" k\n"), "{ps}");
     // The document comes back whole, and so does a thumbnail.
-    let native = vectorcraft_format::load(&vectorcraft_eps::native(&bytes).unwrap()).unwrap();
+    let native = tsipika_format::load(&tsipika_eps::native(&bytes).unwrap()).unwrap();
     assert_eq!(native.layers[0].children().unwrap().len(), 1);
-    assert!(vectorcraft_eps::thumbnail(&bytes).unwrap().starts_with(b"\x89PNG"));
+    assert!(tsipika_eps::thumbnail(&bytes).unwrap().starts_with(b"\x89PNG"));
     // Without the preview, thumbnail and CMYK: plain PostScript in RGB.
     let r = s.execute("document.exportEps", &json!({"previewFormat": "none", "thumbnails": false, "cmykPostScript": false, "level": 2})).unwrap();
     let bytes = b64(&r);
     assert!(bytes.starts_with(b"%!PS-Adobe-3.0 EPSF-3.0"));
     let ps = postscript(&bytes);
-    assert!(ps.contains(" rg\n") && vectorcraft_eps::thumbnail(&bytes).is_none());
+    assert!(ps.contains(" rg\n") && tsipika_eps::thumbnail(&bytes).is_none());
     assert_eq!(dsc(&ps, "LanguageLevel").as_deref(), Some("2"));
 }
 
@@ -86,7 +86,7 @@ fn use_artboards_writes_a_file_per_artboard_named_with_an_underscore() {
         let ps = postscript(&bytes);
         assert_eq!(dsc(&ps, "BoundingBox").as_deref(), Some("0 0 100 100"));
         // Each carries the document with its own artboard.
-        let native = vectorcraft_format::load(&vectorcraft_eps::native(&bytes).unwrap()).unwrap();
+        let native = tsipika_format::load(&tsipika_eps::native(&bytes).unwrap()).unwrap();
         assert_eq!(native.artboards.len(), 1);
     }
     // A range names the artboards (useArtboards implied); one file keeps the path's name.
@@ -120,7 +120,7 @@ fn transparency_is_flattened_with_the_flattener_preset() {
     // The document is left as it was, and reopens with its transparency.
     let doc = &s.doc().unwrap().doc;
     assert_eq!(doc.layers[0].children().unwrap().len(), 2);
-    let native = vectorcraft_format::load(&vectorcraft_eps::native(&b64(&r)).unwrap()).unwrap();
+    let native = tsipika_format::load(&tsipika_eps::native(&b64(&r)).unwrap()).unwrap();
     assert!(native.layers[0].children().unwrap().iter().any(|c| c.opacity < 1.0));
     // A saved preset by name; an unknown one is refused.
     s.execute("flattener.presets.save", &json!({"name": "All Raster", "balance": 0})).unwrap();
@@ -148,7 +148,7 @@ fn placed_images_are_written_and_previews_are_black_and_white_on_request() {
     let bytes = b64(&r);
     let ps = postscript(&bytes);
     assert!(ps.contains("/RunLengthDecode filter >> image"), "{ps}");
-    let tiff = vectorcraft_eps::sections(&bytes).unwrap().1.unwrap();
+    let tiff = tsipika_eps::sections(&bytes).unwrap().1.unwrap();
     // A bilevel TIFF: one sample of one bit, white is zero.
     assert!(tiff.starts_with(b"II*\0"));
     assert_eq!((tiff_tag(tiff, 258), tiff_tag(tiff, 277), tiff_tag(tiff, 262)), (Some(1), Some(1), Some(0)));

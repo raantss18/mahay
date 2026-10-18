@@ -8,9 +8,9 @@
 use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::hit::hit_test;
-use vectorcraft_doc::{AnchorRef, NodeId, NodeKind};
-use vectorcraft_geom::Point;
+use tsipika_doc::hit::hit_test;
+use tsipika_doc::{AnchorRef, NodeId, NodeKind};
+use tsipika_geom::Point;
 
 use super::paint_owner;
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
@@ -153,7 +153,7 @@ impl Tool for LassoTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     #[test]
     fn magic_wand_emits_the_engine_command() {

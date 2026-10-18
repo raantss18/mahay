@@ -1,6 +1,6 @@
 //! Type › Track Changes: record edits as inserted / deleted text; accept or reject them.
 
-use designcraft_doc::{ChangeMark, Story, StoryId};
+use pejy_doc::{ChangeMark, Story, StoryId};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, cmd, has_doc};
@@ -163,7 +163,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 200], "content": "text", "text": "The cat sat"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("changes.track", &json!({"on": true})).unwrap();
         // Replace "cat" with "dog", then type and erase a typo (gone without a trace).
         s.execute("text.select", &json!({"story": sid.0, "anchor": 4, "focus": 7})).unwrap();

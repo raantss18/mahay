@@ -1,12 +1,12 @@
 //! Fallback fonts for the app's own text: layer and file names (and anything else the UI shows) in
 //! Chinese, Japanese, Korean or other scripts the UI fonts lack are drawn in an installed font that
-//! covers them. Builds made with craft-fonts (`CRAFT_FONTS_DIR`, all releases) carry Japanese fonts,
+//! covers them. Builds made with mahay-fonts (`MAHAY_FONTS_DIR`, all releases) carry Japanese fonts,
 //! which `theme::install_fonts` adds after the UI fonts, so Japanese never gets here; nothing else
 //! is bundled for them: the first time a frame paints a character the UI fonts
 //! don't have, an installed font covering it is looked for (in the background on native) and added
 //! to egui's families as their last fallback, from the next frame on. Text the UI fonts cover costs
 //! no font loading or memory. On the web, which has no system fonts, such characters stay
-//! missing-glyph boxes (Japanese too, unless built with craft-fonts).
+//! missing-glyph boxes (Japanese too, unless built with mahay-fonts).
 
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -14,7 +14,7 @@ use std::sync::Arc;
 use egui::epaint::Shape;
 use egui::epaint::text::{FontInsert, FontPriority, InsertFontFamily};
 use egui::{FontData, FontFamily, FontId, LayerId};
-use vectorcraft_text::{FontDb, FontFace};
+use tsipika_text::{FontDb, FontFace};
 
 #[derive(Default)]
 pub(crate) struct UiFonts {
@@ -174,9 +174,9 @@ mod tests {
     }
 
     #[test]
-    fn japanese_renders_with_the_craft_fonts_without_installed_fonts() {
-        if !vectorcraft_text::CRAFT_FONTS.iter().any(|f| f.is_japanese()) {
-            eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout to run it)");
+    fn japanese_renders_with_the_mahay_fonts_without_installed_fonts() {
+        if !tsipika_text::MAHAY_FONTS.iter().any(|f| f.is_japanese()) {
+            eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout to run it)");
             return;
         }
         let text = "日本語の文字";
@@ -189,19 +189,19 @@ mod tests {
         let families: Vec<FontFamily> = ctx.fonts(|f| f.definitions().families.keys().cloned().collect());
         for family in families {
             let stack = ctx.fonts(|f| f.definitions().families.get(&family).cloned().unwrap_or_default());
-            assert!(stack.last().is_some_and(|n| n.starts_with("craft-fonts ")), "{family:?}: craft-fonts last: {stack:?}");
+            assert!(stack.last().is_some_and(|n| n.starts_with("mahay-fonts ")), "{family:?}: mahay-fonts last: {stack:?}");
             for c in text.chars() {
                 assert!(ctx.fonts_mut(|f| f.has_glyph(&FontId::new(13.0, family.clone()), c)), "{family:?} draws {c}");
             }
         }
         // The UI prefers BIZ UDPGothic.
         let stack = ctx.fonts(|f| f.definitions().families.get(&FontFamily::Proportional).cloned().unwrap_or_default());
-        let first = stack.iter().find(|n| n.starts_with("craft-fonts ")).cloned().unwrap_or_default();
-        assert_eq!(first, "craft-fonts BIZ UDPGothic Regular", "{stack:?}");
+        let first = stack.iter().find(|n| n.starts_with("mahay-fonts ")).cloned().unwrap_or_default();
+        assert_eq!(first, "mahay-fonts BIZ UDPGothic Regular", "{stack:?}");
     }
 
     #[test]
-    fn the_ui_works_without_the_craft_fonts() {
+    fn the_ui_works_without_the_mahay_fonts() {
         // Built either way, the fonts install and Japanese text lays out (as installed-font
         // fallbacks or missing-glyph boxes when no font has it).
         let ctx = egui::Context::default();
@@ -210,9 +210,9 @@ mod tests {
         frame(&ctx, &mut fonts, "日本語の文字 Layer 1");
         fonts.finish(&ctx);
         frame(&ctx, &mut fonts, "日本語の文字 Layer 1");
-        if vectorcraft_text::CRAFT_FONTS.is_empty() {
+        if tsipika_text::MAHAY_FONTS.is_empty() {
             let names: Vec<String> = ctx.fonts(|f| f.definitions().font_data.keys().cloned().collect());
-            assert!(names.iter().all(|n| !n.starts_with("craft-fonts")), "{names:?}");
+            assert!(names.iter().all(|n| !n.starts_with("mahay-fonts")), "{names:?}");
         }
         assert!(has_glyph(&ctx, 'L'));
     }

@@ -1,5 +1,5 @@
 [package]
-name = "filmcraft-frame"
+name = "hetsika-frame"
 description = "Video frames and audio buffers with explicit colour metadata"
 version.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-filmcraft-color = { workspace = true }
-filmcraft-time = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-time = { workspace = true }
 rayon = { workspace = true }
 serde = { workspace = true }

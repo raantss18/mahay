@@ -1,4 +1,4 @@
-//! Animated properties: EffectCraft keyframes ↔ Lottie keyframes.
+//! Animated properties: Tselatra keyframes ↔ Lottie keyframes.
 //!
 //! A Lottie keyframe holds the start value `s` of a segment and the segment's normalised cubic
 //! Bezier ease: `o` (out tangent of this key) and `i` (in tangent of the next key), each with `x`
@@ -15,8 +15,8 @@
 //! motion path (Δv = arc length, one dimension) and carry `to`/`ti` spatial tangents. Hold keys
 //! set `h: 1`.
 
-use effectcraft_keyframe::{self as kf, Ease, Interp, Keyframe, Value};
-use effectcraft_project::{Expression, Property};
+use tselatra_keyframe::{self as kf, Ease, Interp, Keyframe, Value};
+use tselatra_project::{Expression, Property};
 use serde_json::{Value as Json, json};
 
 use crate::Timebase;
@@ -52,7 +52,7 @@ impl Im {
     }
 }
 
-fn secs(t: effectcraft_time::Tick) -> f64 {
+fn secs(t: tselatra_time::Tick) -> f64 {
     t.seconds()
 }
 

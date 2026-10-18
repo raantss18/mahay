@@ -29,7 +29,7 @@ permissions:
 jobs:
   freebsd:
     # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/freebsd.yml@main
+    uses: raantss18/mahay-common-actions/.github/workflows/freebsd.yml@main
     with:
       run-package-check: true
-      craft-fonts-ref: 43913056ce82a3fdad0ef69f6b88d1dc922a8104
+      mahay-fonts-ref: 43913056ce82a3fdad0ef69f6b88d1dc922a8104

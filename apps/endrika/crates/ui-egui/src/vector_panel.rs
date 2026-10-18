@@ -4,8 +4,8 @@
 //! dimensions).
 
 use egui::{Id, Ui};
-use figcraft_doc::{Document, HandleMirroring, StrokeCap, StrokeJoin};
-use figcraft_engine::vectoredit::{self, VectorEdit};
+use endrika_doc::{Document, HandleMirroring, StrokeCap, StrokeJoin};
+use endrika_engine::vectoredit::{self, VectorEdit};
 use serde_json::{Value, json};
 
 use crate::FigApp;

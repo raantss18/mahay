@@ -16,8 +16,8 @@
 //! A selected placed graphic shows its own bounding box: its handles resize the graphic (Shift keeps
 //! its proportions, Alt from its centre) and leave the frame as it is.
 
-use designcraft_doc::{Content, Item, ItemId, SpreadRef};
-use designcraft_geom::{Affine, Point, Rect, Vec2};
+use pejy_doc::{Content, Item, ItemId, SpreadRef};
+use pejy_geom::{Affine, Point, Rect, Vec2};
 use serde_json::{Value, json};
 
 use crate::corners::{self, LiveFrame};
@@ -98,20 +98,20 @@ const BRACKET_PX: f64 = 9.0;
 
 /// A selected type-on-a-path item's path (inner space), its inner → canvas transform and its
 /// brackets' arc lengths (start, end).
-fn path_type_of(cx: &ToolContext, id: ItemId) -> Option<(designcraft_geom::warp::PathWarp, designcraft_geom::Affine, f64, f64)> {
+fn path_type_of(cx: &ToolContext, id: ItemId) -> Option<(pejy_geom::warp::PathWarp, pejy_geom::Affine, f64, f64)> {
     let it = cx.doc.item(id)?;
     let pt = it.text_frame()?.options.path.as_ref()?;
-    let warp = designcraft_geom::warp::PathWarp::new(&it.path.to_bezpath(), pt.flip);
+    let warp = pejy_geom::warp::PathWarp::new(&it.path.to_bezpath(), pt.flip);
     let end = pt.end.unwrap_or(warp.length()).min(warp.length());
     Some((warp, cx.item_canvas_xf(id)? * it.xf, pt.start, end))
 }
 
 /// The bracket line at arc length `s`: across the path, `BRACKET_PX` either side (canvas).
-fn bracket_line(cx: &ToolContext, warp: &designcraft_geom::warp::PathWarp, xf: designcraft_geom::Affine, s: f64) -> Option<(Point, Point)> {
+fn bracket_line(cx: &ToolContext, warp: &pejy_geom::warp::PathWarp, xf: pejy_geom::Affine, s: f64) -> Option<(Point, Point)> {
     let (p, a) = warp.at(s)?;
     let c = xf * p;
-    let t = xf * (p + designcraft_geom::Vec2::new(a.cos(), a.sin())) - c;
-    let n = designcraft_geom::Vec2::new(-t.y, t.x);
+    let t = xf * (p + pejy_geom::Vec2::new(a.cos(), a.sin())) - c;
+    let n = pejy_geom::Vec2::new(-t.y, t.x);
     let n = n / n.hypot().max(1e-9) * cx.tol(BRACKET_PX);
     Some((c - n, c + n))
 }
@@ -143,7 +143,7 @@ pub fn anchor_at(cx: &ToolContext, p: Point) -> Option<(u64, usize, usize, Optio
 }
 
 /// [`anchor_at`] over the given items.
-pub fn anchor_at_in(cx: &ToolContext, ids: &[designcraft_doc::ItemId], p: Point) -> Option<(u64, usize, usize, Option<&'static str>)> {
+pub fn anchor_at_in(cx: &ToolContext, ids: &[pejy_doc::ItemId], p: Point) -> Option<(u64, usize, usize, Option<&'static str>)> {
     let tol = cx.tol(5.0);
     for id in ids {
         let (Some(it), Some(xf)) = (cx.doc.item(*id), cx.item_canvas_xf(*id)) else { continue };

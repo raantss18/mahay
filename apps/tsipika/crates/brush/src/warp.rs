@@ -6,8 +6,8 @@
 
 use std::sync::Arc;
 
-use vectorcraft_doc::{Node, NodeKind, PressureProfile};
-use vectorcraft_geom::{Affine, BezPath, PathData, PathEl, Point, Rect, SubPath};
+use tsipika_doc::{Node, NodeKind, PressureProfile};
+use tsipika_geom::{Affine, BezPath, PathData, PathEl, Point, Rect, SubPath};
 
 use crate::track::{Rng, Track, seed_of, tracks};
 use crate::{ArtBrush, ArtScale, Direction, PatternBrush, PatternFit, Scatter, Variation, tolerance};

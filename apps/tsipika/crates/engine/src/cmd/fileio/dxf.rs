@@ -6,9 +6,9 @@ use std::sync::Arc;
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use vectorcraft_cad::{ColorDepth, DxfOptions, DxfVersion, Preserve, RasterFormat};
-use vectorcraft_doc::{Document, Unit};
-use vectorcraft_geom::Rect;
+use tsipika_cad::{ColorDepth, DxfOptions, DxfVersion, Preserve, RasterFormat};
+use tsipika_doc::{Document, Unit};
+use tsipika_geom::Rect;
 
 use super::super::*;
 use super::{ArtboardPick, Encoded, FormatOption};
@@ -80,7 +80,7 @@ pub struct Unsupported {
     pub hint: &'static str,
 }
 
-/// Formats people ask for that VectorCraft doesn't read or write. Append-only.
+/// Formats people ask for that Tsipika doesn't read or write. Append-only.
 pub const UNSUPPORTED: &[Unsupported] = &[
     Unsupported {
         id: "dwg",
@@ -146,8 +146,8 @@ fn parse(p: &Value) -> Result<(DxfOptions, ArtboardPick)> {
     let q: Params = if p.is_object() { Params::deserialize(p).map_err(|e| bad(C, format!("DXF options: {e}")))? } else { Params::default() };
     let d = DxfOptions::default();
     let scale = q.scale.unwrap_or(d.scale);
-    if !(scale.is_finite() && vectorcraft_cad::SCALE_RANGE.contains(&scale)) {
-        return Err(bad(C, format!("DXF scale must be a positive number up to {}, not {scale}", vectorcraft_cad::SCALE_RANGE.end())));
+    if !(scale.is_finite() && tsipika_cad::SCALE_RANGE.contains(&scale)) {
+        return Err(bad(C, format!("DXF scale must be a positive number up to {}, not {scale}", tsipika_cad::SCALE_RANGE.end())));
     }
     let opts = DxfOptions {
         version: choice(
@@ -199,7 +199,7 @@ pub(super) fn encode(doc: &Document, p: &Value, use_artboards: Option<bool>) -> 
     };
     let mut enc = Encoded::default();
     for (board, region, crop) in drawings {
-        let out = vectorcraft_cad::export(doc, &DxfOptions { region, crop, ..opts.clone() }).map_err(|e| bad(C, e))?;
+        let out = tsipika_cad::export(doc, &DxfOptions { region, crop, ..opts.clone() }).map_err(|e| bad(C, e))?;
         enc.files.push((board, out.bytes));
         for w in out.warnings {
             if !enc.warnings.contains(&w) {
@@ -208,7 +208,7 @@ pub(super) fn encode(doc: &Document, p: &Value, use_artboards: Option<bool>) -> 
         }
         for img in out.images {
             if !enc.linked.iter().any(|l| l.name == img.name) {
-                enc.linked.push(vectorcraft_svg::LinkedImage { name: img.name, bytes: Arc::new(img.bytes) });
+                enc.linked.push(tsipika_svg::LinkedImage { name: img.name, bytes: Arc::new(img.bytes) });
             }
         }
     }

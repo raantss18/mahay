@@ -28,8 +28,8 @@
 use std::collections::HashMap;
 
 use serde_json::json;
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{Dash, Effect, LineCap, LineJoin, WidthProfile};
+use tsipika_color::Paint;
+use tsipika_doc::{Dash, Effect, LineCap, LineJoin, WidthProfile};
 
 use super::lex::{Lexer, Tok};
 use super::obj::V;
@@ -322,7 +322,7 @@ fn style(filters: &[Filter]) -> ArtStyle {
         }
         let param = |k: &str| f.params.get(k).copied();
         let mode = |default: usize| super::read::blend_name(param("blnd").map_or(default, |v| v.max(0.0) as usize));
-        let color = f.fill.as_ref().and_then(Paint::color).unwrap_or(vectorcraft_color::Color::BLACK);
+        let color = f.fill.as_ref().and_then(Paint::color).unwrap_or(tsipika_color::Color::BLACK);
         match f.name.as_str() {
             // `blur`'s scale isn't publicly documented: read as the Gaussian's σ, an effect's blur being 2σ.
             GLOW => effects.push(Effect {
@@ -435,7 +435,7 @@ mod tests {
             let style = shadow_style(&format!("2 /Int (blnd) ,\n0.5 /Real (opac) ,\n{csrc}"));
             assert!(style.plain, "{csrc:?}: {style:?}");
             let [shadow] = style.effects.as_slice() else { panic!("{csrc:?}: {style:?}") };
-            let want = json!({"mode": "Screen", "opacity": 50.0, "blur": 10.0, "x": 7.0, "y": 7.0, "color": vectorcraft_color::Color::BLACK});
+            let want = json!({"mode": "Screen", "opacity": 50.0, "blur": 10.0, "x": 7.0, "y": 7.0, "color": tsipika_color::Color::BLACK});
             assert_eq!(shadow.params, want, "{csrc:?}");
         }
     }

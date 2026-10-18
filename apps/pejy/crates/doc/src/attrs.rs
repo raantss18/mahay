@@ -1318,7 +1318,7 @@ attr_set! {
         border_cap: crate::item::Cap = crate::item::Cap::Butt,
         border_join: crate::item::Join = crate::item::Join::Miter,
         /// Corner shape and size: top left, top right, bottom right, bottom left.
-        border_corners: [designcraft_geom::corners::Corner; 4] = [designcraft_geom::corners::Corner::default(); 4],
+        border_corners: [pejy_geom::corners::Corner; 4] = [pejy_geom::corners::Corner::default(); 4],
         border_width: BoxWidth = BoxWidth::Column,
         border_top: BoxTop = BoxTop::Ascent,
         border_bottom: BoxBottom = BoxBottom::Descent,
@@ -1331,7 +1331,7 @@ attr_set! {
         border_gap_color: String = "[None]".into(),
         border_gap_tint: f32 = 1.0,
         /// Shading corners: top left, top right, bottom right, bottom left.
-        shading_corners: [designcraft_geom::corners::Corner; 4] = [designcraft_geom::corners::Corner::default(); 4],
+        shading_corners: [pejy_geom::corners::Corner; 4] = [pejy_geom::corners::Corner::default(); 4],
         shading_width: BoxWidth = BoxWidth::Column,
         shading_top: BoxTop = BoxTop::Ascent,
         shading_bottom: BoxBottom = BoxBottom::Descent,

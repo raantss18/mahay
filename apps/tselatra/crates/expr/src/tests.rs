@@ -2,12 +2,12 @@ use std::time::Instant;
 
 mod fuzz;
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Keyframe, ShapePath, TextDoc, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Comp, Expression, ItemId, ItemKind, Layer, LayerId, LayerSource, Marker, MaskMode, Project, PropGroup, Solid};
-use effectcraft_render::{EvalCtx, NoFootage, RenderOpts, Renderer};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::{Keyframe, ShapePath, TextDoc, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Comp, Expression, ItemId, ItemKind, Layer, LayerId, LayerSource, Marker, MaskMode, Project, PropGroup, Solid};
+use tselatra_render::{EvalCtx, NoFootage, RenderOpts, Renderer};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::{Expressions, check_syntax, eval_property, eval_standalone};
 
@@ -51,8 +51,8 @@ fn fx() -> Fx {
     let mut a = solid(&mut p, &comp, "A", [1.0, 0.0, 0.0], 20, 20);
     a.props.prop_mut(POS).unwrap().value = Value::Vec3([50.0, 40.0, 0.0]);
     a.props.prop_mut(ROT).unwrap().keys = vec![Keyframe::new(Tick::ZERO, Value::Scalar(0.0)), Keyframe::new(secs(1.0), Value::Scalar(90.0))];
-    let spec = effectcraft_effects::find("ec.control.slider").unwrap();
-    let mut slider = group_push(&mut p, |ids| effectcraft_effects::instantiate(spec, ids, "Slider Control", [20.0, 20.0]));
+    let spec = tselatra_effects::find("ec.control.slider").unwrap();
+    let mut slider = group_push(&mut p, |ids| tselatra_effects::instantiate(spec, ids, "Slider Control", [20.0, 20.0]));
     slider.prop_mut("slider").unwrap().value = Value::Scalar(42.0);
     a.props.sub_mut("effects").unwrap().children.push(slider.into());
     let mask = group_push(&mut p, |ids| build::mask(ids, "Mask 1", ShapePath::rect([10.0, 10.0], 10.0, 10.0), MaskMode::Add, [255, 0, 0]));
@@ -860,13 +860,13 @@ fn source_text_style_api() {
     assert_eq!((d.text.as_str(), d.size), ("Bye", 40.0));
     // Paragraph setters.
     let d = doc(&f, "text.sourceText.style.setJustification('CENTER_JUSTIFY').setStartIndent(12).setSpaceBefore(4).setEveryLineComposer(false)");
-    assert_eq!(d.justify, effectcraft_keyframe::Justify::Center);
+    assert_eq!(d.justify, tselatra_keyframe::Justify::Center);
     assert_eq!((d.indent_left, d.space_before), (12.0, 4.0));
     assert_close!(f.num("thisComp.layer('Title').text.sourceText.style.setStartIndent(7).startIndent", 0.0), 7.0);
     // createStyle sets only what's given and keeps the existing runs.
     let d = doc(&f, "thisComp.layer('Title').text.sourceText.createStyle().setTsume(50).setBaselineOption('superscript')");
     assert_eq!(d.text, "Hello");
-    assert!(d.runs().iter().all(|r| r.style.tsume == 50.0 && r.style.baseline == effectcraft_keyframe::BaselineOption::Superscript));
+    assert!(d.runs().iter().all(|r| r.style.tsume == 50.0 && r.style.baseline == tselatra_keyframe::BaselineOption::Superscript));
     assert_eq!(d.runs().len(), 3);
     // Non-text properties have no style.
     assert!(f.ev(f.a, ROT, "transform.rotation.style.fontSize", 0.0).is_err());
@@ -933,10 +933,10 @@ fn colour_result_keeps_alpha() {
 #[test]
 fn checkbox_and_dropdown_results() {
     let mut f = fx();
-    let spec = effectcraft_effects::find("ec.control.checkbox").unwrap();
-    let cb = group_push(&mut f.p, |ids| effectcraft_effects::instantiate(spec, ids, "Checkbox Control", [20.0, 20.0]));
-    let spec = effectcraft_effects::find("ec.control.dropdown").unwrap();
-    let dd = group_push(&mut f.p, |ids| effectcraft_effects::instantiate(spec, ids, "Dropdown Menu Control", [20.0, 20.0]));
+    let spec = tselatra_effects::find("ec.control.checkbox").unwrap();
+    let cb = group_push(&mut f.p, |ids| tselatra_effects::instantiate(spec, ids, "Checkbox Control", [20.0, 20.0]));
+    let spec = tselatra_effects::find("ec.control.dropdown").unwrap();
+    let dd = group_push(&mut f.p, |ids| tselatra_effects::instantiate(spec, ids, "Dropdown Menu Control", [20.0, 20.0]));
     let fxg = f.layer_mut(f.b).props.sub_mut("effects").unwrap();
     fxg.children.push(cb.into());
     fxg.children.push(dd.into());
@@ -1115,10 +1115,10 @@ fn text_expression_selector_values() {
         let c = p.comp(cid).unwrap();
         let l = c.layer(lid).unwrap();
         let ctx = EvalCtx { project: p, comp_id: cid, comp: c, time: Tick::ZERO, expr: Some(&Expressions), footage: None };
-        let doc = effectcraft_render::text::source_text(&ctx, l).unwrap();
-        let lay = effectcraft_text::layout_doc(&doc);
+        let doc = tselatra_render::text::source_text(&ctx, l).unwrap();
+        let lay = tselatra_text::layout_doc(&doc);
         let anim = l.props.group("text/animators/#1").unwrap();
-        effectcraft_render::text::animator_selection(&ctx, l, anim, &lay).into_iter().map(|v| (v[0] * 1000.0).round() / 1000.0).collect::<Vec<_>>()
+        tselatra_render::text::animator_selection(&ctx, l, anim, &lay).into_iter().map(|v| (v[0] * 1000.0).round() / 1000.0).collect::<Vec<_>>()
     };
     // Default: selectorValue * textIndex / textTotal (selectorValue = the full range selector).
     assert_eq!(sel_of(&p), vec![0.25, 0.5, 0.75, 1.0]);
@@ -1167,9 +1167,9 @@ fn sample_image_reads_rendered_pixels() {
 }
 
 fn data_item(p: &mut Project, name: &str, text: &str) {
-    let f = effectcraft_project::Footage {
+    let f = tselatra_project::Footage {
         path: format!("/data/{name}"),
-        kind: effectcraft_project::FootageKind::Data,
+        kind: tselatra_project::FootageKind::Data,
         data: Some(text.into()),
         ..Default::default()
     };
@@ -1221,7 +1221,7 @@ fn project_and_time_globals() {
         let a = f.a;
         let l = f.layer_mut(a);
         l.markers[0].protected = true;
-        l.markers[0].cue_point = Some(effectcraft_project::CuePoint { name: "go".into(), navigation: false, params: vec![("k".into(), "v".into())] });
+        l.markers[0].cue_point = Some(tselatra_project::CuePoint { name: "go".into(), navigation: false, params: vec![("k".into(), "v".into())] });
     }
     assert_close!(f.num("thisLayer.marker.key(1).protectedRegion ? 1 : 0", 0.0), 1.0);
     assert_eq!(f.text("thisComp.layer(\"A\").marker.key(1).cuePointName + thisComp.layer(\"A\").marker.key(1).parameters.k", 0.0), "gov");
@@ -1274,8 +1274,8 @@ fn layer_source_is_the_layers_source_item() {
 fn layer_control_property_stands_for_its_layer() {
     let mut f = fx();
     // Layer A gets a Layer Control ("Map") that points at layer B (#809).
-    let spec = effectcraft_effects::find("ec.control.layer").unwrap();
-    let mut map = group_push(&mut f.p, |ids| effectcraft_effects::instantiate(spec, ids, "Map", [20.0, 20.0]));
+    let spec = tselatra_effects::find("ec.control.layer").unwrap();
+    let mut map = group_push(&mut f.p, |ids| tselatra_effects::instantiate(spec, ids, "Map", [20.0, 20.0]));
     map.prop_mut("layer").unwrap().value = Value::Layer(Some(f.b.0));
     f.p.comp_mut(f.cid).unwrap().layers[0].props.sub_mut("effects").unwrap().children.push(map.into());
     // effect("Map")(1) is the layer itself: its name, index, transform and value.

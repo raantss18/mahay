@@ -2,7 +2,7 @@
 //! profiles (through the Selection tool and the commands that use visual bounds).
 
 use serde_json::json;
-use vectorcraft_tools::{PointerEvent, PointerKind};
+use tsipika_tools::{PointerEvent, PointerKind};
 
 use super::*;
 
@@ -27,7 +27,7 @@ fn click(s: &mut Session, x: f64, y: f64) -> Vec<NodeId> {
 }
 
 /// The artboard after Fit to Selected Art (which fits the selection's visual bounds).
-fn fitted(s: &mut Session) -> vectorcraft_geom::Rect {
+fn fitted(s: &mut Session) -> tsipika_geom::Rect {
     s.execute("artboard.fitToSelection", &json!({})).unwrap();
     s.doc().unwrap().doc.artboards[0].rect
 }

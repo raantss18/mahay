@@ -1,8 +1,8 @@
 //! OFFSET of a full ellipse goes to the side of the picked point (issue #501): an outside point
 //! gave an inward copy and an inside point an outward one.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
 use serde_json::json;
 
 fn last_handle(s: &Session) -> String {

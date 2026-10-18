@@ -2,11 +2,11 @@
 //! is the shared [`PrinterMarks`] (print draws the same marks); here it gets the page's bleed,
 //! spot inks and page information.
 
-use vectorcraft_color::Paint;
-use vectorcraft_doc::marks::{MarkStyle, PrinterMarks, outset};
-use vectorcraft_doc::setup::MAX_BLEED;
-use vectorcraft_doc::{Document, Node, NodeId};
-use vectorcraft_geom::Rect;
+use tsipika_color::Paint;
+use tsipika_doc::marks::{MarkStyle, PrinterMarks, outset};
+use tsipika_doc::setup::MAX_BLEED;
+use tsipika_doc::{Document, Node, NodeId};
+use tsipika_geom::Rect;
 
 use crate::{BleedSettings, MarkKind, MarkSettings, PdfSettings};
 
@@ -79,7 +79,7 @@ pub(crate) fn page_info_of(doc: &Document, title: &str, artboard: Option<usize>,
         info.push_str(&format!("  ·  {name} ({} of {})", i + 1, doc.artboards.len()));
     }
     if let Some(t) = created {
-        let [y, mo, d, h, mi, _] = vectorcraft_doc::metadata::civil(t);
+        let [y, mo, d, h, mi, _] = tsipika_doc::metadata::civil(t);
         info.push_str(&format!("  ·  {y:04}-{mo:02}-{d:02} {h:02}:{mi:02} UTC"));
     }
     info

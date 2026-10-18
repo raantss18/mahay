@@ -5,8 +5,8 @@
 
 use std::sync::Arc;
 
-use figcraft_doc::*;
-use figcraft_geom::{Affine, Point, Rect, Vec2};
+use endrika_doc::*;
+use endrika_geom::{Affine, Point, Rect, Vec2};
 
 use super::point_snap;
 use super::regions::region_hit;
@@ -177,7 +177,7 @@ impl Session {
     pub fn vector_edit_box(&self) -> Option<[Point; 4]> {
         let ds = self.ds().ok()?;
         if let Gesture::Vector(VGesture::BoxRotate { b, angle, .. }) = &self.tool.gesture {
-            let m = figcraft_geom::rotate_about(Affine::IDENTITY, b.center(), -angle);
+            let m = endrika_geom::rotate_about(Affine::IDENTITY, b.center(), -angle);
             return Some(b.corners().map(|c| m * c));
         }
         transform::shown_box(&ds.doc, ds.vector_edit.as_ref()?).map(|b| b.corners())
@@ -394,8 +394,8 @@ impl Session {
                     let mut polys: Vec<Vec<[f64; 2]>> = Vec::new();
                     let mut path = face.path.clone();
                     path.apply_affine(w);
-                    figcraft_geom::kurbo::flatten(path.iter(), 0.25 / ev.zoom.max(1e-6), |el| {
-                        use figcraft_geom::kurbo::PathEl;
+                    endrika_geom::kurbo::flatten(path.iter(), 0.25 / ev.zoom.max(1e-6), |el| {
+                        use endrika_geom::kurbo::PathEl;
                         match el {
                             PathEl::MoveTo(p) => polys.push(vec![[p.x, p.y]]),
                             PathEl::LineTo(p) => {
@@ -891,7 +891,7 @@ impl Session {
                 if ev.shift {
                     angle = (angle / 15.0).round() * 15.0;
                 }
-                let m = figcraft_geom::rotate_about(Affine::IDENTITY, c, -angle);
+                let m = endrika_geom::rotate_about(Affine::IDENTITY, c, -angle);
                 self.preview(|doc, _| transform::transform_points(doc, id, &b.points, m))?;
                 self.tool.overlay.cursor = Cursor::Rotate((ev.p() - c).atan2().to_degrees());
                 self.vgesture(VGesture::BoxRotate { b, start_angle, angle });

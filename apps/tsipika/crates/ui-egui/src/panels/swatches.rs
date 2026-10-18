@@ -9,18 +9,18 @@ use std::sync::Arc;
 
 use egui::{Color32, Rect, Response, Sense, Shape, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::libraries::{BuiltinLibrary, GRADIENT_LIBRARIES, SWATCH_LIBRARIES};
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_color::{Color, GradientKind, Paint, Swatch, SwatchLibrary};
-use vectorcraft_doc::Document;
-use vectorcraft_engine::cmd::swatchlib;
+use tsipika_color::libraries::{BuiltinLibrary, GRADIENT_LIBRARIES, SWATCH_LIBRARIES};
+use tsipika_color::swatch::REGISTRATION;
+use tsipika_color::{Color, GradientKind, Paint, Swatch, SwatchLibrary};
+use tsipika_doc::Document;
+use tsipika_engine::cmd::swatchlib;
 
 use super::library_panel::{self, LibraryKind, LibraryRef, Row};
 use super::{active_paint, pstate, set_pstate};
 use crate::menus::Item;
 use crate::theme::Tokens;
 use crate::widgets::{self, PanelDrag, SwatchRows, menu_item, swatch_tile};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 /// View modes of the swatch list (and of the library panels: `ui.libraryPanel {view}`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -110,14 +110,14 @@ impl Entry {
 
 /// The panel's rows for the kind filter and the find field's `query` (a case-insensitive name
 /// match; a colour group whose name matches shows all its swatches).
-fn entries(app: &VectorcraftApp, kind: Kind, query: &str) -> Vec<Entry> {
+fn entries(app: &TsipikaApp, kind: Kind, query: &str) -> Vec<Entry> {
     let Some(st) = app.session.active() else { return vec![] };
     let d = &st.doc;
     let q = query.trim().to_lowercase();
     let found = |n: &str| q.is_empty() || n.to_lowercase().contains(&q);
     let mut out = vec![];
     // A tint swatch shows its base's kind (global or spot).
-    let sw = |s: &vectorcraft_color::Swatch| {
+    let sw = |s: &tsipika_color::Swatch| {
         let (global, spot) = s.tint_of().and_then(|(base, _)| d.swatch(base)).map_or((s.global, s.spot), |b| (b.global, b.spot));
         // A spot colour shows the colour its art shows (a Lab one's CMYK equivalent when the Spot
         // Colors options use those).
@@ -164,7 +164,7 @@ fn swatch_params(e: &Entry) -> Option<Value> {
 /// Apply a clicked swatch to the active proxy (Alt: the inactive one). An Alt-click on a color
 /// swatch with a gradient stop selected recolors the stop as dropping the swatch on it does,
 /// and with a freeform gradient point selected it recolors the point.
-fn apply(app: &mut VectorcraftApp, ui: &Ui, e: &Entry) {
+fn apply(app: &mut TsipikaApp, ui: &Ui, e: &Entry) {
     let Some(params) = swatch_params(e) else { return };
     if super::alt_held(ui)
         && let Some(c) = drag_of(e, vec![]).color()
@@ -176,7 +176,7 @@ fn apply(app: &mut VectorcraftApp, ui: &Ui, e: &Entry) {
 }
 
 /// A pattern swatch drawn as a rendered tile (cached by the definition's identity and size).
-fn pattern_thumb(app: &VectorcraftApp, ui: &Ui, r: Rect, paint: &Paint) {
+fn pattern_thumb(app: &TsipikaApp, ui: &Ui, r: Rect, paint: &Paint) {
     use std::collections::HashMap;
     type Key = (String, Vec<usize>, String, u32);
     thread_local! {
@@ -193,7 +193,7 @@ fn pattern_thumb(app: &VectorcraftApp, ui: &Ui, r: Rect, paint: &Paint) {
         px,
     );
     let tex = CACHE.with(|c| c.borrow().get(&key).cloned()).unwrap_or_else(|| {
-        let tex = vectorcraft_render::render_pattern_swatch(&st.doc, pattern, px).map(|img| {
+        let tex = tsipika_render::render_pattern_swatch(&st.doc, pattern, px).map(|img| {
             let color = egui::ColorImage::from_rgba_premultiplied([img.width as usize, img.height as usize], &img.pixels);
             ui.ctx().load_texture(format!("pattern-swatch-{pattern}-{px}"), color, egui::TextureOptions::LINEAR)
         });
@@ -316,7 +316,7 @@ pub(crate) fn list_icons(ui: &Ui, r: Rect, paint: &Paint, global: bool, spot: bo
 
 /// The swatches and colour groups selected in the panel, in click order, without names that no
 /// longer exist (deleted, renamed or undone).
-fn selection(app: &VectorcraftApp, ui: &Ui) -> Vec<String> {
+fn selection(app: &TsipikaApp, ui: &Ui) -> Vec<String> {
     let Some(st) = app.session.active() else { return vec![] };
     let mut names: Vec<String> = pstate(ui.ctx(), "swatch-selected");
     names.retain(|n| n == REGISTRATION || st.doc.swatch_name_taken(n));
@@ -558,7 +558,7 @@ fn replaces(d: &Document, with: &str, target: &str) -> bool {
 /// Run a drop on the panel: move the swatches, give the paint of a swatch Alt-dropped on another of
 /// its kind to that one, or make a swatch of the proxy's paint (a color dropped on a folder or a
 /// grouped swatch joins that group).
-fn apply_drop(app: &mut VectorcraftApp, drop: Drop) {
+fn apply_drop(app: &mut TsipikaApp, drop: Drop) {
     let Some(d) = app.session.active().map(|st| &st.doc) else { return };
     let (cmd, params) = match drop {
         // Alt: the swatch grabbed replaces the color, gradient or pattern of the swatch of its kind
@@ -592,9 +592,9 @@ fn apply_drop(app: &mut VectorcraftApp, drop: Drop) {
 /// a Fill/Stroke proxy, the Gradient panel's thumbnail), the fill of the object whose appearance
 /// the Appearance panel's thumbnail carries (or of the first art dragged off the canvas), or the
 /// thumbnail of a dragged graphic style.
-pub(crate) fn drag_preview(app: &VectorcraftApp, ctx: &egui::Context) {
+pub(crate) fn drag_preview(app: &TsipikaApp, ctx: &egui::Context) {
     let Some(d) = egui::DragAndDrop::payload::<PanelDrag>(ctx) else { return };
-    let fill_of = |id: &vectorcraft_doc::NodeId| app.session.active().and_then(|st| st.doc.node(*id)).map(|n| n.appearance.fill_paint());
+    let fill_of = |id: &tsipika_doc::NodeId| app.session.active().and_then(|st| st.doc.node(*id)).map(|n| n.appearance.fill_paint());
     let (paint, registration) = match &*d {
         // Colour groups paint nothing.
         PanelDrag::Paint { params, .. } if params.is_null() => return,
@@ -640,13 +640,13 @@ fn find_id() -> egui::Id {
     egui::Id::new("swatch-find")
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     body(app, ui, TILE);
 }
 
 /// The panel in a Fill/Stroke chip popover (the Control bar's and Properties'): the same body, its
 /// tiles under their own ids so it can be open beside the panel.
-pub(crate) fn popover(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub(crate) fn popover(app: &mut TsipikaApp, ui: &mut Ui) {
     body(app, ui, POPOVER_TILE);
 }
 
@@ -655,7 +655,7 @@ const TILE: &str = "swatch-tile";
 const POPOVER_TILE: &str = "swatch-pop-tile";
 
 /// The panel's body; `salt` keys its tiles (see [`tile_id`]).
-fn body(app: &mut VectorcraftApp, ui: &mut Ui, salt: &'static str) {
+fn body(app: &mut TsipikaApp, ui: &mut Ui, salt: &'static str) {
     if app.session.active().is_none() {
         super::empty_state(ui, "swatch-book", tl!("No document"), tl!("Open a document to see its swatches."));
         return;
@@ -771,7 +771,7 @@ type SelectedArt = (u64, Vec<u64>);
 /// The swatch the tiles scroll to this frame, once: the active paint's swatch when it changed, or
 /// when other art was selected. Selecting other art also clears the panel's own selection, so its
 /// swatch is the one highlighted.
-fn focus_swatch(app: &VectorcraftApp, ui: &Ui, active: Option<&str>) -> Option<String> {
+fn focus_swatch(app: &TsipikaApp, ui: &Ui, active: Option<&str>) -> Option<String> {
     let art: Option<SelectedArt> = app.session.active().map(|st| (st.uid, st.selection.objects.iter().map(|id| id.0).collect()));
     // (None the first time the panel shows.)
     let (last_art, last_swatch): (Option<Option<SelectedArt>>, Option<String>) = pstate(ui.ctx(), "swatch-focus");
@@ -788,11 +788,11 @@ fn focus_swatch(app: &VectorcraftApp, ui: &Ui, active: Option<&str>) -> Option<S
 /// when there is one), a process colour's swatch of that colour (a colour no swatch has: none, so
 /// text in a colour of its own highlights nothing), a gradient's gradient swatch, or None; nothing
 /// for selected images.
-fn active_swatch(app: &VectorcraftApp) -> Option<String> {
+fn active_swatch(app: &TsipikaApp) -> Option<String> {
     // Images and placed files have no fill or stroke: no swatch (not None).
     let st = app.session.active()?;
-    let unpainted = |id: &vectorcraft_doc::NodeId| {
-        st.doc.node(*id).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Image(_) | vectorcraft_doc::NodeKind::PlacedDocument(_)))
+    let unpainted = |id: &tsipika_doc::NodeId| {
+        st.doc.node(*id).is_some_and(|n| matches!(n.kind, tsipika_doc::NodeKind::Image(_) | tsipika_doc::NodeKind::PlacedDocument(_)))
     };
     if !st.selection.objects.is_empty() && st.selection.objects.iter().all(unpainted) {
         return None;
@@ -887,7 +887,7 @@ fn deletable(sel: &[String]) -> Vec<String> {
 
 /// The selected swatch when exactly one swatch with an editor is selected (not None, Registration
 /// or a group).
-fn editable(app: &VectorcraftApp, sel: &[String]) -> Option<String> {
+fn editable(app: &TsipikaApp, sel: &[String]) -> Option<String> {
     match sel {
         [n] if !n.starts_with('[') && app.session.active().is_some_and(|st| st.doc.swatch(n).is_some()) => Some(n.clone()),
         _ => None,
@@ -895,24 +895,24 @@ fn editable(app: &VectorcraftApp, sel: &[String]) -> Option<String> {
 }
 
 /// The selected solid-colour swatches in selection order (Merge Swatches keeps the first).
-fn mergeable(app: &VectorcraftApp, sel: &[String]) -> Vec<String> {
+fn mergeable(app: &TsipikaApp, sel: &[String]) -> Vec<String> {
     let Some(st) = app.session.active() else { return vec![] };
     sel.iter().filter(|n| st.doc.swatch(n).is_some_and(|w| w.paint.color().is_some())).cloned().collect()
 }
 
 /// The first selected colour group (Ungroup Color Group).
-fn selected_group(app: &VectorcraftApp, sel: &[String]) -> Option<String> {
+fn selected_group(app: &TsipikaApp, sel: &[String]) -> Option<String> {
     let d = &app.session.active()?.doc;
     sel.iter().find(|n| d.swatch_groups.iter().any(|g| g.name == **n)).cloned()
 }
 
 /// Edit or Apply Color Group: Recolor Artwork on colour group `group` (and the selected art).
-fn edit_group(app: &mut VectorcraftApp, group: &str) {
+fn edit_group(app: &mut TsipikaApp, group: &str) {
     app.run("ui.recolorDialog", json!({ "group": group })).ok();
 }
 
 /// Delete `names` (swatches and colour groups) after asking, or at once with `now` (Alt-click).
-fn delete(app: &mut VectorcraftApp, names: Vec<String>, now: bool) {
+fn delete(app: &mut TsipikaApp, names: Vec<String>, now: bool) {
     let params = json!({"names": names});
     if now {
         app.run("swatch.delete", params).ok();
@@ -925,7 +925,7 @@ fn delete(app: &mut VectorcraftApp, names: Vec<String>, now: bool) {
     crate::dialogs::confirm::ask(app, &message, tl!("Art using a deleted global swatch keeps its colour."), "swatch.delete", params);
 }
 
-fn bottom(app: &mut VectorcraftApp, ui: &mut Ui, sel: &[String]) {
+fn bottom(app: &mut TsipikaApp, ui: &mut Ui, sel: &[String]) {
     let kind: Kind = pstate(ui.ctx(), "swatch-kind");
     widgets::bottom_bar(ui, |ui| {
         let open = library_panel::any_open::<SwatchLibraries>(&app.ui);
@@ -972,14 +972,14 @@ fn bottom(app: &mut VectorcraftApp, ui: &mut Ui, sel: &[String]) {
 
 /// The colour group the selection points at: the last selected group, or the group of the last
 /// selected swatch.
-fn target_group(app: &VectorcraftApp, sel: &[String]) -> Option<String> {
+fn target_group(app: &TsipikaApp, sel: &[String]) -> Option<String> {
     group_of(&app.session.active()?.doc, sel.last()?)
 }
 
 /// New Swatch from the active paint (a color goes into the selected color group), for a click
 /// with modifiers `m`: a plain click opens the dialog and an Alt-click saves at once. Cmd/Ctrl
 /// makes a color a spot color, and Cmd/Ctrl+Shift makes it a global process color.
-fn new_swatch(app: &mut VectorcraftApp, sel: &[String], m: egui::Modifiers) {
+fn new_swatch(app: &mut TsipikaApp, sel: &[String], m: egui::Modifiers) {
     let paint = active_paint(app);
     let group = paint.color().and_then(|_| target_group(app, sel));
     let (spot, global) = (m.command && !m.shift, m.command && m.shift);
@@ -998,7 +998,7 @@ fn new_swatch(app: &mut VectorcraftApp, sel: &[String], m: egui::Modifiers) {
     app.run("swatch.new", params).ok();
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let view: View = pstate(ui.ctx(), "swatch-view");
     let selected = selection(app, ui);
     let del = deletable(&selected);
@@ -1081,7 +1081,7 @@ fn library_refs(libs: Vec<swatchlib::LibraryInfo>) -> Vec<LibraryRef> {
 }
 
 /// The swatch libraries with solid colours (not the gradient-only ones), for Limit to Library.
-pub(crate) fn colour_libraries(app: &VectorcraftApp) -> Vec<LibraryRef> {
+pub(crate) fn colour_libraries(app: &TsipikaApp) -> Vec<LibraryRef> {
     let has_colours = |id: &str| swatchlib::library(&app.session, id).is_some_and(|(_, lib)| lib.iter().any(|w| w.paint.color().is_some()));
     library_refs(swatchlib::libraries(&app.session).into_iter().filter(|l| l.category != "gradients" && has_colours(&l.id)).collect())
 }
@@ -1091,7 +1091,7 @@ pub(crate) const DOCUMENT_SWATCHES: &str = "Document Swatches";
 
 /// The name of Limit to Library choice `key` (a library id or [`swatchlib::DOCUMENT_SWATCHES`]);
 /// `None` for no limit or a library that is gone.
-pub(crate) fn limit_name(app: &VectorcraftApp, key: &str) -> Option<String> {
+pub(crate) fn limit_name(app: &TsipikaApp, key: &str) -> Option<String> {
     match key {
         "" => None,
         swatchlib::DOCUMENT_SWATCHES => Some(DOCUMENT_SWATCHES.into()),
@@ -1101,7 +1101,7 @@ pub(crate) fn limit_name(app: &VectorcraftApp, key: &str) -> Option<String> {
 
 /// The Limit to Library key for `l`: a library's id (from its id or name), or
 /// [`swatchlib::DOCUMENT_SWATCHES`] as it is.
-pub(crate) fn limit_key(app: &VectorcraftApp, l: &str) -> Result<String, String> {
+pub(crate) fn limit_key(app: &TsipikaApp, l: &str) -> Result<String, String> {
     if l == swatchlib::DOCUMENT_SWATCHES {
         return Ok(l.into());
     }
@@ -1121,16 +1121,16 @@ impl LibraryKind for SwatchLibraries {
     type Lib = Arc<SwatchLibrary>;
     type Item = Swatch;
 
-    fn list(app: &VectorcraftApp) -> Vec<LibraryRef> {
+    fn list(app: &TsipikaApp) -> Vec<LibraryRef> {
         library_refs(swatchlib::libraries(&app.session))
     }
-    fn get(app: &VectorcraftApp, id: &str) -> Option<(String, Self::Lib)> {
+    fn get(app: &TsipikaApp, id: &str) -> Option<(String, Self::Lib)> {
         swatchlib::library(&app.session, id).map(|(info, lib)| (info.name, lib))
     }
-    fn find(app: &VectorcraftApp, key: &str) -> Option<(String, String, usize)> {
+    fn find(app: &TsipikaApp, key: &str) -> Option<(String, String, usize)> {
         swatchlib::library(&app.session, key).map(|(info, lib)| (info.id, info.name, lib.len()))
     }
-    fn path(app: &VectorcraftApp, id: &str) -> Option<String> {
+    fn path(app: &TsipikaApp, id: &str) -> Option<String> {
         app.session.swatch_libraries.path(id).map(str::to_string)
     }
     /// Ungrouped swatches, then each colour group's folder and swatches (a group whose name
@@ -1149,7 +1149,7 @@ impl LibraryKind for SwatchLibraries {
         }
         out
     }
-    fn draw(_: &VectorcraftApp, ui: &Ui, r: Rect, w: &Swatch, selected: bool, hovered: bool) {
+    fn draw(_: &TsipikaApp, ui: &Ui, r: Rect, w: &Swatch, selected: bool, hovered: bool) {
         swatch_tile(ui, r, &w.paint, selected, hovered);
         if w.global {
             global_mark(ui, r, w.spot);
@@ -1162,21 +1162,21 @@ impl LibraryKind for SwatchLibraries {
         describe(&w.paint, w.global, w.spot)
     }
     /// Adds the swatch and applies it to the active proxy (Alt: the inactive one), as one step.
-    fn click(app: &mut VectorcraftApp, ui: &Ui, id: &str, name: &str) {
+    fn click(app: &mut TsipikaApp, ui: &Ui, id: &str, name: &str) {
         let alt = super::alt_held(ui);
         let apply = if super::proxy_cmd(app, alt) == "paint.setFill" { "fill" } else { "stroke" };
         add_from_library(app, json!({"library": id, "names": [name], "apply": apply, "focus": !alt}));
     }
-    fn add(app: &mut VectorcraftApp, id: &str, names: Vec<String>) {
+    fn add(app: &mut TsipikaApp, id: &str, names: Vec<String>) {
         add_from_library(app, json!({"library": id, "names": names}));
     }
-    fn menu_head(app: &mut VectorcraftApp, ui: &mut Ui) {
+    fn menu_head(app: &mut TsipikaApp, ui: &mut Ui) {
         if menu_item(ui, tl!("Default Swatches"), app.session.active().is_some(), false) {
             app.run("swatch.resetDefaults", json!({})).ok();
         }
         ui.separator();
     }
-    fn menu_tail(app: &mut VectorcraftApp, ui: &mut Ui) {
+    fn menu_tail(app: &mut TsipikaApp, ui: &mut Ui) {
         ui.separator();
         // As a command, so its file dialog, shown off the UI thread, loads the library when it
         // answers.
@@ -1192,7 +1192,7 @@ impl LibraryKind for SwatchLibraries {
     }
 }
 
-fn add_from_library(app: &mut VectorcraftApp, params: Value) {
+fn add_from_library(app: &mut TsipikaApp, params: Value) {
     if let Err(e) = app.run("swatch.library.add", params) {
         app.status(e);
     }
@@ -1200,19 +1200,19 @@ fn add_from_library(app: &mut VectorcraftApp, params: Value) {
 
 /// `window.swatchLibrary {library}`: open a swatch library in its own panel (`library` null closes
 /// every swatch library panel).
-pub(crate) fn open_library(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn open_library(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     library_panel::open_command::<SwatchLibraries>(app, p)
 }
 
 /// `swatch.library.load` params, then open the library in its panel.
-pub(crate) fn load_library(app: &mut VectorcraftApp, params: Value) -> Result<Value, String> {
+pub(crate) fn load_library(app: &mut TsipikaApp, params: Value) -> Result<Value, String> {
     let r = app.run("swatch.library.load", params)?;
     open_library(app, &json!({ "library": r["library"] }))
 }
 
 /// Other Library…: load the library (or document) at `path`, else one picked in an open dialog
 /// (on the web the picked file arrives later and opens through [`crate::io::open_bytes`]).
-pub(crate) fn other_library(app: &mut VectorcraftApp, path: Option<String>) -> Result<Value, String> {
+pub(crate) fn other_library(app: &mut TsipikaApp, path: Option<String>) -> Result<Value, String> {
     match library_panel::pick_library_file(app, path)? {
         Some(path) => load_library(app, json!({ "path": path })),
         None => Ok(Value::Null),
@@ -1223,7 +1223,7 @@ pub(crate) fn other_library(app: &mut VectorcraftApp, path: Option<String>) -> R
 pub(crate) const USER_SLOT: &str = "window.userSwatchLibrary";
 
 /// The User Defined library slot `id` (`window.userSwatchLibrary3`) stands for.
-pub(crate) fn user_library(app: &VectorcraftApp, id: &str) -> Option<swatchlib::LibraryInfo> {
+pub(crate) fn user_library(app: &TsipikaApp, id: &str) -> Option<swatchlib::LibraryInfo> {
     library_panel::user_slot(id, USER_SLOT, swatchlib::libraries(&app.session))
 }
 
@@ -1260,28 +1260,28 @@ mod tests {
     use super::*;
     use crate::dialogs::swatch_options::KIND;
     use egui::{Event, Modifiers, PointerButton, Pos2};
-    use vectorcraft_color::Color;
-    use vectorcraft_engine::Session;
+    use tsipika_color::Color;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app
     }
 
     /// One frame of `draw` on a persistent context (clicks need the previous frame's layout).
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, time: f64, draw: fn(&mut VectorcraftApp, &mut Ui)) {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>, time: f64, draw: fn(&mut TsipikaApp, &mut Ui)) {
         frame_with(app, ctx, events, Modifiers::NONE, time, draw);
     }
 
     /// [`frame`] with `modifiers` held.
     fn frame_with(
-        app: &mut VectorcraftApp,
+        app: &mut TsipikaApp,
         ctx: &egui::Context,
         events: Vec<Event>,
         modifiers: Modifiers,
         time: f64,
-        draw: fn(&mut VectorcraftApp, &mut Ui),
+        draw: fn(&mut TsipikaApp, &mut Ui),
     ) {
         let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, vec2(280.0, 700.0)));
         let events = std::iter::once(Event::ModifiersChanged(modifiers)).chain(events).collect();
@@ -1302,14 +1302,14 @@ mod tests {
     }
 
     /// Double-click the thumbnail of swatch `name` in the panel.
-    fn double_click_tile(app: &mut VectorcraftApp, ctx: &egui::Context, name: &str) {
+    fn double_click_tile(app: &mut TsipikaApp, ctx: &egui::Context, name: &str) {
         frame(app, ctx, vec![], 0.0, show);
         let tile = ctx.read_response(egui::Id::new(("swatch-tile", name))).unwrap_or_else(|| panic!("no tile for {name}")).rect;
         frame(app, ctx, double_click(tile.center()), 1.0, show);
     }
 
     /// Click the thumbnail of swatch or group `name` with `modifiers` held (frames at `time`, `time + 0.5`).
-    fn click_tile(app: &mut VectorcraftApp, ctx: &egui::Context, name: &str, modifiers: Modifiers, time: f64) {
+    fn click_tile(app: &mut TsipikaApp, ctx: &egui::Context, name: &str, modifiers: Modifiers, time: f64) {
         frame(app, ctx, vec![], time, show);
         let at = ctx.read_response(egui::Id::new(("swatch-tile", name))).unwrap_or_else(|| panic!("no tile for {name}")).rect.center();
         let button = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers };
@@ -1320,7 +1320,7 @@ mod tests {
         pstate(ctx, "swatch-selected")
     }
 
-    fn dialog_frame(app: &mut VectorcraftApp, ctx: &egui::Context) {
+    fn dialog_frame(app: &mut TsipikaApp, ctx: &egui::Context) {
         frame(app, ctx, vec![], 2.0, |app, ui| crate::dialogs::show(app, ui.ctx()));
     }
 
@@ -1345,7 +1345,7 @@ mod tests {
         assert!(app.ui.dialog.is_none() && !app.session.in_interaction());
         let doc = &app.session.doc().unwrap().doc;
         assert_eq!(doc.swatch("Signal").and_then(|w| w.paint.color()).map(|c| c.to_hex()), Some("#00ff00".into()));
-        let fill = doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
+        let fill = doc.node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
         assert_eq!(fill, Paint::Solid { color: Color::from_hex("#00ff00").unwrap(), swatch: Some("Signal".into()), tint: 1.0 });
         assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1);
     }
@@ -1393,7 +1393,7 @@ mod tests {
     }
 
     /// The hex colors of the stops of the selection's gradient fill, and its stroke's color.
-    fn stops_and_stroke(app: &VectorcraftApp) -> (Vec<String>, String) {
+    fn stops_and_stroke(app: &TsipikaApp) -> (Vec<String>, String) {
         let (fill, stroke) = crate::panels::current_paints(app);
         let Paint::Gradient(g) = fill else { panic!("the fill is still a gradient: {fill:?}") };
         (g.gradient.stops.iter().map(|s| s.color.to_hex()).collect(), stroke.color().map(|c| c.to_hex()).unwrap_or_default())
@@ -1469,7 +1469,7 @@ mod tests {
         assert!(app.ui.dialog.is_none());
         let doc = &app.session.doc().unwrap().doc;
         assert!(doc.swatch("Red").is_none() && doc.swatch("Bright Red").is_none() && doc.swatch_groups.iter().all(|g| g.name != "Brights"));
-        let fill = doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
+        let fill = doc.node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
         assert_eq!(fill, Paint::solid(Color::from_hex("#ed1c24").unwrap()), "the art keeps its colour, unlinked");
         // Cancel keeps the swatch; Alt-click (now) deletes without asking.
         delete(&mut app, vec!["Orange".into()], false);
@@ -1566,7 +1566,7 @@ mod tests {
         let doc = &app.session.doc().unwrap().doc;
         let g = doc.swatch_groups.iter().find(|g| g.name == "Color Group 2").expect("group made");
         assert_eq!(g.swatches.iter().map(|w| (w.name.as_str(), w.global)).collect::<Vec<_>>(), [("R=18 G=52 B=86", true)]);
-        let fill = doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
+        let fill = doc.node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
         assert_eq!(fill, Paint::Solid { color: Color::from_hex("#123456").unwrap(), swatch: Some("R=18 G=52 B=86".into()), tint: 1.0 });
     }
 
@@ -1576,12 +1576,12 @@ mod tests {
     }
 
     /// Press at `from`, drag to `to` and release there, a frame per step from `time`.
-    fn drag(app: &mut VectorcraftApp, ctx: &egui::Context, from: Pos2, to: Pos2, time: f64) {
+    fn drag(app: &mut TsipikaApp, ctx: &egui::Context, from: Pos2, to: Pos2, time: f64) {
         drag_with(app, ctx, from, to, Modifiers::NONE, time);
     }
 
     /// [`drag`] with `modifiers` held.
-    fn drag_with(app: &mut VectorcraftApp, ctx: &egui::Context, from: Pos2, to: Pos2, modifiers: Modifiers, time: f64) {
+    fn drag_with(app: &mut TsipikaApp, ctx: &egui::Context, from: Pos2, to: Pos2, modifiers: Modifiers, time: f64) {
         let button = |pos, pressed| Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers };
         frame_with(app, ctx, vec![Event::PointerMoved(from), button(from, true)], modifiers, time, show);
         frame_with(app, ctx, vec![Event::PointerMoved(from + vec2(6.0, 4.0))], modifiers, time + 0.1, show);
@@ -1589,7 +1589,7 @@ mod tests {
         frame_with(app, ctx, vec![Event::PointerMoved(to), button(to, false)], modifiers, time + 0.3, show);
     }
 
-    fn names_of(app: &VectorcraftApp, group: Option<&str>) -> Vec<String> {
+    fn names_of(app: &TsipikaApp, group: Option<&str>) -> Vec<String> {
         let d = &app.session.active().unwrap().doc;
         let list = match group {
             Some(g) => &d.swatch_groups.iter().find(|x| x.name == g).unwrap().swatches,
@@ -1674,14 +1674,14 @@ mod tests {
         frame(&mut app, &ctx, vec![], 0.0, show);
         // Released over a swatch tile: the list takes it.
         let at = tile_center(&ctx, "Bright Red");
-        egui::DragAndDrop::set_payload(&ctx, PanelDrag::Art(vec![vectorcraft_doc::NodeId(id)]));
+        egui::DragAndDrop::set_payload(&ctx, PanelDrag::Art(vec![tsipika_doc::NodeId(id)]));
         let release = Event::PointerButton { pos: at, button: PointerButton::Primary, pressed: false, modifiers: Modifiers::NONE };
         frame(&mut app, &ctx, vec![Event::PointerMoved(at), release], 1.0, show);
         let patterns = app.run("pattern.list", json!({})).unwrap();
         assert_eq!(patterns["patterns"].as_array().map(Vec::len), Some(1), "{patterns}");
         assert_eq!(patterns["editing"], Value::Null, "no pattern editing mode");
         let st = app.session.doc().unwrap();
-        assert_eq!(st.doc.node(vectorcraft_doc::NodeId(id)), before.node(vectorcraft_doc::NodeId(id)), "the art stays as it was");
+        assert_eq!(st.doc.node(tsipika_doc::NodeId(id)), before.node(tsipika_doc::NodeId(id)), "the art stays as it was");
         assert!(egui::DragAndDrop::payload::<PanelDrag>(&ctx).is_none());
     }
 
@@ -1709,10 +1709,10 @@ mod tests {
         frame(&mut app, &ctx, vec![], 0.0, show);
         let grad = |c: &str| {
             let stops =
-                vec![vectorcraft_color::GradientStop::new(0.0, Color::from_hex(c).unwrap()), vectorcraft_color::GradientStop::new(1.0, Color::WHITE)];
-            Paint::Gradient(Box::new(vectorcraft_color::GradientPaint::new(vectorcraft_color::Gradient { kind: GradientKind::Radial, stops })))
+                vec![tsipika_color::GradientStop::new(0.0, Color::from_hex(c).unwrap()), tsipika_color::GradientStop::new(1.0, Color::WHITE)];
+            Paint::Gradient(Box::new(tsipika_color::GradientPaint::new(tsipika_color::Gradient { kind: GradientKind::Radial, stops })))
         };
-        let drop_on = |app: &mut VectorcraftApp, name: &str, paint: Paint, m: Modifiers, time: f64| {
+        let drop_on = |app: &mut TsipikaApp, name: &str, paint: Paint, m: Modifiers, time: f64| {
             let at = tile_center(&ctx, name);
             egui::DragAndDrop::set_payload(&ctx, PanelDrag::paint(paint));
             let release = Event::PointerButton { pos: at, button: PointerButton::Primary, pressed: false, modifiers: m };
@@ -1749,7 +1749,7 @@ mod tests {
         app.run("paint.setFill", json!({"ids": [id], "swatch": "Orange"})).unwrap();
         frame(&mut app, &ctx, vec![], 0.0, show);
         frame(&mut app, &ctx, vec![], 0.5, show);
-        let doc = |app: &VectorcraftApp| app.session.doc().unwrap().doc.clone();
+        let doc = |app: &TsipikaApp| app.session.doc().unwrap().doc.clone();
         let (before, undo) = (names_of(&app, None), app.session.doc().unwrap().history.undo.len());
         let red = doc(&app).swatch("Red").and_then(|w| w.paint.color()).unwrap();
         drag_with(&mut app, &ctx, tile_center(&ctx, "Red"), tile_center(&ctx, "Orange"), Modifiers::ALT, 1.0);
@@ -1758,7 +1758,7 @@ mod tests {
         assert_eq!((orange.paint.color(), orange.global), (Some(red), true), "Orange takes Red's color");
         assert_eq!(names_of(&app, None), before, "Red stays and Orange keeps its place");
         assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1);
-        let fill = d.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.fill_paint();
+        let fill = d.node(tsipika_doc::NodeId(id)).unwrap().appearance.fill_paint();
         assert_eq!(fill.color(), Some(red), "art linked to Orange takes the new color");
         // A gradient dropped on a color, and a swatch dropped without Alt, move as before.
         frame(&mut app, &ctx, vec![], 2.0, show);
@@ -1794,7 +1794,7 @@ mod tests {
     #[test]
     fn kind_filter() {
         let solid = Paint::solid(Color::BLACK);
-        let grad = Paint::Gradient(Box::new(vectorcraft_color::GradientPaint::new(Default::default())));
+        let grad = Paint::Gradient(Box::new(tsipika_color::GradientPaint::new(Default::default())));
         assert!(Kind::All.accepts(&grad, false));
         assert!(Kind::Color.accepts(&solid, false));
         assert!(!Kind::Color.accepts(&grad, false));
@@ -1857,7 +1857,7 @@ mod tests {
         image::RgbaImage::from_pixel(4, 4, image::Rgba([255, 0, 0, 255]))
             .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
             .unwrap();
-        let data = vectorcraft_format::base64_encode(&png);
+        let data = tsipika_format::base64_encode(&png);
         app.run("file.place", json!({"name": "a.png", "dataBase64": data, "link": false})).unwrap();
         assert_eq!(active_swatch(&app), None, "an image: no swatch");
         let text = app.run("text.create", json!({"x": 10, "y": 50, "text": "Hi"})).unwrap()["id"].clone();
@@ -1879,7 +1879,7 @@ mod tests {
         let mut app = app();
         let lab = Color::lab(60.0, 50.0, 20.0);
         app.run("swatch.new", json!({"name": "Ink", "color": lab, "spot": true})).unwrap();
-        let tile = |app: &VectorcraftApp| {
+        let tile = |app: &TsipikaApp| {
             let ink = entries(app, Kind::All, "Ink").into_iter().find(|e| e.name() == "Ink");
             let Some(Entry::Swatch { paint, .. }) = ink else { panic!("the Ink tile") };
             paint.color().unwrap()

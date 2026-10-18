@@ -4,7 +4,7 @@
 
 use base64::Engine as _;
 use egui::Pos2;
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::colorpicker::PickerTarget;
@@ -28,11 +28,11 @@ fn panel_module() -> Vec<u8> {
     let rect = r#"{"x":0,"y":0,"width":10,"height":10}"#;
     let wat = format!(
         r#"(module
-          (import "figcraft" "call" (func $call (param i32 i32 i32 i32) (result i32)))
-          (import "figcraft" "ui_show" (func $ui_show (param i32 i32) (result i32)))
+          (import "endrika" "call" (func $call (param i32 i32 i32 i32) (result i32)))
+          (import "endrika" "ui_show" (func $ui_show (param i32 i32) (result i32)))
           (memory (export "memory") 1)
           (data (i32.const 1000) "{}") (data (i32.const 100) "shape.rectangle") (data (i32.const 200) "{}")
-          (func (export "figcraft_run") (param $n i32) (result i32)
+          (func (export "endrika_run") (param $n i32) (result i32)
             (i32.store (i32.const 0) (i32.add (i32.load (i32.const 0)) (i32.const 1)))
             (if (i32.eq (i32.load (i32.const 0)) (i32.const 1))
               (then (return (call $ui_show (i32.const 1000) (i32.const {})))))

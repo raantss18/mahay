@@ -1,10 +1,10 @@
-//! Pathfinder panel: Shape Modes (+ Expand) and Pathfinders, with icons drawn for VectorCraft.
+//! Pathfinder panel: Shape Modes (+ Expand) and Pathfinders, with icons drawn for Tsipika.
 
 use egui::Ui;
 use serde_json::json;
 
 use super::{pstate, selection_len, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets::{self, menu_item};
 
 pub const SHAPE_MODES: [(&str, &str, &str); 4] = [
@@ -23,7 +23,7 @@ pub const PATHFINDERS: [(&str, &str, &str); 6] = [
     ("dc-pf-minus-back", "Minus Back", "minusBack"),
 ];
 
-fn run(app: &mut VectorcraftApp, ui: &Ui, op: &str, label: &str) {
+fn run(app: &mut TsipikaApp, ui: &Ui, op: &str, label: &str) {
     if app.run(&format!("object.pathfinder.{op}"), json!({})).is_ok() {
         set_pstate(ui.ctx(), "pf-last", Some((op.to_string(), label.to_string())));
     }
@@ -31,10 +31,10 @@ fn run(app: &mut VectorcraftApp, ui: &Ui, op: &str, label: &str) {
 
 /// How many objects the selection gives an operation: a group selected alone counts as the shapes
 /// the operation takes from it, nested groups included (#1450, #1635).
-fn operands(app: &VectorcraftApp) -> usize {
+fn operands(app: &TsipikaApp) -> usize {
     let alone = app.session.active().filter(|d| d.selection.len() == 1).and_then(|d| d.doc.node(*d.selection.objects.first()?));
-    match alone.filter(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Group { .. })) {
-        Some(group) => vectorcraft_engine::cmd::shape_count(group),
+    match alone.filter(|n| matches!(n.kind, tsipika_doc::NodeKind::Group { .. })) {
+        Some(group) => tsipika_engine::cmd::shape_count(group),
         None => selection_len(app),
     }
 }
@@ -49,7 +49,7 @@ fn button(ui: &mut Ui, icon: &str, tip: &str, n: usize, min: usize) -> bool {
     resp.clicked()
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let n = operands(app);
     let t = crate::theme::Tokens::get(ui.ctx());
     widgets::subheader(ui, tl!("Shape Modes:"));
@@ -80,7 +80,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     menu_item(ui, tl!("Trap…"), false, false);
     let last: Option<(String, String)> = pstate(ui.ctx(), "pf-last");
     let label =
@@ -101,14 +101,14 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 mod tests {
     use super::*;
     use crate::widgets::accessibility_tests::{named, tree};
-    use vectorcraft_engine::doc::{NodeId, NodeKind};
+    use tsipika_engine::doc::{NodeId, NodeKind};
 
     /// #1635: a stroked object expanded inside a group leaves a group holding one group (its fill
     /// and its outlined stroke). The Shape Modes take the group's shapes, so they stay enabled, and
     /// Unite merges the fill and the stroke into one path.
     #[test]
     fn shape_modes_take_the_shapes_of_an_expanded_stroke_in_a_group() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
         app.run("stroke.set", json!({"weight": 10})).unwrap();
@@ -130,7 +130,7 @@ mod tests {
     /// Screen readers name each Shape Mode and Pathfinder button, enabled for two selected objects.
     #[test]
     fn screen_readers_name_the_buttons() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 40, "y": 40, "width": 50, "height": 50})).unwrap()["id"].clone();

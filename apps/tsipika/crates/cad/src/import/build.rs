@@ -8,9 +8,9 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use kurbo::BezPath;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, CharStyle, Dash, Document, LAYER_COLORS, LayerColor, LineCap, Node, NodeKind, Symbol, TextObject};
-use vectorcraft_geom::{Affine, FillRule, PathData, Point, Rect};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, CharStyle, Dash, Document, LAYER_COLORS, LayerColor, LineCap, Node, NodeKind, Symbol, TextObject};
+use tsipika_geom::{Affine, FillRule, PathData, Point, Rect};
 
 use super::ImportOptions;
 use super::entity::{Alpha, Col, Converter, Geom, InsertItem, Item, Lw, Props, Span, TextItem};
@@ -127,7 +127,7 @@ impl<'d, 'a> Build<'d, 'a> {
     /// unit and at the scale asked for (fitting computes its own).
     pub fn run(mut self, layout: &LayoutDef, natural: f64, ratio: f64) -> Result<(Document, Vec<String>), String> {
         let items = self.conv.items(&self.d.layout_records(layout));
-        let bounds = items.iter().fold(None, |acc, it| vectorcraft_geom::union_opt(acc, self.item_bounds(it, 0)));
+        let bounds = items.iter().fold(None, |acc, it| tsipika_geom::union_opt(acc, self.item_bounds(it, 0)));
         let (k, size, offset) = self.placement(bounds, natural, ratio)?;
         self.map = Affine::new([k, 0.0, 0.0, -k, offset.x, offset.y]);
         self.symbol_map = Affine::new([k, 0.0, 0.0, -k, 0.0, 0.0]);
@@ -154,7 +154,7 @@ impl<'d, 'a> Build<'d, 'a> {
     }
 
     /// Points per drawing unit, the artboard's size, and where the drawing's origin goes.
-    fn placement(&self, bounds: Option<Rect>, natural: f64, ratio: f64) -> Result<(f64, vectorcraft_geom::Size, Point), String> {
+    fn placement(&self, bounds: Option<Rect>, natural: f64, ratio: f64) -> Result<(f64, tsipika_geom::Size, Point), String> {
         let b = bounds.unwrap_or(Rect::ZERO);
         let k = if self.o.fit {
             let (w, h) = self.fit_box(b);
@@ -168,9 +168,9 @@ impl<'d, 'a> Build<'d, 'a> {
         }
         let size = if self.o.fit {
             let (w, h) = self.fit_box(b);
-            vectorcraft_geom::Size::new(w, h)
+            tsipika_geom::Size::new(w, h)
         } else {
-            vectorcraft_geom::Size::new((b.width() * k).max(1.0), (b.height() * k).max(1.0))
+            tsipika_geom::Size::new((b.width() * k).max(1.0), (b.height() * k).max(1.0))
         };
         // Centred: the art's centre on the artboard's; else the drawing's origin (fitted art: its
         // bottom-left corner) on the artboard's bottom-left corner.
@@ -234,7 +234,7 @@ impl<'d, 'a> Build<'d, 'a> {
         if !self.enter(name, depth) {
             return None;
         }
-        let b = items.iter().fold(None, |acc, it| vectorcraft_geom::union_opt(acc, self.item_bounds(it, depth + 1)));
+        let b = items.iter().fold(None, |acc, it| tsipika_geom::union_opt(acc, self.item_bounds(it, depth + 1)));
         self.stack.pop();
         let base = self.d.blocks.get(name).map_or(Point::ZERO, |b| b.base);
         let b = b.map(|r| r - base.to_vec2());
@@ -255,8 +255,8 @@ impl<'d, 'a> Build<'d, 'a> {
                 let height = if matches!(t.span, Some(Span::Aligned(_))) { t.height * k } else { t.height };
                 let w = natural * k;
                 let x0 = match t.justify {
-                    vectorcraft_doc::Justify::Center => -w / 2.0,
-                    vectorcraft_doc::Justify::Right => -w,
+                    tsipika_doc::Justify::Center => -w / 2.0,
+                    tsipika_doc::Justify::Right => -w,
                     _ => 0.0,
                 };
                 let below = (lines - 1.0) * t.leading.unwrap_or(0.0) + height * 0.3;
@@ -266,7 +266,7 @@ impl<'d, 'a> Build<'d, 'a> {
                 let b = self.block_bounds(&ins.block, depth);
                 let cells = b.into_iter().flat_map(|b| ins.cells.iter().map(move |m| m.transform_rect_bbox(b)));
                 let attribs: Vec<Option<Rect>> = ins.attribs.iter().map(|a| self.item_bounds(a, depth)).collect();
-                cells.map(Some).chain(attribs).fold(None, vectorcraft_geom::union_opt)
+                cells.map(Some).chain(attribs).fold(None, tsipika_geom::union_opt)
             }
         }
         .filter(|r| [r.x0, r.y0, r.x1, r.y1].iter().all(|v| v.is_finite()))
@@ -596,7 +596,7 @@ impl<'d, 'a> Build<'d, 'a> {
 /// Fit text stretched or squeezed across, aligned text scaled as a whole, to run its span
 /// (`s`: points per drawing unit), measured in the font it is set in.
 fn fill_span(obj: &mut TextObject, span: Span, s: f64) {
-    let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), obj);
+    let layout = tsipika_text::layout(tsipika_text::FontDb::global(), obj);
     let natural = layout.lines.iter().map(|l| l.x1 - l.x0).fold(0.0, f64::max);
     let Some(k) = span.scale(natural / s) else { return };
     for r in &mut obj.runs {

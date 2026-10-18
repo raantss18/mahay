@@ -11,8 +11,8 @@
 //!   progress bar and a cancel button, and the recently finished ones.
 
 use crate::i18n::tr;
-use effectcraft_engine::media_browser as mb;
-use effectcraft_engine::project::ItemId;
+use tselatra_engine::media_browser as mb;
+use tselatra_engine::project::ItemId;
 use egui::{Align2, Color32, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::{Value, json};
 use std::sync::Arc;
@@ -20,7 +20,7 @@ use std::sync::Arc;
 use super::DragPayload;
 use super::panel_kit as kit;
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 // ---------------------------------------------------------------- Media Browser
 
@@ -28,7 +28,7 @@ type Thumb = Option<(egui::TextureHandle, [u32; 2])>;
 type Listing = (f64, Arc<Result<Vec<mb::Entry>, String>>);
 
 /// Thumbnail of a file (cached per path; `None` while not decoded or not decodable).
-fn thumbnail(app: &EffectcraftApp, ctx: &egui::Context, path: &str, budget: &mut u32) -> Thumb {
+fn thumbnail(app: &TselatraApp, ctx: &egui::Context, path: &str, budget: &mut u32) -> Thumb {
     let id = egui::Id::new(("mb-thumb", path));
     if let Some(t) = ctx.data(|d| d.get_temp::<Thumb>(id)) {
         return t;
@@ -45,7 +45,7 @@ fn thumbnail(app: &EffectcraftApp, ctx: &egui::Context, path: &str, budget: &mut
         }
         // A synthetic item id keyed by the path (the frame cache keys on the path).
         let hid = path.bytes().fold(0xcbf2_9ce4_8422_2325u64, |h, b| (h ^ b as u64).wrapping_mul(0x100_0000_01b3)) | (1 << 62);
-        let img = app.session.footage.frame(ItemId(hid), &f, effectcraft_engine::time::Tick::ZERO)?;
+        let img = app.session.footage.frame(ItemId(hid), &f, tselatra_engine::time::Tick::ZERO)?;
         let step = (img.width.max(img.height) as f32 / 128.0).ceil().max(1.0) as u32;
         let (w, h) = (img.width.div_ceil(step), img.height.div_ceil(step));
         let full = img.to_rgba8();
@@ -63,7 +63,7 @@ fn thumbnail(app: &EffectcraftApp, ctx: &egui::Context, path: &str, budget: &mut
     thumb
 }
 
-pub fn media_browser(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn media_browser(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let ctx = ui.ctx().clone();
     let p = ui.painter().with_clip_rect(rect);
@@ -276,7 +276,7 @@ fn comment_field(ui: &mut egui::Ui, r: Rect, id: &str, text: &str) -> Option<Str
     (resp.lost_focus() && buf != text).then_some(buf)
 }
 
-pub fn metadata(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn metadata(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     p.rect_filled(rect, 0.0, t.panel_bg);
@@ -331,7 +331,7 @@ pub fn metadata(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 
 // ---------------------------------------------------------------- Progress
 
-pub fn progress(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn progress(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     p.rect_filled(rect, 0.0, t.panel_bg);
@@ -393,7 +393,7 @@ fn progress_bar(p: &egui::Painter, bar: Rect, frac: f32, t: &Tokens) {
 /// The Importing card, bottom left over the panels while files import in the background (dropped
 /// or picked in the Import dialog): the file being read, how many are left, and Cancel (#270).
 /// Returns the height it takes, so toasts sit above it.
-pub fn import_card(app: &mut EffectcraftApp, ui: &mut egui::Ui, full: Rect) -> f32 {
+pub fn import_card(app: &mut TselatraApp, ui: &mut egui::Ui, full: Rect) -> f32 {
     if app.session.tasks.is_empty() {
         return 0.0;
     }

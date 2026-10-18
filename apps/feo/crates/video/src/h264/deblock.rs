@@ -480,7 +480,7 @@ mod tests {
 mod speed {
     use super::*;
 
-    /// Rough timing of the edge filters (`cargo test --release -p soundcraft-video --lib edge_filter_speed -- --ignored --nocapture`).
+    /// Rough timing of the edge filters (`cargo test --release -p feo-video --lib edge_filter_speed -- --ignored --nocapture`).
     #[test]
     #[ignore]
     fn edge_filter_speed() {

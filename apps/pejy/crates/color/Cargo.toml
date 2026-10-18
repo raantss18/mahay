@@ -1,9 +1,9 @@
 [package]
-name = "designcraft-color"
+name = "pejy-color"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft color"
+description = "Pejy color"
 
 [lints]
 workspace = true
@@ -12,7 +12,7 @@ workspace = true
 kurbo = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-craft-cms = { workspace = true }
+mahay-cms = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

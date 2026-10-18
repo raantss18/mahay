@@ -125,7 +125,7 @@ fn one_undo_step_takes_it_back() {
     let (mut s, ids) = doc();
     let before = s.doc().unwrap().doc.clone();
     let g = s.execute("object.group", &json!({"ids": &ids[..3]})).unwrap()["id"].as_u64().unwrap();
-    assert!(matches!(s.doc().unwrap().doc.node(NodeId(g)).unwrap().kind, vectorcraft_doc::NodeKind::Group { .. }));
+    assert!(matches!(s.doc().unwrap().doc.node(NodeId(g)).unwrap().kind, tsipika_doc::NodeKind::Group { .. }));
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(s.doc().unwrap().doc == before);
 }

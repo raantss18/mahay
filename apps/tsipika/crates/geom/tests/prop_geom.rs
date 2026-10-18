@@ -3,10 +3,10 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use proptest::prelude::*;
-use vectorcraft_geom::hit::{distance_to_outline, fill_contains, stroke_contains};
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, PathEl, Point, Rect, Shape, Vec2, shapes};
-use vectorcraft_testkit::geom::{grid, hausdorff, polygon_area, rect_contains, sample, sample_path};
-use vectorcraft_testkit::strategies::{arb_closed_shape, arb_convex_polygon, arb_path_data, arb_point, arb_rect, arb_star_polygon, polygon_path};
+use tsipika_geom::hit::{distance_to_outline, fill_contains, stroke_contains};
+use tsipika_geom::{Affine, BezPath, FillRule, PathData, PathEl, Point, Rect, Shape, Vec2, shapes};
+use tsipika_testkit::geom::{grid, hausdorff, polygon_area, rect_contains, sample, sample_path};
+use tsipika_testkit::strategies::{arb_closed_shape, arb_convex_polygon, arb_path_data, arb_point, arb_rect, arb_star_polygon, polygon_path};
 
 fn els_close(a: &BezPath, b: &BezPath, eps: f64) -> bool {
     let (a, b) = (a.elements(), b.elements());
@@ -187,7 +187,7 @@ proptest! {
         let sp = &p.subpaths[pick % p.subpaths.len()];
         let n = sp.anchors.len();
         let pieces = sp.cut_at(&cuts);
-        let segs = |s: &vectorcraft_geom::SubPath| (0..s.segment_count()).map(|i| s.segment(i)).collect::<Vec<_>>();
+        let segs = |s: &tsipika_geom::SubPath| (0..s.segment_count()).map(|i| s.segment(i)).collect::<Vec<_>>();
         let mut want = segs(sp);
         if pieces.len() > 1 || pieces.first().is_some_and(|q| q.closed != sp.closed) {
             prop_assert!(pieces.iter().all(|q| !q.closed && q.anchors.len() >= 2));
@@ -200,7 +200,7 @@ proptest! {
         prop_assert_eq!(pieces.iter().flat_map(segs).collect::<Vec<_>>(), want);
         let mut s = sp.clone();
         let i = pick % n.max(1);
-        let corner = s.anchors.get(i).is_some_and(|a| a.kind == vectorcraft_geom::AnchorKind::Corner);
+        let corner = s.anchors.get(i).is_some_and(|a| a.kind == tsipika_geom::AnchorKind::Corner);
         if s.smooth_anchor(i) && corner {
             let a = s.anchors[i];
             let (u, v) = (a.h_in - a.p, a.h_out - a.p);

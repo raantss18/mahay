@@ -29,9 +29,9 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{AppearanceItem, Document, Node, NodeId, NodeKind, Scaling, TextKind, Unit};
-use vectorcraft_geom::{Affine, PathData, Point, Rect, Vec2};
+use tsipika_color::BlendMode;
+use tsipika_doc::{AppearanceItem, Document, Node, NodeId, NodeKind, Scaling, TextKind, Unit};
+use tsipika_geom::{Affine, PathData, Point, Rect, Vec2};
 
 use super::Imported;
 use super::ai::{self, Structure, slot_of};
@@ -40,7 +40,7 @@ use super::ate::{Story, Texts};
 /// The notes that say the import left out something the file has (see [`is_loss`]).
 const TEXT_LEFT_OUT: &str = "text objects on hidden layers or hidden objects couldn't be read, so they are left out";
 /// The same for a file without a page to take shown type from.
-const TYPE_LEFT_OUT: &str = "text objects of kinds VectorCraft doesn't read from the file's text document yet are left out";
+const TYPE_LEFT_OUT: &str = "text objects of kinds Tsipika doesn't read from the file's text document yet are left out";
 const ART_LEFT_OUT: &str = "hidden layers have art this can't read";
 const LAYERS_UNREAD: &str = "the file's layers weren't read";
 
@@ -443,7 +443,7 @@ fn join_pieces(parts: &mut Vec<Arc<Node>>, lines: &[(String, Point)]) {
     }
     let mut gone: BTreeSet<usize> = BTreeSet::new();
     for (first, rest, gaps) in &joins {
-        let mut runs: Vec<Vec<vectorcraft_doc::TextRun>> = [first]
+        let mut runs: Vec<Vec<tsipika_doc::TextRun>> = [first]
             .into_iter()
             .chain(rest)
             .filter_map(|j| parts.get(*j))
@@ -804,36 +804,36 @@ fn comparison_samples(doc: &Document) -> u32 {
 /// Render for the page check. The comparison scale bounds the long side to 400 px, so the
 /// extra samples stay bounded to 1600 px. Filter premultiplied channels, including alpha.
 fn comparison_render(
-    renderer: &mut vectorcraft_render::Renderer,
+    renderer: &mut tsipika_render::Renderer,
     doc: &Document,
     rect: Rect,
     scale: f64,
     samples: u32,
-) -> vectorcraft_render::Rendered {
+) -> tsipika_render::Rendered {
     let rendered = renderer.render_region(doc, rect, scale * f64::from(samples), false);
     if samples == 1 {
         return rendered;
     }
-    let (width, height) = match vectorcraft_render::raster_size(rect, scale) {
+    let (width, height) = match tsipika_render::raster_size(rect, scale) {
         Ok(size) => size,
         // A malformed region cannot provide a comparable raster.
         Err(_) => return rendered,
     };
     let Some(src) = image::RgbaImage::from_raw(rendered.width, rendered.height, rendered.pixels) else {
-        return vectorcraft_render::Rendered { width: 0, height: 0, pixels: Vec::new() };
+        return tsipika_render::Rendered { width: 0, height: 0, pixels: Vec::new() };
     };
     let pixels = image::imageops::resize(&src, width, height, image::imageops::FilterType::Triangle).into_raw();
-    vectorcraft_render::Rendered { width, height, pixels }
+    tsipika_render::Rendered { width, height, pixels }
 }
 
 /// The page drawn once, to weigh the layers' art against it: [`Self::difference`] draws the layers
 /// with a renderer of their own, which keeps their decoded images between draws (the page's images
 /// can share their keys and not their pixels, so the two don't share one).
 struct PageView {
-    page: vectorcraft_render::Rendered,
+    page: tsipika_render::Rendered,
     /// Where the page's own type is, in its pixels.
     page_type: Vec<Rect>,
-    layers: vectorcraft_render::Renderer,
+    layers: tsipika_render::Renderer,
     scale: f64,
     samples: u32,
 }
@@ -845,10 +845,10 @@ impl PageView {
         // Drawn on nothing and then seen on white: blending modes have no page to blend with, as in
         // the app that wrote the file.
         let samples = comparison_samples(frame.page);
-        let page = comparison_render(&mut vectorcraft_render::Renderer::new(), frame.page, ra, scale, samples);
+        let page = comparison_render(&mut tsipika_render::Renderer::new(), frame.page, ra, scale, samples);
         let mut page_type = vec![];
         type_areas(&frame.page.layers, ra, scale, &mut page_type);
-        Self { page, page_type, layers: vectorcraft_render::Renderer::new(), scale, samples }
+        Self { page, page_type, layers: tsipika_render::Renderer::new(), scale, samples }
     }
 
     /// How `b` on `rb` (a rectangle the page's size) draws differently from the page ([`compared`]).
@@ -885,8 +885,8 @@ fn difference(a: &Document, ra: Rect, b: &Document, rb: Rect) -> Difference {
     let scale = compare_scale(ra);
     // A renderer each: the two documents' images can share their keys and not their pixels.
     let samples = comparison_samples(a);
-    let x = comparison_render(&mut vectorcraft_render::Renderer::new(), a, ra, scale, samples);
-    let y = comparison_render(&mut vectorcraft_render::Renderer::new(), b, rb, scale, samples);
+    let x = comparison_render(&mut tsipika_render::Renderer::new(), a, ra, scale, samples);
+    let y = comparison_render(&mut tsipika_render::Renderer::new(), b, rb, scale, samples);
     let mut areas = vec![];
     type_areas(&a.layers, ra, scale, &mut areas);
     type_areas(&b.layers, rb, scale, &mut areas);
@@ -897,7 +897,7 @@ fn difference(a: &Document, ra: Rect, b: &Document, rb: Rect) -> Difference {
 /// the type in `areas` (pixels). Pixels are compared by lightness, and by whether they are inked
 /// at all ([`differ`]): the page of an RGB document is written in the colours' CMYK equivalents,
 /// and what the comparison looks for is art that is missing or out of place.
-fn compared(x: &vectorcraft_render::Rendered, y: &vectorcraft_render::Rendered, areas: &[Rect]) -> Difference {
+fn compared(x: &tsipika_render::Rendered, y: &tsipika_render::Rendered, areas: &[Rect]) -> Difference {
     if x.width == 0 || x.height == 0 || x.width != y.width || x.height != y.height {
         return Difference { any: 1.0, art: 1.0, solid: 1.0 };
     }
@@ -1048,7 +1048,7 @@ fn build(data: &[u8], visible: Option<&Document>, page: Page, outlined: bool, tr
         }
         let taken: BTreeSet<NodeId> = shown.iter().chain(&hidden).flatten().map(|n| n.id).collect();
         visible.walk(|n| {
-            if vectorcraft_pdf::is_glyph_outlines(n) && !taken.contains(&n.id) {
+            if tsipika_pdf::is_glyph_outlines(n) && !taken.contains(&n.id) {
                 lone.push(vec![Arc::new(n.clone())]);
             }
         });
@@ -1056,7 +1056,7 @@ fn build(data: &[u8], visible: Option<&Document>, page: Page, outlined: bool, tr
         // goes where the layers have that artboard.
         let pages: Vec<Rect> = visible.artboards.iter().map(|a| a.rect).collect();
         let same =
-            |(a, p): (&vectorcraft_doc::Artboard, &Rect)| (a.rect.width() - p.width()).abs() <= 0.5 && (a.rect.height() - p.height()).abs() <= 0.5;
+            |(a, p): (&tsipika_doc::Artboard, &Rect)| (a.rect.width() - p.width()).abs() <= 0.5 && (a.rect.height() - p.height()).abs() <= 0.5;
         let boards = (pages.len() == doc.artboards.len() && doc.artboards.iter().zip(&pages).all(same)).then_some(&doc.artboards);
         for object in shown.iter_mut().chain(hidden.iter_mut()).chain(lone.iter_mut()) {
             // The page with most of it, the first for what is on none.
@@ -1186,7 +1186,7 @@ fn in_units(board: Option<Rect>, page: &Document, unit: f64) -> bool {
 /// effects and pattern tiles.
 fn scale_document(doc: &mut Document, k: f64) {
     let a = Affine::scale(k);
-    let scaling = Scaling { strokes: true, effects: Some(vectorcraft_effects::scale_effect), patterns: true, ..Default::default() };
+    let scaling = Scaling { strokes: true, effects: Some(tsipika_effects::scale_effect), patterns: true, ..Default::default() };
     for layer in &mut doc.layers {
         Arc::make_mut(layer).transform(a, scaling);
     }
@@ -1294,7 +1294,7 @@ const PAST_THE_PAGE: f64 = 1.0;
 fn compare(frame: &Frame<'_>, view: &mut PageView, layered: &Document) -> Result<Option<String>, String> {
     let mut diff = view.difference(layered, frame.rect);
     if frame.whole
-        && let Some(art) = vectorcraft_render::encode::art_bounds(as_printed(layered).as_ref().unwrap_or(layered))
+        && let Some(art) = tsipika_render::encode::art_bounds(as_printed(layered).as_ref().unwrap_or(layered))
             .filter(|a| !frame.rect.inflate(PAST_THE_PAGE, PAST_THE_PAGE).contains_rect(*a))
     {
         // The page and the art the layers print beyond it, each in its own document's place.
@@ -1475,7 +1475,7 @@ fn editing_copy(ps: &[u8]) -> Option<Result<Cow<'_, [u8]>, String>> {
 /// prolog without including it) from its layers alone (`ps`: its program, which has them) → the
 /// document and the import's notes. A file whose header says it is in the format (`illustrator`)
 /// but whose program has no layers (Illustrator 3 had none; image editors still export their
-/// paths so, storytold/photocraft#6036) is read with its art on one layer. `None` when the program
+/// paths so, raantss18/sary#6036) is read with its art on one layer. `None` when the program
 /// has no layers and isn't in the format: other PostScript isn't read as the format's operators.
 pub(super) fn program_alone(ps: &[u8], illustrator: bool) -> Option<Result<(Document, Vec<String>), String>> {
     if ai::has_eps_data(ps) {
@@ -1512,16 +1512,16 @@ fn line_with(ps: &[u8], from: usize, key: &[u8]) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::{CharStyle, TextObject};
+    use tsipika_doc::{CharStyle, TextObject};
 
     /// `doc` with a square ring round (20, 20)–(80, 80) (or at `at`), stroked `color` `width` wide,
     /// named `name`.
-    fn ring(doc: &mut Document, name: Option<&str>, color: vectorcraft_color::Color, width: f64, at: Rect) {
-        let stroke = vectorcraft_color::Paint::solid(color);
+    fn ring(doc: &mut Document, name: Option<&str>, color: tsipika_color::Color, width: f64, at: Rect) {
+        let stroke = tsipika_color::Paint::solid(color);
         let mut n = Node::path(
             doc.alloc_id(),
-            vectorcraft_geom::shapes::rectangle(at),
-            vectorcraft_doc::Appearance::basic(vectorcraft_color::Paint::None, stroke, width),
+            tsipika_geom::shapes::rectangle(at),
+            tsipika_doc::Appearance::basic(tsipika_color::Paint::None, stroke, width),
         );
         n.name = name.map(str::to_string);
         let layer = doc.layers[0].id;
@@ -1532,7 +1532,7 @@ mod tests {
     /// by the page: it isn't taken out as unseen (#1102). An object the page doesn't draw still is.
     #[test]
     fn a_stroke_over_one_as_light_is_not_taken_for_unseen() {
-        let (dark, red) = (vectorcraft_color::Color::rgb(0.55, 0.0, 0.0), vectorcraft_color::Color::rgb(1.0, 0.0, 0.0));
+        let (dark, red) = (tsipika_color::Color::rgb(0.55, 0.0, 0.0), tsipika_color::Color::rgb(1.0, 0.0, 0.0));
         let square = Rect::new(20.0, 20.0, 80.0, 80.0);
         let mut page = Document::new(100.0, 100.0);
         ring(&mut page, None, dark, 12.0, square);
@@ -1548,7 +1548,7 @@ mod tests {
         let widths: Vec<f64> = layers.layers[0].children().unwrap().iter().filter_map(|n| n.appearance.stroke().map(|s| s.width)).collect();
         assert_eq!(widths, [12.0, 6.0]);
         // Taken by lightness alone, the red and the dark red are alike.
-        let px = |c: vectorcraft_color::Color| {
+        let px = |c: tsipika_color::Color| {
             let [r, g, b] = c.to_rgb().map(|v| (v * 255.0).round() as u8);
             [r, g, b, 255]
         };
@@ -1574,21 +1574,21 @@ mod tests {
     /// false fallback, while genuinely missing art must still be rejected.
     #[test]
     fn raster_page_comparison_filters_minification_without_accepting_missing_art() {
-        use vectorcraft_color::{Color, Paint};
-        use vectorcraft_doc::{Appearance, ImageBlob, ImageObject};
+        use tsipika_color::{Color, Paint};
+        use tsipika_doc::{Appearance, ImageBlob, ImageObject};
         let mut vector = Document::new(1000.0, 500.0);
         let layer = vector.layers[0].id;
         for i in 0..400 {
             let x = f64::from(i) * 2.5 + 0.5;
             let n = Node::path(
                 vector.alloc_id(),
-                vectorcraft_geom::shapes::rectangle(Rect::new(x, 0.0, x + 1.0, 500.0)),
+                tsipika_geom::shapes::rectangle(Rect::new(x, 0.0, x + 1.0, 500.0)),
                 Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0),
             );
             vector.insert(Some(layer), usize::MAX, n).unwrap();
         }
         let rect = vector.artboards[0].rect;
-        let source = vectorcraft_render::Renderer::new().render_region(&vector, rect, 1.6, true);
+        let source = tsipika_render::Renderer::new().render_region(&vector, rect, 1.6, true);
         let mut png = Vec::new();
         image::RgbaImage::from_raw(source.width, source.height, source.to_straight())
             .unwrap()
@@ -1612,9 +1612,9 @@ mod tests {
         page.insert(Some(page.layers[0].id), usize::MAX, image).unwrap();
         assert_eq!(comparison_samples(&page), 4);
         assert_eq!(comparison_samples(&vector), 1, "ordinary vector pages retain their comparison");
-        let mut renderer = vectorcraft_render::Renderer::new();
+        let mut renderer = tsipika_render::Renderer::new();
         let a = comparison_render(&mut renderer, &page, rect, 0.4, 1);
-        let b = comparison_render(&mut vectorcraft_render::Renderer::new(), &vector, rect, 0.4, 1);
+        let b = comparison_render(&mut tsipika_render::Renderer::new(), &vector, rect, 0.4, 1);
         assert!(compared(&a, &b, &[]).solid > MAX_SOLID_DIFFERENCE, "the old point sampling falsely refused this page");
         let frame = Frame { page: &page, page_rect: rect, rect, whole: false };
         let mut view = PageView::new(&frame);

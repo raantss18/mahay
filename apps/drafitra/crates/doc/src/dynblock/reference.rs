@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use cadcraft_geom::Vec3;
+use drafitra_geom::Vec3;
 use serde::Serialize;
 
 use super::{ActionKind, DynamicBlock, ParameterKind, dynamic_block};
@@ -51,7 +51,7 @@ pub struct CustomProperty {
     /// The values it may be set to, when it is a choice (visibility states, lookup values, a
     /// distance's list).
     pub choices: Vec<String>,
-    /// CADCraft can change it ([`super::set_property`]): a visibility state, a distance, a
+    /// Drafitra can change it ([`super::set_property`]): a visibility state, a distance, a
     /// position, or a lookup whose tables set only those.
     pub editable: bool,
 }

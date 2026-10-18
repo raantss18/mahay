@@ -4,12 +4,12 @@
 //! doesn't move the layer. Uses only APIs that existed before the bars, so it runs (and fails)
 //! on the code without them.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::commands::text_edit::layer_doc;
-use effectcraft_engine::project::{LayerId, PropGroup};
-use effectcraft_engine::text::layout_doc;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::panels::viewer::comp_to_screen;
+use tselatra_engine::Session;
+use tselatra_engine::commands::text_edit::layer_doc;
+use tselatra_engine::project::{LayerId, PropGroup};
+use tselatra_engine::text::layout_doc;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::panels::viewer::comp_to_screen;
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
@@ -41,22 +41,22 @@ fn setup() -> (Session, Ids) {
     (s, ids)
 }
 
-fn harness(s: Session) -> Harness<'static, EffectcraftApp> {
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+fn harness(s: Session) -> Harness<'static, TselatraApp> {
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(4);
     h
 }
 
-fn handle(h: &Harness<'_, EffectcraftApp>, uid: u64) -> Option<Pos2> {
+fn handle(h: &Harness<'_, TselatraApp>, uid: u64) -> Option<Pos2> {
     h.state().auto.find(&format!("viewer.textRange.{uid}")).map(|e| pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0))
 }
 
-fn value(h: &Harness<'_, EffectcraftApp>, ids: &Ids, uid: u64) -> f64 {
+fn value(h: &Harness<'_, TselatraApp>, ids: &Ids, uid: u64) -> f64 {
     h.state().session.active_comp().unwrap().layer(LayerId(ids.layer)).unwrap().props.find(uid).unwrap().value.as_f64()
 }
 
 /// Screen x of the caret before character `ci` of the text.
-fn caret_x(h: &Harness<'_, EffectcraftApp>, ids: &Ids, ci: usize) -> f32 {
+fn caret_x(h: &Harness<'_, TselatraApp>, ids: &Ids, ci: usize) -> f32 {
     let s = &h.state().session;
     let lay = layout_doc(&layer_doc(s, LayerId(ids.layer)).unwrap());
     let pos = s.active_comp().unwrap().layer(LayerId(ids.layer)).unwrap().props.prop("transform/position").unwrap().value.as_vec2();
@@ -64,7 +64,7 @@ fn caret_x(h: &Harness<'_, EffectcraftApp>, ids: &Ids, ci: usize) -> f32 {
     comp_to_screen(&h.ctx, [(pos[0] + bottom.x) as f32, (pos[1] + bottom.y) as f32]).unwrap().x
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2) {
     h.event(Event::PointerMoved(from));
     h.step();
     h.event(Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -144,7 +144,7 @@ fn bars_show_only_for_a_selected_selector_or_animator() {
     h.run_steps(3);
     assert!(handle(&h, ids.end).is_none(), "View ▸ Show Layer Controls off hides them");
     h.state_mut().ui.viewer.show_layer_controls = true;
-    h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Pen;
+    h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Pen;
     h.run_steps(3);
     assert!(handle(&h, ids.end).is_none(), "only the Selection tool drags them");
 }
@@ -185,7 +185,7 @@ fn a_bar_on_a_box_handle_leaves_it_the_press() {
         .min_by(|p, q| (*p - bar).length().total_cmp(&(*q - bar).length()))
         .expect("the box's handles");
     assert!((bar - at).length() < 9.0, "the fixture puts Start within the handle's reach: {bar:?} vs {at:?}");
-    let scale = |h: &Harness<'_, EffectcraftApp>| {
+    let scale = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.prop("transform/scale").unwrap().value.clone()
     };
     let before = scale(&h);

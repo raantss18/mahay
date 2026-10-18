@@ -9,9 +9,9 @@
 //! Shared here (also used by `sim2`): a band-bucketed rasteriser for many small items
 //! ([`raster`]), particle sprites ([`Sprite`]) and transfer-mode compositing ([`combine`]).
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::generate::value_noise;

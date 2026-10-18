@@ -95,7 +95,7 @@ fn nulls_follow_points_and_points_follow_nulls() {
     let nulls: Vec<u64> = r["nulls"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap()).collect();
     assert_eq!(nulls.len(), 4);
     let comp = s.active_comp().unwrap().clone();
-    let n2 = comp.layer(effectcraft_project::LayerId(nulls[2])).unwrap();
+    let n2 = comp.layer(tselatra_project::LayerId(nulls[2])).unwrap();
     assert_eq!(n2.name, "Plate: Mask 1 [3]");
     // Placed on the vertex in comp space (the 40×40 solid is centred at (50, 40)).
     let pos = n2.props.prop("transform/position").unwrap();
@@ -109,7 +109,7 @@ fn nulls_follow_points_and_points_follow_nulls() {
     let r = s.execute("paths.pointsFollowNulls", json!({"layer": l, "path": "masks/#1/path"})).unwrap();
     assert_eq!(r["nulls"].as_array().unwrap().len(), 4);
     let comp = s.active_comp().unwrap().clone();
-    let plate = comp.layer(effectcraft_project::LayerId(l)).unwrap();
+    let plate = comp.layer(tselatra_project::LayerId(l)).unwrap();
     let e = plate.props.prop("masks/#1/path").unwrap().expr.as_ref().unwrap().text.clone();
     assert!(e.contains("createPath(pts") && e.contains("\"Plate: Mask 1 [1]\"") && e.contains("fromComp"), "{e}");
     // Not a path → error.
@@ -122,7 +122,7 @@ fn trace_path_adds_a_progress_null() {
     let r = s.execute("paths.tracePath", json!({"layer": l, "loop": true})).unwrap();
     let n = r["null"].as_u64().unwrap();
     let comp = s.active_comp().unwrap().clone();
-    let null = comp.layer(effectcraft_project::LayerId(n)).unwrap();
+    let null = comp.layer(tselatra_project::LayerId(n)).unwrap();
     let slider = null.props.prop("effects/#1/slider").unwrap();
     assert_eq!(slider.keys.len(), 2);
     assert_eq!(slider.keys[1].value.as_f64(), 100.0);
@@ -150,8 +150,8 @@ fn vr_comp_editor_turns_the_face_cameras_together() {
     assert!((v[1] - 30.0).abs() < 1e-6 && v[0].abs() < 1e-6 && v[2].abs() < 1e-6, "{v:?}");
     // Every face camera turned: Front by 30° about Y.
     let front = &env["faces"][4];
-    let fc = s.project.comp(effectcraft_project::ItemId(front["comp"].as_u64().unwrap())).unwrap();
-    let cam = fc.layer(effectcraft_project::LayerId(front["camera"].as_u64().unwrap())).unwrap();
+    let fc = s.project.comp(tselatra_project::ItemId(front["comp"].as_u64().unwrap())).unwrap();
+    let cam = fc.layer(tselatra_project::LayerId(front["camera"].as_u64().unwrap())).unwrap();
     let o = cam.props.prop("transform/orientation").unwrap().value.components();
     assert!((o[1] - 30.0).abs() < 1e-6, "{o:?}");
     // One undo step back to the start.
@@ -160,7 +160,7 @@ fn vr_comp_editor_turns_the_face_cameras_together() {
     assert!(envs[0]["view"][1].as_f64().unwrap().abs() < 1e-6);
     // Round trip of the Euler decomposition.
     for o in [[10.0, 20.0, 30.0], [350.0, 45.0, 5.0], [0.0, 0.0, 270.0]] {
-        let m = effectcraft_geom::Mat4::orientation(effectcraft_geom::vec3(o[0], o[1], o[2]));
+        let m = tselatra_geom::Mat4::orientation(tselatra_geom::vec3(o[0], o[1], o[2]));
         let e = crate::commands::vr_editor::euler(m);
         assert!(e.iter().zip(o).all(|(a, b)| (a - b).abs() < 1e-6), "{o:?} → {e:?}");
     }

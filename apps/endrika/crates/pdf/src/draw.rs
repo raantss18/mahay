@@ -2,9 +2,9 @@
 
 use std::collections::HashMap;
 
-use figcraft_color::{BlendMode, Gradient, GradientKind, ImagePaint, ImageScaleMode, Paint, PaintKind, PatternPaint};
-use figcraft_doc::{Document, EffectKind, MaskType as DocMaskType, Node, NodeId, NodeKind, StrokeAlign};
-use figcraft_geom::{Affine, BezPath, Rect, Shape};
+use endrika_color::{BlendMode, Gradient, GradientKind, ImagePaint, ImageScaleMode, Paint, PaintKind, PatternPaint};
+use endrika_doc::{Document, EffectKind, MaskType as DocMaskType, Node, NodeId, NodeKind, StrokeAlign};
+use endrika_geom::{Affine, BezPath, Rect, Shape};
 
 use crate::raster::Raster;
 use krilla::geom::{Path, PathBuilder, Size, Transform};
@@ -18,7 +18,7 @@ use crate::PdfOptions;
 use crate::print::Ink;
 
 /// Deepest node nesting drawn (the renderer's limit).
-pub(crate) const MAX_DEPTH: usize = figcraft_render::MAX_EXPORT_DEPTH;
+pub(crate) const MAX_DEPTH: usize = endrika_render::MAX_EXPORT_DEPTH;
 /// Largest side of any raster made for the PDF, in pixels.
 pub(crate) const MAX_RASTER_SIDE: f64 = 4096.0;
 
@@ -55,8 +55,8 @@ pub(crate) fn affine_ok(a: Affine) -> bool {
 
 /// kurbo path → krilla path (`None` when empty, degenerate or not finite).
 pub(crate) fn to_path(p: &BezPath) -> Option<Path> {
-    use figcraft_geom::kurbo::PathEl;
-    if p.elements().is_empty() || !figcraft_pathops::finite(p) {
+    use endrika_geom::kurbo::PathEl;
+    if p.elements().is_empty() || !endrika_pathops::finite(p) {
         return None;
     }
     let mut b = PathBuilder::new();
@@ -108,10 +108,10 @@ pub(crate) fn blend(b: BlendMode) -> Option<krilla::blend::BlendMode> {
     })
 }
 
-pub(crate) fn rule(r: figcraft_render::FillRule) -> FillRule {
+pub(crate) fn rule(r: endrika_render::FillRule) -> FillRule {
     match r {
-        figcraft_render::FillRule::EvenOdd => FillRule::EvenOdd,
-        figcraft_render::FillRule::Winding => FillRule::NonZero,
+        endrika_render::FillRule::EvenOdd => FillRule::EvenOdd,
+        endrika_render::FillRule::Winding => FillRule::NonZero,
     }
 }
 
@@ -250,7 +250,7 @@ impl<'a> Exporter<'a> {
         // Background blur and glass: an image drawn from what lies under the node, under its
         // content (nothing in a soft mask is seen).
         let back =
-            if !as_mask && self.masking == 0 && self.tiling == 0 && figcraft_render::backdrop::has_effects(n) { self.backdrop(id) } else { None };
+            if !as_mask && self.masking == 0 && self.tiling == 0 && endrika_render::backdrop::has_effects(n) { self.backdrop(id) } else { None };
         if fx.iter().any(|k| matches!(k, EffectKind::LayerBlur { .. } | EffectKind::Noise(_) | EffectKind::Texture(_))) {
             // Effects that change every pixel: the renderer draws the whole node.
             if let Some(b) = &back {
@@ -308,12 +308,12 @@ impl<'a> Exporter<'a> {
                 // The page's frame reaches out to the bleed (fills and clip; paints keep their box).
                 let outline = match self.bleed_root {
                     Some((id, b)) if id == n.id && n.kind.is_frame_like() => {
-                        Some((Rect::new(-b, -b, w + b, h + b).to_path(0.1), figcraft_render::FillRule::Winding))
+                        Some((Rect::new(-b, -b, w + b, h + b).to_path(0.1), endrika_render::FillRule::Winding))
                     }
-                    _ => figcraft_render::node_outline(self.doc, n),
+                    _ => endrika_render::node_outline(self.doc, n),
                 };
                 let is_bool = matches!(n.kind, NodeKind::BooleanOp { .. });
-                let closed = figcraft_doc::geometry::is_closed(n) || is_bool;
+                let closed = endrika_doc::geometry::is_closed(n) || is_bool;
                 if let Some((path, r)) = &outline
                     && closed
                 {
@@ -341,9 +341,9 @@ impl<'a> Exporter<'a> {
                     }
                 }
                 if n.has_visible_stroke() {
-                    let geom = if is_bool { outline.as_ref().map(|(p, _)| p.clone()) } else { figcraft_doc::geometry::stroke_geometry(n) };
+                    let geom = if is_bool { outline.as_ref().map(|(p, _)| p.clone()) } else { endrika_doc::geometry::stroke_geometry(n) };
                     if let Some(g) = geom {
-                        let area = figcraft_render::draw::stroke_area(n, &g, closed);
+                        let area = endrika_render::draw::stroke_area(n, &g, closed);
                         for p in &n.strokes {
                             self.fill(s, &area, stroke_rule(n, closed), p, w, h, xf);
                         }
@@ -376,7 +376,7 @@ impl<'a> Exporter<'a> {
                 // The outline, fully opaque; nothing shows through a mask without one.
                 let mut plain = m.clone();
                 plain.is_mask = false;
-                let clip = figcraft_render::subtree_outline(self.doc, &plain, depth + 1).and_then(|(mut p, r)| {
+                let clip = endrika_render::subtree_outline(self.doc, &plain, depth + 1).and_then(|(mut p, r)| {
                     p.apply_affine(xf * m.transform);
                     Some((to_path(&p)?, rule(r)))
                 });
@@ -454,7 +454,7 @@ impl<'a> Exporter<'a> {
         }
         let data = self.doc.images.get(&img.image);
         // Decoding through the renderer checks the image is readable and applies adjustments.
-        let made = figcraft_render::images::get(&img.image, data, &img.filters, self.doc.color_profile).map(|pm| {
+        let made = endrika_render::images::get(&img.image, data, &img.filters, self.doc.color_profile).map(|pm| {
             let (pw, ph) = (pm.width(), pm.height());
             // Unadjusted RGB images embed their original bytes (JPEG stays JPEG).
             let original = data.filter(|_| img.filters.is_identity() && ink == Ink::Rgb).and_then(|d| {
@@ -467,7 +467,7 @@ impl<'a> Exporter<'a> {
                     Sniffed::Other => None,
                 }
             });
-            let image = original.filter(|i| i.size() == (pw, ph)).unwrap_or_else(|| ink.bitmap(figcraft_render::to_rgba8(&pm), pw, ph));
+            let image = original.filter(|i| i.size() == (pw, ph)).unwrap_or_else(|| ink.bitmap(endrika_render::to_rgba8(&pm), pw, ph));
             (image, pw, ph)
         });
         self.images.insert(key, made.clone());
@@ -478,7 +478,7 @@ impl<'a> Exporter<'a> {
     #[allow(clippy::too_many_arguments)]
     fn image_fill(&mut self, s: &mut Surface, kp: &Path, r: FillRule, img: &ImagePaint, op: f32, w: f64, h: f64) {
         let Some((image, iw, ih)) = self.image(img) else { return };
-        let t = figcraft_render::paint::image_transform(img, f64::from(iw), f64::from(ih), w, h);
+        let t = endrika_render::paint::image_transform(img, f64::from(iw), f64::from(ih), w, h);
         let t = Affine::new([f64::from(t.sx), f64::from(t.ky), f64::from(t.kx), f64::from(t.sy), f64::from(t.tx), f64::from(t.ty)]);
         let Some(size) = Size::from_wh(iw as f32, ih as f32) else { return };
         if !affine_ok(t) || !above(t.determinant().abs(), 1e-12) {
@@ -526,7 +526,7 @@ impl<'a> Exporter<'a> {
             let mut ps = sb.surface();
             // Links and backdrops belong to the page, not to a tile.
             self.tiling += 1;
-            let _ = figcraft_render::pattern::nested(|| {
+            let _ = endrika_render::pattern::nested(|| {
                 for (tx, ty) in &cell.tiles {
                     self.node(&mut ps, src.id, Affine::translate((*tx, *ty)) * Affine::scale(cell.scale) * unrotated, 0, false);
                 }
@@ -563,13 +563,13 @@ impl<'a> Exporter<'a> {
             k *= MAX_RASTER_SIDE / side;
         }
         let (pw, ph) = ((bb.width() * k).ceil().max(1.0) as u32, (bb.height() * k).ceil().max(1.0) as u32);
-        let Some(prep) = figcraft_render::paint::prepare(p, w, h, k, self.doc) else { return };
+        let Some(prep) = endrika_render::paint::prepare(p, w, h, k, self.doc) else { return };
         let Some(mut pix) = tiny_skia::Pixmap::new(pw, ph) else { return };
         let paint = tiny_skia::Paint { shader: prep.shader(), anti_alias: false, ..Default::default() };
         let Some(rect) = tiny_skia::Rect::from_xywh(bb.x0 as f32, bb.y0 as f32, bb.width() as f32, bb.height() as f32) else { return };
         pix.fill_rect(rect, &paint, tiny_skia::Transform::from_row(k as f32, 0.0, 0.0, k as f32, (-bb.x0 * k) as f32, (-bb.y0 * k) as f32), None);
         let Some(size) = Size::from_wh(pw as f32, ph as f32) else { return };
-        let image = self.ink().bitmap(figcraft_render::to_rgba8(&pix), pw, ph);
+        let image = self.ink().bitmap(endrika_render::to_rgba8(&pix), pw, ph);
         s.push_clip_path(kp, &r);
         s.push_transform(&to_xf(Affine::translate((bb.x0, bb.y0)) * Affine::scale(1.0 / k)));
         s.draw_image(image, size);

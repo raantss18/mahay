@@ -1,4 +1,4 @@
-//! Colour, paint and blend-mode types for VectorCraft.
+//! Colour, paint and blend-mode types for Tsipika.
 //!
 //! Colours keep the model the user picked them in (RGB, CMYK, Gray, Lab; HSB is a UI view of RGB),
 //! so documents don't drift when converting back and forth. Rendering asks for [`Color::to_rgba`].

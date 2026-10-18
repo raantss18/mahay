@@ -1,4 +1,4 @@
-//! Premiere Pro interop (`effectcraft-interchange`): File ▸ Import ▸ Adobe Premiere Pro Project /
+//! Premiere Pro interop (`tselatra-interchange`): File ▸ Import ▸ Adobe Premiere Pro Project /
 //! Timeline Interchange… and File ▸ Export ▸ Adobe Premiere Pro Project…, through the public
 //! interchange formats Premiere reads and writes. Export writes Final Cut Pro XML (`.xml`) by
 //! default, which Premiere Pro imports (File ▸ Import); FCPXML, OpenTimelineIO and EDL on request.
@@ -6,9 +6,9 @@
 
 use std::collections::HashMap;
 
-use effectcraft_interchange::{ExportOptions, ImportOptions, PrecompMode, PrerenderMode, Prerendered, TimelineFormat};
-use effectcraft_project::render_queue::{AudioOutput, Channels, OutputFormat, OutputModule, ProResProfile, RenderQueueItem, TimeSpan};
-use effectcraft_project::{ItemId, LayerId, LayerSource, Project};
+use tselatra_interchange::{ExportOptions, ImportOptions, PrecompMode, PrerenderMode, Prerendered, TimelineFormat};
+use tselatra_project::render_queue::{AudioOutput, Channels, OutputFormat, OutputModule, ProResProfile, RenderQueueItem, TimeSpan};
+use tselatra_project::{ItemId, LayerId, LayerSource, Project};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, comp_id, f_p, has_comp, str_p};
@@ -41,14 +41,14 @@ fn import_timeline(s: &mut Session, p: &Value) -> Result<Value> {
     let importer = s.importer.clone();
     let services = s.services.clone();
     let rate = s.sequence_rate();
-    let mut probe = move |m: &str| -> Option<effectcraft_project::Footage> {
+    let mut probe = move |m: &str| -> Option<tselatra_project::Footage> {
         if !services.exists(m) {
             return None;
         }
         crate::sequence::probe_path(importer.as_deref()?, services.as_ref(), m, rate).ok()
     };
     let res = s.edit("Import Timeline", None, |proj, st| {
-        let r = effectcraft_interchange::import(proj, &bytes, format, &opts, &mut probe).map_err(|e| EngineError::Other(e.to_string()))?;
+        let r = tselatra_interchange::import(proj, &bytes, format, &opts, &mut probe).map_err(|e| EngineError::Other(e.to_string()))?;
         st.project_selection = r.comps.clone();
         Ok(r)
     })?;
@@ -104,7 +104,7 @@ fn prerender(s: &Session, cid: ItemId, lid: LayerId, path: &str) -> std::result:
     let comp = s.project.comp(cid).ok_or("no composition")?;
     let l = comp.layer(lid).ok_or("no layer")?;
     let fd = comp.frame_duration();
-    let start = comp.frame_rate.snap(l.in_point.max(effectcraft_time::Tick::ZERO));
+    let start = comp.frame_rate.snap(l.in_point.max(tselatra_time::Tick::ZERO));
     let end = l.out_point.min(comp.duration).max(start + fd);
     let q = isolate(&s.project, cid, lid).ok_or("no composition")?;
     let mut item = RenderQueueItem::new(0, cid);
@@ -161,7 +161,7 @@ fn export_timeline(s: &mut Session, p: &Value) -> Result<Value> {
     let mut pre: HashMap<(ItemId, LayerId), Prerendered> = HashMap::new();
     let mut rendered = vec![];
     let mut errors = vec![];
-    for (c, l) in effectcraft_interchange::plan_prerender(&s.project, cid, &opts) {
+    for (c, l) in tselatra_interchange::plan_prerender(&s.project, cid, &opts) {
         let comp_name = s.project.item(c).map(|i| i.name.clone()).unwrap_or_default();
         let layer_name = s.project.comp(c).and_then(|cc| cc.layer(l)).map(|x| x.name.clone()).unwrap_or_default();
         let file = dir.join(format!("{stem}_{}_{}_{}.mov", safe(&comp_name), safe(&layer_name), l.0)).to_string_lossy().to_string();
@@ -173,7 +173,7 @@ fn export_timeline(s: &mut Session, p: &Value) -> Result<Value> {
             Err(e) => errors.push(format!("{comp_name} ▸ {layer_name}: {e}")),
         }
     }
-    let out = effectcraft_interchange::export(&s.project, cid, &opts, &pre).map_err(|e| EngineError::Other(e.to_string()))?;
+    let out = tselatra_interchange::export(&s.project, cid, &opts, &pre).map_err(|e| EngineError::Other(e.to_string()))?;
     s.services.write_file(&path, &out.bytes).map_err(|e| EngineError::Other(format!("cannot write {path}: {e}")))?;
     let mut warnings = out.warnings.clone();
     warnings.extend(errors.iter().map(|e| format!("pre-render failed: {e}")));

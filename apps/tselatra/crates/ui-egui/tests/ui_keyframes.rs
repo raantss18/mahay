@@ -2,16 +2,16 @@
 //! in one gesture (the drag used to end after the first frame), Shift-snapping, Ctrl+C /
 //! Ctrl+V, which the windowing layer delivers as clipboard events rather than key presses.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Event, Pos2, pos2};
 use egui_kittest::Harness;
 use serde_json::json;
 
 /// A 4 s, 30 fps comp with a Box layer whose Opacity has keys at 0 s and 1 s, revealed in the
 /// Timeline; returns the harness, the layer and the property uid.
-fn harness() -> (Harness<'static, EffectcraftApp>, LayerId, u64) {
+fn harness() -> (Harness<'static, TselatraApp>, LayerId, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Keys", "width": 320, "height": 180, "frameRate": 30, "duration": 4})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Box", "color": "#e04020", "width": 80, "height": 80})).unwrap();
@@ -21,21 +21,21 @@ fn harness() -> (Harness<'static, EffectcraftApp>, LayerId, u64) {
     }
     let uid = s.active_comp().unwrap().layer(id).unwrap().props.prop("transform/opacity").unwrap().uid;
     s.execute("layer.select", json!({"layers": [id.0]})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.opacity", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.opacity", json!({})).unwrap();
     h.run_steps(4);
     (h, id, uid)
 }
 
-fn key_times(h: &Harness<'_, EffectcraftApp>, id: LayerId) -> Vec<f64> {
+fn key_times(h: &Harness<'_, TselatraApp>, id: LayerId) -> Vec<f64> {
     let l = h.state().session.active_comp().unwrap().layer(id).unwrap().clone();
     l.props.prop("transform/opacity").unwrap().keys.iter().map(|k| (k.time.seconds() * 30.0).round() / 30.0).collect()
 }
 
 /// Screen centres of the property's keys, left to right.
-fn keys(h: &Harness<'_, EffectcraftApp>, uid: u64) -> Vec<Pos2> {
+fn keys(h: &Harness<'_, TselatraApp>, uid: u64) -> Vec<Pos2> {
     let mut ks: Vec<Pos2> =
         h.state().auto.query(&format!("timeline.key.{uid}.")).iter().map(|e| pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)).collect();
     ks.sort_by(|a, b| a.x.total_cmp(&b.x));
@@ -43,7 +43,7 @@ fn keys(h: &Harness<'_, EffectcraftApp>, uid: u64) -> Vec<Pos2> {
 }
 
 /// Press at `from`, move to `to` in small steps (a real drag), release.
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, modifiers: egui::Modifiers) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2, modifiers: egui::Modifiers) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.step();
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
@@ -73,7 +73,7 @@ fn a_key_drag_follows_the_pointer_for_its_whole_length() {
     let steps = h.state().session.history.undo.iter().filter(|(l, _)| l == "Move Keyframes").count();
     assert_eq!(steps, 1, "one undo step per drag");
     // Shift snaps it to the current time indicator (at 0.5 s), from a few pixels away.
-    h.state_mut().session.set_time(effectcraft_engine::time::Tick::from_seconds_f64(0.5));
+    h.state_mut().session.set_time(tselatra_engine::time::Tick::from_seconds_f64(0.5));
     h.run_steps(2);
     let ks = keys(&h, uid);
     let near = pos2(ks[0].x + px_per_s * 0.5 + 4.0, ks[1].y);
@@ -105,16 +105,16 @@ fn ctrl_c_and_ctrl_v_copy_and_paste_keys_at_the_current_time() {
             _ => None,
         })
         .collect();
-    assert_eq!(copied, ["EffectCraft: 1 keyframe"], "the system clipboard is filled, so Ctrl+V sends a paste event");
+    assert_eq!(copied, ["Tselatra: 1 keyframe"], "the system clipboard is filled, so Ctrl+V sends a paste event");
     assert!(h.state().session.state.clip_is_keys);
     // Move to 3 s, Ctrl+V: the key lands there.
-    h.state_mut().session.set_time(effectcraft_engine::time::Tick::from_seconds_f64(3.0));
-    h.input_mut().events.push(Event::Paste("EffectCraft: 1 keyframe".into()));
+    h.state_mut().session.set_time(tselatra_engine::time::Tick::from_seconds_f64(3.0));
+    h.input_mut().events.push(Event::Paste("Tselatra: 1 keyframe".into()));
     h.run_steps(2);
     assert_eq!(key_times(&h, id), vec![0.0, 1.0, 3.0]);
 }
 
-fn click_with(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, modifiers: egui::Modifiers) {
+fn click_with(h: &mut Harness<'_, TselatraApp>, p: Pos2, modifiers: egui::Modifiers) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
@@ -143,7 +143,7 @@ fn copy_and_paste_key_subsets_across_position_rotation_and_scale() {
         let uids: Vec<u64> = paths.iter().map(|path| h.state().session.active_comp().unwrap().layer(id).unwrap().props.prop(path).unwrap().uid).collect();
         let ctx = h.ctx.clone();
         for command in ["timeline.reveal.position", "timeline.revealAdd.rotation", "timeline.revealAdd.scale"] {
-            effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, command, json!({})).unwrap();
+            tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, command, json!({})).unwrap();
         }
         if graph {
             h.state_mut().session.execute("edit.deselectAll", json!({})).unwrap();
@@ -154,7 +154,7 @@ fn copy_and_paste_key_subsets_across_position_rotation_and_scale() {
             h.state_mut().ui.timeline.graph_mode = "value".into();
         }
         h.run_steps(4);
-        let key_positions = |h: &Harness<'_, EffectcraftApp>, uid: u64| {
+        let key_positions = |h: &Harness<'_, TselatraApp>, uid: u64| {
             if !graph {
                 return keys(h, uid);
             }
@@ -190,9 +190,9 @@ fn copy_and_paste_key_subsets_across_position_rotation_and_scale() {
             assert_eq!(h.state().session.state.selected_props.len(), 3);
             h.input_mut().events.push(Event::Copy);
             h.step();
-            let note = format!("EffectCraft: {count} keyframes");
+            let note = format!("Tselatra: {count} keyframes");
             assert!(h.output().platform_output.commands.iter().any(|command| matches!(command, egui::OutputCommand::CopyText(text) if text == &note)));
-            h.state_mut().session.set_time(effectcraft_engine::time::Tick::from_seconds_f64(2.0));
+            h.state_mut().session.set_time(tselatra_engine::time::Tick::from_seconds_f64(2.0));
             let undo_steps = h.state().session.history.undo.len();
             h.input_mut().events.push(Event::Paste(note));
             h.run_steps(2);
@@ -233,15 +233,15 @@ fn shift_click_toggles_and_ctrl_click_switches_interpolation() {
     click_with(&mut h, ks[1], shift);
     assert_eq!(h.state().session.state.selected_keys.len(), 1, "and takes out again");
     let key =
-        |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layer(id).unwrap().props.prop("transform/opacity").unwrap().keys[0].clone();
+        |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layer(id).unwrap().props.prop("transform/opacity").unwrap().keys[0].clone();
     // Ctrl+click: Linear → Auto Bezier → Linear.
     click_with(&mut h, ks[0], egui::Modifiers::COMMAND);
     assert!(key(&h).auto_bezier, "Auto Bezier");
     click_with(&mut h, ks[0], egui::Modifiers::COMMAND);
-    assert_eq!(key(&h).out_interp, effectcraft_engine::keyframe::Interp::Linear);
+    assert_eq!(key(&h).out_interp, tselatra_engine::keyframe::Interp::Linear);
     // Ctrl+Alt+click: Hold.
     click_with(&mut h, ks[0], egui::Modifiers { alt: true, ..egui::Modifiers::COMMAND });
-    assert_eq!(key(&h).out_interp, effectcraft_engine::keyframe::Interp::Hold);
+    assert_eq!(key(&h).out_interp, tselatra_engine::keyframe::Interp::Hold);
 }
 
 /// Clicking a key in the Timeline selects its property and layer too, as in After Effects, so
@@ -271,13 +271,13 @@ fn graph_editor_drags_move_every_selected_key_and_shift_keeps_an_axis() {
     s.execute("prop.select", json!({"layer": id.0, "prop": uid})).unwrap();
     s.execute("keys.selectAll", json!({})).unwrap();
     h.run_steps(4);
-    let at = |h: &Harness<'_, EffectcraftApp>, i: usize| {
+    let at = |h: &Harness<'_, TselatraApp>, i: usize| {
         let e = h.state().auto.find(&format!("timeline.graph.key.{uid}.0.{i}")).unwrap_or_else(|| panic!("no graph key {i}")).clone();
         pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
     };
     let (k0, k1) = (at(&h, 0), at(&h, 1));
     let px_per_s = k1.x - k0.x;
-    let values = |h: &Harness<'_, EffectcraftApp>| -> Vec<f64> {
+    let values = |h: &Harness<'_, TselatraApp>| -> Vec<f64> {
         h.state().session.active_comp().unwrap().layer(id).unwrap().props.prop("transform/opacity").unwrap().keys.iter().map(|k| k.value.as_f64()).collect()
     };
     // Shift: only along time, both keys, by 0.5 s.
@@ -307,7 +307,7 @@ fn double_click_a_key_to_edit_its_value() {
     }
     h.step();
     h.run_steps(2);
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::Form), "the value dialog opened");
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::Form), "the value dialog opened");
     h.run_steps(2);
     assert!(h.state().auto.find("form.field.value").is_some(), "one Opacity field");
     // OK keeps the key where it is (the dialog edits the value only).
@@ -329,7 +329,7 @@ fn k_follows_the_revealed_properties_and_auto_select_picks_the_speed_graph_for_p
     let (mut h, id, _) = harness();
     // A Rotation key at 2 s on a property that isn't revealed: K skips it.
     h.state_mut().session.execute("prop.addKey", json!({"layer": id.0, "path": "transform/rotation", "time": 2.0, "value": 45})).unwrap();
-    h.state_mut().session.set_time(effectcraft_engine::time::Tick::from_seconds_f64(1.0));
+    h.state_mut().session.set_time(tselatra_engine::time::Tick::from_seconds_f64(1.0));
     h.run_steps(2);
     h.input_mut().events.push(Event::Key { key: egui::Key::K, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() });
     h.run_steps(2);
@@ -365,13 +365,13 @@ fn a_graph_handle_drag_moves_the_handles_of_every_selected_key() {
     h.state_mut().ui.timeline.graph_editor = true;
     h.run_steps(4);
     // (in, out) influence of each key.
-    let influences = |h: &Harness<'_, EffectcraftApp>| -> Vec<(f64, f64)> {
+    let influences = |h: &Harness<'_, TselatraApp>| -> Vec<(f64, f64)> {
         let l = h.state().session.active_comp().unwrap().layer(id).unwrap().clone();
         let keys = l.props.prop("transform/opacity").unwrap().keys.clone();
         keys.iter().map(|k| (k.in_ease.first().map_or(0.0, |e| e.influence), k.out_ease.first().map_or(0.0, |e| e.influence))).collect()
     };
     let before = influences(&h);
-    let handle = |h: &Harness<'_, EffectcraftApp>, key: usize| {
+    let handle = |h: &Harness<'_, TselatraApp>, key: usize| {
         let e = h.state().auto.find(&format!("timeline.graph.handle.{uid}.0.{key}.out")).unwrap_or_else(|| panic!("no handle {key}")).clone();
         pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
     };
@@ -430,7 +430,7 @@ fn graph_editor_buttons_that_do_not_fit_move_to_the_more_menu() {
     let more = h.state().auto.find("timeline.graph.more").expect("the buttons that don't fit are in a menu").rect;
     assert!(more[0] + more[2] <= right);
     let p = pos2(more[0] + more[2] / 2.0, more[1] + more[3] / 2.0);
-    let click = |h: &mut Harness<'_, EffectcraftApp>, p: Pos2| {
+    let click = |h: &mut Harness<'_, TselatraApp>, p: Pos2| {
         h.input_mut().events.push(Event::PointerMoved(p));
         h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
         h.step();
@@ -463,14 +463,14 @@ fn properties_panel_edits_every_selected_layer() {
     s.execute("layer.select", json!({"layers": ids})).unwrap();
     let first = s.state.selected_layers[0];
     let uid = s.active_comp().unwrap().layer(first).unwrap().props.prop("transform/position").unwrap().uid;
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
-    h.state_mut().show_panel(effectcraft_ui_egui::dock::PanelKind::Properties);
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
+    h.state_mut().show_panel(tselatra_ui_egui::dock::PanelKind::Properties);
     h.run_steps(4);
     assert_eq!(h.state().auto.find("properties.selectedObjects").map(|e| e.label.clone()), Some("(3) Selected Objects".into()));
-    let pos = |h: &Harness<'_, EffectcraftApp>, l: u64| {
+    let pos = |h: &Harness<'_, TselatraApp>, l: u64| {
         h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.prop("transform/position").unwrap().clone()
     };
-    let at = |h: &Harness<'_, EffectcraftApp>, id: &str| {
+    let at = |h: &Harness<'_, TselatraApp>, id: &str| {
         let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
         pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
     };
@@ -516,12 +516,12 @@ fn ctrl_alt_scrub_in_the_timeline_is_proportional() {
     }
     let middle = ids[1];
     let uid = s.active_comp().unwrap().layer(LayerId(middle)).unwrap().props.prop("transform/position").unwrap().uid;
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.position", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.position", json!({})).unwrap();
     h.run_steps(4);
-    let x = |h: &Harness<'_, EffectcraftApp>, l: u64| {
+    let x = |h: &Harness<'_, TselatraApp>, l: u64| {
         h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.prop("transform/position").unwrap().value.components()[0]
     };
     let e = h.state().auto.find(&format!("timeline.prop.{uid}.value.0")).cloned().expect("the middle layer's Position X shows");
@@ -547,7 +547,7 @@ fn speed_graph_handle_drags_upward_past_the_top() {
     h.state_mut().ui.timeline.graph_editor = true;
     h.state_mut().ui.timeline.graph_mode = "speed".into();
     h.run_steps(4);
-    let out_speed = |h: &Harness<'_, EffectcraftApp>| {
+    let out_speed = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(id).unwrap().props.prop("transform/opacity").unwrap().keys[0].out_ease[0].speed
     };
     let e = h.state().auto.find(&format!("timeline.graph.handle.{uid}.0.0.out")).cloned().expect("the first key's out handle shows");
@@ -576,13 +576,13 @@ fn speed_graph_fit_selection_frames_the_curve_between_the_keys() {
     s.execute("keys.easyEase", json!({})).unwrap();
     let keys = h.state().session.active_comp().unwrap().layer(id).unwrap().props.prop("transform/opacity").unwrap().keys.clone();
     let peak = (0..=100)
-        .map(|i| effectcraft_engine::keyframe::velocity(&keys, effectcraft_engine::time::Tick::from_seconds_f64(i as f64 / 100.0), false)[0].abs())
+        .map(|i| tselatra_engine::keyframe::velocity(&keys, tselatra_engine::time::Tick::from_seconds_f64(i as f64 / 100.0), false)[0].abs())
         .fold(0.0, f64::max);
     assert!(peak > 100.0, "the eased curve peaks above its average speed: {peak}");
     h.state_mut().ui.timeline.graph_mode = "speed".into();
     h.state_mut().ui.timeline.graph_editor = true;
     h.run_steps(4);
-    let frames_peak = |h: &Harness<'_, EffectcraftApp>, what: &str| {
+    let frames_peak = |h: &Harness<'_, TselatraApp>, what: &str| {
         let (lo, hi) = h.state().ui.timeline.graph_range.expect("a fitted range");
         assert!(lo <= 0.0 && hi > peak * 0.9, "{what}: range {lo}..{hi}, the curve peaks at {peak}");
     };

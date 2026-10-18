@@ -1,8 +1,8 @@
 //! Typed ZOOM Center, Scale, Dynamic and a plain scale factor do what they say, and ZOOM All /
 //! Extents in paper space fit the sheet (#388).
 
-use cadcraft_engine::{Session, View};
-use cadcraft_geom::Vec2;
+use drafitra_engine::{Session, View};
+use drafitra_geom::Vec2;
 use serde_json::json;
 
 fn view(s: &Session) -> View {

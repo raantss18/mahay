@@ -10,7 +10,7 @@ use super::*;
 
 type Texts = Vec<(String, egui::Rect)>;
 
-fn texts(ctx: &egui::Context, app: &mut VectorcraftApp, f: impl FnMut(&mut VectorcraftApp, &mut Ui)) -> Texts {
+fn texts(ctx: &egui::Context, app: &mut TsipikaApp, f: impl FnMut(&mut TsipikaApp, &mut Ui)) -> Texts {
     frame_events(ctx, app, vec![], f)
 }
 
@@ -32,7 +32,7 @@ fn weights_and_dashes_show_in_the_stroke_unit_everywhere() {
     let mut app = app_with_rect();
     app.session.prefs.units_stroke = "millimeters".into();
     run(&mut app, "stroke.set", json!({"dash": [12, 6]}));
-    let mm = vectorcraft_doc::Unit::Millimeters.format(1.0);
+    let mm = tsipika_doc::Unit::Millimeters.format(1.0);
     assert_eq!(mm, "0.3528 mm");
     let t = texts(&ctx, &mut app, stroke::show);
     assert!(shows(&t, &mm), "Stroke panel: {t:?}");
@@ -86,18 +86,18 @@ fn mixed_weights_show_blank() {
 fn inside_and_outside_are_off_for_open_paths_and_on_for_type() {
     let ctx = egui::Context::default();
     let mut app = app_with_rect();
-    let align = |app: &VectorcraftApp| current_stroke(app).unwrap().align;
+    let align = |app: &TsipikaApp| current_stroke(app).unwrap().align;
     let at = row_button(&ctx, &texts(&ctx, &mut app, stroke::show), "Align Stroke:", 1);
     click(&ctx, &mut app, at, stroke::show);
-    assert_eq!(align(&app), vectorcraft_doc::StrokeAlign::Inside, "a closed path takes an inside stroke");
+    assert_eq!(align(&app), tsipika_doc::StrokeAlign::Inside, "a closed path takes an inside stroke");
     run(&mut app, "shape.line", json!({"x1": 10, "y1": 150, "x2": 150, "y2": 150}));
     click(&ctx, &mut app, at, stroke::show);
-    assert_eq!(align(&app), vectorcraft_doc::StrokeAlign::Center, "an open path doesn't");
+    assert_eq!(align(&app), tsipika_doc::StrokeAlign::Center, "an open path doesn't");
     let id = run(&mut app, "text.create", json!({"x": 10, "y": 190, "text": "Hi"}))["id"].as_u64().unwrap();
     run(&mut app, "select.set", json!({ "ids": [id] }));
     run(&mut app, "paint.setStroke", json!({"color": "#000000"}));
     click(&ctx, &mut app, at, stroke::show);
-    assert_eq!(align(&app), vectorcraft_doc::StrokeAlign::Inside, "type's characters do, around their glyphs");
+    assert_eq!(align(&app), tsipika_doc::StrokeAlign::Inside, "type's characters do, around their glyphs");
 }
 
 /// While the Type tool edits text, Align Stroke styles the selected characters' stroke.
@@ -109,21 +109,21 @@ fn align_stroke_styles_the_characters_the_type_tool_selects() {
     app.session.select_tool("type", Default::default()).unwrap();
     let id = run(&mut app, "text.create", json!({"x": 10, "y": 190, "text": "Hello"}))["id"].as_u64().unwrap();
     run(&mut app, "paint.setStroke", json!({"color": "#000000"}));
-    app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+    app.session.apply_actions(vec![tsipika_tools::Action::Notify("text.editNew".into())]).unwrap();
     app.session.set_tool_option("select", &json!({"start": 0, "end": 2}));
     assert!(character::text_editing(&app).is_some());
     assert!(stroke_mixed(&app, &ctx).can_align, "the buttons are on");
     click(&ctx, &mut app, at, stroke::show);
-    let vectorcraft_doc::NodeKind::Text(t) = &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind else {
+    let tsipika_doc::NodeKind::Text(t) = &app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().kind else {
         panic!("not type")
     };
     let aligns: Vec<_> = t.runs.iter().map(|r| r.style.stroke_align).collect();
-    assert_eq!(aligns, [vectorcraft_doc::StrokeAlign::Outside, vectorcraft_doc::StrokeAlign::Center], "only the selected characters");
+    assert_eq!(aligns, [tsipika_doc::StrokeAlign::Outside, tsipika_doc::StrokeAlign::Center], "only the selected characters");
 }
 
 #[test]
 fn the_weight_presets_run_from_a_quarter_point_to_a_hundred() {
-    let pt = stroke::weight_presets(vectorcraft_doc::Unit::Points);
+    let pt = stroke::weight_presets(tsipika_doc::Unit::Points);
     assert!(pt.contains(&0.25) && pt.contains(&100.0));
     let ctx = egui::Context::default();
     let mut app = app_with_rect();
@@ -138,7 +138,7 @@ fn the_weight_presets_run_from_a_quarter_point_to_a_hundred() {
 
 #[test]
 fn weight_presets_display_cleanly_in_their_native_unit() {
-    use vectorcraft_doc::Unit;
+    use tsipika_doc::Unit;
     // Round-tripping a native-unit value through to_pt → from_pt → number() must give the same
     // string the ladder was authored with: no "0.353 mm" surprises in the dropdown.
     for (unit, want) in [
@@ -175,7 +175,7 @@ fn stroke_weight_stepper_uses_ten_point_shift_steps() {
     // The 16 px spinner sits just left of the field's text.
     let r = text_rect(&t, "14 pt");
     let x = r.left() - 14.0;
-    let click_step = |app: &mut VectorcraftApp, y: f32, modifiers: egui::Modifiers| {
+    let click_step = |app: &mut TsipikaApp, y: f32, modifiers: egui::Modifiers| {
         let pos = egui::pos2(x, y);
         let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers };
         for event in [egui::Event::PointerMoved(pos), button(true), button(false)] {

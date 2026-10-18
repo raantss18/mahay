@@ -13,15 +13,15 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::Session;
-use effectcraft_engine::remote::{FrameMsg, FrameReply, FrameServer, Mirror};
-use effectcraft_engine::render::RenderOpts;
-use effectcraft_engine::render::disk_cache;
-use effectcraft_engine::storage::StorageHost;
-use effectcraft_gpu::Gpu;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::control::{self, ControlRequest, Outcome};
-use effectcraft_ui_egui::frames::{FrameImage, FrameKey, Frames, RemoteDone, RemoteFrame, RemoteFrames, RemoteJob, RenderSource};
+use tselatra_engine::Session;
+use tselatra_engine::remote::{FrameMsg, FrameReply, FrameServer, Mirror};
+use tselatra_engine::render::RenderOpts;
+use tselatra_engine::render::disk_cache;
+use tselatra_engine::storage::StorageHost;
+use tselatra_gpu::Gpu;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::control::{self, ControlRequest, Outcome};
+use tselatra_ui_egui::frames::{FrameImage, FrameKey, Frames, RemoteDone, RemoteFrame, RemoteFrames, RemoteJob, RenderSource};
 use egui_kittest::Harness;
 use serde_json::{Value, json};
 
@@ -135,11 +135,11 @@ fn gpu_worker_renders_effect_frames_and_the_disk_cache_survives_a_reload() {
     s.execute("layer.newSolid", json!({"color": "#ff8030", "width": 80, "height": 40})).unwrap();
     s.execute("effect.apply", json!({"layer": "#1", "effect": "Gaussian Blur"})).unwrap();
     s.execute("prop.set", json!({"layer": "#1", "path": "effects/#1/blurriness", "value": 12})).unwrap();
-    let opts = RenderOpts { backend: effectcraft_engine::render::Backend::Gpu, ..Default::default() };
-    let t = effectcraft_engine::time::Tick::ZERO;
-    let key = |comp: effectcraft_engine::project::ItemId| FrameKey {
+    let opts = RenderOpts { backend: tselatra_engine::render::Backend::Gpu, ..Default::default() };
+    let t = tselatra_engine::time::Tick::ZERO;
+    let key = |comp: tselatra_engine::project::ItemId| FrameKey {
         revision: s.revision,
-        content: effectcraft_ui_egui::frames::comp_content(&s.project, comp),
+        content: tselatra_ui_egui::frames::comp_content(&s.project, comp),
         comp: comp.0,
         frame: 0,
         scale: 1000,
@@ -161,7 +161,7 @@ fn gpu_worker_renders_effect_frames_and_the_disk_cache_survives_a_reload() {
     let got = cpu_pixels(&frames.get(&key(fx)).expect("rendered by the worker"));
     let (passes, on_gpu) = worker.rendered.lock().unwrap()[0];
     assert!(on_gpu && passes >= 2, "passes {passes}");
-    let want = effectcraft_ui_egui::frames::to_color_image(&s.render(fx, t, RenderOpts { backend: effectcraft_engine::render::Backend::Cpu, ..opts }));
+    let want = tselatra_ui_egui::frames::to_color_image(&s.render(fx, t, RenderOpts { backend: tselatra_engine::render::Backend::Cpu, ..opts }));
     let worst = got.iter().zip(&want.pixels).map(|(a, b)| (0..4).map(|c| (a[c] as i32 - b[c] as i32).abs()).max().unwrap()).max().unwrap();
     assert!(worst <= 2, "GPU vs CPU: {worst}/255");
     assert_eq!(disk.lock().unwrap().len(), 1, "stored under its disk key");
@@ -208,7 +208,7 @@ impl StorageHost for Storage {
     }
 }
 
-fn send(h: &mut Harness<'_, EffectcraftApp>, method: &str, params: Value) {
+fn send(h: &mut Harness<'_, TselatraApp>, method: &str, params: Value) {
     let ctx = h.ctx.clone();
     let (req, _rx) = ControlRequest::new(method, params);
     if let Outcome::Done(v) = control::handle(h.state_mut(), &ctx, &req) {
@@ -226,9 +226,9 @@ fn settings_disk_page_shows_the_browser_storage_manager() {
     let mut s = Session::default();
     let host = Arc::new(Storage::default());
     s.storage = Some(host.clone());
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(2);
-    effectcraft_ui_egui::panels::settings::open(h.state_mut(), "disk");
+    tselatra_ui_egui::panels::settings::open(h.state_mut(), "disk");
     h.run_steps(3);
     for id in [
         "settings.storage.backend",
@@ -247,9 +247,9 @@ fn settings_disk_page_shows_the_browser_storage_manager() {
     assert_eq!(*host.cleared.lock().unwrap(), vec!["diskCache".to_string()]);
     assert!(*host.persist_asked.lock().unwrap());
     // Without a host (the desktop) the section is not there.
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(Session::default()));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(Session::default()));
     h.run_steps(2);
-    effectcraft_ui_egui::panels::settings::open(h.state_mut(), "disk");
+    tselatra_ui_egui::panels::settings::open(h.state_mut(), "disk");
     h.run_steps(3);
     assert!(h.state().auto.find("settings.storage.usage").is_none());
 }

@@ -188,8 +188,8 @@ fn bundled_catalogs_are_consistent() {
                 // A command id, or an effect id: Effect menu items share `effect.apply` /
                 // `effect.dialog`, so the effect's own id is what tells them apart.
                 let known = crate::menus::UI_COMMANDS.iter().any(|c| c.0 == src)
-                    || vectorcraft_engine::cmd::command_specs().iter().any(|c| c.id == src)
-                    || vectorcraft_effects::effect_catalog().iter().any(|e| e.id == src);
+                    || tsipika_engine::cmd::command_specs().iter().any(|c| c.id == src)
+                    || tsipika_effects::effect_catalog().iter().any(|e| e.id == src);
                 assert!(known, "{}: unknown command id {src:?}", l.code);
             }
         }
@@ -212,9 +212,9 @@ fn partial_catalogs_only_translate_strings_the_ui_shows() {
 /// defaults while it is Japanese (#432). The frames stay in English.
 #[test]
 fn the_engine_follows_the_interface_language() {
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
-    let frame = |app: &mut crate::VectorcraftApp| {
+    let frame = |app: &mut crate::TsipikaApp| {
         ctx.run_ui(egui::RawInput::default(), |ui| app.logic(ui.ctx())).textures_delta.clear();
     };
     frame(&mut app);
@@ -235,7 +235,7 @@ fn the_engine_follows_the_interface_language() {
 #[test]
 fn language_command_sets_the_preference() {
     use crate::menus::{checked, run_ui_command};
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     assert_eq!(checked(&app, "app.language", &serde_json::json!({"lang": "auto"})), Some(true));
     run_ui_command(&mut app, "app.language", &serde_json::json!({"lang": "ja"})).unwrap().unwrap();
     assert_eq!(app.session.prefs.interface_language, "ja");
@@ -252,7 +252,7 @@ fn language_command_sets_the_preference() {
     // Every registered language is in the Mac App menu's Language, by its own name (the in-window
     // bar has no Language menu).
     let layout = crate::native_menu::mac_layout(&app, &crate::native_menu::from_tree(&app, &crate::menus::menu_tree()), Lang::EN);
-    let app_menu = layout.bar.menus.into_iter().find(|m| m.title == "VectorCraft").expect("App menu");
+    let app_menu = layout.bar.menus.into_iter().find(|m| m.title == "Tsipika").expect("App menu");
     fn items(nodes: &[crate::native_menu::Node], out: &mut Vec<String>) {
         for n in nodes {
             match n {
@@ -274,21 +274,21 @@ fn is_cjk(c: char) -> bool {
     matches!(c as u32, 0x1100..=0x11FF | 0x3000..=0x9FFF | 0xAC00..=0xD7AF | 0xF900..=0xFAFF | 0xFF00..=0xFFEF | 0x20000..=0x2FFFF)
 }
 
-/// Georgian letters (Mkhedruli, Mtavruli, Asomtavruli): only craft-fonts' Noto Sans Georgian has them.
+/// Georgian letters (Mkhedruli, Mtavruli, Asomtavruli): only mahay-fonts' Noto Sans Georgian has them.
 fn is_georgian(c: char) -> bool {
     matches!(c as u32, 0x10A0..=0x10FF | 0x1C90..=0x1CBF | 0x2D00..=0x2D2F)
 }
 
 /// The UI fonts draw every character the catalogs use, in every family the UI draws text with
 /// (the web build has no system fonts to fall back to). Chinese and Japanese characters come from
-/// the craft-fonts build input, which is optional: without it they are left to the installed
+/// the mahay-fonts build input, which is optional: without it they are left to the installed
 /// fonts, and with it the Japanese catalog is checked against BIZ UDPGothic (the Traditional
-/// Chinese one waits for a Traditional Chinese UI font in craft-fonts). Georgian letters are the
-/// same: checked against Noto Sans Georgian when craft-fonts has it.
+/// Chinese one waits for a Traditional Chinese UI font in mahay-fonts). Georgian letters are the
+/// same: checked against Noto Sans Georgian when mahay-fonts has it.
 #[test]
 fn bundled_fonts_cover_the_catalogs() {
-    let japanese_ui_font = vectorcraft_text::CRAFT_FONTS.iter().any(|f| f.is_japanese());
-    let georgian_ui_font = vectorcraft_text::CRAFT_FONTS.iter().any(|f| f.is_georgian());
+    let japanese_ui_font = tsipika_text::MAHAY_FONTS.iter().any(|f| f.is_japanese());
+    let georgian_ui_font = tsipika_text::MAHAY_FONTS.iter().any(|f| f.is_georgian());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let mut output = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -464,9 +464,9 @@ fn every_undo_label_is_translated() {
     let scan = undo_scan();
     let mut labels = scan.labels;
     assert!(labels.len() > 300, "scan found only {} undo labels", labels.len());
-    labels.extend(vectorcraft_effects::effect_catalog().iter().map(|e| e.label.trim_end_matches('…').to_string()));
+    labels.extend(tsipika_effects::effect_catalog().iter().map(|e| e.label.trim_end_matches('…').to_string()));
     let liquify = ["warp", "twirl", "pucker", "bloat", "scallop", "crystallize", "wrinkle"];
-    labels.extend(liquify.iter().filter_map(|k| vectorcraft_tools::distort::liquify::LiquifyKind::parse(k)).map(|k| format!("{} Tool", k.label())));
+    labels.extend(liquify.iter().filter_map(|k| tsipika_tools::distort::liquify::LiquifyKind::parse(k)).map(|k| format!("{} Tool", k.label())));
     assert_eq!(scan.formatted.iter().collect::<Vec<_>>(), ["{} Tool"], "step names built with format! (make them with Session::edit_named)");
     assert!(scan.templates.len() >= 3, "scan found only the templates {:?}", scan.templates);
     for l in LANGUAGES.iter().filter(|l| l.complete_menus) {
@@ -846,11 +846,11 @@ fn string_literals(e: &str, keep: impl Fn(&str, &str) -> bool) -> Vec<String> {
     out
 }
 
-/// `VECTORCRAFT_I18N_DUMP=<file> cargo test -p vectorcraft-ui-egui dump_source_strings` writes every
+/// `TSIPIKA_I18N_DUMP=<file> cargo test -p tsipika-ui-egui dump_source_strings` writes every
 /// English source string a complete catalog has to cover, one per line, for translators.
 #[test]
 fn dump_source_strings() {
-    let Ok(path) = std::env::var("VECTORCRAFT_I18N_DUMP") else { return };
+    let Ok(path) = std::env::var("TSIPIKA_I18N_DUMP") else { return };
     let mut all = crate::menus::menu_strings();
     all.extend(tl_literals());
     all.extend(undo_labels());
@@ -870,7 +870,7 @@ const KEEPS_MENU_NAMES: [&str; 17] = ["cs", "de", "el", "es", "fr", "hu", "it", 
 /// names and the perspective grid presets (names, shown untranslated wherever else they appear).
 /// Each language's own name in the Language menu is left alone too.
 const MENU_KEEP_AS_IS: &[&str] = &[
-    "VectorCraft",
+    "Tsipika",
     "OpenType",
     "Essentials",
     "Essentials Classic",
@@ -920,7 +920,7 @@ fn menu_labels() -> Vec<(&'static str, &'static str, serde_json::Value)> {
 /// with every toggle flipped.
 fn toggled_labels() -> Vec<String> {
     use serde_json::json;
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
     app.run("object.envelope.makeWithWarp", json!({})).unwrap();
@@ -978,7 +978,7 @@ fn menu_catalogs_translate_every_menu_label() {
     all.extend(crate::menus::CONTEXT_LABELS.iter().map(|l| l.to_string()));
     // The macOS menu bar's own labels, and its Settings submenu's Preferences pages.
     all.extend(crate::native_menu::MAC_LABELS.iter().map(|l| l.to_string()));
-    all.extend(vectorcraft_engine::cmd::prefscmds::PREF_CATEGORIES.iter().map(|l| l.to_string()));
+    all.extend(tsipika_engine::cmd::prefscmds::PREF_CATEGORIES.iter().map(|l| l.to_string()));
     all.sort();
     all.dedup();
     for code in KEEPS_MENU_NAMES {
@@ -1554,7 +1554,7 @@ fn cyrillic_glyphs_are_available_without_system_fonts() {
 fn a_language_saved_by_an_older_version_carries_over() {
     for (saved, want) in [("ja", "ja"), ("cs", "cs"), ("pt-br", "pt-br"), ("en", "auto"), ("xx", "auto")] {
         let ui: crate::state::UiState = serde_json::from_value(serde_json::json!({"language": saved})).unwrap();
-        let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
         app.ui = ui;
         crate::prefs_dialog::restore(&mut app);
         assert_eq!(app.session.prefs.interface_language, want, "saved {saved}");
@@ -1563,7 +1563,7 @@ fn a_language_saved_by_an_older_version_carries_over() {
     // A preference already set wins over the old field.
     let ui: crate::state::UiState =
         serde_json::from_value(serde_json::json!({"language": "ja", "engine_prefs": {"interfaceLanguage": "cs"}})).unwrap();
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
     app.ui = ui;
     crate::prefs_dialog::restore(&mut app);
     assert_eq!(app.session.prefs.interface_language, "cs");
@@ -1600,12 +1600,12 @@ fn messages_translate_by_template_and_their_parts() {
 
 /// Each language that translates status and error messages ([`COMPLETE_MESSAGES`]) has an `@msg`
 /// row for every message in the sources that reach the status bar, so a new one can't ship
-/// untranslated by accident (`VECTORCRAFT_I18N_DUMP_MESSAGES=<file>` lists them).
+/// untranslated by accident (`TSIPIKA_I18N_DUMP_MESSAGES=<file>` lists them).
 #[test]
 fn complete_languages_translate_every_message() {
     let messages = message_literals();
     assert!(messages.len() > 300, "scan found only {} messages", messages.len());
-    if let Ok(path) = std::env::var("VECTORCRAFT_I18N_DUMP_MESSAGES") {
+    if let Ok(path) = std::env::var("TSIPIKA_I18N_DUMP_MESSAGES") {
         std::fs::write(path, messages.iter().map(|m| format!("{m}\n")).collect::<String>()).expect("write dump");
     }
     for code in COMPLETE_MESSAGES {
@@ -1622,7 +1622,7 @@ fn complete_languages_translate_every_message() {
 #[test]
 fn align_reflect_and_shear_param_errors_are_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = tsipika_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     for x in [0, 50] {
         s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap();
@@ -1640,7 +1640,7 @@ fn align_reflect_and_shear_param_errors_are_translated() {
         ("object.shear", json!({"axis": "diagonal"})),
     ] {
         let e = s.execute(cmd, &p).unwrap_err();
-        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
+        let tsipika_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
         for code in COMPLETE_MESSAGES {
             let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
             assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -1655,7 +1655,7 @@ fn align_reflect_and_shear_param_errors_are_translated() {
 #[test]
 fn blend_spine_param_errors_are_translated() {
     use serde_json::json;
-    use vectorcraft_engine::{EngineError, Session};
+    use tsipika_engine::{EngineError, Session};
     let mut s = Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let rectangle =
@@ -1720,10 +1720,10 @@ fn blend_spine_param_errors_are_translated() {
 #[test]
 fn legacy_ait_param_error_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = tsipika_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let e = s.execute("file.saveAsTemplate", &json!({"format": "ait", "aiVersion": "7"})).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let tsipika_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -1736,8 +1736,8 @@ fn legacy_ait_param_error_is_translated() {
 fn unknown_parameter_errors_are_translated() {
     use serde_json::json;
     for (cmd, p) in [("file.new", json!({"widht": 300})), ("select.all", json!({"zzz": 1})), ("shape.line", json!({"colour": "red"}))] {
-        let e = vectorcraft_engine::check_params(cmd, &p).unwrap_err();
-        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
+        let e = tsipika_engine::check_params(cmd, &p).unwrap_err();
+        let tsipika_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
         for code in COMPLETE_MESSAGES {
             let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
             assert!(!shown.contains("unknown parameter") && shown.contains(cmd), "{code}: {shown} ({msg})");
@@ -1751,8 +1751,8 @@ fn unknown_parameter_errors_are_translated() {
 fn effect_color_param_error_is_translated() {
     use serde_json::json;
     let p = json!({"effect": "stylize.dropShadow", "params": {"color": "not-a-color"}});
-    let e = vectorcraft_engine::check_params("effect.apply", &p).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let e = tsipika_engine::check_params("effect.apply", &p).unwrap_err();
+    let tsipika_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES.iter().chain(&["bg"]) {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()) && shown.contains("`color`") && shown.contains("effect.apply"), "{code}: {shown}");
@@ -1765,8 +1765,8 @@ fn effect_color_param_error_is_translated() {
 fn effect_channel_param_error_is_translated() {
     use serde_json::json;
     let p = json!({"effect": "adjust.levels", "params": {"channel": "alpha"}});
-    let e = vectorcraft_engine::check_params("effect.apply", &p).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let e = tsipika_engine::check_params("effect.apply", &p).unwrap_err();
+    let tsipika_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES.iter().chain(&["bg"]) {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()) && shown.contains("`channel`") && shown.contains("effect.apply"), "{code}: {shown}");
@@ -1808,15 +1808,15 @@ fn unread_layers_notes_are_translated() {
 #[test]
 fn select_key_param_error_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = tsipika_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
-    let rectangle = |s: &mut vectorcraft_engine::Session, x: u64| {
+    let rectangle = |s: &mut tsipika_engine::Session, x: u64| {
         s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap()["id"].clone()
     };
     let [a, b, unselected] = [0, 50, 100].map(|x| rectangle(&mut s, x));
     s.execute("select.set", &json!({"ids": [a, b]})).unwrap();
     let e = s.execute("select.key", &json!({"id": unselected})).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let tsipika_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -1831,8 +1831,8 @@ fn select_key_param_error_is_translated() {
 #[test]
 fn shared_param_check_errors_are_translated() {
     use serde_json::json;
-    use vectorcraft_engine::EngineError;
-    let mut s = vectorcraft_engine::Session::new();
+    use tsipika_engine::EngineError;
+    let mut s = tsipika_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
     s.execute("select.all", &json!({})).unwrap();
@@ -1978,12 +1978,12 @@ fn czech_render_site_follow_up() {
         ("All placeable files", "Všechny soubory pro umístění"),
         ("SVG Compressed", "Komprimované SVG"),
         ("PDF-compatible .ai", ".ai kompatibilní s PDF"),
-        ("VectorCraft Template", "Šablona VectorCraft"),
+        ("Tsipika Template", "Šablona Tsipika"),
     ] {
         assert_eq!(tr_ctx(cs(), "file-filter", source), expected);
         assert_eq!(tr_ctx(Lang::EN, "file-filter", source), source);
     }
-    for source in ["SVG", "PNG", "VectorCraft", "unregistered filter"] {
+    for source in ["SVG", "PNG", "Tsipika", "unregistered filter"] {
         assert_eq!(tr_ctx(cs(), "file-filter", source), source);
     }
     assert_eq!(tr_ctx(cs(), "diagnostics", "render"), "vykreslení");
@@ -2033,7 +2033,7 @@ const RENDER_SITE_ROWS: &[(&str, &str)] = &[
     ("file-filter", "Print presets"),
     ("file-filter", "SVG Compressed"),
     ("file-filter", "PDF-compatible .ai"),
-    ("file-filter", "VectorCraft Template"),
+    ("file-filter", "Tsipika Template"),
     ("file-filter", "Templates"),
     ("diagnostics", "render"),
     ("diagnostics", "ui"),
@@ -2106,12 +2106,12 @@ fn polish_reads_as_polish() {
 #[test]
 fn japanese_names_the_default_swatches() {
     let ja = Lang::from_code("ja").unwrap().catalog();
-    let (swatches, groups) = vectorcraft_color::default_swatches(vectorcraft_color::cms::Model::Rgb);
+    let (swatches, groups) = tsipika_color::default_swatches(tsipika_color::cms::Model::Rgb);
     let names = swatches
         .iter()
         .map(|s| s.name.clone())
         .chain(groups.iter().flat_map(|g| std::iter::once(g.name.clone()).chain(g.swatches.iter().map(|s| s.name.clone()))))
-        .chain([vectorcraft_color::swatch::REGISTRATION.to_string()]);
+        .chain([tsipika_color::swatch::REGISTRATION.to_string()]);
     let missing: Vec<String> = names.filter(|n| !n.starts_with("K=") && ja.contextual("swatch", n).is_none()).collect();
     assert!(missing.is_empty(), "{missing:?}");
     assert_eq!(ja.contextual("swatch", "White"), Some("ホワイト"));

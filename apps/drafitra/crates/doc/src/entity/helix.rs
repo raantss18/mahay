@@ -1,7 +1,7 @@
 //! Helices (HELIX): a spiral round a vertical axis from a base radius to a top radius, drawn as
 //! the cubic spline through points on it (DXF Reference: HELIX, a SPLINE with AcDbHelix data).
 
-use cadcraft_geom::{FitOptions, KnotParam, Spline as GSpline, TAU, Vec2, Vec3};
+use drafitra_geom::{FitOptions, KnotParam, Spline as GSpline, TAU, Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
 /// Most turns a helix has (as the reference program allows).

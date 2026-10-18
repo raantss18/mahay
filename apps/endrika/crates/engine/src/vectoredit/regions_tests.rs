@@ -1,8 +1,8 @@
 //! Regions in vector edit mode (`regions.rs`): hover, the hit priority and clearances, selecting
 //! and dragging regions, and the hatch's geometry (spacing by zoom, anchoring, clipping).
 
-use figcraft_doc::{NodeId, Region, Segment, VectorNetwork, Vertex, WindingRule};
-use figcraft_geom::{Affine, Point, Rect, Vec2};
+use endrika_doc::{NodeId, Region, Segment, VectorNetwork, Vertex, WindingRule};
+use endrika_geom::{Affine, Point, Rect, Vec2};
 use serde_json::json;
 
 use super::regions::*;
@@ -50,9 +50,9 @@ fn editing_vector(s: &mut Session, n: VectorNetwork) -> NodeId {
     let id = crate::params::id_of(&r["id"]).unwrap();
     let doc = s.doc_mut().unwrap();
     let node = doc.get_mut(id).unwrap();
-    node.kind = figcraft_doc::NodeKind::Vector { network: n };
+    node.kind = endrika_doc::NodeKind::Vector { network: n };
     node.transform = Affine::IDENTITY;
-    node.fills = vec![figcraft_color::Paint::solid(figcraft_color::Color::DEFAULT_SHAPE)];
+    node.fills = vec![endrika_color::Paint::solid(endrika_color::Color::DEFAULT_SHAPE)];
     super::refit(doc, id).unwrap();
     ex(s, "vector.edit.begin", json!({"id": id}));
     id

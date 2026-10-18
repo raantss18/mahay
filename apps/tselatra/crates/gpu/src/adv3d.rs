@@ -3,7 +3,7 @@
 //! storage buffers, and `advanced3d.wgsl`'s physically based fragment shader. Opaque triangles
 //! are drawn with depth writes, then the sorted transparent ones blended over (premultiplied).
 //! Colour (`Rgba16Float`) and camera depth (`R32Uint` holding f32 bits) stay on the GPU for `adv3d.wgsl`'s
-//! compute kernels, which run the rest of `effectcraft_render::three_d::adv::render_prepared`:
+//! compute kernels, which run the rest of `tselatra_render::three_d::adv::render_prepared`:
 //! the 2×2 supersampling resolve, the motion-blur sub-sample average (nearest depth), the
 //! depth-based iris depth of field (the Classic 3D bokeh kernel's row spans and prefix-sum
 //! gather, highlight boost, progressive blend between blur levels), the sRGB encode and the
@@ -12,9 +12,9 @@
 //!
 //! Wireframe-quality layers draw their outlines here too ([`wireframe`]).
 
-use effectcraft_render::three_d::Dof;
-use effectcraft_render::three_d::adv::{Prepared, Rendered, Scene, Target};
-use effectcraft_render::three_d::bokeh;
+use tselatra_render::three_d::Dof;
+use tselatra_render::three_d::adv::{Prepared, Rendered, Scene, Target};
+use tselatra_render::three_d::bokeh;
 
 use crate::context::{Enc, GpuContext, GpuImage};
 
@@ -178,7 +178,7 @@ mod capability_tests {
 
     #[test]
     fn predicted_sizes_match_the_real_scene_serializer() {
-        use effectcraft_render::three_d::adv::{Light, Material, ShadowMap, TexInfo};
+        use tselatra_render::three_d::adv::{Light, Material, ShadowMap, TexInfo};
         let scene = Scene {
             materials: vec![Material::default()],
             textures: vec![TexInfo { offset: 0, width: 1, height: 1, wrap_u: 0, wrap_v: 0 }],
@@ -221,7 +221,7 @@ impl Pipes {
     fn new(device: &wgpu::Device, raster: bool) -> Pipes {
         let raster = raster.then(|| {
             let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("effectcraft advanced 3d"),
+                label: Some("tselatra advanced 3d"),
                 source: wgpu::ShaderSource::Wgsl(include_str!("shaders/advanced3d.wgsl").into()),
             });
             let mut entries = vec![wgpu::BindGroupLayoutEntry {
@@ -315,7 +315,7 @@ fn pack(s: &Scene) -> [Vec<u8>; 7] {
     globals.extend([s.eye[0], s.eye[1], s.eye[2], s.ortho as u32 as f32]);
     globals.extend([s.cam_fwd[0], s.cam_fwd[1], s.cam_fwd[2], s.lights.len() as f32]);
     globals.extend([s.ambient[0], s.ambient[1], s.ambient[2], s.env.is_some() as u32 as f32]);
-    let e = s.env.unwrap_or(effectcraft_render::three_d::adv::EnvInfo { radiance: 0, mips: 1, irradiance: 0, intensity: 0.0, rotation: 0.0 });
+    let e = s.env.unwrap_or(tselatra_render::three_d::adv::EnvInfo { radiance: 0, mips: 1, irradiance: 0, intensity: 0.0, rotation: 0.0 });
     globals.extend([e.radiance as f32, e.mips as f32, e.irradiance as f32, e.intensity]);
     let lit = !(s.lights.is_empty() && s.env.is_none() && s.ambient == [0.0; 3]);
     globals.extend([e.rotation, lit as u32 as f32, 0.0, 0.0]);
@@ -516,7 +516,7 @@ fn raster_into(e: &mut Enc, s: &Scene) -> Option<(wgpu::Texture, wgpu::Texture)>
     Some((color, zout))
 }
 
-/// Rasterise a scene and read it back ([`effectcraft_render::Accelerator::raster_3d`]). `None`
+/// Rasterise a scene and read it back ([`tselatra_render::Accelerator::raster_3d`]). `None`
 /// when the device can't (no readback, size or buffer limits).
 ///
 /// With deferred readbacks (a browser worker) both targets are read back under the scene's key
@@ -617,7 +617,7 @@ const KERNELS: &[&str] = &["resolve", "radius_of", "boost", "prefix_rows", "gath
 impl Post {
     fn new(device: &wgpu::Device) -> Post {
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("effectcraft advanced 3d post"),
+            label: Some("tselatra advanced 3d post"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shaders/adv3d.wgsl").into()),
         });
         let tex = |binding, sample_type| wgpu::BindGroupLayoutEntry {
@@ -915,7 +915,7 @@ pub(crate) fn finish(e: &mut Enc, r: &Resolved, encode: bool, canvas: Option<&Gp
     out
 }
 
-/// [`effectcraft_render::Accelerator::render_3d`]: the whole prepared run on the GPU, read
+/// [`tselatra_render::Accelerator::render_3d`]: the whole prepared run on the GPU, read
 /// back.
 pub(crate) fn render_prepared(g: &GpuContext, prep: &Prepared) -> Option<Rendered> {
     if !g.can_readback() {
@@ -974,7 +974,7 @@ fn render_prepared_deferred(g: &GpuContext, d: &std::sync::Arc<crate::deferred::
     match (d.lookup(ki), d.lookup(kz)) {
         (Ready(a), Ready(b)) => {
             let (a, b) = (a?, b?);
-            let mut img = effectcraft_render::Image::new(a.width, a.height);
+            let mut img = tselatra_render::Image::new(a.width, a.height);
             let dst: &mut [u8] = bytemuck::cast_slice_mut(&mut img.data);
             if dst.len() != a.bytes.len() || b.bytes.len() != dst.len() / 4 {
                 return None;
@@ -1047,7 +1047,7 @@ pub(crate) fn occluded(e: &mut Enc, iso: &Resolved, main: &Resolved, encode: boo
 pub(crate) const SKY_KERNELS: &[&str] = &["adv_sky"];
 
 /// An Environment Light Background layer drawn over `canvas` (`three_d::compose::draw_sky`).
-pub(crate) fn sky(e: &mut Enc, sky: &effectcraft_render::three_d::SkyDraw, canvas: &GpuImage) -> Option<GpuImage> {
+pub(crate) fn sky(e: &mut Enc, sky: &tselatra_render::three_d::SkyDraw, canvas: &GpuImage) -> Option<GpuImage> {
     let img = e.g.upload_buf(&sky.buf)?;
     let f3 = |v: [f64; 3], w: f64| [v[0] as f32, v[1] as f32, v[2] as f32, w as f32];
     let mut p = crate::context::Params::default();
@@ -1063,7 +1063,7 @@ pub(crate) fn sky(e: &mut Enc, sky: &effectcraft_render::three_d::SkyDraw, canva
 }
 
 /// Wireframe-quality layer outlines: `canvas` with `pixels` set to opaque white
-/// ([`effectcraft_render::Renderer::wireframe_pixels`]).
+/// ([`tselatra_render::Renderer::wireframe_pixels`]).
 pub(crate) fn wireframe(e: &mut Enc, canvas: &GpuImage, pixels: &[(u32, u32)]) -> GpuImage {
     let out = e.image(canvas.width, canvas.height);
     e.copy_into(canvas, &out, 0, 0);

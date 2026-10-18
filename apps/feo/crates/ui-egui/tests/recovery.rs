@@ -2,8 +2,8 @@
 use egui::vec2;
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
-use soundcraft_engine::autosave::leftovers;
-use soundcraft_ui_egui::{Services, SoundApp};
+use feo_engine::autosave::leftovers;
+use feo_ui_egui::{Services, SoundApp};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
@@ -15,7 +15,7 @@ fn one_at_a_time() -> MutexGuard<'static, ()> {
 }
 
 fn folder(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("soundcraft-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("feo-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -38,7 +38,7 @@ fn autosaved(root: &Path) -> String {
 }
 
 fn launch(root: &Path) -> SoundApp {
-    let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+    let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
     app.autosave_dir = Some(root.to_path_buf());
     app.leftovers = leftovers(root);
     app

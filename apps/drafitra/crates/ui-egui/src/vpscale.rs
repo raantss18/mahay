@@ -2,7 +2,7 @@
 //! the active viewport (MSPACE) or of the one selected viewport, and change it through
 //! `viewport.set`.
 
-use cadcraft_doc::{EntityKind, Handle, Space, Viewport};
+use drafitra_doc::{EntityKind, Handle, Space, Viewport};
 use egui::{Rect, Sense, pos2, vec2};
 use serde_json::json;
 
@@ -115,7 +115,7 @@ pub fn target(app: &CadApp) -> Option<(Handle, Viewport)> {
 pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
     let Some((h, vp)) = target(app) else { return right };
     let t = Tokens::get();
-    let metric = app.session.doc().is_ok_and(|d| cadcraft_render::paper::paper_unit_mm(d) == 1.0);
+    let metric = app.session.doc().is_ok_and(|d| drafitra_render::paper::paper_unit_mm(d) == 1.0);
     let scale = if vp.view_height > 0.0 { vp.height / vp.view_height } else { 0.0 };
     let p = ui.painter().clone();
     // Lock toggle.

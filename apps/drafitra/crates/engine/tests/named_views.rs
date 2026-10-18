@@ -1,10 +1,10 @@
 //! Named views (#463): VIEW / -VIEW Save, Window, Restore, Delete, ? and the layer snapshot
 //! setting; Zoom Realtime and Dynamic; ZOOMFACTOR. (The DXF round trip of views is tested in
-//! `cadcraft-io`'s `view_tables_roundtrip`.)
+//! `drafitra-io`'s `view_tables_roundtrip`.)
 
-use cadcraft_engine::doc::Space;
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::{Session, View};
+use drafitra_engine::doc::Space;
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::{Session, View};
 use serde_json::json;
 
 fn session() -> Session {
@@ -87,7 +87,7 @@ fn window_option_and_json_forms() {
 #[test]
 fn layer_snapshot_restores_layers_and_the_setting_turns_it_off() {
     let mut s = session();
-    s.doc_mut().unwrap().layers.push(cadcraft_engine::doc::Layer { name: "Walls".into(), ..Default::default() });
+    s.doc_mut().unwrap().layers.push(drafitra_engine::doc::Layer { name: "Walls".into(), ..Default::default() });
     let walls_on = |s: &Session| s.doc().unwrap().layer("Walls").map(|l| l.on);
     typed(&mut s, &["-view", "s", "All"]);
     s.doc_mut().unwrap().layer_mut("Walls").unwrap().on = false;

@@ -2,37 +2,37 @@
 //! interest drawing, rulers and guides, snapping, the shape Pen and motion-path key drags
 //! (egui_kittest, UI logic only).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::commands::shape_tool::PaintKind;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::state::Tool;
+use tselatra_engine::Session;
+use tselatra_engine::commands::shape_tool::PaintKind;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::state::Tool;
 use egui::{Event, Pos2, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
-fn app() -> EffectcraftApp {
+fn app() -> TselatraApp {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "View", "width": 640, "height": 360, "duration": 4})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080", "width": 640, "height": 360})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Box", "color": "#e04020", "width": 80, "height": 80})).unwrap();
     s.execute("edit.deselectAll", json!({})).unwrap();
-    EffectcraftApp::new(s)
+    TselatraApp::new(s)
 }
 
-fn harness() -> Harness<'static, EffectcraftApp> {
+fn harness() -> Harness<'static, TselatraApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app());
     h.run_steps(3);
     h
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
@@ -41,7 +41,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(2);
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.input_mut().events.push(Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
@@ -54,20 +54,20 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
 }
 
 /// Comp pixel → screen point.
-fn screen(h: &Harness<'_, EffectcraftApp>, p: [f32; 2]) -> Pos2 {
+fn screen(h: &Harness<'_, TselatraApp>, p: [f32; 2]) -> Pos2 {
     let c = rect(h, "viewer.comp");
     let z = c.width() / 640.0;
     c.min + vec2(p[0] * z, p[1] * z)
 }
 
-fn selection_harness() -> Harness<'static, EffectcraftApp> {
+fn selection_harness() -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Selection", "width": 640, "height": 360, "duration": 4})).unwrap();
     for name in ["Back", "Front"] {
         s.execute("layer.newSolid", json!({"name": name, "color": "#406080", "width": 80, "height": 80})).unwrap();
     }
     s.execute("edit.deselectAll", json!({})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
@@ -131,7 +131,7 @@ fn viewer_click_picks_nothing_while_the_solo_layer_is_inactive() {
     let s = &mut h.state_mut().session;
     s.execute("layer.setSwitch", json!({"layers": [front.0], "switch": "solo", "value": true})).unwrap();
     let cid = s.active_comp_id().unwrap();
-    std::sync::Arc::make_mut(&mut s.project).comp_mut(cid).unwrap().layer_mut(front).unwrap().in_point = effectcraft_engine::time::Tick::from_seconds_f64(1.0);
+    std::sync::Arc::make_mut(&mut s.project).comp_mut(cid).unwrap().layer_mut(front).unwrap().in_point = tselatra_engine::time::Tick::from_seconds_f64(1.0);
     h.run_steps(3);
     let at = screen(&h, [320.0, 180.0]);
     click(&mut h, at);
@@ -169,10 +169,10 @@ fn viewer_press_prefers_a_selected_layer_under_the_pointer() {
 /// A's cached frames and is read back from the saved file (#417).
 #[test]
 fn each_comp_keeps_its_viewer_resolution() {
-    use effectcraft_ui_egui::state::Resolution;
+    use tselatra_ui_egui::state::Resolution;
     let mut h = harness();
     let a = h.state().session.active_comp_id().unwrap();
-    let content = |h: &Harness<'_, EffectcraftApp>, c| {
+    let content = |h: &Harness<'_, TselatraApp>, c| {
         let s = h.state();
         s.frames.content_of(&s.session.project, s.session.revision, c)
     };
@@ -191,12 +191,12 @@ fn each_comp_keeps_its_viewer_resolution() {
     let b = h.state().session.active_comp_id().unwrap();
     assert_ne!(a, b);
     assert_eq!(h.state().viewer_res(), Resolution::Auto);
-    let (req, _reply) = effectcraft_ui_egui::control::ControlRequest::new("ui.set", json!({"viewer": {"res": "quarter"}}));
+    let (req, _reply) = tselatra_ui_egui::control::ControlRequest::new("ui.set", json!({"viewer": {"res": "quarter"}}));
     let ctx = h.ctx.clone();
-    let _ = effectcraft_ui_egui::control::handle(h.state_mut(), &ctx, &req);
+    let _ = tselatra_ui_egui::control::handle(h.state_mut(), &ctx, &req);
     assert_eq!(h.state().viewer_res(), Resolution::Quarter);
     let ctx = h.ctx.clone();
-    assert_eq!(effectcraft_ui_egui::control::inspect(h.state(), &ctx)["ui"]["viewer"]["res"], json!("Quarter"));
+    assert_eq!(tselatra_ui_egui::control::inspect(h.state(), &ctx)["ui"]["viewer"]["res"], json!("Quarter"));
     // Back to comp A: its resolution again.
     h.state_mut().session.open_comp(a);
     h.run_steps(3);
@@ -209,7 +209,7 @@ fn each_comp_keeps_its_viewer_resolution() {
     s.execute("file.open", json!({"path": path.to_string_lossy()})).unwrap();
     let _ = std::fs::remove_file(&path);
     s.open_comp(b);
-    let app = EffectcraftApp::new(s);
+    let app = TselatraApp::new(s);
     assert_eq!(app.viewer_res(), Resolution::Quarter);
     assert_eq!(app.session.project.comp(a).unwrap().resolution, Resolution::Half);
 }
@@ -286,7 +286,7 @@ fn layer_drag_snaps_to_comp_centre_and_ctrl_disables() {
     let from = screen(&h, [100.0, 100.0]);
     let to = screen(&h, [323.0, 182.0]);
     drag(&mut h, from, to);
-    let pos = |h: &Harness<'_, EffectcraftApp>| {
+    let pos = |h: &Harness<'_, TselatraApp>| {
         let l = h.state().session.active_comp().unwrap().layer(box_id).unwrap().clone();
         l.props.prop("transform/position").unwrap().value.as_vec3()
     };
@@ -313,21 +313,21 @@ fn layer_drag_snaps_to_other_layers_edges_ctrl_toggles_and_options_apply() {
     let target = h.state_mut().session.execute("layer.newSolid", json!({"name": "Target", "color": "#20e040", "width": 100, "height": 100})).unwrap()["layer"]
         .as_u64()
         .unwrap();
-    let place = |h: &mut Harness<'_, EffectcraftApp>| {
+    let place = |h: &mut Harness<'_, TselatraApp>| {
         let s = &mut h.state_mut().session;
         s.execute("prop.set", json!({"layer": target, "path": "transform/position", "value": [500, 100, 0]})).unwrap();
         s.execute("prop.set", json!({"layer": box_id.0, "path": "transform/position", "value": [100, 250, 0]})).unwrap();
         s.execute("edit.deselectAll", json!({})).unwrap();
         h.run_steps(2);
     };
-    let pos = |h: &Harness<'_, EffectcraftApp>| {
+    let pos = |h: &Harness<'_, TselatraApp>| {
         let l = h.state().session.active_comp().unwrap().layer(box_id).unwrap().clone();
         l.props.prop("transform/position").unwrap().value.as_vec3()
     };
     // Grab the box by its top right corner (140, 210) and drop it 3 px left of the target's
     // left edge, well below the target: the corner lands on the edge's line (x 450).
     let ctrl = egui::Modifiers { ctrl: true, command: true, ..Default::default() };
-    let drop = |h: &mut Harness<'_, EffectcraftApp>, mods: egui::Modifiers| {
+    let drop = |h: &mut Harness<'_, TselatraApp>, mods: egui::Modifiers| {
         place(h);
         let (from, to) = (screen(h, [138.0, 212.0]), screen(h, [445.0, 232.0]));
         hold_drag(h, from, to, mods);
@@ -388,7 +388,7 @@ fn shape_tool_draws_into_the_selected_shape_layer() {
     drag(&mut h, a, b);
     let comp = h.state().session.active_comp().unwrap();
     assert_eq!(comp.layers.len(), n0 + 1);
-    assert!(matches!(comp.layers[0].source, effectcraft_engine::project::LayerSource::Shape));
+    assert!(matches!(comp.layers[0].source, tselatra_engine::project::LayerSource::Shape));
     assert_ne!(comp.layers[0].id, LayerId(l));
 }
 
@@ -424,7 +424,7 @@ fn tool_creates_mask_draws_a_mask_on_the_selected_shape_layer() {
 
 /// Run frames until the viewer's background frame has landed, so the comp is painted (and not
 /// still black) before the drag begins: the ghost is then the only thing that changes.
-fn settle_viewer(h: &mut Harness<'_, EffectcraftApp>) {
+fn settle_viewer(h: &mut Harness<'_, TselatraApp>) {
     for _ in 0..600 {
         h.step();
         if h.state().frames.inflight() == 0 && h.state().frames.last_ms.lock().map(|v| *v > 0.0).unwrap_or(false) {
@@ -438,7 +438,7 @@ fn settle_viewer(h: &mut Harness<'_, EffectcraftApp>) {
 /// Press at `from`, drag to `to` with `mods` held and return the frame drawn with the button still
 /// down — what the user sees mid-drag, before anything is committed. egui only takes modifiers
 /// from [`egui::Event::ModifiersChanged`], so they are set before the press and stay set.
-fn mid_drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, mods: egui::Modifiers) -> image::RgbaImage {
+fn mid_drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2, mods: egui::Modifiers) -> image::RgbaImage {
     h.input_mut().events.push(Event::ModifiersChanged(mods));
     h.input_mut().events.push(Event::PointerMoved(from));
     h.input_mut().events.push(Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: mods });
@@ -451,13 +451,13 @@ fn mid_drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, mods: egu
 }
 
 /// Release the button where the drag left it.
-fn release(h: &mut Harness<'_, EffectcraftApp>, at: Pos2, mods: egui::Modifiers) {
+fn release(h: &mut Harness<'_, TselatraApp>, at: Pos2, mods: egui::Modifiers) {
     h.input_mut().events.push(Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed: false, modifiers: mods });
     h.run_steps(2);
 }
 
 /// The pixel at a comp point of a rendered frame.
-fn px_at(img: &image::RgbaImage, h: &Harness<'_, EffectcraftApp>, p: [f32; 2]) -> [u8; 3] {
+fn px_at(img: &image::RgbaImage, h: &Harness<'_, TselatraApp>, p: [f32; 2]) -> [u8; 3] {
     let s = screen(h, p);
     let p = img.get_pixel(s.x.round() as u32, s.y.round() as u32).0;
     [p[0], p[1], p[2]]
@@ -469,7 +469,7 @@ fn delta(a: [u8; 3], b: [u8; 3]) -> u32 {
 }
 
 /// The Tools-bar Fill as bytes, the colour a filled ghost carries.
-fn fill_rgb(h: &Harness<'_, EffectcraftApp>) -> [u8; 3] {
+fn fill_rgb(h: &Harness<'_, TselatraApp>) -> [u8; 3] {
     let c = h.state().session.state.shape_tool.fill.color;
     std::array::from_fn(|i| (c[i].clamp(0.0, 1.0) * 255.0).round() as u8)
 }
@@ -535,7 +535,7 @@ fn shape_drag_ghost_normalises_the_same_way_as_the_release() {
         // group sits at its own centre's origin.
         let comp = h.state().session.active_comp().unwrap().clone();
         let layer = comp.layers.first().expect("a new shape layer").clone();
-        assert!(matches!(layer.source, effectcraft_engine::project::LayerSource::Shape), "{mods:?}: no shape layer");
+        assert!(matches!(layer.source, tselatra_engine::project::LayerSource::Shape), "{mods:?}: no shape layer");
         let at = layer.transform().unwrap().get("position").unwrap().value.components();
         assert!((at[0] - centre[0]).abs() < 1.0 && (at[1] - centre[1]).abs() < 1.0, "{mods:?}: at {at:?}, not {centre:?}");
         let group = layer.props.sub("contents").unwrap().groups().next().unwrap().clone();
@@ -637,7 +637,7 @@ fn fill_options_paint_the_next_shape() {
     h.input_mut().events.push(Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() });
     h.run_steps(2);
     let fill = h.state().session.state.shape_tool.fill.clone();
-    assert_eq!((fill.kind, fill.blend, fill.opacity), (PaintKind::Radial, effectcraft_engine::color::BlendMode::Multiply, 40.0));
+    assert_eq!((fill.kind, fill.blend, fill.opacity), (PaintKind::Radial, tselatra_engine::color::BlendMode::Multiply, 40.0));
     h.input_mut().events.push(Event::Key { key: egui::Key::Escape, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() });
     h.run_steps(3);
     assert!(h.state().auto.find("header.fillOptions.radial").is_none(), "closed");
@@ -647,9 +647,9 @@ fn fill_options_paint_the_next_shape() {
     let g = layer.props.sub("contents").unwrap().groups().next().unwrap().sub("contents").unwrap().clone();
     assert_eq!(g.groups().map(|x| x.match_id.as_str()).collect::<Vec<_>>(), ["ellipse", "gfill"]);
     let gfill = g.groups().find(|x| x.match_id == "gfill").unwrap();
-    let multiply = effectcraft_engine::color::BlendMode::ALL.iter().position(|m| *m == effectcraft_engine::color::BlendMode::Multiply).unwrap() as u32;
-    assert_eq!(gfill.get("type").unwrap().value, effectcraft_keyframe::Value::Enum(1));
-    assert_eq!(gfill.get("blend").unwrap().value, effectcraft_keyframe::Value::Enum(multiply));
+    let multiply = tselatra_engine::color::BlendMode::ALL.iter().position(|m| *m == tselatra_engine::color::BlendMode::Multiply).unwrap() as u32;
+    assert_eq!(gfill.get("type").unwrap().value, tselatra_keyframe::Value::Enum(1));
+    assert_eq!(gfill.get("blend").unwrap().value, tselatra_keyframe::Value::Enum(multiply));
     assert_eq!(gfill.get("opacity").unwrap().value.as_f64(), 40.0);
 }
 
@@ -662,7 +662,7 @@ fn fill_options_change_the_selected_shape_layer() {
         .as_u64()
         .unwrap();
     h.run_steps(2);
-    let fill_on = |h: &Harness<'_, EffectcraftApp>| {
+    let fill_on = |h: &Harness<'_, TselatraApp>| {
         let layer = h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().clone();
         layer.props.group("contents/group/contents/fill").unwrap().enabled
     };
@@ -716,7 +716,7 @@ fn path_editing_hides_layer_bounds_and_keeps_corner_vertices_editable() {
         h.run_steps(2); // The automation registry also keeps the preceding frame's elements.
         assert!(h.state().auto.find(&handle).is_none(), "selecting a vertex starts path editing (mask={mask})");
         let position = h.state().session.active_comp().unwrap().layer(LayerId(layer)).unwrap().props.prop("transform/position").unwrap().value.clone();
-        let path = |h: &Harness<'_, EffectcraftApp>| {
+        let path = |h: &Harness<'_, TselatraApp>| {
             h.state()
                 .session
                 .active_comp()
@@ -789,7 +789,7 @@ fn shape_pen_draws_a_closed_shape_layer() {
     let comp = h.state().session.active_comp().unwrap().clone();
     assert_eq!(comp.layers.len(), n0 + 1);
     let l = &comp.layers[0];
-    assert!(matches!(l.source, effectcraft_engine::project::LayerSource::Shape));
+    assert!(matches!(l.source, tselatra_engine::project::LayerSource::Shape));
     let g = l.props.sub("contents").unwrap().groups().next().unwrap();
     assert_eq!(g.name, "Shape 1");
     let path = g.sub("contents").unwrap().groups().next().unwrap();
@@ -801,7 +801,7 @@ fn shape_pen_draws_a_closed_shape_layer() {
     let ctx = h.ctx.clone();
     let mut seen = vec![];
     for _ in 0..5 {
-        effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "tool.pen", json!({})).unwrap();
+        tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "tool.pen", json!({})).unwrap();
         seen.push(h.state().ui.tool);
     }
     assert_eq!(seen, vec![Tool::PenAdd, Tool::PenDelete, Tool::PenConvert, Tool::MaskFeather, Tool::Pen]);
@@ -841,7 +841,7 @@ fn motion_path_key_drag_edits_that_key() {
     s.execute("prop.addKey", json!({"layer": box_id.0, "path": "transform/position", "time": 0.0, "value": [100, 100, 0]})).unwrap();
     s.execute("prop.addKey", json!({"layer": box_id.0, "path": "transform/position", "time": 2.0, "value": [500, 100, 0]})).unwrap();
     s.execute("view.snapping", json!({"value": false})).unwrap();
-    s.set_time(effectcraft_engine::time::Tick::from_seconds_f64(1.0));
+    s.set_time(tselatra_engine::time::Tick::from_seconds_f64(1.0));
     h.run_steps(3);
     assert!(h.state().auto.find(&format!("viewer.motionPath.{}.1", box_id.0)).is_some());
     let from = screen(&h, [500.0, 100.0]);
@@ -855,7 +855,7 @@ fn motion_path_key_drag_edits_that_key() {
 }
 
 /// The first mask path of layer `name`.
-fn mask_path(h: &Harness<'_, EffectcraftApp>, name: &str) -> effectcraft_engine::keyframe::ShapePath {
+fn mask_path(h: &Harness<'_, TselatraApp>, name: &str) -> tselatra_engine::keyframe::ShapePath {
     let l = h.state().session.active_comp().unwrap().layers.iter().find(|l| l.name == name).unwrap().clone();
     l.masks().unwrap().groups().next().unwrap().get("path").unwrap().value.as_path().unwrap().clone()
 }
@@ -872,7 +872,7 @@ fn pen_shift_click_draws_a_straight_segment() {
     h.run_steps(2);
     let first = screen(&h, [100.0, 60.0]);
     click(&mut h, first);
-    let shift_click = |h: &mut Harness<'_, EffectcraftApp>, p: Pos2| {
+    let shift_click = |h: &mut Harness<'_, TselatraApp>, p: Pos2| {
         let shift = egui::Modifiers::SHIFT;
         h.input_mut().events.push(Event::ModifiersChanged(shift));
         h.input_mut().events.push(Event::PointerMoved(p));
@@ -921,7 +921,7 @@ fn pen_mask_undoes_step_by_step_and_double_click_moves_the_whole_mask() {
     drag(&mut h, from, to);
     let moved = mask_path(&h, "Plate");
     assert!(near(moved.vertices[1], [520.0, 80.0]) && moved.vertices[0] == drawn.vertices[0], "{moved:?}");
-    let undo = |h: &mut Harness<'_, EffectcraftApp>| {
+    let undo = |h: &mut Harness<'_, TselatraApp>| {
         h.state_mut().session.execute("edit.undo", json!({})).unwrap();
         h.run_steps(2);
         mask_path(h, "Plate")
@@ -990,7 +990,7 @@ fn a_straight_motion_path_has_handles_to_curve_it() {
     s.execute("prop.addKey", json!({"layer": box_id.0, "path": "transform/position", "time": 0.0, "value": [100, 100, 0]})).unwrap();
     s.execute("prop.addKey", json!({"layer": box_id.0, "path": "transform/position", "time": 2.0, "value": [400, 100, 0]})).unwrap();
     s.execute("view.snapping", json!({"value": false})).unwrap();
-    s.set_time(effectcraft_engine::time::Tick::from_seconds_f64(1.0));
+    s.set_time(tselatra_engine::time::Tick::from_seconds_f64(1.0));
     h.run_steps(3);
     let (out0, in1) = (format!("viewer.motionPath.{}.0.out", box_id.0), format!("viewer.motionPath.{}.1.in", box_id.0));
     assert!(h.state().auto.find(&in1).is_some(), "the second key has a handle");
@@ -1004,7 +1004,7 @@ fn a_straight_motion_path_has_handles_to_curve_it() {
     assert!(!p.keys[0].spatial_auto);
     let t = p.keys[0].spatial_out;
     assert!((t[0] - 50.0).abs() < 2.0 && (t[1] - 150.0).abs() < 2.0, "{t:?}");
-    let mid = p.value_at(effectcraft_engine::time::Tick::from_seconds_f64(1.0)).as_vec3();
+    let mid = p.value_at(tselatra_engine::time::Tick::from_seconds_f64(1.0)).as_vec3();
     assert!(mid[1] > 130.0, "the path curves: {mid:?}");
 }
 
@@ -1053,7 +1053,7 @@ fn timeline_alt_drag_scales_a_key_group_in_time() {
     let uid = s.active_comp().unwrap().layer(box_id).unwrap().props.prop("transform/opacity").unwrap().uid;
     s.execute("keys.selectAll", json!({"layers": [box_id.0]})).unwrap();
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.opacity", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.opacity", json!({})).unwrap();
     h.run_steps(4);
     let mut ks: Vec<Pos2> =
         h.state().auto.query(&format!("timeline.key.{uid}.")).iter().map(|e| pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)).collect();
@@ -1225,7 +1225,7 @@ fn pan_behind_alt_moves_the_anchor_alone_shift_constrains_and_the_tool_button_ce
 
 /// Drag from `from` to `to` with `modifiers` held, holding the end point a frame (the viewer's
 /// gestures apply the pointer of the previous frame).
-fn hold_drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, modifiers: egui::Modifiers) {
+fn hold_drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2, modifiers: egui::Modifiers) {
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
     h.input_mut().events.push(Event::PointerMoved(from));
     h.input_mut().events.push(Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers });
@@ -1241,7 +1241,7 @@ fn hold_drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, modifier
 }
 
 /// A layer's Position and Anchor Point.
-fn position_and_anchor(h: &Harness<'_, EffectcraftApp>, layer: LayerId) -> ([f64; 3], [f64; 3]) {
+fn position_and_anchor(h: &Harness<'_, TselatraApp>, layer: LayerId) -> ([f64; 3], [f64; 3]) {
     let l = h.state().session.active_comp().unwrap().layer(layer).unwrap().clone();
     (l.props.prop("transform/position").unwrap().value.as_vec3(), l.props.prop("transform/anchor").unwrap().value.as_vec3())
 }
@@ -1267,7 +1267,7 @@ fn reference_axes_toggle_from_the_grid_menu() {
 }
 
 /// A Box layer pinned with two Position pins and a Bend pin in the middle (Bend tool active).
-fn puppet_harness() -> (Harness<'static, EffectcraftApp>, u64, u64) {
+fn puppet_harness() -> (Harness<'static, TselatraApp>, u64, u64) {
     let mut h = harness();
     let s = &mut h.state_mut().session;
     // No full-frame Plate behind the Box: the comp around the Box is empty, like the canvas
@@ -1283,7 +1283,7 @@ fn puppet_harness() -> (Harness<'static, EffectcraftApp>, u64, u64) {
     (h, id, bend)
 }
 
-fn pin_value(h: &Harness<'_, EffectcraftApp>, layer: u64, pin: u64, prop: &str) -> f64 {
+fn pin_value(h: &Harness<'_, TselatraApp>, layer: u64, pin: u64, prop: &str) -> f64 {
     let l = h.state().session.active_comp().unwrap().layer(LayerId(layer)).unwrap().clone();
     l.props.find_group(pin).unwrap().get(prop).unwrap().value.as_f64()
 }
@@ -1315,7 +1315,7 @@ fn puppet_bend_pin_rotates_by_its_ring_and_scales_by_its_square() {
 #[test]
 fn puppet_pin_click_selects_and_delete_removes_only_the_pins() {
     let (mut h, id, bend) = puppet_harness();
-    let pin = |h: &Harness<'_, EffectcraftApp>| h.state().session.state.selected_props.iter().map(|(_, u)| *u).collect::<Vec<_>>();
+    let pin = |h: &Harness<'_, TselatraApp>| h.state().session.state.selected_props.iter().map(|(_, u)| *u).collect::<Vec<_>>();
     // Clicking a pin selects it (instead of adding a pin on top of it).
     let at = rect(&h, &format!("viewer.puppetPin.{bend}")).center();
     click(&mut h, at);
@@ -1331,14 +1331,14 @@ fn puppet_pin_click_selects_and_delete_removes_only_the_pins() {
 }
 
 /// A pin's Position property and its keys' times (seconds).
-fn pin_keys(h: &Harness<'_, EffectcraftApp>, layer: u64, pin: u64) -> (u64, Vec<f64>) {
+fn pin_keys(h: &Harness<'_, TselatraApp>, layer: u64, pin: u64) -> (u64, Vec<f64>) {
     let l = h.state().session.active_comp().unwrap().layer(LayerId(layer)).unwrap().clone();
     let pos = l.props.find_group(pin).unwrap().get("position").unwrap().clone();
     (pos.uid, pos.keys.iter().map(|k| k.time.seconds()).collect())
 }
 
 /// The keys the Timeline draws for a property, left to right.
-fn timeline_keys(h: &Harness<'_, EffectcraftApp>, prop: u64) -> Vec<Pos2> {
+fn timeline_keys(h: &Harness<'_, TselatraApp>, prop: u64) -> Vec<Pos2> {
     let mut ks: Vec<Pos2> =
         h.state().auto.query(&format!("timeline.key.{prop}.")).iter().map(|e| pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)).collect();
     ks.sort_by(|a, b| a.x.total_cmp(&b.x));
@@ -1346,7 +1346,7 @@ fn timeline_keys(h: &Harness<'_, EffectcraftApp>, prop: u64) -> Vec<Pos2> {
 }
 
 /// The pin the last click placed (placing a pin selects it).
-fn placed_pin(h: &Harness<'_, EffectcraftApp>) -> u64 {
+fn placed_pin(h: &Harness<'_, TselatraApp>) -> u64 {
     h.state().session.state.selected_props.last().map(|(_, u)| *u).unwrap()
 }
 
@@ -1360,7 +1360,7 @@ fn puppet_pin_keys_show_under_their_pins_in_the_timeline() {
     h.state_mut().ui.tool = Tool::Puppet;
     let pins: Vec<u64> = h.state().auto.previous.iter().filter_map(|e| e.id.strip_prefix("viewer.puppetPin.")?.parse().ok()).filter(|p| *p != bend).collect();
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "anim.reveal", json!({"kind": "keyframes"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "anim.reveal", json!({"kind": "keyframes"})).unwrap();
     h.run_steps(3);
     assert_eq!(pins.len(), 2);
     for pin in &pins {
@@ -1369,7 +1369,7 @@ fn puppet_pin_keys_show_under_their_pins_in_the_timeline() {
         assert_eq!(timeline_keys(&h, pin_keys(&h, id, *pin).0).len(), 1, "its key at 0 s");
     }
     // Moved at 1 s: keyed there, in view.
-    h.state_mut().session.set_time(effectcraft_engine::time::Tick::from_seconds_f64(1.0));
+    h.state_mut().session.set_time(tselatra_engine::time::Tick::from_seconds_f64(1.0));
     h.run_steps(2);
     let pa = rect(&h, &format!("viewer.puppetPin.{}", pins[0])).center();
     drag(&mut h, pa, pa + vec2(20.0, 10.0));
@@ -1435,11 +1435,11 @@ fn puppet_pins_go_on_the_deformed_mesh_and_the_tool_stays_on_the_rigged_layer() 
     s.execute("puppet.movePin", json!({"layer": boxl.0, "pin": right, "position": [140, 40]})).unwrap();
     h.state_mut().ui.tool = Tool::Puppet;
     h.run_steps(3);
-    let pins = |h: &mut Harness<'_, EffectcraftApp>| {
+    let pins = |h: &mut Harness<'_, TselatraApp>| {
         let info = h.state_mut().session.execute("puppet.info", json!({"layer": boxl.0})).unwrap();
         info["meshes"].as_array().unwrap().iter().map(|m| m["pins"].as_array().unwrap().len()).sum::<usize>()
     };
-    let rigged = |h: &Harness<'_, EffectcraftApp>, l: LayerId| {
+    let rigged = |h: &Harness<'_, TselatraApp>, l: LayerId| {
         h.state().session.active_comp().unwrap().layer(l).unwrap().effects().is_some_and(|f| f.groups().next().is_some())
     };
     // Comp (380, 180) is layer (100, 40): past the Box's own edge, over the Plate, on the
@@ -1458,7 +1458,7 @@ fn puppet_pins_go_on_the_deformed_mesh_and_the_tool_stays_on_the_rigged_layer() 
 }
 
 /// Filled circles painted this frame (flattening nested shape lists).
-fn circles(h: &Harness<'_, EffectcraftApp>) -> Vec<egui::epaint::CircleShape> {
+fn circles(h: &Harness<'_, TselatraApp>) -> Vec<egui::epaint::CircleShape> {
     fn walk(s: &egui::Shape, out: &mut Vec<egui::epaint::CircleShape>) {
         match s {
             egui::Shape::Circle(c) => out.push(*c),
@@ -1489,7 +1489,7 @@ fn selected_puppet_pins_are_filled_and_unselected_hollow() {
     // Pointer away from the pins (hover enlarges a pin), then look at the painted pins.
     h.input_mut().events.push(Event::PointerMoved(pos2(5.0, 5.0)));
     h.run_steps(2);
-    let col = effectcraft_ui_egui::panels::puppet_tool::pin_color(effectcraft_engine::effects::puppet::PinKind::Position);
+    let col = tselatra_ui_egui::panels::puppet_tool::pin_color(tselatra_engine::effects::puppet::PinKind::Position);
     let at = |p: Pos2| circles(&h).into_iter().filter(move |c| c.center.distance(p) < 0.5).collect::<Vec<_>>();
     let dark = |c: egui::Color32| c.r().max(c.g()).max(c.b()) < 0x60;
     let sel = at(pa);
@@ -1540,7 +1540,7 @@ fn puppet_marquee_selects_pins_and_alt_drag_works_over_the_art() {
 }
 
 /// Drag with `button` from `from` to `to` in steps, then release.
-fn drag_with(h: &mut Harness<'_, EffectcraftApp>, button: egui::PointerButton, from: Pos2, to: Pos2) {
+fn drag_with(h: &mut Harness<'_, TselatraApp>, button: egui::PointerButton, from: Pos2, to: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.input_mut().events.push(Event::PointerButton { pos: from, button, pressed: true, modifiers: Default::default() });
     h.step();
@@ -1572,7 +1572,7 @@ fn middle_and_hand_drags_pan_the_viewer_and_the_pan_stays_after_release() {
 }
 
 /// A Spacebar press or release (`repeat`: the keyboard's auto-repeat while it is held).
-fn space(h: &mut Harness<'_, EffectcraftApp>, pressed: bool, repeat: bool) {
+fn space(h: &mut Harness<'_, TselatraApp>, pressed: bool, repeat: bool) {
     h.input_mut().events.push(Event::Key { key: egui::Key::Space, physical_key: None, pressed, repeat, modifiers: Default::default() });
     h.step();
 }
@@ -1583,8 +1583,8 @@ fn space(h: &mut Harness<'_, EffectcraftApp>, pressed: bool, repeat: bool) {
 #[test]
 fn spacebar_taps_preview_and_held_spacebar_pans_the_viewer() {
     let mut h = harness();
-    let playing = |h: &Harness<'_, EffectcraftApp>| h.state().playback.playing;
-    let tap = |h: &mut Harness<'_, EffectcraftApp>| {
+    let playing = |h: &Harness<'_, TselatraApp>| h.state().playback.playing;
+    let tap = |h: &mut Harness<'_, TselatraApp>| {
         space(h, true, false);
         space(h, false, false);
     };
@@ -1605,7 +1605,7 @@ fn spacebar_taps_preview_and_held_spacebar_pans_the_viewer() {
     tap(&mut h);
 
     // Held and dragged: pans the viewer (the Box under the pointer stays), and plays nothing.
-    let box_pos = |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layers[0].props.prop("transform/position").unwrap().value.clone();
+    let box_pos = |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layers[0].props.prop("transform/position").unwrap().value.clone();
     let (pos, before) = (box_pos(&h), h.state().ui.viewer.pan);
     let c = rect(&h, "viewer.comp").center();
     space(&mut h, true, false);
@@ -1635,9 +1635,9 @@ fn spacebar_taps_preview_and_held_spacebar_pans_the_viewer() {
 #[test]
 fn timeline_rows_drag_to_reorder_layers() {
     let mut h = harness();
-    let names = |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layers.iter().map(|l| l.name.clone()).collect::<Vec<_>>();
+    let names = |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layers.iter().map(|l| l.name.clone()).collect::<Vec<_>>();
     assert_eq!(names(&h), ["Box", "Plate"]);
-    let row = |h: &Harness<'_, EffectcraftApp>, name: &str| {
+    let row = |h: &Harness<'_, TselatraApp>, name: &str| {
         let l = h.state().session.active_comp().unwrap().layers.iter().find(|l| l.name == name).unwrap().id.0;
         rect(h, &format!("timeline.layer.{l}.row"))
     };
@@ -1658,22 +1658,22 @@ fn timeline_rows_drag_to_reorder_layers() {
     assert_eq!(names(&h), ["Box", "Plate"]);
 }
 
-fn layer_id(h: &Harness<'_, EffectcraftApp>, name: &str) -> u64 {
+fn layer_id(h: &Harness<'_, TselatraApp>, name: &str) -> u64 {
     h.state().session.active_comp().unwrap().layers.iter().find(|l| l.name == name).unwrap().id.0
 }
 
 /// Uid of a layer's property by match path (`transform/position`).
-fn prop_uid(h: &Harness<'_, EffectcraftApp>, layer: &str, path: &str) -> u64 {
+fn prop_uid(h: &Harness<'_, TselatraApp>, layer: &str, path: &str) -> u64 {
     let id = layer_id(h, layer);
     h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().props.prop(path).unwrap().uid
 }
 
 /// Is the property's row on screen in the Timeline?
-fn shown(h: &Harness<'_, EffectcraftApp>, uid: u64) -> bool {
+fn shown(h: &Harness<'_, TselatraApp>, uid: u64) -> bool {
     h.state().auto.find(&format!("timeline.prop.{uid}.stopwatch")).is_some()
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: egui::Key, modifiers: egui::Modifiers) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: egui::Key, modifiers: egui::Modifiers) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers });
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers });
     h.run_steps(2);
@@ -1710,7 +1710,7 @@ fn command_clicking_a_group_twirl_opens_its_whole_tree() {
     let mut h = harness();
     let id = layer_id(&h, "Box");
     h.state_mut().session.execute("effect.apply", json!({"effect": "Lumetri Color", "layers": [id]})).unwrap();
-    fn walk(g: &effectcraft_engine::project::PropGroup, out: &mut Vec<u64>) {
+    fn walk(g: &tselatra_engine::project::PropGroup, out: &mut Vec<u64>) {
         for sg in g.groups() {
             out.push(sg.uid);
             walk(sg, out);
@@ -1728,7 +1728,7 @@ fn command_clicking_a_group_twirl_opens_its_whole_tree() {
     let at = rect(&h, &format!("timeline.layer.{id}.twirl")).center();
     click(&mut h, at);
     let at = rect(&h, &format!("timeline.group.{effects}.twirl")).center();
-    let cmd_click = |h: &mut Harness<'_, EffectcraftApp>| {
+    let cmd_click = |h: &mut Harness<'_, TselatraApp>| {
         h.input_mut().events.push(Event::ModifiersChanged(egui::Modifiers::COMMAND));
         h.input_mut().events.push(Event::PointerMoved(at));
         h.step();
@@ -1757,8 +1757,8 @@ fn timeline_rename_commits_on_enter_and_on_click_away() {
     let mut h = harness();
     h.state_mut().session.execute("layer.newNull", json!({"name": "Ctrl"})).unwrap();
     let id = layer_id(&h, "Ctrl");
-    let name = |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().name.clone();
-    let rename = |h: &mut Harness<'_, EffectcraftApp>| {
+    let name = |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().name.clone();
+    let rename = |h: &mut Harness<'_, TselatraApp>| {
         h.state_mut().session.execute("layer.select", json!({"layers": [id]})).unwrap();
         h.run_steps(2);
         key(h, egui::Key::Enter, Default::default());
@@ -1791,7 +1791,7 @@ fn timeline_rename_commits_on_enter_and_on_click_away() {
 }
 
 /// Press `k` twice within one frame (a quick double press: the harness' frames are long).
-fn key_twice(h: &mut Harness<'_, EffectcraftApp>, k: egui::Key) {
+fn key_twice(h: &mut Harness<'_, TselatraApp>, k: egui::Key) {
     for _ in 0..2 {
         h.input_mut().events.push(Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() });
         h.input_mut().events.push(Event::Key { key: k, physical_key: None, pressed: false, repeat: false, modifiers: Default::default() });
@@ -1804,8 +1804,8 @@ fn property_shortcuts_reveal_and_key_transform_properties() {
     let mut h = harness();
     h.state_mut().session.execute("layer.select", json!({"layers": ["Box"]})).unwrap();
     h.run_steps(2);
-    let t = |h: &Harness<'_, EffectcraftApp>, p: &str| shown(h, prop_uid(h, "Box", &format!("transform/{p}")));
-    let only = |h: &Harness<'_, EffectcraftApp>, want: &[&str]| {
+    let t = |h: &Harness<'_, TselatraApp>, p: &str| shown(h, prop_uid(h, "Box", &format!("transform/{p}")));
+    let only = |h: &Harness<'_, TselatraApp>, want: &[&str]| {
         for p in ["anchor", "position", "scale", "rotation", "opacity"] {
             assert_eq!(t(h, p), want.contains(&p), "{p} shown? want {want:?}");
         }
@@ -1823,7 +1823,7 @@ fn property_shortcuts_reveal_and_key_transform_properties() {
     key(&mut h, egui::Key::R, none);
     only(&h, &["rotation"]);
     // Alt+Shift+P: a Position keyframe at the current time; again removes it.
-    let pos_keys = |h: &Harness<'_, EffectcraftApp>| {
+    let pos_keys = |h: &Harness<'_, TselatraApp>| {
         let id = layer_id(h, "Box");
         h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().props.prop("transform/position").unwrap().keys.len()
     };
@@ -1861,7 +1861,7 @@ fn double_press_shortcuts_reveal_their_second_set() {
     h.state_mut().session.execute("layer.select", json!({"layers": ["Box"]})).unwrap();
     h.state_mut().session.execute("prop.setExpression", json!({"layer": "Box", "path": "transform/scale", "expression": "value"})).unwrap();
     h.run_steps(2);
-    let reveal = |h: &Harness<'_, EffectcraftApp>| h.state().ui.timeline.reveal.clone();
+    let reveal = |h: &Harness<'_, TselatraApp>| h.state().ui.timeline.reveal.clone();
     // EE: properties with expressions (Scale), replacing E's effects.
     key_twice(&mut h, egui::Key::E);
     assert_eq!(reveal(&h), vec!["expressions"]);
@@ -1888,7 +1888,7 @@ fn double_press_shortcuts_reveal_their_second_set() {
 }
 
 /// Drag through `path` with `modifiers` held (press at the first point, release at the last).
-fn drag_path(h: &mut Harness<'_, EffectcraftApp>, path: &[Pos2], modifiers: egui::Modifiers) {
+fn drag_path(h: &mut Harness<'_, TselatraApp>, path: &[Pos2], modifiers: egui::Modifiers) {
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
     h.input_mut().events.push(Event::PointerMoved(path[0]));
     h.input_mut().events.push(Event::PointerButton { pos: path[0], button: egui::PointerButton::Primary, pressed: true, modifiers });
@@ -1914,10 +1914,10 @@ fn drag_path(h: &mut Harness<'_, EffectcraftApp>, path: &[Pos2], modifiers: egui
 fn handle_drags_scale_about_the_anchor_and_follow_the_pointer() {
     let mut h = harness();
     let box_id = h.state().session.active_comp().unwrap().layers[0].id;
-    let set = |h: &mut Harness<'_, EffectcraftApp>, path: &str, v: serde_json::Value| {
+    let set = |h: &mut Harness<'_, TselatraApp>, path: &str, v: serde_json::Value| {
         h.state_mut().session.execute("prop.set", json!({"layer": box_id.0, "path": path, "value": v})).unwrap();
     };
-    let scale = |h: &Harness<'_, EffectcraftApp>| {
+    let scale = |h: &Harness<'_, TselatraApp>| {
         let l = h.state().session.active_comp().unwrap().layer(box_id).unwrap().clone();
         l.props.prop("transform/scale").unwrap().value.as_vec3()
     };
@@ -1970,7 +1970,7 @@ fn handle_drags_scale_every_selected_layer() {
     let mut h = harness();
     let layers = h.state().session.active_comp().unwrap().layers.iter().map(|l| l.id).collect::<Vec<_>>();
     let (box_id, plate) = (layers[0], layers[1]);
-    let scale = |h: &Harness<'_, EffectcraftApp>, id: LayerId| {
+    let scale = |h: &Harness<'_, TselatraApp>, id: LayerId| {
         let l = h.state().session.active_comp().unwrap().layer(id).unwrap().clone();
         l.props.prop("transform/scale").unwrap().value.as_vec3()
     };
@@ -1996,12 +1996,12 @@ fn handle_drags_scale_every_selected_layer() {
 fn handle_drags_snap_to_the_comp_edges() {
     let mut h = harness();
     let box_id = h.state().session.active_comp().unwrap().layers[0].id.0;
-    let scale = |h: &Harness<'_, EffectcraftApp>, id: u64| {
+    let scale = |h: &Harness<'_, TselatraApp>, id: u64| {
         let l = h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().clone();
         l.props.prop("transform/scale").unwrap().value.as_vec3()
     };
     let close = |a: [f64; 3], b: [f64; 2]| (a[0] - b[0]).abs() < 0.01 && (a[1] - b[1]).abs() < 0.01;
-    let drag_handle = |h: &mut Harness<'_, EffectcraftApp>, id: u64, handle: usize, to: [f32; 2], mods: egui::Modifiers| {
+    let drag_handle = |h: &mut Harness<'_, TselatraApp>, id: u64, handle: usize, to: [f32; 2], mods: egui::Modifiers| {
         h.state_mut().session.execute("prop.set", json!({"layer": id, "path": "transform/scale", "value": [100, 100, 100]})).unwrap();
         h.state_mut().session.execute("layer.select", json!({"layers": [id]})).unwrap();
         h.run_steps(2);
@@ -2042,11 +2042,11 @@ fn handle_cursors_follow_each_handle_and_the_layer_rotation() {
     use egui::CursorIcon::{ResizeHorizontal as H, ResizeNeSw as NeSw, ResizeNwSe as NwSe, ResizeVertical as V};
     let mut h = harness();
     let box_id = h.state().session.active_comp().unwrap().layers[0].id.0;
-    let set = |h: &mut Harness<'_, EffectcraftApp>, path: &str, v: serde_json::Value| {
+    let set = |h: &mut Harness<'_, TselatraApp>, path: &str, v: serde_json::Value| {
         h.state_mut().session.execute("prop.set", json!({"layer": box_id, "path": path, "value": v})).unwrap();
         h.run_steps(2);
     };
-    let cursors = |h: &mut Harness<'_, EffectcraftApp>| {
+    let cursors = |h: &mut Harness<'_, TselatraApp>| {
         (0..8)
             .map(|i| {
                 let c = rect(h, &format!("viewer.handle.{box_id}.{i}")).center();
@@ -2079,7 +2079,7 @@ fn arrow_keys_nudge_the_selected_layer_at_the_viewer_magnification() {
     let at = screen(&h, [100.0, 100.0]);
     click(&mut h, at);
     assert_eq!(h.state().session.state.selected_layers, vec![box_id]);
-    let pos = |h: &Harness<'_, EffectcraftApp>| {
+    let pos = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(box_id).unwrap().props.prop("transform/position").unwrap().value.as_vec3()
     };
     let ppp = h.ctx.pixels_per_point();
@@ -2114,7 +2114,7 @@ fn arrow_keys_nudge_the_selected_mask_points() {
     let ppp = h.ctx.pixels_per_point();
     h.state_mut().ui.viewer.zoom = Some(1.0 / ppp);
     h.run_steps(2);
-    let pos = |h: &Harness<'_, EffectcraftApp>| {
+    let pos = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(LayerId(plate)).unwrap().props.prop("transform/position").unwrap().value.as_vec3()
     };
     let (pos0, undo) = (pos(&h), h.state().session.history.undo.len());
@@ -2135,11 +2135,11 @@ fn full_resolution_frames_wider_than_the_texture_limit_fit() {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Wide", "width": 2400, "height": 400, "duration": 1})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080"})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     // (egui's font atlas needs 1024.)
     h.input_mut().max_texture_side = Some(1024);
     h.state_mut().session.execute("view.res.full", json!({})).unwrap();
-    let full = |h: &mut Harness<'_, EffectcraftApp>| h.state_mut().viewer_pixels().is_some_and(|px| px.size == [2400, 400]);
+    let full = |h: &mut Harness<'_, TselatraApp>| h.state_mut().viewer_pixels().is_some_and(|px| px.size == [2400, 400]);
     for _ in 0..400 {
         h.step();
         if full(&mut h) {
@@ -2159,7 +2159,7 @@ fn roto_brush_ctrl_drag_resizes_the_brush() {
     let id = h.state().session.active_comp().unwrap().layers.iter().find(|l| l.name == "Box").unwrap().id.0;
     h.state_mut().session.execute("layer.select", json!({"layers": [id]})).unwrap();
     h.state_mut().ui.layer_panel = Some(id);
-    h.state_mut().show_panel(effectcraft_ui_egui::dock::PanelKind::Layer);
+    h.state_mut().show_panel(tselatra_ui_egui::dock::PanelKind::Layer);
     h.state_mut().ui.tool = Tool::RotoBrush;
     h.run_steps(3);
     assert!(h.state().auto.find("header.roto.diameter").is_some(), "the Diameter field");
@@ -2172,13 +2172,13 @@ fn roto_brush_ctrl_drag_resizes_the_brush() {
     h.run_steps(2);
     let dia = h.state().session.state.roto.diameter;
     assert!((dia - 40.0).abs() <= 1.0, "a 20 px drag makes a 40 px brush: {dia}");
-    let strokes = |h: &Harness<'_, EffectcraftApp>| {
+    let strokes = |h: &Harness<'_, TselatraApp>| {
         let l = h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().clone();
-        let roto = effectcraft_engine::effects::roto::ID;
+        let roto = tselatra_engine::effects::roto::ID;
         let g = l
             .effects()
-            .and_then(|fx| fx.groups().find(|g| matches!(&g.kind, effectcraft_engine::project::GroupKind::Effect { effect } if effect == roto)).cloned());
-        g.map(|g| effectcraft_engine::effects::roto::data(&effectcraft_engine::effects::flatten_params(&g, &mut |p| p.value.clone())).strokes.clone())
+            .and_then(|fx| fx.groups().find(|g| matches!(&g.kind, tselatra_engine::project::GroupKind::Effect { effect } if effect == roto)).cloned());
+        g.map(|g| tselatra_engine::effects::roto::data(&tselatra_engine::effects::flatten_params(&g, &mut |p| p.value.clone())).strokes.clone())
             .unwrap_or_default()
     };
     assert!(strokes(&h).is_empty(), "resizing paints nothing");
@@ -2200,8 +2200,8 @@ fn vertex_tools_edit_motion_path_keyframes() {
     s.execute("prop.addKey", json!({"layer": box_id.0, "path": "transform/position", "time": 0.0, "value": [100, 100, 0]})).unwrap();
     s.execute("prop.addKey", json!({"layer": box_id.0, "path": "transform/position", "time": 2.0, "value": [500, 100, 0]})).unwrap();
     s.execute("view.snapping", json!({"value": false})).unwrap();
-    s.set_time(effectcraft_engine::time::Tick::from_seconds_f64(3.0));
-    let keys = |h: &Harness<'_, EffectcraftApp>| {
+    s.set_time(tselatra_engine::time::Tick::from_seconds_f64(3.0));
+    let keys = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(box_id).unwrap().props.prop("transform/position").unwrap().keys.clone()
     };
     h.state_mut().ui.tool = Tool::PenAdd;
@@ -2242,7 +2242,7 @@ fn frame_sits_on_the_physical_pixel_grid() {
     for ppp in [1.0f32, 1.25, 1.5] {
         let mut s = Session::default();
         s.execute("comp.new", json!({"name": "Grid", "width": 301, "height": 201, "duration": 1})).unwrap();
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_pixels_per_point(ppp).build_eframe(move |_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_pixels_per_point(ppp).build_eframe(move |_| TselatraApp::new(s));
         h.run_steps(3);
         for (mag, pan) in [(1.0f32, [0.3f32, 0.37]), (2.0, [-0.45, 0.2])] {
             h.state_mut().ui.viewer.zoom = Some(mag / ppp);
@@ -2261,8 +2261,8 @@ fn frame_sits_on_the_physical_pixel_grid() {
 /// Fit, and never magnifies past 100%.
 #[test]
 fn fit_up_to_100_follows_the_maximized_panel() {
-    use effectcraft_ui_egui::dock::PanelKind;
-    let pick = |h: &mut Harness<'_, EffectcraftApp>| {
+    use tselatra_ui_egui::dock::PanelKind;
+    let pick = |h: &mut Harness<'_, TselatraApp>| {
         let at = rect(h, "viewer.magnification").center();
         click(h, at);
         let at = rect(h, "viewer.magnification.1").center();
@@ -2275,7 +2275,7 @@ fn fit_up_to_100_follows_the_maximized_panel() {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| {
         let mut s = Session::default();
         s.execute("comp.new", json!({"name": "Big", "width": 3840, "height": 2160, "duration": 4})).unwrap();
-        EffectcraftApp::new(s)
+        TselatraApp::new(s)
     });
     h.run_steps(3);
     pick(&mut h);
@@ -2309,7 +2309,7 @@ fn rotate_tool_counts_revolutions_both_ways() {
     h.state_mut().session.execute("layer.select", json!({"layers": [box_id.0]})).unwrap();
     h.state_mut().ui.tool = Tool::Rotate;
     h.run_steps(2);
-    let rotation = |h: &Harness<'_, EffectcraftApp>| {
+    let rotation = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(box_id).unwrap().props.prop("transform/rotation").unwrap().value.as_f64()
     };
     let center = screen(&h, [320.0, 180.0]);
@@ -2323,7 +2323,7 @@ fn rotate_tool_counts_revolutions_both_ways() {
     h.input_mut().events.push(Event::PointerButton { pos: press, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
     let mut seen = vec![];
-    let mut walk = |h: &mut Harness<'_, EffectcraftApp>, degs: Vec<f64>| {
+    let mut walk = |h: &mut Harness<'_, TselatraApp>, degs: Vec<f64>| {
         for d in degs {
             h.input_mut().events.push(Event::PointerMoved(at(d)));
             h.step();
@@ -2360,7 +2360,7 @@ fn mask_shift_click_toggles_vertices() {
     h.state_mut().ui.tool = Tool::Selection;
     h.run_steps(2);
     let (p0, p1) = (screen(&h, [100.0, 60.0]), screen(&h, [500.0, 60.0]));
-    let shift_click = |h: &mut Harness<'_, EffectcraftApp>, p: Pos2| {
+    let shift_click = |h: &mut Harness<'_, TselatraApp>, p: Pos2| {
         h.input_mut().events.push(Event::ModifiersChanged(Modifiers::SHIFT));
         h.step();
         h.input_mut().events.push(Event::PointerMoved(p));
@@ -2404,7 +2404,7 @@ fn mask_marquee_selects_vertices() {
         (l.props.prop("transform/position").unwrap().value.as_vec3(), l.props.prop("transform/anchor").unwrap().value.as_vec3())
     };
     let v0 = [10.0 - aa[0] + pp[0], 10.0 - aa[1] + pp[1]];
-    let pos = |h: &Harness<'_, EffectcraftApp>| {
+    let pos = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(LayerId(bx)).unwrap().props.prop("transform/position").unwrap().value.as_vec3()
     };
     let before = pos(&h);
@@ -2444,7 +2444,7 @@ fn null_eye_hides_it_in_the_viewer() {
     s.execute("comp.new", json!({"name": "Nulls", "width": 640, "height": 360, "duration": 4})).unwrap();
     let n = s.execute("layer.newNull", json!({})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.select", json!({"layers": [n]})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| TselatraApp::new(s));
     h.run_steps(3);
     let handle = format!("viewer.handle.{n}.0");
     let eye = format!("timeline.layer.{n}.video");
@@ -2480,7 +2480,7 @@ fn unselected_null_keeps_its_outline() {
     s.execute("comp.new", json!({"name": "Nulls", "width": 640, "height": 360, "duration": 4})).unwrap();
     let n = s.execute("layer.newNull", json!({})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.select", json!({"layers": [n]})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| TselatraApp::new(s));
     h.run_steps(3);
     // Use the selected box's actual geometry, so transformed nulls use the same outline.
     let corners: Vec<Pos2> = (0..4).map(|i| rect(&h, &format!("viewer.handle.{n}.{i}")).center()).collect();
@@ -2491,7 +2491,7 @@ fn unselected_null_keeps_its_outline() {
             _ => 0,
         }
     }
-    let outlines = |h: &Harness<'_, EffectcraftApp>| h.output().shapes.iter().map(|s| count(&s.shape, &corners)).sum::<usize>();
+    let outlines = |h: &Harness<'_, TselatraApp>| h.output().shapes.iter().map(|s| count(&s.shape, &corners)).sum::<usize>();
     assert_eq!(outlines(&h), 1, "one selected outline");
     h.state_mut().session.execute("edit.deselectAll", json!({})).unwrap();
     h.run_steps(3);
@@ -2518,7 +2518,7 @@ fn unselected_null_keeps_its_outline() {
     assert_eq!(outlines(&h), 0, "an unsoloed null follows solo scope");
     let cid = h.state().session.active_comp_id().unwrap();
     std::sync::Arc::make_mut(&mut h.state_mut().session.project).comp_mut(cid).unwrap().layer_mut(LayerId(solid)).unwrap().out_point =
-        effectcraft_engine::time::Tick::ZERO;
+        tselatra_engine::time::Tick::ZERO;
     h.run_steps(2);
     assert_eq!(outlines(&h), 0, "an inactive soloed layer still sets solo scope");
     h.state_mut().session.execute("layer.setSwitch", json!({"layers": [n], "switch": "solo", "value": true})).unwrap();

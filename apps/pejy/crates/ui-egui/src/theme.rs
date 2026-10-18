@@ -266,7 +266,7 @@ impl Tokens {
 /// installed without waiting, and the caller installs again once they are (see
 /// [`system_fonts_ready`]) to add the installed faces for the scripts they lack.
 pub fn install_fonts(ctx: &egui::Context, lang: &str) -> bool {
-    let craft = designcraft_fonts::CRAFT_FONTS;
+    let craft = pejy_fonts::MAHAY_FONTS;
     let mut defs = font_definitions(craft, lang);
     let system = system_ui_fonts(craft);
     if let Some(system) = system {
@@ -278,7 +278,7 @@ pub fn install_fonts(ctx: &egui::Context, lang: &str) -> bool {
 
 /// Whether [`install_fonts`] would find the installed fonts cataloged.
 pub fn system_fonts_ready() -> bool {
-    designcraft_fonts::FontDb::global().system_fonts_cataloged()
+    pejy_fonts::FontDb::global().system_fonts_cataloged()
 }
 
 /// An installed font the UI falls back to for a script the built-in faces lack.
@@ -345,14 +345,14 @@ const SYSTEM_UI_FONTS: &[(&str, char, &[&str])] = &[
     ("Ethi", 'አ', &["Kefa", "Ebrima", "Nyala", "Noto Sans Ethiopic", "Abyssinica SIL"]),
 ];
 
-/// The installed faces for the scripts `craft` (the built-in craft-fonts) doesn't cover, so the
-/// interface shows Japanese and Chinese without the craft-fonts build input, and Korean,
+/// The installed faces for the scripts `craft` (the built-in mahay-fonts) doesn't cover, so the
+/// interface shows Japanese and Chinese without the mahay-fonts build input, and Korean,
 /// Traditional Chinese (font names in the font menus), Indic, Southeast Asian and other scripts
 /// in any build. egui can't find system fonts itself; the document font scan (not on the web)
 /// does.
-fn system_ui_fonts(craft: &[designcraft_fonts::CraftFont]) -> Option<&'static [SystemFont]> {
+fn system_ui_fonts(craft: &[pejy_fonts::MahayFont]) -> Option<&'static [SystemFont]> {
     static FACES: std::sync::OnceLock<Vec<SystemFont>> = std::sync::OnceLock::new();
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     // Never wait for the font scan here (the first frame): it runs in the background, and the
     // faces are read once, when it is done.
     // (Tests wait instead, so that the fonts don't change in the middle of one.)
@@ -364,7 +364,7 @@ fn system_ui_fonts(craft: &[designcraft_fonts::CraftFont]) -> Option<&'static [S
 }
 
 /// The faces of [`SYSTEM_UI_FONTS`] that `db` has, for the scripts `craft` doesn't cover.
-fn installed_ui_fonts(db: &designcraft_fonts::FontDb, craft: &[designcraft_fonts::CraftFont]) -> Vec<SystemFont> {
+fn installed_ui_fonts(db: &pejy_fonts::FontDb, craft: &[pejy_fonts::MahayFont]) -> Vec<SystemFont> {
     let mut faces: Vec<SystemFont> = Vec::new();
     for (script, sample, families) in SYSTEM_UI_FONTS {
         if craft.iter().any(|f| f.scripts.contains(script)) {
@@ -395,7 +395,7 @@ const UI_FONT: &[u8] = include_bytes!("../../../assets/fonts/SourceSans3-Regular
 /// text beside it. Shifts are in ems of the font size.
 pub(crate) fn baseline_tweak(face: &[u8], index: u32) -> egui::FontTweak {
     let metrics = |data: &[u8], i: u32| {
-        designcraft_fonts::line_metrics(data, i).map(|(upem, ascent, descent, gap)| (ascent / upem, (ascent - descent + gap) / upem))
+        pejy_fonts::line_metrics(data, i).map(|(upem, ascent, descent, gap)| (ascent / upem, (ascent - descent + gap) / upem))
     };
     let shift = match (metrics(UI_FONT, 0), metrics(face, index)) {
         (Some((ap, hp)), Some((af, hf))) => ap - (af + 0.5 * (hp - hf)),
@@ -438,18 +438,18 @@ pub(crate) fn add_system_fallbacks(fonts: &mut FontDefinitions, system: &[System
     for (family, stack) in fonts.families.iter_mut() {
         // The Arabic families keep their own order (see `font_definitions`).
         let arabic = matches!(family, FontFamily::Name(n) if n.starts_with("arabic"));
-        let at = if arabic { stack.len() } else { stack.iter().position(|n| n.starts_with("craft-")).unwrap_or(stack.len()) };
+        let at = if arabic { stack.len() } else { stack.iter().position(|n| n.starts_with("mahay-")).unwrap_or(stack.len()) };
         stack.splice(at..at, preferred.iter().cloned());
         stack.extend(rest.iter().cloned());
     }
 }
 
-/// The UI fonts: the app's own, then the craft-fonts faces from `craft` (empty without
-/// `CRAFT_FONTS_DIR`) as fallbacks at the end of every family: Japanese (BIZ UDPGothic first) and
+/// The UI fonts: the app's own, then the mahay-fonts faces from `craft` (empty without
+/// `MAHAY_FONTS_DIR`) as fallbacks at the end of every family: Japanese (BIZ UDPGothic first) and
 /// Simplified Chinese, in the interface language's order, then Arabic. The `arabic` families
 /// put the Arabic face first for right-to-left runs. egui has no system-font discovery, so
-/// without craft-fonts CJK and Arabic UI text has no glyphs.
-pub(crate) fn font_definitions(craft: &'static [designcraft_fonts::CraftFont], lang: &str) -> FontDefinitions {
+/// without mahay-fonts CJK and Arabic UI text has no glyphs.
+pub(crate) fn font_definitions(craft: &'static [pejy_fonts::MahayFont], lang: &str) -> FontDefinitions {
     let mut fonts = FontDefinitions::default();
     let add = |fonts: &mut FontDefinitions, name: &str, data: &'static [u8]| {
         fonts.font_data.insert(name.into(), Arc::new(FontData::from_static(data)));
@@ -460,13 +460,13 @@ pub(crate) fn font_definitions(craft: &'static [designcraft_fonts::CraftFont], l
     fonts.families.entry(FontFamily::Proportional).or_default().insert(0, "ui".into());
     fonts.families.entry(FontFamily::Monospace).or_default().insert(0, "mono".into());
     fonts.families.insert(FontFamily::Name("semibold".into()), vec!["ui-semibold".into(), "ui".into()]);
-    let pick = |script: &str| -> Vec<&designcraft_fonts::CraftFont> { craft.iter().filter(|f| f.scripts.contains(&script)).collect() };
+    let pick = |script: &str| -> Vec<&pejy_fonts::MahayFont> { craft.iter().filter(|f| f.scripts.contains(&script)).collect() };
     let mut japanese = pick("Jpan");
     // BIZ UDPGothic (the UI face) first, Regular before Bold; the semibold family prefers Bold.
     japanese.sort_by_key(|f| (f.family != "BIZ UDPGothic", f.style != "Regular"));
     let chinese = pick("Hans");
     let arabic = pick("Arab");
-    let name = |f: &designcraft_fonts::CraftFont| format!("craft-{}-{}", f.family, f.style);
+    let name = |f: &pejy_fonts::MahayFont| format!("mahay-{}-{}", f.family, f.style);
     for f in japanese.iter().chain(&chinese) {
         // CJK faces sit on the Latin baseline (see `baseline_tweak`).
         fonts.font_data.insert(name(f), Arc::new(FontData { tweak: baseline_tweak(f.bytes, 0), ..FontData::from_static(f.bytes) }));
@@ -522,7 +522,7 @@ pub fn apply(ctx: &egui::Context, t: &Tokens) {
     v.selection.stroke = Stroke::new(1.0, t.text_strong);
     v.hyperlink_color = t.accent;
     v.override_text_color = Some(t.text);
-    craft_ui::theme::WidgetPalette { noninteractive: t.panel, inactive: t.button, hovered: t.hover, active: t.tool_active, open: t.hover }.apply_to(
+    mahay_ui::theme::WidgetPalette { noninteractive: t.panel, inactive: t.button, hovered: t.hover, active: t.tool_active, open: t.hover }.apply_to(
         &mut v.widgets,
         r,
         Stroke::new(1.0, t.text),
@@ -559,7 +559,7 @@ mod japanese_font_tests {
         [egui::FontFamily::Proportional, egui::FontFamily::Monospace, egui::FontFamily::Name("semibold".into())]
     }
 
-    fn ctx_with(craft: &'static [designcraft_fonts::CraftFont]) -> egui::Context {
+    fn ctx_with(craft: &'static [pejy_fonts::MahayFont]) -> egui::Context {
         let ctx = egui::Context::default();
         ctx.set_fonts(super::font_definitions(craft, "ja"));
         let mut output = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -569,11 +569,11 @@ mod japanese_font_tests {
 
     #[test]
     fn japanese_ui_glyphs_are_available_in_every_family() {
-        if designcraft_fonts::CRAFT_FONTS.is_empty() {
-            eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a checkout)");
+        if pejy_fonts::MAHAY_FONTS.is_empty() {
+            eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a checkout)");
             return;
         }
-        let ctx = ctx_with(designcraft_fonts::CRAFT_FONTS);
+        let ctx = ctx_with(pejy_fonts::MAHAY_FONTS);
         ctx.fonts_mut(|fonts| {
             for family in families() {
                 let font = egui::FontId::new(13.0, family);
@@ -584,16 +584,16 @@ mod japanese_font_tests {
             }
         });
         // The UI face is BIZ UDPGothic, ahead of the Mincho faces.
-        let defs = super::font_definitions(designcraft_fonts::CRAFT_FONTS, "ja");
+        let defs = super::font_definitions(pejy_fonts::MAHAY_FONTS, "ja");
         let stack = &defs.families[&egui::FontFamily::Proportional];
-        assert_eq!(stack.iter().find(|n| n.starts_with("craft-")).map(String::as_str), Some("craft-BIZ UDPGothic-Regular"));
+        assert_eq!(stack.iter().find(|n| n.starts_with("mahay-")).map(String::as_str), Some("mahay-BIZ UDPGothic-Regular"));
     }
 
-    /// Without craft-fonts, an installed Japanese face gives the interface its glyphs (here a
+    /// Without mahay-fonts, an installed Japanese face gives the interface its glyphs (here a
     /// synthetic stand-in, so the test doesn't depend on the machine's fonts).
     #[test]
-    fn installed_fonts_give_japanese_glyphs_without_craft_fonts() {
-        let bytes = designcraft_fonts::testing::font_with("DC UI Japanese", &['日', '本', '語']).unwrap();
+    fn installed_fonts_give_japanese_glyphs_without_mahay_fonts() {
+        let bytes = pejy_fonts::testing::font_with("DC UI Japanese", &['日', '本', '語']).unwrap();
         let system = [super::SystemFont::new("Jpan", "DC UI Japanese".into(), bytes, 0)];
         let mut defs = super::font_definitions(&[], "ja");
         super::add_system_fallbacks(&mut defs, &system, "ja");
@@ -616,12 +616,12 @@ mod japanese_font_tests {
     /// at `ascent + (primary line height − its line height) / 2`, plus the tweak.
     #[test]
     fn fallback_faces_share_the_ui_baseline() {
-        let ui = designcraft_fonts::line_metrics(super::UI_FONT, 0).unwrap();
+        let ui = pejy_fonts::line_metrics(super::UI_FONT, 0).unwrap();
         // A synthetic face with a taller ascent and a line gap (Hiragino-like proportions).
-        let base = designcraft_fonts::testing::font_with("DC Tall", &['日']).unwrap();
-        let tall = designcraft_fonts::testing::with_table_u16(base, b"hhea", 4, 1200u16).unwrap();
-        let tall = designcraft_fonts::testing::with_table_u16(tall, b"hhea", 8, 500u16).unwrap();
-        let face = designcraft_fonts::line_metrics(&tall, 0).unwrap();
+        let base = pejy_fonts::testing::font_with("DC Tall", &['日']).unwrap();
+        let tall = pejy_fonts::testing::with_table_u16(base, b"hhea", 4, 1200u16).unwrap();
+        let tall = pejy_fonts::testing::with_table_u16(tall, b"hhea", 8, 500u16).unwrap();
+        let face = pejy_fonts::line_metrics(&tall, 0).unwrap();
         let tweak = super::baseline_tweak(&tall, 0);
         let em = |m: (f32, f32, f32, f32)| (m.1 / m.0, (m.1 - m.2 + m.3) / m.0);
         let ((ap, hp), (af, hf)) = (em(ui), em(face));
@@ -637,7 +637,7 @@ mod japanese_font_tests {
     #[test]
     fn installed_korean_faces_give_hangul_glyphs() {
         let face = |family: &str, chars: &[char], script| {
-            super::SystemFont::new(script, family.into(), designcraft_fonts::testing::font_with(family, chars).unwrap(), 0)
+            super::SystemFont::new(script, family.into(), pejy_fonts::testing::font_with(family, chars).unwrap(), 0)
         };
         let system = [face("DC UI Korean", &['한', '글'], "Kore"), face("DC UI Japanese", &['日'], "Jpan")];
         let mut defs = super::font_definitions(&[], "ja");
@@ -660,17 +660,17 @@ mod japanese_font_tests {
     #[test]
     fn interface_language_orders_the_cjk_faces() {
         let face =
-            |family: &str, script| super::SystemFont::new(script, family.into(), designcraft_fonts::testing::font_with(family, &['日']).unwrap(), 0);
+            |family: &str, script| super::SystemFont::new(script, family.into(), pejy_fonts::testing::font_with(family, &['日']).unwrap(), 0);
         let system = [face("DC Ja", "Jpan"), face("DC Hans", "Hans"), face("DC Hant", "Hant"), face("DC Ko", "Kore")];
         for (lang, first) in [("ja", "DC Ja"), ("zh", "DC Hans"), ("zh-hant", "DC Hant"), ("ko", "DC Ko"), ("", "DC Ja")] {
             let mut defs = super::font_definitions(&[], lang);
-            // Stand-in for a built-in CJK face (craft-fonts may be absent in this build).
-            defs.families.entry(egui::FontFamily::Proportional).or_default().push("craft-Stand-in".into());
+            // Stand-in for a built-in CJK face (mahay-fonts may be absent in this build).
+            defs.families.entry(egui::FontFamily::Proportional).or_default().push("mahay-Stand-in".into());
             super::add_system_fallbacks(&mut defs, &system, lang);
             let stack = &defs.families[&egui::FontFamily::Proportional];
             let at = |n: &str| stack.iter().position(|x| x == n).unwrap();
             let first_at = at(&format!("system-{first}"));
-            assert!(first_at < at("craft-Stand-in"), "{lang}: {stack:?}");
+            assert!(first_at < at("mahay-Stand-in"), "{lang}: {stack:?}");
             for f in &system {
                 let name = format!("system-{}", f.family);
                 assert!(first_at <= at(&name), "{lang}: {stack:?}");
@@ -696,22 +696,22 @@ mod japanese_font_tests {
             ("Noto Sans Thai", &['ก'][..]),
         ];
         for (i, (family, chars)) in fonts.iter().enumerate() {
-            std::fs::write(dir.join(format!("font{i}.ttf")), designcraft_fonts::testing::font_with(family, chars).unwrap()).unwrap();
+            std::fs::write(dir.join(format!("font{i}.ttf")), pejy_fonts::testing::font_with(family, chars).unwrap()).unwrap();
         }
-        let db = designcraft_fonts::FontDb::with_font_dirs(vec![dir.clone()]);
+        let db = pejy_fonts::FontDb::with_font_dirs(vec![dir.clone()]);
         let system = super::installed_ui_fonts(&db, &[]);
         let _ = std::fs::remove_dir_all(&dir);
         let picked: Vec<(&str, &str)> = system.iter().map(|f| (f.script, f.family.as_str())).collect();
         assert_eq!(picked, [("Jpan", "Noto Sans CJK JP"), ("Taml", "Nirmala UI"), ("Thai", "Noto Sans Thai")]);
 
         let mut defs = super::font_definitions(&[], "ja");
-        defs.families.entry(egui::FontFamily::Proportional).or_default().push("craft-Stand-in".into());
+        defs.families.entry(egui::FontFamily::Proportional).or_default().push("mahay-Stand-in".into());
         super::add_system_fallbacks(&mut defs, &system, "ja");
         let stack = &defs.families[&egui::FontFamily::Proportional];
         let at = |n: &str| stack.iter().position(|x| x == n).unwrap();
-        assert!(at("system-Noto Sans CJK JP") < at("craft-Stand-in"), "{stack:?}");
-        assert!(at("craft-Stand-in") < at("system-Nirmala UI") && at("system-Nirmala UI") < at("system-Noto Sans Thai"), "{stack:?}");
-        defs.families.entry(egui::FontFamily::Proportional).or_default().retain(|n| n != "craft-Stand-in");
+        assert!(at("system-Noto Sans CJK JP") < at("mahay-Stand-in"), "{stack:?}");
+        assert!(at("mahay-Stand-in") < at("system-Nirmala UI") && at("system-Nirmala UI") < at("system-Noto Sans Thai"), "{stack:?}");
+        defs.families.entry(egui::FontFamily::Proportional).or_default().retain(|n| n != "mahay-Stand-in");
         let ctx = egui::Context::default();
         ctx.set_fonts(defs);
         let mut output = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -725,16 +725,16 @@ mod japanese_font_tests {
     }
 
     #[test]
-    fn ui_works_without_craft_fonts() {
+    fn ui_works_without_mahay_fonts() {
         let ctx = ctx_with(&[]);
         ctx.fonts_mut(|fonts| {
             // (egui's has_glyph reports false for characters of the face that also supplies the
             // replacement glyph, as Source Sans Semibold does in the semibold stack.)
             let body = egui::FontId::new(13.0, egui::FontFamily::Proportional);
-            assert!(fonts.has_glyphs(&body, "DesignCraft"));
+            assert!(fonts.has_glyphs(&body, "Pejy"));
             for family in families() {
                 let font = egui::FontId::new(13.0, family);
-                let galley = fonts.layout_no_wrap("日本語 DesignCraft".into(), font, egui::Color32::WHITE);
+                let galley = fonts.layout_no_wrap("日本語 Pejy".into(), font, egui::Color32::WHITE);
                 assert!(galley.size().x > 0.0);
             }
         });
@@ -747,10 +747,10 @@ mod japanese_font_tests {
 mod ukrainian_font_tests {
     #[test]
     fn every_catalog_cyrillic_glyph_exists_in_the_bundled_ui_fonts() {
-        // Check the actual installed face data, without craft-fonts or system fonts.
+        // Check the actual installed face data, without mahay-fonts or system fonts.
         // egui's has_glyph can report false for the face providing its replacement glyph.
         let definitions = super::font_definitions(&[], "uk");
-        let db = designcraft_fonts::FontDb::with_font_dirs(Vec::new());
+        let db = pejy_fonts::FontDb::with_font_dirs(Vec::new());
         db.set_system_fallback(false);
         let characters: std::collections::HashSet<_> = crate::i18n::ukrainian_catalog()
             .iter()
@@ -775,9 +775,9 @@ mod ukrainian_font_tests {
 mod russian_font_tests {
     #[test]
     fn every_catalog_cyrillic_glyph_exists_in_the_bundled_ui_fonts() {
-        // Same check as for Ukrainian: the installed face data only, without craft-fonts or system fonts.
+        // Same check as for Ukrainian: the installed face data only, without mahay-fonts or system fonts.
         let definitions = super::font_definitions(&[], "ru");
-        let db = designcraft_fonts::FontDb::with_font_dirs(Vec::new());
+        let db = pejy_fonts::FontDb::with_font_dirs(Vec::new());
         db.set_system_fallback(false);
         let characters: std::collections::HashSet<_> = crate::i18n::russian_catalog()
             .iter()

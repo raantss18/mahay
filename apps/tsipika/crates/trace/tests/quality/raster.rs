@@ -2,7 +2,7 @@
 //! from ground-truth vector shapes here, never loaded from files.
 
 use kurbo::{BezPath, PathEl, Point};
-use vectorcraft_trace::{Raster, TracedGradient};
+use tsipika_trace::{Raster, TracedGradient};
 
 /// The closed polylines of `path` (one per subpath), flattened within `tol`.
 pub fn polylines(path: &BezPath, tol: f64) -> Vec<Vec<Point>> {

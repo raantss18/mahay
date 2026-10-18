@@ -2,10 +2,10 @@
 //! comp renderer switch, Layer ▸ Environment Layer, Geometry Options for extruded text and
 //! shapes, and Layer ▸ Material commands.
 
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{FootageKind, ItemId, ItemKind, Layer, LayerSource, Node, PrimitiveKind, PropGroup, Renderer};
-use effectcraft_time::Tick;
+use tselatra_keyframe::Value as KV;
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{FootageKind, ItemId, ItemKind, Layer, LayerSource, Node, PrimitiveKind, PropGroup, Renderer};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::layer::{color_p, index_p, insert_layer, insert_layer_at, place, position_p};
@@ -27,7 +27,7 @@ pub(crate) fn add_geometry_options(next_id: &mut u64, l: &mut Layer) {
 }
 
 /// Advanced 3D comps: give every text and shape layer Geometry Options.
-pub(crate) fn sync_geometry_options(proj: &mut effectcraft_project::Project, cid: ItemId) {
+pub(crate) fn sync_geometry_options(proj: &mut tselatra_project::Project, cid: ItemId) {
     if proj.comp(cid).is_none_or(|c| c.renderer != Renderer::Advanced3D) {
         return;
     }
@@ -77,7 +77,7 @@ fn renderer_id(r: Renderer) -> &'static str {
 /// Only the Advanced 3D renderer draws model and primitive layers, so adding one switches a
 /// Classic 3D comp to it, like After Effects (inside the adding edit: one undo step). Whether
 /// the renderer changed.
-fn use_advanced_3d(proj: &mut effectcraft_project::Project, cid: ItemId) -> Result<bool> {
+fn use_advanced_3d(proj: &mut tselatra_project::Project, cid: ItemId) -> Result<bool> {
     let c = proj.comp_mut(cid).ok_or(EngineError::NoComp)?;
     let switched = c.renderer != Renderer::Advanced3D;
     c.renderer = Renderer::Advanced3D;

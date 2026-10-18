@@ -11,7 +11,7 @@ use crate::theme::Tokens;
 /// Draw the annotation scale list ending at `right` (model space only); returns its left edge,
 /// or `right` when nothing is drawn.
 pub fn status(app: &mut CadApp, ui: &mut egui::Ui, right: f32, cy: f32) -> f32 {
-    if !matches!(app.session.layout_space(), cadcraft_doc::Space::Model) {
+    if !matches!(app.session.layout_space(), drafitra_doc::Space::Model) {
         return right;
     }
     let Ok(d) = app.session.doc() else { return right };

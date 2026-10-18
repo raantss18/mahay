@@ -12,7 +12,7 @@
 
 use std::io::Read;
 
-use vectorcraft_color::cms::{Lab, lab::lab_to_srgb};
+use tsipika_color::cms::{Lab, lab::lab_to_srgb};
 
 /// Photoshop's colour modes (the header's numbers), as far as the merged image is concerned.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

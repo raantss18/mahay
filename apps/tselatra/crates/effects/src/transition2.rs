@@ -6,10 +6,10 @@
 //! reveals a back side); the maths is our own. Completion 0 leaves the layer untouched;
 //! completion 100 leaves it fully transparent (or showing the revealed / back-side layer).
 
-use effectcraft_color::rgb_to_hsl;
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_color::rgb_to_hsl;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::util::{Plane, fit_layer, gauss_plane, layer_or_self, lerp4, smoothstep, unpremul};
@@ -46,7 +46,7 @@ fn prop_plane(img: &Image, prop: u32) -> Plane {
             1 => c[1] * a,
             2 => c[2] * a,
             3 => a,
-            4 => effectcraft_color::luminance(c[0], c[1], c[2]) * a,
+            4 => tselatra_color::luminance(c[0], c[1], c[2]) * a,
             5 => rgb_to_hsl(c[0], c[1], c[2]).2 * a,
             _ => rgb_to_hsl(c[0], c[1], c[2]).1 * a,
         }

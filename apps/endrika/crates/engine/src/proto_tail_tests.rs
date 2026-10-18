@@ -1,11 +1,11 @@
 //! The prototyping tail, written from the public documentation: controller buttons on key/gamepad
 //! triggers, widgets reacting to clicks in a presented prototype, and variable mode lookups in
 //! expressions. Each case states the rule and a one-line derivation; where the documentation is
-//! silent the case says so and pins what FigCraft does. The player's side (injected controller
+//! silent the case says so and pins what Endrika does. The player's side (injected controller
 //! presses, clicks on a widget in the presenter) is `ui-egui`'s `present_tail_tests`.
 
-use figcraft_doc::proto::{Action, GAMEPAD_BUTTONS, KeyMods, Trigger, gamepad_button, uses_gamepad};
-use figcraft_doc::{NodeId, VariableValue};
+use endrika_doc::proto::{Action, GAMEPAD_BUTTONS, KeyMods, Trigger, gamepad_button, uses_gamepad};
+use endrika_doc::{NodeId, VariableValue};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -68,7 +68,7 @@ fn widgets_react_to_clicks_on_the_prototypes_own_copy() {
     let (w, _) = crate::widgets_tests::insert(&mut s);
     let editor = s.doc().unwrap().clone();
     let undo = crate::plugins_tests::undo_len(&s);
-    let state = |d: &figcraft_doc::Document| d.node(w).and_then(|n| n.plugin_data.get("figcraft.widget.state").cloned()).unwrap_or_default();
+    let state = |d: &endrika_doc::Document| d.node(w).and_then(|n| n.plugin_data.get("endrika.widget.state").cloned()).unwrap_or_default();
     // Clicking calls the plugin back with the prototype's state of the widget, which it redraws.
     let (copy, out) = click_on(&s, editor.clone(), w, "inc").unwrap();
     assert_eq!(out["state"], json!({"n": 2}));
@@ -157,9 +157,9 @@ fn set_variable_mode_changes_what_later_expressions_read() {
     let (s, button, inner, a) = modes_session();
     let mut doc = s.doc().unwrap().clone();
     let size = doc.variables.get("size").unwrap().id.clone();
-    let cond = |text: &str, d: &figcraft_doc::Document| {
-        let e = figcraft_doc::proto::Expr::parse(text, &d.variables).unwrap();
-        vec![figcraft_doc::proto::ConditionalBlock { condition: Some(e), actions: vec![Action::Back] }]
+    let cond = |text: &str, d: &endrika_doc::Document| {
+        let e = endrika_doc::proto::Expr::parse(text, &d.variables).unwrap();
+        vec![endrika_doc::proto::ConditionalBlock { condition: Some(e), actions: vec![Action::Back] }]
     };
     assert!(branch(&doc, button, &cond("mode(Theme) == \"Dark\"", &doc)).is_empty(), "Light before the action");
     // The action switches the screen's mode for the prototype: a conditional after it sees Dark.
@@ -167,9 +167,9 @@ fn set_variable_mode_changes_what_later_expressions_read() {
     assert_eq!(branch(&doc, button, &cond("mode(Theme) == \"Dark\"", &doc)), vec![Action::Back]);
     assert_eq!(branch(&doc, button, &cond("size == 20", &doc)), vec![Action::Back], "plain references follow the new mode");
     // A set variable action computes its expression in the new mode.
-    let e = figcraft_doc::proto::Expr::parse("size[Light] + size", &doc.variables).unwrap();
+    let e = endrika_doc::proto::Expr::parse("size[Light] + size", &doc.variables).unwrap();
     assert!(set_variable(&mut doc, button, &size, &Value::Null, Some(&e)));
-    let resolve = |d: &figcraft_doc::Document, mode: &str| {
+    let resolve = |d: &endrika_doc::Document, mode: &str| {
         let m = std::collections::BTreeMap::from([(
             d.variables.collection("Theme").unwrap().id.clone(),
             d.variables.collection("Theme").unwrap().find_mode(mode).unwrap().id.clone(),

@@ -1,6 +1,6 @@
 [package]
-name = "effectcraft-media"
-description = "Footage import: probing, stills, image sequences, video and audio via FilmCraft's pure-Rust codecs, memory-budgeted frame cache"
+name = "tselatra-media"
+description = "Footage import: probing, stills, image sequences, video and audio via Hetsika's pure-Rust codecs, memory-budgeted frame cache"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,22 +10,22 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-craft-docpath = { workspace = true }
-effectcraft-time = { workspace = true }
-effectcraft-project = { workspace = true }
-effectcraft-raster = { workspace = true }
-effectcraft-render = { workspace = true }
-effectcraft-psd = { workspace = true }
-effectcraft-svg = { workspace = true }
-effectcraft-pdf = { workspace = true }
-effectcraft-model = { workspace = true }
-filmcraft-codecs = { workspace = true }
-filmcraft-media = { workspace = true }
-filmcraft-isobmff = { workspace = true }
-filmcraft-frame = { workspace = true }
-filmcraft-color = { workspace = true }
-filmcraft-time = { workspace = true }
-# AIFF import (#1428): enables the aiff reader of filmcraft-codecs' symphonia.
+mahay-docpath = { workspace = true }
+tselatra-time = { workspace = true }
+tselatra-project = { workspace = true }
+tselatra-raster = { workspace = true }
+tselatra-render = { workspace = true }
+tselatra-psd = { workspace = true }
+tselatra-svg = { workspace = true }
+tselatra-pdf = { workspace = true }
+tselatra-model = { workspace = true }
+hetsika-codecs = { workspace = true }
+hetsika-media = { workspace = true }
+hetsika-isobmff = { workspace = true }
+hetsika-frame = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-time = { workspace = true }
+# AIFF import (#1428): enables the aiff reader of hetsika-codecs' symphonia.
 symphonia = { workspace = true }
 exr = { workspace = true }
 gif = { workspace = true }

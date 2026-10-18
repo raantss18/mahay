@@ -11,6 +11,7 @@ default-run = "seho"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 seho-engine = { workspace = true }
 seho-ui-egui = { workspace = true }
 seho-media = { workspace = true }

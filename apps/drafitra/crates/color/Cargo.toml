@@ -1,6 +1,6 @@
 [package]
-name = "cadcraft-color"
-description = "CADCraft colour: AutoCAD Color Index palette, true colour, ByLayer/ByBlock"
+name = "drafitra-color"
+description = "Drafitra colour: AutoCAD Color Index palette, true colour, ByLayer/ByBlock"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

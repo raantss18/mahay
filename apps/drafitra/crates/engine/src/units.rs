@@ -62,7 +62,7 @@ fn gcd(a: i64, b: i64) -> i64 {
 /// 4 surveyor's) and AUPREC.
 pub fn format_angle(a: f64, aunits: i64, auprec: i64) -> String {
     let prec = auprec.clamp(0, 8) as usize;
-    let deg = cadcraft_geom::norm_angle(a).to_degrees();
+    let deg = drafitra_geom::norm_angle(a).to_degrees();
     match aunits {
         1 => {
             // Round at the displayed precision before splitting, carrying through a full turn.
@@ -85,7 +85,7 @@ pub fn format_angle(a: f64, aunits: i64, auprec: i64) -> String {
             }
         }
         2 => format!("{:.*}g", prec, deg / 0.9),
-        3 => format!("{:.*}r", prec, cadcraft_geom::norm_angle(a)),
+        3 => format!("{:.*}r", prec, drafitra_geom::norm_angle(a)),
         4 => {
             // N/S <angle from N/S toward E/W> E/W
             let (ns, ew, ang) = if deg <= 90.0 {
@@ -164,7 +164,7 @@ pub struct AngleSettings {
 }
 
 impl AngleSettings {
-    pub fn from_header(h: &cadcraft_doc::Header) -> Self {
+    pub fn from_header(h: &drafitra_doc::Header) -> Self {
         AngleSettings { aunits: h.i64("AUNITS", 0), angbase: h.f64("ANGBASE", 0.0), clockwise: h.i64("ANGDIR", 0) != 0 }
     }
 

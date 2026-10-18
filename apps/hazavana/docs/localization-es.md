@@ -1,7 +1,7 @@
-# LightCraft en español
+# Hazavana en español
 
 Elegir **Editar → Idioma → Español** o **Ajustes → General → Idioma**. El cambio se aplica al
-momento y se conserva para el próximo inicio (`language: "es"` en `ui.json`). `LIGHTCRAFT_LANGUAGE`
+momento y se conserva para el próximo inicio (`language: "es"` en `ui.json`). `HAZAVANA_LANGUAGE`
 acepta cualquier variante del español (`es`, `es-ES`, `es_MX.UTF-8`, `es-419`…).
 
 El catálogo en español cubre los menús, los métodos abreviados de teclado, la biblioteca, el
@@ -42,6 +42,6 @@ Textos fijos: `crates/ui-egui/locales/es.json`. Mensajes con valores:
 comprueba los marcadores al compilar. Las terminaciones de plural del inglés se ocultan con `{:.0}`.
 
 ```sh
-cargo test -p lightcraft-ui-egui i18n::tests -- --nocapture
-LIGHTCRAFT_LANGUAGE=es lightcraft-cli snapshot --demo -o espanol.png --size 1600x1000
+cargo test -p hazavana-ui-egui i18n::tests -- --nocapture
+HAZAVANA_LANGUAGE=es hazavana-cli snapshot --demo -o espanol.png --size 1600x1000
 ```

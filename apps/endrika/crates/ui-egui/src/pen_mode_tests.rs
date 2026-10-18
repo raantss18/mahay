@@ -4,8 +4,8 @@
 
 use egui::accesskit::Role;
 use egui::{Event, Key, Modifiers, Pos2, pos2};
-use figcraft_engine::Session;
-use figcraft_engine::tools::ToolId;
+use endrika_engine::Session;
+use endrika_engine::tools::ToolId;
 use serde_json::json;
 
 use crate::RightTab;

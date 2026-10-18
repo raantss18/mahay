@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  EffectCraft installer wizard: original dialogs built from Windows Installer's own controls and
-  events (no WixUI library), included by effectcraft.wxs with <UIRef Id="EffectcraftUI" />.
+  Tselatra installer wizard: original dialogs built from Windows Installer's own controls and
+  events (no WixUI library), included by tselatra.wxs with <UIRef Id="TselatraUI" />.
 
     fresh install:  DestDlg (folder, Change... opens BrowseDlg, desktop shortcut) -> ReadyDlg -> ProgressDlg -> ExitDlg
     upgrade:        ReadyDlg (the installed copy's folder, not editable) -> ProgressDlg -> ExitDlg
@@ -13,7 +13,7 @@
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
-    <UI Id="EffectcraftUI">
+    <UI Id="TselatraUI">
       <TextStyle Id="EcText" FaceName="Segoe UI" Size="9" />
       <TextStyle Id="EcTitle" FaceName="Segoe UI" Size="12" Bold="yes" />
       <Property Id="DefaultUIFont" Value="EcText" />
@@ -92,7 +92,7 @@
         <Control Id="Description" Type="Text" X="20" Y="45" Width="330" Height="24" NoPrefix="yes" Text="Repair puts back missing or damaged files in its folder. Remove uninstalls it; your projects are not touched." />
         <Control Id="Repair" Type="PushButton" X="20" Y="80" Width="80" Height="20" Default="yes" ElevationShield="yes" Text="&amp;Repair">
           <!-- "a": put back every file, whatever its version or date. With "e"/"o" a changed
-               unversioned file (effectcraft-cli.exe has no version resource) counts as a user edit
+               unversioned file (tselatra-cli.exe has no version resource) counts as a user edit
                and is kept, and "c" only checks files that carry an MSI checksum. -->
           <Publish Event="ReinstallMode" Value="amus" Order="1" />
           <Publish Event="Reinstall" Value="ALL" Order="2" />
@@ -174,7 +174,7 @@
       </Dialog>
       <Dialog Id="FatalErrorDlg" Width="370" Height="270" Title="[ProductName] Setup">
         <Control Id="Title" Type="Text" X="20" Y="15" Width="330" Height="20" Transparent="yes" NoPrefix="yes" Text="{\EcTitle}Setup did not finish" />
-        <Control Id="Description" Type="Text" X="20" Y="45" Width="330" Height="48" NoPrefix="yes" Text="Something went wrong, and setup put back what was there before. Run setup again, or report it at https://github.com/storytold/effectcraft/issues." />
+        <Control Id="Description" Type="Text" X="20" Y="45" Width="330" Height="48" NoPrefix="yes" Text="Something went wrong, and setup put back what was there before. Run setup again, or report it at https://github.com/raantss18/mahay/issues." />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Finish" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Finish">
           <Publish Event="EndDialog" Value="Exit" />

@@ -3,7 +3,7 @@
 //! DIMFRAC fraction stacking; DIMAUNIT angles. Each formatter returns the MTEXT form (stacked
 //! fractions as `\S1/2;`) that the dimension text is laid out from.
 
-use cadcraft_doc::DimStyle;
+use drafitra_doc::DimStyle;
 
 /// Linear number format settings.
 #[derive(Clone, Debug, PartialEq)]

@@ -6,10 +6,10 @@
 //! Numbering and decoration shapes are font-free; layout geometry reads the default face and skips
 //! on a machine without fonts.
 
-use figcraft_doc::{
+use endrika_doc::{
     DecorationLength, DecorationStyle, ListStyle, ParaList, TextAlignH, TextAutoResize, TextData, TextDecoration, color::Color, color::Paint,
 };
-use figcraft_geom::{Rect, Shape};
+use endrika_geom::{Rect, Shape};
 
 use crate::layout::list_markers;
 use crate::{Decoration, TextLayout, db, layout, scan_system_fonts};
@@ -137,7 +137,7 @@ fn list_spacing_between_items_only() {
     // List spacing is the space between items of a list; paragraphs around it keep the paragraph
     // spacing (silent on both set at once: between two items the list spacing replaces it).
     let Some(mut t) = text("Intro\nA\nB\nOutro") else { return };
-    t.style.line_height = figcraft_doc::LineHeight::Pixels(30.0);
+    t.style.line_height = endrika_doc::LineHeight::Pixels(30.0);
     t.paragraphs = vec![pl(ListStyle::None, 0), pl(ListStyle::Bulleted, 0), pl(ListStyle::Bulleted, 0), pl(ListStyle::None, 0)];
     (t.paragraph_spacing, t.list_spacing) = (10.0, 4.0);
     let Some(l) = laid(&t) else { return };
@@ -190,7 +190,7 @@ fn hanging_punctuation_outside_the_aligned_edge() {
 }
 
 /// (decoration, look change, top edge, height, derivation)
-type Case<'a> = (TextDecoration, &'a dyn Fn(&mut figcraft_doc::DecorationLook), Option<f64>, f64, &'a str);
+type Case<'a> = (TextDecoration, &'a dyn Fn(&mut endrika_doc::DecorationLook), Option<f64>, f64, &'a str);
 
 #[test]
 fn decoration_style_thickness_offset_and_colour() {
@@ -199,7 +199,7 @@ fn decoration_style_thickness_offset_and_colour() {
     let Some(base) = laid(&t) else { return };
     let baseline = base.lines[0].baseline;
     let red = Color::new(1.0, 0.0, 0.0, 1.0);
-    let set = |t: &mut TextData, d: TextDecoration, f: &dyn Fn(&mut figcraft_doc::DecorationLook)| {
+    let set = |t: &mut TextData, d: TextDecoration, f: &dyn Fn(&mut endrika_doc::DecorationLook)| {
         t.style.decoration = d;
         t.style.decoration_look = None;
         t.style.set_look(f);
@@ -287,7 +287,7 @@ fn decoration_shapes() {
     let d = |kind| Decoration { rect: Rect::new(0.0, 10.0, 100.0, 12.0), style: 0, kind, thickness: 2.0 };
     assert_eq!(d(DecorationStyle::Solid).path().bounding_box(), Rect::new(0.0, 10.0, 100.0, 12.0), "solid: the bar");
     let dots = d(DecorationStyle::Dotted).path();
-    let count = dots.elements().iter().filter(|e| matches!(e, figcraft_geom::kurbo::PathEl::MoveTo(_))).count();
+    let count = dots.elements().iter().filter(|e| matches!(e, endrika_geom::kurbo::PathEl::MoveTo(_))).count();
     assert_eq!(count, 25, "dotted: a 2 px dot every 4 px");
     let wave = Decoration { rect: Rect::new(0.0, 7.0, 100.0, 15.0), ..d(DecorationStyle::Wavy) };
     let b = wave.path().bounding_box();

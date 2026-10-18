@@ -1,4 +1,4 @@
-//! CADCraft geometry: double-precision 2D/3D math for drafting.
+//! Drafitra geometry: double-precision 2D/3D math for drafting.
 //!
 //! Everything a CAD kernel needs below the document model: vectors and affine transforms,
 //! bounding boxes, angles, lines, circular arcs (and polyline bulges), ellipses, NURBS splines,

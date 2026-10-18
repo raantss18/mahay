@@ -1,26 +1,26 @@
 //! Headless checks for the Tracker panel and the viewer's track point widgets (egui_kittest, UI
 //! logic only: no GPU needed).
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn app() -> EffectcraftApp {
+fn app() -> TselatraApp {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Track", "width": 640, "height": 360, "duration": 2})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080"})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Target", "width": 80, "height": 80})).unwrap();
     s.execute("layer.select", json!({"layers": ["Plate"]})).unwrap();
-    EffectcraftApp::new(s)
+    TselatraApp::new(s)
 }
 
-fn ids(h: &Harness<'_, EffectcraftApp>) -> Vec<String> {
+fn ids(h: &Harness<'_, TselatraApp>) -> Vec<String> {
     h.state().auto.previous.iter().chain(h.state().auto.elements.iter()).map(|e| e.id.clone()).collect()
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> egui::Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> egui::Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     egui::Rect::from_min_size(egui::pos2(e.rect[0], e.rect[1]), egui::vec2(e.rect[2], e.rect[3]))
 }
@@ -107,16 +107,16 @@ fn tracker_panel_and_track_point_widgets() {
     assert_eq!(undo, 2, "one undo step per drag");
     // Options and Edit Target dialogs.
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "track.optionsDialog", json!({})).unwrap();
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::TrackOptions));
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "track.optionsDialog", json!({})).unwrap();
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::TrackOptions));
     h.step();
     assert!(ids(&h).iter().any(|i| i == "dialog.trackOptions.ok"));
     h.state_mut().dialog = None;
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "track.editTargetDialog", json!({})).unwrap();
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::TrackTarget));
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "track.editTargetDialog", json!({})).unwrap();
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::TrackTarget));
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: egui::Pos2, to: egui::Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: egui::Pos2, to: egui::Pos2) {
     h.input_mut().events.push(egui::Event::PointerMoved(from));
     h.input_mut().events.push(egui::Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
@@ -140,13 +140,13 @@ fn zoomed_out_track_point_can_be_grabbed() {
         s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080"})).unwrap();
         s.execute("layer.select", json!({"layers": ["Plate"]})).unwrap();
         s.execute("track.motion", json!({})).unwrap();
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| TselatraApp::new(s));
         h.state_mut().show_panel(PanelKind::Composition);
         h.run_steps(3);
         h.state_mut().ui.viewer.zoom = Some(mag);
         h.run_steps(3);
         let zoom = rect(&h, "viewer.comp").width() / 1920.0;
-        let point = |h: &mut Harness<'_, EffectcraftApp>| h.state_mut().session.execute("track.status", json!({})).unwrap()["tracker"]["points"][0].clone();
+        let point = |h: &mut Harness<'_, TselatraApp>| h.state_mut().session.execute("track.status", json!({})).unwrap()["tracker"]["points"][0].clone();
         let p0 = point(&mut h);
         let fr = rect(&h, "viewer.track.1.feature");
         let from = fr.center() + egui::vec2(fr.width() * 0.35, 0.0);

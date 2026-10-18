@@ -38,7 +38,7 @@ fn android_main(app: AndroidApp) {
             app.ui.language = tabilao_ui_egui::i18n::Language::system();
             app.ui.system_theme = true;
             SheetApp::setup_context_for_language(&cc.egui_ctx, app.ui.dark, app.ui.language);
-            Ok(Box::new(Shell { app, picture, bridge: EguiBridge::new(&cc.egui_ctx) }))
+            Ok(Box::new(Shell { app, picture, bridge: EguiBridge::new(&cc.egui_ctx, mahay_about::AppInfo { id: "tabilao", name: "Tabilao" }) }))
         }),
     );
     if let Err(e) = result {

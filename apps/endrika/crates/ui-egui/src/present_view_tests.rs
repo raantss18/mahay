@@ -2,8 +2,8 @@
 //! egui (the harness is `present_tests`'), and the motion maths on its own.
 
 use egui::{Event, Key, Pos2, pos2, vec2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::present::{PresentScale, fling_axis, rubber_band};
@@ -78,7 +78,7 @@ fn rubber_band_stretches_less_the_further_it_goes() {
 
 #[test]
 fn scale_options_match_the_command_and_cycle() {
-    for s in figcraft_engine::cmd::proto::PRESENT_SCALES {
+    for s in endrika_engine::cmd::proto::PRESENT_SCALES {
         assert_eq!(PresentScale::parse(s).map(PresentScale::id), Some(s));
     }
     assert_eq!(PresentScale::parse("huge"), None);

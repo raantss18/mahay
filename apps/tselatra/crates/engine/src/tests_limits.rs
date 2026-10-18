@@ -1,15 +1,15 @@
 //! Sizes, frame rates and motion-blur samples stay within the project limits when a project is
 //! opened and when a command sets them (#788).
 
-use effectcraft_project::{ItemKind, limits};
-use effectcraft_render::RenderOpts;
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_project::{ItemKind, limits};
+use tselatra_render::RenderOpts;
+use tselatra_time::{FrameRate, Tick};
 use serde_json::{Value, json};
 
 use crate::{Event, Session};
 
 fn tmp(name: &str) -> String {
-    let d = std::env::temp_dir().join(format!("effectcraft-limits-tests-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("tselatra-limits-tests-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d.join(name).to_string_lossy().to_string()
 }
@@ -53,7 +53,7 @@ fn a_hostile_project_opens_within_the_limits_and_says_what_changed() {
         let r = s.execute("file.open", json!({"path": path})).unwrap();
         let repaired = r["repaired"].as_array().unwrap();
         assert!(repaired.iter().any(|n| n.as_str().unwrap().contains("4000000000 × 0 px → 30000 × 1 px")), "{path}: {repaired:?}");
-        let toast = s.drain_events().into_iter().any(|e| matches!(e, Event::Toast { message, .. } if message.contains("outside EffectCraft's limits")));
+        let toast = s.drain_events().into_iter().any(|e| matches!(e, Event::Toast { message, .. } if message.contains("outside Tselatra's limits")));
         assert!(toast, "{path}");
         let (cid, c) = s.project.comps().next().map(|(id, c)| (*id, c.clone())).unwrap();
         assert_eq!((c.width, c.height), (limits::MAX_SIZE, 1));
@@ -74,7 +74,7 @@ fn a_project_within_the_limits_opens_unchanged() {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 64, "height": 32, "frameRate": 24, "duration": 2})).unwrap();
     let text = s.project.to_file_json().unwrap();
-    let (p, notes) = effectcraft_project::Project::from_json_repaired(&text).unwrap();
+    let (p, notes) = tselatra_project::Project::from_json_repaired(&text).unwrap();
     assert!(notes.is_empty(), "{notes:?}");
     assert_eq!(p, *s.project);
 }

@@ -1,4 +1,4 @@
-//! Original icons for the starter templates: each is one outline drawn for FigCraft from straight
+//! Original icons for the starter templates: each is one outline drawn for Endrika from straight
 //! lines, arcs and simple curves on a 24 px grid (2 px margin, 2 px round strokes).
 
 /// An icon: its name and its outline as SVG path data on the 24 px grid.

@@ -1,8 +1,8 @@
 //! Composition menu, part two: crop to region of interest / layer bounds, Save Frame As ▸ File,
 //! Copy Frame to Clipboard, Responsive Design — Time.
 
-use effectcraft_project::Marker;
-use effectcraft_time::Tick;
+use tselatra_project::Marker;
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, comp_id, f_p, has_comp, has_layers, layers_p, str_p};
@@ -16,10 +16,10 @@ fn has_roi(s: &Session) -> std::result::Result<(), String> {
 
 /// Crop the comp to `[x, y, w, h]`: the comp shrinks and every unparented layer moves by -x, -y
 /// (all position keys too) so nothing moves on screen.
-fn crop(s: &mut Session, cid: effectcraft_project::ItemId, r: [f64; 4], label: &str) -> Result<Value> {
+fn crop(s: &mut Session, cid: tselatra_project::ItemId, r: [f64; 4], label: &str) -> Result<Value> {
     let (x, y) = (r[0].round(), r[1].round());
     // At most 30,000 px a side, like any composition (#788).
-    let (w, h) = (effectcraft_project::limits::size_f64(r[2]), effectcraft_project::limits::size_f64(r[3]));
+    let (w, h) = (tselatra_project::limits::size_f64(r[2]), tselatra_project::limits::size_f64(r[3]));
     s.edit(label, None, |proj, st| {
         let c = proj.comp_mut(cid).ok_or(EngineError::NoComp)?;
         let (old_w, old_h) = (c.width, c.height);
@@ -50,10 +50,10 @@ fn crop_to_layers(s: &mut Session, p: &Value) -> Result<Value> {
     let (cid, ids) = layers_p(s, p)?;
     let t = s.time();
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
-    let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, t);
+    let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, t);
     let mut b = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
     for l in comp.layers.iter().filter(|l| ids.contains(&l.id)) {
-        let Some([x0, y0, x1, y1]) = effectcraft_render::content_bounds(&ctx, l) else { continue };
+        let Some([x0, y0, x1, y1]) = tselatra_render::content_bounds(&ctx, l) else { continue };
         let (m, _) = ctx.layer_to_comp(l);
         for (px, py) in [(x0, y0), (x1, y0), (x1, y1), (x0, y1)] {
             let v = m.0;
@@ -82,8 +82,8 @@ pub(crate) fn encode_png(rgba: &[u8], w: u32, h: u32) -> std::result::Result<Vec
 /// Save Frame As ▸ File with `queue`: a Render Queue item for the current frame, from the Frame
 /// Default templates (Edit ▸ Templates).
 fn queue_frame(s: &mut Session, p: &Value) -> Result<Value> {
-    use effectcraft_project::render_queue::{RenderQueueItem, TimeSpan};
-    use effectcraft_project::render_templates::TemplateSlot;
+    use tselatra_project::render_queue::{RenderQueueItem, TimeSpan};
+    use tselatra_project::render_templates::TemplateSlot;
     let cid = comp_id(s, p)?;
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
     let t = f_p(p, "time").map(Tick::from_seconds_f64).unwrap_or(s.time());
@@ -116,7 +116,7 @@ fn save_frame(s: &mut Session, p: &Value) -> Result<Value> {
     let t = f_p(p, "time").map(Tick::from_seconds_f64).unwrap_or(s.time());
     let scale = f_p(p, "scale").unwrap_or(1.0).clamp(0.01, 4.0);
     let bg = comp.background;
-    let img = s.render(cid, t, effectcraft_render::RenderOpts { scale, backend: effectcraft_render::Backend::Auto, ..Default::default() });
+    let img = s.render(cid, t, tselatra_render::RenderOpts { scale, backend: tselatra_render::Backend::Auto, ..Default::default() });
     let rgba = img.to_rgba8_over(bg);
     let png = encode_png(&rgba, img.width, img.height).map_err(|e| EngineError::Other(format!("PNG encoding failed: {e}")))?;
     s.services.write_file(&path, &png).map_err(|e| EngineError::Other(format!("cannot write {path}: {e}")))?;
@@ -132,7 +132,7 @@ fn copy_frame(s: &mut Session, p: &Value) -> Result<Value> {
     let t = f_p(p, "time").map(Tick::from_seconds_f64).unwrap_or(s.time());
     let scale = f_p(p, "scale").unwrap_or(1.0).clamp(0.01, 4.0);
     let bg = comp.background;
-    let img = s.render(cid, t, effectcraft_render::RenderOpts { scale, backend: effectcraft_render::Backend::Auto, ..Default::default() });
+    let img = s.render(cid, t, tselatra_render::RenderOpts { scale, backend: tselatra_render::Backend::Auto, ..Default::default() });
     let (width, height) = (img.width, img.height);
     let rgba = img.to_rgba8_over(bg);
     let expected = (width as usize).checked_mul(height as usize).and_then(|n| n.checked_mul(4));

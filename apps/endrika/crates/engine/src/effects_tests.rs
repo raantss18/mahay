@@ -6,9 +6,9 @@ use serde_json::json;
 use crate::Session;
 use crate::codegen::{CodeLang, code_for};
 use crate::params::id_of;
-use figcraft_doc::{Effect, EffectKind, Glass, NoiseMode};
+use endrika_doc::{Effect, EffectKind, Glass, NoiseMode};
 
-fn rect(s: &mut Session) -> figcraft_doc::NodeId {
+fn rect(s: &mut Session) -> endrika_doc::NodeId {
     id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 60})).unwrap()["id"]).unwrap()
 }
 

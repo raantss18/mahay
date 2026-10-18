@@ -2,7 +2,7 @@
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|other" forms).
 #
 # Clean-room: menu and feature names follow the names Japanese users of vector illustration
-# software know, written from the meaning of VectorCraft's English labels; no other application's
+# software know, written from the meaning of Tsipika's English labels; no other application's
 # Japanese localisation was copied. Toggles read as their action (「…を表示」「…を隠す」).
 	Glowing Edges…	エッジの光彩…
 	Glowing Edges	エッジの光彩
@@ -14,7 +14,7 @@
 # tested) — and the status and error messages (`@msg` rows at the end, `COMPLETE_MESSAGES`, tested).
 # Left in English on purpose (`MENU_KEEP_AS_IS` in the tests): the product name, language
 # names, OpenType, the built-in workspace names and the bracketed perspective grid preset names.
-	About VectorCraft	VectorCraft について
+	About Tsipika	Tsipika について
 	All Scripts	すべての文字
 	Anchors:	アンカー:
 	Any Kind	すべての種類
@@ -70,7 +70,7 @@
 	Medium Dark	やや暗い
 	Medium Light	やや明るい
 	Light	明るい
-	Quit VectorCraft	VectorCraft を終了
+	Quit Tsipika	Tsipika を終了
 	File	ファイル
 	New…	新規…
 	New from Template…	テンプレートから新規…
@@ -683,11 +683,11 @@
 	Save Swatch Library…	スウォッチライブラリを保存…
 	Symbol Libraries	シンボルライブラリ
 	Help	ヘルプ
-	ArtCraft Website	ArtCraft の Web サイト
-	VectorCraft on getartcraft.com	getartcraft.com の VectorCraft
-	VectorCraft on GitHub	GitHub の VectorCraft
+	Mahay Website	Mahay の Web サイト
+	Tsipika on mahay.com	mahay.com の Tsipika
+	Tsipika on GitHub	GitHub の Tsipika
 	Search Commands…	コマンドを検索…
-	VectorCraft Help…	VectorCraft ヘルプ…
+	Tsipika Help…	Tsipika ヘルプ…
 	Preview	プレビュー
 	Show Edges	エッジを表示
 	Show Corner Widget	コーナーウィジェットを表示
@@ -874,7 +874,7 @@
 	Appearance Panel	アピアランスパネル
 	Appearance of Black	ブラックのアピアランス
 	Appearance panel	アピアランスパネル
-	Applies the next time VectorCraft starts.	VectorCraft の次回起動時に適用されます。
+	Applies the next time Tsipika starts.	Tsipika の次回起動時に適用されます。
 	Applies when the linked file is relinked or updated.	リンクファイルを再リンクまたは更新したときに適用されます。
 	Apply Brush	ブラシを適用
 	Apply Character Style	文字スタイルを適用
@@ -894,7 +894,7 @@
 	Arrange: Bring to Front	重ね順: 最前面へ
 	Arrowheads:	矢印:
 	Art using a deleted global swatch keeps its colour.	削除したグローバルスウォッチを使っているアートは、そのカラーを保持します。
-	ArtCraft website	ArtCraft の Web サイト
+	Mahay website	Mahay の Web サイト
 	Artboard Options	アートボードオプション
 	Artboard Options…	アートボードオプション…
 	Artboard Tool	アートボードツール
@@ -981,7 +981,7 @@
 	Check Script	スクリプトをチェック
 	Check Script…	スクリプトをチェック…
 	Copy Report	レポートをコピー
-	VectorCraft read this script without running it.	VectorCraft はこのスクリプトを実行せずに読み取りました。
+	Tsipika read this script without running it.	Tsipika はこのスクリプトを実行せずに読み取りました。
 	Needs nothing beyond plain JavaScript	通常の JavaScript 以外は不要
 	Needs the script language's own objects or directives	スクリプト言語固有のオブジェクトまたはディレクティブが必要
 	Needs the document model	ドキュメントモデルが必要
@@ -1766,7 +1766,7 @@
 	Italian	イタリア語
 	Join Tool	結合ツール
 	Join our Discord	Discord に参加
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Discord で ArtCraft コミュニティに参加 (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Discord で Mahay コミュニティに参加 (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	段落内の行を連結
 	Justification…	文字組み…
 	Keep Formatting	書式を保持
@@ -1781,7 +1781,7 @@
 # Import Shortcut Set (Keyboard Shortcuts › Import…, File › Open of a .kys file) and its commands.
 	Import Shortcut Set	ショートカットセットを読み込み
 	Import Shortcut Set…	ショートカットセットを読み込み…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	ファイルの各項目を VectorCraft のツール、コマンド、パネルに対応付けます。対応を確認して、残りの項目を指定してください。
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	ファイルの各項目を Tsipika のツール、コマンド、パネルに対応付けます。対応を確認して、残りの項目を指定してください。
 	Keys	キー
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	このファイルはキーと修飾キーをコードで記録しています。提案された意味を確認して、まだ分からないコードを指定してください。
 	Click, then press the key this code stands for (Esc cancels)	クリックしてから、このコードが表すキーを押します (Esc でキャンセル)
@@ -1792,7 +1792,7 @@
 	Shortcuts	ショートカット
 	Shortcut	ショートカット
 	In the File	ファイル内の名前
-	In VectorCraft	VectorCraft での対応
+	In Tsipika	Tsipika での対応
 	Needs Attention Only	要確認の行のみ
 	Ready	適用可能
 	Needs a choice	選択が必要
@@ -1801,7 +1801,7 @@
 	Tools take a single key (optionally with Shift)	ツールには 1 つのキーのみ割り当てられます (Shift との組み合わせは可)
 	A later row takes this shortcut	後の行がこのショートカットを使用
 	Same item as a later row	後の行と同じ項目
-	Start from VectorCraft Defaults	VectorCraft の初期設定から開始
+	Start from Tsipika Defaults	Tsipika の初期設定から開始
 	Add to the Current Shortcuts	現在のショートカットに追加
 	Remember My Choices	選択内容を記憶
 	{ready} of {total} ready	{total} 件中 {ready} 件が適用可能
@@ -2491,7 +2491,7 @@ mark-style	Japanese	日本式
 	{count} folder(s) or file(s) couldn't be read	{count} 個のフォルダーまたはファイルを読み込めませんでした
 	The search stopped at its limit: search a smaller folder.	検索は上限で停止しました。より小さなフォルダーを検索してください。
 	Copy only fonts you own or are licensed to install.	所有しているフォント、またはインストールするライセンスがあるフォントだけをコピーしてください。
-	VectorCraft copies the fonts to {folder}.	VectorCraft はフォントを {folder} にコピーします。
+	Tsipika copies the fonts to {folder}.	Tsipika はフォントを {folder} にコピーします。
 	Registry name:	レジストリ名:
 	Release Compound Shape	複合シェイプを解除
 	Release Opacity Mask	不透明マスクを解除
@@ -2567,9 +2567,9 @@ mark-style	Japanese	日本式
 	Reverse Path Direction On	パスの方向を反転: オン
 	Revert to the saved version of “{name}”?	「{name}」を保存済みの状態に戻しますか？
 	Replace “{name}”, the file this document was opened from?	このドキュメントの開き元のファイル「{name}」を置き換えますか？
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	開いたときに VectorCraft がまだ読み込めない内容（{what}）が除外されたため、置き換えるとそれは完全に失われます。保持するには別の名前で保存してください。
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	開いたときに Tsipika がまだ読み込めない内容（{what}）が除外されたため、置き換えるとそれは完全に失われます。保持するには別の名前で保存してください。
 	“{name}” already exists. Replace it?	「{name}」は既に存在します。置き換えますか？
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	保存パネルの名前は「{typed}」で、VectorCraft がファイル形式の拡張子を付加しました。ファイルを置き換えると内容が上書きされます。
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	保存パネルの名前は「{typed}」で、Tsipika がファイル形式の拡張子を付加しました。ファイルを置き換えると内容が上書きされます。
 	Right Grid:	右グリッド:
 	Right Indent	右インデント
 	Right Plane	右面
@@ -3092,7 +3092,7 @@ mark-style	Japanese	日本式
 	Variation:	バリエーション:
 	Vector Halftone	ベクトルハーフトーン
 	Vector illustration — fast, open, scriptable.	ベクターイラスト — 高速・オープン・スクリプト対応
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft は前回正常に終了しませんでした。次のドキュメントに未保存の変更があります:
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika は前回正常に終了しませんでした。次のドキュメントに未保存の変更があります:
 	Vectors	ベクター
 	Version {version} — open-source vector illustration in pure Rust.	バージョン {version} — Rust だけで書かれたオープンソースのベクターイラストアプリ。
 	Version:	バージョン:
@@ -3113,7 +3113,7 @@ mark-style	Japanese	日本式
 	Web Shift	Web シフト
 	Web Snap:	Web スナップ:
 	Weight:	線幅:
-	Welcome to VectorCraft	VectorCraft へようこそ
+	Welcome to Tsipika	Tsipika へようこそ
 	When pasting text	テキストをペーストするとき
 	White	白
 	Widget Position:	ウィジェットの位置:
@@ -3311,7 +3311,7 @@ file-filter	PDF presets	PDF プリセット
 file-filter	Print presets	プリントプリセット
 file-filter	SVG Compressed	SVG 圧縮
 file-filter	PDF-compatible .ai	PDF 互換の .ai
-file-filter	VectorCraft Template	VectorCraft テンプレート
+file-filter	Tsipika Template	Tsipika テンプレート
 file-filter	Templates	テンプレート
 	Focal Fill	焦点の塗り
 	Focal Stroke	焦点の線
@@ -3432,7 +3432,7 @@ file-filter	Templates	テンプレート
 	Packaged {n} file(s){note}	{n} 個のファイルをパッケージしました{note}
 	Page information	ページ情報
 	Paragraph Style	段落スタイル
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	ArtCraft の一員。MIT OR Apache-2.0。フォント：Source Sans 3、Inter、JetBrains Mono (OFL)。アイコン：Lucide (ISC) + VectorCraft。
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Mahay の一員。MIT OR Apache-2.0。フォント：Source Sans 3、Inter、JetBrains Mono (OFL)。アイコン：Lucide (ISC) + Tsipika。
 	Perspective grid presets	遠近グリッドプリセット
 	Phone 390×844	スマートフォン 390×844
 	Place onto a new locked, dimmed template layer below the current layer	現在のレイヤーの下に、ロックされ淡色表示の新規テンプレートレイヤーとして配置
@@ -3665,7 +3665,7 @@ axis	Both	両方
 
 # The macOS menu bar (native_menu): the app and Window menus' system items, Settings pages.
 	Services	サービス
-	Hide VectorCraft	VectorCraft を隠す
+	Hide Tsipika	Tsipika を隠す
 	Zoom	拡大/縮小
 	Bring All to Front	すべてを手前に移動
 	Settings	環境設定
@@ -3674,7 +3674,7 @@ theme	Appearance	外観
 	On: one locked object showing the document, updated when it changes.	オン：ドキュメントを表示するロックされた 1 つのオブジェクト。ドキュメントの変更時に更新されます。
 	Off: an editable copy of its art, embedded in this document.	オフ：アートの編集可能なコピーをこのドキュメントに埋め込みます。
 	Images: link to the file instead of only embedding it.	画像：埋め込むだけでなく、ファイルにリンクします。
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft ドキュメント：ロックされた 1 つのオブジェクト。ファイルの変更時に更新されます。
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika ドキュメント：ロックされた 1 つのオブジェクト。ファイルの変更時に更新されます。
 	A file dialog is open: choose there first	ファイルダイアログが開いています。先にそちらで選択してください
 	The document was closed while its file dialog was open	ファイルダイアログが開いている間にドキュメントが閉じられました
 	The dialog was closed before its file dialog answered	ファイルダイアログが応答する前にダイアログが閉じられました
@@ -3799,15 +3799,15 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	its type is to come in as outlines, which only its page has	文字をアウトラインとして読み込む設定ですが、アウトラインはページにしかありません
 @msg	{_1} files	{_1} 個のファイル
 @msg	A browser with WebGPU or WebGL2 is required.	WebGPU または WebGL2 に対応したブラウザーが必要です。
-@msg	Loading VectorCraft…	VectorCraft を読み込んでいます…
+@msg	Loading Tsipika…	Tsipika を読み込んでいます…
 @msg	Reload the page to go on (changes not saved yet may be lost).	続けるにはページを再読み込みしてください (未保存の変更は失われる場合があります)。
 @msg	The graphics were lost and couldn't be restarted.	グラフィックス機能が利用できなくなり、再起動できませんでした。
 @msg	The graphics were lost and have been restarted	グラフィックス機能が利用できなくなったため、再起動しました
-@msg	VectorCraft failed to start: {e}	VectorCraft を起動できませんでした: {e}
+@msg	Tsipika failed to start: {e}	Tsipika を起動できませんでした: {e}
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	未保存の変更はこのブラウザーに残っています: 復元するにはページを再読み込みしてください。
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	最初に試したグラフィックスプロセッサーではウィンドウを表示できなかったため、{summary} で VectorCraft を再起動しました
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	前回の VectorCraft の起動はウィンドウが表示される前に {name} で終了したため、{summary} で起動しました。このグラフィックプロセッサーをもう一度試すには、「環境設定 › パフォーマンス › グラフィックプロセッサー」を変更するか、WGPU_BACKEND を設定して起動してください
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	前回の VectorCraft の起動はグラフィックプロセッサーの一覧を取得している間に終了したため、OpenGL のみを使って {summary} で起動しました。ほかのグラフィックバックエンドをもう一度試すには、「環境設定 › パフォーマンス › グラフィックプロセッサー」を変更するか、WGPU_BACKEND を設定して起動してください
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	最初に試したグラフィックスプロセッサーではウィンドウを表示できなかったため、{summary} で Tsipika を再起動しました
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	前回の Tsipika の起動はウィンドウが表示される前に {name} で終了したため、{summary} で起動しました。このグラフィックプロセッサーをもう一度試すには、「環境設定 › パフォーマンス › グラフィックプロセッサー」を変更するか、WGPU_BACKEND を設定して起動してください
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	前回の Tsipika の起動はグラフィックプロセッサーの一覧を取得している間に終了したため、OpenGL のみを使って {summary} で起動しました。ほかのグラフィックバックエンドをもう一度試すには、「環境設定 › パフォーマンス › グラフィックプロセッサー」を変更するか、WGPU_BACKEND を設定して起動してください
 @msg	not a DXF drawing	DXF 図面ではありません
 @msg	scale must be a number from {_1} to {_2}, not {s}	縮尺は {_1} から {_2} までの数値にしてください ({s} は指定できません)
 @msg	the artboard to fit must be a positive size up to {_1} pt	合わせる先のアートボードのサイズは 0 より大きく {_1} pt 以下にしてください
@@ -4095,10 +4095,10 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	it has more than {MAX_NODES} objects	オブジェクトが {MAX_NODES} 個を超えています
 @msg	it has no layers	レイヤーがありません
 @msg	it has too many values in a row	連続する値が多すぎます
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	{_1} が含まれていますが、VectorCraft はまだこのファイルからは読み込めません
+@msg	it has {_1}, which Tsipika doesn't read from it yet	{_1} が含まれていますが、Tsipika はまだこのファイルからは読み込めません
 @msg	its objects are nested too deeply	オブジェクトの入れ子が深すぎます
 @msg	its section ending with `%{end}` doesn't end	`%{end}` で終わるはずのセクションが終わっていません
-@msg	an image VectorCraft can't read was left out	VectorCraft で読み込めない画像は除外されました
+@msg	an image Tsipika can't read was left out	Tsipika で読み込めない画像は除外されました
 @msg	an image whose data is cut short was left out	データが途中で切れている画像は除外されました
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	リンク画像は、元のファイルが見つかるまで、ファイルに保存された低解像度のプレビューで表示されます：リンクパネルで再リンクしてください
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	表示に使われるフォントの 1 行に対して低すぎるフレーム内のエリア内文字は、フレームを高くしました ({_1}): そうしないと文字が表示されません
@@ -4115,7 +4115,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	a PostScript error ({name} in `{op}`: {at})	PostScript エラー (`{op}` での {name}: {at})
 @msg	a PostScript error ({name} in `{op}`: {at}), in {procs}	{procs} 内の PostScript エラー (`{op}` での {name}: {at})
 @msg	a PostScript error ({name})	PostScript エラー ({name})
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	VectorCraft の PostScript 読み込み機能が対応していない `{at}` を使用しています
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	Tsipika の PostScript 読み込み機能が対応していない `{at}` を使用しています
 @msg	the file was read up to an error ({why}): what follows it was left out	ファイルはエラーが発生した箇所まで読み込まれました ({why}): それ以降の内容は除外されました
 @msg	this file's PostScript couldn't be read ({why}): {what}	このファイルの PostScript を読み込めませんでした ({why}): {what}
 @msg	it has no page	ページがありません
@@ -4133,7 +4133,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	its Windows metafile preview was opened instead, which may simplify the art	代わりに Windows メタファイルのプレビューを開いたため、アートが簡略化されている場合があります
 @msg	its preview was placed instead, at screen resolution	代わりにプレビューを画面解像度で配置しました
 @msg	shadings of more than 4096 patches or triangles were left out	パッチまたは三角形が 4096 個を超えるシェーディングは除外されました
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	{procs} 内で、VectorCraft の PostScript 読み込み機能が対応していない `{at}` を使用しています
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	{procs} 内で、Tsipika の PostScript 読み込み機能が対応していない `{at}` を使用しています
 @msg	the export region is not finite	書き出し範囲に無効な数値が含まれています
 @msg	a page out of range	範囲外のページがあります
 @msg	a page's placement is not finite	ページの配置に無効な数値が含まれています
@@ -4142,10 +4142,10 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	the preview image is empty	プレビュー画像が空です
 @msg	the thumbnail image is malformed	サムネール画像の形式が正しくありません
 @msg	can't encode the document: {0}	ドキュメントをエンコードできません: {0}
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	バージョン {0} では保存できません: VectorCraft で保存できるのはバージョン {MIN_VERSION} から {VERSION} までです
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	ファイルのバージョン {0} は、この VectorCraft が対応するバージョン ({VERSION}) より新しいものです
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	バージョン {0} では保存できません: Tsipika で保存できるのはバージョン {MIN_VERSION} から {VERSION} までです
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	ファイルのバージョン {0} は、この Tsipika が対応するバージョン ({VERSION}) より新しいものです
 @msg	invalid image data for `{0}`	`{0}` の画像データが正しくありません
-@msg	not a VectorCraft file: {0}	VectorCraft ファイルではありません: {0}
+@msg	not a Tsipika file: {0}	Tsipika ファイルではありません: {0}
 @msg	the compressed file unpacks to more than {_1} MB	圧縮ファイルを展開すると {_1} MB を超えます
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	バージョン {0} のファイルは圧縮できません: 圧縮ファイルを開けるのはバージョン {COMPRESSED_SINCE} 以降のみです
 @msg	a bitmap is empty	ビットマップが空です
@@ -4193,7 +4193,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	plug-in output: {0}	プラグインの出力に問題があります: {0}
 @msg	plug-in parameters: {0}	プラグインのパラメーターに問題があります: {0}
 @msg	plug-in trapped: {0}	プラグインが異常終了しました: {0}
-@msg	is not an image VectorCraft reads	VectorCraft で読み込める画像ではありません
+@msg	is not an image Tsipika reads	Tsipika で読み込める画像ではありません
 @msg	not found	見つかりません
 @msg	SVG parse error: {0}	SVG を解析できませんでした: {0}
 @msg	decimals must be {_1}–{_2} (got {_3})	小数点以下の桁数は {_1} から {_2} までにしてください (指定値: {_3})
@@ -4375,14 +4375,14 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	Discarded {_1} recovered document(s)	復帰用データのドキュメントを {_1} 件破棄しました
 @msg	Restored {_1} recovered document(s): save them to keep them	復帰用データからドキュメントを {_1} 件復元しました: 残すには保存してください
 @msg	Saving recovery data for {_1}	{_1} の復帰用データを保存中
-@msg	This shortcut file is in a form VectorCraft can't read.	このショートカットファイルは VectorCraft で読み込めない形式です。
+@msg	This shortcut file is in a form Tsipika can't read.	このショートカットファイルは Tsipika で読み込めない形式です。
 @msg	bad shortcut	ショートカットが正しくありません
 @msg	can't parse shortcut `{c}`	ショートカット `{c}` を解釈できません
 @msg	can't parse shortcut `{s}` for `{k}`	`{k}` のショートカット `{s}` を解釈できません
 @msg	no dialog open	ダイアログが開かれていません
 @msg	no file reader	ファイルの読み込み機能がありません
 @msg	no file writer	ファイルの書き込み機能がありません
-@msg	not a VectorCraft shortcut set (missing `overrides`)	VectorCraft のショートカットセットではありません (`overrides` がありません)
+@msg	not a Tsipika shortcut set (missing `overrides`)	Tsipika のショートカットセットではありません (`overrides` がありません)
 @msg	not a blend	ブレンドではありません
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	ショートカットセットではありません: テキストの先頭にスラッシュ付きの名前と開き波かっこがありません
 @msg	shortcut for `{k}` must be a string	`{k}` のショートカットは文字列で指定してください
@@ -4406,13 +4406,13 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	x and y must be finite	x と y には有限の数値を指定してください
 @msg	t, dx and dy must be finite	t、dx、dy には有限の数値を指定してください
 @msg	No fonts are missing in this document	このドキュメントには見つからないフォントはありません
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft は他のアプリやシステムのフォルダーを検索しません: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft は Users 内の Shared フォルダーと Public フォルダーを検索しません: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika は他のアプリやシステムのフォルダーを検索しません: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika は Users 内の Shared フォルダーと Public フォルダーを検索しません: {path}
 @msg	{path} is not a folder	{path} はフォルダーではありません
 @msg	the search couldn't start: try again in a moment	検索を開始できませんでした: しばらくしてからもう一度お試しください
 @msg	searching a folder isn't available on the web	Web 版ではフォルダーを検索できません
 @msg	every search thread stopped on an internal error (please report this bug)	すべての検索スレッドが内部エラーで停止しました (このバグを報告してください)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	この環境では VectorCraft の Fonts フォルダーが設定されていません: デスクトップアプリと vectorcraft-cli が設定します
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	この環境では Tsipika の Fonts フォルダーが設定されていません: デスクトップアプリと tsipika-cli が設定します
 @msg	choose the font files to add	追加するフォントファイルを選択してください
 @msg	{n} font file(s) are now in {folder}	{n} 個のフォントファイルが {folder} に入りました
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	{n} 個のフォントファイルが {folder} に入りましたが、{failed} 個は追加できませんでした: {reason}
@@ -4650,7 +4650,7 @@ lighting	Light	ライト
 	Edge Intensity	エッジの強さ
 	Posterization	ポスタリゼーション
 	Highlight Area	ハイライト領域
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	圧縮ファイルを展開すると VectorCraft が読み込める量を超えます (ドキュメント {_1} MB、画像 1 枚あたり {_2} MB)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	圧縮ファイルを展開すると Tsipika が読み込める量を超えます (ドキュメント {_1} MB、画像 1 枚あたり {_2} MB)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	ドキュメントが大きすぎて圧縮保存できません ({0}): 「圧縮を使用」をオフにして保存してください
 @msg	the file stopped being read (please report this bug)	ファイルの読み込みが中断されました (このバグを報告してください)
 	Concentric Dividers:	同心円の分割線:

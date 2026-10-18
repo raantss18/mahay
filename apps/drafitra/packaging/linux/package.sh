@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build and package CADCraft for Linux (<arch> is x86_64 or aarch64, or riscv64 when cross-compiling):
+# Build and package Drafitra for Linux (<arch> is x86_64 or aarch64, or riscv64 when cross-compiling):
 #
-#   $DIST/cadcraft-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
-#   $DIST/cadcraft-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
-#   $DIST/cadcraft-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
-#   $DIST/cadcraft-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
-#   $DIST/cadcraft-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
+#   $DIST/drafitra-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
+#   $DIST/drafitra-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
+#   $DIST/drafitra-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
+#   $DIST/drafitra-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
+#   $DIST/drafitra-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
 #
 # Usage: packaging/linux/package.sh [--skip-build] [--formats "appimage deb rpm tar"]
 #
@@ -17,7 +17,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.cadcraft
+APP_ID=org.mahay.drafitra
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"
@@ -39,16 +39,16 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export CADCRAFT_MAINTAINER="${CADCRAFT_MAINTAINER:-CADCraft maintainers <cadcraft@storyteller.ai>}"
-BASENAME="cadcraft-$VERSION-linux-$ARCH"
+export DRAFITRA_MAINTAINER="${DRAFITRA_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
+BASENAME="drafitra-$VERSION-linux-$ARCH"
 
-echo "==> CADCraft $VERSION for Linux $ARCH ($FORMATS)"
+echo "==> Drafitra $VERSION for Linux $ARCH ($FORMATS)"
 
 if [ "$SKIP_BUILD" = 0 ]; then
   if [ -n "${CROSS_TARGET:-}" ]; then
-    (cd "$ROOT" && cargo build --release --locked -p cadcraft -p cadcraft-cli --target "$CROSS_TARGET")
+    (cd "$ROOT" && cargo build --release --locked -p drafitra -p drafitra-cli --target "$CROSS_TARGET")
   else
-    (cd "$ROOT" && cargo build --release --locked -p cadcraft -p cadcraft-cli)
+    (cd "$ROOT" && cargo build --release --locked -p drafitra -p drafitra-cli)
   fi
 fi
 BIN="$CARGO_TARGET_DIR/${CROSS_TARGET:+$CROSS_TARGET/}release"
@@ -57,18 +57,18 @@ STAGE="$WORK/root"
 rm -rf "$WORK"
 
 # ---- stage an FHS tree (shared by every format) -------------------------------------------------
-install -Dm755 "$BIN/cadcraft" "$STAGE/usr/bin/cadcraft"
-install -Dm755 "$BIN/cadcraft-cli" "$STAGE/usr/bin/cadcraft-cli"
-"${CROSS_COMPILE:-}strip" "$STAGE/usr/bin/cadcraft" "$STAGE/usr/bin/cadcraft-cli" 2>/dev/null || true
+install -Dm755 "$BIN/drafitra" "$STAGE/usr/bin/drafitra"
+install -Dm755 "$BIN/drafitra-cli" "$STAGE/usr/bin/drafitra-cli"
+"${CROSS_COMPILE:-}strip" "$STAGE/usr/bin/drafitra" "$STAGE/usr/bin/drafitra-cli" 2>/dev/null || true
 install -Dm644 "$HERE/$APP_ID.desktop" "$STAGE/usr/share/applications/$APP_ID.desktop"
 install -Dm644 "$HERE/$APP_ID.mime.xml" "$STAGE/usr/share/mime/packages/$APP_ID.xml"
 mkdir -p "$STAGE/usr/share/metainfo"
-sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$CADCRAFT_BUILD_DATE/g" \
+sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$DRAFITRA_BUILD_DATE/g" \
   "$HERE/$APP_ID.metainfo.xml.in" >"$STAGE/usr/share/metainfo/$APP_ID.metainfo.xml"
 mkdir -p "$STAGE/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/usr/share/icons/"
-mkdir -p "$STAGE/usr/share/doc/cadcraft"
-copy_docs "$STAGE/usr/share/doc/cadcraft"
+mkdir -p "$STAGE/usr/share/doc/drafitra"
+copy_docs "$STAGE/usr/share/doc/drafitra"
 
 if command -v desktop-file-validate >/dev/null; then
   desktop-file-validate "$STAGE/usr/share/applications/$APP_ID.desktop"
@@ -101,10 +101,10 @@ fi
 
 # ---- AppImage -----------------------------------------------------------------------------------
 if has appimage; then
-  APPDIR="$WORK/CADCraft.AppDir"
+  APPDIR="$WORK/Drafitra.AppDir"
   cp -R "$STAGE" "$APPDIR"
   mv "$APPDIR/usr/share/doc" "$WORK/doc-unused"
-  ln -s usr/bin/cadcraft "$APPDIR/AppRun"
+  ln -s usr/bin/drafitra "$APPDIR/AppRun"
   cp "$HERE/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
   cp "$ROOT/assets/app-icon/hicolor/256x256/apps/$APP_ID.png" "$APPDIR/$APP_ID.png"
   ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
@@ -128,8 +128,8 @@ if has appimage; then
   # fetch only the blocks that changed in a newer release, through the .zsync published next to
   # each AppImage on GitHub Releases. `latest` is the newest published release that is not a
   # pre-release. A fork's builds point at its own releases through GITHUB_REPOSITORY.
-  REPO="${GITHUB_REPOSITORY:-storytold/cadcraft}"
-  UPDATE_INFO="gh-releases-zsync|${REPO%%/*}|${REPO#*/}|latest|cadcraft-*-linux-$ARCH.AppImage.zsync"
+  REPO="${GITHUB_REPOSITORY:-raantss18/drafitra}"
+  UPDATE_INFO="gh-releases-zsync|${REPO%%/*}|${REPO#*/}|latest|drafitra-*-linux-$ARCH.AppImage.zsync"
   # Extract-and-run: works without FUSE (containers, CI). The output embeds the static runtime,
   # so users don't need libfuse2 either. With zsyncmake on the host (CI installs the zsync
   # package) appimagetool also writes the .zsync, into its working directory, hence the cd.
@@ -143,9 +143,9 @@ if has appimage; then
 fi
 
 if [ -z "${CROSS_TARGET:-}" ]; then
-  "$STAGE/usr/bin/cadcraft-cli" --version
+  "$STAGE/usr/bin/drafitra-cli" --version
 elif [ -n "${EMULATOR:-}" ]; then
-  "$EMULATOR" "$STAGE/usr/bin/cadcraft-cli" --version
+  "$EMULATOR" "$STAGE/usr/bin/drafitra-cli" --version
 fi
 echo "==> done"
 ls -lh "$DIST"

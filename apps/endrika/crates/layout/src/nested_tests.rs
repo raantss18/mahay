@@ -2,7 +2,7 @@
 
 use super::tests::{FakeMeasure, pos, text};
 use super::*;
-use figcraft_doc::{AutoLayout, Document, NodeKind};
+use endrika_doc::{AutoLayout, Document, NodeKind};
 
 /// An auto layout frame under `parent` (gap 10, no padding) with the given sizing.
 fn al(d: &mut Document, parent: NodeId, mode: LayoutMode, (w, h): (f64, f64), (sh, sv): (Sizing, Sizing)) -> NodeId {
@@ -259,7 +259,7 @@ fn padding_and_included_strokes() {
     let f = al(&mut d, p, LayoutMode::Horizontal, (1.0, 1.0), (Sizing::Hug, Sizing::Hug));
     {
         let n = d.get_mut(f).unwrap();
-        n.strokes = vec![figcraft_doc::color::Paint::solid(figcraft_doc::color::Color::BLACK)];
+        n.strokes = vec![endrika_doc::color::Paint::solid(endrika_doc::color::Color::BLACK)];
         n.stroke.weight = 5.0;
     }
     layout_mut(&mut d, f).padding = [1.0, 2.0, 3.0, 4.0];
@@ -276,7 +276,7 @@ fn padding_and_included_strokes() {
     let g = al(&mut d, p, LayoutMode::Horizontal, (100.0, 50.0), (Sizing::Fixed, Sizing::Fixed));
     {
         let n = d.get_mut(g).unwrap();
-        n.strokes = vec![figcraft_doc::color::Paint::solid(figcraft_doc::color::Color::BLACK)];
+        n.strokes = vec![endrika_doc::color::Paint::solid(endrika_doc::color::Color::BLACK)];
         n.stroke.weight = 5.0;
     }
     layout_mut(&mut d, g).padding = [10.0; 4];
@@ -289,7 +289,7 @@ fn padding_and_included_strokes() {
 
 #[test]
 fn grid_hug_tracks_and_wrapping_text_rows() {
-    use figcraft_doc::GridTrack;
+    use endrika_doc::GridTrack;
     let mut d = Document::new("t");
     let p = page(&d);
     let f = al(&mut d, p, LayoutMode::Grid, (300.0, 1.0), (Sizing::Fixed, Sizing::Hug));

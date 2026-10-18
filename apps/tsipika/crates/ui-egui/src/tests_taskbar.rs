@@ -4,15 +4,15 @@
 
 use egui::{Event, PointerButton, Pos2, Rect, vec2};
 use serde_json::json;
-use vectorcraft_doc::text::TextKind;
-use vectorcraft_doc::{NodeId, NodeKind};
-use vectorcraft_engine::Session;
+use tsipika_doc::text::TextKind;
+use tsipika_doc::{NodeId, NodeKind};
+use tsipika_engine::Session;
 
 use crate::tests_removeanchors::{at, has, shapes_text};
-use crate::{VectorcraftApp, canvas};
+use crate::{TsipikaApp, canvas};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app
 }
@@ -21,11 +21,11 @@ fn id(v: serde_json::Value) -> u64 {
     v["id"].as_u64().unwrap()
 }
 
-fn kind(app: &VectorcraftApp, id: u64) -> NodeKind {
+fn kind(app: &TsipikaApp, id: u64) -> NodeKind {
     app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind.clone()
 }
 
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
     let screen = Rect::from_min_size(Pos2::ZERO, vec2(1000.0, 700.0));
     let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| canvas::show(app, ui));
     out.textures_delta.clear();
@@ -33,7 +33,7 @@ fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> V
 }
 
 /// The task bar's labels for the current selection (its area settles on the second frame).
-fn bar(app: &mut VectorcraftApp) -> (egui::Context, Vec<(String, Rect)>) {
+fn bar(app: &mut TsipikaApp) -> (egui::Context, Vec<(String, Rect)>) {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     frame(app, &ctx, vec![]);
@@ -42,7 +42,7 @@ fn bar(app: &mut VectorcraftApp) -> (egui::Context, Vec<(String, Rect)>) {
 }
 
 /// Click the task bar's `label`.
-fn click(app: &mut VectorcraftApp, label: &str) {
+fn click(app: &mut TsipikaApp, label: &str) {
     let (ctx, texts) = bar(app);
     let p = at(&texts, label);
     let press = |pressed| Event::PointerButton { pos: p, button: PointerButton::Primary, pressed, modifiers: Default::default() };
@@ -52,7 +52,7 @@ fn click(app: &mut VectorcraftApp, label: &str) {
     frame(app, &ctx, vec![]);
 }
 
-fn select(app: &mut VectorcraftApp, ids: &[u64]) {
+fn select(app: &mut TsipikaApp, ids: &[u64]) {
     app.run("select.set", json!({"ids": ids})).unwrap();
 }
 
@@ -120,7 +120,7 @@ fn an_image_with_vector_art_offers_make_clipping_mask() {
     image::RgbaImage::from_pixel(20, 20, image::Rgba([0, 128, 255, 255]))
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    let dir = std::env::temp_dir().join(format!("vectorcraft-ui-taskbar-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tsipika-ui-taskbar-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("blue.png");
     std::fs::write(&path, &png).unwrap();
@@ -150,7 +150,7 @@ fn type_converts_between_point_and_area_type() {
     let mut app = app();
     let t = id(app.run("text.create", json!({"x": 60, "y": 80, "text": "Hello"})).unwrap());
     select(&mut app, &[t]);
-    let text_kind = |app: &VectorcraftApp| match kind(app, t) {
+    let text_kind = |app: &TsipikaApp| match kind(app, t) {
         NodeKind::Text(t) => t.kind.clone(),
         other => panic!("{other:?}"),
     };

@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use effectcraft_engine::{
+use tselatra_engine::{
     Session,
     media_browser::{Browser, Entry, VirtualTree},
 };
-use effectcraft_ui_egui::{ControlRequest, EffectcraftApp, control, dock::PanelKind};
+use tselatra_ui_egui::{ControlRequest, TselatraApp, control, dock::PanelKind};
 use egui::{Event, Modifiers, OutputCommand, PointerButton, pos2};
 use egui_kittest::Harness;
 use serde_json::{Value, json};
@@ -19,7 +19,7 @@ impl Browser for TestBrowser {
     }
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str, button: PointerButton) -> Vec<String> {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str, button: PointerButton) -> Vec<String> {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("missing {id}"));
     let pos = pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0);
     h.input_mut().events.push(Event::PointerMoved(pos));
@@ -53,7 +53,7 @@ fn file_folder_and_virtual_paths_copy_from_the_context_menu_without_document_cha
     session.prefs.general.language = "en".into();
     session.execute("comp.new", json!({"width": 64, "height": 36, "duration": 2})).unwrap();
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| {
-        let mut app = EffectcraftApp::new(session);
+        let mut app = TselatraApp::new(session);
         app.ui.start_screen = false;
         app.show_panel(PanelKind::MediaBrowser);
         app.ui.maximized = Some(PanelKind::MediaBrowser);
@@ -87,7 +87,7 @@ fn file_folder_and_virtual_paths_copy_from_the_context_menu_without_document_cha
 
 #[test]
 fn copy_path_control_command_preserves_the_path_and_rejects_bad_arguments() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     let ctx = egui::Context::default();
     let project = app.session.project.clone();
     let revision = app.session.revision;

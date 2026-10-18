@@ -3,12 +3,12 @@
 //! kept as read in pre-2007 files, and named-dictionary entries the writer writes itself not
 //! kept a second time.
 
-use cadcraft_doc::*;
-use cadcraft_geom::{Vec2, Vec3};
-use cadcraft_io::{SaveOptions, Version};
+use drafitra_doc::*;
+use drafitra_geom::{Vec2, Vec3};
+use drafitra_io::{SaveOptions, Version};
 
 fn save(d: &Drawing, name: &str, v: Version) -> Vec<u8> {
-    cadcraft_io::write_with(d, name, &SaveOptions { version: Some(v), binary: false }).unwrap()
+    drafitra_io::write_with(d, name, &SaveOptions { version: Some(v), binary: false }).unwrap()
 }
 
 fn dxf(d: &Drawing, v: Version) -> String {
@@ -63,7 +63,7 @@ fn multileader_before_2007_is_leader_and_mtext() {
         assert_eq!(records(&text, "MULTILEADER"), 0, "{v:?}: no MULTILEADER entity");
         assert!(!text.contains("AcDbMLeader\n"), "{v:?}: no MULTILEADER class");
         assert_eq!(records(&text, "LEADER"), 2, "{v:?}: one LEADER per leader line");
-        let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+        let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
         assert_eq!(count(&back, |k| matches!(k, EntityKind::MLeader(_))), 0);
         assert_eq!(count(&back, |k| matches!(k, EntityKind::Leader(_))), 2);
         assert_eq!(count(&back, |k| matches!(k, EntityKind::MText(t) if t.contents == "NOTE")), 1);
@@ -82,7 +82,7 @@ fn multileader_from_2007_is_native() {
         let text = dxf(&d, v);
         assert_eq!(records(&text, "MULTILEADER"), 1, "{v:?}");
         assert_eq!(records(&text, "LEADER"), 0, "{v:?}");
-        let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+        let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
         let got: Vec<&MLeader> = back.model.iter().filter_map(|e| if let EntityKind::MLeader(m) = &e.kind { Some(m) } else { None }).collect();
         assert_eq!(got, vec![&m], "{v:?}");
     }
@@ -91,11 +91,11 @@ fn multileader_from_2007_is_native() {
 #[test]
 fn multileader_in_dwg_follows_the_dwg_version() {
     let (d, _) = mleader_drawing();
-    let old = cadcraft_io::read(&save(&d, "x.dwg", Version::R2004), "x.dwg").unwrap();
+    let old = drafitra_io::read(&save(&d, "x.dwg", Version::R2004), "x.dwg").unwrap();
     assert_eq!(count(&old, |k| matches!(k, EntityKind::MLeader(_))), 0, "2004 DWG has no MULTILEADER");
     assert_eq!(count(&old, |k| matches!(k, EntityKind::Leader(_))), 2);
     assert_eq!(count(&old, |k| matches!(k, EntityKind::MText(_))), 1);
-    let new = cadcraft_io::read(&save(&d, "x.dwg", Version::R2018), "x.dwg").unwrap();
+    let new = drafitra_io::read(&save(&d, "x.dwg", Version::R2018), "x.dwg").unwrap();
     assert_eq!(count(&new, |k| matches!(k, EntityKind::Leader(_))), 0, "2018 DWG keeps the multileader whole");
 }
 
@@ -131,7 +131,7 @@ fn newer_dimstyle_variables_are_table_groups_from_2004() {
     let (d, st) = dim_drawing();
     let r2000 = dxf(&d, Version::R2000);
     let rec = dimstyle_record(&r2000, "Detail");
-    assert!(rec.windows(4).any(|w| w == ["1001", "CADCRAFT", "1000", "DIMVARS"]), "R2000: xdata");
+    assert!(rec.windows(4).any(|w| w == ["1001", "DRAFITRA", "1000", "DIMVARS"]), "R2000: xdata");
     assert!(!rec.chunks(2).any(|p| p[0] == "345"), "R2000: no DIMLTYPE group");
     for v in [Version::R2004, Version::R2018] {
         let text = dxf(&d, v);
@@ -142,10 +142,10 @@ fn newer_dimstyle_variables_are_table_groups_from_2004() {
         }
         let jog = rec.chunks(2).find(|p| p[0] == "50").unwrap()[1].parse::<f64>().unwrap();
         assert!((jog - 30f64.to_radians()).abs() < 1e-9, "DIMJOGANG in radians: {jog}");
-        let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+        let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
         assert_eq!(back.dim_style("Detail").unwrap(), &st, "{v:?}");
     }
-    assert_eq!(cadcraft_io::read_dxf(r2000.as_bytes()).unwrap().dim_style("Detail").unwrap(), &st);
+    assert_eq!(drafitra_io::read_dxf(r2000.as_bytes()).unwrap().dim_style("Detail").unwrap(), &st);
 }
 
 fn code_page(text: &str) -> &str {
@@ -180,12 +180,12 @@ fn code_page_is_kept_before_2007() {
         assert!(bytes.is_ascii(), "{v:?}: ASCII with escapes");
         let text = String::from_utf8(bytes).unwrap();
         assert_eq!(code_page(&text), "ANSI_1251", "{v:?}");
-        let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+        let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
         assert_eq!(back.header.str("DWGCODEPAGE", ""), "ANSI_1251");
         assert!(back.model.iter().any(|e| matches!(&e.kind, EntityKind::Text(t) if t.value == "Привет")));
     }
     assert_eq!(code_page(&dxf(&d, Version::R2018)), "ANSI_1252", "2007+: UTF-8 text");
-    // Without one, or with one CADCraft doesn't know: ANSI_1252.
+    // Without one, or with one Drafitra doesn't know: ANSI_1252.
     d.header.set_str("DWGCODEPAGE", "NO_SUCH\n0\nEOF");
     assert_eq!(code_page(&dxf(&d, Version::R2000)), "ANSI_1252");
     assert_eq!(code_page(&dxf(&Drawing::new_metric(), Version::R2000)), "ANSI_1252");
@@ -203,17 +203,17 @@ fn modelled_dictionaries_are_not_kept_twice() {
     )
     .unwrap();
     let first = dxf(&d, Version::R2018);
-    let read = cadcraft_io::read_dxf(first.as_bytes()).unwrap();
+    let read = drafitra_io::read_dxf(first.as_bytes()).unwrap();
     let kept: Vec<&str> = read.foreign.objects.iter().map(|o| o.kind.as_str()).collect();
-    assert!(kept.is_empty(), "nothing CADCraft writes itself is kept raw: {kept:?}");
+    assert!(kept.is_empty(), "nothing Drafitra writes itself is kept raw: {kept:?}");
     let again = dxf(&read, Version::R2018);
-    let third = dxf(&cadcraft_io::read_dxf(again.as_bytes()).unwrap(), Version::R2018);
+    let third = dxf(&drafitra_io::read_dxf(again.as_bytes()).unwrap(), Version::R2018);
     for kind in ["MLINESTYLE", "SCALE", "MLEADERSTYLE", "TABLESTYLE", "DICTIONARY", "XRECORD", "GROUP", "LAYOUT"] {
         assert_eq!(records(&again, kind), records(&first, kind), "{kind} after one round trip");
         assert_eq!(records(&third, kind), records(&first, kind), "{kind} after two");
     }
     let l = lines(&again);
-    for key in ["ACAD_MLINESTYLE", "ACAD_SCALELIST", "ACAD_GROUP", "ACAD_MLEADERSTYLE", "ACAD_PLOTSTYLENAME", "CADCRAFT_HANDSEED"] {
+    for key in ["ACAD_MLINESTYLE", "ACAD_SCALELIST", "ACAD_GROUP", "ACAD_MLEADERSTYLE", "ACAD_PLOTSTYLENAME", "DRAFITRA_HANDSEED"] {
         assert_eq!(l.windows(2).filter(|w| *w == ["3", key]).count(), 1, "{key} once in the named object dictionary");
     }
 }

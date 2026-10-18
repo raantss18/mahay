@@ -1,21 +1,21 @@
-//! Neutral wording in menus and panels: what users read names VectorCraft's own features.
+//! Neutral wording in menus and panels: what users read names Tsipika's own features.
 
 use egui::epaint::Shape;
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::menus::{self, Item};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app
 }
 
 /// Every string painted by `f` in a headless frame (app fonts installed), one per line. The second
 /// of two frames: windows size themselves invisibly in their first.
-pub(crate) fn painted_text(app: &mut VectorcraftApp, mut f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) -> String {
+pub(crate) fn painted_text(app: &mut TsipikaApp, mut f: impl FnMut(&mut TsipikaApp, &mut egui::Ui)) -> String {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     ctx.run_ui(egui::RawInput::default(), |ui| f(app, ui)).textures_delta.clear();
@@ -233,7 +233,7 @@ fn library_submenus_are_disabled_placeholders() {
 
 #[test]
 fn stroke_profiles_have_descriptive_names() {
-    let labels: Vec<&str> = vectorcraft_doc::WidthProfile::PRESETS.iter().map(|p| p.label).collect();
+    let labels: Vec<&str> = tsipika_doc::WidthProfile::PRESETS.iter().map(|p| p.label).collect();
     assert_eq!(labels, ["Uniform", "Lens", "Taper Start", "Taper End", "Pinch", "Teardrop", "Wave"]);
 }
 
@@ -258,7 +258,7 @@ fn edit_menu_lists_pdf_presets() {
 
 #[test]
 fn clipboard_preferences_name_the_legacy_format_neutrally() {
-    let label = |key: &str| vectorcraft_engine::cmd::prefscmds::PREF_SPECS.iter().find(|p| p.key == key).unwrap().label;
+    let label = |key: &str| tsipika_engine::cmd::prefscmds::PREF_SPECS.iter().find(|p| p.key == key).unwrap().label;
     assert_eq!(label("copyAicb"), "Legacy vector clipboard (no transparency)");
     assert_eq!(label("aicbMode"), "Legacy vector clipboard");
 }
@@ -267,7 +267,7 @@ fn clipboard_preferences_name_the_legacy_format_neutrally() {
 fn shortcut_set_old_name_is_accepted() {
     use crate::shortcut_editor::{PRESETS, import_json};
     let (old, _) = crate::shortcut_editor::LEGACY_PRESETS[0];
-    assert_eq!(PRESETS, ["VectorCraft Defaults", "Classic Defaults"]);
+    assert_eq!(PRESETS, ["Tsipika Defaults", "Classic Defaults"]);
     // UI preferences saved by an earlier version load (and save again) under the current name.
     let ui: crate::state::UiState = serde_json::from_value(json!({ "shortcut_set": old })).unwrap();
     assert_eq!(ui.shortcut_set, "Classic Defaults");
@@ -281,8 +281,8 @@ fn shortcut_set_old_name_is_accepted() {
     let mut app = app();
     app.run("shortcuts.preset", json!({ "name": old })).unwrap();
     assert_eq!(app.ui.shortcut_set, "Classic Defaults");
-    app.run("shortcuts.preset", json!({ "name": "VectorCraft Defaults" })).unwrap();
-    assert_eq!(app.ui.shortcut_set, "VectorCraft Defaults");
+    app.run("shortcuts.preset", json!({ "name": "Tsipika Defaults" })).unwrap();
+    assert_eq!(app.ui.shortcut_set, "Tsipika Defaults");
     assert!(app.run("shortcuts.preset", json!({ "name": "Nope" })).is_err());
     let (set, _) = import_json(&json!({ "set": old, "overrides": {} })).unwrap();
     assert_eq!(set, "Classic Defaults");

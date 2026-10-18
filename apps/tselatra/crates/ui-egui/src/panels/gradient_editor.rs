@@ -12,14 +12,14 @@
 //! `dialog.gradient.location`, `dialog.gradient.opacity`, `dialog.gradient.color`,
 //! `dialog.gradient.delete`, `dialog.gradient.ok`, `dialog.gradient.cancel`.
 
-use effectcraft_engine::keyframe::{Gradient, Value};
-use effectcraft_engine::project::{ItemId, LayerId};
+use tselatra_engine::keyframe::{Gradient, Value};
+use tselatra_engine::project::{ItemId, LayerId};
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Value as Json, json};
 
 use crate::i18n::tr;
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 /// Which row of stops: opacity (above the bar) or colour (below it).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -197,7 +197,7 @@ impl Draft {
 
 /// `prop.editGradient {layer, prop, comp?}`: open the editor on that gradient property at the
 /// current time (snapped to the nearest frame, as `prop.set` snaps it).
-pub fn open(app: &mut EffectcraftApp, p: &Json) -> Result<Json, String> {
+pub fn open(app: &mut TselatraApp, p: &Json) -> Result<Json, String> {
     let cid = match p.get("comp").and_then(Json::as_u64) {
         Some(c) => ItemId(c),
         None => app.session.active_comp_id().ok_or("no composition is open")?,
@@ -227,7 +227,7 @@ pub fn open(app: &mut EffectcraftApp, p: &Json) -> Result<Json, String> {
 
 /// Set the property to the draft: one `prop.set` at the time the editor opened, in composition
 /// time, or nothing when the draft is unchanged (so OK adds no keyframe).
-fn commit(app: &mut EffectcraftApp, ctx: &egui::Context) {
+fn commit(app: &mut TselatraApp, ctx: &egui::Context) {
     app.dialog = None;
     let d = std::mem::take(&mut app.dialog_state.gradient);
     let g = d.gradient();
@@ -246,7 +246,7 @@ fn to_color32(c: [f32; 4]) -> Color32 {
     Color32::from_rgba_unmultiplied(b(c[0]), b(c[1]), b(c[2]), b(c[3]))
 }
 
-pub fn show(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn show(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     if app.dialog_state.gradient.target.is_none() {
         app.dialog = None;
         return;

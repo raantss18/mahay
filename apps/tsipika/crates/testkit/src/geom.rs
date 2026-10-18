@@ -1,7 +1,7 @@
 //! Geometry assertions.
 
 use kurbo::{ParamCurveNearest, Shape};
-use vectorcraft_geom::{BezPath, ParamCurve, PathData, Point, Rect};
+use tsipika_geom::{BezPath, ParamCurve, PathData, Point, Rect};
 
 pub fn approx(a: f64, b: f64, eps: f64) -> bool {
     (a - b).abs() <= eps

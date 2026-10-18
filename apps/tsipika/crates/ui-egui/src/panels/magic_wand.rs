@@ -6,10 +6,10 @@ use egui::Ui;
 use serde_json::{Value, json};
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets::{self, menu_item};
 
-fn options(app: &mut VectorcraftApp) -> Value {
+fn options(app: &mut TsipikaApp) -> Value {
     app.session.execute("magicWand.options", &json!({})).unwrap_or_default()
 }
 
@@ -21,7 +21,7 @@ enum Tol {
 }
 
 /// One row: checkbox + tolerance field.
-fn row(app: &mut VectorcraftApp, ui: &mut Ui, o: &Value, label: &str, flag: &str, tol: Option<(&str, Tol, f64)>) {
+fn row(app: &mut TsipikaApp, ui: &mut Ui, o: &Value, label: &str, flag: &str, tol: Option<(&str, Tol, f64)>) {
     let on = o[flag].as_bool().unwrap_or(false);
     ui.horizontal(|ui| {
         ui.set_min_height(26.0);
@@ -47,7 +47,7 @@ fn row(app: &mut VectorcraftApp, ui: &mut Ui, o: &Value, label: &str, flag: &str
     });
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let o = options(app);
     row(app, ui, &o, tl!("Fill Color"), "fillColor", Some(("fillTolerance", Tol::Plain(""), 255.0)));
     if !pstate::<bool>(ui.ctx(), "wand-hide-stroke") {
@@ -62,7 +62,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     for (label, key) in [(tl!("Stroke Options"), "wand-hide-stroke"), (tl!("Transparency Options"), "wand-hide-transparency")] {
         let hidden: bool = pstate(ui.ctx(), key);
         if menu_item(ui, &format!("{} {label}", if hidden { tl!("Show") } else { tl!("Hide") }), true, false) {
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn panel_and_menu_draw_headless() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
         for _ in 0..2 {

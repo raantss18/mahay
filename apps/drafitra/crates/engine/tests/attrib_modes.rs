@@ -3,14 +3,14 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Attrib, AttribModes, Block, Entity, EntityKind, Text};
-use cadcraft_engine::geom::Vec3;
+use drafitra_engine::Session;
+use drafitra_engine::doc::{Attrib, AttribModes, Block, Entity, EntityKind, Text};
+use drafitra_engine::geom::Vec3;
 use serde_json::json;
 
 #[test]
 fn references_take_lock_position_from_the_definition() {
-    let mut d = cadcraft_engine::doc::Drawing::new_imperial();
+    let mut d = drafitra_engine::doc::Drawing::new_imperial();
     let text = Text {
         insert: Vec3::ZERO,
         align_pt: None,
@@ -41,7 +41,7 @@ fn references_take_lock_position_from_the_definition() {
     let mut s = Session::empty();
     s.open_drawing(d, "tags", None);
     let r = s.execute("insert", &json!({ "name": "TAG", "at": [10, 5] })).unwrap();
-    let h = cadcraft_engine::doc::Handle::parse_hex(r["handle"].as_str().unwrap()).unwrap();
+    let h = drafitra_engine::doc::Handle::parse_hex(r["handle"].as_str().unwrap()).unwrap();
     let Some(EntityKind::Insert(i)) = s.doc().unwrap().entity(h).map(|e| e.kind.clone()) else { panic!("no reference") };
     assert_eq!(i.attribs[0].modes, AttribModes { verify: false, preset: false, lock_position: true });
 }

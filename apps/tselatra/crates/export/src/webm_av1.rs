@@ -6,9 +6,9 @@
 
 use std::io::{Seek, SeekFrom, Write};
 
-use effectcraft_project::Comp;
-use effectcraft_project::render_queue::Channels;
-use effectcraft_time::{TICKS_PER_SECOND, Tick};
+use tselatra_project::Comp;
+use tselatra_project::render_queue::Channels;
+use tselatra_time::{TICKS_PER_SECOND, Tick};
 
 use crate::encode::VideoEncoder;
 use crate::encode::mix;
@@ -69,8 +69,8 @@ pub(crate) async fn webm_av1(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut
     let mut info = vec![];
     el_uint(&mut info, 0x2AD7B1, 1_000_000);
     el_float(&mut info, 0x4489, duration_ms);
-    el_str(&mut info, 0x4D80, "EffectCraft");
-    el_str(&mut info, 0x5741, "EffectCraft");
+    el_str(&mut info, 0x4D80, "Tselatra");
+    el_str(&mut info, 0x5741, "Tselatra");
     el(&mut head, INFO, &info);
     let mut tracks = vec![];
     let mut v = vec![];
@@ -119,7 +119,7 @@ pub(crate) async fn webm_av1(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut
             pcm_left.extend(mix(job, start, n, OPUS_RATE));
             cursor = end;
         }
-        let fs = effectcraft_opusenc::OpusEncoder::FRAME_SIZE * opus_channels;
+        let fs = tselatra_opusenc::OpusEncoder::FRAME_SIZE * opus_channels;
         if finish && !pcm_left.is_empty() {
             let pad = (fs - pcm_left.len() % fs) % fs + fs;
             pcm_left.extend(std::iter::repeat_n(0.0, pad));

@@ -3,12 +3,12 @@
 //!
 //! The runner has a device of its own, so a denoise job and the interactive renders are separate contexts that the
 //! driver time-slices, and a failure of one never takes the other down. It respects the same switches as GPU rendering
-//! (`LIGHTCRAFT_GPU`, `LIGHTCRAFT_GPU_BACKEND`, the GPU preference) and the same crash sentinel around device creation.
-//! `LIGHTCRAFT_GPU_ADAPTER` picks an adapter by (part of) its name, e.g. to try another card.
+//! (`HAZAVANA_GPU`, `HAZAVANA_GPU_BACKEND`, the GPU preference) and the same crash sentinel around device creation.
+//! `HAZAVANA_GPU_ADAPTER` picks an adapter by (part of) its name, e.g. to try another card.
 //!
 //! Every failure is an `Err` (never a panic), and a device that errs or is lost stops being used: callers then run the
 //! CPU runner. The kernels (`wgsl/nn_conv.wgsl`, `wgsl/nn_pool.wgsl`) are tested against the plain-loop reference
-//! interpreter in `lightcraft_denoise::reference` and, with the real model, against the pure-Rust CPU runner.
+//! interpreter in `hazavana_denoise::reference` and, with the real model, against the pure-Rust CPU runner.
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -16,8 +16,8 @@ use std::sync::{Condvar, Mutex, OnceLock};
 use std::time::Duration;
 
 use bytemuck::{Pod, Zeroable};
-use lightcraft_denoise::net::{Net, Op};
-use lightcraft_denoise::run::{Error, TileRunner};
+use hazavana_denoise::net::{Net, Op};
+use hazavana_denoise::run::{Error, TileRunner};
 use wgpu::util::DeviceExt;
 
 /// Longest wait for one tile's GPU work before the device is given up on.
@@ -72,10 +72,10 @@ fn dev() -> Result<&'static Dev, String> {
 }
 
 /// Why nothing runs on the GPU once [`crate::begin_shutdown`] was called.
-const CLOSING: &str = "LightCraft is closing";
+const CLOSING: &str = "Hazavana is closing";
 
 fn create_device() -> Result<Dev, String> {
-    let Some(backends) = crate::backend::compute_backends() else { return Err("disabled by LIGHTCRAFT_GPU_BACKEND=off".into()) };
+    let Some(backends) = crate::backend::compute_backends() else { return Err("disabled by HAZAVANA_GPU_BACKEND=off".into()) };
     crate::backend::with_init_marker(backends, || {
         std::panic::catch_unwind(|| make_device(backends)).unwrap_or_else(|_| Err("device creation panicked".into()))
     })
@@ -89,7 +89,7 @@ fn make_device(backends: wgpu::Backends) -> Result<Dev, String> {
     // no indirect-call validation pipeline: Intel Metal fails to compile it (#250)
     desc.flags = crate::backend::instance_flags_from_env(desc.flags);
     let instance = wgpu::Instance::new(desc);
-    let wanted = std::env::var("LIGHTCRAFT_GPU_ADAPTER").ok().map(|s| s.trim().to_lowercase()).filter(|s| !s.is_empty());
+    let wanted = std::env::var("HAZAVANA_GPU_ADAPTER").ok().map(|s| s.trim().to_lowercase()).filter(|s| !s.is_empty());
     let adapter = match &wanted {
         Some(w) => {
             let all = pollster::block_on(instance.enumerate_adapters(backends));
@@ -121,7 +121,7 @@ fn make_device(backends: wgpu::Backends) -> Result<Dev, String> {
         return Err(format!("{} has too little workgroup memory for the denoise kernels", info.name));
     }
     let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
-        label: Some("lightcraft-denoise"),
+        label: Some("hazavana-denoise"),
         required_limits: limits.clone(),
         ..Default::default()
     }))
@@ -880,7 +880,7 @@ impl TileRunner for NetRunner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_denoise::{onnx, reference, synthetic};
+    use hazavana_denoise::{onnx, reference, synthetic};
 
     fn net(tile: u64, ch: u64, depth: usize, seed: u64) -> Net {
         let path = std::env::temp_dir().join(format!("lc-nn-{}-{tile}-{ch}-{depth}-{seed}.onnx", std::process::id()));
@@ -907,7 +907,7 @@ mod tests {
         match runner(net, tile) {
             Ok(r) => Some(r),
             Err(e) => {
-                lightcraft_testkit::skip!(Gpu, "no GPU runner here ({e})");
+                hazavana_testkit::skip!(Gpu, "no GPU runner here ({e})");
                 None
             }
         }
@@ -931,7 +931,7 @@ mod tests {
             let x = picture(4 * (tile * tile) as usize, seed);
             let want = reference::run(&n, tile as usize, &x).unwrap();
             let got = g.run(&x).unwrap();
-            let cpu = lightcraft_denoise::cpu::NetRunner::new(&n, tile as usize).unwrap().run(&x).unwrap();
+            let cpu = hazavana_denoise::cpu::NetRunner::new(&n, tile as usize).unwrap().run(&x).unwrap();
             assert!(worst(&got, &cpu) < 1e-3, "GPU and pure-Rust CPU differ");
             let e = worst(&got, &want);
             eprintln!("{}: tile {tile}, {ch} channels, depth {depth}: off by {e:e} of the output's size", g.adapter());
@@ -974,12 +974,12 @@ mod tests {
     }
 
     /// The real model on the GPU against the pure-Rust CPU runner, with timings (the numbers in docs/denoise.md come from here):
-    /// `LC_DENOISE_MODEL=<model_bayer.onnx> cargo test --release -p lightcraft-gpu --lib real_model -- --ignored --nocapture`
+    /// `LC_DENOISE_MODEL=<model_bayer.onnx> cargo test --release -p hazavana-gpu --lib real_model -- --ignored --nocapture`
     #[test]
     #[ignore = "needs the real model: see the doc comment"]
     fn real_model_on_the_gpu_matches_cpu() {
-        use lightcraft_denoise::manifest::{DenoiserManifest, Domain, Gain};
-        use lightcraft_denoise::runtime::CpuRunner;
+        use hazavana_denoise::manifest::{DenoiserManifest, Domain, Gain};
+        use hazavana_denoise::runtime::CpuRunner;
         use std::time::Instant;
         let Some(model) = std::env::var_os("LC_DENOISE_MODEL") else { return };
         let net = onnx::read(std::path::Path::new(&model)).unwrap();

@@ -11,12 +11,12 @@
 //! - rotation (`50`): relative to the line direction, or absolute (`74` bit 1);
 //! - font, width factor, oblique angle and mirroring from the text style (`340`).
 //!
-//! Shape elements (`74` bit 4) need SHX shape files, which CADCraft does not read: they draw
+//! Shape elements (`74` bit 4) need SHX shape files, which Drafitra does not read: they draw
 //! nothing and leave their gap empty.
 
-use cadcraft_doc::{Drawing, Linetype};
-use cadcraft_fonts::{Shaped, TextFont, TextParams};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{Drawing, Linetype};
+use drafitra_fonts::{Shaped, TextFont, TextParams};
+use drafitra_geom::Vec2;
 
 /// Upper bound on the texts drawn along one run (hostile scales; `apply` caps the dashes).
 const MAX_TEXTS: usize = 10_000;
@@ -91,7 +91,7 @@ fn elements(d: &Drawing, lt: &Linetype, scale: f64) -> Vec<Element> {
             upside_down: ts.upside_down,
             ..TextParams::new(Vec2::ZERO, height)
         };
-        let (local, _) = cadcraft_fonts::place(&font, text, &params);
+        let (local, _) = drafitra_fonts::place(&font, text, &params);
         let finite = |v: f64| if v.is_finite() { v } else { 0.0 };
         out.push(Element {
             at,
@@ -137,7 +137,7 @@ impl Walk<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_doc::DashElement;
+    use drafitra_doc::DashElement;
 
     fn gas() -> Linetype {
         Linetype {

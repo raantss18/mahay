@@ -1,5 +1,5 @@
 // GPU effects (tonal and colour correction family): see src/fx_tone.rs. Each operation mirrors
-// the CPU effect in effectcraft-effects operation for operation. Every name here is prefixed
+// the CPU effect in tselatra-effects operation for operation. Every name here is prefixed
 // `fxt_` (the family files share one module).
 
 fn fxt_straight(px: vec4<f32>) -> vec3<f32> {

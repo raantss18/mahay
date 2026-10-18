@@ -1,13 +1,13 @@
 //! MCP prompts (`prompts/list`, `prompts/get`) and `completion/complete`.
 //!
-//! A prompt is a reusable VectorCraft workflow: `prompts/get` hands the model one templated user
+//! A prompt is a reusable Tsipika workflow: `prompts/get` hands the model one templated user
 //! message, so a client can offer "make a poster" the way it offers a slash command. Every prompt's
 //! arguments double as completion sources, and the resource templates in [`crate::resources`] share
 //! the same [`Live`] catalogues, so `completion/complete` can suggest real command ids, effect ids,
 //! swatch names and export formats instead of a fixed list that goes stale.
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::fileio::FORMATS;
+use tsipika_engine::cmd::fileio::FORMATS;
 
 use crate::backend::Backend;
 
@@ -79,7 +79,7 @@ fn ids_in(reply: &Value, key: Option<&str>) -> Vec<String> {
     items.iter().take(MAX_VALUES * 8).filter_map(|i| i.get("id").or_else(|| i.get("name"))).filter_map(Value::as_str).map(str::to_string).collect()
 }
 
-/// Ids of every layer and object in the active document, for `vectorcraft://object/{id}`.
+/// Ids of every layer and object in the active document, for `tsipika://object/{id}`.
 fn object_ids(b: &mut dyn Backend) -> Vec<String> {
     let mut out = Vec::new();
     let Ok(v) = b.call("document.inspect", json!({})) else { return out };
@@ -156,7 +156,7 @@ pub static PROMPTS: &[PromptDef] = &[
             },
         ],
         text: "\
-Design a poster in VectorCraft.
+Design a poster in Tsipika.
 
 Brief: {brief}
 Palette: {palette}
@@ -208,7 +208,7 @@ rasterise unless the brief asks for it.",
             },
         ],
         text: "\
-Draw a set of {count} icons of {subject} in VectorCraft, {detail}.
+Draw a set of {count} icons of {subject} in Tsipika, {detail}.
 
 Coordinates are points in document space (y down, origin at the first artboard's
 top-left).
@@ -251,7 +251,7 @@ Return the ids of the icons in a grid, and leave them as separate objects on one
             },
         ],
         text: "\
-Recolour the current selection in VectorCraft with {palette}, using the `{method}` recolour method.
+Recolour the current selection in Tsipika with {palette}, using the `{method}` recolour method.
 
 Method:
 1. inspect_document to see what is selected and what colours it actually uses.
@@ -289,7 +289,7 @@ One undo step covers the whole change; gradients and linked swatches stay linked
             },
         ],
         text: "\
-Trace the image at {path} in VectorCraft with the \"{preset}\" preset, then style the result
+Trace the image at {path} in Tsipika with the \"{preset}\" preset, then style the result
 with the {effect} effect.
 
 Method:
@@ -340,7 +340,7 @@ The trace is real geometry: every traced shape stays selectable and editable.",
             },
         ],
         text: "\
-Export the document in VectorCraft to {formats}, into {directory}, at {scale} pixels per
+Export the document in Tsipika to {formats}, into {directory}, at {scale} pixels per
 point for the raster formats.
 
 Method:
@@ -553,7 +553,7 @@ mod tests {
         for params in [
             json!({"ref": {"type": "ref/prompt", "name": "nope"}, "argument": {"name": "x", "value": ""}}),
             json!({"ref": {"type": "ref/prompt", "name": "poster"}, "argument": {"name": "nope", "value": ""}}),
-            json!({"ref": {"type": "ref/resource", "uri": "vectorcraft://nope/{id}"}, "argument": {"name": "id", "value": ""}}),
+            json!({"ref": {"type": "ref/resource", "uri": "tsipika://nope/{id}"}, "argument": {"name": "id", "value": ""}}),
             json!({"ref": {"type": "ref/other"}, "argument": {"name": "x", "value": ""}}),
             json!({}),
         ] {

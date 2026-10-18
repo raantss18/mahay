@@ -1,11 +1,11 @@
-//! SILK, hybrid and CELT round trips through FilmCraft's spec-derived Opus decoder: every
+//! SILK, hybrid and CELT round trips through Hetsika's spec-derived Opus decoder: every
 //! mode/bandwidth decodes, waveform quality on speech-like and music-like signals, bitrate
 //! tracking, stereo, the application tables and delay alignment.
 
 mod common;
 
 use common::*;
-use effectcraft_opusenc::{Application, Bandwidth, Mode, OpusEncoder};
+use tselatra_opusenc::{Application, Bandwidth, Mode, OpusEncoder};
 
 struct Run {
     snr: f64,

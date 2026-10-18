@@ -13,16 +13,16 @@ use std::sync::Arc;
 use egui::{Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_doc::Document;
-use vectorcraft_engine::cmd::FlattenOptions;
-use vectorcraft_engine::cmd::flatten::{FlattenReport, Highlight, Overprints};
-use vectorcraft_geom::{Affine, Point, Rect as DRect};
-use vectorcraft_render::RenderOptions;
+use tsipika_doc::Document;
+use tsipika_engine::cmd::FlattenOptions;
+use tsipika_engine::cmd::flatten::{FlattenReport, Highlight, Overprints};
+use tsipika_geom::{Affine, Point, Rect as DRect};
+use tsipika_render::RenderOptions;
 
 use super::navigator::{doc_to_thumb, thumb_to_doc};
 use crate::dialogs::flatten::{options_editor, preset_dropdown};
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The panel id (Window → Flattener Preview).
 pub const ID: &str = "flattenerPreview";
@@ -115,7 +115,7 @@ struct Cache {
     shot: Option<Shot>,
     view: View,
     generation: u64,
-    renderer: Option<vectorcraft_render::Renderer>,
+    renderer: Option<tsipika_render::Renderer>,
     drawn: crate::graphics::TexCache<Drawn>,
 }
 
@@ -132,7 +132,7 @@ thread_local! {
 
 /// Take a new snapshot of the active document and work out what flattening it would do →
 /// `flattener.preview`'s answer for the panel's highlight.
-pub fn refresh(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn refresh(app: &mut TsipikaApp) -> Result<Value, String> {
     let set = &app.ui.flattener_preview;
     let (o, report) = app.session.flattener_report(&set.params()).map_err(|e| e.to_string())?;
     let (options, overprints) = (set.options.clone(), set.overprints);
@@ -156,7 +156,7 @@ pub fn refresh(app: &mut VectorcraftApp) -> Result<Value, String> {
 
 /// `ui.flattenerPreview {highlight?, overprints?, preset?, options?, showOptions?}`: set the panel's
 /// settings (a preset loads its options, then `options` adjust them), show the panel and refresh.
-pub(crate) fn command(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn command(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let mut set = app.ui.flattener_preview.clone();
     if let Some(h) = p.get("highlight").and_then(Value::as_str) {
         set.highlight = Highlight::parse(h).ok_or_else(|| format!("unknown highlight `{h}`"))?;
@@ -189,7 +189,7 @@ fn merged(base: &FlattenOptions, over: &Value) -> Value {
     v
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
         super::empty_state(ui, "eye", tl!("No document"), tl!("Open a document to preview its flattening."));
@@ -295,7 +295,7 @@ fn preview_area(ui: &mut Ui, t: &Tokens, h: Highlight, overprints: Overprints) {
         let px = [(rect.width() * ppp) as u32, (rect.height() * ppp) as u32];
         let k = (shot.generation, h, overprints == Overprints::Simulate, [visible.x0, visible.y0, visible.x1, visible.y1].map(f64::to_bits), px);
         if *key != Some(k) || tex.is_none() {
-            let r = renderer.get_or_insert_with(vectorcraft_render::Renderer::new);
+            let r = renderer.get_or_insert_with(tsipika_render::Renderer::new);
             let img = render(r, shot, visible, px, h, overprints, t.highlight);
             match tex {
                 Some(tx) => tx.set(img, egui::TextureOptions::LINEAR),
@@ -315,7 +315,7 @@ fn preview_area(ui: &mut Ui, t: &Tokens, h: Highlight, overprints: Overprints) {
 /// `visible` of the snapshot at most `px` pixels: in colour without a highlight, else in grey with
 /// the highlighted art in `color`.
 fn render(
-    r: &mut vectorcraft_render::Renderer,
+    r: &mut tsipika_render::Renderer,
     shot: &Shot,
     visible: DRect,
     px: [u32; 2],
@@ -352,7 +352,7 @@ fn render(
     egui::ColorImage::from_rgba_premultiplied([img.width as usize, img.height as usize], &img.pixels)
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     if widgets::menu_item(ui, tl!("Refresh"), app.session.active().is_some(), false)
         && let Err(e) = refresh(app)
     {
@@ -381,11 +381,11 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// A half-transparent blue rectangle over type, and a green square apart.
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app.run("text.create", json!({"x": 20, "y": 80, "text": "Under", "size": 48})).unwrap();
         let top = app.run("shape.rectangle", json!({"x": 10, "y": 30, "width": 200, "height": 80})).unwrap()["id"].clone();
@@ -396,7 +396,7 @@ mod tests {
     }
 
     /// Two headless frames of the panel (the texture uploads in the first).
-    fn frame(app: &mut VectorcraftApp) -> egui::Context {
+    fn frame(app: &mut TsipikaApp) -> egui::Context {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         for _ in 0..2 {
@@ -412,7 +412,7 @@ mod tests {
             let Cache { shot, view, renderer, .. } = &mut *c;
             let shot = shot.as_ref().unwrap();
             render(
-                renderer.get_or_insert_with(vectorcraft_render::Renderer::new),
+                renderer.get_or_insert_with(tsipika_render::Renderer::new),
                 shot,
                 view.visible(shot.fit),
                 [300, 200],
@@ -443,7 +443,7 @@ mod tests {
             (
                 shot.fit,
                 render(
-                    renderer.get_or_insert_with(vectorcraft_render::Renderer::new),
+                    renderer.get_or_insert_with(tsipika_render::Renderer::new),
                     shot,
                     fit,
                     [300, 200],

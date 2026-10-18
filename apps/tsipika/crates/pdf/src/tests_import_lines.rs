@@ -4,10 +4,10 @@
 
 use kurbo::{BezPath, PathEl, Point, Shape};
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, CharStyle, Document, Justify, Node, NodeKind, TextKind, TextObject};
-use vectorcraft_geom::{Affine, Rect, shapes};
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf_with_catalog};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{AppearanceItem, CharStyle, Document, Justify, Node, NodeKind, TextKind, TextObject};
+use tsipika_geom::{Affine, Rect, shapes};
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf_with_catalog};
 
 use crate::*;
 
@@ -79,7 +79,7 @@ fn layers_stack_as_the_pages_mark_them_when_one_first_paints_on_a_later_page() {
 
 /// A 100 × 100 pt page drawing `content` in Helvetica.
 fn page(content: &str) -> Vec<u8> {
-    vectorcraft_testkit::pdf::pdf(&[PdfPage { resources: HELVETICA.into(), ..PdfPage::new(100.0, 100.0, content) }], None)
+    tsipika_testkit::pdf::pdf(&[PdfPage { resources: HELVETICA.into(), ..PdfPage::new(100.0, 100.0, content) }], None)
 }
 
 /// The outline of glyph `c` drawn at 24 pt from (x, 50), in PDF operators (y up), stroked.
@@ -146,7 +146,7 @@ fn a_stroke_on_the_type_of_a_moved_ai_page_is_still_the_types_stroke() {
         resources,
         ..PdfPage::new(100.0, 100.0, c)
     });
-    let d = import(&vectorcraft_testkit::pdf::pdf(&pages, None)).unwrap();
+    let d = import(&tsipika_testkit::pdf::pdf(&pages, None)).unwrap();
     assert!(d.artboards[1].rect.x0 > d.artboards[0].rect.x1 + 36.0 + 1.0, "page 2 moved: {:?}", d.artboards);
     let art = d.layers[1].children().unwrap();
     assert_eq!(art.len(), 2, "the note and the type: {art:?}");
@@ -185,7 +185,7 @@ fn spaces_read_from_wide_gaps_keep_the_glyphs_after_them_in_place() {
     let t = texts(&import(&bytes).unwrap());
     assert_eq!(t.len(), 1);
     assert_eq!(t[0].plain_text(), "3 533121 010629");
-    let laid = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t[0]);
+    let laid = tsipika_text::layout(tsipika_text::FontDb::global(), &t[0]);
     let at = |byte: usize| (t[0].xf * laid.glyphs.iter().find(|g| g.byte == byte).unwrap().origin).x;
     assert!((at(2) - f64::from(x1)).abs() < 0.05, "the second group starts where the file has it: {} vs {x1}", at(2));
     assert!((at(9) - f64::from(x2)).abs() < 0.05, "the third group starts where the file has it: {} vs {x2}", at(9));
@@ -199,7 +199,7 @@ fn words_set_ems_apart_keep_their_place() {
     let t = texts(&import(&bytes).unwrap());
     assert_eq!(t.len(), 1);
     assert_eq!(t[0].plain_text(), "ab cd ef");
-    let laid = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t[0]);
+    let laid = tsipika_text::layout(tsipika_text::FontDb::global(), &t[0]);
     let at = |byte: usize| (t[0].xf * laid.glyphs.iter().find(|g| g.byte == byte).unwrap().origin).x;
     assert!((at(3) - f64::from(x1)).abs() < 0.05, "the second word starts where the file has it: {} vs {x1}", at(3));
     assert!((at(6) - f64::from(x2)).abs() < 0.05, "the third word starts where the file has it: {} vs {x2}", at(6));

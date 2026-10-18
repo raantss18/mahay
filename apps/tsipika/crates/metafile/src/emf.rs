@@ -8,8 +8,8 @@
 //! that places their pixels.
 
 use kurbo::PathEl;
-use vectorcraft_doc::{LineCap, LineJoin};
-use vectorcraft_geom::{Affine, BezPath, FillRule, Point, Rect};
+use tsipika_doc::{LineCap, LineJoin};
+use tsipika_geom::{Affine, BezPath, FillRule, Point, Rect};
 
 use crate::bytes::Out;
 use crate::dib::{self, Rgba};
@@ -158,7 +158,7 @@ impl Writer {
 
     fn header(&mut self, title: &str) {
         let desc: Vec<u16> =
-            "VectorCraft".encode_utf16().chain([0]).chain(title.chars().take(200).collect::<String>().encode_utf16()).chain([0, 0]).collect();
+            "Tsipika".encode_utf16().chain([0]).chain(title.chars().take(200).collect::<String>().encode_utf16()).chain([0, 0]).collect();
         let f = self.frame;
         // The reference device: 100 pixels a millimetre, as large as the frame.
         let mm = [(f[2] / 100).max(1) + 1, (f[3] / 100).max(1) + 1];

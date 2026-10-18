@@ -6,8 +6,8 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{CharStyle, Guide, Node, NodeId, NodeKind, SavedSelection, TextKind};
-use vectorcraft_geom::Vec2;
+use tsipika_doc::{CharStyle, Guide, Node, NodeId, NodeKind, SavedSelection, TextKind};
+use tsipika_geom::Vec2;
 
 use super::edit::selected_roots;
 use super::pathops::Beside;
@@ -512,7 +512,7 @@ fn make_guides(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(json!({ "count": n }))
 }
 
-fn guide_paths(d: &vectorcraft_doc::Document) -> Vec<NodeId> {
+fn guide_paths(d: &tsipika_doc::Document) -> Vec<NodeId> {
     let mut v = vec![];
     d.walk(|n| {
         if matches!(n.kind, NodeKind::Path { guide: true, .. }) {
@@ -587,8 +587,8 @@ fn release_guides(s: &mut Session, p: &Value) -> Result<Value> {
         let mut made = Vec::with_capacity(lines.len());
         for &(_, parent, a, b) in &lines {
             let id = d.alloc_id();
-            let look = vectorcraft_doc::Appearance::basic(vectorcraft_color::Paint::None, vectorcraft_color::Paint::None, 0.0);
-            d.insert(parent, usize::MAX, Node::path(id, vectorcraft_geom::shapes::line(a, b), look))?;
+            let look = tsipika_doc::Appearance::basic(tsipika_color::Paint::None, tsipika_color::Paint::None, 0.0);
+            d.insert(parent, usize::MAX, Node::path(id, tsipika_geom::shapes::line(a, b), look))?;
             made.push(id);
         }
         d.retain_guides(sel, |i, _| !lines.iter().any(|l| l.0 == i));
@@ -785,7 +785,7 @@ pub(crate) fn guide_move(s: &mut Session, p: &Value) -> Result<Value> {
             s,
             if copy { "Copy Guide" } else { "Move Guide" },
             ids,
-            vectorcraft_geom::Affine::translate((dx, dy)),
+            tsipika_geom::Affine::translate((dx, dy)),
             p,
             true,
         );

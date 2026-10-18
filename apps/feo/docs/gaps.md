@@ -1,13 +1,13 @@
-# Where SoundCraft falls short of Pro Tools
+# Where Feo falls short of Pro Tools
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (G-01: audio device settings and opt-in ASIO) · **Target:** Avid Pro Tools Ultimate 2026.4.1
 
 Every known shortfall, one entry each, ranked by how much it stops a Pro Tools user from doing
-real work in SoundCraft. This is the work list: pick from the top. Rows marked **alpha blocker**
-fail the core-workflow gate in [`roadmap.md`](roadmap.md#alpha-gate) and keep SoundCraft pre-alpha. Numbers and weights live in
+real work in Feo. This is the work list: pick from the top. Rows marked **alpha blocker**
+fail the core-workflow gate in [`roadmap.md`](roadmap.md#alpha-gate) and keep Feo pre-alpha. Numbers and weights live in
 [`target-app-parity.md`](target-app-parity.md); the plan that orders these into milestones is
 [`roadmap.md`](roadmap.md). Hours are Opus 5.5 agent-hours (calibration in target-app-parity.md).
-Estimates marked "≈" are judgements; issue numbers are `storytold/soundcraft` GitHub issues.
+Estimates marked "≈" are judgements; issue numbers are `raantss18/feo` GitHub issues.
 
 When you close a gap, delete its entry (or shrink it) in the same PR, and bump the timestamp.
 
@@ -74,7 +74,7 @@ When you close a gap, delete its entry (or shrink it) in the same PR, and bump t
   Composer–compatible sessions. Our session format is `.scraft` JSON.
 - **Impact:** the standard's main-format bar for beta. A Pro Tools user cannot bring a project in
   or hand one back; post-production (picture editors deliver AAF) is blocked.
-- **Estimate:** AAF/OMF import + export ≈ 50–90 h (FilmCraft already writes AAF/OMF; we can learn
+- **Estimate:** AAF/OMF import + export ≈ 50–90 h (Hetsika already writes AAF/OMF; we can learn
   from it but not share code). `.ptx` is proprietary and undocumented: owner decision on whether
   black-box format study is in the clean-room rules; not included in the estimate.
 

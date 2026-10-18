@@ -1,5 +1,5 @@
 //! IDML enum mappings for CJK character formatting.
-use designcraft_doc::cjk::{CharacterAlignment as A, LeadingModel as L};
+use pejy_doc::cjk::{CharacterAlignment as A, LeadingModel as L};
 pub(crate) fn leading_in(v: &str) -> Option<L> {
     Some(match v {
         "LeadingModelRoman" => L::Roman,
@@ -40,8 +40,8 @@ pub(crate) fn alignment_out(v: A) -> &'static str {
         A::IcfBottom => "AlignIcfBottom",
     }
 }
-pub(crate) fn warichu_align_in(v: &str) -> Option<designcraft_doc::cjk::WarichuAlignment> {
-    use designcraft_doc::cjk::WarichuAlignment as A;
+pub(crate) fn warichu_align_in(v: &str) -> Option<pejy_doc::cjk::WarichuAlignment> {
+    use pejy_doc::cjk::WarichuAlignment as A;
     Some(match v {
         "Auto" => A::Auto,
         "Left" | "LeftAlign" => A::Left,
@@ -52,8 +52,8 @@ pub(crate) fn warichu_align_in(v: &str) -> Option<designcraft_doc::cjk::WarichuA
     })
 }
 
-pub(crate) fn warichu_align_out(v: designcraft_doc::cjk::WarichuAlignment) -> &'static str {
-    use designcraft_doc::cjk::WarichuAlignment as A;
+pub(crate) fn warichu_align_out(v: pejy_doc::cjk::WarichuAlignment) -> &'static str {
+    use pejy_doc::cjk::WarichuAlignment as A;
     match v {
         A::Auto => "Auto",
         A::Left => "Left",
@@ -81,7 +81,7 @@ pub(crate) fn kenten_character(v: &str) -> Option<&'static str> {
 
 // Kenten, shatai, auto tate-chu-yoko and grid settings.
 
-use designcraft_doc::cjk_settings::{AdornmentOverprint, KentenAlignment, KentenKind, KentenPosition};
+use pejy_doc::cjk_settings::{AdornmentOverprint, KentenAlignment, KentenKind, KentenPosition};
 
 /// `KentenKind`. `None`, `KentenSesameDot` and `KentenSmallBlackCircle` are confirmed names; the
 /// others follow their pattern. `KentenBlackBullseye` / `KentenWhiteBullseye` are read as well.

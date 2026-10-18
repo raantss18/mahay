@@ -4,7 +4,7 @@
 //! starts with "Live Paint". Its first child is a hidden group named "Live Paint Sources" holding
 //! the original paths (the planar map's inputs, used by Release, Merge and re-computation); then
 //! come the faces (paths named "Face", fill only) and the edges (open paths named "Edge", stroke
-//! only). See `vectorcraft_tools::builder` for the shared helpers.
+//! only). See `tsipika_tools::builder` for the shared helpers.
 //!
 //! **Image Trace** makes a group named "Image Trace" holding the source image (hidden, bottom)
 //! and the traced filled paths above it, mapped with the image's transform. Expand drops the
@@ -13,16 +13,16 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::appearance::{AppearanceItem, FillLayer, LineCap, LineJoin, StrokeLayer};
-use vectorcraft_doc::{Appearance, Document, GapOptions, GapSize, LiveShape, Node, NodeId, NodeKind, Selection, TraceView};
-use vectorcraft_geom::{FillRule, PathData, Point, Rect, SubPath};
-use vectorcraft_pathops as po;
-use vectorcraft_tools::builder::{
+use tsipika_color::{Color, Paint};
+use tsipika_doc::appearance::{AppearanceItem, FillLayer, LineCap, LineJoin, StrokeLayer};
+use tsipika_doc::{Appearance, Document, GapOptions, GapSize, LiveShape, Node, NodeId, NodeKind, Selection, TraceView};
+use tsipika_geom::{FillRule, PathData, Point, Rect, SubPath};
+use tsipika_pathops as po;
+use tsipika_tools::builder::{
     self as b, BuilderMap, EDGE_NAME, FACE_NAME, LIVE_PAINT_NAME, SOURCES_NAME, Touched, edge_near, face_at, is_live_paint, sample_polyline,
     sorted_roots,
 };
-use vectorcraft_trace as tr;
+use tsipika_trace as tr;
 
 use super::edit::{outermost, selected_roots};
 use super::paint::paint_from;
@@ -872,8 +872,8 @@ pub const MAX_TRACE_ANCHORS: usize = 8_000_000;
 pub const MAX_TRACE_ANCHORS: usize = 2_000_000;
 
 /// The live shape for a shape the tracer found (in the image's pixels), placed in the document by `xf`.
-fn traced_shape(shape: tr::TracedShape, xf: vectorcraft_geom::Affine) -> LiveShape {
-    use vectorcraft_geom::Affine;
+fn traced_shape(shape: tr::TracedShape, xf: tsipika_geom::Affine) -> LiveShape {
+    use tsipika_geom::Affine;
     let about = |c: Point, deg: f64| Affine::translate(c.to_vec2()) * Affine::rotate(deg.to_radians());
     let mut live = match shape {
         tr::TracedShape::Rectangle { center, width, height, radius, rotation } => LiveShape::Rectangle {
@@ -897,8 +897,8 @@ fn traced_shape(shape: tr::TracedShape, xf: vectorcraft_geom::Affine) -> LiveSha
 
 /// The gradient fill for a linear gradient the tracer found (in the image's pixels), placed in the
 /// document by `xf`.
-fn traced_gradient(g: &tr::TracedGradient, xf: vectorcraft_geom::Affine) -> Paint {
-    use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
+fn traced_gradient(g: &tr::TracedGradient, xf: tsipika_geom::Affine) -> Paint {
+    use tsipika_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
     let stops = g.stops.iter().map(|&(at, c)| GradientStop::new(at as f32, Color::rgb8(c[0], c[1], c[2]))).collect();
     let mut paint = GradientPaint::new(Gradient { kind: GradientKind::Linear, stops });
     paint.geom = Some(GradientGeom { start: xf * g.start, end: xf * g.end, aspect: 1.0, focal: None });
@@ -986,7 +986,7 @@ fn trace_make(s: &mut Session, p: &Value, expand: bool) -> Result<Value> {
     // Pixel space of the decoded raster → the image object's pixel space → document.
     let sx = img.width.max(1) as f64 / raster.width.max(1) as f64;
     let sy = img.height.max(1) as f64 / raster.height.max(1) as f64;
-    let xf = img.xf * vectorcraft_geom::Affine::scale_non_uniform(sx, sy);
+    let xf = img.xf * tsipika_geom::Affine::scale_non_uniform(sx, sy);
     // Document units per raster pixel (stroke widths).
     let unit = xf.determinant().abs().sqrt();
     let (npaths, anchors, colors) = (res.paths.len(), res.anchor_count(), res.palette.len());

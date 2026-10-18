@@ -1,6 +1,6 @@
 //! Prototype player behaviour, written from the public documentation of prototype triggers,
 //! actions, overlays, animations and scrolling. Each case states the rule, what it implies and a
-//! one-line derivation; where the documentation is silent the case says so and pins what FigCraft
+//! one-line derivation; where the documentation is silent the case says so and pins what Endrika
 //! does. Gestures go through egui headless (the harness is `present_tests`'); the rest drives the
 //! player directly. Model rules (drag directions, key combinations, easing, interactive
 //! components, hotspots) are in the engine's `proto_behaviour_tests`.
@@ -8,9 +8,9 @@
 use std::sync::Arc;
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, pos2, vec2};
-use figcraft_doc::proto::{Action, Direction, Easing, OverlayPosition, Transition};
-use figcraft_doc::{Document, NodeId, NodeKind};
-use figcraft_engine::Session;
+use endrika_doc::proto::{Action, Direction, Easing, OverlayPosition, Transition};
+use endrika_doc::{Document, NodeId, NodeKind};
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use super::{Presenter, next_delay, raise_fixed, smart_interpolate};
@@ -388,7 +388,7 @@ fn fixed_layers_stay_above_the_content_that_scrolls() {
     let shown = p.display().unwrap();
     // The header was below the feed in the layer list; fixed, it draws (and takes clicks) on top.
     assert_eq!(shown.node(a).unwrap().children, [feed, header], "fixed layers draw above scrolling ones");
-    assert_eq!(figcraft_engine::proto_run::hotspots(&shown, a).last().map(|h| h.0), Some(header), "the top-most hotspot");
+    assert_eq!(endrika_engine::proto_run::hotspots(&shown, a).last().map(|h| h.0), Some(header), "the top-most hotspot");
     assert_eq!(p.design.as_ref().unwrap().node(a).unwrap().children, [header, feed], "the file's layer order doesn't change");
     // Nothing fixed: nothing moves.
     let mut d = s.doc().unwrap().clone();

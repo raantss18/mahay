@@ -1,22 +1,22 @@
 //! GPU effects, time (kernels in `shaders/fx_time.wgsl`, every entry point prefixed `ftm_`):
 //! Time Difference, Time Displacement, CC Force Motion Blur, CC Wide Time, Pixel Motion Blur and
 //! Timewarp. Like Echo (`fx_noise`), the other frames come from the effect host on the CPU
-//! (`effectcraft_effects::time_frames`: fetched at the CPU effect's layer times and placed on
+//! (`tselatra_effects::time_frames`: fetched at the CPU effect's layer times and placed on
 //! one grid) and are uploaded; the kernels combine them with the CPU effect's arithmetic in its
 //! order (weighted sums one frame per pass, so the float rounding matches).
 //!
 //! Time Displacement's per-pixel time (the map's luminance, quantised to the time resolution)
 //! is computed on the CPU, since it decides which frames to fetch; the GPU gathers each pixel
 //! from its frame. Timewarp's motion vectors (block matching and smoothing,
-//! `effectcraft_raster::flow`) are estimated on the CPU (`effectcraft_effects::timewarp_plan`);
+//! `tselatra_raster::flow`) are estimated on the CPU (`tselatra_effects::timewarp_plan`);
 //! the frame building (Whole Frames, Frame Mix, Pixel Motion's warp along the vectors with its
 //! error fallback, the shutter samples' average) runs on the GPU. With a Matte Layer the plan
 //! also carries the matte-masked frames (and the foreground's and background's own vectors);
 //! the GPU builds both layers and shows them as Show asks (`ftm_layer`).
 
-use effectcraft_effects::util::{fit_layer, unpremul};
-use effectcraft_effects::{Buf, EffectCtx, TwStep};
-use effectcraft_keyframe::Value;
+use tselatra_effects::util::{fit_layer, unpremul};
+use tselatra_effects::{Buf, EffectCtx, TwStep};
+use tselatra_keyframe::Value;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::GBuf;
@@ -47,7 +47,7 @@ pub(crate) fn apply(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<G
         }
         // Pixel Motion Blur synthesizes along measured motion vectors (#535); without a plan (no
         // host to read neighbouring frames) it averages the shutter's frames, as the CPU effect does.
-        "ec.time.pixelmotionblur" => match effectcraft_effects::pmb_plan(ctx) {
+        "ec.time.pixelmotionblur" => match tselatra_effects::pmb_plan(ctx) {
             Some(plan) => render_plan(e, &plan),
             None => {
                 let angle = if ctx.params.e("shutterControl") == 1 { ctx.params.f("shutterAngle") } else { 180.0 };
@@ -89,7 +89,7 @@ fn mean_of(e: &mut Enc, ctx: &EffectCtx, b: GBuf, times: &[f64]) -> Option<GBuf>
     if times.is_empty() {
         return Some(b);
     }
-    let Some((grid, imgs)) = effectcraft_effects::time_frames(ctx, times) else { return Some(b) };
+    let Some((grid, imgs)) = tselatra_effects::time_frames(ctx, times) else { return Some(b) };
     let frames = imgs.iter().map(|i| e.g.upload_image(i)).collect::<Option<Vec<_>>>()?;
     let k = 1.0 / times.len() as f32;
     let img = average(e, &frames, &vec![k; times.len()])?;
@@ -105,13 +105,13 @@ fn time_difference(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let target_id = pr.get("targetLayer").and_then(Value::as_layer);
     let (grid, cur, target) = match target_id.and_then(|id| host.layer_at(id, ctx.env.comp_time + off, false)) {
         Some(other) => {
-            let Some((grid, mut imgs)) = effectcraft_effects::time_frames(ctx, &[ctx.time]) else { return Some(b) };
+            let Some((grid, mut imgs)) = tselatra_effects::time_frames(ctx, &[ctx.time]) else { return Some(b) };
             let cur = imgs.pop().unwrap_or_default();
             let tgt = fit_layer(ctx, &Buf { img: cur.clone(), ..grid.clone() }, &other, true);
             (grid, cur, tgt)
         }
         None => {
-            let Some((grid, mut imgs)) = effectcraft_effects::time_frames(ctx, &[ctx.time, ctx.time + off]) else { return Some(b) };
+            let Some((grid, mut imgs)) = tselatra_effects::time_frames(ctx, &[ctx.time, ctx.time + off]) else { return Some(b) };
             let tgt = imgs.pop().unwrap_or_default();
             let cur = imgs.pop().unwrap_or_default();
             (grid, cur, tgt)
@@ -134,7 +134,7 @@ fn time_displacement(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let pr = ctx.params;
     let max = pr.f("maxDisplacementTime");
     let res = pr.f("timeResolution").clamp(1.0, 999.0);
-    let Some((grid, mut imgs)) = effectcraft_effects::time_frames(ctx, &[ctx.time]) else { return Some(b) };
+    let Some((grid, mut imgs)) = tselatra_effects::time_frames(ctx, &[ctx.time]) else { return Some(b) };
     let grid = Buf { img: imgs.pop().unwrap_or_default(), ..grid };
     let map = match ctx.layer_param("displacementMapLayer", true) {
         Some(o) => fit_layer(ctx, &grid, &o, pr.b("stretchMap")),
@@ -148,7 +148,7 @@ fn time_displacement(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         .iter()
         .map(|p| {
             let (c, a) = unpremul(*p);
-            let l = if a > 0.0 { effectcraft_color::luminance(c[0], c[1], c[2]) } else { 0.5 };
+            let l = if a > 0.0 { tselatra_color::luminance(c[0], c[1], c[2]) } else { 0.5 };
             (((l as f64 - 0.5) * 2.0 * max) / step).round() as i32
         })
         .collect();
@@ -159,7 +159,7 @@ fn time_displacement(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         return Some(on_grid(e.g.upload_image(&grid.img)?, &grid));
     }
     let times: Vec<f64> = keys.iter().map(|k| ctx.time + *k as f64 * step).collect();
-    let Some((fgrid, frames)) = effectcraft_effects::time_frames(ctx, &times) else { return Some(on_grid(e.g.upload_image(&grid.img)?, &grid)) };
+    let Some((fgrid, frames)) = tselatra_effects::time_frames(ctx, &times) else { return Some(on_grid(e.g.upload_image(&grid.img)?, &grid)) };
     let dx = (fgrid.offset[0] - grid.offset[0]).round() as i32;
     let dy = (fgrid.offset[1] - grid.offset[1]).round() as i32;
     let which: Vec<u8> = idx.iter().flat_map(|k| (keys.binary_search(k).unwrap_or(0) as u32).to_le_bytes()).collect();
@@ -183,17 +183,17 @@ fn timewarp(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     if ctx.env.host.is_none() {
         return Some(b);
     }
-    let Some(plan) = effectcraft_effects::timewarp_plan(ctx) else { return Some(b) };
+    let Some(plan) = tselatra_effects::timewarp_plan(ctx) else { return Some(b) };
     render_plan(e, &plan)
 }
 
-/// Render a prepared Timewarp plan (also Pixel Motion Blur's, `effectcraft_effects::pmb_plan`):
+/// Render a prepared Timewarp plan (also Pixel Motion Blur's, `tselatra_effects::pmb_plan`):
 /// every step to an image on the GPU, then the weighted average.
-fn render_plan(e: &mut Enc, plan: &effectcraft_effects::TimewarpPlan) -> Option<GBuf> {
+fn render_plan(e: &mut Enc, plan: &tselatra_effects::TimewarpPlan) -> Option<GBuf> {
     // Pixel Motion's in-between frame of frames a, b along motion field `flow`.
     let motion = |e: &mut Enc, a: usize, bi: usize, w: f32, flow: usize| -> Option<GpuImage> {
-        let pa = e.g.upload_image(&effectcraft_effects::timewarp_crop(&plan.frames[a], &plan.pm))?;
-        let pb = e.g.upload_image(&effectcraft_effects::timewarp_crop(&plan.frames[bi], &plan.pm))?;
+        let pa = e.g.upload_image(&tselatra_effects::timewarp_crop(&plan.frames[a], &plan.pm))?;
+        let pb = e.g.upload_image(&tselatra_effects::timewarp_crop(&plan.frames[bi], &plan.pm))?;
         let f = &plan.flows[flow];
         let v: Vec<f32> = f.v.iter().flat_map(|q| [q[0], q[1]]).collect();
         let data = e.data(&v);

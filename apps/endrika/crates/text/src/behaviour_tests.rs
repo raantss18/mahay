@@ -3,13 +3,13 @@
 //! case gives the rule, the numbers it implies and a one-line derivation. Where the documentation
 //! is silent the case says so and pins today's behaviour.
 //!
-//! Metrics cases read the face actually used (any default face: craft-fonts or the system) and
+//! Metrics cases read the face actually used (any default face: mahay-fonts or the system) and
 //! derive the expected numbers from its own ascent, descent, line gap and cap height, so they hold
 //! on every machine that has a font; with none they skip. Break and caret rules are font-free.
 
 use super::*;
 use crate::breaks::{break_between, grapheme_starts};
-use figcraft_doc::{LeadingTrim, LetterSpacing, LineHeight, TextAlignH, TextAutoResize, TextData, TextDecoration};
+use endrika_doc::{LeadingTrim, LetterSpacing, LineHeight, TextAlignH, TextAutoResize, TextData, TextDecoration};
 
 /// The default face once system fonts are indexed (a Latin face where the system has one, so CJK
 /// and emoji come from fallback faces), or None (skip) on a machine without fonts.

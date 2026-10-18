@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (zoom and pan regenerate in the background) · **Target:** Autodesk AutoCAD 2027 (Mac and Windows)
 
-The hardware AutoCAD uses and how CADCraft compares, per platform. Work items:
+The hardware AutoCAD uses and how Drafitra compares, per platform. Work items:
 [gaps.md](gaps.md#hardware).
 
 **Headline (estimated): hardware ≈ 45%.** 2D GPU drawing, HiDPI and trackpads are covered on
@@ -11,15 +11,15 @@ any deliberate multi-monitor handling. Remaining: **≈ 15–25 Opus 5.5 hours**
 the devices to test 3D mice and tablets.
 
 Measured from the source on 2026-10-10 (`crates/ui-egui/src/gpu.rs`, `canvas.rs`,
-`apps/cadcraft/src/graphics.rs`, `apps/cadcraft-web`); AutoCAD's side from Autodesk's system
+`apps/drafitra/src/graphics.rs`, `apps/drafitra-web`); AutoCAD's side from Autodesk's system
 requirements and graphics-performance documentation. Nothing was benchmarked in this pass.
 
-| Feature | AutoCAD 2027 | CADCraft macOS | CADCraft Windows | CADCraft Linux / FreeBSD | CADCraft web |
+| Feature | AutoCAD 2027 | Drafitra macOS | Drafitra Windows | Drafitra Linux / FreeBSD | Drafitra web |
 |---|---|---|---|---|---|
 | GPU canvas for 2D | yes (hardware acceleration, GPU smoothing, high-quality geometry) | wgpu on Metal | wgpu on DirectX 12 by default (`WGPU_BACKEND` overrides; GL avoided after AMD crashes, #31) | wgpu on Vulkan (or GL) | WebGPU, WebGL2 fallback |
 | CPU fallback | software mode | yes (`tiny-skia` rasteriser) | yes | yes | — |
 | GPU for 3D (shaded visual styles, ray-traced rendering) | yes | no (no 3D) | no | no | no |
-| Low-latency presentation | yes | vsync or low-latency via `CADCRAFT_VSYNC` | same | no vsync queue so the crosshair keeps up (#183) | browser-controlled |
+| Low-latency presentation | yes | vsync or low-latency via `DRAFITRA_VSYNC` | same | no vsync queue so the crosshair keeps up (#183) | browser-controlled |
 | HiDPI / Retina, display scaling | yes | yes (egui points per pixel) | yes; a Windows 11 DPI fix is queued upstream (PR #110) | yes | yes |
 | Multi-monitor (palettes on other screens, per-monitor DPI) | yes | not handled deliberately; one window | same | same | — |
 | Trackpad pan, pinch zoom | yes (Mac) | yes, with trackpad vs wheel detection (#58) | wheel only (precision touchpad untested) | wheel; delay reported on Linux Mint (#25) | browser events |
@@ -32,7 +32,7 @@ requirements and graphics-performance documentation. Nothing was benchmarked in 
 
 ## Performance on hardware (internal numbers only)
 
-From the earlier roadmap (measured by the agents that built it, 2026-10-06, `cadcraft-cli perf`):
+From the earlier roadmap (measured by the agents that built it, 2026-10-06, `drafitra-cli perf`):
 200,000 entities pick in 0.001 ms, about 4 ms after an edit (incremental R-tree), and the GPU
 canvas draws a frame in about 4 ms. Nothing has been compared with AutoCAD on the same machine,
 and 1M-entity drawings are untested. A 10 MB DWG took about two minutes to fail (#57).

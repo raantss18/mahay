@@ -6,8 +6,8 @@
 
 use egui::accesskit::{Node, Role, Toggled};
 use egui::{Event, Key, Modifiers};
-use figcraft_doc::NodeId;
-use figcraft_engine::{Session, ToolId};
+use endrika_doc::NodeId;
+use endrika_engine::{Session, ToolId};
 use serde_json::json;
 
 use crate::a11y::{Region, focused_name};

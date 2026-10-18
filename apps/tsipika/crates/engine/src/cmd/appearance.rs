@@ -18,9 +18,9 @@
 //! `appearance.moveItem {from: "contents"}`).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, CharStyle, FillLayer, Node, NodeKind, ParaStyle, StrokeLayer};
-use vectorcraft_geom::Rect;
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, CharStyle, FillLayer, Node, NodeKind, ParaStyle, StrokeLayer};
+use tsipika_geom::Rect;
 
 use super::edit::{outermost, selected_roots};
 use super::opacitymask::percent;
@@ -344,7 +344,7 @@ pub(crate) fn edit_items_then(
     label: &str,
     fill: bool,
     mut f: impl FnMut(&mut Node, Option<usize>) -> Result<()>,
-    mut after: impl FnMut(&mut vectorcraft_doc::Document, &[NodeId]) -> Result<bool>,
+    mut after: impl FnMut(&mut tsipika_doc::Document, &[NodeId]) -> Result<bool>,
 ) -> Result<()> {
     if ids.is_empty() {
         return Ok(());
@@ -365,7 +365,7 @@ pub(crate) fn edit_items_then(
 }
 
 /// How many of `ids` differ in `d` from `before`.
-pub(crate) fn count_changed(d: &vectorcraft_doc::Document, before: &vectorcraft_doc::Document, ids: &[NodeId]) -> usize {
+pub(crate) fn count_changed(d: &tsipika_doc::Document, before: &tsipika_doc::Document, ids: &[NodeId]) -> usize {
     ids.iter().filter(|id| d.node(**id) != before.node(**id)).count()
 }
 

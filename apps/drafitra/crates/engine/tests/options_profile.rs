@@ -1,7 +1,7 @@
 //! OPTIONS: the JSON form reads and sets the user-profile variables without a dialog.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::options::{PROFILE_VARS, profile, restore};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::options::{PROFILE_VARS, profile, restore};
 use serde_json::json;
 
 #[test]
@@ -161,7 +161,7 @@ fn grips_show_up_to_the_object_limit() {
 
 #[test]
 fn preview_filter_excludes_each_kind_it_names() {
-    use cadcraft_engine::select::preview_filtered;
+    use drafitra_engine::select::preview_filtered;
     let mut s = Session::new();
     s.execute("mtext", &json!({"at": [0, 0], "text": "NOTE", "height": 2})).unwrap();
     s.execute("rectang", &json!({"p1": [10, 0], "p2": [20, 10]})).unwrap();
@@ -180,7 +180,7 @@ fn preview_filter_excludes_each_kind_it_names() {
         l.locked = true;
     }
     d.model.modify(line.handle, |e| e.common.layer = "LOCKED".into());
-    d.groups.push(cadcraft_engine::doc::Group { name: "G".into(), description: String::new(), selectable: true, members: vec![mtext.handle] });
+    d.groups.push(drafitra_engine::doc::Group { name: "G".into(), description: String::new(), selectable: true, members: vec![mtext.handle] });
     let d = s.doc().unwrap();
     let line = d.entity(line.handle).unwrap();
     assert!(preview_filtered(d, line, 1) && !preview_filtered(d, line, 62));

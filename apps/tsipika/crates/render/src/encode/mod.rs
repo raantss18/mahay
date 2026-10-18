@@ -17,8 +17,8 @@ pub mod web;
 
 use std::sync::Arc;
 
-use vectorcraft_doc::{Document, Node, NodeKind, SymbolBoxes};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{Document, Node, NodeKind, SymbolBoxes};
+use tsipika_geom::Rect;
 
 use crate::{AntiAlias, RenderOptions, Rendered, Renderer, fx};
 
@@ -198,7 +198,7 @@ pub(crate) fn webp(img: &Rendered) -> Result<Vec<u8>, String> {
 /// without effects of its own by the art it shows. `None` when nothing would be drawn.
 pub fn art_bounds(doc: &Document) -> Option<Rect> {
     let symbols = doc.symbol_boxes();
-    doc.layers.iter().fold(None, |acc, l| vectorcraft_geom::union_opt(acc, drawn_bounds(&symbols, l)))
+    doc.layers.iter().fold(None, |acc, l| tsipika_geom::union_opt(acc, drawn_bounds(&symbols, l)))
 }
 
 /// Bounds of the art an export draws ([`art_bounds`]) that is on artboard rectangle `rect`: each
@@ -210,13 +210,13 @@ pub fn art_bounds_on(doc: &Document, rect: Rect) -> Option<Rect> {
     fn on(symbols: &SymbolBoxes, n: &Node, rect: Rect) -> Option<Rect> {
         match &n.kind {
             NodeKind::Layer { template: false, clip: false, children, .. } if n.visible => {
-                children.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, on(symbols, c, rect)))
+                children.iter().fold(None, |acc, c| tsipika_geom::union_opt(acc, on(symbols, c, rect)))
             }
             _ => drawn_bounds(symbols, n).filter(|b| b.x0 < rect.x1 && b.x1 > rect.x0 && b.y0 < rect.y1 && b.y1 > rect.y0),
         }
     }
     let symbols = doc.symbol_boxes();
-    doc.layers.iter().fold(None, |acc, l| vectorcraft_geom::union_opt(acc, on(&symbols, l, rect)))
+    doc.layers.iter().fold(None, |acc, l| tsipika_geom::union_opt(acc, on(&symbols, l, rect)))
 }
 
 /// Bounds of what an export draws of object `n` ([`art_bounds`]): `None` when `n` is hidden, a
@@ -232,7 +232,7 @@ pub fn drawn_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
         NodeKind::Layer { children, clip: false, .. } | NodeKind::Group { children, clip: false } if !fx::has_object_fx(n) => children
             .iter()
             .skip(usize::from(n.extras().shaper.is_some()))
-            .fold(None, |acc, c| vectorcraft_geom::union_opt(acc, drawn_bounds(symbols, c))),
+            .fold(None, |acc, c| tsipika_geom::union_opt(acc, drawn_bounds(symbols, c))),
         _ => crate::effect_bounds(symbols, without_undrawn(n).as_ref().unwrap_or(n)),
     }
 }

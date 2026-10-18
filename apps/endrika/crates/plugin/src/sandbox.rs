@@ -4,8 +4,8 @@
 //!
 //! # ABI (version 3; version 1 is the first seven imports, version 2 adds panels and settings)
 //!
-//! The module exports its `memory` and `figcraft_run(input_len: i32) -> i32`. Host functions are
-//! imported from the module `figcraft`; strings are UTF-8 `(ptr, len)` pairs in the plugin's memory.
+//! The module exports its `memory` and `endrika_run(input_len: i32) -> i32`. Host functions are
+//! imported from the module `endrika`; strings are UTF-8 `(ptr, len)` pairs in the plugin's memory.
 //!
 //! | Import | Signature | Does |
 //! |---|---|---|
@@ -23,7 +23,7 @@
 //! | `setting_delete` | `(key_ptr, key_len)` | Forgets a setting. |
 //! | `widget_render` | `(ptr, len) -> i32` | Draws the widget being called back: a [`WidgetRender`] as JSON. 1: invalid, the reply says why. |
 //!
-//! When `figcraft_run` starts, the reply holds the input JSON (`input_len` bytes):
+//! When `endrika_run` starts, the reply holds the input JSON (`input_len` bytes):
 //! `{"api", "command", "params", "selection"}`, plus `event` and `values` when a panel calls the
 //! plugin back, or `widget` (`{id, state, event}`) when a widget does. It returns 0 on success; anything else fails the run.
 //!
@@ -39,9 +39,9 @@ use crate::manifest::Panel;
 use crate::widget::WidgetRender;
 
 /// The module host functions are imported from.
-pub const IMPORT_MODULE: &str = "figcraft";
+pub const IMPORT_MODULE: &str = "endrika";
 /// The exported entry point.
-pub const ENTRY: &str = "figcraft_run";
+pub const ENTRY: &str = "endrika_run";
 
 /// The host functions: (name, params, results), all i32.
 const IMPORTS: &[(&str, usize, usize)] = &[
@@ -251,8 +251,8 @@ fn func_type(params: usize, results: usize) -> FuncType {
     FuncType::new(vec![ValType::I32; params], vec![ValType::I32; results])
 }
 
-/// Compile and check a module: its size, that it imports only FigCraft's host functions (no WASI)
-/// and exports `memory` and `figcraft_run`.
+/// Compile and check a module: its size, that it imports only Endrika's host functions (no WASI)
+/// and exports `memory` and `endrika_run`.
 pub fn check_module(bytes: &[u8], limits: &Limits) -> Result<(), PluginError> {
     compile(&engine(), bytes, limits).map(|_| ())
 }
@@ -274,7 +274,7 @@ fn compile(engine: &Engine, bytes: &[u8], limits: &Limits) -> Result<Module, Plu
             }
             (None, _) => {
                 return Err(PluginError::InvalidModule(format!(
-                    "it imports `{}.{}`, which FigCraft doesn't provide (plugins get no file system, network or clock)",
+                    "it imports `{}.{}`, which Endrika doesn't provide (plugins get no file system, network or clock)",
                     imp.module(),
                     imp.name()
                 )));
@@ -291,7 +291,7 @@ fn compile(engine: &Engine, bytes: &[u8], limits: &Limits) -> Result<Module, Plu
     Ok(module)
 }
 
-/// Run a plugin module once: `input` is the JSON handed to `figcraft_run`.
+/// Run a plugin module once: `input` is the JSON handed to `endrika_run`.
 pub fn run(bytes: &[u8], input: &str, limits: &Limits, host: &mut dyn Host) -> Result<RunOutput, PluginError> {
     Instance::new(bytes, limits)?.call(input, host)
 }
@@ -325,7 +325,7 @@ impl Instance {
         Ok(Self { store, entry })
     }
 
-    /// Call `figcraft_run` with `input`, with the full limits. Host calls that need `host` pause
+    /// Call `endrika_run` with `input`, with the full limits. Host calls that need `host` pause
     /// the plugin, are answered here and resume it.
     pub fn call(&mut self, input: &str, host: &mut dyn Host) -> Result<RunOutput, PluginError> {
         let limits = self.store.data().limits;
@@ -390,11 +390,11 @@ fn abort(caller: &mut Ctx<'_>, err: PluginError) -> wasmi::Error {
 }
 
 /// Pause the plugin until the host answers `request`.
-// shortcut: a host function tail-called (`return_call`) from `figcraft_run` itself can't be
+// shortcut: a host function tail-called (`return_call`) from `endrika_run` itself can't be
 // resumed and fails the run; fine for compiled plugins, which don't do that.
 fn ask(caller: &mut Ctx<'_>, request: Request) -> wasmi::Error {
     caller.data_mut().request = Some(request);
-    wasmi::Error::new("a host function was called outside figcraft_run")
+    wasmi::Error::new("a host function was called outside endrika_run")
 }
 
 /// Charge a host call: fuel and the call count.

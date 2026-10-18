@@ -31,7 +31,7 @@ fn android_main(app: AndroidApp) {
                 }
             }
             app.start_screen();
-            Ok(Box::new(Shell { app, dialogs, bridge: EguiBridge::new(&cc.egui_ctx) }))
+            Ok(Box::new(Shell { app, dialogs, bridge: EguiBridge::new(&cc.egui_ctx, mahay_about::AppInfo { id: "soratra", name: "Soratra" }) }))
         }),
     );
     if let Err(e) = result {

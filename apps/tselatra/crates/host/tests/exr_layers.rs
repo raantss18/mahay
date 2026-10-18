@@ -2,8 +2,8 @@
 //! only in named layers (as Blender and Nuke write them) imports, `layer.channels` lists its
 //! layers and channels, and EXtractoR shows the chosen ones.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::time::Tick;
+use tselatra_engine::Session;
+use tselatra_engine::time::Tick;
 use serde_json::{Value, json};
 
 /// An 8×4 EXR with layers `diffuse` (orange), `spec` (blue) and `depth` (Z = 0.25), and no
@@ -34,7 +34,7 @@ fn near(a: [f32; 4], b: [f32; 3]) -> bool {
 #[test]
 fn extractor_shows_the_chosen_layer_and_channels_of_a_layered_exr() {
     let path = layered_exr();
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let r = s.execute("file.import", json!({"paths": [path]})).unwrap();
     assert_eq!(r["errors"], json!([]), "the file imports: {r}");
     s.execute("comp.new", json!({"name": "EXR", "width": 8, "height": 4, "frameRate": 24, "duration": 1})).unwrap();

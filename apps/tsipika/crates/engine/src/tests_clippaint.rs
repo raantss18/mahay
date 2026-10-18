@@ -3,8 +3,8 @@
 //! and unclipped) on the canvas, in SVG and in PDF, and Release and Ungroup keep it.
 
 use serde_json::json;
-use vectorcraft_geom::Affine;
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_geom::Affine;
+use tsipika_render::{RenderOptions, Renderer};
 
 use super::*;
 
@@ -56,11 +56,11 @@ fn a_clipping_paths_fill_and_stroke_show_in_render_svg_and_pdf() {
     let b = doc.node(group).unwrap().visual_bounds().unwrap();
     assert!((b.x0 - 45.0).abs() < 1e-6 && (b.x1 - 155.0).abs() < 1e-6, "{b:?}");
     // SVG: the fill inside the clip, the stroke after it, one element keeping the clipping path's id.
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
-    assert_painted(&vectorcraft_svg::import(&svg).unwrap(), "SVG");
+    let svg = tsipika_svg::export(&doc, &Default::default());
+    assert_painted(&tsipika_svg::import(&svg).unwrap(), "SVG");
     // PDF.
-    let pdf = vectorcraft_pdf::export(&doc, &Default::default()).unwrap();
-    assert_painted(&vectorcraft_pdf::import(&pdf).unwrap(), "PDF");
+    let pdf = tsipika_pdf::export(&doc, &Default::default()).unwrap();
+    assert_painted(&tsipika_pdf::import(&pdf).unwrap(), "PDF");
     // Unpainted clipping paths write nothing extra.
     let mut bare = s;
     bare.execute("paint.setFill", &json!({"none": true, "ids": [clip.0]})).unwrap();
@@ -68,7 +68,7 @@ fn a_clipping_paths_fill_and_stroke_show_in_render_svg_and_pdf() {
     let doc = bare.doc().unwrap().doc.clone();
     assert_eq!(rgb(&doc, 120), [255, 255, 255]);
     assert_eq!(rgb(&doc, 45), [255, 255, 255]);
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
+    let svg = tsipika_svg::export(&doc, &Default::default());
     assert_eq!(svg.matches("<path").count(), 2, "the clip region and the red art: {svg}");
 }
 
@@ -79,7 +79,7 @@ fn release_and_ungroup_keep_the_clipping_paths_paint() {
         s.execute("select.set", &json!({"ids": [group.0]})).unwrap();
         s.execute(cmd, &json!({})).unwrap();
         let n = s.doc().unwrap().doc.node(clip).unwrap().clone();
-        assert_eq!(n.appearance.fill_paint(), vectorcraft_color::Paint::solid(vectorcraft_color::Color::from_hex("#0000ff").unwrap()), "{cmd}");
+        assert_eq!(n.appearance.fill_paint(), tsipika_color::Paint::solid(tsipika_color::Color::from_hex("#0000ff").unwrap()), "{cmd}");
         assert_eq!(n.appearance.stroke().map(|st| st.width), Some(10.0), "{cmd}");
     }
 }

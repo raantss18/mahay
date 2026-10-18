@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used)]
 
 use egui::{Pos2, RawInput, Rect, Vec2, vec2};
-use figcraft_engine::Session;
-use figcraft_ui_egui::{FigApp, NoServices};
+use endrika_engine::Session;
+use endrika_ui_egui::{FigApp, NoServices};
 use serde_json::json;
 
 fn frame(ctx: &egui::Context, app: &mut FigApp, size: Vec2) {

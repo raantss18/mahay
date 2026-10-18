@@ -5,5 +5,5 @@ plan/
 /corpus
 /log
 .DS_Store
-# A craft-fonts checkout for CRAFT_FONTS_DIR (CI and release workflows check it out here)
-/craft-fonts
+# A mahay-fonts checkout for MAHAY_FONTS_DIR (CI and release workflows check it out here)
+/mahay-fonts

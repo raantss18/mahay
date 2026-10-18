@@ -2,8 +2,8 @@
 //! morphology filter), negative spread and inner shadows cut with masks; layers without one outline
 //! keep the morphology filter. Every export stays valid SVG.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, EffectKind, NodeId, NodeKind, Shadow};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, EffectKind, NodeId, NodeKind, Shadow};
 
 use super::*;
 

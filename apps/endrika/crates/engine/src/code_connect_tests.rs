@@ -4,7 +4,7 @@
 use crate::components::tests::{ex, idv};
 use crate::params::id_of;
 use crate::{EngineError, Session};
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 fn code(s: &mut Session, id: NodeId, lang: &str) -> String {
@@ -139,7 +139,7 @@ fn sets_connect_through_the_set_and_round_trip_as_json() {
     assert_eq!(r["warnings"].as_array().unwrap().len(), 3, "{r}");
     assert_eq!(code(&mut t, i2, "swiftui"), "Button(state: .hover)\n");
     // Through a file, as JSON text.
-    let path = std::env::temp_dir().join(format!("figcraft-connect-{}.json", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-connect-{}.json", std::process::id()));
     let path = path.to_string_lossy().to_string();
     ex(&mut s, "codeConnect.export", json!({"path": path}));
     let mut u = Session::new();

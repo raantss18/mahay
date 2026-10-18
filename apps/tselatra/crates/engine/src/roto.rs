@@ -1,7 +1,7 @@
 //! Roto Brush & Refine Edge runtime: propagation and Freeze jobs, Input Key maintenance and the
 //! tool options.
 //!
-//! Segmentations are derived data in `effectcraft_effects::roto`'s content-keyed cache (see that
+//! Segmentations are derived data in `tselatra_effects::roto`'s content-keyed cache (see that
 //! module). `roto.propagate` fills it at full resolution in the background (or blocking with
 //! `wait`; in the browser the background is a Web Worker whose segmentations stream back,
 //! [`crate::offload`]), frame by frame outward from the base frame, rendering the effect's input
@@ -21,14 +21,14 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_effects::object_matte as om;
-use effectcraft_effects::roto::{self as fx, FROZEN, FrozenCache, INPUT_KEY};
-use effectcraft_effects::{Params, flatten_params};
-use effectcraft_keyframe::Value;
-use effectcraft_project::{GroupKind, ItemId, ItemKind, Layer, LayerId, Project, PropGroup, Uid};
-use effectcraft_raster::Image;
-use effectcraft_render::{EvalCtx, ExprHost, FootageSource, LayerCache, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_effects::object_matte as om;
+use tselatra_effects::roto::{self as fx, FROZEN, FrozenCache, INPUT_KEY};
+use tselatra_effects::{Params, flatten_params};
+use tselatra_keyframe::Value;
+use tselatra_project::{GroupKind, ItemId, ItemKind, Layer, LayerId, Project, PropGroup, Uid};
+use tselatra_raster::Image;
+use tselatra_render::{EvalCtx, ExprHost, FootageSource, LayerCache, RenderOpts, Renderer};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 
 use crate::tracking::lock;
@@ -163,7 +163,7 @@ pub(crate) fn is_roto(g: &PropGroup) -> bool {
 /// An Object Matte instance (its Input Key is kept current like Roto Brush's; it segments on
 /// demand while rendering).
 pub(crate) fn is_object_matte(g: &PropGroup) -> bool {
-    matches!(&g.kind, GroupKind::Effect { effect } if effect == effectcraft_effects::object_matte::ID)
+    matches!(&g.kind, GroupKind::Effect { effect } if effect == tselatra_effects::object_matte::ID)
 }
 
 /// What an Object Matte's segmentation is made from besides its frames: the prompt and tracking
@@ -279,12 +279,12 @@ pub(crate) fn params_at(p: &Project, cid: ItemId, layer: &Layer, g: &PropGroup, 
 }
 
 /// The layer's source size (layer pixels).
-pub(crate) fn layer_size(p: &Project, comp: &effectcraft_project::Comp, layer: &Layer) -> [f64; 2] {
-    effectcraft_render::effect_bounds(p, comp, layer).0
+pub(crate) fn layer_size(p: &Project, comp: &tselatra_project::Comp, layer: &Layer) -> [f64; 2] {
+    tselatra_render::effect_bounds(p, comp, layer).0
 }
 
 /// First and last layer frame of the layer inside the comp (inclusive).
-pub fn frame_limits(comp: &effectcraft_project::Comp, layer: &Layer) -> [i64; 2] {
+pub fn frame_limits(comp: &tselatra_project::Comp, layer: &Layer) -> [i64; 2] {
     let fps = comp.frame_rate.as_f64().max(1e-6);
     let lo = layer.layer_time(layer.in_point.max(Tick::ZERO)).seconds();
     let hi = layer.layer_time(layer.out_point.min(comp.duration)).seconds();
@@ -294,7 +294,7 @@ pub fn frame_limits(comp: &effectcraft_project::Comp, layer: &Layer) -> [i64; 2]
 }
 
 /// Comp time of layer frame `f`.
-pub(crate) fn comp_time_of(comp: &effectcraft_project::Comp, layer: &Layer, f: i64) -> Tick {
+pub(crate) fn comp_time_of(comp: &tselatra_project::Comp, layer: &Layer, f: i64) -> Tick {
     layer.comp_time(comp.frame_rate.tick_of(f))
 }
 
@@ -320,11 +320,11 @@ struct Work {
 /// will read in passes beforehand; [`FrameSource::get`] renders on the CPU what it lacks.
 pub(crate) struct FrameSource<'a> {
     r: Renderer<'a>,
-    accel: Option<&'a dyn effectcraft_render::Accelerator>,
+    accel: Option<&'a dyn tselatra_render::Accelerator>,
     /// Frames in `memo`, oldest first.
     order: std::collections::VecDeque<i64>,
     ctx0: EvalCtx<'a>,
-    comp: &'a effectcraft_project::Comp,
+    comp: &'a tselatra_project::Comp,
     layer: &'a Layer,
     index: usize,
     size: [f64; 2],
@@ -339,7 +339,7 @@ impl<'a> FrameSource<'a> {
         expr: Option<&'a dyn ExprHost>,
         cache: &'a LayerCache,
         cid: ItemId,
-        comp: &'a effectcraft_project::Comp,
+        comp: &'a tselatra_project::Comp,
         layer: &'a Layer,
         index: usize,
         size: [f64; 2],
@@ -352,7 +352,7 @@ impl<'a> FrameSource<'a> {
     }
 
     /// Render with `accel` (deferred readbacks: see [`FrameSource::prefetch`]).
-    pub(crate) fn with_accel(mut self, accel: Option<&'a dyn effectcraft_render::Accelerator>) -> Self {
+    pub(crate) fn with_accel(mut self, accel: Option<&'a dyn tselatra_render::Accelerator>) -> Self {
         self.accel = accel;
         self.r.opts = crate::offload::analysis_opts(accel);
         self
@@ -400,8 +400,8 @@ impl<'a> FrameSource<'a> {
         let buf = if (buf.scale - 1.0).abs() > 1e-9 && buf.scale > 0.0 {
             let w = (buf.img.width as f64 / buf.scale).round().max(1.0) as u32;
             let h = (buf.img.height as f64 / buf.scale).round().max(1.0) as u32;
-            effectcraft_effects::Buf {
-                img: effectcraft_raster::resample(&buf.img, w, h),
+            tselatra_effects::Buf {
+                img: tselatra_raster::resample(&buf.img, w, h),
                 offset: [buf.offset[0] / buf.scale, buf.offset[1] / buf.scale],
                 scale: 1.0,
             }
@@ -489,7 +489,7 @@ async fn run_work(w: Work, shared: &RotoShared) {
 }
 
 /// Frames to compute, outward from the base frame.
-pub(crate) fn job_frames(d: &effectcraft_track::roto::RotoData, dir: Direction) -> Vec<i64> {
+pub(crate) fn job_frames(d: &tselatra_track::roto::RotoData, dir: Direction) -> Vec<i64> {
     let Some(base) = d.base else { return vec![] };
     let mut v = vec![base];
     if dir != Direction::Backward {
@@ -676,7 +676,7 @@ impl Session {
             Some(
                 std::thread::Builder::new()
                     .name("roto".into())
-                    .spawn(move || effectcraft_render::passes::block_on(run_work(work, &sh)))
+                    .spawn(move || tselatra_render::passes::block_on(run_work(work, &sh)))
                     .map_err(|e| e.to_string())?,
             )
         };

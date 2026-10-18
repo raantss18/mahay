@@ -1,5 +1,5 @@
 // GPU effects (color family): see src/fx_color.rs. Each entry point mirrors the CPU effect in
-// effectcraft-effects operation for operation; parameter layouts are documented per entry.
+// tselatra-effects operation for operation; parameter layouts are documented per entry.
 // Every name here is prefixed `fxc_` (the family files share one module).
 
 // ---------------------------------------------------------------- helpers

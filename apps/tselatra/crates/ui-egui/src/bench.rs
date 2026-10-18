@@ -1,25 +1,25 @@
-//! UI-side everyday-operation timings for `effectcraft-cli bench --ops` (see
-//! `effectcraft_engine::perf` for the engine side): the app's first frame, and steady frames of
+//! UI-side everyday-operation timings for `tselatra-cli bench --ops` (see
+//! `tselatra_engine::perf` for the engine side): the app's first frame, and steady frames of
 //! the Timeline (scrolling a 5,000-layer comp) and the Project panel (300+ items), measured
 //! headless — layout, painting and tessellation, without a window or GPU upload.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::perf::Measure;
+use tselatra_engine::Session;
+use tselatra_engine::perf::Measure;
 
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::dock::PanelKind;
 
-/// A headless egui driver for [`EffectcraftApp`].
+/// A headless egui driver for [`TselatraApp`].
 pub struct Driver {
     pub ctx: egui::Context,
-    pub app: EffectcraftApp,
+    pub app: TselatraApp,
     frame: eframe::Frame,
     time: f64,
     size: egui::Vec2,
 }
 
 impl Driver {
-    pub fn new(app: EffectcraftApp, size: egui::Vec2) -> Driver {
+    pub fn new(app: TselatraApp, size: egui::Vec2) -> Driver {
         Driver { ctx: egui::Context::default(), app, frame: eframe::Frame::_new_kittest(), time: 0.0, size }
     }
 
@@ -45,7 +45,7 @@ impl Driver {
     }
 
     /// Mean and max of `n` frames, calling `before` ahead of each.
-    pub fn frames(&mut self, n: usize, mut before: impl FnMut(&mut EffectcraftApp, usize)) -> (f64, f64) {
+    pub fn frames(&mut self, n: usize, mut before: impl FnMut(&mut TselatraApp, usize)) -> (f64, f64) {
         let (mut sum, mut max) = (0.0, 0.0f64);
         for i in 0..n {
             before(&mut self.app, i);
@@ -65,7 +65,7 @@ pub fn ui_ops(open: impl FnOnce() -> Session) -> Vec<Measure> {
     let session = open();
     let opened = t0.elapsed().as_secs_f64() * 1000.0;
     let t1 = web_time::Instant::now();
-    let app = EffectcraftApp::new(session);
+    let app = TselatraApp::new(session);
     let built = t1.elapsed().as_secs_f64() * 1000.0;
     let mut d = Driver::new(app, egui::vec2(1680.0, 1020.0));
     // The first pass installs the theme and fonts; the second draws the workspace.
@@ -116,7 +116,7 @@ mod tests {
     fn ui_ops_runs_on_a_small_project() {
         let m = ui_ops(|| {
             let mut s = Session::default();
-            s.replace_project(effectcraft_engine::perf::large_project(&effectcraft_engine::perf::LargeSpec::small()), None);
+            s.replace_project(tselatra_engine::perf::large_project(&tselatra_engine::perf::LargeSpec::small()), None);
             s
         });
         let names: Vec<&str> = m.iter().map(|m| m.name).collect();

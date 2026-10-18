@@ -2,7 +2,7 @@
 
 use crate::components::tests::{ex, idv, node};
 use crate::{EngineError, Session};
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 fn rect(s: &mut Session) -> NodeId {
@@ -113,8 +113,8 @@ fn categories_are_saved_and_old_files_open() {
     let r = rect(&mut s);
     ex(&mut s, "annotation.addCategory", json!({"name": "Motion", "color": "#FF00AA"}));
     ex(&mut s, "annotation.add", json!({"id": r, "label": "Fade", "category": "Motion"}));
-    let bytes = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    let (back, issues) = figcraft_format::load_bytes(&bytes).unwrap();
+    let bytes = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    let (back, issues) = endrika_format::load_bytes(&bytes).unwrap();
     assert!(issues.is_empty());
     assert_eq!(back.annotation_categories, s.doc().unwrap().annotation_categories);
     assert_eq!(back.node(r).unwrap().annotations[0].category.as_deref(), Some("custom-1"));

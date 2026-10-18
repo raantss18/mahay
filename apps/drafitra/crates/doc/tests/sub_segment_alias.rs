@@ -1,6 +1,6 @@
 //! `Sub::parse` accepts every spelling its documentation lists (#710).
 
-use cadcraft_doc::Sub;
+use drafitra_doc::Sub;
 
 #[test]
 fn short_segment_name_matches_the_documented_forms() {

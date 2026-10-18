@@ -98,10 +98,10 @@ with the standard command.
 
 ## Architecture
 
-Revolve geometry in `vectorcraft-three-d` uses `vectorcraft-geom`; the crate also uses `vectorcraft-pathops`
+Revolve geometry in `tsipika-three-d` uses `tsipika-geom`; the crate also uses `tsipika-pathops`
 for the other 3D types. It creates a surface of revolution,
 applies Euler view rotation, projects it, shades faces and sorts their depth. It has no UI or GPU dependency.
-`vectorcraft-effects` turns those faces into document art. The renderer, export baking and
+`tsipika-effects` turns those faces into document art. The renderer, export baking and
 Expand Appearance use the same evaluator. The standard `effect.apply`, `effect.setParams`,
 `effect.remove` and `effect.expandAppearance` commands expose it to the CLI, control channel and MCP.
 

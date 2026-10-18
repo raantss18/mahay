@@ -1,7 +1,7 @@
 //! A space ends an input and an empty input is Enter, in scripts and on the command line alike.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Space};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Space};
 
 fn kinds(s: &Session) -> Vec<EntityKind> {
     s.doc().ok().and_then(|d| d.space(&Space::Model)).map(|st| st.iter().map(|e| e.kind.clone()).collect()).unwrap_or_default()

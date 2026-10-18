@@ -19,7 +19,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use figcraft_color::{Paint, PaintKind};
+use endrika_color::{Paint, PaintKind};
 use serde::{Deserialize, Serialize};
 
 use crate::{CollectionId, Document, Node, NodeId, NodeKind, StyleKind, VariableId};
@@ -260,7 +260,7 @@ impl Document {
         let id = self.alloc_id();
         let node = Node::new(
             id,
-            NodeKind::Page { background: figcraft_color::Color::DEFAULT_PAGE, flows: Vec::new(), prototype: Default::default(), guides: Vec::new() },
+            NodeKind::Page { background: endrika_color::Color::DEFAULT_PAGE, flows: Vec::new(), prototype: Default::default(), guides: Vec::new() },
             STORE_NAME,
             0.0,
             0.0,

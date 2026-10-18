@@ -9,13 +9,13 @@
 
 use serde_json::{Map, Value, json};
 
-use vectorcraft_color::Color;
+use tsipika_color::Color;
 
 use super::{DialogSpec, form, free_distort, transform_each};
 use crate::panels::c32;
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 pub(super) const SPEC: DialogSpec = DialogSpec {
     heading: |d| if super::warp_effect::is_warp(&d.str("__effect")) { tl!("Warp Options").to_string() } else { heading_label(d) },
@@ -29,7 +29,7 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 /// without its trailing ellipsis. A plug-in effect's name is shown as it is.
 fn heading_label(d: &Dialog) -> String {
     let label = d.str("__label");
-    if vectorcraft_plugins::effect::plugin_id(&d.str("__effect")).is_some() {
+    if tsipika_plugins::effect::plugin_id(&d.str("__effect")).is_some() {
         return label;
     }
     let dotted = format!("{label}…");
@@ -59,9 +59,9 @@ pub(super) const EXISTS_SPEC: DialogSpec = DialogSpec {
 /// `effect.dialog {effect, index?, item?}`: edit applied effect `index` of `item` (null: the
 /// object's effects; omitted: the active item's, else the object's) prefilled with its values,
 /// or add `effect`, first asking when that list already has it.
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let id = p.get("effect").and_then(Value::as_str).unwrap_or_default();
-    let info = vectorcraft_effects::effect_info(id).ok_or_else(|| format!("unknown effect `{id}`"))?;
+    let info = tsipika_effects::effect_info(id).ok_or_else(|| format!("unknown effect `{id}`"))?;
     // The list the effect goes to: `item` as given, else the active item's (the object's without
     // one). A new effect keeps `item` unresolved, so `effect.apply` targets each object as usual.
     let target = p.get("item").cloned().unwrap_or_else(|| json!(app.session.appearance_item()));
@@ -98,28 +98,28 @@ pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
 }
 
 /// The effects of the first selected object that `item` (an index or null) addresses.
-fn target_effects(app: &VectorcraftApp, item: &Value) -> Vec<vectorcraft_doc::Effect> {
+fn target_effects(app: &TsipikaApp, item: &Value) -> Vec<tsipika_doc::Effect> {
     let Some(st) = app.session.active() else { return vec![] };
     let node = st.selection.objects.first().and_then(|id| st.doc.node(*id));
     node.and_then(|n| n.appearance.effects_at(item.as_u64().map(|i| i as usize))).cloned().unwrap_or_default()
 }
 
 /// An applied effect's values over its defaults.
-fn params_of(e: &vectorcraft_doc::Effect) -> Map<String, Value> {
-    match vectorcraft_effects::merged_params(&e.id, &e.params) {
+fn params_of(e: &tsipika_doc::Effect) -> Map<String, Value> {
+    match tsipika_effects::merged_params(&e.id, &e.params) {
         Value::Object(m) => m,
         _ => Map::new(),
     }
 }
 
 /// OK in [`EXISTS`]: the dialog editing the applied effect, or (`discard`) a fresh one.
-fn confirm_exists(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm_exists(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut fields = d.fields.clone();
     fields.remove("discard");
     let target = fields.remove("__target").unwrap_or(Value::Null);
     if d.bool("discard") {
         fields.remove("__index");
-        let defaults = vectorcraft_effects::default_params(&d.str("__effect"));
+        let defaults = tsipika_effects::default_params(&d.str("__effect"));
         fields.extend(defaults.and_then(|v| v.as_object().cloned()).unwrap_or_default());
     } else {
         let k = fields.get("__index").and_then(Value::as_u64).unwrap_or(0) as usize;
@@ -131,7 +131,7 @@ fn confirm_exists(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String>
     Ok(Value::Null)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let (id, relative) = (d.str("__effect"), d.bool("relative"));
     if super::warp_effect::is_warp(&id) {
         super::warp_effect::body(ui, d);
@@ -139,16 +139,16 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
         form::preview(app, ui, d, "Warp Options", cmd, params);
         return false;
     }
-    if vectorcraft_effects::is_three_d(&id) {
+    if tsipika_effects::is_three_d(&id) {
         super::revolve::body(app, ui, d);
         let (cmd, params) = command(d);
         form::preview(app, ui, d, &d.str("__label"), cmd, params);
         return false;
     }
     // Plug-in effects get fields from their parameter schema; colour adjustments their sliders.
-    let changed = match vectorcraft_plugins::effect::installed(&id) {
+    let changed = match tsipika_plugins::effect::installed(&id) {
         Some(plugin) => form::schema_fields(ui, d, &plugin.manifest().params),
-        None if vectorcraft_effects::is_adjustment(&id) => adjust_fields(ui, d),
+        None if tsipika_effects::is_adjustment(&id) => adjust_fields(ui, d),
         None if id == GLASS => glass_fields(app, ui, d),
         None if id == TRANSFORM => transform_fields(ui, d, app.session.general_unit()),
         None if id == ZIG_ZAG => zig_zag_fields(ui, d, app.session.general_unit()),
@@ -158,17 +158,17 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
             free_distort::fields(app, ui, d);
             values_changed(d)
         }
-        None if id == vectorcraft_effects::RASTERIZE => {
+        None if id == tsipika_effects::RASTERIZE => {
             super::raster_effects::effect_fields(app, ui, d);
             values_changed(d)
         }
         None => {
-            let doc = vectorcraft_effects::effect_info(&id).map(|e| e.params).unwrap_or_default();
+            let doc = tsipika_effects::effect_info(&id).map(|e| e.params).unwrap_or_default();
             let unit = app.session.general_unit();
             let changed =
-                form::param_fields(ui, d, &|k| vectorcraft_effects::is_length(&id, k, relative), &|k| choices(&id, k), &|k| doc_rank(doc, k), unit);
+                form::param_fields(ui, d, &|k| tsipika_effects::is_length(&id, k, relative), &|k| choices(&id, k), &|k| doc_rank(doc, k), unit);
             // The fields show what the effect stores: Scribble's 270° angle reads -90°.
-            if let Value::Object(m) = vectorcraft_effects::upgrade_params(&id, &Value::Object(d.fields.clone())) {
+            if let Value::Object(m) = tsipika_effects::upgrade_params(&id, &Value::Object(d.fields.clone())) {
                 d.fields = m;
             }
             changed
@@ -216,16 +216,16 @@ const GLASS: &str = "distort.glass";
 /// Glass's dialog: its parameters, the Texture menu ending with Loaded Texture once a texture is
 /// loaded, and Load Texture… with the loaded texture's size. Returns whether the values differ from
 /// those last previewed.
-fn glass_fields(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
-    use vectorcraft_effects::pixel::{TEXTURE_IMAGE, texture};
+fn glass_fields(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+    use tsipika_effects::pixel::{TEXTURE_IMAGE, texture};
     // The stored texture is shown as its size, not as a text field.
     let stored = d.fields.remove(TEXTURE_IMAGE);
     let size = stored.as_ref().and_then(Value::as_str).and_then(texture).map(|t| t.size());
     let menu = glass_textures(size.is_some());
-    let doc = vectorcraft_effects::effect_info(GLASS).map(|e| e.params).unwrap_or_default();
+    let doc = tsipika_effects::effect_info(GLASS).map(|e| e.params).unwrap_or_default();
     let unit = app.session.general_unit();
     let pick = |k: &str| if k == "texture" { Some(menu) } else { choices(GLASS, k) };
-    form::param_fields(ui, d, &|k| vectorcraft_effects::is_length(GLASS, k, false), &pick, &|k| doc_rank(doc, k), unit);
+    form::param_fields(ui, d, &|k| tsipika_effects::is_length(GLASS, k, false), &pick, &|k| doc_rank(doc, k), unit);
     if let Some(v) = stored {
         d.fields.insert(TEXTURE_IMAGE.into(), v);
     }
@@ -248,21 +248,21 @@ fn glass_fields(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> 
 
 /// Glass's Texture menu, ending with Loaded Texture once a texture is `loaded`.
 fn glass_textures(loaded: bool) -> form::Choices {
-    use vectorcraft_effects::pixel::{GLASS_TEXTURES, GLASS_TEXTURES_LOADED};
+    use tsipika_effects::pixel::{GLASS_TEXTURES, GLASS_TEXTURES_LOADED};
     if loaded { &GLASS_TEXTURES_LOADED } else { &GLASS_TEXTURES }
 }
 
 /// Glass's Load Texture…: an image file the user picks, read into `textureImage` as Glass stores
 /// it and picked in the Texture menu.
-fn load_texture(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
-    use vectorcraft_engine::cmd::fileio;
+fn load_texture(app: &mut TsipikaApp, d: &mut Dialog) -> Result<(), String> {
+    use tsipika_engine::cmd::fileio;
     let filters = fileio::FORMATS.iter().filter(|f| f.read && f.raster).map(|f| (f.label, f.extensions)).collect();
     let path = crate::picks::open(app, &crate::FilePick { filters, ..Default::default() }).ok_or("cancelled")?;
     // The button is off where files can't be read.
     let Some(read) = app.services.read.as_ref() else { return Ok(()) };
     let stored = fileio::texture_image(&read(&path)?).map_err(|e| e.to_string())?;
-    d.fields.insert(vectorcraft_effects::pixel::TEXTURE_IMAGE.into(), json!(stored));
-    d.fields.insert("texture".into(), json!(vectorcraft_effects::pixel::LOADED));
+    d.fields.insert(tsipika_effects::pixel::TEXTURE_IMAGE.into(), json!(stored));
+    d.fields.insert("texture".into(), json!(tsipika_effects::pixel::LOADED));
     Ok(())
 }
 
@@ -272,14 +272,14 @@ fn choices(effect: &str, key: &str) -> Option<form::Choices> {
         ("blur.radial", "method") => Some(&[("Spin", "spin"), ("Zoom", "zoom")]),
         ("blur.radial", "quality") => Some(&[("Draft", "draft"), ("Good", "good"), ("Best", "best")]),
         ("blur.smart", "quality") => Some(&[("Low", "low"), ("Medium", "medium"), ("High", "high")]),
-        ("blur.smart", "blurMode") => Some(&vectorcraft_effects::pixel::SMART_BLUR_MODES),
-        ("brushStrokes.sprayedStrokes", "strokeDirection") => Some(&vectorcraft_effects::pixel::STROKE_DIRECTIONS),
-        ("distort.glass", "texture") => Some(&vectorcraft_effects::pixel::GLASS_TEXTURES),
-        ("pixelate.mezzotint", "type") => Some(&vectorcraft_effects::pixel::MEZZOTINT_TYPES),
-        ("sketch.halftonePattern", "patternType") => Some(&vectorcraft_effects::pixel::HALFTONE_TYPES),
-        ("texture.grain", "grainType") => Some(&vectorcraft_effects::pixel::GRAIN_TYPES),
-        ("texture.texturizer", "texture") => Some(&vectorcraft_effects::pixel::TEXTURES),
-        ("texture.texturizer", "lightDirection") => Some(&vectorcraft_effects::pixel::LIGHT_DIRECTIONS),
+        ("blur.smart", "blurMode") => Some(&tsipika_effects::pixel::SMART_BLUR_MODES),
+        ("brushStrokes.sprayedStrokes", "strokeDirection") => Some(&tsipika_effects::pixel::STROKE_DIRECTIONS),
+        ("distort.glass", "texture") => Some(&tsipika_effects::pixel::GLASS_TEXTURES),
+        ("pixelate.mezzotint", "type") => Some(&tsipika_effects::pixel::MEZZOTINT_TYPES),
+        ("sketch.halftonePattern", "patternType") => Some(&tsipika_effects::pixel::HALFTONE_TYPES),
+        ("texture.grain", "grainType") => Some(&tsipika_effects::pixel::GRAIN_TYPES),
+        ("texture.texturizer", "texture") => Some(&tsipika_effects::pixel::TEXTURES),
+        ("texture.texturizer", "lightDirection") => Some(&tsipika_effects::pixel::LIGHT_DIRECTIONS),
         ("video.deinterlace", "eliminate") => Some(&[("Odd Fields", "odd"), ("Even Fields", "even")]),
         ("video.deinterlace", "create") => Some(&[("Duplication", "duplication"), ("Interpolation", "interpolation")]),
         ("stylize.innerGlow", "source") => Some(&[("Center", "center"), ("Edge", "edge")]),
@@ -299,8 +299,8 @@ fn choices(effect: &str, key: &str) -> Option<form::Choices> {
 pub(super) fn own_choices(effect: &str, key: &str, cmyk: bool) -> Option<Vec<(&'static str, &'static str)>> {
     let c3 = |s: &'static str| crate::i18n::tr_ctx(crate::i18n::current(), "3d", s);
     Some(match (effect, key) {
-        (vectorcraft_effects::REVOLVE, "edge") => vec![(tl!("Left"), "left"), (tl!("Right"), "right")],
-        (vectorcraft_effects::EXTRUDE, "bevel") => vec![
+        (tsipika_effects::REVOLVE, "edge") => vec![(tl!("Left"), "left"), (tl!("Right"), "right")],
+        (tsipika_effects::EXTRUDE, "bevel") => vec![
             (tl!("None"), "none"),
             (tl!("Classic"), "classic"),
             (c3("Rounded"), "rounded"),
@@ -309,11 +309,11 @@ pub(super) fn own_choices(effect: &str, key: &str, cmyk: bool) -> Option<Vec<(&'
             (tl!("Ogee"), "ogee"),
         ],
         (_, "orientation") if super::warp_effect::is_warp(effect) => vec![(tl!("Horizontal"), "horizontal"), (tl!("Vertical"), "vertical")],
-        (vectorcraft_effects::RASTERIZE, "colorModel") => {
+        (tsipika_effects::RASTERIZE, "colorModel") => {
             vec![(if cmyk { "CMYK" } else { "RGB" }, "document"), (tl!("Grayscale"), "grayscale"), (tl!("Bitmap"), "bitmap")]
         }
-        (vectorcraft_effects::RASTERIZE, "background") => vec![(tl!("White"), "white"), (tl!("Transparent"), "transparent")],
-        (vectorcraft_effects::RASTERIZE, "antiAlias") => vectorcraft_render::AntiAlias::ALL.iter().map(|a| (a.label(), a.id())).collect(),
+        (tsipika_effects::RASTERIZE, "background") => vec![(tl!("White"), "white"), (tl!("Transparent"), "transparent")],
+        (tsipika_effects::RASTERIZE, "antiAlias") => tsipika_render::AntiAlias::ALL.iter().map(|a| (a.label(), a.id())).collect(),
         ("adjust.levels" | "adjust.curves", "channel") => vec![("RGB", "rgb"), (tl!("Red"), "red"), (tl!("Green"), "green"), (tl!("Blue"), "blue")],
         _ => return None,
     })
@@ -326,9 +326,9 @@ pub(super) fn own_choices(effect: &str, key: &str, cmyk: bool) -> Option<Vec<(&'
 /// dialogs translate them (`cmyk`: the document is in CMYK). `None` for a parameter that is not one
 /// of these lists.
 pub(crate) fn shown_choices(effect: &str, key: &str, params: &Map<String, Value>, cmyk: bool) -> Option<Vec<(String, String)>> {
-    if let Some(plugin) = vectorcraft_plugins::effect::installed(effect) {
+    if let Some(plugin) = tsipika_plugins::effect::installed(effect) {
         return plugin.manifest().params.iter().find(|(k, _)| k == key).and_then(|(_, spec)| match spec {
-            vectorcraft_plugins::ParamSpec::Choice { options, .. } => Some(options.iter().map(|o| (o.clone(), o.clone())).collect()),
+            tsipika_plugins::ParamSpec::Choice { options, .. } => Some(options.iter().map(|o| (o.clone(), o.clone())).collect()),
             _ => None,
         });
     }
@@ -336,7 +336,7 @@ pub(crate) fn shown_choices(effect: &str, key: &str, params: &Map<String, Value>
         return Some(own.into_iter().map(|(label, value)| (tl!(label).to_string(), value.to_string())).collect());
     }
     let options = if effect == GLASS && key == "texture" {
-        use vectorcraft_effects::pixel::{TEXTURE_IMAGE, texture};
+        use tsipika_effects::pixel::{TEXTURE_IMAGE, texture};
         glass_textures(params.get(TEXTURE_IMAGE).and_then(Value::as_str).and_then(texture).is_some())
     } else {
         choices(effect, key)?
@@ -453,7 +453,7 @@ const TRANSFORM: &str = "distort.transform";
 /// The Transform effect's dialog: Transform Each's Scale and Move sliders and Rotate dial, then
 /// Copies, the reflections, the reference point and Random. Returns whether the values differ from
 /// those last previewed.
-fn transform_fields(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit) -> bool {
+fn transform_fields(ui: &mut egui::Ui, d: &mut Dialog, unit: tsipika_doc::Unit) -> bool {
     ui.horizontal_top(|ui| {
         ui.vertical(|ui| transform_each::sections(ui, d, unit));
         ui.add_space(16.0);
@@ -478,7 +478,7 @@ const ZIG_ZAG: &str = "distort.zigZag";
 /// Zig Zag's dialog (#1133): Size and Ridges per segment as sliders with their fields, Relative or
 /// Absolute and the Points as radio buttons. Returns whether the values differ from those last
 /// previewed.
-fn zig_zag_fields(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit) -> bool {
+fn zig_zag_fields(ui: &mut egui::Ui, d: &mut Dialog, unit: tsipika_doc::Unit) -> bool {
     const LABEL_W: f32 = 124.0;
     const FIELD_W: f32 = 70.0;
     let rail = Tokens::get(ui.ctx()).input_border;
@@ -535,11 +535,11 @@ pub(crate) const SHADES: form::Choices = &[("Color", "color"), ("Darkness", "dar
 /// Drop Shadow's dialog: Mode, Opacity, the offsets and Blur as the other effects show them, then
 /// Color and Darkness as radio buttons, each with its field (the field of the one not chosen is
 /// dimmed). Returns whether the values differ from those last previewed.
-fn drop_shadow_fields(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit) -> bool {
-    let doc = vectorcraft_effects::effect_info(DROP_SHADOW).map(|e| e.params).unwrap_or_default();
+fn drop_shadow_fields(ui: &mut egui::Ui, d: &mut Dialog, unit: tsipika_doc::Unit) -> bool {
+    let doc = tsipika_effects::effect_info(DROP_SHADOW).map(|e| e.params).unwrap_or_default();
     // The generic rows, without the three this dialog shows as radio buttons.
     let own: Vec<(String, Value)> = ["shade", "color", "darkness"].iter().filter_map(|k| d.fields.remove(*k).map(|v| (k.to_string(), v))).collect();
-    form::param_fields(ui, d, &|k| vectorcraft_effects::is_length(DROP_SHADOW, k, false), &|k| choices(DROP_SHADOW, k), &|k| doc_rank(doc, k), unit);
+    form::param_fields(ui, d, &|k| tsipika_effects::is_length(DROP_SHADOW, k, false), &|k| choices(DROP_SHADOW, k), &|k| doc_rank(doc, k), unit);
     d.fields.extend(own);
     let darkness = d.str("shade").eq_ignore_ascii_case("darkness");
     ui.add_space(4.0);
@@ -577,7 +577,7 @@ fn curve_graph(ui: &mut egui::Ui, d: &mut Dialog) {
     /// How near (screen points) a press must be to take a point.
     const GRAB: f32 = 8.0;
     let t = Tokens::get(ui.ctx());
-    let mut pts = vectorcraft_effects::curve_points(d.fields.get("points"));
+    let mut pts = tsipika_effects::curve_points(d.fields.get("points"));
     let (rect, resp) = ui.allocate_exact_size(egui::vec2(SIZE, SIZE), egui::Sense::click_and_drag());
     let screen = |(x, y): (f32, f32)| egui::pos2(rect.left() + x * SIZE, rect.bottom() - y * SIZE);
     let unit = |p: egui::Pos2| (((p.x - rect.left()) / SIZE).clamp(0.0, 1.0), ((rect.bottom() - p.y) / SIZE).clamp(0.0, 1.0));
@@ -631,7 +631,7 @@ fn curve_graph(ui: &mut egui::Ui, d: &mut Dialog) {
         painter.line_segment([screen((0.0, f)), screen((1.0, f))], faint);
     }
     painter.line_segment([screen((0.0, 0.0)), screen((1.0, 1.0))], faint);
-    let curve: Vec<egui::Pos2> = (0..=64).map(|k| k as f32 / 64.0).map(|x| screen((x, vectorcraft_effects::curve_at(&pts, x)))).collect();
+    let curve: Vec<egui::Pos2> = (0..=64).map(|k| k as f32 / 64.0).map(|x| screen((x, tsipika_effects::curve_at(&pts, x)))).collect();
     painter.add(egui::Shape::line(curve, egui::Stroke::new(1.5, t.text)));
     for (i, q) in pts.iter().enumerate() {
         let fill = if Some(i) == grabbed { t.accent } else { t.panel };
@@ -666,7 +666,7 @@ fn command(d: &Dialog) -> (&'static str, Value) {
     ("effect.apply", p)
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (cmd, p) = command(d);
     // A live preview commits as one undo step. When the command refuses the values (a Color the
     // effect can't draw), the dialog stays open and the error is returned.
@@ -692,7 +692,7 @@ mod tests {
             ("stylize.innerGlow", "source"),
             (DROP_SHADOW, "shade"),
         ] {
-            let doc = vectorcraft_effects::effect_info(effect).unwrap().params;
+            let doc = tsipika_effects::effect_info(effect).unwrap().params;
             let listed = doc.split(&format!("{key}: ")).nth(1).unwrap().split([',', '}', ' ']).next().unwrap().to_string();
             let values: Vec<String> = choices(effect, key).unwrap().iter().map(|(_, v)| format!("\"{v}\"")).collect();
             assert_eq!(values.join("|"), listed, "{effect} {key}");
@@ -704,22 +704,22 @@ mod tests {
     #[test]
     fn lists_drawn_in_a_dialogs_body_are_the_documented_values() {
         for (effect, key) in [
-            (vectorcraft_effects::REVOLVE, "edge"),
-            (vectorcraft_effects::EXTRUDE, "bevel"),
+            (tsipika_effects::REVOLVE, "edge"),
+            (tsipika_effects::EXTRUDE, "bevel"),
             ("warp.arc", "orientation"),
             ("warp.twist", "orientation"),
-            (vectorcraft_effects::RASTERIZE, "background"),
-            (vectorcraft_effects::RASTERIZE, "antiAlias"),
+            (tsipika_effects::RASTERIZE, "background"),
+            (tsipika_effects::RASTERIZE, "antiAlias"),
             ("adjust.levels", "channel"),
             ("adjust.curves", "channel"),
         ] {
-            let doc = vectorcraft_effects::effect_info(effect).unwrap().params;
+            let doc = tsipika_effects::effect_info(effect).unwrap().params;
             let listed = doc.split(&format!("{key}: ")).nth(1).unwrap().split([',', '}', ' ']).next().unwrap().replace('"', "");
             let values: Vec<&str> = own_choices(effect, key, false).unwrap().iter().map(|(_, v)| *v).collect();
             assert_eq!(values.join("|"), listed, "{effect} {key}");
         }
         for (cmyk, mode) in [(false, "RGB"), (true, "CMYK")] {
-            let models = own_choices(vectorcraft_effects::RASTERIZE, "colorModel", cmyk).unwrap();
+            let models = own_choices(tsipika_effects::RASTERIZE, "colorModel", cmyk).unwrap();
             assert_eq!(models, [(mode, "document"), ("Grayscale", "grayscale"), ("Bitmap", "bitmap")]);
         }
         assert!(own_choices("distort.twist", "orientation", false).is_none() && own_choices("adjust.hueSaturation", "channel", false).is_none());
@@ -729,11 +729,11 @@ mod tests {
     /// Texture and the texture's size instead of its stored text, and OK applies it.
     #[test]
     fn glass_load_texture_reads_the_picked_image_into_the_effect() {
-        let dir = std::env::temp_dir().join(format!("vectorcraft-glass-dialog-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tsipika-glass-dialog-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("texture.png");
         image::RgbaImage::from_fn(6, 4, |x, y| image::Rgba([(x * 40) as u8, (y * 60) as u8, 90, 255])).save(&path).unwrap();
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         let picked = path.to_string_lossy().into_owned();
         app.services.pick_open = Some(Box::new(move |_: &crate::FilePick| Some(picked.clone())));
         app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
@@ -741,21 +741,21 @@ mod tests {
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap()["id"].as_u64().unwrap();
         app.run("select.all", json!({})).unwrap();
         app.run("effect.dialog", json!({"effect": GLASS})).unwrap();
-        let paint = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()));
+        let paint = |app: &mut TsipikaApp| crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()));
         let text = paint(&mut app);
         assert!(text.lines().any(|l| l == "Load Texture…") && text.lines().any(|l| l == "Frosted"), "{text}");
         assert!(!text.contains("Loaded Texture") && !text.contains(" px"), "{text}");
         let mut d = app.ui.dialog.take().unwrap();
         load_texture(&mut app, &mut d).unwrap();
-        let stored = d.str(vectorcraft_effects::pixel::TEXTURE_IMAGE);
-        assert_eq!((d.str("texture"), vectorcraft_effects::pixel::texture(&stored).map(|t| t.size())), ("loaded".to_string(), Some((6, 4))));
+        let stored = d.str(tsipika_effects::pixel::TEXTURE_IMAGE);
+        assert_eq!((d.str("texture"), tsipika_effects::pixel::texture(&stored).map(|t| t.size())), ("loaded".to_string(), Some((6, 4))));
         app.ui.dialog = Some(d);
         let text = paint(&mut app);
         assert!(text.lines().any(|l| l == "Loaded Texture") && text.lines().any(|l| l == "6 × 4 px"), "{text}");
         assert!(!text.contains(&stored[..24]), "the stored text isn't shown");
         super::super::confirm(&mut app).unwrap();
         let st = app.session.doc().unwrap();
-        let params = &st.doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.effects[0].params;
+        let params = &st.doc.node(tsipika_doc::NodeId(id)).unwrap().appearance.effects[0].params;
         assert_eq!((&params["texture"], &params["textureImage"]), (&json!("loaded"), &json!(stored)));
         let _ = std::fs::remove_dir_all(&dir);
     }

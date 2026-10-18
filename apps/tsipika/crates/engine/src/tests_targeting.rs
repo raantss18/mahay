@@ -2,8 +2,8 @@
 //! appearances between objects (`appearance.transfer`).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::Node;
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::Node;
 
 use super::*;
 

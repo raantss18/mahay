@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use figcraft_doc::{Document, NodeId};
-use figcraft_engine::Session;
-use figcraft_engine::params::id_of;
-use figcraft_render::{View, Work};
+use endrika_doc::{Document, NodeId};
+use endrika_engine::Session;
+use endrika_engine::params::id_of;
+use endrika_render::{View, Work};
 use serde_json::json;
 
 use super::{CanvasState, shows};

@@ -1,7 +1,7 @@
 //! Regions (REGION): a closed planar area bounded by loops of lines and arcs. Outer loops add
 //! area, island loops (holes) take it away; loops don't cross.
 
-use cadcraft_geom::{Bounds2, PolyVertex, Polyline, Segment, Vec2, point_in_polygon};
+use drafitra_geom::{Bounds2, PolyVertex, Polyline, Segment, Vec2, point_in_polygon};
 use serde::{Deserialize, Serialize};
 
 use super::HatchLoop;
@@ -98,7 +98,7 @@ impl Region {
         let tol = self.fine_tol();
         let (mut a, mut cx, mut cy, mut ixx, mut iyy, mut ixy) = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         for (l, pts) in self.loops.iter().zip(self.tessellate(tol)) {
-            let signed = cadcraft_geom::shoelace(&pts);
+            let signed = drafitra_geom::shoelace(&pts);
             // Outer loops add, islands subtract, whatever way they run.
             let flip = if (signed >= 0.0) == l.outer { 1.0 } else { -1.0 };
             let n = pts.len();

@@ -13,7 +13,7 @@
 //! command with its default. [`Session::execute`](crate::Session::execute) itself takes what it is
 //! given, so the journal of an older version still replays.
 //!
-//! Ported from VectorCraft (storytold/vectorcraft#1442).
+//! Ported from Tsipika (raantss18/tsipika#1442).
 
 use serde_json::Value;
 

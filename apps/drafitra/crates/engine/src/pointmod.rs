@@ -9,8 +9,8 @@
 //! point to the command. Every point prompt of every command gets them this way, from the command
 //! line and in scripts alike, and they nest (`FROM` then `M2P`).
 
-use cadcraft_doc::{Drawing, Space};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{Drawing, Space};
+use drafitra_geom::Vec2;
 
 use crate::prompt::{Accept, Input, Prompt};
 use crate::snap::{SnapHit, mode};

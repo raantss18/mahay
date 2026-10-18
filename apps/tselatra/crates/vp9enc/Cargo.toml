@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-vp9enc"
+name = "tselatra-vp9enc"
 description = "VP9 encoder (profile 0, 8-bit 4:2:0; intra + inter frames, loop filter, rate control) for WebM export, from the VP9 Bitstream & Decoding Process Specification"
 version.workspace = true
 edition.workspace = true

@@ -14,10 +14,10 @@
 //! ([`gradient_meshes`]).
 
 use kurbo::{BezPath, Point, Shape, Vec2};
-use vectorcraft_doc::color::{Gradient, GradientGeom, GradientPaint, Paint};
-use vectorcraft_doc::live::{H_DOWN, H_LEFT, H_RIGHT, H_UP, lerp_color};
-use vectorcraft_doc::{GradientMesh, LineJoin, MeshPoint, StrokeAlign, StrokeGradientMode, StrokeLayer};
-use vectorcraft_geom::FillRule;
+use tsipika_doc::color::{Gradient, GradientGeom, GradientPaint, Paint};
+use tsipika_doc::live::{H_DOWN, H_LEFT, H_RIGHT, H_UP, lerp_color};
+use tsipika_doc::{GradientMesh, LineJoin, MeshPoint, StrokeAlign, StrokeGradientMode, StrokeLayer};
+use tsipika_geom::FillRule;
 
 use super::width::{flatten, left, length, split_at};
 use super::{aligned_width, cap_extent, is_closed, segments, subpaths, unit};
@@ -357,7 +357,7 @@ pub fn written_slices(bp: &BezPath, rule: FillRule, st: &StrokeLayer, outlines: 
     let g = &st.path_gradient()?.gradient;
     let clip = match outlines {
         [one] => one.clone(),
-        _ => vectorcraft_pathops::stroke_region(outlines).to_bezpath(),
+        _ => tsipika_pathops::stroke_region(outlines).to_bezpath(),
     };
     let grow = if g.stops.iter().all(|s| s.opacity >= 1.0) { SLICE_GROW } else { 0.0 };
     let slices = gradient_slices(bp, rule, st, SLICE_TOL, SLICE_MARGIN, grow)

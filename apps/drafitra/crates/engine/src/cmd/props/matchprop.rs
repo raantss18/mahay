@@ -3,7 +3,7 @@
 //! Settings toggles which properties are copied (remembered for the next typed MATCHPROP). The
 //! JSON form copies every property unless `properties` names some.
 
-use cadcraft_doc::{Entity, EntityKind, Handle};
+use drafitra_doc::{Entity, EntityKind, Handle};
 use serde_json::{Value, json};
 
 use super::super::*;

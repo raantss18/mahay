@@ -2,7 +2,7 @@
 //! (old bools load) and the PDF and SVG output.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Knockout;
+use tsipika_doc::Knockout;
 
 use super::*;
 
@@ -16,7 +16,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     s.execute(id, &p).unwrap()
 }
 
-fn node(s: &Session, id: u64) -> vectorcraft_doc::Node {
+fn node(s: &Session, id: u64) -> tsipika_doc::Node {
     s.doc().unwrap().doc.node(NodeId(id)).unwrap().clone()
 }
 
@@ -108,12 +108,12 @@ fn knockout_settings_round_trip_and_old_bools_load() {
     run(&mut s, "transparency.set", json!({"ids": [child], "knockout": "on", "knockoutShape": true}));
     run(&mut s, "transparency.togglePageIsolatedBlending", json!({}));
     run(&mut s, "transparency.togglePageKnockoutGroup", json!({}));
-    let bytes = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-    let back = vectorcraft_format::load(&bytes).unwrap();
+    let bytes = tsipika_format::save(&s.doc().unwrap().doc, false);
+    let back = tsipika_format::load(&bytes).unwrap();
     let (bg, bc) = (back.node(NodeId(g)).unwrap(), back.node(NodeId(child)).unwrap());
     assert_eq!((bg.knockout, bc.knockout, bc.knockout_shape, back.page_isolate, back.page_knockout), (Knockout::Off, Knockout::On, true, true, true));
     // Defaults are not written.
-    let text = String::from_utf8(vectorcraft_format::save(&session().doc().unwrap().doc, false)).unwrap();
+    let text = String::from_utf8(tsipika_format::save(&session().doc().unwrap().doc, false)).unwrap();
     assert!(!text.contains("knockout") && !text.contains("page_isolate"), "{text}");
     // Files from before the three states stored a bool: true is On, false is Neutral.
     let mut v: Value = serde_json::from_slice(&bytes).unwrap();
@@ -133,7 +133,7 @@ fn knockout_settings_round_trip_and_old_bools_load() {
     }
     patch(&mut v, &mut patched);
     assert_eq!(patched, 2);
-    let old = vectorcraft_format::load(&serde_json::to_vec(&v).unwrap()).unwrap();
+    let old = tsipika_format::load(&serde_json::to_vec(&v).unwrap()).unwrap();
     assert_eq!((old.node(NodeId(g)).unwrap().knockout, old.node(NodeId(child)).unwrap().knockout), (Knockout::Neutral, Knockout::On));
 }
 
@@ -145,7 +145,7 @@ fn pdf_and_svg_write_knockout_groups_as_masks() {
     run(&mut s, "transparency.set", json!({"ids": [g], "knockout": "on"}));
     let ko = s.doc().unwrap().doc.clone();
 
-    let pdf = |d: &Document| vectorcraft_pdf::export_with_report(d, &vectorcraft_pdf::PdfOptions::uncompressed()).unwrap();
+    let pdf = |d: &Document| tsipika_pdf::export_with_report(d, &tsipika_pdf::PdfOptions::uncompressed()).unwrap();
     let r = pdf(&plain);
     assert!(!String::from_utf8_lossy(&r.bytes).contains("/SMask") && r.warnings.is_empty());
     let r = pdf(&ko);
@@ -154,7 +154,7 @@ fn pdf_and_svg_write_knockout_groups_as_masks() {
     assert!(text.contains("/Luminosity") && text.contains("/Alpha"), "soft masks");
     assert!(r.warnings.iter().any(|w| w.contains("knockout")), "{:?}", r.warnings);
 
-    let svg = |d: &Document| vectorcraft_svg::export(d, &Default::default());
+    let svg = |d: &Document| tsipika_svg::export(d, &Default::default());
     assert!(!svg(&plain).contains("knockout"));
     let out = svg(&ko);
     assert_eq!(out.matches("mask=\"url(#knockout-").count(), 1, "{out}");

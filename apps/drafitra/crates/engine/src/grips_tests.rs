@@ -1,5 +1,5 @@
-use cadcraft_doc::{EntityKind, Handle};
-use cadcraft_geom::{Arc, Vec2};
+use drafitra_doc::{EntityKind, Handle};
+use drafitra_geom::{Arc, Vec2};
 use serde_json::{Value, json};
 
 use super::*;
@@ -93,7 +93,7 @@ fn polyline_grips() {
     s.grip_edit(p, 5, v(6.0, 12.0), GripMode::Stretch).unwrap();
     let EntityKind::LwPolyline(pl) = kind(&s, p) else { panic!() };
     assert!(near(pl.vertices[2].p, 12.0, 10.0) && near(pl.vertices[3].p, 0.0, 10.0));
-    let segs = cadcraft_geom::Polyline { vertices: pl.vertices.clone(), closed: false }.segments();
+    let segs = drafitra_geom::Polyline { vertices: pl.vertices.clone(), closed: false }.segments();
     assert!(segs[2].mid().near(v(6.0, 12.0), 1e-6), "{:?}", segs[2].mid());
     assert!(s.grip_edit(p, 7, v(0.0, 0.0), GripMode::Stretch).is_err());
     // Closed polylines have a closing-segment midpoint grip.

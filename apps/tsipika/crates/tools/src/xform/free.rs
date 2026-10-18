@@ -7,7 +7,7 @@
 //! box and preview `object.distort`.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use tsipika_geom::{Affine, Point, Rect, Vec2};
 
 use super::{BLUE, polygon, rect_corners};
 use crate::bbox::{Handle, hit_handle, in_rotate_zone, move_delta, rotate_for_drag, scale_for_drag};
@@ -201,7 +201,7 @@ impl FreeTransformTool {
             Op::Scale(h) => {
                 let mut a = scale_for_drag(d.rect, h, p, shift, m.alt);
                 if let Some(t) = &self.targets {
-                    (a, self.guides) = t.snap_scale(cx, &vectorcraft_doc::OrientedBox::aligned(d.rect), h, a, shift, m.alt);
+                    (a, self.guides) = t.snap_scale(cx, &tsipika_doc::OrientedBox::aligned(d.rect), h, a, shift, m.alt);
                 }
                 let nr = a.transform_rect_bbox(d.rect);
                 self.measure = cx.transform_tools_guides.then(|| (p, cx.size_label(nr.width(), nr.height())));
@@ -361,7 +361,7 @@ impl Tool for FreeTransformTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     fn ev(kind: PointerKind, x: f64, y: f64) -> PointerEvent {
         PointerEvent::new(kind, x, y)

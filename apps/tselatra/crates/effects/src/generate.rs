@@ -1,9 +1,9 @@
 //! Generate and Noise effects that synthesise images.
 
-use effectcraft_color::{BlendMode, blend_pixel};
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::Px;
+use tselatra_color::{BlendMode, blend_pixel};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::Px;
 use rayon::prelude::*;
 
 use crate::{Buf, EffectCtx, EffectSpec, col, num, p, popup, slider};
@@ -40,7 +40,7 @@ fn gradient_ramp(ctx: &EffectCtx, mut b: Buf) -> Buf {
             let (vx, vy) = (x as f64 + 0.5 - s.0, y as f64 + 0.5 - s.1);
             let mut t = if radial { ((vx * vx + vy * vy) / len2).sqrt() } else { (vx * dx + vy * dy) / len2 } as f32;
             if scatter > 0.0 {
-                t += (effectcraft_raster::hash_noise(x as u32, y as u32, seed) - 0.5) * scatter;
+                t += (tselatra_raster::hash_noise(x as u32, y as u32, seed) - 0.5) * scatter;
             }
             let t = t.clamp(0.0, 1.0);
             let c = [c0[0] + (c1[0] - c0[0]) * t, c0[1] + (c1[1] - c0[1]) * t, c0[2] + (c1[2] - c0[2]) * t];
@@ -135,7 +135,7 @@ fn four_color(ctx: &EffectCtx, mut b: Buf) -> Buf {
             let mut c = acc.map(|v| (v / wsum) as f32);
             if jitter > 0.0 {
                 // Dither against banding: a few code values of noise.
-                let n = (effectcraft_raster::hash_noise(x as u32, y as u32, seed) - 0.5) * jitter * (8.0 / 255.0);
+                let n = (tselatra_raster::hash_noise(x as u32, y as u32, seed) - 0.5) * jitter * (8.0 / 255.0);
                 c = c.map(|v| v + n);
             }
             // None keeps the layer's alpha (#1381), as the Gradient Ramp does: the gradient fills
@@ -399,7 +399,7 @@ pub fn specs() -> Vec<EffectSpec> {
 mod generator_tests {
     use super::*;
     use crate::{EffectEnv, run_fx};
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
 
     fn red() -> Image {
         Image::filled(32, 32, [1.0, 0.0, 0.0, 1.0])

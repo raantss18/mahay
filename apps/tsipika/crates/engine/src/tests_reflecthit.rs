@@ -1,8 +1,8 @@
 //! A reflected object is still clicked by its fill, not only by its outline.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::Point;
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_geom::Point;
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 use super::*;
 
@@ -71,7 +71,7 @@ fn a_reflected_imported_heart_is_clicked_by_its_fill() {
     for (i, svg) in files.iter().enumerate() {
         for how in ["horizontal", "vertical", "handle"] {
             let mut s = Session::new();
-            s.add_document(vectorcraft_svg::import(svg).unwrap(), None);
+            s.add_document(tsipika_svg::import(svg).unwrap(), None);
             s.execute("select.all", &json!({})).unwrap();
             let ids = s.doc().unwrap().selection.objects.clone();
             assert!(!ids.is_empty(), "file {i}: nothing imported");
@@ -138,7 +138,7 @@ fn an_open_filled_path_is_clicked_by_its_fill_either_way_round() {
     let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><path fill="#c22a3f" d="M86.311 69.612C100.544 78.261 110.506 88.64 110.506 100.748C110.506 111.127 100.544 118.046 86.311 118.046C93.214 102.045 91.407 102.403 91.407 97.61"/></svg>"##;
     for axis in [None, Some("vertical"), Some("horizontal")] {
         let mut s = Session::new();
-        s.add_document(vectorcraft_svg::import(svg).unwrap(), None);
+        s.add_document(tsipika_svg::import(svg).unwrap(), None);
         s.execute("select.all", &json!({})).unwrap();
         let ids = s.doc().unwrap().selection.objects.clone();
         if let Some(axis) = axis {

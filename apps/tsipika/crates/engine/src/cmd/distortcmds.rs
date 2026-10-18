@@ -1,5 +1,5 @@
 //! Commands behind the distortion tools: width points, Liquify, Puppet Warp and the Perspective
-//! Grid. The geometry kernels live in `vectorcraft_tools::distort` (shared with the tools).
+//! Grid. The geometry kernels live in `tsipika_tools::distort` (shared with the tools).
 //!
 //! The perspective grid definition is document data stored under
 //! `Document.unknown["perspectiveGrid"]` (read/written by [`grid_of`] / [`store_grid`]).
@@ -7,11 +7,11 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind, PuppetPin, WidthProfile};
-use vectorcraft_geom::{Affine, Homography, PathData, Point, Rect};
-use vectorcraft_tools::distort::liquify::{Dabber, LiquifyParams, PathStroke, Sample, reach_bounds};
-use vectorcraft_tools::distort::perspective::{self as persp, PerspectiveGrid, Plane};
-use vectorcraft_tools::distort::{PinSet, arap, collect_points, mesh_for, project_node, stroke_owner, warp_from_rest, warp_node_with};
+use tsipika_doc::{Document, Node, NodeId, NodeKind, PuppetPin, WidthProfile};
+use tsipika_geom::{Affine, Homography, PathData, Point, Rect};
+use tsipika_tools::distort::liquify::{Dabber, LiquifyParams, PathStroke, Sample, reach_bounds};
+use tsipika_tools::distort::perspective::{self as persp, PerspectiveGrid, Plane};
+use tsipika_tools::distort::{PinSet, arap, collect_points, mesh_for, project_node, stroke_owner, warp_from_rest, warp_node_with};
 
 use super::edit::{duplicate_in, outermost, selected_roots};
 use super::*;
@@ -204,14 +204,14 @@ fn uniform() -> WidthProfile {
 const SAME_T: f64 = 1e-6;
 
 /// The stroke of `id` that width point commands edit (a compound path's for its members).
-fn stroke_mut(d: &mut Document, id: NodeId) -> Result<&mut vectorcraft_doc::StrokeLayer> {
+fn stroke_mut(d: &mut Document, id: NodeId) -> Result<&mut tsipika_doc::StrokeLayer> {
     let id = stroke_owner(d, id);
     let n = d.node_mut(id).ok_or(EngineError::NoNode(id))?;
     n.appearance.stroke_mut().ok_or_else(|| EngineError::Other("the object has no stroke".into()))
 }
 
 /// [`stroke_mut`], which must have a weight.
-fn weighted_stroke(d: &mut Document, id: NodeId) -> Result<&mut vectorcraft_doc::StrokeLayer> {
+fn weighted_stroke(d: &mut Document, id: NodeId) -> Result<&mut tsipika_doc::StrokeLayer> {
     let st = stroke_mut(d, id)?;
     if st.width <= 0.0 {
         return Err(EngineError::Other("the stroke has no weight".into()));
@@ -1036,8 +1036,8 @@ fn persp_move(s: &mut Session, p: &Value) -> Result<Value> {
     let (perp, copy) = (bool_or(p, "perpendicular", false), bool_or(p, "copy", false));
     // Snap to Grid: a correction for the objects on the first one's plane and depth.
     let fix = if perp { None } else { super::perspgrid::snap_fix(&s.doc()?.doc, &ids, p, (from, to)) };
-    let snapped = move |pl: Plane, depth: f64, dv: vectorcraft_geom::Vec2| {
-        dv + fix.filter(|f| f.0 == pl && f.1 == depth).map_or(vectorcraft_geom::Vec2::ZERO, |f| f.2)
+    let snapped = move |pl: Plane, depth: f64, dv: tsipika_geom::Vec2| {
+        dv + fix.filter(|f| f.0 == pl && f.1 == depth).map_or(tsipika_geom::Vec2::ZERO, |f| f.2)
     };
     // In-plane: the plane-space offset under the pointer; perpendicular: the depth it reaches.
     let step = |g: &PerspectiveGrid, pl: Plane, depth: f64| -> Result<(Homography, f64)> {
@@ -1229,7 +1229,7 @@ fn persp_nudge(s: &mut Session, p: &Value) -> Result<Value> {
     let g = grid_of(&st.doc);
     let (plane, depth, rect) = g.plane_bounds(&st.doc, &ids).ok_or_else(|| EngineError::Other("the selection isn't in perspective".into()))?;
     let from = g.homography_at(plane, depth).and_then(|h| h.apply(rect.center())).ok_or_else(beyond_horizon)?;
-    let to = from + vectorcraft_geom::Vec2::new(dx.clamp(-1.0, 1.0), dy.clamp(-1.0, 1.0)) * k;
+    let to = from + tsipika_geom::Vec2::new(dx.clamp(-1.0, 1.0), dy.clamp(-1.0, 1.0)) * k;
     persp_move(
         s,
         &json!({"ids": ids.iter().map(|i| i.0).collect::<Vec<_>>(), "from": [from.x, from.y], "to": [to.x, to.y], "copy": bool_or(p, "copy", false)}),
@@ -1315,7 +1315,7 @@ fn edit_text(s: &mut Session, p: &Value) -> Result<Value> {
         // Shown flat where it is drawn: the type moves there and the projection moves the other
         // way, so the picture stays.
         let (Some(flat), Some(drawn)) = (t.bounds(), t.bounds().and_then(|b| h.map_rect_bbox(b))) else { return Ok(()) };
-        let shift = vectorcraft_geom::Affine::translate(drawn.center() - flat.center());
+        let shift = tsipika_geom::Affine::translate(drawn.center() - flat.center());
         t.transform(shift);
         if let Some(rec) = n.extras_if_any().and_then(|e| e.perspective.as_deref_mut()) {
             rec.projection = Some(h.then_after(&Homography::from_affine(shift.inverse())).to_array());

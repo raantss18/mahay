@@ -8,7 +8,7 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::{CharStyle, Document, NodeId, NodeKind, ParaStyle, TextStyleDef};
+use tsipika_doc::{CharStyle, Document, NodeId, NodeKind, ParaStyle, TextStyleDef};
 
 use super::typecmd::{refresh_bounds, text_targets};
 use super::*;
@@ -116,7 +116,7 @@ pub fn specs() -> Vec<CommandSpec> {
 // ---------- attribute plumbing ----------
 
 /// `v` as a JSON map with one key per attribute: Auto alignment, which files save as its
-/// direction's alignment plus `justify_auto` (see `vectorcraft_doc::ParaStyle`), is `"justify":
+/// direction's alignment plus `justify_auto` (see `tsipika_doc::ParaStyle`), is `"justify":
 /// "Auto"`, so a style's `justify` replaces it.
 fn to_map<T: Serialize>(v: &T) -> Option<Map<String, Value>> {
     let Ok(Value::Object(mut m)) = serde_json::to_value(v) else { return None };
@@ -279,7 +279,7 @@ fn all_text(d: &Document) -> Vec<NodeId> {
     v
 }
 
-fn text_mut(d: &mut Document, id: NodeId) -> Option<&mut vectorcraft_doc::TextObject> {
+fn text_mut(d: &mut Document, id: NodeId) -> Option<&mut tsipika_doc::TextObject> {
     match d.node_mut(id).map(|n| &mut n.kind) {
         Some(NodeKind::Text(t)) => Some(t),
         _ => None,
@@ -345,8 +345,8 @@ fn selection_attrs(s: &Session, p: &Value, kind: Kind) -> Result<Option<Map<Stri
     Ok(Some(match kind {
         Kind::Char => {
             let style = match p.get("end").and_then(Value::as_u64).map(|v| usize::try_from(v).unwrap_or(usize::MAX)) {
-                Some(end) => vectorcraft_text::edit::insertion_style(&t.runs, at.min(end), at.max(end)),
-                None => vectorcraft_text::edit::style_at(&t.runs, at),
+                Some(end) => tsipika_text::edit::insertion_style(&t.runs, at.min(end), at.max(end)),
+                None => tsipika_text::edit::style_at(&t.runs, at),
             };
             char_attrs(&style)
         }
@@ -396,11 +396,11 @@ fn new_style_attrs(s: &Session, kind: Kind) -> Map<String, Value> {
     }
     let (set, default) = match kind {
         Kind::Char => {
-            let st = CharStyle { char_align: vectorcraft_doc::CharAlign::EmBoxCenter, ..CharStyle::default() };
+            let st = CharStyle { char_align: tsipika_doc::CharAlign::EmBoxCenter, ..CharStyle::default() };
             (to_attrs(&st), to_attrs(&CharStyle::default()))
         }
         Kind::Para => {
-            let st = ParaStyle { leading_model: vectorcraft_doc::LeadingModel::EmBoxTop, ..ParaStyle::default() };
+            let st = ParaStyle { leading_model: tsipika_doc::LeadingModel::EmBoxTop, ..ParaStyle::default() };
             (to_attrs(&st), to_attrs(&ParaStyle::default()))
         }
     };
@@ -484,7 +484,7 @@ fn apply(s: &mut Session, p: &Value, kind: Kind) -> Result<Value> {
             let Some(t) = text_mut(d, *id) else { continue };
             match kind {
                 Kind::Char => {
-                    let len = vectorcraft_text::edit::runs_len(&t.runs);
+                    let len = tsipika_text::edit::runs_len(&t.runs);
                     let (a, b) = match range {
                         Some(_) => {
                             let g = |k: &str, def: usize| p.get(k).and_then(Value::as_u64).map_or(def, |v| (v as usize).min(len));
@@ -493,7 +493,7 @@ fn apply(s: &mut Session, p: &Value, kind: Kind) -> Result<Value> {
                         None => (0, len),
                     };
                     let mut err = None;
-                    vectorcraft_text::edit::style_range(&mut t.runs, a.min(b), a.max(b), |st| match char_fn(st) {
+                    tsipika_text::edit::style_range(&mut t.runs, a.min(b), a.max(b), |st| match char_fn(st) {
                         Ok(n) => *st = n,
                         Err(e) => err = Some(e),
                     });
@@ -634,7 +634,7 @@ mod tests {
         (s, id)
     }
 
-    fn runs(s: &Session, id: u64) -> Vec<vectorcraft_doc::TextRun> {
+    fn runs(s: &Session, id: u64) -> Vec<tsipika_doc::TextRun> {
         match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.runs.clone(),
             _ => panic!(),
@@ -667,7 +667,7 @@ mod tests {
 
     /// Applying and redefining a style record a step named from a template with the style's name
     /// in it (`HistoryEntry::named`), and undo and redo keep it. The Normal styles' names are
-    /// marked as names VectorCraft gives. A new style's step has a name of its own.
+    /// marked as names Tsipika gives. A new style's step has a name of its own.
     #[test]
     fn style_steps_are_named_from_a_template() {
         let (mut s, id) = session_with_text("Hello");
@@ -777,7 +777,7 @@ mod tests {
         assert_eq!((st.kerning, st.small_caps), (Some(20.0), Some(70.0)));
         s.execute("paraStyle.apply", &json!({"name": "Punctuation", "id": id})).unwrap();
         let NodeKind::Text(t) = &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind else { panic!() };
-        assert_eq!((t.para.mojikumi, t.para.direction), (vectorcraft_doc::Mojikumi::LineEndHalf, Some(vectorcraft_doc::ParaDirection::RightToLeft)));
+        assert_eq!((t.para.mojikumi, t.para.direction), (tsipika_doc::Mojikumi::LineEndHalf, Some(tsipika_doc::ParaDirection::RightToLeft)));
         // A library keeps the captured attributes and makes the style again where it's used.
         s.execute("select.set", &json!({"ids": [id]})).unwrap();
         let lib = s.execute("library.add", &json!({"kind": "charStyle", "name": "Lib Spaced"})).unwrap();
@@ -813,7 +813,7 @@ mod tests {
             assert_eq!(s.doc().unwrap().doc, before);
             s.execute("edit.redo", &json!({})).unwrap();
             assert_eq!(s.doc().unwrap().doc, after);
-            let back = vectorcraft_format::load(&vectorcraft_format::save(&after, false)).unwrap();
+            let back = tsipika_format::load(&tsipika_format::save(&after, false)).unwrap();
             assert_eq!(back.char_styles, after.char_styles);
             for id in ids {
                 let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("not text") };
@@ -843,7 +843,7 @@ mod tests {
     /// attributes `setAttrs` leaves out, stay.
     #[test]
     fn para_style_redefined_to_the_defaults_updates_its_paragraphs() {
-        use vectorcraft_doc::{Composer, HyphenationOptions};
+        use tsipika_doc::{Composer, HyphenationOptions};
         let (mut s, source) = session_with_text("Source");
         let [linked, local] =
             ["Linked", "Local"].map(|text| s.execute("text.create", &json!({"x": 10, "y": 90, "text": text})).unwrap()["id"].as_u64().unwrap());
@@ -879,7 +879,7 @@ mod tests {
     /// run's JSON leaves out, are captured and reach the style's users.
     #[test]
     fn char_style_redefined_to_the_defaults_updates_its_text() {
-        use vectorcraft_doc::CharAlign;
+        use tsipika_doc::CharAlign;
         let (mut s, source) = session_with_text("Source");
         let [linked, local] =
             ["Linked", "Local"].map(|text| s.execute("text.create", &json!({"x": 10, "y": 90, "text": text})).unwrap()["id"].as_u64().unwrap());
@@ -909,8 +909,8 @@ mod tests {
     /// resets the type that uses it.
     #[test]
     fn variable_font_settings_are_captured_explicitly() {
-        use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
-        vectorcraft_text::FontDb::global().add_font(two_axis_font().unwrap());
+        use tsipika_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
+        tsipika_text::FontDb::global().add_font(two_axis_font().unwrap());
         let (mut s, source) = session_with_text("Source");
         let linked = s.execute("text.create", &json!({"x": 10, "y": 90, "text": "Linked"})).unwrap()["id"].as_u64().unwrap();
         let ids = [source, linked];
@@ -932,8 +932,8 @@ mod tests {
     /// version and Variable Font settings, unless the style sets them.
     #[test]
     fn another_font_from_a_style_clears_the_old_fonts_version_and_settings() {
-        use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
-        vectorcraft_text::FontDb::global().add_font(two_axis_font().unwrap());
+        use tsipika_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
+        tsipika_text::FontDb::global().add_font(two_axis_font().unwrap());
         let (mut s, id) = session_with_text("Source");
         let set_variable = |s: &mut Session| {
             s.execute("text.setStyle", &json!({"ids": [id], "font": TWO_AXIS_FAMILY})).unwrap();
@@ -999,12 +999,12 @@ mod tests {
             NodeKind::Text(t) => t.para.clone(),
             _ => panic!(),
         };
-        assert_eq!((para(&s).justify, para(&s).space_after), (vectorcraft_doc::Justify::Center, 6.0));
+        assert_eq!((para(&s).justify, para(&s).space_after), (tsipika_doc::Justify::Center, 6.0));
         // The Normal style can be redefined too (stored once redefined).
         s.execute("paraStyle.redefine", &json!({"name": NORMAL_PARA})).unwrap();
         assert_eq!(s.execute("paraStyle.list", &json!({})).unwrap()["styles"][0]["attrs"]["justify"], "Center");
         let d = s.doc().unwrap().doc.clone();
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&d, false)).unwrap();
+        let back = tsipika_format::load(&tsipika_format::save(&d, false)).unwrap();
         assert_eq!(back.para_styles, d.para_styles);
     }
 

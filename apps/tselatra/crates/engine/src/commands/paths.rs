@@ -2,9 +2,9 @@
 //! First Vertex, Free Transform Points) and Layer ▸ Mask ▸ Motion Blur, Feather Falloff and Hide
 //! Locked Masks.
 
-use effectcraft_keyframe::{ShapePath, Value as KV};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{FeatherFalloff, GroupKind, ItemId, LayerId, LayerSource, MaskMotionBlur, Node, PropGroup, Uid};
+use tselatra_keyframe::{ShapePath, Value as KV};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{FeatherFalloff, GroupKind, ItemId, LayerId, LayerSource, MaskMotionBlur, Node, PropGroup, Uid};
 use serde_json::{Value, json};
 
 use super::layer_menu::target_masks;
@@ -115,13 +115,13 @@ const PARAMETRIC: [&str; 3] = ["rect", "ellipse", "star"];
 /// geometry the renderer builds from the same values (`render::shapes::collect`), so the converted
 /// path is the shape that was on screen rather than an approximation of it; the defaults match
 /// that code for a property a group doesn't carry (a polygon has no inner radius or roundness).
-fn parametric_path(g: &PropGroup, lt: effectcraft_time::Tick) -> Option<ShapePath> {
+fn parametric_path(g: &PropGroup, lt: tselatra_time::Tick) -> Option<ShapePath> {
     let f = |id: &str, d: f64| g.prop(id).map_or(d, |pr| pr.value_at(lt).as_f64());
     let v2 = |id: &str, d: [f64; 2]| g.prop(id).map_or(d, |pr| pr.value_at(lt).as_vec2());
     let path = match g.match_id.as_str() {
-        "rect" => effectcraft_path::rect(v2("size", [100.0; 2]), v2("position", [0.0; 2]), f("roundness", 0.0)),
-        "ellipse" => effectcraft_path::ellipse(v2("size", [100.0; 2]), v2("position", [0.0; 2])),
-        "star" => effectcraft_path::polystar(
+        "rect" => tselatra_path::rect(v2("size", [100.0; 2]), v2("position", [0.0; 2]), f("roundness", 0.0)),
+        "ellipse" => tselatra_path::ellipse(v2("size", [100.0; 2]), v2("position", [0.0; 2])),
+        "star" => tselatra_path::polystar(
             g.prop("type").map_or(0, |pr| pr.value_at(lt).as_enum()) == 0,
             f("points", 5.0),
             v2("position", [0.0; 2]),
@@ -134,7 +134,7 @@ fn parametric_path(g: &PropGroup, lt: effectcraft_time::Tick) -> Option<ShapePat
         _ => return None,
     };
     // A closed parametric shape is one subpath; anything else would not be this shape.
-    effectcraft_path::from_kurbo(&path).into_iter().next()
+    tselatra_path::from_kurbo(&path).into_iter().next()
 }
 
 fn convert_to_bezier(s: &mut Session, p: &Value) -> Result<Value> {

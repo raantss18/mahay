@@ -1,8 +1,8 @@
 //! Import options: the pages picked, the box each artboard gets (Crop To), passwords and `info`.
 
-use vectorcraft_doc::{Document, NodeKind};
-use vectorcraft_geom::Rect;
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with};
+use tsipika_doc::{Document, NodeKind};
+use tsipika_geom::Rect;
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with};
 
 use crate::*;
 

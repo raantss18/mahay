@@ -5,11 +5,11 @@
 //! Fields: `show` (bool) and `position` (`topLeft`, `topRight`, `bottomLeft`, `bottomRight`).
 
 use serde_json::{Value, json};
-use vectorcraft_tools::distort::perspective::widget::WidgetCorner;
+use tsipika_tools::distort::perspective::widget::WidgetCorner;
 
 use super::{DialogSpec, form};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Perspective Grid Options.
 pub const KIND: &str = "perspectiveGridOptions";
@@ -18,11 +18,11 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Perspective Grid Options").into(), body, confirm, min_width: 340.0, ..DialogSpec::FORM };
 
 /// Open the dialog with the current options.
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     app.ui.dialog = Some(Dialog::new(KIND, json!(app.session.prefs.perspective_widget)));
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let r = app.run("perspective.widget.options", form::params(d));
     if r.is_ok() {
         app.ui.dialog = None;
@@ -30,7 +30,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     r
 }
 
-fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let on = d.bool("show");
     if widgets::check(ui, tl!("Show Active Plane Widget"), on, true) {
         d.fields.insert("show".into(), json!(!on));

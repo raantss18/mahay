@@ -1,4 +1,4 @@
-//! FigCraft plugins: the manifest (`figcraft-plugin.json`) and the WebAssembly sandbox a plugin
+//! Endrika plugins: the manifest (`endrika-plugin.json`) and the WebAssembly sandbox a plugin
 //! runs in, and the widget descriptions a plugin hands back. The engine decides what a plugin may
 //! do (its permissions, which commands it may call, one undo step per run, panel or widget
 //! callback, where settings are kept); this crate only runs modules safely: a metered interpreter

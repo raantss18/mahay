@@ -1,7 +1,7 @@
 //! Type › Bulleted & Numbered Lists › Define Lists: named lists whose numbers can continue from
 //! story to story. Paragraphs join one with `listName` (and restart with `startAt`).
 
-use designcraft_doc::NumberedList;
+use pejy_doc::NumberedList;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -55,14 +55,14 @@ mod tests {
     use crate::Session;
 
     /// The digit the story's first line starts with (its list number).
-    fn digit(g: &designcraft_compose::PlacedGlyph) -> char {
+    fn digit(g: &pejy_compose::PlacedGlyph) -> char {
         let face = g.face.get();
         ('0'..='9').find(|c| face.glyph_for(*c) == g.gid).unwrap_or('?')
     }
 
     fn first_char(s: &Session, sid: u64) -> char {
         let d = &s.doc().unwrap().doc;
-        let cs = designcraft_compose::compose_story(d, designcraft_doc::StoryId(sid), &Default::default());
+        let cs = pejy_compose::compose_story(d, pejy_doc::StoryId(sid), &Default::default());
         digit(&cs.frames[0].lines[0].glyphs[0])
     }
 
@@ -89,7 +89,7 @@ mod tests {
         s.execute("text.select", &json!({"story": stories[0], "anchor": 0, "focus": 0})).unwrap();
         s.execute("text.insert", &json!({"text": "Prep\n"})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let cs = s.cache.get(&d, designcraft_doc::StoryId(stories[1]), None);
+        let cs = s.cache.get(&d, pejy_doc::StoryId(stories[1]), None);
         assert_eq!(digit(&cs.frames[0].lines[0].glyphs[0]), '4');
         // Start At restarts.
         s.execute("text.select", &json!({"story": stories[1], "anchor": 0, "focus": 0})).unwrap();

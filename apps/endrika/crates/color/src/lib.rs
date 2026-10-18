@@ -1,4 +1,4 @@
-//! FigCraft colour and paint.
+//! Endrika colour and paint.
 //!
 //! [`Color`] is non-premultiplied sRGB in `0..=1` floats (what a design panel shows as hex + opacity).
 //! [`Paint`] is one entry of a node's fill or stroke list: solid, the four gradient kinds, an

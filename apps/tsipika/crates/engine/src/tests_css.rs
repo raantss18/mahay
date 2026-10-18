@@ -87,7 +87,7 @@ fn export_writes_the_sheet_and_rasterized_art() {
     let images = r["images"].as_array().unwrap();
     assert_eq!(images.len(), 1, "only the star is rasterized");
     assert_eq!(images[0]["name"], json!("path.png"));
-    let png = vectorcraft_format::base64_decode(images[0]["dataBase64"].as_str().unwrap()).unwrap();
+    let png = tsipika_format::base64_decode(images[0]["dataBase64"].as_str().unwrap()).unwrap();
     assert!(png.starts_with(b"\x89PNG"));
     // The selection alone (the star, selected last).
     let r = run(&mut s, "css.export", json!({}));

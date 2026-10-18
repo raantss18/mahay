@@ -6,7 +6,7 @@ use serde_json::json;
 
 use crate::headless::Headless;
 use crate::state::{RightPanel, ViewMode};
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
@@ -15,7 +15,7 @@ const SETTLE: Duration = Duration::from_secs(120);
 /// next Esc goes back to the grid. It used to jump straight to the grid.
 #[test]
 fn escape_leaves_the_crop_tool_before_the_view() {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let id = h.app.session.visible_cloned()[1];
     h.request("engine.execute", json!({"command": "library.select", "params": {"ids": [id.0], "active": id.0}}), T);
@@ -42,7 +42,7 @@ fn escape_leaves_the_crop_tool_before_the_view() {
 /// it would close the tool).
 #[test]
 fn escape_in_the_angle_field_only_leaves_the_field() {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let id = h.app.session.visible_cloned()[1];
     h.request("engine.execute", json!({"command": "library.select", "params": {"ids": [id.0], "active": id.0}}), T);

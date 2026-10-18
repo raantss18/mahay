@@ -1,9 +1,9 @@
 //! DIST snaps to the model geometry displayed in paper-space viewports (#516).
 
-use cadcraft_engine::doc::{Block, Circle, Common, Drawing, Entity, EntityKind, Handle, Insert, Line, Space, Viewport};
-use cadcraft_engine::geom::{Vec2, Vec3};
-use cadcraft_engine::snap::{SnapCurve, SnapHit, mode, osnap};
-use cadcraft_engine::{Input, Session};
+use drafitra_engine::doc::{Block, Circle, Common, Drawing, Entity, EntityKind, Handle, Insert, Line, Space, Viewport};
+use drafitra_engine::geom::{Vec2, Vec3};
+use drafitra_engine::snap::{SnapCurve, SnapHit, mode, osnap};
+use drafitra_engine::{Input, Session};
 use serde_json::json;
 
 fn drawing() -> (Drawing, Space) {
@@ -198,7 +198,7 @@ fn viewport_frozen_layers_do_not_hide_paper_space_geometry() {
 #[test]
 fn viewport_frozen_layers_apply_inside_nested_block_references() {
     let (mut d, paper) = drawing();
-    d.layers.push(cadcraft_engine::doc::Layer { name: "Detail".into(), ..Default::default() });
+    d.layers.push(drafitra_engine::doc::Layer { name: "Detail".into(), ..Default::default() });
     let mut inner = Block::new("Inner");
     inner.entities.push(Entity {
         handle: d.new_handle(),
@@ -234,7 +234,7 @@ fn viewport_frozen_layers_apply_inside_nested_block_references() {
 fn clipped_deferred_curves_do_not_hide_a_visible_candidate() {
     let (mut d, paper) = drawing();
     // Hide the viewport border so its perpendicular snap does not win this query.
-    d.layers.push(cadcraft_engine::doc::Layer { name: "Viewports".into(), on: false, ..Default::default() });
+    d.layers.push(drafitra_engine::doc::Layer { name: "Viewports".into(), on: false, ..Default::default() });
     d.modify_entity(viewport(&d, &paper), |e| e.common.layer = "Viewports".into()).unwrap();
     for x in [30.2, 29.0] {
         d.add(&Space::Model, Common::default(), EntityKind::Line(Line { a: Vec3::new(x, 1.0, 0.0), b: Vec3::new(x, 3.0, 0.0) })).unwrap();
@@ -250,7 +250,7 @@ fn off_viewport_borders_keep_contents_but_frozen_or_hidden_viewports_do_not() {
     let (mut d, paper) = drawing();
     d.layer_mut("0").unwrap().on = false;
     // Put model geometry on a different, visible layer.
-    d.layers.push(cadcraft_engine::doc::Layer { name: "Geometry".into(), ..Default::default() });
+    d.layers.push(drafitra_engine::doc::Layer { name: "Geometry".into(), ..Default::default() });
     let handles: Vec<Handle> = d.model.iter().map(|e| e.handle).collect();
     for h in handles {
         d.modify_entity(h, |e| e.common.layer = "Geometry".into()).unwrap();

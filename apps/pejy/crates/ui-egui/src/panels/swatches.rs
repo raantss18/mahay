@@ -1,6 +1,6 @@
 //! Swatches and Color panels.
 
-use designcraft_color::{ColorType, SwatchValue};
+use pejy_color::{ColorType, SwatchValue};
 use egui::{Sense, vec2};
 use serde_json::json;
 
@@ -148,7 +148,7 @@ const PICKED: &str = "swatches_picked";
 /// The Swatches panel's top row, as InDesign's: a Fill/Stroke proxy (click: the other in front),
 /// Formatting Affects Container / Text, and the tint of the colour in front. `target` is
 /// [`super::color_target`]: fill and stroke swatches and tints of the text or the first object.
-fn header(app: &mut DesignApp, ui: &mut egui::Ui, doc: &designcraft_doc::Document, target: Option<&(String, f32, String, f32)>) {
+fn header(app: &mut DesignApp, ui: &mut egui::Ui, doc: &pejy_doc::Document, target: Option<&(String, f32, String, f32)>) {
     let t = Tokens::get(ui.ctx());
     let (fill_sw, stroke_sw) = target.map_or(("[None]", "[Black]"), |(f, _, s, _)| (f.as_str(), s.as_str()));
     let text = super::colors_affect_text(app) || app.ui.formatting_affects_text;
@@ -238,8 +238,8 @@ fn folder_button(ui: &mut egui::Ui, tip: &str) -> egui::Response {
 fn swatch_row(
     app: &mut DesignApp,
     ui: &mut egui::Ui,
-    doc: &designcraft_doc::Document,
-    sw: &designcraft_color::swatch::Swatch,
+    doc: &pejy_doc::Document,
+    sw: &pejy_color::swatch::Swatch,
     indent: f32,
     fill_cur: Option<&str>,
 ) {
@@ -271,9 +271,9 @@ fn swatch_row(
     let kind = match &sw.value {
         SwatchValue::Color { color, color_type } => {
             let m = match color {
-                designcraft_color::Color::Cmyk { .. } => "CMYK",
-                designcraft_color::Color::Rgb { .. } => "RGB",
-                designcraft_color::Color::Gray { .. } => crate::i18n::tr(&app.ui.language, "Gray"),
+                pejy_color::Color::Cmyk { .. } => "CMYK",
+                pejy_color::Color::Rgb { .. } => "RGB",
+                pejy_color::Color::Gray { .. } => crate::i18n::tr(&app.ui.language, "Gray"),
             };
             format!("{}{}", if *color_type == ColorType::Spot { "● " } else { "" }, m)
         }
@@ -351,7 +351,7 @@ pub fn color_panel(app: &mut DesignApp, ui: &mut egui::Ui) {
     let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
     let mode_id = egui::Id::new("color_panel_mode");
     let mut stroke = app.ui.stroke_front;
-    let default_mode = if doc.settings.intent == designcraft_doc::Intent::Print { ColorMode::Cmyk } else { ColorMode::Rgb };
+    let default_mode = if doc.settings.intent == pejy_doc::Intent::Print { ColorMode::Cmyk } else { ColorMode::Rgb };
     let mut mode: ColorMode = ui.data(|d| d.get_temp(mode_id)).unwrap_or(default_mode);
     let target = if stroke { "stroke" } else { "fill" };
     let name = if stroke { stroke_sw.clone() } else { fill.clone() };
@@ -475,19 +475,19 @@ pub fn color_panel(app: &mut DesignApp, ui: &mut egui::Ui) {
 
 /// The Color Picker's fields for `color` (`None`: black): its values in its own model, so OK
 /// keeps a CMYK colour CMYK.
-pub(crate) fn picker_fields(color: Option<designcraft_color::Color>, stroke: bool) -> serde_json::Value {
-    let color = color.unwrap_or(designcraft_color::Color::BLACK);
+pub(crate) fn picker_fields(color: Option<pejy_color::Color>, stroke: bool) -> serde_json::Value {
+    let color = color.unwrap_or(pejy_color::Color::BLACK);
     let mut f = json!({"target": if stroke { "stroke" } else { "fill" }, "hex": color.to_hex()});
     match color {
-        designcraft_color::Color::Cmyk { c, m, y, k } => {
+        pejy_color::Color::Cmyk { c, m, y, k } => {
             f["model"] = json!("cmyk");
             f["cmyk"] = json!([c, m, y, k].map(|v| f64::from(v) * 100.0));
         }
-        designcraft_color::Color::Rgb { r, g, b } => {
+        pejy_color::Color::Rgb { r, g, b } => {
             f["model"] = json!("rgb");
             f["rgb"] = json!([r, g, b].map(|v| f64::from(v) * 255.0));
         }
-        designcraft_color::Color::Gray { .. } => f["model"] = json!("rgb"),
+        pejy_color::Color::Gray { .. } => f["model"] = json!("rgb"),
     }
     f
 }
@@ -539,7 +539,7 @@ fn channel(ui: &mut egui::Ui, label: &str, v: &mut f32, scale: f32, suffix: &str
 fn cmyk_ramp(k: usize, x: f32) -> egui::Color32 {
     let mut v = [0.0f32; 4];
     v[k] = x;
-    let [r, g, b] = designcraft_color::Color::cmyk(v[0], v[1], v[2], v[3]).to_rgb();
+    let [r, g, b] = pejy_color::Color::cmyk(v[0], v[1], v[2], v[3]).to_rgb();
     egui::Color32::from_rgb((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
@@ -576,8 +576,8 @@ fn spectrum(app: &mut DesignApp, ui: &mut egui::Ui, target: &str) {
 pub struct SwatchDrag(pub String);
 
 /// A colour in `object.gradient` form, keeping its model (CMYK stays CMYK).
-fn color_json(c: &designcraft_color::Color) -> serde_json::Value {
-    use designcraft_color::Color;
+fn color_json(c: &pejy_color::Color) -> serde_json::Value {
+    use pejy_color::Color;
     match *c {
         // The model form takes fractions; bare CMYK would be read as 0..100.
         Color::Cmyk { c, m, y, k } => json!({"model": "cmyk", "c": c, "m": m, "y": y, "k": k}),
@@ -587,22 +587,22 @@ fn color_json(c: &designcraft_color::Color) -> serde_json::Value {
 }
 
 /// Stops in `object.gradient` form.
-fn stops_json(g: &designcraft_color::Gradient) -> Vec<serde_json::Value> {
+fn stops_json(g: &pejy_color::Gradient) -> Vec<serde_json::Value> {
     g.stops
         .iter()
         .map(|s| json!({"location": s.offset as f64 * 100.0, "color": color_json(&s.color), "opacity": s.opacity as f64 * 100.0, "midpoint": s.midpoint as f64 * 100.0}))
         .collect()
 }
 
-fn color32(c: &designcraft_color::Color, alpha: f32) -> egui::Color32 {
+fn color32(c: &pejy_color::Color, alpha: f32) -> egui::Color32 {
     let [r, g, b] = c.to_rgb();
     egui::Color32::from_rgba_unmultiplied((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8, (alpha * 255.0) as u8)
 }
 
 /// The panel's thumbnail: the gradient in a square, linear across or radial from the centre.
-fn thumbnail(p: &egui::Painter, r: egui::Rect, g: &designcraft_color::Gradient, border: egui::Color32) {
+fn thumbnail(p: &egui::Painter, r: egui::Rect, g: &pejy_color::Gradient, border: egui::Color32) {
     let n = 32;
-    if g.kind == designcraft_color::GradientKind::Radial {
+    if g.kind == pejy_color::GradientKind::Radial {
         // Rings from the outside in.
         for i in (0..n).rev() {
             let t = (i as f32 + 0.5) / n as f32;
@@ -662,10 +662,10 @@ pub fn gradient_panel(app: &mut DesignApp, ui: &mut egui::Ui) {
     // The fill's gradient, or the stroke's when the toolbox's Stroke box is in front.
     let stroke_front = app.ui.stroke_front;
     let fill = item.map(|it| if stroke_front { it.stroke.as_fill() } else { it.fill.clone() }).unwrap_or_default();
-    let cur = designcraft_color::swatch::resolve_gradient(&st.doc.swatches, &fill.swatch).cloned();
+    let cur = pejy_color::swatch::resolve_gradient(&st.doc.swatches, &fill.swatch).cloned();
     let is_gradient = cur.is_some();
     let g = cur.unwrap_or_default();
-    let radial = g.kind == designcraft_color::GradientKind::Radial;
+    let radial = g.kind == pejy_color::GradientKind::Radial;
     let sel_id = egui::Id::new("grad_sel");
     let drag_id = egui::Id::new("grad_drag");
     let mut sel: RampSel = ui.data(|d| d.get_temp(sel_id)).unwrap_or(RampSel::Stop(0));
@@ -943,23 +943,23 @@ pub fn gradient_panel(app: &mut DesignApp, ui: &mut egui::Ui) {
 
 #[cfg(test)]
 mod gradient_panel_tests {
-    use designcraft_color::Color;
+    use pejy_color::Color;
     use egui_kittest::{Harness, kittest::Queryable};
     use serde_json::json;
 
     use super::*;
 
     fn app_with_frame() -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [100, 100, 300, 300], "content": "unassigned"})).unwrap();
         app
     }
 
-    fn gradient(app: &DesignApp) -> Option<designcraft_color::Gradient> {
+    fn gradient(app: &DesignApp) -> Option<pejy_color::Gradient> {
         let d = &app.session.doc().unwrap().doc;
         let id = app.session.doc().unwrap().selection.items[0];
-        designcraft_color::swatch::resolve_gradient(&d.swatches, &d.item(id).unwrap().fill.swatch).cloned()
+        pejy_color::swatch::resolve_gradient(&d.swatches, &d.item(id).unwrap().fill.swatch).cloned()
     }
 
     #[test]
@@ -1036,16 +1036,16 @@ mod color_panel_tests {
 
     use crate::DesignApp;
 
-    fn fill(app: &DesignApp, id: u64) -> designcraft_color::Color {
+    fn fill(app: &DesignApp, id: u64) -> pejy_color::Color {
         let d = &app.session.active().unwrap().doc;
-        d.resolve_color(&d.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch, 1.0).unwrap()
+        d.resolve_color(&d.item(pejy_doc::ItemId(id)).unwrap().fill.swatch, 1.0).unwrap()
     }
 
     /// A number typed into the M field stays while typing and applies as a percent on Enter:
     /// M 1 is 1 %, not 100 %.
     #[test]
     fn a_typed_channel_value_is_kept_and_applied_as_a_percent() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let id = app.run("frame.create", json!({"rect": [36, 36, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         app.run("selection.set", json!({"ids": [id]})).unwrap();
@@ -1064,11 +1064,11 @@ mod color_panel_tests {
         h.run_steps(4);
         let typed = h.query_by(|n| n.role() == egui::accesskit::Role::SpinButton && n.is_focused()).and_then(|n| n.value());
         assert_eq!(typed.as_deref(), Some("1"), "the typed text stays while the field has focus");
-        let designcraft_color::Color::Cmyk { m, .. } = fill(h.state(), id) else { panic!("not CMYK") };
+        let pejy_color::Color::Cmyk { m, .. } = fill(h.state(), id) else { panic!("not CMYK") };
         assert!((m - 0.5).abs() < 1e-6, "nothing is applied while typing: {m}");
         h.key_press(egui::Key::Enter);
         h.run_steps(2);
-        let designcraft_color::Color::Cmyk { c, m, y, k } = fill(h.state(), id) else { panic!("not CMYK") };
+        let pejy_color::Color::Cmyk { c, m, y, k } = fill(h.state(), id) else { panic!("not CMYK") };
         assert!(c == 0.0 && (m - 0.01).abs() < 1e-6 && (y - 1.0).abs() < 1e-6 && k == 0.0, "{c} {m} {y} {k}");
     }
 }
@@ -1095,14 +1095,14 @@ mod swatches_header_tests {
         )
     }
 
-    fn items(app: &DesignApp) -> Vec<designcraft_doc::Item> {
+    fn items(app: &DesignApp) -> Vec<pejy_doc::Item> {
         let st = app.session.doc().unwrap();
         st.selection.items.iter().map(|id| st.doc.item(*id).unwrap().clone()).collect()
     }
 
     #[test]
     fn swatches_go_to_the_fill_or_stroke_in_front_and_the_bottom_row_deletes_the_one_clicked() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [36, 36, 200, 200], "content": "unassigned"})).unwrap();
         app.run("swatch.create", json!({"name": "Brand", "color": "#108080"})).unwrap();
@@ -1137,7 +1137,7 @@ mod swatches_header_tests {
 
     #[test]
     fn the_tint_field_keeps_each_objects_own_swatch() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let a = app.run("frame.create", json!({"rect": [36, 36, 100, 100], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
         let b = app.run("frame.create", json!({"rect": [136, 36, 200, 100], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();

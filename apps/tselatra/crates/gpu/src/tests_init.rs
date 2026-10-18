@@ -1,5 +1,5 @@
 //! Native constructor containment. Tiny original shaders; no frames or large allocations.
-//! Set EFFECTCRAFT_REQUIRE_GPU=1 for acceptance: unavailable adapters/devices then fail
+//! Set TSELATRA_REQUIRE_GPU=1 for acceptance: unavailable adapters/devices then fail
 //! instead of taking the explicitly logged headless-CI skip path.
 #![cfg(not(target_arch = "wasm32"))]
 #![allow(clippy::expect_used)] // Test helpers require successful setup to exercise rejection.
@@ -17,7 +17,7 @@ fn brief(message: impl std::fmt::Display) -> String {
 
 fn native_device(desc: wgpu::InstanceDescriptor, required: bool) -> Option<(wgpu::Adapter, wgpu::Device, wgpu::Queue)> {
     crate::tests::hold_gpu_lock();
-    let required = required || std::env::var("EFFECTCRAFT_REQUIRE_GPU").is_ok_and(|value| value == "1");
+    let required = required || std::env::var("TSELATRA_REQUIRE_GPU").is_ok_and(|value| value == "1");
     let instance = wgpu::Instance::new(desc);
     let adapter = match pollster::block_on(
         instance.request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, ..Default::default() }),

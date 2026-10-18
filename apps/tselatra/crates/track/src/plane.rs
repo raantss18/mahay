@@ -4,7 +4,7 @@
 //! Continuous coordinates follow the raster crate: pixel `i` covers `[i, i + 1)` and its centre is
 //! at `i + 0.5`. Downsampling by 2 keeps that convention (level-1 coordinate = level-0 / 2).
 
-use effectcraft_raster::Image;
+use tselatra_raster::Image;
 use serde::{Deserialize, Serialize};
 
 /// What the tracker compares (Motion Tracker Options ▸ Channel).

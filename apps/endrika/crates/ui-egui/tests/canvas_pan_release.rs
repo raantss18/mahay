@@ -3,8 +3,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use egui::{Event, Key, PointerButton, Pos2, RawInput, Rect, vec2};
-use figcraft_engine::Session;
-use figcraft_ui_egui::{FigApp, NoServices};
+use endrika_engine::Session;
+use endrika_ui_egui::{FigApp, NoServices};
 use serde_json::json;
 
 struct Frames {

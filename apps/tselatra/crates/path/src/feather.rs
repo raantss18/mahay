@@ -7,9 +7,9 @@
 //! opacity falls from 1 at the edge to 0 at the outer radius, inside it rises from 0 at the
 //! edge to 1 at the inner radius. Where no radius applies the edge stays hard (anti-aliased).
 
-use effectcraft_geom::{Mat3, vec2};
-use effectcraft_keyframe::{FeatherPoint, ShapePath};
-use effectcraft_raster::Mask;
+use tselatra_geom::{Mat3, vec2};
+use tselatra_keyframe::{FeatherPoint, ShapePath};
+use tselatra_raster::Mask;
 
 use crate::{FillRule, fill_coverage, to_kurbo};
 

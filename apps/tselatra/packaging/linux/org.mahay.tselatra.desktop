@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Tselatra
+GenericName=Motion Graphics Editor
+Comment=Motion graphics and visual effects compositor
+Exec=tselatra %F
+TryExec=tselatra
+Icon=org.mahay.tselatra
+Terminal=false
+StartupNotify=true
+StartupWMClass=org.mahay.tselatra
+Categories=AudioVideo;Video;Graphics;2DGraphics;
+Keywords=motion;graphics;animation;compositor;effects;keyframe;vfx;

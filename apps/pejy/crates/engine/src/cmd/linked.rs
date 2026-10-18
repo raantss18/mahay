@@ -1,7 +1,7 @@
 //! Edit › Place and Link: a story that copies another (the parent) and can be updated when the
 //! parent changes (Links panel: out of date).
 
-use designcraft_doc::{Document, ParaFormat, Selection, Story, StoryId};
+use pejy_doc::{Document, ParaFormat, Selection, Story, StoryId};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, rect_param, spread_param};
@@ -100,7 +100,7 @@ mod tests {
         s.execute("file.new", &json!({})).unwrap();
         let p = s.execute("frame.create", &json!({"rect": [0, 0, 100, 100], "content": "text", "text": "Original"})).unwrap();
         let c = s.execute("story.placeAndLink", &json!({"story": p["story"], "rect": [100, 0, 200, 100]})).unwrap();
-        let child = designcraft_doc::StoryId(c["story"].as_u64().unwrap());
+        let child = pejy_doc::StoryId(c["story"].as_u64().unwrap());
         std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc).story_mut(child).unwrap().rev = u64::MAX;
         s.execute("story.setText", &json!({"story": p["story"], "text": "Revised"})).unwrap();
         s.execute("story.updateLink", &json!({"story": c["story"]})).unwrap();
@@ -120,7 +120,7 @@ mod tests {
         s.execute("file.new", &json!({"pages": 2})).unwrap();
         let p = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": "Original"})).unwrap();
         let c = s.execute("story.placeAndLink", &json!({"story": p["story"], "rect": [72, 72, 300, 200], "spread": 1})).unwrap();
-        let child = designcraft_doc::StoryId(c["story"].as_u64().unwrap());
+        let child = pejy_doc::StoryId(c["story"].as_u64().unwrap());
         assert_eq!(s.doc().unwrap().doc.stories[&child].text, "Original");
         assert_eq!(s.execute("story.links", &json!({})).unwrap()[0]["outOfDate"], false);
         s.execute("story.setText", &json!({"story": p["story"], "text": "Revised"})).unwrap();

@@ -1,8 +1,8 @@
 //! UNDO Mark/Back, BEgin/End groups, Auto and Control (All/None/One/Combine/Layer), UNDOCTL and
 //! UNDOMARKS, REDO and MREDO counts: JSON form, command line and scripts.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
 use serde_json::{Value, json};
 
 fn circles(s: &Session) -> usize {
@@ -113,7 +113,7 @@ fn saving_closes_an_open_group() {
     s.execute("undo", &json!({ "mode": "begin" })).unwrap();
     circle(&mut s, 0.0);
     circle(&mut s, 2.0);
-    let path = std::env::temp_dir().join(format!("cadcraft-undo-group-{}.dxf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("drafitra-undo-group-{}.dxf", std::process::id()));
     s.execute("saveas", &json!({ "path": path.to_string_lossy() })).unwrap();
     let _ = std::fs::remove_file(&path);
     assert_eq!(getvar(&mut s, "UNDOCTL").as_i64().unwrap() & 8, 0, "saving ends the group");

@@ -2,13 +2,13 @@
 
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::{
+use tselatra_engine::{
     Session,
     project::LayerId,
     render::{NoFootage, Renderer},
 };
-use effectcraft_ui_egui::{
-    EffectcraftApp,
+use tselatra_ui_egui::{
+    TselatraApp,
     frames::{RemoteDone, RemoteFrame, RemoteFrames, RemoteJob, to_color_image},
 };
 use egui_kittest::Harness;
@@ -43,14 +43,14 @@ fn opacity_edits_show_completed_intermediate_frames_before_the_drag_stops() {
     session.execute("comp.new", json!({"name":"Live opacity", "width":64, "height":36, "duration":1})).unwrap();
     let layer = session.execute("layer.newSolid", json!({"color":"#ffffff"})).unwrap()["layer"].as_u64().unwrap();
     let renderer = Arc::new(HeldRenderer::default());
-    let mut app = EffectcraftApp::new(session);
+    let mut app = TselatraApp::new(session);
     app.frames.set_remote(Some(renderer.clone()));
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(0.016).build_eframe(|_| app);
     h.run_steps(3);
     assert_eq!(h.state().frames.dispatch_remote(), 1);
     renderer.finish();
     h.step();
-    let alpha = |h: &mut Harness<'_, EffectcraftApp>| h.state_mut().viewer_pixels().unwrap().pixels[32 + 18 * 64].a();
+    let alpha = |h: &mut Harness<'_, TselatraApp>| h.state_mut().viewer_pixels().unwrap().pixels[32 + 18 * 64].a();
     assert_eq!(alpha(&mut h), 255);
     for opacity in [80, 60, 40, 20] {
         h.state_mut().session.execute("prop.set", json!({"layer":layer, "path":"transform/opacity", "value":opacity, "merge":"scrub"})).unwrap();
@@ -93,7 +93,7 @@ fn position_anchor_and_effect_edits_present_intermediate_pixels() {
             session.active_comp().unwrap().layer(LayerId(layer)).unwrap().props.prop(path).unwrap().uid
         };
         let renderer = Arc::new(HeldRenderer::default());
-        let mut app = EffectcraftApp::new(session);
+        let mut app = TselatraApp::new(session);
         app.frames.set_remote(Some(renderer.clone()));
         let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(0.016).build_eframe(|_| app);
         h.run_steps(3);
@@ -124,7 +124,7 @@ fn continuous_opacity_preview_probe() {
     let mut session = Session::default();
     session.execute("comp.new", json!({"width":1920,"height":1080,"duration":1})).unwrap();
     let layer = session.execute("layer.newSolid", json!({"color":"#ffffff"})).unwrap()["layer"].as_u64().unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| EffectcraftApp::new(session));
+    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| TselatraApp::new(session));
     let ready = Instant::now();
     while h.state_mut().viewer_pixels().is_none() && ready.elapsed() < Duration::from_secs(5) {
         h.step();

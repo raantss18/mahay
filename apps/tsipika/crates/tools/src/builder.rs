@@ -1,8 +1,8 @@
 //! Shape Builder (Shift+M), Live Paint Bucket (K) and Live Paint Selection (Shift+L).
 //!
 //! The tools only emit commands (`shapeBuilder.merge`, `livePaint.fill`, `livePaint.strokeEdge`,
-//! `select.*`); the planar arrangement comes from `vectorcraft_pathops::shape_builder` (Shape
-//! Builder) and `vectorcraft_pathops::live_paint` (Live Paint).
+//! `select.*`); the planar arrangement comes from `tsipika_pathops::shape_builder` (Shape
+//! Builder) and `tsipika_pathops::live_paint` (Live Paint).
 //!
 //! **Live Paint groups** are ordinary groups (no special node kind): the group's name starts with
 //! [`LIVE_PAINT_PREFIX`]; its first child is a hidden group named [`SOURCES_NAME`] holding the
@@ -14,9 +14,9 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, Shape as _};
-use vectorcraft_pathops as po;
+use tsipika_doc::{Document, Node, NodeId, NodeKind};
+use tsipika_geom::{BezPath, FillRule, PathData, Point, Rect, Shape as _};
+use tsipika_pathops as po;
 
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, json_ids};
 
@@ -778,8 +778,8 @@ pub fn create(id: &str) -> Option<Box<dyn Tool>> {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::{Appearance, Selection};
-    use vectorcraft_geom::shapes;
+    use tsipika_doc::{Appearance, Selection};
+    use tsipika_geom::shapes;
 
     fn two_rects() -> (Document, NodeId, NodeId) {
         let mut d = Document::new(500.0, 500.0);

@@ -2,8 +2,8 @@
 //! (adjacent, or with one segment between them, which the corner replaces), or a straight end
 //! segment of an open polyline with a line, which joins the polyline.
 
-use cadcraft_doc::{EntityKind, Handle, LwPolyline};
-use cadcraft_geom::{Line, PolyVertex, Polyline, Segment, Vec2, arc_to_bulge, bulge_to_arc, line_line_infinite};
+use drafitra_doc::{EntityKind, Handle, LwPolyline};
+use drafitra_geom::{Line, PolyVertex, Polyline, Segment, Vec2, arc_to_bulge, bulge_to_arc, line_line_infinite};
 
 use super::{curves, other, push_entity, set_kind};
 use crate::cmd::helpers::{arc, line};

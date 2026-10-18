@@ -1,4 +1,4 @@
-# effectcraft-vp9enc
+# tselatra-vp9enc
 
 A small VP9 encoder for WebM export (profile 0, 8-bit 4:2:0, BT.709).
 
@@ -27,7 +27,7 @@ A small VP9 encoder for WebM export (profile 0, 8-bit 4:2:0, BT.709).
 
 The encoder reconstructs exactly what a decoder reconstructs (inter prediction with the
 decoder's vector clamping and edge-clamped reference fetches, integer inverse transforms, the
-loop filter) and exposes it (`Vp9Encoder::reconstruction`); the tests require FilmCraft's VP9
+loop filter) and exposes it (`Vp9Encoder::reconstruction`); the tests require Hetsika's VP9
 decoder (and ffmpeg, when installed) to output exactly that reconstruction, frame by frame, for
 moving synthetic sequences at several sizes and qualities, with tile columns, and lossless.
 
@@ -41,7 +41,7 @@ info, motion vector and token syntax (§6.4), derives motion vector candidates w
 and inter prediction (§8.5), integer inverse transforms (§8.7) and loop filter (§8.8) so it stays
 in step with any conformant decoder. The boolean encoder is the inverse of the §9.2 decoder in
 the form given in RFC 6386 §7.3. Spec tables (§10) are the specification's; the key-frame tables
-were transcribed from FilmCraft's first-party decoder `filmcraft-vp9` (MIT OR Apache-2.0), which
+were transcribed from Hetsika's first-party decoder `hetsika-vp9` (MIT OR Apache-2.0), which
 is also the decoder the tests round-trip through and whose behaviour (loop filter edge rules,
 vector candidate order) the encoder was checked against; ffmpeg is used only as an external test
 oracle. No libvpx or other third-party encoder/decoder source was consulted.

@@ -27,7 +27,7 @@ use super::DialogSpec;
 use crate::picks::PickRequest;
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Find Linked Files.
 pub const KIND: &str = "findLinks";
@@ -53,7 +53,7 @@ fn ids(rows: &[Value]) -> Vec<Value> {
 }
 
 /// A Find Linked Files dialog for the `missing` files of the active document.
-fn dialog(app: &VectorcraftApp, missing: Vec<Value>, modified: Vec<Value>, back: bool) -> Result<Dialog, String> {
+fn dialog(app: &TsipikaApp, missing: Vec<Value>, modified: Vec<Value>, back: bool) -> Result<Dialog, String> {
     let uid = app.session.active().map(|d| d.uid).ok_or("no document open")?;
     let picks = vec![Value::Null; missing.len()];
     let fields =
@@ -63,7 +63,7 @@ fn dialog(app: &VectorcraftApp, missing: Vec<Value>, modified: Vec<Value>, back:
 
 /// Linked File Not Found's Find in Folder… (`d`, the `missingLinks` dialog): `d` becomes Find
 /// Linked Files, searching `folder` for every file `d` still asks about.
-pub(super) fn from_missing_links(app: &mut VectorcraftApp, d: &mut Dialog, folder: &str) -> Result<(), String> {
+pub(super) fn from_missing_links(app: &mut TsipikaApp, d: &mut Dialog, folder: &str) -> Result<(), String> {
     let mut find = dialog(app, rows(d, "missing"), rows(d, "modified"), true)?;
     start_search(app, &mut find, folder)?;
     *d = find;
@@ -71,12 +71,12 @@ pub(super) fn from_missing_links(app: &mut VectorcraftApp, d: &mut Dialog, folde
 }
 
 /// The selected linked images and placed documents of the active document.
-fn selected_linked(app: &VectorcraftApp) -> Vec<Value> {
+fn selected_linked(app: &TsipikaApp) -> Vec<Value> {
     let Some(st) = app.session.active() else { return vec![] };
-    let linked = |id: &vectorcraft_doc::NodeId| {
+    let linked = |id: &tsipika_doc::NodeId| {
         st.doc.node(*id).is_some_and(|n| match &n.kind {
-            vectorcraft_doc::NodeKind::Image(im) => im.link.is_some(),
-            vectorcraft_doc::NodeKind::PlacedDocument(_) => true,
+            tsipika_doc::NodeKind::Image(im) => im.link.is_some(),
+            tsipika_doc::NodeKind::PlacedDocument(_) => true,
             _ => false,
         })
     };
@@ -86,7 +86,7 @@ fn selected_linked(app: &VectorcraftApp) -> Vec<Value> {
 /// `ui.findLinksInFolder` (the Links panel's Find in Folder…): ask for a folder (or take `folder`),
 /// then open Find Linked Files searching it for the files of linked objects `ids` (default: the
 /// selected linked images and placed documents, else the files that are missing).
-pub(crate) fn find_in_folder_command(app: &mut VectorcraftApp, folder: Option<String>, ids: Option<Vec<Value>>) -> Result<Value, String> {
+pub(crate) fn find_in_folder_command(app: &mut TsipikaApp, folder: Option<String>, ids: Option<Vec<Value>>) -> Result<Value, String> {
     let ids = ids.filter(|ids| !ids.is_empty()).or_else(|| Some(selected_linked(app)).filter(|ids| !ids.is_empty()));
     let all = ids.is_some();
     let r = app.session.execute("links.check", &json!({ "ids": ids })).map_err(|e| e.to_string())?;
@@ -112,14 +112,14 @@ pub(crate) fn find_in_folder_command(app: &mut VectorcraftApp, folder: Option<St
 }
 
 /// Whether object `id` of the active document is an image (and not a placed document).
-fn is_image(app: &VectorcraftApp, id: &Value) -> bool {
+fn is_image(app: &TsipikaApp, id: &Value) -> bool {
     let Some(id) = id.as_u64() else { return false };
     let st = app.session.active();
-    st.and_then(|st| st.doc.node(vectorcraft_doc::NodeId(id))).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Image(_)))
+    st.and_then(|st| st.doc.node(tsipika_doc::NodeId(id))).is_some_and(|n| matches!(n.kind, tsipika_doc::NodeKind::Image(_)))
 }
 
 /// Make the dialog's document the active one: it may be another tab's.
-fn activate(app: &mut VectorcraftApp, d: &Dialog) -> Result<(), String> {
+fn activate(app: &mut TsipikaApp, d: &Dialog) -> Result<(), String> {
     let uid = d.fields.get("document").and_then(Value::as_u64);
     if app.session.active().map(|st| st.uid) == uid {
         return Ok(());
@@ -130,7 +130,7 @@ fn activate(app: &mut VectorcraftApp, d: &Dialog) -> Result<(), String> {
 
 /// Start looking in `folder` for the files of the dialog's rows; what an earlier search found, and
 /// the files chosen from it, are dropped.
-fn start_search(app: &mut VectorcraftApp, d: &mut Dialog, folder: &str) -> Result<(), String> {
+fn start_search(app: &mut TsipikaApp, d: &mut Dialog, folder: &str) -> Result<(), String> {
     activate(app, d)?;
     let r = app.run("links.findFiles", json!({ "folder": folder, "ids": ids(&rows(d, "missing")) }))?;
     for k in ["found", "searched", "skipped", "unreadable", "stopped", "error"] {
@@ -186,7 +186,7 @@ fn update(d: &mut Dialog, r: &Value) {
 
 /// While searching: the search's progress into the dialog. A search started elsewhere since
 /// stopped this one.
-fn follow(app: &mut VectorcraftApp, d: &mut Dialog) {
+fn follow(app: &mut TsipikaApp, d: &mut Dialog) {
     // Polled through `session.execute`.
     let Ok(r) = app.session.execute("links.findFiles", &json!({})) else { return };
     if d.fields.get("search") != Some(&r["id"]) {
@@ -200,17 +200,17 @@ fn follow(app: &mut VectorcraftApp, d: &mut Dialog) {
 }
 
 /// Stop the search the dialog started once the dialog is gone (closed, or another in its place).
-pub(super) fn stop_when_closed(app: &mut VectorcraftApp) {
+pub(super) fn stop_when_closed(app: &mut TsipikaApp) {
     let Some(id) = app.ui.links_search else { return };
     let open = app.ui.dialog.as_ref().is_some_and(|d| d.kind == KIND && d.fields.get("search").and_then(Value::as_u64) == Some(id));
     if !open {
         app.ui.links_search = None;
-        vectorcraft_engine::cmd::linkfiles::stop(&mut app.session, id);
+        tsipika_engine::cmd::linkfiles::stop(&mut app.session, id);
     }
 }
 
 /// The folder of the dialog's document, when it was saved.
-fn document_folder(app: &VectorcraftApp, d: &Dialog) -> Option<String> {
+fn document_folder(app: &TsipikaApp, d: &Dialog) -> Option<String> {
     let uid = d.fields.get("document").and_then(Value::as_u64)?;
     let path = app.session.documents().iter().find(|doc| doc.uid == uid)?.path.clone()?;
     std::path::Path::new(&path).parent().map(|p| p.to_string_lossy().into_owned())
@@ -222,7 +222,7 @@ enum Act {
     Stop,
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     if d.str("state") == "searching" {
         follow(app, d);
@@ -331,7 +331,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 /// names the first file that fails to relink, and the other files still relink. From Linked File
 /// Not Found, the rows left without a file and the rows that failed to relink go back to it, then
 /// the modified files are offered for update.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let folder = d.str("searchFolder");
     if !folder.is_empty() {
         let mut d = d.clone();
@@ -387,27 +387,27 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::time::Instant;
 
-    use vectorcraft_engine::Session;
-    use vectorcraft_engine::cmd::findfiles::Rules;
+    use tsipika_engine::Session;
+    use tsipika_engine::cmd::findfiles::Rules;
 
     use super::*;
 
-    fn frame(app: &mut VectorcraftApp) -> String {
+    fn frame(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
     /// A fresh temporary folder (canonical, as a search reports it).
     fn folder(tag: &str) -> PathBuf {
-        let dir = vectorcraft_testkit::temp_dir(&format!("find-links-{tag}"));
+        let dir = tsipika_testkit::temp_dir(&format!("find-links-{tag}"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        vectorcraft_engine::cmd::findfiles::plain(std::fs::canonicalize(&dir).unwrap())
+        tsipika_engine::cmd::findfiles::plain(std::fs::canonicalize(&dir).unwrap())
     }
 
     /// An app that reads files, shows a folder picker and whose searches may go anywhere in `root`,
     /// on two threads.
-    fn app_for(root: &Path) -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app_for(root: &Path) -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
         app.services.pick_folder = Some(Box::new(|| None));
         app.session.search_rules = Some(Rules { user_content: vec![root.to_path_buf()], ..Rules::default() });
@@ -434,9 +434,9 @@ mod tests {
         out
     }
 
-    /// A document linking to files `names` in `root/orig`, saved as `root/doc/doc.vectorcraft`; the
+    /// A document linking to files `names` in `root/orig`, saved as `root/doc/doc.tsipika`; the
     /// files are then deleted and the document opened again → each file's bytes.
-    fn opened_without(app: &mut VectorcraftApp, root: &Path, names: &[&str]) -> Vec<Vec<u8>> {
+    fn opened_without(app: &mut TsipikaApp, root: &Path, names: &[&str]) -> Vec<Vec<u8>> {
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let mut files = vec![];
         for (n, name) in (0..).zip(names) {
@@ -445,7 +445,7 @@ mod tests {
             app.run("file.place", json!({"path": path})).unwrap();
             files.push(png(n));
         }
-        let doc = at(root, "doc/doc.vectorcraft");
+        let doc = at(root, "doc/doc.tsipika");
         std::fs::create_dir_all(doc.parent().unwrap()).unwrap();
         app.run("document.save", json!({"path": doc})).unwrap();
         std::fs::remove_dir_all(root.join("orig")).unwrap();
@@ -454,7 +454,7 @@ mod tests {
     }
 
     /// Draw the dialog until its search ends (10 seconds at most).
-    fn searched(app: &mut VectorcraftApp) {
+    fn searched(app: &mut TsipikaApp) {
         let until = Instant::now() + Duration::from_secs(10);
         while app.ui.dialog.as_ref().is_some_and(|d| d.str("state") == "searching") && Instant::now() < until {
             frame(app);
@@ -462,7 +462,7 @@ mod tests {
         }
     }
 
-    fn kind(app: &VectorcraftApp) -> Option<&str> {
+    fn kind(app: &TsipikaApp) -> Option<&str> {
         app.ui.dialog.as_ref().map(|d| d.kind.as_str())
     }
 
@@ -642,14 +642,14 @@ mod tests {
         let mut app = app_for(&root);
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
-        let badge = at(&root, "orig/badge.vectorcraft");
+        let badge = at(&root, "orig/badge.tsipika");
         std::fs::create_dir_all(badge.parent().unwrap()).unwrap();
         app.run("document.save", json!({"path": badge})).unwrap();
-        let found = at(&root, "found/badge.vectorcraft");
+        let found = at(&root, "found/badge.tsipika");
         write(&found, &std::fs::read(&badge).unwrap());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("file.place", json!({"path": badge, "link": true})).unwrap();
-        let doc = at(&root, "doc/doc.vectorcraft");
+        let doc = at(&root, "doc/doc.tsipika");
         std::fs::create_dir_all(doc.parent().unwrap()).unwrap();
         app.run("document.save", json!({"path": doc})).unwrap();
         std::fs::remove_dir_all(root.join("orig")).unwrap();
@@ -660,7 +660,7 @@ mod tests {
         app.ui.dialog.as_mut().unwrap().fields.insert("copy".into(), json!(true));
         let r = super::super::confirm(&mut app).unwrap();
         assert_eq!((r["relinked"].as_array().unwrap().len(), &r["failed"]), (1, &json!([])), "{r}");
-        assert!(!at(&root, "doc/badge.vectorcraft").exists());
+        assert!(!at(&root, "doc/badge.tsipika").exists());
         assert_eq!(app.run("links.check", json!({})).unwrap()["links"][0]["path"], json!(found));
     }
 

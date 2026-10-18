@@ -4,9 +4,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use effectcraft_color::Label;
-use effectcraft_project::{AlphaMode, Comp, Footage, FootageKind, ItemId, ItemKind, LayerSource, Project, Solid, limits};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_project::{AlphaMode, Comp, Footage, FootageKind, ItemId, ItemKind, LayerSource, Project, Solid, limits};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, f_p, has_comp, has_project_selection, str_p};
@@ -126,7 +126,7 @@ fn import_placeholder(s: &mut Session, p: &Value) -> Result<Value> {
 fn solid_from(p: &Value, s: &Session) -> Solid {
     let (cw, ch) = s.active_comp().map(|c| (c.width, c.height)).unwrap_or((1920, 1080));
     let color = match p.get("color") {
-        Some(Value::String(h)) => effectcraft_color::Rgba::from_hex(h).map(|c| [c.r, c.g, c.b]),
+        Some(Value::String(h)) => tselatra_color::Rgba::from_hex(h).map(|c| [c.r, c.g, c.b]),
         Some(Value::Array(a)) => Some([0, 1, 2].map(|i| a.get(i).and_then(Value::as_f64).unwrap_or(0.0) as f32)),
         _ => None,
     }
@@ -344,7 +344,7 @@ fn find_missing(s: &mut Session, p: &Value) -> Result<Value> {
             for (cid, c) in s.project.comps() {
                 for l in &c.layers {
                     for g in l.effects().into_iter().flat_map(|fx| fx.groups()) {
-                        if let effectcraft_project::GroupKind::Effect { effect } = &g.kind
+                        if let tselatra_project::GroupKind::Effect { effect } = &g.kind
                             && crate::effects::find(effect).is_none()
                         {
                             found.push(json!({"comp": cid.0, "layer": l.id.0, "effect": effect}));
@@ -361,7 +361,7 @@ fn find_missing(s: &mut Session, p: &Value) -> Result<Value> {
                 for l in &c.layers {
                     if let Some(pr) = l.props.prop("text/sourceText")
                         && let Some(doc) = pr.value.as_text()
-                        && effectcraft_text::resolve(&doc.font, &doc.style).missing
+                        && tselatra_text::resolve(&doc.font, &doc.style).missing
                     {
                         found.push(json!({"comp": cid.0, "layer": l.id.0, "font": doc.font}));
                     }
@@ -556,8 +556,8 @@ pub(crate) struct Interpretation {
     invert_alpha: Option<bool>,
     loops: Option<u32>,
     par: Option<f64>,
-    fields: Option<effectcraft_project::FieldOrder>,
-    profile: Option<Option<effectcraft_project::ColorSpace>>,
+    fields: Option<tselatra_project::FieldOrder>,
+    profile: Option<Option<tselatra_project::ColorSpace>>,
     linear: Option<bool>,
     /// Color ▸ Preserve RGB.
     preserve_rgb: Option<bool>,
@@ -591,7 +591,7 @@ impl StartTimecode {
     }
 
     fn read(t: &str, rate: FrameRate) -> Option<i64> {
-        effectcraft_time::parse_timecode(t, rate, false, 0).ok().filter(|n| (0..=Self::MAX).contains(n))
+        tselatra_time::parse_timecode(t, rate, false, 0).ok().filter(|n| (0..=Self::MAX).contains(n))
     }
 }
 
@@ -613,7 +613,7 @@ impl Interpretation {
         it.matte = match p.get("matteColor").or(p.get("premulColor")) {
             None => None,
             Some(v) => Some(
-                effectcraft_keyframe::Value::Color([0.0, 0.0, 0.0, 1.0])
+                tselatra_keyframe::Value::Color([0.0, 0.0, 0.0, 1.0])
                     .coerce_json(v)
                     .map(|c| {
                         let c = c.as_color();
@@ -627,13 +627,13 @@ impl Interpretation {
         it.loops = f_p(p, "loop").filter(|x| x.is_finite()).map(|v| v.round().clamp(1.0, 9999.0) as u32);
         it.par = f_p(p, "pixelAspect").filter(|x| *x > 0.0);
         it.fields = match str_p(p, "fields") {
-            Some(f) => Some(effectcraft_project::FieldOrder::parse(f).ok_or_else(|| bad(cmd, "fields: off|upper|lower"))?),
+            Some(f) => Some(tselatra_project::FieldOrder::parse(f).ok_or_else(|| bad(cmd, "fields: off|upper|lower"))?),
             None => None,
         };
         // Color ▸ Assign Profile: a colour space id, or "auto"/"none" for the file's own (sRGB).
         it.profile = match str_p(p, "colorProfile") {
             Some("auto" | "none" | "") => Some(None),
-            Some(c) => match effectcraft_project::ColorSpace::parse(c) {
+            Some(c) => match tselatra_project::ColorSpace::parse(c) {
                 Some(cs) => Some(Some(cs)),
                 None => return Err(bad(cmd, format!("colorProfile: srgb|rec709|rec2020|p3|auto, not `{c}`"))),
             },

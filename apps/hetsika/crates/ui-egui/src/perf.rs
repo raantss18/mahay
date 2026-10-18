@@ -5,10 +5,10 @@
 
 use serde_json::{Value, json};
 
-use crate::FilmcraftApp;
+use crate::HetsikaApp;
 
-pub fn stats(app: &FilmcraftApp) -> Value {
-    let mut v = filmcraft_engine::perf::stats(&app.session);
+pub fn stats(app: &HetsikaApp) -> Value {
+    let mut v = hetsika_engine::perf::stats(&app.session);
     let (shown, dropped) = app.playback.meter.counts();
     let (images, image_bytes, plans, plan_bytes) = app.frames.cache_entries();
     v["playback"] = json!({

@@ -1,18 +1,18 @@
 {
   "nodes": {
-    "craft-fonts": {
+    "mahay-fonts": {
       "flake": false,
       "locked": {
         "lastModified": 1791295400,
         "narHash": "sha256-e+6HpOYoAFTh6mNfGBBw2njnBzcE8W8+Jybv1+dKOCA=",
-        "owner": "storytold",
-        "repo": "craft-fonts",
+        "owner": "raantss18",
+        "repo": "mahay-fonts",
         "rev": "abb83316d96aa59c1cf64784289e378fe9fa5695",
         "type": "github"
       },
       "original": {
-        "owner": "storytold",
-        "repo": "craft-fonts",
+        "owner": "raantss18",
+        "repo": "mahay-fonts",
         "rev": "abb83316d96aa59c1cf64784289e378fe9fa5695",
         "type": "github"
       }
@@ -35,7 +35,7 @@
     },
     "root": {
       "inputs": {
-        "craft-fonts": "craft-fonts",
+        "mahay-fonts": "mahay-fonts",
         "nixpkgs": "nixpkgs"
       }
     }

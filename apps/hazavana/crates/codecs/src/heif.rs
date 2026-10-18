@@ -1,9 +1,9 @@
 //! HEIF / HEIC (the iPhone and Mac photo format), read-only.
 //!
-//! Decoding lives in the optional `lightcraft-heif` crate (heic-rs, a pure-Rust HEVC
+//! Decoding lives in the optional `hazavana-heif` crate (heic-rs, a pure-Rust HEVC
 //! still-picture decoder, plus a libheif-matching colour conversion), enabled by this crate's
 //! `heif` feature — off by default because HEVC is patent-encumbered and whether a build carries
-//! an HEVC decoder is the distributor's call (the same policy as the sibling PhotoCraft). Without
+//! an HEVC decoder is the distributor's call (the same policy as the sibling Sary). Without
 //! the feature, HEIF files are still detected and opening one is an [`Error::Unsupported`] error
 //! saying so, never a panic.
 //!
@@ -22,7 +22,7 @@ const F: Format = Format::Heif;
 
 /// The reason given when this build has no HEIF decoder.
 #[cfg(not(feature = "heif"))]
-pub(crate) const NOT_IN_BUILD: &str = "HEIC/HEIF support isn't included in this build of LightCraft";
+pub(crate) const NOT_IN_BUILD: &str = "HEIC/HEIF support isn't included in this build of Hazavana";
 
 #[cfg(not(feature = "heif"))]
 pub(crate) fn decode(_bytes: &[u8], _opts: &DecodeOptions) -> Result<Decoded> {
@@ -35,10 +35,10 @@ pub(crate) fn header(_bytes: &[u8]) -> Result<(u32, u32, u16)> {
 }
 
 #[cfg(feature = "heif")]
-fn err(e: lightcraft_heif::Error) -> Error {
+fn err(e: hazavana_heif::Error) -> Error {
     match e {
-        lightcraft_heif::Error::Unsupported(why) => Error::Unsupported(F, why),
-        lightcraft_heif::Error::Limit(m) | lightcraft_heif::Error::Malformed(m) => Error::Malformed(F, m),
+        hazavana_heif::Error::Unsupported(why) => Error::Unsupported(F, why),
+        hazavana_heif::Error::Limit(m) | hazavana_heif::Error::Malformed(m) => Error::Malformed(F, m),
     }
 }
 
@@ -46,24 +46,24 @@ fn err(e: lightcraft_heif::Error) -> Error {
 /// alone: no picture is decoded.
 #[cfg(feature = "heif")]
 pub(crate) fn header(bytes: &[u8]) -> Result<(u32, u32, u16)> {
-    let info = lightcraft_heif::probe(bytes).map_err(err)?;
+    let info = hazavana_heif::probe(bytes).map_err(err)?;
     Ok((info.width, info.height, 1))
 }
 
 #[cfg(feature = "heif")]
 pub(crate) fn decode(bytes: &[u8], opts: &DecodeOptions) -> Result<Decoded> {
     // The container alone: the declared size is checked before any pixel is decoded.
-    let info = lightcraft_heif::probe(bytes).map_err(err)?;
+    let info = hazavana_heif::probe(bytes).map_err(err)?;
     if (info.width as u64).saturating_mul(info.height as u64) > opts.max_pixels {
         return Err(Error::TooLarge(info.width as u64, info.height as u64));
     }
-    let options = lightcraft_heif::Options { max_pixels: opts.max_pixels, apply_transforms: true };
+    let options = hazavana_heif::Options { max_pixels: opts.max_pixels, apply_transforms: true };
     // A small decode (a thumbnail or a cataloguing probe) uses the file's own thumbnail image when
     // it is at least as large as asked: iPhones store one of 320 × 240, and decoding it is a
     // hundredth of the work of the 12 MP photo.
     let thumb = match opts.max_size {
         Some((mw, mh)) if mw > 0 && mh > 0 && mw.max(mh) < info.width.max(info.height) => {
-            lightcraft_heif::decode_thumbnail(bytes, mw.max(mh), &options).ok().flatten().filter(|t| {
+            hazavana_heif::decode_thumbnail(bytes, mw.max(mh), &options).ok().flatten().filter(|t| {
                 // Only a thumbnail of the same picture: same orientation and aspect within 1 %.
                 let aspect = |w: u32, h: u32| w as f64 / h.max(1) as f64;
                 (aspect(t.width, t.height) / aspect(info.width, info.height) - 1.0).abs() < 0.01
@@ -73,7 +73,7 @@ pub(crate) fn decode(bytes: &[u8], opts: &DecodeOptions) -> Result<Decoded> {
     };
     let mut decoded = match thumb {
         Some(t) => t,
-        None => lightcraft_heif::decode(bytes, &options).map_err(err)?,
+        None => hazavana_heif::decode(bytes, &options).map_err(err)?,
     };
     let raw = Raw {
         width: decoded.width as usize,
@@ -123,7 +123,7 @@ mod tests {
         assert!(matches!(&h, Err(crate::Error::Unsupported(Format::Heif, why)) if why.contains("isn't included in this build")), "{h:?}");
     }
 
-    /// Found by PhotoCraft's `decode_heif` fuzz target: a malformed box makes heic-rs 0.1.1 slice
+    /// Found by Sary's `decode_heif` fuzz target: a malformed box makes heic-rs 0.1.1 slice
     /// out of range (`boxes.rs:130`). It must be an error, not a crash.
     #[cfg(feature = "heif")]
     const HEIC_RS_BOX_PANIC: [u8; 72] = [

@@ -1,7 +1,7 @@
 //! Recent Commands for the shortcut menus (#512): the commands started most recently, newest
 //! first, each once.
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 
 #[test]
 fn recent_commands_newest_first_without_repeats() {

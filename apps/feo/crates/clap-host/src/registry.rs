@@ -5,7 +5,7 @@ use crate::plugin::ClapPlugin;
 use crate::scan as paths;
 use crate::{ClapDescriptor, ClapError, parse_id};
 use clap_sys::ext::params::{CLAP_PARAM_IS_ENUM, CLAP_PARAM_IS_HIDDEN, CLAP_PARAM_IS_READONLY, CLAP_PARAM_IS_STEPPED};
-use soundcraft_dsp::{ParamInfo, Plugin, PluginInfo, Taper, Unit};
+use feo_dsp::{ParamInfo, Plugin, PluginInfo, Taper, Unit};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock, PoisonError};

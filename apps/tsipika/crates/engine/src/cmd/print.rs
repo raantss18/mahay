@@ -1,13 +1,13 @@
 //! File → Print as a print-ready PDF or a PostScript file (`file.print`), what it would print
 //! (`print.preview`) and the print settings saved with the document (`print.setup`,
-//! [`vectorcraft_doc::Document::print_setup`]).
+//! [`tsipika_doc::Document::print_setup`]).
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use vectorcraft_doc::Document;
-use vectorcraft_eps::{Level, PrintJob, PrintPage};
-use vectorcraft_geom::{Affine, Rect};
-use vectorcraft_pdf::{PrintLayers, PrintOptions, PrintPreview, PrintSettings};
+use tsipika_doc::Document;
+use tsipika_eps::{Level, PrintJob, PrintPage};
+use tsipika_geom::{Affine, Rect};
+use tsipika_pdf::{PrintLayers, PrintOptions, PrintPreview, PrintSettings};
 
 use super::fileio::pdf::{merge, pdf_error};
 use super::fileio::{extension, write_or_return};
@@ -109,7 +109,7 @@ fn preview(s: &mut Session, p: &Value) -> Result<Value> {
     let doc = &s.doc()?.doc;
     let set = preset_or_saved(C, s, doc, p)?;
     super::printadvanced::flattener(C, &set, &s.prefs.flattener_presets)?;
-    let mut pv = vectorcraft_pdf::preview(doc, &set).map_err(|e| pdf_error(C, e))?;
+    let mut pv = tsipika_pdf::preview(doc, &set).map_err(|e| pdf_error(C, e))?;
     pv.warnings.extend(type_warnings(doc, set.print_layers, &areas(&pv)));
     let mut v = serde_json::to_value(pv).map_err(|e| EngineError::Other(e.to_string()))?;
     v["settings"] = to_json(&set)?;
@@ -142,7 +142,7 @@ fn type_warnings(doc: &Document, which: PrintLayers, areas: &[Rect]) -> Vec<Stri
     // Placed documents print their files' art, which names the resources this adds.
     let doc = doc.with_placed_art();
     let mut layers = doc.layers.clone();
-    vectorcraft_pdf::keep_layers(&mut layers, which);
+    tsipika_pdf::keep_layers(&mut layers, which);
     let (fonts, overflow) = super::fonts::printed_type(&doc, &layers, areas);
     let overflow: Vec<_> = overflow.into_iter().collect();
     super::fonts::substitution_warning_of(fonts).into_iter().chain(super::typecmd::overflow_warning(&overflow)).collect()
@@ -186,8 +186,8 @@ fn print(s: &mut Session, p: &Value) -> Result<Value> {
     let which = set.print_layers;
     if !postscript {
         let printed = prepared.as_ref().unwrap_or(doc);
-        let typed = type_warnings(&full, which, &areas(&vectorcraft_pdf::preview(printed, &set).map_err(|e| pdf_error(PRINT, e))?));
-        let mut r = vectorcraft_pdf::print(printed, &PrintOptions { settings: set, ..Default::default() }).map_err(|e| pdf_error(PRINT, e))?;
+        let typed = type_warnings(&full, which, &areas(&tsipika_pdf::preview(printed, &set).map_err(|e| pdf_error(PRINT, e))?));
+        let mut r = tsipika_pdf::print(printed, &PrintOptions { settings: set, ..Default::default() }).map_err(|e| pdf_error(PRINT, e))?;
         r.warnings.extend(typed);
         return write_or_return(path, &r.bytes, json!({ "pages": r.pages, "format": "pdf", "warnings": r.warnings }));
     }
@@ -199,15 +199,15 @@ fn print(s: &mut Session, p: &Value) -> Result<Value> {
         None => Level::default(),
     };
     let mut warnings = vec![];
-    let bitmap = set.advanced.print_as_bitmap && set.output.mode == vectorcraft_pdf::OutputMode::Composite;
+    let bitmap = set.advanced.print_as_bitmap && set.output.mode == tsipika_pdf::OutputMode::Composite;
     if !bitmap && doc.layers.iter().any(|l| l.shows_transparency()) {
         warnings.push("transparency is flattened into opaque art and images (PostScript has none): see flattenerPreset".to_string());
     }
-    if !set.color.profile.trim().is_empty() && set.output.mode == vectorcraft_pdf::OutputMode::Composite {
+    if !set.color.profile.trim().is_empty() && set.output.mode == tsipika_pdf::OutputMode::Composite {
         warnings.push("the printer profile converts the colours of PDF output: PostScript prints the document's colours".to_string());
     }
     let flatness = (!set.graphics.auto_flatness).then_some(set.graphics.flatness);
-    let plan = vectorcraft_pdf::plan(prepared.as_ref().unwrap_or(doc), &PrintOptions { settings: set, postscript: true, ..Default::default() })
+    let plan = tsipika_pdf::plan(prepared.as_ref().unwrap_or(doc), &PrintOptions { settings: set, postscript: true, ..Default::default() })
         .map_err(|e| pdf_error(PRINT, e))?;
     let pages: Vec<PrintPage> = plan
         .sheets
@@ -225,7 +225,7 @@ fn print(s: &mut Session, p: &Value) -> Result<Value> {
         })
         .collect();
     let job = PrintJob { level, title: plan.title.clone(), created: plan.created, flatness };
-    let out = vectorcraft_eps::print(&pages, &plan.order, &job).map_err(|e| bad(PRINT, e))?;
+    let out = tsipika_eps::print(&pages, &plan.order, &job).map_err(|e| bad(PRINT, e))?;
     for w in plan.warnings.iter().chain(&out.warnings) {
         if !warnings.contains(w) {
             warnings.push(w.clone());

@@ -220,7 +220,7 @@ fn gradient_json(j: &serde_json::Value) -> Option<Gradient> {
     use serde_json::Value as J;
     fn color(c: &J) -> Option<[f32; 4]> {
         if let Some(s) = c.as_str() {
-            let c = effectcraft_color::Rgba::from_hex(s)?;
+            let c = tselatra_color::Rgba::from_hex(s)?;
             return Some([c.r, c.g, c.b, c.a]);
         }
         let a: Vec<f32> = c.as_array()?.iter().map(|x| x.as_f64().map(|v| v as f32)).collect::<Option<_>>()?;
@@ -433,7 +433,7 @@ impl Value {
             }
             Value::Color(_) => {
                 if let Some(s) = j.as_str() {
-                    let c = effectcraft_color::Rgba::from_hex(s)?;
+                    let c = tselatra_color::Rgba::from_hex(s)?;
                     return Some(Value::Color([c.r as f64, c.g as f64, c.b as f64, c.a as f64]));
                 }
                 let mut c = nums(j)?;

@@ -9,9 +9,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use egui::{Event, Key, Shape};
-use figcraft_engine::figcraft_collab::code::{self, Local};
-use figcraft_engine::figcraft_collab::message::ClientMsg;
-use figcraft_engine::live::{
+use endrika_engine::endrika_collab::code::{self, Local};
+use endrika_engine::endrika_collab::message::ClientMsg;
+use endrika_engine::live::{
     Access, DEFAULT_SERVER, Event as LiveEvent, HostOptions, LiveLink, NetReply, NetRequest, Peer, Presence, PublishOptions, Published, Role,
     SessionInfo, Shared as SharedLinks, SharedLink, Status,
 };
@@ -41,7 +41,7 @@ struct Script {
 fn links(n: usize, codes: Option<(&str, &str)>) -> SharedLinks {
     let link = |what: &str, code: Option<&str>| SharedLink {
         id: format!("{what}{n}"),
-        link: format!("figcraft://join?server=wss://share.example:443/&file=f1&token=Share{what}Share{what}0{n}"),
+        link: format!("endrika://join?server=wss://share.example:443/&file=f1&token=Share{what}Share{what}0{n}"),
         code: code.map(str::to_string),
     };
     SharedLinks { edit: link("edit", codes.map(|c| c.0)), view: Some(link("view", codes.map(|c| c.1))) }
@@ -54,7 +54,7 @@ struct Link(Shared);
 /// Where the scripted host listens, and its session's secret.
 const HOST: Local = Local { ip: std::net::Ipv4Addr::new(192, 168, 1, 20), port: 47_900, secret: 0x123_4567_89AB };
 /// A link without a code in it (an address a code can't carry).
-const PLAIN: &str = "figcraft://join?host=[fd00::1]:47900&file=f&token=AbCdEfGhIjKlMnOpQrStUv";
+const PLAIN: &str = "endrika://join?host=[fd00::1]:47900&file=f&token=AbCdEfGhIjKlMnOpQrStUv";
 
 fn info(role: Role, link: &str) -> SessionInfo {
     SessionInfo {
@@ -104,9 +104,9 @@ impl LiveLink for Link {
         _: &str,
         file: &str,
         _: &str,
-        req: Option<figcraft_engine::figcraft_collab::message::Admin>,
-    ) -> Result<(figcraft_engine::live::HostInfo, Option<figcraft_engine::figcraft_collab::message::AdminReply>), String> {
-        use figcraft_engine::figcraft_collab::message::{Admin, AdminReply};
+        req: Option<endrika_engine::endrika_collab::message::Admin>,
+    ) -> Result<(endrika_engine::live::HostInfo, Option<endrika_engine::endrika_collab::message::AdminReply>), String> {
+        use endrika_engine::endrika_collab::message::{Admin, AdminReply};
         if matches!(req, Some(Admin::Remove { .. })) {
             self.0.lock().unwrap().removed.push(file.to_string());
         }
@@ -176,7 +176,7 @@ fn type_text(h: &mut Harness, text: &str) {
 
 /// The file reached the server and the session is live, with these codes (if the server has any).
 fn on_the_server(h: &mut Harness, script: &Shared, codes: Option<(&str, &str)>) -> Vec<Shape> {
-    let link = |token: &str| format!("figcraft://join?server=wss://share.example:443/&file=f1&token={token}");
+    let link = |token: &str| format!("endrika://join?server=wss://share.example:443/&file=f1&token={token}");
     let published = Published {
         server: "wss://share.example:443/".into(),
         file: "f1".into(),
@@ -193,8 +193,8 @@ fn on_the_server(h: &mut Harness, script: &Shared, codes: Option<(&str, &str)>) 
 
 /// The session's document arrives (the host's welcome): it opens in a tab of its own.
 fn document_arrives(h: &mut Harness, script: &Shared) {
-    use figcraft_engine::figcraft_collab::message::ServerMsg;
-    use figcraft_engine::figcraft_collab::{Client, Limits, Outgoing, Server};
+    use endrika_engine::endrika_collab::message::ServerMsg;
+    use endrika_engine::endrika_collab::{Client, Limits, Outgoing, Server};
     let mut server = Server::new(h.app.session.doc().unwrap().clone(), "", Limits::default());
     let ClientMsg::Hello(me) = Client::hello("f", "", "Ada", "") else { panic!("no hello") };
     let (_, outs) = server.join(me).unwrap();
@@ -262,7 +262,7 @@ fn sharing_online_shows_the_code_copies_it_and_stops() {
     let shapes = click(&mut h, &shapes, "Copy code");
     let shapes = click(&mut h, &shapes, "Copy link");
     // The link is one made for others, not the owner's own.
-    assert_eq!(script.lock().unwrap().copied, ["K7M-2QX-9TD", "figcraft://join?server=wss://share.example:443/&file=f1&token=ShareeditShareedit00"]);
+    assert_eq!(script.lock().unwrap().copied, ["K7M-2QX-9TD", "endrika://join?server=wss://share.example:443/&file=f1&token=ShareeditShareedit00"]);
     // Someone joins: they are listed.
     script.lock().unwrap().events.push(LiveEvent::PeerJoined(Peer { client_id: 2, name: "Hana".into(), color: "#9747FF".into() }));
     let shapes_now = h.frames(2);
@@ -339,7 +339,7 @@ fn sharing_on_the_local_network_shows_its_longer_code() {
     assert!(!has_text(&shapes, "Can view"), "everyone edits on the local network");
     {
         let s = script.lock().unwrap();
-        assert!(s.hosted[0].short && s.hosted[0].bind == figcraft_engine::live::Bind::Lan && s.hosted[0].port.is_none());
+        assert!(s.hosted[0].short && s.hosted[0].bind == endrika_engine::live::Bind::Lan && s.hosted[0].port.is_none());
         assert!(s.published.is_empty(), "nothing goes to a server");
     }
     let shapes = click(&mut h, &shapes, "Copy code");
@@ -352,7 +352,7 @@ fn sharing_on_the_local_network_shows_its_longer_code() {
     h.app.ui.live.port = "6".into();
     click(&mut h, &shapes, "Start sharing");
     let s = script.lock().unwrap();
-    assert!(s.hosted[1].bind == figcraft_engine::live::Bind::Local && s.hosted[1].port == Some(6));
+    assert!(s.hosted[1].bind == endrika_engine::live::Bind::Local && s.hosted[1].port == Some(6));
 }
 
 #[test]
@@ -395,7 +395,7 @@ fn the_join_field_takes_a_code_or_a_link_and_enter_joins() {
     type_text(&mut h, " k7m 2qx-9td ");
     assert_eq!(crate::live::inspect(&h.app)["joinField"], " k7m 2qx-9td ");
     key(&mut h, Key::Enter);
-    assert_eq!(script.lock().unwrap().joined, ["figcraft://join?server=wss://share.example/&code=K7M2QX9TD"]);
+    assert_eq!(script.lock().unwrap().joined, ["endrika://join?server=wss://share.example/&code=K7M2QX9TD"]);
     assert!(h.app.ui.live.code.is_empty(), "the field is cleared once the join started");
     let shapes = h.frames(2);
     assert!(has_text(&shapes, "Joining…") && has_text(&shapes, "Leave session"));
@@ -431,7 +431,7 @@ fn the_home_screen_joins_with_a_code_and_opens_the_file() {
     click(&mut h, &shapes, "Code or invite link");
     type_text(&mut h, "K7M-2QX-9TD");
     key(&mut h, Key::Enter);
-    assert_eq!(script.lock().unwrap().joined, ["figcraft://join?server=wss://share.example/&code=K7M2QX9TD"]);
+    assert_eq!(script.lock().unwrap().joined, ["endrika://join?server=wss://share.example/&code=K7M2QX9TD"]);
     let shapes = h.frames(2);
     assert!(has_text(&shapes, "Joining…") && h.app.ui.home);
     // It failed: the reason shows under the field, and the home screen stays.
@@ -460,7 +460,7 @@ fn the_join_dialog_is_the_same_field() {
     type_text(&mut h, "4fh j8r 2wn");
     key(&mut h, Key::Enter);
     h.frames(1);
-    assert_eq!(script.lock().unwrap().joined, ["figcraft://join?server=wss://share.example/&code=4FHJ8R2WN"]);
+    assert_eq!(script.lock().unwrap().joined, ["endrika://join?server=wss://share.example/&code=4FHJ8R2WN"]);
     assert!(h.app.ui.live.join.is_none(), "it closes once the join started");
 }
 

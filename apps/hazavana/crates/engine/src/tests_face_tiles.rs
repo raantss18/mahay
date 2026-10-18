@@ -9,10 +9,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use lightcraft_catalog::PhotoId;
-use lightcraft_codecs::{ChromaSubsampling, EncodeImage, EncodeMeta, Samples, encode_jpeg};
-use lightcraft_geom::Rect;
-use lightcraft_raster::Rgba8;
+use hazavana_catalog::PhotoId;
+use hazavana_codecs::{ChromaSubsampling, EncodeImage, EncodeMeta, Samples, encode_jpeg};
+use hazavana_geom::Rect;
+use hazavana_raster::Rgba8;
 use serde_json::json;
 
 use crate::Session;
@@ -46,7 +46,7 @@ fn jpeg(w: u32, h: u32, px: impl Fn(u32, u32) -> [u8; 3]) -> Vec<u8> {
 /// photo by its largest preview (600 × 400) and the develop path renders from it, after reading
 /// the whole file.
 fn raw_with_two_previews(tail: usize) -> Vec<u8> {
-    use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+    use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
     let preview = |w: u32, h: u32, bytes: Vec<u8>, first: bool| {
         let mut ifd = IfdBuilder::new();
         if first {
@@ -119,7 +119,7 @@ fn setup(tag: &str) -> (PathBuf, Session, PhotoId, PathBuf) {
     let mut s = open(&dir);
     s.execute("library.import", &json!({"paths": [file.to_string_lossy()]})).unwrap();
     let p = s.catalog.photos().next().unwrap();
-    assert_eq!((p.kind, p.width, p.height), (lightcraft_catalog::MediaKind::Raw, W, H), "described by its largest preview");
+    assert_eq!((p.kind, p.width, p.height), (hazavana_catalog::MediaKind::Raw, W, H), "described by its largest preview");
     let id = p.id;
     (dir, s, id, file)
 }

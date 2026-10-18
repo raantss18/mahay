@@ -8,11 +8,11 @@ use std::sync::Arc;
 
 use serde_json::json;
 use skrifa::raw::TableProvider;
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Document, Effect, Node, NodeKind, OpacityMask, Symbol, TextObject, TextRun};
-use vectorcraft_geom::{Affine, Point, Rect, shapes};
-use vectorcraft_svg::{Encoding, ExportOptions, Profile, Styling, compress_bytes, editing, export_full, import, text_of};
-use vectorcraft_testkit::format::base64_decode;
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::{Appearance, CharStyle, Document, Effect, Node, NodeKind, OpacityMask, Symbol, TextObject, TextRun};
+use tsipika_geom::{Affine, Point, Rect, shapes};
+use tsipika_svg::{Encoding, ExportOptions, Profile, Styling, compress_bytes, editing, export_full, import, text_of};
+use tsipika_testkit::format::base64_decode;
 
 fn add(d: &mut Document, mut n: Node) {
     n.id = d.alloc_id();
@@ -27,7 +27,7 @@ fn style(family: &str, font_style: &str) -> CharStyle {
 fn text(at: Point, runs: &[(&str, CharStyle)]) -> Node {
     let mut t = TextObject::point(at, "", runs[0].1.clone());
     t.runs = runs.iter().map(|(s, st)| TextRun { text: (*s).into(), style: st.clone(), inline: None }).collect();
-    Node::new(vectorcraft_doc::NodeId(0), NodeKind::Text(Box::new(t)))
+    Node::new(tsipika_doc::NodeId(0), NodeKind::Text(Box::new(t)))
 }
 
 /// The line of type [`doc`] holds: Latin-1 characters and others the bundled fonts have.
@@ -38,7 +38,7 @@ fn doc() -> Document {
     let mut d = Document::new(300.0, 200.0);
     d.title = "Grüße 中文".into();
     let red = Appearance::basic(Paint::solid(Color::rgb8(255, 0, 0)), Paint::None, 0.0);
-    let mut sq = Node::path(vectorcraft_doc::NodeId(0), shapes::rectangle(Rect::new(10.0, 10.0, 60.0, 60.0)), red);
+    let mut sq = Node::path(tsipika_doc::NodeId(0), shapes::rectangle(Rect::new(10.0, 10.0, 60.0, 60.0)), red);
     sq.name = Some("方块".into());
     add(&mut d, sq);
     add(&mut d, text(Point::new(20.0, 120.0), &[(LINE, style("Source Sans 3", "Regular"))]));
@@ -133,24 +133,24 @@ fn tiny_has_no_filters_masks_symbols_or_style_sheets() {
     let mut d = Document::new(300.0, 200.0);
     let fill = |r, g, b| Appearance::basic(Paint::solid(Color::rgb8(r, g, b)), Paint::None, 0.0);
     // A shadowed square, a masked one in Multiply, a symbol instance and an outside stroke.
-    let mut a = Node::path(vectorcraft_doc::NodeId(0), shapes::rectangle(Rect::new(10.0, 10.0, 60.0, 60.0)), fill(255, 0, 0));
+    let mut a = Node::path(tsipika_doc::NodeId(0), shapes::rectangle(Rect::new(10.0, 10.0, 60.0, 60.0)), fill(255, 0, 0));
     a.appearance.effects.push(Effect { id: "stylize.dropShadow".into(), params: json!({}), visible: true });
     add(&mut d, a);
-    let mut b = Node::path(vectorcraft_doc::NodeId(0), shapes::rectangle(Rect::new(80.0, 10.0, 130.0, 60.0)), fill(0, 0, 255));
+    let mut b = Node::path(tsipika_doc::NodeId(0), shapes::rectangle(Rect::new(80.0, 10.0, 130.0, 60.0)), fill(0, 0, 255));
     b.blend = BlendMode::Multiply;
     b.extras_mut().mask =
         Some(Box::new(OpacityMask::new(Node::path(d.alloc_id(), shapes::ellipse(Rect::new(80.0, 10.0, 130.0, 60.0)), fill(255, 255, 255)), true)));
     add(&mut d, b);
     let art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(-5.0, -5.0, 5.0, 5.0)), fill(0, 128, 0));
     d.symbols.push(Symbol { name: "Dot".into(), art: Arc::new(art) });
-    add(&mut d, Node::new(vectorcraft_doc::NodeId(0), NodeKind::SymbolInstance { symbol: "Dot".into(), xf: Affine::translate((200.0, 30.0)) }));
+    add(&mut d, Node::new(tsipika_doc::NodeId(0), NodeKind::SymbolInstance { symbol: "Dot".into(), xf: Affine::translate((200.0, 30.0)) }));
     let mut c = Node::path(
-        vectorcraft_doc::NodeId(0),
+        tsipika_doc::NodeId(0),
         shapes::rectangle(Rect::new(150.0, 100.0, 250.0, 150.0)),
         Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 6.0),
     );
-    if let Some(vectorcraft_doc::AppearanceItem::Stroke(s)) = c.appearance.items.get_mut(1) {
-        s.align = vectorcraft_doc::StrokeAlign::Outside;
+    if let Some(tsipika_doc::AppearanceItem::Stroke(s)) = c.appearance.items.get_mut(1) {
+        s.align = tsipika_doc::StrokeAlign::Outside;
     }
     add(&mut d, c);
     let full = export_full(&d, &ExportOptions { styling: Styling::InternalCss, ..Default::default() }, None).svg;
@@ -220,8 +220,8 @@ fn embedded_fonts_hold_only_the_glyphs_used() {
 /// file would show its default instance in browsers (#296).
 #[test]
 fn variable_font_instances_embed_as_themselves() {
-    use vectorcraft_text::test_fonts::{VARIABLE_FAMILY, variable_font};
-    let db = vectorcraft_text::FontDb::global();
+    use tsipika_text::test_fonts::{VARIABLE_FAMILY, variable_font};
+    let db = tsipika_text::FontDb::global();
     db.add_font(variable_font().unwrap());
     let mut d = Document::new(300.0, 200.0);
     add(&mut d, text(Point::new(20.0, 60.0), &[("ll", style(VARIABLE_FAMILY, "Regular")), ("ll", style(VARIABLE_FAMILY, "Bold"))]));
@@ -247,8 +247,8 @@ fn variable_font_instances_embed_as_themselves() {
 /// characters are warned about.
 #[test]
 fn variable_font_settings_are_written_embedded_and_read_back() {
-    use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY as FAMILY, two_axis_font};
-    let db = vectorcraft_text::FontDb::global();
+    use tsipika_text::test_fonts::{TWO_AXIS_FAMILY as FAMILY, two_axis_font};
+    let db = tsipika_text::FontDb::global();
     db.add_font(two_axis_font().unwrap());
     let set = [("wdth".to_string(), 90.0), ("wght".to_string(), 650.0)].into_iter().collect::<std::collections::BTreeMap<_, _>>();
     let varied = CharStyle { font_axes: set.clone(), ..style(FAMILY, "Regular") };
@@ -310,7 +310,7 @@ fn licensed_font(family: &str, fs_type: u16) -> Vec<u8> {
 
 #[test]
 fn font_licences_are_respected() {
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     db.add_font(licensed_font("Sealed Sans 3", 0x0002));
     db.add_font(licensed_font("Wholed Sans 3", 0x0100));
     assert!(db.has_family("Sealed Sans 3") && db.has_family("Wholed Sans 3"));

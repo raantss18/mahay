@@ -1,22 +1,22 @@
 # Control protocol
 
-SoundCraft can be driven completely by other programs: scripts, test harnesses and AI agents.
+Feo can be driven completely by other programs: scripts, test harnesses and AI agents.
 Every menu item, button, mouse gesture and keystroke maps to a **command** (or to synthetic
 input), and every command is reachable from:
 
 | Surface | How |
 |---|---|
-| Desktop app control channel | `soundcraft --control <port>` (`0` = pick a free port; printed as `SOUNDCRAFT_CONTROL_PORT=…`) |
-| CLI against a running app | `soundcraft-cli app --port <port> <method or command id> [JSON]` |
-| Headless CLI | `soundcraft-cli run --demo --cmd 'mix.volume={"track":"Kick","db":-6}' --bounce out.wav` |
-| MCP (headless) | `soundcraft-cli mcp [--demo]` |
-| MCP (bridged to the app) | `soundcraft-cli mcp --connect <port>` |
+| Desktop app control channel | `feo --control <port>` (`0` = pick a free port; printed as `FEO_CONTROL_PORT=…`) |
+| CLI against a running app | `feo-cli app --port <port> <method or command id> [JSON]` |
+| Headless CLI | `feo-cli run --demo --cmd 'mix.volume={"track":"Kick","db":-6}' --bounce out.wav` |
+| MCP (headless) | `feo-cli mcp [--demo]` |
+| MCP (bridged to the app) | `feo-cli mcp --connect <port>` |
 
 ## Isolated automation profiles
 
-Set `SOUNDCRAFT_CONFIG_DIR` to a fresh directory to isolate UI preferences, `Autosave`, `Presets`, and `logs`.
+Set `FEO_CONFIG_DIR` to a fresh directory to isolate UI preferences, `Autosave`, `Presets`, and `logs`.
 The nonempty value is used as the complete settings directory. Unset retains the normal platform paths;
-an explicit empty value disables the settings directory instead of falling back to a personal profile. Save synthetic sessions to explicit scratch paths. Do not use `SOUNDCRAFT_NO_PREFS`
+an explicit empty value disables the settings directory instead of falling back to a personal profile. Save synthetic sessions to explicit scratch paths. Do not use `FEO_NO_PREFS`
 when testing preference persistence across restarts.
 
 Run UI acceptance with `--no-audio`. This disables the output player; it does not disable recording
@@ -69,14 +69,14 @@ Errors: `{"id": 1, "ok": false, "error": "bad parameters for `mix.volume`: no tr
 ## Examples
 
 ```sh
-P=$(soundcraft --demo --control 0 | sed -n 's/SOUNDCRAFT_CONTROL_PORT=//p')   # or read stderr
-soundcraft-cli app --port $P mix.solo '{"track":"Bass"}'
-soundcraft-cli app --port $P transport.play
-soundcraft-cli app --port $P ui.screenshot '{"path":"/tmp/shot.png"}'
-soundcraft-cli app --port $P ui.menu.invoke '{"path":"Track > New..."}'
+P=$(feo --demo --control 0 | sed -n 's/FEO_CONTROL_PORT=//p')   # or read stderr
+feo-cli app --port $P mix.solo '{"track":"Bass"}'
+feo-cli app --port $P transport.play
+feo-cli app --port $P ui.screenshot '{"path":"/tmp/shot.png"}'
+feo-cli app --port $P ui.menu.invoke '{"path":"Track > New..."}'
 ```
 
-Offscreen (no window): `cargo run -p soundcraft-ui-egui --example ui_shot -- out.png script.jsonl`,
+Offscreen (no window): `cargo run -p feo-ui-egui --example ui_shot -- out.png script.jsonl`,
 where each script line is a request (`{"method": …, "params": …}`), `{"shot": "path.png"}` or
 `{"steps": n}`. Use `--system-theme light|dark|none` to supply the initial OS appearance, and
 script events such as `{"system_theme": "dark"}` to change it on subsequent frames.

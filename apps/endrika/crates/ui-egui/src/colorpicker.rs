@@ -2,10 +2,10 @@
 //! hex and RGB fields, gradient stops, image and pattern fills and document colours.
 
 use egui::{Align2, Color32, CornerRadius, Id, Mesh, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_color::{
+use endrika_color::{
     Color, ColorStop, Gradient, GradientKind, Hsb, ImageFilters, ImageScaleMode, Paint, PaintKind, PatternAlign, PatternPaint, PatternTile,
 };
-use figcraft_doc::{NodeId, NodeKind};
+use endrika_doc::{NodeId, NodeKind};
 use serde_json::json;
 
 use crate::FigApp;
@@ -19,7 +19,7 @@ use crate::widgets;
 pub enum PickerTarget {
     PageBackground,
     SelectionColor {
-        targets: Vec<figcraft_engine::selection_colors::PaintTarget>,
+        targets: Vec<endrika_engine::selection_colors::PaintTarget>,
         selection: Vec<NodeId>,
         document: u64,
     },
@@ -60,15 +60,15 @@ pub enum PickerTarget {
 }
 
 /// The paints of colour style `id`.
-fn style_paints(doc: &figcraft_doc::Document, id: &str) -> Option<Vec<Paint>> {
+fn style_paints(doc: &endrika_doc::Document, id: &str) -> Option<Vec<Paint>> {
     match &doc.style(id)?.kind {
-        figcraft_doc::StyleKind::Paint { paints } => Some(paints.clone()),
+        endrika_doc::StyleKind::Paint { paints } => Some(paints.clone()),
         _ => None,
     }
 }
 
 /// The fills a text range paints with (its own, else the layer's).
-pub fn range_fills(doc: &figcraft_doc::Document, id: NodeId, start: usize) -> Option<Vec<Paint>> {
+pub fn range_fills(doc: &endrika_doc::Document, id: NodeId, start: usize) -> Option<Vec<Paint>> {
     let n = doc.node(id)?;
     let t = n.kind.text()?;
     Some(t.style_at(start).fills.clone().unwrap_or_else(|| n.fills.clone()))
@@ -96,7 +96,7 @@ fn current_paint(app: &FigApp, target: &PickerTarget) -> Option<Paint> {
         PickerTarget::Effect { ids, index, secondary } => doc.node(*ids.first()?)?.effects.get(*index)?.color(*secondary).map(Paint::solid),
         PickerTarget::TextRange { id, start, .. } => range_fills(doc, *id, *start)?.into_iter().next(),
         PickerTarget::Variable { id, mode } => match doc.variables.get(id)?.values.get(mode)? {
-            figcraft_doc::VariableValue::Color(c) => {
+            endrika_doc::VariableValue::Color(c) => {
                 let mut p = Paint::solid(c.with_alpha(1.0));
                 p.opacity = c.a;
                 Some(p)
@@ -225,12 +225,12 @@ fn page_colors(app: &FigApp, ui: &Ui) -> Vec<Color> {
     let Ok(ds) = app.session.ds() else { return vec![] };
     let key = (std::sync::Arc::as_ptr(&ds.doc) as usize, ds.page);
     let cache_id = Id::new("cp_doc_colors");
-    if let Some((k, colors)) = ui.data(|d| d.get_temp::<((usize, figcraft_doc::NodeId), Vec<Color>)>(cache_id))
+    if let Some((k, colors)) = ui.data(|d| d.get_temp::<((usize, endrika_doc::NodeId), Vec<Color>)>(cache_id))
         && k == key
     {
         return colors;
     }
-    let colors: Vec<Color> = figcraft_engine::cmd::styles::document_colors(&ds.doc, ds.page).into_iter().take(21).map(|(c, _)| c).collect();
+    let colors: Vec<Color> = endrika_engine::cmd::styles::document_colors(&ds.doc, ds.page).into_iter().take(21).map(|(c, _)| c).collect();
     ui.data_mut(|d| d.insert_temp(cache_id, (key, colors.clone())));
     colors
 }
@@ -288,7 +288,7 @@ fn model_fields(ui: &mut Ui, c: Color) -> Option<(Color, bool)> {
             "HSL" | "HSB" => {
                 let hsl = model == 2;
                 let (h, s2, l2) = if hsl {
-                    let x = figcraft_color::Hsl::from_color(c);
+                    let x = endrika_color::Hsl::from_color(c);
                     (x.h, x.s, x.l)
                 } else {
                     let x = Hsb::from_color(c);
@@ -303,7 +303,7 @@ fn model_fields(ui: &mut Ui, c: Color) -> Option<(Color, bool)> {
                             *slot = if k == 0 { x.rem_euclid(360.0) } else { x.clamp(0.0, 100.0) };
                         }
                         let (h, a, b) = (v3[0] as f32, v3[1] as f32 / 100.0, v3[2] as f32 / 100.0);
-                        let col = if hsl { figcraft_color::Hsl { h, s: a, l: b }.to_color() } else { Hsb { h, s: a, b }.to_color() };
+                        let col = if hsl { endrika_color::Hsl { h, s: a, l: b }.to_color() } else { Hsb { h, s: a, b }.to_color() };
                         out = Some(col.with_alpha(c.a));
                     }
                 }
@@ -515,8 +515,8 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
                                 image_pending = true;
                                 let target = target.clone();
                                 app.pick_open(tr("Choose image"), &["png", "jpg", "jpeg", "webp", "gif", "tif", "tiff"], move |app, p| {
-                                    let Ok(bytes) = figcraft_engine::file_access::read(&p) else { return };
-                                    let Some(hash) = app.session.doc_mut().ok().and_then(|d| figcraft_format_add(d, bytes)) else { return };
+                                    let Ok(bytes) = endrika_engine::file_access::read(&p) else { return };
+                                    let Some(hash) = app.session.doc_mut().ok().and_then(|d| endrika_format_add(d, bytes)) else { return };
                                     if let Some(mut paint) = current_paint(app, &target) {
                                         paint.kind = Paint::image(hash, ImageScaleMode::Fill).kind;
                                         write(app, &target, &paint, false);
@@ -660,7 +660,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
                     let stop = g.stops.get(sel).map(|s| s.color);
                     ui.horizontal(|ui| {
                         ui.add_space(16.0);
-                        crate::variable_ui::bindable(app, ui, ids, &field, figcraft_doc::VariableType::Color, 208.0, |_, ui| {
+                        crate::variable_ui::bindable(app, ui, ids, &field, endrika_doc::VariableType::Color, 208.0, |_, ui| {
                             let (r, _) = ui.allocate_exact_size(vec2(208.0, widgets::FIELD_H), Sense::hover());
                             ui.painter().rect_filled(r, CornerRadius::same(5), t.field);
                             let sw = Rect::from_center_size(pos2(r.min.x + 13.0, r.center().y), vec2(14.0, 14.0));
@@ -700,7 +700,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
                     }
                 });
                 // The image's own colour profile (decoding converts it into the file's).
-                let source = app.session.doc().ok().and_then(|d| figcraft_render::images::profile_name(&img.image, d.images.get(&img.image)));
+                let source = app.session.doc().ok().and_then(|d| endrika_render::images::profile_name(&img.image, d.images.get(&img.image)));
                 let source = match source.as_deref() {
                     None => tr("Unknown — treated as sRGB"),
                     Some("") => tr("Embedded profile"),
@@ -800,7 +800,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
                 }
                 ui.data_mut(|d| d.insert_temp(Id::new("cp_hsb"), (hsb.h, hsb.s, hsb.b, nc.to_rgba8())));
                 // A Display P3 colour sRGB can't show: the canvas (sRGB) shows the nearest one.
-                if app.session.doc().is_ok_and(|d| d.color_profile.conversion_to(figcraft_color::ColorProfile::Srgb).clips(nc)) {
+                if app.session.doc().is_ok_and(|d| d.color_profile.conversion_to(endrika_color::ColorProfile::Srgb).clips(nc)) {
                     gamut_warning(ui, &t);
                 }
                 if changed {
@@ -1108,7 +1108,7 @@ fn image_presets(app: &mut FigApp, ui: &mut Ui, target: &PickerTarget, paint: &m
                 app.run("image.adjust", json!({"ids": ids, "target": if *fills { "fill" } else { "stroke" }, "index": index, "preset": name}));
             }
             _ => {
-                let preset = app.session.doc().ok().and_then(|d| figcraft_engine::cmd::image::find_preset(d, &name));
+                let preset = app.session.doc().ok().and_then(|d| endrika_engine::cmd::image::find_preset(d, &name));
                 if let (Some(f), PaintKind::Image(img)) = (preset, &mut paint.kind) {
                     img.filters = f;
                     write(app, target, paint, false);
@@ -1119,7 +1119,7 @@ fn image_presets(app: &mut FigApp, ui: &mut Ui, target: &PickerTarget, paint: &m
     }
 }
 
-fn figcraft_format_add(doc: &mut figcraft_doc::Document, bytes: Vec<u8>) -> Option<String> {
+fn endrika_format_add(doc: &mut endrika_doc::Document, bytes: Vec<u8>) -> Option<String> {
     // Images are keyed by content hash; the engine's image.place uses the same scheme.
     let (w, h) = image::ImageReader::new(std::io::Cursor::new(&bytes)).with_guessed_format().ok()?.into_dimensions().ok()?;
     let hash = {
@@ -1128,7 +1128,7 @@ fn figcraft_format_add(doc: &mut figcraft_doc::Document, bytes: Vec<u8>) -> Opti
         bytes.hash(&mut s);
         format!("img{:016x}{:08x}", s.finish(), bytes.len())
     };
-    doc.images.insert(hash.clone(), figcraft_doc::ImageData { bytes: std::sync::Arc::new(bytes), width: w, height: h });
+    doc.images.insert(hash.clone(), endrika_doc::ImageData { bytes: std::sync::Arc::new(bytes), width: w, height: h });
     Some(hash)
 }
 
@@ -1149,7 +1149,7 @@ impl WithStops for Gradient {
 mod selection_color_tests {
     use super::*;
     use crate::NoServices;
-    use figcraft_engine::{Session, selection_colors::collect};
+    use endrika_engine::{Session, selection_colors::collect};
 
     fn setup() -> (FigApp, NodeId, NodeId) {
         let mut s = Session::new();
@@ -1213,7 +1213,7 @@ mod selection_color_tests {
 mod tests {
     use super::*;
     use crate::layers_drag_tests::Ui;
-    use figcraft_engine::Session;
+    use endrika_engine::Session;
 
     #[test]
     fn dragging_records_only_the_final_colour_in_recent_colors() {

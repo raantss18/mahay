@@ -9,15 +9,15 @@
 //! `__gaps` (the gaps the last preview found, as `livePaint.gapOptions` returns them).
 
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_doc::{GapSize, LAYER_COLORS};
-use vectorcraft_geom::{BezPath, Point};
-use vectorcraft_tools::Overlay;
+use tsipika_color::Color;
+use tsipika_doc::{GapSize, LAYER_COLORS};
+use tsipika_geom::{BezPath, Point};
+use tsipika_tools::Overlay;
 
 use super::tile_edge_color::resolve;
 use super::{DialogSpec, form};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Gap Options.
 pub const KIND: &str = "livePaintGapOptions";
@@ -37,13 +37,13 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Gap Options").into(), body, confirm, preview: true, min_width: 340.0, ..DialogSpec::FORM };
 
 /// Open Gap Options on the selected Live Paint groups, filled in from the first one's options.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let groups: Vec<u64> = app
         .session
         .doc()
         .map(|d| {
             let doc = &d.doc;
-            d.selection.objects.iter().filter(|id| doc.node(**id).is_some_and(vectorcraft_tools::builder::is_live_paint)).map(|id| id.0).collect()
+            d.selection.objects.iter().filter(|id| doc.node(**id).is_some_and(tsipika_tools::builder::is_live_paint)).map(|id| id.0).collect()
         })
         .unwrap_or_default();
     let Some(&first) = groups.first() else { return Err("select a Live Paint group".into()) };
@@ -83,7 +83,7 @@ fn params(d: &Dialog) -> Value {
     })
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     form::check(ui, d, "detect", tl!("Gap Detection"));
     ui.add_space(6.0);
     let size = d.str("size");
@@ -125,13 +125,13 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     form::commit_preview(app, CMD, params(d))
 }
 
 /// The gaps the open Gap Options previews, as lines in its preview color (none while Preview is
 /// off or another dialog is open).
-pub(crate) fn overlays(app: &VectorcraftApp) -> Vec<Overlay> {
+pub(crate) fn overlays(app: &TsipikaApp) -> Vec<Overlay> {
     let Some(d) = app.ui.dialog.as_ref().filter(|d| d.kind == KIND && d.bool("preview")) else { return vec![] };
     let [r, g, b, _] = resolve(&d.str("color")).unwrap_or(Color::BLACK).to_rgba8(1.0);
     let gaps = d.fields.get(GAPS).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
@@ -150,27 +150,27 @@ pub(crate) fn overlays(app: &VectorcraftApp) -> Vec<Overlay> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::{GapOptions, NodeId};
-    use vectorcraft_engine::Session;
+    use tsipika_doc::{GapOptions, NodeId};
+    use tsipika_engine::Session;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
     }
 
-    fn options(app: &VectorcraftApp, g: u64) -> GapOptions {
+    fn options(app: &TsipikaApp, g: u64) -> GapOptions {
         app.session.doc().unwrap().doc.node(NodeId(g)).unwrap().gap_options()
     }
 
-    fn faces(app: &VectorcraftApp, g: u64) -> usize {
-        vectorcraft_tools::builder::faces(app.session.doc().unwrap().doc.node(NodeId(g)).unwrap()).len()
+    fn faces(app: &TsipikaApp, g: u64) -> usize {
+        tsipika_tools::builder::faces(app.session.doc().unwrap().doc.node(NodeId(g)).unwrap()).len()
     }
 
     #[test]
     fn the_menu_item_opens_gap_options_which_preview_the_gaps_and_ok_keeps_them() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         // An open path round a square, its end 2 pt short of its start.
         let anchors = [(0, 0), (100, 0), (100, 100), (0, 100), (0, 2)].map(|(x, y)| json!({"x": x, "y": y}));

@@ -2,10 +2,10 @@
 //!
 //! The frame is stored as the DXF Reference's "visual representation string" (TOLERANCE group 1):
 //! frame lines separated by `^J`, compartments separated by `%%v`, and the geometric symbols as
-//! characters of the `gdt` font inside `{\Fgdt;…}` runs. CADCraft never uses that font: every
+//! characters of the `gdt` font inside `{\Fgdt;…}` runs. Drafitra never uses that font: every
 //! symbol is drawn by [`symbol_prims`] from our own geometry (standard ISO/ASME symbol shapes).
 
-use cadcraft_geom::{Bounds2, Vec2, Vec3};
+use drafitra_geom::{Bounds2, Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
 /// Caps for hostile frame strings (files, command parameters).

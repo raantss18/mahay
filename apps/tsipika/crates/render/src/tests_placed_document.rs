@@ -1,9 +1,9 @@
 //! Placed documents on screen: drawn from bitmaps made in the background (a placeholder until
 //! then), the same as drawn exactly; exports draw them exactly at once.
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, ImageBlob, LinkInfo, Node, NodeId, NodeKind, PlacedDocument};
-use vectorcraft_geom::shapes;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, ImageBlob, LinkInfo, Node, NodeId, NodeKind, PlacedDocument};
+use tsipika_geom::shapes;
 
 use super::*;
 
@@ -24,11 +24,11 @@ fn blue_page(p: &PlacedDocument, bytes: &[u8]) -> Option<(Document, Node, Rect)>
 
 /// A 100×100 document showing one placed file (`bytes` under `key`) in the box (10, 10)–(90, 50).
 fn doc_with(key: &str, bytes: &[u8]) -> Document {
-    vectorcraft_doc::placed_document::set_loader(blue_page);
+    tsipika_doc::placed_document::set_loader(blue_page);
     let mut d = Document::new(100.0, 100.0);
     d.images.insert(key.into(), ImageBlob::new("application/json", bytes.to_vec()));
     let p = PlacedDocument {
-        link: LinkInfo::new("/art/card.vectorcraft"),
+        link: LinkInfo::new("/art/card.tsipika"),
         key: key.into(),
         bounding: false,
         width: 40.0,
@@ -73,7 +73,7 @@ fn an_enveloped_placed_document_shows_its_file_once_read() {
     let placed = d.remove(NodeId(50)).unwrap();
     let NodeKind::PlacedDocument(p) = &placed.kind else { panic!("a placed document") };
     let p = (**p).clone();
-    let kind = vectorcraft_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 30.0, h: 0.0, v: 0.0, horizontal: true };
+    let kind = tsipika_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 30.0, h: 0.0, v: 0.0, horizontal: true };
     let envelope = NodeKind::Envelope {
         content: vec![placed],
         kind: Box::new(kind),
@@ -89,7 +89,7 @@ fn an_enveloped_placed_document_shows_its_file_once_read() {
     let before = r.render(&d, 100, 100, Affine::IDENTITY, &opts).pixels;
     // Exporting the document as PDF, SVG or EPS reads the file.
     d.with_placed_art();
-    assert!(vectorcraft_doc::placed_document::read_cached(&p).is_some(), "the file is read");
+    assert!(tsipika_doc::placed_document::read_cached(&p).is_some(), "the file is read");
     let after = r.render(&d, 100, 100, Affine::IDENTITY, &opts).pixels;
     assert!(after != before, "the file's art shows");
     assert!(after == Renderer::new().render(&d, 100, 100, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");
@@ -100,7 +100,7 @@ fn a_placed_document_with_a_drop_shadow_shows_its_file_once_read() {
     let mut d = doc("shadowed-1");
     let n = d.node_mut(NodeId(50)).unwrap();
     let params = serde_json::json!({"x": 4, "y": 4, "blur": 1, "opacity": 100});
-    n.appearance.effects.push(vectorcraft_doc::Effect { id: "stylize.dropShadow".into(), params, visible: true });
+    n.appearance.effects.push(tsipika_doc::Effect { id: "stylize.dropShadow".into(), params, visible: true });
     let NodeKind::PlacedDocument(p) = &n.kind else { panic!("a placed document") };
     let p = (**p).clone();
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
@@ -108,7 +108,7 @@ fn a_placed_document_with_a_drop_shadow_shows_its_file_once_read() {
     let before = r.render(&d, 100, 100, Affine::IDENTITY, &opts).pixels;
     // Exporting the document as PDF, SVG or EPS reads the file.
     d.with_placed_art();
-    assert!(vectorcraft_doc::placed_document::read_cached(&p).is_some(), "the file is read");
+    assert!(tsipika_doc::placed_document::read_cached(&p).is_some(), "the file is read");
     let after = r.render(&d, 100, 100, Affine::IDENTITY, &opts).pixels;
     assert!(after != before, "the file's art shows");
     assert!(after == Renderer::new().render(&d, 100, 100, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");

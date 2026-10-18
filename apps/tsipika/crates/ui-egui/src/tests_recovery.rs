@@ -4,25 +4,25 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::recovery::{MemoryStore, RecoveryStore};
+use tsipika_engine::Session;
+use tsipika_engine::cmd::recovery::{MemoryStore, RecoveryStore};
 
-use crate::{Services, VectorcraftApp, background, dialogs, recovery, theme};
+use crate::{Services, TsipikaApp, background, dialogs, recovery, theme};
 
 /// An app keeping its copies in `store`, with a modified document.
-fn app_with(store: &Arc<MemoryStore>, services: Services) -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..services });
+fn app_with(store: &Arc<MemoryStore>, services: Services) -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..services });
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 20})).unwrap();
     app
 }
 
 fn copies(store: &MemoryStore) -> usize {
-    store.list().unwrap().iter().filter(|n| n.ends_with(".vectorcraft")).count()
+    store.list().unwrap().iter().filter(|n| n.ends_with(".tsipika")).count()
 }
 
 /// One headless frame of the dialog layer.
-fn frame(app: &mut VectorcraftApp) {
+fn frame(app: &mut TsipikaApp) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     let mut out = ctx.run_ui(egui::RawInput::default(), |ui| dialogs::show(app, ui.ctx()));
@@ -77,7 +77,7 @@ fn copies_are_written_in_the_background_and_go_on_save() {
     assert_eq!(copies(&store), 1);
     assert!(app.session.doc().unwrap().recovery.is_some());
     // Saving (in the background too) removes it.
-    app.run("file.save", json!({"path": "/docs/a.vectorcraft"})).unwrap();
+    app.run("file.save", json!({"path": "/docs/a.tsipika"})).unwrap();
     background::wait_all(&mut app);
     assert_eq!(copies(&store), 0);
 }
@@ -90,7 +90,7 @@ fn launching_after_a_crash_offers_the_copies() {
     drop(crashed);
 
     // Restore.
-    let mut app = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut app = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     recovery::frame(&mut app, 0.0);
     let d = app.ui.dialog.clone().expect("the Recover Documents dialog");
     assert_eq!((d.kind.as_str(), d.fields["copies"][0]["title"].as_str()), (recovery::KIND, Some("Untitled-1")));
@@ -110,7 +110,7 @@ fn launching_after_a_crash_offers_the_copies() {
     app.ui.dialog.as_mut().unwrap().fields.insert("discard".into(), json!(true));
     dialogs::confirm(&mut app).unwrap();
     assert_eq!(copies(&store), 0);
-    let mut next = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut next = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     recovery::frame(&mut next, 0.0);
     assert!(next.ui.dialog.is_none());
 }
@@ -122,12 +122,12 @@ fn discard_at_launch_deletes_the_copies_and_cancel_keeps_them() {
     crashed.run("file.recovery.save", json!({})).unwrap();
     drop(crashed);
     // Cancel: asked again next launch.
-    let mut app = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut app = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     assert!(recovery::offer(&mut app));
     dialogs::cancel(&mut app);
     assert_eq!(copies(&store), 1);
     // Discard (as agents do: set discard, confirm).
-    let mut app = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut app = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     assert!(recovery::offer(&mut app));
     app.ui.dialog.as_mut().unwrap().fields.insert("discard".into(), json!(true));
     dialogs::confirm(&mut app).unwrap();
@@ -154,13 +154,13 @@ fn a_second_app_never_asks_about_a_running_apps_copies() {
     let mut a = app_with(&store, Services::default());
     a.run("file.recovery.save", json!({})).unwrap();
     // B launches while A runs: no Recover Documents dialog, A's copy untouched.
-    let mut b = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut b = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     recovery::frame(&mut b, 0.0);
     assert!(b.ui.dialog.is_none());
     assert_eq!(copies(&store), 1);
     // A crashes: the next launch asks.
     drop(a);
-    let mut c = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut c = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     recovery::frame(&mut c, 0.0);
     assert_eq!(c.ui.dialog.as_ref().map(|d| d.kind.as_str()), Some(recovery::KIND));
 }
@@ -188,7 +188,7 @@ fn a_resumed_tab_writes_again_the_copies_another_tab_discarded() {
     a.run("file.recovery.save", json!({})).unwrap();
     recovery::frame(&mut a, 0.0);
     store.set_now(1_000_000 + 400);
-    let mut b = VectorcraftApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
+    let mut b = TsipikaApp::new(Session::new(), Services { recovery_store: Some(store.clone()), ..Default::default() });
     b.run("file.recovery.discard", json!({})).unwrap();
     assert_eq!(copies(&store), 0);
     store.set_now(1_000_000 + 410);

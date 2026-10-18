@@ -1,16 +1,16 @@
-//! Lottie document → EffectCraft compositions (the inverse of [`crate::export`]).
+//! Lottie document → Tselatra compositions (the inverse of [`crate::export`]).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{ShapePath, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{
+use tselatra_color::Label;
+use tselatra_keyframe::{ShapePath, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{
     AlphaMode, AutoOrient, Comp, Footage, FootageKind, GroupKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Marker, MatteKind, Node, ParamUi, Project,
     PropGroup, Property, Solid, TrackMatte,
 };
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::Value as Json;
 
 use crate::anim::{self, Im, import_prop};
@@ -90,13 +90,13 @@ impl Ctx<'_> {
 
 /// The file an external image asset (`u` + `p`) names, taken from `base_dir`, the folder of the
 /// Lottie file. Only local files, or files on the network share the Lottie file is on, are
-/// imported (see `craft_docpath`).
+/// imported (see `mahay_docpath`).
 fn external_image(stored: &str, base_dir: &str) -> Result<String, String> {
     let doc = (!base_dir.is_empty()).then(|| {
         let doc = std::path::Path::new(base_dir).join("lottie.json");
         std::path::absolute(&doc).unwrap_or(doc)
     });
-    match craft_docpath::resolve(stored, doc.as_deref()) {
+    match mahay_docpath::resolve(stored, doc.as_deref()) {
         Ok(path) if path.is_absolute() => Ok(path.to_string_lossy().into_owned()),
         Ok(_) => Err(format!("{stored} is relative and the Lottie file's folder is not known")),
         Err(why) => Err(format!("{stored}: {why}")),
@@ -305,8 +305,8 @@ fn effects(im: &mut Im, ids: &mut Ids, list: &[Json], g: &mut PropGroup, size: [
             im.warn(format!("effect `{nm}` (type {ty}) is not supported (skipped)"));
             continue;
         };
-        let Some(spec) = effectcraft_effects::find(map.id) else { continue };
-        let mut fg = effectcraft_effects::instantiate(spec, ids, nm, size);
+        let Some(spec) = tselatra_effects::find(map.id) else { continue };
+        let mut fg = tselatra_effects::instantiate(spec, ids, nm, size);
         if e.get("en").and_then(Json::as_u64) == Some(0) {
             fg.enabled = false;
         }

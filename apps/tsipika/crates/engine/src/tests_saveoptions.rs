@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms;
+use tsipika_color::cms;
 
 use super::*;
 use crate::tests_links::{Folder, png};
@@ -24,27 +24,27 @@ fn three_boards() -> Session {
     s
 }
 
-fn objects(d: &vectorcraft_doc::Document) -> usize {
+fn objects(d: &tsipika_doc::Document) -> usize {
     d.layers.iter().map(|l| l.count() - 1).sum()
 }
 
 fn bytes_of(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v.as_str().expect("base64")).unwrap()
+    tsipika_format::base64_decode(v.as_str().expect("base64")).unwrap()
 }
 
 #[test]
 fn three_artboards_give_four_files() {
     let dir = Folder::new("separate");
     let mut s = three_boards();
-    let path = dir.file("Poster.vectorcraft");
+    let path = dir.file("Poster.tsipika");
     let r = s.execute("document.save", &json!({"path": path, "separateArtboards": true})).unwrap();
     let files: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f.as_str().unwrap()).collect();
-    assert_eq!(files, [path.clone(), dir.file("Poster-A.vectorcraft"), dir.file("Poster-B.vectorcraft"), dir.file("Poster-C.vectorcraft")]);
+    assert_eq!(files, [path.clone(), dir.file("Poster-A.tsipika"), dir.file("Poster-B.tsipika"), dir.file("Poster-C.tsipika")]);
     // The master file has everything; each artboard's file that artboard and its art.
-    let master = vectorcraft_format::load(&std::fs::read(&path).unwrap()).unwrap();
+    let master = tsipika_format::load(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!((master.artboards.len(), objects(&master)), (3, 3));
     for (f, name, x) in [(files[1], "A", 0.0), (files[2], "B", 200.0), (files[3], "C", 400.0)] {
-        let d = vectorcraft_format::load(&std::fs::read(f).unwrap()).unwrap();
+        let d = tsipika_format::load(&std::fs::read(f).unwrap()).unwrap();
         assert_eq!((d.artboards.len(), d.artboards[0].name.as_str(), d.artboards[0].rect.x0), (1, name, x));
         assert_eq!(objects(&d), 1, "{name}");
     }
@@ -58,8 +58,8 @@ fn three_artboards_give_four_files() {
     // No path: the bytes of every file.
     let r = s.execute("file.saveCopy", &json!({"separateArtboards": true})).unwrap();
     let names: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f["name"].as_str().unwrap()).collect();
-    assert_eq!(names, ["Poster copy.vectorcraft", "Poster copy-A.vectorcraft", "Poster copy-B.vectorcraft", "Poster copy-C.vectorcraft"]);
-    assert!(vectorcraft_format::sniff(&bytes_of(&r["files"][3]["dataBase64"])));
+    assert_eq!(names, ["Poster copy.tsipika", "Poster copy-A.tsipika", "Poster copy-B.tsipika", "Poster copy-C.tsipika"]);
+    assert!(tsipika_format::sniff(&bytes_of(&r["files"][3]["dataBase64"])));
 }
 
 #[test]
@@ -97,10 +97,10 @@ fn a_linked_pngs_bytes_are_embedded() {
     let full = images(&r);
     let (_, image) = full.as_object().unwrap().iter().next().unwrap();
     assert!(image.get("proxy").is_none());
-    assert_eq!(vectorcraft_format::base64_decode(image["data"].as_str().unwrap()).unwrap(), bytes);
+    assert_eq!(tsipika_format::base64_decode(image["data"].as_str().unwrap()).unwrap(), bytes);
     // With the file gone the document still shows the full pixels.
     std::fs::remove_file(&pic).unwrap();
-    let r = s.execute("document.open", &json!({"name": "copy.vectorcraft", "dataBase64": r["dataBase64"]})).unwrap();
+    let r = s.execute("document.open", &json!({"name": "copy.tsipika", "dataBase64": r["dataBase64"]})).unwrap();
     assert_eq!(r["missingLinks"].as_array().unwrap().len(), 1);
     let d = &s.doc().unwrap().doc;
     let blob = d.images.values().next().unwrap();
@@ -121,7 +121,7 @@ fn an_embedded_profile_is_restored() {
     Arc::make_mut(&mut s.doc_mut().unwrap().doc).color_profiles.rgb = Some(name.clone());
     let file = bytes_of(&s.execute("file.saveCopy", &json!({"compress": false})).unwrap()["dataBase64"]);
     let v: Value = serde_json::from_slice(&file).unwrap();
-    assert_eq!(vectorcraft_format::base64_decode(v["profiles"][&name]["data"].as_str().unwrap()).unwrap(), icc.to_vec());
+    assert_eq!(tsipika_format::base64_decode(v["profiles"][&name]["data"].as_str().unwrap()).unwrap(), icc.to_vec());
     // Not embedded when asked not to; built-in profiles never are (they are everywhere).
     let none: Value =
         serde_json::from_slice(&bytes_of(&s.execute("file.saveCopy", &json!({"compress": false, "embedProfiles": false})).unwrap()["dataBase64"]))
@@ -132,7 +132,7 @@ fn an_embedded_profile_is_restored() {
     let moved = String::from_utf8(file).unwrap().replace(&name, &elsewhere);
     assert!(cms::profile(&elsewhere).is_none());
     let r =
-        s.execute("document.open", &json!({"name": "moved.vectorcraft", "dataBase64": vectorcraft_format::base64_encode(moved.as_bytes())})).unwrap();
+        s.execute("document.open", &json!({"name": "moved.tsipika", "dataBase64": tsipika_format::base64_encode(moved.as_bytes())})).unwrap();
     assert!(r["warnings"].as_array().unwrap().is_empty(), "{r}");
     assert_eq!(cms::profile(&elsewhere).map(|p| p.kind), Some(cms::ProfileKind::Rgb));
     assert_eq!(s.doc().unwrap().doc.color_profiles.rgb.as_deref(), Some(elsewhere.as_str()));
@@ -143,7 +143,7 @@ fn an_embedded_profile_is_restored() {
     let r = s
         .execute(
             "document.open",
-            &json!({"name": "b.vectorcraft", "dataBase64": vectorcraft_format::base64_encode(&serde_json::to_vec(&v).unwrap())}),
+            &json!({"name": "b.tsipika", "dataBase64": tsipika_format::base64_encode(&serde_json::to_vec(&v).unwrap())}),
         )
         .unwrap();
     assert!(r["warnings"][0].as_str().unwrap().contains(&broken), "{r}");
@@ -153,11 +153,11 @@ fn an_embedded_profile_is_restored() {
 fn pdf_compatible_files_carry_a_pdf() {
     let mut s = three_boards();
     let file = bytes_of(&s.execute("file.saveCopy", &json!({"pdfCompatible": true})).unwrap()["dataBase64"]);
-    let pdf = vectorcraft_format::pdf_content(&file).unwrap();
+    let pdf = tsipika_format::pdf_content(&file).unwrap();
     assert!(pdf.starts_with(b"%PDF"));
-    let info = s.execute("document.pdfInfo", &json!({"dataBase64": vectorcraft_format::base64_encode(&pdf)})).unwrap();
+    let info = s.execute("document.pdfInfo", &json!({"dataBase64": tsipika_format::base64_encode(&pdf)})).unwrap();
     assert_eq!(info["pages"], 3);
-    assert!(vectorcraft_format::pdf_content(&bytes_of(&s.execute("file.saveCopy", &json!({})).unwrap()["dataBase64"])).is_none());
+    assert!(tsipika_format::pdf_content(&bytes_of(&s.execute("file.saveCopy", &json!({})).unwrap()["dataBase64"])).is_none());
 }
 
 #[test]
@@ -174,12 +174,12 @@ fn ai_without_pdf_content_and_compression() {
     assert!(warnings.as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("without PDF content")), "{warnings}");
     // The pages are empty (an import of a page finds no art), the document comes back whole.
     let page = |s: &mut Session, b: &[u8]| {
-        s.execute("document.open", &json!({"name": "x.ai", "dataBase64": vectorcraft_format::base64_encode(b), "pages": "1"})).unwrap();
+        s.execute("document.open", &json!({"name": "x.ai", "dataBase64": tsipika_format::base64_encode(b), "pages": "1"})).unwrap();
         objects(&s.doc().unwrap().doc)
     };
     assert!(page(&mut s, &full) > 0);
     assert_eq!(page(&mut s, &blank), 0);
-    s.execute("document.open", &json!({"name": "x.ai", "dataBase64": vectorcraft_format::base64_encode(&blank)})).unwrap();
+    s.execute("document.open", &json!({"name": "x.ai", "dataBase64": tsipika_format::base64_encode(&blank)})).unwrap();
     assert_eq!(objects(&s.doc().unwrap().doc), 3);
     // Use Compression off writes the content uncompressed: a larger file.
     let mut s = three_boards();
@@ -195,11 +195,11 @@ fn format_options_list_the_save_options() {
     for (k, value) in [("separateArtboards", false), ("includeLinked", false), ("embedProfiles", true), ("pdfCompatible", true), ("compress", true)] {
         assert_eq!(v["options"][k]["value"], value, "{k}");
     }
-    let v = s.execute("file.formatOptions", &json!({"format": "vectorcraft"})).unwrap();
+    let v = s.execute("file.formatOptions", &json!({"format": "tsipika"})).unwrap();
     assert_eq!((v["options"]["pdfCompatible"]["value"].as_bool(), v["options"]["range"]["value"].is_null()), (Some(false), true));
     // Saved with them, a document remembers them for Save.
     let dir = Folder::new("remember");
-    let path = dir.file("r.vectorcraft");
+    let path = dir.file("r.tsipika");
     s.execute("document.save", &json!({"path": path, "includeLinked": true})).unwrap();
     let v = s.execute("file.formatOptions", &json!({})).unwrap();
     assert_eq!(v["options"]["includeLinked"]["value"], true);

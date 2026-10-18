@@ -2,9 +2,9 @@
 //! (scale / move selected keys in time and value; Alt-drag of a key group in the timeline) and
 //! spatial Bezier tangents dragged on a motion path.
 
-use effectcraft_keyframe::Keyframe;
-use effectcraft_project::{LayerId, Uid};
-use effectcraft_time::Tick;
+use tselatra_keyframe::Keyframe;
+use tselatra_project::{LayerId, Uid};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::prop::prop_ref;
@@ -102,7 +102,7 @@ fn transform(s: &mut Session, p: &Value) -> Result<Value> {
             kept.extend(moved);
             kept.sort_by_key(|k| k.time);
             pr.keys = kept;
-            effectcraft_keyframe::retime_roving(&mut pr.keys, pr.spatial);
+            tselatra_keyframe::retime_roving(&mut pr.keys, pr.spatial);
         }
         st.selected_keys = new_sel;
         Ok(json!({"keys": st.selected_keys.len()}))
@@ -128,7 +128,7 @@ fn spatial_tangents(s: &mut Session, p: &Value) -> Result<Value> {
         }
         let i = pr.keys.iter().position(|k| k.time == t).or_else(|| pr.keys.iter().enumerate().min_by_key(|(_, k)| (k.time.0 - t.0).abs()).map(|(i, _)| i));
         let i = i.ok_or_else(|| bad("keys.setSpatialTangents", "the property has no keyframes"))?;
-        let (cur_in, cur_out) = effectcraft_keyframe::spatial_tangents(&pr.keys, i);
+        let (cur_in, cur_out) = tselatra_keyframe::spatial_tangents(&pr.keys, i);
         let k = &mut pr.keys[i];
         let neg = |v: [f64; 3]| [-v[0], -v[1], -v[2]];
         let (ni, no) = match (tin, tout) {
@@ -141,7 +141,7 @@ fn spatial_tangents(s: &mut Session, p: &Value) -> Result<Value> {
         k.spatial_continuous = !brk && tin.is_some() != tout.is_some();
         k.spatial_in = ni;
         k.spatial_out = no;
-        effectcraft_keyframe::retime_roving(&mut pr.keys, true);
+        tselatra_keyframe::retime_roving(&mut pr.keys, true);
         Ok(json!({"in": ni, "out": no}))
     })
 }

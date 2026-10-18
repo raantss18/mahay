@@ -2,10 +2,10 @@
 //! Fixtures are synthetic, written by hand from the published schema.
 
 use super::*;
-use figcraft_doc::{BlurType, EffectKind};
+use endrika_doc::{BlurType, EffectKind};
 use serde_json::json;
 
-fn imported(effects: Value) -> Vec<figcraft_doc::Effect> {
+fn imported(effects: Value) -> Vec<endrika_doc::Effect> {
     let file = json!({"name": "Fixture", "schemaVersion": 0, "document": {"id": "0:0", "name": "Document", "type": "DOCUMENT", "children": [
         {"id": "0:1", "name": "Page", "type": "CANVAS", "children": [
             {"id": "1", "name": "S", "type": "RECTANGLE", "relativeTransform": [[1, 0, 0], [0, 1, 0]], "size": {"x": 10, "y": 10}, "effects": effects}
@@ -40,7 +40,7 @@ fn hostile_progressive_fields_are_clamped() {
         {"type": "BACKGROUND_BLUR", "radius": 5, "blurType": 7, "startOffset": [1, 2]}
     ]));
     let a = fx[0].blur().unwrap();
-    assert_eq!((a.radius, a.start_radius, a.start, a.end), (figcraft_doc::MAX_BLUR_RADIUS, 0.0, (0.5, 0.0), (1000.0, -1000.0)));
+    assert_eq!((a.radius, a.start_radius, a.start, a.end), (endrika_doc::MAX_BLUR_RADIUS, 0.0, (0.5, 0.0), (1000.0, -1000.0)));
     let b = fx[1].blur().unwrap();
     assert!(!b.is_progressive());
 }

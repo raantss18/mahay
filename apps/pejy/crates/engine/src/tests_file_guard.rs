@@ -4,8 +4,8 @@
 //!
 //! In the engine that reader is the [`crate::io`] module. The lower crates cannot depend on the
 //! engine (`cargo xtask layers`), so they either have no file access at all or take a reader or
-//! an access check from the caller (`designcraft_idml::import_idml_with`,
-//! `designcraft_fonts::FontDb::load_document_fonts`).
+//! an access check from the caller (`pejy_idml::import_idml_with`,
+//! `pejy_fonts::FontDb::load_document_fonts`).
 //!
 //! The scan reads the source of every crate under `crates/` and flags what touches the file
 //! system, however it is imported or spelled: `std::fs`, a bare `fs::` after `use std::fs` or

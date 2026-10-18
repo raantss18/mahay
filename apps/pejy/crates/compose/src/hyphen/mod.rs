@@ -76,14 +76,14 @@ pub enum Lang {
 }
 
 impl Lang {
-    /// The hyphenator for a language name or locale code (see [`designcraft_doc::language_tag`]).
+    /// The hyphenator for a language name or locale code (see [`pejy_doc::language_tag`]).
     /// None when the language has no bundled hyphenation.
     pub fn for_language(language: &str) -> Option<Lang> {
         if language.starts_with("English") {
             return Some(Lang::English);
         }
-        let tag = designcraft_doc::language_tag(language)?;
-        let sub = designcraft_doc::language_subtag(tag);
+        let tag = pejy_doc::language_tag(language)?;
+        let sub = pejy_doc::language_subtag(tag);
         if sub == "en" {
             return Some(Lang::English);
         }

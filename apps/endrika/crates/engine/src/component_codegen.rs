@@ -6,7 +6,7 @@
 //! rules on `data-*` attributes. Returned by `inspect.componentCode` and used by `inspect.code`. A component
 //! connected to code (see [`crate::code_connect`]) shows its real snippet instead.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::cmd::CommandSpec;

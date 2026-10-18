@@ -1,6 +1,6 @@
 //! Project panel item edits: move into folders, rename, label, comment, with undo.
 
-use effectcraft_project::{ItemId, LayerId};
+use tselatra_project::{ItemId, LayerId};
 use serde_json::json;
 
 use crate::Session;
@@ -77,7 +77,7 @@ fn delete_and_duplicate_items() {
 #[test]
 fn new_layers_take_their_items_label() {
     use crate::color::Label;
-    use effectcraft_project::{Footage, FootageKind, ItemKind};
+    use tselatra_project::{Footage, FootageKind, ItemKind};
     let mut s = Session::default();
     let inner = s.execute("comp.new", json!({"name": "Inner", "width": 64, "height": 64, "duration": 1})).unwrap()["comp"].as_u64().unwrap();
     s.execute("comp.new", json!({"name": "Main", "width": 64, "height": 64, "duration": 1})).unwrap();

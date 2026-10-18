@@ -1,4 +1,4 @@
-# effectcraft-psd
+# tselatra-psd
 
 Reads Photoshop documents (`.psd`, and `.psb` large documents) for File ▸ Import (as footage, as a
 composition, or as a composition with layer sizes retained), and writes a minimal subset (used to

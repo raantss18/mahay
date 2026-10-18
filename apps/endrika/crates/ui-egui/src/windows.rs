@@ -11,7 +11,7 @@
 use std::cell::RefCell;
 
 use egui::{Context, Pos2, Vec2, ViewportBuilder, ViewportCommand, ViewportId};
-use figcraft_engine::DocState;
+use endrika_engine::DocState;
 use serde_json::{Value, json};
 
 use crate::canvas::CanvasState;
@@ -70,7 +70,7 @@ impl Windows {
 
 /// Window `id`'s egui viewport.
 pub fn viewport(id: u64) -> ViewportId {
-    if id == 0 { ViewportId::ROOT } else { ViewportId::from_hash_of(("figcraft_window", id)) }
+    if id == 0 { ViewportId::ROOT } else { ViewportId::from_hash_of(("endrika_window", id)) }
 }
 
 thread_local! {
@@ -93,7 +93,7 @@ pub fn with_app<R>(f: impl FnOnce(&mut FigApp) -> R) -> Option<R> {
 pub fn guard(app: &mut FigApp, ctx: &Context, f: impl FnOnce(&mut FigApp)) {
     // Started with automation roots, everything the window and the control channel do is confined.
     let roots = app.automation_roots.clone();
-    let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| figcraft_engine::file_access::confined(roots.as_ref(), || f(&mut *app))));
+    let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| endrika_engine::file_access::confined(roots.as_ref(), || f(&mut *app))));
     if let Err(e) = res {
         let msg = e.downcast_ref::<&str>().map(|s| s.to_string()).or_else(|| e.downcast_ref::<String>().cloned()).unwrap_or_else(|| "panic".into());
         log::error!("UI panic: {msg}");
@@ -114,8 +114,8 @@ pub fn take_input(app: &mut FigApp, viewport_id: ViewportId) -> Vec<egui::Event>
 
 fn title_of(ds: Option<&DocState>) -> String {
     match ds {
-        Some(ds) => format!("{}{} – FigCraft", ds.doc.name, if ds.is_dirty() { " •" } else { "" }),
-        None => "FigCraft".into(),
+        Some(ds) => format!("{}{} – Endrika", ds.doc.name, if ds.is_dirty() { " •" } else { "" }),
+        None => "Endrika".into(),
     }
 }
 

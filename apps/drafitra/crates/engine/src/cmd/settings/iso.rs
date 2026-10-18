@@ -1,7 +1,7 @@
 //! Isometric drafting commands: ISODRAFT (isometric snap style on with a plane, or back to
 //! orthographic), ISOPLANE (the current plane; F5 cycles it) and ELLIPSE's Isocircle option.
 
-use cadcraft_geom::{Ellipse, Vec2};
+use drafitra_geom::{Ellipse, Vec2};
 use serde_json::{Value, json};
 
 use super::super::{bad, f64_req, point_req, str_param};
@@ -134,13 +134,13 @@ pub(crate) fn run_isocircle(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({ "handle": h.hex(), "plane": plane.name() }))
 }
 
-pub(crate) fn ellipse_entity(e: &Ellipse) -> cadcraft_doc::EntityKind {
-    cadcraft_doc::EntityKind::Ellipse(cadcraft_doc::Ellipse {
+pub(crate) fn ellipse_entity(e: &Ellipse) -> drafitra_doc::EntityKind {
+    drafitra_doc::EntityKind::Ellipse(drafitra_doc::Ellipse {
         center: e.center.to3(0.0),
         major: e.major.to3(0.0),
         ratio: e.ratio,
         start: 0.0,
-        end: cadcraft_geom::TAU,
+        end: drafitra_geom::TAU,
     })
 }
 

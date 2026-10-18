@@ -1,6 +1,6 @@
 //! The public effects catalogue (`docs/effects.md`), generated from the registry.
 //!
-//! Regenerate with `UPDATE_DOCS=1 cargo test -p effectcraft-effects --lib effects_doc_is_current`.
+//! Regenerate with `UPDATE_DOCS=1 cargo test -p tselatra-effects --lib effects_doc_is_current`.
 
 use crate::{CATEGORIES, registry};
 
@@ -14,7 +14,7 @@ pub const PARTIAL: &[(&str, &str)] = &[];
 /// (`value(spec id)`). After Effects shows only the controls a popup selects: Levels' channel,
 /// Hue/Saturation's Channel Control, the camera system of the card effects, and so on. Every
 /// parameter stays animatable and addressable; this is presentation only.
-pub fn param_shown(effect: &str, param: &str, value: &dyn Fn(&str) -> Option<effectcraft_keyframe::Value>) -> bool {
+pub fn param_shown(effect: &str, param: &str, value: &dyn Fn(&str) -> Option<tselatra_keyframe::Value>) -> bool {
     let e = |id: &str| value(id).map(|v| v.as_enum()).unwrap_or(0);
     let b = |id: &str| value(id).is_some_and(|v| v.as_bool());
     match effect {
@@ -125,13 +125,13 @@ pub fn effects_markdown() -> String {
     let mut s = String::new();
     s.push_str("# Effects\n\n");
     s.push_str("<!-- Generated from the effect registry (crates/effects/src/catalog.rs); do not edit by hand.\n");
-    s.push_str("     Regenerate: UPDATE_DOCS=1 cargo test -p effectcraft-effects --lib effects_doc_is_current -->\n\n");
+    s.push_str("     Regenerate: UPDATE_DOCS=1 cargo test -p tselatra-effects --lib effects_doc_is_current -->\n\n");
     let params: usize = r.iter().map(|e| e.params.len()).sum();
     let gpu = r.iter().filter(|e| e.gpu).count();
     let float = r.iter().filter(|e| e.float).count();
     let partial = r.iter().filter(|e| PARTIAL.iter().any(|(id, _)| *id == e.id)).count();
     s.push_str(&format!(
-        "EffectCraft ships {} effects with {} parameters in total, grouped into the same categories as the Effects & Presets \
+        "Tselatra ships {} effects with {} parameters in total, grouped into the same categories as the Effects & Presets \
          panel. Every effect is our own implementation, written from public behaviour descriptions and standard \
          image-processing literature. Parameter names, order, popup options, units, defaults and ranges follow the \
          reference application so that projects, expressions and muscle memory carry over.\n\n",
@@ -156,7 +156,7 @@ pub fn effects_markdown() -> String {
                 "| {} | `{}` | {} | {} | {} | {} |\n",
                 e.name.replace('|', "\\|"),
                 e.id,
-                e.params.iter().filter(|p| !matches!(p.ui, effectcraft_project::ParamUi::Hidden)).count(),
+                e.params.iter().filter(|p| !matches!(p.ui, tselatra_project::ParamUi::Hidden)).count(),
                 if e.gpu { "GPU" } else { "" },
                 if e.float { "32" } else { "" },
                 status(e.id).replace('|', "\\|"),
@@ -179,12 +179,12 @@ mod tests {
         }
         // A Windows checkout may use CRLF; catalog content must still match exactly.
         let have = std::fs::read_to_string(path).unwrap_or_default().replace("\r\n", "\n");
-        assert!(have == want, "docs/effects.md is stale: UPDATE_DOCS=1 cargo test -p effectcraft-effects --lib effects_doc_is_current");
+        assert!(have == want, "docs/effects.md is stale: UPDATE_DOCS=1 cargo test -p tselatra-effects --lib effects_doc_is_current");
     }
 
     #[test]
     fn cpu_only_controls_keep_effects_off_the_gpu() {
-        use effectcraft_keyframe::Value;
+        use tselatra_keyframe::Value;
         let ctx_with = |id: &str, set: &[(&str, Value)]| {
             let s = crate::find(id).unwrap();
             let mut values: std::collections::HashMap<String, Value> =
@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn popups_choose_the_shown_controls() {
-        use effectcraft_keyframe::Value;
+        use tselatra_keyframe::Value;
         let with = |pairs: &'static [(&'static str, u32)]| move |id: &str| pairs.iter().find(|(k, _)| *k == id).map(|(_, v)| Value::Enum(*v));
         let shown = |e: &str, p: &str, pairs: &'static [(&'static str, u32)]| super::param_shown(e, p, &with(pairs));
         // Levels: RGB shows the master controls only; Red shows the red ones.

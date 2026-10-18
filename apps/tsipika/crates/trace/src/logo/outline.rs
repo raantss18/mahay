@@ -5,7 +5,7 @@ use super::geom::{
     Cubic, all_within, arc_cubics, circle_fit, find_corners, finite, resample_closed, resample_open, sample_cubics, smooth_closed, smooth_open,
 };
 use super::restore::{RestoreParams, restore_corners};
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 /// How an outline is fitted. Lengths are in (working) pixels.
 #[derive(Clone, Copy, Debug)]

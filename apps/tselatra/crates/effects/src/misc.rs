@@ -1,9 +1,9 @@
 //! Blur & Sharpen, Stylize, Perspective, Channel, Noise and Transition effects.
 
-use effectcraft_color::luminance;
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, gaussian_blur, hash_noise};
+use tselatra_color::luminance;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, gaussian_blur, hash_noise};
 use rayon::prelude::*;
 
 use crate::{Buf, EffectCtx, EffectSpec, col, num, p, popup, slider};
@@ -50,7 +50,7 @@ fn box_blur(ctx: &EffectCtx, mut b: Buf) -> Buf {
     if !repeat && !ctx.adjustment {
         b.pad((r * it) as u32 + 1);
     }
-    b.img = effectcraft_raster::box_blur(&b.img, r * kx as usize, r * ky as usize, it, repeat || ctx.adjustment);
+    b.img = tselatra_raster::box_blur(&b.img, r * kx as usize, r * ky as usize, it, repeat || ctx.adjustment);
     b
 }
 
@@ -62,7 +62,7 @@ fn directional(ctx: &EffectCtx, mut b: Buf) -> Buf {
     if !ctx.adjustment {
         b.pad(len.ceil() as u32 + 1);
     }
-    b.img = effectcraft_raster::directional_blur(&b.img, ctx.params.f("direction"), len);
+    b.img = tselatra_raster::directional_blur(&b.img, ctx.params.f("direction"), len);
     b
 }
 
@@ -70,7 +70,7 @@ fn radial(ctx: &EffectCtx, mut b: Buf) -> Buf {
     let amt = ctx.params.f("amount");
     let zoom = ctx.params.e("type") == 1;
     let c = b.to_px(ctx.params.v2("center"));
-    b.img = effectcraft_raster::radial_blur(&b.img, c, if zoom { amt / 100.0 } else { amt }, zoom);
+    b.img = tselatra_raster::radial_blur(&b.img, c, if zoom { amt / 100.0 } else { amt }, zoom);
     b
 }
 
@@ -142,9 +142,9 @@ pub const GLOW_OPERATIONS: [&str; 17] = [
 ];
 
 /// Glow's Glow Operation as a blend mode (Add for projects saved before it existed).
-pub fn glow_operation(ctx: &EffectCtx) -> effectcraft_color::BlendMode {
+pub fn glow_operation(ctx: &EffectCtx) -> tselatra_color::BlendMode {
     let name = GLOW_OPERATIONS.get(ctx.params.get("glowOperation").map(|v| v.as_enum()).unwrap_or(1) as usize).copied().unwrap_or("Add");
-    effectcraft_color::BlendMode::ALL.iter().copied().find(|m| m.label() == name).unwrap_or(effectcraft_color::BlendMode::Add)
+    tselatra_color::BlendMode::ALL.iter().copied().find(|m| m.label() == name).unwrap_or(tselatra_color::BlendMode::Add)
 }
 
 /// Glow's Arbitrary Map: red, green and blue curves of the glow brightness, as Curves point
@@ -211,7 +211,7 @@ fn glow(ctx: &EffectCtx, mut b: Buf) -> Buf {
             // None: the glow alone.
             2 => *o = [g[0], g[1], g[2], g[3]],
             // On Top with another Glow Operation: that blend mode.
-            _ if glow_op != effectcraft_color::BlendMode::Add => *o = effectcraft_color::blend_pixel(glow_op, *o, g, 0.0),
+            _ if glow_op != tselatra_color::BlendMode::Add => *o = tselatra_color::blend_pixel(glow_op, *o, g, 0.0),
             // On Top: add (screen-like add on premultiplied colour; alpha grows by the glow's alpha).
             _ => {
                 for c in 0..3 {
@@ -283,7 +283,7 @@ fn invert_color(ch: u32, s: [f32; 3]) -> [f32; 3] {
         2 => [s[0], 1.0 - s[1], s[2]],
         3 => [s[0], s[1], 1.0 - s[2]],
         4..=7 => {
-            let (mut h, mut sat, mut l) = effectcraft_color::rgb_to_hsl(s[0], s[1], s[2]);
+            let (mut h, mut sat, mut l) = tselatra_color::rgb_to_hsl(s[0], s[1], s[2]);
             if matches!(ch, 4 | 5) {
                 h = 1.0 - h;
             }
@@ -293,7 +293,7 @@ fn invert_color(ch: u32, s: [f32; 3]) -> [f32; 3] {
             if matches!(ch, 4 | 7) {
                 sat = 1.0 - sat;
             }
-            let (r, g, b) = effectcraft_color::hsl_to_rgb(h, sat, l);
+            let (r, g, b) = tselatra_color::hsl_to_rgb(h, sat, l);
             [r, g, b]
         }
         8..=11 => {
@@ -739,8 +739,8 @@ mod tests {
     use crate::{EffectEnv, run_fx};
 
     /// A bright square on mid grey.
-    fn scene() -> effectcraft_raster::Image {
-        let mut img = effectcraft_raster::Image::filled(24, 24, [0.3, 0.3, 0.3, 1.0]);
+    fn scene() -> tselatra_raster::Image {
+        let mut img = tselatra_raster::Image::filled(24, 24, [0.3, 0.3, 0.3, 1.0]);
         for y in 8..16 {
             for x in 8..16 {
                 img.set(x, y, [1.0, 1.0, 1.0, 1.0]);
@@ -773,7 +773,7 @@ mod tests {
                 adjustment: false,
                 env: Default::default()
             }),
-            effectcraft_color::BlendMode::Add
+            tselatra_color::BlendMode::Add
         );
         // Arbitrary Map: the glow takes the mapped colour (here pure red for every brightness).
         let red = run(&[("colors", Value::Enum(2)), ("arbitraryMap", Value::Str("0,1 1,1|0,0 1,0|0,0 1,0".into())), ("operation", Value::Enum(2))]);

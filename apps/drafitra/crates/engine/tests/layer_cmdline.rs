@@ -1,7 +1,7 @@
 //! -LAYER: the command-line option loop runs the layer commands and ends on Enter.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Lineweight};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Lineweight};
 use serde_json::json;
 
 #[test]
@@ -11,7 +11,7 @@ fn make_and_color_then_the_next_command_runs() {
     assert!(s.running.is_none(), "{}", s.prompt_text());
     let d = s.doc().unwrap();
     let walls = d.layer("Walls").expect("Walls created");
-    assert_eq!(walls.color, cadcraft_color::Color::Index(1));
+    assert_eq!(walls.color, drafitra_color::Color::Index(1));
     assert_eq!(d.header.str("CLAYER", "0"), "Walls");
     let lines: Vec<_> = d.model.iter().filter(|e| matches!(e.kind, EntityKind::Line(_))).collect();
     assert_eq!(lines.len(), 1, "{:?}", s.log);
@@ -51,7 +51,7 @@ fn options_reach_every_layer_property() {
     assert_eq!(c.transparency, 50);
     assert_eq!(c.lineweight, Lineweight::Mm100(30));
     assert_eq!(c.linetype, "DASHED", "NOPE is refused and DASHED applied: {:?}", s.log);
-    assert_eq!(c.color, cadcraft_color::Color::True(cadcraft_color::Rgb(10, 20, 30)));
+    assert_eq!(c.color, drafitra_color::Color::True(drafitra_color::Rgb(10, 20, 30)));
     assert_eq!(c.description, "note here");
     assert!(s.log.iter().any(|l| l.contains("not available yet")));
     assert!(s.log.iter().any(|l| l.contains("NOPE")));

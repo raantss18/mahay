@@ -5,8 +5,8 @@
 use std::fmt::Write as _;
 
 use kurbo::{PathEl, Shape};
-use vectorcraft_doc::{Document, ImageMap, Node, NodeKind};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{Document, ImageMap, Node, NodeKind};
+use tsipika_geom::Rect;
 
 /// Where the image map goes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -74,7 +74,7 @@ pub fn build(doc: &Document, region: Rect, scale: f64, kind: MapKind, file: usiz
         collect(l, region, scale, &mut areas);
     }
     areas.reverse();
-    let (width, height) = vectorcraft_render::region_pixels(region, scale);
+    let (width, height) = tsipika_render::region_pixels(region, scale);
     (!areas.is_empty()).then_some(Map { kind, file, width, height, areas })
 }
 

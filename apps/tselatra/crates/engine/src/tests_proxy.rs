@@ -4,10 +4,10 @@
 
 use std::sync::Arc;
 
-use effectcraft_project::render_queue::ProxyUse;
-use effectcraft_project::{AlphaMode, Footage, FootageKind, ItemId, ItemKind};
-use effectcraft_raster::Image;
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_project::render_queue::ProxyUse;
+use tselatra_project::{AlphaMode, Footage, FootageKind, ItemId, ItemKind};
+use tselatra_raster::Image;
+use tselatra_time::{FrameRate, Tick};
 use serde_json::json;
 
 use crate::Session;
@@ -135,7 +135,7 @@ fn footage_proxy_follows_use_proxy_and_proxy_use() {
     // Render queue items carry Proxy Use (Best Settings: none).
     let r = s.execute("renderQueue.add", json!({"proxyUse": "all"})).unwrap();
     assert_eq!(s.project.render_queue[0].settings.proxy_use, ProxyUse::UseAll, "{r}");
-    assert_eq!(effectcraft_project::render_queue::RenderSettings::default().proxy_use, ProxyUse::UseNone);
+    assert_eq!(tselatra_project::render_queue::RenderSettings::default().proxy_use, ProxyUse::UseNone);
 }
 
 #[test]
@@ -159,7 +159,7 @@ fn comp_proxy_and_create_proxy() {
     let r = s.execute("file.createProxy", json!({"kind": "still"})).unwrap();
     let it = s.project.render_queue.last().unwrap().clone();
     assert_eq!(it.comp, inner);
-    assert_eq!(it.post_render, effectcraft_project::render_queue::PostRenderAction::SetProxy);
+    assert_eq!(it.post_render, tselatra_project::render_queue::PostRenderAction::SetProxy);
     assert_eq!(it.settings.resolution, 0.5);
     assert!(r["output"].as_str().unwrap().contains("Inner_proxy_"), "{r}");
     let m = s.execute("file.createProxy", json!({"kind": "movie", "comp": inner.0})).unwrap();

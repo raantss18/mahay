@@ -8,8 +8,8 @@
 
 use std::collections::BTreeMap;
 
-use effectcraft_geom::{Mat4, Vec2, Vec3, vec2, vec3};
-use effectcraft_project::{AutoOrient, Layer};
+use tselatra_geom::{Mat4, Vec2, Vec3, vec2, vec3};
+use tselatra_project::{AutoOrient, Layer};
 use serde::{Deserialize, Serialize};
 
 use crate::EvalCtx;
@@ -65,7 +65,7 @@ impl CameraState {
             let z = self.zoom;
             Mat4([[z, 0.0, 0.0, comp_w * 0.5], [0.0, z, 0.0, comp_h * 0.5], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]) * self.view
         } else {
-            effectcraft_geom::camera_matrix(comp_w, comp_h, self.eye, self.view, self.zoom)
+            tselatra_geom::camera_matrix(comp_w, comp_h, self.eye, self.view, self.zoom)
         }
     }
     /// Camera-space depth of a world point.
@@ -159,7 +159,7 @@ pub fn default_aperture(comp_w: f64) -> f64 {
 /// The comp camera used when there is no camera layer: the 50 mm preset at (w/2, h/2, −zoom)
 /// looking at the comp centre, which shows the z = 0 plane at 100%.
 pub fn default_camera(comp_w: f64, comp_h: f64) -> CameraState {
-    let zoom = effectcraft_geom::default_camera_zoom(comp_w);
+    let zoom = tselatra_geom::default_camera_zoom(comp_w);
     let eye = vec3(comp_w / 2.0, comp_h / 2.0, -zoom);
     CameraState { view: basis_view(eye, vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0)), eye, zoom, ortho: false, dof: None }
 }
@@ -224,7 +224,7 @@ fn path_tangent(ctx: &EvalCtx, layer: &Layer) -> Option<Vec3> {
     if !moving {
         return None;
     }
-    let dt = effectcraft_time::Tick::from_seconds_f64(0.005);
+    let dt = tselatra_time::Tick::from_seconds_f64(0.005);
     let pos = |t| Vec3::from(ctx.at(t).v3(layer, tr, "position", [0.0; 3]));
     let dir = |d: Vec3| (d.length() > 1e-9 && d.length().is_finite()).then(|| d.normalize());
     if let Some(d) = dir(pos(ctx.time + dt) - pos(ctx.time - dt)) {
@@ -232,7 +232,7 @@ fn path_tangent(ctx: &EvalCtx, layer: &Layer) -> Option<Vec3> {
     }
     // No motion here: fall back on the nearest motion before this time (a backward difference at
     // each earlier key, latest first), then on the first motion after it.
-    let mut keys: Vec<effectcraft_time::Tick> = dims.iter().filter_map(|m| tr.get(m)).flat_map(|p| p.keys.iter().map(|k| layer.comp_time(k.time))).collect();
+    let mut keys: Vec<tselatra_time::Tick> = dims.iter().filter_map(|m| tr.get(m)).flat_map(|p| p.keys.iter().map(|k| layer.comp_time(k.time))).collect();
 
     keys.sort();
     keys.dedup();
@@ -252,7 +252,7 @@ pub fn auto_orient_2d(ctx: &EvalCtx, layer: &Layer) -> f64 {
 }
 
 /// Whether `id` is `layer` or one of its parents.
-fn in_parent_chain(ctx: &EvalCtx, layer: &Layer, id: effectcraft_project::LayerId) -> bool {
+fn in_parent_chain(ctx: &EvalCtx, layer: &Layer, id: tselatra_project::LayerId) -> bool {
     let mut cur = Some(layer);
     let mut guard = 0;
     while let Some(l) = cur {
@@ -437,7 +437,7 @@ impl ViewCam {
 /// Default camera of a view for a `w`×`h` comp.
 pub fn default_view_cam(v: View3D, w: f64, h: f64) -> ViewCam {
     let c = vec3(w / 2.0, h / 2.0, 0.0);
-    let zoom = effectcraft_geom::default_camera_zoom(w);
+    let zoom = tselatra_geom::default_camera_zoom(w);
     let far = 10_000.0;
     let ortho = |fwd: Vec3, down: Vec3| ViewCam { eye: arr(c - fwd * far), poi: arr(c), down: arr(down), zoom: 0.5, ortho: true };
     let custom = |yaw: f64, pitch: f64| {

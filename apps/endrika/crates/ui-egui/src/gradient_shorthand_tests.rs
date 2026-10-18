@@ -1,6 +1,6 @@
 //! The control channel takes the documented gradient shorthand, as MCP does (#252).
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;

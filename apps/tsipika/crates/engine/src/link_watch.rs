@@ -1,5 +1,5 @@
-//! Linked files that change while their document is open (another app saved them: PhotoCraft,
-//! LightCraft, Photoshop, a placed VectorCraft document): Preferences › File Handling › Update
+//! Linked files that change while their document is open (another app saved them: Sary,
+//! Hazavana, Photoshop, a placed Tsipika document): Preferences › File Handling › Update
 //! Links decides, as it does when a document opens. Automatically reads them again
 //! (`links.update`, an undo step), Ask When Modified offers to, Manually leaves them modified in
 //! the Links panel.
@@ -47,7 +47,7 @@ fn stamp(_: &str, _: Option<&str>) -> Option<Stamp> {
 }
 
 /// The linked files of `d` with the ids of the objects showing them.
-pub fn linked_files(d: &vectorcraft_doc::Document) -> Vec<(String, Vec<u64>)> {
+pub fn linked_files(d: &tsipika_doc::Document) -> Vec<(String, Vec<u64>)> {
     crate::cmd::links::linked_groups(d)
 }
 

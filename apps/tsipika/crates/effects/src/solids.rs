@@ -3,13 +3,13 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use vectorcraft_doc::color::{BlendMode, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Effect, Node, NodeKind, StrokeLayer};
-use vectorcraft_geom::{FillRule, PathData, Rect};
-use vectorcraft_three_d::{Bevel, BevelShape, Extrude, Facet, Inflate, View};
+use tsipika_doc::color::{BlendMode, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, Effect, Node, NodeKind, StrokeLayer};
+use tsipika_geom::{FillRule, PathData, Rect};
+use tsipika_three_d::{Bevel, BevelShape, Extrude, Facet, Inflate, View};
 
 #[cfg(test)]
-use vectorcraft_doc::color::Color;
+use tsipika_doc::color::Color;
 
 use crate::util::{flag, num, text};
 use crate::{GeomContext, apply_geometry_with, is_geometry};
@@ -65,8 +65,8 @@ pub fn view_options(p: &Value) -> View {
         rotation_y: num(p, "rotationY", ROTATION_PRESETS[6].1[1]),
         rotation_z: num(p, "rotationZ", ROTATION_PRESETS[6].1[2]),
         perspective: num(p, "perspectiveAngle", 0.0),
-        light_rotation: num(p, "lightRotation", vectorcraft_three_d::DEFAULT_LIGHT.0),
-        light_height: num(p, "lightHeight", vectorcraft_three_d::DEFAULT_LIGHT.1),
+        light_rotation: num(p, "lightRotation", tsipika_three_d::DEFAULT_LIGHT.0),
+        light_height: num(p, "lightHeight", tsipika_three_d::DEFAULT_LIGHT.1),
         light_behind: flag(p, "lightBehind", false),
         light_color: crate::lighting::light_color(p),
         lights: crate::lighting::lights(p),
@@ -121,9 +121,9 @@ fn profile(n: &Node) -> Option<(PathData, FillRule)> {
 fn facets(id: &str, path: &PathData, rule: FillRule, bounds: Rect, p: &Value) -> Result<Vec<Facet>, String> {
     let view = view_options(p);
     match id {
-        EXTRUDE => vectorcraft_three_d::extrude(path, rule, bounds, extrude_options(p), view),
-        INFLATE => vectorcraft_three_d::inflate(path, rule, bounds, inflate_options(p), view),
-        _ => vectorcraft_three_d::plane(path, rule, bounds, view),
+        EXTRUDE => tsipika_three_d::extrude(path, rule, bounds, extrude_options(p), view),
+        INFLATE => tsipika_three_d::inflate(path, rule, bounds, inflate_options(p), view),
+        _ => tsipika_three_d::plane(path, rule, bounds, view),
     }
 }
 
@@ -175,7 +175,7 @@ fn surface(n: &Node, facets: Vec<Facet>, paint: &Paint, opacity: f32, blend: Ble
                     let AppearanceItem::Fill(fill) = &item else { return vec![item] };
                     let mut edge = StrokeLayer::new(fill.paint.clone(), seam);
                     if colored {
-                        edge.join = vectorcraft_doc::LineJoin::Round;
+                        edge.join = tsipika_doc::LineJoin::Round;
                     }
                     edge.opacity = fill.opacity;
                     vec![item, AppearanceItem::Stroke(edge)]
@@ -189,8 +189,8 @@ fn surface(n: &Node, facets: Vec<Facet>, paint: &Paint, opacity: f32, blend: Ble
     group.blend = blend;
     if let Some(mask) = mask {
         let bounds = group.visual_bounds().unwrap_or(Rect::ZERO).inflate(1.0, 1.0);
-        let coverage = Node::path(n.id, vectorcraft_geom::shapes::rectangle(bounds), Appearance::basic(mask, Paint::None, 0.0));
-        group.extras_mut().mask = Some(Box::new(vectorcraft_doc::OpacityMask::new(coverage, true)));
+        let coverage = Node::path(n.id, tsipika_geom::shapes::rectangle(bounds), Appearance::basic(mask, Paint::None, 0.0));
+        group.extras_mut().mask = Some(Box::new(tsipika_doc::OpacityMask::new(coverage, true)));
     }
     group
 }

@@ -18,8 +18,8 @@
 //! layers and back-less piece plans too large for one item table are drawn in several passes
 //! (`fx_particles::Chunked`).
 
-use effectcraft_effects::{Acc, EffectCtx, PieceTex, Post, Shape, SpritePlan, Tint};
-use effectcraft_raster::Image;
+use tselatra_effects::{Acc, EffectCtx, PieceTex, Post, Shape, SpritePlan, Tint};
+use tselatra_raster::Image;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -50,24 +50,24 @@ const TILE: i32 = 16;
 
 /// Run effect `id` (one of [`IDS`]); `None` = this parameter combination runs on the CPU.
 pub(crate) fn apply(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
-    let geo = effectcraft_effects::Buf { img: Image::new(0, 0), offset: b.offset, scale: b.scale };
+    let geo = tselatra_effects::Buf { img: Image::new(0, 0), offset: b.offset, scale: b.scale };
     match id {
         "ec.sim.ccbubbles" => bubbles(e, ctx, b, &geo),
         "ec.sim.ccdrizzle" => drizzle(e, ctx, b, &geo),
         "ec.sim.ccmrmercury" => mercury(e, ctx, b, &geo),
         "ec.sim.caustics" => caustics(e, ctx, b, &geo),
-        "ec.sim.waveworld" => match effectcraft_effects::wave_world_plan(ctx, &geo)? {
-            effectcraft_effects::WavePlan::Wire(plan) => sprites(e, b, &plan),
-            effectcraft_effects::WavePlan::Height { st, depth } => wave_height(e, ctx, b, &st, depth.as_deref()),
+        "ec.sim.waveworld" => match tselatra_effects::wave_world_plan(ctx, &geo)? {
+            tselatra_effects::WavePlan::Wire(plan) => sprites(e, b, &plan),
+            tselatra_effects::WavePlan::Height { st, depth } => wave_height(e, ctx, b, &st, depth.as_deref()),
         },
         "ec.sim.shatter" | "ec.sim.carddance" | "ec.transition.cardwipe" => pieces(e, id, ctx, b),
         "ec.sim.foam" => crate::fx_particles::foam(e, ctx, b),
-        "ec.sim.cchair" => match effectcraft_effects::sprite_plan(id, ctx, &geo) {
+        "ec.sim.cchair" => match tselatra_effects::sprite_plan(id, ctx, &geo) {
             Some(plan) => sprites(e, b, &plan),
             None => Some(b),
         },
         _ => {
-            let plan = effectcraft_effects::sprite_plan(id, ctx, &geo)?;
+            let plan = tselatra_effects::sprite_plan(id, ctx, &geo)?;
             sprites(e, b, &plan)
         }
     }
@@ -245,10 +245,10 @@ pub(crate) fn sprite_layer(e: &mut Enc, src: &GpuImage, plan: &SpritePlan) -> Op
 
 // ---------------------------------------------------------------- CC Bubbles / Mr. Mercury
 
-fn bubbles(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &effectcraft_effects::Buf) -> Option<GBuf> {
+fn bubbles(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &tselatra_effects::Buf) -> Option<GBuf> {
     let (w, h) = (b.img.width, b.img.height);
     let mut items = Items::new(12, w, h);
-    for q in effectcraft_effects::bubble_list(ctx, geo) {
+    for q in tselatra_effects::bubble_list(ctx, geo) {
         items.push(Some([q.x - q.r - 1.0, q.y - q.r - 1.0, q.x + q.r + 1.0, q.y + q.r + 1.0]), &[9.0, q.x, q.y, q.r, q.sx, q.sy]);
     }
     let mut p = Params::default();
@@ -257,12 +257,12 @@ fn bubbles(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &effectcraft_effects::Buf
     Some(GBuf { img, ..b })
 }
 
-fn mercury(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &effectcraft_effects::Buf) -> Option<GBuf> {
+fn mercury(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &tselatra_effects::Buf) -> Option<GBuf> {
     let pr = ctx.params;
     let (w, h) = (b.img.width, b.img.height);
     let infl = 1.0 + pr.f("blobInfluence") as f32 / 100.0;
     let mut items = Items::new(8, w, h);
-    for q in effectcraft_effects::mercury_blobs(ctx, geo) {
+    for q in tselatra_effects::mercury_blobs(ctx, geo) {
         let ex = q.r * 2.0 * infl;
         items.push(Some([q.x - ex, q.y - ex, q.x + ex, q.y + ex]), &[10.0, q.x, q.y, q.r]);
     }
@@ -296,9 +296,9 @@ fn norm3(v: [f32; 3]) -> [f32; 3] {
 
 // ---------------------------------------------------------------- CC Drizzle
 
-fn drizzle(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &effectcraft_effects::Buf) -> Option<GBuf> {
+fn drizzle(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &tselatra_effects::Buf) -> Option<GBuf> {
     let pr = ctx.params;
-    let Some(drops) = effectcraft_effects::drizzle_drops(ctx, geo) else { return Some(b) };
+    let Some(drops) = tselatra_effects::drizzle_drops(ctx, geo) else { return Some(b) };
     let rippling = (pr.f("rippling") / 360.0).max(0.05) as f32;
     let lh = ctx.layer_size[1] as f32;
     let s = b.scale as f32;
@@ -335,7 +335,7 @@ fn drizzle(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &effectcraft_effects::Buf
 
 // ---------------------------------------------------------------- Wave World (Height Map)
 
-fn wave_height(e: &mut Enc, ctx: &EffectCtx, b: GBuf, st: &effectcraft_effects::Waves, depth: Option<&[f32]>) -> Option<GBuf> {
+fn wave_height(e: &mut Enc, ctx: &EffectCtx, b: GBuf, st: &tselatra_effects::Waves, depth: Option<&[f32]>) -> Option<GBuf> {
     let pr = ctx.params;
     let mut d = st.u.clone();
     if let Some(dp) = depth {
@@ -362,15 +362,15 @@ fn wave_height(e: &mut Enc, ctx: &EffectCtx, b: GBuf, st: &effectcraft_effects::
 fn pieces(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     // Planning reads the layer (gradient maps and textures default to it).
     let img = e.download(&b.img)?;
-    let cpu = effectcraft_effects::Buf { img, offset: b.offset, scale: b.scale };
+    let cpu = tselatra_effects::Buf { img, offset: b.offset, scale: b.scale };
     if id == "ec.sim.shatter" {
         // The rendered pieces or the wireframe views' lines.
-        return match effectcraft_effects::pixel_plan(id, ctx, &cpu)? {
-            effectcraft_effects::PixelPlan::Pieces(plan) => piece_pass(e, b, &plan),
-            effectcraft_effects::PixelPlan::Sprites(plan) => sprites(e, b, &plan),
+        return match tselatra_effects::pixel_plan(id, ctx, &cpu)? {
+            tselatra_effects::PixelPlan::Pieces(plan) => piece_pass(e, b, &plan),
+            tselatra_effects::PixelPlan::Sprites(plan) => sprites(e, b, &plan),
         };
     }
-    let Some(plan) = effectcraft_effects::piece_plan(id, ctx, &cpu) else {
+    let Some(plan) = tselatra_effects::piece_plan(id, ctx, &cpu) else {
         // Card Wipe before anything moves: the layer as is.
         return (id == "ec.transition.cardwipe").then_some(b);
     };
@@ -378,7 +378,7 @@ fn pieces(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 }
 
 /// Draw a piece plan over a transparent frame of `b`'s size (sim2::PiecePlan::finish).
-pub(crate) fn piece_pass(e: &mut Enc, b: GBuf, plan: &effectcraft_effects::PiecePlan) -> Option<GBuf> {
+pub(crate) fn piece_pass(e: &mut Enc, b: GBuf, plan: &tselatra_effects::PiecePlan) -> Option<GBuf> {
     let (w, h) = (b.img.width, b.img.height);
     let tex = |t: &PieceTex| -> Option<GpuImage> {
         match t {
@@ -430,8 +430,8 @@ pub(crate) fn piece_pass(e: &mut Enc, b: GBuf, plan: &effectcraft_effects::Piece
 
 // ---------------------------------------------------------------- Caustics
 
-fn caustics(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &effectcraft_effects::Buf) -> Option<GBuf> {
-    let st = effectcraft_effects::caustics_setup(ctx, geo);
+fn caustics(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &tselatra_effects::Buf) -> Option<GBuf> {
+    let st = tselatra_effects::caustics_setup(ctx, geo);
     let (w, h) = (b.img.width, b.img.height);
     let mut bottom = match &st.bottom {
         Some(i) => e.g.upload_image(i)?,

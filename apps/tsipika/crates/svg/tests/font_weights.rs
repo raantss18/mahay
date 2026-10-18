@@ -3,13 +3,13 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_doc::{CharStyle, Document, Node, NodeKind, TextObject};
-use vectorcraft_geom::Point;
-use vectorcraft_svg::{CssOptions, ExportOptions, css_rules, export, import};
-use vectorcraft_text::FontDb;
+use tsipika_doc::{CharStyle, Document, Node, NodeKind, TextObject};
+use tsipika_geom::Point;
+use tsipika_svg::{CssOptions, ExportOptions, css_rules, export, import};
+use tsipika_text::FontDb;
 
 /// A document with one text in `family` `style`.
-fn doc(family: &str, style: &str) -> (Document, vectorcraft_doc::NodeId) {
+fn doc(family: &str, style: &str) -> (Document, tsipika_doc::NodeId) {
     let mut d = Document::new(300.0, 100.0);
     let st = CharStyle { font_family: family.into(), font_style: style.into(), size: 24.0, ..CharStyle::default() };
     let n = Node::new(d.alloc_id(), NodeKind::Text(Box::new(TextObject::point(Point::new(10.0, 50.0), "Weight", st))));

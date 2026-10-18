@@ -1,6 +1,6 @@
 //! Constant tables of the 48 kHz CELT mode (RFC 6716 §4.3, Tables 55–58 and §4.3.2).
 //!
-//! Transcribed from RFC 6716; copied from FilmCraft's spec-derived `filmcraft-opus` decoder
+//! Transcribed from RFC 6716; copied from Hetsika's spec-derived `hetsika-opus` decoder
 //! (first-party, MIT OR Apache-2.0) so both sides share the exact same values.
 
 /// Number of energy bands.

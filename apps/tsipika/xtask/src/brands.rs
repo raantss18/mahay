@@ -1,6 +1,6 @@
 //! `cargo xtask brands`: no other vendor's product or company names in what users and agents read.
 //!
-//! VectorCraft names its own features; where a comparison is needed, text says "the reference
+//! Tsipika names its own features; where a comparison is needed, text says "the reference
 //! app". Scanned:
 //! * string literals in Rust sources (command labels and params docs, `UI_COMMANDS`, menus, panels,
 //!   MCP tool definitions…). Comments and test code (`tests*.rs`, `*_tests.rs`, `tests/` and

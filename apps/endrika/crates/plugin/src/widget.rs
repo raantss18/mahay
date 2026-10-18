@@ -1,4 +1,4 @@
-//! Widgets (ABI v3): a plugin draws a layer on the canvas by describing it, and FigCraft builds the
+//! Widgets (ABI v3): a plugin draws a layer on the canvas by describing it, and Endrika builds the
 //! layers. The description comes from the plugin, so it is untrusted: [`WidgetRender::parse`]
 //! checks its size, node count, depth, numbers, strings, colours and image sizes before the engine
 //! sees it. The engine decides where the layers go (only inside the widget's own layer).
@@ -25,7 +25,7 @@ const MAX_SIZE: f64 = 4000.0;
 pub const MAX_IMAGE_BYTES: usize = 1024 * 1024;
 const MAX_IMAGES_BYTES: usize = 2 * 1024 * 1024;
 
-/// What a widget is made of: FigCraft's own layer kinds.
+/// What a widget is made of: Endrika's own layer kinds.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum WidgetKind {
@@ -167,7 +167,7 @@ fn within(what: &str, v: Option<f64>, lo: f64, hi: f64) -> Result<(), String> {
 /// A colour as `#RRGGBB(AA)`.
 fn colour(what: &str, c: &mut Option<String>) -> Result<(), String> {
     if let Some(s) = c {
-        let parsed = Some(s.as_str()).filter(|s| s.len() <= 9).and_then(figcraft_color::Color::from_hex);
+        let parsed = Some(s.as_str()).filter(|s| s.len() <= 9).and_then(endrika_color::Color::from_hex);
         *s = parsed.ok_or_else(|| format!("`{what}` must be a hex colour like #FF5A5F"))?.to_css_hex();
     }
     Ok(())

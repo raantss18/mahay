@@ -1,8 +1,8 @@
 //! The engine side of the Hatch and Gradient dialog: GRADIENT's name and centred, points and
 //! objects in one HATCH call, HATCHEDIT's gradient, HATCHPICK and HPDLGMODE.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle, Hatch};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle, Hatch};
 use serde_json::{Value, json};
 
 fn rect(s: &mut Session, a: [f64; 2], b: [f64; 2]) -> String {
@@ -82,7 +82,7 @@ fn hatch_takes_points_and_objects_in_one_call() {
     assert_eq!(hatch(&s, &h).loops.len(), 1);
 }
 
-use cadcraft_engine::doc::color::{Color, Rgb};
+use drafitra_engine::doc::color::{Color, Rgb};
 
 #[test]
 fn hatchedit_turns_a_pattern_into_a_gradient_and_back() {
@@ -136,8 +136,8 @@ fn hatchedit_refuses_a_bad_gradient_and_changes_nothing() {
     assert_eq!(hatch(&s, &h), before);
 }
 
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::{Input, PickMode};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::{Input, PickMode};
 
 fn h(hex: &str) -> Handle {
     Handle::parse_hex(hex).unwrap()
@@ -242,8 +242,8 @@ fn hatchpick_json_form_validates_like_the_prompts() {
 #[test]
 fn hpdlgmode_defaults_to_1_and_takes_0_or_1() {
     let mut s = Session::new();
-    assert_eq!(cadcraft_engine::sysvars::get(&s, "HPDLGMODE"), Some(json!(1)));
+    assert_eq!(drafitra_engine::sysvars::get(&s, "HPDLGMODE"), Some(json!(1)));
     s.execute("setvar", &json!({ "name": "HPDLGMODE", "value": 0 })).unwrap();
-    assert_eq!(cadcraft_engine::sysvars::get(&s, "HPDLGMODE"), Some(json!(0)));
+    assert_eq!(drafitra_engine::sysvars::get(&s, "HPDLGMODE"), Some(json!(0)));
     assert!(s.execute("setvar", &json!({ "name": "HPDLGMODE", "value": 2 })).is_err());
 }

@@ -3,8 +3,8 @@
 //! Gradient tool's snapping and Eyedropper Options (M3.35).
 
 use serde_json::json;
-use vectorcraft_color::{GradientGeom, Paint};
-use vectorcraft_geom::Point;
+use tsipika_color::{GradientGeom, Paint};
+use tsipika_geom::Point;
 
 use super::*;
 
@@ -83,7 +83,7 @@ fn the_eyedropper_places_copied_gradients_on_the_target() {
     s.execute("select.set", &json!({"ids": [dst.0]})).unwrap();
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
     s.select_tool("eyedropper", ViewInfo::default()).unwrap();
-    let ev = vectorcraft_tools::PointerEvent::new(vectorcraft_tools::PointerKind::Down, 50.0, 50.0);
+    let ev = tsipika_tools::PointerEvent::new(tsipika_tools::PointerKind::Down, 50.0, 50.0);
     s.pointer(&ev, ViewInfo::default()).unwrap();
     assert!(close(fill_geom(&s, dst).unwrap().start, Point::new(540.0, 60.0)));
 }
@@ -116,10 +116,10 @@ fn graphic_styles_keep_gradients_relative_to_the_bounds() {
     assert_eq!(linked(&mut s), json!([src.0, dst.0]));
     s.execute("select.set", &json!({"ids": [dst.0]})).unwrap();
     // The flag survives a save; a style from an older file (no flag) keeps document coordinates.
-    let bytes = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-    let back = vectorcraft_format::load(&bytes).unwrap();
+    let bytes = tsipika_format::save(&s.doc().unwrap().doc, false);
+    let back = tsipika_format::load(&bytes).unwrap();
     assert_eq!(back.graphic_styles, s.doc().unwrap().doc.graphic_styles);
-    let legacy: vectorcraft_doc::GraphicStyle = serde_json::from_value(json!({"name": "Old", "appearance": style.appearance})).unwrap();
+    let legacy: tsipika_doc::GraphicStyle = serde_json::from_value(json!({"name": "Old", "appearance": style.appearance})).unwrap();
     assert!(!legacy.unit_box);
     s.edit("Add", |d, _| {
         d.graphic_styles.push(legacy);
@@ -161,8 +161,8 @@ fn the_gradient_tool_reads_the_constrain_angle_preference() {
     rect(&mut s, 100.0, 100.0, 100.0, 100.0);
     s.execute("prefs.set", &json!({"key": "constrainAngle", "value": 30})).unwrap();
     s.select_tool("gradient", ViewInfo::default()).unwrap();
-    let ev = |kind, x, y, shift| vectorcraft_tools::PointerEvent::new(kind, x, y).with_mods(vectorcraft_tools::Mods { shift, ..Default::default() });
-    use vectorcraft_tools::PointerKind::{Down, Drag, Up};
+    let ev = |kind, x, y, shift| tsipika_tools::PointerEvent::new(kind, x, y).with_mods(tsipika_tools::Mods { shift, ..Default::default() });
+    use tsipika_tools::PointerKind::{Down, Drag, Up};
     s.pointer(&ev(Down, 120.0, 180.0, false), ViewInfo::default()).unwrap();
     s.pointer(&ev(Drag, 190.0, 140.0, true), ViewInfo::default()).unwrap();
     s.pointer(&ev(Up, 190.0, 140.0, true), ViewInfo::default()).unwrap();

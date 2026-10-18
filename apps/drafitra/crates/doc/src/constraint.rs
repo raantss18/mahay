@@ -1,7 +1,7 @@
 //! Parametric drawing data: geometric and dimensional constraints, user parameters and the
 //! parametric settings (GEOMCONSTRAINT, DIMCONSTRAINT, PARAMETERS, CONSTRAINTSETTINGS).
 //!
-//! Only the data lives here; the solver is `cadcraft-constraints`.
+//! Only the data lives here; the solver is `drafitra-constraints`.
 
 use serde::{Deserialize, Serialize};
 

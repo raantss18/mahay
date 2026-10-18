@@ -1,7 +1,7 @@
 //! Symbol Options › Registration: the 9-point grid (0 = top-left … 4 = centre … 8 = bottom-right)
 //! that `symbol.place` uses as the point that lands on the click.
 
-use vectorcraft_geom::Vec2;
+use tsipika_geom::Vec2;
 
 /// Document unknown key: `{ symbolName: 0..8 }` for each symbol's registration point.
 pub const SYMBOL_REGISTRATION: &str = "symbolRegistration";

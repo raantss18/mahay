@@ -221,10 +221,10 @@ fn unknown(id: &str, key: &str, keys: &[&str]) -> crate::EngineError {
 /// unknown effect is the command's to report.
 pub fn check_effect_params(id: &str, effect: &str, params: &Value) -> Result<()> {
     let Value::Object(given) = params else { return Ok(()) };
-    if effect.starts_with(vectorcraft_plugins::effect::PREFIX) {
+    if effect.starts_with(tsipika_plugins::effect::PREFIX) {
         return Ok(());
     }
-    let Some(info) = vectorcraft_render::effects::effect_info(effect) else { return Ok(()) };
+    let Some(info) = tsipika_render::effects::effect_info(effect) else { return Ok(()) };
     let defaults = info.defaults.as_object();
     let mut keys: Vec<&str> = defaults.into_iter().flat_map(|d| d.keys().map(String::as_str)).collect();
     // A description that doesn't parse names no more keys (the tests rule that out).
@@ -255,12 +255,12 @@ pub fn check_effect_params(id: &str, effect: &str, params: &Value) -> Result<()>
 /// default color for any other value, except that an array of three or more entries draws an
 /// entry that isn't a number as 0.
 ///
-/// [`Color::from_hex`]: vectorcraft_color::Color::from_hex
+/// [`Color::from_hex`]: tsipika_color::Color::from_hex
 fn is_effect_color(v: &Value) -> bool {
     match v {
-        Value::String(s) => vectorcraft_color::Color::from_hex(s).is_some(),
+        Value::String(s) => tsipika_color::Color::from_hex(s).is_some(),
         Value::Array(a) => a.len() >= 3 && a.iter().take(3).all(Value::is_number),
-        Value::Object(_) => serde_json::from_value::<vectorcraft_color::Color>(v.clone()).is_ok(),
+        Value::Object(_) => serde_json::from_value::<tsipika_color::Color>(v.clone()).is_ok(),
         _ => false,
     }
 }
@@ -273,10 +273,10 @@ fn is_effect_color(v: &Value) -> bool {
 pub(crate) fn check_effect_color(id: &str, effect: &str, params: &Value) -> Result<()> {
     let key = "color";
     let Some(v) = params.get(key) else { return Ok(()) };
-    if effect.starts_with(vectorcraft_plugins::effect::PREFIX) {
+    if effect.starts_with(tsipika_plugins::effect::PREFIX) {
         return Ok(());
     }
-    let takes_color = vectorcraft_render::effects::effect_info(effect).is_some_and(|info| info.defaults.get(key).is_some_and(Value::is_string));
+    let takes_color = tsipika_render::effects::effect_info(effect).is_some_and(|info| info.defaults.get(key).is_some_and(Value::is_string));
     if takes_color && !is_effect_color(v) {
         return Err(bad(id, format!("`{key}` must be a #rrggbb color")));
     }
@@ -285,16 +285,16 @@ pub(crate) fn check_effect_color(id: &str, effect: &str, params: &Value) -> Resu
 
 /// The `channel` in `params` of Levels or Curves (`effect`), as command `id` was given it: a
 /// parameter error naming the channels unless the effect reads it
-/// ([`vectorcraft_render::effects::is_channel`]); the effect draws any other value as RGB.
+/// ([`tsipika_render::effects::is_channel`]); the effect draws any other value as RGB.
 /// `effect.apply` and `effect.setParams` run this themselves before they edit, as they run
 /// [`check_effect_color`].
 pub(crate) fn check_effect_channel(id: &str, effect: &str, params: &Value) -> Result<()> {
     let key = "channel";
     let Some(v) = params.get(key) else { return Ok(()) };
-    if !matches!(effect, "adjust.levels" | "adjust.curves") || v.as_str().is_some_and(vectorcraft_render::effects::is_channel) {
+    if !matches!(effect, "adjust.levels" | "adjust.curves") || v.as_str().is_some_and(tsipika_render::effects::is_channel) {
         return Ok(());
     }
-    Err(bad(id, format!("`{key}` must be one of {}", vectorcraft_render::effects::CHANNELS.join(", "))))
+    Err(bad(id, format!("`{key}` must be one of {}", tsipika_render::effects::CHANNELS.join(", "))))
 }
 
 /// Commands whose params aren't checked yet (#1442): they read keys in ways the audit of the

@@ -7,14 +7,14 @@
 //! (asking where when there is no path); bad options keep the dialog open.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_cad::{ColorDepth, DxfVersion, Preserve, RasterFormat};
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::cmd::fileio;
+use tsipika_cad::{ColorDepth, DxfVersion, Preserve, RasterFormat};
+use tsipika_doc::Unit;
+use tsipika_engine::cmd::fileio;
 
 use super::DialogSpec;
 use super::document_setup::{LABEL, check, choice};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, io, widgets};
+use crate::{TsipikaApp, io, widgets};
 
 pub(super) const KIND: &str = "dxfOptions";
 
@@ -53,7 +53,7 @@ fn defaults() -> Map<String, Value> {
 
 /// Open DXF Options for an export whose params (path, artboard choice, any DXF option) are
 /// `params`, over the options used last.
-pub fn open(app: &mut VectorcraftApp, params: &Value) {
+pub fn open(app: &mut TsipikaApp, params: &Value) {
     let mut fields = defaults();
     for given in [&app.ui.dxf_options, params] {
         if let Some(o) = given.as_object() {
@@ -64,7 +64,7 @@ pub fn open(app: &mut VectorcraftApp, params: &Value) {
     app.ui.dialog = Some(Dialog::new(KIND, Value::Object(fields)));
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let versions: Vec<(&str, &str)> = DxfVersion::ALL.iter().map(|v| (v.id(), v.label())).collect();
     choice(ui, d, "version", tl!("Version:"), &versions);
     ui.add_space(4.0);
@@ -128,7 +128,7 @@ pub(super) fn scale_row(ui: &mut egui::Ui, d: &mut Dialog) {
         ui.label(egui::RichText::new("=").color(t.text));
         let scale = d.f64("scale", 1.0);
         if let Some(v) = widgets::plain_field(ui, "dxf-scale", scale, "", 3, 64.0) {
-            let (lo, hi) = (*vectorcraft_cad::SCALE_RANGE.start(), *vectorcraft_cad::SCALE_RANGE.end());
+            let (lo, hi) = (*tsipika_cad::SCALE_RANGE.start(), *tsipika_cad::SCALE_RANGE.end());
             d.fields.insert("scale".into(), json!(v.clamp(lo, hi)));
         }
         ui.label(egui::RichText::new(tl!("Units")).color(t.text));
@@ -144,7 +144,7 @@ fn note(ui: &mut egui::Ui, text: &str) {
 }
 
 /// Check the options, remember them, and write the file(s).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let params = super::form::params(d);
     fileio::dxf::check(&params)?;
     // Nothing selected keeps the dialog open too.

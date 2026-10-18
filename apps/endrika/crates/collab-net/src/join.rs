@@ -5,9 +5,9 @@
 use std::sync::Mutex;
 use std::time::Duration;
 
-use figcraft_collab::Client;
-use figcraft_collab::message::{ClientMsg, Peer, Resume, ServerMsg};
-use figcraft_engine::live::{Event, Role, SessionInfo, Status};
+use endrika_collab::Client;
+use endrika_collab::message::{ClientMsg, Peer, Resume, ServerMsg};
+use endrika_engine::live::{Event, Role, SessionInfo, Status};
 
 use crate::inbox::Inbox;
 use crate::invite::Invite;

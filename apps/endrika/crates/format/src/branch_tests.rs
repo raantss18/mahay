@@ -1,9 +1,9 @@
-//! Branches in `.figcraft` files: round trips, files from before branches, damaged entries.
+//! Branches in `.endrika` files: round trips, files from before branches, damaged entries.
 
 use std::io::Write;
 use std::sync::Arc;
 
-use figcraft_doc::{Document, NodeKind};
+use endrika_doc::{Document, NodeKind};
 
 use super::*;
 

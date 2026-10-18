@@ -18,8 +18,8 @@
 //! timecode (`10:15:30:12` at the footage's rate), Unix seconds, or Unix milliseconds (numbers
 //! above 10¹¹). When the data has only times of day, `V₀` is reduced to its UTC time of day.
 
-use effectcraft_project::{FootageKind, ItemId, ItemKind};
-use effectcraft_time::Tick;
+use tselatra_project::{FootageKind, ItemId, ItemKind};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, f_p, has_layers, layer_p, str_p};

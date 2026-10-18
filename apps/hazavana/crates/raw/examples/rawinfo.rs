@@ -1,10 +1,10 @@
-//! `cargo run --release -p lightcraft-raw --example rawinfo -- [--tree] FILE...`
+//! `cargo run --release -p hazavana-raw --example rawinfo -- [--tree] FILE...`
 //!
 //! Prints the TIFF structure (with `--tree`), decode result, timings (MP/s) and basic statistics.
 //! Exits unsuccessfully if any input cannot be read, decoded or developed, while inspecting the remaining files.
 
-use lightcraft_raw::{Method, RawData, decode, embedded_preview, probe};
-use lightcraft_tiff::{Ifd, Tiff, Value};
+use hazavana_raw::{Method, RawData, decode, embedded_preview, probe};
+use hazavana_tiff::{Ifd, Tiff, Value};
 use std::process::ExitCode;
 use std::time::Instant;
 
@@ -107,8 +107,8 @@ fn inspect_files(args: &[String]) -> usize {
                     r.metadata.exposure_display(),
                     r.metadata.capture_time.map(|d| d.to_iso())
                 );
-                let xy = lightcraft_raw::color::as_shot_white_xy(&r);
-                let ct = lightcraft_raw::color::camera_transform(&r, xy);
+                let xy = hazavana_raw::color::as_shot_white_xy(&r);
+                let ct = hazavana_raw::color::camera_transform(&r, xy);
                 println!("  as-shot xy ({:.4}, {:.4}) wb {:?} fallback {}", xy.x, xy.y, ct.wb, ct.matrix_is_fallback);
                 for m in [Method::Bilinear, Method::Ppg, Method::Ahd] {
                     let t1 = Instant::now();
@@ -161,7 +161,7 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::inspect_files;
-    use lightcraft_raw::{BlackLevel, Cfa, ColorData, DngWriteOptions, OpcodeLists, Orientation, RawData, RawFormat, RawImage, Rect, write_dng};
+    use hazavana_raw::{BlackLevel, Cfa, ColorData, DngWriteOptions, OpcodeLists, Orientation, RawData, RawFormat, RawImage, Rect, write_dng};
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -170,7 +170,7 @@ mod tests {
     impl TempDir {
         fn new() -> Self {
             static NEXT: AtomicUsize = AtomicUsize::new(0);
-            let path = std::env::temp_dir().join(format!("lightcraft-rawinfo-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+            let path = std::env::temp_dir().join(format!("hazavana-rawinfo-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
             std::fs::create_dir(&path).expect("create test directory");
             Self(path)
         }

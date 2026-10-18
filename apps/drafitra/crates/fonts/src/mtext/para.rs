@@ -5,7 +5,7 @@
 //!
 //! Contents without any of these lay out exactly as in [`super::layout_mtext_with`]'s plain path.
 
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_geom::{Bounds2, Vec2};
 
 use super::{Atom, Fmt, MTextLayout, MTextParams, MTextPiece, Seg, arg, num, parse, seg_plain, seg_shape, seg_width};
 

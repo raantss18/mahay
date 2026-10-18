@@ -58,7 +58,7 @@ fn image_filters_import_from_current_container_and_skip_ambiguous_data() {
     let (doc, warnings) = import(&bytes, "ImageFilters.fig").unwrap();
     let get = |name: &str| {
         let node = doc.nodes().find(|node| node.name == name).unwrap();
-        let figcraft_doc::color::PaintKind::Image(image) = &node.fills[0].kind else { panic!("{name} is not an image fill") };
+        let endrika_doc::color::PaintKind::Image(image) = &node.fills[0].kind else { panic!("{name} is not an image fill") };
         image
     };
     let current = get("Current");

@@ -4,7 +4,7 @@
 //! testing need nothing special; after an edit the engine joins the slices and re-distributes them
 //! with [`distribute`].
 
-use vectorcraft_doc::{ParaStyle, TextObject, TextRun};
+use tsipika_doc::{ParaStyle, TextObject, TextRun};
 
 use crate::edit::{normalize, runs_len, slice_runs, style_at};
 use crate::{FontDb, layout};
@@ -111,11 +111,11 @@ pub fn distribute(db: &FontDb, frames: &[&TextObject], runs: &[TextRun], paras: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::{CharStyle, Justify, TextKind};
-    use vectorcraft_geom::{Affine, Rect, shapes};
+    use tsipika_doc::{CharStyle, Justify, TextKind};
+    use tsipika_geom::{Affine, Rect, shapes};
 
     fn frame(x: f64) -> TextObject {
-        let mut t = TextObject::point(vectorcraft_geom::Point::ZERO, "", CharStyle::default());
+        let mut t = TextObject::point(tsipika_geom::Point::ZERO, "", CharStyle::default());
         t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(x, 0.0, x + 120.0, 60.0)) };
         t.xf = Affine::IDENTITY;
         t
@@ -149,7 +149,7 @@ mod tests {
         let text = "The quick brown fox jumps over the lazy dog. ".repeat(4) + "\nSecond paragraph.\nThird.";
         let story = vec![TextRun { text, style: CharStyle::default(), inline: None }];
         let style = |j| ParaStyle { justify: j, ..Default::default() };
-        use vectorcraft_doc::Justify::*;
+        use tsipika_doc::Justify::*;
         let paras = vec![style(Left), style(Center), style(Right)];
         let parts = distribute(db, &[&a, &b], &story, &paras);
         assert!(!parts[0].runs.is_empty() && !parts[1].runs.is_empty());

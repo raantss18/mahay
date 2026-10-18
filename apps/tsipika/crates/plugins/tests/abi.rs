@@ -6,7 +6,7 @@
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use vectorcraft_plugins::{Error, Kind, Limits, Plugin, registry, wat as tpl};
+use tsipika_plugins::{Error, Kind, Limits, Plugin, registry, wat as tpl};
 
 /// The example Desaturate plug-in, built from `crates/plugins/example`.
 const DESATURATE: &[u8] = include_bytes!("fixtures/desaturate.wasm");
@@ -39,7 +39,7 @@ fn run_err(bytes: &[u8], limits: Limits) -> (Error, Duration) {
 fn example_desaturate_loads_and_reports_its_manifest() {
     let p = Plugin::load(DESATURATE, Limits::default()).unwrap();
     let m = p.manifest();
-    assert_eq!(m.id, "org.vectorcraft.example.desaturate");
+    assert_eq!(m.id, "org.tsipika.example.desaturate");
     assert_eq!(m.name, "Desaturate");
     assert_eq!(m.kind, Kind::Filter);
     assert_eq!(m.params_doc(), "{amount: 0..100 (100)}");
@@ -68,7 +68,7 @@ fn example_desaturate_moves_every_colour_model_to_grey() {
     assert!((half["objects"][0]["fills"][0]["color"]["r"].as_f64().unwrap() - 0.6063).abs() < 1e-9);
     // Nothing to work on: the plug-in's own message.
     let none = p.run(INPUT.as_bytes(), b"{}").unwrap();
-    assert!(matches!(vectorcraft_plugins::objects::decode(&none), Err(Error::Failed(m)) if m.contains("Select some paths")));
+    assert!(matches!(tsipika_plugins::objects::decode(&none), Err(Error::Failed(m)) if m.contains("Select some paths")));
 }
 
 #[test]
@@ -193,13 +193,13 @@ fn registry_install_list_remove() {
 
 #[test]
 fn folder_loading_skips_bad_files() {
-    let dir = std::env::temp_dir().join(format!("vectorcraft-plugins-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tsipika-plugins-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("a-desaturate.wasm"), DESATURATE).unwrap();
     std::fs::write(dir.join("b-broken.wasm"), b"\0asm junk").unwrap();
     std::fs::write(dir.join("notes.txt"), b"ignored").unwrap();
     let r = registry::load_folder(&dir).unwrap();
-    assert_eq!(r.loaded, ["org.vectorcraft.example.desaturate"]);
+    assert_eq!(r.loaded, ["org.tsipika.example.desaturate"]);
     assert_eq!(r.failed.len(), 1);
     assert!(r.failed[0].0.ends_with("b-broken.wasm"));
     assert!(registry::load_folder(&dir.join("missing")).is_err());

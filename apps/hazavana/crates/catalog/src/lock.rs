@@ -1,7 +1,7 @@
 //! One process per library: an exclusive OS lock on `<library>/catalog.lock`, held for as long as
 //! the library is open (issue #99).
 //!
-//! Two processes on the same library (the app and `lightcraft-cli --library`, two app instances,
+//! Two processes on the same library (the app and `hazavana-cli --library`, two app instances,
 //! two computers on a shared folder) would each keep their own catalog and `seq` counter, and
 //! whichever wrote the last snapshot would silently drop the other's edits. So opening a library
 //! takes the lock first, and a second opener gets [`LockError::InUse`] instead.
@@ -40,7 +40,7 @@ pub struct LockOwner {
     pub pid: u32,
     /// Computer name, if known.
     pub host: String,
-    /// The program (`LightCraft`, `lightcraft-cli`…) and its version.
+    /// The program (`Hazavana`, `hazavana-cli`…) and its version.
     pub program: String,
     pub version: String,
     /// When it opened the library (seconds since 1970).
@@ -59,9 +59,9 @@ impl LockOwner {
         }
     }
 
-    /// "LightCraft 0.3.0 (process 123 on studio-mac)".
+    /// "Hazavana 0.3.0 (process 123 on studio-mac)".
     pub fn describe(&self) -> String {
-        let program = if self.program.is_empty() { "another LightCraft" } else { self.program.as_str() };
+        let program = if self.program.is_empty() { "another Hazavana" } else { self.program.as_str() };
         let version = if self.version.is_empty() { String::new() } else { format!(" {}", self.version) };
         let host = if self.host.is_empty() {
             String::new()
@@ -83,7 +83,7 @@ fn host_name() -> String {
 #[derive(Debug, thiserror::Error)]
 pub enum LockError {
     /// Another process has the library open.
-    #[error("This library is already open in {}. Close it there first.", .0.as_ref().map(LockOwner::describe).unwrap_or_else(|| "another LightCraft program".into()))]
+    #[error("This library is already open in {}. Close it there first.", .0.as_ref().map(LockOwner::describe).unwrap_or_else(|| "another Hazavana program".into()))]
     InUse(Option<LockOwner>),
 }
 

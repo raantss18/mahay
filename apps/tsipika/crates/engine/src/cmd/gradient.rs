@@ -1,11 +1,11 @@
 //! The Gradient panel and the Gradient tool: in-place gradient edits and the gradient vector.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::appearance::stroke_paint_bounds;
-use vectorcraft_doc::{Document, Node, NodeKind, StrokeGradientMode};
-use vectorcraft_geom::{Affine, Point, Rect};
-use vectorcraft_tools::params::color_json;
+use tsipika_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::appearance::stroke_paint_bounds;
+use tsipika_doc::{Document, Node, NodeKind, StrokeGradientMode};
+use tsipika_geom::{Affine, Point, Rect};
+use tsipika_tools::params::color_json;
 
 use super::appearance::{ItemTarget, edit_items, edits_stroke, item_target};
 use super::edit::{outermost, selected_roots};
@@ -142,7 +142,7 @@ pub(crate) fn link_stops(d: &Document, v: &Value) -> Parsed<Value> {
 /// RGB color in a CMYK document becoming CMYK through the color settings
 /// ([`super::paint::new_color`], with `p`'s `keepModel`). `None` for a stop that names a swatch,
 /// which gives its color in the swatch's model, and for a color stored as given.
-pub(crate) type StopColors = Vec<Option<(vectorcraft_color::Color, vectorcraft_color::Color)>>;
+pub(crate) type StopColors = Vec<Option<(tsipika_color::Color, tsipika_color::Color)>>;
 
 /// The [`StopColors`] of `g`'s stops.
 pub(crate) fn stop_colors(s: &Session, p: &Value, g: &Value) -> StopColors {
@@ -164,7 +164,7 @@ pub(crate) fn with_stored_stops<'a>(g: &'a Value, old: &Paint, stored: &StopColo
     if stored.iter().all(Option::is_none) {
         return Cow::Borrowed(g);
     }
-    let had = |c: &vectorcraft_color::Color| matches!(old, Paint::Gradient(o) if o.gradient.stops.iter().any(|st| st.color == *c));
+    let had = |c: &tsipika_color::Color| matches!(old, Paint::Gradient(o) if o.gradient.stops.iter().any(|st| st.color == *c));
     let mut v = g.clone();
     let Some(stops) = v.get_mut("stops").and_then(Value::as_array_mut) else { return Cow::Borrowed(g) };
     for (st, sc) in stops.iter_mut().zip(stored) {
@@ -212,7 +212,7 @@ pub(crate) fn parse_stops(v: &Value) -> Parsed<Vec<GradientStop>> {
 }
 
 /// Parse a gradient paint object (the `gradient` param of `paint.setFill`). Lossless for everything
-/// `vectorcraft_tools::params::gradient_params` writes.
+/// `tsipika_tools::params::gradient_params` writes.
 pub(crate) fn parse_gradient(g: &Value) -> Parsed<GradientPaint> {
     if !g.is_object() {
         return Err("`gradient` must be an object".into());
@@ -321,7 +321,7 @@ pub(crate) fn apply_gradient_edit_in(
         gp.angle = a;
         if let Some(g) = &mut gp.geom {
             let r = a.to_radians();
-            let dir = vectorcraft_geom::Vec2::new(r.cos(), -r.sin());
+            let dir = tsipika_geom::Vec2::new(r.cos(), -r.sin());
             if gp.gradient.kind == GradientKind::Radial {
                 g.end = g.start + dir * g.length();
             } else {
@@ -441,7 +441,7 @@ fn edit_gradient(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// A painted stroke on a type run without a weight gets 1 pt.
-pub(crate) fn run_stroke_weight(style: &mut vectorcraft_doc::CharStyle) {
+pub(crate) fn run_stroke_weight(style: &mut tsipika_doc::CharStyle) {
     if style.stroke_width == 0.0 {
         style.stroke_width = 1.0;
     }
@@ -449,7 +449,7 @@ pub(crate) fn run_stroke_weight(style: &mut vectorcraft_doc::CharStyle) {
 
 /// A type run's fill or stroke paint and the box (text space) an unplaced gradient on it fits:
 /// the layout bounds `lb`, grown by half the run's stroke weight for strokes.
-pub(crate) fn run_paint_mut(r: &mut vectorcraft_doc::TextRun, stroke: bool, lb: Rect) -> (&mut Paint, Rect) {
+pub(crate) fn run_paint_mut(r: &mut tsipika_doc::TextRun, stroke: bool, lb: Rect) -> (&mut Paint, Rect) {
     if stroke {
         let b = stroke_paint_bounds(lb, r.style.stroke_width);
         (&mut r.style.stroke, b)

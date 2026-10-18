@@ -1,6 +1,6 @@
-# CADCraft German interface catalog — original translations by the CADCraft contributors.
+# Drafitra German interface catalog — original translations by the Drafitra contributors.
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # UTF-8: context<TAB>English source<TAB>German translation.
 # Empty context = ordinary label; @plural = one|other forms with {n}.
 # Keep command IDs, keywords, technology/product names and user data unchanged.
@@ -28,7 +28,7 @@
 	= Equals	= Gleich
 	> Greater than	> Größer als
 	About	Über
-	About CADCraft	Über CADCraft
+	About Drafitra	Über Drafitra
 	Absolute	Absolut
 	Add Leader	Führungslinie hinzufügen
 	Align	Ausrichten
@@ -83,7 +83,7 @@
 	ByBlock	VonBlock
 	ByColor	VonFarbe
 	ByLayer	VonLayer
-	CADCraft Help	CADCraft-Hilfe
+	Drafitra Help	Drafitra-Hilfe
 	Cancel	Abbrechen
 	Cartesian (x, y)	Kartesisch (x, y)
 	Center	Zentrum
@@ -361,7 +361,7 @@
 	Isolate Layer	Layer isolieren
 	Isometric Drafting	Isometrisches Zeichnen
 	Join	Verbinden
-	Join the ArtCraft Discord…	Dem ArtCraft-Discord beitreten…
+	Join the Mahay Discord…	Dem Mahay-Discord beitreten…
 	Join us on Discord	Treten Sie uns auf Discord bei
 	Language	Sprache
 	Last	Letzter
@@ -490,7 +490,7 @@
 	Offset	Versatz
 	On	Ein
 	On/Off	Ein/Aus
-	One of the Crafting Apps by the ArtCraft team and community.	Eine der Crafting Apps vom ArtCraft-Team und seiner Community.
+	One of the Mahay apps by the Mahay team and community.	Eine der Mahay apps vom Mahay-Team und seiner Community.
 	Open (⌘O)	Öffnen (⌘O)
 	Open Sample Drawing	Beispielzeichnung öffnen
 	Open sample drawing	Beispielzeichnung öffnen
@@ -591,7 +591,7 @@
 	Quick Select Properties	Schnellauswahl-Eigenschaften
 	Quick Select...	Schnellauswahl...
 	QuickCalc	QuickCalc
-	Quit CADCraft	CADCraft beenden
+	Quit Drafitra	Drafitra beenden
 	Radius	Radius
 	Raster Image	Rasterbild
 	Ray	Strahl
@@ -1000,7 +1000,7 @@
 @plural	{n} contributor	{n} Mitwirkender|{n} Mitwirkende
 	Drawing as bytes	Zeichnung als Bytes
 	Services	Dienste
-	Hide CADCraft	CADCraft ausblenden
+	Hide Drafitra	Drafitra ausblenden
 	Hide Others	Andere ausblenden
 	Accessibility	Bedienungshilfen
 	Show System Cursor	Systemzeiger anzeigen

@@ -2,7 +2,7 @@
 
 use crate::{Method, Mode, Raster, TraceError, TraceParams, TraceResult, trace_within};
 use kurbo::{ParamCurve, Shape};
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 /// A soft, anti-aliased render of `shade` (`Some(colour)` where the shape is), supersampled `ss × ss`
 /// and blurred by `blur` pixels, on a transparent background.

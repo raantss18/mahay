@@ -30,22 +30,22 @@ impl Host for Mock {
 }
 
 const IMPORTS: &str = r#"
-  (import "figcraft" "call" (func $call (param i32 i32 i32 i32) (result i32)))
-  (import "figcraft" "selection" (func $selection (result i32)))
-  (import "figcraft" "reply_len" (func $reply_len (result i32)))
-  (import "figcraft" "reply_read" (func $reply_read (param i32 i32) (result i32)))
-  (import "figcraft" "log" (func $log (param i32 i32)))
-  (import "figcraft" "notify" (func $notify (param i32 i32)))
-  (import "figcraft" "set_output" (func $set_output (param i32 i32)))
+  (import "endrika" "call" (func $call (param i32 i32 i32 i32) (result i32)))
+  (import "endrika" "selection" (func $selection (result i32)))
+  (import "endrika" "reply_len" (func $reply_len (result i32)))
+  (import "endrika" "reply_read" (func $reply_read (param i32 i32) (result i32)))
+  (import "endrika" "log" (func $log (param i32 i32)))
+  (import "endrika" "notify" (func $notify (param i32 i32)))
+  (import "endrika" "set_output" (func $set_output (param i32 i32)))
 "#;
 
-/// A module with the host imports, one page of memory, `data` segments and `figcraft_run`'s body.
+/// A module with the host imports, one page of memory, `data` segments and `endrika_run`'s body.
 fn module(data: &str, body: &str) -> Vec<u8> {
     module_with(data, body, "(memory (export \"memory\") 1)", "")
 }
 
 fn module_with(data: &str, body: &str, memory: &str, extra: &str) -> Vec<u8> {
-    let wat = format!("(module {IMPORTS} {memory} {data} {extra} (func (export \"figcraft_run\") (param $n i32) (result i32) {body}))");
+    let wat = format!("(module {IMPORTS} {memory} {data} {extra} (func (export \"endrika_run\") (param $n i32) (result i32) {body}))");
     wat::parse_str(&wat).unwrap_or_else(|e| panic!("{e}\n{wat}"))
 }
 
@@ -341,18 +341,18 @@ fn modules_without_the_abi_are_refused() {
     };
     let wasi = invalid(
         r#"(module (import "wasi_snapshot_preview1" "fd_write" (func (param i32 i32 i32 i32) (result i32)))
-           (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) (i32.const 0)))"#,
+           (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) (i32.const 0)))"#,
     );
     assert!(wasi.contains("no file system"), "{wasi}");
     invalid(
-        r#"(module (import "figcraft" "call" (func (param i32) (result i32))) (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) (i32.const 0)))"#,
+        r#"(module (import "endrika" "call" (func (param i32) (result i32))) (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) (i32.const 0)))"#,
     );
     invalid(
-        r#"(module (import "figcraft" "launch_rockets" (func)) (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) (i32.const 0)))"#,
+        r#"(module (import "endrika" "launch_rockets" (func)) (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) (i32.const 0)))"#,
     );
-    invalid(r#"(module (func (export "figcraft_run") (param i32) (result i32) (i32.const 0)))"#);
+    invalid(r#"(module (func (export "endrika_run") (param i32) (result i32) (i32.const 0)))"#);
     invalid(r#"(module (memory (export "memory") 1))"#);
-    invalid(r#"(module (memory (export "memory") 1) (func (export "figcraft_run") (result i32) (i32.const 0)))"#);
+    invalid(r#"(module (memory (export "memory") 1) (func (export "endrika_run") (result i32) (i32.const 0)))"#);
     for junk in [&b""[..], b"\0asm", b"\0asm\x01\0\0\0\x01", b"not wasm at all", &[0xff; 64]] {
         assert!(matches!(check_module(junk, &Limits::default()), Err(PluginError::InvalidModule(_))));
     }

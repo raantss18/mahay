@@ -1,7 +1,7 @@
 //! Binary DXF writing (#421): every value kind round-trips through `write_binary` and `parse`,
 //! and hostile binary input never panics.
 
-use cadcraft_dxf::{Tag, Value, is_binary, parse, write_ascii_as, write_binary};
+use drafitra_dxf::{Tag, Value, is_binary, parse, write_ascii_as, write_binary};
 
 fn sample() -> Vec<Tag> {
     vec![

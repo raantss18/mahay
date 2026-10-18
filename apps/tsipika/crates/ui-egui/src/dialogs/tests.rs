@@ -1,20 +1,20 @@
 //! The dialog registry and the shared frame, drawn headlessly.
 
 use serde_json::json;
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::Session;
+use tsipika_doc::Unit;
+use tsipika_engine::Session;
 
 use super::*;
 use crate::theme;
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
     app
 }
 
 /// One headless frame of the dialog layer.
-fn frame(app: &mut VectorcraftApp, input: egui::RawInput) {
+fn frame(app: &mut TsipikaApp, input: egui::RawInput) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
@@ -27,11 +27,11 @@ fn enter() -> egui::RawInput {
     egui::RawInput { events: vec![key], ..Default::default() }
 }
 
-fn open(app: &mut VectorcraftApp, kind: &str, fields: serde_json::Value) {
+fn open(app: &mut TsipikaApp, kind: &str, fields: serde_json::Value) {
     app.ui.dialog = Some(Dialog::new(kind, fields));
 }
 
-fn objects(app: &VectorcraftApp) -> usize {
+fn objects(app: &TsipikaApp) -> usize {
     app.session.doc().unwrap().doc.layers.iter().map(|l| l.children().map_or(0, |c| c.len())).sum()
 }
 
@@ -228,16 +228,16 @@ fn raster_filter_dialogs_preview_and_apply() {
         frame(&mut app, Default::default());
         assert!(app.session.in_interaction(), "{effect}: previews");
         confirm(&mut app).unwrap();
-        let n = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
+        let n = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().clone();
         assert_eq!(n.appearance.effects.len(), 1, "{effect}");
         assert_eq!(n.appearance.effects[0].params[key], v, "{effect}");
     }
     // Fields follow the effect's documented order (its dialog's), not the alphabet.
-    let doc = vectorcraft_effects::effect_info("blur.smart").unwrap().params;
+    let doc = tsipika_effects::effect_info("blur.smart").unwrap().params;
     let ranks: Vec<usize> = ["radius", "threshold", "quality", "blurMode"].iter().map(|k| super::effect::doc_rank(doc, k)).collect();
     assert!(ranks.windows(2).all(|w| w[0] < w[1]) && ranks[3] < usize::MAX, "{ranks:?}");
     assert_eq!(super::effect::doc_rank(doc, "nope"), usize::MAX);
-    let doc = vectorcraft_effects::effect_info("pixelate.colorHalftone").unwrap().params;
+    let doc = tsipika_effects::effect_info("pixelate.colorHalftone").unwrap().params;
     let ranks: Vec<usize> = ["maxRadius", "channel1", "channel2", "channel3", "channel4"].iter().map(|k| super::effect::doc_rank(doc, k)).collect();
     assert!(ranks.windows(2).all(|w| w[0] < w[1]) && ranks[4] < usize::MAX, "{ranks:?}");
     // Labels as the dialogs show them.
@@ -246,7 +246,7 @@ fn raster_filter_dialogs_preview_and_apply() {
     assert_eq!(super::form::humanize("channel3"), "Channel 3:");
     assert_eq!(super::form::humanize("cellSize"), "Cell Size:");
     assert_eq!(super::form::humanize("lightDirection"), "Light Direction:");
-    let doc = vectorcraft_effects::effect_info("texture.texturizer").unwrap().params;
+    let doc = tsipika_effects::effect_info("texture.texturizer").unwrap().params;
     let ranks: Vec<usize> = ["texture", "scaling", "relief", "lightDirection", "invert"].iter().map(|k| super::effect::doc_rank(doc, k)).collect();
     assert!(ranks.windows(2).all(|w| w[0] < w[1]) && ranks[4] < usize::MAX, "{ranks:?}");
 }
@@ -259,7 +259,7 @@ fn effect_dialog_applies_to_its_appearance_item() {
     app.run("effect.dialog", json!({"effect": "distort.roughen", "item": 1})).unwrap();
     frame(&mut app, Default::default());
     confirm(&mut app).unwrap();
-    let n = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
+    let n = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().clone();
     assert_eq!(n.appearance.items[1].effects().len(), 1, "the effect goes to the stroke");
     assert!(n.appearance.effects.is_empty() && n.appearance.items[0].effects().is_empty());
 }
@@ -274,10 +274,10 @@ fn scribble_dialog_shows_the_angle_as_stored_and_each_variation() {
     frame(&mut app, Default::default());
     assert_eq!(app.ui.dialog.as_ref().unwrap().fields["angle"].as_f64(), Some(-90.0), "the field reads what is stored");
     confirm(&mut app).unwrap();
-    let n = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
+    let n = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().clone();
     assert_eq!(n.appearance.effects[0].params["angle"].as_f64(), Some(-90.0));
     // Each variation follows the option it varies, as in the reference app's Scribble Options.
-    let doc = vectorcraft_effects::effect_info("stylize.scribble").unwrap().params;
+    let doc = tsipika_effects::effect_info("stylize.scribble").unwrap().params;
     let order = ["angle", "overlap", "overlapVariation", "strokeWidth", "curviness", "curvinessVariation", "spacing", "spacingVariation", "seed"];
     let ranks: Vec<usize> = order.iter().map(|k| super::effect::doc_rank(doc, k)).collect();
     assert!(ranks.windows(2).all(|w| w[0] < w[1]) && ranks[8] < usize::MAX, "{ranks:?}");
@@ -308,7 +308,7 @@ fn revolve_dialog_preview_cancel_confirm_and_undo() {
 
 #[test]
 fn extrude_inflate_and_rotate_dialogs_preview_confirm_and_undo() {
-    for effect in vectorcraft_effects::SOLIDS {
+    for effect in tsipika_effects::SOLIDS {
         let mut app = app();
         app.run("path.create", json!({"d":"M100 100 L200 100 L200 200 L100 200 Z"})).unwrap();
         app.run("select.all", json!({})).unwrap();
@@ -340,7 +340,7 @@ fn dialogs_are_as_tall_as_their_content() {
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let height = |app: &mut VectorcraftApp, kind: &str, fields: serde_json::Value| {
+    let height = |app: &mut TsipikaApp, kind: &str, fields: serde_json::Value| {
         open(app, kind, fields);
         for _ in 0..30 {
             let input = egui::RawInput { screen_rect: Some(screen), ..Default::default() };
@@ -404,7 +404,7 @@ fn dialogs_do_not_stretch_to_the_screen() {
 }
 
 /// The dialog window of `app`'s open dialog after a few frames in a `w` × 900 window.
-fn dialog_rect(app: &mut VectorcraftApp, w: f32) -> egui::Rect {
+fn dialog_rect(app: &mut TsipikaApp, w: f32) -> egui::Rect {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
@@ -510,7 +510,7 @@ fn given_headings_are_shown_as_they_are() {
 struct PluginIntField {
     ctx: egui::Context,
     d: Dialog,
-    specs: Vec<(String, vectorcraft_plugins::ParamSpec)>,
+    specs: Vec<(String, tsipika_plugins::ParamSpec)>,
     pos: egui::Pos2,
 }
 
@@ -519,7 +519,7 @@ impl PluginIntField {
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);
         theme::apply(&ctx, Default::default());
-        let specs = vec![("seed".into(), vectorcraft_plugins::ParamSpec::Int { min, max, default: 0 })];
+        let specs = vec![("seed".into(), tsipika_plugins::ParamSpec::Int { min, max, default: 0 })];
         let mut f = PluginIntField { ctx, d: Dialog::new(plugin::KIND, json!({ "seed": start })), specs, pos: egui::Pos2::ZERO };
         fn number_rect(shape: &egui::Shape, text: &str) -> Option<egui::Rect> {
             match shape {
@@ -596,12 +596,12 @@ fn a_dialog_opens_with_its_first_field_focused_so_typing_and_enter_apply() {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
     };
     let enter = || egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
-    let bounds = |app: &VectorcraftApp| app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
+    let bounds = |app: &TsipikaApp| app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
     // Object › Transform › Rotate…: type 90 over the angle, press Enter.
     crate::menus::invoke(&mut app, "object.rotate", json!({}));
     frame(&mut app, vec![]);
@@ -633,7 +633,7 @@ fn a_dialog_opens_with_its_first_field_focused_so_typing_and_enter_apply() {
     frame(&mut app, vec![egui::Event::Text("50".into())]);
     frame(&mut app, vec![enter()]);
     assert!(app.ui.dialog.is_none());
-    let node = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
+    let node = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().clone();
     assert_eq!(node.appearance.effects.last().map(|e| e.params["scaleH"].clone()), Some(json!(50.0)));
 }
 
@@ -650,7 +650,7 @@ fn shift_enter_in_a_dialog_field_applies_it_and_confirms_the_dialog() {
     let screen_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1280.0, 900.0)));
     let mut time = 0.0;
     // Whole app frames: the panels, then the dialog.
-    let mut frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let mut frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         time += 0.1;
         let mut out = ctx.run_ui(egui::RawInput { events, time: Some(time), screen_rect, ..Default::default() }, |ui| {
             app.logic(ui.ctx());
@@ -661,7 +661,7 @@ fn shift_enter_in_a_dialog_field_applies_it_and_confirms_the_dialog() {
     };
     let shift_enter =
         || egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::SHIFT };
-    let bounds = |app: &VectorcraftApp| app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
+    let bounds = |app: &TsipikaApp| app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
     // Move…: type 15 over its first field and press Shift+Enter.
     let before = bounds(&app);
     crate::menus::invoke(&mut app, "object.move", json!({}));
@@ -709,7 +709,7 @@ fn a_dialog_opened_by_a_click_focuses_its_first_field_each_time_it_opens() {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
     };
@@ -719,7 +719,7 @@ fn a_dialog_opened_by_a_click_focuses_its_first_field_each_time_it_opens() {
         let press = |pressed| egui::Event::PointerButton { pos, button, pressed, modifiers };
         vec![egui::Event::PointerMoved(pos), press(true), press(false)]
     };
-    type Open = fn(&mut VectorcraftApp);
+    type Open = fn(&mut TsipikaApp);
     let opens: [(&str, Open); 2] = [
         ("Convert to Shape", |app| drop(app.run("effect.dialog", json!({"effect": "convertToShape.rectangle"})))),
         ("Rasterize", |app| crate::menus::invoke(app, "object.rasterize", json!({}))),
@@ -750,7 +750,7 @@ fn a_dialogs_focus_skips_a_greyed_out_first_field() {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
     };
@@ -783,7 +783,7 @@ fn tab_through_the_hex_field_keeps_the_value_typed_before_it() {
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
     // One frame of the dialog layer: every text drawn, with its center.
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
         fn collect(s: &egui::Shape, out: &mut Vec<(String, egui::Pos2)>) {
@@ -800,8 +800,8 @@ fn tab_through_the_hex_field_keeps_the_value_typed_before_it() {
     let key = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
     let (tab, back) = (key(egui::Key::Tab, egui::Modifiers::NONE), key(egui::Key::Tab, egui::Modifiers::SHIFT));
     let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
-    let color = |app: &VectorcraftApp| app.ui.dialog.as_ref().unwrap().fields["color"].clone();
-    type Open = fn(&mut VectorcraftApp);
+    let color = |app: &TsipikaApp| app.ui.dialog.as_ref().unwrap().fields["color"].clone();
+    type Open = fn(&mut TsipikaApp);
     let opens: [(&str, Open, &str); 2] = [
         ("Color Picker", |app| drop(app.run("ui.colorPicker", json!({"color": "#ffffff"}))), "FFFFFF"),
         ("Swatch Options", |app| drop(app.run("ui.swatchOptions", json!({"name": "Sky"}))), "3366CC"),
@@ -849,7 +849,7 @@ fn object_mosaic_makes_the_grid_typed_in_its_dialog() {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
     };
@@ -874,7 +874,7 @@ fn object_mosaic_makes_the_grid_typed_in_its_dialog() {
 /// #793: Artboard Options lists its fields as Name, Width, Height, not by key.
 #[test]
 fn artboard_options_lists_name_then_width_and_height() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     app.session.execute("file.new", &json!({"width": 612, "height": 792})).unwrap();
     open(&mut app, "artboardOptions", json!({"index": 0, "name": "Artboard 1", "width": 612, "height": 792, "x": 0, "y": 0}));
     let text = crate::tests_labels::painted_text(&mut app, |app, ui| show(app, ui.ctx()));
@@ -907,7 +907,7 @@ fn the_transform_effect_dialog_has_its_controls_previews_them_and_shows_them_aga
         assert!(text.lines().any(|l| l == s), "{s} in {text}");
     }
     assert!(app.session.in_interaction(), "the preview runs");
-    let effect = |app: &VectorcraftApp| app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.effects[0].clone();
+    let effect = |app: &TsipikaApp| app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().appearance.effects[0].clone();
     // The reference point and Random update the preview.
     let d = app.ui.dialog.as_mut().unwrap();
     for (k, v) in [("moveH", json!(30)), ("copies", json!(3)), ("reference", json!(8))] {
@@ -920,7 +920,7 @@ fn the_transform_effect_dialog_has_its_controls_previews_them_and_shows_them_aga
     assert_eq!(effect(&app).params["random"], json!(true));
     confirm(&mut app).unwrap();
     assert!(!app.session.in_interaction());
-    assert_eq!(app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.effects.len(), 1);
+    assert_eq!(app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().appearance.effects.len(), 1);
     // Editing it from the Appearance panel shows the same values.
     app.run("effect.dialog", json!({"effect": "distort.transform", "index": 0})).unwrap();
     let d = app.ui.dialog.as_ref().unwrap();
@@ -940,7 +940,7 @@ fn drop_shadow_chooses_color_or_darkness() {
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
     let mut time = 0.0;
-    let mut run = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let mut run = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         time += 0.1;
         let mut out = ctx.run_ui(egui::RawInput { events, time: Some(time), ..Default::default() }, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
@@ -966,7 +966,7 @@ fn drop_shadow_chooses_color_or_darkness() {
     for events in [vec![egui::Event::PointerMoved(at)], vec![button(true)], vec![button(false)], vec![], vec![]] {
         run(&mut app, events);
     }
-    let effect = |app: &VectorcraftApp| app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.effects[0].clone();
+    let effect = |app: &TsipikaApp| app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().appearance.effects[0].clone();
     assert!(app.session.in_interaction(), "the preview runs");
     assert_eq!(effect(&app).params["shade"], json!("darkness"));
     confirm(&mut app).unwrap();
@@ -989,7 +989,7 @@ fn artboard_options_position_moves_art_only_with_the_tool_option_on() {
         super::confirm(&mut app).unwrap();
         assert_eq!(app.session.doc().unwrap().doc.artboards[0].rect.x0, 50.0);
         assert_eq!(
-            app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0,
+            app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0,
             if move_art { 60.0 } else { 10.0 }
         );
         app.run("edit.undo", json!({})).unwrap();
@@ -1013,7 +1013,7 @@ fn artboard_options_position_follows_the_tool_option_with_another_tool() {
         super::confirm(&mut app).unwrap();
         assert_eq!(app.session.doc().unwrap().doc.artboards[0].rect.x0, 50.0);
         assert_eq!(
-            app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0,
+            app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0,
             if move_art { 60.0 } else { 10.0 }
         );
     }
@@ -1041,11 +1041,11 @@ fn field_after(shown: &[(String, egui::Rect)], label: &str) -> egui::Pos2 {
 
 /// A 400 × 300 pt artboard at the page's origin with the ruler origin at (120, 50), and its
 /// Artboard Options open.
-fn artboard_options_from_a_ruler_origin() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn artboard_options_from_a_ruler_origin() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.run("document.setRulerOrigin", json!({"x": 120, "y": 50})).unwrap();
-    assert_eq!(app.ruler_origin(), vectorcraft_geom::Point::new(120.0, 50.0));
+    assert_eq!(app.ruler_origin(), tsipika_geom::Point::new(120.0, 50.0));
     app.run("tool.options", json!({"tool": "artboard"})).unwrap();
     app
 }
@@ -1083,7 +1083,7 @@ fn artboard_options_x_and_y_count_from_the_ruler_origin_at_the_reference_point()
     }
     f.key(&mut app, egui::Key::Enter, egui::Modifiers::NONE);
     assert!(app.ui.dialog.is_none(), "Enter applies the dialog");
-    assert_eq!(app.session.doc().unwrap().doc.artboards[0].rect, vectorcraft_geom::Rect::new(20.0, -250.0, 420.0, 50.0));
+    assert_eq!(app.session.doc().unwrap().doc.artboards[0].rect, tsipika_geom::Rect::new(20.0, -250.0, 420.0, 50.0));
     assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1, "one undo step");
     app.run("edit.undo", json!({})).unwrap();
     assert_eq!(app.session.doc().unwrap().doc, before);
@@ -1098,7 +1098,7 @@ fn artboard_options_x_and_y_count_from_the_ruler_origin_at_the_reference_point()
 #[test]
 fn artboard_options_size_keeps_the_reference_point() {
     for (point, want) in
-        [(None, vectorcraft_geom::Rect::new(-50.0, 0.0, 450.0, 300.0)), (Some("Top Left"), vectorcraft_geom::Rect::new(0.0, 0.0, 500.0, 300.0))]
+        [(None, tsipika_geom::Rect::new(-50.0, 0.0, 450.0, 300.0)), (Some("Top Left"), tsipika_geom::Rect::new(0.0, 0.0, 500.0, 300.0))]
     {
         let mut app = artboard_options_from_a_ruler_origin();
         let mut f = Frames::new();
@@ -1148,7 +1148,7 @@ fn zig_zag_has_sliders_and_radio_buttons() {
 fn dialog_sliders_report_the_numbers_their_fields_show() {
     use crate::widgets::accessibility_tests::{slider_value, tree};
     use egui::accesskit::Role::Slider;
-    fn set(app: &mut VectorcraftApp, k: &str, v: serde_json::Value) {
+    fn set(app: &mut TsipikaApp, k: &str, v: serde_json::Value) {
         app.ui.dialog.as_mut().expect("a dialog is open").fields.insert(k.into(), v);
     }
     let v = |n: f64, (lo, hi): (f64, f64), text: &str| (Some(n), Some(lo), Some(hi), Some(text.to_string()));
@@ -1203,7 +1203,7 @@ fn dialog_sliders_report_the_numbers_their_fields_show() {
     assert_eq!(slider_value(&shown, "Opacity:"), v(40.0, (0.0, 100.0), "40%"));
     app.ui.dialog = None;
     app.run("path.create", json!({"d": "M150 40 L180 60 L180 140 L150 160"})).unwrap();
-    app.run("effect.dialog", json!({"effect": vectorcraft_effects::REVOLVE, "item": null})).unwrap();
+    app.run("effect.dialog", json!({"effect": tsipika_effects::REVOLVE, "item": null})).unwrap();
     set(&mut app, "angle", json!(270));
     set(&mut app, "offset", json!(600));
     let shown = tree(|ui| show(&mut app, ui.ctx()));
@@ -1211,7 +1211,7 @@ fn dialog_sliders_report_the_numbers_their_fields_show() {
     assert_eq!(slider_value(&shown, "Revolve angle"), v(270.0, (0.0, 360.0), "270.0°"));
     assert_eq!(slider_value(&shown, "Offset"), v(600.0, (0.0, 600.0), "600.0 pt"), "past the rail's 500 pt");
     app.ui.dialog = None;
-    app.run("effect.dialog", json!({"effect": vectorcraft_effects::EXTRUDE, "item": null})).unwrap();
+    app.run("effect.dialog", json!({"effect": tsipika_effects::EXTRUDE, "item": null})).unwrap();
     set(&mut app, "__tab", json!("rotation"));
     set(&mut app, "rotationX", json!(30));
     set(&mut app, "rotationY", json!(12.25));
@@ -1223,7 +1223,7 @@ fn dialog_sliders_report_the_numbers_their_fields_show() {
     app.run("ui.swatchOptions", json!({"name": "Ink"})).unwrap();
     let shown = tree(|ui| show(&mut app, ui.ctx()));
     assert_eq!(slider_value(&shown, "M"), v(80.0, (0.0, 100.0), "80%"));
-    let mut o = vectorcraft_engine::cmd::FlattenOptions { balance: 30.0, ..Default::default() };
+    let mut o = tsipika_engine::cmd::FlattenOptions { balance: 30.0, ..Default::default() };
     let shown = tree(|ui| {
         flatten::options_editor(ui, "flatten-test", &mut o, true);
     });
@@ -1246,7 +1246,7 @@ impl Frames {
         Self { ctx, time: 0.0 }
     }
 
-    fn run(&mut self, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> egui::FullOutput {
+    fn run(&mut self, app: &mut TsipikaApp, events: Vec<egui::Event>) -> egui::FullOutput {
         self.time += 0.1;
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1280.0, 900.0));
         let input = egui::RawInput { events, time: Some(self.time), screen_rect: Some(screen), ..Default::default() };
@@ -1256,18 +1256,18 @@ impl Frames {
     }
 
     /// The strings the dialog layer paints once it has settled, each with its rectangle.
-    fn texts(&mut self, app: &mut VectorcraftApp) -> Vec<(String, egui::Rect)> {
+    fn texts(&mut self, app: &mut TsipikaApp) -> Vec<(String, egui::Rect)> {
         self.run(app, vec![]);
         painted(&self.run(app, vec![]))
     }
 
     /// The center of the button that screen readers name `label`.
-    fn button(&mut self, app: &mut VectorcraftApp, label: &str) -> egui::Pos2 {
+    fn button(&mut self, app: &mut TsipikaApp, label: &str) -> egui::Pos2 {
         self.control(app, label, egui::accesskit::Role::Button)
     }
 
     /// The center of the control of `role` that screen readers name `label`.
-    fn control(&mut self, app: &mut VectorcraftApp, label: &str, role: egui::accesskit::Role) -> egui::Pos2 {
+    fn control(&mut self, app: &mut TsipikaApp, label: &str, role: egui::accesskit::Role) -> egui::Pos2 {
         self.run(app, vec![]);
         let out = self.run(app, vec![]);
         let nodes = &out.platform_output.accesskit_update.as_ref().expect("an accessibility tree").nodes;
@@ -1276,12 +1276,12 @@ impl Frames {
         egui::pos2((b.x0 + b.x1) as f32 * 0.5, (b.y0 + b.y1) as f32 * 0.5)
     }
 
-    fn press(&mut self, app: &mut VectorcraftApp, at: egui::Pos2, pressed: bool) {
+    fn press(&mut self, app: &mut TsipikaApp, at: egui::Pos2, pressed: bool) {
         let button = egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: egui::Modifiers::NONE };
         self.run(app, vec![egui::Event::PointerMoved(at), button]);
     }
 
-    fn drag(&mut self, app: &mut VectorcraftApp, from: egui::Pos2, by: egui::Vec2) {
+    fn drag(&mut self, app: &mut TsipikaApp, from: egui::Pos2, by: egui::Vec2) {
         self.press(app, from, true);
         for k in 1..=4 {
             self.run(app, vec![egui::Event::PointerMoved(from + by * k as f32 / 4.0)]);
@@ -1289,7 +1289,7 @@ impl Frames {
         self.press(app, from + by, false);
     }
 
-    fn key(&mut self, app: &mut VectorcraftApp, key: egui::Key, modifiers: egui::Modifiers) {
+    fn key(&mut self, app: &mut TsipikaApp, key: egui::Key, modifiers: egui::Modifiers) {
         let event = egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
         self.run(app, vec![egui::Event::ModifiersChanged(modifiers), event]);
         self.run(app, vec![egui::Event::ModifiersChanged(egui::Modifiers::NONE)]);
@@ -1297,7 +1297,7 @@ impl Frames {
 }
 
 /// The corners in the open dialog, and those of the first object's first effect.
-fn free_distort_corners(app: &VectorcraftApp) -> (serde_json::Value, serde_json::Value) {
+fn free_distort_corners(app: &TsipikaApp) -> (serde_json::Value, serde_json::Value) {
     let s = app.session.active().unwrap();
     let node = s.doc.node(s.selection.objects[0]).unwrap();
     (app.ui.dialog.as_ref().unwrap().fields["corners"].clone(), node.appearance.effects[0].params["corners"].clone())
@@ -1365,8 +1365,8 @@ fn free_distort_reset_puts_the_corners_back() {
 
 #[test]
 fn polar_grid_shared_canvas_click_defaults_units_counts_and_history() {
-    use vectorcraft_doc::NodeId;
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_doc::NodeId;
+    use tsipika_tools::{PointerEvent, PointerKind};
     let mut app = app();
     app.select_tool("polarGrid");
     app.run("tool.setOption", json!({"tool": "polarGrid", "values": {"concentric": 2, "radial": 3}})).unwrap();
@@ -1403,7 +1403,7 @@ fn polar_grid_shared_canvas_click_defaults_units_counts_and_history() {
 /// stores them.
 #[test]
 fn polar_grid_dialog_edits_skews_compound_and_fill() {
-    use vectorcraft_doc::{NodeId, NodeKind};
+    use tsipika_doc::{NodeId, NodeKind};
     let mut app = app();
     app.run("paint.setFill", json!({"color": "#ff0000"})).unwrap();
     app.run("tool.setOption", json!({"tool": "polarGrid", "values": {"concentric": 3, "radial": 4, "radialSkew": 500}})).unwrap();
@@ -1437,7 +1437,7 @@ fn polar_grid_dialog_edits_skews_compound_and_fill() {
     let children = s.doc.node(NodeId(result["id"].as_u64().unwrap())).unwrap().children().unwrap();
     // Two rings under four radial dividers, all in the current fill.
     assert_eq!(children.iter().map(|n| matches!(n.kind, NodeKind::Compound { .. })).collect::<Vec<_>>(), [true, true, false, false, false, false]);
-    assert!(children.iter().all(|n| n.appearance.fill().is_some_and(|f| f.paint != vectorcraft_color::Paint::None)));
+    assert!(children.iter().all(|n| n.appearance.fill().is_some_and(|f| f.paint != tsipika_color::Paint::None)));
     let widths: Vec<f64> = children[0].children().unwrap().iter().map(|n| n.geometric_bounds().unwrap().width()).collect();
     assert!((widths[0] - 100.0).abs() < 1e-6 && (widths[1] - 93.75).abs() < 1e-6, "outward: {widths:?}");
     let tips: Vec<f64> = children[3..].iter().map(|n| n.path_data().unwrap().subpaths[0].anchors[1].p.x).collect();
@@ -1462,7 +1462,7 @@ fn polar_grid_shared_cancel_reopen_zero_counts_and_failed_creation() {
         app.ui.dialog.as_mut().unwrap().fields.insert(key.into(), json!(0));
     }
     let result = confirm(&mut app).unwrap();
-    let group = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(result["id"].as_u64().unwrap())).unwrap();
+    let group = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(result["id"].as_u64().unwrap())).unwrap();
     assert_eq!(group.children().unwrap().len(), 1);
     assert!(group.children().unwrap()[0].path_data().unwrap().is_closed());
     open_tool_dialog(&mut app, "polarGrid", json!({"x": 10, "y": 20}));

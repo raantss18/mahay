@@ -3,12 +3,12 @@
 //! All images and placed PDFs are tiny procedural fixtures.
 use std::sync::Arc;
 
-use craft_pdf::write::backend as krilla;
+use mahay_pdf::write::backend as krilla;
 
-use designcraft_compose::Cache;
-use designcraft_doc::{Asset, AssetId, Content, Document, Graphic, Item, ItemId, Shape, SpreadRef};
-use designcraft_geom::{Affine, Rect, shapes};
-use designcraft_pdf::{BookletOptions, PdfOptions, Standard, export_booklet, export_pdf, export_pdf_with_report};
+use pejy_compose::Cache;
+use pejy_doc::{Asset, AssetId, Content, Document, Graphic, Item, ItemId, Shape, SpreadRef};
+use pejy_geom::{Affine, Rect, shapes};
+use pejy_pdf::{BookletOptions, PdfOptions, Standard, export_booklet, export_pdf, export_pdf_with_report};
 
 use crate::image_fixtures as fixtures;
 
@@ -249,7 +249,7 @@ fn successful_fallback_warns_for_both_names_and_preserves_rgb_samples() {
 fn pdfa_rgb_conversion_does_not_poison_later_cmyk_exports() {
     let bytes = fixtures::cmyk_tiff(None, false);
     // PDF/A gets the RGB the screen shows: converted through the working CMYK space.
-    let rgb: Vec<u8> = designcraft_images::decode_rgba(&bytes).unwrap().pixels().flat_map(|p| [p[0], p[1], p[2]]).collect();
+    let rgb: Vec<u8> = pejy_images::decode_rgba(&bytes).unwrap().pixels().flat_map(|p| [p[0], p[1], p[2]]).collect();
     let mut d = Document::new(&Default::default());
     place_named(&mut d, bytes.clone(), 36.0, "a.tif", "image/tiff", 0);
     place_named(&mut d, bytes, 66.0, "b.tif", "image/tiff", 0);

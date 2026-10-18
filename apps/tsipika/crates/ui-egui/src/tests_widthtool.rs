@@ -1,10 +1,10 @@
 //! The Width tool in the UI: its cursors and hint.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_tools::Cursor;
+use tsipika_engine::Session;
+use tsipika_tools::Cursor;
 
-use crate::{VectorcraftApp, chrome, tests_labels::painted_text};
+use crate::{TsipikaApp, chrome, tests_labels::painted_text};
 
 #[test]
 fn the_width_tool_has_its_own_cursors() {
@@ -21,7 +21,7 @@ fn the_width_tool_has_its_own_cursors() {
 
 #[test]
 fn the_hint_bar_explains_the_width_tool() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
     app.run("tool.select", json!({"tool": "width"})).unwrap();
     let text = painted_text(&mut app, chrome::hint_bar).replace('\n', "");

@@ -1,7 +1,7 @@
 use super::*;
 use kurbo::{Affine, Shape};
-use vectorcraft_doc::{CharStyle, Justify, TextKind, TextRun};
-use vectorcraft_geom::PathData;
+use tsipika_doc::{CharStyle, Justify, TextKind, TextRun};
+use tsipika_geom::PathData;
 
 /// The bundled fonts only: what these tests measure doesn't change with the fonts installed.
 fn db() -> &'static FontDb {
@@ -236,8 +236,8 @@ fn indents_and_paragraph_spacing() {
 fn each_paragraph_has_its_own_attributes() {
     let frame = Rect::new(0.0, 0.0, 200.0, 400.0);
     let mut t = area("left\ncentred\nright", style(10.0), frame, Justify::Left);
-    let centred = vectorcraft_doc::ParaStyle { justify: Justify::Center, space_before: 20.0, ..Default::default() };
-    let right = vectorcraft_doc::ParaStyle { justify: Justify::Right, left_indent: 7.0, ..Default::default() };
+    let centred = tsipika_doc::ParaStyle { justify: Justify::Center, space_before: 20.0, ..Default::default() };
+    let right = tsipika_doc::ParaStyle { justify: Justify::Right, left_indent: 7.0, ..Default::default() };
     t.set_paragraph_styles(vec![t.para.clone(), centred, right]);
     let l = layout(db(), &t);
     assert_eq!(l.lines.len(), 3);
@@ -341,7 +341,7 @@ fn on_path_placement() {
 
 #[test]
 fn on_path_effects_orient_glyphs() {
-    use vectorcraft_doc::PathEffect;
+    use tsipika_doc::PathEffect;
     let mut diag = BezPath::new();
     diag.move_to((0.0, 0.0));
     diag.line_to((400.0, 400.0));
@@ -442,13 +442,13 @@ fn bold_italic_of_a_missing_family_keeps_the_bold() {
 /// A space the primary font doesn't map goes to the fallback face like any other character
 /// (#1844): an ideographic space in a face without U+3000 keeps its em, so an indent made with it
 /// isn't lost. A tab, which the layout handles itself, stays with the primary face. Needs a bundled
-/// face with U+3000 and あ (craft-fonts; skipped without it).
+/// face with U+3000 and あ (mahay-fonts; skipped without it).
 #[test]
 fn whitespace_the_primary_font_lacks_takes_the_fallback_face() {
     let primary = db().face("Source Sans 3", "Regular").unwrap();
     assert!(!primary.covers('\u{3000}'));
     if ['\u{3000}', 'あ'].iter().any(|&c| db().fallback_for(c, primary.id()).is_none()) {
-        eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout to run it)");
+        eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout to run it)");
         return;
     }
     let l = layout(db(), &point("あ\u{3000}あ", style(20.0)));
@@ -492,7 +492,7 @@ fn layout_is_fast() {
 
 #[test]
 fn tab_stops_position_text() {
-    use vectorcraft_doc::{TabAlign, TabStop};
+    use tsipika_doc::{TabAlign, TabStop};
     let stop = |position: f64, align: TabAlign| TabStop { position, align, leader: String::new(), align_on: '.' };
     let x_of = |t: &TextObject, byte: usize| layout(db(), t).glyphs.iter().find(|g| g.byte == byte).map(|g| g.origin.x).unwrap();
     // Default stops every 36 pt.
@@ -537,7 +537,7 @@ fn a_leading_tab_takes_its_width_in_the_line_and_the_justification() {
 
 #[test]
 fn a_centred_or_right_aligned_line_sets_its_tabs_as_if_it_started_at_the_left() {
-    use vectorcraft_doc::{TabAlign, TabStop};
+    use tsipika_doc::{TabAlign, TabStop};
     // "A<tab>B" with a stop at 100 pt is 100 pt plus B wide whatever the alignment: the whole line
     // moves, the gap between A and B stays 100 pt, and a right aligned line ends on the edge (#2457).
     for justify in [Justify::Center, Justify::Right, Justify::JustifyCenter, Justify::JustifyRight] {
@@ -555,7 +555,7 @@ fn a_centred_or_right_aligned_line_sets_its_tabs_as_if_it_started_at_the_left() 
 
 #[test]
 fn tab_leaders_line_up_from_line_to_line_and_stop_short_of_the_stop() {
-    use vectorcraft_doc::{TabAlign, TabStop};
+    use tsipika_doc::{TabAlign, TabStop};
     let mut t = point("A\t1\nAAAAA\t2", style(12.0));
     t.para.tabs = vec![TabStop { position: 120.0, align: TabAlign::Left, leader: ".".into(), align_on: '.' }];
     let lay = layout(db(), &t);
@@ -580,18 +580,18 @@ fn tab_leaders_line_up_from_line_to_line_and_stop_short_of_the_stop() {
     assert!(short.last().is_some_and(|&x| x < 120.0));
 }
 
-/// Are the Japanese craft-fonts faces built in? Tests of Japanese glyphs skip (and say so) when
+/// Are the Japanese mahay-fonts faces built in? Tests of Japanese glyphs skip (and say so) when
 /// they aren't: the bundled fonts have none, and [`db`] reads no system fonts.
 fn japanese_fonts() -> bool {
-    let built_in = CRAFT_FONTS.iter().any(|f| f.is_japanese());
+    let built_in = MAHAY_FONTS.iter().any(|f| f.is_japanese());
     if !built_in {
-        eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout to run it)");
+        eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout to run it)");
     }
     built_in
 }
 
 #[test]
-fn japanese_text_uses_the_craft_fonts_mincho_after_the_bundled_fonts() {
+fn japanese_text_uses_the_mahay_fonts_mincho_after_the_bundled_fonts() {
     if !japanese_fonts() {
         return;
     }
@@ -600,31 +600,31 @@ fn japanese_text_uses_the_craft_fonts_mincho_after_the_bundled_fonts() {
     assert!(l.glyphs.iter().all(|g| g.gid != 0 && !g.outline.elements().is_empty()), "real glyphs, no tofu");
     let face = db().face_covering('日').unwrap();
     assert!(face.family.contains("Mincho"), "document text falls back to a Mincho face: {}", face.family);
-    assert!(CRAFT_FONTS.iter().any(|f| f.family == face.family));
+    assert!(MAHAY_FONTS.iter().any(|f| f.family == face.family));
     // Latin keeps the bundled fallback family.
     assert_eq!(db().face_covering('a').unwrap().family, FALLBACK_FAMILY);
 }
 
 #[test]
-fn all_supplied_craft_font_families_are_registered_without_system_fonts() {
-    if CRAFT_FONTS.is_empty() {
-        eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a checkout)");
+fn all_supplied_mahay_font_families_are_registered_without_system_fonts() {
+    if MAHAY_FONTS.is_empty() {
+        eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a checkout)");
         return;
     }
     let db = FontDb::with_font_dirs(vec![]);
-    for font in CRAFT_FONTS {
+    for font in MAHAY_FONTS {
         let face = db.face(font.family, font.style).unwrap();
         assert_eq!(face.family, font.family, "{} {}", font.family, font.style);
     }
 }
 
 #[test]
-fn japanese_text_lays_out_without_the_craft_fonts() {
+fn japanese_text_lays_out_without_the_mahay_fonts() {
     // Built either way, Japanese text lays out (as missing glyphs when no font has them).
     let l = layout(db(), &point("日本語の文字 abc", style(20.0)));
     assert_eq!(l.lines.len(), 1);
     assert!(l.glyphs.iter().all(|g| g.advance.is_finite()));
-    if CRAFT_FONTS.is_empty() {
+    if MAHAY_FONTS.is_empty() {
         assert!(db().families().iter().all(|f| !f.contains("Mincho") && !f.contains("Gothic")), "no Japanese font is bundled");
     }
 }
@@ -699,7 +699,7 @@ fn justified_japanese_lines_spread_between_characters() {
 /// with sizes mixed, a line's leading is the space below it (baseline leading: above it).
 #[test]
 fn em_box_top_leading_hangs_lines_from_the_line_above() {
-    use vectorcraft_doc::{LeadingModel, TextRun};
+    use tsipika_doc::{LeadingModel, TextRun};
     let st = |size: f64| CharStyle { size, leading: Some(size * 1.5), ..style(size) };
     let lay = |t: &TextObject, m: LeadingModel| {
         let mut t = t.clone();
@@ -735,7 +735,7 @@ fn em_box_top_leading_hangs_lines_from_the_line_above() {
 /// it; in area type a top-to-top first paragraph puts its em box on the frame's top.
 #[test]
 fn leading_model_is_per_paragraph() {
-    use vectorcraft_doc::{LeadingModel, ParaStyle, TextRun};
+    use tsipika_doc::{LeadingModel, ParaStyle, TextRun};
     let st = |size: f64| CharStyle { size, leading: Some(size * 1.5), ..style(size) };
     let model = |m: LeadingModel| ParaStyle { leading_model: m, ..ParaStyle::default() };
     let top = |size: f64| 0.88 * size;
@@ -775,7 +775,7 @@ fn leading_model_is_per_paragraph() {
 /// the column (top → right).
 #[test]
 fn character_alignment_lines_small_characters_up_with_the_largest_em_box() {
-    use vectorcraft_doc::{CharAlign, TextRun};
+    use tsipika_doc::{CharAlign, TextRun};
     for vertical_type in [false, true] {
         let place = |a: CharAlign| {
             let mut t = point("", style(40.0));
@@ -800,10 +800,10 @@ fn character_alignment_lines_small_characters_up_with_the_largest_em_box() {
 /// Character Alignment on the ICF: a 20 pt character next to a 40 pt one lines its ideographic
 /// character face's top (right, vertical) or bottom (left) up with the big one's, which lies inside
 /// the em box by the face's ICF margins. A face without ideographs has none (the ICF is the em
-/// box). The Japanese faces need craft-fonts (skipped without them).
+/// box). The Japanese faces need mahay-fonts (skipped without them).
 #[test]
 fn character_alignment_on_the_icf_lines_small_characters_up_with_the_largest_face() {
-    use vectorcraft_doc::{CharAlign, TextRun};
+    use tsipika_doc::{CharAlign, TextRun};
     let place = |family: &str, a: CharAlign, vertical_type: bool| {
         let st = |size: f64| CharStyle { font_family: family.into(), ..style(size) };
         let mut t = point("", st(40.0));
@@ -841,7 +841,7 @@ fn character_alignment_on_the_icf_lines_small_characters_up_with_the_largest_fac
 /// Latin line ending in a full stop isn't shortened by Forced.
 #[test]
 fn burasagari_leaves_latin_commas_and_full_stops_inside_the_line() {
-    use vectorcraft_doc::Burasagari;
+    use tsipika_doc::Burasagari;
     let measure = width(&point("abcd", style(20.0)));
     let lay = |text: &str, b: Burasagari| {
         let mut t = area(text, style(20.0), Rect::new(0.0, 0.0, measure + 0.01, 400.0), Justify::JustifyLeft);
@@ -981,12 +981,12 @@ fn roman_hanging_punctuation_hangs_punctuation_but_not_letters() {
     assert!(near(at("“One\n".len()), 0.0), "second doesn't: {}", at("“One\n".len()));
 }
 
-/// With craft-fonts and no installed fonts (the web), Thai is set in Noto Sans Thai, not as empty
-/// boxes. Skipped when built without craft-fonts or with a checkout that has no Thai font.
+/// With mahay-fonts and no installed fonts (the web), Thai is set in Noto Sans Thai, not as empty
+/// boxes. Skipped when built without mahay-fonts or with a checkout that has no Thai font.
 #[test]
-fn thai_without_installed_fonts_takes_the_craft_fonts_thai_font() {
-    if !crate::CRAFT_FONTS.iter().any(|f| f.is_thai()) {
-        eprintln!("skipping: no Thai font in craft-fonts (set CRAFT_FONTS_DIR to a checkout that has one)");
+fn thai_without_installed_fonts_takes_the_mahay_fonts_thai_font() {
+    if !crate::MAHAY_FONTS.iter().any(|f| f.is_thai()) {
+        eprintln!("skipping: no Thai font in mahay-fonts (set MAHAY_FONTS_DIR to a checkout that has one)");
         return;
     }
     let l = layout(db(), &point("ภาษาไทย", style(20.0)));

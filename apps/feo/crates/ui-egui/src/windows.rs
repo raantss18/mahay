@@ -4,9 +4,9 @@ use crate::SoundApp;
 use crate::theme::{Tokens, mono, rgb};
 use egui::{Color32, Sense, vec2};
 use serde_json::json;
-use soundcraft_model::{AutomationMode, ClipContent};
-use soundcraft_playback::AudioConfig;
-use soundcraft_playback::devices::{AudioSystem, DeviceInfo};
+use feo_model::{AutomationMode, ClipContent};
+use feo_playback::AudioConfig;
+use feo_playback::devices::{AudioSystem, DeviceInfo};
 use std::sync::Arc;
 
 pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
@@ -134,7 +134,7 @@ fn color_palette(app: &mut SoundApp, ctx: &egui::Context) {
     win(ctx, &mut open, "Color Palette", vec2(300.0, 140.0), |ui| {
         ui.label("Apply to selected tracks (Shift: selected clips)");
         ui.horizontal_wrapped(|ui| {
-            for (i, c) in soundcraft_model::TRACK_COLORS.iter().enumerate() {
+            for (i, c) in feo_model::TRACK_COLORS.iter().enumerate() {
                 let (r, resp) = ui.allocate_exact_size(vec2(28.0, 28.0), Sense::click());
                 ui.painter().rect_filled(r, 3.0, rgb(*c));
                 if resp.clicked() {
@@ -213,7 +213,7 @@ fn metadata(app: &mut SoundApp, ctx: &egui::Context) {
                 ("Clips", s.tracks.iter().map(|t| t.clips().len()).sum::<usize>().to_string()),
                 ("Audio files", s.sources.len().to_string()),
                 ("Markers", s.markers.len().to_string()),
-                ("Length", s.format_position(s.content_end(), soundcraft_time::TimeFormat::MinSecs)),
+                ("Length", s.format_position(s.content_end(), feo_time::TimeFormat::MinSecs)),
             ] {
                 ui.label(k);
                 ui.label(v);
@@ -249,7 +249,7 @@ fn event_list(app: &mut SoundApp, ctx: &egui::Context) {
                 ui.end_row();
                 for (i, n) in notes.iter().enumerate() {
                     ui.label(egui::RichText::new(n.start.to_string()).font(mono(11.0)));
-                    ui.label(soundcraft_midi::note_name(n.pitch));
+                    ui.label(feo_midi::note_name(n.pitch));
                     let mut v = i64::from(n.velocity);
                     if ui.add(egui::DragValue::new(&mut v).range(1..=127)).changed() {
                         let _ = app.engine.execute("midi.note_edit", &json!({"clip": cid.0, "index": i, "velocity": v}));
@@ -305,7 +305,7 @@ fn midi_keyboard(app: &mut SoundApp, ctx: &egui::Context) {
             let s = app.engine.session();
             let (clip_start, at) = (s.find_clip(cid).map_or(0, |(_, c)| c.start), s.edit.selection.start);
             let rel = s.tempo.samples_to_ticks(at, s.sample_rate) - s.tempo.samples_to_ticks(clip_start, s.sample_rate);
-            let len = soundcraft_time::TICKS_PER_QUARTER / 2;
+            let len = feo_time::TICKS_PER_QUARTER / 2;
             let _ = app.run("midi.note_add", json!({"clip": cid.0, "pitch": p, "start_ticks": rel.max(0), "length_ticks": len}));
             let s = app.engine.session();
             let next = s.tempo.tick_to_samples(s.tempo.samples_to_ticks(at, s.sample_rate) + len, s.sample_rate);
@@ -417,7 +417,7 @@ fn audio_systems(ctx: &egui::Context, refresh: bool) -> Arc<Vec<AudioSystem>> {
     if !refresh && let Some(s) = ctx.data(|d| d.get_temp::<Arc<Vec<AudioSystem>>>(id)) {
         return s;
     }
-    let s = Arc::new(soundcraft_playback::devices::audio_systems());
+    let s = Arc::new(feo_playback::devices::audio_systems());
     ctx.data_mut(|d| d.insert_temp(id, Arc::clone(&s)));
     s
 }
@@ -499,7 +499,7 @@ pub fn playback_engine(app: &mut SoundApp, ctx: &egui::Context) {
             number_combo(ui, "pe-rate", &mut draft.sample_rate, out.map_or(&[][..], |d| &d.sample_rates), "Hz");
             ui.end_row();
             ui.label("Buffer size");
-            let buffers = out.map(DeviceInfo::buffer_sizes).unwrap_or_else(|| soundcraft_playback::devices::STANDARD_BUFFERS.to_vec());
+            let buffers = out.map(DeviceInfo::buffer_sizes).unwrap_or_else(|| feo_playback::devices::STANDARD_BUFFERS.to_vec());
             number_combo(ui, "pe-buffer", &mut draft.buffer_size, &buffers, "samples");
             ui.end_row();
         });
@@ -600,7 +600,7 @@ pub fn audio_device_command(app: &mut SoundApp, p: &serde_json::Value) -> Result
     });
     let mut out = json!({"config": app.ui.audio, "device": device});
     if p.get("list").and_then(Value::as_bool).unwrap_or(false) {
-        out["systems"] = json!(soundcraft_playback::devices::audio_systems());
+        out["systems"] = json!(feo_playback::devices::audio_systems());
     }
     Ok(out)
 }
@@ -638,7 +638,7 @@ pub fn io_setup(app: &mut SoundApp, ctx: &egui::Context) {
         ui.horizontal(|ui| {
             ui.label("Main output");
             egui::ComboBox::from_id_salt("main_output_format").selected_text(main.label()).show_ui(ui, |ui| {
-                for f in soundcraft_model::ChannelFormat::ALL.into_iter().filter(|f| (2..=16).contains(&f.channels())) {
+                for f in feo_model::ChannelFormat::ALL.into_iter().filter(|f| (2..=16).contains(&f.channels())) {
                     if ui.selectable_label(f == main, f.label()).clicked() && f != main {
                         let _ = app.run("setup.main_format", json!({"format": f.label()}));
                     }
@@ -660,7 +660,7 @@ pub fn shortcuts_window(app: &mut SoundApp, ctx: &egui::Context) {
     win(ctx, &mut open, "Keyboard Shortcuts", vec2(520.0, 480.0), |ui| {
         egui::ScrollArea::vertical().show(ui, |ui| {
             egui::Grid::new("sc").num_columns(3).striped(true).show(ui, |ui| {
-                let engine = soundcraft_engine::command_specs().iter().map(|c| (c.shortcut, c.label, c.menu.join(" › ")));
+                let engine = feo_engine::command_specs().iter().map(|c| (c.shortcut, c.label, c.menu.join(" › ")));
                 let windows = crate::menus::UI_COMMANDS.iter().map(|c| (c.3, c.1, c.2.replace(" > ", " › ")));
                 for (shortcut, label, menu) in engine.chain(windows) {
                     let Some(shortcut) = shortcut else { continue };
@@ -711,7 +711,7 @@ pub fn clip_effects(app: &mut SoundApp, ctx: &egui::Context) {
             ui.columns(2, |cols| {
                 for (col, (title, plugin, prefix)) in cols.iter_mut().zip([("EQ", "eq_7band", "eq."), ("Dynamics", "compressor", "comp.")]) {
                     col.label(egui::RichText::new(title).strong());
-                    let Some(info) = soundcraft_dsp::plugin_info(plugin) else { continue };
+                    let Some(info) = feo_dsp::plugin_info(plugin) else { continue };
                     for p in info.params {
                         let key = format!("{prefix}{}", p.id);
                         let mut v = get(app, &key, p.default);
@@ -748,7 +748,7 @@ mod audio_health_tests {
 
     #[test]
     fn window_command_renders_report_and_close_clears_snapshot() {
-        let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, crate::Services::default());
+        let mut app = SoundApp::new(feo_engine::Engine::default(), None, crate::Services::default());
         app.run("window.audio_health", json!({"value": true})).unwrap();
         let ctx = egui::Context::default();
         let mut output = ctx.run_ui(egui::RawInput::default(), |ui| audio_health(&mut app, ui.ctx()));

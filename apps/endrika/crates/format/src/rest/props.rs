@@ -1,9 +1,9 @@
 //! Property mapping for the REST file JSON: JSON readers, enums, paints, effects, strokes,
 //! corners, constraints, auto layout, layout grids and export settings.
 
-use figcraft_doc::color::{BlendMode, Color, ColorStop, Gradient, GradientKind, ImageFilters, ImagePaint, ImageScaleMode, Paint, PaintKind};
-use figcraft_doc::geom::Affine;
-use figcraft_doc::{
+use endrika_doc::color::{BlendMode, Color, ColorStop, Gradient, GradientKind, ImageFilters, ImagePaint, ImageScaleMode, Paint, PaintKind};
+use endrika_doc::geom::Affine;
+use endrika_doc::{
     AutoLayout, Blur, BlurType, CellAlign, ChildLayout, Constraints, ContentAlign, CrossAlign, Effect, EffectKind, ExportFormat, ExportSetting,
     ExportSize, Glass, GridAlign, GridKind, GridTrack, HConstraint, LayoutGrid, LayoutMode, MainAlign, Noise, NoiseMode, Shadow, Sizing, StrokeAlign,
     StrokeCap, StrokeJoin, StrokeProps, Texture, VConstraint, WidthPoint, WidthProfile,
@@ -194,7 +194,7 @@ fn image(cx: &mut Ctx, p: &Value) -> ImagePaint {
     }
     let fig = cx.fig_sources.is_some();
     if has_filters && fig {
-        cx.warn("image filters use FigCraft's approximate renderer");
+        cx.warn("image filters use Endrika's approximate renderer");
     }
     ImagePaint {
         image: cx.image_key(text(p, "imageRef").unwrap_or("")),

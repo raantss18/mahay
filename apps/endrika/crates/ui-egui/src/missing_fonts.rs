@@ -3,7 +3,7 @@
 //! the installed fonts are indexed and any import report is closed), and from Text ▸ Missing fonts.
 
 use egui::RichText;
-use figcraft_engine::fonts::{Missing, missing};
+use endrika_engine::fonts::{Missing, missing};
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -52,7 +52,7 @@ fn list(app: &mut FigApp, uid: u64) -> Option<Vec<Missing>> {
 /// Text ▸ Missing fonts (`dialog.missingFonts`): the window for the file in front.
 pub fn request(app: &mut FigApp) {
     let Ok(uid) = app.session.ds().map(|d| d.uid) else { return };
-    if figcraft_text::installed_fonts_known() {
+    if endrika_text::installed_fonts_known() {
         list(app, uid);
     } else {
         app.ui.missing_fonts = Some(Shown { uid, families: Vec::new(), indexing: true });
@@ -62,7 +62,7 @@ pub fn request(app: &mut FigApp) {
 pub fn show(app: &mut FigApp, ctx: &egui::Context) {
     // Whether the installed fonts are indexed is asked only while a list waits for it.
     let waiting = app.ui.missing_fonts.as_ref().filter(|m| m.indexing).map(|m| m.uid);
-    if (waiting.is_some() || !app.ui.font_checks.is_empty()) && figcraft_text::installed_fonts_known() {
+    if (waiting.is_some() || !app.ui.font_checks.is_empty()) && endrika_text::installed_fonts_known() {
         if let Some(uid) = waiting {
             list(app, uid);
         }

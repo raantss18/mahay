@@ -2,12 +2,12 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (closed issue references re-audited against `upstream/main` 470ea7a3) · **Target:** Adobe After Effects 2026
 
-Every format After Effects reads or writes, with EffectCraft's support. After Effects' list comes
+Every format After Effects reads or writes, with Tselatra's support. After Effects' list comes
 from its installed bundle (26.5.0.89: `Info.plist` `CFBundleDocumentTypes`, `Plug-ins/Format`,
 `Resources/usd_plugins`) and its public documentation; ours from `crates/media/src/lib.rs`
-(`STILL_EXTENSIONS`, `VIDEO_EXTENSIONS`, `MODEL_EXTENSIONS`, FilmCraft's `AUDIO_EXTENSIONS`),
+(`STILL_EXTENSIONS`, `VIDEO_EXTENSIONS`, `MODEL_EXTENSIONS`, Hetsika's `AUDIO_EXTENSIONS`),
 `crates/engine/src/commands/file.rs` (`DATA_EXTENSIONS`) and `OutputFormat::ALL` in
-`crates/project/src/render_queue.rs`. Video codecs come from FilmCraft's pure-Rust crates
+`crates/project/src/render_queue.rs`. Video codecs come from Hetsika's pure-Rust crates
 ([architecture.md](architecture.md)).
 
 **Overall ≈ 50%** (estimated, weighted by use): modern delivery and interchange formats are
@@ -20,12 +20,12 @@ trips and renders, checked by tests, not against After Effects), **partial** (na
 
 ## After Effects' own formats
 
-| Format | After Effects | EffectCraft read | Write | Fidelity / notes | Tested by |
+| Format | After Effects | Tselatra read | Write | Fidelity / notes | Tested by |
 |---|---|---|---|---|---|
 | Project `.aep` | R/W (native) | none | none | Main file format; needs an owner decision on clean-room scope (#190; #248, closed as its duplicate: py-aep as an external converter; open PRs #251 and #860). Blocks beta | — |
 | XML project `.aepx` | R/W | none | none | Same decision as `.aep` | — |
 | Templates `.aet` / `.aetx` | R/W | none | none | Own `.ectemplate` (Home ▸ Templates, Save as Template) | `templates.rs` tests |
-| Motion Graphics template `.mogrt` | W (and R in Premiere) | none | none | Own `.ectemplate` Essential Graphics templates; FilmCraft rejects our `.fcgt` export (#611) | `essential.rs` tests |
+| Motion Graphics template `.mogrt` | W (and R in Premiere) | none | none | Own `.ectemplate` Essential Graphics templates; Hetsika rejects our `.fcgt` export (#611) | `essential.rs` tests |
 | Animation preset `.ffx` | R/W, 621 bundled | none | none | Own JSON `.ecpreset`; `.ffx` is out of clean-room scope (AGENTS.md §2) | `animation.rs` tests |
 | Render Settings / Output Module templates `.ars` / `.aom` | R/W | none | none | Templates are stored in the project and settings instead | `render_templates.rs` tests |
 | Scripts `.jsx` | R (run) | yes | — | After Effects object model and ScriptUI ([scripting-parity.md](scripting-parity.md)) | `crates/script` tests |
@@ -52,21 +52,21 @@ trips and renders, checked by tests, not against After Effects), **partial** (na
 | DPX / Cineon `.dpx` `.cin` | R/W | yes (still and sequence; 8/10/12/16-bit luma, RGB, RGBA, both byte orders; log code values shown as stored) | none | partial: import (#756); no Interpret Footage ▸ Cineon Settings (log to linear), no DPX output; common in film VFX |
 | Radiance `.hdr` | R/W | yes (still and sequence, 32-bit linear float like OpenEXR) | none | good for import (#745); no Radiance output |
 | SGI, PICT, ElectricImage, RLA/RPF images | R | none | none | Legacy; RPF camera data import exists (`keys.rpfCameraImport`) |
-| Camera Raw (DNG, CR3, NEF…) | R (Camera Raw) | none | none | LightCraft has decoders that could be shared |
+| Camera Raw (DNG, CR3, NEF…) | R (Camera Raw) | none | none | Hazavana has decoders that could be shared |
 | HEIF / AVIF | R (platform) | none | none | — |
 
 ## Footage: video and audio
 
 | Format | After Effects | Read | Write | Fidelity / notes |
 |---|---|---|---|---|
-| MP4 / MOV with H.264 | R/W | yes | yes (own encoder, + AAC) | decoder bit-exact on conformance streams (FilmCraft) |
+| MP4 / MOV with H.264 | R/W | yes | yes (own encoder, + AAC) | decoder bit-exact on conformance streams (Hetsika) |
 | HEVC (H.265) | R/W | yes | yes (MP4 `hvc1`, Main / Main 10) | encoder bit-exact with ffmpeg's decode; no B-frames / SAO, larger files |
 | AV1 | R | yes | yes (MP4 `av01`, WebM) | beyond After Effects' export; no B-frames / CDEF |
 | Apple ProRes (422 family, 4444) | R/W | yes | yes | good; 4444 colour tag wrong (#340); no ProRes RAW |
 | WebM / Matroska (VP9, AV1, Opus) | R (limited) | yes, incl. VP9 alpha | yes | beyond After Effects |
-| MXF (OP1a / OP-Atom) | R/W | yes (FilmCraft's demuxer: AVC, MPEG-2 incl. XDCAM / D-10, VC-3 / DNxHD, ProRes; PCM audio) | none | partial: import (#767), checked against ffmpeg; no MXF output |
+| MXF (OP1a / OP-Atom) | R/W | yes (Hetsika's demuxer: AVC, MPEG-2 incl. XDCAM / D-10, VC-3 / DNxHD, ProRes; PCM audio) | none | partial: import (#767), checked against ffmpeg; no MXF output |
 | AVI | R | none | none | Media Browser lists it |
-| DNxHD / DNxHR | R/W | unverified (FilmCraft decodes it; reachable only inside `.mov`) | none | — |
+| DNxHD / DNxHR | R/W | unverified (Hetsika decodes it; reachable only inside `.mov`) | none | — |
 | BRAW, R3D, ARRIRAW | R (plug-ins / SDKs) | none | none | proprietary SDKs |
 | Variable-frame-rate phone video | R | unverified | — | needs a real-media corpus |
 | WAV, AIFF | R/W | yes | yes (16-bit PCM) | good |

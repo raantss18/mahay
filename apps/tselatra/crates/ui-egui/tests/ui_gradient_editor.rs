@@ -4,12 +4,12 @@
 //! and Escape change nothing; on an animated gradient only the keyframe at that time changes, with
 //! a warning when its stop counts no longer match a neighbour's.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::keyframe::{Gradient, Value};
-use effectcraft_engine::project::{LayerId, PropGroup};
-use effectcraft_engine::time::Tick;
-use effectcraft_ui_egui::panels::gradient_editor::Track;
-use effectcraft_ui_egui::{Dialog, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_engine::keyframe::{Gradient, Value};
+use tselatra_engine::project::{LayerId, PropGroup};
+use tselatra_engine::time::Tick;
+use tselatra_ui_egui::panels::gradient_editor::Track;
+use tselatra_ui_egui::{Dialog, TselatraApp};
 use egui::accesskit::Role;
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, pos2};
 use egui_kittest::Harness;
@@ -34,7 +34,7 @@ fn gradient_fill(g: &PropGroup) -> Option<(Vec<u64>, u64)> {
 
 /// A 20 s comp with a rectangle shape layer holding a Gradient Fill, its rows open in the
 /// Timeline. `timing` runs on the layer first (start, stretch). Returns (harness, layer, Colors uid).
-fn setup(timing: &[(&str, serde_json::Value)]) -> (Harness<'static, EffectcraftApp>, u64, u64) {
+fn setup(timing: &[(&str, serde_json::Value)]) -> (Harness<'static, TselatraApp>, u64, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "duration": 20})).unwrap();
     let l = s.execute("layer.newShape", json!({"kind": "rect"})).unwrap()["layer"].as_u64().unwrap();
@@ -45,29 +45,29 @@ fn setup(timing: &[(&str, serde_json::Value)]) -> (Harness<'static, EffectcraftA
         s.execute(cmd, p).unwrap();
     }
     let (groups, colors) = gradient_fill(&s.active_comp().unwrap().layer(LayerId(l)).unwrap().props).expect("a Gradient Fill");
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.state_mut().ui.timeline.open_layers.insert(l);
     h.state_mut().ui.timeline.open_groups.extend(groups);
     h.run_steps(3);
     (h, l, colors)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> [f32; 4] {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> [f32; 4] {
     h.state().auto.find(id).unwrap_or_else(|| panic!("no automation id {id}")).rect
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let r = rect(h, id);
     pos2(r[0] + r[2] / 2.0, r[1] + r[3] / 2.0)
 }
 
 /// The point at `f` (0..1) along the bar, at the height of automation id `row`.
-fn along(h: &Harness<'_, EffectcraftApp>, row: &str, f: f32) -> Pos2 {
+fn along(h: &Harness<'_, TselatraApp>, row: &str, f: f32) -> Pos2 {
     let bar = rect(h, "dialog.gradient.bar");
     pos2(bar[0] + bar[2] * f, center(h, row).y)
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     h.input_mut().events.push(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -76,12 +76,12 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(3);
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let p = center(h, id);
     click_at(h, p);
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.step();
     h.input_mut().events.push(Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -95,13 +95,13 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
     h.run_steps(3);
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, k: Key) {
+fn key(h: &mut Harness<'_, TselatraApp>, k: Key) {
     h.input_mut().events.push(Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.input_mut().events.push(Event::Key { key: k, physical_key: None, pressed: false, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(3);
 }
 
-fn colors_prop(h: &Harness<'_, EffectcraftApp>, l: u64, uid: u64) -> effectcraft_engine::project::Property {
+fn colors_prop(h: &Harness<'_, TselatraApp>, l: u64, uid: u64) -> tselatra_engine::project::Property {
     h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.find(uid).unwrap().clone()
 }
 
@@ -112,19 +112,19 @@ fn gradient(v: &Value) -> Gradient {
     }
 }
 
-fn open_editor(h: &mut Harness<'_, EffectcraftApp>, colors: u64) {
+fn open_editor(h: &mut Harness<'_, TselatraApp>, colors: u64) {
     let id = format!("timeline.prop.{colors}.value");
     assert!(h.state().auto.find(&id).is_some(), "no automation id {id}: the Timeline's gradient value isn't clickable");
     click(h, &id);
     h.run_steps(2);
 }
 
-fn set_time(h: &mut Harness<'_, EffectcraftApp>, t: f64) {
+fn set_time(h: &mut Harness<'_, TselatraApp>, t: f64) {
     h.state_mut().session.execute("time.set", json!({"time": t})).unwrap();
     h.run_steps(2);
 }
 
-fn add_key(h: &mut Harness<'_, EffectcraftApp>, l: u64, colors: u64, comp_t: f64, g: &Gradient) {
+fn add_key(h: &mut Harness<'_, TselatraApp>, l: u64, colors: u64, comp_t: f64, g: &Gradient) {
     h.state_mut()
         .session
         .execute("prop.addKey", json!({"layer": l, "prop": colors, "time": comp_t, "timeBase": "comp", "value": Value::Gradient(g.clone()).to_json()}))
@@ -136,12 +136,12 @@ fn near(a: [f32; 4], b: [f32; 4]) -> bool {
 }
 
 /// The shared colour picker is showing (its colour field is in the accessibility tree).
-fn picker_open(h: &Harness<'_, EffectcraftApp>) -> bool {
+fn picker_open(h: &Harness<'_, TselatraApp>) -> bool {
     h.query_by_label("Color field").is_some()
 }
 
 /// Type `hex` into the open picker's Hex field, over the code it shows.
-fn type_hex(h: &mut Harness<'_, EffectcraftApp>, hex: &str) {
+fn type_hex(h: &mut Harness<'_, TselatraApp>, hex: &str) {
     let at = h.get_by_role_and_label(Role::TextInput, "#").rect().center();
     click_at(h, at);
     for pressed in [true, false] {
@@ -152,16 +152,16 @@ fn type_hex(h: &mut Harness<'_, EffectcraftApp>, hex: &str) {
     h.run_steps(3);
 }
 
-fn stop_color(h: &Harness<'_, EffectcraftApp>, id: u64) -> [f32; 4] {
+fn stop_color(h: &Harness<'_, TselatraApp>, id: u64) -> [f32; 4] {
     h.state().gradient_draft().colors.iter().find(|s| s.id == id).expect("the stop").value
 }
 
 /// The numbers the editor's fields show (their accessibility values).
-fn shown_numbers(h: &Harness<'_, EffectcraftApp>) -> Vec<f64> {
+fn shown_numbers(h: &Harness<'_, TselatraApp>) -> Vec<f64> {
     h.query_all_by(|n| n.numeric_value().is_some()).filter_map(|n| n.accesskit_node().numeric_value()).collect()
 }
 
-fn undo_len(h: &Harness<'_, EffectcraftApp>) -> usize {
+fn undo_len(h: &Harness<'_, TselatraApp>) -> usize {
     h.state().session.history.undo.len()
 }
 
@@ -427,12 +427,12 @@ fn edit_gradient_by_id_rejects_bad_targets() {
     for (p, err) in [(json!({"layer": 9999, "prop": colors}), "no layer"), (json!({"layer": l, "prop": opacity}), "not a gradient")] {
         let e = h.state_mut().session.execute_checked("prop.editGradient", p.clone()).expect_err("the engine refuses it");
         assert!(e.to_string().contains(err), "{p}: {e}");
-        let e = effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "prop.editGradient", p.clone()).expect_err("so does the UI");
+        let e = tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "prop.editGradient", p.clone()).expect_err("so does the UI");
         assert!(e.contains(err), "{p}: {e}");
         h.run_steps(2);
         assert_eq!(h.state().dialog, None, "{p}");
     }
-    let r = effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "prop.editGradient", json!({"layer": l, "prop": colors}));
+    let r = tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "prop.editGradient", json!({"layer": l, "prop": colors}));
     assert!(r.is_ok(), "{r:?}");
     h.run_steps(2);
     assert_eq!(h.state().dialog, Some(Dialog::GradientEditor));
@@ -480,7 +480,7 @@ fn the_escape_after_the_picker_closes_cancels_the_editor() {
     click(&mut h, "dialog.gradient.colorStop.0");
     click(&mut h, "dialog.gradient.color");
     assert!(picker_open(&h), "the picker opened");
-    let escape = |h: &mut Harness<'_, EffectcraftApp>| {
+    let escape = |h: &mut Harness<'_, TselatraApp>| {
         h.input_mut().events.push(Event::Key { key: Key::Escape, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
         h.input_mut().events.push(Event::Key { key: Key::Escape, physical_key: None, pressed: false, repeat: false, modifiers: Modifiers::NONE });
         h.step();

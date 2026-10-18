@@ -1,21 +1,21 @@
 //! An effect's colour label (26.5) shows on its Timeline row as well as in Effect Controls.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui::vec2;
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn harness() -> (Harness<'static, EffectcraftApp>, u64, u64) {
+fn harness() -> (Harness<'static, TselatraApp>, u64, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "frameRate": 30, "duration": 4})).unwrap();
     let layer = s.execute("layer.newSolid", json!({"name": "A", "color": "#406080"})).unwrap()["layer"].as_u64().unwrap();
     let fx = s.execute("effect.apply", json!({"layers": [layer], "effect": "ec.blur.gaussian"})).unwrap()["effects"][0].as_u64().unwrap();
     s.state.selected_layers = vec![LayerId(layer)];
     s.state.selected_props = vec![(LayerId(layer), fx)];
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.show_panel(PanelKind::Timeline);
     app.ui.timeline.open_layers.insert(layer);
     let effects = app.session.active_comp().and_then(|c| c.layer(LayerId(layer))).and_then(|l| l.props.sub("effects")).map(|g| g.uid);
@@ -36,7 +36,7 @@ fn the_effect_row_wears_its_colour_label() {
 
     h.state_mut().session.execute("effect.setLabel", json!({"layer": layer, "effect": fx, "label": "Blue"})).unwrap();
     h.run_steps(3);
-    let blue = h.state().session.prefs.label_name(effectcraft_engine::color::Label::Blue);
+    let blue = h.state().session.prefs.label_name(tselatra_engine::color::Label::Blue);
     assert_eq!(h.state().auto.find(&id).map(|e| e.label.clone()), Some(blue));
 
     h.state_mut().session.execute("effect.setLabel", json!({"layer": layer, "effect": fx, "label": 0})).unwrap();

@@ -5,7 +5,7 @@
 //! `findLinks`, [`super::find_links`]). Afterwards, with Preferences › Update Links: Ask When
 //! Modified, the modified links are offered for update (`links.update`). Files another app changes
 //! while the document is open are offered the same way ([`ask_update_changed`], from
-//! [`vectorcraft_engine::link_watch`]).
+//! [`tsipika_engine::link_watch`]).
 //!
 //! Fields: `missing` (`[{name, path, ids}]`, the one asked about first), `modified` (the ids of
 //! images whose file was modified), `applyToAll`, `path` (the replacement file; picked when empty),
@@ -16,7 +16,7 @@ use serde_json::{Value, json};
 use super::DialogSpec;
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of a missing linked file.
 pub const KIND: &str = "missingLinks";
@@ -41,7 +41,7 @@ fn ids(rows: &[Value]) -> Vec<Value> {
 /// then about its modified ones, then about the fonts it opened without
 /// ([`super::missing_fonts`]). The web reads no linked files, so missing ones just show their
 /// previews there.
-pub fn after_open(app: &mut VectorcraftApp, r: &Value) {
+pub fn after_open(app: &mut TsipikaApp, r: &Value) {
     // The fonts' dialog waits for these questions (one dialog at a time).
     super::missing_fonts::after_open(app, r);
     let rows = |k: &str| r[k].as_array().cloned().unwrap_or_default();
@@ -57,13 +57,13 @@ pub fn after_open(app: &mut VectorcraftApp, r: &Value) {
     super::settle(app);
 }
 
-fn open(app: &mut VectorcraftApp, missing: Vec<Value>, modified: Vec<Value>) {
+fn open(app: &mut TsipikaApp, missing: Vec<Value>, modified: Vec<Value>) {
     app.ui.dialog = Some(Dialog::new(KIND, json!({ "missing": missing, "modified": modified, "applyToAll": false, "path": "" })));
 }
 
 /// Ask about the missing files `rest`, one at a time, then offer the modified ones `modified` for
 /// update.
-pub(super) fn ask_next(app: &mut VectorcraftApp, rest: Vec<Value>, modified: Vec<Value>) {
+pub(super) fn ask_next(app: &mut TsipikaApp, rest: Vec<Value>, modified: Vec<Value>) {
     if rest.is_empty() {
         app.ui.dialog = None;
         ask_update(app, modified);
@@ -73,18 +73,18 @@ pub(super) fn ask_next(app: &mut VectorcraftApp, rest: Vec<Value>, modified: Vec
 }
 
 /// With Update Links: Ask When Modified, offer to read the modified linked files `ids` again.
-fn ask_update(app: &mut VectorcraftApp, ids: Vec<Value>) {
+fn ask_update(app: &mut TsipikaApp, ids: Vec<Value>) {
     ask(app, ids, tl!("{count} linked image(s) changed since this document was saved. Show the new versions?"));
 }
 
 /// The same offer for linked files another app changed while the document is open
-/// ([`vectorcraft_engine::link_watch`]).
+/// ([`tsipika_engine::link_watch`]).
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn ask_update_changed(app: &mut VectorcraftApp, ids: Vec<Value>) {
+pub(crate) fn ask_update_changed(app: &mut TsipikaApp, ids: Vec<Value>) {
     ask(app, ids, tl!("{count} linked image(s) changed on disk. Show the new versions?"));
 }
 
-fn ask(app: &mut VectorcraftApp, ids: Vec<Value>, question: &str) {
+fn ask(app: &mut TsipikaApp, ids: Vec<Value>, question: &str) {
     if ids.is_empty() {
         return;
     }
@@ -96,7 +96,7 @@ fn ask(app: &mut VectorcraftApp, ids: Vec<Value>, question: &str) {
     super::confirm::ask(app, tl!("Update Modified Links"), &detail, "links.update", json!({ "ids": ids }));
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let missing = d.fields.get("missing").and_then(Value::as_array).map_or(&[][..], Vec::as_slice);
     let Some(current) = missing.first() else { return true };
@@ -142,7 +142,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 
 /// Replace (with `path`, else a picked file) or Ignore (`discard`) the first missing file, then
 /// ask about the next. With `searchFolder`: Find in Folder… on that folder.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let folder = d.str("searchFolder");
     if !folder.is_empty() {
         let mut d = d.clone();
@@ -172,7 +172,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
         let path = match d.str("path") {
             p if !p.is_empty() => p,
             _ => {
-                let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
+                let pick = crate::FilePick { filters: tsipika_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
                 crate::picks::open(app, &pick).ok_or("cancelled")?
             }
         };
@@ -192,9 +192,9 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn frame(app: &mut VectorcraftApp) -> String {
+    fn frame(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
@@ -209,11 +209,11 @@ mod tests {
 
     /// A document with two placed linked files, saved to a fresh folder; the files are then
     /// deleted → (app, folder, document path).
-    fn opened_without_links(name: &str) -> (VectorcraftApp, std::path::PathBuf, String) {
-        let dir = std::env::temp_dir().join(format!("vectorcraft-missing-{name}-{}", std::process::id()));
+    fn opened_without_links(name: &str) -> (TsipikaApp, std::path::PathBuf, String) {
+        let dir = std::env::temp_dir().join(format!("tsipika-missing-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         for n in ["a.png", "b.png"] {
@@ -221,7 +221,7 @@ mod tests {
             std::fs::write(&p, png([200, 0, 0])).unwrap();
             app.run("file.place", json!({"path": p.to_string_lossy()})).unwrap();
         }
-        let doc = dir.join("doc.vectorcraft").to_string_lossy().into_owned();
+        let doc = dir.join("doc.tsipika").to_string_lossy().into_owned();
         app.run("document.save", json!({"path": doc})).unwrap();
         for n in ["a.png", "b.png"] {
             std::fs::remove_file(dir.join(n)).unwrap();
@@ -280,15 +280,15 @@ mod tests {
 
     #[test]
     fn modified_links_are_offered_for_update_when_the_preference_asks() {
-        let dir = std::env::temp_dir().join(format!("vectorcraft-modified-ui-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tsipika-modified-ui-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let pic = dir.join("a.png");
         std::fs::write(&pic, png([200, 0, 0])).unwrap();
         app.run("file.place", json!({"path": pic.to_string_lossy()})).unwrap();
-        let doc = dir.join("doc.vectorcraft").to_string_lossy().into_owned();
+        let doc = dir.join("doc.tsipika").to_string_lossy().into_owned();
         app.run("document.save", json!({"path": doc})).unwrap();
         let original_stamp = std::fs::metadata(&pic).unwrap().modified().unwrap();
         let mark_modified = |seconds| {

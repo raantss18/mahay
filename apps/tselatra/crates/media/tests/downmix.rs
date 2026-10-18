@@ -5,8 +5,8 @@ use std::f64::consts::PI;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use effectcraft_media::{MediaPool, probe};
-use effectcraft_time::Tick;
+use tselatra_media::{MediaPool, probe};
+use tselatra_time::Tick;
 
 const RATE: u32 = 48_000;
 

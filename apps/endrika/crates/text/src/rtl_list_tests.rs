@@ -2,7 +2,7 @@
 //! mirrored to the right, numbers read "1." with the full stop on their left, wrapped lines hang
 //! from the right, and trailing spaces don't push the text out of a right-aligned box.
 
-use figcraft_doc::{ListStyle, TextAlignH, TextAutoResize, TextData};
+use endrika_doc::{ListStyle, TextAlignH, TextAutoResize, TextData};
 
 use crate::{TextLayout, layout};
 

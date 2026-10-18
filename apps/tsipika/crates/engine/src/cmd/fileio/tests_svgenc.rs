@@ -24,14 +24,14 @@ fn each_encoding_reopens_and_serializes_as_text() {
         let text = r["text"].as_str().unwrap();
         assert!(text.contains("Grüße") && text.contains(&format!("encoding=\"{name}\"")), "{text}");
         let bytes = match r.get("dataBase64") {
-            Some(b) => vectorcraft_format::base64_decode(b.as_str().unwrap()).unwrap(),
+            Some(b) => tsipika_format::base64_decode(b.as_str().unwrap()).unwrap(),
             None => text.as_bytes().to_vec(),
         };
         assert_eq!(bom, bytes.starts_with(&[0xfe, 0xff]), "{encoding}");
         assert_eq!(r.get("dataBase64").is_some(), encoding != "utf8", "{encoding}");
-        for (file, data) in [("t.svg", bytes.clone()), ("t.svgz", vectorcraft_svg::compress_bytes(&bytes))] {
+        for (file, data) in [("t.svg", bytes.clone()), ("t.svgz", tsipika_svg::compress_bytes(&bytes))] {
             let mut o = Session::new();
-            o.execute("document.open", &json!({"name": file, "dataBase64": vectorcraft_format::base64_encode(&data)})).unwrap();
+            o.execute("document.open", &json!({"name": file, "dataBase64": tsipika_format::base64_encode(&data)})).unwrap();
             let plain = o.execute("document.inspect", &json!({})).unwrap().to_string();
             assert!(plain.contains("Grüße €"), "{encoding} {file}: {plain}");
         }

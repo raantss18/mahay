@@ -2,14 +2,14 @@
 
 use egui::{Event, Key, PointerButton, Pos2, Rect, Ui, pos2, vec2};
 use serde_json::json;
-use vectorcraft_doc::{NodeId, Unit};
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use tsipika_doc::{NodeId, Unit};
+use tsipika_engine::Session;
+use tsipika_geom::Point;
 
-use crate::{VectorcraftApp, canvas, chrome, panels};
+use crate::{TsipikaApp, canvas, chrome, panels};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.ui.view.rulers = true;
     app.ui.control_bar = true;
@@ -22,7 +22,7 @@ fn context() -> egui::Context {
     ctx
 }
 
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, draw: fn(&mut VectorcraftApp, &mut Ui)) -> Vec<(String, Rect)> {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>, draw: fn(&mut TsipikaApp, &mut Ui)) -> Vec<(String, Rect)> {
     let raw = egui::RawInput {
         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 900.0))),
         time: Some(ctx.input(|i| i.time) + 0.05),
@@ -51,7 +51,7 @@ fn key(key: Key) -> Event {
     Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() }
 }
 
-fn start_drag(app: &mut VectorcraftApp, ctx: &egui::Context, to: Pos2) {
+fn start_drag(app: &mut TsipikaApp, ctx: &egui::Context, to: Pos2) {
     let at = pos2(8.0, 8.0);
     frame(app, ctx, vec![Event::PointerMoved(at)], canvas::show);
     frame(app, ctx, vec![press(at, true)], canvas::show);
@@ -158,7 +158,7 @@ fn ruler_origin_cancelled_drags_do_not_modify_either_document() {
 
 #[test]
 fn ruler_origin_position_fields_show_relative_values_and_edit_absolute_positions() {
-    for draw in [panels::properties::show as fn(&mut VectorcraftApp, &mut Ui), panels::transform::show, chrome::control_bar] {
+    for draw in [panels::properties::show as fn(&mut TsipikaApp, &mut Ui), panels::transform::show, chrome::control_bar] {
         for (label, arrow) in [("X:", (1.0, 0.0)), ("Y:", (0.0, 1.0))] {
             let mut app = app();
             let id = NodeId(app.run("shape.rectangle", json!({"x": 100, "y": 50, "width": 80, "height": 40})).unwrap()["id"].as_u64().unwrap());
@@ -183,7 +183,7 @@ fn ruler_origin_position_fields_show_relative_values_and_edit_absolute_positions
 
 #[test]
 fn ruler_origin_artboard_fields_preserve_the_absolute_reference_point() {
-    for draw in [panels::properties::show as fn(&mut VectorcraftApp, &mut Ui), panels::transform::show] {
+    for draw in [panels::properties::show as fn(&mut TsipikaApp, &mut Ui), panels::transform::show] {
         for label in ["X:", "Y:"] {
             let mut app = app();
             app.run("document.setRulerOrigin", json!({"x": 120, "y": 50})).unwrap();
@@ -209,7 +209,7 @@ fn ruler_origin_artboard_fields_preserve_the_absolute_reference_point() {
 // rulers from one zero point for the whole document.
 
 /// A document with a second artboard at (700, -250) and a rectangle on it at (720, -230).
-fn two_boards() -> (VectorcraftApp, NodeId) {
+fn two_boards() -> (TsipikaApp, NodeId) {
     let mut app = app();
     app.run("artboard.new", json!({"x": 700, "y": -250, "width": 200, "height": 150})).unwrap();
     let id = NodeId(app.run("shape.rectangle", json!({"x": 720, "y": -230, "width": 80, "height": 40})).unwrap()["id"].as_u64().unwrap());
@@ -218,7 +218,7 @@ fn two_boards() -> (VectorcraftApp, NodeId) {
 
 #[test]
 fn artboard_rulers_position_fields_count_from_the_active_artboard() {
-    for draw in [panels::properties::show as fn(&mut VectorcraftApp, &mut Ui), panels::transform::show, chrome::control_bar] {
+    for draw in [panels::properties::show as fn(&mut TsipikaApp, &mut Ui), panels::transform::show, chrome::control_bar] {
         let (mut app, id) = two_boards();
         let ctx = context();
         frame(&mut app, &ctx, vec![], draw);
@@ -277,10 +277,10 @@ fn change_to_global_rulers_menu_item_toggles_and_names_the_other_mode() {
     assert!(item.contains("view.globalRulers"), "View › Rulers lists it: {item}");
     assert_eq!(crate::menus::dynamic_label(&app, "view.globalRulers", "Change to Global Rulers"), "Change to Global Rulers");
     app.run("view.globalRulers", json!({})).unwrap();
-    assert_eq!(app.session.doc().unwrap().doc.rulers, vectorcraft_doc::RulerMode::Global);
+    assert_eq!(app.session.doc().unwrap().doc.rulers, tsipika_doc::RulerMode::Global);
     assert_eq!(crate::menus::dynamic_label(&app, "view.globalRulers", "Change to Global Rulers"), "Change to Artboard Rulers");
     app.run("view.globalRulers", json!({})).unwrap();
-    assert_eq!(app.session.doc().unwrap().doc.rulers, vectorcraft_doc::RulerMode::Artboard);
-    let spec = vectorcraft_engine::command_specs().iter().find(|c| c.id == "view.globalRulers").unwrap();
+    assert_eq!(app.session.doc().unwrap().doc.rulers, tsipika_doc::RulerMode::Artboard);
+    let spec = tsipika_engine::command_specs().iter().find(|c| c.id == "view.globalRulers").unwrap();
     assert_eq!(spec.shortcut, Some("Cmd+Alt+R"));
 }

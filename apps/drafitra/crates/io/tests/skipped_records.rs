@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use cadcraft_doc::*;
+use drafitra_doc::*;
 
 /// ASCII DXF from one `code value` group per line.
 fn dxf(groups: &str) -> Vec<u8> {
@@ -91,7 +91,7 @@ const DAMAGED: &str = "
 
 #[test]
 fn records_the_reader_cannot_place_are_counted_by_section() {
-    let d = cadcraft_io::read_dxf(&dxf(DAMAGED)).unwrap();
+    let d = drafitra_io::read_dxf(&dxf(DAMAGED)).unwrap();
     // ENTITIES: a VERTEX and an ATTRIB with no POLYLINE/INSERT before them, a HATCH without
     // boundary data, a polyface mesh without faces. BLOCKS: a CIRCLE before any BLOCK, a VERTEX
     // inside one. Outside sections: the LINE between HEADER and BLOCKS.
@@ -103,9 +103,9 @@ fn records_the_reader_cannot_place_are_counted_by_section() {
 }
 
 #[test]
-fn a_file_cadcraft_wrote_skips_nothing() {
+fn a_file_drafitra_wrote_skips_nothing() {
     let mut d = Drawing::new_metric();
-    d.add(&Space::Model, Common::default(), EntityKind::Line(Line { a: Default::default(), b: cadcraft_geom::Vec3::new(1.0, 1.0, 0.0) })).unwrap();
-    let back = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&d).as_bytes()).unwrap();
+    d.add(&Space::Model, Common::default(), EntityKind::Line(Line { a: Default::default(), b: drafitra_geom::Vec3::new(1.0, 1.0, 0.0) })).unwrap();
+    let back = drafitra_io::read_dxf(drafitra_io::write_dxf(&d).as_bytes()).unwrap();
     assert!(back.skipped_records.is_empty(), "{:?}", back.skipped_records);
 }

@@ -7,7 +7,7 @@ use serde_json::Value;
 
 const REV: &str = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d";
 const PACKAGES: &[(&str, &str)] =
-    &[("craft-pdf", "0.1.0"), ("krilla", "0.8.2"), ("hayro-syntax", "0.7.2"), ("hayro-interpret", "0.7.0"), ("hayro-jbig2", "0.3.0")];
+    &[("mahay-pdf", "0.1.0"), ("krilla", "0.8.2"), ("hayro-syntax", "0.7.2"), ("hayro-interpret", "0.7.0"), ("hayro-jbig2", "0.3.0")];
 
 pub fn run(root: &Path) -> Result<(), String> {
     let output = Command::new(std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
@@ -26,7 +26,7 @@ pub fn run(root: &Path) -> Result<(), String> {
 
 fn validate(metadata: &Value) -> Result<(), String> {
     let packages = metadata.get("packages").and_then(Value::as_array).ok_or("cargo metadata has no packages")?;
-    let source = format!("git+https://github.com/storytold/craft-libs?rev={REV}#{REV}");
+    let source = format!("git+https://github.com/raantss18/mahay?rev={REV}#{REV}");
     for &(name, version) in PACKAGES {
         let mut found = packages.iter().filter(|p| p.get("name").and_then(Value::as_str) == Some(name));
         let package = found.next().ok_or_else(|| format!("{name}: missing resolved package"))?;
@@ -51,7 +51,7 @@ mod tests {
             .map(|(name, version)| {
                 json!({
                     "name":name, "version":version,
-                    "source":format!("git+https://github.com/storytold/craft-libs?rev={REV}#{REV}")
+                    "source":format!("git+https://github.com/raantss18/mahay?rev={REV}#{REV}")
                 })
             })
             .collect();
@@ -64,7 +64,7 @@ mod tests {
         m["packages"]
             .as_array_mut()
             .unwrap()
-            .push(json!({"name":"craft-print", "version":"0.1.0", "source":"git+https://github.com/storytold/craft-libs?rev=d991bf6792f8ade99c51358bf3c1d902c8cd96b5#d991bf6792f8ade99c51358bf3c1d902c8cd96b5"}));
+            .push(json!({"name":"mahay-print", "version":"0.1.0", "source":"git+https://github.com/raantss18/mahay?rev=d991bf6792f8ade99c51358bf3c1d902c8cd96b5#d991bf6792f8ade99c51358bf3c1d902c8cd96b5"}));
         assert!(validate(&m).is_ok());
     }
 
@@ -87,7 +87,7 @@ mod tests {
             for (field, value) in [
                 ("source", Value::Null),
                 ("source", json!("registry+https://github.com/rust-lang/crates.io-index")),
-                ("source", json!("git+https://github.com/storytold/craft-libs?branch=main#other")),
+                ("source", json!("git+https://github.com/raantss18/mahay?branch=main#other")),
                 ("version", json!("0.99.0")),
             ] {
                 let mut m = metadata();

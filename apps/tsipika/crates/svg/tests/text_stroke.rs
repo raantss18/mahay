@@ -3,10 +3,10 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, CharStyle, Dash, Document, LineCap, LineJoin, Node, NodeKind, StrokeLayer, TextObject, TextRun};
-use vectorcraft_geom::Point;
-use vectorcraft_svg::{ExportOptions, export, import};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{AppearanceItem, CharStyle, Dash, Document, LineCap, LineJoin, Node, NodeKind, StrokeLayer, TextObject, TextRun};
+use tsipika_geom::Point;
+use tsipika_svg::{ExportOptions, export, import};
 
 fn text_doc(t: TextObject, items: Vec<AppearanceItem>) -> Document {
     let mut d = Document::new(300.0, 200.0);
@@ -84,7 +84,7 @@ fn a_run_without_the_first_runs_stroke_resets_it() {
 /// as aligned strokes on paths are; outlined type carries it on its glyphs.
 #[test]
 fn an_aligned_character_stroke_keeps_the_text_live() {
-    use vectorcraft_doc::StrokeAlign;
+    use tsipika_doc::StrokeAlign;
     for (align, side) in [(StrokeAlign::Outside, "mask=\"url(#"), (StrokeAlign::Inside, "clip-path=\"url(#")] {
         let style = CharStyle { size: 40.0, stroke: Paint::solid(Color::BLACK), stroke_width: 2.0, stroke_align: align, ..Default::default() };
         let mut t = TextObject::point(Point::new(20.0, 100.0), "Live", style);

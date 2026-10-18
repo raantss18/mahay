@@ -2,9 +2,9 @@
 //! on-path type from paths, Fit Headline, Convert To Area/Point Type.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, NodeKind, TextKind, TextObject};
-use vectorcraft_geom::Point;
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_doc::{NodeId, NodeKind, TextKind, TextObject};
+use tsipika_geom::Point;
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 use super::*;
 
@@ -101,7 +101,7 @@ fn set_range_style_defaults_to_all_text_and_get_range() {
 /// Where each glyph of type object `id` is drawn from (its origin in font units), document space.
 fn glyph_pens(s: &Session, id: NodeId) -> Vec<(usize, Point)> {
     let t = obj(s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     lay.glyphs.iter().map(|g| (g.byte, t.xf * (g.xf * Point::ZERO))).collect()
 }
 
@@ -129,7 +129,7 @@ fn touch_type_moves_one_character_and_leaves_the_others_where_they_are() {
     }
     // Kerning on the T and the y, and a baseline shift on the y: live attributes, one undo step.
     let t = obj(&s, id);
-    let style = |byte: usize| vectorcraft_text::edit::slice_runs(&t.runs, byte, byte + 1)[0].style.clone();
+    let style = |byte: usize| tsipika_text::edit::slice_runs(&t.runs, byte, byte + 1)[0].style.clone();
     let (k0, k1) = (style(0).kerning.unwrap(), style(1).kerning.unwrap());
     assert!(k0 > 0.0 && k1 < 0.0, "{k0} {k1}");
     assert!((style(1).baseline_shift - 4.0).abs() < 1e-9 && style(2).baseline_shift == 0.0);
@@ -166,9 +166,9 @@ fn touch_type_keeps_the_kerning_of_a_raised_or_scaled_character() {
     s.execute("edit.undo", &json!({})).unwrap();
     let width = |s: &Session| {
         let t = obj(s, id);
-        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+        let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
         let y = lay.glyphs.iter().find(|g| g.byte == 1).unwrap();
-        let face = vectorcraft_text::FontDb::global().face_by_id(y.font_id).unwrap();
+        let face = tsipika_text::FontDb::global().face_by_id(y.font_id).unwrap();
         let [a, b, ..] = y.xf.as_coeffs();
         face.advance(y.gid) * a.hypot(b)
     };
@@ -198,13 +198,13 @@ fn touch_type_scales_a_character_drawn_with_two_glyphs() {
     let id = NodeId(s.execute("text.create", &json!({"x": 100, "y": 100, "text": "aße", "size": 40})).unwrap()["id"].as_u64().unwrap());
     s.execute("text.setRangeStyle", &json!({"id": id.0, "allCaps": true})).unwrap();
     let t = obj(&s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     let esses: Vec<_> = lay.glyphs.iter().filter(|g| g.byte == 1).collect();
     assert_eq!(esses.len(), 2, "ß in All Caps is two glyphs");
     let width: f64 = esses
         .iter()
         .map(|g| {
-            let face = vectorcraft_text::FontDb::global().face_by_id(g.font_id).unwrap();
+            let face = tsipika_text::FontDb::global().face_by_id(g.font_id).unwrap();
             let [a, b, ..] = g.xf.as_coeffs();
             face.advance(g.gid) * a.hypot(b)
         })
@@ -313,7 +313,7 @@ fn touch_type_scales_and_rotates_one_character() {
     let id = NodeId(s.execute("text.create", &json!({"x": 100, "y": 100, "text": "Type", "size": 40})).unwrap()["id"].as_u64().unwrap());
     s.execute("text.touchType", &json!({"id": id.0, "start": 2, "hScale": 150, "vScale": 50, "rotation": 30})).unwrap();
     let t = obj(&s, id);
-    let st = |byte: usize| vectorcraft_text::edit::slice_runs(&t.runs, byte, byte + 1)[0].style.clone();
+    let st = |byte: usize| tsipika_text::edit::slice_runs(&t.runs, byte, byte + 1)[0].style.clone();
     assert_eq!((st(2).h_scale, st(2).v_scale, st(2).rotation), (150.0, 50.0, 30.0));
     for byte in [1, 3] {
         assert_eq!((st(byte).h_scale, st(byte).v_scale, st(byte).rotation), (100.0, 100.0, 0.0));
@@ -331,9 +331,9 @@ fn the_touch_type_tool_drags_a_character() {
     let v = ViewInfo::default();
     s.select_tool("touchType", v).unwrap();
     let t = obj(&s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     let y = lay.glyphs.iter().find(|g| g.byte == 1).unwrap();
-    let at = t.xf * (y.origin + vectorcraft_geom::Vec2::new(y.advance / 2.0, -10.0));
+    let at = t.xf * (y.origin + tsipika_geom::Vec2::new(y.advance / 2.0, -10.0));
     click(&mut s, at.x, at.y);
     assert_eq!(s.doc().unwrap().selection.objects, vec![id], "the click selects the type");
     assert_eq!(s.tool_options(), json!({"id": id.0, "start": 1}));
@@ -348,9 +348,9 @@ fn the_touch_type_tool_drags_a_character() {
     s.execute("text.touchType", &json!({"id": id.0, "start": 1, "rotation": 30})).unwrap();
     let before = glyph_pens(&s, id);
     let t = obj(&s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     let y = lay.glyphs.iter().find(|g| g.byte == 1).unwrap();
-    let face = vectorcraft_text::FontDb::global().face_by_id(y.font_id).unwrap();
+    let face = tsipika_text::FontDb::global().face_by_id(y.font_id).unwrap();
     let (ascent, descent) = face.vertical_metrics();
     let at = t.xf * (y.xf * Point::new(face.advance(y.gid) / 2.0, (descent - ascent) / 2.0));
     for (k, x, y) in [(PointerKind::Down, at.x, at.y), (PointerKind::Drag, at.x, at.y - 4.0), (PointerKind::Up, at.x, at.y - 4.0)] {
@@ -494,8 +494,8 @@ fn ime_cancel_leaves_no_undo_step_and_keeps_the_text() {
     let id = text(&mut s, "雅楽");
     s.select_tool("type", v).unwrap();
     let t = obj(&s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
-    let (a, b) = vectorcraft_text::caret_position(&lay, "雅楽".len());
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
+    let (a, b) = tsipika_text::caret_position(&lay, "雅楽".len());
     let p = t.xf * a.midpoint(b);
     click(&mut s, p.x - 0.1, p.y);
     assert!(s.tool_wants_text());
@@ -553,8 +553,8 @@ fn type_tool_selection_replace_and_delete() {
     s.select_tool("type", v).unwrap();
     // Click at the start of the text to edit it.
     let t = obj(&s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
-    let (a, b) = vectorcraft_text::caret_position(&lay, 6);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
+    let (a, b) = tsipika_text::caret_position(&lay, 6);
     let p = t.xf * a.midpoint(b);
     click(&mut s, p.x + 0.1, p.y);
     assert!(s.tool_wants_text());
@@ -653,12 +653,12 @@ fn area_type_from_a_circle_keeps_glyphs_inside() {
     let mut s = session();
     let e = s.execute("shape.ellipse", &json!({"x": 100, "y": 100, "width": 240, "height": 240})).unwrap();
     let pid = e["id"].as_u64().unwrap();
-    let r = s.execute("text.createInPath", &json!({"path": pid, "mode": "area", "text": vectorcraft_engine_placeholder()})).unwrap();
+    let r = s.execute("text.createInPath", &json!({"path": pid, "mode": "area", "text": tsipika_engine_placeholder()})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     assert!(s.doc().unwrap().doc.node(NodeId(pid)).is_none(), "the path became the frame");
     let t = obj(&s, id);
     assert!(matches!(t.kind, TextKind::Area { .. }));
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     assert!(lay.lines.len() > 5);
     let c = Point::new(220.0, 220.0);
     for g in lay.glyphs.iter().filter(|g| !g.outline.elements().is_empty()) {
@@ -671,7 +671,7 @@ fn area_type_from_a_circle_keeps_glyphs_inside() {
     assert!(s.execute("text.createInPath", &json!({"path": 9999})).is_err());
 }
 
-fn vectorcraft_engine_placeholder() -> String {
+fn tsipika_engine_placeholder() -> String {
     "Type flows inside any closed shape, line by line, trimmed to the shape's edges at each band. ".repeat(4)
 }
 
@@ -686,7 +686,7 @@ fn type_on_path_starts_where_clicked() {
     let t = obj(&s, NodeId(r["id"].as_u64().unwrap()));
     let TextKind::OnPath { start, .. } = t.kind else { panic!() };
     assert!((start - 0.25).abs() < 0.01, "{start}");
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     let g0 = &lay.glyphs[0];
     assert!((g0.origin.y - 300.0).abs() < 1e-6 && (g0.origin.x - 200.0).abs() < 1.0, "{:?}", g0.origin);
 }
@@ -721,7 +721,7 @@ fn fit_headline_fills_the_frame_width() {
     let r = s.execute("type.fitHeadline", &json!({"ids": [id.0]})).unwrap();
     assert!(r["tracking"][0].as_f64().unwrap() > 100.0, "{r}");
     let t = obj(&s, id);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     let l0 = &lay.lines[0];
     assert_eq!(&t.plain_text()[l0.start..l0.end], "Headline", "still one line");
     assert!((l0.x1 - l0.x0 - 400.0).abs() < 1.0, "{}", l0.x1 - l0.x0);
@@ -732,7 +732,7 @@ fn fit_headline_fills_the_frame_width() {
 }
 
 fn first_glyph_doc_pos(t: &TextObject) -> Point {
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
     t.xf * lay.glyphs[0].origin
 }
 
@@ -758,7 +758,7 @@ fn convert_area_point_keeps_text_in_place_for_every_alignment() {
         let t = obj(&s, id);
         let back = first_glyph_doc_pos(&t);
         assert!((back - before).hypot() < 0.01, "{j} (area again): {before:?} → {back:?}");
-        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+        let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
         assert!(!lay.overflow);
     }
 }
@@ -817,7 +817,7 @@ fn rtl_edit_commands_and_undo_preserve_logical_source_and_style_ranges() {
     s.execute("text.editRange", &json!({"id": id.0, "start": 0, "end": 8, "insert": "مرحبا"})).unwrap();
     let t = obj(&s, id);
     assert_eq!(t.plain_text(), "مرحبا Rust 123");
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     assert!(lay.glyphs.iter().any(|g| g.rtl));
     s.execute("text.setRangeStyle", &json!({"id": id.0, "start": 0, "end": 10, "size": 30})).unwrap();
     assert_eq!(obj(&s, id).runs[0].text, "مرحبا");
@@ -830,13 +830,13 @@ fn rtl_edit_commands_and_undo_preserve_logical_source_and_style_ranges() {
 fn automatic_alignment_updates_during_edits_and_can_be_overridden() {
     let mut s = session();
     let id = text(&mut s, "English");
-    let db = vectorcraft_text::FontDb::global();
-    assert_eq!(obj(&s, id).para.justify, vectorcraft_doc::Justify::Auto);
+    let db = tsipika_text::FontDb::global();
+    assert_eq!(obj(&s, id).para.justify, tsipika_doc::Justify::Auto);
     for content in ["שלום", "مرحبا", "English"] {
         let len = obj(&s, id).plain_text().len();
         s.execute("text.editRange", &json!({"id": id.0, "start": 0, "end": len, "insert": content})).unwrap();
         let t = obj(&s, id);
-        let l = vectorcraft_text::layout(db, &t);
+        let l = tsipika_text::layout(db, &t);
         if content == "English" {
             assert_eq!(l.lines[0].x0, 0.0);
         } else {
@@ -845,17 +845,17 @@ fn automatic_alignment_updates_during_edits_and_can_be_overridden() {
     }
     s.execute("text.setStyle", &json!({"id": id.0, "justify": "center"})).unwrap();
     s.execute("text.editRange", &json!({"id": id.0, "start": 0, "end": 7, "insert": "שלום"})).unwrap();
-    assert_eq!(obj(&s, id).para.justify, vectorcraft_doc::Justify::Center);
+    assert_eq!(obj(&s, id).para.justify, tsipika_doc::Justify::Center);
     s.execute("text.setStyle", &json!({"id": id.0, "justify": "auto"})).unwrap();
     let t = obj(&s, id);
-    assert!(vectorcraft_text::layout(db, &t).lines[0].x1.abs() < 1e-6);
+    assert!(tsipika_text::layout(db, &t).lines[0].x1.abs() < 1e-6);
     let restored: TextObject = serde_json::from_value(serde_json::to_value(&t).unwrap()).unwrap();
-    assert_eq!(restored.para.justify, vectorcraft_doc::Justify::Auto);
+    assert_eq!(restored.para.justify, tsipika_doc::Justify::Auto);
     // Legacy documents with explicit alignment retain that choice.
     let mut legacy = serde_json::to_value(t).unwrap();
     legacy["para"].as_object_mut().unwrap().remove("justify_auto");
     legacy["para"]["justify"] = json!("Left");
-    assert_eq!(serde_json::from_value::<TextObject>(legacy).unwrap().para.justify, vectorcraft_doc::Justify::Left);
+    assert_eq!(serde_json::from_value::<TextObject>(legacy).unwrap().para.justify, tsipika_doc::Justify::Left);
 }
 
 /// #1063: a fill (or stroke) chosen while the Type tool has characters selected colours just
@@ -874,7 +874,7 @@ fn a_fill_chosen_with_characters_selected_colours_only_them() {
     let t = obj(&s, id);
     assert_eq!(t.runs.len(), 2);
     assert_eq!(t.runs[0].text, "Sample");
-    assert_eq!(t.runs[0].style.fill, Paint::solid(vectorcraft_color::Color::rgb8(0, 160, 0)));
+    assert_eq!(t.runs[0].style.fill, Paint::solid(tsipika_color::Color::rgb8(0, 160, 0)));
     assert_eq!(t.runs[1].text, " Text");
     assert_eq!(t.runs[1].style.fill, before);
     // A stroke goes on the selected characters only, with a weight to show.
@@ -993,7 +993,7 @@ fn a_colour_previewed_while_typing_keeps_the_typing() {
     s.commit_interaction().unwrap();
     let t = obj(&s, id);
     assert_eq!(t.plain_text(), "abc");
-    assert!(t.runs.iter().all(|r| r.style.fill == Paint::solid(vectorcraft_color::Color::rgb8(0, 160, 0))), "{:?}", t.runs);
+    assert!(t.runs.iter().all(|r| r.style.fill == Paint::solid(tsipika_color::Color::rgb8(0, 160, 0))), "{:?}", t.runs);
     // The typing and the colour are a step each, and typing goes on after them.
     let labels = undo_labels(&s);
     assert_eq!(&labels[labels.len() - 2..], ["Typing", "Fill Color"]);
@@ -1012,7 +1012,7 @@ fn overflow_marker_shows_with_the_selection_tool() {
     let id = NodeId(r["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.select_tool("selection", v).unwrap();
-    let red = |s: &mut Session| s.overlays(v).iter().filter(|o| matches!(o, vectorcraft_tools::Overlay::Path { color: [230, 30, 30], .. })).count();
+    let red = |s: &mut Session| s.overlays(v).iter().filter(|o| matches!(o, tsipika_tools::Overlay::Path { color: [230, 30, 30], .. })).count();
     assert_eq!(red(&mut s), 1, "the out port");
     s.select_tool("type", v).unwrap();
     assert_eq!(red(&mut s), 1, "the Type tool's own, not a second one");
@@ -1032,8 +1032,8 @@ fn clicking_the_out_port_then_the_canvas_threads_the_text_into_a_new_frame() {
     let id = NodeId(r["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.select_tool("selection", v).unwrap();
-    let port = Point::new(150.0, 90.0 - vectorcraft_tools::text::PORT_RISE_PX);
-    let loaded = |s: &mut Session| s.cursor(Point::new(400.0, 400.0), Mods::default(), v) == vectorcraft_tools::Cursor::LoadedText;
+    let port = Point::new(150.0, 90.0 - tsipika_tools::text::PORT_RISE_PX);
+    let loaded = |s: &mut Session| s.cursor(Point::new(400.0, 400.0), Mods::default(), v) == tsipika_tools::Cursor::LoadedText;
     click(&mut s, port.x, port.y);
     assert!(loaded(&mut s));
     key(&mut s, ToolKey::Escape, Mods::default());

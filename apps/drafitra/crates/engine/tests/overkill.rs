@@ -1,8 +1,8 @@
 //! OVERKILL (#439): duplicates within a tolerance, ignored properties, overlapping and end-to-end
 //! collinear lines, arcs on one circle, polyline segments, associativity, typed options.
 
-use cadcraft_engine::doc::{EntityKind, Handle};
-use cadcraft_engine::{Input, Session};
+use drafitra_engine::doc::{EntityKind, Handle};
+use drafitra_engine::{Input, Session};
 use serde_json::{Value, json};
 
 fn line(s: &mut Session, a: [f64; 2], b: [f64; 2]) -> Handle {

@@ -8,7 +8,7 @@ use super::edges::sobel;
 use super::pixelate::{Place, cell, rand};
 use super::texture::{luma, premultiply, straight};
 use super::{PixelSpace, blur_plane};
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 const SALT_FILM: u64 = 256;
 

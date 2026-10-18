@@ -4,28 +4,28 @@
 //! (the PDF page's origin is the top-left of the exported bounds).
 //!
 //! What stays vector:
-//! - shapes, booleans, vector networks and frames: their outlines (`figcraft_render::node_outline`);
+//! - shapes, booleans, vector networks and frames: their outlines (`endrika_render::node_outline`);
 //! - solid fills and linear/radial gradients (with per-stop opacity), paint opacity and blend modes;
-//! - strokes, as filled outlines (`figcraft_render::draw::stroke_area`), so Inside/Outside
+//! - strokes, as filled outlines (`endrika_render::draw::stroke_area`), so Inside/Outside
 //!   alignment, per-side weights, dashes and arrow caps are exact;
 //! - clip content (a clip path), masks (alpha and luminance masks are soft masks drawn from the mask
 //!   layer, so vector, gradient and image masks all work; vector masks clip to the mask's outline),
 //!   node opacity and blend modes (isolated groups);
 //! - text: real text in its embedded (subset) font, selectable and searchable, positioned glyph by
-//!   glyph from `figcraft_text`'s layout. Fonts that can't be embedded, glyphs without a source
+//!   glyph from `endrika_text`'s layout. Fonts that can't be embedded, glyphs without a source
 //!   character (list markers, ellipses), non-solid/gradient text fills and text strokes fall back
 //!   to glyph outlines. If the PDF writer rejects a font, the whole export is retried with
 //!   outlined text. Hyperlinked text becomes clickable link annotations (one per line and link).
 //!
 //! What is rasterised (at [`PdfOptions::raster_scale`], 2× by default):
 //! - image fills are embedded as images (the original PNG/JPEG/GIF/WebP bytes when no image
-//!   adjustments apply, else decoded pixels), placed with `figcraft_render::paint::image_transform`;
+//!   adjustments apply, else decoded pixels), placed with `endrika_render::paint::image_transform`;
 //! - angular and diamond gradients: an image of the paint clipped to the shape;
 //! - drop and inner shadows: images of just the shadow (the renderer's, spread offsetting the
 //!   outline), under/over the vector content;
 //! - background blur and glass: the renderer draws them from a render of everything under the node
 //!   on the page (its ancestors' fills included), placed under the node's content;
-//! - layer blur, noise and texture: the whole node is rendered by `figcraft_render` and placed as
+//! - layer blur, noise and texture: the whole node is rendered by `endrika_render` and placed as
 //!   one image.
 //!
 //! Pages are sized in points, one point per pixel of the document. For print ([`PdfOptions::print`],
@@ -38,8 +38,8 @@ pub mod print;
 mod raster;
 mod text;
 
-use figcraft_doc::{Document, NodeId, PrintSettings};
-use figcraft_geom::{Affine, Rect};
+use endrika_doc::{Document, NodeId, PrintSettings};
+use endrika_geom::{Affine, Rect};
 
 /// Export settings.
 #[derive(Clone, Debug)]
@@ -67,7 +67,7 @@ pub enum PdfError {
     #[error("nothing to export")]
     Empty,
     #[error(transparent)]
-    Depth(#[from] figcraft_render::ExportDepthError),
+    Depth(#[from] endrika_render::ExportDepthError),
     #[error("no such node {0}")]
     NoNode(NodeId),
     #[error("node {0} has no exportable area")]
@@ -97,7 +97,7 @@ pub fn export_nodes_pdf(doc: &Document, ids: &[NodeId]) -> Result<Vec<u8>, PdfEr
 pub fn export_groups(doc: &Document, groups: &[Vec<NodeId>], opts: &PdfOptions) -> Result<Vec<u8>, PdfError> {
     // All pages are checked before bounds, raster fallbacks or PDF writing start.
     for group in groups {
-        figcraft_render::check_export_depth(doc, group)?;
+        endrika_render::check_export_depth(doc, group)?;
     }
     let mut pages: Vec<(Vec<NodeId>, Rect)> = Vec::new();
     for g in groups.iter().filter(|g| !g.is_empty()) {
@@ -106,7 +106,7 @@ pub fn export_groups(doc: &Document, groups: &[Vec<NodeId>], opts: &PdfOptions) 
             if !doc.contains(*id) {
                 return Err(PdfError::NoNode(*id));
             }
-            if let Some(b) = figcraft_render::export_bounds(doc, *id).filter(|b| rect_finite(*b)) {
+            if let Some(b) = endrika_render::export_bounds(doc, *id).filter(|b| rect_finite(*b)) {
                 bounds = Some(bounds.map_or(b, |a| a.union(b)));
             }
         }
@@ -163,7 +163,7 @@ fn rect_finite(r: Rect) -> bool {
 
 fn write(doc: &Document, pages: &[(Vec<NodeId>, Rect)], opts: &PdfOptions) -> Result<Vec<u8>, PdfError> {
     let mut pdf = krilla::Document::new();
-    let mut meta = krilla::metadata::Metadata::new().creator("FigCraft".into()).producer("FigCraft".into());
+    let mut meta = krilla::metadata::Metadata::new().creator("Endrika".into()).producer("Endrika".into());
     if let Some(t) = opts.title.as_ref().filter(|t| !t.trim().is_empty()) {
         meta = meta.title(t.clone());
     }

@@ -1,7 +1,7 @@
 use super::*;
 use crate::{Light, Lights};
 use std::collections::{BTreeMap, BTreeSet};
-use vectorcraft_geom::kurbo::{Circle, Shape};
+use tsipika_geom::kurbo::{Circle, Shape};
 
 #[test]
 fn explicit_single_lights_match_legacy_controls_and_white_keeps_polygon_shading() {

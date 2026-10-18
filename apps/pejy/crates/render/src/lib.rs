@@ -1,4 +1,4 @@
-//! DesignCraft renderer: spreads → premultiplied RGBA pixels with `vello_cpu`.
+//! Pejy renderer: spreads → premultiplied RGBA pixels with `vello_cpu`.
 //!
 //! The renderer draws *document content only* (paper, page items, parent items, composed text,
 //! placed images). Non-printing chrome — guides, frame edges, ports, selection — is drawn by the
@@ -12,11 +12,11 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use designcraft_color::BlendMode as DcBlend;
-use designcraft_compose::{Cache, ComposedStory, ShownOn};
-use designcraft_doc::{Content, Document, Item, PageSide, SpreadRef, StoryId, StrokeAlign, StrokeType};
-use designcraft_geom::corners;
-use designcraft_geom::{Affine, BezPath, Rect, Shape, Vec2};
+use pejy_color::BlendMode as DcBlend;
+use pejy_compose::{Cache, ComposedStory, ShownOn};
+use pejy_doc::{Content, Document, Item, PageSide, SpreadRef, StoryId, StrokeAlign, StrokeType};
+use pejy_geom::corners;
+use pejy_geom::{Affine, BezPath, Rect, Shape, Vec2};
 use vello_cpu::kurbo;
 use vello_cpu::peniko::{self, BlendMode, Compose, Mix};
 use vello_cpu::{Pixmap, RenderContext, Resources};
@@ -125,7 +125,7 @@ pub struct RenderOptions {
     /// Skip non-printing items and layers (Preview mode, export).
     pub printing_only: bool,
     /// Items not to draw (live drag previews).
-    pub hidden: Vec<designcraft_doc::ItemId>,
+    pub hidden: Vec<pejy_doc::ItemId>,
     /// Draw text smaller than this many pixels as grey bars ("greeking"); 0 = never.
     pub greek_below_px: f64,
     /// Drop shadow on pages (screen view).
@@ -227,7 +227,7 @@ pub struct Renderer {
     glyphs: text::GlyphCache,
     /// Composed stories looked up during the current render.
     stories: HashMap<(StoryId, ShownOn), Arc<ComposedStory>>,
-    drawing_items: Vec<designcraft_doc::ItemId>,
+    drawing_items: Vec<pejy_doc::ItemId>,
     cmyk_view: Option<blendspace::CachedView>,
     /// Whether the last render ran the CMYK ink passes (only then is its view worth keeping).
     cmyk_ran: bool,
@@ -270,7 +270,7 @@ pub fn default_threads() -> u16 {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        if let Some(n) = std::env::var("DESIGNCRAFT_RENDER_THREADS").ok().and_then(|v| v.parse().ok()) {
+        if let Some(n) = std::env::var("PEJY_RENDER_THREADS").ok().and_then(|v| v.parse().ok()) {
             return n;
         }
         std::thread::available_parallelism().map(|n| (n.get().saturating_sub(1)).clamp(0, 8) as u16).unwrap_or(0)
@@ -393,7 +393,7 @@ impl Renderer {
         if let Some(pm) = vello_cpu::PixmapMut::new(w, h, &mut pixels) {
             ctx.render(pm, &mut self.resources);
         }
-        if opts.blend_space_view && doc.settings.blend_space == designcraft_doc::BlendSpace::Cmyk && opts.plate.is_none() {
+        if opts.blend_space_view && doc.settings.blend_space == pejy_doc::BlendSpace::Cmyk && opts.plate.is_none() {
             let mut img = Rendered { width: w as u32, height: h as u32, pixels };
             for pl in spreads {
                 let Some(sp) = doc.spread(pl.spread) else { continue };
@@ -437,7 +437,7 @@ impl Renderer {
         let Some(sp) = doc.spread(sr) else { return };
         // Paper.
         if f.opts.paper {
-            let paper = doc.resolve_color(designcraft_color::swatch::PAPER, 1.0).unwrap_or(designcraft_color::Color::WHITE);
+            let paper = doc.resolve_color(pejy_color::swatch::PAPER, 1.0).unwrap_or(pejy_color::Color::WHITE);
             if f.opts.page_shadow {
                 ctx.set_transform(f.view);
                 ctx.set_paint(peniko::Color::from_rgba8(0, 0, 0, 90));
@@ -689,7 +689,7 @@ impl Renderer {
             ctx.set_paint(screen_color([60, 110, 220], 200));
             ctx.set_stroke(kurbo::Stroke::new(0.75));
             ctx.stroke_path(&r.to_path(0.1));
-            if ff.kind == designcraft_doc::FieldKind::CheckBox && !ff.value.is_empty() && ff.value != "Off" {
+            if ff.kind == pejy_doc::FieldKind::CheckBox && !ff.value.is_empty() && ff.value != "Off" {
                 let (w, h) = (r.width(), r.height());
                 let mut c = BezPath::new();
                 c.move_to((r.x0 + w * 0.22, r.y0 + h * 0.48));
@@ -723,23 +723,23 @@ impl Renderer {
     fn draw_stroke_painted(&mut self, ctx: &mut RenderContext, f: &Frame, it: &Item, bp: &BezPath, xf: Affine) {
         let st = &it.stroke;
         let (paint, bounds) = (st.as_fill(), bp.bounding_box());
-        if f.doc.resolve_color(&st.swatch, st.tint).is_none() && designcraft_color::swatch::resolve_gradient(&f.doc.swatches, &st.swatch).is_none() {
+        if f.doc.resolve_color(&st.swatch, st.tint).is_none() && pejy_color::swatch::resolve_gradient(&f.doc.swatches, &st.swatch).is_none() {
             return;
         }
         let mut stroke = kurbo::Stroke::new(st.weight)
             .with_caps(match st.cap {
-                designcraft_doc::Cap::Butt => kurbo::Cap::Butt,
-                designcraft_doc::Cap::Round => kurbo::Cap::Round,
-                designcraft_doc::Cap::Projecting => kurbo::Cap::Square,
+                pejy_doc::Cap::Butt => kurbo::Cap::Butt,
+                pejy_doc::Cap::Round => kurbo::Cap::Round,
+                pejy_doc::Cap::Projecting => kurbo::Cap::Square,
             })
             .with_join(match st.join {
-                designcraft_doc::Join::Miter => kurbo::Join::Miter,
-                designcraft_doc::Join::Round => kurbo::Join::Round,
-                designcraft_doc::Join::Bevel => kurbo::Join::Bevel,
+                pejy_doc::Join::Miter => kurbo::Join::Miter,
+                pejy_doc::Join::Round => kurbo::Join::Round,
+                pejy_doc::Join::Bevel => kurbo::Join::Bevel,
             })
             .with_miter_limit(st.miter_limit);
         let kind = f.doc.stroke_kind(&st.kind);
-        let length = designcraft_doc::path_length_bound(bp);
+        let length = pejy_doc::path_length_bound(bp);
         match &kind {
             StrokeType::Dashed { pattern } if StrokeType::expandable_dashes(pattern, length) => {
                 stroke = stroke.with_dashes(0.0, pattern.iter().copied())
@@ -755,7 +755,7 @@ impl Renderer {
         }
         let closed = it.path.is_closed();
         // Arrowheads: the path is shortened under them; they're drawn after it.
-        let arrows = designcraft_doc::arrow::apply(bp, st, closed);
+        let arrows = pejy_doc::arrow::apply(bp, st, closed);
         let bp = arrows.as_ref().map_or(bp, |a| &a.0);
         // Gap colour under dashes and dots: the whole path, undashed.
         let gap = if matches!(kind, StrokeType::Solid) { None } else { f.doc.resolve_color(&st.gap_swatch, st.gap_tint) };
@@ -833,7 +833,7 @@ impl Renderer {
     }
 
     /// Draw a placed graphic, inside its clipping path when it has one.
-    pub(crate) fn draw_graphic(&mut self, ctx: &mut RenderContext, f: &Frame, g: &designcraft_doc::Graphic, xf: Affine) {
+    pub(crate) fn draw_graphic(&mut self, ctx: &mut RenderContext, f: &Frame, g: &pejy_doc::Graphic, xf: Affine) {
         let Some((region, even_odd)) = g.clip_region() else {
             self.draw_graphic_unclipped(ctx, f, g, xf);
             return;
@@ -848,9 +848,9 @@ impl Renderer {
         ctx.pop_layer();
     }
 
-    fn draw_graphic_unclipped(&mut self, ctx: &mut RenderContext, f: &Frame, g: &designcraft_doc::Graphic, xf: Affine) {
+    fn draw_graphic_unclipped(&mut self, ctx: &mut RenderContext, f: &Frame, g: &pejy_doc::Graphic, xf: Affine) {
         let Some(asset) = f.doc.assets.get(&g.asset) else { return };
-        if designcraft_doc::media_kind(&asset.mime).is_some() {
+        if pejy_doc::media_kind(&asset.mime).is_some() {
             // Video / sound: a dark frame with a play mark (the poster, when set, is drawn by the item).
             ctx.set_transform(f.view * xf * g.xf);
             ctx.set_paint(screen_color([48, 48, 52], 255));
@@ -910,17 +910,17 @@ const CMYK_N: usize = 17;
 /// sample it with [`cmyk_in`]. Fetch it once for many pixels.
 pub(crate) fn cmyk_table() -> std::sync::Arc<Vec<[f32; 4]>> {
     const N: usize = CMYK_N;
-    type Lut = (designcraft_color::cms::ColorSettings, std::sync::Arc<Vec<[f32; 4]>>);
+    type Lut = (pejy_color::cms::ColorSettings, std::sync::Arc<Vec<[f32; 4]>>);
     static LUT: std::sync::Mutex<Option<Lut>> = std::sync::Mutex::new(None);
-    let settings = designcraft_color::cms::active_settings();
+    let settings = pejy_color::cms::active_settings();
     let mut g = LUT.lock().unwrap_or_else(|e| e.into_inner());
     match g.as_ref() {
         Some((s, t)) if *s == settings => t.clone(),
         _ => {
-            let cms = designcraft_color::cms::active();
+            let cms = pejy_color::cms::active();
             let step = |i: usize| i as f32 / (N - 1) as f32;
             let t: Vec<[f32; 4]> = (0..N * N * N)
-                .map(|i| cms.srgb_to_cmyk([step(i / (N * N)), step(i / N % N), step(i % N)], designcraft_color::cms::Intent::RelativeColorimetric))
+                .map(|i| cms.srgb_to_cmyk([step(i / (N * N)), step(i / N % N), step(i % N)], pejy_color::cms::Intent::RelativeColorimetric))
                 .collect();
             let t = std::sync::Arc::new(t);
             *g = Some((settings, t.clone()));
@@ -955,11 +955,11 @@ fn plate_pixmap(pm: &std::sync::Arc<vello_cpu::Pixmap>, plate: u8) -> std::sync:
     // Keep source allocations alive (their addresses are keys), invalidate on colour settings,
     // and cap derived raster memory rather than merely counting differently sized images.
     type Entry = (std::sync::Arc<vello_cpu::Pixmap>, std::sync::Arc<vello_cpu::Pixmap>);
-    type Cache = (designcraft_color::cms::ColorSettings, std::collections::HashMap<(usize, u8), Entry>, usize);
+    type Cache = (pejy_color::cms::ColorSettings, std::collections::HashMap<(usize, u8), Entry>, usize);
     const BUDGET: usize = 64 << 20;
     static CACHE: std::sync::Mutex<Option<Cache>> = std::sync::Mutex::new(None);
     let key = (std::sync::Arc::as_ptr(pm) as usize, plate);
-    let settings = designcraft_color::cms::active_settings();
+    let settings = pejy_color::cms::active_settings();
     {
         let mut guard = CACHE.lock().unwrap_or_else(|e| e.into_inner());
         if let Some((previous, map, _)) = guard.as_ref() {
@@ -1028,14 +1028,14 @@ pub(crate) fn screen_color(rgb: [u8; 3], alpha: u8) -> peniko::Color {
         return peniko::Color::from_rgba8(rgb[0], rgb[1], rgb[2], alpha);
     }
     let [c, m, y, k] = cmyk_in(&cmyk_table(), rgb.map(|v| v as f32 / 255.0));
-    color_of(&designcraft_color::Color::Cmyk { c, m, y, k }, alpha as f32 / 255.0)
+    color_of(&pejy_color::Color::Cmyk { c, m, y, k }, alpha as f32 / 255.0)
 }
 
-pub fn color_of(c: &designcraft_color::Color, alpha: f32) -> peniko::Color {
+pub fn color_of(c: &pejy_color::Color, alpha: f32) -> peniko::Color {
     if let Some(p) = PLATE.with(|p| p.get()) {
         let cmyk = match *c {
-            designcraft_color::Color::Cmyk { c, m, y, k } => [c, m, y, k],
-            _ => c.to_cmyk_managed(designcraft_color::cms::Intent::RelativeColorimetric),
+            pejy_color::Color::Cmyk { c, m, y, k } => [c, m, y, k],
+            _ => c.to_cmyk_managed(pejy_color::cms::Intent::RelativeColorimetric),
         };
         let a = (alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
         let ink = |i: usize| ((1.0 - cmyk[i].clamp(0.0, 1.0)) * 255.0).round() as u8;
@@ -1046,7 +1046,7 @@ pub fn color_of(c: &designcraft_color::Color, alpha: f32) -> peniko::Color {
         return peniko::Color::from_rgba8(v, v, v, a);
     }
     if RICH_BLACK.with(|r| r.get())
-        && let designcraft_color::Color::Cmyk { c: cc, m, y, k } = *c
+        && let pejy_color::Color::Cmyk { c: cc, m, y, k } = *c
         && cc <= 1e-3
         && m <= 1e-3
         && y <= 1e-3
@@ -1059,9 +1059,9 @@ pub fn color_of(c: &designcraft_color::Color, alpha: f32) -> peniko::Color {
 }
 
 /// Set a swatch fill (solid or gradient) as the paint. Returns false for [None]/unknown.
-fn set_fill_paint(ctx: &mut RenderContext, doc: &Document, fill: &designcraft_doc::Fill, bounds: Rect) -> bool {
+fn set_fill_paint(ctx: &mut RenderContext, doc: &Document, fill: &pejy_doc::Fill, bounds: Rect) -> bool {
     let (swatch, tint) = (fill.swatch.as_str(), fill.tint);
-    if let Some(g) = designcraft_color::swatch::resolve_gradient(&doc.swatches, swatch) {
+    if let Some(g) = pejy_color::swatch::resolve_gradient(&doc.swatches, swatch) {
         // Sampled so process colours blend as inks, as InDesign shows them (and as the PDF's CMYK
         // shading prints).
         let stops: Vec<peniko::ColorStop> = g.display_stops().iter().map(|(o, c, a)| peniko::ColorStop::from((*o, color_of(c, *a)))).collect();
@@ -1070,7 +1070,7 @@ fn set_fill_paint(ctx: &mut RenderContext, doc: &Document, fill: &designcraft_do
         }
         let grad = match g.kind {
             // Radial: a circle stretched into the object's ellipse (the paint transform).
-            designcraft_color::GradientKind::Radial => {
+            pejy_color::GradientKind::Radial => {
                 let (c, rx, ry) = fill.radial_ellipse(bounds);
                 let rx = rx.max(1e-3);
                 ctx.set_paint_transform(Affine::translate(c.to_vec2()) * Affine::scale_non_uniform(1.0, ry / rx) * Affine::translate(-c.to_vec2()));
@@ -1096,12 +1096,12 @@ fn set_fill_paint(ctx: &mut RenderContext, doc: &Document, fill: &designcraft_do
 /// Overprint Preview: does this paint overprint (its own flag, or 100% [Black], which
 /// overprints by default)? It's then multiplied over what's beneath.
 pub(crate) fn overprints(f: &Frame, swatch: &str, tint: f32, flag: bool) -> bool {
-    f.opts.overprint_preview && (flag || (f.doc.settings.overprint_black && swatch == designcraft_color::swatch::BLACK && tint >= 0.999))
+    f.opts.overprint_preview && (flag || (f.doc.settings.overprint_black && swatch == pejy_color::swatch::BLACK && tint >= 0.999))
 }
 
 /// Does any item on the spread, or on the parent pages it shows, use a blend mode other than
 /// Normal (groups and pasted-in items included)?
-fn spread_blends(doc: &Document, sp: &designcraft_doc::Spread) -> bool {
+fn spread_blends(doc: &Document, sp: &pejy_doc::Spread) -> bool {
     let blends = |it: &Item| {
         let mut any = false;
         it.walk(&mut |i| any |= i.blend != Default::default());
@@ -1141,17 +1141,17 @@ pub fn decode_pixmap(bytes: &[u8]) -> Option<Pixmap> {
 /// [`decode_pixmap`] for page `page` of a PDF (other formats have one page).
 pub fn decode_pixmap_page(bytes: &[u8], page: u32) -> Option<Pixmap> {
     // Documents retain the EPS source; only display its TIFF preview or placeholder.
-    let proxy = if designcraft_images::is_eps(bytes) { Some(designcraft_images::eps_proxy(bytes)?.0) } else { None };
+    let proxy = if pejy_images::is_eps(bytes) { Some(pejy_images::eps_proxy(bytes)?.0) } else { None };
     let bytes = proxy.as_deref().unwrap_or(bytes);
     if is_pdf(bytes) {
         return render_pdf_page(bytes, page as usize, 3000);
     }
-    if designcraft_images::is_svg(bytes) {
-        let (px, w, h) = designcraft_images::render_svg(bytes, 3000)?;
+    if pejy_images::is_svg(bytes) {
+        let (px, w, h) = pejy_images::render_svg(bytes, 3000)?;
         let data = px.as_chunks::<4>().0.iter().map(|p| vello_cpu::color::PremulRgba8 { r: p[0], g: p[1], b: p[2], a: p[3] }).collect();
         return Some(Pixmap::from_parts(data, w.min(u16::MAX as u32) as u16, h.min(u16::MAX as u32) as u16));
     }
-    let img = designcraft_images::decode_rgba(bytes)?;
+    let img = pejy_images::decode_rgba(bytes)?;
     let (w, h) = img.dimensions();
     if w == 0 || h == 0 || w > u16::MAX as u32 || h > u16::MAX as u32 {
         return None;
@@ -1203,18 +1203,18 @@ fn now() -> u64 {
 
 /// Pixel size of an encoded image without decoding it fully.
 pub fn image_size(bytes: &[u8]) -> Option<(u32, u32)> {
-    if designcraft_images::is_eps(bytes) {
-        return designcraft_images::eps_pixel_size(bytes);
+    if pejy_images::is_eps(bytes) {
+        return pejy_images::eps_pixel_size(bytes);
     }
     if is_pdf(bytes) {
         // Placed PDFs are sized by their page (crop box) in points.
         return pdf_page_size(bytes, 0).map(|(w, h)| (w.round().max(1.0) as u32, h.round().max(1.0) as u32));
     }
-    if designcraft_images::is_svg(bytes) {
+    if pejy_images::is_svg(bytes) {
         // SVGs by their width and height (CSS pixels → points).
-        return designcraft_images::natural_size(bytes).map(|(w, h)| (w.round().max(1.0) as u32, h.round().max(1.0) as u32));
+        return pejy_images::natural_size(bytes).map(|(w, h)| (w.round().max(1.0) as u32, h.round().max(1.0) as u32));
     }
-    designcraft_images::pixel_size(bytes)
+    pejy_images::pixel_size(bytes)
 }
 
 /// Natural size of a placed graphic, unrounded: a PDF page (crop box) and an SVG in points, a raster
@@ -1224,7 +1224,7 @@ pub fn natural_size(bytes: &[u8], page: usize) -> Option<(f64, f64)> {
     if is_pdf(bytes) {
         return pdf_page_size(bytes, page).map(|(w, h)| (w.max(1e-3), h.max(1e-3)));
     }
-    designcraft_images::natural_size(bytes)
+    pejy_images::natural_size(bytes)
 }
 
 /// MIME type guess for encoded image bytes.
@@ -1248,7 +1248,7 @@ pub fn pdf_page_size(bytes: &[u8], page: usize) -> Option<(f64, f64)> {
 }
 
 /// PDF page `page` as PNG, its longer side about `max_side` pixels, with the `hidden` layers off;
-/// only the `shown` part of it ([`designcraft_doc::Asset::shown_box`]) when given.
+/// only the `shown` part of it ([`pejy_doc::Asset::shown_box`]) when given.
 pub fn pdf_page_png(bytes: &[u8], page: usize, max_side: u32, hidden: &[String], shown: Option<[f64; 4]>) -> Option<Vec<u8>> {
     let data = if hidden.is_empty() { bytes.to_vec() } else { pdf_hide_layers(bytes, hidden).unwrap_or_else(|| bytes.to_vec()) };
     let pm = render_pdf_page(&data, page, max_side)?;
@@ -1288,8 +1288,8 @@ pub fn render_pdf_page(bytes: &[u8], page: usize, max_side: u32) -> Option<Pixma
 /// in points. A box the page doesn't define is its crop box, as PDF readers do. The content boxes
 /// are the bounds of what the page draws, found from its drawing operations without rendering it
 /// (the whole page when it draws nothing).
-pub fn pdf_crop_box(bytes: &[u8], page: usize, crop: designcraft_doc::PdfCrop) -> Option<([f64; 4], (f64, f64))> {
-    use designcraft_doc::PdfCrop;
+pub fn pdf_crop_box(bytes: &[u8], page: usize, crop: pejy_doc::PdfCrop) -> Option<([f64; 4], (f64, f64))> {
+    use pejy_doc::PdfCrop;
     use hayro::hayro_syntax::object::{Rect as PRect, dict::keys};
     const WHOLE: [f64; 4] = [0.0, 0.0, 1.0, 1.0];
     let pdf = hayro::hayro_syntax::Pdf::new(std::sync::Arc::new(bytes.to_vec())).ok()?;
@@ -1328,21 +1328,21 @@ pub fn pdf_crop_box(bytes: &[u8], page: usize, crop: designcraft_doc::PdfCrop) -
     (frac.iter().all(|v| v.is_finite()) && size.0 > 0.0 && size.1 > 0.0).then_some((frac, size))
 }
 
-/// The part of the page a placed PDF shows ([`designcraft_doc::Asset::shown_box`]). A Bounding
+/// The part of the page a placed PDF shows ([`pejy_doc::Asset::shown_box`]). A Bounding
 /// Box crop that import left unmeasured is measured here, once per file, page and crop: that
 /// interprets the page's drawing, which only drawing or exporting the graphic needs.
-pub fn shown_box(asset: &designcraft_doc::Asset) -> Option<[f64; 4]> {
+pub fn shown_box(asset: &pejy_doc::Asset) -> Option<[f64; 4]> {
     if !asset.content_box_pending() {
         return asset.shown_box();
     }
     asset.shown(content_box(&asset.data, asset.page, asset.pdf_crop)?)
 }
 
-type ContentBoxes = HashMap<(usize, u32, designcraft_doc::PdfCrop), (std::sync::Weak<Vec<u8>>, Option<[f64; 4]>)>;
+type ContentBoxes = HashMap<(usize, u32, pejy_doc::PdfCrop), (std::sync::Weak<Vec<u8>>, Option<[f64; 4]>)>;
 
 /// [`pdf_crop_box`]'s box, cached by the file's allocation. The weak reference keeps that address
 /// from naming another file while the entry lives.
-fn content_box(bytes: &Arc<Vec<u8>>, page: u32, crop: designcraft_doc::PdfCrop) -> Option<[f64; 4]> {
+fn content_box(bytes: &Arc<Vec<u8>>, page: u32, crop: pejy_doc::PdfCrop) -> Option<[f64; 4]> {
     static CACHE: std::sync::Mutex<Option<ContentBoxes>> = std::sync::Mutex::new(None);
     let key = (Arc::as_ptr(bytes) as usize, page, crop);
     let cached = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().and_then(|c| c.get(&key)).and_then(|(file, b)| {
@@ -1398,8 +1398,8 @@ pub fn crop_pixmap(pm: &Pixmap, frac: [f64; 4]) -> Option<Pixmap> {
 /// Pixels are separated with a plain GCR (black = 1 − max(r, g, b)), so it's a preview.
 /// View › Proof Colors: simulate the proof target (a press, another RGB space, colour-vision
 /// deficiencies) through the active colour settings' proof table.
-pub fn proof_view(img: &mut Rendered, setup: &designcraft_color::cms::ProofSetup) {
-    let lut = designcraft_color::cms::active().proof_lut(setup);
+pub fn proof_view(img: &mut Rendered, setup: &pejy_color::cms::ProofSetup) {
+    let lut = pejy_color::cms::active().proof_lut(setup);
     for px in img.pixels.as_chunks_mut::<4>().0 {
         let a = px[3];
         if a == 0 {
@@ -1418,8 +1418,8 @@ pub fn proof_view(img: &mut Rendered, setup: &designcraft_color::cms::ProofSetup
 /// A CMYK transparency blend space on screen: the pixels of `area` (device space) through the
 /// working CMYK profile and back, as a spread composited in that space looks.
 fn blend_space_view(img: &mut Rendered, area: Rect) {
-    use designcraft_color::cms::{ProofSetup, ProofTarget};
-    let lut = designcraft_color::cms::active().proof_lut(&ProofSetup { target: ProofTarget::WorkingCmyk, ..Default::default() });
+    use pejy_color::cms::{ProofSetup, ProofTarget};
+    let lut = pejy_color::cms::active().proof_lut(&ProofSetup { target: ProofTarget::WorkingCmyk, ..Default::default() });
     let (w, h) = (img.width as i64, img.height as i64);
     let (x0, y0) = ((area.x0.floor() as i64).clamp(0, w), (area.y0.floor() as i64).clamp(0, h));
     let (x1, y1) = ((area.x1.ceil() as i64).clamp(0, w), (area.y1.ceil() as i64).clamp(0, h));
@@ -1466,14 +1466,14 @@ pub fn separation_view(img: &mut Rendered, plate: Option<u8>, ink_limit: Option<
 }
 
 pub fn image_mime(bytes: &[u8]) -> &'static str {
-    designcraft_images::mime(bytes)
+    pejy_images::mime(bytes)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use designcraft_doc::build::NewDocument;
-    use designcraft_doc::{Fill, ParaFormat};
+    use pejy_doc::build::NewDocument;
+    use pejy_doc::{Fill, ParaFormat};
 
     #[test]
     fn eps_source_decodes_like_its_preview() {
@@ -1490,7 +1490,7 @@ mod tests {
         dos.extend_from_slice(source);
         dos.extend_from_slice(&tiff);
         for source in [source.as_slice(), dos.as_slice()] {
-            let proxy = designcraft_images::eps_proxy(source).unwrap().0;
+            let proxy = pejy_images::eps_proxy(source).unwrap().0;
             let actual = decode_pixmap(source).unwrap();
             let expected = decode_pixmap(&proxy).unwrap();
             assert_eq!((actual.width(), actual.height()), (expected.width(), expected.height()));
@@ -1505,13 +1505,13 @@ mod tests {
 
     #[test]
     fn footnote_vector_objects_are_painted() {
-        use designcraft_doc::{AnchorPosition, AnchoredObject, ItemId, Shape, SpreadRef};
+        use pejy_doc::{AnchorPosition, AnchoredObject, ItemId, Shape, SpreadRef};
         let mut d = Document::new(&NewDocument::default());
         let (_, sid) =
             d.add_text_frame(SpreadRef::Doc(0), Rect::new(20.0, 20.0, 300.0, 300.0), d.default_layer(), "Body", ParaFormat::default()).unwrap();
         let mut item =
-            Item::new(ItemId(d.alloc()), d.default_layer(), Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 12.0, 12.0)));
-        item.fill = Fill::swatch(designcraft_color::swatch::BLACK);
+            Item::new(ItemId(d.alloc()), d.default_layer(), Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 12.0, 12.0)));
+        item.fill = Fill::swatch(pejy_color::swatch::BLACK);
         // Open contours with a fill are implicitly closed for painting. A single
         // open contour must not hide the whole compound glyph.
         item.path.subpaths[0].closed = false;
@@ -1522,7 +1522,7 @@ mod tests {
         let cs = cache.get(&d, sid, None);
         let note = &cs.frames[0].notes[0];
         let object = &note.text.frames[0].objects[0];
-        let centre = note.origin + object.origin.to_vec2() + designcraft_geom::Vec2::new(6.0, 6.0);
+        let centre = note.origin + object.origin.to_vec2() + pejy_geom::Vec2::new(6.0, 6.0);
         let image = Renderer::new().render_page(&d, &cache, 0, 1.0, false, &RenderOptions::default()).unwrap();
         let pixel = image.pixel(centre.x as u32, centre.y as u32);
         assert!(pixel[0] < 80 && pixel[1] < 80 && pixel[2] < 80, "{pixel:?}");
@@ -1556,7 +1556,7 @@ mod tests {
 
     #[test]
     fn proof_view_simulates_the_target() {
-        use designcraft_color::cms::{ProofSetup, ProofTarget};
+        use pejy_color::cms::{ProofSetup, ProofTarget};
         let red = |a: u8| Rendered { width: 1, height: 1, pixels: vec![a, 0, 0, a] };
         let mut img = red(255);
         proof_view(&mut img, &ProofSetup { target: ProofTarget::Protanopia, ..Default::default() });
@@ -1576,10 +1576,10 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         let (fid, _) =
-            d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 576.0, 300.0), lid, "Hello DesignCraft", ParaFormat::default()).unwrap();
-        let id = designcraft_doc::ItemId(d.alloc());
+            d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 576.0, 300.0), lid, "Hello Pejy", ParaFormat::default()).unwrap();
+        let id = pejy_doc::ItemId(d.alloc());
         let mut box_ =
-            Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(36.0, 400.0, 136.0, 500.0)));
+            Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(36.0, 400.0, 136.0, 500.0)));
         box_.fill = Fill::swatch("C=100 M=0 Y=0 K=0");
         d.insert_item(SpreadRef::Doc(0), box_, None).unwrap();
         let cache = Cache::new();
@@ -1603,16 +1603,16 @@ mod tests {
     fn inside_strokes_are_inset_by_half_the_weight() {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
-        let id = designcraft_doc::ItemId(d.alloc());
+        let id = pejy_doc::ItemId(d.alloc());
         let mut it =
-            Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 300.0, 300.0)));
-        it.stroke = designcraft_doc::Stroke {
-            swatch: designcraft_color::swatch::BLACK.into(),
+            Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 300.0, 300.0)));
+        it.stroke = pejy_doc::Stroke {
+            swatch: pejy_color::swatch::BLACK.into(),
             weight: 10.0,
-            align: designcraft_doc::StrokeAlign::Inside,
+            align: pejy_doc::StrokeAlign::Inside,
             ..Default::default()
         };
-        it.corners = designcraft_geom::corners::CornerOptions::uniform(designcraft_geom::corners::CornerShape::Rounded, 20.0);
+        it.corners = pejy_geom::corners::CornerOptions::uniform(pejy_geom::corners::CornerShape::Rounded, 20.0);
         d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
         let cache = Cache::new();
         let mut r = Renderer::new();
@@ -1632,24 +1632,24 @@ mod tests {
     fn arrowheads_draw_at_line_ends() {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
-        let id = designcraft_doc::ItemId(d.alloc());
-        let path = designcraft_geom::shapes::line(designcraft_geom::Point::new(100.0, 400.0), designcraft_geom::Point::new(400.0, 400.0));
-        let mut line = Item::new(id, lid, designcraft_doc::Shape::GraphicLine, path);
-        line.stroke = designcraft_doc::Stroke {
-            swatch: designcraft_color::swatch::BLACK.into(),
+        let id = pejy_doc::ItemId(d.alloc());
+        let path = pejy_geom::shapes::line(pejy_geom::Point::new(100.0, 400.0), pejy_geom::Point::new(400.0, 400.0));
+        let mut line = Item::new(id, lid, pejy_doc::Shape::GraphicLine, path);
+        line.stroke = pejy_doc::Stroke {
+            swatch: pejy_color::swatch::BLACK.into(),
             weight: 2.0,
-            end: designcraft_doc::Arrowhead::TriangleWide,
+            end: pejy_doc::Arrowhead::TriangleWide,
             ..Default::default()
         };
         d.insert_item(SpreadRef::Doc(0), line, None).unwrap();
         // A dashed line with a gap colour: the gaps are painted.
-        let id = designcraft_doc::ItemId(d.alloc());
-        let path = designcraft_geom::shapes::line(designcraft_geom::Point::new(100.0, 500.0), designcraft_geom::Point::new(400.0, 500.0));
-        let mut dashed = Item::new(id, lid, designcraft_doc::Shape::GraphicLine, path);
-        dashed.stroke = designcraft_doc::Stroke {
-            swatch: designcraft_color::swatch::BLACK.into(),
+        let id = pejy_doc::ItemId(d.alloc());
+        let path = pejy_geom::shapes::line(pejy_geom::Point::new(100.0, 500.0), pejy_geom::Point::new(400.0, 500.0));
+        let mut dashed = Item::new(id, lid, pejy_doc::Shape::GraphicLine, path);
+        dashed.stroke = pejy_doc::Stroke {
+            swatch: pejy_color::swatch::BLACK.into(),
             weight: 4.0,
-            kind: designcraft_doc::StrokeType::Dashed { pattern: vec![12.0, 4.0] },
+            kind: pejy_doc::StrokeType::Dashed { pattern: vec![12.0, 4.0] },
             gap_swatch: "C=100 M=0 Y=0 K=0".into(),
             ..Default::default()
         };
@@ -1673,9 +1673,9 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         for (sw, op) in [("C=0 M=0 Y=100 K=0", false), ("C=0 M=100 Y=0 K=0", true)] {
-            let id = designcraft_doc::ItemId(d.alloc());
+            let id = pejy_doc::ItemId(d.alloc());
             let mut it =
-                Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
+                Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
             it.fill = Fill { overprint: op, ..Fill::swatch(sw) };
             d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
         }
@@ -1694,11 +1694,11 @@ mod tests {
     #[test]
     fn cmyk_blend_space_shows_transparent_spreads_in_cmyk() {
         let mut d = Document::new(&NewDocument::default());
-        d.swatches.push(designcraft_color::swatch::Swatch::color("Green", designcraft_color::Color::rgb8(0, 255, 0)));
+        d.swatches.push(pejy_color::swatch::Swatch::color("Green", pejy_color::Color::rgb8(0, 255, 0)));
         let lid = d.default_layer();
-        let id = designcraft_doc::ItemId(d.alloc());
+        let id = pejy_doc::ItemId(d.alloc());
         let mut it =
-            Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
+            Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
         it.fill = Fill::swatch("Green");
         d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
         let cache = Cache::new();
@@ -1713,7 +1713,7 @@ mod tests {
         d.item_mut(id).unwrap().opacity = 0.99;
         let cmyk = px(&d, &mut r);
         assert!(cmyk[0] > 20 || cmyk[1] < 240, "{cmyk:?}");
-        d.settings.blend_space = designcraft_doc::BlendSpace::Rgb;
+        d.settings.blend_space = pejy_doc::BlendSpace::Rgb;
         let rgb = px(&d, &mut r);
         assert!(rgb[1] > 245 && rgb[0] < 10, "{rgb:?}");
     }
@@ -1724,17 +1724,17 @@ mod tests {
         // in Color Dodge: in CMYK the black clears the lilac's inks (white), over the paper it
         // shows as it is; in RGB, dodging with black changes nothing.
         let mut d = Document::new(&NewDocument::default());
-        d.swatches.push(designcraft_color::swatch::Swatch::color("Lilac", designcraft_color::Color::rgb8(171, 154, 227)));
+        d.swatches.push(pejy_color::swatch::Swatch::color("Lilac", pejy_color::Color::rgb8(171, 154, 227)));
         let lid = d.default_layer();
         let rect = |d: &mut Document, r: Rect, fill: &str| {
-            let id = designcraft_doc::ItemId(d.alloc());
-            let mut it = Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(r));
+            let id = pejy_doc::ItemId(d.alloc());
+            let mut it = Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(r));
             it.fill = Fill::swatch(fill);
             d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
             id
         };
         rect(&mut d, Rect::new(100.0, 100.0, 300.0, 200.0), "Lilac");
-        let black = rect(&mut d, Rect::new(150.0, 150.0, 250.0, 250.0), designcraft_color::swatch::BLACK);
+        let black = rect(&mut d, Rect::new(150.0, 150.0, 250.0, 250.0), pejy_color::swatch::BLACK);
         d.item_mut(black).unwrap().blend = DcBlend::ColorDodge;
         let cache = Cache::new();
         let mut r = Renderer::new();
@@ -1749,9 +1749,9 @@ mod tests {
         let lilac = px(&d, &mut r, 120, 150);
         assert!(lilac[2] > lilac[1] + 25, "the lilac beside it: {lilac:?}");
         // Inside a group, the group's blend mode.
-        let g = designcraft_doc::ItemId(d.alloc());
+        let g = pejy_doc::ItemId(d.alloc());
         let it = d.remove_item(black).unwrap();
-        let mut grp = Item::new(g, lid, designcraft_doc::Shape::Group, Default::default());
+        let mut grp = Item::new(g, lid, pejy_doc::Shape::Group, Default::default());
         let mut inner = (*it).clone();
         inner.blend = DcBlend::Normal;
         grp.content = Content::Group { items: vec![Arc::new(inner)] };
@@ -1761,7 +1761,7 @@ mod tests {
         assert!(grouped[..3].iter().all(|v| *v > 235), "{grouped:?}");
         // An RGB blend space: still lilac under the black (lightened a little: [Black] shows as a
         // dark grey in RGB).
-        d.settings.blend_space = designcraft_doc::BlendSpace::Rgb;
+        d.settings.blend_space = pejy_doc::BlendSpace::Rgb;
         let rgb = px(&d, &mut r, 200, 175);
         assert!(rgb[2] > rgb[1] + 25 && rgb[1] < 220, "{rgb:?}");
     }
@@ -1772,16 +1772,16 @@ mod tests {
         let lid = d.default_layer();
         let mut kids = Vec::new();
         for (sw, x) in [("C=0 M=0 Y=100 K=0", 100.0), ("C=0 M=100 Y=0 K=0", 150.0)] {
-            let id = designcraft_doc::ItemId(d.alloc());
+            let id = pejy_doc::ItemId(d.alloc());
             let mut it =
-                Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(x, 100.0, x + 100.0, 200.0)));
+                Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(x, 100.0, x + 100.0, 200.0)));
             it.fill = Fill::swatch(sw);
             it.opacity = 0.5;
             kids.push(std::sync::Arc::new(it));
         }
-        let gid = designcraft_doc::ItemId(d.alloc());
-        let mut g = Item::new(gid, lid, designcraft_doc::Shape::Group, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 250.0, 200.0)));
-        g.content = designcraft_doc::Content::Group { items: kids };
+        let gid = pejy_doc::ItemId(d.alloc());
+        let mut g = Item::new(gid, lid, pejy_doc::Shape::Group, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 250.0, 200.0)));
+        g.content = pejy_doc::Content::Group { items: kids };
         d.insert_item(SpreadRef::Doc(0), g, None).unwrap();
         let cache = Cache::new();
         let mut r = Renderer::new();
@@ -1816,10 +1816,10 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         for (sw, r) in
-            [("C=100 M=0 Y=0 K=0", Rect::new(100.0, 100.0, 200.0, 200.0)), (designcraft_color::swatch::BLACK, Rect::new(150.0, 100.0, 250.0, 200.0))]
+            [("C=100 M=0 Y=0 K=0", Rect::new(100.0, 100.0, 200.0, 200.0)), (pejy_color::swatch::BLACK, Rect::new(150.0, 100.0, 250.0, 200.0))]
         {
-            let id = designcraft_doc::ItemId(d.alloc());
-            let mut it = Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(r));
+            let id = pejy_doc::ItemId(d.alloc());
+            let mut it = Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(r));
             it.fill = Fill::swatch(sw);
             d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
         }
@@ -1839,10 +1839,10 @@ mod tests {
     fn appearance_of_black_on_screen() {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
-        let id = designcraft_doc::ItemId(d.alloc());
+        let id = pejy_doc::ItemId(d.alloc());
         let mut it =
-            Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
-        it.fill = Fill::swatch(designcraft_color::swatch::BLACK);
+            Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
+        it.fill = Fill::swatch(pejy_color::swatch::BLACK);
         d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
         let cache = Cache::new();
         let mut r = Renderer::new();
@@ -1863,10 +1863,10 @@ mod tests {
         image::RgbaImage::from_pixel(4, 4, image::Rgba([255, 0, 0, 255]))
             .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
             .unwrap();
-        let aid = designcraft_doc::AssetId(d.alloc());
+        let aid = pejy_doc::AssetId(d.alloc());
         d.assets.insert(
             aid,
-            Arc::new(designcraft_doc::Asset {
+            Arc::new(pejy_doc::Asset {
                 id: aid,
                 name: "red.png".into(),
                 mime: "image/png".into(),
@@ -1875,10 +1875,10 @@ mod tests {
                 ..Default::default()
             }),
         );
-        let id = designcraft_doc::ItemId(d.alloc());
+        let id = pejy_doc::ItemId(d.alloc());
         let mut it =
-            Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
-        it.content = designcraft_doc::Content::Graphic(designcraft_doc::Graphic {
+            Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
+        it.content = pejy_doc::Content::Graphic(pejy_doc::Graphic {
             asset: aid,
             size: (100.0, 100.0),
             xf: Affine::translate((100.0, 100.0)),
@@ -1909,10 +1909,10 @@ mod tests {
         image::RgbaImage::from_pixel(4, 4, image::Rgba([255, 0, 0, 255]))
             .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
             .unwrap();
-        let aid = designcraft_doc::AssetId(d.alloc());
+        let aid = pejy_doc::AssetId(d.alloc());
         d.assets.insert(
             aid,
-            Arc::new(designcraft_doc::Asset {
+            Arc::new(pejy_doc::Asset {
                 page: 0,
                 id: aid,
                 name: "red.png".into(),
@@ -1924,15 +1924,15 @@ mod tests {
             }),
         );
         // A 100 pt image at 100,100 clipped by a triangle with its apex at the top middle.
-        let triangle = designcraft_geom::PathData::single(designcraft_geom::path::SubPath::polyline(
-            &[designcraft_geom::Point::new(0.0, 100.0), designcraft_geom::Point::new(50.0, 0.0), designcraft_geom::Point::new(100.0, 100.0)],
+        let triangle = pejy_geom::PathData::single(pejy_geom::path::SubPath::polyline(
+            &[pejy_geom::Point::new(0.0, 100.0), pejy_geom::Point::new(50.0, 0.0), pejy_geom::Point::new(100.0, 100.0)],
             true,
         ));
-        let mut clip = designcraft_doc::ClippingPath::new(designcraft_doc::ClippingKind::PhotoshopPath, triangle);
-        let id = designcraft_doc::ItemId(d.alloc());
+        let mut clip = pejy_doc::ClippingPath::new(pejy_doc::ClippingKind::PhotoshopPath, triangle);
+        let id = pejy_doc::ItemId(d.alloc());
         let mut it =
-            Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
-        it.content = designcraft_doc::Content::Graphic(designcraft_doc::Graphic {
+            Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(100.0, 100.0, 200.0, 200.0)));
+        it.content = pejy_doc::Content::Graphic(pejy_doc::Graphic {
             asset: aid,
             size: (100.0, 100.0),
             xf: Affine::translate((100.0, 100.0)),
@@ -1952,7 +1952,7 @@ mod tests {
         assert_eq!(page.pixel(110, 110)[..3], [255, 255, 255], "inside the frame, outside the triangle: paper");
         // Inverted: the corners show and the triangle is paper.
         clip.invert = true;
-        if let Some(designcraft_doc::Content::Graphic(g)) = d.item_mut(id).map(|it| &mut it.content) {
+        if let Some(pejy_doc::Content::Graphic(g)) = d.item_mut(id).map(|it| &mut it.content) {
             g.clip = Some(Arc::new(clip));
         }
         let cache = Cache::new();
@@ -1988,13 +1988,13 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 336.0, 400.0), lid, "", ParaFormat::default()).unwrap();
-        let mut t = designcraft_doc::Table::new(1, 1, 1, 0, 0, 200.0);
+        let mut t = pejy_doc::Table::new(1, 1, 1, 0, 0, 200.0);
         t.rows[0].height = 60.0;
-        t.rows[0].mode = designcraft_doc::RowHeightMode::Exactly;
-        let gap = |kind| designcraft_doc::CellStroke { weight: 8.0, kind, gap_color: "C=100 M=0 Y=0 K=0".into(), ..Default::default() };
+        t.rows[0].mode = pejy_doc::RowHeightMode::Exactly;
+        let gap = |kind| pejy_doc::CellStroke { weight: 8.0, kind, gap_color: "C=100 M=0 Y=0 K=0".into(), ..Default::default() };
         let cell = t.cell_mut(0, 0).unwrap();
-        cell.strokes[0] = gap(designcraft_doc::StrokeType::Dashed { pattern: vec![12.0, 6.0] });
-        cell.strokes[2] = gap(designcraft_doc::StrokeType::ThickThin);
+        cell.strokes[0] = gap(pejy_doc::StrokeType::Dashed { pattern: vec![12.0, 6.0] });
+        cell.strokes[2] = gap(pejy_doc::StrokeType::ThickThin);
         cell.border_overrides = [true; 4];
         cell.stroke_defined = [true; 4];
         d.story_mut(sid).unwrap().insert_table(0, t);
@@ -2015,23 +2015,23 @@ mod tests {
 
     #[test]
     fn degenerate_dash_patterns_draw_solid_and_fill_types_close_table_corners() {
-        let fine = designcraft_doc::StrokeType::Dashed { pattern: vec![1e-6, 1e-6] };
+        let fine = pejy_doc::StrokeType::Dashed { pattern: vec![1e-6, 1e-6] };
         // Expanding these would take ~10^8 dashes per edge.
         assert!(text::cell_stroke(&fine, 4.0, 200.0).dash_pattern.is_empty());
-        assert!(text::cell_stroke(&designcraft_doc::StrokeType::Dotted, 1e-6, 200.0).dash_pattern.is_empty());
-        assert!(!text::cell_stroke(&designcraft_doc::StrokeType::Dashed { pattern: vec![3.0, 2.0] }, 1.0, 200.0).dash_pattern.is_empty());
+        assert!(text::cell_stroke(&pejy_doc::StrokeType::Dotted, 1e-6, 200.0).dash_pattern.is_empty());
+        assert!(!text::cell_stroke(&pejy_doc::StrokeType::Dashed { pattern: vec![3.0, 2.0] }, 1.0, 200.0).dash_pattern.is_empty());
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         let (fid, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 336.0, 400.0), lid, "", ParaFormat::default()).unwrap();
-        d.item_mut(fid).unwrap().stroke = designcraft_doc::Stroke { weight: 2.0, kind: fine.clone(), ..Default::default() };
-        let mut t = designcraft_doc::Table::new(1, 2, 2, 0, 0, 200.0);
+        d.item_mut(fid).unwrap().stroke = pejy_doc::Stroke { weight: 2.0, kind: fine.clone(), ..Default::default() };
+        let mut t = pejy_doc::Table::new(1, 2, 2, 0, 0, 200.0);
         for r in 0..2 {
             t.rows[r].height = 60.0;
-            t.rows[r].mode = designcraft_doc::RowHeightMode::Exactly;
+            t.rows[r].mode = pejy_doc::RowHeightMode::Exactly;
         }
-        let stroke = |kind| designcraft_doc::CellStroke { weight: 8.0, kind, gap_color: "C=100 M=0 Y=0 K=0".into(), ..Default::default() };
+        let stroke = |kind| pejy_doc::CellStroke { weight: 8.0, kind, gap_color: "C=100 M=0 Y=0 K=0".into(), ..Default::default() };
         for cell in &mut t.cells {
-            cell.strokes = std::array::from_fn(|_| stroke(designcraft_doc::StrokeType::ThickThin));
+            cell.strokes = std::array::from_fn(|_| stroke(pejy_doc::StrokeType::ThickThin));
             cell.border_overrides = [true; 4];
             cell.stroke_defined = [true; 4];
         }
@@ -2051,9 +2051,9 @@ mod tests {
         // Outside the table's top-left corner, inside both edges' reach.
         let corner = img.pixel((top.x0 - 3.0) as u32, (top.y0 - 3.0) as u32);
         assert!(ink(corner), "corner closed: {corner:?}");
-        let edge = frag.strokes.iter().find(|s| s.a == designcraft_geom::Point::new(top.x0, top.y0) && s.a.y == s.b.y).unwrap();
+        let edge = frag.strokes.iter().find(|s| s.a == pejy_geom::Point::new(top.x0, top.y0) && s.a.y == s.b.y).unwrap();
         let (a, b) = frag.corner_capped(edge);
-        assert_eq!((a, b), (designcraft_geom::Point::new(top.x0 - 4.0, top.y0), edge.b), "only table corners extend");
+        assert_eq!((a, b), (pejy_geom::Point::new(top.x0 - 4.0, top.y0), edge.b), "only table corners extend");
     }
 
     #[test]
@@ -2061,7 +2061,7 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 336.0, 400.0), lid, "", ParaFormat::default()).unwrap();
-        let mut t = designcraft_doc::Table::new(5, 3, 3, 1, 0, 300.0);
+        let mut t = pejy_doc::Table::new(5, 3, 3, 1, 0, 300.0);
         for c in 0..3 {
             let cell = t.cell_mut(0, c).unwrap();
             cell.fill = "C=100 M=0 Y=0 K=0".into();
@@ -2123,7 +2123,7 @@ mod tests {
         // y 100 from x 400 to 500, butt capped. Clipped away: a rectangle off to the left.
         let pdf = one_page_pdf("0 0 0 rg 100 532 200 60 re f 10 w 400 100 m 500 100 l S q 0 0 50 50 re W n 100 0 10 10 re f Q");
         let before = PDF_RENDERS.with(std::cell::Cell::get);
-        let (frac, size) = pdf_crop_box(&pdf, 0, designcraft_doc::PdfCrop::ContentVisible).unwrap();
+        let (frac, size) = pdf_crop_box(&pdf, 0, pejy_doc::PdfCrop::ContentVisible).unwrap();
         assert_eq!(PDF_RENDERS.with(std::cell::Cell::get), before, "the page was rasterized");
         let want = [100.0 / 612.0, 200.0 / 792.0, 500.0 / 612.0, 697.0 / 792.0];
         assert!(frac.iter().zip(want).all(|(a, b)| (a - b).abs() < 1e-6), "{frac:?} vs {want:?}");

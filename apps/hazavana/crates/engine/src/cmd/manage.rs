@@ -2,12 +2,12 @@
 
 use serde_json::{Value, json};
 
-use lightcraft_catalog::{ColorLabel, Op};
+use hazavana_catalog::{ColorLabel, Op};
 
 use super::{CommandSpec, always, bad, bool_or, cmd, f64_or, has_selection, str_param};
 use crate::Result;
 
-fn rename_args(s: &crate::Session, p: &Value, c: &str) -> Result<(Vec<lightcraft_catalog::PhotoId>, String, usize)> {
+fn rename_args(s: &crate::Session, p: &Value, c: &str) -> Result<(Vec<hazavana_catalog::PhotoId>, String, usize)> {
     let template = str_param(p, "template").ok_or_else(|| bad(c, "missing `template`"))?.to_string();
     let start = p.get("start").and_then(Value::as_u64).unwrap_or(1);
     let ids = s.targets(p)?;
@@ -68,7 +68,7 @@ fn set_names_ops(s: &crate::Session, names: &[String; 5]) -> Vec<Op> {
 /// Auto-Tag Photos). GPX times are UTC; capture times are the camera's local clock, so a photo's
 /// recorded zone (Exif `OffsetTimeOriginal`) or the `offset` parameter converts them.
 fn auto_tag_tracklog(s: &mut crate::Session, p: &Value) -> Result<Value> {
-    use lightcraft_meta::{DateTime, Match, parse_gpx};
+    use hazavana_meta::{DateTime, Match, parse_gpx};
     const C: &str = "photo.autoTagTracklog";
     let text = match (str_param(p, "gpx"), str_param(p, "path")) {
         (Some(t), _) => t.to_string(),
@@ -141,7 +141,7 @@ fn auto_tag_tracklog(s: &mut crate::Session, p: &Value) -> Result<Value> {
     if !bool_or(p, "dryRun", false) && !ops.is_empty() {
         s.commit("Auto-Tag from Tracklog", Op::Batch { ops })?;
     }
-    let iso = |t: f64| format!("{}Z", lightcraft_catalog::dates::civil(t.floor() as i64));
+    let iso = |t: f64| format!("{}Z", hazavana_catalog::dates::civil(t.floor() as i64));
     Ok(json!({
         "tagged": tagged,
         "interpolated": interpolated,
@@ -186,7 +186,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "{ids?, time?: `2026-09-30T14:05:00` (the active photo gets it, the others shift by the same amount), each?: bool (every photo gets `time`), shift?: seconds, hours?: time-zone shift in hours} → {changed, captured: [..]}",
             has_selection,
             |s, p| {
-                use lightcraft_catalog::dates::{iso_seconds, normalize_iso, shift_iso};
+                use hazavana_catalog::dates::{iso_seconds, normalize_iso, shift_iso};
                 let c = "photo.setCaptureTime";
                 let targets: Vec<_> = s.targets(p)?.into_iter().filter(|id| s.catalog.photo(*id).is_some()).collect();
                 if targets.is_empty() {

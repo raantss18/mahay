@@ -1,15 +1,15 @@
 [package]
-name = "designcraft-fonts"
+name = "pejy-fonts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft fonts: font database (bundled OFL + system), metrics, glyph outlines, shaping"
+description = "Pejy fonts: font database (bundled OFL + system), metrics, glyph outlines, shaping"
 
 [lints]
 workspace = true
 
 [features]
-# Synthetic fonts for other crates' tests (`designcraft_fonts::testing`).
+# Synthetic fonts for other crates' tests (`pejy_fonts::testing`).
 testing = []
 
 [dependencies]

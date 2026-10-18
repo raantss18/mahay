@@ -17,8 +17,8 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, Entity, EntityStore, Handle, RefEdit, Transparency, WorkItem};
-use cadcraft_geom::Mat3;
+use drafitra_doc::{Drawing, Entity, EntityStore, Handle, RefEdit, Transparency, WorkItem};
+use drafitra_geom::Mat3;
 use serde_json::{Value, json};
 
 use super::super::curves::handle_value;
@@ -100,13 +100,13 @@ fn run_refedit(s: &mut Session, p: &Value) -> Result<Value> {
             .model
             .iter()
             .chain(d.layouts.iter().flat_map(|l| l.entities.iter()))
-            .find(|e| matches!(&e.kind, cadcraft_doc::EntityKind::Insert(i) if i.block.eq_ignore_ascii_case(n)))
+            .find(|e| matches!(&e.kind, drafitra_doc::EntityKind::Insert(i) if i.block.eq_ignore_ascii_case(n)))
             .map(|e| e.handle),
-        None => targets(s, p)?.into_iter().find(|h| d.entity(*h).is_some_and(|e| matches!(e.kind, cadcraft_doc::EntityKind::Insert(_)))),
+        None => targets(s, p)?.into_iter().find(|h| d.entity(*h).is_some_and(|e| matches!(e.kind, drafitra_doc::EntityKind::Insert(_)))),
     };
     let ih = picked.ok_or_else(|| bad("refedit", "select a block reference"))?;
     let (ins, space) = match d.entity(ih).map(|e| &e.kind) {
-        Some(cadcraft_doc::EntityKind::Insert(i)) => (i.clone(), d.space_of(ih).ok_or_else(|| bad("refedit", "the reference is in no space"))?),
+        Some(drafitra_doc::EntityKind::Insert(i)) => (i.clone(), d.space_of(ih).ok_or_else(|| bad("refedit", "the reference is in no space"))?),
         _ => return Err(bad("refedit", "select a block reference")),
     };
     let blk = d.block(&ins.block).cloned().ok_or_else(|| bad("refedit", format!("block \"{}\" not found", ins.block)))?;

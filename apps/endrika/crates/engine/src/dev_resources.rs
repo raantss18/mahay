@@ -7,7 +7,7 @@
 //! capped) and never fetched or opened by the engine. A link added without a name is named after
 //! its URL (no page title is looked up).
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::cmd::CommandSpec;

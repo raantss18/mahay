@@ -5,12 +5,12 @@
 //! edges may be covered by the other neighbour. Interior pixels agree within 2/255; at most
 //! 1.5 % of pixels (silhouettes) may differ more. Skipped without an adapter.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::build;
-use effectcraft_project::{Comp, ItemId, ItemKind, LayerSource, LightKind, PrimitiveKind, Project, Renderer as R3, Solid};
-use effectcraft_render::three_d::adv::{self, Scene};
-use effectcraft_render::{Accelerator, EvalCtx, NoFootage, RenderOpts, Renderer};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_keyframe::Value;
+use tselatra_project::build;
+use tselatra_project::{Comp, ItemId, ItemKind, LayerSource, LightKind, PrimitiveKind, Project, Renderer as R3, Solid};
+use tselatra_render::three_d::adv::{self, Scene};
+use tselatra_render::{Accelerator, EvalCtx, NoFootage, RenderOpts, Renderer};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::Gpu;
 
@@ -20,20 +20,20 @@ fn gpu() -> Option<Gpu> {
     match Gpu::try_headless() {
         Ok(g) => Some(g),
         Err(e) => {
-            eprintln!("effectcraft-gpu adv3d tests: no GPU ({e}), skipping");
-            crate::tests::require_gpu("effectcraft-gpu adv3d tests", Err(&e))
+            eprintln!("tselatra-gpu adv3d tests: no GPU ({e}), skipping");
+            crate::tests::require_gpu("tselatra-gpu adv3d tests", Err(&e))
         }
     }
 }
 
-fn add(p: &mut Project, cid: ItemId, src: LayerSource, edit: impl FnOnce(&mut effectcraft_project::Layer)) {
+fn add(p: &mut Project, cid: ItemId, src: LayerSource, edit: impl FnOnce(&mut tselatra_project::Layer)) {
     let comp = p.comp(cid).unwrap().clone();
     let mut l = build::layer(p, &comp, "L", src, (comp.width, comp.height), None);
     edit(&mut l);
     p.comp_mut(cid).unwrap().layers.insert(0, l);
 }
 
-fn set(l: &mut effectcraft_project::Layer, path: &str, v: Value) {
+fn set(l: &mut tselatra_project::Layer, path: &str, v: Value) {
     l.props.prop_mut(path).unwrap_or_else(|| panic!("{path}")).value = v;
 }
 
@@ -97,7 +97,7 @@ pub(crate) fn scene_project() -> (Project, ItemId) {
 pub(crate) fn scene(p: &Project, cid: ItemId) -> Scene {
     let r = Renderer::new(p, &NoFootage, RenderOpts::default());
     let ctx = EvalCtx { project: p, comp_id: cid, comp: p.comp(cid).unwrap(), time: Tick::ZERO, expr: None, footage: None };
-    let run: Vec<&effectcraft_project::Layer> = ctx.comp.layers.iter().rev().filter(|l| l.is_3d() && l.has_video()).collect();
+    let run: Vec<&tselatra_project::Layer> = ctx.comp.layers.iter().rev().filter(|l| l.is_3d() && l.has_video()).collect();
     adv::scene_of(&r, &ctx, &run, (ctx.comp.width, ctx.comp.height))
 }
 
@@ -148,7 +148,7 @@ fn gpu_matches_cpu_unlit_and_full_frames() {
     // Whole frames through the renderer with the GPU attached.
     let (p, cid) = scene_project();
     let cpu = Renderer::new(&p, &NoFootage, RenderOpts::default()).comp_frame(cid, Tick::ZERO);
-    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
     r.accel = Some(&g);
     let gimg = r.comp_frame(cid, Tick::ZERO);
     let diff = cpu.data.iter().zip(&gimg.data).filter(|(a, b)| (0..4).any(|k| (a[k] - b[k]).abs() > 3.0 / 255.0)).count();
@@ -216,8 +216,8 @@ pub(crate) fn dof_mb_project() -> (Project, ItemId) {
     let sphere = c.layers.iter_mut().find(|l| matches!(l.source, LayerSource::Primitive { kind: PrimitiveKind::Sphere })).unwrap();
     sphere.switches.motion_blur = true;
     sphere.props.prop_mut("transform/position").unwrap().keys = vec![
-        effectcraft_keyframe::Keyframe::new(Tick::ZERO, Value::Vec3([80.0, 95.0, 0.0])),
-        effectcraft_keyframe::Keyframe::new(Tick::from_seconds_f64(1.0), Value::Vec3([80.0 + 30.0 * 40.0, 95.0, 0.0])),
+        tselatra_keyframe::Keyframe::new(Tick::ZERO, Value::Vec3([80.0, 95.0, 0.0])),
+        tselatra_keyframe::Keyframe::new(Tick::from_seconds_f64(1.0), Value::Vec3([80.0 + 30.0 * 40.0, 95.0, 0.0])),
     ];
     (p, cid)
 }
@@ -238,9 +238,9 @@ pub(crate) fn off_share(a: &[[f32; 4]], b: &[[f32; 4]]) -> (f64, f32) {
     (off as f64 / a.len().max(1) as f64, max)
 }
 
-pub(crate) fn run_of(p: &Project, cid: ItemId) -> (EvalCtx<'_>, Vec<&effectcraft_project::Layer>) {
+pub(crate) fn run_of(p: &Project, cid: ItemId) -> (EvalCtx<'_>, Vec<&tselatra_project::Layer>) {
     let ctx = EvalCtx { project: p, comp_id: cid, comp: p.comp(cid).unwrap(), time: Tick::ZERO, expr: None, footage: None };
-    let run: Vec<&effectcraft_project::Layer> = ctx.comp.layers.iter().rev().filter(|l| l.is_3d() && l.has_video()).collect();
+    let run: Vec<&tselatra_project::Layer> = ctx.comp.layers.iter().rev().filter(|l| l.is_3d() && l.has_video()).collect();
     (ctx, run)
 }
 
@@ -259,7 +259,7 @@ fn compare_run(p: &Project, cid: ItemId, g: &Gpu, what: &str) {
     let dz = cdepth.iter().zip(&gdepth).filter(|(a, b)| a.is_finite() != b.is_finite() || (a.is_finite() && (*a - *b).abs() > 0.01 * a.abs().max(1.0))).count();
     assert!((dz as f64) < 0.015 * cdepth.len() as f64, "{what}: {dz} depth mismatches");
     // CPU post-processing of the GPU raster: the post kernels alone.
-    let mut gr = Renderer::new(p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+    let mut gr = Renderer::new(p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
     gr.accel = Some(g);
     let prep = adv::Prepared::new(&gr, &ctx, &run, out);
     let (himg, _) = adv::render_prepared(&prep).expect("cpu post drew");
@@ -312,7 +312,7 @@ fn gpu_runs_match_cpu_for_extrusions_and_collapsed_precomps() {
     // Extruded text with a bevelled stroke.
     add(&mut p, cid, LayerSource::Text, |l| {
         l.switches.three_d = true;
-        let doc = effectcraft_keyframe::TextDoc {
+        let doc = tselatra_keyframe::TextDoc {
             text: "Ab".into(),
             size: 50.0,
             fill: [0.9, 0.8, 0.2, 1.0],
@@ -366,7 +366,7 @@ fn gpu_compositor_draws_advanced_3d_runs_on_the_device() {
     let (ctx, run) = run_of(&p, cid);
     assert!(Renderer::new(&p, &NoFootage, RenderOpts::default()).prepare_adv_run(&ctx, &run, (240, 160)).is_some());
     let cpu = Renderer::new(&p, &NoFootage, RenderOpts::default()).comp_frame(cid, Tick::ZERO);
-    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
     r.accel = Some(&g);
     let gimg = g.render(&r, cid, Tick::ZERO).expect("gpu walk");
     let (share, max) = off_share(&cpu.data, &gimg.data);
@@ -374,11 +374,11 @@ fn gpu_compositor_draws_advanced_3d_runs_on_the_device() {
     assert!(share <= 0.01, "{:.3} % of pixels differ", share * 100.0);
     // A blend mode in the run takes the 2D compositing path (`SplitRun`, also on the GPU).
     p.comp_mut(cid).unwrap().layers.iter_mut().find(|l| l.switches.three_d && !l.is_light() && l.source.is_av()).unwrap().blend_mode =
-        effectcraft_color::BlendMode::Screen;
+        tselatra_color::BlendMode::Screen;
     let (ctx, run) = run_of(&p, cid);
     assert!(Renderer::new(&p, &NoFootage, RenderOpts::default()).prepare_adv_run(&ctx, &run, (240, 160)).is_none());
     let cpu = Renderer::new(&p, &NoFootage, RenderOpts::default()).comp_frame(cid, Tick::ZERO);
-    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
     r.accel = Some(&g);
     let gimg = r.comp_frame(cid, Tick::ZERO);
     let (share, _) = off_share(&cpu.data, &gimg.data);
@@ -395,12 +395,12 @@ fn gpu_wireframes_match_cpu_exactly() {
     add(&mut p, cid, LayerSource::Solid { item: sid }, |_| {});
     let s2 = p.add_item("W", Default::default(), None, ItemKind::Solid(Solid { color: [1.0, 0.0, 0.0], width: 70, height: 40, pixel_aspect: 1.0 }));
     add(&mut p, cid, LayerSource::Solid { item: s2 }, |l| {
-        l.switches.quality = effectcraft_project::Quality::Wireframe;
+        l.switches.quality = tselatra_project::Quality::Wireframe;
         set(l, "transform/rotation", Value::Scalar(23.0));
         set(l, "transform/scale", Value::Vec3([130.0, 90.0, 100.0]));
     });
     let cpu = Renderer::new(&p, &NoFootage, RenderOpts::default()).comp_frame(cid, Tick::ZERO);
-    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
     r.accel = Some(&g);
     let gimg = g.render(&r, cid, Tick::ZERO).expect("gpu walk");
     let white = cpu.data.iter().filter(|q| **q == [1.0; 4]).count();
@@ -435,7 +435,7 @@ fn gpu_environment_light_on_flat_extrusions_has_no_nan() {
     add(&mut p, cid, LayerSource::Text, |l| {
         l.switches.three_d = true;
         let doc =
-            effectcraft_keyframe::TextDoc { text: "EffectCraft".into(), size: 45.0, fill: [0.95, 0.75, 0.2, 1.0], apply_fill: true, ..Default::default() };
+            tselatra_keyframe::TextDoc { text: "Tselatra".into(), size: 45.0, fill: [0.95, 0.75, 0.2, 1.0], apply_fill: true, ..Default::default() };
         set(l, "text/sourceText", Value::Text(Box::new(doc)));
         let mut next = 900_000u64;
         l.props.children.push(build::extrusion_geometry_options(&mut build::Ids(&mut next)).into());
@@ -467,7 +467,7 @@ fn gpu_compositor_draws_split_advanced_3d_runs_and_skies() {
     for case in 0..10 {
         let (mut p, cid) = scene_project();
         if case >= 4 {
-            p.settings.bit_depth = effectcraft_project::BitDepth::Bpc32;
+            p.settings.bit_depth = tselatra_project::BitDepth::Bpc32;
         }
         let classic = case >= 8;
         let case = if classic { 3 } else { case % 4 };
@@ -482,8 +482,8 @@ fn gpu_compositor_draws_split_advanced_3d_runs_and_skies() {
         // A varying environment image (so the sky's lookup shows; a CPU effect, so the frame's
         // only readback is its own).
         let mut next = p.next_id;
-        let spec = effectcraft_effects::find("ec.generate.fractal").unwrap();
-        let ramp = effectcraft_effects::instantiate(spec, &mut build::Ids(&mut next), spec.name, [32.0, 16.0]);
+        let spec = tselatra_effects::find("ec.generate.fractal").unwrap();
+        let ramp = tselatra_effects::instantiate(spec, &mut build::Ids(&mut next), spec.name, [32.0, 16.0]);
         p.next_id = next;
         if case == 3 {
             // A 2D track matte layer above the run.
@@ -498,27 +498,27 @@ fn gpu_compositor_draws_split_advanced_3d_runs_and_skies() {
         env.props.sub_mut("effects").unwrap().children.push(ramp.into());
         let ids: Vec<_> = c.layers.iter().filter(|l| l.switches.three_d && !l.is_light() && !l.environment && l.source.is_av()).map(|l| l.id).collect();
         let top = c.layers[0].id;
-        fn by_id(c: &mut Comp, id: effectcraft_project::LayerId) -> &mut effectcraft_project::Layer {
+        fn by_id(c: &mut Comp, id: tselatra_project::LayerId) -> &mut tselatra_project::Layer {
             c.layers.iter_mut().find(|l| l.id == id).unwrap()
         }
         match case {
-            0 => by_id(c, ids[1]).blend_mode = effectcraft_color::BlendMode::Screen,
+            0 => by_id(c, ids[1]).blend_mode = tselatra_color::BlendMode::Screen,
             1 => {
                 // The card is a 3D track matte (luma) for the sphere; the torus multiplies.
                 let card = ids[0];
-                by_id(c, ids[1]).blend_mode = effectcraft_color::BlendMode::Multiply;
-                by_id(c, ids[2]).track_matte = Some(effectcraft_project::TrackMatte { layer: card, kind: effectcraft_project::MatteKind::Luma });
+                by_id(c, ids[1]).blend_mode = tselatra_color::BlendMode::Multiply;
+                by_id(c, ids[2]).track_matte = Some(tselatra_project::TrackMatte { layer: card, kind: tselatra_project::MatteKind::Luma });
                 by_id(c, ids[0]).switches.video = false;
             }
             2 => {
                 // Preserve Transparency and an Overlay layer.
                 by_id(c, ids[0]).preserve_transparency = true;
-                by_id(c, ids[1]).blend_mode = effectcraft_color::BlendMode::Overlay;
+                by_id(c, ids[1]).blend_mode = tselatra_color::BlendMode::Overlay;
             }
             _ => {
                 // An environment background behind the run, and the 2D track matte.
                 c.layers.iter_mut().find(|l| l.environment).unwrap().environment_background = true;
-                by_id(c, ids[0]).track_matte = Some(effectcraft_project::TrackMatte { layer: top, kind: effectcraft_project::MatteKind::Alpha });
+                by_id(c, ids[0]).track_matte = Some(tselatra_project::TrackMatte { layer: top, kind: tselatra_project::MatteKind::Alpha });
             }
         }
         let (ctx, run) = run_of(&p, cid);
@@ -527,7 +527,7 @@ fn gpu_compositor_draws_split_advanced_3d_runs_and_skies() {
             assert!(r0.split_adv_run(&ctx, &run, (240, 160)).is_some(), "case {case}: split");
         }
         let cpu = r0.comp_frame(cid, Tick::ZERO);
-        let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+        let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
         r.accel = Some(&g);
         // The CPU compositor on the GPU's rasters.
         let hybrid = r.comp_frame_cpu(cid, Tick::ZERO);
@@ -558,7 +558,7 @@ fn adapters_that_cannot_rasterise_render_advanced_3d_on_the_cpu() {
     let s = scene(&p, cid);
     assert!(g.raster_3d(&s).is_none(), "no GPU raster");
     let cpu = Renderer::new(&p, &NoFootage, RenderOpts::default()).comp_frame(cid, Tick::ZERO);
-    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: effectcraft_render::Backend::Gpu, ..Default::default() });
+    let mut r = Renderer::new(&p, &NoFootage, RenderOpts { backend: tselatra_render::Backend::Gpu, ..Default::default() });
     r.accel = Some(&g);
     let gimg = r.comp_frame(cid, Tick::ZERO);
     let worst = cpu.data.iter().zip(&gimg.data).flat_map(|(a, b)| (0..4).map(move |k| (a[k] - b[k]).abs())).fold(0.0f32, f32::max);

@@ -1,7 +1,7 @@
 //! Vertical metrics (`vmtx`, `vhea`, `VORG`), the ideographic em box and top-to-bottom shaping.
 //!
 //! The synthetic font (Source Sans 3 with `vhea`/`vmtx`, and `VORG` where asked) runs everywhere;
-//! the checks against Shippori Mincho's own tables run when built with craft-fonts.
+//! the checks against Shippori Mincho's own tables run when built with mahay-fonts.
 
 use skrifa::raw::TableProvider;
 
@@ -30,10 +30,10 @@ fn gid_in(font: &[u8], c: char) -> u16 {
     u16::try_from(gid).unwrap()
 }
 
-/// Shippori Mincho from craft-fonts, or `None` (with a note) when built without it.
+/// Shippori Mincho from mahay-fonts, or `None` (with a note) when built without it.
 fn shippori() -> Option<Arc<FontFace>> {
     if !crate::japanese_fonts().any(|f| f.family == "Shippori Mincho") {
-        eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a checkout)");
+        eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a checkout)");
         return None;
     }
     let face = FontDb::global().face("Shippori Mincho", "Regular");

@@ -4,7 +4,7 @@
 //! (the same fault as #224).
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;

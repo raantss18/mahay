@@ -6,7 +6,7 @@
 //! ▸ match names). Properties without a documented equivalent keep our own match id
 //! (`perChar3d`, `ec.blur.bilateral`), which `property()` and `addProperty()` accept too.
 
-use effectcraft_project::{LayerSource, Node};
+use tselatra_project::{LayerSource, Node};
 
 /// Match name of a layer (its root property group).
 pub fn layer(source: &LayerSource) -> &'static str {
@@ -62,7 +62,7 @@ const TEXT: &[(&str, &str)] = &[
 ];
 
 // Match names of the six properties below Text ▸ Path Options, as named by
-// After Effects' scripting API (rather than EffectCraft's internal ids).
+// After Effects' scripting API (rather than Tselatra's internal ids).
 const TEXT_PATH_OPTIONS: &[(&str, &str)] = &[
     ("path", "ADBE Text Path"),
     ("reversePath", "ADBE Text Reverse Path"),
@@ -531,7 +531,7 @@ mod tests {
 
     #[test]
     fn text_range_selector_names() {
-        let n = |m: &str| Node::from(effectcraft_project::PropGroup::new(1, m, m));
+        let n = |m: &str| Node::from(tselatra_project::PropGroup::new(1, m, m));
         let (text, animators, animator, selectors, range, start, end, offset) =
             (n("text"), n("animators"), n("animator"), n("selectors"), n("rangeSelector"), n("start"), n("end"), n("offset"));
         assert_eq!(node(&[&text, &animators, &animator, &selectors, &range]), "ADBE Text Selector");

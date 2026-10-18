@@ -18,8 +18,8 @@
 //! math defeats double-f32 emulation); in f32, orbits near the set escape at other iterations
 //! on 0.3–1.5 % of the pixels even at low magnification.
 
-use effectcraft_effects::{Buf, Coverage, EffectCtx};
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, Coverage, EffectCtx};
+use tselatra_raster::Image;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::GBuf;
@@ -262,10 +262,10 @@ fn coverage(e: &mut Enc, w: u32, h: u32, cov: &Coverage) -> Option<GpuImage> {
 // ---------------------------------------------------------------- Stroke, Scribble, Vegas, Write-on
 
 fn paint(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
-    let cpu = cpu_buf(e, &b, effectcraft_effects::plan_reads_pixels(id, ctx))?;
-    let Some(plan) = effectcraft_effects::paint_plan(id, ctx, &cpu) else {
+    let cpu = cpu_buf(e, &b, tselatra_effects::plan_reads_pixels(id, ctx))?;
+    let Some(plan) = tselatra_effects::paint_plan(id, ctx, &cpu) else {
         // Scribble without a usable mask: cleared On Transparent, else unchanged.
-        if id == "ec.generate.scribble" && effectcraft_effects::scribble_style(ctx) == 1 {
+        if id == "ec.generate.scribble" && tselatra_effects::scribble_style(ctx) == 1 {
             let img = e.image(b.img.width, b.img.height);
             return Some(GBuf { img, ..b });
         }
@@ -283,7 +283,7 @@ fn paint(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 
 fn marks(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let cpu = cpu_buf(e, &b, false)?;
-    let Some(m) = effectcraft_effects::marks_plan(id, ctx, &cpu) else { return Some(b) };
+    let Some(m) = tselatra_effects::marks_plan(id, ctx, &cpu) else { return Some(b) };
     let core = Variant::plain(1.0);
     let halo = if m.softness > 0.0 { Variant { add: m.thickness * m.softness.max(0.0) + 0.5, ..Variant::plain(0.0) } } else { core };
     let cov = raster_segs(e, b.img.width, b.img.height, m.segs.iter().map(|s| (s.a, s.b, s.r, s.v)), &[core, halo])?;
@@ -298,7 +298,7 @@ fn marks(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 
 fn lightning(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let cpu = cpu_buf(e, &b, false)?;
-    let plan = effectcraft_effects::bolt_plan(ctx, &cpu);
+    let plan = tselatra_effects::bolt_plan(ctx, &cpu);
     let (w, h) = (b.img.width, b.img.height);
     let core = Variant { mul: plan.core, min: 0.3, ..Variant::plain(0.6) };
     let cov = raster_segs(e, w, h, plan.segs.iter().map(|s| (s.a, s.b, s.r, s.v)), &[Variant::plain(0.0), core])?;
@@ -314,10 +314,10 @@ fn lightning(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 
 fn advanced_lightning(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let pr = ctx.params;
-    let cpu = cpu_buf(e, &b, effectcraft_effects::plan_reads_pixels("ec.generate.advancedlightning", ctx))?;
+    let cpu = cpu_buf(e, &b, tselatra_effects::plan_reads_pixels("ec.generate.advancedlightning", ctx))?;
     let core_r = (pr.f("coreSettings/coreRadius") * b.scale).max(0.3);
     let glow_r = pr.f("glowSettings/glowRadius") * b.scale;
-    let segs = effectcraft_effects::lightning_segments(ctx, &cpu);
+    let segs = tselatra_effects::lightning_segments(ctx, &cpu);
     let (w, h) = (b.img.width, b.img.height);
     let linear = Variant { linear: true, ..Variant::plain(0.0) };
     let core = raster_segs(e, w, h, segs.iter().map(|(a, z, i)| ([a.0, a.1], [z.0, z.1], core_r, *i)), &[linear])?;
@@ -337,13 +337,13 @@ fn advanced_lightning(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 
 fn text(e: &mut Enc, id: &str, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
     let cpu = cpu_buf(e, &b, false)?;
-    let passes = effectcraft_effects::text_passes(id, ctx, &cpu)?;
+    let passes = tselatra_effects::text_passes(id, ctx, &cpu)?;
     let (w, h) = (b.img.width, b.img.height);
     for pass in passes {
         let look = pass.look;
         let mut segs = Vec::new();
         for pl in &pass.polys {
-            effectcraft_effects::poly_segs(pl, false, pass.r, 1.0, &mut segs);
+            tselatra_effects::poly_segs(pl, false, pass.r, 1.0, &mut segs);
         }
         let sw = look.stroke_w.max(0.0);
         let at = |add: f64| Variant { add, min: 0.05, ..Variant::plain(1.0) };
@@ -362,7 +362,7 @@ fn text(e: &mut Enc, id: &str, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
 
 fn radio_waves(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let cpu = cpu_buf(e, &b, false)?;
-    let Some(plan) = effectcraft_effects::radio_plan(ctx, &cpu) else { return Some(b) };
+    let Some(plan) = tselatra_effects::radio_plan(ctx, &cpu) else { return Some(b) };
     let n = plan.waves.len();
     let mut data = Vec::with_capacity(n * 13);
     let mut outlines = Vec::new();
@@ -446,7 +446,7 @@ fn lens_flare(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         2 => (0.02, 12.0, 0.3),
         _ => (0.03, 8.0, 0.25),
     };
-    let ghosts = effectcraft_effects::flare_ghosts(lens);
+    let ghosts = tselatra_effects::flare_ghosts(lens);
     let data: Vec<f32> = ghosts.iter().flat_map(|g| [g.t as f32, g.r as f32, g.c[0], g.c[1], g.c[2], g.k, g.ring as u32 as f32]).collect();
     let mut p = Params::default();
     p.u[0][0] = ghosts.len() as u32;
@@ -466,7 +466,7 @@ fn glue_gun(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let refl = pr.f("reflection").to_radians();
     let strength = (pr.f("strength") / 100.0) as f32;
     let beads = (pr.f("density").max(0.0).round() as usize).clamp(1, 32);
-    let hash = |i: usize, k: u32| effectcraft_raster::hash_noise(i as u32, k, ctx.seed) as f64;
+    let hash = |i: usize, k: u32| tselatra_raster::hash_noise(i as u32, k, ctx.seed) as f64;
     // generate3::glue_gun's beads.
     let mut data = Vec::with_capacity(beads * 3);
     for i in 0..beads {
@@ -505,7 +505,7 @@ fn threads(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 fn paint_bucket(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let pr = ctx.params;
     let cpu = cpu_buf(e, &b, true)?;
-    let region = effectcraft_effects::paint_bucket_region(ctx, &cpu);
+    let region = tselatra_effects::paint_bucket_region(ctx, &cpu);
     let (w, h) = (b.img.width, b.img.height);
     let mut img = Image::new(w, h);
     for (px, &v) in img.data.iter_mut().zip(&region.data) {
@@ -552,7 +552,7 @@ fn paint_bucket(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 
 fn eyedropper(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let cpu = cpu_buf(e, &b, true)?;
-    let fill = effectcraft_effects::eyedropper_color(ctx, &cpu);
+    let fill = tselatra_effects::eyedropper_color(ctx, &cpu);
     let mut p = Params::default();
     p.u[0][0] = ctx.params.b("maintainOriginalAlpha") as u32;
     p.f[0] = fill;

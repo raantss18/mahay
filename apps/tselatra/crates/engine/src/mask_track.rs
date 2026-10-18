@@ -3,11 +3,11 @@
 //!
 //! Analysis runs on a background thread (progress, cancel; blocking with `wait` and on wasm32)
 //! like the point tracker, over the layer's source frames; one undo step covers it. The
-//! algorithm is `effectcraft_track::mask` (KLT features inside the mask + a RANSAC fit of the
+//! algorithm is `tselatra_track::mask` (KLT features inside the mask + a RANSAC fit of the
 //! chosen motion model), and every frame's motion is applied to the mask's vertices and
 //! tangents, so the shape's Bezier structure is kept.
 //!
-//! The two **Face Tracking** methods use `effectcraft_track::face` instead: the mask (drawn
+//! The two **Face Tracking** methods use `tselatra_track::face` instead: the mask (drawn
 //! around a face) seeds the tracker, and every frame's face outline becomes the Mask Path
 //! (*Outline Only*); *Detailed Features* also keys the facial landmarks into a **Face Track
 //! Points** effect on the layer (created on first use), from which Extract & Copy Face
@@ -16,12 +16,12 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_keyframe::{Keyframe, ShapePath, Value};
-use effectcraft_project::{ItemId, LayerId, Project, Uid};
-use effectcraft_render::{ExprHost, FootageSource, LayerCache, Renderer};
-use effectcraft_time::Tick;
-use effectcraft_track as trk;
-use effectcraft_track::fit::Model;
+use tselatra_keyframe::{Keyframe, ShapePath, Value};
+use tselatra_project::{ItemId, LayerId, Project, Uid};
+use tselatra_render::{ExprHost, FootageSource, LayerCache, Renderer};
+use tselatra_time::Tick;
+use tselatra_track as trk;
+use tselatra_track::fit::Model;
 use serde::{Deserialize, Serialize};
 
 use crate::tracking::{Direction, TrackProgress, lock, source_frame};
@@ -199,7 +199,7 @@ pub(crate) struct MaskWork {
     /// Comp times; the first is the start frame.
     pub times: Vec<Tick>,
     /// Face tracking's trained model (Settings ▸ Face Tracking), if one is in use.
-    pub face_model: Option<Arc<dyn effectcraft_segment::face::FaceModel>>,
+    pub face_model: Option<Arc<dyn tselatra_segment::face::FaceModel>>,
 }
 
 async fn run_work(w: MaskWork, shared: &MaskTrackShared) {
@@ -266,13 +266,13 @@ async fn run_work(w: MaskWork, shared: &MaskTrackShared) {
 
 /// Face tracking: the face outline keys the mask; Detailed Features adds the landmarks.
 /// `deferred`: frames render in passes (awaited one after the other).
-async fn run_face<F: std::future::Future<Output = Option<(Arc<effectcraft_raster::Image>, [f64; 2])>>>(
+async fn run_face<F: std::future::Future<Output = Option<(Arc<tselatra_raster::Image>, [f64; 2])>>>(
     w: &MaskWork,
     shared: &MaskTrackShared,
-    first: (Arc<effectcraft_raster::Image>, [f64; 2]),
+    first: (Arc<tselatra_raster::Image>, [f64; 2]),
     frame_at: &(impl Fn(Tick) -> F + Sync),
     deferred: bool,
-    layer: &effectcraft_project::Layer,
+    layer: &tselatra_project::Layer,
     t0: web_time::Instant,
 ) {
     let detailed = w.method == MaskMethod::FaceDetailed;
@@ -323,20 +323,20 @@ async fn run_face<F: std::future::Future<Output = Option<(Arc<effectcraft_raster
 
 /// The layer's Face Track Points effect (created when missing). Returns its uid.
 pub(crate) fn face_points_group(p: &mut Project, comp: ItemId, layer: LayerId) -> Option<Uid> {
-    face_effect(p, comp, layer, effectcraft_effects::face_track::POINTS_ID)
+    face_effect(p, comp, layer, tselatra_effects::face_track::POINTS_ID)
 }
 
 /// The layer's effect `id`, applied when missing (data effects of face tracking).
 pub(crate) fn face_effect(p: &mut Project, comp: ItemId, layer: LayerId, id: &str) -> Option<Uid> {
-    let spec = effectcraft_effects::find(id)?;
+    let spec = tselatra_effects::find(id)?;
     let l = p.comp(comp)?.layer(layer)?;
     if let Some(g) = l.effects().and_then(|fx| fx.groups().find(|g| g.match_id == spec.id)) {
         return Some(g.uid);
     }
-    let (w, h) = effectcraft_render::source_size(p, l);
+    let (w, h) = tselatra_render::source_size(p, l);
     let size = if w == 0 { p.comp(comp).map(|c| [c.width as f64, c.height as f64]).unwrap_or([1920.0, 1080.0]) } else { [w as f64, h as f64] };
     let mut next = p.next_id;
-    let g = effectcraft_effects::instantiate(spec, &mut effectcraft_project::build::Ids(&mut next), spec.name, size);
+    let g = tselatra_effects::instantiate(spec, &mut tselatra_project::build::Ids(&mut next), spec.name, size);
     let uid = g.uid;
     let fx = p.comp_mut(comp)?.layer_mut(layer)?.props.sub_mut("effects")?;
     fx.children.push(g.into());
@@ -351,7 +351,7 @@ fn write_frames(p: &mut Project, job: &MaskTrackJob, frames: &[MaskFrame]) {
         && let Some(pr) = g.get_mut("path")
     {
         for (lt, _, path, _) in frames {
-            effectcraft_keyframe::set_key(&mut pr.keys, Keyframe::new(*lt, Value::Path(path.clone())));
+            tselatra_keyframe::set_key(&mut pr.keys, Keyframe::new(*lt, Value::Path(path.clone())));
         }
     }
     if let Some(g) = points.and_then(|u| layer.props.find_group_mut(u)) {
@@ -359,7 +359,7 @@ fn write_frames(p: &mut Project, job: &MaskTrackJob, frames: &[MaskFrame]) {
             let Some(pts) = pts else { continue };
             for (i, (id, _, _)) in trk::face::LANDMARKS.iter().enumerate() {
                 if let Some(pr) = g.get_mut(id) {
-                    effectcraft_keyframe::set_key(&mut pr.keys, Keyframe::new(*lt, Value::Vec2(pts[i])));
+                    tselatra_keyframe::set_key(&mut pr.keys, Keyframe::new(*lt, Value::Vec2(pts[i])));
                 }
             }
         }
@@ -416,7 +416,7 @@ impl Session {
             Some(
                 std::thread::Builder::new()
                     .name("mask-track".into())
-                    .spawn(move || effectcraft_render::passes::block_on(run_work(work, &sh)))
+                    .spawn(move || tselatra_render::passes::block_on(run_work(work, &sh)))
                     .map_err(|e| e.to_string())?,
             )
         };

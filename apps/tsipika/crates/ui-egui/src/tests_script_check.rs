@@ -3,18 +3,18 @@
 //! files.
 
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, dialogs, io, menus, theme};
+use crate::{TsipikaApp, dialogs, io, menus, theme};
 
 /// An app reading files from disk.
-fn app() -> VectorcraftApp {
+fn app() -> TsipikaApp {
     let services = crate::Services { read: Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string()))), ..Default::default() };
-    VectorcraftApp::new(Session::new(), services)
+    TsipikaApp::new(Session::new(), services)
 }
 
 /// One headless frame of the dialog layer.
-fn frame(app: &mut VectorcraftApp) {
+fn frame(app: &mut TsipikaApp) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
@@ -34,7 +34,7 @@ const SCRIPT: &str = concat!(
     "var s = 'open;\n",
 );
 
-fn report(app: &VectorcraftApp) -> &Value {
+fn report(app: &TsipikaApp) -> &Value {
     let d = app.ui.dialog.as_ref().expect("the report is shown");
     assert_eq!(d.kind, dialogs::script_check::KIND);
     &d.fields["report"]
@@ -54,7 +54,7 @@ fn file_scripts_holds_check_script_above_other_script() {
 #[test]
 fn check_script_shows_the_report_and_copy_report_copies_it() {
     let mut app = app();
-    let p = json!({"dataBase64": vectorcraft_format::base64_encode(SCRIPT.as_bytes()), "name": "Tidy.jsx"});
+    let p = json!({"dataBase64": tsipika_format::base64_encode(SCRIPT.as_bytes()), "name": "Tidy.jsx"});
     let r = menus::run_ui_command(&mut app, "ui.checkScript", &p).unwrap().unwrap();
     assert_eq!(report(&app), &r);
     assert_eq!((r["name"].as_str(), r["kind"].as_str()), (Some("Tidy.jsx"), Some("script")));
@@ -168,7 +168,7 @@ fn check_script_asks_off_the_ui_thread_and_needs_no_document() {
     std::fs::write(&path, "alert('picked');\n").unwrap();
     let mut services = crate::Services { dialogs_are_sheets: false, ..Default::default() };
     let (shown, _) = crate::tests_picks::off_the_ui_thread(&mut services);
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 80})).unwrap();
     assert!(app.run("ui.checkScript", json!({})).is_err(), "nothing yet: the dialog is open");
     assert!(
@@ -184,7 +184,7 @@ fn check_script_asks_off_the_ui_thread_and_needs_no_document() {
 #[test]
 fn every_id_a_report_holds_has_a_label() {
     use dialogs::script_check::{need_label, outside_label, problem_label, status_label};
-    use vectorcraft_engine::cmd::scripts::{IncludeStatus, Need, OUTSIDE, PROBLEMS};
+    use tsipika_engine::cmd::scripts::{IncludeStatus, Need, OUTSIDE, PROBLEMS};
     for need in Need::ALL {
         assert!(need_label(need.id()).is_some(), "{need:?}");
     }

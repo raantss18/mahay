@@ -5,13 +5,13 @@ use std::sync::Arc;
 use serde_json::json;
 
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, menus};
+use crate::{TsipikaApp, menus};
 
 /// Everything the palette searches: (label, command id or `tool:<id>`, shortcut).
 pub fn items() -> Vec<(String, String, String)> {
     let mut items = vec![];
     // Aliases kept for older scripts run a command that is listed already.
-    for c in vectorcraft_engine::command_specs().iter().filter(|c| !vectorcraft_engine::cmd::is_alias(c.id)) {
+    for c in tsipika_engine::command_specs().iter().filter(|c| !tsipika_engine::cmd::is_alias(c.id)) {
         let path = c.menu.join(" › ");
         let label = if path.is_empty() { c.label.to_string() } else { format!("{path} › {}", c.label) };
         items.push((label, c.id.to_string(), menus::shortcut_of(c.id).unwrap_or("").to_string()));
@@ -19,7 +19,7 @@ pub fn items() -> Vec<(String, String, String)> {
     for c in menus::UI_COMMANDS {
         items.push((c.1.to_string(), c.0.to_string(), menus::shortcut_of(c.0).unwrap_or("").to_string()));
     }
-    for tool in vectorcraft_tools::catalog::all_tools() {
+    for tool in tsipika_tools::catalog::all_tools() {
         items.push((tool.label.to_string(), format!("tool:{}", tool.id), crate::shortcut_editor::tool_shortcut(tool.id).unwrap_or("").to_string()));
     }
     items
@@ -73,7 +73,7 @@ fn entries(ctx: &egui::Context, lang: crate::i18n::Lang) -> Arc<Vec<Entry>> {
     built
 }
 
-pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut TsipikaApp, ctx: &egui::Context) {
     if !app.ui.palette_open {
         return;
     }
@@ -178,7 +178,7 @@ mod tests {
         let items = items();
         let ids: Vec<&str> = items.iter().filter(|(label, ..)| label == "Cancel Key Object").map(|(_, id, _)| id.as_str()).collect();
         assert_eq!(ids, ["select.key"]);
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
         let commands = crate::control::all_commands(&app);
         let key = commands.as_array().unwrap().iter().find(|c| c["id"] == "select.key").unwrap();
         assert_eq!(key["label"], "Cancel Key Object");
@@ -198,12 +198,12 @@ mod tests {
     /// from the first again.
     #[test]
     fn arrow_keys_move_the_highlighted_result() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
         app.ui.palette_open = true;
         app.ui.palette_query = "zoom".into();
         let ctx = egui::Context::default();
         let key = |k| egui::Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::NONE };
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui.ctx())).textures_delta.clear();
             ctx.data(|d| d.get_temp::<(usize, String)>(egui::Id::new("palette-selected"))).unwrap().0
         };

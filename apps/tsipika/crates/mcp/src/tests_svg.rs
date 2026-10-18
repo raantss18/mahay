@@ -8,7 +8,7 @@ fn svg_of(h: &mut Headless, args: Value) -> String {
     let r = call_tool(h, "export", &args);
     assert!(!r.is_error, "{r:?}");
     let v: Value = serde_json::from_str(r.content[0]["text"].as_str().unwrap()).unwrap();
-    String::from_utf8(vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()).unwrap()
+    String::from_utf8(tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()).unwrap()
 }
 
 #[test]

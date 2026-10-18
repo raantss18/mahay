@@ -1,8 +1,8 @@
 //! Object › Captions › Generate Static Caption: a text frame beside each selected object, filled
 //! from its metadata.
 
-use designcraft_doc::{Document, Item, ItemId, ParaFormat, Selection};
-use designcraft_geom::Rect;
+use pejy_doc::{Document, Item, ItemId, ParaFormat, Selection};
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_selection, str_param, targets};
@@ -21,7 +21,7 @@ pub fn specs() -> Vec<CommandSpec> {
 }
 
 /// The metadata variables of `it`.
-fn variable(d: &Document, it: &Item, xf: designcraft_geom::Affine, name: &str) -> String {
+fn variable(d: &Document, it: &Item, xf: pejy_geom::Affine, name: &str) -> String {
     let g = it.graphic();
     let asset = g.and_then(|g| d.assets.get(&g.asset));
     match name {
@@ -44,7 +44,7 @@ fn variable(d: &Document, it: &Item, xf: designcraft_geom::Affine, name: &str) -
     }
 }
 
-pub(crate) fn fill(d: &Document, it: &Item, xf: designcraft_geom::Affine, template: &str) -> String {
+pub(crate) fn fill(d: &Document, it: &Item, xf: pejy_geom::Affine, template: &str) -> String {
     let mut out = String::new();
     let mut rest = template;
     while let Some(i) = rest.find('{') {
@@ -100,7 +100,7 @@ fn caption(s: &mut Session, p: &Value) -> Result<Value> {
             let source = *id;
             let (cid, _) = d.add_text_frame(loc.spread, r, lid, &text, para)?;
             if live && let Some(c) = d.item_mut(cid) {
-                c.live_caption = Some(designcraft_doc::LiveCaption { source, template: template.clone() });
+                c.live_caption = Some(pejy_doc::LiveCaption { source, template: template.clone() });
             }
             made.push(cid);
         }
@@ -149,7 +149,7 @@ mod tests {
         s.execute("object.altText", &json!({"text": "Harbour at dawn", "ids": [a]})).unwrap();
         s.execute("object.label", &json!({"label": "fig-1", "ids": [a]})).unwrap();
         let r = s.execute("object.caption", &json!({"ids": [a], "text": "Figure {label}: {altText}", "offset": 6})).unwrap();
-        let cid = designcraft_doc::ItemId(r["ids"][0].as_u64().unwrap());
+        let cid = pejy_doc::ItemId(r["ids"][0].as_u64().unwrap());
         let d = &s.doc().unwrap().doc;
         let c = d.item(cid).unwrap();
         let b = c.bounds();
@@ -166,7 +166,7 @@ mod tests {
         let a = s.execute("frame.create", &json!({"rect": [72, 72, 272, 172]})).unwrap()["id"].as_u64().unwrap();
         s.execute("object.altText", &json!({"text": "First", "ids": [a]})).unwrap();
         let r = s.execute("object.caption", &json!({"ids": [a], "text": "Photo: {altText}", "live": true})).unwrap();
-        let cid = designcraft_doc::ItemId(r["ids"][0].as_u64().unwrap());
+        let cid = pejy_doc::ItemId(r["ids"][0].as_u64().unwrap());
         let text = |s: &Session| {
             let d = &s.doc().unwrap().doc;
             d.stories[&d.item(cid).unwrap().text_frame().unwrap().story].text.clone()

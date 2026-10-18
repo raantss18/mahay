@@ -4,15 +4,15 @@
 //! Effects): the same controls zoom the graph's time axis, centred on the current time, and
 //! switching between the views keeps it.
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::control::{self, ControlRequest, Outcome};
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::control::{self, ControlRequest, Outcome};
 use egui_kittest::Harness;
 use serde_json::{Value, json};
 
 /// A 10 s, 30 fps comp with a layer whose Opacity is keyed at 1 s and 8 s, revealed, the CTI at
 /// 4 s; the Graph Editor on when `graph`.
-fn harness(graph: bool) -> Harness<'static, EffectcraftApp> {
+fn harness(graph: bool) -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Zoom", "width": 320, "height": 180, "frameRate": 30, "duration": 10})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Box", "color": "#e04020", "width": 80, "height": 80})).unwrap();
@@ -21,7 +21,7 @@ fn harness(graph: bool) -> Harness<'static, EffectcraftApp> {
         s.execute("prop.addKey", json!({"layer": id.0, "path": "transform/opacity", "time": t, "value": v})).unwrap();
     }
     s.execute("layer.select", json!({"layers": [id.0]})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     // (Opening a comp may zoom; start from the whole comp.)
     app.ui.timeline.pps = None;
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app);
@@ -39,7 +39,7 @@ fn harness(graph: bool) -> Harness<'static, EffectcraftApp> {
 
 /// One control-channel request, then its synthetic input fed in one event per frame (kittest
 /// doesn't call `raw_input_hook`).
-fn send(h: &mut Harness<'_, EffectcraftApp>, method: &str, params: Value) {
+fn send(h: &mut Harness<'_, TselatraApp>, method: &str, params: Value) {
     let ctx = h.ctx.clone();
     let (req, _rx) = ControlRequest::new(method, params);
     if let Outcome::Done(v) = control::handle(h.state_mut(), &ctx, &req) {
@@ -54,19 +54,19 @@ fn send(h: &mut Harness<'_, EffectcraftApp>, method: &str, params: Value) {
 
 /// Visible span (start, seconds shown) from the ruler's automation label ("start,pps"); the
 /// time graph ends 18 px before the ruler and maps time from 6 px in.
-fn view(h: &Harness<'_, EffectcraftApp>) -> (f64, f64) {
+fn view(h: &Harness<'_, TselatraApp>) -> (f64, f64) {
     let e = h.state().auto.find("timeline.ruler").expect("ruler");
     let (start, pps) = e.label.split_once(',').map(|(a, b)| (a.parse::<f64>().unwrap(), b.parse::<f64>().unwrap())).unwrap();
     (start, (e.rect[2] - 24.0) as f64 / pps)
 }
 
-fn x_of(h: &Harness<'_, EffectcraftApp>, id: &str) -> f32 {
+fn x_of(h: &Harness<'_, TselatraApp>, id: &str) -> f32 {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     e.rect[0] + e.rect[2] / 2.0
 }
 
 /// The span shrinks (`in`) or grows by more than 10 %, and the CTI stays where it was.
-fn zoomed(h: &Harness<'_, EffectcraftApp>, before: f64, cti: f32, zoom_in: bool, what: &str) -> f64 {
+fn zoomed(h: &Harness<'_, TselatraApp>, before: f64, cti: f32, zoom_in: bool, what: &str) -> f64 {
     let (_, span) = view(h);
     if zoom_in {
         assert!(span < before * 0.9, "{what} zooms in: {before} -> {span}");
@@ -118,7 +118,7 @@ fn keys_buttons_and_slider_zoom_the_graph_editor_time_axis() {
 #[test]
 fn graph_curves_follow_the_time_zoom_and_the_navigator() {
     let mut h = harness(true);
-    let key_x = |h: &Harness<'_, EffectcraftApp>| {
+    let key_x = |h: &Harness<'_, TselatraApp>| {
         let mut ks: Vec<f32> = h.state().auto.query("timeline.graph.key.").iter().map(|e| e.rect[0] + e.rect[2] / 2.0).collect();
         ks.sort_by(f32::total_cmp);
         ks

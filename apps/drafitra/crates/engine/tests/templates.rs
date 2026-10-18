@@ -4,9 +4,9 @@
 
 use std::sync::Mutex;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::Drawing;
 use serde_json::json;
 
 static FILES: Mutex<Vec<(String, Drawing)>> = Mutex::new(Vec::new());
@@ -28,7 +28,7 @@ fn hooks() {
 }
 
 fn path(name: &str) -> String {
-    let dir = std::env::temp_dir().join(format!("cadcraft-templates-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-templates-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir.join(name).to_string_lossy().into_owned()
 }

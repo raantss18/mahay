@@ -3,7 +3,7 @@
 use egui::{Event, Key, Modifiers, PointerButton, Response, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use soundcraft_ui_egui::{Services, SoundApp, theme, widgets};
+use feo_ui_egui::{Services, SoundApp, theme, widgets};
 
 #[derive(Default)]
 struct ButtonState {
@@ -104,7 +104,7 @@ fn tool_and_record_buttons_handle_keyboard_disabled_state_and_cancelled_clicks()
 
 #[test]
 fn toolbar_keyboard_activation_changes_tools_without_transport_or_marker_actions() {
-    let app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+    let app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
     let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_ui_state(
         |ui, app: &mut SoundApp| {
             app.logic(&ui.ctx().clone());
@@ -115,10 +115,10 @@ fn toolbar_keyboard_activation_changes_tools_without_transport_or_marker_actions
     h.run_steps(5);
     h.get_by_label("Trim (F6)").click();
     h.run_steps(3);
-    assert_eq!(h.state().engine.session().edit.tool, soundcraft_model::Tool::Trim);
+    assert_eq!(h.state().engine.session().edit.tool, feo_model::Tool::Trim);
     let markers = h.state().engine.session().markers.len();
     for (label, tool, key) in
-        [("Pencil (F10)", soundcraft_model::Tool::Pencil, Key::Enter), ("Grabber (F8)", soundcraft_model::Tool::Grabber, Key::Space)]
+        [("Pencil (F10)", feo_model::Tool::Pencil, Key::Enter), ("Grabber (F8)", feo_model::Tool::Grabber, Key::Space)]
     {
         h.get_by_label(label).focus();
         h.run_steps(2);
@@ -134,7 +134,7 @@ fn toolbar_keyboard_activation_changes_tools_without_transport_or_marker_actions
 
 #[test]
 fn track_record_button_arms_the_track_without_starting_transport() {
-    let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+    let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
     app.run("track.new", serde_json::json!({"name": "Voice"})).unwrap();
     let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_ui_state(
         |ui, app: &mut SoundApp| {
@@ -161,10 +161,10 @@ fn track_record_button_arms_the_track_without_starting_transport() {
 
 #[test]
 fn shared_controls_visuals() {
-    let Some(directory) = std::env::var_os("CRAFT_UI_SUITE_SHOTS").map(std::path::PathBuf::from) else { return };
+    let Some(directory) = std::env::var_os("MAHAY_UI_SUITE_SHOTS").map(std::path::PathBuf::from) else { return };
     std::fs::create_dir_all(&directory).unwrap();
     for scale in [1.0, 2.0] {
-        let app = SoundApp::new(soundcraft_engine::demo::demo_engine(), None, Services::default());
+        let app = SoundApp::new(feo_engine::demo::demo_engine(), None, Services::default());
         let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
             |ui, app: &mut SoundApp| {
                 app.logic(&ui.ctx().clone());
@@ -176,7 +176,7 @@ fn shared_controls_visuals() {
         for (name, size) in [("normal", vec2(1600.0, 1000.0)), ("narrow", vec2(1000.0, 700.0))] {
             h.set_size(size);
             h.run_steps(6);
-            h.render().unwrap().save(directory.join(format!("soundcraft-{name}-dark-{scale}x.png"))).unwrap();
+            h.render().unwrap().save(directory.join(format!("feo-{name}-dark-{scale}x.png"))).unwrap();
         }
         let mut controls = Harness::builder().with_size(vec2(340.0, 150.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
             |ui, rects: &mut Vec<egui::Rect>| {
@@ -197,7 +197,7 @@ fn shared_controls_visuals() {
             Vec::new(),
         );
         controls.run_steps(4);
-        controls.render().unwrap().save(directory.join(format!("soundcraft-controls-dark-{scale}x.png"))).unwrap();
+        controls.render().unwrap().save(directory.join(format!("feo-controls-dark-{scale}x.png"))).unwrap();
         for (name, index, pressed) in [("hover", 0, false), ("selected-hover", 3, false), ("disabled-hover", 6, false), ("pressed", 0, true)] {
             let center = controls.state()[index].center();
             controls.event(Event::PointerMoved(center));
@@ -205,13 +205,13 @@ fn shared_controls_visuals() {
                 controls.event(pointer(center, true));
             }
             controls.run_steps(2);
-            controls.render().unwrap().save(directory.join(format!("soundcraft-controls-{name}-dark-{scale}x.png"))).unwrap();
+            controls.render().unwrap().save(directory.join(format!("feo-controls-{name}-dark-{scale}x.png"))).unwrap();
         }
         controls.event(pointer(controls.state()[0].center(), false));
         controls.event(Event::PointerGone);
         controls.run_steps(2);
         controls.key_press(Key::Tab);
         controls.run_steps(2);
-        controls.render().unwrap().save(directory.join(format!("soundcraft-controls-focus-dark-{scale}x.png"))).unwrap();
+        controls.render().unwrap().save(directory.join(format!("feo-controls-focus-dark-{scale}x.png"))).unwrap();
     }
 }

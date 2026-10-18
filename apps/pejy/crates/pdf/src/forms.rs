@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use designcraft_doc::{Document, FieldKind, FormField, Item, MediaOptions};
+use pejy_doc::{Document, FieldKind, FormField, Item, MediaOptions};
 
 use crate::export::Sheet;
 use crate::transitions::{int_after, object, rfind};
@@ -47,7 +47,7 @@ pub(crate) fn collect(doc: &Document, sheets: &[Sheet]) -> Vec<Placed> {
 pub(crate) fn collect_media(doc: &Document, sheets: &[Sheet]) -> Vec<PlacedMedia> {
     let mut out = Vec::new();
     visit(doc, sheets, |pi, r, it| {
-        if let (Some(m), designcraft_doc::Content::Graphic(g)) = (&it.media, &it.content)
+        if let (Some(m), pejy_doc::Content::Graphic(g)) = (&it.media, &it.content)
             && let Some(a) = doc.assets.get(&g.asset).filter(|a| !a.data.is_empty())
         {
             out.push((pi, r, a.name.clone(), a.mime.clone(), a.data.clone(), m.clone()));

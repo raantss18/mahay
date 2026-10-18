@@ -3,10 +3,10 @@
 
 use egui::{Sense, Stroke, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Node, NodeKind, ParaStyle, TabAlign, TabStop, TextKind};
+use tsipika_doc::{Node, NodeKind, ParaStyle, TabAlign, TabStop, TextKind};
 
 use super::{first_selected, pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
 
@@ -32,12 +32,12 @@ const RULER_LEFT: f32 = 10.0 + 4.0;
 /// The text object, the stops of the caret's paragraph while the Type tool edits text (else the
 /// first selected text object's first paragraph) and the ruler span in points (the frame width for
 /// area type).
-fn current(app: &VectorcraftApp) -> Option<(Node, Vec<TabStop>, f64)> {
+fn current(app: &TsipikaApp) -> Option<(Node, Vec<TabStop>, f64)> {
     current_para(app).map(|(n, para, span)| (n, para.tabs, span))
 }
 
 /// As [`current`], with all the attributes of the paragraph whose stops the panel shows.
-fn current_para(app: &VectorcraftApp) -> Option<(Node, ParaStyle, f64)> {
+fn current_para(app: &TsipikaApp) -> Option<(Node, ParaStyle, f64)> {
     let editing = super::character::text_editing(app);
     let n = match editing {
         Some((id, _, _)) => app.session.active()?.doc.node(id)?.clone(),
@@ -56,7 +56,7 @@ fn current_para(app: &VectorcraftApp) -> Option<(Node, ParaStyle, f64)> {
 /// Position Panel Above Text: float the panel just above text `n`, as wide as its ruler needs to
 /// put 0 on the text's left edge and its marks at the canvas zoom, so each stop sits over the
 /// column it sets (#729). `span`: the ruler's length in the text's points.
-fn above_text(app: &mut VectorcraftApp, ctx: &egui::Context, n: &Node, span: f64) -> Option<()> {
+fn above_text(app: &mut TsipikaApp, ctx: &egui::Context, n: &Node, span: f64) -> Option<()> {
     let xf = crate::canvas::Xf::new(app.canvas_rect?, app.view()?);
     let on_screen = xf.rect_to_screen(n.geometric_bounds()?);
     // Screen points per point of the text: across the frame for area type (so a scaled frame
@@ -90,7 +90,7 @@ fn stops_json(stops: &[TabStop]) -> Value {
     )
 }
 
-fn apply(app: &mut VectorcraftApp, stops: &[TabStop]) {
+fn apply(app: &mut TsipikaApp, stops: &[TabStop]) {
     if let Some((id, a, b)) = super::character::text_editing(app) {
         super::character::end_typing(app);
         app.run("text.tabs.set", json!({"stops": stops_json(stops), "ids": [id.0], "start": a, "end": b})).ok();
@@ -99,7 +99,7 @@ fn apply(app: &mut VectorcraftApp, stops: &[TabStop]) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some((node, mut stops, span)) = current(app) else {
         super::empty_state(ui, "pilcrow", tl!("No text selected"), tl!("Select a text object to set its tab stops."));
@@ -253,7 +253,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     resp.on_hover_text(tl!("Click to add a tab stop, drag to move it, drag it off the ruler to delete it"));
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let Some((_, para, _)) = current_para(app) else {
         ui.add_enabled(false, egui::Button::new(tl!("Select text")).frame(false));
         return;
@@ -295,9 +295,9 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
             show(app, ui);
@@ -308,7 +308,7 @@ mod tests {
 
     #[test]
     fn panel_draws_empty_with_text_and_with_stops() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         frame(&mut app);
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a\tb", "area": {"width": 300, "height": 100}})).unwrap();
@@ -327,14 +327,14 @@ mod tests {
     /// (spaces kept, eight characters at most).
     #[test]
     fn leader_and_align_on_keep_what_is_typed_until_enter() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50, "align": "decimal"}]})).unwrap();
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 400.0));
         // One frame with `events` → the texts painted and where.
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -354,7 +354,7 @@ mod tests {
                 modifiers: Default::default(),
             })
         };
-        let stop = |app: &VectorcraftApp| current(app).unwrap().1[0].clone();
+        let stop = |app: &TsipikaApp| current(app).unwrap().1[0].clone();
         for (label, typed, want) in [("Leader:", [". ", "_", "123456789"], ". _12345"), ("Align On:", [",", "", ""], ",")] {
             let texts = frame(&mut app, vec![]);
             let r = texts.iter().find(|(t, _)| t == label).unwrap_or_else(|| panic!("{label} in {texts:?}")).1;
@@ -383,14 +383,14 @@ mod tests {
     /// the pointer is past its threshold (farther from the press than the 5 px hit tolerance).
     #[test]
     fn dragging_a_stop_moves_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 400.0));
         // One frame with `events` → where the ruler's inch labels (9 pt) are painted.
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -426,7 +426,7 @@ mod tests {
     }
 
     /// One frame of the panel menu with `events` → the rows' texts and where they are painted.
-    fn menu_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn menu_frame(ctx: &egui::Context, app: &mut TsipikaApp, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 400.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| menu(app, ui));
         out.textures_delta.clear();
@@ -440,7 +440,7 @@ mod tests {
     }
 
     /// Click the panel menu's row `label`, which shows no check mark.
-    fn choose(ctx: &egui::Context, app: &mut VectorcraftApp, label: &str) {
+    fn choose(ctx: &egui::Context, app: &mut TsipikaApp, label: &str) {
         let rows = menu_frame(ctx, app, vec![]);
         let (text, r) = rows.iter().find(|(t, _)| t.trim_start_matches(['✓', ' ']) == label).unwrap_or_else(|| panic!("{label} in {rows:?}"));
         assert!(!text.contains('✓'), "{label} shows a check mark");
@@ -455,12 +455,12 @@ mod tests {
     /// ruler, and Clear All Tabs removes every stop.
     #[test]
     fn panel_menu_repeats_deletes_and_clears_tab_stops() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50, "leader": "."}]})).unwrap();
         let ctx = egui::Context::default();
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &TsipikaApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         // Repeat Tab with the second stop selected: 20 copies of it, 20 pt apart (its distance from
         // the first stop), leader and all.
         set_pstate(&ctx, "tabs-sel", 1usize);
@@ -483,13 +483,13 @@ mod tests {
     /// left indent, from the paragraph the caret is in while the Type tool edits text.
     #[test]
     fn repeat_tab_measures_the_first_stop_from_the_left_indent() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b\nc	d", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.setFormat", &json!({"leftIndent": 20})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &TsipikaApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         // 30 pt from the indent at 20: copies at 80, 110, ...
         set_pstate(&ctx, "tabs-sel", 0usize);
         choose(&ctx, &mut app, "Repeat Tab");
@@ -501,11 +501,11 @@ mod tests {
         assert_eq!(positions(&app)[..4], [5.0, 20.0, 35.0, 50.0]);
         // The Type tool's caret in the second paragraph, indented 40 pt: its stop at 50 repeats
         // every 10 pt, and the first paragraph keeps its stop.
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({})).unwrap();
         app.session.select_tool("type", Default::default()).unwrap();
         let id = app.run("text.create", json!({"x": 10, "y": 20, "text": "a	b\nc	d"})).unwrap()["id"].clone();
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![tsipika_tools::Action::Notify("text.editNew".into())]).unwrap();
         app.run("text.setFormat", json!({"id": id, "leftIndent": 20})).unwrap();
         app.run("text.setFormat", json!({"id": id, "start": 4, "end": 7, "leftIndent": 40})).unwrap();
         app.run("text.tabs.set", json!({"id": id, "stops": [{"position": 50}]})).unwrap();
@@ -520,7 +520,7 @@ mod tests {
     /// Delete Tab removes that one next.
     #[test]
     fn delete_tab_after_the_last_stop_deletes_the_stop_the_ruler_shows_selected() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50}]})).unwrap();
@@ -536,7 +536,7 @@ mod tests {
     /// edge and a stop's mark over the column it sets, at any zoom (#729).
     #[test]
     fn above_text_puts_the_ruler_over_the_text_at_the_zoom() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 600, "height": 400})).unwrap();
         app.session.execute("text.create", &json!({"x": 40, "y": 200, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(egui::pos2(50.0, 40.0), vec2(1000.0, 700.0)));

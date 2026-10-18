@@ -13,7 +13,7 @@ fn comp_marker_dialog_fields_and_undo() {
     let r = s
         .execute(
             "markers.set",
-            json!({"index": 0, "time": 1.51, "duration": 0.5, "comment": "Intro", "chapter": "One", "url": "https://getartcraft.com", "frameTarget": "_blank",
+            json!({"index": 0, "time": 1.51, "duration": 0.5, "comment": "Intro", "chapter": "One", "url": "https://github.com/raantss18/mahay", "frameTarget": "_blank",
                    "cuePoint": {"name": "cue", "navigation": true, "params": [["k", "v"]]}, "protected": true, "label": "Aqua"}),
         )
         .unwrap();
@@ -25,7 +25,7 @@ fn comp_marker_dialog_fields_and_undo() {
     assert!((m["duration"].as_f64().unwrap() - 0.5).abs() < 1e-9);
     assert_eq!(m["comment"], "Intro");
     assert_eq!(m["chapter"], "One");
-    assert_eq!(m["url"], "https://getartcraft.com");
+    assert_eq!(m["url"], "https://github.com/raantss18/mahay");
     assert_eq!(m["frameTarget"], "_blank");
     assert_eq!(m["cuePoint"]["name"], "cue");
     assert_eq!(m["cuePoint"]["navigation"], true);
@@ -75,7 +75,7 @@ fn layer_markers_convert_and_update_from_source() {
     s.execute("layer.timing", json!({"layers": [l], "start": 1.0})).unwrap();
     s.execute("markers.set", json!({"layer": l, "new": true, "time": 2.0, "comment": "hit"})).unwrap();
     let c = s.active_comp().unwrap();
-    let lay = c.layer(effectcraft_project::LayerId(l)).unwrap();
+    let lay = c.layer(tselatra_project::LayerId(l)).unwrap();
     assert_eq!(lay.markers[0].time.seconds(), 1.0);
     assert_eq!(s.execute("markers.list", json!({"layer": l})).unwrap()[0]["time"], 2.0);
     // Layer → comp marker keeps the comp time.
@@ -111,7 +111,7 @@ fn layer_markers_convert_and_update_from_source() {
 
 #[test]
 fn precompose_leave_and_move_attributes() {
-    use effectcraft_project::{ItemId, LayerId, LayerSource};
+    use tselatra_project::{ItemId, LayerId, LayerSource};
     let (mut s, l) = setup();
     s.execute("prop.set", json!({"layer": l, "path": "transform/position", "value": [50, 60]})).unwrap();
     let outer = s.active_comp_id().unwrap();

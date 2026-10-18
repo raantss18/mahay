@@ -1,7 +1,7 @@
 //! Finding VST3 plugins on disk (safe, pure `std::fs`), resolving bundles to their binaries and
-//! mapping VST3 sub-categories to SoundCraft categories.
+//! mapping VST3 sub-categories to Feo categories.
 
-use soundcraft_dsp::Category;
+use feo_dsp::Category;
 use std::path::{Path, PathBuf};
 
 /// Directory recursion limit while scanning (vendors nest folders, never deeply).
@@ -197,7 +197,7 @@ pub fn split_sub_categories(s: &str) -> Vec<String> {
     s.split('|').map(str::trim).filter(|t| !t.is_empty()).take(32).map(str::to_string).collect()
 }
 
-/// Maps VST3 sub-categories (`Fx|EQ`, `Instrument|Synth`, …) to a SoundCraft insert-menu category.
+/// Maps VST3 sub-categories (`Fx|EQ`, `Instrument|Synth`, …) to a Feo insert-menu category.
 pub fn category_from_sub_categories<S: AsRef<str>>(subs: &[S]) -> Category {
     let has = |names: &[&str]| subs.iter().any(|f| names.iter().any(|n| f.as_ref().eq_ignore_ascii_case(n)));
     if is_instrument(subs) {
@@ -231,7 +231,7 @@ mod tests {
     use super::*;
 
     fn tmp(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("soundcraft-vst3-scan-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("feo-vst3-scan-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d

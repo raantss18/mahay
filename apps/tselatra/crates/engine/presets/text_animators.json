@@ -1,6 +1,6 @@
 {
-  "format": "effectcraft.textAnimatorPresets/1",
-  "notes": "Original EffectCraft text animator presets (MIT OR Apache-2.0). Key times are seconds from the current time; paths are relative to the selector.",
+  "format": "tselatra.textAnimatorPresets/1",
+  "notes": "Original Tselatra text animator presets (MIT OR Apache-2.0). Key times are seconds from the current time; paths are relative to the selector.",
   "presets": [
     {
       "id": "typewriter",

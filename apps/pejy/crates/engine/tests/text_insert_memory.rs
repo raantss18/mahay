@@ -1,8 +1,8 @@
 //! Text-command fidelity across transformed strings and editor targets.
 
-use designcraft_doc::{ChangeMark, Document, StoryId};
-use designcraft_engine::Session;
-use designcraft_render::Renderer;
+use pejy_doc::{ChangeMark, Document, StoryId};
+use pejy_engine::Session;
+use pejy_render::Renderer;
 use serde_json::{Value, json};
 
 fn fixture(text: &str) -> (Session, StoryId) {
@@ -17,7 +17,7 @@ fn fixture(text: &str) -> (Session, StoryId) {
 fn fresh_pixels(s: &Session, r: &mut Renderer) -> Vec<u8> {
     let warm = r.render_page(&s.doc().unwrap().doc, &s.cache, 0, 1.0, false, &Default::default()).unwrap().pixels;
     let fresh =
-        Renderer::new().render_page(&s.doc().unwrap().doc, &designcraft_compose::Cache::new(), 0, 1.0, false, &Default::default()).unwrap().pixels;
+        Renderer::new().render_page(&s.doc().unwrap().doc, &pejy_compose::Cache::new(), 0, 1.0, false, &Default::default()).unwrap().pixels;
     assert_eq!(warm, fresh);
     warm
 }
@@ -69,7 +69,7 @@ fn typing_on_each_side_of_table_anchor_preserves_automatic_newlines() {
     for before in [true, false] {
         let (mut s, sid) = fixture("");
         s.execute("table.insert", &json!({"rows":1,"cols":1})).unwrap();
-        let anchor = designcraft_doc::TABLE_ANCHOR;
+        let anchor = pejy_doc::TABLE_ANCHOR;
         assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().text, format!("{anchor}\n"));
         let at = if before { 0 } else { anchor.len_utf8() };
         s.execute("text.select", &json!({"story":sid.0,"anchor":at,"focus":at})).unwrap();
@@ -186,7 +186,7 @@ fn replacement_reserves_only_net_growth_and_shrinking_text_keeps_existing_room()
 
 #[test]
 fn text_insert_relocates_and_removes_current_data_merge_placeholders() {
-    use designcraft_doc::PlaceholderAnchor;
+    use pejy_doc::PlaceholderAnchor;
 
     let (mut s, sid) = fixture("");
     s.execute("data.source.select", &json!({"bytes":"TmFtZQpBZGEK","name":"people.csv"})).unwrap();

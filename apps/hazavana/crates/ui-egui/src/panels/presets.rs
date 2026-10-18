@@ -7,14 +7,14 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use egui::{Align2, Color32, Rect, Sense, pos2, vec2};
-use lightcraft_develop::{ControlSpec, Preset, Section, Track};
-use lightcraft_engine::presets::PresetList;
+use hazavana_develop::{ControlSpec, Preset, Section, Track};
+use hazavana_engine::presets::PresetList;
 use serde_json::json;
 
 use crate::icons::{Icon, paint};
 use crate::theme::Tokens;
 use crate::widgets::{divider, icon_button, register, slider};
-use crate::{HoverPreview, LightcraftApp};
+use crate::{HoverPreview, HazavanaApp};
 
 /// Long edge of preset thumbnails (px).
 const THUMB_EDGE: usize = 128;
@@ -24,17 +24,17 @@ const THUMB_EDGE: usize = 128;
 struct AppliedPreset {
     id: String,
     amount: f64,
-    selected: Vec<lightcraft_catalog::PhotoId>,
-    active: Option<lightcraft_catalog::PhotoId>,
+    selected: Vec<hazavana_catalog::PhotoId>,
+    active: Option<hazavana_catalog::PhotoId>,
     commits: u64,
 }
 
 impl AppliedPreset {
-    fn new(session: &lightcraft_engine::Session, id: String, amount: f64) -> Self {
+    fn new(session: &hazavana_engine::Session, id: String, amount: f64) -> Self {
         Self { id, amount, selected: session.selection.ids.clone(), active: session.active(), commits: session.commits() }
     }
 
-    fn is_current(&self, session: &lightcraft_engine::Session) -> bool {
+    fn is_current(&self, session: &hazavana_engine::Session) -> bool {
         self.selected == session.selection.ids
             && self.active == session.active()
             && self.commits == session.commits()
@@ -47,7 +47,7 @@ impl AppliedPreset {
     }
 }
 
-pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Frame::NONE.fill(t.chrome).stroke(egui::Stroke::new(1.0, t.divider)).show(ui, |ui| {
         ui.spacing_mut().item_spacing.y = 0.0;
@@ -201,7 +201,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                     }
                     if resp.clicked() && app.run("preset.apply", json!({"id": pid, "amount": 100})).is_ok() {
                         ui.data_mut(|d| d.insert_temp(amt_id, AppliedPreset::new(&app.session, pid.clone(), 100.0)));
-                        ui.data_mut(|d| d.remove::<(lightcraft_catalog::PhotoId, Preset, String)>(egui::Id::new("last-preset-hover")));
+                        ui.data_mut(|d| d.remove::<(hazavana_catalog::PhotoId, Preset, String)>(egui::Id::new("last-preset-hover")));
                         app.toast(ui.ctx(), crate::i18n::tr_format!("Preset: {name}", name = name));
                     }
                     let (builtin, group) = (pr.builtin, pr.group.clone());
@@ -261,13 +261,13 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
             if app.hover_preview.is_none()
                 && let (Some(id), Some(curr)) = (active, current.as_ref())
                 && let Some((saved_id, saved_preset, saved_label)) =
-                    ui.data(|d| d.get_temp::<(lightcraft_catalog::PhotoId, Preset, String)>(last_hover_id))
+                    ui.data(|d| d.get_temp::<(hazavana_catalog::PhotoId, Preset, String)>(last_hover_id))
                 && saved_id == id
             {
                 app.hover_preview = Some(HoverPreview { label: saved_label, settings: saved_preset.apply(curr, 1.0) });
             }
         } else {
-            ui.data_mut(|d| d.remove::<(lightcraft_catalog::PhotoId, Preset, String)>(last_hover_id));
+            ui.data_mut(|d| d.remove::<(hazavana_catalog::PhotoId, Preset, String)>(last_hover_id));
         }
     });
 }
@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn amount_slider_does_not_undo_a_later_edit() {
-        let mut session = lightcraft_engine::Session::with_demo();
+        let mut session = hazavana_engine::Session::with_demo();
         let pid = "lc.golden-hour";
         session.execute("preset.apply", &json!({"id": pid})).unwrap();
         let state = AppliedPreset::new(&session, pid.into(), 100.0);
@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn amount_slider_does_not_undo_on_another_photo() {
-        let mut session = lightcraft_engine::Session::with_demo();
+        let mut session = hazavana_engine::Session::with_demo();
         let pid = "lc.golden-hour";
         session.execute("preset.apply", &json!({"id": pid})).unwrap();
         let state = AppliedPreset::new(&session, pid.into(), 100.0);

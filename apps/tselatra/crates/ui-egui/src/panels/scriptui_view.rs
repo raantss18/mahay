@@ -9,12 +9,12 @@
 //! script through `scriptui.mouse` when a listener wants them (`Widget::mouse`).
 
 use crate::i18n::tr;
-use effectcraft_engine::Services;
-use effectcraft_engine::scriptui::{DrawOp, ImageRef, PathSeg, ScriptWindow, Widget, WidgetKind, WindowKind, layout};
+use tselatra_engine::Services;
+use tselatra_engine::scriptui::{DrawOp, ImageRef, PathSeg, ScriptWindow, Widget, WidgetKind, WindowKind, layout};
 use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, UiBuilder, pos2, vec2};
 use serde_json::{Value, json};
 
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::dock::PanelKind;
 use crate::theme::Tokens;
 
@@ -32,7 +32,7 @@ fn rect_of(origin: egui::Pos2, b: [f64; 4]) -> Rect {
     Rect::from_min_size(origin + vec2(b[0] as f32, b[1] as f32), vec2(b[2] as f32, b[3] as f32))
 }
 
-fn register(app: &mut EffectcraftApp, win: u32, w: &Widget, rect: Rect) {
+fn register(app: &mut TselatraApp, win: u32, w: &Widget, rect: Rect) {
     let label = if w.text.is_empty() { format!("{:?}", w.kind) } else { w.text.clone() };
     app.auto.add(&format!("scriptui.{win}.{}", w.id), rect, &label);
     if !w.name.is_empty() {
@@ -41,7 +41,7 @@ fn register(app: &mut EffectcraftApp, win: u32, w: &Widget, rect: Rect) {
 }
 
 /// Draw `w`'s children (and, for containers, their children) at `origin` + bounds.
-fn draw_children(app: &mut EffectcraftApp, ui: &mut egui::Ui, origin: egui::Pos2, win: u32, w: &Widget, acts: &mut Vec<Act>) {
+fn draw_children(app: &mut TselatraApp, ui: &mut egui::Ui, origin: egui::Pos2, win: u32, w: &Widget, acts: &mut Vec<Act>) {
     let t = app.tokens;
     if w.kind == WidgetKind::TabbedPanel {
         // Tab headers, then the active tab only.
@@ -81,7 +81,7 @@ fn draw_children(app: &mut EffectcraftApp, ui: &mut egui::Ui, origin: egui::Pos2
     }
 }
 
-fn draw_widget(app: &mut EffectcraftApp, ui: &mut egui::Ui, origin: egui::Pos2, win: u32, w: &Widget, acts: &mut Vec<Act>) {
+fn draw_widget(app: &mut TselatraApp, ui: &mut egui::Ui, origin: egui::Pos2, win: u32, w: &Widget, acts: &mut Vec<Act>) {
     let t = app.tokens;
     let services = app.session.services.clone();
     let rect = rect_of(origin, w.bounds);
@@ -471,7 +471,7 @@ fn snug(r: Rect, text: &str) -> Rect {
     Rect::from_min_size(r.min, vec2(w, r.height()))
 }
 
-fn perform(app: &mut EffectcraftApp, ctx: &egui::Context, acts: Vec<Act>) {
+fn perform(app: &mut TselatraApp, ctx: &egui::Context, acts: Vec<Act>) {
     for a in acts {
         let (cmd, p) = match a {
             Act::Click(w, id) => ("scriptui.click", json!({"window": w, "widget": id})),
@@ -501,7 +501,7 @@ fn perform(app: &mut EffectcraftApp, ctx: &egui::Context, acts: Vec<Act>) {
 }
 
 /// The floating script windows (dialogs, palettes, windows), drawn over the app.
-pub fn show_windows(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn show_windows(app: &mut TselatraApp, ctx: &egui::Context) {
     let windows: Vec<ScriptWindow> = app.session.script_ui.windows.iter().filter(|w| w.kind != WindowKind::Panel).cloned().collect();
     if windows.is_empty() {
         return;
@@ -547,7 +547,7 @@ pub fn show_windows(app: &mut EffectcraftApp, ctx: &egui::Context) {
 }
 
 /// A dockable ScriptUI panel's content (Window ▸ <panel>.jsx).
-pub fn panel(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect, id: u32) {
+pub fn panel(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect, id: u32) {
     let t = app.tokens;
     let Some(mut w) = app.session.script_ui.window(id).cloned() else {
         ui.painter().text(rect.center(), Align2::CENTER_CENTER, tr("This ScriptUI panel has closed"), Tokens::ui(12.0), t.text_faint);
@@ -572,13 +572,13 @@ pub fn panel(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect, id: u32) {
 }
 
 /// Tab title of a script panel.
-pub fn panel_title(app: &EffectcraftApp, id: u32) -> Option<String> {
+pub fn panel_title(app: &TselatraApp, id: u32) -> Option<String> {
     app.session.script_ui.window(id).map(|w| if w.title.is_empty() { w.script.clone() } else { w.title.clone() })
 }
 
 /// Close the dock panels whose script window has gone (the script closed it, or a saved
 /// workspace from an earlier run).
-pub fn sync_panels(app: &mut EffectcraftApp) {
+pub fn sync_panels(app: &mut TselatraApp) {
     let mut all = vec![];
     app.ui.dock.panels(&mut all);
     for f in &app.ui.floating {

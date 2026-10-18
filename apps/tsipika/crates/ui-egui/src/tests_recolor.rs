@@ -2,14 +2,14 @@
 
 use egui::{Event, Modifiers, PointerButton, Pos2, Rect, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_color::recolor::ColorKey;
-use vectorcraft_engine::Session;
+use tsipika_color::Color;
+use tsipika_color::recolor::ColorKey;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, dialogs, panels};
+use crate::{TsipikaApp, dialogs, panels};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
     app
 }
@@ -20,14 +20,14 @@ fn context() -> egui::Context {
     ctx
 }
 
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, time: f64, draw: fn(&mut VectorcraftApp, &mut egui::Ui)) {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>, time: f64, draw: fn(&mut TsipikaApp, &mut egui::Ui)) {
     let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, vec2(900.0, 800.0)));
     let input = egui::RawInput { events, time: Some(time), screen_rect, ..Default::default() };
     let mut out = ctx.run_ui(input, |ui| draw(app, ui));
     out.textures_delta.clear();
 }
 
-fn dialog_frame(app: &mut VectorcraftApp, ctx: &egui::Context) {
+fn dialog_frame(app: &mut TsipikaApp, ctx: &egui::Context) {
     let time = ctx.input(|i| i.time) + 1.0;
     frame(app, ctx, vec![], time, |app, ui| dialogs::show(app, ui.ctx()));
 }
@@ -38,7 +38,7 @@ fn press(at: Pos2, clicks: usize) -> Vec<Event> {
 }
 
 /// Rectangles filled with `colors`, all selected.
-fn art(app: &mut VectorcraftApp, colors: &[&str]) {
+fn art(app: &mut TsipikaApp, colors: &[&str]) {
     for (i, c) in colors.iter().enumerate() {
         let id = app.run("shape.rectangle", json!({"x": 10 + 30 * i, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
         app.run("paint.setFill", json!({"ids": [id], "color": c})).unwrap();
@@ -47,21 +47,21 @@ fn art(app: &mut VectorcraftApp, colors: &[&str]) {
     app.run("select.all", json!({})).unwrap();
 }
 
-fn colors(app: &mut VectorcraftApp) -> usize {
+fn colors(app: &mut TsipikaApp) -> usize {
     app.session.execute("recolor.colors", &json!({})).unwrap()["colors"].as_array().unwrap().len()
 }
 
-fn group_keys(app: &VectorcraftApp, name: &str) -> Vec<Value> {
+fn group_keys(app: &TsipikaApp, name: &str) -> Vec<Value> {
     let d = &app.session.doc().unwrap().doc;
     let g = d.swatch_groups.iter().find(|g| g.name == name).unwrap();
     g.swatches.iter().filter_map(|w| w.paint.color()).map(|c| json!(ColorKey::of(&c).to_string())).collect()
 }
 
-fn field(app: &VectorcraftApp, k: &str) -> Value {
+fn field(app: &TsipikaApp, k: &str) -> Value {
     app.ui.dialog.as_ref().and_then(|d| d.fields.get(k).cloned()).unwrap_or(Value::Null)
 }
 
-fn set(app: &mut VectorcraftApp, k: &str, v: Value) {
+fn set(app: &mut TsipikaApp, k: &str, v: Value) {
     app.ui.dialog.as_mut().unwrap().fields.insert(k.into(), v);
 }
 
@@ -112,7 +112,7 @@ fn presets_open_colour_jobs_and_libraries_and_both_tabs_draw() {
     app.run("ui.recolorDialog", presets[3].1.clone()).unwrap();
     assert_eq!(field(&app, "limitTo"), "web-safe-216", "Color Library starts on the first library");
     dialog_frame(&mut app, &ctx);
-    let web = |k: &Value| vectorcraft_engine::cmd::color_value(k).unwrap().to_rgb().iter().all(|v| ((v * 5.0).round() - v * 5.0).abs() < 1e-3);
+    let web = |k: &Value| tsipika_engine::cmd::color_value(k).unwrap().to_rgb().iter().all(|v| ((v * 5.0).round() - v * 5.0).abs() < 1e-3);
     assert!(field(&app, "rows").as_array().unwrap().iter().all(|r| web(&r["to"])));
     dialogs::cancel(&mut app);
     // The Color Guide's colours become the new colours.
@@ -127,7 +127,7 @@ fn presets_open_colour_jobs_and_libraries_and_both_tabs_draw() {
 fn double_clicking_a_colour_group_opens_it_and_ok_rewrites_it() {
     let mut app = app();
     let ctx = context();
-    let show: fn(&mut VectorcraftApp, &mut egui::Ui) = panels::swatches::show;
+    let show: fn(&mut TsipikaApp, &mut egui::Ui) = panels::swatches::show;
     frame(&mut app, &ctx, vec![], 0.0, show);
     let folder = ctx.read_response(egui::Id::new(("swatch-tile", "Brights"))).expect("the Brights folder").rect.center();
     frame(&mut app, &ctx, press(folder, 2), 1.0, show);
@@ -155,7 +155,7 @@ fn the_options_button_edits_a_selected_group_and_applies_it_to_the_art() {
     let mut app = app();
     let ctx = context();
     art(&mut app, &["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff"]);
-    let show: fn(&mut VectorcraftApp, &mut egui::Ui) = panels::swatches::show;
+    let show: fn(&mut TsipikaApp, &mut egui::Ui) = panels::swatches::show;
     frame(&mut app, &ctx, vec![], 0.0, show);
     let folder = ctx.read_response(egui::Id::new(("swatch-tile", "Brights"))).unwrap().rect.center();
     frame(&mut app, &ctx, press(folder, 1), 1.0, show);
@@ -204,7 +204,7 @@ fn a_group_keeps_the_colours_no_art_row_took() {
 }
 
 /// Recolor Artwork on art filled with `colors`, on the Edit tab, drawn by a kittest harness.
-fn edit_harness(colors: &[&str]) -> egui_kittest::Harness<'static, VectorcraftApp> {
+fn edit_harness(colors: &[&str]) -> egui_kittest::Harness<'static, TsipikaApp> {
     let mut app = app();
     art(&mut app, colors);
     app.run("ui.recolorDialog", json!({})).unwrap();
@@ -212,7 +212,7 @@ fn edit_harness(colors: &[&str]) -> egui_kittest::Harness<'static, VectorcraftAp
     assert_eq!(field(&app, "linked"), json!(true));
     let mut fonts = false;
     let mut h = egui_kittest::Harness::builder().with_size(vec2(900.0, 800.0)).build_ui_state(
-        move |ui, app: &mut VectorcraftApp| {
+        move |ui, app: &mut TsipikaApp| {
             if !std::mem::replace(&mut fonts, true) {
                 crate::theme::install_fonts(ui.ctx());
                 return;
@@ -226,14 +226,14 @@ fn edit_harness(colors: &[&str]) -> egui_kittest::Harness<'static, VectorcraftAp
 }
 
 /// The rect of the widget drawn `size` big (the wheel is 220 across, its Brightness slider 220 by 22).
-fn widget_of_size(h: &egui_kittest::Harness<'_, VectorcraftApp>, size: egui::Vec2) -> Rect {
+fn widget_of_size(h: &egui_kittest::Harness<'_, TsipikaApp>, size: egui::Vec2) -> Rect {
     h.ctx
         .viewport(|vp| vp.prev_pass.widgets.layers().flat_map(|(_, w)| w.iter()).find(|w| w.rect.size() == size).map(|w| w.rect))
         .expect("the widget")
 }
 
-fn new_hsb(app: &VectorcraftApp) -> Vec<[f32; 3]> {
-    field(app, "rows").as_array().unwrap().iter().map(|row| vectorcraft_engine::cmd::color_value(&row["to"]).unwrap().to_hsb()).collect()
+fn new_hsb(app: &TsipikaApp) -> Vec<[f32; 3]> {
+    field(app, "rows").as_array().unwrap().iter().map(|row| tsipika_engine::cmd::color_value(&row["to"]).unwrap().to_hsb()).collect()
 }
 
 /// #1733: on the Edit tab, dragging a handle of CMYK art (linked, Complementary) must leave every
@@ -245,13 +245,13 @@ fn dragging_a_wheel_handle_keeps_the_other_handles_apart() {
     let wheel = widget_of_size(&h, vec2(220.0, 220.0));
     let (c, r) = (wheel.center(), 100.0);
     // Each row's new colour: its hue, and where its handle is drawn (as `widgets::harmony_wheel`).
-    let handles = |app: &VectorcraftApp| -> Vec<(f32, Pos2)> {
+    let handles = |app: &TsipikaApp| -> Vec<(f32, Pos2)> {
         field(app, "rows")
             .as_array()
             .unwrap()
             .iter()
             .map(|row| {
-                let [hue, s, _] = vectorcraft_engine::cmd::color_value(&row["to"]).unwrap().to_hsb();
+                let [hue, s, _] = tsipika_engine::cmd::color_value(&row["to"]).unwrap().to_hsb();
                 (hue, c + vec2(hue.to_radians().cos(), -hue.to_radians().sin()) * r * s)
             })
             .collect()
@@ -272,8 +272,8 @@ fn dragging_a_wheel_handle_keeps_the_other_handles_apart() {
     }
     let moved = handles(h.state());
     assert!(gap(moved[1].0, start[1].0) > 10.0, "linked: the other handle turned with it (intended): {start:?} -> {moved:?}");
-    let brightness = |app: &VectorcraftApp| -> Vec<f32> {
-        field(app, "rows").as_array().unwrap().iter().map(|row| vectorcraft_engine::cmd::color_value(&row["to"]).unwrap().to_hsb()[2]).collect()
+    let brightness = |app: &TsipikaApp| -> Vec<f32> {
+        field(app, "rows").as_array().unwrap().iter().map(|row| tsipika_engine::cmd::color_value(&row["to"]).unwrap().to_hsb()[2]).collect()
     };
     let moved_v = brightness(h.state());
     // Hold the pointer still: nothing should change.
@@ -291,7 +291,7 @@ fn dragging_a_wheel_handle_keeps_the_other_handles_apart() {
     h.run_steps(1);
     assert_eq!(field(h.state(), "rows"), rows, "releasing keeps the colours the drag ended on");
     // OK keeps the whole drag as one undo step; undo brings the art's colours back.
-    let keys = |app: &mut VectorcraftApp| -> Vec<Value> {
+    let keys = |app: &mut TsipikaApp| -> Vec<Value> {
         let mut k: Vec<Value> =
             app.session.execute("recolor.colors", &json!({})).unwrap()["colors"].as_array().unwrap().iter().map(|c| c["key"].clone()).collect();
         k.sort_by_key(Value::to_string);

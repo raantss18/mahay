@@ -1,7 +1,7 @@
 //! Opening a native file that lost something (a damaged image): the session says so, with the
 //! reason, and the file still opens.
 
-use figcraft_doc::Document;
+use endrika_doc::Document;
 use serde_json::json;
 
 use crate::Session;
@@ -14,17 +14,17 @@ const PNG: [u8; 67] = [
 ];
 
 fn file(name: &str, damage: bool) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("figcraft-open-issues-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-open-issues-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut d = Document::new("Pics");
-    figcraft_format::add_image(&mut d, PNG.to_vec()).unwrap();
-    let mut bytes = figcraft_format::save_bytes(&d, None).unwrap();
+    endrika_format::add_image(&mut d, PNG.to_vec()).unwrap();
+    let mut bytes = endrika_format::save_bytes(&d, None).unwrap();
     if damage {
         // Images are stored as they are: change one byte of the PNG, not its checksum.
         let at = bytes.windows(PNG.len()).position(|w| w == PNG).unwrap();
         bytes[at + 30] ^= 0xff;
     }
-    let path = dir.join("pics.figcraft");
+    let path = dir.join("pics.endrika");
     std::fs::write(&path, bytes).unwrap();
     path
 }

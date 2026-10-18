@@ -68,7 +68,7 @@
 
 Taratasy is part of [Mahay](https://github.com/raantss18/mahay). Come say hello, get help and follow development:
 
-- **Discord: [discord.gg/mahay](https://github.com/raantss18/mahay/discussions)**. This is the fastest way to get help and share feedback. The app has a Discord button in its title bar.
+- **Discord: [github.com/raantss18/mahay/discussions](https://github.com/raantss18/mahay/discussions)**. This is the fastest way to get help and share feedback. The app has a Discord button in its title bar.
 - **Web page:** [mahay.com/apps/taratasy](https://github.com/raantss18/mahay)
 - **Source:** [github.com/raantss18/taratasy](https://github.com/raantss18/mahay)
 
@@ -558,7 +558,7 @@ And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and vid
 </p>
 
 <p align="center">
-  <a href="https://github.com/raantss18/mahay/discussions"><b>discord.gg/mahay</b></a> ·
+  <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
   <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
   <a href="https://github.com/raantss18/mahay">Taratasy</a>

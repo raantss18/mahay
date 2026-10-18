@@ -1,10 +1,10 @@
 //! Text layers ↔ Lottie text data (`t`: document keys `d`, animators `a`, more options `m`),
 //! and text converted to glyph shapes.
 
-use effectcraft_keyframe::{Justify, TextDoc, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Layer, Node, PropGroup};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Justify, TextDoc, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Layer, Node, PropGroup};
+use tselatra_time::Tick;
 use serde_json::{Map, Value as Json, json};
 
 use crate::anim::{self, Ex, Im, export_prop, import_prop};
@@ -310,7 +310,7 @@ pub(crate) fn import_text(im: &mut Im, ids: &mut Ids, t: &Json, tg: &mut PropGro
             st.value = Value::Text(Box::new(first.clone()));
         }
         if docs.len() > 1 {
-            st.keys = docs.iter().map(|(f, d)| effectcraft_keyframe::Keyframe::new(im.tb.tick(*f), Value::Text(Box::new(d.clone()))).hold()).collect();
+            st.keys = docs.iter().map(|(f, d)| tselatra_keyframe::Keyframe::new(im.tb.tick(*f), Value::Text(Box::new(d.clone()))).hold()).collect();
         }
     }
     if let Some(m) = t.get("m")
@@ -406,11 +406,11 @@ pub(crate) fn glyph_shapes(ex: &mut Ex, layer: &Layer) -> Vec<Json> {
     if st.keys.len() > 1 || tg.sub("animators").is_some_and(|a| !a.children.is_empty()) {
         ex.warn(format!("{}: text exported as static glyph shapes (Source Text keys and animators are baked at time 0)", layer.name));
     }
-    let lay = effectcraft_text::layout_doc(&doc);
+    let lay = tselatra_text::layout_doc(&doc);
     let mut items = vec![];
     for g in &lay.glyphs {
         let p = kurbo::Affine::translate((g.origin.x, g.origin.y)) * g.path.clone();
-        for sp in effectcraft_path::from_kurbo(&p) {
+        for sp in tselatra_path::from_kurbo(&p) {
             items.push(json!({"ty": "sh", "nm": g.ch.to_string(), "d": 1, "ks": {"a": 0, "k": shapes::shape_json(&sp)}}));
         }
     }

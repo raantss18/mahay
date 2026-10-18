@@ -3,7 +3,7 @@
 //! square to it: scaling by a side handle stretches it along its own width or height. Path
 //! geometry is still baked; Object ▸ Transform ▸ Reset Bounding Box sets the angle back to 0.
 
-use vectorcraft_geom::{Affine, Point, Rect, Vec2, normalize_deg, union_opt};
+use tsipika_geom::{Affine, Point, Rect, Vec2, normalize_deg, union_opt};
 
 use crate::{Document, Node, NodeId, NodeKind, SymbolBoxes};
 
@@ -41,7 +41,7 @@ impl OrientedBox {
     }
     /// One of the 9 reference points (row-major from the box's own top-left), on the page.
     pub fn reference_point(&self, index: usize) -> Point {
-        self.to_doc() * vectorcraft_geom::reference_point(self.rect, index)
+        self.to_doc() * tsipika_geom::reference_point(self.rect, index)
     }
     /// The corners on the page: top-left, top-right, bottom-right, bottom-left of the box itself.
     pub fn corners(&self) -> [Point; 4] {
@@ -136,7 +136,7 @@ impl Document {
 mod tests {
     use super::*;
     use crate::Appearance;
-    use vectorcraft_geom::shapes;
+    use tsipika_geom::shapes;
 
     fn close(a: f64, b: f64) -> bool {
         (a - b).abs() < 1e-9

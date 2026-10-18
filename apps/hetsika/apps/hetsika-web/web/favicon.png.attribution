@@ -1,0 +1,8 @@
+asset:        favicon.png
+title:        Hetsika web app icon (favicon and loading image), 128 px
+author:       Brandon Thomas (Hetsika owner), for the Hetsika project
+source:       original work (drawn by the owner in Mahay, then vectorised)
+license:      MIT OR Apache-2.0
+license-file: assets/app-icon/LICENSE.txt
+added:        2026-10-02 by Claude (agent) for Brandon Thomas
+notes:        Rendered from assets/app-icon/hetsika.svg with resvg by packaging/icons.sh. Replaces the earlier hand-drawn favicon.svg.

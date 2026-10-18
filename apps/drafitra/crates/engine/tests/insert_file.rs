@@ -1,11 +1,11 @@
 //! INSERT of exploded blocks (`*NAME`) and of drawing files (`-INSERT path`, `NAME=path`, JSON
 //! `file`), read through the io hooks (#340).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::color::Color;
-use cadcraft_engine::doc::geom::Vec3;
-use cadcraft_engine::doc::{Block, Circle, Drawing, Entity, EntityKind, HVal, Handle, Insert, Layer, Line};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::color::Color;
+use drafitra_engine::doc::geom::Vec3;
+use drafitra_engine::doc::{Block, Circle, Drawing, Entity, EntityKind, HVal, Handle, Insert, Layer, Line};
 use serde_json::json;
 
 /// A drawing file in a test format: its bytes are "x,y", the $INSBASE. Model space: a line from
@@ -46,7 +46,7 @@ fn hooks() {
 
 /// Write a test drawing file with $INSBASE `base`; returns its path.
 fn file(name: &str, base: &str) -> String {
-    let dir = std::env::temp_dir().join(format!("cadcraft-insert-file-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-insert-file-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let p = dir.join(name);
     std::fs::write(&p, base).unwrap();

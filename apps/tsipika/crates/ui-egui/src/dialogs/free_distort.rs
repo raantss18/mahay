@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The Free Distort effect.
 pub(crate) const FREE_DISTORT: &str = "distort.freeDistort";
@@ -54,7 +54,7 @@ pub(super) fn corners(d: &Dialog) -> [[f64; 2]; 4] {
 
 /// The width of the first selected object's bounds over their height, limited to 1/8 to 8; 1 when
 /// nothing is selected or the bounds are empty.
-fn aspect(app: &VectorcraftApp) -> f32 {
+fn aspect(app: &TsipikaApp) -> f32 {
     let bounds = app.session.active().and_then(|st| st.selection.objects.first().and_then(|id| st.doc.node(*id))).and_then(|n| n.geometric_bounds());
     match bounds {
         Some(b) if b.width() > 0.0 || b.height() > 0.0 => (b.width().max(1e-9) / b.height().max(1e-9)).clamp(0.125, 8.0) as f32,
@@ -68,7 +68,7 @@ fn round(x: f64) -> f64 {
 }
 
 /// The box, the handles and Reset. Changes go to `d.fields["corners"]`.
-pub(super) fn fields(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+pub(super) fn fields(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let before = corners(d);
     let mut c = before;
     let (pad, _) = ui.allocate_exact_size(PAD, Sense::hover());

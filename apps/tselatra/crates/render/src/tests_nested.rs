@@ -1,12 +1,12 @@
 //! Nested compositions: Preserve frame rate when nested or in render queue, Preserve resolution
 //! when nested.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::build;
-use effectcraft_project::render_queue::RenderSettings;
-use effectcraft_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::build;
+use tselatra_project::render_queue::RenderSettings;
+use tselatra_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::render_frame;
 

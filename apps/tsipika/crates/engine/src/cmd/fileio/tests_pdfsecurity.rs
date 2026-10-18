@@ -1,7 +1,7 @@
 //! Opening password-protected PDFs: the open password or the permissions password unlocks them.
 
 use serde_json::{Value, json};
-use vectorcraft_testkit::pdf::{PdfPage, pdf};
+use tsipika_testkit::pdf::{PdfPage, pdf};
 
 use super::*;
 
@@ -9,7 +9,7 @@ use super::*;
 fn the_permissions_password_opens_a_protected_pdf_too() {
     let mut s = Session::new();
     // The test file's permissions (owner) password is its open password followed by `-owner`.
-    let locked = vectorcraft_format::base64_encode(&pdf(&[PdfPage::new(80.0, 40.0, "0 g 0 0 10 10 re f")], Some("pw")));
+    let locked = tsipika_format::base64_encode(&pdf(&[PdfPage::new(80.0, 40.0, "0 g 0 0 10 10 re f")], Some("pw")));
     let info = |s: &mut Session, pw: &str| s.execute("document.pdfInfo", &json!({"dataBase64": locked, "password": pw})).unwrap();
     assert_eq!(info(&mut s, "pw-owner")["pages"], 1);
     assert_eq!(info(&mut s, "pw-owners")["wrongPassword"], true);
@@ -29,7 +29,7 @@ fn export_with_passwords_writes_a_pdf_that_only_its_passwords_open() {
         let p = json!({"compatibility": compatibility, "security": {"openPassword": "open", "permissionsPassword": "owner", "printing": "none"}});
         let out = s.execute("document.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
         let data = out["dataBase64"].as_str().unwrap().to_string();
-        let bytes = vectorcraft_format::base64_decode(&data).unwrap();
+        let bytes = tsipika_format::base64_decode(&data).unwrap();
         assert!(String::from_utf8_lossy(&bytes).contains("/Encrypt"), "{compatibility}: not encrypted");
         let info = |s: &mut Session, p: Value| s.execute("document.pdfInfo", &p).unwrap();
         assert_eq!(info(&mut s, json!({"dataBase64": data}))["needsPassword"], true, "{compatibility}");
@@ -53,6 +53,6 @@ fn permissions_without_a_password_warn_and_a_password_applies_them() {
     assert!(warns(&open), "{open}");
     let locked = s.execute("document.exportPdf", &json!({"security": {"permissionsPassword": "owner", "printing": "none"}})).unwrap();
     assert!(!warns(&locked), "{locked}");
-    let bytes = vectorcraft_format::base64_decode(locked["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(locked["dataBase64"].as_str().unwrap()).unwrap();
     assert!(String::from_utf8_lossy(&bytes).contains("/Encrypt"));
 }

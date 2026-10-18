@@ -4,14 +4,14 @@
 
 use egui::Modifiers;
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::Session;
+use tsipika_doc::NodeId;
+use tsipika_engine::Session;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::control::{ControlRequest, Outcome};
 
 /// Send one control request (it must succeed).
-pub(crate) fn control(app: &mut VectorcraftApp, ctx: &egui::Context, method: &str, params: Value) {
+pub(crate) fn control(app: &mut TsipikaApp, ctx: &egui::Context, method: &str, params: Value) {
     let (req, _rx) = ControlRequest::new(method, params);
     let Outcome::Done(r) = crate::control::handle(app, ctx, &req) else { panic!("not done") };
     assert_eq!(r["ok"], true, "{r}");
@@ -20,7 +20,7 @@ pub(crate) fn control(app: &mut VectorcraftApp, ctx: &egui::Context, method: &st
 /// Frames through the host's input hook until the synthetic queue is drained, and one more (the
 /// keyboard's modifiers come back); `draw` lays out what the input reaches. → the modifiers
 /// held in each frame.
-pub(crate) fn run_synthetic(app: &mut VectorcraftApp, ctx: &egui::Context, draw: fn(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<Modifiers> {
+pub(crate) fn run_synthetic(app: &mut TsipikaApp, ctx: &egui::Context, draw: fn(&mut TsipikaApp, &mut egui::Ui)) -> Vec<Modifiers> {
     let mut held = vec![];
     loop {
         let last = app.synthetic.is_empty();
@@ -37,25 +37,25 @@ pub(crate) fn run_synthetic(app: &mut VectorcraftApp, ctx: &egui::Context, draw:
     }
 }
 
-fn keys(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+fn keys(app: &mut TsipikaApp, ui: &mut egui::Ui) {
     crate::shortcuts::handle(app, ui.ctx());
 }
 
 /// A document with one selected 10 × 10 square at (10, 10) → (app, its id).
-fn one_square() -> (VectorcraftApp, NodeId) {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn one_square() -> (TsipikaApp, NodeId) {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
     let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].as_u64().unwrap();
     app.run("select.set", json!({"ids": [id]})).unwrap();
     (app, NodeId(id))
 }
 
-fn top_left(app: &VectorcraftApp, id: NodeId) -> (f64, f64) {
+fn top_left(app: &TsipikaApp, id: NodeId) -> (f64, f64) {
     let b = app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
     (b.x0, b.y0)
 }
 
-fn object_count(app: &VectorcraftApp) -> usize {
+fn object_count(app: &TsipikaApp) -> usize {
     app.session.active().unwrap().doc.layers[0].children().unwrap().len()
 }
 

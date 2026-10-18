@@ -1,10 +1,10 @@
 //! `.fig` export through `file.export {format: "fig"}`: files written by the command open again
 //! with the same layers, linked instances and auto layout. The export's own round-trip tests
-//! (generated documents, fuzzing) are in `figcraft_format::fig`; the local check here runs only
-//! when `FIGCRAFT_FIG_SAMPLES` names a folder of `.fig` files.
+//! (generated documents, fuzzing) are in `endrika_format::fig`; the local check here runs only
+//! when `ENDRIKA_FIG_SAMPLES` names a folder of `.fig` files.
 
 use base64::Engine as _;
-use figcraft_doc::{Document, NodeKind};
+use endrika_doc::{Document, NodeKind};
 use serde_json::{Value, json};
 
 use crate::{EngineError, Session};
@@ -14,7 +14,7 @@ fn id(v: &Value) -> u64 {
 }
 
 fn temp(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("figcraft-fig-export-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-fig-export-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir.join(name)
 }
@@ -88,7 +88,7 @@ fn fig_export_without_a_path_returns_the_file() {
     build(&mut s);
     let r = s.execute("file.export", &json!({"format": "FIG"})).unwrap();
     let bytes = base64::engine::general_purpose::STANDARD.decode(r["data"].as_str().unwrap()).unwrap();
-    assert!(figcraft_format::fig::is_fig(&bytes));
+    assert!(endrika_format::fig::is_fig(&bytes));
     let (doc, _) = crate::cmd::file::load_bytes(&bytes, "x.fig").unwrap();
     assert_eq!(outline(&doc), outline(s.doc().unwrap()));
     // A path ending in .fig picks the format.
@@ -116,17 +116,17 @@ fn fig_export_survives_junk_params() {
         }
     }
     // A failed write leaves no temporary file behind.
-    assert!(!std::path::Path::new(".tmp-figcraft").exists());
+    assert!(!std::path::Path::new(".tmp-endrika").exists());
     // An empty document exports too.
     let mut s = Session::new();
     assert!(s.execute("file.export", &json!({"format": "fig"})).is_ok());
 }
 
-/// Local only (`FIGCRAFT_FIG_SAMPLES`): each sample opened, exported and opened again has the
+/// Local only (`ENDRIKA_FIG_SAMPLES`): each sample opened, exported and opened again has the
 /// same layers, with its instances linked.
 #[test]
 fn local_samples_export_and_open_again() {
-    let Some(dir) = std::env::var_os("FIGCRAFT_FIG_SAMPLES") else { return };
+    let Some(dir) = std::env::var_os("ENDRIKA_FIG_SAMPLES") else { return };
     let Ok(dir) = std::fs::read_dir(dir) else { return };
     for p in dir.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "fig")) {
         let mut s = Session::new();

@@ -53,7 +53,7 @@ fn wrap_doc(frame_wrap: &str, image_wrap: &str) -> Document {
 /// Each composed line as (x0, x1, baseline), rounded to 0.01 pt.
 fn lines(d: &Document) -> Vec<(i64, i64, i64)> {
     let sid = *d.stories.keys().next().unwrap();
-    let cs = designcraft_compose::compose_story(d, sid, &Default::default());
+    let cs = pejy_compose::compose_story(d, sid, &Default::default());
     let r = |v: f64| (v * 100.0).round() as i64;
     cs.frames.iter().flat_map(|f| f.lines.iter()).map(|l| (r(l.x0), r(l.x1), r(l.baseline))).collect()
 }
@@ -66,9 +66,9 @@ fn wrap_on_a_placed_graphic_wraps_text_like_a_wrap_on_its_frame() {
     let on_frame = wrap_doc(&bbox, &none);
     let unwrapped = wrap_doc(&none, &none);
     let frame = &on_image.spreads[0].items[1];
-    assert_eq!(frame.wrap.mode, designcraft_doc::WrapMode::None);
+    assert_eq!(frame.wrap.mode, pejy_doc::WrapMode::None);
     let g = frame.graphic().unwrap();
-    assert_eq!((g.wrap.mode, g.wrap.offsets), (designcraft_doc::WrapMode::BoundingBox, [6.0; 4]));
+    assert_eq!((g.wrap.mode, g.wrap.offsets), (pejy_doc::WrapMode::BoundingBox, [6.0; 4]));
     // The image fills its frame, so both wraps make the same obstacle.
     let wrapped = lines(&on_image);
     assert_eq!(wrapped, lines(&on_frame));
@@ -85,24 +85,24 @@ fn wrap_on_a_placed_graphic_follows_its_crop_and_round_trips() {
     // Exported on the image element, not on the frame.
     let back = import_idml(&export_idml(&d)).unwrap();
     let f = back.spreads[0].items.iter().find(|i| i.graphic().is_some()).unwrap();
-    assert_eq!(f.wrap.mode, designcraft_doc::WrapMode::None);
+    assert_eq!(f.wrap.mode, pejy_doc::WrapMode::None);
     assert_eq!(f.graphic().unwrap().wrap, d.spreads[0].items[1].graphic().unwrap().wrap);
     // Moved half out of the bottom of its frame, the image wraps only the part the frame shows.
     let mut moved = d.clone();
     let sp = std::sync::Arc::make_mut(&mut moved.spreads[0]);
     let fr = std::sync::Arc::make_mut(&mut sp.items[1]);
-    if let designcraft_doc::Content::Graphic(g) = &mut fr.content {
-        g.xf = designcraft_geom::Affine::translate((0.0, 50.0)) * g.xf;
+    if let pejy_doc::Content::Graphic(g) = &mut fr.content {
+        g.xf = pejy_geom::Affine::translate((0.0, 50.0)) * g.xf;
     }
     let fr = &moved.spreads[0].items[1];
     let g = fr.graphic().unwrap();
-    let image = fr.xf.transform_rect_bbox(g.xf.transform_rect_bbox(designcraft_geom::Rect::new(0.0, 0.0, g.size.0, g.size.1)));
+    let image = fr.xf.transform_rect_bbox(g.xf.transform_rect_bbox(pejy_geom::Rect::new(0.0, 0.0, g.size.0, g.size.1)));
     // In the text frame's inner space, where lines are.
     let inv = moved.spreads[0].items[0].xf.inverse();
     let shown = inv.transform_rect_bbox(fr.bounds().intersect(image));
     let image = inv.transform_rect_bbox(image);
     let sid = *moved.stories.keys().next().unwrap();
-    let cs = designcraft_compose::compose_story(&moved, sid, &Default::default());
+    let cs = pejy_compose::compose_story(&moved, sid, &Default::default());
     let beside: Vec<_> = cs.frames[0].lines.iter().filter(|l| l.baseline > shown.y0 && l.baseline - l.ascent < shown.y1).collect();
     assert!(!beside.is_empty());
     for l in &beside {
@@ -115,7 +115,7 @@ fn wrap_on_a_placed_graphic_follows_its_crop_and_round_trips() {
 
 #[test]
 fn contour_wrap_on_a_placed_graphic_follows_its_shown_part_on_one_side() {
-    use designcraft_doc::{ContourType, WrapSide};
+    use pejy_doc::{ContourType, WrapSide};
     let pref = r#"<TextWrapPreference Inverse="false" ApplyToMasterPageOnly="false" TextWrapSide="RightSide" TextWrapMode="Contour"><Properties><TextWrapOffset Top="4" Left="4" Bottom="4" Right="4"/></Properties><ContourOption ContourType="BoundingBox" IncludeInsideEdges="false"/></TextWrapPreference>"#;
     let mut d = wrap_doc(&wrap_pref("None", 0.0), pref);
     let w = d.spreads[0].items[1].graphic().unwrap().wrap.clone();
@@ -124,18 +124,18 @@ fn contour_wrap_on_a_placed_graphic_follows_its_shown_part_on_one_side() {
     assert_eq!(back.spreads[0].items.iter().find_map(|i| i.graphic()).unwrap().wrap, w);
     // Half of the image below its frame: the contour is the shown half, 4 pt around it.
     let sp = std::sync::Arc::make_mut(&mut d.spreads[0]);
-    if let designcraft_doc::Content::Graphic(g) = &mut std::sync::Arc::make_mut(&mut sp.items[1]).content {
-        g.xf = designcraft_geom::Affine::translate((0.0, 50.0)) * g.xf;
+    if let pejy_doc::Content::Graphic(g) = &mut std::sync::Arc::make_mut(&mut sp.items[1]).content {
+        g.xf = pejy_geom::Affine::translate((0.0, 50.0)) * g.xf;
     }
     let sid = *d.stories.keys().next().unwrap();
-    let specs = designcraft_compose::frame_specs(&d, sid);
+    let specs = pejy_compose::frame_specs(&d, sid);
     let [ex] = specs[0].exclusions.as_slice() else { panic!("{:?}", specs[0].exclusions) };
     assert!(ex.contour.is_some());
     assert_eq!(ex.side, WrapSide::RightSide);
     let r = ex.rect;
     assert!([r.x0 - 156.0, r.y0 - 196.0, r.x1 - 264.0, r.y1 - 254.0].iter().all(|v| v.abs() < 0.05), "{r:?}");
     // Text runs only to its right.
-    let cs = designcraft_compose::compose_story(&d, sid, &Default::default());
+    let cs = pejy_compose::compose_story(&d, sid, &Default::default());
     let beside: Vec<_> = cs.frames[0].lines.iter().filter(|l| l.baseline + l.descent > 196.0 && l.baseline - l.ascent < 254.0).collect();
     assert!(!beside.is_empty());
     for l in beside {

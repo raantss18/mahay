@@ -1,4 +1,4 @@
-# Contributing to EffectCraft
+# Contributing to Tselatra
 
 Thanks for helping. Please read [AGENTS.md](AGENTS.md) first: its rules on assets and clean-room
 work apply to everyone, people and AI agents alike, and they are not negotiable.
@@ -8,7 +8,7 @@ work apply to everyone, people and AI agents alike, and they are not negotiable.
 You need [Rust](https://rustup.rs/) 1.95 or newer.
 
 ```sh
-cargo run -p effectcraft -- --demo       # the desktop app, with the demo project
+cargo run -p tselatra -- --demo       # the desktop app, with the demo project
 cargo test --workspace
 cargo xtask ci                           # what every commit must pass
 ```
@@ -42,5 +42,5 @@ cargo xtask ci                           # what every commit must pass
 
 ## Talk to us
 
-Questions, ideas and bug reports are welcome on [Discord](https://discord.gg/artcraft) and in
+Questions, ideas and bug reports are welcome on [Discord](https://github.com/raantss18/mahay/discussions) and in
 GitHub issues.

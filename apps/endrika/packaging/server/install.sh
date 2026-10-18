@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Install or upgrade figcraft-server on a Debian or Ubuntu machine, behind Caddy (TLS), as a
+# Install or upgrade endrika-server on a Debian or Ubuntu machine, behind Caddy (TLS), as a
 # server open to the public. See docs/server.md ("Running a public server").
 #
-#   sudo ./install.sh --host figcraft.example.com --email you@example.com
+#   sudo ./install.sh --host endrika.example.com --email you@example.com
 #
 # The binary comes from this folder when it is an unpacked release archive; else it is built from
 # the source tree around this script (a copy of the repository); else it is the latest release for
 # this machine (checked against SHA256SUMS.txt); else it is built from a fresh clone of the latest
 # release tag. Builds run as an unprivileged user, with a temporary swap file under 2 GB of memory.
-# It makes the `figcraft` user, its data directory and /etc/figcraft-server/server.toml (only when
+# It makes the `endrika` user, its data directory and /etc/endrika-server/server.toml (only when
 # missing: your edits are kept), installs the systemd units and its own Caddy site, opens SSH, 80
 # and 443 in ufw and starts it all. Safe to run again: it upgrades and restarts only on change.
 #
@@ -27,21 +27,21 @@
 #   -h, --help         this text
 set -euo pipefail
 
-REPO="storytold/figcraft"
-CONFIG_DIR=/etc/figcraft-server
+REPO="raantss18/endrika"
+CONFIG_DIR=/etc/endrika-server
 CONFIG="$CONFIG_DIR/server.toml"
-DATA=/var/lib/figcraft-server
-BIN=/usr/local/bin/figcraft-server
-BUILD=/var/cache/figcraft-build
-BUILDER=figcraft-build
+DATA=/var/lib/endrika-server
+BIN=/usr/local/bin/endrika-server
+BUILD=/var/cache/endrika-build
+BUILDER=endrika-build
 # Root's own work (downloads, its clone, the swap file, the built binary once copied out): never
 # a place the build user can touch.
-WORK=/var/cache/figcraft-install
-SERVICE=figcraft-server
+WORK=/var/cache/endrika-install
+SERVICE=endrika-server
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The source tree this script sits in (packaging/server/ of a copy or checkout), if any.
 LOCAL_SRC=""
-if [ -f "$HERE/../../Cargo.toml" ] && [ -d "$HERE/../../apps/figcraft-server" ]; then
+if [ -f "$HERE/../../Cargo.toml" ] && [ -d "$HERE/../../apps/endrika-server" ]; then
   LOCAL_SRC="$(cd "$HERE/../.." && pwd)"
 fi
 
@@ -60,19 +60,19 @@ say() { printf '==> %s\n' "$*"; }
 warn() { printf 'install.sh: warning: %s\n' "$*" >&2; }
 die() { printf 'install.sh: %s\n' "$*" >&2; exit 1; }
 
-MARK="# figcraft-server (install.sh)"
+MARK="# endrika-server (install.sh)"
 
 caddy_main() { # caddy_main FILE EMAIL: the main Caddyfile to install, on stdout
   local file="$1" email="$2"
-  if [ -f "$file" ] && grep -qE '^[[:space:]]*import[[:space:]]+figcraft-server\.caddy[[:space:]]*$' "$file"; then
+  if [ -f "$file" ] && grep -qE '^[[:space:]]*import[[:space:]]+endrika-server\.caddy[[:space:]]*$' "$file"; then
     cat "$file" # it imports our site already: kept exactly as it is
   elif [ ! -f "$file" ] || ! grep -qvE '^[[:space:]]*(#|$|:80|\{|\}|root|file_server)' "$file"; then
     # Missing, or only the example site the package ships: ours, with the certificate email.
-    printf '%s\n{\n\temail %s\n}\n\nimport figcraft-server.caddy\n' "$MARK" "$email"
+    printf '%s\n{\n\temail %s\n}\n\nimport endrika-server.caddy\n' "$MARK" "$email"
   else
     # Someone else's sites: kept, with one line added that imports ours.
     cat "$file"
-    printf '\nimport figcraft-server.caddy\n'
+    printf '\nimport endrika-server.caddy\n'
   fi
 }
 
@@ -111,10 +111,10 @@ ask() { # ask VAR "question" FLAG: read an answer from the terminal when the val
     printf -v "$var" '%s' "$answer"
   fi
 }
-ask HOST "DNS name people will use (e.g. figcraft.example.com):" "--host"
+ask HOST "DNS name people will use (e.g. endrika.example.com):" "--host"
 ask EMAIL "Email for Let's Encrypt and the abuse contact shown to users:" "--email"
 case "$HOST" in
-  "" | *[!A-Za-z0-9.-]* | .* | *. ) die "--host must be a DNS name like figcraft.example.com" ;;
+  "" | *[!A-Za-z0-9.-]* | .* | *. ) die "--host must be a DNS name like endrika.example.com" ;;
 esac
 case "$EMAIL" in
   *@*.*) ;;
@@ -150,7 +150,7 @@ from_release() { # download and check the release archive; sets NEW_BIN and FILE
     version="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | head -n 1)" || return 1
     [ -n "$version" ] || return 1
   fi
-  name="figcraft-server-$version-linux-$ARCH"
+  name="endrika-server-$version-linux-$ARCH"
   dir="$WORK/release"
   rm -rf "$dir"
   mkdir -p "$dir"
@@ -159,7 +159,7 @@ from_release() { # download and check the release archive; sets NEW_BIN and FILE
   curl -fsSL -o "$dir/SHA256SUMS.txt" "https://github.com/$REPO/releases/download/v$version/SHA256SUMS.txt" || return 1
   (cd "$dir" && grep " $name.tar.gz\$" SHA256SUMS.txt | sha256sum -c --quiet -) || die "the download doesn't match SHA256SUMS.txt"
   tar -C "$dir" -xzf "$dir/$name.tar.gz"
-  NEW_BIN="$dir/$name/figcraft-server"
+  NEW_BIN="$dir/$name/endrika-server"
   FILES="$dir/$name"
 }
 
@@ -225,36 +225,36 @@ from_source() { # build the source tree around this script, else a fresh clone; 
     swapon "$SWAP"
     export CARGO_BUILD_JOBS=1
   fi
-  (cd "$copy" && as_builder "$BUILD/cargo/bin/cargo" build --release --locked -p figcraft-server)
+  (cd "$copy" && as_builder "$BUILD/cargo/bin/cargo" build --release --locked -p endrika-server)
   cleanup
   SWAP=""
   # Copied out with the build user's rights into a file root made: a link the build user planted
   # can't make root read (or install) anything else.
-  NEW_BIN="$WORK/figcraft-server.built"
+  NEW_BIN="$WORK/endrika-server.built"
   rm -f "$NEW_BIN"
-  as_builder cat "$BUILD/target/release/figcraft-server" >"$NEW_BIN" || die "the build left no binary"
+  as_builder cat "$BUILD/target/release/endrika-server" >"$NEW_BIN" || die "the build left no binary"
   chmod 755 "$NEW_BIN"
   FILES="$src/packaging/server"
 }
 
-if [ -x "$HERE/figcraft-server" ] && [ "$FROM_SOURCE" = false ]; then
-  NEW_BIN="$HERE/figcraft-server" # run from an unpacked release archive
+if [ -x "$HERE/endrika-server" ] && [ "$FROM_SOURCE" = false ]; then
+  NEW_BIN="$HERE/endrika-server" # run from an unpacked release archive
 elif [ -n "$LOCAL_SRC" ] && [ -z "$VERSION" ]; then
   from_source # the source copied to (or checked out on) this machine, as it is
 elif [ "$FROM_SOURCE" = true ] || ! from_release; then
   [ "$FROM_SOURCE" = true ] || say "No release archive for linux-$ARCH: building from source instead"
   from_source
 fi
-[ -x "$NEW_BIN" ] || die "no figcraft-server binary to install"
+[ -x "$NEW_BIN" ] || die "no endrika-server binary to install"
 # The units and the Caddyfile beside this script when it has them (a checkout or an archive).
-[ -f "$HERE/figcraft-backup.timer" ] && FILES="$HERE"
-for f in figcraft-server.service Caddyfile figcraft-backup.service figcraft-backup.timer; do
+[ -f "$HERE/endrika-backup.timer" ] && FILES="$HERE"
+for f in endrika-server.service Caddyfile endrika-backup.service endrika-backup.timer; do
   [ -f "$FILES/$f" ] || die "$FILES/$f is missing"
 done
 
 # The server's own account runs the binary, from here on too (root never runs what was built).
-id -u figcraft >/dev/null 2>&1 || useradd --system --home-dir "$DATA" --shell /usr/sbin/nologin figcraft
-as_server() { runuser -u figcraft -- "$@"; }
+id -u endrika >/dev/null 2>&1 || useradd --system --home-dir "$DATA" --shell /usr/sbin/nologin endrika
+as_server() { runuser -u endrika -- "$@"; }
 
 CHANGED=false
 if ! cmp -s "$NEW_BIN" "$BIN"; then
@@ -265,12 +265,12 @@ if ! cmp -s "$NEW_BIN" "$BIN"; then
 fi
 
 # --- Data and settings ----------------------------------------------------------------------
-install -d -o figcraft -g figcraft -m 700 "$DATA"
+install -d -o endrika -g endrika -m 700 "$DATA"
 install -d -m 755 "$CONFIG_DIR"
 if [ ! -f "$CONFIG" ]; then
   say "Writing $CONFIG"
   {
-    printf '# figcraft-server settings (docs/server.md, "Configuration"). install.sh never overwrites this file.\n'
+    printf '# endrika-server settings (docs/server.md, "Configuration"). install.sh never overwrites this file.\n'
     printf 'listen = "127.0.0.1:47900"\n'
     printf 'data = "%s"\n' "$DATA"
     printf 'public_url = "wss://%s/"\n' "$HOST"
@@ -300,7 +300,7 @@ if [ ! -f "$CONFIG" ]; then
   CHANGED=true
 fi
 as_server "$BIN" --config "$CONFIG" check >/dev/null ||
-  die "$CONFIG isn't right for this figcraft-server (see above; a release older than open hosting needs --from-source)"
+  die "$CONFIG isn't right for this endrika-server (see above; a release older than open hosting needs --from-source)"
 
 install_file() { # install_file SOURCE TARGET MODE: true when it changed
   if cmp -s "$1" "$2"; then return 1; fi
@@ -309,37 +309,37 @@ install_file() { # install_file SOURCE TARGET MODE: true when it changed
 
 # --- systemd --------------------------------------------------------------------------------
 UNITS=false
-install_file "$FILES/figcraft-server.service" /etc/systemd/system/figcraft-server.service 644 && UNITS=true
-install_file "$FILES/figcraft-backup.service" /etc/systemd/system/figcraft-backup.service 644 && UNITS=true
-install_file "$FILES/figcraft-backup.timer" /etc/systemd/system/figcraft-backup.timer 644 && UNITS=true
+install_file "$FILES/endrika-server.service" /etc/systemd/system/endrika-server.service 644 && UNITS=true
+install_file "$FILES/endrika-backup.service" /etc/systemd/system/endrika-backup.service 644 && UNITS=true
+install_file "$FILES/endrika-backup.timer" /etc/systemd/system/endrika-backup.timer 644 && UNITS=true
 if [ "$UNITS" = true ]; then
   systemctl daemon-reload
   CHANGED=true
 fi
 systemctl enable --quiet "$SERVICE"
 if [ "$CHANGED" = true ] || ! systemctl is-active --quiet "$SERVICE"; then
-  say "Starting figcraft-server"
+  say "Starting endrika-server"
   systemctl restart "$SERVICE"
 fi
 if [ "$BACKUPS" = true ]; then
-  systemctl enable --now --quiet figcraft-backup.timer
+  systemctl enable --now --quiet endrika-backup.timer
 fi
 
 # --- Caddy ----------------------------------------------------------------------------------
 # Our site lives in a file of its own; the main Caddyfile only imports it (caddy_main). A
 # Caddyfile with other sites is never replaced: it only gains the import line, once.
 CADDYFILE=/etc/caddy/Caddyfile
-SITE_FILE=/etc/caddy/figcraft-server.caddy
+SITE_FILE=/etc/caddy/endrika-server.caddy
 SITE="$(mktemp)"
 MAIN="$(mktemp)"
 {
   printf '%s: written by packaging/server/install.sh (run it again to update).\n' "$MARK"
-  sed -e '/^#/d' -e "s/figcraft\.example\.com/$HOST/" "$FILES/Caddyfile" | sed -e '/./,$!d'
+  sed -e '/^#/d' -e "s/endrika\.example\.com/$HOST/" "$FILES/Caddyfile" | sed -e '/./,$!d'
 } >"$SITE"
 caddy_main "$CADDYFILE" "$EMAIL" >"$MAIN"
 CADDY_CHANGED=false
 for f in "$CADDYFILE" "$SITE_FILE"; do
-  if [ -f "$f" ]; then cp -p "$f" "$f.before-figcraft"; else rm -f "$f.before-figcraft"; fi
+  if [ -f "$f" ]; then cp -p "$f" "$f.before-endrika"; else rm -f "$f.before-endrika"; fi
 done
 install_file "$SITE" "$SITE_FILE" 644 && CADDY_CHANGED=true
 install_file "$MAIN" "$CADDYFILE" 644 && CADDY_CHANGED=true
@@ -347,7 +347,7 @@ rm -f "$SITE" "$MAIN"
 if [ "$CADDY_CHANGED" = true ]; then
   if ! caddy validate --config "$CADDYFILE" --adapter caddyfile >/dev/null 2>&1; then
     for f in "$CADDYFILE" "$SITE_FILE"; do
-      if [ -f "$f.before-figcraft" ]; then cp -p "$f.before-figcraft" "$f"; else rm -f "$f"; fi
+      if [ -f "$f.before-endrika" ]; then cp -p "$f.before-endrika" "$f"; else rm -f "$f"; fi
     done
     die "Caddy doesn't accept the new configuration (the old one is back; see: caddy validate --config $CADDYFILE)"
   fi
@@ -388,13 +388,13 @@ for _ in $(seq 1 50); do
   curl -fs http://127.0.0.1:47900/healthz >/dev/null && break
   sleep 0.2
 done
-curl -fs http://127.0.0.1:47900/healthz >/dev/null || die "figcraft-server isn't answering: journalctl -u $SERVICE"
-ADMIN="sudo -u figcraft figcraft-server --config $CONFIG"
+curl -fs http://127.0.0.1:47900/healthz >/dev/null || die "endrika-server isn't answering: journalctl -u $SERVICE"
+ADMIN="sudo -u endrika endrika-server --config $CONFIG"
 cat <<EOF
 
-figcraft-server is running behind Caddy.
+endrika-server is running behind Caddy.
 
-  Publish:   in FigCraft, Share > Publish to server..., address wss://$HOST/
+  Publish:   in Endrika, Share > Publish to server..., address wss://$HOST/
              $(if [ "$OPEN" = true ]; then echo "(open to the public: no key needed; each file gets an owner token)"; else echo "(with the key: $ADMIN key)"; fi)
   Check:     curl https://$HOST/healthz      (once DNS points here and Caddy has its certificate)
   Logs:      journalctl -u $SERVICE -f
@@ -405,7 +405,7 @@ figcraft-server is running behind Caddy.
              $ADMIN block-ip ADDRESS      (unblock-ip, blocked)
   Server key: $ADMIN key
   Settings:  $CONFIG (then: systemctl restart $SERVICE)
-  Backups:   systemctl enable --now figcraft-backup.timer   (nightly, to /var/backups/figcraft-server;
+  Backups:   systemctl enable --now endrika-backup.timer   (nightly, to /var/backups/endrika-server;
              the archives hold every file and the server key: keep them as private as the server)
   Upgrade:   run this script again
 

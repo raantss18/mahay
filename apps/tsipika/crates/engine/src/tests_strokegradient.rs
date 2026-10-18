@@ -2,10 +2,10 @@
 //! and the same picture on the canvas, after Outline Stroke and Expand, and in SVG and PDF.
 
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{Document, NodeKind, StrokeGradientMode};
-use vectorcraft_geom::Rect;
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_color::Paint;
+use tsipika_doc::{Document, NodeKind, StrokeGradientMode};
+use tsipika_geom::Rect;
+use tsipika_render::{Rendered, Renderer};
 
 use super::*;
 
@@ -83,12 +83,12 @@ fn stroke_mode_sets_how_the_gradient_lies_with_one_undo_step() {
 #[test]
 fn the_mode_round_trips_through_the_native_format_and_old_files_paint_within() {
     let (s, id) = setup("across");
-    let back = vectorcraft_format::load(&vectorcraft_format::save_file(doc(&s))).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save_file(doc(&s))).unwrap();
     assert_eq!(back.node(id).unwrap().appearance.stroke().unwrap().gradient_mode, StrokeGradientMode::Across);
     let (s, id) = setup("within");
     let json = serde_json::to_string(doc(&s).node(id).unwrap().appearance.stroke().unwrap()).unwrap();
     assert!(!json.contains("gradient_mode"), "the default is not written: {json}");
-    let old: vectorcraft_doc::StrokeLayer = serde_json::from_str(r#"{"paint":{"type":"none"},"width":2.0}"#).unwrap();
+    let old: tsipika_doc::StrokeLayer = serde_json::from_str(r#"{"paint":{"type":"none"},"width":2.0}"#).unwrap();
     assert_eq!(old.gradient_mode, StrokeGradientMode::Within);
 }
 
@@ -140,20 +140,20 @@ fn svg_and_pdf_write_the_same_gradient_as_slices_with_a_warning() {
     for mode in ["along", "across"] {
         let (s, _) = setup(mode);
         let before = render(doc(&s));
-        let (svg, warnings) = vectorcraft_svg::export_with_report(doc(&s), &Default::default());
+        let (svg, warnings) = tsipika_svg::export_with_report(doc(&s), &Default::default());
         assert!(warnings.iter().any(|w| w.contains("along or across strokes")), "{warnings:?}");
         assert!(svg.contains("<clipPath") && svg.matches("<linearGradient").count() > 3, "{mode}: sliced");
-        let back = vectorcraft_svg::import(&svg).unwrap();
+        let back = tsipika_svg::import(&svg).unwrap();
         assert_same(&before, &render(&back), 0.04, &format!("{mode} SVG"));
-        let opts = vectorcraft_pdf::PdfOptions::uncompressed();
-        let r = vectorcraft_pdf::export_with_report(doc(&s), &opts).unwrap();
+        let opts = tsipika_pdf::PdfOptions::uncompressed();
+        let r = tsipika_pdf::export_with_report(doc(&s), &opts).unwrap();
         assert!(r.warnings.iter().any(|w| w.contains("along or across strokes")), "{:?}", r.warnings);
         assert!(String::from_utf8_lossy(&r.bytes).matches("/ShadingType 2").count() > 3, "{mode}: axial shadings");
-        let back = vectorcraft_pdf::import(&r.bytes).unwrap();
+        let back = tsipika_pdf::import(&r.bytes).unwrap();
         assert_same(&before, &render(&back), 0.04, &format!("{mode} PDF"));
     }
     // Within, a stroke is still written as one plain stroke.
     let (s, _) = setup("within");
-    let (svg, warnings) = vectorcraft_svg::export_with_report(doc(&s), &Default::default());
+    let (svg, warnings) = tsipika_svg::export_with_report(doc(&s), &Default::default());
     assert!(warnings.is_empty() && !svg.contains("<clipPath"));
 }

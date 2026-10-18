@@ -1107,11 +1107,11 @@ mod tests {
         refused(&m, "weights are too large");
     }
 
-    /// The official face models (`EFFECTCRAFT_FACE_LANDMARKER` = path to `face_landmarker.task`)
+    /// The official face models (`TSELATRA_FACE_LANDMARKER` = path to `face_landmarker.task`)
     /// fit every budget with wide headroom.
     #[test]
     fn official_face_models_fit_the_budgets() {
-        let Some(path) = std::env::var_os("EFFECTCRAFT_FACE_LANDMARKER") else { return };
+        let Some(path) = std::env::var_os("TSELATRA_FACE_LANDMARKER") else { return };
         let bytes = std::fs::read(path).unwrap();
         for name in [crate::mediapipe::DETECTOR, crate::mediapipe::MESH] {
             let c = Model::read(&crate::pt::zip_file(&bytes, name).unwrap()).unwrap().cost().unwrap();

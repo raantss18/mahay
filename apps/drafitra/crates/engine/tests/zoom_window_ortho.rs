@@ -1,8 +1,8 @@
 //! ZOOM Window's opposite corner ignores ortho: the window stays a rectangle (#787).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::snap::tracking::CursorQuery;
-use cadcraft_geom::Vec2;
+use drafitra_engine::Session;
+use drafitra_engine::snap::tracking::CursorQuery;
+use drafitra_geom::Vec2;
 use serde_json::json;
 
 /// Move the cursor to `raw` at the current prompt, as the canvas does.

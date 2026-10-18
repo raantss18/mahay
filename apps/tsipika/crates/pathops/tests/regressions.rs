@@ -2,8 +2,8 @@
 //! deterministic tests.
 
 use kurbo::{BezPath, Shape as _};
-use vectorcraft_geom::{Anchor, FillRule, PathData, SubPath};
-use vectorcraft_pathops::*;
+use tsipika_geom::{Anchor, FillRule, PathData, SubPath};
+use tsipika_pathops::*;
 
 const NZ: FillRule = FillRule::NonZero;
 

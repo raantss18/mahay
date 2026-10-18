@@ -1,12 +1,12 @@
 //! Real library/tool panel moves preserve the selected tool and saved arrangement.
 use egui::{Event, Modifiers, PointerButton, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
-use lightcraft_ui_egui::{LightcraftApp, Services, UiState, docking::Panel, state::RightPanel};
+use hazavana_ui_egui::{HazavanaApp, Services, UiState, docking::Panel, state::RightPanel};
 use serde_json::json;
 use std::time::{Duration, Instant};
 
-fn harness(state: Option<UiState>, width: f32, scale: f32) -> Harness<'static, LightcraftApp> {
-    let mut app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+fn harness(state: Option<UiState>, width: f32, scale: f32) -> Harness<'static, HazavanaApp> {
+    let mut app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     if let Some(state) = state {
         app.ui = state;
     } else {
@@ -14,7 +14,7 @@ fn harness(state: Option<UiState>, width: f32, scale: f32) -> Harness<'static, L
         app.ui.right = RightPanel::Edit;
     }
     let mut h = Harness::builder().with_size(vec2(width, 900.0)).with_pixels_per_point(scale).build_ui_state(
-        |ui, app: &mut LightcraftApp| {
+        |ui, app: &mut HazavanaApp| {
             app.logic(&ui.ctx().clone());
             app.ui(ui);
         },
@@ -24,7 +24,7 @@ fn harness(state: Option<UiState>, width: f32, scale: f32) -> Harness<'static, L
     h
 }
 
-fn drag(h: &mut Harness<'_, LightcraftApp>, from: egui::Pos2, to: egui::Pos2) {
+fn drag(h: &mut Harness<'_, HazavanaApp>, from: egui::Pos2, to: egui::Pos2) {
     h.event(Event::PointerMoved(from));
     h.run_steps(2);
     h.event(Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -37,7 +37,7 @@ fn drag(h: &mut Harness<'_, LightcraftApp>, from: egui::Pos2, to: egui::Pos2) {
     h.run_steps(4);
 }
 
-fn settle_photo(h: &mut Harness<'_, LightcraftApp>) {
+fn settle_photo(h: &mut Harness<'_, HazavanaApp>) {
     let started = Instant::now();
     let mut quiet = 0;
     while quiet < 4 {
@@ -116,7 +116,7 @@ fn docking_renders_real_photo_panels_default_floating_and_redocked() {
                 h.run_steps(8);
                 settle_photo(&mut h);
                 h.state().ui.docking.as_ref().unwrap().validate().unwrap();
-                if let Ok(directory) = std::env::var("CRAFT_UI_DOCKING_DIR") {
+                if let Ok(directory) = std::env::var("MAHAY_UI_DOCKING_DIR") {
                     std::fs::create_dir_all(&directory).unwrap();
                     h.render().unwrap().save(format!("{directory}/light-{width}-{scale}-{state}.png")).unwrap();
                 }

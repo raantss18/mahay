@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use super::DialogSpec;
 use super::form;
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 pub(super) const KIND: &str = "placementOptions";
 const CMD: &str = "links.placementOptions";
@@ -30,7 +30,7 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Placement Options").into(), body, confirm, min_width: 400.0, max_width: Some(420.0), ..DialogSpec::FORM };
 
 /// Open the dialog on the placement options of images `ids` (default: the selected ones).
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let ids = p.get("ids").cloned().unwrap_or(Value::Null);
     let r = app.session.execute(CMD, &json!({ "ids": ids })).map_err(|e| e.to_string())?;
     let mut fields = r["placement"].clone();
@@ -39,7 +39,7 @@ pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     Ok(Value::Null)
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let r = app.run(CMD, Value::Object(d.fields.clone()));
     if r.is_ok() {
         app.ui.dialog = None;
@@ -47,7 +47,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     r
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     form::choice(ui, d, "preserve", tl!("Preserve:"), (LABEL, 240.0), &PRESERVE);
     ui.add_space(8.0);
     // Bounds stretches the art into the old bounds: nothing to align or clip.

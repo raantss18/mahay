@@ -1,25 +1,25 @@
 //! Composition Settings: saving, picking and deleting your own presets (egui_kittest).
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::{Dialog, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_ui_egui::{Dialog, TselatraApp};
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, pos2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn harness() -> Harness<'static, EffectcraftApp> {
+fn harness() -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Edit", "width": 2560, "height": 1440, "frameRate": 60, "duration": 4})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let p = center(h, id);
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -29,20 +29,20 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
     h.run_steps(3);
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(3);
 }
 
-fn open_settings(h: &mut Harness<'_, EffectcraftApp>) {
+fn open_settings(h: &mut Harness<'_, TselatraApp>) {
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "comp.settings", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "comp.settings", json!({})).unwrap();
     h.run_steps(3);
     assert_eq!(h.state().dialog, Some(Dialog::CompSettings));
 }
 
-fn preset_names(h: &Harness<'_, EffectcraftApp>) -> Vec<String> {
+fn preset_names(h: &Harness<'_, TselatraApp>) -> Vec<String> {
     h.state().session.prefs.comp_presets.iter().map(|q| q.name.clone()).collect()
 }
 

@@ -40,7 +40,7 @@ macro_rules! language_table {
             }
 
             /// The ISO 15924 script this language is written in (`"Latn"`, `"Jpan"`, `"Hans"`…):
-            /// the craft-fonts faces for it are the ones this language needs.
+            /// the mahay-fonts faces for it are the ones this language needs.
             pub const fn script(self) -> &'static str {
                 match self { Self::$source => "Latn", $(Self::$variant => $script,)* }
             }
@@ -151,9 +151,9 @@ thread_local! {
     static LOCALE: std::cell::Cell<Locale> = const { std::cell::Cell::new(Locale::En) };
 }
 
-/// The UI language from the environment (`LIGHTCRAFT_LANGUAGE=zh-hans`), for headless runs.
+/// The UI language from the environment (`HAZAVANA_LANGUAGE=zh-hans`), for headless runs.
 pub fn default_language() -> Locale {
-    std::env::var("LIGHTCRAFT_LANGUAGE").ok().and_then(|value| Locale::parse_tag(&value)).unwrap_or(Locale::En)
+    std::env::var("HAZAVANA_LANGUAGE").ok().and_then(|value| Locale::parse_tag(&value)).unwrap_or(Locale::En)
 }
 
 pub fn set_language(language: Locale) {
@@ -210,21 +210,21 @@ include!(concat!(env!("OUT_DIR"), "/tr-formats.rs"));
 /// (issue #260), in the UI language: the error and, when there is one, the log file to look in.
 pub fn startup_failed_message(error: &str, log_file: Option<&str>) -> (String, String) {
     let text = match log_file {
-        Some(path) => tr_format!("LightCraft could not open its window: {e}\n\nThe log file has the details: {path}", e = error, path = path),
-        None => tr_format!("LightCraft could not open its window: {e}", e = error),
+        Some(path) => tr_format!("Hazavana could not open its window: {e}\n\nThe log file has the details: {path}", e = error, path = path),
+        None => tr_format!("Hazavana could not open its window: {e}", e = error),
     };
-    (tr("LightCraft could not start").to_string(), text)
+    (tr("Hazavana could not start").to_string(), text)
 }
 
-/// The title and text of the message box shown when LightCraft stopped while its window was up
+/// The title and text of the message box shown when Hazavana stopped while its window was up
 /// (issue #1337: the window's renderer after the graphics driver reset the GPU), in the UI
 /// language: what happened and, when there is one, the log file to look in.
 pub fn stopped_message(error: &str, log_file: Option<&str>) -> (String, String) {
     let text = match log_file {
-        Some(path) => tr_format!("LightCraft stopped unexpectedly: {e}\n\nThe log file has the details: {path}", e = error, path = path),
-        None => tr_format!("LightCraft stopped unexpectedly: {e}", e = error),
+        Some(path) => tr_format!("Hazavana stopped unexpectedly: {e}\n\nThe log file has the details: {path}", e = error, path = path),
+        None => tr_format!("Hazavana stopped unexpectedly: {e}", e = error),
     };
-    (tr("LightCraft stopped").to_string(), text)
+    (tr("Hazavana stopped").to_string(), text)
 }
 
 /// Whether sentence case may upper-case `c`. Georgian has no case: upper-casing Mkhedruli would
@@ -250,12 +250,12 @@ pub fn builtin_label(source: &str, builtin: bool) -> &str {
 /// A profile's name for display: a built-in profile's is translated, an imported LUT's is shown as
 /// its file named it (it may happen to match a message, like "Vivid").
 pub fn profile_label<'a>(id: &str, name: &'a str) -> &'a str {
-    builtin_label(name, lightcraft_engine::presets::profile(id).is_some())
+    builtin_label(name, hazavana_engine::presets::profile(id).is_some())
 }
 
 /// An Activity (history) step for display. The step's stored label stays English; generated steps
 /// are translated around the names they carry, and a user preset's name is kept verbatim.
-pub fn history_label(source: &str, presets: &[lightcraft_develop::Preset]) -> String {
+pub fn history_label(source: &str, presets: &[hazavana_develop::Preset]) -> String {
     if let Some(name) = source.strip_prefix("Preset: ") {
         // A user preset may share a stock preset's name: then the step could be either, so it
         // keeps the name as written.
@@ -273,16 +273,16 @@ pub fn history_label(source: &str, presets: &[lightcraft_develop::Preset]) -> St
 
 /// A library source's heading (All Photos, Recently Deleted…) in the UI language; an album's
 /// name is the user's and stays verbatim.
-pub fn source_label(source: lightcraft_engine::LibrarySource, catalog: &lightcraft_catalog::Catalog) -> String {
+pub fn source_label(source: hazavana_engine::LibrarySource, catalog: &hazavana_catalog::Catalog) -> String {
     let label = source.label(catalog);
-    if matches!(source, lightcraft_engine::LibrarySource::Album(id) if catalog.album(id).is_some()) { label } else { tr(&label).to_string() }
+    if matches!(source, hazavana_engine::LibrarySource::Album(id) if catalog.album(id).is_some()) { label } else { tr(&label).to_string() }
 }
 
 /// What the grid is titled for the session's source: [`source_label`], or a library folder's last
 /// two names (`photos/travel`; the folder's name is the user's and stays verbatim).
-pub fn source_title(session: &lightcraft_engine::Session) -> String {
+pub fn source_title(session: &hazavana_engine::Session) -> String {
     match (session.source, session.library_folder.as_deref()) {
-        (lightcraft_engine::LibrarySource::LibraryFolder, Some(path)) => lightcraft_catalog::folders::folder_label(path),
+        (hazavana_engine::LibrarySource::LibraryFolder, Some(path)) => hazavana_catalog::folders::folder_label(path),
         (source, _) => source_label(source, &session.catalog),
     }
 }
@@ -292,7 +292,7 @@ pub fn source_title(session: &lightcraft_engine::Session) -> String {
 /// catalog's own wording; every other language formats it with its `*-formats.json` date
 /// patterns and weekday names. The grouping keys themselves never change.
 pub fn date_group_label(key: &str, short: bool) -> String {
-    let label = lightcraft_catalog::dates::group_label(key);
+    let label = hazavana_catalog::dates::group_label(key);
     if language() == Locale::En {
         return if short {
             match key.len() {
@@ -317,7 +317,7 @@ pub fn date_group_label(key: &str, short: bool) -> String {
         return if short { tr_format!("{month}", month = month) } else { tr_format!("{month} {year}", month = month, year = year) };
     }
     if key.len() == 10
-        && let Some(weekday) = lightcraft_catalog::dates::weekday(key)
+        && let Some(weekday) = hazavana_catalog::dates::weekday(key)
         && let Some(day) = key.get(8..10).and_then(|d| d.parse::<u32>().ok())
     {
         let weekday = tr(weekday);
@@ -333,8 +333,8 @@ pub fn date_group_label(key: &str, short: bool) -> String {
 /// A capture time for display in the UI language (English: "March 30, 2022 at 10:11:11 PM");
 /// the metadata itself is never rewritten, and a value that doesn't parse is shown as it is.
 pub fn display_time(iso: &str) -> String {
-    if language() == Locale::En || lightcraft_catalog::dates::normalize_iso(iso).is_none() {
-        return lightcraft_catalog::dates::display_time(iso);
+    if language() == Locale::En || hazavana_catalog::dates::normalize_iso(iso).is_none() {
+        return hazavana_catalog::dates::display_time(iso);
     }
     let date = date_group_label(iso.get(..10).unwrap_or(iso), false);
     match iso.get(11..).filter(|time| !time.is_empty()) {
@@ -344,16 +344,16 @@ pub fn display_time(iso: &str) -> String {
 }
 
 /// Built-in colour names are translated; custom label names are user data.
-pub fn color_label(catalog: &lightcraft_catalog::Catalog, label: lightcraft_catalog::ColorLabel) -> String {
+pub fn color_label(catalog: &hazavana_catalog::Catalog, label: hazavana_catalog::ColorLabel) -> String {
     catalog.custom_label_name(label).map_or_else(|| tr(&catalog.label_name(label)).to_string(), str::to_string)
 }
 
 /// A legacy smart-album filter summary, using the same display labels as filter chips.
-pub fn filter_label(filter: &lightcraft_catalog::Filter, catalog: &lightcraft_catalog::Catalog) -> String {
+pub fn filter_label(filter: &hazavana_catalog::Filter, catalog: &hazavana_catalog::Catalog) -> String {
     if language() == Locale::En {
         filter.describe_with(catalog)
     } else {
-        lightcraft_engine::filter_chips(filter, catalog)
+        hazavana_engine::filter_chips(filter, catalog)
             .iter()
             .map(|chip| crate::panels::chips::display_label(chip, filter, catalog))
             .collect::<Vec<_>>()
@@ -363,27 +363,27 @@ pub fn filter_label(filter: &lightcraft_catalog::Filter, catalog: &lightcraft_ca
 
 /// What people read for a smart-album rule's problem, under its row: the field's name and the
 /// issue, in the current language ("Title: needs something to look for").
-pub fn problem_text(problem: &lightcraft_catalog::rules::Problem) -> String {
+pub fn problem_text(problem: &hazavana_catalog::rules::Problem) -> String {
     problem_text_in(language(), problem)
 }
 
 /// [`problem_text`] with the rule's position first ("#2.1 Rating: …"), for lists away from the
 /// editor (the sidebar's tooltip).
-pub fn problem_line(problem: &lightcraft_catalog::rules::Problem) -> String {
+pub fn problem_line(problem: &hazavana_catalog::rules::Problem) -> String {
     problem_line_in(language(), problem)
 }
 
-fn problem_text_in(language: Locale, problem: &lightcraft_catalog::rules::Problem) -> String {
+fn problem_text_in(language: Locale, problem: &hazavana_catalog::rules::Problem) -> String {
     let issue = tr_in(language, problem.issue.text());
     // Japanese and Chinese catalogs join a label and its text with a full-width colon
     let colon = if matches!(language.script(), "Jpan" | "Hans" | "Hant") { "：" } else { ": " };
     match problem.field.as_deref() {
-        Some(field) => format!("{}{colon}{issue}", tr_in(language, lightcraft_catalog::rules::field_label(field).unwrap_or(field))),
+        Some(field) => format!("{}{colon}{issue}", tr_in(language, hazavana_catalog::rules::field_label(field).unwrap_or(field))),
         None => issue.to_string(),
     }
 }
 
-fn problem_line_in(language: Locale, problem: &lightcraft_catalog::rules::Problem) -> String {
+fn problem_line_in(language: Locale, problem: &hazavana_catalog::rules::Problem) -> String {
     let at: Vec<String> = problem.path.iter().map(|i| i.saturating_add(1).to_string()).collect();
     // a problem with the album filter around the rules has no rule to point at
     if at.is_empty() {
@@ -399,7 +399,7 @@ pub fn choice_text<'a>(field: &str, id: &'a str) -> &'a str {
 }
 
 fn choice_text_in<'a>(language: Locale, field: &str, id: &'a str) -> &'a str {
-    lightcraft_catalog::rules::choice_label(field, id).map_or(id, |label| tr_in(language, label))
+    hazavana_catalog::rules::choice_label(field, id).map_or(id, |label| tr_in(language, label))
 }
 
 /// What people read for a smart-album yes/no value ("Ja" / "Nein" in German).
@@ -411,13 +411,13 @@ pub fn bool_text(b: bool) -> &'static str {
 const BOOL_CONTEXT: &str = "smart album value";
 
 fn bool_text_in(language: Locale, b: bool) -> &'static str {
-    tr_ctx_in(language, BOOL_CONTEXT, lightcraft_catalog::rules::bool_label(b))
+    tr_ctx_in(language, BOOL_CONTEXT, hazavana_catalog::rules::bool_label(b))
 }
 
 /// A rule summary for display, keeping free-text rule values verbatim.
-pub fn rules_label(rules: &lightcraft_catalog::RuleSet, catalog: &lightcraft_catalog::Catalog) -> String {
-    fn describe(rules: &lightcraft_catalog::RuleSet, catalog: &lightcraft_catalog::Catalog, depth: usize) -> String {
-        use lightcraft_catalog::{
+pub fn rules_label(rules: &hazavana_catalog::RuleSet, catalog: &hazavana_catalog::Catalog) -> String {
+    fn describe(rules: &hazavana_catalog::RuleSet, catalog: &hazavana_catalog::Catalog, depth: usize) -> String {
+        use hazavana_catalog::{
             Match, Rule,
             rules::{FIELDS, Kind, ops_for},
         };
@@ -434,9 +434,9 @@ pub fn rules_label(rules: &lightcraft_catalog::RuleSet, catalog: &lightcraft_cat
                     let operator = ops_for(*kind).iter().find(|entry| entry.0 == op).map_or(op.as_str(), |entry| entry.1);
                     let text = match kind {
                         // the album's name, as people know it (a user's name is never translated)
-                        Kind::Album => lightcraft_catalog::rules::album_name(value, Some(catalog)),
+                        Kind::Album => hazavana_catalog::rules::album_name(value, Some(catalog)),
                         Kind::Choice(_) => value.as_str().map_or_else(|| value.to_string(), |id| choice_text(field, id).to_string()),
-                        Kind::Bool => lightcraft_catalog::rules::bool_value(value).map_or_else(|| value.to_string(), |b| bool_text(b).to_string()),
+                        Kind::Bool => hazavana_catalog::rules::bool_value(value).map_or_else(|| value.to_string(), |b| bool_text(b).to_string()),
                         _ if matches!(op.as_str(), "inLast" | "notInLast") => format!(
                             "{} {}",
                             value.get("n").unwrap_or(&serde_json::Value::Null),
@@ -471,13 +471,13 @@ mod tests {
         if !lacking.is_empty() {
             eprintln!("cs lacks {} catalog message(s) (shown in English): {lacking:?}", lacking.len());
         }
-        let mut labels: Vec<&str> = lightcraft_engine::command_specs().iter().map(|spec| spec.label).collect();
+        let mut labels: Vec<&str> = hazavana_engine::command_specs().iter().map(|spec| spec.label).collect();
         labels.extend(crate::menus::ui_commands().map(|command| command.1).filter(|label| !Locale::ALL.iter().any(|locale| locale.name() == *label)));
-        labels.extend(lightcraft_develop::CONTROLS.iter().map(|control| control.label));
+        labels.extend(hazavana_develop::CONTROLS.iter().map(|control| control.label));
         labels.extend(crate::panels::settings::TABS.iter().map(|(_, label)| *label));
-        labels.extend(lightcraft_catalog::rules::FIELD_GROUPS.iter().map(|group| group.0));
-        labels.extend(lightcraft_engine::rename::TOKENS.iter().map(|token| token.meaning));
-        labels.extend(lightcraft_engine::rename::TEMPLATE_NOTES);
+        labels.extend(hazavana_catalog::rules::FIELD_GROUPS.iter().map(|group| group.0));
+        labels.extend(hazavana_engine::rename::TOKENS.iter().map(|token| token.meaning));
+        labels.extend(hazavana_engine::rename::TEMPLATE_NOTES);
         let missing: Vec<_> = labels.into_iter().filter(|label| !catalog.contains_key(*label)).collect();
         if !missing.is_empty() {
             eprintln!("cs lacks {} display label(s) (shown in English): {missing:?}", missing.len());
@@ -487,7 +487,7 @@ mod tests {
     #[test]
     fn czech_switches_persists_and_formats_without_changing_user_values() {
         use crate::control::{ControlRequest, Outcome};
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.run("app.language.czech", serde_json::json!({})).unwrap();
         assert_eq!(app.ui.language, Locale::Cs);
         assert_eq!(Locale::Cs.name(), "Čeština");
@@ -596,9 +596,9 @@ mod tests {
     /// file, in the UI language.
     #[test]
     fn startup_failure_message_names_the_error_and_the_log() {
-        let (title, text) = startup_failed_message("no adapter", Some("/home/a/.config/lightcraft/logs/lightcraft.log"));
-        assert_eq!(title, "LightCraft could not start");
-        assert!(text.contains("no adapter") && text.ends_with("lightcraft.log"), "{text}");
+        let (title, text) = startup_failed_message("no adapter", Some("/home/a/.config/hazavana/logs/hazavana.log"));
+        assert_eq!(title, "Hazavana could not start");
+        assert!(text.contains("no adapter") && text.ends_with("hazavana.log"), "{text}");
         assert!(!startup_failed_message("no adapter", None).1.contains("log file"));
     }
 
@@ -689,12 +689,12 @@ mod tests {
     }
 
     /// Every character a catalog paints has a glyph in the fonts the UI installs, so a translation
-    /// never shows as boxes. Without craft-fonts there are no CJK faces at all, and the CJK
+    /// never shows as boxes. Without mahay-fonts there are no CJK faces at all, and the CJK
     /// catalogs are skipped (the same degradation the Japanese UI has always had).
     #[test]
     fn catalog_characters_are_paintable() {
         let ctx = egui::Context::default();
-        ctx.set_fonts(crate::theme::font_definitions(lightcraft_engine::CRAFT_FONTS));
+        ctx.set_fonts(crate::theme::font_definitions(hazavana_engine::MAHAY_FONTS));
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
         out.textures_delta.clear();
         for language in Locale::ALL {
@@ -702,13 +702,13 @@ mod tests {
             if messages.is_empty() {
                 continue;
             }
-            // The faces this language's script needs; a language the craft-fonts input does not
+            // The faces this language's script needs; a language the mahay-fonts input does not
             // cover (a translation added ahead of its font) is reported, not failed.
             let mut faces: Vec<&str> =
-                lightcraft_engine::CRAFT_FONTS.iter().filter(|font| font.serves(language.script())).map(|font| font.family).collect();
+                hazavana_engine::MAHAY_FONTS.iter().filter(|font| font.serves(language.script())).map(|font| font.family).collect();
             faces.dedup();
             if faces.is_empty() {
-                lightcraft_testkit::skip!(Fonts, "{}: built without a craft-fonts face for {}", language.code(), language.script());
+                hazavana_testkit::skip!(Fonts, "{}: built without a mahay-fonts face for {}", language.code(), language.script());
                 continue;
             }
             ctx.fonts_mut(|fonts| {
@@ -737,7 +737,7 @@ mod tests {
     #[test]
     fn interface_symbols_are_paintable() {
         let ctx = egui::Context::default();
-        ctx.set_fonts(crate::theme::font_definitions(lightcraft_engine::CRAFT_FONTS));
+        ctx.set_fonts(crate::theme::font_definitions(hazavana_engine::MAHAY_FONTS));
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
         out.textures_delta.clear();
         // ⌥ and ⌫ come from egui's bundled fonts; ▸ and ▾ are in neither (measured 2026-10-07).
@@ -749,7 +749,7 @@ mod tests {
         });
     }
 
-    /// Symbols a translation must not carry, because the craft-fonts faces of at least one shipped
+    /// Symbols a translation must not carry, because the mahay-fonts faces of at least one shipped
     /// script have no glyph for them and egui's bundled fonts do not either: the menu triangles,
     /// and the heavy multiplication X (U+2715) that Noto Sans Georgian lacks — `×` (U+00D7) reads
     /// the same and every face has it.
@@ -830,7 +830,7 @@ mod tests {
     /// in the middle of a translated rule.
     #[test]
     fn choice_values_read_as_words_in_every_language() {
-        use lightcraft_catalog::rules::{FIELDS, Kind};
+        use hazavana_catalog::rules::{FIELDS, Kind};
         assert_eq!(choice_text_in(Locale::En, "copyrightStatus", "publicDomain"), "Public Domain");
         assert_eq!(choice_text_in(Locale::De, "copyrightStatus", "publicDomain"), "Gemeinfrei");
         assert_eq!(choice_text_in(Locale::De, "copyrightStatus", "someday"), "someday");
@@ -855,7 +855,7 @@ mod tests {
             assert!(!ja.contains("あり") && !ja.contains("なし"), "{field}: {ja}");
         }
         // a contextual entry names a real value (a typo would silently fall back to はい / いいえ)
-        let values = [lightcraft_catalog::rules::bool_label(true), lightcraft_catalog::rules::bool_label(false)];
+        let values = [hazavana_catalog::rules::bool_label(true), hazavana_catalog::rules::bool_label(false)];
         for language in Locale::ALL {
             for key in language.catalog().keys() {
                 if let Some(value) = key.strip_prefix(BOOL_CONTEXT).and_then(|k| k.strip_prefix('|')) {
@@ -864,7 +864,7 @@ mod tests {
             }
         }
         for language in Locale::ALL.iter().filter(|language| **language != Locale::En) {
-            for label in [lightcraft_catalog::rules::bool_label(true), lightcraft_catalog::rules::bool_label(false)] {
+            for label in [hazavana_catalog::rules::bool_label(true), hazavana_catalog::rules::bool_label(false)] {
                 assert!(language.catalog().contains_key(label), "{} lacks {label:?}", language.code());
             }
         }
@@ -887,10 +887,10 @@ mod tests {
     /// is translated in every language: an English one would stand out in a translated editor.
     #[test]
     fn problems_read_in_every_language() {
-        use lightcraft_catalog::rules::Issue;
-        let cat = lightcraft_catalog::Catalog::new();
+        use hazavana_catalog::rules::Issue;
+        let cat = hazavana_catalog::Catalog::new();
         let problems = |rules: serde_json::Value| {
-            serde_json::from_value::<lightcraft_catalog::RuleSet>(serde_json::json!({"rules": rules})).unwrap().check(&cat)
+            serde_json::from_value::<hazavana_catalog::RuleSet>(serde_json::json!({"rules": rules})).unwrap().check(&cat)
         };
         let p = problems(serde_json::json!([{"field": "rating", "op": "gte", "value": 3}, {"field": "title", "op": "contains", "value": ""}]));
         assert_eq!(problem_text_in(Locale::En, &p[0]), "Title: needs something to look for (or use “is empty”)");
@@ -900,14 +900,14 @@ mod tests {
         assert_eq!(problem_text_in(Locale::Ja, &p[0]), "タイトル：検索する語句が必要です（または「が空」を使用）");
         // a problem with the album filter itself has no rule position to show
         let filter_loop =
-            lightcraft_catalog::rules::Problem { path: Vec::new(), field: Some("album".into()), issue: Issue::AlbumLoop, message: String::new() };
+            hazavana_catalog::rules::Problem { path: Vec::new(), field: Some("album".into()), issue: Issue::AlbumLoop, message: String::new() };
         assert!(problem_line_in(Locale::En, &filter_loop).starts_with("Album: "), "{}", problem_line_in(Locale::En, &filter_loop));
         let g = problems(serde_json::json!([{"group": {"rules": []}}]));
         assert_eq!(problem_text_in(Locale::En, &g[0]), "This group is empty: add a rule or remove it.");
         // the issues, the operators their hints name and the album picker's words, in every language
         for language in Locale::ALL.iter().filter(|l| **l != Locale::En) {
             // the field menu: every field and every group, so it never mixes languages
-            for label in lightcraft_catalog::rules::FIELDS.iter().map(|f| f.1).chain(lightcraft_catalog::rules::FIELD_GROUPS.iter().map(|g| g.0)) {
+            for label in hazavana_catalog::rules::FIELDS.iter().map(|f| f.1).chain(hazavana_catalog::rules::FIELD_GROUPS.iter().map(|g| g.0)) {
                 assert!(language.catalog().contains_key(label), "{} lacks the rule label {label:?}", language.code());
             }
             for word in [
@@ -924,8 +924,8 @@ mod tests {
             for issue in Issue::ALL {
                 assert!(language.catalog().contains_key(issue.text()), "{} lacks {:?}", language.code(), issue.text());
             }
-            for (_, _, kind) in lightcraft_catalog::rules::FIELDS {
-                for (_, op) in lightcraft_catalog::rules::ops_for(*kind) {
+            for (_, _, kind) in hazavana_catalog::rules::FIELDS {
+                for (_, op) in hazavana_catalog::rules::ops_for(*kind) {
                     assert!(language.catalog().contains_key(*op), "{} lacks the operator {op:?}", language.code());
                 }
             }
@@ -954,16 +954,16 @@ mod tests {
         if !lacking.is_empty() {
             eprintln!("uk lacks {} catalog message(s) (shown in English): {lacking:?}", lacking.len());
         }
-        let mut labels: Vec<&str> = lightcraft_engine::command_specs().iter().map(|spec| spec.label).collect();
+        let mut labels: Vec<&str> = hazavana_engine::command_specs().iter().map(|spec| spec.label).collect();
         labels.extend(crate::menus::ui_commands().map(|command| command.1).filter(|label| !Locale::ALL.iter().any(|locale| locale.name() == *label)));
-        labels.extend(lightcraft_develop::CONTROLS.iter().map(|control| control.label));
+        labels.extend(hazavana_develop::CONTROLS.iter().map(|control| control.label));
         labels.extend(crate::panels::settings::TABS.iter().map(|(_, label)| *label));
-        for (_, label, kind) in lightcraft_catalog::rules::FIELDS {
+        for (_, label, kind) in hazavana_catalog::rules::FIELDS {
             labels.push(label);
-            labels.extend(lightcraft_catalog::rules::ops_for(*kind).iter().map(|(_, label)| *label));
+            labels.extend(hazavana_catalog::rules::ops_for(*kind).iter().map(|(_, label)| *label));
         }
-        labels.extend(lightcraft_engine::rename::TOKENS.iter().map(|token| token.meaning));
-        labels.extend(lightcraft_engine::rename::TEMPLATE_NOTES);
+        labels.extend(hazavana_engine::rename::TOKENS.iter().map(|token| token.meaning));
+        labels.extend(hazavana_engine::rename::TEMPLATE_NOTES);
         let missing: Vec<_> = labels.into_iter().filter(|label| !catalog.contains_key(*label)).collect();
         if !missing.is_empty() {
             eprintln!("uk lacks {} display label(s) (shown in English): {missing:?}", missing.len());
@@ -973,7 +973,7 @@ mod tests {
     #[test]
     fn ukrainian_switches_persists_formats_dates_and_preserves_values() {
         use crate::control::{ControlRequest, Outcome};
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.run("app.language.ukrainian", serde_json::json!({})).unwrap();
         assert_eq!(app.ui.language, Locale::Uk);
         assert_eq!(crate::menubar::checked(&app, "app.language.ukrainian"), Some(true));
@@ -1018,7 +1018,7 @@ mod tests {
 
     #[test]
     fn georgian_switches_formats_counts_and_dates() {
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.run("app.language.georgian", serde_json::json!({})).unwrap();
         assert_eq!(app.ui.language, Locale::Ka);
         assert_eq!(crate::menubar::checked(&app, "app.language.georgian"), Some(true));
@@ -1044,11 +1044,11 @@ mod tests {
     #[test]
     fn ukrainian_panels_dialogs_and_letters_paint_with_bundled_fonts() {
         let ctx = fonts_ctx(&[]);
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.ui.left_panel = true;
         let text = painted_text(&ctx, &mut app, Locale::Uk);
         assert!(text.contains("Мої фото") && text.contains("Усі фото"), "{text}");
-        for (command, title) in [("app.about", "Про LightCraft"), ("app.shortcuts", "Клавіатурні скорочення"), ("app.settings", "Налаштування")]
+        for (command, title) in [("app.about", "Про Hazavana"), ("app.shortcuts", "Клавіатурні скорочення"), ("app.settings", "Налаштування")]
         {
             app.ui.dialog = None;
             app.run(command, serde_json::json!({})).unwrap();
@@ -1078,16 +1078,16 @@ mod tests {
         if !lacking.is_empty() {
             eprintln!("it lacks {} catalog message(s) (shown in English): {lacking:?}", lacking.len());
         }
-        let mut labels: Vec<&str> = lightcraft_engine::command_specs().iter().map(|spec| spec.label).collect();
+        let mut labels: Vec<&str> = hazavana_engine::command_specs().iter().map(|spec| spec.label).collect();
         labels.extend(crate::menus::ui_commands().map(|command| command.1).filter(|label| !Locale::ALL.iter().any(|locale| locale.name() == *label)));
-        labels.extend(lightcraft_develop::CONTROLS.iter().map(|control| control.label));
+        labels.extend(hazavana_develop::CONTROLS.iter().map(|control| control.label));
         labels.extend(crate::panels::settings::TABS.iter().map(|(_, label)| *label));
-        for (_, label, kind) in lightcraft_catalog::rules::FIELDS {
+        for (_, label, kind) in hazavana_catalog::rules::FIELDS {
             labels.push(label);
-            labels.extend(lightcraft_catalog::rules::ops_for(*kind).iter().map(|(_, label)| *label));
+            labels.extend(hazavana_catalog::rules::ops_for(*kind).iter().map(|(_, label)| *label));
         }
-        labels.extend(lightcraft_engine::rename::TOKENS.iter().map(|token| token.meaning));
-        labels.extend(lightcraft_engine::rename::TEMPLATE_NOTES);
+        labels.extend(hazavana_engine::rename::TOKENS.iter().map(|token| token.meaning));
+        labels.extend(hazavana_engine::rename::TEMPLATE_NOTES);
         let missing: Vec<_> = labels.into_iter().filter(|label| !catalog.contains_key(*label)).collect();
         if !missing.is_empty() {
             eprintln!("it lacks {} display label(s) (shown in English): {missing:?}", missing.len());
@@ -1097,7 +1097,7 @@ mod tests {
     #[test]
     fn italian_switches_persists_formats_dates_and_preserves_values() {
         use crate::control::{ControlRequest, Outcome};
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.run("app.language.italian", serde_json::json!({})).unwrap();
         assert_eq!(app.ui.language, Locale::It);
         assert_eq!(crate::menubar::checked(&app, "app.language.italian"), Some(true));
@@ -1146,12 +1146,12 @@ mod tests {
     #[test]
     fn italian_panels_dialogs_and_letters_paint_with_bundled_fonts() {
         let ctx = fonts_ctx(&[]);
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.ui.left_panel = true;
         let text = painted_text(&ctx, &mut app, Locale::It);
         assert!(text.contains("Le mie foto") && text.contains("Tutte le foto"), "{text}");
         for (command, title) in
-            [("app.about", "Informazioni su LightCraft"), ("app.shortcuts", "Scorciatoie da tastiera"), ("app.settings", "Impostazioni")]
+            [("app.about", "Informazioni su Hazavana"), ("app.shortcuts", "Scorciatoie da tastiera"), ("app.settings", "Impostazioni")]
         {
             app.ui.dialog = None;
             app.run(command, serde_json::json!({})).unwrap();
@@ -1178,16 +1178,16 @@ mod tests {
     /// language, and the translations catch up at their own pace.
     #[test]
     fn display_label_gaps_are_reported() {
-        let mut labels: Vec<&str> = lightcraft_engine::command_specs().iter().map(|spec| spec.label).collect();
+        let mut labels: Vec<&str> = hazavana_engine::command_specs().iter().map(|spec| spec.label).collect();
         labels.extend(crate::menus::ui_commands().map(|command| command.1).filter(|label| !Locale::ALL.iter().any(|locale| locale.name() == *label)));
-        labels.extend(lightcraft_develop::CONTROLS.iter().map(|control| control.label));
-        for (_, label, kind) in lightcraft_catalog::rules::FIELDS {
+        labels.extend(hazavana_develop::CONTROLS.iter().map(|control| control.label));
+        for (_, label, kind) in hazavana_catalog::rules::FIELDS {
             labels.push(label);
-            labels.extend(lightcraft_catalog::rules::ops_for(*kind).iter().map(|(_, label)| *label));
+            labels.extend(hazavana_catalog::rules::ops_for(*kind).iter().map(|(_, label)| *label));
         }
-        labels.extend(lightcraft_catalog::rules::FIELD_GROUPS.iter().map(|group| group.0));
-        labels.extend(lightcraft_engine::rename::TOKENS.iter().map(|token| token.meaning));
-        labels.extend(lightcraft_engine::rename::TEMPLATE_NOTES);
+        labels.extend(hazavana_catalog::rules::FIELD_GROUPS.iter().map(|group| group.0));
+        labels.extend(hazavana_engine::rename::TOKENS.iter().map(|token| token.meaning));
+        labels.extend(hazavana_engine::rename::TEMPLATE_NOTES);
         let ui_labels = labels.len();
         for line in crate::panels::dialogs::WHATS_NEW.lines().map(str::trim) {
             if line.is_empty() || line.starts_with("# ") {
@@ -1220,7 +1220,7 @@ mod tests {
     #[test]
     fn german_switches_via_menu_and_control_persists_and_formats_dates() {
         use crate::control::{ControlRequest, Outcome};
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.run("app.language.german", serde_json::json!({})).unwrap();
         assert_eq!(app.ui.language, Locale::De);
         assert_eq!(tr("File"), "Datei");
@@ -1245,23 +1245,23 @@ mod tests {
         assert_eq!(builtin_label("Warm Glow", false), "Warm Glow");
         assert_eq!(builtin_label("Warm Glow", true), "Warmer Glanz");
         assert_eq!(tr("my-photo.jpg"), "my-photo.jpg");
-        let rules = lightcraft_catalog::RuleSet {
-            mode: lightcraft_catalog::Match::All,
-            rules: vec![lightcraft_catalog::Rule::Field { field: "keywords".into(), op: "contains".into(), value: serde_json::json!("Color") }],
+        let rules = hazavana_catalog::RuleSet {
+            mode: hazavana_catalog::Match::All,
+            rules: vec![hazavana_catalog::Rule::Field { field: "keywords".into(), op: "contains".into(), value: serde_json::json!("Color") }],
         };
-        let mut catalog = lightcraft_catalog::Catalog::new();
+        let mut catalog = hazavana_catalog::Catalog::new();
         catalog
-            .apply(lightcraft_catalog::Op::AddAlbum { album: lightcraft_catalog::Album::new(lightcraft_catalog::AlbumId(4), "Ausgeschlossen") })
+            .apply(hazavana_catalog::Op::AddAlbum { album: hazavana_catalog::Album::new(hazavana_catalog::AlbumId(4), "Ausgeschlossen") })
             .unwrap();
         assert_eq!(rules_label(&rules, &catalog), "Stichwörter enthält Color");
-        let album = lightcraft_catalog::RuleSet {
-            mode: lightcraft_catalog::Match::All,
-            rules: vec![lightcraft_catalog::Rule::Field { field: "album".into(), op: "isNot".into(), value: serde_json::json!(4) }],
+        let album = hazavana_catalog::RuleSet {
+            mode: hazavana_catalog::Match::All,
+            rules: vec![hazavana_catalog::Rule::Field { field: "album".into(), op: "isNot".into(), value: serde_json::json!(4) }],
         };
         assert!(rules_label(&album, &catalog).ends_with(" “Ausgeschlossen”"), "{}", rules_label(&album, &catalog));
-        let rules = lightcraft_catalog::RuleSet {
-            mode: lightcraft_catalog::Match::All,
-            rules: vec![lightcraft_catalog::Rule::Field {
+        let rules = hazavana_catalog::RuleSet {
+            mode: hazavana_catalog::Match::All,
+            rules: vec![hazavana_catalog::Rule::Field {
                 field: "copyrightStatus".into(),
                 op: "is".into(),
                 value: serde_json::json!("publicDomain"),
@@ -1269,14 +1269,14 @@ mod tests {
         };
         assert!(rules_label(&rules, &catalog).ends_with(" Gemeinfrei"), "{}", rules_label(&rules, &catalog));
         for value in [serde_json::json!(false), serde_json::json!("false")] {
-            let rules = lightcraft_catalog::RuleSet {
-                mode: lightcraft_catalog::Match::All,
-                rules: vec![lightcraft_catalog::Rule::Field { field: "edited".into(), op: "is".into(), value }],
+            let rules = hazavana_catalog::RuleSet {
+                mode: hazavana_catalog::Match::All,
+                rules: vec![hazavana_catalog::Rule::Field { field: "edited".into(), op: "is".into(), value }],
             };
             assert!(rules_label(&rules, &catalog).ends_with(" Nein"), "{}", rules_label(&rules, &catalog));
         }
-        let filter = lightcraft_catalog::Filter {
-            labels: vec![lightcraft_catalog::ColorLabel::Red, lightcraft_catalog::ColorLabel::Blue],
+        let filter = hazavana_catalog::Filter {
+            labels: vec![hazavana_catalog::ColorLabel::Red, hazavana_catalog::ColorLabel::Blue],
             ..Default::default()
         };
         assert_eq!(filter_label(&filter, &app.session.catalog), "Farbmarkierung: Rot oder Blau");
@@ -1288,14 +1288,14 @@ mod tests {
     #[test]
     fn german_panels_dialogs_and_glyphs_are_painted_without_extra_fonts() {
         let ctx = fonts_ctx(&[]);
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.ui.left_panel = true;
         let text = painted_text(&ctx, &mut app, Locale::De);
         assert!(text.contains("Meine Fotos") && text.contains("Alle Fotos"), "{text}");
         app.ui.view = crate::state::ViewMode::People;
         let text = painted_text(&ctx, &mut app, Locale::De);
         assert!(text.contains("Benannte Personen"), "{text}");
-        for (command, title) in [("app.about", "Über LightCraft"), ("app.shortcuts", "Tastenkürzel"), ("app.settings", "Einstellungen")] {
+        for (command, title) in [("app.about", "Über Hazavana"), ("app.shortcuts", "Tastenkürzel"), ("app.settings", "Einstellungen")] {
             app.ui.dialog = None;
             app.run(command, serde_json::json!({})).unwrap();
             let text = painted_text(&ctx, &mut app, Locale::De);
@@ -1326,7 +1326,7 @@ mod tests {
         for language in [Locale::De, Locale::Uk, Locale::It] {
             let ctx = fonts_ctx(&[]);
             let services = crate::Services { pick_folder: Some(Box::new(|| None)), ..Default::default() };
-            let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+            let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
             app.ui.language = language;
             let mut bounds = Vec::new();
             for export in [false, true] {
@@ -1379,7 +1379,7 @@ mod tests {
     }
 
     /// The text the whole window paints over a few frames in `language`.
-    fn painted_text(ctx: &egui::Context, app: &mut crate::LightcraftApp, language: Locale) -> String {
+    fn painted_text(ctx: &egui::Context, app: &mut crate::HazavanaApp, language: Locale) -> String {
         fn collect(shape: &egui::epaint::Shape, text: &mut String) {
             match shape {
                 egui::epaint::Shape::Text(shape) => {
@@ -1414,9 +1414,9 @@ mod tests {
     fn every_language_is_painted_and_menu_ids_stay_the_same() {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.ui.left_panel = true;
-        let ids = |app: &crate::LightcraftApp| crate::menus::menu_entries(app).into_iter().map(|entry| entry.id).collect::<Vec<_>>();
+        let ids = |app: &crate::HazavanaApp| crate::menus::menu_entries(app).into_iter().map(|entry| entry.id).collect::<Vec<_>>();
         let english_ids = ids(&app);
         for language in Locale::ALL {
             let text = painted_text(&ctx, &mut app, *language);
@@ -1436,7 +1436,7 @@ mod tests {
     }
 
     /// The UI families, after one frame so the font definitions are loaded.
-    fn fonts_ctx(craft: &'static [lightcraft_engine::CraftFont]) -> egui::Context {
+    fn fonts_ctx(craft: &'static [hazavana_engine::MahayFont]) -> egui::Context {
         let ctx = egui::Context::default();
         ctx.set_fonts(crate::theme::font_definitions(craft));
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -1444,18 +1444,18 @@ mod tests {
         ctx
     }
 
-    /// Built with craft-fonts, every CJK language renders with real glyphs (no tofu) in every UI
+    /// Built with mahay-fonts, every CJK language renders with real glyphs (no tofu) in every UI
     /// family, Monospace included.
     #[test]
-    fn craft_fonts_render_cjk_in_the_ui() {
+    fn mahay_fonts_render_cjk_in_the_ui() {
         let samples = [(Locale::Ja, "日本語の文字"), (Locale::ZhHans, "简体中文字"), (Locale::ZhHant, "繁體中文字")];
         for (language, sample) in samples {
-            if !lightcraft_engine::CRAFT_FONTS.iter().any(|font| font.serves(language.script())) {
-                lightcraft_testkit::skip!(Fonts, "{}: built without a craft-fonts face for {}", language.code(), language.script());
+            if !hazavana_engine::MAHAY_FONTS.iter().any(|font| font.serves(language.script())) {
+                hazavana_testkit::skip!(Fonts, "{}: built without a mahay-fonts face for {}", language.code(), language.script());
                 continue;
             }
             set_language(language);
-            let ctx = fonts_ctx(lightcraft_engine::CRAFT_FONTS);
+            let ctx = fonts_ctx(hazavana_engine::MAHAY_FONTS);
             ctx.fonts_mut(|fonts| {
                 for family in
                     [egui::FontFamily::Proportional, egui::FontFamily::Name(crate::theme::FONT_SEMIBOLD.into()), egui::FontFamily::Monospace]
@@ -1473,20 +1473,20 @@ mod tests {
         set_language(Locale::En);
     }
 
-    /// Built without craft-fonts, the UI (in every language) still installs its fonts and runs;
+    /// Built without mahay-fonts, the UI (in every language) still installs its fonts and runs;
     /// Latin text keeps Inter.
     #[test]
-    fn the_ui_works_without_craft_fonts() {
+    fn the_ui_works_without_mahay_fonts() {
         let ctx = fonts_ctx(&[]);
         ctx.fonts_mut(|fonts| {
             // (Not Monospace: egui's `has_glyph` reports false for glyphs of the family's
             // replacement-glyph face, which there is Hack, the face that draws Latin.)
             for family in [egui::FontFamily::Proportional, egui::FontFamily::Name(crate::theme::FONT_SEMIBOLD.into())] {
                 let font = egui::FontId::new(13.0, family);
-                assert!("LightCraft".chars().all(|ch| fonts.has_glyph(&font, ch)), "{font:?}");
+                assert!("Hazavana".chars().all(|ch| fonts.has_glyph(&font, ch)), "{font:?}");
             }
         });
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         for language in Locale::ALL {
             app.ui.language = *language;
             for frame in 0..3 {
@@ -1506,12 +1506,12 @@ mod tests {
     #[test]
     fn traditional_chinese_switches_through_menu_and_control_and_persists() {
         use crate::control::{ControlRequest, Outcome};
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.run("app.language.traditionalChinese", serde_json::json!({})).unwrap();
         assert_eq!(app.ui.language, Locale::ZhHant);
         // Applied at once, not on the next frame.
         assert_eq!(tr("File"), "檔案");
-        assert_eq!(source_label(lightcraft_engine::LibrarySource::All, &app.session.catalog), "所有照片");
+        assert_eq!(source_label(hazavana_engine::LibrarySource::All, &app.session.catalog), "所有照片");
         assert_eq!(date_group_label("2026-09-20", false), "2026年9月20日 星期日");
         assert_eq!(date_group_label("2026-09-20", true), "20日 星期日");
         assert_eq!(date_group_label("2026-09", false), "2026年9月");
@@ -1545,7 +1545,7 @@ mod tests {
         let Outcome::Done(reply) = crate::control::handle(&mut app, &ctx, &req) else { panic!("expected a reply") };
         assert_eq!(reply["ok"], false);
         assert_eq!(app.ui.language, Locale::ZhHant);
-        let ids = |app: &crate::LightcraftApp| crate::menus::menu_entries(app).into_iter().map(|entry| entry.id).collect::<Vec<_>>();
+        let ids = |app: &crate::HazavanaApp| crate::menus::menu_entries(app).into_iter().map(|entry| entry.id).collect::<Vec<_>>();
         let chinese_ids = ids(&app);
         app.run("app.language.english", serde_json::json!({})).unwrap();
         assert_eq!(tr("File"), "File");
@@ -1559,7 +1559,7 @@ mod tests {
         assert_eq!(date_group_label("2026-09-20", false), "Sunday, 20 September 2026");
         assert_eq!(date_group_label("2026-09-20", true), "Sunday, 20");
         assert_eq!(date_group_label("2026-09", true), "September");
-        assert_eq!(display_time("2026-09-20T16:04:05"), lightcraft_catalog::dates::display_time("2026-09-20T16:04:05"));
+        assert_eq!(display_time("2026-09-20T16:04:05"), hazavana_catalog::dates::display_time("2026-09-20T16:04:05"));
         set_language(Locale::Ja);
         assert_eq!(date_group_label("2026-09-20", false), "2026年9月20日（日曜日）");
         assert_eq!(date_group_label("2026-09", true), "9月");
@@ -1582,10 +1582,10 @@ mod tests {
     fn traditional_chinese_presets_and_panel_headers_are_painted() {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::with_demo(), Default::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::with_demo(), Default::default());
         app.ui.presets = true;
         let builtin = app.session.presets.iter().find(|p| p.name == "Warm Glow").unwrap().clone();
-        app.session.presets.push(lightcraft_develop::Preset { id: "user.test".into(), builtin: false, ..builtin });
+        app.session.presets.push(hazavana_develop::Preset { id: "user.test".into(), builtin: false, ..builtin });
         for (panel, title) in [(crate::state::RightPanel::Activity, "歷史紀錄"), (crate::state::RightPanel::Versions, "版本")] {
             app.ui.right = panel;
             let text = painted_text(&ctx, &mut app, Locale::ZhHant);

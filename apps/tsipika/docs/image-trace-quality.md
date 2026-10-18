@@ -35,7 +35,7 @@ are:
 At most six are kept, largest region first. They are fixed while the other colours are refitted around
 them, mixed-colour merging leaves them alone, and Noise removal keeps their regions of 4 pixels or more
 (smaller specks of them still go). This follows the idea of salient-colour preservation in palette
-reduction (Fukuda et al. 2019, doi:10.1117/12.2521607); the rule and its numbers are VectorCraft's own.
+reduction (Fukuda et al. 2019, doi:10.1117/12.2521607); the rule and its numbers are Tsipika's own.
 Full Tone, Limited and the continuous-tone route of Automatic are unchanged.
 
 Tests (code-drawn): `automatic_keeps_a_rare_distinct_stem_or_patch` (2, 3, 5 and 8 flat colours and a
@@ -198,7 +198,7 @@ not a new quality-harness baseline or a general claim about small-feature fideli
 built-in preset, and measures the result:
 
 ```text
-TRACE_QUALITY_REPORT=report.md cargo test --release -p vectorcraft-trace --test quality -- --ignored
+TRACE_QUALITY_REPORT=report.md cargo test --release -p tsipika-trace --test quality -- --ignored
 ```
 
 **Inputs** (drawn anti-aliased at 128, 256 and 512 px, and at 256 px also blurred, with compression-like
@@ -1144,7 +1144,7 @@ Measured 2026-10-17 with maximal-disc pruning and junction merging, against base
 Earlier preset and cost tables retain their previous measurements. Regenerate only this class:
 
 ```text
-TRACE_QUALITY_CLASS=centre-lines TRACE_QUALITY_REPORT=centre-lines.md cargo test --release -p vectorcraft-trace --test quality quality_report -- --ignored --nocapture
+TRACE_QUALITY_CLASS=centre-lines TRACE_QUALITY_REPORT=centre-lines.md cargo test --release -p tsipika-trace --test quality quality_report -- --ignored --nocapture
 ```
 
 Junction clusters use their deepest pixel and a disc radius of `distance − 0.5` px. Terminal

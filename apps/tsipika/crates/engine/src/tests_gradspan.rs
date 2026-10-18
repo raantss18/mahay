@@ -2,8 +2,8 @@
 //! the targets' bounds, so the ramp runs across them (#2127).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{GradientPaint, Paint};
-use vectorcraft_geom::{Affine, Point};
+use tsipika_color::{GradientPaint, Paint};
+use tsipika_geom::{Affine, Point};
 
 use super::*;
 
@@ -43,7 +43,7 @@ fn black_to_white() -> Value {
 /// The red channel of the rendered document at (x, y).
 fn red_at(s: &Session, x: u32, y: u32) -> u8 {
     let doc = s.doc().unwrap().doc.clone();
-    let img = vectorcraft_render::Renderer::new().render(&doc, 400, 200, Affine::IDENTITY, &Default::default());
+    let img = tsipika_render::Renderer::new().render(&doc, 400, 200, Affine::IDENTITY, &Default::default());
     img.pixel(x, y)[0]
 }
 

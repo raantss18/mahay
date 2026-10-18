@@ -11,12 +11,12 @@
 
 use egui::vec2;
 use serde_json::{Value, json};
-use vectorcraft_engine::doc::NodeId;
+use tsipika_engine::doc::NodeId;
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Width Point Edit.
 pub const KIND: &str = "widthPoint";
@@ -25,7 +25,7 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Width Point Edit").into(), body, confirm, discard: Some("Delete"), min_width: 300.0, ..DialogSpec::FORM };
 
 /// Width point `index` of `id`: its place and side widths (points).
-fn point(app: &VectorcraftApp, id: u64, index: usize) -> Option<(f64, f64, f64)> {
+fn point(app: &TsipikaApp, id: u64, index: usize) -> Option<(f64, f64, f64)> {
     let st = app.session.active()?.doc.node(NodeId(id))?.appearance.stroke()?;
     let half = st.width / 2.0;
     st.profile.as_ref()?.points.get(index).map(|&(t, l, r)| (t, l * half, r * half))
@@ -34,10 +34,10 @@ fn point(app: &VectorcraftApp, id: u64, index: usize) -> Option<(f64, f64, f64)>
 /// Open Width Point Edit for `index`, or a prospective point at fraction `t` without an index
 /// (`{id, index?, t?, adjustAdjoining?}`). Opening only samples the stroke: confirmation creates
 /// the point. Adjoining adjustment defaults to false.
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let id = p.get("id").and_then(Value::as_u64).ok_or("give the path `id`")?;
     let doc = &app.session.active().ok_or("no document")?.doc;
-    let id = vectorcraft_tools::distort::stroke_owner(doc, NodeId(id)).0;
+    let id = tsipika_tools::distort::stroke_owner(doc, NodeId(id)).0;
     let index = match p.get("index").filter(|v| !v.is_null()) {
         Some(v) => Some(v.as_u64().and_then(|i| usize::try_from(i).ok()).ok_or("no such width point")?),
         None => None,
@@ -64,7 +64,7 @@ pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     Ok(Value::Null)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.stroke_unit();
     let (s1, s2, linked) = (d.f64("side1", 0.0), d.f64("side2", 0.0), d.bool("linked"));
     let mut sides = None;
@@ -108,7 +108,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (id, index) = (d.fields.get("id").cloned().unwrap_or_default(), d.fields.get("index").cloned().unwrap_or_default());
     if d.bool("discard") {
         if index.is_null() {
@@ -126,12 +126,12 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_engine::Session;
+    use tsipika_tools::{PointerEvent, PointerKind};
 
     /// A 10 pt line from (100, 150) to (300, 150) with a 4 + 4 pt width point in the middle.
-    fn app() -> (VectorcraftApp, u64) {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> (TsipikaApp, u64) {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let id = app.run("shape.line", json!({"x1": 100, "y1": 150, "x2": 300, "y2": 150})).unwrap()["id"].as_u64().unwrap();
         app.run("stroke.set", json!({"ids": [id], "weight": 10})).unwrap();
@@ -139,13 +139,13 @@ mod tests {
         (app, id)
     }
 
-    fn points(app: &VectorcraftApp, id: u64) -> Vec<(f64, f64, f64)> {
+    fn points(app: &TsipikaApp, id: u64) -> Vec<(f64, f64, f64)> {
         let st = app.session.active().unwrap().doc.node(NodeId(id)).unwrap().appearance.stroke().unwrap().clone();
         let round = |v: f64| (v * 1e9).round() / 1e9;
         st.profile.map(|p| p.points.into_iter().map(|(t, l, r)| (round(t), round(l), round(r))).collect()).unwrap_or_default()
     }
 
-    fn frame(app: &mut VectorcraftApp) -> Vec<String> {
+    fn frame(app: &mut TsipikaApp) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -235,7 +235,7 @@ mod tests {
         assert!((short - tall).abs() < 1.0 && short < 400.0, "{short} vs {tall}");
     }
 
-    fn creation_app() -> (VectorcraftApp, u64) {
+    fn creation_app() -> (TsipikaApp, u64) {
         let (mut app, id) = app();
         app.run("stroke.set", json!({"ids": [id], "profile": "uniform"})).unwrap();
         app.run("shape.rectangle", json!({"x": 20, "y": 20, "width": 30, "height": 40})).unwrap();
@@ -244,14 +244,14 @@ mod tests {
         (app, id)
     }
 
-    fn creation_history(app: &VectorcraftApp) -> (usize, usize, bool) {
+    fn creation_history(app: &TsipikaApp) -> (usize, usize, bool) {
         let st = app.session.doc().unwrap();
         (st.history.undo.len(), st.history.redo.len(), st.is_dirty())
     }
 
     /// The actual tool-event sequence from two stationary canvas clicks. No profile or dialog
     /// is installed by the fixture after either click; DoubleClick must open the pending point.
-    fn creation_double_click(app: &mut VectorcraftApp, x: f64, y: f64) {
+    fn creation_double_click(app: &mut TsipikaApp, x: f64, y: f64) {
         let before = app.session.doc().unwrap().doc.clone();
         let history = creation_history(app);
         let view = app.view_info();
@@ -297,7 +297,7 @@ mod tests {
         let after = app.session.doc().unwrap().doc.clone();
         assert_eq!(after.node(NodeId(id)).unwrap().kind, before.node(NodeId(id)).unwrap().kind, "path geometry remains unchanged");
         before.walk(|node| {
-            if node.id != NodeId(id) && matches!(node.kind, vectorcraft_engine::doc::NodeKind::Path { .. }) {
+            if node.id != NodeId(id) && matches!(node.kind, tsipika_engine::doc::NodeKind::Path { .. }) {
                 assert_eq!(after.node(node.id), Some(node), "other artwork remains unchanged");
             }
         });
@@ -426,7 +426,7 @@ mod tests {
         }
     }
 
-    fn creation_dialog_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn creation_dialog_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         fn collect(shape: &egui::Shape, clip: egui::Rect, texts: &mut Vec<(String, egui::Rect)>) {
             match shape {
                 egui::Shape::Text(t) if clip.contains_rect(t.visual_bounding_rect()) => {
@@ -445,7 +445,7 @@ mod tests {
         texts
     }
 
-    fn creation_dialog_click(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str) {
+    fn creation_dialog_click(app: &mut TsipikaApp, ctx: &egui::Context, label: &str) {
         for _ in 0..4 {
             creation_dialog_frame(app, ctx, vec![]);
         }
@@ -500,7 +500,7 @@ mod tests {
         let after = app.session.doc().unwrap().doc.clone();
         assert_eq!(after.node(NodeId(id)).unwrap().kind, before.node(NodeId(id)).unwrap().kind);
         before.walk(|node| {
-            if node.id != NodeId(id) && matches!(node.kind, vectorcraft_engine::doc::NodeKind::Path { .. }) {
+            if node.id != NodeId(id) && matches!(node.kind, tsipika_engine::doc::NodeKind::Path { .. }) {
                 assert_eq!(after.node(node.id), Some(node), "other artwork remains unchanged");
             }
         });

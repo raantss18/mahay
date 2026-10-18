@@ -5,10 +5,10 @@ use std::cell::Cell;
 
 use egui::{CursorIcon, Event, Key, Modifiers, PointerButton, Pos2, Rect, vec2};
 use serde_json::json;
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::Session;
+use tsipika_doc::Unit;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, scrub, widgets};
+use crate::{TsipikaApp, scrub, widgets};
 
 /// Headless frames of one labelled field: where its label and its box were last drawn.
 struct Row {
@@ -207,7 +207,7 @@ fn escape_puts_the_value_back_and_the_preference_turns_scrubbing_off() {
 // ---------- in the app ----------
 
 /// One frame of the whole window with `events`. → The rect of the first text drawn as `text`.
-fn app_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, text: &str) -> Option<Rect> {
+fn app_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>, text: &str) -> Option<Rect> {
     let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 900.0)));
     let mut out = ctx.run_ui(egui::RawInput { events, screen_rect, ..Default::default() }, |ui| {
         app.logic(ui.ctx());
@@ -224,23 +224,23 @@ fn app_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, 
     out.shapes.iter().find_map(|s| find(&s.shape, text))
 }
 
-fn app_with_rect() -> (VectorcraftApp, egui::Context) {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app_with_rect() -> (TsipikaApp, egui::Context) {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
     app.session.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 100, "height": 50})).unwrap();
     (app, egui::Context::default())
 }
 
-fn width(app: &VectorcraftApp) -> f64 {
+fn width(app: &TsipikaApp) -> f64 {
     app.session.transform_box(&app.session.doc().unwrap().selection.objects).unwrap().rect.width()
 }
 
-fn undo_len(app: &VectorcraftApp) -> usize {
+fn undo_len(app: &TsipikaApp) -> usize {
     app.session.doc().unwrap().history.undo.len()
 }
 
 /// Drag the W label by `dx` in four moves (`escape`: Escape before the release).
-fn drag_w(app: &mut VectorcraftApp, ctx: &egui::Context, dx: f32, escape: bool) {
+fn drag_w(app: &mut TsipikaApp, ctx: &egui::Context, dx: f32, escape: bool) {
     let mut w = None;
     for _ in 0..4 {
         w = app_frame(app, ctx, vec![], "W:");

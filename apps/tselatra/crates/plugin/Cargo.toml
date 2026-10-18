@@ -1,6 +1,6 @@
 [package]
-name = "effectcraft-plugin"
-description = "EffectCraft effect plug-ins: loads sandboxed WebAssembly effect modules (plug-in API v1) into the effect registry"
+name = "tselatra-plugin"
+description = "Tselatra effect plug-ins: loads sandboxed WebAssembly effect modules (plug-in API v1) into the effect registry"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,11 +15,11 @@ workspace = true
 wasm = ["dep:wasmi"]
 
 [dependencies]
-effectcraft-effects = { workspace = true }
+tselatra-effects = { workspace = true }
 serde_json = { workspace = true }
 wasmi = { workspace = true, optional = true }
 
 [dev-dependencies]
-effectcraft-keyframe = { workspace = true }
-effectcraft-project = { workspace = true }
-effectcraft-raster = { workspace = true }
+tselatra-keyframe = { workspace = true }
+tselatra-project = { workspace = true }
+tselatra-raster = { workspace = true }

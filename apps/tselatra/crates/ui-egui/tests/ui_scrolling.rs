@@ -1,27 +1,27 @@
 //! Long menus and lists scroll instead of running off the window, with a scroll bar to drag
 //! (egui_kittest, UI logic only).
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Event, Pos2, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
-fn harness(w: f32, h: f32) -> Harness<'static, EffectcraftApp> {
+fn harness(w: f32, h: f32) -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("file.openDemoProject", json!({})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(w, h)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(w, h)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
@@ -29,7 +29,7 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(2);
 }
 
-fn wheel(h: &mut Harness<'_, EffectcraftApp>, at: Pos2, dy: f32) {
+fn wheel(h: &mut Harness<'_, TselatraApp>, at: Pos2, dy: f32) {
     h.input_mut().events.push(Event::PointerMoved(at));
     h.input_mut().events.push(Event::MouseWheel {
         unit: egui::MouseWheelUnit::Point,
@@ -56,10 +56,10 @@ fn a_menu_taller_than_the_window_scrolls() {
     let last = h.query_by_label_contains("Keyboard Shortcuts").expect("still open").rect();
     assert!(last.min.y >= 0.0 && last.max.y <= 520.0, "scrolled into the window ({last:?})");
     click_at(&mut h, last.center());
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::Shortcuts), "the entry takes the click");
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::Shortcuts), "the entry takes the click");
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.input_mut().events.push(Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
@@ -72,7 +72,7 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
 }
 
 /// A scroll bar's "scroll/max" automation label.
-fn scrolled(h: &Harness<'_, EffectcraftApp>, id: &str) -> (f32, f32) {
+fn scrolled(h: &Harness<'_, TselatraApp>, id: &str) -> (f32, f32) {
     let label = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).label.clone();
     let (s, max) = label.split_once('/').unwrap_or_else(|| panic!("{id}: {label}"));
     (s.parse().unwrap(), max.parse().unwrap())
@@ -82,7 +82,7 @@ fn scrolled(h: &Harness<'_, EffectcraftApp>, id: &str) -> (f32, f32) {
 /// scrolls them: without a mouse wheel or touchpad there was no way down most panels (#271).
 #[test]
 fn panels_taller_than_their_space_have_a_scroll_bar_to_drag() {
-    use effectcraft_ui_egui::dock::PanelKind;
+    use tselatra_ui_egui::dock::PanelKind;
     // (The Project panel's list starts below its item preview and search: a taller window.)
     for (panel, id, height) in [
         (PanelKind::EffectControls, "effectControls.scroll", 240.0),
@@ -126,7 +126,7 @@ fn panels_taller_than_their_space_have_a_scroll_bar_to_drag() {
 /// navigator (â—€ â—† â–¶), which was drawn over them (#271).
 #[test]
 fn effect_values_stay_clear_of_the_keyframe_navigator() {
-    use effectcraft_ui_egui::dock::PanelKind;
+    use tselatra_ui_egui::dock::PanelKind;
     let mut h = harness(1600.0, 1000.0);
     let app = h.state_mut();
     let lid = app.session.active_comp().unwrap().layers[0].id.0;
@@ -135,7 +135,7 @@ fn effect_values_stay_clear_of_the_keyframe_navigator() {
     let path = "effects/#1/point";
     app.session.execute("prop.toggleAnimation", json!({"layer": lid, "path": path})).unwrap();
     app.session.execute("prop.set", json!({"layer": lid, "path": path, "value": [123456.7, 123456.7]})).unwrap();
-    let uid = app.session.active_comp().unwrap().layer(effectcraft_engine::project::LayerId(lid)).unwrap().props.prop(path).unwrap().uid;
+    let uid = app.session.active_comp().unwrap().layer(tselatra_engine::project::LayerId(lid)).unwrap().props.prop(path).unwrap().uid;
     assert!(app.edit_layout(|l| l.float(PanelKind::EffectControls, [300.0, 150.0, 330.0, 500.0])));
     h.run_steps(3);
     let value = rect(&h, &format!("effectControls.prop.{uid}.value.1"));
@@ -150,7 +150,7 @@ fn effect_values_stay_clear_of_the_keyframe_navigator() {
 fn settings_dialog_does_not_scroll_sideways() {
     let mut h = harness(1400.0, 900.0);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "app.settings", json!({"page": "general"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "app.settings", json!({"page": "general"})).unwrap();
     h.run_steps(3);
     let (ok, page) = (rect(&h, "settings.ok"), rect(&h, "settings.page.general"));
     h.input_mut().events.push(Event::PointerMoved(page.center()));

@@ -5,7 +5,7 @@ use serde_json::json;
 use crate::Session;
 use crate::params::id_of;
 
-fn stale_bound_color_document() -> (figcraft_doc::Document, figcraft_doc::NodeId) {
+fn stale_bound_color_document() -> (endrika_doc::Document, endrika_doc::NodeId) {
     let mut s = Session::new();
     let id = id_of(&s.execute("shape.rectangle", &json!({"x": 4000, "y": 4000, "width": 23, "height": 17})).unwrap()["id"]).unwrap();
     let page = s.doc().unwrap().first_page().unwrap();
@@ -20,7 +20,7 @@ fn stale_bound_color_document() -> (figcraft_doc::Document, figcraft_doc::NodeId
     let mut doc = s.doc().unwrap().clone();
     let node = doc.get_mut(id).unwrap();
     node.name = "load-binding-sentinel".into();
-    node.fills = vec![figcraft_color::Paint::solid(figcraft_color::Color::WHITE)];
+    node.fills = vec![endrika_color::Paint::solid(endrika_color::Color::WHITE)];
     node.width = 5.0;
     node.source = Some(page);
     node.overrides.insert("sentinel".into());
@@ -28,7 +28,7 @@ fn stale_bound_color_document() -> (figcraft_doc::Document, figcraft_doc::NodeId
     (doc, id)
 }
 
-fn assert_dark_bound_color(doc: &figcraft_doc::Document, transform: figcraft_doc::geom::Affine) -> figcraft_doc::NodeId {
+fn assert_dark_bound_color(doc: &endrika_doc::Document, transform: endrika_doc::geom::Affine) -> endrika_doc::NodeId {
     let node = doc.nodes().find(|n| n.name == "load-binding-sentinel").unwrap();
     assert_eq!(node.fills.first().and_then(|p| p.solid_color()).map(|c| c.to_hex()), Some("202124".into()));
     assert_eq!((node.transform, node.width, node.height), (transform, 5.0, 17.0));
@@ -51,8 +51,8 @@ fn initial_color_bindings_settle_in_constructor_and_loaders() {
     state.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 2, "height": 2})).unwrap();
     assert_dark_bound_color(state.doc().unwrap(), name_transform);
 
-    let native = figcraft_format::save_bytes(&stale, None).unwrap();
-    let (loaded, _) = crate::cmd::file::load_bytes(&native, "bindings.figcraft").unwrap();
+    let native = endrika_format::save_bytes(&stale, None).unwrap();
+    let (loaded, _) = crate::cmd::file::load_bytes(&native, "bindings.endrika").unwrap();
     // A native file settles when it opens as a document, not in the loader.
     let opened = Session::with_document(loaded);
     let loaded = opened.doc().unwrap();
@@ -62,7 +62,7 @@ fn initial_color_bindings_settle_in_constructor_and_loaders() {
     assert!(loaded.node(id).unwrap().overrides.contains("sentinel"));
     assert!(loaded.dirty().is_empty());
 
-    let (fig, _) = figcraft_format::fig::export(&stale, None).unwrap();
+    let (fig, _) = endrika_format::fig::export(&stale, None).unwrap();
     let (loaded, _) = crate::cmd::file::load_bytes(&fig, "bindings.fig").unwrap();
     assert_dark_bound_color(&loaded, name_transform);
 }
@@ -150,10 +150,10 @@ fn line_height_and_letter_spacing_follow_number_variables_in_pixels() {
     s.execute("variable.bind", &json!({"ids": [t], "field": "lineHeight", "variable": "leading"})).unwrap();
     s.execute("variable.bind", &json!({"ids": [t], "field": "letterSpacing", "variable": "tracking"})).unwrap();
     let style = |s: &Session| s.doc().unwrap().node(t).unwrap().kind.text().unwrap().style.clone();
-    assert_eq!(style(&s).line_height, figcraft_doc::LineHeight::Pixels(24.0));
-    assert_eq!(style(&s).letter_spacing, figcraft_doc::LetterSpacing::Pixels(2.0));
+    assert_eq!(style(&s).line_height, endrika_doc::LineHeight::Pixels(24.0));
+    assert_eq!(style(&s).letter_spacing, endrika_doc::LetterSpacing::Pixels(2.0));
     s.execute("variable.set", &json!({"variable": "leading", "value": 30})).unwrap();
-    assert_eq!(style(&s).line_height, figcraft_doc::LineHeight::Pixels(30.0));
+    assert_eq!(style(&s).line_height, endrika_doc::LineHeight::Pixels(30.0));
 }
 
 #[test]
@@ -175,16 +175,16 @@ fn effects_follow_their_variables() {
     bind(&mut s, "effects/9/radius", "blur");
     let fx = |s: &Session| s.doc().unwrap().node(r).unwrap().effects.clone();
     match &fx(&s)[0].kind {
-        figcraft_doc::EffectKind::DropShadow(sh) => {
+        endrika_doc::EffectKind::DropShadow(sh) => {
             assert_eq!(sh.offset.1, 6.0);
             assert_eq!(sh.color.to_hex(), "FF0000");
             assert!((sh.color.a - 0.5).abs() < 0.01);
         }
         k => panic!("{k:?}"),
     }
-    assert!(matches!(fx(&s)[1].kind, figcraft_doc::EffectKind::LayerBlur(ref b) if b.radius == 12.0));
+    assert!(matches!(fx(&s)[1].kind, endrika_doc::EffectKind::LayerBlur(ref b) if b.radius == 12.0));
     s.execute("variable.set", &json!({"variable": "blur", "value": -3})).unwrap();
-    assert!(matches!(fx(&s)[1].kind, figcraft_doc::EffectKind::LayerBlur(ref b) if b.radius == 0.0), "clamped");
+    assert!(matches!(fx(&s)[1].kind, endrika_doc::EffectKind::LayerBlur(ref b) if b.radius == 0.0), "clamped");
     // Pickers offer effect-scoped variables for these fields.
     let doc = s.doc().unwrap();
     assert_eq!(crate::cmd::variables::field_scope(doc, r, "effects/0/color"), Some("EFFECT_COLOR"));

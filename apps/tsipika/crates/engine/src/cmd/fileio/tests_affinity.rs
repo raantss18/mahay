@@ -16,7 +16,7 @@ fn png() -> Vec<u8> {
 /// Synthetic envelope without a native object graph; not a native Affinity writer.
 fn file(png: &[u8]) -> Vec<u8> {
     let mut b = vec![0; 72];
-    b[..4].copy_from_slice(vectorcraft_affinity::MAGIC);
+    b[..4].copy_from_slice(tsipika_affinity::MAGIC);
     b[4..6].copy_from_slice(&12u16.to_le_bytes());
     b[8..12].copy_from_slice(b"nsrP");
     b[12..16].copy_from_slice(b"#Inf");
@@ -44,16 +44,16 @@ fn preview_opens_with_a_warning_and_never_saves_to_the_source() {
         assert!(w.contains("2×1") && w.contains("native Affinity document could not be read") && w.contains("no layers"), "{w}");
         let st = s.doc().unwrap();
         assert!(st.path.is_none());
-        assert_eq!(st.format, "vectorcraft");
+        assert_eq!(st.format, "tsipika");
         assert_eq!((st.doc.artboards[0].rect.width(), st.doc.artboards[0].rect.height()), (2.0, 1.0));
         assert_eq!(st.doc.images.values().next().unwrap().bytes.as_slice(), png());
-        let saved = vectorcraft_format::save_file(&st.doc);
-        let reopened = vectorcraft_format::load_file(&saved).unwrap();
+        let saved = tsipika_format::save_file(&st.doc);
+        let reopened = tsipika_format::load_file(&saved).unwrap();
         assert_eq!(reopened.doc.images, st.doc.images);
         let plan = save_plan(&s, SaveMode::Save, &json!({})).unwrap();
         assert!(plan.path.is_none(), "Save must ask for a new destination");
-        assert_eq!(plan.format.id, "vectorcraft");
-        assert!(plan.name.ends_with(".vectorcraft"));
+        assert_eq!(plan.format.id, "tsipika");
+        assert!(plan.name.ends_with(".tsipika"));
     }
     let f = format("affinity").unwrap();
     assert!(f.read && !f.write);
@@ -69,7 +69,7 @@ fn preview_opens_with_a_warning_and_never_saves_to_the_source() {
 #[test]
 fn preview_reaches_the_document_open_command() {
     let mut s = Session::new();
-    let r = s.execute("document.open", &json!({"name":"test.af", "dataBase64":vectorcraft_format::base64_encode(&file(&png()))})).unwrap();
+    let r = s.execute("document.open", &json!({"name":"test.af", "dataBase64":tsipika_format::base64_encode(&file(&png()))})).unwrap();
     assert_eq!(r["format"], "affinity");
     assert_eq!(r["warnings"].as_array().unwrap().len(), 1);
 }
@@ -80,7 +80,7 @@ fn placing_a_preview_is_rejected_even_when_renamed_or_queued() {
     s.execute("file.new", &json!({"width":100,"height":100})).unwrap();
     let original = s.doc().unwrap().doc.clone();
     for name in ["test.af", "renamed.png", "renamed.txt"] {
-        let p = json!({"name":name, "dataBase64":vectorcraft_format::base64_encode(&file(&png())), "link":true});
+        let p = json!({"name":name, "dataBase64":tsipika_format::base64_encode(&file(&png())), "link":true});
         for cmd in ["file.place", "file.place.info"] {
             let e = s.execute(cmd, &p).unwrap_err().to_string();
             assert!(e.contains("File › Open") && e.contains("embedded preview"), "{e}");
@@ -97,7 +97,7 @@ fn templates_and_libraries_cannot_silently_extract_preview_content() {
     s.execute("file.new", &json!({"width":100,"height":100})).unwrap();
     let original = s.doc().unwrap().doc.clone();
     for name in ["test.af", "renamed.svg"] {
-        let p = json!({"name":name, "dataBase64":vectorcraft_format::base64_encode(&file(&png()))});
+        let p = json!({"name":name, "dataBase64":tsipika_format::base64_encode(&file(&png()))});
         for cmd in ["file.newFromTemplate", "swatch.library.load", "graphicStyle.loadLibrary"] {
             let e = s.execute(cmd, &p).unwrap_err().to_string();
             assert!(e.contains("File › Open"), "{cmd}: {e}");
@@ -154,7 +154,7 @@ fn a_previewless_file_fails_without_replacing_the_active_document() {
     let original = s.doc().unwrap().doc.clone();
     let mut bytes = file(&png());
     bytes[24..32].copy_from_slice(&0u64.to_le_bytes());
-    let e = s.execute("document.open", &json!({"name":"no-preview.af", "dataBase64":vectorcraft_format::base64_encode(&bytes)})).unwrap_err();
+    let e = s.execute("document.open", &json!({"name":"no-preview.af", "dataBase64":tsipika_format::base64_encode(&bytes)})).unwrap_err();
     assert!(e.to_string().contains("no embedded preview"));
     assert_eq!(s.documents().len(), 1);
     assert_eq!(s.doc().unwrap().doc, original);
@@ -172,8 +172,8 @@ proptest! {
 
 mod native {
     use super::*;
-    use vectorcraft_affinity::synth::{self, F, Method, tag};
-    use vectorcraft_doc::{NodeKind, appearance::AppearanceItem};
+    use tsipika_affinity::synth::{self, F, Method, tag};
+    use tsipika_doc::{NodeKind, appearance::AppearanceItem};
 
     fn rgba(r: f32, g: f32, b: f32, a: f32) -> F {
         F::Struct([r, g, b, a].iter().flat_map(|v| v.to_le_bytes()).collect())
@@ -293,7 +293,7 @@ mod native {
             assert_eq!(pts, [(10.0, 5.0), (60.0, 5.0), (35.0, 45.0)]);
             assert!(path.subpaths[0].closed);
             let [AppearanceItem::Fill(f), AppearanceItem::Stroke(k)] = tri.appearance.items.as_slice() else { panic!("{:?}", tri.appearance) };
-            assert_eq!(f.paint, vectorcraft_color::Paint::solid(vectorcraft_color::Color::Rgb { r: 1.0, g: 0.0, b: 0.0 }));
+            assert_eq!(f.paint, tsipika_color::Paint::solid(tsipika_color::Color::Rgb { r: 1.0, g: 0.0, b: 0.0 }));
             assert_eq!(k.width, 2.0);
             let NodeKind::Layer { children, .. } = &d.layers[1].kind else { panic!() };
             assert!(!children[0].visible, "hidden layers stay hidden");
@@ -306,12 +306,12 @@ mod native {
         let mut s = Session::new();
         open_bytes(&mut s, "native.af", &bytes, None).unwrap();
         let doc = s.doc().unwrap().doc.clone();
-        let reopened = vectorcraft_format::load_file(&vectorcraft_format::save_file(&doc)).unwrap();
+        let reopened = tsipika_format::load_file(&tsipika_format::save_file(&doc)).unwrap();
         assert_eq!(reopened.doc.layers, doc.layers);
         for format in ["svg", "pdf", "png"] {
             assert!(s.execute("document.export", &json!({"format": format})).is_ok(), "{format}");
         }
-        let p = json!({"name":"native.afdesign", "dataBase64":vectorcraft_format::base64_encode(&bytes)});
+        let p = json!({"name":"native.afdesign", "dataBase64":tsipika_format::base64_encode(&bytes)});
         s.execute("file.new", &json!({"width":100,"height":100})).unwrap();
         s.execute("file.place", &p).unwrap();
         assert!(s.doc().unwrap().doc.layers.iter().any(|l| !l.children().unwrap().is_empty()));

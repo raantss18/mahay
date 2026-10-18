@@ -1,9 +1,9 @@
 //! Tests for Pathfinder, Object → Path and Type commands.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, NodeKind};
-use vectorcraft_geom::{FillRule, PathData, Rect};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, NodeKind};
+use tsipika_geom::{FillRule, PathData, Rect};
 
 use super::*;
 
@@ -22,7 +22,7 @@ fn ids(v: &Value) -> Vec<NodeId> {
     v["ids"].as_array().unwrap().iter().map(|x| NodeId(x.as_u64().unwrap())).collect()
 }
 
-fn node(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> tsipika_doc::Node {
     s.doc().unwrap().doc.node(id).cloned().unwrap()
 }
 
@@ -39,7 +39,7 @@ fn path_of(s: &Session, id: NodeId) -> (PathData, FillRule) {
 
 fn area_of(s: &Session, id: NodeId) -> f64 {
     let (p, r) = path_of(s, id);
-    vectorcraft_pathops::area(&p, r)
+    tsipika_pathops::area(&p, r)
 }
 
 fn bounds(s: &Session, id: NodeId) -> Rect {
@@ -229,7 +229,7 @@ fn name_sources(s: &mut Session, a: NodeId, b: NodeId, names: [Option<&str>; 2])
     .unwrap();
 }
 
-fn named_nodes<'a>(n: &'a vectorcraft_doc::Node, name: &str, out: &mut Vec<&'a vectorcraft_doc::Node>) {
+fn named_nodes<'a>(n: &'a tsipika_doc::Node, name: &str, out: &mut Vec<&'a tsipika_doc::Node>) {
     if n.name.as_deref() == Some(name) {
         out.push(n);
     }
@@ -241,9 +241,9 @@ fn named_nodes<'a>(n: &'a vectorcraft_doc::Node, name: &str, out: &mut Vec<&'a v
 }
 
 fn check_svg_name(s: &Session, id: NodeId, name: &str) {
-    let svg = vectorcraft_svg::export(&s.doc().unwrap().doc, &Default::default());
+    let svg = tsipika_svg::export(&s.doc().unwrap().doc, &Default::default());
     assert_eq!(svg.matches(&format!("id=\"{name}\"")).count(), 1, "{svg}");
-    let imported = vectorcraft_svg::import(&svg).unwrap();
+    let imported = tsipika_svg::import(&svg).unwrap();
     let mut matches = vec![];
     for layer in &imported.layers {
         named_nodes(layer, name, &mut matches);
@@ -263,7 +263,7 @@ fn pathfinder_shape_names_follow_paint_order_without_changing_output_or_undo() {
         s.edit("Source opacity and blend", |d, _| {
             d.node_mut(a).unwrap().opacity = 0.4;
             d.node_mut(b).unwrap().opacity = 0.8;
-            d.node_mut(b).unwrap().blend = vectorcraft_color::BlendMode::Multiply;
+            d.node_mut(b).unwrap().blend = tsipika_color::BlendMode::Multiply;
             Ok(())
         })
         .unwrap();
@@ -533,7 +533,7 @@ fn simplify_refreshes_changed_path_selection_and_undo() {
     let kept = NodeId(s.execute("path.create", &json!({"anchors": [{"x": 350, "y": 180}]})).unwrap()["id"].as_u64().unwrap());
     let unrelated = rect(&mut s, 400.0, 200.0, 40.0, 30.0);
     s.edit("selection fixture", |d, sel| {
-        d.guides.push(vectorcraft_doc::Guide::new(true, 30.0));
+        d.guides.push(tsipika_doc::Guide::new(true, 30.0));
         sel.set([kept, id]);
         sel.anchors.insert(id, [(0, 19)].into_iter().collect());
         sel.anchors.insert(kept, [(0, 0)].into_iter().collect());
@@ -770,7 +770,7 @@ fn set_style_size_changes_bounds() {
     assert!(b1.width() > b0.width() * 1.8, "{b0:?} → {b1:?}");
     let NodeKind::Text(tx) = node(&s, t).kind else { panic!() };
     assert_eq!(tx.first_style().size, 24.0);
-    assert_eq!(tx.para.justify, vectorcraft_doc::Justify::Center);
+    assert_eq!(tx.para.justify, tsipika_doc::Justify::Center);
     assert_eq!(tx.first_style().fill, Paint::solid(Color::rgb(1.0, 0.0, 0.0)));
     assert!(s.execute("text.setStyle", &json!({"justify": "diagonal"})).is_err());
     assert!(s.execute("text.setStyle", &json!({})).is_err());
@@ -820,13 +820,13 @@ fn divide_cutting_lines_keep_appearance_unrelated_art_and_one_undo() {
             let n = d.node_mut(base).unwrap();
             n.appearance = Appearance::basic(Paint::solid(Color::rgb(0.2, 0.5, 0.7)), Paint::solid(Color::BLACK), 3.0).into();
             n.opacity = 0.65;
-            n.blend = vectorcraft_color::BlendMode::Multiply;
+            n.blend = tsipika_color::BlendMode::Multiply;
             let n = d.node_mut(cutter).unwrap();
             n.appearance =
                 Appearance::basic(if line_has_fill { Paint::solid(Color::BLACK) } else { Paint::None }, Paint::solid(Color::rgb(0.8, 0.2, 0.1)), 2.0)
                     .into();
             if curved {
-                let mut bp = vectorcraft_geom::BezPath::new();
+                let mut bp = tsipika_geom::BezPath::new();
                 bp.move_to((-10.0, 50.0));
                 bp.curve_to((30.0, 15.0), (70.0, 85.0), (110.0, 50.0));
                 n.kind = NodeKind::Path { path: PathData::from_bezpath(&bp), rule: FillRule::NonZero, live: None, clipping: false, guide: false };
@@ -874,7 +874,7 @@ fn divide_keeps_implicitly_closed_filled_paths_including_zero_signed_area() {
         s.edit("open fill fixture", |d, sel| {
             let mut appearance = Appearance::basic(Paint::solid(Color::rgb(0.1, 0.7, 0.2)), Paint::None, 0.0);
             // An empty top fill must not hide the nonempty fill below it.
-            appearance.items.insert(0, vectorcraft_doc::AppearanceItem::Fill(vectorcraft_doc::FillLayer::new(Paint::None)));
+            appearance.items.insert(0, tsipika_doc::AppearanceItem::Fill(tsipika_doc::FillLayer::new(Paint::None)));
             d.node_mut(filled).unwrap().appearance = appearance.into();
             d.node_mut(cutter).unwrap().appearance = Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 1.0).into();
             sel.set([cutter, filled]);

@@ -266,7 +266,7 @@ fn deleted_tracks_are_ignored_and_cancel_stops() {
 /// End to end: rendered frames of a textured scene through the KLT feature tracker.
 #[test]
 fn rendered_scene_end_to_end() {
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
     let (w, h) = (480u32, 270u32);
     let f = 420.0;
     // Three textured planes at different depths (a floor, a back wall and a box face).
@@ -350,7 +350,7 @@ fn rendered_scene_end_to_end() {
     assert!(pe < 0.03, "{pe}");
 }
 
-/// A long clip (300 frames, ~900 points): `cargo test -p effectcraft-track --release -- --ignored`.
+/// A long clip (300 frames, ~900 points): `cargo test -p tselatra-track --release -- --ignored`.
 #[test]
 #[ignore]
 fn perf_long_clip() {
@@ -364,7 +364,7 @@ fn perf_long_clip() {
     assert!(s.average_error < 0.5);
 }
 
-/// Solve tracks saved from the app (`EC_CAMTRACK_FILE=tracks.json cargo test -p effectcraft-track
+/// Solve tracks saved from the app (`EC_CAMTRACK_FILE=tracks.json cargo test -p tselatra-track
 /// --release solve_saved_tracks -- --ignored --nocapture`): a debugging aid.
 #[test]
 #[ignore]

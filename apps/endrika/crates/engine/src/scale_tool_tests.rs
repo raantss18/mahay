@@ -6,8 +6,8 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{Handle, PointerEvent, PointerKind, ToolId, anchor_name, anchor_of, scale_factor};
-use figcraft_doc::{Effect, EffectKind, NodeId, NodeKind};
-use figcraft_geom::{Point, Rect};
+use endrika_doc::{Effect, EffectKind, NodeId, NodeKind};
+use endrika_geom::{Point, Rect};
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))

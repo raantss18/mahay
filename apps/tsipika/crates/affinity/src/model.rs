@@ -1,4 +1,4 @@
-//! The document model VectorCraft imports: spreads, artboards, layers, groups, curves, shapes,
+//! The document model Tsipika imports: spreads, artboards, layers, groups, curves, shapes,
 //! text and images, with transforms composed into document space. Anything else is reported
 //! by [`Document::warnings`] instead of being dropped silently.
 

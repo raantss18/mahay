@@ -7,10 +7,10 @@ use std::net::{SocketAddr, TcpStream};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use figcraft_collab::message::{self, ClientMsg, Hello, Presence, ServerMsg, Signal};
-use figcraft_collab::{Client, Limits};
-use figcraft_doc::{Document, NodeId};
-use figcraft_engine::live::{Event, PEOPLE, Status};
+use endrika_collab::message::{self, ClientMsg, Hello, Presence, ServerMsg, Signal};
+use endrika_collab::{Client, Limits};
+use endrika_doc::{Document, NodeId};
+use endrika_engine::live::{Event, PEOPLE, Status};
 use tungstenite::protocol::WebSocket;
 use tungstenite::{Bytes, Message};
 
@@ -188,7 +188,7 @@ fn guests_join_and_see_each_other() {
     assert_eq!(info.name, "Ada");
     assert!(
         ap.events.iter().any(
-            |e| matches!(e, Event::Sync(ServerMsg::Welcome { catch_up: figcraft_collab::CatchUp::Snapshot(snapshot), .. }) if !snapshot.is_empty())
+            |e| matches!(e, Event::Sync(ServerMsg::Welcome { catch_up: endrika_collab::CatchUp::Snapshot(snapshot), .. }) if !snapshot.is_empty())
         ),
         "the welcome carries the document for the sync client"
     );
@@ -500,7 +500,7 @@ fn guests_reconnect_after_a_network_failure() {
     let second = gp.me();
     assert_eq!(first, second, "a reconnect resumes as the same client");
     assert!(
-        gp.events.iter().any(|e| matches!(e, Event::Sync(ServerMsg::Welcome { catch_up: figcraft_collab::CatchUp::Delta(_), .. }))),
+        gp.events.iter().any(|e| matches!(e, Event::Sync(ServerMsg::Welcome { catch_up: endrika_collab::CatchUp::Delta(_), .. }))),
         "it catches up with what it missed, not the whole file"
     );
     hp.wait("it left and came back", |e| {

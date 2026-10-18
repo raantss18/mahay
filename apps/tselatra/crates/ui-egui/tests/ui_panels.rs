@@ -4,30 +4,30 @@
 
 use std::sync::Arc;
 
-use effectcraft_engine::{Session, config::MemoryConfig};
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::{Session, config::MemoryConfig};
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui::{Event, Pos2, pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
-fn harness() -> Harness<'static, EffectcraftApp> {
+fn harness() -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Panels", "width": 320, "height": 180, "duration": 4})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080"})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
 
-fn open(h: &mut Harness<'_, EffectcraftApp>, panel: &str) {
+fn open(h: &mut Harness<'_, TselatraApp>, panel: &str) {
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.panel", json!({"panel": panel})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.panel", json!({"panel": panel})).unwrap();
     h.run_steps(3);
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).clone();
     let p: Pos2 = pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0);
     h.input_mut().events.push(Event::PointerMoved(p));
@@ -43,7 +43,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
 fn discord_pill_fits_its_label() {
     let h = harness();
     let e = h.state().auto.find("header.discord").expect("the Discord pill").clone();
-    let text = h.ctx.fonts_mut(|f| f.layout_no_wrap("Discord".into(), effectcraft_ui_egui::theme::Tokens::semibold(12.0), egui::Color32::WHITE).size().x);
+    let text = h.ctx.fonts_mut(|f| f.layout_no_wrap("Discord".into(), tselatra_ui_egui::theme::Tokens::semibold(12.0), egui::Color32::WHITE).size().x);
     // Padding 10, the 14 px icon, a 6 px gap, the text, padding 12.
     assert!((e.rect[2] - (text + 42.0)).abs() < 0.5, "{} for a {text} px label", e.rect[2]);
 }
@@ -72,7 +72,7 @@ fn window_menu_opens_the_new_panels() {
 #[test]
 fn window_menu_closes_a_checked_panel() {
     let mut h = harness();
-    let shown = |h: &Harness<'_, EffectcraftApp>| {
+    let shown = |h: &Harness<'_, TselatraApp>| {
         h.state().ui.dock.contains(PanelKind::Align) || h.state().ui.floating.iter().any(|f| f.panels.contains(&PanelKind::Align))
     };
     open(&mut h, "align");
@@ -103,7 +103,7 @@ fn scopes_switch_kind() {
 #[test]
 fn footage_panel_buttons_edit_into_the_comp() {
     let mut h = harness();
-    let item = h.state().session.project.items.values().find(|i| matches!(i.kind, effectcraft_engine::project::ItemKind::Solid(_))).unwrap().id.0;
+    let item = h.state().session.project.items.values().find(|i| matches!(i.kind, tselatra_engine::project::ItemKind::Solid(_))).unwrap().id.0;
     h.state_mut().session.execute("footage.open", json!({"item": item})).unwrap();
     h.run_steps(4);
     assert!(h.state().ui.dock.contains(PanelKind::Footage) || h.state().ui.floating.iter().any(|f| f.panels.contains(&PanelKind::Footage)));
@@ -137,7 +137,7 @@ fn progress_panel_cancels_a_job() {
     assert_eq!(h.state().session.job_log.last().unwrap().status, "cancelled");
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
     h.step();
@@ -145,7 +145,7 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(2);
 }
 
-fn double_click_at(h: &mut Harness<'_, EffectcraftApp>, pos: Pos2) {
+fn double_click_at(h: &mut Harness<'_, TselatraApp>, pos: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(pos));
     h.step();
     for pressed in [true, false, true, false] {
@@ -154,7 +154,7 @@ fn double_click_at(h: &mut Harness<'_, EffectcraftApp>, pos: Pos2) {
     h.run_steps(3);
 }
 
-fn hover(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn hover(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.run_steps(3);
 }
@@ -164,12 +164,12 @@ fn hover(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
 /// ones stay that way.
 #[test]
 fn saved_workspaces_persist_across_sessions() {
-    use effectcraft_engine::config::{ConfigStore, MemoryConfig};
-    use effectcraft_ui_egui::menus::invoke;
+    use tselatra_engine::config::{ConfigStore, MemoryConfig};
+    use tselatra_ui_egui::menus::invoke;
     let store = std::sync::Arc::new(MemoryConfig::default());
     let launch = || {
         let s = Session { config: Some(store.clone()), ..Default::default() };
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
         h.run_steps(2);
         h
     };
@@ -191,7 +191,7 @@ fn saved_workspaces_persist_across_sessions() {
     drop(h);
     assert_eq!(launch().state().saved_workspace_names(), ["Edit Bay"]);
     // A damaged file is ignored.
-    store.write(effectcraft_ui_egui::WORKSPACES_FILE, "{not json").unwrap();
+    store.write(tselatra_ui_egui::WORKSPACES_FILE, "{not json").unwrap();
     assert!(launch().state().saved_workspace_names().is_empty());
 }
 
@@ -204,17 +204,17 @@ fn saved_workspace_is_listed_in_the_workspace_menu() {
     // Saving needs a settings folder.
     h.state_mut().session.config = Some(Arc::new(MemoryConfig::default()));
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "Minimal"})).unwrap();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.saveWorkspaceAs", json!({"name": "My Layout"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "Minimal"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.saveWorkspaceAs", json!({"name": "My Layout"})).unwrap();
     h.run_steps(3);
     let saved = h.state().ui.dock.clone();
     assert_eq!(h.state().saved_workspace_names(), ["My Layout"]);
-    let cx = effectcraft_engine::menus::DynCtx { workspace: Some("My Layout"), saved_workspaces: &["My Layout".to_string()] };
-    let (entries, _) = effectcraft_engine::menus::dynamic(&h.state().session, "savedWorkspaces", &cx);
+    let cx = tselatra_engine::menus::DynCtx { workspace: Some("My Layout"), saved_workspaces: &["My Layout".to_string()] };
+    let (entries, _) = tselatra_engine::menus::dynamic(&h.state().session, "savedWorkspaces", &cx);
     assert_eq!(entries.len(), 1);
     assert_eq!((entries[0].label.as_str(), entries[0].command.as_str(), &entries[0].params), ("My Layout", "window.workspace", &json!({"name": "My Layout"})));
     // Leave it, then pick it from the in-window menu bar.
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "Default"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "Default"})).unwrap();
     h.run_steps(3);
     assert_ne!(h.state().ui.dock, saved);
     click(&mut h, "menu.Window");
@@ -243,7 +243,7 @@ fn edit_label_menu_shows_the_label_colours() {
     hover(&mut h, label.center());
     // (Not Dark Green; the entry's label starts with its check-mark column.)
     let green = h.query_by_label(" Green").expect("the Label submenu is open").rect();
-    let col = h.state().tokens.label(effectcraft_engine::color::Label::Green);
+    let col = h.state().tokens.label(tselatra_engine::color::Label::Green);
     let swatch = |s: &egui::Shape| matches!(s, egui::Shape::Rect(r) if r.fill == col && r.rect.width() < 16.0 && green.contains(r.rect.center()));
     let shapes: Vec<egui::Shape> = h.output().shapes.iter().map(|c| c.shape.clone()).collect();
     assert!(shapes.iter().any(|s| swatch(s) || matches!(s, egui::Shape::Vec(v) if v.iter().any(swatch))), "no Green swatch");
@@ -253,7 +253,7 @@ fn edit_label_menu_shows_the_label_colours() {
         hover(&mut h, pos2(green.center().x, label.center().y + (green.center().y - label.center().y) * k as f32 / 10.0));
     }
     click_at(&mut h, green.center());
-    assert_eq!(h.state().session.active_comp().unwrap().layers[0].label, effectcraft_engine::color::Label::Green);
+    assert_eq!(h.state().session.active_comp().unwrap().layers[0].label, tselatra_engine::color::Label::Green);
 }
 
 /// Learn opens the Home screen's tutorials; clicking another workspace tab closes them again,
@@ -270,13 +270,13 @@ fn leaving_the_learn_workspace_closes_its_tutorials() {
     }
 }
 
-fn open_settings(h: &mut Harness<'_, EffectcraftApp>) {
+fn open_settings(h: &mut Harness<'_, TselatraApp>) {
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "app.settings", json!({"page": "appearance"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "app.settings", json!({"page": "appearance"})).unwrap();
     h.run_steps(3);
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: egui::Key, modifiers: egui::Modifiers) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: egui::Key, modifiers: egui::Modifiers) {
     for pressed in [true, false] {
         h.input_mut().events.push(Event::Key { key, physical_key: None, pressed, repeat: false, modifiers });
         h.step();
@@ -284,13 +284,13 @@ fn key(h: &mut Harness<'_, EffectcraftApp>, key: egui::Key, modifiers: egui::Mod
 }
 
 /// The UI Scale setting and the zoom it gives.
-fn scale(h: &Harness<'_, EffectcraftApp>) -> (u32, f32) {
+fn scale(h: &Harness<'_, TselatraApp>) -> (u32, f32) {
     (h.state().session.prefs.appearance.ui_scale, h.ctx.zoom_factor())
 }
 
 /// Types `text` into Settings' UI Scale a key at a time: nothing applies (and the field keeps
 /// the keyboard) until Enter.
-fn type_scale(h: &mut Harness<'_, EffectcraftApp>, text: &str) {
+fn type_scale(h: &mut Harness<'_, TselatraApp>, text: &str) {
     let before = scale(h);
     click(h, "settings.appearance.uiScale");
     for c in text.chars() {
@@ -337,8 +337,8 @@ fn ui_scale_setting_sizes_the_interface() {
     h.run_steps(2);
     assert_eq!(ctx.zoom_factor(), 0.9);
     // A saved scale applies from the first frame.
-    let s = Session { prefs: effectcraft_engine::prefs::Prefs::from_json(&h.state().session.prefs.to_json()), ..Default::default() };
-    let mut h2 = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let s = Session { prefs: tselatra_engine::prefs::Prefs::from_json(&h.state().session.prefs.to_json()), ..Default::default() };
+    let mut h2 = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h2.run_steps(3);
     assert_eq!(h2.ctx.zoom_factor(), 0.9);
 }
@@ -359,15 +359,15 @@ fn settings_buttons_stay_in_view_at_200_percent() {
     s.prefs.disk.disk_cache_enabled = false;
     s.prefs.set("appearance.uiScale", json!(200)).unwrap();
     s.save_prefs();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     assert_eq!(scale(&h), (200, 2.0));
-    let rect = |h: &Harness<'_, EffectcraftApp>, id: &str| {
+    let rect = |h: &Harness<'_, TselatraApp>, id: &str| {
         let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
         egui::Rect::from_min_size(pos2(e.rect[0], e.rect[1]), egui::vec2(e.rect[2], e.rect[3]))
     };
     // Whole: inside the window, and painted with none of them clipped away.
-    let buttons = |h: &Harness<'_, EffectcraftApp>| {
+    let buttons = |h: &Harness<'_, TselatraApp>| {
         ["previous", "next", "cancel", "ok"].map(|b| {
             let r = rect(h, &format!("settings.{b}"));
             let clip = h
@@ -380,7 +380,7 @@ fn settings_buttons_stay_in_view_at_200_percent() {
             r
         })
     };
-    let scroll_page = |h: &mut Harness<'_, EffectcraftApp>| {
+    let scroll_page = |h: &mut Harness<'_, TselatraApp>| {
         let at = rect(h, "settings.appearance.appearanceMode").center();
         h.input_mut().events.push(Event::PointerMoved(at));
         h.input_mut().events.push(Event::MouseWheel {
@@ -414,18 +414,18 @@ fn settings_buttons_stay_in_view_at_200_percent() {
 }
 
 /// Headless look at the panels (wgpu offscreen; needs a GPU adapter). Run with
-/// `PANELS_SNAPSHOT=/abs/dir cargo test -p effectcraft-ui-egui --test ui_panels -- --ignored`.
+/// `PANELS_SNAPSHOT=/abs/dir cargo test -p tselatra-ui-egui --test ui_panels -- --ignored`.
 #[test]
 #[ignore]
 fn panels_snapshot() {
     let mut s = Session::default();
     s.execute("file.openDemoProject", json!({})).unwrap();
-    let solid = s.project.items.values().find(|i| matches!(i.kind, effectcraft_engine::project::ItemKind::Solid(_))).map(|i| i.id.0);
-    let mut app = Some(EffectcraftApp::new(s));
+    let solid = s.project.items.values().find(|i| matches!(i.kind, tselatra_engine::project::ItemKind::Solid(_))).map(|i| i.id.0);
+    let mut app = Some(TselatraApp::new(s));
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app.take().expect("app"));
     h.run_steps(3);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "All Panels"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "All Panels"})).unwrap();
     h.run_steps(3);
     let dir = std::env::var("PANELS_SNAPSHOT").unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/test-out").into());
     std::fs::create_dir_all(&dir).unwrap();
@@ -454,7 +454,7 @@ fn panels_snapshot() {
 }
 
 /// Drag the automation element `id` horizontally by `dx` points.
-fn drag_x(h: &mut Harness<'_, EffectcraftApp>, id: &str, dx: f32) {
+fn drag_x(h: &mut Harness<'_, TselatraApp>, id: &str, dx: f32) {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).clone();
     let from: Pos2 = pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0);
     h.input_mut().events.push(Event::PointerMoved(from));
@@ -481,7 +481,7 @@ fn essential_graphics_scale_keeps_constrain_proportions() {
         h.state_mut().session.execute("essential.addProperty", json!({"layer": layer, "path": "transform/scale"})).unwrap()["controls"][0].as_u64().unwrap();
     open(&mut h, "essentialGraphics");
     let value = format!("essential.control.{c}.value");
-    let scale = |h: &Harness<'_, EffectcraftApp>| {
+    let scale = |h: &Harness<'_, TselatraApp>| {
         let comp = h.state().session.active_comp().unwrap();
         let l = comp.layers.iter().find(|l| l.id.0 == layer).unwrap();
         l.props.prop("transform/scale").unwrap().value.components()
@@ -514,7 +514,7 @@ fn properties_scale_link_shares_the_timeline_state() {
     };
     let link = format!("properties.prop.{uid}.constrain");
     assert!(h.state().auto.find(&link).is_some(), "the chain link is drawn");
-    let scale = |h: &Harness<'_, EffectcraftApp>| {
+    let scale = |h: &Harness<'_, TselatraApp>| {
         let comp = h.state().session.active_comp().unwrap();
         let l = comp.layers.iter().find(|l| l.id.0 == layer).unwrap();
         l.props.prop("transform/scale").unwrap().value.components()
@@ -546,7 +546,7 @@ fn properties_label_double_click_reveals_without_editing() {
     let opacity = comp.layer(layer).unwrap().props.prop("transform/opacity").unwrap().uid;
     let other_scale = comp.layers.iter().find(|l| l.id.0 == other).unwrap().props.prop("transform/scale").unwrap().uid;
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::frontend(h.state_mut(), &ctx, "timeline.revealProps", json!({"props": [{"layer": other, "prop": other_scale}]})).unwrap();
+    tselatra_ui_egui::menus::frontend(h.state_mut(), &ctx, "timeline.revealProps", json!({"props": [{"layer": other, "prop": other_scale}]})).unwrap();
     open(&mut h, "properties");
     open(&mut h, "renderQueue");
     h.state_mut().ui.timeline.search = "no matching property".into();

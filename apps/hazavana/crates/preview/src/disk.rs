@@ -35,7 +35,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use lightcraft_raster::Rgba8;
+use hazavana_raster::Rgba8;
 
 use crate::Hash128;
 
@@ -54,7 +54,7 @@ pub const STALE: std::time::Duration = std::time::Duration::from_secs(7 * 24 * 3
 /// The file that says the cache has looked through its folder for thumbnails under the name
 /// of before and taken them over ([`DiskCache::take_over_old`]): written after a whole pass,
 /// whatever else the folder holds, so that it is done once.
-const TIDIED: &str = ".lightcraft-thumbs";
+const TIDIED: &str = ".hazavana-thumbs";
 
 /// Files an operating system leaves in a folder that was looked at: nobody's, and no reason
 /// to take a folder for more than a cache.
@@ -64,7 +64,7 @@ const DROPPINGS: [&str; 3] = [".DS_Store", "desktop.ini", "Thumbs.db"];
 /// Directory Tagging Specification: the first line is the signature).
 pub const TAG: &str = "CACHEDIR.TAG";
 const TAG_TEXT: &str = "Signature: 8a477f597d28d172789f06886806bc55\n\
-# This folder holds LightCraft's thumbnail cache. It is safe to delete: LightCraft renders what it needs again.\n\
+# This folder holds Hazavana's thumbnail cache. It is safe to delete: Hazavana renders what it needs again.\n\
 # See https://bford.info/cachedir/\n";
 
 pub struct DiskCache {

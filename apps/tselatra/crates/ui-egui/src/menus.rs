@@ -1,5 +1,5 @@
 //! Menus, keyboard shortcuts and UI-level commands. The menu bar is the engine's After Effects
-//! menu tree (`effectcraft_engine::menus`): every entry is an engine command, and frontend-only
+//! menu tree (`tselatra_engine::menus`): every entry is an engine command, and frontend-only
 //! commands (viewer zoom, panels, dialogs…) come back as `Event::Frontend` and are performed by
 //! [`frontend`]. [`UI_COMMANDS`] holds the remaining UI-only shortcuts (tools, timeline
 //! navigation, reveal keys). `invoke` is the single entry point used by menus, shortcuts and the
@@ -7,10 +7,10 @@
 
 use serde_json::{Value, json};
 
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::dock::PanelKind;
 use crate::state::{Resolution, Tool};
-use effectcraft_engine::menus::{MenuEntry, MenuNode};
+use tselatra_engine::menus::{MenuEntry, MenuNode};
 
 pub struct UiCommand {
     pub id: &'static str,
@@ -146,7 +146,7 @@ pub fn panel_command_id(p: PanelKind) -> String {
 
 /// The reveal shortcuts (P, S, R, T, A, E, M, F, L…). `add` (Shift+key) adds the property to
 /// (or removes it from) those already revealed instead of replacing them.
-pub fn reveal(app: &mut EffectcraftApp, kind: &str, now: f64, add: bool) {
+pub fn reveal(app: &mut TselatraApp, kind: &str, now: f64, add: bool) {
     // The double-press shortcuts: the same key again within 0.6 s reveals its second set (LL
     // Waveform, TT Mask Opacity, MM all mask properties, EE Expressions, RR Time Remap, AA
     // Material Options, PP paint / Roto Brush / Puppet, SS selected properties, FF missing
@@ -201,7 +201,7 @@ pub fn reveal(app: &mut EffectcraftApp, kind: &str, now: f64, add: bool) {
 
 /// Show Time Remap on the layers of a `layer.enableTimeRemap` (`layers` by id, else the
 /// selected ones) that have it now.
-fn reveal_time_remap(app: &mut EffectcraftApp, params: &Value) {
+fn reveal_time_remap(app: &mut TselatraApp, params: &Value) {
     let asked: Vec<u64> = match params.get("layers").and_then(Value::as_array) {
         Some(a) => a.iter().filter_map(Value::as_u64).collect(),
         None => app.session.state.selected_layers.iter().map(|l| l.0).collect(),
@@ -216,7 +216,7 @@ fn reveal_time_remap(app: &mut EffectcraftApp, params: &Value) {
 /// After Alt+Shift+P (A, S, R, T) the Timeline shows the property on each layer it keyed, as in
 /// After Effects: added to what a reveal shortcut shows, else with the layer's Transform twirled
 /// open, else alone like P.
-fn reveal_keyed(app: &mut EffectcraftApp, keyed: &Value, kind: &str) {
+fn reveal_keyed(app: &mut TselatraApp, keyed: &Value, kind: &str) {
     let layers: std::collections::BTreeSet<u64> = keyed.as_array().into_iter().flatten().filter_map(|k| k.get("layer").and_then(Value::as_u64)).collect();
     let Some(comp) = app.session.active_comp() else { return };
     let tl = &mut app.ui.timeline;
@@ -230,7 +230,7 @@ fn reveal_keyed(app: &mut EffectcraftApp, keyed: &Value, kind: &str) {
                 }
             }
             None if tl.open_layers.contains(&id) => {
-                if let Some(tr) = comp.layer(effectcraft_engine::project::LayerId(id)).and_then(|l| l.transform()) {
+                if let Some(tr) = comp.layer(tselatra_engine::project::LayerId(id)).and_then(|l| l.transform()) {
                     tl.open_groups.insert(tr.uid);
                 }
             }
@@ -243,7 +243,7 @@ fn reveal_keyed(app: &mut EffectcraftApp, keyed: &Value, kind: &str) {
 }
 
 /// The layers a reveal shortcut acts on: the selected ones, else every layer of the active comp.
-fn reveal_targets(app: &EffectcraftApp) -> Vec<u64> {
+fn reveal_targets(app: &TselatraApp) -> Vec<u64> {
     if app.session.state.selected_layers.is_empty() {
         app.session.active_comp().map(|c| c.layers.iter().map(|l| l.id.0).collect()).unwrap_or_default()
     } else {
@@ -256,7 +256,7 @@ fn reveal_targets(app: &EffectcraftApp) -> Vec<u64> {
 /// they move by fractions of a comp pixel. From any panel except Project (which owns the
 /// arrow keys for its own keyboard navigation, #961); not while typing, with a dialog or
 /// menu open. With mask points selected the arrows move the points instead (#1288).
-fn nudge(app: &mut EffectcraftApp, ctx: &egui::Context, dir: &str) -> Result<Value, String> {
+fn nudge(app: &mut TselatraApp, ctx: &egui::Context, dir: &str) -> Result<Value, String> {
     let (side, n) = match dir.strip_suffix("10") {
         Some(side) => (side, 10.0),
         None => (dir, 1.0),
@@ -284,12 +284,12 @@ fn nudge(app: &mut EffectcraftApp, ctx: &egui::Context, dir: &str) -> Result<Val
 
 /// A comp-space step `d` in the layer space of `layer`, where mask points live. Like a drag of
 /// the points in the viewer, every selected point takes the first one's layer space.
-fn vertex_delta(app: &EffectcraftApp, layer: effectcraft_engine::project::LayerId, d: [f64; 2]) -> [f64; 2] {
-    use effectcraft_engine::geom::vec2;
+fn vertex_delta(app: &TselatraApp, layer: tselatra_engine::project::LayerId, d: [f64; 2]) -> [f64; 2] {
+    use tselatra_engine::geom::vec2;
     let s = &app.session;
     let (Some(cid), Some(comp)) = (s.active_comp_id(), s.active_comp()) else { return d };
     let Some(l) = comp.layer(layer) else { return d };
-    let ectx = effectcraft_engine::render::EvalCtx { project: &s.project, comp_id: cid, comp, time: s.time(), expr: s.expr.as_deref(), footage: None };
+    let ectx = tselatra_engine::render::EvalCtx { project: &s.project, comp_id: cid, comp, time: s.time(), expr: s.expr.as_deref(), footage: None };
     let (l2c, _) = crate::panels::viewer::l2c(&ectx, l);
     l2c.inverse().map_or(d, |inv| {
         let v = inv.apply_vec(vec2(d[0], d[1]));
@@ -303,13 +303,13 @@ fn no_params(p: &Value) -> bool {
 
 /// `{"comp": id}` and nothing else: Composition Settings opens on that comp instead of
 /// applying no settings to it.
-fn only_comp(p: &Value) -> Option<effectcraft_engine::project::ItemId> {
+fn only_comp(p: &Value) -> Option<tselatra_engine::project::ItemId> {
     let m = p.as_object().filter(|m| m.len() == 1)?;
-    m.get("comp")?.as_u64().map(effectcraft_engine::project::ItemId)
+    m.get("comp")?.as_u64().map(tselatra_engine::project::ItemId)
 }
 
 /// Execute a UI or engine command by id.
-pub fn invoke(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, params: Value) -> Result<Value, String> {
+pub fn invoke(app: &mut TselatraApp, ctx: &egui::Context, id: &str, params: Value) -> Result<Value, String> {
     if matches!(id, "effects.copyPresetsFolderPath" | "mediaBrowser.copySourcePath") {
         return frontend(app, ctx, id, params);
     }
@@ -353,7 +353,7 @@ pub fn invoke(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, params: V
     // was copied, so SVG there was copied after anything copied in the app.
     if id == "edit.paste" && no_params(&params) && app.session.state.text_edit.is_none() {
         let text = ctx.data_mut(|d| d.remove_temp::<String>(system_paste_id())).or_else(|| app.hooks.clipboard_text.as_ref().and_then(|f| f()));
-        if let Some(svg) = text.filter(|t| effectcraft_engine::vector::is_svg_text(t)) {
+        if let Some(svg) = text.filter(|t| tselatra_engine::vector::is_svg_text(t)) {
             return run_engine(app, ctx, "edit.pasteSvg", json!({"svg": svg}));
         }
     }
@@ -496,11 +496,11 @@ pub fn invoke(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, params: V
     }
     if id == "window.dockAction" {
         let value = params.get("action").cloned().ok_or("missing docking action")?;
-        let action: craft_ui::docking::Action<PanelKind> = serde_json::from_value(value).map_err(|error| format!("invalid docking action: {error}"))?;
-        if matches!(&action, craft_ui::docking::Action::Open { .. } | craft_ui::docking::Action::OpenAt { .. }) {
+        let action: mahay_ui::docking::Action<PanelKind> = serde_json::from_value(value).map_err(|error| format!("invalid docking action: {error}"))?;
+        if matches!(&action, mahay_ui::docking::Action::Open { .. } | mahay_ui::docking::Action::OpenAt { .. }) {
             return Err("use the panel open commands to preserve viewer and ScriptUI lifecycle callbacks".into());
         }
-        if let craft_ui::docking::Action::Close { panel } = &action {
+        if let mahay_ui::docking::Action::Close { panel } = &action {
             let mut layout = crate::dock_shared::encode(&app.ui.dock, &app.ui.floating)?;
             layout.apply(action.clone()).map_err(|error| error.to_string())?;
             app.close_panel(*panel);
@@ -599,14 +599,14 @@ pub fn invoke(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, params: V
         app.set_theme(ctx, k);
         return Ok(Value::Null);
     }
-    let timing = |app: &mut EffectcraftApp, op: &str| app.session.execute("layer.timing", json!({"op": op})).map_err(|e| e.to_string());
+    let timing = |app: &mut TselatraApp, op: &str| app.session.execute("layer.timing", json!({"op": op})).map_err(|e| e.to_string());
     match id {
         "playback.ramPreview" => {
-            app.toggle_play_with(now, effectcraft_engine::preview::PreviewShortcut::Numpad0);
+            app.toggle_play_with(now, tselatra_engine::preview::PreviewShortcut::Numpad0);
             return Ok(json!({"playing": app.playback.playing}));
         }
         "playback.preview.shiftSpacebar" | "playback.preview.shiftNumpad0" | "playback.preview.altNumpad0" => {
-            let sc = effectcraft_engine::preview::PreviewShortcut::parse(id.trim_start_matches("playback.preview.")).ok_or("unknown preview shortcut")?;
+            let sc = tselatra_engine::preview::PreviewShortcut::parse(id.trim_start_matches("playback.preview.")).ok_or("unknown preview shortcut")?;
             app.toggle_play_with(now, sc);
             return Ok(json!({"playing": app.playback.playing}));
         }
@@ -853,11 +853,11 @@ pub fn invoke(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, params: V
 const COPY_COMMANDS: &[&str] =
     &["edit.copy", "edit.cut", "edit.copyWithPropertyLinks", "edit.copyWithRelativePropertyLinks", "edit.copyExpressionOnly", "keys.copy", "effect.copy"];
 
-/// A line for the system clipboard naming what EffectCraft copied. The system clipboard must
+/// A line for the system clipboard naming what Tselatra copied. The system clipboard must
 /// hold something: with nothing on it, the windowing layer sends no paste event for Ctrl+V.
-fn clipboard_note(s: &effectcraft_engine::Session) -> String {
+fn clipboard_note(s: &tselatra_engine::Session) -> String {
     let st = &s.state;
-    let n = |n: usize, one: &str, many: &str| format!("EffectCraft: {n} {}", if n == 1 { one } else { many });
+    let n = |n: usize, one: &str, many: &str| format!("Tselatra: {n} {}", if n == 1 { one } else { many });
     if st.clip_is_keys && !st.key_clipboard.is_empty() {
         n(st.key_clipboard.iter().map(|c| c.keys.len()).sum(), "keyframe", "keyframes")
     } else if !st.effect_clipboard.is_empty() {
@@ -865,13 +865,13 @@ fn clipboard_note(s: &effectcraft_engine::Session) -> String {
     } else if !st.contents_clipboard.is_empty() {
         n(st.contents_clipboard.len(), "shape item", "shape items")
     } else if st.link_clipboard.is_some() {
-        "EffectCraft: property links".into()
+        "Tselatra: property links".into()
     } else {
         n(st.clipboard.len(), "layer", "layers")
     }
 }
 
-pub(crate) fn run_engine(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, params: Value) -> Result<Value, String> {
+pub(crate) fn run_engine(app: &mut TselatraApp, ctx: &egui::Context, id: &str, params: Value) -> Result<Value, String> {
     // Events already queued belong to earlier invocations (`engine.execute` defers them).
     let queued = app.session.events.len();
     let mut r = app.session.execute(id, params).map_err(|e| e.to_string());
@@ -883,7 +883,7 @@ pub(crate) fn run_engine(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str
     let events = app.session.drain_events();
     for (index, ev) in events.into_iter().enumerate() {
         match ev {
-            effectcraft_engine::Event::Frontend { command, params } => {
+            tselatra_engine::Event::Frontend { command, params } => {
                 if let Err(e) = frontend(app, ctx, &command, params) {
                     app.ui.status = e.clone();
                     // A frontend-only command's own failure is the command's result (#696: a
@@ -906,7 +906,7 @@ fn toggle(slot: &mut bool, p: &Value) -> Value {
 }
 
 /// Perform a frontend command (from `Event::Frontend`).
-pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Value) -> Result<Value, String> {
+pub fn frontend(app: &mut TselatraApp, ctx: &egui::Context, id: &str, p: Value) -> Result<Value, String> {
     let now = ctx.input(|i| i.time);
     let v = &mut app.ui.viewer;
     Ok(match id {
@@ -933,7 +933,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
         // Audio scrubbing: one frame of audio at `time` (default the current time).
         "playback.scrubAudio" => {
             let cid = app.session.active_comp_id().ok_or("no composition")?;
-            let t = p.get("time").and_then(Value::as_f64).map_or(app.session.time(), effectcraft_engine::time::Tick::from_seconds_f64);
+            let t = p.get("time").and_then(Value::as_f64).map_or(app.session.time(), tselatra_engine::time::Tick::from_seconds_f64);
             app.scrub_audio(cid, t, now);
             json!({"playing": app.scrub.is_some()})
         }
@@ -954,7 +954,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
         }
         "app.settings" => {
             let page = p.get("page").and_then(Value::as_str).unwrap_or("general");
-            crate::panels::settings::open(app, effectcraft_engine::prefs::page_id(page).unwrap_or("general"));
+            crate::panels::settings::open(app, tselatra_engine::prefs::page_id(page).unwrap_or("general"));
             Value::Null
         }
         "app.gpuInfo" => {
@@ -963,7 +963,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
                 "GPU Information",
                 &format!(
                     "{}Layer cache: {} MB  •  Preview cache: {} MB.",
-                    effectcraft_engine::sysinfo::gpu_summary(&app.session),
+                    tselatra_engine::sysinfo::gpu_summary(&app.session),
                     app.session.layer_cache.budget() >> 20,
                     app.frames.budget() >> 20
                 ),
@@ -1023,8 +1023,8 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
             // The play button and Spacebar: `{shortcut?}` picks which Preview panel shortcut's
             // options to play with (default Spacebar).
             let sc = match p.get("shortcut").and_then(Value::as_str) {
-                Some(k) => effectcraft_engine::preview::PreviewShortcut::parse(k).ok_or_else(|| format!("unknown preview shortcut `{k}`"))?,
-                None => effectcraft_engine::preview::PreviewShortcut::Spacebar,
+                Some(k) => tselatra_engine::preview::PreviewShortcut::parse(k).ok_or_else(|| format!("unknown preview shortcut `{k}`"))?,
+                None => tselatra_engine::preview::PreviewShortcut::Spacebar,
             };
             app.toggle_play_with(now, sc);
             json!({"playing": app.playback.playing, "shortcut": sc.id()})
@@ -1107,7 +1107,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
                 "white" => Some([0xff, 0xff, 0xff]),
                 "custom" => Some(v.custom_pasteboard),
                 hex => {
-                    let c = effectcraft_engine::color::Rgba::from_hex(hex).ok_or_else(|| format!("unknown colour `{hex}`"))?;
+                    let c = tselatra_engine::color::Rgba::from_hex(hex).ok_or_else(|| format!("unknown colour `{hex}`"))?;
                     let rgb = [(c.r * 255.0).round() as u8, (c.g * 255.0).round() as u8, (c.b * 255.0).round() as u8];
                     v.custom_pasteboard = rgb;
                     Some(rgb)
@@ -1298,7 +1298,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
         "file.interpretFootage" => {
             // Import ▸ Interpret Unlabeled Alpha As: Ask User.
             if let Some(i) = p.get("item").and_then(Value::as_u64) {
-                app.session.state.project_selection = vec![effectcraft_engine::project::ItemId(i)];
+                app.session.state.project_selection = vec![tselatra_engine::project::ItemId(i)];
             }
             crate::panels::dialogs::open_form(app, "file.interpretFootage", &json!({}));
             Value::Null
@@ -1337,7 +1337,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
                 comp.as_ref().is_some_and(|c| {
                     targets
                         .iter()
-                        .filter_map(|l| c.layer(effectcraft_engine::project::LayerId(*l)))
+                        .filter_map(|l| c.layer(tselatra_engine::project::LayerId(*l)))
                         .any(|l| l.props.find(u).is_some() || l.props.find_group(u).is_some())
                 })
             };
@@ -1360,7 +1360,7 @@ pub fn frontend(app: &mut EffectcraftApp, ctx: &egui::Context, id: &str, p: Valu
 }
 
 /// Commands that need a file or folder path: ask the host's file dialog when `params` lacks one.
-fn file_dialog(app: &mut EffectcraftApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
+fn file_dialog(app: &mut TselatraApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
     enum Ask {
         Folder,
         Import,
@@ -1473,7 +1473,7 @@ fn picked_value(key: &str, paths: Vec<String>) -> Option<Value> {
 
 /// A file dialog shown without blocking ([`crate::Hooks::file_dialog_async`]) answered: run its
 /// command with the picked path (nothing when it was cancelled).
-pub(crate) fn dialog_answered(app: &mut EffectcraftApp, answer: crate::DialogAnswer) {
+pub(crate) fn dialog_answered(app: &mut TselatraApp, answer: crate::DialogAnswer) {
     let Some(v) = picked_value(answer.key, answer.paths) else { return };
     if let Err(e) = run_with_picked(app, &answer.command, answer.key, &answer.params, v) {
         app.ui.status = e;
@@ -1481,7 +1481,7 @@ pub(crate) fn dialog_answered(app: &mut EffectcraftApp, answer: crate::DialogAns
 }
 
 /// Run command `id` with the path picked for it in parameter `key`.
-fn run_with_picked(app: &mut EffectcraftApp, id: &str, key: &str, params: &Value, v: Value) -> Result<Value, String> {
+fn run_with_picked(app: &mut TselatraApp, id: &str, key: &str, params: &Value, v: Value) -> Result<Value, String> {
     let mut p = params.as_object().cloned().unwrap_or_default();
     p.insert(key.to_string(), v);
     // Picked files import in the background, with the Importing card showing progress (#270).
@@ -1522,10 +1522,10 @@ pub struct MenuItem {
 
 /// Top-level menus in order.
 pub fn menus() -> Vec<&'static str> {
-    effectcraft_engine::menus::top_level()
+    tselatra_engine::menus::top_level()
 }
 
-pub(crate) fn entry_label(app: &EffectcraftApp, e: &MenuEntry) -> String {
+pub(crate) fn entry_label(app: &TselatraApp, e: &MenuEntry) -> String {
     let shown = match e.command.as_str() {
         "edit.undo" => app.session.history.undo.last().map(|u| format!("Undo {}", u.0)).unwrap_or_else(|| "Can't Undo".into()),
         "edit.redo" => app.session.history.redo.last().map(|u| format!("Redo {}", u.0)).unwrap_or_else(|| "Can't Redo".into()),
@@ -1534,23 +1534,23 @@ pub(crate) fn entry_label(app: &EffectcraftApp, e: &MenuEntry) -> String {
             let name = app
                 .ui
                 .layer_panel
-                .and_then(|id| app.session.active_comp().and_then(|c| c.layer(effectcraft_engine::project::LayerId(id))))
+                .and_then(|id| app.session.active_comp().and_then(|c| c.layer(tselatra_engine::project::LayerId(id))))
                 .map(|l| l.name.clone());
             format!("Layer: {}", name.unwrap_or_else(|| "(none)".into()))
         }
-        _ => effectcraft_engine::menus::entry_label(&app.session, e),
+        _ => tselatra_engine::menus::entry_label(&app.session, e),
     };
     crate::i18n::entry(app, e, shown)
 }
 
 /// The entry's shortcut in the active keyboard shortcut preset.
-pub(crate) fn entry_shortcut(app: &EffectcraftApp, e: &MenuEntry) -> Option<String> {
+pub(crate) fn entry_shortcut(app: &TselatraApp, e: &MenuEntry) -> Option<String> {
     app.session.shortcuts().shortcut_of(&e.command, &e.params).map(str::to_string)
 }
 
 /// Whether panel `p` is on screen: the front tab of a floating window, or of a docked group
 /// (an open frame in a stack) that a maximized panel does not cover.
-pub(crate) fn panel_shown(app: &EffectcraftApp, p: PanelKind) -> bool {
+pub(crate) fn panel_shown(app: &TselatraApp, p: PanelKind) -> bool {
     if app.ui.floating.iter().any(|f| f.panels.get(f.active) == Some(&p)) {
         return true;
     }
@@ -1563,7 +1563,7 @@ pub(crate) fn panel_shown(app: &EffectcraftApp, p: PanelKind) -> bool {
 /// The command a menu entry runs when chosen from a menu: Window ▸ <panel> closes a panel whose
 /// entry is checked, as in After Effects (#1630). Shortcuts and agents calling `window.panel`
 /// still only show the panel.
-pub(crate) fn menu_choice(app: &EffectcraftApp, id: String, params: Value) -> (String, Value) {
+pub(crate) fn menu_choice(app: &TselatraApp, id: String, params: Value) -> (String, Value) {
     if id == "window.panel"
         && let Some(p) = params.get("panel").and_then(Value::as_str).and_then(PanelKind::from_name)
         && panel_shown(app, p)
@@ -1574,7 +1574,7 @@ pub(crate) fn menu_choice(app: &EffectcraftApp, id: String, params: Value) -> (S
 }
 
 /// Check-mark state of frontend toggles (engine state is answered by the engine).
-pub(crate) fn entry_checked(app: &EffectcraftApp, e: &MenuEntry) -> Option<bool> {
+pub(crate) fn entry_checked(app: &TselatraApp, e: &MenuEntry) -> Option<bool> {
     let v = &app.ui.viewer;
     let pstr = |k: &str| e.params.get(k).and_then(Value::as_str);
     match e.command.as_str() {
@@ -1601,11 +1601,11 @@ pub(crate) fn entry_checked(app: &EffectcraftApp, e: &MenuEntry) -> Option<bool>
             };
             Some(pstr("color") == Some(cur))
         }
-        _ => effectcraft_engine::menus::checked(&app.session, &e.command, &e.params),
+        _ => tselatra_engine::menus::checked(&app.session, &e.command, &e.params),
     }
 }
 
-pub(crate) fn entry_enabled(app: &EffectcraftApp, e: &MenuEntry) -> bool {
+pub(crate) fn entry_enabled(app: &TselatraApp, e: &MenuEntry) -> bool {
     if app.ui.focused == PanelKind::Project {
         match e.command.as_str() {
             "edit.duplicate" => {
@@ -1633,8 +1633,8 @@ pub(crate) fn entry_enabled(app: &EffectcraftApp, e: &MenuEntry) -> bool {
 }
 
 /// Every menu entry, flattened with its submenu path.
-pub fn menu_items(app: &EffectcraftApp) -> Vec<MenuItem> {
-    effectcraft_engine::menus::entries()
+pub fn menu_items(app: &TselatraApp) -> Vec<MenuItem> {
+    tselatra_engine::menus::entries()
         .into_iter()
         .map(|(path, e)| MenuItem {
             id: e.command.clone(),
@@ -1746,7 +1746,7 @@ fn shifted_alias(k: egui::Key) -> Option<egui::Key> {
 pub type Binding = (egui::Modifiers, egui::Key, String, Value);
 
 /// All bindings of the active keyboard shortcut preset, most modifiers first.
-pub fn bindings(session: &effectcraft_engine::Session) -> Vec<Binding> {
+pub fn bindings(session: &tselatra_engine::Session) -> Vec<Binding> {
     let mut v: Vec<Binding> = Vec::new();
     for (sc, b) in session.shortcuts().bindings() {
         if sc.starts_with("Physical+") {
@@ -1810,19 +1810,19 @@ fn only_shift(m: egui::Modifiers) -> bool {
 }
 
 /// Dispatch keyboard shortcuts (skipped while typing in a text field).
-pub fn handle_shortcuts(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn handle_shortcuts(app: &mut TselatraApp, ctx: &egui::Context) {
     handle_shortcuts_impl(app, ctx, false);
 }
 
 /// Tab can acquire widget focus while the current frame is drawn. Dispatch its application
 /// binding only afterward, and only when no widget owned focus before or after layout.
-pub fn handle_tab_shortcut(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn handle_tab_shortcut(app: &mut TselatraApp, ctx: &egui::Context) {
     if ctx.input(|i| i.key_pressed(egui::Key::Tab)) {
         handle_shortcuts_impl(app, ctx, true);
     }
 }
 
-fn handle_shortcuts_impl(app: &mut EffectcraftApp, ctx: &egui::Context, tab_only: bool) {
+fn handle_shortcuts_impl(app: &mut TselatraApp, ctx: &egui::Context, tab_only: bool) {
     let start = modifiers_at_start(ctx);
     // Dialog cancellation owns Escape even when a text field has keyboard focus.
     if !tab_only && app.dialog.is_some() && ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
@@ -2004,7 +2004,7 @@ fn handle_shortcuts_impl(app: &mut EffectcraftApp, ctx: &egui::Context, tab_only
         }
         if let Some((_, _, id, params)) = binds.iter().filter(|(m, k, ..)| *k == key && mods_match(*m, mods)).min_by_key(|(_, _, id, params)| {
             // The focused panel wins over an application command sharing its chord.
-            let key = effectcraft_engine::shortcuts::binding_key(id, params);
+            let key = tselatra_engine::shortcuts::binding_key(id, params);
             app.session.shortcuts().find(&key).is_none_or(|b| b.scope != app.ui.focused.id())
         }) {
             let (id, params) = (id.clone(), if params.is_null() { json!({}) } else { params.clone() });
@@ -2022,14 +2022,14 @@ fn handle_shortcuts_impl(app: &mut EffectcraftApp, ctx: &egui::Context, tab_only
 }
 
 /// Draw the in-window menu bar (the engine's AE menu tree).
-pub fn menu_bar(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
+pub fn menu_bar(app: &mut TselatraApp, ui: &mut egui::Ui) {
     let ctx = ui.ctx().clone();
     let mut clicked: Option<(String, Value)> = None;
     let mut nav = crate::menu_keys::Nav::default();
     ui.horizontal_centered(|ui| {
         ui.add_space(6.0);
         egui::MenuBar::new().config(egui::containers::menu::MenuConfig::new().style(crate::widgets::menu_style)).ui(ui, |ui| {
-            for node in effectcraft_engine::menus::menu_bar() {
+            for node in tselatra_engine::menus::menu_bar() {
                 if let MenuNode::Submenu { label, children } = node {
                     let r = ui.menu_button(crate::i18n::label(app, "", label), |ui| {
                         ui.set_min_width(if label == "Effect" { 200.0 } else { 280.0 });
@@ -2051,10 +2051,10 @@ pub fn menu_bar(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
 
 /// The entries of top-level menu `name` (the Effect menu is the Effect Controls panel's context
 /// menu); returns the chosen command and its params.
-pub(crate) fn menu_contents(app: &mut EffectcraftApp, ui: &mut egui::Ui, name: &str) -> Option<(String, Value)> {
+pub(crate) fn menu_contents(app: &mut TselatraApp, ui: &mut egui::Ui, name: &str) -> Option<(String, Value)> {
     let mut clicked = None;
     if let Some(MenuNode::Submenu { children, .. }) =
-        effectcraft_engine::menus::menu_bar().iter().find(|n| matches!(n, MenuNode::Submenu { label, .. } if label == name))
+        tselatra_engine::menus::menu_bar().iter().find(|n| matches!(n, MenuNode::Submenu { label, .. } if label == name))
     {
         menu_nodes(app, ui, children, &mut clicked, &mut crate::menu_keys::Nav::default(), 0);
     }
@@ -2063,7 +2063,7 @@ pub(crate) fn menu_contents(app: &mut EffectcraftApp, ui: &mut egui::Ui, name: &
 
 /// The entries `nodes` of a menu `depth` submenus deep, registered with `nav` for the keyboard.
 fn menu_nodes(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     nodes: &[MenuNode],
     clicked: &mut Option<(String, Value)>,
@@ -2080,7 +2080,7 @@ fn menu_nodes(
                 // saved workspaces.
                 let ws = app.ui.workspace.clone();
                 let saved = app.saved_workspace_names();
-                let (entries, empty) = effectcraft_engine::menus::dynamic(&app.session, name, &dyn_ctx(&ws, &saved));
+                let (entries, empty) = tselatra_engine::menus::dynamic(&app.session, name, &dyn_ctx(&ws, &saved));
                 if entries.is_empty()
                     && let Some(e) = empty
                 {
@@ -2111,7 +2111,7 @@ fn menu_nodes(
                 // The generated Effect menu's category submenus draw the catalog's name (#821);
                 // every other submenu goes through the menu catalog.
                 let shown = crate::i18n::effect_category(children, label)
-                    .unwrap_or_else(|| crate::i18n::submenu(app, label, effectcraft_engine::menus::submenu_label(&app.session, label, &dyn_ctx(&ws, &[]))));
+                    .unwrap_or_else(|| crate::i18n::submenu(app, label, tselatra_engine::menus::submenu_label(&app.session, label, &dyn_ctx(&ws, &[]))));
                 let r = ui.menu_button((gutter(false), shown.as_str()), |ui| {
                     ui.set_min_width(if children.len() > 30 { 200.0 } else { 240.0 });
                     crate::widgets::menu_scroll(ui, |ui| menu_nodes(app, ui, children, clicked, nav, depth + 1));
@@ -2135,8 +2135,8 @@ fn menu_nodes(
 
 /// The menu bar's submenu at `path` (`["File", "Interpret Footage"]`) in a panel's context menu,
 /// with the menu bar's labels, shortcuts and enabled state; a chosen entry goes to `clicked`.
-pub(crate) fn submenu_at(app: &mut EffectcraftApp, ui: &mut egui::Ui, path: &[&str], clicked: &mut Option<(String, Value)>) {
-    let mut nodes = effectcraft_engine::menus::menu_bar();
+pub(crate) fn submenu_at(app: &mut TselatraApp, ui: &mut egui::Ui, path: &[&str], clicked: &mut Option<(String, Value)>) {
+    let mut nodes = tselatra_engine::menus::menu_bar();
     let mut found = None;
     for label in path {
         let Some(n) = nodes.iter().find(|n| matches!(n, MenuNode::Submenu { label: l, .. } if l == label)) else { return };
@@ -2156,8 +2156,8 @@ pub(crate) fn submenu_at(app: &mut EffectcraftApp, ui: &mut egui::Ui, path: &[&s
 }
 
 /// The menu bar's entry for `command` in a panel's context menu (see [`submenu_at`]).
-pub(crate) fn entry_for(app: &EffectcraftApp, ui: &mut egui::Ui, command: &str, clicked: &mut Option<(String, Value)>) {
-    if let Some((_, e)) = effectcraft_engine::menus::entries().into_iter().find(|(_, e)| e.command == command)
+pub(crate) fn entry_for(app: &TselatraApp, ui: &mut egui::Ui, command: &str, clicked: &mut Option<(String, Value)>) {
+    if let Some((_, e)) = tselatra_engine::menus::entries().into_iter().find(|(_, e)| e.command == command)
         && menu_entry(app, ui, e).clicked()
     {
         *clicked = Some((e.command.clone(), e.params_or_empty()));
@@ -2166,8 +2166,8 @@ pub(crate) fn entry_for(app: &EffectcraftApp, ui: &mut egui::Ui, command: &str, 
 }
 
 /// Frontend state for dynamic menus (the current workspace and the saved ones).
-pub(crate) fn dyn_ctx<'a>(workspace: &'a str, saved_workspaces: &'a [String]) -> effectcraft_engine::menus::DynCtx<'a> {
-    effectcraft_engine::menus::DynCtx { workspace: Some(workspace), saved_workspaces }
+pub(crate) fn dyn_ctx<'a>(workspace: &'a str, saved_workspaces: &'a [String]) -> tselatra_engine::menus::DynCtx<'a> {
+    tselatra_engine::menus::DynCtx { workspace: Some(workspace), saved_workspaces }
 }
 
 /// The check-mark column every menu row reserves (like macOS / After Effects menus).
@@ -2176,11 +2176,11 @@ fn gutter(checked: bool) -> egui::Atom<'static> {
     (if checked { "✔" } else { "" }).atom_size(egui::vec2(14.0, 14.0))
 }
 
-fn menu_entry(app: &EffectcraftApp, ui: &mut egui::Ui, e: &MenuEntry) -> egui::Response {
+fn menu_entry(app: &TselatraApp, ui: &mut egui::Ui, e: &MenuEntry) -> egui::Response {
     let (label, check, enabled) = (entry_label(app, e), gutter(entry_checked(app, e) == Some(true)), entry_enabled(app, e));
     // Edit ▸ Label's entries show the label's colour before its name.
     if e.command == "edit.label"
-        && let Some(l) = e.params.get("label").and_then(Value::as_str).and_then(effectcraft_engine::color::Label::from_name)
+        && let Some(l) = e.params.get("label").and_then(Value::as_str).and_then(tselatra_engine::color::Label::from_name)
     {
         let out = ui.add_enabled_ui(enabled, |ui| egui::Button::new((check, crate::widgets::label_swatch(), label)).atom_ui(ui)).inner;
         crate::widgets::paint_label_swatch(ui, &out, l, &app.tokens);
@@ -2253,7 +2253,7 @@ mod tests {
                 assert!(parse_shortcut(sc).is_some() || sc == "Num*", "{sc}");
             }
         }
-        for (_, e) in effectcraft_engine::menus::entries() {
+        for (_, e) in tselatra_engine::menus::entries() {
             if let Some(sc) = &e.shortcut {
                 assert!(parse_shortcut(sc).is_some() || sc == "Num*", "{} ({sc})", e.label);
             }
@@ -2262,7 +2262,7 @@ mod tests {
 
     #[test]
     fn full_screen_default_is_platform_specific() {
-        let app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let app = TselatraApp::new(tselatra_engine::Session::default());
         let full_screen = app.session.shortcuts().shortcut_of("view.fullScreen", &Value::Null);
         if cfg!(target_os = "macos") {
             assert_eq!(full_screen, Some("Ctrl+Cmd+F"));
@@ -2274,7 +2274,7 @@ mod tests {
 
     #[test]
     fn ui_and_menu_shortcuts_do_not_collide() {
-        let app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let app = TselatraApp::new(tselatra_engine::Session::default());
         let mut seen: std::collections::BTreeMap<(String, String), (String, String)> = Default::default();
         for (m, k, id, params) in bindings(&app.session) {
             let key = (format!("{m:?}"), format!("{k:?}"));
@@ -2291,12 +2291,12 @@ mod tests {
     /// it, as in After Effects.
     #[test]
     fn ctrl_backslash_maximizes_or_restores_the_window() {
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         let (m, k) = parse_shortcut("Cmd+\\").unwrap();
         assert!(m.command && k == egui::Key::Backslash, "{m:?} {k:?}");
         assert!(bindings(&app.session).iter().any(|b| (b.0, b.1) == (m, k) && b.2 == "window.maximizeApp"));
         let ctx = egui::Context::default();
-        let run = |app: &mut EffectcraftApp, maximized: bool| {
+        let run = |app: &mut TselatraApp, maximized: bool| {
             let input = egui::RawInput {
                 viewports: std::iter::once((egui::ViewportId::ROOT, egui::ViewportInfo { maximized: Some(maximized), ..Default::default() })).collect(),
                 ..Default::default()
@@ -2318,7 +2318,7 @@ mod tests {
     /// The default keys of the keyboard-only commands parse and reach them.
     #[test]
     fn keyboard_only_commands_are_bound() {
-        let app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let app = TselatraApp::new(tselatra_engine::Session::default());
         for (id, keys) in [
             ("time.workAreaStart", "Shift+Home"),
             ("time.workAreaEnd", "Shift+End"),
@@ -2356,8 +2356,8 @@ mod tests {
     #[test]
     fn timeline_keys_scroll_and_toggle_the_parent_column() {
         let ctx = egui::Context::default();
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
-        let run = |app: &mut EffectcraftApp, id: &str| invoke(app, &ctx, id, json!({})).unwrap();
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
+        let run = |app: &mut TselatraApp, id: &str| invoke(app, &ctx, id, json!({})).unwrap();
         // D and X leave a scroll for the Timeline to do when it is drawn.
         run(&mut app, "timeline.scrollToTime");
         assert_eq!(app.ui.timeline.scroll_to, Some(crate::state::ScrollTo::Time));
@@ -2374,10 +2374,10 @@ mod tests {
     #[test]
     fn viewer_keys_fit_and_step_through_open_comps() {
         let ctx = egui::Context::default();
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
-        let run = |app: &mut EffectcraftApp, id: &str| invoke(app, &ctx, id, json!({})).unwrap();
-        let new = |app: &mut EffectcraftApp, name: &str| app.session.execute("comp.new", json!({"name": name, "duration": 4})).unwrap()["comp"].as_u64();
-        let active = |app: &EffectcraftApp| app.session.state.active_comp.map(|c| c.0);
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
+        let run = |app: &mut TselatraApp, id: &str| invoke(app, &ctx, id, json!({})).unwrap();
+        let new = |app: &mut TselatraApp, name: &str| app.session.execute("comp.new", json!({"name": name, "duration": 4})).unwrap()["comp"].as_u64();
+        let active = |app: &TselatraApp| app.session.state.active_comp.map(|c| c.0);
         // With one composition open there is nothing to step to.
         let a = new(&mut app, "A");
         run(&mut app, "view.nextItem");
@@ -2400,8 +2400,8 @@ mod tests {
     #[test]
     fn panel_keys_switch_cycle_and_close() {
         let ctx = egui::Context::default();
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
-        let run = |app: &mut EffectcraftApp, id: &str| invoke(app, &ctx, id, json!({})).unwrap();
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
+        let run = |app: &mut TselatraApp, id: &str| invoke(app, &ctx, id, json!({})).unwrap();
         for name in ["A", "B"] {
             app.session.execute("comp.new", json!({"name": name, "duration": 4})).unwrap();
         }
@@ -2430,7 +2430,7 @@ mod tests {
     #[test]
     fn c_cycles_the_camera_tools() {
         let ctx = egui::Context::default();
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         app.ui.tool = Tool::Selection;
         let mut seen = vec![];
         for _ in 0..4 {
@@ -2442,8 +2442,8 @@ mod tests {
 
     #[test]
     fn dispatch_uses_the_active_custom_preset() {
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
-        let find = |app: &EffectcraftApp, id: &str| bindings(&app.session).into_iter().filter(|b| b.2 == id).map(|b| (b.0, b.1)).collect::<Vec<_>>();
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
+        let find = |app: &TselatraApp, id: &str| bindings(&app.session).into_iter().filter(|b| b.2 == id).map(|b| (b.0, b.1)).collect::<Vec<_>>();
         let (m, k) = parse_shortcut("Cmd+Alt+Shift+Y").unwrap();
         assert!(find(&app, "layer.newNull").contains(&(m, k)));
         // A UI command rebound in a custom preset.
@@ -2457,13 +2457,13 @@ mod tests {
         let item = menu_items(&app).into_iter().find(|i| i.id == "layer.newNull").unwrap();
         assert_eq!(item.shortcut.as_deref(), Some("F6"));
         // Back to the default preset.
-        app.session.execute("shortcuts.preset", json!({"op": "select", "name": effectcraft_engine::shortcuts::DEFAULT_PRESET})).unwrap();
+        app.session.execute("shortcuts.preset", json!({"op": "select", "name": tselatra_engine::shortcuts::DEFAULT_PRESET})).unwrap();
         assert!(find(&app, "layer.newNull").contains(&(m, k)));
     }
 
     #[test]
     fn renamed_label_shows_in_the_label_menu() {
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         app.set_pref("labels.1.name", json!("Sunflower")).unwrap();
         let labels: Vec<String> = menu_items(&app).into_iter().filter(|i| i.id == "edit.label").map(|i| i.label).collect();
         assert!(labels.contains(&"Sunflower".to_string()), "{labels:?}");
@@ -2477,7 +2477,7 @@ mod tests {
     fn save_dialogs_offer_the_file_extension() {
         use std::cell::RefCell;
         use std::rc::Rc;
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         app.session.execute("comp.new", json!({"name": "A", "width": 64, "height": 36, "frameRate": 30, "duration": 1})).unwrap();
         let ctx = egui::Context::default();
         let asked: Rc<RefCell<Vec<String>>> = Rc::default();
@@ -2517,7 +2517,7 @@ mod tests {
     #[test]
     fn file_dialogs_can_answer_on_a_later_frame() {
         use std::sync::{Arc, Mutex};
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         app.session.execute("comp.new", json!({"name": "A", "width": 64, "height": 36, "frameRate": 30, "duration": 1})).unwrap();
         let ctx = egui::Context::default();
         app.hooks.pick_save = Some(Box::new(|_: &str| panic!("the blocking dialog is not used")));
@@ -2549,7 +2549,7 @@ mod tests {
     #[test]
     fn tga_is_available_in_import_replace_and_proxy_dialogs() {
         use std::sync::{Arc, Mutex};
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         let ctx = egui::Context::default();
         let pending = Arc::new(Mutex::new(Vec::new()));
         let queue = pending.clone();
@@ -2564,6 +2564,6 @@ mod tests {
     #[test]
     fn menu_items_cover_the_tree() {
         assert_eq!(menus().last(), Some(&"Help"));
-        assert!(effectcraft_engine::menus::entries().len() > 500);
+        assert!(tselatra_engine::menus::entries().len() > 500);
     }
 }

@@ -2,10 +2,10 @@
 //! Bitmap prints images of the art, and a flattener preset flattens transparency first.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, NodeKind};
-use vectorcraft_geom::Rect;
-use vectorcraft_pdf::PrintSettings;
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_doc::{Document, NodeKind};
+use tsipika_geom::Rect;
+use tsipika_pdf::PrintSettings;
+use tsipika_render::{RenderOptions, Renderer};
 
 use super::*;
 
@@ -43,10 +43,10 @@ fn pixels(doc: &Document, opts: RenderOptions) -> Vec<u8> {
 /// The pixel of the page `pdf` prints at document point `(x, y)` of the first sheet.
 fn printed_pixel(s: &mut Session, settings: Value, (x, y): (f64, f64)) -> [u8; 4] {
     let v = s.execute("file.print", &json!({ "settings": settings })).unwrap();
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     let pv = s.execute("print.preview", &json!({ "settings": settings })).unwrap();
     let t: Vec<f64> = pv["sheets"][0]["transform"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
-    let back = vectorcraft_pdf::import(&bytes).unwrap();
+    let back = tsipika_pdf::import(&bytes).unwrap();
     let page = back.artboards[0].rect;
     let (px, py) = (page.x0 + t[0] * x + t[2] * y + t[4], page.y0 + t[1] * x + t[3] * y + t[5]);
     let img = Renderer::new().render_region(&back, Rect::new(px - 0.5, py - 0.5, px + 0.5, py + 0.5), 1.0, true);
@@ -61,7 +61,7 @@ fn near(a: [u8; 4], b: [u8; 4]) -> bool {
 fn simulated_overprints_print_what_overprint_preview_shows() {
     let (mut s, _) = session();
     let preview = pixels(doc(&s), RenderOptions { overprint_preview: true, ..Default::default() });
-    let simulated = vectorcraft_pdf::printed_document(doc(&s), &settings(json!({"advanced": {"overprints": "simulate"}})));
+    let simulated = tsipika_pdf::printed_document(doc(&s), &settings(json!({"advanced": {"overprints": "simulate"}})));
     assert_eq!(pixels(&simulated, RenderOptions::default()), preview, "the same pixels as Overprint Preview");
     assert_ne!(pixels(doc(&s), RenderOptions::default()), preview, "overprinting shows");
     // On the printed page too: where yellow overprints cyan it prints green; discarded, yellow.
@@ -113,8 +113,8 @@ fn print_as_bitmap_prints_an_image_of_each_artboard() {
     assert_eq!(pixels(&bitmap, RenderOptions::default()).len(), pixels(doc(&s), RenderOptions::default()).len());
     let v = s.execute("file.print", &json!({"settings": {"advanced": {"printAsBitmap": true}, "skipBlank": true}})).unwrap();
     assert_eq!(v["pages"], 1, "the blank artboard is skipped");
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
-    let back = vectorcraft_pdf::import(&bytes).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let back = tsipika_pdf::import(&bytes).unwrap();
     let (mut images, mut paths) = (0, 0);
     back.walk(|n| match n.kind {
         NodeKind::Image(_) => images += 1,

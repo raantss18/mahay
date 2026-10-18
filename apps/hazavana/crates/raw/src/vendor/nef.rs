@@ -11,10 +11,10 @@
 use super::{nefc, white_from_data};
 use crate::tiffraw::{Packing, check_image, read_image};
 use crate::{BlackLevel, Cfa, ColorData, Mode, OpcodeLists, RawData, RawError, RawFormat, RawImage, Rect, Result};
-use lightcraft_geom::Orientation;
-use lightcraft_tiff::image::ImageInfo;
-use lightcraft_tiff::tags::{self as t, photometric};
-use lightcraft_tiff::{ByteOrder, Ifd, Tiff, makernote};
+use hazavana_geom::Orientation;
+use hazavana_tiff::image::ImageInfo;
+use hazavana_tiff::tags::{self as t, photometric};
+use hazavana_tiff::{ByteOrder, Ifd, Tiff, makernote};
 
 const WB_RB_LEVELS: u16 = 0x000c;
 const BLACK_LEVEL: u16 = 0x003d;
@@ -279,7 +279,7 @@ pub(crate) fn decode(bytes: &[u8], mode: Mode) -> Result<RawImage> {
         _ => default_crop(mn.as_ref(), active_w, h),
     };
     let pixel_aspect = pixel_aspect_of(raw);
-    let mut metadata = lightcraft_meta::from_tiff(&tiff);
+    let mut metadata = hazavana_meta::from_tiff(&tiff);
     metadata.width = Some(crop.width as u32);
     metadata.height = Some(crate::stretched_height(crop.height, pixel_aspect) as u32);
     let img = RawImage {
@@ -373,7 +373,7 @@ fn compressed(bytes: &[u8], info: &ImageInfo, mn: Option<&makernote::MakerNote>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value};
+    use hazavana_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value};
 
     fn nef(compression: u16, bits: u16, strips: Vec<Vec<u8>>, w: u32, h: u32, rps: u32) -> Vec<u8> {
         nef_with_note(compression, bits, strips, w, h, rps, None)

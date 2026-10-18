@@ -2,8 +2,8 @@
 //! Gaussian blur, O(1)-per-pixel min/max filters, box means for guided filtering), channel
 //! pickers, a small deterministic RNG and per-pixel helpers.
 
-use effectcraft_color::{luminance, rgb_to_hsl};
-use effectcraft_raster::{Image, Px};
+use tselatra_color::{luminance, rgb_to_hsl};
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 /// A single-channel `f32` image (row-major).
@@ -358,7 +358,7 @@ impl Rng {
 /// Integer hash → [0, 1).
 #[inline]
 pub fn hash1(a: u32, b: u32, seed: u32) -> f32 {
-    effectcraft_raster::hash_noise(a, b, seed)
+    tselatra_raster::hash_noise(a, b, seed)
 }
 
 /// Map every pixel with its coordinates (row-parallel).
@@ -382,7 +382,7 @@ pub fn gen_image(w: u32, h: u32, f: impl Fn(usize, usize) -> Px + Sync) -> Image
 pub fn set_alpha(img: &mut Image, new_a: &Plane) {
     let needs_fill = img.data.par_iter().zip(new_a.data.par_iter()).any(|(p, &a)| p[3] <= 1e-4 && a > 1e-4);
     let fill = if needs_fill {
-        let blurred = effectcraft_raster::gaussian_blur(img, 3.0, 3.0, true);
+        let blurred = tselatra_raster::gaussian_blur(img, 3.0, 3.0, true);
         Some(blurred)
     } else {
         None

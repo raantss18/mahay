@@ -1,9 +1,9 @@
 //! Menu long-tail commands (Object/Edit/Select/Type/View/File), driven through `Session::execute`.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, ColorMode, LiveShape, Node, NodeKind, TextKind};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, ColorMode, LiveShape, Node, NodeKind, TextKind};
+use tsipika_geom::{Rect, shapes};
 
 use super::tests_large_edits::{layer, run_soon, square, undo_gives_back};
 use super::*;
@@ -47,7 +47,7 @@ pub(crate) fn place_undecodable_png(s: &mut Session) -> NodeId {
         .unwrap();
     let idat = png.windows(4).position(|w| w == b"IDAT").unwrap();
     png.truncate(idat + 8);
-    let r = s.execute("file.place", &json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&png)})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&png)})).unwrap();
     NodeId(r["ids"][0].as_u64().unwrap())
 }
 
@@ -805,7 +805,7 @@ fn blend_make_release_options() {
     assert_eq!(undo_len(&s), n + 1);
     let gn = node(&s, g);
     assert!(matches!(gn.kind, NodeKind::Blend { .. }), "live blend");
-    let ch = vectorcraft_doc::live::expand_live(&gn);
+    let ch = tsipika_doc::live::expand_live(&gn);
     assert_eq!(ch.len(), 5);
     // Middle step: halfway in position, size and colour.
     let mid = &ch[2];
@@ -815,7 +815,7 @@ fn blend_make_release_options() {
     assert!((c[0] - 0.5).abs() < 1e-3);
     // Options: 1 step.
     s.execute("object.blend.options", &json!({"steps": 1})).unwrap();
-    assert_eq!(vectorcraft_doc::live::expand_live(&node(&s, g)).len(), 3);
+    assert_eq!(tsipika_doc::live::expand_live(&node(&s, g)).len(), 3);
     // Release: keys only, back in the layer.
     let r = s.execute("object.blend.release", &json!({})).unwrap();
     assert_eq!(r["ids"].as_array().unwrap().len(), 2);
@@ -1510,7 +1510,7 @@ fn update_selection_replaces_the_recalled_saved_selection() {
     s.execute("select.recall", &json!({"name": "Other"})).unwrap();
     assert_eq!(selected(&s), vec![a, b]);
     // It travels with the file.
-    let loaded = vectorcraft_format::load(&vectorcraft_format::save_file(&s.doc().unwrap().doc)).unwrap();
+    let loaded = tsipika_format::load(&tsipika_format::save_file(&s.doc().unwrap().doc)).unwrap();
     assert_eq!(loaded.saved_selections.iter().map(|x| x.objects.len()).collect::<Vec<_>>(), [3, 2]);
     // It is one undo step.
     s.execute("edit.undo", &json!({})).unwrap();
@@ -1651,7 +1651,7 @@ fn saved_selections_live_in_the_document() {
     sel(&mut s, &[a, b]);
     s.execute("select.save", &json!({"name": "Both"})).unwrap();
     // They travel with the file.
-    let loaded = vectorcraft_format::load(&vectorcraft_format::save_file(&s.doc().unwrap().doc)).unwrap();
+    let loaded = tsipika_format::load(&tsipika_format::save_file(&s.doc().unwrap().doc)).unwrap();
     assert_eq!(loaded.saved_selections.iter().map(|x| x.name.as_str()).collect::<Vec<_>>(), ["A", "Both"]);
     // Saving is an undo step.
     s.execute("edit.undo", &json!({})).unwrap();
@@ -2444,7 +2444,7 @@ fn artboard_guides_go_with_their_artboard() {
 /// canvas; with the Artboard tool it is an artboard guide of the active artboard.
 #[test]
 fn guides_dragged_out_of_a_ruler_snap_and_take_the_artboard_tool_s_artboard() {
-    use vectorcraft_tools::{Overlay, PointerEvent, PointerKind};
+    use tsipika_tools::{Overlay, PointerEvent, PointerKind};
     let mut s = session();
     rect(&mut s, 100.0, 100.0, 100.0, 100.0);
     let v = ViewInfo::default();
@@ -2483,9 +2483,9 @@ fn guides_dragged_out_of_a_ruler_snap_and_take_the_artboard_tool_s_artboard() {
 #[test]
 fn guides_from_older_files_are_put_on_a_layer() {
     let mut s = Session::new();
-    let mut d = vectorcraft_doc::Document::new(400.0, 300.0);
-    d.guides.push(vectorcraft_doc::Guide::new(true, 50.0));
-    d.guides.push(vectorcraft_doc::Guide::new(false, 80.0));
+    let mut d = tsipika_doc::Document::new(400.0, 300.0);
+    d.guides.push(tsipika_doc::Guide::new(true, 50.0));
+    d.guides.push(tsipika_doc::Guide::new(false, 80.0));
     s.add_document(d, None);
     let st = s.doc().unwrap();
     let top = st.doc.default_layer();
@@ -2590,7 +2590,7 @@ fn guides_go_with_their_layers_when_duplicated_merged_and_flattened() {
 /// Guides).
 #[test]
 fn moved_art_snaps_to_the_artboard_edges_and_centre() {
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_tools::{PointerEvent, PointerKind};
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 100.0, 100.0);
     let v = ViewInfo::default();
@@ -2610,7 +2610,7 @@ fn moved_art_snaps_to_the_artboard_edges_and_centre() {
 /// guides hidden or locked the press goes to the art.
 #[test]
 fn selection_tool_drags_a_ruler_guide() {
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_tools::{PointerEvent, PointerKind};
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 100.0, 100.0);
     s.execute("guide.add", &json!({"vertical": true, "pos": 150})).unwrap();
@@ -2763,7 +2763,7 @@ fn opening_in_cmyk_can_put_rgb_greys_on_the_black_plate() {
         fill(&mut s, id, hex);
     }
     let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
-    let data = vectorcraft_format::base64_encode(svg.as_bytes());
+    let data = tsipika_format::base64_encode(svg.as_bytes());
     let mut o = Session::new();
     o.execute("document.open", &json!({"name": "greys.svg", "dataBase64": data, "colorMode": "cmyk", "grays": "black"})).unwrap();
     let d = &o.doc().unwrap().doc;
@@ -2817,10 +2817,10 @@ fn saved_selection_names_are_trimmed_and_capped() {
     sel(&mut s, &[a]);
     let long = "n".repeat(1000);
     let name = s.execute("select.save", &json!({ "name": format!(" {long} ") })).unwrap()["name"].clone();
-    assert_eq!(name.as_str().map(|n| n.chars().count()), Some(vectorcraft_doc::SavedSelection::MAX_NAME));
+    assert_eq!(name.as_str().map(|n| n.chars().count()), Some(tsipika_doc::SavedSelection::MAX_NAME));
     s.execute("select.editSaved", &json!({"name": name, "newName": format!("{long}é")})).unwrap();
     let list = s.execute("select.savedList", &json!({})).unwrap();
-    assert_eq!(list[0].as_str().map(|n| n.chars().count()), Some(vectorcraft_doc::SavedSelection::MAX_NAME));
+    assert_eq!(list[0].as_str().map(|n| n.chars().count()), Some(tsipika_doc::SavedSelection::MAX_NAME));
 }
 
 #[test]
@@ -2835,7 +2835,7 @@ fn crop_image_trim_cuts_to_the_opaque_pixels_as_they_are() {
     let mut png = Vec::new();
     px.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "art.png", "dataBase64": vectorcraft_format::base64_encode(&png)})).unwrap();
+    s.execute("document.open", &json!({"name": "art.png", "dataBase64": tsipika_format::base64_encode(&png)})).unwrap();
     s.execute("select.all", &json!({})).unwrap();
     let img = selected(&s)[0];
     s.execute("object.scale", &json!({"sx": 200, "origin": [0, 0]})).unwrap();
@@ -2862,7 +2862,7 @@ fn crop_image_trim_checks_the_rgba_size_before_decoding() {
     let trim = |w: u32, h: u32| {
         let png = super::tests_linkspanel::png_header(w, h);
         let mut s = Session::new();
-        s.execute("document.open", &json!({"name": "wall.png", "dataBase64": vectorcraft_format::base64_encode(&png)})).unwrap();
+        s.execute("document.open", &json!({"name": "wall.png", "dataBase64": tsipika_format::base64_encode(&png)})).unwrap();
         s.execute("select.all", &json!({})).unwrap();
         s.execute("object.cropImage", &json!({"trim": true})).unwrap_err().to_string()
     };
@@ -2876,10 +2876,10 @@ fn crop_image_trim_checks_the_rgba_size_before_decoding() {
 #[test]
 fn crop_image_trim_leaves_a_cmyk_image_alone() {
     // CMYK images keep their ink amounts and have no alpha: nothing to cut, and not an error.
-    let inks = vectorcraft_doc::cmyk::Inks::new(4, 2, [255, 0, 0, 0].repeat(8)).unwrap();
-    let tiff = vectorcraft_doc::ImageBlob::cmyk_tiff(&inks).unwrap();
+    let inks = tsipika_doc::cmyk::Inks::new(4, 2, [255, 0, 0, 0].repeat(8)).unwrap();
+    let tiff = tsipika_doc::ImageBlob::cmyk_tiff(&inks).unwrap();
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "inks.tif", "dataBase64": vectorcraft_format::base64_encode(&tiff.bytes)})).unwrap();
+    s.execute("document.open", &json!({"name": "inks.tif", "dataBase64": tsipika_format::base64_encode(&tiff.bytes)})).unwrap();
     s.execute("select.all", &json!({})).unwrap();
     let r = s.execute("object.cropImage", &json!({"trim": true})).unwrap();
     assert_eq!((r["trimmed"].as_bool(), r["width"].as_u64(), r["height"].as_u64()), (Some(false), Some(4), Some(2)), "{r}");

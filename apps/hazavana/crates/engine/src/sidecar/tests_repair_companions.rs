@@ -2,7 +2,7 @@
 use super::*;
 use crate::rename::{MoveFs, RealFs};
 use crate::tests_xmp::{same_path_for_volume, same_path_or_file};
-use lightcraft_catalog::{Op, Photo, Source};
+use hazavana_catalog::{Op, Photo, Source};
 use serde_json::json;
 
 struct Faults(Vec<PathBuf>);
@@ -35,7 +35,7 @@ impl MoveFs for Faults {
 }
 fn packet(marker: &str) -> String {
     format!(
-        r#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:fixture="urn:lightcraft:companion-test" xmp:Rating="2" fixture:Marker="{marker}"/></rdf:RDF></x:xmpmeta>"#
+        r#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:fixture="urn:hazavana:companion-test" xmp:Rating="2" fixture:Marker="{marker}"/></rdf:RDF></x:xmpmeta>"#
     )
 }
 fn queues(s: &Session) -> Vec<crate::rename::SidecarMove> {

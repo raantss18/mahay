@@ -4,9 +4,9 @@ mod patfile;
 pub use patfile::{PatternChoice, pattern_choices};
 pub(super) use patfile::{lines_for, run_patterns};
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Drawing, Entity, EntityKind, Gradient, Handle, Hatch, HatchLoop, Space, entity_bounds};
-use cadcraft_geom::{Bounds2, PolyVertex, Polyline, Vec2, point_in_polygon};
+use drafitra_color::Color;
+use drafitra_doc::{Drawing, Entity, EntityKind, Gradient, Handle, Hatch, HatchLoop, Space, entity_bounds};
+use drafitra_geom::{Bounds2, PolyVertex, Polyline, Vec2, point_in_polygon};
 use serde_json::{Value, json};
 
 use super::helpers::lwpoly;
@@ -95,7 +95,7 @@ fn closed_loop(d: &Drawing, e: &Entity) -> Option<Vec<PolyVertex>> {
             Some(p.vertices.clone())
         }
         EntityKind::Ellipse(el) => {
-            let ge = cadcraft_geom::Ellipse { center: el.center.xy(), major: el.major.xy(), ratio: el.ratio, start: el.start, end: el.end };
+            let ge = drafitra_geom::Ellipse { center: el.center.xy(), major: el.major.xy(), ratio: el.ratio, start: el.start, end: el.end };
             if !ge.is_full() {
                 return None;
             }
@@ -204,7 +204,7 @@ pub(crate) fn loops_at(s: &Session, p: Vec2) -> Result<Vec<HatchLoop>> {
     let ext = d.extents(&space);
     let tol = ((ext.width() + ext.height()) * 1e-9).max(1e-9);
     let (polys, owners) = outlines(d, &space, None);
-    let found = cadcraft_geom::region::boundary_at_gap(&polys, p, tol, gap_tolerance(d))
+    let found = drafitra_geom::region::boundary_at_gap(&polys, p, tol, gap_tolerance(d))
         .ok_or_else(|| EngineError::Other("Valid hatch boundary not found.".into()))?;
     let outer = found.outer;
     let ob = Bounds2::from_points(outer.iter().copied());
@@ -223,7 +223,7 @@ pub(crate) fn loops_at(s: &Session, p: Vec2) -> Result<Vec<HatchLoop>> {
             if let Some(vs) = closed_loop(d, e) {
                 let pts = Polyline { vertices: vs.clone(), closed: true }.tessellate(tol.max(eb.width() * 1e-3));
                 let inside = pts.iter().all(|q| point_in_polygon(&outer, *q) || outer.iter().any(|o| o.near(*q, tol * 10.0)));
-                let same_as_outer = (cadcraft_geom::shoelace(&pts).abs() - cadcraft_geom::shoelace(&outer).abs()).abs() < tol.max(1e-6) * 1000.0;
+                let same_as_outer = (drafitra_geom::shoelace(&pts).abs() - drafitra_geom::shoelace(&outer).abs()).abs() < tol.max(1e-6) * 1000.0;
                 if inside && !same_as_outer && !point_in_polygon(&pts, p) {
                     loops.push(HatchLoop { vertices: vs, outer: false, sources: vec![e.handle] });
                 }
@@ -455,7 +455,7 @@ fn run_hatch(s: &mut Session, p: &Value) -> Result<Value> {
     patfile::load_param(p)?;
     // Like the prompt: a name without a definition would be drawn as ANSI31.
     if let Some(up) = str_param(p, "pattern").map(str::to_ascii_uppercase)
-        && cadcraft_doc::library::pattern(&up).is_none()
+        && drafitra_doc::library::pattern(&up).is_none()
         && patfile::user_pattern(&up).is_none()
     {
         return Err(bad("hatch", format!("unknown pattern {up}")));
@@ -512,7 +512,7 @@ fn run_region(s: &mut Session, p: &Value) -> Result<Value> {
         if let Some((vs, common)) = vs {
             let d = s.doc_mut()?;
             d.modify_entity(h, |e| {
-                e.kind = EntityKind::Region(cadcraft_doc::Region::from_loop(vs));
+                e.kind = EntityKind::Region(drafitra_doc::Region::from_loop(vs));
                 e.common = common;
             })?;
             n += 1;
@@ -565,7 +565,7 @@ impl HatchM {
         let h = &mut s.doc_mut()?.header;
         if let Some(o) = origin.filter(|o| o.is_finite()) {
             self.settings.origin = o;
-            h.set("HPORIGIN", cadcraft_doc::HVal::Point(o.to3(0.0)));
+            h.set("HPORIGIN", drafitra_doc::HVal::Point(o.to3(0.0)));
         }
         self.settings.origin_mode = mode;
         h.set_i64("HPORIGINMODE", mode.index());
@@ -579,7 +579,7 @@ impl HatchM {
                     Some(n) => n,
                     None => t.trim().to_ascii_uppercase(),
                 };
-                if cadcraft_doc::library::pattern(&up).is_some() || patfile::user_pattern(&up).is_some() {
+                if drafitra_doc::library::pattern(&up).is_some() || patfile::user_pattern(&up).is_some() {
                     self.settings.pattern = up.clone();
                     s.doc_mut()?.header.set_str("HPNAME", &up);
                 } else {

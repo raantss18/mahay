@@ -1,4 +1,4 @@
-//! The DesignCraft engine façade.
+//! The Pejy engine façade.
 //!
 //! Every user-visible action is a command with a stable id (`frame.create`, `text.insert`,
 //! `layout.pages.insert`…) and JSON parameters. The egui UI, the CLI, the control channel and MCP
@@ -24,15 +24,15 @@ mod tooling;
 
 use std::sync::Arc;
 
-use designcraft_compose::Cache;
-use designcraft_doc::{Document, LayerId, Selection};
+use pejy_compose::Cache;
+use pejy_doc::{Document, LayerId, Selection};
 use serde_json::Value;
 
 pub use cmd::params::{check_keys, check_params};
 pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
-pub use designcraft_compose as compose;
-pub use designcraft_doc as doc;
-pub use designcraft_tools as tools;
+pub use pejy_compose as compose;
+pub use pejy_doc as doc;
+pub use pejy_tools as tools;
 pub use tooling::{SnapView, UiRequest, ViewInfo};
 
 #[derive(Debug, thiserror::Error)]
@@ -52,8 +52,8 @@ pub enum EngineError {
     Internal(String, String),
 }
 
-impl From<designcraft_doc::DocError> for EngineError {
-    fn from(e: designcraft_doc::DocError) -> Self {
+impl From<pejy_doc::DocError> for EngineError {
+    fn from(e: pejy_doc::DocError) -> Self {
         EngineError::Other(e.to_string())
     }
 }
@@ -112,7 +112,7 @@ pub struct DocState {
     pub fonts: Option<Arc<FontScope>>,
 }
 
-/// A document's font scope ([`designcraft_fonts::FontDb::load_document_fonts`]): its fonts are
+/// A document's font scope ([`pejy_fonts::FontDb::load_document_fonts`]): its fonts are
 /// found until the document's state (with every copy of it) is gone — closed, reverted, or its
 /// session ended.
 #[derive(Debug)]
@@ -121,7 +121,7 @@ pub struct FontScope(pub u32);
 /// A graphic loaded in the place cursor (`place.load`, File › Place with no frame to fill).
 #[derive(Clone, Copy, Debug)]
 pub struct LoadedGraphic {
-    pub asset: designcraft_doc::AssetId,
+    pub asset: pejy_doc::AssetId,
     /// Natural size in points: the Image Import Options › Crop to box for a PDF page (the asset's
     /// `pdf_box`).
     pub size: (f64, f64),
@@ -129,7 +129,7 @@ pub struct LoadedGraphic {
 
 impl Drop for FontScope {
     fn drop(&mut self) {
-        designcraft_fonts::FontDb::global().close_scope(self.0);
+        pejy_fonts::FontDb::global().close_scope(self.0);
     }
 }
 
@@ -235,7 +235,7 @@ pub struct Prefs {
     /// Preferences › File Handling: minutes between document recovery saves.
     pub recovery_minutes: f64,
     /// File › New › Document › Save Document Preset: saved document presets, by name (`title`).
-    pub document_presets: Vec<designcraft_doc::build::NewDocument>,
+    pub document_presets: Vec<pejy_doc::build::NewDocument>,
     /// Preferences › File Handling › Create Links When Placing Text Files: placed text files are
     /// linked (Links panel) unless `file.place` says otherwise.
     pub link_text_files: bool,
@@ -328,10 +328,10 @@ pub struct Session {
     in_undo_step: bool,
     pub prefs: Prefs,
     pub cache: Arc<Cache>,
-    pub(crate) tool: Box<dyn designcraft_tools::Tool>,
+    pub(crate) tool: Box<dyn pejy_tools::Tool>,
     /// The selection tool a Cmd-held press borrows for one gesture while another tool stays
     /// chosen (#919). Dropped on release.
-    pub(crate) temp_tool: Option<Box<dyn designcraft_tools::Tool>>,
+    pub(crate) temp_tool: Option<Box<dyn pejy_tools::Tool>>,
     /// The selection tool (`selection` or `directSelection`) chosen last: the one Cmd borrows.
     pub(crate) last_selection_tool: &'static str,
     pub journal: Vec<(String, Value)>,
@@ -343,7 +343,7 @@ pub struct Session {
     /// Crash-recovery folder (the app sets it; saving or closing a document removes its entry).
     pub recovery_dir: Option<std::path::PathBuf>,
     /// Copied text with its formatting (a frameless story slice) and its plain text.
-    pub text_clipboard: Option<(Arc<designcraft_doc::Story>, String)>,
+    pub text_clipboard: Option<(Arc<pejy_doc::Story>, String)>,
     /// Requests for the UI (dialogs, view changes) produced by tools/commands.
     pub ui_requests: Vec<UiRequest>,
     /// Graphic loaded in the place cursor.
@@ -352,12 +352,12 @@ pub struct Session {
     /// Transforms applied to the current selection, oldest first (Transform Again / Sequence
     /// Again), with the selection they were applied to and whether the last one came from a
     /// tool interaction (its previews replace each other).
-    pub(crate) transforms: (Vec<(String, Value)>, Vec<designcraft_doc::ItemId>, bool),
+    pub(crate) transforms: (Vec<(String, Value)>, Vec<pejy_doc::ItemId>, bool),
     /// Drag and drop text editing: the press landed in the selected text.
     pub(crate) text_drag: bool,
     /// The word, line, paragraph or story the last `text.selectAt` selected: a drag that follows a
     /// double, triple or quadruple click extends from it by whole units (#981).
-    pub(crate) text_unit: Option<designcraft_doc::TextSel>,
+    pub(crate) text_unit: Option<pejy_doc::TextSel>,
     /// Character formatting chosen at a bare caret, for the text typed there next.
     pub(crate) typing_format: Option<cmd::text::TypingFormat>,
     /// The open Object Library (File › New / Open Library).
@@ -371,7 +371,7 @@ pub struct Session {
     pub(crate) new_document_preview: Option<(u64, Option<u64>)>,
     /// Linked text files checked by the Links panel: path → the size and modification time the
     /// file had and the hash of its contents then, so a file touched but not changed is read once.
-    pub(crate) text_link_checks: std::collections::HashMap<String, (designcraft_doc::Fingerprint, String)>,
+    pub(crate) text_link_checks: std::collections::HashMap<String, (pejy_doc::Fingerprint, String)>,
 }
 
 impl Default for Session {
@@ -394,7 +394,7 @@ impl Session {
             in_undo_step: false,
             prefs: Prefs::default(),
             cache: Arc::new(Cache::new()),
-            tool: designcraft_tools::create("selection"),
+            tool: pejy_tools::create("selection"),
             temp_tool: None,
             last_selection_tool: "selection",
             journal: vec![],
@@ -660,10 +660,10 @@ impl Session {
             while let Some(story) = d.story(sid) {
                 let Some(&last) = story.frames.last() else { break };
                 let Some(page) = d.page_of_item(last) else { break };
-                let cs = designcraft_compose::compose_story(&d, sid, &Default::default());
+                let cs = pejy_compose::compose_story(&d, sid, &Default::default());
                 let on_page: Vec<_> =
                     d.spreads.iter().flat_map(|sp| sp.items.iter()).map(|i| i.id).filter(|id| d.page_of_item(*id) == Some(page)).collect();
-                let empty = |id: &designcraft_doc::ItemId| story.frames.contains(id) && cs.frame(*id).is_none_or(|ft| ft.range.is_empty());
+                let empty = |id: &pejy_doc::ItemId| story.frames.contains(id) && cs.frame(*id).is_none_or(|ft| ft.range.is_empty());
                 if page + 1 != d.page_count() || d.page_count() < 2 || !on_page.iter().all(empty) || on_page.len() >= story.frames.len() {
                     break;
                 }

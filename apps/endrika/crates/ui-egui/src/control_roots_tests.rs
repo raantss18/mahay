@@ -4,8 +4,8 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use figcraft_engine::Session;
-use figcraft_engine::file_access::Roots;
+use endrika_engine::Session;
+use endrika_engine::file_access::Roots;
 use serde_json::{Value, json};
 
 use crate::{FigApp, NoServices};
@@ -19,7 +19,7 @@ impl Drop for Dirs {
 }
 
 fn confined_app(name: &str) -> (FigApp, Dirs) {
-    let d = std::env::temp_dir().join(format!("figcraft-ui-roots-{name}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("endrika-ui-roots-{name}-{}", std::process::id()));
     for sub in ["out", "outside"] {
         std::fs::create_dir_all(d.join(sub)).unwrap();
     }
@@ -64,7 +64,7 @@ fn window_captures_are_written_through_the_roots_or_returned() {
     let roots = app.automation_roots.clone();
     let out = d.0.join("out/shot.png").to_string_lossy().into_owned();
     let outside = d.0.join("outside/shot.png").to_string_lossy().into_owned();
-    figcraft_engine::file_access::confined(roots.as_ref(), || {
+    endrika_engine::file_access::confined(roots.as_ref(), || {
         assert!(super::shot_reply(&img, Some(&outside)).unwrap_err().contains("automation path rejected"));
         assert_eq!(super::shot_reply(&img, Some(&out)).unwrap()["width"], 3);
         let data = super::shot_reply(&img, None).unwrap();

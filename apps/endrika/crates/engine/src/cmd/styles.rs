@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_color::{Color, Paint, PaintKind};
-use figcraft_doc::*;
+use endrika_color::{Color, Paint, PaintKind};
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, ok};

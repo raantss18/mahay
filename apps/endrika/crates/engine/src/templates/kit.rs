@@ -4,8 +4,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use figcraft_color::Color;
-use figcraft_doc::{Document, NodeId, NodeKind};
+use endrika_color::Color;
+use endrika_doc::{Document, NodeId, NodeKind};
 use serde_json::{Map, Value, json};
 
 use super::glyphs::Glyph;

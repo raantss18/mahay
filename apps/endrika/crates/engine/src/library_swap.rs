@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::Value;
 
 use crate::cmd::component::{main_of, swap_instance};

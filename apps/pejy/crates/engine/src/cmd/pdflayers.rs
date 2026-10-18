@@ -5,11 +5,11 @@ use serde_json::{Value, json};
 use super::{CommandSpec, bad, cmd, has_selection, targets};
 use crate::Session;
 
-fn placed_pdf(s: &Session, id: designcraft_doc::ItemId) -> Option<std::sync::Arc<Vec<u8>>> {
+fn placed_pdf(s: &Session, id: pejy_doc::ItemId) -> Option<std::sync::Arc<Vec<u8>>> {
     let d = &s.active()?.doc;
     let g = d.item(id)?.graphic()?;
     let a = d.assets.get(&g.asset)?;
-    designcraft_render::is_pdf(&a.data).then(|| a.data.clone())
+    pejy_render::is_pdf(&a.data).then(|| a.data.clone())
 }
 
 pub fn specs() -> Vec<CommandSpec> {
@@ -19,7 +19,7 @@ pub fn specs() -> Vec<CommandSpec> {
             let data = placed_pdf(s, id).ok_or_else(|| bad("object.pdfLayers", "not a placed PDF"))?;
             let hidden = s.doc()?.doc.item(id).map(|i| i.pdf_hidden_layers.clone()).unwrap_or_default();
             Ok(Value::Array(
-                designcraft_render::pdf_layers(&data)
+                pejy_render::pdf_layers(&data)
                     .into_iter()
                     .map(|(name, on)| json!({"visible": if hidden.is_empty() { on } else { !hidden.contains(&name) }, "name": name, "default": on}))
                     .collect(),
@@ -102,7 +102,7 @@ pub(crate) mod tests {
         assert_eq!(l[0]["name"], "Blue");
         let px = |s: &Session, x: u32| {
             let d = s.doc().unwrap().doc.clone();
-            let mut rr = designcraft_render::Renderer::new();
+            let mut rr = pejy_render::Renderer::new();
             rr.threads = 0;
             rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap().pixel(x, 150)
         };

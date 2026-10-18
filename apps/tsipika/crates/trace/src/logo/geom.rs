@@ -2,7 +2,7 @@
 
 use kurbo::Vec2;
 use std::collections::HashMap;
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 /// One cubic Bézier segment: start, two handles, end.
 pub(crate) type Cubic = [Point; 4];

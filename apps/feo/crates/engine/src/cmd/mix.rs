@@ -3,7 +3,7 @@
 use super::*;
 use crate::cmd;
 use serde_json::json;
-use soundcraft_model::{AutoParam, AutomationMode, INSERT_SLOTS, Insert, SEND_SLOTS, SendSlot, Session, TrackId};
+use feo_model::{AutoParam, AutomationMode, INSERT_SLOTS, Insert, SEND_SLOTS, SendSlot, Session, TrackId};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -126,7 +126,7 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("mix.send_level", "Send Level", [], None, "{track?, slot, db?, pan?, mute?, pre_fader?}", has_selection, send_level),
         cmd!("mix.new_bus", "New Bus", [], None, "{name, format?: stereo}", always, |e, p| {
             let name = str_param(p, "name").filter(|n| !n.trim().is_empty()).ok_or_else(|| bad("mix.new_bus", "`name` required"))?.to_string();
-            let fmt = str_param(p, "format").and_then(soundcraft_model::ChannelFormat::from_id).unwrap_or(soundcraft_model::ChannelFormat::Stereo);
+            let fmt = str_param(p, "format").and_then(feo_model::ChannelFormat::from_id).unwrap_or(feo_model::ChannelFormat::Stereo);
             let id = e.session_mut().add_bus(&name, fmt);
             Ok(json!({"bus": id}))
         }),
@@ -182,7 +182,7 @@ pub fn specs() -> Vec<CommandSpec> {
 }
 
 /// Apply a change to `t` and its active mix-group siblings.
-fn set_grouped(s: &mut Session, t: TrackId, attr: &str, f: impl Fn(&mut soundcraft_model::Track)) {
+fn set_grouped(s: &mut Session, t: TrackId, attr: &str, f: impl Fn(&mut feo_model::Track)) {
     let mut targets = vec![t];
     for g in &s.groups {
         if g.active && g.mix && g.members.contains(&t) && g.attributes.iter().any(|a| a == attr) {
@@ -200,7 +200,7 @@ fn set_grouped(s: &mut Session, t: TrackId, attr: &str, f: impl Fn(&mut soundcra
     }
 }
 
-fn toggle(e: &mut Engine, p: &Value, cmd: &str, set: fn(&mut Session, TrackId, bool), get: fn(&soundcraft_model::Track) -> bool) -> Result<Value> {
+fn toggle(e: &mut Engine, p: &Value, cmd: &str, set: fn(&mut Session, TrackId, bool), get: fn(&feo_model::Track) -> bool) -> Result<Value> {
     let tracks = tracks_required(e, cmd, p)?;
     let s = e.session_mut();
     let v = p.get("value").and_then(Value::as_bool).unwrap_or_else(|| !tracks.iter().all(|t| s.track(*t).is_some_and(get)));
@@ -418,13 +418,13 @@ fn send(e: &mut Engine, p: &Value) -> Result<Value> {
     let t = tracks_required(e, "mix.send", p)?.first().copied().ok_or_else(|| bad("mix.send", "no track"))?;
     let explicit = slot_of(p, "slot", SEND_SLOTS);
     let s = e.session_mut();
-    let bid = s.add_bus(&bus, soundcraft_model::ChannelFormat::Stereo);
+    let bid = s.add_bus(&bus, feo_model::ChannelFormat::Stereo);
     let tr = s.track_mut(t).ok_or_else(|| bad("mix.send", "no track"))?;
     let slot = explicit.or_else(|| tr.mixer.sends.iter().position(Option::is_none)).ok_or_else(|| bad("mix.send", "all send slots are in use"))?;
     // Re-targeting an existing send keeps its level, pan, mute and pre/post setting.
     let mut sl = match tr.mixer.sends.get(slot).cloned().flatten() {
-        Some(old) => SendSlot { target: soundcraft_model::Route::Bus(bid), ..old },
-        None => SendSlot::new(soundcraft_model::Route::Bus(bid)),
+        Some(old) => SendSlot { target: feo_model::Route::Bus(bid), ..old },
+        None => SendSlot::new(feo_model::Route::Bus(bid)),
     };
     sl.level_db = f32_or(p, "level_db", sl.level_db).clamp(-144.0, 12.0);
     sl.pre_fader = bool_or(p, "pre_fader", sl.pre_fader);
@@ -497,7 +497,7 @@ fn write_range(e: &mut Engine, p: &Value) -> Result<Value> {
 }
 
 /// The static (non-automated) value of a parameter on a track.
-pub(crate) fn current_value(tr: &soundcraft_model::Track, param: &AutoParam) -> f32 {
+pub(crate) fn current_value(tr: &feo_model::Track, param: &AutoParam) -> f32 {
     match param {
         AutoParam::Volume => tr.mixer.volume_db,
         AutoParam::Pan(i) => tr.mixer.pan.get(usize::from(*i)).copied().unwrap_or(0.0),
@@ -715,9 +715,9 @@ fn copy_to_send(e: &mut Engine, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soundcraft_audio_io::AudioBuffer;
-    use soundcraft_model::{ChannelFormat, Clip, SourceAudio, SourceId, TrackKind};
-    use soundcraft_time::Range;
+    use feo_audio_io::AudioBuffer;
+    use feo_model::{ChannelFormat, Clip, SourceAudio, SourceId, TrackKind};
+    use feo_time::Range;
     use std::sync::Arc;
 
     fn rms_db(before: &[f32], after: &[f32]) -> f32 {
@@ -743,7 +743,7 @@ mod tests {
     }
 
     fn rendered(s: &Session) -> Vec<f32> {
-        soundcraft_mix::render_range(s, Range::new(0, 8192), 1024).into_iter().next().unwrap_or_default()
+        feo_mix::render_range(s, Range::new(0, 8192), 1024).into_iter().next().unwrap_or_default()
     }
 
     fn convert(e: &mut Engine, t: TrackId, start: i64, end: i64) {
@@ -883,7 +883,7 @@ mod tests {
         e.execute("mix.send", &json!({"track": "Gtr", "slot": 0, "bus": "Delay"})).unwrap();
         let sl = e.session().tracks[0].mixer.sends[0].clone().unwrap();
         let delay = e.session().busses.iter().find(|b| b.name == "Delay").unwrap().id;
-        assert_eq!(sl.target, soundcraft_model::Route::Bus(delay));
+        assert_eq!(sl.target, feo_model::Route::Bus(delay));
         assert_eq!((sl.level_db, sl.pan, sl.mute, sl.pre_fader), (-9.0, 0.5, true, true));
     }
 }

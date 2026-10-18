@@ -9,6 +9,7 @@ description = "Seho egui frontend (PowerPoint-style UI); swappable — nothing b
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 seho-geom = { workspace = true }
 seho-color = { workspace = true }
 seho-model = { workspace = true }

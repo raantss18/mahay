@@ -5,7 +5,7 @@
 //! 150°, Top on 30° and 150°, Right on 30° and 90°. Lengths along the axes are true lengths, so
 //! the snap lattice is triangular: its points sit the snap Y spacing apart along every axis.
 
-use cadcraft_geom::{Bounds2, Ellipse, Vec2};
+use drafitra_geom::{Bounds2, Ellipse, Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::Settings;
@@ -118,7 +118,7 @@ pub fn lattice_snap(p: Vec2, d: f64, origin: Vec2, angle: f64) -> Vec2 {
 /// isometric lattice, and the settings with grid snap off so the rectangular grid leaves it be.
 /// Otherwise both unchanged, also when PolarSnap (SNAPTYPE 1) is the snap type: snap mode then
 /// steps along the tracking paths instead.
-pub(crate) fn grid_snap(doc: &cadcraft_doc::Drawing, mut s: Settings, p: Vec2) -> (Vec2, Settings) {
+pub(crate) fn grid_snap(doc: &drafitra_doc::Drawing, mut s: Settings, p: Vec2) -> (Vec2, Settings) {
     if !(s.snapmode && s.isodraft) || s.polarsnap {
         return (p, s);
     }

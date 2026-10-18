@@ -2,7 +2,7 @@
 //! next to the built-in ones, applied by name with `stroke.set {profile}`.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::WidthProfile;
+use tsipika_doc::WidthProfile;
 
 use super::*;
 

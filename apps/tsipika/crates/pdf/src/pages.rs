@@ -3,12 +3,12 @@
 
 use std::collections::HashMap;
 
-use craft_pdf::syntax::object::{Array, Dict, MaybeRef, Name, Object, ObjectIdentifier, Stream, dict_or_stream};
-use craft_pdf::syntax::page::Page;
-use craft_pdf::syntax::xref::XRef;
-use craft_pdf::syntax::{DecryptionError, LoadPdfError, Pdf};
+use mahay_pdf::syntax::object::{Array, Dict, MaybeRef, Name, Object, ObjectIdentifier, Stream, dict_or_stream};
+use mahay_pdf::syntax::page::Page;
+use mahay_pdf::syntax::xref::XRef;
+use mahay_pdf::syntax::{DecryptionError, LoadPdfError, Pdf};
 use kurbo::{Affine, Rect};
-use vectorcraft_doc::setup::MAX_BLEED;
+use tsipika_doc::setup::MAX_BLEED;
 
 use crate::import_color::{direct, items, readable, values};
 use crate::{Choice, CropTo, ImportOptions, PdfError};
@@ -170,11 +170,11 @@ pub(crate) fn open(bytes: &[u8], password: Option<&str>) -> Result<Pdf, PdfError
 
 /// Preserve the application's existing accepted file sizes. Ordinary stream decoding still
 /// uses the shared reader's immutable per-document limits, and its input copy is fallible.
-pub(crate) fn open_options() -> craft_pdf::OpenOptions {
-    craft_pdf::OpenOptions { max_input_bytes: usize::MAX, ..Default::default() }
+pub(crate) fn open_options() -> mahay_pdf::OpenOptions {
+    mahay_pdf::OpenOptions { max_input_bytes: usize::MAX, ..Default::default() }
 }
 
-pub(crate) fn open_with_options(bytes: &[u8], password: Option<&str>, options: &craft_pdf::OpenOptions) -> Result<Pdf, PdfError> {
+pub(crate) fn open_with_options(bytes: &[u8], password: Option<&str>, options: &mahay_pdf::OpenOptions) -> Result<Pdf, PdfError> {
     if is_postscript(bytes) {
         return Err(PdfError::PostScript);
     }
@@ -182,21 +182,21 @@ pub(crate) fn open_with_options(bytes: &[u8], password: Option<&str>, options: &
         return Err(PdfError::Parse(STREAM_NOTE.into()));
     }
     let password = password.unwrap_or_default();
-    let read = |pw: &str| craft_pdf::open_slice_with_options(bytes, Some(pw), options);
+    let read = |pw: &str| mahay_pdf::open_slice_with_options(bytes, Some(pw), options);
     read(password)
         .or_else(|e| match e {
             // The reader takes only the open password of RC4 and 128-bit AES files: the
             // permissions password gives it.
-            craft_pdf::OpenError::Load(LoadPdfError::Decryption(DecryptionError::PasswordProtected)) if !password.is_empty() => {
+            mahay_pdf::OpenError::Load(LoadPdfError::Decryption(DecryptionError::PasswordProtected)) if !password.is_empty() => {
                 crate::encrypt::user_password(bytes, password).map_or(Err(e), |user| read(&user))
             }
             e => Err(e),
         })
         .map_err(|e| match e {
-            craft_pdf::OpenError::Load(LoadPdfError::Decryption(DecryptionError::PasswordProtected)) if password.is_empty() => {
+            mahay_pdf::OpenError::Load(LoadPdfError::Decryption(DecryptionError::PasswordProtected)) if password.is_empty() => {
                 PdfError::NeedsPassword
             }
-            craft_pdf::OpenError::Load(LoadPdfError::Decryption(DecryptionError::PasswordProtected)) => PdfError::WrongPassword,
+            mahay_pdf::OpenError::Load(LoadPdfError::Decryption(DecryptionError::PasswordProtected)) => PdfError::WrongPassword,
             e => PdfError::Parse(e.to_string()),
         })
         // Twice: looking at every object makes the reader repair a damaged table of objects (once
@@ -217,10 +217,10 @@ pub fn info(bytes: &[u8], password: Option<&str>) -> Result<PdfInfo, PdfError> {
         .map(|page| {
             let (w, h) = page.render_dimensions();
             let rotation = match page.rotation() {
-                craft_pdf::syntax::page::Rotation::None => 0,
-                craft_pdf::syntax::page::Rotation::Horizontal => 90,
-                craft_pdf::syntax::page::Rotation::Flipped => 180,
-                craft_pdf::syntax::page::Rotation::FlippedHorizontal => 270,
+                mahay_pdf::syntax::page::Rotation::None => 0,
+                mahay_pdf::syntax::page::Rotation::Horizontal => 90,
+                mahay_pdf::syntax::page::Rotation::Flipped => 180,
+                mahay_pdf::syntax::page::Rotation::FlippedHorizontal => 270,
             };
             let unit = f64::from(page.user_unit());
             let boxes = CropTo::ALL.iter().filter(|c| **c != CropTo::Bounding).map(|c| (*c, page_box(page, *c).scale_from_origin(unit))).collect();
@@ -250,7 +250,7 @@ pub(crate) fn picked(opts: &ImportOptions, count: usize) -> Result<Vec<usize>, P
     Ok(v)
 }
 
-fn rect(r: craft_pdf::syntax::object::Rect) -> Rect {
+fn rect(r: mahay_pdf::syntax::object::Rect) -> Rect {
     Rect::new(r.x0, r.y0, r.x1, r.y1).abs()
 }
 
@@ -267,7 +267,7 @@ pub(crate) fn page_box(page: &Page<'_>, which: CropTo) -> Rect {
         CropTo::Trim => b"TrimBox",
         CropTo::Art => b"ArtBox",
     };
-    page.raw().get::<craft_pdf::syntax::object::Rect>(key).map(|r| rect(r).intersect(media)).filter(|r| r.area() > 0.0).unwrap_or(crop)
+    page.raw().get::<mahay_pdf::syntax::object::Rect>(key).map(|r| rect(r).intersect(media)).filter(|r| r.area() > 0.0).unwrap_or(crop)
 }
 
 /// Where `page` draws on its artboard: the page transform (PDF user space → y-down page space
@@ -299,7 +299,7 @@ const MAX_PRIVATE: usize = 256 << 20;
 /// streams in order, joined. A PDF saved with the editing data has its streams under
 /// `AIPDFPrivateData1`, `AIPDFPrivateData2`, … instead: those are read when there is no
 /// `AIPrivateData1`. `None` for a PDF without either (or with a stream that can't be read).
-/// What it holds is the editor's own copy of the art (see `vectorcraft_eps::layered_ai`).
+/// What it holds is the editor's own copy of the art (see `tsipika_eps::layered_ai`).
 pub fn illustrator_data(bytes: &[u8], password: Option<&str>) -> Option<Vec<u8>> {
     let pdf = open(bytes, password).ok()?;
     let page = pdf.pages().first()?;

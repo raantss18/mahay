@@ -3231,6 +3231,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
+name = "mahay-about"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "mahay-update",
+]
+
+[[package]]
 name = "mahay-android"
 version = "0.1.0"
 dependencies = [
@@ -3239,6 +3247,8 @@ dependencies = [
  "egui",
  "jni 0.21.1",
  "log",
+ "mahay-about",
+ "mahay-update",
 ]
 
 [[package]]
@@ -3274,6 +3284,18 @@ version = "0.1.0"
 dependencies = [
  "egui",
  "serde",
+]
+
+[[package]]
+name = "mahay-update"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "log",
+ "serde_json",
+ "sha2 0.10.9",
+ "ureq",
 ]
 
 [[package]]
@@ -5992,6 +6014,7 @@ dependencies = [
  "egui",
  "fmv-macos-events",
  "log",
+ "mahay-about",
  "mahay-quit",
  "pollster 1.0.1",
  "raw-window-handle",
@@ -6028,6 +6051,7 @@ dependencies = [
  "eframe",
  "egui",
  "log",
+ "mahay-about",
  "mahay-android",
  "taratasy-ui-egui",
 ]
@@ -6425,6 +6449,7 @@ dependencies = [
  "image",
  "js-sys",
  "log",
+ "mahay-about",
  "mahay-quit",
  "mahay-ui",
  "objc2 0.6.4",
@@ -6949,6 +6974,7 @@ dependencies = [
  "rustls-pki-types",
  "ureq-proto",
  "utf8-zero",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -7379,6 +7405,15 @@ name = "webpki-root-certs"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b"
+dependencies = [
+ "rustls-pki-types",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
 dependencies = [
  "rustls-pki-types",
 ]

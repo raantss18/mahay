@@ -2,14 +2,14 @@
 //! `i.modifiers` from `ModifiersChanged` events, not from the pointer events, and synthetic
 //! events arrive one per frame, so a Shift-click must hold Shift from its press to its release.
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::control::{self, ControlRequest};
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::control::{self, ControlRequest};
 use serde_json::{Value, json};
 
 /// Feed the queued synthetic input frame by frame; per frame: (has a press/release, the
 /// modifiers egui holds in that frame, which only `ModifiersChanged` events change).
-fn frames(app: &mut EffectcraftApp) -> Vec<(bool, egui::Modifiers)> {
+fn frames(app: &mut TselatraApp) -> Vec<(bool, egui::Modifiers)> {
     let mut out = vec![];
     let mut held = egui::Modifiers::NONE;
     for _ in 0..64 {
@@ -31,7 +31,7 @@ fn frames(app: &mut EffectcraftApp) -> Vec<(bool, egui::Modifiers)> {
     out
 }
 
-fn send(app: &mut EffectcraftApp, method: &str, params: Value) {
+fn send(app: &mut TselatraApp, method: &str, params: Value) {
     let ctx = egui::Context::default();
     let (req, _rx) = ControlRequest::new(method, params);
     let _ = control::handle(app, &ctx, &req);
@@ -39,7 +39,7 @@ fn send(app: &mut EffectcraftApp, method: &str, params: Value) {
 
 #[test]
 fn shift_click_holds_shift_from_press_to_release() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     send(&mut app, "ui.click", json!({"x": 10, "y": 10, "modifiers": {"shift": true}}));
     let f = frames(&mut app);
     let buttons: Vec<_> = f.iter().filter(|(b, _)| *b).collect();
@@ -52,7 +52,7 @@ fn shift_click_holds_shift_from_press_to_release() {
 
 #[test]
 fn shift_drag_holds_shift_through_the_moves() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     send(&mut app, "ui.drag", json!({"from": {"x": 10, "y": 10}, "to": {"x": 90, "y": 40}, "steps": 4, "modifiers": {"shift": true}}));
     let f = frames(&mut app);
     let first = f.iter().position(|(b, _)| *b).expect("press");

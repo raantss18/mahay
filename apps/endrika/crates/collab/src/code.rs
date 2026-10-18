@@ -126,13 +126,13 @@ impl Local {
 
     /// The session's invite link (what a joiner's app connects with).
     pub fn link(&self) -> String {
-        format!("figcraft://join?host={}:{}&file={LOCAL_FILE}&token={}", self.ip, self.port, self.token())
+        format!("endrika://join?host={}:{}&file={LOCAL_FILE}&token={}", self.ip, self.port, self.token())
     }
 
     /// The session behind a local session's invite link (`None` for any other link: only IPv4
     /// hosts with a code-sized secret have a code).
     pub fn from_link(link: &str) -> Option<Local> {
-        let query = link.strip_prefix("figcraft://join?")?;
+        let query = link.strip_prefix("endrika://join?")?;
         let get = |key: &str| query.split('&').find_map(|kv| kv.split_once('=').filter(|(k, _)| *k == key).map(|(_, v)| v));
         let addr: std::net::SocketAddrV4 = get("host")?.parse().ok()?;
         let hex = get("token")?.strip_prefix(TOKEN_PREFIX).filter(|h| h.len() == 11)?;

@@ -2,18 +2,18 @@
 
 ## Settings (Preferences)
 
-EffectCraft ▸ Settings (macOS) or Edit ▸ Preferences (Windows/Linux), `Cmd+Alt+;`. The dialog has
+Tselatra ▸ Settings (macOS) or Edit ▸ Preferences (Windows/Linux), `Cmd+Alt+;`. The dialog has
 After Effects 2026's pages (General, Startup & Repair, Project, Composition, Previews, Appearance,
 Grids & Guides, Labels, Type, Import, Export, Audio, Disk, Memory & CPU, Video, 3D, Scripting &
 Expressions) with OK, Cancel, Previous and Next. Older page names still open the right page
 (`prefs.open {"page": "Auto-Save"}` opens Project, `Media & Disk Cache` opens Disk, `Memory &
 Performance` opens Memory & CPU).
 
-The model is `effectcraft_engine::prefs::Prefs`: serde, versioned (`version`), addressed by dotted
+The model is `tselatra_engine::prefs::Prefs`: serde, versioned (`version`), addressed by dotted
 keys (`general.undoLevels`, `autoSave.intervalMinutes`, `labels.3.name`). It is stored as
 `prefs.json` through the session's `ConfigStore` (the desktop app uses the platform config
-directory: `~/Library/Application Support/EffectCraft` on macOS, `%APPDATA%\EffectCraft` on
-Windows, `$XDG_CONFIG_HOME/effectcraft` on Linux, or `EffectCraftData` beside the executable when a
+directory: `~/Library/Application Support/Tselatra` on macOS, `%APPDATA%\Tselatra` on
+Windows, `$XDG_CONFIG_HOME/tselatra` on Linux, or `TselatraData` beside the executable when a
 `portable.txt` sits there, as in the Windows portable zip; the web app keeps it in browser storage: the
 Origin Private File System, or IndexedDB where OPFS can't write, see [web.md](web.md)). Loading migrates older layouts, keeps unknown keys (from newer versions) and
 falls back to defaults for values that don't parse.
@@ -30,7 +30,7 @@ Commands (CLI, MCP, control channel):
 
 ### Settings that change behaviour
 
-- `general.language`: interface language (`system` / `en` / `ja` / `zh-hans` / `zh-hant` / `uk` / `es` / `pt-br`), Settings ▸ General ▸ Language; menu labels change immediately. `system` (Match System, the default) follows the operating system's interface language where EffectCraft has a translation and is English otherwise: a Simplified Chinese locale (`zh`, `zh-CN`, `zh_CN.UTF-8`, `zh-Hans-CN`, `zh-SG`) selects `zh-hans`, a Traditional one (`zh-TW`, `zh-HK`, `zh-Hant`, `zh_MO`) selects `zh-hant`, a Ukrainian one (`uk`, `uk-UA`, `uk_UA.UTF-8`) selects `uk`, a Spanish one (`es`, `es-ES`, `es_MX.UTF-8`) selects `es`, a Portuguese one (`pt`, `pt-BR`, `pt_PT.UTF-8`) selects `pt-br`; the browser build stays in English with it. Choose **Español** or **Português (Brasil)** for Spanish or Brazilian Portuguese menus (panels stay in English for now); choose **Українська** for Ukrainian menus and cataloged panel, dialog, button and tooltip text; Ukrainian uses the bundled UI fonts. Native Japanese, Simplified and Traditional Chinese UI uses installed system fonts; the web host must supply a Japanese font. The same setting picks the CJK fallback for the interface *and* the Han preference of the text engine, so the composition's own text is drawn with the same language's glyph forms (the text engine's preference is process-global); swapping the language reinstalls the fonts, so it applies without a restart. Two catalogs back the text: the menus are keyed by `(command, English label)` (`crates/ui-egui/src/i18n.rs`), and the rest of the interface - panels, dialogs, buttons, tooltips - is keyed by its English source string (`crates/ui-egui/src/i18n/ui.rs`, with rows for Japanese, Simplified and Traditional Chinese and Ukrainian), where a panel writes `tr("Rename")`, or `tr_args("Proxy Use: {}", &[&quality])` when the row carries a value. A row that is missing falls back to English, so a new string shows up untranslated rather than empty; the tests in that module fail on an unused row and on a hard-coded string in a converted panel.
+- `general.language`: interface language (`system` / `en` / `ja` / `zh-hans` / `zh-hant` / `uk` / `es` / `pt-br`), Settings ▸ General ▸ Language; menu labels change immediately. `system` (Match System, the default) follows the operating system's interface language where Tselatra has a translation and is English otherwise: a Simplified Chinese locale (`zh`, `zh-CN`, `zh_CN.UTF-8`, `zh-Hans-CN`, `zh-SG`) selects `zh-hans`, a Traditional one (`zh-TW`, `zh-HK`, `zh-Hant`, `zh_MO`) selects `zh-hant`, a Ukrainian one (`uk`, `uk-UA`, `uk_UA.UTF-8`) selects `uk`, a Spanish one (`es`, `es-ES`, `es_MX.UTF-8`) selects `es`, a Portuguese one (`pt`, `pt-BR`, `pt_PT.UTF-8`) selects `pt-br`; the browser build stays in English with it. Choose **Español** or **Português (Brasil)** for Spanish or Brazilian Portuguese menus (panels stay in English for now); choose **Українська** for Ukrainian menus and cataloged panel, dialog, button and tooltip text; Ukrainian uses the bundled UI fonts. Native Japanese, Simplified and Traditional Chinese UI uses installed system fonts; the web host must supply a Japanese font. The same setting picks the CJK fallback for the interface *and* the Han preference of the text engine, so the composition's own text is drawn with the same language's glyph forms (the text engine's preference is process-global); swapping the language reinstalls the fonts, so it applies without a restart. Two catalogs back the text: the menus are keyed by `(command, English label)` (`crates/ui-egui/src/i18n.rs`), and the rest of the interface - panels, dialogs, buttons, tooltips - is keyed by its English source string (`crates/ui-egui/src/i18n/ui.rs`, with rows for Japanese, Simplified and Traditional Chinese and Ukrainian), where a panel writes `tr("Rename")`, or `tr_args("Proxy Use: {}", &[&quality])` when the row carries a value. A row that is missing falls back to English, so a new string shows up untranslated rather than empty; the tests in that module fail on an unused row and on a hard-coded string in a converted panel.
 - `general.undoLevels`: Levels of Undo
 - `general.pathPointSize`: Path Point and Handle Size
 - `general.recentItems`: Recent Projects Shown
@@ -57,7 +57,7 @@ Commands (CLI, MCP, control channel):
 - `previews.fastPreviews`: Fast Previews (Draft 3D, Faster Effects)
 - `appearance.appearanceMode`: Appearance Mode (`auto` / `dark` / `light`). `auto` (Sync with System) follows the operating system's light or dark appearance while the app runs: on Linux the desktop app reads the XDG desktop portal (`org.freedesktop.appearance` `color-scheme`) once and then listens for its `SettingChanged` signal on a worker thread, repainting only when the value changes (nothing polls); `gsettings` runs at most once at start-up, by absolute path, when the portal gives no answer. Elsewhere it uses what the window system reports. With no answer it shows the dark theme. New installs stay `dark`; Sync with System is opt-in. The Tools bar's appearance button (a monitor, sun or moon) cycles Sync with System, Light and Dark (`view.theme.toggle`, Next Appearance Mode).
 - `appearance.darkTheme`: Dark Theme (`dark` / `darker`), shown in dark appearance
-- `appearance.lightTheme`: Light Theme (`light`), shown in light appearance. Settings ▸ Appearance shows the mode above a light and a dark theme card, each with a preview of the EffectCraft window in that theme.
+- `appearance.lightTheme`: Light Theme (`light`), shown in light appearance. Settings ▸ Appearance shows the mode above a light and a dark theme card, each with a preview of the Tselatra window in that theme.
 - `appearance.favoriteThemes`: a list of unique theme ids (`dark`, `darker`, `light`), empty by default. Hover a theme row to star it; saved favorites keep an accent-colored star. Right-click the appearance button for Appearance Settings and favorites grouped light first, then dark. Selecting a favorite fixes its appearance family and preserves the opposite family choice; left-click still cycles modes. Settings OK saves favorites and Cancel restores them. Unknown or duplicate ids are rejected by `prefs.set` and removed when loading old settings.
 - `appearance.theme`: the single theme from before appearance modes, kept for older settings files and automation. A saved file with only `theme` loads as a fixed Dark or Light mode showing it; setting it (`prefs.set`, `ui.set {"theme": …}`, `view.theme.dark|darker|light`) selects that theme and fixes the mode to its family. While the mode is Dark or Light it mirrors the theme in use.
 - `appearance.brightness`: Brightness
@@ -121,7 +121,7 @@ Commands (CLI, MCP, control channel):
   in After Effects) or `all` (image sequences too). Every two seconds,
   and as soon as the window comes back to the front, the desktop app compares each footage file's
   size and modification time with what they were, and reloads what another app saved: a
-  Photoshop file edited in PhotoCraft or Photoshop shows its new pixels without File ▸ Reload
+  Photoshop file edited in Sary or Photoshop shows its new pixels without File ▸ Reload
   Footage. It is not an undo step and doesn't modify the project; a layer item stays on its layer
   (found again by name), and a file that can't be read yet (still being written) is tried again once it changes again.
   `footage.reloadChanged` runs the same check once (CLI, agents)
@@ -170,11 +170,11 @@ Commands (CLI, MCP, control channel):
 
 ### Display-only settings
 
-These rows are in the dialog for After Effects parity and are stored, but have no EffectCraft
+These rows are in the dialog for After Effects parity and are stored, but have no Tselatra
 behaviour to change. `prefs.pages` reports them with `"live": false`; a test keeps this list in
 step with the schema.
 
-- `general.useSystemColorPicker`: EffectCraft has one colour picker on every platform and the
+- `general.useSystemColorPicker`: Tselatra has one colour picker on every platform and the
   web; there is no pure-Rust way to open the system colour panels.
 - `composition.hardwareAcceleratePanels`: the Composition, Layer and Footage panels are always
   drawn by the GPU (egui on wgpu).
@@ -190,7 +190,7 @@ which keys are assigned for the held modifiers (purple: application-wide, green:
 both: split), modifier toggles, a searchable list of every command (all engine commands, menu
 entries with bound parameters and the frontend's tool / panel commands), and a preset menu.
 
-- **Presets.** "EffectCraft Default" is After Effects' default layout and is read-only; editing
+- **Presets.** "Tselatra Default" is After Effects' default layout and is read-only; editing
   it creates a "Custom" copy. Custom presets store only their differences from the default and
   can be duplicated, renamed, deleted, exported and imported (JSON). The active preset is what
   the menus show and what the shortcut dispatcher runs.
@@ -208,9 +208,9 @@ from?, newName?}`, `shortcuts.export {preset?, path?}`, `shortcuts.import {path?
 ## Auto-save and crash recovery
 
 - Every *n* minutes (Settings ▸ Project ▸ Auto-Save) a project with unsaved changes is written
-  to an `EffectCraft Auto-Save` folder next to it (or the custom folder) as
+  to an `Tselatra Auto-Save` folder next to it (or the custom folder) as
   `<name> auto-save N.ecproj`. Slots rotate through 1…maximum versions, overwriting the oldest.
-  Untitled projects go to the custom folder, or to `EffectCraft Auto-Save` in the config directory.
+  Untitled projects go to the custom folder, or to `Tselatra Auto-Save` in the config directory.
 - Every project and auto-save write is atomic: a temporary file is written and flushed, then
   renamed over the target, so a crash mid-write leaves the previous file intact.
 - While the app runs, `session.lock` in the config directory records the open project and its
@@ -219,9 +219,9 @@ from?, newName?}`, `shortcuts.export {preset?, path?}`, `shortcuts.import {path?
 - File ▸ Open Recent lists recent projects (stored in the settings), File ▸ Revert reloads the
   saved project, File ▸ Increment and Save saves `Intro.ecproj` as `Intro 2.ecproj`.
 
-Headless MCP clients can opt in with `effectcraft-cli mcp --autosave`. Unlike the desktop's
+Headless MCP clients can opt in with `tselatra-cli mcp --autosave`. Unlike the desktop's
 interval, this writes changed dirty projects before sending each tool reply, with separate
-version slots per server under `EffectCraft Auto-Save/MCP/` (or the custom folder's `MCP/`).
+version slots per server under `Tselatra Auto-Save/MCP/` (or the custom folder's `MCP/`).
 It reads settings without sharing the desktop's writable settings store or `session.lock`.
 See [headless recovery](agents.md#keeping-headless-work-across-restarts) for how to reopen a
 checkpoint after a client restart.
@@ -231,14 +231,14 @@ Commands: `file.autoSave` (now), `file.recoveryInfo`, `file.openRecent {index? |
 
 ## Logs
 
-The desktop app writes its log records to standard error and to `Logs/effectcraft.log` in the
-config directory. Each launch moves the previous log to `effectcraft.1.log` (and that one to
-`effectcraft.2.log`), so the log of a run that crashed survives the next start; a log stops
+The desktop app writes its log records to standard error and to `Logs/tselatra.log` in the
+config directory. Each launch moves the previous log to `tselatra.1.log` (and that one to
+`tselatra.2.log`), so the log of a run that crashed survives the next start; a log stops
 growing at 16 MiB. A launch from the Dock, the Start menu or a launcher has no terminal, so
 attach these files to a bug report. Help ▸ Reveal Logging File shows this run's log (or Help ▸
-Enable Logging's `EffectCraft Log.txt` while that is on, which keeps every EffectCraft record
+Enable Logging's `Tselatra Log.txt` while that is on, which keeps every Tselatra record
 across launches).
 
-By default the log has `info` records from EffectCraft and warnings and errors from everything
+By default the log has `info` records from Tselatra and warnings and errors from everything
 else. `RUST_LOG` replaces that with env_logger-style directives: `debug`,
-`warn,effectcraft_render=trace`, `wgpu_core=info`. The control-channel token is never logged.
+`warn,tselatra_render=trace`, `wgpu_core=info`. The control-channel token is never logged.

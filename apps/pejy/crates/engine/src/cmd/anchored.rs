@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::{
+use pejy_doc::{
     AnchorPosition, AnchoredObject, Content, Document, Item, ItemId, OBJECT_MARK, SpreadRef, StoryId, TextSel, anchored::AnchorAlign,
 };
-use designcraft_geom::Affine;
+use pejy_geom::Affine;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -79,7 +79,7 @@ fn position_param(p: &Value, base: &AnchorPosition) -> Result<AnchorPosition> {
             AnchorPosition::AboveLine { align, space_before: f("spaceBefore", sb0), space_after: f("spaceAfter", sa0) }
         }
         ("custom", b) => {
-            use designcraft_doc::anchored::AnchorRelative as R;
+            use pejy_doc::anchored::AnchorRelative as R;
             let (xr0, yr0, xo0, yo0, op0, rp0, k0) = match b {
                 AnchorPosition::Custom { x_relative, y_relative, x_offset, y_offset, object_point, ref_point, keep_within_column } => {
                     (*x_relative, *y_relative, *x_offset, *y_offset, *object_point, *ref_point, *keep_within_column)
@@ -117,7 +117,7 @@ fn check_item(it: &Item) -> Result<()> {
 
 /// Anchor copies of `items` (in spread coordinates) at `pos` of `sid`; returns the end position.
 pub(crate) fn anchor_items(d: &mut Document, sid: StoryId, pos: usize, items: Vec<Item>, position: &AnchorPosition) -> Result<usize> {
-    let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+    let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
     let mut at = pos.min(st.len());
     for it in items {
         st.insert_object(at, AnchoredObject::new(it, position.clone()));
@@ -156,7 +156,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
             d.remove_item(*id)?;
         }
         let end = anchor_items(d, sid, pos, items.clone(), &position)?;
-        *sel = designcraft_doc::Selection::text(TextSel { story: sid, anchor: end, focus: end, frame: None, cell: None });
+        *sel = pejy_doc::Selection::text(TextSel { story: sid, anchor: end, focus: end, frame: None, cell: None });
         Ok(json!({"story": sid.0, "pos": end}))
     })
 }
@@ -187,7 +187,7 @@ fn options(s: &mut Session, p: &Value) -> Result<Value> {
     let cur = s.doc()?.doc.story(sid).and_then(|st| st.objects.get(k).cloned()).ok_or_else(|| bad("anchored.options", "no such anchored object"))?;
     let position = position_param(p, &cur.position)?;
     s.edit(|d, _| {
-        let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+        let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
         let o = st.objects.get_mut(k).ok_or_else(|| bad("anchored.options", "no such anchored object"))?;
         Arc::make_mut(o).position = position.clone();
         st.rev = st.rev.wrapping_add(1);
@@ -220,9 +220,9 @@ fn release(s: &mut Session, p: &Value) -> Result<Value> {
             it.layer = d.default_layer();
         }
         let id = d.insert_item(spread, it, None)?;
-        let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+        let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
         st.delete(pos..pos + OBJECT_MARK.len_utf8());
-        *sel = designcraft_doc::Selection::items(vec![id]);
+        *sel = pejy_doc::Selection::items(vec![id]);
         Ok(json!({"id": id.0}))
     })
 }
@@ -292,7 +292,7 @@ mod custom_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Side note here"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let end_before = s.cache.get(&s.doc().unwrap().doc, sid, None).frames[0].lines[0].end_x;
         let box_id = s.execute("frame.create", &json!({"rect": [0, 0, 30, 20], "content": "unassigned"})).unwrap()["id"].clone();
         // To the left of the page margin, top of the box on the anchor's baseline.
@@ -310,10 +310,10 @@ mod custom_tests {
         let margin_x = d.spreads[0].pages[0].margin_rect().x0;
         assert!((o.origin.x + o.size.0 - (margin_x - 6.0)).abs() < 1e-6, "right edge 6 pt left of the margin: {:?}", o.origin);
         assert!((o.origin.y - ft.lines[0].baseline).abs() < 1e-6);
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
         let obj = back.stories.values().flat_map(|st| st.objects.iter()).next().unwrap();
         assert!(
-            matches!(obj.position, designcraft_doc::AnchorPosition::Custom { x_offset, object_point: 2, .. } if x_offset == -6.0),
+            matches!(obj.position, pejy_doc::AnchorPosition::Custom { x_offset, object_point: 2, .. } if x_offset == -6.0),
             "IDML Anchored position"
         );
     }

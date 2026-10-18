@@ -15,12 +15,12 @@ An active slider gesture finishes before the pending action resumes.
 ## Models and terms
 
 **No model weights are bundled.** Models live in the per-user `denoise-models` folder
-(override with `LIGHTCRAFT_DENOISE_MODELS`). Settings provides **Install from file…**
+(override with `HAZAVANA_DENOISE_MODELS`). Settings provides **Install from file…**
 for a user-supplied ONNX file with a `denoise-model.json` beside it. The default build
 offers no model downloads. The separate `rawnind-model` Cargo feature enables the
 pinned RawNIND offer only when a release's model policy permits it.
 Terms must be acknowledged before installation or
-download. Downloads use the shared pure-Rust `lightcraft-fetch` client, with resume,
+download. Downloads use the shared pure-Rust `hazavana-fetch` client, with resume,
 progress, cancellation, size limits and SHA-256 verification.
 
 RawNIND's optional ONNX weights are **GPL-3.0**, as recorded in the pinned model catalog.
@@ -76,8 +76,8 @@ architecture-specific assembly in its dependencies. Tiles share the outer worker
 pool. A scalar implementation checks the optimized operators on synthetic networks.
 Tract is not a workspace dependency or a product feature.
 CPU inference and the GPU model module are feature-gated; ordinary engine/web builds
-do not compile the faer/GEMM backend. The engine depends on the inference crate only through `denoise = ["dep:lightcraft-denoise", …]`;
-lightweight `lightcraft-denoise-core` metadata and cache formats remain available without inference. Pictures are capped at 110 megapixels; at most
+do not compile the faer/GEMM backend. The engine depends on the inference crate only through `denoise = ["dep:hazavana-denoise", …]`;
+lightweight `hazavana-denoise-core` metadata and cache formats remain available without inference. Pictures are capped at 110 megapixels; at most
 four tile calls run together, chosen within the process-wide working-memory budget.
 One idle CPU workspace is retained, and cache costs reserve room for the blended picture.
 
@@ -116,9 +116,9 @@ from the current workspace. These numbers are not a fresh benchmark of this reba
 Fresh checks can be run using an already installed model and CC0 raw samples:
 
 ```text
-LC_DENOISE_MODEL=<model.onnx> cargo test --release -p lightcraft-gpu --lib real_model_on_the_gpu_matches_cpu -- --ignored --nocapture
-LC_DENOISE_MODEL=<model.onnx> LC_DENOISE_RAW=<corpus/raw> cargo test --release -p lightcraft-engine --features rawnind-model --test denoise_cpu -- --ignored --nocapture
-LC_DENOISE_MODEL=<model.onnx> LC_DENOISE_RAW=<corpus/raw> cargo test --release -p lightcraft-engine --features rawnind-model --test denoise_real -- --ignored --nocapture
+LC_DENOISE_MODEL=<model.onnx> cargo test --release -p hazavana-gpu --lib real_model_on_the_gpu_matches_cpu -- --ignored --nocapture
+LC_DENOISE_MODEL=<model.onnx> LC_DENOISE_RAW=<corpus/raw> cargo test --release -p hazavana-engine --features rawnind-model --test denoise_cpu -- --ignored --nocapture
+LC_DENOISE_MODEL=<model.onnx> LC_DENOISE_RAW=<corpus/raw> cargo test --release -p hazavana-engine --features rawnind-model --test denoise_real -- --ignored --nocapture
 ```
 
 ## Another computer's graphics card
@@ -127,15 +127,15 @@ A laptop can hand tiles to a desktop with a bigger graphics card over a LAN or a
 selected model the way the app does (the card when it can run it, checked against the CPU first; else the CPU):
 
 ```text
-export LIGHTCRAFT_DENOISE_TOKEN='a long random string, at least 16 characters'
-lightcraft-cli denoise-serve --listen 100.101.102.103:7990          # e.g. the machine's Tailscale address
+export HAZAVANA_DENOISE_TOKEN='a long random string, at least 16 characters'
+hazavana-cli denoise-serve --listen 100.101.102.103:7990          # e.g. the machine's Tailscale address
 ```
 
-On the laptop, before LightCraft starts:
+On the laptop, before Hazavana starts:
 
 ```text
-export LIGHTCRAFT_DENOISE_URL=100.101.102.103:7990
-export LIGHTCRAFT_DENOISE_TOKEN='…the same token…'
+export HAZAVANA_DENOISE_URL=100.101.102.103:7990
+export HAZAVANA_DENOISE_TOKEN='…the same token…'
 ```
 
 When the laptop first uses the model it greets the server and times a check tile there and back. If that is faster

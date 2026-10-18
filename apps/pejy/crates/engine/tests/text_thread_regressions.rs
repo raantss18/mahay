@@ -1,5 +1,5 @@
-use designcraft_doc::{ParaFormat, Story, StoryId};
-use designcraft_engine::Session;
+use pejy_doc::{ParaFormat, Story, StoryId};
+use pejy_engine::Session;
 use serde_json::{Value, json};
 use std::sync::Arc;
 fn setup() -> Session {
@@ -64,9 +64,9 @@ fn rejected_selection_preserves_pending_typing() {
 }
 #[test]
 fn append_max_id_preserves_both_tables() {
-    use designcraft_doc::table::Table;
-    let mut a = Story::with_text(StoryId(1), &designcraft_doc::TABLE_ANCHOR.to_string(), ParaFormat::default());
-    let mut b = Story::with_text(StoryId(2), &designcraft_doc::TABLE_ANCHOR.to_string(), ParaFormat::default());
+    use pejy_doc::table::Table;
+    let mut a = Story::with_text(StoryId(1), &pejy_doc::TABLE_ANCHOR.to_string(), ParaFormat::default());
+    let mut b = Story::with_text(StoryId(2), &pejy_doc::TABLE_ANCHOR.to_string(), ParaFormat::default());
     let mut ta = Table::new(u64::MAX, 1, 1, 0, 0, 100.);
     ta.cells[0].text = Story::with_text(StoryId(0), "ORIGINAL", ParaFormat::default());
     a.tables.insert(u64::MAX, Arc::new(ta));
@@ -83,7 +83,7 @@ fn append_max_id_preserves_both_tables() {
 }
 #[test]
 fn idml_dropcap_detail_preserves_inherited_other_bit() {
-    use designcraft_doc::{Document, ParaAttrs, ParagraphStyle, build::NewDocument};
+    use pejy_doc::{Document, ParaAttrs, ParagraphStyle, build::NewDocument};
     let mut d = Document::new(&NewDocument::default());
     let parent = ParagraphStyle {
         name: "Parent".into(),
@@ -103,8 +103,8 @@ fn idml_dropcap_detail_preserves_inherited_other_bit() {
     };
     d.styles_mut().paragraph.extend([parent, child]);
     let before = d.styles.resolve_para_style("Child").0;
-    let bytes = designcraft_idml::export_idml(&d);
-    let back = designcraft_idml::import_idml(&bytes).unwrap();
+    let bytes = pejy_idml::export_idml(&d);
+    let back = pejy_idml::import_idml(&bytes).unwrap();
     let after = back.styles.resolve_para_style("Child").0;
     assert_eq!(
         (after.drop_cap_align_left, after.drop_cap_scale_descenders),
@@ -121,9 +121,9 @@ fn threading_preserves_incoming_text_hyperlink() {
     s.execute("hyperlink.create", &json!({"url":"https://example.com"})).unwrap();
     s.execute("text.thread", &json!({"from":a,"to":b})).unwrap();
     let d = &s.doc().unwrap().doc;
-    let back = designcraft_format::load(&designcraft_format::save(d).unwrap()).unwrap();
+    let back = pejy_format::load(&pejy_format::save(d).unwrap()).unwrap();
     match &back.hyperlinks[0].source {
-        designcraft_doc::HyperlinkSource::Text { story, start, end } => {
+        pejy_doc::HyperlinkSource::Text { story, start, end } => {
             assert_eq!(story.0, sa, "hyperlink points to deleted incoming story");
             assert_eq!((*start, *end), (6, 12));
         }
@@ -167,7 +167,7 @@ fn generated_endnotes_accept_empty_extensions_but_reject_reverse_body_merge() {
 }
 #[test]
 fn threading_moves_data_placeholders_and_primary_story_with_text() {
-    use designcraft_doc::{Placeholder, PlaceholderAnchor, PlaceholderRole};
+    use pejy_doc::{Placeholder, PlaceholderAnchor, PlaceholderRole};
     let mut s = setup();
     let (a, sa) = frame(&mut s, "First");
     let (b, sb) = frame(&mut s, "<<name>>");
@@ -234,8 +234,8 @@ fn locked_layer_and_neighbour_reject_unthread_atomically() {
 }
 #[test]
 fn idml_partial_dropcap_bits_resolve_both_style_and_paragraph_inheritance() {
-    use designcraft_doc::{Document, ParaAttrs, ParagraphStyle, SpreadRef, build::NewDocument};
-    use designcraft_geom::Rect;
+    use pejy_doc::{Document, ParaAttrs, ParagraphStyle, SpreadRef, build::NewDocument};
+    use pejy_geom::Rect;
     for parent_align in [false, true] {
         for parent_scale in [false, true] {
             for local_align in [false, true] {
@@ -262,8 +262,8 @@ fn idml_partial_dropcap_bits_resolve_both_style_and_paragraph_inheritance() {
                         },
                     )
                     .unwrap();
-                let bytes = designcraft_idml::export_idml(&d);
-                let back = designcraft_idml::import_idml(&bytes).unwrap();
+                let bytes = pejy_idml::export_idml(&d);
+                let back = pejy_idml::import_idml(&bytes).unwrap();
                 let st = back.stories.values().find(|s| s.text == "Body").unwrap();
                 let actual = back.styles.resolve_para(&st.paras[0]).0;
                 let expected = d.styles.resolve_para(&d.story(sid).unwrap().paras[0]).0;

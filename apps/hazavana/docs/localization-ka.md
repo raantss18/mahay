@@ -1,9 +1,9 @@
-# LightCraft in Georgian
+# Hazavana in Georgian
 
 Choose **Edit → Language → ქართული** or **Settings → General → Language**. The choice applies at once
 and is saved for the next launch (`language: "ka"` in `ui.json`); the control command is
-`app.language.georgian`. `LIGHTCRAFT_LANGUAGE` selects it for headless runs and accepts `ka`, `ka-GE`
-and `ka_GE.UTF-8`; the saved value is always `ka`. LightCraft does not follow the system language,
+`app.language.georgian`. `HAZAVANA_LANGUAGE` selects it for headless runs and accepts `ka`, `ka-GE`
+and `ka_GE.UTF-8`; the saved value is always `ka`. Hazavana does not follow the system language,
 for Georgian as for every other language.
 
 The Georgian catalogs cover every key of the other catalogs plus all command and slider labels:
@@ -23,7 +23,7 @@ interface never uses Mtavruli (a test checks the whole catalog). Commands are ve
 are count-neutral, noun first (`იმპორტირებულია ფოტო: 3`); English plural endings are dropped with
 `{:.0}`. Dates read `კვირა, 20.09.2026` (`{weekday}, {day:02}.{month:02}.{year}`), months `09.2026`.
 
-Inter has no Georgian letters and craft-fonts has no Georgian face yet, so Georgian text shows boxes
+Inter has no Georgian letters and mahay-fonts has no Georgian face yet, so Georgian text shows boxes
 until a Georgian face is available to the UI.
 
 ## Terminology
@@ -58,7 +58,7 @@ until a Georgian face is available to the UI.
 | Reset / Revert | ჩამოყრა / წინა ვერსიაზე დაბრუნება |
 | Undo / Redo | დაბრუნება / გამეორება |
 
-Please follow this table and the shared ArtCraft Georgian glossary when you add strings.
+Please follow this table and the shared Mahay Georgian glossary when you add strings.
 
 ## Maintenance and checks
 
@@ -67,8 +67,8 @@ Fixed texts: `crates/ui-egui/locales/ka.json` (2,719 entries). Messages with val
 the placeholders at build time. Strings not yet in the plain catalog show in English.
 
 ```sh
-cargo test -p lightcraft-ui-egui i18n::tests -- --nocapture
-LIGHTCRAFT_LANGUAGE=ka lightcraft-cli snapshot --demo -o georgian.png --size 1600x1000
+cargo test -p hazavana-ui-egui i18n::tests -- --nocapture
+HAZAVANA_LANGUAGE=ka hazavana-cli snapshot --demo -o georgian.png --size 1600x1000
 ```
 
 The tests check catalog coverage, placeholders, switching language by menu and control channel,

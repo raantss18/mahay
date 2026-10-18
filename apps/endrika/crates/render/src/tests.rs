@@ -1,6 +1,6 @@
 use super::*;
-use figcraft_color::{Color, ColorStop, Gradient, GradientKind, Paint};
-use figcraft_doc::{Effect, EffectKind, NodeKind, Shadow, StrokeAlign, TextData};
+use endrika_color::{Color, ColorStop, Gradient, GradientKind, Paint};
+use endrika_doc::{Effect, EffectKind, NodeKind, Shadow, StrokeAlign, TextData};
 
 fn px(p: &Pixmap, x: u32, y: u32) -> [u8; 4] {
     let i = ((y * p.width() + x) * 4) as usize;
@@ -8,8 +8,8 @@ fn px(p: &Pixmap, x: u32, y: u32) -> [u8; 4] {
     [d[0], d[1], d[2], d[3]]
 }
 
-fn doc_with_rect(fill: Color) -> (figcraft_doc::Document, figcraft_doc::NodeId, figcraft_doc::NodeId) {
-    let mut d = figcraft_doc::Document::new("t");
+fn doc_with_rect(fill: Color) -> (endrika_doc::Document, endrika_doc::NodeId, endrika_doc::NodeId) {
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
     let r = d.create(p, NodeKind::Rectangle, "R", 10.0, 10.0, 50.0, 30.0).unwrap();
     d.get_mut(r).unwrap().fills = vec![Paint::solid(fill)];
@@ -69,7 +69,7 @@ fn inner_shadow_and_blur_dont_crash() {
     n.effects.push(Effect::layer_blur());
     n.effects.push(Effect::background_blur());
     n.effects.push(Effect {
-        kind: EffectKind::Noise(figcraft_doc::Noise { size: 1.0, density: 0.5, color: Color::BLACK, ..Default::default() }),
+        kind: EffectKind::Noise(endrika_doc::Noise { size: 1.0, density: 0.5, color: Color::BLACK, ..Default::default() }),
         visible: true,
     });
     let _ = render_view(&d, p, &view(100, 100), &Options::default()).unwrap();
@@ -100,7 +100,7 @@ fn gradients_render() {
 
 #[test]
 fn frame_clips_children() {
-    let mut d = figcraft_doc::Document::new("t");
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
     let f = d.create(p, NodeKind::Frame, "F", 0.0, 0.0, 50.0, 50.0).unwrap();
     let r = d.create(f, NodeKind::Rectangle, "R", 25.0, 25.0, 50.0, 50.0).unwrap();
@@ -131,7 +131,7 @@ fn strokes_align() {
 
 #[test]
 fn mask_clips_siblings() {
-    let mut d = figcraft_doc::Document::new("t");
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
     let g = d.create(p, NodeKind::Group, "G", 0.0, 0.0, 100.0, 100.0).unwrap();
     let m = d.create(g, NodeKind::Ellipse { start: 0.0, sweep: std::f64::consts::TAU, inner: 0.0 }, "M", 0.0, 0.0, 50.0, 50.0).unwrap();
@@ -146,18 +146,18 @@ fn mask_clips_siblings() {
 
 #[test]
 fn luminance_and_vector_masks() {
-    let mut d = figcraft_doc::Document::new("t");
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
     let g = d.create(p, NodeKind::Group, "G", 0.0, 0.0, 100.0, 100.0).unwrap();
     // The mask: white on the left half, black on the right.
     let m = d.create(g, NodeKind::Rectangle, "M", 0.0, 0.0, 100.0, 100.0).unwrap();
-    let grad = figcraft_color::Gradient {
-        kind: figcraft_color::GradientKind::Linear,
+    let grad = endrika_color::Gradient {
+        kind: endrika_color::GradientKind::Linear,
         stops: vec![
-            figcraft_color::ColorStop { position: 0.0, color: Color::WHITE },
-            figcraft_color::ColorStop { position: 0.49, color: Color::WHITE },
-            figcraft_color::ColorStop { position: 0.51, color: Color::BLACK },
-            figcraft_color::ColorStop { position: 1.0, color: Color::BLACK },
+            endrika_color::ColorStop { position: 0.0, color: Color::WHITE },
+            endrika_color::ColorStop { position: 0.49, color: Color::WHITE },
+            endrika_color::ColorStop { position: 0.51, color: Color::BLACK },
+            endrika_color::ColorStop { position: 1.0, color: Color::BLACK },
         ],
         from: (0.0, 0.5),
         to: (1.0, 0.5),
@@ -171,7 +171,7 @@ fn luminance_and_vector_masks() {
     let pix = render_view(&d, p, &view(100, 100), &Options::default()).unwrap();
     assert_eq!(px(&pix, 80, 50), [0, 0, 0, 255]);
     // Luminance: only the white half shows.
-    d.get_mut(m).unwrap().mask_type = figcraft_doc::MaskType::Luminance;
+    d.get_mut(m).unwrap().mask_type = endrika_doc::MaskType::Luminance;
     let pix = render_view(&d, p, &view(100, 100), &Options::default()).unwrap();
     assert_eq!(px(&pix, 20, 50), [0, 0, 0, 255]);
     assert_eq!(px(&pix, 80, 50)[0], 0xF5, "black hides");
@@ -179,22 +179,22 @@ fn luminance_and_vector_masks() {
     let e = d.create(g, NodeKind::Ellipse { start: 0.0, sweep: std::f64::consts::TAU, inner: 0.0 }, "E", 0.0, 0.0, 50.0, 50.0).unwrap();
     d.get_mut(e).unwrap().fills = vec![Paint::solid(Color::new(0.0, 0.0, 0.0, 0.0))];
     d.get_mut(e).unwrap().is_mask = true;
-    d.get_mut(e).unwrap().mask_type = figcraft_doc::MaskType::Vector;
+    d.get_mut(e).unwrap().mask_type = endrika_doc::MaskType::Vector;
     d.get_mut(g).unwrap().children = vec![e, r];
     let pix = render_view(&d, p, &view(100, 100), &Options::default()).unwrap();
     assert_eq!(px(&pix, 25, 25), [0, 0, 0, 255], "inside the outline");
     assert_eq!(px(&pix, 80, 80)[0], 0xF5, "outside");
     // As an alpha mask the transparent ellipse hides everything.
-    d.get_mut(e).unwrap().mask_type = figcraft_doc::MaskType::Alpha;
+    d.get_mut(e).unwrap().mask_type = endrika_doc::MaskType::Alpha;
     let pix = render_view(&d, p, &view(100, 100), &Options::default()).unwrap();
     assert_eq!(px(&pix, 25, 25)[0], 0xF5);
 }
 
 #[test]
 fn boolean_subtract_renders_hole() {
-    let mut d = figcraft_doc::Document::new("t");
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
-    let b = d.create(p, NodeKind::BooleanOp { op: figcraft_doc::BoolOp::Subtract }, "B", 0.0, 0.0, 100.0, 100.0).unwrap();
+    let b = d.create(p, NodeKind::BooleanOp { op: endrika_doc::BoolOp::Subtract }, "B", 0.0, 0.0, 100.0, 100.0).unwrap();
     d.get_mut(b).unwrap().fills = vec![Paint::solid(Color::BLACK)];
     d.create(b, NodeKind::Rectangle, "A", 0.0, 0.0, 100.0, 100.0).unwrap();
     d.create(b, NodeKind::Rectangle, "Hole", 25.0, 25.0, 50.0, 50.0).unwrap();
@@ -205,29 +205,29 @@ fn boolean_subtract_renders_hole() {
 
 #[test]
 fn text_renders_something() {
-    let mut d = figcraft_doc::Document::new("t");
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
     let mut td = TextData::new("Hello");
     td.style.font_size = 32.0;
     d.create(p, NodeKind::Text(td), "T", 0.0, 0.0, 200.0, 50.0).unwrap();
     let pix = render_view(&d, p, &view(200, 60), &Options { background: Some(Color::WHITE), ..Default::default() }).unwrap();
     let dark = pix.data().as_chunks::<4>().0.iter().filter(|c| c[0] < 100).count();
-    if figcraft_text::find_face("Inter", "Regular").is_some() {
+    if endrika_text::find_face("Inter", "Regular").is_some() {
         assert!(dark > 50, "{dark}");
     }
 }
 
 /// The machine's colour emoji face, if it has one (this test skips without: no font ships here).
 fn emoji_face() -> Option<(String, String)> {
-    figcraft_text::scan_system_fonts();
-    let mut db = figcraft_text::db().write().unwrap();
+    endrika_text::scan_system_fonts();
+    let mut db = endrika_text::db().write().unwrap();
     db.emoji_fallbacks().into_iter().find(|f| f.has_color()).map(|f| (f.family.clone(), f.style.clone()))
 }
 
 #[test]
 fn colour_emoji_draw_their_pixels() {
     let Some((family, style)) = emoji_face() else { return };
-    let mut d = figcraft_doc::Document::new("t");
+    let mut d = endrika_doc::Document::new("t");
     let p = d.first_page().unwrap();
     let mut td = TextData::new("\u{1F600}");
     (td.style.font_family, td.style.font_style) = (family.clone(), style.clone());
@@ -261,8 +261,8 @@ fn export_png_roundtrip() {
 
 #[test]
 fn exports_carry_the_colour_profile() {
-    use figcraft_color::ColorProfile;
-    use figcraft_doc::ExportFormat;
+    use endrika_color::ColorProfile;
+    use endrika_doc::ExportFormat;
     use image::ImageDecoder;
     let (d, _, r) = doc_with_rect(Color::from_hex("00FF00").unwrap());
     let pix = render_node(&d, r, 1.0).unwrap();
@@ -283,11 +283,11 @@ fn exports_carry_the_colour_profile() {
 
 #[test]
 fn images_are_managed_into_the_file_profile() {
-    use figcraft_color::{ColorProfile, ImageScaleMode, Paint};
+    use endrika_color::{ColorProfile, ImageScaleMode, Paint};
     let (mut d, _, r) = doc_with_rect(Color::WHITE);
     let mut red = Pixmap::new(4, 4).unwrap();
     red.fill(tiny_skia::Color::from_rgba8(255, 0, 0, 255));
-    d.images.insert("red".into(), figcraft_doc::ImageData { bytes: std::sync::Arc::new(encode_png(&red).unwrap()), width: 4, height: 4 });
+    d.images.insert("red".into(), endrika_doc::ImageData { bytes: std::sync::Arc::new(encode_png(&red).unwrap()), width: 4, height: 4 });
     d.get_mut(r).unwrap().fills = vec![Paint::image("red", ImageScaleMode::Fill)];
     let center = |d: &Document| {
         let pix = render_node(d, r, 1.0).unwrap();
@@ -312,7 +312,7 @@ fn hostile_sizes() {
     let n = d.get_mut(r).unwrap();
     n.width = f64::NAN;
     n.height = 1e12;
-    n.effects.push(Effect { kind: EffectKind::LayerBlur(figcraft_doc::Blur::uniform(1e9)), visible: true });
+    n.effects.push(Effect { kind: EffectKind::LayerBlur(endrika_doc::Blur::uniform(1e9)), visible: true });
     let _ = render_view(&d, p, &view(64, 64), &Options::default());
     let _ = render_node(&d, r, f64::NAN);
     let _ = render_view(&d, p, &View { origin: (f64::NAN, 0.0), scale: 0.0, width: 0, height: 0 }, &Options::default());
@@ -335,7 +335,7 @@ fn inner_shadow_reaches_every_edge() {
 fn rect_clip_frame_matches_same_rect_fill_on_fractional_edges() {
     let white = Options { background: Some(Color::WHITE), ..Default::default() };
     for (x, y, w, h) in [(0.5, 0.5, 10.0, 10.0), (0.0, 0.0, 10.5, 10.5), (0.0, 0.0, 10.0, 10.0)] {
-        let mut clipped = figcraft_doc::Document::new("clipped");
+        let mut clipped = endrika_doc::Document::new("clipped");
         let p = clipped.first_page().unwrap();
         let f = clipped.create(p, NodeKind::Frame, "F", x, y, w, h).unwrap();
         clipped.get_mut(f).unwrap().fills.clear();
@@ -343,7 +343,7 @@ fn rect_clip_frame_matches_same_rect_fill_on_fractional_edges() {
         let c = clipped.create(f, NodeKind::Rectangle, "C", -5.0, -5.0, w + 10.0, h + 10.0).unwrap();
         clipped.get_mut(c).unwrap().fills = vec![Paint::solid(Color::BLACK)];
 
-        let mut direct = figcraft_doc::Document::new("direct");
+        let mut direct = endrika_doc::Document::new("direct");
         let dp = direct.first_page().unwrap();
         let r = direct.create(dp, NodeKind::Rectangle, "R", x, y, w, h).unwrap();
         direct.get_mut(r).unwrap().fills = vec![Paint::solid(Color::BLACK)];

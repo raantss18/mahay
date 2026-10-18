@@ -1,4 +1,4 @@
-//! The SoundCraft session document.
+//! The Feo session document.
 //!
 //! A [`Session`] is pure data: tracks with playlists of clips, the mixer (inserts, sends, routing,
 //! automation), tempo/meter, memory locations and groups. Audio sample data lives in
@@ -29,4 +29,4 @@ pub use session::{
 pub use source::{Source, SourceAudio, SourcePool, VideoSource};
 pub use track::{Playlist, TRACK_COLORS, Track, TrackHeight, TrackKind};
 
-pub use soundcraft_time as time;
+pub use feo_time as time;

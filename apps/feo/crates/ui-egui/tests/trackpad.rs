@@ -1,7 +1,7 @@
 use egui::{Pos2, RawInput, Rect, pos2, vec2};
 use serde_json::{Value, json};
-use soundcraft_time::to_samples;
-use soundcraft_ui_egui::{ControlRequest, Services, SoundApp};
+use feo_time::to_samples;
+use feo_ui_egui::{ControlRequest, Services, SoundApp};
 use std::sync::mpsc::{Sender, channel};
 
 struct Rig {
@@ -14,7 +14,7 @@ struct Rig {
 impl Rig {
     fn new(width: f32) -> Rig {
         let (tx, rx) = channel();
-        let app = SoundApp::new(soundcraft_engine::demo::demo_engine(), None, Services::default()).with_control(rx);
+        let app = SoundApp::new(feo_engine::demo::demo_engine(), None, Services::default()).with_control(rx);
         let mut r = Rig { ctx: egui::Context::default(), app, tx, width };
         r.frames(6);
         r

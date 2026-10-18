@@ -1,23 +1,23 @@
 //! Headless UI checks for the 3D viewer (egui_kittest). The `snapshot` test renders the window
-//! with wgpu and writes PNGs when `EC_SNAPSHOT_DIR` is set (`cargo test -p effectcraft-ui-egui
+//! with wgpu and writes PNGs when `EC_SNAPSHOT_DIR` is set (`cargo test -p tselatra-ui-egui
 //! --test ui_3d -- --ignored`); the other test only runs the UI logic.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::render::three_d::View3D;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::render::three_d::View3D;
+use tselatra_ui_egui::TselatraApp;
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn app() -> EffectcraftApp {
+fn app() -> TselatraApp {
     let mut s = Session::default();
     s.execute("file.openDemoProject", json!({})).unwrap();
     s.execute("comp.open", json!({"comp": "3D Showcase"})).unwrap();
     s.execute("time.set", json!({"time": 5.0})).unwrap();
-    EffectcraftApp::new(s)
+    TselatraApp::new(s)
 }
 
 /// Step the UI until background frame renders have landed.
-fn settle(h: &mut Harness<'_, EffectcraftApp>) {
+fn settle(h: &mut Harness<'_, TselatraApp>) {
     for _ in 0..600 {
         h.step();
         if h.state().frames.inflight() == 0 && h.state().frames.last_ms.lock().map(|v| *v > 0.0).unwrap_or(false) {
@@ -49,7 +49,7 @@ fn viewer_registers_3d_controls() {
 }
 
 /// Click the centre of the automation element `id`.
-fn click_id(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click_id(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let [x, y, w, hh] = h.state().auto.find(id).unwrap_or_else(|| panic!("{id} is registered")).rect;
     let p = egui::pos2(x + w / 2.0, y + hh / 2.0);
     h.input_mut().events.push(egui::Event::PointerMoved(p));
@@ -66,17 +66,17 @@ fn renderer_menu_shows_and_switches_the_comp_renderer() {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app());
     h.state_mut().session.execute("comp.settings", json!({"renderer": "classic3D"})).unwrap();
     h.run_steps(3);
-    let label = |h: &Harness<'_, EffectcraftApp>| h.state().auto.find("viewer.renderer3d").map(|e| e.label.clone());
+    let label = |h: &Harness<'_, TselatraApp>| h.state().auto.find("viewer.renderer3d").map(|e| e.label.clone());
     assert_eq!(label(&h).as_deref(), Some("Classic 3D"));
     click_id(&mut h, "viewer.renderer3d");
     click_id(&mut h, "viewer.renderer3dItem.1");
     let renderer = h.state().session.active_comp().unwrap().renderer;
-    assert_eq!(renderer, effectcraft_engine::project::Renderer::Advanced3D);
+    assert_eq!(renderer, tselatra_engine::project::Renderer::Advanced3D);
     h.run_steps(2);
     assert_eq!(label(&h).as_deref(), Some("Advanced 3D"));
     // One undoable Composition Settings step.
     h.state_mut().session.execute("edit.undo", json!({})).unwrap();
-    assert_eq!(h.state().session.active_comp().unwrap().renderer, effectcraft_engine::project::Renderer::Classic3D);
+    assert_eq!(h.state().session.active_comp().unwrap().renderer, tselatra_engine::project::Renderer::Classic3D);
 }
 
 #[test]
@@ -85,8 +85,8 @@ fn camera_and_light_dialogs_create_layers() {
     h.step();
     let ctx = h.ctx.clone();
     let n0 = h.state().session.active_comp().unwrap().layers.len();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newCamera", json!({})).unwrap();
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::CameraSettings));
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newCamera", json!({})).unwrap();
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::CameraSettings));
     h.step();
     let ok = h.state().auto.elements.iter().chain(h.state().auto.previous.iter()).find(|e| e.id == "dialog.camera.ok").map(|e| e.rect);
     assert!(ok.is_some(), "camera dialog OK registered");
@@ -95,15 +95,15 @@ fn camera_and_light_dialogs_create_layers() {
     h.step();
     assert!(h.state().dialog.is_none());
     assert_eq!(h.state().session.active_comp().unwrap().layers.len(), n0 + 1);
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newLight", json!({})).unwrap();
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::LightSettings));
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newLight", json!({})).unwrap();
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::LightSettings));
     h.step();
     h.key_press(egui::Key::Enter);
     h.step();
     assert_eq!(h.state().session.active_comp().unwrap().layers.len(), n0 + 2);
     // Layer Settings on the new light reopens Light Settings for it.
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.settings", json!({})).unwrap();
-    assert_eq!(h.state().dialog, Some(effectcraft_ui_egui::Dialog::LightSettings));
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.settings", json!({})).unwrap();
+    assert_eq!(h.state().dialog, Some(tselatra_ui_egui::Dialog::LightSettings));
 }
 
 #[test]
@@ -124,14 +124,14 @@ fn snapshot() {
         }
     }
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newCamera", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newCamera", json!({})).unwrap();
     h.run_steps(3);
     let img = h.render().expect("render");
     if let Some(d) = &dir {
         img.save(format!("{d}/ui3d_camera_dialog.png")).unwrap();
     }
     h.state_mut().dialog = None;
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newLight", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newLight", json!({})).unwrap();
     h.run_steps(3);
     let img = h.render().expect("render");
     if let Some(d) = &dir {
@@ -141,7 +141,7 @@ fn snapshot() {
     h.state_mut().dialog = None;
     h.state_mut().session.execute("view.3d.activeCamera", json!({})).unwrap();
     h.state_mut().session.execute("layer.select", json!({"layers": ["Card Blue"]})).unwrap();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.rotation", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.rotation", json!({})).unwrap();
     settle(&mut h);
     let img = h.render().expect("render");
     if let Some(d) = &dir {
@@ -207,9 +207,9 @@ fn layout_views_draw_the_camera_and_follow_its_position() {
     s.execute("layer.setSwitch", json!({"layer": solid, "switch": "threeD", "value": true})).unwrap();
     let cam = s.execute("layer.newCamera", json!({"position": [320, 180, -300], "poi": [320, 180, 0]})).unwrap()["layer"].as_u64().unwrap();
     s.execute("view.layout", json!({"views": 4})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     settle(&mut h);
-    let centre = |h: &Harness<'_, EffectcraftApp>, view: &str| {
+    let centre = |h: &Harness<'_, TselatraApp>, view: &str| {
         let id = format!("viewer.view.{view}.camera.{cam}");
         let [x, y, w, hh] = h.state().auto.find(&id).unwrap_or_else(|| panic!("{id} is registered")).rect;
         (x + w / 2.0, y + hh / 2.0)
@@ -226,14 +226,14 @@ fn layout_views_draw_the_camera_and_follow_its_position() {
 }
 
 /// A 4-view layout over a comp with a 3D solid and a camera.
-fn four_views() -> Harness<'static, EffectcraftApp> {
+fn four_views() -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "C", "width": 640, "height": 360, "duration": 2})).unwrap();
     let solid = s.execute("layer.newSolid", json!({"color": "#ff0000", "width": 200, "height": 200})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.setSwitch", json!({"layer": solid, "switch": "threeD", "value": true})).unwrap();
     s.execute("layer.newCamera", json!({"position": [320, 180, -300], "poi": [320, 180, 0]})).unwrap();
     s.execute("view.layout", json!({"views": 4})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     settle(&mut h);
     h
 }
@@ -243,8 +243,8 @@ fn four_views() -> Harness<'static, EffectcraftApp> {
 #[test]
 fn each_layout_pane_chooses_its_own_view() {
     let mut h = four_views();
-    let present = |h: &Harness<'_, EffectcraftApp>, view: &str| h.state().auto.find(&format!("viewer.view.{view}")).is_some();
-    let has_camera = |h: &Harness<'_, EffectcraftApp>, view: &str| h.state().auto.query(&format!("viewer.view.{view}.camera.")).len() == 1;
+    let present = |h: &Harness<'_, TselatraApp>, view: &str| h.state().auto.find(&format!("viewer.view.{view}")).is_some();
+    let has_camera = |h: &Harness<'_, TselatraApp>, view: &str| h.state().auto.query(&format!("viewer.view.{view}.camera.")).len() == 1;
     for p in 1..=3 {
         assert!(h.state().auto.find(&format!("viewer.view.{p}.type")).is_some(), "pane {p} has a selector");
     }
@@ -266,7 +266,7 @@ fn each_layout_pane_chooses_its_own_view() {
     assert!(present(&h, "activeCamera") && !has_camera(&h, "activeCamera"));
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: egui::Pos2, to: egui::Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: egui::Pos2, to: egui::Pos2) {
     h.event(egui::Event::PointerMoved(from));
     h.step();
     h.event(egui::Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: egui::Modifiers::NONE });
@@ -280,24 +280,24 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: egui::Pos2, to: egui::Pos2) {
 }
 
 /// A selected 3D solid (`w` x `h`) in an empty 640x360 comp seen by the default camera.
-fn gizmo_harness(w: u32, h: u32) -> (Harness<'static, EffectcraftApp>, u64) {
+fn gizmo_harness(w: u32, h: u32) -> (Harness<'static, TselatraApp>, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "C", "width": 640, "height": 360, "duration": 2})).unwrap();
     let solid = s.execute("layer.newSolid", json!({"color": "#ff0000", "width": w, "height": h})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.setSwitch", json!({"layer": solid, "switch": "threeD", "value": true})).unwrap();
     s.execute("layer.select", json!({"layers": [solid]})).unwrap();
-    let mut harness = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut harness = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     settle(&mut harness);
     (harness, solid)
 }
 
-fn transform(h: &mut Harness<'_, EffectcraftApp>, layer: u64, prop: &str) -> Vec<f64> {
+fn transform(h: &mut Harness<'_, TselatraApp>, layer: u64, prop: &str) -> Vec<f64> {
     let v = h.state_mut().session.execute("prop.get", json!({"layer": layer, "path": format!("transform/{prop}")})).unwrap()["value"].clone();
     serde_json::from_value(v).unwrap()
 }
 
 /// The centre of the automation element `id`.
-fn centre(h: &Harness<'_, EffectcraftApp>, id: &str) -> egui::Pos2 {
+fn centre(h: &Harness<'_, TselatraApp>, id: &str) -> egui::Pos2 {
     let [x, y, w, hh] = h.state().auto.find(id).unwrap_or_else(|| panic!("{id} is registered")).rect;
     egui::pos2(x + w / 2.0, y + hh / 2.0)
 }

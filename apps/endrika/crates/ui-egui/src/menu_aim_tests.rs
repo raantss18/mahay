@@ -6,7 +6,7 @@
 //! unless it rests on one or turns away.
 
 use egui::{Event, Id, LayerId, Order, Pos2, RawInput, Rect, pos2, vec2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 
 use crate::menus::{AIM_REST, HOVER_DELAY, heading_for, in_triangle, main_menu_id};
 use crate::{FigApp, NoServices};
@@ -93,11 +93,11 @@ fn top(name: &str) -> Id {
 
 /// The submenus of top-level menu `menu` (their keys), from the menu catalog.
 fn submenu_keys(menu: &str) -> Vec<String> {
-    let mut keys: Vec<String> = figcraft_engine::catalog::MENU
+    let mut keys: Vec<String> = endrika_engine::catalog::MENU
         .iter()
         .filter_map(|m| m.menu.strip_prefix(menu).and_then(|r| r.strip_prefix('/')).map(|r| format!("{menu}/{}", r.split('/').next().unwrap_or(r))))
         .collect();
-    keys.extend(figcraft_engine::catalog::MENU.iter().filter(|m| m.menu == menu && m.id == "file.openRecent").map(|m| format!("{menu}/{}", m.label)));
+    keys.extend(endrika_engine::catalog::MENU.iter().filter(|m| m.menu == menu && m.id == "file.openRecent").map(|m| format!("{menu}/{}", m.label)));
     keys.dedup();
     keys
 }

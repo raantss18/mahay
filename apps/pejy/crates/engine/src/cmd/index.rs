@@ -1,8 +1,8 @@
 //! Index: page references (New Page Reference) and Generate Index.
 
-use designcraft_doc::index::{IndexRange, IndexRef, IndexSpec, Resolved};
-use designcraft_doc::{Document, INDEX_MARK, ParaAttrs, ParaFormat, ParagraphStyle, SpreadRef, StoryId, TextSel};
-use designcraft_geom::Rect;
+use pejy_doc::index::{IndexRange, IndexRef, IndexSpec, Resolved};
+use pejy_doc::{Document, INDEX_MARK, ParaAttrs, ParaFormat, ParagraphStyle, SpreadRef, StoryId, TextSel};
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -54,7 +54,7 @@ fn has_index(s: &Session) -> std::result::Result<(), String> {
 fn add_reference(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
     let t = st.selection.text.ok_or_else(|| bad("index.addReference", "no insertion point"))?;
-    let selected = st.doc.story(t.story).map(|x| designcraft_doc::xref::clean(x.slice(t.range()))).unwrap_or_default();
+    let selected = st.doc.story(t.story).map(|x| pejy_doc::xref::clean(x.slice(t.range()))).unwrap_or_default();
     let topics: Vec<String> = if let Some(a) = p.get("topics").and_then(Value::as_array) {
         a.iter().filter_map(Value::as_str).map(str::to_string).collect()
     } else if let Some(t) = str_param(p, "topic") {
@@ -81,7 +81,7 @@ fn add_reference(s: &mut Session, p: &Value) -> Result<Value> {
         p.get("sort").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
     let r = IndexRef { topics, sort, range };
     s.edit(|d, sel| {
-        let st = d.story_mut(t.story).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+        let st = d.story_mut(t.story).ok_or(pejy_doc::DocError::NoStory(t.story))?;
         // InDesign puts the marker before the selected text.
         let at = t.range().start.min(st.len());
         st.insert_index_ref(at, r.clone());
@@ -96,7 +96,7 @@ fn resolve(s: &Session, d: &Document, skip: Option<StoryId>) -> Vec<(StoryId, us
     let mut out = Vec::new();
     for st in d.stories.values().filter(|st| !st.index_refs.is_empty() && Some(st.id) != skip) {
         let cs = s.cache.get(d, st.id, None);
-        let page = |pos: usize| designcraft_compose::vars::page_of(d, &cs, pos);
+        let page = |pos: usize| pejy_compose::vars::page_of(d, &cs, pos);
         for ((pos, _), r) in st.text.match_indices(INDEX_MARK).zip(&st.index_refs) {
             let start = page(pos);
             let end = match &r.range {
@@ -151,10 +151,10 @@ fn ensure_styles(d: &mut Document) {
     for (name, para, size) in missing {
         st.paragraph.push(ParagraphStyle {
             name: name.into(),
-            based_on: Some(designcraft_doc::story::BASIC_PARAGRAPH.into()),
+            based_on: Some(pejy_doc::story::BASIC_PARAGRAPH.into()),
             next_style: None,
             para,
-            chars: designcraft_doc::CharAttrs { size, ..Default::default() },
+            chars: pejy_doc::CharAttrs { size, ..Default::default() },
             shortcut: String::new(),
         });
     }
@@ -165,7 +165,7 @@ fn fill_index(s: &mut Session, spec: IndexSpec, new_frame: Option<(usize, Option
     let existing = d0.index.as_ref().map(|i| i.story).filter(|sid| d0.story(*sid).is_some());
     let refs = resolve(s, &d0, existing);
     let resolved: Vec<Resolved> = refs.into_iter().map(|(_, _, r)| r).collect();
-    let paras = designcraft_doc::index::build(&spec, &resolved, &|p| d0.page_name(p));
+    let paras = pejy_doc::index::build(&spec, &resolved, &|p| d0.page_name(p));
     s.edit(|d, sel| {
         ensure_styles(d);
         let story = match existing {
@@ -176,12 +176,12 @@ fn fill_index(s: &mut Session, spec: IndexSpec, new_frame: Option<(usize, Option
                 let r: Rect = rect.unwrap_or_else(|| d.spreads[si].pages[pi].margin_rect());
                 let layer = d.default_layer();
                 let (fid, sid) = d.add_text_frame(SpreadRef::Doc(si), r, layer, "", ParaFormat::default())?;
-                *sel = designcraft_doc::Selection::items(vec![fid]);
+                *sel = pejy_doc::Selection::items(vec![fid]);
                 sid
             }
         };
         let text = paras.iter().map(|(_, t)| t.as_str()).collect::<Vec<_>>().join("\n");
-        let st = d.story_mut(story).ok_or(designcraft_doc::DocError::NoStory(story))?;
+        let st = d.story_mut(story).ok_or(pejy_doc::DocError::NoStory(story))?;
         let len = st.len();
         st.replace(0..len, &text);
         for (pi, r) in st.para_ranges().into_iter().enumerate() {
@@ -222,7 +222,7 @@ mod tests {
             let sp = s.doc().unwrap().doc.page_loc(page).unwrap().0;
             let text = ["Kerning adjusts pairs.", "Leading sets line spacing. Kerning again.", "Grids organise pages."][page];
             let r = s.execute("frame.create", &json!({"spread": sp, "rect": [72, 72, 400, 300], "content": "text", "text": text})).unwrap();
-            sids.push(s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story);
+            sids.push(s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story);
         }
         // Topic from the selected word, explicit nested topics, a See reference.
         s.execute("text.select", &json!({"story": sids[0].0, "anchor": 0, "focus": 7})).unwrap();

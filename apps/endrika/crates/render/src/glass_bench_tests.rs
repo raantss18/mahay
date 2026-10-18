@@ -1,6 +1,6 @@
 //! Glass render timings: a 600 × 360 rounded glass pane over coloured stripes, 2400 × 1600 device
 //! pixels. Run in release:
-//! `cargo test --release -p figcraft-render --lib glass_render_timings -- --ignored --nocapture`.
+//! `cargo test --release -p endrika-render --lib glass_render_timings -- --ignored --nocapture`.
 //!
 //! "export" rows render the whole view with `render_view` (exports, thumbnails, the first canvas
 //! frame); "canvas" rows go through `Retained`, which re-renders only what changed, as the canvas
@@ -9,9 +9,9 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, EffectKind, Glass, NodeId, NodeKind};
-use figcraft_geom::Affine;
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, EffectKind, Glass, NodeId, NodeKind};
+use endrika_geom::Affine;
 
 use crate::{Options, Retained, View, Work, render_view, render_view_single};
 

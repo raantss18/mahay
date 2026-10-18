@@ -2,19 +2,19 @@
 //! blocking for the CLI / agents / wasm), writing track results into the tracker's Track Point
 //! properties, and applying tracks (Transform, Stabilize, Corner Pin) to layers.
 //!
-//! The algorithms are in `effectcraft-track`; the property layout in
-//! `effectcraft_project::tracking`.
+//! The algorithms are in `tselatra-track`; the property layout in
+//! `tselatra_project::tracking`.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_geom::{Mat3, vec2};
-use effectcraft_project::tracking::{LowConfidence, TrackChannel, TrackKind, TrackerOptions, TrackerSettings};
-use effectcraft_project::{Comp, ItemId, Keyframe, Layer, LayerId, Project, PropGroup, Uid, Value};
-use effectcraft_raster::Image;
-use effectcraft_render::{EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
-use effectcraft_time::Tick;
-use effectcraft_track as trk;
+use tselatra_geom::{Mat3, vec2};
+use tselatra_project::tracking::{LowConfidence, TrackChannel, TrackKind, TrackerOptions, TrackerSettings};
+use tselatra_project::{Comp, ItemId, Keyframe, Layer, LayerId, Project, PropGroup, Uid, Value};
+use tselatra_raster::Image;
+use tselatra_render::{EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
+use tselatra_time::Tick;
+use tselatra_track as trk;
 use serde::{Deserialize, Serialize};
 
 use crate::{Event, Session};
@@ -208,8 +208,8 @@ pub(crate) fn source_frame(
     expr: Option<&dyn ExprHost>,
 ) -> Option<(Arc<Image>, [f64; 2])> {
     let ctx = EvalCtx { project, comp_id: cid, comp, time: t, expr, footage: None };
-    if let effectcraft_project::LayerSource::Footage { item } = &layer.source
-        && let Some(effectcraft_project::ItemKind::Footage(f)) = project.item(*item).map(|i| &i.kind)
+    if let tselatra_project::LayerSource::Footage { item } = &layer.source
+        && let Some(tselatra_project::ItemKind::Footage(f)) = project.item(*item).map(|i| &i.kind)
         && f.has_video
         && let Some(img) = r.footage.frame(*item, f, ctx.source_time(layer))
         && img.width == f.width
@@ -223,7 +223,7 @@ pub(crate) fn source_frame(
         let w = (buf.img.width as f64 / buf.scale).round().max(1.0) as u32;
         let h = (buf.img.height as f64 / buf.scale).round().max(1.0) as u32;
         let off = [buf.offset[0] / buf.scale, buf.offset[1] / buf.scale];
-        return Some((Arc::new(effectcraft_raster::resample(&buf.img, w, h)), off));
+        return Some((Arc::new(tselatra_raster::resample(&buf.img, w, h)), off));
     }
     Some((Arc::new(buf.img), buf.offset))
 }
@@ -312,7 +312,7 @@ pub(crate) async fn run_work(w: Work, shared: &TrackShared) {
 /// Set (or add) a key at layer time `t`.
 pub(crate) fn key(g: &mut PropGroup, m: &str, t: Tick, v: Value) {
     if let Some(p) = g.get_mut(m) {
-        effectcraft_keyframe::set_key(&mut p.keys, Keyframe::new(t, v));
+        tselatra_keyframe::set_key(&mut p.keys, Keyframe::new(t, v));
     }
 }
 
@@ -382,7 +382,7 @@ impl Session {
             Some(
                 std::thread::Builder::new()
                     .name("track-analyze".into())
-                    .spawn(move || effectcraft_render::passes::block_on(run_work(work, &sh)))
+                    .spawn(move || tselatra_render::passes::block_on(run_work(work, &sh)))
                     .map_err(|e| e.to_string())?,
             )
         };
@@ -492,7 +492,7 @@ pub fn apply(p: &mut Project, cid: ItemId, src: LayerId, tracker: Uid, dims: Dim
     let ctx0 = EvalCtx::new(p, cid, &comp, Tick::ZERO);
     let t_first = source.comp_time(track[0].0);
     let rot_scale = settings.point_count() >= 2 && track[0].1.len() >= 2;
-    let (ang0, len0) = if rot_scale { effectcraft_track::angle_and_length(track[0].1[0], track[0].1[1]) } else { (0.0, 1.0) };
+    let (ang0, len0) = if rot_scale { tselatra_track::angle_and_length(track[0].1[0], track[0].1[1]) } else { (0.0, 1.0) };
     // (target layer time, values) to write.
     let mut pos_keys = vec![];
     let mut anchor_keys = vec![];
@@ -513,8 +513,8 @@ pub fn apply(p: &mut Project, cid: ItemId, src: LayerId, tracker: Uid, dims: Dim
         let ct = source.comp_time(*lt);
         let ctx = ctx0.at(ct);
         let tt = target.layer_time(ct);
-        let (ang, len) = if rot_scale { effectcraft_track::angle_and_length(pts[0], pts[1]) } else { (ang0, len0) };
-        let dang = effectcraft_track::unwrap_degrees(prev_ang, ang - ang0);
+        let (ang, len) = if rot_scale { tselatra_track::angle_and_length(pts[0], pts[1]) } else { (ang0, len0) };
+        let dang = tselatra_track::unwrap_degrees(prev_ang, ang - ang0);
         prev_ang = dang;
         let ratio = if len0 > 1e-9 { len / len0 } else { 1.0 };
         match settings.kind {
@@ -564,15 +564,15 @@ pub fn apply(p: &mut Project, cid: ItemId, src: LayerId, tracker: Uid, dims: Dim
         }
     }
     let n = track.len();
-    let size = effectcraft_render::effect_bounds(p, &comp, &target).0;
+    let size = tselatra_render::effect_bounds(p, &comp, &target).0;
     let mut ids_next = p.next_id;
     let layer = p.comp_mut(cid).and_then(|c| c.layer_mut(target_id)).ok_or("no target layer")?;
     if !corner_keys.is_empty() {
-        let spec = effectcraft_effects::find("ec.distort.cornerpin").ok_or("Corner Pin is not available")?;
+        let spec = tselatra_effects::find("ec.distort.cornerpin").ok_or("Corner Pin is not available")?;
         let fx = layer.props.sub_mut("effects").ok_or("the target layer can't have effects")?;
         let same = fx.groups().filter(|g| g.match_id == spec.id).count();
         let name = if same == 0 { spec.name.to_string() } else { format!("{} {}", spec.name, same + 1) };
-        let mut g = effectcraft_effects::instantiate(spec, &mut effectcraft_project::build::Ids(&mut ids_next), &name, size);
+        let mut g = tselatra_effects::instantiate(spec, &mut tselatra_project::build::Ids(&mut ids_next), &name, size);
         for (t, c) in &corner_keys {
             for (m, v) in ["ul", "ur", "ll", "lr"].iter().zip(c) {
                 key(&mut g, m, *t, Value::Vec2(*v));

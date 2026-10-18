@@ -2,8 +2,8 @@
 //! give the copies the same xdata, so it is saved on them too; the pieces of an exploded object
 //! don't keep it.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Drawing, EntityKind, Handle, RawTag};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{Drawing, EntityKind, Handle, RawTag};
 use serde_json::json;
 
 /// A LINE with a hyperlink (`PE_URL`) and another application's data, and an LWPOLYLINE with
@@ -21,7 +21,7 @@ fn tags(xdata: &[RawTag]) -> Vec<(i32, String)> {
 }
 
 fn session() -> (Session, Handle, Handle) {
-    let d = cadcraft_io::read_dxf(DXF.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(DXF.as_bytes()).unwrap();
     let mut s = Session::empty();
     s.open_drawing(d, "xdata", None);
     let doc = s.doc().unwrap();
@@ -95,13 +95,13 @@ fn copies_keep_the_xdata() {
 fn a_copy_saves_its_xdata() {
     let (mut s, l, _) = session();
     s.execute("copy", &json!({ "handles": [l.hex()], "delta": [0, 20] })).unwrap();
-    let text = cadcraft_io::write_dxf(s.doc().unwrap());
+    let text = drafitra_io::write_dxf(s.doc().unwrap());
     let groups: Vec<&str> = text.lines().map(str::trim).collect();
     let count = |code: &str, value: &str| groups.chunks(2).filter(|g| *g == [code, value]).count();
     assert_eq!(count("1001", "PE_URL"), 2, "on the line and on its copy");
     assert_eq!(count("1000", "https://example.com/door-7"), 2);
     assert_eq!((count("2", "PE_URL"), count("2", "ACME_TAGS")), (1, 1), "the applications stay registered");
-    let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     let lines: Vec<_> = back.model.iter().filter(|e| matches!(e.kind, EntityKind::Line(_))).collect();
     assert_eq!(lines.len(), 2);
     assert_eq!(tags(&lines[0].common.xdata), tags(&lines[1].common.xdata));

@@ -10,7 +10,7 @@
 use std::collections::VecDeque;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError, channel};
 
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_render::{Rendered, Renderer};
 
 /// How long (seconds) the document must stay unchanged before a thumbnail that is already shown
 /// is drawn again.
@@ -43,9 +43,9 @@ pub struct ThumbWorker<S, K> {
 impl<S: PartialEq + Send + 'static, K: Send + 'static> ThumbWorker<S, K> {
     /// Spawn the worker thread, `None` where rendering stays on the UI thread: on wasm, in unit
     /// tests (they look at the panel right after the frame that asks), with
-    /// `VECTORCRAFT_SYNC_RENDER` set, or if the thread can't start.
+    /// `TSIPIKA_SYNC_RENDER` set, or if the thread can't start.
     pub fn spawn(ctx: &egui::Context, name: &str) -> Option<Self> {
-        if cfg!(target_arch = "wasm32") || cfg!(test) || std::env::var_os("VECTORCRAFT_SYNC_RENDER").is_some() {
+        if cfg!(target_arch = "wasm32") || cfg!(test) || std::env::var_os("TSIPIKA_SYNC_RENDER").is_some() {
             return None;
         }
         Self::start(ctx, name)
@@ -57,7 +57,7 @@ impl<S: PartialEq + Send + 'static, K: Send + 'static> ThumbWorker<S, K> {
         let (done_tx, rx) = channel::<Done<K>>();
         let ctx = ctx.clone();
         std::thread::Builder::new()
-            .name(format!("vectorcraft-{name}"))
+            .name(format!("tsipika-{name}"))
             .spawn(move || {
                 let mut r = Renderer::new();
                 let mut queue: VecDeque<Job<S, K>> = VecDeque::new();

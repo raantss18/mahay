@@ -6,8 +6,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, RawInput, Rect, Shape, vec2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::{FigApp, Services};
@@ -15,7 +15,7 @@ use crate::{FigApp, Services};
 /// What the system clipboard holds when a paste chord is pressed (#716).
 #[derive(Clone, Copy, Debug)]
 enum Held {
-    /// FigCraft's own copy (its SVG text).
+    /// Endrika's own copy (its SVG text).
     Ours,
     /// Text copied in another app.
     Text,
@@ -112,7 +112,7 @@ impl Win {
         self.frame(vec![Event::ModifiersChanged(Modifiers::NONE)]);
     }
 
-    /// A red rectangle A copied in FigCraft, and a grey rectangle B selected; then `held` on the
+    /// A red rectangle A copied in Endrika, and a grey rectangle B selected; then `held` on the
     /// system clipboard. Returns (A, B).
     fn copy_a_select_b(&mut self, held: Held) -> (NodeId, NodeId) {
         let s = &mut self.app.session;
@@ -133,7 +133,7 @@ impl Win {
     }
 
     fn fill(&self, id: NodeId) -> String {
-        let n = figcraft_engine::inspect::node_json(self.app.session.doc().unwrap(), id, 0);
+        let n = endrika_engine::inspect::node_json(self.app.session.doc().unwrap(), id, 0);
         n["fills"][0]["color"].as_str().unwrap_or_default().to_string()
     }
 
@@ -155,7 +155,7 @@ impl Win {
     }
 
     fn texts(&self) -> usize {
-        self.app.session.doc().unwrap().nodes().filter(|n| matches!(n.kind, figcraft_doc::NodeKind::Text(_))).count()
+        self.app.session.doc().unwrap().nodes().filter(|n| matches!(n.kind, endrika_doc::NodeKind::Text(_))).count()
     }
 
     fn rects(&self) -> usize {

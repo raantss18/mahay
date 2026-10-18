@@ -1,4 +1,4 @@
-# SoundCraft roadmap: milestones and what's next
+# Feo roadmap: milestones and what's next
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** minor (alpha gate added; stage re-normalized to pre-alpha) · **Target:** Avid Pro Tools Ultimate 2026.4.1
 
@@ -18,8 +18,8 @@ Hours are Opus 5.5 agent-hours.
 ## Alpha gate
 
 The core workflows a Pro Tools professional does every day, checked end to end on macOS (the
-main platform). Any **no** keeps SoundCraft **pre-alpha**, and those rows are the alpha checklist
-(craftrules `standards/progress-docs.md`, Stages).
+main platform). Any **no** keeps Feo **pre-alpha**, and those rows are the alpha checklist
+(mahay-rules `standards/progress-docs.md`, Stages).
 
 | Workflow | Works end to end? | Evidence | Hours to pass |
 |---|---|---|---:|

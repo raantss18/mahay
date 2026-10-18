@@ -8,11 +8,11 @@
 //! macOS oracle archive SHA256:
 //! ee70805cb60f18d5ed62548c4e595f6cee0a33407e15358eb1766a46afc1c16e.
 
-use lightcraft_raw::{RawData, RawFormat, decode, probe_info};
+use hazavana_raw::{RawData, RawFormat, decode, probe_info};
 use std::path::{Path, PathBuf};
 
 fn corpus() -> PathBuf {
-    std::env::var_os("LIGHTCRAFT_CORPUS").map(PathBuf::from).unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
+    std::env::var_os("HAZAVANA_CORPUS").map(PathBuf::from).unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
 }
 
 fn check(name: &str, hash: u64, sensor: (usize, usize), developed: (usize, usize)) {
@@ -22,7 +22,7 @@ fn check(name: &str, hash: u64, sensor: (usize, usize), developed: (usize, usize
 fn check_against(name: &str, hash: u64, sensor: (usize, usize), developed: Option<(usize, usize)>, reference: &str) {
     let path = corpus().join("raw").join(name);
     let Ok(bytes) = std::fs::read(&path) else {
-        lightcraft_testkit::skip!(Corpus, "{} absent", path.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", path.display());
         return;
     };
     let raw = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -86,12 +86,12 @@ fn canon_r8_craw_sensor_is_exact() {
 }
 
 /// EOS R5 Mark II (raw.pixls.us 7881–7884, CC0). No external decoder was run on these: the hashes pin
-/// LightCraft's own decode. Lossless RAW is CRX 0x100, as in the oracle-checked fixtures above, with
+/// Hazavana's own decode. Lossless RAW is CRX 0x100, as in the oracle-checked fixtures above, with
 /// odd-height (2825- and 1787-row) Bayer planes; every entropy stream decodes to its exact end. These
 /// low-ISO C-RAW files need no QP-map escape (most of the camera's files do; that is covered by the unit
 /// tests in `crx.rs`, see docs/cr3.md). The developed images match the camera's own previews.
 fn check_r5m2(name: &str, hash: u64, sensor: (usize, usize), developed: Option<(usize, usize)>) {
-    check_against(name, hash, sensor, developed, "the pinned LightCraft decode");
+    check_against(name, hash, sensor, developed, "the pinned Hazavana decode");
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn canon_m50_craw_crop_is_the_shot_aspect() {
     // which is (12, 12) inside the valid sensor area.
     let path = corpus().join("raw").join("cr3-canon-m50-craw.cr3");
     let Ok(bytes) = std::fs::read(&path) else {
-        lightcraft_testkit::skip!(Corpus, "{} absent", path.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", path.display());
         return;
     };
     let raw = decode(&bytes).unwrap();
@@ -128,7 +128,7 @@ fn canon_m50_craw_crop_is_the_shot_aspect() {
 /// Green of the decoded mosaic against the camera's embedded JPEG, on a `gw × gh` grid of the active area
 /// (gamma-encoded, Pearson). A misread CRX stream (wrong tile, plane, band or quantiser) leaves a picture that
 /// no longer follows the camera's own rendering; lens-corrected compact JPEGs keep it well above 0.6.
-fn green_vs_camera_jpeg(raw: &lightcraft_raw::RawImage, jpeg: &[u8], gw: usize, gh: usize) -> f64 {
+fn green_vs_camera_jpeg(raw: &hazavana_raw::RawImage, jpeg: &[u8], gw: usize, gh: usize) -> f64 {
     use zune_core::{bytestream::ZCursor, colorspace::ColorSpace, options::DecoderOptions};
     let opts = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGB);
     let mut d = zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(jpeg), opts);
@@ -167,7 +167,7 @@ fn green_vs_camera_jpeg(raw: &lightcraft_raw::RawImage, jpeg: &[u8], gw: usize, 
 }
 
 /// One CC0 file per further CR3 body (raw.pixls.us; URLs and SHA-256 in `RAW_SAMPLES`, xtask/src/main.rs).
-/// No external decoder was run on these: the sensor hashes pin LightCraft's own decode, every CRX stream
+/// No external decoder was run on these: the sensor hashes pin Hazavana's own decode, every CRX stream
 /// decodes, and the mosaic follows the camera's own embedded JPEG (`green_vs_camera_jpeg` on 24 × 16 cells).
 /// The renders were also inspected at 100 % for tile, band and quantiser artefacts (none). See docs/cr3.md.
 #[test]
@@ -204,9 +204,9 @@ fn canon_cr3_bodies_decode_like_the_camera_jpeg() {
             eprintln!("skip: {} absent", path.display());
             continue;
         };
-        check_against(name, hash, sensor, None, "the pinned LightCraft decode");
+        check_against(name, hash, sensor, None, "the pinned Hazavana decode");
         let raw = decode(&bytes).unwrap();
-        let jpeg = lightcraft_raw::embedded_preview(&bytes).unwrap_or_else(|| panic!("{name}: no camera JPEG"));
+        let jpeg = hazavana_raw::embedded_preview(&bytes).unwrap_or_else(|| panic!("{name}: no camera JPEG"));
         let r = green_vs_camera_jpeg(&raw, &jpeg, 24, 16);
         eprintln!("{name:34} {}x{}: green follows the camera JPEG, r = {r:.3}", raw.width, raw.height);
         assert!(r > 0.6, "{name}: decoded mosaic does not follow the camera JPEG (r = {r:.3})");

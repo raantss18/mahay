@@ -4,7 +4,7 @@
 
 CAD users trust numbers: a trimmed endpoint, an offset, an intersection or an area is either right
 to the last displayed digit or the tool is unusable for production drawings. This document
-audits CADCraft's geometry kernel (`crates/geom`, the curve code in `crates/engine/src/cmd`,
+audits Drafitra's geometry kernel (`crates/geom`, the curve code in `crates/engine/src/cmd`,
 `crates/constraints`) curve by curve against what AutoCAD users rely on. Snaps and tracking are
 in [ui-parity.md](ui-parity.md); dimension and hatch behaviour in [gaps.md](gaps.md).
 
@@ -21,7 +21,7 @@ drawings behave differently from mid-sized ones. 3D geometry doesn't exist. Rema
 Read from the source on 2026-10-10 (main at bd2412f), with file:line evidence in the tables. No
 numeric comparison against AutoCAD has been run yet: the plan is a set of synthetic drawings whose
 exact answers are known analytically, measured in both apps black-box (LIST, ID, AREA results)
-and in CADCraft headless. Until then the percentages are judgements.
+and in Drafitra headless. Until then the percentages are judgements.
 
 Weights (how much AutoCAD users lean on each area in 2D drafting): numeric robustness 15%,
 curve representation 10%, intersections 15%, offsets 15%, trim/extend/fillet/chamfer/break/join
@@ -30,7 +30,7 @@ constraints 10%.
 
 ## Numbers and tolerances (≈ 30%)
 
-| Item | AutoCAD | CADCraft | Evidence |
+| Item | AutoCAD | Drafitra | Evidence |
 |---|---|---|---|
 | Representation | IEEE double, 3D throughout | f64, **2D kernel** (`Vec2`); Z kept only on entity points and 3D polylines | `geom/src/vec.rs` |
 | Tolerance model | Relative to geometry (the ACIS/AcGe tolerance context), stable at survey coordinates | one absolute `EPS = 1e-9`, plus ad-hoc absolute 1e-12/1e-14 in intersections and 1e-3/1e-4 world units for tessellating curves; a few relative tolerances (line–line denominator, hatch, solver) | `geom/src/lib.rs:26`, `intersect.rs:8,19,34,50`, `cmd/modify.rs:469-474`, `snap.rs:98-110` |
@@ -41,7 +41,7 @@ constraints 10%.
 
 ## Curves (≈ 60%)
 
-| Curve | AutoCAD | CADCraft |
+| Curve | AutoCAD | Drafitra |
 |---|---|---|
 | Line, ray, xline | yes | yes, exact |
 | Circle, arc, bulge polyline | yes | yes, exact |
@@ -56,7 +56,7 @@ constraints 10%.
 
 ## Intersections (≈ 40%)
 
-| Pair | AutoCAD | CADCraft |
+| Pair | AutoCAD | Drafitra |
 |---|---|---|
 | line–line, line–circle/arc, circle–circle | exact | closed form, exact; tangency decided by a fixed `|disc| ≤ 1e-12·a`, so near-tangent cases depend on scale |
 | line/arc–ellipse | exact (quartic) | **tessellated**: 1e-4 world units in TRIM, 1e-3 in snaps; TRIM refines with 720 samples + 60-step bisection, near-exact against line/arc cutters (`modify2.rs:1946-1995`) |
@@ -67,7 +67,7 @@ constraints 10%.
 
 ## Offsets (≈ 30%)
 
-| Curve | AutoCAD OFFSET | CADCraft (`cmd/modify.rs:276-424`) |
+| Curve | AutoCAD OFFSET | Drafitra (`cmd/modify.rs:276-424`) |
 |---|---|---|
 | Line, ray, xline | exact | exact |
 | Circle, arc | exact | exact (radius change) |
@@ -78,7 +78,7 @@ constraints 10%.
 
 ## Trim, extend, fillet, chamfer, break, join, lengthen (≈ 70%)
 
-| Command | AutoCAD supports | CADCraft supports |
+| Command | AutoCAD supports | Drafitra supports |
 |---|---|---|
 | TRIM | every curve type, quick and standard modes | line, arc, circle, polyline; ellipse and spline via sampled cutting (`modify.rs:485-656`, `modify2.rs` `trim_other`); a closed spline leaves one open spline On a closed polyline a pick before the first or after the last cut keeps the run between the cuts and nothing more (#726). |
 | EXTEND | every open curve | line, arc, polyline, elliptical arc, open spline (runs on along its end tangent, `modify2/curve_edits.rs`) |
@@ -92,7 +92,7 @@ Where line and arc are supported the results are exact.
 
 ## Measurement (≈ 40%)
 
-| Quantity | AutoCAD | CADCraft |
+| Quantity | AutoCAD | Drafitra |
 |---|---|---|
 | Closest point: line, arc, circle, polyline | exact | exact |
 | Closest point: ellipse, spline | exact to tolerance | **sampled** (`curve.rs:264`, `curves.rs:637`) |
@@ -114,7 +114,7 @@ lines are scanline families clipped against the tessellated loops (`render/src/h
 
 ## Constraint solver (≈ 50%)
 
-| Item | AutoCAD | CADCraft (`crates/constraints`) |
+| Item | AutoCAD | Drafitra (`crates/constraints`) |
 |---|---|---|
 | Geometric constraints (12) | coincident, collinear, concentric, fix, parallel, perpendicular, horizontal, vertical, tangent, smooth (G2), symmetric, equal | all 12; Smooth is G2 (common point, tangent and curvature, `curves.rs`) between a spline and a line, arc, elliptical arc, polyline segment or spline; between two non-spline curves it stays tangency |
 | Dimensional constraints | linear, horizontal, vertical, aligned, angular, radial, diameter; dynamic and annotational; reference | distance (aligned/horizontal/vertical), angular, radius, diameter; parameters and expressions (`expr.rs`) |

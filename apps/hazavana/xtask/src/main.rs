@@ -32,7 +32,7 @@ commands:
                   Lightroom parity summary; --write refreshes the summary table in the document
   wasm            cargo check --target wasm32-unknown-unknown for the wasm-safe crates (+ the web app)
   web [--serve [port]] [--dev]
-                  build the browser app (apps/lightcraft-web) into <target>/web-site/;
+                  build the browser app (apps/hazavana-web) into <target>/web-site/;
                   --serve serves it on http://127.0.0.1:<port> (default 8080)
   ci [--hardware] [--summary-md]
                   fmt --check, clippy -D warnings, heif, test, GPU probe, parity refs, layers, assets, wasm
@@ -80,14 +80,14 @@ fn main() -> ExitCode {
     }
 }
 
-/// `cargo xtask raw-frame FILE…`: runs the `raw_frame` example of `lightcraft-engine` on the files.
+/// `cargo xtask raw-frame FILE…`: runs the `raw_frame` example of `hazavana-engine` on the files.
 fn cmd_raw_frame(files: &[&str]) -> Result<(), String> {
     if files.is_empty() {
         return Err("raw-frame needs one or more raw files (several per camera, with detail across the frame)".into());
     }
-    eprintln!("$ cargo run --release -p lightcraft-engine --example raw_frame -- {}", files.join(" "));
+    eprintln!("$ cargo run --release -p hazavana-engine --example raw_frame -- {}", files.join(" "));
     let status = cargo()
-        .args(["run", "--release", "-q", "-p", "lightcraft-engine", "--example", "raw_frame", "--"])
+        .args(["run", "--release", "-q", "-p", "hazavana-engine", "--example", "raw_frame", "--"])
         .args(files)
         .status()
         .map_err(|e| format!("raw_frame: {e}"))?;
@@ -244,7 +244,7 @@ fn wasm_set() -> Result<Vec<String>, String> {
             _ => false,
         })
         .map(|c| c.name)
-        .chain(std::iter::once("lightcraft-web".to_string()))
+        .chain(std::iter::once("hazavana-web".to_string()))
         .collect())
 }
 
@@ -275,7 +275,7 @@ fn cmd_ci(args: &[&str]) -> Result<(), String> {
     let report_dir = ci_report::prepare(&root)?;
     let started = std::time::Instant::now();
     let started_unix = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
-    // test runs append the skips their tests record (`lightcraft_testkit::skip!`) to target/ci/skips-<step>.jsonl
+    // test runs append the skips their tests record (`hazavana_testkit::skip!`) to target/ci/skips-<step>.jsonl
     let test = |cargo_args: &[&str], step: &str| {
         let mut c = cargo();
         c.args(cargo_args).env(ci_report::SKIP_LOG_ENV, ci_report::skip_log(&root, step));
@@ -318,11 +318,11 @@ fn cmd_ci(args: &[&str]) -> Result<(), String> {
             Box::new(|| {
                 // the optional HEIC/HEIF decoder is off in the workspace build above
                 let mut c = cargo();
-                c.args(["clippy", "-p", "lightcraft-codecs", "--features", "heif", "--all-targets", "--", "-D", "warnings"]);
-                run(c, "cargo clippy -p lightcraft-codecs --features heif --all-targets -- -D warnings")?;
-                test(&["test", "-p", "lightcraft-codecs", "-p", "lightcraft-heif", "--features", "lightcraft-codecs/heif"], "heif")?;
+                c.args(["clippy", "-p", "hazavana-codecs", "--features", "heif", "--all-targets", "--", "-D", "warnings"]);
+                run(c, "cargo clippy -p hazavana-codecs --features heif --all-targets -- -D warnings")?;
+                test(&["test", "-p", "hazavana-codecs", "-p", "hazavana-heif", "--features", "hazavana-codecs/heif"], "heif")?;
                 // the engine's HEIC import test, with the decoder (the workspace run checks the error)
-                test(&["test", "-p", "lightcraft-engine", "--lib", "--features", "lightcraft-codecs/heif", "heic"], "heif")
+                test(&["test", "-p", "hazavana-engine", "--lib", "--features", "hazavana-codecs/heif", "heic"], "heif")
             }),
         ),
         ("test", Box::new(|| test(&["test", "--workspace"], "test"))),
@@ -331,7 +331,7 @@ fn cmd_ci(args: &[&str]) -> Result<(), String> {
         steps.push((
             "gpu-backends",
             Box::new(|| {
-                // the GPU tests once per backend with a hardware adapter (`LIGHTCRAFT_GPU_BACKEND`)
+                // the GPU tests once per backend with a hardware adapter (`HAZAVANA_GPU_BACKEND`)
                 probe();
                 let backends = ci_report::hardware_backends(&gpu.borrow());
                 if backends.is_empty() {
@@ -341,11 +341,11 @@ fn cmd_ci(args: &[&str]) -> Result<(), String> {
                 for (backend, adapter) in backends {
                     let step = format!("gpu-{backend}");
                     let mut c = cargo();
-                    c.args(["test", "-p", "lightcraft-gpu", "--features", "denoise"])
-                        .env("LIGHTCRAFT_GPU_BACKEND", &backend)
+                    c.args(["test", "-p", "hazavana-gpu", "--features", "denoise"])
+                        .env("HAZAVANA_GPU_BACKEND", &backend)
                         .env(ci_report::SKIP_LOG_ENV, ci_report::skip_log(&root, &step));
                     let t = std::time::Instant::now();
-                    let ok = run(c, &format!("LIGHTCRAFT_GPU_BACKEND={backend} cargo test -p lightcraft-gpu --features denoise")).is_ok();
+                    let ok = run(c, &format!("HAZAVANA_GPU_BACKEND={backend} cargo test -p hazavana-gpu --features denoise")).is_ok();
                     hardware_runs.borrow_mut().push(serde_json::json!({
                         "backend": backend,
                         "adapter": adapter,
@@ -439,13 +439,13 @@ fn cmd_ci(args: &[&str]) -> Result<(), String> {
     }
 }
 
-/// Run the ignored `gpu_probe` test of lightcraft-gpu: the pipeline's device (`None`) or one
+/// Run the ignored `gpu_probe` test of hazavana-gpu: the pipeline's device (`None`) or one
 /// backend's adapters. `--workspace`, like the test step, so its build is reused. Its stdout, or why
 /// it failed (a driver that crashes while it is enumerated, issue #136, ends up here, not in xtask).
 fn probe_gpu(backend: Option<&str>) -> Result<String, String> {
     let mut c = cargo();
     c.args(["test", "-q", "--workspace", "--test", "gpu_probe", "--", "--ignored", "--exact", "gpu_probe", "--nocapture"]);
-    c.env("LIGHTCRAFT_GPU_PROBE", backend.unwrap_or(""));
+    c.env("HAZAVANA_GPU_PROBE", backend.unwrap_or(""));
     let out = c.output().map_err(|e| format!("gpu_probe: {e}"))?;
     if !out.status.success() {
         let err = String::from_utf8_lossy(&out.stderr);
@@ -2719,7 +2719,7 @@ fn cmd_corpus(download: bool) -> Result<(), String> {
         "Test corpora live under {} (git-ignored, never committed).
 Tests that use a corpus skip cleanly when it is absent.
 
-  corpus/raw/        raw.pixls.us samples (CC0) — lightcraft-raw decodes every file.
+  corpus/raw/        raw.pixls.us samples (CC0) — hazavana-raw decodes every file.
   corpus/images/     CC0 / public-domain JPEG/PNG/TIFF/HEIC samples (optional)
 ",
         corpus.display()

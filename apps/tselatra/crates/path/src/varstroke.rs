@@ -310,7 +310,7 @@ pub fn outline(paths: &[BezPath], style: &StrokeStyle, res_scale: f64) -> Option
 mod tests {
     use super::*;
     use crate::{FillRule, fill_coverage};
-    use effectcraft_geom::Mat3;
+    use tselatra_geom::Mat3;
 
     fn line(len: f64) -> BezPath {
         let mut p = BezPath::new();
@@ -319,7 +319,7 @@ mod tests {
         p
     }
 
-    fn column(m: &effectcraft_raster::Mask, x: usize) -> f32 {
+    fn column(m: &tselatra_raster::Mask, x: usize) -> f32 {
         (0..m.height as usize).map(|y| m.data[y * m.width as usize + x]).sum()
     }
 

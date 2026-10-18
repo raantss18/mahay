@@ -8,12 +8,12 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::pattern::pattern_paint;
-use vectorcraft_doc::{Appearance, Document, Node, NodeKind, PatternDef, Symbol};
-use vectorcraft_geom::{Affine, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, editing, export, export_full, import};
-use vectorcraft_testkit::raster::{Image, assert_similar, render_artboard};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::pattern::pattern_paint;
+use tsipika_doc::{Appearance, Document, Node, NodeKind, PatternDef, Symbol};
+use tsipika_geom::{Affine, Rect, shapes};
+use tsipika_svg::{ExportOptions, editing, export, export_full, import};
+use tsipika_testkit::raster::{Image, assert_similar, render_artboard};
 
 /// The exported SVG rendered by resvg on white at 1 px/pt.
 fn resvg_render(svg: &str, w: u32, h: u32) -> Image {
@@ -81,7 +81,7 @@ fn instances_the_def_cant_stand_for_get_their_own_art() {
     let mut stained = instance(&mut d, "My Mark", Affine::translate((40.0, 20.0)));
     stained.appearance = Appearance::basic(Paint::solid(Color::rgb8(255, 0, 0)), Paint::None, 0.0).into();
     stained.appearance.items.retain(|i| i.is_fill());
-    if let vectorcraft_doc::AppearanceItem::Fill(f) = &mut stained.appearance.items[0] {
+    if let tsipika_doc::AppearanceItem::Fill(f) = &mut stained.appearance.items[0] {
         f.opacity = 0.5;
     }
     let id = stained.id;
@@ -127,7 +127,7 @@ fn expanded(d: &Document) -> Document {
     for c in l.children_mut().unwrap().iter_mut() {
         if let NodeKind::SymbolInstance { symbol, xf } = &c.kind {
             let sym = d.symbols.iter().find(|s| s.name == *symbol).unwrap();
-            let mut art = vectorcraft_brush::instance_art(&sym.art, c);
+            let mut art = tsipika_brush::instance_art(&sym.art, c);
             art.transform(*xf, false);
             *c = Arc::new(art);
         }
@@ -142,7 +142,7 @@ fn masks_in_symbols_move_with_the_art_when_linked() {
         let fill = |c| Appearance::basic(Paint::solid(c), Paint::None, 0.0);
         let mut art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 60.0, 60.0)), fill(Color::rgb8(200, 0, 0)));
         let shape = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 30.0, 60.0)), fill(Color::WHITE));
-        let mut mask = vectorcraft_doc::OpacityMask::new(shape, true);
+        let mut mask = tsipika_doc::OpacityMask::new(shape, true);
         mask.linked = linked;
         art.extras_mut().mask = Some(Box::new(mask));
         d.symbols.push(Symbol { name: "Half".into(), art: Arc::new(art) });
@@ -175,7 +175,7 @@ fn layered() -> Document {
     let a = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(10.0, 10.0, 40.0, 40.0)), fill(Color::rgb8(255, 0, 0)));
     let l = d.layers[0].id;
     d.insert(Some(l), 0, a).unwrap();
-    let mut hidden = Node::layer(d.alloc_id(), "Notes", vectorcraft_doc::LayerColor::Preset(1));
+    let mut hidden = Node::layer(d.alloc_id(), "Notes", tsipika_doc::LayerColor::Preset(1));
     let b = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(50.0, 50.0, 90.0, 90.0)), fill(Color::rgb8(0, 0, 255)));
     hidden.children_mut().unwrap().push(Arc::new(b));
     hidden.visible = false;
@@ -191,8 +191,8 @@ fn hidden_layers_are_kept_hidden_when_asked() {
     // Page isolation wraps the layers in one more group.
     let mut isolated = d.clone();
     isolated.page_isolate = true;
-    let styles = [vectorcraft_svg::Styling::PresentationAttributes, vectorcraft_svg::Styling::InlineStyle, vectorcraft_svg::Styling::InternalCss];
-    for (d, styling) in styles.iter().map(|s| (&d, *s)).chain([(&isolated, vectorcraft_svg::Styling::InternalCss)]) {
+    let styles = [tsipika_svg::Styling::PresentationAttributes, tsipika_svg::Styling::InlineStyle, tsipika_svg::Styling::InternalCss];
+    for (d, styling) in styles.iter().map(|s| (&d, *s)).chain([(&isolated, tsipika_svg::Styling::InternalCss)]) {
         let kept = export(d, &ExportOptions { hidden_layers: true, styling, ..Default::default() });
         assert!(kept.contains("id=\"Notes\"") && kept.contains("display") && kept.matches("<path").count() == 2, "{kept}");
         // Viewers don't show it.
@@ -248,7 +248,7 @@ fn hidden_objects_and_data_attributes_round_trip() {
     // An export leaves the hidden objects out, their data with them; the others keep theirs.
     let plain = export(&d, &ExportOptions::default());
     assert!(!plain.contains("arm-raised") && !plain.contains("eye-closed") && plain.contains("data-pivot=\"60,100\""), "{plain}");
-    let styles = [vectorcraft_svg::Styling::PresentationAttributes, vectorcraft_svg::Styling::InlineStyle, vectorcraft_svg::Styling::InternalCss];
+    let styles = [tsipika_svg::Styling::PresentationAttributes, tsipika_svg::Styling::InlineStyle, tsipika_svg::Styling::InternalCss];
     for styling in styles {
         // Kept (Save, or asked), they are written hidden and come back hidden, with every attribute.
         let kept = export(&d, &ExportOptions { hidden_layers: true, styling, ..Default::default() });
@@ -413,7 +413,7 @@ fn sublayered() -> Document {
         Arc::new(Node::path(d.alloc_id(), shapes::rectangle(Rect::new(x, x, x + 10.0, x + 10.0)), ap))
     };
     let layer = |children: Vec<Arc<Node>>, d: &mut Document, name: &str| {
-        let mut l = Node::layer(d.alloc_id(), name, vectorcraft_doc::LayerColor::Preset(3));
+        let mut l = Node::layer(d.alloc_id(), name, tsipika_doc::LayerColor::Preset(3));
         *l.children_mut().unwrap() = children;
         l
     };
@@ -457,7 +457,7 @@ fn sublayers_round_trip() {
         "  Path",
     ];
     assert_eq!(outline(&d), expected);
-    let styles = [vectorcraft_svg::Styling::PresentationAttributes, vectorcraft_svg::Styling::InlineStyle, vectorcraft_svg::Styling::InternalCss];
+    let styles = [tsipika_svg::Styling::PresentationAttributes, tsipika_svg::Styling::InlineStyle, tsipika_svg::Styling::InternalCss];
     for styling in styles {
         // Saved with the hidden sublayer: the same tree comes back.
         let kept = export(&d, &ExportOptions { hidden_layers: true, styling, ..Default::default() });
@@ -469,7 +469,7 @@ fn sublayers_round_trip() {
             if let NodeKind::Layer { color, .. } = &n.kind
                 && n.name.as_deref() != Some("Top")
             {
-                assert_eq!(*color, vectorcraft_doc::LayerColor::Preset(0), "{:?}", n.name);
+                assert_eq!(*color, tsipika_doc::LayerColor::Preset(0), "{:?}", n.name);
             }
         });
         assert!(back.layers[0].children().unwrap()[2].clips());
@@ -544,7 +544,7 @@ fn editing_data_notices_edits_made_elsewhere() {
     let svg = export_full(&d, &opts, Some(b"native bytes")).svg;
     assert!(svg.contains("<![CDATA[") && svg.contains(" hash=\""), "{svg}");
     let e = editing(&svg).unwrap();
-    assert!(e.intact && e.data == vectorcraft_svg::base64_encode(b"native bytes"));
+    assert!(e.intact && e.data == tsipika_svg::base64_encode(b"native bytes"));
     // Re-indented, with other line endings: still the same picture.
     let reformatted = svg.replace("\n  ", "\r\n\t\t");
     assert!(editing(&reformatted).unwrap().intact);
@@ -558,6 +558,6 @@ fn editing_data_notices_edits_made_elsewhere() {
     let retitled = svg.replacen("<dc:format>", "<dc:creator>someone</dc:creator><dc:format>", 1);
     assert!(editing(&retitled).unwrap().intact);
     // Unique ids hash the final output.
-    let unique = export_full(&d, &ExportOptions { object_ids: vectorcraft_svg::ObjectIds::Unique, ..opts }, Some(b"native bytes")).svg;
+    let unique = export_full(&d, &ExportOptions { object_ids: tsipika_svg::ObjectIds::Unique, ..opts }, Some(b"native bytes")).svg;
     assert!(editing(&unique).unwrap().intact);
 }

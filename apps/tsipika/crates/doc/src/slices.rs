@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_geom::Rect;
+use tsipika_geom::Rect;
 
 use crate::{Document, Node, NodeId};
 
@@ -238,7 +238,7 @@ impl Document {
             return vec![];
         }
         let region = if self.slices_clip_to_artboard { self.slice_clip() } else { None }
-            .or_else(|| cut.iter().fold(self.art_bounds(), |acc, (_, _, r)| vectorcraft_geom::union_opt(acc, Some(*r))));
+            .or_else(|| cut.iter().fold(self.art_bounds(), |acc, (_, _, r)| tsipika_geom::union_opt(acc, Some(*r))));
         let rects: Vec<Rect> = cut.iter().map(|(_, _, r)| *r).collect();
         let autos = region.map(|g| auto_slices(g, &rects)).unwrap_or_default();
         let mut out: Vec<SliceArea> = cut

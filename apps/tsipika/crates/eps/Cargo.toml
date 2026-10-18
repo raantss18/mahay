@@ -1,26 +1,26 @@
 [package]
-name = "vectorcraft-eps"
+name = "tsipika-eps"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft Encapsulated PostScript: a hand-written EPS writer (PostScript Level 2 and 3) with TIFF previews"
+description = "Tsipika Encapsulated PostScript: a hand-written EPS writer (PostScript Level 2 and 3) with TIFF previews"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-text = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-doc = { workspace = true }
+tsipika-effects = { workspace = true }
+tsipika-brush = { workspace = true }
+tsipika-text = { workspace = true }
 # Windows metafile previews, opened when a file's PostScript can't be read.
-vectorcraft-metafile = { workspace = true }
+tsipika-metafile = { workspace = true }
 # Non-native art in Illustrator editing data (a placed PDF's content, kept as a PDF).
-vectorcraft-pdf = { workspace = true }
+tsipika-pdf = { workspace = true }
 # The TIFF writer (previews) and PackBits, shared with raster export.
-vectorcraft-render = { workspace = true }
+tsipika-render = { workspace = true }
 kurbo = { workspace = true }
 image = { workspace = true }
 flate2 = { workspace = true }
@@ -31,6 +31,6 @@ hayro-ccitt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 # Tests: a Group 4 encoder and the T.4 run codes, to write CCITT test images.
 fax = "0.2"

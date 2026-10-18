@@ -1,9 +1,9 @@
-//! Headless UI snapshot: runs the real [`EffectcraftApp`] without a window (egui_kittest + wgpu)
+//! Headless UI snapshot: runs the real [`TselatraApp`] without a window (egui_kittest + wgpu)
 //! and writes PNGs. Works regardless of window focus, Spaces or display sleep, so agents can
 //! look at the UI at any time.
 //!
 //! ```text
-//! cargo run -p effectcraft-ui-egui --example snapshot -- [--out ui.png] [--size 1680x1020]
+//! cargo run -p tselatra-ui-egui --example snapshot -- [--out ui.png] [--size 1680x1020]
 //!     [--scale 2] [--settle 1.5] [--empty] [--script steps.jsonl | --step '<json>']...
 //! ```
 //!
@@ -15,7 +15,7 @@
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
-use effectcraft_ui_egui::{ControlRequest, EffectcraftApp};
+use tselatra_ui_egui::{ControlRequest, TselatraApp};
 use egui_kittest::Harness;
 use serde_json::{Value, json};
 
@@ -62,7 +62,7 @@ fn parse_args() -> Result<Args, String> {
 
 /// One frame, first queueing the app's synthetic input (kittest doesn't call
 /// `raw_input_hook`); the harness runs one frame per queued event.
-fn step_frame(h: &mut Harness<'_, EffectcraftApp>) {
+fn step_frame(h: &mut Harness<'_, TselatraApp>) {
     for e in h.state_mut().take_synthetic_input() {
         h.event(e);
     }
@@ -70,7 +70,7 @@ fn step_frame(h: &mut Harness<'_, EffectcraftApp>) {
 }
 
 /// Step the app for `secs` of wall time so background frame renders land in the viewer.
-fn settle(h: &mut Harness<'_, EffectcraftApp>, secs: f64) {
+fn settle(h: &mut Harness<'_, TselatraApp>, secs: f64) {
     let end = Instant::now() + Duration::from_secs_f64(secs);
     while Instant::now() < end {
         step_frame(h);
@@ -79,7 +79,7 @@ fn settle(h: &mut Harness<'_, EffectcraftApp>, secs: f64) {
     step_frame(h);
 }
 
-fn snap(h: &mut Harness<'_, EffectcraftApp>, path: &str) -> Result<(), String> {
+fn snap(h: &mut Harness<'_, TselatraApp>, path: &str) -> Result<(), String> {
     let img = h.render()?;
     img.save(path).map_err(|e| format!("{path}: {e}"))?;
     println!("{}", json!({"snapshot": path, "width": img.width(), "height": img.height()}));
@@ -94,7 +94,7 @@ fn main() {
             std::process::exit(2);
         }
     };
-    let mut session = effectcraft_host::session();
+    let mut session = tselatra_host::session();
     if args.demo {
         let _ = session.execute("file.openDemoProject", json!({}));
     }
@@ -103,7 +103,7 @@ fn main() {
         .with_size(egui::vec2(args.size.0, args.size.1))
         .with_pixels_per_point(args.scale)
         .wgpu()
-        .build_eframe(move |_cc| EffectcraftApp::new(session).with_control(rx));
+        .build_eframe(move |_cc| TselatraApp::new(session).with_control(rx));
     settle(&mut harness, args.settle);
     for step in &args.steps {
         let method = step["method"].as_str().unwrap_or_default().to_string();

@@ -2,9 +2,9 @@
 //! display settings, and its IMAGEDEF (file path and name), written with the IMAGEDEF_REACTOR,
 //! RASTERVARIABLES and dictionaries the DXF Reference describes.
 
-use cadcraft_doc::{Drawing, EntityKind, Image};
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{Drawing, EntityKind, Image};
+use drafitra_dxf::{Tag, records, sections};
+use drafitra_geom::Vec2;
 
 /// A small DXF as another program writes it: a line, an image on layer `Pics` pointing at an
 /// IMAGEDEF named `logo`, and an MLINE without vertices.
@@ -114,7 +114,7 @@ fn images(d: &Drawing) -> Vec<Image> {
 
 /// The records of a section of a DXF text.
 fn section(dxf: &str, name: &str) -> Vec<(String, Vec<Tag>)> {
-    let tags = cadcraft_dxf::parse(dxf.as_bytes()).unwrap();
+    let tags = drafitra_dxf::parse(dxf.as_bytes()).unwrap();
     let s = sections(&tags).into_iter().find(|s| s.name == name).unwrap();
     records(&s.tags)
 }
@@ -125,7 +125,7 @@ fn val(tags: &[Tag], code: i32) -> String {
 
 #[test]
 fn image_and_its_definition_survive_save_and_reopen() {
-    let d = cadcraft_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
     let [img] = images(&d).try_into().unwrap();
     assert_eq!((img.path.as_str(), img.name.as_str()), ("images/logo.png", "logo"));
     assert_eq!(img.size, Vec2::new(640.0, 480.0));
@@ -134,8 +134,8 @@ fn image_and_its_definition_survive_save_and_reopen() {
     assert_eq!((img.display, img.brightness, img.contrast, img.fade), (15, 60, 40, 10));
     assert_eq!((img.pixel_size, img.resolution_units), (Vec2::new(0.25, 0.25), 5));
 
-    let saved = cadcraft_io::write_dxf(&d);
-    let back = cadcraft_io::read_dxf(saved.as_bytes()).unwrap();
+    let saved = drafitra_io::write_dxf(&d);
+    let back = drafitra_io::read_dxf(saved.as_bytes()).unwrap();
     assert_eq!(images(&back), vec![img.clone()]);
     let e = back.model.iter().find(|e| matches!(e.kind, EntityKind::Image(_))).unwrap();
     assert_eq!(e.common.layer, "Pics");
@@ -161,20 +161,20 @@ fn image_and_its_definition_survive_save_and_reopen() {
         assert!(classes.iter().any(|(_, t)| val(t, 1) == c), "CLASS {c}");
     }
     // Saving again is stable.
-    let again = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&back).as_bytes()).unwrap();
+    let again = drafitra_io::read_dxf(drafitra_io::write_dxf(&back).as_bytes()).unwrap();
     assert_eq!(images(&again), vec![img]);
 }
 
 #[test]
 fn images_of_one_file_share_a_definition() {
-    let mut d = cadcraft_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
+    let mut d = drafitra_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
     let e = d.model.iter().find(|e| matches!(e.kind, EntityKind::Image(_))).unwrap().as_ref().clone();
-    d.add(&cadcraft_doc::Space::Model, e.common.clone(), e.kind.clone()).unwrap();
-    let saved = cadcraft_io::write_dxf(&d);
+    d.add(&drafitra_doc::Space::Model, e.common.clone(), e.kind.clone()).unwrap();
+    let saved = drafitra_io::write_dxf(&d);
     let objs = section(&saved, "OBJECTS");
     assert_eq!(objs.iter().filter(|(k, _)| k == "IMAGEDEF").count(), 1);
     assert_eq!(objs.iter().filter(|(k, _)| k == "IMAGEDEF_REACTOR").count(), 2);
-    let back = cadcraft_io::read_dxf(saved.as_bytes()).unwrap();
+    let back = drafitra_io::read_dxf(saved.as_bytes()).unwrap();
     assert!(images(&back).iter().all(|i| i.path == "images/logo.png" && i.name == "logo"));
     assert_eq!(images(&back).len(), 2);
 }
@@ -183,10 +183,10 @@ fn images_of_one_file_share_a_definition() {
 fn image_without_definition_is_still_written() {
     // An image whose IMAGEDEF is missing (or an empty path) keeps its placement.
     let text = foreign_dxf().replace("340\n40\n", "340\n99\n");
-    let d = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     let [img] = images(&d).try_into().unwrap();
     assert_eq!(img.path, "");
-    let back = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&d).as_bytes()).unwrap();
+    let back = drafitra_io::read_dxf(drafitra_io::write_dxf(&d).as_bytes()).unwrap();
     let [b] = images(&back).try_into().unwrap();
     assert_eq!((b.insert, b.size, b.clip.len()), (img.insert, img.size, 4));
     assert_eq!(b.name, "Image");
@@ -195,10 +195,10 @@ fn image_without_definition_is_still_written() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn image_survives_dwg_save_and_reopen() {
-    let d = cadcraft_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
     let [img] = images(&d).try_into().unwrap();
-    let dwg = cadcraft_io::write(&d, "x.dwg").unwrap();
-    let back = cadcraft_io::read(&dwg, "x.dwg").unwrap();
+    let dwg = drafitra_io::write(&d, "x.dwg").unwrap();
+    let back = drafitra_io::read(&dwg, "x.dwg").unwrap();
     let [b] = images(&back).try_into().unwrap();
     // The DWG bridge keeps everything but the definition's resolution unit.
     assert_eq!(Image { resolution_units: img.resolution_units, ..b }, img);

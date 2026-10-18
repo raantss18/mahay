@@ -15,7 +15,7 @@
 //!
 //! **Import** ([`import`]) is the inverse mapping into a new composition.
 //!
-//! Keyframe times in Lottie are frames of the layer's local time, which is EffectCraft's layer
+//! Keyframe times in Lottie are frames of the layer's local time, which is Tselatra's layer
 //! time; layer `ip`/`op`/`st` are composition frames and `sr` is the stretch factor.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -28,8 +28,8 @@ mod shapes;
 mod text;
 pub mod zip;
 
-use effectcraft_color::BlendMode;
-use effectcraft_time::{FrameRate, TICKS_PER_SECOND, Tick};
+use tselatra_color::BlendMode;
+use tselatra_time::{FrameRate, TICKS_PER_SECOND, Tick};
 
 pub use export::{ExportOptions, ExportResult, export_comp, to_dotlottie};
 pub use import::{ImportResult, ImportedImage, import};

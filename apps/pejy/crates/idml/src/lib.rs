@@ -7,7 +7,7 @@
 //! parts.
 //!
 //! ## Coordinates
-//! DesignCraft spreads have their origin at the top-left of the first page (y down). IDML spread
+//! Pejy spreads have their origin at the top-left of the first page (y down). IDML spread
 //! coordinates have their origin at the binding spine (facing pages) or the spread centre
 //! (single-sided documents), vertically centred on the pages; pages are placed by their
 //! `ItemTransform` and every page item's geometry is `PathGeometry` in inner coordinates mapped by
@@ -128,8 +128,8 @@ pub(crate) fn base64_decode(s: &str) -> Vec<u8> {
 
 /// Sniff an image's MIME type and pixel size (PNG, JPEG, GIF, WebP, TIFF, PDF, EPS).
 pub(crate) fn sniff_image(b: &[u8]) -> (Option<&'static str>, Option<(u32, u32)>) {
-    if designcraft_images::is_eps(b) {
-        return (Some("application/postscript"), designcraft_images::eps_pixel_size(b));
+    if pejy_images::is_eps(b) {
+        return (Some("application/postscript"), pejy_images::eps_pixel_size(b));
     }
     let be32 = |i: usize| b.get(i..i + 4).map(|s| u32::from_be_bytes([s[0], s[1], s[2], s[3]]));
     if b.starts_with(b"\x89PNG\r\n\x1a\n") {

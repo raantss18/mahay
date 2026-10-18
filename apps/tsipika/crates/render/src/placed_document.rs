@@ -1,6 +1,6 @@
 //! Drawing placed documents ([`PlacedDocument`]).
 //!
-//! Exactly: the art read from the file ([`vectorcraft_doc::placed_document::read`]) drawn with its
+//! Exactly: the art read from the file ([`tsipika_doc::placed_document::read`]) drawn with its
 //! own resources, through a view that maps its artboard into the object's box (nothing is copied
 //! into the document).
 //!
@@ -14,7 +14,7 @@
 //!
 //! A document opened with only its placed documents' previews ([`ImageBlob::is_proxy`]) shows them
 //! up to their resolution; past it the file is read again in the background
-//! ([`vectorcraft_doc::placed_document::full_bytes`]), the preview standing in until then (and for
+//! ([`tsipika_doc::placed_document::full_bytes`]), the preview standing in until then (and for
 //! good when the file can't be found). Placed documents inside a placed document are drawn the
 //! same way, up to [`MAX_DEPTH`] deep; deeper ones show their previews.
 
@@ -23,9 +23,9 @@ use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard, PoisonError};
 
-use vectorcraft_doc::placed_document::MAX_DEPTH;
-use vectorcraft_doc::{ImageBlob, Node, PlacedDocument};
-use vectorcraft_geom::{Affine, Rect};
+use tsipika_doc::placed_document::MAX_DEPTH;
+use tsipika_doc::{ImageBlob, Node, PlacedDocument};
+use tsipika_geom::{Affine, Rect};
 use vello_cpu::{Pixmap, RenderContext, kurbo, peniko};
 
 use crate::ink::Ink;
@@ -130,7 +130,7 @@ struct Job {
 
 /// Device pixels per point of `object`'s box its preview `bytes` have.
 fn preview_density(object: &PlacedDocument, bytes: &[u8]) -> f64 {
-    vectorcraft_doc::placed_document::image_size(bytes).map_or(0.0, |(w, _)| w as f64 / object.width.max(1e-9))
+    tsipika_doc::placed_document::image_size(bytes).map_or(0.0, |(w, _)| w as f64 / object.width.max(1e-9))
 }
 
 thread_local! {
@@ -160,7 +160,7 @@ fn depth() -> usize {
 
 /// Render `art` of a placed document's file (`doc`, its resources) into `w`×`h` transparent
 /// pixels through `view`, the placed documents inside it one level deeper.
-pub fn render_inside(r: &mut Renderer, doc: &vectorcraft_doc::Document, art: &Arc<Node>, w: u16, h: u16, view: Affine) -> Option<crate::Rendered> {
+pub fn render_inside(r: &mut Renderer, doc: &tsipika_doc::Document, art: &Arc<Node>, w: u16, h: u16, view: Affine) -> Option<crate::Rendered> {
     let _inside = Inside::enter();
     r.render_node(doc, art, w, h, view)
 }
@@ -173,10 +173,10 @@ fn make(r: &mut Renderer, object: &PlacedDocument, blob: &ImageBlob, step: f64) 
     let preview = if blob.is_proxy() { Some(blob.bytes.clone()) } else { blob.proxy.clone() };
     let full = match blob.is_proxy() {
         true if step <= preview_density(object, &blob.bytes) * 1.01 => None,
-        true => vectorcraft_doc::placed_document::full_bytes(object, blob),
+        true => tsipika_doc::placed_document::full_bytes(object, blob),
         false => Some(blob.bytes.clone()),
     };
-    let read = full.and_then(|bytes| vectorcraft_doc::placed_document::read(object, &bytes));
+    let read = full.and_then(|bytes| tsipika_doc::placed_document::read(object, &bytes));
     let Some(e) = read else { return crate::paint::decode_pixmap_fit(&preview?, w, h) };
     let f = e.frame;
     let (sx, sy) = (w as f64 / f.width(), h as f64 / f.height());
@@ -215,7 +215,7 @@ mod workers {
         let mut started = 0;
         for i in 0..n {
             let rx = rx.clone();
-            let spawned = std::thread::Builder::new().name(format!("vectorcraft-placed-{i}")).spawn(move || {
+            let spawned = std::thread::Builder::new().name(format!("tsipika-placed-{i}")).spawn(move || {
                 let mut r = crate::Renderer::new();
                 r.threads = 0;
                 loop {
@@ -271,11 +271,11 @@ impl Renderer {
         // The file's bytes: stored, read again already, or (inside another placed document, while
         // not too deep) read again now.
         let full = match depth() {
-            0 => vectorcraft_doc::placed_document::full_bytes_cached(p, blob),
-            d if d < MAX_DEPTH => vectorcraft_doc::placed_document::full_bytes(p, blob),
+            0 => tsipika_doc::placed_document::full_bytes_cached(p, blob),
+            d if d < MAX_DEPTH => tsipika_doc::placed_document::full_bytes(p, blob),
             _ => None,
         };
-        let read = full.and_then(|bytes| vectorcraft_doc::placed_document::read(p, &bytes));
+        let read = full.and_then(|bytes| tsipika_doc::placed_document::read(p, &bytes));
         let Some(e) = read else {
             // Only the preview: drawn scaled into the box.
             if blob.is_proxy()

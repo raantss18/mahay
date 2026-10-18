@@ -2,8 +2,8 @@
 //! as area type.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeKind, TextKind};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{NodeKind, TextKind};
+use tsipika_geom::Rect;
 
 use super::*;
 
@@ -14,7 +14,7 @@ fn session() -> Session {
 }
 
 fn place_text(s: &mut Session, text: &[u8], extra: Value) -> Value {
-    let mut p = json!({"name": "notes.txt", "dataBase64": vectorcraft_format::base64_encode(text)});
+    let mut p = json!({"name": "notes.txt", "dataBase64": tsipika_format::base64_encode(text)});
     if let (Some(o), Value::Object(e)) = (p.as_object_mut(), extra) {
         o.extend(e);
     }
@@ -71,7 +71,7 @@ fn type_placed_on_an_artboard_edge_takes_that_artboards_frame() {
 #[test]
 fn text_files_report_and_queue_with_their_options() {
     let mut s = session();
-    let file = json!({"name": "a.txt", "dataBase64": vectorcraft_format::base64_encode(b"caf\xe9")});
+    let file = json!({"name": "a.txt", "dataBase64": tsipika_format::base64_encode(b"caf\xe9")});
     let info = s.execute("file.place.info", &file).unwrap();
     assert_eq!((info["format"].as_str(), info["width"].as_f64(), info["height"].as_f64()), (Some("txt"), Some(468.0), Some(648.0)));
     // Not UTF-8: read as Windows-1252, or Mac Roman for a Mac file.
@@ -82,7 +82,7 @@ fn text_files_report_and_queue_with_their_options() {
     assert_eq!(s.tool_options()["name"], "a.txt");
     let bad = json!({"name": "a.txt", "dataBase64": "YQ==", "text": {"platform": "beos"}});
     assert!(s.execute("file.place", &bad).is_err());
-    let blank = json!({"name": "blank.txt", "dataBase64": vectorcraft_format::base64_encode(b" \r\n\t\r\n")});
+    let blank = json!({"name": "blank.txt", "dataBase64": tsipika_format::base64_encode(b" \r\n\t\r\n")});
     assert!(s.execute("file.place", &blank).is_err(), "no text to place");
     // Replace: the frame takes the replaced object's bounds.
     s.execute("shape.rectangle", &json!({"x": 50, "y": 60, "width": 80, "height": 40})).unwrap();
@@ -108,7 +108,7 @@ const LETTER_RTF: &str = concat!(
 fn rtf_places_as_area_type_with_its_character_and_paragraph_formatting() {
     let mut s = session();
     s.execute("document.setup", &json!({"superscript": {"size": 50, "position": 40}})).unwrap();
-    let r = s.execute("file.place", &json!({"name": "letter.rtf", "dataBase64": vectorcraft_format::base64_encode(LETTER_RTF.as_bytes())})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "letter.rtf", "dataBase64": tsipika_format::base64_encode(LETTER_RTF.as_bytes())})).unwrap();
     assert_eq!((r["format"].as_str(), r["name"].as_str()), (Some("rtf"), Some("letter.rtf")));
     let (body, frame) = placed(&s, &r);
     assert_eq!(body, "Plain and bold words2.\nCentered café");
@@ -128,17 +128,17 @@ fn rtf_places_as_area_type_with_its_character_and_paragraph_formatting() {
             ("café", "Arial", "Italic", 18.0),
         ]
     );
-    let superscript = vectorcraft_doc::ScriptMetrics { size: 50.0, position: 40.0 };
-    assert_eq!(t.runs[3].style.position, vectorcraft_doc::CharPosition::Superscript(superscript), "in Document Setup's proportions");
-    let red = vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb8(255, 0, 0));
+    let superscript = tsipika_doc::ScriptMetrics { size: 50.0, position: 40.0 };
+    assert_eq!(t.runs[3].style.position, tsipika_doc::CharPosition::Superscript(superscript), "in Document Setup's proportions");
+    let red = tsipika_color::Paint::solid(tsipika_color::Color::rgb8(255, 0, 0));
     assert_eq!((t.runs[0].style.fill == red, t.runs[5].style.fill == red, t.runs[6].style.fill == red), (false, true, true));
     let paras = t.paragraph_styles();
     let summary: Vec<_> = paras.iter().map(|p| (p.justify, p.left_indent, p.space_after)).collect();
-    assert_eq!(summary, [(vectorcraft_doc::Justify::Left, 0.0, 0.0), (vectorcraft_doc::Justify::Center, 36.0, 12.0)]);
+    assert_eq!(summary, [(tsipika_doc::Justify::Left, 0.0, 0.0), (tsipika_doc::Justify::Center, 36.0, 12.0)]);
     let st = s.doc().unwrap();
     assert_eq!((st.history.undo.len(), st.selection.objects.len()), (2, 1), "Document Setup and Place, each one undo step");
     // Info and the place cursor report it as RTF.
-    let file = json!({"name": "letter.rtf", "dataBase64": vectorcraft_format::base64_encode(LETTER_RTF.as_bytes())});
+    let file = json!({"name": "letter.rtf", "dataBase64": tsipika_format::base64_encode(LETTER_RTF.as_bytes())});
     let info = s.execute("file.place.info", &file).unwrap();
     assert_eq!((info["format"].as_str(), info["width"].as_f64()), (Some("rtf"), Some(468.0)));
     let q = s.execute("file.place.queue", &json!({"files": [file]})).unwrap();
@@ -149,7 +149,7 @@ fn rtf_places_as_area_type_with_its_character_and_paragraph_formatting() {
 fn malformed_rtf_fails_cleanly() {
     let mut s = session();
     let place = |s: &mut Session, name: &str, bytes: &[u8]| {
-        s.execute("file.place", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)}))
+        s.execute("file.place", &json!({"name": name, "dataBase64": tsipika_format::base64_encode(bytes)}))
     };
     assert!(place(&mut s, "a.rtf", b"Plain words, not RTF").is_err(), "an .rtf file that isn't RTF");
     assert!(place(&mut s, "a.rtf", br"{\rtf1{\fonttbl{\f0 Arial;}}\par\par }").is_err(), "no text to place");
@@ -261,7 +261,7 @@ fn docx_places_as_area_type_with_its_styles_and_formatting() {
     );
     let mut s = session();
     s.execute("document.setup", &json!({"superscript": {"size": 50, "position": 40}})).unwrap();
-    let file = json!({"name": "report.docx", "dataBase64": vectorcraft_format::base64_encode(&docx(body, STYLES))});
+    let file = json!({"name": "report.docx", "dataBase64": tsipika_format::base64_encode(&docx(body, STYLES))});
     let r = s.execute("file.place", &file).unwrap();
     assert_eq!((r["format"].as_str(), r["name"].as_str()), (Some("docx"), Some("report.docx")));
     let (text, frame) = placed(&s, &r);
@@ -283,16 +283,16 @@ fn docx_places_as_area_type_with_its_styles_and_formatting() {
             (" page 7", "Georgia", "Regular", 11.0),
         ]
     );
-    let navy = vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb8(0x1F, 0x38, 0x64));
+    let navy = tsipika_color::Paint::solid(tsipika_color::Color::rgb8(0x1F, 0x38, 0x64));
     assert_eq!((t.runs[0].style.fill == navy, t.runs[1].style.fill == navy, t.runs[3].style.fill == navy), (true, true, false));
     assert_eq!((t.runs[3].style.underline, t.runs[4].style.underline), (false, true));
     let caps: Vec<_> = t.runs.iter().map(|r| r.style.all_caps).collect();
     assert_eq!(caps, [true, false, false, true, true, true, true], "runs without a character style take the default one");
-    let superscript = vectorcraft_doc::ScriptMetrics { size: 50.0, position: 40.0 };
-    assert_eq!(t.runs[5].style.position, vectorcraft_doc::CharPosition::Superscript(superscript), "in Document Setup's proportions");
+    let superscript = tsipika_doc::ScriptMetrics { size: 50.0, position: 40.0 };
+    assert_eq!(t.runs[5].style.position, tsipika_doc::CharPosition::Superscript(superscript), "in Document Setup's proportions");
     let paras = t.paragraph_styles();
     let summary: Vec<_> = paras.iter().map(|p| (p.justify, p.left_indent, p.first_line_indent, p.space_before, p.space_after)).collect();
-    assert_eq!(summary, [(vectorcraft_doc::Justify::Center, 0.0, 0.0, 12.0, 0.0), (vectorcraft_doc::Justify::JustifyLeft, 36.0, -18.0, 0.0, 8.0)]);
+    assert_eq!(summary, [(tsipika_doc::Justify::Center, 0.0, 0.0, 12.0, 0.0), (tsipika_doc::Justify::JustifyLeft, 36.0, -18.0, 0.0, 8.0)]);
     let st = s.doc().unwrap();
     assert_eq!((st.history.undo.len(), st.selection.objects.len()), (2, 1), "Document Setup and Place, each one undo step");
     // Info and the place cursor report it as a Word document.
@@ -316,7 +316,7 @@ fn docx_double_strikethrough_is_not_a_toggle_property() {
         r#"<w:r><w:rPr><w:rStyle w:val="AlsoStruck"/><w:dstrike w:val="0"/></w:rPr><w:t>three</w:t></w:r></w:p>"#,
     );
     let mut s = session();
-    let r = s.execute("file.place", &json!({"name": "struck.docx", "dataBase64": vectorcraft_format::base64_encode(&docx(body, styles))})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "struck.docx", "dataBase64": tsipika_format::base64_encode(&docx(body, styles))})).unwrap();
     let n = s.doc().unwrap().doc.node(NodeId(r["ids"][0].as_u64().unwrap())).unwrap().clone();
     let NodeKind::Text(t) = &n.kind else { panic!("not type") };
     let struck: Vec<_> = t.runs.iter().map(|r| (r.text.as_str(), r.style.strikethrough)).collect();
@@ -347,7 +347,7 @@ fn docx_tables_breaks_and_fields_place_as_paragraphs_and_tabs() {
     zip[length..].copy_from_slice(&(comment.len() as u16).to_le_bytes());
     zip.extend(comment);
     let mut s = session();
-    let r = s.execute("file.place", &json!({"name": "notes.bin", "dataBase64": vectorcraft_format::base64_encode(&zip)})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "notes.bin", "dataBase64": tsipika_format::base64_encode(&zip)})).unwrap();
     assert_eq!(r["format"].as_str(), Some("docx"));
     assert_eq!(
         placed(&s, &r).0,
@@ -357,12 +357,12 @@ fn docx_tables_breaks_and_fields_place_as_paragraphs_and_tabs() {
     let n = s.doc().unwrap().doc.node(NodeId(r["ids"][0].as_u64().unwrap())).unwrap().clone();
     let NodeKind::Text(t) = &n.kind else { panic!("not type") };
     let paras = t.paragraph_styles();
-    assert_eq!(paras[paras.len() - 2].justify, vectorcraft_doc::Justify::JustifyRight, "the last line of right-to-left justified text at the right");
+    assert_eq!(paras[paras.len() - 2].justify, tsipika_doc::Justify::JustifyRight, "the last line of right-to-left justified text at the right");
     let last = paras.last().cloned().unwrap();
     // The start indent of a right-to-left paragraph is its right indent.
     assert_eq!(
         (last.justify, last.left_indent, last.right_indent, last.direction),
-        (vectorcraft_doc::Justify::Left, 0.0, 20.0, Some(vectorcraft_doc::ParaDirection::RightToLeft))
+        (tsipika_doc::Justify::Left, 0.0, 20.0, Some(tsipika_doc::ParaDirection::RightToLeft))
     );
 }
 
@@ -370,7 +370,7 @@ fn docx_tables_breaks_and_fields_place_as_paragraphs_and_tabs() {
 fn malformed_docx_fails_cleanly() {
     let mut s = session();
     let place = |s: &mut Session, name: &str, bytes: &[u8]| {
-        s.execute("file.place", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)})).map_err(|e| e.to_string())
+        s.execute("file.place", &json!({"name": name, "dataBase64": tsipika_format::base64_encode(bytes)})).map_err(|e| e.to_string())
     };
     let store = |files: &[(&str, &[u8])]| cmd::fileio::zip::store(files).unwrap();
     let document = |body: &str| format!(r#"<w:document xmlns:w="{W_NS}"><w:body>{body}</w:body></w:document>"#);
@@ -378,7 +378,7 @@ fn malformed_docx_fails_cleanly() {
     let e = place(&mut s, "a.docx", &store(&[("readme.txt", b"x")])).unwrap_err();
     assert!(e.contains("no main document part"), "{e}");
     let e = place(&mut s, "a.zip", &store(&[("readme.txt", b"x")])).unwrap_err();
-    assert!(e.contains("not a format VectorCraft reads"), "a ZIP archive of something else isn't read as a Word document: {e}");
+    assert!(e.contains("not a format Tsipika reads"), "a ZIP archive of something else isn't read as a Word document: {e}");
     let sheet = r#"<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"/>"#;
     let e = place(&mut s, "a.docx", &store(&[("word/document.xml", sheet.as_bytes())])).unwrap_err();
     assert!(e.contains("not a WordprocessingML document"), "{e}");

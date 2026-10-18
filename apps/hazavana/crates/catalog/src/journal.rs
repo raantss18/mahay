@@ -1,7 +1,7 @@
 //! Crash-safe catalog persistence: an append-only op log plus periodic snapshots.
 //!
 //! Files (in a [`Store`]):
-//! - `catalog.snap` — `{"format":"lightcraft-catalog","version":V,"seq":N,"catalog":{…}}`, the
+//! - `catalog.snap` — `{"format":"hazavana-catalog","version":V,"seq":N,"catalog":{…}}`, the
 //!   state after op `N` in catalog format `V` ([`VERSION`]); replaced atomically (temp + fsync +
 //!   rename).
 //! - `catalog.log` — JSON lines, one per op applied after the snapshot:
@@ -73,7 +73,7 @@ use crate::{Catalog, CatalogError, Op, Result};
 
 pub const SNAPSHOT: &str = "catalog.snap";
 pub const LOG: &str = "catalog.log";
-const FORMAT: &str = "lightcraft-catalog";
+const FORMAT: &str = "hazavana-catalog";
 /// The catalog format this build writes (and the newest it reads). See the module docs →
 /// *Format versions*; bump it whenever an [`Op`] variant or a serialized field is added.
 pub const VERSION: u32 = 9;
@@ -119,7 +119,7 @@ pub struct LoadReport {
 }
 
 /// Where persistence time goes (reported by `library.info` → `persistence`; printed to stderr
-/// per write under `LIGHTCRAFT_PROFILE`). Times are wall-clock milliseconds on the calling
+/// per write under `HAZAVANA_PROFILE`). Times are wall-clock milliseconds on the calling
 /// thread, i.e. how long the caller (the UI thread, for the app) was blocked.
 #[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -167,10 +167,10 @@ pub struct SnapshotTiming {
     pub records: u64,
 }
 
-/// `LIGHTCRAFT_PROFILE` is set: print persistence timings to stderr.
+/// `HAZAVANA_PROFILE` is set: print persistence timings to stderr.
 fn profiling() -> bool {
     static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ON.get_or_init(|| std::env::var_os("LIGHTCRAFT_PROFILE").is_some())
+    *ON.get_or_init(|| std::env::var_os("HAZAVANA_PROFILE").is_some())
 }
 
 fn ms_since(t: web_time::Instant) -> f64 {
@@ -234,7 +234,7 @@ pub fn decode_record(line: &str) -> Option<(u64, Op)> {
 enum Line {
     Record(u64, Op),
     /// The CRC matches — the line is exactly what was written — but the op doesn't parse: it
-    /// was written by a newer LightCraft (an op or field this version doesn't know), not damaged.
+    /// was written by a newer Hazavana (an op or field this version doesn't know), not damaged.
     Newer(u64),
     /// Malformed or a CRC mismatch: torn or damaged.
     Bad,
@@ -258,7 +258,7 @@ fn decode_line(line: &str) -> Line {
     }
 }
 
-/// The error for a library written by a newer LightCraft.
+/// The error for a library written by a newer Hazavana.
 fn newer(what: String) -> CatalogError {
     CatalogError::Newer(format!("{what}; this version reads catalog format v{VERSION} and older"))
 }
@@ -277,7 +277,7 @@ fn resync(line: &[u8], last: u64) -> Option<(usize, (u64, Op))> {
 
 /// Write `catalog.snap` for the state after op `seq`, streaming the JSON into the store (no
 /// whole-file string). The bytes are exactly
-/// `{"format":"lightcraft-catalog","version":1,"seq":N,"catalog":<serde_json of the catalog>}\n`,
+/// `{"format":"hazavana-catalog","version":1,"seq":N,"catalog":<serde_json of the catalog>}\n`,
 /// as before streaming. Fills in the serialise / write+sync times and the size.
 fn write_snapshot(store: &mut dyn Store, seq: u64, catalog: &Catalog) -> std::io::Result<SnapshotTiming> {
     let t0 = web_time::Instant::now();
@@ -328,7 +328,7 @@ impl Journal {
                 // the header first: a newer snapshot may not parse as this version's catalog
                 let h: SnapHeader = serde_json::from_slice(&bytes).map_err(|e| CatalogError::Corrupt(format!("{SNAPSHOT}: {e}")))?;
                 if h.format != FORMAT {
-                    return Err(CatalogError::Corrupt(format!("{SNAPSHOT}: not a LightCraft catalog (format {:?})", h.format)));
+                    return Err(CatalogError::Corrupt(format!("{SNAPSHOT}: not a Hazavana catalog (format {:?})", h.format)));
                 }
                 if h.version > VERSION {
                     return Err(newer(format!("{SNAPSHOT} is catalog format v{}", h.version)));

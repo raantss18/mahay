@@ -2,7 +2,7 @@
 //! error it is for code that decides on it. Decide on [`CommandError::kind`], never on the message:
 //! messages get reworded and will be translated.
 
-use lightcraft_engine::{EngineError, ErrorKind};
+use hazavana_engine::{EngineError, ErrorKind};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CommandError {

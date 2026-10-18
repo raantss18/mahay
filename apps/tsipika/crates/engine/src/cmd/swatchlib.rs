@@ -1,6 +1,6 @@
 //! Swatch libraries (Window → Swatch Libraries, the Swatches panel's library button): read-only
 //! sets of swatches the library panel shows. The built-in libraries are computed in
-//! [`vectorcraft_color::libraries`]; User Defined ones are the library files in the user library
+//! [`tsipika_color::libraries`]; User Defined ones are the library files in the user library
 //! folder ([`Libraries`]), and Other Library… loads more from files. `swatch.library.add` copies
 //! swatches into the document; `swatch.library.save` writes the document's ([`palette_io`]).
 //! `swatch.library.copyToUser` copies a loaded library into the user library folder.
@@ -9,10 +9,10 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::libraries::{BuiltinLibrary, GRADIENT_LIBRARIES, SWATCH_LIBRARIES, builtin_library};
-use vectorcraft_color::palette_io::{self, PaletteFormat};
-use vectorcraft_color::recolor::Palette;
-use vectorcraft_color::{Paint, Swatch, SwatchGroup, SwatchLibrary, default_swatches};
+use tsipika_color::libraries::{BuiltinLibrary, GRADIENT_LIBRARIES, SWATCH_LIBRARIES, builtin_library};
+use tsipika_color::palette_io::{self, PaletteFormat};
+use tsipika_color::recolor::Palette;
+use tsipika_color::{Paint, Swatch, SwatchGroup, SwatchLibrary, default_swatches};
 
 use super::fileio::{create_dir, extension, read_file, write_file, write_new_file};
 use super::menucmds::squash;
@@ -72,7 +72,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Other Library…",
             ["Window", "Swatch Libraries"],
             None,
-            "{path? | data?: file text | dataBase64?, name?: file name (default: the path's)} load a .vcswatches, .gpl, .ase (swatch exchange) or .acb (color book, read only) library, or the swatches of any document VectorCraft opens (see document.formats), for the library panel (Window → Swatch Libraries lists it until the app quits; a file of the user library folder, or a file with the same extension and bytes as one there, opens as that User Defined library) → {library: id, name, count}",
+            "{path? | data?: file text | dataBase64?, name?: file name (default: the path's)} load a .vcswatches, .gpl, .ase (swatch exchange) or .acb (color book, read only) library, or the swatches of any document Tsipika opens (see document.formats), for the library panel (Window → Swatch Libraries lists it until the app quits; a file of the user library folder, or a file with the same extension and bytes as one there, opens as that User Defined library) → {library: id, name, count}",
             always,
             load
         ),
@@ -81,7 +81,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Copy to User Defined",
             ["Window", "Swatch Libraries"],
             None,
-            "{library: id or name of a loaded library (category \"loaded\", swatch.library.load)} copy it into the user library folder of the desktop app, whose libraries VectorCraft lists as User Defined every time it starts (a loaded library is listed until the app quits): a library file as it is, the swatches of a document or a library loaded from data as a .vcswatches file. A name the folder already has gets a number (\"Brand 2.ase\") and no file is replaced; when the folder already holds the same file, that file is used. The library is then listed as User Defined only, and until the app quits commands given its loaded id use the copy; a User Defined library comes back as it is → {library: its User Defined id, name, count, path, copied: false when nothing was written}",
+            "{library: id or name of a loaded library (category \"loaded\", swatch.library.load)} copy it into the user library folder of the desktop app, whose libraries Tsipika lists as User Defined every time it starts (a loaded library is listed until the app quits): a library file as it is, the swatches of a document or a library loaded from data as a .vcswatches file. A name the folder already has gets a number (\"Brand 2.ase\") and no file is replaced; when the folder already holds the same file, that file is used. The library is then listed as User Defined only, and until the app quits commands given its loaded id use the copy; a User Defined library comes back as it is → {library: its User Defined id, name, count, path, copied: false when nothing was written}",
             has_user_folder,
             copy_to_user
         ),
@@ -90,7 +90,7 @@ pub fn specs() -> Vec<CommandSpec> {
 
 /// The libraries beyond the built-in ones: User Defined (the library files in the user library
 /// folder, as last scanned) and loaded ones (`swatch.library.load`). Graphic style libraries use
-/// the same with [`vectorcraft_doc::StyleLibrary`] ([`super::stylelib`]).
+/// the same with [`tsipika_doc::StyleLibrary`] ([`super::stylelib`]).
 #[derive(Clone, Debug, Default)]
 pub struct Libraries<L = SwatchLibrary> {
     /// The user library folder. The desktop app sets it; without one (the web, headless sessions)
@@ -216,7 +216,7 @@ impl<L: LibraryFile> Libraries<L> {
         } else {
             match data {
                 FileData::Text(text) => out["data"] = json!(text),
-                FileData::Binary(bytes) => out["dataBase64"] = json!(vectorcraft_format::base64_encode(&bytes)),
+                FileData::Binary(bytes) => out["dataBase64"] = json!(tsipika_format::base64_encode(&bytes)),
             }
         }
         Ok(())
@@ -231,7 +231,7 @@ impl<L: LibraryFile> Libraries<L> {
         let bytes = match (path, str_param(p, "data"), str_param(p, "dataBase64")) {
             (Some(path), ..) => read_file(path)?,
             (None, Some(text), _) => text.as_bytes().to_vec(),
-            (None, None, Some(b64)) => vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad dataBase64"))?,
+            (None, None, Some(b64)) => tsipika_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad dataBase64"))?,
             _ => return Err(bad(cmd, "give `path`, `data` or `dataBase64`")),
         };
         let file = str_param(p, "name").map(str::to_string).or_else(|| path.map(file_name)).unwrap_or_else(|| "Library".into());
@@ -434,7 +434,7 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
 
 /// The document's swatches `names` (swatches or colour groups; empty: all) as a library named
 /// `name`, without None and patterns.
-fn document_library(d: &vectorcraft_doc::Document, names: &[String], name: String, cmd: &str) -> Result<SwatchLibrary> {
+fn document_library(d: &tsipika_doc::Document, names: &[String], name: String, cmd: &str) -> Result<SwatchLibrary> {
     if let Some(n) = names.iter().find(|n| !d.swatch_name_taken(n)) {
         return Err(bad(cmd, format!("no swatch or colour group `{n}`")));
     }

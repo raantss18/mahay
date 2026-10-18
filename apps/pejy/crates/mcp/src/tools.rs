@@ -77,7 +77,7 @@ fn tool(name: &str, title: &str, desc: &str, schema: Value, read_only: bool) -> 
     })
 }
 
-const APP_ONLY: &str = " Desktop app only (`designcraft-cli mcp --connect PORT`).";
+const APP_ONLY: &str = " Desktop app only (`pejy-cli mcp --connect PORT`).";
 
 /// All tools, in `tools/list` order.
 pub fn tool_definitions() -> Vec<Value> {
@@ -88,7 +88,7 @@ pub fn tool_definitions() -> Vec<Value> {
         tool(
             "list_commands",
             "List commands",
-            "List DesignCraft commands: id, label, menu path, shortcut, parameter description and whether it can run right now. \
+            "List Pejy commands: id, label, menu path, shortcut, parameter description and whether it can run right now. \
              Every user-visible action is a command (frame.create, text.insert, type.char, style.paragraph.apply, layout.pages.insert, \
              object.fill, transform.move, edit.undo…); run them with execute or batch.",
             obj(
@@ -103,7 +103,7 @@ pub fn tool_definitions() -> Vec<Value> {
         tool(
             "execute",
             "Execute command",
-            "Run any DesignCraft command by id with JSON params (ids and params from list_commands). Examples: \
+            "Run any Pejy command by id with JSON params (ids and params from list_commands). Examples: \
              {\"command\":\"frame.create\",\"params\":{\"rect\":[36,36,576,300],\"content\":\"text\",\"text\":\"Hello\"}} → {id, story}; \
              {\"command\":\"type.char\",\"params\":{\"size\":24}}; {\"command\":\"edit.undo\"}. Coordinates are points in spread space. \
              In the desktop app the UI-only commands (view.*, window.*, help.*, edit.dynamicSpelling, and app.* except app.links, \
@@ -192,14 +192,14 @@ pub fn tool_definitions() -> Vec<Value> {
         tool(
             "open_document",
             "Open document",
-            "Open a .designcraft file as a new, active document.",
+            "Open a .pejy file as a new, active document.",
             obj(json!({"path": string("File path")}), &["path"]),
             false,
         ),
         tool(
             "save_document",
             "Save document",
-            "Save the active document in the native .designcraft format.",
+            "Save the active document in the native .pejy format.",
             obj(json!({"path": string("Destination (default: the document's current path)")}), &[]),
             false,
         ),
@@ -482,7 +482,7 @@ fn filter_commands(all: Value, a: &Args) -> Value {
 }
 
 fn batch(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
-    use designcraft_engine::script;
+    use pejy_engine::script;
     let steps = match (a.get("commands").and_then(Value::as_array), a.get("script").and_then(Value::as_str)) {
         (Some(c), _) if !c.is_empty() => script::parse(&Value::Array(c.clone()).to_string())?,
         (_, Some(t)) => script::parse(t)?,
@@ -510,7 +510,7 @@ fn render_page(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
     let b64 = r.get("pngBase64").and_then(Value::as_str).ok_or("renderer returned no image")?.to_string();
     let path = a.get("path").and_then(Value::as_str);
     if let Some(path) = path {
-        let png = designcraft_engine::cmd::base64_decode(&b64);
+        let png = pejy_engine::cmd::base64_decode(&b64);
         b.write_file(path, &png)?;
     }
     Ok(ToolResult::image(b64, &json!({"width": r.get("width"), "height": r.get("height"), "path": path})))
@@ -523,7 +523,7 @@ fn screenshot(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
     let target = match keep {
         Some(p) => p.to_string(),
         None => std::env::temp_dir()
-            .join(format!("designcraft-mcp-{}-{}.png", std::process::id(), std::time::SystemTime::UNIX_EPOCH.elapsed().map_or(0, |d| d.as_millis())))
+            .join(format!("pejy-mcp-{}-{}.png", std::process::id(), std::time::SystemTime::UNIX_EPOCH.elapsed().map_or(0, |d| d.as_millis())))
             .to_string_lossy()
             .to_string(),
     };
@@ -532,7 +532,7 @@ fn screenshot(b: &mut dyn Backend, a: &Args) -> Result<ToolResult, String> {
     if keep.is_none() {
         std::fs::remove_file(&target).ok();
     }
-    Ok(ToolResult::image(designcraft_engine::cmd::base64_encode(&png), &json!({"width": r.get("width"), "height": r.get("height"), "path": keep})))
+    Ok(ToolResult::image(pejy_engine::cmd::base64_encode(&png), &json!({"width": r.get("width"), "height": r.get("height"), "path": keep})))
 }
 
 fn pointer(b: &mut dyn Backend, a: &Args) -> Result<Value, String> {

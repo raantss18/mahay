@@ -1,9 +1,9 @@
 //! PDF security: password-protected files open only with a password, carry the permissions asked
 //! for, and refuse what a PDF standard forbids.
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node, NodeId, NodeKind};
+use tsipika_geom::{Rect, shapes};
 
 use crate::encrypt::protect;
 use crate::lab_spot::find;
@@ -80,7 +80,7 @@ fn strings_and_streams_are_encrypted() {
     sec.plaintext_metadata = false;
     let bytes = protected(Compatibility::Pdf17, sec, true);
     let text = String::from_utf8_lossy(&bytes);
-    for plain in ["VectorCraft", "native", "xmpmeta", "FEFF0054"] {
+    for plain in ["Tsipika", "native", "xmpmeta", "FEFF0054"] {
         assert!(!text.contains(plain), "`{plain}` is readable");
     }
     // The trailer names the dictionary; the ID stays as it was.
@@ -200,7 +200,7 @@ fn without_a_password_nothing_changes() {
 
 #[test]
 fn the_permissions_password_opens_files_of_other_writers() {
-    use vectorcraft_testkit::pdf::{PdfPage, pdf};
+    use tsipika_testkit::pdf::{PdfPage, pdf};
     // Revision 2 (40-bit RC4): the owner password is the user password followed by `-owner`.
     let bytes = pdf(&[PdfPage::new(50.0, 50.0, "0 g 0 0 10 10 re f")], Some("pw"));
     assert_eq!(info(&bytes, Some("pw-owner")).unwrap().pages.len(), 1);

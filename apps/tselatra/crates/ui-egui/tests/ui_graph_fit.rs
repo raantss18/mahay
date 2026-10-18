@@ -3,14 +3,14 @@
 //! layer isn't selected), else Fit All Graphs to View. It used to open on an empty 0–100 range
 //! or with the curves off-view.
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
 use egui_kittest::Harness;
 use serde_json::json;
 
 /// A 20 s comp whose Box layer has Rotation keys 300° at 8 s and 720° at 12 s; the Timeline is
 /// zoomed in on 0–4 s, so neither key is in view. Returns the harness and Rotation's uid.
-fn harness(select_layer: bool) -> (Harness<'static, EffectcraftApp>, u64, u64) {
+fn harness(select_layer: bool) -> (Harness<'static, TselatraApp>, u64, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Fit", "width": 320, "height": 180, "frameRate": 30, "duration": 20})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Box", "color": "#e04020", "width": 80, "height": 80})).unwrap();
@@ -20,22 +20,22 @@ fn harness(select_layer: bool) -> (Harness<'static, EffectcraftApp>, u64, u64) {
     }
     let uid = s.active_comp().unwrap().layer(id).unwrap().props.prop("transform/rotation").unwrap().uid;
     s.execute("layer.select", json!({"layers": if select_layer { vec![id.0] } else { vec![] }})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.state_mut().ui.timeline.pps = Some(300.0);
     h.state_mut().ui.timeline.start = 0.0;
     h.run_steps(3);
     (h, id.0, uid)
 }
 
-fn open_graph(h: &mut Harness<'_, EffectcraftApp>) {
+fn open_graph(h: &mut Harness<'_, TselatraApp>) {
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.graphEditor", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.graphEditor", json!({})).unwrap();
     h.run_steps(4);
     assert!(h.state().ui.timeline.graph_editor);
 }
 
 /// Every key of the property sits inside the plot, and the value range spans `lo..=hi`.
-fn assert_framed(h: &Harness<'_, EffectcraftApp>, uid: u64, keys: &[usize], lo: f64, hi: f64) {
+fn assert_framed(h: &Harness<'_, TselatraApp>, uid: u64, keys: &[usize], lo: f64, hi: f64) {
     let plot = h.state().auto.find("timeline.graph").expect("graph plot").rect;
     for i in keys {
         let k = h.state().auto.find(&format!("timeline.graph.key.{uid}.0.{i}")).unwrap_or_else(|| panic!("graph key {i} not drawn")).rect;
@@ -70,9 +70,9 @@ fn opening_the_graph_editor_with_no_keys_selected_fits_all_graphs() {
     assert_framed(&h, uid, &[0, 1], 300.0, 720.0);
 }
 
-fn open_graph_toggle_twice(h: &mut Harness<'_, EffectcraftApp>) {
+fn open_graph_toggle_twice(h: &mut Harness<'_, TselatraApp>) {
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.graphEditor", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.graphEditor", json!({})).unwrap();
     h.run_steps(2);
     assert!(!h.state().ui.timeline.graph_editor);
     open_graph(h);

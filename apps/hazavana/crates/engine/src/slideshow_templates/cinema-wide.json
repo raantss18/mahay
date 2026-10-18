@@ -1,5 +1,5 @@
 {
-  "format": "lightcraft.slideshowTemplate",
+  "format": "hazavana.slideshowTemplate",
   "version": 1,
   "name": "Cinema Wide",
   "description": "A 16:9 frame with black bars above and below, the title in the corner, fades through black and a closing card.",

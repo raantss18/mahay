@@ -1,9 +1,9 @@
 //! The canvas's right-click menu (#325): Repeat, the Clipboard commands with AutoCAD's rules for
 //! what is available, and the selection commands.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::menus::Entry;
-use cadcraft_ui_egui::{CadApp, Services, context_menu};
+use drafitra_engine::Session;
+use drafitra_ui_egui::menus::Entry;
+use drafitra_ui_egui::{CadApp, Services, context_menu};
 use serde_json::json;
 
 /// (label, id, enabled) of the items, with submenu items prefixed by "Sub/".
@@ -85,7 +85,7 @@ fn clipboard_events_run_the_clipboard_commands() {
     let ctx = egui::Context::default();
     let frame = |app: &mut CadApp, events: Vec<egui::Event>| {
         ctx.begin_pass(egui::RawInput { events, ..Default::default() });
-        cadcraft_ui_egui::menus::shortcuts(app, &ctx);
+        drafitra_ui_egui::menus::shortcuts(app, &ctx);
         ctx.end_pass().textures_delta.clear();
     };
     frame(&mut app, vec![egui::Event::Copy]);
@@ -144,10 +144,10 @@ fn snap_menu_types_point_modifiers_and_snap_overrides() {
     app.cmdline("LINE");
     assert!(snap_items(&app).iter().all(|(_, _, on)| *on), "everything at a point prompt");
     context_menu::choose_snap(&mut app, "_endp");
-    assert_eq!(app.session.snap_override(), Some(cadcraft_engine::snap::mode::END));
+    assert_eq!(app.session.snap_override(), Some(drafitra_engine::snap::mode::END));
     assert!(app.session.prompt_text().ends_with("Endpoint of:"), "{}", app.session.prompt_text());
-    app.session.input(cadcraft_engine::Input::Point(cadcraft_geom::Vec2::new(9.98, 0.02))).unwrap();
-    assert_eq!(app.session.last_point, cadcraft_geom::Vec2::new(10.0, 0.0));
+    app.session.input(drafitra_engine::Input::Point(drafitra_geom::Vec2::new(9.98, 0.02))).unwrap();
+    assert_eq!(app.session.last_point, drafitra_geom::Vec2::new(10.0, 0.0));
     context_menu::choose_snap(&mut app, "_non");
     assert_eq!(app.session.snap_override(), Some(0));
     context_menu::choose_snap(&mut app, "_from");

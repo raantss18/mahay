@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::{Footage, FootageKind, ItemId, LayerId, LayerSource, PrimitiveKind, Project, Renderer};
-use effectcraft_render::FootageSource;
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_keyframe::Value as KV;
+use tselatra_project::{Footage, FootageKind, ItemId, LayerId, LayerSource, PrimitiveKind, Project, Renderer};
+use tselatra_render::FootageSource;
+use tselatra_time::{FrameRate, Tick};
 use serde_json::json;
 
 use crate::{Importer, Session};
@@ -15,17 +15,17 @@ fn fixture(name: &str) -> String {
     format!("{}/../model/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"))
 }
 
-/// Loads models from disk (what `effectcraft-media` does in the app).
+/// Loads models from disk (what `tselatra-media` does in the app).
 struct DiskModels;
 
 impl FootageSource for DiskModels {
-    fn frame(&self, _: ItemId, _: &Footage, _: Tick) -> Option<Arc<effectcraft_raster::Image>> {
+    fn frame(&self, _: ItemId, _: &Footage, _: Tick) -> Option<Arc<tselatra_raster::Image>> {
         None
     }
-    fn model(&self, _: ItemId, f: &Footage) -> Option<Arc<effectcraft_model::Model>> {
+    fn model(&self, _: ItemId, f: &Footage) -> Option<Arc<tselatra_model::Model>> {
         let dir = std::path::Path::new(&f.path).parent()?.to_path_buf();
         let bytes = std::fs::read(&f.path).ok()?;
-        effectcraft_model::load(&f.path, &bytes, &|u| std::fs::read(dir.join(u)).ok()).ok().map(Arc::new)
+        tselatra_model::load(&f.path, &bytes, &|u| std::fs::read(dir.join(u)).ok()).ok().map(Arc::new)
     }
 }
 
@@ -33,7 +33,7 @@ struct ModelImporter;
 
 impl Importer for ModelImporter {
     fn probe(&self, path: &str) -> Result<Footage, String> {
-        effectcraft_model::format_of(path).ok_or("not a model")?;
+        tselatra_model::format_of(path).ok_or("not a model")?;
         Ok(Footage {
             path: path.into(),
             kind: FootageKind::Model,
@@ -63,7 +63,7 @@ fn session() -> Session {
     s
 }
 
-fn layer(s: &Session, id: u64) -> effectcraft_project::Layer {
+fn layer(s: &Session, id: u64) -> tselatra_project::Layer {
     s.active_comp().unwrap().layer(LayerId(id)).unwrap().clone()
 }
 
@@ -85,7 +85,7 @@ fn import_gltf_and_add_model_layer() {
     let anim = l.props.prop("geometryOptions/animation").unwrap();
     assert_eq!(anim.value, KV::Enum(1));
     match &anim.ui {
-        effectcraft_project::ParamUi::Popup { options } => assert_eq!(options, &vec!["None".to_string(), "Move".to_string()]),
+        tselatra_project::ParamUi::Popup { options } => assert_eq!(options, &vec!["None".to_string(), "Move".to_string()]),
         u => panic!("{u:?}"),
     }
     s.undo();

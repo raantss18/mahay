@@ -18,7 +18,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 fn session(w: f64, h: f64) -> Session {
     let mut s = Session::new();
     run(&mut s, "file.new", json!({"width": w, "height": h}));
-    s.paint.stroke = vectorcraft_color::Paint::None;
+    s.paint.stroke = tsipika_color::Paint::None;
     s
 }
 
@@ -52,7 +52,7 @@ fn files(v: &Value) -> Vec<(String, Vec<u8>)> {
         .as_array()
         .unwrap()
         .iter()
-        .map(|f| (f["name"].as_str().unwrap().to_string(), vectorcraft_format::base64_decode(f["dataBase64"].as_str().unwrap()).unwrap()))
+        .map(|f| (f["name"].as_str().unwrap().to_string(), tsipika_format::base64_decode(f["dataBase64"].as_str().unwrap()).unwrap()))
         .collect()
 }
 
@@ -191,7 +191,7 @@ fn preview_size_is_the_written_size() {
         let file = one(&mut s, p.clone());
         let pv = run(&mut s, "document.exportForWeb.preview", merge(&p, json!({"image": true})));
         assert_eq!(pv["bytes"].as_u64().unwrap() as usize, file.len(), "{p}");
-        assert_eq!(vectorcraft_format::base64_decode(pv["dataBase64"].as_str().unwrap()).unwrap(), file, "{p}");
+        assert_eq!(tsipika_format::base64_decode(pv["dataBase64"].as_str().unwrap()).unwrap(), file, "{p}");
         let img = pixels(&file);
         assert_eq!((pv["width"].as_u64().unwrap() as u32, pv["height"].as_u64().unwrap() as u32), img.dimensions());
         let seconds = pv["seconds"].as_f64().unwrap();
@@ -294,7 +294,7 @@ fn files_named_after_the_title_follow_windows_naming_rules() {
 
 #[test]
 fn files_are_written_beside_the_path() {
-    let dir = vectorcraft_testkit::temp_dir("webexport");
+    let dir = tsipika_testkit::temp_dir("webexport");
     let mut s = two_colours();
     let path = dir.join("art.gif").to_string_lossy().to_string();
     let r = run(&mut s, "document.exportForWeb", json!({"path": path}));
@@ -328,14 +328,14 @@ fn an_export_says_when_an_image_could_not_be_decoded() {
     assert_eq!(r["warnings"], json!([]), "{r}");
     assert_eq!(run(&mut s, "document.exportForWeb.preview", json!({}))["warnings"], json!([]));
     // The renderer can't decode the placed image and draws nothing in its place.
-    run(&mut s, "file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&cut_png())}));
+    run(&mut s, "file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&cut_png())}));
     for format in ["gif", "jpg", "png8", "png24"] {
         let r = run(&mut s, "document.exportForWeb", json!({"format": format}));
         assert!(undecoded(&r), "{format}: {}", r["warnings"]);
         let r = run(&mut s, "document.exportForWeb.preview", json!({"format": format}));
         assert!(undecoded(&r), "{format} preview: {}", r["warnings"]);
     }
-    let dir = vectorcraft_testkit::temp_dir("webexport-undecoded");
+    let dir = tsipika_testkit::temp_dir("webexport-undecoded");
     let page = dir.join("page.html").to_string_lossy().to_string();
     let r = run(&mut s, "document.exportForWeb", json!({"path": page, "output": "html"}));
     assert!(undecoded(&r), "{r}");

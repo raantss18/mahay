@@ -1,7 +1,7 @@
 //! An explicit numeric `scale` on a non-fitted layout plot scales the geometry (issue #490).
 
-use cadcraft_doc::{Common, Drawing, EntityKind, Line, Space};
-use cadcraft_geom::Vec3;
+use drafitra_doc::{Common, Drawing, EntityKind, Line, Space};
+use drafitra_geom::Vec3;
 use serde_json::{Value, json};
 
 /// Plotted length in millimetres of the one 90-unit line in Layout1.
@@ -13,7 +13,7 @@ fn plotted_mm(opts: Value) -> f64 {
     if let (Some(o), Some(e)) = (o.as_object_mut(), opts.as_object()) {
         o.extend(e.clone());
     }
-    let bytes = cadcraft_io::plot(&d, &Space::Paper("Layout1".into()), &o).unwrap();
+    let bytes = drafitra_io::plot(&d, &Space::Paper("Layout1".into()), &o).unwrap();
     let text = String::from_utf8_lossy(&bytes).into_owned();
     let xs: Vec<f64> = text.lines().filter(|l| l.ends_with(" m") || l.ends_with(" l")).filter_map(|l| l.split(' ').next()?.parse().ok()).collect();
     assert_eq!(xs.len(), 2, "{text}");

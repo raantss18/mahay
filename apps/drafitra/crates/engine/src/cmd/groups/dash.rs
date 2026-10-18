@@ -2,7 +2,7 @@
 //! [?/Order/Add/Remove/Explode/REName/Selectable/Create] <Create>:". The JSON form takes the option
 //! as `option` and never prompts.
 
-use cadcraft_doc::{Drawing, Handle};
+use drafitra_doc::{Drawing, Handle};
 use serde_json::{Value, json};
 
 use super::super::machines::{SelOutcome, SelectPhase, number};
@@ -26,7 +26,7 @@ pub fn specs() -> Vec<CommandSpec> {
 }
 
 /// Groups whose names match `pattern` (comma-separated wildcards; empty is `*`).
-fn matching<'a>(d: &'a Drawing, pattern: &str) -> impl Iterator<Item = &'a cadcraft_doc::Group> + 'a {
+fn matching<'a>(d: &'a Drawing, pattern: &str) -> impl Iterator<Item = &'a drafitra_doc::Group> + 'a {
     let pats: Vec<String> = pattern.split(',').map(|p| p.trim().to_string()).filter(|p| !p.is_empty()).collect();
     d.groups.iter().filter(move |g| pats.is_empty() || pats.iter().any(|p| wildcard(p, &g.name)))
 }

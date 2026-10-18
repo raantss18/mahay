@@ -7,7 +7,7 @@ use egui::Ui;
 use serde_json::{Value, json};
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
 
@@ -32,7 +32,7 @@ pub(crate) fn row(ui: &mut Ui, label: &str, value: String) {
 }
 
 /// `document.info` with its categories, fetched again only when the document or the scope changes.
-fn info(app: &mut VectorcraftApp, ctx: &egui::Context, sel_only: bool) -> Option<Value> {
+fn info(app: &mut TsipikaApp, ctx: &egui::Context, sel_only: bool) -> Option<Value> {
     let st = app.session.active()?;
     let key = Some((st.uid, st.revision, sel_only));
     let mut c: Cache = pstate(ctx, "docinfo-cache");
@@ -44,7 +44,7 @@ fn info(app: &mut VectorcraftApp, ctx: &egui::Context, sel_only: bool) -> Option
     Some(c.info)
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let sel_only: bool = pstate(ui.ctx(), "docinfo-sel");
     let category: String = pstate(ui.ctx(), "docinfo-category");
     let Some(i) = info(app, ui.ctx(), sel_only) else {
@@ -103,7 +103,7 @@ fn named_rows(id: &str, rows: &[Value]) -> std::ops::Range<usize> {
 
 /// `docInfo.save {path?, selectionOnly?}`: write the text report to `path`, else a picked file
 /// (the web downloads it) → `{path}`.
-pub(crate) fn save_report(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn save_report(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let sel_only = p.get("selectionOnly").and_then(Value::as_bool).unwrap_or(false);
     let r = app.session.execute("document.info", &json!({ "format": "text", "selectionOnly": sel_only })).map_err(|e| e.to_string())?;
     let text = r["text"].as_str().unwrap_or_default();
@@ -115,7 +115,7 @@ pub(crate) fn save_report(app: &mut VectorcraftApp, p: &Value) -> Result<Value, 
     Ok(json!({ "path": path }))
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let sel: bool = pstate(ui.ctx(), "docinfo-sel");
     if menu_item(ui, tl!("Selection Only"), true, sel) {
         set_pstate(ui.ctx(), "docinfo-sel", !sel);
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn draws_headless() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
         let ctx = egui::Context::default();
@@ -159,7 +159,7 @@ mod tests {
     /// language: an artboard named like a label ("Units") is still a name.
     #[test]
     fn names_in_rows_are_told_from_labels() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("artboard.setProps", &json!({"index": 0, "name": "Units"})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn categories_filter_the_panel_and_save_writes_the_report() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
         let text = crate::tests_labels::painted_text(&mut app, show);

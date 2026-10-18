@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
-use lightcraft_develop::Preset;
+use hazavana_develop::Preset;
 use serde_json::json;
 
 use crate::Session;
@@ -94,14 +94,14 @@ fn importing_thousands_of_presets_is_not_quadratic() {
     assert!(t.elapsed().as_secs() < 20, "took {:?}", t.elapsed());
 }
 
-/// Timing with a real preset collection: `LIGHTCRAFT_BENCH_PRESETS=path/to/presets.json cargo test
-/// -p lightcraft-engine --release presets_scale_bench -- --ignored --nocapture`. The file is copied
+/// Timing with a real preset collection: `HAZAVANA_BENCH_PRESETS=path/to/presets.json cargo test
+/// -p hazavana-engine --release presets_scale_bench -- --ignored --nocapture`. The file is copied
 /// into a temporary library; the original is only read.
 #[test]
 #[ignore]
 fn presets_scale_bench() {
-    let Ok(src) = std::env::var("LIGHTCRAFT_BENCH_PRESETS") else {
-        eprintln!("set LIGHTCRAFT_BENCH_PRESETS");
+    let Ok(src) = std::env::var("HAZAVANA_BENCH_PRESETS") else {
+        eprintln!("set HAZAVANA_BENCH_PRESETS");
         return;
     };
     let lib = temp_dir("bench");

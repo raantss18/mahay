@@ -1,7 +1,7 @@
 //! Auto layout commands beyond `layout.add` / `layout.remove` (in `structure`) and the layout
 //! keys of `node.set` (gap, padding, alignment, sizing, min/max, absolute, grid cells): grid tracks.
 
-use figcraft_doc::{GridTrack, LayoutMode, Sizing};
+use endrika_doc::{GridTrack, LayoutMode, Sizing};
 use serde_json::Value;
 
 use super::props::sizing;
@@ -33,7 +33,7 @@ fn set_track(s: &mut Session, p: &Value) -> Result<Value> {
     let doc = s.doc_mut()?;
     for id in ids {
         // Current track sizes (switching to Fixed keeps the size the track has now).
-        let tracks_now = figcraft_layout::grid_geometry(doc, id).map(|g| if columns { g.columns } else { g.rows }).unwrap_or_default();
+        let tracks_now = endrika_layout::grid_geometry(doc, id).map(|g| if columns { g.columns } else { g.rows }).unwrap_or_default();
         let n = doc.get_mut(id)?;
         let Some(l) = n.layout.as_mut().filter(|l| l.mode == LayoutMode::Grid) else {
             return Err(bad(CMD, format!("node {id} is not a grid auto layout frame")));
@@ -64,7 +64,7 @@ fn set_track(s: &mut Session, p: &Value) -> Result<Value> {
 
 #[cfg(test)]
 mod tests {
-    use figcraft_doc::{CrossAlign, Document, GridTrack, LayoutMode, Node, NodeId, Sizing};
+    use endrika_doc::{CrossAlign, Document, GridTrack, LayoutMode, Node, NodeId, Sizing};
     use serde_json::{Value, json};
 
     use crate::{EngineError, Session, params};
@@ -158,7 +158,7 @@ mod tests {
         ex(&mut s, "node.set", json!({"id": f, "props": {"crossAlign": "baseline"}}));
         assert_eq!(node(&s, f).layout.unwrap().cross_align, CrossAlign::Baseline);
         let base =
-            |s: &Session, t: NodeId| figcraft_text::layout_node(&node(s, t)).and_then(|(l, dy)| l.lines.first().map(|line| line.baseline + dy));
+            |s: &Session, t: NodeId| endrika_text::layout_node(&node(s, t)).and_then(|(l, dy)| l.lines.first().map(|line| line.baseline + dy));
         // Only meaningful when the text was measured (fonts available).
         if let (Some(bs), Some(bb)) = (base(&s, small), base(&s, big))
             && (bb - bs).abs() > 1.0

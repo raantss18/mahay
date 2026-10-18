@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn load_from_a_folder() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-geocode-load-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-geocode-load-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         assert!(matches!(GeoNames::load(&dir), Err(GeocodeError::Missing(_))));
         std::fs::create_dir_all(&dir).unwrap();

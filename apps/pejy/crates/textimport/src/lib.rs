@@ -27,7 +27,7 @@ pub fn xlsx_records(bytes: &[u8], sheet: Option<&str>) -> Result<Vec<Vec<String>
     xlsx::records(bytes, sheet)
 }
 
-use designcraft_doc::{CharAttrs, ParaAttrs, Story};
+use pejy_doc::{CharAttrs, ParaAttrs, Story};
 
 /// Joins UTF-16 code units that arrive one at a time (RTF `\uN`, Tagged Text `<0xNNNN>`) into
 /// characters. A character past U+FFFF comes as two units, a surrogate pair: the first half
@@ -120,7 +120,7 @@ pub fn import(name: &str, bytes: &[u8]) -> Result<Imported, ImportError> {
 /// Plain text: line breaks become paragraphs (CRLF / CR normalised).
 pub fn plain(text: &str) -> Imported {
     let t = text.trim_start_matches('\u{FEFF}').replace("\r\n", "\n").replace('\r', "\n");
-    let story = Story::with_text(designcraft_doc::StoryId(0), &t, Default::default());
+    let story = Story::with_text(pejy_doc::StoryId(0), &t, Default::default());
     Imported { story, para_styles: vec![], char_styles: vec![], warnings: vec![] }
 }
 

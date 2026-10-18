@@ -64,16 +64,16 @@ impl Wat {
             steps.iter().enumerate().map(|(i, s)| format!("(if (i32.eq (local.get $k) (i32.const {})) (then {s}))\n", i + 1)).collect();
         let wat = format!(
             r#"(module
-              (import "figcraft" "call" (func $call (param i32 i32 i32 i32) (result i32)))
-              (import "figcraft" "reply_read" (func $reply_read (param i32 i32) (result i32)))
-              (import "figcraft" "set_output" (func $set_output (param i32 i32)))
-              (import "figcraft" "ui_show" (func $ui_show (param i32 i32) (result i32)))
-              (import "figcraft" "ui_close" (func $ui_close))
-              (import "figcraft" "setting_get" (func $setting_get (param i32 i32) (result i32)))
-              (import "figcraft" "setting_set" (func $setting_set (param i32 i32 i32 i32) (result i32)))
+              (import "endrika" "call" (func $call (param i32 i32 i32 i32) (result i32)))
+              (import "endrika" "reply_read" (func $reply_read (param i32 i32) (result i32)))
+              (import "endrika" "set_output" (func $set_output (param i32 i32)))
+              (import "endrika" "ui_show" (func $ui_show (param i32 i32) (result i32)))
+              (import "endrika" "ui_close" (func $ui_close))
+              (import "endrika" "setting_get" (func $setting_get (param i32 i32) (result i32)))
+              (import "endrika" "setting_set" (func $setting_set (param i32 i32 i32 i32) (result i32)))
               (memory (export "memory") 4)
               {}
-              (func (export "figcraft_run") (param $n i32) (result i32) (local $k i32)
+              (func (export "endrika_run") (param $n i32) (result i32) (local $k i32)
                 (drop (call $reply_read (i32.const {INPUT}) (local.get $n)))
                 (i32.store (i32.const 0) (i32.add (i32.load (i32.const 0)) (i32.const 1)))
                 (local.set $k (i32.load (i32.const 0)))

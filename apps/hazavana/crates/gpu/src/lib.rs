@@ -1,16 +1,16 @@
-//! The LightCraft develop pipeline on the GPU (wgpu compute, WGSL kernels).
+//! The Hazavana develop pipeline on the GPU (wgpu compute, WGSL kernels).
 //!
-//! The CPU pipeline (`lightcraft-pipeline`) is the reference: every kernel here is a port of a CPU
-//! stage, both read the same resolved parameters ([`lightcraft_pipeline::Plan`],
-//! [`lightcraft_pipeline::finish::FinishParams`]), and the equivalence tests (`tests/`) render the
+//! The CPU pipeline (`hazavana-pipeline`) is the reference: every kernel here is a port of a CPU
+//! stage, both read the same resolved parameters ([`hazavana_pipeline::Plan`],
+//! [`hazavana_pipeline::finish::FinishParams`]), and the equivalence tests (`tests/`) render the
 //! same settings on both and bound the difference in 8-bit sRGB. Stages without a kernel run on the
 //! CPU inside the same render (per-stage hybrid); see `docs/gpu-pipeline.md`.
 //!
-//! Which backends wgpu may load (DX12 only on Windows; `LIGHTCRAFT_GPU_BACKEND`, `WGPU_BACKEND`) and
+//! Which backends wgpu may load (DX12 only on Windows; `HAZAVANA_GPU_BACKEND`, `WGPU_BACKEND`) and
 //! the crash sentinel around device creation: [`backend`] (issue #136).
 //!
-//! Use [`render`]: it returns `None` when the GPU is unavailable, disabled (`LIGHTCRAFT_GPU=0`,
-//! `LIGHTCRAFT_GPU_BACKEND=off` or [`set_enabled`]), the render does not fit the device, or the device reported an error, ran out
+//! Use [`render`]: it returns `None` when the GPU is unavailable, disabled (`HAZAVANA_GPU=0`,
+//! `HAZAVANA_GPU_BACKEND=off` or [`set_enabled`]), the render does not fit the device, or the device reported an error, ran out
 //! of memory or returned an incomplete image — callers then render on the CPU. [`try_render`] is
 //! the same call reporting why *this* render fell back ([`Fallback`]); [`unavailable_reason`] and
 //! [`last_fallback`] (the latest fallback in the process) feed the status displays (`ui.inspect` →
@@ -25,9 +25,9 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use lightcraft_develop::DevelopSettings;
-use lightcraft_pipeline::{RenderRequest, Rendered, SourceInfo, StageCache};
-use lightcraft_raster::Rgb32f;
+use hazavana_develop::DevelopSettings;
+use hazavana_pipeline::{RenderRequest, Rendered, SourceInfo, StageCache};
+use hazavana_raster::Rgb32f;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod backend;
@@ -72,21 +72,21 @@ fn record_fallback(reason: String) {
 }
 
 /// Why renders do not use the GPU, or `None` when they do (or will, once the device is created).
-/// E.g. "disabled by LIGHTCRAFT_GPU=0", "software adapter (llvmpipe …) skipped", "device lost …".
+/// E.g. "disabled by HAZAVANA_GPU=0", "software adapter (llvmpipe …) skipped", "device lost …".
 /// Never blocks.
 pub fn unavailable_reason() -> Option<String> {
     if env_disabled() {
         #[cfg(not(target_arch = "wasm32"))]
         if backend::env_off() {
-            return Some("disabled by LIGHTCRAFT_GPU_BACKEND=off".into());
+            return Some("disabled by HAZAVANA_GPU_BACKEND=off".into());
         }
-        return Some("disabled by LIGHTCRAFT_GPU=0".into());
+        return Some("disabled by HAZAVANA_GPU=0".into());
     }
     if !ENABLED.load(Ordering::Relaxed) {
         return Some("disabled by the GPU rendering preference (app.gpu)".into());
     }
     if shutting_down() {
-        return Some("LightCraft is closing".into());
+        return Some("Hazavana is closing".into());
     }
     if BROKEN.load(Ordering::Relaxed) {
         let r = BROKEN_REASON.lock().unwrap_or_else(|e| e.into_inner()).clone().unwrap_or_else(|| "device error".into());
@@ -194,7 +194,7 @@ pub fn reset_failures() {
     let _ = BROKEN_HERE.try_with(|b| *b.borrow_mut() = None);
 }
 
-/// Allow or forbid GPU rendering at runtime (a preference). `LIGHTCRAFT_GPU=0` forbids it for the
+/// Allow or forbid GPU rendering at runtime (a preference). `HAZAVANA_GPU=0` forbids it for the
 /// whole process regardless.
 pub fn set_enabled(on: bool) {
     ENABLED.store(on, Ordering::Relaxed);
@@ -246,16 +246,16 @@ pub fn wait_idle(timeout: std::time::Duration) -> bool {
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn switched_off() -> Option<String> {
     if env_disabled() {
-        return Some(if backend::env_off() { "disabled by LIGHTCRAFT_GPU_BACKEND=off" } else { "disabled by LIGHTCRAFT_GPU=0" }.into());
+        return Some(if backend::env_off() { "disabled by HAZAVANA_GPU_BACKEND=off" } else { "disabled by HAZAVANA_GPU=0" }.into());
     }
     (!ENABLED.load(Ordering::Relaxed)).then(|| "disabled by the GPU rendering preference (app.gpu)".into())
 }
 
-/// `LIGHTCRAFT_GPU=0` (or `LIGHTCRAFT_GPU_BACKEND=off`): no GPU for the whole process.
+/// `HAZAVANA_GPU=0` (or `HAZAVANA_GPU_BACKEND=off`): no GPU for the whole process.
 fn env_disabled() -> bool {
     static OFF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *OFF.get_or_init(|| {
-        let off = std::env::var("LIGHTCRAFT_GPU").is_ok_and(|v| matches!(v.trim(), "0" | "off" | "false" | "no"));
+        let off = std::env::var("HAZAVANA_GPU").is_ok_and(|v| matches!(v.trim(), "0" | "off" | "false" | "no"));
         #[cfg(not(target_arch = "wasm32"))]
         let off = off || backend::env_off();
         off
@@ -277,7 +277,7 @@ pub(crate) fn device() -> Option<&'static ctx::Gpu> {
     // creating the device is a long call into the driver: not once the process is ending
     let _work = exit::enter()?;
     GPU.get_or_init(|| {
-        let Some(backends) = backend::compute_backends() else { return Err("disabled by LIGHTCRAFT_GPU_BACKEND=off".into()) };
+        let Some(backends) = backend::compute_backends() else { return Err("disabled by HAZAVANA_GPU_BACKEND=off".into()) };
         let r = backend::with_init_marker(backends, || {
             std::panic::catch_unwind(|| ctx::Gpu::new(backends)).unwrap_or_else(|_| Err("device creation panicked".into()))
         });
@@ -443,8 +443,8 @@ pub fn render(src: &Arc<Rgb32f>, info: &SourceInfo, s: &DevelopSettings, req: &R
 /// the CPU): the kernel writes 8-bit output, so high-bit-depth exports and soft proofs render on
 /// the CPU, and so does Visualize HDR, which needs the float HDR render. [`try_render`] follows it,
 /// and the loupe sizes its slider-drag drafts by it (issue #330), so the two can't drift apart.
-pub fn handles(depth: lightcraft_pipeline::OutputDepth, proofed: bool, overlay: lightcraft_pipeline::Overlay) -> bool {
-    depth == lightcraft_pipeline::OutputDepth::U8 && !proofed && overlay != lightcraft_pipeline::Overlay::HdrRange
+pub fn handles(depth: hazavana_pipeline::OutputDepth, proofed: bool, overlay: hazavana_pipeline::Overlay) -> bool {
+    depth == hazavana_pipeline::OutputDepth::U8 && !proofed && overlay != hazavana_pipeline::Overlay::HdrRange
 }
 
 /// [`render`], reporting why this render made no GPU image: [`Fallback::NotTried`] when the GPU
@@ -466,7 +466,7 @@ pub fn try_render(
         if !enabled() || !handles(req.depth, req.proof.is_some(), req.overlay) {
             return Err(Fallback::NotTried);
         }
-        let s = &*lightcraft_pipeline::settings_for(s, req);
+        let s = &*hazavana_pipeline::settings_for(s, req);
         // in flight until this returns; not tried once the process is ending (issue #620)
         let _work = exit::enter().ok_or(Fallback::NotTried)?;
         let gpu = device().ok_or(Fallback::NotTried)?;
@@ -540,7 +540,7 @@ pub fn try_render(
 
 #[cfg(test)]
 mod tests {
-    use lightcraft_pipeline::{OutputDepth, Overlay};
+    use hazavana_pipeline::{OutputDepth, Overlay};
 
     // Given a request the 8-bit kernel can't draw (high bit depth, a soft proof, Visualize HDR),
     // the GPU doesn't take it; the loupe and diagnostic overlays it can draw stay on the GPU

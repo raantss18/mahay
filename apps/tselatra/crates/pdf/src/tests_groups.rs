@@ -99,7 +99,7 @@ fn soft_mask_applies_to_the_masked_group_result() {
 }
 
 /// The ink bounding box `(x0, y0, x1, y1)` of a render (pixels with alpha > 0.5).
-fn ink_box(img: &effectcraft_raster::Image) -> (i64, i64, i64, i64) {
+fn ink_box(img: &tselatra_raster::Image) -> (i64, i64, i64, i64) {
     let (mut x0, mut y0, mut x1, mut y1) = (i64::MAX, i64::MAX, i64::MIN, i64::MIN);
     for y in 0..img.height as i64 {
         for x in 0..img.width as i64 {
@@ -114,7 +114,7 @@ fn ink_box(img: &effectcraft_raster::Image) -> (i64, i64, i64, i64) {
 #[test]
 fn vertical_metrics_w2_and_dw2() {
     use skrifa::MetadataProvider;
-    let inter = effectcraft_text::fonts::INTER_REGULAR.to_vec();
+    let inter = tselatra_text::fonts::INTER_REGULAR.to_vec();
     let font = skrifa::FontRef::new(&inter).unwrap();
     let h = font.charmap().map('H').unwrap().to_u32();
     let doc = |desc_extra: &str| {

@@ -10,18 +10,18 @@ use super::tests_appearance::{frame_raw, run};
 use super::*;
 
 /// What draws a set of size fields.
-type Draw = fn(&mut VectorcraftApp, &mut Ui);
+type Draw = fn(&mut TsipikaApp, &mut Ui);
 
 /// A selected 100 × 50 pt rectangle.
-fn rect_app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+fn rect_app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 400, "height": 400}));
     let id = run(&mut app, "shape.rectangle", json!({"x": 10, "y": 10, "width": 100, "height": 50}))["id"].clone();
     run(&mut app, "select.set", json!({ "ids": [id] }));
     app
 }
 
-fn size(app: &VectorcraftApp) -> (f64, f64) {
+fn size(app: &TsipikaApp) -> (f64, f64) {
     let st = app.session.active().unwrap();
     let b = st.doc.bounds_of(&st.selection.objects, false).unwrap();
     (b.width().round(), b.height().round())
@@ -38,16 +38,16 @@ enum End {
 
 /// Type `value` into the field of what `draw` shows that shows `field` (the first one drawn), and
 /// end its editing with `end`. Returns the context the frames ran in.
-fn set_field(app: &mut VectorcraftApp, draw: Draw, field: &str, value: &str, end: End) -> egui::Context {
+fn set_field(app: &mut TsipikaApp, draw: Draw, field: &str, value: &str, end: End) -> egui::Context {
     set_nth_field(app, draw, (field, 0), value, end)
 }
 
 /// [`set_field`] for the field drawn `nth` (from 0) among those that show `field`.
-fn set_nth_field(app: &mut VectorcraftApp, draw: Draw, (field, nth): (&str, usize), value: &str, end: End) -> egui::Context {
+fn set_nth_field(app: &mut TsipikaApp, draw: Draw, (field, nth): (&str, usize), value: &str, end: End) -> egui::Context {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let mut time = 0.0;
-    let mut frame = |app: &mut VectorcraftApp, events: Vec<Event>| {
+    let mut frame = |app: &mut TsipikaApp, events: Vec<Event>| {
         time += 1.0;
         frame_raw(&ctx, app, egui::RawInput { events, time: Some(time), ..Default::default() }, draw)
     };
@@ -83,17 +83,17 @@ fn set_nth_field(app: &mut VectorcraftApp, draw: Draw, (field, nth): (&str, usiz
 }
 
 /// Type `value` into the W field (the one showing "100 pt") of what `draw` shows, and press Enter.
-fn set_width(app: &mut VectorcraftApp, draw: Draw, value: &str) {
+fn set_width(app: &mut TsipikaApp, draw: Draw, value: &str) {
     set_field(app, draw, "100 pt", value, End::Enter(Modifiers::NONE));
 }
 
 /// The paths of the document, bottom to top: their size and angle (rounded), and whether each is
 /// selected.
-fn paths(app: &VectorcraftApp) -> Vec<((f64, f64), f64, bool)> {
+fn paths(app: &TsipikaApp) -> Vec<((f64, f64), f64, bool)> {
     let st = app.session.active().unwrap();
     let mut out = vec![];
     st.doc.walk(|n| {
-        if matches!(n.kind, vectorcraft_doc::NodeKind::Path { .. }) {
+        if matches!(n.kind, tsipika_doc::NodeKind::Path { .. }) {
             let b = st.doc.oriented_bounds(&[n.id], false).unwrap();
             out.push(((b.rect.width().round(), b.rect.height().round()), b.angle.round(), st.selection.objects.contains(&n.id)));
         }
@@ -205,7 +205,7 @@ fn ctrl_cmd_enter_in_a_position_field_keeps_editing() {
 #[test]
 fn ctrl_cmd_enter_scales_the_artboard_proportionally() {
     let board = |end| {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         run(&mut app, "file.new", json!({"width": 200, "height": 150}));
         app.run("tool.select", json!({"tool": "artboard"})).unwrap();
         set_field(&mut app, transform::show, "200 pt", "400", end);
@@ -244,10 +244,10 @@ fn a_percentage_in_a_size_field_scales_the_size_it_shows() {
 /// creates no document.
 #[test]
 fn ctrl_cmd_enter_in_a_dialog_field_keeps_editing() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     app.run("file.newDialog", json!({})).unwrap();
     let d = app.ui.dialog.as_ref().unwrap();
-    let unit = d.fields.get("units").and_then(|u| u.as_str()).and_then(vectorcraft_doc::Unit::named).unwrap_or_default();
+    let unit = d.fields.get("units").and_then(|u| u.as_str()).and_then(tsipika_doc::Unit::named).unwrap_or_default();
     let shown = unit.format(d.fields["width"].as_f64().unwrap());
     let dialogs: Draw = |app, ui| crate::dialogs::show(app, ui.ctx());
     let ctx = set_field(&mut app, dialogs, &shown, "300", End::Enter(Modifiers::COMMAND));

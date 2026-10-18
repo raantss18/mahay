@@ -7,7 +7,7 @@
 //! (tilted towards or away from the camera) is blurred progressively: the buffer is blurred at a
 //! few kernel sizes and every pixel blends the two that bracket its own circle of confusion.
 
-use effectcraft_raster::Image;
+use tselatra_raster::Image;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -178,7 +178,7 @@ pub fn boost_highlights(img: &mut Image, h: &Highlight) {
         }
         let a = p[3];
         let (r, g, b) = (p[0] / a, p[1] / a, p[2] / a);
-        let l = effectcraft_color::luminance(r, g, b);
+        let l = tselatra_color::luminance(r, g, b);
         if l < thr || (thr >= 1.0 && l < 1.0) {
             return;
         }
@@ -237,7 +237,7 @@ pub fn bokeh_blur(img: &Image, iris: &Iris, r: f64) -> Image {
         let a = iris.aspect.clamp(0.01, 100.0).sqrt();
         let rx = (r * a).round().max(0.0) as usize;
         let ry = (r / a).round().max(0.0) as usize;
-        return effectcraft_raster::box_blur(img, rx, ry, 1, false);
+        return tselatra_raster::box_blur(img, rx, ry, 1, false);
     }
     // The iris as row spans (prefix-sum gather: cost ∝ kernel height, not area).
     match kernel_spans(iris, r) {

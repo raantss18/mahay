@@ -5,8 +5,8 @@ use serde_json::{Value, json};
 use crate::shapebuilder::{arrangement, current};
 use crate::tools::{PointerEvent, PointerKind};
 use crate::{EngineError, Session, ToolId, params};
-use figcraft_doc::{NodeId, NodeKind};
-use figcraft_geom::Shape;
+use endrika_doc::{NodeId, NodeKind};
+use endrika_geom::Shape;
 
 fn ex(s: &mut Session, c: &str, p: Value) -> Value {
     s.execute(c, &p).unwrap_or_else(|e| panic!("{c}: {e}"))
@@ -31,7 +31,7 @@ fn squares(s: &mut Session) -> (NodeId, NodeId) {
 /// A layer's filled area in page units.
 fn area(s: &Session, id: NodeId) -> f64 {
     let doc = s.doc().unwrap();
-    let (mut p, _) = figcraft_render::node_outline(doc, doc.node(id).unwrap()).unwrap();
+    let (mut p, _) = endrika_render::node_outline(doc, doc.node(id).unwrap()).unwrap();
     p.apply_affine(doc.world_transform(id));
     p.area().abs()
 }
@@ -247,7 +247,7 @@ fn groups_rotated_and_ineligible_layers() {
     let after = area(&s, a) + area(&s, b) + 2.0 * area(&s, m);
     assert!((after - total).abs() < 0.05, "areas are conserved: {after} vs {total}");
     let t_after = s.doc().unwrap().node(b).unwrap().transform;
-    let rot = |t: figcraft_geom::Affine| t.as_coeffs()[1].atan2(t.as_coeffs()[0]);
+    let rot = |t: endrika_geom::Affine| t.as_coeffs()[1].atan2(t.as_coeffs()[0]);
     assert!((rot(t_before) - rot(t_after)).abs() < 1e-9);
 }
 

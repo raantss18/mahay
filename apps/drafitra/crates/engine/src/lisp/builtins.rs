@@ -1467,7 +1467,7 @@ pub fn install(env: &mut Env) {
 
 /// Tests only: a built-in that panics, to prove the guards around the machine.
 #[cfg(test)]
-static TEST_PANIC: Builtin = Builtin { name: "CADCRAFT-TEST-PANIC", kind: BuiltinKind::Pure(test_panic) };
+static TEST_PANIC: Builtin = Builtin { name: "DRAFITRA-TEST-PANIC", kind: BuiltinKind::Pure(test_panic) };
 #[cfg(test)]
 #[allow(clippy::panic)]
 fn test_panic(_a: &[Value]) -> R {

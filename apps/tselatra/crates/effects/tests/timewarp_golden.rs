@@ -1,14 +1,14 @@
 //! Golden hashes of the CPU Timewarp (M13.29), with and without a Matte Layer.
 //!
 //! Timewarp's frame building is shared with the GPU compositor as a plan
-//! (`effectcraft_effects::timewarp_plan`); this pins the CPU output of every method / Show /
+//! (`tselatra_effects::timewarp_plan`); this pins the CPU output of every method / Show /
 //! Matte Channel combination, with motion blur and a Warp Layer, so refactoring the plan keeps
 //! it bit-identical. Same hashing and re-pinning (`SIM_GOLDEN_PRINT=1`) as `sim_golden.rs`;
 //! pinned for aarch64 macOS.
 
-use effectcraft_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params, apply, default_value, find};
-use effectcraft_keyframe::Value;
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params, apply, default_value, find};
+use tselatra_keyframe::Value;
+use tselatra_raster::Image;
 
 const W: u32 = 48;
 const H: u32 = 32;

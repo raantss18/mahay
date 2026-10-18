@@ -619,7 +619,7 @@ fn font_files_are_told_by_their_extension() {
     }
 }
 
-/// VectorCraft's own Fonts folder joins the scan once set, even before it exists; only the first
+/// Tsipika's own Fonts folder joins the scan once set, even before it exists; only the first
 /// folder set counts.
 #[test]
 fn the_app_font_folder_is_read_by_the_scan() {
@@ -696,7 +696,7 @@ fn thai_falls_back_to_a_font_made_for_thai() {
         eprintln!("skipped: no Thai font installed");
         return;
     };
-    let st = vectorcraft_doc::CharStyle { size: 20.0, ..Default::default() };
+    let st = tsipika_doc::CharStyle { size: 20.0, ..Default::default() };
     let l = layout(db, &TextObject::point(kurbo::Point::ZERO, "Thai ภาษาไทย", st));
     let family = |g: &PositionedGlyph| db.face_by_id(g.font_id).map(|f| f.family.clone()).unwrap_or_default();
     let (latin, thai_glyphs) = l.glyphs.split_at(5);
@@ -763,7 +763,7 @@ fn a_missing_fonts_name_is_looked_up_once_until_fonts_are_added() {
     let before = alias_lists();
     assert_eq!(db.canonical("Gone Sans", "Bold"), ("Gone Sans".to_string(), "Bold".to_string()));
     let one_lookup = alias_lists() - before;
-    let style = vectorcraft_doc::CharStyle { font_family: "Gone Sans".into(), ..Default::default() };
+    let style = tsipika_doc::CharStyle { font_family: "Gone Sans".into(), ..Default::default() };
     let t = TextObject::point(kurbo::Point::ZERO, &vec!["Set in a font that is not installed."; 20].join("\n"), style);
     let before = alias_lists();
     for _ in 0..2 {
@@ -816,12 +816,12 @@ fn a_name_asked_for_before_its_font_is_installed_finds_it_after_a_rescan() {
 
 /// Times the layout of a story of 1,000 paragraphs set in a font that is not installed, with 0, 100
 /// and 400 fonts added to the bundled ones. Run with
-/// `cargo test --release -p vectorcraft-text --lib missing_font_story_layout_timing -- --ignored --nocapture`.
+/// `cargo test --release -p tsipika-text --lib missing_font_story_layout_timing -- --ignored --nocapture`.
 #[test]
 #[ignore = "manual timing probe; wall-clock performance depends on machine load"]
 fn missing_font_story_layout_timing() {
     let text = vec!["Type set in a font that is not installed on this computer."; 1000].join("\n");
-    let style = vectorcraft_doc::CharStyle { font_family: "No Such Font".into(), ..Default::default() };
+    let style = tsipika_doc::CharStyle { font_family: "No Such Font".into(), ..Default::default() };
     let t = TextObject::point(kurbo::Point::ZERO, &text, style);
     for extra in [0, 100, 400] {
         let db = FontDb::with_font_dirs(vec![]);

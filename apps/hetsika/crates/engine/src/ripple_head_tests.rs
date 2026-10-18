@@ -2,8 +2,8 @@
 //! through the playhead and ripples the sequence closed.
 
 use crate::Session;
-use filmcraft_project::ClipId;
-use filmcraft_time::Tick;
+use hetsika_project::ClipId;
+use hetsika_time::Tick;
 use serde_json::json;
 
 fn f(s: &Session, n: i64) -> Tick {

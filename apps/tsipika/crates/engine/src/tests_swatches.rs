@@ -3,7 +3,7 @@
 //! groups and colour groups made from artwork.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
+use tsipika_color::{Color, Paint};
 
 use super::*;
 
@@ -21,7 +21,7 @@ fn rect(s: &mut Session) -> NodeId {
     NodeId(run(s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10}))["id"].as_u64().unwrap())
 }
 
-fn doc(s: &Session) -> &vectorcraft_doc::Document {
+fn doc(s: &Session) -> &tsipika_doc::Document {
     &s.doc().unwrap().doc
 }
 
@@ -58,7 +58,7 @@ fn grouped_spot_swatches_print_on_their_own_plate() {
     let a = rect(&mut s);
     run(&mut s, "paint.setFill", json!({"ids": [a.0], "swatch": "Signal Orange"}));
     let bytes =
-        vectorcraft_pdf::export(doc(&s), &vectorcraft_pdf::PdfOptions { created: Some(0), ..vectorcraft_pdf::PdfOptions::uncompressed() }).unwrap();
+        tsipika_pdf::export(doc(&s), &tsipika_pdf::PdfOptions { created: Some(0), ..tsipika_pdf::PdfOptions::uncompressed() }).unwrap();
     let pdf = String::from_utf8_lossy(&bytes);
     assert!(pdf.contains("/Separation") && pdf.contains("Signal#20Orange"), "a grouped spot swatch is a Separation");
     let info = run(&mut s, "document.info", json!({}));
@@ -149,7 +149,7 @@ fn editing_a_global_swatch_recolours_linked_art_in_one_step() {
     assert_eq!(fill_of(&s, a), linked("#ff0000", "Brand"));
     assert_eq!(fill_of(&s, b), Paint::solid(Color::from_hex("#2a6fb0").unwrap()), "unlinked art keeps its colour");
     let text_fill = |s: &Session| match &doc(s).node(t).unwrap().kind {
-        vectorcraft_doc::NodeKind::Text(tx) => tx.runs[0].style.fill.clone(),
+        tsipika_doc::NodeKind::Text(tx) => tx.runs[0].style.fill.clone(),
         _ => panic!("type"),
     };
     assert_eq!(text_fill(&s), linked("#ff0000", "Brand"), "text runs follow the swatch");

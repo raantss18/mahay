@@ -1,8 +1,8 @@
 //! Paint order of a layer's effects: drop shadows under everything, then fills, inner shadows,
 //! children and strokes, with layer blur over the composite. Strokes draw over inner shadows.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, EffectKind, NodeId, NodeKind, Shadow, StrokeAlign};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, EffectKind, NodeId, NodeKind, Shadow, StrokeAlign};
 
 use super::*;
 
@@ -86,7 +86,7 @@ fn a_frames_children_draw_over_its_inner_shadow() {
 
 #[test]
 fn layer_blur_still_blurs_strokes_and_inner_shadows() {
-    let blur = Effect { kind: EffectKind::LayerBlur(figcraft_doc::Blur::uniform(10.0)), visible: true };
+    let blur = Effect { kind: EffectKind::LayerBlur(endrika_doc::Blur::uniform(10.0)), visible: true };
     let (d, r) = stroked(NodeKind::Rectangle, vec![red_inner_shadow(), blur]);
     let pix = render(&d, r);
     // The blur reaches past the box and mixes the stroke into its neighbours.

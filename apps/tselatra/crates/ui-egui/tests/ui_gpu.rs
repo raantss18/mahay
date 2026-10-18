@@ -1,12 +1,12 @@
 //! The viewer on the GPU compositor (egui_kittest with wgpu): frames composited on the GPU match
 //! the CPU viewer. Skips without a GPU adapter (CI). Set `EC_SNAPSHOT_DIR` to keep PNGs.
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn settle(h: &mut Harness<'_, EffectcraftApp>) {
+fn settle(h: &mut Harness<'_, TselatraApp>) {
     for _ in 0..600 {
         h.step();
         if h.state().frames.inflight() == 0 && h.state().frames.last_ms.lock().map(|v| *v > 0.0).unwrap_or(false) {
@@ -41,11 +41,11 @@ fn same_adapter(name: String) -> eframe::egui_wgpu::WgpuSetup {
 
 #[test]
 fn viewer_draws_gpu_frames_that_match_the_cpu() {
-    let Some(probe) = effectcraft_gpu::Gpu::headless() else {
+    let Some(probe) = tselatra_gpu::Gpu::headless() else {
         eprintln!("no GPU adapter: skipping");
         return;
     };
-    let adapter = effectcraft_engine::render::Accelerator::name(&probe);
+    let adapter = tselatra_engine::render::Accelerator::name(&probe);
     eprintln!("headless compositor adapter: {adapter}");
     // egui-wgpu creates its GL device with WebGL2's limits, which the compositor declines.
     let gl = adapter.ends_with("(Gl)");
@@ -57,7 +57,7 @@ fn viewer_draws_gpu_frames_that_match_the_cpu() {
         .with_size(egui::vec2(1400.0, 900.0))
         .with_pixels_per_point(1.0)
         .wgpu_setup(same_adapter(adapter))
-        .build_eframe(|_| EffectcraftApp::new(s));
+        .build_eframe(|_| TselatraApp::new(s));
     settle(&mut h);
     if gl && h.state().gpu_adapter().is_none() {
         eprintln!("egui-wgpu's GL device has WebGL2 limits: the viewer stays on the CPU, skipping");
@@ -97,13 +97,13 @@ fn a_lost_device_draws_nothing_autosaves_and_closes() {
     let mut s = Session { autosave_folder_override: Some(dir.clone()), ..Default::default() };
     s.execute("comp.new", json!({"name": "Unsaved", "width": 64, "height": 64, "duration": 1})).unwrap();
     assert!(s.is_dirty());
-    let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(|_| TselatraApp::new(s));
     let told = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
     let log = told.clone();
     h.state_mut().hooks.device_lost = Some(Box::new(move |saved| log.borrow_mut().push(saved)));
     h.run_steps(3);
     assert!(!h.output().shapes.is_empty(), "the UI draws before the loss");
-    let bridge = effectcraft_ui_egui::gpu_failure::GpuFailureBridge::new(&h.ctx);
+    let bridge = tselatra_ui_egui::gpu_failure::GpuFailureBridge::new(&h.ctx);
     h.state_mut().set_gpu_failure_bridge(bridge.clone());
     bridge.report("GPU device lost (Unknown): Device is lost", true);
     h.step();

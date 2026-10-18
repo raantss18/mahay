@@ -1,10 +1,10 @@
 //! Time remapping and separated Position dimensions.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Comp, ItemKind, LayerSource, Node, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Comp, ItemKind, LayerSource, Node, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::render_frame;
 

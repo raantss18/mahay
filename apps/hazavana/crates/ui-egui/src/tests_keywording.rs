@@ -6,7 +6,7 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
@@ -14,7 +14,7 @@ const SETTLE: Duration = Duration::from_secs(120);
 /// The Library grid with the Keywords panel open and two photos selected: the first with beach and
 /// Weddings, the second with beach.
 fn two_selected() -> (Headless, Vec<u64>) {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1400.0, 1000.0], 1.0);
     let ids: Vec<u64> = h.app.session.visible_cloned().iter().take(2).map(|p| p.0).collect();
     for (method, params) in [
@@ -41,7 +41,7 @@ fn has(h: &Headless, id: &str) -> bool {
 }
 
 fn keywords_of(h: &Headless, id: u64) -> Vec<String> {
-    h.app.session.catalog.photo(lightcraft_catalog::PhotoId(id)).unwrap().meta.keywords.clone()
+    h.app.session.catalog.photo(hazavana_catalog::PhotoId(id)).unwrap().meta.keywords.clone()
 }
 
 /// The chips are the keywords of every selected photo, not only the active one's; a keyword only
@@ -769,7 +769,7 @@ fn an_offer_out_of_sight_is_not_taken() {
 #[test]
 fn offers_never_cover_the_box() {
     for height in [1000.0, 420.0, 300.0, 230.0, 180.0] {
-        let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+        let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
         let mut h = Headless::new(app, [1400.0, height], 1.0);
         let ids: Vec<u64> = h.app.session.visible_cloned().iter().take(12).map(|p| p.0).collect();
         ask(&mut h, "ui.set", json!({"view": "photoGrid", "right": "keywords"}));

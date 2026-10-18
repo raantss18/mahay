@@ -17,13 +17,13 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_effects::camera_tracker::{self as ct, AVERAGE_ERROR, METHOD_USED, SOLVE, SOLVE_KEY, TRACKS, TRACKS_KEY};
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::{AutoOrient, GroupKind, ItemId, ItemKind, Layer, LayerId, Project, PropGroup, Uid};
-use effectcraft_render::{EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
-use effectcraft_time::Tick;
-use effectcraft_track::camtrack::linalg::{self, Similarity, V3};
-use effectcraft_track::camtrack::{AnalyzeOpts, CameraSolve, CameraTracks, SolveSettings, Target, TrackAnalyzer};
+use tselatra_effects::camera_tracker::{self as ct, AVERAGE_ERROR, METHOD_USED, SOLVE, SOLVE_KEY, TRACKS, TRACKS_KEY};
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::{AutoOrient, GroupKind, ItemId, ItemKind, Layer, LayerId, Project, PropGroup, Uid};
+use tselatra_render::{EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
+use tselatra_time::Tick;
+use tselatra_track::camtrack::linalg::{self, Similarity, V3};
+use tselatra_track::camtrack::{AnalyzeOpts, CameraSolve, CameraTracks, SolveSettings, Target, TrackAnalyzer};
 use serde::Serialize;
 
 use crate::offload::JobKind;
@@ -124,13 +124,13 @@ fn str_of(g: &PropGroup, m: &str) -> String {
 
 /// What a tracker's tracks are made from: the layer's frames and Detailed Analysis.
 fn tracks_key(project: &Project, cid: ItemId, l: &Layer, g: &PropGroup) -> String {
-    let detailed = effectcraft_effects::warp_stab::param(&static_params(g), "advanced/detailedAnalysis").is_some_and(Value::as_bool);
+    let detailed = tselatra_effects::warp_stab::param(&static_params(g), "advanced/detailedAnalysis").is_some_and(Value::as_bool);
     format!("{}{}", signature(project, cid, l), if detailed { "+detailed" } else { "" })
 }
 
 /// Parameters of an instance from static values (the tracker's settings are not animated).
-pub fn static_params(g: &PropGroup) -> effectcraft_effects::Params {
-    effectcraft_effects::flatten_params(g, &mut |p| p.value.clone())
+pub fn static_params(g: &PropGroup) -> tselatra_effects::Params {
+    tselatra_effects::flatten_params(g, &mut |p| p.value.clone())
 }
 
 fn clear(g: &mut PropGroup, all: bool) {
@@ -185,13 +185,13 @@ pub(crate) fn invalidate(before: &Project, after: &mut Project) -> Vec<(ItemId, 
     todo
 }
 
-fn input_frame(r: &Renderer, ctx: &EvalCtx, layer: &Layer, effect_index: usize) -> Option<(Arc<effectcraft_raster::Image>, [f64; 2])> {
+fn input_frame(r: &Renderer, ctx: &EvalCtx, layer: &Layer, effect_index: usize) -> Option<(Arc<tselatra_raster::Image>, [f64; 2])> {
     let buf = r.layer_input(ctx, layer, effect_index)?;
     if (buf.scale - 1.0).abs() > 1e-9 && buf.scale > 0.0 {
         let w = (buf.img.width as f64 / buf.scale).round().max(1.0) as u32;
         let h = (buf.img.height as f64 / buf.scale).round().max(1.0) as u32;
         let off = [buf.offset[0] / buf.scale, buf.offset[1] / buf.scale];
-        return Some((Arc::new(effectcraft_raster::resample(&buf.img, w, h)), off));
+        return Some((Arc::new(tselatra_raster::resample(&buf.img, w, h)), off));
     }
     Some((Arc::new(buf.img.clone()), buf.offset))
 }
@@ -240,7 +240,7 @@ async fn run_work(w: CamWork, shared: &CameraShared) {
                 let Some(cur) = next.take() else { return fail(&format!("no frame at {:.3} s", w.times[k].seconds())) };
                 let ((), nf) = crate::offload::join_fetch(
                     accel.is_some(),
-                    || an.push(&effectcraft_track::Frame { img: &cur.0, offset: cur.1 }),
+                    || an.push(&tselatra_track::Frame { img: &cur.0, offset: cur.1 }),
                     || async { if k + 1 < w.times.len() { frame_at(w.times[k + 1]).await } else { None } },
                 )
                 .await;
@@ -255,7 +255,7 @@ async fn run_work(w: CamWork, shared: &CameraShared) {
         }
     };
     lock(&shared.state).step = 2;
-    let solve = effectcraft_track::camtrack::solve(&tracks, &w.settings, Some(&shared.cancel)).map_err(|e| e.0);
+    let solve = tselatra_track::camtrack::solve(&tracks, &w.settings, Some(&shared.cancel)).map_err(|e| e.0);
     if shared.cancel.load(Ordering::Relaxed) {
         return cancelled();
     }
@@ -320,7 +320,7 @@ impl Session {
         if times.len() < 2 {
             return Err("the layer must be at least two frames long".into());
         }
-        let size = effectcraft_render::effect_bounds(&self.project, c, l).0;
+        let size = tselatra_render::effect_bounds(&self.project, c, l).0;
         let params = static_params(g);
         let key = tracks_key(&self.project, comp, l, g);
         let settings = ct::settings(&params);
@@ -365,7 +365,7 @@ impl Session {
             Some(
                 std::thread::Builder::new()
                     .name("camera-track".into())
-                    .spawn(move || effectcraft_render::passes::block_on(run_work(work, &sh)))
+                    .spawn(move || tselatra_render::passes::block_on(run_work(work, &sh)))
                     .map_err(|e| e.to_string())?,
             )
         };
@@ -619,7 +619,7 @@ pub(crate) fn write_camera(l: &mut Layer, pl: &Placed) {
     }
     // A one-node camera has no Point of Interest.
     if let Some(tr) = l.props.sub_mut("transform") {
-        tr.children.retain(|c| !matches!(c, effectcraft_project::Node::Prop(p) if p.match_id == "poi"));
+        tr.children.retain(|c| !matches!(c, tselatra_project::Node::Prop(p) if p.match_id == "poi"));
     }
     for rot in ["transform/rotationX", "transform/rotationY", "transform/rotation"] {
         if let Some(pr) = l.props.prop_mut(rot) {

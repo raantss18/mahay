@@ -3,8 +3,8 @@
 //! ISO 16684-1). Where both give a field, the XMP packet's value is taken; a packet that can't be
 //! read leaves the information dictionary's values.
 
-use craft_pdf::syntax::Pdf;
-use craft_pdf::syntax::object::{DateTime, Dict, Stream};
+use mahay_pdf::syntax::Pdf;
+use mahay_pdf::syntax::object::{DateTime, Dict, Stream};
 use roxmltree::Node;
 
 use crate::import_scan::text_string;
@@ -282,7 +282,7 @@ fn xmp_date(s: &str) -> Option<i64> {
 }
 
 /// `[year, month, day, hour, minute, second]` at a UTC offset of `offset` minutes → Unix seconds
-/// (days-from-civil, proleptic Gregorian: the inverse of [`vectorcraft_doc::metadata::civil`]).
+/// (days-from-civil, proleptic Gregorian: the inverse of [`tsipika_doc::metadata::civil`]).
 fn unix([year, month, day, hour, minute, second]: [i64; 6], offset: i64) -> i64 {
     let y = if month <= 2 { year - 1 } else { year };
     let era = y.div_euclid(400);

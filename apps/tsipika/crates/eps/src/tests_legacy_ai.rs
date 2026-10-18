@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::{Affine, AnchorKind, FillRule, PathData, Rect, shapes};
+use tsipika_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::{Affine, AnchorKind, FillRule, PathData, Rect, shapes};
 
 use super::*;
 
@@ -93,17 +93,17 @@ fn write_with(doc: &Document, o: LegacyAiOptions) -> LegacyAiOutput {
 /// in their first stop's color.
 fn as_printed(doc: &Document, o: &LegacyAiOptions) -> Document {
     // A run's glyphs, laid out, as one path with the run's fill (the renderer draws no type).
-    fn outlined(t: &vectorcraft_doc::TextObject) -> Node {
-        let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    fn outlined(t: &tsipika_doc::TextObject) -> Node {
+        let layout = tsipika_text::layout(tsipika_text::FontDb::global(), t);
         let runs = t.runs.iter().enumerate().map(|(i, run)| {
             let mut bp = kurbo::BezPath::new();
             for g in layout.glyphs.iter().filter(|g| g.run == i) {
                 bp.extend(g.outline.iter());
             }
             let path = PathData::from_bezpath(&bp).transformed(t.xf);
-            Arc::new(Node::path(vectorcraft_doc::NodeId(0), path, Appearance::basic(run.style.fill.clone(), Paint::None, 0.0)))
+            Arc::new(Node::path(tsipika_doc::NodeId(0), path, Appearance::basic(run.style.fill.clone(), Paint::None, 0.0)))
         });
-        Node::group(vectorcraft_doc::NodeId(0), runs.collect())
+        Node::group(tsipika_doc::NodeId(0), runs.collect())
     }
     fn plain(nodes: &mut Vec<Arc<Node>>, o: &LegacyAiOptions) {
         nodes.retain(|n| match &n.kind {
@@ -138,7 +138,7 @@ fn as_printed(doc: &Document, o: &LegacyAiOptions) -> Document {
     d
 }
 
-/// The legacy `.ai` `bytes` run as a PostScript program (VectorCraft's PostScript reader, with the
+/// The legacy `.ai` `bytes` run as a PostScript program (Tsipika's PostScript reader, with the
 /// file's prolog) draws as `doc`, written with options `o` (its first artboard the file's), prints
 /// ([`as_printed`]): the same art in the same places, in the same colours.
 fn prints_as(bytes: &[u8], doc: &Document, o: &LegacyAiOptions) {
@@ -153,15 +153,15 @@ fn prints_as(bytes: &[u8], doc: &Document, o: &LegacyAiOptions) {
     let board = doc.artboards[0].rect;
     let there = Rect::new(board.x0 + llx, board.y0 + top - ury, board.x0 + urx, board.y0 + top - lly);
     let scale = 300.0 / (urx - llx).max(ury - lly).max(1.0);
-    let want = vectorcraft_render::Renderer::new().render_region(&as_printed(doc, o), there, scale, true);
+    let want = tsipika_render::Renderer::new().render_region(&as_printed(doc, o), there, scale, true);
     let drew = match crate::import_with(bytes, false) {
         Ok(page) => {
             assert!(!page.preview, "read as its program");
-            vectorcraft_render::Renderer::new().render_region(&page.document, Rect::new(0.0, 0.0, urx - llx, ury - lly), scale, true)
+            tsipika_render::Renderer::new().render_region(&page.document, Rect::new(0.0, 0.0, urx - llx, ury - lly), scale, true)
         }
         // A page that marks nothing (type alone): blank.
         Err(e) if e.contains("draws nothing") => {
-            vectorcraft_render::Renderer::new().render_region(&Document::new(1.0, 1.0), Rect::new(0.0, 0.0, urx - llx, ury - lly), scale, true)
+            tsipika_render::Renderer::new().render_region(&Document::new(1.0, 1.0), Rect::new(0.0, 0.0, urx - llx, ury - lly), scale, true)
         }
         Err(e) => panic!("the file doesn't run as PostScript: {e}"),
     };
@@ -390,11 +390,11 @@ fn a_gradient_fill_and_its_stroke_are_one_object() {
         stops: vec![GradientStop::new(0.0, Color::rgb(1.0, 1.0, 1.0)), GradientStop::new(1.0, Color::cmyk(0.0, 0.0, 0.0, 1.0))],
     };
     let mut paint = GradientPaint::new(g);
-    paint.geom = Some(vectorcraft_color::GradientGeom {
-        start: vectorcraft_geom::Point::new(30.0, 30.0),
-        end: vectorcraft_geom::Point::new(50.0, 30.0),
+    paint.geom = Some(tsipika_color::GradientGeom {
+        start: tsipika_geom::Point::new(30.0, 30.0),
+        end: tsipika_geom::Point::new(50.0, 30.0),
         aspect: 1.0,
-        focal: Some(vectorcraft_geom::Point::new(35.0, 30.0)),
+        focal: Some(tsipika_geom::Point::new(35.0, 30.0)),
     });
     let n = shape(&mut doc, shapes::rectangle(Rect::new(10.0, 10.0, 50.0, 50.0)), Paint::Gradient(Box::new(paint)), red());
     let layer = doc.layers[0].id;
@@ -411,7 +411,7 @@ fn a_gradient_fill_and_its_stroke_are_one_object() {
 
 /// A gradient from white to #1b2a6b, the colors of #2687's circle, placed at `geom` (None: fitted
 /// to the object).
-fn white_to_navy(kind: GradientKind, geom: Option<vectorcraft_color::GradientGeom>) -> Paint {
+fn white_to_navy(kind: GradientKind, geom: Option<tsipika_color::GradientGeom>) -> Paint {
     let navy = Color::rgb(27.0 / 255.0, 42.0 / 255.0, 107.0 / 255.0);
     let g = Gradient { kind, stops: vec![GradientStop::new(0.0, Color::rgb(1.0, 1.0, 1.0)), GradientStop::new(1.0, navy)] };
     Paint::Gradient(Box::new(GradientPaint { geom, ..GradientPaint::new(g) }))
@@ -447,11 +447,11 @@ fn radials() -> Document {
     let clipped = shape(&mut doc, shapes::rectangle(Rect::new(130.0, 210.0, 190.0, 270.0)), radial(), Paint::None);
     let window = Node::new(doc.alloc_id(), NodeKind::Group { children: vec![Arc::new(clip), Arc::new(clipped)], clip: true });
     let stroked = shape(&mut doc, shapes::rectangle(Rect::new(200.0, 220.0, 240.0, 260.0)), Paint::None, radial());
-    let geom = vectorcraft_color::GradientGeom {
-        start: vectorcraft_geom::Point::new(300.0, 240.0),
-        end: vectorcraft_geom::Point::new(320.0, 240.0),
+    let geom = tsipika_color::GradientGeom {
+        start: tsipika_geom::Point::new(300.0, 240.0),
+        end: tsipika_geom::Point::new(320.0, 240.0),
         aspect: 2.0,
-        focal: Some(vectorcraft_geom::Point::new(300.0, 210.0)),
+        focal: Some(tsipika_geom::Point::new(300.0, 210.0)),
     };
     let off_center =
         shape(&mut doc, shapes::rectangle(Rect::new(260.0, 220.0, 340.0, 260.0)), white_to_navy(GradientKind::Radial, Some(geom)), Paint::None);
@@ -464,7 +464,7 @@ fn radials() -> Document {
 /// Every radial gradient instance has its highlight `Bh` (§3.5.5): `0 0 0 0 Bh` when it is at the
 /// center (#2687: without it the reference app drew the circle in its outer color), on fills,
 /// strokes, in groups, compound paths and clipping groups, and an off-center one within the
-/// gradient's circle. Linear instances have none. VectorCraft reads back one linear and at least
+/// gradient's circle. Linear instances have none. Tsipika reads back one linear and at least
 /// seven radial gradients, each with its stops, and the circle, the square and the off-center
 /// square in their place.
 #[test]
@@ -524,7 +524,7 @@ fn radial_gradients_have_their_highlight() {
     let kinds = |k: GradientKind| found.iter().filter(|g| g.gradient.kind == k).count();
     // Seven radial objects (a compound path's members carry its fill too) and the linear square.
     assert!(kinds(GradientKind::Radial) >= 7 && kinds(GradientKind::Linear) == 1, "{found:#?}");
-    let near = |a: vectorcraft_geom::Point, x: f64, y: f64| (a.x - x).abs() < 1e-3 && (a.y - y).abs() < 1e-3;
+    let near = |a: tsipika_geom::Point, x: f64, y: f64| (a.x - x).abs() < 1e-3 && (a.y - y).abs() < 1e-3;
     for g in &found {
         let [white, navy] = g.gradient.stops.as_slice() else { panic!("{g:?}") };
         assert_eq!((white.offset, navy.offset, white.color), (0.0, 1.0, Color::rgb(1.0, 1.0, 1.0)), "{g:?}");
@@ -591,7 +591,7 @@ fn reads_back_with_layers_groups_and_paths() {
 #[test]
 fn spot_colours_are_custom_colours() {
     let mut doc = Document::new(100.0, 100.0);
-    doc.swatches.push(vectorcraft_color::Swatch {
+    doc.swatches.push(tsipika_color::Swatch {
         name: "Spot Test".into(),
         paint: Paint::solid(Color::cmyk(0.0, 0.5, 1.0, 0.0)),
         global: true,
@@ -621,7 +621,7 @@ fn spots_and_gradient(spots: &[&str], gradient: &str) -> Document {
     let layer = doc.layers[0].id;
     for (i, name) in spots.iter().enumerate() {
         let c = i as f32 * 0.5;
-        doc.swatches.push(vectorcraft_color::Swatch {
+        doc.swatches.push(tsipika_color::Swatch {
             name: (*name).into(),
             paint: Paint::solid(Color::cmyk(c, 0.5, 1.0, 0.0)),
             global: true,
@@ -738,7 +738,7 @@ fn losses_are_warned() {
     let mut doc = sample();
     // A sublayer, a hidden object, a named object, type and half opacity.
     let back = doc.layers[0].id;
-    let sub = Node::layer(doc.alloc_id(), "Sub", vectorcraft_doc::LayerColor::Preset(2));
+    let sub = Node::layer(doc.alloc_id(), "Sub", tsipika_doc::LayerColor::Preset(2));
     let sub = doc.insert(Some(back), usize::MAX, sub).unwrap();
     let mut hidden = shape(&mut doc, shapes::rectangle(Rect::new(0.0, 0.0, 5.0, 5.0)), red(), Paint::None);
     hidden.visible = false;
@@ -763,7 +763,7 @@ fn several_fills_and_odd_strokes_become_objects() {
     let mut n = shape(&mut doc, shapes::rectangle(Rect::new(10.0, 10.0, 50.0, 50.0)), red(), Paint::solid(Color::gray(1.0)));
     let mut a = (*n.appearance).clone();
     if let Some(AppearanceItem::Stroke(s)) = a.items.iter_mut().find(|i| !i.is_fill()) {
-        s.align = vectorcraft_doc::StrokeAlign::Inside;
+        s.align = tsipika_doc::StrokeAlign::Inside;
     }
     n.appearance = a.into();
     let layer = doc.layers[0].id;
@@ -819,7 +819,7 @@ fn needs_an_artboard() {
 }
 
 /// Every text object of `doc`'s layers, in paint order.
-fn texts(doc: &Document) -> Vec<(Node, vectorcraft_doc::TextObject)> {
+fn texts(doc: &Document) -> Vec<(Node, tsipika_doc::TextObject)> {
     let mut out = vec![];
     doc.walk(|n| {
         if let NodeKind::Text(t) = &n.kind {
@@ -829,25 +829,25 @@ fn texts(doc: &Document) -> Vec<(Node, vectorcraft_doc::TextObject)> {
     out
 }
 
-fn style(size: f64, fill: Paint) -> vectorcraft_doc::CharStyle {
-    vectorcraft_doc::CharStyle { size, fill, ..vectorcraft_doc::CharStyle::default() }
+fn style(size: f64, fill: Paint) -> tsipika_doc::CharStyle {
+    tsipika_doc::CharStyle { size, fill, ..tsipika_doc::CharStyle::default() }
 }
 
 /// A document of point type (two paragraphs, the second centred, accented letters and a euro
 /// sign), area type in a 100 × 50 frame and type on a path starting a quarter of the way along.
 fn typed() -> Document {
-    use vectorcraft_doc::{Justify, ParaStyle, TextKind, TextObject, TextRun};
+    use tsipika_doc::{Justify, ParaStyle, TextKind, TextObject, TextRun};
     let mut doc = Document::new(300.0, 200.0);
     let layer = doc.layers[0].id;
-    let mut point = TextObject::point(vectorcraft_geom::Point::new(20.0, 40.0), "Héllo €5\nWorld", style(18.0, red()));
+    let mut point = TextObject::point(tsipika_geom::Point::new(20.0, 40.0), "Héllo €5\nWorld", style(18.0, red()));
     point.runs.push(TextRun::new(" again", style(12.0, Paint::solid(Color::cmyk(1.0, 0.0, 0.0, 0.0)))));
     point.set_paragraph_styles(vec![ParaStyle::default(), ParaStyle { justify: Justify::Center, ..ParaStyle::default() }]);
-    let mut area = TextObject::point(vectorcraft_geom::Point::ZERO, "Area type flows in its frame", style(10.0, Paint::solid(Color::BLACK)));
+    let mut area = TextObject::point(tsipika_geom::Point::ZERO, "Area type flows in its frame", style(10.0, Paint::solid(Color::BLACK)));
     area.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 50.0)) };
     area.xf = Affine::translate((20.0, 80.0));
-    let mut on_path = TextObject::point(vectorcraft_geom::Point::ZERO, "Along a path", style(12.0, Paint::solid(Color::gray(0.5))));
+    let mut on_path = TextObject::point(tsipika_geom::Point::ZERO, "Along a path", style(12.0, Paint::solid(Color::gray(0.5))));
     let mut line = PathData::new(vec![]);
-    line.subpaths.push(vectorcraft_geom::SubPath::polyline(&[(150.0, 150.0).into(), (250.0, 150.0).into(), (250.0, 190.0).into()], false));
+    line.subpaths.push(tsipika_geom::SubPath::polyline(&[(150.0, 150.0).into(), (250.0, 150.0).into(), (250.0, 190.0).into()], false));
     on_path.kind = TextKind::OnPath { path: line, start: 0.25, end: None };
     on_path.xf = Affine::IDENTITY;
     for t in [point, area, on_path] {
@@ -900,7 +900,7 @@ fn variable_font_settings_are_warned_as_left_out() {
 
 #[test]
 fn type_reads_back_as_text() {
-    use vectorcraft_doc::{Justify, TextKind};
+    use tsipika_doc::{Justify, TextKind};
     let imported = crate::import(&write(&typed()).bytes).unwrap();
     let found = texts(&imported.document);
     assert_eq!(found.len(), 3, "{:?}", imported.warnings);
@@ -918,7 +918,7 @@ fn type_reads_back_as_text() {
     assert!((point.runs[1].style.size - 12.0).abs() < 1e-6);
     assert_eq!(point.para_at(0).justify, Justify::Left);
     assert_eq!(point.para_at(1).justify, Justify::Center);
-    let origin = point.xf * vectorcraft_geom::Point::ZERO;
+    let origin = point.xf * tsipika_geom::Point::ZERO;
     assert!((origin.x - 20.0).abs() < 1e-3 && (origin.y - 40.0).abs() < 1e-3, "{:?}", point.xf);
     // Area type: its frame where it was.
     let (_, area) = &found[1];
@@ -936,10 +936,10 @@ fn type_reads_back_as_text() {
 
 #[test]
 fn type_8_bit_text_cant_hold_and_type_asked_for_as_outlines_are_outlines() {
-    use vectorcraft_doc::TextObject;
+    use tsipika_doc::TextObject;
     let mut doc = Document::new(200.0, 100.0);
     let layer = doc.layers[0].id;
-    let t = TextObject::point(vectorcraft_geom::Point::new(10.0, 50.0), "Ωmega 日本", style(12.0, red()));
+    let t = TextObject::point(tsipika_geom::Point::new(10.0, 50.0), "Ωmega 日本", style(12.0, red()));
     let n = Node::new(doc.alloc_id(), NodeKind::Text(Box::new(t)));
     doc.insert(Some(layer), usize::MAX, n).unwrap();
     let out = write(&doc);

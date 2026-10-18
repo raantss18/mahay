@@ -3,7 +3,7 @@
 //! `orientation`, `alignChildren`, `onClick`/`onChange`, `show()`, `close()`,
 //! `layout.layout()`…).
 //!
-//! The scripting engine (`effectcraft-script`) owns the live JavaScript objects; after every
+//! The scripting engine (`tselatra-script`) owns the live JavaScript objects; after every
 //! script step it publishes a serde description of each open window here ([`ScriptWindow`],
 //! a [`Widget`] tree with computed [`Widget::bounds`]). Frontends draw that description (the egui
 //! UI renders dialogs, palettes and dockable panels from it) and report what the user does as

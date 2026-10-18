@@ -1,8 +1,8 @@
 //! Dimension edits: DIMEDIT (Home/New/Rotate/Oblique), DIMJOGGED, DIMJOGLINE, DIMBREAK and
 //! DIMINSPECT. Each has a JSON form; the prompt sequences run the same JSON form.
 
-use cadcraft_doc::{DimBreak, DimKind, Dimension, EntityKind, Handle, Inspection, JoggedRadius, Prim};
-use cadcraft_geom::{Segment, Vec2};
+use drafitra_doc::{DimBreak, DimKind, Dimension, EntityKind, Handle, Inspection, JoggedRadius, Prim};
+use drafitra_geom::{Segment, Vec2};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase};
@@ -118,7 +118,7 @@ fn run_dimedit(s: &mut Session, p: &Value) -> Result<Value> {
         "rotate" => {
             let a = angle.ok_or_else(|| bad("dimedit", "`angle` (degrees) is required"))?;
             edit_dims(s, &hs, &|dm| {
-                dm.text_rotation = cadcraft_geom::norm_angle(a);
+                dm.text_rotation = drafitra_geom::norm_angle(a);
                 true
             })?
         }
@@ -126,7 +126,7 @@ fn run_dimedit(s: &mut Session, p: &Value) -> Result<Value> {
             if !is_linear(dm) {
                 return false;
             }
-            dm.marks.oblique = angle.map(cadcraft_geom::norm_angle);
+            dm.marks.oblique = angle.map(drafitra_geom::norm_angle);
             true
         })?,
         other => return Err(bad("dimedit", format!("unknown mode `{other}` (home, new, rotate, oblique)"))),
@@ -387,7 +387,7 @@ fn run_jogline(s: &mut Session, p: &Value) -> Result<Value> {
         Some(at) => at,
         None => {
             // Halfway between the text and the first extension line.
-            let t = cadcraft_render::dimension_in(d, dm).text_pos;
+            let t = drafitra_render::dimension_in(d, dm).text_pos;
             f1.mid(f1 + dir * (t - f1).dot(dir))
         }
     };
@@ -457,16 +457,16 @@ fn crossings(dm_lines: &[Vec<Vec2>], prims: &[Prim]) -> Vec<Vec2> {
     let mut out = Vec::new();
     for l in dm_lines {
         for w in l.windows(2) {
-            let seg = Segment::Line(cadcraft_geom::Line::new(w[0], w[1]));
+            let seg = Segment::Line(drafitra_geom::Line::new(w[0], w[1]));
             for p in prims {
                 let pts = match p {
-                    Prim::Seg(o) => cadcraft_geom::intersect_segments(&seg, o),
-                    Prim::Circle(c) => cadcraft_geom::line_circle(&cadcraft_geom::Line::new(w[0], w[1]), c)
+                    Prim::Seg(o) => drafitra_geom::intersect_segments(&seg, o),
+                    Prim::Circle(c) => drafitra_geom::line_circle(&drafitra_geom::Line::new(w[0], w[1]), c)
                         .into_iter()
                         .filter(|(_, t)| (-1e-9..=1.0 + 1e-9).contains(t))
                         .map(|(q, _)| q)
                         .collect(),
-                    Prim::Infinite { base, dir, ray } => cadcraft_geom::line_line_infinite(w[0], w[1], *base, *base + *dir)
+                    Prim::Infinite { base, dir, ray } => drafitra_geom::line_line_infinite(w[0], w[1], *base, *base + *dir)
                         .filter(|(_, t, u)| (-1e-9..=1.0 + 1e-9).contains(t) && (!ray || *u >= -1e-9))
                         .map(|(q, _, _)| vec![q])
                         .unwrap_or_default(),
@@ -540,7 +540,7 @@ fn run_dimbreak(s: &mut Session, p: &Value) -> Result<Value> {
                 let Some(EntityKind::Dimension(dm)) = d.entity(*h).map(|e| &e.kind) else { continue };
                 let mut plain = dm.clone();
                 plain.marks.breaks.clear();
-                let g = cadcraft_render::dimension_in(d, &plain);
+                let g = drafitra_render::dimension_in(d, &plain);
                 let prims: Vec<Prim> = others.iter().filter(|(o, _)| o != h).flat_map(|(_, p)| p.iter().cloned()).collect();
                 plan.push((*h, crossings(&g.lines, &prims)));
             }

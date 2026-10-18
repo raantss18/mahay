@@ -1,7 +1,7 @@
 //! EMF records (MS-EMF) played on a [`Player`]: the header gives the frame (the artboard) and the
 //! reference device (device pixels → millimetres), then every record in turn until EMR_EOF.
 
-use vectorcraft_geom::{Affine, Point, Rect};
+use tsipika_geom::{Affine, Point, Rect};
 
 use super::{ArcKind, BrushObj, FontObj, Obj, PenObj, Player};
 use crate::bytes::{Reader, slice};
@@ -12,7 +12,7 @@ use crate::{Imported, Kind};
 const PT_PER_MM: f64 = 72.0 / 25.4;
 /// Most points one record may give (a hostile count can't make a huge allocation).
 const MAX_POINTS: usize = 1 << 22;
-/// Records that change nothing VectorCraft keeps (background mode and colour, raster modes,
+/// Records that change nothing Tsipika keeps (background mode and colour, raster modes,
 /// palettes, colour management, comments…).
 const IGNORED: &[u32] =
     &[1, 13, 15, 16, 18, 20, 21, 23, 25, 28, 48, 50, 51, 52, 65, 66, 70, 98, 100, 101, 104, 110, 111, 112, 113, 115, 119, 120, 121];
@@ -222,8 +222,8 @@ fn record(p: &mut Player, kind: u32, rec: &[u8]) -> Option<()> {
             p.create_at(ih, Obj::Brush(BrushObj::from_log(style, color(&mut r)?)));
         }
         40 => p.delete(r.u32()?),
-        42 => p.figure(vectorcraft_geom::shapes::ellipse(rect(&mut r)?.abs()).to_bezpath(), true),
-        43 => p.figure(vectorcraft_geom::shapes::rectangle(rect(&mut r)?.abs()).to_bezpath(), true),
+        42 => p.figure(tsipika_geom::shapes::ellipse(rect(&mut r)?.abs()).to_bezpath(), true),
+        43 => p.figure(tsipika_geom::shapes::rectangle(rect(&mut r)?.abs()).to_bezpath(), true),
         44 => {
             let b = rect(&mut r)?;
             let (cx, cy) = (f64::from(r.i32()?), f64::from(r.i32()?));

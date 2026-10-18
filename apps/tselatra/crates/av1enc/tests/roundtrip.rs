@@ -1,10 +1,10 @@
-//! Round trips through FilmCraft's spec-derived AV1 decoder: decoded frames must equal the
+//! Round trips through Hetsika's spec-derived AV1 decoder: decoded frames must equal the
 //! encoder's own reconstruction bit for bit.
 
 mod common;
 
 use common::*;
-use effectcraft_av1enc::{EncoderConfig, RateControl};
+use tselatra_av1enc::{EncoderConfig, RateControl};
 
 fn cfg(w: u32, h: u32, bd: u8, q: u8, keyint: u32) -> EncoderConfig {
     let mut c = EncoderConfig::new(w, h, 30, 1);
@@ -82,7 +82,7 @@ fn bitrate_mode_tracks_target() {
 
 #[test]
 fn headers() {
-    let enc = effectcraft_av1enc::Encoder::new(cfg(1920, 1080, 10, 100, 60)).unwrap();
+    let enc = tselatra_av1enc::Encoder::new(cfg(1920, 1080, 10, 100, 60)).unwrap();
     let c = enc.av1c();
     assert_eq!(c[0], 0x81);
     assert_eq!(c[1] & 0x1f, 8, "1080p30 is level 4.0");

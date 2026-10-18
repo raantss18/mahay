@@ -6,13 +6,13 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 
 fn demo(size: [f32; 2]) -> Headless {
     let services = Services { png: None, write_shared: Some(std::sync::Arc::new(|_: &str, _: &[u8]| Ok(()))), ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, size, 1.0);
     // let the first renders finish (a render still running at exit can crash in GPU teardown)
     h.settle(T);
@@ -51,7 +51,7 @@ fn export_dialog(size: [f32; 2]) -> Headless {
     open(&mut h, "dialog.export");
     if let Some(crate::state::Dialog::Export { full_size, resize, dir, .. }) = &mut h.app.ui.dialog {
         *full_size = false;
-        *resize = lightcraft_engine::export::Resize::long_edge(64);
+        *resize = hazavana_engine::export::Resize::long_edge(64);
         *dir = "/lc-test-out".into();
     }
     h.settle(T);
@@ -153,7 +153,7 @@ fn gpu_status_never_moves_the_performance_controls() {
         h.app.ui.settings.gpu = gpu;
         h.step();
         h.step();
-        seen.push((gpu, rect(&h, "button:settingsMemory-2"), lightcraft_engine::gpu::unavailable_reason()));
+        seen.push((gpu, rect(&h, "button:settingsMemory-2"), hazavana_engine::gpu::unavailable_reason()));
     }
     let first = seen[0].1;
     assert!(seen.iter().all(|(_, r, _)| *r == first), "the memory buttons moved: {seen:?}");

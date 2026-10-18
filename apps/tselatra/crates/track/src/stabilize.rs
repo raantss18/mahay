@@ -659,7 +659,7 @@ pub fn plan(a: &WarpAnalysis, s: &StabSettings) -> Plan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
     use rayon::prelude::*;
 
     /// A synthetic analysis: a slow pan plus per-frame jitter.

@@ -3,9 +3,9 @@
 
 use super::*;
 use crate::boolean::{PathCache, boolean_steps, fold_cached};
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{BoolOp, Document, NodeId, NodeKind, WidthPoint, WidthProfile};
-use figcraft_geom::kurbo::{BezPath, Shape};
+use endrika_color::{Color, Paint};
+use endrika_doc::{BoolOp, Document, NodeId, NodeKind, WidthPoint, WidthProfile};
+use endrika_geom::kurbo::{BezPath, Shape};
 
 fn dark(p: &Pixmap, x: u32, y: u32) -> bool {
     let i = ((y * p.width() + x) * 4) as usize;
@@ -65,7 +65,7 @@ fn editing_one_operand_recombines_only_from_it_up() {
     assert_eq!(steps(&d), 0, "unchanged: from the cache");
     // Moving the sixth operand (a drag frame) recombines it and the two above it.
     let mut moved = d.clone();
-    moved.get_mut(kids[5]).unwrap().transform = figcraft_geom::Affine::translate((3.0, 1.5)) * d.node(kids[5]).unwrap().transform;
+    moved.get_mut(kids[5]).unwrap().transform = endrika_geom::Affine::translate((3.0, 1.5)) * d.node(kids[5]).unwrap().transform;
     assert_eq!(steps(&moved), 3);
     // The top one: one step. Going back: cached.
     let mut top = moved.clone();
@@ -112,7 +112,7 @@ fn caches_drop_the_least_recently_used_half() {
     let mut bad = BezPath::new();
     bad.move_to((f64::NAN, 0.0));
     bad.line_to((1.0, 1.0));
-    let sq = figcraft_geom::Rect::new(0.0, 0.0, 1.0, 1.0).to_path(0.1);
+    let sq = endrika_geom::Rect::new(0.0, 0.0, 1.0, 1.0).to_path(0.1);
     assert!(fold_cached(&[(sq, BoolOp::Union), (bad, BoolOp::Union)]).elements().is_empty());
 }
 

@@ -2,8 +2,8 @@
 //! the Session's recent colours.
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::NodeKind;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::NodeKind;
 
 use super::*;
 
@@ -18,7 +18,7 @@ fn rect(s: &mut Session) -> NodeId {
     NodeId(r["id"].as_u64().unwrap())
 }
 
-fn node(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> tsipika_doc::Node {
     s.doc().unwrap().doc.node(id).unwrap().clone()
 }
 

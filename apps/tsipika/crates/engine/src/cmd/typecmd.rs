@@ -4,8 +4,8 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{AreaFit, Document, Justify, Node, NodeId, NodeKind, TextObject};
-use vectorcraft_geom::{Affine, PathData, Vec2};
+use tsipika_doc::{AreaFit, Document, Justify, Node, NodeId, NodeKind, TextObject};
+use tsipika_geom::{Affine, PathData, Vec2};
 
 use super::edit::selected_roots;
 use super::pathops::{len_param, num_param, shape_node};
@@ -130,23 +130,23 @@ fn optical_margin_alignment(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Recompute the layout caches (bounds and baselines) after a text edit. Every engine text edit ends here (typing
 /// through `text.editRange` too), inside its `Session::edit`, so this is where Auto Size area type
-/// ([`vectorcraft_doc::AreaFit::AutoHeight`]) fits its frame to the text: part of the same undo
+/// ([`tsipika_doc::AreaFit::AutoHeight`]) fits its frame to the text: part of the same undo
 /// step as the edit.
 pub(crate) fn refresh_bounds(t: &mut TextObject) {
     // Edits that changed the paragraph count keep one paragraph style per paragraph.
     t.normalize_paras();
     auto_height(t);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
     t.cached_bounds = Some(lay.bounds);
     t.cached_baselines = lay.baselines();
 }
 
 /// The text-space bounds of area type's frame, when Auto Size can fit it: a rectangle (one
 /// subpath, as large as its bounds) of horizontal type in one row, with some height.
-fn auto_height_frame(t: &TextObject) -> Option<vectorcraft_geom::Rect> {
-    use vectorcraft_geom::Shape;
-    let vectorcraft_doc::TextKind::Area { frame } = &t.kind else { return None };
-    if t.area.fit != vectorcraft_doc::AreaFit::AutoHeight || t.vertical || t.area.rows > 1 || frame.subpaths.len() != 1 {
+fn auto_height_frame(t: &TextObject) -> Option<tsipika_geom::Rect> {
+    use tsipika_geom::Shape;
+    let tsipika_doc::TextKind::Area { frame } = &t.kind else { return None };
+    if t.area.fit != tsipika_doc::AreaFit::AutoHeight || t.vertical || t.area.rows > 1 || frame.subpaths.len() != 1 {
         return None;
     }
     let b = frame.bounds()?;
@@ -168,9 +168,9 @@ thread_local! {
 /// the inset), so the frame's height follows the text. Text in several columns gets the least
 /// height (to 0.01 pt) at which it fits. True when the frame changed.
 fn auto_height(t: &mut TextObject) -> bool {
-    use vectorcraft_geom::Shape;
+    use tsipika_geom::Shape;
     let Some(b) = auto_height_frame(t) else { return false };
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     // Lay out in a frame as tall as the canvas allows: everything the width lets through flows.
     let tall = (crate::MAX_COORD - b.y0).min(1.0e5);
     if tall <= 1.0 {
@@ -178,8 +178,8 @@ fn auto_height(t: &mut TextObject) -> bool {
     }
     let mut probe = t.clone();
     let with_size = |probe: &mut TextObject, w: f64, h: f64| {
-        if let vectorcraft_doc::TextKind::Area { frame } = &mut probe.kind {
-            *frame = PathData::from_bezpath(&vectorcraft_geom::Rect::new(b.x0, b.y0, b.x0 + w, b.y0 + h).to_path(0.1));
+        if let tsipika_doc::TextKind::Area { frame } = &mut probe.kind {
+            *frame = PathData::from_bezpath(&tsipika_geom::Rect::new(b.x0, b.y0, b.x0 + w, b.y0 + h).to_path(0.1));
         }
     };
     // Columns: all the text in one column as wide as each of them is surely tall enough.
@@ -188,8 +188,8 @@ fn auto_height(t: &mut TextObject) -> bool {
     with_size(&mut probe, col_w, tall);
     probe.area.columns = 1;
     // Measured from the top: aligned in the tall probe the lines would sit far below.
-    probe.area.vertical_align = vectorcraft_doc::VerticalAlign::Top;
-    let lay = vectorcraft_text::layout(db, &probe);
+    probe.area.vertical_align = tsipika_doc::VerticalAlign::Top;
+    let lay = tsipika_text::layout(db, &probe);
     let inset = t.area.inset.max(0.0);
     let Some(bottom) = lay.lines.iter().map(|l| l.baseline + l.descent).filter(|y| y.is_finite()).reduce(f64::max) else { return false };
     // The layout's fit test is `baseline + descent <= bottom + 0.01`: the last line fits exactly.
@@ -201,7 +201,7 @@ fn auto_height(t: &mut TextObject) -> bool {
             #[cfg(test)]
             COLUMN_LAYOUTS.with(|c| c.set(c.get() + 1));
             with_size(probe, b.width(), h);
-            !vectorcraft_text::layout(db, probe).overflow
+            !tsipika_text::layout(db, probe).overflow
         };
         // The bisection runs on the one column's lines as `columns_hold` places them in the columns.
         // The columns are then laid out at the upper height it ends on and, when they hold the text
@@ -228,7 +228,7 @@ fn auto_height(t: &mut TextObject) -> bool {
     }
     // Scale the frame about its top edge, keeping its anchors (and their order) as they are.
     let a = Affine::translate((0.0, b.y0)) * Affine::scale_non_uniform(1.0, h / b.height()) * Affine::translate((0.0, -b.y0));
-    let vectorcraft_doc::TextKind::Area { frame } = &mut t.kind else { return false };
+    let tsipika_doc::TextKind::Area { frame } = &mut t.kind else { return false };
     let mut next = frame.clone();
     next.transform(a);
     if next.bounds().is_none_or(|nb| ![nb.x0, nb.y0, nb.x1, nb.y1].iter().all(|v| v.is_finite() && v.abs() <= crate::MAX_COORD)) {
@@ -255,10 +255,10 @@ fn least_height(mut lo: f64, mut hi: f64, mut fits: impl FnMut(f64) -> bool) -> 
 /// `lines`, the text's lines laid out in one column as wide as each of them from the same top?
 /// Each column takes the next lines while they end within its bottom, as layout tests them
 /// (`baseline + descent <= bottom + 0.01`). A column's first line sits its
-/// [`first_baseline`](vectorcraft_text::LineInfo::first_baseline) below `y0 + inset`, and the
+/// [`first_baseline`](tsipika_text::LineInfo::first_baseline) below `y0 + inset`, and the
 /// lines after it keep their distances from it. A last line with no characters (after a return
 /// that ends the text) may be left out, as layout leaves it out without overflowing.
-fn columns_hold(lines: &[vectorcraft_text::LineInfo], cols: usize, y0: f64, inset: f64, h: f64) -> bool {
+fn columns_hold(lines: &[tsipika_text::LineInfo], cols: usize, y0: f64, inset: f64, h: f64) -> bool {
     let Some(first) = lines.first() else { return true };
     let bottom = y0 + h - inset + 0.01;
     let mut next = 0;
@@ -290,8 +290,8 @@ pub(crate) fn refresh_bounds_of(d: &mut Document, ids: &[NodeId]) {
 /// pushed text out of its frame says so itself.
 pub(crate) fn with_overflow(s: &Session, ids: &[NodeId], mut result: Value) -> Value {
     let Ok(st) = s.doc() else { return result };
-    let db = vectorcraft_text::FontDb::global();
-    let fits = |t: &TextObject| matches!(t.kind, vectorcraft_doc::TextKind::Point) || !vectorcraft_text::layout(db, t).overflow;
+    let db = tsipika_text::FontDb::global();
+    let fits = |t: &TextObject| matches!(t.kind, tsipika_doc::TextKind::Point) || !tsipika_text::layout(db, t).overflow;
     let over = |id: &&NodeId| matches!(st.doc.node(**id).map(|n| &n.kind), Some(NodeKind::Text(t)) if !fits(t));
     let over: Vec<u64> = ids.iter().filter(over).map(|i| i.0).collect();
     if !over.is_empty() {
@@ -366,7 +366,7 @@ fn create_outlines(s: &mut Session, _: &Value) -> Result<Value> {
         for tid in texts {
             let Some(n) = d.node(tid).cloned() else { continue };
             let NodeKind::Text(t) = &n.kind else { continue };
-            let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
             let mut children = vec![];
             for (gi, g) in lay.glyphs.iter().enumerate() {
                 // Inline graphics become instances of their symbols, in place.
@@ -388,7 +388,7 @@ fn create_outlines(s: &mut Session, _: &Value) -> Result<Value> {
                 children.push(Arc::new(node));
             }
             // Underline and strikethrough bars become paths of their run's paint too (#847).
-            for (run, bar) in vectorcraft_text::decorations(&lay, vectorcraft_text::FontDb::global(), t) {
+            for (run, bar) in tsipika_text::decorations(&lay, tsipika_text::FontDb::global(), t) {
                 let st = t.runs.get(run).map(|r| r.style.clone()).unwrap_or_else(|| t.first_style());
                 let mut node = shape_node(d, PathData::from_bezpath(&bar).transformed(t.xf), None);
                 node.appearance = st.appearance().into();
@@ -465,7 +465,7 @@ impl TextRange {
     }
     /// The byte range in `t`, clamped and ordered.
     pub(crate) fn bytes(&self, t: &TextObject) -> (usize, usize) {
-        let len = vectorcraft_text::edit::runs_len(&t.runs);
+        let len = tsipika_text::edit::runs_len(&t.runs);
         let a = self.start.unwrap_or(0).min(len);
         let b = self.end.unwrap_or(len).min(len);
         (a.min(b), a.max(b))
@@ -483,13 +483,13 @@ pub(crate) fn para_span(range: Option<TextRange>, t: &TextObject) -> Option<std:
 }
 
 /// Apply `f` to the character styles of `range` of `t` (None: every run).
-pub(crate) fn style_chars(t: &mut TextObject, range: Option<TextRange>, mut f: impl FnMut(&mut vectorcraft_doc::CharStyle)) {
+pub(crate) fn style_chars(t: &mut TextObject, range: Option<TextRange>, mut f: impl FnMut(&mut tsipika_doc::CharStyle)) {
     match range {
         None => t.runs.iter_mut().for_each(|r| f(&mut r.style)),
         Some(r) => {
             let (a, b) = r.bytes(t);
             if a < b {
-                vectorcraft_text::edit::style_range(&mut t.runs, a, b, f);
+                tsipika_text::edit::style_range(&mut t.runs, a, b, f);
             }
         }
     }
@@ -503,8 +503,8 @@ fn set_text(s: &mut Session, p: &Value) -> Result<Value> {
             let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else { continue };
             let style = t.first_style();
             // Every paragraph of the new text takes the first paragraph's attributes.
-            t.splice_paras(0, vectorcraft_text::edit::runs_len(&t.runs), &text);
-            t.runs = vec![vectorcraft_doc::TextRun { text: text.clone(), style, inline: None }];
+            t.splice_paras(0, tsipika_text::edit::runs_len(&t.runs), &text);
+            t.runs = vec![tsipika_doc::TextRun { text: text.clone(), style, inline: None }];
             refresh_bounds(t);
         }
         Ok(())
@@ -546,8 +546,8 @@ fn set_style(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let fill = match p.get("fill") {
         None | Some(Value::Null) => None,
-        Some(Value::String(n)) if n.eq_ignore_ascii_case("none") => Some(vectorcraft_color::Paint::None),
-        Some(v) => Some(vectorcraft_color::Paint::solid(super::paint::new_color(s, p, color_value(v).ok_or_else(|| bad(C, "bad fill colour"))?))),
+        Some(Value::String(n)) if n.eq_ignore_ascii_case("none") => Some(tsipika_color::Paint::None),
+        Some(v) => Some(tsipika_color::Paint::solid(super::paint::new_color(s, p, color_value(v).ok_or_else(|| bad(C, "bad fill colour"))?))),
     };
     let features = super::textedit::features_param(p, C)?;
     if font.is_none()
@@ -649,7 +649,7 @@ fn set_style(s: &mut Session, p: &Value) -> Result<Value> {
 pub(crate) fn reshape_area_with(t: &mut TextObject, f: impl FnOnce(&mut TextObject) -> bool) -> bool {
     let before = t.kind.clone();
     let within = |t: &TextObject| match &t.kind {
-        vectorcraft_doc::TextKind::Area { frame } => {
+        tsipika_doc::TextKind::Area { frame } => {
             frame.bounds().is_some_and(|b| [b.x0, b.y0, b.x1, b.y1].iter().all(|v| v.abs() <= crate::MAX_COORD))
         }
         _ => false,
@@ -664,7 +664,7 @@ pub(crate) fn reshape_area_with(t: &mut TextObject, f: impl FnOnce(&mut TextObje
     if let (Some(a), Some(b)) = (was, height(t))
         && (a - b).abs() > 1e-6
     {
-        t.area.fit = vectorcraft_doc::AreaFit::None;
+        t.area.fit = tsipika_doc::AreaFit::None;
     }
     refresh_bounds(t);
     true
@@ -673,15 +673,15 @@ pub(crate) fn reshape_area_with(t: &mut TextObject, f: impl FnOnce(&mut TextObje
 /// Area type's text, if `n` is area type.
 fn area_text(n: Option<&Node>) -> Option<&TextObject> {
     match n.map(|n| &n.kind) {
-        Some(NodeKind::Text(t)) if matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }) => Some(t),
+        Some(NodeKind::Text(t)) if matches!(t.kind, tsipika_doc::TextKind::Area { .. }) => Some(t),
         _ => None,
     }
 }
 
 /// The width and height of area type's frame in points, along the type's own axes, and the frame's
 /// bounds in text space.
-fn area_size(t: &TextObject) -> Option<(f64, f64, vectorcraft_geom::Rect)> {
-    let vectorcraft_doc::TextKind::Area { frame } = &t.kind else { return None };
+fn area_size(t: &TextObject) -> Option<(f64, f64, tsipika_geom::Rect)> {
+    let tsipika_doc::TextKind::Area { frame } = &t.kind else { return None };
     let b = frame.bounds()?;
     let [a, bb, c, d, _, _] = t.xf.as_coeffs();
     Some((b.width() * a.hypot(bb), b.height() * c.hypot(d), b))
@@ -737,7 +737,7 @@ pub(crate) fn fit_param(p: &Value, cur: AreaFit, c: &str) -> Result<Option<AreaF
 /// `overflow`s its frame at `fitScale` (Shrink Text to Fit's factor; 1 unshrunk).
 pub(crate) fn area_options_json(t: &TextObject) -> Result<Value> {
     let mut v = serde_json::to_value(&t.area).map_err(|e| EngineError::Other(e.to_string()))?;
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
     if let Some(o) = v.as_object_mut() {
         o.insert("fit".into(), json!(t.area.fit.id()));
         let min = match t.area.fit {
@@ -755,7 +755,7 @@ pub(crate) fn area_options_json(t: &TextObject) -> Result<Value> {
     Ok(v)
 }
 
-/// The [`vectorcraft_doc::AreaOptions`] keys `text.areaOptions` merges as they are.
+/// The [`tsipika_doc::AreaOptions`] keys `text.areaOptions` merges as they are.
 const AREA_KEYS: [&str; 7] = ["rows", "columns", "gutter", "inset", "firstBaseline", "firstBaselineMin", "verticalAlign"];
 
 fn area_options(s: &mut Session, p: &Value) -> Result<Value> {
@@ -784,9 +784,9 @@ fn area_options(s: &mut Session, p: &Value) -> Result<Value> {
     if !changed {
         return options(s);
     }
-    let mut opts: vectorcraft_doc::AreaOptions = serde_json::from_value(v).map_err(|e| bad(C, e.to_string()))?;
-    opts.rows = opts.rows.clamp(1, vectorcraft_doc::AreaOptions::MAX_ROWS_COLUMNS);
-    opts.columns = opts.columns.clamp(1, vectorcraft_doc::AreaOptions::MAX_ROWS_COLUMNS);
+    let mut opts: tsipika_doc::AreaOptions = serde_json::from_value(v).map_err(|e| bad(C, e.to_string()))?;
+    opts.rows = opts.rows.clamp(1, tsipika_doc::AreaOptions::MAX_ROWS_COLUMNS);
+    opts.columns = opts.columns.clamp(1, tsipika_doc::AreaOptions::MAX_ROWS_COLUMNS);
     let finite = |x: f64| if x.is_finite() { x } else { 0.0 };
     opts.gutter = finite(opts.gutter).clamp(0.0, 10_000.0);
     opts.inset = finite(opts.inset).clamp(0.0, 10_000.0);
@@ -910,7 +910,7 @@ mod area_tests {
 
     #[test]
     fn kinsoku_set_is_set_per_paragraph_and_saved_only_when_not_hard() {
-        use vectorcraft_doc::Kinsoku;
+        use tsipika_doc::Kinsoku;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "あカッ", "area": {"width": 40, "height": 100}})).unwrap()["id"]
@@ -934,13 +934,13 @@ mod area_tests {
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(para(&s).kinsoku, Kinsoku::Hard);
         // Documents from before it read as Hard.
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
+        let old: tsipika_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.kinsoku, Kinsoku::Hard);
     }
 
     #[test]
     fn burasagari_is_set_per_paragraph_and_saved_only_when_on() {
-        use vectorcraft_doc::Burasagari;
+        use tsipika_doc::Burasagari;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "雅楽、笙。", "area": {"width": 200, "height": 100}})).unwrap()["id"]
@@ -964,7 +964,7 @@ mod area_tests {
         s.execute("edit.undo", &json!({})).unwrap();
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(para(&s).burasagari, Burasagari::Standard);
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
+        let old: tsipika_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.burasagari, Burasagari::None);
     }
 
@@ -1011,7 +1011,7 @@ mod area_tests {
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(text(&s).optical_margin);
         // Saved and reopened as it was; a document from before it reads as off.
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert!(t.optical_margin);
         let mut old = serde_json::to_value(text(&s)).unwrap();
@@ -1024,7 +1024,7 @@ mod area_tests {
     /// and paragraph styles carry them.
     #[test]
     fn hyphenation_options_are_set_per_paragraph_and_saved_only_when_not_default() {
-        use vectorcraft_doc::HyphenationOptions;
+        use tsipika_doc::HyphenationOptions;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "One\nTwo", "area": {"width": 200, "height": 100}})).unwrap()["id"]
@@ -1046,7 +1046,7 @@ mod area_tests {
         let (first, second) = paras(&s);
         assert_eq!((first.hyphenation, &second.hyphenation), (HyphenationOptions::default(), &want), "only the paragraph the caret is in");
         assert_eq!(serde_json::to_value(&second).unwrap()["hyphenation"]["hyphen_limit"], 2);
-        let back: vectorcraft_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
+        let back: tsipika_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
         assert_eq!(back.hyphenation, want);
         s.execute("text.setFormat", &json!({"hyphenLimit": -3, "hyphenationZone": 5000})).unwrap();
         assert_eq!((paras(&s).0.hyphenation.hyphen_limit, paras(&s).1.hyphenation.zone), (0, 1296.0));
@@ -1057,7 +1057,7 @@ mod area_tests {
         s.execute("paraStyle.new", &json!({"name": "Loose", "attrs": {"hyphenation": {"words_longer_than": 9}}})).unwrap();
         s.execute("paraStyle.apply", &json!({"name": "Loose", "id": id})).unwrap();
         assert_eq!(paras(&s).0.hyphenation, HyphenationOptions { words_longer_than: 9, ..HyphenationOptions::default() });
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
+        let old: tsipika_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
         assert_eq!(old.hyphenation, HyphenationOptions::default());
     }
 
@@ -1087,7 +1087,7 @@ mod area_tests {
         assert!(text(&s).para_at(0).roman_hanging && !text(&s).para_at(1).roman_hanging);
         assert!(left(&s) < inside - 5.0, "{} {inside}", left(&s));
         assert_eq!(serde_json::to_value(text(&s).para_at(0)).unwrap()["roman_hanging"], true);
-        let back: vectorcraft_doc::ParaStyle = serde_json::from_value(serde_json::to_value(text(&s).para_at(0)).unwrap()).unwrap();
+        let back: tsipika_doc::ParaStyle = serde_json::from_value(serde_json::to_value(text(&s).para_at(0)).unwrap()).unwrap();
         assert!(back.roman_hanging);
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(!text(&s).para_at(0).roman_hanging);
@@ -1104,7 +1104,7 @@ mod area_tests {
     /// are saved only when not the defaults, and paragraph styles carry them.
     #[test]
     fn justification_options_are_set_per_paragraph_and_saved_only_when_not_default() {
-        use vectorcraft_doc::{JustificationOptions, SingleWordJustify};
+        use tsipika_doc::{JustificationOptions, SingleWordJustify};
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "One\nTwo", "area": {"width": 200, "height": 100}})).unwrap()["id"]
@@ -1135,7 +1135,7 @@ mod area_tests {
         let (first, second) = paras(&s);
         assert_eq!((first.justification, &second.justification), (JustificationOptions::default(), &want), "only the paragraph the caret is in");
         assert_eq!(serde_json::to_value(&second).unwrap()["justification"]["single_word"], "alignCenter");
-        let back: vectorcraft_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
+        let back: tsipika_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
         assert_eq!(back.justification, want);
         // Out of order: nothing changes, and the error names the setting.
         let e = s.execute("text.setFormat", &json!({"wordSpacing": {"desired": 85}, "letterSpacing": {"min": 5}})).unwrap_err().to_string();
@@ -1149,7 +1149,7 @@ mod area_tests {
         s.execute("paraStyle.new", &json!({"name": "Airy", "attrs": {"justification": {"auto_leading": 200.0}}})).unwrap();
         s.execute("paraStyle.apply", &json!({"name": "Airy", "id": id})).unwrap();
         assert_eq!(paras(&s).0.justification, JustificationOptions { auto_leading: 200.0, ..JustificationOptions::default() });
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
+        let old: tsipika_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
         assert_eq!(old.justification, JustificationOptions::default());
     }
 
@@ -1159,7 +1159,7 @@ mod area_tests {
     /// baseline.
     #[test]
     fn new_type_takes_the_japanese_defaults_while_the_interface_is_japanese() {
-        use vectorcraft_doc::{CharAlign, LeadingModel};
+        use tsipika_doc::{CharAlign, LeadingModel};
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let made = |s: &mut Session, cmd: &str, p: Value| -> (LeadingModel, CharAlign) {
@@ -1210,7 +1210,7 @@ mod area_tests {
         // Imported text keeps the Roman baseline.
         s.ui_language = Some("ja".into());
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><text x="10" y="50">雅楽</text></svg>"#;
-        s.execute("document.open", &json!({"name": "t.svg", "dataBase64": vectorcraft_format::base64_encode(svg.as_bytes())})).unwrap();
+        s.execute("document.open", &json!({"name": "t.svg", "dataBase64": tsipika_format::base64_encode(svg.as_bytes())})).unwrap();
         let mut found = vec![];
         s.doc().unwrap().doc.walk(|n| {
             if let NodeKind::Text(t) = &n.kind {
@@ -1222,10 +1222,10 @@ mod area_tests {
 
     #[test]
     fn leading_model_is_set_per_paragraph_and_saved_only_when_top_to_top() {
-        use vectorcraft_doc::LeadingModel;
+        use tsipika_doc::LeadingModel;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
-        // Exercise ink bounds with bundled glyphs; Japanese outlines require optional craft-fonts.
+        // Exercise ink bounds with bundled glyphs; Japanese outlines require optional mahay-fonts.
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "A\nB", "area": {"width": 200, "height": 100}})).unwrap()["id"]
             .as_u64()
             .unwrap();
@@ -1240,8 +1240,8 @@ mod area_tests {
         s.execute("text.setFormat", &json!({"leadingModel": "emBoxTop"})).unwrap();
         let t = text(&s);
         assert_eq!(t.para.leading_model, LeadingModel::EmBoxTop);
-        // The fallback used without craft-fonts has no glyph metrics to move the first line.
-        if !vectorcraft_text::CRAFT_FONTS.is_empty() {
+        // The fallback used without mahay-fonts has no glyph metrics to move the first line.
+        if !tsipika_text::MAHAY_FONTS.is_empty() {
             assert_ne!(t.cached_bounds, before, "the first line moves up to the frame's top");
         }
         assert_eq!(serde_json::to_value(&t.para).unwrap()["leading_model"], "emBoxTop");
@@ -1251,7 +1251,7 @@ mod area_tests {
 
     #[test]
     fn character_alignment_is_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_doc::CharAlign;
+        use tsipika_doc::CharAlign;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "雅楽"})).unwrap()["id"].as_u64().unwrap();
@@ -1306,14 +1306,14 @@ mod area_tests {
         // Styles written without it (documents from before it) read as off.
         let old = serde_json::to_value(&runs(&s)[0].style).unwrap();
         assert!(old.get("proportionalMetrics").is_none());
-        assert!(!serde_json::from_value::<vectorcraft_doc::CharStyle>(old).unwrap().proportional_metrics);
+        assert!(!serde_json::from_value::<tsipika_doc::CharStyle>(old).unwrap().proportional_metrics);
     }
 
     /// Digits (Character panel menu, Middle Eastern options): a character attribute, saved only
     /// when set; the text keeps the digits that were typed.
     #[test]
     fn digits_are_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_doc::Digits;
+        use tsipika_doc::Digits;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "صفحة 12"})).unwrap()["id"].as_u64().unwrap();
@@ -1347,8 +1347,8 @@ mod area_tests {
     /// when set, each value clamped to its axis's range, and cleared by another font or style.
     #[test]
     fn variable_font_settings_are_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY as FAMILY, two_axis_font};
-        vectorcraft_text::FontDb::global().add_font(two_axis_font().unwrap());
+        use tsipika_text::test_fonts::{TWO_AXIS_FAMILY as FAMILY, two_axis_font};
+        tsipika_text::FontDb::global().add_font(two_axis_font().unwrap());
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "lIn lIn", "font": FAMILY, "size": 40})).unwrap()["id"].as_u64().unwrap();
@@ -1381,7 +1381,7 @@ mod area_tests {
         let axes = |v: &[(&str, f64)]| v.iter().map(|(t, v)| (t.to_string(), *v)).collect::<std::collections::BTreeMap<_, _>>();
         assert_eq!(set, [("lIn ".to_string(), axes(&[("wdth", 80.0)])), ("lIn".to_string(), axes(&[("wdth", 80.0), ("wght", 550.0)]))]);
         // A saved file keeps them.
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert_eq!(t.runs, runs(&s));
         // Another style or font clears them: their settings were the old face's.
@@ -1419,7 +1419,7 @@ mod area_tests {
 
     #[test]
     fn new_type_is_composed_with_line_end_half_width_punctuation() {
-        use vectorcraft_doc::Mojikumi;
+        use tsipika_doc::Mojikumi;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "雅楽。"})).unwrap()["id"].as_u64().unwrap();
@@ -1437,7 +1437,7 @@ mod area_tests {
         // Saved only when set; documents from before it read as None.
         let json = serde_json::to_value(para(&s)).unwrap();
         assert_eq!(json["mojikumi"], "lineEndHalf");
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
+        let old: tsipika_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.mojikumi, Mojikumi::None);
         assert!(serde_json::to_value(&old).unwrap().get("mojikumi").is_none());
     }
@@ -1471,7 +1471,7 @@ mod area_tests {
         let q = s.execute("text.areaOptions", &json!({})).unwrap();
         assert_eq!((q["rows"].as_u64(), q["columns"].as_u64()), (Some(1), Some(1)));
         let lay = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
-            NodeKind::Text(t) => vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t),
+            NodeKind::Text(t) => tsipika_text::layout(tsipika_text::FontDb::global(), t),
             _ => panic!(),
         };
         assert_eq!(lay(&s).frames.len(), 1);
@@ -1493,8 +1493,8 @@ mod area_tests {
 fn headline_fit(t: &TextObject, tracking: f64) -> Option<(f64, f64, usize)> {
     let mut probe = t.clone();
     let para_end = probe.plain_text().find('\n').unwrap_or(usize::MAX);
-    vectorcraft_text::edit::style_range(&mut probe.runs, 0, para_end.min(vectorcraft_text::edit::runs_len(&t.runs)), |st| st.tracking = tracking);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &probe);
+    tsipika_text::edit::style_range(&mut probe.runs, 0, para_end.min(tsipika_text::edit::runs_len(&t.runs)), |st| st.tracking = tracking);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &probe);
     let cell = lay.frames.first()?;
     let line = lay.lines.first()?;
     let para = t.para_at(0);
@@ -1509,7 +1509,7 @@ fn fit_headline(s: &mut Session, p: &Value) -> Result<Value> {
     let mut plans = vec![];
     for id in &ids {
         let Some(NodeKind::Text(t)) = d.node(*id).map(|n| &n.kind) else { continue };
-        if !matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }) {
+        if !matches!(t.kind, tsipika_doc::TextKind::Area { .. }) {
             continue;
         }
         // Largest tracking that keeps the first paragraph on one line (bisection). The layout
@@ -1531,8 +1531,8 @@ fn fit_headline(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit("Fit Headline", |d, _| {
         for (id, tr) in &plans {
             if let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) {
-                let end = t.plain_text().find('\n').unwrap_or(usize::MAX).min(vectorcraft_text::edit::runs_len(&t.runs));
-                vectorcraft_text::edit::style_range(&mut t.runs, 0, end, |st| st.tracking = *tr);
+                let end = t.plain_text().find('\n').unwrap_or(usize::MAX).min(tsipika_text::edit::runs_len(&t.runs));
+                tsipika_text::edit::style_range(&mut t.runs, 0, end, |st| st.tracking = *tr);
                 refresh_bounds(t);
             }
         }

@@ -4,7 +4,7 @@
 
 Forward-looking plan. The summary with the headline numbers is [ROADMAP.md](../ROADMAP.md); the
 ranked shortfalls are [gaps.md](gaps.md); the numbers come from [target-app-parity.md](target-app-parity.md).
-LightCraft has no `cargo xtask scorecard`; the measured checklist is
+Hazavana has no `cargo xtask scorecard`; the measured checklist is
 [parity-checklist.md](parity-checklist.md) (`cargo xtask parity`).
 
 ## Current focus
@@ -12,7 +12,7 @@ LightCraft has no `cargo xtask scorecard`; the measured checklist is
 Toward **beta** (~340–600 Opus 5.5 agent hours; ranked, each a gap in [gaps.md](gaps.md)):
 
 1. **Camera colour of our own** (gap 1, 50–90 h): chart-based calibration for the most-used models,
-   building on the per-file JPEG fits and pooled profiles (`lightcraft-cli calibrate`); never Adobe
+   building on the per-file JPEG fits and pooled profiles (`hazavana-cli calibrate`); never Adobe
    data.
 2. **CR3 for every Canon body** (gap 2, 25–45 h): the remaining CRX variants, sRAW / mRAW, HEIF CR3;
    clean-room from prose descriptions (decided 2026-10-05; compressed NEF is the template).
@@ -43,7 +43,7 @@ against the code, tests, issues and [gaps.md](gaps.md).
 
 **Result: passes.** Every core workflow runs end to end on macOS and the work survives quit and
 reopen; the partial rows degrade fidelity for some cameras and large files but don't stop the
-workflow, so LightCraft stays **alpha** (ready for real work ~61%, above the ~40% bar).
+workflow, so Hazavana stays **alpha** (ready for real work ~61%, above the ~40% bar).
 
 ## After beta
 
@@ -75,7 +75,7 @@ calibration: M0–M13 took ≈ 25 active hours against an estimate of ≈ 110–
 | M11 | RAW II | CR3, RAF (X-Trans), ORF, RW2, PEF, SRW, 3FR, IIQ + long tail; camera calibration DB; HEIC/AVIF/JXL import | 20–35 | 🚧 (RAF all, RW2 every format, PEF, ORF uncompressed and 12.8 bpp, SRW uncompressed, HEIC ✅; CR3 🟡 (3 bodies verified); **camera colour calibration** 🚧 (per-file JPEG fits, 5 bundled profiles, 52 spectral matrices; measured database missing); compressed ORF / SRW, HE NEF, IIQ, X3F ⬜) |
 | M12 | AI & smart features | subject/sky/background/people/object masks, semantic search, faces/People (permissively licensed models, pure-Rust inference) | 20–40 | 🚧 (faces: detection, recognition, People view ✅; Object / Describe masks via SAM 3 🟡; Subject / Sky / People masks, semantic search ⬜) |
 | M13 | Merge | HDR merge (deghost), panorama (projections, boundary warp, fill edges), HDR panorama | 10–15 | ✅ |
-| M14 | Video | import/playback/trim via FilmCraft crates, global edits + presets on video, video export | 6–10 | ⬜ |
+| M14 | Video | import/playback/trim via Hetsika crates, global edits + presets on video, video export | 6–10 | ⬜ |
 | M15 | Classic modules | Map, Book, Slideshow, Print, Web; smart collections, stacks, virtual copies, publish services, tethering | 25–40 | 🚧 (smart albums, stacks, virtual copies, compare/survey ✅; contact-sheet PDF 🟡; Map/Book/Slideshow/Print/Web ⬜) |
 | M16 | 1.0 polish | preferences, shortcut editor, accessibility, localization, packaging (dmg/msi/AppImage/web), hardening | 10–20 | 🚧 (settings, keyboard shortcuts sheet, packaging basics ✅; English/Chinese (Simplified, Traditional)/Japanese/Brazilian Portuguese/Spanish/German/Russian/Ukrainian/Georgian localisation 🟡; accessibility and further locales ⬜) |
 

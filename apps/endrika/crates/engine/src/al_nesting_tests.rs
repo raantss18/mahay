@@ -5,8 +5,8 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::{NodeId, Sizing};
-use figcraft_geom::{Point, Rect};
+use endrika_doc::{NodeId, Sizing};
+use endrika_geom::{Point, Rect};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -186,7 +186,7 @@ fn the_dragged_frame_never_receives_itself_and_plain_frames_in_a_flow_are_items(
     s.ds_mut().unwrap().view.snap_objects = false;
     select(&mut s, dot);
     let start = bounds(&s, dot);
-    drag(&mut s, start.center(), start.center() + figcraft_geom::Vec2::new(30.0, 5.0));
+    drag(&mut s, start.center(), start.center() + endrika_geom::Vec2::new(30.0, 5.0));
     assert_eq!(parent(&s, dot), card);
     assert_eq!(bounds(&s, dot).x0, start.x0 + 30.0);
     let below = bounds(&s, cards[1]);

@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! "FCPLUGB1"                          magic
-//! u32 LE length, manifest JSON        (UTF-8, `figcraft-plugin.json`)
+//! u32 LE length, manifest JSON        (UTF-8, `endrika-plugin.json`)
 //! u32 LE length, WebAssembly module
 //! u32 LE asset count, then per asset: u32 LE length, name (UTF-8), u32 LE length, bytes
 //! ```
@@ -158,7 +158,7 @@ impl Bundle {
         }
         let mut r = Reader(bytes);
         if r.take(MAGIC.len()).ok() != Some(MAGIC.as_slice()) {
-            return Err("that isn't a FigCraft plugin bundle".into());
+            return Err("that isn't a Endrika plugin bundle".into());
         }
         let manifest = r.text("manifest")?;
         let wasm = r.part()?.to_vec();

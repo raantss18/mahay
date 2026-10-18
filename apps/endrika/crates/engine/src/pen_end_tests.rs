@@ -4,7 +4,7 @@
 use crate::Session;
 use crate::tools::{PointerEvent, PointerKind, ToolId};
 use crate::vectoredit::VTool;
-use figcraft_doc::NodeKind;
+use endrika_doc::NodeKind;
 
 fn click(s: &mut Session, x: f64, y: f64) {
     for kind in [PointerKind::Down, PointerKind::Up] {
@@ -17,7 +17,7 @@ fn layers(s: &Session) -> usize {
 }
 
 /// (points, segments) of vector `id`.
-fn shape(s: &Session, id: figcraft_doc::NodeId) -> (usize, usize) {
+fn shape(s: &Session, id: endrika_doc::NodeId) -> (usize, usize) {
     match &s.doc().unwrap().node(id).unwrap().kind {
         NodeKind::Vector { network } => (network.vertices.len(), network.segments.len()),
         k => panic!("not a vector: {k:?}"),
@@ -25,7 +25,7 @@ fn shape(s: &Session, id: figcraft_doc::NodeId) -> (usize, usize) {
 }
 
 /// A two-point pen path, ended with `end`.
-fn drawn(end: fn(&mut Session)) -> (Session, figcraft_doc::NodeId) {
+fn drawn(end: fn(&mut Session)) -> (Session, endrika_doc::NodeId) {
     let mut s = Session::new();
     s.set_tool(ToolId::Pen);
     click(&mut s, 100.0, 100.0);

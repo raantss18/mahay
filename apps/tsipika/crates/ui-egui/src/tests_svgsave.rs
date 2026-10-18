@@ -23,6 +23,6 @@ fn save_as_svg_keeps_hidden_layers_and_export_as_leaves_them_out() {
     // Reopened, the saved SVG is the document again.
     let before = app.session.doc().unwrap().doc.layers.clone();
     let saved = text(1);
-    app.session.execute("document.open", &json!({"name": "layers.svg", "dataBase64": vectorcraft_format::base64_encode(saved.as_bytes())})).unwrap();
+    app.session.execute("document.open", &json!({"name": "layers.svg", "dataBase64": tsipika_format::base64_encode(saved.as_bytes())})).unwrap();
     assert_eq!(app.session.doc().unwrap().doc.layers, before);
 }

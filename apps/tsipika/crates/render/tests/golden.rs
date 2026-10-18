@@ -4,11 +4,11 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::json;
-use vectorcraft_color::{BlendMode, Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Arrowhead, Dash, Document, Effect, FillLayer, LineCap, Node, StrokeAlign, StrokeLayer};
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_testkit::fixtures::{DocBuilder, exec, session_with};
-use vectorcraft_testkit::raster::{Image, assert_rgb, assert_similar, diff, render_view};
+use tsipika_color::{BlendMode, Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, Arrowhead, Dash, Document, Effect, FillLayer, LineCap, Node, StrokeAlign, StrokeLayer};
+use tsipika_geom::{Point, Rect, shapes};
+use tsipika_testkit::fixtures::{DocBuilder, exec, session_with};
+use tsipika_testkit::raster::{Image, assert_rgb, assert_similar, diff, render_view};
 
 const W: u32 = 100;
 
@@ -475,8 +475,8 @@ fn invisible_and_hidden_nodes_are_not_drawn() {
     let mut b = DocBuilder::new(100.0, 100.0);
     let id = b.rect(Rect::new(0.0, 0.0, 100.0, 100.0), Color::BLACK, |_| {});
     let d = b.build();
-    let opts = vectorcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), hidden: vec![id], ..Default::default() };
-    let r = vectorcraft_render::Renderer::new().render(&d, 100, 100, vectorcraft_geom::Affine::IDENTITY, &opts);
+    let opts = tsipika_render::RenderOptions { background: Some([255, 255, 255, 255]), hidden: vec![id], ..Default::default() };
+    let r = tsipika_render::Renderer::new().render(&d, 100, 100, tsipika_geom::Affine::IDENTITY, &opts);
     assert_eq!(Image::from_rendered(&r).ink(), 0);
 }
 
@@ -485,8 +485,8 @@ fn outline_mode_draws_thin_black_edges_only() {
     let mut b = DocBuilder::new(100.0, 100.0);
     b.rect(Rect::new(20.0, 20.0, 80.0, 80.0), Color::rgb(1.0, 0.0, 0.0), |_| {});
     let d = b.build();
-    let opts = vectorcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), outline: true, ..Default::default() };
-    let img = Image::from_rendered(&vectorcraft_render::Renderer::new().render(&d, 100, 100, vectorcraft_geom::Affine::IDENTITY, &opts));
+    let opts = tsipika_render::RenderOptions { background: Some([255, 255, 255, 255]), outline: true, ..Default::default() };
+    let img = Image::from_rendered(&tsipika_render::Renderer::new().render(&d, 100, 100, tsipika_geom::Affine::IDENTITY, &opts));
     assert_rgb(&img, 50, 50, [255, 255, 255], 2);
     assert_eq!(img.count(|p| p[0] > 200 && p[1] < 50), 0, "red paint visible in outline mode");
     assert!(img.ink() > 150 && img.ink() < 600, "outline ink {}", img.ink());
@@ -497,7 +497,7 @@ fn png_encoding_roundtrips_pixels() {
     let mut b = DocBuilder::new(100.0, 100.0);
     b.rect(Rect::new(10.0, 10.0, 60.0, 60.0), Color::rgb(0.2, 0.4, 0.6), |n| n.opacity = 0.5);
     let d = b.build();
-    let r = vectorcraft_render::Renderer::new().render_region(&d, Rect::new(0.0, 0.0, 100.0, 100.0), 1.0, false);
+    let r = tsipika_render::Renderer::new().render_region(&d, Rect::new(0.0, 0.0, 100.0, 100.0), 1.0, false);
     let decoded = Image::from_png(&r.to_png().unwrap()).unwrap();
     assert_eq!(decoded, Image::from_rendered(&r));
 }
@@ -510,9 +510,9 @@ fn renderer_reuse_matches_fresh_renderer() {
     let mut b = DocBuilder::new(100.0, 100.0);
     b.path(shapes::ellipse(Rect::new(30.0, 30.0, 90.0, 90.0)), fill_only(Paint::solid(Color::rgb(0.9, 0.2, 0.1))), |_| {});
     let d2 = b.build();
-    let opts = vectorcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
-    let mut r = vectorcraft_render::Renderer::new();
-    let id = vectorcraft_geom::Affine::IDENTITY;
+    let opts = tsipika_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    let mut r = tsipika_render::Renderer::new();
+    let id = tsipika_geom::Affine::IDENTITY;
     let _ = r.render(&d1, 100, 100, id, &opts);
     let reused = Image::from_rendered(&r.render(&d2, 100, 100, id, &opts));
     assert_eq!(reused, render(&d2));
@@ -524,10 +524,10 @@ fn scaled_render_matches_upscaled_geometry() {
     let mut b = DocBuilder::new(50.0, 50.0);
     b.path(shapes::ellipse(Rect::new(5.0, 5.0, 45.0, 40.0)), fill_only(Paint::solid(Color::rgb(0.1, 0.6, 0.3))), |_| {});
     let d = b.build();
-    let a = Image::from_rendered(&vectorcraft_render::Renderer::new().render_region(&d, Rect::new(0.0, 0.0, 50.0, 50.0), 2.0, true));
+    let a = Image::from_rendered(&tsipika_render::Renderer::new().render_region(&d, Rect::new(0.0, 0.0, 50.0, 50.0), 2.0, true));
     let mut b = DocBuilder::new(100.0, 100.0);
     b.path(shapes::ellipse(Rect::new(10.0, 10.0, 90.0, 80.0)), fill_only(Paint::solid(Color::rgb(0.1, 0.6, 0.3))), |_| {});
-    let c = Image::from_rendered(&vectorcraft_render::Renderer::new().render_region(&b.build(), Rect::new(0.0, 0.0, 100.0, 100.0), 1.0, true));
+    let c = Image::from_rendered(&tsipika_render::Renderer::new().render_region(&b.build(), Rect::new(0.0, 0.0, 100.0, 100.0), 1.0, true));
     assert_similar(&a, &c, 2.0, 0.0);
     let _: Option<Node> = None;
 }

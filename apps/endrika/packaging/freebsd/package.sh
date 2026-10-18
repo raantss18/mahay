@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Build and package FigCraft for FreeBSD:
+# Build and package Endrika for FreeBSD:
 #
-#   $DIST/figcraft-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
-#       figcraft-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
-#       share/metainfo, share/doc/figcraft}
-#   bin/ holds figcraft, plus figcraft-cli once apps/figcraft-cli exists.
+#   $DIST/endrika-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
+#       endrika-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
+#       share/metainfo, share/doc/endrika}
+#   bin/ holds endrika, plus endrika-cli once apps/endrika-cli exists.
 #
 # Install by copying the tree's contents into /usr/local:
-#   tar -xzf figcraft-<version>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local
+#   tar -xzf endrika-<version>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local
 #
 # Usage: packaging/freebsd/package.sh [--skip-build] [--dry-run]
 #   --dry-run   stage the tree from stub binaries and list it, without building (works on any OS)
@@ -17,7 +17,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 LINUX="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.figcraft
+APP_ID=org.mahay.endrika
 
 SKIP_BUILD=0
 DRY_RUN=0
@@ -41,9 +41,9 @@ if [ "$DRY_RUN" = 0 ] && [ "$(uname -s)" != FreeBSD ]; then
   echo "error: build on FreeBSD (or pass --dry-run to check the tree layout)" >&2
   exit 2
 fi
-BASENAME="figcraft-$VERSION-freebsd-$ARCH"
+BASENAME="endrika-$VERSION-freebsd-$ARCH"
 
-echo "==> FigCraft $VERSION for FreeBSD $ARCH"
+echo "==> Endrika $VERSION for FreeBSD $ARCH"
 
 # The release VM has 12 GB; full parallelism on the biggest crates runs it out of memory.
 export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"
@@ -71,7 +71,7 @@ fi
 # ---- stage a /usr/local-style tree --------------------------------------------------------------
 # FreeBSD's install(1) has no -D: create the directories first.
 mkdir -p "$STAGE/bin" "$STAGE/share/applications" "$STAGE/share/mime/packages" \
-  "$STAGE/share/metainfo" "$STAGE/share/icons" "$STAGE/share/doc/figcraft"
+  "$STAGE/share/metainfo" "$STAGE/share/icons" "$STAGE/share/doc/endrika"
 for b in "${BINS[@]}"; do
   install -m 755 "$BIN/$b" "$STAGE/bin/"
   strip "$STAGE/bin/$b" 2>/dev/null || true
@@ -79,18 +79,18 @@ done
 # The desktop entry, MIME type, metainfo and icons are the freedesktop files Linux ships. The
 # window's X11 class is the binary's name here (egui-winit names the window after the app id on
 # Linux only), so the entry matches that.
-sed -e "s/^StartupWMClass=.*/StartupWMClass=figcraft/" "$LINUX/$APP_ID.desktop" >"$STAGE/share/applications/$APP_ID.desktop"
+sed -e "s/^StartupWMClass=.*/StartupWMClass=endrika/" "$LINUX/$APP_ID.desktop" >"$STAGE/share/applications/$APP_ID.desktop"
 chmod 644 "$STAGE/share/applications/$APP_ID.desktop"
 install -m 644 "$LINUX/$APP_ID.mime.xml" "$STAGE/share/mime/packages/$APP_ID.xml"
-sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$FIGCRAFT_BUILD_DATE/g" \
+sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$ENDRIKA_BUILD_DATE/g" \
   "$LINUX/$APP_ID.metainfo.xml.in" >"$STAGE/share/metainfo/$APP_ID.metainfo.xml"
 cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/share/icons/"
-copy_docs "$STAGE/share/doc/figcraft"
-if [ -f "$ROOT/ATTRIBUTION.md" ]; then install -m 644 "$ROOT/ATTRIBUTION.md" "$STAGE/share/doc/figcraft/"; fi
+copy_docs "$STAGE/share/doc/endrika"
+if [ -f "$ROOT/ATTRIBUTION.md" ]; then install -m 644 "$ROOT/ATTRIBUTION.md" "$STAGE/share/doc/endrika/"; fi
 
 for f in "${BINS[@]/#/bin/}" "share/applications/$APP_ID.desktop" \
   "share/icons/hicolor/256x256/apps/$APP_ID.png" \
-  share/doc/figcraft/LICENSE-MIT share/doc/figcraft/LICENSE-APACHE; do
+  share/doc/endrika/LICENSE-MIT share/doc/endrika/LICENSE-APACHE; do
   if [ ! -e "$STAGE/$f" ]; then echo "error: $f is missing from the package" >&2; exit 1; fi
 done
 

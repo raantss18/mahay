@@ -1,4 +1,4 @@
-//! File ▸ Watch Folder…: render farm without a farm. EffectCraft watches a folder for project
+//! File ▸ Watch Folder…: render farm without a farm. Tselatra watches a folder for project
 //! files (`.ecproj`, at the top level or one folder down, e.g. the folders File ▸ Dependencies ▸
 //! Collect Files writes) whose Render Queue has queued items, renders them, and writes a status
 //! file next to each project (`<project>.status.json`: `rendering`, then `done` or `failed`, with
@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_project::render_queue::RenderStatus;
+use tselatra_project::render_queue::RenderStatus;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, str_p};

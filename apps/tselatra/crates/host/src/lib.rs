@@ -1,16 +1,16 @@
-//! A fully wired [`Session`]: footage decoding through `effectcraft-media` (FilmCraft's codecs),
-//! the media importer, the expression engine, JavaScript scripting (`effectcraft-script`) and
-//! Render Queue export through `effectcraft-export` (FilmCraft's encoders). Frontends (desktop,
+//! A fully wired [`Session`]: footage decoding through `tselatra-media` (Hetsika's codecs),
+//! the media importer, the expression engine, JavaScript scripting (`tselatra-script`) and
+//! Render Queue export through `tselatra-export` (Hetsika's encoders). Frontends (desktop,
 //! CLI, MCP, web) start here.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 use std::sync::Arc;
 
-use effectcraft_engine::project::render_queue::OutputFormat;
-use effectcraft_engine::{ExportJob, ExportResult, Exporter, Importer, Session};
-use effectcraft_project::Footage;
-pub use effectcraft_script as script;
+use tselatra_engine::project::render_queue::OutputFormat;
+use tselatra_engine::{ExportJob, ExportResult, Exporter, Importer, Session};
+use tselatra_project::Footage;
+pub use tselatra_script as script;
 
 pub mod app_dirs;
 
@@ -18,32 +18,32 @@ struct MediaImporter;
 
 impl Importer for MediaImporter {
     fn probe(&self, path: &str) -> Result<Footage, String> {
-        effectcraft_media::probe(path).map_err(|e| e.to_string())
+        tselatra_media::probe(path).map_err(|e| e.to_string())
     }
 }
 
-/// Render Queue export via `effectcraft-export`: to the file system, or to `sink` (the web app
+/// Render Queue export via `tselatra-export`: to the file system, or to `sink` (the web app
 /// turns written files into downloads).
 #[derive(Default)]
 pub struct FileExporter {
-    pub sink: Option<Arc<effectcraft_export::Sink>>,
+    pub sink: Option<Arc<tselatra_export::Sink>>,
 }
 
 impl Exporter for FileExporter {
     fn formats(&self) -> Vec<OutputFormat> {
-        effectcraft_export::available_formats()
+        tselatra_export::available_formats()
     }
     fn export(&self, job: &ExportJob, progress: &mut dyn FnMut(u64, u64) -> bool) -> Result<ExportResult, String> {
-        effectcraft_engine::render::passes::block_on(self.export_async(job, progress))
+        tselatra_engine::render::passes::block_on(self.export_async(job, progress))
     }
 
     fn export_async<'a>(
         &'a self,
         job: &'a ExportJob<'a>,
         progress: &'a mut dyn FnMut(u64, u64) -> bool,
-    ) -> effectcraft_engine::render_queue::LocalFuture<'a, Result<ExportResult, String>> {
+    ) -> tselatra_engine::render_queue::LocalFuture<'a, Result<ExportResult, String>> {
         Box::pin(async move {
-            let j = effectcraft_export::Job {
+            let j = tselatra_export::Job {
                 project: job.project,
                 footage: job.footage,
                 expr: job.expr,
@@ -53,7 +53,7 @@ impl Exporter for FileExporter {
                 output: &job.item.output,
                 path: job.path,
                 sink: self.sink.as_deref(),
-                options: effectcraft_export::JobOptions {
+                options: tselatra_export::JobOptions {
                     log: job.item.log,
                     label: job.label.clone(),
                     storage: job.storage,
@@ -61,7 +61,7 @@ impl Exporter for FileExporter {
                 },
                 nested_switches: job.nested_switches,
             };
-            match effectcraft_export::export_async(&j, &mut |p| progress(p.done, p.total)).await {
+            match tselatra_export::export_async(&j, &mut |p| progress(p.done, p.total)).await {
                 Ok(r) => Ok(ExportResult {
                     path: r.path,
                     frames: r.frames,
@@ -73,7 +73,7 @@ impl Exporter for FileExporter {
                     log: r.log,
                     overflow: r.overflow,
                 }),
-                Err(effectcraft_export::ExportError::Cancelled) => Err(effectcraft_engine::render_queue::CANCELLED.into()),
+                Err(tselatra_export::ExportError::Cancelled) => Err(tselatra_engine::render_queue::CANCELLED.into()),
                 Err(e) => Err(e.to_string()),
             }
         })
@@ -86,21 +86,21 @@ pub fn session() -> Session {
         // The desktop app, the CLI and the MCP server share installed Roto Brush models.
         models_dir: config_dir().map(|d| d.join("models")),
         exporter: Some(Arc::new(FileExporter::default())),
-        footage: Arc::new(effectcraft_media::MediaPool::new()),
+        footage: Arc::new(tselatra_media::MediaPool::new()),
         importer: Some(Arc::new(MediaImporter)),
-        expr: Some(Arc::new(effectcraft_expr::Expressions)),
-        expr_check: Some(effectcraft_expr::check_syntax),
-        script: Some(effectcraft_script::runner),
-        script_ui: effectcraft_engine::scriptui::ScriptUi { dispatch: Some(effectcraft_script::dispatch_ui), ..Default::default() },
-        plugin_loader: effectcraft_plugin::wasm_available().then_some(effectcraft_plugin::loader as effectcraft_engine::PluginLoader),
+        expr: Some(Arc::new(tselatra_expr::Expressions)),
+        expr_check: Some(tselatra_expr::check_syntax),
+        script: Some(tselatra_script::runner),
+        script_ui: tselatra_engine::scriptui::ScriptUi { dispatch: Some(tselatra_script::dispatch_ui), ..Default::default() },
+        plugin_loader: tselatra_plugin::wasm_available().then_some(tselatra_plugin::loader as tselatra_engine::PluginLoader),
         ..Default::default()
     }
 }
 
-/// The platform config directory for EffectCraft (`EFFECTCRAFT_CONFIG_DIR` overrides):
-/// `~/Library/Application Support/EffectCraft` (macOS), `%APPDATA%\EffectCraft` (Windows),
-/// `$XDG_CONFIG_HOME/effectcraft` or `~/.config/effectcraft` (Linux and others). A `portable.txt`
-/// beside the executable puts it in `EffectCraftData` there instead ([`app_dirs`]).
+/// The platform config directory for Tselatra (`TSELATRA_CONFIG_DIR` overrides):
+/// `~/Library/Application Support/Tselatra` (macOS), `%APPDATA%\Tselatra` (Windows),
+/// `$XDG_CONFIG_HOME/tselatra` or `~/.config/tselatra` (Linux and others). A `portable.txt`
+/// beside the executable puts it in `TselatraData` there instead ([`app_dirs`]).
 pub fn config_dir() -> Option<std::path::PathBuf> {
     app_dirs::current().dir.clone()
 }
@@ -113,7 +113,7 @@ mod tests {
     /// evaluate to the camera's focus on the target.
     #[test]
     fn focus_link_expressions_track_the_target() {
-        use effectcraft_engine::geom::vec3;
+        use tselatra_engine::geom::vec3;
         let mut s = super::session();
         s.execute("comp.new", json!({"name": "F", "width": 400, "height": 300, "duration": 2})).unwrap();
         let t = s.execute("layer.newSolid", json!({"color": "#ffffff", "width": 50, "height": 50})).unwrap()["layer"].as_u64().unwrap();
@@ -121,19 +121,19 @@ mod tests {
         s.execute("layer.setTransform", json!({"layer": t, "prop": "position", "value": [260, 120, 400]})).unwrap();
         let cam = s.execute("layer.newCamera", json!({})).unwrap()["layer"].as_u64().unwrap();
         let cid = s.active_comp_id().unwrap();
-        let focus = |s: &effectcraft_engine::Session| {
+        let focus = |s: &tselatra_engine::Session| {
             let comp = s.project.comp(cid).unwrap();
-            let mut ctx = effectcraft_engine::render::EvalCtx::new(&s.project, cid, comp, s.time());
+            let mut ctx = tselatra_engine::render::EvalCtx::new(&s.project, cid, comp, s.time());
             ctx.expr = s.expr.as_deref();
-            let l = comp.layer(effectcraft_engine::project::LayerId(cam)).unwrap();
+            let l = comp.layer(tselatra_engine::project::LayerId(cam)).unwrap();
             ctx.value(l, l.props.prop("cameraOptions/focusDistance").unwrap()).as_f64()
         };
-        let depth = |s: &effectcraft_engine::Session| {
+        let depth = |s: &tselatra_engine::Session| {
             let comp = s.project.comp(cid).unwrap();
-            let ctx = effectcraft_engine::render::EvalCtx::new(&s.project, cid, comp, s.time());
-            let c = comp.layer(effectcraft_engine::project::LayerId(cam)).unwrap();
-            let tl = comp.layer(effectcraft_engine::project::LayerId(t)).unwrap();
-            let cs = effectcraft_engine::render::three_d::camera::layer_camera(&ctx, c);
+            let ctx = tselatra_engine::render::EvalCtx::new(&s.project, cid, comp, s.time());
+            let c = comp.layer(tselatra_engine::project::LayerId(cam)).unwrap();
+            let tl = comp.layer(tselatra_engine::project::LayerId(t)).unwrap();
+            let cs = tselatra_engine::render::three_d::camera::layer_camera(&ctx, c);
             cs.depth(ctx.world_matrix(tl).apply(vec3(25.0, 25.0, 0.0)))
         };
         s.execute("layer.select", json!({"layers": [cam, t]})).unwrap();
@@ -145,7 +145,7 @@ mod tests {
         assert!((focus(&s) - depth(&s)).abs() < 1e-3, "{} vs {}", focus(&s), depth(&s));
         s.execute("camera.linkFocusToPoi", json!({"camera": cam})).unwrap();
         let poi = {
-            let l = s.active_comp().unwrap().layer(effectcraft_engine::project::LayerId(cam)).unwrap();
+            let l = s.active_comp().unwrap().layer(tselatra_engine::project::LayerId(cam)).unwrap();
             let p = l.props.prop("transform/position").unwrap().value.as_vec3();
             let q = l.props.prop("transform/poi").unwrap().value.as_vec3();
             ((p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2) + (p[2] - q[2]).powi(2)).sqrt()
@@ -160,7 +160,7 @@ mod tests {
         let cid = s.active_comp_id().unwrap();
         let lid = s.active_comp().unwrap().layers[1].id.0;
         s.execute("prop.setExpression", json!({"layer": lid, "path": "transform/rotation", "expression": "time * 90"})).unwrap();
-        let img = s.render(cid, s.time(), effectcraft_engine::render::RenderOpts { scale: 0.25, ..Default::default() });
+        let img = s.render(cid, s.time(), tselatra_engine::render::RenderOpts { scale: 0.25, ..Default::default() });
         assert!(img.data.iter().any(|p| p[3] > 0.5));
     }
 
@@ -179,7 +179,7 @@ mod tests {
         s.execute("prop.set", json!({"layer": cube, "path": "transform/rotationY", "value": 30})).unwrap();
         s.execute("prop.set", json!({"layer": cube, "path": "transform/rotationX", "value": 20})).unwrap();
         let cid = s.active_comp_id().unwrap();
-        let opts = effectcraft_engine::render::RenderOpts::default();
+        let opts = tselatra_engine::render::RenderOpts::default();
         let img = s.render(cid, s.time(), opts);
         let covered = img.data.iter().filter(|p| p[3] > 0.99).count();
         assert!(covered > 1000, "the cube covers part of the frame: {covered}");
@@ -228,21 +228,21 @@ mod tests {
     /// and the software renderer (no GPU, as on the reporter's Intel HD Graphics 5500) draws it.
     #[test]
     fn imported_glb_shows_in_a_new_composition() {
-        let path = std::env::temp_dir().join(format!("effectcraft-264-cube-{}.glb", std::process::id()));
+        let path = std::env::temp_dir().join(format!("tselatra-264-cube-{}.glb", std::process::id()));
         std::fs::write(&path, glb_cube()).unwrap();
         let mut s = super::session();
         assert!(s.accel.is_none(), "renders in software");
         let r = s.execute("file.import", json!({"paths": [path.to_string_lossy()]})).unwrap();
         assert_eq!(r["errors"], json!([]), "{r}");
-        s.state.project_selection = vec![effectcraft_project::ItemId(r["items"][0].as_u64().unwrap())];
+        s.state.project_selection = vec![tselatra_project::ItemId(r["items"][0].as_u64().unwrap())];
         s.execute("file.newCompFromSelection", json!({})).unwrap();
         let comp = s.active_comp().unwrap();
-        assert_eq!(comp.renderer, effectcraft_project::Renderer::Advanced3D);
+        assert_eq!(comp.renderer, tselatra_project::Renderer::Advanced3D);
         let layer = comp.layers[0].id.0;
         s.execute("prop.set", json!({"layer": layer, "path": "transform/rotationY", "value": 30})).unwrap();
         s.execute("prop.set", json!({"layer": layer, "path": "transform/rotationX", "value": 20})).unwrap();
         let cid = s.active_comp_id().unwrap();
-        let img = s.render(cid, s.time(), effectcraft_engine::render::RenderOpts { scale: 0.25, ..Default::default() });
+        let img = s.render(cid, s.time(), tselatra_engine::render::RenderOpts { scale: 0.25, ..Default::default() });
         let red = img.data.iter().filter(|p| p[3] > 0.99 && p[0] > 0.2 && p[1] < 0.05 && p[2] < 0.05).count();
         let _ = std::fs::remove_file(&path);
         // Half the comp height wide, seen at an angle: well over 5% of the frame.
@@ -271,7 +271,7 @@ mod tests {
         s.execute("file.import", json!({"paths": [path.to_string_lossy()], "addToComp": true})).unwrap();
         let cid = s.active_comp_id().unwrap();
         let rgb = |t: f64| {
-            let img = s.render(cid, effectcraft_time::Tick::from_seconds_f64(t), effectcraft_engine::render::RenderOpts::default());
+            let img = s.render(cid, tselatra_time::Tick::from_seconds_f64(t), tselatra_engine::render::RenderOpts::default());
             let p = img.data[5];
             [p[0].round(), p[1].round(), p[2].round()]
         };
@@ -291,7 +291,7 @@ mod tests {
         s.exporter = Some(Arc::new(super::FileExporter { sink: Some(Arc::new(move |p: &str, d: Vec<u8>| g.lock().unwrap().push((p.to_string(), d)))) }));
         s.execute("file.openDemoProject", json!({})).unwrap();
         // Rooted without a drive letter is not absolute on Windows, where the engine joins it to the home drive.
-        let dir = if cfg!(windows) { "C:/no-such-dir-effectcraft-sink-test" } else { "/no-such-dir-effectcraft-sink-test" };
+        let dir = if cfg!(windows) { "C:/no-such-dir-tselatra-sink-test" } else { "/no-such-dir-tselatra-sink-test" };
         s.execute(
             "renderQueue.add",
             json!({"format": "gif", "output": format!("{dir}/a.gif"), "resolution": 0.0625, "timeSpan": "custom", "start": 0.0, "end": 0.2}),
@@ -352,16 +352,16 @@ mod tests {
         // Rendering again needs a re-queue.
         assert!(s.execute("renderQueue.render", json!({})).is_err());
         s.execute("renderQueue.setRender", json!({"index": 1, "render": true})).unwrap();
-        assert_eq!(s.project.render_queue[0].status, effectcraft_engine::project::render_queue::RenderStatus::Queued);
+        assert_eq!(s.project.render_queue[0].status, tselatra_engine::project::render_queue::RenderStatus::Queued);
     }
 
     /// Value of a property of layer `l` at time 0 (keys + expression).
-    fn value(s: &effectcraft_engine::Session, l: u64, path: &str) -> effectcraft_engine::keyframe::Value {
+    fn value(s: &tselatra_engine::Session, l: u64, path: &str) -> tselatra_engine::keyframe::Value {
         let cid = s.active_comp_id().unwrap();
         let comp = s.project.comp(cid).unwrap();
-        let layer = comp.layer(effectcraft_engine::project::LayerId(l)).unwrap();
+        let layer = comp.layer(tselatra_engine::project::LayerId(l)).unwrap();
         let ctx =
-            effectcraft_engine::render::EvalCtx { project: &s.project, comp_id: cid, comp, time: Default::default(), expr: s.expr.as_deref(), footage: None };
+            tselatra_engine::render::EvalCtx { project: &s.project, comp_id: cid, comp, time: Default::default(), expr: s.expr.as_deref(), footage: None };
         ctx.value(layer, layer.props.prop(path).unwrap())
     }
 
@@ -377,14 +377,14 @@ mod tests {
         s.execute("prop.set", json!({"layer": b, "path": "effects/#1/blurriness", "value": 21})).unwrap();
         s.execute("layer.addMask", json!({"layer": b})).unwrap();
         s.execute("prop.set", json!({"layer": b, "path": "masks/#1/feather", "value": [7, 7]})).unwrap();
-        let link = |s: &mut effectcraft_engine::Session, from: &str, to: &str| {
+        let link = |s: &mut tselatra_engine::Session, from: &str, to: &str| {
             s.execute("prop.pickWhip", json!({"layer": a, "path": from, "target": {"layer": b, "path": to}})).unwrap();
         };
         link(&mut s, "transform/opacity", "transform/rotation");
         assert_eq!(value(&s, a, "transform/opacity").as_f64(), 33.0);
         link(&mut s, "transform/scale", "transform/rotation");
         let cid = s.active_comp_id().unwrap();
-        let ep = effectcraft_expr::eval_property(&s.project, cid, effectcraft_engine::project::LayerId(a), "transform/scale", 0.0);
+        let ep = tselatra_expr::eval_property(&s.project, cid, tselatra_engine::project::LayerId(a), "transform/scale", 0.0);
         assert!(ep.is_ok(), "{ep:?}");
         assert_eq!(value(&s, a, "transform/scale").as_vec2(), [33.0, 33.0]);
         link(&mut s, "transform/position", "transform/position");
@@ -446,7 +446,7 @@ mod tests {
         assert_eq!(r["items"].as_array().unwrap().len(), 2, "{r}");
         assert_eq!(r["errors"].as_array().unwrap().len(), 1, "{r}");
         let csv = r["items"][0].as_u64().unwrap();
-        assert_eq!(s.project.item(effectcraft_engine::project::ItemId(csv)).unwrap().type_name(), "Data");
+        assert_eq!(s.project.item(tselatra_engine::project::ItemId(csv)).unwrap().type_name(), "Data");
         assert!(s.execute("layer.addItem", json!({"item": csv})).is_err(), "data files are not layers");
         let a = s.execute("layer.newSolid", json!({"color": "#ffffff"})).unwrap()["layer"].as_u64().unwrap();
         s.execute("prop.setExpression", json!({"layer": a, "path": "transform/opacity", "expression": "footage(\"levels.csv\").sourceData[1].value"})).unwrap();
@@ -469,7 +469,7 @@ mod tests {
         )
         .unwrap();
         let cid = s.active_comp_id().unwrap();
-        let img = s.render(cid, s.time(), effectcraft_engine::render::RenderOpts::default());
+        let img = s.render(cid, s.time(), tselatra_engine::render::RenderOpts::default());
         let px = img.get(50, 50);
         assert!(px[1] > 0.99 && px[0] < 0.01, "the box is filled with the sampled green: {px:?}");
     }
@@ -506,7 +506,7 @@ mod tests {
         }
         s.execute("renderQueue.render", json!({"wait": true})).unwrap();
         s.poll_render();
-        let centre = |s: &mut effectcraft_engine::Session, path: &str| {
+        let centre = |s: &mut tselatra_engine::Session, path: &str| {
             let id = s.execute("file.import", json!({"paths": [path]})).unwrap()["items"][0].as_u64().unwrap();
             s.execute("comp.new", json!({"name": "Probe", "width": 16, "height": 16, "frameRate": 10, "duration": 1})).unwrap();
             s.execute("layer.addItem", json!({"item": id})).unwrap();
@@ -610,12 +610,12 @@ mod tests {
             .unwrap();
         let r = s.execute("camera.stereoRig", json!({"sceneDepth": 4})).unwrap();
         let ctl = r["controls"].as_u64().unwrap();
-        let left = effectcraft_engine::project::ItemId(r["leftComp"].as_u64().unwrap());
+        let left = tselatra_engine::project::ItemId(r["leftComp"].as_u64().unwrap());
         // The left eye camera's evaluated value (expressions on).
-        let v3 = |s: &effectcraft_engine::Session, path: &str| {
+        let v3 = |s: &tselatra_engine::Session, path: &str| {
             let comp = s.project.comp(left).unwrap();
             let layer = &comp.layers[0];
-            let ctx = effectcraft_engine::render::EvalCtx {
+            let ctx = tselatra_engine::render::EvalCtx {
                 project: &s.project,
                 comp_id: left,
                 comp,

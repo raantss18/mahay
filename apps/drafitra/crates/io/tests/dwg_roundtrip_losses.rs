@@ -2,13 +2,13 @@
 //! converts our DXF with acadrust), and the paper-space viewport the DXF writer adds for it.
 #![cfg(not(target_arch = "wasm32"))]
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::*;
+use drafitra_geom::{Vec2, Vec3};
 
 fn through_dwg(d: &Drawing) -> Drawing {
-    let dwg = cadcraft_io::write(d, "x.dwg").unwrap();
-    cadcraft_io::read(&dwg, "x.dwg").unwrap()
+    let dwg = drafitra_io::write(d, "x.dwg").unwrap();
+    drafitra_io::read(&dwg, "x.dwg").unwrap()
 }
 
 fn line(d: &mut Drawing, space: &Space, common: Common) -> Handle {
@@ -70,12 +70,12 @@ fn dwg_keeps_true_colours_and_transparency() {
         Common { layer: "Fancy".into(), color: Color::True(Rgb(1, 2, 3)), transparency: Transparency::Percent(40), ..Common::default() },
     );
 
-    let dwg = cadcraft_io::write(&d, "x.dwg").unwrap();
-    assert_eq!(cadcraft_dwg::version(&dwg).as_deref(), Some("AC1032"));
-    let header = records(&cadcraft_io::write_dxf(&d), "SECTION");
+    let dwg = drafitra_io::write(&d, "x.dwg").unwrap();
+    assert_eq!(drafitra_dwg::version(&dwg).as_deref(), Some("AC1032"));
+    let header = records(&drafitra_io::write_dxf(&d), "SECTION");
     assert_eq!(header.first().and_then(|h| group(h, "1")), Some("AC1015"), "the DXF stays R2000");
 
-    let back = cadcraft_io::read(&dwg, "x.dwg").unwrap();
+    let back = drafitra_io::read(&dwg, "x.dwg").unwrap();
     let e = back.entity(h).unwrap();
     assert_eq!(e.common.color, Color::True(Rgb(1, 2, 3)));
     assert_eq!(e.common.transparency, Transparency::Percent(40));
@@ -105,7 +105,7 @@ fn dwg_keeps_table_styles() {
 
 /// DWG doesn't store viewport ids; readers number a layout's viewports in order, and id 1 is the
 /// paper-space viewport (the sheet, not drawn). The writer puts that viewport ahead of a layout's
-/// own viewports, so a viewport made in CADCraft (id 2) keeps its id instead of becoming the
+/// own viewports, so a viewport made in Drafitra (id 2) keeps its id instead of becoming the
 /// sheet; our reader drops the added viewport again, so a DXF round trip is unchanged.
 #[test]
 fn viewport_ids_survive_dwg_and_the_paper_viewport_stays_implicit() {
@@ -114,7 +114,7 @@ fn viewport_ids_survive_dwg_and_the_paper_viewport_stays_implicit() {
     let h = d.add(&first, Common::default(), viewport(2)).unwrap();
     d.add(&first, Common::default(), viewport(3)).unwrap();
 
-    let text = cadcraft_io::write_dxf(&d);
+    let text = drafitra_io::write_dxf(&d);
     let vps = records(&text, "VIEWPORT");
     assert_eq!(vps.len(), 3, "{text}");
     assert_eq!(group(&vps[0], "69"), Some("1"));
@@ -123,7 +123,7 @@ fn viewport_ids_survive_dwg_and_the_paper_viewport_stays_implicit() {
     assert_eq!(group(&vps[1], "68"), Some("2"));
     assert_eq!(group(&vps[1], "90"), Some("32768"));
 
-    let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     assert_eq!(viewport_ids(&back.layouts[0]), [2, 3]);
     assert_eq!(back.layouts[0].entities.len(), 2);
 
@@ -135,7 +135,7 @@ fn viewport_ids_survive_dwg_and_the_paper_viewport_stays_implicit() {
     let mut d = Drawing::new_metric();
     d.add(&first, Common::default(), viewport(1)).unwrap();
     d.add(&first, Common::default(), viewport(2)).unwrap();
-    let text = cadcraft_io::write_dxf(&d);
+    let text = drafitra_io::write_dxf(&d);
     assert!(!text.contains("PAPERVIEW"));
-    assert_eq!(viewport_ids(&cadcraft_io::read_dxf(text.as_bytes()).unwrap().layouts[0]), [1, 2]);
+    assert_eq!(viewport_ids(&drafitra_io::read_dxf(text.as_bytes()).unwrap().layouts[0]), [1, 2]);
 }

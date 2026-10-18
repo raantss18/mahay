@@ -1,6 +1,6 @@
 //! Gouraud lighting represented by an ordinary vector linear gradient on each triangle.
 
-use vectorcraft_geom::{Point, Vec2};
+use tsipika_geom::{Point, Vec2};
 
 /// Document-space gradient placement and the brightness at its two ends. Clipping a
 /// face must keep this placement unchanged, so newly cut edges retain their lighting.

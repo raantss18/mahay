@@ -213,6 +213,7 @@ dependencies = [
  "ndk-context",
  "ndk-sys",
  "num_enum",
+ "simd_cesu8",
  "thiserror 2.0.21",
 ]
 
@@ -221,6 +222,23 @@ name = "android-properties"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
+
+[[package]]
+name = "android_log-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84521a3cf562bc62942e294181d9eef17eb38ceb8c68677bc49f144e4c3d4f8d"
+
+[[package]]
+name = "android_logger"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbb4e440d04be07da1f1bf44fb4495ebd58669372fe0cffa6e48595ac5bd88a3"
+dependencies = [
+ "android_log-sys",
+ "env_filter",
+ "log",
+]
 
 [[package]]
 name = "android_system_properties"
@@ -234,12 +252,11 @@ dependencies = [
 [[package]]
 name = "arboard"
 version = "3.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
 dependencies = [
  "clipboard-win",
  "image",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -247,7 +264,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.60.2",
+ "windows-sys 0.52.0",
  "x11rb",
 ]
 
@@ -1012,20 +1029,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "craft-docpath"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=82a24b006eefa036b43c09a67fb9a3fbd17ffe63#82a24b006eefa036b43c09a67fb9a3fbd17ffe63"
-
-[[package]]
-name = "craft-ui"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51eeb3de70e735c8ce87a59a7dedd47675"
-dependencies = [
- "egui",
- "serde",
-]
-
-[[package]]
 name = "crc32fast"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1537,6 +1540,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_filter"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bf3c259d255ca70051b30e2e95b5446cdb8949ac4cd22c0d7fd634d89f568e2"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "epaint"
 version = "0.36.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1675,728 +1687,6 @@ checksum = "38e2275cc4e4fc009b0669731a1e5ab7ebf11f469eaede2bab9309a5b4d6057f"
 dependencies = [
  "memoffset",
  "rustc_version",
-]
-
-[[package]]
-name = "filmcraft"
-version = "0.9.0"
-dependencies = [
- "arboard",
- "chrono",
- "cpal",
- "eframe",
- "egui",
- "filmcraft-engine",
- "filmcraft-export",
- "filmcraft-gpu",
- "filmcraft-platform",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-time",
- "filmcraft-ui-egui",
- "glob",
- "log",
- "muda",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "open",
- "pollster 0.4.0",
- "rfd",
- "serde_json",
- "sys-locale",
- "winit",
- "winresource",
- "zbus",
-]
-
-[[package]]
-name = "filmcraft-aac"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-ac3"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-apv"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-audio-dsp"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
-]
-
-[[package]]
-name = "filmcraft-automation"
-version = "0.9.0"
-dependencies = [
- "base64 0.22.1",
- "filmcraft-engine",
- "filmcraft-time",
- "image",
- "rmcp",
- "schemars",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "tokio",
-]
-
-[[package]]
-name = "filmcraft-av1"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "rustix 1.1.5",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-avi"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
-]
-
-[[package]]
-name = "filmcraft-bitstream"
-version = "0.9.0"
-dependencies = [
- "proptest",
-]
-
-[[package]]
-name = "filmcraft-captions"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "filmcraft-project",
- "filmcraft-text",
- "filmcraft-time",
- "proptest",
- "roxmltree",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-cfb"
-version = "0.9.0"
-
-[[package]]
-name = "filmcraft-cli"
-version = "0.9.0"
-dependencies = [
- "filmcraft-automation",
- "filmcraft-codecs",
- "filmcraft-engine",
- "filmcraft-export",
- "filmcraft-gpu",
- "filmcraft-media",
- "filmcraft-mpegts",
- "filmcraft-mxf",
- "filmcraft-ogg",
- "filmcraft-platform",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-testkit",
- "filmcraft-time",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "filmcraft-codecs"
-version = "0.9.0"
-dependencies = [
- "filmcraft-aac",
- "filmcraft-ac3",
- "filmcraft-apv",
- "filmcraft-av1",
- "filmcraft-avi",
- "filmcraft-bitstream",
- "filmcraft-color",
- "filmcraft-dnx",
- "filmcraft-frame",
- "filmcraft-h264",
- "filmcraft-hevc",
- "filmcraft-isobmff",
- "filmcraft-matroska",
- "filmcraft-media",
- "filmcraft-mpa",
- "filmcraft-mpeg2v",
- "filmcraft-mpegts",
- "filmcraft-mxf",
- "filmcraft-ogg",
- "filmcraft-opus",
- "filmcraft-prores",
- "filmcraft-testkit",
- "filmcraft-time",
- "filmcraft-vp8",
- "filmcraft-vp9",
- "image",
- "log",
- "rayon",
- "serde_json",
- "symphonia",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "filmcraft-color"
-version = "0.9.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "filmcraft-dng"
-version = "0.9.0"
-dependencies = [
- "filmcraft-dng",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-dnx"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-edit"
-version = "0.9.0"
-dependencies = [
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-time",
- "proptest",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-engine"
-version = "0.9.0"
-dependencies = [
- "craft-docpath",
- "filmcraft-audio-dsp",
- "filmcraft-captions",
- "filmcraft-codecs",
- "filmcraft-color",
- "filmcraft-dng",
- "filmcraft-edit",
- "filmcraft-export",
- "filmcraft-format",
- "filmcraft-frame",
- "filmcraft-geom",
- "filmcraft-interchange",
- "filmcraft-isobmff",
- "filmcraft-media",
- "filmcraft-mxf",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-scopes",
- "filmcraft-speech",
- "filmcraft-testkit",
- "filmcraft-text",
- "filmcraft-time",
- "filmcraft-tts",
- "image",
- "log",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "filmcraft-export"
-version = "0.9.0"
-dependencies = [
- "filmcraft-aac",
- "filmcraft-apv",
- "filmcraft-audio-dsp",
- "filmcraft-codecs",
- "filmcraft-color",
- "filmcraft-dnx",
- "filmcraft-flac",
- "filmcraft-frame",
- "filmcraft-geom",
- "filmcraft-h264enc",
- "filmcraft-isobmff",
- "filmcraft-media",
- "filmcraft-mxf",
- "filmcraft-project",
- "filmcraft-prores",
- "filmcraft-render",
- "filmcraft-testkit",
- "filmcraft-text",
- "filmcraft-time",
- "image",
- "rayon",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "filmcraft-flac"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-format"
-version = "0.9.0"
-dependencies = [
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-time",
- "log",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-frame"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "filmcraft-time",
- "rayon",
- "serde",
-]
-
-[[package]]
-name = "filmcraft-geom"
-version = "0.9.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "filmcraft-golden"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "filmcraft-frame",
- "filmcraft-geom",
- "filmcraft-gpu",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-testkit",
- "filmcraft-time",
- "pollster 0.4.0",
- "wgpu",
-]
-
-[[package]]
-name = "filmcraft-gpu"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "filmcraft-export",
- "filmcraft-frame",
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-time",
- "image",
- "log",
- "pollster 0.4.0",
- "rayon",
- "wgpu",
-]
-
-[[package]]
-name = "filmcraft-h264"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-h264enc"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-hevc"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-interchange"
-version = "0.9.0"
-dependencies = [
- "filmcraft-cfb",
- "filmcraft-color",
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-time",
- "proptest",
- "roxmltree",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-isobmff"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "proptest",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-matroska"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
- "serde_json",
-]
-
-[[package]]
-name = "filmcraft-media"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "filmcraft-dng",
- "filmcraft-frame",
- "filmcraft-testkit",
- "filmcraft-time",
- "image",
- "png",
- "rayon",
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mpa"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mpeg2v"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mpegts"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mxf"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
-]
-
-[[package]]
-name = "filmcraft-ogg"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
-]
-
-[[package]]
-name = "filmcraft-opus"
-version = "0.9.0"
-dependencies = [
- "filmcraft-testkit",
-]
-
-[[package]]
-name = "filmcraft-platform"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-codecs",
- "filmcraft-color",
- "filmcraft-export",
- "filmcraft-frame",
- "filmcraft-h264",
- "filmcraft-hevc",
- "filmcraft-isobmff",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-testkit",
- "filmcraft-time",
- "libloading",
- "log",
- "objc2-core-foundation",
- "objc2-core-media",
- "objc2-core-video",
- "objc2-video-toolbox",
- "windows 0.62.2",
-]
-
-[[package]]
-name = "filmcraft-project"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-time",
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-prores"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "filmcraft-testkit",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-render"
-version = "0.9.0"
-dependencies = [
- "filmcraft-audio-dsp",
- "filmcraft-captions",
- "filmcraft-color",
- "filmcraft-frame",
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-text",
- "filmcraft-time",
- "image",
- "rayon",
- "rustix 1.1.5",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "filmcraft-scopes"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "filmcraft-speech"
-version = "0.9.0"
-dependencies = [
- "candle-core",
- "candle-nn",
- "filmcraft-project",
- "filmcraft-time",
- "rayon",
- "rustls",
- "rustls-rustcrypto",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.21",
- "ureq",
-]
-
-[[package]]
-name = "filmcraft-testkit"
-version = "0.9.0"
-dependencies = [
- "png",
-]
-
-[[package]]
-name = "filmcraft-text"
-version = "0.9.0"
-dependencies = [
- "filmcraft-color",
- "harfrust",
- "skrifa",
- "unicode-bidi",
- "unicode-linebreak",
- "unicode-segmentation",
-]
-
-[[package]]
-name = "filmcraft-time"
-version = "0.9.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "filmcraft-tts"
-version = "0.9.0"
-dependencies = [
- "candle-core",
- "candle-nn",
- "filmcraft-audio-dsp",
- "filmcraft-tts-text",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "zip",
-]
-
-[[package]]
-name = "filmcraft-tts-text"
-version = "0.9.0"
-dependencies = [
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-ui-egui"
-version = "0.9.0"
-dependencies = [
- "cpu-time",
- "craft-ui",
- "eframe",
- "egui",
- "egui_kittest",
- "filmcraft-audio-dsp",
- "filmcraft-codecs",
- "filmcraft-color",
- "filmcraft-edit",
- "filmcraft-engine",
- "filmcraft-export",
- "filmcraft-frame",
- "filmcraft-geom",
- "filmcraft-gpu",
- "filmcraft-interchange",
- "filmcraft-media",
- "filmcraft-platform",
- "filmcraft-project",
- "filmcraft-render",
- "filmcraft-scopes",
- "filmcraft-text",
- "filmcraft-time",
- "filmcraft-tts",
- "image",
- "log",
- "pollster 0.4.0",
- "rayon",
- "rustix 1.1.5",
- "serde",
- "serde_json",
- "toml 1.1.6+spec-1.1.0",
- "unicode-bidi",
- "web-time",
-]
-
-[[package]]
-name = "filmcraft-vp8"
-version = "0.9.0"
-dependencies = [
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-vp9"
-version = "0.9.0"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-web"
-version = "0.9.0"
-dependencies = [
- "eframe",
- "egui",
- "filmcraft-codecs",
- "filmcraft-color",
- "filmcraft-engine",
- "filmcraft-format",
- "filmcraft-frame",
- "filmcraft-isobmff",
- "filmcraft-media",
- "filmcraft-time",
- "filmcraft-ui-egui",
- "js-sys",
- "log",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "web-time",
 ]
 
 [[package]]
@@ -3184,6 +2474,728 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
 
 [[package]]
+name = "hetsika"
+version = "0.2.0"
+dependencies = [
+ "arboard",
+ "chrono",
+ "cpal",
+ "eframe",
+ "egui",
+ "glob",
+ "hetsika-engine",
+ "hetsika-export",
+ "hetsika-gpu",
+ "hetsika-platform",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-time",
+ "hetsika-ui-egui",
+ "log",
+ "muda",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "open",
+ "pollster 0.4.0",
+ "rfd",
+ "serde_json",
+ "sys-locale",
+ "winit",
+ "winresource",
+ "zbus",
+]
+
+[[package]]
+name = "hetsika-aac"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-ac3"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-apv"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-audio-dsp"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+]
+
+[[package]]
+name = "hetsika-automation"
+version = "0.2.0"
+dependencies = [
+ "base64 0.22.1",
+ "hetsika-engine",
+ "hetsika-time",
+ "image",
+ "rmcp",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
+name = "hetsika-av1"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "rustix 1.1.5",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-avi"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+]
+
+[[package]]
+name = "hetsika-bitstream"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+]
+
+[[package]]
+name = "hetsika-captions"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-project",
+ "hetsika-text",
+ "hetsika-time",
+ "proptest",
+ "roxmltree",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-cfb"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-cli"
+version = "0.2.0"
+dependencies = [
+ "hetsika-automation",
+ "hetsika-codecs",
+ "hetsika-engine",
+ "hetsika-export",
+ "hetsika-gpu",
+ "hetsika-media",
+ "hetsika-mpegts",
+ "hetsika-mxf",
+ "hetsika-ogg",
+ "hetsika-platform",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-testkit",
+ "hetsika-time",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "hetsika-codecs"
+version = "0.2.0"
+dependencies = [
+ "hetsika-aac",
+ "hetsika-ac3",
+ "hetsika-apv",
+ "hetsika-av1",
+ "hetsika-avi",
+ "hetsika-bitstream",
+ "hetsika-color",
+ "hetsika-dnx",
+ "hetsika-frame",
+ "hetsika-h264",
+ "hetsika-hevc",
+ "hetsika-isobmff",
+ "hetsika-matroska",
+ "hetsika-media",
+ "hetsika-mpa",
+ "hetsika-mpeg2v",
+ "hetsika-mpegts",
+ "hetsika-mxf",
+ "hetsika-ogg",
+ "hetsika-opus",
+ "hetsika-prores",
+ "hetsika-testkit",
+ "hetsika-time",
+ "hetsika-vp8",
+ "hetsika-vp9",
+ "image",
+ "log",
+ "rayon",
+ "serde_json",
+ "symphonia",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hetsika-color"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "hetsika-dng"
+version = "0.2.0"
+dependencies = [
+ "hetsika-dng",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-dnx"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-edit"
+version = "0.2.0"
+dependencies = [
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-time",
+ "proptest",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-engine"
+version = "0.2.0"
+dependencies = [
+ "hetsika-audio-dsp",
+ "hetsika-captions",
+ "hetsika-codecs",
+ "hetsika-color",
+ "hetsika-dng",
+ "hetsika-edit",
+ "hetsika-export",
+ "hetsika-format",
+ "hetsika-frame",
+ "hetsika-geom",
+ "hetsika-interchange",
+ "hetsika-isobmff",
+ "hetsika-media",
+ "hetsika-mxf",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-scopes",
+ "hetsika-speech",
+ "hetsika-testkit",
+ "hetsika-text",
+ "hetsika-time",
+ "hetsika-tts",
+ "image",
+ "log",
+ "mahay-docpath",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hetsika-export"
+version = "0.2.0"
+dependencies = [
+ "hetsika-aac",
+ "hetsika-apv",
+ "hetsika-audio-dsp",
+ "hetsika-codecs",
+ "hetsika-color",
+ "hetsika-dnx",
+ "hetsika-flac",
+ "hetsika-frame",
+ "hetsika-geom",
+ "hetsika-h264enc",
+ "hetsika-isobmff",
+ "hetsika-media",
+ "hetsika-mxf",
+ "hetsika-project",
+ "hetsika-prores",
+ "hetsika-render",
+ "hetsika-testkit",
+ "hetsika-text",
+ "hetsika-time",
+ "image",
+ "rayon",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hetsika-flac"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-format"
+version = "0.2.0"
+dependencies = [
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-time",
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-frame"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-time",
+ "rayon",
+ "serde",
+]
+
+[[package]]
+name = "hetsika-geom"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "hetsika-golden"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-frame",
+ "hetsika-geom",
+ "hetsika-gpu",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-testkit",
+ "hetsika-time",
+ "pollster 0.4.0",
+ "wgpu",
+]
+
+[[package]]
+name = "hetsika-gpu"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-export",
+ "hetsika-frame",
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-time",
+ "image",
+ "log",
+ "pollster 0.4.0",
+ "rayon",
+ "wgpu",
+]
+
+[[package]]
+name = "hetsika-h264"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-h264enc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-hevc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-interchange"
+version = "0.2.0"
+dependencies = [
+ "hetsika-cfb",
+ "hetsika-color",
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-time",
+ "proptest",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-isobmff"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "proptest",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-matroska"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+ "serde_json",
+]
+
+[[package]]
+name = "hetsika-media"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-dng",
+ "hetsika-frame",
+ "hetsika-testkit",
+ "hetsika-time",
+ "image",
+ "png",
+ "rayon",
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mpa"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mpeg2v"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mpegts"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mxf"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+]
+
+[[package]]
+name = "hetsika-ogg"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+]
+
+[[package]]
+name = "hetsika-opus"
+version = "0.2.0"
+dependencies = [
+ "hetsika-testkit",
+]
+
+[[package]]
+name = "hetsika-platform"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-codecs",
+ "hetsika-color",
+ "hetsika-export",
+ "hetsika-frame",
+ "hetsika-h264",
+ "hetsika-hevc",
+ "hetsika-isobmff",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-testkit",
+ "hetsika-time",
+ "libloading",
+ "log",
+ "objc2-core-foundation",
+ "objc2-core-media",
+ "objc2-core-video",
+ "objc2-video-toolbox",
+ "windows 0.62.2",
+]
+
+[[package]]
+name = "hetsika-project"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-time",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-prores"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "hetsika-testkit",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-render"
+version = "0.2.0"
+dependencies = [
+ "hetsika-audio-dsp",
+ "hetsika-captions",
+ "hetsika-color",
+ "hetsika-frame",
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-text",
+ "hetsika-time",
+ "image",
+ "rayon",
+ "rustix 1.1.5",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hetsika-scopes"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hetsika-speech"
+version = "0.2.0"
+dependencies = [
+ "candle-core",
+ "candle-nn",
+ "hetsika-project",
+ "hetsika-time",
+ "rayon",
+ "rustls",
+ "rustls-rustcrypto",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
+ "ureq",
+]
+
+[[package]]
+name = "hetsika-testkit"
+version = "0.2.0"
+dependencies = [
+ "png",
+]
+
+[[package]]
+name = "hetsika-text"
+version = "0.2.0"
+dependencies = [
+ "harfrust",
+ "hetsika-color",
+ "skrifa",
+ "unicode-bidi",
+ "unicode-linebreak",
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "hetsika-time"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "hetsika-tts"
+version = "0.2.0"
+dependencies = [
+ "candle-core",
+ "candle-nn",
+ "hetsika-audio-dsp",
+ "hetsika-tts-text",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "zip",
+]
+
+[[package]]
+name = "hetsika-tts-text"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-ui-egui"
+version = "0.2.0"
+dependencies = [
+ "cpu-time",
+ "eframe",
+ "egui",
+ "egui_kittest",
+ "hetsika-audio-dsp",
+ "hetsika-codecs",
+ "hetsika-color",
+ "hetsika-edit",
+ "hetsika-engine",
+ "hetsika-export",
+ "hetsika-frame",
+ "hetsika-geom",
+ "hetsika-gpu",
+ "hetsika-interchange",
+ "hetsika-media",
+ "hetsika-platform",
+ "hetsika-project",
+ "hetsika-render",
+ "hetsika-scopes",
+ "hetsika-text",
+ "hetsika-time",
+ "hetsika-tts",
+ "image",
+ "log",
+ "mahay-ui",
+ "pollster 0.4.0",
+ "rayon",
+ "rustix 1.1.5",
+ "serde",
+ "serde_json",
+ "toml 1.1.6+spec-1.1.0",
+ "unicode-bidi",
+ "web-time",
+]
+
+[[package]]
+name = "hetsika-vp8"
+version = "0.2.0"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-vp9"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-web"
+version = "0.2.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "hetsika-codecs",
+ "hetsika-color",
+ "hetsika-engine",
+ "hetsika-format",
+ "hetsika-frame",
+ "hetsika-isobmff",
+ "hetsika-media",
+ "hetsika-time",
+ "hetsika-ui-egui",
+ "js-sys",
+ "log",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "web-time",
+]
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3570,6 +3582,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "mahay-android"
+version = "0.1.0"
+dependencies = [
+ "android-activity",
+ "android_logger",
+ "jni 0.21.1",
+ "log",
+]
+
+[[package]]
+name = "mahay-docpath"
+version = "0.1.0"
+
+[[package]]
+name = "mahay-ui"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "serde",
 ]
 
 [[package]]
@@ -5021,14 +5055,13 @@ dependencies = [
 [[package]]
 name = "rfd"
 version = "0.17.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
 dependencies = [
  "block2 0.6.2",
  "dispatch2",
  "js-sys",
  "libc",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -7030,15 +7063,6 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
-version = "0.60.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb"
-dependencies = [
- "windows-targets 0.53.5",
-]
-
-[[package]]
-name = "windows-sys"
 version = "0.61.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
@@ -7070,28 +7094,11 @@ dependencies = [
  "windows_aarch64_gnullvm 0.52.6",
  "windows_aarch64_msvc 0.52.6",
  "windows_i686_gnu 0.52.6",
- "windows_i686_gnullvm 0.52.6",
+ "windows_i686_gnullvm",
  "windows_i686_msvc 0.52.6",
  "windows_x86_64_gnu 0.52.6",
  "windows_x86_64_gnullvm 0.52.6",
  "windows_x86_64_msvc 0.52.6",
-]
-
-[[package]]
-name = "windows-targets"
-version = "0.53.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4945f9f551b88e0d65f3db0bc25c33b8acea4d9e41163edf90dcd0b19f9069f3"
-dependencies = [
- "windows-link",
- "windows_aarch64_gnullvm 0.53.1",
- "windows_aarch64_msvc 0.53.1",
- "windows_i686_gnu 0.53.1",
- "windows_i686_gnullvm 0.53.1",
- "windows_i686_msvc 0.53.1",
- "windows_x86_64_gnu 0.53.1",
- "windows_x86_64_gnullvm 0.53.1",
- "windows_x86_64_msvc 0.53.1",
 ]
 
 [[package]]
@@ -7116,12 +7123,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
 
 [[package]]
-name = "windows_aarch64_gnullvm"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9d8416fa8b42f5c947f8482c43e7d89e73a173cead56d044f6a56104a6d1b53"
-
-[[package]]
 name = "windows_aarch64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7132,12 +7133,6 @@ name = "windows_aarch64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
-
-[[package]]
-name = "windows_aarch64_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9d782e804c2f632e395708e99a94275910eb9100b2114651e04744e9b125006"
 
 [[package]]
 name = "windows_i686_gnu"
@@ -7152,22 +7147,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
 
 [[package]]
-name = "windows_i686_gnu"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "960e6da069d81e09becb0ca57a65220ddff016ff2d6af6a223cf372a506593a3"
-
-[[package]]
 name = "windows_i686_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
-
-[[package]]
-name = "windows_i686_gnullvm"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa7359d10048f68ab8b09fa71c3daccfb0e9b559aed648a8f95469c27057180c"
 
 [[package]]
 name = "windows_i686_msvc"
@@ -7182,12 +7165,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
 
 [[package]]
-name = "windows_i686_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e7ac75179f18232fe9c285163565a57ef8d3c89254a30685b57d83a38d326c2"
-
-[[package]]
 name = "windows_x86_64_gnu"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7198,12 +7175,6 @@ name = "windows_x86_64_gnu"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
-
-[[package]]
-name = "windows_x86_64_gnu"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c3842cdd74a865a8066ab39c8a7a473c0778a3f29370b5fd6b4b9aa7df4a499"
 
 [[package]]
 name = "windows_x86_64_gnullvm"
@@ -7218,12 +7189,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
 
 [[package]]
-name = "windows_x86_64_gnullvm"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ffa179e2d07eee8ad8f57493436566c7cc30ac536a3379fdf008f47f6bb7ae1"
-
-[[package]]
 name = "windows_x86_64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7234,12 +7199,6 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
-
-[[package]]
-name = "windows_x86_64_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6bbff5f0aada427a1e5a6da5f1f98158182f26556f345ac9e04d36d0ebed650"
 
 [[package]]
 name = "winit"
@@ -7402,9 +7361,9 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.9.0"
+version = "0.2.0"
 dependencies = [
- "filmcraft-testkit",
+ "hetsika-testkit",
  "serde_json",
 ]
 

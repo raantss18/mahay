@@ -1,6 +1,6 @@
 //! The keyboard-only commands: time navigation, the work area, selection and layer timing.
 
-use effectcraft_time::Tick;
+use tselatra_time::Tick;
 use serde_json::json;
 
 use crate::Session;

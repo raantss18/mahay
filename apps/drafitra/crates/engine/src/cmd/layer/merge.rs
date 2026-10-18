@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use cadcraft_doc::{Drawing, EntityKind, EntityStore, Handle};
+use drafitra_doc::{Drawing, EntityKind, EntityStore, Handle};
 use serde_json::{Value, json};
 
 use super::super::{bad, find_command, str_param};

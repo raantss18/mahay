@@ -1,7 +1,7 @@
 //! Type on a Path: a story set along any path (lines, curves, shapes), with Type on a Path
 //! Options (start, flip, alignment) and Delete Type from Path.
 
-use designcraft_doc::{Content, ItemId, PathAlign, PathType, Selection, Story, StoryId, TextFrame, TextSel};
+use pejy_doc::{Content, ItemId, PathAlign, PathType, Selection, Story, StoryId, TextFrame, TextSel};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc};
@@ -46,7 +46,7 @@ fn on_path(s: &mut Session, p: &Value) -> Result<Value> {
         pt.align = a;
     }
     s.edit(|d, sel| {
-        let it = d.item(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
+        let it = d.item(id).ok_or(pejy_doc::DocError::NoItem(id))?;
         match &it.content {
             Content::Unassigned => {}
             Content::Text(_) => return Err(bad("type.onPath", "the object already holds text")),
@@ -57,7 +57,7 @@ fn on_path(s: &mut Session, p: &Value) -> Result<Value> {
         st.direction = d.new_story_direction();
         st.frames = vec![id];
         d.stories.insert(sid, std::sync::Arc::new(st));
-        let it = d.item_mut(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
+        let it = d.item_mut(id).ok_or(pejy_doc::DocError::NoItem(id))?;
         let mut tf = TextFrame { story: sid, options: Default::default() };
         tf.options.path = Some(pt);
         it.content = Content::Text(tf);
@@ -85,8 +85,8 @@ fn path_options(s: &mut Session, p: &Value) -> Result<Value> {
     let delete = p.get("delete").and_then(Value::as_bool).unwrap_or(false);
     let p = p.clone();
     s.edit(|d, sel| {
-        let it = d.item_mut(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
-        let len = designcraft_geom::warp::PathWarp::new(&it.path.to_bezpath(), false).length();
+        let it = d.item_mut(id).ok_or(pejy_doc::DocError::NoItem(id))?;
+        let len = pejy_geom::warp::PathWarp::new(&it.path.to_bezpath(), false).length();
         let Content::Text(tf) = &mut it.content else { return Err(bad("type.pathOptions", "not type on a path")) };
         let Some(pt) = tf.options.path.as_mut() else { return Err(bad("type.pathOptions", "not type on a path")) };
         if delete {
@@ -140,14 +140,14 @@ mod tests {
         // A vertical line: the text must run down it, not across.
         let id = s.execute("line.create", &json!({"a": [300, 100], "b": [300, 600]})).unwrap()["id"].as_u64().unwrap();
         let r = s.execute("type.onPath", &json!({"id": id, "text": "Along the line we go"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let d = s.doc().unwrap().doc.clone();
-        let cs = designcraft_compose::compose_story(&d, sid, &Default::default());
+        let cs = pejy_compose::compose_story(&d, sid, &Default::default());
         assert!(cs.overset_at.is_none());
-        let it = d.item(designcraft_doc::ItemId(id)).unwrap();
-        let designcraft_doc::Content::Text(tf) = &it.content else { panic!() };
-        let glyphs = designcraft_compose::path_glyphs(&cs, &cs.frames[0], &it.path.to_bezpath(), tf.options.path.as_ref().unwrap());
-        let b = glyphs.iter().map(|(_, bp)| designcraft_geom::kurbo::Shape::bounding_box(bp)).reduce(|a, b| a.union(b)).unwrap();
+        let it = d.item(pejy_doc::ItemId(id)).unwrap();
+        let pejy_doc::Content::Text(tf) = &it.content else { panic!() };
+        let glyphs = pejy_compose::path_glyphs(&cs, &cs.frames[0], &it.path.to_bezpath(), tf.options.path.as_ref().unwrap());
+        let b = glyphs.iter().map(|(_, bp)| pejy_geom::kurbo::Shape::bounding_box(bp)).reduce(|a, b| a.union(b)).unwrap();
         assert!(b.height() > b.width() * 3.0, "runs down the line: {b:?}");
         assert!(b.x0 > 280.0 && b.x1 < 320.0);
         // Typing at the cursor adds to it; options; delete.
@@ -158,11 +158,11 @@ mod tests {
         // Too much text oversets (one line only).
         s.execute("text.insert", &json!({"text": " more words".repeat(60)})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        assert!(designcraft_compose::compose_story(&d, sid, &Default::default()).overset_at.is_some());
+        assert!(pejy_compose::compose_story(&d, sid, &Default::default()).overset_at.is_some());
         s.execute("type.pathOptions", &json!({"id": id, "delete": true})).unwrap();
         let d = s.doc().unwrap().doc.clone();
         assert!(d.story(sid).is_none());
-        assert!(matches!(d.item(designcraft_doc::ItemId(id)).unwrap().content, designcraft_doc::Content::Unassigned));
+        assert!(matches!(d.item(pejy_doc::ItemId(id)).unwrap().content, pejy_doc::Content::Unassigned));
         // Rendered output has ink along the line.
         let mut s2 = Session::new();
         s2.execute("file.new", &json!({})).unwrap();
@@ -170,13 +170,13 @@ mod tests {
         s2.execute("object.stroke", &json!({"ids": [id], "swatch": "[None]"})).unwrap();
         s2.execute("type.onPath", &json!({"id": id, "text": "MMMMMMMM"})).unwrap();
         let d = s2.doc().unwrap().doc.clone();
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
         let img = rr.render_page(&d, &s2.cache, 0, 1.0, false, &Default::default()).unwrap();
         let ink = (100..200).filter(|&x| img.pixel(x, 295)[0] < 128).count();
         assert!(ink > 8, "glyphs sit on the line: {ink}");
         assert_eq!((100..200).filter(|&x| img.pixel(x, 306)[0] < 128).count(), 0, "nothing hangs below the baseline");
-        let pdf = designcraft_pdf::export_pdf(&d, &s2.cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &s2.cache, &Default::default()).unwrap();
         assert!(pdf.len() > 1000);
     }
 
@@ -186,8 +186,8 @@ mod tests {
         s.execute("file.new", &json!({})).unwrap();
         let id = s.execute("line.create", &json!({"a": [100, 300], "b": [500, 300]})).unwrap()["id"].as_u64().unwrap();
         let r = s.execute("type.onPath", &json!({"id": id, "text": "Sixteen letters!"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
-        let overset = |s: &Session| designcraft_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default()).overset_at.is_some();
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
+        let overset = |s: &Session| pejy_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default()).overset_at.is_some();
         let undo = s.doc().unwrap().history.undo.len();
         assert!(!overset(&s));
         // The end bracket close to the start: the text no longer fits, and is overset.
@@ -211,7 +211,7 @@ mod tests {
         // Saved with the document.
         let d = s.doc().unwrap().doc.clone();
         let back = crate::cmd::file_from(&crate::cmd::file_bytes(&d).unwrap()).unwrap();
-        let path = |d: &designcraft_doc::Document| d.item(designcraft_doc::ItemId(id)).unwrap().text_frame().unwrap().options.path.clone();
+        let path = |d: &pejy_doc::Document| d.item(pejy_doc::ItemId(id)).unwrap().text_frame().unwrap().options.path.clone();
         assert_eq!(path(&back), path(&d));
     }
 
@@ -227,19 +227,19 @@ mod tests {
                 .as_u64()
                 .unwrap();
             let r = s.execute("type.onPath", &json!({"id": id, "text": "AAAA BBBB CCCC DDDD EEEE FFFF GGGG", "flip": flip})).unwrap();
-            let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+            let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
             // Where each glyph sits on the path, from the composed line.
             let d = s.doc().unwrap().doc.clone();
-            let it = d.item(designcraft_doc::ItemId(id)).unwrap();
-            let cs = designcraft_compose::compose_story(&d, sid, &Default::default());
+            let it = d.item(pejy_doc::ItemId(id)).unwrap();
+            let cs = pejy_compose::compose_story(&d, sid, &Default::default());
             let ft = &cs.frames[0];
-            let map = designcraft_compose::PathTextMap::new(it, ft).unwrap();
+            let map = pejy_compose::PathTextMap::new(it, ft).unwrap();
             let l = &ft.lines[0];
             let glyph = |byte: usize| l.glyphs.iter().find(|g| g.byte == byte).unwrap();
             let on_path = |byte: usize| {
                 let g = glyph(byte);
                 // A little outside the path, as a click near the letter would be.
-                map.to_path(designcraft_geom::Point::new(g.x + g.adv * 0.3, l.baseline - 4.0))
+                map.to_path(pejy_geom::Point::new(g.x + g.adv * 0.3, l.baseline - 4.0))
             };
             // A click by the first C (byte 10), on the curve: the caret goes there.
             let p = on_path(10);
@@ -256,15 +256,15 @@ mod tests {
             s.execute("text.selectWord", &json!({"frame": id, "point": [w.x, w.y]})).unwrap();
             assert_eq!(s.doc().unwrap().selection.text.unwrap().range(), 15..19, "flip={flip}");
             // A click on a letter, above the path, hits the frame (the type tool's hit test).
-            let above = map.to_path(designcraft_geom::Point::new(glyph(10).x, l.baseline - l.ascent * 0.7));
+            let above = map.to_path(pejy_geom::Point::new(glyph(10).x, l.baseline - l.ascent * 0.7));
             let sp = s.doc().unwrap().doc.clone();
             assert_eq!(
-                sp.hit_item(0, sp.parent_xf(&sp.find(designcraft_doc::ItemId(id)).unwrap()) * above, 1.0),
-                Some(designcraft_doc::ItemId(id)),
+                sp.hit_item(0, sp.parent_xf(&sp.find(pejy_doc::ItemId(id)).unwrap()) * above, 1.0),
+                Some(pejy_doc::ItemId(id)),
                 "flip={flip}"
             );
             // The map runs both ways along the path.
-            let back = map.to_line(map.to_path(designcraft_geom::Point::new(123.0, l.baseline)));
+            let back = map.to_line(map.to_path(pejy_geom::Point::new(123.0, l.baseline)));
             assert!((back.x - 123.0).abs() < 0.01, "{back:?}");
         }
     }

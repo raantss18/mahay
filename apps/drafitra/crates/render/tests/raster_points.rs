@@ -1,10 +1,10 @@
 //! PNG rasterising of POINT markers must never panic, wherever the point lands on the pixel grid
 //! (issue #270).
 
-use cadcraft_doc::{Common, Drawing, EntityKind, Line, Point, Space};
-use cadcraft_geom::{Vec2, Vec3};
-use cadcraft_render::raster::{RasterOptions, View, render};
-use cadcraft_render::{Options, build};
+use drafitra_doc::{Common, Drawing, EntityKind, Line, Point, Space};
+use drafitra_geom::{Vec2, Vec3};
+use drafitra_render::raster::{RasterOptions, View, render};
+use drafitra_render::{Options, build};
 
 fn add_point(d: &mut Drawing, x: f64, y: f64) {
     d.add(&Space::Model, Common::default(), EntityKind::Point(Point { p: Vec3::new(x, y, 0.0), angle: 0.0 })).unwrap();
@@ -42,7 +42,7 @@ fn point_in_large_png_export_does_not_panic() {
     let list = build(&d, &Space::Model, &Options::default());
     for (w, h) in [(2400, 1600), (1601, 999), (333, 77)] {
         let view = View::fit(&list.bounds, w, h, 0.05);
-        let png = cadcraft_render::raster::render_png(&list, &view, &RasterOptions::default()).unwrap();
+        let png = drafitra_render::raster::render_png(&list, &view, &RasterOptions::default()).unwrap();
         assert!(png.starts_with(b"\x89PNG"));
     }
 }

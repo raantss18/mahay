@@ -1,7 +1,7 @@
 //! System variables the engine already keeps in the drawing header (or in [`crate::Settings`]) and
 //! reads with a default, described once in a table: their type, allowed values and default. GETVAR
 //! reports the default until a value is set, SETVAR checks the value against the table, and
-//! `SETVAR ?` lists them. Variables CADCraft doesn't model are not in the table.
+//! `SETVAR ?` lists them. Variables Drafitra doesn't model are not in the table.
 
 use serde_json::{Value, json};
 
@@ -178,10 +178,10 @@ fn set_header(s: &mut Session, name: &str, kind: Kind, v: &Value, bad: impl Fn(S
                 _ => v.as_f64().map(f64::to_radians),
             };
             let a = a.filter(|a| a.is_finite()).ok_or_else(|| bad("an angle".into()))?;
-            s.doc_mut()?.header.set_f64(name, cadcraft_geom::norm_angle(a));
+            s.doc_mut()?.header.set_f64(name, drafitra_geom::norm_angle(a));
         }
         Kind::Pattern => {
-            let p = v.as_str().map(|t| t.trim().to_ascii_uppercase()).filter(|p| cadcraft_doc::library::pattern(p).is_some());
+            let p = v.as_str().map(|t| t.trim().to_ascii_uppercase()).filter(|p| drafitra_doc::library::pattern(p).is_some());
             let p = p.ok_or_else(|| bad("a hatch pattern name".into()))?;
             s.doc_mut()?.header.set_str(name, &p);
         }
@@ -198,7 +198,7 @@ fn set_header(s: &mut Session, name: &str, kind: Kind, v: &Value, bad: impl Fn(S
 /// Add the table variables and the dimension variables of the current style to a `SETVAR ?` list.
 pub(super) fn list(s: &Session, m: &mut serde_json::Map<String, Value>) {
     let names = SETTINGS.iter().map(|(n, _, _)| *n).chain(HEADER.iter().map(|(n, _, _)| *n));
-    for n in names.chain(cadcraft_doc::DIMVARS.iter().map(|(n, _)| *n)) {
+    for n in names.chain(drafitra_doc::DIMVARS.iter().map(|(n, _)| *n)) {
         if !m.contains_key(n)
             && let Some(v) = super::get(s, n)
         {

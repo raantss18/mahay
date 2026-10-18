@@ -11,7 +11,7 @@
 use egui::epaint::{Mesh, TessellationOptions, Tessellator, Vertex};
 use egui::{Color32, CustomCursorImage, Pos2, Shape, Stroke, Vec2, pos2, vec2};
 
-use designcraft_tools::Cursor;
+use pejy_tools::Cursor;
 
 const INK: Color32 = Color32::BLACK;
 const HALO: Color32 = Color32::WHITE;

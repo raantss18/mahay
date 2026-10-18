@@ -1,12 +1,12 @@
 //! The cutting tools in the UI: toolbar entries, icons and Mirror & Cut's Control bar options.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, chrome, icons, tests_labels::painted_text};
+use crate::{TsipikaApp, chrome, icons, tests_labels::painted_text};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
     app
 }
@@ -14,7 +14,7 @@ fn app() -> VectorcraftApp {
 #[test]
 fn the_cut_tools_have_their_own_icons_and_toolbar_slot() {
     for (tool, icon) in [("mirrorCut", "dc-mirror-cut"), ("lineCut", "dc-line-cut"), ("rectCut", "dc-rect-cut")] {
-        let info = vectorcraft_tools::tool_info(tool).unwrap();
+        let info = tsipika_tools::tool_info(tool).unwrap();
         assert_eq!(icons::tool_icon(info.icon), icon);
         assert!(icons::exists(icon), "{icon}");
         assert!(crate::toolbar::BASIC.iter().flat_map(|(_, slots)| slots.iter()).any(|s| s.contains(&tool) && s.contains(&"knife")));

@@ -1,17 +1,17 @@
-# effectcraft-segment
+# tselatra-segment
 
 Trained models for Roto Brush and face tracking, each kind behind one swappable interface.
 
 - **`MaskModel`**: what Roto Brush asks of a model: given a frame and prompts (foreground /
   background points, a box, a prior mask), the foreground probability of every pixel. Roto Brush
-  (`effectcraft-track`) only talks to this trait, so models can be added or swapped without
+  (`tselatra-track`) only talks to this trait, so models can be added or swapped without
   touching it. The classical graph-cut segmenter stays built in as the fallback.
 - **`face::FaceModel`**: what face tracking asks of a model: find a face in a region of a frame,
   then follow it from frame to frame. A model reports its own points plus a `Topology` naming
   which are the tracker's landmarks and which trace the face outline, so the tracker never
   depends on one model's layout. The classical face tracker stays built in as the fallback.
 - **`MODELS`**: the registry. Every entry must be open source under a licence compatible with
-  EffectCraft's MIT OR Apache-2.0 (`ALLOWED_LICENCES`), with its task, authors, homepage, licence
+  Tselatra's MIT OR Apache-2.0 (`ALLOWED_LICENCES`), with its task, authors, homepage, licence
   URL, the official weights URL, size and SHA-256. `load` refuses anything else.
 - **Weights are never bundled.** They are downloaded on demand (or installed from a file) by the
   engine (`roto.model.*` / `face.model.*`, Settings ▸ Roto Brush / Face Tracking), verified
@@ -50,7 +50,7 @@ How they were checked:
   on average (2.2 px at worst). Finding a face takes about 45 ms; following it, about 20 ms a
   frame (32-thread CPU).
 
-Tests that need the weights run when `EFFECTCRAFT_MOBILESAM` / `EFFECTCRAFT_FACE_LANDMARKER`
+Tests that need the weights run when `TSELATRA_MOBILESAM` / `TSELATRA_FACE_LANDMARKER`
 point at the files, and are skipped otherwise.
 
 ## Adding a model

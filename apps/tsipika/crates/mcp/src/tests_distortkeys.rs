@@ -17,7 +17,7 @@ fn run(h: &mut Headless, command: &str, params: Value) -> Value {
 }
 
 fn exists(h: &Headless, id: u64) -> bool {
-    h.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).is_some()
+    h.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).is_some()
 }
 
 fn click(h: &mut Headless, tool: &str, x: f64, y: f64) {
@@ -40,7 +40,7 @@ fn delete_and_backspace_reach_the_width_tool() {
         click(&mut h, "width", 200.0, 200.0);
         let r = ok(&mut h, "press_key", json!({"key": key}));
         assert_eq!(r["handledBy"], "tool", "{key}: {r}");
-        let n = h.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.stroke().unwrap().profile.clone().unwrap();
+        let n = h.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().appearance.stroke().unwrap().profile.clone().unwrap();
         assert_eq!(n.points.len(), 2, "{key} removed the width point");
         // With no width point selected the key clears the selected line.
         ok(&mut h, "press_key", json!({"key": key}));
@@ -75,5 +75,5 @@ fn cmd_a_while_the_type_tool_edits_selects_the_text() {
     let r = ok(&mut h, "press_key", json!({"key": "A", "mods": {"cmd": true}}));
     assert_eq!(r["command"], "select.all");
     assert_eq!(r["result"], json!({"editing": id, "start": 0, "end": 5}));
-    assert_eq!(h.session.doc().unwrap().selection.objects, [vectorcraft_doc::NodeId(id)], "the art selection stays");
+    assert_eq!(h.session.doc().unwrap().selection.objects, [tsipika_doc::NodeId(id)], "the art selection stays");
 }

@@ -7,8 +7,8 @@
 //! list shows what this computer remembers.
 
 use egui::{Align2, CornerRadius, Rect, Sense, Ui, pos2, vec2};
-use figcraft_engine::live::utc_date;
-use figcraft_engine::online::{FileState, OnlineFile, ServerProblem, server_host};
+use endrika_engine::live::utc_date;
+use endrika_engine::online::{FileState, OnlineFile, ServerProblem, server_host};
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -199,7 +199,7 @@ fn row(app: &mut FigApp, ui: &mut Ui, t: &Tokens, f: &OnlineFile, busy: bool) {
         if let Some(code) = shared.and_then(|s| s.edit.code.as_deref())
             && item(ui, tr("Copy code"), true)
         {
-            app.services.clipboard_set_text(&figcraft_engine::figcraft_collab::code::grouped(code));
+            app.services.clipboard_set_text(&endrika_engine::endrika_collab::code::grouped(code));
             app.toast(tr("Join code copied"));
             ui.close();
         }

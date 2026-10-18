@@ -1,6 +1,6 @@
 //! Hand (H) and Zoom (Z) tools.
 
-use designcraft_geom::Point;
+use pejy_geom::Point;
 use serde_json::json;
 
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext};
@@ -138,11 +138,11 @@ impl Tool for PlaceGun {
                     && cx
                         .doc
                         .item(id)
-                        .is_some_and(|i| matches!(i.content, designcraft_doc::Content::Unassigned | designcraft_doc::Content::Graphic(_)))
+                        .is_some_and(|i| matches!(i.content, pejy_doc::Content::Unassigned | pejy_doc::Content::Graphic(_)))
                 {
                     return vec![Action::Exec("place.drop".into(), json!({"frame": id.0}))];
                 }
-                let r = designcraft_geom::Rect::from_points(sa, b);
+                let r = pejy_geom::Rect::from_points(sa, b);
                 vec![Action::Exec(
                     "place.drop".into(),
                     json!({"spread": crate::spread_json(sr), "x": sa.x, "y": sa.y, "rect": [r.x0, r.y0, r.x1, r.y1]}),
@@ -153,7 +153,7 @@ impl Tool for PlaceGun {
     }
     fn overlays(&self, _cx: &ToolContext) -> Vec<crate::Overlay> {
         match self.start {
-            Some(a) => vec![crate::Overlay::Marquee(designcraft_geom::Rect::from_points(a, self.cur))],
+            Some(a) => vec![crate::Overlay::Marquee(pejy_geom::Rect::from_points(a, self.cur))],
             None => vec![],
         }
     }
@@ -202,7 +202,7 @@ impl LiquidControl {
     }
 
     /// InDesign's tooltip for the control in its current state.
-    fn tip(self, l: &designcraft_doc::ObjectLiquid) -> &'static str {
+    fn tip(self, l: &pejy_doc::ObjectLiquid) -> &'static str {
         match self {
             LiquidControl::Pin(i) if [l.pin_top, l.pin_right, l.pin_bottom, l.pin_left][i.min(3)] => {
                 "Object is pinned relative to the page edge. Click to release."
@@ -215,7 +215,7 @@ impl LiquidControl {
         }
     }
 
-    fn value(self, l: &designcraft_doc::ObjectLiquid) -> bool {
+    fn value(self, l: &pejy_doc::ObjectLiquid) -> bool {
         match self {
             LiquidControl::Pin(0) => l.pin_top,
             LiquidControl::Pin(1) => l.pin_right,
@@ -234,7 +234,7 @@ pub const LOCK_OFFSET_PX: f64 = 10.0;
 
 /// Where an object's liquid controls sit (canvas): pins outside each edge's middle, the width lock
 /// right of the centre, the height lock above it.
-fn liquid_control_points(cx: &ToolContext, r: designcraft_geom::Rect) -> [(LiquidControl, Point); 6] {
+fn liquid_control_points(cx: &ToolContext, r: pejy_geom::Rect) -> [(LiquidControl, Point); 6] {
     let (c, o, k) = (r.center(), cx.tol(PIN_OFFSET_PX), cx.tol(LOCK_OFFSET_PX));
     [
         (LiquidControl::Pin(0), Point::new(c.x, r.y0 - o)),
@@ -261,13 +261,13 @@ struct PageDrag {
 }
 
 /// The eight handles of a page rect: (reference-point index, canvas point).
-fn page_handles(r: designcraft_geom::Rect) -> impl Iterator<Item = (usize, Point)> {
+fn page_handles(r: pejy_geom::Rect) -> impl Iterator<Item = (usize, Point)> {
     (0..9).filter(|i| *i != 4).map(move |i| (i, Point::new(r.x0 + r.width() * (i % 3) as f64 / 2.0, r.y0 + r.height() * (i / 3) as f64 / 2.0)))
 }
 
 /// The liquid page rule as the Page tool tags a page.
-pub fn rule_label(rule: designcraft_doc::LiquidRule) -> &'static str {
-    use designcraft_doc::LiquidRule as R;
+pub fn rule_label(rule: pejy_doc::LiquidRule) -> &'static str {
+    use pejy_doc::LiquidRule as R;
     match rule {
         R::Off => "Off",
         R::Scale => "Scale",
@@ -279,8 +279,8 @@ pub fn rule_label(rule: designcraft_doc::LiquidRule) -> &'static str {
 }
 
 /// Whether page `abs` follows the object-based rule (its own, or its parent page's).
-fn object_based(doc: &designcraft_doc::Document, abs: usize) -> bool {
-    use designcraft_doc::LiquidRule as R;
+fn object_based(doc: &pejy_doc::Document, abs: usize) -> bool {
+    use pejy_doc::LiquidRule as R;
     let Some((si, pi)) = doc.page_loc(abs) else { return false };
     match doc.spreads[si].pages[pi].liquid {
         R::ObjectBased => true,
@@ -296,7 +296,7 @@ impl PageTool {
     /// shows its pins: one object selected on the selected page, whose rule is object-based.
     fn liquid_target(
         cx: &ToolContext,
-    ) -> Option<(designcraft_doc::ItemId, designcraft_doc::ObjectLiquid, designcraft_geom::Rect, designcraft_geom::Rect)> {
+    ) -> Option<(pejy_doc::ItemId, pejy_doc::ObjectLiquid, pejy_geom::Rect, pejy_geom::Rect)> {
         let page = cx.selection.page?;
         let [id] = cx.selection.items.as_slice() else { return None };
         let (si, _) = cx.doc.page_loc(page)?;
@@ -304,13 +304,13 @@ impl PageTool {
             return None;
         }
         let it = cx.doc.item(*id)?;
-        let l = it.liquid.unwrap_or(designcraft_doc::ObjectLiquid { resize_width: true, resize_height: true, ..Default::default() });
-        let r = cx.layout.xf(designcraft_doc::SpreadRef::Doc(si)).transform_rect_bbox(it.bounds());
+        let l = it.liquid.unwrap_or(pejy_doc::ObjectLiquid { resize_width: true, resize_height: true, ..Default::default() });
+        let r = cx.layout.xf(pejy_doc::SpreadRef::Doc(si)).transform_rect_bbox(it.bounds());
         Some((*id, l, r, cx.layout.page_rect(cx.doc, page)?))
     }
 
     /// The selected object's pin or lock under `p`.
-    fn control_at(cx: &ToolContext, p: Point) -> Option<(designcraft_doc::ItemId, designcraft_doc::ObjectLiquid, LiquidControl)> {
+    fn control_at(cx: &ToolContext, p: Point) -> Option<(pejy_doc::ItemId, pejy_doc::ObjectLiquid, LiquidControl)> {
         let (id, l, r, _) = Self::liquid_target(cx)?;
         liquid_control_points(cx, r).into_iter().find(|(_, q)| (q.x - p.x).hypot(q.y - p.y) <= cx.tol(6.0)).map(|(c, _)| (id, l, c))
     }
@@ -326,7 +326,7 @@ impl PageTool {
     /// proportion).
     fn size_at(cx: &ToolContext, d: &PageDrag, p: Point, shift: bool) -> (f64, f64) {
         let si = cx.doc.page_loc(d.page).map_or(0, |l| l.0);
-        let v = cx.layout.delta_to_spread(designcraft_doc::SpreadRef::Doc(si), p - d.start);
+        let v = cx.layout.delta_to_spread(pejy_doc::SpreadRef::Doc(si), p - d.start);
         let (col, row) = (d.handle % 3, d.handle / 3);
         let dx = match col {
             0 => -v.x,
@@ -434,8 +434,8 @@ impl Tool for PageTool {
                 p: d.cur,
                 text: format!(
                     "W: {}\nH: {}",
-                    designcraft_geom::format_measure(pg.width, cx.unit),
-                    designcraft_geom::format_measure(pg.height, cx.unit)
+                    pejy_geom::format_measure(pg.width, cx.unit),
+                    pejy_geom::format_measure(pg.height, cx.unit)
                 ),
             });
         }
@@ -474,7 +474,7 @@ impl Tool for PathTypeTool {
         let Some((_, id)) = cx.hit(ev.pos) else { return vec![] };
         let Some(it) = cx.doc.item(id) else { return vec![] };
         match &it.content {
-            designcraft_doc::Content::Unassigned => vec![Action::Exec("type.onPath".into(), json!({"id": id.0})), Action::SwitchTool("type".into())],
+            pejy_doc::Content::Unassigned => vec![Action::Exec("type.onPath".into(), json!({"id": id.0})), Action::SwitchTool("type".into())],
             _ => vec![],
         }
     }
@@ -488,7 +488,7 @@ impl Tool for PathTypeTool {
 #[derive(Default)]
 pub struct GapTool {
     /// Spread, its spread → canvas transform and the press point in spread coordinates.
-    start: Option<(designcraft_doc::SpreadRef, designcraft_geom::Affine, Point)>,
+    start: Option<(pejy_doc::SpreadRef, pejy_geom::Affine, Point)>,
     active: bool,
 }
 

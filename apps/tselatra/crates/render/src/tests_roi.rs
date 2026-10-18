@@ -1,14 +1,14 @@
 //! Region of interest: a ROI render equals the matching crop of the full render.
 
-use effectcraft_color::{BlendMode, Label};
-use effectcraft_keyframe::Value;
-use effectcraft_project::build;
-use effectcraft_project::{Comp, ItemKind, LayerSource, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::{BlendMode, Label};
+use tselatra_keyframe::Value;
+use tselatra_project::build;
+use tselatra_project::{Comp, ItemKind, LayerSource, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::{Image, NoFootage, RenderOpts, Renderer};
 
-fn project(three_d: bool) -> (Project, effectcraft_project::ItemId) {
+fn project(three_d: bool) -> (Project, tselatra_project::ItemId) {
     let mut p = Project::default();
     let comp = Comp::new(160, 120, FrameRate::FPS_30, Tick::from_seconds_f64(1.0));
     let cid = p.add_item("Comp", Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));

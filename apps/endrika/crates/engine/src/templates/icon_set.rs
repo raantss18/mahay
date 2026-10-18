@@ -1,8 +1,8 @@
-//! Icon set starter: FigCraft's own template icons as components on a 24 px grid (2 px round
+//! Icon set starter: Endrika's own template icons as components on a 24 px grid (2 px round
 //! strokes in one colour style), an anatomy board that shows the grid, the margin and the keyline
 //! shapes at twenty times the size, and a preview of one icon at four sizes.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::json;
 
 use super::glyphs;

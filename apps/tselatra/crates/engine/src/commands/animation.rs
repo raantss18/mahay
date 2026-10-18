@@ -1,20 +1,20 @@
-//! Animation menu: animation presets (EffectCraft's own JSON format), Add Keyframe, Keyframe
+//! Animation menu: animation presets (Tselatra's own JSON format), Add Keyframe, Keyframe
 //! Assistant (Exponential Scale), text animators/selectors, and the
 //! Reveal Properties commands.
 
 use std::collections::BTreeMap;
 
-use effectcraft_keyframe::{Interp, Keyframe, Value as KV};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{GroupKind, Layer, LayerId, LayerSource, Node, Project, PropGroup, Property, Uid};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Interp, Keyframe, Value as KV};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{GroupKind, Layer, LayerId, LayerSource, Node, Project, PropGroup, Property, Uid};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, frontend, has_comp, has_keys, has_layers, layer_mut, layers_p, match_path_of, resolve_effect_path, selected_leaf_props, str_p};
 use crate::{EngineError, KeyRef, Result, Session, cmd};
 
 /// Preset file format version tag (`*.ecpreset`, JSON).
-pub const PRESET_TAG: &str = "effectcraftAnimationPreset";
+pub const PRESET_TAG: &str = "tselatraAnimationPreset";
 
 fn has_selected_props(s: &Session) -> std::result::Result<(), String> {
     has_comp(s)?;
@@ -98,7 +98,7 @@ fn apply_preset(s: &mut Session, p: &Value) -> Result<Value> {
         _ => return Err(bad("anim.applyPreset", "missing `path` (or inline `preset`)")),
     };
     if doc.get(PRESET_TAG).is_none() {
-        return Err(bad("anim.applyPreset", "not an EffectCraft animation preset"));
+        return Err(bad("anim.applyPreset", "not an Tselatra animation preset"));
     }
     let (cid, ids) = layers_p(s, p)?;
     if ids.is_empty() {
@@ -250,7 +250,7 @@ fn exponential_scale(s: &mut Session, _: &Value) -> Result<Value> {
                 let mut k = Keyframe::new(t, KV::Vec3(v));
                 k.in_interp = Interp::Linear;
                 k.out_interp = Interp::Linear;
-                effectcraft_keyframe::set_key(&mut pr.keys, k);
+                tselatra_keyframe::set_key(&mut pr.keys, k);
                 st.selected_keys.push(KeyRef { layer: *lid, prop: *uid, time: t });
             }
             done += 1;
@@ -377,7 +377,7 @@ fn reveal(s: &mut Session, p: &Value) -> Result<Value> {
     let mut out = vec![];
     for lid in &layers {
         let Some(l) = comp.layer(*lid) else { continue };
-        let (w, h) = effectcraft_render::source_size(&s.project, l);
+        let (w, h) = tselatra_render::source_size(&s.project, l);
         let anchor = [w as f64 / 2.0, h as f64 / 2.0];
         let center = [comp.width as f64 / 2.0, comp.height as f64 / 2.0];
         // Properties at the top of the layer's tree (Time Remap): enabled time remapping is a
@@ -417,10 +417,10 @@ fn reveal(s: &mut Session, p: &Value) -> Result<Value> {
             }
             // Modified: an effect's parameters that differ from a new instance's.
             if kind == "modified" && top.match_id == "effects" {
-                let size = effectcraft_render::effect_bounds(&s.project, comp, l).0;
+                let size = tselatra_render::effect_bounds(&s.project, comp, l).0;
                 for g in top.groups() {
                     let spec = match &g.kind {
-                        GroupKind::Effect { effect } => effectcraft_effects::find(effect),
+                        GroupKind::Effect { effect } => tselatra_effects::find(effect),
                         _ => None,
                     };
                     // A missing plug-in's defaults aren't known: the effect shows in full.
@@ -429,7 +429,7 @@ fn reveal(s: &mut Session, p: &Value) -> Result<Value> {
                         continue;
                     };
                     let mut next = 0;
-                    let new = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), "", size);
+                    let new = tselatra_effects::instantiate(spec, &mut Ids(&mut next), "", size);
                     effect_changes(g, &new, &mut found);
                 }
             }
@@ -444,8 +444,8 @@ fn reveal(s: &mut Session, p: &Value) -> Result<Value> {
                 }
                 // Every layer style counts in full, like an effect; so does each overridden
                 // Essential Property.
-                if top.match_id == effectcraft_project::styles::GROUP {
-                    found.extend(top.groups().filter(|g| g.match_id != effectcraft_project::styles::BLENDING).map(|g| g.uid));
+                if top.match_id == tselatra_project::styles::GROUP {
+                    found.extend(top.groups().filter(|g| g.match_id != tselatra_project::styles::BLENDING).map(|g| g.uid));
                 }
                 if let GroupKind::Essential { overridden } = &top.kind {
                     for u in overridden {

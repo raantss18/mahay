@@ -1,4 +1,4 @@
-//! DesignCraft geometry kernel.
+//! Pejy geometry kernel.
 //!
 //! The editable path model is anchor based (like every InDesign tool thinks about paths):
 //! a [`PathData`] is a list of [`SubPath`]s, each a list of [`Anchor`]s with absolute in/out

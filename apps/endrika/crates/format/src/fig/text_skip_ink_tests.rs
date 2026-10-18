@@ -3,7 +3,7 @@
 
 use super::kiwi::Kv;
 use super::{export, import};
-use figcraft_doc::{Document, NodeKind, StyleKind, StyleRun, TextData, TextDecoration, TextStyle};
+use endrika_doc::{Document, NodeKind, StyleKind, StyleRun, TextData, TextDecoration, TextStyle};
 use serde_json::Value;
 
 fn object(fields: Vec<(&'static str, Kv<'static>)>) -> Kv<'static> {
@@ -201,7 +201,7 @@ fn export_writes_one_actual_node_value_and_complete_run_values_without_skip_only
 
     let mut custom = TextData::new("x");
     custom.style.set_look(|look| look.skip_ink = true);
-    custom.style.set_look(|look| look.thickness = figcraft_doc::DecorationLength::Pixels(2.0));
+    custom.style.set_look(|look| look.thickness = endrika_doc::DecorationLength::Pixels(2.0));
     let mut custom_doc = Document::new("Unsupported decoration");
     custom_doc.create(custom_doc.first_page().unwrap(), NodeKind::Text(custom), "Custom", 0.0, 0.0, 100.0, 30.0).unwrap();
     let (_, warnings) = export(&custom_doc, None).unwrap();
@@ -219,7 +219,7 @@ fn export_writes_one_actual_node_value_and_complete_run_values_without_skip_only
     let mut local = TextStyle { decoration: TextDecoration::Underline, ..TextStyle::default() };
     local.set_look(|look| look.skip_ink = false);
     let mut linked_doc = Document::new("Shared skip ink");
-    linked_doc.styles.push(figcraft_doc::Style {
+    linked_doc.styles.push(endrika_doc::Style {
         id: "body".into(),
         name: "Body".into(),
         description: String::new(),

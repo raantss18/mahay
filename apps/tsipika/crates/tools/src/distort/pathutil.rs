@@ -1,7 +1,7 @@
 //! Arc-length helpers: width points live at a fraction (0..1) of a subpath's length.
 
-use vectorcraft_geom::kurbo::{ParamCurve, ParamCurveArclen, ParamCurveDeriv};
-use vectorcraft_geom::{PathData, Point, SubPath, Vec2};
+use tsipika_geom::kurbo::{ParamCurve, ParamCurveArclen, ParamCurveDeriv};
+use tsipika_geom::{PathData, Point, SubPath, Vec2};
 
 const ACC: f64 = 1e-4;
 
@@ -42,7 +42,7 @@ pub fn eval_fraction(sp: &SubPath, f: f64) -> Option<(Point, Vec2)> {
 }
 
 /// Unit tangent of a cubic at `t` (falls back to the chord for degenerate derivatives).
-pub fn tangent(c: &vectorcraft_geom::CubicBez, t: f64) -> Vec2 {
+pub fn tangent(c: &tsipika_geom::CubicBez, t: f64) -> Vec2 {
     let d = c.deriv().eval(t).to_vec2();
     let d = if d.hypot() > 1e-9 {
         d

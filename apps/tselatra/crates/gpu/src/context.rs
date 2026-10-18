@@ -3,8 +3,8 @@
 use std::collections::{BTreeSet, HashMap};
 use std::sync::{Arc, Mutex, Weak};
 
-use effectcraft_effects::Buf;
-use effectcraft_raster::Image;
+use tselatra_effects::Buf;
+use tselatra_raster::Image;
 
 /// Compute entry points in `kernels.wgsl` (one pipeline each).
 const ENTRIES: &[&str] = &[
@@ -537,11 +537,11 @@ impl GpuContext {
         ]
         .concat();
         let module = init_resource(&device, "kernels shader module", || {
-            device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("effectcraft kernels"), source: wgpu::ShaderSource::Wgsl(src.into()) })
+            device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("tselatra kernels"), source: wgpu::ShaderSource::Wgsl(src.into()) })
         })?;
         let bgl = init_resource(&device, "kernels bind-group layout", || {
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("effectcraft kernels"),
+                label: Some("tselatra kernels"),
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
@@ -567,7 +567,7 @@ impl GpuContext {
         })?;
         let layout = init_resource(&device, "kernels pipeline layout", || {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("effectcraft kernels"),
+                label: Some("tselatra kernels"),
                 bind_group_layouts: &[Some(&bgl)],
                 immediate_size: 0,
             })
@@ -580,13 +580,13 @@ impl GpuContext {
         };
         let bgl_ext = init_resource(&device, "extended kernels bind-group layout", || {
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("effectcraft kernels (ext)"),
+                label: Some("tselatra kernels (ext)"),
                 entries: &[storage(0), storage(1), storage(2), storage(3)],
             })
         })?;
         let layout_ext = init_resource(&device, "extended kernels pipeline layout", || {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("effectcraft kernels (ext)"),
+                label: Some("tselatra kernels (ext)"),
                 bind_group_layouts: &[Some(&bgl), Some(&bgl_ext)],
                 immediate_size: 0,
             })
@@ -648,19 +648,19 @@ impl GpuContext {
         }
         let dmodule = init_resource(&device, "display shader module", || {
             device.create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("effectcraft display"),
+                label: Some("tselatra display"),
                 source: wgpu::ShaderSource::Wgsl(include_str!("shaders/display.wgsl").into()),
             })
         })?;
         let display_bgl = init_resource(&device, "display bind-group layout", || {
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("effectcraft display"),
+                label: Some("tselatra display"),
                 entries: &[tex_entry(1), storage_tex_entry(3, wgpu::TextureFormat::Rgba8Unorm)],
             })
         })?;
         let dlayout = init_resource(&device, "display pipeline layout", || {
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("effectcraft display"),
+                label: Some("tselatra display"),
                 bind_group_layouts: &[Some(&display_bgl)],
                 immediate_size: 0,
             })
@@ -871,7 +871,7 @@ impl GpuContext {
             ..wgpu::Limits::default()
         };
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor { label: Some("effectcraft gpu"), required_limits, ..Default::default() })
+            .request_device(&wgpu::DeviceDescriptor { label: Some("tselatra gpu"), required_limits, ..Default::default() })
             .await
             .map_err(|e| match by_name {
             true => format!("no device on {} (picked by WGPU_ADAPTER_NAME): {e}", adapter.get_info().name),
@@ -1037,7 +1037,7 @@ impl GpuContext {
             }
             if u.bytes > budget && !self.upload_full_warned.swap(true, std::sync::atomic::Ordering::Relaxed) {
                 log::warn!(
-                    target: "effectcraft_gpu",
+                    target: "tselatra_gpu",
                     "GPU upload cache full ({} MB): evicting layer textures, which upload again when next used; a frame whose static layers exceed it re-uploads them every frame",
                     budget >> 20
                 );
@@ -1109,7 +1109,7 @@ impl<'g> Enc<'g> {
             .enc
             .get_or_insert_with(|| {
                 let id = g.pool.lock().map(|mut p| p.open()).unwrap_or(0);
-                (g.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("effectcraft") }), id)
+                (g.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("tselatra") }), id)
             })
             .0
     }

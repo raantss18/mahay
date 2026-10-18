@@ -11,7 +11,7 @@ use serde_json::{Map, Value, json};
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, form};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::state::Dialog;
 use crate::widgets;
 
@@ -22,7 +22,7 @@ pub const KIND: &str = "symbolOptions";
 const SLICE_KEYS: [&str; 4] = ["sliceLeft", "sliceTop", "sliceRight", "sliceBottom"];
 
 /// The 9-slice dialog fields for `guides` (percent of the symbol's size; a third each when off).
-fn slice_fields(guides: Option<vectorcraft_doc::SymbolNineSlice>) -> Map<String, Value> {
+fn slice_fields(guides: Option<tsipika_doc::SymbolNineSlice>) -> Map<String, Value> {
     let g = guides.unwrap_or_default();
     let mut m = Map::new();
     m.insert("nineSlice".into(), json!(guides.is_some()));
@@ -44,7 +44,7 @@ const EXPORT_TYPES: [(&str, &str); 2] = [("movieClip", "Movie Clip"), ("graphic"
 pub(super) const SPEC: DialogSpec = DialogSpec { heading: |_| tl!("Symbol Options").into(), body, confirm, min_width: 320.0, ..DialogSpec::FORM };
 
 /// Open Symbol Options to name a new symbol made from the selection.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document open")?;
     if st.selection.is_empty() {
         return Err("nothing selected".into());
@@ -59,7 +59,7 @@ pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
 }
 
 /// Open Symbol Options on an existing symbol (`name`, else the Symbols panel's current).
-pub fn open_edit(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, String> {
+pub fn open_edit(app: &mut TsipikaApp, name: Option<&str>) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document open")?;
     let name = match name.filter(|n| !n.is_empty()) {
         Some(n) if st.doc.symbols.iter().any(|s| s.name == n) => n.to_string(),
@@ -90,7 +90,7 @@ pub fn open_edit(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, 
     Ok(Value::Null)
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     grid(ui, |ui| {
         label(ui, tl!("Name:"));
         form::text(ui, d, "name", 190.0);
@@ -127,7 +127,7 @@ fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// OK: make a new symbol, or apply name / Export Type / Registration on an existing one.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let name = d.str("name");
     let name = name.trim();
     if name.is_empty() {

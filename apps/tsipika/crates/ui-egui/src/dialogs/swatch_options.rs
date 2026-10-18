@@ -10,10 +10,10 @@
 
 use egui::vec2;
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
+use tsipika_color::{Color, Paint};
 
 use super::{DialogSpec, form, run_and_close};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::panels::color::{Mode, components, from_components, parse_hex, track_color, web_safe};
 use crate::state::Dialog;
 use crate::theme::Tokens;
@@ -56,7 +56,7 @@ fn set_color(d: &mut Dialog, c: Color) {
 
 /// Open the editor of swatch `name`: Swatch Options for a colour (a tint swatch's base) or a
 /// gradient (its name only), pattern editing for a pattern.
-pub fn open(app: &mut VectorcraftApp, name: &str) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, name: &str) -> Result<Value, String> {
     let d = app.session.active().map(|st| &st.doc);
     let sw = d.and_then(|d| d.swatch(name)).ok_or_else(|| format!("no swatch `{name}`"))?;
     if let Some((base, _)) = sw.tint_of()
@@ -104,8 +104,8 @@ fn edit_params(d: &Dialog) -> Value {
     })
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
-    let changed = match d.fields.get("__gradient").and_then(|g| serde_json::from_value::<vectorcraft_color::GradientPaint>(g.clone()).ok()) {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+    let changed = match d.fields.get("__gradient").and_then(|g| serde_json::from_value::<tsipika_color::GradientPaint>(g.clone()).ok()) {
         Some(g) => {
             let changed = grid(ui, |ui| name_row(ui, d));
             ui.add_space(6.0);
@@ -134,7 +134,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// Drop the preview and apply the edit as one undo step (which also updates the default paints).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let _ = app.session.cancel_interaction();
     run_and_close(app, "swatch.edit", edit_params(d))
 }
@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn lab_mode_defines_a_spot_colour_in_lab() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app.run("swatch.new", json!({"name": "Ink", "color": {"c": 0, "m": 80, "y": 60, "k": 0}, "spot": true})).unwrap();
         app.run("ui.swatchOptions", json!({"name": "Ink"})).unwrap();
@@ -312,7 +312,7 @@ mod tests {
         assert_eq!(mode_of(app.ui.dialog.as_ref().unwrap()).labels(), ["L", "a", "b"]);
         super::super::confirm(&mut app).unwrap();
         let ink = app.session.active().unwrap().doc.swatch("Ink").unwrap().paint.color().unwrap();
-        assert_eq!(ink.model(), vectorcraft_color::cms::Model::Lab);
+        assert_eq!(ink.model(), tsipika_color::cms::Model::Lab);
         assert_eq!(ink.to_hex(), Color::cmyk(0.0, 0.8, 0.6, 0.0).to_hex(), "the same colour, now in Lab");
         // Lab values typed into the fields.
         app.run("ui.swatchOptions", json!({"name": "Ink"})).unwrap();

@@ -1,7 +1,7 @@
 //! File menu.
 
-use effectcraft_color::Label;
-use effectcraft_project::{FootageKind, ItemId, ItemKind, LayerSource, Project};
+use tselatra_color::Label;
+use tselatra_project::{FootageKind, ItemId, ItemKind, LayerSource, Project};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, str_p};
@@ -35,7 +35,7 @@ fn demo(s: &mut Session, _: &Value) -> Result<Value> {
     s.replace_project(p, None);
     if let Some(id) = s.project.items.values().find(|i| i.name == crate::demo::MAIN_COMP).map(|i| i.id) {
         s.open_comp(id);
-        s.set_time(effectcraft_time::Tick::from_seconds_f64(2.5));
+        s.set_time(tselatra_time::Tick::from_seconds_f64(2.5));
     }
     Ok(json!({"comp": s.state.active_comp.map(|c| c.0)}))
 }
@@ -47,32 +47,32 @@ pub(crate) fn open(s: &mut Session, p: &Value) -> Result<Value> {
     // XML copies (File ▸ Save a Copy As XML…) open like the JSON project.
     let text = if crate::xml_project::is_xml(&text) { crate::xml_project::from_xml(&text).map_err(EngineError::Other)? } else { text };
     let (mut proj, repaired) =
-        Project::from_json_repaired(&text).map_err(|e| EngineError::Other(format!("{path} is not a project EffectCraft can open: {e}")))?;
+        Project::from_json_repaired(&text).map_err(|e| EngineError::Other(format!("{path} is not a project Tselatra can open: {e}")))?;
     // Footage saved with a relative path (imported by the CLI or an agent as `clip.mp4`, or
     // written by hand) is found next to the project file, as After Effects looks for footage
     // relative to the project (#652).
     let refused = crate::doc_path::resolve_footage(&mut proj, Some(path));
     s.replace_project(proj, Some(path.to_string()));
     s.stored_paths.add(&s.project, Some(path));
-    s.restore_view(&effectcraft_project::saved_view(&text));
+    s.restore_view(&tselatra_project::saved_view(&text));
     s.note_project_path(path);
     // Values past the limits (a corrupt or hostile file) were brought within them (#788).
     if !repaired.is_empty() {
         let more = repaired.len().saturating_sub(3);
         let shown = repaired.iter().take(3).cloned().collect::<Vec<_>>().join("; ");
         let more = if more > 0 { format!(" and {more} more") } else { String::new() };
-        s.toast(format!("This project had values outside EffectCraft's limits, corrected when it opened: {shown}{more}."));
+        s.toast(format!("This project had values outside Tselatra's limits, corrected when it opened: {shown}{more}."));
     }
     if let Some((_, first, why)) = refused.first() {
         let n = refused.len();
         s.toast(format!("{n} footage item{} marked missing: {}.", if n == 1 { "" } else { "s" }, crate::doc_path::refusal(first, *why)));
     }
-    // Written by a newer EffectCraft: what this version doesn't know would be lost on saving.
-    let saved_by = effectcraft_project::saved_by(&text);
-    if let Some(v) = saved_by.as_deref().filter(|v| effectcraft_project::is_newer_version(v, effectcraft_project::APP_VERSION)) {
+    // Written by a newer Tselatra: what this version doesn't know would be lost on saving.
+    let saved_by = tselatra_project::saved_by(&text);
+    if let Some(v) = saved_by.as_deref().filter(|v| tselatra_project::is_newer_version(v, tselatra_project::APP_VERSION)) {
         s.toast(format!(
-            "This project was saved by EffectCraft {v}, newer than this version ({}). Settings this version doesn't know are lost if you save it.",
-            effectcraft_project::APP_VERSION
+            "This project was saved by Tselatra {v}, newer than this version ({}). Settings this version doesn't know are lost if you save it.",
+            tselatra_project::APP_VERSION
         ));
     }
     // Lazy open: footage is checked in the background (Progress panel), not before the
@@ -234,7 +234,7 @@ struct PendingImport {
     comps: Vec<u64>,
     items: Vec<u64>,
     errors: Vec<String>,
-    /// EffectCraft projects merged in (`file.importProject` results); never added to a comp.
+    /// Tselatra projects merged in (`file.importProject` results); never added to a comp.
     projects: Vec<Value>,
 }
 
@@ -245,11 +245,11 @@ struct Prober {
     /// Settings ▸ Import ▸ Report Missing Frames.
     report_missing_frames: bool,
     /// Settings ▸ Import ▸ Interpret Unlabeled Alpha As, for stills and for movies.
-    still_alpha: Option<effectcraft_project::AlphaMode>,
-    movie_alpha: Option<effectcraft_project::AlphaMode>,
+    still_alpha: Option<tselatra_project::AlphaMode>,
+    movie_alpha: Option<tselatra_project::AlphaMode>,
     /// Image sequences' frames per second: the import's `frameRate`, or Settings ▸ Import ▸
     /// Sequence Footage.
-    sequence_rate: effectcraft_time::FrameRate,
+    sequence_rate: tselatra_time::FrameRate,
     /// PDF / Illustrator page (0-based).
     page: u32,
     /// Choose Layer: one layer of a Photoshop document.
@@ -260,7 +260,7 @@ struct Prober {
 struct Probed {
     /// The Project panel name.
     name: String,
-    footage: effectcraft_project::Footage,
+    footage: tselatra_project::Footage,
     /// Its alpha is unlabeled and Settings say Ask User: open Interpret Footage.
     ask_alpha: bool,
     warning: Option<String>,
@@ -293,7 +293,7 @@ impl Prober {
         // own alpha, and audio and data have none).
         let mut ask_alpha = false;
         if matches!(f.kind, FootageKind::Still | FootageKind::Sequence | FootageKind::Video)
-            && f.alpha != effectcraft_project::AlphaMode::Ignore
+            && f.alpha != tselatra_project::AlphaMode::Ignore
             && !alpha_is_labeled(path, &f.codec)
         {
             let setting = if f.kind == FootageKind::Video { self.movie_alpha } else { self.still_alpha };
@@ -308,7 +308,7 @@ impl Prober {
                 .services
                 .read_file(path)
                 .map_err(|e| e.to_string())
-                .and_then(|b| effectcraft_pdf::parse_page(&b, self.page as usize).map_err(|e| e.to_string()))
+                .and_then(|b| tselatra_pdf::parse_page(&b, self.page as usize).map_err(|e| e.to_string()))
                 .map_err(fail)?;
             (f.width, f.height) = doc.pixel_size();
             f.page = self.page;
@@ -321,10 +321,10 @@ impl Prober {
                 .services
                 .read_file(path)
                 .ok()
-                .and_then(|b| effectcraft_psd::Psd::parse(b).ok())
+                .and_then(|b| tselatra_psd::Psd::parse(b).ok())
                 .and_then(|d| find_psd_layer(&d, sel))
                 .ok_or_else(|| fail(format!("no layer {sel}")))?;
-            f.layer = Some(effectcraft_project::SourceLayer { index: index as u32, name, layer_size: false, embedded: None, placed: false });
+            f.layer = Some(tselatra_project::SourceLayer { index: index as u32, name, layer_size: false, embedded: None, placed: false });
         }
         Ok(Probed { name, footage: f, ask_alpha, warning })
     }
@@ -364,7 +364,7 @@ fn prepare_import(s: &mut Session, p: &Value) -> Result<PendingImport> {
     let mut comps = vec![];
     let mut items = vec![];
     let mut errors = vec![];
-    // EffectCraft projects import as projects, as After Effects imports an .aep.
+    // Tselatra projects import as projects, as After Effects imports an .aep.
     let (project_paths, mut paths): (Vec<String>, Vec<String>) = paths.into_iter().partition(|x| super::import_project::is_project_path(x));
     let mut projects = vec![];
     for path in project_paths {
@@ -377,8 +377,8 @@ fn prepare_import(s: &mut Session, p: &Value) -> Result<PendingImport> {
         let mut rest = vec![];
         for path in paths {
             let bytes = match s.services.read_file(&path) {
-                Ok(b) if effectcraft_psd::is_psd(&b) => b,
-                Ok(b) if effectcraft_pdf::sniff(&b).is_some() && !path.to_ascii_lowercase().ends_with(".svg") => {
+                Ok(b) if tselatra_psd::is_psd(&b) => b,
+                Ok(b) if tselatra_pdf::sniff(&b).is_some() && !path.to_ascii_lowercase().ends_with(".svg") => {
                     // PDF / Illustrator / EPS: one layer per file layer.
                     match import_vector_comp(s, &path, &b, page, retain) {
                         Ok((comp, made)) => {
@@ -426,7 +426,7 @@ fn prepare_import(s: &mut Session, p: &Value) -> Result<PendingImport> {
         report_missing_frames: s.prefs.import.report_missing_frames,
         still_alpha: s.prefs.unlabeled_alpha(false),
         movie_alpha: s.prefs.unlabeled_alpha(true),
-        sequence_rate: effectcraft_time::FrameRate::from_f64(fps),
+        sequence_rate: tselatra_time::FrameRate::from_f64(fps),
         page,
         psd_layer: p.get("layer").cloned(),
     };
@@ -509,7 +509,7 @@ fn alpha_is_labeled(path: &str, codec: &str) -> bool {
 }
 
 /// A Photoshop layer by index or name (pixel layers only).
-fn find_psd_layer(d: &effectcraft_psd::Psd, sel: &Value) -> Option<(usize, String)> {
+fn find_psd_layer(d: &tselatra_psd::Psd, sel: &Value) -> Option<(usize, String)> {
     let l = match sel {
         Value::Number(n) => d.layers.get(n.as_u64()? as usize)?,
         Value::String(name) => d.layers.iter().find(|l| &l.name == name)?,
@@ -520,11 +520,11 @@ fn find_psd_layer(d: &effectcraft_psd::Psd, sel: &Value) -> Option<(usize, Strin
 
 /// Import a Photoshop document as a composition (one undo step). Returns (comp, items, warnings).
 pub(crate) fn import_psd_comp(s: &mut Session, path: &str, bytes: Vec<u8>, retain: bool) -> Result<(u64, Vec<u64>, Vec<String>)> {
-    let psd = effectcraft_psd::Psd::parse(bytes).map_err(|e| EngineError::Other(e.to_string()))?;
+    let psd = tselatra_psd::Psd::parse(bytes).map_err(|e| EngineError::Other(e.to_string()))?;
     let name = std::path::Path::new(path).file_stem().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "Photoshop".into());
-    let rate = effectcraft_time::FrameRate::FPS_29_97;
+    let rate = tselatra_time::FrameRate::FPS_29_97;
     let secs = if s.prefs.import.still_footage == "seconds" { s.prefs.import.still_seconds } else { 10.0 };
-    let duration = rate.snap_nearest(effectcraft_time::Tick::from_seconds_f64(secs));
+    let duration = rate.snap_nearest(tselatra_time::Tick::from_seconds_f64(secs));
     let r = s.edit("Import", None, |proj, st| {
         let r = crate::psd_import::import(proj, &psd, path, &name, retain, rate, duration);
         st.project_selection = vec![r.comp];
@@ -542,9 +542,9 @@ fn import_vector_comp(s: &mut Session, path: &str, bytes: &[u8], page: u32, reta
     if page > 0 {
         name = format!("{name} (Page {})", page + 1);
     }
-    let rate = effectcraft_time::FrameRate::FPS_29_97;
+    let rate = tselatra_time::FrameRate::FPS_29_97;
     let secs = if s.prefs.import.still_footage == "seconds" { s.prefs.import.still_seconds } else { 10.0 };
-    let duration = rate.snap_nearest(effectcraft_time::Tick::from_seconds_f64(secs));
+    let duration = rate.snap_nearest(tselatra_time::Tick::from_seconds_f64(secs));
     let (comp, folder, items) = s.edit("Import", None, |proj, st| {
         let r = crate::vector::import_vector_comp(proj, path, bytes, &name, page, retain, (rate, duration)).map_err(EngineError::Other)?;
         st.project_selection = vec![r.0];
@@ -559,7 +559,7 @@ fn import_vector_comp(s: &mut Session, path: &str, bytes: &[u8], page: u32, reta
 pub const DATA_EXTENSIONS: &[&str] = &["json", "csv", "tsv"];
 
 /// A data footage item for `path` (JSON / CSV / TSV), `None` for other files.
-pub(crate) fn data_footage(services: &dyn crate::Services, path: &str) -> Option<std::result::Result<effectcraft_project::Footage, String>> {
+pub(crate) fn data_footage(services: &dyn crate::Services, path: &str) -> Option<std::result::Result<tselatra_project::Footage, String>> {
     let ext = std::path::Path::new(path).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
     if !DATA_EXTENSIONS.contains(&ext.as_str()) {
         return None;
@@ -570,7 +570,7 @@ pub(crate) fn data_footage(services: &dyn crate::Services, path: &str) -> Option
         if ext == "json" {
             serde_json::from_str::<Value>(text.trim_start_matches('\u{feff}')).map_err(|e| format!("invalid JSON: {e}"))?;
         }
-        Ok(effectcraft_project::Footage { path: path.to_string(), kind: FootageKind::Data, codec: ext.to_uppercase(), data: Some(text), ..Default::default() })
+        Ok(tselatra_project::Footage { path: path.to_string(), kind: FootageKind::Data, codec: ext.to_uppercase(), data: Some(text), ..Default::default() })
     })())
 }
 
@@ -578,16 +578,16 @@ fn project_settings(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit("Project Settings", None, |proj, _| {
         if let Some(b) = str_p(p, "bitDepth") {
             proj.settings.bit_depth = match b {
-                "8" | "8bpc" | "8 bpc" => effectcraft_project::BitDepth::Bpc8,
-                "16" | "16bpc" | "16 bpc" => effectcraft_project::BitDepth::Bpc16,
-                "32" | "32bpc" | "32 bpc" => effectcraft_project::BitDepth::Bpc32,
+                "8" | "8bpc" | "8 bpc" => tselatra_project::BitDepth::Bpc8,
+                "16" | "16bpc" | "16 bpc" => tselatra_project::BitDepth::Bpc16,
+                "32" | "32bpc" | "32 bpc" => tselatra_project::BitDepth::Bpc32,
                 _ => return Err(bad("file.projectSettings", "bitDepth must be 8, 16 or 32")),
             };
         } else if let Some(n) = p.get("bitDepth").and_then(Value::as_u64) {
             proj.settings.bit_depth = match n {
-                16 => effectcraft_project::BitDepth::Bpc16,
-                32 => effectcraft_project::BitDepth::Bpc32,
-                _ => effectcraft_project::BitDepth::Bpc8,
+                16 => tselatra_project::BitDepth::Bpc16,
+                32 => tselatra_project::BitDepth::Bpc32,
+                _ => tselatra_project::BitDepth::Bpc8,
             };
         }
         if let Some(l) = p.get("linearize").and_then(Value::as_bool) {
@@ -596,7 +596,7 @@ fn project_settings(s: &mut Session, p: &Value) -> Result<Value> {
         if let Some(l) = p.get("blendLinear").or_else(|| p.get("blendColorsUsing1Gamma")).and_then(Value::as_bool) {
             proj.settings.blend_linear = l;
         }
-        use effectcraft_project::{ColorEngine, ColorSpace, HdrMode};
+        use tselatra_project::{ColorEngine, ColorSpace, HdrMode};
         let cmd = "file.projectSettings";
         if let Some(e) = str_p(p, "colorEngine") {
             let engine = match e.to_ascii_lowercase().replace([' ', '-', '_'], "").as_str() {
@@ -653,8 +653,8 @@ fn project_settings(s: &mut Session, p: &Value) -> Result<Value> {
         if let Some(r) = p.get("renderer").or_else(|| p.get("gpuAcceleration")) {
             proj.settings.gpu_acceleration = match r {
                 Value::Bool(b) => *b,
-                Value::String(s) => match effectcraft_render::Backend::parse(s) {
-                    Some(effectcraft_render::Backend::Cpu) => false,
+                Value::String(s) => match tselatra_render::Backend::parse(s) {
+                    Some(tselatra_render::Backend::Cpu) => false,
                     Some(_) => true,
                     None => return Err(bad("file.projectSettings", format!("renderer: gpu|software, not `{s}`"))),
                 },
@@ -662,7 +662,7 @@ fn project_settings(s: &mut Session, p: &Value) -> Result<Value> {
             };
         }
         if let Some(t) = str_p(p, "timeDisplay") {
-            proj.settings.time_display = effectcraft_project::TimeDisplayStyle::parse(t)
+            proj.settings.time_display = tselatra_project::TimeDisplayStyle::parse(t)
                 .ok_or_else(|| bad("file.projectSettings", format!("timeDisplay: timecode|frames|feet35|feet16, not `{t}`")))?;
         }
         Ok(())
@@ -676,8 +676,8 @@ fn render_backend(s: &mut Session, p: &Value) -> Result<Value> {
     if let Some(b) = p.get("backend").or_else(|| p.get("renderer")) {
         let gpu = match b {
             Value::Bool(b) => *b,
-            Value::String(v) => match effectcraft_render::Backend::parse(v) {
-                Some(effectcraft_render::Backend::Cpu) => false,
+            Value::String(v) => match tselatra_render::Backend::parse(v) {
+                Some(tselatra_render::Backend::Cpu) => false,
                 Some(_) => true,
                 None => return Err(bad("render.backend", format!("backend: gpu|cpu, not `{v}`"))),
             },

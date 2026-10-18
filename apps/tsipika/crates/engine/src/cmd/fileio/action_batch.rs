@@ -194,10 +194,10 @@ fn process_one_file(s: &mut Session, run: &Run<'_>, path: &str, stem: &str, ext:
 #[cfg(not(target_arch = "wasm32"))]
 fn process_one_dataset(s: &mut Session, run: &Run<'_>, name: &str, stem: &str) -> Result<Value> {
     s.execute("dataset.select", &json!({"name": name}))?;
-    let rewritten = rewrite_paths(run.steps, run.override_save, run.override_export, run.dest_folder, stem, "vectorcraft");
+    let rewritten = rewrite_paths(run.steps, run.override_save, run.override_export, run.dest_folder, stem, "tsipika");
     let batch = s.execute("command.batch", &json!({"label": run.label, "commands": rewritten}))?;
     // Data sets share one open document: write each row out but leave it open for the next.
-    finish_destination(s, run, stem, "vectorcraft", "", false)?;
+    finish_destination(s, run, stem, "tsipika", "", false)?;
     Ok(json!({"dataset": name, "result": batch}))
 }
 
@@ -218,7 +218,7 @@ fn finish_destination(s: &mut Session, run: &Run<'_>, stem: &str, ext: &str, sou
         }
         "folder" => {
             let folder = run.dest_folder.ok_or_else(|| bad("action.batch", "missing destination folder"))?;
-            let out_ext = if ext.is_empty() { "vectorcraft" } else { ext };
+            let out_ext = if ext.is_empty() { "tsipika" } else { ext };
             let out = std::path::Path::new(folder).join(format!("{stem}.{out_ext}"));
             let out = out.to_string_lossy().into_owned();
             // When `close` is false (data sets), write a copy so the template keeps its path.
@@ -237,7 +237,7 @@ fn finish_destination(s: &mut Session, run: &Run<'_>, stem: &str, ext: &str, sou
 #[cfg(not(target_arch = "wasm32"))]
 fn write_result(s: &mut Session, path: &str, ext: &str, as_copy: bool) -> Result<()> {
     use super::SAVE_FORMATS;
-    let id = if ext == "drawcraft" { "vectorcraft" } else { ext };
+    let id = if ext == "drawcraft" { "tsipika" } else { ext };
     if SAVE_FORMATS.contains(&id) {
         let cmd = if as_copy { "file.saveCopy" } else { "document.save" };
         s.execute(cmd, &json!({"path": path}))?;
@@ -560,7 +560,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(r["failed"], 0, "{r}");
-        assert_eq!(file_names(&dest), ["Untitled_..-y.vectorcraft", "Untitled_a", "Untitled_a-..-..-x.vectorcraft"], "{r}");
+        assert_eq!(file_names(&dest), ["Untitled_..-y.tsipika", "Untitled_a", "Untitled_a-..-..-x.tsipika"], "{r}");
         assert_eq!(file_names(&root), ["out"], "nothing is written outside the destination folder");
     }
 
@@ -582,7 +582,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(r["failed"], 0, "{r}");
-        assert_eq!(file_names(&dest), ["Untitled_a-b.vectorcraft", "Untitled_c-d.vectorcraft", "Untitled_e-f.vectorcraft"], "{r}");
+        assert_eq!(file_names(&dest), ["Untitled_a-b.tsipika", "Untitled_c-d.tsipika", "Untitled_e-f.tsipika"], "{r}");
         // Override Export points each data set's export at the destination folder under the same name.
         let r = s
             .execute(
@@ -620,7 +620,7 @@ mod tests {
         assert_eq!(r["failed"], 0, "{r}");
         assert_eq!(
             file_names(&dest),
-            ["Untitled_a-b.vectorcraft", "Untitled_c-d-e-.vectorcraft", "Untitled_f-g-h.vectorcraft", "Untitled_i-j.vectorcraft"],
+            ["Untitled_a-b.tsipika", "Untitled_c-d-e-.tsipika", "Untitled_f-g-h.tsipika", "Untitled_i-j.tsipika"],
             "{r}"
         );
     }
@@ -641,7 +641,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(r["failed"], 0, "{r}");
-        assert_eq!(file_names(&dest), ["Untitled_A-B-3.vectorcraft", "Untitled_a-b-2.vectorcraft", "Untitled_a-b.vectorcraft"], "{r}");
+        assert_eq!(file_names(&dest), ["Untitled_A-B-3.tsipika", "Untitled_a-b-2.tsipika", "Untitled_a-b.tsipika"], "{r}");
     }
 
     #[test]

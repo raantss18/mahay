@@ -6,8 +6,8 @@
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::message::{ClientMsg, LibraryReply, LibraryReq, PluginEntry, PluginReply, PluginReq};
-use figcraft_plugin::bundle::{Bundle, sha256_hex};
+use endrika_collab::message::{ClientMsg, LibraryReply, LibraryReq, PluginEntry, PluginReply, PluginReq};
+use endrika_plugin::bundle::{Bundle, sha256_hex};
 use serde_json::json;
 
 use crate::library_server::{archive, read_archive};
@@ -63,7 +63,7 @@ impl LiveLink for Link {
 }
 
 fn wasm() -> Vec<u8> {
-    wat::parse_str(r#"(module (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) i32.const 0))"#).unwrap()
+    wat::parse_str(r#"(module (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) i32.const 0))"#).unwrap()
 }
 
 fn bundle() -> Vec<u8> {

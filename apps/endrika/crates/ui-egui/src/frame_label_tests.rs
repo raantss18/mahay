@@ -3,15 +3,15 @@
 //! either label selects and drags its frame; double-clicking one renames the frame or section there.
 
 use egui::{Event, Pos2, pos2, vec2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
-use figcraft_geom::Point;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
+use endrika_geom::Point;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;
 
 fn id(v: serde_json::Value) -> NodeId {
-    figcraft_engine::params::id_of(&v["id"]).unwrap()
+    endrika_engine::params::id_of(&v["id"]).unwrap()
 }
 
 /// Frames "Upright" at (0, 0) and "Turned" at (400, 0), the second rotated 30°.

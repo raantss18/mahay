@@ -4,7 +4,7 @@
 use serde_json::{Value, json};
 
 use crate::Session;
-use effectcraft_project::{LayerId, Project};
+use tselatra_project::{LayerId, Project};
 
 pub(crate) fn comp(w: u32, h: u32) -> Session {
     let mut s = Session::default();
@@ -27,7 +27,7 @@ fn line_layer(s: &mut Session) -> (u64, u64) {
 
 fn column(s: &Session, x: u32) -> f32 {
     let cid = s.active_comp_id().unwrap();
-    let img = s.render(cid, effectcraft_time::Tick::ZERO, Default::default());
+    let img = s.render(cid, tselatra_time::Tick::ZERO, Default::default());
     (0..img.height).map(|y| img.data[(y * img.width + x) as usize][3]).sum()
 }
 
@@ -101,9 +101,9 @@ fn masked_solid(s: &mut Session) -> (u64, u64) {
     (l, r["mask"].as_u64().unwrap())
 }
 
-fn render_at(s: &Session, t: f64) -> effectcraft_raster::Image {
+fn render_at(s: &Session, t: f64) -> tselatra_raster::Image {
     let cid = s.active_comp_id().unwrap();
-    s.render(cid, effectcraft_time::Tick::from_seconds_f64(t), Default::default())
+    s.render(cid, tselatra_time::Tick::from_seconds_f64(t), Default::default())
 }
 
 fn alpha_at(s: &Session, x: u32, y: u32, t: f64) -> f32 {
@@ -148,7 +148,7 @@ fn variable_mask_feather_points() {
     // Serde: the points travel in the Mask Path value.
     let back = roundtrip(&s);
     let lay = back.comp(s.active_comp_id().unwrap()).unwrap().layer(LayerId(l)).unwrap();
-    let effectcraft_keyframe::Value::Path(sp) = &lay.props.find_group(m).unwrap().get("path").unwrap().value else { panic!() };
+    let tselatra_keyframe::Value::Path(sp) = &lay.props.find_group(m).unwrap().get("path").unwrap().value else { panic!() };
     assert_eq!(sp.feather.len(), 2);
     s.execute("mask.featherPoint.remove", json!({"layer": l, "mask": m, "all": true})).unwrap();
     assert!(alpha_at(&s, 100, 39, 0.0) < 0.01);
@@ -176,10 +176,10 @@ fn mask_motion_blur_ramps_across_the_motion() {
 
 #[test]
 fn adaptive_sample_limit_drives_layer_samples() {
-    assert_eq!(effectcraft_render::adaptive_samples(0.5, 16, 128), 16);
-    assert_eq!(effectcraft_render::adaptive_samples(100.0, 16, 128), 100);
-    assert_eq!(effectcraft_render::adaptive_samples(400.0, 16, 128), 128);
-    assert_eq!(effectcraft_render::adaptive_samples(400.0, 16, 9999), 256);
+    assert_eq!(tselatra_render::adaptive_samples(0.5, 16, 128), 16);
+    assert_eq!(tselatra_render::adaptive_samples(100.0, 16, 128), 100);
+    assert_eq!(tselatra_render::adaptive_samples(400.0, 16, 128), 128);
+    assert_eq!(tselatra_render::adaptive_samples(400.0, 16, 9999), 256);
     let mut s = comp(400, 100);
     s.execute("comp.settings", json!({"shutterAngle": 360, "shutterPhase": 0})).unwrap();
     let l = s.execute("layer.newSolid", json!({"color": "#ffffff", "width": 20, "height": 20})).unwrap()["layer"].as_u64().unwrap();
@@ -268,10 +268,10 @@ fn tate_chu_yoko_via_set_text_with_undo_and_serde() {
     s.execute("layer.setText", json!({"layer": t, "range": [1, 3], "tateChuYoko": true})).unwrap();
     let doc = crate::commands::text_edit::layer_doc(&s, LayerId(t)).unwrap();
     assert!(doc.style_at(1).tate_chu_yoko && doc.style_at(2).tate_chu_yoko && !doc.style_at(0).tate_chu_yoko);
-    let lay = effectcraft_text::layout_doc(&doc);
+    let lay = tselatra_text::layout_doc(&doc);
     assert!((lay.glyphs[1].origin.y - lay.glyphs[2].origin.y).abs() < 1e-6, "the digits share a row");
     let back = roundtrip(&s);
-    let effectcraft_keyframe::Value::Text(d) =
+    let tselatra_keyframe::Value::Text(d) =
         &back.comp(s.active_comp_id().unwrap()).unwrap().layer(LayerId(t)).unwrap().props.prop("text/sourceText").unwrap().value
     else {
         panic!()
@@ -292,11 +292,11 @@ fn variable_font_axes_animator() {
     // Inter (bundled) is static.
     assert_eq!(s.execute("text.animatorFontAxes", json!({})).unwrap()["axes"], json!([]));
     assert!(s.execute("text.animatorFontAxes", json!({"axis": "wght"})).is_err());
-    let Some((face, axes)) = effectcraft_text::variable::find_variable_face() else {
+    let Some((face, axes)) = tselatra_text::variable::find_variable_face() else {
         eprintln!("no variable font installed: animation check skipped");
         return;
     };
-    let info = effectcraft_text::fonts::face(face).info.clone();
+    let info = tselatra_text::fonts::face(face).info.clone();
     s.execute("layer.setText", json!({"layer": t, "font": info.family, "style": info.style})).unwrap();
     let axis = axes.iter().find(|a| a.max > a.min).unwrap().clone();
     let listed = s.execute("text.animatorFontAxes", json!({})).unwrap();
@@ -310,17 +310,17 @@ fn variable_font_axes_animator() {
     let area = |s: &Session| {
         let cid = s.active_comp_id().unwrap();
         let comp = s.project.comp(cid).unwrap();
-        let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, s.time());
+        let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, s.time());
         let l = comp.layer(LayerId(t)).unwrap();
-        effectcraft_render::text::glyph_paths(&ctx, l).iter().map(|(p, _)| effectcraft_text::kurbo::Shape::area(p).abs()).sum::<f64>()
+        tselatra_render::text::glyph_paths(&ctx, l).iter().map(|(p, _)| tselatra_text::kurbo::Shape::area(p).abs()).sum::<f64>()
     };
     // The distance between the two H's left edges: the H advance.
     let gap = |s: &Session| {
         let cid = s.active_comp_id().unwrap();
         let comp = s.project.comp(cid).unwrap();
-        let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, s.time());
+        let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, s.time());
         let l = comp.layer(LayerId(t)).unwrap();
-        let x0: Vec<f64> = effectcraft_render::text::glyph_paths(&ctx, l).iter().map(|(p, _)| effectcraft_text::kurbo::Shape::bounding_box(p).x0).collect();
+        let x0: Vec<f64> = tselatra_render::text::glyph_paths(&ctx, l).iter().map(|(p, _)| tselatra_text::kurbo::Shape::bounding_box(p).x0).collect();
         x0[1] - x0[0]
     };
     let before = area(&s);
@@ -334,10 +334,10 @@ fn variable_font_axes_animator() {
     assert!((after - before).abs() > 1.0, "{} axis moved the outline: {before} → {after}", axis.tag);
     // Advances follow the axis too (the text is re-spaced, not only redrawn).
     let a = axes.iter().find(|a| a.tag == tag).unwrap();
-    let f = effectcraft_text::fonts::face(face);
+    let f = tselatra_text::fonts::face(face);
     let gid = f.glyph('H').unwrap();
     let upem = f.units_per_em() as f64;
-    let units = |v: f32| effectcraft_text::variable::advance_units_at(face, gid, &[(a.tag.clone(), v)]).unwrap() as f64;
+    let units = |v: f32| tselatra_text::variable::advance_units_at(face, gid, &[(a.tag.clone(), v)]).unwrap() as f64;
     let want = (units((a.default + range as f32).clamp(a.min, a.max)) - units(a.default)) * 60.0 / upem;
     let moved = gap(&s) - gap_before;
     assert!((moved - want).abs() < 0.5, "{} axis: advance change {moved}, expected {want}", a.tag);
@@ -354,7 +354,7 @@ fn variable_font_axes_in_the_character_style() {
     s.execute("layer.setText", json!({"layer": t, "variations": {"wght": 650}})).unwrap();
     let d = crate::commands::text_edit::layer_doc(&s, LayerId(t)).unwrap();
     assert_eq!(d.style_at(0).variations, vec![("wght".to_string(), 650.0)]);
-    assert_eq!(effectcraft_keyframe::text_doc::char_style_json(&d.style_at(0))["variations"], json!({"wght": 650.0}));
+    assert_eq!(tselatra_keyframe::text_doc::char_style_json(&d.style_at(0))["variations"], json!({"wght": 650.0}));
     s.execute("layer.setText", json!({"layer": t, "range": [0, 3], "variations": {"wght": null}})).unwrap();
     let d = crate::commands::text_edit::layer_doc(&s, LayerId(t)).unwrap();
     assert!(d.style_at(0).variations.is_empty() && !d.style_at(5).variations.is_empty());
@@ -362,12 +362,12 @@ fn variable_font_axes_in_the_character_style() {
     s.execute("edit.undo", json!({})).unwrap();
     assert!(crate::commands::text_edit::layer_doc(&s, LayerId(t)).unwrap().style_at(0).variations.is_empty());
     assert!(s.execute("layer.setText", json!({"layer": t, "variations": 3})).is_err());
-    let Some((face, axes)) = effectcraft_text::variable::find_variable_face() else {
+    let Some((face, axes)) = tselatra_text::variable::find_variable_face() else {
         eprintln!("no variable font installed: rendering check skipped");
         return;
     };
-    let info = effectcraft_text::fonts::face(face).info.clone();
-    if effectcraft_text::resolve(&info.family, &info.style).face != face {
+    let info = tselatra_text::fonts::face(face).info.clone();
+    if tselatra_text::resolve(&info.family, &info.style).face != face {
         eprintln!("variable face not reachable by family/style: skipped");
         return;
     }
@@ -376,11 +376,11 @@ fn variable_font_axes_in_the_character_style() {
     let geom = |s: &Session| {
         let cid = s.active_comp_id().unwrap();
         let comp = s.project.comp(cid).unwrap();
-        let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, s.time());
+        let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, s.time());
         let l = comp.layer(LayerId(t)).unwrap();
-        let paths = effectcraft_render::text::glyph_paths(&ctx, l);
-        let area: f64 = paths.iter().map(|(p, _)| effectcraft_text::kurbo::Shape::area(p).abs()).sum();
-        let right = paths.iter().map(|(p, _)| effectcraft_text::kurbo::Shape::bounding_box(p).x1).fold(f64::MIN, f64::max);
+        let paths = tselatra_render::text::glyph_paths(&ctx, l);
+        let area: f64 = paths.iter().map(|(p, _)| tselatra_text::kurbo::Shape::area(p).abs()).sum();
+        let right = paths.iter().map(|(p, _)| tselatra_text::kurbo::Shape::bounding_box(p).x1).fold(f64::MIN, f64::max);
         (area, right)
     };
     s.execute("layer.setText", json!({"layer": t, "variations": {a.tag.trim_end(): a.min}})).unwrap();

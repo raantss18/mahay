@@ -1,7 +1,7 @@
 //! An in-process MCP client: feeds JSON-RPC lines to `Server::handle_line`.
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use figcraft_mcp::Server;
+use endrika_mcp::Server;
 use serde_json::{Value, json};
 
 pub struct Client {
@@ -84,5 +84,5 @@ pub fn approx(v: &Value, want: f64) -> bool {
 pub fn png_dims(b64: &str) -> (u32, u32) {
     use base64::Engine as _;
     let bytes = base64::engine::general_purpose::STANDARD.decode(b64).unwrap();
-    figcraft_mcp::png_size(&bytes).unwrap()
+    endrika_mcp::png_size(&bytes).unwrap()
 }

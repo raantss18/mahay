@@ -60,6 +60,6 @@
     <path d="M401.8 228 C407.867 221.067 413.933 221.067 420 228 C426.067 221.067 432.133 221.067 438.2 228" fill="none" stroke="#2a1450" stroke-width="2.2" stroke-miterlimit="10"/>
     <path d="M436.6 262 C441.733 256.133 446.867 256.133 452 262 C457.133 256.133 462.267 256.133 467.4 262" fill="none"/>
     <text transform="matrix(1 0 0 1 64 130)" xml:space="preserve" font-family="&apos;Source Sans 3&apos;" font-size="110" font-weight="bold" fill="#fff6e0" letter-spacing="19.8"><tspan>DUSK</tspan></text>
-    <text transform="matrix(1 0 0 1 70 170)" xml:space="preserve" font-family="&apos;Source Sans 3&apos;" font-size="18" fill="#ffe3c2"><tspan>Made in VectorCraft — vectors, pure Rust</tspan></text>
+    <text transform="matrix(1 0 0 1 70 170)" xml:space="preserve" font-family="&apos;Source Sans 3&apos;" font-size="18" fill="#ffe3c2"><tspan>Made in Tsipika — vectors, pure Rust</tspan></text>
   </g>
 </svg>

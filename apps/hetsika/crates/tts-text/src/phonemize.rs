@@ -1222,7 +1222,7 @@ PERCENT  P ER0 S EH1 N T
             ("fives", "fˈIvz"),
             // Letter-to-sound for unknown words.
             ("kokoro", "kˈɑkɑɹɑ"),
-            ("filmcraft", "fˈɪlmkɹæft"),
+            ("hetsika", "fˈɪlmkɹæft"),
             ("knight", "nˈIt"),
             // Punctuation attachment, kept and dropped.
             ("hello, world.", "həlˈO, wˈɜɹld."),
@@ -1266,7 +1266,7 @@ PERCENT  P ER0 S EH1 N T
     #[test]
     fn letter_to_sound_cases() {
         let cases: [(&str, &str); 36] = [
-            ("filmcraft", "fˈɪlmkɹæft"),
+            ("hetsika", "fˈɪlmkɹæft"),
             ("narration", "næɹˈæʃən"),
             ("kokoro", "kˈɑkɑɹɑ"),
             ("phone", "fˈOn"),
@@ -1363,7 +1363,7 @@ PERCENT  P ER0 S EH1 N T
             "999999999999999999999999",
             "007",
             "12345678901234",
-            "filmcraft narration kokoro",
+            "hetsika narration kokoro",
             "Dr. Smith lives on Main St. in 1999.",
             "The TDA project for NASA costs $1,234,567.",
         ];
@@ -1422,13 +1422,13 @@ PERCENT  P ER0 S EH1 N T
     }
 
     /// Measured accuracy against a real CMUdict, when the environment provides one
-    /// (FILMCRAFT_CMUDICT=/path/to/cmudict.dict). Holds out every 50th entry,
+    /// (HETSIKA_CMUDICT=/path/to/cmudict.dict). Holds out every 50th entry,
     /// rebuilds the lexicon without them, and reports letter-to-sound word
     /// accuracy and phoneme error rate on the held-out words.
     #[test]
     fn measured_accuracy_against_cmudict() {
-        let Ok(path) = std::env::var("FILMCRAFT_CMUDICT") else {
-            eprintln!("measured_accuracy_against_cmudict: FILMCRAFT_CMUDICT not set; skipping");
+        let Ok(path) = std::env::var("HETSIKA_CMUDICT") else {
+            eprintln!("measured_accuracy_against_cmudict: HETSIKA_CMUDICT not set; skipping");
             return;
         };
         let Ok(bytes) = std::fs::read(&path) else {

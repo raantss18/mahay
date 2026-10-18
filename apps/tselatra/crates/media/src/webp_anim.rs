@@ -11,8 +11,8 @@
 
 use std::io::Cursor;
 
-use effectcraft_project::{AlphaMode, Footage, FootageKind};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_project::{AlphaMode, Footage, FootageKind};
+use tselatra_time::{FrameRate, Tick};
 use image::{AnimationDecoder, DynamicImage, codecs::webp::WebPDecoder};
 
 use crate::gif_anim::{Anim, MAX_BYTES, MAX_FRAMES, gcd};
@@ -182,8 +182,8 @@ pub(crate) fn load(bytes: &[u8]) -> Result<Anim> {
 
 #[cfg(test)]
 mod tests {
-    use effectcraft_project::{AlphaMode, Footage, FootageKind};
-    use effectcraft_time::{FrameRate, Tick};
+    use tselatra_project::{AlphaMode, Footage, FootageKind};
+    use tselatra_time::{FrameRate, Tick};
     use image::{ExtendedColorType, ImageEncoder, codecs::webp::WebPEncoder};
 
     use super::timing;

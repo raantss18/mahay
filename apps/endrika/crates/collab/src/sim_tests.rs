@@ -3,8 +3,8 @@
 
 use std::collections::BTreeSet;
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, NodeId, NodeKind, Style, StyleKind};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, NodeId, NodeKind, Style, StyleKind};
 
 use crate::sim::{Rng, Sim};
 use crate::{NoRecompute, Recompute};
@@ -76,7 +76,7 @@ pub(crate) fn random_edit(doc: &mut Document, rng: &mut Rng, derive: &dyn Recomp
         }
         5..=7 => {
             if let Some(n) = pick(rng, &layers).and_then(|x| doc.node_mut(x)) {
-                n.transform = figcraft_geom::Affine::translate((rng.below(800) as f64 * 0.5, rng.below(800) as f64 * 0.25));
+                n.transform = endrika_geom::Affine::translate((rng.below(800) as f64 * 0.5, rng.below(800) as f64 * 0.25));
             }
         }
         8 => {
@@ -164,7 +164,7 @@ fn derived_data_is_repaired_after_concurrent_edits() {
 }
 
 #[test]
-#[ignore = "longer run for development: cargo test -p figcraft-collab -- --ignored"]
+#[ignore = "longer run for development: cargo test -p endrika-collab -- --ignored"]
 fn many_seeds_converge() {
     for seed in 1000..1300 {
         run(seed, 4, 120, &Width);

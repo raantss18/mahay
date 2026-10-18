@@ -1,7 +1,7 @@
 //! The Tools panel (left): single or double column, tool groups with flyouts, fill/stroke proxy,
 //! screen mode buttons.
 
-use designcraft_tools::{SPLIT_IN_TWO_COLUMNS, TOOL_GROUPS};
+use pejy_tools::{SPLIT_IN_TWO_COLUMNS, TOOL_GROUPS};
 use egui::{Color32, Sense, Stroke, StrokeKind, vec2};
 use serde_json::{Value, json};
 
@@ -214,7 +214,7 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
             }
         }
     });
-    if std::env::var_os("DESIGNCRAFT_DEBUG_LAYOUT").is_some() {
+    if std::env::var_os("PEJY_DEBUG_LAYOUT").is_some() {
         eprintln!("tools panel rect {:?} (wanted width {width}); remaining {:?}", r.response.rect, ui.available_rect_before_wrap());
     }
 }
@@ -348,8 +348,8 @@ fn fill_stroke_proxy(app: &mut DesignApp, ui: &mut egui::Ui, width: f32, cols: u
     // them out; one well with the kind in front (and a flyout of the three) in one column.
     let front_sw = if stroke_front { &stroke_sw } else { &fill_sw };
     let front_kind = match doc.as_ref() {
-        Some(_) if front_sw == designcraft_color::swatch::NONE => 2,
-        Some(d) if designcraft_color::swatch::resolve_gradient(&d.swatches, front_sw).is_some() => 1,
+        Some(_) if front_sw == pejy_color::swatch::NONE => 2,
+        Some(d) if pejy_color::swatch::resolve_gradient(&d.swatches, front_sw).is_some() => 1,
         _ => 0,
     };
     let applies: [(&str, &str); 3] =
@@ -592,8 +592,8 @@ pub(crate) fn apply_gradient(app: &mut DesignApp) -> Result<Value, String> {
         .ui
         .last_gradient
         .clone()
-        .filter(|s| designcraft_color::swatch::resolve_gradient(&st.doc.swatches, s).is_some())
-        .or_else(|| st.doc.swatches.iter().find(|w| matches!(w.value, designcraft_color::SwatchValue::Gradient { .. })).map(|w| w.name.clone()));
+        .filter(|s| pejy_color::swatch::resolve_gradient(&st.doc.swatches, s).is_some())
+        .or_else(|| st.doc.swatches.iter().find(|w| matches!(w.value, pejy_color::SwatchValue::Gradient { .. })).map(|w| w.name.clone()));
     let stroke = app.ui.stroke_front;
     if let Some(sw) = known {
         return crate::panels::apply_swatch(app, stroke, &sw, None);
@@ -629,7 +629,7 @@ mod tests {
     const STATUS_H: f32 = 17.0;
 
     fn app(double: bool) -> crate::DesignApp {
-        let mut app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.ui.tools_double_column = double;
         app
     }
@@ -648,7 +648,7 @@ mod tests {
     fn a_tool_flyout_closes_on_escape_and_on_a_click_elsewhere() {
         use egui::{Event, Modifiers, PointerButton};
         use egui_kittest::kittest::Queryable;
-        let app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let mut h = crate::test_window::open(app, vec2(1400.0, 900.0));
         let open = |h: &mut egui_kittest::Harness<'static, crate::test_window::Window>| {
             let at = h.get_by_label("Rectangle Frame Tool (F)").rect().center();
@@ -681,7 +681,7 @@ mod tests {
     fn a_tool_flyout_opened_by_holding_stays_open_and_esc_keeps_the_tool() {
         use egui::{Event, Modifiers, PointerButton};
         use egui_kittest::kittest::Queryable;
-        let app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let mut h = crate::test_window::open_stepped(app, vec2(1400.0, 900.0), 1.0, 1.0 / 60.0);
         h.state_mut().app.select_tool("rectangleFrame");
         h.run_steps(2);
@@ -776,7 +776,7 @@ mod tests {
         let mut app = app(false);
         app.run("file.new", serde_json::json!({})).unwrap();
         let r = app.run("frame.create", serde_json::json!({"rect": [72, 72, 300, 200], "content": "text", "text": "words", "caret": false})).unwrap();
-        let id = designcraft_doc::ItemId(r["id"].as_u64().unwrap());
+        let id = pejy_doc::ItemId(r["id"].as_u64().unwrap());
         app.run("selection.set", serde_json::json!({"ids": [id.0]})).unwrap();
         app.ui.formatting_affects_text = true;
         let mut h = double_click_fill(app);
@@ -858,7 +858,7 @@ mod tests {
         app.run("color.applyGradient", json!({})).unwrap();
         let g = fill(&app).0;
         let doc = &app.session.active().unwrap().doc;
-        let grad = designcraft_color::swatch::resolve_gradient(&doc.swatches, &g).expect("a gradient");
+        let grad = pejy_color::swatch::resolve_gradient(&doc.swatches, &g).expect("a gradient");
         assert_eq!((grad.stops[0].color.to_rgb(), grad.stops[1].color.to_rgb()), ([1.0; 3], [0.0; 3]));
         app.run("color.applyColor", json!({})).unwrap();
         // With the stroke in front, it goes to the stroke; the fill keeps its colour.
@@ -938,7 +938,7 @@ mod tests {
         // The next rectangle has them.
         let id = app.run("frame.create", json!({"rect": [72, 72, 200, 200], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
         let st = app.session.active().unwrap();
-        let it = st.doc.item(designcraft_doc::ItemId(id)).unwrap();
+        let it = st.doc.item(pejy_doc::ItemId(id)).unwrap();
         assert_eq!((it.fill.swatch.as_str(), it.stroke.swatch.as_str()), (red.as_str(), "[None]"));
     }
 
@@ -1002,11 +1002,11 @@ mod tests {
 #[cfg(test)]
 mod text_color_tests {
     use super::*;
-    use designcraft_doc::{ItemId, StoryId};
+    use pejy_doc::{ItemId, StoryId};
 
     #[test]
     fn integration_color_swap_preserves_each_run_and_frame() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let mut frames = vec![];
         let mut stories = vec![];
@@ -1047,7 +1047,7 @@ mod text_color_tests {
     #[test]
     fn integration_color_toolbar_picker_targets_selected_frame_text() {
         use egui_kittest::kittest::Queryable;
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let f = app.run("frame.create", json!({"rect":[36,36,300,200],"content":"text","text":"hello"})).unwrap();
         app.run("selection.set", json!({"ids":[f["id"]]})).unwrap();

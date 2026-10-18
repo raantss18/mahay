@@ -1,12 +1,12 @@
 //! Auxiliary 3D channels: the comp's depth / ID / Cryptomatte pass and the 3D Channel effects on
 //! a precomp of a 3D comp.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::Value;
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Comp, ItemId, ItemKind, Layer, LayerSource, Project, Solid};
-use effectcraft_raster::channels3d::{BACKGROUND_DEPTH, crypto_hash};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::Value;
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Comp, ItemId, ItemKind, Layer, LayerSource, Project, Solid};
+use tselatra_raster::channels3d::{BACKGROUND_DEPTH, crypto_hash};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::{NoFootage, RenderOpts, Renderer, render_frame};
 
@@ -30,7 +30,7 @@ fn solid3(p: &mut Project, comp: &Comp, name: &str, color: [f32; 3], pos: [f64; 
 /// precomp layer, optionally with an effect.
 fn scene(effect: Option<(&str, Vec<(&str, Value)>)>) -> (Project, ItemId, ItemId) {
     let mut p = Project::default();
-    p.settings.bit_depth = effectcraft_project::BitDepth::Bpc32;
+    p.settings.bit_depth = tselatra_project::BitDepth::Bpc32;
     let inner = Comp::new(W, H, FrameRate::FPS_30, Tick::from_seconds_f64(2.0));
     let iid = p.add_item("Inner", Label::Sandstone, None, ItemKind::Comp(inner.clone().into()));
     let near = solid3(&mut p, &inner, "Near", [1.0, 0.0, 0.0], [60.0, 50.0, 0.0]);
@@ -41,9 +41,9 @@ fn scene(effect: Option<(&str, Vec<(&str, Value)>)>) -> (Project, ItemId, ItemId
     let oid = p.add_item("Outer", Label::Sandstone, None, ItemKind::Comp(outer.clone().into()));
     let mut pre = build::layer(&mut p, &outer, "Inner", LayerSource::Comp { item: iid }, (W, H), None);
     if let Some((id, vals)) = effect {
-        let spec = effectcraft_effects::find(id).unwrap();
+        let spec = tselatra_effects::find(id).unwrap();
         let mut next = p.next_id;
-        let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [W as f64, H as f64]);
+        let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [W as f64, H as f64]);
         p.next_id = next;
         for (k, v) in vals {
             g.prop_mut(k).unwrap().value = v.clone();

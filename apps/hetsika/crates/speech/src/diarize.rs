@@ -21,8 +21,8 @@
 //! very similar voices or music beds confuse it. Labels are editable in the Text panel (rename a
 //! speaker, or assign words to a speaker by hand), which is the fallback when it gets them wrong.
 
-use filmcraft_project::{Speaker, Transcript};
-use filmcraft_time::Tick;
+use hetsika_project::{Speaker, Transcript};
+use hetsika_time::Tick;
 
 use crate::{SAMPLE_RATE, TICKS_PER_SAMPLE};
 
@@ -245,7 +245,7 @@ pub fn diarize(audio: &[f32], t: &mut Transcript, p: &Params) -> usize {
 mod tests {
     use super::*;
     use crate::seconds_tick;
-    use filmcraft_project::Word;
+    use hetsika_project::Word;
 
     /// A synthetic "voice": a pulse train at `f0` through two resonances (formants), with a slow
     /// syllable envelope.

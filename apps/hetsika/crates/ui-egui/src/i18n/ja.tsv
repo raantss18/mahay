@@ -4,7 +4,7 @@
 # Clean-room: every entry was written from the plain meaning of the English text using ordinary
 # Japanese computing and video-editing vocabulary (クリップ, シーケンス, トラック, 再生ヘッド, ぼかし ...). No
 # proprietary localisation resource, string table or product UI was consulted or copied; add entries
-# the same way. Product and technology names (FilmCraft, ArtCraft, Lumetri, ProRes, LUFS ...) keep
+# the same way. Product and technology names (Hetsika, Mahay, Lumetri, ProRes, LUFS ...) keep
 # their spelling.
 #
 # House style, so new entries read like the rest:
@@ -16,7 +16,7 @@
 #     (not 効果), ぼかし, 音量, ビデオ, 再生ヘッド, イン点/アウト点.
 #   - "Horizontal"/"Vertical" are 水平/垂直 (guides, blur, axes); vertical text is "Vertical Text".
 
-	About FilmCraft	FilmCraft について
+	About Hetsika	Hetsika について
 	Add Audio Submix Track	オーディオサブミックストラックを追加
 	Add Caption at Playhead	再生ヘッドの位置にキャプションを追加
 	Add Chapter Marker…	チャプターマーカーを追加…
@@ -42,7 +42,7 @@
 	Apply Default Transitions to Selection	選択範囲に既定のトランジションを適用
 	Apply Video Transition	ビデオトランジションを適用
 	Arrange	重ね順
-	ArtCraft Website	ArtCraft の Web サイト
+	Mahay Website	Mahay の Web サイト
 	Assembly	アセンブリ
 	Attach Proxies…	プロキシを関連付け…
 	Audio Channels…	オーディオチャンネル…
@@ -135,9 +135,9 @@
 	File	ファイル
 	File…	ファイル…
 	Fill frame	フレームを埋める
-	FilmCraft Help…	FilmCraft ヘルプ…
-	FilmCraft on GitHub	GitHub の FilmCraft
-	FilmCraft on getartcraft.com	getartcraft.com の FilmCraft
+	Hetsika Help…	Hetsika ヘルプ…
+	Hetsika on GitHub	GitHub の Hetsika
+	Hetsika on mahay.com	mahay.com の Hetsika
 	Find Next	次を検索
 	Find…	検索…
 	Fit	合わせる
@@ -181,7 +181,7 @@
 	Insert Frame Hold Segment	フレームホールドセグメントを挿入
 	Install Motion Graphics Template…	モーショングラフィックステンプレートをインストール…
 	Interpret Footage…	素材を解釈…
-	Join the ArtCraft Discord…	ArtCraft の Discord に参加…
+	Join the Mahay Discord…	Mahay の Discord に参加…
 	Keyboard Shortcuts…	キーボードショートカット…
 	Label	ラベル
 	Labels…	ラベル…
@@ -309,7 +309,7 @@
 	Select Previous Graphic	前のグラフィックを選択
 	Select Previous Layer	前のレイヤーを選択
 	Selection Follows Playhead	選択範囲が再生ヘッドに追従
-	Selection as FilmCraft Project…	選択項目を FilmCraft プロジェクトとして書き出し…
+	Selection as Hetsika Project…	選択項目を Hetsika プロジェクトとして書き出し…
 	Selection…	選択項目…
 	Send Backward	背面へ
 	Send to Back	最背面へ
@@ -375,7 +375,7 @@
 	Master volume: use the Audio Track Mixer	マスター音量はオーディオトラックミキサーで調整してください
 	Search	検索
 	Quick Export	クイック書き出し
-	Join the ArtCraft Discord (discord.gg/artcraft)	ArtCraft の Discord に参加 (discord.gg/artcraft)
+	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	Mahay の Discord に参加 (github.com/raantss18/mahay/discussions)
 	Cancel	キャンセル
 	OK	OK
 	Interpret Footage	素材を解釈
@@ -414,8 +414,8 @@
 	Delete Audio Tracks	オーディオトラックを削除する
 	All Empty Tracks	すべての空のトラック
 	Version {version}	バージョン {version}
-	A clean-room, pure-Rust non-linear video editor. Part of the ArtCraft family.	Rust だけで書かれた、クリーンルーム設計のノンリニアビデオ編集ソフトです。ArtCraft ファミリーの一員です。
-	Join the ArtCraft Discord	ArtCraft の Discord に参加
+	A clean-room, pure-Rust non-linear video editor. Part of the Mahay family.	Rust だけで書かれた、クリーンルーム設計のノンリニアビデオ編集ソフトです。Mahay ファミリーの一員です。
+	Join the Mahay Discord	Mahay の Discord に参加
 	Source code on GitHub	GitHub のソースコード
 	Report an issue	問題を報告
 	MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).	MIT OR Apache-2.0。フォント: Inter、Noto Serif、JetBrains Mono (SIL OFL 1.1)。
@@ -435,8 +435,8 @@
 	No background jobs.	バックグラウンドジョブはありません。
 	Recover Unsaved Changes	未保存の変更を復元
 	Untitled	名称未設定
-	FilmCraft was closed while “{name}” had unsaved changes.	「{name}」に未保存の変更がある状態で FilmCraft が終了しました。
-	FilmCraft quit unexpectedly while “{name}” had unsaved changes.	「{name}」に未保存の変更がある状態で FilmCraft が予期せず終了しました。
+	Hetsika was closed while “{name}” had unsaved changes.	「{name}」に未保存の変更がある状態で Hetsika が終了しました。
+	Hetsika quit unexpectedly while “{name}” had unsaved changes.	「{name}」に未保存の変更がある状態で Hetsika が予期せず終了しました。
 	Recover unsaved changes from {when}?	{when} の未保存の変更を復元しますか？
 	The project had not been saved yet.	このプロジェクトはまだ保存されていませんでした。
 	{n} sessions have unsaved changes:	{n} 件のセッションに未保存の変更があります:
@@ -962,7 +962,7 @@
 	Font family	フォントファミリー
 	Label Colors	ラベルカラー
 	Decoded frames held for the monitors and thumbnails: {used} of {budget}.	モニターとサムネイル用に保持するデコード済みフレームに、{budget} のうち {used} を使用しています。
-	FilmCraft keeps the rest of the RAM free for other applications.	FilmCraft は残りの RAM をほかのアプリケーション用に空けておきます。
+	Hetsika keeps the rest of the RAM free for other applications.	Hetsika は残りの RAM をほかのアプリケーション用に空けておきます。
 	not available in this session	このセッションでは利用できません
 	Currently: {loc} — {files} file(s), {size}	現在: {loc} — {files} 個のファイル、{size}
 	 ({ch} output channels)	 (出力 {ch} チャンネル)
@@ -1071,7 +1071,7 @@
 	Video Frame	ビデオフレーム
 	Pin To	固定先
 	Pinned Edges	固定する辺
-	FilmCraft Graphics Template	FilmCraft グラフィックステンプレート
+	Hetsika Graphics Template	Hetsika グラフィックステンプレート
 	{n} Font	{n} のフォント
 	{n} Size	{n} のサイズ
 	{n} Color	{n} の色
@@ -1081,7 +1081,7 @@
 	Export As Motion Graphics Template	モーショングラフィックステンプレートとして書き出し
 	Category:	カテゴリ:
 	Editable properties:	編集可能なプロパティ:
-	Saved as a FilmCraft graphics template (.fcgt) in your templates folder.	テンプレートフォルダーに FilmCraft グラフィックステンプレート (.fcgt) として保存されます。
+	Saved as a Hetsika graphics template (.fcgt) in your templates folder.	テンプレートフォルダーに Hetsika グラフィックステンプレート (.fcgt) として保存されます。
 	Exported graphics template to {path}	グラフィックステンプレートを {path} に書き出しました
 	Replace Fonts in Projects	プロジェクト内のフォントを置換
 	Fonts used in the project:	プロジェクトで使用されているフォント:
@@ -1451,7 +1451,7 @@
 	Center of Sphere	球の中心
 	Cents	セント
 	Change to Color	指定色に変更
-	Changes are copied in the background a moment after each edit. If FilmCraft quits unexpectedly, they are offered the next time it starts.	変更内容は、編集のたびに少し遅れてバックグラウンドでコピーされます。FilmCraft が予期せず終了した場合は、次回の起動時に復元できます。
+	Changes are copied in the background a moment after each edit. If Hetsika quits unexpectedly, they are offered the next time it starts.	変更内容は、編集のたびに少し遅れてバックグラウンドでコピーされます。Hetsika が予期せず終了した場合は、次回の起動時に復元できます。
 	Channel	チャンネル
 	Channel Blur	チャンネルぼかし
 	Channel Mix	チャンネルミックス
@@ -1824,7 +1824,7 @@
 	Hard Limiter	ハードリミッター
 	Hard Mix	ハードミックス
 	Hardware decoding	ハードウェアデコード
-	Hardware decoding: Auto uses the system's video decoder (VideoToolbox on macOS, Media Foundation on Windows, VA-API or NVDEC for H.264 and HEVC on Linux) for the streams it supports, and FilmCraft's own decoder for everything else or if the hardware fails. Media that is already open keeps its decoder until it is reopened.	ハードウェアデコード: 「自動」では、対応しているストリームにはシステムのビデオデコーダー (macOS では VideoToolbox、Windows では Media Foundation、Linux では H.264・HEVC 用の VA-API または NVDEC) を使用し、それ以外のストリームや、ハードウェアで失敗した場合は FilmCraft 独自のデコーダーを使用します。すでに開いているメディアは、開き直すまで現在のデコーダーを使い続けます。
+	Hardware decoding: Auto uses the system's video decoder (VideoToolbox on macOS, Media Foundation on Windows, VA-API or NVDEC for H.264 and HEVC on Linux) for the streams it supports, and Hetsika's own decoder for everything else or if the hardware fails. Media that is already open keeps its decoder until it is reopened.	ハードウェアデコード: 「自動」では、対応しているストリームにはシステムのビデオデコーダー (macOS では VideoToolbox、Windows では Media Foundation、Linux では H.264・HEVC 用の VA-API または NVDEC) を使用し、それ以外のストリームや、ハードウェアで失敗した場合は Hetsika 独自のデコーダーを使用します。すでに開いているメディアは、開き直すまで現在のデコーダーを使い続けます。
 	Head Size	頭部サイズ
 	Heart	ハート
 	Height	高さ
@@ -2094,7 +2094,7 @@
 	Night	夜
 	No Motion	動きなし
 	No Scroll	スクロールなし
-	No plugins are installed. Changes will take effect the next time you start FilmCraft.	プラグインはインストールされていません。変更は次回 FilmCraft の起動時に反映されます。
+	No plugins are installed. Changes will take effect the next time you start Hetsika.	プラグインはインストールされていません。変更は次回 Hetsika の起動時に反映されます。
 	Noise	ノイズ
 	Noise & Grain	ノイズ・グレイン
 	Noise (Legacy)	ノイズ (従来版)
@@ -2525,7 +2525,7 @@
 	Template Properties	テンプレートのプロパティ
 	Text Animator	テキストアニメーター
 	Text Color	テキストの色
-	The media cache holds render previews of unsaved projects and other files FilmCraft can recreate. Deleting them is always safe; FilmCraft rebuilds them as needed.	メディアキャッシュには、未保存のプロジェクトのレンダリングプレビューなど、FilmCraft が再作成できるファイルが保存されています。これらはいつ削除しても問題ありません。FilmCraft が必要に応じて再構築します。
+	The media cache holds render previews of unsaved projects and other files Hetsika can recreate. Deleting them is always safe; Hetsika rebuilds them as needed.	メディアキャッシュには、未保存のプロジェクトのレンダリングプレビューなど、Hetsika が再作成できるファイルが保存されています。これらはいつ削除しても問題ありません。Hetsika が必要に応じて再構築します。
 	Thickness	太さ
 	Tile Gradient	タイル状に配置
 	Tilt	チルト
@@ -2735,7 +2735,7 @@
 	System Compatibility Report	システム互換性レポート
 	no GPU adapter: the CPU compositor is used	GPU アダプターがありません: CPU コンポジターを使用します
 	Avid Log Exchange	Avid Log Exchange
-	FilmCraft Project	FilmCraft プロジェクト
+	Hetsika Project	Hetsika プロジェクト
 	{name} Selection.fcproj	{name} 選択項目.fcproj
 	{name} (Simplified)	{name} (単純化済み)
 	Find in:	検索場所:
@@ -2875,7 +2875,7 @@
 	Start Queue	キューを開始
 	Stop	停止
 	Clear Finished	終了した項目をクリア
-	Not supported by FilmCraft's encoders yet	FilmCraft のエンコーダーはまだ対応していません
+	Not supported by Hetsika's encoders yet	Hetsika のエンコーダーはまだ対応していません
 	Sequence name	シーケンス名
 	Folder	フォルダー
 	Preset	プリセット
@@ -2964,7 +2964,7 @@
 	Drag a clip to slide it between its neighbours.	クリップをドラッグすると、前後のクリップの間でスライドします。
 	Drag to scroll the timeline.	ドラッグしてタイムラインをスクロールします。
 	Click to zoom in; Opt-click to zoom out.	クリックでズームイン、Opt+クリックでズームアウトします。
-	FilmCraft hit an error	FilmCraft でエラーが発生しました
+	Hetsika hit an error	Hetsika でエラーが発生しました
 	Details: {path}	詳細: {path}
 	Opened {url}	{url} を開きました
 	(empty)	(空)
@@ -3224,7 +3224,7 @@
 	QuickTime, ProRes 4444 (4:4:4) with alpha channel, 24-bit 48 kHz PCM	QuickTime、ProRes 4444 (4:4:4) アルファチャンネル付き、24-bit 48 kHz PCM
 	QuickTime, ProRes 4444 XQ (4:4:4), 24-bit 48 kHz PCM	QuickTime、ProRes 4444 XQ (4:4:4)、24-bit 48 kHz PCM
 	QuickTime, ProRes 422, 24-bit 48 kHz PCM	QuickTime、ProRes 422、24-bit 48 kHz PCM
-	Quit FilmCraft	FilmCraft を終了
+	Quit Hetsika	Hetsika を終了
 	Rate Stretch Tool	レートストレッチツール
 	Razor Tool	カミソリツール
 	Rectangle Tool	長方形ツール
@@ -3535,8 +3535,8 @@
 	Composite in Linear Color	リニアカラーで合成
 	Auto Tone Map Media (HDR and log into SDR)	メディアの自動トーンマッピング (HDR と log を SDR に変換)
 	Configure…	設定…
-	Not supported in FilmCraft yet	FilmCraft ではまだサポートされていません
-	FilmCraft always composites in linear light	FilmCraft は常にリニアライトで合成します
+	Not supported in Hetsika yet	Hetsika ではまだサポートされていません
+	Hetsika always composites in linear light	Hetsika は常にリニアライトで合成します
 	Loop marked range	マークした範囲をループ
 	Play Source	ソースを再生
 	Source Play/Stop	ソースの再生/停止
@@ -3606,6 +3606,6 @@
 	Opens in your web browser: {url}	ウェブブラウザーで開きます：{url}
 	Saves this session's log and shows it in your file manager.	このセッションのログを保存し、ファイルマネージャーで表示します。
 	Shows a report on this computer.	このコンピューターのレポートを表示します。
-	Shows the version, community links and credits in a FilmCraft window.	バージョン、コミュニティへのリンク、クレジットを FilmCraft のウィンドウに表示します。
+	Shows the version, community links and credits in a Hetsika window.	バージョン、コミュニティへのリンク、クレジットを Hetsika のウィンドウに表示します。
 	Couldn't open your web browser	ウェブブラウザーを開けませんでした
 	Open this address in your browser yourself:	このアドレスをご自身でブラウザーで開いてください：

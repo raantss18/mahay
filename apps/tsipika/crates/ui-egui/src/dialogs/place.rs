@@ -3,7 +3,7 @@
 //! object) or loads the place cursor with several ([`crate::place::confirm`]).
 //!
 //! Fields: `files` (`[{path} | {name}]`), `link`, `template`, `replace`, and `__replace` (one file
-//! and one selected object: Replace applies), `__documents` and `__others` (VectorCraft documents
+//! and one selected object: Replace applies), `__documents` and `__others` (Tsipika documents
 //! from files are picked, other files are: what Link's tooltip explains), `__info` (a line per
 //! file).
 
@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use super::DialogSpec;
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Place.
 pub const KIND: &str = "place";
@@ -34,7 +34,7 @@ const OPTIONS: [(&str, &str, &str); 3] = [
     ("replace", "Replace", "Swap the selected object for the file, keeping its place and transform"),
 ];
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let files: Vec<Value> = d.fields.get("files").and_then(Value::as_array).cloned().unwrap_or_default();
     let info = d.fields.get("__info").cloned().unwrap_or_default();
@@ -45,7 +45,7 @@ fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
             for (i, f) in files.iter().enumerate() {
                 let path = f.get("path").and_then(Value::as_str);
                 let name = path
-                    .map(vectorcraft_engine::cmd::fileio::file_name)
+                    .map(tsipika_engine::cmd::fileio::file_name)
                     .or_else(|| f.get("name").and_then(Value::as_str).map(str::to_string))
                     .unwrap_or_default();
                 ui.horizontal(|ui| {
@@ -83,7 +83,7 @@ fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-/// Link's tooltip: what it does for the files picked (images, VectorCraft documents, or both), a
+/// Link's tooltip: what it does for the files picked (images, Tsipika documents, or both), a
 /// line each.
 pub(crate) fn link_tip(d: &Dialog) -> String {
     let lines = match (d.bool("__documents"), d.bool("__others")) {
@@ -96,7 +96,7 @@ pub(crate) fn link_tip(d: &Dialog) -> String {
         (true, true) => {
             vec![
                 tl!("Images: link to the file instead of only embedding it."),
-                tl!("VectorCraft documents: one locked object, updated when the file changes."),
+                tl!("Tsipika documents: one locked object, updated when the file changes."),
             ]
         }
         _ => vec![tl!("Keep a link to an image file instead of only embedding it")],

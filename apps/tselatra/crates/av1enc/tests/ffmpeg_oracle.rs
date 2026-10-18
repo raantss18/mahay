@@ -7,7 +7,7 @@ mod common;
 use std::process::Command;
 
 use common::*;
-use effectcraft_av1enc::{Encoder, EncoderConfig, Packet, RateControl};
+use tselatra_av1enc::{Encoder, EncoderConfig, Packet, RateControl};
 
 fn have_libdav1d() -> bool {
     let Ok(out) = Command::new("ffmpeg").args(["-hide_banner", "-decoders"]).output() else {
@@ -57,7 +57,7 @@ fn check(name: &str, cfg: EncoderConfig, pics: &[Pic]) -> Vec<u32> {
         recons.push(enc.last_reconstruction().expect("reconstruction"));
         levels.push(enc.last_loop_filter_level().expect("level"));
     }
-    let dir = std::env::temp_dir().join(format!("effectcraft-av1enc-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tselatra-av1enc-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("temp dir");
     let input = dir.join("in.ivf");
     let output = dir.join("out.yuv");

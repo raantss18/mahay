@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 
 use crate::change::{Change, Json, Prop};
 use crate::frac::{self, FIRST_KEY, KEY_RESPACE_LEN};

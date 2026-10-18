@@ -2,11 +2,11 @@
 
 use std::time::{Duration, Instant};
 
-use lightcraft_catalog::{Op, Photo, PhotoId, Source};
+use hazavana_catalog::{Op, Photo, PhotoId, Source};
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 fn ms(d: Duration) -> f64 {
     d.as_secs_f64() * 1000.0
@@ -14,8 +14,8 @@ fn ms(d: Duration) -> f64 {
 
 /// A library of `n` photos, about a third of them keyworded from a pool of 500 keywords, showing a smart album of
 /// the photos without keywords at random.
-fn library(n: usize) -> lightcraft_engine::Session {
-    let mut s = lightcraft_engine::Session::new();
+fn library(n: usize) -> hazavana_engine::Session {
+    let mut s = hazavana_engine::Session::new();
     let mut keyworded: Vec<Vec<u64>> = vec![Vec::new(); 500];
     for i in 0..n {
         let id = s.catalog.alloc_photo_id();
@@ -97,10 +97,10 @@ fn what_one_keyword_costs_in_a_library_of_67_000_photos() {
         let _ = s.catalog.count(&f);
     });
     time("count of all photos", &|| {
-        let _ = s.catalog.count(&lightcraft_catalog::Filter::default());
+        let _ = s.catalog.count(&hazavana_catalog::Filter::default());
     });
     // the app: a frame after an edit against a frame with nothing changed
-    let app = LightcraftApp::new(s, Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(s, Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1600.0, 1000.0], 1.0);
     h.app.ui.left_panel = true;
     h.request("engine.execute", json!({"command": "view.squareGrid", "params": {}}), Duration::from_secs(60));

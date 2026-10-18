@@ -2,8 +2,8 @@
 //! gridlines), the gridline colours and opacity, and Show Rulers (a ruler up the vertical line
 //! where the planes meet, in Define Grid's real-world units).
 
-use vectorcraft_doc::Unit;
-use vectorcraft_geom::{Point, Rect, Vec2};
+use tsipika_doc::Unit;
+use tsipika_geom::{Point, Rect, Vec2};
 
 use super::{PerspectiveGrid, Plane};
 use crate::Overlay;

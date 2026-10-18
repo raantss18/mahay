@@ -1,4 +1,4 @@
-//! # effectcraft-script (L4)
+//! # tselatra-script (L4)
 //!
 //! Scripting with an After Effects-style object model, on the boa JavaScript engine (the one the
 //! expressions use). Scripts written for After Effects' documented scripting API mostly run
@@ -24,7 +24,7 @@
 //!   `Folder`, `$` (with `evalFile`), `BridgeTalk` (host identification), `alert`/`writeLn`, and the enums (`BlendingMode`, `KeyframeInterpolationType`,
 //!   `TrackMatteType`, `LightType`, `ParagraphJustification`, `PropertyValueType`…).
 //! * **Edits are engine commands**: every mutating call runs a command through
-//!   [`Session::execute`](effectcraft_engine::Session::execute), so it is undoable, journaled
+//!   [`Session::execute`](tselatra_engine::Session::execute), so it is undoable, journaled
 //!   and identical to the UI's action; `app.beginUndoGroup`/`endUndoGroup` fold everything in
 //!   between into one undo step.
 //! * **Match names** ([`matchnames`]): After Effects' documented match names for our properties
@@ -37,7 +37,7 @@
 //!   `Progressbar`, `DropDownList`, `ListBox`, `TabbedPanel`/`Tab`, with `add()`, `orientation`,
 //!   `alignChildren`, `alignment`, `margins`, `spacing`, `preferredSize`, `onClick` /
 //!   `onChange` / `onChanging` / `onClose`, `show()` / `close()` and `layout.layout()`. Windows
-//!   are published to [`Session::script_ui`](effectcraft_engine::Session::script_ui) for
+//!   are published to [`Session::script_ui`](tselatra_engine::Session::script_ui) for
 //!   frontends and agents (`scriptui.*` commands); modal dialogs block `show()` until they close.
 //!   Scripts in the ScriptUI Panels folder run with `this` = a dockable `Panel`. Resource
 //!   strings (`new Window("dialog { ok: Button { text: 'OK' } }")`, `add("group { … }")`) build
@@ -47,9 +47,9 @@
 //! * **Sockets** (`socket.rs`): `Socket` (`open`/`listen`/`poll`/`read`/`readln`/`write`/`close`)
 //!   over TCP, behind the same network preference; on the web `open` returns false.
 //!
-//! Entry points: [`install`] sets [`Session::script`](effectcraft_engine::Session::script), which
+//! Entry points: [`install`] sets [`Session::script`](tselatra_engine::Session::script), which
 //! the `script.run` command, File ▸ Scripts ▸ Run Script File… (`.jsx`/`.js`), the Script Console
-//! panel, `effectcraft-cli script` and the MCP `run_script` tool use.
+//! panel, `tselatra-cli script` and the MCP `run_script` tool use.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![recursion_limit = "256"]
@@ -63,13 +63,13 @@ mod socket;
 mod tasks;
 mod ui;
 
-use effectcraft_engine::{ScriptRequest, Session};
+use tselatra_engine::{ScriptRequest, Session};
 
 pub use runtime::{Outcome, ScriptError, run};
 pub use tasks::{MAX_TASKS, MIN_REPEAT_MS, run_tasks};
 pub use ui::dispatch_ui;
 
-/// The [`effectcraft_engine::ScriptRunner`] this crate provides.
+/// The [`tselatra_engine::ScriptRunner`] this crate provides.
 pub fn runner(s: &mut Session, req: &ScriptRequest) -> serde_json::Value {
     run(s, req).to_json()
 }

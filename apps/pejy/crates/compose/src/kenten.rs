@@ -6,9 +6,9 @@
 //! box, that box sits next to the character's em box (plus the kenten distance) and is centred on
 //! the character, or starts with it when the alignment is Start (肩付き).
 
-use designcraft_doc::CharProps;
-use designcraft_fonts::{FaceRef, FontDb, ScopedFonts};
-use designcraft_geom::{Rect, Shape as _};
+use pejy_doc::CharProps;
+use pejy_fonts::{FaceRef, FontDb, ScopedFonts};
+use pejy_geom::{Rect, Shape as _};
 
 use crate::{PlacedGlyph, RunStyle, upright_in_vertical};
 
@@ -48,7 +48,7 @@ fn mark_size(p: &CharProps) -> f64 {
 impl KentenMark {
     /// The kenten of text formatted with `p`, drawn in run style `style`.
     pub(crate) fn of(p: &CharProps, style: u32) -> KentenMark {
-        use designcraft_doc::cjk_settings::{KentenAlignment, KentenKind, KentenPosition, kenten_mark};
+        use pejy_doc::cjk_settings::{KentenAlignment, KentenKind, KentenPosition, kenten_mark};
         let custom_font = p.kenten_kind == KentenKind::Custom && !p.kenten_font.trim().is_empty();
         let font_style = if p.kenten_font_style.trim().is_empty() { "Regular".to_string() } else { p.kenten_font_style.clone() };
         KentenMark {
@@ -119,7 +119,7 @@ fn shape_mark(face: FaceRef, text: &str, m: &KentenMark, b: &PlacedGlyph) -> Vec
     let (sx, sy) = (k * m.x_scale, k * m.y_scale);
     let mut x = 0.0;
     let mut out = Vec::new();
-    for sg in designcraft_fonts::shape(&face, text, &[], |c| c) {
+    for sg in pejy_fonts::shape(&face, text, &[], |c| c) {
         let ch = text.get(sg.cluster..).and_then(|t| t.chars().next()).unwrap_or(' ');
         let adv = f64::from(sg.x_advance) * sx;
         out.push(PlacedGlyph {

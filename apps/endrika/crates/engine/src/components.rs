@@ -32,8 +32,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_doc::*;
-use figcraft_geom::Affine;
+use endrika_doc::*;
+use endrika_geom::Affine;
 use serde_json::Value;
 
 /// Nesting limit for instances inside instances.
@@ -770,7 +770,7 @@ fn sync_instance_depth(doc: &mut Document, inst: NodeId, depth: usize, spare: BT
     // A resized instance: children follow their constraints (auto layout re-flows later).
     let (iw, ih) = doc.node(inst).map(|n| (n.width, n.height)).unwrap_or((comp.width, comp.height));
     if (iw - comp.width).abs() > 1e-9 || (ih - comp.height).abs() > 1e-9 {
-        figcraft_layout::apply_constraints(doc, inst, comp.width, comp.height);
+        endrika_layout::apply_constraints(doc, inst, comp.width, comp.height);
         remeasure = map.values().copied().collect();
     }
     // Geometry overrides of children win over constraints.
@@ -784,7 +784,7 @@ fn sync_instance_depth(doc: &mut Document, inst: NodeId, depth: usize, spare: BT
             && doc.node(nid).is_some_and(|n| n.kind.is_frame_like() && n.layout.is_none())
             && let Some((mw, mh)) = doc.node(*s).map(|m| (m.width, m.height))
         {
-            figcraft_layout::apply_constraints(doc, nid, mw, mh);
+            endrika_layout::apply_constraints(doc, nid, mw, mh);
         }
         if !o.overrides.contains("size") && !o.overrides.contains("position") {
             continue;
@@ -793,9 +793,9 @@ fn sync_instance_depth(doc: &mut Document, inst: NodeId, depth: usize, spare: BT
         let Some((ow, oh)) = doc.node(nid).map(|n| (n.width, n.height)) else { continue };
         if o.overrides.contains("size") {
             // Through set_size so vector networks scale with the box.
-            figcraft_layout::set_size(doc, nid, o.width, o.height);
+            endrika_layout::set_size(doc, nid, o.width, o.height);
             if doc.node(nid).is_some_and(|n| n.kind.is_frame_like() && n.layout.is_none()) {
-                figcraft_layout::apply_constraints(doc, nid, ow, oh);
+                endrika_layout::apply_constraints(doc, nid, ow, oh);
             }
         }
         if let Some(n) = doc.node_mut(nid) {
@@ -805,10 +805,10 @@ fn sync_instance_depth(doc: &mut Document, inst: NodeId, depth: usize, spare: BT
     // Text whose characters or style differ from the main re-measures.
     for nid in remeasure {
         if let Some(n) = doc.node(nid)
-            && let Some((w, h)) = figcraft_text::auto_size(n)
+            && let Some((w, h)) = endrika_text::auto_size(n)
             && ((w - n.width).abs() > 1e-6 || (h - n.height).abs() > 1e-6)
         {
-            figcraft_layout::set_size(doc, nid, w, h);
+            endrika_layout::set_size(doc, nid, w, h);
         }
     }
     // Nested instances showing another main than the main's copy (swapped): rebuild from it,
@@ -1522,10 +1522,10 @@ fn patch_copies(doc: &mut Document, seeds: &[(NodeId, Vec<&'static str>)]) -> bo
                 }
             }
             if (geometry || gs.iter().any(|g| text(g)))
-                && let Some((w, h)) = doc.node(c).and_then(figcraft_text::auto_size)
+                && let Some((w, h)) = doc.node(c).and_then(endrika_text::auto_size)
                 && doc.node(c).is_some_and(|n| (n.width - w).abs() > 1e-6 || (n.height - h).abs() > 1e-6)
             {
-                figcraft_layout::set_size(doc, c, w, h);
+                endrika_layout::set_size(doc, c, w, h);
             }
             work.push((c, gs));
         }

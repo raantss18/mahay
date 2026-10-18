@@ -109,12 +109,12 @@ fn slot_definition_reference_and_arbitrary_override_children_are_imported() {
         .unwrap()
         .children
         .iter()
-        .find_map(|id| doc.node(*id).filter(|n| n.name == "Synthetic" && matches!(n.kind, figcraft_doc::NodeKind::Component { .. })))
+        .find_map(|id| doc.node(*id).filter(|n| n.name == "Synthetic" && matches!(n.kind, endrika_doc::NodeKind::Component { .. })))
         .unwrap();
     assert!(
-        matches!(&main.kind, figcraft_doc::NodeKind::Component { props, .. } if matches!(props.get("Content"), Some(figcraft_doc::PropDef::Slot { preferred }) if preferred.is_empty()))
+        matches!(&main.kind, endrika_doc::NodeKind::Component { props, .. } if matches!(props.get("Content"), Some(endrika_doc::PropDef::Slot { preferred }) if preferred.is_empty()))
     );
-    let instance = doc.ids().filter_map(|id| doc.node(id)).find(|n| matches!(n.kind, figcraft_doc::NodeKind::Instance { .. })).unwrap();
+    let instance = doc.ids().filter_map(|id| doc.node(id)).find(|n| matches!(n.kind, endrika_doc::NodeKind::Instance { .. })).unwrap();
     let slot = doc.node(instance.children[0]).unwrap();
     assert!(!slot.prop_refs.contains_key("slot"));
     assert_eq!(slot.source, Some(main.children[0]));
@@ -123,7 +123,7 @@ fn slot_definition_reference_and_arbitrary_override_children_are_imported() {
     assert!(slot.children.iter().all(|id| doc.node(*id).is_some_and(|child| child.source.is_none())));
 
     let (public, _) = crate::rest::import(&rest, &crate::rest::no_images).unwrap();
-    let public_instance = public.ids().filter_map(|id| public.node(id)).find(|n| matches!(n.kind, figcraft_doc::NodeKind::Instance { .. })).unwrap();
+    let public_instance = public.ids().filter_map(|id| public.node(id)).find(|n| matches!(n.kind, endrika_doc::NodeKind::Instance { .. })).unwrap();
     let public_slot = public.node(public_instance.children[0]).unwrap();
     assert!(!public_slot.overrides.contains("slot"));
 }
@@ -148,12 +148,12 @@ fn nested_instance_in_own_slot_content_keeps_its_own_source_tree() {
         .ids()
         .filter_map(|id| doc.node(id))
         .find(|n| {
-            matches!(n.kind, figcraft_doc::NodeKind::Instance { .. })
-                && !doc.ancestors(n.id).iter().any(|a| doc.node(*a).is_some_and(|p| matches!(p.kind, figcraft_doc::NodeKind::Instance { .. })))
+            matches!(n.kind, endrika_doc::NodeKind::Instance { .. })
+                && !doc.ancestors(n.id).iter().any(|a| doc.node(*a).is_some_and(|p| matches!(p.kind, endrika_doc::NodeKind::Instance { .. })))
         })
         .unwrap();
     let slot = doc.node(outer.children[0]).unwrap();
-    let own_frame = slot.children.iter().filter_map(|id| doc.node(*id)).find(|n| matches!(n.kind, figcraft_doc::NodeKind::Frame)).unwrap();
+    let own_frame = slot.children.iter().filter_map(|id| doc.node(*id)).find(|n| matches!(n.kind, endrika_doc::NodeKind::Frame)).unwrap();
     assert!(own_frame.source.is_none());
 
     let nested = slot
@@ -162,9 +162,9 @@ fn nested_instance_in_own_slot_content_keeps_its_own_source_tree() {
         .filter_map(|id| doc.node(*id))
         .flat_map(|n| n.children.iter())
         .filter_map(|id| doc.node(*id))
-        .find(|n| matches!(n.kind, figcraft_doc::NodeKind::Instance { .. }))
+        .find(|n| matches!(n.kind, endrika_doc::NodeKind::Instance { .. }))
         .unwrap();
-    let figcraft_doc::NodeKind::Instance { component, .. } = nested.kind else { panic!("not an instance") };
+    let endrika_doc::NodeKind::Instance { component, .. } = nested.kind else { panic!("not an instance") };
     assert_eq!(nested.source, Some(component));
     let main_frame = doc.node(doc.node(component).unwrap().children[0]).unwrap();
     let expanded_frame = doc.node(nested.children[0]).unwrap();

@@ -1,16 +1,16 @@
 [package]
-name = "lightcraft-meta"
+name = "hazavana-meta"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LightCraft metadata: EXIF, XMP, IPTC (L1)"
+description = "Hazavana metadata: EXIF, XMP, IPTC (L1)"
 
 [lints]
 workspace = true
 
 [dependencies]
-lightcraft-tiff = { workspace = true }
-lightcraft-geom = { workspace = true }
+hazavana-tiff = { workspace = true }
+hazavana-geom = { workspace = true }
 serde = { workspace = true }
 quick-xml = { workspace = true }
 

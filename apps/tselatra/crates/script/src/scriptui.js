@@ -1,4 +1,4 @@
-// EffectCraft scripting: ScriptUI, the dialog / panel object model After Effects scripts use
+// Tselatra scripting: ScriptUI, the dialog / panel object model After Effects scripts use
 // (`new Window("dialog", "Title")`, `win.add("button", undefined, "OK")`, `onClick`, `show()`…).
 //
 // Written from the behaviour Adobe's public JavaScript Tools Guide documents. Controls are plain
@@ -317,7 +317,7 @@ function __uiImageJson(v) {
 
 var ScriptUI = {
   version: "6.2.2",
-  frameworkName: "EffectCraft",
+  frameworkName: "Tselatra",
   environment: { keyboardState: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, keyName: "" } },
   FontStyle: { REGULAR: 0, BOLD: 1, ITALIC: 2, BOLDITALIC: 3 },
   BrushType: { SOLID_COLOR: 0, THEME_COLOR: 1 },

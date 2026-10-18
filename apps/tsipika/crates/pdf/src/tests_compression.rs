@@ -6,8 +6,8 @@ use std::io::Cursor;
 
 use image::{DynamicImage, ImageFormat};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::Affine;
+use tsipika_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::Affine;
 
 use crate::*;
 

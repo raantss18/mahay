@@ -3,7 +3,7 @@
 
 use super::proto_variable_tests::at;
 use super::*;
-use figcraft_doc::proto::{GAMEPAD_BUTTONS, Trigger};
+use endrika_doc::proto::{GAMEPAD_BUTTONS, Trigger};
 use serde_json::json;
 
 fn import_trigger(trigger: Value) -> (Option<Trigger>, Vec<String>) {

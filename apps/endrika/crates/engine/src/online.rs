@@ -15,9 +15,9 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_collab::Change;
-use figcraft_collab::code;
-use figcraft_collab::message::{Admin, AdminReply, OwnedFile, Resume};
+use endrika_collab::Change;
+use endrika_collab::code;
+use endrika_collab::message::{Admin, AdminReply, OwnedFile, Resume};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 
@@ -305,7 +305,7 @@ impl Session {
         let (Some(client), Some(uid)) = (live.client(), live.doc_uid) else { return };
         let name = r.copy.doc.name.clone();
         let me = client.resume();
-        let ahead = figcraft_collab::diff(client.view(), &r.copy.doc).map(|d| d.changes);
+        let ahead = endrika_collab::diff(client.view(), &r.copy.doc).map(|d| d.changes);
         if ahead.as_ref().is_ok_and(Vec::is_empty) {
             return;
         }

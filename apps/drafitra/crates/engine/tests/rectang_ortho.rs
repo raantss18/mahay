@@ -1,9 +1,9 @@
 //! The "other corner" of RECTANG and of ARRAYRECT's unit cell ignores ortho: the rectangle keeps
 //! its area (#1113).
 
-use cadcraft_engine::snap::tracking::CursorQuery;
-use cadcraft_engine::{Input, Session};
-use cadcraft_geom::Vec2;
+use drafitra_engine::snap::tracking::CursorQuery;
+use drafitra_engine::{Input, Session};
+use drafitra_geom::Vec2;
 use serde_json::json;
 
 /// Move the cursor to `raw` at the current prompt, as the canvas does.
@@ -23,9 +23,9 @@ fn click_rectangle(ortho: bool) -> ((Vec2, Vec2), (Vec2, Vec2)) {
     s.cmdline("rectang 0,0").unwrap();
     assert_eq!(s.current_prompt().unwrap().message, "Specify other corner point");
     let c = hover(&mut s, Vec2::new(10.0, 3.0));
-    let mut pv = cadcraft_geom::Bounds2::EMPTY;
+    let mut pv = drafitra_geom::Bounds2::EMPTY;
     for e in s.preview(c) {
-        pv = pv.union(&cadcraft_doc::entity_bounds(s.doc().unwrap(), &e, 0));
+        pv = pv.union(&drafitra_doc::entity_bounds(s.doc().unwrap(), &e, 0));
     }
     s.input(Input::Point(c)).unwrap();
     assert!(s.current_prompt().is_none(), "RECTANG is done, still at {:?}", s.current_prompt().map(|p| p.message));

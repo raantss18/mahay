@@ -1,4 +1,4 @@
-//! Linked images in `.vectorcraft` files: their link details round-trip, and an image only linked
+//! Linked images in `.tsipika` files: their link details round-trip, and an image only linked
 //! images show is saved as its preview.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
@@ -6,9 +6,9 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, LinkInfo, Node, NodeKind};
-use vectorcraft_format::{base64_decode, load, save};
-use vectorcraft_geom::Affine;
+use tsipika_doc::{Document, ImageBlob, ImageObject, LinkInfo, Node, NodeKind};
+use tsipika_format::{base64_decode, load, save};
+use tsipika_geom::Affine;
 
 fn image(d: &mut Document, key: &str, link: Option<LinkInfo>) {
     let (id, layer) = (d.alloc_id(), d.layers[0].id);

@@ -6,11 +6,11 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{CharStyle, Document, Justify, Node, NodeKind, TextKind, TextObject, TextRun};
-use vectorcraft_geom::{Affine, BezPath, PathData, Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, export};
-use vectorcraft_testkit::raster::{assert_similar, render_artboard};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{CharStyle, Document, Justify, Node, NodeKind, TextKind, TextObject, TextRun};
+use tsipika_geom::{Affine, BezPath, PathData, Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, export};
+use tsipika_testkit::raster::{assert_similar, render_artboard};
 
 fn style(size: f64) -> CharStyle {
     CharStyle { size, fill: Paint::solid(Color::BLACK), ..CharStyle::default() }
@@ -18,11 +18,11 @@ fn style(size: f64) -> CharStyle {
 
 /// Area type `w` wide at (20, 20) in a 300 × 200 document.
 fn area_doc(runs: Vec<TextRun>, w: f64, justify: Justify) -> Document {
-    area_doc_justified(runs, w, justify, vectorcraft_doc::JustificationOptions::default())
+    area_doc_justified(runs, w, justify, tsipika_doc::JustificationOptions::default())
 }
 
 /// [`area_doc`] with the paragraph's Justification options `j`.
-fn area_doc_justified(runs: Vec<TextRun>, w: f64, justify: Justify, j: vectorcraft_doc::JustificationOptions) -> Document {
+fn area_doc_justified(runs: Vec<TextRun>, w: f64, justify: Justify, j: tsipika_doc::JustificationOptions) -> Document {
     let mut t = TextObject::point(Point::new(20.0, 20.0), "", style(12.0));
     t.runs = runs;
     t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, w, 160.0)) };
@@ -62,7 +62,7 @@ fn wrapped_lines_get_one_tspan_each() {
     assert!((ys[1] - ys[0] - 14.4).abs() < 0.01, "{ys:?}");
     assert!(tags.iter().all(|t| attr(t, "x") == Some(0.0)), "left aligned at the frame's edge: {svg}");
     // Reading it back gives a line per baseline, starting at the first baseline.
-    let back = vectorcraft_svg::import(&svg).unwrap();
+    let back = tsipika_svg::import(&svg).unwrap();
     let text = back.layers[0].children().unwrap().iter().find_map(|n| if let NodeKind::Text(t) = &n.kind { Some(t.clone()) } else { None }).unwrap();
     assert_eq!(text.plain_text().lines().count(), ys.len(), "{:?}", text.plain_text());
     assert!((text.xf.translation().y - (20.0 + ys[0])).abs() < 0.01);
@@ -80,7 +80,7 @@ fn vertically_aligned_area_type_exports_where_it_is_drawn() {
     let mut centred = top.clone();
     let id = centred.layers[0].children().unwrap()[0].id;
     if let Some(NodeKind::Text(t)) = centred.node_mut(id).map(|n| &mut n.kind) {
-        t.area.vertical_align = vectorcraft_doc::VerticalAlign::Center;
+        t.area.vertical_align = tsipika_doc::VerticalAlign::Center;
     }
     let y = |d: &Document| attr(tspans(&export(d, &ExportOptions::default()))[0], "y").unwrap();
     let (yt, yc) = (y(&top), y(&centred));
@@ -129,7 +129,7 @@ fn proportional_metrics_write_palt() {
 /// All Caps writes capitals).
 #[test]
 fn digits_are_written_as_drawn() {
-    use vectorcraft_doc::Digits;
+    use tsipika_doc::Digits;
     let hindi = CharStyle { digits: Digits::Hindi, ..style(12.0) };
     let farsi = CharStyle { digits: Digits::Farsi, ..style(12.0) };
     let d = area_doc(vec![run("page 3, ", style(12.0)), run("page 4, ", hindi), run("page ٥", farsi)], 280.0, Justify::Left);
@@ -176,7 +176,7 @@ type Drawn = (String, Point, f64);
 /// Each character a usvg draws from `svg` (with the bundled font and the font files of `faces`)
 /// and how it draws the character's first glyph, in SVG user space and text order; spaces and
 /// tabs are left out.
-fn viewer_glyph_positions(svg: &str, faces: &[Arc<vectorcraft_text::FontFace>]) -> Vec<Drawn> {
+fn viewer_glyph_positions(svg: &str, faces: &[Arc<tsipika_text::FontFace>]) -> Vec<Drawn> {
     let mut db = usvg::fontdb::Database::new();
     db.load_font_data(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/fonts/SourceSans3-Regular.ttf")).unwrap());
     for f in faces {
@@ -209,13 +209,13 @@ fn viewer_glyph_positions(svg: &str, faces: &[Arc<vectorcraft_text::FontFace>]) 
 /// Each character the canvas draws of the only type in `d` and how it draws the character's
 /// first glyph, in document space and text order (spaces and tabs left out), with the faces
 /// it draws them in.
-fn canvas_glyph_positions(d: &Document) -> (Vec<Drawn>, Vec<Arc<vectorcraft_text::FontFace>>) {
+fn canvas_glyph_positions(d: &Document) -> (Vec<Drawn>, Vec<Arc<tsipika_text::FontFace>>) {
     let t = the_text(d);
-    let db = vectorcraft_text::FontDb::global();
-    let lay = vectorcraft_text::layout(db, &t);
+    let db = tsipika_text::FontDb::global();
+    let lay = tsipika_text::layout(db, &t);
     let plain = t.plain_text();
     let mut out: Vec<Drawn> = vec![];
-    let mut faces: Vec<Arc<vectorcraft_text::FontFace>> = vec![];
+    let mut faces: Vec<Arc<tsipika_text::FontFace>> = vec![];
     let mut last = None;
     for g in &lay.glyphs {
         let text = if g.len == 0 { "-" } else { &plain[g.byte..g.byte + g.len] };
@@ -262,7 +262,7 @@ fn justify_all_lines_keep_their_letter_gaps() {
 /// line uses, are written so a viewer draws each character where and as wide as the canvas does.
 #[test]
 fn justification_spacing_and_glyph_scaling_are_drawn_in_place() {
-    use vectorcraft_doc::JustificationOptions;
+    use tsipika_doc::JustificationOptions;
     let text = "Typography arranges type to make written language legible and readable";
     for (justify, j) in [
         (
@@ -296,7 +296,7 @@ fn lines_without_moved_characters_are_written_as_before() {
     let mut composed = area_doc(vec![run("Latin words only", style(12.0))], 200.0, Justify::Center);
     let id = composed.layers[0].children().unwrap()[0].id;
     if let Some(NodeKind::Text(t)) = composed.node_mut(id).map(|n| &mut n.kind) {
-        t.para.mojikumi = vectorcraft_doc::Mojikumi::LineEndHalf;
+        t.para.mojikumi = tsipika_doc::Mojikumi::LineEndHalf;
     }
     let open = |x: &str, anchor: &str| {
         format!(
@@ -362,7 +362,7 @@ fn japanese_composition_keeps_its_spacing() {
         let mut d = area_doc(vec![run(text, style(12.0))], 280.0, justify);
         let id = d.layers[0].children().unwrap()[0].id;
         if let Some(NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) {
-            t.para.mojikumi = vectorcraft_doc::Mojikumi::LineEndHalf;
+            t.para.mojikumi = tsipika_doc::Mojikumi::LineEndHalf;
         }
         assert_drawn_in_place(&d);
     }
@@ -430,7 +430,7 @@ fn a_viewer_draws_the_text_where_the_canvas_does() {
                 let outlines = viewer_outlines(&svg);
                 assert!(outlines.iter().map(|b| b.elements().len()).sum::<usize>() > 200, "the viewer laid the text out");
                 for bp in outlines {
-                    let ap = vectorcraft_doc::Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0);
+                    let ap = tsipika_doc::Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0);
                     let n = Node::path(viewer.alloc_id(), PathData::from_bezpath(&bp), ap);
                     viewer.insert(Some(l), usize::MAX, n).unwrap();
                 }
@@ -445,7 +445,7 @@ fn a_viewer_draws_the_text_where_the_canvas_does() {
 fn paragraphs_aligned_differently_keep_their_alignment() {
     let mut t = TextObject::point(Point::new(20.0, 20.0), "Left words here\nCentred line\nRight line", style(14.0));
     t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 200.0, 160.0)) };
-    let para = |j| vectorcraft_doc::ParaStyle { justify: j, ..Default::default() };
+    let para = |j| tsipika_doc::ParaStyle { justify: j, ..Default::default() };
     t.set_paragraph_styles(vec![para(Justify::Left), para(Justify::Center), para(Justify::Right)]);
     let mut d = Document::new(300.0, 200.0);
     let n = Node::new(d.alloc_id(), NodeKind::Text(Box::new(t)));
@@ -460,13 +460,13 @@ fn paragraphs_aligned_differently_keep_their_alignment() {
         let mut viewer = Document::new(300.0, 200.0);
         let vl = viewer.layers[0].id;
         for bp in viewer_outlines(&svg) {
-            let ap = vectorcraft_doc::Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0);
+            let ap = tsipika_doc::Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0);
             let n = Node::path(viewer.alloc_id(), PathData::from_bezpath(&bp), ap);
             viewer.insert(Some(vl), usize::MAX, n).unwrap();
         }
         assert_similar(&render_artboard(&d), &render_artboard(&viewer), 40.0, 0.01);
         // Read back: one paragraph per line, each with its alignment, drawn where it was.
-        let back = vectorcraft_svg::import(&svg).unwrap();
+        let back = tsipika_svg::import(&svg).unwrap();
         let text =
             back.layers[0].children().unwrap().iter().find_map(|n| if let NodeKind::Text(t) = &n.kind { Some(t.clone()) } else { None }).unwrap();
         let js: Vec<Justify> = text.paragraph_styles().iter().map(|p| p.justify).collect();

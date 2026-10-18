@@ -4,7 +4,7 @@
 
 use std::io::Write;
 
-use figcraft_doc::Document;
+use endrika_doc::Document;
 
 use super::*;
 

@@ -1,11 +1,11 @@
-//! SoundCraft's CLAP plugin host.
+//! Feo's CLAP plugin host.
 //!
 //! Scans the standard CLAP folders (plus `CLAP_PATH`), loads `.clap` binaries in-process and
-//! exposes each plugin as a [`soundcraft_dsp::Plugin`], so the mix engine treats third-party
+//! exposes each plugin as a [`feo_dsp::Plugin`], so the mix engine treats third-party
 //! plugins exactly like the built-in ones. Plugin ids are `clap:<CLAP plugin id>`; parameter ids
 //! are the CLAP param ids as decimal strings, with their human names in [`PluginInfo::params`].
 //!
-//! This is SoundCraft's single isolated `unsafe` crate (craftrules never-crash): `unsafe` is
+//! This is Feo's single isolated `unsafe` crate (mahay-rules never-crash): `unsafe` is
 //! denied crate-wide and allowed only in the private `ffi` module. The public API is safe, returns
 //! `Result`/`Option` and never panics. Limits of in-process hosting: a plugin that itself crashes
 //! (segfault) takes the process down with it; we cannot sandbox native code.
@@ -21,8 +21,8 @@
 //! [`Plugin::load_state`] as an opaque blob. Plugin editors (`clap.gui`) open as the plugin's own
 //! floating window ([`Plugin::open_editor`], or [`Plugin::editor`] for a handle usable on the main
 //! thread while the instance processes on the audio thread). Plugins that offer only an embedded
-//! editor get a host window of SoundCraft's on Windows (resized on `request_resize`, closed by
-//! its title bar); elsewhere they are not hosted yet, and SoundCraft's generic parameter editor
+//! editor get a host window of Feo's on Windows (resized on `request_resize`, closed by
+//! its title bar); elsewhere they are not hosted yet, and Feo's generic parameter editor
 //! still works for them.
 //! Parameter changes made in the plugin's GUI arrive as output events while the plugin processes
 //! and are reported by the editor's `idle`.
@@ -42,13 +42,13 @@ mod registry;
 #[cfg(not(target_arch = "wasm32"))]
 pub use plugin::ClapPlugin;
 
-use soundcraft_dsp::{Category, Plugin, PluginInfo};
+use feo_dsp::{Category, Plugin, PluginInfo};
 use std::path::{Path, PathBuf};
 
 /// Prefix of every hosted-CLAP plugin id.
 pub const ID_PREFIX: &str = "clap:";
 
-/// The CLAP plugin id inside a `clap:<id>` SoundCraft id (`None` for other ids or an empty id).
+/// The CLAP plugin id inside a `clap:<id>` Feo id (`None` for other ids or an empty id).
 pub fn parse_id(id: &str) -> Option<&str> {
     id.strip_prefix(ID_PREFIX).filter(|s| !s.is_empty() && !s.contains('\0'))
 }
@@ -56,7 +56,7 @@ pub fn parse_id(id: &str) -> Option<&str> {
 /// One plugin found by a scan.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct ClapDescriptor {
-    /// SoundCraft id: `clap:<plugin_id>`.
+    /// Feo id: `clap:<plugin_id>`.
     pub id: String,
     /// The CLAP plugin id (reverse-DNS, e.g. `com.vendor.reverb`).
     pub plugin_id: String,
@@ -180,7 +180,7 @@ pub fn load_bundle(path: &Path) -> Result<Vec<ClapDescriptor>, ClapError> {
 }
 
 /// Creates a plugin by `clap:<id>`, prepared for 48 kHz stereo with 1024-frame blocks (like
-/// `soundcraft_dsp::create`), with the reason when it fails.
+/// `feo_dsp::create`), with the reason when it fails.
 pub fn instantiate(id: &str) -> Result<Box<dyn Plugin>, ClapError> {
     api::instantiate(id)
 }
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn garbage_files_are_errors_not_crashes() {
-        let d = std::env::temp_dir().join(format!("soundcraft-clap-garbage-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("feo-clap-garbage-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(d.join("Bundle.clap/Contents/MacOS")).unwrap();
         std::fs::write(d.join("garbage.clap"), b"\x7fELF this is not a plugin \x00\x01\x02").unwrap();

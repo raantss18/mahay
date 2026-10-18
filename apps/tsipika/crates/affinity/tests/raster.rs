@@ -3,7 +3,7 @@
 //! no third-party Affinity parser, source code or application is used as an oracle.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_affinity::{
+use tsipika_affinity::{
     Archive, Limits,
     model::{Affine, Document, Image, Kind, Node, Pixels},
     stream,
@@ -24,7 +24,7 @@ fn images(nodes: &[Node], out: &mut Vec<Image>) {
 fn read_fixture(name: &str) -> Option<(Vec<u8>, Document, Vec<Image>)> {
     let dir = corpus::pinned()?;
     let bytes = std::fs::read(dir.join(name)).unwrap();
-    let doc = vectorcraft_affinity::read(&bytes, Limits::default()).unwrap();
+    let doc = tsipika_affinity::read(&bytes, Limits::default()).unwrap();
     assert!(doc.saved_by.as_deref().unwrap().starts_with("Affinity 3."));
     let mut out = Vec::new();
     for spread in &doc.spreads {

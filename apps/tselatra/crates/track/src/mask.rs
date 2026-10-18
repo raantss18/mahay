@@ -7,7 +7,7 @@
 //! chosen model robustly with RANSAC ([`crate::fit`]), falling back to simpler models when too few
 //! features survive. Only a crop around the mask (plus a margin for the motion) is analysed.
 
-use effectcraft_raster::Image;
+use tselatra_raster::Image;
 
 use crate::Frame;
 use crate::fit::{Model, ransac};

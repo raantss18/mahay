@@ -1,4 +1,4 @@
-//! Slideshow slides for LightCraft: the settings of Lightroom Classic's Slideshow Layout, Options
+//! Slideshow slides for Hazavana: the settings of Lightroom Classic's Slideshow Layout, Options
 //! and Backdrop panels ([`SlideSettings`]) and the CPU composer that draws one slide from a
 //! rendered photo ([`compose`]).
 //!

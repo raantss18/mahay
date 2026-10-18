@@ -1,8 +1,8 @@
 //! Object › Generate QR Code: a vector QR code (a compound path) as a new object, inside the
 //! selected frame, or replacing a selected code (Edit QR Code).
 
-use designcraft_doc::{Content, Fill, Item, ItemId, Selection, Shape};
-use designcraft_geom::Rect;
+use pejy_doc::{Content, Fill, Item, ItemId, Selection, Shape};
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, rect_param, spread_param, str_param};
@@ -45,8 +45,8 @@ fn encode(p: &Value) -> std::result::Result<String, String> {
     if out.is_empty() { Err("nothing to encode".into()) } else { Ok(out) }
 }
 
-fn qr_item(id: ItemId, layer: designcraft_doc::LayerId, text: &str, r: Rect, color: &str) -> std::result::Result<Item, String> {
-    let path = designcraft_geom::qr::qr_path(text, r).ok_or("too much content for a QR code")?;
+fn qr_item(id: ItemId, layer: pejy_doc::LayerId, text: &str, r: Rect, color: &str) -> std::result::Result<Item, String> {
+    let path = pejy_geom::qr::qr_path(text, r).ok_or("too much content for a QR code")?;
     let mut it = Item::new(id, layer, Shape::Path, path);
     it.fill = Fill::swatch(color);
     it.alt_text = format!("{MARK}{text}");
@@ -56,7 +56,7 @@ fn qr_item(id: ItemId, layer: designcraft_doc::LayerId, text: &str, r: Rect, col
 fn qr_code(s: &mut Session, p: &Value) -> Result<Value> {
     const ID: &str = "object.qrCode";
     let text = encode(p).map_err(|e| bad(ID, e))?;
-    let color = str_param(p, "color").unwrap_or(designcraft_color::swatch::BLACK).to_string();
+    let color = str_param(p, "color").unwrap_or(pejy_color::swatch::BLACK).to_string();
     let rect = rect_param(p, "rect");
     let sr = spread_param(p, ID)?;
     let st = s.doc()?;
@@ -79,11 +79,11 @@ fn qr_code(s: &mut Session, p: &Value) -> Result<Value> {
                     // Edit QR Code: same place and size.
                     let b = it.path.bounds().unwrap_or(Rect::ZERO);
                     let side = b.width().max(b.height());
-                    let n = designcraft_geom::qr::qr_size(it.alt_text.trim_start_matches(MARK)).unwrap_or(21);
+                    let n = pejy_geom::qr::qr_size(it.alt_text.trim_start_matches(MARK)).unwrap_or(21);
                     let quiet = side / (n + 4) as f64 * 2.0;
                     let r = Rect::from_center_size(b.center(), (side + 2.0 * quiet, side + 2.0 * quiet));
                     let fresh = qr_item(t, it.layer, &text, r, &color).map_err(|e| bad(ID, e))?;
-                    let it = d.item_mut(t).ok_or(designcraft_doc::DocError::NoItem(t))?;
+                    let it = d.item_mut(t).ok_or(pejy_doc::DocError::NoItem(t))?;
                     it.path = fresh.path;
                     it.fill = fresh.fill;
                     it.alt_text = fresh.alt_text;
@@ -95,7 +95,7 @@ fn qr_code(s: &mut Session, p: &Value) -> Result<Value> {
                     }
                     let id = ItemId(d.alloc());
                     let code = qr_item(id, it.layer, &text, it.inner_bounds(), &color).map_err(|e| bad(ID, e))?;
-                    let f = d.item_mut(t).ok_or(designcraft_doc::DocError::NoItem(t))?;
+                    let f = d.item_mut(t).ok_or(pejy_doc::DocError::NoItem(t))?;
                     f.content = Content::Group { items: vec![std::sync::Arc::new(code)] };
                     t
                 }
@@ -118,7 +118,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("object.qrCode", &json!({"content": "https://example.com", "rect": [72, 72, 216, 216]})).unwrap();
-        let id = designcraft_doc::ItemId(r["id"].as_u64().unwrap());
+        let id = pejy_doc::ItemId(r["id"].as_u64().unwrap());
         let item = |s: &Session| s.doc().unwrap().doc.item(id).unwrap().clone();
         let a = item(&s);
         assert!(a.path.subpaths.len() > 20 && a.alt_text.contains("example.com"));
@@ -133,7 +133,7 @@ mod tests {
         // Into an empty frame.
         let f = s.execute("frame.create", &json!({"rect": [300, 300, 400, 400], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
         s.execute("object.qrCode", &json!({"type": "vcard", "name": "Ada", "phone": "+44 1"})).unwrap();
-        let fr = s.doc().unwrap().doc.item(designcraft_doc::ItemId(f)).unwrap().clone();
+        let fr = s.doc().unwrap().doc.item(pejy_doc::ItemId(f)).unwrap().clone();
         assert!(fr.has_nested_items());
         assert!(s.execute("object.qrCode", &json!({"type": "fax", "content": "x", "rect": [0, 0, 9, 9]})).is_err());
     }

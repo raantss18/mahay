@@ -1,25 +1,25 @@
 [package]
-name = "designcraft-pptx"
+name = "pejy-pptx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft PowerPoint (PPTX) export: pages as slides of editable shapes, pictures and text"
+description = "Pejy PowerPoint (PPTX) export: pages as slides of editable shapes, pictures and text"
 
 [lints]
 workspace = true
 
 [dependencies]
-designcraft-geom = { workspace = true }
-designcraft-color = { workspace = true }
-designcraft-doc = { workspace = true }
-designcraft-fonts = { workspace = true }
-designcraft-compose = { workspace = true }
-designcraft-images = { workspace = true }
+pejy-geom = { workspace = true }
+pejy-color = { workspace = true }
+pejy-doc = { workspace = true }
+pejy-fonts = { workspace = true }
+pejy-compose = { workspace = true }
+pejy-images = { workspace = true }
 skrifa = { workspace = true }
 image = { workspace = true }
 thiserror = { workspace = true }
 zip = { workspace = true }
 
 [dev-dependencies]
-designcraft-fonts = { workspace = true, features = ["testing"] }
+pejy-fonts = { workspace = true, features = ["testing"] }
 quick-xml = { workspace = true }

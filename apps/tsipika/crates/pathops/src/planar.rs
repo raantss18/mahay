@@ -21,7 +21,7 @@ use std::collections::HashMap;
 
 use kurbo::{Affine, BezPath, CubicBez, ParamCurve, ParamCurveArclen, PathSeg, Point, Shape as _};
 use linesweeper::topology::{Topology, WindingNumber};
-use vectorcraft_geom::{FillRule, PathData, SubPath};
+use tsipika_geom::{FillRule, PathData, SubPath};
 
 use crate::boolean::{DEFAULT_PRECISION, Seg, Tidy, eps_for, is_sliver, segs_to_subpath, snap_horizontals, tidy_segments, to_seg};
 use crate::pathfinder::{Region, Shape};
@@ -1200,7 +1200,7 @@ pub fn interior_point(path: &PathData) -> Option<Point> {
 mod tests {
     use super::*;
     use proptest::prelude::*;
-    use vectorcraft_geom::{Rect, shapes};
+    use tsipika_geom::{Rect, shapes};
 
     fn line(a: (f64, f64), b: (f64, f64), key: u64) -> Shape {
         Shape::new(PathData::single(SubPath::polyline(&[Point::new(a.0, a.1), Point::new(b.0, b.1)], false)), FillRule::NonZero, key)
@@ -1625,7 +1625,7 @@ mod tests {
         assert!(started.elapsed().as_secs_f64() < 5.0, "{:?}", started.elapsed());
         // Past the cap, only the filled areas count.
         s.push(line((0.0, 0.0), (1.0, 1.0), 2));
-        s[0].path.subpaths[0].anchors.extend((0..16).map(|k| vectorcraft_geom::Anchor::corner(Point::new(100.0, f64::from(k)))));
+        s[0].path.subpaths[0].anchors.extend((0..16).map(|k| tsipika_geom::Anchor::corner(Point::new(100.0, f64::from(k)))));
         assert!(shape_builder(&s, false).lines.is_empty());
     }
 
@@ -1747,7 +1747,7 @@ mod tests {
                 let covering: Vec<usize> = shapes
                     .iter()
                     .enumerate()
-                    .filter(|(_, s)| s.path.is_closed() && vectorcraft_geom::hit::fill_contains(&s.path.to_bezpath(), s.rule, p))
+                    .filter(|(_, s)| s.path.is_closed() && tsipika_geom::hit::fill_contains(&s.path.to_bezpath(), s.rule, p))
                     .map(|(i, _)| i)
                     .collect();
                 prop_assert_eq!(&f.sources, &covering, "at {:?}", p);

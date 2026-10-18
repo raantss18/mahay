@@ -1,7 +1,7 @@
 //! Linked measurements, history, portable artwork and hostile command input.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use serde_json::{Value, json};
-use vectorcraft_engine::{
+use tsipika_engine::{
     Session, ViewInfo,
     doc::{Document, NodeId, NodeKind},
     tools::{Mods, PointerEvent, PointerKind, ToolKey},
@@ -31,7 +31,7 @@ fn text(s: &Session, id: u64) -> String {
     let n = s.doc().unwrap().doc.node(NodeId(id)).unwrap();
     n.children().unwrap().iter().find_map(|n| if let NodeKind::Text(t) = &n.kind { Some(t.plain_text()) } else { None }).unwrap()
 }
-fn recipe(s: &Session, id: u64) -> vectorcraft_doc::dimension::Dimension {
+fn recipe(s: &Session, id: u64) -> tsipika_doc::dimension::Dimension {
     (**s.doc().unwrap().doc.node(NodeId(id)).unwrap().extras().dimension.as_ref().unwrap()).clone()
 }
 fn ev(s: &mut Session, kind: PointerKind, x: f64, y: f64) {
@@ -252,8 +252,8 @@ fn dimension_anchor_links_and_native_file_survive_source_moves() {
     let second = edge(&mut s);
     let id=run(&mut s,"dimension.create",json!({"a":[100,100],"b":[172,100],"source":{"kind":"points","a":{"node":first,"subpath":0,"anchor":0},"b":{"node":second,"subpath":0,"anchor":1},"vertex":null},"options":{"units":"pt","precision":0}}))["id"].as_u64().unwrap();
     assert_eq!(text(&s, id), "72 pt");
-    let bytes = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-    let doc = vectorcraft_format::load(&bytes).unwrap();
+    let bytes = tsipika_format::save(&s.doc().unwrap().doc, false);
+    let doc = tsipika_format::load(&bytes).unwrap();
     let mut s = Session::new();
     s.add_document(doc, None);
     run(&mut s, "select.set", json!({"ids":[second]}));
@@ -287,9 +287,9 @@ fn dimension_options_are_persistent_and_invalid_updates_report_errors() {
     s.set_tool_option_cmd(&json!({"tool":"dimension","values":{"style":{"scale":"10:1","units":"mm","precision":3},"mode":"radial"}})).unwrap();
     assert_eq!(s.tool_options_of("dimension")["style"]["scale"], "10:1");
     assert!(s.set_tool_option_cmd(&json!({"tool":"dimension","values":{"style":{"scale":"1:0"}}})).is_err());
-    let o: vectorcraft_doc::dimension::DimensionOptions = serde_json::from_value(s.tool_options_of("dimension")["style"].clone()).unwrap();
+    let o: tsipika_doc::dimension::DimensionOptions = serde_json::from_value(s.tool_options_of("dimension")["style"].clone()).unwrap();
     assert_eq!(o.label(72.0, false).unwrap(), "2.540 mm");
-    let picas: vectorcraft_doc::dimension::DimensionOptions = serde_json::from_value(json!({"units":"pc","precision":1})).unwrap();
+    let picas: tsipika_doc::dimension::DimensionOptions = serde_json::from_value(json!({"units":"pc","precision":1})).unwrap();
     assert_eq!(picas.label(72.0, false).unwrap(), "6.0 pc");
     let prefs = serde_json::to_value(&s.prefs).unwrap();
     let mut fresh = Session::new();
@@ -367,7 +367,7 @@ fn unknown_dimension_options_are_refused_by_commands_but_a_newer_file_still_open
     assert!(bad.unwrap_err().to_string().contains("Unknown dimension option color"));
     assert!(s.set_tool_option_cmd(&json!({"tool":"dimension","values":{"style":{"precison":2}}})).is_err());
     let id = dim(&mut s, line);
-    let saved = vectorcraft_format::save(&s.doc().unwrap().doc, false);
+    let saved = tsipika_format::save(&s.doc().unwrap().doc, false);
     let mut v: Value = serde_json::from_slice(&saved).unwrap();
     // A later version's dimension carries fields this one doesn't know.
     fn add_unknown(v: &mut Value) {
@@ -386,7 +386,7 @@ fn unknown_dimension_options_are_refused_by_commands_but_a_newer_file_still_open
         }
     }
     add_unknown(&mut v);
-    let doc = vectorcraft_format::load(&serde_json::to_vec(&v).unwrap()).unwrap();
+    let doc = tsipika_format::load(&serde_json::to_vec(&v).unwrap()).unwrap();
     assert!(doc.node(NodeId(id)).unwrap().extras().dimension.is_some());
 }
 
@@ -394,7 +394,7 @@ fn unknown_dimension_options_are_refused_by_commands_but_a_newer_file_still_open
 /// second click will pick (#2432), not the raw pointer.
 #[test]
 fn shift_shows_the_constrained_line_while_picking_the_second_point() {
-    use vectorcraft_engine::tools::Overlay;
+    use tsipika_engine::tools::Overlay;
     let mut s = session();
     s.select_tool("dimension", ViewInfo::default()).unwrap();
     ev(&mut s, PointerKind::Down, 300.0, 300.0);
@@ -426,7 +426,7 @@ fn clicking_near_a_line_snaps_the_measured_point_onto_it() {
 /// snap before the click, and the dimension stays linked to the anchors (#2516).
 #[test]
 fn both_points_snap_onto_anchors_with_a_visible_indicator() {
-    use vectorcraft_engine::tools::Overlay;
+    use tsipika_engine::tools::Overlay;
     let mut s = session();
     let line = edge(&mut s);
     s.select_tool("dimension", ViewInfo::default()).unwrap();

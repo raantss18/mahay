@@ -1,9 +1,9 @@
 //! WBLOCK writes the drawing with its base point at the origin (INSBASE 0,0,0), for selected
 //! objects and for a block, where `base` overrides the block's own base point.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::{Drawing, EntityKind};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::{Drawing, EntityKind};
 use serde_json::json;
 
 /// Writes "INSBASE x,y;line ax,ay" for each line, so the test can read the written geometry.
@@ -19,7 +19,7 @@ fn write(d: &Drawing, _path: &str) -> Result<Vec<u8>, String> {
 }
 
 fn written(s: &mut Session, p: serde_json::Value) -> String {
-    let path = std::env::temp_dir().join(format!("cadcraft-wblock-base-{}.dxf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("drafitra-wblock-base-{}.dxf", std::process::id()));
     let mut p = p;
     p["path"] = json!(path.to_string_lossy());
     s.execute("wblock", &p).unwrap();

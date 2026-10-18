@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Dash, Document, ImageBlob, ImageObject, Node, NodeKind, TextObject, Unit};
-use vectorcraft_geom::{Affine, PathData, Point, Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, CharStyle, Dash, Document, ImageBlob, ImageObject, Node, NodeKind, TextObject, Unit};
+use tsipika_geom::{Affine, PathData, Point, Rect, shapes};
 
 use crate::*;
 
@@ -360,7 +360,7 @@ fn alter_paths_writes_strokes_as_filled_outlines() {
     let mut d = shapes_doc();
     let rect = d.layers[0].children().and_then(|c| c.first()).map(|n| n.id).unwrap();
     if let Some(st) = d.node_mut(rect).and_then(|n| n.appearance.stroke_mut()) {
-        st.align = vectorcraft_doc::StrokeAlign::Outside;
+        st.align = tsipika_doc::StrokeAlign::Outside;
     }
     assert_eq!(kinds(&export(&d, &opts(&d)).unwrap()), [&fill[..], &rect_stroke, &["SPLINE"]].concat());
     let editable = export(&d, &DxfOptions { preserve: Preserve::Editability, ..opts(&d) }).unwrap();
@@ -461,7 +461,7 @@ fn crop_keeps_an_instance_whose_art_reaches_the_region() {
     // while the 20 × 20 square around the origin, moved to (-60, -60) to (-40, -40), is off it.
     let mut d = doc_with(|d| vec![Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Far".into(), xf: Affine::translate((-50.0, -50.0)) })]);
     let art = path(&mut d, shapes::rectangle(Rect::new(100.0, 50.0, 140.0, 90.0)), Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::None, 0.0);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
     let o = DxfOptions { crop: true, ..opts(&d) };
     assert!(!kinds(&export(&d, &o).unwrap()).is_empty());
 }

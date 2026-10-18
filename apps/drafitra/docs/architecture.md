@@ -1,8 +1,8 @@
-# CADCraft architecture
+# Drafitra architecture
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** major (first committed architecture doc, written from the code on main at bd2412f) · **Target:** Autodesk AutoCAD 2027
 
-How CADCraft is built today. This describes the code on `main`, not plans; plans live in
+How Drafitra is built today. This describes the code on `main`, not plans; plans live in
 [roadmap.md](roadmap.md). Agents: the rules that keep this shape (layering, never-crash,
 everything-is-a-command, clean-room) are in [AGENTS.md](../AGENTS.md).
 
@@ -19,14 +19,14 @@ About 57,000 lines of Rust in 12 library crates, 3 apps and `xtask` (counted 202
 | L2 | `fonts` | 2,062 | Our single-stroke drafting font, TrueType/OpenType/`.ttc` outlines through `skrifa`, TEXT and MTEXT layout and formatting codes, per-character fallback and FONTALT |
 | L2 | `render` | 3,300 | Display lists (polylines, triangles, points tagged with entity handles): linetypes, hatches, gradients, text, block expansion, dimension geometry, paper-space clipping; CPU rasteriser (`tiny-skia`) for PNG, plot preview and tests |
 | L2 | `constraints` | 2,504 | Own parametric solver: damped Gauss–Newton / Levenberg–Marquardt (`lm.rs`), 12 geometric and the dimensional constraints, expressions and parameters, AutoConstrain inference |
-| L3 | `io` | 5,124 | DXF ⇄ document mapping (`dxf_read.rs`, `dxf_write.rs`, CADCraft xdata in `dxf_ext.rs`), PDF plotting, SVG and PNG export |
+| L3 | `io` | 5,124 | DXF ⇄ document mapping (`dxf_read.rs`, `dxf_write.rs`, Drafitra xdata in `dxf_ext.rs`), PDF plotting, SVG and PNG export |
 | L3 | `dwg` | 149 | DWG through a DXF bridge: the `acadrust` crate (MPL-2.0, unmodified) converts DWG ⇄ DXF bytes; nothing else sees its types. Native only |
 | L4 | `engine` | 25,090 | `Session`, the command registry (`cmd/*`), command-line parser and prompt machines, object snaps and polar/ortho (`snap.rs`), selection (`select.rs`), grips (`grips.rs`), associativity (`assoc.rs`), system variables, units, undo, R-tree spatial index (`spatial.rs`) |
 | L5 | `ui-egui` | 9,849 | The swappable egui front end: GPU canvas (`gpu.rs`, wgpu), menus and shortcuts (`menus.rs`), command line, palettes, Layer Properties Manager and other dialogs, ViewCube, icons drawn in code, themes, the interface string catalog (`i18n/`, English, Ukrainian and German), JSON control channel (`control.rs`) |
 | L5 | `mcp` | 559 | MCP server (JSON-RPC 2.0 over stdio) on a headless session or bridged to a running app |
-| app | `cadcraft` | 1,102 | Desktop app (eframe/wgpu; DirectX 12 by default on Windows) |
-| app | `cadcraft-cli` | 823 | `info`, `convert`, `run` (scripts), `commands`, `sample`, `mcp` |
-| app | `cadcraft-web` | 88 | WASM build of the same UI (no DWG) |
+| app | `drafitra` | 1,102 | Desktop app (eframe/wgpu; DirectX 12 by default on Windows) |
+| app | `drafitra-cli` | 823 | `info`, `convert`, `run` (scripts), `commands`, `sample`, `mcp` |
+| app | `drafitra-web` | 88 | WASM build of the same UI (no DWG) |
 | tool | `xtask` | 1,064 | `ci`, `layers`, `assets`, `wasm`, `parity`, `version`, `stats`, icon generation |
 
 `cargo xtask layers` enforces the layering: nothing below L5 depends on egui, eframe, winit,
@@ -65,17 +65,17 @@ SVG and plot preview reuse the same display list through the CPU rasteriser or v
 
 DXF is the native path: `dxf` parses tags, `io::dxf_read` maps them to the document, and
 `io::dxf_write` writes an R2000 (AC1015) DXF. DWG is converted to DXF in memory by `acadrust` and
-read through the same path; saving DWG writes our DXF and converts it back. CADCraft-only data
+read through the same path; saving DWG writes our DXF and converts it back. Drafitra-only data
 (constraints, associativity details, table flags) travels in xdata under our own application
 name. Detail and gaps: [file-format-parity.md](file-format-parity.md).
 
 ## Agent control
 
-- **Control channel:** `cadcraft --control PORT` accepts JSON lines (`cmdline.input`,
+- **Control channel:** `drafitra --control PORT` accepts JSON lines (`cmdline.input`,
   `engine.execute`, `ui.screenshot`, `ui.render` …); see [control-protocol.md](control-protocol.md).
-- **MCP:** `cadcraft-cli mcp` (headless) or `--connect HOST:PORT` (drive the running app); see
+- **MCP:** `drafitra-cli mcp` (headless) or `--connect HOST:PORT` (drive the running app); see
   [mcp.md](mcp.md).
-- **CLI:** `cadcraft-cli run --script … --export out.png` for headless batch work. A reader that
+- **CLI:** `drafitra-cli run --script … --export out.png` for headless batch work. A reader that
   closes stdout early (`… | head`) drops the rest of the output but keeps the work — later
   commands, `--save`, `--export` — and the exit status still reports failures; another stdout
   write error is reported and makes it 1.

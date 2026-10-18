@@ -2,8 +2,8 @@
 //! the point and line commands (M3.82).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Freeform, GradientKind, GradientPaint, Paint};
-use vectorcraft_geom::Point;
+use tsipika_color::{Color, Freeform, GradientKind, GradientPaint, Paint};
+use tsipika_geom::Point;
 
 use super::*;
 
@@ -18,7 +18,7 @@ fn shape(s: &mut Session, cmd: &str, x: f64, y: f64, w: f64, h: f64) -> NodeId {
     NodeId(r["id"].as_u64().unwrap())
 }
 
-fn node(s: &Session, id: NodeId) -> &vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> &tsipika_doc::Node {
     s.doc().unwrap().doc.node(id).unwrap()
 }
 
@@ -67,7 +67,7 @@ fn the_first_application_places_points_inside_the_shape() {
     assert_eq!(g.gradient.stops.iter().map(|st| st.color).collect::<Vec<_>>(), f.points.iter().map(|p| p.color).collect::<Vec<_>>());
     // Draw mode: freeform only.
     s.execute("paint.editGradient", &json!({"mode": "lines"})).unwrap();
-    assert_eq!(points(&s, id).mode, vectorcraft_color::FreeformMode::Lines);
+    assert_eq!(points(&s, id).mode, tsipika_color::FreeformMode::Lines);
     assert_eq!(points(&s, id).points, f.points, "the points stay");
     s.execute("paint.editGradient", &json!({"kind": "linear"})).unwrap();
     assert!(fill_gradient(&s, id).freeform.is_none(), "a linear gradient drops the points");
@@ -141,7 +141,7 @@ fn transforms_and_warps_move_the_points() {
     let before = points(&s, id);
     run(&mut s, "object.move", json!({"dx": 10, "dy": 5}));
     let moved = points(&s, id);
-    assert!(before.points.iter().zip(&moved.points).all(|(a, b)| close(b.at, a.at + vectorcraft_geom::Vec2::new(10.0, 5.0))));
+    assert!(before.points.iter().zip(&moved.points).all(|(a, b)| close(b.at, a.at + tsipika_geom::Vec2::new(10.0, 5.0))));
     run(&mut s, "object.rotate", json!({"angle": 90, "origin": [160, 155]}));
     let turned = points(&s, id);
     // The y-down document turns (x, y) about the origin to (x', y') = (160 + (y − 155), 155 − (x − 160)).
@@ -162,14 +162,14 @@ fn freeform_paints_survive_saving_and_old_files_load() {
     let (mut s, id) = freeform_rect();
     run(&mut s, "paint.editGradient", json!({"mode": "lines"}));
     run(&mut s, "paint.freeform.addLine", json!({"points": [0, 1, 2]}));
-    vectorcraft_testkit::invariants::check_native_roundtrip_exact(&s.doc().unwrap().doc).unwrap();
+    tsipika_testkit::invariants::check_native_roundtrip_exact(&s.doc().unwrap().doc).unwrap();
     // A gradient saved before freeform points existed has none.
     let old: GradientPaint = serde_json::from_value(json!({"gradient": {"kind": "Freeform", "stops": []}, "angle": 0.0})).unwrap();
     assert!(old.freeform.is_none());
     // The command params are lossless: setting the paint read back reproduces it.
     let g = fill_gradient(&s, id);
     let other = shape(&mut s, "shape.rectangle", 300.0, 300.0, 50.0, 50.0);
-    run(&mut s, "paint.setFill", json!({"gradient": vectorcraft_tools::params::gradient_params(&g), "ids": [other.0]}));
+    run(&mut s, "paint.setFill", json!({"gradient": tsipika_tools::params::gradient_params(&g), "ids": [other.0]}));
     assert_eq!(fill_gradient(&s, other), g);
 }
 

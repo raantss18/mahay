@@ -1,14 +1,14 @@
-//! SoundCraft's VST3 plugin host.
+//! Feo's VST3 plugin host.
 //!
 //! Scans the standard VST3 folders (plus `VST3_PATH`), loads `.vst3` bundles in-process and
-//! exposes each "Audio Module Class" as a [`soundcraft_dsp::Plugin`], so the mix engine treats
+//! exposes each "Audio Module Class" as a [`feo_dsp::Plugin`], so the mix engine treats
 //! third-party plugins exactly like the built-in ones. Plugin ids are `vst3:<class id hex>` (32
 //! upper-case hex digits of the component's class id); parameter ids are VST3 `ParamID`s as
 //! decimal strings, with titles, units and plain ranges from the edit controller in
 //! [`PluginInfo::params`]. Values are plain (display) values; the host converts to and from the
 //! VST3 normalized 0..1 values. Stepped parameters become toggles or choices.
 //!
-//! Like `soundcraft-clap-host`, this is an isolated `unsafe` crate (craftrules never-crash):
+//! Like `feo-clap-host`, this is an isolated `unsafe` crate (mahay-rules never-crash):
 //! `unsafe` is denied crate-wide and allowed only in the private `ffi` module. The public API is
 //! safe, returns `Result`/`Option` and never panics. Limits of in-process hosting: a plugin that
 //! itself crashes (segfault) takes the process down with it; we cannot sandbox native code.
@@ -54,16 +54,16 @@ mod registry;
 #[cfg(not(target_arch = "wasm32"))]
 pub use plugin::Vst3Plugin;
 
-use soundcraft_dsp::{Category, Plugin, PluginInfo};
+use feo_dsp::{Category, Plugin, PluginInfo};
 use std::path::{Path, PathBuf};
 
 /// Prefix of every hosted-VST3 plugin id.
 pub const ID_PREFIX: &str = "vst3:";
 
-/// The factory class category of audio processors (the only classes SoundCraft lists).
+/// The factory class category of audio processors (the only classes Feo lists).
 pub const AUDIO_MODULE_CLASS: &str = "Audio Module Class";
 
-/// The 16-byte class id inside a `vst3:<32 hex digits>` SoundCraft id (`None` for other ids).
+/// The 16-byte class id inside a `vst3:<32 hex digits>` Feo id (`None` for other ids).
 pub fn parse_id(id: &str) -> Option<[u8; 16]> {
     let hex = id.strip_prefix(ID_PREFIX)?;
     if hex.len() != 32 || !hex.is_ascii() {
@@ -80,7 +80,7 @@ pub fn parse_id(id: &str) -> Option<[u8; 16]> {
 /// One plugin found by a scan.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct Vst3Descriptor {
-    /// SoundCraft id: `vst3:<class_id>`.
+    /// Feo id: `vst3:<class_id>`.
     pub id: String,
     /// The component's class id as 32 upper-case hex digits.
     pub class_id: String,
@@ -219,7 +219,7 @@ pub fn load_bundle(path: &Path) -> Result<Vec<Vst3Descriptor>, Vst3Error> {
 }
 
 /// Creates a plugin by `vst3:<class id>`, prepared for 48 kHz stereo with 1024-frame blocks (like
-/// `soundcraft_dsp::create`), with the reason when it fails.
+/// `feo_dsp::create`), with the reason when it fails.
 pub fn instantiate(id: &str) -> Result<Box<dyn Plugin>, Vst3Error> {
     api::instantiate(id)
 }
@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn garbage_files_are_errors_not_crashes() {
-        let d = std::env::temp_dir().join(format!("soundcraft-vst3-garbage-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("feo-vst3-garbage-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         let arch = if cfg!(target_os = "macos") {
             "MacOS"
@@ -319,7 +319,7 @@ mod tests {
             ["/lib/x86_64-linux-gnu/libz.so.1", "/usr/lib/libz.so.1", "/lib64/libz.so.1"].iter().map(PathBuf::from).find(|p| p.exists())
         };
         let Some(lib) = lib else { return };
-        let d = std::env::temp_dir().join(format!("soundcraft-vst3-nolib-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("feo-vst3-nolib-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         // Point a single-file ".vst3" at it via a symlink (no copying of binaries).

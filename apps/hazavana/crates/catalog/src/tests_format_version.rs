@@ -32,7 +32,7 @@ fn snapshot_version(m: &MemStore) -> u64 {
 fn v1_library_loads_and_is_upgraded() {
     let (base, log, full) = legacy_parts();
     let m = MemStore::new();
-    m.set(SNAPSHOT, format!("{{\"format\":\"lightcraft-catalog\",\"version\":1,\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes());
+    m.set(SNAPSHOT, format!("{{\"format\":\"hazavana-catalog\",\"version\":1,\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes());
     m.set(LOG, log.into_bytes());
     let (mut j, c, r) = Journal::open(Box::new(m.clone())).unwrap();
     assert_eq!(c.to_snapshot(), full.to_snapshot());
@@ -52,7 +52,7 @@ fn v1_library_loads_and_is_upgraded() {
 fn v2_library_loads_and_is_upgraded() {
     let (base, log, full) = legacy_parts();
     let m = MemStore::new();
-    m.set(SNAPSHOT, format!("{{\"format\":\"lightcraft-catalog\",\"version\":2,\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes());
+    m.set(SNAPSHOT, format!("{{\"format\":\"hazavana-catalog\",\"version\":2,\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes());
     m.set(LOG, log.into_bytes());
     let (_, c, r) = Journal::open(Box::new(m.clone())).unwrap();
     assert_eq!(c.to_snapshot(), full.to_snapshot());
@@ -66,7 +66,7 @@ fn v2_library_loads_and_is_upgraded() {
 fn v3_library_loads_and_is_upgraded() {
     let (base, log, full) = legacy_parts();
     let m = MemStore::new();
-    m.set(SNAPSHOT, format!("{{\"format\":\"lightcraft-catalog\",\"version\":3,\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes());
+    m.set(SNAPSHOT, format!("{{\"format\":\"hazavana-catalog\",\"version\":3,\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes());
     m.set(LOG, log.into_bytes());
     let (_, c, r) = Journal::open(Box::new(m.clone())).unwrap();
     assert_eq!(c.to_snapshot(), full.to_snapshot());
@@ -88,7 +88,7 @@ fn v6_preview_only_photo_loads_unstamped_and_is_upgraded() {
     let snap = c.to_snapshot();
     assert!(!snap.contains("preview_checked"), "an empty stamp isn't written");
     let m = MemStore::new();
-    m.set(SNAPSHOT, format!("{{\"format\":\"lightcraft-catalog\",\"version\":6,\"seq\":1,\"catalog\":{snap}}}\n").into_bytes());
+    m.set(SNAPSHOT, format!("{{\"format\":\"hazavana-catalog\",\"version\":6,\"seq\":1,\"catalog\":{snap}}}\n").into_bytes());
     let (_, loaded, r) = Journal::open(Box::new(m.clone())).unwrap();
     let p = loaded.photo(id).unwrap();
     assert_eq!(p.preview_only.as_deref(), Some("Cr3 files are not decoded yet"));
@@ -126,7 +126,7 @@ fn assert_refused_untouched(m: &MemStore) {
     let e = Journal::open(Box::new(m.clone())).err().expect("refused");
     assert!(matches!(e, CatalogError::Newer(_)), "{e:?}");
     let msg = e.to_string();
-    assert!(msg.contains("newer version of LightCraft") && msg.contains("left unchanged"), "{msg}");
+    assert!(msg.contains("newer version of Hazavana") && msg.contains("left unchanged"), "{msg}");
     assert_eq!(*m.files.lock().unwrap(), before, "nothing modified, nothing renamed");
 }
 
@@ -136,7 +136,7 @@ fn newer_snapshot_is_refused_untouched() {
     let m = MemStore::new();
     m.set(
         SNAPSHOT,
-        format!("{{\"format\":\"lightcraft-catalog\",\"version\":{},\"seq\":2,\"catalog\":{}}}\n", VERSION + 1, base.to_snapshot()).into_bytes(),
+        format!("{{\"format\":\"hazavana-catalog\",\"version\":{},\"seq\":2,\"catalog\":{}}}\n", VERSION + 1, base.to_snapshot()).into_bytes(),
     );
     m.set(LOG, log.into_bytes());
     assert_refused_untouched(&m);
@@ -144,7 +144,7 @@ fn newer_snapshot_is_refused_untouched() {
     let m = MemStore::new();
     m.set(
         SNAPSHOT,
-        format!("{{\"format\":\"lightcraft-catalog\",\"version\":{},\"seq\":2,\"catalog\":{{\"photos\":7}}}}\n", VERSION + 1).into_bytes(),
+        format!("{{\"format\":\"hazavana-catalog\",\"version\":{},\"seq\":2,\"catalog\":{{\"photos\":7}}}}\n", VERSION + 1).into_bytes(),
     );
     assert_refused_untouched(&m);
     let e = Journal::open(Box::new(m)).err().unwrap().to_string();
@@ -160,7 +160,7 @@ fn unknown_op_in_the_log_is_refused_untouched() {
         let body = r#"{"op":"fromTheFuture","id":1,"what":"something new"}"#;
         format!("{{\"seq\":{seq},\"crc\":{},\"op\":{body}}}\n", crc32fast::hash(body.as_bytes()))
     };
-    let snap = format!("{{\"format\":\"lightcraft-catalog\",\"version\":{VERSION},\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot());
+    let snap = format!("{{\"format\":\"hazavana-catalog\",\"version\":{VERSION},\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot());
     let id = base.photos().next().unwrap().id;
     let after = format!("{}\n", encode_record(5, &Op::SetRating { id, rating: 1 }));
     for log in [format!("{log}{}", future(4)), format!("{log}{}{after}", future(4)), format!("{}{log}", future(3))] {
@@ -184,7 +184,7 @@ fn bad_crc_is_still_a_torn_tail() {
     let m = MemStore::new();
     m.set(
         SNAPSHOT,
-        format!("{{\"format\":\"lightcraft-catalog\",\"version\":{VERSION},\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes(),
+        format!("{{\"format\":\"hazavana-catalog\",\"version\":{VERSION},\"seq\":2,\"catalog\":{}}}\n", base.to_snapshot()).into_bytes(),
     );
     let body = r#"{"op":"fromTheFuture"}"#;
     m.set(LOG, format!("{log}{{\"seq\":4,\"crc\":1,\"op\":{body}}}\n").into_bytes());

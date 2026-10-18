@@ -1,15 +1,15 @@
-//! Pixel tests for the shared stroke geometry (`vectorcraft_effects::stroke`) on the canvas:
+//! Pixel tests for the shared stroke geometry (`tsipika_effects::stroke`) on the canvas:
 //! dotted lines (zero-length dashes) and arrowheads (hollow kinds, alignment, compositing).
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, ArrowAlign, Arrowhead, Dash, Document, LineCap, StrokeLayer};
-use vectorcraft_geom::{Point, Rect, Shape, shapes};
-use vectorcraft_render::{Renderer, effects};
-use vectorcraft_testkit::fixtures::DocBuilder;
-use vectorcraft_testkit::raster::{Image, assert_similar, render_region};
-use vectorcraft_testkit::svg;
+use tsipika_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, ArrowAlign, Arrowhead, Dash, Document, LineCap, StrokeLayer};
+use tsipika_geom::{Point, Rect, Shape, shapes};
+use tsipika_render::{Renderer, effects};
+use tsipika_testkit::fixtures::DocBuilder;
+use tsipika_testkit::raster::{Image, assert_similar, render_region};
+use tsipika_testkit::svg;
 
 /// Pixels per point in these tests.
 const S: f64 = 4.0;
@@ -172,7 +172,7 @@ fn a_gradient_runs_on_into_the_head() {
 
 #[test]
 fn a_head_past_the_end_counts_in_the_visual_bounds_and_is_never_culled() {
-    let d = arrow_doc(Arrowhead::Triangle, ArrowAlign::Extend, 1.0, |s| s.join = vectorcraft_doc::LineJoin::Round);
+    let d = arrow_doc(Arrowhead::Triangle, ArrowAlign::Extend, 1.0, |s| s.join = tsipika_doc::LineJoin::Round);
     let h = head_of(&d);
     let vb = d.layers[0].children().unwrap()[0].visual_bounds().unwrap();
     let head = h.outline.bounding_box();
@@ -189,19 +189,19 @@ fn a_head_past_the_end_counts_in_the_visual_bounds_and_is_never_culled() {
 fn shapes_far_beyond_the_page_are_left_undrawn_without_crashing() {
     let mut d = Document::new(100.0, 100.0);
     let layer = d.layers[0].id;
-    let mut far = vectorcraft_geom::BezPath::new();
+    let mut far = tsipika_geom::BezPath::new();
     far.move_to((13607718712.4, 13.2));
     far.curve_to((-0.03, 720.96), (-3.08e17, -8.36e20), (-3.35e20, -1.0));
     far.close_path();
     let black =
-        || Appearance { items: vec![AppearanceItem::Fill(vectorcraft_doc::FillLayer::new(Paint::solid(Color::BLACK)))], ..Default::default() };
+        || Appearance { items: vec![AppearanceItem::Fill(tsipika_doc::FillLayer::new(Paint::solid(Color::BLACK)))], ..Default::default() };
     for (path, app) in [
-        (vectorcraft_geom::PathData::from_bezpath(&far), black()),
+        (tsipika_geom::PathData::from_bezpath(&far), black()),
         (shapes::rectangle(Rect::new(10.0, 10.0, 30.0, 30.0)), black()),
         (shapes::rectangle(Rect::new(50.0, 50.0, 60.0, 60.0)), stroked(1e30, |_| {})),
     ] {
         let id = d.alloc_id();
-        d.insert(Some(layer), usize::MAX, vectorcraft_doc::Node::path(id, path, app)).unwrap();
+        d.insert(Some(layer), usize::MAX, tsipika_doc::Node::path(id, path, app)).unwrap();
     }
     let img = Renderer::new().render_region(&d, Rect::new(0.0, 0.0, 100.0, 100.0), 1.0, true);
     let px = |x: usize, y: usize| img.pixels.get((y * img.width as usize + x) * 4).copied().unwrap();

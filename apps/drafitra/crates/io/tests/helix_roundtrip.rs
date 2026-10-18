@@ -3,9 +3,9 @@
 //! radii, height, turns, twist and start point. Foreign helices read the same way; hostile ones
 //! don't panic.
 
-use cadcraft_doc::{Common, Drawing, EntityKind, Helix, HelixConstrain, Space};
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_geom::Vec3;
+use drafitra_doc::{Common, Drawing, EntityKind, Helix, HelixConstrain, Space};
+use drafitra_dxf::{Tag, records, sections};
+use drafitra_geom::Vec3;
 
 fn helices(d: &Drawing) -> Vec<Helix> {
     d.model
@@ -57,15 +57,15 @@ fn helix_survives_save_and_reopen() {
     };
     d.add(&Space::Model, Common { layer: "Springs".into(), ..Common::default() }, EntityKind::Helix(a.clone())).unwrap();
     d.add(&Space::Model, Common::default(), EntityKind::Helix(b.clone())).unwrap();
-    let saved = cadcraft_io::write_dxf(&d);
-    let back = cadcraft_io::read_dxf(saved.as_bytes()).unwrap();
+    let saved = drafitra_io::write_dxf(&d);
+    let back = drafitra_io::read_dxf(saved.as_bytes()).unwrap();
     let [ra, rb] = helices(&back).try_into().unwrap();
     assert!(same(&ra, &a), "{ra:?}\n{a:?}");
     assert!(same(&rb, &b), "{rb:?}\n{b:?}");
     assert_eq!(back.model.iter().next().unwrap().common.layer, "Springs");
 
     // The file: a spline whose last control point is the helix's end, the helix data, a CLASS.
-    let tags = cadcraft_dxf::parse(saved.as_bytes()).unwrap();
+    let tags = drafitra_dxf::parse(saved.as_bytes()).unwrap();
     let secs = sections(&tags);
     let recs = |name: &str| records(&secs.iter().find(|s| s.name == name).unwrap().tags);
     let ents = recs("ENTITIES");
@@ -83,7 +83,7 @@ fn helix_survives_save_and_reopen() {
     assert!(recs("CLASSES").iter().any(|(_, t)| t.iter().any(|g| g.code == 1 && g.str() == "HELIX")));
 
     // Saving again is stable.
-    let again = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&back).as_bytes()).unwrap();
+    let again = drafitra_io::read_dxf(drafitra_io::write_dxf(&back).as_bytes()).unwrap();
     assert!(same(&helices(&again)[0], &a));
 }
 
@@ -146,7 +146,7 @@ fn foreign_helix_reads() {
         (0, "EOF"),
     ];
     let text: String = g.iter().map(|(c, v)| format!("{c}\n{v}\n")).collect();
-    let d = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     let [x] = helices(&d).try_into().unwrap();
     assert_eq!((x.base_radius, x.top_radius, x.turns, x.height, x.ccw, x.constrain), (2.0, 0.5, 1.0, 3.0, true, HelixConstrain::Turns));
 }
@@ -158,13 +158,13 @@ fn hostile_helix_does_not_panic() {
         t.push_str(&format!("0\nHELIX\n100\nAcDbSpline\n72\n999999999\n73\n-4\n10\nnan\n20\n1e308\n100\nAcDbHelix\n10\ninf\n12\n0\n22\n0\n32\n0\n40\n{r}\n41\n{turns}\n42\n{th}\n290\n7\n280\n-9\n"));
     }
     t.push_str("0\nHELIX\n0\nENDSEC\n0\nEOF\n");
-    let d = cadcraft_io::read_dxf(t.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(t.as_bytes()).unwrap();
     assert_eq!(helices(&d).len(), 5);
     for x in helices(&d) {
         assert!(x.turns > 0.0 && x.turns <= 500.0 && x.base_radius.is_finite() && x.height.is_finite());
     }
-    let _ = cadcraft_io::write_dxf(&d);
-    let _ = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+    let _ = drafitra_io::write_dxf(&d);
+    let _ = drafitra_render::build(&d, &Space::Model, &drafitra_render::Options::default());
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -182,7 +182,7 @@ fn helix_survives_dwg_save_and_reopen() {
         constrain: HelixConstrain::Height,
     };
     d.add(&Space::Model, Common::default(), EntityKind::Helix(a.clone())).unwrap();
-    let back = cadcraft_io::read(&cadcraft_io::write(&d, "x.dwg").unwrap(), "x.dwg").unwrap();
+    let back = drafitra_io::read(&drafitra_io::write(&d, "x.dwg").unwrap(), "x.dwg").unwrap();
     let [x] = helices(&back).try_into().unwrap();
     assert!(same(&x, &a), "{x:?}");
 }

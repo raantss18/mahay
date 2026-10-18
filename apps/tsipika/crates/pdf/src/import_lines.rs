@@ -13,9 +13,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use kurbo::{Point, Rect, Shape};
-use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{AppearanceItem, Justify, Node, NodeId, NodeKind, TextKind, TextObject, TextRun};
-use vectorcraft_geom::shapes;
+use tsipika_color::BlendMode;
+use tsipika_doc::{AppearanceItem, Justify, Node, NodeId, NodeKind, TextKind, TextObject, TextRun};
+use tsipika_geom::shapes;
 
 use crate::import_text::LineFacts;
 
@@ -214,12 +214,12 @@ fn laid_out(texts: &[(&TextObject, &LineFacts)], b: &Block, justify: Justify, wi
     t.para.justify = justify;
     t.para.space_before = b.space;
     let last = b.ys.last().copied()?;
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     // The frame's top puts the first baseline where the file has it.
     t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, width, last + b.leading.max(size) + size)) };
-    let top = -vectorcraft_text::layout(db, &t).lines.first()?.baseline;
+    let top = -tsipika_text::layout(db, &t).lines.first()?.baseline;
     t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, top, width, last + b.leading.max(size))) };
-    let laid = vectorcraft_text::layout(db, &t);
+    let laid = tsipika_text::layout(db, &t);
     let plain = t.plain_text();
     let same = !laid.overflow
         && laid.lines.len() == texts.len()

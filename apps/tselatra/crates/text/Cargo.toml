@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-text"
+name = "tselatra-text"
 description = "Text engine: fonts (bundled OFL + system), shaping (harfrust), bidi, line breaking, paragraph layout and glyph outlines as Bezier paths"
 version.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-effectcraft-keyframe = { workspace = true }
+tselatra-keyframe = { workspace = true }
 kurbo = { workspace = true }
 # Font tables, glyph outlines and metrics (MIT OR Apache-2.0).
 skrifa = { workspace = true }

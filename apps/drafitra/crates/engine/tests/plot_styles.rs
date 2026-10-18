@@ -1,6 +1,6 @@
 //! PAGESETUP: the plot style table and "Display plot styles" of a layout (issue #410).
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 use serde_json::json;
 
 #[test]
@@ -94,7 +94,7 @@ fn stylesmanager_creates_edits_saves_and_loads_tables() {
     assert!(s.execute("stylesmanager", &json!({"action": "explode"})).is_err());
     #[cfg(not(target_arch = "wasm32"))]
     {
-        let path = std::env::temp_dir().join(format!("cadcraft-pstyle-{}.stb.json", std::process::id()));
+        let path = std::env::temp_dir().join(format!("drafitra-pstyle-{}.stb.json", std::process::id()));
         let p = path.to_string_lossy().to_string();
         s.execute("stylesmanager", &json!({"action": "save", "name": "office.stb", "path": p})).unwrap();
         s.execute("stylesmanager", &json!({"action": "load", "path": p, "name": "copy.stb"})).unwrap();

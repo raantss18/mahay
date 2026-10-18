@@ -11,7 +11,7 @@
 //!   Distortion Percentage scales the mesh and Distortion Mesh Offset moves it.
 //! * **Rolling Shutter Repair** — every scanline of a CMOS frame is exposed a little later than
 //!   the previous one, so moving content shears. Motion is measured between the neighbouring
-//!   frames with pyramidal Lucas–Kanade (`effectcraft-track`) on a grid of points; each pixel is
+//!   frames with pyramidal Lucas–Kanade (`tselatra-track`) on a grid of points; each pixel is
 //!   then resampled from where it was at the frame's mid-exposure time:
 //!   `out(p) = in(p + v(p)·rate·(s(p) − ½))`, with `s` the scan position (0…1 along the scan
 //!   direction) and `v` the per-frame velocity (Warp: one smooth velocity per scanline band;
@@ -20,9 +20,9 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::Image;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::Image;
 use rayon::prelude::*;
 
 use crate::util::{hash1, point_in_poly};
@@ -440,7 +440,7 @@ fn median(v: &mut [f64]) -> f64 {
 /// `detail` (Pixel Motion Detail, 0..1; 0.2 = the standard grid) scales the number of motion
 /// vectors the Pixel Motion method measures: more vectors follow finer local motion.
 fn measure(cur: &Image, prev: Option<&Image>, next: Option<&Image>, scale: f64, detailed: bool, per_row: bool, detail: f64) -> Option<Flow> {
-    use effectcraft_track::klt::{GrayPyramid, LkOpts, analysis_factor, track};
+    use tselatra_track::klt::{GrayPyramid, LkOpts, analysis_factor, track};
     let factor = analysis_factor(cur.width, cur.height, if detailed { 640 } else { 320 });
     let pc = GrayPyramid::from_image(cur, [0.0; 2], factor, 4);
     let (w, h) = (pc.width(), pc.height());
@@ -676,7 +676,7 @@ mod tests {
         // Offset) and it moves the mesh: the pattern rendered at x renders at x + offset.
         let spec = crate::find("ec.distort.liquify").unwrap();
         assert!(
-            spec.params.iter().any(|ps| ps.id == "distortionMeshOffset" && ps.ui == effectcraft_project::ParamUi::Point),
+            spec.params.iter().any(|ps| ps.id == "distortionMeshOffset" && ps.ui == tselatra_project::ParamUi::Point),
             "offset is shown in Effect Controls"
         );
         let shifted = run_fx(

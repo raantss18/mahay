@@ -1,6 +1,6 @@
 //! Character Styles panel's existing `fromSelection` command contract.
-use designcraft_doc::{CharAttrs, StoryId};
-use designcraft_engine::Session;
+use pejy_doc::{CharAttrs, StoryId};
+use pejy_engine::Session;
 use serde_json::{Value, json};
 
 fn story(text: &str) -> (Session, u64) {
@@ -79,7 +79,7 @@ fn character_capture_reproducer_is_one_undo_step_and_survives_native_reopen() {
     // Both commands use the native ZIP format, without a filesystem fixture.
     let saved = s.execute("file.serialize", &json!({})).unwrap();
     let mut reopened = Session::new();
-    reopened.execute("file.openBytes", &json!({"name": "capture.designcraft", "base64": saved["base64"]})).unwrap();
+    reopened.execute("file.openBytes", &json!({"name": "capture.pejy", "base64": saved["base64"]})).unwrap();
     assert_eq!(chars(&reopened, "Captured"), chars(&s, "Captured"));
     select(&mut reopened, sid, 6, 10);
     assert_eq!(reopened.execute("type.selectionAttrs", &json!({})).unwrap()["chars"]["underline"], false);
@@ -178,7 +178,7 @@ fn character_capture_retains_deleted_fill_and_reuses_it_after_native_reopen() {
 
         let saved = s.execute("file.serialize", &json!({})).unwrap();
         let mut reopened = Session::new();
-        reopened.execute("file.openBytes", &json!({"name": "deleted-fill.designcraft", "base64": saved["base64"]})).unwrap();
+        reopened.execute("file.openBytes", &json!({"name": "deleted-fill.pejy", "base64": saved["base64"]})).unwrap();
         reopened.doc().unwrap().doc.check().unwrap();
         for name in ["Captured", "Tweaked", "Paper", "Cleared fill"] {
             assert_eq!(chars(&reopened, name), chars(&s, name));

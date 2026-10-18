@@ -3,7 +3,7 @@
 
 use kurbo::Shape;
 use serde_json::json;
-use vectorcraft_doc::Dash;
+use tsipika_doc::Dash;
 
 use super::tests_outlinestroke::{outline, path_of};
 use super::*;
@@ -56,7 +56,7 @@ fn align_dashes_and_the_offset_edit_the_pattern_in_place() {
 fn fitted_dashes_survive_the_native_format() {
     let (mut s, id) = session_with_rect();
     set(&mut s, json!({"dash": [12, 6], "dashOffset": 2, "alignDashes": true}));
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(back.node(id).unwrap().appearance.stroke().unwrap().dash, dash_of(&s, id));
 }
 

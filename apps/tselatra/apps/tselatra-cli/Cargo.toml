@@ -1,0 +1,25 @@
+[package]
+name = "tselatra-cli"
+description = "Tselatra headless CLI: render frames and sequences, run commands, MCP server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "tselatra-cli"
+path = "src/main.rs"
+
+[dependencies]
+tselatra-engine = { workspace = true }
+tselatra-host = { workspace = true }
+tselatra-automation = { workspace = true }
+tselatra-ui-egui = { workspace = true }
+tselatra-render = { workspace = true }
+tselatra-gpu = { workspace = true }
+tselatra-time = { workspace = true }
+serde_json = { workspace = true }
+image = { workspace = true }
+cpu-time = "1"

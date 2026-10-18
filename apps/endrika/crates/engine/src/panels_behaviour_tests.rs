@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))

@@ -2,11 +2,11 @@
 //! story with "TOC Title" / "TOC Level n" styles (right tab with dot leader) or the entry styles
 //! chosen per style. Update Table of Contents regenerates the same story after edits.
 
-use designcraft_compose::{ComposeOptions, caret, compose_story};
-use designcraft_doc::{
+use pejy_compose::{ComposeOptions, caret, compose_story};
+use pejy_doc::{
     Align, Document, NO_CHAR_STYLE, ParaAttrs, ParaFormat, ParagraphStyle, SpreadRef, StoryId, TabAlign, TabStop, Toc, TocEntry, TocPageNumber,
 };
-use designcraft_geom::Rect;
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -224,10 +224,10 @@ fn ensure_styles(d: &mut Document, levels: u8, width: f64) {
     }
     let st = d.styles_mut();
     for (name, para, size) in missing {
-        let chars = designcraft_doc::CharAttrs { size, ..Default::default() };
+        let chars = pejy_doc::CharAttrs { size, ..Default::default() };
         st.paragraph.push(ParagraphStyle {
             name,
-            based_on: Some(designcraft_doc::story::BASIC_PARAGRAPH.into()),
+            based_on: Some(pejy_doc::story::BASIC_PARAGRAPH.into()),
             next_style: None,
             para,
             chars,
@@ -288,7 +288,7 @@ fn fill(d: &mut Document, toc: &Toc, width: Option<f64>) -> Result<usize> {
         }
         styles.push(e.entry_style.clone().unwrap_or_else(|| format!("TOC Level {}", f.level.max(1))));
     }
-    let st = d.story_mut(toc.story).ok_or(designcraft_doc::DocError::NoStory(toc.story))?;
+    let st = d.story_mut(toc.story).ok_or(pejy_doc::DocError::NoStory(toc.story))?;
     let len = st.len();
     st.replace(0..len, &text);
     // The text takes the format of the old first character: its character style would spread
@@ -340,7 +340,7 @@ fn generate(s: &mut Session, p: &Value) -> Result<Value> {
                 let r: Rect = rect.unwrap_or_else(|| d.spreads[si].pages[pi].margin_rect());
                 let layer = d.default_layer();
                 let (fid, sid) = d.add_text_frame(SpreadRef::Doc(si), r, layer, "", ParaFormat::default())?;
-                *sel = designcraft_doc::Selection::items(vec![fid]);
+                *sel = pejy_doc::Selection::items(vec![fid]);
                 let w = d.item(fid).map(|i| i.text_area().width());
                 (sid, w)
             }
@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn toc_entry_style_page_number_position_and_separator_survive_update() {
         let (mut s, page) = sample_with_toc_page();
-        let basic = designcraft_doc::story::BASIC_PARAGRAPH;
+        let basic = pejy_doc::story::BASIC_PARAGRAPH;
         s.execute(
             "toc.generate",
             &json!({"page": page, "title": "In This Issue", "titleStyle": basic, "entries": [
@@ -525,7 +525,7 @@ mod tests {
         let (mut s, page) = doc_with(&[("Apples", "Head"), ("Pears", "Head")]);
         s.execute("style.character.create", &json!({"name": "Number", "chars": {"fontStyle": "Bold"}})).unwrap();
         s.execute("style.character.create", &json!({"name": "Dots", "chars": {"fill": "[Registration]"}})).unwrap();
-        let none = designcraft_doc::NO_CHAR_STYLE.to_string();
+        let none = pejy_doc::NO_CHAR_STYLE.to_string();
         s.execute(
             "toc.generate",
             &json!({"page": page, "title": "", "entries": [

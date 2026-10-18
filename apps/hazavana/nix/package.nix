@@ -1,17 +1,17 @@
-# LightCraft — the desktop app (`lightcraft`) and the CLI/MCP server (`lightcraft-cli`), built from
+# Hazavana — the desktop app (`hazavana`) and the CLI/MCP server (`hazavana-cli`), built from
 # this repository:
 #
-#   nix build          # → ./result/bin/lightcraft, ./result/bin/lightcraft-cli
+#   nix build          # → ./result/bin/hazavana, ./result/bin/hazavana-cli
 #
 # Kept in step with the release workflow (.github/workflows/release.yml) and packaging/env.sh:
 #   * `Cargo.lock` drives the dependencies (`cargoLock`), so there is no vendorHash to bump. The git
-#     source (storytold/craft-libs) is fetched at the revision the lock file pins;
-#   * `CRAFT_FONTS_DIR` embeds the CJK fonts from storytold/craft-fonts (the `craft-fonts`
+#     source (raantss18/mahay-libs) is fetched at the revision the lock file pins;
+#   * `MAHAY_FONTS_DIR` embeds the CJK fonts from raantss18/mahay-fonts (the `mahay-fonts`
 #     flake input); without it everything builds and runs, but Japanese and Chinese text have no glyphs;
 #   * the desktop file, hicolor icons and AppStream metadata are the same files the .deb/.rpm ship
-#     (packaging/linux/), so `apt` and NixOS users see one identical LightCraft;
+#     (packaging/linux/), so `apt` and NixOS users see one identical Hazavana;
 #   * `doCheck` runs `cargo test --workspace`, what `cargo xtask ci` runs. `nix build` runs it too;
-#     `pkgs.lightcraft.overrideAttrs { doCheck = false; }` skips it for a faster, build-only install.
+#     `pkgs.hazavana.overrideAttrs { doCheck = false; }` skips it for a faster, build-only install.
 #
 # Everything in the product is pure Rust (no C/C++ dependencies), so this needs no build system
 # beyond cargo plus the windowing headers winit's build scripts look for.
@@ -41,8 +41,8 @@
   # Adds the driver search path (/run/opengl-driver/lib) to the binaries' RPATH so wgpu finds the
   # installed Vulkan driver on NixOS. Optional: harmless on nixpkgs without it.
   autoAddDriverRunpath ? null,
-  # storytold/craft-fonts checkout (flake input). `null` builds without CJK glyphs.
-  craft-fonts ? null,
+  # raantss18/mahay-fonts checkout (flake input). `null` builds without CJK glyphs.
+  mahay-fonts ? null,
   # Release date for the AppStream metadata (YYYY-MM-DD); the flake derives it from its own commit.
   buildDate ? "1970-01-01",
 }:
@@ -56,7 +56,7 @@ let
   isLinux = stdenv.hostPlatform.isLinux;
 
   # AppStream id: also the desktop file name, and the icon name in share/icons/hicolor.
-  appId = "ai.storyteller.lightcraft";
+  appId = "org.mahay.hazavana";
 
   # Libraries the binaries open at run time with dlopen(): nothing links them, so no RPATH points at
   # them — winit loads libwayland-client/libxkbcommon/libxcb, rfd libdbus-1, wgpu the Vulkan loader
@@ -75,21 +75,21 @@ let
     dbus
   ];
 
-  # The two native binaries. The wasm app (apps/lightcraft-web) is built by `cargo xtask web`, not
+  # The two native binaries. The wasm app (apps/hazavana-web) is built by `cargo xtask web`, not
   # here; xtask is tooling.
   binaries = [
-    "lightcraft"
-    "lightcraft-cli"
+    "hazavana"
+    "hazavana-cli"
   ];
 
   # HEIC/HEIF decoding (opt-in upstream: HEVC patents are the distributor's call), as the release builds.
   buildFeatures = [
-    "lightcraft/heif"
-    "lightcraft-cli/heif"
+    "hazavana/heif"
+    "hazavana-cli/heif"
   ];
 in
 rustPlatform.buildRustPackage {
-  pname = "lightcraft";
+  pname = "hazavana";
   inherit version;
 
   src = lib.cleanSourceWith {
@@ -106,7 +106,7 @@ rustPlatform.buildRustPackage {
 
   cargoLock = {
     lockFile = root + "/Cargo.lock";
-    # The git dependency (storytold/craft-libs) is pinned by revision in Cargo.lock.
+    # The git dependency (raantss18/mahay-libs) is pinned by revision in Cargo.lock.
     allowBuiltinFetchGit = true;
   };
 
@@ -114,9 +114,9 @@ rustPlatform.buildRustPackage {
   cargoBuildFlags = [
     "--locked"
     "-p"
-    "lightcraft"
+    "hazavana"
     "-p"
-    "lightcraft-cli"
+    "hazavana-cli"
   ];
 
   # `cargo xtask ci` runs `cargo test --workspace`. Tests that need what the sandbox cannot have
@@ -124,7 +124,7 @@ rustPlatform.buildRustPackage {
   # equivalence tests (no adapter).
   cargoTestFlags = [ "--workspace" ];
 
-  # One test thread at a time (RUST_TEST_THREADS=1). `lightcraft-catalog`'s `tests_lock` tests share
+  # One test thread at a time (RUST_TEST_THREADS=1). `hazavana-catalog`'s `tests_lock` tests share
   # a process-global resource: `flock` is inherited across `fork`, so a child process that another
   # test forked keeps the parent's just-released library lock alive until its `execve` closes the
   # (CLOEXEC) fd — long enough that the sibling test sees a spurious `LockError::InUse`, on ~30 % of
@@ -157,10 +157,10 @@ rustPlatform.buildRustPackage {
     libxrandr
   ];
 
-  env = lib.optionalAttrs (craft-fonts != null) {
-    CRAFT_FONTS_DIR = toString craft-fonts;
+  env = lib.optionalAttrs (mahay-fonts != null) {
+    MAHAY_FONTS_DIR = toString mahay-fonts;
     # A malformed font input must fail the build rather than silently ship without glyphs.
-    CRAFT_FONTS_REQUIRED = "1";
+    MAHAY_FONTS_REQUIRED = "1";
   };
 
   postInstall = ''
@@ -175,13 +175,13 @@ rustPlatform.buildRustPackage {
       --subst-var-by DATE ${buildDate}
 
     # Licences for everything embedded in the binaries: Inter, the app icon, each craft font.
-    doc=$out/share/doc/lightcraft
+    doc=$out/share/doc/hazavana
     install -Dm644 -t "$doc" \
       README.md LICENSE-MIT LICENSE-APACHE NOTICE \
       assets/ATTRIBUTION.md assets/fonts/OFL-Inter.txt
   ''
-  + lib.optionalString (craft-fonts != null) ''
-    for lic in ${toString craft-fonts}/fonts/*/OFL.txt; do
+  + lib.optionalString (mahay-fonts != null) ''
+    for lic in ${toString mahay-fonts}/fonts/*/OFL.txt; do
       install -Dm644 "$lic" "$doc/OFL-$(basename "$(dirname "$lic")").txt"
     done
   ''
@@ -204,12 +204,12 @@ rustPlatform.buildRustPackage {
   meta = {
     description = "Photo library and non-destructive raw developer";
     longDescription = ''
-      LightCraft organises a photo library and develops raw files non-destructively: masks,
+      Hazavana organises a photo library and develops raw files non-destructively: masks,
       presets, colour grading, local adjustments and batch export, driven by the same command
-      layer as its UI. It ships with lightcraft-cli, a headless renderer, command runner and MCP
+      layer as its UI. It ships with hazavana-cli, a headless renderer, command runner and MCP
       server for AI agents.
     '';
-    homepage = "https://getartcraft.com/apps/lightcraft";
+    homepage = "https://github.com/raantss18/mahay";
     license = with lib.licenses; [
       mit
       asl20
@@ -217,6 +217,6 @@ rustPlatform.buildRustPackage {
     sourceProvenance = with lib.sourceTypes; [ fromSource ];
     platforms = lib.platforms.linux ++ lib.platforms.darwin;
     # `nix run` and the desktop entry both start the GUI.
-    mainProgram = "lightcraft";
+    mainProgram = "hazavana";
   };
 }

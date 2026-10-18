@@ -1,4 +1,4 @@
-//! The FigCraft document model.
+//! The Endrika document model.
 //!
 //! A [`Document`] holds pages; each page is the root of a tree of [`Node`]s (frames, groups, shapes,
 //! text, components, instances…). Nodes are stored by id in a map of `Arc`s, so cloning a document
@@ -25,8 +25,8 @@ pub mod vector_regions;
 
 pub use colors::*;
 pub use comments::*;
-pub use figcraft_color as color;
-pub use figcraft_geom as geom;
+pub use endrika_color as color;
+pub use endrika_geom as geom;
 pub use handoff::*;
 pub use library::*;
 pub use node::*;
@@ -36,8 +36,8 @@ pub use text::*;
 pub use vector::*;
 pub use vector_faces::Face;
 
-use figcraft_color::{Color, ColorProfile};
-use figcraft_geom::{Affine, Point, Rect};
+use endrika_color::{Color, ColorProfile};
+use endrika_geom::{Affine, Point, Rect};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -680,7 +680,7 @@ impl Document {
         if n.is_page() {
             return self.page_content_bounds(id);
         }
-        Some(figcraft_geom::transform_rect_bbox(self.world_transform(id), n.local_rect()))
+        Some(endrika_geom::transform_rect_bbox(self.world_transform(id), n.local_rect()))
     }
 
     /// Bounds of everything painted by a node, effects and strokes included (page coordinates):
@@ -741,7 +741,7 @@ impl Document {
         // Children bounds in the group's current local space (a mask stands for what it masks).
         let mut local: Option<Rect> = None;
         for (c, cn) in self.box_children(n) {
-            let r = figcraft_geom::transform_rect_bbox(inv * self.world_transform(c), cn.local_rect());
+            let r = endrika_geom::transform_rect_bbox(inv * self.world_transform(c), cn.local_rect());
             local = Some(local.map_or(r, |l| l.union(r)));
         }
         let Some(local) = local else { return Ok(()) };
@@ -837,7 +837,7 @@ impl Document {
             }
             // A pattern tiling a layer of the copy tiles the copy's layer.
             for p in c.fills.iter_mut().chain(c.strokes.iter_mut()) {
-                if let figcraft_color::PaintKind::Pattern(pt) = &mut p.kind
+                if let endrika_color::PaintKind::Pattern(pt) = &mut p.kind
                     && let Some(m) = map.get(&NodeId(pt.source))
                 {
                     pt.source = m.0;

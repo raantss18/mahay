@@ -2,10 +2,10 @@
 //! matte clean-up. Written from public behaviour descriptions and the standard colour-difference /
 //! blue-screen matting literature (Vlahos; Smith & Blinn, "Blue Screen Matting").
 
-use effectcraft_color::{luminance, rgb_to_hsl, srgb_to_linear};
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, gaussian_blur};
+use tselatra_color::{luminance, rgb_to_hsl, srgb_to_linear};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, gaussian_blur};
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, morph_frac, premul, unpremul};
@@ -500,13 +500,13 @@ fn advanced_spill(ctx: &EffectCtx, mut b: Buf) -> Buf {
     // colour out of suppressed pixels; Spill Color Correction puts the removed spill back as
     // neutral light (so suppressed areas keep their brightness without the cast).
     let key = ctx.params.color("ultraSettings/keyColor");
-    let key_hue = effectcraft_color::rgb_to_hsl(key[0], key[1], key[2]).0;
+    let key_hue = tselatra_color::rgb_to_hsl(key[0], key[1], key[2]).0;
     let tol = if ultra { ctx.params.get("ultraSettings/tolerance").map(Value::as_f64).unwrap_or(100.0) as f32 / 100.0 } else { 1.0 };
     let desat = if ultra { ctx.params.f("ultraSettings/desaturate") as f32 / 100.0 } else { 0.0 };
     let neutral = if ultra { ctx.params.f("ultraSettings/spillColorCorrection") as f32 / 100.0 } else { 0.0 };
     b.img.map_straight(|mut c| {
         let w = if tol < 1.0 {
-            let h = effectcraft_color::rgb_to_hsl(c[0], c[1], c[2]).0;
+            let h = tselatra_color::rgb_to_hsl(c[0], c[1], c[2]).0;
             let d = (h - key_hue).abs();
             let d = d.min(1.0 - d);
             (1.0 - d / (tol * 0.5).max(1e-4)).clamp(0.0, 1.0)
@@ -521,7 +521,7 @@ fn advanced_spill(ctx: &EffectCtx, mut b: Buf) -> Buf {
         let back = spill * LUMA_W[pi] * luma + spill * neutral / 3.0;
         let mut c = c.map(|v| v + back);
         if desat > 0.0 && spill > 0.0 {
-            let l = effectcraft_color::luminance(c[0], c[1], c[2]);
+            let l = tselatra_color::luminance(c[0], c[1], c[2]);
             let k = (desat * (spill * 4.0).min(1.0)).min(1.0);
             c = c.map(|v| v + (l - v) * k);
         }

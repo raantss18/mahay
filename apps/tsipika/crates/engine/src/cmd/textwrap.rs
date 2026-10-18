@@ -5,8 +5,8 @@
 //! `TextObject::wrap` (text space); the layout engine subtracts them from each line's span.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind, TextKind, TextWrap, WrapShape};
-use vectorcraft_geom::{PathData, shapes};
+use tsipika_doc::{Document, Node, NodeId, NodeKind, TextKind, TextWrap, WrapShape};
+use tsipika_geom::{PathData, shapes};
 
 use super::typecmd::refresh_bounds;
 use super::*;
@@ -198,13 +198,13 @@ pub(crate) fn refresh(doc: &mut Document) {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_doc::NodeKind;
+    use tsipika_doc::NodeKind;
 
     use crate::{NodeId, Session};
 
     fn lines(s: &Session, id: u64) -> Vec<(f64, f64)> {
         let Some(NodeKind::Text(t)) = s.doc().unwrap().doc.node(NodeId(id)).map(|n| n.kind.clone()) else { panic!() };
-        vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t).lines.iter().map(|l| l.avail).collect()
+        tsipika_text::layout(tsipika_text::FontDb::global(), &t).lines.iter().map(|l| l.avail).collect()
     }
 
     /// Invalid explicit ids must not turn a requested multi-object edit into a partial one.
@@ -286,7 +286,7 @@ mod tests {
         s.execute("select.set", &json!({"ids": [r]})).unwrap();
         s.execute("object.textWrap.make", &json!({})).unwrap();
         let Some(NodeKind::Text(tx)) = s.doc().unwrap().doc.node(NodeId(t)).map(|n| n.kind.clone()) else { panic!() };
-        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &tx);
+        let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &tx);
         // Beside the circle each line band holds two lines: left of it and right of it.
         let beside: Vec<_> = lay.lines.iter().filter(|l| l.baseline > 120.0 && l.baseline < 180.0).collect();
         assert!(

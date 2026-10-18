@@ -2,9 +2,9 @@
 #![allow(clippy::unwrap_used)]
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::{Session, ViewInfo};
-use vectorcraft_tools::{PointerEvent, PointerKind};
+use tsipika_doc::NodeId;
+use tsipika_engine::{Session, ViewInfo};
+use tsipika_tools::{PointerEvent, PointerKind};
 
 fn fixture() -> (Session, NodeId) {
     let mut s = Session::new();

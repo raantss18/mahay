@@ -1,11 +1,11 @@
-//! Keyboard handling: the shortcuts of [`figcraft_engine::keymap`], tool keys, nudging, opacity
+//! Keyboard handling: the shortcuts of [`endrika_engine::keymap`], tool keys, nudging, opacity
 //! digits and text editing keys.
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 use egui::{Context, Event, Key, Modifiers};
-use figcraft_engine::keymap::{self, Platform};
+use endrika_engine::keymap::{self, Platform};
 use serde_json::json;
 
 use crate::FigApp;
@@ -359,7 +359,7 @@ impl FigApp {
             Some(r) => r.inflate(8.0 / zoom, 8.0 / zoom),
             None => {
                 let c = self.to_page(self.canvas.rect.center());
-                figcraft_geom::Rect::new(c.x - 100.0 / zoom, c.y - 75.0 / zoom, c.x + 100.0 / zoom, c.y + 75.0 / zoom)
+                endrika_geom::Rect::new(c.x - 100.0 / zoom, c.y - 75.0 / zoom, c.x + 100.0 / zoom, c.y + 75.0 / zoom)
             }
         };
         self.ui.key_box = Some([r.x0, r.y0, r.x1, r.y1]);
@@ -402,7 +402,7 @@ pub fn opacity_digit(app: &mut FigApp, key: Key, now: f64) -> bool {
 fn enter_text(app: &mut FigApp) -> bool {
     let sel = app.session.selection();
     if sel.len() > 1 {
-        let ids = app.session.doc().ok().and_then(|d| figcraft_engine::vectoredit::enter_targets(d, &sel));
+        let ids = app.session.doc().ok().and_then(|d| endrika_engine::vectoredit::enter_targets(d, &sel));
         return ids.is_some_and(|ids| {
             app.run("vector.edit.begin", json!({"ids": ids}));
             true
@@ -412,10 +412,10 @@ fn enter_text(app: &mut FigApp) -> bool {
         return false;
     }
     let Some(id) = sel.first().copied() else { return false };
-    let kind = app.session.doc().ok().and_then(|d| d.node(id)).map(|n| (matches!(n.kind, figcraft_doc::NodeKind::Text(_)), n.kind.is_shape()));
+    let kind = app.session.doc().ok().and_then(|d| d.node(id)).map(|n| (matches!(n.kind, endrika_doc::NodeKind::Text(_)), n.kind.is_shape()));
     match kind {
         Some((true, _)) => {
-            let _ = figcraft_engine::textedit::begin(&mut app.session, id, None, false);
+            let _ = endrika_engine::textedit::begin(&mut app.session, id, None, false);
             true
         }
         Some((_, true)) => {
@@ -436,28 +436,28 @@ fn text_keys(app: &mut FigApp, ctx: &Context, events: &[Event]) {
                     skip_text = false;
                     continue;
                 }
-                if let Err(e) = figcraft_engine::textedit::insert(&mut app.session, t) {
+                if let Err(e) = endrika_engine::textedit::insert(&mut app.session, t) {
                     app.toast(e.to_string());
                 }
             }
             // The composition shows inline at the caret; the document gets it on Commit.
             Event::Ime(egui::ImeEvent::Preedit { text, active_range_chars }) => {
                 let cursor = active_range_chars.as_ref().map(|r| r.start);
-                if let Err(e) = figcraft_engine::textedit::preedit(&mut app.session, text, cursor) {
+                if let Err(e) = endrika_engine::textedit::preedit(&mut app.session, text, cursor) {
                     app.toast(e.to_string());
                 }
             }
             Event::Paste(t) => {
                 // Plain text only: the engine normalises line endings and drops control chars.
-                if let Err(e) = figcraft_engine::textedit::insert(&mut app.session, t) {
+                if let Err(e) = endrika_engine::textedit::insert(&mut app.session, t) {
                     app.toast(e.to_string());
                 }
             }
             Event::Copy | Event::Cut => {
-                if let Some(text) = figcraft_engine::textedit::selected_text(&app.session).filter(|t| !t.is_empty()) {
+                if let Some(text) = endrika_engine::textedit::selected_text(&app.session).filter(|t| !t.is_empty()) {
                     app.services.clipboard_set_text(&text);
                     if matches!(ev, Event::Cut) {
-                        let _ = figcraft_engine::textedit::key(&mut app.session, "Delete", false, false, false);
+                        let _ = endrika_engine::textedit::key(&mut app.session, "Delete", false, false, false);
                     }
                 }
             }
@@ -484,18 +484,18 @@ fn text_keys(app: &mut FigApp, ctx: &Context, events: &[Event]) {
                     Key::Tab => "Tab",
                     Key::A if m.command => "SelectAll",
                     Key::Z if m.command => {
-                        let _ = figcraft_engine::textedit::end(&mut app.session);
+                        let _ = endrika_engine::textedit::end(&mut app.session);
                         app.run(if m.shift { "edit.redo" } else { "edit.undo" }, json!({}));
                         continue;
                     }
                     _ => continue,
                 };
                 if name == "Enter" && m.command {
-                    let _ = figcraft_engine::textedit::end(&mut app.session);
+                    let _ = endrika_engine::textedit::end(&mut app.session);
                     continue;
                 }
                 let (word, line) = keymap::text_motion(platform(), name, mods(*m));
-                if let Err(e) = figcraft_engine::textedit::key(&mut app.session, name, m.shift, word, line) {
+                if let Err(e) = endrika_engine::textedit::key(&mut app.session, name, m.shift, word, line) {
                     app.toast(e.to_string());
                 }
             }
@@ -536,12 +536,12 @@ fn ime_output(app: &FigApp, ctx: &Context) {
     let preedit = app.preedit_view();
     let Some(doc) = preedit.map(|p| &*p.doc).or_else(|| app.session.doc().ok()) else { return };
     let Some(node) = doc.node(te.id) else { return };
-    let Some((layout, dy)) = figcraft_text::layout_node(node) else { return };
+    let Some((layout, dy)) = endrika_text::layout_node(node) else { return };
     let w = doc.world_transform(te.id);
     let (cx, li) = layout.caret(preedit.map(|p| p.cursor).unwrap_or(te.caret));
     let (top, h) = layout.lines.get(li).map(|l| (l.top, l.height)).unwrap_or((0.0, 14.0));
-    let p0 = w * figcraft_geom::Point::new(cx, top + dy);
-    let p1 = w * figcraft_geom::Point::new(cx, top + h + dy);
+    let p0 = w * endrika_geom::Point::new(cx, top + dy);
+    let p1 = w * endrika_geom::Point::new(cx, top + h + dy);
     let (a, b) = (app.to_screen(p0.x, p0.y), app.to_screen(p1.x, p1.y));
     if !(a.x.is_finite() && a.y.is_finite() && b.x.is_finite() && b.y.is_finite()) {
         return;

@@ -4,8 +4,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::fileio;
+use tsipika_engine::Session;
+use tsipika_engine::cmd::fileio;
 
 use super::*;
 use crate::Services;
@@ -15,7 +15,7 @@ pub(super) type Written = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
 /// An app with `artboards` 60×40 pt artboards whose save dialog answers `/out/<suggested>` and
 /// whose writer records what it is given.
-pub(super) fn app(artboards: usize) -> (VectorcraftApp, Written) {
+pub(super) fn app(artboards: usize) -> (TsipikaApp, Written) {
     let written = Written::default();
     let w = written.clone();
     let services = Services {
@@ -26,7 +26,7 @@ pub(super) fn app(artboards: usize) -> (VectorcraftApp, Written) {
         })),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 60, "height": 40, "artboards": artboards})).unwrap();
     app.run("paint.setStroke", json!({"none": true})).unwrap();
     app.run("shape.ellipse", json!({"x": 5, "y": 4, "width": 30, "height": 20})).unwrap();
@@ -34,18 +34,18 @@ pub(super) fn app(artboards: usize) -> (VectorcraftApp, Written) {
 }
 
 /// One headless frame of the dialog layer.
-pub(super) fn frame(app: &mut VectorcraftApp) {
+pub(super) fn frame(app: &mut TsipikaApp) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     let mut out = ctx.run_ui(Default::default(), |ui| show(app, ui.ctx()));
     out.textures_delta.clear();
 }
 
-pub(super) fn kind(app: &VectorcraftApp) -> Option<&str> {
+pub(super) fn kind(app: &TsipikaApp) -> Option<&str> {
     app.ui.dialog.as_ref().map(|d| d.kind.as_str())
 }
 
-pub(super) fn set(app: &mut VectorcraftApp, field: &str, value: serde_json::Value) {
+pub(super) fn set(app: &mut TsipikaApp, field: &str, value: serde_json::Value) {
     app.ui.dialog.as_mut().expect("a dialog is open").fields.insert(field.into(), value);
 }
 
@@ -160,7 +160,7 @@ fn svg_continues_in_svg_options_and_pdf_art_is_written_directly() {
     app.run("file.exportAs", json!({"format": "pdf"})).unwrap();
     let r = confirm(&mut app).unwrap();
     assert_eq!(r["path"], "/out/Untitled-1.pdf");
-    let pdf = vectorcraft_pdf::import(&written.borrow()[2].1).unwrap();
+    let pdf = tsipika_pdf::import(&written.borrow()[2].1).unwrap();
     assert_eq!((pdf.artboards[0].rect.width().round(), pdf.artboards[0].rect.height().round()), (30.0, 20.0), "the ellipse's bounds");
 }
 
@@ -237,7 +237,7 @@ fn pdf_artboards_continue_in_the_save_pdf_dialog() {
     assert!(written.borrow().is_empty());
     frame(&mut app);
     confirm(&mut app).unwrap();
-    let pdf = vectorcraft_pdf::import(&written.borrow()[0].1).unwrap();
+    let pdf = tsipika_pdf::import(&written.borrow()[0].1).unwrap();
     assert_eq!(pdf.artboards.len(), 2, "one page per artboard in the range");
 }
 

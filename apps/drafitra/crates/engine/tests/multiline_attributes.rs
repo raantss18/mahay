@@ -3,14 +3,14 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Attrib, Block, Common, Entity, EntityKind, Handle, MText, MultilineAttrib, Text};
-use cadcraft_engine::geom::Vec3;
+use drafitra_engine::Session;
+use drafitra_engine::doc::{Attrib, Block, Common, Entity, EntityKind, Handle, MText, MultilineAttrib, Text};
+use drafitra_engine::geom::Vec3;
 use serde_json::json;
 
 /// A session whose block TAG has a multiline definition LABEL ("SITE" / "NAME") at (10, 3).
 fn session() -> Session {
-    let mut d = cadcraft_engine::doc::Drawing::new_imperial();
+    let mut d = drafitra_engine::doc::Drawing::new_imperial();
     let text = Text {
         insert: Vec3::new(2.0, 2.0, 0.0),
         align_pt: None,

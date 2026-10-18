@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use designcraft_geom::{Affine, Unit, units};
+use pejy_geom::{Affine, Unit, units};
 use serde::{Deserialize, Serialize};
 
 use crate::ids::{ItemId, LayerId, PageId, SpreadId};
@@ -131,7 +131,7 @@ impl Document {
             layers: vec![],
             stories: BTreeMap::new(),
             styles: Arc::new(Styles::default()),
-            swatches: designcraft_color::default_swatches(),
+            swatches: pejy_color::default_swatches(),
             color_groups: vec![],
             conditions: vec![],
             inks: Default::default(),
@@ -837,7 +837,7 @@ mod tests {
         let mut d = Document::new(&NewDocument { pages: 3, ..Default::default() });
         // Put a frame on page 3 (spread 1, page index 1).
         let lid = d.default_layer();
-        let r = designcraft_geom::Rect::new(612.0 + 100.0, 100.0, 612.0 + 200.0, 200.0);
+        let r = pejy_geom::Rect::new(612.0 + 100.0, 100.0, 612.0 + 200.0, 200.0);
         let (id, _) = d.add_text_frame(crate::SpreadRef::Doc(1), r, lid, "hello", Default::default()).unwrap();
         d.move_page(2, 0).unwrap();
         // The frame's page is now page 1 (spread 0, single right page at x=0).

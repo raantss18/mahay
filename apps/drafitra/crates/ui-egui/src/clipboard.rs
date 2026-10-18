@@ -1,5 +1,5 @@
 //! The system clipboard: Cut/Copy/Paste key presses, and the drawing clipboard mirrored as DXF
-//! text so it can be pasted into another CADCraft window.
+//! text so it can be pasted into another Drafitra window.
 //!
 //! egui turns Cmd/Ctrl+C, X and V into `Copy`, `Cut` and `Paste(text)` events instead of key
 //! presses, so the clipboard shortcuts are read from those. A `Paste` arrives only when the system
@@ -7,7 +7,7 @@
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 
-use cadcraft_engine::cmd::clipboard;
+use drafitra_engine::cmd::clipboard;
 
 use crate::CadApp;
 
@@ -40,7 +40,7 @@ pub fn mirror(app: &CadApp, ctx: &egui::Context) {
 }
 
 /// The commands the Cut/Copy/Paste events of this frame ask for. Pasted DXF text that isn't our
-/// own last copy (another CADCraft's) becomes the clipboard first.
+/// own last copy (another Drafitra's) becomes the clipboard first.
 pub fn shortcut_commands(app: &mut CadApp, ctx: &egui::Context) -> Vec<&'static str> {
     let (events, shift) = ctx.input(|i| {
         let ev: Vec<egui::Event> =

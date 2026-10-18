@@ -1,10 +1,10 @@
 //! Dimension Tool Options, the tool's control strip, and the Properties panel's Dimension section.
 //! Dialog values are drafts until Save, which sets the style of new dimensions.
 use super::DialogSpec;
-use crate::{VectorcraftApp, state::Dialog, theme::Tokens, widgets};
+use crate::{TsipikaApp, state::Dialog, theme::Tokens, widgets};
 use egui::{RichText, Ui};
 use serde_json::{Value, json};
-use vectorcraft_doc::dimension::DimensionOptions;
+use tsipika_doc::dimension::DimensionOptions;
 
 pub const KIND: &str = "dimensionOptions";
 pub(super) const SPEC: DialogSpec = DialogSpec {
@@ -35,7 +35,7 @@ const ARROWS: Choices = &[("filled", "Filled"), ("open", "Open"), ("tick", "Tick
 const POSITIONS: Choices = &[("away", "Away from the Line"), ("between", "Between Line and Object")];
 const ALIGNMENTS: Choices = &[("left", "Left"), ("center", "Center"), ("right", "Right")];
 
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     if app.session.tool_id() == "dimension" && app.session.tool_busy() {
         app.run("tool.select", json!({"tool":"selection"}))?;
         app.run("tool.select", json!({"tool":"dimension"}))?;
@@ -119,7 +119,7 @@ fn section(ui: &mut Ui, title: &str, body: impl FnOnce(&mut Ui)) {
     ui.add_space(7.0);
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     let f = &mut d.fields;
     section(ui, "Units & Scale", |ui| {
         ui.horizontal(|ui| {
@@ -180,7 +180,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         widgets::label_row(ui, tl!("Font Style:"), 96.0, |ui| {
             let family = f.get("fontFamily").and_then(Value::as_str).unwrap_or_default().to_owned();
             let current = f.get("fontStyle").and_then(Value::as_str).unwrap_or_default().to_owned();
-            let styles = vectorcraft_text::FontDb::global().styles(&family);
+            let styles = tsipika_text::FontDb::global().styles(&family);
             let names: Vec<&str> = styles.iter().map(|s| s.as_str()).collect();
             if let Some(i) = widgets::dropdown_names(ui, "dimension-font-style", &current, &names, 180.0)
                 && let Some(style) = styles.get(i)
@@ -216,7 +216,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let o = read(&d.fields)?;
     let r = app.run("tool.setOption", json!({"tool":"dimension","values":{"style":o}}))?;
     app.ui.dialog = None;
@@ -224,7 +224,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 }
 
 /// The Dimension tool's strip: the kind of dimension, and Tool Options.
-pub fn controls(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn controls(app: &mut TsipikaApp, ui: &mut Ui) {
     let mode = app.session.tool_options()["mode"].as_str().unwrap_or("linear").to_owned();
     for (id, label) in [("linear", "Linear"), ("angular", "Angular"), ("radial", "Radial")] {
         if ui.selectable_label(mode == id, tl!(label)).clicked() {
@@ -246,7 +246,7 @@ pub fn controls(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Always available while measuring, including workspaces with the main Control bar hidden.
-pub fn floating(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn floating(app: &mut TsipikaApp, ctx: &egui::Context) {
     if app.session.tool_id() != "dimension" || app.ui.dialog.is_some() {
         return;
     }
@@ -268,7 +268,7 @@ pub fn floating(app: &mut VectorcraftApp, ctx: &egui::Context) {
 }
 
 /// The selected dimension, if one is selected alone: its id and style.
-pub fn selected(app: &VectorcraftApp) -> Option<(u64, DimensionOptions)> {
+pub fn selected(app: &TsipikaApp) -> Option<(u64, DimensionOptions)> {
     let st = app.session.active()?;
     let [id] = st.selection.objects.as_slice() else { return None };
     let d = st.doc.node(*id)?.extras().dimension.as_deref()?;
@@ -277,7 +277,7 @@ pub fn selected(app: &VectorcraftApp) -> Option<(u64, DimensionOptions)> {
 
 /// The Properties panel's Dimension section: the selected dimension's style, Apply to All and Set
 /// as Default. Its scale is set in the Tool Options.
-pub fn properties_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn properties_section(app: &mut TsipikaApp, ui: &mut Ui) {
     let Some((id, o)) = selected(app) else { return };
     let Ok(Value::Object(mut f)) = serde_json::to_value(&o) else { return };
     widgets::section_header(ui, tl!("Dimension"));
@@ -327,7 +327,7 @@ mod tests {
     use super::*;
     #[test]
     fn dimension_dialog_fields_save_and_cancel() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("tool.options", json!({"tool":"dimension"})).unwrap();
         let text = crate::tests_labels::painted_text(&mut app, |app, ui| super::super::show(app, ui.ctx()));
         for label in ["Dimension Tool Options", "Units & Scale", "Dimension Lines", "Extension Lines", "Dimension Text", "Save"] {
@@ -349,7 +349,7 @@ mod tests {
     /// A selected dimension shows its style in Properties, with Apply to All and Set as Default.
     #[test]
     fn properties_show_the_selected_dimension() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("dimension.create", json!({"a":[10,10],"b":[110,10]})).unwrap();
         let text = crate::tests_labels::painted_text(&mut app, properties_section);

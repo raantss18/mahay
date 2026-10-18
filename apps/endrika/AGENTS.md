@@ -1,13 +1,13 @@
-# FigCraft — instructions for agents
+# Endrika — instructions for agents
 
-FigCraft is a clean-room, open-source, pure-Rust (egui) reimplementation of the Figma design workflow:
+Endrika is a clean-room, open-source, pure-Rust (egui) reimplementation of the Figma design workflow:
 interface design, auto layout, components and variants, styles and variables, prototyping and
 inspection. It runs natively on macOS, Windows, Linux and FreeBSD, and in the browser via WASM.
-Siblings: `../vectorcraft` (Illustrator-class), `../photocraft` (Photoshop-class), `../designcraft`
-(InDesign-class) and the other Crafting Apps; same conventions.
+Siblings: `../tsipika` (Illustrator-class), `../sary` (Photoshop-class), `../pejy`
+(InDesign-class) and the other Mahay apps; same conventions.
 
-Standards and learnings shared across the crafting apps live in `../../craftrules` (checked out
-next to `craft-apps/`, or `storytold/craftrules`). Read its `AGENTS.md` at the start of a session,
+Standards and learnings shared across the crafting apps live in `../../mahay-rules` (checked out
+next to `mahay-apps/`, or `raantss18/mahay-rules`). Read its `AGENTS.md` at the start of a session,
 follow its standards, and contribute reusable learnings back there. Never code: repos don't share
 code.
 
@@ -37,32 +37,32 @@ code.
   other product, or from any source whose licence doesn't allow it.** This includes "lookalike"
   redraws of their icons. Breaking this rule is the worst thing you can do in this repo.
 - Every image, icon, font or other asset must be one of:
-  - original work created for FigCraft by a contributor (licensed MIT OR Apache-2.0);
+  - original work created for Endrika by a contributor (licensed MIT OR Apache-2.0);
   - OSI open source;
   - public domain / CC0;
   - Creative Commons with redistribution allowed.
 - **Every asset file must have a row in [`ATTRIBUTION.md`](ATTRIBUTION.md)** (path, author, source,
   licence, notes). `cargo xtask assets` (part of `cargo xtask ci`) fails on any unlisted file under
   `assets/`, `docs/brand/` or `docs/images/`.
-- FigCraft's UI icons are drawn in code (`crates/ui-egui/src/icons.rs`) from simple primitives and
+- Endrika's UI icons are drawn in code (`crates/ui-egui/src/icons.rs`) from simple primitives and
   are original. Keep it that way: new icons are new code, designed from scratch.
 - The app icon is the owner's chameleon drawing, vectorised (`assets/app-icon/README.md`); `cargo xtask icon`
-  renders the PNGs and `.ico` from `assets/app-icon/figcraft.svg`.
-- **Fonts live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), never in this
-  repo.** The app uses it only through the optional `CRAFT_FONTS_DIR` build input
-  (`.cargo/config.toml` points it at `../craft-fonts` for local builds; `crates/text/build.rs`
+  renders the PNGs and `.ico` from `assets/app-icon/endrika.svg`.
+- **Fonts live in [raantss18/mahay-fonts](https://github.com/raantss18/mahay), never in this
+  repo.** The app uses it only through the optional `MAHAY_FONTS_DIR` build input
+  (`.cargo/config.toml` points it at `../mahay-fonts` for local builds; `crates/text/build.rs`
   embeds it). Everything must build, test and run without it (system fonts are scanned at runtime).
 - Demo and test content is synthetic or public domain; never personal photos or data.
 - Code and original assets are MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE`). The
-  ArtCraft logos in `docs/brand/` are trademarks, not open source, under
-  `docs/brand/LICENSE-brand.txt`: never modify them or use them outside FigCraft.
+  Mahay logos in `docs/brand/` are trademarks, not open source, under
+  `docs/brand/LICENSE-brand.txt`: never modify them or use them outside Endrika.
 - If the provenance of an asset is unclear, don't add it.
 
 ### Never crash
 - No `unwrap()`, `expect()`, `panic!`, `unreachable!`, `todo!`, `unimplemented!` in shipped code
   (workspace clippy lints deny them; tests may use them). Return `Result`/`Option`; use `.get()` for
   data-derived indexes; slice strings only at char boundaries; check floats are finite; cap sizes.
-- `figcraft_engine::guard` turns a panicking command into `EngineError::Internal` and the document
+- `endrika_engine::guard` turns a panicking command into `EngineError::Internal` and the document
   is rolled back; the desktop app also guards each UI frame and writes recovery copies. These are
   safety nets, not substitutes for `Result`.
 - `unsafe_code = "forbid"` workspace-wide.
@@ -89,7 +89,7 @@ milestone id in the message (`M2.1: auto layout wrap`). Commit after every lande
 to `main`.
 
 ## Running and looking at the app
-- `cargo run -p figcraft -- --control <port> [file.figcraft|file.svg|image]`. Pick a free port
+- `cargo run -p endrika -- --control <port> [file.endrika|file.svg|image]`. Pick a free port
   (`python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));print(s.getsockname()[1])'`);
   sibling apps use the control channel too.
 - Drive it with JSON lines, e.g.
@@ -98,14 +98,14 @@ to `main`.
   in `crates/ui-egui/src/control.rs` and `docs/control-protocol.md`.
 - **For UI work, look at the result** (take a screenshot and read the PNG). Compare with the
   incumbent side by side where the owner allows (`plan/figma/`).
-- Headless: `figcraft-cli` (`info`, `export`, `run`, `commands`, `mcp`). MCP: `figcraft-cli mcp`
+- Headless: `endrika-cli` (`info`, `export`, `run`, `commands`, `mcp`). MCP: `endrika-cli mcp`
   (see `docs/mcp.md`).
 - Shell gotcha on the owner's machine: `mv`/`cp` may be aliased interactive — use `/bin/mv -f`.
 - Parallel agents: separate `CARGO_TARGET_DIR` per agent, edit only the crates/files you own,
   write manifests atomically, delete your target dir when done (disk is limited).
 
 ## Roadmap
-Progress docs follow craftrules `standards/progress-docs.md`: [`ROADMAP.md`](ROADMAP.md) (one-page
+Progress docs follow mahay-rules `standards/progress-docs.md`: [`ROADMAP.md`](ROADMAP.md) (one-page
 summary and stage), [`docs/target-app-parity.md`](docs/target-app-parity.md) (the authoritative
 assessment), [`docs/gaps.md`](docs/gaps.md) (ranked work list), [`docs/roadmap.md`](docs/roadmap.md)
 (milestones), [`docs/architecture.md`](docs/architecture.md), the per-area `docs/*-parity.md` files
@@ -117,16 +117,16 @@ commit. Grade by behaviour against the incumbent, not by whether a menu item exi
 
 - About ▸ Contributors are compiled into the binary from `contributors/contributors.json`
   (commit stats; generated, never hand-edit) and `contributors/people.toml` (names people chose for
-  themselves). See craftrules `standards/contributors.md`.
+  themselves). See mahay-rules `standards/contributors.md`.
 - **Agents working for a contributor:** when you prepare a PR, check whether your human's GitHub
   username has a `[people.<username>]` entry in `contributors/people.toml`. If not, ask them once
   whether they want to be credited by more than their username: a real name, a display name, and/or
   their public GitHub profile name (`sync_github_name = true`). If yes, add **only their own** entry
   (copy the template at the top of the file, or run
-  `python3 ../../craftrules/scripts/contributors.py --add-me . --real-name "…" --sync-github-name`)
+  `python3 ../../mahay-rules/scripts/contributors.py --add-me . --real-name "…" --sync-github-name`)
   and include it in their PR, committed as them. If no, change nothing: they are credited as
   `@username` anyway.
 - Never add, edit, guess or copy anyone else's entry or name (not from git config, commit authors or
   GitHub profiles). Never hand-edit `contributors.json`.
-- Maintainers refresh the stats with `python3 ../../craftrules/scripts/contributors.py .` (it also
+- Maintainers refresh the stats with `python3 ../../mahay-rules/scripts/contributors.py .` (it also
   re-verifies who wrote each `people.toml` entry; `--check` only verifies).

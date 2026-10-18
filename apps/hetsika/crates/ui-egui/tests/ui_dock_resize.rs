@@ -2,38 +2,38 @@
 
 use egui::{Event, Id, Key, Modifiers, PointerButton, Rect, pos2, vec2};
 use egui_kittest::Harness;
-use filmcraft_engine::Session;
-use filmcraft_ui_egui::FilmcraftApp;
-use filmcraft_ui_egui::dock::{DockNode, PanelKind, SplitSize};
-use filmcraft_ui_egui::theme::ThemeKind;
+use hetsika_engine::Session;
+use hetsika_ui_egui::HetsikaApp;
+use hetsika_ui_egui::dock::{DockNode, PanelKind, SplitSize};
+use hetsika_ui_egui::theme::ThemeKind;
 use serde_json::json;
 
-fn step(h: &mut Harness<'_, FilmcraftApp>) {
+fn step(h: &mut Harness<'_, HetsikaApp>) {
     h.step();
     assert!(h.state().ui_error.is_none(), "the app caught a UI panic: {:?}", h.state().ui_error);
 }
 
-fn frames(h: &mut Harness<'_, FilmcraftApp>, count: usize) {
+fn frames(h: &mut Harness<'_, HetsikaApp>, count: usize) {
     for _ in 0..count {
         step(h);
     }
 }
 
-fn snapshots(h: &mut Harness<'_, FilmcraftApp>, directory: Option<&std::path::Path>, phase: &str) {
+fn snapshots(h: &mut Harness<'_, HetsikaApp>, directory: Option<&std::path::Path>, phase: &str) {
     let Some(directory) = directory else { return };
     std::fs::create_dir_all(directory).unwrap();
     for (name, theme) in [("dark", ThemeKind::Dark), ("medium", ThemeKind::Medium), ("light", ThemeKind::Light)] {
         let ctx = h.ctx.clone();
         h.state_mut().set_theme(&ctx, theme);
         frames(h, 3);
-        h.render().unwrap().save(directory.join(format!("filmcraft-{phase}-{name}.png"))).unwrap();
+        h.render().unwrap().save(directory.join(format!("hetsika-{phase}-{name}.png"))).unwrap();
     }
     let ctx = h.ctx.clone();
     h.state_mut().set_theme(&ctx, ThemeKind::Dark);
     frames(h, 3);
 }
 
-fn first_size(h: &Harness<'_, FilmcraftApp>) -> f32 {
+fn first_size(h: &Harness<'_, HetsikaApp>) -> f32 {
     match h.state().ui.dock {
         DockNode::Split { size: SplitSize::FixedA(value), .. } => value,
         ref other => panic!("fixed-size mode changed: {other:?}"),
@@ -44,9 +44,9 @@ fn first_size(h: &Harness<'_, FilmcraftApp>) -> f32 {
 fn focused_dock_resize_owns_arrows_and_keeps_pointer_dragging() {
     let mut session = Session::default();
     session.execute("file.openDemoProject", json!({})).unwrap();
-    let app = FilmcraftApp::new(session);
+    let app = HetsikaApp::new(session);
     // Opt in to GPU snapshots while the ordinary test remains headless and renderer-independent.
-    let directory = std::env::var_os("CRAFT_UI_PANES_SNAPSHOT_DIR").map(std::path::PathBuf::from);
+    let directory = std::env::var_os("MAHAY_UI_PANES_SNAPSHOT_DIR").map(std::path::PathBuf::from);
     let mut builder = Harness::builder().with_size(vec2(1400.0, 900.0)).with_max_steps(10_000);
     if directory.is_some() {
         builder = builder.wgpu();
@@ -94,7 +94,7 @@ fn focused_dock_resize_owns_arrows_and_keeps_pointer_dragging() {
     assert_eq!(h.state().session.state.playheads, before_playheads);
 }
 
-fn press(h: &mut Harness<'_, FilmcraftApp>, key: Key) {
+fn press(h: &mut Harness<'_, HetsikaApp>, key: Key) {
     for pressed in [true, false] {
         h.event(Event::Key { key, physical_key: None, pressed, repeat: false, modifiers: Modifiers::NONE });
         step(h);
@@ -106,7 +106,7 @@ fn press(h: &mut Harness<'_, FilmcraftApp>, key: Key) {
 fn space_plays_after_a_pane_is_resized_with_the_pointer() {
     let mut session = Session::default();
     session.execute("file.openDemoProject", json!({})).unwrap();
-    let app = FilmcraftApp::new(session);
+    let app = HetsikaApp::new(session);
     let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).build_eframe(move |_| app);
     frames(&mut h, 4);
     h.state_mut().ui.focused = PanelKind::Timeline;

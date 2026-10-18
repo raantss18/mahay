@@ -46,7 +46,7 @@ fn add_remove_show_all_with_undo() {
     assert_eq!(styles_of(&s, a).len(), 2);
     s.execute("layer.style.removeAll", json!({})).unwrap();
     assert!(styles_of(&s, a).is_empty());
-    let layer = s.active_comp().unwrap().layer(effectcraft_project::LayerId(a)).unwrap().clone();
+    let layer = s.active_comp().unwrap().layer(tselatra_project::LayerId(a)).unwrap().clone();
     assert!(layer.layer_styles().is_none());
     s.execute("edit.undo", json!({})).unwrap();
     assert_eq!(styles_of(&s, a).len(), 2);
@@ -63,7 +63,7 @@ fn add_remove_show_all_with_undo() {
     s.execute("layer.style.removeAll", json!({})).unwrap();
     s.execute("layer.style.colorOverlay", json!({})).unwrap();
     s.execute("layer.style.remove", json!({"layer": a, "style": "Color Overlay"})).unwrap();
-    assert!(s.active_comp().unwrap().layer(effectcraft_project::LayerId(a)).unwrap().layer_styles().is_none());
+    assert!(s.active_comp().unwrap().layer(tselatra_project::LayerId(a)).unwrap().layer_styles().is_none());
     // Convert to Editable Styles is unavailable without PSD styles.
     assert!(!s.is_enabled("layer.style.convertToEditable"));
 }
@@ -103,7 +103,7 @@ fn styles_render_and_round_trip() {
     let cid = s.active_comp_id().unwrap();
     // Cached session render == uncached render, and the stroke shows outside the 40×40 square.
     let img = s.render(cid, s.time(), Default::default());
-    let r = effectcraft_render::render_frame(&s.project, cid, s.time(), 1.0);
+    let r = tselatra_render::render_frame(&s.project, cid, s.time(), 1.0);
     assert_eq!(img.data, r.data);
     assert!(img.get(123, 50)[0] > 0.98 && img.get(123, 50)[1] < 0.02, "{:?}", img.get(123, 50));
     // Change the colour through a command: the cache must not serve stale pixels.
@@ -113,7 +113,7 @@ fn styles_render_and_round_trip() {
     // Serde round trip keeps styles and the comp's Global Light.
     s.execute("layer.style.globalLight", json!({"angle": 33})).unwrap();
     let json = serde_json::to_string(&*s.project).unwrap();
-    let back: effectcraft_project::Project = serde_json::from_str(&json).unwrap();
+    let back: tselatra_project::Project = serde_json::from_str(&json).unwrap();
     assert_eq!(back, *s.project);
     assert_eq!(back.comp(cid).unwrap().global_light.angle.value.as_f64(), 33.0);
 }

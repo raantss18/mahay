@@ -39,7 +39,7 @@ step. AutoWrite uses the normal rating metadata path. In Detail, including Maski
 remapping and disabling the default brush bindings take precedence over their grid bracket actions.
 The separate Decrease Rating / Increase Rating commands can also be assigned in Help → Keyboard Shortcuts.
 
-Flag cycling and raise/lower use each photo's own flag, so a mixed selection steps together without being made uniform. Adobe's shortcut list names the backtick "Cycle flag settings" but does not state the order; unflagged → pick → reject is LightCraft's choice. The key is the logical grave key, so it follows the keyboard layout (on layouts where it is a dead accent key, assign another key in Help → Keyboard Shortcuts to `photo.cycleFlag`).
+Flag cycling and raise/lower use each photo's own flag, so a mixed selection steps together without being made uniform. Adobe's shortcut list names the backtick "Cycle flag settings" but does not state the order; unflagged → pick → reject is Hazavana's choice. The key is the logical grave key, so it follows the keyboard layout (on layouts where it is a dead accent key, assign another key in Help → Keyboard Shortcuts to `photo.cycleFlag`).
 
 `Home` and `End` make the first or last photo of the view the active, selected one. `Shift` + `←` /
 `→` add the previous or next photo of the view to the selection and make the added photo active; the
@@ -56,7 +56,7 @@ keyboard input, and `X` in the Crop panel swaps the crop aspect.
 Shifted number keys also use the physical number key when the keyboard reports punctuation
 (for example, `Shift+1` as `!`). Letter shortcuts continue to follow the keyboard layout.
 
-`Shift+P` picks and advances in the two library grids. In other views it retains LightCraft's
+`Shift+P` picks and advances in the two library grids. In other views it retains Hazavana's
 Presets-panel binding. `Shift+Z` remains an alternative pick-and-advance key in all views.
 
 The macOS native menu displays plain-key bindings but leaves execution to egui; only shortcuts

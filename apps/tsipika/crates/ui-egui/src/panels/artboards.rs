@@ -12,16 +12,16 @@ use serde_json::{Value, json};
 use super::{alt_held, pstate, set_pstate};
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 /// The Artboard tool's Move Artwork with Artboard and Scale Artwork with Artboard options (#602) as
 /// check boxes: the Control bar ([`control_bar`]) and Properties show them while the tool is in use.
-pub(crate) fn art_options(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub(crate) fn art_options(app: &mut TsipikaApp, ui: &mut Ui) {
     art_option_boxes(app, ui, false);
 }
 
 /// [`art_options`], or with `compact` the boxes alone, each option's name in its tooltip.
-fn art_option_boxes(app: &mut VectorcraftApp, ui: &mut Ui, compact: bool) {
+fn art_option_boxes(app: &mut TsipikaApp, ui: &mut Ui, compact: bool) {
     let opts = app.session.tool_options();
     for (key, label, default) in [("moveArt", tl!("Move Artwork with Artboard"), true), ("scaleArt", tl!("Scale Artwork with Artboard"), false)] {
         let on = opts[key].as_bool().unwrap_or(default);
@@ -49,7 +49,7 @@ const INLINE_FIELDS_WIDTH: f32 = 480.0;
 /// Constrain Width and Height Proportions link. Each control runs the command its Properties panel
 /// or Transform panel counterpart runs. Returns false, and draws nothing, while another tool is in
 /// use.
-pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) -> bool {
+pub(crate) fn control_bar(app: &mut TsipikaApp, ui: &mut Ui) -> bool {
     if app.session.tool_id() != "artboard" {
         return false;
     }
@@ -91,7 +91,7 @@ pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) -> bool {
     let refi = super::transform::reference_index(ui);
     super::transform::reference_locator(ui, refi);
     let link = super::transform::proportional(app, ui);
-    let rp = vectorcraft_geom::reference_point(r, refi);
+    let rp = tsipika_geom::reference_point(r, refi);
     for (k, lbl, v) in [("x", "X:", rp.x - origin.x), ("y", "Y:", rp.y - origin.y), ("width", "W:", r.width()), ("height", "H:", r.height())] {
         // The W/H link sits between W and H.
         if k == "height" {
@@ -118,24 +118,24 @@ pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) -> bool {
 
 /// Whether artboards resized while the Artboard tool is in use take their art along (its Scale
 /// Artwork with Artboard option): the panels' sizes pass it to `artboard.setProps` as `scaleArt`.
-pub(crate) fn scale_art(app: &VectorcraftApp) -> bool {
+pub(crate) fn scale_art(app: &TsipikaApp) -> bool {
     app.session.tool_id() == "artboard" && app.session.tool_options()["scaleArt"].as_bool().unwrap_or(false)
 }
 
 /// Whether position edits take their art along, matching the Artboard tool's move option. The tool
 /// keeps the option while another tool is in use, as when this panel opens Artboard Options.
-pub(crate) fn move_art(app: &VectorcraftApp) -> bool {
+pub(crate) fn move_art(app: &TsipikaApp) -> bool {
     app.session.tool_options_of("artboard")["moveArt"].as_bool().unwrap_or(true)
 }
 
 /// The active artboard (of `n`).
-pub(crate) fn selected(app: &VectorcraftApp, n: usize) -> usize {
+pub(crate) fn selected(app: &TsipikaApp, n: usize) -> usize {
     app.view().map_or(0, |v| v.artboard).min(n.saturating_sub(1))
 }
 
 /// The selected artboards (of `n`): while the Artboard tool is in use, those it has selected
 /// (Shift-click, #1139), else the active one.
-pub(crate) fn picked(app: &VectorcraftApp, n: usize) -> Vec<usize> {
+pub(crate) fn picked(app: &TsipikaApp, n: usize) -> Vec<usize> {
     let tool = (app.session.tool_id() == "artboard").then(|| app.session.tool_options()["selected"].clone());
     let mut all: Vec<usize> = tool
         .iter()
@@ -154,7 +154,7 @@ pub(crate) fn picked(app: &VectorcraftApp, n: usize) -> Vec<usize> {
 }
 
 /// Delete the picked artboards and select a remaining one.
-pub(crate) fn delete_selected(app: &mut VectorcraftApp) {
+pub(crate) fn delete_selected(app: &mut TsipikaApp) {
     let n = app.session.active().map_or(0, |d| d.doc.artboards.len());
     let mut all = picked(app, n);
     if n > 1 && all.len() == n {
@@ -171,7 +171,7 @@ pub(crate) fn delete_selected(app: &mut VectorcraftApp) {
 /// without Shift or where the last range started; when its artboard is no longer selected, the
 /// range starts from the active artboard. Returns where the range starts, the anchor for the next
 /// Shift-click.
-fn select_range(app: &mut VectorcraftApp, anchor: Option<usize>, i: usize, n: usize) -> usize {
+fn select_range(app: &mut TsipikaApp, anchor: Option<usize>, i: usize, n: usize) -> usize {
     let from = anchor.filter(|a| picked(app, n).contains(a)).unwrap_or_else(|| selected(app, n));
     let mut all: Vec<usize> = (from.min(i)..=from.max(i)).filter(|j| *j != i).collect();
     all.insert(0, i);
@@ -185,7 +185,7 @@ fn select_range(app: &mut VectorcraftApp, anchor: Option<usize>, i: usize, n: us
 /// Ctrl/Cmd-click on artboard `i`'s row while the Artboard tool is in use: adds its artboard to the
 /// tool's selection and makes it the active one, or takes it out and makes the lowest-numbered
 /// remaining artboard active. The only selected artboard stays selected.
-fn toggle(app: &mut VectorcraftApp, i: usize, n: usize) {
+fn toggle(app: &mut TsipikaApp, i: usize, n: usize) {
     let mut all = picked(app, n);
     match all.iter().position(|j| *j == i) {
         Some(at) if all.len() > 1 => {
@@ -205,7 +205,7 @@ fn toggle(app: &mut VectorcraftApp, i: usize, n: usize) {
 
 /// Whether the panel has the keyboard: one of its rows was clicked, and in every frame since then
 /// the panel was drawn and the pointer was not pressed outside its list.
-fn has_keyboard(app: &VectorcraftApp, ctx: &egui::Context) -> bool {
+fn has_keyboard(app: &TsipikaApp, ctx: &egui::Context) -> bool {
     pstate::<Option<u64>>(ctx, "ab-keys").is_some_and(|f| f + 1 >= app.frame)
 }
 
@@ -213,13 +213,13 @@ fn has_keyboard(app: &VectorcraftApp, ctx: &egui::Context) -> bool {
 /// panel has the keyboard and the Artboard tool is in use. [`crate::shortcuts::handle`] and
 /// [`crate::menus::invoke_from_system_menu`] read it before they run `select.all`, which they reach
 /// only while no text field has the keyboard.
-pub(crate) fn selects_all(app: &VectorcraftApp, ctx: &egui::Context) -> bool {
+pub(crate) fn selects_all(app: &TsipikaApp, ctx: &egui::Context) -> bool {
     app.session.tool_id() == "artboard" && has_keyboard(app, ctx)
 }
 
 /// Ctrl/Cmd+A while [`selects_all`]: the Artboard tool selects every artboard, and the active
 /// artboard stays active. The art's selection stays as it is.
-pub(crate) fn select_all(app: &mut VectorcraftApp) {
+pub(crate) fn select_all(app: &mut TsipikaApp) {
     let n = app.session.active().map_or(0, |d| d.doc.artboards.len());
     if n == 0 {
         return;
@@ -231,7 +231,7 @@ pub(crate) fn select_all(app: &mut VectorcraftApp) {
 
 /// Make artboard `i` the active one, leaving the view where it is: the navigator's and, while it
 /// is the tool, the Artboard tool's.
-pub(crate) fn select(app: &mut VectorcraftApp, i: usize) {
+pub(crate) fn select(app: &mut TsipikaApp, i: usize) {
     if let Some(v) = app.view_mut() {
         v.artboard = i;
     }
@@ -245,7 +245,7 @@ pub(crate) fn select(app: &mut VectorcraftApp, i: usize) {
 struct RowDrag(usize);
 
 /// Duplicate artboard `i` (`artboard.duplicate`) and make the copy the active artboard.
-fn duplicate(app: &mut VectorcraftApp, i: usize) {
+fn duplicate(app: &mut TsipikaApp, i: usize) {
     if let Ok(r) = app.run("artboard.duplicate", json!({ "index": i }))
         && let Some(copy) = r["index"].as_u64()
     {
@@ -255,7 +255,7 @@ fn duplicate(app: &mut VectorcraftApp, i: usize) {
 
 /// Duplicate the selected artboards ([`picked`]) in one undo step (`artboard.duplicate {indices}`)
 /// and select the copies, the active artboard's copy active.
-pub(crate) fn duplicate_picked(app: &mut VectorcraftApp) {
+pub(crate) fn duplicate_picked(app: &mut TsipikaApp) {
     let n = app.session.active().map_or(0, |d| d.doc.artboards.len());
     let all = picked(app, n);
     let active = selected(app, n);
@@ -270,7 +270,7 @@ pub(crate) fn duplicate_picked(app: &mut VectorcraftApp) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let abs: Vec<String> = app.session.active().map(|d| d.doc.artboards.iter().map(|a| a.name.clone()).collect()).unwrap_or_default();
     if abs.is_empty() {
@@ -403,11 +403,11 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Open Rearrange All Artboards (#681).
-pub(crate) fn open_rearrange(app: &mut VectorcraftApp) {
+pub(crate) fn open_rearrange(app: &mut TsipikaApp) {
     app.run("ui.menuDialog", json!({ "command": "artboard.rearrange" })).ok();
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let n = app.session.active().map(|d| d.doc.artboards.len()).unwrap_or(0);
     let sel = selected(app, n);
     if menu_item(ui, tl!("New Artboard"), n > 0, false) {
@@ -440,17 +440,17 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// Clicking a row makes its artboard the active one (the navigator's, Fit Artboard in Window's).
     #[test]
     fn clicking_a_row_makes_its_artboard_active() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("artboard.new", &json!({"x": 400, "y": 300, "width": 200, "height": 150})).unwrap();
         app.view_mut().unwrap().artboard = 0;
         let ctx = egui::Context::default();
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -477,11 +477,11 @@ mod tests {
     /// and an explicit artboard still wins.
     #[test]
     fn all_on_active_artboard_takes_the_active_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100, "units": "Points", "artboards": 2})).unwrap();
         let mut rect = |x| app.session.execute("shape.rectangle", &json!({"x": x, "y": 10, "width": 20, "height": 20})).unwrap()["id"].clone();
         let (a, b) = (rect(10), rect(130));
-        let picked = |app: &mut VectorcraftApp, params| {
+        let picked = |app: &mut TsipikaApp, params| {
             crate::menus::invoke(app, "select.allOnArtboard", params);
             let ids: Vec<u64> = app.session.active().unwrap().selection.objects.iter().map(|n| n.0).collect();
             json!(ids)
@@ -499,13 +499,13 @@ mod tests {
     #[test]
     fn fit_to_artwork_bounds_and_selected_art_resize_the_active_artboard() {
         for id in ["artboard.fitToArt", "artboard.fitToSelection"] {
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+            let mut app = TsipikaApp::new(Session::new(), Default::default());
             app.session.execute("file.new", &json!({"width": 100, "height": 100, "units": "Points", "artboards": 2})).unwrap();
             // Partly on artboard 1 and partly on artboard 2.
             app.session.execute("shape.rectangle", &json!({"x": 90, "y": 10, "width": 60, "height": 30})).unwrap();
             app.session.execute("paint.setStroke", &json!({"none": true})).unwrap();
-            let boards = |app: &VectorcraftApp| app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect::<Vec<_>>();
-            let (first, art) = (boards(&app)[0], vectorcraft_geom::Rect::new(90.0, 10.0, 150.0, 40.0));
+            let boards = |app: &TsipikaApp| app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect::<Vec<_>>();
+            let (first, art) = (boards(&app)[0], tsipika_geom::Rect::new(90.0, 10.0, 150.0, 40.0));
             select(&mut app, 1);
             crate::menus::invoke(&mut app, id, json!({}));
             assert_eq!(boards(&app), [first, art], "{id} resizes Artboard 2, the active one");
@@ -518,20 +518,20 @@ mod tests {
     /// Bounds fits each of them to the art on it and leaves artboard 2 as it was.
     #[test]
     fn fit_to_artwork_bounds_fits_each_selected_artboard_to_its_own_art() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100, "units": "Points", "artboards": 3})).unwrap();
         for (x, h) in [(10, 30), (130, 20), (250, 40)] {
             app.session.execute("shape.rectangle", &json!({"x": x, "y": 10, "width": 20, "height": h})).unwrap();
         }
         app.session.execute("select.all", &json!({})).unwrap();
         app.session.execute("paint.setStroke", &json!({"none": true})).unwrap();
-        let boards = |app: &VectorcraftApp| app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect::<Vec<_>>();
+        let boards = |app: &TsipikaApp| app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect::<Vec<_>>();
         let was = boards(&app);
         app.select_tool("artboard");
         select(&mut app, 0);
         app.session.set_tool_option("selected", &json!([0, 2]));
         crate::menus::invoke(&mut app, "artboard.fitToArt", json!({}));
-        let rect = vectorcraft_geom::Rect::new;
+        let rect = tsipika_geom::Rect::new;
         assert_eq!(boards(&app), [rect(10.0, 10.0, 30.0, 40.0), was[1], rect(250.0, 10.0, 270.0, 50.0)]);
     }
 
@@ -541,7 +541,7 @@ mod tests {
     /// row is highlighted.
     #[test]
     fn shift_clicking_rows_selects_several_artboards() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         for x in [400, 800, 1200] {
             app.session.execute("artboard.new", &json!({"x": x, "y": 0, "width": 200, "height": 150})).unwrap();
@@ -550,7 +550,7 @@ mod tests {
         select(&mut app, 1);
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, time: f64, events: Vec<egui::Event>| {
             let raw = egui::RawInput { events, time: Some(time), screen_rect: screen, ..Default::default() };
             let mut out = ctx.run_ui(raw, |ui| show(app, ui));
             out.textures_delta.clear();
@@ -607,13 +607,13 @@ mod tests {
     /// artboard is the active one.
     #[test]
     fn double_clicks_go_to_or_rename_and_options_edits_the_rows_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("artboard.new", &json!({"x": 400, "y": 300, "width": 200, "height": 150})).unwrap();
         app.view_mut().unwrap().artboard = 0;
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, time: f64, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, time: Some(time), screen_rect: screen, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -658,8 +658,8 @@ mod tests {
         assert_eq!(app.session.tool_options()["active"], json!(1));
         // And clicking an artboard with the tool makes it the active one, highlighted in the panel.
         let view = app.view_info();
-        for kind in [vectorcraft_tools::PointerKind::Down, vectorcraft_tools::PointerKind::Up] {
-            crate::canvas::dispatch(&mut app, &vectorcraft_tools::PointerEvent::new(kind, 100.0, 100.0), view);
+        for kind in [tsipika_tools::PointerKind::Down, tsipika_tools::PointerKind::Up] {
+            crate::canvas::dispatch(&mut app, &tsipika_tools::PointerEvent::new(kind, 100.0, 100.0), view);
         }
         assert_eq!((app.session.tool_options()["active"].clone(), selected(&app, 2)), (json!(0), 0));
     }
@@ -668,15 +668,15 @@ mod tests {
     /// name selected; Enter then renames it again and closes the field.
     #[test]
     fn shift_enter_renames_an_artboard_and_keeps_the_field_open() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("artboard.new", &json!({"x": 400, "y": 300, "width": 100, "height": 50})).unwrap();
         let ctx = egui::Context::default();
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
         };
-        let name = |app: &VectorcraftApp| app.session.active().unwrap().doc.artboards[1].name.clone();
+        let name = |app: &TsipikaApp| app.session.active().unwrap().doc.artboards[1].name.clone();
         let key = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
         // What a double-click on the second row's name does: its name field opens.
         set_pstate::<Option<usize>>(&ctx, "ab-edit", Some(1));
@@ -703,14 +703,14 @@ mod tests {
     /// tool moves to that artboard too.
     #[test]
     fn the_options_icon_opens_artboard_options_for_its_rows_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("artboard.new", &json!({"x": 400, "y": 300, "width": 100, "height": 50})).unwrap();
         app.view_mut().unwrap().artboard = 0;
         let tool = app.session.tool_id().to_string();
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, time: f64, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, time: Some(time), screen_rect: screen, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -730,7 +730,7 @@ mod tests {
                 |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
             std::iter::once(egui::Event::PointerMoved(at)).chain((0..clicks).flat_map(|_| [button(true), button(false)])).collect::<Vec<_>>()
         };
-        let opened = |app: &mut VectorcraftApp| app.ui.dialog.take().map(|d| (d.kind.clone(), d.f64("index", 9.0), d.f64("width", 0.0)));
+        let opened = |app: &mut TsipikaApp| app.ui.dialog.take().map(|d| (d.kind.clone(), d.f64("index", 9.0), d.f64("width", 0.0)));
         // Artboard 2's icon: the first click makes it active, the second (a double-click) opens its
         // options; no rename starts.
         frame(&mut app, 1.0, events(icon(1.0), 1));
@@ -753,14 +753,14 @@ mod tests {
     /// the tool as it is.
     #[test]
     fn the_panel_menus_artboard_options_opens_the_active_artboards_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("artboard.new", &json!({"x": 400, "y": 300, "width": 100, "height": 50})).unwrap();
         select(&mut app, 1);
         let tool = app.session.tool_id().to_string();
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, screen_rect: screen, ..Default::default() }, |ui| menu(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -784,7 +784,7 @@ mod tests {
     /// active artboard's copy active.
     #[test]
     fn the_panel_menus_duplicate_artboards_copies_every_selected_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         for x in [400, 800] {
             app.session.execute("artboard.new", &json!({"x": x, "y": 0, "width": 200, "height": 150})).unwrap();
@@ -797,7 +797,7 @@ mod tests {
         app.session.set_tool_option("selected", &json!([1, 0]));
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, screen_rect: screen, ..Default::default() }, |ui| menu(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -823,12 +823,12 @@ mod tests {
 
     /// One headless frame of the Control bar, 2,000 points wide, with `events` → the texts painted,
     /// with their rects.
-    fn bar_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn bar_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         bar_frame_in(app, ctx, events, 2000.0)
     }
 
     /// [`bar_frame`] in a window `width` points wide.
-    fn bar_frame_in(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>, width: f32) -> Vec<(String, egui::Rect)> {
+    fn bar_frame_in(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>, width: f32) -> Vec<(String, egui::Rect)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(width, 300.0));
         let mut out =
             ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| crate::chrome::control_bar(app, ui));
@@ -850,7 +850,7 @@ mod tests {
     }
 
     /// Two frames of the Control bar → the texts the second one painted.
-    fn bar_texts(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<(String, egui::Rect)> {
+    fn bar_texts(app: &mut TsipikaApp, ctx: &egui::Context) -> Vec<(String, egui::Rect)> {
         bar_frame(app, ctx, vec![]);
         bar_frame(app, ctx, vec![])
     }
@@ -861,14 +861,14 @@ mod tests {
     }
 
     /// A press and a release at `at` on the Control bar, a frame each.
-    fn bar_click(app: &mut VectorcraftApp, ctx: &egui::Context, at: egui::Pos2) {
+    fn bar_click(app: &mut TsipikaApp, ctx: &egui::Context, at: egui::Pos2) {
         let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
         bar_frame(app, ctx, vec![egui::Event::PointerMoved(at), button(true)]);
         bar_frame(app, ctx, vec![button(false)]);
     }
 
     /// Click the Control bar's field at `at`, select all of it, type `typed` and press Enter.
-    fn bar_type(app: &mut VectorcraftApp, ctx: &egui::Context, at: egui::Pos2, typed: &str) {
+    fn bar_type(app: &mut TsipikaApp, ctx: &egui::Context, at: egui::Pos2, typed: &str) {
         let key = |key, modifiers| vec![egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }];
         bar_click(app, ctx, at);
         bar_frame(app, ctx, key(egui::Key::A, egui::Modifiers::COMMAND));
@@ -894,7 +894,7 @@ mod tests {
     }
 
     /// The artboards' rectangles, the undo steps and the artboards' names.
-    fn boards(app: &VectorcraftApp) -> (Vec<vectorcraft_geom::Rect>, usize, Vec<String>) {
+    fn boards(app: &TsipikaApp) -> (Vec<tsipika_geom::Rect>, usize, Vec<String>) {
         let st = app.session.active().unwrap();
         (st.doc.artboards.iter().map(|a| a.rect).collect(), st.history.undo.len(), st.doc.artboards.iter().map(|a| a.name.clone()).collect())
     }
@@ -905,7 +905,7 @@ mod tests {
     /// Another tool shows the object controls.
     #[test]
     fn the_control_bar_shows_the_artboard_tools_controls() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "units": "Points"})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap();
         let ctx = bar_context();
@@ -941,7 +941,7 @@ mod tests {
         assert!(has(&texts, "Scale Artwork with Artboard") && !has(&texts, "X:") && !has(&texts, "W:"), "{texts:?}");
         // In the app's narrowest window, 800 points wide, the name and the Transform link still fit,
         // and a click on the link shows the artboard's X, Y, W and H in the Transform panel's popover.
-        let narrow = |app: &mut VectorcraftApp, events| bar_frame_in(app, &ctx, events, 800.0);
+        let narrow = |app: &mut TsipikaApp, events| bar_frame_in(app, &ctx, events, 800.0);
         narrow(&mut app, vec![]);
         let texts = narrow(&mut app, vec![]);
         let link = text_rect(&texts, "Transform");
@@ -951,7 +951,7 @@ mod tests {
         assert!(!has(&texts, "Move Artwork with Artboard"), "{texts:?}");
         let boxes = bar_buttons(&ctx, link.right(), 790.0);
         assert_eq!(boxes.len(), 2, "{boxes:?}");
-        let scale = |app: &VectorcraftApp| app.session.tool_options()["scaleArt"].as_bool();
+        let scale = |app: &TsipikaApp| app.session.tool_options()["scaleArt"].as_bool();
         assert_eq!(scale(&app), Some(false));
         let press = |pressed| egui::Event::PointerButton {
             pos: boxes[1].center(),
@@ -976,7 +976,7 @@ mod tests {
     /// chosen.
     #[test]
     fn the_control_bar_resizes_the_active_artboard_about_the_reference_point() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "units": "Points", "artboards": 2})).unwrap();
         app.select_tool("artboard");
         select(&mut app, 1);
@@ -986,7 +986,7 @@ mod tests {
         bar_type(&mut app, &ctx, egui::pos2(w.right() + 40.0, w.center().y), "300");
         let b = before[1];
         let mut want = before.clone();
-        want[1] = vectorcraft_geom::Rect::new(b.x0 - 50.0, b.y0, b.x1 + 50.0, b.y1);
+        want[1] = tsipika_geom::Rect::new(b.x0 - 50.0, b.y0, b.x1 + 50.0, b.y1);
         assert_eq!(boards(&app).0, want, "Artboard 2 widens about its center");
         assert_eq!(boards(&app).1, undo + 1, "one undo step");
         app.run("edit.undo", json!({})).unwrap();
@@ -1002,7 +1002,7 @@ mod tests {
         assert_eq!(ctx.data(|d| d.get_temp::<usize>(egui::Id::new("refpt"))), Some(0), "the shared reference point is the top-left one");
         let w = text_rect(&bar_texts(&mut app, &ctx), "W:");
         bar_type(&mut app, &ctx, egui::pos2(w.right() + 40.0, w.center().y), "300");
-        want[1] = vectorcraft_geom::Rect::new(b.x0, b.y0, b.x0 + 300.0, b.y1);
+        want[1] = tsipika_geom::Rect::new(b.x0, b.y0, b.x0 + 300.0, b.y1);
         assert_eq!(boards(&app).0, want, "Artboard 2 widens from its left edge");
     }
 
@@ -1010,30 +1010,30 @@ mod tests {
     /// its top-left corner staying put, in one undo step each.
     #[test]
     fn the_control_bar_orientation_swaps_width_and_height() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "units": "Points"})).unwrap();
         app.select_tool("artboard");
         let ctx = bar_context();
         let (_, undo, _) = boards(&app);
         // Between "Preset:" and "Name:", the buttons that take a click: the preset menu, Portrait,
         // Landscape and New Artboard (Delete Artboard is disabled with one artboard).
-        let buttons = |app: &mut VectorcraftApp| {
+        let buttons = |app: &mut TsipikaApp| {
             let texts = bar_texts(app, &ctx);
             bar_buttons(&ctx, text_rect(&texts, "Preset:").right(), text_rect(&texts, "Name:").left())
         };
         let b = buttons(&mut app);
         bar_click(&mut app, &ctx, b[b.len() - 3].center());
-        assert_eq!((boards(&app).0, boards(&app).1), (vec![vectorcraft_geom::Rect::new(0.0, 0.0, 100.0, 200.0)], undo + 1), "Portrait");
+        assert_eq!((boards(&app).0, boards(&app).1), (vec![tsipika_geom::Rect::new(0.0, 0.0, 100.0, 200.0)], undo + 1), "Portrait");
         let b = buttons(&mut app);
         bar_click(&mut app, &ctx, b[b.len() - 2].center());
-        assert_eq!((boards(&app).0, boards(&app).1), (vec![vectorcraft_geom::Rect::new(0.0, 0.0, 200.0, 100.0)], undo + 2), "Landscape");
+        assert_eq!((boards(&app).0, boards(&app).1), (vec![tsipika_geom::Rect::new(0.0, 0.0, 200.0, 100.0)], undo + 2), "Landscape");
     }
 
     /// Typing a name into the Control bar's Name field and pressing Enter renames the active
     /// artboard alone, in one undo step.
     #[test]
     fn the_control_bar_name_field_renames_the_active_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 2})).unwrap();
         app.select_tool("artboard");
         select(&mut app, 1);
@@ -1051,7 +1051,7 @@ mod tests {
     /// Artboard deletes the selected artboard.
     #[test]
     fn the_control_bar_adds_deletes_and_opens_artboard_dialogs() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.select_tool("artboard");
         let ctx = bar_context();
@@ -1087,7 +1087,7 @@ mod tests {
     /// selected.
     #[test]
     fn choosing_the_artboard_tool_starts_it_on_the_active_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         for x in [400, 800] {
             app.session.execute("artboard.new", &json!({"x": x, "y": 0, "width": 200, "height": 150})).unwrap();
@@ -1098,9 +1098,9 @@ mod tests {
         app.run("tool.options", json!({"tool": "artboard"})).unwrap();
         assert_eq!(app.ui.dialog.take().unwrap().str("name"), "Artboard 2");
         let view = app.view_info();
-        crate::canvas::dispatch(&mut app, &vectorcraft_tools::PointerEvent::new(vectorcraft_tools::PointerKind::Move, 100.0, 75.0), view);
+        crate::canvas::dispatch(&mut app, &tsipika_tools::PointerEvent::new(tsipika_tools::PointerKind::Move, 100.0, 75.0), view);
         assert_eq!(selected(&app, 3), 1, "the pointer over Artboard 1 leaves Artboard 2 active");
-        let r = app.session.tool_key(vectorcraft_tools::ToolKey::Delete, Default::default(), view);
+        let r = app.session.tool_key(tsipika_tools::ToolKey::Delete, Default::default(), view);
         crate::canvas::apply_requests(&mut app, r);
         let names: Vec<String> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.name.clone()).collect();
         assert_eq!(names, ["Artboard 1", "Artboard 3"], "Delete removes Artboard 2");
@@ -1117,12 +1117,12 @@ mod tests {
     /// button while it is held over it, and the copy becomes the active artboard.
     #[test]
     fn dragging_a_row_onto_new_artboard_duplicates_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap();
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, screen_rect: screen, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -1156,13 +1156,13 @@ mod tests {
     /// with the fields in one undo step and makes it the active one.
     #[test]
     fn alt_clicking_new_artboard_opens_artboard_options_for_the_new_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.session.execute("artboard.new", &json!({"x": 400, "y": 300, "width": 100, "height": 50})).unwrap();
         select(&mut app, 0);
         let ctx = egui::Context::default();
         let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(240.0, 400.0)));
-        let frame = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, time: f64, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, time: Some(time), screen_rect: screen, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -1180,8 +1180,8 @@ mod tests {
             let b = |pressed| egui::Event::PointerButton { pos: new, button: egui::PointerButton::Primary, pressed, modifiers };
             vec![egui::Event::ModifiersChanged(modifiers), egui::Event::PointerMoved(new), b(true), b(false)]
         };
-        let count = |app: &VectorcraftApp| app.session.active().unwrap().doc.artboards.len();
-        let fields = |app: &VectorcraftApp| {
+        let count = |app: &TsipikaApp| app.session.active().unwrap().doc.artboards.len();
+        let fields = |app: &TsipikaApp| {
             let d = app.ui.dialog.as_ref().unwrap();
             assert_eq!(d.kind, crate::dialogs::artboard_options::KIND);
             (d.str("name"), ["x", "y", "width", "height"].map(|k| d.f64(k, -1.0)))
@@ -1194,7 +1194,7 @@ mod tests {
         crate::dialogs::cancel(&mut app);
         frame(&mut app, 2.0, click(egui::Modifiers::NONE));
         let ab = app.session.active().unwrap().doc.artboards[2].clone();
-        assert_eq!((ab.name.as_str(), ab.rect), ("Artboard 3", vectorcraft_geom::Rect::new(520.0, 300.0, 620.0, 350.0)));
+        assert_eq!((ab.name.as_str(), ab.rect), ("Artboard 3", tsipika_geom::Rect::new(520.0, 300.0, 620.0, 350.0)));
         assert!(app.ui.dialog.is_none());
         app.run("edit.undo", json!({})).unwrap();
         select(&mut app, 0);
@@ -1210,7 +1210,7 @@ mod tests {
         let undo = app.session.doc().unwrap().history.undo.len();
         crate::dialogs::confirm(&mut app).unwrap();
         let ab = app.session.active().unwrap().doc.artboards[2].clone();
-        assert_eq!((ab.name.as_str(), ab.rect), ("Cover", vectorcraft_geom::Rect::new(520.0, 300.0, 820.0, 350.0)));
+        assert_eq!((ab.name.as_str(), ab.rect), ("Cover", tsipika_geom::Rect::new(520.0, 300.0, 820.0, 350.0)));
         assert_eq!((app.view().unwrap().artboard, app.session.doc().unwrap().history.undo.len()), (2, undo + 1));
         assert!(app.ui.dialog.is_none());
     }
@@ -1219,7 +1219,7 @@ mod tests {
     /// its default name, and with the Artboard tool in use the tool moves to the new artboard.
     #[test]
     fn new_artboard_options_with_an_empty_name_add_the_default_name() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         assert!(app.run("ui.newArtboard", json!({})).is_err(), "no document");
         app.session.execute("file.new", &json!({"width": 200, "height": 150})).unwrap();
         app.select_tool("artboard");

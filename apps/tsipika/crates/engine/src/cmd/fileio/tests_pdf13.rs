@@ -3,8 +3,8 @@
 //! flattened with the chosen preset, and reads back looking like the canvas.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::Rect;
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_geom::Rect;
+use tsipika_render::{Rendered, Renderer};
 
 use super::*;
 
@@ -29,13 +29,13 @@ fn session() -> Session {
     image::RgbaImage::from_fn(8, 8, |x, _| image::Rgba([0, 120, 255, if x < 4 { 0 } else { 255 }]))
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    run(&mut s, "file.place", json!({"name": "dots.png", "dataBase64": vectorcraft_format::base64_encode(&png), "at": [150, 120]}));
+    run(&mut s, "file.place", json!({"name": "dots.png", "dataBase64": tsipika_format::base64_encode(&png), "at": [150, 120]}));
     s
 }
 
 fn export(s: &mut Session, p: Value) -> (Vec<u8>, Vec<String>) {
     let v = s.execute("document.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (bytes, v["warnings"].as_array().unwrap().iter().map(|w| w.as_str().unwrap().to_string()).collect())
 }
 
@@ -56,7 +56,7 @@ fn transparency(pdf: &[u8]) -> Vec<&'static str> {
     found
 }
 
-fn render(d: &vectorcraft_doc::Document) -> Rendered {
+fn render(d: &tsipika_doc::Document) -> Rendered {
     Renderer::new().render_region(d, Rect::new(0.0, 0.0, 200.0, 160.0), 1.0, true)
 }
 
@@ -80,24 +80,24 @@ fn pdf_1_3_flattens_all_transparency_and_looks_the_same() {
     assert!(warnings.iter().any(|w| w.contains("flattened") && w.contains("PDF 1.3")), "{warnings:?}");
     // It reads back looking like the canvas.
     let canvas = render(&before);
-    let diff = mean_diff(&canvas, &render(&vectorcraft_pdf::import(&pdf).unwrap()));
+    let diff = mean_diff(&canvas, &render(&tsipika_pdf::import(&pdf).unwrap()));
     assert!(diff < 0.02, "read back {:.2}% off", diff * 100.0);
     // The document itself is untouched.
     assert_eq!(s.doc().unwrap().doc, before);
     // The writer refuses a document that isn't flat; a flat one with isolated page blending gets
     // no page group.
-    let opts = vectorcraft_pdf::PdfOptions { settings: serde_json::from_value(json!({"compatibility": "1.3"})).unwrap(), ..Default::default() };
-    let e = vectorcraft_pdf::export(&before, &opts).unwrap_err();
-    assert!(matches!(&e, vectorcraft_pdf::PdfError::Unsupported(m) if m.contains("PDF 1.3")), "{e}");
-    let mut flat = vectorcraft_doc::Document::new(100.0, 100.0);
+    let opts = tsipika_pdf::PdfOptions { settings: serde_json::from_value(json!({"compatibility": "1.3"})).unwrap(), ..Default::default() };
+    let e = tsipika_pdf::export(&before, &opts).unwrap_err();
+    assert!(matches!(&e, tsipika_pdf::PdfError::Unsupported(m) if m.contains("PDF 1.3")), "{e}");
+    let mut flat = tsipika_doc::Document::new(100.0, 100.0);
     flat.page_isolate = true;
     let l = flat.default_layer().unwrap();
     let id = flat.alloc_id();
-    let rect = vectorcraft_geom::shapes::rectangle(Rect::new(10.0, 10.0, 50.0, 50.0));
-    let paint = vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK);
-    flat.insert(Some(l), 0, vectorcraft_doc::Node::path(id, rect, vectorcraft_doc::Appearance::basic(paint, vectorcraft_color::Paint::None, 0.0)))
+    let rect = tsipika_geom::shapes::rectangle(Rect::new(10.0, 10.0, 50.0, 50.0));
+    let paint = tsipika_color::Paint::solid(tsipika_color::Color::BLACK);
+    flat.insert(Some(l), 0, tsipika_doc::Node::path(id, rect, tsipika_doc::Appearance::basic(paint, tsipika_color::Paint::None, 0.0)))
         .unwrap();
-    assert!(transparency(&vectorcraft_pdf::export(&flat, &opts).unwrap()).is_empty());
+    assert!(transparency(&tsipika_pdf::export(&flat, &opts).unwrap()).is_empty());
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn the_flattener_preset_and_options_apply() {
     let v = s
         .execute("document.export", &json!({"format": "pdf", "compatibility": "1.3", "flattenerPreset": "All Raster", "preserveEditing": false}))
         .unwrap();
-    assert_eq!(vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap().len(), raster.len());
+    assert_eq!(tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap().len(), raster.len());
     s.execute("pdf.preset.save", &json!({"name": "Old Press", "compatibility": "1.3", "flattenerPreset": "All Raster", "preserveEditing": false}))
         .unwrap();
     assert_eq!(export(&mut s, json!({"preset": "Old Press"})).0.len(), raster.len(), "a PDF preset keeps its flattener preset");
@@ -146,10 +146,10 @@ fn pdf_1_3_files_are_encrypted_with_40_bit_rc4_and_can_be_linearised() {
     assert!(text.contains("/V 1/R 2/Length 40") && text.contains("/Linearized 1") && text.contains("/Thumb "));
     for password in ["open", "owner"] {
         s.execute("document.close", &json!({"force": true})).ok();
-        s.execute("document.open", &json!({"dataBase64": vectorcraft_format::base64_encode(&pdf), "name": "old.pdf", "password": password})).unwrap();
+        s.execute("document.open", &json!({"dataBase64": tsipika_format::base64_encode(&pdf), "name": "old.pdf", "password": password})).unwrap();
         assert_eq!(s.doc().unwrap().doc.artboards.len(), 1, "{password}");
     }
     assert!(
-        s.execute("document.open", &json!({"dataBase64": vectorcraft_format::base64_encode(&pdf), "name": "old.pdf", "password": "nope"})).is_err()
+        s.execute("document.open", &json!({"dataBase64": tsipika_format::base64_encode(&pdf), "name": "old.pdf", "password": "nope"})).is_err()
     );
 }

@@ -1,9 +1,9 @@
 //! Table cell styles, row/cell styles and formulas survive a DXF round trip (#534); other readers
 //! get the documented TABLESTYLE groups and a block drawn with the styles.
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_geom::Vec3;
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::*;
+use drafitra_geom::Vec3;
 
 fn sample() -> (Drawing, Table) {
     let mut d = Drawing::new_imperial();
@@ -52,13 +52,13 @@ fn first_table(d: &Drawing) -> Table {
 #[test]
 fn cell_styles_rows_and_formulas_roundtrip() {
     let (d, t) = sample();
-    let bytes = cadcraft_io::write(&d, "t.dxf").unwrap();
-    let back = cadcraft_io::read(&bytes, "t.dxf").unwrap();
+    let bytes = drafitra_io::write(&d, "t.dxf").unwrap();
+    let back = drafitra_io::read(&bytes, "t.dxf").unwrap();
     let st = back.table_styles.iter().find(|s| s.name == "Costs").unwrap();
     assert_eq!(st, d.table_styles.iter().find(|s| s.name == "Costs").unwrap());
     assert_eq!(first_table(&back), t);
     // And again (our own file read back writes the same).
-    let again = cadcraft_io::read(&cadcraft_io::write(&back, "t.dxf").unwrap(), "t.dxf").unwrap();
+    let again = drafitra_io::read(&drafitra_io::write(&back, "t.dxf").unwrap(), "t.dxf").unwrap();
     assert_eq!(first_table(&again), t);
     // Plain styles stay plain.
     let std = back.table_styles.iter().find(|s| s.name == "Standard").unwrap();
@@ -68,10 +68,10 @@ fn cell_styles_rows_and_formulas_roundtrip() {
 #[test]
 fn documented_groups_carry_the_builtin_styles() {
     let (d, _) = sample();
-    let text = String::from_utf8(cadcraft_io::write(&d, "t.dxf").unwrap()).unwrap();
+    let text = String::from_utf8(drafitra_io::write(&d, "t.dxf").unwrap()).unwrap();
     // Without our xdata a reader still gets the header fill and colours from the groups.
     let foreign = text.replace("CELLSTYLES", "SOMETHING_ELSE");
-    let back = cadcraft_io::read(foreign.as_bytes(), "t.dxf").unwrap();
+    let back = drafitra_io::read(foreign.as_bytes(), "t.dxf").unwrap();
     let st = back.table_styles.iter().find(|s| s.name == "Costs").unwrap();
     let h = st.cell_style(CellStyle::HEADER);
     assert_eq!((h.fill, h.text_color, h.borders.bottom.lineweight), (Some(Color::Index(2)), Color::Index(5), Lineweight::Mm100(50)));
@@ -82,7 +82,7 @@ fn documented_groups_carry_the_builtin_styles() {
 #[test]
 fn table_block_draws_fills_and_styles() {
     let (d, _) = sample();
-    let text = String::from_utf8(cadcraft_io::write(&d, "t.dxf").unwrap()).unwrap();
+    let text = String::from_utf8(drafitra_io::write(&d, "t.dxf").unwrap()).unwrap();
     // The (code, value) pairs of the BLOCKS section.
     let lines: Vec<&str> = text.lines().map(str::trim).collect();
     let pairs: Vec<(&str, &str)> = lines.chunks(2).filter_map(|c| if let [a, b] = c { Some((*a, *b)) } else { None }).collect();
@@ -100,10 +100,10 @@ fn table_block_draws_fills_and_styles() {
 #[test]
 fn hostile_table_xdata_is_ignored() {
     let (d, _) = sample();
-    let text = String::from_utf8(cadcraft_io::write(&d, "t.dxf").unwrap()).unwrap();
+    let text = String::from_utf8(drafitra_io::write(&d, "t.dxf").unwrap()).unwrap();
     // Broken JSON in both payloads: the file still opens, styles fall back to the groups.
     let broken = text.replace("{\"v\":1", "{\"v\":[[[");
-    let back = cadcraft_io::read(broken.as_bytes(), "t.dxf").unwrap();
+    let back = drafitra_io::read(broken.as_bytes(), "t.dxf").unwrap();
     let t = first_table(&back);
     assert!(t.row_styles.is_empty());
     assert_eq!(t.cells[3][1].text, "1.000");
@@ -113,12 +113,12 @@ fn hostile_table_xdata_is_ignored() {
 fn breaks_and_data_links_roundtrip_and_the_block_draws_the_parts() {
     let (mut d, mut t) = sample();
     t.breaks =
-        Some(TableBreak { enabled: true, height: 1.5, spacing: 0.5, offsets: vec![cadcraft_geom::Vec2::new(0.0, -1.0)], ..TableBreak::default() });
+        Some(TableBreak { enabled: true, height: 1.5, spacing: 0.5, offsets: vec![drafitra_geom::Vec2::new(0.0, -1.0)], ..TableBreak::default() });
     t.data_link = Some(DataLink { path: "costs.csv".into(), start_row: 1 });
     let h = d.model.iter().next().unwrap().handle;
     d.modify_entity(h, |e| e.kind = EntityKind::Table(t.clone())).unwrap();
-    let bytes = cadcraft_io::write(&d, "t.dxf").unwrap();
-    let back = cadcraft_io::read(&bytes, "t.dxf").unwrap();
+    let bytes = drafitra_io::write(&d, "t.dxf").unwrap();
+    let back = drafitra_io::read(&bytes, "t.dxf").unwrap();
     assert_eq!(first_table(&back), t);
     // Two parts: the block repeats the header row (Item / Cost).
     let text = String::from_utf8(bytes).unwrap();

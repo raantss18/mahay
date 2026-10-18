@@ -4,8 +4,8 @@
 
 use std::sync::{Arc, Once};
 
-use figcraft_doc::{Blur, BlurType, Document, Effect, EffectKind, NodeId, Shadow};
-use figcraft_render::{Options, Pixmap, Retained, View, Work, render_view};
+use endrika_doc::{Blur, BlurType, Document, Effect, EffectKind, NodeId, Shadow};
+use endrika_render::{Options, Pixmap, Retained, View, Work, render_view};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -38,7 +38,7 @@ impl Rng {
 
 fn fonts() {
     static ONCE: Once = Once::new();
-    ONCE.call_once(figcraft_text::scan_system_fonts);
+    ONCE.call_once(endrika_text::scan_system_fonts);
 }
 
 fn id(v: Value) -> NodeId {
@@ -187,7 +187,7 @@ fn step(s: &mut Session, page: NodeId, view: &mut View, rng: &mut Rng) -> String
         },
         15 => {
             let texts: Vec<NodeId> =
-                all.iter().copied().filter(|i| doc.node(*i).is_some_and(|x| matches!(x.kind, figcraft_doc::NodeKind::Text(_)))).collect();
+                all.iter().copied().filter(|i| doc.node(*i).is_some_and(|x| matches!(x.kind, endrika_doc::NodeKind::Text(_)))).collect();
             let Some(t) = texts.get(rng.below(texts.len())) else { return "no text".into() };
             let words = ["glyph", "a", "longer word", "W", "overflowing text runs on"];
             let text: Vec<&str> = (0..1 + rng.below(4)).map(|_| words[rng.below(words.len())]).collect();

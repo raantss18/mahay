@@ -6,9 +6,9 @@ use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use designcraft_color::swatch::apply_tint;
-use designcraft_doc::{Document, Fill};
-use designcraft_images::Tone;
+use pejy_color::swatch::apply_tint;
+use pejy_doc::{Document, Fill};
+use pejy_images::Tone;
 use vello_cpu::Pixmap;
 use vello_cpu::color::PremulRgba8;
 
@@ -22,7 +22,7 @@ fn tone_of(bytes: &Arc<Vec<u8>>) -> Option<Tone> {
     if let Some((_, t)) = TONES.lock().unwrap_or_else(PoisonError::into_inner).as_ref().and_then(|m| m.get(&key)) {
         return *t;
     }
-    let tone = designcraft_images::tone(bytes);
+    let tone = pejy_images::tone(bytes);
     let mut guard = TONES.lock().unwrap_or_else(PoisonError::into_inner);
     let map = guard.get_or_insert_with(HashMap::new);
     if map.len() >= MAX {
@@ -54,10 +54,10 @@ pub(crate) fn colorized(doc: &Document, fill: &Fill, bytes: &Arc<Vec<u8>>, pm: &
     // As for plate previews: source pixmaps are kept alive (their addresses are keys), new colour
     // settings start over, and the derived pixels have a memory budget.
     type Entry = (Arc<Pixmap>, Arc<Pixmap>);
-    type Cache = (designcraft_color::cms::ColorSettings, HashMap<(usize, Tone, u64), Entry>, usize);
+    type Cache = (pejy_color::cms::ColorSettings, HashMap<(usize, Tone, u64), Entry>, usize);
     const BUDGET: usize = 64 << 20;
     static CACHE: Mutex<Option<Cache>> = Mutex::new(None);
-    let settings = designcraft_color::cms::active_settings();
+    let settings = pejy_color::cms::active_settings();
     {
         let mut guard = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some((previous, map, _)) = guard.as_ref() {

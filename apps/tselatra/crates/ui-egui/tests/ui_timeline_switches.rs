@@ -3,17 +3,17 @@
 //! in After Effects (#227); stopwatches the same way (#284). Also the label swatch's menu and the
 //! layer bar past its source (#290).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::color::Label;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::color::Label;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Color32, Event, Modifiers, Pos2, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
 /// Comp "Main" with solids A (top) to D (bottom); returns their ids top to bottom.
-fn harness() -> (Harness<'static, EffectcraftApp>, Vec<u64>) {
+fn harness() -> (Harness<'static, TselatraApp>, Vec<u64>) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "frameRate": 30, "duration": 4})).unwrap();
     let mut ids: Vec<u64> = ["D", "C", "B", "A"]
@@ -22,18 +22,18 @@ fn harness() -> (Harness<'static, EffectcraftApp>, Vec<u64>) {
         .collect();
     ids.reverse();
     s.execute("edit.deselectAll", json!({})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     (h, ids)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).clone();
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
 /// Press on `from`, move to `to` in `steps`, release there.
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, steps: u32) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2, steps: u32) {
     h.event(Event::PointerMoved(from));
     h.step();
     h.event(Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -47,23 +47,23 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, steps: u32) {
 }
 
 /// Each layer's switch, top to bottom.
-fn states(h: &Harness<'_, EffectcraftApp>, ids: &[u64], f: fn(&effectcraft_engine::project::Layer) -> bool) -> Vec<bool> {
+fn states(h: &Harness<'_, TselatraApp>, ids: &[u64], f: fn(&tselatra_engine::project::Layer) -> bool) -> Vec<bool> {
     let comp = h.state().session.active_comp().unwrap();
     ids.iter().map(|id| f(comp.layer(LayerId(*id)).unwrap())).collect()
 }
 
-fn video(l: &effectcraft_engine::project::Layer) -> bool {
+fn video(l: &tselatra_engine::project::Layer) -> bool {
     l.switches.video
 }
 
-fn motion_blur(l: &effectcraft_engine::project::Layer) -> bool {
+fn motion_blur(l: &tselatra_engine::project::Layer) -> bool {
     l.switches.motion_blur
 }
 
 #[test]
 fn dragging_over_layer_switches_sets_them_all() {
     let (mut h, ids) = harness();
-    let eye = |h: &Harness<'_, EffectcraftApp>, i: usize| rect(h, &format!("timeline.layer.{}.video", ids[i])).center();
+    let eye = |h: &Harness<'_, TselatraApp>, i: usize| rect(h, &format!("timeline.layer.{}.video", ids[i])).center();
     let steps = h.state().session.history.undo.len();
 
     // From A's eye down to D's: all hidden, one undo step.
@@ -93,7 +93,7 @@ fn dragging_over_layer_switches_sets_them_all() {
     assert_eq!(states(&h, &ids, video), [false, true, false, true]);
 
     // The Switches column works the same (Motion Blur, from D up to B).
-    let mb = |h: &Harness<'_, EffectcraftApp>, i: usize| rect(h, &format!("timeline.layer.{}.switch.motionBlur", ids[i])).center();
+    let mb = |h: &Harness<'_, TselatraApp>, i: usize| rect(h, &format!("timeline.layer.{}.switch.motionBlur", ids[i])).center();
     let (d, b) = (mb(&h, 3), mb(&h, 1));
     drag(&mut h, d, b, 8);
     assert_eq!(states(&h, &ids, motion_blur), [false, true, true, true]);
@@ -105,7 +105,7 @@ fn dragging_over_layer_switches_sets_them_all() {
 #[test]
 fn alt_click_on_av_feature_switches_the_other_layers() {
     let (mut h, ids) = harness();
-    let alt_click = |h: &mut Harness<'_, EffectcraftApp>, id: String| {
+    let alt_click = |h: &mut Harness<'_, TselatraApp>, id: String| {
         let p = rect(h, &id).center();
         let modifiers = Modifiers::ALT;
         h.event(Event::PointerMoved(p));
@@ -149,12 +149,12 @@ fn dragging_over_stopwatches_sets_them_all() {
     h.state_mut().ui.timeline.open_layers.insert(layer.0);
     h.state_mut().ui.timeline.open_groups.insert(group);
     h.run_steps(3);
-    let animated = |h: &Harness<'_, EffectcraftApp>| -> Vec<bool> {
+    let animated = |h: &Harness<'_, TselatraApp>| -> Vec<bool> {
         let comp = h.state().session.active_comp().unwrap();
         let l = comp.layer(layer).unwrap();
         uids.iter().map(|u| l.props.find(*u).unwrap().is_animated()).collect()
     };
-    let sw = |h: &Harness<'_, EffectcraftApp>, i: usize| rect(h, &format!("timeline.prop.{}.stopwatch", uids[i])).center();
+    let sw = |h: &Harness<'_, TselatraApp>, i: usize| rect(h, &format!("timeline.prop.{}.stopwatch", uids[i])).center();
     let steps = h.state().session.history.undo.len();
 
     // Scale animated first; from Anchor Point down to Opacity: all animated, one undo step.
@@ -180,7 +180,7 @@ fn dragging_over_stopwatches_sets_them_all() {
 }
 
 /// A swatch (a small rect filled with `col`) painted this frame in the left half of `row`.
-fn swatch_in(h: &Harness<'_, EffectcraftApp>, row: Rect, col: Color32) -> bool {
+fn swatch_in(h: &Harness<'_, TselatraApp>, row: Rect, col: Color32) -> bool {
     fn walk(s: &egui::Shape, row: Rect, col: Color32) -> bool {
         match s {
             egui::Shape::Rect(r) => r.fill == col && r.rect.width() < 16.0 && row.contains(r.rect.center()) && r.rect.center().x < row.center().x,
@@ -219,7 +219,7 @@ fn the_bar_past_the_source_end_is_striped() {
     s.execute("comp.new", json!({"name": "Inner", "width": 64, "height": 64, "frameRate": 30, "duration": 2})).unwrap();
     s.execute("comp.new", json!({"name": "Outer", "width": 64, "height": 64, "frameRate": 30, "duration": 4})).unwrap();
     let l = s.execute("layer.addItem", json!({"item": "Inner"})).unwrap()["layer"].as_u64().unwrap();
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     let past = format!("timeline.layer.{l}.bar.afterSource");
     assert!(h.state().auto.find(&past).is_none(), "the source fills the whole bar");

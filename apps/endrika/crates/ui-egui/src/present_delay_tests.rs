@@ -2,9 +2,9 @@
 //! player: gestures go through egui headless on the harness's clock (a frame is 1/60 s).
 
 use egui::{Event, Modifiers, PointerButton, Pos2, Rect, pos2, vec2};
-use figcraft_doc::NodeId;
-use figcraft_doc::proto::OverlayPosition;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_doc::proto::OverlayPosition;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use super::overlay_rect;

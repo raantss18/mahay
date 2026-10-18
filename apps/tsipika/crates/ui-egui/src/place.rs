@@ -5,12 +5,12 @@
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeKind;
-use vectorcraft_engine::cmd::fileio;
-use vectorcraft_geom::Point;
+use tsipika_doc::NodeKind;
+use tsipika_engine::cmd::fileio;
+use tsipika_geom::Point;
 
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, io, widgets};
+use crate::{TsipikaApp, io, widgets};
 
 /// The loaded place cursor's thumbnail size (px on the longer side).
 const THUMB: u32 = 64;
@@ -27,7 +27,7 @@ pub struct PlaceArrival {
 
 pub type PlaceInbox = Arc<Mutex<Vec<PlaceArrival>>>;
 
-/// Where files dropped on a canvas land: document `doc` ([`vectorcraft_engine::DocState::uid`]) at
+/// Where files dropped on a canvas land: document `doc` ([`tsipika_engine::DocState::uid`]) at
 /// `at` (document coordinates), embedded when Shift was held. The document is kept because the web
 /// reads dropped files asynchronously: another document may have become active when they arrive.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -83,7 +83,7 @@ impl PlaceState {
 
 /// Run engine command `id` itself (past the UI's handling of the same id); an error shows in the
 /// status bar.
-fn engine(app: &mut VectorcraftApp, id: &str, p: &Value) -> Result<Value, String> {
+fn engine(app: &mut TsipikaApp, id: &str, p: &Value) -> Result<Value, String> {
     let r = app.session.execute(id, p).map_err(|e| e.to_string());
     app.sync_views();
     if let Err(e) = &r {
@@ -98,7 +98,7 @@ fn engine(app: &mut VectorcraftApp, id: &str, p: &Value) -> Result<Value, String
 /// in the view unless `at`, `rect` or `replace` say otherwise (a text file without `text` options
 /// asks for them first); with `paths`, the Place dialog for them; with neither, pick the files
 /// first.
-pub fn run(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn run(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     if p.get("text").is_none() && crate::dialogs::text_import::is_text(p) {
         return Ok(crate::dialogs::text_import::open(app, p));
     }
@@ -131,7 +131,7 @@ pub fn run(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
 }
 
 /// Pick files to place: the Place dialog opens with them (on the web once they arrive).
-fn pick(app: &mut VectorcraftApp) -> Result<(), String> {
+fn pick(app: &mut TsipikaApp) -> Result<(), String> {
     if let Some(f) = app.services.place_async.as_mut() {
         f();
         return Ok(());
@@ -149,7 +149,7 @@ fn pick(app: &mut VectorcraftApp) -> Result<(), String> {
 }
 
 /// The Place dialog for `files` (`{path}`, or `{name}` with the bytes in [`PlaceState`]).
-fn open_dialog(app: &mut VectorcraftApp, files: Vec<Value>) {
+fn open_dialog(app: &mut TsipikaApp, files: Vec<Value>) {
     let units = app.session.active().map(|d| d.doc.units).unwrap_or_default();
     let info: Vec<String> = files.iter().map(|f| summary(app, f, units)).collect();
     let one_object = app.session.active().is_some_and(|d| d.selection.objects.len() == 1);
@@ -161,33 +161,33 @@ fn open_dialog(app: &mut VectorcraftApp, files: Vec<Value>) {
             "template": false,
             "replace": false,
             "__replace": files.len() == 1 && one_object,
-            "__documents": files.iter().any(is_vectorcraft_file),
-            "__others": !files.iter().all(is_vectorcraft_file),
+            "__documents": files.iter().any(is_tsipika_file),
+            "__others": !files.iter().all(is_tsipika_file),
             "__info": info,
         }),
     ));
 }
 
-/// Is dialog file entry `file` a VectorCraft document on disk (what Link places as one locked
+/// Is dialog file entry `file` a Tsipika document on disk (what Link places as one locked
 /// object)?
-fn is_vectorcraft_file(file: &Value) -> bool {
-    let native = ["vectorcraft", vectorcraft_format::LEGACY_EXTENSION, "vctemplate"];
+fn is_tsipika_file(file: &Value) -> bool {
+    let native = ["tsipika", tsipika_format::LEGACY_EXTENSION, "vctemplate"];
     file.get("path").and_then(Value::as_str).is_some_and(|p| native.contains(&fileio::extension(p).as_str()))
 }
 
 /// The engine params naming `file` (a dialog file entry).
-fn source(app: &VectorcraftApp, file: &Value) -> Option<Value> {
+fn source(app: &TsipikaApp, file: &Value) -> Option<Value> {
     if let Some(path) = file.get("path").and_then(Value::as_str) {
         return Some(json!({ "path": path }));
     }
     let name = file.get("name").and_then(Value::as_str)?;
     let bytes = app.place.picked.iter().find(|(n, _)| n == name).map(|(_, b)| b)?;
-    Some(json!({ "name": name, "dataBase64": vectorcraft_format::base64_encode(bytes) }))
+    Some(json!({ "name": name, "dataBase64": tsipika_format::base64_encode(bytes) }))
 }
 
 /// One line about `file` for the Place dialog ("300 × 150 px, 300 ppi, RGB (1 in × 0.5 in)"), or
 /// why it can't be placed.
-fn summary(app: &mut VectorcraftApp, file: &Value, units: vectorcraft_doc::Unit) -> String {
+fn summary(app: &mut TsipikaApp, file: &Value, units: tsipika_doc::Unit) -> String {
     let Some(p) = source(app, file) else { return "not found".into() };
     let i = match app.session.execute("file.place.info", &p) {
         Ok(i) => i,
@@ -211,7 +211,7 @@ fn fmt_ppi(v: f64) -> String {
 
 /// Place (the dialog's OK): one file is placed centred in the view (or replaces the selection);
 /// several load the place cursor.
-pub fn confirm(app: &mut VectorcraftApp, d: &crate::state::Dialog) -> Result<Value, String> {
+pub fn confirm(app: &mut TsipikaApp, d: &crate::state::Dialog) -> Result<Value, String> {
     let files: Vec<Value> = d.fields.get("files").and_then(Value::as_array).cloned().unwrap_or_default();
     let sources: Vec<Value> = files.iter().filter_map(|f| source(app, f)).collect();
     if sources.is_empty() {
@@ -243,7 +243,7 @@ pub fn confirm(app: &mut VectorcraftApp, d: &crate::state::Dialog) -> Result<Val
 // ---------- the place cursor ----------
 
 /// `file.place.queue` with thumbnails for the cursor (unless `thumbnail` is given).
-pub fn queue(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn queue(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let mut p = p.clone();
     if p.get("thumbnail").is_none() {
         p["thumbnail"] = json!(THUMB);
@@ -254,7 +254,7 @@ pub fn queue(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
         .into_iter()
         .flatten()
         .filter_map(|f| {
-            let png = vectorcraft_format::base64_decode(f["thumbnailBase64"].as_str()?)?;
+            let png = tsipika_format::base64_decode(f["thumbnailBase64"].as_str()?)?;
             let img = image::load_from_memory_with_format(&png, image::ImageFormat::Png).ok()?.to_rgba8();
             let color = egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw());
             Some((f["name"].as_str()?.to_string(), Thumb { image: std::sync::Arc::new(color), tex: None }))
@@ -264,7 +264,7 @@ pub fn queue(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
 }
 
 /// The loaded place cursor at `pos`: the current file's thumbnail with the number of files loaded.
-pub fn paint_cursor(app: &mut VectorcraftApp, ctx: &egui::Context, painter: &egui::Painter, pos: egui::Pos2) {
+pub fn paint_cursor(app: &mut TsipikaApp, ctx: &egui::Context, painter: &egui::Painter, pos: egui::Pos2) {
     let opts = app.session.tool_options();
     let count = opts["count"].as_u64().unwrap_or(0);
     let name = opts["name"].as_str().unwrap_or_default();
@@ -297,7 +297,7 @@ pub fn paint_cursor(app: &mut VectorcraftApp, ctx: &egui::Context, painter: &egu
 
 // ---------- drops ----------
 
-impl VectorcraftApp {
+impl TsipikaApp {
     /// Where file `name` dropped with the pointer at `pos` (screen points) goes: as in Illustrator,
     /// onto the canvas of the open document (Shift embeds it), else opened. Where the platform
     /// doesn't say (`None`: desktop drags carry no position), a document opens as a tab of its
@@ -319,7 +319,7 @@ impl VectorcraftApp {
 
 /// Where the pointer is during a file drag over the window, as far as egui knows: nowhere on the
 /// desktop, whose drags carry no position (the one egui had before is stale; files dropped there
-/// go by their kind, see [`VectorcraftApp::drop_target`]). On the web, egui's own position (for
+/// go by their kind, see [`TsipikaApp::drop_target`]). On the web, egui's own position (for
 /// the highlight: the web host follows its drags itself for drops).
 pub fn drag_pos(ctx: &egui::Context) -> Option<egui::Pos2> {
     if cfg!(target_arch = "wasm32") { ctx.input(|i| i.pointer.latest_pos()) } else { None }
@@ -332,7 +332,7 @@ pub type DropFile = (String, Option<String>, Vec<u8>);
 /// Files) as its target says: the placed ones first, so the last document opened is the one
 /// shown. A file for a canvas goes to the document it was dropped on, which becomes active again;
 /// it isn't placed when that document has closed since.
-pub fn drop_files(app: &mut VectorcraftApp, mut files: Vec<(DropTarget, DropFile)>) {
+pub fn drop_files(app: &mut TsipikaApp, mut files: Vec<(DropTarget, DropFile)>) {
     files.sort_by_key(|(target, _)| *target == DropTarget::Open);
     for (target, (name, path, bytes)) in files {
         if let DropTarget::Place(d) = target {
@@ -346,7 +346,7 @@ pub fn drop_files(app: &mut VectorcraftApp, mut files: Vec<(DropTarget, DropFile
             DropTarget::Place(DropAt { at, embed, .. }) => {
                 let mut p = match &path {
                     Some(path) => json!({ "path": path }),
-                    None => json!({ "name": name, "dataBase64": vectorcraft_format::base64_encode(&bytes) }),
+                    None => json!({ "name": name, "dataBase64": tsipika_format::base64_encode(&bytes) }),
                 };
                 p["at"] = json!([at.x, at.y]);
                 p["link"] = json!(!embed);
@@ -371,7 +371,7 @@ pub fn drop_files(app: &mut VectorcraftApp, mut files: Vec<(DropTarget, DropFile
 
 /// Files that arrived to be placed (web): drops go where they were dropped, picked files to the
 /// Place dialog.
-pub fn drain(app: &mut VectorcraftApp) {
+pub fn drain(app: &mut TsipikaApp) {
     let arrived: Vec<PlaceArrival> =
         app.services.place_inbox.as_ref().map(|q| std::mem::take(&mut *q.lock().unwrap_or_else(|e| e.into_inner()))).unwrap_or_default();
     let mut picked = vec![];
@@ -394,7 +394,7 @@ pub fn drain(app: &mut VectorcraftApp) {
 /// the browser gives a dragged file's type but not its name, so the canvas is outlined for any
 /// file dragged over it, including libraries, presets, plug-ins and shortcut sets, which open when
 /// dropped.
-pub fn paint_drop_highlight(app: &VectorcraftApp, ctx: &egui::Context, painter: &egui::Painter, rect: egui::Rect) {
+pub fn paint_drop_highlight(app: &TsipikaApp, ctx: &egui::Context, painter: &egui::Painter, rect: egui::Rect) {
     let pos = drag_pos(ctx);
     let placed = ctx.input(|i| {
         i.raw.hovered_files.iter().any(|f| {
@@ -414,7 +414,7 @@ pub fn paint_drop_highlight(app: &VectorcraftApp, ctx: &egui::Context, painter: 
 
 /// `image.info` of the one selected image, fetched again only when it changes (the Control bar's
 /// and the Properties panel's image details).
-pub fn selected_image_info(app: &mut VectorcraftApp) -> Option<&Value> {
+pub fn selected_image_info(app: &mut TsipikaApp) -> Option<&Value> {
     let st = app.session.active()?;
     let key = match &st.selection.objects[..] {
         [id] if st.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Image(_))) => (st.uid, st.revision, id.0),
@@ -437,7 +437,7 @@ pub fn image_summary(i: &Value) -> (String, String) {
 /// The Control bar for the one selected image: Linked File or Embedded, its file name, colour mode
 /// and effective resolution, Embed or Unembed, Edit Original (a linked file), Image Trace, Mask and
 /// Crop Image. Whether one image is selected.
-pub fn control_bar_details(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> bool {
+pub fn control_bar_details(app: &mut TsipikaApp, ui: &mut egui::Ui) -> bool {
     let Some(i) = selected_image_info(app) else { return false };
     let (name, details) = image_summary(i);
     let (Some(id), linked) = (i["id"].as_u64(), i["linked"] == true) else { return false };
@@ -465,7 +465,7 @@ pub fn control_bar_details(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> bool 
 /// The menu of the Control bar's file name for image `id`: Replace… (another file takes the
 /// image's place with its own aspect ratio; an embedded image becomes linked), Go To Link, Edit
 /// Original, Update Link and Placement Options….
-fn link_menu(app: &mut VectorcraftApp, ui: &mut egui::Ui, id: u64, linked: bool) {
+fn link_menu(app: &mut TsipikaApp, ui: &mut egui::Ui, id: u64, linked: bool) {
     ui.set_min_width(200.0);
     if widgets::menu_item(ui, tl!("Replace…"), app.services.pick_open.is_some(), false) {
         crate::panels::links::replace(app, vec![id]);
@@ -490,7 +490,7 @@ fn link_menu(app: &mut VectorcraftApp, ui: &mut egui::Ui, id: u64, linked: bool)
 
 /// Embed (and Edit Original) for linked image `id`, Unembed… for an embedded one named `name`
 /// (Control bar, Properties). The buttons are `width` wide, or fit their labels.
-pub fn link_buttons(app: &mut VectorcraftApp, ui: &mut egui::Ui, id: u64, linked: bool, name: &str, width: Option<f32>) {
+pub fn link_buttons(app: &mut TsipikaApp, ui: &mut egui::Ui, id: u64, linked: bool, name: &str, width: Option<f32>) {
     let w = |fit: f32| width.unwrap_or(fit);
     if linked {
         if widgets::flat_button(ui, tl!("Embed"), w(60.0)).clicked() {

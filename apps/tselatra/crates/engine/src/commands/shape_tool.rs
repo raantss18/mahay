@@ -3,11 +3,11 @@
 //! Options / Stroke Options), and drawing with them: a drawn shape goes into the selected shape
 //! layer's Contents as a new group, as in After Effects, or into a new shape layer.
 
-use effectcraft_color::BlendMode;
-use effectcraft_geom::vec2;
-use effectcraft_keyframe::{Gradient, ShapePath, Value as KV};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Comp, ItemId, LayerId, LayerSource, Project, PropGroup};
+use tselatra_color::BlendMode;
+use tselatra_geom::vec2;
+use tselatra_keyframe::{Gradient, ShapePath, Value as KV};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Comp, ItemId, LayerId, LayerSource, Project, PropGroup};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -218,13 +218,13 @@ pub fn mask_path(kind: &str, centre: [f64; 2], size: [f64; 2]) -> Option<ShapePa
     let bez = match kind {
         "rect" | "rectangle" => return Some(ShapePath::rect(centre, size[0], size[1])),
         "ellipse" => return Some(ShapePath::ellipse(centre, size[0], size[1])),
-        "rounded" | "roundedRect" => effectcraft_path::rect(size, centre, roundness(size)),
+        "rounded" | "roundedRect" => tselatra_path::rect(size, centre, roundness(size)),
         k => {
             let (star, points, outer, inner) = polystar_of(k, size)?;
-            effectcraft_path::polystar(star, points, centre, 0.0, inner, outer, 0.0, 0.0)
+            tselatra_path::polystar(star, points, centre, 0.0, inner, outer, 0.0, 0.0)
         }
     };
-    effectcraft_path::from_kurbo(&bez).into_iter().next()
+    tselatra_path::from_kurbo(&bez).into_iter().next()
 }
 
 /// The layer a shape tool draws into when no `layer` is given: the first selected unlocked shape
@@ -272,7 +272,7 @@ pub(crate) fn add_to_contents(
     mut g: PropGroup,
     position: [f64; 2],
     cmd: &str,
-) -> Result<effectcraft_project::Uid> {
+) -> Result<tselatra_project::Uid> {
     let contents = layer_mut(proj, cid, lid)?.props.sub_mut("contents").ok_or_else(|| bad(cmd, "the layer has no contents"))?;
     g.name = super::effect::unique_name(contents, &g.name);
     if let Some(pr) = g.sub_mut("transform").and_then(|t| t.get_mut("position")) {
@@ -314,7 +314,7 @@ fn new_shape(s: &mut Session, p: &Value) -> Result<Value> {
     // its scale.
     let (centre, size) = match target.and_then(|l| comp.layer(l)) {
         Some(l) if str_p(p, "space") != Some("layer") => {
-            let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, &comp, s.time_of(cid));
+            let ctx = tselatra_render::EvalCtx::new(&s.project, cid, &comp, s.time_of(cid));
             let inv = ctx.layer_to_comp(l).0.inverse().ok_or_else(|| bad(c, "the layer is scaled to nothing"))?;
             let q = inv.apply(vec2(pos[0], pos[1]));
             ([q.x, q.y], [inv.apply_vec(vec2(size[0], 0.0)).length(), inv.apply_vec(vec2(0.0, size[1])).length()])

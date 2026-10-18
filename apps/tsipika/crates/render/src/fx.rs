@@ -1,7 +1,7 @@
 //! Live effects in the renderer.
 //!
 //! Geometry effects (object-level, then per fill/stroke) rewrite the path before painting via
-//! `vectorcraft-effects`. Raster effects use vello_cpu filter layers. Those only work in
+//! `tsipika-effects`. Raster effects use vello_cpu filter layers. Those only work in
 //! single-threaded contexts, so on the multithreaded pipeline each filter layer is rendered
 //! offscreen on the calling thread (cropped to its reach) and composited back with the same blend
 //! mode and opacity ([`Renderer::with_filters`]):
@@ -49,11 +49,11 @@
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::{Arc, Weak};
 
-use vectorcraft_color::cms::Cms;
-use vectorcraft_doc::{AppearanceItem, Document, Effect, Node, NodeId, NodeKind, SymbolBoxes};
-use vectorcraft_effects::pixel::{Channels, PixelFx};
-use vectorcraft_effects::{self as effects, GeomContext, RasterFx};
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathEl, Point, Rect, Shape, Size, Vec2};
+use tsipika_color::cms::Cms;
+use tsipika_doc::{AppearanceItem, Document, Effect, Node, NodeId, NodeKind, SymbolBoxes};
+use tsipika_effects::pixel::{Channels, PixelFx};
+use tsipika_effects::{self as effects, GeomContext, RasterFx};
+use tsipika_geom::{Affine, BezPath, FillRule, PathEl, Point, Rect, Shape, Size, Vec2};
 use vello_common::filter_effects::{EdgeMode, Filter, FilterPrimitive};
 use vello_cpu::RenderContext;
 use vello_cpu::peniko;
@@ -103,7 +103,7 @@ fn is_container(n: &Node) -> bool {
 /// holds live objects and whose geometry effects reshape them or whose own fills and strokes paint
 /// their evaluated outlines ([`effects::evaluate_container`]).
 fn evaluates_live(n: &Node) -> bool {
-    use vectorcraft_doc::live::{is_live, subtree_has_live};
+    use tsipika_doc::live::{is_live, subtree_has_live};
     let to_members = effects::has_geometry(&n.appearance.effects) || n.appearance.items.iter().any(effects::paints);
     is_live(n) || (is_container(n) && to_members && !effects::has_pathfinder(n) && subtree_has_live(n))
 }
@@ -254,7 +254,7 @@ pub(crate) fn drawn_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
 /// 3D art, a brushed stroke and an item that draws no path.
 fn item_bounds(n: &Node, item: &AppearanceItem) -> Option<Rect> {
     let stroke = matches!(item, AppearanceItem::Stroke(_));
-    if !has_fx(n) || effects::has_revolve(n) || effects::has_solid(n) || (stroke && vectorcraft_brush::has_brush(n)) {
+    if !has_fx(n) || effects::has_revolve(n) || effects::has_solid(n) || (stroke && tsipika_brush::has_brush(n)) {
         return None;
     }
     let g = effected_path(n, &node_bezpath(n)?);
@@ -264,7 +264,7 @@ fn item_bounds(n: &Node, item: &AppearanceItem) -> Option<Rect> {
         let o = if let AppearanceItem::Stroke(s) = item { s.reach() } else { 0.0 };
         return (!ig.elements().is_empty()).then(|| ig.bounding_box().inflate(o, o));
     }
-    let one = vectorcraft_doc::Appearance { items: vec![item.clone()], ..Default::default() };
+    let one = tsipika_doc::Appearance { items: vec![item.clone()], ..Default::default() };
     (!g.elements().is_empty()).then(|| one.stroked_bounds(g.bounding_box(), || g.clone()))
 }
 
@@ -279,11 +279,11 @@ fn spread(symbols: &SymbolBoxes, fx: &[Effect], b: Rect) -> Rect {
 /// its brushed strokes (a symbol's brushed art as far as [`crate::brush_fx::pad`] reaches).
 fn art_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
     let b = shape_bounds(symbols, n);
-    let brushed = vectorcraft_brush::has_brush(n)
-        .then(|| vectorcraft_brush::expand(symbols.document(), n))
+    let brushed = tsipika_brush::has_brush(n)
+        .then(|| tsipika_brush::expand(symbols.document(), n))
         .flatten()
         .and_then(|art| art.visual_bounds_with(symbols));
-    let b = vectorcraft_geom::union_opt(b, brushed)?;
+    let b = tsipika_geom::union_opt(b, brushed)?;
     let pad = if matches!(n.kind, NodeKind::SymbolInstance { .. }) { crate::brush_fx::pad(symbols, n) } else { 0.0 };
     Some(b.inflate(pad, pad))
 }
@@ -294,7 +294,7 @@ fn shape_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
     // nothing).
     let union = |g: &Node| {
         let members = g.children()?.get(usize::from(g.extras().shaper.is_some())..).unwrap_or_default();
-        members.iter().filter(|c| c.visible).fold(None, |acc, c| vectorcraft_geom::union_opt(acc, painted_reach(symbols, c)))
+        members.iter().filter(|c| c.visible).fold(None, |acc, c| tsipika_geom::union_opt(acc, painted_reach(symbols, c)))
     };
     match &n.kind {
         _ if effects::has_container_appearance(n) => {
@@ -319,7 +319,7 @@ fn shape_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
             for item in n.appearance.items.iter().filter(|i| paints(i) && effects::has_geometry(item_effects(i))) {
                 let ig = apply(item_effects(item), &g, &ctx.item(item));
                 let o = if let AppearanceItem::Stroke(s) = item { s.reach() } else { 0.0 };
-                r = vectorcraft_geom::union_opt(r, (!ig.elements().is_empty()).then(|| ig.bounding_box().inflate(o, o)));
+                r = tsipika_geom::union_opt(r, (!ig.elements().is_empty()).then(|| ig.bounding_box().inflate(o, o)));
             }
             r
         }
@@ -335,7 +335,7 @@ fn shape_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
             let reshaped = effects::reshape(n, symbol.as_deref());
             let b = match &reshaped {
                 Some(r) if matches!(n.kind, NodeKind::Text(_)) => {
-                    r.children().into_iter().flatten().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, painted_reach(symbols, c)))
+                    r.children().into_iter().flatten().fold(None, |acc, c| tsipika_geom::union_opt(acc, painted_reach(symbols, c)))
                 }
                 Some(r) => r.visual_bounds_with(symbols),
                 None => None,
@@ -417,13 +417,13 @@ fn cull_bounds_in(symbols: &SymbolBoxes, n: &Node, after_reshape: bool) -> Optio
             let b = if art.clips() {
                 art.visual_bounds_with(symbols)
             } else {
-                art.children()?.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, inner(c)))
+                art.children()?.iter().fold(None, |acc, c| tsipika_geom::union_opt(acc, inner(c)))
             }?;
             let o = outset(symbols, &n.appearance.effects, b);
             Some(b.inflate(o, o))
         }
         NodeKind::Layer { children, clip: false, .. } | NodeKind::Group { children, clip: false } => {
-            children.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, inner(c)))
+            children.iter().fold(None, |acc, c| tsipika_geom::union_opt(acc, inner(c)))
         }
         _ if has_fx(n) => visual_bounds(symbols, n),
         // The reshaped art (a symbol instance's reshaped art is made from its symbol's art; type's
@@ -437,7 +437,7 @@ fn cull_bounds_in(symbols: &SymbolBoxes, n: &Node, after_reshape: bool) -> Optio
             let reshaped = effects::reshape(n, symbol.as_deref());
             let b = match &reshaped {
                 Some(r) if matches!(n.kind, NodeKind::Text(_)) => {
-                    r.children().into_iter().flatten().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, inner(c)))
+                    r.children().into_iter().flatten().fold(None, |acc, c| tsipika_geom::union_opt(acc, inner(c)))
                 }
                 Some(r) => r.visual_bounds_with(symbols),
                 None => None,
@@ -470,7 +470,7 @@ fn cull_bounds_in(symbols: &SymbolBoxes, n: &Node, after_reshape: bool) -> Optio
 /// art ([`art_effects_reach`]) and how far brush art can paint ([`crate::brush_fx::pad`]), on the
 /// farthest side. 0 for any other kind of object.
 fn live_content_reach(symbols: &SymbolBoxes, n: &Node) -> f64 {
-    if !vectorcraft_doc::live::is_live(n) {
+    if !tsipika_doc::live::is_live(n) {
         return 0.0;
     }
     let mut reach = 0.0f64;
@@ -514,7 +514,7 @@ fn reshaped_art_effects_reach(symbols: &SymbolBoxes, n: &Node, r: &Node) -> f64 
     if !symbols.has_effects(symbol) {
         return 0.0;
     }
-    let art = r.children().into_iter().flatten().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, cull_bounds_in(symbols, c, false)));
+    let art = r.children().into_iter().flatten().fold(None, |acc, c| tsipika_geom::union_opt(acc, cull_bounds_in(symbols, c, false)));
     match (art, r.visual_bounds_with(symbols)) {
         (Some(c), Some(v)) => [v.x0 - c.x0, v.y0 - c.y0, c.x1 - v.x1, c.y1 - v.y1].into_iter().fold(0.0, f64::max),
         _ => 0.0,
@@ -552,7 +552,7 @@ fn silhouette(pm: &vello_cpu::Pixmap, colored: bool) -> Vec<u8> {
     if colored { pm.data().iter().flat_map(|p| [p.r, p.g, p.b, p.a]).collect() } else { pm.data().iter().map(|p| p.a).collect() }
 }
 
-fn pcolor(ink: Ink, c: &vectorcraft_doc::color::Color) -> peniko::Color {
+fn pcolor(ink: Ink, c: &tsipika_doc::color::Color) -> peniko::Color {
     let [r, g, b] = ink.rgb(c);
     peniko::Color::new([r, g, b, 1.0])
 }
@@ -616,7 +616,7 @@ fn looks_around(fx: &RasterFx) -> Option<f64> {
 pub(crate) struct PixelEntry {
     node: Drawn,
     linear: [u64; 4],
-    anchor: vectorcraft_geom::Point,
+    anchor: tsipika_geom::Point,
     rel: (f64, f64),
     k: f64,
     image: std::sync::Arc<vello_cpu::Pixmap>,
@@ -726,7 +726,7 @@ fn draw_placed(ctx: &mut RenderContext, image: std::sync::Arc<vello_cpu::Pixmap>
 pub(crate) struct ShadowEntry {
     node: Drawn,
     linear: [u64; 4],
-    anchor: vectorcraft_geom::Point,
+    anchor: tsipika_geom::Point,
     /// Pixel offset of the raster's top-left from the anchor's view position.
     rel: (f64, f64),
     image: std::sync::Arc<vello_cpu::Pixmap>,
@@ -746,7 +746,7 @@ struct Shadow {
     image: std::sync::Arc<vello_cpu::Pixmap>,
     /// Raster to view pixels.
     at: Affine,
-    mode: vectorcraft_doc::color::BlendMode,
+    mode: tsipika_doc::color::BlendMode,
     /// Made before its object moved ([`ShadowEntry::moved`]).
     moved: bool,
 }
@@ -909,7 +909,7 @@ impl Reads {
     }
 
     fn add(&mut self, n: &Node) {
-        let pattern = |p: &vectorcraft_color::Paint| matches!(p, vectorcraft_color::Paint::Pattern { .. });
+        let pattern = |p: &tsipika_color::Paint| matches!(p, tsipika_color::Paint::Pattern { .. });
         n.walk(&mut |c| {
             self.plugins |= effects::has_plugin_effect(c);
             for item in &c.appearance.items {
@@ -1152,7 +1152,7 @@ impl Renderer {
         ctx.reset_paint_transform();
         ctx.set_paint(vello_cpu::Image { image: vello_cpu::ImageSource::Pixmap(s.image.clone()), sampler });
         ctx.fill_rect(&Rect::new(0.0, 0.0, w, h));
-        ctx.set_blend_mode(blend_mode(vectorcraft_doc::color::BlendMode::Normal));
+        ctx.set_blend_mode(blend_mode(tsipika_doc::color::BlendMode::Normal));
         ctx.set_transform(Affine::IDENTITY);
     }
 
@@ -1189,7 +1189,7 @@ impl Renderer {
                 c.set_blend_mode(peniko::BlendMode::new(peniko::Mix::Normal, peniko::Compose::SrcAtop));
                 c.set_paint(peniko::Color::new([0.0, 0.0, 0.0, black]));
                 c.fill_rect(&reach);
-                c.set_blend_mode(blend_mode(vectorcraft_doc::color::BlendMode::Normal));
+                c.set_blend_mode(blend_mode(tsipika_doc::color::BlendMode::Normal));
             }
             c.pop_layer();
         });
@@ -1313,7 +1313,7 @@ impl Renderer {
     /// the art standing for the object's silhouette.
     pub(crate) fn draw_object_fx(&mut self, ctx: &mut RenderContext, f: &Frame, a: &Arc<Node>, cache: bool) {
         let opacity = self.opacity_of(a);
-        if !f.opts.outline && (opacity < 1.0 || a.blend != vectorcraft_doc::color::BlendMode::Normal || a.isolate) {
+        if !f.opts.outline && (opacity < 1.0 || a.blend != tsipika_doc::color::BlendMode::Normal || a.isolate) {
             let blends = self.blends_through(a);
             let bounds = if blends { self.bounds_of(f.symbols, a) } else { None };
             let comp = crate::group::Composite { blend: a.blend, opacity, isolated: a.isolate, blends, bounds, ..Default::default() };
@@ -1360,7 +1360,7 @@ impl Renderer {
     /// without the object's transparency and effects (a path keeps its geometry effects). Art that
     /// is made from live objects it evaluated ([`evaluates_live`]) is kept only while the inputs of
     /// their evaluation stay the same ([`Self::live_found`]).
-    fn fx_art(&mut self, doc: &vectorcraft_doc::Document, a: &Arc<Node>, cache: bool) -> Arc<Node> {
+    fn fx_art(&mut self, doc: &tsipika_doc::Document, a: &Arc<Node>, cache: bool) -> Arc<Node> {
         let key = Arc::as_ptr(a) as usize;
         let mut kept = None;
         if cache
@@ -1406,7 +1406,7 @@ impl Renderer {
         art.isolate = false;
         // One element: its pieces never knock each other out (a group's members still do as its
         // knockout setting says).
-        art.knockout = if container { a.knockout } else { vectorcraft_doc::Knockout::Off };
+        art.knockout = if container { a.knockout } else { tsipika_doc::Knockout::Off };
         let art = Arc::new(art);
         if cache {
             let bytes = crate::lru::node_bytes(&art);
@@ -1709,7 +1709,7 @@ impl Renderer {
         let channels = match f.ink {
             Ink::Cmy => effects::pixel::Channels::CmyPlane,
             Ink::K => effects::pixel::Channels::KPlane,
-            Ink::Display | Ink::RichBlack if f.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk => effects::pixel::Channels::Cmyk,
+            Ink::Display | Ink::RichBlack if f.doc.color_mode == tsipika_doc::ColorMode::Cmyk => effects::pixel::Channels::Cmyk,
             Ink::Display | Ink::RichBlack => effects::pixel::Channels::Rgb,
         };
         // De-Interlace's field lines: the rows of the document's raster grid (1 to 2400 ppi).
@@ -1846,7 +1846,7 @@ impl Renderer {
         }
         let image = std::sync::Arc::new(pm);
         // A cancelled export drew part of the content: that raster isn't kept for later frames.
-        if !vectorcraft_doc::cancel::is_cancelled()
+        if !tsipika_doc::cancel::is_cancelled()
             && let Some(((key, made), inputs)) = key.zip(made).zip(inputs)
         {
             let anchor = content.reach.origin();
@@ -1965,7 +1965,7 @@ impl Renderer {
         if reads.text {
             let setup = &f.doc.setup;
             let highlights = f.opts.highlight_substitutions.then_some((setup.highlight_substituted_fonts, setup.highlight_substituted_glyphs));
-            (vectorcraft_text::FontDb::global().generation(), crate::proof::overprints(f.opts), highlights).hash(&mut h);
+            (tsipika_text::FontDb::global().generation(), crate::proof::overprints(f.opts), highlights).hash(&mut h);
         }
         if reads.plugins || (doc.plugins && (reads.symbols || reads.patterns)) {
             effects::plugin_revision().hash(&mut h);
@@ -1982,7 +1982,7 @@ impl Renderer {
         {
             return d.clone();
         }
-        let cms = vectorcraft_color::cms::active();
+        let cms = tsipika_color::cms::active();
         let hash = |each: &mut dyn FnMut(&mut DefaultHasher)| {
             let mut h = DefaultHasher::new();
             each(&mut h);
@@ -2098,8 +2098,8 @@ impl Renderer {
         f: &Frame,
         reach: Rect,
         blur: f64,
-        composite: Option<(vectorcraft_doc::color::BlendMode, f32)>,
-        draw: impl FnOnce(&mut Self, &mut RenderContext, &Frame, Option<(vectorcraft_doc::color::BlendMode, f32)>),
+        composite: Option<(tsipika_doc::color::BlendMode, f32)>,
+        draw: impl FnOnce(&mut Self, &mut RenderContext, &Frame, Option<(tsipika_doc::color::BlendMode, f32)>),
     ) {
         if !f.mt {
             return self.inside_layer(|r| draw(r, ctx, f, composite));
@@ -2121,7 +2121,7 @@ impl Renderer {
         off.flush();
         let mut pm = vello_cpu::Pixmap::new(w, h);
         off.render(&mut pm, &mut self.resources);
-        let layered = composite.is_some_and(|(m, o)| m != vectorcraft_doc::color::BlendMode::Normal || o < 1.0);
+        let layered = composite.is_some_and(|(m, o)| m != tsipika_doc::color::BlendMode::Normal || o < 1.0);
         if let Some((m, o)) = composite.filter(|_| layered) {
             ctx.set_transform(Affine::IDENTITY);
             ctx.push_layer(None, Some(blend_mode(m)), Some(o), None, None);
@@ -2201,7 +2201,7 @@ impl Renderer {
     fn paint_item(&mut self, ctx: &mut RenderContext, f: &Frame, n: &Node, item: &AppearanceItem, ig: &BezPath, rule: FillRule, ib: Rect) {
         match item {
             AppearanceItem::Fill(fl) => {
-                let layered = fl.opacity < 1.0 || fl.blend != vectorcraft_doc::color::BlendMode::Normal;
+                let layered = fl.opacity < 1.0 || fl.blend != tsipika_doc::color::BlendMode::Normal;
                 if layered {
                     ctx.set_transform(Affine::IDENTITY);
                     ctx.push_layer(None, Some(blend_mode(fl.blend)), Some(fl.opacity), None, None);
@@ -2232,9 +2232,9 @@ impl Renderer {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_doc::color::{Color, Paint};
-    use vectorcraft_doc::{Appearance, Document, Effect, Node};
-    use vectorcraft_geom::{Affine, Rect, shapes};
+    use tsipika_doc::color::{Color, Paint};
+    use tsipika_doc::{Appearance, Document, Effect, Node};
+    use tsipika_geom::{Affine, Rect, shapes};
 
     use super::{DRAG_PIXEL_BUDGET, Drawn, PIXEL_BUDGET, drag_scale, filter_region, filter_region_within};
     use crate::tests_fontchange::fonts_steady;
@@ -2422,8 +2422,8 @@ mod tests {
         let id = d.layers[0].children().unwrap()[0].id;
         let mut n = (*d.node(id).unwrap()).clone();
         n.appearance = Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 4.0).into();
-        if let Some(vectorcraft_doc::AppearanceItem::Stroke(s)) =
-            n.appearance.items.iter_mut().find(|i| matches!(i, vectorcraft_doc::AppearanceItem::Stroke(_)))
+        if let Some(tsipika_doc::AppearanceItem::Stroke(s)) =
+            n.appearance.items.iter_mut().find(|i| matches!(i, tsipika_doc::AppearanceItem::Stroke(_)))
         {
             s.effects =
                 vec![Effect { id: "stylize.outerGlow".into(), params: json!({"color": "#ff0000", "opacity": 100, "blur": 6}), visible: true }];
@@ -2450,7 +2450,7 @@ mod tests {
 
     /// A red square's drop shadow at Darkness `darkness` (%), opaque and sharp, 10 pt down and
     /// right; `shade` "color" or "darkness".
-    fn shaded_doc(mode: vectorcraft_doc::ColorMode, fill: Color, shade: &str, darkness: f64) -> Document {
+    fn shaded_doc(mode: tsipika_doc::ColorMode, fill: Color, shade: &str, darkness: f64) -> Document {
         let mut d = doc_with(
             Rect::new(20.0, 20.0, 60.0, 60.0),
             fill,
@@ -2469,7 +2469,7 @@ mod tests {
     /// raster and, at 6000 %, in the filter layer that a raster too large to cache is drawn with.
     #[test]
     fn drop_shadow_darkness_darkens_the_objects_own_color() {
-        let rgb = vectorcraft_doc::ColorMode::Rgb;
+        let rgb = tsipika_doc::ColorMode::Rgb;
         let red = Color::rgb(1.0, 0.0, 0.0);
         // At 6000 %, the view's center is (65, 65), where only the shadow lies.
         let zoomed = Affine::translate((50.0, 50.0)) * Affine::scale(60.0) * Affine::translate((-65.0, -65.0));
@@ -2488,7 +2488,7 @@ mod tests {
     /// full black, and a black object's shadow is 100% black).
     #[test]
     fn drop_shadow_darkness_adds_black_in_a_cmyk_document() {
-        let cmyk = vectorcraft_doc::ColorMode::Cmyk;
+        let cmyk = tsipika_doc::ColorMode::Cmyk;
         let inks = |d: &Document| {
             let i = Renderer::new().render_region_inks(d, Rect::new(0.0, 0.0, 100.0, 100.0), 1.0, &RenderOptions::default());
             let at = (66 * 100 + 66) * 4;
@@ -2510,7 +2510,7 @@ mod tests {
     /// Darkness value, draw the same pixels, which a shadow with Darkness does not.
     #[test]
     fn a_drop_shadow_with_color_draws_as_before() {
-        let rgb = vectorcraft_doc::ColorMode::Rgb;
+        let rgb = tsipika_doc::ColorMode::Rgb;
         let red = Color::rgb(1.0, 0.0, 0.0);
         let old = doc_with(
             Rect::new(20.0, 20.0, 60.0, 60.0),
@@ -2655,10 +2655,10 @@ mod tests {
             shapes::rectangle(Rect::new(0.0, 0.0, 40.0, 40.0)),
             Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0),
         );
-        instanced.symbols.push(vectorcraft_doc::Symbol { name: "Square".into(), art: std::sync::Arc::new(art) });
+        instanced.symbols.push(tsipika_doc::Symbol { name: "Square".into(), art: std::sync::Arc::new(art) });
         let mut instance = Node::new(
             instanced.alloc_id(),
-            vectorcraft_doc::NodeKind::SymbolInstance { symbol: "Square".into(), xf: Affine::translate((30.0, 30.0)) },
+            tsipika_doc::NodeKind::SymbolInstance { symbol: "Square".into(), xf: Affine::translate((30.0, 30.0)) },
         );
         instance.appearance.effects = glows.into_iter().map(|(id, p)| Effect { id: id.into(), params: p, visible: true }).collect();
         let l = instanced.layers[0].id;
@@ -2763,7 +2763,7 @@ mod tests {
     /// ([`crate::paint::decode_failures`]), from a new raster or from the raster kept.
     #[test]
     fn cached_effect_rasters_count_the_images_they_could_not_decode() {
-        use vectorcraft_doc::{ImageBlob, ImageObject, NodeKind};
+        use tsipika_doc::{ImageBlob, ImageObject, NodeKind};
         let mut d = Document::new(100.0, 100.0);
         // A PNG signature with nothing after it.
         d.images.insert("cut".into(), ImageBlob::new("image/png", b"\x89PNG\r\n\x1a\n".to_vec()));
@@ -2788,7 +2788,7 @@ mod tests {
     /// content are drawn from the rasters kept.
     #[test]
     fn rasters_drawn_from_a_kept_rasterize_image_count_the_images_it_could_not_decode() {
-        use vectorcraft_doc::{ImageBlob, ImageObject, NodeKind};
+        use tsipika_doc::{ImageBlob, ImageObject, NodeKind};
         let mut d = Document::new(100.0, 100.0);
         // A PNG signature with nothing after it.
         d.images.insert("cut".into(), ImageBlob::new("image/png", b"\x89PNG\r\n\x1a\n".to_vec()));
@@ -2897,7 +2897,7 @@ mod tests {
         let shadowed = doc_with(Rect::new(20.0, 20.0, 50.0, 46.0), Color::rgb(0.9, 0.4, 0.1), vec![("stylize.dropShadow", json!({"blur": 2}))]);
         let mut scaled = shadowed.clone();
         let id = scaled.layers[0].children().unwrap()[0].id;
-        scaled.node_mut(id).unwrap().transform(Affine::scale_about(1.05, vectorcraft_geom::Point::new(35.0, 33.0)), false);
+        scaled.node_mut(id).unwrap().transform(Affine::scale_about(1.05, tsipika_geom::Point::new(35.0, 33.0)), false);
         let view = Affine::translate((800.0, 500.0)) * Affine::scale(40.0) * Affine::translate((-35.0, -33.0));
         let mut r = threaded();
         let _ = r.render(&shadowed, 1600, 1000, view, &still);
@@ -2918,11 +2918,11 @@ mod tests {
         let mut base = Document::new(100.0, 100.0);
         let orange = Appearance::basic(Paint::solid(Color::rgb(0.9, 0.4, 0.1)), Paint::None, 0.0);
         let art = Node::path(base.alloc_id(), shapes::rectangle(Rect::new(100.0, 100.0, 130.0, 126.0)), orange);
-        base.symbols.push(vectorcraft_doc::Symbol { name: "Far".into(), art: std::sync::Arc::new(art) });
+        base.symbols.push(tsipika_doc::Symbol { name: "Far".into(), art: std::sync::Arc::new(art) });
         // The instance draws the art from (20, 20) to (50, 46), and the 20 × 20 square around the
         // origin from (-90, -90) to (-70, -70).
         let xf = Affine::translate((-80.0, -80.0));
-        let instance = Node::new(base.alloc_id(), vectorcraft_doc::NodeKind::SymbolInstance { symbol: "Far".into(), xf });
+        let instance = Node::new(base.alloc_id(), tsipika_doc::NodeKind::SymbolInstance { symbol: "Far".into(), xf });
         let mut group = Node::group(base.alloc_id(), vec![std::sync::Arc::new(instance)]);
         let shadow = json!({"x": 4, "y": 3, "blur": 2, "opacity": 80});
         group.appearance.effects.push(Effect { id: "stylize.dropShadow".into(), params: shadow, visible: true });
@@ -2974,7 +2974,7 @@ mod tests {
             let mut d = d.clone();
             let id = d.layers[0].children().unwrap()[0].id;
             let n = d.node_mut(id).unwrap();
-            n.transform(Affine::translate((5.0, 3.0)), vectorcraft_doc::Scaling { patterns, ..Default::default() });
+            n.transform(Affine::translate((5.0, 3.0)), tsipika_doc::Scaling { patterns, ..Default::default() });
             edit(n);
             d
         };
@@ -2985,11 +2985,11 @@ mod tests {
         assert_eq!(drag(&base, &moved(&base, false, &recolor)), (0, true), "recolored");
         let spacing = |n: &mut Node| n.appearance.effects[0].params = json!({"crackSpacing": 9});
         assert_eq!(drag(&base, &moved(&base, false, &spacing)), (0, true), "other effect settings");
-        let resize = |n: &mut Node| n.transform(Affine::scale_about(1.5, vectorcraft_geom::Point::new(25.0, 23.0)), false);
+        let resize = |n: &mut Node| n.transform(Affine::scale_about(1.5, tsipika_geom::Point::new(25.0, 23.0)), false);
         assert_eq!(drag(&base, &moved(&base, false, &resize)), (0, true), "resized");
         // A square added beyond the old raster leaves the content inside it as it was.
         let beyond = |n: &mut Node| {
-            if let vectorcraft_doc::NodeKind::Path { path, .. } = &mut n.kind {
+            if let tsipika_doc::NodeKind::Path { path, .. } = &mut n.kind {
                 path.subpaths.extend(shapes::rectangle(Rect::new(75.0, 30.0, 80.0, 35.0)).subpaths);
             }
         };
@@ -3001,15 +3001,15 @@ mod tests {
         // A pattern fill: its tiles stay on the page unless they move with the object.
         let mut tiled = base.clone();
         let red = Node::path(
-            vectorcraft_doc::NodeId(900),
+            tsipika_doc::NodeId(900),
             shapes::rectangle(Rect::new(0.0, 0.0, 3.0, 3.0)),
             Appearance::basic(Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::None, 0.0),
         );
-        let mut def = vectorcraft_doc::pattern::PatternDef::new("Dots", vec![std::sync::Arc::new(red)]);
+        let mut def = tsipika_doc::pattern::PatternDef::new("Dots", vec![std::sync::Arc::new(red)]);
         def.tile = Rect::new(0.0, 0.0, 7.0, 7.0);
         tiled.patterns.push(def);
         let id = tiled.layers[0].children().unwrap()[0].id;
-        tiled.node_mut(id).unwrap().appearance.fill_mut().unwrap().paint = vectorcraft_doc::pattern::pattern_paint("Dots");
+        tiled.node_mut(id).unwrap().appearance.fill_mut().unwrap().paint = tsipika_doc::pattern::pattern_paint("Dots");
         assert_eq!(drag(&tiled, &moved(&tiled, false, &|_| {})), (0, true), "tiles that stay on the page");
         assert_eq!(drag(&tiled, &moved(&tiled, true, &|_| {})), (1, true), "tiles that move with the object");
         // Feather clips to the outline: a notch in the top edge where the tiles paint nothing
@@ -3019,14 +3019,14 @@ mod tests {
             vec![Effect { id: "stylize.feather".into(), params: json!({"radius": 3}), visible: true }];
         assert_eq!(drag(&feathered, &moved(&feathered, true, &|_| {})), (1, true), "feathered");
         let notch = |n: &mut Node| {
-            let mut bp = vectorcraft_geom::BezPath::new();
+            let mut bp = tsipika_geom::BezPath::new();
             bp.move_to((25.0, 23.0));
             for p in [(30.0, 23.0), (30.5, 23.6), (31.5, 23.6), (32.0, 23.0), (55.0, 23.0), (55.0, 49.0), (25.0, 49.0)] {
                 bp.line_to(p);
             }
             bp.close_path();
-            if let vectorcraft_doc::NodeKind::Path { path, .. } = &mut n.kind {
-                *path = vectorcraft_geom::PathData::from_bezpath(&bp);
+            if let tsipika_doc::NodeKind::Path { path, .. } = &mut n.kind {
+                *path = tsipika_geom::PathData::from_bezpath(&bp);
             }
         };
         assert_eq!(drag(&feathered, &moved(&feathered, true, &notch)), (0, true), "a notch in the feathered outline");
@@ -3079,13 +3079,13 @@ mod tests {
     /// and the next eight render as the canvas renders a drag's frames (`interacting`). Then the
     /// eighth position renders as the canvas renders the frame after the drag, and that frame
     /// renders once more with every raster cached.
-    /// Run with `cargo test -p vectorcraft-render texture_drag_perf -- --ignored --nocapture`.
+    /// Run with `cargo test -p tsipika-render texture_drag_perf -- --ignored --nocapture`.
     #[test]
     #[ignore = "manual timing probe; wall-clock performance depends on machine load"]
     fn texture_drag_perf() {
         for effect in ["texture.craquelure", "texture.mosaicTiles", "texture.stainedGlass"] {
             let mut base = Document::new(600.0, 500.0);
-            base.color_mode = vectorcraft_doc::ColorMode::Cmyk;
+            base.color_mode = tsipika_doc::ColorMode::Cmyk;
             let (layer, id) = (base.layers[0].id, base.alloc_id());
             let mut n = Node::path(
                 id,
@@ -3133,7 +3133,7 @@ mod tests {
     /// render as a drag's frames, once with `interacting` alone and once with `dragging` as well (as
     /// the canvas renders them). Then the eighth position renders as the canvas renders the frame
     /// after the drag. The hashes of that frame and of a fresh renderer's frame compare builds.
-    /// Run with `cargo test -p vectorcraft-render zoomed_drag_perf -- --ignored --nocapture`.
+    /// Run with `cargo test -p tsipika-render zoomed_drag_perf -- --ignored --nocapture`.
     #[test]
     #[ignore = "manual timing probe; wall-clock performance depends on machine load"]
     fn zoomed_drag_perf() {

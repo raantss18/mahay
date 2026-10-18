@@ -1,14 +1,14 @@
 //! The Backgrounds animation presets through the wired session (with the expression engine):
 //! each one renders a non-flat, finite, deterministic frame that keeps moving, and undoes.
 
-use effectcraft_engine::render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_engine::render::RenderOpts;
+use tselatra_time::Tick;
 use serde_json::json;
 
 type Frame = Vec<[f32; 4]>;
 
 /// The frame at `secs`, its mean luma, luma standard deviation and whether any channel is not finite.
-fn frame(s: &effectcraft_engine::Session, secs: f64) -> (Frame, f64, f64, bool) {
+fn frame(s: &tselatra_engine::Session, secs: f64) -> (Frame, f64, f64, bool) {
     let Some(cid) = s.active_comp_id() else { panic!("no active comp") };
     let img = s.render(cid, Tick::from_seconds_f64(secs), RenderOpts { scale: 1.0, ..Default::default() });
     let bad = img.data.iter().any(|p| p.iter().any(|c| !c.is_finite()));
@@ -25,7 +25,7 @@ fn diff(a: &[[f32; 4]], b: &[[f32; 4]]) -> f64 {
 
 #[test]
 fn every_background_preset_renders_moves_and_undoes() {
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     s.execute("comp.new", json!({"name": "BG", "width": 640, "height": 360, "frameRate": 30, "duration": 8})).unwrap();
     let solid = s.execute("layer.newSolid", json!({"name": "S", "color": "#ffffff"})).unwrap()["layer"].as_u64().unwrap();
     let list = s.execute("anim.builtinPresets", json!({"category": "Backgrounds"})).unwrap();

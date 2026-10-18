@@ -1,11 +1,11 @@
 //! PDF text in installed fonts imports as live type (one point type object per line).
 
-use craft_pdf::write::backend as krilla;
+use mahay_pdf::write::backend as krilla;
 use krilla::geom::{Point as KPoint, Transform};
 use krilla::page::PageSettings;
 use krilla::text::{Font, TextDirection};
 use kurbo::Shape;
-use vectorcraft_doc::{Document, NodeKind, TextObject};
+use tsipika_doc::{Document, NodeKind, TextObject};
 
 use crate::*;
 
@@ -44,7 +44,7 @@ fn texts(d: &Document) -> Vec<TextObject> {
 }
 
 fn ink_width(t: &TextObject) -> f64 {
-    vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).glyphs.iter().map(|g| g.advance).sum()
+    tsipika_text::layout(tsipika_text::FontDb::global(), t).glyphs.iter().map(|g| g.advance).sum()
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn lines_of_text_in_installed_fonts_come_in_as_point_type() {
     assert!((st.size - 24.0).abs() < 0.01);
     let origin = first.xf * kurbo::Point::ZERO;
     assert!((origin.x - 20.0).abs() < 0.01 && (origin.y - 50.0).abs() < 0.01, "on the PDF's baseline: {origin:?}");
-    assert!(st.tracking.abs() <= 1.0, "set as VectorCraft sets it: {}", st.tracking);
+    assert!(st.tracking.abs() <= 1.0, "set as Tsipika sets it: {}", st.tracking);
     assert!(t.iter().any(|t| t.plain_text() == "Hall A" && (t.first_style().size - 12.0).abs() < 0.01));
     assert!(!r.warnings.iter().any(|w| w.contains("outlines")), "{:?}", r.warnings);
 }
@@ -83,7 +83,7 @@ fn letter_spacing_in_the_pdf_becomes_tracking() {
     let mut x = 20.0;
     let mut lines = vec![];
     let word = "Wide";
-    let font = vectorcraft_text::FontDb::global().find_postscript("SourceSans3-Regular").unwrap();
+    let font = tsipika_text::FontDb::global().find_postscript("SourceSans3-Regular").unwrap();
     let mut pieces = vec![];
     for c in word.chars() {
         pieces.push((x, c.to_string()));
@@ -137,7 +137,7 @@ fn kangxi_radicals_from_cid_tables_become_ideographs() {
 fn a_glyph_whose_unicode_names_another_letter_stays_outlined() {
     // The glyph of `l` labelled `W` in the PDF's ToUnicode map: opening it as live `W` would change
     // what the page shows.
-    let font = vectorcraft_text::FontDb::global().find_postscript("SourceSans3-Regular").unwrap();
+    let font = tsipika_text::FontDb::global().find_postscript("SourceSans3-Regular").unwrap();
     let l = font.glyph_for('l');
     let mut pdf = krilla::Document::new();
     let mut page = pdf.start_page_with(PageSettings::from_wh(300.0, 200.0).unwrap());
@@ -256,7 +256,7 @@ fn text_in_a_missing_font_stays_live_type() {
 #[test]
 fn a_single_upright_glyph_comes_in_as_vertical_type_and_takes_no_horizontal_glyphs() {
     use crate::import_text::{Look, Placement, TextLine, Upright};
-    use vectorcraft_geom::{Point, Vec2};
+    use tsipika_geom::{Point, Vec2};
     let look = Look {
         font: 1,
         family: "Source Sans 3".into(),
@@ -264,7 +264,7 @@ fn a_single_upright_glyph_comes_in_as_vertical_type_and_takes_no_horizontal_glyp
         version: None,
         size: 20.0,
         h_scale: 100.0,
-        fill: Some(vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb(0.0, 0.0, 0.0))),
+        fill: Some(tsipika_color::Paint::solid(tsipika_color::Color::rgb(0.0, 0.0, 0.0))),
         stroke: None,
         overprint_fill: false,
         overprint_stroke: false,
@@ -281,7 +281,7 @@ fn a_single_upright_glyph_comes_in_as_vertical_type_and_takes_no_horizontal_glyp
 #[test]
 fn letter_spaced_vertical_type_keeps_its_characters_together() {
     use crate::import_text::{Look, Placement, TextLine, Upright};
-    use vectorcraft_geom::{Point, Vec2};
+    use tsipika_geom::{Point, Vec2};
     let look = Look {
         font: 1,
         family: "Source Sans 3".into(),
@@ -289,7 +289,7 @@ fn letter_spaced_vertical_type_keeps_its_characters_together() {
         version: None,
         size: 20.0,
         h_scale: 100.0,
-        fill: Some(vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb(0.0, 0.0, 0.0))),
+        fill: Some(tsipika_color::Paint::solid(tsipika_color::Color::rgb(0.0, 0.0, 0.0))),
         stroke: None,
         overprint_fill: false,
         overprint_stroke: false,
@@ -331,27 +331,27 @@ fn a_tagged_span_inside_a_line_leaves_the_line_whole() {
 
 /// Advance of `text` in `font` at `size` (from the bundled Source Sans 3, as laid out).
 fn ink_width_of(_font: &Font, size: f32, text: &str) -> f32 {
-    let style = vectorcraft_doc::CharStyle { font_family: "Source Sans 3".into(), size: f64::from(size), ..Default::default() };
-    ink_width(&TextObject::point(vectorcraft_geom::Point::ZERO, text, style)) as f32
+    let style = tsipika_doc::CharStyle { font_family: "Source Sans 3".into(), size: f64::from(size), ..Default::default() };
+    ink_width(&TextObject::point(tsipika_geom::Point::ZERO, text, style)) as f32
 }
 
-/// Hebrew drawn by a PDF (in visual order, as VectorCraft's own export draws it) comes back as type
+/// Hebrew drawn by a PDF (in visual order, as Tsipika's own export draws it) comes back as type
 /// in logical order that shows as drawn. Needs an installed font with Hebrew (skipped without one).
 #[test]
 fn hebrew_comes_back_in_logical_order() {
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     let Some(face) =
         ["Arial", "Noto Sans Hebrew", "DejaVu Sans", "Liberation Sans"].into_iter().filter_map(|f| db.face(f, "Regular")).find(|f| f.covers('ש'))
     else {
         return;
     };
     for text in ["שלום עולם", "שלום 123", "Hello שלום"] {
-        let style = vectorcraft_doc::CharStyle { font_family: face.family.clone(), size: 24.0, ..Default::default() };
+        let style = tsipika_doc::CharStyle { font_family: face.family.clone(), size: 24.0, ..Default::default() };
         let mut d = Document::new(300.0, 200.0);
         let l = d.layers[0].id;
-        let n = vectorcraft_doc::Node::new(
+        let n = tsipika_doc::Node::new(
             d.alloc_id(),
-            NodeKind::Text(Box::new(TextObject::point(vectorcraft_geom::Point::new(20.0, 60.0), text, style))),
+            NodeKind::Text(Box::new(TextObject::point(tsipika_geom::Point::new(20.0, 60.0), text, style))),
         );
         d.insert(Some(l), 0, n).unwrap();
         let settings: PdfSettings = serde_json::from_value(serde_json::json!({"advanced": {"outlineText": false}})).unwrap();
@@ -361,9 +361,9 @@ fn hebrew_comes_back_in_logical_order() {
         assert_eq!(t.iter().map(TextObject::plain_text).collect::<Vec<_>>(), [text], "{:?}", r.warnings);
         let shown = |t: &TextObject| -> String {
             let plain = t.plain_text();
-            vectorcraft_text::layout(db, t).glyphs.iter().filter_map(|g| plain.get(g.byte..)?.chars().next()).collect()
+            tsipika_text::layout(db, t).glyphs.iter().filter_map(|g| plain.get(g.byte..)?.chars().next()).collect()
         };
-        let original = TextObject::point(vectorcraft_geom::Point::ZERO, text, vectorcraft_doc::CharStyle::default());
+        let original = TextObject::point(tsipika_geom::Point::ZERO, text, tsipika_doc::CharStyle::default());
         assert_eq!(shown(&t[0]), shown(&original), "{text}");
     }
 }

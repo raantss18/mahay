@@ -1,6 +1,6 @@
 //! Cross-command caret color and character-style regressions.
 use crate::Session;
-use designcraft_doc::StoryId;
+use pejy_doc::StoryId;
 use serde_json::{Value, json};
 
 fn setup(text: &str) -> (Session, u64) {

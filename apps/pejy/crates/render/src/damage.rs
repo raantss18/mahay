@@ -8,8 +8,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use designcraft_doc::{Document, Item, ItemId, SpreadRef, Story, StoryId};
-use designcraft_geom::Rect;
+use pejy_doc::{Document, Item, ItemId, SpreadRef, Story, StoryId};
+use pejy_geom::Rect;
 
 /// Changed regions in spread coordinates, or `None` when the whole view must be repainted.
 pub fn damage(old: &Document, new: &Document) -> Option<Vec<(SpreadRef, Rect)>> {
@@ -18,7 +18,7 @@ pub fn damage(old: &Document, new: &Document) -> Option<Vec<(SpreadRef, Rect)>> 
 
 /// [`damage`] using the composition cache: of a changed story, only the frames whose composed
 /// text actually changed are damaged (typing on page 40 of a chapter repaints page 40).
-pub fn damage_with(old: &Document, new: &Document, cache: Option<&designcraft_compose::Cache>) -> Option<Vec<(SpreadRef, Rect)>> {
+pub fn damage_with(old: &Document, new: &Document, cache: Option<&pejy_compose::Cache>) -> Option<Vec<(SpreadRef, Rect)>> {
     if std::ptr::eq(old, new) {
         return Some(vec![]);
     }
@@ -94,7 +94,7 @@ pub fn damage_with(old: &Document, new: &Document, cache: Option<&designcraft_co
         }
         // Its anchored objects' text wrap reflows the other stories on its spreads.
         for d in [old, new] {
-            for other in designcraft_compose::wrap::wrapped_by(d, sid) {
+            for other in pejy_compose::wrap::wrapped_by(d, sid) {
                 for f in d.story(other).map(|s| s.frames.clone()).unwrap_or_default() {
                     out.push(frame_area(d, f)?);
                 }
@@ -105,7 +105,7 @@ pub fn damage_with(old: &Document, new: &Document, cache: Option<&designcraft_co
             && let Some(prev) = c.composed_for(old, sid)
         {
             let cur = c.get(new, sid, None);
-            let changed = designcraft_compose::Cache::changed_frames(&prev, &cur);
+            let changed = pejy_compose::Cache::changed_frames(&prev, &cur);
             for f in changed {
                 for d in [old, new] {
                     if d.find(f).is_some() {
@@ -148,7 +148,7 @@ fn text_stories(it: &Item) -> Vec<StoryId> {
 
 /// Does the story show text generated from other stories or pages?
 fn shows_other_text(d: &Document, s: &Story) -> bool {
-    !s.xrefs.is_empty() || s.text.chars().any(|c| designcraft_doc::vars::var_index(c).is_some()) || d.toc.as_ref().is_some_and(|t| t.story == s.id)
+    !s.xrefs.is_empty() || s.text.chars().any(|c| pejy_doc::vars::var_index(c).is_some()) || d.toc.as_ref().is_some_and(|t| t.story == s.id)
 }
 
 /// Area an item paints (spread coordinates), or None when it can't be bounded cheaply.
@@ -192,8 +192,8 @@ fn frame_area(d: &Document, f: ItemId) -> Option<(SpreadRef, Rect)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use designcraft_doc::ParaFormat;
-    use designcraft_doc::build::NewDocument;
+    use pejy_doc::ParaFormat;
+    use pejy_doc::build::NewDocument;
 
     #[test]
     fn typing_damages_only_the_frame() {
@@ -205,12 +205,12 @@ mod tests {
         d.story_mut(sid).unwrap().insert(5, " world");
         let dmg = damage(&old, &d).unwrap();
         assert!(!dmg.is_empty());
-        assert!(dmg.iter().all(|(r, rect)| *r == SpreadRef::Doc(0) && rect.contains(designcraft_geom::Point::new(100.0, 100.0))));
+        assert!(dmg.iter().all(|(r, rect)| *r == SpreadRef::Doc(0) && rect.contains(pejy_geom::Point::new(100.0, 100.0))));
         // Nothing changed.
         assert_eq!(damage(&d, &d.clone()).unwrap().len(), 0);
         // A style change repaints everything.
         let old = d.clone();
-        d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+        d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
             name: "X".into(),
             based_on: None,
             next_style: None,
@@ -222,10 +222,10 @@ mod tests {
         // Moving an item damages where it was and where it is.
         let old = d.clone();
         let id = d.spreads[0].items[0].id;
-        d.item_mut(id).unwrap().xf = designcraft_geom::Affine::translate((100.0, 0.0));
+        d.item_mut(id).unwrap().xf = pejy_geom::Affine::translate((100.0, 0.0));
         let dmg = damage(&old, &d).unwrap();
-        assert!(dmg.iter().any(|(_, r)| r.contains(designcraft_geom::Point::new(100.0, 100.0))));
-        assert!(dmg.iter().any(|(_, r)| r.contains(designcraft_geom::Point::new(350.0, 100.0))));
+        assert!(dmg.iter().any(|(_, r)| r.contains(pejy_geom::Point::new(100.0, 100.0))));
+        assert!(dmg.iter().any(|(_, r)| r.contains(pejy_geom::Point::new(350.0, 100.0))));
     }
 
     #[test]
@@ -234,24 +234,24 @@ mod tests {
         let lid = d.default_layer();
         let (_, a) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 200.0, 200.0), lid, "Anchor", ParaFormat::default()).unwrap();
         let (_, _) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(300.0, 400.0, 500.0, 600.0), lid, "Wrapped", ParaFormat::default()).unwrap();
-        let mut it = designcraft_doc::Item::new(
-            designcraft_doc::ItemId(d.alloc()),
+        let mut it = pejy_doc::Item::new(
+            pejy_doc::ItemId(d.alloc()),
             lid,
-            designcraft_doc::Shape::Rectangle,
-            designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 20.0, 20.0)),
+            pejy_doc::Shape::Rectangle,
+            pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 20.0, 20.0)),
         );
-        it.wrap.mode = designcraft_doc::WrapMode::BoundingBox;
+        it.wrap.mode = pejy_doc::WrapMode::BoundingBox;
         let old = d.clone();
-        d.story_mut(a).unwrap().insert_object(0, designcraft_doc::AnchoredObject::new(it, Default::default()));
+        d.story_mut(a).unwrap().insert_object(0, pejy_doc::AnchoredObject::new(it, Default::default()));
         let dmg = damage(&old, &d).unwrap();
-        assert!(dmg.iter().any(|(_, r)| r.contains(designcraft_geom::Point::new(400.0, 500.0))));
+        assert!(dmg.iter().any(|(_, r)| r.contains(pejy_geom::Point::new(400.0, 500.0))));
     }
 
     /// Channels where `old`'s render patched over `new`'s damage differs from `new`'s full render.
     fn patched_diff(old: &Document, new: &Document, (w, h): (u32, u32), zoom: f64) -> usize {
         use crate::{Placed, RenderOptions, Renderer};
-        use designcraft_geom::{Affine, Vec2};
-        let cache = designcraft_compose::Cache::new();
+        use pejy_geom::{Affine, Vec2};
+        let cache = pejy_compose::Cache::new();
         let placed = [Placed { spread: SpreadRef::Doc(0), xf: Affine::translate(Vec2::ZERO) }];
         let view = Affine::scale(zoom);
         let mut r = Renderer::new();
@@ -290,7 +290,7 @@ mod tests {
 
     #[test]
     fn moving_a_sheared_turned_text_frame_leaves_no_trail() {
-        use designcraft_geom::Affine;
+        use pejy_geom::Affine;
         let mut d = Document::new(&NewDocument { pages: 1, ..Default::default() });
         let lid = d.default_layer();
         let text = "Lorem ipsum dolor sit amet. ".repeat(60);
@@ -298,7 +298,7 @@ mod tests {
         // Sheared outline (its box's corners are outside it, the text's first and last lines in
         // them), then turned: the text reaches past the outline's bounds.
         let it = d.item_mut(f).unwrap();
-        it.path = designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 300.0, 200.0)).transformed(Affine::skew(0.5, 0.0));
+        it.path = pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 300.0, 200.0)).transformed(Affine::skew(0.5, 0.0));
         it.xf = Affine::translate((150.0, 60.0)) * Affine::rotate(30f64.to_radians());
         let old = d.clone();
         d.item_mut(f).unwrap().xf = Affine::translate((210.0, 90.0)) * Affine::rotate(30f64.to_radians());
@@ -316,7 +316,7 @@ mod tests {
         let (f3, _) = d.add_text_frame(SpreadRef::Doc(2), Rect::new(72.0, 72.0, 300.0, 300.0), lid, "", ParaFormat::default()).unwrap();
         d.thread(f1, f2).unwrap();
         d.thread(f2, f3).unwrap();
-        let cache = designcraft_compose::Cache::new();
+        let cache = pejy_compose::Cache::new();
         let _ = cache.get(&d, sid, None);
         // Change a word in the last frame's text (same length): only that frame changes.
         let old = d.clone();
@@ -339,7 +339,7 @@ mod tests {
         let old = d.clone();
         let _ = cache.get(&d, sid, None);
         let it = d.item_mut(f1).unwrap();
-        it.path = designcraft_geom::shapes::rectangle(Rect::new(72.0, 72.0, 300.0, 150.0));
+        it.path = pejy_geom::shapes::rectangle(Rect::new(72.0, 72.0, 300.0, 150.0));
         let dmg = damage_with(&old, &d, Some(&cache)).unwrap();
         let spreads: Vec<SpreadRef> = dmg.iter().map(|(r, _)| *r).collect();
         assert!(spreads.contains(&SpreadRef::Doc(1)), "{dmg:?}");

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 
 use crate::{DialogFuture, FigApp, Services};
 
@@ -14,12 +14,12 @@ impl Services for OpenFile {
 
 #[test]
 fn open_dialog_finishes_after_the_async_picker_returns() {
-    let dir = std::env::temp_dir().join(format!("figcraft-async-open-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-async-open-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("opened.figcraft");
-    let doc = figcraft_doc::Document::new("Opened");
-    std::fs::write(&path, figcraft_format::save_bytes(&doc, None).unwrap()).unwrap();
+    let path = dir.join("opened.endrika");
+    let doc = endrika_doc::Document::new("Opened");
+    std::fs::write(&path, endrika_format::save_bytes(&doc, None).unwrap()).unwrap();
 
     let mut app = FigApp::new(Session::empty(), Box::new(OpenFile(path.clone())));
     app.ui.home = true;
@@ -47,10 +47,10 @@ impl Services for Picks {
 
 /// Two files, A (the first) in front, and where the picker saves.
 fn two_files(tag: &str) -> (FigApp, PathBuf, PathBuf) {
-    let dir = std::env::temp_dir().join(format!("figcraft-async-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-async-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("a.figcraft");
+    let path = dir.join("a.endrika");
     let mut app = FigApp::new(Session::empty(), Box::new(Picks(path.clone())));
     for _ in 0..2 {
         app.session.execute("file.new", &serde_json::json!({})).unwrap();

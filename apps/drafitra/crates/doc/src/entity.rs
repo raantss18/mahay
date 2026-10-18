@@ -1,7 +1,7 @@
 //! Entities: the graphical objects of a drawing.
 
-use cadcraft_color::Color;
-use cadcraft_geom::{
+use drafitra_color::Color;
+use drafitra_geom::{
     Arc as GArc, Bounds2, Circle as GCircle, Ellipse as GEllipse, Line as GLine, Mat3, PolyVertex, Polyline, Segment, Spline as GSpline, Vec2, Vec3,
 };
 use serde::{Deserialize, Serialize};
@@ -601,7 +601,7 @@ impl DimMarks {
     /// Transform the points and angles (part of [`EntityKind::transform`]).
     fn transform(&mut self, t3: &dyn Fn(&mut Vec3), rot: f64, s: f64, mirror: bool) {
         if let Some(a) = &mut self.oblique {
-            *a = cadcraft_geom::norm_angle(if mirror { rot - (*a - rot) } else { *a + rot });
+            *a = drafitra_geom::norm_angle(if mirror { rot - (*a - rot) } else { *a + rot });
         }
         if let Some(j) = &mut self.jog_line {
             t3(j);
@@ -1216,9 +1216,9 @@ impl EntityKind {
                 t3(&mut e.center);
                 let mj = m.apply_vec(e.major.xy());
                 e.major = mj.to3(0.0);
-                let full = (cadcraft_geom::ccw_sweep(e.start, e.end) - cadcraft_geom::TAU).abs() < 1e-9;
+                let full = (drafitra_geom::ccw_sweep(e.start, e.end) - drafitra_geom::TAU).abs() < 1e-9;
                 if !full {
-                    let ge = GEllipse { center: e.center.xy(), major: mj, ratio: e.ratio, start: 0.0, end: cadcraft_geom::TAU };
+                    let ge = GEllipse { center: e.center.xy(), major: mj, ratio: e.ratio, start: 0.0, end: drafitra_geom::TAU };
                     let (ps, pe) = (ge.param_of(sp), ge.param_of(ep));
                     if mirror {
                         e.start = pe;
@@ -1268,17 +1268,17 @@ impl EntityKind {
                 if let Some(c) = &mut t.columns {
                     c.scale(s);
                 }
-                t.rotation = cadcraft_geom::norm_angle(t.rotation + rot);
+                t.rotation = drafitra_geom::norm_angle(t.rotation + rot);
             }
             EntityKind::Insert(i) => {
                 t3(&mut i.insert);
                 i.scale.x *= s;
                 i.scale.y *= s;
                 i.scale.z *= s;
-                i.rotation = cadcraft_geom::norm_angle(i.rotation + rot);
+                i.rotation = drafitra_geom::norm_angle(i.rotation + rot);
                 if mirror {
                     i.scale.y = -i.scale.y;
-                    i.rotation = cadcraft_geom::norm_angle(rot - (i.rotation - rot));
+                    i.rotation = drafitra_geom::norm_angle(rot - (i.rotation - rot));
                 }
                 for a in &mut i.attribs {
                     transform_text(&mut a.text, m, s, rot, false);
@@ -1292,7 +1292,7 @@ impl EntityKind {
                     t3(p);
                 }
                 if let DimKind::Linear { rotation } = &mut d.kind {
-                    *rotation = cadcraft_geom::norm_angle(*rotation + rot);
+                    *rotation = drafitra_geom::norm_angle(*rotation + rot);
                 }
                 d.marks.transform(&t3, rot, s, mirror);
                 d.block = None;
@@ -1336,7 +1336,7 @@ impl EntityKind {
                     }
                 }
                 h.scale *= s;
-                h.angle = cadcraft_geom::norm_angle(h.angle + rot);
+                h.angle = drafitra_geom::norm_angle(h.angle + rot);
                 h.origin = m.apply(h.origin);
             }
             EntityKind::Solid(so) | EntityKind::Trace(so) => so.corners.iter_mut().for_each(t3),
@@ -1376,7 +1376,7 @@ impl EntityKind {
                 t3(&mut t.insert);
                 // Like text with MIRRTEXT = 0: a mirrored frame keeps reading left to right.
                 let a = if mirror { t.rotation() } else { t.rotation() + rot };
-                t.dir = Vec2::from_angle(cadcraft_geom::norm_angle(a)).to3(0.0);
+                t.dir = Vec2::from_angle(drafitra_geom::norm_angle(a)).to3(0.0);
             }
             EntityKind::Unknown(_) => {}
         }
@@ -1466,5 +1466,5 @@ fn transform_text(t: &mut Text, m: &Mat3, s: f64, rot: f64, mirror: bool) {
     }
     t.height *= s;
     // MIRRTEXT = 0 (the default): mirrored text keeps reading left to right.
-    t.rotation = cadcraft_geom::norm_angle(t.rotation + if mirror { 0.0 } else { rot });
+    t.rotation = drafitra_geom::norm_angle(t.rotation + if mirror { 0.0 } else { rot });
 }

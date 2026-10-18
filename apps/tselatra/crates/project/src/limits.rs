@@ -9,7 +9,7 @@
 use std::fmt::Display;
 use std::sync::Arc;
 
-use effectcraft_time::FrameRate;
+use tselatra_time::FrameRate;
 
 use crate::{Comp, Footage, Item, ItemKind, Solid};
 
@@ -115,7 +115,7 @@ fn repair_comp(name: &str, c: &Comp, notes: &mut Vec<String>) -> Option<Comp> {
     }
     if duration != c.duration {
         note(notes, name, "duration", format_args!("{:.3} s", c.duration.seconds()), format_args!("{:.3} s", duration.seconds()));
-        n.work_area = (effectcraft_time::Tick::ZERO, duration);
+        n.work_area = (tselatra_time::Tick::ZERO, duration);
     }
     if samples != c.motion_blur_samples {
         note(notes, name, "motion blur samples per frame", c.motion_blur_samples, samples);
@@ -170,7 +170,7 @@ fn repair_footage(name: &str, f: &mut Footage, notes: &mut Vec<String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_time::Tick;
+    use tselatra_time::Tick;
 
     #[test]
     fn helpers_clamp_and_refuse_nonsense() {
@@ -191,7 +191,7 @@ mod tests {
     fn add_item_and_reading_a_file_hold_footage_to_the_limits() {
         let mut p = crate::Project::default();
         let wild = Footage { width: u32::MAX, height: 0, pixel_aspect: 0.0, frame_rate: FrameRate { num: 1, den: 0 }, ..Default::default() };
-        let id = p.add_item("Clip", effectcraft_color::Label::None, None, ItemKind::Footage(wild));
+        let id = p.add_item("Clip", tselatra_color::Label::None, None, ItemKind::Footage(wild));
         let ItemKind::Footage(f) = &p.items[&id].kind else { panic!("footage") };
         assert_eq!((f.width, f.height, f.pixel_aspect, f.frame_rate), (MAX_SIZE, 0, 1.0, FrameRate::FPS_30));
         // The same values in a file are corrected, and each correction is reported.

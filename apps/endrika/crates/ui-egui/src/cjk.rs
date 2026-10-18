@@ -2,11 +2,11 @@
 //! the UI adds a face per script it needs: the UI language's, the scripts in the open file's names
 //! and comments, the language picker's and typed text. Desktop finds them among the installed
 //! fonts (the system font scan), only once one is needed, so English users load none; the web
-//! build has only the CJK faces built in from craft-fonts (`FIGCRAFT_EMBED_CJK`), else none.
+//! build has only the CJK faces built in from mahay-fonts (`ENDRIKA_EMBED_CJK`), else none.
 
 use std::sync::Arc;
 
-use figcraft_text::Face;
+use endrika_text::Face;
 
 pub const KANA: u8 = 1;
 pub const HANGUL: u8 = 2;
@@ -75,7 +75,7 @@ pub fn can_show(code: &str) -> bool {
     let need = language(code);
     need == 0
         || !cfg!(target_arch = "wasm32")
-        || samples(need, 0).iter().all(|(c, _)| figcraft_text::face_with_char(*c, &["BIZ UDPGothic", "Noto Sans CJK SC"]).is_some())
+        || samples(need, 0).iter().all(|(c, _)| endrika_text::face_with_char(*c, &["BIZ UDPGothic", "Noto Sans CJK SC"]).is_some())
 }
 
 /// A character standing for each script in `need`, with the families to look for it in, the UI
@@ -107,7 +107,7 @@ pub fn faces(need: u8, lang: &str, have: &dyn Fn(char) -> bool) -> Vec<Arc<Face>
         if have(c) || out.iter().any(|f| f.has_char(c)) {
             continue;
         }
-        if let Some(face) = figcraft_text::face_with_char(c, &families) {
+        if let Some(face) = endrika_text::face_with_char(c, &families) {
             out.push(face);
         }
     }

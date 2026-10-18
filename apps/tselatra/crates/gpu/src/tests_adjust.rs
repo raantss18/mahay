@@ -1,11 +1,11 @@
 //! Adjustment layers on the GPU vs the CPU: GPU-only stacks (resident on the device), mixed
 //! stacks (CPU effects in between read back and upload), masks, opacity, colour management.
 
-use effectcraft_keyframe::{ShapePath, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{BitDepth, ColorSpace, MaskMode, MatteKind, TrackMatte};
-use effectcraft_render::{Backend, FxStep, FxTarget, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{ShapePath, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{BitDepth, ColorSpace, MaskMode, MatteKind, TrackMatte};
+use tselatra_render::{Backend, FxStep, FxTarget, RenderOpts, Renderer};
+use tselatra_time::Tick;
 
 use crate::tests::{Pattern, Scene, c, check, compare_at, gpu, n, opts, set};
 
@@ -102,7 +102,7 @@ impl FxTarget for Probe {
         self.gpu += steps.len();
         true
     }
-    fn cpu(&mut self, _f: &mut dyn FnMut(effectcraft_effects::Buf) -> effectcraft_effects::Buf) {
+    fn cpu(&mut self, _f: &mut dyn FnMut(tselatra_effects::Buf) -> tselatra_effects::Buf) {
         self.cpu += 1;
     }
 }

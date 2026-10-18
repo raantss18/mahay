@@ -1,8 +1,8 @@
-# FigCraft plugins
+# Endrika plugins
 
-A FigCraft plugin is a WebAssembly module with a small JSON manifest. It acts on the document only
-through FigCraft's commands, the same ones the menus, the CLI, the control channel and the MCP
-server run (`figcraft-cli commands` lists them), so a plugin can do what a script can do, within the
+A Endrika plugin is a WebAssembly module with a small JSON manifest. It acts on the document only
+through Endrika's commands, the same ones the menus, the CLI, the control channel and the MCP
+server run (`endrika-cli commands` lists them), so a plugin can do what a script can do, within the
 permissions its manifest asks for, and nothing more.
 
 - **Sandboxed.** Plugins run in [wasmi](https://github.com/wasmi-labs/wasmi), a pure-Rust
@@ -13,15 +13,15 @@ permissions its manifest asks for, and nothing more.
   so is everything one callback from its panel does. When a run or a callback fails (the plugin
   returns an error, traps, panics or runs out of fuel or memory), the document, selection and page
   are put back as they were.
-- **Panels and settings (API 2).** A plugin can show a small panel of its own while it runs: FigCraft
+- **Panels and settings (API 2).** A plugin can show a small panel of its own while it runs: Endrika
   draws its fields and buttons with its own widgets and calls the plugin back when one is used. A
   plugin can also keep settings from one run to the next.
 - **Widgets (API 3).** A plugin can put a layer of its own on the canvas: it describes the layer
-  (frames with auto layout, text, shapes, images), FigCraft builds it, and a click on one of its
+  (frames with auto layout, text, shapes, images), Endrika builds it, and a click on one of its
   parts calls the plugin back to redraw it from its state, which is kept in the document.
 - **Permissions.** The manifest says whether the plugin only reads the document or may edit it, and
-  can narrow the commands it may call. FigCraft enforces both.
-- **Distribution.** A team's own `figcraft-server` can keep a plugin directory: plugins are
+  can narrow the commands it may call. Endrika enforces both.
+- **Distribution.** A team's own `endrika-server` can keep a plugin directory: plugins are
   published to it with the server's key, browsed and installed from Plugins ▸ Manage plugins, and
   updated when a newer version is published (see [Plugin directories](#plugin-directories)). No
   third-party service is involved.
@@ -49,7 +49,7 @@ large data instead of logging it in full.
 
 ## Using plugins
 
-- **Plugins ▸ Development ▸ Import plugin from manifest…** picks a `figcraft-plugin.json`. The
+- **Plugins ▸ Development ▸ Import plugin from manifest…** picks a `endrika-plugin.json`. The
   plugin is kept in the preferences and its module is read again on every run, so a rebuilt
   development plugin runs its new code without importing it again.
 - The desktop app saves the preferences the moment a plugin is imported, installed, updated or
@@ -57,7 +57,7 @@ large data instead of logging it in full.
   killed app never loses them; it doesn't wait until it quits.
 - The installed plugins head the **Plugins** menu: a plugin with one command is an item, one with
   several a submenu. A command with parameters (an ellipsis after its name) first opens a small form
-  with a field per parameter, drawn with FigCraft's own widgets; **Run** runs it.
+  with a field per parameter, drawn with Endrika's own widgets; **Run** runs it.
 - **Plugins ▸ Run last plugin** (⌥⌘P on macOS, Ctrl+Alt+Shift+P on Windows and Linux, where
   Ctrl+Alt+P is Pixel preview) runs the last plugin command again with the same parameters.
 - **Plugins ▸ Manage plugins…** has two tabs. **Installed** lists the installed plugins (version,
@@ -71,8 +71,8 @@ A message the plugin shows (`notify`) appears as a toast; so does a text result.
 
 **Plugin panels.** A plugin written for API 2 can show a panel while it runs: a floating window,
 first placed beside the properties panel (drag its title bar to move it), with the plugin's notes,
-fields (text, number, checkbox, menu, list, colour) and buttons, drawn with FigCraft's own widgets
-and named for screen readers. A colour field's swatch opens FigCraft's colour picker (the plugin hears
+fields (text, number, checkbox, menu, list, colour) and buttons, drawn with Endrika's own widgets
+and named for screen readers. A colour field's swatch opens Endrika's colour picker (the plugin hears
 of the colour when a drag in the picker ends); its hex can also be typed. Pressing a button or
 changing a field calls the plugin back with every field's value; what that callback does is one
 undo step (none when it changes nothing), and the plugin can update the panel or close it. The
@@ -105,26 +105,26 @@ From scripts, the CLI and MCP the same commands apply, panels included:
 ```jsonl
 {"command": "plugin.import", "params": {"path": "plugins/tidy-names"}}
 {"command": "select.all", "params": {}}
-{"command": "plugin.run", "params": {"id": "org.figcraft.examples.tidy-names", "command": "tidy", "params": {"case": "Title Case"}}}
+{"command": "plugin.run", "params": {"id": "org.endrika.examples.tidy-names", "command": "tidy", "params": {"case": "Title Case"}}}
 {"command": "plugin.import", "params": {"path": "target/plugins/dist/swatch-grid"}}
-{"command": "plugin.run", "params": {"id": "org.figcraft.examples.swatch-grid", "command": "panel"}}
-{"command": "plugin.event", "params": {"id": "org.figcraft.examples.swatch-grid", "control": "palette", "value": "Ocean"}}
-{"command": "plugin.event", "params": {"id": "org.figcraft.examples.swatch-grid", "control": "generate"}}
-{"command": "plugin.close", "params": {"id": "org.figcraft.examples.swatch-grid"}}
+{"command": "plugin.run", "params": {"id": "org.endrika.examples.swatch-grid", "command": "panel"}}
+{"command": "plugin.event", "params": {"id": "org.endrika.examples.swatch-grid", "control": "palette", "value": "Ocean"}}
+{"command": "plugin.event", "params": {"id": "org.endrika.examples.swatch-grid", "control": "generate"}}
+{"command": "plugin.close", "params": {"id": "org.endrika.examples.swatch-grid"}}
 {"command": "plugin.import", "params": {"path": "target/plugins/dist/counter"}}
-{"command": "widget.insert", "params": {"plugin": "org.figcraft.examples.counter", "x": 0, "y": 0}}
+{"command": "widget.insert", "params": {"plugin": "org.endrika.examples.counter", "x": 0, "y": 0}}
 {"command": "widget.list", "params": {}}
 {"command": "widget.click", "params": {"id": 12, "target": "increment"}}
 ```
 
-`figcraft-cli run script.jsonl --in design.figcraft --out tidy.figcraft` runs that headless; over
+`endrika-cli run script.jsonl --in design.endrika --out tidy.endrika` runs that headless; over
 MCP, `run_command` takes the same ids. A session started by the CLI or the MCP server starts with no
 plugins: import them in the script.
 
 | Command | Params | Does |
 |---|---|---|
 | `plugin.list` | `{}` | `{plugins: [{id, name, version, description, main, api, permissions, commands, path, loaded}], last: {id, command}}` |
-| `plugin.import` | `{path}` or `{manifest, wasm}` | `path` is a `figcraft-plugin.json` or its folder. Without files (the browser, tests), pass the manifest (an object or JSON text) and the module as base64 `wasm`; such a plugin lasts for the session only. A plugin with the same id is replaced. The module is checked first. |
+| `plugin.import` | `{path}` or `{manifest, wasm}` | `path` is a `endrika-plugin.json` or its folder. Without files (the browser, tests), pass the manifest (an object or JSON text) and the module as base64 `wasm`; such a plugin lasts for the session only. A plugin with the same id is replaced. The module is checked first. |
 | `plugin.remove` | `{id}` | Uninstalls it. |
 | `plugin.run` | `{id, command?, params?, fuel?}` | Runs a command (default: the first) with its parameters checked against the manifest and the missing ones filled with their defaults; `fuel` lowers the instruction budget (for the panel's callbacks too). Returns `{plugin, command, output, logs, calls, fuel, panel}`; `output` is the plugin's result, parsed as JSON when it is JSON; `panel` is the plugin's open panel (as `plugin.ui` returns it) or null. |
 | `plugin.ui` | `{id?}` | Plugin `id`'s open panel: `{plugin, command, title, controls, values}` (`values`: every field's current value by name), or null. Without `id`, the panel opened last. |
@@ -137,12 +137,12 @@ plugins: import them in the script.
 | `widget.list` | `{}` | `{widgets: [{id, plugin, name, page, state, targets}]}`: every widget in the file. |
 | `plugin.directory.list` | `{server?, query?}` | The plugin directory at `server` (`ws://host:port/`; default: the one browsed last): `{server, plugins: [{id, name, version, description, author, api, access, commands, widget, bytes, sha256, published, versions, installed, update}]}`, the latest version of each plugin whose id, name, description or author contains `query`. `installed` is the installed version (or null), `update` whether the listed one is newer. |
 | `plugin.directory.install` | `{id, version?, confirm, server?, sha256?}` | Downloads version `version` (default: the latest) and installs it, or updates the installed one. `confirm` must be `true` (installing runs the plugin's code: show its permissions first); without it nothing is downloaded. The download must match the SHA-256 the directory lists (and `sha256`, the one shown, when given). Returns `{installed, name, version, permissions, sha256, path, source, replaced}`. |
-| `plugin.directory.publish` | `{path \| plugin, server}` | Publishes a plugin folder (or its `figcraft-plugin.json`), or an installed plugin, as a new version. `server` carries the server's key: `ws://host:port/?key=…`. Returns `{published, server}`. |
+| `plugin.directory.publish` | `{path \| plugin, server}` | Publishes a plugin folder (or its `endrika-plugin.json`), or an installed plugin, as a new version. `server` carries the server's key: `ws://host:port/?key=…`. Returns `{published, server}`. |
 | `plugin.directory.unpublish` | `{id, version?, server}` | Removes one version (default: every version) from the directory; needs the key. Returns `{id, removed}`. |
 
 ## Plugin directories
 
-A `figcraft-server` ([`server.md`](server.md#plugin-directory)) can keep a directory of plugins for a
+A `endrika-server` ([`server.md`](server.md#plugin-directory)) can keep a directory of plugins for a
 team. Anyone who can reach the server may browse it and install from it; only whoever has the
 server's key may publish to it or unpublish from it. There are no accounts: the server's operator
 decides who gets the key and moderates what's there.
@@ -162,38 +162,38 @@ checked like an imported plugin (manifest, plugin API version, the module compil
 asset names) before anything is written. A plugin installed this way runs in the same sandbox,
 with the same limits and its manifest's permissions, as any other.
 
-The desktop app keeps such plugins per user, beside its settings (`Plugins/` in FigCraft's settings
-folder: `%APPDATA%\FigCraft` on Windows, `~/Library/Application Support/FigCraft` on macOS,
-`~/.config/FigCraft` elsewhere), each in a folder of its own named by a hash of its id, with its
+The desktop app keeps such plugins per user, beside its settings (`Plugins/` in Endrika's settings
+folder: `%APPDATA%\Endrika` on Windows, `~/Library/Application Support/Endrika` on macOS,
+`~/.config/Endrika` elsewhere), each in a folder of its own named by a hash of its id, with its
 module and its assets. The CLI and the MCP server install for the session only.
 
 **Updating.** When the directory has a newer version than the one installed, the plugin's row
 offers **Update**, with the same confirmation (the permissions may have changed). Browsing again is
 the update check; nothing checks in the background. **Remove** uninstalls it and deletes its folder.
 
-**Publishing.** A plugin folder holds `figcraft-plugin.json`, the module its `main` names and, if
+**Publishing.** A plugin folder holds `endrika-plugin.json`, the module its `main` names and, if
 you like, an `assets/` folder of up to 32 plain files (an icon, a licence) that are installed with
 it. Publish it with the server's key:
 
 ```sh
-FIGCRAFT_SERVER_KEY=<key> figcraft-cli plugin publish target/plugins/dist/counter --server ws://host:47900/
+ENDRIKA_SERVER_KEY=<key> endrika-cli plugin publish target/plugins/dist/counter --server ws://host:47900/
 ```
 
 (the key may also be in the address, `?key=…`, but the environment keeps it out of your shell
 history), or `plugin.directory.publish {path, server}` from a script or MCP. The server checks the
 whole bundle before keeping it, refuses a version that isn't newer than the one it has, and lists
-the new version at once. `plugin.directory.unpublish` (or the operator's `figcraft-server plugins
+the new version at once. `plugin.directory.unpublish` (or the operator's `endrika-server plugins
 remove`) takes a version, or the whole plugin, down; installed copies keep working.
 
 **In the browser** the directory isn't available yet: the browser build's network link has no
 plugin directory requests (`plugin.directory.*` says so). Import plugins with `plugin.import
 {manifest, wasm}` there.
 
-## The manifest: `figcraft-plugin.json`
+## The manifest: `endrika-plugin.json`
 
 ```json
 {
-  "id": "org.figcraft.examples.swatch-grid",
+  "id": "org.endrika.examples.swatch-grid",
   "name": "Swatch grid",
   "version": "1.0.0",
   "description": "Makes a grid of colour swatches from a palette of hex colours.",
@@ -224,7 +224,7 @@ plugin directory requests (`plugin.directory.*` says so). Import plugins with `p
 | `version`, `description` | Optional text. A plugin published to a [directory](#plugin-directories) needs a `version` of one to four numbers (`1.2.0`), each version newer than the last. |
 | `author` | Optional: who made it, as you type it (64 characters at most); plugin directories show it. |
 | `main` | Required. The module, a `.wasm` path relative to the manifest, inside its folder. |
-| `api` | The plugin API version the plugin was written for: `1` (the default), `2` (panels and settings) or `3` (widgets). A manifest asking for a newer one than FigCraft runs is refused, so a plugin that needs panels or widgets fails clearly on an older FigCraft. |
+| `api` | The plugin API version the plugin was written for: `1` (the default), `2` (panels and settings) or `3` (widgets). A manifest asking for a newer one than Endrika runs is refused, so a plugin that needs panels or widgets fails clearly on an older Endrika. |
 | `widget` | API 3: `true` when the plugin draws a widget (it's listed in Plugins ▸ Widgets). |
 | `permissions.access` | `read` (the default): commands that leave the document as it is; such plugins also run from Dev Mode's Inspect tab. `write`: edits too. |
 | `permissions.commands` | Optional allowlist: exact command ids or prefixes ending in `*` (`node.*`). Empty: any command the access allows. |
@@ -233,7 +233,7 @@ plugin directory requests (`plugin.directory.*` says so). Import plugins with `p
 
 ## What a plugin can't do
 
-Whatever its manifest says, FigCraft refuses these calls (the plugin gets the refusal as an error
+Whatever its manifest says, Endrika refuses these calls (the plugin gets the refusal as an error
 it can handle):
 
 - files and the app: `file.*`, `app.*`, `pref.*`, `help.*`, `library.add`, `libraries.*`,
@@ -246,7 +246,7 @@ it can handle):
   `version.list`);
 - the undo history and nesting: `edit.undo`, `edit.redo`, `edit.repeat`, `command.batch` (a run is
   already one undo step), `plugin.*` / `plugins.*` (no plugin runs another) and `widget.*`;
-- writing layer data whose key starts with `figcraft.widget` (a widget's own data: no plugin can
+- writing layer data whose key starts with `endrika.widget` (a widget's own data: no plugin can
   forge a widget or change another one's state);
 - commands that open a dialog or panel (for example `object.rename` without a `name`, which would
   start renaming in the layers panel): the call is undone and refused;
@@ -272,21 +272,21 @@ Version 2 adds panels and settings to version 1, and version 3 adds widgets; a v
 module runs unchanged and gets the input it always got. Strings are UTF-8 `(ptr, len)` pairs in the plugin's linear memory; all values
 are `i32`.
 
-The module **exports** `memory` and `figcraft_run(input_len) -> status`. When `figcraft_run` starts,
+The module **exports** `memory` and `endrika_run(input_len) -> status`. When `endrika_run` starts,
 the reply buffer holds the input JSON, `input_len` bytes:
 
 ```json
 {"api": 1, "command": "grid", "params": {"palette": "#FF5A5F", "columns": 3, "labels": true}, "selection": [12, 15]}
 ```
 
-`api` is the manifest's. When the plugin's panel calls it back, `figcraft_run` runs again in the
+`api` is the manifest's. When the plugin's panel calls it back, `endrika_run` runs again in the
 same instance (its memory as the last call left it) with the event and every field's value added:
 
 ```json
 {"api": 2, "command": "panel", "params": {}, "selection": [], "event": {"control": "generate", "value": null}, "values": {"palette": "Ocean", "columns": 3, "labels": true}}
 ```
 
-When its widget is inserted or clicked, `figcraft_run` runs in a fresh instance (nothing is kept
+When its widget is inserted or clicked, `endrika_run` runs in a fresh instance (nothing is kept
 from one call to the next: a widget's state is all it remembers, so the same state and click
 always give the same widget) with `widget` added: the widget's layer id, its state (an empty object
 for a new widget) and what was clicked (`event` is null when it's inserted):
@@ -298,7 +298,7 @@ for a new widget) and what was clicked (`event` is null when it's inserted):
 It returns `0` for success; anything else fails the run (and rolls it back), with the text passed
 to `set_output` as the error message.
 
-The module may **import** these functions from the module `figcraft` (anything else, WASI
+The module may **import** these functions from the module `endrika` (anything else, WASI
 included, is refused when the plugin is imported):
 
 | Import | Signature | Does |
@@ -307,7 +307,7 @@ included, is refused when the plugin is imported):
 | `selection` | `() -> len` | The reply becomes the selected layer ids, a JSON array. |
 | `reply_len` | `() -> len` | The reply's length in bytes. |
 | `reply_read` | `(ptr, len) -> copied` | Copies up to `len` bytes of the reply to `ptr`. |
-| `log` | `(ptr, len)` | A line of the run's log (returned in `logs`, and written to FigCraft's log). |
+| `log` | `(ptr, len)` | A line of the run's log (returned in `logs`, and written to Endrika's log). |
 | `notify` | `(ptr, len)` | A short message for the user (a toast in the app). |
 | `set_output` | `(ptr, len)` | The run's result (JSON or text), or its error message when it fails. |
 | `ui_show` | `(ptr, len) -> status` | API 2. Shows the plugin's panel, or replaces the one showing (the panel spec below, as JSON). `1`: the spec is invalid, the reply says why. |
@@ -318,7 +318,7 @@ included, is refused when the plugin is imported):
 | `widget_render` | `(ptr, len) -> status` | API 3. Draws the widget being inserted or clicked (the widget description below, as JSON). `1`: the description is invalid, the reply says why. A widget call that doesn't draw keeps the widget as it was (inserting one must draw it). |
 
 A pointer or length outside the plugin's memory traps, which fails the run. Host functions can only
-be called while `figcraft_run` runs (not from a start function). Settings are forgotten when the
+be called while `endrika_run` runs (not from a start function). Settings are forgotten when the
 plugin is removed.
 
 ### Panel spec
@@ -340,7 +340,7 @@ plugin is removed.
 1,000 characters, no `name` needed), in order, each `name` unique. A field shows its `value`; a
 field without one keeps what the user entered before the panel was updated, so a plugin can update
 a note without resetting the other fields. Buttons next to each other share a row; the first button
-is the primary one. FigCraft checks the whole spec (sizes, kinds, options, bounds) and drops values
+is the primary one. Endrika checks the whole spec (sizes, kinds, options, bounds) and drops values
 that don't fit their field.
 
 ### Widget description
@@ -355,7 +355,7 @@ that don't fit their field.
 ```
 
 `state` is the widget's new state, a JSON object (left out: it keeps the one it has). `root` is the
-widget itself, a frame; FigCraft replaces everything inside it with the layers described and keeps
+widget itself, a frame; Endrika replaces everything inside it with the layers described and keeps
 the widget where it is (and its size, unless the description gives one). Every layer has a `type`
 (`frame`, `text`, `rectangle`, `ellipse`, `image`) and may have a `name`, a `target` (clicking it
 calls the plugin back with that name: letters, digits, `.`, `-`, `_`), `x` and `y` (in its frame,
@@ -366,13 +366,13 @@ layout) and `children`;
 with auto layout it hugs its contents on an axis without a size. A text has `text`, `size`,
 `color` and `bold` (with a `width` it wraps). An image has `data`, the image's bytes (PNG, JPEG…)
 as base64, usually carried in the module itself; without a size it takes the image's.
-FigCraft checks the whole description (kinds, sizes, numbers, colours, lengths, counts, depth,
+Endrika checks the whole description (kinds, sizes, numbers, colours, lengths, counts, depth,
 image sizes) and refuses it if anything is off.
 
 ## Writing a plugin in Rust
 
 `plugins/` in the repository is a workspace of its own: `plugins/sdk` (the crate
-`figcraft-plugin-sdk`, `no_std` with `alloc`) wraps the ABI with serde_json, and
+`endrika-plugin-sdk`, `no_std` with `alloc`) wraps the ABI with serde_json, and
 `plugins/examples` has three plugins:
 
 - **Tidy names** (`tidy-names`): cleans up the selected layers' names (extra spaces, the "copy" left
@@ -405,7 +405,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-figcraft-plugin-sdk = { path = "../figcraft/plugins/sdk" }
+endrika-plugin-sdk = { path = "../endrika/plugins/sdk" }
 
 [profile.release]
 opt-level = "z"
@@ -416,7 +416,7 @@ strip = true
 
 ```rust
 // src/lib.rs
-use figcraft_plugin_sdk::{Input, Result, Value, call, entry, json, notify};
+use endrika_plugin_sdk::{Input, Result, Value, call, entry, json, notify};
 
 fn run(input: Input) -> Result<Value> {
     if input.selection.is_empty() {
@@ -435,7 +435,7 @@ entry!(run);
 ```
 
 Build it with `cargo build --release --target wasm32-unknown-unknown`, put
-`target/wasm32-unknown-unknown/release/my_plugin.wasm` next to a `figcraft-plugin.json` whose `main`
+`target/wasm32-unknown-unknown/release/my_plugin.wasm` next to a `endrika-plugin.json` whose `main`
 names it, and import the manifest. The SDK gives `call`, `selection`, `log`, `notify` and the
 `Input` (`command`, `params` with `str`/`f64`/`bool` helpers, `selection`, and `event` when the
 panel calls back: `control`, `value` and every field's `values`); returning `Err` fails the run and
@@ -445,12 +445,12 @@ panel, `setting(key)`, `set_setting(key, &value)` and `delete_setting(key)` for 
 inserted or clicked, and `render_widget(&json!({"state": ..., "root": ...}))` to draw it. Outside
 WebAssembly every host call fails, so the plugin's own logic can be unit-tested with `cargo test`.
 
-Any language that compiles to WebAssembly works the same way: export `memory` and `figcraft_run`,
-import what you need from `figcraft`.
+Any language that compiles to WebAssembly works the same way: export `memory` and `endrika_run`,
+import what you need from `endrika`.
 
 ## Not yet
 
-- Distribution: directories live on your own `figcraft-server`; there is no public catalogue,
+- Distribution: directories live on your own `endrika-server`; there is no public catalogue,
   no publisher accounts or signatures (the server's key is the publisher), no ratings, reviews or
   install counts, and updates are found when you browse, not in the background. The browser build
   can't use a directory yet.

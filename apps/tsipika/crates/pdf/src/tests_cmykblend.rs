@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::{Appearance, ColorMode, Document, Node, NodeId, OpacityMask};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::{Appearance, ColorMode, Document, Node, NodeId, OpacityMask};
+use tsipika_geom::{Rect, shapes};
 
 use crate::*;
 

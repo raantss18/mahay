@@ -13,7 +13,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     s.execute(id, &p).unwrap_or_else(|e| panic!("{id} {p}: {e}"))
 }
 
-/// A saved document `dir/poster.vectorcraft` with two linked files (in `dir/art`) and a line of
+/// A saved document `dir/poster.tsipika` with two linked files (in `dir/art`) and a line of
 /// type.
 fn poster(dir: &Folder) -> Session {
     let (a, b) = (dir.file("art/red.png"), dir.file("art/blue.png"));
@@ -23,7 +23,7 @@ fn poster(dir: &Folder) -> Session {
     place(&mut s, &a);
     place(&mut s, &b);
     run(&mut s, "text.create", json!({"x": 10, "y": 40, "text": "Poster"}));
-    save(&mut s, &dir.file("poster.vectorcraft"));
+    save(&mut s, &dir.file("poster.tsipika"));
     s
 }
 
@@ -62,7 +62,7 @@ fn two_links_and_a_font_are_collected_and_relinked() {
     let out = dir.file("out");
     let r = run(&mut s, "file.package", json!({"folder": out}));
     let files: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f.as_str().unwrap()).collect();
-    assert_eq!(files, ["poster.vectorcraft", "Links/red.png", "Links/blue.png", "Fonts/SourceSans3-Regular.ttf", "poster Report.txt"]);
+    assert_eq!(files, ["poster.tsipika", "Links/red.png", "Links/blue.png", "Fonts/SourceSans3-Regular.ttf", "poster Report.txt"]);
     assert_eq!((r["links"].as_u64(), r["fonts"].as_u64(), r["missingLinks"].clone()), (Some(2), Some(1), json!([])));
     let root = std::path::Path::new(&out).join("poster Folder");
     assert_eq!(std::path::Path::new(r["folder"].as_str().unwrap()), root);
@@ -81,7 +81,7 @@ fn two_links_and_a_font_are_collected_and_relinked() {
     assert!(link(&s).iter().all(|l| l.path.contains("art")));
     // The packaged one opens with the copies, even with the originals gone.
     std::fs::remove_dir_all(dir.0.join("art")).unwrap();
-    let r = open(&mut s, &root.join("poster.vectorcraft").to_string_lossy());
+    let r = open(&mut s, &root.join("poster.tsipika").to_string_lossy());
     assert_eq!(r["missingLinks"], json!([]), "{r}");
     for l in link(&s) {
         assert!(std::path::Path::new(&l.path).starts_with(root.join("Links")), "{l:?}");
@@ -104,14 +104,14 @@ fn without_a_folder_the_zip_has_the_same_files() {
     let mut s = poster(&dir);
     let r = run(&mut s, "file.package", json!({"name": "Poster Kit"}));
     assert_eq!(r["name"], "Poster Kit.zip");
-    let zip = unzip(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
+    let zip = unzip(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
     let want: Vec<String> = r["files"].as_array().unwrap().iter().map(|f| format!("Poster Kit/{}", f.as_str().unwrap())).collect();
     let mut want_sorted = want.clone();
     want_sorted.sort();
     assert_eq!(zip.keys().cloned().collect::<Vec<_>>(), want_sorted);
     assert_eq!(zip["Poster Kit/Links/blue.png"], png(300, 300, BLUE));
     // The packaged document links to the files beside it.
-    let doc = vectorcraft_format::load(&zip["Poster Kit/poster.vectorcraft"]).unwrap();
+    let doc = tsipika_format::load(&zip["Poster Kit/poster.tsipika"]).unwrap();
     let mut rel = vec![];
     doc.visit_images(|_, im| rel.push(im.link.clone().unwrap().relative.unwrap()));
     rel.sort();
@@ -129,16 +129,16 @@ fn options_leave_out_links_fonts_and_the_report() {
     let dir = Folder::new("package-options");
     let mut s = poster(&dir);
     let r = run(&mut s, "file.package", json!({"linksFolder": false, "copyFonts": false, "report": false}));
-    assert_eq!(r["files"], json!(["poster.vectorcraft", "red.png", "blue.png"]));
+    assert_eq!(r["files"], json!(["poster.tsipika", "red.png", "blue.png"]));
     let r = run(&mut s, "file.package", json!({"copyLinks": false}));
-    assert_eq!(r["files"], json!(["poster.vectorcraft", "Fonts/SourceSans3-Regular.ttf", "poster Report.txt"]));
-    let zip = unzip(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
-    let doc = vectorcraft_format::load(&zip["poster Folder/poster.vectorcraft"]).unwrap();
+    assert_eq!(r["files"], json!(["poster.tsipika", "Fonts/SourceSans3-Regular.ttf", "poster Report.txt"]));
+    let zip = unzip(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
+    let doc = tsipika_format::load(&zip["poster Folder/poster.tsipika"]).unwrap();
     doc.visit_images(|_, im| assert!(im.link.as_ref().unwrap().path.contains("art"), "not relinked: the originals"));
     let r = run(&mut s, "file.package", json!({"relink": false}));
-    let zip = unzip(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
+    let zip = unzip(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
     assert!(zip.contains_key("poster Folder/Links/red.png"), "copied");
-    let doc = vectorcraft_format::load(&zip["poster Folder/poster.vectorcraft"]).unwrap();
+    let doc = tsipika_format::load(&zip["poster Folder/poster.tsipika"]).unwrap();
     doc.visit_images(|_, im| assert!(im.link.as_ref().unwrap().path.contains("art"), "not relinked"));
     assert!(s.execute("file.package", &json!({"name": "../up"})).is_err());
 }
@@ -147,7 +147,7 @@ fn options_leave_out_links_fonts_and_the_report() {
 fn a_package_never_replaces_its_source_or_its_links() {
     let dir = Folder::new("package-overwrite");
     let mut s = poster(&dir);
-    let doc = dir.file("poster.vectorcraft");
+    let doc = dir.file("poster.tsipika");
     let (saved, red) = (std::fs::read(&doc).unwrap(), std::fs::read(dir.file("art/red.png")).unwrap());
     let parent = dir.0.parent().unwrap();
     let name = dir.0.file_name().unwrap().to_string_lossy().into_owned();
@@ -162,7 +162,7 @@ fn a_package_never_replaces_its_source_or_its_links() {
     // Nothing was written.
     assert_eq!(std::fs::read(&doc).unwrap(), saved);
     assert_eq!(std::fs::read(dir.file("art/red.png")).unwrap(), red);
-    assert!(!dir.0.join("art/poster.vectorcraft").exists() && !dir.0.join("poster Report.txt").exists());
+    assert!(!dir.0.join("art/poster.tsipika").exists() && !dir.0.join("poster Report.txt").exists());
 }
 
 #[test]
@@ -171,10 +171,10 @@ fn a_missing_link_is_reported_not_copied() {
     let mut s = poster(&dir);
     std::fs::remove_file(dir.file("art/blue.png")).unwrap();
     // Reopened, the missing file's image shows its preview: nothing to copy.
-    open(&mut s, &dir.file("poster.vectorcraft"));
+    open(&mut s, &dir.file("poster.tsipika"));
     let r = run(&mut s, "file.package", json!({}));
     assert_eq!((r["links"].as_u64(), r["missingLinks"].clone()), (Some(1), json!(["blue.png"])));
-    let zip = unzip(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
+    let zip = unzip(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
     let report = String::from_utf8(zip["poster Folder/poster Report.txt"].clone()).unwrap();
     assert!(report.contains("blue.png: not found"), "{report}");
 }
@@ -187,7 +187,7 @@ fn a_font_named_by_another_of_its_names_is_copied() {
     run(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "Alias", "font": "SourceSans3-Semibold"}));
     let r = run(&mut s, "file.package", json!({}));
     assert_eq!((r["fonts"].as_u64(), r["skippedFonts"].clone()), (Some(2), json!([])), "{}", r["skippedFonts"]);
-    let zip = unzip(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
+    let zip = unzip(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
     let report = String::from_utf8(zip["poster Folder/poster Report.txt"].clone()).unwrap();
     assert!(report.contains("SourceSans3-Semibold Regular → Fonts/"), "{report}");
     let details = report.lines().find(|l| l.starts_with("SourceSans3-Semibold Regular: ")).unwrap_or_default();
@@ -203,7 +203,7 @@ fn a_substituted_style_names_the_style_shown() {
     run(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "Heavy", "font": "Source Sans 3", "style": "Black Wide"}));
     let r = run(&mut s, "file.package", json!({}));
     assert_eq!(r["skippedFonts"], json!([]));
-    let zip = unzip(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
+    let zip = unzip(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
     let report = String::from_utf8(zip["poster Folder/poster Report.txt"].clone()).unwrap();
     assert!(report.contains("Source Sans 3 Black Wide (shown in Source Sans 3 "), "{report}");
     assert!(report.contains("Source Sans 3 Black Wide: substituted: shown in Source Sans 3 "), "{report}");
@@ -242,7 +242,7 @@ fn the_document_info_report_has_every_category() {
     assert!(s.execute("document.info", &json!({"category": "brushes"})).is_err());
     assert!(s.execute("document.info", &json!({"format": "xml"})).is_err());
     // The bundled fonts allow embedding.
-    let face = vectorcraft_text::FontDb::global().face("Source Sans 3", "Regular").unwrap();
+    let face = tsipika_text::FontDb::global().face("Source Sans 3", "Regular").unwrap();
     assert!(face.embeddable() && face.path().is_none());
 }
 
@@ -253,21 +253,21 @@ fn poster_with_placed_document(dir: &Folder) -> Session {
     write(&image, &png(600, 300, RED));
     let mut part = session();
     place(&mut part, &image);
-    let part_path = dir.file("art/part.vectorcraft");
+    let part_path = dir.file("art/part.tsipika");
     save(&mut part, &part_path);
 
     let mut poster = session();
     let placed = run(&mut poster, "file.place", json!({ "path": part_path, "link": true }));
     assert_eq!(placed["linked"], true, "{placed}");
-    save(&mut poster, &dir.file("poster.vectorcraft"));
+    save(&mut poster, &dir.file("poster.tsipika"));
     poster
 }
 
 /// Every link must point to a packaged copy, including links inside a linked
-/// VectorCraft file. Validate after original assets have been removed.
+/// Tsipika file. Validate after original assets have been removed.
 fn verify_portable_nested_package(folder: &std::path::Path) {
-    let main = folder.join("poster.vectorcraft");
-    let part = folder.join("Links/part.vectorcraft");
+    let main = folder.join("poster.tsipika");
+    let part = folder.join("Links/part.tsipika");
     let image = folder.join("Links/photo.png");
     assert!(main.is_file() && part.is_file() && image.is_file());
 
@@ -278,9 +278,9 @@ fn verify_portable_nested_package(folder: &std::path::Path) {
     parent.doc().unwrap().doc.visit_placed(|_, p| targets.push(p.link.clone()));
     assert_eq!(targets.len(), 1);
     let link = &targets[0];
-    assert_eq!(link.relative.as_deref(), Some("Links/part.vectorcraft"));
+    assert_eq!(link.relative.as_deref(), Some("Links/part.tsipika"));
     let packaged_part = std::fs::read(&part).unwrap();
-    let expected_hash = vectorcraft_doc::links::hash_bytes(&packaged_part);
+    let expected_hash = tsipika_doc::links::hash_bytes(&packaged_part);
     assert_eq!(link.hash.as_deref(), Some(expected_hash.as_str()));
     let mut nested = session();
     let opened = open(&mut nested, &part.to_string_lossy());
@@ -311,7 +311,7 @@ fn zipped_package_recursively_relinks_without_absolute_creator_paths() {
     let mut s = poster_with_placed_document(&dir);
     let result = run(&mut s, "file.package", json!({}));
     assert_eq!(result["links"], 2, "{result}");
-    let bytes = vectorcraft_format::base64_decode(result["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(result["dataBase64"].as_str().unwrap()).unwrap();
     let archive = unzip(&bytes);
     let extraction = dir.file("extracted");
     for (name, bytes) in archive {
@@ -330,22 +330,22 @@ fn package_keeps_distinct_linked_documents_with_colliding_file_names() {
         write(&image, &png(300, 300, color));
         let mut part = session();
         place(&mut part, &image);
-        let name = dir.file(&format!("art{number}/part.vectorcraft"));
+        let name = dir.file(&format!("art{number}/part.tsipika"));
         save(&mut part, &name);
         run(&mut poster, "file.place", json!({ "path": name, "link": true }));
     }
-    save(&mut poster, &dir.file("poster.vectorcraft"));
+    save(&mut poster, &dir.file("poster.tsipika"));
     let result = run(&mut poster, "file.package", json!({ "folder": dir.file("delivery") }));
     assert_eq!(result["links"], 4, "{result}");
     assert_eq!(result["missingLinks"], json!([]));
     let folder = dir.0.join("delivery/poster Folder");
     let packaged: Vec<_> =
-        result["files"].as_array().unwrap().iter().filter_map(Value::as_str).filter(|name| name.ends_with(".vectorcraft")).collect();
+        result["files"].as_array().unwrap().iter().filter_map(Value::as_str).filter(|name| name.ends_with(".tsipika")).collect();
     assert_eq!(packaged.len(), 3, "both nested documents must be retained: {packaged:?}");
     std::fs::remove_dir_all(dir.0.join("art1")).unwrap();
     std::fs::remove_dir_all(dir.0.join("art2")).unwrap();
     let mut check = session();
-    assert_eq!(open(&mut check, &folder.join("poster.vectorcraft").to_string_lossy())["missingLinks"], json!([]));
+    assert_eq!(open(&mut check, &folder.join("poster.tsipika").to_string_lossy())["missingLinks"], json!([]));
     for name in packaged.into_iter().filter(|n| n.starts_with("Links/")) {
         let mut inner = session();
         let result = open(&mut inner, &folder.join(name).to_string_lossy());
@@ -360,12 +360,12 @@ fn package_finds_nested_assets_after_the_source_tree_moves() {
     let moved = dir.0.join("moved");
     std::fs::create_dir_all(&moved).unwrap();
     std::fs::rename(dir.0.join("art"), moved.join("art")).unwrap();
-    std::fs::rename(dir.0.join("poster.vectorcraft"), moved.join("poster.vectorcraft")).unwrap();
+    std::fs::rename(dir.0.join("poster.tsipika"), moved.join("poster.tsipika")).unwrap();
     // The file paths embedded in both documents still point to the old location.
     // Opening the parent repairs its direct link, but the child must resolve
     // the image from the folder where it was actually found.
     let mut opened = session();
-    open(&mut opened, &moved.join("poster.vectorcraft").to_string_lossy());
+    open(&mut opened, &moved.join("poster.tsipika").to_string_lossy());
     let result = run(&mut opened, "file.package", json!({ "folder": dir.file("delivery") }));
     assert_eq!(result["missingLinks"], json!([]), "moved file's nested link wasn't found: {result}");
     std::fs::remove_dir_all(moved.join("art")).unwrap();
@@ -381,20 +381,20 @@ fn identical_stale_paths_in_different_nested_documents_keep_separate_assets() {
         write(&image, &png(300, 300, color));
         let mut part = session();
         place(&mut part, &image);
-        let name = dir.file(&format!("art{number}/part.vectorcraft"));
+        let name = dir.file(&format!("art{number}/part.tsipika"));
         save(&mut part, &name);
 
         // Two otherwise independent linked documents have the *same* obsolete
         // absolute image path. Their relative paths identify different files.
-        let mut saved = vectorcraft_format::load(&std::fs::read(&name).unwrap()).unwrap();
+        let mut saved = tsipika_format::load(&std::fs::read(&name).unwrap()).unwrap();
         saved.update_links(|link| {
             link.path = "/old-computer/illustrations/photo.png".into();
             link.relative = Some("photo.png".into());
         });
-        write(&name, &vectorcraft_format::save_file(&saved));
+        write(&name, &tsipika_format::save_file(&saved));
         run(&mut poster, "file.place", json!({ "path": name, "link": true }));
     }
-    save(&mut poster, &dir.file("poster.vectorcraft"));
+    save(&mut poster, &dir.file("poster.tsipika"));
     let result = run(&mut poster, "file.package", json!({ "folder": dir.file("delivery") }));
     assert_eq!(result["links"], 4, "both images and both documents must be copied: {result}");
     assert_eq!(result["missingLinks"], json!([]), "{result}");
@@ -413,7 +413,7 @@ fn identical_stale_paths_in_different_nested_documents_keep_separate_assets() {
         .unwrap()
         .iter()
         .filter_map(Value::as_str)
-        .filter(|name| name.starts_with("Links/") && name.ends_with(".vectorcraft"))
+        .filter(|name| name.starts_with("Links/") && name.ends_with(".tsipika"))
     {
         let mut nested = session();
         let opened = open(&mut nested, &folder.join(filename).to_string_lossy());
@@ -425,24 +425,24 @@ fn identical_stale_paths_in_different_nested_documents_keep_separate_assets() {
 fn packaging_nested_files_preserves_embedded_preview_pdf_and_compression() {
     let dir = Folder::new("package-native-extras");
     let mut parent = poster_with_placed_document(&dir);
-    let source = dir.file("art/part.vectorcraft");
+    let source = dir.file("art/part.tsipika");
     let original = std::fs::read(&source).unwrap();
-    let doc = vectorcraft_format::load(&original).unwrap();
+    let doc = tsipika_format::load(&original).unwrap();
     let preview = png(8, 8, BLUE);
     let pdf = b"%PDF-1.7\n%Embedded client preview\n".to_vec();
-    let mut opts = vectorcraft_format::SaveOptions::for_doc(&doc);
+    let mut opts = tsipika_format::SaveOptions::for_doc(&doc);
     opts.preview = Some(preview.clone());
     opts.pdf = Some(pdf.clone());
     opts.compress = true;
-    write(&source, &vectorcraft_format::save_with(&doc, &opts).unwrap());
+    write(&source, &tsipika_format::save_with(&doc, &opts).unwrap());
 
     let result = run(&mut parent, "file.package", json!({ "folder": dir.file("delivery") }));
     assert_eq!(result["missingLinks"], json!([]), "{result}");
-    let packaged = std::fs::read(dir.0.join("delivery/poster Folder/Links/part.vectorcraft")).unwrap();
+    let packaged = std::fs::read(dir.0.join("delivery/poster Folder/Links/part.tsipika")).unwrap();
     assert!(packaged.starts_with(&[0x1f, 0x8b]), "compression must be preserved");
-    assert_eq!(vectorcraft_format::preview(&packaged), Some(preview));
-    assert_eq!(vectorcraft_format::pdf_content(&packaged), Some(pdf));
-    let nested = vectorcraft_format::load(&packaged).unwrap();
+    assert_eq!(tsipika_format::preview(&packaged), Some(preview));
+    assert_eq!(tsipika_format::pdf_content(&packaged), Some(pdf));
+    let nested = tsipika_format::load(&packaged).unwrap();
     let mut images = Vec::new();
     nested.visit_images(|_, image| images.push(image.link.clone()));
     assert_eq!(images.len(), 1);
@@ -460,8 +460,8 @@ fn the_report_lists_a_placed_documents_links_in_a_section_of_its_own() {
     let lines: Vec<&str> = report.lines().collect();
     let sections: Vec<usize> = lines.iter().enumerate().filter(|(_, l)| **l == "LINKED FILES").map(|(i, _)| i).collect();
     let [poster, part] = sections[..] else { panic!("two link sections: {report}") };
-    assert!(lines[poster + 1].ends_with("→ Links/part.vectorcraft"), "the packaged document's section as before: {report}");
-    assert!(lines[part + 1].starts_with("Document: ") && lines[part + 1].ends_with("part.vectorcraft"), "{report}");
+    assert!(lines[poster + 1].ends_with("→ Links/part.tsipika"), "the packaged document's section as before: {report}");
+    assert!(lines[part + 1].starts_with("Document: ") && lines[part + 1].ends_with("part.tsipika"), "{report}");
     assert!(lines[part + 2].ends_with("→ Links/photo.png"), "{report}");
 }
 
@@ -471,8 +471,8 @@ fn the_report_lists_a_placed_documents_links_in_a_section_of_its_own() {
 fn unreadable_placed_document_is_copied_unchanged_with_warning() {
     let dir = Folder::new("package-unreadable-placed");
     let mut parent = poster_with_placed_document(&dir);
-    let damaged = dir.file("art/part.vectorcraft");
-    let bytes = b"not a parseable VectorCraft file".to_vec();
+    let damaged = dir.file("art/part.tsipika");
+    let bytes = b"not a parseable Tsipika file".to_vec();
     write(&damaged, &bytes);
 
     let result = run(&mut parent, "file.package", json!({ "folder": dir.file("delivery") }));
@@ -483,7 +483,7 @@ fn unreadable_placed_document_is_copied_unchanged_with_warning() {
     assert!(warnings[0].as_str().unwrap().contains("unreadable linked document"), "{result}");
 
     let packaged = dir.0.join("delivery/poster Folder");
-    assert_eq!(std::fs::read(packaged.join("Links/part.vectorcraft")).unwrap(), bytes);
+    assert_eq!(std::fs::read(packaged.join("Links/part.tsipika")).unwrap(), bytes);
     let report = std::fs::read_to_string(packaged.join("poster Report.txt")).unwrap();
     assert!(report.lines().any(|line| line == "LINKED FILES"), "{report}");
     assert!(report.contains("copied unchanged") && report.contains("its own links were not collected"), "{report}");
@@ -492,8 +492,8 @@ fn unreadable_placed_document_is_copied_unchanged_with_warning() {
 #[test]
 fn circular_placed_links_copy_each_document_once_and_warn() {
     let dir = Folder::new("package-placed-cycle");
-    let source = dir.file("root.vectorcraft");
-    let child_path = dir.file("child.vectorcraft");
+    let source = dir.file("root.tsipika");
+    let child_path = dir.file("child.tsipika");
 
     let mut root = session();
     save(&mut root, &source);
@@ -508,16 +508,16 @@ fn circular_placed_links_copy_each_document_once_and_warn() {
     assert_eq!(result["missingLinks"], json!([]), "{result}");
     assert!(result["warnings"].as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("circular placed-document link")), "{result}");
     let packaged = dir.0.join("delivery/root Folder");
-    let root_doc = vectorcraft_format::load(&std::fs::read(packaged.join("root.vectorcraft")).unwrap()).unwrap();
-    let child_doc = vectorcraft_format::load(&std::fs::read(packaged.join("Links/child.vectorcraft")).unwrap()).unwrap();
+    let root_doc = tsipika_format::load(&std::fs::read(packaged.join("root.tsipika")).unwrap()).unwrap();
+    let child_doc = tsipika_format::load(&std::fs::read(packaged.join("Links/child.tsipika")).unwrap()).unwrap();
     let mut direct = Vec::new();
     root_doc.visit_placed(|_, p| direct.push(p.link.relative.clone()));
-    assert_eq!(direct, [Some("Links/child.vectorcraft".into())]);
+    assert_eq!(direct, [Some("Links/child.tsipika".into())]);
     let mut back = Vec::new();
     child_doc.visit_placed(|_, p| {
         back.push((p.link.relative.clone(), p.link.hash.clone(), p.link.size));
     });
-    assert_eq!(back, [(Some("../root.vectorcraft".into()), None, None)]);
+    assert_eq!(back, [(Some("../root.tsipika".into()), None, None)]);
     let report = std::fs::read_to_string(packaged.join("root Report.txt")).unwrap();
     assert!(report.lines().any(|line| line == "LINKED FILES"), "{report}");
     assert!(report.contains("stopped following the cycle"), "{report}");
@@ -527,14 +527,14 @@ fn circular_placed_links_copy_each_document_once_and_warn() {
 fn nesting_limit_copies_boundary_file_and_reports_uncollected_links() {
     let dir = Folder::new("package-placed-depth-limit");
     let mut deepest = session();
-    let mut next = dir.file("leaf.vectorcraft");
+    let mut next = dir.file("leaf.tsipika");
     save(&mut deepest, &next);
 
     let mut root = None;
-    for depth in (0..=vectorcraft_doc::placed_document::MAX_DEPTH).rev() {
+    for depth in (0..=tsipika_doc::placed_document::MAX_DEPTH).rev() {
         let mut current = session();
         run(&mut current, "file.place", json!({ "path": next, "link": true }));
-        let name = dir.file(&format!("level{depth}.vectorcraft"));
+        let name = dir.file(&format!("level{depth}.tsipika"));
         save(&mut current, &name);
         next = name;
         if depth == 0 {
@@ -544,12 +544,12 @@ fn nesting_limit_copies_boundary_file_and_reports_uncollected_links() {
 
     let mut root = root.unwrap();
     let result = run(&mut root, "file.package", json!({ "folder": dir.file("delivery") }));
-    let expected_links = vectorcraft_doc::placed_document::MAX_DEPTH + 1;
+    let expected_links = tsipika_doc::placed_document::MAX_DEPTH + 1;
     assert_eq!(result["links"].as_u64(), Some(expected_links as u64), "{result}");
     assert!(result["warnings"].as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("nesting limit reached")), "{result}");
     let folder = dir.0.join("delivery/level0 Folder");
-    let packaged = std::fs::read(folder.join("Links/leaf.vectorcraft")).unwrap();
-    assert_eq!(packaged, std::fs::read(dir.file("leaf.vectorcraft")).unwrap());
+    let packaged = std::fs::read(folder.join("Links/leaf.tsipika")).unwrap();
+    assert_eq!(packaged, std::fs::read(dir.file("leaf.tsipika")).unwrap());
     let report = std::fs::read_to_string(folder.join("level0 Report.txt")).unwrap();
     assert!(report.contains("nesting limit reached"), "{report}");
 }

@@ -7,7 +7,7 @@ convention; that page's *Two conventions* section has the comparison and what wo
 
 Sony ARWs record three lens corrections per shot in the raw image IFD: shading (vignetting), lateral chromatic
 aberration (CA) and distortion, each as a camera setting and a radial table, with copies in the encrypted
-`SR2SubIFD`. LightCraft **decodes all three** wherever a file carries them and **applies one**: the distortion table
+`SR2SubIFD`. Hazavana **decodes all three** wherever a file carries them and **applies one**: the distortion table
 of the **ILCE-7RM4A (A7R IVA)** in Bayer ARWs with native 3:2 framing, independently validated with the
 FE 24–105mm F4 G OSS and FE 200–600mm F5.6–6.3 G OSS (the ILCE-7RM6's distortion is applied too, by its own
 conversion above). Every other model,
@@ -20,7 +20,7 @@ control, CPU/GPU optics path, EXIF orientation handling, and DNG export use the 
 and non-3:2 camera crops are excluded pending validation. An aspect crop may retain the full-frame radial
 normalization; the decoder does not guess that relationship. Tables of other lengths and rejected tables remain
 uncorrected, and a table found only in the encrypted `SR2SubIFD` is never applied. The camera's distortion Off
-setting does not erase its table. Newly imported photos use LightCraft's existing embedded-profile default
+setting does not erase its table. Newly imported photos use Hazavana's existing embedded-profile default
 (enabled); the profile correction control can disable or adjust it.
 
 ## What is decoded
@@ -114,13 +114,13 @@ part of this repository.
 
 ## Local inventory check
 
-`crates/raw/tests/sony_lens_inventory.rs` is opt-in and does nothing in CI. With `LIGHTCRAFT_SONY_LENS_DIR` naming a
+`crates/raw/tests/sony_lens_inventory.rs` is opt-in and does nothing in CI. With `HAZAVANA_SONY_LENS_DIR` naming a
 directory of ARWs it decodes each from its headers and prints its record (settings, sources, copies' agreement,
-sample ranges, statuses); `LIGHTCRAFT_SONY_LENS_FULL=1` also compares header and full decode. With
-`LIGHTCRAFT_SONY_LENS_INVENTORY` naming a CSV inventory it checks every file's table counts, sizes, sample counts,
+sample ranges, statuses); `HAZAVANA_SONY_LENS_FULL=1` also compares header and full decode. With
+`HAZAVANA_SONY_LENS_INVENTORY` naming a CSV inventory it checks every file's table counts, sizes, sample counts,
 minima and maxima, raw-IFD versus `SR2SubIFD` agreement, settings (numbers and labels), stored size, compression and
 crop tags. A file with a row must decode, and every file must have a row, whether it decodes or not. Any decode
-error fails the check except an unsupported variant, which is counted and must equal `LIGHTCRAFT_SONY_LENS_UNSUPPORTED`
+error fails the check except an unsupported variant, which is counted and must equal `HAZAVANA_SONY_LENS_UNSUPPORTED`
 (default 0). On the 131 A7CR raws above, all 131 inventory rows reproduce and every file decodes. On 133 public Sony
 ARWs (127 raw.pixls.us samples from 100 bodies, four corpus copies and two files attached to a public issue), 110 carry
 a record, 14 decode without one, and 9 are unsupported variants (eight packed ARWs of older bodies and one ARW
@@ -183,7 +183,7 @@ from the interpolated file table was below 0.12 px at 1440 px. That measures app
 not agreement with an independent renderer. Camera JPEG and Apple Core Image comparisons support
 the wide-lens interpretation but are weaker evidence than same-renderer On/Off pairs.
 
-Historical validation before restoring main's image crop precedence: LightCraft exports with the
+Historical validation before restoring main's image crop precedence: Hazavana exports with the
 standard default crop framing were compared directly with Sony's corrected
 TIFFs. At 2376 px wide, median / 95th-percentile feature residuals were 0.35 / 1.04 px at 24 mm,
 0.15 / 0.40 px at 200 mm, and 0.13 / 0.56 px at 600 mm (median translation below 0.024 px).
@@ -235,7 +235,7 @@ download checks. `sony_embedded_distortion_is_limited_to_validated_models` check
 codings have their own test), and `sony_lens_records_of_the_public_samples` verifies all 25 against their pins
 (`SONY_SAMPLES` in `crates/raw/tests/corpus.rs`, itself anchored by a pinned digest and compared with the manifest)
 before decoding. **No CI job fetches the corpus**: these fixture tests run only where it has been downloaded, and
-otherwise skip each absent file. `LIGHTCRAFT_CORPUS_REQUIRED=1` makes `sony_lens_records_of_the_public_samples`
+otherwise skip each absent file. `HAZAVANA_CORPUS_REQUIRED=1` makes `sony_lens_records_of_the_public_samples`
 fail on any absent pinned file instead.
 
 | Camera | Corpus samples | Decoded record: tables, settings (shading / CA / distortion) | Applied |

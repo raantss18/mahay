@@ -1,4 +1,4 @@
-//! The incumbent's main-menu tree with stable FigCraft command ids. A command registered under a
+//! The incumbent's main-menu tree with stable Endrika command ids. A command registered under a
 //! catalog id lights up its menu item, and `cargo xtask parity` measures coverage against it.
 //!
 //! Entries: (menu path, label, command id). `/` separates submenus; a label of `-` is a
@@ -21,7 +21,7 @@ pub const SEP: &str = "-";
 pub static MENU: &[MenuItem] = &[
     // File
     m!("File", "New design file", "file.new"),
-    // FigCraft's own: starter templates (not counted by `parity`, like the other items of its own
+    // Endrika's own: starter templates (not counted by `parity`, like the other items of its own
     // listed in `OWN`).
     m!("File", "New from template…", "file.newFromTemplate"),
     m!("File", "New window", "window.new"),
@@ -33,10 +33,10 @@ pub static MENU: &[MenuItem] = &[
     m!("File", "Save as…", "file.saveAs"),
     m!("File", "Save to version history…", "file.saveVersion"),
     m!("File", "Show version history", "file.versionHistory"),
-    // FigCraft's own: branches of the file.
+    // Endrika's own: branches of the file.
     m!("File", "Create branch…", "branch.create"),
     m!("File", SEP, ""),
-    // FigCraft's own (live sessions): not in the reference menu, so not counted by `parity`.
+    // Endrika's own (live sessions): not in the reference menu, so not counted by `parity`.
     m!("File", "Join live session…", "collab.join"),
     m!("File", "Publish to server…", "collab.publish"),
     m!("File", SEP, ""),
@@ -100,11 +100,11 @@ pub static MENU: &[MenuItem] = &[
     m!("View", "Pixel preview", "view.pixelPreview"),
     m!("View", "Mask outlines", "view.maskOutlines"),
     m!("View", "Frame outlines", "view.frameOutlines"),
-    // FigCraft's own: the canvas shows sRGB, so Display P3 files can mark what it can't show.
+    // Endrika's own: the canvas shows sRGB, so Display P3 files can mark what it can't show.
     m!("View", "Soft-proof sRGB", "view.proofSrgb"),
     m!("View", SEP, ""),
     m!("View/Panels", "Show/Hide UI", "view.toggleUi"),
-    // FigCraft's own: the window fills the screen (F11), for setups that hide the taskbar then.
+    // Endrika's own: the window fills the screen (F11), for setups that hide the taskbar then.
     m!("View", "Full screen", "view.fullscreen"),
     m!("View/Panels", "Reset panel widths", "view.panelWidths"),
     m!("View/Panels", "Layers", "view.layers"),
@@ -261,7 +261,7 @@ pub static MENU: &[MenuItem] = &[
     m!("Help", "Getting started", "help.gettingStarted"),
     m!("Help", "Keyboard shortcuts", "help.shortcuts"),
     m!("Help", "Help page", "help.page"),
-    m!("Help", "About FigCraft", "help.about"),
+    m!("Help", "About Endrika", "help.about"),
     // Toolbar
     m!("Tools", "Move", "tool.move"),
     m!("Tools", "Scale", "tool.scale"),
@@ -288,7 +288,7 @@ pub fn items() -> impl Iterator<Item = &'static MenuItem> {
     MENU.iter().filter(|m| m.label != SEP)
 }
 
-/// Items of FigCraft's own that the parity count leaves out (as it does the `collab.` ones).
+/// Items of Endrika's own that the parity count leaves out (as it does the `collab.` ones).
 const OWN: [&str; 3] = ["file.newFromTemplate", "help.gettingStarted", "text.missingFonts"];
 
 /// Coverage: (implemented, total, missing ids). `extra` lists ids implemented by the UI layer.

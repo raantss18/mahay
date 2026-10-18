@@ -169,7 +169,7 @@ fn presentation_forms_match_the_shaper() {
         for (s, form) in cases {
             let form = char::from_u32(form).unwrap();
             assert!(face.has_char(form), "{base:?} form {form:?} missing");
-            let mut t = figcraft_doc::TextData::new(s.clone());
+            let mut t = endrika_doc::TextData::new(s.clone());
             t.style.font_family = "Noto Sans Arabic".into();
             let l = crate::layout(&t, None, None);
             let at = s.chars().position(|c| c == base).unwrap();

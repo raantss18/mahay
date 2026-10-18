@@ -1,6 +1,6 @@
 //! Transparent commands with their own prompts run nested inside the active command.
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 
 fn lines(s: &Session) -> usize {
     s.doc().map(|d| d.entity_count()).unwrap_or(0)

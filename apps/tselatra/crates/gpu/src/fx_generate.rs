@@ -5,8 +5,8 @@
 //! edge (the wipes), the per-column and per-row terms are computed in f64 here and uploaded as
 //! (hi, lo) f32 pairs so the GPU puts the edge where the CPU does.
 
-use effectcraft_color::BlendMode;
-use effectcraft_effects::{EffectCtx, GrainLook};
+use tselatra_color::BlendMode;
+use tselatra_effects::{EffectCtx, GrainLook};
 
 use crate::context::{Enc, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -84,7 +84,7 @@ fn hl(v: f64) -> [f32; 2] {
 
 /// Generate blending mode index → `BlendMode::ALL` index (255 = None: replace).
 pub(crate) fn gen_mode(i: u32) -> u32 {
-    match effectcraft_effects::gen_mode(i) {
+    match tselatra_effects::gen_mode(i) {
         None => 255,
         Some(m) => BlendMode::ALL.iter().position(|&x| x == m).unwrap_or(0) as u32,
     }
@@ -134,7 +134,7 @@ fn camera_lens(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
     if r < 0.5 {
         return Some(b);
     }
-    let (spans, reach) = effectcraft_effects::camera_lens_spans(ctx, r);
+    let (spans, reach) = tselatra_effects::camera_lens_spans(ctx, r);
     let repeat = ctx.params.b("repeatEdge") || ctx.adjustment;
     if !repeat {
         b.pad(e, reach.ceil() as u32 + 1)?;
@@ -265,9 +265,9 @@ fn gradient_wipe(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let grad = match ctx.layer_param("gradientLayer", false) {
         Some(o) => {
             // place_layer reads only the buffer's size, offset and scale.
-            let img = effectcraft_raster::Image { width: b.img.width, height: b.img.height, data: vec![] };
-            let cpu = effectcraft_effects::Buf { img, offset: b.offset, scale: b.scale };
-            let img = effectcraft_effects::place_layer(ctx, &cpu, &o, ctx.params.e("gradientPlacement"));
+            let img = tselatra_raster::Image { width: b.img.width, height: b.img.height, data: vec![] };
+            let cpu = tselatra_effects::Buf { img, offset: b.offset, scale: b.scale };
+            let img = tselatra_effects::place_layer(ctx, &cpu, &o, ctx.params.e("gradientPlacement"));
             Some(e.g.upload_image(&img)?)
         }
         None => None,
@@ -298,7 +298,7 @@ fn cell_pattern(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         return None;
     }
     let mut p = Params::default();
-    p.u[0] = [effectcraft_effects::cell_pattern_kind(pr.e("cellPattern")), pr.e("overflow"), pr.b("invert") as u32, seed];
+    p.u[0] = [tselatra_effects::cell_pattern_kind(pr.e("cellPattern")), pr.e("overflow"), pr.b("invert") as u32, seed];
     p.u[1] = [tile as u32, nx as u32, ny as u32, 0];
     // cos / sin of 2π·(h + evo) only see evo modulo 1.
     p.f[0] = [pr.f("contrast") as f32 / 100.0, pr.f("disperse").clamp(0.0, 1.5) as f32, size as f32, evo.rem_euclid(1.0) as f32];
@@ -392,7 +392,7 @@ fn add_grain(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         planes = gaussian_blur(e, &planes, soft * look.aspect as f64, soft, true);
     }
     // GrainLook::color's tint factors.
-    let l = effectcraft_color::luminance(look.tint[0], look.tint[1], look.tint[2]).max(1e-3);
+    let l = tselatra_color::luminance(look.tint[0], look.tint[1], look.tint[2]).max(1e-3);
     let tint = [0, 1, 2].map(|k| (1.0 - look.tint_amount) + look.tint_amount * look.tint[k] / l);
     let mut p = Params::default();
     p.u[0] = [look.mono as u32, look.mode, (look.tint_amount > 0.0) as u32, 0];

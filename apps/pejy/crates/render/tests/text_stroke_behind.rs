@@ -1,10 +1,10 @@
 //! Stroke behind fill on text: the fill covers the inner half of a double-width stroke.
-use designcraft_color::{Color, swatch::Swatch};
-use designcraft_compose::Cache;
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{Document, ParaFormat, SpreadRef};
-use designcraft_geom::Rect;
-use designcraft_render::{RenderOptions, Rendered, Renderer};
+use pejy_color::{Color, swatch::Swatch};
+use pejy_compose::Cache;
+use pejy_doc::build::NewDocument;
+use pejy_doc::{Document, ParaFormat, SpreadRef};
+use pejy_geom::Rect;
+use pejy_render::{RenderOptions, Rendered, Renderer};
 
 const WHITE: [u8; 4] = [255, 255, 255, 255];
 const RED: [u8; 4] = [255, 0, 0, 255];
@@ -21,7 +21,7 @@ fn render(fill: &str, stroke: bool, behind: bool) -> Rendered {
     d.story_mut(sid).unwrap().format_chars(0..1, |f| {
         f.over.size = Some(200.0);
         f.over.fill = Some(fill.into());
-        f.over.stroke = Some(if stroke { "Red" } else { designcraft_color::swatch::NONE }.into());
+        f.over.stroke = Some(if stroke { "Red" } else { pejy_color::swatch::NONE }.into());
         f.over.stroke_weight = Some(WEIGHT);
         f.over.stroke_behind_fill = Some(behind);
     });
@@ -57,7 +57,7 @@ fn stroke_behind_fill_shows_only_outside_the_letter() {
     assert_eq!(behind.pixel(inner, y), BLUE, "the fill covers the stroke behind it");
     assert_eq!(behind.pixel(outer, y), RED, "the full stroke weight lies outside the letter");
     assert_eq!(behind.pixel(x - 15, y), WHITE, "and no further");
-    let hollow = render(designcraft_color::swatch::NONE, true, true);
+    let hollow = render(pejy_color::swatch::NONE, true, true);
     assert_eq!(hollow.pixel(inner, y), WHITE, "with no fill the letter stays empty");
     assert_eq!(hollow.pixel(outer, y), RED);
 }

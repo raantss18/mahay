@@ -1,13 +1,13 @@
 # User docs: rules for agents and contributors
 
 Everything in this folder (except this file, CLAUDE.md and README.md) is published at
-https://getartcraft.com/docs/designcraft. The file path is the URL:
-`troubleshooting/app-closes-at-start.md` → `/docs/designcraft/troubleshooting/app-closes-at-start`.
+https://github.com/raantss18/mahay The file path is the URL:
+`troubleshooting/app-closes-at-start.md` → `/docs/pejy/troubleshooting/app-closes-at-start`.
 Renaming a file breaks links, so add the old path to `redirect_from` when you rename.
 
 ## Who reads this
 
-Artists and designers using DesignCraft, Discord mods answering them, and AI assistants looking things up for
+Artists and designers using Pejy, Discord mods answering them, and AI assistants looking things up for
 either. Write for an artist, not a developer.
 
 ## Page rules
@@ -16,9 +16,9 @@ either. Write for an artist, not a developer.
 - Plain words, short sentences, numbered steps for anything the reader does.
 - Start the body at `##`. The page title comes from frontmatter.
 - Link to other pages instead of repeating them. Use relative links to the `.md` file:
-  `[Install DesignCraft](../getting-started/install.md)`.
+  `[Install Pejy](../getting-started/install.md)`.
 - No marketing copy, no "simply", no claims you have not checked in the code or a release.
-- Call the product "DesignCraft", as the app, its downloads and getartcraft.com do.
+- Call the product "Pejy", as the app, its downloads and mahay.com do.
 - Name UI labels exactly as the app shows them, in **bold**.
 - Document Windows 11 only. Do not name older Windows versions.
 - Troubleshooting pages: `## Symptoms`, `## Fix`, `## Why this happens` (optional),
@@ -31,7 +31,7 @@ either. Write for an artist, not a developer.
     description: One sentence for search results, link previews and AI summaries.
     order: 10                 # optional, sorts within the folder (lower first)
     verified: 0.6.0           # optional, app version you last checked this page against
-    redirect_from: [old/path] # optional, old URLs (relative to /docs/designcraft)
+    redirect_from: [old/path] # optional, old URLs (relative to /docs/pejy)
     ---
 
 Only `key: value` and `key: [a, b]` lines work. Quote values that start with a quote or contain ` #`.
@@ -51,12 +51,12 @@ drafts and are not published.
 
 ## Check before you push
 
-    node <path to your artcraft-services checkout>/frontend/apps/artcraft-website-next/scripts/docs/core.mjs docs/user
+    node <path to your mahay-services checkout>/frontend/apps/mahay-website-next/scripts/docs/core.mjs docs/user
 
-The checker lives in storytold/artcraft-services. A CI check will be added once it is on that repo's main branch.
+The checker lives in raantss18/mahay-services. A CI check will be added once it is on that repo's main branch.
 
 ## Support PRs
 
 Pages written to answer a user question come in as PRs titled `docs(support): <page title>`.
 Review them like code: check every claim against the source. Questions and bugs go to
-https://github.com/storytold/designcraft/issues.
+https://github.com/raantss18/mahay/issues.

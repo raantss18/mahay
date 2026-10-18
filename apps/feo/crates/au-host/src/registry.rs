@@ -3,7 +3,7 @@
 use crate::ffi::{self, Instance, PARAM_FLAG_DISPLAY_LOG, PARAM_FLAG_METER_READ_ONLY, PARAM_FLAG_WRITABLE, RawParam};
 use crate::plugin::AuPlugin;
 use crate::{AuDescriptor, AuError, SUPPORTED_TYPES, TYPE_EFFECT, TYPE_INSTRUMENT, TYPE_MUSIC_EFFECT, parse_id};
-use soundcraft_dsp::{ParamInfo, Plugin, PluginInfo, Taper, Unit};
+use feo_dsp::{ParamInfo, Plugin, PluginInfo, Taper, Unit};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, PoisonError};
 
@@ -91,7 +91,7 @@ fn leak(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
-/// Maps an Audio Unit parameter unit (and a custom unit label) to a SoundCraft display unit.
+/// Maps an Audio Unit parameter unit (and a custom unit label) to a Feo display unit.
 pub(crate) fn unit_for(unit: u32, custom: &str) -> Unit {
     match unit {
         U_DECIBELS => Unit::Db,
@@ -114,7 +114,7 @@ pub(crate) fn unit_for(unit: u32, custom: &str) -> Unit {
     }
 }
 
-/// The SoundCraft description of one parameter (`None` for read-only/meter/broken ones).
+/// The Feo description of one parameter (`None` for read-only/meter/broken ones).
 pub(crate) fn param_info(p: &RawParam) -> Option<ParamInfo> {
     if p.flags & PARAM_FLAG_WRITABLE == 0 || p.flags & PARAM_FLAG_METER_READ_ONLY != 0 || p.unit == U_METERS {
         return None;

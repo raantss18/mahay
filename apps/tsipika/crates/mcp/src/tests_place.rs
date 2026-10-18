@@ -21,7 +21,7 @@ fn setup() -> (Headless, String) {
 
 fn images(h: &Headless) -> usize {
     let mut n = 0;
-    h.session.doc().unwrap().doc.walk(|x| n += usize::from(matches!(x.kind, vectorcraft_doc::NodeKind::Image(_))));
+    h.session.doc().unwrap().doc.walk(|x| n += usize::from(matches!(x.kind, tsipika_doc::NodeKind::Image(_))));
     n
 }
 

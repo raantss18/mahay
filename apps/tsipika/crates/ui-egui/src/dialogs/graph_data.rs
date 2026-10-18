@@ -16,11 +16,11 @@
 //! `__scatter`.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{MAX_GRAPH_CATEGORIES, MAX_GRAPH_SERIES};
+use tsipika_doc::{MAX_GRAPH_CATEGORIES, MAX_GRAPH_SERIES};
 
 use super::DialogSpec;
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Graph Data.
 pub const KIND: &str = "graphData";
@@ -48,12 +48,12 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 };
 
 /// Open Graph Data for the selected graph.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     // The query fails without a graph selected, with the engine's own message.
     let v = app.session.execute("graph.setData", &json!({})).map_err(|e| e.to_string())?;
     let graph = app.session.active().and_then(|st| st.selection.objects.iter().find_map(|id| graph_of(&st.doc, *id)).map(|id| (st, id)));
     let scatter = graph.is_some_and(|(st, id)| {
-        st.doc.node(id).and_then(|n| n.extras().graph.as_deref()).is_some_and(|g| g.kind == vectorcraft_doc::GraphKind::Scatter)
+        st.doc.node(id).and_then(|n| n.extras().graph.as_deref()).is_some_and(|g| g.kind == tsipika_doc::GraphKind::Scatter)
     });
     let id = graph.map(|(_, id)| id.0);
     let grid = grid_from_data(&v);
@@ -66,7 +66,7 @@ pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
 }
 
 /// The graph `id` belongs to (itself, or the graph its parts are in).
-fn graph_of(doc: &vectorcraft_doc::Document, id: vectorcraft_doc::NodeId) -> Option<vectorcraft_doc::NodeId> {
+fn graph_of(doc: &tsipika_doc::Document, id: tsipika_doc::NodeId) -> Option<tsipika_doc::NodeId> {
     let mut cur = Some(id);
     while let Some(c) = cur {
         if doc.node(c).is_some_and(|n| n.extras().graph.is_some()) {
@@ -82,7 +82,7 @@ fn graph_of(doc: &vectorcraft_doc::Document, id: vectorcraft_doc::NodeId) -> Opt
 type Grid = Vec<Vec<String>>;
 
 /// A button's work, done once the sheet is drawn.
-type Action = fn(&mut VectorcraftApp, &mut Dialog) -> Result<(), String>;
+type Action = fn(&mut TsipikaApp, &mut Dialog) -> Result<(), String>;
 
 /// The sheet's cells from the `graph.setData` query: the series in the first row, each category's
 /// label then values below (the label column is there, blank, when the graph has no labels).
@@ -304,7 +304,7 @@ fn paste_block(d: &mut Dialog, text: &str) {
 }
 
 /// Apply: the sheet's data to the graph.
-fn apply(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn apply(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut d = d.clone();
     commit(&mut d);
     // The graph the sheet opened on (else the selected one).
@@ -318,7 +318,7 @@ fn apply(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 }
 
 /// Revert: the graph's data again.
-fn revert(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
+fn revert(app: &mut TsipikaApp, d: &mut Dialog) -> Result<(), String> {
     let id = d.fields.get("__graph").cloned().unwrap_or(Value::Null);
     let v = app.session.execute("graph.setData", &json!({ "id": id })).map_err(|e| e.to_string())?;
     replace_grid(d, grid_from_data(&v));
@@ -326,7 +326,7 @@ fn revert(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
 }
 
 /// Import Data: a tab-separated text file's rows into the sheet.
-fn import(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
+fn import(app: &mut TsipikaApp, d: &mut Dialog) -> Result<(), String> {
     let pick = crate::FilePick { filters: vec![("Text", &["txt", "tsv", "csv"])], ..Default::default() };
     let path = crate::picks::open(app, &pick).ok_or("cancelled")?;
     // The button is off where files can't be read.
@@ -336,7 +336,7 @@ fn import(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
     Ok(())
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let entry_id = egui::Id::new("graph-data-entry");
     if ui.memory(|m| m.has_focus(entry_id)) {
         // Tab, Enter (Shift: the other way) and the arrow keys move the picked cell while the entry box
@@ -469,15 +469,15 @@ mod tests {
         rows.iter().map(|r| r.iter().map(|c| c.to_string()).collect()).collect()
     }
 
-    fn app_with(csv: &str, ty: &str) -> (VectorcraftApp, u64) {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    fn app_with(csv: &str, ty: &str) -> (TsipikaApp, u64) {
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let id =
             app.run("graph.create", json!({"type": ty, "x": 0, "y": 0, "width": 200, "height": 150, "csv": csv})).unwrap()["id"].as_u64().unwrap();
         (app, id)
     }
 
-    fn data(app: &mut VectorcraftApp, id: u64) -> Value {
+    fn data(app: &mut TsipikaApp, id: u64) -> Value {
         app.session.execute("graph.setData", &json!({"id": id})).unwrap()
     }
 
@@ -569,7 +569,7 @@ mod tests {
         open(&mut app).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| super::super::show(app, ui.ctx()));
             out.textures_delta.clear();
         };
@@ -596,7 +596,7 @@ mod tests {
     #[test]
     fn a_full_size_sheet_draws_only_what_is_in_view() {
         let rows: Vec<Vec<f64>> = (0..MAX_GRAPH_CATEGORIES).map(|i| vec![i as f64; 256]).collect();
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("graph.create", json!({"type": "column", "x": 0, "y": 0, "width": 200, "height": 150, "rows": rows})).unwrap();
         open(&mut app).unwrap();

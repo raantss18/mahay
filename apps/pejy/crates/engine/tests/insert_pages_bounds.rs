@@ -1,5 +1,5 @@
 //! `layout.pages.insert` clamps an out-of-range `after` to the end instead of overflowing.
-use designcraft_engine::Session;
+use pejy_engine::Session;
 use serde_json::json;
 
 #[test]

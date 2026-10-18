@@ -1,4 +1,4 @@
-//! The credits tabs as drawn, through egui headless with FigCraft's fonts and theme: every column
+//! The credits tabs as drawn, through egui headless with Endrika's fonts and theme: every column
 //! keeps its measured width and scrolls when needed, switching the Contributors view keeps its size, clicking a header sorts
 //! by it, and empty tables (no contributors.json) draw a note instead.
 
@@ -34,7 +34,7 @@ fn model(name: &'static str, commits: u64) -> Model {
     Model { company: "Anthropic", model: name, version: "5.5", commits, lines_added: 150_000 + commits, lines_deleted: 20_000 }
 }
 
-/// A headless egui with FigCraft's fonts and light theme; `draw` runs inside a fixed-width column.
+/// A headless egui with Endrika's fonts and light theme; `draw` runs inside a fixed-width column.
 struct Ui {
     ctx: egui::Context,
     time: f64,
@@ -249,7 +249,7 @@ fn the_models_table_is_as_tall_as_its_rows() {
 fn the_about_window_draws_every_tab() {
     // The whole app, with the compiled-in credits (whatever contributors.json held, or none).
     let ctx = egui::Context::default();
-    let mut app = crate::FigApp::new(figcraft_engine::Session::new(), Box::new(crate::NoServices));
+    let mut app = crate::FigApp::new(endrika_engine::Session::new(), Box::new(crate::NoServices));
     app.ui.about = true;
     for (i, tab) in crate::dialogs::AboutTab::ALL.into_iter().enumerate() {
         app.ui.about_tab = tab;

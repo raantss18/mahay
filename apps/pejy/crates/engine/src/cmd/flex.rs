@@ -1,12 +1,12 @@
 //! Flex Layout: Object › Flex Layout and the Flex Layout panel. A container is a frame whose
-//! nested objects [`designcraft_doc::flex::layout`] places; [`sync`] lays every container out
+//! nested objects [`pejy_doc::flex::layout`] places; [`sync`] lays every container out
 //! after each edit, so moving, resizing or editing an object inside one reflows it.
 
 use std::sync::Arc;
 
-use designcraft_doc::flex::{FlexAlign, FlexDirection, FlexJustify, FlexLayout, FlexSize};
-use designcraft_doc::{Content, Document, Item, ItemId, Selection, Shape};
-use designcraft_geom::{Rect, shapes};
+use pejy_doc::flex::{FlexAlign, FlexDirection, FlexJustify, FlexLayout, FlexSize};
+use pejy_doc::{Content, Document, Item, ItemId, Selection, Shape};
+use pejy_geom::{Rect, shapes};
 use serde_json::{Value, json};
 
 use super::object::RemoveKeep;
@@ -76,8 +76,8 @@ fn is_container(s: &Session) -> std::result::Result<(), String> {
 /// Lay out every container (called after each edit). Spreads without one aren't copied.
 pub(crate) fn sync(d: &mut Document) {
     for sp in d.spreads.iter_mut().chain(d.parents.iter_mut()) {
-        if sp.items.iter().any(|i| designcraft_doc::flex::contains_flex(i)) {
-            designcraft_doc::flex::layout_all(&mut Arc::make_mut(sp).items);
+        if sp.items.iter().any(|i| pejy_doc::flex::contains_flex(i)) {
+            pejy_doc::flex::layout_all(&mut Arc::make_mut(sp).items);
         }
     }
 }
@@ -135,7 +135,7 @@ fn add(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad("flex.add", "select the objects to put in a Flex Layout"));
     }
     s.edit(|d, sel| {
-        let sr = d.find(ids[0]).map(|l| l.spread).ok_or(designcraft_doc::DocError::NoItem(ids[0]))?;
+        let sr = d.find(ids[0]).map(|l| l.spread).ok_or(pejy_doc::DocError::NoItem(ids[0]))?;
         let order: Vec<ItemId> = d.spread(sr).map(|sp| sp.items.iter().map(|i| i.id).filter(|i| ids.contains(i)).collect()).unwrap_or_default();
         if order.len() != ids.len() {
             return Err(bad("flex.add", "select objects on one spread, not inside a group or frame"));
@@ -177,7 +177,7 @@ fn convert(s: &mut Session, p: &Value) -> Result<Value> {
     let [id] = ids.as_slice() else { return Err(bad("flex.convert", "select one group or rectangle frame")) };
     let id = *id;
     s.edit(|d, sel| {
-        let it = d.item(id).ok_or(designcraft_doc::DocError::NoItem(id))?.clone();
+        let it = d.item(id).ok_or(pejy_doc::DocError::NoItem(id))?.clone();
         if !convertible(&it) {
             return Err(bad("flex.convert", "select one group or rectangle frame"));
         }
@@ -185,7 +185,7 @@ fn convert(s: &mut Session, p: &Value) -> Result<Value> {
             Content::Group { items } => items.clone(),
             _ => Vec::new(),
         };
-        let it = d.item_mut(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
+        let it = d.item_mut(id).ok_or(pejy_doc::DocError::NoItem(id))?;
         if it.is_group() {
             // The group's box becomes the container's, in its own space.
             let rect = kids.iter().map(|k| k.bounds()).reduce(|a, b| a.union(b)).unwrap_or(Rect::ZERO);
@@ -232,7 +232,7 @@ fn remove(s: &mut Session, p: &Value) -> Result<Value> {
                 k.xf = c.xf * k.xf;
                 k
             } else {
-                let mut g = Item::new(c.id, c.layer, Shape::Group, designcraft_geom::PathData::default());
+                let mut g = Item::new(c.id, c.layer, Shape::Group, pejy_geom::PathData::default());
                 g.xf = c.xf;
                 g.content = Content::Group { items: kids };
                 g
@@ -366,15 +366,15 @@ fn reorder(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad("flex.reorder", "give `to` or `by`"));
     }
     s.edit(|d, sel| {
-        let loc = d.find(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
-        let (last, parent_path) = loc.path.split_last().ok_or(designcraft_doc::DocError::NoItem(id))?;
-        let parent_loc = designcraft_doc::ItemLoc { spread: loc.spread, path: parent_path.to_vec() };
+        let loc = d.find(id).ok_or(pejy_doc::DocError::NoItem(id))?;
+        let (last, parent_path) = loc.path.split_last().ok_or(pejy_doc::DocError::NoItem(id))?;
+        let parent_loc = pejy_doc::ItemLoc { spread: loc.spread, path: parent_path.to_vec() };
         let parent = d
             .item_at(&parent_loc)
             .filter(|c| c.flex.is_some())
             .map(|c| c.id)
             .ok_or_else(|| bad("flex.reorder", "the object isn't in a Flex Layout"))?;
-        let c = d.item_mut(parent).ok_or(designcraft_doc::DocError::NoItem(parent))?;
+        let c = d.item_mut(parent).ok_or(pejy_doc::DocError::NoItem(parent))?;
         let Content::Group { items } = &mut c.content else { return Err(bad("flex.reorder", "the object isn't in a Flex Layout")) };
         let n = items.len() as i64;
         let from = *last as i64;
@@ -391,7 +391,7 @@ fn reorder(s: &mut Session, p: &Value) -> Result<Value> {
 pub(crate) fn drop_in_container(d: &mut Document, id: ItemId) {
     let Some(loc) = d.find(id) else { return };
     let Some((&at, parent)) = loc.path.split_last() else { return };
-    let parent_loc = designcraft_doc::ItemLoc { spread: loc.spread, path: parent.to_vec() };
+    let parent_loc = pejy_doc::ItemLoc { spread: loc.spread, path: parent.to_vec() };
     let Some(cid) = d.item_at(&parent_loc).filter(|c| c.flex.is_some()).map(|c| c.id) else { return };
     let Some(c) = d.item_mut(cid) else { return };
     let Some(f) = c.flex.clone() else { return };
@@ -401,7 +401,7 @@ pub(crate) fn drop_in_container(d: &mut Document, id: ItemId) {
     }
     let moved = items.remove(at);
     let m = moved.bounds().center();
-    let along = |p: designcraft_geom::Point| if f.direction.is_row() { p.x } else { p.y };
+    let along = |p: pejy_geom::Point| if f.direction.is_row() { p.x } else { p.y };
     let nearest = items.iter().enumerate().map(|(i, k)| (i, k.bounds().center())).min_by(|a, b| (a.1 - m).hypot().total_cmp(&(b.1 - m).hypot()));
     let index = match nearest {
         Some((i, k)) => {

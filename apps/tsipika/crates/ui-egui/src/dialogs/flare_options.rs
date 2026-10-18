@@ -4,19 +4,19 @@
 //! then draws a flare there with them (`shape.flare`, on the active perspective plane while the
 //! grid shows).
 //!
-//! Fields: the options (`vectorcraft_tools::extra::FLARE_OPTIONS`): `diameter` and `pathLength`
+//! Fields: the options (`tsipika_tools::extra::FLARE_OPTIONS`): `diameter` and `pathLength`
 //! (points), `opacity`, `brightness`, `growth`, `fuzziness`, `longest`, `rayFuzziness` and
 //! `largest` (%), `rays` and `rings` (counts), `direction` (degrees); `raysOn` and `ringsOn`; and
 //! `x`, `y` where a click opened it.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_geom::Point;
-use vectorcraft_tools::extra::{FLARE_OPTIONS, flare_params};
+use tsipika_geom::Point;
+use tsipika_tools::extra::{FLARE_OPTIONS, flare_params};
 
 use super::document_setup::check;
 use super::{DialogResult, DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of the Flare Tool Options.
 pub const KIND: &str = "flareOptions";
@@ -29,7 +29,7 @@ const FIELD_W: f32 = 90.0;
 
 /// Open the Flare Tool Options with the tool's values; `at`: where a click opened them, to draw a
 /// flare there on OK.
-pub fn open(app: &mut VectorcraftApp, at: Option<Point>) -> Value {
+pub fn open(app: &mut TsipikaApp, at: Option<Point>) -> Value {
     let mut fields = match app.session.tool_options_of("flare") {
         Value::Object(o) => o,
         _ => Map::new(),
@@ -43,7 +43,7 @@ pub fn open(app: &mut VectorcraftApp, at: Option<Point>) -> Value {
 }
 
 /// A row for option `key`, kept within its range: a distance in `unit`, else a number.
-fn field(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit, (key, label): (&str, &str)) {
+fn field(ui: &mut egui::Ui, d: &mut Dialog, unit: tsipika_doc::Unit, (key, label): (&str, &str)) {
     let Some(&(_, default, lo, hi)) = FLARE_OPTIONS.iter().find(|(k, ..)| *k == key) else { return };
     widgets::label_row(ui, label, LABEL_W, |ui| match key {
         "diameter" | "pathLength" => {
@@ -65,7 +65,7 @@ fn field(ui: &mut egui::Ui, d: &mut Dialog, unit: vectorcraft_doc::Unit, (key, l
     });
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.general_unit();
     // Center and Halo, then Rays and Rings, side by side as two rows of groups.
     egui::Grid::new("flare-groups").num_columns(2).spacing([28.0, 14.0]).show(ui, |ui| {
@@ -106,7 +106,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// OK: set the tool's options; opened by a click, draw a flare there with them.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> DialogResult {
     let mut values: Map<String, Value> =
         FLARE_OPTIONS.iter().filter(|(k, ..)| d.fields.contains_key(*k)).map(|(k, default, ..)| (k.to_string(), json!(d.f64(k, *default)))).collect();
     for key in ["raysOn", "ringsOn"] {
@@ -116,7 +116,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
     let options = run_and_close(app, "tool.setOption", json!({ "tool": "flare", "values": values }))?;
     let Some(at) = at else { return Ok(options) };
     let params = flare_params(&options, at);
-    match vectorcraft_engine::perspective_click(&app.session, "shape.flare", &params, at) {
+    match tsipika_engine::perspective_click(&app.session, "shape.flare", &params, at) {
         Some((id, p)) => app.run(&id, p),
         None => app.run("shape.flare", params),
     }
@@ -125,23 +125,23 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
-    use vectorcraft_engine::doc::NodeKind;
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_engine::Session;
+    use tsipika_engine::doc::NodeKind;
+    use tsipika_tools::{PointerEvent, PointerKind};
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 600, "height": 600})).unwrap();
         app
     }
 
     /// The labels the open dialog paints.
-    fn painted(app: &mut VectorcraftApp) -> String {
+    fn painted(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
     /// The children of the newest flare (a group named Flare), by name.
-    fn flare_parts(app: &VectorcraftApp) -> Vec<String> {
+    fn flare_parts(app: &TsipikaApp) -> Vec<String> {
         let doc = &app.session.doc().unwrap().doc;
         let flare = doc.layers[0].children().unwrap().iter().rev().find(|n| n.name.as_deref() == Some("Flare")).expect("a flare");
         let NodeKind::Group { children, .. } = &flare.kind else { panic!("a flare is a group") };
@@ -162,7 +162,7 @@ mod tests {
         for (k, v) in [("rays", json!(4)), ("ringsOn", json!(false)), ("growth", json!(80))] {
             d.fields.insert(k.into(), v);
         }
-        let objects = |app: &VectorcraftApp| app.session.doc().unwrap().doc.layers[0].children().map_or(0, |c| c.len());
+        let objects = |app: &TsipikaApp| app.session.doc().unwrap().doc.layers[0].children().map_or(0, |c| c.len());
         super::super::confirm(&mut app).unwrap();
         assert!(app.ui.dialog.is_none());
         assert_eq!(objects(&app), 0, "OK from the toolbar draws nothing");

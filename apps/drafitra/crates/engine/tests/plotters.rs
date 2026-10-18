@@ -2,10 +2,10 @@
 //! PAGESETUP takes a device and its papers with their printable areas, and PLOT hands the
 //! plotter the device's output, paper and margins.
 
-use cadcraft_doc::{Drawing, Space};
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, base64_decode, set_io};
-use cadcraft_engine::cmd::plotters::{PlotterStore, set_plotter_store};
+use drafitra_doc::{Drawing, Space};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, base64_decode, set_io};
+use drafitra_engine::cmd::plotters::{PlotterStore, set_plotter_store};
 use serde_json::{Value, json};
 
 /// The plot hook echoes the options it gets.
@@ -37,8 +37,8 @@ fn plotted(r: Value) -> Value {
 fn manage_devices() {
     let mut s = session();
     let n = names(&mut s);
-    assert_eq!(n[..3], ["CADCraft PDF", "CADCraft PNG", "CADCraft SVG"], "built-in devices first");
-    let pdf = s.execute("plottermanager", &json!({"action": "get", "name": "cadcraft pdf"})).unwrap();
+    assert_eq!(n[..3], ["Drafitra PDF", "Drafitra PNG", "Drafitra SVG"], "built-in devices first");
+    let pdf = s.execute("plottermanager", &json!({"action": "get", "name": "drafitra pdf"})).unwrap();
     assert!(pdf["builtin"].as_bool().unwrap());
     let papers = pdf["papers"].as_array().unwrap();
     assert!(papers.iter().any(|p| p["name"] == "ISO B1 (707.00 x 1000.00 MM)"));
@@ -55,14 +55,14 @@ fn manage_devices() {
     assert_eq!(r["resolution"], 150);
     assert!(names(&mut s).contains(&"Office Raster".to_string()));
     assert!(s.execute("plottermanager", &json!({"action": "new", "name": "OFFICE RASTER"})).is_err(), "duplicate");
-    assert!(s.execute("plottermanager", &json!({"action": "set", "name": "CADCraft PDF", "resolution": 100})).is_err(), "built-ins are fixed");
-    assert!(s.execute("plottermanager", &json!({"action": "delete", "name": "CADCraft SVG"})).is_err());
+    assert!(s.execute("plottermanager", &json!({"action": "set", "name": "Drafitra PDF", "resolution": 100})).is_err(), "built-ins are fixed");
+    assert!(s.execute("plottermanager", &json!({"action": "delete", "name": "Drafitra SVG"})).is_err());
     let bad_margins = json!({"name": "x", "width": 100, "height": 100, "margins": [60, 0, 60, 0]});
     assert!(s.execute("plottermanager", &json!({"action": "set", "name": "Office Raster", "paper": bad_margins})).is_err());
 
     // Save as text, load under another name, delete.
     let text = s.execute("plottermanager", &json!({"action": "save", "name": "Office Raster"})).unwrap()["text"].as_str().unwrap().to_string();
-    assert!(text.contains("\"cadcraftPlotter\": 1"), "{text}");
+    assert!(text.contains("\"drafitraPlotter\": 1"), "{text}");
     s.execute("plottermanager", &json!({"action": "load", "text": text, "name": "Office Copy"})).unwrap();
     let copy = s.execute("plottermanager", &json!({"action": "get", "name": "Office Copy"})).unwrap();
     assert_eq!(copy["output"], "png");
@@ -84,13 +84,13 @@ fn page_setup_takes_a_device_and_its_papers() {
     let page = &s.doc().unwrap().layout("Layout1").unwrap().page;
     assert_eq!((page.width_mm, page.height_mm, page.margins_mm), (200.0, 600.0, [10.0, 20.0, 10.0, 20.0]));
     // The printable area shown in the layout follows the device paper.
-    let sheet = cadcraft_render::sheet(s.doc().unwrap(), "Layout1").unwrap();
+    let sheet = drafitra_render::sheet(s.doc().unwrap(), "Layout1").unwrap();
     let mm = |v: f64| v * sheet.unit_mm;
     let got = [mm(sheet.printable.min.x), mm(sheet.printable.min.y), mm(sheet.printable.max.x), mm(sheet.printable.max.y)];
     assert!(got.iter().zip([10.0, 20.0, 190.0, 580.0]).all(|(a, b)| (a - b).abs() < 1e-9), "{got:?}");
 
     // Switching to a built-in device keeps a paper it has, else takes its default (A4).
-    s.execute("pagesetup", &json!({"layout": "Layout1", "device": "CADCraft PDF"})).unwrap();
+    s.execute("pagesetup", &json!({"layout": "Layout1", "device": "Drafitra PDF"})).unwrap();
     let page = s.doc().unwrap().layout("Layout1").unwrap().page.clone();
     assert_eq!((page.paper.as_str(), page.margins_mm), ("ISO A4 (210.00 x 297.00 MM)", [5.0; 4]));
     s.execute("pagesetup", &json!({"layout": "Layout1", "paper": "A3"})).unwrap();
@@ -180,7 +180,7 @@ fn plotwindow_keeps_the_picked_window_for_the_plot_dialog() {
     s.cmdline("plotwindow").unwrap();
     assert_eq!(s.current_prompt().unwrap().message, "Specify first corner");
     s.cmdline("10,20").unwrap();
-    assert_eq!(s.preview(cadcraft_engine::geom::Vec2::new(40.0, 5.0)).len(), 4, "the rubber-band rectangle");
+    assert_eq!(s.preview(drafitra_engine::geom::Vec2::new(40.0, 5.0)).len(), 4, "the rubber-band rectangle");
     s.cmdline("40,5").unwrap();
     assert!(s.running.is_none());
     let w = s.plot_window.expect("the picked window");

@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_engine::live::{Event, SessionId};
+use endrika_engine::live::{Event, SessionId};
 
 use crate::inbox::{Inbox, Waker};
 

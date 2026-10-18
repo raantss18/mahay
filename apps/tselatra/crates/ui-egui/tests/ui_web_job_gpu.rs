@@ -5,9 +5,9 @@
 
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::Session;
-use effectcraft_engine::offload::{Inbox, Offload, Post, WorkerReply, WorkerRequest};
-use effectcraft_gpu::Gpu;
+use tselatra_engine::Session;
+use tselatra_engine::offload::{Inbox, Offload, Post, WorkerReply, WorkerRequest};
+use tselatra_gpu::Gpu;
 use serde_json::json;
 
 /// One device at a time in this test binary: wgpu's OpenGL backend (Mesa llvmpipe on FreeBSD,
@@ -28,20 +28,20 @@ impl Offload for Manual {
 
 type Files = Arc<Mutex<Vec<(String, Vec<u8>)>>>;
 
-fn exporter(files: Files) -> Arc<effectcraft_host::FileExporter> {
+fn exporter(files: Files) -> Arc<tselatra_host::FileExporter> {
     let sink: Arc<dyn Fn(&str, Vec<u8>) + Send + Sync> = Arc::new(move |p: &str, d: Vec<u8>| files.lock().unwrap().push((p.to_string(), d)));
-    Arc::new(effectcraft_host::FileExporter { sink: Some(sink) })
+    Arc::new(tselatra_host::FileExporter { sink: Some(sink) })
 }
 
 /// Run `req` on a worker session (`gpu`: its accelerator); its replies and the files it wrote.
 fn run(req: WorkerRequest, gpu: Option<&Gpu>) -> (Vec<WorkerReply>, Vec<(String, Vec<u8>)>) {
     let files: Files = Arc::default();
     let mut w = Session { exporter: Some(exporter(files.clone())), ..Default::default() };
-    w.accel = gpu.map(|g| Arc::new(g.clone()) as Arc<dyn effectcraft_engine::render::Accelerator>);
+    w.accel = gpu.map(|g| Arc::new(g.clone()) as Arc<dyn tselatra_engine::render::Accelerator>);
     let replies = Arc::new(Mutex::new(vec![]));
     let r2 = replies.clone();
     let post: Post = std::rc::Rc::new(move |r| r2.lock().unwrap().push(r));
-    effectcraft_engine::offload::run_request(&mut w, req, &post);
+    tselatra_engine::offload::run_request(&mut w, req, &post);
     let r = replies.lock().unwrap().clone();
     let f = files.lock().unwrap().clone();
     (r, f)

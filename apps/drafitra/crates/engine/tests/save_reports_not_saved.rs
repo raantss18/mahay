@@ -1,10 +1,10 @@
-//! Saving a drawing with entities of types CADCraft doesn't model (read from another program's
+//! Saving a drawing with entities of types Drafitra doesn't model (read from another program's
 //! file) as DWG says which ones the file doesn't keep, instead of dropping them silently. DXF
 //! writes them back as read: nothing to report.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::{Block, Common, Drawing, EntityKind, RawTag, Space, Unknown};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::{Block, Common, Drawing, EntityKind, RawTag, Space, Unknown};
 use serde_json::json;
 
 fn unknown(kind: &str) -> EntityKind {
@@ -20,12 +20,12 @@ fn save_lists_the_entities_the_file_does_not_keep() {
     }
     let mut b = Block::new("Part");
     let h = d.new_handle();
-    b.entities.push(cadcraft_engine::doc::Entity { handle: h, common: Common::default(), kind: unknown("REGION") });
+    b.entities.push(drafitra_engine::doc::Entity { handle: h, common: Common::default(), kind: unknown("REGION") });
     d.blocks.insert("Part".into(), std::sync::Arc::new(b));
     let mut s = Session::empty();
     s.open_drawing(d, "foreign.dxf", None);
 
-    let path = std::env::temp_dir().join(format!("cadcraft-not-saved-{}.dwg", std::process::id()));
+    let path = std::env::temp_dir().join(format!("drafitra-not-saved-{}.dwg", std::process::id()));
     let r = s.execute("saveas", &json!({ "path": path.to_string_lossy() })).unwrap();
     let _ = std::fs::remove_file(&path);
     assert_eq!(r["notSaved"], json!({ "3DSOLID": 1, "MLINE": 2, "REGION": 1 }));
@@ -33,14 +33,14 @@ fn save_lists_the_entities_the_file_does_not_keep() {
     assert!(s.log.iter().any(|l| l == msg), "{:?}", s.log);
 
     // DXF keeps them.
-    let dxf = std::env::temp_dir().join(format!("cadcraft-not-saved-{}.dxf", std::process::id()));
+    let dxf = std::env::temp_dir().join(format!("drafitra-not-saved-{}.dxf", std::process::id()));
     let n = s.log.len();
     let r = s.execute("saveas", &json!({ "path": dxf.to_string_lossy() })).unwrap();
     let _ = std::fs::remove_file(&dxf);
     assert!(r.get("notSaved").is_none() && s.log.len() == n);
 
     // Exporting an image isn't a save of the drawing: no report.
-    let png = std::env::temp_dir().join(format!("cadcraft-not-saved-{}.png", std::process::id()));
+    let png = std::env::temp_dir().join(format!("drafitra-not-saved-{}.png", std::process::id()));
     let r = s.execute("saveas", &json!({ "path": png.to_string_lossy() })).unwrap();
     let _ = std::fs::remove_file(&png);
     assert!(r.get("notSaved").is_none());
@@ -54,16 +54,16 @@ fn save_lists_the_entities_the_file_does_not_keep() {
 
 #[test]
 fn templates_report_what_dwg_does_not_keep() {
-    use cadcraft_engine::cmd::file::drops_unknown;
+    use drafitra_engine::cmd::file::drops_unknown;
     assert!(drops_unknown("a.dwg") && drops_unknown("B.DWT"));
     assert!(!drops_unknown("a.dxf"));
 }
 
 #[test]
 fn solids_whose_geometry_the_data_store_keeps_are_not_reported_from_2013() {
-    use cadcraft_engine::cmd::file::{Version, not_saved_as};
-    use cadcraft_engine::doc::Handle;
-    use cadcraft_engine::doc::foreign::Foreign;
+    use drafitra_engine::cmd::file::{Version, not_saved_as};
+    use drafitra_engine::doc::Handle;
+    use drafitra_engine::doc::foreign::Foreign;
     let mut d = Drawing::new_imperial();
     let kept = d.add(&Space::Model, Common::default(), unknown("3DSOLID")).unwrap();
     d.add(&Space::Model, Common::default(), unknown("3DSOLID")).unwrap();

@@ -1,8 +1,8 @@
 //! Separate Dimensions and the property pick-whip (AE-style reference expressions).
 
-use effectcraft_keyframe::{Ease, Interp, Keyframe, Value as KV};
-use effectcraft_project::{Comp, Layer, Node, ParamUi, Property, Uid};
-use effectcraft_time::{TICKS_PER_SECOND, Tick};
+use tselatra_keyframe::{Ease, Interp, Keyframe, Value as KV};
+use tselatra_project::{Comp, Layer, Node, ParamUi, Property, Uid};
+use tselatra_time::{TICKS_PER_SECOND, Tick};
 use serde_json::{Value, json};
 
 use super::prop::prop_ref;
@@ -23,7 +23,7 @@ fn split_keys(keys: &[Keyframe], spatial: bool, d: usize) -> Vec<Keyframe> {
             s.auto_bezier = k.auto_bezier;
             s.continuous = k.continuous;
             s.roving = false;
-            let vel = |t: Tick| effectcraft_keyframe::velocity(keys, t, spatial).get(d).copied().unwrap_or(0.0);
+            let vel = |t: Tick| tselatra_keyframe::velocity(keys, t, spatial).get(d).copied().unwrap_or(0.0);
             if k.in_interp == Interp::Bezier {
                 let inf = k.in_ease.first().map(|e| e.influence).unwrap_or(1.0 / 3.0);
                 s.in_ease = vec![Ease { speed: vel(k.time - h), influence: inf }];

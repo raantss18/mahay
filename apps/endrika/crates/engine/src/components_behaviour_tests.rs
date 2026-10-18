@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::components::tests::{chars, copy_of, ex, fill, healthy, idv, kids, node};
-use figcraft_doc::*;
+use endrika_doc::*;
 
 /// The card: a 200×100 component with a "Bg" rectangle, a "Title" text and a "Row" auto layout
 /// frame (padding 4, gap 2) holding a "Chip" rectangle; and one instance of it.
@@ -623,12 +623,12 @@ fn detach_reset_push_and_restore() {
     ex(&mut s, "node.set", json!({"id": row, "props": {"padding": 9}}));
     let t = k.copy(&s, Layer::Bg);
     ex(&mut s, "node.set", json!({"id": t, "props": {"fill": "#00ff00"}}));
-    let look = figcraft_render::render_node(s.doc().unwrap(), k.inst, 1.0).unwrap();
+    let look = endrika_render::render_node(s.doc().unwrap(), k.inst, 1.0).unwrap();
     let steps = undo_len(&s);
     ex(&mut s, "component.detach", json!({"ids": [k.inst]}));
     assert_eq!(undo_len(&s), steps + 1);
     assert_eq!(node(&s, k.inst).kind.type_name(), "FRAME");
-    assert_eq!(figcraft_render::render_node(s.doc().unwrap(), k.inst, 1.0).unwrap().data(), look.data(), "the look is kept");
+    assert_eq!(endrika_render::render_node(s.doc().unwrap(), k.inst, 1.0).unwrap().data(), look.data(), "the look is kept");
     assert_eq!(node(&s, row).layout.as_ref().map(|l| l.padding), Some([9.0; 4]));
     healthy(&s);
 

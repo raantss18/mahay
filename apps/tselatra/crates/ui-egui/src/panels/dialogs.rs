@@ -2,14 +2,14 @@
 //! Composition Settings, Solid Settings and the command palette (Camera/Light Settings live in `dialogs_3d`).
 
 use crate::i18n::{tr, tr_args};
-use effectcraft_engine::project::{ItemId, ItemKind, LayerId, LayerSource};
+use tselatra_engine::project::{ItemId, ItemKind, LayerId, LayerSource};
 use egui::{Align2, Color32, Rect, Sense, pos2, vec2};
 use serde_json::{Value, json};
 
 pub use super::forms::{Field, form, info, open_form};
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 pub use super::comp_settings::CompDraft;
 
@@ -38,7 +38,7 @@ pub struct DialogState {
     /// Settings dialog page id (`general`, `appearance`…).
     pub settings_page: String,
     /// Settings when the dialog opened (Cancel restores them).
-    pub prefs_snapshot: Option<effectcraft_engine::prefs::Prefs>,
+    pub prefs_snapshot: Option<tselatra_engine::prefs::Prefs>,
     /// Keyboard Shortcuts editor.
     pub shortcuts: super::shortcut_editor::EditorState,
     /// The open parameter form.
@@ -69,7 +69,7 @@ pub struct DialogState {
     pub delete_template: Option<(String, String)>,
 }
 
-pub fn open_new_comp(app: &mut EffectcraftApp) {
+pub fn open_new_comp(app: &mut TselatraApp) {
     let n = app.session.project.comps().count() + 1;
     let last = app.dialog_state.last_new_comp.clone().unwrap_or_default();
     app.dialog_state.comp =
@@ -78,13 +78,13 @@ pub fn open_new_comp(app: &mut EffectcraftApp) {
     app.dialog = Some(Dialog::NewComp);
 }
 
-pub fn open_comp_settings(app: &mut EffectcraftApp) -> Result<(), String> {
+pub fn open_comp_settings(app: &mut TselatraApp) -> Result<(), String> {
     let cid = app.session.active_comp_id().ok_or("no composition is open")?;
     open_comp_settings_for(app, cid)
 }
 
 /// Composition Settings on `cid`, open in the viewer or not.
-pub fn open_comp_settings_for(app: &mut EffectcraftApp, cid: ItemId) -> Result<(), String> {
+pub fn open_comp_settings_for(app: &mut TselatraApp, cid: ItemId) -> Result<(), String> {
     let c = app.session.project.comp(cid).ok_or("no composition")?;
     app.dialog_state.comp = CompDraft {
         name: app.session.project.item(cid).map(|i| i.name.clone()).unwrap_or_default(),
@@ -101,7 +101,7 @@ pub fn open_comp_settings_for(app: &mut EffectcraftApp, cid: ItemId) -> Result<(
         adaptive_limit: c.motion_blur_adaptive_limit,
         preserve_frame_rate: c.preserve_frame_rate,
         preserve_resolution: c.preserve_resolution,
-        advanced_3d: c.renderer == effectcraft_engine::project::Renderer::Advanced3D,
+        advanced_3d: c.renderer == tselatra_engine::project::Renderer::Advanced3D,
         ..Default::default()
     };
     app.dialog_state.editing_existing = true;
@@ -110,9 +110,9 @@ pub fn open_comp_settings_for(app: &mut EffectcraftApp, cid: ItemId) -> Result<(
     Ok(())
 }
 
-pub fn open_new_solid(app: &mut EffectcraftApp) -> Result<(), String> {
+pub fn open_new_solid(app: &mut TselatraApp) -> Result<(), String> {
     let c = app.session.active_comp().ok_or("no composition is open")?;
-    let n = app.session.project.items.values().filter(|i| matches!(i.kind, effectcraft_engine::project::ItemKind::Solid(_))).count() + 1;
+    let n = app.session.project.items.values().filter(|i| matches!(i.kind, tselatra_engine::project::ItemKind::Solid(_))).count() + 1;
     let d = &mut app.dialog_state;
     d.solid_name = format!("Solid {n}");
     d.solid_size = [c.width, c.height];
@@ -126,7 +126,7 @@ pub fn open_new_solid(app: &mut EffectcraftApp) -> Result<(), String> {
 }
 
 /// Layer ▸ Layer Settings on a solid or adjustment layer: Solid Settings on its solid.
-fn open_solid_settings(app: &mut EffectcraftApp, layer: u64, item: ItemId) -> Result<(), String> {
+fn open_solid_settings(app: &mut TselatraApp, layer: u64, item: ItemId) -> Result<(), String> {
     let s = &app.session;
     let it = s.project.item(item).ok_or("the layer's solid is missing")?;
     let ItemKind::Solid(so) = &it.kind else { return Err("not a solid".into()) };
@@ -142,7 +142,7 @@ fn open_solid_settings(app: &mut EffectcraftApp, layer: u64, item: ItemId) -> Re
 /// Layer ▸ Layer Settings without parameters: Solid Settings for solids and adjustment layers,
 /// the layer's name for nulls (cameras and lights: `dialogs_3d::route`). Returns true when a
 /// dialog opened.
-pub fn route_layer_settings(app: &mut EffectcraftApp, id: &str, params: &Value) -> Result<bool, String> {
+pub fn route_layer_settings(app: &mut TselatraApp, id: &str, params: &Value) -> Result<bool, String> {
     if id != "layer.settings" || !params.as_object().is_none_or(|m| m.keys().all(|k| k == "layer")) {
         return Ok(false);
     }
@@ -232,7 +232,7 @@ pub(crate) fn above_footer(ui: &mut egui::Ui, height: f32, footer: impl FnOnce(&
     (body, body_h)
 }
 
-pub fn show(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut TselatraApp, ctx: &egui::Context) {
     let Some(d) = app.dialog else { return };
     let t = app.tokens;
     match d {
@@ -270,11 +270,11 @@ const ABOUT_TABS: [(&str, &str); 3] = [("About", "about"), ("Contributors", "con
 /// Height of the Contributors / Models tab bodies (they scroll inside it).
 const CREDITS_HEIGHT: f32 = 380.0;
 
-fn about(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+fn about(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut close = false;
     let mut cmd: Option<&str> = None;
     let tab_id = egui::Id::new("about_tab");
-    modal(ctx, "About EffectCraft", vec2(680.0, 520.0), t, |ui| {
+    modal(ctx, "About Tselatra", vec2(680.0, 520.0), t, |ui| {
         let mut tab = ui.data_mut(|d| d.get_temp::<usize>(tab_id)).unwrap_or(0);
         ui.horizontal(|ui| {
             for (i, (label, id)) in ABOUT_TABS.iter().enumerate() {
@@ -322,12 +322,12 @@ fn about(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
 }
 
 /// The About tab: logo, version, blurb and community links.
-fn about_main(app: &mut EffectcraftApp, ui: &mut egui::Ui, t: &Tokens, cmd: &mut Option<&'static str>) {
+fn about_main(app: &mut TselatraApp, ui: &mut egui::Ui, t: &Tokens, cmd: &mut Option<&'static str>) {
     let (r, _) = ui.allocate_exact_size(vec2(ui.available_width(), 96.0), Sense::hover());
     let p = ui.painter();
     p.rect_filled(r, 10.0, Color32::from_rgb(0x1b, 0x22, 0x3c));
     crate::header::paint_logo(p, Rect::from_min_size(r.min + vec2(18.0, 20.0), vec2(56.0, 56.0)));
-    p.text(r.min + vec2(90.0, 34.0), Align2::LEFT_CENTER, "EffectCraft", Tokens::semibold(24.0), Color32::WHITE);
+    p.text(r.min + vec2(90.0, 34.0), Align2::LEFT_CENTER, "Tselatra", Tokens::semibold(24.0), Color32::WHITE);
     p.text(
         r.min + vec2(90.0, 62.0),
         Align2::LEFT_CENTER,
@@ -336,13 +336,13 @@ fn about_main(app: &mut EffectcraftApp, ui: &mut egui::Ui, t: &Tokens, cmd: &mut
         t.text_dim,
     );
     ui.add_space(12.0);
-    ui.label(tr("A clean-room, open-source compositor for motion graphics and visual effects: native on macOS, Windows and Linux, and in the browser. Part of the ArtCraft family of creative apps."));
+    ui.label(tr("A clean-room, open-source compositor for motion graphics and visual effects: native on macOS, Windows and Linux, and in the browser. Part of the Mahay family of creative apps."));
     ui.add_space(14.0);
     let links: [(Icon, &str, &str, &'static str); 4] = [
-        (Icon::Chat, "Join the ArtCraft Discord", effectcraft_engine::links::DISCORD, "help.discord"),
-        (Icon::Globe, "ArtCraft website", effectcraft_engine::links::WEBSITE, "help.website"),
-        (Icon::Sparkle, "EffectCraft home page", effectcraft_engine::links::APP_PAGE, "help.appPage"),
-        (Icon::Code, "Source code on GitHub", effectcraft_engine::links::GITHUB, "help.github"),
+        (Icon::Chat, "Join the Mahay discussions", tselatra_engine::links::DISCORD, "help.discord"),
+        (Icon::Globe, "Mahay website", tselatra_engine::links::WEBSITE, "help.website"),
+        (Icon::Sparkle, "Tselatra home page", tselatra_engine::links::APP_PAGE, "help.appPage"),
+        (Icon::Code, "Source code on GitHub", tselatra_engine::links::GITHUB, "help.github"),
     ];
     for (icon, label, url, c) in links {
         let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 30.0), Sense::click());
@@ -377,7 +377,7 @@ fn about_main(app: &mut EffectcraftApp, ui: &mut egui::Ui, t: &Tokens, cmd: &mut
     }
 }
 
-fn comp_settings(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens, existing: bool) {
+fn comp_settings(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens, existing: bool) {
     let mut d = app.dialog_state.comp.clone();
     let mut result = None;
     let custom = app.session.prefs.comp_presets.clone();
@@ -422,7 +422,7 @@ fn comp_settings(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens, exis
 
 /// One frame of the open dialog with `key` pressed.
 #[cfg(test)]
-pub(crate) fn press_key(app: &mut EffectcraftApp, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
+pub(crate) fn press_key(app: &mut TselatraApp, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
     let mut raw = egui::RawInput::default();
     raw.events.push(egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers });
     let mut out = ctx.run_ui(raw, |ui| {
@@ -435,7 +435,7 @@ pub(crate) fn press_key(app: &mut EffectcraftApp, ctx: &egui::Context, key: egui
 /// The letter that answers the open confirmation with Cmd (Ctrl elsewhere): Cmd+D is Delete in
 /// Delete Items, Delete Template and Delete Preset, Cmd+R is Revert in Revert Project. The native menu bar hands these keys back
 /// while the prompt is open ([`crate::native_menu::activate`]).
-pub(crate) fn command_key(app: &EffectcraftApp) -> Option<egui::Key> {
+pub(crate) fn command_key(app: &TselatraApp) -> Option<egui::Key> {
     match app.dialog? {
         Dialog::DeleteItems | Dialog::DeleteTemplate => Some(egui::Key::D),
         Dialog::Shortcuts if super::shortcut_editor::confirming(app) => Some(egui::Key::D),
@@ -455,7 +455,7 @@ pub(crate) fn ui_enter(ctx: &egui::Context) -> bool {
 }
 
 /// Solid Settings: a new solid (Layer ▸ New ▸ Solid…) or the layer's solid (Layer Settings).
-fn solid(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+fn solid(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let (mut close, mut ok) = (false, false);
     let ds = &app.dialog_state;
     let (mut name, mut color, mut size, mut par, mut affect_all) =
@@ -585,7 +585,7 @@ fn solid_params(d: &DialogState) -> Value {
 }
 
 /// ⌘⇧P: fuzzy search over every command (engine + UI) and effect.
-fn palette(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+fn palette(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut q = app.dialog_state.palette_query.clone();
     let mut run: Option<(String, serde_json::Value)> = None;
     let mut close = false;
@@ -595,7 +595,7 @@ fn palette(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
             .filter(|m| m.enabled)
             .map(|m| (m.path.join(" ▸ ") + " ▸ " + &m.label, m.id, if m.params.is_null() { json!({}) } else { m.params }, m.shortcut.unwrap_or_default()))
             .collect();
-        for c in effectcraft_engine::command_specs().iter().filter(|c| c.menu.is_empty() && c.journal && c.params == "{}") {
+        for c in tselatra_engine::command_specs().iter().filter(|c| c.menu.is_empty() && c.journal && c.params == "{}") {
             if app.session.is_enabled(c.id) {
                 v.push((c.label.to_string(), c.id.to_string(), json!({}), c.shortcut.unwrap_or("").to_string()));
             }
@@ -670,15 +670,15 @@ fn palette(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
 mod tests {
     use super::*;
 
-    fn app() -> (EffectcraftApp, egui::Context) {
+    fn app() -> (TselatraApp, egui::Context) {
         let ctx = egui::Context::default();
-        let mut app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = TselatraApp::new(tselatra_engine::Session::default());
         crate::theme::install(&ctx, &app.tokens, crate::i18n::language(&app));
         app.session.execute("comp.new", json!({"name": "Main", "width": 640, "height": 360})).unwrap();
         (app, ctx)
     }
 
-    fn frame(app: &mut EffectcraftApp, ctx: &egui::Context) {
+    fn frame(app: &mut TselatraApp, ctx: &egui::Context) {
         let mut out = ctx.run_ui(Default::default(), |ui| {
             app.auto.begin_frame();
             show(app, ui.ctx());
@@ -687,7 +687,7 @@ mod tests {
     }
 
     /// One frame with `events` in its input; returns what it asked the platform to do.
-    fn frame_with(app: &mut EffectcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> egui::FullOutput {
+    fn frame_with(app: &mut TselatraApp, ctx: &egui::Context, events: Vec<egui::Event>) -> egui::FullOutput {
         let input = egui::RawInput { events, ..Default::default() };
         let mut out = ctx.run_ui(input, |ui| {
             app.auto.begin_frame();
@@ -736,7 +736,7 @@ mod tests {
         assert!(frame_with(&mut app, &ctx, vec![]).platform_output.ime.is_some(), "and takes it back");
     }
 
-    fn solid_item(app: &EffectcraftApp, l: u64) -> ItemId {
+    fn solid_item(app: &TselatraApp, l: u64) -> ItemId {
         match app.session.active_comp().unwrap().layer(LayerId(l)).unwrap().source {
             LayerSource::Solid { item } => item,
             _ => panic!("not a solid"),

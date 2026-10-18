@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::*;
-use cadcraft_geom::Vec3;
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_doc::*;
+use drafitra_geom::Vec3;
+use drafitra_io::{read_dxf, write_dxf};
 
 fn attrib(tag: &str, modes: AttribModes) -> Attrib {
     let text = Text {
@@ -77,15 +77,15 @@ fn modes_survive_dxf_and_dwg() {
     assert_eq!(modes(&d), want);
     // DXF 2018 (the default): AutoCAD's layout, subclass version first and Lock position after
     // the flags.
-    let dxf = cadcraft_io::write(&d, "x.dxf").expect("dxf");
+    let dxf = drafitra_io::write(&d, "x.dxf").expect("dxf");
     let p = pairs(&dxf);
     let at = p.iter().position(|(c, v)| *c == 100 && v == "AcDbAttributeDefinition").expect("ATTDEF");
     let tail: Vec<(i32, String)> = p[at + 1..].iter().take_while(|(c, _)| *c != 0 && *c != 1001).cloned().collect();
     let s = |v: &[(i32, &str)]| v.iter().map(|(c, x)| (*c, x.to_string())).collect::<Vec<_>>();
     assert_eq!(tail, s(&[(280, "0"), (3, ""), (2, "A"), (70, "12"), (280, "1")]));
     assert_eq!(modes(&read_dxf(&String::from_utf8_lossy(&dxf).into_owned().into_bytes()).expect("read")), want);
-    let dwg = cadcraft_io::write(&d, "x.dwg").expect("dwg");
-    assert_eq!(modes(&cadcraft_io::read(&dwg, "x.dwg").expect("read dwg")), want, "dwg");
+    let dwg = drafitra_io::write(&d, "x.dwg").expect("dwg");
+    assert_eq!(modes(&drafitra_io::read(&dwg, "x.dwg").expect("read dwg")), want, "dwg");
     // DXF 2000 has no Lock position; the flags stay.
     let old = modes(&read_dxf(write_dxf(&d).as_bytes()).expect("read"));
     let unlocked = AttribModes { lock_position: false, ..ALL };
@@ -94,7 +94,7 @@ fn modes_survive_dxf_and_dwg() {
 
 #[test]
 fn a_280_before_the_tag_is_the_version_not_lock_position() {
-    let mut p = pairs(&cadcraft_io::write(&drawing(), "x.dxf").expect("dxf"));
+    let mut p = pairs(&drafitra_io::write(&drawing(), "x.dxf").expect("dxf"));
     // A's subclass version made 1 and its Lock position cleared: nothing is locked.
     let at = p.iter().position(|(c, v)| *c == 100 && v == "AcDbAttributeDefinition").expect("ATTDEF");
     let lock = at + p[at..].iter().position(|(c, v)| *c == 70 && v == "12").expect("flags") + 1;

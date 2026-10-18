@@ -5,8 +5,8 @@
 //! and round-trip through the DXF VIEW table. Restoring one is a view change like ZOOM: it goes
 //! into the view history, not the undo stack (a layer snapshot it restores is an undo step).
 
-use cadcraft_doc::{LayerState, NamedView, Space};
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_doc::{LayerState, NamedView, Space};
+use drafitra_geom::{Bounds2, Vec2};
 use serde_json::{Value, json};
 
 use super::super::qselect::wildcard;
@@ -91,7 +91,7 @@ fn run_view(s: &mut Session, p: &Value) -> Result<Value> {
             }
             Ok(json!({ "layerSnapshot": s.settings.view_layer_snapshot }))
         }
-        "orthographic" | "o" => Err(EngineError::Other("Orthographic views are not available yet: CADCraft views are 2D.".into())),
+        "orthographic" | "o" => Err(EngineError::Other("Orthographic views are not available yet: Drafitra views are 2D.".into())),
         _ => Err(bad("view", "option must be save, window, restore, delete, list or settings")),
     }
 }
@@ -305,7 +305,7 @@ impl Interactive for ViewM {
                     "window" | "w" => Stage::WindowName,
                     "settings" | "e" => Stage::Settings,
                     "orthographic" | "o" => {
-                        s.echo("Orthographic views are not available yet: CADCraft views are 2D.");
+                        s.echo("Orthographic views are not available yet: Drafitra views are 2D.");
                         return Ok(Step::Done);
                     }
                     _ => return Err(EngineError::Other("Invalid option keyword.".into())),
@@ -374,7 +374,7 @@ impl Interactive for ViewM {
             }
         }
     }
-    fn preview(&self, _s: &Session, c: Vec2) -> Vec<cadcraft_doc::EntityKind> {
+    fn preview(&self, _s: &Session, c: Vec2) -> Vec<drafitra_doc::EntityKind> {
         match self.stage {
             Stage::WindowSecond(a) => vec![super::super::helpers::lwpoly(super::super::helpers::rect_vertices(a, c), true)],
             _ => Vec::new(),

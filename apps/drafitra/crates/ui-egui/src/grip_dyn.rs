@@ -1,15 +1,15 @@
 //! Grip dimensional input at the cursor: while one grip is stretched, the dimensions it changes
-//! ([`cadcraft_engine::grip_dims`]) show as value fields beside the object in place of the pointer
+//! ([`drafitra_engine::grip_dims`]) show as value fields beside the object in place of the pointer
 //! boxes. Typing goes into the active field; Tab locks a typed value and moves to the next field;
 //! locked values hold the grip; Enter places it there (the GRIP command gets a plain point).
 //!
 //! The command-line text is the active field's text, so Backspace and Escape behave as usual;
 //! text that isn't a value (a keyword such as `C` for Copy) goes to the command as typed.
 
-use cadcraft_doc::Handle;
-use cadcraft_engine::Input;
-use cadcraft_engine::grip_dims::{GripDim, GripDimKind, grip_dims, resolve};
-use cadcraft_geom::Vec2;
+use drafitra_doc::Handle;
+use drafitra_engine::Input;
+use drafitra_engine::grip_dims::{GripDim, GripDimKind, grip_dims, resolve};
+use drafitra_geom::Vec2;
 use egui::{Color32, Pos2, Rect, Shape, Stroke, pos2, vec2};
 
 use crate::CadApp;
@@ -112,7 +112,7 @@ pub fn submit(app: &mut CadApp) -> bool {
 }
 
 fn format(kind: GripDimKind, v: f64, (lu, lp): (i64, i64)) -> String {
-    if kind.is_angle() { format!("{}°", (v.to_degrees() * 10.0).round() / 10.0) } else { cadcraft_engine::units::format_distance(v, lu, lp) }
+    if kind.is_angle() { format!("{}°", (v.to_degrees() * 10.0).round() / 10.0) } else { drafitra_engine::units::format_distance(v, lu, lp) }
 }
 
 /// Draw the fields for the stretched grip at the cursor; `false` when there are none (the
@@ -206,7 +206,7 @@ fn padlock(p: &egui::Painter, c: Pos2, color: Color32) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_doc::EntityKind;
+    use drafitra_doc::EntityKind;
     use egui::Event;
 
     fn run_frame(app: &mut CadApp, ctx: &egui::Context, events: Vec<Event>) {
@@ -241,7 +241,7 @@ mod tests {
 
     #[test]
     fn typed_length_tab_and_enter_place_the_grip_and_keywords_pass_through() {
-        let mut app = CadApp::new(cadcraft_engine::Session::new(), crate::Services::default());
+        let mut app = CadApp::new(drafitra_engine::Session::new(), crate::Services::default());
         let r = app.session.execute("line", &serde_json::json!({"points": [[0, 0], [10, 0]]})).unwrap();
         let h = Handle::parse_hex(r["handles"][0].as_str().unwrap()).unwrap();
         let ctx = egui::Context::default();
@@ -281,7 +281,7 @@ mod tests {
     /// The grip's length fields read the drawing's length units (LUNITS/LUPREC) (#841).
     #[test]
     fn length_fields_follow_the_drawing_units() {
-        let mut app = CadApp::new(cadcraft_engine::Session::new(), crate::Services::default());
+        let mut app = CadApp::new(drafitra_engine::Session::new(), crate::Services::default());
         app.session.execute("units", &serde_json::json!({"lunits": 4, "luprec": 4})).unwrap();
         let r = app.session.execute("line", &serde_json::json!({"points": [[0, 0], [10, 0]]})).unwrap();
         let h = Handle::parse_hex(r["handles"][0].as_str().unwrap()).unwrap();
@@ -292,7 +292,7 @@ mod tests {
         crate::canvas::tests::painted_text(&mut app, &ctx, at);
         let text = crate::canvas::tests::painted_text(&mut app, &ctx, at);
         let c = app.canvas.cursor.unwrap();
-        let arch = |v: f64| cadcraft_engine::units::format_distance(v, 4, 4);
+        let arch = |v: f64| drafitra_engine::units::format_distance(v, 4, 4);
         assert!(arch(c.len()) != arch(c.x) && arch(c.len()) != arch(c.y), "{c:?}");
         assert!(text.contains(&arch(c.len())), "no {} in:\n{text}", arch(c.len()));
     }

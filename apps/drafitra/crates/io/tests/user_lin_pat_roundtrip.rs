@@ -2,10 +2,10 @@
 //! a DXF save and reopen, so a drawing that uses them no longer needs the file. The files are tiny
 //! synthetic ones with our own names.
 
-use cadcraft_doc::geom::{PolyVertex, Vec2};
-use cadcraft_doc::library::files::{parse_lin, parse_pat};
-use cadcraft_doc::{Common, Drawing, EntityKind, Hatch, HatchLoop, Space};
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_doc::geom::{PolyVertex, Vec2};
+use drafitra_doc::library::files::{parse_lin, parse_pat};
+use drafitra_doc::{Common, Drawing, EntityKind, Hatch, HatchLoop, Space};
+use drafitra_io::{read_dxf, write_dxf};
 
 #[test]
 fn user_linetypes_and_patterns_survive_dxf() {

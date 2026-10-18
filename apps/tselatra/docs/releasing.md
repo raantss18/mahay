@@ -1,13 +1,13 @@
-# Releasing EffectCraft
+# Releasing Tselatra
 
 Every push to the `release` branch runs [`.github/workflows/release.yml`](../.github/workflows/release.yml).
 It builds signed installers for macOS and Windows, packages for Linux and FreeBSD, and the web
 build, then creates or updates a
-**draft** GitHub Release named `EffectCraft v<version>`. Nobody sees a draft until a maintainer
+**draft** GitHub Release named `Tselatra v<version>`. Nobody sees a draft until a maintainer
 publishes it.
 
-User-facing names say **EffectCraft**. Files, binaries and ids stay lowercase
-(`effectcraft-<version>-<platform>-<arch>.<ext>`).
+User-facing names say **Tselatra**. Files, binaries and ids stay lowercase
+(`tselatra-<version>-<platform>-<arch>.<ext>`).
 
 ## Cutting a release
 
@@ -19,17 +19,17 @@ User-facing names say **EffectCraft**. Files, binaries and ids stay lowercase
    cargo xtask version set 0.4.0       # or 0.4.0-rc.1; updates Cargo.toml and Cargo.lock
    ```
 
-   Open a PR titled `Release: EffectCraft v0.4.0` with that change (`Cargo.toml` and our crates
+   Open a PR titled `Release: Tselatra v0.4.0` with that change (`Cargo.toml` and our crates
    in `Cargo.lock` only) and merge it.
 2. **Check the gate.** Run `cargo xtask ci` on `main` (it runs clippy and the tests in release
    mode, as CI does), and check that `main`'s CI is green on every platform.
 3. **Push `main` to `release`** (a fast-forward): `git push origin main:release`. The `release`
    branch is protected; only maintainers can push to it. The workflow starts by itself.
 4. **Wait for the draft.** When every job is green (macOS notarization is the slow part), the
-   Releases page has a draft `EffectCraft v0.4.0`, tagged `v0.4.0` on the pushed commit, with
+   Releases page has a draft `Tselatra v0.4.0`, tagged `v0.4.0` on the pushed commit, with
    every artifact and `SHA256SUMS.txt`. Its notes are generated from the merged PRs.
 5. **Check it.** Download an installer or two, check them against `SHA256SUMS.txt`, and run
-   `effectcraft --version` / `effectcraft-cli --version`. Read the job summaries: a `::warning::`
+   `tselatra --version` / `tselatra-cli --version`. Read the job summaries: a `::warning::`
    means a signing secret was missing and that artifact is unsigned.
 6. **Publish** the draft in the GitHub UI (or `gh release edit v0.4.0 --draft=false --latest`),
    with a short *Highlights* section above the generated notes. Publishing creates the `v0.4.0`
@@ -52,17 +52,17 @@ jobs are refused by the environment's branch rule, and no draft release is made.
 
 | Platform | Artifacts | Built on |
 |---|---|---|
-| macOS 11+ (universal: Apple silicon and Intel) | `effectcraft-<v>-macos-universal.dmg`, `effectcraft-cli-<v>-macos-universal.zip` | `macos-15` |
-| Windows 10+ x64 | `effectcraft-<v>-windows-x64.msi`, `effectcraft-<v>-windows-x64-portable.zip` | `windows-latest` |
-| Windows 10+ x86 (32-bit) | `effectcraft-<v>-windows-x86.msi`, `effectcraft-<v>-windows-x86-portable.zip` | `windows-latest` |
-| Windows 11 ARM64 | `effectcraft-<v>-windows-arm64.msi`, `effectcraft-<v>-windows-arm64-portable.zip` | cross-compiled on `windows-latest` |
-| Linux x86_64 | `effectcraft-<v>-linux-x86_64.{AppImage,deb,rpm,tar.gz}` | `ubuntu-22.04` |
-| Linux aarch64 | `effectcraft-<v>-linux-aarch64.{AppImage,deb,rpm,tar.gz}` | `ubuntu-22.04-arm` |
-| Linux riscv64 | `effectcraft-<v>-linux-riscv64.tar.gz` | cross-compiled on `ubuntu-24.04` (CLI smoke-tested under QEMU) |
-| Linux AppImage updates | `effectcraft-<v>-linux-{x86_64,aarch64}.AppImage.zsync` | with the AppImages |
-| Flatpak x86_64, aarch64 | `effectcraft-<v>-linux-{x86_64,aarch64}.flatpak` (the Linux tarball, repackaged) | `ubuntu-24.04`, `ubuntu-24.04-arm` |
-| FreeBSD 14+ x86_64 | `effectcraft-<v>-freebsd-x86_64.tar.gz` | a FreeBSD 14.3 VM on `ubuntu-latest` |
-| Web | `effectcraft-web-<v>.zip` (a static site; see [web.md](web.md)) | `ubuntu-latest` |
+| macOS 11+ (universal: Apple silicon and Intel) | `tselatra-<v>-macos-universal.dmg`, `tselatra-cli-<v>-macos-universal.zip` | `macos-15` |
+| Windows 10+ x64 | `tselatra-<v>-windows-x64.msi`, `tselatra-<v>-windows-x64-portable.zip` | `windows-latest` |
+| Windows 10+ x86 (32-bit) | `tselatra-<v>-windows-x86.msi`, `tselatra-<v>-windows-x86-portable.zip` | `windows-latest` |
+| Windows 11 ARM64 | `tselatra-<v>-windows-arm64.msi`, `tselatra-<v>-windows-arm64-portable.zip` | cross-compiled on `windows-latest` |
+| Linux x86_64 | `tselatra-<v>-linux-x86_64.{AppImage,deb,rpm,tar.gz}` | `ubuntu-22.04` |
+| Linux aarch64 | `tselatra-<v>-linux-aarch64.{AppImage,deb,rpm,tar.gz}` | `ubuntu-22.04-arm` |
+| Linux riscv64 | `tselatra-<v>-linux-riscv64.tar.gz` | cross-compiled on `ubuntu-24.04` (CLI smoke-tested under QEMU) |
+| Linux AppImage updates | `tselatra-<v>-linux-{x86_64,aarch64}.AppImage.zsync` | with the AppImages |
+| Flatpak x86_64, aarch64 | `tselatra-<v>-linux-{x86_64,aarch64}.flatpak` (the Linux tarball, repackaged) | `ubuntu-24.04`, `ubuntu-24.04-arm` |
+| FreeBSD 14+ x86_64 | `tselatra-<v>-freebsd-x86_64.tar.gz` | a FreeBSD 14.3 VM on `ubuntu-latest` |
+| Web | `tselatra-web-<v>.zip` (a static site; see [web.md](web.md)) | `ubuntu-latest` |
 
 The ARM64 MSI is installed and run on ARM64 hardware by
 [`windows-arm64.yml`](../.github/workflows/windows-arm64.yml).
@@ -74,15 +74,15 @@ that with stub binaries ([`test-msi.ps1`](../packaging/windows/test-msi.ps1)): a
 an upgrade that keeps it, a repair, uninstall, and the Program Files default. The wizard pages
 themselves are checked by hand.
 
-The portable zip ships [`portable.txt`](../packaging/windows/portable.txt) beside `effectcraft.exe`.
-That marker (or an `EffectCraft.portable` file) switches on portable mode: the settings folder
-(preferences, shortcuts, recovery files, logs, plug-ins) becomes `EffectCraftData\` next to the
-exe instead of `%APPDATA%\EffectCraft`. If that folder isn't writable the app logs a warning and
+The portable zip ships [`portable.txt`](../packaging/windows/portable.txt) beside `tselatra.exe`.
+That marker (or an `Tselatra.portable` file) switches on portable mode: the settings folder
+(preferences, shortcuts, recovery files, logs, plug-ins) becomes `TselatraData\` next to the
+exe instead of `%APPDATA%\Tselatra`. If that folder isn't writable the app logs a warning and
 uses `%APPDATA%`. The MSI has no marker. The logic is in `crates/host/src/app_dirs.rs` and works
-the same on macOS and Linux; `EFFECTCRAFT_CONFIG_DIR` still wins over it.
+the same on macOS and Linux; `TSELATRA_CONFIG_DIR` still wins over it.
 
-Every binary reports its version: `effectcraft --version`, `effectcraft-cli --version` and
-*Help › About EffectCraft*.
+Every binary reports its version: `tselatra --version`, `tselatra-cli --version` and
+*Help › About Tselatra*.
 
 ### Linux: the glibc baseline
 
@@ -98,22 +98,22 @@ builds the AppImage, `.deb`, `.rpm` and tarball; the workflow then runs the AppI
 GitHub has no RISC-V runners, so the `linux-riscv64` job cross-compiles on `ubuntu-24.04` for
 `riscv64gc-unknown-linux-gnu`, against riscv64 libraries (X11/Wayland/GL, ALSA) from
 ports.ubuntu.com. It ships the tarball only, needs glibc 2.39 (Ubuntu 24.04+, Debian 13+), and runs
-`effectcraft-cli --version` under `qemu-riscv64` as a smoke test. `package.sh` cross-compiles when
+`tselatra-cli --version` under `qemu-riscv64` as a smoke test. `package.sh` cross-compiles when
 `CROSS_ARCH`, `CROSS_TARGET` and `CROSS_COMPILE` are set (see its header).
 
 ### Linux: AppImage updates and Flatpak
 
 Each AppImage embeds update information
-(`gh-releases-zsync|storytold|effectcraft|latest|effectcraft-*-linux-<arch>.AppImage.zsync`), and
+(`gh-releases-zsync|raantss18|tselatra|latest|tselatra-*-linux-<arch>.AppImage.zsync`), and
 the `.zsync` file published beside it lets [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate)
 and AppImageLauncher fetch only the changed blocks from the newest published (non-pre-release)
 version. `package.sh` writes the `.zsync` when `zsyncmake` (the `zsync` package) is installed; the
 workflow checks both.
 
 The `.flatpak` bundles repackage the Linux job's tarball with
-`packaging/linux/flatpak-bundle.sh` and `packaging/linux/flatpak/ai.storyteller.effectcraft.bundle.yml`
-(no Rust build inside flatpak-builder), then install the bundle and run `effectcraft-cli --version`
-in the sandbox. `ai.storyteller.effectcraft.yml` is the from-source manifest for Flathub; packaging
+`packaging/linux/flatpak-bundle.sh` and `packaging/linux/flatpak/org.mahay.tselatra.bundle.yml`
+(no Rust build inside flatpak-builder), then install the bundle and run `tselatra-cli --version`
+in the sandbox. `org.mahay.tselatra.yml` is the from-source manifest for Flathub; packaging
 lint keeps the runtime and sandbox permissions of the two identical.
 
 ### FreeBSD
@@ -121,7 +121,7 @@ lint keeps the runtime and sandbox permissions of the two identical.
 GitHub has no FreeBSD runners, so the job builds in a FreeBSD 14.3 VM
 (`vmactions/freebsd-vm`, pinned by commit) with the packages
 [`freebsd.yml`](../.github/workflows/freebsd.yml) uses, and `packaging/freebsd/package.sh` makes a
-`/usr/local`-style tarball: `tar -xzf effectcraft-<v>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local`.
+`/usr/local`-style tarball: `tar -xzf tselatra-<v>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local`.
 
 ## Signing
 

@@ -686,7 +686,7 @@ pub fn warp_rectilinear(img: &Rgb32f, planes: &[[f64; 6]], center: [f64; 2]) -> 
     let m = max_radius(cx, cy, w as f64 - 1.0, h as f64 - 1.0);
     let mut out = Rgb32f::new(w, h);
     let coef = |p: usize| planes[p.min(planes.len() - 1)];
-    lightcraft_raster::par_rows(&mut out.data, w, |y, row| {
+    hazavana_raster::par_rows(&mut out.data, w, |y, row| {
         for (x, px) in row.iter_mut().enumerate() {
             for (c, v) in px.iter_mut().enumerate() {
                 let [kr0, kr1, kr2, kr3, kt0, kt1] = coef(c);
@@ -712,7 +712,7 @@ pub fn warp_rectilinear2(img: &Rgb32f, planes: &[[f64; WR2_LEN]], center: [f64; 
     let mut out = Rgb32f::new(w, h);
     let (cx, cy) = (center[0] * (w as f64 - 1.0), center[1] * (h as f64 - 1.0));
     let m = max_radius(cx, cy, w as f64 - 1.0, h as f64 - 1.0);
-    lightcraft_raster::par_rows(&mut out.data, w, |y, row| {
+    hazavana_raster::par_rows(&mut out.data, w, |y, row| {
         for (x, px) in row.iter_mut().enumerate() {
             for (c, v) in px.iter_mut().enumerate() {
                 let Some(k) = planes.get(c.min(last)) else { continue };

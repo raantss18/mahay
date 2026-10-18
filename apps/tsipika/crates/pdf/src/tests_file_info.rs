@@ -1,8 +1,8 @@
 //! File Info read from a PDF: the information dictionary, the XMP packet, the packet's values
 //! where both give a field, and the dictionary's alone where the packet can't be read.
 
-use vectorcraft_doc::Document;
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf_with_catalog};
+use tsipika_doc::Document;
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf_with_catalog};
 
 use crate::*;
 

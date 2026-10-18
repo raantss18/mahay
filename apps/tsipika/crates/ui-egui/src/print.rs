@@ -7,9 +7,9 @@
 
 use serde::Serialize;
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::fileio;
+use tsipika_engine::cmd::fileio;
 
-use crate::{VectorcraftApp, io};
+use crate::{TsipikaApp, io};
 
 /// A printer the system knows.
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -53,7 +53,7 @@ pub trait PrintService {
 }
 
 /// `print.printers`: the system's printers, and what the print service offers.
-pub fn printers(app: &mut VectorcraftApp) -> Value {
+pub fn printers(app: &mut TsipikaApp) -> Value {
     let (printers, setup) = app.services.print.as_mut().map(|s| (s.printers(), s.has_setup())).unwrap_or_default();
     json!({ "printers": printers, "service": app.services.print.is_some(), "setup": setup })
 }
@@ -64,7 +64,7 @@ pub fn printers(app: &mut VectorcraftApp) -> Value {
 /// `path` or no print service. A PostScript file
 /// (`format: "postscript"` or a `.ps` path, at `level`, flattened with `flattenerPreset`) is saved
 /// the same way.
-pub fn run(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn run(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let s = |k: &str| p.get(k).and_then(Value::as_str).map(str::to_string);
     let postscript = s("format").as_deref() == Some("postscript") || s("path").is_some_and(|path| fileio::extension(&path) == "ps");
     let to_file = p.get("toFile").and_then(Value::as_bool).unwrap_or(false) || s("path").is_some() || postscript;
@@ -93,7 +93,7 @@ pub fn run(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     }
     let mut v = app.session.execute("file.print", &q).map_err(|e| e.to_string())?;
     let data = v.as_object_mut().and_then(|o| o.remove("dataBase64"));
-    let pdf = data.as_ref().and_then(Value::as_str).and_then(vectorcraft_format::base64_decode).ok_or("the print job has no data")?;
+    let pdf = data.as_ref().and_then(Value::as_str).and_then(tsipika_format::base64_decode).ok_or("the print job has no data")?;
     let title = app.session.active().map(|d| d.title()).unwrap_or_default();
     let printer = s("printer").filter(|n| !n.is_empty());
     let service = app.services.print.as_mut().ok_or("no print service")?;

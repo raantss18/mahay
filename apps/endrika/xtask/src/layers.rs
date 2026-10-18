@@ -35,7 +35,7 @@ pub fn check(root: &std::path::Path) -> bool {
         .output();
     let Ok(out) = out else { return false };
     let Ok(v) = serde_json::from_slice::<serde_json::Value>(&out.stdout) else { return false };
-    let layer: BTreeMap<String, u8> = TABLE.iter().map(|(n, l)| (format!("figcraft-{n}"), *l)).collect();
+    let layer: BTreeMap<String, u8> = TABLE.iter().map(|(n, l)| (format!("endrika-{n}"), *l)).collect();
     let mut ok = true;
     for pkg in v["packages"].as_array().cloned().unwrap_or_default() {
         let name = pkg["name"].as_str().unwrap_or("").to_string();
@@ -71,5 +71,5 @@ pub fn check(root: &std::path::Path) -> bool {
 fn same_layer_ok(from: &str, to: &str) -> bool {
     // Within L0: color uses geom types; within L2: text/layout/pathops/collab are independent;
     // within L6 the MCP server joins live sessions through collab-net.
-    matches!((from, to), ("figcraft-color", "figcraft-geom") | ("figcraft-render", "figcraft-format") | ("figcraft-mcp", "figcraft-collab-net"))
+    matches!((from, to), ("endrika-color", "endrika-geom") | ("endrika-render", "endrika-format") | ("endrika-mcp", "endrika-collab-net"))
 }

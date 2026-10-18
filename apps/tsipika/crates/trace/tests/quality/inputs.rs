@@ -2,7 +2,7 @@
 //! sizes) and two continuous-tone images computed per pixel.
 
 use kurbo::{Affine, BezPath, Circle, Ellipse, Point, RoundedRect, Shape};
-use vectorcraft_trace::{Raster, TracedShape};
+use tsipika_trace::{Raster, TracedShape};
 
 use crate::raster::{self, noise};
 

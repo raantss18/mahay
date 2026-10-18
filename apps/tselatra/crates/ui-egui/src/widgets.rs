@@ -8,7 +8,7 @@ use crate::theme::Tokens;
 
 /// The [`egui::UiStackInfo`] tag of a dock panel's `Ui`: Tab moves between the hot-text fields
 /// of one panel.
-pub const PANEL_TAG: &str = "effectcraft.panel";
+pub const PANEL_TAG: &str = "tselatra.panel";
 
 /// A panel's hot-text fields in drawing order (this pass's and the last one's), and a Tab
 /// pressed while typing in one: (that field, Shift held, the pass).
@@ -494,10 +494,10 @@ pub fn label_swatch() -> egui::Atom<'static> {
 }
 
 /// Paint the [`label_swatch`] of a laid-out button: label `l`'s colour, an empty box for None.
-pub fn paint_label_swatch(ui: &Ui, out: &egui::AtomLayoutResponse, l: effectcraft_engine::color::Label, t: &Tokens) {
+pub fn paint_label_swatch(ui: &Ui, out: &egui::AtomLayoutResponse, l: tselatra_engine::color::Label, t: &Tokens) {
     let Some(r) = out.rect(label_swatch_id()) else { return };
     let r = Rect::from_center_size(r.center(), vec2(11.0, 11.0));
-    if l == effectcraft_engine::color::Label::None {
+    if l == tselatra_engine::color::Label::None {
         ui.painter().rect_stroke(r, 2.0, Stroke::new(1.0, t.text_dim), StrokeKind::Inside);
     } else {
         ui.painter().rect_filled(r, 2.0, t.label(l));
@@ -505,7 +505,7 @@ pub fn paint_label_swatch(ui: &Ui, out: &egui::AtomLayoutResponse, l: effectcraf
 }
 
 /// A Label menu row: label `l`'s swatch then `name`, highlighted when it is the `current` label.
-pub fn label_entry(ui: &mut Ui, l: effectcraft_engine::color::Label, name: &str, current: bool, t: &Tokens) -> Response {
+pub fn label_entry(ui: &mut Ui, l: tselatra_engine::color::Label, name: &str, current: bool, t: &Tokens) -> Response {
     let out = egui::Button::selectable(current, (label_swatch(), name)).atom_ui(ui);
     paint_label_swatch(ui, &out, l, t);
     out.response
@@ -517,14 +517,14 @@ pub fn label_popup(
     ui: &mut Ui,
     id: egui::Id,
     pos: egui::Pos2,
-    current: effectcraft_engine::color::Label,
-    name: impl Fn(effectcraft_engine::color::Label) -> String,
+    current: tselatra_engine::color::Label,
+    name: impl Fn(tselatra_engine::color::Label) -> String,
     t: &Tokens,
-) -> Option<effectcraft_engine::color::Label> {
+) -> Option<tselatra_engine::color::Label> {
     if !popup_is_open(ui, id) {
         return None;
     }
-    let labels = effectcraft_engine::color::Label::ALL;
+    let labels = tselatra_engine::color::Label::ALL;
     popup_list(ui, id, pos, Rect::NOTHING, labels.len(), 0, |ui| {
         ui.set_min_width(160.0);
         let mut chosen = None;

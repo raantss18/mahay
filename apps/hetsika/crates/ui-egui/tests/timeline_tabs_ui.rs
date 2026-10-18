@@ -7,16 +7,16 @@ use std::path::PathBuf;
 use std::sync::mpsc::{Sender, channel};
 
 use egui_kittest::Harness;
-use filmcraft_engine::Session;
-use filmcraft_engine::project::ItemId;
-use filmcraft_ui_egui::FilmcraftApp;
-use filmcraft_ui_egui::control::ControlRequest;
+use hetsika_engine::Session;
+use hetsika_engine::project::ItemId;
+use hetsika_ui_egui::HetsikaApp;
+use hetsika_ui_egui::control::ControlRequest;
 use serde_json::{Value, json};
 
 struct Driver {
-    harness: Harness<'static, FilmcraftApp>,
+    harness: Harness<'static, HetsikaApp>,
     tx: Sender<ControlRequest>,
-    /// `FILMCRAFT_UI_SNAPSHOT_DIR`: where to write PNGs of the window (rendered with wgpu).
+    /// `HETSIKA_UI_SNAPSHOT_DIR`: where to write PNGs of the window (rendered with wgpu).
     snapshots: Option<PathBuf>,
 }
 
@@ -25,8 +25,8 @@ impl Driver {
         let mut s = Session::default();
         s.execute("file.openDemoProject", json!({})).unwrap();
         let (tx, rx) = channel();
-        let app = FilmcraftApp::new(s).with_control(rx);
-        let snapshots = std::env::var_os("FILMCRAFT_UI_SNAPSHOT_DIR").map(PathBuf::from);
+        let app = HetsikaApp::new(s).with_control(rx);
+        let snapshots = std::env::var_os("HETSIKA_UI_SNAPSHOT_DIR").map(PathBuf::from);
         let mut b = Harness::builder().with_size(egui::vec2(1600.0, 980.0)).with_max_steps(10_000);
         if snapshots.is_some() {
             b = b.wgpu();
@@ -70,7 +70,7 @@ impl Driver {
         self.ok("engine.execute", json!({"command": command, "params": params}))
     }
 
-    fn app(&mut self) -> &mut FilmcraftApp {
+    fn app(&mut self) -> &mut HetsikaApp {
         self.harness.state_mut()
     }
 }
@@ -256,7 +256,7 @@ fn tabs_that_do_not_fit_are_reached_through_a_list() {
 
 #[test]
 fn a_reopened_project_shows_its_tabs_as_they_were_left() {
-    let dir = std::env::temp_dir().join(format!("filmcraft-tabs-ui-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("hetsika-tabs-ui-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("tabs.fcproj").to_string_lossy().to_string();

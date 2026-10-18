@@ -8,14 +8,14 @@
 //!
 //! Automation ids: `viewer.gradientPoint.<uid>` (the Start Point / End Point property's uid).
 
-use effectcraft_engine::geom::Mat3;
-use effectcraft_engine::project::{Layer, LayerId, Node, PropGroup, Property};
-use effectcraft_engine::render::EvalCtx;
+use tselatra_engine::geom::Mat3;
+use tselatra_engine::project::{Layer, LayerId, Node, PropGroup, Property};
+use tselatra_engine::render::EvalCtx;
 use egui::{Color32, Rect, Sense, Stroke, vec2};
 use serde_json::json;
 
 use super::fx_widgets as fw;
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 
 /// Gradient Fill / Gradient Stroke groups in shape contents `g`, through nested groups.
 fn gradient_paints<'a>(g: &'a PropGroup, depth: usize, out: &mut Vec<&'a PropGroup>) {
@@ -43,7 +43,7 @@ pub(crate) fn selected_in(g: &PropGroup, layer: LayerId, selected: &[(LayerId, u
 /// matrix (it knows the 3D view). Called after the viewer's own gestures, so a handle takes the
 /// press before the layer would move.
 pub fn viewer_hook(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     map: &super::viewer::ViewerMap,
@@ -68,7 +68,7 @@ pub fn viewer_hook(
         let m = l2c(ectx, layer);
         for g in paints.into_iter().filter(|g| selected_in(g, layer.id, &selected_props)) {
             // Gradient (group) space → comp: the enclosing groups' transforms, then the layer's.
-            let pm = m * effectcraft_engine::render::shapes::item_matrix(ectx, layer, g.uid).unwrap_or(Mat3::IDENTITY);
+            let pm = m * tselatra_engine::render::shapes::item_matrix(ectx, layer, g.uid).unwrap_or(Mat3::IDENTITY);
             let pts: Vec<&Property> = ["start", "end"].iter().filter_map(|k| g.get(k)).collect();
             let screen: Vec<egui::Pos2> = pts.iter().map(|pr| map.to_screen(fw::layer_to_comp(&pm, ectx.value(layer, pr).as_vec2()))).collect();
             if let [a, b] = screen[..] {

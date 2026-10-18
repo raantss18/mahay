@@ -1,6 +1,6 @@
 use serde_json::json;
-use soundcraft_engine::Engine;
-use soundcraft_model::{ChannelFormat, Clip, Session, SourceId, TrackKind};
+use feo_engine::Engine;
+use feo_model::{ChannelFormat, Clip, Session, SourceId, TrackKind};
 
 #[test]
 fn trim_to_selection_keeps_clips_sorted() {

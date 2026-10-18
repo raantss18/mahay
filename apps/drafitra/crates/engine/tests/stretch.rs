@@ -1,8 +1,8 @@
 //! STRETCH: repeated crossing selections until Enter, the `C`/`W` selection keywords, and the
 //! Displacement option (typed, or Enter at the base point prompt).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
 
 /// Every line as ((ax, ay), (bx, by)), sorted by the first x.
 fn lines(s: &Session) -> Vec<((f64, f64), (f64, f64))> {

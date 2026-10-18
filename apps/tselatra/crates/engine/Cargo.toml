@@ -1,6 +1,6 @@
 [package]
-name = "effectcraft-engine"
-description = "The EffectCraft engine: session, undo history, editor state and the command registry every frontend (UI, CLI, control channel, MCP) dispatches through"
+name = "tselatra-engine"
+description = "The Tselatra engine: session, undo history, editor state and the command registry every frontend (UI, CLI, control channel, MCP) dispatches through"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,26 +10,26 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-craft-docpath = { workspace = true }
-effectcraft-time = { workspace = true }
-effectcraft-geom = { workspace = true }
-effectcraft-color = { workspace = true }
-effectcraft-keyframe = { workspace = true }
-effectcraft-project = { workspace = true }
-effectcraft-raster = { workspace = true }
-effectcraft-path = { workspace = true }
-effectcraft-text = { workspace = true }
-effectcraft-effects = { workspace = true }
-effectcraft-render = { workspace = true }
-effectcraft-segment = { workspace = true }
-effectcraft-track = { workspace = true }
-effectcraft-model = { workspace = true }
-effectcraft-lottie = { workspace = true }
-effectcraft-interchange = { workspace = true }
-effectcraft-psd = { workspace = true }
+mahay-docpath = { workspace = true }
+tselatra-time = { workspace = true }
+tselatra-geom = { workspace = true }
+tselatra-color = { workspace = true }
+tselatra-keyframe = { workspace = true }
+tselatra-project = { workspace = true }
+tselatra-raster = { workspace = true }
+tselatra-path = { workspace = true }
+tselatra-text = { workspace = true }
+tselatra-effects = { workspace = true }
+tselatra-render = { workspace = true }
+tselatra-segment = { workspace = true }
+tselatra-track = { workspace = true }
+tselatra-model = { workspace = true }
+tselatra-lottie = { workspace = true }
+tselatra-interchange = { workspace = true }
+tselatra-psd = { workspace = true }
 kurbo = { workspace = true }
-effectcraft-svg = { workspace = true }
-effectcraft-pdf = { workspace = true }
+tselatra-svg = { workspace = true }
+tselatra-pdf = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

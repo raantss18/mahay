@@ -8,7 +8,7 @@
 //! blemishes, and gets none; the rest are capped per face. Removing freckles is a different
 //! feature and never a default.
 
-use lightcraft_raster::{Plane, Rgba8, blur::gaussian};
+use hazavana_raster::{Plane, Rgba8, blur::gaussian};
 
 /// A face in fractions of the image (0..1, y down): its box and the five landmarks a YuNet
 /// detector gives, in its order (right eye, left eye, nose tip, right and left mouth corner,

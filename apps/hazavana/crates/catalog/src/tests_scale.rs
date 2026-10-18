@@ -1,5 +1,5 @@
 //! What library queries cost at 100k photos (ignored:
-//! `cargo test --release -p lightcraft-catalog --lib scale_100k -- --ignored --nocapture`).
+//! `cargo test --release -p hazavana-catalog --lib scale_100k -- --ignored --nocapture`).
 
 use std::time::Instant;
 

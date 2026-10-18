@@ -1,5 +1,5 @@
-# A tiny VST3 plugin used only by soundcraft-vst3-host's integration tests. Not part of the
-# SoundCraft workspace (the empty [workspace] table makes it its own root); the test builds it
+# A tiny VST3 plugin used only by feo-vst3-host's integration tests. Not part of the
+# Feo workspace (the empty [workspace] table makes it its own root); the test builds it
 # with `cargo build` and loads the resulting library. Never shipped.
 [package]
 name = "vst3-fixture"

@@ -64,7 +64,7 @@ fn presets_export_and_import_round_trip() {
     let r = s.execute("print.presets.import", &json!({"data": text})).unwrap();
     assert_eq!(r["imported"], json!(["Tiles", "Default 2"]), "[Default] comes in as a saved copy");
     assert_eq!(s.prefs.print_presets[0], saved[0], "the same preset comes back");
-    assert_eq!(s.prefs.print_presets[1].settings, vectorcraft_pdf::PrintSettings::default());
+    assert_eq!(s.prefs.print_presets[1].settings, tsipika_pdf::PrintSettings::default());
     // replace: saved presets of the same names are overwritten.
     let r = s.execute("print.presets.import", &json!({"data": text, "replace": true})).unwrap();
     assert_eq!(r["imported"], json!(["Tiles", "Default 3"]));

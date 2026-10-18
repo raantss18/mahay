@@ -1,6 +1,6 @@
 //! M13.4: HEVC / AV1 output modules and the WebM codec / Opus options over the command API.
 
-use effectcraft_project::render_queue::{Channels, CodecProfile, OpusApplication, OutputFormat, RateControlMode, VideoCodecOptions, WebmVideoCodec};
+use tselatra_project::render_queue::{Channels, CodecProfile, OpusApplication, OutputFormat, RateControlMode, VideoCodecOptions, WebmVideoCodec};
 use serde_json::json;
 
 use crate::Session;
@@ -53,7 +53,7 @@ fn hevc_and_av1_output_module_options() {
 }
 
 /// An explicit format wins over the output file's extension, which follows it (#154:
-/// `effectcraft-cli render --format hevc --out x.mp4` wrote H.264). Without a format, the extension
+/// `tselatra-cli render --format hevc --out x.mp4` wrote H.264). Without a format, the extension
 /// still picks one.
 #[test]
 fn an_explicit_format_wins_over_the_output_extension() {

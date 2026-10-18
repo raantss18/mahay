@@ -16,7 +16,7 @@ pub mod raster;
 pub mod scene;
 pub mod shade;
 
-use effectcraft_project::Layer;
+use tselatra_project::Layer;
 use rayon::prelude::*;
 
 pub use dof::depth_of_field;
@@ -29,7 +29,7 @@ use crate::{EvalCtx, Image, Renderer};
 /// Whether a comp draws its 3D layers with the Advanced 3D renderer: its own setting, or for a
 /// collapsed precomp's layers, the setting of the outermost comp they collapse into.
 pub(crate) fn active(r: &Renderer, ctx: &EvalCtx) -> bool {
-    r.collapse3d.map_or(ctx.comp, |c| c.parent.comp).renderer == effectcraft_project::Renderer::Advanced3D
+    r.collapse3d.map_or(ctx.comp, |c| c.parent.comp).renderer == tselatra_project::Renderer::Advanced3D
 }
 
 /// Box-filter a supersampled target down by `k`: (premultiplied colour, mean depth of the
@@ -148,7 +148,7 @@ impl<'p, 'a> Prepared<'p, 'a> {
         let fd = ctx.comp.frame_duration().seconds();
         let (angle, phase) = (ctx.comp.shutter_angle / 360.0, ctx.comp.shutter_phase / 360.0);
         let f = phase + angle * i as f64 / (n - 1) as f64;
-        let sub = ctx.at(ctx.time + effectcraft_time::Tick::from_seconds_f64(f * fd));
+        let sub = ctx.at(ctx.time + tselatra_time::Tick::from_seconds_f64(f * fd));
         scene::build_at(self.r, ctx, Some(&sub), self.layers, self.out)
     }
 }
@@ -305,7 +305,7 @@ fn far_to_near<'p>(r: &Renderer, ctx: &EvalCtx, special: Vec<&'p Layer>) -> Vec<
         .into_iter()
         .map(|l| {
             let anchor = l.transform().map_or([0.0; 3], |tr| ctx.v3(l, tr, "anchor", [0.0; 3]));
-            (cam.depth(ctx.world_matrix(l).apply(effectcraft_geom::Vec3::from(anchor))), l)
+            (cam.depth(ctx.world_matrix(l).apply(tselatra_geom::Vec3::from(anchor))), l)
         })
         .collect();
     order.sort_by(|a, b| b.0.total_cmp(&a.0));
@@ -318,7 +318,7 @@ fn solo_matte(ctx: &EvalCtx, l: &Layer) -> Option<(Layer, bool)> {
     let m = l.track_matte.and_then(|tm| ctx.comp.layer(tm.layer).filter(|m| m.id != l.id && m.is_3d()))?;
     let mut solo = m.clone();
     solo.track_matte = None;
-    solo.blend_mode = effectcraft_color::BlendMode::Normal;
+    solo.blend_mode = tselatra_color::BlendMode::Normal;
     solo.preserve_transparency = false;
     solo.switches.video = true;
     Some((solo, m.is_active_at(ctx.time)))
@@ -326,7 +326,7 @@ fn solo_matte(ctx: &EvalCtx, l: &Layer) -> Option<(Layer, bool)> {
 
 /// Layers whose blend mode, track matte or Preserve Transparency needs the 2D compositing path.
 fn needs_2d_composite(ctx: &EvalCtx, l: &Layer) -> bool {
-    l.blend_mode != effectcraft_color::BlendMode::Normal
+    l.blend_mode != tselatra_color::BlendMode::Normal
         || l.preserve_transparency
         || l.track_matte.is_some_and(|tm| tm.layer != l.id && ctx.comp.layer(tm.layer).is_some())
 }

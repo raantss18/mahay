@@ -1,9 +1,9 @@
 //! MTEXT columns and paragraph codes survive a DXF round trip (#532): the column groups
 //! 75/76/78/79/48/49/50, tabs as `^I`, carets as `^ `.
 
-use cadcraft_doc::{Common, Drawing, EntityKind, MText, MTextColumnType, MTextColumns, Space};
-use cadcraft_geom::Vec3;
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_doc::{Common, Drawing, EntityKind, MText, MTextColumnType, MTextColumns, Space};
+use drafitra_geom::Vec3;
+use drafitra_io::{read_dxf, write_dxf};
 
 fn mtext(contents: &str, rotation: f64, columns: Option<MTextColumns>) -> MText {
     MText {

@@ -1,4 +1,4 @@
-# The cursors VectorCraft needs: one [[cursor]] per `Cursor` value (crates/tools/src/lib.rs).
+# The cursors Tsipika needs: one [[cursor]] per `Cursor` value (crates/tools/src/lib.rs).
 #
 # This is the source of truth for what each cursor is for, written for whoever draws them:
 # designers never decide what a cursor is for, this file does. `cargo xtask cursors` warns about
@@ -17,7 +17,7 @@
 # Wording: plain sentences for a designer, behaviour only. `cargo xtask brands` rejects vendor
 # names here.
 
-app = "VectorCraft"
+app = "Tsipika"
 
 # ── Selection ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -350,7 +350,7 @@ id = "RotateToward"
 group = "Transform and resize"
 shown_when = ["Selection and Free Transform in the rotate zone just outside a bounding-box corner, and while rotating there. The Rotate, Gradient and Puppet Warp rotate cursors don't turn."]
 hotspot = "Below the arc, in its empty middle, as for Rotate."
-look = "The Rotate arc drawn for the top-right corner (direction 1). VectorCraft turns it in 45° steps so it wraps whichever corner the pointer is at."
+look = "The Rotate arc drawn for the top-right corner (direction 1). Tsipika turns it in 45° steps so it wraps whichever corner the pointer is at."
 
 # ── Navigation ────────────────────────────────────────────────────────────────────────────────────
 

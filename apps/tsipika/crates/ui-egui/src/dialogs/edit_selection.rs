@@ -6,11 +6,11 @@
 //! `name<i>` (as edited) and `deleted<i>`; `selected` (the row picked).
 
 use serde_json::{Value, json};
-use vectorcraft_engine::doc::SavedSelection;
+use tsipika_engine::doc::SavedSelection;
 
 use super::{DialogSpec, form};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Edit Selection.
 pub const KIND: &str = "editSelection";
@@ -18,7 +18,7 @@ pub const KIND: &str = "editSelection";
 pub(super) const SPEC: DialogSpec = DialogSpec { heading: |_| tl!("Edit Selection").into(), body, confirm, min_width: 420.0, ..DialogSpec::FORM };
 
 /// Open Edit Selection on the active document's saved selections.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let names = app.run("select.savedList", json!({}))?;
     let names: Vec<&str> = names.as_array().map(|a| a.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
     if names.is_empty() {
@@ -47,7 +47,7 @@ fn selected(d: &Dialog, rows: &[usize]) -> Option<usize> {
     want.filter(|w| rows.contains(w)).or_else(|| rows.first().copied())
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let rows = rows(d);
     let current = selected(d, &rows);
     let mut pick = None;
@@ -107,7 +107,7 @@ fn edits(d: &Dialog) -> Vec<Value> {
         .collect()
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let edits = edits(d);
     // A name two selections would share keeps the dialog open, to be changed.
     let r = if edits.is_empty() { Ok(Value::Null) } else { app.run("select.editSaved", json!({ "edits": edits })) };
@@ -121,10 +121,10 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 mod tests {
     use serde_json::json;
 
-    use crate::VectorcraftApp;
+    use crate::TsipikaApp;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
         for n in ["Logo", "Icons", "Text"] {
@@ -133,11 +133,11 @@ mod tests {
         app
     }
 
-    fn set(app: &mut VectorcraftApp, k: &str, v: serde_json::Value) {
+    fn set(app: &mut TsipikaApp, k: &str, v: serde_json::Value) {
         app.ui.dialog.as_mut().unwrap().fields.insert(k.into(), v);
     }
 
-    fn names(app: &mut VectorcraftApp) -> serde_json::Value {
+    fn names(app: &mut TsipikaApp) -> serde_json::Value {
         app.run("select.savedList", json!({})).unwrap()
     }
 
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn it_needs_a_saved_selection() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         assert!(super::open(&mut app).is_err());
         assert!(app.ui.dialog.is_none());

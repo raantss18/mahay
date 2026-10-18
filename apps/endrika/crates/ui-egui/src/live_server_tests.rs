@@ -6,10 +6,10 @@
 //! the moving tools.
 
 use egui::{Event, Key};
-use figcraft_engine::figcraft_collab::message::{ClientMsg, ServerMsg};
-use figcraft_engine::figcraft_collab::{Client, Limits, Outgoing, Server};
-use figcraft_engine::live::{Access, Event as LiveEvent, HostInfo, Published, Role, SessionInfo, Status, VIEW_ONLY};
-use figcraft_engine::tools::ToolId;
+use endrika_engine::endrika_collab::message::{ClientMsg, ServerMsg};
+use endrika_engine::endrika_collab::{Client, Limits, Outgoing, Server};
+use endrika_engine::live::{Access, Event as LiveEvent, HostInfo, Published, Role, SessionInfo, Status, VIEW_ONLY};
+use endrika_engine::tools::ToolId;
 use serde_json::json;
 
 use crate::live_tests::{Harness, has_text, text_center};
@@ -26,7 +26,7 @@ fn focused(h: &Harness, id: &str) -> bool {
 
 /// Joined through a server's link with `access`: the welcome and the document (a new tab).
 fn joined(h: &mut Harness, access: Access) {
-    h.app.session.execute("collab.join", &json!({"link": "figcraft://join?host=127.0.0.1:47900&file=f&token=AbCdEfGhIjKlMnOpQrStUv"})).unwrap();
+    h.app.session.execute("collab.join", &json!({"link": "endrika://join?host=127.0.0.1:47900&file=f&token=AbCdEfGhIjKlMnOpQrStUv"})).unwrap();
     let mut server = Server::new(h.app.session.doc().unwrap().clone(), "", Limits::default());
     let ClientMsg::Hello(me) = Client::hello("f", "", "Ada", "") else { panic!("no hello") };
     let (id, outs) = server.join_as(me, access).unwrap();
@@ -69,7 +69,7 @@ fn the_publish_dialog() {
     let shapes = h.frames(2);
     assert!(has_text(
         &shapes,
-        "Give the address of a server open to the public, or a server's address with its key (`figcraft-server key` prints it)."
+        "Give the address of a server open to the public, or a server's address with its key (`endrika-server key` prints it)."
     ));
     h.frame(vec![Event::Text("ws://127.0.0.1:47900/?key=KeyKeyKeyKeyKeyKeyKey0".into())]);
     let shapes = h.frames(1);
@@ -79,7 +79,7 @@ fn the_publish_dialog() {
     assert!(h.app.ui.live.publish.is_none(), "it closes once publishing starts");
     assert_eq!(h.app.session.live().status, Status::Connecting);
     assert!(has_text(&shapes, "Publishing…"), "the toolbar says why the file can't be edited yet");
-    assert_eq!(crate::live::inspect(&h.app)["readOnly"], figcraft_engine::live::PUBLISHING);
+    assert_eq!(crate::live::inspect(&h.app)["readOnly"], endrika_engine::live::PUBLISHING);
 }
 
 fn hosting(expires: Option<u64>) -> HostInfo {
@@ -98,7 +98,7 @@ fn a_server_open_to_the_public_takes_a_file_without_a_key() {
     let (mut h, _) = Harness::new();
     crate::menus::invoke(&mut h.app, "collab.publish");
     h.frames(2);
-    h.frame(vec![Event::Text("wss://figcraft.example.com/".into())]);
+    h.frame(vec![Event::Text("wss://endrika.example.com/".into())]);
     let shapes = h.frames(1);
     assert!(!crate::live::inspect(&h.app)["publishDialog"].is_null());
     // Without a key and before the server said it is open, Publish waits.
@@ -106,7 +106,7 @@ fn a_server_open_to_the_public_takes_a_file_without_a_key() {
     assert!(h.app.ui.live.publish.is_some(), "nothing is sent yet");
     // The server's answer (collab.serverInfo).
     h.app.ui.live.publish.as_mut().unwrap().info = Some((
-        "wss://figcraft.example.com/".into(),
+        "wss://endrika.example.com/".into(),
         json!({"open": true, "operator": "abuse@example.com", "terms": "https://example.com/terms", "idleDays": 30.0}),
     ));
     let shapes = h.frames(2);
@@ -123,11 +123,11 @@ fn a_server_open_to_the_public_takes_a_file_without_a_key() {
     h.send(vec![
         LiveEvent::Hosting(hosting(None)),
         LiveEvent::Published(Published {
-            server: "wss://figcraft.example.com/".into(),
+            server: "wss://endrika.example.com/".into(),
             file: "f".into(),
             name: "Poster".into(),
-            edit: "figcraft://join?server=wss://figcraft.example.com/&file=f&token=EditEditEditEditEdit00".into(),
-            view: "figcraft://join?server=wss://figcraft.example.com/&file=f&token=ViewViewViewViewView00".into(),
+            edit: "endrika://join?server=wss://endrika.example.com/&file=f&token=EditEditEditEditEdit00".into(),
+            view: "endrika://join?server=wss://endrika.example.com/&file=f&token=ViewViewViewViewView00".into(),
             owner: Some(owner.into()),
             expires: Some(1_800_000_000),
         }),
@@ -153,8 +153,8 @@ fn a_published_file_shows_its_links() {
         server: "127.0.0.1:47900".into(),
         file: "f".into(),
         name: "Team".into(),
-        edit: "figcraft://join?host=127.0.0.1:47900&file=f&token=EditEditEditEditEdit00".into(),
-        view: "figcraft://join?host=127.0.0.1:47900&file=f&token=ViewViewViewViewView00".into(),
+        edit: "endrika://join?host=127.0.0.1:47900&file=f&token=EditEditEditEditEdit00".into(),
+        view: "endrika://join?host=127.0.0.1:47900&file=f&token=ViewViewViewViewView00".into(),
         owner: None,
         expires: None,
     });

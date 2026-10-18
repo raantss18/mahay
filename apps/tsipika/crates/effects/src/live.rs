@@ -1,5 +1,5 @@
 //! Live objects (blends, envelopes, gradient meshes, repeats) evaluated alike for the renderer and
-//! every exporter, with what the pure evaluation in [`vectorcraft_doc::live`] can't do itself
+//! every exporter, with what the pure evaluation in [`tsipika_doc::live`] can't do itself
 //! ([`Hooks`]): type inside an envelope distorts as its glyph outlines, run by run
 //! ([`outline_text`]); symbol instances as their symbol's art; with Distort Appearance strokes and
 //! geometry effects bend with the art ([`bake_appearance`]); with Distort Pattern Fills the pattern
@@ -7,9 +7,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_doc::live::{self, Hooks, Outliner};
-use vectorcraft_doc::{Document, Node, NodeKind};
-use vectorcraft_geom::{Affine, Rect};
+use tsipika_doc::live::{self, Hooks, Outliner};
+use tsipika_doc::{Document, Node, NodeKind};
+use tsipika_geom::{Affine, Rect};
 
 use crate::{bake_appearance, outline_text};
 

@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 use std::io::Read;
 
-use designcraft_doc::story::{BASIC_PARAGRAPH, NO_CHAR_STYLE};
-use designcraft_doc::{CharAttrs, CharFormat, ListCounter, ListType, ParaAttrs, ParaFormat, ParaProps, Story, StoryId, Table};
+use pejy_doc::story::{BASIC_PARAGRAPH, NO_CHAR_STYLE};
+use pejy_doc::{CharAttrs, CharFormat, ListCounter, ListType, ParaAttrs, ParaFormat, ParaProps, Story, StoryId, Table};
 use quick_xml::events::Event;
 
 use crate::docx_numbering::{ListPara, Numbering};
@@ -187,13 +187,13 @@ fn run_attrs(rpr: Option<&El>) -> CharAttrs {
         a.font_family = Some(f.to_string());
     }
     if r.on("caps") == Some(true) {
-        a.capitalization = Some(designcraft_doc::Capitalization::AllCaps);
+        a.capitalization = Some(pejy_doc::Capitalization::AllCaps);
     }
     if let Some(v) = r.val("vertAlign") {
         a.position = Some(match v.as_str() {
-            "superscript" => designcraft_doc::Position::Superscript,
-            "subscript" => designcraft_doc::Position::Subscript,
-            _ => designcraft_doc::Position::Normal,
+            "superscript" => pejy_doc::Position::Superscript,
+            "subscript" => pejy_doc::Position::Subscript,
+            _ => pejy_doc::Position::Normal,
         });
     }
     a
@@ -215,10 +215,10 @@ fn para_attrs(ppr: Option<&El>) -> ParaAttrs {
     }
     if let Some(j) = p.val("jc") {
         a.align = Some(match j.as_str() {
-            "center" => designcraft_doc::Align::Center,
-            "right" | "end" => designcraft_doc::Align::Right,
-            "both" | "distribute" => designcraft_doc::Align::LeftJustified,
-            _ => designcraft_doc::Align::Left,
+            "center" => pejy_doc::Align::Center,
+            "right" | "end" => pejy_doc::Align::Right,
+            "both" | "distribute" => pejy_doc::Align::LeftJustified,
+            _ => pejy_doc::Align::Left,
         });
     }
     a
@@ -316,7 +316,7 @@ impl Ctx {
                 "p" => {
                     let mut st = Story::new(StoryId(0));
                     self.inline(e, &mut st, false);
-                    let is_break = |c: char| matches!(c, designcraft_doc::PAGE_BREAK | designcraft_doc::COLUMN_BREAK);
+                    let is_break = |c: char| matches!(c, pejy_doc::PAGE_BREAK | pejy_doc::COLUMN_BREAK);
                     out.push(st.text.chars().map(|c| if is_break(c) { '\n' } else { c }).collect());
                 }
                 "sdt" => {
@@ -397,9 +397,9 @@ impl Ctx {
                 "t" => e.text(),
                 "tab" => "\t".into(),
                 "br" => match e.attr("type") {
-                    Some("page") => designcraft_doc::PAGE_BREAK.to_string(),
-                    Some("column") => designcraft_doc::COLUMN_BREAK.to_string(),
-                    _ => designcraft_doc::FORCED_LINE_BREAK.to_string(),
+                    Some("page") => pejy_doc::PAGE_BREAK.to_string(),
+                    Some("column") => pejy_doc::COLUMN_BREAK.to_string(),
+                    _ => pejy_doc::FORCED_LINE_BREAK.to_string(),
                 },
                 "noBreakHyphen" => "\u{2011}".into(),
                 "softHyphen" => "\u{AD}".into(),
@@ -711,7 +711,7 @@ mod tests {
         );
         let st = import(&docx(&document, &styles, "")).unwrap().story;
         st.check().unwrap();
-        let (pb, cb) = (designcraft_doc::PAGE_BREAK, designcraft_doc::COLUMN_BREAK);
+        let (pb, cb) = (pejy_doc::PAGE_BREAK, pejy_doc::COLUMN_BREAK);
         assert_eq!(st.text, format!("End of one{pb}\n{pb}\nTwo{cb}\n"));
         let styles: Vec<&str> = st.paras.iter().map(|p| p.style.as_str()).collect();
         assert_eq!(styles, [BASIC_PARAGRAPH, "Chapter", "Chapter", "Chapter"]);
@@ -737,10 +737,10 @@ mod tests {
     /// The label composition gives paragraph `i`: numbered paragraphs count per level on one
     /// counter that a paragraph outside a list restarts; bullets and empty paragraphs leave it.
     fn label(st: &Story, i: usize) -> String {
-        let mut counter = designcraft_doc::ListCounter::default();
+        let mut counter = pejy_doc::ListCounter::default();
         let mut label = String::new();
         for (f, r) in st.paras.iter().zip(st.para_ranges()).take(i + 1) {
-            let mut p = designcraft_doc::ParaProps::default();
+            let mut p = pejy_doc::ParaProps::default();
             p.apply(&f.para);
             label = match p.list_type {
                 _ if r.is_empty() => String::new(),
@@ -750,7 +750,7 @@ mod tests {
                 }
                 ListType::Bullets => p.bullet_label(),
                 ListType::None => {
-                    counter = designcraft_doc::ListCounter::default();
+                    counter = pejy_doc::ListCounter::default();
                     String::new()
                 }
             };
@@ -782,7 +782,7 @@ mod tests {
         let types: Vec<Option<ListType>> = st.paras.iter().map(|p| p.para.list_type).collect();
         assert_eq!(types, [None, Some(ListType::Bullets), Some(ListType::Bullets), Some(ListType::Numbers), Some(ListType::Numbers)]);
         assert_eq!(label(&st, 1), "•\t");
-        assert_eq!(st.paras[3].para.number_style, Some(designcraft_doc::NumberStyle::Arabic));
+        assert_eq!(st.paras[3].para.number_style, Some(pejy_doc::NumberStyle::Arabic));
         assert_eq!((label(&st, 3), label(&st, 4)), ("1.\t".to_string(), "2.\t".to_string()));
         // The model's own counter already starts at 1 and carries on: no Start At needed.
         assert_eq!((st.paras[3].para.start_at, st.paras[4].para.start_at), (None, None));

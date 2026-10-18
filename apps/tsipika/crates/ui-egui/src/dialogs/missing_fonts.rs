@@ -3,7 +3,7 @@
 //! Find Fonts (Type › Find Font on the first of them, to replace it) and Close. Neither brings the
 //! dialog back for that open. Search Fonts Folder (the `Fonts` folder next to the document, as
 //! File › Package writes it) and Find in Folder… look for their files (`text.findFontFiles`, on
-//! separate threads), and Add Fonts copies the files the user chooses into VectorCraft's own Fonts
+//! separate threads), and Add Fonts copies the files the user chooses into Tsipika's own Fonts
 //! folder (`text.addFontFiles`). Type › Find Font's Find in Folder… opens it too
 //! (`ui.findFontsInFolder`), and so does `ui.missingFontsDialog`.
 //!
@@ -23,7 +23,7 @@ use super::DialogSpec;
 use crate::picks::PickRequest;
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of the fonts a document opened without.
 pub const KIND: &str = "missingFonts";
@@ -43,15 +43,15 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 /// After a document opened (`document.open`'s result `r`): its Missing Fonts dialog waits for the
 /// dialog slot. On the web the status line shows how many fonts are missing instead, unless it
 /// shows the open's notes.
-pub fn after_open(app: &mut VectorcraftApp, r: &Value) {
+pub fn after_open(app: &mut TsipikaApp, r: &Value) {
     after_open_for(app, r, cfg!(target_arch = "wasm32"));
 }
 
-fn after_open_for(app: &mut VectorcraftApp, r: &Value, web: bool) {
+fn after_open_for(app: &mut TsipikaApp, r: &Value, web: bool) {
     let Some(st) = app.session.active() else { return };
     let uid = st.uid;
     if web {
-        let n = vectorcraft_engine::cmd::fontfiles::missing_fonts(&st.doc).len();
+        let n = tsipika_engine::cmd::fontfiles::missing_fonts(&st.doc).len();
         if n > 0 && r["warnings"].as_array().is_none_or(Vec::is_empty) {
             app.status(format!("{n} font(s) aren't available here: their text shows in another font"));
         }
@@ -63,9 +63,9 @@ fn after_open_for(app: &mut VectorcraftApp, r: &Value, web: bool) {
 }
 
 /// The Missing Fonts dialog of the open document `uid`, when fonts it uses aren't available.
-fn dialog_for(app: &VectorcraftApp, uid: u64) -> Option<Dialog> {
+fn dialog_for(app: &TsipikaApp, uid: u64) -> Option<Dialog> {
     let st = app.session.documents().iter().find(|d| d.uid == uid)?;
-    let r = vectorcraft_engine::cmd::fontfiles::missing_fonts_of(st, app.session.search_rules.as_ref());
+    let r = tsipika_engine::cmd::fontfiles::missing_fonts_of(st, app.session.search_rules.as_ref());
     let fonts = r["fonts"].as_array().filter(|f| !f.is_empty())?;
     let next = r["fontsNextToDocument"].as_str().unwrap_or_default();
     Some(Dialog::new(KIND, json!({ "document": uid, "fonts": fonts, "fontsNextToDocument": next, "state": "", "chosen": [] })))
@@ -73,7 +73,7 @@ fn dialog_for(app: &VectorcraftApp, uid: u64) -> Option<Dialog> {
 
 /// With no dialog open: the dialog of the first queued document that is still open and still
 /// misses fonts.
-pub(super) fn open_next(app: &mut VectorcraftApp) {
+pub(super) fn open_next(app: &mut TsipikaApp) {
     while app.ui.dialog.is_none() && !app.ui.pending_fonts.is_empty() {
         let uid = app.ui.pending_fonts.remove(0);
         app.ui.dialog = dialog_for(app, uid);
@@ -84,7 +84,7 @@ pub(super) fn open_next(app: &mut VectorcraftApp) {
 }
 
 /// Put the document `uid` at the front of the queue.
-fn queue_first(app: &mut VectorcraftApp, uid: u64) {
+fn queue_first(app: &mut TsipikaApp, uid: u64) {
     app.ui.pending_fonts.retain(|u| *u != uid);
     app.ui.pending_fonts.insert(0, uid);
 }
@@ -93,7 +93,7 @@ fn queue_first(app: &mut VectorcraftApp, uid: u64) {
 /// for a file opened after the document, for example), its document goes back to the front of the
 /// queue, and the dialog opens again once no dialog is open. A dialog closed by Cancel, Add Fonts
 /// or Escape stays closed.
-pub(super) fn requeue_replaced(app: &mut VectorcraftApp) {
+pub(super) fn requeue_replaced(app: &mut TsipikaApp) {
     let Some(uid) = app.ui.fonts_dialog else { return };
     let Some(d) = &app.ui.dialog else {
         app.ui.fonts_dialog = None;
@@ -106,17 +106,17 @@ pub(super) fn requeue_replaced(app: &mut VectorcraftApp) {
 }
 
 /// Stop the search the dialog started once the dialog is gone (closed, or another in its place).
-pub(super) fn stop_when_closed(app: &mut VectorcraftApp) {
+pub(super) fn stop_when_closed(app: &mut TsipikaApp) {
     let Some(id) = app.ui.dialog_search else { return };
     let open = app.ui.dialog.as_ref().is_some_and(|d| d.kind == KIND && d.fields.get("search").and_then(Value::as_u64) == Some(id));
     if !open {
         app.ui.dialog_search = None;
-        vectorcraft_engine::cmd::fontfiles::stop(&mut app.session, id);
+        tsipika_engine::cmd::fontfiles::stop(&mut app.session, id);
     }
 }
 
 /// `ui.missingFontsDialog`: the dialog for the active document; with `folder`, searching it.
-pub(crate) fn open_command(app: &mut VectorcraftApp, folder: Option<String>) -> Result<Value, String> {
+pub(crate) fn open_command(app: &mut TsipikaApp, folder: Option<String>) -> Result<Value, String> {
     let uid = app.session.active().map(|d| d.uid).ok_or("no document open")?;
     let mut d = dialog_for(app, uid).ok_or("No fonts are missing in this document")?;
     if let Some(folder) = folder {
@@ -128,7 +128,7 @@ pub(crate) fn open_command(app: &mut VectorcraftApp, folder: Option<String>) -> 
 
 /// Show `d`, the dialog of the document `uid`, in place of the open dialog (another document's
 /// Missing Fonts dialog asks again later).
-fn show_for(app: &mut VectorcraftApp, uid: u64, d: Dialog) {
+fn show_for(app: &mut TsipikaApp, uid: u64, d: Dialog) {
     requeue_replaced(app);
     if let Some(shown) = app.ui.fonts_dialog.filter(|shown| *shown != uid) {
         queue_first(app, shown);
@@ -140,7 +140,7 @@ fn show_for(app: &mut VectorcraftApp, uid: u64, d: Dialog) {
 
 /// `ui.findFontsInFolder` (Type › Find Font's Find in Folder…): ask for a folder (or take
 /// `folder`), then open the dialog for the active document, searching it.
-pub(crate) fn find_in_folder_command(app: &mut VectorcraftApp, folder: Option<String>) -> Result<Value, String> {
+pub(crate) fn find_in_folder_command(app: &mut TsipikaApp, folder: Option<String>) -> Result<Value, String> {
     let uid = app.session.active().map(|d| d.uid).ok_or("no document open")?;
     // Nothing to look for: no folder is asked for.
     let mut d = dialog_for(app, uid).ok_or("No fonts are missing in this document")?;
@@ -155,7 +155,7 @@ pub(crate) fn find_in_folder_command(app: &mut VectorcraftApp, folder: Option<St
 
 /// Start looking in `folder` for the files of the dialog's fonts; what an earlier search found is
 /// dropped.
-fn start_search(app: &mut VectorcraftApp, d: &mut Dialog, folder: &str) -> Result<(), String> {
+fn start_search(app: &mut TsipikaApp, d: &mut Dialog, folder: &str) -> Result<(), String> {
     let fonts: Vec<Value> = d
         .fields
         .get("fonts")
@@ -205,7 +205,7 @@ fn update(d: &mut Dialog, r: &Value) {
 
 /// While searching: the search's progress into the dialog. A search started elsewhere since
 /// stopped this one.
-fn follow(app: &mut VectorcraftApp, d: &mut Dialog) {
+fn follow(app: &mut TsipikaApp, d: &mut Dialog) {
     // Polled through `session.execute`.
     let Ok(r) = app.session.execute("text.findFontFiles", &json!({})) else { return };
     if d.fields.get("search") != Some(&r["id"]) {
@@ -226,7 +226,7 @@ enum Act {
     Add,
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     if d.str("state") == "searching" {
         follow(app, d);
@@ -298,8 +298,8 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     if found.iter().any(|f| f["files"].as_array().is_some_and(|files| !files.is_empty())) {
         ui.add_space(8.0);
         widgets::dim_label(ui, tl!("Copy only fonts you own or are licensed to install."));
-        if let Some(dir) = vectorcraft_text::app_font_dir() {
-            widgets::dim_name(ui, &crate::i18n::fmt(tl!("VectorCraft copies the fonts to {folder}."), &[("folder", &dir.to_string_lossy())]));
+        if let Some(dir) = tsipika_text::app_font_dir() {
+            widgets::dim_name(ui, &crate::i18n::fmt(tl!("Tsipika copies the fonts to {folder}."), &[("folder", &dir.to_string_lossy())]));
         }
         ui.add_space(6.0);
         if ui.add_enabled(!searching && !chosen.is_empty(), egui::Button::new(tl!("Add Fonts"))).clicked() {
@@ -358,7 +358,7 @@ pub(super) fn progress(ui: &mut egui::Ui, d: &Dialog) {
 /// Find Fonts (`discard`): Type › Find Font on the first font the document misses, to replace it;
 /// this Missing Fonts dialog doesn't come back. Otherwise (agents), with `searchFolder`: search that
 /// folder, and stay open; else Add Fonts.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     if d.bool("discard") {
         app.ui.fonts_dialog = None;
         // Find Font works on the active document; the dialog's may be another tab.
@@ -384,8 +384,8 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     add_fonts(app, d)
 }
 
-/// Add Fonts: copy the chosen files into VectorCraft's Fonts folder and close.
-fn add_fonts(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+/// Add Fonts: copy the chosen files into Tsipika's Fonts folder and close.
+fn add_fonts(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let chosen = d.fields.get("chosen").and_then(Value::as_array).cloned().unwrap_or_default();
     if chosen.is_empty() {
         return Err("choose the font files to add".into());
@@ -413,26 +413,26 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::time::Instant;
 
-    use vectorcraft_engine::Session;
-    use vectorcraft_engine::cmd::findfiles::Rules;
+    use tsipika_engine::Session;
+    use tsipika_engine::cmd::findfiles::Rules;
 
     use super::*;
 
-    fn frame(app: &mut VectorcraftApp) -> String {
+    fn frame(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
     /// A fresh temporary folder (canonical, as a search reports it).
     fn folder(tag: &str) -> PathBuf {
-        let dir = vectorcraft_testkit::temp_dir(&format!("missing-fonts-{tag}"));
+        let dir = tsipika_testkit::temp_dir(&format!("missing-fonts-{tag}"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        vectorcraft_engine::cmd::findfiles::plain(std::fs::canonicalize(&dir).unwrap())
+        tsipika_engine::cmd::findfiles::plain(std::fs::canonicalize(&dir).unwrap())
     }
 
     /// An app that reads files and whose searches may go anywhere in `root`, on two threads.
-    fn app_for(root: &Path) -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app_for(root: &Path) -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
         app.session.search_rules = Some(Rules { user_content: vec![root.to_path_buf()], ..Rules::default() });
         app.session.search_threads = Some(2);
@@ -449,7 +449,7 @@ mod tests {
 
     /// Save a new document with type in `font` at `path`, with a linked image that is then deleted
     /// when `link`.
-    fn save_doc(app: &mut VectorcraftApp, path: &Path, font: &str, link: bool) {
+    fn save_doc(app: &mut TsipikaApp, path: &Path, font: &str, link: bool) {
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let pic = path.with_extension("png");
         if link {
@@ -463,11 +463,11 @@ mod tests {
         }
     }
 
-    fn open(app: &mut VectorcraftApp, path: &Path) {
+    fn open(app: &mut TsipikaApp, path: &Path) {
         crate::io::open_path(app, &path.to_string_lossy()).unwrap();
     }
 
-    fn kind(app: &VectorcraftApp) -> Option<&str> {
+    fn kind(app: &TsipikaApp) -> Option<&str> {
         app.ui.dialog.as_ref().map(|d| d.kind.as_str())
     }
 
@@ -475,7 +475,7 @@ mod tests {
     fn missing_fonts_are_asked_about_after_the_missing_links() {
         let root = folder("after-links");
         let mut app = app_for(&root);
-        let doc = root.join("doc.vectorcraft");
+        let doc = root.join("doc.tsipika");
         save_doc(&mut app, &doc, "No Such Font Family", true);
         open(&mut app, &doc);
         assert_eq!(kind(&app), Some(super::super::missing_links::KIND));
@@ -501,9 +501,9 @@ mod tests {
         let root = folder("package");
         let font = root.join("pkg").join("Fonts").join("sub").join("Findme.otf");
         std::fs::create_dir_all(font.parent().unwrap()).unwrap();
-        std::fs::write(&font, vectorcraft_testkit::fonts::renamed("Findme Sans 3")).unwrap();
+        std::fs::write(&font, tsipika_testkit::fonts::renamed("Findme Sans 3")).unwrap();
         let mut app = app_for(&root);
-        let doc = root.join("pkg/doc.vectorcraft");
+        let doc = root.join("pkg/doc.tsipika");
         save_doc(&mut app, &doc, "Findme Sans 3", false);
         open(&mut app, &doc);
         let next = app.ui.dialog.as_ref().filter(|d| d.kind == KIND).expect("Missing Fonts at once: no links missing").str("fontsNextToDocument");
@@ -525,7 +525,7 @@ mod tests {
         for label in ["Findme.otf", "Copy only fonts you own or are licensed to install.", "Add Fonts"] {
             assert!(text.contains(label), "{label} in {text}");
         }
-        // Adding needs VectorCraft's Fonts folder, which only the apps set.
+        // Adding needs Tsipika's Fonts folder, which only the apps set.
         let e = super::super::confirm(&mut app).unwrap_err();
         assert!(e.contains("isn't set here"), "{e}");
         assert_eq!(kind(&app), Some(KIND));
@@ -540,7 +540,7 @@ mod tests {
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("text.create", json!({"x": 10, "y": 40, "text": "Here", "font": "Source Sans 3"})).unwrap();
         app.run("text.create", json!({"x": 10, "y": 80, "text": "Gone", "font": "Zz Missing Family"})).unwrap();
-        let doc = root.join("doc.vectorcraft");
+        let doc = root.join("doc.tsipika");
         app.run("document.save", json!({"path": doc.to_string_lossy()})).unwrap();
         open(&mut app, &doc);
         assert_eq!(kind(&app), Some(KIND));
@@ -563,7 +563,7 @@ mod tests {
     fn find_fonts_works_on_the_dialog_s_own_document() {
         let root = folder("find-fonts-tab");
         let mut app = app_for(&root);
-        let (a, b) = (root.join("a.vectorcraft"), root.join("b.vectorcraft"));
+        let (a, b) = (root.join("a.tsipika"), root.join("b.tsipika"));
         save_doc(&mut app, &a, "Alpha Missing Family", false);
         save_doc(&mut app, &b, "Beta Missing Family", true);
         open(&mut app, &a);
@@ -614,11 +614,11 @@ mod tests {
     fn one_dialog_at_a_time_document_by_document() {
         let root = folder("queue");
         let mut app = app_for(&root);
-        let (a, b) = (root.join("a.vectorcraft"), root.join("b.vectorcraft"));
+        let (a, b) = (root.join("a.tsipika"), root.join("b.tsipika"));
         save_doc(&mut app, &a, "Alpha Missing Family", false);
         save_doc(&mut app, &b, "Beta Missing Family", true);
         open(&mut app, &a);
-        let family = |app: &VectorcraftApp| app.ui.dialog.as_ref().and_then(|d| d.fields["fonts"][0]["family"].as_str().map(str::to_string));
+        let family = |app: &TsipikaApp| app.ui.dialog.as_ref().and_then(|d| d.fields["fonts"][0]["family"].as_str().map(str::to_string));
         assert_eq!(family(&app).as_deref(), Some("Alpha Missing Family"));
         // The second document's linked files are asked about first; then each document's fonts.
         open(&mut app, &b);
@@ -644,19 +644,19 @@ mod tests {
     fn the_question_comes_back_after_a_dialog_that_took_its_place() {
         let root = folder("replaced");
         let mut app = app_for(&root);
-        let doc = root.join("a.vectorcraft");
+        let doc = root.join("a.tsipika");
         save_doc(&mut app, &doc, "Alpha Missing Family", false);
         let pdf = || {
-            let page = || vectorcraft_testkit::pdf::PdfPage::new(100.0, 100.0, "0 g 0 0 10 10 re f");
-            vectorcraft_testkit::pdf::pdf(&[page(), page()], None)
+            let page = || tsipika_testkit::pdf::PdfPage::new(100.0, 100.0, "0 g 0 0 10 10 re f");
+            tsipika_testkit::pdf::pdf(&[page(), page()], None)
         };
         let opened = |name: &str, path: Option<String>, bytes: Vec<u8>| (crate::place::DropTarget::Open, (name.to_string(), path, bytes));
         let files =
-            vec![opened("a.vectorcraft", Some(doc.to_string_lossy().into_owned()), std::fs::read(&doc).unwrap()), opened("b.pdf", None, pdf())];
+            vec![opened("a.tsipika", Some(doc.to_string_lossy().into_owned()), std::fs::read(&doc).unwrap()), opened("b.pdf", None, pdf())];
         crate::place::drop_files(&mut app, files);
         assert_eq!(kind(&app), Some(super::super::import_pdf::KIND));
         super::super::cancel(&mut app);
-        let family = |app: &VectorcraftApp| app.ui.dialog.as_ref().filter(|d| d.kind == KIND).map(|d| d.fields["fonts"][0]["family"].clone());
+        let family = |app: &TsipikaApp| app.ui.dialog.as_ref().filter(|d| d.kind == KIND).map(|d| d.fields["fonts"][0]["family"].clone());
         assert_eq!(family(&app), Some(json!("Alpha Missing Family")));
         // The same when a frame drew the other dialog before it closed.
         crate::io::open_bytes(&mut app, "c.pdf", &pdf(), None).unwrap();
@@ -708,7 +708,7 @@ mod tests {
     fn edit_original_asks_about_the_placed_documents_fonts() {
         let root = folder("edit-original");
         let mut app = app_for(&root);
-        let badge = root.join("badge.vectorcraft");
+        let badge = root.join("badge.tsipika");
         save_doc(&mut app, &badge, "Badge Missing Family", false);
         app.session.execute("file.close", &json!({})).unwrap();
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
@@ -759,7 +759,7 @@ mod tests {
 
     #[test]
     fn the_web_says_how_many_fonts_are_missing() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("text.create", json!({"x": 10, "y": 40, "text": "Gone", "font": "No Such Font Family"})).unwrap();
         after_open_for(&mut app, &json!({}), true);

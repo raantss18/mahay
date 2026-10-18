@@ -59,7 +59,7 @@ fn eps_degenerate_bounds_are_rejected_without_edits() {
             assert!(Arc::ptr_eq(&before, &s.doc().unwrap().doc));
             assert_eq!(s.doc().unwrap().revision, revision);
             assert!(s.loaded.is_none());
-            designcraft_format::load(&designcraft_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
+            pejy_format::load(&pejy_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
         }
     }
 }
@@ -78,7 +78,7 @@ fn eps_fitting_overflow_is_rejected_before_document_edits() {
     assert!(s.execute("place.drop", &json!({"rect": [0, 0, 1e308, 1e308]})).is_err());
     assert!(Arc::ptr_eq(&before, &s.doc().unwrap().doc));
     s.execute("place.drop", &json!({"rect": [72, 72, 172, 122]})).unwrap();
-    designcraft_format::load(&designcraft_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
+    pejy_format::load(&pejy_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn eps_table_and_data_merge_reject_fitting_overflow() {
     let before = s.doc().unwrap().doc.clone();
     assert!(s.execute("table.placeGraphic", &json!({"base64":base64_encode(source),"name":"small.eps","fit":"fill"})).is_err());
     assert!(Arc::ptr_eq(&before, &s.doc().unwrap().doc));
-    designcraft_format::load(&designcraft_format::save(&before).unwrap()).unwrap();
+    pejy_format::load(&pejy_format::save(&before).unwrap()).unwrap();
 
     let path = std::env::temp_dir().join(format!("dc-eps-fit-{}.eps", std::process::id()));
     std::fs::write(&path, source).unwrap();
@@ -104,7 +104,7 @@ fn eps_table_and_data_merge_reject_fitting_overflow() {
     let result = s.execute("data.merge", &json!({"fitting":"fillProportionally"})).unwrap();
     assert_eq!(result["missingImages"].as_array().unwrap().len(), 1);
     assert!(s.doc().unwrap().doc.assets.is_empty());
-    designcraft_format::load(&designcraft_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
+    pejy_format::load(&pejy_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
     let _ = std::fs::remove_file(path);
 }
 
@@ -141,7 +141,7 @@ fn eps_table_and_data_merge_use_bounding_box_points() {
             .find_map(|it| if let Content::Graphic(g) = &it.content { Some(g) } else { None })
             .unwrap();
         assert_eq!(g.size, (100.0, 50.0), "merge {index}");
-        designcraft_format::load(&designcraft_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
+        pejy_format::load(&pejy_format::save(&s.doc().unwrap().doc).unwrap()).unwrap();
     }
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -154,7 +154,7 @@ fn eps_idml_roundtrip_preserves_source_and_resource_type() {
         s.execute("file.new", &json!({})).unwrap();
         s.execute("file.place", &json!({"base64":base64_encode(&bytes),"name":"logo.eps"})).unwrap();
         let source = s.doc().unwrap().doc.clone();
-        let idml = designcraft_idml::export_idml(&source);
+        let idml = pejy_idml::export_idml(&source);
         let mut z = zip::ZipArchive::new(std::io::Cursor::new(&idml)).unwrap();
         let names: Vec<_> = z.file_names().filter(|n| n.starts_with("Spreads/")).map(str::to_string).collect();
         let mut xml = String::new();
@@ -164,22 +164,22 @@ fn eps_idml_roundtrip_preserves_source_and_resource_type() {
         assert!(xml.contains("<EPS "), "EPS resource element missing");
         assert!(xml.contains("Encapsulated PostScript (EPS)"));
         assert!(!xml.contains("Portable Network Graphics (PNG)"));
-        let restored = designcraft_idml::import_idml(&idml).unwrap();
+        let restored = pejy_idml::import_idml(&idml).unwrap();
         let a = restored.assets.values().next().unwrap();
         assert_eq!(a.mime, "application/postscript");
         assert_eq!(a.data.as_slice(), bytes);
-        assert!(designcraft_render::decode_pixmap(&a.data).is_some());
+        assert!(pejy_render::decode_pixmap(&a.data).is_some());
         // A linked-only EPS keeps its type even when the external file is unavailable;
         // when the resolver supplies it, sniff the raw source rather than PNG metadata.
         let mut linked = (*source).clone();
         let a = Arc::make_mut(linked.assets.values_mut().next().unwrap());
         a.link = Some("/synthetic/logo.eps".into());
-        let idml = designcraft_idml::export_idml_with(&linked, &designcraft_idml::ExportOptions { embed_images: false });
-        let missing = designcraft_idml::import_idml_with(&idml, &|_| None).unwrap();
+        let idml = pejy_idml::export_idml_with(&linked, &pejy_idml::ExportOptions { embed_images: false });
+        let missing = pejy_idml::import_idml_with(&idml, &|_| None).unwrap();
         let a = missing.assets.values().next().unwrap();
         assert_eq!(a.mime, "application/postscript");
         assert!(a.data.is_empty());
-        let resolved = designcraft_idml::import_idml_with(&idml, &|path| {
+        let resolved = pejy_idml::import_idml_with(&idml, &|path| {
             assert_eq!(path, "/synthetic/logo.eps");
             Some(bytes.clone())
         })

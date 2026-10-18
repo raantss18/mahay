@@ -1,8 +1,8 @@
 //! Programmatic SPLINE keeps the degree within 1..=10 like the Degree prompt (issue #268): a high
 //! degree on many control points made tessellation and extents take minutes.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
 use serde_json::json;
 
 #[test]

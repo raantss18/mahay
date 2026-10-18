@@ -3,10 +3,10 @@
 //! reach screen readers with names, roles and states; a row focused with Tab keeps the arrows, and
 //! keyboard focus follows the selection.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::{ItemId, ItemKind};
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_engine::project::{ItemId, ItemKind};
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui::accesskit::Role;
 use egui::{Event, Key, Modifiers, Pos2, pos2};
 use egui_kittest::Harness;
@@ -14,7 +14,7 @@ use egui_kittest::kittest::{NodeT, Queryable};
 use serde_json::json;
 
 /// A closed folder holding a comp, and a solid at the project root: (harness, folder, comp, solid).
-fn harness() -> (Harness<'static, EffectcraftApp>, ItemId, ItemId, ItemId) {
+fn harness() -> (Harness<'static, TselatraApp>, ItemId, ItemId, ItemId) {
     let mut s = Session::default();
     let comp = ItemId(s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "duration": 4})).unwrap()["comp"].as_u64().unwrap());
     s.execute("layer.newSolid", json!({"name": "Solid", "color": "#406080"})).unwrap();
@@ -23,17 +23,17 @@ fn harness() -> (Harness<'static, EffectcraftApp>, ItemId, ItemId, ItemId) {
     s.execute("project.move", json!({"items": [comp.0], "folder": folder.0})).unwrap();
     s.execute("project.move", json!({"items": [solid.0], "folder": null})).unwrap();
     s.execute("project.select", json!({"items": []})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     (h, folder, comp, solid)
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).clone();
     pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let p = center(h, id);
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
@@ -45,7 +45,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
 }
 
 /// Press and release `key` with `modifiers` (one frame each), then let the UI settle.
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key, modifiers: Modifiers) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key, modifiers: Modifiers) {
     for pressed in [true, false] {
         h.input_mut().events.push(Event::Key { key, physical_key: None, pressed, repeat: false, modifiers });
         h.step();
@@ -54,7 +54,7 @@ fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key, modifiers: Modifiers) {
 }
 
 /// The item rows on screen, top to bottom.
-fn rows(h: &Harness<'_, EffectcraftApp>) -> Vec<ItemId> {
+fn rows(h: &Harness<'_, TselatraApp>) -> Vec<ItemId> {
     let mut rows: Vec<(f32, ItemId)> = h
         .state()
         .auto
@@ -66,7 +66,7 @@ fn rows(h: &Harness<'_, EffectcraftApp>) -> Vec<ItemId> {
     rows.into_iter().map(|(_, id)| id).collect()
 }
 
-fn selection(h: &Harness<'_, EffectcraftApp>) -> Vec<ItemId> {
+fn selection(h: &Harness<'_, TselatraApp>) -> Vec<ItemId> {
     h.state().session.state.project_selection.clone()
 }
 
@@ -188,7 +188,7 @@ fn a_focused_row_keeps_the_arrows_and_focus_follows_the_selection() {
 /// after an arrow key moved the selection.
 #[test]
 fn shortcuts_still_run_after_a_mouse_click_and_the_arrows() {
-    let focus = |h: &Harness<'_, EffectcraftApp>| h.ctx.memory(|m| m.focused());
+    let focus = |h: &Harness<'_, TselatraApp>| h.ctx.memory(|m| m.focused());
     for delete_key in [Key::Delete, Key::Backspace] {
         let (mut h, folder, _, _) = harness();
         let empty = ItemId(h.state_mut().session.execute("project.newFolder", json!({"name": "Empty"})).unwrap()["item"].as_u64().unwrap());

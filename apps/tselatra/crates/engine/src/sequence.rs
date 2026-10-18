@@ -11,9 +11,9 @@
 //! The browser has no folders: its file table lists the files picked or dropped so far, so
 //! picking every frame of a sequence imports it there too.
 
-use effectcraft_project::sequence::{frame_number, missing_frame_ranges, sequence_name, split_frame_number};
-use effectcraft_project::{Footage, FootageKind};
-use effectcraft_time::FrameRate;
+use tselatra_project::sequence::{frame_number, missing_frame_ranges, sequence_name, split_frame_number};
+use tselatra_project::{Footage, FootageKind};
+use tselatra_time::FrameRate;
 
 use crate::{Importer, Services};
 

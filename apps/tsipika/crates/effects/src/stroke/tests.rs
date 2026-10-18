@@ -1,6 +1,6 @@
 use kurbo::{BezPath, PathEl, Point, Rect, Shape, Vec2};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{ArrowAlign, Arrowhead, Dash, LineCap, StrokeLayer, WidthProfile};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{ArrowAlign, Arrowhead, Dash, LineCap, StrokeLayer, WidthProfile};
 
 use super::*;
 
@@ -146,10 +146,10 @@ fn line_outline_uses_the_profile_dashes_or_a_plain_stroke() {
 
 #[test]
 fn aligned_width_doubles_only_closed_inside_and_outside_strokes() {
-    let mut st = stroke(3.0, |s| s.align = vectorcraft_doc::StrokeAlign::Inside);
+    let mut st = stroke(3.0, |s| s.align = tsipika_doc::StrokeAlign::Inside);
     assert_eq!(aligned_width(&st, true), 6.0);
     assert_eq!(aligned_width(&st, false), 3.0);
-    st.align = vectorcraft_doc::StrokeAlign::Center;
+    st.align = tsipika_doc::StrokeAlign::Center;
     assert_eq!(aligned_width(&st, true), 3.0);
 }
 

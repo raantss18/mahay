@@ -3,7 +3,7 @@
 //! across every group.
 
 use egui::{Align2, Context, CornerRadius, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_engine::keymap::{GESTURES, Group, KEYS, Platform};
+use endrika_engine::keymap::{GESTURES, Group, KEYS, Platform};
 
 use crate::FigApp;
 use crate::i18n::{self, tr};
@@ -42,7 +42,7 @@ fn rows(group: Option<Group>, query: &str, platform: Platform) -> Vec<Row> {
             // Alternatives that read the same (⌘+ and ⇧⌘+) show once.
             let mut keys: Vec<String> = Vec::with_capacity(MAX_KEYS);
             for k in b.keys(platform) {
-                let shown = figcraft_engine::keymap::display(k, platform);
+                let shown = endrika_engine::keymap::display(k, platform);
                 if keys.len() < MAX_KEYS && !keys.contains(&shown) {
                     keys.push(shown);
                 }

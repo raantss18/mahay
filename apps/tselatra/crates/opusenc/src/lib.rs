@@ -13,7 +13,7 @@
 //! Layer L0: no dependencies beyond `std`; no `unsafe`; builds for `wasm32-unknown-unknown`.
 //!
 //! ```
-//! use effectcraft_opusenc::{Application, Mode, OpusEncoder};
+//! use tselatra_opusenc::{Application, Mode, OpusEncoder};
 //! let mut enc = OpusEncoder::new(2, 128_000);
 //! let pcm = vec![0.0f32; OpusEncoder::FRAME_SIZE * 2];
 //! let packet = enc.encode_float(&pcm);

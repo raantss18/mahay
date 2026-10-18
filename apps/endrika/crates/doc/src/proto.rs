@@ -533,7 +533,7 @@ pub enum Action {
         close_on_outside: bool,
         /// Colour drawn behind the overlay (over the frame underneath); None = no background.
         #[serde(default)]
-        background: Option<figcraft_color::Color>,
+        background: Option<endrika_color::Color>,
         /// Manual position: where the overlay's top-left sits from the top-left of the layer that
         /// opened it (x, y). None = right below that layer.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -802,7 +802,7 @@ impl DeviceRotation {
 #[serde(default)]
 pub struct PrototypeSettings {
     pub device: String,
-    pub background: figcraft_color::Color,
+    pub background: endrika_color::Color,
     /// Applies to devices that turn (phones and tablets).
     pub rotation: DeviceRotation,
     /// The device's colour: one of its model's [`Device::colors`] by name (empty or one the model
@@ -822,7 +822,7 @@ impl Default for PrototypeSettings {
     fn default() -> Self {
         Self {
             device: "None".into(),
-            background: figcraft_color::Color::from_rgb8_const(0x1E, 0x1E, 0x1E),
+            background: endrika_color::Color::from_rgb8_const(0x1E, 0x1E, 0x1E),
             rotation: DeviceRotation::Portrait,
             color: String::new(),
             custom_size: PrototypeSettings::CUSTOM_DEFAULT,

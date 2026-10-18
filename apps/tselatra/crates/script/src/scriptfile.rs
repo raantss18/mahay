@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_engine::Session;
+use tselatra_engine::Session;
 
 use crate::runtime::{GATE, normalize, project_dir};
 

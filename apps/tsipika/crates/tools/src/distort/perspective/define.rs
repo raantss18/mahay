@@ -11,8 +11,8 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use vectorcraft_doc::{Document, Unit};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{Document, Unit};
+use tsipika_geom::Rect;
 
 use super::{PerspectiveGrid, Plane};
 
@@ -393,7 +393,7 @@ impl PerspectiveGrid {
 mod tests {
     use super::*;
     use serde_json::json;
-    use vectorcraft_geom::Point;
+    use tsipika_geom::Point;
 
     const AB: Rect = Rect::new(0.0, 0.0, 800.0, 600.0);
 

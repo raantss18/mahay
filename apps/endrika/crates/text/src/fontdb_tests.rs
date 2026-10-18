@@ -80,7 +80,7 @@ fn macos_font_assets_are_found_in_the_asset_store() {
             let _ = std::fs::remove_dir_all(&self.0);
         }
     }
-    let tmp = TempDir(std::env::temp_dir().join(format!("figcraft-font-assets-{}", std::process::id())));
+    let tmp = TempDir(std::env::temp_dir().join(format!("endrika-font-assets-{}", std::process::id())));
     let store = tmp.0.join("AssetsV2");
     let fonts = store.join("com_apple_MobileAsset_Font7");
     let data = |kind: &std::path::Path| kind.join("0f1e2d.asset").join("AssetData");
@@ -114,7 +114,7 @@ fn the_scan_skips_named_pipes() {
     use std::process::{Command, Stdio};
     use std::time::{Duration, Instant};
 
-    const INPUT: &str = "FIGCRAFT_TEST_PIPE_FONT_DIR";
+    const INPUT: &str = "ENDRIKA_TEST_PIPE_FONT_DIR";
     if let Some(dir) = std::env::var_os(INPUT) {
         let mut pending = BTreeMap::new();
         scan_dir(std::path::Path::new(&dir), 0, &mut pending);
@@ -129,7 +129,7 @@ fn the_scan_skips_named_pipes() {
             let _ = std::fs::remove_dir_all(&self.0);
         }
     }
-    let path = std::env::temp_dir().join(format!("figcraft-font-pipe-{}", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-font-pipe-{}", std::process::id()));
     std::fs::create_dir(&path).unwrap();
     let dir = TempDir(path);
     // POSIX mkfifo is only a test fixture helper, never a runtime font dependency.

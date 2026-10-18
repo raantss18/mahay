@@ -5,28 +5,28 @@
 //! the SVG names when it's installed (else the first installed of its fallbacks or generic family).
 //!
 //! usvg lays text out before handing it over and drops what it can't lay out, so one face from
-//! FigCraft's font database stands in for every family while parsing; FigCraft then lays the text
+//! Endrika's font database stands in for every family while parsing; Endrika then lays the text
 //! out with the real fonts. Text on one path comes in as text on a path; text on several paths,
 //! with per-glyph rotation or vertical comes in as outlines.
 
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use figcraft_doc::{LetterSpacing, LineHeight, Node, NodeId, NodeKind, StyleRun, TextAlignH, TextCase, TextData, TextDecoration, TextStyle};
-use figcraft_geom::{Affine, Point};
-use figcraft_text::fontdb::FontBytes;
+use endrika_doc::{LetterSpacing, LineHeight, Node, NodeId, NodeKind, StyleRun, TextAlignH, TextCase, TextData, TextDecoration, TextStyle};
+use endrika_geom::{Affine, Point};
+use endrika_text::fontdb::FontBytes;
 use usvg::{FontFamily, TextAnchor};
 
 use super::paint::{Target, paint};
 use super::shape::place;
 use super::{Ctx, children, finish, finite, layer_name, xf};
 
-/// Family names FigCraft can draw (lower case).
+/// Family names Endrika can draw (lower case).
 pub(crate) struct Fonts(HashSet<String>);
 
 impl Fonts {
     fn load() -> Self {
-        Fonts(figcraft_text::fontdb::family_names().into_iter().map(|f| f.to_lowercase()).collect())
+        Fonts(endrika_text::fontdb::family_names().into_iter().map(|f| f.to_lowercase()).collect())
     }
     fn has(&self, family: &str) -> bool {
         self.0.contains(&family.to_lowercase())
@@ -43,7 +43,7 @@ impl AsRef<[u8]> for Shared {
 
 /// Let usvg parse text: one face stands in for every family (see the module docs).
 pub(crate) fn prepare(o: &mut usvg::Options) {
-    let Some(face) = figcraft_text::fontdb::find_face("Inter", "Regular") else { return };
+    let Some(face) = endrika_text::fontdb::find_face("Inter", "Regular") else { return };
     let source = match &face.bytes {
         FontBytes::Static(b) => usvg::fontdb::Source::Binary(Arc::new(*b)),
         FontBytes::Shared(v) => usvg::fontdb::Source::Binary(Arc::new(Shared(v.clone()))),
@@ -202,7 +202,7 @@ pub(crate) fn text(cx: &mut Ctx, t: &usvg::Text, parent: NodeId, base: Affine, d
         let line = Line { x, y, anchor: chunk.anchor(), text: text.to_string(), spans };
         // The next chunk without its own x continues where this one ends.
         if chunks.get(i + 1).is_some_and(|c| c.x().is_none()) {
-            let width = figcraft_text::layout(&text_data(std::slice::from_ref(&line), s), None, None).width / s;
+            let width = endrika_text::layout(&text_data(std::slice::from_ref(&line), s), None, None).width / s;
             pen_x = x + (1.0 - anchor_k(line.anchor)) * width;
         }
         pen_y = y;
@@ -257,8 +257,8 @@ fn on_path(cx: &mut Ctx, t: &usvg::Text, world: Affine, parent: NodeId) -> bool 
     let [chunk] = t.chunks() else { return false };
     let usvg::TextFlow::Path(tp) = chunk.text_flow() else { return false };
     let path = super::to_bez(tp.path());
-    let bb = figcraft_geom::Shape::bounding_box(&path);
-    let Some(len) = figcraft_geom::measure::polylines(&path).and_then(|l| l.first().map(|l| l.length())).filter(|l| *l > 1e-9) else { return false };
+    let bb = endrika_geom::Shape::bounding_box(&path);
+    let Some(len) = endrika_geom::measure::polylines(&path).and_then(|l| l.first().map(|l| l.length())).filter(|l| *l > 1e-9) else { return false };
     let fonts = cx.fonts.get_or_insert_with(Fonts::load);
     let text = chunk.text();
     let count = text.chars().count();
@@ -269,7 +269,7 @@ fn on_path(cx: &mut Ctx, t: &usvg::Text, world: Affine, parent: NodeId) -> bool 
     td.align_h = align(line.anchor);
     let mut local = path.clone();
     local.apply_affine(Affine::translate((-bb.x0, -bb.y0)));
-    td.path = Some(Box::new(figcraft_doc::TextPath { start: f64::from(tp.start_offset()) / len, ..figcraft_doc::TextPath::new(&local) }));
+    td.path = Some(Box::new(endrika_doc::TextPath { start: f64::from(tp.start_offset()) / len, ..endrika_doc::TextPath::new(&local) }));
     let transform = world * Affine::translate((bb.x0, bb.y0));
     add_layer(cx, t, &[line], td, transform, (bb.width().max(1.0), bb.height().max(1.0)), world, 1.0, parent);
     true
@@ -289,7 +289,7 @@ fn layer(cx: &mut Ctx, t: &usvg::Text, block: &[Line], m: Affine, s: f64, world:
     let mut td = text_data(block, s);
     td.align_h = align(first.anchor);
     // Placed by its layout (runs included): the anchor on x, the first baseline on y.
-    let lay = figcraft_text::layout(&td, None, None);
+    let lay = endrika_text::layout(&td, None, None);
     let (w, h) = (lay.width.ceil().max(1.0), lay.height.max(1.0));
     let baseline = lay.lines.first().map_or(0.0, |l| l.baseline);
     let transform = m * Affine::translate((s * first.x - anchor_k(first.anchor) * w, s * first.y - baseline));
@@ -318,7 +318,7 @@ fn add_layer(
     let target = Target { to_node: transform.inverse() * world, size: (w, h) };
     let mut fills = Vec::with_capacity(spans.len());
     for sp in &spans {
-        let f: Vec<figcraft_color::Paint> =
+        let f: Vec<endrika_color::Paint> =
             if sp.is_visible() { sp.fill().and_then(|f| paint(cx, f.paint(), f.opacity().get(), target)).into_iter().collect() } else { Vec::new() };
         fills.push(f);
     }

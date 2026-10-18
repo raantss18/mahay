@@ -95,7 +95,7 @@ fn presets_round_trip_through_export_and_import() {
     let b64 = {
         let out = run(&mut s, "flattener.presets.export", json!({"names": ["high", "Medium Resolution"]}));
         assert_eq!(out["count"], 2);
-        vectorcraft_format::base64_encode(out["data"].as_str().unwrap().as_bytes())
+        tsipika_format::base64_encode(out["data"].as_str().unwrap().as_bytes())
     };
     let r = run(&mut s, "flattener.presets.import", json!({ "dataBase64": b64 }));
     assert_eq!(r["imported"], json!(["High Resolution 2", "Medium Resolution 2"]));

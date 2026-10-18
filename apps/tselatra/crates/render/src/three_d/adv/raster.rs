@@ -321,7 +321,7 @@ pub fn render(s: &Scene) -> Target {
 // ---------------------------------------------------------------- shadow maps
 
 fn basis(eye: [f64; 3], fwd: [f64; 3], down: [f64; 3]) -> [[f32; 4]; 3] {
-    use effectcraft_geom::vec3;
+    use tselatra_geom::vec3;
     let m = crate::three_d::camera::basis_view(vec3(eye[0], eye[1], eye[2]), vec3(fwd[0], fwd[1], fwd[2]), vec3(down[0], down[1], down[2]));
     [0, 1, 2].map(|r| m.0[r].map(|v| v as f32))
 }

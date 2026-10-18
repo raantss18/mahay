@@ -12,10 +12,10 @@
 
 use std::sync::Arc;
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::channels3d::{BACKGROUND_DEPTH, crypto_hash};
-use effectcraft_raster::{AuxChannels, Image, Px, gaussian_blur};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::channels3d::{BACKGROUND_DEPTH, crypto_hash};
+use tselatra_raster::{AuxChannels, Image, Px, gaussian_blur};
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, hash1, premul, unpremul};
@@ -55,7 +55,7 @@ fn plane_of(b: &Buf, idx: &[Option<usize>], ch: &[f32], fill: f32) -> Plane {
 /// Distinct colour for an ID (hash → hue).
 pub fn id_color(id: f32) -> [f32; 3] {
     let h = hash1(id.to_bits(), 0x1d, 0x5eed);
-    let (r, g, b) = effectcraft_color::hsl_to_rgb(h, 0.75, 0.5);
+    let (r, g, b) = tselatra_color::hsl_to_rgb(h, 0.75, 0.5);
     if id == 0.0 { [0.0; 3] } else { [r, g, b] }
 }
 
@@ -226,7 +226,7 @@ fn fog_3d(ctx: &EffectCtx, mut b: Buf) -> Buf {
         };
         if let Some(g) = &grad {
             let (gc, ga) = unpremul(g.data[i]);
-            let l = effectcraft_color::luminance(gc[0], gc[1], gc[2]) * ga;
+            let l = tselatra_color::luminance(gc[0], gc[1], gc[2]) * ga;
             f *= 1.0 - contrib + contrib * l;
         }
         let f = (f * opacity).clamp(0.0, 1.0);
@@ -626,7 +626,7 @@ pub fn specs() -> Vec<EffectSpec> {
 mod tests {
     use super::*;
     use crate::{EffectEnv, EffectHost, LayerPixels, run_fx};
-    use effectcraft_raster::channels3d::crypto_float;
+    use tselatra_raster::channels3d::crypto_float;
 
     /// A 20×10 layer: left half object 1 at depth 100, right half object 2 at depth 500; the
     /// top-right corner is background. Cryptomatte: "left" / "right".
@@ -736,7 +736,7 @@ mod tests {
         let (w, h) = (7u32, 5u32);
         let n = (w * h) as usize;
         let mut a = AuxChannels::new(w, h, 1.0);
-        let ids = [crypto_hash("cube"), crypto_hash("sphere"), crypto_hash("ring")].map(effectcraft_raster::channels3d::crypto_float);
+        let ids = [crypto_hash("cube"), crypto_hash("sphere"), crypto_hash("ring")].map(tselatra_raster::channels3d::crypto_float);
         for (k, ch) in ["00.R", "00.G", "00.B", "00.A", "01.R", "01.G", "01.B", "01.A"].iter().enumerate() {
             let v: Vec<f32> = (0..n).map(|i| if k % 2 == 0 { ids[(i + k) % 3] } else { ((i * 7 + k * 3) % 11) as f32 / 10.0 }).collect();
             a.channels.push((format!("CryptoObject{ch}"), v));

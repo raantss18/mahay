@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::{Node, NodeId};
+use endrika_doc::{Node, NodeId};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()

@@ -11,8 +11,8 @@ fn rect(s: &mut Session) -> crate::NodeId {
 }
 
 fn assert_roundtrips(s: &Session) {
-    let bytes = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    assert!(figcraft_format::load_bytes(&bytes).is_ok(), "the saved file reopens");
+    let bytes = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    assert!(endrika_format::load_bytes(&bytes).is_ok(), "the saved file reopens");
 }
 
 #[test]

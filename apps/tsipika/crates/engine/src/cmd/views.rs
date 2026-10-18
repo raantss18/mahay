@@ -2,8 +2,8 @@
 //! toggles (Show Transparency Grid).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::SavedView;
-use vectorcraft_geom::Point;
+use tsipika_doc::SavedView;
+use tsipika_geom::Point;
 
 use super::*;
 
@@ -151,7 +151,7 @@ mod tests {
         s.execute("view.saved.edit", &json!({"name": "Logo", "delete": true})).unwrap();
         assert_eq!(s.doc().unwrap().doc.views.len(), 1);
         // Views travel with the file.
-        let bytes = vectorcraft_format::save_file(&s.doc().unwrap().doc);
-        assert_eq!(vectorcraft_format::load(&bytes).unwrap().views[0].name, "Overview");
+        let bytes = tsipika_format::save_file(&s.doc().unwrap().doc);
+        assert_eq!(tsipika_format::load(&bytes).unwrap().views[0].name, "Overview");
     }
 }

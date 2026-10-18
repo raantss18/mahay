@@ -140,7 +140,7 @@ fn fit_steps_take_the_batchs_artboard_and_actions_leave_out_their_index() {
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 610, "height": 30})).unwrap();
     s.execute("paint.setStroke", &json!({"none": true})).unwrap();
     let boards = |s: &Session| s.doc().unwrap().doc.artboards.iter().map(|a| a.rect).collect::<Vec<_>>();
-    let (was, art) = (boards(&s), vectorcraft_geom::Rect::new(10.0, 10.0, 620.0, 40.0));
+    let (was, art) = (boards(&s), tsipika_geom::Rect::new(10.0, 10.0, 620.0, 40.0));
     let step = |command: &str, params: Value| json!({"command": command, "params": params});
     s.execute("command.batch", &json!({"artboard": 9, "commands": [step("artboard.fitToArt", json!({}))]})).unwrap();
     assert_eq!(boards(&s), [was[0], was[1], art], "artboard 3, the last one, for a batch's artboard past it");
@@ -161,7 +161,7 @@ fn fit_steps_take_the_batchs_artboard_and_actions_leave_out_their_index() {
 
 #[test]
 fn a_save_records_its_date_and_replays_it() {
-    let path = vectorcraft_testkit::temp_dir("journal-save").join("a.vectorcraft").to_string_lossy().into_owned();
+    let path = tsipika_testkit::temp_dir("journal-save").join("a.tsipika").to_string_lossy().into_owned();
     let mut s = Session::new();
     s.execute("file.new", &json!({"created": null})).unwrap();
     s.execute("document.save", &json!({"path": path})).unwrap();
@@ -176,10 +176,10 @@ fn a_save_records_its_date_and_replays_it() {
     assert_eq!(s.doc().unwrap().doc.metadata.modified, Some(2_000_000_000));
     assert!(s.execute("document.save", &json!({"path": path, "modified": "today"})).is_err());
     // Save As stamps the same way; Save a Copy leaves the document's dates (and records none).
-    let dir = vectorcraft_testkit::temp_dir("journal-save");
-    s.execute("file.saveAs", &json!({"path": dir.join("b.vectorcraft").to_string_lossy(), "modified": 2_000_000_100})).unwrap();
+    let dir = tsipika_testkit::temp_dir("journal-save");
+    s.execute("file.saveAs", &json!({"path": dir.join("b.tsipika").to_string_lossy(), "modified": 2_000_000_100})).unwrap();
     assert_eq!(s.journal.last().unwrap().1["modified"], json!(2_000_000_100));
-    s.execute("file.saveCopy", &json!({"path": dir.join("c.vectorcraft").to_string_lossy()})).unwrap();
+    s.execute("file.saveCopy", &json!({"path": dir.join("c.tsipika").to_string_lossy()})).unwrap();
     assert!(s.journal.last().unwrap().1.get("modified").is_none());
     assert_eq!(s.doc().unwrap().doc.metadata.modified, Some(2_000_000_100));
     // Replayed later, the saves stamp the recorded dates; an action stamps the time it plays.
@@ -202,7 +202,7 @@ fn replayed(s: &Session) -> Session {
 
 #[test]
 fn a_save_in_a_batch_records_its_date_and_replays_it() {
-    let path = vectorcraft_testkit::temp_dir("journal-batch").join("a.vectorcraft").to_string_lossy().into_owned();
+    let path = tsipika_testkit::temp_dir("journal-batch").join("a.tsipika").to_string_lossy().into_owned();
     let mut s = Session::new();
     s.execute("file.new", &json!({"created": 1_000_000_000})).unwrap();
     let rect = json!({"x": 10, "y": 10, "width": 50, "height": 40});
@@ -310,7 +310,7 @@ fn a_failed_batch_closes_the_documents_it_opened_and_restores_the_ones_it_closed
 
 #[test]
 fn a_failed_batch_brings_back_a_document_it_reverted() {
-    let path = vectorcraft_testkit::temp_dir("journal-batch").join("revert.vectorcraft").to_string_lossy().into_owned();
+    let path = tsipika_testkit::temp_dir("journal-batch").join("revert.tsipika").to_string_lossy().into_owned();
     let mut s = Session::new();
     s.execute("file.new", &json!({"created": null})).unwrap();
     s.execute("document.save", &json!({"path": path, "modified": null})).unwrap();

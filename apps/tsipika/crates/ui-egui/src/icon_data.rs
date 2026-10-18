@@ -1,4 +1,4 @@
-//! Generated icon table (`assets/icons`). Lucide icons are ISC-licensed; `dc-*` icons are VectorCraft's own.
+//! Generated icon table (`assets/icons`). Lucide icons are ISC-licensed; `dc-*` icons are Tsipika's own.
 //! Regenerate when icons are added: see crates/ui-egui/README.md.
 
 pub static ICONS: &[(&str, &[u8])] = &[

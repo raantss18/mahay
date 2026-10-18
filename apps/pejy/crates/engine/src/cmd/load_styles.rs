@@ -1,10 +1,10 @@
-//! Load Styles: the paragraph and character styles of another document (`.designcraft` or IDML)
+//! Load Styles: the paragraph and character styles of another document (`.pejy` or IDML)
 //! come into this one, with the styles, swatches and lists they name.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use designcraft_color::{Swatch, SwatchValue};
-use designcraft_doc::{CharAttrs, Document, NO_CHAR_STYLE, NO_PARA_STYLE, NumberedList, ParaAttrs, ParagraphStyle, Styles};
+use pejy_color::{Swatch, SwatchValue};
+use pejy_doc::{CharAttrs, Document, NO_CHAR_STYLE, NO_PARA_STYLE, NumberedList, ParaAttrs, ParagraphStyle, Styles};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -19,7 +19,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Load Styles…",
             [],
             None,
-            "{path | base64, name?: the file's name (`.idml` reads IDML), paragraph?: [name], character?: [name], conflicts?: redefine|useExisting|autoRename} — paragraph and character styles of another document (.designcraft or .idml): all of a kind, or the named ones (`[]`: none). The styles, swatches and lists they name come along where this document has none. A style this document defines differently under the same name takes the loaded definition (redefine, the default), stays as it is (useExisting), or the loaded one gets a new name (autoRename) → {paragraph: {added, replaced, renamed: {name: new name}}, character: {…}, swatches: [name]}",
+            "{path | base64, name?: the file's name (`.idml` reads IDML), paragraph?: [name], character?: [name], conflicts?: redefine|useExisting|autoRename} — paragraph and character styles of another document (.pejy or .idml): all of a kind, or the named ones (`[]`: none). The styles, swatches and lists they name come along where this document has none. A style this document defines differently under the same name takes the loaded definition (redefine, the default), stays as it is (useExisting), or the loaded one gets a new name (autoRename) → {paragraph: {added, replaced, renamed: {name: new name}}, character: {…}, swatches: [name]}",
             has_doc,
             load
         ),
@@ -86,7 +86,7 @@ fn source(p: &Value, id: &str) -> Result<Document> {
         _ => return Err(bad(id, "give `path` or `base64`")),
     };
     if name.to_lowercase().ends_with(".idml") {
-        designcraft_idml::import_idml(&bytes).map_err(|e| bad(id, e.to_string()))
+        pejy_idml::import_idml(&bytes).map_err(|e| bad(id, e.to_string()))
     } else {
         super::file::from_bytes(&bytes).map_err(|e| bad(id, e.to_string()))
     }
@@ -340,8 +340,8 @@ fn list(s: &mut Session, p: &Value) -> Result<Value> {
 
 #[cfg(test)]
 mod tests {
-    use designcraft_color::{Color, Swatch, SwatchValue};
-    use designcraft_doc::{CharAttrs, CharacterStyle, ExportTag, GrepStyle, NumberedList, ParaAttrs, ParagraphStyle, Rule, Styles};
+    use pejy_color::{Color, Swatch, SwatchValue};
+    use pejy_doc::{CharAttrs, CharacterStyle, ExportTag, GrepStyle, NumberedList, ParaAttrs, ParagraphStyle, Rule, Styles};
     use serde_json::{Value, json};
 
     use crate::Session;
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn styles_load_from_a_path() {
-        let path = std::env::temp_dir().join(format!("dc-load-styles-{}.designcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("dc-load-styles-{}.pejy", std::process::id()));
         std::fs::write(&path, super::super::file::to_bytes(&client().doc().unwrap().doc).unwrap()).unwrap();
         let mut s = new_doc();
         let r = s.execute("style.load", &json!({"path": path.to_str().unwrap(), "paragraph": [], "character": ["Small"]}));

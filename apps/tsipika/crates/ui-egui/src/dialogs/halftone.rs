@@ -6,12 +6,12 @@
 //! command's parameters) and `preview`.
 
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
+use tsipika_color::Color;
 
 use super::{DialogSpec, form};
 use crate::panels::c32;
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Vector Halftone.
 pub const KIND: &str = "vectorHalftone";
@@ -28,7 +28,7 @@ pub fn fields() -> Value {
     json!({"shape": "circle", "frequency": 20, "angle": 45, "mode": "mono", "color": "#000000", "invert": false, "clip": true, "keepOriginal": false, "preview": true})
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let shapes =
         [("circle", tl!("Circle")), ("ellipse", tl!("Ellipse")), ("square", tl!("Square")), ("diamond", tl!("Diamond")), ("line", tl!("Line"))];
     form::choice(ui, d, "shape", tl!("Shape"), (LABEL_W, 140.0), &shapes);
@@ -49,6 +49,6 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     form::commit_preview(app, CMD, form::params(d))
 }

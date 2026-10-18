@@ -5,8 +5,8 @@
 //! `pointer.rs`). Commands make the same edits for the Design panel, the control channel and MCP,
 //! and while points are selected the flip and 90°/180° rotation commands act on them.
 
-use figcraft_doc::Document;
-use figcraft_geom::{Affine, Point};
+use endrika_doc::Document;
+use endrika_geom::{Affine, Point};
 use serde_json::{Value, json};
 
 use super::{VHit, VTool, VectorEdit, default_points, edit, editing, indices, network, ops, selected_points, selection_position};
@@ -115,7 +115,7 @@ pub fn box_hit(doc: &Document, ve: &VectorEdit, h: Option<VHit>, p: Point, zoom:
 
 /// Map points `verts` of vector `id` (and the handles at them) through page transform `m`, then
 /// re-fit the vector.
-pub fn transform_points(doc: &mut Document, id: figcraft_doc::NodeId, verts: &[usize], m: Affine) -> Result<()> {
+pub fn transform_points(doc: &mut Document, id: endrika_doc::NodeId, verts: &[usize], m: Affine) -> Result<()> {
     let w = doc.world_transform(id);
     let local = w.inverse() * m * w;
     edit(doc, id, |net| ops::transform_vertices(net, verts, local))
@@ -193,7 +193,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
                 let angle = req_num("vector.edit.rotate", p, "angle")?;
                 let c = b.center();
                 let pivot = Point::new(num_or(p, "cx", c.x), num_or(p, "cy", c.y));
-                transform_points(s.doc_mut()?, ve.id, &b.points, figcraft_geom::rotate_about(Affine::IDENTITY, pivot, angle))?;
+                transform_points(s.doc_mut()?, ve.id, &b.points, endrika_geom::rotate_about(Affine::IDENTITY, pivot, angle))?;
                 Ok(json!({"ok": true}))
             }
         ),

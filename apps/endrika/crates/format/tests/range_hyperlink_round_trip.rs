@@ -1,7 +1,7 @@
 //! A hyperlink cleared on part of a text layer stays cleared through FIG export and import.
 
-use figcraft_doc::{Document, NodeKind, TextData};
-use figcraft_format::fig;
+use endrika_doc::{Document, NodeKind, TextData};
+use endrika_format::fig;
 
 fn links(doc: &Document, name: &str) -> Vec<Option<String>> {
     let Some(NodeKind::Text(text)) = doc.nodes().find(|n| n.name == name).map(|n| &n.kind) else { return Vec::new() };
@@ -25,8 +25,8 @@ fn cleared_range_hyperlink_round_trip() {
 
     let expected = vec![Some(url.clone()), None];
     assert_eq!(links(&document, "Cleared"), expected);
-    let native_bytes = figcraft_format::save_bytes(&document, None).unwrap();
-    let native = figcraft_format::load_bytes(&native_bytes).unwrap().0;
+    let native_bytes = endrika_format::save_bytes(&document, None).unwrap();
+    let native = endrika_format::load_bytes(&native_bytes).unwrap().0;
     assert_eq!(links(&native, "Cleared"), expected);
 
     let (bytes, export_warnings) = fig::export(&document, None).unwrap();

@@ -1,4 +1,4 @@
-//! The EffectCraft engine façade.
+//! The Tselatra engine façade.
 //!
 //! Every user-visible action is a command with a stable id (`layer.newSolid`, `prop.set`,
 //! `keys.easyEase`…) and JSON parameters, dispatched through [`Session::execute`]. The egui UI,
@@ -52,25 +52,25 @@ pub mod xml_project;
 
 use std::sync::Arc;
 
-use effectcraft_project::{Comp, ItemId, Layer, LayerId, Project, Uid};
-use effectcraft_raster::Image;
-use effectcraft_render::{ExprHost, FootageSource, LayerCache, NoFootage, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_project::{Comp, ItemId, Layer, LayerId, Project, Uid};
+use tselatra_raster::Image;
+use tselatra_render::{ExprHost, FootageSource, LayerCache, NoFootage, RenderOpts, Renderer};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub use commands::{CommandSpec, command_specs, find as find_command};
-pub use effectcraft_color as color;
-pub use effectcraft_effects as effects;
-pub use effectcraft_geom as geom;
-pub use effectcraft_keyframe as keyframe;
-pub use effectcraft_project as project;
-pub use effectcraft_raster as raster;
-pub use effectcraft_render as render;
-pub use effectcraft_segment as segment;
-pub use effectcraft_text as text;
-pub use effectcraft_time as time;
-pub use effectcraft_track as track;
+pub use tselatra_color as color;
+pub use tselatra_effects as effects;
+pub use tselatra_geom as geom;
+pub use tselatra_keyframe as keyframe;
+pub use tselatra_project as project;
+pub use tselatra_raster as raster;
+pub use tselatra_render as render;
+pub use tselatra_segment as segment;
+pub use tselatra_text as text;
+pub use tselatra_time as time;
+pub use tselatra_track as track;
 pub use history::{Branch, History, HistoryNode};
 pub use render_queue::{ExportJob, ExportResult, Exporter, JobState};
 
@@ -88,7 +88,7 @@ pub enum EngineError {
     #[error("no composition {0}")]
     NoSuchComp(String),
     #[error("{0}")]
-    Project(#[from] effectcraft_project::ProjectError),
+    Project(#[from] tselatra_project::ProjectError),
     #[error("{0}")]
     Other(String),
 }
@@ -149,7 +149,7 @@ impl Services for FsServices {
 pub trait Importer: Send + Sync {
     /// Probe one file and return footage metadata. Image sequences are the engine's
     /// ([`sequence`]): it groups numbered stills and probes their first file here.
-    fn probe(&self, path: &str) -> std::result::Result<effectcraft_project::Footage, String>;
+    fn probe(&self, path: &str) -> std::result::Result<tselatra_project::Footage, String>;
     /// A footage file's bytes are now at `path` (extracted from a template): hosts whose media
     /// layer reads from memory (the browser) register them; file-based ones need nothing.
     fn register(&self, _path: &str, _data: &[u8]) {}
@@ -184,7 +184,7 @@ pub struct KeyClip {
     /// Match-id path relative to the layer (`transform/position`), portable between layers.
     pub path: String,
     /// Keys with times relative to the earliest copied key (layer time).
-    pub keys: Vec<effectcraft_keyframe::Keyframe>,
+    pub keys: Vec<tselatra_keyframe::Keyframe>,
 }
 
 /// A selected mask vertex: layer, mask group uid, vertex index.
@@ -243,15 +243,15 @@ pub struct EditorState {
     /// Values of selected unanimated properties (match path, value), copied with Edit ▸ Copy;
     /// Paste sets the same properties of the selected layers.
     #[serde(skip)]
-    pub value_clipboard: Vec<(String, effectcraft_keyframe::Value)>,
+    pub value_clipboard: Vec<(String, tselatra_keyframe::Value)>,
     /// Copied effect instances, with comp-time key offsets from the earliest copied key.
     /// Paste adds them to the selected layers at the destination comp's CTI.
     #[serde(skip)]
-    pub effect_clipboard: Vec<effectcraft_project::PropGroup>,
+    pub effect_clipboard: Vec<tselatra_project::PropGroup>,
     /// Copied shape items (Edit ▸ Copy with groups, paths, paints or path operations selected in
     /// a shape layer's Contents); Paste adds them to the selected shape layers.
     #[serde(skip)]
-    pub contents_clipboard: Vec<effectcraft_project::PropGroup>,
+    pub contents_clipboard: Vec<tselatra_project::PropGroup>,
     /// Selected mask vertices (viewer Selection tool / pen).
     #[serde(default)]
     pub selected_vertices: Vec<VertexRef>,
@@ -270,10 +270,10 @@ pub struct EditorState {
     pub link_clipboard: Option<LinkClip>,
     /// File ▸ Interpret Footage ▸ Remember Interpretation.
     #[serde(skip)]
-    pub interpretation: Option<effectcraft_project::Footage>,
+    pub interpretation: Option<tselatra_project::Footage>,
     /// Viewer 3D view per comp (Active Camera / Front / … / Custom View 3 and edited view cameras).
     #[serde(default)]
-    pub views3d: std::collections::BTreeMap<ItemId, effectcraft_render::three_d::Views3D>,
+    pub views3d: std::collections::BTreeMap<ItemId, tselatra_render::three_d::Views3D>,
     /// Tracker panel ▸ Current Track: (tracked layer, tracker group uid) in the active comp.
     #[serde(default)]
     pub current_track: Option<(LayerId, Uid)>,
@@ -312,7 +312,7 @@ pub struct EditorState {
     pub text_edit: Option<commands::text_edit::TextEdit>,
     /// Text copied while editing (with its formatting), for Paste / Paste Text Formatting Only.
     #[serde(skip)]
-    pub text_clipboard: Option<effectcraft_keyframe::TextDoc>,
+    pub text_clipboard: Option<tselatra_keyframe::TextDoc>,
     /// Composition viewer display options (Show Channel, exposure, snapshot, Fast Previews).
     #[serde(default)]
     pub viewer: commands::viewer_cmds::ViewOptions,
@@ -356,7 +356,7 @@ pub enum LinkClip {
     /// Expressions that link back to the source properties: (match path, expression text).
     Links { relative: bool, links: Vec<(String, String)> },
     /// Expressions only: (match path, expression).
-    Expressions(Vec<(String, effectcraft_project::Expression)>),
+    Expressions(Vec<(String, tselatra_project::Expression)>),
 }
 
 /// Events for frontends (drained each frame).
@@ -404,9 +404,9 @@ pub struct Session {
     pub footage: Arc<dyn FootageSource>,
     pub expr: Option<Arc<dyn ExprHost>>,
     /// GPU compositor (Mercury GPU Acceleration), when the frontend has one: used by renders
-    /// that ask for [`effectcraft_render::Backend::Gpu`]/`Auto`, and by Render Queue exports
+    /// that ask for [`tselatra_render::Backend::Gpu`]/`Auto`, and by Render Queue exports
     /// when the project's renderer is the GPU.
-    pub accel: Option<Arc<dyn effectcraft_render::Accelerator>>,
+    pub accel: Option<Arc<dyn tselatra_render::Accelerator>>,
     /// Why there is no [`Session::accel`] (`render.backend`'s `why`): the host's reason, e.g. a
     /// headless start without `--gpu` or the compositor's setup error.
     pub accel_note: Option<String>,
@@ -419,7 +419,7 @@ pub struct Session {
     /// Render Queue encoder (the export layer); `None` = export unavailable.
     pub exporter: Option<Arc<dyn Exporter>>,
     /// Free-space hook for Render Settings ▸ Use Storage Overflow (`None`: never full).
-    pub storage_quota: Option<Arc<dyn effectcraft_project::render_queue::StorageQuota>>,
+    pub storage_quota: Option<Arc<dyn tselatra_project::render_queue::StorageQuota>>,
     /// The running (or finished, not yet polled) render.
     pub render_job: Option<render_queue::RenderJob>,
     /// The running (or finished, not yet polled) track analysis.
@@ -448,7 +448,7 @@ pub struct Session {
     /// Processed-layer pixels reused across frames and edits (content-keyed, never stale).
     pub layer_cache: Arc<LayerCache>,
     /// The persistent disk cache (Settings ▸ Media & Disk Cache), when enabled.
-    pub disk_cache: Option<Arc<effectcraft_render::disk_cache::DiskCache>>,
+    pub disk_cache: Option<Arc<tselatra_render::disk_cache::DiskCache>>,
     /// Settings (Preferences).
     pub prefs: prefs::Prefs,
     /// Bumped whenever settings change (frontends re-apply theme, labels…).
@@ -472,10 +472,10 @@ pub struct Session {
     pub autosave_folder_override: Option<std::path::PathBuf>,
     /// The viewer snapshot (Take Snapshot / Show Snapshot).
     pub snapshot: Option<viewer::Snapshot>,
-    /// The JavaScript scripting engine (set by the host that links `effectcraft-script`):
+    /// The JavaScript scripting engine (set by the host that links `tselatra-script`):
     /// `script.run`, File ▸ Scripts ▸ Run Script File… (`.jsx`/`.js`) and the Script Console.
     pub script: Option<ScriptRunner>,
-    /// Loads WebAssembly effect plug-ins (set by the host that links `effectcraft-plugin` with
+    /// Loads WebAssembly effect plug-ins (set by the host that links `tselatra-plugin` with
     /// its runtime): `effect.plugins.load`.
     pub plugin_loader: Option<PluginLoader>,
     /// ScriptUI windows and panels opened by scripts (see [`scriptui`]).
@@ -689,9 +689,9 @@ impl Session {
         let mut st = self.state.clone();
         let r = f(&mut p, &mut st)?;
         // Layer styles: one Global Light per comp, whichever layer edited it.
-        effectcraft_project::styles::sync_global_light(&before, &mut p);
+        tselatra_project::styles::sync_global_light(&before, &mut p);
         // Essential Properties of precomp layers follow their comps' Essential Graphics.
-        effectcraft_project::essential::sync_project(&before, &mut p);
+        tselatra_project::essential::sync_project(&before, &mut p);
         // Warp Stabilizer analyses made from other frames are cleared (and queued again).
         for w in warp::invalidate(&before, &mut p) {
             if !self.warp_pending.contains(&w) {
@@ -737,15 +737,15 @@ impl Session {
             self.saved_revision = self.revision;
         }
         if self.disk_cache.is_some() {
-            self.layer_cache.set_disk_salt(effectcraft_render::disk_cache::footage_salt(&self.project));
+            self.layer_cache.set_disk_salt(tselatra_render::disk_cache::footage_salt(&self.project));
         }
         self.events.push(Event::ProjectChanged { revision: self.revision });
     }
 
     /// Set a comp's Resolution. As in After Effects it is saved with the project (which becomes
     /// modified) but is no undo step, and it changes no pixels: the comp's cached frames stay
-    /// valid ([`effectcraft_project::Comp::same_pixels`]).
-    pub fn set_resolution(&mut self, comp: ItemId, r: effectcraft_project::Resolution) -> Result<()> {
+    /// valid ([`tselatra_project::Comp::same_pixels`]).
+    pub fn set_resolution(&mut self, comp: ItemId, r: tselatra_project::Resolution) -> Result<()> {
         if self.project.comp(comp).ok_or(EngineError::NoComp)?.resolution == r {
             return Ok(());
         }
@@ -757,7 +757,7 @@ impl Session {
     /// Keep what lives outside the undo history (each comp's Resolution) as it is in `from`, the
     /// project before undo, redo or a history jump restored another state.
     pub(crate) fn keep_view_settings(&mut self, from: &Project) {
-        let keep: Vec<(ItemId, effectcraft_project::Resolution)> =
+        let keep: Vec<(ItemId, tselatra_project::Resolution)> =
             self.project.comps().filter_map(|(id, c)| from.comp(*id).map(|f| (*id, f.resolution)).filter(|(_, r)| *r != c.resolution)).collect();
         if keep.is_empty() {
             return;
@@ -891,7 +891,7 @@ impl Session {
             let Some(c) = self.project.comp(cid) else { continue };
             // Down: the comps this one nests.
             for l in &c.layers {
-                if let effectcraft_project::LayerSource::Comp { item } = &l.source
+                if let tselatra_project::LayerSource::Comp { item } = &l.source
                     && seen.insert(*item)
                 {
                     todo.push((*item, l.layer_time(ct)));
@@ -900,7 +900,7 @@ impl Session {
             // Up: the comps nesting this one.
             for iid in self.project.items.keys() {
                 if let Some(pc) = self.project.comp(*iid)
-                    && let Some(l) = pc.layers.iter().find(|l| matches!(&l.source, effectcraft_project::LayerSource::Comp { item } if *item == cid))
+                    && let Some(l) = pc.layers.iter().find(|l| matches!(&l.source, tselatra_project::LayerSource::Comp { item } if *item == cid))
                     && seen.insert(*iid)
                 {
                     todo.push((*iid, l.comp_time(ct)));
@@ -989,17 +989,17 @@ impl Session {
     }
 
     /// The open compositions and their current times, as a project file records them
-    /// ([`effectcraft_project::SavedView`]).
-    pub fn saved_view(&self) -> effectcraft_project::SavedView {
+    /// ([`tselatra_project::SavedView`]).
+    pub fn saved_view(&self) -> tselatra_project::SavedView {
         let comp_times = self.state.times.iter().filter(|(id, _)| self.project.comp(**id).is_some()).map(|(id, t)| (*id, *t)).collect();
-        effectcraft_project::SavedView { active_comp: self.state.active_comp, open_comps: self.state.open_comps.clone(), comp_times }
+        tselatra_project::SavedView { active_comp: self.state.active_comp, open_comps: self.state.open_comps.clone(), comp_times }
     }
 
     /// Reopen the compositions a project file was saved with (#748), each at its saved current
     /// time (#1714). Ids that no longer name a comp are skipped; with none left the project stays
     /// on the comp [`Session::replace_project`] opened (its first), as files from before the view
     /// was saved do.
-    pub fn restore_view(&mut self, view: &effectcraft_project::SavedView) {
+    pub fn restore_view(&mut self, view: &tselatra_project::SavedView) {
         for (id, t) in &view.comp_times {
             if let Some(comp) = self.project.comp(*id) {
                 let t = comp_frame_at(comp, *t);
@@ -1026,7 +1026,7 @@ impl Session {
     }
 
     /// The 3D view camera of a comp's viewer (None = the active camera).
-    pub fn view_camera(&self, comp: ItemId) -> Option<effectcraft_render::three_d::CameraState> {
+    pub fn view_camera(&self, comp: ItemId) -> Option<tselatra_render::three_d::CameraState> {
         let c = self.project.comp(comp)?;
         if !c.has_3d() {
             return None;
@@ -1059,7 +1059,7 @@ impl Session {
         let c = self.project.comp(comp).ok_or(EngineError::NoComp)?;
         let long = c.width.max(c.height).max(1) as f64;
         let scale = if max_side == 0 { 1.0 } else { (max_side as f64 / long).min(1.0) };
-        let img = self.render(comp, t, RenderOpts { scale, backend: effectcraft_render::Backend::Auto, ..Default::default() });
+        let img = self.render(comp, t, RenderOpts { scale, backend: tselatra_render::Backend::Auto, ..Default::default() });
         Ok((img.width, img.height, img.to_rgba8_over(c.background)))
     }
 
@@ -1070,7 +1070,7 @@ impl Session {
         let it = self.project.item(item)?;
         let footage = self.footage.clone();
         match &it.kind {
-            effectcraft_project::ItemKind::Comp(c) => {
+            tselatra_project::ItemKind::Comp(c) => {
                 let (project, expr, cache) = (self.project.clone(), self.expr.clone(), self.layer_cache.clone());
                 let long = c.width.max(c.height).max(1) as f64;
                 let scale = if max_side == 0 { 1.0 } else { (max_side as f64 / long).min(1.0) };
@@ -1089,7 +1089,7 @@ impl Session {
                     Some((img.width, img.height, img.to_rgba8_over(bg)))
                 }))
             }
-            effectcraft_project::ItemKind::Footage(f) if f.has_video => {
+            tselatra_project::ItemKind::Footage(f) if f.has_video => {
                 let f = f.clone();
                 Some(Box::new(move || {
                     let img = footage.frame(item, &f, Tick(0))?;
@@ -1120,13 +1120,13 @@ impl Session {
         let c = self.project.comp(comp).ok_or(EngineError::NoComp)?;
         let long = c.width.max(c.height).max(1) as f64;
         let scale = if max_side == 0 { 1.0 } else { (max_side as f64 / long).min(1.0) };
-        let img = self.render(comp, t, RenderOpts { scale, backend: effectcraft_render::Backend::Auto, ..Default::default() });
+        let img = self.render(comp, t, RenderOpts { scale, backend: tselatra_render::Backend::Auto, ..Default::default() });
         Ok((img.width, img.height, img.to_rgba8()))
     }
 
     /// Make the media layer and the layer cache let go of what they decoded from `footage`'s
     /// files (it keys frames by path, so an overwritten file would keep showing its old pixels).
-    pub(crate) fn forget_decoded(&self, footage: &effectcraft_project::Footage) {
+    pub(crate) fn forget_decoded(&self, footage: &tselatra_project::Footage) {
         for p in std::iter::once(&footage.path).chain(&footage.sequence) {
             self.footage.forget(p);
         }
@@ -1163,7 +1163,7 @@ impl Session {
         // The media layer keys decoded frames by path: files of the new project may have changed
         // since an earlier project decoded them (#1070).
         for it in p.items.values() {
-            if let effectcraft_project::ItemKind::Footage(f) = &it.kind {
+            if let tselatra_project::ItemKind::Footage(f) = &it.kind {
                 self.forget_decoded(f);
             }
         }
@@ -1183,21 +1183,21 @@ impl Session {
 
 /// Bring effect instances saved by earlier versions up to date with the effect registry
 /// (renamed / regrouped / added parameters, reordered popups; see
-/// [`effectcraft_effects::migrate`]), and a project from before
-/// [`effectcraft_project::SCHEMA_EFFECT_SPACE`] into effect space
-/// ([`effectcraft_effects::migrate::to_effect_space`]). Stamps the current schema.
+/// [`tselatra_effects::migrate`]), and a project from before
+/// [`tselatra_project::SCHEMA_EFFECT_SPACE`] into effect space
+/// ([`tselatra_effects::migrate::to_effect_space`]). Stamps the current schema.
 pub fn upgrade_effects(p: &mut Project) {
-    let to_effect_space = p.schema < effectcraft_project::SCHEMA_EFFECT_SPACE;
+    let to_effect_space = p.schema < tselatra_project::SCHEMA_EFFECT_SPACE;
     // Effect bounds per layer: (size, top-left in layer coordinates).
     let mut bounds = std::collections::HashMap::new();
     for (cid, c) in p.comps() {
         for l in &c.layers {
-            bounds.insert((*cid, l.id), effectcraft_render::effect_bounds(p, c, l));
+            bounds.insert((*cid, l.id), tselatra_render::effect_bounds(p, c, l));
         }
     }
     let mut next = p.next_id;
     for (cid, it) in p.items.iter_mut() {
-        let effectcraft_project::ItemKind::Comp(c) = &mut it.kind else { continue };
+        let tselatra_project::ItemKind::Comp(c) = &mut it.kind else { continue };
         for l in &mut std::sync::Arc::make_mut(c).layers {
             let (size, origin) = bounds.get(&(*cid, l.id)).copied().unwrap_or(([100.0, 100.0], [0.0; 2]));
             // Effect space starts at the bounds' top-left: positions move by minus that corner.
@@ -1205,24 +1205,24 @@ pub fn upgrade_effects(p: &mut Project) {
             let shift = |o: [f64; 2]| [-o[0], -o[1]];
             let d = if l.switches.adjustment { [0.0; 2] } else { shift(origin) };
             let clone_d = |src: Option<u64>| match src {
-                Some(id) => bounds.get(&(*cid, effectcraft_project::LayerId(id))).map_or([0.0; 2], |b| shift(b.1)),
+                Some(id) => bounds.get(&(*cid, tselatra_project::LayerId(id))).map_or([0.0; 2], |b| shift(b.1)),
                 None => d,
             };
             let Some(fx) = l.props.sub_mut("effects") else { continue };
             for n in &mut fx.children {
-                let effectcraft_project::Node::Group(g) = n else { continue };
-                let effectcraft_project::GroupKind::Effect { effect } = &g.kind else { continue };
-                if let Some(spec) = effectcraft_effects::find(effect) {
-                    effectcraft_effects::migrate::upgrade_instance(spec, g, &mut effectcraft_project::build::Ids(&mut next), size);
+                let tselatra_project::Node::Group(g) = n else { continue };
+                let tselatra_project::GroupKind::Effect { effect } = &g.kind else { continue };
+                if let Some(spec) = tselatra_effects::find(effect) {
+                    tselatra_effects::migrate::upgrade_instance(spec, g, &mut tselatra_project::build::Ids(&mut next), size);
                     if to_effect_space {
-                        effectcraft_effects::migrate::to_effect_space(spec, g, size, d, &clone_d);
+                        tselatra_effects::migrate::to_effect_space(spec, g, size, d, &clone_d);
                     }
                 }
             }
         }
     }
     p.next_id = next;
-    p.schema = effectcraft_project::SCHEMA_VERSION;
+    p.schema = tselatra_project::SCHEMA_VERSION;
 }
 
 #[cfg(test)]
@@ -1330,13 +1330,13 @@ pub fn animation_presets() -> Vec<(String, String, String)> {
 }
 
 pub fn text_families() -> Vec<String> {
-    effectcraft_text::families().into_iter().map(|(f, _)| f).collect()
+    tselatra_text::families().into_iter().map(|(f, _)| f).collect()
 }
 
 /// The styles a family offers (its own faces, in weight order), for the style menus. A family
 /// that isn't installed offers the usual styles, which resolve to Inter's.
 pub fn font_styles(family: &str) -> Vec<String> {
-    effectcraft_text::families()
+    tselatra_text::families()
         .into_iter()
         .find(|(f, _)| f.eq_ignore_ascii_case(family))
         .map(|(_, st)| st)
@@ -1346,7 +1346,7 @@ pub fn font_styles(family: &str) -> Vec<String> {
 
 /// The OpenType feature tags (GSUB / GPOS) of the face a family + style resolves to.
 pub fn font_features(family: &str, style: &str) -> Vec<String> {
-    effectcraft_text::fonts::face(effectcraft_text::resolve(family, style).face).features()
+    tselatra_text::fonts::face(tselatra_text::resolve(family, style).face).features()
 }
 
 /// One row of the Character panel's font menu.
@@ -1366,11 +1366,11 @@ pub struct FontRow {
 /// the font menu's preview (Settings ▸ Type ▸ Show Font Preview).
 pub fn font_preview(family: &str, size: f64) -> Vec<Vec<[f32; 2]>> {
     use kurbo::PathEl;
-    let st = effectcraft_keyframe::text_doc::CharStyle { font: family.to_string(), size, ..Default::default() };
+    let st = tselatra_keyframe::text_doc::CharStyle { font: family.to_string(), size, ..Default::default() };
     let mut out = vec![];
     let mut x = 0.0;
     for ch in "Sample".chars() {
-        let (path, adv) = effectcraft_text::char_glyph_style(&st, ch);
+        let (path, adv) = tselatra_text::char_glyph_style(&st, ch);
         let mut cur: Vec<[f32; 2]> = vec![];
         let pt = |p: kurbo::Point| [(p.x + x) as f32, p.y as f32];
         kurbo::flatten(&path, 0.2, |el| match el {
@@ -1404,8 +1404,8 @@ pub fn font_preview(family: &str, size: f64) -> Vec<Vec<[f32; 2]>> {
 /// for the menu's Variable Fonts filter.
 pub fn font_menu(prefs: &prefs::Prefs) -> Vec<FontRow> {
     let all = text_families();
-    let native = if prefs.type_.font_names_in_english { Default::default() } else { effectcraft_text::fonts::native_families() };
-    let variable = effectcraft_text::fonts::variable_families();
+    let native = if prefs.type_.font_names_in_english { Default::default() } else { tselatra_text::fonts::native_families() };
+    let variable = tselatra_text::fonts::variable_families();
     let row = |f: &String, recent: bool| FontRow {
         family: f.clone(),
         display: native.get(f).cloned().unwrap_or_else(|| f.clone()),

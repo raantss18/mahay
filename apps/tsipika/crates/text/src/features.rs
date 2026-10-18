@@ -1,7 +1,7 @@
 //! OpenType feature selection (the OpenType panel), resolved per character style.
 
 use harfrust::{Feature, Tag};
-use vectorcraft_doc::CharStyle;
+use tsipika_doc::CharStyle;
 
 /// Tracking (in 1/1000 em) outside which standard ligatures are dropped automatically: tighter
 /// than the first, looser than the second.
@@ -273,8 +273,8 @@ mod tests {
         assert!(tags.contains(&"ss05".to_string()) && tags.contains(&"titl".to_string()), "{tags:?}");
     }
     use crate::{FontDb, layout};
-    use vectorcraft_doc::TextObject;
-    use vectorcraft_geom::Point;
+    use tsipika_doc::TextObject;
+    use tsipika_geom::Point;
 
     fn glyphs(features: &[&str]) -> usize {
         let st = CharStyle { font_family: "Source Serif 4".into(), features: features.iter().map(|s| s.to_string()).collect(), ..Default::default() };

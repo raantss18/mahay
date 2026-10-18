@@ -1,9 +1,9 @@
 //! Layer menu: quality / sampling / frame blending, switches, transform dialogs, masks on existing
 //! layers, markers, track matte shortcuts, open/reveal, and Keyframe Assistant ▸ Sequence Layers.
 
-use effectcraft_keyframe::{Keyframe, ShapePath, Value as KV};
-use effectcraft_project::{FrameBlend, GroupKind, ItemId, LayerId, LayerSource, Marker, MaskMode, MatteKind, Node, Quality, Sampling, TrackMatte, Uid};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, ShapePath, Value as KV};
+use tselatra_project::{FrameBlend, GroupKind, ItemId, LayerId, LayerSource, Marker, MaskMode, MatteKind, Node, Quality, Sampling, TrackMatte, Uid};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, comp_id, f_p, frontend, has_comp, has_layers, layer_mut, layer_p, layers_p, merge_p, str_p, time_p};
@@ -245,11 +245,11 @@ fn center_anchor(s: &mut Session, p: &Value) -> Result<Value> {
     let ids = super::unlocked(s, cid, ids, "layer.centerAnchor")?;
     let t = s.time();
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
-    let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, t);
+    let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, t);
     let mut centers = vec![];
     for lid in &ids {
         let Some(l) = comp.layer(*lid) else { continue };
-        if let Some([x0, y0, x1, y1]) = effectcraft_render::content_bounds(&ctx, l) {
+        if let Some([x0, y0, x1, y1]) = tselatra_render::content_bounds(&ctx, l) {
             centers.push((*lid, [(x0 + x1) / 2.0, (y0 + y1) / 2.0]));
         }
     }
@@ -258,7 +258,7 @@ fn center_anchor(s: &mut Session, p: &Value) -> Result<Value> {
             let l = layer_mut(proj, cid, *lid)?;
             let lt = l.layer_time(t);
             let Some(tr) = l.transform_mut() else { continue };
-            let get = |tr: &effectcraft_project::PropGroup, m: &str, d: [f64; 3]| tr.get(m).map(|p| p.value_at(lt).as_vec3()).unwrap_or(d);
+            let get = |tr: &tselatra_project::PropGroup, m: &str, d: [f64; 3]| tr.get(m).map(|p| p.value_at(lt).as_vec3()).unwrap_or(d);
             let anchor = get(tr, "anchor", [0.0; 3]);
             let scale = get(tr, "scale", [100.0; 3]);
             let rot = tr.get("rotation").map(|p| p.value_at(lt).as_f64()).unwrap_or(0.0).to_radians();
@@ -270,7 +270,7 @@ fn center_anchor(s: &mut Session, p: &Value) -> Result<Value> {
             }
             // Shift every key so the layer stays put over its whole animation (X and Y Position
             // when the dimensions are separated).
-            let offset = |pr: &mut effectcraft_project::Property, f: &dyn Fn(&KV) -> KV| {
+            let offset = |pr: &mut tselatra_project::Property, f: &dyn Fn(&KV) -> KV| {
                 pr.value = f(&pr.value);
                 for k in &mut pr.keys {
                     k.value = f(&k.value);
@@ -342,7 +342,7 @@ fn edit_masks(
     s: &mut Session,
     p: &Value,
     label: &str,
-    mut f: impl FnMut(&mut effectcraft_project::PropGroup, (f64, f64), Tick) -> Result<()>,
+    mut f: impl FnMut(&mut tselatra_project::PropGroup, (f64, f64), Tick) -> Result<()>,
 ) -> Result<Value> {
     let (cid, targets) = target_masks(s, p)?;
     if targets.is_empty() {
@@ -353,7 +353,7 @@ fn edit_masks(
     let t = s.time();
     let sizes: Vec<(LayerId, (f64, f64))> = targets
         .iter()
-        .filter_map(|(lid, _)| s.project.comp(cid)?.layer(*lid).map(|l| (*lid, effectcraft_render::source_size(&s.project, l))))
+        .filter_map(|(lid, _)| s.project.comp(cid)?.layer(*lid).map(|l| (*lid, tselatra_render::source_size(&s.project, l))))
         .map(|(l, (w, h))| (l, (w as f64, h as f64)))
         .collect();
     let n = targets.len();
@@ -370,7 +370,7 @@ fn edit_masks(
     Ok(json!({"masks": n}))
 }
 
-fn mask_kind(g: &mut effectcraft_project::PropGroup) -> Option<(&mut MaskMode, &mut bool, &mut bool)> {
+fn mask_kind(g: &mut tselatra_project::PropGroup) -> Option<(&mut MaskMode, &mut bool, &mut bool)> {
     match &mut g.kind {
         GroupKind::Mask { mode, inverted, locked, .. } => Some((mode, inverted, locked)),
         _ => None,
@@ -418,7 +418,7 @@ fn mask_shape(s: &mut Session, p: &Value) -> Result<Value> {
 fn mask_reset(s: &mut Session, p: &Value) -> Result<Value> {
     edit_masks(s, p, "Reset Mask", |g, (w, h), _| {
         let (w, h) = if w > 0.0 { (w, h) } else { (400.0, 300.0) };
-        let reset = |g: &mut effectcraft_project::PropGroup, m: &str, v: KV| {
+        let reset = |g: &mut tselatra_project::PropGroup, m: &str, v: KV| {
             if let Some(pr) = g.get_mut(m) {
                 pr.keys.clear();
                 pr.expr = None;
@@ -745,7 +745,7 @@ pub(crate) fn file_url(path: &str) -> String {
 fn reveal_in_finder(s: &mut Session, p: &Value) -> Result<Value> {
     let item = source_item(s, p, "layer.revealInFinder")?;
     let path = match s.project.item(item).map(|i| &i.kind) {
-        Some(effectcraft_project::ItemKind::Footage(f)) if !f.path.is_empty() => f.path.clone(),
+        Some(tselatra_project::ItemKind::Footage(f)) if !f.path.is_empty() => f.path.clone(),
         _ => return Err(bad("layer.revealInFinder", "the layer's source is not a file")),
     };
     let url = reveal_url(s, &path).map_err(|e| bad("layer.revealInFinder", e))?;
@@ -770,7 +770,7 @@ fn reveal_comp(s: &mut Session, p: &Value) -> Result<Value> {
 impl Session {
     /// Expressions of comp `cid` that fail at its current time: `{layer, prop, name, expression,
     /// error}` (Reveal Expression Errors, the viewer's expression error banner).
-    pub fn expression_errors(&self, cid: effectcraft_project::ItemId) -> Vec<Value> {
+    pub fn expression_errors(&self, cid: tselatra_project::ItemId) -> Vec<Value> {
         let t = self.time_of(cid);
         let Some(comp) = self.project.comp(cid) else { return vec![] };
         let Some(host) = &self.expr else { return vec![] };
@@ -784,7 +784,7 @@ impl Session {
             });
             for pr in has {
                 let text = pr.expr.as_ref().map(|e| e.text.clone()).unwrap_or_default();
-                let mut ctx = effectcraft_render::EvalCtx::new(&self.project, cid, comp, t);
+                let mut ctx = tselatra_render::EvalCtx::new(&self.project, cid, comp, t);
                 ctx.expr = Some(host.as_ref());
                 if let Err(e) = host.eval(&ctx, l, pr, &pr.value_at(l.layer_time(t))) {
                     errors.push(json!({"layer": l.id.0, "prop": pr.uid, "name": pr.name, "expression": text, "error": e}));

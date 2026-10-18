@@ -1,4 +1,4 @@
-//! The non-destructive edit model of LightCraft.
+//! The non-destructive edit model of Hazavana.
 //!
 //! [`DevelopSettings`] is the complete description of a photo's look: pure, serializable data.
 //! The pipeline evaluates it; the catalog stores it; presets, copy/paste, sync, versions and history
@@ -68,15 +68,15 @@ impl DevelopSettings {
         }
         let c = &mut self.curve;
         for p in [&mut c.master, &mut c.red, &mut c.green, &mut c.blue].into_iter().flatten() {
-            *p = lightcraft_geom::Point::new(p.x.clamp(0.0, 1.0), p.y.clamp(0.0, 1.0));
+            *p = hazavana_geom::Point::new(p.x.clamp(0.0, 1.0), p.y.clamp(0.0, 1.0));
         }
         let g = &mut self.crop.geometry;
         if g.angle == 0.0 {
-            g.rect = g.rect.intersect(&lightcraft_geom::Rect::UNIT);
+            g.rect = g.rect.intersect(&hazavana_geom::Rect::UNIT);
         }
         if g.rect.is_empty() {
             let old = before.crop.geometry.rect;
-            g.rect = if old.is_empty() { lightcraft_geom::Rect::UNIT } else { old };
+            g.rect = if old.is_empty() { hazavana_geom::Rect::UNIT } else { old };
         }
     }
 
@@ -186,7 +186,7 @@ mod tests {
                 op: MaskOp::Add,
                 invert: false,
                 shape: MaskShape::Radial {
-                    center: lightcraft_geom::Point::new(0.5, 0.5),
+                    center: hazavana_geom::Point::new(0.5, 0.5),
                     rx: 0.2,
                     ry: 0.1,
                     angle: 10.0,
@@ -284,14 +284,14 @@ mod tests {
     fn merged_settings_are_kept_in_range() {
         // issue #1946: `develop.merge`, `render --settings` and presets stored whatever the JSON said
         let mut base = DevelopSettings::default();
-        base.crop.geometry.rect = lightcraft_geom::Rect::new(0.1, 0.2, 0.8, 0.9);
+        base.crop.geometry.rect = hazavana_geom::Rect::new(0.1, 0.2, 0.8, 0.9);
         let m = base
             .merged(&json!({"light": {"exposure": 1e308}, "vignette": {"amount": -1e308}, "geometry": {"scale": 0}, "optics": {"distortion": 1e308}}))
             .unwrap();
         assert_eq!((m.light.exposure, m.vignette.amount, m.geometry.scale, m.optics.distortion), (5.0, -100.0, 50.0, 100.0));
         // point curves stay in 0..1, as an imported XMP curve does
         let m = base.merged(&json!({"curve": {"master": [{"x": -3, "y": 0}, {"x": 1, "y": 1e308}]}})).unwrap();
-        assert_eq!(m.curve.master, vec![lightcraft_geom::Point::new(0.0, 0.0), lightcraft_geom::Point::new(1.0, 1.0)]);
+        assert_eq!(m.curve.master, vec![hazavana_geom::Point::new(0.0, 0.0), hazavana_geom::Point::new(1.0, 1.0)]);
         // a crop with no area is left out, as XMP import leaves out one whose edges are inverted
         for rect in
             [json!({"x0": 0.9, "x1": 0.1, "y0": 0, "y1": 1}), json!({"x0": 1e308, "x1": -1e308, "y0": 0, "y1": 1}), json!({"x0": 0.5, "x1": 0.5})]
@@ -301,7 +301,7 @@ mod tests {
         }
         // unrotated, the crop stays inside the photo
         let m = base.merged(&json!({"crop": {"geometry": {"rect": {"x0": -1e308, "y0": 0.25, "x1": 1e308, "y1": 0.75}}}})).unwrap();
-        assert_eq!(m.crop.geometry.rect, lightcraft_geom::Rect::new(0.0, 0.25, 1.0, 0.75));
+        assert_eq!(m.crop.geometry.rect, hazavana_geom::Rect::new(0.0, 0.25, 1.0, 0.75));
     }
 
     #[test]

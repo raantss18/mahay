@@ -1,6 +1,6 @@
 [package]
-name = "effectcraft-host"
-description = "Builds a fully wired EffectCraft session: media decoding (FilmCraft codecs), importer, the expression engine and scripting"
+name = "tselatra-host"
+description = "Builds a fully wired Tselatra session: media decoding (Hetsika codecs), importer, the expression engine and scripting"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,27 +10,27 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-effectcraft-engine = { workspace = true }
-effectcraft-project = { workspace = true }
+tselatra-engine = { workspace = true }
+tselatra-project = { workspace = true }
 log = { workspace = true }
-effectcraft-media = { workspace = true }
-effectcraft-expr = { workspace = true }
-effectcraft-script = { workspace = true }
-effectcraft-export = { workspace = true }
-effectcraft-plugin = { workspace = true }
+tselatra-media = { workspace = true }
+tselatra-expr = { workspace = true }
+tselatra-script = { workspace = true }
+tselatra-export = { workspace = true }
+tselatra-plugin = { workspace = true }
 
 # WebAssembly effect plug-ins run in wasmi on native builds.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-effectcraft-plugin = { workspace = true, features = ["wasm"] }
+tselatra-plugin = { workspace = true, features = ["wasm"] }
 
 [dev-dependencies]
 serde_json = { workspace = true }
-effectcraft-psd = { workspace = true }
-effectcraft-svg = { workspace = true }
-effectcraft-pdf = { workspace = true }
-effectcraft-raster = { workspace = true }
-effectcraft-time = { workspace = true }
-effectcraft-interchange = { workspace = true }
+tselatra-psd = { workspace = true }
+tselatra-svg = { workspace = true }
+tselatra-pdf = { workspace = true }
+tselatra-raster = { workspace = true }
+tselatra-time = { workspace = true }
+tselatra-interchange = { workspace = true }
 image = { workspace = true }
 gif = { workspace = true }
 exr = { workspace = true }

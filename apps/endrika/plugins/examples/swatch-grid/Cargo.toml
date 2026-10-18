@@ -12,4 +12,4 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-figcraft-plugin-sdk = { workspace = true }
+endrika-plugin-sdk = { workspace = true }

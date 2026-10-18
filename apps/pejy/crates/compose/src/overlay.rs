@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::Range;
 
-use designcraft_doc::{GrepStyle, NestedStyle, NestedUntil};
+use pejy_doc::{GrepStyle, NestedStyle, NestedUntil};
 
 use crate::grep::{Grep, GrepOptions};
 
@@ -22,7 +22,7 @@ fn is_event(u: &NestedUntil, c: char, prev: Option<char>, next: Option<char>) ->
         NestedUntil::Letters => c.is_alphabetic(),
         NestedUntil::Digits => c.is_numeric(),
         NestedUntil::Tab => c == '\t',
-        NestedUntil::ForcedLineBreak => c == designcraft_doc::FORCED_LINE_BREAK,
+        NestedUntil::ForcedLineBreak => c == pejy_doc::FORCED_LINE_BREAK,
         NestedUntil::EmSpace => c == '\u{2003}',
         NestedUntil::EnSpace => c == '\u{2002}',
         // Counted by position, not by character (see `overlays`).

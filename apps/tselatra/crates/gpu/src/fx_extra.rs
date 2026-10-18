@@ -4,7 +4,7 @@
 //! Wipe's polygon are computed on the CPU in f64 as the CPU effect does; the kernels work
 //! relative to the shape's centre.
 
-use effectcraft_effects::EffectCtx;
+use tselatra_effects::EffectCtx;
 
 use crate::context::{Enc, Params};
 use crate::effects::{GBuf, gaussian_blur};

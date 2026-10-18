@@ -1,8 +1,8 @@
 //! The region a clip group clips to ([`Node::clip_outline`]) with text outlined by the font engine
 //! and several shapes united, so the renderer and the SVG and PDF writers clip alike.
 
-use vectorcraft_doc::{Appearance, Node, NodeKind};
-use vectorcraft_geom::{BezPath, FillRule, PathData};
+use tsipika_doc::{Appearance, Node, NodeKind};
+use tsipika_geom::{BezPath, FillRule, PathData};
 
 /// The clipping path `clip` of a clip group as one path and fill rule: compound paths keep their
 /// holes, even-odd paths their rule, text clips by its glyph outlines and a group by the union of
@@ -14,7 +14,7 @@ pub fn clip_outline(clip: &Node) -> Option<(BezPath, FillRule)> {
 /// Text as one path of its glyph outlines, in document space.
 fn outline_text(n: &Node) -> Option<Node> {
     let NodeKind::Text(t) = &n.kind else { return None };
-    let mut bp = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).to_bezpath();
+    let mut bp = tsipika_text::layout(tsipika_text::FontDb::global(), t).to_bezpath();
     bp.apply_affine(t.xf);
     Some(Node::path(n.id, PathData::from_bezpath(&bp), Appearance::default()))
 }
@@ -22,5 +22,5 @@ fn outline_text(n: &Node) -> Option<Node> {
 fn unite(shapes: &[(BezPath, FillRule)]) -> BezPath {
     let paths: Vec<(PathData, FillRule)> = shapes.iter().map(|(bp, r)| (PathData::from_bezpath(bp), *r)).collect();
     let refs: Vec<(&PathData, FillRule)> = paths.iter().map(|(p, r)| (p, *r)).collect();
-    vectorcraft_pathops::unite_all(&refs).to_bezpath()
+    tsipika_pathops::unite_all(&refs).to_bezpath()
 }

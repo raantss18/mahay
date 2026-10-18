@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 
 use super::transform::{add_object_options, add_scale_options, object_options, scale_options, with_scale_options};
 use super::{DialogSpec, form};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::state::Dialog;
 use crate::theme::Tokens;
 use crate::widgets;
@@ -49,7 +49,7 @@ const MAX_SCALE: f64 = 100_000.0;
 /// `scaleH` and `scaleV` (rails 0–200 %) and for `moveH` and `moveV` (rails ±1000 pt, fields in
 /// `units`), and an angle dial for `rotate` (counter-clockwise). The fields take values past the
 /// rails.
-pub(super) fn sections(ui: &mut egui::Ui, d: &mut Dialog, units: vectorcraft_doc::Unit) {
+pub(super) fn sections(ui: &mut egui::Ui, d: &mut Dialog, units: tsipika_doc::Unit) {
     let rail = Tokens::get(ui.ctx()).input_border;
     let track = move |_| rail;
     let axes = |h, v| [(h, tl!("Horizontal:")), (v, tl!("Vertical:"))];
@@ -96,7 +96,7 @@ pub(super) fn reflect_options(ui: &mut egui::Ui, d: &mut Dialog) {
     form::check(ui, d, "random", tl!("Random"));
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let units = app.session.general_unit();
     ui.horizontal_top(|ui| {
         ui.vertical(|ui| sections(ui, d, units));
@@ -117,7 +117,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut p = params(d);
     add_object_options(app, d, &mut p);
     let p = with_scale_options(app, d, p)?;
@@ -127,12 +127,12 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::NodeId;
-    use vectorcraft_engine::Session;
+    use tsipika_doc::NodeId;
+    use tsipika_engine::Session;
 
     #[test]
     fn ok_transforms_each_and_keeps_the_scale_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap()["id"].as_u64().unwrap();
         app.run("select.all", json!({})).unwrap();

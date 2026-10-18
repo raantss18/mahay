@@ -1,7 +1,7 @@
 //! Literal guide types must survive independently of the stored page layout rule (#872).
 
 use super::*;
-use designcraft_doc::{LiquidRule, Orientation};
+use pejy_doc::{LiquidRule, Orientation};
 use std::sync::Arc;
 
 fn fixture(kind: Option<&str>, origin: &str) -> Vec<u8> {

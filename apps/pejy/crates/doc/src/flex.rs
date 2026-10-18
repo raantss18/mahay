@@ -3,7 +3,7 @@
 //! holding its objects as nested items (as Edit › Paste Into does), so it draws its fill, clips its
 //! objects and strokes like any frame; [`layout`] moves the objects to where the settings put them.
 
-use designcraft_geom::{Affine, Rect, Vec2, shapes};
+use pejy_geom::{Affine, Rect, Vec2, shapes};
 use serde::{Deserialize, Serialize};
 
 use crate::{Content, Item};

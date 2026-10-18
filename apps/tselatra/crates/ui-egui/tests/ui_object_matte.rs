@@ -2,48 +2,48 @@
 //! click (point prompt), a drag (box prompt) re-prompting the same effect, Shift adding another,
 //! one undo step each (egui_kittest, UI logic only).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::effects::flatten_params;
-use effectcraft_engine::effects::object_matte as om;
-use effectcraft_engine::keyframe::Value;
-use effectcraft_engine::project::{GroupKind, LayerId, PropGroup};
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
-use effectcraft_ui_egui::state::Tool;
+use tselatra_engine::Session;
+use tselatra_engine::effects::flatten_params;
+use tselatra_engine::effects::object_matte as om;
+use tselatra_engine::keyframe::Value;
+use tselatra_engine::project::{GroupKind, LayerId, PropGroup};
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
+use tselatra_ui_egui::state::Tool;
 use egui::{Event, Modifiers, Pos2, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn harness() -> Harness<'static, EffectcraftApp> {
+fn harness() -> Harness<'static, TselatraApp> {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Matte", "width": 640, "height": 360, "duration": 4})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080", "width": 640, "height": 360})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Box", "color": "#e04020", "width": 80, "height": 80})).unwrap();
     s.execute("edit.deselectAll", json!({})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
 /// Comp pixel → screen point.
-fn screen(h: &Harness<'_, EffectcraftApp>, p: [f32; 2]) -> Pos2 {
+fn screen(h: &Harness<'_, TselatraApp>, p: [f32; 2]) -> Pos2 {
     let c = rect(h, "viewer.comp");
     let z = c.width() / 640.0;
     c.min + vec2(p[0] * z, p[1] * z)
 }
 
-fn press(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, pressed: bool, modifiers: Modifiers) {
+fn press(h: &mut Harness<'_, TselatraApp>, p: Pos2, pressed: bool, modifiers: Modifiers) {
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed, modifiers });
     h.step();
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, modifiers: Modifiers) {
+fn click(h: &mut Harness<'_, TselatraApp>, p: Pos2, modifiers: Modifiers) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     press(h, p, true, modifiers);
@@ -52,7 +52,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, modifiers: Modifiers) {
     h.run_steps(2);
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) -> Option<Rect> {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2) -> Option<Rect> {
     h.input_mut().events.push(Event::PointerMoved(from));
     press(h, from, true, Modifiers::NONE);
     let mut drawn = None;
@@ -66,12 +66,12 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) -> Option<Rec
     drawn
 }
 
-fn box_layer(h: &Harness<'_, EffectcraftApp>) -> LayerId {
+fn box_layer(h: &Harness<'_, TselatraApp>) -> LayerId {
     h.state().session.active_comp().unwrap().layers.iter().find(|l| l.name == "Box").unwrap().id
 }
 
 /// The Box layer's Object Matte effects.
-fn mattes(h: &Harness<'_, EffectcraftApp>) -> Vec<PropGroup> {
+fn mattes(h: &Harness<'_, TselatraApp>) -> Vec<PropGroup> {
     let comp = h.state().session.active_comp().unwrap();
     let l = comp.layer(box_layer(h)).unwrap();
     l.effects().unwrap().groups().filter(|g| matches!(&g.kind, GroupKind::Effect { effect } if effect == om::ID)).cloned().collect()
@@ -155,12 +155,12 @@ fn object_matte_effect_controls_track_and_freeze() {
     click(&mut h, center, Modifiers::NONE);
     let uid = mattes(&h)[0].uid;
     h.run_steps(2);
-    let status = |h: &Harness<'_, EffectcraftApp>| h.state().auto.find(&format!("effectControls.objectMatte.{uid}.status")).map(|e| e.label.clone());
+    let status = |h: &Harness<'_, TselatraApp>| h.state().auto.find(&format!("effectControls.objectMatte.{uid}.status")).map(|e| e.label.clone());
     assert!(status(&h).is_some(), "no Object Matte status line");
     // Freeze: a background job (the frames keep coming), then the effect is frozen.
     let b = rect(&h, &format!("effectControls.objectMatte.{uid}.freeze"));
     // Let any automatic tracking finish first (one job at a time).
-    let frozen = |h: &Harness<'_, EffectcraftApp>| om::is_frozen(&flatten_params(&mattes(h)[0], &mut |p| p.value.clone()));
+    let frozen = |h: &Harness<'_, TselatraApp>| om::is_frozen(&flatten_params(&mattes(h)[0], &mut |p| p.value.clone()));
     let t = std::time::Instant::now();
     while h.state().session.is_roto_running() {
         assert!(t.elapsed().as_secs() < 120);

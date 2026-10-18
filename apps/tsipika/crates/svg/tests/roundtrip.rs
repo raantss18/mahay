@@ -2,13 +2,13 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use std::sync::Arc;
 
-use vectorcraft_color::{BlendMode, Color, Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{
+use tsipika_color::{BlendMode, Color, Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
+use tsipika_doc::{
     Appearance, AppearanceItem, CharStyle, Dash, Document, FillLayer, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeId, NodeKind, StrokeAlign,
     StrokeLayer, TextKind, TextObject,
 };
-use vectorcraft_geom::{Affine, FillRule, PathData, Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, ObjectIds, Styling, export, import, import_with_report};
+use tsipika_geom::{Affine, FillRule, PathData, Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, ObjectIds, Styling, export, import, import_with_report};
 
 fn doc_with(nodes: Vec<Node>) -> Document {
     let mut d = Document::new(200.0, 200.0);
@@ -407,7 +407,7 @@ fn scaled_text_roundtrips_at_the_size_it_draws() {
     for (xf, size) in [(at * Affine::scale(2.0), 18.0), (at * Affine::rotate(0.5) * Affine::scale(3.0), 27.0), (stretch, 9.0)] {
         let mut t = TextObject::point(Point::ZERO, "Scaled\ntype", CharStyle { size: 9.0, leading: Some(11.0), ..CharStyle::default() });
         t.xf = xf;
-        let drawn = |t: &TextObject| t.xf.transform_rect_bbox(vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).bounds);
+        let drawn = |t: &TextObject| t.xf.transform_rect_bbox(tsipika_text::layout(tsipika_text::FontDb::global(), t).bounds);
         let before = drawn(&t);
         let id = Document::new(200.0, 200.0).alloc_id();
         let d = doc_with(vec![Node::new(id, NodeKind::Text(Box::new(t)))]);
@@ -428,7 +428,7 @@ fn scaled_text_roundtrips_at_the_size_it_draws() {
 #[test]
 fn text_on_path_roundtrip() {
     let mut d = Document::new(200.0, 200.0);
-    let mut curve = vectorcraft_geom::BezPath::new();
+    let mut curve = tsipika_geom::BezPath::new();
     curve.move_to((20.0, 150.0));
     curve.curve_to((60.0, 40.0), (140.0, 40.0), (180.0, 150.0));
     let mut t = TextObject::point(Point::new(0.0, 0.0), "On a curve", CharStyle { size: 14.0, ..CharStyle::default() });
@@ -449,7 +449,7 @@ fn text_on_path_roundtrip() {
 /// outlines (#429).
 #[test]
 fn text_on_path_options_svg_cannot_express_are_outlined() {
-    let mut curve = vectorcraft_geom::BezPath::new();
+    let mut curve = tsipika_geom::BezPath::new();
     curve.move_to((20.0, 150.0));
     curve.curve_to((60.0, 40.0), (140.0, 40.0), (180.0, 150.0));
     for set in [0, 1, 2] {
@@ -457,7 +457,7 @@ fn text_on_path_options_svg_cannot_express_are_outlined() {
         let mut t = TextObject::point(Point::ZERO, "On a curve", CharStyle { size: 14.0, ..CharStyle::default() });
         t.kind = TextKind::OnPath { path: PathData::from_bezpath(&curve), start: 0.1, end: (set == 0).then_some(0.8) };
         if set == 1 {
-            t.path_align = vectorcraft_doc::PathAlign::Center;
+            t.path_align = tsipika_doc::PathAlign::Center;
         }
         if set == 2 {
             t.path_spacing = 4.0;
@@ -706,9 +706,9 @@ fn area_type_exports_its_wrapped_lines() {
     let mut d = Document::new(400.0, 300.0);
     let text = "Centred area text that wraps onto more than one line here";
     let mut t = TextObject::point(Point::new(0.0, 0.0), text, CharStyle { size: 18.0, ..CharStyle::default() });
-    t.kind = vectorcraft_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 200.0, 150.0)) };
+    t.kind = tsipika_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 200.0, 150.0)) };
     t.xf = Affine::translate((100.0, 50.0));
-    t.para.justify = vectorcraft_doc::Justify::Center;
+    t.para.justify = tsipika_doc::Justify::Center;
     let id = d.alloc_id();
     let d = doc_with(vec![Node::new(id, NodeKind::Text(Box::new(t)))]);
     let svg = export(&d, &ExportOptions::default());
@@ -779,7 +779,7 @@ fn import_tspan_on_the_same_baseline_stays_on_the_line() {
     // The styled runs stay (a kerned space may split the first one: "world" keeps its x).
     let red: Vec<&str> = t.runs.iter().filter(|r| r.style.fill.color().is_some_and(|c| c.to_hex() == "#ff0000")).map(|r| r.text.trim()).collect();
     assert_eq!(red, ["world"], "{:?}", t.runs);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
     let w = lay.glyphs.iter().find(|g| t.plain_text()[g.byte..].starts_with('w')).unwrap();
     assert!(((t.xf * w.origin).x - 65.6).abs() < 0.05, "{:?}", t.xf * w.origin);
 }
@@ -872,7 +872,7 @@ fn masked_doc(clip: bool, invert: bool) -> Document {
     let white = Appearance::basic(Paint::solid(Color::WHITE), Paint::None, 0.0);
     let mut n = rect_node(&mut d, Rect::new(10.0, 10.0, 90.0, 90.0), red);
     let art = rect_node(&mut d, Rect::new(10.0, 10.0, 50.0, 90.0), white);
-    let mut m = vectorcraft_doc::OpacityMask::new(art, clip);
+    let mut m = tsipika_doc::OpacityMask::new(art, clip);
     m.invert = invert;
     n.extras_mut().mask = Some(Box::new(m));
     let l = d.layers[0].id;
@@ -923,7 +923,7 @@ fn opentype_features_export_as_css() {
 fn live_effects_export_as_geometry_and_filters() {
     let mut d = Document::new(400.0, 400.0);
     let mut n = rect_node(&mut d, Rect::new(100.0, 100.0, 200.0, 200.0), Appearance::default_art());
-    let fx = |id: &str, p: serde_json::Value| vectorcraft_doc::Effect { id: id.into(), params: p, visible: true };
+    let fx = |id: &str, p: serde_json::Value| tsipika_doc::Effect { id: id.into(), params: p, visible: true };
     n.appearance.effects.push(fx("path.offsetPath", serde_json::json!({"offset": 10.0})));
     n.appearance.effects.push(fx("stylize.dropShadow", serde_json::json!({"x": 7.0, "y": 7.0, "blur": 5.0})));
     let l = d.layers[0].id;
@@ -960,7 +960,7 @@ fn outline_text_writes_glyph_paths() {
 fn bidirectional_svg_export_preserves_shaped_appearance_as_outlines() {
     let t = TextObject::point(Point::new(10.0, 40.0), "שלום Rust 123 مرحبا", CharStyle::default());
     let expected =
-        vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t).glyphs.iter().filter(|g| !g.outline.elements().is_empty()).count();
+        tsipika_text::layout(tsipika_text::FontDb::global(), &t).glyphs.iter().filter(|g| !g.outline.elements().is_empty()).count();
     assert!(expected > 0);
     let d = doc_with(vec![Node::new(NodeId(100), NodeKind::Text(Box::new(t)))]);
     let svg = export(&d, &ExportOptions::default());

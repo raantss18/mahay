@@ -3,7 +3,7 @@
 use super::*;
 use crate::cmd;
 use serde_json::json;
-use soundcraft_model::SourceId;
+use feo_model::SourceId;
 use std::collections::BTreeSet;
 
 const CLEAR: &str = "clip.clear";
@@ -66,7 +66,7 @@ fn clear(e: &mut Engine, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soundcraft_audio_io::{AudioBuffer, FileFormat};
+    use feo_audio_io::{AudioBuffer, FileFormat};
 
     fn kick(e: &Engine) -> (SourceId, Vec<ClipId>) {
         let s = e.session();

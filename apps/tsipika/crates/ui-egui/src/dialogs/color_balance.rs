@@ -7,10 +7,10 @@
 //! `k`, `gray`, `tint`, then `convert`, `fill`, `stroke` and `preview`.
 
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
+use tsipika_color::Color;
 
 use super::{DialogSpec, form};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::panels::c32;
 use crate::state::Dialog;
 use crate::widgets;
@@ -41,7 +41,7 @@ const MODES: [Mode; 4] = [
 const GLOBAL: &str = "global";
 
 /// Open the dialog with every channel at 0, adjusting fills and strokes.
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     let fields = json!({
         "mode": "rgb", "r": 0, "g": 0, "b": 0, "c": 0, "m": 0, "y": 0, "k": 0, "gray": 0, "tint": 0,
         "convert": false, "fill": true, "stroke": true, "preview": true,
@@ -80,7 +80,7 @@ fn track(key: &str, x: f32) -> egui::Color32 {
     c32(&c)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let m = mode(d);
     ui.horizontal(|ui| {
         widgets::dim_label(ui, tl!("Color Mode:"));
@@ -115,21 +115,21 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     form::commit_preview(app, CMD, params(d))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn fill_hex(app: &VectorcraftApp, id: u64) -> String {
-        let n = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
+    fn fill_hex(app: &TsipikaApp, id: u64) -> String {
+        let n = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().clone();
         n.appearance.fill_paint().color().unwrap().to_hex()
     }
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::super::show(app, ui.ctx()));
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn previews_live_and_commits_one_undo_step() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap()["id"].as_u64().unwrap();
         app.run("paint.setFill", json!({"color": "#808080"})).unwrap();
@@ -165,13 +165,13 @@ mod tests {
         super::super::confirm(&mut app).unwrap();
         assert!(app.ui.dialog.is_none() && !app.session.in_interaction());
         assert_eq!(app.session.doc().unwrap().history.undo.len(), undo + 1);
-        let lighter = vectorcraft_color::Color::from_hex(&fill_hex(&app, id)).unwrap().to_rgb()[0];
+        let lighter = tsipika_color::Color::from_hex(&fill_hex(&app, id)).unwrap().to_rgb()[0];
         assert!(lighter > 0.6, "{lighter}");
     }
 
     #[test]
     fn global_mode_shifts_the_tints_of_global_colours() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app.run("swatch.new", json!({"name": "Ink", "color": {"c": 0, "m": 1, "y": 0, "k": 0}, "spot": true})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap()["id"].as_u64().unwrap();
@@ -183,8 +183,8 @@ mod tests {
         frame(&mut app);
         assert_eq!(params(app.ui.dialog.as_ref().unwrap())["tint"], json!(-20.0));
         super::super::confirm(&mut app).unwrap();
-        let n = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().clone();
-        let vectorcraft_color::Paint::Solid { swatch, tint, .. } = n.appearance.fill_paint() else { panic!() };
+        let n = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().clone();
+        let tsipika_color::Paint::Solid { swatch, tint, .. } = n.appearance.fill_paint() else { panic!() };
         assert_eq!(swatch.as_deref(), Some("Ink"), "the colour stays linked");
         assert!((tint - 0.3).abs() < 1e-6, "{tint}");
     }

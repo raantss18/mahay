@@ -3,8 +3,8 @@
 //! merge item by item: different items changed on each side merge, the same item changed both ways
 //! conflicts.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, LayoutGrid, NodeId, NodeKind, proto};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, LayoutGrid, NodeId, NodeKind, proto};
 use serde_json::{Value, json};
 
 use crate::merge::{Key, Side, merge_items, plan};
@@ -106,11 +106,11 @@ fn the_other_item_lists_merge_one_by_one_too() {
     // Layout grids, export settings, guides, accessibility annotations and Dev Mode resources are
     // item lists like fills: both sides changing different items merges.
     let (mut base, _, _, r) = files();
-    let export = |suffix: &str| figcraft_doc::ExportSetting { suffix: suffix.into(), ..Default::default() };
-    let guide = |vertical: bool, offset: f64| figcraft_doc::Guide { vertical, offset };
-    let annot = |label: &str| figcraft_doc::Annotation { label: label.into(), properties: Vec::new(), category: None };
+    let export = |suffix: &str| endrika_doc::ExportSetting { suffix: suffix.into(), ..Default::default() };
+    let guide = |vertical: bool, offset: f64| endrika_doc::Guide { vertical, offset };
+    let annot = |label: &str| endrika_doc::Annotation { label: label.into(), properties: Vec::new(), category: None };
     let grid = |size: f64| LayoutGrid { size, ..Default::default() };
-    let res = |url: &str| figcraft_doc::DevResource { url: url.into(), name: String::new() };
+    let res = |url: &str| endrika_doc::DevResource { url: url.into(), name: String::new() };
     let n = base.get_mut(r).unwrap();
     n.exports = vec![export("@1"), export("@2")];
     n.guides = vec![guide(true, 10.0), guide(false, 20.0)];
@@ -144,11 +144,11 @@ fn the_other_item_lists_merge_one_by_one_too() {
 #[test]
 fn the_same_item_of_another_list_changed_both_ways_conflicts() {
     let (mut base, _, _, r) = files();
-    let link = |language: &str| figcraft_doc::CodeLink { language: language.into(), ..Default::default() };
+    let link = |language: &str| endrika_doc::CodeLink { language: language.into(), ..Default::default() };
     let n = base.get_mut(r).unwrap();
     n.exports = vec![
-        figcraft_doc::ExportSetting { suffix: "@1".into(), ..Default::default() },
-        figcraft_doc::ExportSetting { suffix: "@2".into(), ..Default::default() },
+        endrika_doc::ExportSetting { suffix: "@1".into(), ..Default::default() },
+        endrika_doc::ExportSetting { suffix: "@2".into(), ..Default::default() },
     ];
     n.code_links = vec![link("react"), link("vue")];
     let (mut branch, mut main) = (base.clone(), base.clone());

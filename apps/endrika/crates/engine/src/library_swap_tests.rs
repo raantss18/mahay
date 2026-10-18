@@ -1,7 +1,7 @@
 //! Swapping a library: instances, styles and variables move to the other library's assets of the
 //! same names (overrides kept), what has no match stays and is reported, one undo step.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -59,9 +59,9 @@ fn main_of(s: &Session, inst: NodeId) -> NodeId {
 
 #[test]
 fn swap_moves_instances_styles_and_variables_by_name() {
-    let dir = Scratch(std::env::temp_dir().join(format!("figcraft-libswap-{}", std::process::id())));
+    let dir = Scratch(std::env::temp_dir().join(format!("endrika-libswap-{}", std::process::id())));
     std::fs::create_dir_all(&dir.0).unwrap();
-    let (pa, pb) = (dir.0.join("a.figcraft").to_string_lossy().into_owned(), dir.0.join("b.figcraft").to_string_lossy().into_owned());
+    let (pa, pb) = (dir.0.join("a.endrika").to_string_lossy().into_owned(), dir.0.join("b.endrika").to_string_lossy().into_owned());
     let a = library(&pa, "#0000ff", &["Only in A"]);
     let b = library(&pb, "#00ff00", &[]);
 

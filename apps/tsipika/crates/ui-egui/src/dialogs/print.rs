@@ -19,9 +19,9 @@
 use std::sync::{Arc, LazyLock};
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms::Intent;
-use vectorcraft_geom::Rect as DRect;
-use vectorcraft_pdf::{
+use tsipika_color::cms::Intent;
+use tsipika_geom::Rect as DRect;
+use tsipika_pdf::{
     Choice, Emulsion, FontDownload, Media, Orientation, Origin, OutputMode, PrintArtboards, PrintImage, PrintLayers, PrintOverprints, PrintScaling,
     PrintSettings,
 };
@@ -30,8 +30,8 @@ use super::save_pdf::{TOP_LABEL_WIDTH, choice, current_section, flag, get, headi
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
-use vectorcraft_engine::cmd::printpresets::DEFAULT_PRESET;
+use crate::{TsipikaApp, widgets};
+use tsipika_engine::cmd::printpresets::DEFAULT_PRESET;
 
 pub(super) const KIND: &str = "print";
 
@@ -80,7 +80,7 @@ const PDF_FILE: &str = "PDF File";
 const PREVIEW: egui::Vec2 = egui::vec2(super::save_pdf::LIST_WIDTH - 12.0, 168.0);
 
 /// Open the Print dialog on the document's print settings and the system's default printer.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document")?;
     // The settings saved with the document, every field filled in (defaults if never set up).
     let saved: PrintSettings = st.doc.print_setup.clone().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default();
@@ -110,7 +110,7 @@ fn fields_of(set: &PrintSettings) -> Result<serde_json::Map<String, Value>, Stri
 }
 
 /// Load the settings of the preset `preset` names once it changed (the list, or `ui.dialog.set`).
-fn sync_preset(app: &VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
+fn sync_preset(app: &TsipikaApp, d: &mut Dialog) -> Result<(), String> {
     let name = d.str("preset");
     if d.kind != KIND || name == d.str(LOADED) {
         return Ok(());
@@ -122,7 +122,7 @@ fn sync_preset(app: &VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
 }
 
 /// Save Preset…: save the settings under the typed name and pick that preset.
-fn save_preset(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<Value, String> {
+fn save_preset(app: &mut TsipikaApp, d: &mut Dialog) -> Result<Value, String> {
     let r = app.run("print.presets.save", json!({ "name": d.str(SAVE_AS), "preset": DEFAULT_PRESET, "settings": settings(d) }))?;
     d.fields.remove(SAVE_AS);
     d.fields.insert("preset".into(), r["name"].clone());
@@ -132,7 +132,7 @@ fn save_preset(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<Value, String
 
 /// Open the preset editor on the saved preset `name`, or on a new preset starting from `preset`
 /// (default: [Default]).
-pub fn open_preset(app: &mut VectorcraftApp, params: &Value) -> Result<Value, String> {
+pub fn open_preset(app: &mut TsipikaApp, params: &Value) -> Result<Value, String> {
     let s = |k: &str| params.get(k).and_then(Value::as_str);
     let (base, name, editing) = match s("name") {
         Some(name) => {
@@ -154,7 +154,7 @@ pub fn open_preset(app: &mut VectorcraftApp, params: &Value) -> Result<Value, St
 
 /// Save Preset (the preset editor's OK): `print.presets.save`, then back to Edit → Print Presets on
 /// it. A new preset may not take the name of another one.
-fn confirm_preset(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm_preset(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (name, editing) = (d.str("name"), d.str(EDITING));
     let p = if editing.is_empty() {
         if app.session.print_preset_settings(&name).is_some() {
@@ -183,7 +183,7 @@ pub(super) fn settings(d: &Dialog) -> Value {
 /// Print, or Done (`discard`): keep the settings with the document (one undo step when they
 /// changed), then print them; settings that can't print keep the dialog open, unchanged. While
 /// Save Preset… asks for a name, it saves the preset instead.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut d = d.clone();
     // Done's flag holds for this press only: the dialog may stay open.
     let done = d.fields.remove("discard").is_some_and(|v| v == true);
@@ -212,7 +212,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 
 // ---------- the dialog ----------
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     if let Err(e) = sync_preset(app, d) {
         app.status(e);
@@ -254,7 +254,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 
 /// The Print Preset row ([Default], the saved presets; [Custom] once the settings differ from the
 /// preset's) with Save Preset…, and while Save Preset… asks for a name, the row taking it.
-fn preset_rows(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn preset_rows(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     const CUSTOM: &str = "[Custom]";
     let name = d.str("preset");
     let current = serde_json::from_value::<PrintSettings>(settings(d)).ok();
@@ -305,7 +305,7 @@ enum Destination {
 }
 
 /// The Printer row: the system's printers (or its default one), PDF File; Setup….
-fn printer_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn printer_row(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let printers = d.fields.get("__printers");
     let names: Vec<String> = printers
         .and_then(|p| p["printers"].as_array())
@@ -362,7 +362,7 @@ fn printer_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 
 /// `print.preview` of `settings` (an error when they can't print), cached until they or the
 /// document change.
-fn preview_of(app: &mut VectorcraftApp, ctx: &egui::Context, settings: &Value) -> Arc<Result<Value, String>> {
+fn preview_of(app: &mut TsipikaApp, ctx: &egui::Context, settings: &Value) -> Arc<Result<Value, String>> {
     let doc = app.session.active().map_or((0, 0), |s| (s.uid, s.revision));
     let stamp = egui::Id::new((settings.to_string(), doc));
     let key = egui::Id::new("print-preview");
@@ -391,7 +391,7 @@ fn current_sheet<'a>(d: &Dialog, pv: &'a Value) -> Option<(usize, usize, &'a Val
 
 /// The preview: the page with its imageable area (dashed) and the art as it prints; ◀ ▶ step
 /// through the pages; dragging the art moves the placement (not when tiling).
-fn page_preview(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, pv: &Result<Value, String>) {
+fn page_preview(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog, pv: &Result<Value, String>) {
     let t = Tokens::get(ui.ctx());
     let (rect, resp) = ui.allocate_exact_size(PREVIEW, egui::Sense::drag());
     ui.painter().rect_filled(rect, 3.0, t.pasteboard);
@@ -535,7 +535,7 @@ fn round2(v: f64) -> f64 {
 
 /// The art of `area` as it prints (only the layers that print), `px` pixels on its longest side;
 /// cached until the document, the layers or the size change.
-fn art_texture(app: &mut VectorcraftApp, ctx: &egui::Context, layers: PrintLayers, area: DRect, px: f64) -> Option<egui::TextureHandle> {
+fn art_texture(app: &mut TsipikaApp, ctx: &egui::Context, layers: PrintLayers, area: DRect, px: f64) -> Option<egui::TextureHandle> {
     let st = app.session.active()?;
     let bits = [area.x0, area.y0, area.x1, area.y1].map(f64::to_bits);
     let stamp = egui::Id::new((st.uid, st.revision, layers, bits, px.round() as u32));
@@ -546,7 +546,7 @@ fn art_texture(app: &mut VectorcraftApp, ctx: &egui::Context, layers: PrintLayer
         return Some(tex);
     }
     let mut doc = (*st.doc).clone();
-    vectorcraft_pdf::keep_layers(&mut doc.layers, layers);
+    tsipika_pdf::keep_layers(&mut doc.layers, layers);
     let tex = widgets::region_texture(ctx, &mut app.canvas.renderer, "print-preview-art", &doc, area, px);
     ctx.data_mut(|m| m.insert_temp(key, (stamp, tex.clone())));
     Some(tex)
@@ -564,10 +564,10 @@ fn whole(ui: &mut egui::Ui, d: &mut Dialog, path: &str, range: std::ops::RangeIn
     });
 }
 
-fn general(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn general(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let unit = app.session.general_unit();
     row(ui, tl!("Copies:"), |ui| {
-        whole(ui, d, "copies", 1.0..=f64::from(vectorcraft_pdf::MAX_COPIES), true);
+        whole(ui, d, "copies", 1.0..=f64::from(tsipika_pdf::MAX_COPIES), true);
         ui.add_space(12.0);
         let copies = get(d, "copies").as_u64().unwrap_or(1);
         flag(ui, d, "collate", tl!("Collate"), copies > 1);
@@ -734,7 +734,7 @@ fn graphics(ui: &mut egui::Ui, d: &mut Dialog) {
 }
 
 fn color(ui: &mut egui::Ui, d: &mut Dialog) {
-    let profiles = vectorcraft_color::cms::profiles();
+    let profiles = tsipika_color::cms::profiles();
     let names: Vec<&str> = std::iter::once(SAME_AS_SOURCE).chain(profiles.iter().map(|p| p.name.as_str())).collect();
     row(ui, tl!("Printer profile:"), |ui| super::save_pdf::profile_pick(ui, d, "color.profile", &names, 1, true));
     note(ui, tl!("Composite colours are converted to it; separations separate with it when it is a CMYK profile."));
@@ -750,7 +750,7 @@ fn color(ui: &mut egui::Ui, d: &mut Dialog) {
     note(ui, tl!("CMYK colours print with their own values; off, they go through the colour settings too."));
 }
 
-fn advanced(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn advanced(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     heading(ui, tl!("Printer"));
     row(ui, tl!("Unprintable margin:"), |ui| length(ui, d, "margin", app.session.general_unit(), true));
     note(ui, tl!("The edge of the paper the printer can't reach: the art goes inside it, and the preview shows it dashed."));
@@ -815,7 +815,7 @@ pub(super) fn labelled(changed: &mut [Value]) {
             "printLayers" => label::<PrintLayers>(id),
             "placement.origin" => label::<Origin>(id),
             "scaling" => label::<PrintScaling>(id),
-            "marks.kind" => label::<vectorcraft_pdf::MarkKind>(id),
+            "marks.kind" => label::<tsipika_pdf::MarkKind>(id),
             "output.mode" => label::<OutputMode>(id),
             "output.emulsion" => label::<Emulsion>(id),
             "output.image" => label::<PrintImage>(id),
@@ -853,7 +853,7 @@ fn summary(ui: &mut egui::Ui, d: &mut Dialog, pv: &Result<Value, String>, has_do
     }
     heading(ui, tl!("Options"));
     let mut changed = vec![];
-    vectorcraft_engine::cmd::fileio::pdf::changed("", &settings(d), &DEFAULTS, &mut changed);
+    tsipika_engine::cmd::fileio::pdf::changed("", &settings(d), &DEFAULTS, &mut changed);
     changed.sort_by_key(|c| section_of(c["option"].as_str().unwrap_or_default()).0);
     labelled(&mut changed);
     if changed.is_empty() {

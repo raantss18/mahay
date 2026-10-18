@@ -1,10 +1,10 @@
 //! Raster effects stay where they are, and look the same, at every zoom and pan (#755).
 
 use serde_json::json;
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::text::{CharStyle, TextObject};
-use vectorcraft_doc::{Appearance, Effect, Node, NodeKind};
-use vectorcraft_geom::{Point, shapes};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::text::{CharStyle, TextObject};
+use tsipika_doc::{Appearance, Effect, Node, NodeKind};
+use tsipika_geom::{Point, shapes};
 
 use super::*;
 

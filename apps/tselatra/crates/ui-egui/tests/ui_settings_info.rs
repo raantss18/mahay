@@ -1,20 +1,20 @@
 //! Settings remain a single transaction while GPU Information is open.
 use std::sync::Arc;
 
-use effectcraft_engine::{Session, config::MemoryConfig};
-use effectcraft_ui_egui::{Dialog, EffectcraftApp, menus};
+use tselatra_engine::{Session, config::MemoryConfig};
+use tselatra_ui_egui::{Dialog, TselatraApp, menus};
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Rect, pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable as _};
 use serde_json::json;
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("missing {id}"));
     let r = Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]));
     assert!(h.ctx.content_rect().contains_rect(r), "visible {id}: {r:?}");
     r
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, at: Pos2) {
+fn click(h: &mut Harness<'_, TselatraApp>, at: Pos2) {
     h.event(Event::PointerMoved(at));
     h.step();
     h.event(Event::PointerButton { pos: at, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -37,7 +37,7 @@ fn check_info_transaction(via_escape: bool) {
     session.save_prefs();
     session.execute("comp.new", json!({"width":32,"height":32,"duration":2})).unwrap();
     let original_brightness = session.prefs.appearance.brightness;
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(session));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(session));
     h.run_steps(4);
     let ctx = h.ctx.clone();
     menus::invoke(h.state_mut(), &ctx, "app.settings", json!({"page":"appearance"})).unwrap();
@@ -125,7 +125,7 @@ fn gpu_information_names_the_adapter_and_why_the_gpu_is_off() {
         window_adapter: Some("NVIDIA GeForce RTX 4070 (Dx12, DiscreteGpu)".into()),
         ..Default::default()
     };
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(session));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(session));
     h.run_steps(4);
     let ctx = h.ctx.clone();
     menus::invoke(h.state_mut(), &ctx, "app.gpuInfo", json!({})).unwrap();
@@ -140,7 +140,7 @@ fn gpu_information_dialog_stays_in_place() {
     let mut session = Session::default();
     session.prefs.appearance.ui_scale = 125;
     session.execute("comp.new", json!({"width":32,"height":32,"duration":2})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(1280.0, 720.0)).build_eframe(|_| EffectcraftApp::new(session));
+    let mut h = Harness::builder().with_size(vec2(1280.0, 720.0)).build_eframe(|_| TselatraApp::new(session));
     h.run_steps(4);
     let ctx = h.ctx.clone();
     menus::invoke(h.state_mut(), &ctx, "app.settings", json!({"page":"previews"})).unwrap();
@@ -161,9 +161,9 @@ fn gpu_information_dialog_stays_in_place() {
 fn gpu_information_enter_presses_ok() {
     let mut session = Session::default();
     session.execute("comp.new", json!({"width":32,"height":32,"duration":2})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(session));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(session));
     h.run_steps(4);
-    let enter = |h: &mut Harness<'_, EffectcraftApp>| {
+    let enter = |h: &mut Harness<'_, TselatraApp>| {
         for pressed in [true, false] {
             h.event(Event::Key { key: Key::Enter, physical_key: Some(Key::Enter), pressed, repeat: false, modifiers: Modifiers::NONE });
             h.step();

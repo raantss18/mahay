@@ -13,7 +13,7 @@ fn harness(app: DesignApp) -> Harness<'static, DesignApp> {
 }
 
 fn fill_tint(app: &DesignApp, id: u64) -> f32 {
-    app.session.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().fill.tint
+    app.session.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().fill.tint
 }
 
 /// The Tint row is the panel's first value field, above the C/M/Y/K fields.
@@ -39,7 +39,7 @@ fn typed(h: &Harness<'static, DesignApp>) -> Option<String> {
 /// clamped when the field loses focus.
 #[test]
 fn a_typed_tint_is_kept_while_typing_and_applied_on_enter_or_leaving_the_field() {
-    let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+    let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({})).unwrap();
     let id = app.run("frame.create", json!({"rect": [36, 36, 200, 200], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
     app.run("object.fill", json!({"ids": [id], "swatch": "C=100 M=0 Y=0 K=0"})).unwrap();
@@ -58,7 +58,7 @@ fn a_typed_tint_is_kept_while_typing_and_applied_on_enter_or_leaving_the_field()
     h.key_press(egui::Key::Enter);
     h.run_steps(3);
     assert!((fill_tint(h.state(), id) - 0.6).abs() < 1e-6, "Enter applies 60 %: {}", fill_tint(h.state(), id));
-    assert_eq!(h.state().session.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch, "C=100 M=0 Y=0 K=0");
+    assert_eq!(h.state().session.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().fill.swatch, "C=100 M=0 Y=0 K=0");
     // Out of range: clamped to 100 % when focus moves away.
     click_tint_field(&mut h);
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::A);

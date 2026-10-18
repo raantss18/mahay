@@ -1,0 +1,8 @@
+asset:        hetsika-small.svg
+title:        Hetsika app icon, lighter vector
+author:       Brandon Thomas (Hetsika owner), for the Hetsika project
+source:       original work (drawn by the owner in Mahay, then vectorised)
+license:      MIT OR Apache-2.0
+license-file: assets/app-icon/LICENSE.txt
+added:        2026-10-02 by Claude (agent) for Brandon Thomas
+notes:        The same drawing traced at 1024 px (smaller file). Copied unchanged from mahay-rules assets/app-icons/hetsika/icon.svg.

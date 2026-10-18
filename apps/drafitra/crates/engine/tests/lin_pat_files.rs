@@ -2,15 +2,15 @@
 //! form, -LINETYPE at the command line, HATCH with a pattern file, HATCH.PATTERNS. The files are
 //! tiny synthetic ones written here, with our own names.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Hatch};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Hatch};
 use serde_json::json;
 
 const LIN: &str = "*MYDASH,My dash __ __\nA,.5,-.25\n*MYTEXT,My text --MY--\nA,.5,-.2,[\"MY\",Standard,S=.1,X=-.1,Y=-.05],-.2\n";
 
 /// A user file in the test's temp folder; returns its path.
 fn file(name: &str, text: &str) -> String {
-    let dir = std::env::temp_dir().join(format!("cadcraft-lin-pat-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-lin-pat-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let p = dir.join(name);
     std::fs::write(&p, text).unwrap();

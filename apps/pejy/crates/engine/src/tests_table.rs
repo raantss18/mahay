@@ -280,7 +280,7 @@ fn cell_style_sampling_resolves_covered_point_but_retains_upper_left_policy() {
 
 #[test]
 fn selected_merged_owners_convert_graphics_back_to_text() {
-    let png = designcraft_render::Rendered { width: 1, height: 1, pixels: vec![255, 0, 0, 255] }.to_png();
+    let png = pejy_render::Rendered { width: 1, height: 1, pixels: vec![255, 0, 0, 255] }.to_png();
     let image = crate::cmd::base64_encode(&png);
     for column in [true, false] {
         let (mut s, sid, tid, _) = selected_merged_table(column);
@@ -353,7 +353,7 @@ fn insert_type_in_cells_and_tab() {
     assert_eq!(t["cells"][1]["text"], "Value");
     // The story text holds only the anchor.
     let story = s.execute("story.get", &json!({"story": sid})).unwrap();
-    assert!(story["text"].as_str().unwrap().contains(designcraft_doc::TABLE_ANCHOR));
+    assert!(story["text"].as_str().unwrap().contains(pejy_doc::TABLE_ANCHOR));
     assert!(!story["text"].as_str().unwrap().contains("Name"));
     // Backspace edits the cell.
     s.execute("text.delete", &json!({})).unwrap();
@@ -437,11 +437,11 @@ fn convert_text_to_table_and_back() {
     let t = s.execute("table.get", &json!({"table": r["table"]})).unwrap();
     assert_eq!(t["columns"].as_array().unwrap().len(), 2);
     assert_eq!(t["cells"][3]["text"], "80%");
-    let story = s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().text.clone();
-    assert_eq!(story, format!("{}\nAfter", designcraft_doc::TABLE_ANCHOR));
+    let story = s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().text.clone();
+    assert_eq!(story, format!("{}\nAfter", pejy_doc::TABLE_ANCHOR));
     s.execute("table.convertToText", &json!({"table": r["table"]})).unwrap();
     check(&s);
-    assert_eq!(s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().text, "Ink\tCoverage\nPlum\t80%\nSunset\t45%\nAfter");
+    assert_eq!(s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().text, "Ink\tCoverage\nPlum\t80%\nSunset\t45%\nAfter");
 }
 
 #[test]
@@ -453,7 +453,7 @@ fn caret_placement_in_cells_and_cell_formatting() {
     // Click inside cell (1,1): spread coordinates = frame inner space here.
     let (rect, _) = {
         let st = s.doc().unwrap();
-        let cs = s.cache.get(&st.doc, designcraft_doc::StoryId(sid), None);
+        let cs = s.cache.get(&st.doc, pejy_doc::StoryId(sid), None);
         let c = cs.frames[0].tables[0].cell(1, 1).unwrap().clone();
         (c.rect, c)
     };
@@ -472,15 +472,15 @@ fn caret_placement_in_cells_and_cell_formatting() {
     s.execute("table.select", &json!({"table": tid, "what": "table"})).unwrap();
     s.execute("type.para", &json!({"attrs": {"align": "center"}})).unwrap();
     let st = s.doc().unwrap();
-    let t = &st.doc.story(designcraft_doc::StoryId(sid)).unwrap().tables[&tid];
-    assert!(t.cells.iter().all(|c| c.text.paras[0].para.align == Some(designcraft_doc::Align::Center)));
+    let t = &st.doc.story(pejy_doc::StoryId(sid)).unwrap().tables[&tid];
+    assert!(t.cells.iter().all(|c| c.text.paras[0].para.align == Some(pejy_doc::Align::Center)));
     // Typing after the table starts a new paragraph instead of hiding text in the anchor paragraph.
-    let a = st.doc.story(designcraft_doc::StoryId(sid)).unwrap().table_anchor(tid).unwrap();
+    let a = st.doc.story(pejy_doc::StoryId(sid)).unwrap().table_anchor(tid).unwrap();
     s.execute("text.select", &json!({"story": sid, "anchor": a + 3, "focus": a + 3})).unwrap();
     s.execute("text.insert", &json!({"text": "Tail"})).unwrap();
     check(&s);
-    let text = s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().text.clone();
-    assert!(text.contains(&format!("{}\nTail", designcraft_doc::TABLE_ANCHOR)), "{text:?}");
+    let text = s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().text.clone();
+    assert!(text.contains(&format!("{}\nTail", pejy_doc::TABLE_ANCHOR)), "{text:?}");
 }
 
 #[test]
@@ -492,13 +492,13 @@ fn file_roundtrip_keeps_tables() {
     let bytes = crate::cmd::file_bytes(&d).unwrap();
     let back = crate::cmd::file_from(&bytes).unwrap();
     back.check().unwrap();
-    let st = back.story(designcraft_doc::StoryId(sid)).unwrap();
+    let st = back.story(pejy_doc::StoryId(sid)).unwrap();
     assert_eq!(st.tables.values().next().unwrap().cells[0].text.text, "A1");
 }
 
 #[test]
 fn backspace_and_paste_between_tables_keep_both_and_the_file_reopens() {
-    let n = designcraft_doc::TABLE_ANCHOR.len_utf8();
+    let n = pejy_doc::TABLE_ANCHOR.len_utf8();
     let anchor_of = |s: &Session, sid: u64, tid: u64| s.doc().unwrap().doc.story(doc::StoryId(sid)).unwrap().table_anchor(tid).unwrap();
     let reopens_with = |s: &Session, sid: u64, ids: &[u64]| {
         let back = crate::cmd::file_from(&crate::cmd::file_bytes(&s.doc().unwrap().doc).unwrap()).unwrap();
@@ -748,8 +748,8 @@ fn editing_beside_a_merged_cell_only_changes_the_selected_edge_segment() {
             let unselected = frag.cell(1, 1).unwrap().rect;
             let visible: Vec<_> = frag.strokes.iter().filter(|s| s.stroke.weight == 7.0).collect();
             assert_eq!(visible.len(), 1);
-            assert_eq!(visible[0].a, designcraft_geom::Point::new(unselected.x0, unselected.y0));
-            assert_eq!(visible[0].b, designcraft_geom::Point::new(unselected.x1, unselected.y0));
+            assert_eq!(visible[0].a, pejy_geom::Point::new(unselected.x0, unselected.y0));
+            assert_eq!(visible[0].b, pejy_geom::Point::new(unselected.x1, unselected.y0));
             s.execute("edit.undo", &json!({})).unwrap();
             assert_eq!(table_for(&s, sid, tid), &before);
         }

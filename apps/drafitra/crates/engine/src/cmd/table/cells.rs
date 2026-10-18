@@ -1,8 +1,8 @@
 //! Table cell styles, formulas, TABLEDIT and TABLEEXPORT.
 
-use cadcraft_color::Color;
-use cadcraft_doc::{CellBorder, CellFormat, CellStyle, Drawing, EntityKind, Handle, Lineweight, Table, TableStyle};
-use cadcraft_geom::Vec2;
+use drafitra_color::Color;
+use drafitra_doc::{CellBorder, CellFormat, CellStyle, Drawing, EntityKind, Handle, Lineweight, Table, TableStyle};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 use super::formula::{self, cell_name, parse_cell_name};
@@ -220,7 +220,7 @@ pub(crate) fn define_cell_style(d: &mut Drawing, p: &Value) -> Result<Value> {
             }
         }
     } else {
-        if !st.has_cell_style(name) && st.cell_styles.len() >= cadcraft_doc::MAX_CELL_STYLES {
+        if !st.has_cell_style(name) && st.cell_styles.len() >= drafitra_doc::MAX_CELL_STYLES {
             return Err(bad(id, "too many cell styles"));
         }
         let mut cs = st.cell_style(name);
@@ -376,7 +376,7 @@ pub(crate) fn recalc(s: &mut Session, hs: Option<Vec<Handle>>) -> Result<usize> 
     for h in hs {
         let Some(EntityKind::Table(t)) = d.entity(h).map(|e| &e.kind) else { continue };
         let mut t = t.clone();
-        let st = cadcraft_render::table_style_of(d, &t);
+        let st = drafitra_render::table_style_of(d, &t);
         if formula::recalc(&mut t, &st) {
             changed.push((h, t));
         }
@@ -492,7 +492,7 @@ fn csv_field(text: &str, sep: char) -> String {
 
 /// The table's cell values as CSV (cells covered by a merge are empty).
 pub(crate) fn table_csv(t: &Table, sep: char) -> String {
-    let cov = cadcraft_render::table_covered(t);
+    let cov = drafitra_render::table_covered(t);
     let rows = t.row_heights.len().min(t.cells.len()).min(MAX_ROWS);
     let cols = t.col_widths.len().min(MAX_COLS);
     let mut out = String::new();

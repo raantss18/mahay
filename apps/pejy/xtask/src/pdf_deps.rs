@@ -5,7 +5,7 @@ use std::process::Command;
 use serde_json::Value;
 
 const REV: &str = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8";
-const PACKAGES: &[(&str, &str)] = &[("craft-pdf", "0.1.0"), ("krilla", "0.8.2")];
+const PACKAGES: &[(&str, &str)] = &[("mahay-pdf", "0.1.0"), ("krilla", "0.8.2")];
 
 pub fn run(root: &Path) -> Result<(), String> {
     let output = Command::new(std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
@@ -24,7 +24,7 @@ pub fn run(root: &Path) -> Result<(), String> {
 
 fn validate(metadata: &Value) -> Result<(), String> {
     let packages = metadata.get("packages").and_then(Value::as_array).ok_or("cargo metadata has no packages")?;
-    let source = format!("git+https://github.com/storytold/craft-libs?rev={REV}#{REV}");
+    let source = format!("git+https://github.com/raantss18/mahay?rev={REV}#{REV}");
     for (name, version) in PACKAGES {
         let matching: Vec<_> = packages.iter().filter(|p| p.get("name").and_then(Value::as_str) == Some(name)).collect();
         let [package] = matching.as_slice() else {
@@ -44,7 +44,7 @@ mod tests {
 
     fn metadata() -> Value {
         json!({"packages": PACKAGES.iter().map(|(name, version)| json!({"name":name,"version":version,
-            "source":format!("git+https://github.com/storytold/craft-libs?rev={REV}#{REV}")})).collect::<Vec<_>>()})
+            "source":format!("git+https://github.com/raantss18/mahay?rev={REV}#{REV}")})).collect::<Vec<_>>()})
     }
 
     #[test]
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn rejects_facade_revision_drift_and_malformed_metadata() {
         let mut m = metadata();
-        m["packages"][0]["source"] = json!("git+https://github.com/storytold/craft-libs?branch=main#other");
+        m["packages"][0]["source"] = json!("git+https://github.com/raantss18/mahay?branch=main#other");
         assert!(validate(&m).is_err());
         assert!(validate(&json!({})).is_err());
     }

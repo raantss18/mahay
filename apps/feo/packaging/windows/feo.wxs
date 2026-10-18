@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Feo MSI (WiX Toolset v5: `dotnet tool install -g wix`). Built by package.ps1:
+
+    wix build feo.wxs -arch x64 -d Version=1.2.3 -d BinDir=... -d IconPath=... -o out.msi
+
+  Per-machine install into Program Files, a Start Menu shortcut, `.scraft` sessions owned by
+  Feo, and Feo offered under "Open with" for WAV/AIFF/FLAC/MP3 and MIDI files
+  (without taking over the user's default player for them).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Feo"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="EE53D3E5-D0AE-40F9-808D-9417FDEBF61A"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Feo digital audio workstation" Manufacturer="Learning Machines LLC" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Feo is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="FeoIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="FeoIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/raantss18/mahay/discussions" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Feo" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="Feo" Level="1">
+      <ComponentGroupRef Id="FeoFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="FeoFiles" Directory="INSTALLFOLDER">
+      <Component Id="FeoApp" Guid="091136D7-205E-41A8-9D27-5E231F7CBBD4">
+        <File Id="FeoExe" Source="$(var.BinDir)\feo.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Feo"
+              Description="Feo digital audio workstation" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
+              Icon="FeoIcon.ico" IconIndex="0" />
+        </File>
+
+        <!-- .scraft: Feo's own session format; Feo is its default app. -->
+        <ProgId Id="Feo.Session" Description="Feo Session" Icon="FeoExe" IconIndex="0">
+          <Extension Id="scraft" ContentType="application/x-feo-session">
+            <Verb Id="open" Command="Open" TargetFile="FeoExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <!-- Audio and MIDI files: offered under "Open with" (imported into a session), never forced
+             as the default. -->
+        <ProgId Id="Feo.Audio" Description="Audio File" Icon="FeoExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Feo.Audio\shell\open\command" Value="&quot;[#FeoExe]&quot; &quot;%1&quot;" Type="string" />
+        <ProgId Id="Feo.Midi" Description="MIDI File" Icon="FeoExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Feo.Midi\shell\open\command" Value="&quot;[#FeoExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.wav\OpenWithProgids" Name="Feo.Audio" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.aif\OpenWithProgids" Name="Feo.Audio" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.aiff\OpenWithProgids" Name="Feo.Audio" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.flac\OpenWithProgids" Name="Feo.Audio" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.mp3\OpenWithProgids" Name="Feo.Audio" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.mid\OpenWithProgids" Name="Feo.Midi" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.midi\OpenWithProgids" Name="Feo.Midi" Value="" Type="string" />
+
+        <!-- "Open with" app list and the Run dialog (Win+R "feo"). -->
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe" Name="FriendlyAppName" Value="Feo" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\shell\open\command" Value="&quot;[#FeoExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".scraft" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".wav" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".aif" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".aiff" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".flac" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".mp3" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".mid" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\feo.exe\SupportedTypes" Name=".midi" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\feo.exe" Value="[#FeoExe]" Type="string" />
+      </Component>
+
+      <Component Id="FeoCli" Guid="4552049A-C2F0-4AB0-BAE6-A62C3348F4B4">
+        <File Id="FeoCliExe" Source="$(var.BinDir)\feo-cli.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

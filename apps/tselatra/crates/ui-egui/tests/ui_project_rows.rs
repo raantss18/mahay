@@ -1,17 +1,17 @@
 //! Project panel rows: a folder's twirl and an item's label swatch take their own clicks, over
 //! the row's click / drag area (#152).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::color::Label;
-use effectcraft_engine::project::{Footage, FootageKind, ItemId, ItemKind};
-use effectcraft_ui_egui::{Dialog, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_engine::color::Label;
+use tselatra_engine::project::{Footage, FootageKind, ItemId, ItemKind};
+use tselatra_ui_egui::{Dialog, TselatraApp};
 use egui::{Color32, Event, Modifiers, Pos2, Rect, pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
 /// A closed folder holding a comp, and a solid at the project root: (harness, folder, comp, solid).
-fn harness() -> (Harness<'static, EffectcraftApp>, ItemId, ItemId, ItemId) {
+fn harness() -> (Harness<'static, TselatraApp>, ItemId, ItemId, ItemId) {
     let mut s = Session::default();
     let comp = ItemId(s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "duration": 4})).unwrap()["comp"].as_u64().unwrap());
     s.execute("layer.newSolid", json!({"name": "Solid", "color": "#406080"})).unwrap();
@@ -20,21 +20,21 @@ fn harness() -> (Harness<'static, EffectcraftApp>, ItemId, ItemId, ItemId) {
     s.execute("project.move", json!({"items": [comp.0], "folder": folder.0})).unwrap();
     s.execute("project.move", json!({"items": [solid.0], "folder": null})).unwrap();
     s.execute("project.select", json!({"items": []})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     (h, folder, comp, solid)
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).clone();
     pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
 }
 
-fn button(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, pressed: bool) {
+fn button(h: &mut Harness<'_, TselatraApp>, p: Pos2, pressed: bool) {
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE });
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     button(h, p, true);
@@ -44,7 +44,7 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
 }
 
 /// Both clicks in one frame: the harness' frame time is longer than a double-click's.
-fn double_click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn double_click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     for _ in 0..2 {
@@ -54,7 +54,7 @@ fn double_click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(3);
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let p = center(h, id);
     click_at(h, p);
 }
@@ -71,7 +71,7 @@ fn command_clicking_a_folder_twirl_opens_the_folders_inside_it() {
     h.state_mut().ui.project_open_folders.clear();
     h.run_steps(3);
     let p = center(&h, &format!("project.item.{}.twirl", folder.0));
-    let cmd_click = |h: &mut Harness<'_, EffectcraftApp>| {
+    let cmd_click = |h: &mut Harness<'_, TselatraApp>| {
         h.input_mut().events.push(Event::ModifiersChanged(Modifiers::COMMAND));
         click_at(h, p);
         h.input_mut().events.push(Event::ModifiersChanged(Modifiers::NONE));
@@ -106,7 +106,7 @@ fn folder_twirl_opens_and_closes_the_folder_on_one_click() {
 }
 
 /// A swatch (a small rect filled with `col`) painted this frame in the left half of `row`.
-fn swatch_in(h: &Harness<'_, EffectcraftApp>, row: Rect, col: Color32) -> bool {
+fn swatch_in(h: &Harness<'_, TselatraApp>, row: Rect, col: Color32) -> bool {
     fn walk(s: &egui::Shape, row: Rect, col: Color32) -> bool {
         match s {
             egui::Shape::Rect(r) => r.fill == col && r.rect.width() < 16.0 && row.contains(r.rect.center()) && r.rect.center().x < row.center().x,
@@ -143,7 +143,7 @@ fn footage_context_menu_interprets_the_footage() {
     let footage = Footage { kind: FootageKind::Video, path: "clip.mp4".into(), width: 64, height: 36, has_video: true, ..Default::default() };
     let clip = std::sync::Arc::make_mut(&mut h.state_mut().session.project).add_item("Clip", Default::default(), None, ItemKind::Footage(footage));
     h.run_steps(2);
-    let right_click = |h: &mut Harness<'_, EffectcraftApp>, p: Pos2| {
+    let right_click = |h: &mut Harness<'_, TselatraApp>, p: Pos2| {
         h.input_mut().events.push(Event::PointerMoved(p));
         h.step();
         for pressed in [true, false] {
@@ -153,7 +153,7 @@ fn footage_context_menu_interprets_the_footage() {
         h.run_steps(2);
     };
     // The menu's Interpret Footage entry, not the panel's footer button of the same name.
-    let menu_entry = |h: &Harness<'_, EffectcraftApp>| {
+    let menu_entry = |h: &Harness<'_, TselatraApp>| {
         let footer = center(h, "project.interpret");
         h.query_all_by_label_contains("Interpret Footage").find(|n| !n.rect().contains(footer)).map(|n| n.rect())
     };
@@ -234,7 +234,7 @@ fn dragging_in_the_empty_area_box_selects_items() {
 #[test]
 fn a_short_project_panel_draws() {
     for height in [400.0, 300.0] {
-        let mut h = Harness::builder().with_size(egui::vec2(640.0, height)).build_eframe(|_| EffectcraftApp::new(Session::default()));
+        let mut h = Harness::builder().with_size(egui::vec2(640.0, height)).build_eframe(|_| TselatraApp::new(Session::default()));
         h.run_steps(3);
         assert!(h.state().auto.find("project.empty").is_some(), "the Project panel drew at {height} points");
     }
@@ -252,7 +252,7 @@ fn comp_context_menu_opens_that_comps_settings() {
     let clip = std::sync::Arc::make_mut(&mut s.project).add_item("Clip", Default::default(), None, ItemKind::Footage(footage));
     h.run_steps(2);
     assert_eq!(h.state().session.active_comp_id(), Some(main));
-    let right_click = |h: &mut Harness<'_, EffectcraftApp>, p: Pos2| {
+    let right_click = |h: &mut Harness<'_, TselatraApp>, p: Pos2| {
         h.input_mut().events.push(Event::PointerMoved(p));
         h.step();
         for pressed in [true, false] {
@@ -284,7 +284,7 @@ fn comp_context_menu_opens_that_comps_settings() {
     h.run_steps(2);
     assert_eq!(h.state().dialog, None, "OK closed the dialog");
     assert_eq!(h.state().session.history.undo.len(), undo + 1, "OK applied the settings");
-    let size = |h: &Harness<'_, EffectcraftApp>, c: ItemId| {
+    let size = |h: &Harness<'_, TselatraApp>, c: ItemId| {
         let s = &h.state().session;
         (s.project.item(c).unwrap().name.clone(), s.project.comp(c).unwrap().width, s.project.comp(c).unwrap().height)
     };

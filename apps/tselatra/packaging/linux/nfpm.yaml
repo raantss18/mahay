@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: effectcraft
+name: tselatra
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -12,16 +12,16 @@ version_schema: semver
 release: 1
 section: graphics
 priority: optional
-maintainer: ${EFFECTCRAFT_MAINTAINER}
+maintainer: ${TSELATRA_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/effectcraft
+homepage: https://github.com/raantss18/mahay
 license: MIT OR Apache-2.0
 description: |-
   Open-source motion graphics and visual effects compositor.
   Layers with keyframes and a graph editor, masks and shapes, text animators,
   expressions, 3D cameras and lights, over 300 effects and a render queue
   (H.264, HEVC, AV1, ProRes, WebM, image sequences); GPU compositing (wgpu).
-  Includes effectcraft-cli, a headless renderer, command runner and MCP server.
+  Includes tselatra-cli, a headless renderer, command runner and MCP server.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
@@ -65,11 +65,11 @@ overrides:
       - xdg-desktop-portal
 
 contents:
-  - src: ${STAGE}/usr/bin/effectcraft
-    dst: /usr/bin/effectcraft
+  - src: ${STAGE}/usr/bin/tselatra
+    dst: /usr/bin/tselatra
     file_info: { mode: 0755 }
-  - src: ${STAGE}/usr/bin/effectcraft-cli
-    dst: /usr/bin/effectcraft-cli
+  - src: ${STAGE}/usr/bin/tselatra-cli
+    dst: /usr/bin/tselatra-cli
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/

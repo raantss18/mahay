@@ -7,7 +7,7 @@
 //! baseline shift) are application preferences. Typed values with a unit ("5 mm", "12 pt") work in
 //! any unit.
 
-use vectorcraft_doc::Unit;
+use tsipika_doc::Unit;
 
 use crate::{Result, Session};
 

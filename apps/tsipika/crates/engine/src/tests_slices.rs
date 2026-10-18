@@ -1,7 +1,7 @@
 //! Object → Slice, View → Hide/Lock Slices, Select → Object → Slices and `slice.list`.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::SliceKind;
+use tsipika_doc::SliceKind;
 
 use super::*;
 
@@ -9,7 +9,7 @@ fn session() -> Session {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
     // Unstroked art: visual bounds are the geometry.
-    s.paint.stroke = vectorcraft_color::Paint::None;
+    s.paint.stroke = tsipika_color::Paint::None;
     s
 }
 
@@ -81,8 +81,8 @@ fn releasing_a_user_slice_leaves_an_unpainted_rectangle() {
     let d = &s.doc().unwrap().doc;
     assert!(d.slices.is_empty());
     let n = d.node(NodeId(rid)).unwrap();
-    assert_eq!(n.geometric_bounds().unwrap(), vectorcraft_geom::Rect::new(10.0, 20.0, 40.0, 60.0));
-    assert!(matches!(n.appearance.fill_paint(), vectorcraft_color::Paint::None));
+    assert_eq!(n.geometric_bounds().unwrap(), tsipika_geom::Rect::new(10.0, 20.0, 40.0, 60.0));
+    assert!(matches!(n.appearance.fill_paint(), tsipika_color::Paint::None));
     assert_eq!(s.doc().unwrap().selection.objects, vec![NodeId(rid)]);
 }
 
@@ -240,8 +240,8 @@ fn slices_survive_a_native_round_trip() {
     run(&mut s, "object.slice.options", json!({"alt": "logo"}));
     run(&mut s, "object.slice.clipToArtboard", json!({"on": false}));
     let doc = s.doc().unwrap().doc.clone();
-    vectorcraft_testkit::invariants::check_native_roundtrip_exact(&doc).unwrap();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    tsipika_testkit::invariants::check_native_roundtrip_exact(&doc).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&doc, false)).unwrap();
     assert_eq!(back.slices, doc.slices);
     assert_eq!(back.node(NodeId(a)).unwrap().extras().slice.as_ref().unwrap().alt, "logo");
     assert!(!back.slices_clip_to_artboard);
@@ -253,7 +253,7 @@ fn slices_survive_a_native_round_trip() {
 
 #[test]
 fn slice_tool_gestures_are_one_undo_step_each() {
-    use vectorcraft_tools::{Mods, PointerEvent, PointerKind as K, ToolKey};
+    use tsipika_tools::{Mods, PointerEvent, PointerKind as K, ToolKey};
     let mut s = session();
     let view = ViewInfo { smart_guides: false, ..Default::default() };
     let undo = |s: &Session| s.doc().unwrap().history.undo.len();

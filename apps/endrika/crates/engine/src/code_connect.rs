@@ -3,14 +3,14 @@
 //! properties to its props. `inspect.code`, `inspect.componentCode` and Dev Mode then show that
 //! snippet for its instances (with their values, also inside generated layer trees) instead of
 //! generated code. Links are stored on the component or set (`Node::code_links`: saved, synced,
-//! undoable) and travel as `figcraft.connect.json` kept in the code repository.
+//! undoable) and travel as `endrika.connect.json` kept in the code repository.
 //!
 //! Templates are text with placeholders and are never executed: `{prop}` (a property's name or its
 //! parameter name) becomes the value as an expression in the language, escaped for it (React
 //! keeps JSX's braces: `size={size}` → `size="Large"`, `{label}` → `{"Buy"}`), and
 //! `{prop ? "a" : "b"}` picks one of two strings. Any other `{…}` stays as written.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::cmd::CommandSpec;
@@ -360,7 +360,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "codeConnect.export",
             "Export code connections",
-            "{path? (write it there, e.g. figcraft.connect.json in the code repository)}  every component's links as {version: 1, links: [{component (its name), language, importPath, name, template}]}, sorted  → {text, links} or {path, links}",
+            "{path? (write it there, e.g. endrika.connect.json in the code repository)}  every component's links as {version: 1, links: [{component (its name), language, importPath, name, template}]}, sorted  → {text, links} or {path, links}",
             false,
             |s, p| {
                 let cmd = "codeConnect.export";
@@ -393,7 +393,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "codeConnect.import",
             "Import code connections",
-            "{json (the connect JSON as codeConnect.export writes it: an object or JSON text) | path (a figcraft.connect.json)}  links each entry to every component or set of that name (replacing its link for the language); invalid entries and unknown components are skipped with a warning  → {linked, warnings}",
+            "{json (the connect JSON as codeConnect.export writes it: an object or JSON text) | path (a endrika.connect.json)}  links each entry to every component or set of that name (replacing its link for the language); invalid entries and unknown components are skipped with a warning  → {linked, warnings}",
             true,
             import
         ),

@@ -1,5 +1,5 @@
 //! Uncompressed QuickTime (`raw `) output (#372): every frame stored is exactly the frame the
-//! lossless PNG sequence of the same job writes, read back with FilmCraft's demuxer and — when
+//! lossless PNG sequence of the same job writes, read back with Hetsika's demuxer and — when
 //! installed — decoded by ffmpeg as an external oracle. Audio rides along as PCM.
 //!
 //! The comp is 33×20 so 24-bit rows (99 bytes) need their padding byte, and a 16-px solid centred
@@ -8,14 +8,14 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use effectcraft_color::Label;
-use effectcraft_export::render_queue::{AudioFormat, AudioOutput, Channels, OutputFormat, OutputModule, RenderSettings, TimeSpan, sequence_path};
-use effectcraft_export::{Job, export};
-use effectcraft_media::MediaPool;
-use effectcraft_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid, build};
-use effectcraft_render::FootageSource;
-use effectcraft_time::{FrameRate, Tick};
-use filmcraft_isobmff::TrackKind;
+use tselatra_color::Label;
+use tselatra_export::render_queue::{AudioFormat, AudioOutput, Channels, OutputFormat, OutputModule, RenderSettings, TimeSpan, sequence_path};
+use tselatra_export::{Job, export};
+use tselatra_media::MediaPool;
+use tselatra_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid, build};
+use tselatra_render::FootageSource;
+use tselatra_time::{FrameRate, Tick};
+use hetsika_isobmff::TrackKind;
 
 const W: u32 = 33;
 const H: u32 = 20;
@@ -64,7 +64,7 @@ fn project(audio: Option<&Path>) -> (Project, ItemId) {
     l.in_point = comp.frame_rate.tick_of(2);
     comp.layers.push(l);
     if let Some(path) = audio {
-        let f = effectcraft_media::probe(path).expect("probe wav");
+        let f = tselatra_media::probe(path).expect("probe wav");
         let fid = p.add_item("tone.wav", Label::SeaFoam, None, ItemKind::Footage(f));
         let l = build::layer(&mut p, &comp, "tone", LayerSource::Footage { item: fid }, (0, 0), None);
         comp.layers.push(l);
@@ -73,7 +73,7 @@ fn project(audio: Option<&Path>) -> (Project, ItemId) {
     (p, cid)
 }
 
-fn run(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &OutputModule, path: &Path) -> effectcraft_export::Report {
+fn run(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &OutputModule, path: &Path) -> tselatra_export::Report {
     let s = RenderSettings { time_span: TimeSpan::LengthOfComp, ..Default::default() };
     let path = path.to_string_lossy().to_string();
     let job = Job {
@@ -103,7 +103,7 @@ fn reference_frames(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &
 /// The frames as stored in the movie, unpacked to RGBA (rows padded to even bytes).
 fn stored_frames(path: &Path, alpha: bool) -> Vec<Vec<u8>> {
     let bytes = std::fs::read(path).expect("read movie");
-    let mov = filmcraft_isobmff::open(bytes.as_slice()).expect("demux");
+    let mov = hetsika_isobmff::open(bytes.as_slice()).expect("demux");
     assert!(mov.is_quicktime);
     let t = mov.tracks.iter().find(|t| t.kind == TrackKind::Video).expect("video track");
     let e = &t.entries[0];
@@ -159,9 +159,9 @@ fn check(name: &str, channels: Channels) {
     let (p, cid) = project(None);
     let om = OutputModule { channels, ..OutputModule::for_format(OutputFormat::Uncompressed) };
     let path = d.join("comp.mov");
-    let r = run(&p, cid, &effectcraft_render::NoFootage, &om, &path);
+    let r = run(&p, cid, &tselatra_render::NoFootage, &om, &path);
     assert_eq!((r.width, r.height, r.frames, r.audio), (W, H, FRAMES, false));
-    let mut want_rgba = reference_frames(&p, cid, &effectcraft_render::NoFootage, &om, &d);
+    let mut want_rgba = reference_frames(&p, cid, &tselatra_render::NoFootage, &om, &d);
     let alpha = channels == Channels::Rgba;
     if !alpha {
         // The PNG is RGB (opaque); `to_rgba8` already filled alpha with 255.
@@ -204,7 +204,7 @@ fn uncompressed_with_pcm_audio() {
     let path = d.join("comp.mov");
     assert!(run(&p, cid, &pool, &om, &path).audio);
     let bytes = std::fs::read(&path).expect("read");
-    let mov = filmcraft_isobmff::open(bytes.as_slice()).expect("demux");
+    let mov = hetsika_isobmff::open(bytes.as_slice()).expect("demux");
     let a = mov.tracks.iter().find(|t| t.kind == TrackKind::Audio).expect("audio track");
     assert_eq!(a.timescale, 48_000);
     // 0.6 s of audio at 48 kHz.

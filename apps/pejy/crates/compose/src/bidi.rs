@@ -1,6 +1,6 @@
 //! Paragraph-wide Unicode bidi input, retaining cluster offsets through line breaking.
 use super::shape::Glyph;
-use designcraft_doc::arabic::CharacterDirection as D;
+use pejy_doc::arabic::CharacterDirection as D;
 
 pub fn paragraph_text(glyphs: &mut [Glyph], source: &str) -> String {
     let mut text = String::new();

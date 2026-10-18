@@ -2,9 +2,9 @@
 //! proxy and type (M3.16) and the interactive annotator (M3.17).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_geom::Point;
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_color::{Color, Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_geom::Point;
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 use super::*;
 
@@ -19,7 +19,7 @@ fn rect(s: &mut Session, x: f64, y: f64, w: f64, h: f64) -> NodeId {
     NodeId(r["id"].as_u64().unwrap())
 }
 
-fn node(s: &Session, id: NodeId) -> &vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> &tsipika_doc::Node {
     s.doc().unwrap().doc.node(id).unwrap()
 }
 
@@ -47,7 +47,7 @@ fn three_stops() -> GradientPaint {
 }
 
 fn gradient_param(g: &GradientPaint) -> Value {
-    json!({ "gradient": vectorcraft_tools::params::gradient_params(g) })
+    json!({ "gradient": tsipika_tools::params::gradient_params(g) })
 }
 
 #[test]
@@ -173,8 +173,8 @@ fn free_distort_maps_gradients_once() {
     // An affine distort (a sheared parallelogram) maps the gradient exactly like object.transform.
     s.execute("object.distort", &json!({"corners": [[20, 0], [120, 0], [100, 100], [0, 100]]})).unwrap();
     let g = fill_geom(&s, id);
-    let mut want = GradientGeom::fit(GradientKind::Linear, vectorcraft_geom::Rect::new(0.0, 0.0, 100.0, 100.0), 0.0);
-    want.transform(vectorcraft_geom::Affine::new([1.0, 0.0, -0.2, 1.0, 20.0, 0.0]), GradientKind::Linear);
+    let mut want = GradientGeom::fit(GradientKind::Linear, tsipika_geom::Rect::new(0.0, 0.0, 100.0, 100.0), 0.0);
+    want.transform(tsipika_geom::Affine::new([1.0, 0.0, -0.2, 1.0, 20.0, 0.0]), GradientKind::Linear);
     assert!(g.start.distance(want.start) < 1e-6 && g.end.distance(want.end) < 1e-6, "{g:?} vs {want:?}");
 }
 
@@ -185,9 +185,9 @@ fn text(s: &mut Session, x: f64, y: f64) -> NodeId {
     NodeId(r["id"].as_u64().unwrap())
 }
 
-fn text_obj(s: &Session, id: NodeId) -> &vectorcraft_doc::TextObject {
+fn text_obj(s: &Session, id: NodeId) -> &tsipika_doc::TextObject {
     match &node(s, id).kind {
-        vectorcraft_doc::NodeKind::Text(t) => t,
+        tsipika_doc::NodeKind::Text(t) => t,
         k => panic!("not text: {k:?}"),
     }
 }

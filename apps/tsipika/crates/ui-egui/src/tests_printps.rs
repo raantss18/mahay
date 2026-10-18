@@ -4,10 +4,10 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use crate::print::{PrintJob, PrintService, Printer};
-use crate::{Services, VectorcraftApp};
+use crate::{Services, TsipikaApp};
 
 /// What the app wrote: (path, bytes).
 type Written = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
@@ -40,7 +40,7 @@ fn postscript_is_saved_not_printed() {
         })),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 80, "artboards": 2})).unwrap();
     // A .ps path: PostScript, at the level asked for.
     let r = app.run("file.print", json!({"path": "/tmp/job.ps", "level": 2})).unwrap();
@@ -97,7 +97,7 @@ fn desktop_print_pending_receipt_and_refusal_are_distinct() {
             write_shared: Some(Arc::new(|_, _| Err("printing must not write a document".into()))),
             ..Default::default()
         };
-        let mut app = VectorcraftApp::new(Session::new(), services);
+        let mut app = TsipikaApp::new(Session::new(), services);
         app.run("file.new", json!({ "width": 100, "height": 80 })).unwrap();
         let pending = app.run("file.print", json!({ "printer": "Office Laser" })).unwrap();
         assert_eq!(pending["background"], true);

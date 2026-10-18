@@ -1,13 +1,13 @@
 //! Regions in DXF. A REGION entity holds ACIS solid-modeler data, which no public specification
-//! describes in enough detail, so CADCraft writes a region as closed LWPOLYLINEs, one per loop,
-//! which every DXF reader understands. The first carries `CADCRAFT` xdata naming it a region
+//! describes in enough detail, so Drafitra writes a region as closed LWPOLYLINEs, one per loop,
+//! which every DXF reader understands. The first carries `DRAFITRA` xdata naming it a region
 //! and holding its other loops (`1000 REGION`); the others are marked `1000 REGIONPART`. Reading
 //! our own file builds the region back from the first and drops the others. Foreign REGIONs are
 //! kept as unknown objects.
 
-use cadcraft_doc::{EntityKind, HatchLoop, LwPolyline, MAX_REGION_LOOPS, Region};
-use cadcraft_dxf::Tag;
-use cadcraft_geom::{PolyVertex, Vec2};
+use drafitra_doc::{EntityKind, HatchLoop, LwPolyline, MAX_REGION_LOOPS, Region};
+use drafitra_dxf::Tag;
+use drafitra_geom::{PolyVertex, Vec2};
 
 use crate::dxf_ext::{APP, xdata, xdata_list};
 
@@ -57,7 +57,7 @@ pub(crate) fn polylines(r: &Region) -> Vec<Vec<Tag>> {
     out
 }
 
-/// What a closed LWPOLYLINE read as `pl` stands for: a region CADCraft wrote, nothing (a loop
+/// What a closed LWPOLYLINE read as `pl` stands for: a region Drafitra wrote, nothing (a loop
 /// of such a region, read with it), or the polyline itself.
 pub(crate) fn from_polyline(tags: &[Tag], pl: LwPolyline) -> Option<EntityKind> {
     let x = xdata(tags, APP);

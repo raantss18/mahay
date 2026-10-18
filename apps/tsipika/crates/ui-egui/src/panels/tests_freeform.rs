@@ -3,25 +3,25 @@
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Rect, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::{Freeform, FreeformMode, Paint};
-use vectorcraft_engine::Session;
+use tsipika_color::{Freeform, FreeformMode, Paint};
+use tsipika_engine::Session;
 
 use super::*;
 
 /// A selected rectangle with a freeform fill.
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 300, "height": 300}));
     run(&mut app, "shape.rectangle", json!({"x": 100, "y": 100, "width": 100, "height": 100}));
     run(&mut app, "paint.editGradient", json!({"kind": "freeform"}));
     app
 }
 
-fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+fn run(app: &mut TsipikaApp, id: &str, p: Value) -> Value {
     app.session.execute(id, &p).unwrap_or_else(|e| panic!("{id}: {e}"))
 }
 
-fn freeform(app: &VectorcraftApp) -> Freeform {
+fn freeform(app: &TsipikaApp) -> Freeform {
     match current_paints(app).0 {
         Paint::Gradient(g) => g.freeform.expect("placed points"),
         p => panic!("expected a gradient fill, got {p:?}"),
@@ -29,7 +29,7 @@ fn freeform(app: &VectorcraftApp) -> Freeform {
 }
 
 /// One frame of `f` with `events`: the texts drawn and their centres.
-fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<Event>, f: fn(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<(String, Pos2)> {
+fn frame(ctx: &egui::Context, app: &mut TsipikaApp, events: Vec<Event>, f: fn(&mut TsipikaApp, &mut egui::Ui)) -> Vec<(String, Pos2)> {
     fn texts(s: &egui::Shape, out: &mut Vec<(String, Pos2)>) {
         match s {
             egui::Shape::Text(t) => out.push((t.galley.text().to_string(), t.pos + t.galley.rect.center().to_vec2())),
@@ -49,7 +49,7 @@ fn at(texts: &[(String, Pos2)], s: &str) -> Pos2 {
     texts.iter().find(|(t, _)| t == s).unwrap_or_else(|| panic!("`{s}` not drawn: {texts:?}")).1
 }
 
-fn click(ctx: &egui::Context, app: &mut VectorcraftApp, pos: Pos2, f: fn(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<(String, Pos2)> {
+fn click(ctx: &egui::Context, app: &mut TsipikaApp, pos: Pos2, f: fn(&mut TsipikaApp, &mut egui::Ui)) -> Vec<(String, Pos2)> {
     let b = |pressed| Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
     frame(ctx, app, vec![Event::PointerMoved(pos), b(true)], f);
     frame(ctx, app, vec![b(false)], f);
@@ -57,7 +57,7 @@ fn click(ctx: &egui::Context, app: &mut VectorcraftApp, pos: Pos2, f: fn(&mut Ve
 }
 
 /// Click the field drawn at `pos`, replace its text with `text` and press Enter.
-fn type_into(ctx: &egui::Context, app: &mut VectorcraftApp, pos: Pos2, text: &str, f: fn(&mut VectorcraftApp, &mut egui::Ui)) {
+fn type_into(ctx: &egui::Context, app: &mut TsipikaApp, pos: Pos2, text: &str, f: fn(&mut TsipikaApp, &mut egui::Ui)) {
     click(ctx, app, pos, f);
     let key = |k, modifiers| Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers };
     frame(ctx, app, vec![key(Key::A, Modifiers::COMMAND), Event::Text(text.into())], f);

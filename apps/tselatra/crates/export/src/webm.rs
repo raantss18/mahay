@@ -5,18 +5,18 @@
 //! (size patched at the end), Info, Tracks and one Cluster per render batch. Video frames are
 //! SimpleBlocks; with alpha (Channels: RGB + Alpha) each frame is a BlockGroup whose
 //! BlockAdditional (BlockAddID 1) carries a second VP9 frame coding the alpha channel as luma,
-//! with `AlphaMode` 1 on the track, as WebM defines. VP9 comes from `effectcraft-vp9enc` (key
+//! with `AlphaMode` 1 on the track, as WebM defines. VP9 comes from `tselatra-vp9enc` (key
 //! frames every two seconds, inter frames between them: SimpleBlocks carry the key flag, inter
 //! BlockGroups a ReferenceBlock; the alpha stream's key frames line up with the colour stream's),
-//! Opus from `effectcraft-opusenc` (CELT, 48 kHz stereo, 20 ms packets,
+//! Opus from `tselatra-opusenc` (CELT, 48 kHz stereo, 20 ms packets,
 //! `CodecDelay` = pre-skip). WAV (RIFF, PCM or IEEE float) and AIFF (big-endian PCM, 80-bit
 //! extended sample rate; AIFF-C `fl32` for float) follow their published file layouts.
 
 use std::io::{Seek, SeekFrom, Write};
 
-use effectcraft_project::Comp;
-use effectcraft_project::render_queue::{AudioFormat, Channels};
-use effectcraft_time::{TICKS_PER_SECOND, Tick};
+use tselatra_project::Comp;
+use tselatra_project::render_queue::{AudioFormat, Channels};
+use tselatra_time::{TICKS_PER_SECOND, Tick};
 
 use crate::encode::{mix, pcm_bytes};
 use crate::{Cx, Report, Result, State, batch_size, io, wants_audio};
@@ -124,17 +124,17 @@ fn cluster(frames: &mut [Frame]) -> Vec<u8> {
 }
 
 /// The Opus encoder of a WebM output: the module's channel count, bitrate and application.
-pub(crate) fn opus_encoder(job: &Cx) -> effectcraft_opusenc::OpusEncoder {
+pub(crate) fn opus_encoder(job: &Cx) -> tselatra_opusenc::OpusEncoder {
     let channels = if job.output.audio_channels == 1 { 1 } else { 2 };
     let app = match job.output.opus_application {
-        effectcraft_project::render_queue::OpusApplication::Audio => effectcraft_opusenc::Application::Audio,
-        effectcraft_project::render_queue::OpusApplication::Voip => effectcraft_opusenc::Application::Voip,
+        tselatra_project::render_queue::OpusApplication::Audio => tselatra_opusenc::Application::Audio,
+        tselatra_project::render_queue::OpusApplication::Voip => tselatra_opusenc::Application::Voip,
     };
-    effectcraft_opusenc::OpusEncoder::with_application(channels, job.output.opus_bitrate_kbps.clamp(6, 510) * 1000, app)
+    tselatra_opusenc::OpusEncoder::with_application(channels, job.output.opus_bitrate_kbps.clamp(6, 510) * 1000, app)
 }
 
 pub(crate) async fn webm(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut State<'_>) -> Result<Report> {
-    if job.output.webm_codec == effectcraft_project::render_queue::WebmVideoCodec::Av1 {
+    if job.output.webm_codec == tselatra_project::render_queue::WebmVideoCodec::Av1 {
         return crate::webm_av1::webm_av1(job, comp, w, h, st).await;
     }
     let rate = job.settings.rate(comp);
@@ -142,7 +142,7 @@ pub(crate) async fn webm(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut Sta
     let colour_channels = if job.output.channels == Channels::Alpha { Channels::Alpha } else { Channels::Rgb };
     let quality = job.output.quality.clamp(1, 100);
     let fps = rate.as_f64().max(1.0);
-    let cfg = effectcraft_vp9enc::EncoderConfig {
+    let cfg = tselatra_vp9enc::EncoderConfig {
         width: w,
         height: h,
         quality,
@@ -152,8 +152,8 @@ pub(crate) async fn webm(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut Sta
         frame_rate: fps,
         loop_filter: true,
     };
-    let mut color_enc = effectcraft_vp9enc::Vp9Encoder::new(cfg.clone());
-    let mut alpha_enc = alpha.then(|| effectcraft_vp9enc::Vp9Encoder::new(cfg.clone()));
+    let mut color_enc = tselatra_vp9enc::Vp9Encoder::new(cfg.clone());
+    let mut alpha_enc = alpha.then(|| tselatra_vp9enc::Vp9Encoder::new(cfg.clone()));
     let with_audio = wants_audio(job);
     let opus_channels = if job.output.audio_channels == 1 { 1usize } else { 2 };
     let mut opus = with_audio.then(|| opus_encoder(job));
@@ -182,8 +182,8 @@ pub(crate) async fn webm(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut Sta
     let mut info = vec![];
     el_uint(&mut info, 0x2AD7B1, 1_000_000);
     el_float(&mut info, 0x4489, duration_ms);
-    el_str(&mut info, 0x4D80, "EffectCraft");
-    el_str(&mut info, 0x5741, "EffectCraft");
+    el_str(&mut info, 0x4D80, "Tselatra");
+    el_str(&mut info, 0x5741, "Tselatra");
     el(&mut head, INFO, &info);
     let mut tracks = vec![];
     let mut v = vec![];
@@ -238,7 +238,7 @@ pub(crate) async fn webm(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut Sta
             pcm_left.extend(mix(job, start, n, OPUS_RATE));
             cursor = end;
         }
-        let fs = effectcraft_opusenc::OpusEncoder::FRAME_SIZE * opus_channels;
+        let fs = tselatra_opusenc::OpusEncoder::FRAME_SIZE * opus_channels;
         if finish && !pcm_left.is_empty() {
             // Pad the last packet (pre-skip + padding cover the encoder delay).
             let pad = (fs - pcm_left.len() % fs) % fs + fs;
@@ -264,12 +264,12 @@ pub(crate) async fn webm(job: &Cx<'_>, comp: &Comp, w: u32, h: u32, st: &mut Sta
         for (j, px) in pixels.iter().enumerate() {
             let (color, a) = rayon::join(
                 || {
-                    let (y, u, vv) = effectcraft_vp9enc::rgba_to_yuv420(px, w, h, false);
+                    let (y, u, vv) = tselatra_vp9enc::rgba_to_yuv420(px, w, h, false);
                     color_enc.encode_frame(&y, &u, &vv, false)
                 },
                 || {
                     alpha_enc.as_mut().map(|ea| {
-                        let (y, u, vv) = effectcraft_vp9enc::alpha_to_yuv420(px, w, h);
+                        let (y, u, vv) = tselatra_vp9enc::alpha_to_yuv420(px, w, h);
                         ea.encode_frame(&y, &u, &vv, false).data
                     })
                 },

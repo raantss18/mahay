@@ -1,9 +1,9 @@
-// EffectCraft GPU compositor: shared bindings and helpers.
+// Tselatra GPU compositor: shared bindings and helpers.
 //
 // Every kernel uses the same bind group: a uniform block of parameters, two input textures
 // (premultiplied RGBA f32, read with textureLoad), one output storage texture and a read-only
 // storage buffer of extra data (curve tables). Each helper mirrors a CPU function in
-// effectcraft-raster / effectcraft-color operation for operation, so results match the CPU
+// tselatra-raster / tselatra-color operation for operation, so results match the CPU
 // reference to float rounding.
 
 struct Params {

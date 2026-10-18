@@ -1,10 +1,10 @@
 //! Encode → decode round trips on generated fixtures.
 
-use lightcraft_codecs::exif::minimal_exif;
-use lightcraft_codecs::icc::{self, write_named};
-use lightcraft_codecs::*;
-use lightcraft_color::{DISPLAY_P3, REC2020, transfer::srgb_to_linear};
-use lightcraft_raster::Rgba8;
+use hazavana_codecs::exif::minimal_exif;
+use hazavana_codecs::icc::{self, write_named};
+use hazavana_codecs::*;
+use hazavana_color::{DISPLAY_P3, REC2020, transfer::srgb_to_linear};
+use hazavana_raster::Rgba8;
 
 fn gradient(w: usize, h: usize) -> Rgba8 {
     Rgba8::from_fn(w, h, |x, y| [(x * 255 / w.max(2).saturating_sub(1).max(1)) as u8, (y * 255 / h.max(2)) as u8, ((x + y) % 256) as u8, 255])
@@ -183,12 +183,12 @@ fn p3_icc_to_working() {
 #[test]
 fn custom_matrix_icc_is_exact() {
     // A non-standard space: goes through the generic matrix/TRC path, not the named one.
-    let space = lightcraft_color::RgbSpace {
+    let space = hazavana_color::RgbSpace {
         name: "Custom",
-        r: lightcraft_color::Xy::new(0.66, 0.32),
-        g: lightcraft_color::Xy::new(0.25, 0.65),
-        b: lightcraft_color::Xy::new(0.14, 0.07),
-        white: lightcraft_color::D65,
+        r: hazavana_color::Xy::new(0.66, 0.32),
+        g: hazavana_color::Xy::new(0.25, 0.65),
+        b: hazavana_color::Xy::new(0.14, 0.07),
+        white: hazavana_color::D65,
     };
     let icc = icc::write_matrix_trc(&space, &Trc::Gamma(2.0));
     let data = [255u8, 0, 0];
@@ -785,7 +785,7 @@ fn pq_png_rejects_short_buffers_and_survives_hostile_samples() {
 }
 
 /// Largest per-channel difference between two linear images.
-fn max_diff(a: &lightcraft_raster::Rgb32f, b: &lightcraft_raster::Rgb32f) -> f32 {
+fn max_diff(a: &hazavana_raster::Rgb32f, b: &hazavana_raster::Rgb32f) -> f32 {
     a.data.iter().zip(&b.data).flat_map(|(p, q)| (0..3).map(move |c| (p[c] - q[c]).abs())).fold(0.0, f32::max)
 }
 
@@ -911,7 +911,7 @@ fn jxl_hdr_pq() {
         let fb = r.image_all_channels();
         let at = |x: usize| fb.buf()[((h / 2) * w + x) * fb.channels() + 1];
         for (x, nits) in [(w / 4, HDR_REFERENCE_WHITE_NITS), (w * 3 / 4, 4.0 * HDR_REFERENCE_WHITE_NITS)] {
-            let (got, want) = (at(x), lightcraft_codecs::encode::pq_encode(nits));
+            let (got, want) = (at(x), hazavana_codecs::encode::pq_encode(nits));
             assert!((got - want).abs() < 0.005, "lossless={lossless}: {nits} cd/m² written as {got}, want {want}");
         }
     }

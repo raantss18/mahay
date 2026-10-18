@@ -1,0 +1,8 @@
+asset:        hetsika-macos-512.png
+title:        Hetsika app icon, macOS runtime Dock icon (512 px)
+author:       Brandon Thomas (Hetsika owner), for the Hetsika project
+source:       original work (drawn by the owner in Mahay, then vectorised)
+license:      MIT OR Apache-2.0
+license-file: assets/app-icon/LICENSE.txt
+added:        2026-10-02 by Claude (agent) for Brandon Thomas
+notes:        Rendered from hetsika.svg with resvg by packaging/icons.sh, inside Apple's 824/1024 icon grid (transparent margin). Embedded in the app by apps/hetsika/src/main.rs.

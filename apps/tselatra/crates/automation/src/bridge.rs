@@ -41,7 +41,7 @@ impl BridgeClient {
             .next()
             .ok_or_else(|| Error::Bridge(format!("cannot resolve {}", self.addr)))?;
         let s = TcpStream::connect_timeout(&sa, Duration::from_secs(5))
-            .map_err(|e| Error::Bridge(format!("cannot connect to {} ({e}); start the app with `effectcraft --control <port>`", self.addr)))?;
+            .map_err(|e| Error::Bridge(format!("cannot connect to {} ({e}); start the app with `tselatra --control <port>`", self.addr)))?;
         s.set_read_timeout(Some(READ_TIMEOUT)).ok();
         s.set_nodelay(true).ok();
         let r = s.try_clone().map_err(|e| Error::Bridge(e.to_string()))?;

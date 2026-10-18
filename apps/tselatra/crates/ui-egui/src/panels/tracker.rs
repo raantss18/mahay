@@ -4,17 +4,17 @@
 //!
 //! Everything goes through `track.*` commands, so agents can do the same.
 
-use effectcraft_engine::geom::{Mat3, vec2 as gv2};
-use effectcraft_engine::project::tracking::{LowConfidence, TrackChannel, TrackKind, TrackerOptions};
-use effectcraft_engine::project::{Layer, LayerId, Uid};
-use effectcraft_engine::time::Tick;
-use effectcraft_engine::tracking::point_values;
+use tselatra_engine::geom::{Mat3, vec2 as gv2};
+use tselatra_engine::project::tracking::{LowConfidence, TrackChannel, TrackKind, TrackerOptions};
+use tselatra_engine::project::{Layer, LayerId, Uid};
+use tselatra_engine::time::Tick;
+use tselatra_engine::tracking::point_values;
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::json;
 
 use super::viewer::ViewerMap;
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp, widgets};
+use crate::{Dialog, TselatraApp, widgets};
 
 const ROW: f32 = 26.0;
 
@@ -39,7 +39,7 @@ pub struct ApplyDraft {
 }
 
 /// The current track: (tracked layer, tracker uid), resolved like the engine does.
-fn current(app: &EffectcraftApp) -> Option<(LayerId, Uid)> {
+fn current(app: &TselatraApp) -> Option<(LayerId, Uid)> {
     let comp = app.session.active_comp()?;
     if let Some((l, t)) = app.session.state.current_track
         && comp.layer(l).and_then(|l| l.tracker(t)).is_some()
@@ -56,7 +56,7 @@ fn source_id() -> egui::Id {
 }
 
 /// Motion Source: the current track's layer, the chosen source, or the selected layer.
-fn motion_source(app: &EffectcraftApp) -> Option<LayerId> {
+fn motion_source(app: &TselatraApp) -> Option<LayerId> {
     let comp = app.session.active_comp()?;
     if let Some((l, _)) = app.session.state.current_track
         && comp.layer(l).is_some()
@@ -71,7 +71,7 @@ fn motion_source(app: &EffectcraftApp) -> Option<LayerId> {
 }
 
 fn trackable(l: &Layer) -> bool {
-    use effectcraft_engine::project::LayerSource;
+    use tselatra_engine::project::LayerSource;
     l.has_video() && !matches!(l.source, LayerSource::Text | LayerSource::Shape)
 }
 
@@ -80,7 +80,7 @@ fn label(p: &egui::Painter, pos: Pos2, s: &str, t: &Tokens) {
 }
 
 /// A button that can be disabled (drawn dim and inert).
-fn button(app: &mut EffectcraftApp, ui: &mut egui::Ui, r: Rect, text: &str, enabled: bool, id: &str) -> bool {
+fn button(app: &mut TselatraApp, ui: &mut egui::Ui, r: Rect, text: &str, enabled: bool, id: &str) -> bool {
     let t = app.tokens;
     app.auto.add(id, r, text);
     if !enabled {
@@ -91,7 +91,7 @@ fn button(app: &mut EffectcraftApp, ui: &mut egui::Ui, r: Rect, text: &str, enab
     widgets::text_button(ui, r, text, false, &t, egui::Id::new(id)).clicked()
 }
 
-fn run(app: &mut EffectcraftApp, ctx: &egui::Context, cmd: &str, p: serde_json::Value) {
+fn run(app: &mut TselatraApp, ctx: &egui::Context, cmd: &str, p: serde_json::Value) {
     if let Err(e) = crate::menus::invoke(app, ctx, cmd, p) {
         app.ui.status = e;
     }
@@ -113,7 +113,7 @@ fn analyze_glyph(p: &egui::Painter, r: Rect, forward: bool, frame: bool, stop: b
     }
 }
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let ctx = ui.ctx().clone();
     if app.session.track_job.is_some() {
@@ -157,7 +157,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         return;
     };
     // A selected mask switches the panel to mask tracking.
-    if let Some((ml, mu)) = effectcraft_engine::commands::mask_interp::selected_mask(&app.session) {
+    if let Some((ml, mu)) = tselatra_engine::commands::mask_interp::selected_mask(&app.session) {
         mask_mode(app, ui, &ctx, &p, rect, y, ml, mu);
         return;
     }
@@ -288,10 +288,10 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     let running_dir = app.session.track_job.as_ref().map(|j| j.direction);
     let mut bx = field_x;
     for (dir, fwd, frame, id, tip) in [
-        (effectcraft_engine::tracking::Direction::FrameBackward, false, true, "frameBackward", "Analyze 1 frame backward"),
-        (effectcraft_engine::tracking::Direction::Backward, false, false, "backward", "Analyze backward"),
-        (effectcraft_engine::tracking::Direction::Forward, true, false, "forward", "Analyze forward"),
-        (effectcraft_engine::tracking::Direction::FrameForward, true, true, "frameForward", "Analyze 1 frame forward"),
+        (tselatra_engine::tracking::Direction::FrameBackward, false, true, "frameBackward", "Analyze 1 frame backward"),
+        (tselatra_engine::tracking::Direction::Backward, false, false, "backward", "Analyze backward"),
+        (tselatra_engine::tracking::Direction::Forward, true, false, "forward", "Analyze forward"),
+        (tselatra_engine::tracking::Direction::FrameForward, true, true, "frameForward", "Analyze 1 frame forward"),
     ] {
         let r = Rect::from_min_size(pos2(bx, y), vec2(30.0, 22.0));
         let resp = ui.interact(r, egui::Id::new(("tracker-analyze", id)), Sense::click()).on_hover_text(tip);
@@ -347,8 +347,8 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 
 /// The Tracker panel in mask mode: Method and the four track buttons (◀| ◀ ▶ |▶).
 #[allow(clippy::too_many_arguments)]
-fn mask_mode(app: &mut EffectcraftApp, ui: &mut egui::Ui, ctx: &egui::Context, p: &egui::Painter, rect: Rect, mut y: f32, layer: LayerId, mask: Uid) {
-    use effectcraft_engine::mask_track::MaskMethod;
+fn mask_mode(app: &mut TselatraApp, ui: &mut egui::Ui, ctx: &egui::Context, p: &egui::Painter, rect: Rect, mut y: f32, layer: LayerId, mask: Uid) {
+    use tselatra_engine::mask_track::MaskMethod;
     let t = app.tokens;
     let x0 = rect.min.x + 10.0;
     let w = (rect.width() - 20.0).max(120.0);
@@ -381,10 +381,10 @@ fn mask_mode(app: &mut EffectcraftApp, ui: &mut egui::Ui, ctx: &egui::Context, p
     let running_dir = app.session.mask_job.as_ref().map(|j| j.direction);
     let mut bx = field_x;
     for (dir, fwd, frame, id, tip) in [
-        (effectcraft_engine::tracking::Direction::FrameBackward, false, true, "frameBackward", "Track selected masks 1 frame backward"),
-        (effectcraft_engine::tracking::Direction::Backward, false, false, "backward", "Track selected masks backward"),
-        (effectcraft_engine::tracking::Direction::Forward, true, false, "forward", "Track selected masks forward"),
-        (effectcraft_engine::tracking::Direction::FrameForward, true, true, "frameForward", "Track selected masks 1 frame forward"),
+        (tselatra_engine::tracking::Direction::FrameBackward, false, true, "frameBackward", "Track selected masks 1 frame backward"),
+        (tselatra_engine::tracking::Direction::Backward, false, false, "backward", "Track selected masks backward"),
+        (tselatra_engine::tracking::Direction::Forward, true, false, "forward", "Track selected masks forward"),
+        (tselatra_engine::tracking::Direction::FrameForward, true, true, "frameForward", "Track selected masks 1 frame forward"),
     ] {
         let r = Rect::from_min_size(pos2(bx, y), vec2(30.0, 22.0));
         let resp = ui.interact(r, egui::Id::new(("tracker-mask-track", id)), Sense::click()).on_hover_text(tip);
@@ -410,7 +410,7 @@ fn mask_mode(app: &mut EffectcraftApp, ui: &mut egui::Ui, ctx: &egui::Context, p
         .active_comp()
         .and_then(|c| c.layer(layer))
         .and_then(|l| l.effects())
-        .is_some_and(|fx| fx.groups().any(|g| g.match_id == effectcraft_engine::effects::face_track::POINTS_ID));
+        .is_some_and(|fx| fx.groups().any(|g| g.match_id == tselatra_engine::effects::face_track::POINTS_ID));
     if method == MaskMethod::FaceDetailed || has_points {
         let r = Rect::from_min_size(pos2(x0, y), vec2(w.min(260.0), 24.0));
         if button(app, ui, r, "Extract & Copy Face Measurements", has_points && !running, "tracker.mask.extractFace") {
@@ -451,7 +451,7 @@ fn mask_mode(app: &mut EffectcraftApp, ui: &mut egui::Ui, ctx: &egui::Context, p
 
 // ---------------------------------------------------------------- dialogs
 
-pub fn open_options(app: &mut EffectcraftApp) -> Result<(), String> {
+pub fn open_options(app: &mut TselatraApp) -> Result<(), String> {
     let (l, u) = current(app).ok_or("no current track")?;
     let comp = app.session.active_comp().ok_or("no composition")?;
     let (g, s) = comp.layer(l).and_then(|l| l.tracker(u)).ok_or("no tracker")?;
@@ -463,7 +463,7 @@ pub fn open_options(app: &mut EffectcraftApp) -> Result<(), String> {
     Ok(())
 }
 
-pub fn open_target(app: &mut EffectcraftApp) -> Result<(), String> {
+pub fn open_target(app: &mut TselatraApp) -> Result<(), String> {
     let (l, u) = current(app).ok_or("no current track")?;
     let comp = app.session.active_comp().ok_or("no composition")?;
     let (_, s) = comp.layer(l).and_then(|l| l.tracker(u)).ok_or("no tracker")?;
@@ -472,7 +472,7 @@ pub fn open_target(app: &mut EffectcraftApp) -> Result<(), String> {
     Ok(())
 }
 
-fn ok_cancel(ui: &mut egui::Ui, app: &mut EffectcraftApp, t: &Tokens, prefix: &str) -> (bool, bool) {
+fn ok_cancel(ui: &mut egui::Ui, app: &mut TselatraApp, t: &Tokens, prefix: &str) -> (bool, bool) {
     let (mut ok, mut cancel) = (false, false);
     ui.add_space(14.0);
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -486,7 +486,7 @@ fn ok_cancel(ui: &mut egui::Ui, app: &mut EffectcraftApp, t: &Tokens, prefix: &s
     (ok, cancel)
 }
 
-pub fn options_dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn options_dialog(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut d = app.dialog_state.track_options.clone();
     let (mut ok, mut cancel) = (false, false);
     super::dialogs::modal(ctx, "Motion Tracker Options", vec2(460.0, 470.0), t, |ui| {
@@ -573,7 +573,7 @@ pub fn options_dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens)
     }
 }
 
-pub fn target_dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn target_dialog(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut d = app.dialog_state.track_target.clone();
     let (mut ok, mut cancel) = (false, false);
     let layers: Vec<(u64, String)> =
@@ -609,7 +609,7 @@ pub fn target_dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) 
     }
 }
 
-pub fn apply_dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn apply_dialog(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut d = app.dialog_state.track_apply.clone();
     let (mut ok, mut cancel) = (false, false);
     super::dialogs::modal(ctx, "Motion Tracker Apply Options", vec2(380.0, 170.0), t, |ui| {
@@ -702,7 +702,7 @@ fn quad_contains(q: &[Pos2; 4], p: Pos2) -> bool {
 
 /// Draw the current track's points (layer → comp matrix `m`) and return their hit areas, from the
 /// most to the least specific.
-pub fn draw_overlay(app: &mut EffectcraftApp, painter: &egui::Painter, map: &ViewerMap, m: &Mat3, layer: &Layer, tracker: Uid, comp_time: Tick) -> Vec<Hit> {
+pub fn draw_overlay(app: &mut TselatraApp, painter: &egui::Painter, map: &ViewerMap, m: &Mat3, layer: &Layer, tracker: Uid, comp_time: Tick) -> Vec<Hit> {
     let Some((g, _)) = layer.tracker(tracker) else { return vec![] };
     let lt = layer.layer_time(comp_time);
     let scr = |p: [f64; 2]| {
@@ -836,6 +836,6 @@ pub fn drag_params(d: &Drag, cpt: [f64; 2]) -> serde_json::Value {
 }
 
 /// The tracked layer and tracker the viewer shows widgets for.
-pub fn viewer_track(app: &EffectcraftApp) -> Option<(LayerId, Uid)> {
+pub fn viewer_track(app: &TselatraApp) -> Option<(LayerId, Uid)> {
     current(app)
 }

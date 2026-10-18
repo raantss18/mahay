@@ -274,7 +274,7 @@ impl EntityStore {
 mod tests {
     use super::*;
     use crate::{EntityKind, Point};
-    use cadcraft_geom::Vec2;
+    use drafitra_geom::Vec2;
 
     fn ent(h: u64) -> Entity {
         Entity::new(Handle(h), EntityKind::Point(Point { p: Vec2::new(h as f64, 0.0).to3(0.0), angle: 0.0 }))

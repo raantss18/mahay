@@ -19,7 +19,7 @@ fn names(s: &mut Session) -> Vec<String> {
 }
 
 fn pdf(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()
 }
 
 fn is_bad_params(r: crate::Result<Value>) -> bool {
@@ -96,7 +96,7 @@ fn presets_export_and_import_round_trip() {
     let r = s.execute("pdf.preset.import", &json!({"data": text})).unwrap();
     assert_eq!(r["imported"], json!(["Proof", "Press Quality 2"]), "a built-in name gets a number");
     assert_eq!(s.prefs.pdf_presets[0], saved[0], "the same preset comes back");
-    let press = vectorcraft_pdf::builtin_preset("Press Quality").unwrap();
+    let press = tsipika_pdf::builtin_preset("Press Quality").unwrap();
     assert_eq!(s.prefs.pdf_presets[1].settings, press.settings);
     // replace: saved presets of the same names are overwritten.
     let r = s.execute("pdf.preset.import", &json!({"data": text, "replace": true})).unwrap();

@@ -2,9 +2,9 @@
 
 use super::*;
 use kurbo::{Affine, Shape};
-use vectorcraft_doc::text::INLINE_CHAR;
-use vectorcraft_doc::{CharStyle, InlineArt, Justify, TextKind, TextRun};
-use vectorcraft_geom::PathData;
+use tsipika_doc::text::INLINE_CHAR;
+use tsipika_doc::{CharStyle, InlineArt, Justify, TextKind, TextRun};
+use tsipika_geom::PathData;
 
 use crate::edit;
 
@@ -222,7 +222,7 @@ fn malformed_inline_runs_are_plain_text() {
 /// it stays between them.
 #[test]
 fn inline_art_in_a_right_to_left_paragraph_is_placed_by_the_bidi_reordering() {
-    use vectorcraft_doc::ParaDirection;
+    use tsipika_doc::ParaDirection;
     let db = FontDb::global();
     let order = |before: &str, after: &str, direction: Option<ParaDirection>| {
         let mut t = text(before, art(1.0), after, 20.0);
@@ -253,7 +253,7 @@ fn inline_art_in_a_right_to_left_paragraph_is_placed_by_the_bidi_reordering() {
 /// small text doesn't make its line's small characters move.
 #[test]
 fn character_alignment_treats_inline_art_as_a_character_of_its_run_size() {
-    use vectorcraft_doc::CharAlign;
+    use tsipika_doc::CharAlign;
     let centre_y = |a: CharAlign, scale: f64, big: f64| {
         let mut t = TextObject::point(Point::ZERO, "M", style(big));
         t.runs.push(TextRun::inline(art(scale), CharStyle { char_align: a, ..style(20.0) }));
@@ -283,7 +283,7 @@ fn character_alignment_treats_inline_art_as_a_character_of_its_run_size() {
 /// with a tall graphic is spaced like its text (as Roman leading spaces it by its run's leading).
 #[test]
 fn top_to_top_leading_spaces_inline_art_by_its_run() {
-    use vectorcraft_doc::LeadingModel;
+    use tsipika_doc::LeadingModel;
     let lines = |scale: f64| {
         let mut t = text("Ab", art(scale), "cd\nef", 20.0);
         t.kind = TextKind::Area { frame: PathData::from_bezpath(&Rect::new(0.0, 0.0, 400.0, 400.0).to_path(0.1)) };
@@ -299,7 +299,7 @@ fn top_to_top_leading_spaces_inline_art_by_its_run() {
 
 #[test]
 fn inline_art_moves_with_vertically_aligned_lines() {
-    use vectorcraft_doc::text::{AreaOptions, VerticalAlign};
+    use tsipika_doc::text::{AreaOptions, VerticalAlign};
     // A rectangle (lines shift) and a triangle (text flows again lower down).
     let rect = Rect::new(0.0, 0.0, 400.0, 400.0).to_path(0.1);
     let mut tri = kurbo::BezPath::new();

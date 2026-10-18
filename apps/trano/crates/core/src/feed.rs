@@ -1,4 +1,4 @@
-//! The release feed from storyteller-web: `GET https://api.storyteller.ai/v1/mahay_apps/release_info`.
+//! The release feed (an optional server set with `TRANO_FEED_URL`; Mahay uses GitHub releases).
 //!
 //! storyteller-web polls GitHub for every Mahay App on a schedule and serves the result, so the
 //! launcher doesn't have to (GitHub allows 60 unauthenticated requests an hour). GitHub stays the

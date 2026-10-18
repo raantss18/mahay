@@ -1,17 +1,17 @@
 //! Attributes panel: Overprint Fill / Overprint Stroke, Show / Don't Show Center, Reverse Path
 //! Direction Off / On, the fill rule (non-zero winding or even-odd), Image Map, URL (with the
 //! recent URLs and a Browser button) and the note. The menu hides the options and shows the note.
-//! Everything reads `attributes.info` ([`vectorcraft_engine::Session::attributes_info`]) and acts
+//! Everything reads `attributes.info` ([`tsipika_engine::Session::attributes_info`]) and acts
 //! through `attributes.set`, `path.reverse` and `path.setFillRule`.
 
 use egui::Ui;
 use serde_json::{Value, json};
-use vectorcraft_doc::{ImageMap, NodeId, NodeKind};
-use vectorcraft_engine::cmd::AttributesInfo;
-use vectorcraft_geom::FillRule;
+use tsipika_doc::{ImageMap, NodeId, NodeKind};
+use tsipika_engine::cmd::AttributesInfo;
+use tsipika_geom::FillRule;
 
 use super::{pstate, selection_len, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets::{self, menu_item};
 
 /// Panel state: the options (centre, direction, fill rule, image map, URL) are hidden.
@@ -22,7 +22,7 @@ const LABEL_W: f32 = 70.0;
 
 /// The panel's values and whether the targets hold paths (direction and fill rule apply),
 /// recomputed only when the document or the selection changes.
-fn state(app: &VectorcraftApp, ctx: &egui::Context) -> (AttributesInfo, bool) {
+fn state(app: &TsipikaApp, ctx: &egui::Context) -> (AttributesInfo, bool) {
     type Key = (u64, u64, usize, Option<NodeId>, Option<NodeId>);
     let Some(st) = app.session.active() else { return Default::default() };
     let sel = &st.selection.objects;
@@ -44,7 +44,7 @@ fn state(app: &VectorcraftApp, ctx: &egui::Context) -> (AttributesInfo, bool) {
 }
 
 /// Run `attributes.set` with `p` on the selection (errors show in the status bar).
-fn set(app: &mut VectorcraftApp, p: Value) {
+fn set(app: &mut TsipikaApp, p: Value) {
     app.run("attributes.set", p).ok();
 }
 
@@ -60,7 +60,7 @@ fn pair<T: Copy + PartialEq>(ui: &mut Ui, enabled: bool, current: Option<T>, ite
     clicked
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let (info, paths) = state(app, ui.ctx());
     let has = !info.ids.is_empty();
     ui.horizontal(|ui| {
@@ -134,7 +134,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// The recent URLs button: a menu of the URLs given lately; picking one sets it.
-fn recent_urls(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn recent_urls(app: &mut TsipikaApp, ui: &mut Ui) {
     let resp = widgets::icon_button_enabled(ui, "chevron-down", tl!("Recent URLs"), false, !app.session.recent_urls.is_empty(), 20.0);
     let mut chosen = None;
     egui::Popup::menu(&resp).show(|ui| {
@@ -150,7 +150,7 @@ fn recent_urls(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn menu(_app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(_app: &mut TsipikaApp, ui: &mut Ui) {
     for (key, hide, show) in [(HIDE_OPTIONS, tl!("Hide Options"), tl!("Show Options")), (HIDE_NOTE, tl!("Hide Note"), tl!("Show Note"))] {
         let hidden: bool = pstate(ui.ctx(), key);
         if menu_item(ui, if hidden { show } else { hide }, true, false) {
@@ -160,7 +160,7 @@ pub fn menu(_app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// `attributes.openUrl {url?}`: open `url`, else the selection's URL, in the web browser.
-pub(crate) fn open_url(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn open_url(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     app.refuse_automation("attributes.openUrl")?;
     let url = match p.get("url").and_then(Value::as_str) {
         Some(u) => u.to_string(),
@@ -173,10 +173,10 @@ pub(crate) fn open_url(app: &mut VectorcraftApp, p: &Value) -> Result<Value, Str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// Run the panel and its menu for one headless frame: the texts drawn.
-    fn frame(app: &mut VectorcraftApp) -> Vec<String> {
+    fn frame(app: &mut TsipikaApp) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -195,13 +195,13 @@ mod tests {
         v
     }
 
-    fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+    fn run(app: &mut TsipikaApp, id: &str, p: Value) -> Value {
         app.session.execute(id, &p).unwrap()
     }
 
     #[test]
     fn panel_shows_the_selections_attributes() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         run(&mut app, "file.new", json!({"width": 100, "height": 100}));
         let texts = frame(&mut app);
         assert!(texts.iter().any(|t| t == "No Selection") && texts.iter().any(|t| t == "Overprint Fill"), "{texts:?}");
@@ -247,7 +247,7 @@ mod tests {
         let opened = std::rc::Rc::new(std::cell::RefCell::new(Vec::<String>::new()));
         let o = opened.clone();
         let services = crate::Services { open_url: Some(Box::new(move |u: &str| o.borrow_mut().push(u.to_string()))), ..Default::default() };
-        let mut app = VectorcraftApp::new(Session::new(), services);
+        let mut app = TsipikaApp::new(Session::new(), services);
         run(&mut app, "file.new", json!({"width": 100, "height": 100}));
         run(&mut app, "shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50}));
         run(&mut app, "attributes.set", json!({"url": "file:///tmp/run.desktop"}));

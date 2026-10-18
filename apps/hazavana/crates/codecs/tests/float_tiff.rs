@@ -1,6 +1,6 @@
 //! Non-finite samples in procedural 32-bit float TIFFs (issue #1952, item 6).
 
-use lightcraft_codecs::{icc, *};
+use hazavana_codecs::{icc, *};
 
 fn tiff(samples: &[f32], channels: u8, profile: Option<&[u8]>) -> Vec<u8> {
     encode_tiff(
@@ -40,10 +40,10 @@ fn float_tiff_nonfinite_gray_and_icc_curves_match_clipped_samples() {
     let clipped = [1.0, 0.0, 0.0, 0.25, 1.0, 2.0, -0.25];
     let profiles = [
         None,
-        Some(icc::write_matrix_trc(&lightcraft_color::SRGB, &Trc::Linear)),
+        Some(icc::write_matrix_trc(&hazavana_color::SRGB, &Trc::Linear)),
         Some(icc::write_named(NamedSpace::Srgb)),
-        Some(icc::write_matrix_trc(&lightcraft_color::SRGB, &Trc::Gamma(2.0))),
-        Some(icc::write_matrix_trc(&lightcraft_color::SRGB, &Trc::Table(vec![0, 16384, 65535]))),
+        Some(icc::write_matrix_trc(&hazavana_color::SRGB, &Trc::Gamma(2.0))),
+        Some(icc::write_matrix_trc(&hazavana_color::SRGB, &Trc::Table(vec![0, 16384, 65535]))),
         Some(moxcms::ColorProfile::new_gray_with_gamma(2.0).encode().unwrap()),
         Some(b"invalid ICC profile".to_vec()),
     ];

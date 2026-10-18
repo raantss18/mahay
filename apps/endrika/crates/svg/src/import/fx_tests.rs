@@ -1,8 +1,8 @@
 //! Filters → effects: the primitive chains tools write for shadows and blurs, scaled with their
 //! layer, and our own exports coming back as the effects they were.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Blur, Document, Effect, EffectKind, NodeKind, Shadow};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Blur, Document, Effect, EffectKind, NodeKind, Shadow};
 
 use super::import_svg_with_notes;
 

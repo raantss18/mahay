@@ -3,8 +3,8 @@
 //! boxes, a thumbnail; one page for a PostScript file) for the Import PDF dialog.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{ColorMode, Document};
-use vectorcraft_pdf::{Choice, CropTo, ImportOptions, PdfError, TextAs};
+use tsipika_doc::{ColorMode, Document};
+use tsipika_pdf::{Choice, CropTo, ImportOptions, PdfError, TextAs};
 
 use super::super::colormgmt::Grays;
 use super::super::*;
@@ -31,7 +31,7 @@ pub struct LoadOptions {
     /// that is off).
     pub layers: bool,
     /// How a DXF drawing comes in (the `dxf` param, see [`super::dxfimport`]).
-    pub dxf: vectorcraft_cad::ImportOptions,
+    pub dxf: tsipika_cad::ImportOptions,
     /// An Illustrator EPS or `.ai` that carries the editing copy of its art opens from it (its
     /// layers, hidden objects and the art outside its artboards); else only what its page or PDF
     /// part prints comes in.
@@ -108,11 +108,11 @@ impl LoadOptions {
         let pages = match &self.pages {
             None => None,
             Some(range) => {
-                let count = vectorcraft_pdf::info(bytes, self.password.as_deref()).map_err(err)?.pages.len();
+                let count = tsipika_pdf::info(bytes, self.password.as_deref()).map_err(err)?.pages.len();
                 Some(parse_range(range, count).map_err(|e| err(format!("pages: {e}")))?)
             }
         };
-        let is_ai = self.crop == CropTo::Crop && vectorcraft_pdf::has_illustrator_data(bytes, self.password.as_deref());
+        let is_ai = self.crop == CropTo::Crop && tsipika_pdf::has_illustrator_data(bytes, self.password.as_deref());
         Ok(ImportOptions {
             pages,
             crop: if is_ai { CropTo::Trim } else { self.crop },
@@ -138,8 +138,8 @@ fn choice<T: Choice + Default>(cmd: &str, key: &str, id: Option<&str>) -> Result
 
 /// Import the pages `o` pick → the document, import notes and what else the import tells.
 /// `editor_document`: a `.ai` file.
-pub(super) fn import(bytes: &[u8], o: &LoadOptions, editor_document: bool) -> Result<vectorcraft_pdf::ImportReport> {
-    vectorcraft_pdf::import_with_report(bytes, &o.import_options(bytes, editor_document)?).map_err(err)
+pub(super) fn import(bytes: &[u8], o: &LoadOptions, editor_document: bool) -> Result<tsipika_pdf::ImportReport> {
+    tsipika_pdf::import_with_report(bytes, &o.import_options(bytes, editor_document)?).map_err(err)
 }
 
 /// Page `page` (0-based) of a PDF as a document of one artboard (its `o.crop` box) and one
@@ -153,7 +153,7 @@ pub fn page_document(bytes: &[u8], page: usize, o: &LoadOptions) -> Result<(Docu
         layers: false,
         ..Default::default()
     };
-    vectorcraft_pdf::import_with_report(bytes, &opts).map(|r| (r.document, r.warnings)).map_err(err)
+    tsipika_pdf::import_with_report(bytes, &opts).map(|r| (r.document, r.warnings)).map_err(err)
 }
 
 const INFO: &str = "document.pdfInfo";
@@ -163,17 +163,17 @@ pub(super) fn pdf_info(_: &mut Session, p: &Value) -> Result<Value> {
     let bytes = source(p, INFO)?.bytes;
     let o = LoadOptions::from_params(INFO, p)?;
     // Programs whose header is only `%!` are PostScript too, as `clipboard.importEps` reads them.
-    if bytes.starts_with(b"%!") || vectorcraft_pdf::is_postscript(&bytes) {
+    if bytes.starts_with(b"%!") || tsipika_pdf::is_postscript(&bytes) {
         return postscript_info(&bytes, p);
     }
-    let info = match vectorcraft_pdf::info(&bytes, o.password.as_deref()) {
+    let info = match tsipika_pdf::info(&bytes, o.password.as_deref()) {
         Ok(i) => i,
         Err(e @ (PdfError::NeedsPassword | PdfError::WrongPassword)) => {
             return Ok(json!({"pages": 0, "needsPassword": true, "wrongPassword": e == PdfError::WrongPassword, "pageInfo": []}));
         }
         Err(e) => return Err(err(e)),
     };
-    let r4 = |r: vectorcraft_geom::Rect| json!([r.x0, r.y0, r.x1, r.y1]);
+    let r4 = |r: tsipika_geom::Rect| json!([r.x0, r.y0, r.x1, r.y1]);
     let pages: Vec<Value> = info
         .pages
         .iter()
@@ -193,18 +193,18 @@ pub(super) fn pdf_info(_: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// `document.pdfInfo` of a PostScript file (an EPS, a `.ps` file, a `.ai` in PostScript form): one
-/// page, the page [`vectorcraft_eps::page`] reads, with no PDF boxes. Its thumbnail is the file as
+/// page, the page [`tsipika_eps::page`] reads, with no PDF boxes. Its thumbnail is the file as
 /// the EPS reader reads it without any editing data it carries: what the page prints, or the
 /// file's preview when its PostScript can't be read.
 fn postscript_info(bytes: &[u8], p: &Value) -> Result<Value> {
-    let page = vectorcraft_eps::page(bytes).map_err(err)?;
+    let page = tsipika_eps::page(bytes).map_err(err)?;
     let info = json!({"width": page.width(), "height": page.height(), "rotation": 0, "boxes": {}});
     let mut out = json!({"pages": 1, "needsPassword": false, "pageInfo": [info]});
     if let Some(n) = p.get("thumbnail").and_then(Value::as_u64) {
         if n != 1 {
             return Err(bad(INFO, format!("thumbnail: no page {n} (the file has 1)")));
         }
-        let doc = vectorcraft_eps::import_with(bytes, false).map_err(err)?.document;
+        let doc = tsipika_eps::import_with(bytes, false).map_err(err)?.document;
         out["thumbnail"] = json!(thumbnail(&doc, p)?);
     }
     Ok(out)
@@ -216,5 +216,5 @@ fn thumbnail(doc: &Document, p: &Value) -> Result<String> {
     let size = f64_or(p, "thumbnailSize", 160.0).clamp(16.0, 1024.0);
     let r = doc.artboards.first().map(|a| a.rect).ok_or_else(|| err("the page has no area"))?;
     let png = super::encode(doc, "png", &json!({"scale": size / r.width().max(r.height()).max(1.0)}))?;
-    Ok(vectorcraft_format::base64_encode(&png))
+    Ok(tsipika_format::base64_encode(&png))
 }

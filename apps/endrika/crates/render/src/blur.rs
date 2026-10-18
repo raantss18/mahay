@@ -6,8 +6,8 @@
 //! the two levels around its own radius. Each level is one Gaussian-like blur (three box passes,
 //! linear in the pixel count whatever the radius), so the cost is a handful of uniform blurs.
 
-use figcraft_doc::Blur;
-use figcraft_geom::{Affine, Point};
+use endrika_doc::Blur;
+use endrika_geom::{Affine, Point};
 use tiny_skia::Pixmap;
 
 use crate::fx;

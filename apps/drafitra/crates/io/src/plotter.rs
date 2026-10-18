@@ -7,10 +7,10 @@
 
 use std::sync::Arc;
 
-use cadcraft_color::Rgb;
-use cadcraft_doc::{Drawing, Space};
-use cadcraft_geom::{Bounds2, Vec2};
-use cadcraft_render::{Sheet, paper, raster};
+use drafitra_color::Rgb;
+use drafitra_doc::{Drawing, Space};
+use drafitra_geom::{Bounds2, Vec2};
+use drafitra_render::{Sheet, paper, raster};
 use serde_json::Value;
 
 use crate::{IoError, PdfOptions, Result, pdf};
@@ -51,7 +51,7 @@ pub fn plot(d: &Drawing, space: &Space, opts: &Value) -> Result<Vec<u8>> {
 }
 
 /// The sheet a plot draws on (a model-space plot's printable area inside the device margins).
-fn sheet(d: &Drawing, space: &Space, o: &PdfOptions) -> Result<(Sheet, cadcraft_doc::PageSetup)> {
+fn sheet(d: &Drawing, space: &Space, o: &PdfOptions) -> Result<(Sheet, drafitra_doc::PageSetup)> {
     let page = pdf::page_for(d, space, o)?;
     Ok((Sheet::from_page(&page, paper::paper_unit_mm(d)), page))
 }
@@ -77,7 +77,7 @@ fn png(d: &Drawing, space: &Space, opts: &Value) -> Result<Vec<u8>> {
     let px = |v: f64| (v * k).round().clamp(1.0, 16384.0) as u32;
     let (width, height) = (px(sheet.size.x), px(sheet.size.y));
     let lineweights = o.lineweights.unwrap_or(if space.is_paper() { page.lineweights } else { true });
-    let table = cadcraft_doc::plot_style_table(d, &page.plot_style_table).map(Arc::new);
+    let table = drafitra_doc::plot_style_table(d, &page.plot_style_table).map(Arc::new);
     // Paper units per drawing unit: 1 for a layout at 1:1, the fitted scale for model space.
     let fit = matches!(space, Space::Model) || o.fit == Some(true);
     let window = o.window.filter(|w| matches!(space, Space::Model) && !w.is_empty());
@@ -85,14 +85,14 @@ fn png(d: &Drawing, space: &Space, opts: &Value) -> Result<Vec<u8>> {
     // Chord tolerance: a fifth of a pixel.
     let tolerance = (0.2 / (k * est)).max(1e-9);
     let transparency = o.plot_transparency.unwrap_or(page.plot_transparency);
-    let ropts = cadcraft_render::Options { tolerance, lineweights, plot_style_table: table, transparency, ..cadcraft_render::Options::default() };
-    let mut list = cadcraft_render::build_plot(d, space, &ropts);
+    let ropts = drafitra_render::Options { tolerance, lineweights, plot_style_table: table, transparency, ..drafitra_render::Options::default() };
+    let mut list = drafitra_render::build_plot(d, space, &ropts);
     let half = Vec2::new(f64::from(width), f64::from(height)) / (2.0 * k);
     let b = window.unwrap_or(list.bounds);
     let s = if fit { fit_scale(&b, &sheet, &o) } else { 1.0 };
     // Plot style ends, joins and fill patterns at the plot scale, as PDF draws them (a layout's
     // are already drawn).
-    cadcraft_render::pen::apply(&mut list, s * sheet.unit_mm);
+    drafitra_render::pen::apply(&mut list, s * sheet.unit_mm);
     let view = if fit {
         let (from, to) = pdf::placement(space, &b, true, &sheet, &o);
         // The world point at the image centre, mapped through the same paper origin as PDF.
@@ -117,25 +117,25 @@ fn svg(d: &Drawing, space: &Space, opts: &Value) -> Result<Vec<u8>> {
     // fills at the scale that fits the window (or the extents) on the device's paper.
     let (sheet, page) = sheet(d, space, &o)?;
     let window = o.window.filter(|w| !w.is_empty());
-    let table = cadcraft_doc::plot_style_table(d, &page.plot_style_table).map(Arc::new);
+    let table = drafitra_doc::plot_style_table(d, &page.plot_style_table).map(Arc::new);
     let lineweights = o.lineweights.unwrap_or(true);
     let est = fit_scale(&window.unwrap_or_else(|| d.extents(space)), &sheet, &o);
     // Chord tolerance: about 0.05 mm on paper.
     let tolerance = (0.05 / (sheet.unit_mm * est)).max(1e-9);
-    let tolerance = if tolerance.is_finite() { tolerance } else { cadcraft_render::Options::default().tolerance };
+    let tolerance = if tolerance.is_finite() { tolerance } else { drafitra_render::Options::default().tolerance };
     let transparency = o.plot_transparency.unwrap_or(page.plot_transparency);
-    let ropts = cadcraft_render::Options { tolerance, lineweights, plot_style_table: table, transparency, ..cadcraft_render::Options::default() };
-    let mut list = cadcraft_render::build_plot(d, space, &ropts);
+    let ropts = drafitra_render::Options { tolerance, lineweights, plot_style_table: table, transparency, ..drafitra_render::Options::default() };
+    let mut list = drafitra_render::build_plot(d, space, &ropts);
     let s = fit_scale(&window.unwrap_or(list.bounds), &sheet, &o);
-    cadcraft_render::pen::apply(&mut list, s * sheet.unit_mm);
+    drafitra_render::pen::apply(&mut list, s * sheet.unit_mm);
     Ok(crate::svg::export_list(&list, window).into_bytes())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_doc::{Common, EntityKind, Line};
-    use cadcraft_geom::{Bounds2, Vec2, Vec3};
+    use drafitra_doc::{Common, EntityKind, Line};
+    use drafitra_geom::{Bounds2, Vec2, Vec3};
     use serde_json::json;
 
     /// Width and height from a PNG's header.

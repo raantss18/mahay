@@ -11,7 +11,7 @@ fn assert_pixels(source: DynamicImage, expected: &[u8]) {
     for format in [ImageFormat::Png, ImageFormat::Tiff] {
         let bytes = encoded(&source, format);
         let original = bytes.clone();
-        let result = designcraft_images::decode_rgba(&bytes).unwrap();
+        let result = pejy_images::decode_rgba(&bytes).unwrap();
         assert_eq!(result.dimensions(), (2, 2));
         assert_eq!(result.as_raw(), expected, "{format:?}");
         assert_eq!(bytes, original);
@@ -65,7 +65,7 @@ fn malformed_rasters_remain_unsupported_without_mutating_input() {
     let tiff = encoded(&DynamicImage::ImageRgba8(RgbaImage::from_pixel(2, 2, image::Rgba([13, 27, 42, 128]))), ImageFormat::Tiff);
     for input in [b"".as_slice(), b"not a raster", &png[..16], &tiff[..6]] {
         let original = input.to_vec();
-        assert!(designcraft_images::decode_rgba(input).is_none());
+        assert!(pejy_images::decode_rgba(input).is_none());
         assert_eq!(input, original);
     }
 }
@@ -77,7 +77,7 @@ fn all_gray_bytes_survive_png_and_tiff_decoding() {
     for format in [ImageFormat::Png, ImageFormat::Tiff] {
         let encoded = encoded(&source, format);
         let old = image::load_from_memory(&encoded).unwrap().to_rgba8();
-        let actual = designcraft_images::decode_rgba(&encoded).unwrap();
+        let actual = pejy_images::decode_rgba(&encoded).unwrap();
         assert_eq!(actual.dimensions(), (256, 1));
         assert_eq!(actual.as_raw(), old.as_raw());
         assert_eq!(actual.color_space(), old.color_space());
@@ -103,8 +103,8 @@ fn grayscale_eps_proxy_keeps_all_values_and_source_bytes() {
     let original = eps.clone();
     let old = image::load_from_memory(&tiff).unwrap().to_rgba8();
     // Current main exposes EPS proxies separately; automatic EPS raster routing is PR150.
-    let (proxy, _) = designcraft_images::eps_proxy(&eps).unwrap();
-    let actual = designcraft_images::decode_rgba(&proxy).unwrap();
+    let (proxy, _) = pejy_images::eps_proxy(&eps).unwrap();
+    let actual = pejy_images::decode_rgba(&proxy).unwrap();
     assert_eq!(actual.dimensions(), (256, 1));
     assert_eq!(actual.as_raw(), old.as_raw());
     assert_eq!(actual.color_space(), old.color_space());

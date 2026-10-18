@@ -1,28 +1,28 @@
 //! Shared pane resizing in the full application, including application shortcut ownership.
 
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::{DockNode, PanelKind, SplitSize};
-use effectcraft_ui_egui::theme::ThemeKind;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::{DockNode, PanelKind, SplitSize};
+use tselatra_ui_egui::theme::ThemeKind;
 use egui::{Event, Id, Key, Modifiers, PointerButton, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn snapshots(h: &mut Harness<'_, EffectcraftApp>, directory: Option<&std::path::Path>, phase: &str) {
+fn snapshots(h: &mut Harness<'_, TselatraApp>, directory: Option<&std::path::Path>, phase: &str) {
     let Some(directory) = directory else { return };
     std::fs::create_dir_all(directory).unwrap();
     for (name, theme) in [("dark", ThemeKind::Dark), ("darker", ThemeKind::Darker), ("light", ThemeKind::Light)] {
         let ctx = h.ctx.clone();
         h.state_mut().set_theme(&ctx, theme);
         h.run_steps(3);
-        h.render().unwrap().save(directory.join(format!("effectcraft-{phase}-{name}.png"))).unwrap();
+        h.render().unwrap().save(directory.join(format!("tselatra-{phase}-{name}.png"))).unwrap();
     }
     let ctx = h.ctx.clone();
     h.state_mut().set_theme(&ctx, ThemeKind::Dark);
     h.run_steps(3);
 }
 
-fn first_size(h: &Harness<'_, EffectcraftApp>) -> f32 {
+fn first_size(h: &Harness<'_, TselatraApp>) -> f32 {
     match h.state().ui.dock {
         DockNode::Split { size: SplitSize::FixedA(value), .. } => value,
         ref other => panic!("fixed-size mode changed: {other:?}"),
@@ -34,9 +34,9 @@ fn focused_dock_resize_owns_arrows_and_keeps_pointer_dragging() {
     let mut session = Session::default();
     session.execute("comp.new", json!({"name": "Split test", "width": 160, "height": 90, "duration": 1})).unwrap();
     session.execute("layer.newSolid", json!({"name": "Selected", "color": [1.0, 0.0, 0.0, 1.0]})).unwrap();
-    let mut app = EffectcraftApp::new(session);
+    let mut app = TselatraApp::new(session);
     app.ui.start_screen = false;
-    let directory = std::env::var_os("CRAFT_UI_PANES_SNAPSHOT_DIR").map(std::path::PathBuf::from);
+    let directory = std::env::var_os("MAHAY_UI_PANES_SNAPSHOT_DIR").map(std::path::PathBuf::from);
     let mut builder = Harness::builder().with_size(vec2(1400.0, 900.0)).with_max_steps(10_000);
     if directory.is_some() {
         builder = builder.wgpu();

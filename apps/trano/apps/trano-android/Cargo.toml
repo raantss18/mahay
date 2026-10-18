@@ -19,3 +19,5 @@ egui = { workspace = true }
 egui_extras = { workspace = true, features = ["svg"] }
 log = { workspace = true }
 mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }
+mahay-update = { path = "../../../../libs/core/crates/update" }

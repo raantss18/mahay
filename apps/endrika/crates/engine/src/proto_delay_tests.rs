@@ -5,8 +5,8 @@ use serde_json::{Value, json};
 
 use crate::params::id_of;
 use crate::{EngineError, Session};
-use figcraft_doc::proto::{Action, Interaction, OverlayPosition, Trigger};
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::proto::{Action, Interaction, OverlayPosition, Trigger};
+use endrika_doc::{Document, NodeId};
 
 fn frame(s: &mut Session, x: f64) -> NodeId {
     id_of(&s.execute("frame.create", &json!({"x": x, "y": 0, "width": 100, "height": 200})).unwrap()["id"]).unwrap()
@@ -87,7 +87,7 @@ fn rest(trigger: Value, action: Value) -> Document {
              "interactions": [{"trigger": trigger, "actions": [action]}]}]},
         {"id": "1:3", "name": "Menu", "type": "FRAME", "relativeTransform": at(200.0), "size": {"x": 50, "y": 50}, "overlayPositionType": "MANUAL", "children": []}
     ]}]}});
-    let (doc, warnings) = figcraft_format::rest::import(&file, &figcraft_format::rest::no_images).unwrap();
+    let (doc, warnings) = endrika_format::rest::import(&file, &endrika_format::rest::no_images).unwrap();
     assert!(warnings.iter().all(|w| !w.contains("delay")), "{warnings:?}");
     doc
 }
@@ -115,8 +115,8 @@ fn rest_and_fig_carry_delays_and_offsets() {
     assert_eq!(junk.delay_ms, 0);
     assert!(matches!(junk.actions[0], Action::OpenOverlay { offset: None, .. }));
     // Written to `.fig` and read back.
-    let (bytes, _) = figcraft_format::fig::export(&doc, None).unwrap();
-    let (back, _) = figcraft_format::fig::import(&bytes, "x").unwrap();
+    let (bytes, _) = endrika_format::fig::export(&doc, None).unwrap();
+    let (back, _) = endrika_format::fig::import(&bytes, "x").unwrap();
     let again = hot(&back);
     assert_eq!((again.trigger, again.delay_ms), (Trigger::MouseEnter, 300));
     assert!(

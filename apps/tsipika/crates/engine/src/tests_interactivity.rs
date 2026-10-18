@@ -127,7 +127,7 @@ fn events_and_files_survive_a_native_round_trip_and_reach_svg() {
     run(&mut s, "svgInteractivity.setEvent", json!({"event": "onclick", "script": "show(\"menu\") && x < 1"}));
     run(&mut s, "svgInteractivity.addFile", json!({"file": "menu.js"}));
     let doc = s.doc().unwrap().doc.clone();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(a).unwrap().extras().attrs, doc.node(a).unwrap().extras().attrs);
     assert_eq!(back.svg_scripts, ["menu.js"]);
     let svg = run(&mut s, "document.serialize", json!({"format": "svg"}))["text"].as_str().unwrap().to_string();

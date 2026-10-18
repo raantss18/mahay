@@ -1,8 +1,8 @@
 //! Prototype actions on variables (set variable with expressions, set variable mode, conditional
 //! branches) and conditional actions through the interaction commands.
 
-use figcraft_doc::proto::{Action, ConditionalBlock, Expr, ExprOp};
-use figcraft_doc::{Document, NodeId, NodeKind, VariableType, VariableValue};
+use endrika_doc::proto::{Action, ConditionalBlock, Expr, ExprOp};
+use endrika_doc::{Document, NodeId, NodeKind, VariableType, VariableValue};
 use serde_json::json;
 
 use crate::Session;
@@ -164,7 +164,7 @@ fn interaction_commands_take_conditional_actions() {
     assert!(s.execute("proto.interaction.add", &json!({"ids": [a], "action": bad})).is_err());
     // Saved files keep them.
     let saved = crate::cmd::file::file_bytes(s.ds().unwrap()).unwrap();
-    let (back, _) = figcraft_format::load_bytes(&saved).unwrap();
+    let (back, _) = endrika_format::load_bytes(&saved).unwrap();
     assert_eq!(back.node(a).unwrap().interactions, s.doc().unwrap().node(a).unwrap().interactions, "saved and loaded");
 }
 
@@ -188,7 +188,7 @@ fn junk_conditional_actions_never_panic() {
                 // Whatever was accepted runs without panicking.
                 let mut doc = s.doc().unwrap().clone();
                 for it in doc.node(a).unwrap().interactions.clone() {
-                    for act in figcraft_doc::proto::walk(&it.actions) {
+                    for act in endrika_doc::proto::walk(&it.actions) {
                         match act {
                             Action::SetVariable { variable, value, expr } => {
                                 let _ = set_variable(&mut doc, a, variable, value, expr.as_ref());

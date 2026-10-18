@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::CommandSpec;
@@ -44,7 +44,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
         Some(_) => return Err(bad(cmd, "collections: [collection ids or names]")),
     };
     let text = match string(p, "format").as_deref().unwrap_or("json") {
-        "json" => serde_json::to_string_pretty(&figcraft_format::rest::export_variables(&doc.variables, &colls))
+        "json" => serde_json::to_string_pretty(&endrika_format::rest::export_variables(&doc.variables, &colls))
             .map_err(|e| EngineError::Other(e.to_string()))?,
         "css" => css(&doc.variables, &colls),
         _ => return Err(bad(cmd, "format: json|css")),
@@ -97,7 +97,7 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "variable.import";
     let v =
         super::file::variables_param(cmd, p)?.ok_or_else(|| bad(cmd, "`variables` (the variables JSON: an object, JSON text or a path) required"))?;
-    let (src, mut warnings) = figcraft_format::rest::read_variables(&v).ok_or_else(|| bad(cmd, "not a variables JSON"))?;
+    let (src, mut warnings) = endrika_format::rest::read_variables(&v).ok_or_else(|| bad(cmd, "not a variables JSON"))?;
     let doc = s.doc_mut()?;
     // Imported collection → (this file's collection, imported mode → its mode).
     let mut colls: BTreeMap<CollectionId, (CollectionId, BTreeMap<ModeId, ModeId>)> = BTreeMap::new();

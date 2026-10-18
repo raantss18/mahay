@@ -1,6 +1,6 @@
-# CADCraft Spanish interface catalog — original translations.
+# Drafitra Spanish interface catalog — original translations.
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # UTF-8: context<TAB>English source<TAB>Spanish translation.
 # Empty context = ordinary label; @plural = one|other forms with {n}.
 # Command IDs, typed keywords, technology/product names and user data stay unchanged.
@@ -30,7 +30,7 @@
 	A drawing opened from a file keeps that file's format.	Un dibujo abierto desde un archivo conserva el formato de ese archivo.
 	A variable name starts with a letter and has only letters, digits and _	El nombre de una variable empieza por una letra y solo lleva letras, dígitos y _
 	About	Acerca de
-	About CADCraft	Acerca de CADCraft
+	About Drafitra	Acerca de Drafitra
 	Absolute	Absolutas
 	Add Current Scale	Añadir escala actual
 	Add Leader	Añadir directriz
@@ -105,9 +105,9 @@
 	ByBlock	PorBloque
 	ByColor	PorColor
 	ByLayer	PorCapa
-	CADCraft	CADCraft
-	CADCraft Help	Ayuda de CADCraft
-	CADCraft keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	CADCraft guarda estas preferencias, los modos de referencia a objetos y los ajustes de dibujo para tu cuenta de usuario y los restaura al iniciarse.
+	Drafitra	Drafitra
+	Drafitra Help	Ayuda de Drafitra
+	Drafitra keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	Drafitra guarda estas preferencias, los modos de referencia a objetos y los ajustes de dibujo para tu cuenta de usuario y los restaura al iniciarse.
 	Cancel	Cancelar
 	Cartesian (x, y)	Cartesianas (x, y)
 	Center	Centro
@@ -455,7 +455,7 @@
 	Jogged	Con recodo
 	Jogged Linear	Lineal con recodo
 	Join	Unir
-	Join the ArtCraft Discord…	Únete al Discord de ArtCraft…
+	Join the Mahay Discord…	Únete al Discord de Mahay…
 	Join us on Discord	Únete a nosotros en Discord
 	Keep the system cursor visible over the drawing area	Mantener visible el cursor del sistema sobre el área de dibujo
 	Language	Idioma
@@ -608,7 +608,7 @@
 	Offset	Desfase
 	On	Activado
 	On/Off	Activar/desactivar
-	One of the Crafting Apps by the ArtCraft team and community.	Una de las Crafting Apps del equipo y la comunidad de ArtCraft.
+	One of the Mahay apps by the Mahay team and community.	Una de las Mahay apps del equipo y la comunidad de Mahay.
 	Only in this drawing: {n}	Solo en este dibujo: {n}
 	Only in {name}: {n}	Solo en {name}: {n}
 	Open	Abrir
@@ -789,7 +789,7 @@
 	Quick Select Properties	Propiedades de selección rápida
 	Quick Select...	Selección rápida...
 	QuickCalc	Calculadora rápida
-	Quit CADCraft	Salir de CADCraft
+	Quit Drafitra	Salir de Drafitra
 	Radius	Radio
 	Raster Image	Imagen ráster
 	Ray	Semirrecta
@@ -1215,7 +1215,7 @@
 @plural	{n} contributor	{n} colaborador|{n} colaboradores
 	Drawing as bytes	Dibujo como bytes
 	Services	Servicios
-	Hide CADCraft	Ocultar CADCraft
+	Hide Drafitra	Ocultar Drafitra
 	Hide Others	Ocultar otros
 	Accessibility	Accesibilidad
 	Show System Cursor	Mostrar cursor del sistema

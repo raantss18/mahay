@@ -293,22 +293,8 @@ pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
                     }
                 }
                 DialogKind::About => {
-                    // Tabs About · Contributors · Models (mahay-rules standards/contributors.md). The
-                    // tab is a dialog field, so automation can switch it with `ui.dialog.set`.
-                    let tab = about_tab(&fields);
-                    let mut chosen = tab;
-                    ui.horizontal(|ui| {
-                        for (key, label) in [("about", tl!("About")), ("contributors", tl!("Contributors")), ("models", tl!("Models"))] {
-                            if crate::widgets::pill_tab(ui, label, tab == key).clicked() {
-                                chosen = key;
-                            }
-                        }
-                    });
-                    if chosen != tab {
-                        fields.insert("tab".into(), json!(chosen));
-                    }
-                    ui.add_space(8.0);
-                    about_tab_body(app, ui, chosen);
+                    // The shared Mahay About page (version, updates, author, licences).
+                    mahay_about::page(ui, mahay_about::AppInfo { id: "sary", name: "Sary" });
                 }
                 DialogKind::Command if crate::guide_layout_ui::owns(&fields) => outcome = crate::guide_layout_ui::body(app, ui, &mut fields, interactive),
                 DialogKind::Command if crate::brush_preset_dialog::owns(&fields) => {

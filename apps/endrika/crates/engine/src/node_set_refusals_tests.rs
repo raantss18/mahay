@@ -57,19 +57,19 @@ fn with_several_layers_the_frames_take_auto_layout_keys_and_the_others_are_named
 
 #[test]
 fn a_font_style_draws_in_the_nearest_face_and_says_so_when_it_differs() {
-    figcraft_text::scan_system_fonts();
+    endrika_text::scan_system_fonts();
     // Any installed family with a regular and a bold face and nothing heavier (CI machines differ).
-    let pick = figcraft_text::family_names().into_iter().find_map(|f| {
-        let st = figcraft_text::family_styles(&f);
-        let has = |w: u16| st.iter().any(|x| figcraft_doc::style_weight(x) == w && !x.to_lowercase().contains("italic"));
-        (has(400) && has(700) && !st.iter().any(|x| figcraft_doc::style_weight(x) > 700)).then_some((f, st))
+    let pick = endrika_text::family_names().into_iter().find_map(|f| {
+        let st = endrika_text::family_styles(&f);
+        let has = |w: u16| st.iter().any(|x| endrika_doc::style_weight(x) == w && !x.to_lowercase().contains("italic"));
+        (has(400) && has(700) && !st.iter().any(|x| endrika_doc::style_weight(x) > 700)).then_some((f, st))
     });
     let Some((family, styles)) = pick else { return };
     let mut s = Session::new();
     let t = id(&ex(&mut s, "node.create", json!({"type": "text", "text": "Hi", "props": {"fontFamily": family}}))["id"]);
     let set = |s: &mut Session, style: &str| ex(s, "node.set", json!({"ids": [t], "props": {"fontStyle": style}}));
     // Any spelling of a style it has, and names that resolve to the weight they ask for, say nothing.
-    let bold = styles.iter().find(|x| figcraft_doc::style_weight(x) == 700).unwrap().clone();
+    let bold = styles.iter().find(|x| endrika_doc::style_weight(x) == 700).unwrap().clone();
     for style in [bold.clone(), bold.to_uppercase(), bold.replace(' ', ""), "Roman".into(), "Normal".into()] {
         let out = set(&mut s, &style);
         assert!(out.get("warnings").is_none(), "{style}: {out}");

@@ -1,8 +1,8 @@
 //! Drawing templates (#552): a `.dwt` is written as DWG content and read back, and a template
 //! named `.dwt` that holds DXF text reads too.
 
-use cadcraft_doc::{Drawing, Layer};
-use cadcraft_io::{read, write};
+use drafitra_doc::{Drawing, Layer};
+use drafitra_io::{read, write};
 
 fn office() -> Drawing {
     let mut d = Drawing::new_metric();

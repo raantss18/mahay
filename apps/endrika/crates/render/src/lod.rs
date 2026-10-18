@@ -14,9 +14,9 @@
 //! so are exports, thumbnails and every other render. Whatever LOD can't approximate faithfully
 //! (image paints, masks) takes the exact path at any scale.
 
-use figcraft_color::{BlendMode, Paint, PaintKind};
-use figcraft_doc::{Document, ListStyle, Node, NodeKind, StrokeAlign, TextAutoResize, TextData};
-use figcraft_geom::{Affine, Rect};
+use endrika_color::{BlendMode, Paint, PaintKind};
+use endrika_doc::{Document, ListStyle, Node, NodeKind, StrokeAlign, TextAutoResize, TextData};
+use endrika_geom::{Affine, Rect};
 use tiny_skia::Pixmap;
 
 use crate::draw::{Ctx, ts_transform};
@@ -152,7 +152,7 @@ fn stroke_box(n: &Node) -> (Rect, f32) {
         StrokeAlign::Outside => wt,
     };
     // Open paths (lines) are stroked along their length; a line's box has no height of its own.
-    let closed = figcraft_doc::geometry::is_closed(n);
+    let closed = endrika_doc::geometry::is_closed(n);
     let out = if closed { out } else { wt / 2.0 };
     let r = n.local_rect().inflate(out, out);
     let (w, h) = (n.width.abs(), n.height.abs());
@@ -184,7 +184,7 @@ pub fn splat_fills(pix: &mut Pixmap, n: &Node, xf: Affine) -> bool {
     }
     let c = xf.as_coeffs();
     let radius = n.corners.radii.iter().copied().fold(0.0, f64::max);
-    let dev = figcraft_geom::transform_rect_bbox(xf, n.local_rect());
+    let dev = endrika_geom::transform_rect_bbox(xf, n.local_rect());
     let simple =
         |p: &Paint| !p.visible || (matches!(p.kind, PaintKind::Solid { .. }) && matches!(p.blend, BlendMode::Normal | BlendMode::PassThrough));
     if !(radius * c[0].abs().max(c[3].abs()) < SQUARE_CORNER_PX && dev.area().abs() <= SMALL_AREA && n.fills.iter().all(simple)) {
@@ -216,14 +216,14 @@ pub fn splat_subtree(ctx: &Ctx, pix: &mut Pixmap, n: &Node, xf: Affine, clip: Op
         NodeKind::Page { .. } | NodeKind::Group => {}
         NodeKind::Text(t) => paint(pix, local, &mut text_paints(n, t), text_share(t, n.width, n.height)),
         _ => {
-            if figcraft_doc::geometry::is_closed(n) {
+            if endrika_doc::geometry::is_closed(n) {
                 paint(pix, local, &mut n.fills.iter(), fill_share(n));
             }
         }
     }
     if !matches!(n.kind, NodeKind::BooleanOp { .. }) && !n.hides_contents() {
         let clip = if n.clip && n.kind.is_frame_like() {
-            let own = figcraft_geom::transform_rect_bbox(xf, local);
+            let own = endrika_geom::transform_rect_bbox(xf, local);
             Some(clip.map_or(own, |c| c.intersect(own)))
         } else {
             clip
@@ -264,7 +264,7 @@ pub fn greek_text(pix: &mut Pixmap, n: &Node, xf: Affine, limit: Rect) {
         }
         return;
     }
-    let Some((layout, dy)) = figcraft_text::layout_node(n) else { return };
+    let Some((layout, dy)) = endrika_text::layout_node(n) else { return };
     for line in &layout.lines {
         let glyphs = layout.glyphs.get(line.glyph_start..line.glyph_end).unwrap_or(&[]);
         let Some(first) = glyphs.first() else { continue };
@@ -292,7 +292,7 @@ fn axis_aligned(xf: Affine) -> bool {
 /// it stays axis-aligned, an anti-aliased path otherwise.
 fn fill_local(pix: &mut Pixmap, r: Rect, xf: Affine, color: [f32; 4]) {
     if axis_aligned(xf) {
-        splat(pix, figcraft_geom::transform_rect_bbox(xf, r), color);
+        splat(pix, endrika_geom::transform_rect_bbox(xf, r), color);
         return;
     }
     let (Some(rect), Some(c)) = (
@@ -308,7 +308,7 @@ fn fill_local(pix: &mut Pixmap, r: Rect, xf: Affine, color: [f32; 4]) {
 /// Splat local rectangle `r` through `xf`, inside `clip`: its device bounding box, with the
 /// colour thinned by how much of that box the (possibly rotated) rectangle fills.
 fn splat_local(pix: &mut Pixmap, r: Rect, xf: Affine, clip: Option<Rect>, color: [f32; 4]) {
-    let bbox = figcraft_geom::transform_rect_bbox(xf, r);
+    let bbox = endrika_geom::transform_rect_bbox(xf, r);
     let c = xf.as_coeffs();
     let area = (r.area() * (c[0] * c[3] - c[1] * c[2])).abs();
     let bbox_area = bbox.area().abs();

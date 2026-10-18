@@ -2,8 +2,8 @@
 //! settings (rows, sizes, "Export N layers"). Fixtures are synthetic.
 
 use base64::Engine as _;
-use figcraft_doc::proto::{Action, Trigger};
-use figcraft_doc::*;
+use endrika_doc::proto::{Action, Trigger};
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -50,7 +50,7 @@ fn fill_hex(n: &Node) -> Option<String> {
 }
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("figcraft-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-{tag}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }

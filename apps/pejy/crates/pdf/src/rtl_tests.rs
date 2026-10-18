@@ -2,10 +2,10 @@
 //! their letters, ActualText never spans more than a cluster, and glyphs stay where composition
 //! put them.
 
-use designcraft_compose::{Cache, ComposeOptions, compose_story};
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{Align, Document, ParaAttrs, ParaFormat, SpreadRef, TextDirection};
-use designcraft_geom::Rect;
+use pejy_compose::{Cache, ComposeOptions, compose_story};
+use pejy_doc::build::NewDocument;
+use pejy_doc::{Align, Document, ParaAttrs, ParaFormat, SpreadRef, TextDirection};
+use pejy_geom::Rect;
 
 use crate::tests::extract_text;
 use crate::*;
@@ -22,13 +22,13 @@ fn hebrew_font() {
     let mut map: Vec<(char, char)> = letters.iter().zip('A'..).map(|(h, l)| (*h, l)).collect();
     map.extend(points.iter().copied().zip(accents));
     map.extend(" &abcdef".chars().map(|c| (c, c)));
-    designcraft_fonts::FontDb::global().add_font(designcraft_fonts::testing::font_mapping(HEBREW, &map).expect("font"));
+    pejy_fonts::FontDb::global().add_font(pejy_fonts::testing::font_mapping(HEBREW, &map).expect("font"));
 }
 
 /// A stand-in Arabic font with a tatweel, so justification inserts kashidas.
 fn arabic_font() {
     let map = [('ب', 'b'), ('س', 's'), ('م', 'm'), ('ا', 'a'), ('ل', 'l'), ('ه', 'h'), ('\u{640}', '_'), (' ', ' ')];
-    designcraft_fonts::FontDb::global().add_font(designcraft_fonts::testing::font_mapping(ARABIC, &map).expect("font"));
+    pejy_fonts::FontDb::global().add_font(pejy_fonts::testing::font_mapping(ARABIC, &map).expect("font"));
 }
 
 /// One frame of `text` in `family` with paragraph attributes `para`.
@@ -155,7 +155,7 @@ fn kashidas_extract_as_no_text() {
     let d = doc(text, ARABIC, Rect::new(36.0, 36.0, 186.0, 300.0), para);
     let sid = *d.stories.keys().next().unwrap();
     let cs = compose_story(&d, sid, &ComposeOptions::default());
-    let kashida = |g: &designcraft_compose::PlacedGlyph| g.len == 0 && g.gid == g.face.glyph_for('\u{640}');
+    let kashida = |g: &pejy_compose::PlacedGlyph| g.len == 0 && g.gid == g.face.glyph_for('\u{640}');
     assert!(cs.frames[0].lines.iter().any(|l| l.glyphs.iter().any(kashida)), "justification inserts kashidas");
     let bytes = export_pdf(&d, &Cache::new(), &PdfOptions::default()).unwrap();
     let words: Vec<String> = extract_text(&bytes)[0].split([' ', '\u{FFFD}']).filter(|w| !w.is_empty()).map(str::to_string).collect();
@@ -168,7 +168,7 @@ fn kashidas_extract_as_no_text() {
 fn arabic_ligatures_extract_their_letters() {
     // Lam-alef in a system font with Arabic (skipped without one).
     let text = "لا سلام";
-    let mut d = doc(text, designcraft_fonts::DEFAULT_FAMILY, Rect::new(36.0, 36.0, 576.0, 300.0), rtl());
+    let mut d = doc(text, pejy_fonts::DEFAULT_FAMILY, Rect::new(36.0, 36.0, 576.0, 300.0), rtl());
     d.settings.glyph_fallback = true;
     let sid = *d.stories.keys().next().unwrap();
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -211,7 +211,7 @@ fn right_to_left_lines_carry_actual_text_only_on_their_clusters() {
     // Hebrew (skipped without one): krilla gives such clusters an ActualText span of their own,
     // which must not nest in another (poppler drops the text before a nested one).
     let lines = ["سيّد الكلّ مُحَمَّد", "ישראל אַבְרָהָם יִצְחָק"];
-    let mut d = doc(&lines.join("\n"), designcraft_fonts::DEFAULT_FAMILY, Rect::new(36.0, 36.0, 576.0, 300.0), rtl());
+    let mut d = doc(&lines.join("\n"), pejy_fonts::DEFAULT_FAMILY, Rect::new(36.0, 36.0, 576.0, 300.0), rtl());
     d.settings.glyph_fallback = true;
     let sid = *d.stories.keys().next().unwrap();
     let cs = compose_story(&d, sid, &ComposeOptions::default());

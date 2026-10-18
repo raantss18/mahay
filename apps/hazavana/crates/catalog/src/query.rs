@@ -524,7 +524,7 @@ impl Catalog {
         let prepared = filter.prepare();
         for p in self.photos().filter(|p| filter.matches_in(p, self, &prepared)) {
             let mut seen: Vec<String> = Vec::new();
-            for r in p.meta.regions.iter().filter(|r| r.kind == lightcraft_meta::RegionKind::Face) {
+            for r in p.meta.regions.iter().filter(|r| r.kind == hazavana_meta::RegionKind::Face) {
                 let Some(name) = r.name.as_deref().map(str::trim).filter(|n| !n.is_empty()) else { continue };
                 let key = name.to_lowercase();
                 // the face's size in pixels of the photo
@@ -554,7 +554,7 @@ pub struct Person {
     pub count: usize,
     /// The photo with their largest face, and that face (normalized, in the photo's upright frame).
     pub photo: PhotoId,
-    pub face: lightcraft_meta::Rect,
+    pub face: hazavana_meta::Rect,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]

@@ -5,14 +5,14 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use effectcraft_color::Label;
-use effectcraft_project::build;
-use effectcraft_project::tracking::TrackKind;
-use effectcraft_project::{Footage, FootageKind, ItemId, ItemKind, LayerId, LayerSource};
-use effectcraft_raster::Image;
-use effectcraft_render::{EvalCtx, FootageSource};
-use effectcraft_time::{FrameRate, Tick};
-use effectcraft_track::Homography;
+use tselatra_color::Label;
+use tselatra_project::build;
+use tselatra_project::tracking::TrackKind;
+use tselatra_project::{Footage, FootageKind, ItemId, ItemKind, LayerId, LayerSource};
+use tselatra_raster::Image;
+use tselatra_render::{EvalCtx, FootageSource};
+use tselatra_time::{FrameRate, Tick};
+use tselatra_track::Homography;
 use serde_json::json;
 
 use crate::Session;
@@ -117,7 +117,7 @@ pub(crate) fn setup(make: impl Fn(u32) -> Image + Send + Sync + 'static) -> (Ses
     (s, clip, LayerId(solid))
 }
 
-fn tracker_points(s: &Session, layer: LayerId) -> Vec<effectcraft_project::PropGroup> {
+fn tracker_points(s: &Session, layer: LayerId) -> Vec<tselatra_project::PropGroup> {
     let l = s.active_comp().unwrap().layer(layer).unwrap();
     l.trackers().next().unwrap().0.track_points().cloned().collect()
 }
@@ -188,7 +188,7 @@ fn track_motion_analyze_apply_transform_undo_redo() {
     assert!((v[0] - translate_pose(10).0[0]).abs() < 0.25 && (v[1] - 120.0).abs() < 1e-9, "{v:?}");
     // Serde round trip keeps the tracker.
     let json = s.project.to_json();
-    let back = effectcraft_project::Project::from_json(&json).unwrap();
+    let back = tselatra_project::Project::from_json(&json).unwrap();
     let l = back.comp(s.active_comp_id().unwrap()).unwrap().layer(clip).unwrap();
     let (g, st) = l.trackers().next().unwrap();
     assert_eq!(st.kind, TrackKind::Transform);
@@ -211,7 +211,7 @@ fn stabilize_keeps_the_feature_fixed() {
         let ctx = EvalCtx::new(&s.project, cid, &comp, frame_time(f));
         let (m, _) = ctx.layer_to_comp(l);
         let c = translate_pose(f).0;
-        let q = m.apply(effectcraft_geom::vec2(c[0], c[1]));
+        let q = m.apply(tselatra_geom::vec2(c[0], c[1]));
         [q.x, q.y]
     };
     let p0 = at(0);

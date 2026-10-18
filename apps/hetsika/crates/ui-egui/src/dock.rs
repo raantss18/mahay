@@ -5,7 +5,7 @@
 use egui::{Align2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde::{Deserialize, Serialize};
 
-use craft_ui::layout::{ResizeHandle, ResizeHandleStyle, SplitAxis, SplitSize as SharedSplitSize, split_rect};
+use mahay_ui::layout::{ResizeHandle, ResizeHandleStyle, SplitAxis, SplitSize as SharedSplitSize, split_rect};
 
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
@@ -403,7 +403,7 @@ impl DockNode {
     }
     /// Make `p` the active tab of its group. Returns false if not present.
     pub fn activate(&mut self, p: PanelKind) -> bool {
-        crate::dock_shared::apply_tree(self, craft_ui::docking::Action::Activate { panel: p })
+        crate::dock_shared::apply_tree(self, mahay_ui::docking::Action::Activate { panel: p })
     }
     pub fn is_visible(&self, p: PanelKind) -> bool {
         match self {
@@ -413,7 +413,7 @@ impl DockNode {
     }
     /// Close a panel (remove its tab; empty groups collapse their split).
     pub fn close(&mut self, p: PanelKind) {
-        crate::dock_shared::apply_tree(self, craft_ui::docking::Action::Close { panel: p });
+        crate::dock_shared::apply_tree(self, mahay_ui::docking::Action::Close { panel: p });
     }
     /// Put the Timeline panel back where the workspaces keep it (left of the audio meters) after
     /// it was closed, so opening a sequence always has somewhere to show it.
@@ -445,7 +445,7 @@ impl DockNode {
             self.panels(&mut panels);
             panels.first().copied()
         });
-        crate::dock_shared::apply_tree(self, craft_ui::docking::Action::Open { panel: p, anchor });
+        crate::dock_shared::apply_tree(self, mahay_ui::docking::Action::Open { panel: p, anchor });
     }
 }
 
@@ -467,7 +467,7 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn apply(&mut self, action: craft_ui::docking::Action<PanelKind>) -> Result<(), String> {
+    pub fn apply(&mut self, action: mahay_ui::docking::Action<PanelKind>) -> Result<(), String> {
         crate::dock_shared::apply(self, action)
     }
     pub fn validate(&self) -> Result<(), String> {
@@ -520,7 +520,7 @@ pub fn layout_with_actions(
     path: &str,
     out: &mut Vec<Group>,
     reg: &mut crate::automation::Registry,
-    actions: &mut Vec<craft_ui::docking::Action<PanelKind>>,
+    actions: &mut Vec<mahay_ui::docking::Action<PanelKind>>,
 ) {
     layout_inner(ui, node, rect, t, path, &[], out, reg, actions);
 }
@@ -534,7 +534,7 @@ fn layout_inner(
     tree_path: &[bool],
     out: &mut Vec<Group>,
     reg: &mut crate::automation::Registry,
-    actions: &mut Vec<craft_ui::docking::Action<PanelKind>>,
+    actions: &mut Vec<mahay_ui::docking::Action<PanelKind>>,
 ) {
     match node {
         DockNode::Tabs { panels, active } => {
@@ -553,7 +553,7 @@ fn layout_inner(
             if response.delta != 0.0
                 && let Some(resized) = split.resized(size.shared(), response.delta, 40.0)
             {
-                actions.push(craft_ui::docking::Action::ResizeSplit { path: tree_path.to_vec(), size: resized });
+                actions.push(mahay_ui::docking::Action::ResizeSplit { path: tree_path.to_vec(), size: resized });
             }
             let mut first_path = tree_path.to_vec();
             first_path.push(false);

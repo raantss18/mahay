@@ -1,5 +1,5 @@
 [package]
-name = "vectorcraft-scriptcheck"
+name = "tsipika-scriptcheck"
 description = "Static checker for scripts written for the reference app: what a script uses, without running it"
 version.workspace = true
 edition.workspace = true

@@ -25,8 +25,8 @@
 //!   [`rgb_preview`] hands the largest 8-bit one on as a small baseline TIFF.
 use crate::dng;
 use crate::{ColorData, Mode, RawFormat, RawImage, Result};
-use lightcraft_tiff::image::{Layout, chunk_bytes};
-use lightcraft_tiff::{ByteOrder, IfdBuilder, ImageData, ParseOptions, Tiff, TiffWriter, Value, tags as t};
+use hazavana_tiff::image::{Layout, chunk_bytes};
+use hazavana_tiff::{ByteOrder, IfdBuilder, ImageData, ParseOptions, Tiff, TiffWriter, Value, tags as t};
 
 /// Private IFD0 tag holding the original 3FR header (a complete TIFF) inside an FFF.
 pub(crate) const ORIGINAL_HEADER: u16 = 0xc51b;
@@ -64,7 +64,7 @@ fn original_header_color(bytes: &[u8]) -> Option<ColorData> {
 const MAX_PREVIEW_BYTES: usize = (64 << 20) * 3;
 
 /// The file's largest uncompressed 8-bit RGB image (chunky, in strips), as a little-endian baseline TIFF holding
-/// just those pixels, which `lightcraft_codecs::decode` reads. No `Orientation` tag is written: the viewer
+/// just those pixels, which `hazavana_codecs::decode` reads. No `Orientation` tag is written: the viewer
 /// applies the raw file's, which is the one that stands over this image in IFD0.
 pub(crate) fn rgb_preview(tiff: &Tiff, bytes: &[u8]) -> Option<Vec<u8>> {
     let info = tiff
@@ -124,7 +124,7 @@ fn adopt_matrices(color: &mut ColorData, from: &ColorData) {
 mod tests {
     use super::*;
     use crate::{RawData, RawError, decode as decode_file, probe, probe_info};
-    use lightcraft_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+    use hazavana_tiff::{ByteOrder, IfdBuilder, ImageData, TiffWriter, Value, tags as t};
 
     const MATRIX: [(i32, i32); 9] =
         [(686, 1000), (-196, 1000), (-32, 1000), (-437, 1000), (1228, 1000), (235, 1000), (-165, 1000), (317, 1000), (675, 1000)];
@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(r.cfa.as_ref().unwrap().name(), "RGGB");
         assert_eq!(matrix_row0(&r.color), Some([0.686, -0.196, -0.032]));
         assert_eq!(r.color.as_shot_neutral, Some([0.4, 1.0, 0.8]), "the outer file's white balance");
-        assert!(!crate::color::camera_transform_of(&r.color, lightcraft_color::D65).matrix_is_fallback);
+        assert!(!crate::color::camera_transform_of(&r.color, hazavana_color::D65).matrix_is_fallback);
         // the import probe says the same
         assert_eq!(matrix_row0(&probe_info(&bytes).unwrap().color), Some([0.686, -0.196, -0.032]));
     }

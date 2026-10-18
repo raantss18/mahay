@@ -1,7 +1,7 @@
 //! Real key traversal of the custom painted controls, without assigning widget focus.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_ui_egui::{CadApp, Services};
 use egui::{Key, Modifiers, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;

@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-expr"
+name = "tselatra-expr"
 description = "After Effects-compatible expressions: a boa JavaScript runtime with the AE object model (thisComp, thisLayer, wiggle, loopOut, valueAtTime…) and array maths"
 version.workspace = true
 edition.workspace = true
@@ -10,13 +10,13 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-effectcraft-time = { workspace = true }
-effectcraft-geom = { workspace = true }
-effectcraft-keyframe = { workspace = true }
+tselatra-time = { workspace = true }
+tselatra-geom = { workspace = true }
+tselatra-keyframe = { workspace = true }
 serde_json = { workspace = true }
-effectcraft-project = { workspace = true }
-effectcraft-path = { workspace = true }
-effectcraft-render = { workspace = true }
+tselatra-project = { workspace = true }
+tselatra-path = { workspace = true }
+tselatra-render = { workspace = true }
 boa_engine = { workspace = true }
 
 # On the web, boa's clock and Math.random need the browser (getrandom `wasm_js`, web-time).
@@ -24,6 +24,6 @@ boa_engine = { workspace = true }
 boa_engine = { workspace = true, features = ["js"] }
 
 [dev-dependencies]
-effectcraft-color = { workspace = true }
-effectcraft-effects = { workspace = true }
-effectcraft-text = { workspace = true }
+tselatra-color = { workspace = true }
+tselatra-effects = { workspace = true }
+tselatra-text = { workspace = true }

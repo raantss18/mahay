@@ -1,10 +1,10 @@
 //! Headless look at the Render Queue panel (wgpu offscreen). Ignored by default (needs a GPU
 //! adapter); run with
-//! `RQ_SNAPSHOT=/abs/out.png cargo test -p effectcraft-ui-egui --test render_queue_snapshot -- --ignored`.
+//! `RQ_SNAPSHOT=/abs/out.png cargo test -p tselatra-ui-egui --test render_queue_snapshot -- --ignored`.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::render_queue::RenderStatus;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::project::render_queue::RenderStatus;
+use tselatra_ui_egui::TselatraApp;
 use egui_kittest::Harness;
 use serde_json::json;
 
@@ -29,10 +29,10 @@ fn render_queue_panel_snapshot() {
         p.render_queue[3].status = RenderStatus::Unqueued;
     }
     let ids: Vec<u64> = s.project.render_queue.iter().take(3).map(|i| i.id).collect();
-    let mut app = Some(EffectcraftApp::new(s));
+    let mut app = Some(TselatraApp::new(s));
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app.take().expect("app"));
     h.ctx.data_mut(|d| d.insert_temp(egui::Id::new("rq-ui"), (ids, None::<u64>)));
-    h.state_mut().show_panel(effectcraft_ui_egui::dock::PanelKind::RenderQueue);
+    h.state_mut().show_panel(tselatra_ui_egui::dock::PanelKind::RenderQueue);
     h.run_steps(4);
     let img = h.render().expect("render");
     let out = std::env::var("RQ_SNAPSHOT").unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/test-out/render_queue.png").into());
@@ -53,7 +53,7 @@ fn templates_dialog_snapshot() {
         .unwrap();
     let kind = std::env::var("RQ_TEMPLATES_KIND").unwrap_or_else(|_| "outputModule".into());
     s.execute("app.templates", json!({"kind": kind})).unwrap();
-    let mut app = Some(EffectcraftApp::new(s));
+    let mut app = Some(TselatraApp::new(s));
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| app.take().expect("app"));
     h.run_steps(4);
     assert!(h.state().dialog.is_some(), "the Templates dialog is open");

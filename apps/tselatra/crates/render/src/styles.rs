@@ -20,13 +20,13 @@
 //! profiles, and from the shared separable Gaussian (`effects::util::gauss_plane`) for soft
 //! shadows and glows. All per-pixel work is parallel (rayon).
 
-use effectcraft_color::{BlendMode, blend_pixel};
-use effectcraft_effects::Buf;
-use effectcraft_effects::util::{Plane, gauss_plane};
-use effectcraft_keyframe::{Gradient, Value};
-use effectcraft_project::styles::{self as st, style_blend_mode};
-use effectcraft_project::{Layer, PropGroup};
-use effectcraft_raster::{Image, hash_noise};
+use tselatra_color::{BlendMode, blend_pixel};
+use tselatra_effects::Buf;
+use tselatra_effects::util::{Plane, gauss_plane};
+use tselatra_keyframe::{Gradient, Value};
+use tselatra_project::styles::{self as st, style_blend_mode};
+use tselatra_project::{Layer, PropGroup};
+use tselatra_raster::{Image, hash_noise};
 use rayon::prelude::*;
 
 use crate::eval::EvalCtx;

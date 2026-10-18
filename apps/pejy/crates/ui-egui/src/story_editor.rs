@@ -5,7 +5,7 @@
 use egui::vec2;
 use serde_json::json;
 
-use designcraft_doc::StoryId;
+use pejy_doc::StoryId;
 
 use crate::DesignApp;
 use crate::theme::Tokens;
@@ -14,7 +14,7 @@ use crate::theme::Tokens;
 /// to the document the story belongs to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Target {
-    /// [`designcraft_engine::DocState::uid`] of the story's document.
+    /// [`pejy_engine::DocState::uid`] of the story's document.
     pub doc: u64,
     pub story: StoryId,
 }
@@ -127,7 +127,7 @@ mod tests {
     /// the other document's story with the same id.
     #[test]
     fn editor_stays_with_its_document() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), Default::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), Default::default());
         let mut stories = Vec::new();
         for text in ["Alpha story", "Bravo story"] {
             app.run("file.new", json!({})).unwrap();

@@ -7,7 +7,7 @@
 //! top-level row, those on its layer). Locked and hidden layers take drops only with Cmd/Ctrl
 //! held.
 
-use designcraft_doc::{Content, Document, Item, ItemId, LayerId};
+use pejy_doc::{Content, Document, Item, ItemId, LayerId};
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::json;
 
@@ -610,7 +610,7 @@ mod tests {
 
     #[test]
     fn text_frames_are_labelled_with_their_first_words() {
-        let mut s = designcraft_engine::Session::new();
+        let mut s = pejy_engine::Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [36, 36, 300, 200], "content": "text"})).unwrap();
         s.execute("text.insert", &json!({"text": "Every page begins as an empty field of possibility"})).unwrap();
@@ -648,7 +648,7 @@ mod tests {
     }
 
     fn app() -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app
     }
@@ -730,7 +730,7 @@ mod tests {
     #[test]
     fn selecting_an_object_opens_its_layer_in_the_panel() {
         use egui_kittest::Harness;
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let id = app.run("frame.create", json!({"rect": [72, 72, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         let first = app.session.active().unwrap().doc.item(ItemId(id)).unwrap().layer;
@@ -754,7 +754,7 @@ mod tests {
     #[test]
     fn a_slow_double_click_renames_an_object_and_a_quick_one_does_not() {
         use egui_kittest::{Harness, kittest::Queryable};
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let id = app.run("frame.create", json!({"rect": [72, 72, 200, 200], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
         app.run("selection.set", json!({"ids": []})).unwrap();
@@ -792,7 +792,7 @@ mod tests {
     #[test]
     fn rows_rename_in_place() {
         use egui_kittest::{Harness, kittest::Queryable};
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let id = app.run("frame.create", json!({"rect": [72, 72, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         let mut h = Harness::builder().with_size(egui::vec2(260.0, 400.0)).build_ui_state(|ui, app: &mut DesignApp| show(app, ui), app);
@@ -820,7 +820,7 @@ mod tests {
     #[test]
     fn confirming_an_unedited_automatic_label_keeps_the_object_unnamed() {
         use egui_kittest::{Harness, kittest::Queryable};
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let id = app.run("frame.create", json!({"rect": [72, 72, 200, 200]})).unwrap()["id"].as_u64().unwrap();
         let mut h = Harness::builder().with_size(egui::vec2(260.0, 400.0)).build_ui_state(|ui, app: &mut DesignApp| show(app, ui), app);

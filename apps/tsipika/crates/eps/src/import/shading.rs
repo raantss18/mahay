@@ -5,10 +5,10 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::live::GradientMesh;
-use vectorcraft_doc::{Node, NodeId, NodeKind};
-use vectorcraft_geom::{Affine, Point};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::live::GradientMesh;
+use tsipika_doc::{Node, NodeId, NodeKind};
+use tsipika_geom::{Affine, Point};
 
 use super::graphics::Space;
 use super::interp::{Interp, matrix_of};

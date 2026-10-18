@@ -1,7 +1,7 @@
 //! Canvas rendering off the UI thread (desktop) or inline (web). The latest request wins (queued
 //! older ones are skipped); the UI shows each finished image, re-projected to the current view,
 //! until the next one arrives.
-//! The renderer keeps its last image ([`figcraft_render::Retained`]): a pan renders only the
+//! The renderer keeps its last image ([`endrika_render::Retained`]): a pan renders only the
 //! uncovered strips and an edit only the areas of the layers that changed.
 //! A new zoom can't reuse that image, and the old one, re-projected, covers little of the view
 //! after a zoom out (an eighth of the width from 800% to 100%). When full renders are slow, the
@@ -11,9 +11,9 @@
 
 use std::sync::Arc;
 
-use figcraft_color::ColorProfile;
-use figcraft_doc::{Document, NodeId};
-use figcraft_render::{Pixmap, Retained, View, Work};
+use endrika_color::ColorProfile;
+use endrika_doc::{Document, NodeId};
+use endrika_render::{Pixmap, Retained, View, Work};
 // A monotonic clock in the browser too: preview decisions rest on how long renders take there.
 use web_time::Instant;
 
@@ -29,7 +29,7 @@ pub struct Job {
     pub view: View,
     pub outline: bool,
     /// Outline mode's options (hidden layers, object bounds).
-    pub outline_extras: figcraft_render::Outline,
+    pub outline_extras: endrika_render::Outline,
     /// Layers drawn as outlines (outlines for the selection).
     pub outlined: Vec<NodeId>,
     pub skip: Vec<NodeId>,
@@ -37,7 +37,7 @@ pub struct Job {
     pub solo: Option<NodeId>,
     /// Soft-proof sRGB: stripe the colours sRGB can't show.
     pub proof: bool,
-    /// The document's [`figcraft_engine::DocState::uid`]: images of other files are never shown.
+    /// The document's [`endrika_engine::DocState::uid`]: images of other files are never shown.
     pub uid: u64,
     /// A coarse preview may come first when the zoom changes (not in pixel preview, whose pixels
     /// are the point).
@@ -88,7 +88,7 @@ fn mark_outside_srgb(image: &mut egui::ColorImage, pix: &Pixmap, profile: ColorP
 fn run(job: &Job, view: &View, retained: &mut Retained, coarse: bool) -> Option<Done> {
     let t0 = Instant::now();
     // The canvas is a preview: what's too small to see in detail at this zoom is approximated.
-    let opts = figcraft_render::Options {
+    let opts = endrika_render::Options {
         outline_mode: job.outline,
         outline: job.outline_extras,
         outlined: job.outlined.clone(),
@@ -199,7 +199,7 @@ impl Worker {
         let done_with = finished.clone();
         // The window that renders with it (each window has its own worker).
         let viewport = ctx.viewport_id();
-        let spawned = std::thread::Builder::new().name("figcraft-render".into()).spawn(move || {
+        let spawned = std::thread::Builder::new().name("endrika-render".into()).spawn(move || {
             let mut renders = Renders::default();
             let mut next = None;
             loop {

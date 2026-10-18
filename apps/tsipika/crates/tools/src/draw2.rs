@@ -9,8 +9,8 @@ mod family;
 mod gesture;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, NodeKind};
-use vectorcraft_geom::{Anchor, AnchorKind, BezPath, Point, SubPath, Vec2};
+use tsipika_doc::{NodeId, NodeKind};
+use tsipika_geom::{Anchor, AnchorKind, BezPath, Point, SubPath, Vec2};
 
 use crate::{Action, Tool, ToolContext};
 
@@ -206,7 +206,7 @@ pub fn polyline(pts: &[Point]) -> BezPath {
 
 /// Visit `n` and everything inside it, depth first in paint order, but a Shaper Group's original
 /// shapes (its first child), which are not shown.
-pub(crate) fn walk_shown<'a>(n: &'a vectorcraft_doc::Node, f: &mut impl FnMut(&'a vectorcraft_doc::Node)) {
+pub(crate) fn walk_shown<'a>(n: &'a tsipika_doc::Node, f: &mut impl FnMut(&'a tsipika_doc::Node)) {
     f(n);
     for c in n.children().into_iter().flatten().skip(usize::from(n.extras().shaper.is_some())) {
         walk_shown(c, f);
@@ -216,7 +216,7 @@ pub(crate) fn walk_shown<'a>(n: &'a vectorcraft_doc::Node, f: &mut impl FnMut(&'
 /// Visit the nodes the anchor tools and the Lasso may pick, bottom to top ([`walk_shown`]). In
 /// isolation mode that is the isolated object and its contents, so in Construction mode, where a
 /// Shaper Group's original shapes are isolated, it visits them.
-pub(crate) fn walk_pickable<'a>(cx: &ToolContext<'a>, mut f: impl FnMut(&'a vectorcraft_doc::Node)) {
+pub(crate) fn walk_pickable<'a>(cx: &ToolContext<'a>, mut f: impl FnMut(&'a tsipika_doc::Node)) {
     if let Some(id) = cx.isolation
         && let Some(n) = cx.doc.node(id)
     {
@@ -259,7 +259,7 @@ pub(crate) fn editable_paths<'a>(cx: &'a ToolContext) -> impl Iterator<Item = No
 /// The paths whose anchors show with the Pen: the selected ones, and those inside selected groups
 /// and compound paths (not guides, nor locked or hidden ones). Pen + Alt converts their anchors.
 pub(crate) fn shown_paths(cx: &ToolContext) -> Vec<NodeId> {
-    fn inside(n: &vectorcraft_doc::Node, v: &mut Vec<NodeId>) {
+    fn inside(n: &tsipika_doc::Node, v: &mut Vec<NodeId>) {
         match &n.kind {
             NodeKind::Path { guide: false, .. } => v.push(n.id),
             // A Shape Builder group's first child is its shaper, not art.
@@ -334,7 +334,7 @@ pub(crate) fn remove_anchor((id, si, ai): (NodeId, usize, usize)) -> Action {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_geom::ParamCurve;
+    use tsipika_geom::ParamCurve;
 
     #[test]
     fn catmull_rom_passes_through_points() {

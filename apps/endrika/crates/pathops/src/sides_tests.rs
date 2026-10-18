@@ -1,8 +1,8 @@
 //! One-sided variable widths in stroke outlines: each side offset by its own width, lopsided
 //! caps around the middle of the end, dashes and closed paths.
 
-use figcraft_doc::{StrokeAlign, StrokeCap, StrokeProps, WidthPoint, WidthProfile};
-use figcraft_geom::kurbo::{BezPath, Shape};
+use endrika_doc::{StrokeAlign, StrokeCap, StrokeProps, WidthPoint, WidthProfile};
+use endrika_geom::kurbo::{BezPath, Shape};
 
 use crate::stroke_outline;
 

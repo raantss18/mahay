@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use cadcraft_geom::{Arc, Bounds2, EPS, Polyline, Vec2, bulge_to_arc};
+use drafitra_geom::{Arc, Bounds2, EPS, Polyline, Vec2, bulge_to_arc};
 
 use crate::{Drawing, Entity, EntityKind, LwPolyline, Prim};
 
@@ -276,7 +276,7 @@ fn lwpolyline_bounds(p: &LwPolyline) -> Bounds2 {
 mod tests {
     use super::*;
     use crate::{HAlign, Text, VAlign};
-    use cadcraft_geom::Vec3;
+    use drafitra_geom::Vec3;
 
     fn text(halign: HAlign, valign: VAlign) -> Text {
         Text {

@@ -1,18 +1,18 @@
 //! Recently opened files (#858): File ▸ Open Recent and the Start page list the drawings opened
 //! from a path, newest first, and keep them across restarts.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
-use cadcraft_ui_egui::menus::{self, Entry};
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::Drawing;
+use drafitra_ui_egui::menus::{self, Entry};
+use drafitra_ui_egui::{CadApp, Services};
 use egui::{Rect, Shape, vec2};
 use egui_kittest::Harness;
 
 /// Two drawing files on disk (the reader below accepts anything, so their contents don't matter).
 fn drawings(test: &str) -> (String, String) {
     set_io(IoHooks { read: |_, _| Ok(Drawing::new_metric()), write: |_, _| Ok(Vec::new()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-recent-{test}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-recent-{test}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |name: &str| {
         let p = dir.join(name);

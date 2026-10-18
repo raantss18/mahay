@@ -1,6 +1,6 @@
 //! Brushed strokes and symbol-instance staining in the renderer.
 //!
-//! A stroke with `brush: Some(name)` is painted as the filled art `vectorcraft_brush::stroke_pieces`
+//! A stroke with `brush: Some(name)` is painted as the filled art `tsipika_brush::stroke_pieces`
 //! generates. Pieces are cached per (node, stroke item) and validated by the node's path, the
 //! stroke layer and the brush definition (an `Arc` from the per-frame parsed library), so edits to
 //! any of them regenerate the art and nothing else does.
@@ -9,9 +9,9 @@ use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 
-use vectorcraft_brush::Brush;
-use vectorcraft_doc::{AppearanceItem, Document, Node, NodeKind, StrokeLayer, SymbolBoxes};
-use vectorcraft_geom::{BezPath, Rect};
+use tsipika_brush::Brush;
+use tsipika_doc::{AppearanceItem, Document, Node, NodeKind, StrokeLayer, SymbolBoxes};
+use tsipika_geom::{BezPath, Rect};
 use vello_cpu::RenderContext;
 
 use crate::lru::{self, FrameCache};
@@ -27,7 +27,7 @@ pub(crate) struct Entry {
 /// Parsed brush library and generated brush art.
 pub(crate) struct BrushCache {
     /// The document value the library was parsed from (`None` = defaults).
-    src: Option<Option<vectorcraft_brush::serde_json::Value>>,
+    src: Option<Option<tsipika_brush::serde_json::Value>>,
     /// A hash of that value (0 for the defaults), which rasters drawing brushed strokes record
     /// ([`crate::fx::Inputs`]).
     key: u64,
@@ -50,17 +50,17 @@ impl BrushCache {
             return;
         }
         self.checked = key;
-        let cur = doc.unknown.get(vectorcraft_brush::DOC_KEY);
+        let cur = doc.unknown.get(tsipika_brush::DOC_KEY);
         if self.src.as_ref().is_some_and(|s| s.as_ref() == cur) {
             return;
         }
         self.src = Some(cur.cloned());
         self.key = cur.map_or(0, |v| {
             let mut h = DefaultHasher::new();
-            vectorcraft_brush::serde_json::to_string(v).unwrap_or_default().hash(&mut h);
+            tsipika_brush::serde_json::to_string(v).unwrap_or_default().hash(&mut h);
             h.finish()
         });
-        self.lib = vectorcraft_brush::library(doc).into_iter().map(|b| (b.name.clone(), Arc::new(b))).collect();
+        self.lib = tsipika_brush::library(doc).into_iter().map(|b| (b.name.clone(), Arc::new(b))).collect();
     }
 
     /// [`Self::key`] for the brush library `doc` holds (checked once a frame, `stamp`).
@@ -83,7 +83,7 @@ pub(crate) fn cull_bounds(symbols: &SymbolBoxes, n: &Node) -> Option<Rect> {
 /// has a visible brushed stroke and of the objects in that art that have one
 /// ([`SymbolBoxes::brush_width`]), and 0 when neither has one.
 pub(crate) fn pad(symbols: &SymbolBoxes, n: &Node) -> f64 {
-    let own = vectorcraft_brush::has_brush(n)
+    let own = tsipika_brush::has_brush(n)
         .then(|| n.appearance.items.iter().filter_map(|i| if let AppearanceItem::Stroke(s) = i { Some(s.width) } else { None }).fold(1.0, f64::max));
     let art = match &n.kind {
         NodeKind::SymbolInstance { symbol, .. } => symbols.brush_width(symbol).map(|w| w.max(1.0)),
@@ -92,7 +92,7 @@ pub(crate) fn pad(symbols: &SymbolBoxes, n: &Node) -> f64 {
     own.into_iter().chain(art).reduce(f64::max).map_or(0.0, |w| 16.0 * w + 8.0)
 }
 
-pub use vectorcraft_brush::instance_art;
+pub use tsipika_brush::instance_art;
 
 impl Renderer {
     /// Paint stroke `st` of `n` (outline `bp`) with its brush. Returns false when the brush is
@@ -107,7 +107,7 @@ impl Renderer {
         let pieces = match self.brushes.entries.get(&key, stamp) {
             Some(e) if Arc::ptr_eq(&e.brush, &brush) && e.stroke == *st && e.path == *bp => e.pieces.clone(),
             _ => {
-                let pieces = Arc::new(vectorcraft_brush::stroke_pieces(f.doc, &brush, bp, st));
+                let pieces = Arc::new(tsipika_brush::stroke_pieces(f.doc, &brush, bp, st));
                 let bytes = size_of::<Entry>() + lru::path_bytes(bp) + pieces.iter().map(lru::node_bytes).sum::<usize>();
                 self.brushes.entries.insert(key, Entry { path: bp.clone(), stroke: st.clone(), brush, pieces: pieces.clone() }, bytes, stamp);
                 pieces
@@ -118,7 +118,7 @@ impl Renderer {
                 r.draw_node(c, fr, p, true);
             }
         };
-        if st.opacity < 1.0 || st.blend != vectorcraft_color::BlendMode::Normal {
+        if st.opacity < 1.0 || st.blend != tsipika_color::BlendMode::Normal {
             self.group(ctx, f, crate::group::Composite { blend: st.blend, opacity: st.opacity, ..Default::default() }, &mut draw);
         } else {
             draw(self, ctx, f);
@@ -129,9 +129,9 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_color::{Color, Paint};
-    use vectorcraft_doc::{Appearance, Document, Node};
-    use vectorcraft_geom::{Affine, Rect, shapes};
+    use tsipika_color::{Color, Paint};
+    use tsipika_doc::{Appearance, Document, Node};
+    use tsipika_geom::{Affine, Rect, shapes};
 
     use crate::{RenderOptions, Rendered, Renderer};
 
@@ -183,11 +183,11 @@ mod tests {
         let mut r = Renderer::new();
         let mut d = doc_with_line(Some("3 pt. Round"), 1.0);
         let a = render(&mut r, &d);
-        let mut lib = vectorcraft_brush::library(&d);
-        if let vectorcraft_brush::BrushKind::Calligraphic(c) = &mut lib[0].kind {
+        let mut lib = tsipika_brush::library(&d);
+        if let tsipika_brush::BrushKind::Calligraphic(c) = &mut lib[0].kind {
             c.size = 20.0;
         }
-        vectorcraft_brush::store(&mut d, &lib);
+        tsipika_brush::store(&mut d, &lib);
         let b = render(&mut r, &d);
         assert!(!dark(a.pixel(100, 58)) && dark(b.pixel(100, 58)));
     }
@@ -196,13 +196,13 @@ mod tests {
     fn stained_symbol_instance() {
         let mut d = Document::new(100.0, 100.0);
         let art = Node::path(
-            vectorcraft_doc::NodeId(0),
+            tsipika_doc::NodeId(0),
             shapes::rectangle(Rect::new(-10.0, -10.0, 10.0, 10.0)),
             Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0),
         );
-        d.symbols.push(vectorcraft_doc::Symbol { name: "S".into(), art: std::sync::Arc::new(art) });
+        d.symbols.push(tsipika_doc::Symbol { name: "S".into(), art: std::sync::Arc::new(art) });
         let id = d.alloc_id();
-        let mut inst = Node::new(id, vectorcraft_doc::NodeKind::SymbolInstance { symbol: "S".into(), xf: Affine::translate((50.0, 50.0)) });
+        let mut inst = Node::new(id, tsipika_doc::NodeKind::SymbolInstance { symbol: "S".into(), xf: Affine::translate((50.0, 50.0)) });
         inst.appearance.set_fill(Paint::solid(Color::rgb(1.0, 0.0, 0.0)));
         let l = d.layers[0].id;
         d.insert(Some(l), 0, inst).unwrap();
@@ -215,18 +215,18 @@ mod tests {
         // The art: a line from (0, 40) to (0, 60) with a 1 pt stroke painted by a 20 pt round nib,
         // drawn from x -6. The line lies left of the view, and the nib paints 10 pt either side of it.
         let mut d = Document::new(100.0, 100.0);
-        let mut lib = vectorcraft_brush::library(&d);
-        let Some(vectorcraft_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
+        let mut lib = tsipika_brush::library(&d);
+        let Some(tsipika_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
             panic!("the 3 pt. Round brush")
         };
         c.size = 20.0;
-        vectorcraft_brush::store(&mut d, &lib);
+        tsipika_brush::store(&mut d, &lib);
         let mut ap = Appearance::basic(Paint::None, Paint::solid(Color::BLACK), 1.0);
         ap.stroke_mut().unwrap().brush = Some("3 pt. Round".into());
-        let art = Node::path(vectorcraft_doc::NodeId(0), shapes::line((0.0, 40.0).into(), (0.0, 60.0).into()), ap);
-        d.symbols.push(vectorcraft_doc::Symbol { name: "Nib".into(), art: std::sync::Arc::new(art) });
+        let art = Node::path(tsipika_doc::NodeId(0), shapes::line((0.0, 40.0).into(), (0.0, 60.0).into()), ap);
+        d.symbols.push(tsipika_doc::Symbol { name: "Nib".into(), art: std::sync::Arc::new(art) });
         let id = d.alloc_id();
-        let inst = Node::new(id, vectorcraft_doc::NodeKind::SymbolInstance { symbol: "Nib".into(), xf: Affine::translate((-6.0, 0.0)) });
+        let inst = Node::new(id, tsipika_doc::NodeKind::SymbolInstance { symbol: "Nib".into(), xf: Affine::translate((-6.0, 0.0)) });
         let l = d.layers[0].id;
         d.insert(Some(l), 0, inst).unwrap();
         let img = render(&mut Renderer::new(), &d);
@@ -245,24 +245,24 @@ mod tests {
         };
         for instance in [false, true] {
             let mut d = Document::new(100.0, 100.0);
-            let mut lib = vectorcraft_brush::library(&d);
-            let Some(vectorcraft_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
+            let mut lib = tsipika_brush::library(&d);
+            let Some(tsipika_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
                 panic!("the 3 pt. Round brush")
             };
             c.size = 20.0;
-            vectorcraft_brush::store(&mut d, &lib);
+            tsipika_brush::store(&mut d, &lib);
             let moved = Affine::translate((-8.0, 0.0));
             let source = if instance {
                 let art = line(&mut d);
-                d.symbols.push(vectorcraft_doc::Symbol { name: "Nib".into(), art: std::sync::Arc::new(art) });
-                Node::new(d.alloc_id(), vectorcraft_doc::NodeKind::SymbolInstance { symbol: "Nib".into(), xf: moved })
+                d.symbols.push(tsipika_doc::Symbol { name: "Nib".into(), art: std::sync::Arc::new(art) });
+                Node::new(d.alloc_id(), tsipika_doc::NodeKind::SymbolInstance { symbol: "Nib".into(), xf: moved })
             } else {
                 let mut n = line(&mut d);
                 n.transform(moved, false);
                 n
             };
-            let grid = vectorcraft_doc::TileType::Grid;
-            let kind = vectorcraft_doc::RepeatKind::Grid {
+            let grid = tsipika_doc::TileType::Grid;
+            let kind = tsipika_doc::RepeatKind::Grid {
                 h_spacing: 0.0,
                 v_spacing: 0.0,
                 rows: 1,
@@ -271,8 +271,8 @@ mod tests {
                 flip_rows: false,
                 flip_cols: false,
             };
-            let spec = vectorcraft_doc::RepeatSpec { kind, source: vec![std::sync::Arc::new(source)] };
-            let repeat = Node::new(d.alloc_id(), vectorcraft_doc::NodeKind::Repeat(spec));
+            let spec = tsipika_doc::RepeatSpec { kind, source: vec![std::sync::Arc::new(source)] };
+            let repeat = Node::new(d.alloc_id(), tsipika_doc::NodeKind::Repeat(spec));
             let l = d.layers[0].id;
             d.insert(Some(l), 0, repeat).unwrap();
             let img = render(&mut Renderer::new(), &d);

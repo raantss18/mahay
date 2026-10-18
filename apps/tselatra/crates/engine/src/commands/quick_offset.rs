@@ -5,8 +5,8 @@
 
 use std::collections::HashMap;
 
-use effectcraft_project::LayerId;
-use effectcraft_time::{TICKS_PER_SECOND, Tick};
+use tselatra_project::LayerId;
+use tselatra_time::{TICKS_PER_SECOND, Tick};
 use serde_json::{Value, json};
 
 use super::prop::{key_gesture, layer_shift, move_key_refs};

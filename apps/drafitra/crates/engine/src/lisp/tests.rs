@@ -5,7 +5,7 @@ use crate::Session;
 use crate::cmd::file::{EntityCodec, set_entity_codec};
 
 fn session() -> Session {
-    set_entity_codec(EntityCodec { groups: cadcraft_io::entity_groups, entity: cadcraft_io::entity_from_groups });
+    set_entity_codec(EntityCodec { groups: drafitra_io::entity_groups, entity: drafitra_io::entity_from_groups });
     Session::new()
 }
 
@@ -211,7 +211,7 @@ fn command_draws_and_one_routine_is_one_undo_step() {
     // An expression at a command's prompt answers it.
     s.cmdline("CIRCLE 0,0 (* 2 dist)").unwrap();
     let r = s.doc().unwrap().model.iter().find_map(|e| match &e.kind {
-        cadcraft_doc::EntityKind::Circle(c) if c.center.x == 0.0 && c.center.y == 0.0 => Some(c.radius),
+        drafitra_doc::EntityKind::Circle(c) if c.center.x == 0.0 && c.center.y == 0.0 => Some(c.radius),
         _ => None,
     });
     assert_eq!(r, Some(15.0));
@@ -293,9 +293,9 @@ fn interactive_routine_waits_for_the_user() {
     s.cmdline("PT").unwrap();
     assert!(s.lisp_running());
     assert_eq!(s.prompt_text(), "Where: ");
-    s.input(crate::Input::Point(cadcraft_geom::Vec2::new(3.0, 4.0))).unwrap();
+    s.input(crate::Input::Point(drafitra_geom::Vec2::new(3.0, 4.0))).unwrap();
     assert!(!s.lisp_running());
-    assert!(s.doc().unwrap().model.iter().any(|e| matches!(&e.kind, cadcraft_doc::EntityKind::Circle(c) if c.center.x == 3.0 && c.center.y == 4.0)));
+    assert!(s.doc().unwrap().model.iter().any(|e| matches!(&e.kind, drafitra_doc::EntityKind::Circle(c) if c.center.x == 3.0 && c.center.y == 4.0)));
     // Typed answers and keywords.
     s.cmdline("(progn (initget 1 \"Yes No\") (setq ans (getkword \"\\nSure? [Yes/No]: \")))").unwrap();
     s.cmdline("n").unwrap();
@@ -310,9 +310,9 @@ fn interactive_routine_waits_for_the_user() {
     // `pause` lets the user answer one prompt of a command.
     s.cmdline("(command \"_.CIRCLE\" pause 2)").unwrap();
     assert!(s.lisp_running());
-    s.input(crate::Input::Point(cadcraft_geom::Vec2::new(50.0, 50.0))).unwrap();
+    s.input(crate::Input::Point(drafitra_geom::Vec2::new(50.0, 50.0))).unwrap();
     assert!(!s.lisp_running());
-    assert!(s.doc().unwrap().model.iter().any(|e| matches!(&e.kind, cadcraft_doc::EntityKind::Circle(c) if c.center.x == 50.0 && c.radius == 2.0)));
+    assert!(s.doc().unwrap().model.iter().any(|e| matches!(&e.kind, drafitra_doc::EntityKind::Circle(c) if c.center.x == 50.0 && c.radius == 2.0)));
 }
 
 #[test]
@@ -394,16 +394,16 @@ fn a_waiting_routine_is_a_prompt_with_a_rubber_band() {
     let current = s.current_prompt().unwrap();
     assert!(current.raw && current.display() == "Other corner: ");
     // getcorner drags a rectangle from its corner.
-    let band = s.preview(cadcraft_geom::Vec2::new(3.0, 2.0));
+    let band = s.preview(drafitra_geom::Vec2::new(3.0, 2.0));
     assert_eq!(band.len(), 4);
-    s.input(crate::Input::Point(cadcraft_geom::Vec2::new(3.0, 2.0))).unwrap();
+    s.input(crate::Input::Point(drafitra_geom::Vec2::new(3.0, 2.0))).unwrap();
     assert!(!s.prompting());
     // getpoint with a base point drags a line; without one, nothing.
     s.cmdline("(getpoint '(1 1))").unwrap();
-    assert_eq!(s.preview(cadcraft_geom::Vec2::new(4.0, 5.0)).len(), 1);
+    assert_eq!(s.preview(drafitra_geom::Vec2::new(4.0, 5.0)).len(), 1);
     s.cancel();
     s.cmdline("(getpoint)").unwrap();
-    assert!(s.preview(cadcraft_geom::Vec2::new(4.0, 5.0)).is_empty());
+    assert!(s.preview(drafitra_geom::Vec2::new(4.0, 5.0)).is_empty());
     s.cancel();
 }
 
@@ -417,7 +417,7 @@ fn a_leading_newline_ends_the_command_line_instead_of_adding_an_empty_one() {
 
 #[test]
 fn startup_files_load_from_the_support_folder() {
-    let dir = std::env::temp_dir().join(format!("cadcraft-lisp-startup-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-lisp-startup-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("acad.lsp"), "(defun c:fromacad () (princ \"acad\") (princ))").unwrap();
@@ -459,7 +459,7 @@ fn startup_files_load_from_the_support_folder() {
 
     // A drawing opened from a folder with its own acaddoc.lsp: only the support folder's runs.
     let path = drawings.join("plan.dxf").to_string_lossy().into_owned();
-    s.open_drawing(cadcraft_doc::Drawing::new_metric(), "plan.dxf", Some(path));
+    s.open_drawing(drafitra_doc::Drawing::new_metric(), "plan.dxf", Some(path));
     s.lisp_tick();
     assert_eq!(v(&s, "DOCVAR"), "1");
     assert!(s.lisp_var("EVIL").is_nil());
@@ -532,13 +532,13 @@ fn a_panic_inside_a_routine_ends_it_with_an_error() {
     let mut s = session();
     let n = |s: &Session| s.doc().unwrap().model.handles().len();
     let before = n(&s);
-    let e = eval(&mut s, "(entmake '((0 . \"LINE\") (10 0 0 0) (11 5 0 0))) (cadcraft-test-panic)").unwrap_err();
+    let e = eval(&mut s, "(entmake '((0 . \"LINE\") (10 0 0 0) (11 5 0 0))) (drafitra-test-panic)").unwrap_err();
     assert!(e.contains("internal error"), "{e}");
     assert_eq!(n(&s), before, "the drawing is put back");
     assert_eq!(ok(&mut s, "(+ 1 2)"), "3");
 
     // A routine carried on by the per-frame tick.
-    let r = s.lisp_eval("(repeat 500000 (setq i 1)) (cadcraft-test-panic)", false, false, Vec::new()).unwrap();
+    let r = s.lisp_eval("(repeat 500000 (setq i 1)) (drafitra-test-panic)", false, false, Vec::new()).unwrap();
     assert!(r.is_none(), "the routine gave the interface a frame");
     assert!(s.lisp_busy());
     for _ in 0..100 {

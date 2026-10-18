@@ -8,7 +8,7 @@
 //! first dash, so a dash is centred on every corner and on both ends of an open path.
 
 use kurbo::{BezPath, ParamCurve, ParamCurveArclen, PathSeg, Point, Shape, Vec2};
-use vectorcraft_doc::{Dash, LineCap};
+use tsipika_doc::{Dash, LineCap};
 
 use super::{ARCLEN_ACCURACY, kink, push_seg, segments, subpaths, tangent};
 

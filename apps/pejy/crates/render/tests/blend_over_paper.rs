@@ -1,11 +1,11 @@
 //! Blend modes blend with the objects below, never with the paper: over blank paper an object in
 //! Color Dodge (or any other mode) shows as it is, as in InDesign and in the exported PDF.
 
-use designcraft_color::{BlendMode, Color, Swatch};
-use designcraft_compose::Cache;
-use designcraft_doc::{Document, Fill, Item, ItemId, Shape, SpreadRef, build::NewDocument};
-use designcraft_geom::{Affine, Rect, shapes};
-use designcraft_render::{Placed, RenderOptions, Renderer};
+use pejy_color::{BlendMode, Color, Swatch};
+use pejy_compose::Cache;
+use pejy_doc::{Document, Fill, Item, ItemId, Shape, SpreadRef, build::NewDocument};
+use pejy_geom::{Affine, Rect, shapes};
+use pejy_render::{Placed, RenderOptions, Renderer};
 
 /// A 200 x 100 page: a mid-blue rectangle on the right half, and over both halves a black
 /// rectangle in `blend`.

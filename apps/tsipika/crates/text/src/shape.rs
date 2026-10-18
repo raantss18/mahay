@@ -9,8 +9,8 @@ use unicode_script::{Script, UnicodeScript};
 use harfrust::{Direction, Feature, ShapeOptions, Tag, UnicodeBuffer};
 use skrifa::MetadataProvider;
 use skrifa::instance::Size;
-use vectorcraft_doc::text::INLINE_CHAR;
-use vectorcraft_doc::{CharStyle, InlineArt};
+use tsipika_doc::text::INLINE_CHAR;
+use tsipika_doc::{CharStyle, InlineArt};
 
 use crate::features::{OtFeatures, ligatures_suppressed_by};
 use crate::fontdb::{FontDb, FontFace};
@@ -57,7 +57,7 @@ pub(crate) struct SGlyph {
     pub vpal: Option<VAdjust>,
     /// Resolved Unicode bidi embedding level (logical source order).
     pub level: Level,
-    /// An inline graphic ([`vectorcraft_doc::TextRun::inline`]) standing in for a glyph.
+    /// An inline graphic ([`tsipika_doc::TextRun::inline`]) standing in for a glyph.
     pub inline: Option<InlineBox>,
     /// A word of a script written without spaces (Thai, Lao, Khmer, Myanmar) ends after the
     /// glyph's cluster, so a line may break there ([`mark_word_ends`]).

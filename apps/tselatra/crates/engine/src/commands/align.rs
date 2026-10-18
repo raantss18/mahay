@@ -7,10 +7,10 @@
 //! Dimensions writes X/Y Position), at the current time (a key when Position is animated). All
 //! moves are one undo step.
 
-use effectcraft_geom::{Mat4, Vec3};
-use effectcraft_keyframe::Value as KValue;
-use effectcraft_project::{ItemId, Layer, LayerId};
-use effectcraft_render::EvalCtx;
+use tselatra_geom::{Mat4, Vec3};
+use tselatra_keyframe::Value as KValue;
+use tselatra_project::{ItemId, Layer, LayerId};
+use tselatra_render::EvalCtx;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, f_p, has_layers, layer_mut, layers_p, merge_p, str_p};
@@ -34,7 +34,7 @@ fn placed(s: &Session, cid: ItemId, ids: &[LayerId]) -> Result<Vec<Placed>> {
         if l.transform().is_none() {
             continue;
         }
-        let Some(b) = effectcraft_render::content_bounds(&ctx, l) else { continue };
+        let Some(b) = tselatra_render::content_bounds(&ctx, l) else { continue };
         let w = ctx.world_matrix(l);
         let pts = [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]].map(|p| w.apply(Vec3::from([p[0], p[1], 0.0])));
         let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
@@ -354,7 +354,7 @@ mod tests {
         let keys = s.active_comp().unwrap().layer(LayerId(a)).unwrap().props.prop("transform/position").unwrap().keys.clone();
         assert_eq!(
             keys.iter().map(|k| (k.time, k.value.as_vec3())).collect::<Vec<_>>(),
-            vec![(effectcraft_time::Tick::ZERO, [0.0; 3]), (s.time(), [10.0, 0.0, 0.0])]
+            vec![(tselatra_time::Tick::ZERO, [0.0; 3]), (s.time(), [10.0, 0.0, 0.0])]
         );
         // A locked layer doesn't move.
         s.execute("layer.setSwitch", json!({"layers": [child], "switch": "lock", "value": true})).unwrap();

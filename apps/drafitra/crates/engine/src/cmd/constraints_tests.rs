@@ -1,5 +1,5 @@
-use cadcraft_doc::{ConstraintKind, EntityKind, Handle};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{ConstraintKind, EntityKind, Handle};
+use drafitra_geom::Vec2;
 use serde_json::json;
 
 use crate::{Input, Session, command_specs};

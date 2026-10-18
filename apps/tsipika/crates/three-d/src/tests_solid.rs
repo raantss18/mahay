@@ -1,4 +1,4 @@
-use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect};
+use tsipika_geom::{BezPath, FillRule, PathData, Point, Rect};
 
 use super::*;
 
@@ -181,7 +181,7 @@ fn a_plane_turns_about_the_given_centre() {
 #[test]
 fn inflate_covers_the_shape_and_puffs_by_the_volume() {
     let mut c = BezPath::new();
-    c.extend(vectorcraft_geom::kurbo::Shape::path_elements(&vectorcraft_geom::kurbo::Circle::new((100.0, 100.0), 50.0), 0.01));
+    c.extend(tsipika_geom::kurbo::Shape::path_elements(&tsipika_geom::kurbo::Circle::new((100.0, 100.0), 50.0), 0.01));
     let (p, b) = shape(&c);
     let f = inflate(&p, FillRule::EvenOdd, b, Inflate::default(), front()).unwrap();
     // Straight on, the cushion covers the circle (sampled as a polygon) and nothing else.
@@ -286,7 +286,7 @@ fn the_inflate_membrane_matches_known_solutions() {
     // ∇²φ = −1, zero on the outline: a disc of radius r peaks at r²/4, a square of side l at
     // about 0.07367 l².
     let mut c = BezPath::new();
-    c.extend(vectorcraft_geom::kurbo::Shape::path_elements(&vectorcraft_geom::kurbo::Circle::new((100.0, 100.0), 50.0), 0.01));
+    c.extend(tsipika_geom::kurbo::Shape::path_elements(&tsipika_geom::kurbo::Circle::new((100.0, 100.0), 50.0), 0.01));
     let (p, b) = shape(&c);
     let r = rings(&p, FillRule::EvenOdd, 100.0, MAX_SOLID_POINTS).unwrap();
     let disc = Membrane::solve(&r, &Edges::new(&r), b.origin(), b.width() / 48.0, 49, 49);
@@ -358,7 +358,7 @@ fn small_curves_take_few_points_and_rotate_takes_large_outlines() {
     // Each piece stays within the tolerance of the curve: a circle's chords sag at most 0.05 pt
     // here (1/2000 of its 100 pt size is less).
     let mut c = BezPath::new();
-    c.extend(vectorcraft_geom::kurbo::Shape::path_elements(&vectorcraft_geom::kurbo::Circle::new((50.0, 50.0), 50.0), 0.01));
+    c.extend(tsipika_geom::kurbo::Shape::path_elements(&tsipika_geom::kurbo::Circle::new((50.0, 50.0), 50.0), 0.01));
     let (p, r) = shape(&c);
     let ring = &rings(&p, FillRule::EvenOdd, 100.0, MAX_SOLID_POINTS).unwrap()[0];
     for (a, b) in ring.iter().zip(ring.iter().cycle().skip(1)) {
@@ -688,7 +688,7 @@ fn nonzero_shapes_keep_the_middle_a_same_way_contour_encloses() {
         if clockwise {
             pts.reverse();
         }
-        vectorcraft_geom::SubPath::polyline(&pts, true)
+        tsipika_geom::SubPath::polyline(&pts, true)
     };
     let (outer, inner) = (Rect::new(0.0, 0.0, 100.0, 100.0), Rect::new(25.0, 25.0, 75.0, 75.0));
     let nested = |inner_clockwise: bool| PathData::new(vec![rect(outer, false), rect(inner, inner_clockwise)]);

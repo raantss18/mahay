@@ -2,10 +2,10 @@
 
 use std::collections::HashMap;
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_geom::{PolyVertex, Spline, Vec2, Vec3};
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::*;
+use drafitra_dxf::{Tag, records, sections};
+use drafitra_geom::{PolyVertex, Spline, Vec2, Vec3};
 
 use crate::{IoError, Result};
 
@@ -89,7 +89,7 @@ fn ocs(c: &Common, p: Vec3) -> Vec3 {
 }
 
 fn ocs_n(n: Vec3, p: Vec3) -> Vec3 {
-    if (n.z - 1.0).abs() < 1e-12 && n.x.abs() < 1e-12 && n.y.abs() < 1e-12 { p } else { cadcraft_geom::Mat4::ocs(n).apply(p) }
+    if (n.z - 1.0).abs() < 1e-12 && n.x.abs() < 1e-12 && n.y.abs() < 1e-12 { p } else { drafitra_geom::Mat4::ocs(n).apply(p) }
 }
 
 /// The properties an ATTRIB carries itself: those it has groups for. Its layer counts only when
@@ -127,7 +127,7 @@ fn split_embedded(tags: &[Tag]) -> (&[Tag], Option<&[Tag]>) {
 /// A multiline attribute's text, from the MTEXT groups embedded in it.
 fn multiline_attrib(embedded: Option<&[Tag]>, c: &Common) -> Option<MultilineAttrib> {
     let mtext = mtext_from(embedded.filter(|e| !e.is_empty())?, c);
-    let read_as = cadcraft_fonts::plain_mtext(&mtext.contents);
+    let read_as = drafitra_fonts::plain_mtext(&mtext.contents);
     Some(MultilineAttrib { mtext, read_as })
 }
 
@@ -154,7 +154,7 @@ fn mtext_from(tags: &[Tag], c: &Common) -> MText {
         // Insertion point and direction are WCS, but the line height runs along extrusion ×
         // direction: under (0,0,-1) the glyphs are mirrored. Drawn readable (MIRRTEXT = 0) with
         // the same footprint, the text turns round and left/right attachment swap.
-        rotation = cadcraft_geom::norm_angle(rotation + std::f64::consts::PI);
+        rotation = drafitra_geom::norm_angle(rotation + std::f64::consts::PI);
         attach = match attach {
             1 | 4 | 7 => attach + 2,
             3 | 6 | 9 => attach - 2,
@@ -214,11 +214,11 @@ fn text_from(t: &T) -> Text {
 }
 
 /// TEXT / ATTRIB / ATTDEF with extrusion (0,0,-1): the points are OCS and the text runs from its
-/// insertion point towards -x in the WCS, with mirrored glyphs. CADCraft draws text readable
+/// insertion point towards -x in the WCS, with mirrored glyphs. Drafitra draws text readable
 /// (MIRRTEXT = 0), so it keeps the mirrored footprint: the direction turns to -rotation and
 /// left/right justification swap ends (start ↔ end point).
 fn mirror_text(t: &mut Text, align: Option<Vec3>, insert: Vec3) {
-    t.rotation = cadcraft_geom::norm_angle(-t.rotation);
+    t.rotation = drafitra_geom::norm_angle(-t.rotation);
     let baseline_left = |t: &Text, p: Vec3| if t.valign == VAlign::Baseline { None } else { Some(p) };
     match t.halign {
         HAlign::Left => {
@@ -261,8 +261,8 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
             if c.extrusion.z < 0.0 {
                 // Mirrored OCS: angles run the other way.
                 let (s, e) = (std::f64::consts::PI - a.end, std::f64::consts::PI - a.start);
-                a.start = cadcraft_geom::norm_angle(s);
-                a.end = cadcraft_geom::norm_angle(e);
+                a.start = drafitra_geom::norm_angle(s);
+                a.end = drafitra_geom::norm_angle(e);
             }
             EntityKind::Arc(a)
         }
@@ -274,13 +274,13 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
                 start: t.fd(41, 0.0),
                 end: t.fd(42, std::f64::consts::TAU),
             };
-            if c.extrusion.z < 0.0 && (cadcraft_geom::ccw_sweep(e.start, e.end) - std::f64::consts::TAU).abs() > 1e-9 {
+            if c.extrusion.z < 0.0 && (drafitra_geom::ccw_sweep(e.start, e.end) - std::f64::consts::TAU).abs() > 1e-9 {
                 // Centre and major axis are WCS, but the minor axis is extrusion × major: with (0,0,-1)
                 // it points the other way, so parameter t lands where -t does in the XY plane. A full
                 // ellipse is symmetric and stays as it is.
                 let (s, e2) = (-e.end, -e.start);
-                e.start = cadcraft_geom::norm_angle(s);
-                e.end = cadcraft_geom::norm_angle(e2);
+                e.start = drafitra_geom::norm_angle(s);
+                e.end = drafitra_geom::norm_angle(e2);
             }
             EntityKind::Ellipse(e)
         }
@@ -333,7 +333,7 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
                 elevation: t.fd(38, 0.0),
                 plinegen: flags & 128 != 0,
             };
-            // A region CADCraft wrote as polylines (`dxf_region`).
+            // A region Drafitra wrote as polylines (`dxf_region`).
             crate::dxf_region::from_polyline(tags, pl)?
         }
         "SPLINE" => {
@@ -343,7 +343,7 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
             let weights = t.all_f(41);
             let fit = t.pts(11);
             let tangent = |c: i32| t.f(c).map(|_| t.p(c).xy());
-            let fit_opts = cadcraft_geom::FitOptions {
+            let fit_opts = drafitra_geom::FitOptions {
                 knots: Default::default(),
                 start_tangent: tangent(12),
                 end_tangent: tangent(13),
@@ -476,7 +476,7 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
                     v.p.x = -v.p.x;
                     v.bulge = -v.bulge;
                 }
-                h.angle = cadcraft_geom::norm_angle(std::f64::consts::PI - h.angle);
+                h.angle = drafitra_geom::norm_angle(std::f64::consts::PI - h.angle);
             }
             k
         }
@@ -523,7 +523,7 @@ fn entity(kind: &str, tags: &[Tag]) -> Option<(Common, EntityKind)> {
     Some((c, k))
 }
 
-/// An ACAD_TABLE entity: sizes, cell texts and merges (DXF Reference), plus CADCraft's
+/// An ACAD_TABLE entity: sizes, cell texts and merges (DXF Reference), plus Drafitra's
 /// title/header flags, text height and style name from xdata when present.
 fn acad_table(tags: &[Tag]) -> Table {
     const MAX_CELLS: usize = 1_000_000;
@@ -566,7 +566,7 @@ fn acad_table(tags: &[Tag]) -> Table {
         text.push_str(&c.s(1).unwrap_or_default());
         let span = |code: i32| c.i(code).and_then(|v| u32::try_from(v).ok());
         // A merge starts at the cell whose span (rows 176, columns 175) is more than one cell.
-        // Its own merged flag (173) varies by writer: CADCraft sets it, while AutoCAD-style
+        // Its own merged flag (173) varies by writer: Drafitra sets it, while AutoCAD-style
         // writers (acadrust 0.6.4) set it only on the cells the merge covers, whose span is 0.
         let merged = match (span(176), span(175)) {
             (Some(rs), Some(cs)) if rs >= 1 && cs >= 1 && (rs, cs) != (1, 1) => Some((rs, cs)),
@@ -677,14 +677,14 @@ fn hatch(tags: &[Tag], t: &T) -> Option<EntityKind> {
                         let (s, e) = if ccw { (sa, ea) } else { (-sa, -ea) };
                         let p0 = Vec2::polar(c, r, s);
                         let p1 = Vec2::polar(c, r, e);
-                        let sweep = if ccw { cadcraft_geom::ccw_sweep(s, e) } else { -cadcraft_geom::ccw_sweep(e, s) };
+                        let sweep = if ccw { drafitra_geom::ccw_sweep(s, e) } else { -drafitra_geom::ccw_sweep(e, s) };
                         if verts.last().is_none_or(|l| !l.p.near(p0, 1e-9)) {
                             verts.push(PolyVertex::new(p0));
                         }
                         // A full circle (0 to 360) starts and ends on the same point, which one
                         // bulge can't span: it goes in as two half circles.
                         let full = (sweep.abs() - std::f64::consts::TAU).abs() < 1e-9;
-                        let bulge = cadcraft_geom::arc_to_bulge(if full { sweep / 2.0 } else { sweep });
+                        let bulge = drafitra_geom::arc_to_bulge(if full { sweep / 2.0 } else { sweep });
                         if let Some(l) = verts.last_mut() {
                             l.bulge = bulge;
                         }
@@ -706,7 +706,7 @@ fn hatch(tags: &[Tag], t: &T) -> Option<EntityKind> {
                         // runs from -start clockwise to -end, the ccw sweep from -end to -start
                         // walked backwards.
                         let (s, e) = if ccw { (sa, ea) } else { (-ea, -sa) };
-                        let e = cadcraft_geom::Ellipse { center: c, major: m, ratio, start: s, end: e };
+                        let e = drafitra_geom::Ellipse { center: c, major: m, ratio, start: s, end: e };
                         let mut pts = Vec::new();
                         e.tessellate(m.len() * 1e-3, &mut pts);
                         if !ccw {
@@ -836,7 +836,7 @@ const MAX_PATTERN_DASHES: usize = 256;
 /// (unit scale, no hatch rotation, base point relative to the hatch origin, offset as shift
 /// along the line and spacing), which the writer and the renderer turn back. Lines with
 /// non-finite values are skipped.
-fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec<cadcraft_doc::library::PatternLine> {
+fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec<drafitra_doc::library::PatternLine> {
     let Some(at) = tags.iter().position(|x| x.code == 78) else { return Vec::new() };
     let scale = if scale.is_finite() && scale > 1e-9 { scale } else { 1.0 };
     let angle = if angle.is_finite() { angle } else { 0.0 };
@@ -869,7 +869,7 @@ fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec
         .map(|(a, base, offset, dashes)| {
             let local = (base - origin).rotate(-angle) * (1.0 / scale);
             let delta = offset.rotate(-a.to_radians()) * (1.0 / scale);
-            cadcraft_doc::library::PatternLine {
+            drafitra_doc::library::PatternLine {
                 angle: a - angle.to_degrees(),
                 origin: (local.x, local.y),
                 delta: (delta.x, delta.y),
@@ -879,7 +879,7 @@ fn pattern_definition(tags: &[Tag], scale: f64, angle: f64, origin: Vec2) -> Vec
         .collect()
 }
 
-/// Hatch origin and background colour from `CADCRAFT` xdata: `1000 HATCH`, `1011` origin,
+/// Hatch origin and background colour from `DRAFITRA` xdata: `1000 HATCH`, `1011` origin,
 /// `1000` background colour name (empty for none). Defaults when absent.
 fn hatch_xdata(tags: &[Tag]) -> (Vec2, Option<Color>) {
     let x = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP);
@@ -898,12 +898,12 @@ fn default_gradient() -> Gradient {
 }
 
 /// A hatch's gradient fill: the native groups when present (another program may have edited
-/// them), otherwise CADCraft's `GRADIENT` xdata (kept by R2000 files and DWG conversions).
+/// them), otherwise Drafitra's `GRADIENT` xdata (kept by R2000 files and DWG conversions).
 fn gradient(tags: &[Tag]) -> Option<Gradient> {
     if tags.iter().any(|x| x.code == 450) { native_gradient(tags) } else { xdata_gradient(tags) }
 }
 
-/// `CADCRAFT` xdata: `1000 GRADIENT`, then name, 1040 angle, 1070 centered, colour 1 and 2 names.
+/// `DRAFITRA` xdata: `1000 GRADIENT`, then name, 1040 angle, 1070 centered, colour 1 and 2 names.
 fn xdata_gradient(tags: &[Tag]) -> Option<Gradient> {
     let x = crate::dxf_ext::xdata(tags, crate::dxf_ext::APP);
     let at = x.iter().position(|t| t.code == 1000 && t.str() == "GRADIENT")?;
@@ -982,14 +982,14 @@ struct Rx {
     /// Plot style name placeholder handle (upper case) → plot style name (`ACAD_PLOTSTYLENAME`).
     pstyles: HashMap<String, String>,
     /// Upper-case block name → associative array parameters from its BLOCK_RECORD.
-    block_arrays: HashMap<String, cadcraft_doc::ArrayParams>,
+    block_arrays: HashMap<String, drafitra_doc::ArrayParams>,
     /// LAYER record handle (upper case) → layer name (VIEWPORT group 341 frozen layers).
     layers: HashMap<String, String>,
 }
 
 /// The plot style names of a file: the entries of the `ACAD_PLOTSTYLENAME` dictionary of the
 /// named object dictionary (the first object), by placeholder handle.
-fn plot_style_names(secs: &[cadcraft_dxf::Section]) -> HashMap<String, String> {
+fn plot_style_names(secs: &[drafitra_dxf::Section]) -> HashMap<String, String> {
     let mut out = HashMap::new();
     let Some(objects) = secs.iter().find(|s| s.name == "OBJECTS") else { return out };
     let recs = records(&objects.tags);
@@ -1060,7 +1060,7 @@ fn entity_extras(kind: &str, tags: &[Tag], h: Handle, k: &mut EntityKind, rx: &m
                 _ => None,
             };
             if let (Some(base), Some(o)) = (base, T(tags).f(52).filter(|o| o.is_finite() && o.rem_euclid(180.0) != 0.0)) {
-                dm.marks.oblique = Some(cadcraft_geom::norm_angle(base + o.to_radians()));
+                dm.marks.oblique = Some(drafitra_geom::norm_angle(base + o.to_radians()));
             }
         }
         ("ACAD_TABLE", EntityKind::Table(_)) => {
@@ -1083,7 +1083,7 @@ fn entity_extras(kind: &str, tags: &[Tag], h: Handle, k: &mut EntityKind, rx: &m
             }
             rx.mleader_fix.push((h, pending));
         }
-        // CADCraft's VPFROZEN xdata wins; otherwise AutoCAD's group 341 layer handles.
+        // Drafitra's VPFROZEN xdata wins; otherwise AutoCAD's group 341 layer handles.
         ("VIEWPORT", EntityKind::Viewport(v)) if v.frozen_layers.is_empty() => {
             v.frozen_layers = tags
                 .iter()
@@ -1326,9 +1326,9 @@ fn header(tags: &[Tag], d: &mut Drawing) {
                 [x, y, z] if x.code == 10 => HVal::Point(Vec3::new(x.f64(), y.f64(), z.f64())),
                 [x, y] if x.code == 10 => HVal::Point(Vec3::new(x.f64(), y.f64(), 0.0)),
                 [v] => match &v.value {
-                    cadcraft_dxf::Value::Real(r) => HVal::Real(*r),
-                    cadcraft_dxf::Value::Int(n) => HVal::Int(*n),
-                    cadcraft_dxf::Value::Bool(b) => HVal::Int(i64::from(*b)),
+                    drafitra_dxf::Value::Real(r) => HVal::Real(*r),
+                    drafitra_dxf::Value::Int(n) => HVal::Int(*n),
+                    drafitra_dxf::Value::Bool(b) => HVal::Int(i64::from(*b)),
                     other => HVal::Str(other.as_str()),
                 },
                 _ => continue,
@@ -1356,7 +1356,7 @@ fn annotative(tags: &[Tag]) -> bool {
     list.iter().filter(|t| t.code == 1070).nth(1).is_some_and(|t| t.i64() != 0)
 }
 
-/// A text style's font: CADCraft's own font name from `CADCRAFT` xdata (`1000 FONT`, name)
+/// A text style's font: Drafitra's own font name from `DRAFITRA` xdata (`1000 FONT`, name)
 /// while the font file is still the `txt` written for other readers; the TrueType family of the
 /// style's `ACAD` xdata (`1000` typeface) when it has no font file (how AutoCAD stores TrueType
 /// styles); otherwise the file.
@@ -1525,7 +1525,7 @@ fn tables(tags: &[Tag], d: &mut Drawing, rx: &mut Rx) {
                 let field = |key: &str| {
                     x.iter().position(|t| t.code == 1000 && t.str() == key).and_then(|i| x.get(i + 1)).filter(|t| t.code == 1000).map(Tag::str)
                 };
-                // 70 bit 1: a paper space view; its layout is CADCraft xdata.
+                // 70 bit 1: a paper space view; its layout is Drafitra xdata.
                 let layout = (t.i(70).unwrap_or(0) & 1 != 0).then(|| field("LAYOUT").unwrap_or_default());
                 let twist = t.f(50).filter(|a| a.is_finite()).map_or(0.0, |a| a.rem_euclid(360.0).to_radians());
                 let v = NamedView { name: name.clone(), center, height: h, width: w, layer_state: field("LAYERSTATE"), twist, layout };
@@ -1648,7 +1648,7 @@ fn ltype_pattern(tags: &[Tag], styles: &HashMap<String, String>) -> Vec<DashElem
 
 /// Read a DXF file into a drawing.
 pub fn read(bytes: &[u8]) -> Result<Drawing> {
-    let tags = cadcraft_dxf::parse(bytes).map_err(|e| IoError::Format(e.to_string()))?;
+    let tags = drafitra_dxf::parse(bytes).map_err(|e| IoError::Format(e.to_string()))?;
     let secs = sections(&tags);
     if secs.is_empty() {
         return Err(IoError::Format("no sections found".into()));
@@ -1663,7 +1663,7 @@ pub fn read(bytes: &[u8]) -> Result<Drawing> {
     // Every handle another program's file already uses is taken before anything gets a new one:
     // its $HANDSEED can be lower than its handles, and entities made while reading (the faces of
     // a polyface mesh) would otherwise get handles that records further on still have. A file
-    // CADCraft wrote names its own next handle, above which its rebuilt records are numbered
+    // Drafitra wrote names its own next handle, above which its rebuilt records are numbered
     // (#495), so it is left to that.
     let ours = secs.iter().any(|s| s.name == "OBJECTS" && s.tags.iter().any(|t| t.code == 3 && t.str() == crate::dxf_ext::HANDSEED_KEY));
     for t in secs.iter().filter(|_| !ours).flat_map(|s| s.tags.iter()).filter(|t| t.code == 5 || t.code == 105) {
@@ -1737,7 +1737,7 @@ pub fn read(bytes: &[u8]) -> Result<Drawing> {
             _ => {}
         }
     }
-    // A file CADCraft wrote names its own next handle (#495): its table records and objects
+    // A file Drafitra wrote names its own next handle (#495): its table records and objects
     // are numbered above it and rebuilt on save, so following $HANDSEED would drift every save.
     let own_seed = objs.xrecord_text(crate::dxf_ext::HANDSEED_KEY).and_then(|t| Handle::parse_hex(t.trim()));
     // Layouts.
@@ -1915,7 +1915,7 @@ struct Objects {
     /// Dictionary entry handle (upper case) → entry name.
     names: HashMap<String, String>,
     /// SCALE objects (the annotation scale list), in file order.
-    scales: Vec<cadcraft_doc::AnnoScale>,
+    scales: Vec<drafitra_doc::AnnoScale>,
     /// XRECORD handle (upper case) → its groups.
     xrecords: HashMap<String, Vec<Tag>>,
     /// TABLESTYLE objects: (handle, groups).
@@ -1938,7 +1938,7 @@ impl Objects {
     fn add(&mut self, kind: &str, tags: &[Tag]) {
         let h = T(tags).s(5).map(|h| h.trim().to_ascii_uppercase()).unwrap_or_default();
         match kind {
-            "SCALE" if self.scales.len() < cadcraft_doc::MAX_SCALES => {
+            "SCALE" if self.scales.len() < drafitra_doc::MAX_SCALES => {
                 if let Some(s) = crate::dxf_ext::read_scale(tags)
                     && !self.scales.iter().any(|x| x.name.eq_ignore_ascii_case(&s.name))
                 {
@@ -1983,7 +1983,7 @@ impl Objects {
         }
     }
 
-    /// The text of the CADCraft XRECORD stored under `key` in a dictionary (its 1/3 strings).
+    /// The text of the Drafitra XRECORD stored under `key` in a dictionary (its 1/3 strings).
     fn xrecord_text(&self, key: &str) -> Option<String> {
         let h = self.names.iter().find(|(_, n)| n.as_str() == key).map(|(h, _)| h)?;
         let tags = self.xrecords.get(h)?;
@@ -2019,7 +2019,7 @@ impl Objects {
                 d.table_styles
                     .iter()
                     .find(|s| s.name.eq_ignore_ascii_case(style))
-                    .map_or(cadcraft_doc::TableStyle::default().text_height, |s| s.text_height)
+                    .map_or(drafitra_doc::TableStyle::default().text_height, |s| s.text_height)
             };
             let _ = d.modify_entity(*h, |e| {
                 if let EntityKind::Table(t) = &mut e.kind {
@@ -2036,11 +2036,11 @@ impl Objects {
             d.parametric = p;
         }
         // The annotation scale list (a metric drawing without one gets the metric defaults),
-        // then CADCraft's annotative scaling record.
+        // then Drafitra's annotative scaling record.
         if !self.scales.is_empty() {
             d.scales = self.scales.clone();
         } else if d.header.i64("MEASUREMENT", 0) == 1 {
-            d.scales = cadcraft_doc::metric_scales();
+            d.scales = drafitra_doc::metric_scales();
         }
         if let Some(p) = self.xrecord_text(crate::dxf_ext::ANNOTATION_KEY).and_then(|t| crate::dxf_ext::parse_anno(&t)) {
             crate::dxf_ext::apply_anno(d, p);
@@ -2097,7 +2097,7 @@ impl Objects {
                 None => d.groups.push(g),
             }
         }
-        // Standard associativity, for dimensions without CADCraft's exact links.
+        // Standard associativity, for dimensions without Drafitra's exact links.
         for tags in &self.dimassocs {
             dimassoc(d, tags);
         }
@@ -2143,7 +2143,7 @@ fn dimassoc(d: &mut Drawing, tags: &[Tag]) {
     }
 }
 
-/// A CADCraft snap from a DIMASSOC object snap type and point.
+/// A Drafitra snap from a DIMASSOC object snap type and point.
 fn infer_snap(d: &Drawing, osnap: i64, main: Handle, other: Option<Handle>, at: Vec2) -> Option<AssocSnap> {
     let e = d.entity(main)?;
     Some(match osnap {
@@ -2156,7 +2156,7 @@ fn infer_snap(d: &Drawing, osnap: i64, main: Handle, other: Option<Handle>, at: 
                 }
             }
             EntityKind::Arc(a) => {
-                let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+                let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
                 if osnap == 13 || g.start_point().dist(at) <= g.end_point().dist(at) { AssocSnap::Start } else { AssocSnap::End }
             }
             EntityKind::LwPolyline(p) => {
@@ -2233,7 +2233,7 @@ fn page_setup(t: &T) -> PageSetup {
     p
 }
 
-/// A layout's saved paper-space view (centre, height) from CADCraft xdata.
+/// A layout's saved paper-space view (centre, height) from Drafitra xdata.
 fn layout_view(tags: &[Tag]) -> Option<(Vec2, f64)> {
     let list = crate::dxf_ext::xdata_list(crate::dxf_ext::xdata(tags, crate::dxf_ext::APP), "PSVIEW");
     let g = |c: i32| list.iter().find(|t| t.code == c).map(Tag::f64).filter(|v| v.is_finite());

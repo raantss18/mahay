@@ -40,17 +40,17 @@ impl Host for Settings {
 fn v2_module(data: &str, body: &str) -> Vec<u8> {
     let wat = format!(
         r#"(module
-          (import "figcraft" "reply_len" (func $reply_len (result i32)))
-          (import "figcraft" "reply_read" (func $reply_read (param i32 i32) (result i32)))
-          (import "figcraft" "set_output" (func $set_output (param i32 i32)))
-          (import "figcraft" "ui_show" (func $ui_show (param i32 i32) (result i32)))
-          (import "figcraft" "ui_close" (func $ui_close))
-          (import "figcraft" "setting_get" (func $setting_get (param i32 i32) (result i32)))
-          (import "figcraft" "setting_set" (func $setting_set (param i32 i32 i32 i32) (result i32)))
-          (import "figcraft" "setting_delete" (func $setting_delete (param i32 i32)))
+          (import "endrika" "reply_len" (func $reply_len (result i32)))
+          (import "endrika" "reply_read" (func $reply_read (param i32 i32) (result i32)))
+          (import "endrika" "set_output" (func $set_output (param i32 i32)))
+          (import "endrika" "ui_show" (func $ui_show (param i32 i32) (result i32)))
+          (import "endrika" "ui_close" (func $ui_close))
+          (import "endrika" "setting_get" (func $setting_get (param i32 i32) (result i32)))
+          (import "endrika" "setting_set" (func $setting_set (param i32 i32 i32 i32) (result i32)))
+          (import "endrika" "setting_delete" (func $setting_delete (param i32 i32)))
           (memory (export "memory") 1)
           {data}
-          (func (export "figcraft_run") (param $n i32) (result i32) {body}))"#
+          (func (export "endrika_run") (param $n i32) (result i32) {body}))"#
     );
     wat::parse_str(&wat).unwrap_or_else(|e| panic!("{e}\n{wat}"))
 }

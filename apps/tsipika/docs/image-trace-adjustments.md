@@ -29,7 +29,7 @@ after expanding, the tracing settings are no longer available. **Release** resto
 **Auto Color** (the Automatic palette) counts flat art's colours by area, and also keeps colours too
 rare for that count when they are distinct and drawn as regions of their own (a stem, a highlight, a
 white beside a cream), at most six; scattered specks of a colour add none. Adobe does not document how
-its own palettes are chosen; this is VectorCraft's own method (see
+its own palettes are chosen; this is Tsipika's own method (see
 [image-trace-quality.md](image-trace-quality.md#auto-color-keeps-rare-colours)).
 
 **Large images.** An image of more than 1500 pixels on a side is traced as any other, only more
@@ -40,7 +40,7 @@ page describes the same warning for images over 1500 px). An image of more than 
 make more than 8,000,000 anchor points (2,000,000 on the web) is refused to protect memory, with advice:
 raise Noise, lower Paths or Colors, or pick a lower-fidelity preset. A trace keeps
 about 90 bytes an anchor; a 4000 × 3000 photo at High Fidelity Photo makes about 1.9 million.
-These controls use VectorCraft's existing tracing algorithm. Parameter effects follow its
+These controls use Tsipika's existing tracing algorithm. Parameter effects follow its
 implementation; they do not claim pixel-identical results with another application.
 The terminology and general control behavior are described in the
 [public Image Trace panel documentation](https://helpx.adobe.com/illustrator/desktop/manage-objects/traces-mockups-symbols/image-trace-panel-options.html).

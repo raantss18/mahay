@@ -26,26 +26,26 @@ macOS.
 ## 2. Build and run
 
 ```sh
-cargo run --release -p filmcraft                      # desktop app with the demo project
-cargo run --release -p filmcraft -- --empty           # start without the demo project
-cargo run --release -p filmcraft -- --control 9876    # plus the JSON-lines control server
-cargo run --release -p filmcraft -- a.mp4 b.wav       # import media (or open a .fcproj)
-cargo run --release -p filmcraft-cli -- commands      # list engine commands
-cargo run --release -p filmcraft-cli -- render --demo --seconds 3 --out frame.png
-cargo run --release -p filmcraft-cli -- mcp --demo    # headless MCP server on stdio
+cargo run --release -p hetsika                      # desktop app with the demo project
+cargo run --release -p hetsika -- --empty           # start without the demo project
+cargo run --release -p hetsika -- --control 9876    # plus the JSON-lines control server
+cargo run --release -p hetsika -- a.mp4 b.wav       # import media (or open a .fcproj)
+cargo run --release -p hetsika-cli -- commands      # list engine commands
+cargo run --release -p hetsika-cli -- render --demo --seconds 3 --out frame.png
+cargo run --release -p hetsika-cli -- mcp --demo    # headless MCP server on stdio
 cargo xtask web --serve 8765                          # the web app on http://127.0.0.1:8765/ (docs/web.md)
 ```
 
 | Variable | Effect |
 |---|---|
-| `FILMCRAFT_CONTROL_PORT` | Same as `--control <port>` |
-| `FILMCRAFT_CPU_COMPOSITE=1` | Disables the GPU compositor |
-| `FILMCRAFT_DEV_DESKTOP_ENTRY=1` | Linux, opt-in: a run from a source tree installs a user-level desktop entry (and the icons from `assets/app-icon`) so the taskbar shows the FilmCraft icon. Nothing is written without it; packaged runs never write one |
-| `FILMCRAFT_DATA_DIR` | Same as `--data-dir <dir>`: auto-save, crash recovery, settings and logs |
+| `HETSIKA_CONTROL_PORT` | Same as `--control <port>` |
+| `HETSIKA_CPU_COMPOSITE=1` | Disables the GPU compositor |
+| `HETSIKA_DEV_DESKTOP_ENTRY=1` | Linux, opt-in: a run from a source tree installs a user-level desktop entry (and the icons from `assets/app-icon`) so the taskbar shows the Hetsika icon. Nothing is written without it; packaged runs never write one |
+| `HETSIKA_DATA_DIR` | Same as `--data-dir <dir>`: auto-save, crash recovery, settings and logs |
 | `RUST_LOG` | Log levels for standard error and the log file (see [Logs](#logs)) |
 
-`filmcraft --help` lists the app's options. An option it does not know, or a control port that is
-not a number (from `--control` or from `FILMCRAFT_CONTROL_PORT`), is an error on stderr with exit
+`hetsika --help` lists the app's options. An option it does not know, or a control port that is
+not a number (from `--control` or from `HETSIKA_CONTROL_PORT`), is an error on stderr with exit
 code 2 instead of a window.
 
 Dev builds compile dependencies at `opt-level = 2` and workspace crates at `opt-level = 1`. For
@@ -53,45 +53,45 @@ playback and codec speed, use `--release`.
 
 ### Logs
 
-The desktop app writes its `log` records to standard error and to `Logs/filmcraft.log` in the data
-directory (`~/.local/share/filmcraft/Logs/` or `$XDG_DATA_HOME/filmcraft/Logs/` on Linux,
-`~/Library/Application Support/FilmCraft/Logs/` on macOS, `%APPDATA%\FilmCraft\Logs\` on Windows,
-or under `--data-dir` / `FILMCRAFT_DATA_DIR`), next to the crash logs; Help ▸ Reveal Log Files opens
+The desktop app writes its `log` records to standard error and to `Logs/hetsika.log` in the data
+directory (`~/.local/share/hetsika/Logs/` or `$XDG_DATA_HOME/hetsika/Logs/` on Linux,
+`~/Library/Application Support/Hetsika/Logs/` on macOS, `%APPDATA%\Hetsika\Logs\` on Windows,
+or under `--data-dir` / `HETSIKA_DATA_DIR`), next to the crash logs; Help ▸ Reveal Log Files opens
 the folder. A start from a desktop menu or the Dock has no terminal, so this file is what to attach
 to a bug report: GPU compositor fallbacks, audio output problems, panicked frame jobs and container
-warnings all land there. Each launch moves the previous log to `filmcraft.1.log` (and that one to
-`filmcraft.2.log`), so the log of a run that crashed survives the next start. The file stops growing
+warnings all land there. Each launch moves the previous log to `hetsika.1.log` (and that one to
+`hetsika.2.log`), so the log of a run that crashed survives the next start. The file stops growing
 at 16 MiB. `--help`, `--version` and command-line errors write no file.
 
-By default FilmCraft's own crates log at `info` and everything else at `warn`. `RUST_LOG` replaces
+By default Hetsika's own crates log at `info` and everything else at `warn`. `RUST_LOG` replaces
 that with env_logger-style directives, for example `RUST_LOG=debug`,
-`RUST_LOG=warn,filmcraft_codecs=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*`
-covers every target starting with it (`filmcraft*=debug`). The logger is
-`apps/filmcraft/src/logging.rs`; the realtime audio callbacks do not log. The web app logs to the
+`RUST_LOG=warn,hetsika_codecs=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*`
+covers every target starting with it (`hetsika*=debug`). The logger is
+`apps/hetsika/src/logging.rs`; the realtime audio callbacks do not log. The web app logs to the
 browser console instead.
 
-### Building with craft-fonts
+### Building with mahay-fonts
 
-Font assets live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), never in this
-repo ([standard](https://github.com/storytold/craftrules/blob/main/standards/fonts.md)). It is an optional build input, not a Cargo
+Font assets live in [raantss18/mahay-fonts](https://github.com/raantss18/mahay), never in this
+repo ([standard](https://github.com/raantss18/mahay-rules/blob/main/standards/fonts.md)). It is an optional build input, not a Cargo
 dependency:
 
 ```sh
-git clone https://github.com/storytold/craft-fonts ../craft-fonts
-CRAFT_FONTS_DIR="$PWD/../craft-fonts" cargo run --release -p filmcraft
+git clone https://github.com/raantss18/mahay ../mahay-fonts
+MAHAY_FONTS_DIR="$PWD/../mahay-fonts" cargo run --release -p hetsika
 ```
 
-Use an absolute path: `build.rs` runs in `crates/text`, so a relative `CRAFT_FONTS_DIR` would
+Use an absolute path: `build.rs` runs in `crates/text`, so a relative `MAHAY_FONTS_DIR` would
 resolve from there. `crates/text/build.rs` reads its `fonts/manifest.txt` and embeds the fonts as
-`filmcraft_text::fonts::CRAFT_FONTS` (native: all of them; the web build: only BIZ UDPGothic
+`hetsika_text::fonts::MAHAY_FONTS` (native: all of them; the web build: only BIZ UDPGothic
 Regular, to keep the wasm small). The Japanese ones become the last fallback of every UI font family
 (`crates/ui-egui/src/theme.rs`, BIZ UDPGothic first) and fallback faces in the text engine (Gothic
-for sans text, Mincho for serif text). Without `CRAFT_FONTS_DIR`, `CRAFT_FONTS` is empty and
-FilmCraft uses its bundled and system fonts. A `CRAFT_FONTS_DIR` that is not a checkout is a build
-warning, or an error with `CRAFT_FONTS_REQUIRED=1` (release builds set both). Tests on these fonts'
+for sans text, Mincho for serif text). Without `MAHAY_FONTS_DIR`, `MAHAY_FONTS` is empty and
+Hetsika uses its bundled and system fonts. A `MAHAY_FONTS_DIR` that is not a checkout is a build
+warning, or an error with `MAHAY_FONTS_REQUIRED=1` (release builds set both). Tests on these fonts'
 glyphs skip when it is empty; when you touch fonts, run the gates both with and without it.
 
-Chinese media names and track labels use the `Hans` / `Hant` craft-fonts faces after the Japanese
+Chinese media names and track labels use the `Hans` / `Hant` mahay-fonts faces after the Japanese
 fallbacks in every UI font family, regardless of interface language (Japanese and Chinese share code
 points, so Japanese text keeps Japanese glyph forms; the Chinese faces cover hanzi the Japanese ones lack). Without those build inputs,
 native builds look up an installed Chinese face (for example Microsoft YaHei or Noto Sans CJK SC)
@@ -100,7 +100,7 @@ Web builds depend on the font faces selected by `crates/text/build.rs`; they can
 `theme::tests::chinese_names_render_in_every_theme_and_font_family` verifies Chinese glyphs in the
 timeline's proportional, monospace, medium and semibold families under all three themes.
 
-Arabic and Hebrew work the same way (`crates/ui-egui/src/rtl.rs`): the `Arab` / `Hebr` craft-fonts
+Arabic and Hebrew work the same way (`crates/ui-egui/src/rtl.rs`): the `Arab` / `Hebr` mahay-fonts
 faces, else one installed face per script (for example Noto Sans Arabic, SF Arabic or Segoe UI),
 are the last fallbacks of every UI font family. egui shapes each font run (letters join) but lays
 runs out left to right with no bidi pass, so captions on the timeline and in the Text panel are laid
@@ -119,10 +119,10 @@ Every commit must pass all of these:
 | Tests | `cargo test --workspace` |
 | Layering | `cargo xtask layers` |
 | Assets | `cargo xtask assets` |
-| wasm | `cargo xtask wasm` (checks every L0–L4 crate, `filmcraft-ui-egui` and `filmcraft-web` for `wasm32-unknown-unknown`) |
+| wasm | `cargo xtask wasm` (checks every L0–L4 crate, `hetsika-ui-egui` and `hetsika-web` for `wasm32-unknown-unknown`) |
 | All of the above | `cargo xtask ci` (runs clippy and tests with `--release`) |
 
-Run them with `CRAFT_FONTS_DIR` set too when you change font code ([craft-fonts](#building-with-craft-fonts)).
+Run them with `MAHAY_FONTS_DIR` set too when you change font code ([mahay-fonts](#building-with-mahay-fonts)).
 
 `cargo xtask` is an alias in `.cargo/config.toml` for `cargo run -p xtask --`.
 
@@ -150,8 +150,8 @@ comes with a regression test; parsers, decoders and commands get fuzz / hostile-
 ## 5. Parallel work (several agents or worktrees)
 
 ```sh
-git worktree add ../filmcraft-hevc -b hevc-work
-cd ../filmcraft-hevc
+git worktree add ../hetsika-hevc -b hevc-work
+cd ../hetsika-hevc
 export CARGO_TARGET_DIR=target/agent-hevc     # separate build dir, no lock fights
 ```
 
@@ -159,7 +159,7 @@ export CARGO_TARGET_DIR=target/agent-hevc     # separate build dir, no lock figh
 - The workspace includes `crates/*` and `apps/*` by glob, so one broken `Cargo.toml` breaks every
   build. Keep every manifest valid at all times, including half-finished crates.
 - Test fixtures always go to `<repo>/target/fixtures/`, whatever `CARGO_TARGET_DIR` says.
-- `.mcp.json` points at `target/release/filmcraft-cli`. With a custom target dir, use your own path.
+- `.mcp.json` points at `target/release/hetsika-cli`. With a custom target dir, use your own path.
 
 ## 6. How to add…
 
@@ -181,13 +181,13 @@ export CARGO_TARGET_DIR=target/agent-hevc     # separate build dir, no lock figh
    - Read time with `time_p` so `time`, `frame`, `seconds` and `timecode` all work.
    - Mutate only through `s.edit(…)` or `s.edit_sequence(…)`, so the change is undoable and
      validated.
-   - Put pure timeline logic in `filmcraft-edit` as a function on `&mut Sequence`, with unit or
+   - Put pure timeline logic in `hetsika-edit` as a function on `&mut Sequence`, with unit or
      property tests there.
 2. Add tests to `crates/engine/src/tests.rs`: execute, assert, undo, redo, and check the disabled
    case.
 3. Frontend-only actions (tools, zoom, panels) go in `UI_COMMANDS` in
    `crates/ui-egui/src/menus.rs` with a branch in `menus::invoke`.
-4. The command now appears in menus (from `menu`), shortcuts, `filmcraft-cli commands`,
+4. The command now appears in menus (from `menu`), shortcuts, `hetsika-cli commands`,
    `engine.commands` and MCP `command_list` without further work.
 
 ### A video effect
@@ -231,7 +231,7 @@ stream is cut into blocks (there are tests for this).
 1. **Spec first.** Work only from the public specification (ITU-T, ISO/IEC, IETF RFCs, SMPTE,
    published container specs). Never copy GPL/LGPL code, and follow AGENTS.md §2 on reading other
    implementations. Name the spec edition in the crate README.
-2. Create `crates/<name>` as an L0 crate that depends only on `filmcraft-bitstream` (plus
+2. Create `crates/<name>` as an L0 crate that depends only on `hetsika-bitstream` (plus
    `thiserror` and optional `rayon` behind a `threads` feature). Add `[lints] workspace = true`, add
    it to `[workspace.dependencies]`, and add it to `LAYERS` in `xtask/src/main.rs`. It must build
    for wasm32.
@@ -271,14 +271,14 @@ In short:
   traced or "inspired-by" copies.
 - Open licences only (MIT, Apache-2.0, BSD, ISC, zlib, OFL, CC0, CC BY, CC BY-SA, or your own
   work under MIT OR Apache-2.0). No NC or ND licences. If the licence is unclear, leave the asset out.
-- Screenshots show only FilmCraft (or other open projects) with media we generated or that is
+- Screenshots show only Hetsika (or other open projects) with media we generated or that is
   openly licensed.
 
-- **Fonts live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), not here.**
+- **Fonts live in [raantss18/mahay-fonts](https://github.com/raantss18/mahay), not here.**
   Don't commit new font files to this repo (the Latin UI fonts already in `assets/fonts/` stay): add
-  the font to craft-fonts (file, licence, manifest line, `ATTRIBUTION.md` row) and use it through
-  `filmcraft_text::fonts::CRAFT_FONTS`. See [Building with craft-fonts](#building-with-craft-fonts)
-  and [`craftrules/standards/fonts.md`](https://github.com/storytold/craftrules/blob/main/standards/fonts.md).
+  the font to mahay-fonts (file, licence, manifest line, `ATTRIBUTION.md` row) and use it through
+  `hetsika_text::fonts::MAHAY_FONTS`. See [Building with mahay-fonts](#building-with-mahay-fonts)
+  and [`mahay-rules/standards/fonts.md`](https://github.com/raantss18/mahay-rules/blob/main/standards/fonts.md).
 
 For each asset file `X`, commit a sidecar `X.attribution`. This is the real one for
 `assets/fonts/Inter-Regular.ttf`:

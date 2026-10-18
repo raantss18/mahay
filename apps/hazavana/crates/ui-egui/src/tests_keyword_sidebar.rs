@@ -4,12 +4,12 @@
 
 use std::time::{Duration, Instant};
 
-use lightcraft_catalog::{Op, Photo, PhotoId, Source};
-use lightcraft_engine::Session;
+use hazavana_catalog::{Op, Photo, PhotoId, Source};
+use hazavana_engine::Session;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(30);
 const SETTLE: Duration = Duration::from_secs(120);
@@ -18,7 +18,7 @@ const SETTLE: Duration = Duration::from_secs(120);
 fn library(photos: u64, keywords: u64) -> Session {
     let mut s = Session::new();
     for i in 0..photos {
-        let path = format!("/lightcraft-kw-test/IMG_{i:05}.jpg");
+        let path = format!("/hazavana-kw-test/IMG_{i:05}.jpg");
         let mut p = Photo::new(PhotoId(i + 1), Source::File { path }, &format!("IMG_{i:05}.jpg"), "JPEG", 60, 40, "2026-01-01T00:00:00");
         p.meta.keywords = (0..6).map(|k| format!("Keyword {:05}|Child", (i * 6 + k) % keywords)).collect();
         s.catalog.apply(Op::AddPhoto { photo: Box::new(p) }).unwrap();
@@ -27,7 +27,7 @@ fn library(photos: u64, keywords: u64) -> Session {
 }
 
 fn app(photos: u64, keywords: u64) -> Headless {
-    let app = LightcraftApp::new(library(photos, keywords), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(library(photos, keywords), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let r = h.request("ui.set", json!({"view": "photoGrid", "leftPanel": true}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -61,7 +61,7 @@ fn keywords_section_draws_only_the_rows_near_the_screen() {
 }
 
 /// Timings on a library the size of the report's (58,000 photos): `cargo test --release -p
-/// lightcraft-ui-egui --lib probe_keyword_sidebar_cost -- --ignored --nocapture`.
+/// hazavana-ui-egui --lib probe_keyword_sidebar_cost -- --ignored --nocapture`.
 #[test]
 #[ignore = "timing probe"]
 fn probe_keyword_sidebar_cost() {

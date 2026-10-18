@@ -4,7 +4,7 @@
 //! [`Session::plan_merge`] and runs it on a worker thread. `preview: true` merges ≤ 1024 px frames
 //! and (with `previewPath`) writes the rendered preview as PNG instead of adding a photo.
 
-use lightcraft_catalog::PhotoId;
+use hazavana_catalog::PhotoId;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, bool_or, cmd, str_param};
@@ -28,7 +28,7 @@ fn run(s: &mut Session, id: &str, p: &Value) -> Result<Value> {
     let out = job.run(&|_, _| true).map_err(|e| bad(id, e))?;
     let mut info = out.info;
     if let (Some(path), Some(img)) = (str_param(p, "previewPath"), &out.preview) {
-        let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(img), &lightcraft_codecs::EncodeMeta::default())
+        let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(img), &hazavana_codecs::EncodeMeta::default())
             .map_err(|e| bad(id, e.to_string()))?;
         s.check_write_target(path).map_err(|e| bad(id, e))?;
         crate::export::write_file(path, &png).map_err(|e| bad(id, e))?;
@@ -40,7 +40,7 @@ fn run(s: &mut Session, id: &str, p: &Value) -> Result<Value> {
     Ok(info)
 }
 
-/// `merge.hdrBatch`: an HDR merge of each bracket set among the photos ([`lightcraft_catalog::Catalog::bracket_sets`]),
+/// `merge.hdrBatch`: an HDR merge of each bracket set among the photos ([`hazavana_catalog::Catalog::bracket_sets`]),
 /// one after the other. A set that fails is reported and the others still run.
 fn run_batch(s: &mut Session, p: &Value) -> Result<Value> {
     const ID: &str = "merge.hdrBatch";

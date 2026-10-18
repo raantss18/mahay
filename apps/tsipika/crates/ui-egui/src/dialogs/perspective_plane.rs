@@ -6,12 +6,12 @@
 //! is its place in the grid's definition), `objects` (`none`, `move` or `copy`).
 
 use serde_json::{Value, json};
-use vectorcraft_tools::distort::perspective::{PerspectiveGrid, Plane};
+use tsipika_tools::distort::perspective::{PerspectiveGrid, Plane};
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of the plane options.
 pub const KIND: &str = "perspectivePlane";
@@ -31,7 +31,7 @@ fn heading(d: &Dialog) -> String {
 }
 
 /// Open the options of `plane` (`{plane}`; default the active plane), filled in with its location.
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let doc = &app.session.active().ok_or("no document")?.doc;
     let g = PerspectiveGrid::current(doc);
     let plane = match p.get("plane").and_then(Value::as_str) {
@@ -46,7 +46,7 @@ pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     Ok(Value::Null)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.general_unit();
     grid(ui, |ui| {
         label(ui, tl!("Location:"));
@@ -65,7 +65,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let objects = Some(d.str("objects")).filter(|o| OBJECTS.iter().any(|(v, _)| v == o)).unwrap_or_else(|| "none".into());
     let p = json!({"plane": d.str("plane"), "offset": d.f64("location", 0.0), "objects": objects});
     run_and_close(app, "perspective.plane.move", p)
@@ -74,10 +74,10 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_engine::Session;
+    use tsipika_tools::{PointerEvent, PointerKind};
 
-    fn shown(app: &mut VectorcraftApp) -> Vec<String> {
+    fn shown(app: &mut TsipikaApp) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn double_clicking_a_plane_widget_opens_its_options_and_ok_moves_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 800, "height": 600})).unwrap();
         app.run("perspective.grid.preset", json!({"kind": 2})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 450, "y": 380, "width": 60, "height": 60})).unwrap()["id"].clone();
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn a_click_to_size_rectangle_goes_on_the_active_plane() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 800, "height": 600})).unwrap();
         app.run("perspective.grid.preset", json!({"kind": 2})).unwrap();
         app.run("perspective.plane.set", json!({"plane": "right"})).unwrap();
@@ -144,6 +144,6 @@ mod tests {
         assert_eq!(app.session.journal.last().unwrap().0, "perspective.draw");
         let st = app.session.active().unwrap();
         let id = *st.selection.objects.first().unwrap();
-        assert_eq!(vectorcraft_tools::distort::perspective::attachment(st.doc.node(id).unwrap()).map(|a| a.0), Some(Plane::Right));
+        assert_eq!(tsipika_tools::distort::perspective::attachment(st.doc.node(id).unwrap()).map(|a| a.0), Some(Plane::Right));
     }
 }

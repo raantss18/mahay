@@ -117,7 +117,7 @@ impl LightroomArchiveFinalization {
         if bytes.len() > MAX_INDEX_BYTES {
             return Err(error("Lightroom import index exceeds 16 MiB"));
         }
-        lightcraft_catalog::safe_file::write_atomic(&path, &bytes).map_err(|e| error(e.to_string()))
+        hazavana_catalog::safe_file::write_atomic(&path, &bytes).map_err(|e| error(e.to_string()))
     }
 
     pub fn path(&self) -> Option<&Path> {
@@ -495,8 +495,8 @@ mod tests {
         let first = commit_prepared(&mut session, prepared).unwrap();
         assert_eq!(first.report["mapping"]["1"].as_u64(), Some(1));
         assert_eq!(session.undo.len(), 1);
-        let id = lightcraft_catalog::PhotoId(1);
-        let mut personal = lightcraft_develop::DevelopSettings::default();
+        let id = hazavana_catalog::PhotoId(1);
+        let mut personal = hazavana_develop::DevelopSettings::default();
         personal.light.exposure = 1.5;
         session.set_develop(id, personal, "Personal").unwrap();
         let before = session.catalog.photo(id).map(|photo| photo.develop.clone());
@@ -509,7 +509,7 @@ mod tests {
 
     #[test]
     fn oversized_history_archive_keeps_prepared_import_successful_with_warning() {
-        let archive_dir = std::env::temp_dir().join(format!("lightcraft-lr-prepared-scale-{}", std::process::id()));
+        let archive_dir = std::env::temp_dir().join(format!("hazavana-lr-prepared-scale-{}", std::process::id()));
         let mut data = empty_data();
         data.photos = (0..5_000)
             .map(|source_id| {
@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn execute_fn_import_does_not_rewrite_source_sidecar() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-lr-job-sidecar-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-lr-job-sidecar-{}", std::process::id()));
         let path = dir.join("source.jpg");
         let sidecar = dir.join("source.xmp");
         std::fs::create_dir_all(&dir).unwrap();

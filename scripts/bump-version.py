@@ -10,7 +10,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APPS = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho"]
+APPS = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsipika", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
 
 
 def workspace_version(text):

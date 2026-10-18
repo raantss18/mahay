@@ -1,9 +1,9 @@
 //! Groups (#417): GROUP, UNGROUP and GROUPEDIT, typed and as JSON; erased members leave their
 //! groups and empty groups go away. (The DXF round trip of groups is tested in
-//! `cadcraft-io`'s `tables_objects_roundtrip`.)
+//! `drafitra-io`'s `tables_objects_roundtrip`.)
 
-use cadcraft_engine::doc::Handle;
-use cadcraft_engine::{Input, Session};
+use drafitra_engine::doc::Handle;
+use drafitra_engine::{Input, Session};
 use serde_json::json;
 
 /// A session with three lines; their handles.

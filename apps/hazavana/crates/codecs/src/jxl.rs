@@ -109,7 +109,7 @@ pub(crate) fn decode(bytes: &[u8], opts: &DecodeOptions) -> Result<Decoded> {
     let keep = n_color + has_alpha as usize;
     let src = fb.buf();
     let mut v = Vec::with_capacity(fw * fh * keep);
-    let to_2020 = lightcraft_color::SRGB.to_space(&lightcraft_color::REC2020).to_f32();
+    let to_2020 = hazavana_color::SRGB.to_space(&hazavana_color::REC2020).to_f32();
     for px in src.chunks_exact(ch) {
         let start = v.len();
         v.extend_from_slice(&px[..keep.min(ch)]);

@@ -3,16 +3,16 @@
 //! layers deselecting them (#205), Mask Feather's linked values (#203), and copying shape items
 //! between shape layers (#227), and Ctrl+V of SVG markup making a shape layer (#738).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::{Dialog, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::{Dialog, TselatraApp};
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
-fn harness(s: Session) -> Harness<'static, EffectcraftApp> {
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+fn harness(s: Session) -> Harness<'static, TselatraApp> {
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
@@ -23,13 +23,13 @@ fn session() -> Session {
     s
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
 }
 
 /// Step until the viewer's frame has rendered (frames render on background threads).
-fn settle(h: &mut Harness<'_, EffectcraftApp>) {
+fn settle(h: &mut Harness<'_, TselatraApp>) {
     for _ in 0..600 {
         h.step();
         if h.state().frames.inflight() == 0 && h.state().frames.last_ms.lock().map(|v| *v > 0.0).unwrap_or(false) {
@@ -40,7 +40,7 @@ fn settle(h: &mut Harness<'_, EffectcraftApp>) {
     h.run_steps(2);
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     h.input_mut().events.push(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -49,12 +49,12 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(3);
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let p = center(h, id);
     click_at(h, p);
 }
 
-fn open_layer(h: &mut Harness<'_, EffectcraftApp>, id: u64) {
+fn open_layer(h: &mut Harness<'_, TselatraApp>, id: u64) {
     h.state_mut().ui.timeline.open_layers.insert(id);
     h.run_steps(2);
 }
@@ -98,7 +98,7 @@ fn add_position_key_reveals_position() {
     let l = s.execute("layer.newSolid", json!({"color": "#808080"})).unwrap()["layer"].as_u64().unwrap();
     let mut h = harness(s);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.keyAt.position", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.keyAt.position", json!({})).unwrap();
     h.run_steps(2);
     let app = h.state();
     let position = app.session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.prop("transform/position").unwrap().clone();
@@ -124,7 +124,7 @@ fn mask_feather_values_are_linked_and_not_negative() {
     let mut s = session();
     let l = s.execute("layer.newSolid", json!({"color": "#808080"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.addMask", json!({"layer": l, "shape": "rect"})).unwrap();
-    let feather = |h: &Harness<'_, EffectcraftApp>| {
+    let feather = |h: &Harness<'_, TselatraApp>| {
         let p = h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.prop("masks/#1/feather").unwrap().clone();
         (p.uid, p.value.components())
     };
@@ -133,7 +133,7 @@ fn mask_feather_values_are_linked_and_not_negative() {
     h.state_mut().ui.timeline.layer_reveal.insert(l, vec!["feather".into()]);
     h.run_steps(2);
     let (uid, _) = feather(&h);
-    let type_value = |h: &mut Harness<'_, EffectcraftApp>, d: usize, v: &str| {
+    let type_value = |h: &mut Harness<'_, TselatraApp>, d: usize, v: &str| {
         click(h, &format!("timeline.prop.{uid}.value.{d}"));
         h.input_mut().events.push(Event::Text(v.into()));
         h.step();
@@ -151,7 +151,7 @@ fn mask_feather_values_are_linked_and_not_negative() {
 
 /// Two shape layers, "Rect" (Rectangle 1) and "Oval" (Ellipse 1, selected): (harness with Rect's
 /// Contents open, Rect, Oval, Rectangle 1's uid).
-fn two_shape_layers() -> (Harness<'static, EffectcraftApp>, u64, u64, u64) {
+fn two_shape_layers() -> (Harness<'static, TselatraApp>, u64, u64, u64) {
     let mut s = session();
     let a = s.execute("layer.newShape", json!({"kind": "rect", "name": "Rect"})).unwrap()["layer"].as_u64().unwrap();
     let b = s.execute("layer.newShape", json!({"kind": "ellipse", "name": "Oval"})).unwrap()["layer"].as_u64().unwrap();
@@ -163,7 +163,7 @@ fn two_shape_layers() -> (Harness<'static, EffectcraftApp>, u64, u64, u64) {
     (h, a, b, rect)
 }
 
-fn contents_names(h: &Harness<'_, EffectcraftApp>, l: u64) -> Vec<String> {
+fn contents_names(h: &Harness<'_, TselatraApp>, l: u64) -> Vec<String> {
     h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props.sub("contents").unwrap().groups().map(|g| g.name.clone()).collect()
 }
 
@@ -176,7 +176,7 @@ fn ctrl_c_and_ctrl_v_copy_a_shape_group_into_another_shape_layer() {
     h.step();
     click(&mut h, &format!("timeline.layer.{b}.row"));
     assert_eq!(h.state().session.state.selected_layers, vec![LayerId(b)]);
-    h.input_mut().events.push(Event::Paste("EffectCraft: 1 shape item".into()));
+    h.input_mut().events.push(Event::Paste("Tselatra: 1 shape item".into()));
     h.run_steps(3);
     assert_eq!(h.state().session.active_comp().unwrap().layers.len(), 2, "no new layer");
     assert_eq!(contents_names(&h, b), ["Rectangle 1", "Ellipse 1"]);
@@ -220,12 +220,12 @@ fn timeline_colour_eyedropper_samples_the_comp() {
     let layer = s.active_comp().unwrap().layer(LayerId(l)).unwrap().clone();
     let mut fill = None;
     layer.props.walk("", &mut |_, p| {
-        if fill.is_none() && matches!(p.value, effectcraft_engine::keyframe::Value::Color(_)) {
+        if fill.is_none() && matches!(p.value, tselatra_engine::keyframe::Value::Color(_)) {
             fill = Some(p.uid);
         }
     });
     let fill = fill.expect("a fill colour");
-    fn groups(g: &effectcraft_engine::project::PropGroup, out: &mut Vec<u64>) {
+    fn groups(g: &tselatra_engine::project::PropGroup, out: &mut Vec<u64>) {
         for c in g.groups() {
             out.push(c.uid);
             groups(c, out);
@@ -239,7 +239,7 @@ fn timeline_colour_eyedropper_samples_the_comp() {
     settle(&mut h);
     click(&mut h, &format!("timeline.prop.{fill}.eyedropper"));
     assert_eq!(h.state().ui.fx_pick.as_ref().map(|p| (p.prop, p.kind.as_str())), Some((fill, "color")), "the eyedropper waits for a viewer click");
-    let pos = effectcraft_ui_egui::panels::viewer::comp_to_screen(&h.ctx, [6.0, 6.0]).unwrap();
+    let pos = tselatra_ui_egui::panels::viewer::comp_to_screen(&h.ctx, [6.0, 6.0]).unwrap();
     click_at(&mut h, pos);
     assert!(h.state().ui.fx_pick.is_none(), "the pick is used up");
     let layer = h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().clone();
@@ -249,7 +249,7 @@ fn timeline_colour_eyedropper_samples_the_comp() {
             got = Some(p.value.clone());
         }
     });
-    let Some(effectcraft_engine::keyframe::Value::Color(c)) = got else { panic!("{got:?}") };
+    let Some(tselatra_engine::keyframe::Value::Color(c)) = got else { panic!("{got:?}") };
     let want = [0x20 as f64 / 255.0, 0xc0 as f64 / 255.0, 0x40 as f64 / 255.0];
     for k in 0..3 {
         assert!((c[k] - want[k]).abs() < 0.02, "{c:?} vs {want:?}");
@@ -277,7 +277,7 @@ fn ctrl_v_pastes_svg_markup_as_a_shape_layer() {
     assert_eq!(top.props.sub("contents").unwrap().groups().count(), 2);
     assert_eq!(h.state().session.state.selected_layers, vec![top.id]);
     // The app's own clipboard note pastes the copied layer as before.
-    h.input_mut().events.push(Event::Paste("EffectCraft: 1 layer".into()));
+    h.input_mut().events.push(Event::Paste("Tselatra: 1 layer".into()));
     h.run_steps(3);
     let c = h.state().session.active_comp().unwrap();
     assert_eq!(c.layers.len(), 4);

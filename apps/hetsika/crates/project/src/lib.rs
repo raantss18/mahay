@@ -1,4 +1,4 @@
-//! The FilmCraft document model.
+//! The Hetsika document model.
 //!
 //! A [`Project`] owns a tree of bins and a flat map of [`ProjectItem`]s (media clips, sequences,
 //! synthetic items). A [`Sequence`] has video and audio [`Track`]s holding [`TrackItem`]s (clip
@@ -26,9 +26,9 @@ pub mod vtransition;
 
 use std::collections::BTreeMap;
 
-use filmcraft_geom::Vec2;
-use filmcraft_media::{Generator, MediaInfo};
-use filmcraft_time::{FrameRate, TICKS_PER_SECOND, Tick, TimeRange};
+use hetsika_geom::Vec2;
+use hetsika_media::{Generator, MediaInfo};
+use hetsika_time::{FrameRate, TICKS_PER_SECOND, Tick, TimeRange};
 use serde::{Deserialize, Serialize};
 
 pub use caption::{Caption, CaptionAlign, CaptionAnchor, CaptionFormat, CaptionStyle, CaptionTrack, plain_text};
@@ -173,7 +173,7 @@ pub struct Interpretation {
     pub invert_alpha: bool,
     /// Color Management ▸ override the colour space detected from the file's metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub color_space: Option<filmcraft_color::ColorSpace>,
+    pub color_space: Option<hetsika_color::ColorSpace>,
     /// Modify ▸ Audio Channels: how the source channels map to the audio clips made when the item
     /// is edited into a sequence. None = one stereo clip of the first two channels.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -370,11 +370,11 @@ impl ProjectItem {
     pub fn type_label(&self) -> &'static str {
         match &self.kind {
             ItemKind::Media(m) => match m.info.kind {
-                filmcraft_media::MediaKind::Movie => "Movie",
-                filmcraft_media::MediaKind::AudioOnly => "Audio",
-                filmcraft_media::MediaKind::Still => "Still Image",
-                filmcraft_media::MediaKind::ImageSequence => "Image Sequence",
-                filmcraft_media::MediaKind::Synthetic => "Synthetic",
+                hetsika_media::MediaKind::Movie => "Movie",
+                hetsika_media::MediaKind::AudioOnly => "Audio",
+                hetsika_media::MediaKind::Still => "Still Image",
+                hetsika_media::MediaKind::ImageSequence => "Image Sequence",
+                hetsika_media::MediaKind::Synthetic => "Synthetic",
             },
             ItemKind::Sequence(s) if s.multicam.is_some() => "Multi-Camera Source Sequence",
             ItemKind::Sequence(s) if s.merged.is_some() => "Merged Clip",
@@ -554,7 +554,7 @@ pub struct TrackItem {
     /// of animating through the hold.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub hold_filters: bool,
-    /// Video Options ▸ Field Options… (stored; FilmCraft renders progressive frames).
+    /// Video Options ▸ Field Options… (stored; Hetsika renders progressive frames).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub field_options: Option<FieldOptions>,
     /// Audio clips: the source channels this clip plays (0-based; one = mono on both sides, two =
@@ -854,11 +854,11 @@ pub struct SequenceSettings {
     /// Colour pipeline: working space (Rec. 709 / Rec. 2100 PQ / HLG), wide-gamut compositing,
     /// Auto Tone Map Media.
     #[serde(default = "default_color_pipeline")]
-    pub color: filmcraft_color::ColorPipeline,
+    pub color: hetsika_color::ColorPipeline,
 }
 
-fn default_color_pipeline() -> filmcraft_color::ColorPipeline {
-    filmcraft_color::ColorPipeline::REC709
+fn default_color_pipeline() -> hetsika_color::ColorPipeline {
+    hetsika_color::ColorPipeline::REC709
 }
 
 impl Default for SequenceSettings {
@@ -876,7 +876,7 @@ impl Default for SequenceSettings {
             max_bit_depth: false,
             max_render_quality: false,
             working_space: "Rec. 709".into(),
-            color: filmcraft_color::ColorPipeline::REC709,
+            color: hetsika_color::ColorPipeline::REC709,
         }
     }
 }
@@ -1132,7 +1132,7 @@ pub(crate) fn bounded_time_range(start: Tick, duration: Tick) -> bool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ProjectSettings {
     pub renderer: String,
-    pub video_display: filmcraft_time::TimeDisplay,
+    pub video_display: hetsika_time::TimeDisplay,
     pub audio_display_samples: bool,
     /// Kept for file compatibility; the editor uses Settings ▸ Timeline (user preferences) for
     /// still and transition default durations, as Premiere does.
@@ -1147,7 +1147,7 @@ pub struct ProjectSettings {
     pub title_safe: (f64, f64),
     #[serde(default = "action_safe_default")]
     pub action_safe: (f64, f64),
-    /// Project Settings ▸ General ▸ Capture Format (`DV` or `HDV`; informational, FilmCraft has no
+    /// Project Settings ▸ General ▸ Capture Format (`DV` or `HDV`; informational, Hetsika has no
     /// tape capture). Schema v11.
     #[serde(default = "capture_format_default")]
     pub capture_format: String,
@@ -1210,8 +1210,8 @@ pub enum IngestAction {
 impl Default for ProjectSettings {
     fn default() -> Self {
         Self {
-            renderer: "FilmCraft GPU Acceleration (wgpu)".into(),
-            video_display: filmcraft_time::TimeDisplay::Timecode,
+            renderer: "Hetsika GPU Acceleration (wgpu)".into(),
+            video_display: hetsika_time::TimeDisplay::Timecode,
             audio_display_samples: true,
             default_still_duration: Tick(5 * TICKS_PER_SECOND),
             default_transition_duration_frames: 24,
@@ -1632,7 +1632,7 @@ impl Project {
     }
 
     /// The bare model as JSON. Project *files* add a schema-versioned envelope; read and write them
-    /// with `filmcraft-format`, not with these.
+    /// with `hetsika-format`, not with these.
     pub fn to_json(&self) -> String {
         serde_json::to_string_pretty(self).unwrap_or_default()
     }
@@ -1804,11 +1804,11 @@ fn has_auto_point(e: &EffectInstance) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use filmcraft_media::{DemoScene, MediaSource};
+    use hetsika_media::{DemoScene, MediaSource};
 
     fn demo_project() -> (Project, ItemId, ItemId) {
         let mut p = Project::new("Test");
-        let src = filmcraft_media::generators::GeneratorSource::demo(DemoScene::OceanSunset);
+        let src = hetsika_media::generators::GeneratorSource::demo(DemoScene::OceanSunset);
         let info = src.info().clone();
         let clip = p.add_item(
             "Ocean_Sunset.mp4",

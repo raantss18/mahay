@@ -29,7 +29,7 @@ fn session() -> (Session, Arc<MemoryStore>) {
 /// The copies in the store, without their areas.
 fn copies(store: &dyn RecoveryStore) -> Vec<String> {
     let mut v: Vec<String> =
-        store.list().unwrap().iter().filter_map(|n| n.strip_suffix(".vectorcraft")).map(|n| n.split_once('/').unwrap().1.to_string()).collect();
+        store.list().unwrap().iter().filter_map(|n| n.strip_suffix(".tsipika")).map(|n| n.split_once('/').unwrap().1.to_string()).collect();
     v.sort();
     v
 }
@@ -68,9 +68,9 @@ fn recovery_save_writes_modified_documents_once() {
     assert_eq!(r["saved"].as_array().unwrap().len(), 1, "{r}");
     let area = s.recovery.own_area().unwrap().to_string();
     assert_eq!(r["saved"][0]["file"], format!("{area}/Untitled-1-1"));
-    assert_eq!(store.list().unwrap(), [format!("{area}/Untitled-1-1.json"), format!("{area}/Untitled-1-1.vectorcraft")]);
-    let doc = store.read(&format!("{area}/Untitled-1-1.vectorcraft")).unwrap();
-    assert_eq!(vectorcraft_format::load(&doc).unwrap().node_count(), s.documents()[0].doc.node_count());
+    assert_eq!(store.list().unwrap(), [format!("{area}/Untitled-1-1.json"), format!("{area}/Untitled-1-1.tsipika")]);
+    let doc = store.read(&format!("{area}/Untitled-1-1.tsipika")).unwrap();
+    assert_eq!(tsipika_format::load(&doc).unwrap().node_count(), s.documents()[0].doc.node_count());
     // Unchanged since: nothing written again.
     let again = s.execute("file.recovery.save", &json!({})).unwrap();
     assert!(again["saved"].as_array().unwrap().is_empty());
@@ -335,21 +335,21 @@ fn folder_areas_are_locked_by_running_apps() {
     let mut a = app(true);
     a.execute("file.recovery.save", &json!({})).unwrap();
     let area = a.recovery.own_area().unwrap().to_string();
-    assert!(dir.join(&area).join(".lock").is_file() && dir.join(&area).join("Untitled-1-1.vectorcraft").is_file());
+    assert!(dir.join(&area).join(".lock").is_file() && dir.join(&area).join("Untitled-1-1.tsipika").is_file());
     // The lock file is held: another app (another handle) can't take it.
     let store = FolderStore::new(&dir);
     assert!(matches!(store.lock(&area), Ok(cmd::recovery::Lock::Busy)));
     let mut b = app(false);
     assert!(offered(&mut b).is_empty());
     assert!(b.execute("file.recovery.discard", &json!({})).unwrap()["discarded"].as_array().unwrap().is_empty());
-    assert!(dir.join(&area).join("Untitled-1-1.vectorcraft").is_file());
+    assert!(dir.join(&area).join("Untitled-1-1.tsipika").is_file());
     // A crashes (its handle closes): B offers its copy, and restoring it tidies A's folder away.
     drop(a);
     assert_eq!(offered(&mut b), ["Untitled-1"]);
     b.execute("file.recovery.restore", &json!({})).unwrap();
     assert!(!dir.join(&area).exists(), "the crashed app's folder is removed");
     let mine = b.recovery.own_area().unwrap().to_string();
-    assert!(dir.join(&mine).join("Untitled-1-1.vectorcraft").is_file());
+    assert!(dir.join(&mine).join("Untitled-1-1.tsipika").is_file());
     // An empty folder a crash left (no copies) is tidied by the next list.
     std::fs::create_dir_all(dir.join("123-1")).unwrap();
     std::fs::write(dir.join("123-1").join(".lock"), b"").unwrap();
@@ -367,7 +367,7 @@ fn folder_areas_are_locked_by_running_apps() {
 fn saving_reverting_or_closing_removes_the_copy() {
     let dir = std::env::temp_dir().join(format!("vc-recovery-save-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("doc.vectorcraft").to_string_lossy().to_string();
+    let path = dir.join("doc.tsipika").to_string_lossy().to_string();
     // Save to a file.
     let (mut s, store) = session();
     s.execute("file.recovery.save", &json!({})).unwrap();
@@ -396,7 +396,7 @@ fn saving_reverting_or_closing_removes_the_copy() {
     assert!(copies(store.as_ref()).is_empty());
     let st = s2.doc().unwrap();
     assert!(!st.recovered && !st.is_dirty());
-    assert_eq!(st.title(), "doc.vectorcraft");
+    assert_eq!(st.title(), "doc.tsipika");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -416,12 +416,12 @@ fn complex_documents_are_skipped_when_the_preference_says() {
     let store = Arc::new(MemoryStore::default());
     let mut s = Session::new();
     s.recovery.set_store(store.clone());
-    let mut d = vectorcraft_doc::Document::new(1000.0, 1000.0);
+    let mut d = tsipika_doc::Document::new(1000.0, 1000.0);
     let layer = d.layers[0].id;
     for i in 0..cmd::recovery::COMPLEX_OBJECTS {
         let id = d.alloc_id();
-        let r = vectorcraft_geom::Rect::new((i % 200) as f64, (i / 200) as f64, (i % 200) as f64 + 1.0, (i / 200) as f64 + 1.0);
-        let n = vectorcraft_doc::Node::path(id, vectorcraft_geom::shapes::rectangle(r), vectorcraft_doc::Appearance::default_art());
+        let r = tsipika_geom::Rect::new((i % 200) as f64, (i / 200) as f64, (i % 200) as f64 + 1.0, (i / 200) as f64 + 1.0);
+        let n = tsipika_doc::Node::path(id, tsipika_geom::shapes::rectangle(r), tsipika_doc::Appearance::default_art());
         d.insert(Some(layer), i, n).unwrap();
     }
     s.add_document(d, None);
@@ -452,7 +452,7 @@ fn discard_deletes_copies_left_behind_only() {
     let r = s.execute("file.recovery.discard", &json!({})).unwrap();
     assert_eq!(r["discarded"], json!([format!("{crashed}/Untitled-1-1")]));
     let mine = s.recovery.own_area().unwrap();
-    assert_eq!(store.list().unwrap(), [format!("{mine}/Untitled-1-1.json"), format!("{mine}/Untitled-1-1.vectorcraft")]);
+    assert_eq!(store.list().unwrap(), [format!("{mine}/Untitled-1-1.json"), format!("{mine}/Untitled-1-1.tsipika")]);
 }
 
 #[test]
@@ -469,9 +469,9 @@ fn without_a_store_the_commands_say_where_to_set_one() {
     s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 5, "height": 5})).unwrap();
     s.execute("file.recovery.save", &json!({})).unwrap();
     let area = dir.join(s.recovery.own_area().unwrap());
-    assert!(area.join("Untitled-1-1.vectorcraft").is_file() && area.join("Untitled-1-1.json").is_file());
+    assert!(area.join("Untitled-1-1.tsipika").is_file() && area.join("Untitled-1-1.json").is_file());
     s.execute("file.close", &json!({})).unwrap();
-    assert!(!area.join("Untitled-1-1.vectorcraft").exists());
+    assert!(!area.join("Untitled-1-1.tsipika").exists());
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -520,7 +520,7 @@ impl RecoveryStore for Counting {
 
 fn place_png(s: &mut Session, name: &str, rgb: [u8; 3]) -> Vec<u8> {
     let png = crate::tests_links::png(64, 48, rgb);
-    s.execute("file.place", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(&png), "link": false})).unwrap();
+    s.execute("file.place", &json!({"name": name, "dataBase64": tsipika_format::base64_encode(&png), "link": false})).unwrap();
     png
 }
 
@@ -541,8 +541,8 @@ fn images_are_kept_apart_and_written_again_only_when_they_change() {
     assert_eq!(store.images_written().len(), 1);
     let area = s.recovery.own_area().unwrap().to_string();
     // The document entry doesn't hold the image.
-    let doc = store.read(&format!("{area}/Untitled-1-1.vectorcraft")).unwrap();
-    assert!(vectorcraft_format::load(&doc).unwrap().images.is_empty());
+    let doc = store.read(&format!("{area}/Untitled-1-1.tsipika")).unwrap();
+    assert!(tsipika_format::load(&doc).unwrap().images.is_empty());
     // An edit that leaves the image alone: the copy is written again, its image isn't.
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 50, "height": 20})).unwrap();
     let r = s.execute("file.recovery.save", &json!({})).unwrap();
@@ -580,11 +580,11 @@ fn copies_from_before_images_were_kept_apart_still_restore() {
     // The document entry is a whole native file, images inside; the details say nothing of them.
     let mut s = session_in(&store);
     place_png(&mut s, "red.png", crate::tests_links::RED);
-    let d = vectorcraft_doc::Document::clone(&s.doc().unwrap().doc);
+    let d = tsipika_doc::Document::clone(&s.doc().unwrap().doc);
     let images = images_of(&s);
     drop(s);
-    store.write("1-1/Old-1.vectorcraft", &vectorcraft_format::save_file(&d)).unwrap();
-    store.write("1-1/Old-1.json", br#"{"title": "Old", "format": "vectorcraft", "saved": 5}"#).unwrap();
+    store.write("1-1/Old-1.tsipika", &tsipika_format::save_file(&d)).unwrap();
+    store.write("1-1/Old-1.json", br#"{"title": "Old", "format": "tsipika", "saved": 5}"#).unwrap();
     let mut s = relaunch(&store);
     assert_eq!(restored(s.execute("file.recovery.restore", &json!({})).unwrap()), 1);
     assert_eq!(images_of(&s), images);
@@ -610,7 +610,7 @@ impl RecoveryStore for DiesAfterDocument {
             return Err("the app is gone".into());
         }
         self.inner.write(name, bytes)?;
-        if name.ends_with(".vectorcraft") {
+        if name.ends_with(".tsipika") {
             self.dead.store(true, std::sync::atomic::Ordering::Relaxed);
         }
         Ok(())

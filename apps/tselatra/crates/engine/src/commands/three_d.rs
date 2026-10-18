@@ -2,13 +2,13 @@
 //! Settings), the viewer's 3D views (View ▸ Switch 3D View, Reset 3D View) and the camera tools
 //! (Orbit, Pan, Dolly) acting on the current 3D view.
 
-use effectcraft_geom::{Mat4, Vec3, vec3};
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::build;
-use effectcraft_project::{AutoOrient, Comp, ItemId, Layer, LayerId, LayerSource, LightKind};
-use effectcraft_render::EvalCtx;
-use effectcraft_render::three_d::camera::{self, PRESETS, Rig, View3D, ViewCam, Views3D, orientation_for, zoom_for_focal};
-use effectcraft_time::Tick;
+use tselatra_geom::{Mat4, Vec3, vec3};
+use tselatra_keyframe::Value as KV;
+use tselatra_project::build;
+use tselatra_project::{AutoOrient, Comp, ItemId, Layer, LayerId, LayerSource, LightKind};
+use tselatra_render::EvalCtx;
+use tselatra_render::three_d::camera::{self, PRESETS, Rig, View3D, ViewCam, Views3D, orientation_for, zoom_for_focal};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::layer::{color_p, insert_layer};
@@ -375,7 +375,7 @@ fn reset_view(s: &mut Session, p: &Value) -> Result<Value> {
     let (w, h) = (comp.width as f64, comp.height as f64);
     s.edit("Reset 3D View", None, |proj, _| {
         let l = layer_mut(proj, cid, cam)?;
-        let zoom = get_at(l, "cameraOptions/zoom", t).map(|v| v.as_f64()).unwrap_or(effectcraft_geom::default_camera_zoom(w));
+        let zoom = get_at(l, "cameraOptions/zoom", t).map(|v| v.as_f64()).unwrap_or(tselatra_geom::default_camera_zoom(w));
         set_at(l, "transform/position", t, KV::Vec3([w / 2.0, h / 2.0, -zoom]));
         set_at(l, "transform/poi", t, KV::Vec3([w / 2.0, h / 2.0, 0.0]));
         set_at(l, "transform/orientation", t, KV::Vec3([0.0; 3]));
@@ -559,7 +559,7 @@ fn layer_points(s: &Session, cid: ItemId, ids: &[LayerId], t: Tick) -> Vec<Vec3>
     let mut out = vec![];
     for l in comp.layers.iter().filter(|l| ids.contains(&l.id)) {
         let m = ctx.world_matrix(l);
-        match effectcraft_render::content_bounds(&ctx, l) {
+        match tselatra_render::content_bounds(&ctx, l) {
             Some([x0, y0, x1, y1]) => {
                 for (x, y) in [(x0, y0), (x1, y0), (x1, y1), (x0, y1)] {
                     out.push(m.apply(vec3(x, y, 0.0)));
@@ -651,7 +651,7 @@ fn camera_from_view(s: &mut Session, p: &Value) -> Result<Value> {
     let vc = s.state.views3d.get(&cid).cloned().unwrap_or_default().cam(cur, w, h);
     let poi = Vec3::from(vc.poi);
     let fwd = (poi - Vec3::from(vc.eye)).normalize();
-    let zoom = if vc.ortho { effectcraft_geom::default_camera_zoom(w) } else { vc.zoom };
+    let zoom = if vc.ortho { tselatra_geom::default_camera_zoom(w) } else { vc.zoom };
     let eye = if vc.ortho { poi - fwd * zoom } else { Vec3::from(vc.eye) };
     let t = s.state.times.get(&cid).copied().unwrap_or(Tick::ZERO);
     let name = comp.unique_layer_name("Camera 1");

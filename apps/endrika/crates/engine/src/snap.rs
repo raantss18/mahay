@@ -4,8 +4,8 @@
 //! guide lines (with spacing labels) for the canvas to draw in red. Vector points also snap to
 //! other points (see `vectoredit::snap`); landing on one shows a marker (a zero-length guide).
 
-use figcraft_doc::{Document, NodeId};
-use figcraft_geom::{Affine, Point, Rect, Vec2, transform_rect_bbox};
+use endrika_doc::{Document, NodeId};
+use endrika_geom::{Affine, Point, Rect, Vec2, transform_rect_bbox};
 use serde::Serialize;
 
 use crate::guides;
@@ -85,7 +85,7 @@ impl Targets {
             for y in [b.y0, b.center().y, b.y1] {
                 t.ys.push((y, b.x0, b.x1));
             }
-            let (gx, gy) = figcraft_layout::grid_snap_lines_in(doc, parent, to * doc.world_transform(parent));
+            let (gx, gy) = endrika_layout::grid_snap_lines_in(doc, parent, to * doc.world_transform(parent));
             for x in gx {
                 t.xs.push((x, b.y0, b.y1));
             }

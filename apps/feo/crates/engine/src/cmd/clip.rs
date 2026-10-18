@@ -138,7 +138,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let src = p
                     .get("source")
                     .and_then(Value::as_u64)
-                    .map(soundcraft_model::SourceId)
+                    .map(feo_model::SourceId)
                     .ok_or_else(|| bad("clip.place_source", "`source` id required"))?;
                 let at = position_param(e, "clip.place_source", p, "at")?.unwrap_or(e.session().edit.selection.start).max(0);
                 let track = track_param(e, "clip.place_source", p, "track")?;
@@ -149,17 +149,17 @@ pub fn specs() -> Vec<CommandSpec> {
                     .ok_or_else(|| bad("clip.place_source", "no such audio file"))?;
                 let s = e.session_mut();
                 let t = match track {
-                    Some(t) if s.track(t).is_some_and(|x| x.kind == soundcraft_model::TrackKind::Audio) => t,
+                    Some(t) if s.track(t).is_some_and(|x| x.kind == feo_model::TrackKind::Audio) => t,
                     Some(_) => return Err(bad("clip.place_source", "audio files go on audio tracks")),
-                    None => s.add_track(soundcraft_model::TrackKind::Audio, soundcraft_model::ChannelFormat::for_channels(chans.min(2)), Some(&name)),
+                    None => s.add_track(feo_model::TrackKind::Audio, feo_model::ChannelFormat::for_channels(chans.min(2)), Some(&name)),
                 };
-                let (sh, len) = (s.edit.edit_mode == soundcraft_model::EditMode::Shuffle, frames.max(1));
+                let (sh, len) = (s.edit.edit_mode == feo_model::EditMode::Shuffle, frames.max(1));
                 let at = if sh { crate::edit::shuffle_slot(s, t, at, &[]) } else { at };
                 if sh {
                     crate::edit::make_room(s, t, at, len).map_err(|why| bad("clip.place_source", why))?;
                 }
                 let id = s.new_clip_id();
-                crate::edit::place_clip(s, t, soundcraft_model::Clip::audio(id, name, src, 0, at, len));
+                crate::edit::place_clip(s, t, feo_model::Clip::audio(id, name, src, 0, at, len));
                 Ok(json!({"clip": id, "track": t}))
             }
         ),
@@ -193,7 +193,7 @@ fn elastic(e: &mut Engine, p: &Value) -> Result<Value> {
         let orig = warp_original(s, *id);
         let mut base = c.clone();
         if let Some((src, off, len)) = orig {
-            base.content = soundcraft_model::ClipContent::Audio { source: src, offset: off };
+            base.content = feo_model::ClipContent::Audio { source: src, offset: off };
             base.length = len.max(1);
             base.stretch = 1.0;
         }
@@ -203,10 +203,10 @@ fn elastic(e: &mut Engine, p: &Value) -> Result<Value> {
             }
             continue;
         }
-        let out_len = soundcraft_time::to_samples(base.length as f64 * ratio).max(1);
+        let out_len = feo_time::to_samples(base.length as f64 * ratio).max(1);
         let Some(src) = super::more_util::render_stretched(s, "clip.elastic_properties", &base, out_len)? else { continue };
         if orig.is_none()
-            && let soundcraft_model::ClipContent::Audio { source, offset } = base.content
+            && let feo_model::ClipContent::Audio { source, offset } = base.content
         {
             s.edit.values.insert(key("src"), source.0 as f64);
             s.edit.values.insert(key("off"), offset as f64);
@@ -214,7 +214,7 @@ fn elastic(e: &mut Engine, p: &Value) -> Result<Value> {
         }
         s.edit.values.insert(key("ratio"), ratio);
         let mut nc = base;
-        nc.content = soundcraft_model::ClipContent::Audio { source: src, offset: 0 };
+        nc.content = feo_model::ClipContent::Audio { source: src, offset: 0 };
         nc.length = out_len;
         nc.stretch = 1.0;
         super::more_util::replace_clip(s, t, *id, nc);
@@ -233,7 +233,7 @@ fn remove_warp(e: &mut Engine, p: &Value) -> Result<Value> {
         if let Some(c) = s.find_clip_mut(*id) {
             c.stretch = 1.0;
             if let Some((src, off, len)) = orig {
-                c.content = soundcraft_model::ClipContent::Audio { source: src, offset: off };
+                c.content = feo_model::ClipContent::Audio { source: src, offset: off };
                 c.length = len.max(1);
                 c.fade_out.len = c.fade_out.len.min(c.length);
                 n += 1;
@@ -247,14 +247,14 @@ fn remove_warp(e: &mut Engine, p: &Value) -> Result<Value> {
 }
 
 /// The audio a warped clip was rendered from, while that file is still in the session.
-fn warp_original(s: &soundcraft_model::Session, id: ClipId) -> Option<(soundcraft_model::SourceId, Samples, Samples)> {
+fn warp_original(s: &feo_model::Session, id: ClipId) -> Option<(feo_model::SourceId, Samples, Samples)> {
     let v = |k: &str| s.edit.values.get(&format!("elastic.{}.{k}", id.0)).copied();
-    let src = soundcraft_model::SourceId(v("src")? as u64);
+    let src = feo_model::SourceId(v("src")? as u64);
     s.source(src)?;
     Some((src, v("off")? as i64, v("len")? as i64))
 }
 
-fn flag(e: &mut Engine, p: &Value, get: fn(&soundcraft_model::Clip) -> bool, set: fn(&mut soundcraft_model::Clip, bool)) -> Result<Value> {
+fn flag(e: &mut Engine, p: &Value, get: fn(&feo_model::Clip) -> bool, set: fn(&mut feo_model::Clip, bool)) -> Result<Value> {
     let ids = clip_ids_param(e, p);
     let s = e.session_mut();
     let v = p.get("value").and_then(Value::as_bool).unwrap_or_else(|| !ids.iter().all(|id| s.find_clip(*id).is_some_and(|(_, c)| get(c))));
@@ -351,7 +351,7 @@ fn nudge_gain(e: &mut Engine, p: &Value, db: f64) -> Result<Value> {
 fn quantize_to_grid(e: &mut Engine, p: &Value) -> Result<Value> {
     let ids = clip_ids_param(e, p);
     let s = e.session();
-    let moves: Vec<(soundcraft_model::ClipId, i64)> =
+    let moves: Vec<(feo_model::ClipId, i64)> =
         ids.iter().filter_map(|id| s.find_clip(*id).map(|(_, c)| (*id, crate::edit::grid_delta(s, c, 0, false)))).collect();
     let s = e.session_mut();
     for (id, d) in &moves {
@@ -363,7 +363,7 @@ fn quantize_to_grid(e: &mut Engine, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use soundcraft_model::{ClipId, TrackId};
+    use feo_model::{ClipId, TrackId};
 
     #[test]
     fn elastic_warp_renders_and_remove_warp_restores() {
@@ -387,12 +387,12 @@ mod tests {
 
     /// A clip on an Elastic track playing `clip_len` samples of a source that is silent before `tone_at`.
     fn elastic_clip(source_len: usize, tone_at: usize, clip_len: i64) -> (crate::Engine, TrackId, ClipId) {
-        use soundcraft_model::{ChannelFormat, Clip, Session, TrackKind};
+        use feo_model::{ChannelFormat, Clip, Session, TrackKind};
         let mut s = Session::default();
         let t = s.add_track(TrackKind::Audio, ChannelFormat::Mono, Some("Elastic"));
         let samples = (0..source_len).map(|i| if i >= tone_at { (i as f32 * 0.2).sin() * 0.4 } else { 0.0 }).collect();
-        let buf = soundcraft_audio_io::AudioBuffer { sample_rate: 48_000, channels: vec![samples] };
-        let src = crate::io::add_source(&mut s, "Tone", buf, None, soundcraft_audio_io::FileFormat::Wav);
+        let buf = feo_audio_io::AudioBuffer { sample_rate: 48_000, channels: vec![samples] };
+        let src = crate::io::add_source(&mut s, "Tone", buf, None, feo_audio_io::FileFormat::Wav);
         let cid = s.new_clip_id();
         crate::edit::place_clip(&mut s, t, Clip::audio(cid, "Clip", src, 0, 0, clip_len));
         let mut e = crate::Engine::new(s);
@@ -402,7 +402,7 @@ mod tests {
 
     fn rendered_peak(e: &crate::Engine, t: TrackId, cid: ClipId) -> f32 {
         let range = e.session().find_clip(cid).unwrap().1.range();
-        soundcraft_mix::render_clips(e.session(), t, range).iter().flatten().fold(0.0, |m, x| m.max(x.abs()))
+        feo_mix::render_clips(e.session(), t, range).iter().flatten().fold(0.0, |m, x| m.max(x.abs()))
     }
 
     /// Elastic Properties stretches the material the clip plays, by the requested ratio (#227).

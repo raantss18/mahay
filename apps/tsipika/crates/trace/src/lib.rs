@@ -1,4 +1,4 @@
-//! VectorCraft Image Trace: raster → vector.
+//! Tsipika Image Trace: raster → vector.
 //!
 //! A clean-room tracer built from the published ideas behind bitmap tracers (the potrace paper
 //! and classic colour quantisation), not from any existing implementation:
@@ -58,7 +58,7 @@ mod subpixel;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_geom::PathData;
+use tsipika_geom::PathData;
 
 pub use contour::{Component, Loop, trace_mask};
 pub use gradient::TracedGradient;
@@ -716,7 +716,7 @@ impl Layers<'_> {
     /// say, and up or down by what those to its left and right say (the mean, where there are
     /// two). It depends on the corner alone, so every region around it gets the same point; on the
     /// image's border it stays on the border.
-    fn junction(&self, x: i32, y: i32) -> Option<vectorcraft_geom::Point> {
+    fn junction(&self, x: i32, y: i32) -> Option<tsipika_geom::Point> {
         let label = |px: i32, py: i32| Crack::new((px, py), (1, 0), self.w, self.h).at(0).and_then(|i| self.q.labels.get(i).copied());
         // The four pixels around the corner (`None` off the image), and the edges between them.
         let around = [label(x - 1, y - 1), label(x, y - 1), label(x, y), label(x - 1, y)];
@@ -740,7 +740,7 @@ impl Layers<'_> {
         };
         let dx = mean(shift((x - 1, y - 1), (1, 0)), shift((x - 1, y), (1, 0)));
         let dy = mean(shift((x - 1, y - 1), (0, 1)), shift((x, y - 1), (0, 1)));
-        Some(vectorcraft_geom::Point::new(f64::from(x) + dx, f64::from(y) + dy))
+        Some(tsipika_geom::Point::new(f64::from(x) + dx, f64::from(y) + dy))
     }
     /// How far the edge lies from a crack between two pixels, towards the outside one (−0.5 to 0.5).
     ///
@@ -799,7 +799,7 @@ impl Layers<'_> {
                 let flat = self.q.palette.get(l as usize)?.map(f64::from);
                 let Some(g) = self.gradients.get(l as usize).and_then(Option::as_ref) else { return Some(flat) };
                 let i = c.at(k)?;
-                Some(g.color_at(vectorcraft_geom::Point::new((i % self.w) as f64 + 0.5, (i / self.w) as f64 + 0.5)))
+                Some(g.color_at(tsipika_geom::Point::new((i % self.w) as f64 + 0.5, (i / self.w) as f64 + 0.5)))
             };
             let (Some(ca), Some(cb)) = (own(la, 0), own(lb, 1)) else { return 0.0 };
             (ca, cb)
@@ -898,7 +898,7 @@ impl Layers<'_> {
     /// region whose whole outline is the hole of one other (no junction on it, not on the image's
     /// border), and only a shape inside the image. The shape is read from the outline run one way
     /// from one start, so the region and the hole it fills get the very same one.
-    fn shared_shape(&self, l: &Loop, sp: &vectorcraft_geom::SubPath, hard: bool) -> Option<TracedShape> {
+    fn shared_shape(&self, l: &Loop, sp: &tsipika_geom::SubPath, hard: bool) -> Option<TracedShape> {
         let (w, h) = (i32::try_from(self.w).ok()?, i32::try_from(self.h).ok()?);
         if l.pts.iter().any(|&(x, y)| x <= 0 || y <= 0 || x >= w || y >= h || self.junction(x, y).is_some()) {
             return None;
@@ -1006,8 +1006,8 @@ impl Layers<'_> {
                 };
                 if let Some(exact) = exact.and_then(|shape| shape.path().subpaths.into_iter().next()) {
                     // (Which way round each goes: by the area of the polygon through points along it.)
-                    let turn = |sp: &vectorcraft_geom::SubPath| {
-                        use vectorcraft_geom::ParamCurve;
+                    let turn = |sp: &tsipika_geom::SubPath| {
+                        use tsipika_geom::ParamCurve;
                         let pts: Vec<_> =
                             (0..sp.segment_count()).flat_map(|i| (0..6).map(move |k| sp.segment(i).eval(f64::from(k) / 6.0).to_vec2())).collect();
                         pts.iter().zip(pts.iter().cycle().skip(1)).map(|(a, b)| a.cross(*b)).sum::<f64>()

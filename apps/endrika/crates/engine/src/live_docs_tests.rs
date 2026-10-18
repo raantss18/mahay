@@ -5,16 +5,16 @@
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::message::{ClientMsg, ServerMsg};
-use figcraft_collab::{Client, Outgoing, Server};
-use figcraft_doc::NodeId;
+use endrika_collab::message::{ClientMsg, ServerMsg};
+use endrika_collab::{Client, Outgoing, Server};
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use crate::live::{Event, PUBLISHING, Presence, Role, Signal, Status};
 use crate::live_tests::{Script, info, peer, push, relay, serve, session};
 use crate::{EngineError, Session};
 
-const LINK: &str = "figcraft://join?host=a:1&file=f&token=t";
+const LINK: &str = "endrika://join?host=a:1&file=f&token=t";
 
 /// Hand `events` to the session as link session `id`'s.
 fn feed(s: &mut Session, script: &Arc<Mutex<Script>>, id: u64, events: Vec<Event>) {
@@ -205,7 +205,7 @@ fn a_join_shows_where_it_started_until_its_file_opens() {
     let p = s.live_summary();
     assert_eq!((&p["status"], &p["sessions"][0]["status"], &p["sessions"][0]["document"]), (&json!("off"), &json!("connecting"), &Value::Null));
     // Its file opens as a tab of its own, in front, with the session.
-    let mut theirs = figcraft_doc::Document::new("Team file");
+    let mut theirs = endrika_doc::Document::new("Team file");
     theirs.repair();
     let (_, me, welcome) = serve(&theirs);
     feed(&mut s, &script, join, vec![Event::Welcome { info: info(Role::Guest, me), peers: vec![peer(1, "Hana")] }, welcome]);

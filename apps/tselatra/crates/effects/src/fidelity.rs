@@ -1,6 +1,6 @@
 //! Deterministic rendered-frame comparison helpers for the fidelity corpus.
 
-use effectcraft_raster::Image;
+use tselatra_raster::Image;
 
 /// How far a rendered frame is from its reference.
 #[derive(Clone, Copy, Debug, PartialEq)]

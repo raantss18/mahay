@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 fn rectangle(s: &mut Session, x: f64) -> Value {

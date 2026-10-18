@@ -12,8 +12,8 @@ use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::{Arc, Mutex, OnceLock};
 
-use figcraft_doc::BoolOp;
-use figcraft_geom::BezPath;
+use endrika_doc::BoolOp;
+use endrika_geom::BezPath;
 
 use crate::draw::hash_path;
 
@@ -76,7 +76,7 @@ pub fn boolean_steps() -> u64 {
 /// unused), reusing the longest cached prefix. Invalid geometry gives an empty path.
 pub fn fold_cached(operands: &[(BezPath, BoolOp)]) -> BezPath {
     if operands.len() < 2 {
-        return figcraft_pathops::boolean_ops(operands.iter().map(|(p, op)| (p, *op))).unwrap_or_default();
+        return endrika_pathops::boolean_ops(operands.iter().map(|(p, op)| (p, *op))).unwrap_or_default();
     }
     // keys[i]: the fold of operands 0..=i.
     let mut h = DefaultHasher::new();
@@ -107,7 +107,7 @@ pub fn fold_cached(operands: &[(BezPath, BoolOp)]) -> BezPath {
     let mut fresh = Vec::new();
     for ((p, op), key) in operands.iter().zip(&keys).skip(start + 1) {
         STEPS.with(|s| s.set(s.get() + 1));
-        acc = match figcraft_pathops::boolean_step(&acc, p, *op) {
+        acc = match endrika_pathops::boolean_step(&acc, p, *op) {
             Ok(r) => r,
             Err(_) => return BezPath::new(),
         };

@@ -5,9 +5,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use figcraft_collab::code;
-use figcraft_collab::message::{Access, Admin, AdminReply, ClientMsg, LibraryReply, LibraryReq, PluginReply, PluginReq};
-use figcraft_engine::live::{
+use endrika_collab::code;
+use endrika_collab::message::{Access, Admin, AdminReply, ClientMsg, LibraryReply, LibraryReq, PluginReply, PluginReq};
+use endrika_engine::live::{
     Bind, Event, HostInfo, HostOptions, LiveLink, NO_SESSION, NetReply, NetRequest, PageInfo, Presence, PublishOptions, Published, Resume, Role,
     SessionId, SessionInfo, Shared,
 };
@@ -121,7 +121,7 @@ impl LiveLink for NetLink {
             Bind::Addr(ip) => ip,
         };
         // A session shared with a join code: its secret is short enough to be typed with the
-        // address (see `figcraft_collab::code`); the code and the invite link name the same session.
+        // address (see `endrika_collab::code`); the code and the invite link name the same session.
         let (file, token) = if o.short {
             (code::LOCAL_FILE.to_string(), code::Local::new(Ipv4Addr::UNSPECIFIED, 0, token::random()?).token())
         } else {
@@ -139,7 +139,7 @@ impl LiveLink for NetLink {
             doc,
             name: o.name,
             limits: self.limits,
-            core: figcraft_collab::Limits::default(),
+            core: endrika_collab::Limits::default(),
         };
         let host = Host::start(cfg, inbox.clone()).map_err(|e| format!("can't listen on {ip}: {e}"))?;
         let invite = Invite::new(host.addr().to_string(), file, token);
@@ -288,7 +288,7 @@ impl LiveLink for NetLink {
 fn upload(o: PublishOptions, limits: &NetLimits) -> Result<Published, String> {
     let (server, query) = Endpoint::parse(&o.server)?;
     let key = o.key.or_else(|| query.into_iter().find(|(k, _)| k == "key").map(|(_, v)| v)).filter(|k| !k.trim().is_empty());
-    let key = key.ok_or("the server address needs the server's key (ws://host:port/?key=…; `figcraft-server key` prints it)")?;
+    let key = key.ok_or("the server address needs the server's key (ws://host:port/?key=…; `endrika-server key` prints it)")?;
     upload_file(&server, Some(&key), &o.name, &o.doc, limits, CONNECT).map(|(_, published, _)| published)
 }
 

@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use designcraft_doc::{SpreadId, SpreadRef};
+use pejy_doc::{SpreadId, SpreadRef};
 use egui::{Color32, Sense, Stroke, StrokeKind, vec2};
 use serde_json::json;
 
@@ -34,9 +34,9 @@ fn thumb(app: &mut DesignApp, ctx: &egui::Context, of: ThumbOf, h: f32) -> Optio
         return Some(t.clone());
     }
     let px = h as f64 * ctx.pixels_per_point() as f64;
-    let mut r = designcraft_render::Renderer::new();
+    let mut r = pejy_render::Renderer::new();
     r.threads = 0;
-    let opts = designcraft_render::RenderOptions { printing_only: true, ..Default::default() };
+    let opts = pejy_render::RenderOptions { printing_only: true, ..Default::default() };
     let (img, name) = match of {
         ThumbOf::Page(abs) => {
             let page = st.doc.page(abs)?;
@@ -51,9 +51,9 @@ fn thumb(app: &mut DesignApp, ctx: &egui::Context, of: ThumbOf, h: f32) -> Optio
             }
             let scale = (px / b.height()).min(MAX_THUMB_W / b.width());
             let (w, h) = ((b.width() * scale).round().max(1.0) as u32, (b.height() * scale).round().max(1.0) as u32);
-            let view = designcraft_geom::Affine::scale(scale) * designcraft_geom::Affine::translate(-b.origin().to_vec2());
-            let o = designcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), ..opts };
-            let placed = [designcraft_render::Placed { spread: SpreadRef::Parent(i), xf: designcraft_geom::Affine::IDENTITY }];
+            let view = pejy_geom::Affine::scale(scale) * pejy_geom::Affine::translate(-b.origin().to_vec2());
+            let o = pejy_render::RenderOptions { background: Some([255, 255, 255, 255]), ..opts };
+            let placed = [pejy_render::Placed { spread: SpreadRef::Parent(i), xf: pejy_geom::Affine::IDENTITY }];
             (r.render(&st.doc, &app.session.cache, &placed, w, h, view, &o), format!("thumbp{}", id.0))
         }
     };
@@ -217,7 +217,7 @@ struct ParentRow {
 
 impl ParentRow {
     /// A parent's row, from the spread's own pages; blank pages of `aspect` when it has no size.
-    fn new(i: usize, sp: &designcraft_doc::Spread, aspect: f32) -> ParentRow {
+    fn new(i: usize, sp: &pejy_doc::Spread, aspect: f32) -> ParentRow {
         let b = sp.bounds();
         let (pages, unit_w) = if b.width() > 0.0 && b.height() > 0.0 && b.width().is_finite() && b.height().is_finite() {
             let k = 1.0 / b.height();
@@ -271,7 +271,7 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
     // ---- Parents: [None] and each parent, rows with the parent's thumbnail at the right.
     // While parents are edited, the row of the parent the canvas shows is selected.
     let cur_parent = if editing_parents {
-        let layout = designcraft_tools::CanvasLayout::new(&doc, true);
+        let layout = pejy_tools::CanvasLayout::new(&doc, true);
         crate::canvas::current_slot(app, &layout).and_then(|i| layout.slots.get(i)).and_then(|s| match s.spread {
             SpreadRef::Parent(i) => Some(i),
             SpreadRef::Doc(_) => None,
@@ -460,7 +460,7 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
                             let prefix = pp.parent.as_ref().map(|i| i.prefix.clone()).unwrap_or_default();
                             let g = ui.painter().layout_no_wrap(prefix, crate::theme::semibold(9.5), Color32::BLACK);
                             let w = g.size().x + 2.0;
-                            let br = if p.side == designcraft_doc::PageSide::Left {
+                            let br = if p.side == pejy_doc::PageSide::Left {
                                 egui::Rect::from_min_size(pr.left_top(), vec2(w, 10.0))
                             } else {
                                 egui::Rect::from_min_size(pr.right_top() - vec2(w, 0.0), vec2(w, 10.0))
@@ -662,7 +662,7 @@ pub fn open_panel_options(app: &mut DesignApp) {
     ));
 }
 
-fn page_menu(app: &mut DesignApp, ui: &mut egui::Ui, doc: &designcraft_doc::Document, abs: usize, si: usize) {
+fn page_menu(app: &mut DesignApp, ui: &mut egui::Ui, doc: &pejy_doc::Document, abs: usize, si: usize) {
     let lang = app.ui.language.clone();
     let tr = |s: &str| crate::i18n::tr(&lang, s).to_owned();
     let pages_in_spread = doc.spreads.get(si).map_or(1, |sp| sp.pages.len());
@@ -780,7 +780,7 @@ mod tests {
 
     #[test]
     fn double_clicking_a_parent_shows_that_parent() {
-        let mut app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         for prefix in ["B", "C", "D"] {
             app.run("layout.parents.new", json!({"prefix": prefix})).unwrap();
@@ -802,9 +802,9 @@ mod tests {
         let app = &h.state().app;
         assert!(app.session.active().unwrap().editing_parents);
         let st = app.session.active().unwrap();
-        let layout = designcraft_tools::CanvasLayout::new(&st.doc, true);
+        let layout = pejy_tools::CanvasLayout::new(&st.doc, true);
         let slot = crate::canvas::current_slot(app, &layout).unwrap();
-        assert_eq!(layout.slots[slot].spread, designcraft_doc::SpreadRef::Parent(2));
+        assert_eq!(layout.slots[slot].spread, pejy_doc::SpreadRef::Parent(2));
         for name in names {
             assert_eq!(h.get_by_label(name).accesskit_node().toggled() == Some(egui::accesskit::Toggled::True), name == "C-Parent", "{name}");
         }
@@ -868,7 +868,7 @@ mod tests {
 
     #[test]
     fn a_page_in_a_spread_offers_delete_page_and_delete_spread() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 5, "facingPages": true})).unwrap();
         let doc = app.session.doc().unwrap().doc.clone();
         let (si, _) = doc.page_loc(2).unwrap();
@@ -884,7 +884,7 @@ mod tests {
     /// "Don't show again" stops the question.
     #[test]
     fn deleting_a_page_with_objects_asks_first() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 5, "facingPages": true})).unwrap();
         let doc = app.session.doc().unwrap().doc.clone();
         let (si, pi) = doc.page_loc(2).unwrap();
@@ -941,7 +941,7 @@ mod tests {
     #[test]
     fn the_footer_stays_put_and_the_divider_resizes_the_parents() {
         use egui::{Event, Modifiers, PointerButton};
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 60, "facingPages": true})).unwrap();
         for prefix in ["B", "C", "D", "E", "F", "G"] {
             app.run("layout.parents.new", json!({"prefix": prefix})).unwrap();
@@ -976,7 +976,7 @@ mod tests {
     /// side, pages on top.
     #[test]
     fn panel_options_size_and_arrange_the_panel() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 6, "facingPages": true})).unwrap();
         app.run("layout.parents.new", json!({"prefix": "B"})).unwrap();
         app.ui.dock_tab = "pages".into();
@@ -1034,7 +1034,7 @@ mod tests {
     fn large_parent_rows_in_a_short_panel_do_not_panic() {
         use egui::{Event, Modifiers, PointerButton};
         for size in [IconSize::ExtraLarge, IconSize::Jumbo] {
-            let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+            let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"pages": 4})).unwrap();
             app.ui.pages_panel.parent_size = size;
             let mut h = sized_harness(app, vec2(260.0, 160.0));
@@ -1055,7 +1055,7 @@ mod tests {
     #[test]
     fn parent_thumbnails_follow_panel_options() {
         let parent_thumb_heights = |thumbnails: bool| {
-            let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+            let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({})).unwrap();
             app.ui.dock_tab = "pages".into();
             app.ui.pages_panel.parent_size = IconSize::Large;
@@ -1073,7 +1073,7 @@ mod tests {
 
     #[test]
     fn the_panel_menu_follows_indesigns_order() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 2, "facingPages": false})).unwrap();
         let mut h = menu_harness(app, 0, 0);
         assert!(h.query_by_label("Delete Spread").is_none(), "a single-page spread has no Delete Spread");
@@ -1094,7 +1094,7 @@ mod tests {
     #[test]
     fn a_page_dropped_on_create_new_page_is_duplicated_at_the_end() {
         // Chris Cicchino's Page Tool video (2:06): "click and drag onto my plus sign I can duplicate that".
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 252, "height": 144, "facingPages": false})).unwrap();
         app.run("layout.pages.insert", json!({"count": 1})).unwrap();
         app.run("layout.pageSize", json!({"pages": [2], "width": 612, "height": 792})).unwrap();

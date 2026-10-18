@@ -1,14 +1,14 @@
-//! Where LightCraft keeps per-user data on this machine: the config folder (app settings, camera
+//! Where Hazavana keeps per-user data on this machine: the config folder (app settings, camera
 //! profiles, face and denoise models).
 //!
 //! [`config_dir`] picks it, in order:
-//! 1. `$LIGHTCRAFT_CONFIG_DIR`, when set (tests, agents, custom setups).
-//! 2. **Portable mode** (issue #1200, as in PhotoCraft): a marker file ([`PORTABLE_MARKERS`]) beside the
-//!    executable puts everything in `<exe dir>/LightCraftData`, so a copy on a USB stick leaves nothing in
+//! 1. `$HAZAVANA_CONFIG_DIR`, when set (tests, agents, custom setups).
+//! 2. **Portable mode** (issue #1200, as in Sary): a marker file ([`PORTABLE_MARKERS`]) beside the
+//!    executable puts everything in `<exe dir>/HazavanaData`, so a copy on a USB stick leaves nothing in
 //!    `%APPDATA%`. If that folder can't be written (read-only medium, Program Files), a warning is logged
 //!    and the platform folder is used.
-//! 3. The platform convention: macOS `~/Library/Application Support/LightCraft`, Windows
-//!    `%APPDATA%\LightCraft`, Linux `$XDG_CONFIG_HOME/lightcraft` or `~/.config/lightcraft`.
+//! 3. The platform convention: macOS `~/Library/Application Support/Hazavana`, Windows
+//!    `%APPDATA%\Hazavana`, Linux `$XDG_CONFIG_HOME/hazavana` or `~/.config/hazavana`.
 //!
 //! Hosts that have a file system (the desktop app, the CLI, the MCP server) share these defaults so a model
 //! installed from one is there for the others. Nothing here is applied automatically: a [`Session`] has no
@@ -22,9 +22,9 @@ use std::sync::OnceLock;
 use crate::Session;
 
 /// Files beside the executable that switch on portable mode (either one; contents are ignored).
-pub const PORTABLE_MARKERS: [&str; 2] = ["portable.txt", "LightCraft.portable"];
+pub const PORTABLE_MARKERS: [&str; 2] = ["portable.txt", "Hazavana.portable"];
 /// The data folder created beside the executable in portable mode.
-pub const PORTABLE_DATA_DIR: &str = "LightCraftData";
+pub const PORTABLE_DATA_DIR: &str = "HazavanaData";
 
 #[derive(Clone, Copy)]
 enum Platform {
@@ -33,7 +33,7 @@ enum Platform {
     Other,
 }
 
-/// LightCraft's settings folder. A nonempty `$LIGHTCRAFT_CONFIG_DIR` overrides portable mode and the
+/// Hazavana's settings folder. A nonempty `$HAZAVANA_CONFIG_DIR` overrides portable mode and the
 /// platform default. The override is the complete directory; no application-name suffix is appended. An
 /// explicitly empty value disables the settings directory instead of falling back to a personal profile.
 pub fn config_dir() -> Option<PathBuf> {
@@ -49,17 +49,17 @@ pub fn config_dir() -> Option<PathBuf> {
 
 /// `portable` is asked only without an override, so an isolated run never probes beside the executable.
 fn config_dir_with(platform: Platform, env: impl Fn(&str) -> Option<OsString>, portable: impl FnOnce() -> Option<PathBuf>) -> Option<PathBuf> {
-    if let Some(dir) = env("LIGHTCRAFT_CONFIG_DIR") {
+    if let Some(dir) = env("HAZAVANA_CONFIG_DIR") {
         return (!dir.is_empty()).then(|| PathBuf::from(dir));
     }
     if let Some(dir) = portable() {
         return Some(dir);
     }
     match platform {
-        Platform::Mac => env("HOME").map(|h| PathBuf::from(h).join("Library/Application Support/LightCraft")),
-        Platform::Windows => env("APPDATA").map(|a| PathBuf::from(a).join("LightCraft")),
+        Platform::Mac => env("HOME").map(|h| PathBuf::from(h).join("Library/Application Support/Hazavana")),
+        Platform::Windows => env("APPDATA").map(|a| PathBuf::from(a).join("Hazavana")),
         Platform::Other => {
-            env("XDG_CONFIG_HOME").map(PathBuf::from).or_else(|| env("HOME").map(|h| PathBuf::from(h).join(".config"))).map(|c| c.join("lightcraft"))
+            env("XDG_CONFIG_HOME").map(PathBuf::from).or_else(|| env("HOME").map(|h| PathBuf::from(h).join(".config"))).map(|c| c.join("hazavana"))
         }
     }
 }
@@ -81,7 +81,7 @@ fn portable_dir() -> Option<PathBuf> {
     .clone()
 }
 
-/// `<exe_dir>/LightCraftData` when `exe_dir` holds a portable marker; `Err` says why a marked folder
+/// `<exe_dir>/HazavanaData` when `exe_dir` holds a portable marker; `Err` says why a marked folder
 /// can't be used (the caller falls back to the platform folder).
 fn portable_dir_in(exe_dir: &Path) -> Result<Option<PathBuf>, String> {
     let Some(marker) = PORTABLE_MARKERS.iter().map(|m| exe_dir.join(m)).find(|p| p.is_file()) else {
@@ -108,22 +108,22 @@ fn ensure_writable(dir: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-/// Where face models are kept: `$LIGHTCRAFT_FACE_MODELS` if set, else `<config>/models`.
+/// Where face models are kept: `$HAZAVANA_FACE_MODELS` if set, else `<config>/models`.
 pub fn default_face_models_dir() -> Option<PathBuf> {
-    std::env::var_os("LIGHTCRAFT_FACE_MODELS").filter(|v| !v.is_empty()).map(PathBuf::from).or_else(|| config_dir().map(|d| d.join("models")))
+    std::env::var_os("HAZAVANA_FACE_MODELS").filter(|v| !v.is_empty()).map(PathBuf::from).or_else(|| config_dir().map(|d| d.join("models")))
 }
 
-/// Where opt-in denoise models are kept: `$LIGHTCRAFT_DENOISE_MODELS` if set, else `<config>/denoise-models`.
+/// Where opt-in denoise models are kept: `$HAZAVANA_DENOISE_MODELS` if set, else `<config>/denoise-models`.
 pub fn default_denoise_models_dir() -> Option<PathBuf> {
-    std::env::var_os("LIGHTCRAFT_DENOISE_MODELS")
+    std::env::var_os("HAZAVANA_DENOISE_MODELS")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
         .or_else(|| config_dir().map(|d| d.join("denoise-models")))
 }
 
-/// Where the SAM 3 model is kept: `$LIGHTCRAFT_SAM3_DIR` if set, else `<config>/models/sam3`.
+/// Where the SAM 3 model is kept: `$HAZAVANA_SAM3_DIR` if set, else `<config>/models/sam3`.
 pub fn default_sam3_dir() -> Option<PathBuf> {
-    sam3_dir(std::env::var_os("LIGHTCRAFT_SAM3_DIR"), config_dir())
+    sam3_dir(std::env::var_os("HAZAVANA_SAM3_DIR"), config_dir())
 }
 
 /// [`default_sam3_dir`] for a given override and config folder: a non-empty override wins.
@@ -215,7 +215,7 @@ mod config_tests {
             let actual = config_dir_with(
                 platform,
                 |name| {
-                    assert_eq!(name, "LIGHTCRAFT_CONFIG_DIR");
+                    assert_eq!(name, "HAZAVANA_CONFIG_DIR");
                     Some(OsString::from("isolated/settings"))
                 },
                 no_portable_probe,
@@ -231,7 +231,7 @@ mod config_tests {
                 config_dir_with(
                     platform,
                     |name| {
-                        assert_eq!(name, "LIGHTCRAFT_CONFIG_DIR");
+                        assert_eq!(name, "HAZAVANA_CONFIG_DIR");
                         Some(OsString::new())
                     },
                     no_portable_probe
@@ -244,10 +244,10 @@ mod config_tests {
     #[test]
     fn config_unset_override_keeps_platform_defaults() {
         let vars = [("HOME", "/user"), ("APPDATA", "/roaming"), ("XDG_CONFIG_HOME", "/xdg")];
-        assert_eq!(resolve(Platform::Mac, &vars), Some(PathBuf::from("/user/Library/Application Support/LightCraft")));
-        assert_eq!(resolve(Platform::Windows, &vars), Some(PathBuf::from("/roaming/LightCraft")));
-        assert_eq!(resolve(Platform::Other, &vars), Some(PathBuf::from("/xdg/lightcraft")));
-        assert_eq!(resolve(Platform::Other, &[("HOME", "/user")]), Some(PathBuf::from("/user/.config/lightcraft")));
+        assert_eq!(resolve(Platform::Mac, &vars), Some(PathBuf::from("/user/Library/Application Support/Hazavana")));
+        assert_eq!(resolve(Platform::Windows, &vars), Some(PathBuf::from("/roaming/Hazavana")));
+        assert_eq!(resolve(Platform::Other, &vars), Some(PathBuf::from("/xdg/hazavana")));
+        assert_eq!(resolve(Platform::Other, &[("HOME", "/user")]), Some(PathBuf::from("/user/.config/hazavana")));
         for platform in [Platform::Mac, Platform::Windows, Platform::Other] {
             assert_eq!(resolve(platform, &[]), None);
         }
@@ -266,7 +266,7 @@ mod config_tests {
 mod tests {
     use super::*;
 
-    /// A non-empty `LIGHTCRAFT_SAM3_DIR` wins; unset or empty falls back to `<config>/models/sam3` (issue #619).
+    /// A non-empty `HAZAVANA_SAM3_DIR` wins; unset or empty falls back to `<config>/models/sam3` (issue #619).
     #[test]
     fn sam3_dir_prefers_the_override() {
         let config = PathBuf::from("cfg");

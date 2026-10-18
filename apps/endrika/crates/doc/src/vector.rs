@@ -1,8 +1,8 @@
 //! Vector networks: vertices joined by curved segments, any number of segments per vertex, plus
 //! filled regions made of closed loops.
 
-use figcraft_geom::kurbo::{CubicBez, ParamCurve, ParamCurveArclen, ParamCurveDeriv};
-use figcraft_geom::{BezPath, Point, Vec2};
+use endrika_geom::kurbo::{CubicBez, ParamCurve, ParamCurveArclen, ParamCurveDeriv};
+use endrika_geom::{BezPath, Point, Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::{StrokeCap, StrokeJoin};
@@ -150,7 +150,7 @@ impl VectorNetwork {
 
     /// A network from a bezier path: each subpath becomes a chain (closed subpaths a loop + region).
     pub fn from_path(path: &BezPath) -> Self {
-        use figcraft_geom::kurbo::PathEl;
+        use endrika_geom::kurbo::PathEl;
         let mut net = VectorNetwork::default();
         let mut loop_segs: Vec<usize> = Vec::new();
         let mut first_v: Option<usize> = None;
@@ -304,9 +304,9 @@ impl VectorNetwork {
     }
 
     /// Segment `i` as a cubic bezier.
-    pub fn cubic(&self, i: usize) -> Option<figcraft_geom::kurbo::CubicBez> {
+    pub fn cubic(&self, i: usize) -> Option<endrika_geom::kurbo::CubicBez> {
         let (a, c1, c2, b) = self.seg_points(self.segments.get(i)?)?;
-        Some(figcraft_geom::kurbo::CubicBez::new(a, c1, c2, b))
+        Some(endrika_geom::kurbo::CubicBez::new(a, c1, c2, b))
     }
 
     /// One closed loop of segments as a path.
@@ -319,7 +319,7 @@ impl VectorNetwork {
     /// Whether the rendered fill covers `p` (the renderer fills every region with one rule: even-odd
     /// when any region asks for it).
     pub fn fill_contains(&self, p: Point) -> bool {
-        use figcraft_geom::Shape;
+        use endrika_geom::Shape;
         let path = self.fill_path();
         let w = path.winding(p);
         if self.regions.iter().any(|r| r.winding == WindingRule::EvenOdd) { w % 2 != 0 } else { w != 0 }
@@ -613,8 +613,8 @@ impl VectorNetwork {
     }
 
     /// Bounds of the curves.
-    pub fn bounds(&self) -> Option<figcraft_geom::Rect> {
-        use figcraft_geom::Shape;
+    pub fn bounds(&self) -> Option<endrika_geom::Rect> {
+        use endrika_geom::Shape;
         let p = self.stroke_path();
         if p.elements().is_empty() { None } else { Some(p.bounding_box()) }
     }

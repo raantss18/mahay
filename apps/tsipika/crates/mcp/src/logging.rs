@@ -1,6 +1,6 @@
 //! `logging/setLevel` and the `notifications/message` it turns on.
 //!
-//! VectorCraft's crates log through the `log` facade, and until now nothing installed a logger, so
+//! Tsipika's crates log through the `log` facade, and until now nothing installed a logger, so
 //! every `log::debug!` went nowhere. This module is the sink for them: a `log` logger that turns
 //! records into MCP `notifications/message`, filtered to the level the client asked for.
 //!
@@ -208,7 +208,7 @@ mod tests {
         let got = drain();
         let ours = got.iter().find(|m| m["data"] == "hello world").unwrap_or_else(|| panic!("not in {got:?}"));
         assert_eq!(ours["level"], "warning");
-        assert!(ours["logger"].as_str().unwrap_or_default().starts_with("vectorcraft_mcp"), "{ours}");
+        assert!(ours["logger"].as_str().unwrap_or_default().starts_with("tsipika_mcp"), "{ours}");
 
         // Below the requested level stays out.
         set_level(Some("error")).ok();

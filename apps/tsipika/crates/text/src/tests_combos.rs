@@ -5,8 +5,8 @@
 
 use super::*;
 use kurbo::Shape;
-use vectorcraft_doc::{AreaFit, CharStyle, Composer, InlineArt, Justify, TextKind, TextRun, VerticalAlign};
-use vectorcraft_geom::PathData;
+use tsipika_doc::{AreaFit, CharStyle, Composer, InlineArt, Justify, TextKind, TextRun, VerticalAlign};
+use tsipika_geom::PathData;
 
 const COPY: &str = "Typography is the craft of arranging type to make written language legible, readable and appealing when displayed. \
 The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing and letter spacing.";
@@ -258,7 +258,7 @@ fn composer_x_paragraph_attrs() {
     // Each paragraph breaks with its own composer.
     let w = natural_width("Destroy all creatures with toughness X or", 12.0) + 2.0;
     let mut t = area(vec![run(&format!("{RAG}\n{RAG}\n{RAG}"), sans(12.0))], Rect::new(0.0, 0.0, w, 400.0));
-    let p = |c: Composer| vectorcraft_doc::ParaStyle { composer: c, ..t.para.clone() };
+    let p = |c: Composer| tsipika_doc::ParaStyle { composer: c, ..t.para.clone() };
     t.set_paragraph_styles(vec![p(Composer::SingleLine), p(Composer::EveryLine), p(Composer::SingleLine)]);
     let l = layout(db(), &t);
     let greedy = ["Destroy all creatures with toughness X or", "less."];
@@ -294,7 +294,7 @@ fn composer_x_inline_graphics() {
     }
 }
 
-const INLINE: char = vectorcraft_doc::text::INLINE_CHAR;
+const INLINE: char = tsipika_doc::text::INLINE_CHAR;
 
 // ---------- vertical alignment × … ----------
 
@@ -490,7 +490,7 @@ fn paragraph_attrs_x_inline_graphics() {
     ];
     let mut t = area(runs, Rect::new(0.0, 0.0, 200.0, 400.0));
     let base = t.para.clone();
-    let with = |j: Justify, first: f64| vectorcraft_doc::ParaStyle { justify: j, first_line_indent: first, left_indent: 6.0, ..base.clone() };
+    let with = |j: Justify, first: f64| tsipika_doc::ParaStyle { justify: j, first_line_indent: first, left_indent: 6.0, ..base.clone() };
     t.set_paragraph_styles(vec![base.clone(), with(Justify::Center, 0.0), with(Justify::Right, 0.0), with(Justify::JustifyLeft, 18.0)]);
     let l = layout(db(), &t);
     assert_inlines_on_their_glyphs(&t, &l, "paragraphs");

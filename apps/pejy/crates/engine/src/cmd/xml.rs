@@ -1,7 +1,7 @@
 //! Structure and XML: tags on frames (Tags panel), paragraph styles mapped to tags, the structure
 //! tree, XML export and import (content flows into the frames with matching tags).
 
-use designcraft_doc::{Content, Document, Item, ItemId, ParaFormat, Story, StoryId, XmlTag};
+use pejy_doc::{Content, Document, Item, ItemId, ParaFormat, Story, StoryId, XmlTag};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, ids_param, ok, str_param};
@@ -47,7 +47,7 @@ fn plain(t: &str) -> String {
 }
 
 /// A paragraph's text with inline-tagged runs as elements.
-fn para_xml(st: &designcraft_doc::Story, r: std::ops::Range<usize>) -> String {
+fn para_xml(st: &pejy_doc::Story, r: std::ops::Range<usize>) -> String {
     let mut out = String::new();
     let mut open: Option<String> = None;
     for (rr, f) in st.runs() {
@@ -509,10 +509,10 @@ mod tests {
             .unwrap();
         assert_eq!((r["placed"].as_u64(), r["unmatched"].as_u64()), (Some(2), Some(1)));
         let d = &s.doc().unwrap().doc;
-        let sa = d.stories[&designcraft_doc::StoryId(a["story"].as_u64().unwrap())].clone();
+        let sa = d.stories[&pejy_doc::StoryId(a["story"].as_u64().unwrap())].clone();
         assert_eq!(sa.text, "New title\nNew body");
         assert_eq!(sa.paras[0].style, "Head", "mapped tag → paragraph style");
-        assert_eq!(d.stories[&designcraft_doc::StoryId(b["story"].as_u64().unwrap())].text, "New caption");
+        assert_eq!(d.stories[&pejy_doc::StoryId(b["story"].as_u64().unwrap())].text, "New caption");
         assert!(s.execute("xml.tag", &json!({"tag": "1bad", "ids": [b["id"]]})).is_err());
         // Inline tagging: part of a paragraph becomes an element.
         let f = s
@@ -526,9 +526,9 @@ mod tests {
         // Tag markers draw in the tag's colour (screen view only).
         let d = s.doc().unwrap().doc.clone();
         let col = d.xml.tags.iter().find(|t| t.name == "term").unwrap().color;
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
-        let count = |opts: &designcraft_render::RenderOptions, rr: &mut designcraft_render::Renderer| {
+        let count = |opts: &pejy_render::RenderOptions, rr: &mut pejy_render::Renderer| {
             let img = rr.render_page(&d, &s.cache, 0, 2.0, false, opts).unwrap();
             img.pixels
                 .as_chunks::<4>()
@@ -540,7 +540,7 @@ mod tests {
                 .count()
         };
         let plain = count(&Default::default(), &mut rr);
-        let marked = count(&designcraft_render::RenderOptions { tag_markers: true, ..Default::default() }, &mut rr);
+        let marked = count(&pejy_render::RenderOptions { tag_markers: true, ..Default::default() }, &mut rr);
         assert!(marked > plain + 10, "{plain} {marked}");
     }
 }

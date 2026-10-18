@@ -3,7 +3,7 @@
 #![cfg(feature = "synth")]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_affinity::{
+use tsipika_affinity::{
     Document, Limits,
     model::{Kind, Path, Point},
     synth::{self, F, Method, tag},
@@ -13,7 +13,7 @@ fn compound(id: u32, children: Vec<F>) -> F {
     F::Def(id, vec![tag(b"Comp")], vec![(tag(b"Chld"), F::Shared(children))])
 }
 
-fn shape(id: u32, class: &[u8; 4], parameters: Vec<(vectorcraft_affinity::stream::Tag, F)>) -> F {
+fn shape(id: u32, class: &[u8; 4], parameters: Vec<(tsipika_affinity::stream::Tag, F)>) -> F {
     F::Def(
         id,
         vec![tag(b"ShpN")],
@@ -41,7 +41,7 @@ fn read(definitions: Vec<F>, top: u32) -> Document {
         ),
     ]);
     let bytes = synth::container(&[("doc.dat", &data, Method::Zlib)], None);
-    vectorcraft_affinity::read(&bytes, Limits::default()).unwrap()
+    tsipika_affinity::read(&bytes, Limits::default()).unwrap()
 }
 
 fn path(document: &Document) -> &Path {

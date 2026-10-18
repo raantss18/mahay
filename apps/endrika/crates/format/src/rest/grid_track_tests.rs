@@ -2,7 +2,7 @@
 //! `grid-template-columns`/`-rows` strings). Fixtures are synthetic, written by hand.
 
 use super::*;
-use figcraft_doc::GridTrack;
+use endrika_doc::GridTrack;
 use serde_json::json;
 
 fn tracks(columns: Value, rows: Value) -> (Vec<GridTrack>, Vec<GridTrack>) {

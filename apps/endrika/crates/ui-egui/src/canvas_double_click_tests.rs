@@ -2,7 +2,7 @@
 //! began is dropped, so the tool is idle once the button is up.
 
 use egui::{Event, Modifiers, PointerButton, Pos2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;
@@ -35,7 +35,7 @@ fn a_double_click_leaves_the_shape_tool_idle() {
 fn a_shift_double_click_keeps_the_selection_handles() {
     let mut s = Session::new();
     let r = s.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 300, "height": 200})).unwrap();
-    let r = figcraft_engine::params::id_of(&r["id"]).unwrap();
+    let r = endrika_engine::params::id_of(&r["id"]).unwrap();
     s.execute("select.set", &json!({"ids": [r]})).unwrap();
     let mut u = Ui::new(s);
     let handles = |u: &Ui| u.app.inspect()["tool"]["shapeHandles"].as_array().map_or(0, Vec::len);

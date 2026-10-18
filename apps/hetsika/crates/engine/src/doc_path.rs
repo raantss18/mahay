@@ -1,7 +1,7 @@
 //! Media paths stored in a document (a project, a project template, an interchange file) reach
 //! the file system only through [`resolve`]: a relative path is taken from the document's folder,
 //! and only local files, or files on the network share the document itself is on, are opened (see
-//! `craft_docpath`). A refused path is handled like a missing file: the item renders the offline
+//! `mahay_docpath`). A refused path is handled like a missing file: the item renders the offline
 //! slate and File ▸ Link Media… can reconnect it.
 //!
 //! Paths the user picks in this session (import, Link Media, file dialogs, the control channel)
@@ -12,7 +12,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-pub use craft_docpath::Refused;
+pub use mahay_docpath::Refused;
 
 /// Why a stored path is not followed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,7 +39,7 @@ impl std::error::Error for NotFollowed {}
 /// where it was opened from.
 pub fn resolve(stored: &str, document: Option<&Path>) -> Result<String, NotFollowed> {
     let document = document.filter(|d| !d.as_os_str().is_empty()).map(|d| std::path::absolute(d).unwrap_or_else(|_| d.to_path_buf()));
-    let path: PathBuf = craft_docpath::resolve(stored, document.as_deref()).map_err(NotFollowed::Refused)?;
+    let path: PathBuf = mahay_docpath::resolve(stored, document.as_deref()).map_err(NotFollowed::Refused)?;
     // A path that is still relative would be taken from the working directory, which the
     // document does not choose.
     if path.is_relative() {

@@ -1,9 +1,9 @@
 //! Effect Controls operations: copy/paste, duplicate, reorder, remove (Delete), reset, and the
 //! Edit menu routing to them when effects are selected, all with undo.
 
-use effectcraft_keyframe::{Ease, Interp, Value as KV};
-use effectcraft_project::{Layer, LayerId, PropGroup};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Ease, Interp, Value as KV};
+use tselatra_project::{Layer, LayerId, PropGroup};
+use tselatra_time::Tick;
 use serde_json::json;
 
 use crate::Session;
@@ -229,9 +229,9 @@ fn effect_clipboard_is_a_snapshot_and_repeated_paste_uses_the_target_comps_cti()
     s.execute("time.set", json!({"time": 4.0})).unwrap();
     s.open_comp(original_comp);
     for (cti, expected) in [(4.0, vec![4.0, 6.0]), (2.0, vec![2.0, 4.0])] {
-        s.state.times.insert(effectcraft_project::ItemId(destination), Tick::from_seconds_f64(cti));
+        s.state.times.insert(tselatra_project::ItemId(destination), Tick::from_seconds_f64(cti));
         let uid = s.execute("effect.paste", json!({"comp": destination, "layers": [b]})).unwrap()["effects"][0].as_u64().unwrap();
-        let l = s.project.comp(effectcraft_project::ItemId(destination)).unwrap().layer(LayerId(b)).unwrap();
+        let l = s.project.comp(tselatra_project::ItemId(destination)).unwrap().layer(LayerId(b)).unwrap();
         let pr = l.effects().unwrap().groups().find(|g| g.uid == uid).unwrap().get("blurriness").unwrap();
         assert_eq!(pr.keys.iter().map(|k| l.comp_time(k.time).seconds()).collect::<Vec<_>>(), expected);
         assert_eq!(pr.keys.iter().map(|k| k.value.as_f64()).collect::<Vec<_>>(), vec![10.0, 30.0]);
@@ -275,13 +275,13 @@ fn invalid_effect_copy_keeps_the_previous_clipboard() {
 fn effect_paste_keeps_exact_ntsc_frame_offsets() {
     let (mut s, a, b) = comp_with_two_solids();
     let cid = s.active_comp_id().unwrap();
-    let frame = effectcraft_time::FrameRate::new(30000, 1001).frame_duration();
+    let frame = tselatra_time::FrameRate::new(30000, 1001).frame_duration();
     let blur = apply(&mut s, a, "Gaussian Blur");
     let uid = effect_group(&s, a, blur).get("blurriness").unwrap().uid;
     let pr = std::sync::Arc::make_mut(&mut s.project).comp_mut(cid).unwrap().layer_mut(LayerId(a)).unwrap().props.find_mut(uid).unwrap();
     pr.keys = vec![
-        effectcraft_keyframe::Keyframe::new(frame.mul_ratio(11, 1), KV::Scalar(10.0)),
-        effectcraft_keyframe::Keyframe::new(frame.mul_ratio(43, 1), KV::Scalar(30.0)),
+        tselatra_keyframe::Keyframe::new(frame.mul_ratio(11, 1), KV::Scalar(10.0)),
+        tselatra_keyframe::Keyframe::new(frame.mul_ratio(43, 1), KV::Scalar(30.0)),
     ];
     s.execute("effect.copy", json!({"layer": a, "effect": blur})).unwrap();
     let cti = frame.mul_ratio(71, 1);
@@ -507,21 +507,21 @@ fn layer_params_get_a_source_companion() {
     let (mut s, a, _) = comp_with_two_solids();
     apply(&mut s, a, "ec.channel.blend");
     let g = layer(&s, a).effects().unwrap().groups().next().unwrap().clone();
-    let layer_params: Vec<_> = g.props().filter(|p| matches!(p.ui, effectcraft_project::ParamUi::Layer)).map(|p| p.match_id.clone()).collect();
+    let layer_params: Vec<_> = g.props().filter(|p| matches!(p.ui, tselatra_project::ParamUi::Layer)).map(|p| p.match_id.clone()).collect();
     assert!(!layer_params.is_empty());
     for id in layer_params {
-        let src = g.get(&effectcraft_effects::layer_source_id(&id)).expect("companion");
+        let src = g.get(&tselatra_effects::layer_source_id(&id)).expect("companion");
         assert_eq!(src.value, KV::Enum(2), "Effects & Masks by default");
-        assert!(matches!(src.ui, effectcraft_project::ParamUi::Hidden));
+        assert!(matches!(src.ui, tselatra_project::ParamUi::Hidden));
     }
 }
 
 /// Projects saved before parameters were renamed, regrouped, added or had their popups
-/// reordered open with their instances brought up to date (`effectcraft_effects::migrate`).
+/// reordered open with their instances brought up to date (`tselatra_effects::migrate`).
 #[test]
 fn opening_an_old_project_upgrades_effect_instances() {
-    use effectcraft_effects::migrate::PARAM_ID_ALIASES;
-    use effectcraft_project::{Node, ParamUi, PropGroup};
+    use tselatra_effects::migrate::PARAM_ID_ALIASES;
+    use tselatra_project::{Node, ParamUi, PropGroup};
     let (mut s, a, _) = comp_with_two_solids();
     apply(&mut s, a, "ec.blur.gaussian");
     // One instance of every effect with renamed parameter ids.
@@ -531,7 +531,7 @@ fn opening_an_old_project_upgrades_effect_instances() {
         apply(&mut s, a, e);
     }
     // Rewrite the saved instances the way an older version wrote them.
-    fn take(g: &mut PropGroup, path: &str) -> Option<effectcraft_project::Property> {
+    fn take(g: &mut PropGroup, path: &str) -> Option<tselatra_project::Property> {
         match path.split_once('/') {
             None => {
                 let i = g.children.iter().position(|c| matches!(c, Node::Prop(p) if p.match_id == path))?;
@@ -547,7 +547,7 @@ fn opening_an_old_project_upgrades_effect_instances() {
     let cid = s.active_comp_id().unwrap();
     {
         let comp = std::sync::Arc::make_mut(match &mut old.items.get_mut(&cid).unwrap().kind {
-            effectcraft_project::ItemKind::Comp(c) => c,
+            tselatra_project::ItemKind::Comp(c) => c,
             _ => panic!("not a composition"),
         });
         let l = comp.layers.iter_mut().find(|l| l.id == LayerId(a)).unwrap();
@@ -590,7 +590,7 @@ fn opening_an_old_project_upgrades_effect_instances() {
     let _ = std::fs::remove_dir_all(dir);
     let l = s2.project.comp(cid).unwrap().layer(LayerId(a)).unwrap().clone();
     let fx = l.effects().unwrap();
-    let spec = effectcraft_effects::find("ec.blur.gaussian").unwrap();
+    let spec = tselatra_effects::find("ec.blur.gaussian").unwrap();
     let sp = |id: &str| spec.params.iter().find(|p| p.id == id).unwrap();
     let blur = fx.groups().find(|g| g.match_id == "ec.blur.gaussian").unwrap();
     assert_eq!(blur.get("blurriness").unwrap().name, sp("blurriness").name);
@@ -635,12 +635,12 @@ fn opening_a_schema_1_project_moves_shape_layer_effect_points_into_effect_space(
     let point = |s: &Session, lid: u64, fx: u64, id: &str| -> KV {
         let l = layer(s, lid);
         let g = l.effects().unwrap().groups().find(|g| g.uid == fx).unwrap();
-        g.props().find(|p| p.match_id == id || (id.is_empty() && p.ui == effectcraft_project::ParamUi::Point)).unwrap().value.clone()
+        g.props().find(|p| p.match_id == id || (id.is_empty() && p.ui == tselatra_project::ParamUi::Point)).unwrap().value.clone()
     };
     let set = |s: &mut Session, lid: u64, fx: u64, id: &str, v: [f64; 2]| {
         let l = layer(s, lid);
         let g = l.effects().unwrap().groups().find(|g| g.uid == fx).unwrap();
-        let uid = g.props().find(|p| p.match_id == id || (id.is_empty() && p.ui == effectcraft_project::ParamUi::Point)).unwrap().uid;
+        let uid = g.props().find(|p| p.match_id == id || (id.is_empty() && p.ui == tselatra_project::ParamUi::Point)).unwrap().uid;
         s.execute("prop.set", json!({"layer": lid, "prop": uid, "value": v})).unwrap();
     };
     let twirl = apply(&mut s, shape, "Twirl");
@@ -664,7 +664,7 @@ fn opening_a_schema_1_project_moves_shape_layer_effect_points_into_effect_space(
     std::fs::write(&path, old).unwrap();
     let mut s2 = Session::default();
     s2.execute("file.open", json!({"path": path})).unwrap();
-    assert_eq!(s2.project.schema, effectcraft_project::SCHEMA_VERSION);
+    assert_eq!(s2.project.schema, tselatra_project::SCHEMA_VERSION);
     let check = |s2: &Session| {
         assert_eq!(point(s2, shape, twirl, "center"), KV::Vec2([70.0, 40.0]), "a set point keeps its place in the comp");
         assert_eq!(point(s2, shape, bulge, "center"), KV::Vec2([100.0, 50.0]), "a default point becomes the layer centre");
@@ -717,27 +717,27 @@ fn effect_colour_labels_set_clear_undo_and_round_trip() {
     let label = |s: &Session| layer(s, a).effects().unwrap().groups().next().unwrap().label;
     assert_eq!(label(&s), None);
     s.execute("effect.setLabel", json!({"layer": a, "effect": blur, "label": "Blue"})).unwrap();
-    assert_eq!(label(&s), Some(effectcraft_color::Label::Blue));
+    assert_eq!(label(&s), Some(tselatra_color::Label::Blue));
     // Duplicates keep the label.
     s.execute("effect.duplicate", json!({"layer": a, "effect": blur})).unwrap();
     assert_eq!(layer(&s, a).effects().unwrap().groups().filter(|g| g.label.is_some()).count(), 2);
     s.undo();
     // It saves with the project and survives a reload.
     let json = s.project.to_file_json().unwrap();
-    let back = effectcraft_project::Project::from_json(&json).unwrap();
+    let back = tselatra_project::Project::from_json(&json).unwrap();
     let l = back.comp(s.active_comp_id().unwrap()).unwrap().layer(LayerId(a)).unwrap().clone();
-    assert_eq!(l.effects().unwrap().groups().next().unwrap().label, Some(effectcraft_color::Label::Blue));
+    assert_eq!(l.effects().unwrap().groups().next().unwrap().label, Some(tselatra_color::Label::Blue));
     // None (or index 0) clears it; the change undoes.
     s.execute("effect.setLabel", json!({"layer": a, "effect": blur, "label": 0})).unwrap();
     assert_eq!(label(&s), None);
     s.undo();
-    assert_eq!(label(&s), Some(effectcraft_color::Label::Blue));
+    assert_eq!(label(&s), Some(tselatra_color::Label::Blue));
     assert!(s.execute("effect.setLabel", json!({"layer": a, "effect": blur, "label": "Chartreuse"})).is_err());
     assert!(s.execute("effect.setLabel", json!({"layer": a, "effect": blur, "label": 99})).is_err());
     // A project saved before labels existed has none.
     let old = json.replace("\"label\":\"Blue\"", "\"x\":0").replace("\"label\": \"Blue\"", "\"x\": 0");
     assert_ne!(old, json, "the replace removed the effect's label");
-    let old = effectcraft_project::Project::from_json(&old).unwrap();
+    let old = tselatra_project::Project::from_json(&old).unwrap();
     let l = old.comp(s.active_comp_id().unwrap()).unwrap().layer(LayerId(a)).unwrap().clone();
     assert_eq!(l.effects().unwrap().groups().next().unwrap().label, None);
 }

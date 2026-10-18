@@ -1,8 +1,8 @@
-//! Team libraries: a file's published library kept on a `figcraft-server` under that file, and
+//! Team libraries: a file's published library kept on a `endrika-server` under that file, and
 //! used by other files through one of its share links (a view link is enough to read it).
 //!
 //! A library on a server is the same published library a library file holds (manifest and
-//! snapshot, with per-asset versions), carried as a small `.figcraft` archive holding only it. Its
+//! snapshot, with per-asset versions), carried as a small `.endrika` archive holding only it. Its
 //! link takes the place of a library file's path in [`LibraryLink::path`], so everything else
 //! (the Assets panel, placing components, updates with overrides kept) works as for library files.
 //! The engine never opens a socket: requests go through the app's [`LiveLink`](crate::live::LiveLink).
@@ -14,8 +14,8 @@
 use std::io::Cursor;
 use std::sync::Arc;
 
-use figcraft_collab::message::{LibraryReply, LibraryReq, Usage};
-use figcraft_doc::{Document, NodeId, NodeKind, PublishedLibrary};
+use endrika_collab::message::{LibraryReply, LibraryReq, Usage};
+use endrika_doc::{Document, NodeId, NodeKind, PublishedLibrary};
 
 use crate::live::{NetReply, NetRequest};
 use crate::{EngineError, Result, Session};
@@ -30,7 +30,7 @@ pub const MAX_USAGE: usize = 10_000;
 /// Whether a library's path is a share link of a file on a server (else it is a library file).
 pub fn is_server_link(path: &str) -> bool {
     let p = path.trim_start().to_ascii_lowercase();
-    ["figcraft://", "ws://", "wss://"].iter().any(|s| p.starts_with(s))
+    ["endrika://", "ws://", "wss://"].iter().any(|s| p.starts_with(s))
 }
 
 /// A library path to show: a server link without its token.
@@ -43,16 +43,16 @@ pub fn shown_path(path: &str) -> String {
     format!("{}token=…{}", path.get(..at).unwrap_or_default(), path.get(end..).unwrap_or_default())
 }
 
-/// `lib` as the archive a server keeps: a `.figcraft` file holding only the library.
+/// `lib` as the archive a server keeps: a `.endrika` file holding only the library.
 pub fn archive(lib: &PublishedLibrary) -> Result<Vec<u8>> {
     let mut holder = Document::new(lib.manifest.name.clone());
     holder.published = Some(Arc::new(lib.clone()));
-    figcraft_format::save_bytes(&holder, None).map_err(|e| EngineError::Other(format!("couldn't pack the library: {e}")))
+    endrika_format::save_bytes(&holder, None).map_err(|e| EngineError::Other(format!("couldn't pack the library: {e}")))
 }
 
 /// The library in an archive from a server (untrusted: read with the library file's limits).
 pub fn read_archive(bytes: &[u8]) -> std::result::Result<PublishedLibrary, String> {
-    match figcraft_format::read_library(Cursor::new(bytes)) {
+    match endrika_format::read_library(Cursor::new(bytes)) {
         Ok(Some(lib)) => Ok(lib),
         Ok(None) => Err("the server sent a file without a library".into()),
         Err(e) => Err(format!("the server sent a library that can't be read ({e})")),
@@ -133,7 +133,7 @@ impl Session {
             // otherwise reach whatever path it names. Only a path on this computer is followed: a
             // network share would make opening a document contact that server, and on Windows
             // send the credentials of whoever opened it.
-            if !craft_docpath::is_local(path) {
+            if !mahay_docpath::is_local(path) {
                 return Err(EngineError::Other(format!("{path}: a library is opened only from this computer")));
             }
             return self.libraries.load(path);

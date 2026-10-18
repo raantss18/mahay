@@ -1,7 +1,7 @@
 //! Vector footage: PDF, PDF-compatible Illustrator files (`.ai`) and Encapsulated PostScript
 //! (see README.md for what is read and the specifications used).
 //!
-//! Files parse into the same render tree as SVG ([`effectcraft_svg::Doc`]): document pixels are
+//! Files parse into the same render tree as SVG ([`tselatra_svg::Doc`]): document pixels are
 //! PostScript points (1/72 in), y down, so footage rasterises at any scale (Continuously
 //! Rasterize) and converts to shape layers (Create Shapes from Vector Layer). The root group's
 //! children are the document's **layers**: one group per top-level optional-content group
@@ -24,8 +24,8 @@ mod shading;
 mod type1;
 pub mod write;
 
-pub use effectcraft_svg::Doc;
-use effectcraft_svg::{Affine, Group, Node};
+pub use tselatra_svg::Doc;
+use tselatra_svg::{Affine, Group, Node};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Error {

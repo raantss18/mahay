@@ -1,5 +1,5 @@
 use super::*;
-use vectorcraft_geom::SubPath;
+use tsipika_geom::SubPath;
 
 fn square(x: f64) -> PathData {
     PathData::single(SubPath::polyline(&[Point::new(x, 0.0), Point::new(x + 10.0, 0.0), Point::new(x + 10.0, 10.0), Point::new(x, 10.0)], true))
@@ -44,7 +44,7 @@ fn targets_are_selected_paths_in_paint_order() {
 #[test]
 fn objects_round_trip_through_the_json_model() {
     let (mut d, ids, _) = doc();
-    let mut g = vectorcraft_color::GradientPaint::new(vectorcraft_color::Gradient::default());
+    let mut g = tsipika_color::GradientPaint::new(tsipika_color::Gradient::default());
     g.gradient.stops[0].swatch = Some("White".into());
     d.node_mut(ids[0]).unwrap().appearance.set_stroke(Paint::Gradient(Box::new(g)));
     let input: Value = serde_json::from_slice(&encode_input(&d, &ids)).unwrap();

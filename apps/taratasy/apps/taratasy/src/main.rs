@@ -370,6 +370,7 @@ fn app_creator<'a>(
     let Launch { files, options, control_file, create_images, integrated, window_controls } = launch;
     Box::new(move |cc| {
         started.set(true);
+        mahay_about::register_desktop(mahay_about::AppInfo { id: "taratasy", name: "Taratasy" }, &cc.egui_ctx);
         let mut app = TaratasyApp::new();
         // First start (or settings from before Units existed): the region's unit.
         app.units = taratasy_ui_egui::units::Unit::system();

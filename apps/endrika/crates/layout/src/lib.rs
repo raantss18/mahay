@@ -1,4 +1,4 @@
-//! FigCraft layout.
+//! Endrika layout.
 //!
 //! - [`layout_page`] / [`layout_frame`]: Figma-style auto layout. Children of an auto layout frame
 //!   are stacked horizontally or vertically (optionally wrapping, optionally aligned on their first
@@ -14,11 +14,11 @@
 //! Text measurement is injected ([`Measure`]) so this crate doesn't depend on fonts.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use figcraft_doc::{
+use endrika_doc::{
     AutoLayout, CellAlign, ContentAlign, CrossAlign, Document, GridAlign, GridKind, HConstraint, LayoutGrid, LayoutMode, MainAlign, NodeId, NodeKind,
     Sizing, StrokeAlign, TextAutoResize, VConstraint,
 };
-use figcraft_geom::{Affine, Point, Rect};
+use endrika_geom::{Affine, Point, Rect};
 
 /// Most layout calls nested in one another (about one per level of layers): deeper layers don't
 /// follow a resize, so a deeply nested document can't run the stack out (#210).
@@ -88,7 +88,7 @@ fn finite_or_zero(v: f64) -> f64 {
 /// The child's box size as seen by the parent (rotation → bounding box).
 fn outer_size(doc: &Document, id: NodeId) -> (f64, f64) {
     let Some(n) = doc.node(id) else { return (0.0, 0.0) };
-    let b = figcraft_geom::transform_rect_bbox(linear(n.transform), n.local_rect());
+    let b = endrika_geom::transform_rect_bbox(linear(n.transform), n.local_rect());
     (b.width(), b.height())
 }
 
@@ -114,7 +114,7 @@ pub fn axis_factors(xf: Affine, kx: f64, ky: f64) -> (f64, f64) {
 fn place(doc: &mut Document, id: NodeId, x: f64, y: f64) {
     let Some(n) = doc.node(id) else { return };
     let lin = linear(n.transform);
-    let b = figcraft_geom::transform_rect_bbox(lin, n.local_rect());
+    let b = endrika_geom::transform_rect_bbox(lin, n.local_rect());
     let t = Affine::translate((x - b.x0, y - b.y0)) * lin;
     if let Some(n) = doc.node_mut(id) {
         n.transform = t;
@@ -133,7 +133,7 @@ pub fn set_size(doc: &mut Document, id: NodeId, w: f64, h: f64) {
     let sy = if oh > 1e-9 { h / oh } else { 1.0 };
     match &mut n.kind {
         NodeKind::Vector { network } => network.scale(sx, sy),
-        NodeKind::Text(figcraft_doc::TextData { path: Some(tp), .. }) => tp.scale(sx, sy),
+        NodeKind::Text(endrika_doc::TextData { path: Some(tp), .. }) => tp.scale(sx, sy),
         _ => {}
     }
     n.width = w;
@@ -217,7 +217,7 @@ fn coherent_own_sizing(doc: &mut Document, id: NodeId) -> bool {
 /// Padding `(top, right, bottom, left)` of an auto layout frame, sanitised, plus the frame's own
 /// inside stroke (per side) when strokes are included in the layout; center and outside strokes
 /// never take up space.
-fn insets(f: &figcraft_doc::Node, al: &AutoLayout) -> (f64, f64, f64, f64) {
+fn insets(f: &endrika_doc::Node, al: &AutoLayout) -> (f64, f64, f64, f64) {
     let included = al.strokes_included && f.has_visible_stroke() && f.stroke.align == StrokeAlign::Inside;
     let stroke = if included { f.stroke.sides.unwrap_or([f.stroke.weight; 4]) } else { [0.0; 4] };
     let [pt, pr, pb, pl] = al.padding.map(|p| finite_or_zero(p).max(0.0));
@@ -310,7 +310,7 @@ fn item_baseline(doc: &Document, id: NodeId, m: &dyn Measure, depth: usize) -> O
         _ if n.layout.is_some() && n.kind.is_frame_like() && depth < 32 => flow_children(doc, id).into_iter().find_map(|k| {
             let b = item_baseline(doc, k, m, depth + 1)?;
             let kn = doc.node(k)?;
-            let top = figcraft_geom::transform_rect_bbox(kn.transform, kn.local_rect()).y0;
+            let top = endrika_geom::transform_rect_bbox(kn.transform, kn.local_rect()).y0;
             Some(top + b)
         }),
         _ => None,
@@ -719,7 +719,7 @@ pub fn grid_place(doc: &Document, al: &AutoLayout, kids: &[NodeId]) -> (Vec<Grid
 }
 
 /// Track `i`'s sizing and sanitised value (missing tracks are `1fr`).
-fn track_spec(specs: &[figcraft_doc::GridTrack], i: usize) -> (Sizing, f64) {
+fn track_spec(specs: &[endrika_doc::GridTrack], i: usize) -> (Sizing, f64) {
     let t = specs.get(i).copied().unwrap_or_default();
     let v = if t.value.is_finite() { t.value.clamp(0.0, 1e6) } else { 0.0 };
     (t.sizing, v)
@@ -729,7 +729,7 @@ fn track_spec(specs: &[figcraft_doc::GridTrack], i: usize) -> (Sizing, f64) {
 /// share what is left by their fractional units like the CSS `fr` unit (a track never gets less
 /// than its content: one whose share is too small keeps its content size and the others share the
 /// rest). `avail` is None when the frame hugs that axis (fill tracks then hug their content too).
-fn resolve_tracks(specs: &[figcraft_doc::GridTrack], content: &[f64], avail: Option<f64>) -> Vec<f64> {
+fn resolve_tracks(specs: &[endrika_doc::GridTrack], content: &[f64], avail: Option<f64>) -> Vec<f64> {
     let mut out: Vec<f64> = (0..content.len())
         .map(|i| match track_spec(specs, i) {
             (Sizing::Fixed, v) => v,
@@ -764,7 +764,7 @@ fn resolve_tracks(specs: &[figcraft_doc::GridTrack], content: &[f64], avail: Opt
 /// largest single-span child (for a fill track, the least it can shrink to); a spanning child that
 /// needs more than its tracks give it grows the content-sized tracks it spans (unless a flexible
 /// track can absorb it).
-fn track_content(cells: &[GridCell], sizes: &[f64], specs: &[figcraft_doc::GridTrack], n: usize, gap: f64, columns: bool, hug: bool) -> Vec<f64> {
+fn track_content(cells: &[GridCell], sizes: &[f64], specs: &[endrika_doc::GridTrack], n: usize, gap: f64, columns: bool, hug: bool) -> Vec<f64> {
     let by_content = |i: usize| track_spec(specs, i).0 != Sizing::Fixed;
     let mut content: Vec<f64> = (0..n).map(|i| if let (Sizing::Fixed, v) = track_spec(specs, i) { v } else { 0.0 }).collect();
     let span = |c: &GridCell| if columns { (c.column, c.column_span) } else { (c.row, c.row_span) };
@@ -938,7 +938,7 @@ pub fn apply_constraints(doc: &mut Document, id: NodeId, ow: f64, oh: f64) {
             continue;
         }
         let lin = linear(n.transform);
-        let b = figcraft_geom::transform_rect_bbox(n.transform, n.local_rect());
+        let b = endrika_geom::transform_rect_bbox(n.transform, n.local_rect());
         let (cw, ch) = (n.width, n.height);
         let (bw, bh) = (b.width(), b.height());
         let (mut x0, mut x1) = (b.x0, b.x1);
@@ -1007,7 +1007,7 @@ pub fn scale_group_children(doc: &mut Document, id: NodeId, kx: f64, ky: f64) {
     let Some(n) = doc.node(id) else { return };
     for c in n.children.clone() {
         let Some(cn) = doc.node(c) else { continue };
-        let center = figcraft_geom::transform_rect_bbox(cn.transform, cn.local_rect()).center();
+        let center = endrika_geom::transform_rect_bbox(cn.transform, cn.local_rect()).center();
         let (w, h) = (cn.width, cn.height);
         let (kw, kh) = axis_factors(cn.transform, kx, ky);
         set_size(doc, c, w * kw, h * kh);
@@ -1083,7 +1083,7 @@ pub fn grid_lines(g: &LayoutGrid, w: f64, h: f64) -> Vec<Rect> {
 
 /// Whether a frame's layout grids apply: they don't show (or snap) on a frame turned off 0°.
 pub fn grids_shown(doc: &Document, frame: NodeId) -> bool {
-    figcraft_geom::rotation_degrees(doc.world_transform(frame)).abs() < 1e-6
+    endrika_geom::rotation_degrees(doc.world_transform(frame)).abs() < 1e-6
 }
 
 /// Snap targets of a frame's visible layout grids (page coordinates): column/row edges.

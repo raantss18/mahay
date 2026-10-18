@@ -15,10 +15,10 @@
 //!   Levels a histogram; Lumetri's curves, Colorama's output cycle, Glow's colour map and
 //!   Reshape's correspondence points have visual editors ([`super::fx_editors`]).
 
-use effectcraft_engine::geom::Mat3;
-use effectcraft_engine::keyframe::Value;
-use effectcraft_engine::project::{GroupKind, Layer, Node, ParamUi, PropGroup, Property};
-use effectcraft_engine::render::EvalCtx;
+use tselatra_engine::geom::Mat3;
+use tselatra_engine::keyframe::Value;
+use tselatra_engine::project::{GroupKind, Layer, Node, ParamUi, PropGroup, Property};
+use tselatra_engine::render::EvalCtx;
 use egui::{Align2, Color32, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ use super::fx_widgets as fw;
 use crate::icons::{self, Icon};
 use crate::state::FxPick;
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 type Actions = Vec<(String, serde_json::Value)>;
 
@@ -39,7 +39,7 @@ const TREE_INDENT: f32 = 14.0;
 
 /// Selecting any descendant activates its owning effect without replacing the property
 /// selection used by keyframe editing, copy and delete.
-fn effect_active(g: &PropGroup, layer: effectcraft_engine::project::LayerId, selected: &[(effectcraft_engine::project::LayerId, u64)]) -> bool {
+fn effect_active(g: &PropGroup, layer: tselatra_engine::project::LayerId, selected: &[(tselatra_engine::project::LayerId, u64)]) -> bool {
     fn contains(g: &PropGroup, uid: u64, depth: usize) -> bool {
         if g.uid == uid {
             return true;
@@ -52,7 +52,7 @@ fn effect_active(g: &PropGroup, layer: effectcraft_engine::project::LayerId, sel
     selected.iter().any(|(l, uid)| *l == layer && contains(g, *uid, 0))
 }
 
-fn selected_layer(app: &EffectcraftApp) -> Option<Layer> {
+fn selected_layer(app: &TselatraApp) -> Option<Layer> {
     let comp = app.session.active_comp()?;
     let id = app.session.state.selected_layers.first()?;
     comp.layer(*id).cloned()
@@ -61,7 +61,7 @@ fn selected_layer(app: &EffectcraftApp) -> Option<Layer> {
 /// An effect was just applied (`effect.apply` / `effect.applyLast` with `params`): Effect
 /// Controls comes up (opened if closed, brought to the front, the focus left where it is) on the
 /// layer the effect went to, with the new effect selected, as in After Effects.
-pub fn reveal_applied(app: &mut EffectcraftApp, params: &serde_json::Value) {
+pub fn reveal_applied(app: &mut TselatraApp, params: &serde_json::Value) {
     // `effect.apply` selects the new effect on (the last of) the layers it went to.
     let target = app.session.state.selected_props.last().map(|(l, _)| *l);
     if let Some(l) = target
@@ -83,7 +83,7 @@ pub fn reveal_applied(app: &mut EffectcraftApp, params: &serde_json::Value) {
 /// dialog for its LUT). For the instances `effect.apply` made (`applied`, its result), open the
 /// file dialog for their first empty file parameter and set the file on each; cancelling
 /// leaves the effect without one. Does nothing without a file dialog (tests, agents).
-pub fn choose_files_after_apply(app: &mut EffectcraftApp, applied: &serde_json::Value) {
+pub fn choose_files_after_apply(app: &mut TselatraApp, applied: &serde_json::Value) {
     let Some(pick) = app.hooks.pick_files.as_ref() else { return };
     let Some(comp) = app.session.active_comp() else { return };
     let uids: Vec<u64> = applied.get("effects").and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|v| v.as_u64()).collect()).unwrap_or_default();
@@ -140,7 +140,7 @@ fn triangle(p: &egui::Painter, c: egui::Pos2, left: bool, col: Color32) {
 
 /// ◀ ◆ ▶ at the right end of an animated parameter's row.
 fn key_navigator(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     layer: &Layer,
@@ -188,7 +188,7 @@ fn key_navigator(
 
 /// Toggle a viewer pick (crosshair / eyedropper) for a parameter (also the Timeline's colour
 /// eyedroppers).
-pub(crate) fn toggle_pick(app: &mut EffectcraftApp, kind: &str, layer: &Layer, prop: &Property) {
+pub(crate) fn toggle_pick(app: &mut TselatraApp, kind: &str, layer: &Layer, prop: &Property) {
     let pick = FxPick { kind: kind.into(), layer: layer.id.0, prop: prop.uid, name: prop.name.clone() };
     if app.ui.fx_pick.as_ref() == Some(&pick) {
         app.ui.fx_pick = None;
@@ -207,7 +207,7 @@ pub(crate) fn toggle_pick(app: &mut EffectcraftApp, kind: &str, layer: &Layer, p
 /// value fields of a vector, one per dimension, for the pick whip.
 #[allow(clippy::too_many_arguments)]
 fn prop_row(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     layer: &Layer,
@@ -288,7 +288,7 @@ fn prop_row(
     let set = |actions: &mut Actions, v: serde_json::Value| {
         actions.push(("prop.set".into(), json!({"layer": layer.id.0, "prop": uid, "value": v, "merge": merge, "selected": true, "offset": scrub})))
     };
-    let twirl_open = |app: &mut EffectcraftApp, ui: &mut egui::Ui| {
+    let twirl_open = |app: &mut TselatraApp, ui: &mut egui::Ui| {
         let open = app.ui.fx_slider_open.contains(&uid);
         let tw = Rect::from_center_size(pos2(swr.min.x - 9.0, cy), vec2(10.0, 10.0));
         if widgets::twirl(ui, tw, open, egui::Id::new(("ec-stw", uid)), &t).clicked() {
@@ -455,9 +455,9 @@ fn prop_row(
                     set(actions, if i == 0 { serde_json::Value::Null } else { json!(comp.layers[i - 1].id.0) });
                 }
                 // Source / Masks / Effects & Masks (the hidden companion parameter).
-                if let Some(src) = group.get(&effectcraft_engine::effects::layer_source_id(&prop.match_id)) {
+                if let Some(src) = group.get(&tselatra_engine::effects::layer_source_id(&prop.match_id)) {
                     let si = src.value.as_enum() as usize;
-                    let opts: Vec<String> = effectcraft_engine::effects::LAYER_SOURCE_OPTIONS.iter().map(|s| s.to_string()).collect();
+                    let opts: Vec<String> = tselatra_engine::effects::LAYER_SOURCE_OPTIONS.iter().map(|s| s.to_string()).collect();
                     let sr = Rect::from_min_size(pos2(dr.max.x + 6.0, cy - 9.0), vec2(((r.max.x - dr.max.x) - 64.0).clamp(70.0, 120.0), 18.0));
                     let spop = egui::Id::new(("ec-lspop", uid));
                     if widgets::dropdown(ui, sr, opts.get(si).map(String::as_str).unwrap_or(""), &t, egui::Id::new(("ec-ls", uid))).clicked() {
@@ -500,7 +500,7 @@ fn prop_row(
             } else if s.contains('\n') {
                 prop.name.clone()
             } else {
-                effectcraft_engine::sequence::file_name(s)
+                tselatra_engine::sequence::file_name(s)
             };
             let nr = Rect::from_min_max(pos2(br.max.x + 8.0, r.min.y), pos2(r.max.x - 8.0, r.max.y));
             let np = p.with_clip_rect(nr.intersect(p.clip_rect()));
@@ -553,7 +553,7 @@ fn shown_dims(layer: &Layer, prop: &Property, value: &Value) -> usize {
 }
 
 /// Colour of a gradient at `f` (colour stops only).
-fn gradient_at(g: &effectcraft_engine::keyframe::Gradient, f: f64) -> Color32 {
+fn gradient_at(g: &tselatra_engine::keyframe::Gradient, f: f64) -> Color32 {
     let stops = &g.colors;
     let c = if stops.is_empty() {
         [0.0, 0.0, 0.0, 1.0]
@@ -573,7 +573,7 @@ fn gradient_at(g: &effectcraft_engine::keyframe::Gradient, f: f64) -> Color32 {
 /// The twirled-open slider under a slider param: track, knob and the slider range's ends.
 #[allow(clippy::too_many_arguments)]
 fn slider_row(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     layer: &Layer,
@@ -613,7 +613,7 @@ fn slider_row(
 
 /// The twirled-open angle dial under an angle param.
 #[allow(clippy::too_many_arguments)]
-fn dial_row(app: &mut EffectcraftApp, ui: &mut egui::Ui, layer: &Layer, prop: &Property, ectx: &EvalCtx, r: Rect, x0: f32, actions: &mut Actions) {
+fn dial_row(app: &mut TselatraApp, ui: &mut egui::Ui, layer: &Layer, prop: &Property, ectx: &EvalCtx, r: Rect, x0: f32, actions: &mut Actions) {
     let t = app.tokens;
     let Value::Scalar(v) = ectx.value(layer, prop) else { return };
     let uid = prop.uid;
@@ -629,7 +629,7 @@ fn dial_row(app: &mut EffectcraftApp, ui: &mut egui::Ui, layer: &Layer, prop: &P
 }
 
 /// The effect instance a row belongs to, for conditional visibility
-/// ([`effectcraft_engine::effects::catalog::param_shown`]): effect id, the instance's root
+/// ([`tselatra_engine::effects::catalog::param_shown`]): effect id, the instance's root
 /// group and the spec-id path of the group being drawn (`""` or `cameraPosition/`).
 struct FxScope<'a> {
     effect: &'a str,
@@ -655,12 +655,12 @@ impl<'a> FxScope<'a> {
             }
             None
         };
-        effectcraft_engine::effects::catalog::param_shown(self.effect, &format!("{}{m}", self.path), &value)
+        tselatra_engine::effects::catalog::param_shown(self.effect, &format!("{}{m}", self.path), &value)
     }
 }
 
 /// Twirl `g` closed (it was `open`) or open; with `all` (Alt/Cmd-click) every group under it follows.
-fn toggle_closed(app: &mut EffectcraftApp, g: &PropGroup, open: bool, all: bool) {
+fn toggle_closed(app: &mut TselatraApp, g: &PropGroup, open: bool, all: bool) {
     fn walk(g: &PropGroup, out: &mut Vec<u64>) {
         for sg in g.groups() {
             out.push(sg.uid);
@@ -682,7 +682,7 @@ fn toggle_closed(app: &mut EffectcraftApp, g: &PropGroup, open: bool, all: bool)
 
 #[allow(clippy::too_many_arguments)]
 fn group_rows(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     layer: &Layer,
@@ -729,7 +729,7 @@ fn group_rows(
             }
             Node::Group(sg) => {
                 // Paint strokes live in the Timeline only (AE's Paint shows Paint on Transparent).
-                if effectcraft_engine::effects::paint::is_paint(g) || !fx.shown(layer, ectx, &sg.match_id) {
+                if tselatra_engine::effects::paint::is_paint(g) || !fx.shown(layer, ectx, &sg.match_id) {
                     continue;
                 }
                 *y += ROW;
@@ -763,7 +763,7 @@ fn group_rows(
 }
 
 /// Warp Stabilizer's Analyze / Cancel buttons and analysis status.
-fn warp_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, r: Rect, actions: &mut Actions) {
+fn warp_editor(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, r: Rect, actions: &mut Actions) {
     let t = app.tokens;
     let running = app.session.warp_target().is_some_and(|(_, l, u)| l == layer.id && u == g.uid) && app.session.is_warp_analyzing();
     let busy = app.session.is_warp_analyzing();
@@ -779,7 +779,7 @@ fn warp_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, l
         }
         app.auto.add(&format!("effectControls.warp.{}.cancel", g.uid), b2, "Cancel");
     }
-    let analysed = matches!(g.get(effectcraft_engine::effects::warp_stab::ANALYSIS).map(|p| &p.value), Some(Value::Str(s)) if !s.is_empty());
+    let analysed = matches!(g.get(tselatra_engine::effects::warp_stab::ANALYSIS).map(|p| &p.value), Some(Value::Str(s)) if !s.is_empty());
     let status = match app.session.warp_progress() {
         Some(pr) if running => pr.banner(),
         _ if analysed => "Analysis complete".to_string(),
@@ -790,10 +790,10 @@ fn warp_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, l
 }
 
 /// Roto Brush & Refine Edge: Freeze / Unfreeze and Propagate buttons and the segmentation status.
-fn roto_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, r: Rect, actions: &mut Actions) {
-    use effectcraft_engine::effects::roto as fx;
+fn roto_editor(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, r: Rect, actions: &mut Actions) {
+    use tselatra_engine::effects::roto as fx;
     let t = app.tokens;
-    let params = effectcraft_engine::effects::flatten_params(g, &mut |pr| pr.value.clone());
+    let params = tselatra_engine::effects::flatten_params(g, &mut |pr| pr.value.clone());
     let frozen = fx::is_frozen(&params);
     let d = fx::data(&params);
     let running = app.session.roto_target().is_some_and(|(_, l, u, _)| l == layer.id && u == g.uid) && app.session.is_roto_running();
@@ -820,10 +820,10 @@ fn roto_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, l
 
 /// Object Matte: Freeze / Unfreeze and Track / Stop buttons (the background job that computes
 /// the matte over the tracked frames) and its status.
-fn object_matte_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, r: Rect, actions: &mut Actions) {
-    use effectcraft_engine::effects::object_matte as om;
+fn object_matte_editor(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, r: Rect, actions: &mut Actions) {
+    use tselatra_engine::effects::object_matte as om;
     let t = app.tokens;
-    let params = effectcraft_engine::effects::flatten_params(g, &mut |pr| pr.value.clone());
+    let params = tselatra_engine::effects::flatten_params(g, &mut |pr| pr.value.clone());
     let frozen = om::is_frozen(&params);
     let mine = app.session.roto_target().is_some_and(|(_, l, u, _)| l == layer.id && u == g.uid);
     let running = mine && app.session.is_roto_running();
@@ -864,9 +864,9 @@ fn editor_height(effect: &str, g: &PropGroup, width: f32) -> f32 {
     match effect {
         super::fx_editors::GLOW | super::fx_editors::RESHAPE | super::fx_editors::EXTRACTOR => super::fx_editors::header_height(effect, g, width),
         "ec.color.curves" => 34.0 + curves_size(width) + 26.0,
-        effectcraft_engine::effects::warp_stab::ID => 50.0,
-        effectcraft_engine::effects::camera_tracker::ID => super::camera_tracker_ui::EDITOR_HEIGHT,
-        effectcraft_engine::effects::roto::ID | effectcraft_engine::effects::object_matte::ID => 50.0,
+        tselatra_engine::effects::warp_stab::ID => 50.0,
+        tselatra_engine::effects::camera_tracker::ID => super::camera_tracker_ui::EDITOR_HEIGHT,
+        tselatra_engine::effects::roto::ID | tselatra_engine::effects::object_matte::ID => 50.0,
         "ec.color.levels" | "ec.color.levelsic" => 34.0 + 80.0 + 58.0,
         "ec.color.autolevels" | "ec.color.autocontrast" | "ec.color.autocolor" => 24.0 + 80.0 + 12.0,
         _ => 0.0,
@@ -878,7 +878,7 @@ fn curves_size(width: f32) -> f32 {
 }
 
 /// Cached histogram of the displayed frame (recomputed when the frame changes).
-fn frame_histogram(app: &mut EffectcraftApp, ctx: &egui::Context) -> Option<std::sync::Arc<[[u32; 256]; 5]>> {
+fn frame_histogram(app: &mut TselatraApp, ctx: &egui::Context) -> Option<std::sync::Arc<[[u32; 256]; 5]>> {
     let img = app.viewer_pixels()?;
     let key = std::sync::Arc::as_ptr(&img) as usize;
     let id = egui::Id::new("ec-histogram");
@@ -905,7 +905,7 @@ fn channel_color(ch: usize) -> Color32 {
 /// A "Channel: [RGB ▾]" popup; returns the chosen channel.
 #[allow(clippy::too_many_arguments)]
 fn channel_popup(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     x: f32,
@@ -930,7 +930,7 @@ fn channel_popup(
 /// Curves: channel popup, Bezier/pencil mode, Reset, and the graph bound to the channel's
 /// hidden point-list parameter.
 #[allow(clippy::too_many_arguments)]
-fn curves_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, ectx: &EvalCtx, r: Rect, actions: &mut Actions) {
+fn curves_editor(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, layer: &Layer, g: &PropGroup, ectx: &EvalCtx, r: Rect, actions: &mut Actions) {
     let t = app.tokens;
     let euid = g.uid;
     // The channel lives in the effect's hidden Channel parameter (UI state for instances
@@ -999,7 +999,7 @@ fn curves_editor(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter,
 /// Levels parameter ids for a channel: input black, input white, gamma, output black, output white.
 fn levels_ids(effect: &str, ch: usize) -> [String; 5] {
     if effect == "ec.color.levels" {
-        return effectcraft_engine::effects::levels_channel_ids(ch);
+        return tselatra_engine::effects::levels_channel_ids(ch);
     }
     // Levels (Individual Controls) nests each channel's controls in its twirl-down group.
     let pre = fw::LEVELS_CHANNELS[ch.min(4)].0;
@@ -1010,7 +1010,7 @@ fn levels_ids(effect: &str, ch: usize) -> [String; 5] {
 /// black/white triangles.
 #[allow(clippy::too_many_arguments)]
 fn levels_editor(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     layer: &Layer,
@@ -1100,7 +1100,7 @@ fn levels_editor(
 }
 
 /// Auto Levels / Auto Contrast / Auto Color: the histogram they work from.
-fn histogram_only(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, g: &PropGroup, r: Rect) {
+fn histogram_only(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, g: &PropGroup, r: Rect) {
     let t = app.tokens;
     let x0 = r.min.x + 30.0;
     p.text(pos2(x0, r.min.y + 12.0), Align2::LEFT_CENTER, crate::i18n::tr("Histogram"), Tokens::ui(12.0), t.text_dim);
@@ -1129,7 +1129,7 @@ pub fn start_rename(ctx: &egui::Context, uid: u64, name: &str) {
     ctx.memory_mut(|m| m.request_focus(id.with("field")));
 }
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let ctx = ui.ctx().clone();
@@ -1138,7 +1138,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         return;
     };
     let Some(cid) = app.session.active_comp_id() else { return };
-    let comp = app.session.project.comp_arc(cid).unwrap_or_else(|| effectcraft_engine::project::Comp::new(1, 1, Default::default(), Default::default()).into());
+    let comp = app.session.project.comp_arc(cid).unwrap_or_else(|| tselatra_engine::project::Comp::new(1, 1, Default::default(), Default::default()).into());
     let comp_name = app.session.project.item(cid).map(|i| i.name.clone()).unwrap_or_default();
     let snap_project = app.session.project.clone();
     let snap_expr = app.session.expr.clone();
@@ -1187,7 +1187,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         let active = effect_active(g, layer.id, &app.session.state.selected_props);
         bp.rect_filled(r, 0.0, if active { t.fx_header_active } else { t.fx_header });
         // The effect's colour label (26.5): a bar on the header's left edge.
-        if let Some(lab) = g.label.filter(|l| *l != effectcraft_engine::color::Label::None) {
+        if let Some(lab) = g.label.filter(|l| *l != tselatra_engine::color::Label::None) {
             let [lr, lg, lb] = app.session.prefs.label_rgb(lab);
             bp.rect_filled(Rect::from_min_size(r.min, vec2(4.0, r.height())), 0.0, Color32::from_rgb(lr, lg, lb));
             app.auto.add(
@@ -1254,11 +1254,11 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         if aresp.clicked() {
             widgets::open_popup(ui, apop);
         }
-        if let Some(spec) = effectcraft_engine::effects::find(effect) {
+        if let Some(spec) = tselatra_engine::effects::find(effect) {
             let lines = vec![
                 crate::i18n::effects::name(spec.id, spec.name),
                 format!("Category: {}", crate::i18n::effects::category(spec.category)),
-                "EffectCraft built-in effect (MIT OR Apache-2.0)".to_string(),
+                "Tselatra built-in effect (MIT OR Apache-2.0)".to_string(),
             ];
             let _ = widgets::popup_menu(ui, apop, about.left_bottom(), &lines, None);
         }
@@ -1307,8 +1307,8 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
             }
             ui.separator();
             ui.menu_button(crate::i18n::tr("Label"), |ui| {
-                let cur = g.label.unwrap_or(effectcraft_engine::color::Label::None);
-                for (i, l) in effectcraft_engine::color::Label::ALL.into_iter().enumerate() {
+                let cur = g.label.unwrap_or(tselatra_engine::color::Label::None);
+                for (i, l) in tselatra_engine::color::Label::ALL.into_iter().enumerate() {
                     if widgets::label_entry(ui, l, &app.session.prefs.label_name(l), l == cur, &t).clicked() {
                         picked_label = Some(i);
                         ui.close();
@@ -1326,7 +1326,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         });
         // What the effect can't render as asked (an OCIO config it can't read, transforms it
         // passes through), under its name.
-        if let Some(w) = effectcraft_engine::effects::warning(g, &mut |pr| ectx.value(&layer, pr)) {
+        if let Some(w) = tselatra_engine::effects::warning(g, &mut |pr| ectx.value(&layer, pr)) {
             let galley = bp.layout(format!("⚠ {w}"), Tokens::ui(11.0), t.warning, (body.width() - 20.0).max(60.0));
             let wr = Rect::from_min_size(pos2(body.min.x + 10.0, y + 3.0), galley.size());
             bp.galley(wr.min, galley, t.warning);
@@ -1346,10 +1346,10 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                     }
                     match effect.as_str() {
                         "ec.color.curves" => curves_editor(app, ui, &bp, &layer, g, &ectx, er, &mut actions),
-                        effectcraft_engine::effects::warp_stab::ID => warp_editor(app, ui, &bp, &layer, g, er, &mut actions),
-                        effectcraft_engine::effects::camera_tracker::ID => super::camera_tracker_ui::editor(app, ui, &bp, &layer, g, er, &mut actions),
-                        effectcraft_engine::effects::roto::ID => roto_editor(app, ui, &bp, &layer, g, er, &mut actions),
-                        effectcraft_engine::effects::object_matte::ID => object_matte_editor(app, ui, &bp, &layer, g, er, &mut actions),
+                        tselatra_engine::effects::warp_stab::ID => warp_editor(app, ui, &bp, &layer, g, er, &mut actions),
+                        tselatra_engine::effects::camera_tracker::ID => super::camera_tracker_ui::editor(app, ui, &bp, &layer, g, er, &mut actions),
+                        tselatra_engine::effects::roto::ID => roto_editor(app, ui, &bp, &layer, g, er, &mut actions),
+                        tselatra_engine::effects::object_matte::ID => object_matte_editor(app, ui, &bp, &layer, g, er, &mut actions),
                         "ec.color.levels" | "ec.color.levelsic" => levels_editor(app, ui, &bp, &layer, g, effect, &ectx, er, &mut actions),
                         super::fx_editors::GLOW | super::fx_editors::RESHAPE | super::fx_editors::EXTRACTOR => {
                             super::fx_editors::header_editor(app, ui, &bp, &layer, g, effect, &ectx, er, &mut actions)
@@ -1463,7 +1463,7 @@ fn visible_points<'a>(g: &'a PropGroup, scope: &FxScope<'_>, layer: &Layer, ectx
 ///
 /// `l2c` is the viewer's layer→comp matrix (it knows the 3D view).
 pub fn viewer_hook(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     map: &super::viewer::ViewerMap,
@@ -1475,7 +1475,7 @@ pub fn viewer_hook(
     let mut actions: Actions = vec![];
     let mut point_preview = None;
     if let Some(pick) = app.ui.fx_pick.clone() {
-        let Some(layer) = ectx.comp.layer(effectcraft_engine::project::LayerId(pick.layer)).cloned() else {
+        let Some(layer) = ectx.comp.layer(tselatra_engine::project::LayerId(pick.layer)).cloned() else {
             app.ui.fx_pick = None;
             return;
         };
@@ -1483,7 +1483,7 @@ pub fn viewer_hook(
         let keyer = (pick.kind == "color")
             .then(|| layer.effects()?.groups().find(|g| g.find(pick.prop).is_some()))
             .flatten()
-            .filter(|g| effectcraft_engine::effects::find(&g.match_id).is_some_and(|s| s.category == "Keying"))
+            .filter(|g| tselatra_engine::effects::find(&g.match_id).is_some_and(|s| s.category == "Keying"))
             .map(|g| g.uid);
         if pick.kind == "color" && keyer.is_none() {
             // GPU frames: read the shown frame back for sampling.
@@ -1549,7 +1549,7 @@ pub fn viewer_hook(
         }
     }
     if let Some(pick) = app.ui.text_color_pick.clone() {
-        if ectx.comp.layer(effectcraft_engine::project::LayerId(pick.layer)).is_none() {
+        if ectx.comp.layer(tselatra_engine::project::LayerId(pick.layer)).is_none() {
             app.ui.text_color_pick = None;
             app.ui.status.clear();
         } else {
@@ -1597,7 +1597,7 @@ pub fn viewer_hook(
         // ⊕ controls for the point parameters of the selected effects.
         let mut sel = app.session.state.selected_props.clone();
         if let Some(pick) = &point_pick {
-            sel.push((effectcraft_engine::project::LayerId(pick.layer), pick.prop));
+            sel.push((tselatra_engine::project::LayerId(pick.layer), pick.prop));
         }
         let selected = app.session.state.selected_layers.clone();
         for layer in ectx
@@ -1614,7 +1614,7 @@ pub fn viewer_hook(
             for g in fx.groups().filter(|g| g.enabled && effect_active(g, layer.id, &sel)) {
                 // Puppet owns its pin handles and hit testing. Generic crosshairs would
                 // overlap the pins and steal their selection/rotation/scale gestures.
-                if matches!(&g.kind, GroupKind::Effect { effect } if effect == effectcraft_engine::effects::puppet::ID) {
+                if matches!(&g.kind, GroupKind::Effect { effect } if effect == tselatra_engine::effects::puppet::ID) {
                     continue;
                 }
                 if !picking && app.ui.viewer.show_layer_controls && matches!(&g.kind, GroupKind::Effect { effect } if effect == super::fx_editors::RESHAPE) {

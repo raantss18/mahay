@@ -5,9 +5,9 @@
 use std::sync::Arc;
 
 use kurbo::ParamCurve;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Justify, Node, NodeKind, TextObject, Unit};
-use vectorcraft_geom::{Affine, FillRule, Point, Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Justify, Node, NodeKind, TextObject, Unit};
+use tsipika_geom::{Affine, FillRule, Point, Rect, shapes};
 
 use super::*;
 
@@ -460,7 +460,7 @@ fn text_and_multiline_text() {
 
 /// Where the first line's baseline starts and ends, in document coordinates.
 fn baseline_ends(t: &TextObject) -> (Point, Point) {
-    let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let layout = tsipika_text::layout(tsipika_text::FontDb::global(), t);
     let l = &layout.lines[0];
     (t.xf * Point::new(l.x0, l.baseline), t.xf * Point::new(l.x1, l.baseline))
 }
@@ -663,11 +663,11 @@ fn an_insert_is_measured_clicked_and_marqueed_by_its_blocks_art() {
     assert!(close(b, Rect::new(100.0, h - 70.0, 100.0, h - 50.0), 1e-9), "{b:?}");
     // A click 25 pt right of the line, inside that square's box, selects nothing; one on the line
     // selects the insert.
-    let hit = |x: f64| vectorcraft_doc::hit::hit_test(&doc, Point::new(x, h - 60.0), vectorcraft_doc::hit::HitOptions::default()).map(|h| h.leaf);
+    let hit = |x: f64| tsipika_doc::hit::hit_test(&doc, Point::new(x, h - 60.0), tsipika_doc::hit::HitOptions::default()).map(|h| h.leaf);
     assert_eq!(hit(125.0), None);
     assert_eq!(hit(100.0), Some(inst.id));
     // A marquee beside the line leaves it out; one across it takes it.
-    let marquee = |r: Rect| vectorcraft_doc::hit::marquee(&doc, r, None, false);
+    let marquee = |r: Rect| tsipika_doc::hit::marquee(&doc, r, None, false);
     assert!(marquee(Rect::new(115.0, h - 65.0, 125.0, h - 55.0)).is_empty());
     assert_eq!(marquee(Rect::new(90.0, h - 62.0, 110.0, h - 58.0)), vec![inst.id]);
 }
@@ -983,7 +983,7 @@ fn closed_control_point_splines_stay_closed_through_export_and_import() {
         }
         let id = doc.alloc_id();
         let black = Appearance::basic(Paint::None, Paint::solid(Color::rgb8(0, 0, 0)), 1.0);
-        doc.insert(Some(layer), i, Node::path(id, vectorcraft_geom::PathData::from_bezpath(&b), black)).unwrap();
+        doc.insert(Some(layer), i, Node::path(id, tsipika_geom::PathData::from_bezpath(&b), black)).unwrap();
     }
     for version in crate::DxfVersion::ALL.into_iter().filter(|v| *v >= crate::DxfVersion::R13) {
         let opts = crate::DxfOptions { version, unit: Unit::Points, region: doc.artboards[0].rect, ..crate::DxfOptions::default() };

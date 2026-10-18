@@ -1,9 +1,9 @@
 //! Offline mix throughput on a synthetic many-track session:
-//! `cargo run --release -p soundcraft-mix --example render_bench -- [tracks] [seconds]`
+//! `cargo run --release -p feo-mix --example render_bench -- [tracks] [seconds]`
 
-use soundcraft_audio_io::AudioBuffer;
-use soundcraft_model::{ChannelFormat, Clip, Insert, Session, SourceAudio, SourceId, TrackKind};
-use soundcraft_time::Range;
+use feo_audio_io::AudioBuffer;
+use feo_model::{ChannelFormat, Clip, Insert, Session, SourceAudio, SourceId, TrackKind};
+use feo_time::Range;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -34,7 +34,7 @@ fn main() {
         }
     }
     let t0 = Instant::now();
-    let out = soundcraft_mix::render_range(&s, Range::new(0, frames as i64), 512);
+    let out = feo_mix::render_range(&s, Range::new(0, frames as i64), 512);
     let el = t0.elapsed().as_secs_f64();
     let peak = out.iter().flat_map(|c| c.iter()).fold(0.0f32, |m, v| m.max(v.abs()));
     println!("{tracks} tracks × {secs} s with EQ+comp (+reverb on 1/4): rendered in {el:.2} s → {:.1}× realtime (peak {peak:.2})", secs as f64 / el);

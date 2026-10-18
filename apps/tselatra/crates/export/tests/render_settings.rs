@@ -6,14 +6,14 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use effectcraft_color::Label;
-use effectcraft_effects::Buf;
-use effectcraft_export::render_queue::*;
-use effectcraft_export::{Job, JobOptions, Report, Sink, StorageQuota, export};
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid, build};
-use effectcraft_render::{Accelerator, AutoPick, FxStep, Image, NoFootage, Renderer};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_effects::Buf;
+use tselatra_export::render_queue::*;
+use tselatra_export::{Job, JobOptions, Report, Sink, StorageQuota, export};
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid, build};
+use tselatra_render::{Accelerator, AutoPick, FxStep, Image, NoFootage, Renderer};
+use tselatra_time::{FrameRate, Tick};
 
 const W: u32 = 64;
 const H: u32 = 48;
@@ -363,7 +363,7 @@ fn wav_and_aiff_channels_and_formats() {
 
 #[test]
 fn cancelled_export_removes_only_files_it_opened() {
-    use effectcraft_export::ExportError;
+    use tselatra_export::ExportError;
     let dir = std::env::temp_dir().join(format!("ec-cancel-owned-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let (p, cid) = project(FrameRate::new(25, 1), |_, _| {});

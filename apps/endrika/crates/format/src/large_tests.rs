@@ -2,9 +2,9 @@
 //! are left out (and come back), files that spell every field out still open, and the header is
 //! read without building the document.
 
-use figcraft_doc::color::{BlendMode, Color, Paint};
-use figcraft_doc::geom::Affine;
-use figcraft_doc::{
+use endrika_doc::color::{BlendMode, Color, Paint};
+use endrika_doc::geom::Affine;
+use endrika_doc::{
     AutoLayout, ChildLayout, Document, Effect, EffectKind, ExportSetting, Node, NodeKind, Shadow, Sizing, StrokeAlign, TextAlignH, TextData,
 };
 
@@ -124,7 +124,7 @@ fn defaults_are_left_out_and_come_back() {
     let r = d.create(p, NodeKind::Rectangle, "Plain", 5.0, 0.0, 10.0, 10.0).unwrap();
     let t = d.create(p, NodeKind::Text(TextData::new("Hi")), "Text", 0.0, 20.0, 10.0, 10.0).unwrap();
     let v = to_json(&d).unwrap();
-    let node = |id: figcraft_doc::NodeId| v["nodes"][id.0.to_string()].as_object().unwrap().clone();
+    let node = |id: endrika_doc::NodeId| v["nodes"][id.0.to_string()].as_object().unwrap().clone();
     let plain = node(r);
     for field in [
         "visible",
@@ -171,14 +171,14 @@ fn defaults_are_left_out_and_come_back() {
 #[test]
 fn files_with_every_field_spelled_out_still_open() {
     // A layer as earlier versions wrote it: every field, defaults included.
-    let old = r#"{"format":"figcraft","version":1,"imageIndex":[],"name":"Old","pages":[1],"next_id":3,"current_page":1,
+    let old = r#"{"format":"endrika","version":1,"imageIndex":[],"name":"Old","pages":[1],"next_id":3,"current_page":1,
         "nodes":{
           "1":{"id":1,"name":"Page 1","type":"page","parent":null,"children":[2],"visible":true,"locked":false,"opacity":1.0,"blend":"passThrough","transform":[1.0,0.0,0.0,1.0,0.0,0.0],"width":0.0,"height":0.0,"fills":[],"strokes":[],"effects":[]},
           "2":{"id":2,"name":"Card background","type":"rectangle","parent":1,"children":[],"visible":true,"locked":false,"opacity":1.0,"blend":"normal","transform":[1.0,0.0,0.0,1.0,0.0,0.0],"width":160.0,"height":64.0,"fills":[{"type":"solid","color":{"r":0.93333334,"g":0.95686275,"b":1.0,"a":1.0},"opacity":1.0,"visible":true,"blend":"normal"}],"strokes":[],"stroke":{"weight":1.0,"align":"inside","sides":null,"cap_start":"none","cap_end":"none","join":"miter","miter_limit":4.0,"dashes":[]},"effects":[],"corners":{"radii":[0.0,0.0,0.0,0.0],"smoothing":0.0},"constraints":{"horizontal":"left","vertical":"top"},"layout":null,"child_layout":{"sizing_h":"fixed","sizing_v":"fixed","absolute":false,"min_w":null,"max_w":null,"min_h":null,"max_h":null,"grid_column":null,"grid_row":null,"grid_column_span":0,"grid_row_span":0},"clip":false,"is_mask":false,"grids":[],"exports":[],"interactions":[],"overflow":"none","scroll_position":"scrolls","styles":{"fill":null,"stroke":null,"effect":null,"grid":null,"text":null},"bound":{},"var_modes":{},"constrain_proportions":false,"source":null,"overrides":[],"prop_refs":{},"plugin_data":{}}
         }}"#;
     let (d, issues) = load_bytes(old.as_bytes()).unwrap();
     assert!(issues.is_empty(), "{issues:?}");
-    let n: &Node = d.node(figcraft_doc::NodeId(2)).unwrap();
+    let n: &Node = d.node(endrika_doc::NodeId(2)).unwrap();
     assert_eq!((n.name.as_str(), n.width, n.height, n.visible, n.opacity), ("Card background", 160.0, 64.0, true, 1.0));
     assert_eq!(n.fills.len(), 1);
     // Written again, it's the short form, and reads back the same.

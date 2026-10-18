@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
-use cadcraft_engine::doc::{Handle, RawTag};
+use drafitra_engine::Session;
+use drafitra_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
+use drafitra_engine::doc::{Handle, RawTag};
 use serde_json::json;
 
 fn obj(handle: u64, kind: &str, tags: &[(i32, &str)]) -> ForeignObject {
@@ -116,7 +116,7 @@ fn a_visibility_state_is_changed_in_one_undo_step() {
     let r = s.execute("blocks.reference.set", &json!({ "handle": insert, "name": "Visibility1", "value": "Closed" })).unwrap();
     assert_eq!(r["properties"][0]["value"], "Closed");
     let block = |s: &Session| match s.doc().unwrap().model.iter().next().map(|e| e.kind.clone()) {
-        Some(cadcraft_engine::doc::EntityKind::Insert(i)) => i.block,
+        Some(drafitra_engine::doc::EntityKind::Insert(i)) => i.block,
         other => panic!("{other:?}"),
     };
     assert!(block(&s).starts_with("*U"));

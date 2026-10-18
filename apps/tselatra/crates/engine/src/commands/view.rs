@@ -1,7 +1,7 @@
 //! View menu commands that change the project (guides, each comp's Resolution) or
 //! headless-relevant editor state (the region of interest).
 
-use effectcraft_project::{Guide, Resolution};
+use tselatra_project::{Guide, Resolution};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, comp_id, f_p, has_comp, str_p};
@@ -84,7 +84,7 @@ fn clear_guides(s: &mut Session, p: &Value) -> Result<Value> {
 fn export_guides(s: &mut Session, p: &Value) -> Result<Value> {
     let path = str_p(p, "path").ok_or_else(|| bad("view.exportGuides", "missing `path`"))?;
     let comp = s.project.comp(comp_id(s, p)?).ok_or(EngineError::NoComp)?;
-    let doc = json!({"effectcraftGuides": 1, "width": comp.width, "height": comp.height, "guides": comp.guides});
+    let doc = json!({"tselatraGuides": 1, "width": comp.width, "height": comp.height, "guides": comp.guides});
     let text = serde_json::to_string_pretty(&doc).unwrap_or_default();
     s.services.write_file(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("cannot write {path}: {e}")))?;
     Ok(json!({"path": path, "guides": comp.guides.len()}))

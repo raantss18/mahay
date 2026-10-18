@@ -5,9 +5,9 @@
 //! Written from the public descriptions of the effects' behaviour. Pieces are textured convex
 //! polygons placed in 3D and drawn through a per-piece inverse homography, far to near.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::card3d::{Lighting, Proj};
@@ -534,7 +534,7 @@ const CD_PROPS: [(&str, &str); 8] = [
 fn card_source(src: u32, g1: [f32; 4], g2: [f32; 4]) -> f32 {
     let (c1, a1) = unpremul(g1);
     let (c2, a2) = unpremul(g2);
-    let lum = |c: [f32; 3]| effectcraft_color::luminance(c[0], c[1], c[2]);
+    let lum = |c: [f32; 3]| tselatra_color::luminance(c[0], c[1], c[2]);
     match src {
         1 => lum(c1),
         2 => c1[0],
@@ -850,7 +850,7 @@ fn shatter_impl(ctx: &EffectCtx, b: &Buf) -> ShatterPlan {
             }
             if broken && let Some(g) = &gradient {
                 let (c, _) = unpremul(g.sample_bilinear(gc[0] * s + b.offset[0], gc[1] * s + b.offset[1]));
-                let mut l = effectcraft_color::luminance(c[0], c[1], c[2]).clamp(0.0, 1.0) as f64;
+                let mut l = tselatra_color::luminance(c[0], c[1], c[2]).clamp(0.0, 1.0) as f64;
                 if invert_gradient {
                     l = 1.0 - l;
                 }
@@ -1127,7 +1127,7 @@ fn caustics(ctx: &EffectCtx, mut b: Buf) -> Buf {
     let st = caustics_setup(ctx, &b);
     let mut bottom = st.bottom.clone().unwrap_or_else(|| b.img.clone());
     if st.bottom_sigma > 0.0 {
-        bottom = effectcraft_raster::gaussian_blur(&bottom, st.bottom_sigma, st.bottom_sigma, false);
+        bottom = tselatra_raster::gaussian_blur(&bottom, st.bottom_sigma, st.bottom_sigma, false);
     }
     let CausticsSetup {
         scaling,
@@ -1353,7 +1353,7 @@ fn wave_world_impl(ctx: &EffectCtx, b: &Buf, plan_only: bool) -> Result<Image, W
             .map(|i| {
                 let (fx, fy) = ((i % nx) as f64 / (nx - 1) as f64, (i / nx) as f64 / (ny - 1) as f64);
                 let (c, a) = unpremul(lp.buf.img.sample_bilinear_clamped(fx * gw * lp.buf.scale + lp.buf.offset[0], fy * gh * lp.buf.scale + lp.buf.offset[1]));
-                level - steep * effectcraft_color::luminance(c[0], c[1], c[2]) * a
+                level - steep * tselatra_color::luminance(c[0], c[1], c[2]) * a
             })
             .collect()
     });
@@ -1691,7 +1691,7 @@ pub fn foam_full_plan(ctx: &EffectCtx, b: &Buf) -> FoamPlan {
         let img = &lp.buf.img;
         let pl = Plane::from_image(img, |px| {
             let (c, a) = unpremul(px);
-            effectcraft_color::luminance(c[0], c[1], c[2]) * a
+            tselatra_color::luminance(c[0], c[1], c[2]) * a
         });
         (pl, lp.buf.scale, lp.buf.offset, lp.size)
     });

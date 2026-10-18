@@ -6,8 +6,8 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::{NodeId, NodeKind};
-use figcraft_geom::Shape;
+use endrika_doc::{NodeId, NodeKind};
+use endrika_geom::Shape;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -20,7 +20,7 @@ fn id(v: &Value) -> NodeId {
 /// A layer's filled area in page units.
 fn area(s: &Session, id: NodeId) -> f64 {
     let doc = s.doc().unwrap();
-    let (mut p, _) = figcraft_render::node_outline(doc, doc.node(id).unwrap()).unwrap();
+    let (mut p, _) = endrika_render::node_outline(doc, doc.node(id).unwrap()).unwrap();
     p.apply_affine(doc.world_transform(id));
     p.area().abs()
 }

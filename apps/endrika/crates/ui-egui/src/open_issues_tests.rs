@@ -1,7 +1,7 @@
 //! Opening a native file with a damaged image: the app says what was lost.
 
 use base64::Engine as _;
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;
@@ -15,9 +15,9 @@ const PNG: [u8; 67] = [
 
 #[test]
 fn opening_a_file_with_a_damaged_image_toasts_what_was_lost() {
-    let dir = std::env::temp_dir().join(format!("figcraft-ui-open-issues-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-ui-open-issues-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("pics.figcraft");
+    let path = dir.join("pics.endrika");
     let mut s = Session::new();
     let data = base64::engine::general_purpose::STANDARD.encode(PNG);
     s.execute("file.import", &json!({"data": data, "name": "dot.png"})).unwrap();

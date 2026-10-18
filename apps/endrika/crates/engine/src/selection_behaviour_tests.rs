@@ -10,8 +10,8 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind, handle_at};
-use figcraft_doc::NodeId;
-use figcraft_geom::Point;
+use endrika_doc::NodeId;
+use endrika_geom::Point;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))

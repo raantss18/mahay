@@ -14,7 +14,7 @@ fn toggle(s: &mut Session) -> bool {
     s.execute("layer.clippingMask.toggle", &json!({})).unwrap()["clip"].as_bool().unwrap()
 }
 
-fn layer(s: &Session) -> vectorcraft_doc::Node {
+fn layer(s: &Session) -> tsipika_doc::Node {
     let st = s.doc().unwrap();
     st.doc.node(st.current_layer().unwrap()).unwrap().clone()
 }
@@ -75,11 +75,11 @@ fn layer_clipping_masks_save_and_export() {
     art_and_clip(&mut s);
     toggle(&mut s);
     let doc = &s.doc().unwrap().doc;
-    let back = vectorcraft_format::load(&vectorcraft_format::save(doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(doc, false)).unwrap();
     assert!(back.layers[0].clips());
     assert_eq!(back, **doc);
     // An unclipped layer writes no `clip` key (older files stay as they were).
-    let plain = String::from_utf8(vectorcraft_format::save(&session().doc().unwrap().doc, false)).unwrap();
+    let plain = String::from_utf8(tsipika_format::save(&session().doc().unwrap().doc, false)).unwrap();
     assert!(!plain.contains("\"clip\""), "{plain}");
     // SVG and PDF clip the same way as the canvas.
     assert_outputs_agree(&mut s, &[(50, 50), (10, 10), (30, 30), (80, 80), (74, 26)]);

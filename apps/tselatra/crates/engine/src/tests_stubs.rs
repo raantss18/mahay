@@ -4,10 +4,10 @@
 
 use std::sync::{Arc, Mutex};
 
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::render_queue::{OutputFormat, PostRenderAction};
-use effectcraft_project::{FeatherFalloff, Footage, FootageKind, GroupKind, LayerId, LayerSource, MaskMotionBlur};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_keyframe::Value as KV;
+use tselatra_project::render_queue::{OutputFormat, PostRenderAction};
+use tselatra_project::{FeatherFalloff, Footage, FootageKind, GroupKind, LayerId, LayerSource, MaskMotionBlur};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::json;
 
 use crate::{Event, ExportJob, ExportResult, Exporter, Importer, Session};
@@ -18,7 +18,7 @@ fn comp() -> Session {
     s
 }
 
-fn layer(s: &Session, id: u64) -> effectcraft_project::Layer {
+fn layer(s: &Session, id: u64) -> tselatra_project::Layer {
     s.active_comp().unwrap().layer(LayerId(id)).unwrap().clone()
 }
 
@@ -30,7 +30,7 @@ fn masked(s: &mut Session) -> (u64, u64) {
     (l, m)
 }
 
-fn mask_path(s: &Session, l: u64, m: u64) -> effectcraft_keyframe::ShapePath {
+fn mask_path(s: &Session, l: u64, m: u64) -> tselatra_keyframe::ShapePath {
     let ly = layer(s, l);
     let g = ly.masks().unwrap().find_group(m).unwrap();
     g.get("path").unwrap().value.as_path().unwrap().clone()
@@ -203,13 +203,13 @@ fn camera_from_view_and_view_layout() {
     assert!(s.execute("camera.fromView", json!({})).is_err(), "needs a 3D view");
     s.execute("view.3d.custom2", json!({})).unwrap();
     let cid = s.active_comp_id().unwrap();
-    let vc = s.state.views3d[&cid].cam(effectcraft_render::three_d::View3D::Custom2, 400.0, 300.0);
+    let vc = s.state.views3d[&cid].cam(tselatra_render::three_d::View3D::Custom2, 400.0, 300.0);
     let r = s.execute("camera.fromView", json!({})).unwrap();
     let cam = layer(&s, r["layer"].as_u64().unwrap());
     assert!(cam.is_camera());
     let pos = cam.props.prop("transform/position").unwrap().value.as_vec3();
     assert!((0..3).all(|i| (pos[i] - vc.eye[i]).abs() < 1e-6), "{pos:?} {:?}", vc.eye);
-    assert_eq!(s.state.views3d[&cid].current, effectcraft_render::three_d::View3D::ActiveCamera);
+    assert_eq!(s.state.views3d[&cid].current, tselatra_render::three_d::View3D::ActiveCamera);
     s.execute("edit.undo", json!({})).unwrap();
     assert!(!s.active_comp().unwrap().layers.iter().any(|l| l.is_camera()));
     // Switch View Layout.
@@ -274,7 +274,7 @@ fn rq() -> (Session, Arc<MockExporter>) {
 /// where it means "the current drive" to the OS but resolves against the home folder's drive in
 /// the render queue, so a test cannot know which drive to expect.
 pub(crate) fn tmp_out(rel: &str) -> String {
-    let base = std::env::temp_dir().join("effectcraft-rq-tests");
+    let base = std::env::temp_dir().join("tselatra-rq-tests");
     rel.split('/').fold(base, |p, part| p.join(part)).to_string_lossy().into_owned()
 }
 
@@ -327,7 +327,7 @@ fn pre_render_imports_and_replaces() {
     let l = &s.project.comp(outer).unwrap().layers[0];
     let LayerSource::Footage { item } = l.source else { panic!("not replaced: {:?}", l.source) };
     assert!(
-        matches!(&s.project.item(item).unwrap().kind, effectcraft_project::ItemKind::Footage(f) if std::path::Path::new(&f.path) == std::path::PathBuf::from(tmp_out("pre/inner.mov")))
+        matches!(&s.project.item(item).unwrap().kind, tselatra_project::ItemKind::Footage(f) if std::path::Path::new(&f.path) == std::path::PathBuf::from(tmp_out("pre/inner.mov")))
     );
     s.execute("edit.undo", json!({})).unwrap();
     assert!(matches!(s.project.comp(outer).unwrap().layers[0].source, LayerSource::Comp { .. }));
@@ -345,7 +345,7 @@ fn post_render_actions_import_and_set_proxy() {
     s.execute("renderQueue.render", json!({})).unwrap();
     assert_eq!(s.project.items.len(), items_before + 1);
     assert!(s.project.items.values().any(
-        |i| matches!(&i.kind, effectcraft_project::ItemKind::Footage(f) if std::path::Path::new(&f.path) == std::path::PathBuf::from(tmp_out("post/a.mov")))
+        |i| matches!(&i.kind, tselatra_project::ItemKind::Footage(f) if std::path::Path::new(&f.path) == std::path::PathBuf::from(tmp_out("post/a.mov")))
     ));
     // Set Proxy: the comp gets the render as its proxy.
     let b = s.execute("renderQueue.add", json!({"output": tmp_out("post/b.mov")})).unwrap();
@@ -406,7 +406,7 @@ fn templates_save_apply_default_and_persist() {
     assert_eq!(r["outputModuleSummary"], "High Quality");
     assert!(r["outputPath"].as_str().unwrap().ends_with("a.mov"), "{r}");
     // Persisted with the project.
-    let p = effectcraft_project::Project::from_json(&s.project.to_json()).unwrap();
+    let p = tselatra_project::Project::from_json(&s.project.to_json()).unwrap();
     assert_eq!(p.render_templates, s.project.render_templates);
     assert_eq!(p.render_queue, s.project.render_queue);
     // Delete: saved ones go; built-ins stay. Undo restores.
@@ -438,7 +438,7 @@ fn log_notify_and_overflow_settings() {
     assert_eq!(a["logLabel"], "Plus Per Frame Info");
     assert_eq!(std::path::Path::new(a["logPath"].as_str().unwrap()), std::path::PathBuf::from(tmp_out("n/a_RenderLog.txt")));
     s.execute("renderQueue.setLog", json!({"item": a["item"], "log": "plusSettings"})).unwrap();
-    assert_eq!(s.project.render_queue[0].log, effectcraft_project::render_queue::RenderLog::PlusSettings);
+    assert_eq!(s.project.render_queue[0].log, tselatra_project::render_queue::RenderLog::PlusSettings);
     s.execute("renderQueue.setOverflowFolders", json!({"folders": ["/tmp/o1", " ", "/tmp/o2"]})).unwrap();
     assert_eq!(s.project.render_prefs.overflow_folders, ["/tmp/o1", "/tmp/o2"]);
     assert_eq!(s.execute("renderQueue.setNotify", json!({})).unwrap()["notify"], true);
@@ -480,7 +480,7 @@ fn implemented_stubs_are_enabled_and_workspaces_are_frontend() {
 /// The first path item in a shape layer's Contents, at any depth: (uid, match_id). A new shape
 /// layer nests it in a group ("Rectangle 1" ▸ "Rectangle Path 1"), as After Effects does.
 fn first_shape(s: &Session, l: u64) -> (u64, String) {
-    fn walk(g: &effectcraft_project::PropGroup) -> Option<(u64, String)> {
+    fn walk(g: &tselatra_project::PropGroup) -> Option<(u64, String)> {
         if ["rect", "ellipse", "star", "path"].contains(&g.match_id.as_str()) {
             return Some((g.uid, g.match_id.clone()));
         }
@@ -489,7 +489,7 @@ fn first_shape(s: &Session, l: u64) -> (u64, String) {
     walk(layer(s, l).props.sub("contents").unwrap()).unwrap()
 }
 
-fn shape_path_of(s: &Session, l: u64, uid: u64) -> effectcraft_keyframe::ShapePath {
+fn shape_path_of(s: &Session, l: u64, uid: u64) -> tselatra_keyframe::ShapePath {
     let ly = layer(s, l);
     let g = ly.props.sub("contents").unwrap().find_group(uid).unwrap();
     let _ = &g;

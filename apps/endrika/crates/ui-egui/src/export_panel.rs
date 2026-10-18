@@ -6,8 +6,8 @@
 use std::collections::BTreeSet;
 
 use egui::{Align2, Color32, CornerRadius, Id, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_doc::*;
-use figcraft_engine::cmd::file::export_jobs;
+use endrika_doc::*;
+use endrika_engine::cmd::file::export_jobs;
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -312,7 +312,7 @@ pub(crate) fn wide_button(ui: &mut Ui, label: &str) -> bool {
 /// one file through a save dialog, several into a folder.
 pub(crate) fn export_layers(app: &mut FigApp, ids: &[NodeId], assets: bool) {
     let jobs = match app.session.doc() {
-        Ok(doc) if assets => figcraft_engine::devinspect::asset_jobs(doc, ids),
+        Ok(doc) if assets => endrika_engine::devinspect::asset_jobs(doc, ids),
         Ok(doc) => export_jobs(doc, ids),
         Err(_) => return,
     };

@@ -7,12 +7,12 @@
 
 use std::sync::Arc;
 
-use effectcraft_engine::Session;
-use effectcraft_engine::commands::scripts::SCRIPT_SETTINGS_FILE;
-use effectcraft_engine::config::{ConfigStore, MemoryConfig};
-use effectcraft_engine::project::{LayerId, Property};
-use effectcraft_keyframe::{Ease, Interp, ease_progress};
-use effectcraft_time::Tick;
+use tselatra_engine::Session;
+use tselatra_engine::commands::scripts::SCRIPT_SETTINGS_FILE;
+use tselatra_engine::config::{ConfigStore, MemoryConfig};
+use tselatra_engine::project::{LayerId, Property};
+use tselatra_keyframe::{Ease, Interp, ease_progress};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use crate::run_code;
@@ -20,7 +20,7 @@ use crate::run_code;
 const PANEL: &str = "Ease Presets.jsx";
 
 fn session(store: &Arc<MemoryConfig>) -> Session {
-    let mut s = Session { expr: Some(Arc::new(effectcraft_expr::Expressions)), ..Default::default() };
+    let mut s = Session { expr: Some(Arc::new(tselatra_expr::Expressions)), ..Default::default() };
     crate::install(&mut s);
     s.config = Some(store.clone());
     s.load_settings();
@@ -124,7 +124,7 @@ fn spatial_tangents_are_reported_as_the_path_plays() {
     let l = setup(&mut s);
     animate(&mut s, l, "transform/position", &[(0.0, json!([0, 0, 0])), (1.0, json!([100, 0, 0])), (2.0, json!([100, 100, 0]))]);
     let pos = prop(&s, l, "transform/position");
-    let (inn, out) = effectcraft_keyframe::spatial_tangents(&pos.keys, 1);
+    let (inn, out) = tselatra_keyframe::spatial_tangents(&pos.keys, 1);
     let r = ok(&mut s, "var p = app.project.activeItem.layer(1).transform.position; [p.keyInSpatialTangent(2), p.keyOutSpatialTangent(2)]");
     for (got, want) in [(&r[0], inn), (&r[1], out)] {
         for d in 0..2 {
@@ -451,7 +451,7 @@ fn a_single_key_on_a_curved_path_eases_along_each_side() {
     let l = setup(&mut s);
     animate(&mut s, l, "transform/position", &[(0.0, json!([0, 0, 0])), (1.0, json!([100, 0, 0])), (3.0, json!([100, 300, 0]))]);
     let before = prop(&s, l, "transform/position");
-    let (len_in, len_out) = (effectcraft_keyframe::spatial_segment_length(&before.keys, 0), effectcraft_keyframe::spatial_segment_length(&before.keys, 1));
+    let (len_in, len_out) = (tselatra_keyframe::spatial_segment_length(&before.keys, 0), tselatra_keyframe::spatial_segment_length(&before.keys, 1));
     let win = open_panel(&mut s);
     select_keys(&mut s, l, &[("transform/position", 1.0)]);
     apply_typed(&mut s, win, "In", [40.0, 1.5, 50.0, 2.0]);

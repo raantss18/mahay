@@ -1,8 +1,8 @@
 //! Text animation commands: animators, properties, selectors, per-character 3D, presets (with
 //! undo/redo and serde round-trips).
 
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::{LayerId, Node, Project, PropGroup};
+use tselatra_keyframe::Value as KV;
+use tselatra_project::{LayerId, Node, Project, PropGroup};
 use serde_json::json;
 
 use crate::Session;
@@ -35,7 +35,7 @@ fn animate_text_adds_animators_with_companion_properties() {
     );
     assert_eq!(matches(a.sub("selectors").unwrap()), ["rangeSelector"]);
     // Every Animate entry is accepted.
-    for (k, _) in effectcraft_project::build::TEXT_ANIMATOR_KINDS.iter().filter(|(k, _)| *k != "-") {
+    for (k, _) in tselatra_project::build::TEXT_ANIMATOR_KINDS.iter().filter(|(k, _)| *k != "-") {
         s.execute("layer.addTextAnimator", json!({"layer": t, "property": k})).unwrap_or_else(|e| panic!("{k}: {e}"));
     }
     assert!(s.execute("layer.addTextAnimator", json!({"layer": t, "property": "nope"})).is_err());
@@ -137,18 +137,18 @@ fn presets_apply_render_and_round_trip() {
         let after = s.active_comp().unwrap().layers[0].props.group("text/animators").unwrap().children.len();
         assert!(after > before, "{id}");
         for secs in [0.0, 0.7, 3.0] {
-            let _ = s.render(cid, effectcraft_time::Tick::from_seconds_f64(secs), effectcraft_render::RenderOpts { scale: 0.25, ..Default::default() });
+            let _ = s.render(cid, tselatra_time::Tick::from_seconds_f64(secs), tselatra_render::RenderOpts { scale: 0.25, ..Default::default() });
         }
         s.execute("edit.undo", json!({})).unwrap();
         assert_eq!(s.active_comp().unwrap().layers[0].props.group("text/animators").unwrap().children.len(), before, "{id}");
     }
     // Typewriter: the start keyframes reveal the text over time.
     s.execute("layer.applyTextPreset", json!({"layer": t, "preset": "Typewriter"})).unwrap();
-    let opts = effectcraft_render::RenderOpts { scale: 0.5, ..Default::default() };
-    let cov = |img: &effectcraft_render::Image| img.data.iter().filter(|p| p[3] > 0.5).count();
-    let a = cov(&s.render(cid, effectcraft_time::Tick::from_seconds_f64(0.0), opts));
-    let b = cov(&s.render(cid, effectcraft_time::Tick::from_seconds_f64(1.0), opts));
-    let c = cov(&s.render(cid, effectcraft_time::Tick::from_seconds_f64(3.0), opts));
+    let opts = tselatra_render::RenderOpts { scale: 0.5, ..Default::default() };
+    let cov = |img: &tselatra_render::Image| img.data.iter().filter(|p| p[3] > 0.5).count();
+    let a = cov(&s.render(cid, tselatra_time::Tick::from_seconds_f64(0.0), opts));
+    let b = cov(&s.render(cid, tselatra_time::Tick::from_seconds_f64(1.0), opts));
+    let c = cov(&s.render(cid, tselatra_time::Tick::from_seconds_f64(3.0), opts));
     assert!(a < b && b < c, "{a} {b} {c}");
     // Every selector kind and More / Path Options survive a save/load round trip.
     s.execute("layer.addTextSelector", json!({"layer": t, "kind": "wiggly"})).unwrap();

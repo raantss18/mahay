@@ -1,7 +1,7 @@
-//! `Vst3Plugin`: a loaded VST3 instance behind the safe `soundcraft_dsp::Plugin` trait.
+//! `Vst3Plugin`: a loaded VST3 instance behind the safe `feo_dsp::Plugin` trait.
 
 use crate::ffi::{AFTERTOUCH, BusBuffers, EVENT_CAP, EditorLink, HostContext, Instance, NoteEvent, PARAM_QUEUE_CAP, PITCH_BEND};
-use soundcraft_dsp::{Plugin, PluginEditor, PluginInfo, Transport, Unit};
+use feo_dsp::{Plugin, PluginEditor, PluginInfo, Transport, Unit};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use vst3::ComWrapper;
@@ -13,7 +13,7 @@ const MAX_CHANNELS: usize = 64;
 /// An `unsynced` slot with no value waiting (a NaN pattern, which `set_param` never stores).
 const SYNCED: u64 = u64::MAX;
 
-/// How a SoundCraft parameter value maps to the VST3 normalized value.
+/// How a Feo parameter value maps to the VST3 normalized value.
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Mapping {
     /// Toggle/choice index `0..=steps` ↔ `index / steps`.
@@ -402,7 +402,7 @@ impl Plugin for Vst3Plugin {
         Some(Box::new(Vst3Editor { link, host: self.inst.host_ref(), info: self.info, ids: self.ids.clone(), maps: self.maps.clone() }))
     }
 
-    fn state_reader(&mut self) -> Option<Box<dyn soundcraft_dsp::PluginStateReader>> {
+    fn state_reader(&mut self) -> Option<Box<dyn feo_dsp::PluginStateReader>> {
         let (link, ids, unsynced) = (self.inst.state_link(), self.ids.clone(), Arc::clone(&self.unsynced));
         Some(Box::new(move || {
             // A parameter only the controller stores (no processor state) would otherwise be

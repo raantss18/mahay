@@ -14,13 +14,13 @@
 
 use egui::{Color32, Sense, Stroke, pos2, vec2};
 use serde_json::{Map, Value, json};
-use vectorcraft_brush::{Bristle, Brush, BrushKind, Calligraphic, Variation};
+use tsipika_brush::{Bristle, Brush, BrushKind, Calligraphic, Variation};
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, brush_art_options, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Brush Options.
 pub const KIND: &str = "brushOptions";
@@ -77,7 +77,7 @@ fn variation_key(key: &str) -> String {
 }
 
 /// Open the options of brush `name` (default: the selected path's brush, else the current one).
-pub fn open(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, name: Option<&str>) -> Result<Value, String> {
     let name = match name {
         Some(n) => n.to_string(),
         None => target(app).ok_or("no brush selected")?,
@@ -112,16 +112,16 @@ pub fn open(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, Strin
 }
 
 /// Can Brush Options open without a name (the selected path's brush, else the current one, exists)?
-pub fn available(app: &VectorcraftApp) -> bool {
+pub fn available(app: &TsipikaApp) -> bool {
     let Some(st) = app.session.active() else { return false };
-    target(app).is_some_and(|n| vectorcraft_brush::find(&st.doc, &n).is_some())
+    target(app).is_some_and(|n| tsipika_brush::find(&st.doc, &n).is_some())
 }
 
 /// The brush Brush Options opens on without a name: the selected path's brush, else the current one.
-fn target(app: &VectorcraftApp) -> Option<String> {
+fn target(app: &TsipikaApp) -> Option<String> {
     let st = app.session.active()?;
     let selected = st.selection.subjects().first().and_then(|id| st.doc.node(*id)).and_then(|n| n.appearance.stroke()?.brush.clone());
-    selected.or_else(|| vectorcraft_brush::current(&st.doc))
+    selected.or_else(|| tsipika_brush::current(&st.doc))
 }
 
 /// The value of field `key` within `range`.
@@ -153,7 +153,7 @@ fn params(d: &Dialog) -> Value {
     }
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     grid(ui, |ui| {
         label(ui, tl!("Name:"));
         form::text(ui, d, "name", 240.0);
@@ -200,7 +200,7 @@ fn calligraphic_body(ui: &mut egui::Ui, d: &mut Dialog) {
     });
 }
 
-fn bristle_body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn bristle_body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     form::choice(ui, d, "shape", tl!("Shape:"), (LABEL_W, 150.0), &SHAPES);
     widgets::label_row(ui, tl!("Size:"), LABEL_W, |ui| {
         form::length(ui, d, "size", app.session.general_unit(), 80.0);
@@ -264,7 +264,7 @@ fn nib_preview(ui: &mut egui::Ui, c: &Calligraphic, size: egui::Vec2) {
 }
 
 /// OK: edit the brush (and rename it). A name another brush has keeps the dialog open.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let name = d.str("name").trim().to_string();
     let r = app.run("brush.options", json!({ "name": d.str("__brush"), "newName": name, "params": params(d) }));
     if r.is_ok() {
@@ -276,22 +276,22 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app
     }
 
-    fn set(app: &mut VectorcraftApp, fields: Value) {
+    fn set(app: &mut TsipikaApp, fields: Value) {
         let d = app.ui.dialog.as_mut().unwrap();
         for (k, v) in fields.as_object().unwrap() {
             d.fields.insert(k.clone(), v.clone());
         }
     }
 
-    fn shown(app: &mut VectorcraftApp) -> String {
+    fn shown(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
@@ -346,17 +346,17 @@ mod tests {
     }
 
     /// A path painted with brush `name`, and the height of the art its stroke draws.
-    fn brushed(app: &mut VectorcraftApp, name: &str) -> (vectorcraft_doc::NodeId, f64) {
+    fn brushed(app: &mut TsipikaApp, name: &str) -> (tsipika_doc::NodeId, f64) {
         let id = app.run("shape.line", json!({"x1": 20, "y1": 100, "x2": 280, "y2": 100})).unwrap()["id"].as_u64().unwrap();
-        let id = vectorcraft_doc::NodeId(id);
+        let id = tsipika_doc::NodeId(id);
         app.run("brush.apply", json!({ "name": name, "ids": [id.0] })).unwrap();
         (id, drawn_height(app, id))
     }
 
-    fn drawn_height(app: &VectorcraftApp, id: vectorcraft_doc::NodeId) -> f64 {
+    fn drawn_height(app: &TsipikaApp, id: tsipika_doc::NodeId) -> f64 {
         let st = app.session.active().unwrap();
-        let pieces = vectorcraft_brush::node_pieces(&st.doc, st.doc.node(id).unwrap()).unwrap();
-        vectorcraft_brush::pieces_bounds(&pieces).unwrap().height()
+        let pieces = tsipika_brush::node_pieces(&st.doc, st.doc.node(id).unwrap()).unwrap();
+        tsipika_brush::pieces_bounds(&pieces).unwrap().height()
     }
 
     #[test]

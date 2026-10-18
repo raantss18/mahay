@@ -3,15 +3,15 @@
 //! Arrays are associative by default (ARRAYASSOCIATIVITY): the source objects move into an
 //! anonymous source block and the array becomes one block reference to an anonymous array block
 //! holding a reference per item, with the array parameters kept on that block
-//! ([`cadcraft_doc::ArrayParams`]). With ASsociative = No the items are separate copies. The
+//! ([`drafitra_doc::ArrayParams`]). With ASsociative = No the items are separate copies. The
 //! interactive forms select objects, then edit the array in an option loop with a live preview,
 //! and create the array on eXit (or Enter).
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use cadcraft_doc::{ArrayKind, ArrayParams, Block, Drawing, Entity, EntityKind, Handle, Insert, MAX_BLOCK_DEPTH, PolarArray, RectArray};
-use cadcraft_geom::{Bounds2, Mat3, Vec2, Vec3};
+use drafitra_doc::{ArrayKind, ArrayParams, Block, Drawing, Entity, EntityKind, Handle, Insert, MAX_BLOCK_DEPTH, PolarArray, RectArray};
+use drafitra_geom::{Bounds2, Mat3, Vec2, Vec3};
 use serde_json::{Value, json};
 
 use super::helpers::{line, v3};
@@ -201,25 +201,25 @@ fn placed(parent: &Entity, child: &Entity, m: &Mat3) -> Entity {
     if ne.common.layer == "0" {
         ne.common.layer = parent.common.layer.clone();
     }
-    if ne.common.color == cadcraft_color::Color::ByBlock {
+    if ne.common.color == drafitra_color::Color::ByBlock {
         ne.common.color = parent.common.color;
     }
     if ne.common.linetype.eq_ignore_ascii_case("ByBlock") {
         ne.common.linetype = parent.common.linetype.clone();
     }
-    if ne.common.lineweight == cadcraft_doc::Lineweight::ByBlock {
+    if ne.common.lineweight == drafitra_doc::Lineweight::ByBlock {
         ne.common.lineweight = parent.common.lineweight;
     }
     ne
 }
 
 fn bounds(d: &Drawing, hs: &[Handle]) -> Bounds2 {
-    hs.iter().filter_map(|h| d.entity(*h).map(|e| cadcraft_doc::entity_bounds(d, e, 0))).fold(Bounds2::EMPTY, |a, b| a.union(&b))
+    hs.iter().filter_map(|h| d.entity(*h).map(|e| drafitra_doc::entity_bounds(d, e, 0))).fold(Bounds2::EMPTY, |a, b| a.union(&b))
 }
 
 /// The centre of the first object (the point a non-rotated polar copy is moved by).
 fn first_center(d: &Drawing, hs: &[Handle]) -> Option<Vec2> {
-    hs.first().and_then(|h| d.entity(*h)).map(|e| cadcraft_doc::entity_bounds(d, e, 0).center()).filter(|c| c.is_finite())
+    hs.first().and_then(|h| d.entity(*h)).map(|e| drafitra_doc::entity_bounds(d, e, 0).center()).filter(|c| c.is_finite())
 }
 
 /// MAXARRAY: refuse an array of `items` copies of `objs` objects that would exceed the limit

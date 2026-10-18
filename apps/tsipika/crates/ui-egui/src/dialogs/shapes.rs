@@ -4,7 +4,7 @@
 use serde_json::{Value, json};
 
 use super::{DialogSpec, form, run_and_close};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::state::Dialog;
 
 pub(super) const SPEC: DialogSpec = DialogSpec { heading: |d| title(&d.kind).into(), body, confirm, ..DialogSpec::FORM };
@@ -28,7 +28,7 @@ fn grid_keys(kind: &str) -> ([&'static str; 2], [&'static str; 2]) {
 }
 
 /// The form's fields, then a grid's switches.
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     form::grid(ui, d, app.session.general_unit());
     let own = match d.kind.as_str() {
         "rectangularGrid" => ("frame", tl!("Use Outside Rectangle As Frame")),
@@ -42,7 +42,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (x, y) = (d.f64("x", 0.0), d.f64("y", 0.0));
     let (id, params) = match d.kind.as_str() {
         "ellipse" => ("shape.ellipse", json!({"x": x, "y": y, "width": d.f64("width", 100.0), "height": d.f64("height", 100.0)})),
@@ -74,7 +74,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     };
     // On the active plane while the perspective grid shows, sized in plane units from the click.
     let options = matches!(d.kind.as_str(), "rectangularGrid" | "polarGrid").then(|| params.clone());
-    let result = match vectorcraft_engine::perspective_click(&app.session, id, &params, vectorcraft_geom::Point::new(x, y)) {
+    let result = match tsipika_engine::perspective_click(&app.session, id, &params, tsipika_geom::Point::new(x, y)) {
         Some((id, params)) => run_and_close(app, &id, params),
         None => run_and_close(app, id, params),
     }?;

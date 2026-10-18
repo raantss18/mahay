@@ -24,7 +24,7 @@
 //! Kelvin is about 8 % above the matrices', as #730 found for the ILCE-7M3's dial) and the tint to −9 ± 4: the
 //! matrices put Sony's presets slightly off the locus, the presets themselves are tint 0 here.
 use crate::ColorData;
-use lightcraft_color::{Xy, cct};
+use hazavana_color::{Xy, cct};
 use serde::{Deserialize, Serialize};
 
 /// Mired change per unit offset from the preset curve, in units of the mired change per unit distance along it.

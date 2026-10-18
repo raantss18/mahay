@@ -11,15 +11,15 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Write as _};
 
-use craft_pdf::interpret::Function;
-use craft_pdf::interpret::color::ColorSpace;
-use craft_pdf::syntax::Pdf;
-use craft_pdf::syntax::object::array::FlexArrayIter;
-use craft_pdf::syntax::object::{Array, Dict, MaybeRef, Name, Object, Stream};
-use craft_pdf::syntax::reader::{Reader, ReaderExt};
+use mahay_pdf::interpret::Function;
+use mahay_pdf::interpret::color::ColorSpace;
+use mahay_pdf::syntax::Pdf;
+use mahay_pdf::syntax::object::array::FlexArrayIter;
+use mahay_pdf::syntax::object::{Array, Dict, MaybeRef, Name, Object, Stream};
+use mahay_pdf::syntax::reader::{Reader, ReaderExt};
 use smallvec::SmallVec;
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_color::{Color, Paint, Swatch};
+use tsipika_color::swatch::REGISTRATION;
+use tsipika_color::{Color, Paint, Swatch};
 
 /// The longest `Debug` text read: a colour whose space is longer (a big sampled tint transform)
 /// imports as RGB.
@@ -170,7 +170,7 @@ impl<'p> Colors<'p> {
 
     /// A solid color in its own model; `None`: use its RGB. `inks`: the colorant names of the
     /// space the page's walk found it painted in ([`Colors::space_of`]).
-    pub fn solid(&mut self, c: &craft_pdf::interpret::color::Color, inks: Option<&[String]>) -> Option<Native> {
+    pub fn solid(&mut self, c: &mahay_pdf::interpret::color::Color, inks: Option<&[String]>) -> Option<Native> {
         let mapped = debug_text(c).and_then(|t| {
             let (space, comps) = split_color(&t)?;
             let space = self.space_of(space, comps.len(), inks);
@@ -502,7 +502,7 @@ fn lab_profile(profile: &Stream<'_>) -> bool {
     let mut head = vec![];
     match profile.filters().as_slice() {
         [] => head.extend(raw.iter().take(20)),
-        [craft_pdf::syntax::Filter::FlateDecode] => {
+        [mahay_pdf::syntax::Filter::FlateDecode] => {
             let _ = flate2::read::ZlibDecoder::new(&*raw).take(20).read_to_end(&mut head); // a damaged profile reads as not Lab
         }
         _ => return false,
@@ -510,7 +510,7 @@ fn lab_profile(profile: &Stream<'_>) -> bool {
     head.get(16..20) == Some(b"Lab ")
 }
 
-/// An alternate-space colour (the tint transform's output) as a VectorCraft colour.
+/// An alternate-space colour (the tint transform's output) as a Tsipika colour.
 fn alt_color(alt: Alt, v: &[f32]) -> Option<Color> {
     let c = |i: usize| v.get(i).copied().filter(|x| x.is_finite());
     let u = |i: usize| c(i).map(|x| round3(x.clamp(0.0, 1.0)));

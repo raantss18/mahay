@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::{Attrib, Block, Entity, EntityKind, Handle, Insert};
+use drafitra_doc::{Attrib, Block, Entity, EntityKind, Handle, Insert};
 use serde_json::{Value, json};
 
 use crate::cmd::curves::KW;
@@ -118,15 +118,15 @@ fn references<'a>(ents: impl Iterator<Item = &'a Arc<Entity>>, name: &str) -> Ve
 
 /// Apply `f` to every reference of block `name` (in model space, layouts and other blocks);
 /// returns how many references there were.
-fn update_references(d: &mut cadcraft_doc::Drawing, name: &str, mut f: impl FnMut(&mut Insert)) -> usize {
+fn update_references(d: &mut drafitra_doc::Drawing, name: &str, mut f: impl FnMut(&mut Insert)) -> usize {
     let mut n = 0;
     let mut update = |e: &mut Entity| {
         if let EntityKind::Insert(ins) = &mut e.kind {
             f(ins);
         }
     };
-    let spaces: Vec<cadcraft_doc::Space> =
-        std::iter::once(cadcraft_doc::Space::Model).chain(d.layouts.iter().map(|l| cadcraft_doc::Space::Paper(l.name.clone()))).collect();
+    let spaces: Vec<drafitra_doc::Space> =
+        std::iter::once(drafitra_doc::Space::Model).chain(d.layouts.iter().map(|l| drafitra_doc::Space::Paper(l.name.clone()))).collect();
     for sp in spaces {
         let Some(store) = d.space_mut(&sp) else { continue };
         let hs = references(store.iter(), name);
@@ -150,7 +150,7 @@ fn update_references(d: &mut cadcraft_doc::Drawing, name: &str, mut f: impl FnMu
 }
 
 /// How many references block `name` has (in model space, layouts and other blocks).
-pub(super) fn reference_count(d: &cadcraft_doc::Drawing, name: &str) -> usize {
+pub(super) fn reference_count(d: &drafitra_doc::Drawing, name: &str) -> usize {
     let spaces = std::iter::once(&d.model).chain(d.layouts.iter().map(|l| &l.entities));
     spaces
         .chain(d.blocks.iter().filter(|(k, _)| !k.eq_ignore_ascii_case(name)).map(|(_, b)| &b.entities))

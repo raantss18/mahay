@@ -101,7 +101,7 @@ fn strokes_segment_the_base_frame() {
 fn coarse_to_fine_segments_large_frames() {
     // A 2× upscaled frame goes through the reduced-size path (Standard works at 480 px).
     let (small, _) = frame_at(center(0));
-    let img = effectcraft_raster::resample(&small, W * 3, H * 3);
+    let img = tselatra_raster::resample(&small, W * 3, H * 3);
     let c = center(0);
     let st: Vec<Stroke> = base_strokes(0)
         .into_iter()
@@ -297,13 +297,13 @@ fn chain_keys_restart_at_correction_frames() {
     assert_eq!(d.source_of(5), None);
 }
 
-/// `cargo test -p effectcraft-track --release roto_perf -- --ignored --nocapture`
+/// `cargo test -p tselatra-track --release roto_perf -- --ignored --nocapture`
 #[test]
 #[ignore]
 fn roto_perf_1080p() {
     let up = |c: [f64; 2]| {
         let (img, _) = frame_at(c);
-        effectcraft_raster::resample(&img, 1920, 1080)
+        tselatra_raster::resample(&img, 1920, 1080)
     };
     let s = 1920.0 / W as f64;
     let st: Vec<Stroke> = base_strokes(0)
@@ -339,9 +339,9 @@ fn roto_perf_1080p() {
 /// A stand-in trained model: the foreground is a fixed rectangle (or nothing, or an error).
 struct FakeModel(Option<[usize; 4]>, bool);
 
-impl effectcraft_segment::MaskModel for FakeModel {
-    fn info(&self) -> &'static effectcraft_segment::ModelInfo {
-        &effectcraft_segment::MOBILE_SAM
+impl tselatra_segment::MaskModel for FakeModel {
+    fn info(&self) -> &'static tselatra_segment::ModelInfo {
+        &tselatra_segment::MOBILE_SAM
     }
     fn segment(&self, _: &[[f32; 3]], w: usize, h: usize, prompt: &Prompt) -> Result<Vec<f32>, String> {
         if self.1 {
@@ -397,13 +397,13 @@ fn a_model_prior_shapes_the_cut_and_bad_models_are_ignored() {
     assert!(iou(&kept.matte, &gt) > 0.95, "{}", iou(&kept.matte, &gt));
 }
 
-/// With the real MobileSAM weights (`EFFECTCRAFT_MOBILESAM=path/to/mobile_sam.pt`, else
+/// With the real MobileSAM weights (`TSELATRA_MOBILESAM=path/to/mobile_sam.pt`, else
 /// skipped): the base frame and 20 propagated frames of the moving textured disk stay at least
 /// as accurate as the classic engine.
 #[test]
 fn mobilesam_segments_and_propagates_the_disk() {
-    let Ok(path) = std::env::var("EFFECTCRAFT_MOBILESAM") else { return };
-    let effectcraft_segment::Loaded::Mask(model) = effectcraft_segment::load("mobilesam", &std::fs::read(path).unwrap()).unwrap() else {
+    let Ok(path) = std::env::var("TSELATRA_MOBILESAM") else { return };
+    let tselatra_segment::Loaded::Mask(model) = tselatra_segment::load("mobilesam", &std::fs::read(path).unwrap()).unwrap() else {
         panic!("not a mask model")
     };
     let m = Some(model.as_ref());

@@ -10,8 +10,8 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::{NodeId, NodeKind};
-use figcraft_geom::Point;
+use endrika_doc::{NodeId, NodeKind};
+use endrika_geom::Point;
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -69,7 +69,7 @@ fn drag(s: &mut Session, a: (f64, f64), b: (f64, f64), cmd: bool) {
 
 /// The RGBA of `node` rendered at 1x, at (`x`, `y`) of its export box.
 fn pixel(s: &Session, node: NodeId, x: u32, y: u32) -> [u8; 4] {
-    let pix = figcraft_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
     let i = ((y * pix.width() + x) * 4) as usize;
     let d = pix.data();
     [d[i], d[i + 1], d[i + 2], d[i + 3]]
@@ -162,7 +162,7 @@ fn clip_content_hides_and_unhides_what_overflows() {
         let page = s.page().unwrap();
         let hit = s.doc().unwrap().hit_test(page, Point::new(120.0, 20.0), 0.0, None);
         assert_eq!(hit == Some(c), hit_outside, "clip {clip}");
-        assert_eq!(figcraft_render::render_node(s.doc().unwrap(), f, 1.0).unwrap().width(), export_w, "clip {clip}");
+        assert_eq!(endrika_render::render_node(s.doc().unwrap(), f, 1.0).unwrap().width(), export_w, "clip {clip}");
     }
     // New frames clip (silent on the default for Frame selection: pinned to the frame default).
     let mut s = Session::new();
@@ -322,8 +322,8 @@ fn clicks_pick_children_of_top_level_frames_and_whole_groups() {
     let sf = frame(&mut s, 20.0, 20.0, 100.0, 100.0, Some(sec));
     let sr = rect(&mut s, 10.0, 10.0, 20.0, 20.0, Some(sf));
     let doc = s.doc().unwrap().clone();
-    let pick = |leaf, ctx: &[NodeId], deep| figcraft_doc::geometry::select_target(&doc, leaf, ctx, deep);
-    let enter = |leaf, sel: &[NodeId]| figcraft_doc::geometry::enter_target(&doc, leaf, sel);
+    let pick = |leaf, ctx: &[NodeId], deep| endrika_doc::geometry::select_target(&doc, leaf, ctx, deep);
+    let enter = |leaf, sel: &[NodeId]| endrika_doc::geometry::enter_target(&doc, leaf, sel);
     let cases: [(&str, NodeId, NodeId); 10] = [
         // A layer in a group in a top-level frame: the group.
         ("group", pick(a, &[], false), g),
@@ -468,7 +468,7 @@ fn top_level_frames_are_screens_and_export_whole() {
     let doc = s.doc().unwrap();
     assert_eq!(doc.top_frames(page), vec![a, b]);
     assert_eq!(doc.top_level_frame(nested), Some(a));
-    let px = figcraft_render::render_node(doc, a, 2.0).unwrap();
+    let px = endrika_render::render_node(doc, a, 2.0).unwrap();
     assert_eq!((px.width(), px.height()), (200, 400), "the frame's own size at 2x");
 }
 

@@ -5,7 +5,7 @@
 //!
 //! The maths lives in plain functions so it can be tested without a UI.
 
-use effectcraft_engine::geom::{Mat3, vec2 as gv2};
+use tselatra_engine::geom::{Mat3, vec2 as gv2};
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 
 use crate::theme::Tokens;
@@ -293,7 +293,7 @@ impl CurvePoints {
     }
     /// The curve the effect renders (the same monotone spline), evaluated at `x`.
     pub fn eval(&self, x: f32) -> f32 {
-        effectcraft_engine::effects::Curve::parse(&self.format()).map(|c| c.eval(x)).unwrap_or(x)
+        tselatra_engine::effects::Curve::parse(&self.format()).map(|c| c.eval(x)).unwrap_or(x)
     }
     /// Pencil mode: points from a free-drawn curve sampled at `samples.len()` even x steps.
     pub fn from_samples(samples: &[f32]) -> CurvePoints {
@@ -349,7 +349,7 @@ pub fn curves_graph(ui: &mut egui::Ui, rect: Rect, pts: &CurvePoints, channel: u
     };
     let to_s = |x: f32, y: f32| pos2(rect.min.x + x * rect.width(), rect.max.y - y * rect.height());
     let to_g = |s: Pos2| [((s.x - rect.min.x) / rect.width()), ((rect.max.y - s.y) / rect.height())];
-    let spline = effectcraft_engine::effects::Curve::parse(&pts.format());
+    let spline = tselatra_engine::effects::Curve::parse(&pts.format());
     let line: Vec<Pos2> = (0..=96)
         .map(|i| {
             let x = i as f32 / 96.0;
@@ -632,7 +632,7 @@ mod tests {
         let mut c = CurvePoints::identity();
         assert!((c.eval(0.3) - 0.3).abs() < 1e-6);
         c.insert(0.5, 0.75);
-        let fx = effectcraft_engine::effects::Curve::parse(&c.format()).unwrap();
+        let fx = tselatra_engine::effects::Curve::parse(&c.format()).unwrap();
         for i in 0..=20 {
             let x = i as f32 / 20.0;
             assert!((c.eval(x) - fx.eval(x)).abs() < 1e-6);

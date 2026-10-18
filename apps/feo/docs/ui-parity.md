@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (drag across checkboxes, #399; waveforms preview fades during drag) · **Target:** Avid Pro Tools Ultimate 2026.4.1
 
-How SoundCraft feels in the hands of a Pro Tools user: tools, modes, modifiers, shortcuts,
+How Feo feels in the hands of a Pro Tools user: tools, modes, modifiers, shortcuts,
 windows, meters. Measured from `crates/model/src/session.rs` (tools, modes), the command
 registry (shortcuts), `crates/ui-egui/src` (windows, gestures) and user issues; compared with
 reference screenshots kept locally under `plan/protools/screenshots/` (16, never committed).
@@ -36,7 +36,7 @@ Legend: ✅ matches · 🟡 partial · ❌ missing.
 | Scroll/zoom: wheel, trackpad pinch | 🟡 | Anchored trackpad zoom in open PRs #112, #137 |
 | Drag and drop: Clip List → tracks, files → tracks | ✅ macOS/Windows; 🟡 Wayland (PR #150) | |
 | Context menus (clip, track name, ruler, Clip List) | 🟡 | Clip and track menus exist; depth lower than Pro Tools'; Clip List delete (#4) |
-| Drag across checkboxes to check or uncheck several | ✅ | #399; every checkbox, as in the other Craft apps |
+| Drag across checkboxes to check or uncheck several | ✅ | #399; every checkbox, as in the other Mahay apps |
 
 ## Windows and panels
 

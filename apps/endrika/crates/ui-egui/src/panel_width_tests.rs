@@ -7,7 +7,7 @@
 use std::sync::{Arc, Mutex};
 
 use egui::{Event, Pos2, RawInput, Rect, pos2, vec2};
-use figcraft_engine::{Prefs, Session};
+use endrika_engine::{Prefs, Session};
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;

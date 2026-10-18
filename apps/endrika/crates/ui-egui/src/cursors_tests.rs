@@ -4,9 +4,9 @@
 //! drop.
 
 use egui::{CursorIcon, Event, Key, Modifiers, Pos2, pos2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
-use figcraft_engine::tools::{Cursor, PenCursor, ToolId};
+use endrika_doc::NodeId;
+use endrika_engine::Session;
+use endrika_engine::tools::{Cursor, PenCursor, ToolId};
 use serde_json::json;
 
 use crate::cursors::{Glyph, Shown, of, on_canvas, resize_icon};

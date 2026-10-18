@@ -4,18 +4,18 @@
 use egui::accesskit::Role;
 use egui::vec2;
 use egui_kittest::{Harness, kittest::NodeT};
-use lightcraft_ui_egui::{
-    LightcraftApp, Services,
+use hazavana_ui_egui::{
+    HazavanaApp, Services,
     state::{RightPanel, ViewMode},
 };
 
-fn harness(view: ViewMode, right: RightPanel) -> Harness<'static, LightcraftApp> {
-    let mut app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+fn harness(view: ViewMode, right: RightPanel) -> Harness<'static, HazavanaApp> {
+    let mut app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     app.ui.left_panel = true;
     app.ui.view = view;
     app.ui.right = right;
     let mut h = Harness::builder().with_size(vec2(1500.0, 950.0)).build_ui_state(
-        |ui, app: &mut LightcraftApp| {
+        |ui, app: &mut HazavanaApp| {
             app.logic(&ui.ctx().clone());
             app.ui(ui);
         },
@@ -49,7 +49,7 @@ fn interactive(role: Role) -> bool {
 }
 
 /// Every problem found in the harness's current tree, one line each.
-fn audit(h: &Harness<'_, LightcraftApp>, place: &str) -> Vec<String> {
+fn audit(h: &Harness<'_, HazavanaApp>, place: &str) -> Vec<String> {
     let mut problems = Vec::new();
     let mut count = 0;
     for node in h.root().children_recursive() {
@@ -139,7 +139,7 @@ fn every_interactive_node_has_a_name_in_every_view_and_tool() {
     assert!(problems.is_empty(), "{} accessibility problems:\n{}", problems.len(), problems.join("\n"));
 }
 
-fn slider_value(h: &Harness<'_, LightcraftApp>, name: &str) -> Option<f64> {
+fn slider_value(h: &Harness<'_, HazavanaApp>, name: &str) -> Option<f64> {
     h.root()
         .children_recursive()
         .map(|n| n.accesskit_node())

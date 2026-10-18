@@ -1,4 +1,4 @@
-# Where DesignCraft falls short of InDesign
+# Where Pejy falls short of InDesign
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-16 · **Change:** minor (gap 27 closed: the loaded text cursor threads into a frame inside a group (#1075); .indd and .indt open through indd-utils; gap 0 shrunk: text threads by hand; threading gaps added; Optical kerning from outlines (#181); gap 6: macOS lists fonts that font services and managers activate; shared print spooler; image clipping paths from IDML; Tabs panel listed as present (#343); book chapter update safety; gap 16: Based on Parent leftovers; bounded control click/drag input; swatches on placed greyscale and bitmap images) · **Target:** Adobe InDesign 2026 (21.6)
 
@@ -41,20 +41,20 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
 
 ### 2. INDD opening isn't measured on real files (FF)
 - **Missing:** a real-file corpus test of opening `.indd` and `.indt`. They open through
-  [storytold/indd-utils](https://github.com/storytold/indd-utils), which converts them to IDML in
-  memory for the IDML importer, but DesignCraft's own tests use synthetic bytes only. INDB and
+  [raantss18/indd-utils](https://github.com/raantss18/indd-utils), which converts them to IDML in
+  memory for the IDML importer, but Pejy's own tests use synthetic bytes only. INDB and
   INDL are still not read.
 - **Evidence:** #21, #114 (PR #98 proposed another converter). indd-utils reports 96.9% of
   InDesign's IDML values reproduced on ~650 INDD/IDML pairs and 0 failures on ~4,300 files; what
-  DesignCraft draws from those files is unmeasured, and it inherits the IDML importer's open bugs
+  Pejy draws from those files is unmeasured, and it inherits the IDML importer's open bugs
   (gap 3).
 - **Impact:** a client's `.indd` opens, but nobody knows how close it comes to the original.
-- **Estimate:** 10–30 h (corpus pinned in a sibling of `storytold/photocraft-corpus`, metric,
+- **Estimate:** 10–30 h (corpus pinned in a sibling of `raantss18/sary-corpus`, metric,
   fixes in indd-utils or the IDML importer).
 - **Doc:** [file-format-parity.md](file-format-parity.md)
 
 ### 3. IDML round-trip isn't proven on real files (FF)
-- **Missing:** a corpus test of real InDesign-authored IDML (via `storytold/photocraft-corpus` or
+- **Missing:** a corpus test of real InDesign-authored IDML (via `raantss18/sary-corpus` or
   a sibling) measuring what survives import → export → reopen in InDesign. Open bugs: frames not
   rendered without a warning (#193), `$ID/` font names reported missing (#338), no
   `PDFAttribute` on export (#339), Package writes build-machine absolute paths (#340), drag-drop
@@ -68,7 +68,7 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
 
 ### 4. Composition isn't compared with InDesign (T)
 - **Missing:** an oracle harness: the same synthetic stories set by InDesign 2026 (observed
-  black-box, results kept under `plan/`) and by DesignCraft, comparing line breaks, overset and
+  black-box, results kept under `plan/`) and by Pejy, comparing line breaks, overset and
   frame fit. Known differences: optical kerning is an outline-based approximation, not Adobe's
   algorithm (#181); a frame goes overset when descenders don't fit, InDesign needs only the baseline
   (#180); setting the text language was missing (#130; Language is now in Properties, #145, the issue is still open); "hyphenation doesn't work"
@@ -83,7 +83,7 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
   AMD OpenGL driver crash on Windows (#167), launch failures (#273, #220, #192, #166), blank or
   frozen canvas after graphics loss (#90).
 - **Evidence:** a backend fallback landed 2026-10-10 (#297: DirectX 12 on Windows, `gpu.json`
-  skip list); then VectorCraft's adapter choice (the GPU that drives the display), restart on the
+  skip list); then Tsipika's adapter choice (the GPU that drives the display), restart on the
   next adapter or backend when one fails or hangs at start-up, the indirect-call check off (the
   first Metal error of #334) and a logged reason when the app stops (#273). Not yet confirmed by
   the reporters. Still open for #334: wgpu asks an old macOS's Metal compiler for a language
@@ -98,7 +98,7 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
   Adobe Fonts and font managers activate are listed (#261, #327, 2026-10-11); not yet confirmed
   by the reporters.
 - **Impact:** documents set in the client's fonts render in Source Sans 3: wrong everywhere.
-- **Estimate:** 10–20 h (VectorCraft has a port, #261).
+- **Estimate:** 10–20 h (Tsipika has a port, #261).
 - **Doc:** [typography-parity.md](typography-parity.md)
 
 ### 7. No CI runs the tests on pull requests (S)
@@ -126,7 +126,7 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
 ### 10. Printing (H, F)
 - **Missing:** PostScript, a printer-driver options UI, separations to device, print presets, or trapping.
 - **Have:** `file.print` exports selected pages/spreads with marks and bleed, then submits through
-  craft-print: CUPS on macOS/Linux and the Windows PDF raster spooler. Physical printer fidelity
+  mahay-print: CUPS on macOS/Linux and the Windows PDF raster spooler. Physical printer fidelity
   remains a hardware check.
 - **Estimate:** 25–45 h. **Doc:** [hardware-parity.md](hardware-parity.md)
 

@@ -2,7 +2,7 @@
 use super::{SliderOut, slider, take_registry};
 use crate::headless::HeadlessView;
 use egui::{Event, Key, Modifiers, PointerButton, Rect, vec2};
-use lightcraft_develop::{ControlSpec, controls};
+use hazavana_develop::{ControlSpec, controls};
 
 struct Harness {
     view: HeadlessView,

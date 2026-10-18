@@ -1,9 +1,9 @@
 use super::*;
 use serde_json::json;
-use vectorcraft_doc::shaper::{FILL_PREFIX, SOURCES, STROKE_PREFIX};
-use vectorcraft_doc::{LiveShape, Node};
-use vectorcraft_geom::{Point, Shape as _};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_doc::shaper::{FILL_PREFIX, SOURCES, STROKE_PREFIX};
+use tsipika_doc::{LiveShape, Node};
+use tsipika_geom::{Point, Shape as _};
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 fn session() -> Session {
     let mut s = Session::new();
@@ -184,7 +184,7 @@ fn shaper_source_move_resize_native_roundtrip_and_release_preserve_live_art() {
     s.execute("object.setBounds", &json!({"width":120.0,"height":110.0,"reference":0})).unwrap();
     assert!(matches!(node(&s, a).live_shape(), Some(LiveShape::Rectangle { .. })));
     let doc = &s.doc().unwrap().doc;
-    let back = vectorcraft_format::load(&vectorcraft_format::save(doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(doc, false)).unwrap();
     assert_eq!(back.layers, doc.layers);
     let originals = [node(&s, a).clone(), node(&s, b).clone()];
     s.execute("shaper.release", &json!({"id":g.0})).unwrap();
@@ -244,7 +244,7 @@ fn shaper_widget_switches_between_face_selection_and_construction_mode() {
     let v = ViewInfo { smart_guides: false, ..Default::default() };
     let widget = |s: &Session| {
         let st = s.doc().unwrap();
-        vectorcraft_tools::shaperwidget::ShaperWidget::of(&st.doc, &st.selection, st.isolation, v.zoom).unwrap()
+        tsipika_tools::shaperwidget::ShaperWidget::of(&st.doc, &st.selection, st.isolation, v.zoom).unwrap()
     };
     let click = |s: &mut Session, p: Point| {
         for kind in [PointerKind::Down, PointerKind::Up] {
@@ -340,7 +340,7 @@ fn shaper_rejects_oversized_or_invalid_gestures_without_changing_art() {
 
 #[test]
 fn shaper_tool_trims_both_diagonal_ends_and_only_construction_can_pick_them() {
-    use vectorcraft_doc::hit::{HitOptions, hit_test};
+    use tsipika_doc::hit::{HitOptions, hit_test};
     let mut s = session();
     s.execute("paint.setFill", &json!({"color":"#ffff00"})).unwrap();
     s.execute("shape.ellipse", &json!({"x":100,"y":100,"width":100,"height":100})).unwrap();
@@ -414,7 +414,7 @@ fn shaper_marquees_leave_the_original_shape_of_an_erased_face() {
     s.select_tool("groupSelection", v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Down, 155.0, -10.0), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, 45.0, 110.0), v).unwrap();
-    s.tool_key(vectorcraft_tools::ToolKey::Letter('e'), Mods::default(), v).unwrap();
+    s.tool_key(tsipika_tools::ToolKey::Letter('e'), Mods::default(), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, 45.0, 110.0), v).unwrap();
     let sel = s.doc().unwrap().selection.clone();
     assert!(!sel.objects.contains(&b) && !sel.anchors.contains_key(&b), "{sel:?}");

@@ -9,7 +9,7 @@
 //! comes from Adobe or from a GPL raw decoder. Which colour a raw starts from is the engine's choice
 //! (`docs/camera-preview-colour.md`).
 use crate::ColorData;
-use lightcraft_color::{Mat3, Xy};
+use hazavana_color::{Mat3, Xy};
 
 #[path = "spectral_table.rs"]
 mod table;
@@ -222,7 +222,7 @@ mod tests {
         let color = ColorData::default();
         // daylight-ish Sony multipliers: a white near the locus around 5000 K, not the generic model's wild tint
         let xy = as_shot_white_through(c, &color, Some([2.2, 1.0, 1.6])).unwrap();
-        let (t, tint) = lightcraft_color::cct::xy_to_temp_tint(xy);
+        let (t, tint) = hazavana_color::cct::xy_to_temp_tint(xy);
         assert!((3500.0..7000.0).contains(&t) && tint.abs() < 30.0, "{t} {tint}");
         // the file's own tags are left alone
         assert_eq!(color, ColorData::default());
@@ -247,7 +247,7 @@ mod tests {
             // a forward matrix maps white-balanced white to D50 (DNG spec, chapter 6)
             for fm in &c.forward_matrix {
                 let w = fm.apply([1.0; 3]);
-                let d50 = lightcraft_color::D50.to_xyz();
+                let d50 = hazavana_color::D50.to_xyz();
                 assert!((0..3).all(|i| (w[i] - d50[i]).abs() < 1e-4), "{} {w:?}", c.model);
             }
         }

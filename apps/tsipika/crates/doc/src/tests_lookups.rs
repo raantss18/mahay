@@ -3,7 +3,7 @@
 //! ([`Document::remove_many`], `wrap`, `insert_beside`) leave the tree that `remove`, `insert` and
 //! `move_node` leave one node at a time.
 use super::*;
-use vectorcraft_geom::shapes;
+use tsipika_geom::shapes;
 
 /// Layers with paths and groups nested `depth` deep; every 7th id is reused (a damaged file), so
 /// first-in-tree-order matters.

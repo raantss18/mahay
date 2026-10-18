@@ -9,9 +9,9 @@
 
 use std::collections::HashMap;
 
-use figcraft_color::{BlendMode, Color};
-use figcraft_doc::{Blur, Effect, EffectKind, Shadow};
-use figcraft_geom::{Affine, Vec2};
+use endrika_color::{BlendMode, Color};
+use endrika_doc::{Blur, Effect, EffectKind, Shadow};
+use endrika_geom::{Affine, Vec2};
 use usvg::filter::{ColorMatrixKind, CompositeOperator, Input, Kind, MorphologyOperator};
 
 use super::paint::color;

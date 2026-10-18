@@ -2,7 +2,7 @@
 //! is happening: opening a large `.fig` blocks the UI thread for a while, and the card is on screen
 //! before it does (rather than a window that freezes without a word).
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::Value;
 
 use crate::FigApp;

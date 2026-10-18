@@ -1,5 +1,5 @@
 use super::*;
-use figcraft_color::{ImageFilters, Paint, ProfileConversion};
+use endrika_color::{ImageFilters, Paint, ProfileConversion};
 use std::collections::BTreeMap;
 
 const RED: Color = Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 };

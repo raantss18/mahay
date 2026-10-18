@@ -7,7 +7,7 @@
 //! `drawing:<op>:<index>` and `cmdline:<op>`. Items for commands that aren't registered are
 //! left out.
 
-use cadcraft_engine::{Input, find_command};
+use drafitra_engine::{Input, find_command};
 use serde_json::{Value, json};
 
 use crate::CadApp;

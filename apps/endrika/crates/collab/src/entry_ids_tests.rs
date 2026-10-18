@@ -1,8 +1,8 @@
 //! Styles, variables, collections and comments created by several people at once: ids from each
 //! creator's space, checked by the server, so concurrent creations never overwrite each other.
 
-use figcraft_doc::ids::{STYLE_ID_PREFIX, id_space};
-use figcraft_doc::{Collection, Comment, Document, Message, Mode, Style, StyleKind, Variable, VariableType};
+use endrika_doc::ids::{STYLE_ID_PREFIX, id_space};
+use endrika_doc::{Collection, Comment, Document, Message, Mode, Style, StyleKind, Variable, VariableType};
 
 use crate::change::{Change, Entry, Json};
 use crate::message::{ClientMsg, ServerMsg};

@@ -1,13 +1,13 @@
 //! HDR editing: the HDR render ([`OutputDepth::F32Hdr`]) and the SDR rendition every other render uses.
 
-use lightcraft_develop::DevelopSettings;
-use lightcraft_raster::Rgb32f;
+use hazavana_develop::DevelopSettings;
+use hazavana_raster::Rgb32f;
 
 use crate::{DeepSamples, OutputDepth, RenderRequest, SourceInfo, render};
 
 fn sunset() -> Rgb32f {
-    let lib = lightcraft_scenes::demo_library();
-    let s = lib.iter().find(|s| s.kind == lightcraft_scenes::Kind::OceanSunset).map(|s| s.render(240, 160));
+    let lib = hazavana_scenes::demo_library();
+    let s = lib.iter().find(|s| s.kind == hazavana_scenes::Kind::OceanSunset).map(|s| s.render(240, 160));
     s.unwrap_or_else(|| lib[0].render(240, 160))
 }
 
@@ -155,11 +155,11 @@ fn hdr_histogram_shows_the_range_above_sdr_white_on_a_fixed_scale() {
     }
     let h = crate::hdr_histogram(&src, &raw(), &s, &req).expect("an HDR edit's histogram");
     let bins = h.hdr.expect("HDR bins");
-    assert_eq!(bins.stops, lightcraft_develop::Hdr::MAX_EV_LIMIT as f32, "the whole HDR range");
+    assert_eq!(bins.stops, hazavana_develop::Hdr::MAX_EV_LIMIT as f32, "the whole HDR range");
     assert!(h.above_sdr() > 0.0, "highlights above SDR white: {}", h.above_sdr());
     assert!(h.total > 0);
     // the scale doesn't follow the headroom limit (a damaged one included); the content does
-    let highest = |h: &lightcraft_raster::Histogram| h.luma.iter().rposition(|&n| n > 0).unwrap_or(0);
+    let highest = |h: &hazavana_raster::Histogram| h.luma.iter().rposition(|&n| n > 0).unwrap_or(0);
     let top3 = highest(&h);
     s.hdr.max_ev = 1.5;
     let h15 = crate::hdr_histogram(&src, &raw(), &s, &req).unwrap();

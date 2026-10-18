@@ -110,7 +110,7 @@ fn linetype(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Action {
             .filter(|l| !l.name.eq_ignore_ascii_case("ByLayer") && !l.name.eq_ignore_ascii_case("ByBlock"))
             .map(|l| (l.name.clone(), l.description.clone(), l.pattern.iter().map(|e| e.length).collect())),
     );
-    let library: Vec<String> = cadcraft_doc::library::standard_linetypes().into_iter().map(|l| l.name).filter(|n| d.linetype(n).is_none()).collect();
+    let library: Vec<String> = drafitra_doc::library::standard_linetypes().into_iter().map(|l| l.name).filter(|n| d.linetype(n).is_none()).collect();
     let mut sel = temp::<String>(ctx, "ltmgr_sel").filter(|s| rows.iter().any(|r| r.0.eq_ignore_ascii_case(s))).unwrap_or_else(|| current.clone());
     let mut action = None;
     egui::Window::new("Linetype Manager").open(open).default_size(vec2(520.0, 360.0)).resizable(true).show(ctx, |ui| {
@@ -324,7 +324,7 @@ fn text_style(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Action 
         })
         .collect();
     if styles.is_empty() {
-        let s = cadcraft_doc::TextStyle::default();
+        let s = drafitra_doc::TextStyle::default();
         styles.push(Style { name: s.name, fields: Vec::new() });
     }
     let current = d.header.str("TEXTSTYLE", "Standard");
@@ -350,7 +350,7 @@ fn table_style(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Action
         })
         .collect();
     if styles.is_empty() {
-        let s = cadcraft_doc::TableStyle::default();
+        let s = drafitra_doc::TableStyle::default();
         styles.push(Style { name: s.name, fields: Vec::new() });
     }
     let current = d.header.str("CTABLESTYLE", "Standard");
@@ -378,7 +378,7 @@ fn mleader_style(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Acti
         })
         .collect();
     if styles.is_empty() {
-        let s = cadcraft_doc::MLeaderStyle::default();
+        let s = drafitra_doc::MLeaderStyle::default();
         styles.push(Style { name: s.name, fields: Vec::new() });
     }
     let current = d.header.str("CMLEADERSTYLE", "Standard");
@@ -472,7 +472,7 @@ fn page_setup(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Action 
         no_drawing(ctx, "Page Setup Manager", open);
         return None;
     };
-    let mut layouts: Vec<(u32, String, cadcraft_doc::PageSetup)> = d.layouts.iter().map(|l| (l.tab_order, l.name.clone(), l.page.clone())).collect();
+    let mut layouts: Vec<(u32, String, drafitra_doc::PageSetup)> = d.layouts.iter().map(|l| (l.tab_order, l.name.clone(), l.page.clone())).collect();
     layouts.sort_by_key(|l| l.0);
     let shown = app.session.layout_space().layout().map(str::to_string);
     let mut sel = temp::<String>(ctx, "pagesetup_sel")
@@ -524,39 +524,39 @@ struct PageRows {
 
 /// The devices and plot style tables the page-setup rows offer.
 struct PageChoices {
-    devices: std::sync::Arc<Vec<cadcraft_doc::PlotterConfig>>,
+    devices: std::sync::Arc<Vec<drafitra_doc::PlotterConfig>>,
     styles: Vec<String>,
 }
 
 impl PageChoices {
-    fn new(ctx: &egui::Context, d: &cadcraft_doc::Drawing) -> Self {
-        PageChoices { devices: device_choices(ctx), styles: cadcraft_doc::plot_style_table_names(d) }
+    fn new(ctx: &egui::Context, d: &drafitra_doc::Drawing) -> Self {
+        PageChoices { devices: device_choices(ctx), styles: drafitra_doc::plot_style_table_names(d) }
     }
 }
 
 /// The plotter devices (built-in, then the user's files), read again at most every 2 s: the
 /// dialogs ask every frame and user devices are files.
-fn device_choices(ctx: &egui::Context) -> std::sync::Arc<Vec<cadcraft_doc::PlotterConfig>> {
-    type Cached = (f64, std::sync::Arc<Vec<cadcraft_doc::PlotterConfig>>);
+fn device_choices(ctx: &egui::Context) -> std::sync::Arc<Vec<drafitra_doc::PlotterConfig>> {
+    type Cached = (f64, std::sync::Arc<Vec<drafitra_doc::PlotterConfig>>);
     let now = crate::now_ms();
     if let Some((at, list)) = temp::<Cached>(ctx, "plot_devices")
         && now - at < 2000.0
     {
         return list;
     }
-    let list = std::sync::Arc::new(cadcraft_engine::cmd::plotters::devices());
+    let list = std::sync::Arc::new(drafitra_engine::cmd::plotters::devices());
     set_temp::<Cached>(ctx, "plot_devices", (now, list.clone()));
     list
 }
 
 /// A page setup's device, or `"None"` (plot to PDF on the page's paper).
-fn device_label(page: &cadcraft_doc::PageSetup) -> &str {
+fn device_label(page: &drafitra_doc::PageSetup) -> &str {
     if page.device.trim().is_empty() { "None" } else { page.device.as_str() }
 }
 
 /// A page setup's plot style table, or `"None"`.
-fn style_label(page: &cadcraft_doc::PageSetup) -> &str {
-    if cadcraft_doc::no_plot_style_table(&page.plot_style_table) { "None" } else { page.plot_style_table.as_str() }
+fn style_label(page: &drafitra_doc::PageSetup) -> &str {
+    if drafitra_doc::no_plot_style_table(&page.plot_style_table) { "None" } else { page.plot_style_table.as_str() }
 }
 
 fn area_label(a: &str) -> &str {
@@ -587,7 +587,7 @@ fn parse_ratio(t: &str) -> Option<f64> {
 fn page_rows(
     ui: &mut egui::Ui,
     salt: egui::Id,
-    page: &cadcraft_doc::PageSetup,
+    page: &drafitra_doc::PageSetup,
     rows: &PageRows,
     choices: &PageChoices,
     placement: Option<(&mut bool, &mut [f64; 2], bool)>,
@@ -622,7 +622,7 @@ fn page_rows(
             }
         }
         None => {
-            for p in cadcraft_render::PAPER_SIZES {
+            for p in drafitra_render::PAPER_SIZES {
                 if ui.selectable_label(p.name == page.paper, p.name).clicked() && p.name != page.paper {
                     change = Some(("paper", json!(p.name)));
                 }
@@ -676,7 +676,7 @@ fn page_rows(
             .on_hover_text("Distance from the printable area's lower-left corner; values range from −100000 to 100000 mm");
             ui.end_row();
         }
-        if supported && !*center && offset_mm.iter().any(|v| !v.is_finite() || v.abs() > cadcraft_render::paper::MAX_PLOT_OFFSET_MM) {
+        if supported && !*center && offset_mm.iter().any(|v| !v.is_finite() || v.abs() > drafitra_render::paper::MAX_PLOT_OFFSET_MM) {
             ui.label("");
             ui.colored_label(Tokens::get().warn, "Offsets must be within ±100000 mm");
             ui.end_row();
@@ -736,8 +736,8 @@ fn page_rows(
 /// Apply a [`page_rows`] change to a page setup held by a dialog.
 /// Device and paper changes follow PAGESETUP's rules (`plotters::page_device`): a device brings
 /// its papers, orientation and printable areas.
-fn apply_page_change(page: &mut cadcraft_doc::PageSetup, key: &str, v: &Value) {
-    use cadcraft_engine::cmd::plotters::page_device;
+fn apply_page_change(page: &mut drafitra_doc::PageSetup, key: &str, v: &Value) {
+    use drafitra_engine::cmd::plotters::page_device;
     match key {
         "device" => {
             let _ = page_device("plot", &json!({ "device": v }), page);
@@ -745,7 +745,7 @@ fn apply_page_change(page: &mut cadcraft_doc::PageSetup, key: &str, v: &Value) {
         "paper" => {
             // A device's paper, else a standard size (no device).
             if !page_device("plot", &json!({ "paper": v }), page).unwrap_or(false)
-                && let Some(ps) = v.as_str().and_then(cadcraft_render::paper_size)
+                && let Some(ps) = v.as_str().and_then(drafitra_render::paper_size)
             {
                 page.paper = ps.name.into();
                 page.width_mm = ps.width_mm;
@@ -808,7 +808,7 @@ struct PlotState {
     generation: u32,
     /// "Model" or a layout name.
     target: String,
-    page: cadcraft_doc::PageSetup,
+    page: drafitra_doc::PageSetup,
     /// Plot area "window" corners in drawing units: [x1, y1, x2, y2].
     window: [f64; 4],
     /// Model-space placement; stays outside PageSetup so layouts keep their existing behavior.
@@ -818,15 +818,15 @@ struct PlotState {
 
 /// The page setup a plot of `target` starts from: the layout's, or model-space defaults (fitted
 /// extents on A4 in metric drawings, ANSI A otherwise).
-fn plot_page(d: &cadcraft_doc::Drawing, target: &str) -> cadcraft_doc::PageSetup {
+fn plot_page(d: &drafitra_doc::Drawing, target: &str) -> drafitra_doc::PageSetup {
     if let Some(l) = d.layouts.iter().find(|l| l.name == target) {
         let mut page = l.page.clone();
         page.plot_area = "layout".into();
         return page;
     }
-    let mut page = cadcraft_doc::PageSetup { plot_area: "extents".into(), scale_to_fit: true, ..Default::default() };
-    if cadcraft_render::paper::paper_unit_mm(d) == 1.0
-        && let Some(a4) = cadcraft_render::paper_size("A4")
+    let mut page = drafitra_doc::PageSetup { plot_area: "extents".into(), scale_to_fit: true, ..Default::default() };
+    if drafitra_render::paper::paper_unit_mm(d) == 1.0
+        && let Some(a4) = drafitra_render::paper_size("A4")
     {
         page.paper = a4.name.into();
         page.width_mm = a4.width_mm;
@@ -848,7 +848,7 @@ fn plot_params(st: &PlotState, preview_dpi: Option<f64>) -> Value {
     });
     if let Some(o) = p.as_object_mut() {
         let device = device_label(page) != "None";
-        let output = cadcraft_engine::cmd::plotters::find_device(&page.device).map_or("pdf", |d| d.output.as_str());
+        let output = drafitra_engine::cmd::plotters::find_device(&page.device).map_or("pdf", |d| d.output.as_str());
         match preview_dpi {
             // The page's own sheet, so a device's paper and printable area show as they plot.
             Some(dpi) => {
@@ -863,7 +863,7 @@ fn plot_params(st: &PlotState, preview_dpi: Option<f64>) -> Value {
                 o.insert("device".into(), json!(page.device));
                 o.insert("paper".into(), json!(page.paper));
             }
-            None if cadcraft_render::paper_size(&page.paper).is_some() => {
+            None if drafitra_render::paper_size(&page.paper).is_some() => {
                 o.insert("device".into(), json!("None"));
                 o.insert("paper".into(), json!(page.paper));
             }
@@ -911,9 +911,9 @@ fn plot(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Action {
     let generation = PLOT_GEN.load(Ordering::Relaxed);
     let mut st = temp::<PlotState>(ctx, "plot_state").filter(|s| s.generation == generation && targets.contains(&s.target)).unwrap_or_else(|| {
         let target = app.session.layout_space().tab_name().to_string();
-        let mut ext = d.extents(&cadcraft_doc::Space::Model);
+        let mut ext = d.extents(&drafitra_doc::Space::Model);
         if ext.is_empty() {
-            ext = cadcraft_geom::Bounds2::new(cadcraft_geom::Vec2::ZERO, cadcraft_geom::Vec2::new(12.0, 9.0));
+            ext = drafitra_geom::Bounds2::new(drafitra_geom::Vec2::ZERO, drafitra_geom::Vec2::new(12.0, 9.0));
         }
         PlotState {
             generation,
@@ -1056,7 +1056,7 @@ fn plot(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -> Action {
 }
 
 /// The sheet in the chosen orientation with its printable area, and its size.
-fn sheet_sketch(ui: &mut egui::Ui, page: &cadcraft_doc::PageSetup, t: &Tokens) {
+fn sheet_sketch(ui: &mut egui::Ui, page: &drafitra_doc::PageSetup, t: &Tokens) {
     let (w, h) = if page.landscape { (page.height_mm, page.width_mm) } else { (page.width_mm, page.height_mm) };
     ui.vertical(|ui| {
         let (rect, _) = ui.allocate_exact_size(vec2(120.0, 120.0), Sense::hover());
@@ -1082,7 +1082,7 @@ fn constraint_settings(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -
         return None;
     };
     let s = d.parametric.settings.clone();
-    let types = cadcraft_doc::ParametricSettings::default().auto_types;
+    let types = drafitra_doc::ParametricSettings::default().auto_types;
     let mut action = None;
     let set = |k: &str, v: Value| Some(("constraintsettings", json!({ k: v })));
     egui::Window::new("Constraint Settings").open(open).collapsible(false).resizable(false).show(ctx, |ui| {
@@ -1142,10 +1142,10 @@ fn constraint_settings(app: &mut CadApp, ctx: &egui::Context, open: &mut bool) -
 #[cfg(test)]
 mod plot_dialog_tests {
     use super::*;
-    use cadcraft_engine::Session;
+    use drafitra_engine::Session;
 
     fn state(target: &str) -> PlotState {
-        let d = cadcraft_doc::Drawing::new_metric();
+        let d = drafitra_doc::Drawing::new_metric();
         PlotState {
             generation: 0,
             page: plot_page(&d, target),
@@ -1159,14 +1159,14 @@ mod plot_dialog_tests {
     #[test]
     fn a_device_brings_its_papers_and_the_plot_names_them() {
         let mut st = state("Model");
-        apply_page_change(&mut st.page, "device", &json!("CADCraft PNG"));
-        assert_eq!(st.page.device, "CADCraft PNG");
-        let dev = cadcraft_engine::cmd::plotters::find_device("CADCraft PNG").unwrap();
+        apply_page_change(&mut st.page, "device", &json!("Drafitra PNG"));
+        assert_eq!(st.page.device, "Drafitra PNG");
+        let dev = drafitra_engine::cmd::plotters::find_device("Drafitra PNG").unwrap();
         assert!(dev.papers.iter().any(|p| p.name == st.page.paper), "a paper of the device: {}", st.page.paper);
         assert!(st.page.margins_mm.iter().any(|m| *m > 0.0), "the paper's printable area");
         apply_page_change(&mut st.page, "plotStyleTable", &json!("monochrome.ctb"));
         let p = plot_params(&st, None);
-        assert_eq!((p["device"].as_str(), p["paper"].as_str()), (Some("CADCraft PNG"), Some(st.page.paper.as_str())));
+        assert_eq!((p["device"].as_str(), p["paper"].as_str()), (Some("Drafitra PNG"), Some(st.page.paper.as_str())));
         assert_eq!(p["plotStyleTable"], json!("monochrome.ctb"));
         // The preview plots the same sheet to PNG, whatever the device.
         let q = plot_params(&st, Some(150.0));
@@ -1177,7 +1177,7 @@ mod plot_dialog_tests {
         apply_page_change(&mut st.page, "device", &json!("None"));
         apply_page_change(&mut st.page, "paper", &json!("A3"));
         let p = plot_params(&st, None);
-        let a3 = cadcraft_render::paper_size("A3").unwrap().name;
+        let a3 = drafitra_render::paper_size("A3").unwrap().name;
         assert_eq!((p["device"].as_str(), p["paper"].as_str()), (Some("None"), Some(a3)));
         apply_page_change(&mut st.page, "plotStyleTable", &json!("None"));
         assert!(plot_params(&st, None).get("plotStyleTable").is_none());
@@ -1215,7 +1215,7 @@ mod plot_dialog_tests {
         assert_eq!(preview["output"], json!("png"));
         assert_eq!(preview["offset"], json!([12.5, -7.0]));
 
-        let svg = cadcraft_engine::cmd::plotters::devices().into_iter().find(|dev| dev.output.as_str() == "svg").expect("built-in SVG device");
+        let svg = drafitra_engine::cmd::plotters::devices().into_iter().find(|dev| dev.output.as_str() == "svg").expect("built-in SVG device");
         apply_page_change(&mut st.page, "device", &json!(svg.name));
         let params = plot_params(&st, None);
         assert!(params.get("center").is_none() && params.get("offset").is_none(), "SVG does not receive unsupported placement options: {params}");
@@ -1226,7 +1226,7 @@ mod plot_dialog_tests {
         );
 
         st.target = "Layout1".into();
-        st.page = plot_page(&cadcraft_doc::Drawing::new_metric(), "Layout1");
+        st.page = plot_page(&drafitra_doc::Drawing::new_metric(), "Layout1");
         let params = plot_params(&st, None);
         assert!(params.get("center").is_none() && params.get("offset").is_none(), "layout plots retain their page setup mapping");
     }
@@ -1250,7 +1250,7 @@ mod plot_dialog_tests {
         app.ui.dialog = None;
         set_temp(&ctx, PICKING_WINDOW, true);
         app.start("plotwindow");
-        app.session.input(cadcraft_engine::Input::Cancel).ok();
+        app.session.input(drafitra_engine::Input::Cancel).ok();
         plot_window_resume(&mut app, &ctx);
         assert_eq!(app.ui.dialog.as_deref(), Some("plot"));
         assert_eq!(temp::<PlotState>(&ctx, "plot_state").unwrap().window, [2.0, 3.0, 12.0, 9.0]);

@@ -1,10 +1,10 @@
 //! The bottom bar: view modes, sort, rating/flags pill, copy/paste settings, zoom and view toggles.
 
 use egui::{Align2, Rect, Sense, pos2, vec2};
-use lightcraft_catalog::Flag;
+use hazavana_catalog::Flag;
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::icons::{Icon, paint};
 use crate::state::{ViewMode, Zoom};
 use crate::theme::Tokens;
@@ -19,7 +19,7 @@ const VIEW_MODES: &[(&str, Icon, ViewMode, &str)] = &[
     ("people", Icon::Subject, ViewMode::People, "People"),
 ];
 
-pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::bottom("bottom_bar")
         .exact_size(t.bottom_bar_h)
@@ -84,7 +84,7 @@ const PILL_W: f32 = 208.0;
 
 /// The rating/flag pill and copy/paste settings, between `from` and `to` (the side groups): the
 /// copy buttons go first when there is no room (they are in the Edit menu too), then the pill.
-fn centre(app: &mut LightcraftApp, ui: &mut egui::Ui, full: Rect, from: f32, to: f32) {
+fn centre(app: &mut HazavanaApp, ui: &mut egui::Ui, full: Rect, from: f32, to: f32) {
     let t = Tokens::get(ui.ctx());
     let has_clip = app.session.clipboard.is_some();
     let label = crate::i18n::tr(if has_clip { "Paste Edit Settings" } else { "Copy Edit Settings" });
@@ -166,7 +166,7 @@ fn centre(app: &mut LightcraftApp, ui: &mut egui::Ui, full: Rect, from: f32, to:
 }
 
 /// The right-hand group (zoom, view toggles or thumbnail size); returns its left edge.
-fn right_side(app: &mut LightcraftApp, ui: &mut egui::Ui, full: Rect, compact_zoom: bool) -> f32 {
+fn right_side(app: &mut HazavanaApp, ui: &mut egui::Ui, full: Rect, compact_zoom: bool) -> f32 {
     let t = Tokens::get(ui.ctx());
     let mut child = ui.new_child(
         egui::UiBuilder::new()
@@ -258,7 +258,7 @@ fn right_side(app: &mut LightcraftApp, ui: &mut egui::Ui, full: Rect, compact_zo
     if child.min_rect().width() > 0.0 { child.min_rect().left() } else { full.right() }
 }
 
-fn click_zoom_menu(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+fn click_zoom_menu(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     for pct in crate::state::CLICK_ZOOMS {
         if ui.selectable_label(app.ui.click_zoom == pct, format!("{}:1", pct / 100)).clicked() {
             let _ = app.run("view.clickZoom", json!({"ratio": pct / 100}));
@@ -266,9 +266,9 @@ fn click_zoom_menu(app: &mut LightcraftApp, ui: &mut egui::Ui) {
     }
 }
 
-fn sort_menu(app: &mut LightcraftApp, ui: &mut egui::Ui) {
-    use lightcraft_catalog::GroupBy;
-    use lightcraft_catalog::SortKey::*;
+fn sort_menu(app: &mut HazavanaApp, ui: &mut egui::Ui) {
+    use hazavana_catalog::GroupBy;
+    use hazavana_catalog::SortKey::*;
     let cur = app.session.sort;
     ui.label(egui::RichText::new(crate::i18n::tr("Sort by")).weak());
     for (label, key, k) in [
@@ -332,7 +332,7 @@ mod visual_regressions {
 
     #[test]
     fn capture_bottom_bar_visual_fixtures() {
-        let Some(directory) = std::env::var_os("CRAFT_UI_VISUAL_FIXTURES").map(std::path::PathBuf::from) else { return };
+        let Some(directory) = std::env::var_os("MAHAY_UI_VISUAL_FIXTURES").map(std::path::PathBuf::from) else { return };
         std::fs::create_dir_all(&directory).unwrap();
         for width in [280.0, 400.0, 600.0, 1000.0] {
             for view in [
@@ -345,12 +345,12 @@ mod visual_regressions {
                 ViewMode::People,
             ] {
                 for scale in [1.0, 1.5, 2.0] {
-                    let mut app = LightcraftApp::new(lightcraft_engine::Session::new(), Default::default());
+                    let mut app = HazavanaApp::new(hazavana_engine::Session::new(), Default::default());
                     app.ui.view = view;
                     let mut ready = false;
                     let mut harness =
                         egui_kittest::Harness::builder().with_size(vec2(width, 100.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
-                            move |ui, app: &mut LightcraftApp| {
+                            move |ui, app: &mut HazavanaApp| {
                                 if !ready {
                                     crate::theme::install_fonts(ui.ctx());
                                     crate::theme::apply(ui.ctx());
@@ -364,7 +364,7 @@ mod visual_regressions {
                         );
                     harness.input_mut().max_texture_side = Some(8192);
                     harness.run_steps(4);
-                    let stem = format!("lightcraft-bottom-{view:?}-{width}-{scale}x");
+                    let stem = format!("hazavana-bottom-{view:?}-{width}-{scale}x");
                     harness.render().unwrap().save(directory.join(format!("{stem}.png"))).unwrap();
                     let panel = egui::containers::panel::PanelState::load(&harness.ctx, egui::Id::new("bottom_bar")).unwrap().outer_rect;
                     let controls: serde_json::Map<String, serde_json::Value> = crate::widgets::take_registry(&harness.ctx)
@@ -402,7 +402,7 @@ mod visual_regressions {
                     let ctx = egui::Context::default();
                     crate::theme::install_fonts(&ctx);
                     crate::theme::apply(&ctx);
-                    let mut app = LightcraftApp::new(lightcraft_engine::Session::new(), Default::default());
+                    let mut app = HazavanaApp::new(hazavana_engine::Session::new(), Default::default());
                     app.ui.view = view;
                     let mut output = ctx.run_ui(scaled_input(vec2(width, 100.0), scale), |ui| show(&mut app, ui));
                     output.textures_delta.clear();
@@ -425,10 +425,10 @@ mod visual_regressions {
         use egui_kittest::kittest::Queryable;
 
         for scale in [1.0, 1.5, 2.0] {
-            let app = LightcraftApp::new(lightcraft_engine::Session::new(), Default::default());
+            let app = HazavanaApp::new(hazavana_engine::Session::new(), Default::default());
             let mut ready = false;
             let mut harness = egui_kittest::Harness::builder().with_size(vec2(280.0, 640.0)).with_pixels_per_point(scale).build_ui_state(
-                move |ui, app: &mut LightcraftApp| {
+                move |ui, app: &mut HazavanaApp| {
                     if !ready {
                         crate::theme::install_fonts(ui.ctx());
                         crate::theme::apply(ui.ctx());
@@ -483,7 +483,7 @@ mod tests {
     fn rating_and_flag_buttons_keep_padding_inside_the_pill() {
         for scale in [1.0, 2.0] {
             for room in [240.0, 500.0] {
-                let mut app = LightcraftApp::new(lightcraft_engine::Session::new(), Services::default());
+                let mut app = HazavanaApp::new(hazavana_engine::Session::new(), Services::default());
                 let mut view = HeadlessView::new();
                 for frame in 0..3 {
                     let raw = HeadlessView::raw_input(vec2(700.0, 40.0), scale, frame as f64 / 60.0, vec![]);

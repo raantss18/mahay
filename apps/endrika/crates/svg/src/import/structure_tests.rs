@@ -1,8 +1,8 @@
 //! The layer tree an import makes: wrappers merged, names kept, masks and effects in the right
 //! order, files on disk never read.
 
-use figcraft_color::BlendMode;
-use figcraft_doc::{Document, MaskType, Node, NodeId, StrokeAlign};
+use endrika_color::BlendMode;
+use endrika_doc::{Document, MaskType, Node, NodeId, StrokeAlign};
 
 use super::import_svg_with_notes;
 
@@ -131,7 +131,7 @@ fn strokes_scale_with_their_layer() {
 
 #[test]
 fn linked_files_are_never_read() {
-    let dir = std::env::temp_dir().join("figcraft-svg-linked");
+    let dir = std::env::temp_dir().join("endrika-svg-linked");
     std::fs::create_dir_all(&dir).unwrap();
     let png = dir.join("secret.png");
     std::fs::write(&png, base64::Engine::decode(&base64::engine::general_purpose::STANDARD, PNG).unwrap()).unwrap();
@@ -156,7 +156,7 @@ fn an_svg_image_is_imported_as_layers() {
 
 #[test]
 fn text_layers_are_named_by_their_text_or_id() {
-    if figcraft_text::fontdb::find_face("Inter", "Regular").is_none() {
+    if endrika_text::fontdb::find_face("Inter", "Regular").is_none() {
         return;
     }
     let (d, f) = import(r##"<text x="10" y="20">Hello there</text><text id="Caption_x20_1" x="10" y="60">Small</text>"##);
@@ -165,7 +165,7 @@ fn text_layers_are_named_by_their_text_or_id() {
     let (d, f) = import(r##"<text x="10" y="20">Ab<tspan y="40">C</tspan>d</text>"##);
     assert_eq!(tree(&d, f), [t(0, "TEXT", "Ab"), t(0, "TEXT", "Cd")]);
     let x = |name: &str| d.world_transform(d.subtree(f).into_iter().find(|i| d.node(*i).is_some_and(|n| n.name == name)).unwrap()).translation().x;
-    let advance = figcraft_text::layout(node(&d, f, "Ab").kind.text().unwrap(), None, None).width;
+    let advance = endrika_text::layout(node(&d, f, "Ab").kind.text().unwrap(), None, None).width;
     assert!((x("Cd") - (10.0 + advance)).abs() < 1e-6, "{} vs {}", x("Cd"), 10.0 + advance);
     // A scaled text keeps its look in the font size.
     let (d, f) = import(r##"<text transform="scale(2)" x="10" y="20" font-size="10">Big</text>"##);

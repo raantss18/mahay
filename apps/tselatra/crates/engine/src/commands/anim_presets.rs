@@ -1,4 +1,4 @@
-//! EffectCraft's own animation preset library (Effects & Presets ▸ * Animation Presets): the
+//! Tselatra's own animation preset library (Effects & Presets ▸ * Animation Presets): the
 //! Transitions category (original presets built on our Transition effects and layer opacity) and
 //! the Backgrounds category (generators, noise and colour effects driven by expressions).
 //!
@@ -10,10 +10,10 @@
 //! from the current time), `expr` (an expression text per property) and `ease`. Values of
 //! point parameters are fractions of the layer size, like the effects' own defaults.
 
-use effectcraft_keyframe::Keyframe;
-use effectcraft_project::build::Ids;
-use effectcraft_project::{Expression, Node, ParamUi, Property, Value as KV};
-use effectcraft_time::Tick;
+use tselatra_keyframe::Keyframe;
+use tselatra_project::build::Ids;
+use tselatra_project::{Expression, Node, ParamUi, Property, Value as KV};
+use tselatra_time::Tick;
 use serde_json::{Map, Value, json};
 
 use super::text_anim::json_value;
@@ -93,7 +93,7 @@ fn set_prop(pr: &mut Property, v: Option<&Value>, keys: Option<&Value>, at: Tick
 
 /// Apply `set` / `keys` maps to the properties under `root`; returns the paths that don't exist
 /// or don't take the given values.
-fn apply_maps(root: &mut effectcraft_project::PropGroup, spec: &Value, at: Tick, size: [f64; 2]) -> Vec<String> {
+fn apply_maps(root: &mut tselatra_project::PropGroup, spec: &Value, at: Tick, size: [f64; 2]) -> Vec<String> {
     let ease = spec.get("ease").and_then(Value::as_bool).unwrap_or(false);
     let empty = Map::new();
     let set = spec.get("set").and_then(Value::as_object).unwrap_or(&empty);
@@ -126,14 +126,14 @@ fn apply(s: &mut Session, p: &Value) -> Result<Value> {
     let want = str_p(p, "preset").ok_or_else(|| bad(C, "`preset` id or name required"))?;
     let preset = find_preset(want).ok_or_else(|| bad(C, format!("no animation preset `{want}`")))?;
     let name = text(&preset, "name").unwrap_or("Preset").to_string();
-    let effects: Vec<(&'static effectcraft_effects::EffectSpec, Value)> = preset
+    let effects: Vec<(&'static tselatra_effects::EffectSpec, Value)> = preset
         .get("effects")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
         .map(|e| {
             let id = text(e, "effect").unwrap_or_default();
-            effectcraft_effects::lookup(id).map(|spec| (spec, e.clone())).ok_or_else(|| bad(C, format!("preset `{name}` uses unknown effect `{id}`")))
+            tselatra_effects::lookup(id).map(|spec| (spec, e.clone())).ok_or_else(|| bad(C, format!("preset `{name}` uses unknown effect `{id}`")))
         })
         .collect::<Result<_>>()?;
     let layer_spec = preset.get("layer").cloned();
@@ -143,7 +143,7 @@ fn apply(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let sizes: Vec<_> = {
         let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
-        ids.iter().filter_map(|id| comp.layer(*id)).map(|l| (l.id, effectcraft_render::effect_bounds(&s.project, comp, l).0)).collect()
+        ids.iter().filter_map(|id| comp.layer(*id)).map(|l| (l.id, tselatra_render::effect_bounds(&s.project, comp, l).0)).collect()
     };
     let now = s.time();
     let (added, skipped) = s.edit(&format!("Apply Animation Preset {name}"), None, |proj, _| {
@@ -158,7 +158,7 @@ fn apply(s: &mut Session, p: &Value) -> Result<Value> {
                 for (spec, ej) in &effects {
                     let same = fx.groups().filter(|g| g.match_id == spec.id).count();
                     let inst = if same == 0 { spec.name.to_string() } else { format!("{} {}", spec.name, same.saturating_add(1)) };
-                    let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), &inst, *size);
+                    let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), &inst, *size);
                     skipped.extend(apply_maps(&mut g, ej, at, *size).into_iter().map(|path| format!("{}/{path}", spec.id)));
                     added.push(g.uid);
                     fx.children.push(Node::Group(g));

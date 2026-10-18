@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cancel;
+use tsipika_engine::cancel;
 
 use crate::{Backend, Server};
 
@@ -314,7 +314,7 @@ impl Backend for Gated {
 
 #[test]
 fn a_cancelled_export_through_the_real_engine_writes_nothing_and_leaves_the_session_usable() {
-    let path = vectorcraft_testkit::temp_dir("mcp-cancel").join("out.pdf");
+    let path = tsipika_testkit::temp_dir("mcp-cancel").join("out.pdf");
     std::fs::remove_file(&path).ok();
     let (read, mut to_server) = std::io::pipe().unwrap();
     let (tx, replies) = mpsc::channel();

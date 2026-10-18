@@ -2,20 +2,20 @@
 
 use std::time::Duration;
 
-use lightcraft_develop::MaskShape;
+use hazavana_develop::MaskShape;
 use serde_json::json;
 
 use crate::headless::Headless;
 use crate::state::RightPanel;
-use crate::{LightcraftApp, Services};
-use lightcraft_catalog::Rule;
+use crate::{HazavanaApp, Services};
+use hazavana_catalog::Rule;
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn detail(panel: &str) -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail"}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -35,7 +35,7 @@ fn pointer(h: &mut Headless, events: serde_json::Value) {
     assert_eq!(r["ok"], true, "{r}");
 }
 
-fn develop(h: &Headless) -> lightcraft_develop::DevelopSettings {
+fn develop(h: &Headless) -> hazavana_develop::DevelopSettings {
     let id = h.app.session.active().expect("active photo");
     (*h.app.session.develop_of(id).unwrap_or_default()).clone()
 }
@@ -51,11 +51,11 @@ fn brush_at(h: &mut Headless, x: f64, y: f64) {
 
 /// Evaluate the real composite, with a deterministic embedded sky matte (no AI model required).
 fn mask_coverage(h: &Headless, mask: usize, x: usize, y: usize) -> f32 {
-    use lightcraft_pipeline::{
+    use hazavana_pipeline::{
         geometry::Frame,
         masks::{MatteKind, Mattes, evaluate_one},
     };
-    use lightcraft_raster::{Image, Plane, Rgb32f};
+    use hazavana_raster::{Image, Plane, Rgb32f};
     let d = develop(h);
     let mut sky = Image::<u8>::new(100, 100);
     sky.data.fill(255);
@@ -135,7 +135,7 @@ fn new_brush_starts_a_separate_mask_in_paint_mode() {
 
 #[test]
 fn mask_adjustments_hide_overlay_without_disabling_the_mask() {
-    use lightcraft_pipeline::Overlay;
+    use hazavana_pipeline::Overlay;
     let mut h = detail("panel.masking");
     exec(&mut h, "mask.add", json!({"kind": "linear", "start": [0.5, 0.2], "end": [0.5, 0.7]}));
     assert!(h.app.ui.mask_overlay);
@@ -266,7 +266,7 @@ fn radial_body_drag_keeps_resize_and_rotation_handles() {
 
 #[test]
 fn mask_overlay_keys_and_pins() {
-    use lightcraft_pipeline::{MaskView, Overlay};
+    use hazavana_pipeline::{MaskView, Overlay};
     let mut h = detail("panel.masking");
     assert_eq!(h.app.ui.right, RightPanel::Masking);
     exec(&mut h, "mask.add", json!({"kind": "radial", "center": [0.3, 0.4], "rx": 0.1, "ry": 0.1}));
@@ -607,7 +607,7 @@ fn smart_album_rule_editor_creates_and_edits() {
     let r = h.request("ui.dialog.confirm", json!({}), T);
     assert_eq!(r["ok"], true, "{r}");
     let a = h.app.session.catalog.albums().find(|a| a.name == "Keepers").expect("album").clone();
-    let n = h.app.session.catalog.photos().filter(|p| !p.deleted && p.rating >= 3 && p.flag != lightcraft_catalog::Flag::Reject).count();
+    let n = h.app.session.catalog.photos().filter(|p| !p.deleted && p.rating >= 3 && p.flag != hazavana_catalog::Flag::Reject).count();
     assert_eq!(h.app.session.catalog.album_count(a.id), n);
     // edit: back to one rule
     exec(&mut h, "dialog.smartAlbum", json!({"id": a.id.0}));
@@ -631,7 +631,7 @@ fn smart_album_field_menu_groups_fields_in_submenus() {
     assert_eq!(r["ok"], true, "{r}");
     h.settle(SETTLE);
     assert!(has(&h, "ruleFieldItem:rating:rules-0"), "top-level fields are in the menu itself");
-    for (group, _) in lightcraft_catalog::rules::FIELD_GROUPS {
+    for (group, _) in hazavana_catalog::rules::FIELD_GROUPS {
         assert!(has(&h, &format!("ruleFieldGroup:{group}:rules-0")), "no {group} submenu");
     }
     assert!(!has(&h, "ruleFieldItem:filePath:rules-0"), "grouped fields wait in their submenu");
@@ -768,7 +768,7 @@ fn smart_album_edit_with_bad_rules_keeps_the_name() {
     assert_eq!(r["ok"], true, "{r}");
     h.settle(SETTLE);
     let _ = h.request("ui.dialog.confirm", json!({}), T);
-    let album = h.app.session.catalog.album(lightcraft_catalog::AlbumId(id)).expect("album");
+    let album = h.app.session.catalog.album(hazavana_catalog::AlbumId(id)).expect("album");
     assert_eq!(album.name, "Keep", "neither OK nor confirm renamed it");
     // fixed: OK renames it and sets the rules in one undo step
     let Some(crate::state::Dialog::SmartRules { rules, .. }) = &mut h.app.ui.dialog else { panic!("the editor stays open") };
@@ -778,10 +778,10 @@ fn smart_album_edit_with_bad_rules_keeps_the_name() {
     let r = h.request("ui.clickWidget", json!({"id": "button:dialogOk"}), T);
     assert_eq!(r["ok"], true, "{r}");
     h.settle(SETTLE);
-    let album = h.app.session.catalog.album(lightcraft_catalog::AlbumId(id)).expect("album");
+    let album = h.app.session.catalog.album(hazavana_catalog::AlbumId(id)).expect("album");
     assert_eq!((album.name.as_str(), h.app.session.undo.len()), ("Renamed", undo + 1));
     exec(&mut h, "edit.undo", json!({}));
-    let album = h.app.session.catalog.album(lightcraft_catalog::AlbumId(id)).expect("album");
+    let album = h.app.session.catalog.album(hazavana_catalog::AlbumId(id)).expect("album");
     assert_eq!(album.name, "Keep", "one undo takes back the name with the rules");
     assert!(album.smart.as_ref().is_some_and(|f| f.rule_set.is_none()));
 }
@@ -854,7 +854,7 @@ fn g_toggles_grids_and_shift_g_starts_guided_upright() {
     assert_eq!(h.app.ui.view, crate::state::ViewMode::PhotoGrid);
     key(&mut h, true);
     assert_eq!((h.app.ui.view, h.app.ui.right, h.app.ui.tool.as_str()), (crate::state::ViewMode::Detail, RightPanel::Crop, "guidedUpright"));
-    assert_eq!(develop(&h).geometry.upright, lightcraft_develop::Upright::Guided);
+    assert_eq!(develop(&h).geometry.upright, hazavana_develop::Upright::Guided);
     h.settle(SETTLE);
 }
 
@@ -1001,7 +1001,7 @@ fn local_folder_listed_twice_opens_and_closes_each_row() {
 #[test]
 fn geometry_slider_drag_marks_the_grid() {
     let mut h = detail("panel.crop");
-    let spec = lightcraft_develop::controls::find("geometry.vertical").unwrap();
+    let spec = hazavana_develop::controls::find("geometry.vertical").unwrap();
     let start = crate::widgets::SliderOut { value: None, drag_started: true, drag_stopped: false, reset: false };
     crate::panels::edit::apply_slider_out(&mut h.app, spec, start, |_, _| Ok(serde_json::Value::Null));
     assert_eq!(h.app.ui.dragging_control.as_deref(), Some("geometry.vertical"));
@@ -1027,24 +1027,24 @@ fn edit_in_external_editor_opens_the_copy() {
         })),
         ..Default::default()
     };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo().with_fs(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo().with_fs(), services);
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
-    h.app.ui.settings.external_editor = "PhotoCraft".into();
+    h.app.ui.settings.external_editor = "Sary".into();
     let r = h.request("engine.execute", json!({"command": "photo.editInExternal", "params": {"dir": dir.to_string_lossy()}}), T);
     assert_eq!(r["ok"], true, "{r}");
     let calls = opened.lock().unwrap().clone();
     assert_eq!(calls.len(), 1);
     assert!(calls[0].0.ends_with("-Edit.tif") && std::path::Path::new(&calls[0].0).exists(), "{calls:?}");
-    assert_eq!(calls[0].1, "PhotoCraft");
+    assert_eq!(calls[0].1, "Sary");
     let _ = std::fs::remove_dir_all(&dir);
     h.settle(SETTLE);
 }
 
-/// Edit in PhotoCraft: a PSD copy (what PhotoCraft saves back to), handed to "PhotoCraft" for
+/// Edit in Sary: a PSD copy (what Sary saves back to), handed to "Sary" for
 /// the host to find; when the host can't find it, no copy is made.
 #[test]
-fn edit_in_photocraft_opens_a_psd_copy() {
-    let dir = std::env::temp_dir().join(format!("lc-ui-pcraft-{}", std::process::id()));
+fn edit_in_sary_opens_a_psd_copy() {
+    let dir = std::env::temp_dir().join(format!("lc-ui-sary-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let opened: std::sync::Arc<std::sync::Mutex<Vec<(String, String)>>> = Default::default();
@@ -1057,39 +1057,39 @@ fn edit_in_photocraft_opens_a_psd_copy() {
             Ok(())
         })),
         check_editor: Some(Box::new(move |app: &str| {
-            if app == crate::state::PHOTOCRAFT && !i.load(std::sync::atomic::Ordering::SeqCst) {
-                Err("PhotoCraft isn't installed".into())
+            if app == crate::state::SARY && !i.load(std::sync::atomic::Ordering::SeqCst) {
+                Err("Sary isn't installed".into())
             } else {
                 Ok(())
             }
         })),
         ..Default::default()
     };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo().with_fs(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo().with_fs(), services);
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     let n = h.app.session.catalog.len();
-    let params = json!({"command": "photo.editInPhotoCraft", "params": {"dir": dir.to_string_lossy()}});
+    let params = json!({"command": "photo.editInSary", "params": {"dir": dir.to_string_lossy()}});
     let r = h.request("engine.execute", params.clone(), T);
     assert_eq!(r["ok"], false, "{r}");
-    assert_eq!((h.app.session.catalog.len(), opened.lock().unwrap().len()), (n, 0), "no copy without PhotoCraft");
+    assert_eq!((h.app.session.catalog.len(), opened.lock().unwrap().len()), (n, 0), "no copy without Sary");
     installed.store(true, std::sync::atomic::Ordering::SeqCst);
     let r = h.request("engine.execute", params, T);
     assert_eq!(r["ok"], true, "{r}");
     let calls = opened.lock().unwrap().clone();
     assert_eq!(calls.len(), 1);
     assert!(calls[0].0.ends_with("-Edit.psd") && std::path::Path::new(&calls[0].0).exists(), "{calls:?}");
-    assert_eq!(calls[0].1, "PhotoCraft");
-    let d = lightcraft_codecs::decode(&std::fs::read(&calls[0].0).unwrap(), Default::default()).unwrap();
+    assert_eq!(calls[0].1, "Sary");
+    let d = hazavana_codecs::decode(&std::fs::read(&calls[0].0).unwrap(), Default::default()).unwrap();
     assert_eq!(d.bit_depth, 16, "16-bit by default");
     // a portable copy: its path is what the host is given; the file follows the settings
-    h.app.ui.settings.photocraft_path = "/opt/pc/photocraft".into();
-    h.app.ui.settings.photocraft_file.format = crate::state::EditFormat::Tiff;
-    h.app.ui.settings.photocraft_file.bit_depth = 8;
-    let r = h.request("engine.execute", json!({"command": "photo.editInPhotoCraft", "params": {"dir": dir.to_string_lossy()}}), T);
+    h.app.ui.settings.sary_path = "/opt/pc/sary".into();
+    h.app.ui.settings.sary_file.format = crate::state::EditFormat::Tiff;
+    h.app.ui.settings.sary_file.bit_depth = 8;
+    let r = h.request("engine.execute", json!({"command": "photo.editInSary", "params": {"dir": dir.to_string_lossy()}}), T);
     assert_eq!(r["ok"], true, "{r}");
     let last = opened.lock().unwrap().last().cloned().unwrap();
-    assert!(last.0.ends_with(".tif") && last.1 == "/opt/pc/photocraft", "{last:?}");
-    assert!(crate::menus::ui_enabled(&h.app, "photo.editInPhotoCraft"));
+    assert!(last.0.ends_with(".tif") && last.1 == "/opt/pc/sary", "{last:?}");
+    assert!(crate::menus::ui_enabled(&h.app, "photo.editInSary"));
     let _ = std::fs::remove_dir_all(&dir);
     h.settle(SETTLE);
 }
@@ -1098,7 +1098,7 @@ fn edit_in_photocraft_opens_a_psd_copy() {
 /// configured editor, untouched and without a copy; demo photos and missing files say why.
 #[test]
 fn open_original_in_external_editor_hands_over_the_raw_itself() {
-    use lightcraft_catalog::{Op, Photo, Source};
+    use hazavana_catalog::{Op, Photo, Source};
     let dir = std::env::temp_dir().join(format!("lc-ui-orig-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
@@ -1113,7 +1113,7 @@ fn open_original_in_external_editor_hands_over_the_raw_itself() {
         check_editor: Some(Box::new(|_: &str| Ok(()))),
         ..Default::default()
     };
-    let mut session = lightcraft_engine::Session::with_demo().with_fs();
+    let mut session = hazavana_engine::Session::with_demo().with_fs();
     let demo = session.catalog.photos().map(|p| p.id).next().unwrap();
     let mut file = |name: &str, exists: bool| {
         let path = dir.join(name);
@@ -1128,7 +1128,7 @@ fn open_original_in_external_editor_hands_over_the_raw_itself() {
     let (a, a_path) = file("DSC_0001.NEF", true);
     let (b, b_path) = file("DSC_0002.NEF", true);
     let (gone, _) = file("DSC_0003.NEF", false);
-    let app = LightcraftApp::new(session, services);
+    let app = HazavanaApp::new(session, services);
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     h.app.ui.settings.external_editor = "DxO PhotoLab".into();
     let n = h.app.session.catalog.len();
@@ -1179,10 +1179,10 @@ fn open_original_in_external_editor_hands_over_the_raw_itself() {
 
 /// Issue #2135: a library record whose original is a program (an imported `.lrcat` names the
 /// paths) is never handed to the opener — the launcher is asked for nothing — and the user is
-/// told why. The path LightCraft does hand over is absolute, whatever the record's spelling.
+/// told why. The path Hazavana does hand over is absolute, whatever the record's spelling.
 #[test]
 fn open_original_refuses_anything_that_is_not_a_photo_file() {
-    use lightcraft_catalog::{Op, Photo, Source};
+    use hazavana_catalog::{Op, Photo, Source};
     let dir = std::env::temp_dir().join(format!("lc-ui-gate-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
@@ -1202,7 +1202,7 @@ fn open_original_refuses_anything_that_is_not_a_photo_file() {
         check_editor: Some(Box::new(|_: &str| Ok(()))),
         ..Default::default()
     };
-    let mut session = lightcraft_engine::Session::with_demo().with_fs();
+    let mut session = hazavana_engine::Session::with_demo().with_fs();
     let mut record = |name: &str| {
         let path = dir.join(name);
         std::fs::write(&path, b"MZ").unwrap();
@@ -1215,14 +1215,14 @@ fn open_original_refuses_anything_that_is_not_a_photo_file() {
     let programs = ["payload.exe", "start.lnk", "run.bat", "page.hta", "go.command", "noext"];
     let bad: Vec<_> = programs.iter().map(|n| record(n)).collect();
     let good = record("DSC_0001.NEF");
-    let app = LightcraftApp::new(session, services);
+    let app = HazavanaApp::new(session, services);
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     h.app.ui.settings.external_editor = "DxO PhotoLab".into();
 
     for (id, name) in bad.iter().zip(programs) {
         let r = h.request("engine.execute", json!({"command": "photo.openOriginalInExternal", "params": {"ids": [id.0]}}), T);
         assert_eq!(r["ok"], false, "{name} was opened: {r}");
-        assert!(r.to_string().contains("file types LightCraft reads"), "{name}: {r}");
+        assert!(r.to_string().contains("file types Hazavana reads"), "{name}: {r}");
         // the menu item is greyed out for such a record, so it is never offered either
         exec(&mut h, "library.select", json!({"ids": [id.0]}));
         assert!(!crate::menus::ui_enabled(&h.app, "photo.openOriginalInExternal"), "{name} is offered in the menu");
@@ -1258,12 +1258,12 @@ fn second_window_shows_the_active_photo() {
 }
 
 /// Frame time of the photo grid on a 100k-photo library (ignored:
-/// `cargo test --release -p lightcraft-ui-egui -- --ignored grid_frame_100k --nocapture`).
+/// `cargo test --release -p hazavana-ui-egui -- --ignored grid_frame_100k --nocapture`).
 #[test]
 #[ignore]
 fn grid_frame_100k() {
-    use lightcraft_catalog::{Op, Photo, PhotoId, Source};
-    let mut session = lightcraft_engine::Session::new();
+    use hazavana_catalog::{Op, Photo, PhotoId, Source};
+    let mut session = hazavana_engine::Session::new();
     let ops = (0..100_000u64)
         .map(|i| {
             let mut p = Photo::new(
@@ -1281,7 +1281,7 @@ fn grid_frame_100k() {
         })
         .collect();
     session.commit("Add", Op::Batch { ops }).unwrap();
-    let app = LightcraftApp::new(session, Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(session, Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1600.0, 1000.0], 1.0);
     h.app.ui.view = crate::state::ViewMode::PhotoGrid;
     h.app.ui.left_panel = true;
@@ -1397,7 +1397,7 @@ fn soft_proofing_flags_out_of_gamut_colours_and_makes_proof_copies() {
     let dir = std::env::temp_dir().join(format!("proof-profile-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let icc = dir.join("printer.icc");
-    std::fs::write(&icc, lightcraft_codecs::icc::write_named(lightcraft_codecs::NamedSpace::Srgb)).unwrap();
+    std::fs::write(&icc, hazavana_codecs::icc::write_named(hazavana_codecs::NamedSpace::Srgb)).unwrap();
     let st = exec(&mut h, "view.softProof", json!({"profile": icc.to_string_lossy(), "intent": "relative", "paperInk": true}));
     assert_eq!((st["intent"].as_str(), st["paperInk"].as_bool()), (Some("relative"), Some(true)), "{st}");
     assert!(st["profile"]["name"].as_str().is_some_and(|n| !n.is_empty()), "{st}");
@@ -1432,7 +1432,7 @@ fn soft_proofing_flags_out_of_gamut_colours_and_makes_proof_copies() {
 #[test]
 fn ai_masks_without_the_model_offer_the_download() {
     use crate::state::Dialog;
-    use lightcraft_engine::segment::Segmenter;
+    use hazavana_engine::segment::Segmenter;
     let mut h = detail("panel.masking");
     let dir = std::env::temp_dir().join(format!("lc-ui-no-sam3-{}", std::process::id()));
     h.app.session.segmenter.dir = Some(dir.clone());
@@ -1471,7 +1471,7 @@ fn ai_masks_without_the_model_offer_the_download() {
         assert_eq!(r["ok"], false, "{r}");
         let r = h.request("ui.dialog.confirm", json!({}), T);
         assert_eq!(r["ok"], false, "{r}");
-        assert!(r["error"].as_str().unwrap_or_default().contains("LIGHTCRAFT_SAM3_MIRRORS"), "{r}");
+        assert!(r["error"].as_str().unwrap_or_default().contains("HAZAVANA_SAM3_MIRRORS"), "{r}");
         assert!(matches!(h.app.ui.dialog, Some(Dialog::SamModel { .. })), "stays open");
     } else {
         // with a mirror: Download starts it in the background (here it fails: nothing listens)
@@ -1491,7 +1491,7 @@ fn ai_masks_without_the_model_offer_the_download() {
     assert_eq!(h.app.ui.describe, None);
     // a click command from an agent gets the not-installed error at once, and the app offers the model
     let e = h.app.run("mask.add", json!({"kind": "prompt", "text": "sky"})).unwrap_err();
-    assert!(e.starts_with(lightcraft_engine::segment::NOT_INSTALLED), "{e}");
+    assert!(e.starts_with(hazavana_engine::segment::NOT_INSTALLED), "{e}");
     assert!(develop(&h).masks.is_empty());
     assert!(t.elapsed() < SETTLE, "{:?}", t.elapsed());
 }
@@ -1570,7 +1570,7 @@ fn a_selected_develop_slider_accepts_wheel_nudges() {
 
     let result = h.request("ui.clickWidget", json!({"id": name, "fx": 0.5}), T);
     assert_eq!(result["ok"], true, "{result}");
-    let before = lightcraft_develop::controls::get(&develop(&h), "light.exposure").expect("exposure");
+    let before = hazavana_develop::controls::get(&develop(&h), "light.exposure").expect("exposure");
 
     // A wheel event over the selected control adjusts exposure instead of
     // scrolling the right sidebar (an unselected slider leaves scrolling alone).
@@ -1580,7 +1580,7 @@ fn a_selected_develop_slider_accepts_wheel_nudges() {
     for _ in 0..10 {
         h.step();
     }
-    let after = lightcraft_develop::controls::get(&develop(&h), "light.exposure").expect("exposure");
+    let after = hazavana_develop::controls::get(&develop(&h), "light.exposure").expect("exposure");
     assert!(after > before, "selected exposure did not increase: {before} -> {after}");
 }
 
@@ -1593,7 +1593,7 @@ fn sideways_scrolling_adjusts_the_slider_under_the_pointer() {
     let r = h.request("ui.set", json!({"right": "edit"}), T);
     assert_eq!(r["ok"], true, "{r}");
     h.settle(SETTLE);
-    let exposure = |h: &Headless| lightcraft_develop::controls::get(&develop(h), "light.exposure").expect("exposure");
+    let exposure = |h: &Headless| hazavana_develop::controls::get(&develop(h), "light.exposure").expect("exposure");
     let scroll = |h: &mut Headless, params: serde_json::Value| {
         // the pointer rests on the track, the slider is not clicked
         let r = h.request("ui.hoverWidget", json!({"id": "slider:light.exposure"}), T);

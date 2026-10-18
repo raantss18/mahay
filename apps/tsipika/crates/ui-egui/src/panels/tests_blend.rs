@@ -6,12 +6,12 @@
 
 use egui::{Event, Pos2, Rect, pos2, vec2};
 use serde_json::json;
-use vectorcraft_doc::live::{BlendOrientation, BlendSpacing};
-use vectorcraft_doc::{BlendSpec, NodeId, NodeKind};
-use vectorcraft_engine::Session;
+use tsipika_doc::live::{BlendOrientation, BlendSpacing};
+use tsipika_doc::{BlendSpec, NodeId, NodeKind};
+use tsipika_engine::Session;
 
 use super::blend::{ID, show};
-use crate::{VectorcraftApp, theme};
+use crate::{TsipikaApp, theme};
 
 /// Frames of the panel alone in a 300 × 600 window, with the accessibility tree on.
 struct Frames {
@@ -28,7 +28,7 @@ impl Frames {
         Self { ctx, time: 0.0 }
     }
 
-    fn run(&mut self, app: &mut VectorcraftApp, events: Vec<Event>) -> egui::FullOutput {
+    fn run(&mut self, app: &mut TsipikaApp, events: Vec<Event>) -> egui::FullOutput {
         self.time += 0.1;
         let screen = Rect::from_min_size(Pos2::ZERO, vec2(300.0, 600.0));
         let input = egui::RawInput { events, time: Some(self.time), screen_rect: Some(screen), ..Default::default() };
@@ -38,7 +38,7 @@ impl Frames {
     }
 
     /// The center of the text `label` the panel draws.
-    fn text(&mut self, app: &mut VectorcraftApp, label: &str) -> Pos2 {
+    fn text(&mut self, app: &mut TsipikaApp, label: &str) -> Pos2 {
         self.run(app, vec![]);
         let out = self.run(app, vec![]);
         let mut texts = vec![];
@@ -54,7 +54,7 @@ impl Frames {
     }
 
     /// The center of the button that screen readers name `label`.
-    fn button(&mut self, app: &mut VectorcraftApp, label: &str) -> Pos2 {
+    fn button(&mut self, app: &mut TsipikaApp, label: &str) -> Pos2 {
         self.run(app, vec![]);
         let out = self.run(app, vec![]);
         let nodes = &out.platform_output.accesskit_update.as_ref().expect("an accessibility tree").nodes;
@@ -65,7 +65,7 @@ impl Frames {
 
     /// Move to `at` and click there. egui finds what the pointer is over from the frame before, so
     /// the move gets a frame of its own, drawn with the selection as it is now.
-    fn click(&mut self, app: &mut VectorcraftApp, at: Pos2) {
+    fn click(&mut self, app: &mut TsipikaApp, at: Pos2) {
         let button = |pressed| Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: egui::Modifiers::NONE };
         self.run(app, vec![Event::PointerMoved(at)]);
         self.run(app, vec![button(true)]);
@@ -74,15 +74,15 @@ impl Frames {
     }
 
     /// Click the text `label` the panel draws.
-    fn click_text(&mut self, app: &mut VectorcraftApp, label: &str) {
+    fn click_text(&mut self, app: &mut TsipikaApp, label: &str) {
         let at = self.text(app, label);
         self.click(app, at);
     }
 }
 
 /// A document with two 20 pt squares 200 pt apart, both selected.
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
     app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 20, "height": 20})).unwrap();
     app.run("shape.rectangle", json!({"x": 200, "y": 0, "width": 20, "height": 20})).unwrap();
@@ -91,25 +91,25 @@ fn app() -> VectorcraftApp {
 }
 
 /// [`app`] with the squares blended at Smooth Color; the blend is selected.
-fn blended() -> (VectorcraftApp, NodeId) {
+fn blended() -> (TsipikaApp, NodeId) {
     let mut app = app();
     let id = app.run("object.blend.make", json!({"smooth": true})).unwrap()["id"].as_u64().unwrap();
     (app, NodeId(id))
 }
 
-fn spec(app: &VectorcraftApp, id: NodeId) -> BlendSpec {
+fn spec(app: &TsipikaApp, id: NodeId) -> BlendSpec {
     match &app.session.active().unwrap().doc.node(id).unwrap().kind {
         NodeKind::Blend { spec, .. } => (**spec).clone(),
         k => panic!("not a blend: {k:?}"),
     }
 }
 
-fn undo_depth(app: &VectorcraftApp) -> usize {
+fn undo_depth(app: &TsipikaApp) -> usize {
     app.session.active().unwrap().history.undo.len()
 }
 
 /// The top-level objects of the first layer.
-fn top(app: &VectorcraftApp) -> Vec<(NodeId, bool)> {
+fn top(app: &TsipikaApp) -> Vec<(NodeId, bool)> {
     let doc = &app.session.active().unwrap().doc;
     doc.layers[0].children().unwrap().iter().map(|n| (n.id, matches!(n.kind, NodeKind::Blend { .. }))).collect()
 }
@@ -197,7 +197,7 @@ fn spacing_and_orientation_edit_the_selected_blend() {
 fn each_button_runs_its_blend_command() {
     // Reverse Front to Back reverses the keys' stacking order.
     let (mut app, id) = blended();
-    let keys = |app: &VectorcraftApp| -> Vec<NodeId> {
+    let keys = |app: &TsipikaApp| -> Vec<NodeId> {
         app.session.active().unwrap().doc.node(id).unwrap().children().unwrap().iter().map(|k| k.id).collect()
     };
     let before = keys(&app);
@@ -205,7 +205,7 @@ fn each_button_runs_its_blend_command() {
     f.click_text(&mut app, "Reverse Front to Back");
     assert_eq!(keys(&app), before.iter().rev().copied().collect::<Vec<_>>());
     // Reverse Spine swaps the keys' places along the spine.
-    let x = |app: &VectorcraftApp, k: NodeId| app.session.active().unwrap().doc.node(k).unwrap().geometric_bounds().unwrap().x0;
+    let x = |app: &TsipikaApp, k: NodeId| app.session.active().unwrap().doc.node(k).unwrap().geometric_bounds().unwrap().x0;
     let (a, b) = (keys(&app)[0], keys(&app)[1]);
     let (xa, xb) = (x(&app, a), x(&app, b));
     f.click_text(&mut app, "Reverse Spine");

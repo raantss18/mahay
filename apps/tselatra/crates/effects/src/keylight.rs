@@ -21,10 +21,10 @@
 //! Views: Source, Source Alpha, Corrected Source, Colour Correction Edges, Screen Matte, Inside
 //! Mask, Outside Mask, Combined Matte, Status, Intermediate Result and Final Result.
 
-use effectcraft_color::luminance;
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, gaussian_blur};
+use tselatra_color::luminance;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, gaussian_blur};
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, morph_frac, point_in_poly, premul, unpremul};
@@ -171,7 +171,7 @@ fn balance(ctx: &EffectCtx, hue: &str, sat: &str) -> [f32; 3] {
     if s <= 0.0 {
         return [0.0; 3];
     }
-    let (r, g, b) = effectcraft_color::hsl_to_rgb((ctx.params.f(hue) / 360.0).rem_euclid(1.0) as f32, 1.0, 0.5);
+    let (r, g, b) = tselatra_color::hsl_to_rgb((ctx.params.f(hue) / 360.0).rem_euclid(1.0) as f32, 1.0, 0.5);
     let l = luminance(r, g, b);
     [(r - l) * s * 0.5, (g - l) * s * 0.5, (b - l) * s * 0.5]
 }
@@ -618,7 +618,7 @@ mod tests {
     /// Instances saved with the flat layout get their parameters moved into the twirl-downs.
     #[test]
     fn flat_instances_move_into_twirl_downs() {
-        use effectcraft_project::build::Ids;
+        use tselatra_project::build::Ids;
         let spec = crate::find("ec.keying.keylight").unwrap();
         let mut next = 1;
         let mut ids = Ids(&mut next);
@@ -628,7 +628,7 @@ mod tests {
         g.walk_mut(&mut |p| flat.push(p.clone()));
         g.children = flat.into_iter().map(Into::into).collect();
         let clip = g.children.iter_mut().find_map(|c| match c {
-            effectcraft_project::Node::Prop(p) if p.match_id == "clipWhite" => Some(p),
+            tselatra_project::Node::Prop(p) if p.match_id == "clipWhite" => Some(p),
             _ => None,
         });
         clip.unwrap().value = num(42.0);

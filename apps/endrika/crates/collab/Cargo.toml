@@ -1,15 +1,15 @@
 [package]
-name = "figcraft-collab"
+name = "endrika-collab"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "FigCraft real-time collaboration core: the synced object/property model, change sets, fractional positions, server ordering and validation, client reconciliation, per-user undo, offline queueing and reconnect, and the wire messages (no networking)"
+description = "Endrika real-time collaboration core: the synced object/property model, change sets, fractional positions, server ordering and validation, client reconciliation, per-user undo, offline queueing and reconnect, and the wire messages (no networking)"
 
 [lints]
 workspace = true
 
 [dependencies]
-figcraft-doc = { workspace = true }
+endrika-doc = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -18,5 +18,5 @@ base64 = { workspace = true }
 postcard = { workspace = true }
 
 [dev-dependencies]
-figcraft-color = { workspace = true }
-figcraft-geom = { workspace = true }
+endrika-color = { workspace = true }
+endrika-geom = { workspace = true }

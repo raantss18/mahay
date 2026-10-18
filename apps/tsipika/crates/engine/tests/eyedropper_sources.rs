@@ -2,9 +2,9 @@
 #![allow(clippy::unwrap_used)]
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::{Session, UiRequest, ViewInfo};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_doc::NodeId;
+use tsipika_engine::{Session, UiRequest, ViewInfo};
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 fn fixture() -> (Session, NodeId, NodeId, NodeId) {
     let mut s = Session::new();
@@ -124,6 +124,6 @@ fn a_gradient_stop_can_read_a_locked_source_and_return_to_the_gradient_tool() {
     assert_eq!(s.tool_options()["stop"], json!(null));
     assert_eq!(json!(s.doc().unwrap().doc.node(source).unwrap()), before);
     let paint = s.doc().unwrap().doc.node(target).unwrap().appearance.fill_paint();
-    let vectorcraft_color::Paint::Gradient(g) = paint else { panic!("gradient retained") };
+    let tsipika_color::Paint::Gradient(g) = paint else { panic!("gradient retained") };
     assert_eq!(g.gradient.stops[1].color.to_hex(), "#e23355");
 }

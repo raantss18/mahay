@@ -3,7 +3,7 @@
 //! the last saved state gives the same server (clients resume into it), entries already in the
 //! state change nothing, and a log with a gap is refused.
 
-use figcraft_doc::{Document, NodeKind};
+use endrika_doc::{Document, NodeKind};
 
 use crate::message::{self, Access, ClientMsg, Hello, ServerMsg};
 use crate::sim_tests::base;

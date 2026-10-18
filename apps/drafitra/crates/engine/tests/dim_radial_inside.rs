@@ -1,16 +1,16 @@
 //! DIMRADIUS / DIMDIAMETER: a dimension line location picked inside the circle puts the text
 //! there, on the dimension line; outside, the text stays beyond the arrowhead.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Dimension, EntityKind};
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::render::{DimGeometry, LineRole};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{Dimension, EntityKind};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::render::{DimGeometry, LineRole};
 use serde_json::json;
 
 fn last_dim(s: &Session) -> (Dimension, DimGeometry) {
     let d = s.doc().unwrap();
     match &d.model.last().unwrap().kind {
-        EntityKind::Dimension(dm) => (dm.clone(), cadcraft_engine::render::dimension_in(d, dm)),
+        EntityKind::Dimension(dm) => (dm.clone(), drafitra_engine::render::dimension_in(d, dm)),
         other => panic!("not a dimension: {other:?}"),
     }
 }

@@ -1,7 +1,7 @@
 //! Messages between clients and the session server, and their two encodings: a compact binary form
 //! (a version byte, then postcard) and a JSON form for debugging and agents.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
@@ -472,7 +472,7 @@ pub enum LibraryReq {
     /// The file's library, unless the server's version is `have`; `usage` reports how the asking
     /// file uses it.
     Fetch { have: Option<u64>, usage: Option<Usage> },
-    /// Keep `archive` (a `.figcraft` archive holding the published library) as the file's library.
+    /// Keep `archive` (a `.endrika` archive holding the published library) as the file's library.
     /// Needs an edit link; the library must be the one kept (same id) at a newer version.
     Publish { archive: Vec<u8> },
     /// The usage reports of the files that use the library.
@@ -487,7 +487,7 @@ pub enum LibraryReply {
     Ready {
         access: Access,
     },
-    /// The library (a `.figcraft` archive holding it) at `version`.
+    /// The library (a `.endrika` archive holding it) at `version`.
     Library {
         version: u64,
         archive: Vec<u8>,
@@ -555,7 +555,7 @@ pub enum PluginReq {
     List { query: String },
     /// A plugin's bundle: version `version`, or its latest.
     Fetch { id: String, version: Option<String> },
-    /// Keep a bundle (`figcraft_plugin::bundle`) as a new version of its plugin. Needs the key.
+    /// Keep a bundle (`endrika_plugin::bundle`) as a new version of its plugin. Needs the key.
     Publish { bundle: Vec<u8> },
     /// Remove version `version` of a plugin, or all of them. Needs the key.
     Unpublish { id: String, version: Option<String> },

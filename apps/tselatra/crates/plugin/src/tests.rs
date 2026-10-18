@@ -1,11 +1,11 @@
 //! WebAssembly plug-ins: load, register, render through the effect registry, sandbox limits.
 
-use effectcraft_effects::{Buf, EffectCtx, EffectEnv, Image};
-use effectcraft_project::build::Ids;
+use tselatra_effects::{Buf, EffectCtx, EffectEnv, Image};
+use tselatra_project::build::Ids;
 
 use crate::load_wasm;
 
-fn load_err(r: Result<&'static effectcraft_effects::EffectSpec, String>) -> String {
+fn load_err(r: Result<&'static tselatra_effects::EffectSpec, String>) -> String {
     match r {
         Err(e) => e,
         Ok(s) => panic!("unexpectedly loaded {}", s.id),
@@ -114,12 +114,12 @@ fn module_with(manifest: &str, render_body: &str) -> String {
     )
 }
 
-fn render(spec: &effectcraft_effects::EffectSpec, gain: f64, on: bool) -> Image {
+fn render(spec: &tselatra_effects::EffectSpec, gain: f64, on: bool) -> Image {
     let mut next = 1;
-    let g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [4.0, 2.0]);
-    let mut params = effectcraft_effects::flatten_params(&g, &mut |p| p.value.clone());
-    params.values.insert("gain".into(), effectcraft_keyframe::Value::Scalar(gain));
-    params.values.insert("on".into(), effectcraft_keyframe::Value::Bool(on));
+    let g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [4.0, 2.0]);
+    let mut params = tselatra_effects::flatten_params(&g, &mut |p| p.value.clone());
+    params.values.insert("gain".into(), tselatra_keyframe::Value::Scalar(gain));
+    params.values.insert("on".into(), tselatra_keyframe::Value::Bool(on));
     let ctx = EffectCtx { params: &params, time: 0.0, layer_size: [4.0, 2.0], seed: 1, adjustment: false, env: EffectEnv::default() };
     let buf = Buf { img: Image::filled(4, 2, [0.8, 0.6, 0.2, 1.0]), offset: [0.0; 2], scale: 1.0 };
     (spec.render)(&ctx, buf).img
@@ -132,10 +132,10 @@ fn wasm_plugin_registers_and_renders() {
     assert_eq!(spec.category, "Test Plug-ins");
     assert_eq!(spec.params.len(), 3);
     // Found like a built-in, listed under its own category.
-    assert!(effectcraft_effects::find("org.test.gain").is_some());
-    assert!(effectcraft_effects::lookup("Gain org.test.gain").is_some());
-    assert!(effectcraft_effects::all().iter().any(|e| e.id == "org.test.gain"));
-    assert!(effectcraft_effects::categories().contains(&"Test Plug-ins"));
+    assert!(tselatra_effects::find("org.test.gain").is_some());
+    assert!(tselatra_effects::lookup("Gain org.test.gain").is_some());
+    assert!(tselatra_effects::all().iter().any(|e| e.id == "org.test.gain"));
+    assert!(tselatra_effects::categories().contains(&"Test Plug-ins"));
     let img = render(spec, 0.5, false);
     assert_eq!(img.get(1, 1), [0.4, 0.3, 0.1, 1.0]);
     // The checkbox and colour parameters arrive flattened (tint blue = 1 → +1 on blue).
@@ -274,8 +274,8 @@ fn render_failures_leave_the_frame_and_recover() {
     // out of bounds: the frame passes through unchanged, and the plug-in keeps working.
     let trap = load_wasm(gain_module("org.test.trap", "local.get $t f64.const 0.5 f64.gt if unreachable end").as_bytes(), "trap.wat").unwrap();
     let mut next = 1;
-    let g = effectcraft_effects::instantiate(trap, &mut Ids(&mut next), trap.name, [4.0, 2.0]);
-    let params = effectcraft_effects::flatten_params(&g, &mut |p| p.value.clone());
+    let g = tselatra_effects::instantiate(trap, &mut Ids(&mut next), trap.name, [4.0, 2.0]);
+    let params = tselatra_effects::flatten_params(&g, &mut |p| p.value.clone());
     let at = |time: f64| {
         let ctx = EffectCtx { params: &params, time, layer_size: [4.0, 2.0], seed: 1, adjustment: false, env: EffectEnv::default() };
         let buf = Buf { img: Image::filled(4, 2, orig), offset: [0.0; 2], scale: 1.0 };

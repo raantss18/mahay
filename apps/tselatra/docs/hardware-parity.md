@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (closed issue references re-audited against `upstream/main` 470ea7a3) · **Target:** Adobe After Effects 2026
 
-Each piece of hardware After Effects uses, per platform, against EffectCraft. Ours comes from the
+Each piece of hardware After Effects uses, per platform, against Tselatra. Ours comes from the
 code at `origin/main` 1446e27 (`crates/gpu`, `crates/render`, `crates/ui-egui`) and the issue
 tracker; After Effects' from its documentation (Mercury GPU Acceleration, Multi-Frame Rendering,
 hardware-accelerated decode and encode, Mercury Transmit) and its bundle.
@@ -11,13 +11,13 @@ hardware-accelerated decode and encode, Mercury Transmit) and its bundle.
 in the browser too; hardware video decode and encode, video-out devices, tablets and multiple
 monitors are missing, and two GPU start-up failures are open.
 
-| Feature | After Effects 2026 | EffectCraft macOS | Windows | Linux | Web | Notes / evidence |
+| Feature | After Effects 2026 | Tselatra macOS | Windows | Linux | Web | Notes / evidence |
 |---|---|---|---|---|---|---|
 | GPU compositing and effects | Mercury GPU (Metal; CUDA / OpenCL / DirectX on Windows) | yes, Metal via wgpu | Vulkan yes; **Direct3D 12 fails** (FXC can't compile the `pointwise` kernel, #613) | Vulkan | WebGPU, in frame workers | 280 of 306 effects on the GPU, checked against the CPU renderer; Fractal and the analysis/tool effects stay on the CPU ([effects-parity.md](effects-parity.md)) |
 | CPU fallback and device-loss recovery | yes | yes | yes; Windows ARM64 Adreno panic after device loss (#591, closed) | yes | yes (#225 fixed) | Out of video memory falls back to the CPU (#106) |
 | GPU detection and choice | GPU info, renderer choice | Backend Auto per comp | "GPU isn't being detected" (#596, closed); Intel HD 5500 fix unverified (#198) | yes | yes | No settings page listing adapters yet |
 | Multi-core rendering | Multi-Frame Rendering | rayon pools; preview scheduler sized to the render pool | same | same | Web Workers, one engine per worker | No benchmark against Multi-Frame Rendering |
-| Hardware video decode | H.264 / HEVC / ProRes (Apple silicon) | none (software, FilmCraft) | none | none | none | FilmCraft has VideoToolbox, Media Foundation/DXVA and VA-API paths to borrow (gap 15) |
+| Hardware video decode | H.264 / HEVC / ProRes (Apple silicon) | none (software, Hetsika) | none | none | none | Hetsika has VideoToolbox, Media Foundation/DXVA and VA-API paths to borrow (gap 15) |
 | Hardware video encode | H.264 / HEVC via VideoToolbox, NVENC, Quick Sync (render queue and Media Encoder) | none | none | none | none | #498 asks for NVENC (answered: Nvidia's SDK needs FFI, which the no-`unsafe` rule forbids; open PR #819 adds hardware decoding); our software encoders are slower and lack B-frames |
 | Video output devices | Mercury Transmit to AJA, Blackmagic, second display | second preview window only (Video Preview) | same | same | — | No SDI/HDMI device output |
 | HDR display | HDR monitoring on EDR / HDR displays | tone-mapped SDR view; no EDR output | no HDR output | no | no | Colour engine handles HDR maths (Rec. 2100 PQ/HLG output files) |
@@ -31,7 +31,7 @@ monitors are missing, and two GPU start-up failures are open.
 ## Estimate
 
 **≈ 60–120 h**: Direct3D 12 and adapter start-up fixes 6–12 h; hardware decode on three platforms
-20–35 h and encode 15–30 h (borrowing FilmCraft's work); multiple monitors 10–20 h; tablet pressure
+20–35 h and encode 15–30 h (borrowing Hetsika's work); multiple monitors 10–20 h; tablet pressure
 4–8 h; HDR output 8–15 h. Needs Windows and Linux GPUs we don't have locally, and a human for
 the Adreno and Intel cases.
 

@@ -2,13 +2,13 @@
 use egui::{Color32, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
-use soundcraft_ui_egui::{Services, SoundApp, theme, widgets};
+use feo_ui_egui::{Services, SoundApp, theme, widgets};
 
 #[test]
 fn shared_panels_and_controls_follow_manual_and_live_system_appearance() {
     // Keep palette changes in one owning test: upstream custom painters use process-global tokens.
     for scale in [1.0, 2.0] {
-        let mut app = SoundApp::new(soundcraft_engine::demo::demo_engine(), None, Services::default());
+        let mut app = SoundApp::new(feo_engine::demo::demo_engine(), None, Services::default());
         app.run("edit.select", json!({"tracks":["Keys"]})).unwrap();
         for id in ["window.midi_editor", "window.memory_locations", "window.undo_history"] {
             app.run(id, json!({})).unwrap();
@@ -37,7 +37,7 @@ fn shared_panels_and_controls_follow_manual_and_live_system_appearance() {
                 assert_eq!(h.state().ui.theme, mode);
                 assert_eq!(*h.state().engine.session(), session);
                 h.state().ui.docking.validate().unwrap();
-                if let Some(directory) = std::env::var_os("CRAFT_UI_THEME_SHOTS").map(std::path::PathBuf::from) {
+                if let Some(directory) = std::env::var_os("MAHAY_UI_THEME_SHOTS").map(std::path::PathBuf::from) {
                     std::fs::create_dir_all(&directory).unwrap();
                     h.render().unwrap().save(directory.join(format!("sound-{name}-{width_name}-{scale}x.png"))).unwrap();
                 }
@@ -55,7 +55,7 @@ fn shared_panels_and_controls_follow_manual_and_live_system_appearance() {
                 assert!(output.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Rect(rect) if rect.fill == expected)));
             }
             assert!(output.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Circle(circle) if circle.fill == Color32::WHITE)));
-            if let Some(directory) = std::env::var_os("CRAFT_UI_THEME_SHOTS").map(std::path::PathBuf::from) {
+            if let Some(directory) = std::env::var_os("MAHAY_UI_THEME_SHOTS").map(std::path::PathBuf::from) {
                 let mut controls = Harness::builder().with_size(vec2(340.0, 150.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
                     move |ui, _: &mut ()| {
                         theme::apply(ui.ctx(), light);

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- EffectCraft test fixture (original work, MIT OR Apache-2.0): path data, gradients, CSS, use. -->
+<!-- Tselatra test fixture (original work, MIT OR Apache-2.0): path data, gradients, CSS, use. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160" height="120">
   <defs>
     <style>

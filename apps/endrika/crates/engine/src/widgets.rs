@@ -1,6 +1,6 @@
 //! Widgets: layers on the canvas that a plugin draws (plugin API 3). A widget is a frame owned by
 //! its plugin: the plugin describes it ([`WidgetRender`]: frames with auto layout, text, shapes and
-//! images) and FigCraft builds the layers inside it, locked, so the widget moves as one layer.
+//! images) and Endrika builds the layers inside it, locked, so the widget moves as one layer.
 //! Each widget keeps its plugin's id and a small state (a JSON object) in its own layer data, so it
 //! is saved, copied, undone, exported and synced in a live session like any layer. Clicking a part
 //! of it the plugin named as a target calls the plugin back with that state, in a fresh sandbox
@@ -8,11 +8,11 @@
 //! state and layers. A callback can only rebuild its own widget; other layers change only through
 //! the commands its manifest permits. See `docs/plugins.md`.
 
-use figcraft_color::{ImageScaleMode, Paint};
-use figcraft_doc::{Document, Node, NodeId, NodeKind, TextData};
-use figcraft_geom::{Affine, Point};
-use figcraft_plugin::widget::{MAX_IMAGE_BYTES, MAX_STATE_BYTES};
-use figcraft_plugin::{Instance, Manifest, RunOutput, WidgetKind, WidgetNode, WidgetRender};
+use endrika_color::{ImageScaleMode, Paint};
+use endrika_doc::{Document, Node, NodeId, NodeKind, TextData};
+use endrika_geom::{Affine, Point};
+use endrika_plugin::widget::{MAX_IMAGE_BYTES, MAX_STATE_BYTES};
+use endrika_plugin::{Instance, Manifest, RunOutput, WidgetKind, WidgetNode, WidgetRender};
 use serde_json::{Map, Value, json};
 
 use crate::cmd::CommandSpec;
@@ -20,13 +20,13 @@ use crate::params::{id, num, string};
 use crate::plugins::{InstalledPlugin, call_plugin, installed, limits, module_of, plugin_error};
 use crate::{Result, Session, bad, spec};
 
-/// Layer data FigCraft keeps for widgets starts with this; plugins can't write it.
-pub const DATA_PREFIX: &str = "figcraft.widget";
+/// Layer data Endrika keeps for widgets starts with this; plugins can't write it.
+pub const DATA_PREFIX: &str = "endrika.widget";
 /// On a widget's own layer: its plugin's id, and its state (JSON).
-const PLUGIN: &str = "figcraft.widget";
-const STATE: &str = "figcraft.widget.state";
+const PLUGIN: &str = "endrika.widget";
+const STATE: &str = "endrika.widget.state";
 /// On a layer inside a widget: the name its plugin gets when it's clicked.
-const TARGET: &str = "figcraft.widget.target";
+const TARGET: &str = "endrika.widget.target";
 /// Images in a widget are at most this many pixels on a side.
 const MAX_IMAGE_SIDE: u32 = 4096;
 
@@ -160,7 +160,7 @@ fn add(doc: &mut Document, parent: NodeId, d: &WidgetNode, cmd: &str) -> Result<
         if bytes.len() > MAX_IMAGE_BYTES {
             return Err(bad(cmd, format!("an image is larger than {} KB", MAX_IMAGE_BYTES / 1024)));
         }
-        let (hash, iw, ih) = figcraft_format::add_image(doc, bytes).map_err(|e| bad(cmd, e.to_string()))?;
+        let (hash, iw, ih) = endrika_format::add_image(doc, bytes).map_err(|e| bad(cmd, e.to_string()))?;
         if iw > MAX_IMAGE_SIDE || ih > MAX_IMAGE_SIDE {
             return Err(bad(cmd, format!("an image is larger than {MAX_IMAGE_SIDE} pixels on a side")));
         }

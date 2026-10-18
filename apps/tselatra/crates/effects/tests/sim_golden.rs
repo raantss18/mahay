@@ -21,9 +21,9 @@
 //! here and at the commit that pinned the hash, and compare the frames: identical frames mean
 //! the code didn't change, and the new hash goes into [`LIBM_VARIANTS`].
 
-use effectcraft_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params, apply, default_value, find};
-use effectcraft_keyframe::Value;
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params, apply, default_value, find};
+use tselatra_keyframe::Value;
+use tselatra_raster::Image;
 
 const W: u32 = 64;
 const H: u32 = 48;

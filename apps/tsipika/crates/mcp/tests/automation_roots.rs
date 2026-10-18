@@ -1,4 +1,4 @@
-//! `vectorcraft-cli mcp --automation-read-root <dir> --automation-write-root <dir>` (#832): through
+//! `tsipika-cli mcp --automation-read-root <dir> --automation-write-root <dir>` (#832): through
 //! the MCP protocol, files open only from inside the read root and are saved, exported and
 //! captured only inside the write root; paths that leave a root (`..`, another folder, a sibling
 //! with the same prefix) are refused, and nothing is written outside.
@@ -8,15 +8,15 @@
 use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
-use vectorcraft_engine::file_access::AutomationRoots;
-use vectorcraft_mcp::{Headless, Server};
+use tsipika_engine::file_access::AutomationRoots;
+use tsipika_mcp::{Headless, Server};
 
 const SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30"><rect width="20" height="10" fill="red"/></svg>"#;
 
 /// A folder holding `in` (the read root, with `a.svg`), `out` (the write root), `outside` (with
 /// `b.svg`) and `in2`, and a server confined to `in` and `out` (either may be left out).
 fn confined(tag: &str, read: bool, write: bool) -> (Server, PathBuf) {
-    let base = vectorcraft_testkit::temp_dir(&format!("roots-{tag}"));
+    let base = tsipika_testkit::temp_dir(&format!("roots-{tag}"));
     for d in ["in", "out", "outside", "in2"] {
         std::fs::create_dir_all(base.join(d)).unwrap();
     }
@@ -84,14 +84,14 @@ fn saves_exports_and_captures_go_only_into_the_write_root() {
     ok(&mut server, "export", json!({"path": s(&base.join("out/art.png"))}));
     assert!(base.join("out/art.png").is_file());
     ok(&mut server, "export", json!({"path": s(&base.join("out/art.svg"))}));
-    ok(&mut server, "save_file", json!({"path": s(&base.join("out/doc.vectorcraft"))}));
+    ok(&mut server, "save_file", json!({"path": s(&base.join("out/doc.tsipika"))}));
     ok(&mut server, "screenshot", json!({"path": s(&base.join("out/shot.png"))}));
     assert!(base.join("out/shot.png").is_file(), "the backend wrote the capture");
 
     refused(&mut server, "export", json!({"path": s(&base.join("in/art.png"))}), "outside the write root");
     refused(&mut server, "export", json!({"path": s(&base.join("outside/art.svg"))}), "outside the write root");
     refused(&mut server, "export", json!({"path": format!("{}{sep}..{sep}outside{sep}up.png", s(&base.join("out")))}), "outside the write root");
-    refused(&mut server, "save_file", json!({"path": s(&base.join("outside/doc.vectorcraft"))}), "outside the write root");
+    refused(&mut server, "save_file", json!({"path": s(&base.join("outside/doc.tsipika"))}), "outside the write root");
     refused(&mut server, "screenshot", json!({"path": s(&base.join("outside/shot.png"))}), "outside the write root");
     refused(
         &mut server,

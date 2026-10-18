@@ -10,22 +10,22 @@
 use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
-use vectorcraft_engine::doc::{LiveCorners, NodeId};
-use vectorcraft_geom::shapes::CornerKind;
+use tsipika_engine::doc::{LiveCorners, NodeId};
+use tsipika_geom::shapes::CornerKind;
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Corners (the corner widgets' double-click).
-pub const KIND: &str = vectorcraft_tools::corners::DIALOG;
+pub const KIND: &str = tsipika_tools::corners::DIALOG;
 
 pub(super) const SPEC: DialogSpec = DialogSpec { heading: |_| tl!("Corners").into(), body, confirm, min_width: 280.0, ..DialogSpec::FORM };
 
 /// Open Corners for `{id?, corners?}`: the path `id` (default: the selected one) and its
 /// `corners` (default: the selected corners), filled in with their kind and radius.
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document")?;
     let id = match p.get("id") {
         Some(v) => NodeId(v.as_u64().ok_or_else(|| format!("object ids are non-negative integers, not {v}"))?),
@@ -60,7 +60,7 @@ pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     Ok(Value::Null)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.general_unit();
     let current = d.fields.get("kind").and_then(|k| serde_json::from_value::<CornerKind>(k.clone()).ok());
     grid(ui, |ui| {
@@ -89,7 +89,7 @@ pub(crate) fn kind_label(k: CornerKind) -> &'static str {
     }
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut p = json!({"id": d.fields.get("id"), "corners": d.fields.get("corners")});
     if let Some(k) = d.fields.get("kind") {
         p["kind"] = k.clone();
@@ -103,38 +103,38 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
-    use vectorcraft_engine::doc::{LiveShape, NodeKind};
-    use vectorcraft_tools::corners::CornerWidgets;
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use tsipika_engine::Session;
+    use tsipika_engine::doc::{LiveShape, NodeKind};
+    use tsipika_tools::corners::CornerWidgets;
+    use tsipika_tools::{PointerEvent, PointerKind};
 
     /// A selected 100 pt live square at (100, 100).
-    fn app() -> (VectorcraftApp, u64) {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> (TsipikaApp, u64) {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 400})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 100, "y": 100, "width": 100, "height": 100})).unwrap()["id"].as_u64().unwrap();
         (app, id)
     }
 
-    fn live(app: &VectorcraftApp, id: u64) -> LiveShape {
+    fn live(app: &TsipikaApp, id: u64) -> LiveShape {
         let Some(NodeKind::Path { live: Some(l), .. }) = app.session.active().unwrap().doc.node(NodeId(id)).map(|n| n.kind.clone()) else {
             panic!("not live")
         };
         *l
     }
 
-    fn corners(app: &VectorcraftApp, id: u64) -> ([f64; 4], [CornerKind; 4]) {
+    fn corners(app: &TsipikaApp, id: u64) -> ([f64; 4], [CornerKind; 4]) {
         let LiveShape::Rectangle { radii, kinds, .. } = live(app, id) else { panic!("not a rectangle") };
         (radii, kinds)
     }
 
     /// The radius the Properties panel's Corner Radius field shows.
-    fn panel_radius(app: &VectorcraftApp, id: u64) -> Option<f64> {
+    fn panel_radius(app: &TsipikaApp, id: u64) -> Option<f64> {
         let n = app.session.active().unwrap().doc.node(NodeId(id)).unwrap().clone();
         crate::panels::corner_radius(app, &n)
     }
 
-    fn shown(app: &mut VectorcraftApp) -> Vec<String> {
+    fn shown(app: &mut TsipikaApp) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),

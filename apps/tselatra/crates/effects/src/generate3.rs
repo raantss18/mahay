@@ -8,10 +8,10 @@
 
 use std::f64::consts::PI;
 
-use effectcraft_color::{hsl_to_rgb, luminance, rgb_to_hsl};
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_color::{hsl_to_rgb, luminance, rgb_to_hsl};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, hash1, layer_or_self, morph_frac, poly_length, premul, smoothstep, unpremul};
@@ -164,7 +164,7 @@ impl Coverage {
     }
 }
 
-/// Stroke, Scribble, Vegas and Write-on, shared with the GPU compositor (effectcraft-gpu
+/// Stroke, Scribble, Vegas and Write-on, shared with the GPU compositor (tselatra-gpu
 /// `fx_gen2`): the coverage and how it is painted. `style` 0–2 as [`paint`] (On Original
 /// Image, On Transparent, Reveal Original Image), 3 = under the layer (Vegas' Composite Under).
 #[derive(Clone, Debug)]
@@ -1595,7 +1595,7 @@ fn draw_marks(b: &mut Buf, segs_core: &[Seg], thickness: f64, softness: f64, ins
     });
 }
 
-/// Audio Spectrum / Audio Waveform, shared with the GPU compositor (effectcraft-gpu `fx_gen2`):
+/// Audio Spectrum / Audio Waveform, shared with the GPU compositor (tselatra-gpu `fx_gen2`):
 /// the marks (the audio analysis runs on the CPU) and how [`draw_marks`] colours them.
 #[derive(Clone, Debug)]
 pub struct MarksPlan {

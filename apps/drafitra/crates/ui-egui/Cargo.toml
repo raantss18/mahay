@@ -1,6 +1,6 @@
 [package]
-name = "cadcraft-ui-egui"
-description = "CADCraft user interface (egui): the swappable front end"
+name = "drafitra-ui-egui"
+description = "Drafitra user interface (egui): the swappable front end"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,13 +10,13 @@ rust-version = "1.95"
 workspace = true
 
 [dependencies]
-craft-ui = { workspace = true }
-cadcraft-geom = { workspace = true }
-cadcraft-color = { workspace = true }
-cadcraft-doc = { workspace = true }
-cadcraft-render = { workspace = true }
-cadcraft-engine = { workspace = true }
-cadcraft-fonts = { workspace = true }
+mahay-ui = { workspace = true }
+drafitra-geom = { workspace = true }
+drafitra-color = { workspace = true }
+drafitra-doc = { workspace = true }
+drafitra-render = { workspace = true }
+drafitra-engine = { workspace = true }
+drafitra-fonts = { workspace = true }
 egui = { workspace = true }
 # GPU canvas paint callback (same egui-wgpu/wgpu eframe uses with its "wgpu" feature).
 egui-wgpu = { workspace = true }

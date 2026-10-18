@@ -21,8 +21,8 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use filmcraft_project::{ClipId, Project, Sequence, TrackId, TrackKind};
-use filmcraft_time::{Tick, TimeRange};
+use hetsika_project::{ClipId, Project, Sequence, TrackId, TrackKind};
+use hetsika_time::{Tick, TimeRange};
 
 use crate::{EngineError, Result, Session};
 
@@ -248,7 +248,7 @@ pub fn to_playhead(s: &mut Session, p: &Value) -> Result<Value> {
     let ripple = p.get("ripple").and_then(Value::as_bool).unwrap_or(true);
     let ph = s.playhead();
     let seq = s.active_sequence().ok_or(EngineError::NoSequence)?;
-    let under = |t: &filmcraft_project::Track, keep: &dyn Fn(ClipId) -> bool| t.items.iter().any(|i| i.start < ph && ph < i.end() && keep(i.id));
+    let under = |t: &hetsika_project::Track, keep: &dyn Fn(ClipId) -> bool| t.items.iter().any(|i| i.start < ph && ph < i.end() && keep(i.id));
     // Like Add Edit: selected clips under the playhead (and their linked partners) are trimmed,
     // and only their tracks (#164); with none, the targeted tracks are.
     let sel = crate::commands::with_links(s, &s.state.selection);
@@ -277,9 +277,9 @@ pub fn to_playhead(s: &mut Session, p: &Value) -> Result<Value> {
     };
     s.edit_sequence(label, |q, ctx, _| {
         if ripple {
-            filmcraft_edit::extract(q, &tracks, range, ctx);
+            hetsika_edit::extract(q, &tracks, range, ctx);
         } else {
-            filmcraft_edit::lift(q, &tracks, range, ctx);
+            hetsika_edit::lift(q, &tracks, range, ctx);
         }
         Ok(())
     })?;

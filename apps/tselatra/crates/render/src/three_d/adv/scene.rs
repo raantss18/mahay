@@ -15,10 +15,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use effectcraft_effects::Buf;
-use effectcraft_geom::{Mat4, Vec3, vec3};
-use effectcraft_model::{self as model, Primitive};
-use effectcraft_project::{ItemKind, Layer, LayerSource, LightKind, PrimitiveKind};
+use tselatra_effects::Buf;
+use tselatra_geom::{Mat4, Vec3, vec3};
+use tselatra_model::{self as model, Primitive};
+use tselatra_project::{ItemKind, Layer, LayerSource, LightKind, PrimitiveKind};
 
 use super::shade::srgb_to_linear;
 use crate::three_d::camera::{CameraState, NEAR};
@@ -571,7 +571,7 @@ pub fn extruded_meshes(ctx: &EvalCtx, layer: &Layer, p: &model::extrude::Extrude
                         groups.push((vec![g.local.clone()], c, g.m, usize::from(!stroke_on_top), g.xf.surface_colors(c)));
                     }
                     if g.stroke_width > 0.0 && g.stroke[3] * op > 0.0 {
-                        let st = effectcraft_path::StrokeStyle { width: g.stroke_width, join: effectcraft_path::Join::Round, ..Default::default() };
+                        let st = tselatra_path::StrokeStyle { width: g.stroke_width, join: tselatra_path::Join::Round, ..Default::default() };
                         if let Some(region) = crate::shapes::stroke_region(std::slice::from_ref(&g.local), &st) {
                             let c = [g.stroke[0], g.stroke[1], g.stroke[2], g.stroke[3] * op];
                             groups.push((vec![region], c, g.m, usize::from(stroke_on_top), g.xf.surface_colors(c)));
@@ -825,7 +825,7 @@ pub(crate) fn add_environment(b: &mut Builder, w: u32, h: u32, data: Vec<[f32; 4
 /// The environment layer's pixels as linear straight RGBA.
 fn env_pixels(r: &Renderer, ctx: &EvalCtx, src: Option<u64>, lin: bool) -> Option<(u32, u32, Vec<[f32; 4]>)> {
     let layer = match src {
-        Some(id) => ctx.comp.layer(effectcraft_project::LayerId(id))?,
+        Some(id) => ctx.comp.layer(tselatra_project::LayerId(id))?,
         None => ctx.comp.layers.iter().find(|l| l.environment && l.is_active_at(ctx.time))?,
     };
     let buf = r.blend_layer_buf(ctx, layer)?;
@@ -873,7 +873,7 @@ fn emit_layer<'a>(r: &Renderer<'a>, ctx: &EvalCtx<'a>, layer: &Layer, b: &mut Bu
 /// (meshes, extrusions, cards) placed by the precomp layer's world transform, so they
 /// intersect, occlude and shadow the parent's layers. Nested 2D layers lie on the precomp
 /// layer's plane; nested lights and cameras are ignored (the parent's light the scene).
-fn collapsed_layer<'a>(r: &Renderer<'a>, ctx: &EvalCtx<'a>, layer: &Layer, item: effectcraft_project::ItemId, b: &mut Builder) {
+fn collapsed_layer<'a>(r: &Renderer<'a>, ctx: &EvalCtx<'a>, layer: &Layer, item: tselatra_project::ItemId, b: &mut Builder) {
     let op = ctx.opacity(layer) as f32 * r.opacity_mul();
     let Some((sub, nctx)) = r.collapse_into(ctx, layer, item, op) else { return };
     let saved = b.outer;

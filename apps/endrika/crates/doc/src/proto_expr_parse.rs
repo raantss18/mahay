@@ -447,7 +447,7 @@ impl Parser<'_> {
                     hex.push(h);
                     self.i += 1;
                 }
-                match figcraft_color::Color::from_hex(&hex).filter(|_| matches!(hex.len(), 3 | 4 | 6 | 8)) {
+                match endrika_color::Color::from_hex(&hex).filter(|_| matches!(hex.len(), 3 | 4 | 6 | 8)) {
                     Some(col) => Ok(Expr::Value(VariableValue::Color(col))),
                     None => Err(ExprError { message: format!("`#{hex}` isn't a colour (use #RRGGBB)"), at: start }),
                 }

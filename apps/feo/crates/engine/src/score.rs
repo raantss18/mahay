@@ -5,8 +5,8 @@
 //! a chord, overlapping notes are cut at the next onset, and anything crossing a bar line is split
 //! and tied.
 
-use soundcraft_model::{ClipContent, Session, TrackId, TrackKind};
-use soundcraft_time::TICKS_PER_QUARTER;
+use feo_model::{ClipContent, Session, TrackId, TrackKind};
+use feo_time::TICKS_PER_QUARTER;
 use std::fmt::Write as _;
 
 /// Ticks per score unit (a sixteenth).
@@ -241,7 +241,7 @@ pub fn musicxml(parts: &[Part], setup: &ScoreSetup) -> String {
     if !setup.composer.is_empty() {
         let _ = writeln!(x, "    <creator type=\"composer\">{}</creator>", xml_escape(&setup.composer));
     }
-    x.push_str("    <encoding><software>SoundCraft</software></encoding>\n  </identification>\n  <part-list>\n");
+    x.push_str("    <encoding><software>Feo</software></encoding>\n  </identification>\n  <part-list>\n");
     for (i, p) in parts.iter().enumerate() {
         let _ = writeln!(x, "    <score-part id=\"P{}\"><part-name>{}</part-name></score-part>", i + 1, xml_escape(&p.name));
     }

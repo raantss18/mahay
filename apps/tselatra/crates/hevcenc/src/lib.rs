@@ -6,7 +6,7 @@
 //! DCT / DST transforms and CABAC. The deblocking filter is on; SAO is not used.
 //!
 //! ```
-//! use effectcraft_hevcenc::{Encoder, EncoderConfig, Frame};
+//! use tselatra_hevcenc::{Encoder, EncoderConfig, Frame};
 //! let mut enc = Encoder::new(EncoderConfig::new(64, 48, 30, 1)).unwrap();
 //! let (y, c) = (vec![128u16; 64 * 48], vec![128u16; 32 * 24]);
 //! let packet = enc.encode(&Frame { y: &y, u: &c, v: &c, y_stride: 64, uv_stride: 32 });

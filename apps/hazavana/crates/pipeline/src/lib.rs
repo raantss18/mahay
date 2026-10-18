@@ -1,4 +1,4 @@
-//! The LightCraft develop pipeline (CPU reference implementation).
+//! The Hazavana develop pipeline (CPU reference implementation).
 //!
 //! Input: a scene-referred, linear Rec.2020 source image (already EXIF-oriented) at any resolution
 //! (full size or a proxy), plus [`DevelopSettings`]. Output: a display-encoded sRGB image at the
@@ -47,12 +47,12 @@ pub mod visualize;
 pub use output::{DeepImage, DeepSamples, DisplaySpace, OutputDepth, OutputSpace, OutputTrc, Proof, ProofLut, proof_profile, register_proof_profile};
 pub use visualize::{MaskView, Overlay};
 
-use lightcraft_develop::{DevelopSettings, Treatment};
+use hazavana_develop::{DevelopSettings, Treatment};
 use std::any::Any;
 use std::borrow::Cow;
 use std::sync::{Arc, Mutex};
 
-use lightcraft_raster::{Histogram, Plane, Rgb32f, Rgba8, par_rows};
+use hazavana_raster::{Histogram, Plane, Rgb32f, Rgba8, par_rows};
 
 pub use tone::ToneMap;
 
@@ -62,16 +62,16 @@ pub use tone::ToneMap;
 #[derive(Debug, PartialEq)]
 pub struct CameraColor {
     /// The file's colour tags (its profile look left out: it is applied at load).
-    pub tags: lightcraft_raw::ColorData,
+    pub tags: hazavana_raw::ColorData,
     /// The white the source pixels were developed for.
-    pub developed_for: lightcraft_color::Xy,
+    pub developed_for: hazavana_color::Xy,
 }
 
 /// Facts about the source the settings are interpreted against.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SourceInfo {
     /// Lens corrections embedded in the file (DNG opcodes), relative to the EXIF-oriented source.
-    pub lens: Option<lightcraft_develop::EmbeddedLens>,
+    pub lens: Option<hazavana_develop::EmbeddedLens>,
     /// Raw sources use absolute Kelvin white balance; rendered sources use a relative scale around
     /// their as-shot white.
     pub raw: bool,
@@ -81,7 +81,7 @@ pub struct SourceInfo {
     pub relative_wb: bool,
     /// The Kelvin scale comes from matrices measured for the camera model, not from the file: before those were
     /// used for white balance, this source was edited on the relative scale (6500 K / 0 = as shot), so settings
-    /// without a [`lightcraft_develop::WbScale`] are read that way ([`local::legacy_to_kelvin`]).
+    /// without a [`hazavana_develop::WbScale`] are read that way ([`local::legacy_to_kelvin`]).
     pub legacy_relative_wb: bool,
     /// The camera's colour model (raw files with a colour matrix); `None`: white balance adapts
     /// the developed pixels (Bradford, linear Rec.2020).
@@ -267,7 +267,7 @@ impl StageCache {
     }
 
     /// Per-view state of type `T` kept alongside this cache (created on first use). Lets another
-    /// renderer of the same view (e.g. `lightcraft-gpu`) keep its own stage cache with this one.
+    /// renderer of the same view (e.g. `hazavana-gpu`) keep its own stage cache with this one.
     pub fn extension<T: Any + Send + Sync + Default>(&self) -> Arc<T> {
         let mut g = self.ext.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(e) = g.as_ref()
@@ -288,7 +288,7 @@ impl StageCache {
     /// Bytes of the intermediate images held (each buffer counted once; the sources they were
     /// made from belong to their owner and are not counted).
     pub fn bytes(&self) -> usize {
-        fn size<T>(i: &lightcraft_raster::Image<T>) -> usize {
+        fn size<T>(i: &hazavana_raster::Image<T>) -> usize {
             i.data.len() * std::mem::size_of::<T>()
         }
         let mut seen: Vec<usize> = Vec::new();
@@ -356,7 +356,7 @@ fn hash_of(parts: impl std::hash::Hash) -> u64 {
 
 /// What a render resolves to before any pixel work: the effective settings (profile and Upright
 /// applied), the geometric frame, the output size and the stage-cache keys. Shared by the CPU
-/// renderer and the GPU renderer (`lightcraft-gpu`), so both key their caches identically.
+/// renderer and the GPU renderer (`hazavana-gpu`), so both key their caches identically.
 pub struct Plan<'a> {
     pub settings: Cow<'a, DevelopSettings>,
     pub frame: geometry::Frame,
@@ -401,7 +401,7 @@ pub fn plan<'a>(src: &Rgb32f, info: &SourceInfo, s: &'a DevelopSettings, req: &R
     // a window must not choose a spot's source from the pixels it happens to hold: fix them
     // from a fixed-size render of the whole frame first
     if req.window.is_some() && settings.spots.iter().any(|sp| sp.source_offset.is_none()) {
-        let picked: Vec<Option<lightcraft_geom::Point>> =
+        let picked: Vec<Option<hazavana_geom::Point>> =
             settings.spots.iter().map(|sp| sp.source_offset.or_else(|| spots::pick_source(src, info, &settings, sp, None))).collect();
         for (sp, o) in settings.to_mut().spots.iter_mut().zip(picked) {
             sp.source_offset = o;
@@ -493,7 +493,7 @@ pub const HDR_HISTOGRAM_DRAG_EDGE: usize = 192;
 
 /// The histogram of an HDR edit's HDR rendition for a preview request `req`: a small float HDR
 /// render of the same framing ([`HDR_HISTOGRAM_EDGE`]), binned with SDR on the left half and the
-/// whole HDR range ([`Hdr::MAX_EV_LIMIT`](lightcraft_develop::Hdr::MAX_EV_LIMIT) stops above SDR
+/// whole HDR range ([`Hdr::MAX_EV_LIMIT`](hazavana_develop::Hdr::MAX_EV_LIMIT) stops above SDR
 /// white, whatever the headroom limit, so the scale stays put) on the right ([`Histogram::of_hdr`]). A preview of
 /// an HDR edit shows its SDR rendition; this says how far its highlights go. `None` for SDR edits,
 /// high-bit-depth, windowed and proofed requests (their histogram stays the image's).
@@ -516,7 +516,7 @@ pub fn hdr_histogram(src: &Rgb32f, info: &SourceInfo, s: &DevelopSettings, req: 
     };
     let deep = render(src, info, s, &hreq).deep?;
     let DeepSamples::F32(v) = &deep.samples else { return None };
-    Some(Histogram::of_hdr(v.as_chunks::<3>().0, lightcraft_develop::Hdr::MAX_EV_LIMIT as f32))
+    Some(Histogram::of_hdr(v.as_chunks::<3>().0, hazavana_develop::Hdr::MAX_EV_LIMIT as f32))
 }
 
 /// Render `src` with settings `s`.
@@ -631,9 +631,9 @@ fn render_impl(src: Src<'_>, info: &SourceInfo, s: &DevelopSettings, req: &Rende
 }
 
 /// The colour a colour-range mask would sample at normalized image point `p` (OkLab of the
-/// exposed scene colours, as [`MaskShape::ColorRange`](lightcraft_develop::MaskShape) compares
+/// exposed scene colours, as [`MaskShape::ColorRange`](hazavana_develop::MaskShape) compares
 /// them), averaged over 3 × 3 pixels of a render fitting `req`. `None` outside the image.
-pub fn color_range_sample(src: &Rgb32f, info: &SourceInfo, s: &DevelopSettings, req: &RenderRequest, p: lightcraft_geom::Point) -> Option<[f64; 3]> {
+pub fn color_range_sample(src: &Rgb32f, info: &SourceInfo, s: &DevelopSettings, req: &RenderRequest, p: hazavana_geom::Point) -> Option<[f64; 3]> {
     // Pick from the same settings as the render: disabled panels contribute nothing, and an
     // SDR preview of an HDR edit includes the SDR rendition's exposure offset.
     let effective = s.effective();
@@ -652,7 +652,7 @@ pub fn color_range_sample(src: &Rgb32f, info: &SourceInfo, s: &DevelopSettings, 
     for y in (cy - 1).max(0)..=(cy + 1).min(plan.h as i64 - 1) {
         for x in (cx - 1).max(0)..=(cx + 1).min(plan.w as i64 - 1) {
             let c = img.data[y as usize * plan.w + x as usize].map(|v| v * gain);
-            let lab = lightcraft_color::perceptual::oklab_from_2020(masks::tonemap_for_select(c));
+            let lab = hazavana_color::perceptual::oklab_from_2020(masks::tonemap_for_select(c));
             for k in 0..3 {
                 acc[k] += lab[k] as f64;
             }
@@ -695,7 +695,7 @@ fn overlay_alphas_all(o: Overlay, plan: &Plan<'_>, prep: &Prepared) -> Option<Ve
 /// (default look, keeping the crop so framing matches, under the photo's own rendering process).
 pub fn before_settings(s: &DevelopSettings) -> DevelopSettings {
     let mut b = DevelopSettings { crop: s.crop, orientation: s.orientation, process: s.process, ..DevelopSettings::default() };
-    b.wb = lightcraft_develop::WhiteBalance { mode: lightcraft_develop::WbMode::AsShot, ..b.wb };
+    b.wb = hazavana_develop::WhiteBalance { mode: hazavana_develop::WbMode::AsShot, ..b.wb };
     b
 }
 
@@ -703,13 +703,13 @@ pub(crate) fn is_bw(s: &DevelopSettings) -> bool {
     s.treatment == Treatment::Bw || s.profile.id == "lc.mono" || s.profile.id.starts_with("lc.bw.")
 }
 
-/// `LIGHTCRAFT_PROFILE` is set: print per-stage timings to stderr.
+/// `HAZAVANA_PROFILE` is set: print per-stage timings to stderr.
 pub fn profiling() -> bool {
     static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ON.get_or_init(|| std::env::var_os("LIGHTCRAFT_PROFILE").is_some())
+    *ON.get_or_init(|| std::env::var_os("HAZAVANA_PROFILE").is_some())
 }
 
-/// Run `f`, printing its duration under `LIGHTCRAFT_PROFILE`.
+/// Run `f`, printing its duration under `HAZAVANA_PROFILE`.
 pub(crate) fn timed<R>(what: &str, f: impl FnOnce() -> R) -> R {
     if !profiling() {
         return f();

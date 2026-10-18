@@ -6,8 +6,8 @@
 //! (L 100, a = b = 0) to the colour's Lab values, and moves the cross-reference offsets after the
 //! rewritten bytes.
 
-use vectorcraft_color::cms::Lab;
-use vectorcraft_color::cms::lab::D50;
+use tsipika_color::cms::Lab;
+use tsipika_color::cms::lab::D50;
 
 use crate::patch::{Patch, Xref};
 

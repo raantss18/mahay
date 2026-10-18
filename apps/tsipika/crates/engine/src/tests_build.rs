@@ -3,11 +3,11 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeKind};
-use vectorcraft_geom::{Affine, FillRule, PathData, Rect};
-use vectorcraft_testkit::pdf::{PdfPage, pdf};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{AppearanceItem, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeKind};
+use tsipika_geom::{Affine, FillRule, PathData, Rect};
+use tsipika_testkit::pdf::{PdfPage, pdf};
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 use super::*;
 
@@ -39,12 +39,12 @@ fn node(s: &Session, id: NodeId) -> Node {
 }
 
 fn outline(n: &Node) -> (PathData, FillRule) {
-    vectorcraft_tools::builder::node_outline(n).expect("path")
+    tsipika_tools::builder::node_outline(n).expect("path")
 }
 
 fn area(s: &Session, id: NodeId) -> f64 {
     let (p, r) = outline(&node(s, id));
-    vectorcraft_pathops::area(&p, r)
+    tsipika_pathops::area(&p, r)
 }
 
 /// Rect A (0..100) and rect B (50..150), both 100 tall, selected. A red, B blue.
@@ -229,7 +229,7 @@ fn shape_builder_cuts_gradient_shapes_from_a_pdf_along_their_outlines() {
     };
     let bytes = pdf(&[page], None);
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "diamonds.pdf", "dataBase64": vectorcraft_format::base64_encode(&bytes)})).unwrap();
+    s.execute("document.open", &json!({"name": "diamonds.pdf", "dataBase64": tsipika_format::base64_encode(&bytes)})).unwrap();
     s.execute("select.all", &json!({})).unwrap();
     let r = s.execute("shapeBuilder.merge", &json!({"points": [[250, 100]]})).unwrap();
     let mut pieces: Vec<(f64, Rect, Paint)> =
@@ -473,8 +473,8 @@ fn live_paint_make_builds_group_with_hidden_sources() {
     let mut s = session();
     let g = live(&mut s);
     let n = node(&s, g);
-    assert!(vectorcraft_tools::builder::is_live_paint(&n));
-    let src = vectorcraft_tools::builder::sources(&n).unwrap();
+    assert!(tsipika_tools::builder::is_live_paint(&n));
+    let src = tsipika_tools::builder::sources(&n).unwrap();
     assert!(!src.visible);
     assert_eq!(src.children().unwrap().len(), 2);
     assert_eq!(layer_children(&s), 1);
@@ -496,7 +496,7 @@ fn live_paint_fill_assigns_the_face_under_the_point() {
     assert_eq!(face.appearance.fill_paint(), Paint::solid(Color::from_hex("#00ff00").unwrap()));
     // The other faces are untouched.
     let gn = node(&s, g);
-    let green = vectorcraft_tools::builder::faces(&gn).iter().filter(|f| f.appearance.fill_paint() == face.appearance.fill_paint()).count();
+    let green = tsipika_tools::builder::faces(&gn).iter().filter(|f| f.appearance.fill_paint() == face.appearance.fill_paint()).count();
     assert_eq!(green, 1);
     // Default paint = current fill; a miss is an error.
     s.paint.fill = Paint::solid(Color::rgb(1.0, 1.0, 0.0));
@@ -511,7 +511,7 @@ fn live_paint_fill_on_plain_paths_makes_the_group() {
     let (a, b) = two(&mut s);
     let r = s.execute("livePaint.fill", &json!({"ids": [a.0, b.0], "point": [125, 50], "color": "#123456"})).unwrap();
     let g = NodeId(r["group"].as_u64().unwrap());
-    assert!(vectorcraft_tools::builder::is_live_paint(&node(&s, g)));
+    assert!(tsipika_tools::builder::is_live_paint(&node(&s, g)));
     assert_eq!(layer_children(&s), 1);
     // One undo step removes both the make and the fill.
     s.execute("edit.undo", &json!({})).unwrap();
@@ -539,7 +539,7 @@ fn live_paint_release_and_expand() {
     let r = s.execute("livePaint.expand", &json!({})).unwrap();
     assert_eq!(ids(&r), vec![g]);
     let n = node(&s, g);
-    assert!(!vectorcraft_tools::builder::is_live_paint(&n));
+    assert!(!tsipika_tools::builder::is_live_paint(&n));
     // Unpainted face and the hidden sources are gone: 2 faces + stroked edges.
     let ch = n.children().unwrap();
     assert!(ch.iter().all(|c| c.visible));
@@ -569,9 +569,9 @@ fn live_paint_merge_keeps_paint_and_adds_faces() {
     assert_eq!(NodeId(r["id"].as_u64().unwrap()), g);
     assert!(r["faces"].as_u64().unwrap() > 3);
     let gn = node(&s, g);
-    let f = vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(25.0, 50.0)).unwrap();
+    let f = tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(25.0, 50.0)).unwrap();
     assert_eq!(f.appearance.fill_paint(), Paint::solid(Color::from_hex("#00ff00").unwrap()));
-    let src = vectorcraft_tools::builder::sources(&gn).unwrap();
+    let src = tsipika_tools::builder::sources(&gn).unwrap();
     assert_eq!(src.children().unwrap().len(), 3, "the rectangle joined the sources");
     assert_eq!(s.doc().unwrap().doc.parent_of(c), Some(src.id));
     assert_eq!(layer_children(&s), 1);
@@ -585,7 +585,7 @@ fn live_square_with_a_gap(s: &mut Session) -> NodeId {
     live_group_only(s)
 }
 
-fn gap_options(s: &Session, g: NodeId) -> vectorcraft_doc::GapOptions {
+fn gap_options(s: &Session, g: NodeId) -> tsipika_doc::GapOptions {
     node(s, g).gap_options()
 }
 
@@ -599,7 +599,7 @@ fn live_paint_gap_detection_stops_paint_at_a_gap() {
     let mut s = session();
     let g = live_square_with_a_gap(&mut s);
     // Paint leaks through the gap: there is no face to fill.
-    assert!(vectorcraft_tools::builder::faces(&node(&s, g)).is_empty());
+    assert!(tsipika_tools::builder::faces(&node(&s, g)).is_empty());
     assert!(s.execute("livePaint.fill", &json!({"group": g.0, "point": [50, 50]})).is_err());
     let info = s.execute("livePaint.info", &json!({"group": g.0})).unwrap();
     assert_eq!(info["gapOptions"], json!({"detect": false, "size": "small", "points": 3.0, "color": "#ff4f4f"}));
@@ -612,27 +612,27 @@ fn live_paint_gap_detection_stops_paint_at_a_gap() {
     assert_eq!(gaps_of(&r), [[0.0, 0.0, 0.0, 2.0]]);
     let f = s.execute("livePaint.fill", &json!({"group": g.0, "point": [50, 50], "color": "#00ff00"})).unwrap();
     let face = node(&s, NodeId(f["face"].as_u64().unwrap()));
-    assert!((vectorcraft_pathops::area(face.path_data().unwrap(), FillRule::NonZero).abs() - 10000.0).abs() < 1e-6);
-    assert_eq!(vectorcraft_tools::builder::edges(&node(&s, g)).len(), 1, "the gap is no edge");
+    assert!((tsipika_pathops::area(face.path_data().unwrap(), FillRule::NonZero).abs() - 10000.0).abs() < 1e-6);
+    assert_eq!(tsipika_tools::builder::edges(&node(&s, g)).len(), 1, "the gap is no edge");
     // A color change keeps the face and its paint.
     s.execute("livePaint.gapOptions", &json!({"id": g.0, "color": "Green"})).unwrap();
     let opts = gap_options(&s, g);
-    assert_eq!((opts.detect, opts.size, opts.color), (true, vectorcraft_doc::GapSize::Small, [0x4f, 0xff, 0x4f]));
+    assert_eq!((opts.detect, opts.size, opts.color), (true, tsipika_doc::GapSize::Small, [0x4f, 0xff, 0x4f]));
     let gn = node(&s, g);
-    let kept = vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(50.0, 50.0)).unwrap();
+    let kept = tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(50.0, 50.0)).unwrap();
     assert_eq!(kept.appearance.fill_paint(), Paint::solid(Color::from_hex("#00ff00").unwrap()));
     // A custom size narrower than the gap lets paint leak again, and so does Gap Detection off.
     let r = s.execute("livePaint.gapOptions", &json!({"size": 1.5})).unwrap();
     assert_eq!((&r["faces"], gaps_of(&r).len()), (&json!(0), 0));
     s.execute("livePaint.gapOptions", &json!({"size": 12})).unwrap();
-    assert_eq!(vectorcraft_tools::builder::faces(&node(&s, g)).len(), 1);
+    assert_eq!(tsipika_tools::builder::faces(&node(&s, g)).len(), 1);
     let r = s.execute("livePaint.gapOptions", &json!({"detect": false})).unwrap();
     assert_eq!((&r["faces"], gaps_of(&r).len()), (&json!(0), 1));
     // Bad values change nothing.
     for bad in [json!({"size": 0}), json!({"size": 73}), json!({"size": "huge"}), json!({"detect": "yes"}), json!({"color": "#12"})] {
         assert!(s.execute("livePaint.gapOptions", &bad).is_err(), "{bad}");
     }
-    assert_eq!(gap_options(&s, g).size, vectorcraft_doc::GapSize::Custom(12.0));
+    assert_eq!(gap_options(&s, g).size, tsipika_doc::GapSize::Custom(12.0));
     // Plain paths are no Live Paint group.
     let r = rect(&mut s, 200.0, 0.0, 10.0, 10.0);
     assert!(s.execute("livePaint.gapOptions", &json!({"id": r.0, "detect": true})).is_err());
@@ -659,7 +659,7 @@ fn medium_and_large_gaps_stop_paint_at_wider_gaps() {
         let info = s.execute("livePaint.info", &json!({"group": g.0})).unwrap();
         assert_eq!(info["gapOptions"], json!({"detect": true, "size": "large", "points": 12.0, "color": "#ff4f4f"}));
         s.execute("livePaint.gapOptions", &json!({"size": "Medium"})).unwrap();
-        assert_eq!(gap_options(&s, g).size, vectorcraft_doc::GapSize::Medium);
+        assert_eq!(gap_options(&s, g).size, tsipika_doc::GapSize::Medium);
     }
 }
 
@@ -672,11 +672,11 @@ fn gap_options_keep_the_paint_of_split_faces_and_of_unpainted_faces() {
     let l = line(&mut s, (50.0, 2.0), (50.0, 100.0));
     s.execute("select.set", &json!({"ids": [r.0, l.0]})).unwrap();
     let g = live_group_only(&mut s);
-    assert_eq!(vectorcraft_tools::builder::faces(&node(&s, g)).len(), 1);
+    assert_eq!(tsipika_tools::builder::faces(&node(&s, g)).len(), 1);
     s.execute("livePaint.fill", &json!({"group": g.0, "point": [25, 50], "color": "#00ff00"})).unwrap();
     let fill_at = |s: &Session, x: f64| {
         let gn = node(s, g);
-        vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(x, 50.0)).map(|f| f.appearance.fill_paint())
+        tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(x, 50.0)).map(|f| f.appearance.fill_paint())
     };
     let green = Paint::solid(Color::from_hex("#00ff00").unwrap());
     // Closing the gap splits the face in two, and both halves keep its paint.
@@ -688,7 +688,7 @@ fn gap_options_keep_the_paint_of_split_faces_and_of_unpainted_faces() {
     s.execute("livePaint.fill", &json!({"group": g.0, "point": [75, 50], "none": true})).unwrap();
     s.execute("livePaint.gapOptions", &json!({"color": "Blue"})).unwrap();
     assert_eq!((fill_at(&s, 25.0), fill_at(&s, 75.0)), (Some(green.clone()), Some(Paint::None)));
-    let left = vectorcraft_tools::builder::face_at(&node(&s, g), vectorcraft_geom::Point::new(25.0, 50.0)).unwrap().id;
+    let left = tsipika_tools::builder::face_at(&node(&s, g), tsipika_geom::Point::new(25.0, 50.0)).unwrap().id;
     s.edit("t", |d, _| {
         d.node_mut(left).unwrap().opacity = 0.5;
         Ok(())
@@ -696,14 +696,14 @@ fn gap_options_keep_the_paint_of_split_faces_and_of_unpainted_faces() {
     .unwrap();
     s.execute("livePaint.gapOptions", &json!({"size": 12})).unwrap();
     let gn = node(&s, g);
-    let f = vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(25.0, 50.0)).unwrap();
+    let f = tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(25.0, 50.0)).unwrap();
     assert_eq!((f.opacity, f.appearance.fill_paint()), (0.5, green));
     assert_eq!(fill_at(&s, 75.0), Some(Paint::None));
 }
 
 #[test]
 fn a_gradient_face_split_by_a_closed_gap_keeps_one_gradient_across_both_halves() {
-    use vectorcraft_color::{Gradient, GradientKind, GradientPaint, GradientStop};
+    use tsipika_color::{Gradient, GradientKind, GradientPaint, GradientStop};
     let mut s = session();
     let r = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     let stops = vec![GradientStop::new(0.0, Color::rgb(1.0, 0.0, 0.0)), GradientStop::new(1.0, Color::rgb(0.0, 0.0, 1.0))];
@@ -718,7 +718,7 @@ fn a_gradient_face_split_by_a_closed_gap_keeps_one_gradient_across_both_halves()
     let g = live_group_only(&mut s);
     s.execute("livePaint.gapOptions", &json!({"detect": true})).unwrap();
     let gn = node(&s, g);
-    let geoms: Vec<_> = vectorcraft_tools::builder::faces(&gn)
+    let geoms: Vec<_> = tsipika_tools::builder::faces(&gn)
         .iter()
         .map(|f| match f.appearance.fill_paint() {
             Paint::Gradient(gp) => gp.geom,
@@ -737,7 +737,7 @@ fn close_gaps_with_paths_adds_an_unpainted_path_across_each_gap() {
     assert_eq!((&r["faces"], &r["closed"], gaps_of(&r).len()), (&json!(1), &json!(1), 0), "{r}");
     assert!(!gap_options(&s, g).detect, "Gap Detection stays off: the path closes the gap");
     let gn = node(&s, g);
-    let src = vectorcraft_tools::builder::sources(&gn).unwrap();
+    let src = tsipika_tools::builder::sources(&gn).unwrap();
     let added = src.children().unwrap().last().unwrap();
     assert!(added.appearance.fill_paint().is_none() && added.appearance.stroke_paint().is_none(), "unpainted");
     let bb = added.geometric_bounds().unwrap();
@@ -752,26 +752,26 @@ fn gap_options_survive_save_copy_and_undo() {
     let mut s = session();
     let g = live_square_with_a_gap(&mut s);
     s.execute("livePaint.gapOptions", &json!({"detect": true, "size": 4.5, "color": "#123456"})).unwrap();
-    let want = vectorcraft_doc::GapOptions { detect: true, size: vectorcraft_doc::GapSize::Custom(4.5), color: [0x12, 0x34, 0x56] };
+    let want = tsipika_doc::GapOptions { detect: true, size: tsipika_doc::GapSize::Custom(4.5), color: [0x12, 0x34, 0x56] };
     assert_eq!(gap_options(&s, g), want);
     let doc = s.doc().unwrap().doc.clone();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(g).unwrap().gap_options(), want);
     s.execute("edit.copy", &json!({})).unwrap();
     s.execute("edit.paste", &json!({})).unwrap();
     let pasted = s.doc().unwrap().selection.objects[0];
     assert_ne!(pasted, g);
     assert_eq!(gap_options(&s, pasted), want);
-    assert_eq!(vectorcraft_tools::builder::faces(&node(&s, pasted)).len(), 1);
+    assert_eq!(tsipika_tools::builder::faces(&node(&s, pasted)).len(), 1);
     s.execute("edit.undo", &json!({})).unwrap();
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_eq!(gap_options(&s, g), vectorcraft_doc::GapOptions::default());
-    assert!(vectorcraft_tools::builder::faces(&node(&s, g)).is_empty());
+    assert_eq!(gap_options(&s, g), tsipika_doc::GapOptions::default());
+    assert!(tsipika_tools::builder::faces(&node(&s, g)).is_empty());
 }
 
 #[test]
 fn merged_live_paint_groups_keep_the_bottom_groups_gap_options() {
-    use vectorcraft_doc::{GapOptions, GapSize};
+    use tsipika_doc::{GapOptions, GapSize};
     // Two groups side by side, the left one at the bottom, merged with each Gap Detection setting.
     let merged = |bottom: Value, top: Value| {
         let mut s = session();
@@ -814,7 +814,7 @@ fn live_paint_bucket_tool_fills_face() {
     assert!(!s.overlays(v).is_empty(), "red face highlight");
     s.pointer(&PointerEvent::new(PointerKind::Down, 125.0, 50.0), v).unwrap();
     let gn = node(&s, g);
-    let f = vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(125.0, 50.0)).unwrap();
+    let f = tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(125.0, 50.0)).unwrap();
     assert_eq!(f.appearance.fill_paint(), s.paint.fill);
     // Live Paint Selection selects the face.
     s.select_tool("livePaintSelection", v).unwrap();
@@ -842,13 +842,13 @@ fn live_paint_bucket_fills_an_area_enclosed_by_lines() {
     s.pointer(&PointerEvent::new(PointerKind::Down, 50.0, 70.0), v).unwrap();
     let g = s.doc().unwrap().selection.objects[0];
     let gn = node(&s, g);
-    assert!(vectorcraft_tools::builder::is_live_paint(&gn));
-    assert_eq!(vectorcraft_tools::builder::faces(&gn).len(), 1);
-    let f = vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(50.0, 70.0)).unwrap();
+    assert!(tsipika_tools::builder::is_live_paint(&gn));
+    assert_eq!(tsipika_tools::builder::faces(&gn).len(), 1);
+    let f = tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(50.0, 70.0)).unwrap();
     assert_eq!(f.appearance.fill_paint(), s.paint.fill);
-    assert!((vectorcraft_pathops::area(f.path_data().unwrap(), FillRule::NonZero).abs() - 900.0).abs() < 1e-6);
+    assert!((tsipika_pathops::area(f.path_data().unwrap(), FillRule::NonZero).abs() - 900.0).abs() < 1e-6);
     // The lines are edges, cut where they cross, and keep their stroke.
-    let edges = vectorcraft_tools::builder::edges(&gn);
+    let edges = tsipika_tools::builder::edges(&gn);
     assert_eq!(edges.len(), 9);
     assert!(edges.iter().all(|e| !e.appearance.stroke_paint().is_none()));
     // Outside the triangle there's nothing to fill.
@@ -867,7 +867,7 @@ fn a_line_across_a_live_paint_shape_splits_its_face() {
     let g = NodeId(made["id"].as_u64().unwrap());
     s.execute("livePaint.fill", &json!({"group": g.0, "point": [80, 25], "color": "#0000ff"})).unwrap();
     let gn = node(&s, g);
-    let face = |x: f64| vectorcraft_tools::builder::face_at(&gn, vectorcraft_geom::Point::new(x, 25.0)).unwrap().appearance.fill_paint();
+    let face = |x: f64| tsipika_tools::builder::face_at(&gn, tsipika_geom::Point::new(x, 25.0)).unwrap().appearance.fill_paint();
     assert_eq!(face(10.0), Paint::solid(Color::rgb(1.0, 0.0, 0.0)), "the left half keeps the rectangle's fill");
     assert_eq!(face(80.0), Paint::solid(Color::from_hex("#0000ff").unwrap()));
 }
@@ -876,14 +876,14 @@ fn a_line_across_a_live_paint_shape_splits_its_face() {
 
 /// A 100×100 image with a black disc (r = 30 px), placed at (50, 50) scaled ×2.
 fn image_doc(s: &mut Session) -> NodeId {
-    let r = vectorcraft_trace::Raster::from_fn(100, 100, |x, y| {
+    let r = tsipika_trace::Raster::from_fn(100, 100, |x, y| {
         let (dx, dy) = (x as f64 + 0.5 - 50.0, y as f64 + 0.5 - 50.0);
         if dx * dx + dy * dy <= 900.0 { [0, 0, 0, 255] } else { [255, 255, 255, 255] }
     });
     add_image(s, &r, Affine::translate((50.0, 50.0)) * Affine::scale(2.0))
 }
 
-fn add_image(s: &mut Session, r: &vectorcraft_trace::Raster, xf: Affine) -> NodeId {
+fn add_image(s: &mut Session, r: &tsipika_trace::Raster, xf: Affine) -> NodeId {
     let png = r.encode_png();
     let (w, h) = (r.width, r.height);
     s.edit("img", |d, sel| {
@@ -912,7 +912,7 @@ fn traced_paths(n: &Node) -> Vec<Arc<Node>> {
 fn a_large_image_traces_with_a_warning() {
     // The public documentation: images over 1500 px on a side are traced, only more slowly.
     let mut s = session();
-    let art = vectorcraft_trace::Raster::from_fn(
+    let art = tsipika_trace::Raster::from_fn(
         1600,
         40,
         |x, y| if (100..1500).contains(&x) && (10..30).contains(&y) { [0, 0, 0, 255] } else { [255; 4] },
@@ -931,7 +931,7 @@ fn a_large_image_traces_with_a_warning() {
     image_doc(&mut s);
     let r = s.execute("imageTrace.make", &json!({})).unwrap();
     assert_eq!(r["warnings"], json!([]));
-    let edge = vectorcraft_trace::Raster::from_fn(1500, 8, |x, _| if x < 700 { [0, 0, 0, 255] } else { [255; 4] });
+    let edge = tsipika_trace::Raster::from_fn(1500, 8, |x, _| if x < 700 { [0, 0, 0, 255] } else { [255; 4] });
     add_image(&mut s, &edge, Affine::IDENTITY);
     assert_eq!(s.execute("imageTrace.make", &json!({})).unwrap()["warnings"], json!([]));
 }
@@ -951,7 +951,7 @@ fn image_trace_make_places_paths_over_the_image() {
     assert_eq!(paths.len(), 1);
     let (p, rule) = outline(&paths[0]);
     let want = std::f64::consts::PI * 60.0 * 60.0; // r = 30 px × 2
-    let got = vectorcraft_pathops::area(&p, rule);
+    let got = tsipika_pathops::area(&p, rule);
     assert!((got - want).abs() / want < 0.03, "{got} vs {want}");
     let bb = p.bounds().unwrap();
     assert!((bb.center().x - 150.0).abs() < 1.5 && (bb.center().y - 150.0).abs() < 1.5, "{bb:?}");
@@ -969,7 +969,7 @@ fn image_trace_shapes_makes_live_shapes() {
     let paths = traced_paths(&n);
     assert_eq!(paths.len(), 1);
     let NodeKind::Path { path, live: Some(live), .. } = &paths[0].kind else { panic!("not a live shape: {:?}", paths[0].kind) };
-    let vectorcraft_doc::LiveShape::Ellipse { w, h, .. } = **live else { panic!("{live:?}") };
+    let tsipika_doc::LiveShape::Ellipse { w, h, .. } = **live else { panic!("{live:?}") };
     // A circle of r = 30 px, drawn twice the size.
     assert!(w == h && (w - 60.0).abs() < 0.75, "{w} × {h}");
     let bb = path.bounds().unwrap();
@@ -989,7 +989,7 @@ fn image_trace_shapes_makes_live_shapes() {
 /// and releases as any other.
 #[test]
 fn image_trace_auto_grouping_groups_what_is_inside() {
-    let art = vectorcraft_trace::Raster::from_fn(120, 80, |x, y| {
+    let art = tsipika_trace::Raster::from_fn(120, 80, |x, y| {
         let d = (x as f64 + 0.5 - 40.0).hypot(y as f64 + 0.5 - 40.0);
         if d <= 6.0 || (90..110).contains(&x) && (30..50).contains(&y) {
             [200, 0, 0, 255]
@@ -1049,7 +1049,7 @@ fn image_trace_auto_grouping_groups_what_is_inside() {
 /// where the image lies; without the option it is bands of flat colour, as saved documents have it.
 #[test]
 fn image_trace_gradients_fills_with_a_gradient() {
-    let art = vectorcraft_trace::Raster::from_fn(100, 60, |x, _| {
+    let art = tsipika_trace::Raster::from_fn(100, 60, |x, _| {
         let t = (f64::from(x) + 0.5) / 100.0;
         [(20.0 + 200.0 * t) as u8, 40, (220.0 - 180.0 * t) as u8, 255]
     });
@@ -1062,7 +1062,7 @@ fn image_trace_gradients_fills_with_a_gradient() {
     let paths = make(true);
     assert_eq!(paths.len(), 1);
     let Paint::Gradient(g) = paths[0].appearance.fill_paint() else { panic!("{:?}", paths[0].appearance.fill_paint()) };
-    assert_eq!(g.gradient.kind, vectorcraft_color::GradientKind::Linear);
+    assert_eq!(g.gradient.kind, tsipika_color::GradientKind::Linear);
     assert_eq!(g.gradient.stops.len(), 2);
     // Level, from the image's left edge (x = 50) to its right one (x = 250), at any height.
     let geom = g.geom.as_ref().unwrap();
@@ -1121,7 +1121,7 @@ fn image_trace_release_and_expand() {
 #[test]
 fn image_trace_make_and_expand_and_color_presets() {
     let mut s = session();
-    let r = vectorcraft_trace::Raster::from_fn(60, 60, |x, y| match (x < 30, y < 30) {
+    let r = tsipika_trace::Raster::from_fn(60, 60, |x, y| match (x < 30, y < 30) {
         (true, true) => [230, 20, 20, 255],
         (false, true) => [20, 200, 30, 255],
         (true, false) => [20, 30, 220, 255],
@@ -1141,7 +1141,7 @@ fn image_trace_make_and_expand_and_color_presets() {
 #[test]
 fn image_trace_palettes_and_swatch_libraries() {
     let mut s = session();
-    let quads = vectorcraft_trace::Raster::from_fn(60, 60, |x, y| match (x < 30, y < 30) {
+    let quads = tsipika_trace::Raster::from_fn(60, 60, |x, y| match (x < 30, y < 30) {
         (true, true) => [230, 20, 20, 255],
         (false, true) => [20, 200, 30, 255],
         (true, false) => [20, 30, 220, 255],
@@ -1186,7 +1186,7 @@ fn image_trace_create_strokes_makes_stroked_centre_lines() {
     let mut s = session();
     // A 3 px wide horizontal line from x = 10 to 90 at y = 50, placed at 2× from (100, 100).
     let r =
-        vectorcraft_trace::Raster::from_fn(100, 100, |x, y| if (10..90).contains(&x) && (49..52).contains(&y) { [0, 0, 0, 255] } else { [255; 4] });
+        tsipika_trace::Raster::from_fn(100, 100, |x, y| if (10..90).contains(&x) && (49..52).contains(&y) { [0, 0, 0, 255] } else { [255; 4] });
     add_image(&mut s, &r, Affine::translate((100.0, 100.0)) * Affine::scale(2.0));
     let res = s.execute("imageTrace.make", &json!({"params": {"ignoreWhite": true, "strokes": true, "strokeWidth": 5}})).unwrap();
     assert_eq!(res["paths"], 1);
@@ -1231,7 +1231,7 @@ fn image_trace_presets_query_and_errors() {
 
 /// A soft-edged red disc (r = 30 px at (50.3, 49.6)) on transparency, placed at (50, 50) scaled ×2.
 fn soft_logo_doc(s: &mut Session) -> NodeId {
-    let r = vectorcraft_trace::Raster::from_fn(100, 100, |x, y| {
+    let r = tsipika_trace::Raster::from_fn(100, 100, |x, y| {
         let d = (x as f64 + 0.5 - 50.3).hypot(y as f64 + 0.5 - 49.6);
         let cover = (0.5 + (30.0 - d) * 0.7).clamp(0.0, 1.0);
         [200, 40, 60, (cover * 255.0).round() as u8]
@@ -1253,7 +1253,7 @@ fn image_trace_flat_logo_preset_makes_a_true_circle() {
     let paths = traced_paths(&n);
     let (p, rule) = outline(&paths[0]);
     let want = std::f64::consts::PI * 60.0 * 60.0;
-    let got = vectorcraft_pathops::area(&p, rule);
+    let got = tsipika_pathops::area(&p, rule);
     assert!((got - want).abs() / want < 0.01, "area {got} vs {want}");
     let bb = p.bounds().unwrap();
     // The disc is at (50.3, 49.6) in a x2 image placed at (50, 50): centre (150.6, 149.2).
@@ -1263,7 +1263,7 @@ fn image_trace_flat_logo_preset_makes_a_true_circle() {
 #[test]
 fn image_trace_flat_logo_refuses_a_gradient_and_a_bad_palette() {
     let mut s = session();
-    let grad = vectorcraft_trace::Raster::from_fn(64, 32, |x, y| [(x * 4) as u8, 255 - (x * 4) as u8, (y * 6) as u8, 255]);
+    let grad = tsipika_trace::Raster::from_fn(64, 32, |x, y| [(x * 4) as u8, 255 - (x * 4) as u8, (y * 6) as u8, 255]);
     add_image(&mut s, &grad, Affine::IDENTITY);
     let e = s.execute("imageTrace.make", &json!({"preset": "Flat Logo"})).unwrap_err().to_string();
     assert!(e.contains("flat-colour") && e.contains("Color mode"), "{e}");
@@ -1289,7 +1289,7 @@ fn image_trace_object_remembers_its_settings() {
     let r = s.execute("imageTrace.make", &json!({"id": g.0, "preset": "6 Colors", "params": {"colors": 9}})).unwrap();
     let g = NodeId(r["id"].as_u64().unwrap());
     let d = s.doc().unwrap().doc.clone();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&d, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&d, false)).unwrap();
     let t = back.node(g).unwrap().extras().trace.clone().unwrap();
     assert_eq!((t["preset"].as_str(), t["params"]["colors"].as_u64()), (Some("Custom"), Some(9)));
     // Expanded traces are plain groups.
@@ -1303,7 +1303,7 @@ fn image_trace_object_remembers_its_settings() {
 /// Black and White with Ignore White, the blue drops out and one disc (r = 60 pt at (150, 150))
 /// remains.
 fn disc_on_blue(s: &mut Session) -> NodeId {
-    let r = vectorcraft_trace::Raster::from_fn(100, 100, |x, y| {
+    let r = tsipika_trace::Raster::from_fn(100, 100, |x, y| {
         let (dx, dy) = (x as f64 + 0.5 - 50.0, y as f64 + 0.5 - 50.0);
         if dx * dx + dy * dy <= 900.0 { [0, 0, 0, 255] } else { [170, 210, 255, 255] }
     });
@@ -1314,9 +1314,9 @@ fn disc_on_blue(s: &mut Session) -> NodeId {
 }
 
 /// The document rendered as the canvas draws it (`trace_views`) or as exports do.
-fn render_doc(s: &Session, trace_views: bool) -> vectorcraft_render::Rendered {
-    let opts = vectorcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), trace_views, ..Default::default() };
-    vectorcraft_render::Renderer::new().render(&s.doc().unwrap().doc, 300, 300, Affine::IDENTITY, &opts)
+fn render_doc(s: &Session, trace_views: bool) -> tsipika_render::Rendered {
+    let opts = tsipika_render::RenderOptions { background: Some([255, 255, 255, 255]), trace_views, ..Default::default() };
+    tsipika_render::Renderer::new().render(&s.doc().unwrap().doc, 300, 300, Affine::IDENTITY, &opts)
 }
 
 #[test]
@@ -1326,17 +1326,17 @@ fn image_trace_view_is_stored_kept_and_validated() {
     assert_eq!(node(&s, g).extras().trace.clone().unwrap()["view"], "tracingResult");
     let r = s.execute("imageTrace.setView", &json!({"view": "outlinesWithSourceImage"})).unwrap();
     assert_eq!((ids(&r), r["view"].as_str()), (vec![g], Some("outlinesWithSourceImage")));
-    assert_eq!(node(&s, g).trace_view(), vectorcraft_doc::TraceView::OutlinesWithSource);
+    assert_eq!(node(&s, g).trace_view(), tsipika_doc::TraceView::OutlinesWithSource);
     // Setting the view it has already adds no undo step.
     let steps = s.doc().unwrap().history.undo.len();
     s.execute("imageTrace.setView", &json!({"id": g.0, "view": "outlinesWithSourceImage"})).unwrap();
     assert_eq!(s.doc().unwrap().history.undo.len(), steps);
     // Tracing again keeps it, unless another one is asked for; it survives save and open.
     let g = NodeId(s.execute("imageTrace.make", &json!({"id": g.0, "params": {"ignoreWhite": true, "noise": 30}})).unwrap()["id"].as_u64().unwrap());
-    assert_eq!(node(&s, g).trace_view(), vectorcraft_doc::TraceView::OutlinesWithSource);
+    assert_eq!(node(&s, g).trace_view(), tsipika_doc::TraceView::OutlinesWithSource);
     let g = NodeId(s.execute("imageTrace.make", &json!({"id": g.0, "view": "SourceImage"})).unwrap()["id"].as_u64().unwrap());
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
-    assert_eq!(back.node(g).unwrap().trace_view(), vectorcraft_doc::TraceView::Source);
+    let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    assert_eq!(back.node(g).unwrap().trace_view(), tsipika_doc::TraceView::Source);
     // Bad views and other objects are refused.
     assert!(s.execute("imageTrace.setView", &json!({"view": "sepia"})).is_err());
     assert!(s.execute("imageTrace.setView", &json!({})).is_err());
@@ -1353,18 +1353,18 @@ fn image_trace_views_draw_on_screen_only_and_expand_to_the_result() {
     let white = |p: [u8; 4]| p[0] > 245 && p[1] > 245 && p[2] > 245;
     let blue = |p: [u8; 4]| p[0] < 200 && p[2] > 245;
     let (centre, beside) = ((150, 150), (70, 70));
-    let at = |img: &vectorcraft_render::Rendered, (x, y): (u32, u32)| img.pixel(x, y);
+    let at = |img: &tsipika_render::Rendered, (x, y): (u32, u32)| img.pixel(x, y);
     // The outline is a 1 px line where the disc's right side is (x = 210, anti-aliased).
-    let outlined = |img: &vectorcraft_render::Rendered| (205..=215).any(|x| img.pixel(x, 150)[0] < 128);
+    let outlined = |img: &tsipika_render::Rendered| (205..=215).any(|x| img.pixel(x, 150)[0] < 128);
     let mut expanded = None;
-    for view in vectorcraft_doc::TraceView::ALL {
+    for view in tsipika_doc::TraceView::ALL {
         s.execute("imageTrace.setView", &json!({"id": g.0, "view": view.id()})).unwrap();
         let screen = render_doc(&s, true);
         let (c, b) = (at(&screen, centre), at(&screen, beside));
         assert_eq!(dark(c), view.shows_result() || view.shows_source(), "{view:?}: the disc's middle {c:?}");
         assert_eq!(blue(b), view.shows_source(), "{view:?}: the image's background {b:?}");
         assert!(view.shows_source() || white(b), "{view:?}: nothing beside the disc {b:?}");
-        if view == vectorcraft_doc::TraceView::Outlines {
+        if view == tsipika_doc::TraceView::Outlines {
             assert!(outlined(&screen), "{view:?}: the disc's outline");
         }
         // Exports draw the tracing result whatever the view.
@@ -1424,8 +1424,8 @@ fn rosette_rings_merge_cleanly(turns: &[(u32, &[f64])]) {
     let merged = merged.unwrap();
     for id in s.doc().unwrap().selection.objects.clone().into_iter().filter(|id| *id != merged) {
         let (p, r) = outline(&node(&s, id));
-        let over = vectorcraft_pathops::boolean(&p, r, &ring, rule, vectorcraft_pathops::BoolOp::Intersect);
-        let a = vectorcraft_pathops::area(&over, FillRule::NonZero);
+        let over = tsipika_pathops::boolean(&p, r, &ring, rule, tsipika_pathops::BoolOp::Intersect);
+        let a = tsipika_pathops::area(&over, FillRule::NonZero);
         assert!(a < 1.0, "{id:?} overlaps the merged shape by {a} pt²");
     }
     // No outline is a sliver or carries a spur (2 × area / length: its mean width).
@@ -1433,16 +1433,16 @@ fn rosette_rings_merge_cleanly(turns: &[(u32, &[f64])]) {
         let (p, r) = outline(&node(&s, id));
         for sp in &p.subpaths {
             let one = PathData::new(vec![sp.clone()]);
-            let width = 2.0 * vectorcraft_pathops::area(&one, r) / one.length();
+            let width = 2.0 * tsipika_pathops::area(&one, r) / one.length();
             assert!(width > 1.0, "{id:?} has an outline {width:.3} pt wide on average, {:.1} pt long", one.length());
         }
     }
     // The ring is one outline around the centre (the regions the drags missed aside): the
     // petals' tips are no outlines of their own beside it, apart by a hairline.
-    let big = ring.subpaths.iter().filter(|sp| vectorcraft_pathops::area(&PathData::new(vec![(*sp).clone()]), rule) > 100.0).count();
-    assert_eq!(big, 2, "{:?}", ring.subpaths.iter().map(|sp| vectorcraft_pathops::area(&PathData::new(vec![sp.clone()]), rule)).collect::<Vec<_>>());
+    let big = ring.subpaths.iter().filter(|sp| tsipika_pathops::area(&PathData::new(vec![(*sp).clone()]), rule) > 100.0).count();
+    assert_eq!(big, 2, "{:?}", ring.subpaths.iter().map(|sp| tsipika_pathops::area(&PathData::new(vec![sp.clone()]), rule)).collect::<Vec<_>>());
     // An inner edge would be a second outline over the merged area: normalising would drop it.
-    let clean = vectorcraft_pathops::normalize(&ring, rule);
+    let clean = tsipika_pathops::normalize(&ring, rule);
     assert!((ring.length() - clean.length()).abs() < 1.0, "{} pt of outline, {} without inner edges", ring.length(), clean.length());
 }
 

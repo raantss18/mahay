@@ -1,10 +1,10 @@
-//! Opt-in local check of Sony's lens-correction records ([`lightcraft_raw::lens_metadata`]); it does nothing unless
-//! `LIGHTCRAFT_SONY_LENS_DIR` names a directory of ARW files, so CI never runs it. The files there (searched
+//! Opt-in local check of Sony's lens-correction records ([`hazavana_raw::lens_metadata`]); it does nothing unless
+//! `HAZAVANA_SONY_LENS_DIR` names a directory of ARW files, so CI never runs it. The files there (searched
 //! recursively) are only read, from their headers, and one line per file is printed: settings, where each table came
 //! from, whether its raw-IFD and `SR2SubIFD` copies agree, sample ranges and status. Header and full decode are
-//! compared too when `LIGHTCRAFT_SONY_LENS_FULL=1` (slow on large files).
+//! compared too when `HAZAVANA_SONY_LENS_FULL=1` (slow on large files).
 //!
-//! With `LIGHTCRAFT_SONY_LENS_INVENTORY` naming a CSV inventory of those files (comma-separated, no quoting, a header
+//! With `HAZAVANA_SONY_LENS_INVENTORY` naming a CSV inventory of those files (comma-separated, no quoting, a header
 //! row, one row per file name), every file must have a row, every row a file, and these columns must match where
 //! present: `split` (the file's folder name), `raw_size` (`WxH`), `compression`, `crop_origin` / `crop_size` (Sony's
 //! crop tags, `x y` / `w h`), and for each of `shading`, `ca` and `distortion`: `_entries` (TIFF count), `_bytes`,
@@ -13,13 +13,13 @@
 //! params available`). A file that doesn't decode must still have a row, and fails the check when it has one.
 //!
 //! Any decode error fails the check except an unsupported variant (`RawError::Unsupported`, e.g. the packed ARW of
-//! some older bodies): those are counted, and the count must equal `LIGHTCRAFT_SONY_LENS_UNSUPPORTED` (default 0).
+//! some older bodies): those are counted, and the count must equal `HAZAVANA_SONY_LENS_UNSUPPORTED` (default 0).
 //!
-//! `LIGHTCRAFT_SONY_LENS_DIR=… LIGHTCRAFT_SONY_LENS_INVENTORY=….csv cargo test -p lightcraft-raw --release --test
+//! `HAZAVANA_SONY_LENS_DIR=… HAZAVANA_SONY_LENS_INVENTORY=….csv cargo test -p hazavana-raw --release --test
 //! sony_lens_inventory -- --nocapture`
 
-use lightcraft_raw::lens_metadata::{SonyCopy, SonyField, SonyLensCorrections, SonyLensStatus, SonySetting, SonySettingMeaning, SonySource};
-use lightcraft_raw::{RawError, RawInfo, decode, probe_info};
+use hazavana_raw::lens_metadata::{SonyCopy, SonyField, SonyLensCorrections, SonyLensStatus, SonySetting, SonySettingMeaning, SonySource};
+use hazavana_raw::{RawError, RawInfo, decode, probe_info};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -145,13 +145,13 @@ fn read_csv(path: &Path) -> (Vec<String>, BTreeMap<String, Vec<String>>) {
 
 #[test]
 fn sony_lens_records_reproduce_a_local_inventory() {
-    let Some(dir) = std::env::var_os("LIGHTCRAFT_SONY_LENS_DIR").map(PathBuf::from) else {
-        eprintln!("skip: LIGHTCRAFT_SONY_LENS_DIR unset");
+    let Some(dir) = std::env::var_os("HAZAVANA_SONY_LENS_DIR").map(PathBuf::from) else {
+        eprintln!("skip: HAZAVANA_SONY_LENS_DIR unset");
         return;
     };
-    let full = std::env::var_os("LIGHTCRAFT_SONY_LENS_FULL").is_some_and(|v| v == "1");
-    let inventory = std::env::var_os("LIGHTCRAFT_SONY_LENS_INVENTORY").map(PathBuf::from);
-    let unsupported = std::env::var("LIGHTCRAFT_SONY_LENS_UNSUPPORTED").map_or(0, |v| v.parse().expect("LIGHTCRAFT_SONY_LENS_UNSUPPORTED: a count"));
+    let full = std::env::var_os("HAZAVANA_SONY_LENS_FULL").is_some_and(|v| v == "1");
+    let inventory = std::env::var_os("HAZAVANA_SONY_LENS_INVENTORY").map(PathBuf::from);
+    let unsupported = std::env::var("HAZAVANA_SONY_LENS_UNSUPPORTED").map_or(0, |v| v.parse().expect("HAZAVANA_SONY_LENS_UNSUPPORTED: a count"));
     let report = check(&dir, inventory.as_deref(), full, unsupported);
     assert!(report.problems.is_empty(), "{} problems", report.problems.len());
 }
@@ -276,7 +276,7 @@ struct Scratch(PathBuf);
 
 impl Scratch {
     fn new(name: &str) -> Scratch {
-        let dir = std::env::temp_dir().join(format!("lightcraft-sony-lens-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-sony-lens-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         Scratch(dir)
@@ -292,7 +292,7 @@ impl Drop for Scratch {
 /// A small Sony CFA file with a distortion setting (a lens record), or, `unsupported`, the packed 12-bit ARW variant
 /// the decoder refuses as unsupported.
 fn synthetic_arw(unsupported: bool) -> Vec<u8> {
-    use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
+    use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value, tags as t};
     let mut raw = IfdBuilder::new();
     raw.set(t::MAKE, Value::Ascii("SONY".into()));
     raw.set(t::MODEL, Value::Ascii("ILCE-7CR".into()));

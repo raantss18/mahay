@@ -1,6 +1,6 @@
 //! Right-to-left scripts (Arabic, Hebrew) in the interface: fallback fonts and reading order.
 //!
-//! Fonts: like [`crate::cjk`], the craft-fonts faces for these scripts (`Arab`, `Hebr`) become the
+//! Fonts: like [`crate::cjk`], the mahay-fonts faces for these scripts (`Arab`, `Hebr`) become the
 //! last fallbacks of every UI font family. A build without them looks up one installed face per
 //! script once (Noto Sans Arabic, SF Arabic, Segoe UI…) and reuses it across theme changes.
 //!
@@ -19,10 +19,10 @@ use std::sync::{Arc, OnceLock};
 
 use egui::epaint::text::{ByteIndex, LayoutJob, LayoutSection, TextFormat};
 use egui::{Color32, FontData, FontDefinitions, FontId, Galley, Painter, Rect, Vec2, pos2};
-use filmcraft_text::fonts::{CraftFont, Face};
+use hetsika_text::fonts::{MahayFont, Face};
 use unicode_bidi::{BidiClass, BidiInfo, bidi_class};
 
-/// A right-to-left script: its ISO 15924 code (as in the craft-fonts manifest), letters a face
+/// A right-to-left script: its ISO 15924 code (as in the mahay-fonts manifest), letters a face
 /// must cover, and installed families to prefer, best first.
 struct Script {
     code: &'static str,
@@ -54,12 +54,12 @@ const SCRIPTS: &[Script] = &[
     },
 ];
 
-/// The craft-fonts faces for right-to-left scripts (empty unless built with `CRAFT_FONTS_DIR`).
-pub(crate) fn craft_fonts() -> impl Iterator<Item = &'static CraftFont> {
-    filmcraft_text::fonts::CRAFT_FONTS.iter().filter(|f| f.scripts.iter().any(|s| SCRIPTS.iter().any(|x| x.code == *s)))
+/// The mahay-fonts faces for right-to-left scripts (empty unless built with `MAHAY_FONTS_DIR`).
+pub(crate) fn mahay_fonts() -> impl Iterator<Item = &'static MahayFont> {
+    hetsika_text::fonts::MAHAY_FONTS.iter().filter(|f| f.scripts.iter().any(|s| SCRIPTS.iter().any(|x| x.code == *s)))
 }
 
-/// Installed faces for the scripts craft-fonts does not cover, looked up once per process (native
+/// Installed faces for the scripts mahay-fonts does not cover, looked up once per process (native
 /// builds only). A face that covers several scripts (Segoe UI) is added once.
 fn system_fonts() -> &'static [(String, Arc<FontData>)] {
     static FONTS: OnceLock<Vec<(String, Arc<FontData>)>> = OnceLock::new();
@@ -67,12 +67,12 @@ fn system_fonts() -> &'static [(String, Arc<FontData>)] {
         if cfg!(target_arch = "wasm32") {
             return Vec::new();
         }
-        let missing: Vec<&Script> = SCRIPTS.iter().filter(|s| !craft_fonts().any(|f| f.scripts.contains(&s.code))).collect();
+        let missing: Vec<&Script> = SCRIPTS.iter().filter(|s| !mahay_fonts().any(|f| f.scripts.contains(&s.code))).collect();
         if missing.is_empty() {
             return Vec::new();
         }
-        filmcraft_text::fonts::scan_system();
-        let faces: Vec<_> = filmcraft_text::fonts::all_faces().into_iter().filter(|f| f.info.origin == "system" && !f.info.italic).collect();
+        hetsika_text::fonts::scan_system();
+        let faces: Vec<_> = hetsika_text::fonts::all_faces().into_iter().filter(|f| f.info.origin == "system" && !f.info.italic).collect();
         let by_weight = |f: &&Arc<Face>| f.info.weight.abs_diff(400);
         let mut chosen: Vec<&Arc<Face>> = Vec::new();
         let mut out = Vec::new();
@@ -97,14 +97,14 @@ fn system_fonts() -> &'static [(String, Arc<FontData>)] {
     })
 }
 
-/// Append the right-to-left faces (craft-fonts, else installed ones) after the other fallbacks of
+/// Append the right-to-left faces (mahay-fonts, else installed ones) after the other fallbacks of
 /// every font family. Their letters are in no other UI font, so their place among the fallbacks
 /// does not matter, and Latin text keeps the interface fonts. Installed faces come last, after
-/// the craft-fonts faces: one may be a broad face (DejaVu Sans, Segoe UI) that should not take
-/// symbols the craft-fonts faces draw.
+/// the mahay-fonts faces: one may be a broad face (DejaVu Sans, Segoe UI) that should not take
+/// symbols the mahay-fonts faces draw.
 pub(crate) fn install(fonts: &mut FontDefinitions) {
     let mut names = Vec::new();
-    for f in craft_fonts() {
+    for f in mahay_fonts() {
         let name = format!("craft:{} {}", f.family, f.style);
         fonts.font_data.insert(name.clone(), Arc::new(FontData::from_static(f.bytes)));
         names.push(name);
@@ -328,7 +328,7 @@ mod tests {
 
     #[test]
     fn latin_and_numbers_inside_rtl_keep_their_order() {
-        assert_eq!(visual("قال FilmCraft 0.6 جيد"), [["جيد", " ", "FilmCraft 0.6", " ", "قال"]]);
+        assert_eq!(visual("قال Hetsika 0.6 جيد"), [["جيد", " ", "Hetsika 0.6", " ", "قال"]]);
         // Arabic-Indic digits read left to right, one section each so the shaper keeps them so
         assert_eq!(visual("سنة ١٤٤٥"), [["١", "٤", "٤", "٥", " ", "سنة"]]);
     }
@@ -370,8 +370,8 @@ mod tests {
         let ctx = egui::Context::default();
         let mut fonts = FontDefinitions::default();
         install(&mut fonts);
-        if !craft_fonts().any(|f| f.scripts.contains(&"Arab")) && !system_fonts().iter().any(|(name, _)| name == "system-arab") {
-            eprintln!("SKIPPED: no craft-fonts or installed Arabic font");
+        if !mahay_fonts().any(|f| f.scripts.contains(&"Arab")) && !system_fonts().iter().any(|(name, _)| name == "system-arab") {
+            eprintln!("SKIPPED: no mahay-fonts or installed Arabic font");
             return;
         }
         ctx.set_fonts(fonts);

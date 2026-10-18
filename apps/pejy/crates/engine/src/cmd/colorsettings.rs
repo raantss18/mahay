@@ -1,7 +1,7 @@
 //! Edit › Color Settings: the RGB and CMYK working spaces, conversion intent and black-point
 //! compensation (process-wide), and loading ICC profiles.
 
-use designcraft_color::cms::{self, ColorSettings, Intent};
+use pejy_color::cms::{self, ColorSettings, Intent};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, cmd, str_param};
@@ -56,7 +56,7 @@ pub fn specs() -> Vec<CommandSpec> {
             }
         }),
         cmd!(query "color.convert", "Convert Color", [], None, "{color: {model: rgb, r, g, b} | {model: cmyk, c, m, y, k} | {model: gray, k}, to: rgb|cmyk|gray|lab} — through the working spaces", always, |_s, p| {
-            let c: designcraft_color::Color = serde_json::from_value(p.get("color").cloned().unwrap_or_default()).map_err(|e| bad("color.convert", e.to_string()))?;
+            let c: pejy_color::Color = serde_json::from_value(p.get("color").cloned().unwrap_or_default()).map_err(|e| bad("color.convert", e.to_string()))?;
             let a = cms::active();
             let intent = a.settings().intent;
             Ok(match str_param(p, "to").unwrap_or("rgb") {

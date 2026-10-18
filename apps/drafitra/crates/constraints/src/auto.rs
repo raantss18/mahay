@@ -1,8 +1,8 @@
 //! AUTOCONSTRAIN: infer constraints from geometry that already nearly satisfies them; and
 //! CONSTRAINTINFER's inference for what a command just placed ([`infer_placed`]).
 
-use cadcraft_doc::{Constraint, ConstraintKind, Drawing, EntityKind, GeomRef, Handle, Sub};
-use cadcraft_geom::{Line, Vec2};
+use drafitra_doc::{Constraint, ConstraintKind, Drawing, EntityKind, GeomRef, Handle, Sub};
+use drafitra_geom::{Line, Vec2};
 
 /// Most objects considered at once.
 pub const MAX_OBJECTS: usize = 200;
@@ -45,7 +45,7 @@ fn collect(d: &Drawing, handles: &[Handle]) -> Geo {
                 }
             }
             EntityKind::Arc(a) => {
-                let ga = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+                let ga = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
                 if ga.center.is_finite() && a.radius.is_finite() {
                     g.points.push((GeomRef::new(h, Sub::Start), ga.start_point()));
                     g.points.push((GeomRef::new(h, Sub::End), ga.end_point()));
@@ -295,7 +295,7 @@ pub fn infer_placed(d: &Drawing, placed: &[Handle], others: &[Handle], o: &Infer
 /// Does `p` (on the circle) lie within the arc's sweep (always for a circle)?
 fn on_arc(d: &Drawing, h: Handle, c: Vec2, p: Vec2) -> bool {
     match d.entity(h).map(|e| &e.kind) {
-        Some(EntityKind::Arc(a)) => cadcraft_geom::angle_in_sweep((p - c).angle(), a.start, a.end),
+        Some(EntityKind::Arc(a)) => drafitra_geom::angle_in_sweep((p - c).angle(), a.start, a.end),
         _ => true,
     }
 }

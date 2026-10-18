@@ -8,7 +8,7 @@ use crate::devinspect::{Section, properties};
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
 
-fn id(v: Value) -> figcraft_doc::NodeId {
+fn id(v: Value) -> endrika_doc::NodeId {
     id_of(&v["id"]).unwrap()
 }
 

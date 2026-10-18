@@ -1,9 +1,9 @@
 //! Annotative objects seen through layout viewports (#468): they draw at their paper size in
 //! every viewport whose scale they support, and not at all in others when ANNOALLVISIBLE is 0.
 
-use cadcraft_doc::{AnnoScale, Common, Drawing, EntityKind, Space, Text, Viewport};
-use cadcraft_geom::{Bounds2, Vec3};
-use cadcraft_render::{Options, VIEWPORT_CONTENT, build};
+use drafitra_doc::{AnnoScale, Common, Drawing, EntityKind, Space, Text, Viewport};
+use drafitra_geom::{Bounds2, Vec3};
+use drafitra_render::{Options, VIEWPORT_CONTENT, build};
 
 /// A viewport on Layout1, 100 × 100 paper units, showing a model window `100 × scale`.
 fn viewport(x: f64, scale: f64) -> Viewport {

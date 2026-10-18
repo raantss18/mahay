@@ -3,7 +3,7 @@
 //! used to create them. They prove recovery/mapping behavior, not Affinity's layout or exporter.
 #![allow(dead_code)]
 
-use vectorcraft_affinity::synth::{self, F, Method, tag};
+use tsipika_affinity::synth::{self, F, Method, tag};
 
 pub fn array_f64(field: &[u8; 4], values: &[f64]) -> F {
     let mut bytes = vec![0x8a];
@@ -59,7 +59,7 @@ pub fn attrs(family: &str, postscript: &str, weight: i32, italic: bool, size: f6
     )
 }
 
-pub fn run(end: i32, attrs: Option<F>) -> Vec<(vectorcraft_affinity::stream::Tag, F)> {
+pub fn run(end: i32, attrs: Option<F>) -> Vec<(tsipika_affinity::stream::Tag, F)> {
     let mut fields = vec![(tag(b"Indx"), F::I32(end))];
     if let Some(attrs) = attrs {
         fields.push((tag(b"Item"), attrs));
@@ -67,7 +67,7 @@ pub fn run(end: i32, attrs: Option<F>) -> Vec<(vectorcraft_affinity::stream::Tag
     fields
 }
 
-pub fn block(glyphs: F, runs: Vec<Vec<(vectorcraft_affinity::stream::Tag, F)>>, alignments: &[i32]) -> F {
+pub fn block(glyphs: F, runs: Vec<Vec<(tsipika_affinity::stream::Tag, F)>>, alignments: &[i32]) -> F {
     F::Obj(
         tag(b"StBl"),
         vec![

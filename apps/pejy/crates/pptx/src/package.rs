@@ -237,7 +237,7 @@ pub fn write(p: &Package) -> Result<Vec<u8>> {
     put(
         "docProps/app.xml",
         format!(
-            "{DECL}<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\" xmlns:vt=\"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes\"><Application>DesignCraft</Application><Slides>{n}</Slides><PresentationFormat>Custom</PresentationFormat></Properties>"
+            "{DECL}<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\" xmlns:vt=\"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes\"><Application>Pejy</Application><Slides>{n}</Slides><PresentationFormat>Custom</PresentationFormat></Properties>"
         ),
     );
 
@@ -312,12 +312,12 @@ fn theme() -> String {
     let ln = "<a:ln w=\"6350\"><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:ln>".repeat(3);
     let fx = "<a:effectStyle><a:effectLst/></a:effectStyle>".repeat(3);
     format!(
-        "{DECL}<a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"DesignCraft\"><a:themeElements>\
-<a:clrScheme name=\"DesignCraft\"><a:dk1><a:srgbClr val=\"000000\"/></a:dk1><a:lt1><a:srgbClr val=\"FFFFFF\"/></a:lt1><a:dk2><a:srgbClr val=\"44546A\"/></a:dk2><a:lt2><a:srgbClr val=\"E7E6E6\"/></a:lt2>\
+        "{DECL}<a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"Pejy\"><a:themeElements>\
+<a:clrScheme name=\"Pejy\"><a:dk1><a:srgbClr val=\"000000\"/></a:dk1><a:lt1><a:srgbClr val=\"FFFFFF\"/></a:lt1><a:dk2><a:srgbClr val=\"44546A\"/></a:dk2><a:lt2><a:srgbClr val=\"E7E6E6\"/></a:lt2>\
 <a:accent1><a:srgbClr val=\"4472C4\"/></a:accent1><a:accent2><a:srgbClr val=\"ED7D31\"/></a:accent2><a:accent3><a:srgbClr val=\"A5A5A5\"/></a:accent3><a:accent4><a:srgbClr val=\"FFC000\"/></a:accent4><a:accent5><a:srgbClr val=\"5B9BD5\"/></a:accent5><a:accent6><a:srgbClr val=\"70AD47\"/></a:accent6>\
 <a:hlink><a:srgbClr val=\"0563C1\"/></a:hlink><a:folHlink><a:srgbClr val=\"954F72\"/></a:folHlink></a:clrScheme>\
-<a:fontScheme name=\"DesignCraft\"><a:majorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:majorFont><a:minorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:minorFont></a:fontScheme>\
-<a:fmtScheme name=\"DesignCraft\"><a:fillStyleLst>{fill3}</a:fillStyleLst><a:lnStyleLst>{ln}</a:lnStyleLst><a:effectStyleLst>{fx}</a:effectStyleLst><a:bgFillStyleLst>{fill3}</a:bgFillStyleLst></a:fmtScheme>\
+<a:fontScheme name=\"Pejy\"><a:majorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:majorFont><a:minorFont><a:latin typeface=\"Arial\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/></a:minorFont></a:fontScheme>\
+<a:fmtScheme name=\"Pejy\"><a:fillStyleLst>{fill3}</a:fillStyleLst><a:lnStyleLst>{ln}</a:lnStyleLst><a:effectStyleLst>{fx}</a:effectStyleLst><a:bgFillStyleLst>{fill3}</a:bgFillStyleLst></a:fmtScheme>\
 </a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>"
     )
 }

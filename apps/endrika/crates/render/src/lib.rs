@@ -1,4 +1,4 @@
-//! The FigCraft renderer.
+//! The Endrika renderer.
 //!
 //! [`render_view`] draws a page region at any zoom into a premultiplied RGBA pixmap (the canvas);
 //! [`render_node`] rasterises one node for export at a scale. Everything is CPU (tiny-skia) so it
@@ -26,9 +26,9 @@ pub use export_depth::{ExportDepthError, MAX_EXPORT_DEPTH, check_export_depth};
 pub use retained::{Retained, Work};
 pub use tiny_skia::{FillRule, Pixmap};
 
-use figcraft_color::{Color, ColorProfile};
-use figcraft_doc::{Document, ExportFormat, NodeId, NodeKind};
-use figcraft_geom::{Affine, Rect};
+use endrika_color::{Color, ColorProfile};
+use endrika_doc::{Document, ExportFormat, NodeId, NodeKind};
+use endrika_geom::{Affine, Rect};
 
 /// Which part of a page to draw, and how big.
 #[derive(Clone, Debug)]
@@ -87,7 +87,7 @@ fn new_pixmap(w: u32, h: u32) -> Option<Pixmap> {
     Pixmap::new(w, h)
 }
 
-/// The largest backdrop radius (background blur, glass: see [`figcraft_doc::Effect::backdrop_radius`])
+/// The largest backdrop radius (background blur, glass: see [`endrika_doc::Effect::backdrop_radius`])
 /// in the document (0 without any).
 pub(crate) fn max_backdrop_blur(doc: &Document) -> f64 {
     doc.max_backdrop_radius()
@@ -244,12 +244,12 @@ pub fn render_alone(doc: &Document, id: NodeId, view: &View, how: Alone) -> Opti
     n.is_mask = false;
     match how {
         Alone::WithEffects => {
-            n.effects.retain(|e| !matches!(e.kind, figcraft_doc::EffectKind::BackgroundBlur(_) | figcraft_doc::EffectKind::Glass(_)))
+            n.effects.retain(|e| !matches!(e.kind, endrika_doc::EffectKind::BackgroundBlur(_) | endrika_doc::EffectKind::Glass(_)))
         }
         Alone::Plain => {
             n.effects.clear();
             n.opacity = 1.0;
-            n.blend = figcraft_color::BlendMode::Normal;
+            n.blend = endrika_color::BlendMode::Normal;
         }
     }
     let mut pix = Pixmap::new(view.width.clamp(1, 16_384), view.height.clamp(1, 16_384))?;

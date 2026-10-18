@@ -15,7 +15,7 @@ const CHUNK: u64 = 64 << 10;
 const RESERVE_MAX: usize = 64 << 20;
 
 fn damaged(e: impl std::fmt::Display) -> FormatError {
-    FormatError::NotVectorcraft(format!("damaged compressed data: {e}"))
+    FormatError::NotTsipika(format!("damaged compressed data: {e}"))
 }
 
 /// A file opened for reading: its JSON, and where the data after it is.

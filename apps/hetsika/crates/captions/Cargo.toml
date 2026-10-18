@@ -1,6 +1,6 @@
 [package]
-name = "filmcraft-captions"
-description = "FilmCraft captions: SRT, WebVTT, SCC, MCC, EBU STL and TTML/IMSC1/DFXP import/export, caption layout and burn-in rasterisation"
+name = "hetsika-captions"
+description = "Hetsika captions: SRT, WebVTT, SCC, MCC, EBU STL and TTML/IMSC1/DFXP import/export, caption layout and burn-in rasterisation"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,10 +10,10 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-filmcraft-time = { workspace = true }
-filmcraft-color = { workspace = true }
-filmcraft-project = { workspace = true }
-filmcraft-text = { workspace = true }
+hetsika-time = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-project = { workspace = true }
+hetsika-text = { workspace = true }
 thiserror = { workspace = true }
 roxmltree = { workspace = true }
 

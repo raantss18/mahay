@@ -5,7 +5,7 @@
 //! laid out for it. Everything written reads back; what the format can't say is written as its
 //! value with a warning; damaged files never panic.
 
-use figcraft_doc::{Collection, Mode, Style, StyleKind, Variable, VariableType, VariableValue};
+use endrika_doc::{Collection, Mode, Style, StyleKind, Variable, VariableType, VariableValue};
 use serde_json::json;
 
 use super::*;
@@ -733,7 +733,7 @@ fn strokes_wider_on_one_side_are_written_as_their_outline_and_come_back_as_strok
     assert!(line["fillGeometry"].is_array() && line["vectorData"].is_object());
     assert_eq!(line["transform"]["m02"], 20.0);
     let kept = &line["pluginData"][0];
-    assert_eq!((kept["pluginID"].as_str(), kept["key"].as_str()), (Some("figcraft"), Some("stroke")));
+    assert_eq!((kept["pluginID"].as_str(), kept["key"].as_str()), (Some("endrika"), Some("stroke")));
     assert!(kept["value"].as_str().unwrap().contains("width_profile"));
     // Our own import gets the line and its stroke back.
     let (bytes, warnings) = export(&doc, None).unwrap();
@@ -945,7 +945,7 @@ fn junk_style_definitions_and_orders_never_panic() {
     }
 }
 
-/// Local only (`FIGCRAFT_FIG_SAMPLES`): each sample's variables, modes, bindings, styles and style
+/// Local only (`ENDRIKA_FIG_SAMPLES`): each sample's variables, modes, bindings, styles and style
 /// links come back the same after an export and another import.
 #[test]
 fn local_samples_keep_their_variables_and_styles() {

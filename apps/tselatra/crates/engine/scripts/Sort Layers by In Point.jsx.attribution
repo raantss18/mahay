@@ -1,7 +1,7 @@
 asset:        Sort Layers by In Point.jsx
-title:        EffectCraft sample script (Sort Layers by In Point)
-author:       EffectCraft contributors
+title:        Tselatra sample script (Sort Layers by In Point)
+author:       Tselatra contributors
 source:       original work
 license:      MIT OR Apache-2.0
-added:        2026-10-03 by EffectCraft contributors (M13.1)
-notes:        Written from scratch for EffectCraft against the documented scripting behaviour; not derived from any Adobe sample.
+added:        2026-10-03 by Tselatra contributors (M13.1)
+notes:        Written from scratch for Tselatra against the documented scripting behaviour; not derived from any Adobe sample.

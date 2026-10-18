@@ -7,7 +7,7 @@ use super::*;
 
 fn pdf(s: &mut Session, p: Value) -> (String, Value) {
     let v = s.execute("document.exportPdf", &p).unwrap();
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (String::from_utf8_lossy(&bytes).into_owned(), v["warnings"].clone())
 }
 
@@ -18,9 +18,9 @@ fn export_pdf_converts_colours_writes_the_output_intent_and_real_text() {
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 40, "height": 40})).unwrap();
     s.execute("paint.setFill", &json!({"color": {"model": "rgb", "r": 1.0, "g": 0.0, "b": 0.0}})).unwrap();
     s.execute("text.create", &json!({"x": 80, "y": 60, "text": "Press ready"})).unwrap();
-    let generic = vectorcraft_color::cms::GENERIC_CMYK;
+    let generic = tsipika_color::cms::GENERIC_CMYK;
     let p = json!({
-        "preset": "VectorCraft Default",
+        "preset": "Tsipika Default",
         "compression": {"compressText": false},
         "output": {"conversion": "destination", "destination": generic, "profiles": "destination", "outputIntent": generic, "outputConditionId": "Generic press", "trapped": true},
         "advanced": {"outlineText": false},

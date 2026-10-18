@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-segment"
+name = "tselatra-segment"
 description = "Swappable trained models for Roto Brush and face tracking: the MaskModel and FaceModel interfaces, a registry of open-licensed models, PyTorch checkpoint and TensorFlow Lite readers, a pure-Rust MobileSAM and MediaPipe Face Landmarker"
 version.workspace = true
 edition.workspace = true

@@ -11,10 +11,10 @@
 
 use egui::{Rect, Sense, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Lab};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::ColorMode;
-use vectorcraft_engine::cmd::color_value;
+use tsipika_color::cms::{self, Lab};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::ColorMode;
+use tsipika_engine::cmd::color_value;
 
 use super::DialogSpec;
 use super::form::PREVIEWED;
@@ -22,7 +22,7 @@ use crate::panels::color::{GAMUT_WARNING, WEB_WARNING, gamut_fix, hex_digits, is
 use crate::panels::{c32, color_json};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 pub(super) const KIND: &str = "colorPicker";
 
@@ -176,7 +176,7 @@ fn store(d: &mut Dialog, p: &Picked) {
 }
 
 /// The colour the proxy shows (a gradient's first stop; the last colour for None and patterns).
-fn proxy_color(app: &VectorcraftApp, stroke: bool) -> Color {
+fn proxy_color(app: &TsipikaApp, stroke: bool) -> Color {
     let (f, s) = crate::panels::current_paints(app);
     match if stroke { s } else { f } {
         Paint::Solid { color, .. } => color,
@@ -187,7 +187,7 @@ fn proxy_color(app: &VectorcraftApp, stroke: bool) -> Color {
 
 /// `ui.colorPicker {stroke?, color?}`: open the picker for the fill (or stroke) proxy, starting
 /// from `color` or the proxy's colour.
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let stroke = p.get("stroke").and_then(Value::as_bool).unwrap_or(!app.session.fill_active);
     let color = match p.get("color") {
         Some(v) => color_value(v).ok_or_else(|| format!("bad color {v}"))?,
@@ -203,7 +203,7 @@ pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
     Ok(Value::Null)
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     let channel = Channel::parse(&d.str("channel")).unwrap_or_default();
     let web = d.bool("webOnly");
     let swatches = d.bool("swatches");
@@ -282,7 +282,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
 /// Show the picked colour on the selected art while the picker is open: each new colour replaces
 /// the last preview. Nothing previews until the colour first changes, nor without a selection
 /// (the colour then only becomes the default paint, on OK).
-fn preview(app: &mut VectorcraftApp, d: &mut Dialog) {
+fn preview(app: &mut TsipikaApp, d: &mut Dialog) {
     let (cmd, params) = paint_command(app, d);
     let first = !app.session.in_interaction();
     let unchanged = d.fields.get(PREVIEWED) == Some(&params) || first && d.fields.get("original").and_then(color_value) == Some(picked(d).color);
@@ -299,7 +299,7 @@ fn preview(app: &mut VectorcraftApp, d: &mut Dialog) {
 
 /// The command that applies the picked colour to the proxy, and its params (as CMYK in a CMYK
 /// document).
-fn paint_command(app: &VectorcraftApp, d: &Dialog) -> (&'static str, Value) {
+fn paint_command(app: &TsipikaApp, d: &Dialog) -> (&'static str, Value) {
     let mut c = picked(d).color;
     if matches!(c, Color::Rgb { .. }) && app.session.active().is_some_and(|s| s.doc.color_mode == ColorMode::Cmyk) {
         let [cy, m, y, k] = c.to_cmyk_managed(cms::active().settings().intent);
@@ -406,7 +406,7 @@ fn value_fields(ui: &mut Ui, p: &Picked, channel: Channel) -> (Option<Picked>, O
 }
 
 /// The document's colour swatches as a list; returns the clicked swatch's colour.
-fn swatch_list(app: &VectorcraftApp, ui: &mut Ui, current: &Color) -> Option<Color> {
+fn swatch_list(app: &TsipikaApp, ui: &mut Ui, current: &Color) -> Option<Color> {
     let t = Tokens::get(ui.ctx());
     let mut chosen = None;
     ui.allocate_ui(vec2(FIELD + 28.0, FIELD), |ui| {
@@ -444,39 +444,39 @@ fn swatch_list(app: &VectorcraftApp, ui: &mut Ui, current: &Color) -> Option<Col
 }
 
 /// OK: apply the colour to the proxy, keeping the live preview as one undo step.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (cmd, params) = paint_command(app, d);
     super::form::commit_preview(app, cmd, params)
 }
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::panels::color::in_gamut;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
         app
     }
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(Default::default(), |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
     }
 
-    fn fill_hex(app: &VectorcraftApp) -> String {
+    fn fill_hex(app: &TsipikaApp) -> String {
         crate::panels::current_paints(app).0.color().unwrap().to_hex()
     }
 
     /// Runs one frame of the dialog with `events` in `ctx`, which keeps the keyboard focus from
     /// frame to frame, and returns the texts drawn with their screen rects.
-    fn frame_in(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
+    fn frame_in(ctx: &egui::Context, app: &mut TsipikaApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
         fn collect(s: &egui::Shape, out: &mut Vec<(String, Rect)>) {
@@ -564,7 +564,7 @@ mod tests {
     #[test]
     fn the_selection_shows_the_colour_live() {
         let mut app = app();
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let undo = |app: &TsipikaApp| app.session.doc().unwrap().history.undo.len();
         let before = undo(&app);
         app.run("ui.colorPicker", json!({})).unwrap();
         frame(&mut app);

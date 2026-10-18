@@ -3,7 +3,7 @@
 //! the values; what shows it (the Inspect panel, `component.playground`) renders that instance and
 //! generates its code.
 
-use figcraft_doc::{Document, ExportFormat, NodeId, NodeKind};
+use endrika_doc::{Document, ExportFormat, NodeId, NodeKind};
 use serde_json::{Map, Value, json};
 
 use crate::cmd::CommandSpec;

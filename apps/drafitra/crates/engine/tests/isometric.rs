@@ -1,11 +1,11 @@
 //! Isometric drafting: ISODRAFT and ISOPLANE (SNAPSTYL, SNAPISOPAIR), the isometric snap
 //! lattice, ortho along the isometric plane's axes and ELLIPSE's Isocircle option.
 
-use cadcraft_doc::EntityKind;
-use cadcraft_engine::Session;
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::snap::iso::{self, IsoPlane};
-use cadcraft_engine::snap::tracking::CursorQuery;
+use drafitra_doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::snap::iso::{self, IsoPlane};
+use drafitra_engine::snap::tracking::CursorQuery;
 use serde_json::{Value, json};
 
 fn v(x: f64, y: f64) -> Vec2 {
@@ -17,14 +17,14 @@ fn deg(a: f64) -> Vec2 {
 }
 
 fn getvar(s: &Session, name: &str) -> Value {
-    cadcraft_engine::sysvars::get(s, name).unwrap_or(Value::Null)
+    drafitra_engine::sysvars::get(s, name).unwrap_or(Value::Null)
 }
 
-fn setvar(s: &mut Session, name: &str, value: Value) -> cadcraft_engine::Result<Value> {
+fn setvar(s: &mut Session, name: &str, value: Value) -> drafitra_engine::Result<Value> {
     s.execute("setvar", &json!({ "name": name, "value": value }))
 }
 
-fn last_ellipse(s: &Session) -> cadcraft_doc::Ellipse {
+fn last_ellipse(s: &Session) -> drafitra_doc::Ellipse {
     match s.doc().unwrap().model.iter().last().map(|e| e.kind.clone()) {
         Some(EntityKind::Ellipse(e)) => e,
         other => panic!("not an ellipse: {other:?}"),
@@ -32,7 +32,7 @@ fn last_ellipse(s: &Session) -> cadcraft_doc::Ellipse {
 }
 
 /// Whether `p` lies on the full ellipse.
-fn on_ellipse(e: &cadcraft_doc::Ellipse, p: Vec2) -> bool {
+fn on_ellipse(e: &drafitra_doc::Ellipse, p: Vec2) -> bool {
     let (c, m) = (e.center.xy(), e.major.xy());
     let (a, b) = (m.len(), m.len() * e.ratio);
     let u = m.normalized();
@@ -211,7 +211,7 @@ fn ellipse_isocircle_in_each_plane() {
     s.cmdline("ellipse a i 0,0 1 0 90").unwrap();
     assert!(s.running.is_none());
     let e = last_ellipse(&s);
-    assert!((e.end - e.start).abs() > 1e-6 && (e.end - e.start).abs() < cadcraft_geom::TAU - 1e-6);
+    assert!((e.end - e.start).abs() > 1e-6 && (e.end - e.start).abs() < drafitra_geom::TAU - 1e-6);
 
     // JSON form.
     let r = s.execute("ellipse", &json!({ "isocircle": { "center": [1, 1], "radius": 1, "plane": "top" } })).unwrap();
@@ -233,9 +233,9 @@ fn hostile_isometric_inputs_never_panic() {
         let p = iso::lattice_snap(v(f64::MAX, -f64::MAX), d, Vec2::ZERO, f64::NAN);
         let _ = p;
     }
-    let view = cadcraft_geom::Bounds2 { min: v(-1e12, -1e12), max: v(1e12, 1e12) };
+    let view = drafitra_geom::Bounds2 { min: v(-1e12, -1e12), max: v(1e12, 1e12) };
     assert!(iso::grid_lines(view, 1.0, Vec2::ZERO, 0.0, 5).is_empty(), "too many lines");
-    let view = cadcraft_geom::Bounds2 { min: v(-10.0, -10.0), max: v(10.0, 10.0) };
+    let view = drafitra_geom::Bounds2 { min: v(-10.0, -10.0), max: v(10.0, 10.0) };
     let lines = iso::grid_lines(view, 1.0, Vec2::ZERO, 0.3, 0);
     assert!(!lines.is_empty() && lines.len() <= 3 * (iso::MAX_GRID_LINES + 1));
     for plane in IsoPlane::ALL {

@@ -1,16 +1,16 @@
 [package]
-name = "lightcraft-color"
+name = "hazavana-color"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LightCraft color (L0)"
+description = "Hazavana color (L0)"
 
 [lints]
 workspace = true
 
 [dependencies]
 serde = { workspace = true }
-lightcraft-geom = { workspace = true }
+hazavana-geom = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

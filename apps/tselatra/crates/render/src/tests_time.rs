@@ -1,11 +1,11 @@
 //! Time effects through the renderer: neighbouring frames via `EffectHost::self_at`, and the
 //! layer cache staying correct while scrubbing.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Keyframe, ShapePath, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Comp, ItemId, ItemKind, LayerSource, MaskMode, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::{Keyframe, ShapePath, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Comp, ItemId, ItemKind, LayerSource, MaskMode, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 fn render(p: &Project, cid: ItemId, t: f64, cache: Option<&crate::LayerCache>) -> crate::Image {
     let mut r = crate::Renderer::new(p, &crate::NoFootage, crate::RenderOpts::default());
@@ -28,8 +28,8 @@ fn scene(fx: Option<(&str, &[(&str, Value)])>) -> (Project, ItemId) {
     }
     l.props.sub_mut("masks").unwrap().children.push(m.into());
     if let Some((id, vals)) = fx {
-        let spec = effectcraft_effects::find(id).unwrap();
-        let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [200.0, 100.0]);
+        let spec = tselatra_effects::find(id).unwrap();
+        let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [200.0, 100.0]);
         for (k, v) in vals {
             g.prop_mut(k).unwrap().value = v.clone();
         }
@@ -70,9 +70,9 @@ fn echo_blends_neighbouring_frames() {
 #[test]
 fn time_effects_see_the_effects_before_them() {
     let (mut p, cid) = scene(Some(("ec.generate.fill", &[])));
-    let spec = effectcraft_effects::find("ec.time.echo").unwrap();
+    let spec = tselatra_effects::find("ec.time.echo").unwrap();
     let mut next = p.next_id;
-    let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [200.0, 100.0]);
+    let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [200.0, 100.0]);
     g.prop_mut("numberOfEchoes").unwrap().value = Value::Scalar(0.0);
     p.next_id = next;
     p.comp_mut(cid).unwrap().layers[0].props.sub_mut("effects").unwrap().children.push(g.into());
@@ -87,9 +87,9 @@ fn time_difference_of_static_layer_is_black() {
     let cid = p.add_item("Comp", Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));
     let sid = p.add_item("Solid", Label::Red, None, ItemKind::Solid(Solid { color: [0.8, 0.4, 0.2], width: 64, height: 32, pixel_aspect: 1.0 }));
     let mut l = build::layer(&mut p, &comp, "Solid", LayerSource::Solid { item: sid }, (64, 32), None);
-    let spec = effectcraft_effects::find("ec.time.timedifference").unwrap();
+    let spec = tselatra_effects::find("ec.time.timedifference").unwrap();
     let mut next = p.next_id;
-    let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [64.0, 32.0]);
+    let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [64.0, 32.0]);
     g.prop_mut("timeOffset").unwrap().value = Value::Scalar(-0.5);
     p.next_id = next;
     l.props.sub_mut("effects").unwrap().children.push(g.into());
@@ -126,9 +126,9 @@ fn cache_correct_while_scrubbing() {
 fn input_keys_ignore_later_effects() {
     let (mut p, cid) = scene(Some(("ec.blur.gaussian", &[("blurriness", Value::Scalar(4.0))])));
     {
-        let spec = effectcraft_effects::find("ec.stylize.mosaic").unwrap();
+        let spec = tselatra_effects::find("ec.stylize.mosaic").unwrap();
         let mut next = p.next_id;
-        let g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [200.0, 100.0]);
+        let g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [200.0, 100.0]);
         p.next_id = next;
         p.comp_mut(cid).unwrap().layers[0].props.sub_mut("effects").unwrap().children.push(g.into());
     }

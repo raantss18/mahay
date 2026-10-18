@@ -6,7 +6,7 @@
 //! space (2×2 supersampled, so the mesh's outer edges are anti-aliased without seams between
 //! triangles).
 
-use effectcraft_svg::{Affine, Image as SvgImage};
+use tselatra_svg::{Affine, Image as SvgImage};
 use kurbo::Point;
 
 use crate::color::{Cs, Func, color_space};

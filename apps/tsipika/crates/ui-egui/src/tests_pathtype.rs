@@ -3,13 +3,13 @@
 //! Selection tool draws no brackets on a huge selection.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, NodeKind, TextKind};
-use vectorcraft_engine::Session;
+use tsipika_doc::{NodeId, NodeKind, TextKind};
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, dialogs, menus};
+use crate::{TsipikaApp, dialogs, menus};
 
 /// The start and end brackets of type on a path `id`.
-fn brackets(app: &VectorcraftApp, id: NodeId) -> (f64, Option<f64>) {
+fn brackets(app: &TsipikaApp, id: NodeId) -> (f64, Option<f64>) {
     match app.session.doc().unwrap().doc.node(id).map(|n| &n.kind) {
         Some(NodeKind::Text(t)) => match t.kind {
             TextKind::OnPath { start, end, .. } => (start, end),
@@ -20,7 +20,7 @@ fn brackets(app: &VectorcraftApp, id: NodeId) -> (f64, Option<f64>) {
 }
 
 /// Open Type on a Path Options… from its menu item.
-fn open_options(app: &mut VectorcraftApp) {
+fn open_options(app: &mut TsipikaApp) {
     let entry = menus::menu_entries(app).into_iter().find(|e| e.label == "Type on a Path Options…").expect("menu item");
     assert_eq!(entry.path, ["Type", "Type on a Path"]);
     assert!(entry.enabled);
@@ -30,7 +30,7 @@ fn open_options(app: &mut VectorcraftApp) {
 
 /// Two headless canvas frames → the vertices of the second one's tessellated mesh, which the GPU
 /// takes in one buffer.
-fn canvas_vertices(app: &mut VectorcraftApp, ctx: &egui::Context) -> usize {
+fn canvas_vertices(app: &mut TsipikaApp, ctx: &egui::Context) -> usize {
     let raw = || egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))), ..Default::default() };
     ctx.run_ui(raw(), |ui| crate::canvas::show(app, ui)).textures_delta.clear();
     let mut out = ctx.run_ui(raw(), |ui| crate::canvas::show(app, ui));
@@ -41,7 +41,7 @@ fn canvas_vertices(app: &mut VectorcraftApp, ctx: &egui::Context) -> usize {
 
 #[test]
 fn type_on_a_path_options_keep_the_type_where_it_is() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 600, "height": 400})).unwrap();
     let path = app.run("path.create", json!({"d": "M100 200 L500 200"})).unwrap()["id"].as_u64().unwrap();
     let r = app.run("text.createInPath", json!({"path": path, "mode": "onPath", "text": "Along", "at": [300, 210]})).unwrap();
@@ -84,7 +84,7 @@ fn type_on_a_path_options_keep_the_type_where_it_is() {
 /// mesh. On 32,768 (an opened PDF can hold as many curved text lines) they add none.
 #[test]
 fn a_huge_selection_of_type_on_a_path_draws_no_brackets() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     let path = app.run("path.create", json!({"d": "M20 100 L380 100"})).unwrap()["id"].clone();
     app.run("text.createInPath", json!({"path": path, "mode": "onPath", "text": "Along"})).unwrap();
@@ -93,7 +93,7 @@ fn a_huge_selection_of_type_on_a_path_draws_no_brackets() {
     let ctx = egui::Context::default();
     // The vertices that the Selection tool adds over the Rectangle tool, which draws nothing of its
     // own, with everything selected.
-    let brackets = |app: &mut VectorcraftApp| {
+    let brackets = |app: &mut TsipikaApp| {
         app.run("select.all", json!({})).unwrap();
         app.select_tool("rectangle");
         let rectangle = canvas_vertices(app, &ctx);

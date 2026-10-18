@@ -1,0 +1,9 @@
+Drafitra app icon (every file in this directory).
+
+Original artwork for Mahay, generated from brand/svg/drafitra.svg by brand/generate.py and
+brand/apply.py. No third-party material. Licensed like the rest of Mahay, under either of
+
+  * Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+  * MIT license (https://opensource.org/licenses/MIT)
+
+at your option. See docs/BRAND.md for how to use the Mahay marks.

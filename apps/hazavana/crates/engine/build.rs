@@ -1,6 +1,6 @@
-//! Optional build input: with `CRAFT_FONTS_DIR=<storytold/craft-fonts checkout>`, embed every font
-//! in its `fonts/manifest.txt` as `CRAFT_FONTS` (see src/fonts.rs). Unset, `CRAFT_FONTS` is empty.
-//! Recipe from craft-fonts' docs/integration.md; craft-fonts is never a Cargo dependency, and this
+//! Optional build input: with `MAHAY_FONTS_DIR=<raantss18/mahay-fonts checkout>`, embed every font
+//! in its `fonts/manifest.txt` as `MAHAY_FONTS` (see src/fonts.rs). Unset, `MAHAY_FONTS` is empty.
+//! Recipe from mahay-fonts' docs/integration.md; mahay-fonts is never a Cargo dependency, and this
 //! script only reads a local directory (no network).
 //!
 //! wasm32 embeds BIZ UDPGothic Regular (~4.5 MB) and Noto Sans Thai (~214 KiB), to keep the
@@ -11,45 +11,45 @@ use std::path::{Path, PathBuf};
 
 fn main() {
     println!("cargo::rerun-if-changed=build.rs");
-    println!("cargo::rerun-if-env-changed=CRAFT_FONTS_DIR");
-    println!("cargo::rerun-if-env-changed=CRAFT_FONTS_REQUIRED");
-    let required = std::env::var_os("CRAFT_FONTS_REQUIRED").is_some();
-    let mut src = String::from("pub static CRAFT_FONTS: &[CraftFont] = &[\n");
+    println!("cargo::rerun-if-env-changed=MAHAY_FONTS_DIR");
+    println!("cargo::rerun-if-env-changed=MAHAY_FONTS_REQUIRED");
+    let required = std::env::var_os("MAHAY_FONTS_REQUIRED").is_some();
+    let mut src = String::from("pub static MAHAY_FONTS: &[MahayFont] = &[\n");
     let mut embedded = 0;
-    if let Some(dir) = std::env::var_os("CRAFT_FONTS_DIR").map(PathBuf::from).map(resolve) {
-        match craft_fonts(&dir, required) {
+    if let Some(dir) = std::env::var_os("MAHAY_FONTS_DIR").map(PathBuf::from).map(resolve) {
+        match mahay_fonts(&dir, required) {
             Ok(entries) => {
                 embedded = entries.lines().count();
                 src.push_str(&entries);
             }
             Err(e) if required => {
-                println!("cargo::error=CRAFT_FONTS_DIR={}: {e}", dir.display());
+                println!("cargo::error=MAHAY_FONTS_DIR={}: {e}", dir.display());
             }
-            Err(e) => println!("cargo::warning=building without craft-fonts: CRAFT_FONTS_DIR={}: {e}", dir.display()),
+            Err(e) => println!("cargo::warning=building without mahay-fonts: MAHAY_FONTS_DIR={}: {e}", dir.display()),
         }
     } else if required {
-        println!("cargo::error=CRAFT_FONTS_REQUIRED is set but CRAFT_FONTS_DIR is missing");
+        println!("cargo::error=MAHAY_FONTS_REQUIRED is set but MAHAY_FONTS_DIR is missing");
     }
     src.push_str("];\n");
     // Without them the app still runs and every language still selectable, so Chinese and Japanese
     // just paint boxes — the one failure a user cannot diagnose from what they see.
     if embedded == 0 {
         println!(
-            "cargo::warning=no craft-fonts embedded: Chinese and Japanese text will render as empty boxes. \
-             Clone https://github.com/storytold/craft-fonts next to this repo and rebuild with \
-             CRAFT_FONTS_DIR=../craft-fonts"
+            "cargo::warning=no mahay-fonts embedded: Chinese and Japanese text will render as empty boxes. \
+             Clone https://github.com/raantss18/mahay next to this repo and rebuild with \
+             MAHAY_FONTS_DIR=../mahay-fonts"
         );
     }
-    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("craft_fonts.rs");
+    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("mahay_fonts.rs");
     if let Err(e) = std::fs::write(&out, src) {
         println!("cargo::error=writing {}: {e}", out.display());
     }
 }
 
-/// Resolve a relative `CRAFT_FONTS_DIR` against both roots a caller might mean: a build script's
-/// cwd is the *package* root (`crates/engine`), while the `../craft-fonts` the README and
-/// craft-fonts' docs use is written relative to the *workspace* root and would otherwise resolve
-/// to `crates/craft-fonts`.
+/// Resolve a relative `MAHAY_FONTS_DIR` against both roots a caller might mean: a build script's
+/// cwd is the *package* root (`crates/engine`), while the `../mahay-fonts` the README and
+/// mahay-fonts' docs use is written relative to the *workspace* root and would otherwise resolve
+/// to `crates/mahay-fonts`.
 fn resolve(dir: PathBuf) -> PathBuf {
     if dir.is_absolute() {
         return dir;
@@ -60,8 +60,8 @@ fn resolve(dir: PathBuf) -> PathBuf {
     candidates.iter().find(|candidate| candidate.is_dir()).cloned().unwrap_or_else(|| candidates[0].clone())
 }
 
-/// One `CraftFont { .. }` initialiser per manifest line.
-fn craft_fonts(dir: &Path, required: bool) -> Result<String, String> {
+/// One `MahayFont { .. }` initialiser per manifest line.
+fn mahay_fonts(dir: &Path, required: bool) -> Result<String, String> {
     let manifest = dir.join("fonts/manifest.txt");
     println!("cargo::rerun-if-changed={}", manifest.display());
     let text = std::fs::read_to_string(&manifest).map_err(|e| format!("{}: {e}", manifest.display()))?;
@@ -86,7 +86,7 @@ fn craft_fonts(dir: &Path, required: bool) -> Result<String, String> {
         let scripts: Vec<String> = scripts.split(',').map(|s| format!("{:?}", s.trim())).collect();
         let _ = writeln!(
             out,
-            "    CraftFont {{ family: {family:?}, style: {style:?}, scripts: &[{}], bytes: include_bytes!({:?}) }},",
+            "    MahayFont {{ family: {family:?}, style: {style:?}, scripts: &[{}], bytes: include_bytes!({:?}) }},",
             scripts.join(", "),
             path.display().to_string(),
         );

@@ -10,9 +10,9 @@
 use std::collections::HashMap;
 
 use kurbo::{Affine, BezPath, Point, Rect, Vec2};
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{CharStyle, Node, ParaDirection, TextKind, TextObject, TextRun};
-use vectorcraft_text::TextLayout;
+use tsipika_color::Paint;
+use tsipika_doc::{CharStyle, Node, ParaDirection, TextKind, TextObject, TextRun};
+use tsipika_text::TextLayout;
 
 /// One glyph's placement: its baseline origin, advance direction, size and horizontal scale.
 #[derive(Clone, Copy, Debug)]
@@ -349,7 +349,7 @@ impl TextLine {
         let angle = self.at.dir.atan2();
         // The glyphs' tops lean along the baseline (+x), up being -y in the type's own space.
         t.xf = Affine::translate(self.at.origin.to_vec2()) * Affine::rotate(angle) * Affine::skew(-self.at.slant, 0.0);
-        let db = vectorcraft_text::FontDb::global();
+        let db = tsipika_text::FontDb::global();
         // Glyphs spaced each their own way (character tightening, optical kerning) keep their
         // place: each character its own tracking.
         let own = (self.upright.is_none() && t.para.direction.is_none())
@@ -364,7 +364,7 @@ impl TextLine {
             // the difference from the advances.
             if own.is_none() {
                 let length: f64 = path.segments().take(self.baseline.len()).map(|seg| kurbo::ParamCurveArclen::arclen(&seg, 1e-3)).sum();
-                let laid = vectorcraft_text::layout(db, &t);
+                let laid = tsipika_text::layout(db, &t);
                 let natural: f64 = laid.glyphs.iter().map(|g| g.advance).sum();
                 let chars: usize = t.runs.iter().map(|r| r.text.chars().count()).sum();
                 let size = self.at.size;
@@ -373,9 +373,9 @@ impl TextLine {
                     t.runs = tracked(std::mem::take(&mut t.runs), tracking, &spaces);
                 }
             }
-            t.kind = TextKind::OnPath { path: vectorcraft_geom::PathData::from_bezpath(&path), start: 0.0, end: None };
+            t.kind = TextKind::OnPath { path: tsipika_geom::PathData::from_bezpath(&path), start: 0.0, end: None };
             t.xf = Affine::IDENTITY;
-            t.cached_bounds = Some(vectorcraft_text::layout(db, &t).bounds);
+            t.cached_bounds = Some(tsipika_text::layout(db, &t).bounds);
             return Some((t, self.opacity, facts));
         }
         let (start, along) = match self.upright {
@@ -396,7 +396,7 @@ impl TextLine {
         if !t.vertical {
             facts.length = length;
         }
-        let laid = vectorcraft_text::layout(db, &t);
+        let laid = tsipika_text::layout(db, &t);
         let natural: f64 = laid.glyphs.iter().map(|g| g.advance).sum();
         let chars: usize = t.runs.iter().map(|r| r.text.chars().count()).sum();
         let size = self.at.size;
@@ -409,7 +409,7 @@ impl TextLine {
             let (tracking, spaces) = spacing(&laid, &gaps, length - natural, chars, size);
             t.runs = tracked(std::mem::take(&mut t.runs), tracking, &spaces);
             // Tracked: laid out again for its bounds.
-            bounds = vectorcraft_text::layout(db, &t).bounds;
+            bounds = tsipika_text::layout(db, &t).bounds;
         }
         t.cached_bounds = Some(bounds);
         Some((t, self.opacity, facts))
@@ -429,7 +429,7 @@ fn own_spacing(t: &TextObject, baseline: &[Point], advances: &[f64], path: Optio
     if chars < 3 || text.contains(' ') || baseline.len() != chars || advances.len() != chars {
         return None;
     }
-    let laid = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let laid = tsipika_text::layout(tsipika_text::FontDb::global(), t);
     let advs: Vec<f64> = laid.glyphs.iter().map(|g| g.advance).collect();
     if advs.len() != chars || advs.iter().zip(advances).any(|(a, b)| (a - b).abs() > size * 0.01) {
         return None;
@@ -559,7 +559,7 @@ pub(crate) struct Families(HashMap<String, String>);
 
 impl Families {
     pub fn available() -> Self {
-        Self(vectorcraft_text::FontDb::global().families().into_iter().map(|f| (norm(&f), f)).collect())
+        Self(tsipika_text::FontDb::global().families().into_iter().map(|f| (norm(&f), f)).collect())
     }
 
     /// The family and style of a font with base (PostScript) name `name`, or of weight `weight`
@@ -571,7 +571,7 @@ impl Families {
             _ => name,
         };
         // An installed face of that exact PostScript name: its own family and style.
-        if let Some((family, style)) = vectorcraft_text::FontDb::global().by_postscript_name(name) {
+        if let Some((family, style)) = tsipika_text::FontDb::global().by_postscript_name(name) {
             return (family, style, true);
         }
         let (fam, style) = name.split_once(['-', ',']).unwrap_or((name, ""));
@@ -595,7 +595,7 @@ impl Families {
 /// Hebrew or Arabic comes from a PDF in visual order (each glyph where it is drawn): put `t`'s text
 /// back in logical order, with the paragraph direction that shows it as drawn.
 fn to_logical(t: &mut TextObject) {
-    let Some((order, rtl)) = vectorcraft_text::logical_order(&t.plain_text()) else { return };
+    let Some((order, rtl)) = tsipika_text::logical_order(&t.plain_text()) else { return };
     let chars: Vec<(char, usize)> = t.runs.iter().enumerate().flat_map(|(i, r)| r.text.chars().map(move |c| (c, i))).collect();
     let mut runs: Vec<(usize, String)> = Vec::with_capacity(t.runs.len());
     for &(c, i) in order.iter().filter_map(|&k| chars.get(k)) {

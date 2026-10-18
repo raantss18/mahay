@@ -4,7 +4,7 @@
 //! [`crate::Hooks::audio_device`], the web app one on Web Audio. During preview playback an
 //! [`AudioPlayback`] runs a feeder thread (wasm32: [`AudioPlayback::pump`] every UI frame) that
 //! mixes the composition ahead of the device with the same mixdown export uses
-//! (`effectcraft_render::audio::mix_comp`: Audio switch, solo, Audio Levels, audio effects) and
+//! (`tselatra_render::audio::mix_comp`: Audio switch, solo, Audio Levels, audio effects) and
 //! pushes it into an [`AudioFeed`]; the device callback pulls from the feed.
 //!
 //! **A/V sync:** while audio plays, the audio clock drives playback. The clock is the number of
@@ -23,8 +23,8 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
-use effectcraft_engine::project::ItemId;
-use effectcraft_engine::time::{FrameRate, Tick};
+use tselatra_engine::project::ItemId;
+use tselatra_engine::time::{FrameRate, Tick};
 
 use crate::frames::RenderSource;
 
@@ -59,7 +59,7 @@ pub struct AudioOutput {
 }
 
 impl AudioOutput {
-    pub fn from_prefs(p: &effectcraft_engine::prefs::Prefs) -> AudioOutput {
+    pub fn from_prefs(p: &tselatra_engine::prefs::Prefs) -> AudioOutput {
         AudioOutput { device: p.audio.output_device.clone(), left: p.audio.output_left, right: p.audio.output_right, rate: p.audio.preview_sample_rate }
     }
 }
@@ -299,7 +299,7 @@ fn feed_block(src: &RenderSource, comp: ItemId, feed: &AudioFeed, span: &PlaySpa
 /// (resampled when they differ).
 fn mix_block(src: &RenderSource, comp: ItemId, t: Tick, n: usize, rate: u32, mix: u32) -> Vec<f32> {
     let render =
-        |frames: usize, at: u32| effectcraft_engine::render::audio::mix_comp(&src.project, src.footage.as_ref(), src.expr.as_deref(), comp, t, frames, at);
+        |frames: usize, at: u32| tselatra_engine::render::audio::mix_comp(&src.project, src.footage.as_ref(), src.expr.as_deref(), comp, t, frames, at);
     if mix == rate {
         return render(n, rate);
     }
@@ -490,10 +490,10 @@ mod tests {
     /// calling (UI) thread. The sound arrives from the feeder thread, and the clock waits for it.
     #[test]
     fn starting_audio_does_not_wait_for_slow_footage() {
-        use effectcraft_engine::color::Label;
-        use effectcraft_engine::project::{Comp, Footage, FootageKind, ItemKind, LayerSource, Project, build};
-        use effectcraft_engine::render::FootageSource;
-        use effectcraft_engine::render::cache::LayerCache;
+        use tselatra_engine::color::Label;
+        use tselatra_engine::project::{Comp, Footage, FootageKind, ItemKind, LayerSource, Project, build};
+        use tselatra_engine::render::FootageSource;
+        use tselatra_engine::render::cache::LayerCache;
         use std::time::{Duration, Instant};
 
         /// Footage audio that takes `delay` to read the first time (then a constant 0.5).
@@ -502,7 +502,7 @@ mod tests {
             opened: Mutex<bool>,
         }
         impl FootageSource for Slow {
-            fn frame(&self, _: ItemId, _: &Footage, _: Tick) -> Option<Arc<effectcraft_engine::raster::Image>> {
+            fn frame(&self, _: ItemId, _: &Footage, _: Tick) -> Option<Arc<tselatra_engine::raster::Image>> {
                 None
             }
             fn audio(&self, _: ItemId, _: &Footage, _: Tick, frames: usize, _: u32) -> Option<Vec<f32>> {

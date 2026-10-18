@@ -88,7 +88,7 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
                     }
                     ui.painter().galley(egui::pos2(r.min.x + 13.0, r.center().y - g.size().y / 2.0), g, Color32::WHITE);
                     ui.painter().line_segment([r.right_top(), r.right_bottom()], Stroke::new(1.0, t.border));
-                    let response = craft_ui::tabs::Tab::new(ui.id().with(("docktab", *id)), label, active).sense(Sense::click_and_drag()).show_at(
+                    let response = mahay_ui::tabs::Tab::new(ui.id().with(("docktab", *id)), label, active).sense(Sense::click_and_drag()).show_at(
                         ui,
                         r,
                         |_, _| {},
@@ -439,12 +439,12 @@ mod visual_regressions {
     /// Opt-in evidence for native screenshot review; ordinary test runs stay headless and fast.
     #[test]
     fn capture_dock_visual_fixtures() {
-        let Some(directory) = std::env::var_os("CRAFT_UI_VISUAL_FIXTURES").map(std::path::PathBuf::from) else { return };
+        let Some(directory) = std::env::var_os("MAHAY_UI_VISUAL_FIXTURES").map(std::path::PathBuf::from) else { return };
         std::fs::create_dir_all(&directory).unwrap();
         for brightness in crate::theme::Brightness::ALL {
             for width in [800.0, 1280.0] {
                 for scale in [1.0, 1.5, 2.0] {
-                    let mut app = DesignApp::new(designcraft_engine::Session::new(), Default::default());
+                    let mut app = DesignApp::new(pejy_engine::Session::new(), Default::default());
                     app.ui.dock_expanded = true;
                     app.ui.dock_tab = "properties".into();
                     let mut ready = false;
@@ -463,7 +463,7 @@ mod visual_regressions {
                         );
                     harness.input_mut().max_texture_side = Some(8192);
                     harness.run_steps(4);
-                    let stem = format!("designcraft-dock-{}-{width}-{scale}x", brightness.id());
+                    let stem = format!("pejy-dock-{}-{width}-{scale}x", brightness.id());
                     harness.render().unwrap().save(directory.join(format!("{stem}.png"))).unwrap();
                     let panel = egui::containers::panel::PanelState::load(&harness.ctx, egui::Id::new("dock")).unwrap().outer_rect;
                     let region = serde_json::json!({
@@ -493,7 +493,7 @@ mod visual_regressions {
                     crate::theme::install_fonts(&ctx, "en");
                     let tokens = Tokens::for_brightness(brightness);
                     crate::theme::apply(&ctx, &tokens);
-                    let mut app = DesignApp::new(designcraft_engine::Session::new(), Default::default());
+                    let mut app = DesignApp::new(pejy_engine::Session::new(), Default::default());
                     app.ui.dock_expanded = true;
                     app.ui.dock_tab = "properties".into();
                     let mut output = ctx.run_ui(scaled_input(vec2(width, 640.0), scale), |ui| show(&mut app, ui));

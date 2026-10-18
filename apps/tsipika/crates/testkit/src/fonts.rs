@@ -20,7 +20,7 @@ pub fn renamed(family: &str) -> Vec<u8> {
 }
 
 /// A resource fork holding `fonts` as `sfnt` resources and one other resource (a `vers`), as a font
-/// utility writes a suitcase font's fork, and as vectorcraft-text's suitcase tests build one. macOS
+/// utility writes a suitcase font's fork, and as tsipika-text's suitcase tests build one. macOS
 /// keeps a file's resource fork at `<file>/..namedfork/rsrc`.
 pub fn suitcase_fork(fonts: &[Vec<u8>]) -> Vec<u8> {
     let mut data = Vec::new();

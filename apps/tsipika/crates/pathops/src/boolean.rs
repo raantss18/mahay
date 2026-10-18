@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 
 use kurbo::{BezPath, CubicBez, PathSeg, Point, Shape as _};
 use linesweeper::topology::{ContourIdx, Contours, Topology, WindingNumber};
-use vectorcraft_geom::{Anchor, FillRule, PathData, SubPath};
+use tsipika_geom::{Anchor, FillRule, PathData, SubPath};
 
 use crate::PathOpsError;
 use crate::fit::{end_tangent, fit_single, is_straight, sample, start_tangent};

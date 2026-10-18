@@ -1,7 +1,7 @@
 # Polish (pl) catalog. Same format as zh-hant.tsv:  context <TAB> source <TAB> translation
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|few|many" forms).
 #
-# Clean-room: every entry is written from the meaning of VectorCraft's English label, following
+# Clean-room: every entry is written from the meaning of Tsipika's English label, following
 # common Polish desktop-software conventions (commands in the imperative: "Otwórz…", "Zapisz";
 # menus and panels as nouns); no other application's Polish localisation was consulted or copied.
 # Drafted with AI assistance (Claude) from the English meaning; not yet fully reviewed by a native
@@ -27,7 +27,7 @@
 	Paste Design	Wklej projekt
 	Select Unused	Zaznacz nieużywane
 	Glowing Edges…	Świecące krawędzie…
-	About VectorCraft	O programie VectorCraft
+	About Tsipika	O programie Tsipika
 	Align to Path	Wyrównaj do ścieżki
 	Cut Path at Selected Anchor Points	Rozetnij ścieżkę w zaznaczonych punktach kontrolnych
 	Join Our Discord	Dołącz do naszego Discorda
@@ -37,7 +37,7 @@
 	Medium Dark	Średnio ciemny
 	Medium Light	Średnio jasny
 	Light	Jasny
-	Quit VectorCraft	Zakończ VectorCraft
+	Quit Tsipika	Zakończ Tsipika
 	File	Plik
 	New…	Nowy…
 	New from Template…	Nowy z szablonu…
@@ -648,11 +648,11 @@
 	Save Swatch Library…	Zapisz bibliotekę próbek…
 	Symbol Libraries	Biblioteki symboli
 	Help	Pomoc
-	ArtCraft Website	Strona ArtCraft
-	VectorCraft on getartcraft.com	VectorCraft w getartcraft.com
-	VectorCraft on GitHub	VectorCraft w serwisie GitHub
+	Mahay Website	Strona Mahay
+	Tsipika on mahay.com	Tsipika w mahay.com
+	Tsipika on GitHub	Tsipika w serwisie GitHub
 	Search Commands…	Szukaj poleceń…
-	VectorCraft Help…	Pomoc VectorCraft…
+	Tsipika Help…	Pomoc Tsipika…
 	Auto Color	Kolor automatyczny
 	Automatic	Automatycznie
 	Isolate Selected Group	Izoluj zaznaczoną grupę
@@ -703,7 +703,7 @@
 	Dock Panel	Zadokuj panel
 	Float Tool Group	Odepnij grupę narzędzi
 	Services	Usługi
-	Hide VectorCraft	Ukryj VectorCraft
+	Hide Tsipika	Ukryj Tsipika
 	Hide Others	Ukryj pozostałe
 	Minimize	Minimalizuj
 	Zoom	Zmień rozmiar
@@ -1898,7 +1898,7 @@ lighting	Light	Światło
 	Select All Bound Objects	Zaznacz wszystkie powiązane obiekty
 	Multiple objects	Wiele obiektów
 	Graphics: {adapter}	Grafika: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	Część ArtCraft. MIT LUB Apache-2.0. Czcionki: Source Sans 3, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Część Mahay. MIT LUB Apache-2.0. Czcionki: Source Sans 3, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + Tsipika.
 	Version {version} — open-source vector illustration in pure Rust.	Wersja {version} — otwartoźródłowa grafika wektorowa w czystym Ruście.
 	Align to Page	Wyrównaj do strony
 	Smooth Color	Gładki kolor
@@ -2203,7 +2203,7 @@ lighting	Light	Światło
 	{count} folder(s) or file(s) couldn't be read	Nie udało się odczytać folderów lub plików: {count}
 	The search stopped at its limit: search a smaller folder.	Wyszukiwanie zatrzymało się na limicie: przeszukaj mniejszy folder.
 	Copy only fonts you own or are licensed to install.	Kopiuj tylko czcionki, które posiadasz lub masz licencję na ich instalację.
-	VectorCraft copies the fonts to {folder}.	VectorCraft kopiuje czcionki do {folder}.
+	Tsipika copies the fonts to {folder}.	Tsipika kopiuje czcionki do {folder}.
 	Apply to All ({count} more missing)	Zastosuj do wszystkich (brakuje jeszcze: {count})
 	Ignore	Ignoruj
 	Linked File Not Found	Nie znaleziono połączonego pliku
@@ -2291,7 +2291,7 @@ lighting	Light	Światło
 	On: one locked object showing the document, updated when it changes.	Wł.: jeden zablokowany obiekt pokazujący dokument, aktualizowany przy jego zmianie.
 	Off: an editable copy of its art, embedded in this document.	Wył.: edytowalna kopia jego kompozycji, osadzona w tym dokumencie.
 	Images: link to the file instead of only embedding it.	Obrazy: połącz z plikiem zamiast tylko go osadzać.
-	VectorCraft documents: one locked object, updated when the file changes.	Dokumenty VectorCraft: jeden zablokowany obiekt, aktualizowany przy zmianie pliku.
+	Tsipika documents: one locked object, updated when the file changes.	Dokumenty Tsipika: jeden zablokowany obiekt, aktualizowany przy zmianie pliku.
 	Alignment:	Wyrównanie:
 	Applies when the linked file is relinked or updated.	Ma zastosowanie, gdy połączony plik zostanie ponownie połączony lub zaktualizowany.
 	Bounds (Fill Proportionally)	Granice (wypełnij proporcjonalnie)
@@ -2417,7 +2417,7 @@ lighting	Light	Światło
 	3 Color Job	Praca 3-kolorowa
 	Recover Documents	Odzyskaj dokumenty
 	Restored documents open unsaved: save them to keep them.	Odzyskane dokumenty otwierają się jako niezapisane: zapisz je, aby je zachować.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	Ostatnio VectorCraft nie zakończył pracy prawidłowo. Te dokumenty miały niezapisane zmiany:
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Ostatnio Tsipika nie zakończył pracy prawidłowo. Te dokumenty miały niezapisane zmiany:
 	Do you want to save the changes you made to “{name}”?	Czy zapisać zmiany wprowadzone w „{name}”?
 	Don't Save	Nie zapisuj
 	Your changes will be lost if you don't save them.	Jeśli ich nie zapiszesz, zmiany zostaną utracone.
@@ -2559,7 +2559,7 @@ lighting	Light	Światło
 	Selected Swatches Only	Tylko zaznaczone próbki
 	User Defined Libraries	Biblioteki zdefiniowane przez użytkownika
 	Copy Report	Kopiuj raport
-	VectorCraft read this script without running it.	VectorCraft odczytał ten skrypt, nie uruchamiając go.
+	Tsipika read this script without running it.	Tsipika odczytał ten skrypt, nie uruchamiając go.
 	Needs nothing beyond plain JavaScript	Wymaga tylko zwykłego JavaScriptu
 	Needs the script language's own objects or directives	Wymaga własnych obiektów lub dyrektyw języka skryptowego
 	Needs the document model	Wymaga modelu dokumentu
@@ -3549,7 +3549,7 @@ axis	Both	Obie
 	Width	Szerokość
 	:	:
 effect	Regular	Normalny
-	Saving Poster.vectorcraft	Zapisywanie Poster.vectorcraft
+	Saving Poster.tsipika	Zapisywanie Poster.tsipika
 	Community	Społeczność
 	Hide Bar	Ukryj pasek
 	More Options	Więcej opcji
@@ -3561,11 +3561,11 @@ effect	Regular	Normalny
 	Quickly start a new file	Szybko rozpocznij nowy plik
 	Recent Files	Ostatnie pliki
 	Vector illustration — fast, open, scriptable.	Ilustracja wektorowa — szybka, otwarta, skryptowalna.
-	Welcome to VectorCraft	Witamy w VectorCraft
-	ArtCraft website	Strona ArtCraft
+	Welcome to Tsipika	Witamy w Tsipika
+	Mahay website	Strona Mahay
 	Discord	Discord
 	Join our Discord	Dołącz do naszego Discorda
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Dołącz do społeczności ArtCraft na Discordzie (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Dołącz do społeczności Mahay na Discordzie (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Kod źródłowy w serwisie GitHub
 	All Tools	Wszystkie narzędzia
 	Draw	Rysuj
@@ -3610,9 +3610,9 @@ effect	Regular	Normalny
 	Opened with {} note(s): {}	Otwarto, uwagi ({}): {}
 	Revert to the saved version of “{name}”?	Przywrócić zapisaną wersję „{name}”?
 	Replace “{name}”, the file this document was opened from?	Zastąpić „{name}”, plik, z którego otwarto ten dokument?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Przy otwieraniu pominięto to, czego VectorCraft jeszcze nie odczytuje ({what}), więc zastąpienie pliku utraci to bezpowrotnie. Zapisz pod inną nazwą, aby to zachować.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Przy otwieraniu pominięto to, czego Tsipika jeszcze nie odczytuje ({what}), więc zastąpienie pliku utraci to bezpowrotnie. Zapisz pod inną nazwą, aby to zachować.
 	“{name}” already exists. Replace it?	„{name}” już istnieje. Zastąpić?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Nazwa w oknie zapisu to „{typed}”, a VectorCraft dodał rozszerzenie typu pliku. Zastąpienie pliku nadpisze jego zawartość.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	Nazwa w oknie zapisu to „{typed}”, a Tsipika dodał rozszerzenie typu pliku. Zastąpienie pliku nadpisze jego zawartość.
 	Saved {path}	Zapisano {path}
 	Saved {path} with {} note(s): {first}	Zapisano {path}, uwagi ({}): {first}
 	Saving	Zapisywanie
@@ -3621,7 +3621,7 @@ effect	Regular	Normalny
 	Dashed Line	Linia przerywana
 	Panel menu	Menu panelu
 	Unembed…	Wyodrębnij…
-	Applies the next time VectorCraft starts.	Zostanie zastosowane przy następnym uruchomieniu VectorCraft.
+	Applies the next time Tsipika starts.	Zostanie zastosowane przy następnym uruchomieniu Tsipika.
 	Enable Contextual Task Bar	Włącz kontekstowy pasek zadań
 	Next	Dalej
 	OK	OK
@@ -3997,7 +3997,7 @@ imageTrace	Outline	Kontur
 @msg	can't encode the document: {0}	nie można zakodować dokumentu: {0}
 @msg	can't parse shortcut `{c}`	nie można przeanalizować skrótu `{c}`
 @msg	can't parse shortcut `{s}` for `{k}`	nie można przeanalizować skrótu `{s}` dla `{k}`
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	nie można zapisać wersji {0}: VectorCraft zapisuje wersje od {MIN_VERSION} do {VERSION}
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	nie można zapisać wersji {0}: Tsipika zapisuje wersje od {MIN_VERSION} do {VERSION}
 @msg	can't write .{ext} images	nie można zapisywać obrazów .{ext}
 @msg	cannot distort a zero-size bounding box	nie można zniekształcić obwiedni o zerowym rozmiarze
 @msg	cannot read PDF: {0}	nie można odczytać PDF: {0}
@@ -4023,7 +4023,7 @@ imageTrace	Outline	Kontur
 @msg	empty brush stroke	puste pociągnięcie pędzla
 @msg	empty cutter	pusty obiekt tnący
 @msg	empty path	pusta ścieżka
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	wersja pliku {0} jest nowsza niż obsługiwana przez tę wersję VectorCraft ({VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	wersja pliku {0} jest nowsza niż obsługiwana przez tę wersję Tsipika ({VERSION})
 @msg	freeform point {i} needs `at` [x, y] and a valid `color`	dowolny punkt {i} wymaga `at` [x, y] i prawidłowego `color`
 @msg	freeform line {i} must be an array of point indices	dowolna linia {i} musi być tablicą indeksów punktów
 @msg	give both `start` and `end` [x, y] (or neither)	podaj zarówno `start`, jak i `end` [x, y] (albo żadnego)
@@ -4044,9 +4044,9 @@ imageTrace	Outline	Kontur
 @msg	invalid PDF setting: {0}	nieprawidłowe ustawienie PDF: {0}
 @msg	invalid image data for `{0}`	nieprawidłowe dane obrazu dla `{0}`
 @msg	invalid parameters for `{cmd}`: {msg}	nieprawidłowe parametry dla `{cmd}`: {msg}
-@msg	is not an image VectorCraft reads	nie jest obrazem obsługiwanym przez VectorCraft
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	używa `{at}`, czego czytnik PostScript programu VectorCraft nie zna
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	używa `{at}`, czego czytnik PostScript programu VectorCraft nie zna, w {procs}
+@msg	is not an image Tsipika reads	nie jest obrazem obsługiwanym przez Tsipika
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	używa `{at}`, czego czytnik PostScript programu Tsipika nie zna
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	używa `{at}`, czego czytnik PostScript programu Tsipika nie zna, w {procs}
 @msg	its Windows metafile preview was opened instead, which may simplify the art	zamiast tego otwarto jego podgląd w formacie metapliku Windows, co może uprościć kompozycję
 @msg	its preview was placed instead, at screen resolution	zamiast tego umieszczono jego podgląd w rozdzielczości ekranowej
 @msg	join needs open paths	łączenie wymaga otwartych ścieżek
@@ -4154,11 +4154,11 @@ imageTrace	Outline	Kontur
 @msg	no user workspace `{from}`	brak obszaru roboczego użytkownika `{from}`
 @msg	node {_1} is not text	węzeł {_1} nie jest tekstem
 @msg	not a DXF drawing	to nie jest rysunek DXF
-@msg	not a VectorCraft file: {0}	to nie jest plik VectorCraft: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	to nie jest zestaw skrótów VectorCraft (brak `overrides`)
+@msg	not a Tsipika file: {0}	to nie jest plik Tsipika: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	to nie jest zestaw skrótów Tsipika (brak `overrides`)
 @msg	not a blend	to nie jest przejście
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	to nie jest zestaw skrótów: tekst nie zaczyna się od nazwy z ukośnikiem i otwierającego nawiasu klamrowego
-@msg	This shortcut file is in a form VectorCraft can't read.	Ten plik skrótów ma postać, której VectorCraft nie potrafi odczytać.
+@msg	This shortcut file is in a form Tsipika can't read.	Ten plik skrótów ma postać, której Tsipika nie potrafi odczytać.
 @msg	not a graphic style library (format `{_1}`)	to nie jest biblioteka stylów graficznych (format `{_1}`)
 @msg	not a stored central record	to nie jest zapisany rekord centralny
 @msg	not a valid plug-in module: {0}	nieprawidłowy moduł wtyczki: {0}
@@ -4394,11 +4394,11 @@ imageTrace	Outline	Kontur
 @msg	Sent to {_1}	Wysłano do {_1}
 @msg	{_1} files	Pliki {_1}
 @msg	The graphics were lost and have been restarted	Utracono grafikę i uruchomiono ją ponownie
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	Pierwszy wypróbowany procesor graficzny nie mógł wyświetlić okna, więc VectorCraft uruchomił się ponownie na {summary}
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Ostatnie uruchomienie VectorCraft zakończyło się na {name}, zanim pojawiło się okno, więc VectorCraft uruchomił się na {summary}. Aby ponownie wypróbować ten procesor graficzny, zmień Preferencje › Wydajność › Procesor graficzny lub uruchom z ustawioną zmienną WGPU_BACKEND
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Ostatnie uruchomienie VectorCraft zakończyło się podczas wyliczania procesorów graficznych, więc VectorCraft uruchomił się na {summary} tylko z OpenGL. Aby ponownie wypróbować pozostałe interfejsy graficzne, zmień Preferencje › Wydajność › Procesor graficzny lub uruchom z ustawioną zmienną WGPU_BACKEND
-@msg	Loading VectorCraft…	Wczytywanie VectorCraft…
-@msg	VectorCraft failed to start: {e}	Nie udało się uruchomić VectorCraft: {e}
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	Pierwszy wypróbowany procesor graficzny nie mógł wyświetlić okna, więc Tsipika uruchomił się ponownie na {summary}
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Ostatnie uruchomienie Tsipika zakończyło się na {name}, zanim pojawiło się okno, więc Tsipika uruchomił się na {summary}. Aby ponownie wypróbować ten procesor graficzny, zmień Preferencje › Wydajność › Procesor graficzny lub uruchom z ustawioną zmienną WGPU_BACKEND
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Ostatnie uruchomienie Tsipika zakończyło się podczas wyliczania procesorów graficznych, więc Tsipika uruchomił się na {summary} tylko z OpenGL. Aby ponownie wypróbować pozostałe interfejsy graficzne, zmień Preferencje › Wydajność › Procesor graficzny lub uruchom z ustawioną zmienną WGPU_BACKEND
+@msg	Loading Tsipika…	Wczytywanie Tsipika…
+@msg	Tsipika failed to start: {e}	Nie udało się uruchomić Tsipika: {e}
 @msg	A browser with WebGPU or WebGL2 is required.	Wymagana jest przeglądarka z obsługą WebGPU lub WebGL2.
 @msg	The graphics were lost and couldn't be restarted.	Utracono grafikę i nie udało się jej ponownie uruchomić.
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	Niezapisane zmiany są przechowywane w tej przeglądarce: odśwież stronę, aby je odzyskać.
@@ -4420,25 +4420,25 @@ imageTrace	Outline	Kontur
 @msg	it has more than {MAX_NODES} objects	ma ponad {MAX_NODES} obiektów
 @msg	it has no layers	nie ma warstw
 @msg	it has too many values in a row	ma zbyt wiele wartości z rzędu
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	zawiera {_1}, czego VectorCraft jeszcze z niego nie odczytuje
+@msg	it has {_1}, which Tsipika doesn't read from it yet	zawiera {_1}, czego Tsipika jeszcze z niego nie odczytuje
 @msg	its objects are nested too deeply	jego obiekty są zagnieżdżone zbyt głęboko
 @msg	its section ending with `%{end}` doesn't end	jego sekcja kończąca się na `%{end}` nie ma końca
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	obiekty z kilkoma wypełnieniami lub obrysami, efektami albo pędzlami wczytano jako ich narysowany wygląd ({_1}): ich wyglądu nie można jeszcze edytować
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	gradient „{name}” nie jest zdefiniowany w pliku: zastąpiono go jednolitym kolorem
-@msg	an image VectorCraft can't read was left out	pominięto obraz, którego VectorCraft nie potrafi odczytać
+@msg	an image Tsipika can't read was left out	pominięto obraz, którego Tsipika nie potrafi odczytać
 @msg	an image whose data is cut short was left out	pominięto obraz z uciętymi danymi
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	połączone obrazy pokazują zapisany w pliku podgląd niskiej rozdzielczości, dopóki ich pliki nie zostaną znalezione: połącz je ponownie w panelu Łącza
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	tekst akapitowy w ramkach niższych niż wiersz wyświetlanej czcionki otrzymał wyższe ramki ({_1}): inaczej tekst nie byłby widoczny
 @msg	its editing data doesn't say where its art is	jego dane edycyjne nie określają położenia kompozycji
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	ten plik zapisano bez zgodności z PDF, a jego danych edycyjnych nie można odczytać ({why})
 @msg	No fonts are missing in this document	W tym dokumencie nie brakuje czcionek
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft nie przeszukuje folderów innych aplikacji ani systemowych: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft nie przeszukuje folderu Shared ani Public w Users: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika nie przeszukuje folderów innych aplikacji ani systemowych: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika nie przeszukuje folderu Shared ani Public w Users: {path}
 @msg	{path} is not a folder	{path} nie jest folderem
 @msg	the search couldn't start: try again in a moment	nie udało się rozpocząć wyszukiwania: spróbuj ponownie za chwilę
 @msg	searching a folder isn't available on the web	przeszukiwanie folderu nie jest dostępne w wersji webowej
 @msg	every search thread stopped on an internal error (please report this bug)	wszystkie wątki wyszukiwania zatrzymały się na błędzie wewnętrznym (zgłoś ten błąd)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	folder czcionek VectorCraft nie jest tu ustawiony: ustawia go aplikacja desktopowa i vectorcraft-cli
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	folder czcionek Tsipika nie jest tu ustawiony: ustawia go aplikacja desktopowa i tsipika-cli
 @msg	choose the font files to add	wybierz pliki czcionek do dodania
 @msg	{n} font file(s) are now in {folder}	pliki czcionek w {folder}: {n}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	pliki czcionek w {folder}: {n}; nie udało się dodać: {failed} ({reason})
@@ -4573,12 +4573,12 @@ imageTrace	Outline	Kontur
 	All shortcuts reset to defaults.	Wszystkie skróty przywrócono do domyślnych.
 	Imported. Press OK to keep the imported set.	Zaimportowano. Naciśnij OK, aby zachować zaimportowany zestaw.
 	⚠ {chord} was already used by {names} — it has been removed there.	Uwaga: skrót {chord} był już używany przez {names} — został tam usunięty.
-	VectorCraft Defaults	Domyślne VectorCraft
+	Tsipika Defaults	Domyślne Tsipika
 @plural	{n} shortcut is assigned more than once|{n} shortcuts are assigned more than once	{n} skrót jest przypisany więcej niż raz|{n} skróty są przypisane więcej niż raz|{n} skrótów jest przypisanych więcej niż raz
 # Import Shortcut Set (Keyboard Shortcuts › Import…, File › Open of a .kys file) and its commands.
 	Import Shortcut Set	Importuj zestaw skrótów
 	Import Shortcut Set…	Importuj zestaw skrótów…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	Każdy wpis pliku zostaje dopasowany do narzędzia, polecenia lub panelu VectorCraft. Sprawdź dopasowania i uzupełnij pozostałe.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	Każdy wpis pliku zostaje dopasowany do narzędzia, polecenia lub panelu Tsipika. Sprawdź dopasowania i uzupełnij pozostałe.
 	Keys	Klawisze
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	Plik zapisuje klawisze i modyfikatory jako kody. Sprawdź proponowane znaczenia i uzupełnij kody, które nie są jeszcze znane.
 	Click, then press the key this code stands for (Esc cancels)	Kliknij, a następnie naciśnij klawisz oznaczany tym kodem (Esc anuluje)
@@ -4588,7 +4588,7 @@ imageTrace	Outline	Kontur
 	not known yet	jeszcze nieznany
 	Shortcuts	Skróty
 	In the File	W pliku
-	In VectorCraft	W VectorCraft
+	In Tsipika	W Tsipika
 	Needs Attention Only	Tylko wymagające uwagi
 	Ready	Gotowe
 	Needs a choice	Wymaga wyboru
@@ -4597,7 +4597,7 @@ imageTrace	Outline	Kontur
 	Tools take a single key (optionally with Shift)	Narzędzia przyjmują pojedynczy klawisz (opcjonalnie z Shift)
 	A later row takes this shortcut	Ten skrót przejmuje dalszy wiersz
 	Same item as a later row	Ten sam element co w dalszym wierszu
-	Start from VectorCraft Defaults	Zacznij od domyślnych skrótów VectorCraft
+	Start from Tsipika Defaults	Zacznij od domyślnych skrótów Tsipika
 	Add to the Current Shortcuts	Dodaj do bieżących skrótów
 	Remember My Choices	Zapamiętaj moje wybory
 	{ready} of {total} ready	Gotowe: {ready} z {total}
@@ -4823,7 +4823,7 @@ file-filter	PDF presets	Ustawienia PDF
 file-filter	Print presets	Ustawienia drukowania
 file-filter	SVG Compressed	SVG skompresowany
 file-filter	PDF-compatible .ai	.ai zgodny z PDF
-file-filter	VectorCraft Template	Szablon VectorCraft
+file-filter	Tsipika Template	Szablon Tsipika
 file-filter	Templates	Szablony
 diagnostics	render	renderowanie
 diagnostics	ui	interfejs
@@ -4834,7 +4834,7 @@ diagnostics	ui	interfejs
 @plural	{n} commit|{n} commits	{n} commit|{n} commity|{n} commitów
 gradient-kind	Radial	Promienisty
 mark-style	Japanese	Japońskie
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	skompresowany plik po rozpakowaniu przekracza limit VectorCraft ({_1} MB dokumentu, {_2} MB na obraz)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	skompresowany plik po rozpakowaniu przekracza limit Tsipika ({_1} MB dokumentu, {_2} MB na obraz)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	dokument jest zbyt duży, aby zapisać go skompresowanego ({0}): zapisz go z wyłączoną opcją Używaj kompresji
 @msg	the file stopped being read (please report this bug)	odczyt pliku został przerwany (zgłoś ten błąd)
 	Concentric Dividers:	Podziały koncentryczne:

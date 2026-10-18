@@ -1,4 +1,4 @@
-//! The SoundCraft mix engine.
+//! The Feo mix engine.
 //!
 //! [`MixEngine::render`] produces one block of the main output for a session at a timeline
 //! position: clips (with clip gain and fades) → trim/phase → inserts → pre-fader sends → fader and
@@ -10,11 +10,11 @@
 //! The main mix has the format of the session's main output path ([`Session::main_format`]:
 //! stereo by default, up to 16 channels such as 7.1.4 or 9.1.6) and every bus has its own format.
 //! Channels are in SMPTE / WAV order (L R C LFE Ls Rs …, see
-//! [`ChannelFormat::speakers`](soundcraft_model::ChannelFormat::speakers)). Routing a strip into a
+//! [`ChannelFormat::speakers`](feo_model::ChannelFormat::speakers)). Routing a strip into a
 //! destination builds a gain matrix per block:
 //! - mono/stereo sources into a stereo destination use the stereo pan exactly as before;
 //! - into a multichannel destination they use the track's [`SurroundPan`] (pairwise
-//!   constant-power panner over the speaker layout, see `soundcraft_dsp::pan::surround_gains`),
+//!   constant-power panner over the speaker layout, see `feo_dsp::pan::surround_gains`),
 //!   or go to L/R with the stereo pan when the track has no surround pan;
 //! - sources whose format equals the destination's pass straight through, channel for channel;
 //! - other multichannel sources fold to stereo with ITU-R BS.775 coefficients (C and surrounds at
@@ -46,17 +46,17 @@
 //! instrument (the Sampler) is handed the decoded audio of its insert's
 //! [`Insert::sample`] source straight from the session's pool, shared and never copied.
 //!
-//! [`Insert::state`]: soundcraft_model::Insert::state
-//! [`Insert::sample`]: soundcraft_model::Insert::sample
+//! [`Insert::state`]: feo_model::Insert::state
+//! [`Insert::sample`]: feo_model::Insert::sample
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use soundcraft_dsp::pan::{PanLaw, SpeakerPos, SurroundParams, gains};
-use soundcraft_dsp::{Plugin, SampleSource, Transport, db_to_gain};
-use soundcraft_midi::CtrlKind;
-use soundcraft_model::{
+use feo_dsp::pan::{PanLaw, SpeakerPos, SurroundParams, gains};
+use feo_dsp::{Plugin, SampleSource, Transport, db_to_gain};
+use feo_midi::CtrlKind;
+use feo_model::{
     AutoParam, BusId, ChannelFormat, Clip, ClipContent, Route, Session, SourceAudio, Speaker, SurroundPan, Track, TrackId, TrackKind,
 };
-use soundcraft_time::{Range, Samples, TICKS_PER_QUARTER};
+use feo_time::{Range, Samples, TICKS_PER_QUARTER};
 use std::collections::HashMap;
 use std::ops::Bound;
 use std::sync::Arc;
@@ -78,9 +78,9 @@ pub const INSTRUMENT_SLOT: usize = usize::MAX;
 
 /// Hosted third-party plugin ids (CLAP or VST3): created off the audio thread in realtime use.
 pub fn is_third_party(id: &str) -> bool {
-    id.starts_with(soundcraft_clap_host::ID_PREFIX)
-        || id.starts_with(soundcraft_vst3_host::ID_PREFIX)
-        || id.starts_with(soundcraft_au_host::ID_PREFIX)
+    id.starts_with(feo_clap_host::ID_PREFIX)
+        || id.starts_with(feo_vst3_host::ID_PREFIX)
+        || id.starts_with(feo_au_host::ID_PREFIX)
 }
 
 /// A third-party plugin instance a session needs: which slot, which plugin, how many channels,
@@ -93,7 +93,7 @@ pub struct InstanceSpec {
     pub id: String,
     /// Channel count the instance is prepared for.
     pub ch: usize,
-    /// Decoded [`Insert::state`](soundcraft_model::Insert::state).
+    /// Decoded [`Insert::state`](feo_model::Insert::state).
     pub state: Option<Vec<u8>>,
 }
 
@@ -396,7 +396,7 @@ impl SlotCtx<'_> {
     }
 
     /// A new instance for `ins` on track `t`, slot `idx`, prepared for `ch` channels.
-    fn make(&mut self, t: TrackId, idx: usize, ins: &soundcraft_model::Insert, ch: usize) -> Option<PluginSlot> {
+    fn make(&mut self, t: TrackId, idx: usize, ins: &feo_model::Insert, ch: usize) -> Option<PluginSlot> {
         let third = is_third_party(&ins.plugin);
         let plugin = if third && self.external {
             match self.adopt.remove(&(t, idx)) {
@@ -1150,7 +1150,7 @@ impl ClipFx {
         ClipFx { eq: None, comp: None, gain_db: 0.0, sr, ch }
     }
     fn make(&self, id: &str) -> Option<Box<dyn Plugin>> {
-        soundcraft_dsp::create(id).map(|mut p| {
+        feo_dsp::create(id).map(|mut p| {
             p.prepare(self.sr, 16_384, self.ch.max(1));
             p
         })
@@ -1240,7 +1240,7 @@ std::thread_local! {
     static AUDIO_THREAD: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
-/// Mark the calling thread as the realtime audio thread (`soundcraft_playback`'s cpal callbacks
+/// Mark the calling thread as the realtime audio thread (`feo_playback`'s cpal callbacks
 /// do, every call: one thread-local store). Strips [`MixEngine::render`] hands to worker threads
 /// count as the audio thread while they render for it. Code that might run there asks
 /// [`on_audio_thread`] before doing anything that blocks; the desktop app's logger does, so a
@@ -1403,7 +1403,7 @@ mod click {
 
     /// Click pitch for a MIDI note setting (clamped to the MIDI range).
     fn note_hz(note: f64) -> f64 {
-        soundcraft_dsp::midi_to_hz(note.clamp(0.0, 127.0))
+        feo_dsp::midi_to_hz(note.clamp(0.0, 127.0))
     }
 }
 
@@ -1616,7 +1616,7 @@ impl SampleSource for PoolSample {
 
 /// Hands a strip's instrument the audio of its insert's sample source when it changed (a new
 /// sample, a cleared one, or a new instance). Missing media plays nothing.
-fn sync_sample(strip: &mut Strip, want: Option<&soundcraft_model::Insert>, s: &Session) {
+fn sync_sample(strip: &mut Strip, want: Option<&feo_model::Insert>, s: &Session) {
     let audio = want.and_then(|i| i.sample).and_then(|id| s.pool.get(id));
     let same = match (strip.sample.as_ref(), audio) {
         (Some(a), Some(b)) => Arc::ptr_eq(a, b),
@@ -1647,7 +1647,7 @@ fn note_insert_latency(t: &Track, strip: &mut Strip, pos: Samples) {
     strip.latency = latency.min(MAX_LATENCY);
 }
 
-fn apply_params(slot: &mut PluginSlot, ins: &soundcraft_model::Insert, t: &Track, i: usize, pos: Samples) {
+fn apply_params(slot: &mut PluginSlot, ins: &feo_model::Insert, t: &Track, i: usize, pos: Samples) {
     // Automation lanes address insert slots; the instrument (`INSTRUMENT_SLOT`) has none, so it
     // must not pick up slot A's lanes.
     let Ok(slot_u8) = u8::try_from(i) else {
@@ -1667,7 +1667,7 @@ fn apply_params(slot: &mut PluginSlot, ins: &soundcraft_model::Insert, t: &Track
 }
 
 /// Sends each stored param (as mapped by `value`) to the plugin when it changed since last time.
-fn apply_values(slot: &mut PluginSlot, ins: &soundcraft_model::Insert, value: impl Fn(&str, f32) -> f32) {
+fn apply_values(slot: &mut PluginSlot, ins: &feo_model::Insert, value: impl Fn(&str, f32) -> f32) {
     if slot.applied.len() != ins.params.len() {
         slot.applied = vec![f32::NAN; ins.params.len()];
     }
@@ -1703,7 +1703,7 @@ fn transport_at(s: &Session, pos: Samples, playing: bool, recording: bool) -> Tr
 
 fn volume_db_at(t: &Track, pos: Samples) -> f32 {
     if t.mixer.automation_mode.reads()
-        && t.mixer.automation_mode != soundcraft_model::AutomationMode::Write
+        && t.mixer.automation_mode != feo_model::AutomationMode::Write
         && let Some(l) = t.lane(&AutoParam::Volume)
         && !l.points.is_empty()
     {
@@ -1849,7 +1849,7 @@ fn build_matrix(src_fmt: ChannelFormat, ns: usize, dst_fmt: ChannelFormat, nd: u
             }
             _ if src_amb => {
                 for (d, az) in [(0usize, -30.0f32), (1, 30.0)] {
-                    let g = soundcraft_dsp::pan::ambisonic_decode(az, 0.0, 2);
+                    let g = feo_dsp::pan::ambisonic_decode(az, 0.0, 2);
                     for (c, gc) in g.iter().enumerate() {
                         set(&mut m, c, d, *gc);
                     }
@@ -1891,7 +1891,7 @@ fn build_matrix(src_fmt: ChannelFormat, ns: usize, dst_fmt: ChannelFormat, nd: u
             return identity_matrix(ns.min(nd));
         }
         let mut enc = |m: &mut Matrix, s: usize, az: f32, el: f32, spread: f32| {
-            soundcraft_dsp::pan::ambisonic_encode(az, el, spread, &mut g);
+            feo_dsp::pan::ambisonic_encode(az, el, spread, &mut g);
             for (d, gd) in g.iter().enumerate().take(nd) {
                 set(m, s, d, *gd);
             }
@@ -1901,7 +1901,7 @@ fn build_matrix(src_fmt: ChannelFormat, ns: usize, dst_fmt: ChannelFormat, nd: u
                 for s in 0..ns {
                     let dx = if ns == 2 { if s == 0 { -1.0 } else { 1.0 } } else { 0.0 };
                     let p = surround_params(sp, dx);
-                    enc(&mut m, s, soundcraft_dsp::pan::puck_azimuth(&[], p.x, p.y), p.z * 90.0, p.divergence);
+                    enc(&mut m, s, feo_dsp::pan::puck_azimuth(&[], p.x, p.y), p.z * 90.0, p.divergence);
                 }
             }
             (1, None) => enc(&mut m, 0, pan.stereo[0].clamp(-1.0, 1.0) * 30.0, 0.0, 0.0),
@@ -1928,7 +1928,7 @@ fn build_matrix(src_fmt: ChannelFormat, ns: usize, dst_fmt: ChannelFormat, nd: u
         (1 | 2, Some(sp)) if !src_amb => {
             for s in 0..ns {
                 let dx = if ns == 2 { if s == 0 { -1.0 } else { 1.0 } } else { 0.0 };
-                soundcraft_dsp::pan::surround_gains(layout, &surround_params(sp, dx), &mut g);
+                feo_dsp::pan::surround_gains(layout, &surround_params(sp, dx), &mut g);
                 for (d, gd) in g.iter().enumerate().take(nd) {
                     set(&mut m, s, d, *gd);
                 }
@@ -1962,7 +1962,7 @@ fn build_matrix(src_fmt: ChannelFormat, ns: usize, dst_fmt: ChannelFormat, nd: u
                 if sp.is_lfe() {
                     continue;
                 }
-                let dec = soundcraft_dsp::pan::ambisonic_decode(sp.azimuth(), sp.elevation(), n_spk);
+                let dec = feo_dsp::pan::ambisonic_decode(sp.azimuth(), sp.elevation(), n_spk);
                 for (c, gc) in dec.iter().enumerate() {
                     set(&mut m, c, d, *gc);
                 }
@@ -1975,7 +1975,7 @@ fn build_matrix(src_fmt: ChannelFormat, ns: usize, dst_fmt: ChannelFormat, nd: u
                 } else if sp.is_lfe() {
                     // No LFE in the destination: dropped.
                 } else {
-                    soundcraft_dsp::pan::direction_gains(layout, sp.azimuth(), sp.elevation(), &mut g);
+                    feo_dsp::pan::direction_gains(layout, sp.azimuth(), sp.elevation(), &mut g);
                     for (d, gd) in g.iter().enumerate().take(nd) {
                         set(&mut m, s, d, *gd);
                     }
@@ -2189,7 +2189,7 @@ pub fn render_track_pre_fader(s: &Session, track: TrackId, range: Range) -> Vec<
     let mut solo = s.clone();
     // Multichannel tracks render into a main mix of their own format (straight through).
     let fmt = s.track(track).map_or(ChannelFormat::Stereo, |t| if t.channels() > 2 { t.format } else { ChannelFormat::Stereo });
-    solo.outputs = vec![soundcraft_model::OutputPath { name: "Out".into(), first_channel: 0, format: fmt }];
+    solo.outputs = vec![feo_model::OutputPath { name: "Out".into(), first_channel: 0, format: fmt }];
     for t in &mut solo.tracks {
         if t.id == track {
             t.mixer.volume_db = 0.0;
@@ -2220,10 +2220,10 @@ pub fn render_track_pre_fader(s: &Session, track: TrackId, range: Range) -> Vec<
 
 /// A built-in plugin, else a hosted CLAP plugin (`clap:<id>`).
 fn create_plugin(id: &str) -> Option<Box<dyn Plugin>> {
-    soundcraft_dsp::create(id)
-        .or_else(|| soundcraft_clap_host::create(id))
-        .or_else(|| soundcraft_vst3_host::create(id))
-        .or_else(|| soundcraft_au_host::create(id))
+    feo_dsp::create(id)
+        .or_else(|| feo_clap_host::create(id))
+        .or_else(|| feo_vst3_host::create(id))
+        .or_else(|| feo_au_host::create(id))
 }
 
 #[cfg(test)]
@@ -2273,12 +2273,12 @@ mod audio_thread_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soundcraft_audio_io::AudioBuffer;
-    use soundcraft_model::{Insert, SourceAudio, SourceId};
+    use feo_audio_io::AudioBuffer;
+    use feo_model::{Insert, SourceAudio, SourceId};
     use std::sync::Arc;
 
     fn synth_session(level_db: f32) -> Session {
-        use soundcraft_midi::{Note, Sequence};
+        use feo_midi::{Note, Sequence};
         let mut s = Session::default();
         let t = s.add_track(TrackKind::Instrument, ChannelFormat::Stereo, None);
         let mut seq = Sequence::default();
@@ -2311,7 +2311,7 @@ mod tests {
         let mut s = synth_session(-6.0);
         let reference = render_range(&s, Range::new(0, 12_000), 512);
         let tr = &mut s.tracks[0];
-        let mut lane = soundcraft_model::AutomationLane::new(AutoParam::Plugin { slot: 0, param: "level".into() });
+        let mut lane = feo_model::AutomationLane::new(AutoParam::Plugin { slot: 0, param: "level".into() });
         lane.set_point(0, -48.0);
         tr.automation.push(lane);
         assert_eq!(render_range(&s, Range::new(0, 12_000), 512), reference);
@@ -2375,7 +2375,7 @@ mod tests {
             for curvature in [-0.5, 0.0, 0.5] {
                 let (mut s, t) = session_with_dc(1.0, 8192);
                 s.track_mut(t).unwrap().mixer.pan = vec![-1.0];
-                let fade = soundcraft_model::Fade { len: 8192, shape: soundcraft_model::FadeShape::SCurve, curvature };
+                let fade = feo_model::Fade { len: 8192, shape: feo_model::FadeShape::SCurve, curvature };
                 let c = &mut s.track_mut(t).unwrap().playlist_mut().unwrap().clips[0];
                 if fade_in {
                     c.fade_in = fade;
@@ -2418,7 +2418,7 @@ mod tests {
         let (mut s, t) = session_with_dc(1.0, 48_000);
         {
             let c = &mut s.track_mut(t).unwrap().playlist_mut().unwrap().clips[0];
-            c.fade_in = soundcraft_model::Fade { len: 1000, shape: soundcraft_model::FadeShape::Linear, curvature: 0.0 };
+            c.fade_in = feo_model::Fade { len: 1000, shape: feo_model::FadeShape::Linear, curvature: 0.0 };
             c.gain_db = -6.0;
         }
         let out = render_range(&s, Range::new(0, 2000), 512);
@@ -2437,7 +2437,7 @@ mod tests {
         {
             let tr = s.track_mut(t).unwrap();
             tr.mixer.output = Route::None;
-            let mut snd = soundcraft_model::SendSlot::new(Route::Bus(bus));
+            let mut snd = feo_model::SendSlot::new(Route::Bus(bus));
             snd.level_db = 0.0;
             tr.mixer.sends[0] = Some(snd);
         }
@@ -2479,7 +2479,7 @@ mod tests {
         s.track_mut(t).unwrap().mixer.inserts[0] = Some(Insert::new("does-not-exist"));
         let out = render_range(&s, Range::new(0, 4800), 512);
         assert!(out[0][100] > 0.3);
-        let id = soundcraft_dsp::plugins().iter().find(|p| p.id.contains("gain")).map(|p| p.id).unwrap_or("gain");
+        let id = feo_dsp::plugins().iter().find(|p| p.id.contains("gain")).map(|p| p.id).unwrap_or("gain");
         let mut ins = Insert::new(id);
         ins.params.insert("gain".into(), -6.0);
         s.track_mut(t).unwrap().mixer.inserts[0] = Some(ins);
@@ -2494,7 +2494,7 @@ mod tests {
     }
 
     impl Plugin for Stateful {
-        fn info(&self) -> &'static soundcraft_dsp::PluginInfo {
+        fn info(&self) -> &'static feo_dsp::PluginInfo {
             self.inner.info()
         }
         fn prepare(&mut self, sr: f32, mb: usize, ch: usize) {
@@ -2513,7 +2513,7 @@ mod tests {
         fn process(&mut self, io: &mut [Vec<f32>], frames: usize) {
             self.inner.process(io, frames);
         }
-        fn state_reader(&mut self) -> Option<Box<dyn soundcraft_dsp::PluginStateReader>> {
+        fn state_reader(&mut self) -> Option<Box<dyn feo_dsp::PluginStateReader>> {
             let blob = self.blob.clone();
             Some(Box::new(move || Some(blob.clone())))
         }
@@ -2525,7 +2525,7 @@ mod tests {
     }
 
     impl Plugin for Clock {
-        fn info(&self) -> &'static soundcraft_dsp::PluginInfo {
+        fn info(&self) -> &'static feo_dsp::PluginInfo {
             self.inner.info()
         }
         fn prepare(&mut self, sr: f32, mb: usize, ch: usize) {
@@ -2555,7 +2555,7 @@ mod tests {
         s.tempo.set_meter(0, 3, 4).unwrap();
         s.track_mut(t).unwrap().mixer.inserts[0] = Some(Insert::new("clap:test.clock"));
         let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
-        let clock = Clock { inner: soundcraft_dsp::create("gain").unwrap(), seen: Arc::clone(&seen) };
+        let clock = Clock { inner: feo_dsp::create("gain").unwrap(), seen: Arc::clone(&seen) };
         let mut eng = MixEngine::new(48_000.0, 512);
         eng.set_external_instances(true);
         eng.adopt(vec![PreparedInstance { track: t, slot: 0, id: "clap:test.clock".into(), ch: 1, plugin: Box::new(clock) }]);
@@ -2576,7 +2576,7 @@ mod tests {
     }
 
     impl Plugin for Ears {
-        fn info(&self) -> &'static soundcraft_dsp::PluginInfo {
+        fn info(&self) -> &'static feo_dsp::PluginInfo {
             self.inner.info()
         }
         fn prepare(&mut self, sr: f32, mb: usize, ch: usize) {
@@ -2604,13 +2604,13 @@ mod tests {
         let mut s = Session::default();
         let t = s.add_track(TrackKind::Instrument, ChannelFormat::Stereo, None);
         s.track_mut(t).unwrap().instrument = Some(Insert::new("clap:test.ears"));
-        let cc = |tick, kind, value| soundcraft_midi::CtrlEvent { tick, channel: 0, kind, value };
+        let cc = |tick, kind, value| feo_midi::CtrlEvent { tick, channel: 0, kind, value };
         let ctrls = vec![cc(4, CtrlKind::Cc(64), 127), cc(960, CtrlKind::PitchBend, -8192), cc(1920, CtrlKind::Cc(64), 0)];
-        let seq = soundcraft_midi::Sequence { ctrls, ..Default::default() };
+        let seq = feo_midi::Sequence { ctrls, ..Default::default() };
         let cid = s.new_clip_id();
         s.track_mut(t).unwrap().playlist_mut().unwrap().clips.push(Clip::midi(cid, "m", 0, 48_000 * 4, seq));
         let heard = Arc::new(std::sync::Mutex::new(Vec::new()));
-        let ears = Ears { inner: soundcraft_dsp::create("gain").unwrap(), heard: Arc::clone(&heard) };
+        let ears = Ears { inner: feo_dsp::create("gain").unwrap(), heard: Arc::clone(&heard) };
         let mut eng = MixEngine::new(48_000.0, 512);
         eng.set_external_instances(true);
         eng.adopt(vec![PreparedInstance { track: t, slot: INSTRUMENT_SLOT, id: "clap:test.ears".into(), ch: 2, plugin: Box::new(ears) }]);
@@ -2628,7 +2628,7 @@ mod tests {
     }
 
     impl Plugin for Keys {
-        fn info(&self) -> &'static soundcraft_dsp::PluginInfo {
+        fn info(&self) -> &'static feo_dsp::PluginInfo {
             self.inner.info()
         }
         fn prepare(&mut self, sr: f32, mb: usize, ch: usize) {
@@ -2656,14 +2656,14 @@ mod tests {
         let mut s = Session::default();
         let t = s.add_track(TrackKind::Instrument, ChannelFormat::Stereo, None);
         s.track_mut(t).unwrap().instrument = Some(Insert::new("clap:test.keys"));
-        let mut seq = soundcraft_midi::Sequence::default();
-        seq.notes.push(soundcraft_midi::Note { pitch: 60, velocity: 100, release_velocity: 64, channel: 0, start: 0, length: 480 });
+        let mut seq = feo_midi::Sequence::default();
+        seq.notes.push(feo_midi::Note { pitch: 60, velocity: 100, release_velocity: 64, channel: 0, start: 0, length: 480 });
         let cid = s.new_clip_id();
         s.track_mut(t).unwrap().playlist_mut().unwrap().clips.push(Clip::midi(cid, "m", 0, 48_000, seq));
         s.edit.values.insert(format!("rtp.{}.transpose", t.0), 12.0);
         s.edit.values.insert(format!("rtp.{}.velocity", t.0), -20.0);
         let heard = Arc::new(std::sync::Mutex::new(Vec::new()));
-        let keys = Keys { inner: soundcraft_dsp::create("gain").unwrap(), heard: Arc::clone(&heard) };
+        let keys = Keys { inner: feo_dsp::create("gain").unwrap(), heard: Arc::clone(&heard) };
         let mut eng = MixEngine::new(48_000.0, 512);
         eng.set_external_instances(true);
         eng.adopt(vec![PreparedInstance { track: t, slot: INSTRUMENT_SLOT, id: "clap:test.keys".into(), ch: 2, plugin: Box::new(keys) }]);
@@ -2692,11 +2692,11 @@ mod tests {
         let dry = render_block(&mut eng, &s, 0);
         assert!(dry > 0.3, "{dry}");
         let sets = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut gain = soundcraft_dsp::create("gain").unwrap();
+        let mut gain = feo_dsp::create("gain").unwrap();
         gain.prepare(48_000.0, 512, 1);
         let fake = Stateful { inner: gain, blob: Vec::new(), sets: Arc::clone(&sets) };
         // An instance for the wrong channel count is retired, not used.
-        let wrong = Stateful { inner: soundcraft_dsp::create("gain").unwrap(), blob: Vec::new(), sets: Arc::clone(&sets) };
+        let wrong = Stateful { inner: feo_dsp::create("gain").unwrap(), blob: Vec::new(), sets: Arc::clone(&sets) };
         eng.adopt(vec![PreparedInstance { track: t, slot: 0, id: "clap:test.fake".into(), ch: 2, plugin: Box::new(wrong) }]);
         assert!(render_block(&mut eng, &s, 512) > 0.3);
         assert_eq!(eng.take_retired().len(), 1);
@@ -2713,7 +2713,7 @@ mod tests {
         render_block(&mut eng, &s, 20 * 512);
         assert_eq!(eng.take_retired().len(), 1);
         // Instances nobody claims are retired too; drain_plugins empties the engine.
-        eng.adopt(vec![PreparedInstance { track: t, slot: 3, id: "clap:x".into(), ch: 1, plugin: soundcraft_dsp::create("gain").unwrap() }]);
+        eng.adopt(vec![PreparedInstance { track: t, slot: 3, id: "clap:x".into(), ch: 1, plugin: feo_dsp::create("gain").unwrap() }]);
         render_block(&mut eng, &s, 21 * 512);
         assert_eq!(eng.take_retired().len(), 1);
         assert!(eng.drain_plugins().is_empty());
@@ -2722,7 +2722,7 @@ mod tests {
     struct Nan(Box<dyn Plugin>);
 
     impl Plugin for Nan {
-        fn info(&self) -> &'static soundcraft_dsp::PluginInfo {
+        fn info(&self) -> &'static feo_dsp::PluginInfo {
             self.0.info()
         }
         fn prepare(&mut self, sr: f32, mb: usize, ch: usize) {
@@ -2743,7 +2743,7 @@ mod tests {
     }
 
     fn nan(track: TrackId, slot: usize, ch: usize) -> Vec<PreparedInstance> {
-        vec![PreparedInstance { track, slot, id: "clap:test.nan".into(), ch, plugin: Box::new(Nan(soundcraft_dsp::create("gain").unwrap())) }]
+        vec![PreparedInstance { track, slot, id: "clap:test.nan".into(), ch, plugin: Box::new(Nan(feo_dsp::create("gain").unwrap())) }]
     }
 
     #[test]
@@ -2798,7 +2798,7 @@ mod tests {
         eng.set_external_instances(true);
         let sets = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let make = |blob: &[u8]| {
-            let mut gain = soundcraft_dsp::create("gain").unwrap();
+            let mut gain = feo_dsp::create("gain").unwrap();
             gain.prepare(48_000.0, 512, 1);
             Box::new(Stateful { inner: gain, blob: blob.to_vec(), sets: Arc::clone(&sets) })
         };
@@ -2823,7 +2823,7 @@ mod tests {
         let mut eng = MixEngine::new(48_000.0, 512);
         eng.set_external_instances(true);
         let sets = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let fake = Stateful { inner: soundcraft_dsp::create("gain").unwrap(), blob: Vec::new(), sets: Arc::clone(&sets) };
+        let fake = Stateful { inner: feo_dsp::create("gain").unwrap(), blob: Vec::new(), sets: Arc::clone(&sets) };
         eng.adopt(vec![PreparedInstance { track: t, slot: 0, id: "vst3:00000000000000000000000000000001".into(), ch: 1, plugin: Box::new(fake) }]);
         render_block(&mut eng, &s, 0);
         assert_eq!(sets.load(std::sync::atomic::Ordering::Relaxed), 1, "session params apply once");
@@ -2872,7 +2872,7 @@ mod tests {
             ids.push(t);
         }
         let argmax = |c: &[f32]| c.iter().enumerate().max_by(|a, b| a.1.abs().total_cmp(&b.1.abs())).map(|(i, _)| i).unwrap();
-        let lat = soundcraft_dsp::create("maximizer").unwrap().latency();
+        let lat = feo_dsp::create("maximizer").unwrap().latency();
         assert!(lat > 0, "test needs a latent plugin");
         let out = render_range(&s, Range::new(0, 8000), 512);
         assert_eq!(argmax(&out[0]), argmax(&out[1]), "PDC should align L and R");
@@ -2961,10 +2961,10 @@ mod tests {
         let tr = s.track_mut(t).unwrap();
         tr.playlist_mut().unwrap().clips.push(Clip::audio(cid, "i", SourceId(900), 0, 0, 48_000));
         tr.mixer.inserts[0] = Some(Insert::new("maximizer"));
-        let mut send = soundcraft_model::SendSlot::new(Route::Bus(bus));
+        let mut send = feo_model::SendSlot::new(Route::Bus(bus));
         send.level_db = 0.0;
         tr.mixer.sends[0] = Some(send);
-        let latency = soundcraft_dsp::create("maximizer").unwrap().latency();
+        let latency = feo_dsp::create("maximizer").unwrap().latency();
         assert!(latency > 16);
         for source in [None, Some(bus)] {
             for block in [16, 100, 512] {
@@ -2988,7 +2988,7 @@ mod tests {
     fn a_plugins_bogus_latency_is_capped() {
         struct Latent(Box<dyn Plugin>);
         impl Plugin for Latent {
-            fn info(&self) -> &'static soundcraft_dsp::PluginInfo {
+            fn info(&self) -> &'static feo_dsp::PluginInfo {
                 self.0.info()
             }
             fn prepare(&mut self, sr: f32, mb: usize, ch: usize) {
@@ -3016,7 +3016,7 @@ mod tests {
         eng.set_external_instances(true);
         for track in [t, aux] {
             s.track_mut(track).unwrap().mixer.inserts[0] = Some(Insert::new("clap:test.latent"));
-            let mut gain = soundcraft_dsp::create("gain").unwrap();
+            let mut gain = feo_dsp::create("gain").unwrap();
             gain.prepare(48_000.0, 512, 1);
             eng.adopt(vec![PreparedInstance { track, slot: 0, id: "clap:test.latent".into(), ch: 1, plugin: Box::new(Latent(gain)) }]);
         }

@@ -2,8 +2,8 @@
 //! Radius and Diameter, a datum point for Baseline and Ordinate, and Edit (add or remove
 //! dimension points). The prompt sequence runs the JSON form.
 
-use cadcraft_doc::{DimKind, EntityKind, Handle, Prim};
-use cadcraft_geom::{Segment, Vec2};
+use drafitra_doc::{DimKind, EntityKind, Handle, Prim};
+use drafitra_geom::{Segment, Vec2};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase};
@@ -106,7 +106,7 @@ fn plan(
     }
     // Horizontal dimensions measure along x; vertical ones along y. Without a choice: vertical
     // when the line position is beside the geometry, as with DIMLINEAR.
-    let bounds = cadcraft_geom::Bounds2::from_points(pts.iter().copied());
+    let bounds = drafitra_geom::Bounds2::from_points(pts.iter().copied());
     let vertical = vertical.unwrap_or_else(|| {
         let beside = at.x < bounds.min.x || at.x > bounds.max.x;
         let within = at.y >= bounds.min.y && at.y <= bounds.max.y;

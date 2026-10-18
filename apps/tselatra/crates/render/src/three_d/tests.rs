@@ -1,9 +1,9 @@
-use effectcraft_color::Label;
-use effectcraft_geom::{Vec3, vec3};
-use effectcraft_keyframe::Value;
-use effectcraft_project::build;
-use effectcraft_project::{Comp, ItemId, ItemKind, Layer, LayerSource, LightKind, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_geom::{Vec3, vec3};
+use tselatra_keyframe::Value;
+use tselatra_project::build;
+use tselatra_project::{Comp, ItemId, ItemKind, Layer, LayerSource, LightKind, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 use super::camera::{Rig, View3D, default_view_cam, orientation_for};
 use super::*;
@@ -15,7 +15,7 @@ const H: u32 = 100;
 fn setup() -> (Project, ItemId, Comp) {
     let mut p = Project::default();
     // Exact float maths; 8/16 bpc quantisation has its own tests (tests_color).
-    p.settings.bit_depth = effectcraft_project::BitDepth::Bpc32;
+    p.settings.bit_depth = tselatra_project::BitDepth::Bpc32;
     let comp = Comp::new(W, H, FrameRate::FPS_30, Tick::from_seconds_f64(2.0));
     let cid = p.add_item("Comp", Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));
     (p, cid, comp)
@@ -39,7 +39,7 @@ fn push(p: &mut Project, cid: ItemId, l: Layer) {
     p.comp_mut(cid).unwrap().layers.push(l);
 }
 
-fn render(p: &Project, cid: ItemId) -> effectcraft_raster::Image {
+fn render(p: &Project, cid: ItemId) -> tselatra_raster::Image {
     render_frame(p, cid, Tick::ZERO, 1.0)
 }
 
@@ -382,7 +382,7 @@ fn two_node_camera_looks_at_poi() {
 fn one_node_camera_uses_orientation() {
     let (mut p, cid, comp) = setup();
     let mut cam = camera(&mut p, &comp);
-    cam.auto_orient = effectcraft_project::AutoOrient::Off;
+    cam.auto_orient = tselatra_project::AutoOrient::Off;
     set(&mut cam, "transform/position", Value::Vec3([100.0, 50.0, 0.0]));
     // Turn to look along +x.
     set(&mut cam, "transform/orientation", Value::Vec3(orientation_for(vec3(1.0, 0.0, 0.0))));
@@ -398,7 +398,7 @@ fn one_node_camera_uses_orientation() {
 fn orientation_for_round_trips() {
     for d in [vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(-0.3, 0.4, 0.8), vec3(0.2, -0.9, -0.1)] {
         let o = orientation_for(d);
-        let f = effectcraft_geom::Mat4::orientation(Vec3::from(o)).apply_vec(vec3(0.0, 0.0, 1.0));
+        let f = tselatra_geom::Mat4::orientation(Vec3::from(o)).apply_vec(vec3(0.0, 0.0, 1.0));
         assert!((f - d.normalize()).length() < 1e-9, "{d:?} → {o:?} → {f:?}");
     }
 }
@@ -424,7 +424,7 @@ fn depth_of_field_blurs_out_of_focus_layers() {
 }
 
 /// Pixels in column `x` whose alpha is strictly between 0.05 and 0.95.
-fn soft_px(img: &effectcraft_raster::Image, x: i64) -> usize {
+fn soft_px(img: &tselatra_raster::Image, x: i64) -> usize {
     (0..img.height as i64).filter(|&y| (0.05..0.95).contains(&img.get(x, y)[3])).count()
 }
 
@@ -467,7 +467,7 @@ fn iris_shape_and_highlights_shape_the_bokeh() {
         push(&mut p, cid, s);
         render(&p, cid)
     };
-    let area = |img: &effectcraft_raster::Image| img.data.iter().filter(|q| q[3] > 1e-4).count();
+    let area = |img: &tselatra_raster::Image| img.data.iter().filter(|q| q[3] > 1e-4).count();
     let (tri, dec, rect) = (spot(1, 0.0), spot(8, 0.0), spot(0, 0.0));
     assert!(area(&tri) * 3 < area(&dec) * 2, "triangle {} vs decagon {}", area(&tri), area(&dec));
     // Fast Rectangle: a box.
@@ -476,7 +476,7 @@ fn iris_shape_and_highlights_shape_the_bokeh() {
     assert!(((x1 - x0 + 1) - y_extent).abs() <= 2, "square box {} vs {}", x1 - x0 + 1, y_extent);
     // Highlight Gain brightens the blurred highlight.
     let lit = spot(8, 100.0);
-    let sum = |img: &effectcraft_raster::Image| img.data.iter().map(|q| q[0]).sum::<f32>();
+    let sum = |img: &tselatra_raster::Image| img.data.iter().map(|q| q[0]).sum::<f32>();
     assert!(sum(&lit) > sum(&dec) * 1.5, "{} vs {}", sum(&lit), sum(&dec));
 }
 

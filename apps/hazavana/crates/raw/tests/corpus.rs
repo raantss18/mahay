@@ -1,17 +1,17 @@
 //! Corpus test over `corpus/raw/**` (git-ignored CC0 samples from raw.pixls.us, fetched with
-//! `cargo xtask corpus --download`; `LIGHTCRAFT_CORPUS` overrides the corpus root). Skips cleanly when absent.
+//! `cargo xtask corpus --download`; `HAZAVANA_CORPUS` overrides the corpus root). Skips cleanly when absent.
 //!
 //! Every file must be recognised, carry an embedded JPEG preview (optional for DNG, generic CFA TIFF,
 //! older Panasonic RAW and HEVC-preview CR3), and either decode to a valid image or report
 //! `Unsupported` for one of the variants we know we don't decode yet. Prints decode times
-//! (`cargo test -p lightcraft-raw --release --test corpus -- --nocapture`).
+//! (`cargo test -p hazavana-raw --release --test corpus -- --nocapture`).
 
-use lightcraft_raw::{RawError, RawFormat, decode, embedded_preview, probe, probe_info};
+use hazavana_raw::{RawError, RawFormat, decode, embedded_preview, probe, probe_info};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 fn corpus_root() -> PathBuf {
-    std::env::var_os("LIGHTCRAFT_CORPUS").map(PathBuf::from).unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
+    std::env::var_os("HAZAVANA_CORPUS").map(PathBuf::from).unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
 }
 
 /// Variants known not to decode yet (see the crate docs): matched against the lower-case file name.
@@ -26,7 +26,7 @@ const KNOWN_UNSUPPORTED: &[&str] = &[
 fn corpus_raw_decodes() {
     let dir = corpus_root().join("raw");
     let Ok(rd) = std::fs::read_dir(&dir) else {
-        lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
         return;
     };
     let mut paths: Vec<PathBuf> = rd.flatten().map(|e| e.path()).filter(|p| p.is_file()).collect();
@@ -50,8 +50,8 @@ fn corpus_raw_decodes() {
             assert!(jpeg || jxl, "{name}: preview is neither a JPEG nor a JPEG XL file");
         } else {
             let hevc_preview = fmt == RawFormat::Cr3
-                && lightcraft_meta::cr3::parse_cr3(&bytes)
-                    .is_some_and(|c| c.tracks.iter().any(|t| t.kind == lightcraft_meta::cr3::Cr3TrackKind::Other(*b"HEVC") && t.data.is_some()));
+                && hazavana_meta::cr3::parse_cr3(&bytes)
+                    .is_some_and(|c| c.tracks.iter().any(|t| t.kind == hazavana_meta::cr3::Cr3TrackKind::Other(*b"HEVC") && t.data.is_some()));
             // the Mamiya ZD's previews are uncompressed RGB sub-IFDs, not JPEGs
             assert!(
                 matches!(fmt, RawFormat::Dng | RawFormat::CfaTiff | RawFormat::Mef) || name.starts_with("raw-panasonic-") || hevc_preview,
@@ -100,8 +100,8 @@ fn corpus_raw_decodes() {
 }
 
 /// Green-channel means of 32×32 blocks.
-fn block_means(img: &lightcraft_raw::RawImage) -> Vec<f64> {
-    let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+fn block_means(img: &hazavana_raw::RawImage) -> Vec<f64> {
+    let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
     let (w, h, b) = (img.width, img.height, 32);
     let mut out = Vec::new();
     for by in 0..h / b {
@@ -131,8 +131,8 @@ fn correlation(a: &[f64], b: &[f64]) -> f64 {
 /// Which diagonal of each 2×2 cell (anchored at raw pixel (0, 0)) holds the green sites: the two greens of a Bayer
 /// cell see nearly the same light, so their mean absolute difference is far smaller than across the other diagonal.
 /// Returns `true` when green sits at (0, 0)/(1, 1) (GBRG/GRBG), `false` for (1, 0)/(0, 1) (RGGB/BGGR).
-fn green_on_main_diagonal(img: &lightcraft_raw::RawImage) -> bool {
-    let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+fn green_on_main_diagonal(img: &hazavana_raw::RawImage) -> bool {
+    let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
     let (w, a) = (img.width, img.active_area);
     let (mut main, mut anti) = (0f64, 0f64);
     for y in ((a.y + 2) & !1..a.y + a.height - 2).step_by(2) {
@@ -164,7 +164,7 @@ fn corpus_cr2_cfa_patterns() {
     let mut seen = 0;
     for (name, want) in cases {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -194,7 +194,7 @@ fn corpus_cr2_as_shot_white_balance() {
         "cr2-canon-80d.cr2",
     ] {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let wb = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}")).wb_multipliers.unwrap_or_else(|| panic!("{name}: no as-shot WB"));
@@ -211,7 +211,7 @@ fn corpus_nef_compressed_matches_uncompressed() {
     let dir = corpus_root().join("raw");
     let (Ok(a), Ok(b)) = (std::fs::read(dir.join("nef-nikon-d5100-lossless.nef")), std::fs::read(dir.join("nef-nikon-d5100-uncompressed.nef")))
     else {
-        lightcraft_testkit::skip!(Corpus, "D5100 NEF pair absent");
+        hazavana_testkit::skip!(Corpus, "D5100 NEF pair absent");
         return;
     };
     let (a, b) = (decode(&a).unwrap(), decode(&b).unwrap());
@@ -236,7 +236,7 @@ fn corpus_nef_compressed_matches_uncompressed() {
 fn corpus_nef_high_efficiency_is_named() {
     let dir = corpus_root().join("raw");
     let (Ok(he), Ok(lossless)) = (std::fs::read(dir.join("nef-nikon-zf-he.nef")), std::fs::read(dir.join("nef-nikon-zf-lossless.nef"))) else {
-        lightcraft_testkit::skip!(Corpus, "Z f samples absent");
+        hazavana_testkit::skip!(Corpus, "Z f samples absent");
         return;
     };
     for result in [decode(&he).map(|_| ()), probe_info(&he).map(|_| ())] {
@@ -253,13 +253,13 @@ fn corpus_nef_12_bit_black_level_matches_14_bit() {
     let dir = corpus_root().join("raw");
     let (Ok(a), Ok(b)) = (std::fs::read(dir.join("nef-nikon-d7500-lossless12.nef")), std::fs::read(dir.join("nef-nikon-d7500-lossless14.nef")))
     else {
-        lightcraft_testkit::skip!(Corpus, "D7500 NEF pair absent");
+        hazavana_testkit::skip!(Corpus, "D7500 NEF pair absent");
         return;
     };
     let (a, b) = (decode(&a).unwrap(), decode(&b).unwrap());
     assert_eq!((a.bits, b.bits), (12, 14));
     assert!((a.black.values[0] - 100.0).abs() < 1.0 && (b.black.values[0] - 400.0).abs() < 1.0, "{:?} {:?}", a.black, b.black);
-    let normalized = |img: &lightcraft_raw::RawImage| {
+    let normalized = |img: &hazavana_raw::RawImage| {
         let (black, white) = (img.black.values[0] as f64, img.white[0] as f64);
         block_means(img).into_iter().map(|v| (v - black) / (white - black)).collect::<Vec<_>>()
     };
@@ -283,7 +283,7 @@ fn corpus_nef_12_bit_black_level_matches_14_bit() {
 fn corpus_dngs_carry_profile_looks() {
     let dir = corpus_root().join("raw");
     let Ok(rd) = std::fs::read_dir(&dir) else {
-        lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
         return;
     };
     let mut seen = 0;
@@ -300,7 +300,7 @@ fn corpus_dngs_carry_profile_looks() {
             assert!(hsm.hue_divisions > 1 && hsm.sat_divisions > 1, "{name}");
             assert!(look.look_table.is_some(), "{name}: no look table");
             // a profile applied to a mid grey keeps it (close to) neutral
-            let t = lightcraft_raw::profile::ProfileTables::new(look, 0.5).unwrap();
+            let t = hazavana_raw::profile::ProfileTables::new(look, 0.5).unwrap();
             let g = t.apply([0.18; 3], 1.0);
             assert!(g.iter().all(|v| (v - g[0]).abs() < 0.01 * g[0].max(0.01)), "{name}: grey → {g:?}");
         }
@@ -332,11 +332,11 @@ fn corpus_dngs_carry_profile_looks() {
 fn corpus_proraw_sky_matte() {
     let path = corpus_root().join("raw/dng-apple-iphone12pro-proraw.dng");
     let Ok(bytes) = std::fs::read(&path) else {
-        lightcraft_testkit::skip!(Corpus, "{} absent", path.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", path.display());
         return;
     };
     let t0 = Instant::now();
-    let masks = lightcraft_raw::semantic_masks(&bytes);
+    let masks = hazavana_raw::semantic_masks(&bytes);
     eprintln!("semantic masks read in {:.1} ms", t0.elapsed().as_secs_f64() * 1e3);
     let names: Vec<&str> = masks.iter().map(|m| m.name.as_str()).collect();
     assert_eq!(names, ["urn:com:apple:photo:2020:aux:semanticskymatte"]);
@@ -370,7 +370,7 @@ fn corpus_sony_pre2017_colour_metadata() {
     let mut seen = 0;
     for (name, black, [r, b], (cw, ch)) in cases {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -402,7 +402,7 @@ fn corpus_sony_a7cr_codings() {
         let bytes = match std::fs::read(dir.join(name)) {
             Ok(bytes) => bytes,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                lightcraft_testkit::skip!(Corpus, "{name} absent");
+                hazavana_testkit::skip!(Corpus, "{name} absent");
                 continue;
             }
             Err(e) => panic!("{name}: {e}"),
@@ -422,8 +422,8 @@ fn corpus_sony_a7cr_codings() {
     }
     // The lossless and compressed codings are two exposures of the same scene with the same framing: inside the
     // default crop their mosaics must agree (up to the small differences between two exposures).
-    let crop_means = |img: &lightcraft_raw::RawImage| {
-        let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+    let crop_means = |img: &hazavana_raw::RawImage| {
+        let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
         let (w, c, b) = (img.width, img.crop, 32);
         let mut out = Vec::new();
         for by in 0..c.height / b {
@@ -469,7 +469,7 @@ fn corpus_sony_a7cm2_codings() {
         let bytes = match std::fs::read(dir.join(name)) {
             Ok(bytes) => bytes,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                lightcraft_testkit::skip!(Corpus, "{name} absent");
+                hazavana_testkit::skip!(Corpus, "{name} absent");
                 continue;
             }
             Err(e) => panic!("{name}: {e}"),
@@ -495,7 +495,7 @@ fn corpus_sony_a7cm2_codings() {
 /// level that is too low leaves a pedestal, one that is too high clips the shadows.
 #[test]
 fn corpus_sony_black_levels_sit_at_the_data_floor() {
-    use lightcraft_raw::RawData;
+    use hazavana_raw::RawData;
     let dir = corpus_root().join("raw");
     // (file, black, white): SR2SubIFD black at three layouts, a plain 0x7310, and the lossless L / M / S codings
     let cases = [
@@ -514,7 +514,7 @@ fn corpus_sony_black_levels_sit_at_the_data_floor() {
         let bytes = match std::fs::read(dir.join(name)) {
             Ok(bytes) => bytes,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                lightcraft_testkit::skip!(Corpus, "{name} absent");
+                hazavana_testkit::skip!(Corpus, "{name} absent");
                 continue;
             }
             Err(e) => panic!("{name}: {e}"),
@@ -572,7 +572,7 @@ fn corpus_sony_sr2_white_balance() {
     let mut seen = 0;
     for (name, [r, b]) in cases {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -590,7 +590,7 @@ fn corpus_sony_sr2_white_balance() {
 fn corpus_sony_a900_packed12() {
     let name = "arw-sony-a900-packed12.arw";
     let Ok(bytes) = std::fs::read(corpus_root().join("raw").join(name)) else {
-        lightcraft_testkit::skip!(Corpus, "{name} absent");
+        hazavana_testkit::skip!(Corpus, "{name} absent");
         return;
     };
     let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -612,7 +612,7 @@ fn corpus_sony_16x9_crops() {
         let bytes = match std::fs::read(dir.join(name)) {
             Ok(bytes) => bytes,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                lightcraft_testkit::skip!(Corpus, "{name} absent");
+                hazavana_testkit::skip!(Corpus, "{name} absent");
                 continue;
             }
             Err(e) => panic!("{name}: {e}"),
@@ -697,7 +697,7 @@ fn corpus_sony_lens_tables_become_opcodes() {
             .list3
             .iter()
             .filter_map(|op| match op {
-                lightcraft_raw::Opcode::WarpRectilinear { planes, center } => Some((planes, center)),
+                hazavana_raw::Opcode::WarpRectilinear { planes, center } => Some((planes, center)),
                 _ => None,
             })
             .collect();
@@ -736,8 +736,8 @@ fn jpeg_cells(jpeg: &[u8], gw: usize, gh: usize) -> Vec<[f64; 3]> {
 
 /// Black-subtracted means of the four sites of the 2×2 cells (anchored at sample (0, 0)) of the active area,
 /// reduced to `gw × gh` cells.
-fn raw_sites(img: &lightcraft_raw::RawImage, gw: usize, gh: usize) -> Vec<[f64; 4]> {
-    let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+fn raw_sites(img: &hazavana_raw::RawImage, gw: usize, gh: usize) -> Vec<[f64; 4]> {
+    let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
     let (w, a, black) = (img.width, img.active_area, img.black.mean() as f64);
     let (x0, y0) = ((a.x + 1) & !1, (a.y + 1) & !1);
     let (cw, ch) = ((a.x + a.width - x0) / 2, (a.y + a.height - y0) / 2);
@@ -813,7 +813,7 @@ fn corpus_panasonic_encodings() {
     let mut seen = 0;
     for (name, bits, black, (cw, ch), cfa) in cases {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -822,7 +822,7 @@ fn corpus_panasonic_encodings() {
         assert_eq!((img.crop.width, img.crop.height), (cw, ch), "{name}: crop");
         let layout = img.cfa.clone().unwrap_or_else(|| panic!("{name}: no CFA"));
         assert_eq!(layout.name(), cfa, "{name}: CFA layout");
-        let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+        let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
         let a = img.active_area;
         let zeros =
             (a.y..a.y + a.height).map(|y| d[y * img.width + a.x..y * img.width + a.x + a.width].iter().filter(|&&v| v == 0).count()).sum::<usize>();
@@ -840,7 +840,7 @@ fn corpus_panasonic_encodings() {
         let green: Vec<f64> = sites.iter().map(|s| (0..4).filter(|&i| layout.pattern[i] == 1).map(|i| s[i]).sum::<f64>()).collect();
         let jg: Vec<f64> = jpeg.iter().map(|j| j[1]).collect();
         let rho = correlation(&ranks(&green), &ranks(&jg));
-        let agree = |l: &str| chroma_agreement(&sites, &jpeg, &lightcraft_raw::Cfa::bayer(l).unwrap().pattern);
+        let agree = |l: &str| chroma_agreement(&sites, &jpeg, &hazavana_raw::Cfa::bayer(l).unwrap().pattern);
         let best_other = ["RGGB", "GRBG", "GBRG", "BGGR"].into_iter().filter(|l| *l != cfa).map(agree).fold(f64::MIN, f64::max);
         let own = agree(cfa);
         eprintln!(
@@ -863,7 +863,7 @@ fn corpus_orf_cfa_patterns() {
     let mut seen = 0;
     for (name, cfa) in cases {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -872,7 +872,7 @@ fn corpus_orf_cfa_patterns() {
         let jpeg = embedded_preview(&bytes).unwrap_or_else(|| panic!("{name}: no embedded preview"));
         let (gw, gh) = (24, 18);
         let (sites, jpeg) = (raw_sites(&img, gw, gh), jpeg_cells(&jpeg, gw, gh));
-        let agree = |l: &str| chroma_agreement(&sites, &jpeg, &lightcraft_raw::Cfa::bayer(l).unwrap().pattern);
+        let agree = |l: &str| chroma_agreement(&sites, &jpeg, &hazavana_raw::Cfa::bayer(l).unwrap().pattern);
         let best_other = ["RGGB", "GRBG", "GBRG", "BGGR"].into_iter().filter(|l| *l != cfa).map(agree).fold(f64::MIN, f64::max);
         let own = agree(cfa);
         let a = img.active_area;
@@ -898,7 +898,7 @@ fn corpus_samsung_srw() {
     let mut seen = 0;
     for (name, bits, active, crop, cfa, whole) in cases {
         let Ok(bytes) = std::fs::read(dir.join(name)) else {
-            lightcraft_testkit::skip!(Corpus, "{name} absent");
+            hazavana_testkit::skip!(Corpus, "{name} absent");
             continue;
         };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -912,7 +912,7 @@ fn corpus_samsung_srw() {
         assert!(img.white_at(0) > (1u32 << bits) as f32 * 0.9 && img.white_at(0) <= ((1u32 << bits) - 1) as f32, "{name}: white {}", img.white_at(0));
         assert!(img.black.mean() < 8.0, "{name}: black {}", img.black.mean());
         // the mosaic inside the framing holds no marker or padding values above the saturation level
-        let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+        let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
         let a = img.active_area;
         let above = (a.y..a.y + a.height)
             .map(|y| d[y * img.width + a.x..y * img.width + a.x + a.width].iter().filter(|&&v| f32::from(v) > ((1u32 << bits) - 1) as f32).count())
@@ -925,7 +925,7 @@ fn corpus_samsung_srw() {
             let layout = img.cfa.clone().unwrap_or_else(|| panic!("{name}: no CFA"));
             let green: Vec<f64> = sites.iter().map(|s| (0..4).filter(|&i| layout.pattern[i] == 1).map(|i| s[i]).sum::<f64>()).collect();
             let rho = correlation(&ranks(&green), &ranks(&jpeg.iter().map(|j| j[1]).collect::<Vec<_>>()));
-            let agree = |l: &str| chroma_agreement(&sites, &jpeg, &lightcraft_raw::Cfa::bayer(l).unwrap().pattern);
+            let agree = |l: &str| chroma_agreement(&sites, &jpeg, &hazavana_raw::Cfa::bayer(l).unwrap().pattern);
             let best_other = ["RGGB", "GRBG", "GBRG", "BGGR"].into_iter().filter(|l| *l != cfa).map(agree).fold(f64::MIN, f64::max);
             let own = agree(cfa);
             eprintln!(
@@ -977,7 +977,7 @@ fn corpus_fujifilm_compressed_samples() {
         assert_eq!(actual_sha, checksum, "{name}: corpus file differs from its pinned identity");
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
         assert_eq!((img.width, img.height), (width, height), "{name}");
-        let lightcraft_raw::RawData::U16(data) = img.data else { panic!("{name}: float data") };
+        let hazavana_raw::RawData::U16(data) = img.data else { panic!("{name}: float data") };
         let actual = data
             .iter()
             .enumerate()
@@ -997,7 +997,7 @@ fn verify_sensor_arrays(cases: &[(&str, usize, usize, u64, u64)]) -> usize {
         let Ok(bytes) = std::fs::read(dir.join(name)) else { continue };
         let img = decode(&bytes).unwrap_or_else(|e| panic!("{name}: {e}"));
         assert_eq!((img.width, img.height), (width, height), "{name}");
-        let lightcraft_raw::RawData::U16(data) = img.data else { panic!("{name}: float data") };
+        let hazavana_raw::RawData::U16(data) = img.data else { panic!("{name}: float data") };
         let actual = data
             .iter()
             .enumerate()
@@ -1008,7 +1008,7 @@ fn verify_sensor_arrays(cases: &[(&str, usize, usize, u64, u64)]) -> usize {
     seen
 }
 
-/// Regression values from LightCraft's decoder with the derived companding curve; the 12-bit codes before the curve
+/// Regression values from Hazavana's decoder with the derived companding curve; the 12-bit codes before the curve
 /// were verified against the black-box oracle in Phase 0 (docs/arw6-compression.md). The files are CC0 from RawDB, one
 /// per geometry and compression mode.
 #[test]
@@ -1027,7 +1027,7 @@ fn corpus_sony_arw6_samples() {
 fn corpus_raws_keep_their_container_and_are_not_thumbnail_shells() {
     let dir = corpus_root().join("raw");
     let Ok(rd) = std::fs::read_dir(&dir) else {
-        lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
         return;
     };
     let mut checked = 0;
@@ -1090,7 +1090,7 @@ fn sony_embedded_distortion_is_limited_to_validated_models() {
     ] {
         let path = root.join(name);
         if !path.exists() {
-            lightcraft_testkit::skip!(Corpus, "{} absent", path.display());
+            hazavana_testkit::skip!(Corpus, "{} absent", path.display());
             continue;
         }
         let bytes = std::fs::read(&path).unwrap();
@@ -1130,7 +1130,7 @@ fn nikon_in_file_distortion_is_limited_to_validated_bodies() {
         assert_eq!(probe_info(&bytes).unwrap(), full.info(), "{name}");
         assert_eq!(full.metadata.model.as_deref(), Some(model), "{name}");
         assert_eq!(full.opcodes.list3.len(), expected, "{name}");
-        if let Some(lightcraft_raw::Opcode::WarpRectilinear { planes, .. }) = full.opcodes.list3.first() {
+        if let Some(hazavana_raw::Opcode::WarpRectilinear { planes, .. }) = full.opcodes.list3.first() {
             // the stored zoom (0.0557) frames the corrected picture as the camera does
             assert!((planes[0][0] - 1.0 / 1.055719).abs() < 1e-4, "{name}: {planes:?}");
         }
@@ -1174,7 +1174,7 @@ const SONY_SAMPLES: &[(&str, &str)] = &[
 const SONY_PINS_SHA256: &str = "4cfc349194278146356b463c59ede500331c6ca5fc50aec4e92d7cd847b17b68";
 
 /// A Sony corpus file's bytes, checked against its pinned SHA-256 before anything decodes them; `None` (with a
-/// note) when the file is absent, unless `LIGHTCRAFT_CORPUS_REQUIRED=1` asks for every pinned file. A file that
+/// note) when the file is absent, unless `HAZAVANA_CORPUS_REQUIRED=1` asks for every pinned file. A file that
 /// differs from its pin fails the test.
 fn pinned_sony(root: &Path, name: &str) -> Option<Vec<u8>> {
     use sha2::{Digest, Sha256};
@@ -1182,7 +1182,7 @@ fn pinned_sony(root: &Path, name: &str) -> Option<Vec<u8>> {
     let bytes = match std::fs::read(root.join(name)) {
         Ok(bytes) => bytes,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            assert!(std::env::var_os("LIGHTCRAFT_CORPUS_REQUIRED").is_none_or(|v| v != "1"), "{name}: absent, and LIGHTCRAFT_CORPUS_REQUIRED=1");
+            assert!(std::env::var_os("HAZAVANA_CORPUS_REQUIRED").is_none_or(|v| v != "1"), "{name}: absent, and HAZAVANA_CORPUS_REQUIRED=1");
             eprintln!("skip: {name} absent");
             return None;
         }
@@ -1216,21 +1216,21 @@ fn a_sony_fixture_that_differs_from_its_pin_fails() {
             let _ = std::fs::remove_dir_all(&self.0);
         }
     }
-    let dir = Gone(std::env::temp_dir().join(format!("lightcraft-sony-pin-{}", std::process::id())));
+    let dir = Gone(std::env::temp_dir().join(format!("hazavana-sony-pin-{}", std::process::id())));
     std::fs::create_dir_all(&dir.0).unwrap();
     std::fs::write(dir.0.join("arw-sony-a7cr-compressed.arw"), b"not the pinned file").unwrap();
     pinned_sony(&dir.0, "arw-sony-a7cr-compressed.arw");
 }
 
-/// Sony's lens-correction records (`lightcraft_raw::lens_metadata`, `crates/raw/src/vendor/arw_lens.rs`) on the public
+/// Sony's lens-correction records (`hazavana_raw::lens_metadata`, `crates/raw/src/vendor/arw_lens.rs`) on the public
 /// samples: shading, CA and distortion decoded from the raw IFD with their settings, equal to their `SR2SubIFD` copies,
 /// the same from header and full decode, and nothing applied beyond the validated ILCE-7RM4A distortion. Expected
 /// tables and settings: what ExifTool, run as a black-box tool, prints for these files. Every file is checked against
 /// its pinned SHA-256 before it is decoded; absent files are skipped.
 #[test]
 fn sony_lens_records_of_the_public_samples() {
-    use lightcraft_raw::Rect;
-    use lightcraft_raw::lens_metadata::{SonyCopy, SonyLensStatus, SonySettingMeaning as M, SonySource};
+    use hazavana_raw::Rect;
+    use hazavana_raw::lens_metadata::{SonyCopy, SonyLensStatus, SonySettingMeaning as M, SonySource};
     let root = corpus_root().join("raw");
     // ILCE-7CR (Sigma 24-70mm F2.8 DG DN Art at 49.5 mm): one scene in three codings, identical tables
     let a7cr_shading = [0, 64, 128, 224, 320, 480, 672, 896, 1184, 1472, 1824, 2240, 2816, 3552, 4512, 7328];
@@ -1370,7 +1370,7 @@ fn corpus_kodak_dcs520c() {
     let name = "2573_Kodak - DCS520C - 12bit (3_2).TIF";
     let candidates = [corpus_root().join("raw").join("kodak-dcs520c.tif"), Path::new("P:/raw-pixls/Kodak/DCS520C").join(name)];
     let Some(bytes) = candidates.iter().find_map(|p| std::fs::read(p).ok()) else {
-        lightcraft_testkit::skip!(Corpus, "DCS520C sample absent");
+        hazavana_testkit::skip!(Corpus, "DCS520C sample absent");
         return;
     };
     assert_eq!(probe(&bytes), Some(RawFormat::KodakDcs));
@@ -1378,7 +1378,7 @@ fn corpus_kodak_dcs520c() {
     assert_eq!((img.width, img.height, img.bits), (1736, 1160, 12));
     assert_eq!(img.cfa.as_ref().map(|c| c.name()).as_deref(), Some("GRBG"));
     assert_eq!(img.white_at(0), 4095.0);
-    let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+    let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
     assert_eq!(d.len(), 1736 * 1160);
     // stored 191..=622 expands to 191..=4095
     assert_eq!((d.iter().min().copied(), d.iter().max().copied()), (Some(191), Some(4095)));
@@ -1407,7 +1407,7 @@ fn corpus_kodak_dcs520c() {
 }
 
 /// Fujifilm RAF lens tables (`0xf00b` distortion, `0xf010` vignetting) become a warp and a vignette gain for the
-/// cameras whose geometry was checked against the camera JPEG (docs/fuji-lens-corrections.md). Reads `LIGHTCRAFT_FUJI` (a folder
+/// cameras whose geometry was checked against the camera JPEG (docs/fuji-lens-corrections.md). Reads `HAZAVANA_FUJI` (a folder
 /// of RAFs or of per-model folders, e.g. the CC0 pixls set) or the corpus' `raf-fuji-*` files; skips when absent.
 #[test]
 fn fuji_embedded_lens_tables_follow_the_validated_models() {
@@ -1423,7 +1423,7 @@ fn fuji_embedded_lens_tables_follow_the_validated_models() {
         }
     }
     let mut files = Vec::new();
-    match std::env::var_os("LIGHTCRAFT_FUJI") {
+    match std::env::var_os("HAZAVANA_FUJI") {
         Some(dir) => collect(Path::new(&dir), 0, &mut files),
         None => {
             collect(&corpus_root().join("raw"), 1, &mut files);
@@ -1436,7 +1436,7 @@ fn fuji_embedded_lens_tables_follow_the_validated_models() {
     let (mut warped, mut vignetted, mut checked) = (0, 0, 0);
     for path in &files {
         let Ok(bytes) = std::fs::read(path) else { continue };
-        if lightcraft_raw::probe(&bytes) != Some(RawFormat::Raf) {
+        if hazavana_raw::probe(&bytes) != Some(RawFormat::Raf) {
             continue;
         }
         let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
@@ -1449,7 +1449,7 @@ fn fuji_embedded_lens_tables_follow_the_validated_models() {
         }
         for op in ops {
             match op {
-                lightcraft_raw::Opcode::WarpRectilinear { planes, center } => {
+                hazavana_raw::Opcode::WarpRectilinear { planes, center } => {
                     assert_eq!(*center, [0.5, 0.5], "{name}");
                     assert_eq!(planes.len(), 1, "{name}: lateral CA is not applied");
                     // a sane radial mapping: close to 1 at the centre, monotone, never folding
@@ -1459,7 +1459,7 @@ fn fuji_embedded_lens_tables_follow_the_validated_models() {
                     assert!((0..100).all(|i| source((i + 1) as f64 / 100.0) > source(i as f64 / 100.0)), "{name}");
                     warped += 1;
                 }
-                lightcraft_raw::Opcode::FixVignetteRadial { k, center } => {
+                hazavana_raw::Opcode::FixVignetteRadial { k, center } => {
                     assert_eq!(*center, [0.5, 0.5], "{name}");
                     let gain = 1.0 + k.iter().enumerate().map(|(i, c)| c * 1.0f64.powi(2 * i as i32 + 2)).sum::<f64>();
                     assert!((1.0..3.0).contains(&gain), "{name}: corner gain {gain}");
@@ -1471,7 +1471,7 @@ fn fuji_embedded_lens_tables_follow_the_validated_models() {
         eprintln!(
             "{model}: {} opcode(s) {}",
             ops.len(),
-            if ops.iter().any(|o| matches!(o, lightcraft_raw::Opcode::WarpRectilinear { .. })) { "warp" } else { "no warp" }
+            if ops.iter().any(|o| matches!(o, hazavana_raw::Opcode::WarpRectilinear { .. })) { "warp" } else { "no warp" }
         );
         checked += 1;
     }
@@ -1502,7 +1502,7 @@ fn corpus_epson_erf() {
             assert!((wb[0] - 2.68).abs() < 0.1 && (wb[2] - 1.31).abs() < 0.1, "{name}: {wb:?}");
         }
         // same-colour neighbours differ little: the bit order is right
-        let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+        let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
         let step: f64 = d.chunks(3040).take(400).flat_map(|r| r.windows(3).map(|w| f64::from(w[0].abs_diff(w[2])))).sum::<f64>() / (400.0 * 3038.0);
         assert!(step < 40.0, "{name}: rough {step}");
         assert!(embedded_preview(&bytes).is_some(), "{name}: no preview");
@@ -1524,11 +1524,11 @@ fn corpus_mamiya_mef() {
     assert_eq!((img.width, img.height, img.bits), (4016, 5344, 12));
     assert_eq!((img.crop.x, img.crop.y, img.crop.width, img.crop.height), (24, 12, 3968, 5312));
     assert_eq!(img.cfa.as_ref().map(|c| c.name()).as_deref(), Some("RGGB"));
-    assert_eq!(img.orientation, lightcraft_geom::Orientation::from_exif(6));
+    assert_eq!(img.orientation, hazavana_geom::Orientation::from_exif(6));
     let wb = img.wb_multipliers.expect("white balance");
     eprintln!("MEF wb {wb:?}");
     assert!(wb.iter().all(|g| (0.5..=4.0).contains(g)), "{wb:?}");
-    let lightcraft_raw::RawData::U16(d) = &img.data else { panic!("float data") };
+    let hazavana_raw::RawData::U16(d) = &img.data else { panic!("float data") };
     let step: f64 = d.chunks(4016).take(400).flat_map(|r| r.windows(3).map(|w| f64::from(w[0].abs_diff(w[2])))).sum::<f64>() / (400.0 * 4014.0);
     assert!(step < 40.0, "rough {step}");
 }

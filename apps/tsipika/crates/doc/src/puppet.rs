@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 use crate::{Document, Node, NodeId};
 
@@ -62,7 +62,7 @@ impl Document {
 mod tests {
     use super::*;
     use crate::Appearance;
-    use vectorcraft_geom::{Rect, shapes};
+    use tsipika_geom::{Rect, shapes};
 
     #[test]
     fn pins_hold_until_their_objects_change_and_are_never_saved() {

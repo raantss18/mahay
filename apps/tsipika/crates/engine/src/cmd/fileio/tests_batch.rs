@@ -1,13 +1,13 @@
 //! Batch exports through Export for Screens (#1935): a file name pattern (the document's and the
 //! item's names, a counter, the date), folders by format, by item or both, layers and the selection
-//! as what is exported, and document formats (VectorCraft, Illustrator, EPS) as rows.
+//! as what is exported, and document formats (Tsipika, Illustrator, EPS) as rows.
 
 use serde_json::{Value, json};
 
 use super::*;
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 /// A document of `artboards` 40×30 pt artboards side by side with a 20 pt square on the first.
@@ -62,7 +62,7 @@ fn the_logo_package_of_the_request() {
     let f = files(&r);
     let page = |name: &str| {
         let bytes = &f.iter().find(|(n, _)| n == name).unwrap().1;
-        let d = vectorcraft_pdf::import(bytes).unwrap();
+        let d = tsipika_pdf::import(bytes).unwrap();
         let a = d.artboards.first().unwrap().rect;
         (a.width(), a.height())
     };
@@ -138,12 +138,12 @@ fn layers_and_the_selection_are_exported_by_name() {
 #[test]
 fn document_formats_write_one_artboard_each() {
     let mut s = session(2);
-    let r = export(&mut s, json!({"formats": [{"format": "vectorcraft"}, {"format": "ai"}, {"format": "eps"}]}));
+    let r = export(&mut s, json!({"formats": [{"format": "tsipika"}, {"format": "ai"}, {"format": "eps"}]}));
     let n = names(&r);
-    assert_eq!(n, ["Artboard-1.vectorcraft", "Artboard-1.ai", "Artboard-1.eps", "Artboard-2.vectorcraft", "Artboard-2.ai", "Artboard-2.eps"]);
+    assert_eq!(n, ["Artboard-1.tsipika", "Artboard-1.ai", "Artboard-1.eps", "Artboard-2.tsipika", "Artboard-2.ai", "Artboard-2.eps"]);
     let native = &files(&r)[0].1;
     let mut t = Session::new();
-    t.execute("document.open", &json!({"name": "a.vectorcraft", "dataBase64": vectorcraft_format::base64_encode(native)})).unwrap();
+    t.execute("document.open", &json!({"name": "a.tsipika", "dataBase64": tsipika_format::base64_encode(native)})).unwrap();
     assert_eq!(t.doc().unwrap().doc.artboards.len(), 1, "that artboard alone");
 }
 

@@ -930,7 +930,7 @@ mod tests {
 
     #[test]
     fn japanese_vertical_titles_with_an_installed_font() {
-        // Japanese glyphs come from the craft-fonts (built with CRAFT_FONTS_DIR) or a system font:
+        // Japanese glyphs come from the mahay-fonts (built with MAHAY_FONTS_DIR) or a system font:
         // skip where neither is present.
         crate::fonts::scan_system();
         if !crate::fonts::all_faces().iter().any(|f| "日本語縦書き".chars().all(|c| f.has_char(c))) {

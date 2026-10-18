@@ -1,4 +1,4 @@
-//! Test-only VST3 plugin for soundcraft-vst3-host (two audio module classes):
+//! Test-only VST3 plugin for feo-vst3-host (two audio module classes):
 //!
 //! - "Fixture Gain" (`Fx`): stereo or mono in → out × gain, with a separate edit controller
 //!   (connected through IConnectionPoint, synced through the component state). Params: 7 "Gain"
@@ -638,7 +638,7 @@ const CLASSES: [(TUID, &str, &str, &str); 3] = [
 impl IPluginFactoryTrait for Factory {
     unsafe fn getFactoryInfo(&self, info: *mut PFactoryInfo) -> tresult {
         let i = unsafe { &mut *info };
-        copy_c8("SoundCraft tests", &mut i.vendor);
+        copy_c8("Feo tests", &mut i.vendor);
         copy_c8("https://example.invalid", &mut i.url);
         copy_c8("tests@example.invalid", &mut i.email);
         i.flags = PFactoryInfo_::FactoryFlags_::kUnicode as i32;

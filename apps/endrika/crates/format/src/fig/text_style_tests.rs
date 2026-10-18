@@ -1,7 +1,7 @@
 //! Text layers and their shared text styles on import: which of the style, the layer's own
 //! values and an instance's overrides win, on messages built in code.
 
-use figcraft_doc::{Document, LetterSpacing, StyleKind, TextCase, TextDecoration};
+use endrika_doc::{Document, LetterSpacing, StyleKind, TextCase, TextDecoration};
 use serde_json::Value;
 
 use super::kiwi::Kv;

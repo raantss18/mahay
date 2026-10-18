@@ -242,13 +242,14 @@ dependencies = [
  "android-properties",
  "bitflags 2.13.2",
  "cc",
- "jni",
+ "jni 0.22.4",
  "libc",
  "log",
  "ndk",
  "ndk-context",
  "ndk-sys",
  "num_enum",
+ "simd_cesu8",
  "thiserror 2.0.21",
 ]
 
@@ -257,6 +258,23 @@ name = "android-properties"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
+
+[[package]]
+name = "android_log-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84521a3cf562bc62942e294181d9eef17eb38ceb8c68677bc49f144e4c3d4f8d"
+
+[[package]]
+name = "android_logger"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbb4e440d04be07da1f1bf44fb4495ebd58669372fe0cffa6e48595ac5bd88a3"
+dependencies = [
+ "android_log-sys",
+ "env_filter",
+ "log",
+]
 
 [[package]]
 name = "android_system_properties"
@@ -282,12 +300,11 @@ checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 [[package]]
 name = "arboard"
 version = "3.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
 dependencies = [
  "clipboard-win",
  "image",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -295,7 +312,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.60.2",
+ "windows-sys 0.52.0",
  "x11rb",
 ]
 
@@ -892,6 +909,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cesu8"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d43a04d8753f35258c91f8ec639f792891f748a1edbd759cf1dcea3382ad83c"
+
+[[package]]
 name = "cfg-if"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1070,20 +1093,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "craft-docpath"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=82a24b006eefa036b43c09a67fb9a3fbd17ffe63#82a24b006eefa036b43c09a67fb9a3fbd17ffe63"
-
-[[package]]
-name = "craft-ui"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51eeb3de70e735c8ce87a59a7dedd47675"
-dependencies = [
- "egui",
- "serde",
 ]
 
 [[package]]
@@ -1578,6 +1587,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "env_filter"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bf3c259d255ca70051b30e2e95b5446cdb8949ac4cd22c0d7fd634d89f568e2"
+dependencies = [
+ "log",
 ]
 
 [[package]]
@@ -2546,6 +2564,483 @@ dependencies = [
 ]
 
 [[package]]
+name = "hazavana"
+version = "0.2.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "hazavana-codecs",
+ "hazavana-engine",
+ "hazavana-raster",
+ "hazavana-sysmem",
+ "hazavana-testkit",
+ "hazavana-ui-egui",
+ "log",
+ "muda",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "pollster 1.0.1",
+ "rfd",
+ "serde_json",
+ "winit",
+ "winresource",
+ "zbus",
+]
+
+[[package]]
+name = "hazavana-catalog"
+version = "0.2.0"
+dependencies = [
+ "crc32fast",
+ "hazavana-develop",
+ "hazavana-geom",
+ "hazavana-meta",
+ "hazavana-raw",
+ "log",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hazavana-cli"
+version = "0.2.0"
+dependencies = [
+ "dhat",
+ "hazavana-codecs",
+ "hazavana-denoise",
+ "hazavana-engine",
+ "hazavana-mcp",
+ "hazavana-merge",
+ "hazavana-raster",
+ "hazavana-sysmem",
+ "hazavana-ui-egui",
+ "serde_json",
+]
+
+[[package]]
+name = "hazavana-codecs"
+version = "0.2.0"
+dependencies = [
+ "avif-serialize",
+ "bytemuck",
+ "dhat",
+ "hazavana-color",
+ "hazavana-geom",
+ "hazavana-heif",
+ "hazavana-raster",
+ "hazavana-testkit",
+ "image",
+ "image-webp",
+ "jixel",
+ "jpeg-decoder",
+ "jpeg-encoder",
+ "jxl-oxide",
+ "moxcms 0.9.1",
+ "png",
+ "proptest",
+ "rav1e",
+ "ravif",
+ "rayon",
+ "serde",
+ "thiserror 2.0.21",
+ "tiff",
+ "zune-core",
+ "zune-jpeg",
+]
+
+[[package]]
+name = "hazavana-color"
+version = "0.2.0"
+dependencies = [
+ "hazavana-geom",
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "hazavana-denoise"
+version = "0.2.0"
+dependencies = [
+ "faer-core",
+ "hazavana-denoise-core",
+ "hazavana-raster",
+ "miniz_oxide 0.8.9",
+ "proptest",
+ "rayon",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hazavana-denoise-core"
+version = "0.2.0"
+dependencies = [
+ "hazavana-raster",
+ "miniz_oxide 0.8.9",
+ "proptest",
+ "rayon",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hazavana-develop"
+version = "0.2.0"
+dependencies = [
+ "hazavana-color",
+ "hazavana-geom",
+ "miniz_oxide 0.8.9",
+ "proptest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hazavana-engine"
+version = "0.2.0"
+dependencies = [
+ "ab_glyph",
+ "harfrust",
+ "hazavana-catalog",
+ "hazavana-codecs",
+ "hazavana-color",
+ "hazavana-denoise",
+ "hazavana-denoise-core",
+ "hazavana-develop",
+ "hazavana-faces",
+ "hazavana-fetch",
+ "hazavana-geocode",
+ "hazavana-geom",
+ "hazavana-gpu",
+ "hazavana-heif",
+ "hazavana-lensdb",
+ "hazavana-merge",
+ "hazavana-meta",
+ "hazavana-pipeline",
+ "hazavana-preview",
+ "hazavana-raster",
+ "hazavana-raw",
+ "hazavana-scenes",
+ "hazavana-segment",
+ "hazavana-slideshow",
+ "hazavana-testkit",
+ "hazavana-tiff",
+ "jxl-oxide",
+ "libc",
+ "log",
+ "mahay-docpath",
+ "miniz_oxide 0.8.9",
+ "rayon",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "unicode-segmentation",
+ "web-time",
+]
+
+[[package]]
+name = "hazavana-faces"
+version = "0.2.0"
+dependencies = [
+ "hazavana-testkit",
+ "matrixmultiply",
+ "ndarray",
+ "proptest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hazavana-fetch"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "rustls",
+ "rustls-rustcrypto",
+ "sha2",
+ "webpki-roots",
+]
+
+[[package]]
+name = "hazavana-geocode"
+version = "0.2.0"
+dependencies = [
+ "miniz_oxide 0.8.9",
+ "serde",
+]
+
+[[package]]
+name = "hazavana-geom"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "hazavana-gpu"
+version = "0.2.0"
+dependencies = [
+ "bytemuck",
+ "hazavana-color",
+ "hazavana-denoise",
+ "hazavana-develop",
+ "hazavana-faces",
+ "hazavana-geom",
+ "hazavana-pipeline",
+ "hazavana-raster",
+ "hazavana-raw",
+ "hazavana-scenes",
+ "hazavana-testkit",
+ "log",
+ "pollster 1.0.1",
+ "wgpu",
+]
+
+[[package]]
+name = "hazavana-heif"
+version = "0.2.0"
+dependencies = [
+ "heic-rs",
+ "rayon",
+]
+
+[[package]]
+name = "hazavana-inpaint"
+version = "0.2.0"
+dependencies = [
+ "rayon",
+]
+
+[[package]]
+name = "hazavana-lensdb"
+version = "0.2.0"
+dependencies = [
+ "hazavana-develop",
+ "hazavana-geom",
+ "quick-xml 0.38.4",
+]
+
+[[package]]
+name = "hazavana-mcp"
+version = "0.2.0"
+dependencies = [
+ "hazavana-codecs",
+ "hazavana-engine",
+ "hazavana-raster",
+ "log",
+ "serde_json",
+]
+
+[[package]]
+name = "hazavana-merge"
+version = "0.2.0"
+dependencies = [
+ "hazavana-codecs",
+ "hazavana-color",
+ "hazavana-geom",
+ "hazavana-meta",
+ "hazavana-raster",
+ "hazavana-raw",
+ "hazavana-scenes",
+ "rayon",
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hazavana-meta"
+version = "0.2.0"
+dependencies = [
+ "hazavana-geom",
+ "hazavana-tiff",
+ "proptest",
+ "quick-xml 0.38.4",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hazavana-pipeline"
+version = "0.2.0"
+dependencies = [
+ "hazavana-color",
+ "hazavana-develop",
+ "hazavana-geom",
+ "hazavana-inpaint",
+ "hazavana-raster",
+ "hazavana-raw",
+ "hazavana-scenes",
+ "image",
+ "proptest",
+ "rayon",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hazavana-preview"
+version = "0.2.0"
+dependencies = [
+ "hazavana-raster",
+ "jpeg-encoder",
+ "log",
+ "siphasher",
+ "zune-core",
+ "zune-jpeg",
+]
+
+[[package]]
+name = "hazavana-raster"
+version = "0.2.0"
+dependencies = [
+ "hazavana-color",
+ "hazavana-geom",
+ "libc",
+ "proptest",
+ "rayon",
+ "serde",
+]
+
+[[package]]
+name = "hazavana-raw"
+version = "0.2.0"
+dependencies = [
+ "dhat",
+ "hazavana-color",
+ "hazavana-geom",
+ "hazavana-meta",
+ "hazavana-raster",
+ "hazavana-testkit",
+ "hazavana-tiff",
+ "jpeg-encoder",
+ "jxl-oxide",
+ "miniz_oxide 0.8.9",
+ "proptest",
+ "rayon",
+ "serde",
+ "sha2",
+ "thiserror 2.0.21",
+ "zune-core",
+ "zune-jpeg",
+ "zune-jpegxl",
+]
+
+[[package]]
+name = "hazavana-scenes"
+version = "0.2.0"
+dependencies = [
+ "hazavana-color",
+ "hazavana-raster",
+ "image",
+ "rayon",
+ "serde",
+]
+
+[[package]]
+name = "hazavana-segment"
+version = "0.2.0"
+dependencies = [
+ "candle-core",
+ "candle-nn",
+ "hazavana-fetch",
+ "hazavana-testkit",
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hazavana-slideshow"
+version = "0.2.0"
+dependencies = [
+ "hazavana-raster",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hazavana-sysmem"
+version = "0.2.0"
+
+[[package]]
+name = "hazavana-testkit"
+version = "0.2.0"
+
+[[package]]
+name = "hazavana-tiff"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hazavana-ui-egui"
+version = "0.2.0"
+dependencies = [
+ "egui",
+ "egui_kittest",
+ "hazavana-catalog",
+ "hazavana-codecs",
+ "hazavana-color",
+ "hazavana-denoise",
+ "hazavana-develop",
+ "hazavana-engine",
+ "hazavana-faces",
+ "hazavana-geom",
+ "hazavana-merge",
+ "hazavana-meta",
+ "hazavana-pipeline",
+ "hazavana-preview",
+ "hazavana-raster",
+ "hazavana-slideshow",
+ "hazavana-testkit",
+ "log",
+ "mahay-ui",
+ "serde",
+ "serde_json",
+ "toml",
+ "web-time",
+]
+
+[[package]]
+name = "hazavana-web"
+version = "0.2.0"
+dependencies = [
+ "crc32fast",
+ "eframe",
+ "egui",
+ "hazavana-codecs",
+ "hazavana-engine",
+ "hazavana-preview",
+ "hazavana-raster",
+ "hazavana-ui-egui",
+ "js-sys",
+ "log",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2703,6 +3198,22 @@ name = "jixel"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "278a75e12caacec34be774d62ad05e45fc0b6a52d1f4e9f7fbc0209ecdf794f3"
+
+[[package]]
+name = "jni"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a87aa2bb7d2af34197c04845522473242e1aa17c12f4935d5856491a7fb8c97"
+dependencies = [
+ "cesu8",
+ "cfg-if",
+ "combine",
+ "jni-sys 0.3.1",
+ "log",
+ "thiserror 1.0.69",
+ "walkdir",
+ "windows-sys 0.45.0",
+]
 
 [[package]]
 name = "jni"
@@ -3077,483 +3588,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lightcraft"
-version = "0.9.1"
-dependencies = [
- "eframe",
- "egui",
- "lightcraft-codecs",
- "lightcraft-engine",
- "lightcraft-raster",
- "lightcraft-sysmem",
- "lightcraft-testkit",
- "lightcraft-ui-egui",
- "log",
- "muda",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "pollster 1.0.1",
- "rfd",
- "serde_json",
- "winit",
- "winresource",
- "zbus",
-]
-
-[[package]]
-name = "lightcraft-catalog"
-version = "0.9.1"
-dependencies = [
- "crc32fast",
- "lightcraft-develop",
- "lightcraft-geom",
- "lightcraft-meta",
- "lightcraft-raw",
- "log",
- "proptest",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "lightcraft-cli"
-version = "0.9.1"
-dependencies = [
- "dhat",
- "lightcraft-codecs",
- "lightcraft-denoise",
- "lightcraft-engine",
- "lightcraft-mcp",
- "lightcraft-merge",
- "lightcraft-raster",
- "lightcraft-sysmem",
- "lightcraft-ui-egui",
- "serde_json",
-]
-
-[[package]]
-name = "lightcraft-codecs"
-version = "0.9.1"
-dependencies = [
- "avif-serialize",
- "bytemuck",
- "dhat",
- "image",
- "image-webp",
- "jixel",
- "jpeg-decoder",
- "jpeg-encoder",
- "jxl-oxide",
- "lightcraft-color",
- "lightcraft-geom",
- "lightcraft-heif",
- "lightcraft-raster",
- "lightcraft-testkit",
- "moxcms 0.9.1",
- "png",
- "proptest",
- "rav1e",
- "ravif",
- "rayon",
- "serde",
- "thiserror 2.0.21",
- "tiff",
- "zune-core",
- "zune-jpeg",
-]
-
-[[package]]
-name = "lightcraft-color"
-version = "0.9.1"
-dependencies = [
- "lightcraft-geom",
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "lightcraft-denoise"
-version = "0.9.1"
-dependencies = [
- "faer-core",
- "lightcraft-denoise-core",
- "lightcraft-raster",
- "miniz_oxide 0.8.9",
- "proptest",
- "rayon",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "lightcraft-denoise-core"
-version = "0.9.1"
-dependencies = [
- "lightcraft-raster",
- "miniz_oxide 0.8.9",
- "proptest",
- "rayon",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "lightcraft-develop"
-version = "0.9.1"
-dependencies = [
- "lightcraft-color",
- "lightcraft-geom",
- "miniz_oxide 0.8.9",
- "proptest",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lightcraft-engine"
-version = "0.9.1"
-dependencies = [
- "ab_glyph",
- "craft-docpath",
- "harfrust",
- "jxl-oxide",
- "libc",
- "lightcraft-catalog",
- "lightcraft-codecs",
- "lightcraft-color",
- "lightcraft-denoise",
- "lightcraft-denoise-core",
- "lightcraft-develop",
- "lightcraft-faces",
- "lightcraft-fetch",
- "lightcraft-geocode",
- "lightcraft-geom",
- "lightcraft-gpu",
- "lightcraft-heif",
- "lightcraft-lensdb",
- "lightcraft-merge",
- "lightcraft-meta",
- "lightcraft-pipeline",
- "lightcraft-preview",
- "lightcraft-raster",
- "lightcraft-raw",
- "lightcraft-scenes",
- "lightcraft-segment",
- "lightcraft-slideshow",
- "lightcraft-testkit",
- "lightcraft-tiff",
- "log",
- "miniz_oxide 0.8.9",
- "rayon",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "unicode-segmentation",
- "web-time",
-]
-
-[[package]]
-name = "lightcraft-faces"
-version = "0.9.1"
-dependencies = [
- "lightcraft-testkit",
- "matrixmultiply",
- "ndarray",
- "proptest",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "lightcraft-fetch"
-version = "0.9.1"
-dependencies = [
- "log",
- "rustls",
- "rustls-rustcrypto",
- "sha2",
- "webpki-roots",
-]
-
-[[package]]
-name = "lightcraft-geocode"
-version = "0.9.1"
-dependencies = [
- "miniz_oxide 0.8.9",
- "serde",
-]
-
-[[package]]
-name = "lightcraft-geom"
-version = "0.9.1"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "lightcraft-gpu"
-version = "0.9.1"
-dependencies = [
- "bytemuck",
- "lightcraft-color",
- "lightcraft-denoise",
- "lightcraft-develop",
- "lightcraft-faces",
- "lightcraft-geom",
- "lightcraft-pipeline",
- "lightcraft-raster",
- "lightcraft-raw",
- "lightcraft-scenes",
- "lightcraft-testkit",
- "log",
- "pollster 1.0.1",
- "wgpu",
-]
-
-[[package]]
-name = "lightcraft-heif"
-version = "0.9.1"
-dependencies = [
- "heic-rs",
- "rayon",
-]
-
-[[package]]
-name = "lightcraft-inpaint"
-version = "0.9.1"
-dependencies = [
- "rayon",
-]
-
-[[package]]
-name = "lightcraft-lensdb"
-version = "0.9.1"
-dependencies = [
- "lightcraft-develop",
- "lightcraft-geom",
- "quick-xml 0.38.4",
-]
-
-[[package]]
-name = "lightcraft-mcp"
-version = "0.9.1"
-dependencies = [
- "lightcraft-codecs",
- "lightcraft-engine",
- "lightcraft-raster",
- "log",
- "serde_json",
-]
-
-[[package]]
-name = "lightcraft-merge"
-version = "0.9.1"
-dependencies = [
- "lightcraft-codecs",
- "lightcraft-color",
- "lightcraft-geom",
- "lightcraft-meta",
- "lightcraft-raster",
- "lightcraft-raw",
- "lightcraft-scenes",
- "rayon",
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "lightcraft-meta"
-version = "0.9.1"
-dependencies = [
- "lightcraft-geom",
- "lightcraft-tiff",
- "proptest",
- "quick-xml 0.38.4",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lightcraft-pipeline"
-version = "0.9.1"
-dependencies = [
- "image",
- "lightcraft-color",
- "lightcraft-develop",
- "lightcraft-geom",
- "lightcraft-inpaint",
- "lightcraft-raster",
- "lightcraft-raw",
- "lightcraft-scenes",
- "proptest",
- "rayon",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lightcraft-preview"
-version = "0.9.1"
-dependencies = [
- "jpeg-encoder",
- "lightcraft-raster",
- "log",
- "siphasher",
- "zune-core",
- "zune-jpeg",
-]
-
-[[package]]
-name = "lightcraft-raster"
-version = "0.9.1"
-dependencies = [
- "libc",
- "lightcraft-color",
- "lightcraft-geom",
- "proptest",
- "rayon",
- "serde",
-]
-
-[[package]]
-name = "lightcraft-raw"
-version = "0.9.1"
-dependencies = [
- "dhat",
- "jpeg-encoder",
- "jxl-oxide",
- "lightcraft-color",
- "lightcraft-geom",
- "lightcraft-meta",
- "lightcraft-raster",
- "lightcraft-testkit",
- "lightcraft-tiff",
- "miniz_oxide 0.8.9",
- "proptest",
- "rayon",
- "serde",
- "sha2",
- "thiserror 2.0.21",
- "zune-core",
- "zune-jpeg",
- "zune-jpegxl",
-]
-
-[[package]]
-name = "lightcraft-scenes"
-version = "0.9.1"
-dependencies = [
- "image",
- "lightcraft-color",
- "lightcraft-raster",
- "rayon",
- "serde",
-]
-
-[[package]]
-name = "lightcraft-segment"
-version = "0.9.1"
-dependencies = [
- "candle-core",
- "candle-nn",
- "lightcraft-fetch",
- "lightcraft-testkit",
- "log",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "lightcraft-slideshow"
-version = "0.9.1"
-dependencies = [
- "lightcraft-raster",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "lightcraft-sysmem"
-version = "0.9.1"
-
-[[package]]
-name = "lightcraft-testkit"
-version = "0.9.1"
-
-[[package]]
-name = "lightcraft-tiff"
-version = "0.9.1"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "lightcraft-ui-egui"
-version = "0.9.1"
-dependencies = [
- "craft-ui",
- "egui",
- "egui_kittest",
- "lightcraft-catalog",
- "lightcraft-codecs",
- "lightcraft-color",
- "lightcraft-denoise",
- "lightcraft-develop",
- "lightcraft-engine",
- "lightcraft-faces",
- "lightcraft-geom",
- "lightcraft-merge",
- "lightcraft-meta",
- "lightcraft-pipeline",
- "lightcraft-preview",
- "lightcraft-raster",
- "lightcraft-slideshow",
- "lightcraft-testkit",
- "log",
- "serde",
- "serde_json",
- "toml",
- "web-time",
-]
-
-[[package]]
-name = "lightcraft-web"
-version = "0.9.1"
-dependencies = [
- "crc32fast",
- "eframe",
- "egui",
- "js-sys",
- "lightcraft-codecs",
- "lightcraft-engine",
- "lightcraft-preview",
- "lightcraft-raster",
- "lightcraft-ui-egui",
- "log",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "linebender_resource_handle"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3599,6 +3633,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fae87c125b03c1d2c0150c90365d7d6bcc53fb73a9acaef207d2d065860f062"
 dependencies = [
  "imgref",
+]
+
+[[package]]
+name = "mahay-android"
+version = "0.1.0"
+dependencies = [
+ "android-activity",
+ "android_logger",
+ "jni 0.21.1",
+ "log",
+]
+
+[[package]]
+name = "mahay-docpath"
+version = "0.1.0"
+
+[[package]]
+name = "mahay-ui"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "serde",
 ]
 
 [[package]]
@@ -5138,14 +5194,13 @@ dependencies = [
 [[package]]
 name = "rfd"
 version = "0.17.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
 dependencies = [
  "block2 0.6.2",
  "dispatch2",
  "js-sys",
  "libc",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -6680,6 +6735,15 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75283be5efb2831d37ea142365f009c02ec203cd29a3ebecbc093d52315b66d0"
+dependencies = [
+ "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
@@ -6698,20 +6762,26 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
-version = "0.60.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb"
-dependencies = [
- "windows-targets 0.53.5",
-]
-
-[[package]]
-name = "windows-sys"
 version = "0.61.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
 dependencies = [
  "windows-link",
+]
+
+[[package]]
+name = "windows-targets"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e5180c00cd44c9b1c88adb3693291f1cd93605ded80c250a75d472756b4d071"
+dependencies = [
+ "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_msvc 0.42.2",
+ "windows_i686_gnu 0.42.2",
+ "windows_i686_msvc 0.42.2",
+ "windows_x86_64_gnu 0.42.2",
+ "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_msvc 0.42.2",
 ]
 
 [[package]]
@@ -6723,28 +6793,11 @@ dependencies = [
  "windows_aarch64_gnullvm 0.52.6",
  "windows_aarch64_msvc 0.52.6",
  "windows_i686_gnu 0.52.6",
- "windows_i686_gnullvm 0.52.6",
+ "windows_i686_gnullvm",
  "windows_i686_msvc 0.52.6",
  "windows_x86_64_gnu 0.52.6",
  "windows_x86_64_gnullvm 0.52.6",
  "windows_x86_64_msvc 0.52.6",
-]
-
-[[package]]
-name = "windows-targets"
-version = "0.53.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4945f9f551b88e0d65f3db0bc25c33b8acea4d9e41163edf90dcd0b19f9069f3"
-dependencies = [
- "windows-link",
- "windows_aarch64_gnullvm 0.53.1",
- "windows_aarch64_msvc 0.53.1",
- "windows_i686_gnu 0.53.1",
- "windows_i686_gnullvm 0.53.1",
- "windows_i686_msvc 0.53.1",
- "windows_x86_64_gnu 0.53.1",
- "windows_x86_64_gnullvm 0.53.1",
- "windows_x86_64_msvc 0.53.1",
 ]
 
 [[package]]
@@ -6758,15 +6811,21 @@ dependencies = [
 
 [[package]]
 name = "windows_aarch64_gnullvm"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "597a5118570b68bc08d8d59125332c54f1ba9d9adeedeef5b99b02ba2b0698f8"
+
+[[package]]
+name = "windows_aarch64_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
 
 [[package]]
-name = "windows_aarch64_gnullvm"
-version = "0.53.1"
+name = "windows_aarch64_msvc"
+version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9d8416fa8b42f5c947f8482c43e7d89e73a173cead56d044f6a56104a6d1b53"
+checksum = "e08e8864a60f06ef0d0ff4ba04124db8b0fb3be5776a5cd47641e942e58c4d43"
 
 [[package]]
 name = "windows_aarch64_msvc"
@@ -6775,10 +6834,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
 
 [[package]]
-name = "windows_aarch64_msvc"
-version = "0.53.1"
+name = "windows_i686_gnu"
+version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9d782e804c2f632e395708e99a94275910eb9100b2114651e04744e9b125006"
+checksum = "c61d927d8da41da96a81f029489353e68739737d3beca43145c8afec9a31a84f"
 
 [[package]]
 name = "windows_i686_gnu"
@@ -6787,22 +6846,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
 
 [[package]]
-name = "windows_i686_gnu"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "960e6da069d81e09becb0ca57a65220ddff016ff2d6af6a223cf372a506593a3"
-
-[[package]]
 name = "windows_i686_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
 
 [[package]]
-name = "windows_i686_gnullvm"
-version = "0.53.1"
+name = "windows_i686_msvc"
+version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa7359d10048f68ab8b09fa71c3daccfb0e9b559aed648a8f95469c27057180c"
+checksum = "44d840b6ec649f480a41c8d80f9c65108b92d89345dd94027bfe06ac444d1060"
 
 [[package]]
 name = "windows_i686_msvc"
@@ -6811,10 +6864,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
 
 [[package]]
-name = "windows_i686_msvc"
-version = "0.53.1"
+name = "windows_x86_64_gnu"
+version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e7ac75179f18232fe9c285163565a57ef8d3c89254a30685b57d83a38d326c2"
+checksum = "8de912b8b8feb55c064867cf047dda097f92d51efad5b491dfb98f6bbb70cb36"
 
 [[package]]
 name = "windows_x86_64_gnu"
@@ -6823,10 +6876,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
 
 [[package]]
-name = "windows_x86_64_gnu"
-version = "0.53.1"
+name = "windows_x86_64_gnullvm"
+version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c3842cdd74a865a8066ab39c8a7a473c0778a3f29370b5fd6b4b9aa7df4a499"
+checksum = "26d41b46a36d453748aedef1486d5c7a85db22e56aff34643984ea85514e94a3"
 
 [[package]]
 name = "windows_x86_64_gnullvm"
@@ -6835,22 +6888,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
 
 [[package]]
-name = "windows_x86_64_gnullvm"
-version = "0.53.1"
+name = "windows_x86_64_msvc"
+version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ffa179e2d07eee8ad8f57493436566c7cc30ac536a3379fdf008f47f6bb7ae1"
+checksum = "9aec5da331524158c6d1a4ac0ab1541149c0b9505fde06423b02f5ef0106b9f0"
 
 [[package]]
 name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
-
-[[package]]
-name = "windows_x86_64_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6bbff5f0aada427a1e5a6da5f1f98158182f26556f345ac9e04d36d0ebed650"
 
 [[package]]
 name = "winit"
@@ -7004,7 +7051,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.9.1"
+version = "0.2.0"
 dependencies = [
  "brotli",
  "flate2",

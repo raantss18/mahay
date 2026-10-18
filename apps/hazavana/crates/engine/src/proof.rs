@@ -1,14 +1,14 @@
 //! Soft proofing against an output-device ICC profile (a printer and paper): loads the profile,
 //! builds its proof table through the CMS and registers it with the pipeline, which a
-//! [`Proof`](lightcraft_pipeline::Proof) then names by id.
+//! [`Proof`](hazavana_pipeline::Proof) then names by id.
 
-use lightcraft_codecs::display::MAX_PROFILE_BYTES;
-pub use lightcraft_codecs::proof::ProofIntent;
+use hazavana_codecs::display::MAX_PROFILE_BYTES;
+pub use hazavana_codecs::proof::ProofIntent;
 
 /// A device profile ready to proof against.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProofProfile {
-    /// Pass as [`Proof::profile`](lightcraft_pipeline::Proof::profile).
+    /// Pass as [`Proof::profile`](hazavana_pipeline::Proof::profile).
     pub id: u64,
     /// The profile's description, else the file name.
     pub name: String,
@@ -28,31 +28,31 @@ pub fn load(path: &str, intent: ProofIntent, paper_ink: bool) -> Result<ProofPro
 
 /// [`load`] from the profile's bytes; `fallback_name` names a profile without a description.
 pub fn from_bytes(bytes: &[u8], intent: ProofIntent, paper_ink: bool, fallback_name: &str) -> Result<ProofProfile, String> {
-    let table = lightcraft_codecs::proof::proof_table(bytes, intent, paper_ink)?;
-    let lut = lightcraft_pipeline::ProofLut::new(table.n, table.data).ok_or("the profile's tables give no usable colours")?;
+    let table = hazavana_codecs::proof::proof_table(bytes, intent, paper_ink)?;
+    let lut = hazavana_pipeline::ProofLut::new(table.n, table.data).ok_or("the profile's tables give no usable colours")?;
     let id = {
         use std::hash::{Hash, Hasher};
         let mut h = std::collections::hash_map::DefaultHasher::new();
         (bytes, intent, paper_ink).hash(&mut h);
         h.finish()
     };
-    let id = lightcraft_pipeline::register_proof_profile(id, lut);
+    let id = hazavana_pipeline::register_proof_profile(id, lut);
     Ok(ProofProfile { id, name: table.description.unwrap_or_else(|| fallback_name.to_string()) })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_codecs::space::NamedSpace;
+    use hazavana_codecs::space::NamedSpace;
 
     #[test]
     fn profiles_register_by_content_and_options() {
-        let p3 = lightcraft_codecs::icc::write_named(NamedSpace::DisplayP3);
+        let p3 = hazavana_codecs::icc::write_named(NamedSpace::DisplayP3);
         let a = from_bytes(&p3, ProofIntent::Perceptual, false, "x").unwrap();
         let b = from_bytes(&p3, ProofIntent::Perceptual, true, "x").unwrap();
         assert_ne!(a.id, b.id);
         assert_eq!(a, from_bytes(&p3, ProofIntent::Perceptual, false, "x").unwrap());
-        assert!(lightcraft_pipeline::proof_profile(a.id).is_some());
+        assert!(hazavana_pipeline::proof_profile(a.id).is_some());
         assert!(!a.name.is_empty());
         assert!(from_bytes(b"nope", ProofIntent::Relative, false, "x").is_err());
         assert!(load("/nonexistent/printer.icc", ProofIntent::Relative, false).is_err());

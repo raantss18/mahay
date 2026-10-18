@@ -4,11 +4,11 @@
 //! last effect in the stack isn't Paint, as After Effects does). Defaults come from the Paint
 //! and Brushes panel options in [`PaintOptions`] (`paint.options`, `paint.brushPreset`).
 
-use effectcraft_effects::paint::{self, BRUSH_PRESETS, CHANNELS, DURATIONS, ERASE_MODES, MODES, StrokeKind, StrokeSpec};
-use effectcraft_keyframe::{Keyframe, Value as KV};
-use effectcraft_project::build::Ids;
-use effectcraft_project::{GroupKind, PropGroup, Uid};
-use effectcraft_time::Tick;
+use tselatra_effects::paint::{self, BRUSH_PRESETS, CHANNELS, DURATIONS, ERASE_MODES, MODES, StrokeKind, StrokeSpec};
+use tselatra_keyframe::{Keyframe, Value as KV};
+use tselatra_project::build::Ids;
+use tselatra_project::{GroupKind, PropGroup, Uid};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -284,10 +284,10 @@ fn paint_effect(fx: &mut PropGroup, ids: &mut Ids, layer_size: [f64; 2]) -> Resu
     if let Some(g) = fx.groups().last().filter(|g| paint::is_paint(g)) {
         return Ok(g.uid);
     }
-    let spec = effectcraft_effects::find(paint::ID).ok_or_else(|| EngineError::Other("Paint effect missing".into()))?;
+    let spec = tselatra_effects::find(paint::ID).ok_or_else(|| EngineError::Other("Paint effect missing".into()))?;
     let n = fx.groups().filter(|g| paint::is_paint(g)).count();
     let name = if n == 0 { "Paint".to_string() } else { format!("Paint {}", n + 1) };
-    let g = effectcraft_effects::instantiate(spec, ids, &name, layer_size);
+    let g = tselatra_effects::instantiate(spec, ids, &name, layer_size);
     let uid = g.uid;
     fx.children.push(g.into());
     Ok(uid)
@@ -325,7 +325,7 @@ fn stroke(s: &mut Session, p: &Value) -> Result<Value> {
     let t = fr.snap_nearest(super::time_p(s, p, Some(comp)));
     let layer = comp.layer(lid).ok_or_else(|| bad(cmd, "no layer"))?;
     let lt = layer.layer_time(t);
-    let size = effectcraft_render::effect_bounds(&s.project, comp, layer).0;
+    let size = tselatra_render::effect_bounds(&s.project, comp, layer).0;
     if layer.effects().is_none() || !layer.source.is_av() {
         return Err(bad(cmd, "this layer can't be painted on"));
     }

@@ -8,7 +8,7 @@
 //! it is ([`is_file`], [`is_dir`], [`exists`], [`metadata`]), and as the roots' own message where
 //! it asks for the bytes.
 
-pub use craft_docpath::Refused;
+pub use mahay_docpath::Refused;
 pub use std::fs::Metadata;
 use std::path::{Path, PathBuf};
 
@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 /// refused path is never handed to the file system; callers treat it as a missing file.
 pub fn document_path(stored: &str, document: Option<&Path>) -> Result<PathBuf, Refused> {
     let document = document.map(|d| std::path::absolute(d).unwrap_or_else(|_| d.to_path_buf()));
-    let path = craft_docpath::resolve(stored, document.as_deref())?;
+    let path = mahay_docpath::resolve(stored, document.as_deref())?;
     if path.is_absolute() { Ok(path) } else { Err(Refused::Invalid) }
 }
 

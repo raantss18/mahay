@@ -1,10 +1,10 @@
 //! The Block Editor (BEDIT, BSAVE, BSAVEAS, BCLOSE): a block is edited with the ordinary
 //! commands, its base point at the origin, and saving it updates every reference in the drawing.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::{EntityKind, Line};
-use cadcraft_engine::geom::Vec3;
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::{EntityKind, Line};
+use drafitra_engine::geom::Vec3;
 use serde_json::{Value, json};
 
 fn line(s: &mut Session, a: [f64; 2], b: [f64; 2]) -> Value {
@@ -56,7 +56,7 @@ fn saving_the_block_updates_every_reference() {
     let d = s.doc().unwrap();
     assert!(d.model.same_as(&model) || d.model == model);
     for h in [&a, &b] {
-        let h = cadcraft_engine::cmd::curves::handle_value(h).unwrap();
+        let h = drafitra_engine::cmd::curves::handle_value(h).unwrap();
         assert!(matches!(&d.entity(h).unwrap().kind, EntityKind::Insert(i) if i.block == "Door"));
     }
 
@@ -143,7 +143,7 @@ fn what_the_block_editor_refuses() {
     assert!(s.execute("bedit", &json!({ "name": "Door" })).is_err(), "already open");
     let r = s.execute("layout.set", &json!({ "name": "Layout1" }));
     assert!(r.is_err_and(|e| e.to_string().contains("Block Editor")));
-    assert_eq!(s.layout_space(), cadcraft_engine::doc::Space::Model);
+    assert_eq!(s.layout_space(), drafitra_engine::doc::Space::Model);
 
     // A reference to the block itself can't be saved into it.
     s.execute("insert", &json!({ "name": "Door", "at": [5, 5] })).unwrap();
@@ -155,7 +155,7 @@ fn what_the_block_editor_refuses() {
 
     // Anonymous blocks are made by other objects.
     let mut d = s.doc().unwrap().clone();
-    d.blocks.insert("*U1".into(), std::sync::Arc::new(cadcraft_engine::doc::Block::new("*U1")));
+    d.blocks.insert("*U1".into(), std::sync::Arc::new(drafitra_engine::doc::Block::new("*U1")));
     s.open_drawing(d, "anon", None);
     assert!(s.execute("bedit", &json!({ "name": "*U1" })).is_err_and(|e| e.to_string().contains("anonymous")));
 }
@@ -180,7 +180,7 @@ fn hostile_params_never_panic() {
 fn a_selected_reference_opens_its_block_and_bclose_asks_to_save() {
     let mut s = Session::new();
     let (a, _) = door(&mut s);
-    s.set_selection(vec![cadcraft_engine::cmd::curves::handle_value(&a).unwrap()]);
+    s.set_selection(vec![drafitra_engine::cmd::curves::handle_value(&a).unwrap()]);
     s.start("bedit").unwrap();
     assert!(s.running.is_none());
     assert_eq!(editor(&s).as_deref(), Some("Door"));
@@ -209,7 +209,7 @@ fn a_file_save_writes_the_drawing_outside_the_editor() {
     });
     let mut s = Session::new();
     door(&mut s);
-    let path = std::env::temp_dir().join(format!("cadcraft-bedit-{}.dxf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("drafitra-bedit-{}.dxf", std::process::id()));
     let path = path.to_string_lossy().to_string();
     s.execute("saveas", &json!({ "path": path })).unwrap();
     assert!(!s.state().unwrap().is_dirty());
@@ -235,8 +235,8 @@ fn a_file_save_writes_the_drawing_outside_the_editor() {
 
 #[test]
 fn a_dynamic_block_from_another_program_says_its_parameters_are_kept() {
-    use cadcraft_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
-    use cadcraft_engine::doc::{Handle, RawTag};
+    use drafitra_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
+    use drafitra_engine::doc::{Handle, RawTag};
     let mut s = Session::new();
     door(&mut s);
     // As a DXF from AutoCAD has it: the block record's extension dictionary holds ACAD_ENHANCEDBLOCK.
@@ -260,8 +260,8 @@ fn a_dynamic_block_from_another_program_says_its_parameters_are_kept() {
 
 #[test]
 fn a_dynamic_reference_with_its_own_values_opens_its_dynamic_block() {
-    use cadcraft_engine::doc::foreign::{Foreign, ForeignExtra};
-    use cadcraft_engine::doc::{Block, Handle, RawTag};
+    use drafitra_engine::doc::foreign::{Foreign, ForeignExtra};
+    use drafitra_engine::doc::{Block, Handle, RawTag};
     let mut s = Session::new();
     let (a, _) = door(&mut s);
     // As AutoCAD leaves it: the reference shows anonymous block *U7, whose record's
@@ -269,7 +269,7 @@ fn a_dynamic_reference_with_its_own_values_opens_its_dynamic_block() {
     let mut d = s.doc().unwrap().clone();
     let door_block = d.block("Door").unwrap().clone();
     d.blocks.insert("*U7".into(), std::sync::Arc::new(Block { name: "*U7".into(), anonymous: true, ..(*door_block).clone() }));
-    let h = cadcraft_engine::cmd::curves::handle_value(&a).unwrap();
+    let h = drafitra_engine::cmd::curves::handle_value(&a).unwrap();
     d.model.modify(h, |e| {
         if let EntityKind::Insert(i) = &mut e.kind {
             i.block = "*U7".into();
@@ -331,9 +331,9 @@ fn bedit_can_start_a_new_block() {
 
 #[test]
 fn the_current_drawing_opens_in_the_block_editor() {
-    use cadcraft_engine::blockedit::{CURRENT_DRAWING, has_authoring_elements};
-    use cadcraft_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
-    use cadcraft_engine::doc::{Handle, RawTag};
+    use drafitra_engine::blockedit::{CURRENT_DRAWING, has_authoring_elements};
+    use drafitra_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
+    use drafitra_engine::doc::{Handle, RawTag};
     let mut s = Session::new();
     line(&mut s, [0.0, 0.0], [10.0, 0.0]);
     // A dynamic block's own drawing: model space's record carries ACAD_ENHANCEDBLOCK.

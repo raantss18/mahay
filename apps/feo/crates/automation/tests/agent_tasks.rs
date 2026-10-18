@@ -1,8 +1,8 @@
 //! An agent completes realistic DAW tasks through MCP only, and verifies each through MCP.
 
 use serde_json::{Value, json};
-use soundcraft_automation::{Headless, mcp::Server};
-use soundcraft_engine::Engine;
+use feo_automation::{Headless, mcp::Server};
+use feo_engine::Engine;
 
 fn rpc(s: &mut Server<Headless>, id: i64, method: &str, params: Value) -> Value {
     s.handle(&json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params})).unwrap()
@@ -28,7 +28,7 @@ fn track<'a>(sess: &'a Value, name: &str) -> &'a Value {
 fn handshake_and_tool_list() {
     let mut s = Server::new(Headless::new(Engine::default()));
     let r = rpc(&mut s, 1, "initialize", json!({"protocolVersion": "2025-06-18"}));
-    assert_eq!(r["result"]["serverInfo"]["name"], "soundcraft");
+    assert_eq!(r["result"]["serverInfo"]["name"], "feo");
     let r = rpc(&mut s, 2, "tools/list", json!({}));
     assert!(r["result"]["tools"].as_array().unwrap().len() >= 10);
     assert!(s.handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"})).is_none());
@@ -106,7 +106,7 @@ fn agent_builds_and_mixes_a_session() {
     assert!(pad["automation"].as_array().unwrap().iter().any(|l| l["param"] == "volume"));
 
     // 8. Bounce 4 seconds and check loudness is sane.
-    let dir = std::env::temp_dir().join(format!("soundcraft-agent-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("feo-agent-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("bounce.wav");
     let r =

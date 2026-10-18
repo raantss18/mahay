@@ -4,9 +4,9 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use effectcraft_color::luminance;
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
+use tselatra_color::luminance;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
 use rayon::prelude::*;
 
 use crate::util::{premul, unpremul};

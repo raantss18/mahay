@@ -5,8 +5,8 @@
 //!
 //! Positions are character indices. The selection is `anchor..caret` (either order).
 
-use effectcraft_keyframe::{CharStyle, TextDoc, Value as KV};
-use effectcraft_project::{LayerId, LayerSource};
+use tselatra_keyframe::{CharStyle, TextDoc, Value as KV};
+use tselatra_project::{LayerId, LayerSource};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -204,14 +204,14 @@ fn move_target(s: &Session, e: &TextEdit, doc: &TextDoc, to: &str) -> Result<(us
     let n = doc.char_len();
     let (lo, hi) = (e.range().start, e.range().end);
     let collapse = !e.is_empty();
-    let lay = || effectcraft_text::layout_doc(doc);
+    let lay = || tselatra_text::layout_doc(doc);
     Ok(match to {
         "left" if collapse => (lo, None),
         "right" if collapse => (hi, None),
         "left" => (e.caret.saturating_sub(1), None),
         "right" => ((e.caret + 1).min(n), None),
-        "wordLeft" => (effectcraft_keyframe::text_doc::word_left(&doc.text, e.caret), None),
-        "wordRight" => (effectcraft_keyframe::text_doc::word_right(&doc.text, e.caret), None),
+        "wordLeft" => (tselatra_keyframe::text_doc::word_left(&doc.text, e.caret), None),
+        "wordRight" => (tselatra_keyframe::text_doc::word_right(&doc.text, e.caret), None),
         "lineStart" | "home" => (lay().line_span(e.caret).0, None),
         "lineEnd" => (lay().line_span(e.caret).1, None),
         "up" | "down" => {
@@ -294,8 +294,8 @@ fn delete(s: &mut Session, p: &Value) -> Result<Value> {
     let r = match range_p(p) {
         Some(r) => r.start.min(n)..r.end.min(n),
         None if !e.is_empty() => e.range(),
-        None if forward => e.caret..if word { effectcraft_keyframe::text_doc::word_right(&doc.text, e.caret) } else { (e.caret + 1).min(n) },
-        None => (if word { effectcraft_keyframe::text_doc::word_left(&doc.text, e.caret) } else { e.caret.saturating_sub(1) })..e.caret,
+        None if forward => e.caret..if word { tselatra_keyframe::text_doc::word_right(&doc.text, e.caret) } else { (e.caret + 1).min(n) },
+        None => (if word { tselatra_keyframe::text_doc::word_left(&doc.text, e.caret) } else { e.caret.saturating_sub(1) })..e.caret,
     };
     if r.is_empty() {
         return Ok(state_json(s));
@@ -480,8 +480,8 @@ pub fn font_features(s: &mut Session, p: &Value) -> Result<Value> {
             (st.font, st.style)
         }
     };
-    let r = effectcraft_text::resolve(&family, &style);
-    let face = effectcraft_text::fonts::face(r.face);
+    let r = tselatra_text::resolve(&family, &style);
+    let face = tselatra_text::fonts::face(r.face);
     let feats = face.features();
     let has = |t: &str| feats.iter().any(|f| f == t);
     let sets: Vec<u32> = (1..=20u32).filter(|n| has(&format!("ss{n:02}"))).collect();
@@ -503,7 +503,7 @@ pub fn font_features(s: &mut Session, p: &Value) -> Result<Value> {
 /// name contains it (case-insensitive); `rescan` first looks for fonts installed since the app
 /// started.
 pub fn fonts(_s: &mut Session, p: &Value) -> Result<Value> {
-    use effectcraft_text::fonts;
+    use tselatra_text::fonts;
     let added = if p.get("rescan").and_then(Value::as_bool).unwrap_or(false) { fonts::rescan_system() } else { 0 };
     let query = p.get("query").and_then(Value::as_str).map(str::to_lowercase).unwrap_or_default();
     let only_variable = p.get("variable").and_then(Value::as_bool).unwrap_or(false);
@@ -513,7 +513,7 @@ pub fn fonts(_s: &mut Session, p: &Value) -> Result<Value> {
     for f in fonts::all_faces() {
         origin.entry(f.info.family.clone()).or_insert(f.info.origin);
     }
-    let list: Vec<Value> = effectcraft_text::families()
+    let list: Vec<Value> = tselatra_text::families()
         .into_iter()
         .filter(|(f, _)| query.is_empty() || f.to_lowercase().contains(&query) || native.get(f).is_some_and(|n| n.to_lowercase().contains(&query)))
         .filter(|(f, _)| !only_variable || variable.contains(f))

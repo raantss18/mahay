@@ -9,15 +9,15 @@
 
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::color::Label;
-use effectcraft_engine::project::{Item, ItemId, ItemKind};
+use tselatra_engine::color::Label;
+use tselatra_engine::project::{Item, ItemId, ItemKind};
 use egui::{Align2, Color32, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
 use crate::icons::{self, Icon};
 use crate::panels::DragPayload;
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 /// Item row height (After Effects' Project panel rows are compact, about 19 pt).
 const ROW_H: f32 = 19.0;
@@ -28,9 +28,9 @@ fn item_icon(it: &Item) -> Icon {
         ItemKind::Comp(_) => Icon::Comp,
         ItemKind::Solid(_) => Icon::Solid,
         ItemKind::Footage(f) => match f.kind {
-            effectcraft_engine::project::FootageKind::Still | effectcraft_engine::project::FootageKind::Sequence => Icon::Image,
-            effectcraft_engine::project::FootageKind::Audio => Icon::Audio,
-            effectcraft_engine::project::FootageKind::Model => Icon::Cube,
+            tselatra_engine::project::FootageKind::Still | tselatra_engine::project::FootageKind::Sequence => Icon::Image,
+            tselatra_engine::project::FootageKind::Audio => Icon::Audio,
+            tselatra_engine::project::FootageKind::Model => Icon::Cube,
             _ => Icon::Footage,
         },
     }
@@ -114,7 +114,7 @@ fn sort_by_size(items: &mut [&Item], desc: bool, mut size_of: impl FnMut(&Item) 
 }
 
 /// Where a drop at a row lands: into a folder row, else into the row's folder; `None` row = root.
-pub fn drop_folder(project: &effectcraft_engine::project::Project, row: Option<ItemId>) -> Option<ItemId> {
+pub fn drop_folder(project: &tselatra_engine::project::Project, row: Option<ItemId>) -> Option<ItemId> {
     let it = project.item(row?)?;
     if it.is_folder() { Some(it.id) } else { it.parent }
 }
@@ -125,7 +125,7 @@ type PendingThumb = (u64, Arc<Mutex<Option<Option<(u32, u32, Vec<u8>)>>>>);
 /// Thumbnail of a comp (its current time) or footage (first frame), cached per item/revision.
 /// Rendered on a background thread (inline on wasm32): until the new one lands the previous
 /// thumbnail stays up, so selecting a big comp or editing it never stalls the panel.
-fn thumbnail(app: &EffectcraftApp, ctx: &egui::Context, it: &Item) -> Option<egui::TextureHandle> {
+fn thumbnail(app: &TselatraApp, ctx: &egui::Context, it: &Item) -> Option<egui::TextureHandle> {
     let key = egui::Id::new(("proj-thumb", it.id.0));
     let pkey = egui::Id::new(("proj-thumb-pending", it.id.0));
     let rev = app.session.revision;
@@ -196,7 +196,7 @@ fn edit_id() -> egui::Id {
 }
 
 /// Start renaming the selected item (Enter in the Project panel).
-pub fn begin_rename(app: &EffectcraftApp, ctx: &egui::Context) {
+pub fn begin_rename(app: &TselatraApp, ctx: &egui::Context) {
     if let Some(id) = app.session.state.project_selection.first()
         && let Some(it) = app.session.project.item(*id)
     {
@@ -226,7 +226,7 @@ fn focused_row_id() -> egui::Id {
 
 /// The focused widget is one of the panel's rows, or nothing has keyboard focus: the panel's keys
 /// apply. Any other focused widget (a text field, a button reached with Tab) keeps them.
-fn keys_reach_rows(app: &EffectcraftApp, ctx: &egui::Context) -> bool {
+fn keys_reach_rows(app: &TselatraApp, ctx: &egui::Context) -> bool {
     match ctx.memory(|m| m.focused()) {
         None => app.ui.focused == crate::dock::PanelKind::Project,
         Some(f) => ctx.data(|d| d.get_temp::<ItemId>(focused_row_id())).is_some_and(|row| row_id(row) == f),
@@ -240,7 +240,7 @@ fn keys_reach_rows(app: &EffectcraftApp, ctx: &egui::Context) -> bool {
 /// else takes them: a dialog, an open menu, an inline rename. A row focused with Tab keeps them
 /// too, and keyboard focus then follows the selection, so a screen reader reads the new item.
 /// Returns the item the selection moved to.
-fn keyboard_nav(app: &mut EffectcraftApp, ctx: &egui::Context) -> Option<ItemId> {
+fn keyboard_nav(app: &mut TselatraApp, ctx: &egui::Context) -> Option<ItemId> {
     use egui::Key;
     let keys: Vec<(Key, egui::Modifiers)> = ctx.input(|i| {
         i.events
@@ -328,8 +328,8 @@ fn keyboard_nav(app: &mut EffectcraftApp, ctx: &egui::Context) -> Option<ItemId>
     moved
 }
 
-pub(crate) fn visible_rows(app: &EffectcraftApp) -> Vec<(ItemId, usize)> {
-    fn walk(app: &EffectcraftApp, folder: Option<ItemId>, depth: usize, q: &str, out: &mut Vec<(ItemId, usize)>) {
+pub(crate) fn visible_rows(app: &TselatraApp) -> Vec<(ItemId, usize)> {
+    fn walk(app: &TselatraApp, folder: Option<ItemId>, depth: usize, q: &str, out: &mut Vec<(ItemId, usize)>) {
         let mut kids = app.session.project.children(folder);
         sort_items(&mut kids, &app.ui.project_sort, app.ui.project_sort_desc);
         for it in kids {
@@ -347,7 +347,7 @@ pub(crate) fn visible_rows(app: &EffectcraftApp) -> Vec<(ItemId, usize)> {
     rows
 }
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().clone();
     let ctx = ui.ctx().clone();
@@ -695,7 +695,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         }
         let name_rect = Rect::from_min_max(pos2(x0 + 28.0, r.min.y + 2.0), pos2(r.min.x + name_w + 2.0, r.max.y - 2.0));
         // Inline edits (rename / comment).
-        let cell_edit = |app: &mut EffectcraftApp, ui: &mut egui::Ui, actions: &mut Vec<(String, serde_json::Value)>, field: &str, cell: Rect| -> bool {
+        let cell_edit = |app: &mut TselatraApp, ui: &mut egui::Ui, actions: &mut Vec<(String, serde_json::Value)>, field: &str, cell: Rect| -> bool {
             let Some((eid, ef, mut buf)) = editing.clone().filter(|(e, f, _)| *e == id.0 && f == field) else { return false };
             let mut child = ui.new_child(egui::UiBuilder::new().max_rect(cell));
             // The field keeps Tab (egui would move the keyboard to the next widget, where Enter no
@@ -836,7 +836,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                     app.ui.project_open_folders.insert(id.0);
                 }
                 // Footage (not data) and solids open in the Footage panel.
-                ItemKind::Footage(f) if f.kind != effectcraft_engine::project::FootageKind::Data => {
+                ItemKind::Footage(f) if f.kind != tselatra_engine::project::FootageKind::Data => {
                     actions.push(("footage.open".into(), json!({"item": id.0})))
                 }
                 ItemKind::Solid(_) => actions.push(("footage.open".into(), json!({"item": id.0}))),
@@ -1091,7 +1091,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 }
 
 /// Items a row's menu acts on: the selection when the row is selected, else the row's item.
-fn targets(app: &EffectcraftApp, id: ItemId, selected: bool) -> Vec<u64> {
+fn targets(app: &TselatraApp, id: ItemId, selected: bool) -> Vec<u64> {
     if selected { app.session.state.project_selection.iter().map(|i| i.0).collect() } else { vec![id.0] }
 }
 
@@ -1101,7 +1101,7 @@ fn label_index(l: Label) -> usize {
 }
 
 /// The column header's context menu: show or hide the optional columns.
-fn column_menu(app: &mut EffectcraftApp, resp: &egui::Response) {
+fn column_menu(app: &mut TselatraApp, resp: &egui::Response) {
     crate::widgets::context_menu(resp, |ui| {
         ui.label(egui::RichText::new(crate::i18n::tr("Columns")).weak());
         for (key, label, _) in COLUMNS {
@@ -1125,7 +1125,7 @@ pub fn set_column(cols: &mut Vec<String>, key: &str, on: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_engine::project::{Footage, Project};
+    use tselatra_engine::project::{Footage, Project};
 
     struct SizeFiles(std::path::PathBuf);
 
@@ -1133,7 +1133,7 @@ mod tests {
         fn new() -> Self {
             static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
             let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            let path = std::env::temp_dir().join(format!("effectcraft-size-{}-{n}", std::process::id()));
+            let path = std::env::temp_dir().join(format!("tselatra-size-{}-{n}", std::process::id()));
             std::fs::create_dir(&path).unwrap();
             Self(path)
         }
@@ -1266,23 +1266,23 @@ mod tests {
 
     #[test]
     fn folders_sort_with_items_by_name() {
-        let mut p = effectcraft_engine::project::Project::default();
-        let l = effectcraft_engine::color::Label::Yellow;
+        let mut p = tselatra_engine::project::Project::default();
+        let l = tselatra_engine::color::Label::Yellow;
         p.add_item("Solids", l, None, ItemKind::Folder);
         p.add_item("Precomps", l, None, ItemKind::Folder);
-        p.add_item("EffectCraft Intro", l, None, ItemKind::Folder);
+        p.add_item("Tselatra Intro", l, None, ItemKind::Folder);
         let mut kids = p.children(None);
         sort_items(&mut kids, "name", false);
         let names: Vec<&str> = kids.iter().map(|i| i.name.as_str()).collect();
-        assert_eq!(names, ["EffectCraft Intro", "Precomps", "Solids"]);
+        assert_eq!(names, ["Tselatra Intro", "Precomps", "Solids"]);
         sort_items(&mut kids, "name", true);
         assert_eq!(kids[0].name, "Solids");
     }
 
     #[test]
     fn drop_targets_and_column_toggles() {
-        let mut p = effectcraft_engine::project::Project::default();
-        let l = effectcraft_engine::color::Label::Yellow;
+        let mut p = tselatra_engine::project::Project::default();
+        let l = tselatra_engine::color::Label::Yellow;
         let f = p.add_item("F", l, None, ItemKind::Folder);
         let inner = p.add_item("I", l, Some(f), ItemKind::Folder);
         assert_eq!(drop_folder(&p, Some(f)), Some(f));

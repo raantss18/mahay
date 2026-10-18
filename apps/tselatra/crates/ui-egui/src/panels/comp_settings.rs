@@ -4,8 +4,8 @@
 
 use crate::i18n::{tr, tr_args};
 use crate::icons::Icon;
-use effectcraft_engine::prefs::CompPreset;
-use effectcraft_engine::time::{FrameRate, format_timecode_frames, parse_timecode};
+use tselatra_engine::prefs::CompPreset;
+use tselatra_engine::time::{FrameRate, format_timecode_frames, parse_timecode};
 use egui::{Color32, vec2};
 use serde_json::json;
 

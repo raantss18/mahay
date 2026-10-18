@@ -1,18 +1,18 @@
 # Online sharing through the default server: terms and privacy
 
-> **Last updated:** 2026-10-13 · Applies to the public FigCraft collaboration server at
+> **Last updated:** 2026-10-13 · Applies to the public Endrika collaboration server at
 > `collab.craftapps.dev`, which the app uses for **Share ▸ Online** unless you set another server
 > in Preferences. It does not apply to servers other people run, or to sharing on your local
 > network, which involves no server.
 
-FigCraft works without this service. You only use it when you choose Share ▸ Online, join a file
+Endrika works without this service. You only use it when you choose Share ▸ Online, join a file
 someone shared that way, or open Home ▸ Online. By doing so you agree to what follows. If you
 don't, don't use the default server: share on your local network, or run your own
-[`figcraft-server`](server.md).
+[`endrika-server`](server.md).
 
 ## Who runs it
 
-The FigCraft project operates the server. Contact: **hello@storyteller.ai** (questions, removal
+The Endrika project operates the server. Contact: [GitHub Discussions](https://github.com/raantss18/mahay/discussions) (questions, removal
 requests, abuse reports).
 
 ## It is a preview, offered as is

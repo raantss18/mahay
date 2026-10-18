@@ -1,7 +1,7 @@
 //! The Table panel: row/column counts, row height, column width, cell text alignment and insets,
 //! merge/unmerge — for the table at the text insertion point or the selected cells.
 
-use designcraft_geom::Unit;
+use pejy_geom::Unit;
 use serde_json::{Value, json};
 
 use crate::DesignApp;
@@ -64,8 +64,8 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
         let styles = &st.doc.styles;
         let tnames: Vec<String> = styles.table.iter().map(|s| s.name.clone()).collect();
         let cnames: Vec<String> = styles.cell.iter().map(|s| s.name.clone()).collect();
-        let tcur = info["style"].as_str().filter(|s| !s.is_empty()).unwrap_or(designcraft_doc::BASIC_TABLE).to_string();
-        let ccur = cell["style"].as_str().filter(|s| !s.is_empty()).unwrap_or(designcraft_doc::NO_CELL_STYLE).to_string();
+        let tcur = info["style"].as_str().filter(|s| !s.is_empty()).unwrap_or(pejy_doc::BASIC_TABLE).to_string();
+        let ccur = cell["style"].as_str().filter(|s| !s.is_empty()).unwrap_or(pejy_doc::NO_CELL_STYLE).to_string();
         for (label, kind, names, cur) in [("Table Style", "table", tnames, tcur), ("Cell Style", "cell", cnames, ccur)] {
             ui.horizontal(|ui| {
                 caption(ui, crate::i18n::tr(&app.ui.language, label));

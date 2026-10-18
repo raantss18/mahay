@@ -2,12 +2,12 @@
 //! property nodes, values and keyframes as JSON shaped for the prelude. Every edit goes through
 //! engine commands instead (`__exec`), so it is undoable and journaled.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::color::Label;
-use effectcraft_keyframe::{Interp, TextDoc, Value as KV};
-use effectcraft_project::{Comp, GroupKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Node, ParamUi, PropGroup};
-use effectcraft_render::EvalCtx;
-use effectcraft_time::Tick;
+use tselatra_engine::Session;
+use tselatra_engine::color::Label;
+use tselatra_keyframe::{Interp, TextDoc, Value as KV};
+use tselatra_project::{Comp, GroupKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Node, ParamUi, PropGroup};
+use tselatra_render::EvalCtx;
+use tselatra_time::Tick;
 use serde_json::{Value as J, json};
 
 use crate::matchnames;
@@ -49,7 +49,7 @@ pub fn query(s: &mut Session, kind: &str, a: &J) -> R {
         "menuCommandId" => Ok(menu_command_id(a.get("name").and_then(J::as_str).unwrap_or(""))),
         "commandAt" => {
             let i = u(a, "index").unwrap_or(0) as usize;
-            Ok(effectcraft_engine::command_specs().get(i.wrapping_sub(1)).map(|c| json!(c.id)).unwrap_or(J::Null))
+            Ok(tselatra_engine::command_specs().get(i.wrapping_sub(1)).map(|c| json!(c.id)).unwrap_or(J::Null))
         }
         "exprError" => {
             let code = a.get("code").and_then(J::as_str).unwrap_or("");
@@ -60,7 +60,7 @@ pub fn query(s: &mut Session, kind: &str, a: &J) -> R {
         }
         "labels" => Ok(json!(Label::ALL.iter().map(|l| l.name()).collect::<Vec<_>>())),
         "effects" => Ok(json!(
-            effectcraft_engine::effects::all()
+            tselatra_engine::effects::all()
                 .into_iter()
                 .map(|e| json!({"id": e.id, "name": e.name, "matchName": matchnames::effect(e.id), "category": e.category}))
                 .collect::<Vec<_>>()
@@ -84,7 +84,7 @@ fn project(s: &Session) -> J {
         "linearizeWorkingSpace": p.settings.linearize,
         "workingSpace": p.settings.working_space.map(|w| format!("{w:?}")).unwrap_or_default(),
         "workingGamma": if p.settings.working_gamma_24() { 2.4 } else { 2.2 },
-        "timeDisplayFrames": p.settings.time_display == effectcraft_project::TimeDisplayStyle::Frames,
+        "timeDisplayFrames": p.settings.time_display == tselatra_project::TimeDisplayStyle::Frames,
         "renderQueue": p.render_queue.len(),
         "revision": s.revision,
     })
@@ -95,7 +95,7 @@ fn label_index(l: Label) -> usize {
 }
 
 /// Layer ids selected in `comp`, including a comp that is not the active one (#1001).
-fn selected_layer_ids(s: &Session, comp: effectcraft_project::ItemId) -> Vec<u64> {
+fn selected_layer_ids(s: &Session, comp: tselatra_project::ItemId) -> Vec<u64> {
     let layers = if s.active_comp_id() == Some(comp) {
         &s.state.selected_layers
     } else {
@@ -108,7 +108,7 @@ fn selected_layer_ids(s: &Session, comp: effectcraft_project::ItemId) -> Vec<u64
     layers.iter().filter(|l| c.layer(**l).is_some()).map(|l| l.0).collect()
 }
 
-fn layer_selected(s: &Session, comp: effectcraft_project::ItemId, layer: effectcraft_project::LayerId) -> bool {
+fn layer_selected(s: &Session, comp: tselatra_project::ItemId, layer: tselatra_project::LayerId) -> bool {
     if s.active_comp_id() == Some(comp) {
         return s.state.selected_layers.contains(&layer);
     }
@@ -118,7 +118,7 @@ fn layer_selected(s: &Session, comp: effectcraft_project::ItemId, layer: effectc
 /// A comp's selected properties as `[layer, uid]`: the selected ones, then those with selected
 /// keyframes (selecting a keyframe selects its property in After Effects, so scripts find
 /// selected keys through `selectedProperties`).
-fn selected_props(s: &Session, c: &effectcraft_project::Comp) -> Vec<J> {
+fn selected_props(s: &Session, c: &tselatra_project::Comp) -> Vec<J> {
     let mut v: Vec<(u64, u64)> = vec![];
     let keyed = s.state.selected_keys.iter().map(|k| (k.layer, k.prop));
     for (l, p) in s.state.selected_props.iter().copied().chain(keyed) {
@@ -145,7 +145,7 @@ fn item(s: &Session, a: &J) -> R {
     o["usedIn"] = json!(used_in);
     // The item's proxy (footage and comps): its file and whether Use Proxy is on (#813).
     o["proxy"] = match &it.proxy {
-        Some(p) => json!({"file": p.footage.path, "isStill": p.footage.kind == effectcraft_project::FootageKind::Still, "enabled": p.enabled}),
+        Some(p) => json!({"file": p.footage.path, "isStill": p.footage.kind == tselatra_project::FootageKind::Still, "enabled": p.enabled}),
         None => J::Null,
     };
     match &it.kind {
@@ -174,7 +174,7 @@ fn item(s: &Session, a: &J) -> R {
                         "motionBlurSamplesPerFrame": c.motion_blur_samples,
                         "motionBlurAdaptiveSampleLimit": c.motion_blur_adaptive_limit,
                         "preserveNestedFrameRate": c.preserve_frame_rate, "preserveNestedResolution": c.preserve_resolution,
-                        "renderer": match c.renderer { effectcraft_project::Renderer::Classic3D => "ADBE Classic 3D", effectcraft_project::Renderer::Advanced3D => "ADBE Advanced 3d" },
+                        "renderer": match c.renderer { tselatra_project::Renderer::Classic3D => "ADBE Classic 3D", tselatra_project::Renderer::Advanced3D => "ADBE Advanced 3d" },
                         "open": s.state.open_comps.contains(&cid), "active": s.active_comp_id() == Some(cid),
                         "hasVideo": true, "hasAudio": c.layers.iter().any(|l| l.switches.audio && matches!(l.source, LayerSource::Footage { .. } | LayerSource::Comp { .. })),
                         "posterTime": c.poster_time.seconds(),
@@ -191,12 +191,12 @@ fn item(s: &Session, a: &J) -> R {
             o["width"] = json!(fo.width);
             o["height"] = json!(fo.height);
             o["pixelAspect"] = json!(fo.pixel_aspect);
-            o["duration"] = json!(if fo.kind == effectcraft_project::FootageKind::Still { 0.0 } else { fo.duration.seconds() });
-            o["frameRate"] = json!(if fo.kind == effectcraft_project::FootageKind::Still { 0.0 } else { fo.frame_rate.as_f64() });
+            o["duration"] = json!(if fo.kind == tselatra_project::FootageKind::Still { 0.0 } else { fo.duration.seconds() });
+            o["frameRate"] = json!(if fo.kind == tselatra_project::FootageKind::Still { 0.0 } else { fo.frame_rate.as_f64() });
             o["hasVideo"] = json!(fo.has_video);
             o["hasAudio"] = json!(fo.has_audio);
             o["footageMissing"] = json!(fo.missing);
-            o["isStill"] = json!(fo.kind == effectcraft_project::FootageKind::Still);
+            o["isStill"] = json!(fo.kind == tselatra_project::FootageKind::Still);
             o["loop"] = json!(fo.loop_count);
             // Interpret Footage ▸ Conform to frame rate: 0 when the file's own rate is used (#813).
             o["conformFrameRate"] = json!(if fo.native_rate.is_some() { fo.frame_rate.as_f64() } else { 0.0 });
@@ -227,7 +227,7 @@ fn layer(s: &Session, a: &J) -> R {
         LayerSource::Light { .. } => "light",
         _ => "av",
     };
-    let (w, h) = effectcraft_render::source_size(&s.project, l);
+    let (w, h) = tselatra_render::source_size(&s.project, l);
     let t = s.time_of(cid);
     Ok(json!({
         "id": l.id.0,
@@ -282,7 +282,7 @@ fn chain(l: &Layer, uid: u64) -> Option<Vec<&Node>> {
 }
 
 /// PropertyValueType of a property.
-fn value_type(p: &effectcraft_project::Property) -> &'static str {
+fn value_type(p: &tselatra_project::Property) -> &'static str {
     if matches!(p.ui, ParamUi::Mask) {
         return "MASK_INDEX";
     }
@@ -500,8 +500,8 @@ fn text_json(d: &TextDoc) -> J {
     let mut doc = serde_json::to_value(d).unwrap_or(J::Null);
     let st = d.style_at(0);
     if let Some(o) = doc.as_object_mut() {
-        o.insert("first".into(), effectcraft_keyframe::text_doc::char_style_json(&st));
-        o.insert("para".into(), effectcraft_keyframe::text_doc::para_style_json(&d.para(0)));
+        o.insert("first".into(), tselatra_keyframe::text_doc::char_style_json(&st));
+        o.insert("para".into(), tselatra_keyframe::text_doc::para_style_json(&d.para(0)));
     }
     doc
 }
@@ -548,15 +548,15 @@ fn keys(s: &Session, a: &J) -> R {
         let v: Vec<J> = (0..dims)
             .map(|d| {
                 let e =
-                    effectcraft_keyframe::side_ease(&p.keys, i, d, p.spatial, out).or_else(|| stored.get(d).or(stored.first()).copied()).unwrap_or_default();
+                    tselatra_keyframe::side_ease(&p.keys, i, d, p.spatial, out).or_else(|| stored.get(d).or(stored.first()).copied()).unwrap_or_default();
                 json!({"speed": e.speed, "influence": e.influence * 100.0})
             })
             .collect();
         J::Array(v)
     };
-    let key = |i: usize, k: &effectcraft_keyframe::Keyframe| -> J {
+    let key = |i: usize, k: &tselatra_keyframe::Keyframe| -> J {
         // Spatial tangents as the motion path plays (auto-Bezier and continuous keys too).
-        let (spatial_in, spatial_out) = if p.spatial { effectcraft_keyframe::spatial_tangents(&p.keys, i) } else { (k.spatial_in, k.spatial_out) };
+        let (spatial_in, spatial_out) = if p.spatial { tselatra_keyframe::spatial_tangents(&p.keys, i) } else { (k.spatial_in, k.spatial_out) };
         json!({
             "time": l.comp_time(k.time).seconds(),
             "layerTime": k.time.seconds(),
@@ -607,7 +607,7 @@ fn textdoc(s: &Session, a: &J) -> R {
 
 fn markers(s: &Session, a: &J) -> R {
     let (_, c) = comp_of(s, a)?;
-    let (list, to_comp): (&[effectcraft_project::Marker], Option<&Layer>) = match u(a, "layer") {
+    let (list, to_comp): (&[tselatra_project::Marker], Option<&Layer>) = match u(a, "layer") {
         Some(lid) => {
             let l = c.layer(LayerId(lid)).ok_or("the layer no longer exists")?;
             (&l.markers, Some(l))
@@ -660,18 +660,18 @@ fn source_rect(s: &Session, a: &J) -> R {
     ctx.expr = s.expr.as_deref();
     let r = match &l.source {
         LayerSource::Text => {
-            let paths: Vec<_> = effectcraft_render::text::glyph_paths(&ctx, l).into_iter().map(|(p, _)| p).collect();
-            effectcraft_path::bounds(&paths).map(|b| [b.y0, b.x0, b.width(), b.height()]).unwrap_or([0.0; 4])
+            let paths: Vec<_> = tselatra_render::text::glyph_paths(&ctx, l).into_iter().map(|(p, _)| p).collect();
+            tselatra_path::bounds(&paths).map(|b| [b.y0, b.x0, b.width(), b.height()]).unwrap_or([0.0; 4])
         }
         LayerSource::Shape => match l.props.sub("contents") {
             Some(contents) => {
-                let buf = effectcraft_render::shapes::render(&ctx, l, contents, 1.0);
+                let buf = tselatra_render::shapes::render(&ctx, l, contents, 1.0);
                 if buf.img.width <= 4 { [0.0; 4] } else { [2.0 - buf.offset[1], 2.0 - buf.offset[0], buf.img.width as f64 - 4.0, buf.img.height as f64 - 4.0] }
             }
             None => [0.0; 4],
         },
         _ => {
-            let (w, h) = effectcraft_render::source_size(&s.project, l);
+            let (w, h) = tselatra_render::source_size(&s.project, l);
             [0.0, 0.0, w as f64, h as f64]
         }
     };
@@ -688,7 +688,7 @@ fn resolve_add(s: &Session, a: &J) -> R {
     let in_group = l.props.sub("contents").is_some_and(|c| c.uid == g.uid || c.find_group(g.uid).is_some());
     Ok(match g.match_id.as_str() {
         "effects" => {
-            let id = matchnames::effect_from_match(name).map(str::to_string).or_else(|| effectcraft_engine::effects::lookup(name).map(|e| e.id.to_string()));
+            let id = matchnames::effect_from_match(name).map(str::to_string).or_else(|| tselatra_engine::effects::lookup(name).map(|e| e.id.to_string()));
             match id {
                 Some(id) => json!({"kind": "effect", "effect": id}),
                 None => json!({"error": format!("Can not add a property with name \"{name}\" to this PropertyGroup (unknown effect)")}),
@@ -779,7 +779,7 @@ fn text_animator_property(name: &str) -> Option<&'static str> {
 fn menu_command_id(name: &str) -> J {
     let norm = |s: &str| s.trim().trim_end_matches("...").trim_end_matches('…').trim().to_ascii_lowercase();
     let n = norm(name);
-    let specs = effectcraft_engine::command_specs();
+    let specs = tselatra_engine::command_specs();
     let pick = specs
         .iter()
         .position(|c| !c.menu.is_empty() && norm(c.label) == n)

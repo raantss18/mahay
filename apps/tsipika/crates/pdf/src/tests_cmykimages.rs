@@ -4,13 +4,13 @@
 
 use std::sync::Arc;
 
-use craft_pdf::syntax::Pdf;
-use craft_pdf::syntax::object::{Array, Name, Object, Stream};
+use mahay_pdf::syntax::Pdf;
+use mahay_pdf::syntax::object::{Array, Name, Object, Stream};
 use serde_json::json;
-use vectorcraft_color::cms::{self, DEVICE_CMYK, GENERIC_CMYK, SRGB};
-use vectorcraft_doc::cmyk::Inks;
-use vectorcraft_doc::{ColorMode, Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::Affine;
+use tsipika_color::cms::{self, DEVICE_CMYK, GENERIC_CMYK, SRGB};
+use tsipika_doc::cmyk::Inks;
+use tsipika_doc::{ColorMode, Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::Affine;
 
 use crate::*;
 
@@ -385,7 +385,7 @@ fn export_masked(mask: Vec<u8>, clip: bool, invert: bool) -> (Vec<u8>, Vec<Optio
             placement: Default::default(),
         }))
     };
-    let mut mask = vectorcraft_doc::OpacityMask::new(Node::new(d.alloc_id(), image("alpha")), clip);
+    let mut mask = tsipika_doc::OpacityMask::new(Node::new(d.alloc_id(), image("alpha")), clip);
     mask.invert = invert;
     let n = Node::new(d.alloc_id(), image("img")).with_mask(Some(Box::new(mask)));
     let l = d.layers[0].id;

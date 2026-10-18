@@ -3,9 +3,9 @@
 //! or a DNG 1.7 JPEG XL preview IFD stored as a single tile/strip (a standalone `.jxl` file, as the spec
 //! recommends for previews).
 
-use lightcraft_tiff::image::chunk_bytes;
-use lightcraft_tiff::tags as t;
-use lightcraft_tiff::{Ifd, Tiff, makernote};
+use hazavana_tiff::image::chunk_bytes;
+use hazavana_tiff::tags as t;
+use hazavana_tiff::{Ifd, Tiff, makernote};
 
 /// Colour space of an embedded JPEG when the enclosing raw supplies it instead of the JPEG.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -112,7 +112,7 @@ fn is_jxl(b: &[u8]) -> bool {
 fn candidates<'a>(data: &'a [u8], ifd: &Ifd, base: u64, out: &mut Vec<&'a [u8]>) {
     // whole JPEG files stored as an undefined-type tag value (e.g. Panasonic `JpgFromRaw` 0x002e)
     for e in &ifd.entries {
-        if matches!(e.value, lightcraft_tiff::Value::Undefined(_))
+        if matches!(e.value, hazavana_tiff::Value::Undefined(_))
             && e.count() > 1024
             && let Some(s) = data.get(e.offset as usize..(e.offset.saturating_add(e.count() as u64) as usize).min(data.len()))
             && s.starts_with(&[0xff, 0xd8])
@@ -149,7 +149,7 @@ fn candidates<'a>(data: &'a [u8], ifd: &Ifd, base: u64, out: &mut Vec<&'a [u8]>)
 }
 
 /// The largest embedded preview, if any: a JPEG, or (DNG 1.7) a JPEG XL file, or for a Hasselblad 3FR / FFF, which
-/// has no JPEG, its uncompressed RGB preview wrapped as a baseline TIFF — all decode with `lightcraft_codecs::decode`.
+/// has no JPEG, its uncompressed RGB preview wrapped as a baseline TIFF — all decode with `hazavana_codecs::decode`.
 pub fn embedded_preview(bytes: &[u8]) -> Option<Vec<u8>> {
     preview_covering(bytes, None)
 }
@@ -202,7 +202,7 @@ fn preview_covering(bytes: &[u8], min_edge: Option<u32>) -> Option<Vec<u8>> {
         if let Some(mn) = makernote::parse_makernote(bytes, e.offset, e.count() as u64, tiff.order, &make) {
             candidates(bytes, &mn.ifd, mn.base, &mut found);
             if let Some(off) = mn.ifd.u64(0x0011)
-                && let Ok((pifd, _)) = lightcraft_tiff::parse_ifd_at(bytes, mn.base + off, mn.order, mn.base, false, &Default::default())
+                && let Ok((pifd, _)) = hazavana_tiff::parse_ifd_at(bytes, mn.base + off, mn.order, mn.base, false, &Default::default())
             {
                 candidates(bytes, &pifd, mn.base, &mut found);
             }
@@ -384,10 +384,10 @@ fn scan_for_jpeg(data: &[u8]) -> Option<Vec<u8>> {
     Some(jpeg)
 }
 
-/// Canon CR3: the full-size JPEG track (see [`lightcraft_meta::cr3`]), else the `PRVW` / `THMB` boxes.
+/// Canon CR3: the full-size JPEG track (see [`hazavana_meta::cr3`]), else the `PRVW` / `THMB` boxes.
 fn cr3_preview(bytes: &[u8]) -> Option<&[u8]> {
-    let full = lightcraft_meta::cr3::parse_cr3(bytes)
-        .and_then(|c| c.tracks.iter().find(|t| t.kind == lightcraft_meta::cr3::Cr3TrackKind::Jpeg).and_then(|t| t.data));
+    let full = hazavana_meta::cr3::parse_cr3(bytes)
+        .and_then(|c| c.tracks.iter().find(|t| t.kind == hazavana_meta::cr3::Cr3TrackKind::Jpeg).and_then(|t| t.data));
     if let Some(j) = full.and_then(|(at, len)| bytes.get(at..at.checked_add(len)?)).filter(|j| is_dct_jpeg(j)) {
         return Some(j);
     }
@@ -431,7 +431,7 @@ fn trim_eoi(s: &[u8]) -> &[u8] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_tiff::{IfdBuilder, ImageData, TiffWriter, Value};
+    use hazavana_tiff::{IfdBuilder, ImageData, TiffWriter, Value};
 
     fn fake_jpeg(n: usize) -> Vec<u8> {
         let mut j = vec![0xff, 0xd8, 0xff, 0xc0, 0x00, 0x0b, 8, 0, 1, 0, 1, 1, 1, 0x11, 0];

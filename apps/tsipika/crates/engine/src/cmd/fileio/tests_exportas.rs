@@ -12,7 +12,7 @@ fn session(width: f64, height: f64, artboards: usize) -> Session {
 }
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 fn rgba(bytes: &[u8]) -> image::RgbaImage {
@@ -48,7 +48,7 @@ fn use_artboards_writes_one_file_per_artboard_in_the_range() {
     let r = s.execute("document.export", &json!({"format": "webp", "useArtboards": true, "artboards": [3]})).unwrap();
     assert!(r.get("files").is_none() && !b64(&r).is_empty(), "{r}");
     let r = s.execute("document.export", &json!({"format": "pdf", "useArtboards": true, "range": "2-4"})).unwrap();
-    assert_eq!(vectorcraft_pdf::import(&b64(&r)).unwrap().artboards.len(), 3);
+    assert_eq!(tsipika_pdf::import(&b64(&r)).unwrap().artboards.len(), 3);
     // Without Use Artboards a raster export holds one artboard.
     assert!(s.execute("document.export", &json!({"format": "png", "range": "1-2"})).is_err());
     let _ = std::fs::remove_dir_all(dir);
@@ -98,7 +98,7 @@ fn without_artboards_the_export_covers_the_visible_art() {
         (220, 130)
     );
     // A PDF takes the art's bounds too (SVG has its own `useArtboards` option).
-    let pdf = vectorcraft_pdf::import(&b64(&s.execute("document.export", &json!({"format": "pdf", "useArtboards": false})).unwrap())).unwrap();
+    let pdf = tsipika_pdf::import(&b64(&s.execute("document.export", &json!({"format": "pdf", "useArtboards": false})).unwrap())).unwrap();
     let page = pdf.artboards[0].rect;
     assert_eq!((page.width().round(), page.height().round()), (110.0, 65.0));
     let mut empty = session(50.0, 50.0, 1);
@@ -115,5 +115,5 @@ fn formats_list_use_artboards() {
         assert!(opts(id).get("useArtboards").is_some(), "{id} lists useArtboards");
         assert!(opts(id).get("range").is_some(), "{id} lists range");
     }
-    assert!(opts("vectorcraft").get("useArtboards").is_none());
+    assert!(opts("tsipika").get("useArtboards").is_none());
 }

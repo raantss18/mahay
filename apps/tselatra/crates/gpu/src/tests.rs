@@ -14,15 +14,15 @@
 
 use std::sync::{Arc, OnceLock};
 
-use effectcraft_color::{BlendMode, ColorSpace, Label};
-use effectcraft_keyframe::{Keyframe, ShapePath, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{
+use tselatra_color::{BlendMode, ColorSpace, Label};
+use tselatra_keyframe::{Keyframe, ShapePath, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{
     AlphaMode, BitDepth, Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, MaskMode, MatteKind, Project, Quality, Sampling, Solid, TrackMatte,
 };
-use effectcraft_raster::Image;
-use effectcraft_render::{Backend, FootageSource, RenderOpts, Renderer};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_raster::Image;
+use tselatra_render::{Backend, FootageSource, RenderOpts, Renderer};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::Gpu;
 
@@ -54,21 +54,21 @@ pub(crate) fn gpu() -> Option<&'static Gpu> {
     let g = G.get_or_init(|| {
         let g = Gpu::try_headless();
         match &g {
-            Ok(g) => eprintln!("effectcraft-gpu tests: adapter {}", g.ctx.name),
-            Err(e) => eprintln!("effectcraft-gpu tests: no GPU ({e}), skipping GPU comparisons"),
+            Ok(g) => eprintln!("tselatra-gpu tests: adapter {}", g.ctx.name),
+            Err(e) => eprintln!("tselatra-gpu tests: no GPU ({e}), skipping GPU comparisons"),
         }
         g
     });
-    require_gpu("effectcraft-gpu tests", g.as_ref())
+    require_gpu("tselatra-gpu tests", g.as_ref())
 }
 
-/// `g`, or `None` (the GPU tests skip) when there is no GPU, unless `EFFECTCRAFT_REQUIRE_GPU=1`
+/// `g`, or `None` (the GPU tests skip) when there is no GPU, unless `TSELATRA_REQUIRE_GPU=1`
 /// (as in `tests_init`): then a GPU that didn't start fails the test, with why.
 pub(crate) fn require_gpu<G>(tests: &str, g: Result<G, &String>) -> Option<G> {
     match g {
         Ok(g) => Some(g),
-        Err(e) if std::env::var("EFFECTCRAFT_REQUIRE_GPU").is_ok_and(|v| v == "1") => {
-            panic!("{tests}: EFFECTCRAFT_REQUIRE_GPU=1 but GPU initialization failed: {e}")
+        Err(e) if std::env::var("TSELATRA_REQUIRE_GPU").is_ok_and(|v| v == "1") => {
+            panic!("{tests}: TSELATRA_REQUIRE_GPU=1 but GPU initialization failed: {e}")
         }
         Err(_) => None,
     }
@@ -98,7 +98,7 @@ pub(crate) fn pattern(seed: u32, w: u32, h: u32) -> Image {
     for y in 0..h {
         for x in 0..w {
             let (u, v) = (x as f32 / w as f32, y as f32 / h as f32);
-            let n = effectcraft_raster::hash_noise(x, y, seed) * 0.25;
+            let n = tselatra_raster::hash_noise(x, y, seed) * 0.25;
             let r = (0.5 + 0.5 * (u * 7.0 + k).sin()) * 0.75 + n;
             let g = (0.5 + 0.5 * (v * 5.0 - k).cos()) * 0.75 + n * 0.5;
             let b = ((u + v) * 0.5 + k).fract() * 0.8 + 0.1;
@@ -162,17 +162,17 @@ impl Scene {
     }
 
     /// Add on top of the stack.
-    pub(crate) fn push(&mut self, l: Layer) -> effectcraft_project::LayerId {
+    pub(crate) fn push(&mut self, l: Layer) -> tselatra_project::LayerId {
         let id = l.id;
         self.p.comp_mut(self.cid).unwrap().layers.insert(0, l);
         id
     }
 
     pub(crate) fn effect(&mut self, l: &mut Layer, id: &str, vals: &[(&str, Value)]) {
-        let spec = effectcraft_effects::find(id).unwrap();
+        let spec = tselatra_effects::find(id).unwrap();
         let mut next = self.p.next_id;
-        let size = effectcraft_render::effect_bounds(&self.p, &self.comp, l).0;
-        let mut g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, size);
+        let size = tselatra_render::effect_bounds(&self.p, &self.comp, l).0;
+        let mut g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, size);
         self.p.next_id = next;
         for (k, v) in vals {
             g.prop_mut(k).unwrap_or_else(|| panic!("{id}: no {k}")).value = v.clone();
@@ -399,8 +399,8 @@ fn layer_styles_collapsed_precomps_and_cpu_fallbacks() {
         s.push(bg);
         let mut l = s.solid([0.8, 0.3, 0.2], 40, 30);
         let mut next = s.p.next_id;
-        effectcraft_project::styles::add_style(&mut l, &mut Ids(&mut next), "dropShadow", &s.comp.global_light, true).unwrap();
-        effectcraft_project::styles::add_style(&mut l, &mut Ids(&mut next), "stroke", &s.comp.global_light, true).unwrap();
+        tselatra_project::styles::add_style(&mut l, &mut Ids(&mut next), "dropShadow", &s.comp.global_light, true).unwrap();
+        tselatra_project::styles::add_style(&mut l, &mut Ids(&mut next), "stroke", &s.comp.global_light, true).unwrap();
         s.p.next_id = next;
         l.blend_mode = BlendMode::Multiply;
         set(&mut l, "transform/rotation", Value::Scalar(10.0));
@@ -439,19 +439,19 @@ fn layer_styles_collapsed_precomps_and_cpu_fallbacks() {
 /// buffer geometry (padding, offset).
 pub(crate) fn effect_direct(id: &str, vals: &[(&str, Value)], adjustment: bool) {
     let Some(g) = gpu() else { return };
-    let spec = effectcraft_effects::find(id).unwrap();
+    let spec = tselatra_effects::find(id).unwrap();
     let size = [70.0, 44.0];
     let mut params =
-        effectcraft_effects::Params { values: spec.params.iter().map(|ps| (ps.id.to_string(), effectcraft_effects::default_value(ps, size))).collect() };
+        tselatra_effects::Params { values: spec.params.iter().map(|ps| (ps.id.to_string(), tselatra_effects::default_value(ps, size))).collect() };
     for (k, v) in vals {
         params.values.insert(k.to_string(), v.clone());
     }
     for scale in [1.0, 0.5] {
         let img = pattern(7, (size[0] * scale) as u32, (size[1] * scale) as u32);
-        let buf = effectcraft_effects::Buf { img, offset: [0.0, 0.0], scale };
-        let ctx = || effectcraft_effects::EffectCtx { params: &params, time: 0.25, layer_size: size, seed: 11, adjustment, env: Default::default() };
+        let buf = tselatra_effects::Buf { img, offset: [0.0, 0.0], scale };
+        let ctx = || tselatra_effects::EffectCtx { params: &params, time: 0.25, layer_size: size, seed: 11, adjustment, env: Default::default() };
         let cpu = (spec.render)(&ctx(), buf.clone());
-        let out = effectcraft_render::Accelerator::effects(g, &[effectcraft_render::FxStep { spec, ctx: ctx() }], &buf, None).expect("the GPU runs the effect");
+        let out = tselatra_render::Accelerator::effects(g, &[tselatra_render::FxStep { spec, ctx: ctx() }], &buf, None).expect("the GPU runs the effect");
         assert_eq!((out.offset, out.scale), (cpu.offset, cpu.scale), "{id}: geometry");
         let d = diff(&cpu.img, &out.img, 1e-3);
         let allow = if on_gl() { (d.total as f64 * GL_BOUNDARY_FLIPS) as usize } else { 0 };
@@ -563,7 +563,7 @@ fn gpu_effects_match_cpu() {
     effect_case("ec.color.exposure", &[("channels", Value::Enum(1)), ("red/redExposure", n(0.8)), ("green/greenOffset", n(-0.05)), ("blue/blueGamma", n(1.6))]);
     effect_case("ec.color.exposure", &[("master/exposure", n(0.5)), ("master/offset", n(-0.03)), ("bypassLinearLight", Value::Bool(true))]);
     effect_case("ec.channel.invert", &[]);
-    effect_case("ec.channel.invert", &[("channel", Value::Enum(effectcraft_effects::INVERT_ALPHA)), ("blend", n(30.0))]);
+    effect_case("ec.channel.invert", &[("channel", Value::Enum(tselatra_effects::INVERT_ALPHA)), ("blend", n(30.0))]);
     effect_case("ec.channel.invert", &[("channel", Value::Enum(2))]);
     effect_case("ec.distort.transform", &[("rotation", n(20.0)), ("scaleHeight", n(80.0)), ("skew", n(10.0)), ("opacity", n(70.0))]);
 }
@@ -587,7 +587,7 @@ fn effect_chains_and_mixed_stacks() {
 
 #[test]
 fn registry_badges_match_the_gpu_implementation() {
-    for s in effectcraft_effects::registry() {
+    for s in tselatra_effects::registry() {
         let implemented = crate::effects::supports(s.id);
         assert_eq!(s.gpu, implemented, "{}: registry gpu = {}, GPU implementation = {implemented}", s.id, s.gpu);
     }
@@ -607,7 +607,7 @@ fn quantization_preserves_cpu_levels_and_half_step_neighbors() {
             *p = [v, v, v, 1.0];
         }
         let input = g.ctx.upload_image(&cpu).unwrap();
-        effectcraft_render::color::quantize(&mut cpu, levels);
+        tselatra_render::color::quantize(&mut cpu, levels);
         let mut e = crate::context::Enc::new(&g.ctx);
         let out = crate::ops::quantize(&mut e, &input, levels);
         let bytes = e.read_texture(&out.texture, out.width, out.height, 16).unwrap();
@@ -885,12 +885,12 @@ fn adjustment_footprint_uploads_once_under_time_dependent_effects() {
     let comp = s.p.comp(s.cid).expect("the scene's comp");
     let adj = comp.layers.last().expect("the adjustment layer");
     let key = |k: f64| {
-        effectcraft_render::cache::footprint_key(&effectcraft_render::EvalCtx::new(&s.p, s.cid, comp, Tick::from_seconds_f64(k)), adj, 1.0, false, false)
+        tselatra_render::cache::footprint_key(&tselatra_render::EvalCtx::new(&s.p, s.cid, comp, Tick::from_seconds_f64(k)), adj, 1.0, false, false)
     };
     assert!(key(0.0).is_some());
     assert_eq!(key(0.0), key(0.5), "the footprint key changes with time");
     let Some(g) = gpu() else { return };
-    let cache = effectcraft_render::cache::LayerCache::new(64 << 20);
+    let cache = tselatra_render::cache::LayerCache::new(64 << 20);
     let mut r = Renderer::new(&s.p, &Pattern, RenderOpts { backend: Backend::Gpu, ..opts() });
     r.accel = Some(g);
     r.cache = Some(&cache);
@@ -968,7 +968,7 @@ fn upload_budget_bounds_the_layer_textures_kept() {
         s.effect(&mut l, "ec.color.levels", &[("gamma", n(1.1 + 0.2 * i as f64))]);
         s.push(l);
     }
-    let frame = |cache: &effectcraft_render::cache::LayerCache, k: u64| {
+    let frame = |cache: &tselatra_render::cache::LayerCache, k: u64| {
         let mut r = Renderer::new(&s.p, &Pattern, RenderOpts { backend: Backend::Gpu, ..opts() });
         r.accel = Some(g);
         r.cache = Some(cache);
@@ -976,14 +976,14 @@ fn upload_budget_bounds_the_layer_textures_kept() {
         let img = g.render(&r, s.cid, Tick::from_seconds_f64(k as f64 / 30.0)).expect("the GPU renders the frame");
         (img.data, g.ctx.transfer_stats().upload_bytes - before)
     };
-    let fits = effectcraft_render::cache::LayerCache::new(64 << 20);
+    let fits = tselatra_render::cache::LayerCache::new(64 << 20);
     let (a, _) = frame(&fits, 0);
     let (b, up) = frame(&fits, 1);
     assert_eq!(up, 0, "static layers re-uploaded within the default budget");
     // A budget smaller than the two 640 KB footprints: each upload evicts the other.
     let default = g.ctx.upload_budget();
     g.ctx.set_upload_budget(1 << 20);
-    let tight = effectcraft_render::cache::LayerCache::new(64 << 20);
+    let tight = tselatra_render::cache::LayerCache::new(64 << 20);
     let _ = frame(&tight, 0);
     let (c, up) = frame(&tight, 1);
     g.ctx.set_upload_budget(default);
@@ -1035,14 +1035,14 @@ fn static_effect_layers_draw_from_the_cache() {
     let mut l = s.solid([0.6, 0.4, 0.2], 80, 50);
     s.effect(&mut l, "ec.blur.gaussian", &[("blurriness", n(3.0))]);
     s.push(l);
-    let cache = effectcraft_render::cache::LayerCache::new(64 << 20);
+    let cache = tselatra_render::cache::LayerCache::new(64 << 20);
     let mut r = Renderer::new(&s.p, &Pattern, RenderOpts { backend: Backend::Gpu, ..opts() });
     r.accel = Some(g);
     r.cache = Some(&cache);
     let comp = s.p.comp(s.cid).expect("the scene's comp");
     let layer = comp.layers.last().expect("the layer");
     let t = |k: u64| Tick::from_seconds_f64(k as f64 / 30.0);
-    assert!(r.layer_is_static(&effectcraft_render::EvalCtx::new(&s.p, s.cid, comp, t(2)), layer));
+    assert!(r.layer_is_static(&tselatra_render::EvalCtx::new(&s.p, s.cid, comp, t(2)), layer));
     let mut frames = Vec::new();
     for k in 0..3 {
         let before = g.ctx.transfer_stats().upload_bytes;
@@ -1061,10 +1061,10 @@ fn static_effect_layers_draw_from_the_cache() {
 #[test]
 fn upload_cache_drops_textures_of_freed_buffers() {
     let Some(g) = gpu() else { return };
-    let img = effectcraft_raster::Image::new(256, 256);
+    let img = tselatra_raster::Image::new(256, 256);
     let before = g.ctx.upload_entries();
     for _ in 0..6 {
-        let buf = std::sync::Arc::new(effectcraft_effects::Buf { img: img.clone(), offset: [0.0; 2], scale: 1.0 });
+        let buf = std::sync::Arc::new(tselatra_effects::Buf { img: img.clone(), offset: [0.0; 2], scale: 1.0 });
         let up = g.ctx.upload_buf(&buf).expect("upload");
         drop((up, buf));
     }

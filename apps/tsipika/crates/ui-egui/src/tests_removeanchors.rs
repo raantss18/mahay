@@ -4,25 +4,25 @@
 
 use egui::{Event, PointerButton, Pos2, Rect, Shape, vec2};
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use tsipika_doc::NodeId;
+use tsipika_engine::Session;
+use tsipika_geom::Point;
 
 use crate::canvas::Xf;
 use crate::menus::{self, Item};
-use crate::{VectorcraftApp, canvas, chrome};
+use crate::{TsipikaApp, canvas, chrome};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app
 }
 
-fn rect(app: &mut VectorcraftApp) -> NodeId {
+fn rect(app: &mut TsipikaApp) -> NodeId {
     NodeId(app.run("shape.rectangle", json!({"x": 50, "y": 50, "width": 100, "height": 80})).unwrap()["id"].as_u64().unwrap())
 }
 
-fn anchor_count(app: &VectorcraftApp, id: NodeId) -> usize {
+fn anchor_count(app: &TsipikaApp, id: NodeId) -> usize {
     app.session.active().and_then(|st| st.doc.node(id)).and_then(|n| n.path_data()).map(|p| p.anchor_count()).unwrap_or(0)
 }
 
@@ -50,28 +50,28 @@ pub(crate) fn shapes_text(shapes: &[Shape]) -> Vec<(String, Rect)> {
     v
 }
 
-pub(crate) fn control_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
+pub(crate) fn control_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
     let screen = Rect::from_min_size(Pos2::ZERO, vec2(1400.0, 900.0));
     let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| chrome::control_bar(app, ui));
     out.textures_delta.clear();
     shapes_text(&out.shapes.iter().map(|c| c.shape.clone()).collect::<Vec<_>>())
 }
 
-pub(crate) fn click_control(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2) {
+pub(crate) fn click_control(app: &mut TsipikaApp, ctx: &egui::Context, at: Pos2) {
     let press = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
     control_frame(app, ctx, vec![Event::PointerMoved(at), press(true)]);
     control_frame(app, ctx, vec![press(false)]);
     control_frame(app, ctx, vec![]);
 }
 
-fn canvas_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
+fn canvas_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
     let screen = Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0));
     let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| canvas::show(app, ui));
     out.textures_delta.clear();
     shapes_text(&out.shapes.iter().map(|c| c.shape.clone()).collect::<Vec<_>>())
 }
 
-fn click_canvas(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2, button: PointerButton) -> Vec<(String, Rect)> {
+fn click_canvas(app: &mut TsipikaApp, ctx: &egui::Context, at: Pos2, button: PointerButton) -> Vec<(String, Rect)> {
     let press = |pressed| Event::PointerButton { pos: at, button, pressed, modifiers: Default::default() };
     canvas_frame(app, ctx, vec![Event::PointerMoved(at)]);
     canvas_frame(app, ctx, vec![press(true)]);
@@ -79,7 +79,7 @@ fn click_canvas(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2, button:
     canvas_frame(app, ctx, vec![])
 }
 
-pub(crate) fn properties_frame(app: &mut VectorcraftApp, width: f32) -> Vec<(String, Rect)> {
+pub(crate) fn properties_frame(app: &mut TsipikaApp, width: f32) -> Vec<(String, Rect)> {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let screen = Rect::from_min_size(Pos2::ZERO, vec2(width, 900.0));
@@ -171,7 +171,7 @@ fn button(texts: &[(String, Rect)], ctx: &egui::Context, label: &str, i: usize) 
 }
 
 /// Click the Control bar's `i`-th icon button after `label`.
-fn click_button(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str, i: usize) {
+fn click_button(app: &mut TsipikaApp, ctx: &egui::Context, label: &str, i: usize) {
     let at = button(&control_frame(app, ctx, vec![]), ctx, label, i);
     click_control(app, ctx, at);
 }
@@ -184,10 +184,10 @@ fn the_control_bar_converts_connects_and_cuts_selected_anchors() {
     app.run("select.anchors", json!({"id": id.0, "anchors": [[0, 1]]})).unwrap();
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
-    let anchor = |app: &VectorcraftApp, id: NodeId, ai: usize| {
+    let anchor = |app: &TsipikaApp, id: NodeId, ai: usize| {
         app.session.active().unwrap().doc.node(id).unwrap().path_data().unwrap().subpaths[0].anchors[ai]
     };
-    let last_undo = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.last().unwrap().label.clone();
+    let last_undo = |app: &TsipikaApp| app.session.active().unwrap().history.undo.last().unwrap().label.clone();
     // Convert: smooth, then corner again.
     click_button(&mut app, &ctx, "Convert:", 1);
     assert!(anchor(&app, id, 1).has_in() && anchor(&app, id, 1).has_out(), "smooth");
@@ -232,7 +232,7 @@ fn a_whole_path_converts_with_the_tools_that_edit_anchors() {
 }
 
 /// Use the normal application frame: canvas pointer picking and the keyboard shortcut dispatcher.
-fn anchor_delete_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) {
+fn anchor_delete_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) {
     let screen = Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 900.0));
     let time = ctx.input(|i| i.time) + 0.1;
     let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), time: Some(time), events, ..Default::default() }, |ui| {

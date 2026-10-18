@@ -2,13 +2,13 @@
 
 use std::sync::Arc;
 
-use lightcraft_catalog::{Album, Flag, Meta, Op, Photo, Source};
-use lightcraft_develop::DevelopSettings;
+use hazavana_catalog::{Album, Flag, Meta, Op, Photo, Source};
+use hazavana_develop::DevelopSettings;
 
 use crate::Session;
 
 pub fn load(s: &mut Session) {
-    let scenes = lightcraft_scenes::demo_library();
+    let scenes = hazavana_scenes::demo_library();
     let mut ids = Vec::new();
     let mut ops = Vec::new();
     for sc in &scenes {
@@ -27,14 +27,14 @@ pub fn load(s: &mut Session) {
             location: sc.meta.location.into(),
             title: sc.name.clone(),
             keywords: sc.meta.keywords.iter().map(|k| k.to_string()).collect(),
-            creator: "LightCraft Demo".into(),
+            creator: "Hazavana Demo".into(),
             ..Default::default()
         };
         // one demo photo carries a camera focus point (as a Sony raw would), on the bloom's centre, so
         // View ▸ Show Focus Point and Zoom to Focus Point can be tried without a camera file
         if sc.name == "Cosmos bloom" {
-            p.meta.focus = Some(lightcraft_meta::FocusPoint {
-                rect: lightcraft_geom::Rect { x0: 0.42, y0: 0.433, x1: 0.50, y1: 0.487 },
+            p.meta.focus = Some(hazavana_meta::FocusPoint {
+                rect: hazavana_geom::Rect { x0: 0.42, y0: 0.433, x1: 0.50, y1: 0.487 },
                 mode: Some("AF-S".into()),
                 area: Some("Flexible Spot".into()),
                 tracking: None,
@@ -61,7 +61,7 @@ pub fn load(s: &mut Session) {
                 d.effects.dehaze = 15.0;
             }
             9 => {
-                d.treatment = lightcraft_develop::Treatment::Bw;
+                d.treatment = hazavana_develop::Treatment::Bw;
                 d.light.contrast = 35.0;
             }
             _ => {}
@@ -119,7 +119,7 @@ pub fn load(s: &mut Session) {
 ///   holds them any more.
 ///
 /// Only demo photos use this; real files are decoded by their loader as before.
-pub(crate) fn scene_pixels(scene: &lightcraft_scenes::Scene, max_edge: usize) -> Result<Arc<lightcraft_raster::Rgb32f>, String> {
+pub(crate) fn scene_pixels(scene: &hazavana_scenes::Scene, max_edge: usize) -> Result<Arc<hazavana_raster::Rgb32f>, String> {
     let key = SceneKey { kind: scene.kind, seed: scene.seed, width: scene.width, height: scene.height, max_edge };
     let slot = {
         let mut c = scene_cache();
@@ -161,10 +161,10 @@ const FAILED: &str = "the demo scene could not be generated";
 /// would run queued jobs while it waits for rows other workers took, and one of them could ask for
 /// this very scene and wait for the generation further down its own stack (the faces scan's pool
 /// threads hung that way). That also keeps the work within the caller's pool and its limits (the
-/// scan's pace, `LIGHTCRAFT_FACE_THREADS`). Any other caller (the render workers, which are plain
+/// scan's pace, `HAZAVANA_FACE_THREADS`). Any other caller (the render workers, which are plain
 /// threads) renders in parallel on [`render_pool`], whose threads only ever render, and blocks
 /// without running other work meanwhile; where that pool can't be started it renders alone too.
-fn generate(render: impl FnOnce(Render) -> lightcraft_raster::Rgb32f + Send) -> lightcraft_raster::Rgb32f {
+fn generate(render: impl FnOnce(Render) -> hazavana_raster::Rgb32f + Send) -> hazavana_raster::Rgb32f {
     if rayon::current_thread_index().is_some() {
         return render(Render::Serial);
     }
@@ -205,7 +205,7 @@ enum Generation {
     #[default]
     Empty,
     Running,
-    Ready(Arc<lightcraft_raster::Rgb32f>),
+    Ready(Arc<hazavana_raster::Rgb32f>),
     /// The last generation failed (its render panicked); the next request tries again.
     Failed,
 }
@@ -220,7 +220,7 @@ impl SlotState {
 
     /// What came of generation `n`, once it has ended: its pixels, or an error when it failed
     /// (even if a retry has started or finished since: callers get the outcome they waited for).
-    fn outcome(&self, n: u64) -> Option<Result<Arc<lightcraft_raster::Rgb32f>, String>> {
+    fn outcome(&self, n: u64) -> Option<Result<Arc<hazavana_raster::Rgb32f>, String>> {
         match &self.generation {
             Generation::Running if self.started == n => None,
             // pixels are kept for good once made, so only generation `n` itself can have made them
@@ -235,7 +235,7 @@ impl SceneSlot {
         self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    fn ready(&self) -> Option<Arc<lightcraft_raster::Rgb32f>> {
+    fn ready(&self) -> Option<Arc<hazavana_raster::Rgb32f>> {
         match &self.lock().generation {
             Generation::Ready(p) => Some(p.clone()),
             _ => None,
@@ -245,7 +245,7 @@ impl SceneSlot {
     /// The pixels `render` makes ([`generate`]), generated once: the first caller renders, with no
     /// lock held, and later ones wait for its outcome. A render that panics is an error for the
     /// callers of its generation, and the next request tries again.
-    fn get_or_generate(&self, render: impl FnOnce(Render) -> lightcraft_raster::Rgb32f + Send) -> Result<Arc<lightcraft_raster::Rgb32f>, String> {
+    fn get_or_generate(&self, render: impl FnOnce(Render) -> hazavana_raster::Rgb32f + Send) -> Result<Arc<hazavana_raster::Rgb32f>, String> {
         let mut g = self.lock();
         let n = match &g.generation {
             Generation::Ready(p) => return Ok(p.clone()),
@@ -285,7 +285,7 @@ fn scene_cache_limit() -> usize {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct SceneKey {
-    kind: lightcraft_scenes::Kind,
+    kind: hazavana_scenes::Kind,
     seed: u32,
     width: u32,
     height: u32,
@@ -332,8 +332,8 @@ fn trim_scene_cache(c: &mut SceneCache, limit: usize) {
 mod tests {
     use super::*;
 
-    fn small_scene() -> lightcraft_scenes::Scene {
-        lightcraft_scenes::demo_library().swap_remove(0)
+    fn small_scene() -> hazavana_scenes::Scene {
+        hazavana_scenes::demo_library().swap_remove(0)
     }
 
     #[test]
@@ -377,8 +377,8 @@ mod tests {
         }
     }
 
-    fn pixels(n: usize) -> lightcraft_raster::Rgb32f {
-        lightcraft_raster::Rgb32f::new(n, 1)
+    fn pixels(n: usize) -> hazavana_raster::Rgb32f {
+        hazavana_raster::Rgb32f::new(n, 1)
     }
 
     /// Rayon workers asking for a scene while it is generated never deadlock. The render is parallel, and a rayon worker
@@ -674,11 +674,11 @@ mod tests {
 
     #[test]
     fn the_cache_keeps_the_most_recent_scenes_within_its_limit() {
-        let key = |max_edge| SceneKey { kind: lightcraft_scenes::Kind::Dunes, seed: 1, width: 3, height: 2, max_edge };
+        let key = |max_edge| SceneKey { kind: hazavana_scenes::Kind::Dunes, seed: 1, width: 3, height: 2, max_edge };
         let entry = |max_edge, used, px: Option<usize>| {
             let slot = Arc::new(SceneSlot::default());
             if let Some(n) = px {
-                slot.lock().generation = Generation::Ready(Arc::new(lightcraft_raster::Rgb32f::new(n, 1)));
+                slot.lock().generation = Generation::Ready(Arc::new(hazavana_raster::Rgb32f::new(n, 1)));
             }
             SceneEntry { key: key(max_edge), slot, used }
         };

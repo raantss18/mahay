@@ -1,8 +1,8 @@
 //! LAYMRG merges layers into another one and LAYDEL deletes a layer with its objects: model space,
 //! layouts and block definitions, typed (with confirmation) and as JSON (#286).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
 use serde_json::json;
 
 fn line_on(s: &mut Session, layer: &str, y: f64) -> String {
@@ -81,7 +81,7 @@ fn laymrg_typed_moves_everything_and_deletes_the_source() {
     let h = s.doc().unwrap().model.iter().find(|e| e.common.layer == "C" || e.common.layer == "A").map(|e| e.handle).unwrap();
     s.start("laymrg").unwrap();
     assert!(s.prompt_text().contains("Select object on layer to merge or [Name]:"), "{}", s.prompt_text());
-    s.input(cadcraft_engine::Input::Pick(vec![h])).unwrap();
+    s.input(drafitra_engine::Input::Pick(vec![h])).unwrap();
     assert!(s.prompt_text().contains("[Name/Undo]"), "{}", s.prompt_text());
     s.script("\nN\nC\n\n").unwrap();
     assert!(s.running.is_none());
@@ -135,8 +135,8 @@ fn laydel_deletes_the_layer_and_its_objects() {
     // Refused: layer 0, Defpoints, the current layer, xref-dependent layers.
     s.execute("layer.current", &json!({ "name": "B" })).unwrap();
     let d = std::sync::Arc::make_mut(&mut s.state_mut().unwrap().doc);
-    d.layers.push(cadcraft_engine::doc::Layer::new("Site|Walls"));
-    d.layers.push(cadcraft_engine::doc::Layer::new("Defpoints"));
+    d.layers.push(drafitra_engine::doc::Layer::new("Site|Walls"));
+    d.layers.push(drafitra_engine::doc::Layer::new("Defpoints"));
     for n in ["0", "Defpoints", "B", "Site|Walls"] {
         assert!(s.execute("laydel", &json!({ "names": [n] })).is_err(), "{n}");
         assert!(s.doc().unwrap().layer(n).is_some(), "{n}");

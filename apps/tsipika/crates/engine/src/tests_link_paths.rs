@@ -3,7 +3,7 @@
 //! files, and the images an SVG file links to.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, NodeKind};
+use tsipika_doc::{NodeId, NodeKind};
 
 use super::*;
 use crate::cmd::fileio::touched;
@@ -24,7 +24,7 @@ fn far_reads(seen: &[String]) -> Vec<&String> {
     seen.iter().filter(|p| p.contains("192.0.2.1") || p.starts_with("//") || p.starts_with(r"\\")).collect()
 }
 
-/// A document saved at `dir/doc.vectorcraft` with one linked image per path in `paths`, each
+/// A document saved at `dir/doc.tsipika` with one linked image per path in `paths`, each
 /// showing `dir/pic.png` until its link is set → the document's path.
 fn save_linked(dir: &Folder, paths: &[String]) -> String {
     let pic = dir.file("pic.png");
@@ -34,10 +34,10 @@ fn save_linked(dir: &Folder, paths: &[String]) -> String {
     let mut doc = (*s.doc().unwrap().doc).clone();
     for (id, path) in ids.iter().zip(paths) {
         let Some(NodeKind::Image(im)) = doc.node_mut(*id).map(|n| &mut n.kind) else { panic!("not an image") };
-        im.link = Some(vectorcraft_doc::LinkInfo::new(path.clone()));
+        im.link = Some(tsipika_doc::LinkInfo::new(path.clone()));
     }
-    let path = dir.file("doc.vectorcraft");
-    std::fs::write(&path, vectorcraft_format::save(&doc, false)).unwrap();
+    let path = dir.file("doc.tsipika");
+    std::fs::write(&path, tsipika_format::save(&doc, false)).unwrap();
     path
 }
 
@@ -99,10 +99,10 @@ fn on_share(folder: &str) -> Option<std::path::PathBuf> {
 #[test]
 fn a_document_on_a_mapped_drive_is_on_the_share_behind_it() {
     use crate::cmd::fileio::share_of;
-    // craft-docpath refuses a link on the share when the document is given by its drive letter.
+    // mahay-docpath refuses a link on the share when the document is given by its drive letter.
     let link = r"\\server\share\img\logo.png";
-    assert_eq!(craft_docpath::resolve(link, Some(std::path::Path::new(r"Z:\jobs\doc.vectorcraft"))), Err(craft_docpath::Refused::Network));
-    assert!(craft_docpath::resolve(link, Some(std::path::Path::new(r"\\server\share\jobs\doc.vectorcraft"))).is_ok());
+    assert_eq!(mahay_docpath::resolve(link, Some(std::path::Path::new(r"Z:\jobs\doc.tsipika"))), Err(mahay_docpath::Refused::Network));
+    assert!(mahay_docpath::resolve(link, Some(std::path::Path::new(r"\\server\share\jobs\doc.tsipika"))).is_ok());
 
     // The document's path on the share, from its folder's final path.
     let mut asked = vec![];
@@ -110,26 +110,26 @@ fn a_document_on_a_mapped_drive_is_on_the_share_behind_it() {
         asked.push(folder.to_string());
         on_share(folder)
     };
-    assert_eq!(share_of(r"Z:\jobs\doc.vectorcraft", &mut ask).as_deref(), Some(r"\\server\share\jobs\doc.vectorcraft"));
-    assert_eq!(share_of(r"Z:\doc.vectorcraft", &mut ask).as_deref(), Some(r"\\server\share\doc.vectorcraft"));
-    assert_eq!(share_of("Z:/jobs/doc.vectorcraft", &mut ask).as_deref(), Some(r"\\server\share\jobs\doc.vectorcraft"));
+    assert_eq!(share_of(r"Z:\jobs\doc.tsipika", &mut ask).as_deref(), Some(r"\\server\share\jobs\doc.tsipika"));
+    assert_eq!(share_of(r"Z:\doc.tsipika", &mut ask).as_deref(), Some(r"\\server\share\doc.tsipika"));
+    assert_eq!(share_of("Z:/jobs/doc.tsipika", &mut ask).as_deref(), Some(r"\\server\share\jobs\doc.tsipika"));
     assert_eq!(asked, [r"Z:\jobs", r"Z:\", "Z:/jobs"]);
     let unc = |p: &'static str| move |_: &str| Some(std::path::PathBuf::from(p));
-    assert_eq!(share_of(r"Z:\doc.vectorcraft", unc(r"\\?\unc\server\share\")).as_deref(), Some(r"\\server\share\doc.vectorcraft"));
+    assert_eq!(share_of(r"Z:\doc.tsipika", unc(r"\\?\unc\server\share\")).as_deref(), Some(r"\\server\share\doc.tsipika"));
 
     // A folder on a local volume (also behind a `subst` drive), a folder that can't be opened,
     // and a final path without a share name give no path on a share.
-    assert_eq!(share_of(r"C:\art\doc.vectorcraft", unc(r"\\?\C:\art")), None);
-    assert_eq!(share_of(r"S:\doc.vectorcraft", unc(r"\\?\D:\real")), None);
-    assert_eq!(share_of(r"Z:\gone\doc.vectorcraft", |_| None), None);
-    assert_eq!(share_of(r"Z:\doc.vectorcraft", unc(r"\\?\UNC\server")), None);
+    assert_eq!(share_of(r"C:\art\doc.tsipika", unc(r"\\?\C:\art")), None);
+    assert_eq!(share_of(r"S:\doc.tsipika", unc(r"\\?\D:\real")), None);
+    assert_eq!(share_of(r"Z:\gone\doc.tsipika", |_| None), None);
+    assert_eq!(share_of(r"Z:\doc.tsipika", unc(r"\\?\UNC\server")), None);
     // A document given by its share, or not by a drive, is not looked up.
     for doc in [
-        r"\\server\share\doc.vectorcraft",
-        r"\\?\Z:\doc.vectorcraft",
-        "/Users/a/doc.vectorcraft",
-        "doc.vectorcraft",
-        "Z:doc.vectorcraft",
+        r"\\server\share\doc.tsipika",
+        r"\\?\Z:\doc.tsipika",
+        "/Users/a/doc.tsipika",
+        "doc.tsipika",
+        "Z:doc.tsipika",
         r"Z:\jobs\",
     ] {
         assert_eq!(share_of(doc, |f: &str| panic!("{doc}: looked up {f}")), None, "{doc}");
@@ -140,15 +140,15 @@ fn a_document_on_a_mapped_drive_is_on_the_share_behind_it() {
 #[test]
 fn links_on_a_mapped_drives_share_are_followed() {
     use crate::cmd::fileio::{document_path_with, share_of};
-    let doc = Some(r"Z:\jobs\doc.vectorcraft");
+    let doc = Some(r"Z:\jobs\doc.tsipika");
     let share = |d: &str| share_of(d, on_share);
     // A link on the share behind the drive is followed; one on another share still isn't.
     assert_eq!(document_path_with(r"\\server\share\img\logo.png", doc, share).as_deref(), Ok(r"\\server\share\img\logo.png"));
     assert_eq!(document_path_with(r"\\SERVER\Share\logo.png", doc, share).as_deref(), Ok(r"\\SERVER\Share\logo.png"));
-    assert_eq!(document_path_with(r"\\other\share\logo.png", doc, share), Err(craft_docpath::Refused::Network));
-    assert_eq!(document_path_with("file://server/share/logo.png", doc, share), Err(craft_docpath::Refused::Network));
+    assert_eq!(document_path_with(r"\\other\share\logo.png", doc, share), Err(mahay_docpath::Refused::Network));
+    assert_eq!(document_path_with("file://server/share/logo.png", doc, share), Err(mahay_docpath::Refused::Network));
     // On a local volume, the link stays refused.
-    assert_eq!(document_path_with(r"\\server\share\logo.png", doc, |_| None), Err(craft_docpath::Refused::Network));
+    assert_eq!(document_path_with(r"\\server\share\logo.png", doc, |_| None), Err(mahay_docpath::Refused::Network));
     // Links that were followed resolve as before, without looking the share up.
     let unasked = |d: &str| -> Option<String> { panic!("looked up {d}") };
     assert_eq!(document_path_with(r"img\logo.png", doc, unasked).as_deref(), Ok(r"Z:\jobs\img\logo.png"));
@@ -160,11 +160,11 @@ fn a_document_off_a_mapped_drive_keeps_its_path() {
     use crate::cmd::fileio::share_path;
     let dir = Folder::new("docpath-share");
     // A folder on this computer's own disk, and one that doesn't exist.
-    assert_eq!(share_path(&dir.file("doc.vectorcraft")), None);
-    assert_eq!(share_path(&dir.file("gone/doc.vectorcraft")), None);
+    assert_eq!(share_path(&dir.file("doc.tsipika")), None);
+    assert_eq!(share_path(&dir.file("gone/doc.tsipika")), None);
     // Elsewhere than Windows, no document is looked up.
     if cfg!(not(windows)) {
-        assert_eq!(share_path(r"Z:\jobs\doc.vectorcraft"), None);
+        assert_eq!(share_path(r"Z:\jobs\doc.tsipika"), None);
     }
 }
 

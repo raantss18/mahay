@@ -17,14 +17,14 @@
 //! - Feather: the object is masked by its shape inset by half the width and blurred, so the
 //!   edge fades from ~0 at the path to full strength `width` inside.
 
-use designcraft_doc::Item;
-use designcraft_geom::{Affine, BezPath, Rect, Shape, Vec2};
+use pejy_doc::Item;
+use pejy_geom::{Affine, BezPath, Rect, Shape, Vec2};
 use vello_common::filter_effects::{EdgeMode, Filter, FilterPrimitive};
 use vello_cpu::peniko::{self, BlendMode, Compose, Mix};
 use vello_cpu::{RenderContext, kurbo};
 
 use crate::{Frame, Renderer, color_of};
-use designcraft_compose::ShownOn;
+use pejy_compose::ShownOn;
 
 /// Shadow offset (spread units) for an InDesign angle (degrees, light direction) and distance.
 pub(crate) fn offset(angle: f64, distance: f64) -> Vec2 {
@@ -98,7 +98,7 @@ impl Renderer {
         let reach = xf.transform_rect_bbox(bp.bounding_box()).inflate(sw + 1.0, sw + 1.0);
         // The silhouette is the shape when the object paints its area (fill / image); text frames
         // without a fill cast the shadow of their text only, which can't be grown.
-        let solid = !it.fill.is_none() || matches!(it.content, designcraft_doc::Content::Graphic(_)) || it.has_nested_items();
+        let solid = !it.fill.is_none() || matches!(it.content, pejy_doc::Content::Graphic(_)) || it.has_nested_items();
         let mut below = vec![];
         if e.outer_glow.on {
             let g = &e.outer_glow;
@@ -143,9 +143,9 @@ impl Renderer {
             let fo = &e.feather_options;
             let w = e.feather * (1.0 - fo.choke.clamp(0.0, 100.0) / 100.0).max(0.01);
             let (sigma, join) = match fo.corners {
-                designcraft_doc::FeatherCorners::Diffused => (w / 4.0, kurbo::Join::Round),
-                designcraft_doc::FeatherCorners::Rounded => (w / 3.0, kurbo::Join::Round),
-                designcraft_doc::FeatherCorners::Sharp => (w / 6.0, kurbo::Join::Miter),
+                pejy_doc::FeatherCorners::Diffused => (w / 4.0, kurbo::Join::Round),
+                pejy_doc::FeatherCorners::Rounded => (w / 3.0, kurbo::Join::Round),
+                pejy_doc::FeatherCorners::Sharp => (w / 6.0, kurbo::Join::Miter),
             };
             // The body and its clip stay at device resolution; only the blurred mask may be drawn
             // offscreen at a lower one.
@@ -227,7 +227,7 @@ impl Renderer {
             let g = &e.inner_glow;
             let (sigma, choke) = split(g.size, g.choke);
             // Precise keeps the glow close to the edge: a tighter blur.
-            let sigma = if g.technique == designcraft_doc::GlowTechnique::Precise { sigma * 0.4 } else { sigma };
+            let sigma = if g.technique == pejy_doc::GlowTechnique::Precise { sigma * 0.4 } else { sigma };
             let mix = crate::blend_mode(g.mode).mix;
             let paint = color_of(&c, g.opacity.clamp(0.0, 1.0));
             if g.center {

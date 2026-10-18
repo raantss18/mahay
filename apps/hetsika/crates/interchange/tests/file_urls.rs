@@ -1,7 +1,7 @@
 //! Media URL handling at the public interchange boundary.
 
-use filmcraft_interchange::{Format, file_url_to_path, import, resolve_path};
-use filmcraft_project::MediaRef;
+use hetsika_interchange::{Format, file_url_to_path, import, resolve_path};
+use hetsika_project::MediaRef;
 
 #[test]
 fn unicode_file_urls_do_not_panic_or_lose_the_path() {

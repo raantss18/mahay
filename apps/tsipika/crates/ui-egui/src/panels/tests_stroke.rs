@@ -6,7 +6,7 @@ use super::tests_appearance::{app_with_rect, click, frame_events, run, text_rect
 use super::*;
 
 /// Click the Dashed Line check box and return the stroke's dash afterwards.
-fn toggle_dashes(ctx: &egui::Context, app: &mut VectorcraftApp) -> Option<vectorcraft_doc::Dash> {
+fn toggle_dashes(ctx: &egui::Context, app: &mut TsipikaApp) -> Option<tsipika_doc::Dash> {
     let at = text_rect(&frame_events(ctx, app, vec![], stroke::show), "Dashed Line").center();
     click(ctx, app, at, stroke::show);
     current_stroke(app).unwrap().dash

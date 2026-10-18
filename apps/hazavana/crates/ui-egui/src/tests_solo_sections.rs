@@ -6,14 +6,14 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 
 /// Detail view with the Edit panel open and Light (the default) expanded.
 fn edit_open() -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, [1200.0, 1400.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail"}), T);
     assert_eq!(r["ok"], true, "{r}");

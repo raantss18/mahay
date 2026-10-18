@@ -4,9 +4,9 @@
 
 use std::sync::Arc;
 
-use effectcraft_engine::Session;
-use effectcraft_engine::effects::plugin::{EffectPlugin, PluginFrame, PluginManifest, PluginParam, PluginParamKind, PluginParams, register_plugin};
-use effectcraft_engine::time::Tick;
+use tselatra_engine::Session;
+use tselatra_engine::effects::plugin::{EffectPlugin, PluginFrame, PluginManifest, PluginParam, PluginParamKind, PluginParams, register_plugin};
+use tselatra_engine::time::Tick;
 use serde_json::json;
 
 struct Swap {
@@ -28,7 +28,7 @@ impl EffectPlugin for Swap {
 }
 
 fn setup() -> (Session, u64) {
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     s.execute("comp.new", json!({"name": "P", "width": 40, "height": 20, "duration": 1})).unwrap();
     let l = s.execute("layer.newSolid", json!({"color": [1.0, 0.5, 0.0], "width": 40, "height": 20})).unwrap()["layer"].as_u64().unwrap();
     (s, l)
@@ -89,7 +89,7 @@ fn example_wasm_plugin_loads_and_renders() {
     let Some(wasm) = build_example() else { return };
     let (mut s, l) = setup();
     let r = s.execute("effect.plugins.load", json!({"path": wasm.to_string_lossy()})).unwrap();
-    assert_eq!(r["loaded"][0]["id"], "org.effectcraft.example.posterize-bands", "{r}");
+    assert_eq!(r["loaded"][0]["id"], "org.tselatra.example.posterize-bands", "{r}");
     s.execute("effect.apply", json!({"layer": l, "effect": "Posterize Bands"})).unwrap();
     s.execute("prop.set", json!({"layer": l, "path": "effects/#1/mix", "value": 0})).unwrap();
     s.execute("prop.set", json!({"layer": l, "path": "effects/#1/levels", "value": 2})).unwrap();
@@ -124,7 +124,7 @@ fn wat_plugin(id: &str, api: i32, render: &str) -> String {
 
 #[test]
 fn plugin_loading_reports_bad_modules_and_survives_failing_renders() {
-    let dir = std::env::temp_dir().join(format!("effectcraft-host-plugins-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tselatra-host-plugins-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let files = [
         ("a-good.wasm", wat_plugin("org.test.host.good", 1, "i32.const 0").into_bytes()),

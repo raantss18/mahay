@@ -5,10 +5,10 @@ use std::sync::Arc;
 
 use egui::{Pos2, Shape, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeKind;
-use vectorcraft_engine::Session;
+use tsipika_doc::NodeKind;
+use tsipika_engine::Session;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::canvas::Xf;
 use crate::place::{DropAt, DropTarget};
 
@@ -16,12 +16,12 @@ use crate::place::{DropAt, DropTarget};
 fn png(w: u32, h: u32, ppi: f64) -> Vec<u8> {
     let mut out = vec![];
     image::RgbaImage::from_pixel(w, h, image::Rgba([255, 0, 0, 255])).write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Png).unwrap();
-    vectorcraft_engine::cmd::fileio::ppi::with_png_resolution(&out, (ppi, ppi))
+    tsipika_engine::cmd::fileio::ppi::with_png_resolution(&out, (ppi, ppi))
 }
 
 /// `bytes` written to a fresh temporary file named `name` → its path.
 fn temp_file(name: &str, bytes: &[u8]) -> String {
-    let dir = std::env::temp_dir().join(format!("vectorcraft-ui-place-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tsipika-ui-place-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join(name);
     std::fs::write(&path, bytes).unwrap();
@@ -29,15 +29,15 @@ fn temp_file(name: &str, bytes: &[u8]) -> String {
 }
 
 /// An app reading files from disk, with a 400×300 document.
-fn app() -> VectorcraftApp {
+fn app() -> TsipikaApp {
     let services = crate::Services { read: Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string()))), ..Default::default() };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app
 }
 
 /// File → Place… with `path` chosen in the file picker.
-fn place_picked(app: &mut VectorcraftApp, path: &str) {
+fn place_picked(app: &mut TsipikaApp, path: &str) {
     let path = path.to_string();
     app.services.pick_open = Some(Box::new(move |_: &crate::FilePick| Some(path.clone())));
     app.run("file.place", json!({})).unwrap();
@@ -71,12 +71,12 @@ impl egui::DroppedFile for MockDrop {
 }
 
 /// One headless frame of the whole window (800×600) with `events` and `dropped` files.
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>, dropped: &[&str], shift: bool) {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>, dropped: &[&str], shift: bool) {
     let files = dropped.iter().map(|p| Arc::new(Dropped(p.into())) as egui::DroppedFileHandle).collect();
     frame_files(app, ctx, events, files, shift);
 }
 
-fn frame_files(app: &mut VectorcraftApp, ctx: &egui::Context, mut events: Vec<egui::Event>, dropped: Vec<egui::DroppedFileHandle>, shift: bool) {
+fn frame_files(app: &mut TsipikaApp, ctx: &egui::Context, mut events: Vec<egui::Event>, dropped: Vec<egui::DroppedFileHandle>, shift: bool) {
     events.push(egui::Event::ModifiersChanged(egui::Modifiers { shift, ..Default::default() }));
     let raw = egui::RawInput {
         screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))),
@@ -91,7 +91,7 @@ fn frame_files(app: &mut VectorcraftApp, ctx: &egui::Context, mut events: Vec<eg
     out.textures_delta.clear();
 }
 
-fn selected_image(app: &VectorcraftApp) -> vectorcraft_doc::Node {
+fn selected_image(app: &TsipikaApp) -> tsipika_doc::Node {
     let st = app.session.active().unwrap();
     let n = st.doc.node(st.selection.objects[0]).unwrap().clone();
     assert!(matches!(n.kind, NodeKind::Image(_)), "{:?}", n.kind);
@@ -102,7 +102,7 @@ fn selected_image(app: &VectorcraftApp) -> vectorcraft_doc::Node {
 const SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="50" height="40"><path d="M5 5 L45 5 L30 30 Z"/></svg>"#;
 
 /// Two frames: fonts, then the canvas lays out → the canvas.
-fn laid_out(app: &mut VectorcraftApp, ctx: &egui::Context) -> egui::Rect {
+fn laid_out(app: &mut TsipikaApp, ctx: &egui::Context) -> egui::Rect {
     frame(app, ctx, vec![], &[], false);
     frame(app, ctx, vec![], &[], false);
     app.canvas_rect.expect("the canvas is laid out")
@@ -118,7 +118,7 @@ fn a_drop_with_a_position_places_on_the_canvas_and_opens_off_it() {
     let pos = rect.center() + vec2(60.0, -40.0);
     let want = Xf::new(rect, app.view().unwrap()).to_doc(pos);
     let uid = app.session.active().unwrap().uid;
-    for name in ["a.png", "a.svg", "a.ai", "a.vectorcraft"] {
+    for name in ["a.png", "a.svg", "a.ai", "a.tsipika"] {
         assert_eq!(app.drop_target(name, Some(pos), true), DropTarget::Place(DropAt { doc: uid, at: want, embed: true }), "{name}");
         assert_eq!(app.drop_target(name, Some(Pos2::new(300.0, rect.top() - 10.0)), false), DropTarget::Open, "{name} on the tab bar");
     }
@@ -133,7 +133,7 @@ fn a_drop_without_a_position_opens_documents_and_places_pictures() {
     laid_out(&mut app, &ctx);
     let center = app.view().unwrap().center;
     let uid = app.session.active().unwrap().uid;
-    for name in ["a.svg", "a.svgz", "a.pdf", "a.ai", "a.eps", "a.vectorcraft", "a.drawcraft", "a.vctemplate", "a.dxf", "a.emf"] {
+    for name in ["a.svg", "a.svgz", "a.pdf", "a.ai", "a.eps", "a.tsipika", "a.drawcraft", "a.vctemplate", "a.dxf", "a.emf"] {
         assert_eq!(app.drop_target(name, None, false), DropTarget::Open, "{name}");
     }
     for name in ["a.png", "a.jpg", "a.tiff", "a.webp", "a.txt"] {
@@ -221,7 +221,7 @@ fn a_dropped_shortcut_set_opens_import_shortcut_set() {
     let set = "/Menus {\n /Acme\\ Undo { /Modifiers 11 /Key 902 }\n}\n";
     let path = temp_file("dropped.kys", set.as_bytes());
     frame(&mut app, &ctx, vec![], &[&path], false);
-    let kind = |app: &VectorcraftApp| app.ui.dialog.as_ref().map(|d| d.kind.clone());
+    let kind = |app: &TsipikaApp| app.ui.dialog.as_ref().map(|d| d.kind.clone());
     assert_eq!(kind(&app).as_deref(), Some(crate::dialogs::shortcut_import::KIND), "{}", app.ui.status);
     app.ui.dialog = None;
     let target = app.drop_target("sent.kys", Some(rect.center()), false);
@@ -278,7 +278,7 @@ fn a_native_svg_drop_uses_file_open_even_with_a_path_only_handle() {
 
     let mut opened = app();
     opened.run("file.open", json!({ "path": path })).unwrap();
-    let anchors = |app: &VectorcraftApp| {
+    let anchors = |app: &TsipikaApp| {
         let mut count = 0;
         app.session.active().unwrap().doc.walk(|n| {
             if let NodeKind::Path { path, .. } = &n.kind {
@@ -347,7 +347,7 @@ fn unsupported_and_unreadable_drops_leave_the_document_open() {
 
 #[test]
 fn files_dropped_with_no_document_open_open_and_are_recent() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     let ctx = egui::Context::default();
     let path = temp_file("open-me.png", &png(8, 8, 72.0));
     frame(&mut app, &ctx, vec![], &[], false);
@@ -357,7 +357,7 @@ fn files_dropped_with_no_document_open_open_and_are_recent() {
 }
 
 /// The images in open document `i`.
-fn images(app: &VectorcraftApp, i: usize) -> usize {
+fn images(app: &TsipikaApp, i: usize) -> usize {
     let mut n = 0;
     app.session.documents()[i].doc.walk(|node| n += usize::from(matches!(node.kind, NodeKind::Image(_))));
     n
@@ -375,7 +375,7 @@ fn a_file_read_after_another_document_became_active_lands_where_it_was_dropped()
     frame(&mut app, &ctx, vec![], &[], false);
     let rect = app.canvas_rect.expect("the canvas is laid out");
     let pos = rect.center() + vec2(60.0, -40.0);
-    let drop_on_active = |app: &VectorcraftApp| match app.drop_target("late.png", Some(pos), false) {
+    let drop_on_active = |app: &TsipikaApp| match app.drop_target("late.png", Some(pos), false) {
         DropTarget::Place(d) => d,
         t => panic!("{t:?}"),
     };
@@ -446,7 +446,7 @@ fn the_place_dialog_lists_the_files_and_loads_the_cursor_with_several() {
 #[test]
 fn one_file_places_centred_in_the_view_and_replace_swaps_the_selection() {
     let mut app = app();
-    app.view_mut().unwrap().center = vectorcraft_geom::Point::new(120.0, 80.0);
+    app.view_mut().unwrap().center = tsipika_geom::Point::new(120.0, 80.0);
     place_picked(&mut app, &temp_file("one.png", &png(300, 150, 300.0)));
     let d = app.ui.dialog.as_ref().expect("the Place dialog");
     assert_eq!(d.kind, crate::dialogs::place::KIND);
@@ -459,7 +459,7 @@ fn one_file_places_centred_in_the_view_and_replace_swaps_the_selection() {
     crate::dialogs::confirm(&mut app).unwrap();
     assert!(app.ui.dialog.is_none());
     let first = selected_image(&app);
-    assert_eq!(first.geometric_bounds().unwrap().center(), vectorcraft_geom::Point::new(120.0, 80.0), "centred in the view");
+    assert_eq!(first.geometric_bounds().unwrap().center(), tsipika_geom::Point::new(120.0, 80.0), "centred in the view");
     // With one object selected, Replace applies.
     place_picked(&mut app, &temp_file("two.png", &png(40, 40, 144.0)));
     assert!(app.ui.dialog.as_ref().unwrap().bool("__replace"));
@@ -488,7 +488,7 @@ fn the_control_bar_shows_the_image_file_link_colour_mode_and_ppi() {
 }
 
 /// Click the Control bar's `label`.
-fn click_label(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str) {
+fn click_label(app: &mut TsipikaApp, ctx: &egui::Context, label: &str) {
     use crate::tests_removeanchors::{at, click_control, control_frame};
     let p = at(&control_frame(app, ctx, vec![]), label);
     click_control(app, ctx, p);
@@ -501,12 +501,12 @@ fn click_label(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str) {
 fn the_control_bars_file_name_relinks_the_image() {
     use crate::tests_removeanchors::{click_control, control_frame};
     // Menu items are drawn after the space a check mark takes.
-    let item = |app: &mut VectorcraftApp, ctx: &egui::Context, label: &str| {
+    let item = |app: &mut TsipikaApp, ctx: &egui::Context, label: &str| {
         let texts = control_frame(app, ctx, vec![]);
         texts.iter().find(|(t, _)| t.trim() == label).map(|(_, r)| r.center()).unwrap_or_else(|| panic!("no `{label}` in {texts:?}"))
     };
     let mut app = app();
-    let data = vectorcraft_format::base64_encode(&png(30, 30, 72.0));
+    let data = tsipika_format::base64_encode(&png(30, 30, 72.0));
     app.run("file.place", json!({"name": "red.png", "dataBase64": data, "link": false})).unwrap();
     let before = selected_image(&app).geometric_bounds().unwrap();
     let ctx = egui::Context::default();
@@ -535,10 +535,10 @@ fn the_control_bars_file_name_relinks_the_image() {
 #[test]
 fn the_control_bar_and_properties_trace_a_selected_image() {
     use crate::panels::image_trace::{TRACE_BUTTON_W, selected_trace};
-    let selected_preset = |app: &VectorcraftApp| selected_trace(app).map(|t| t.0);
+    let selected_preset = |app: &TsipikaApp| selected_trace(app).map(|t| t.0);
     use crate::tests_removeanchors::{at, click_control, control_frame, has, properties_frame};
     let mut app = app();
-    let data = vectorcraft_format::base64_encode(&png(30, 30, 72.0));
+    let data = tsipika_format::base64_encode(&png(30, 30, 72.0));
     app.run("file.place", json!({"name": "red.png", "dataBase64": data, "link": false})).unwrap();
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
@@ -570,7 +570,7 @@ fn the_control_bar_and_properties_trace_a_selected_image() {
     let traced = app.session.active().unwrap().selection.objects.clone();
     click_control(&mut app, &ctx, at(&bar, "Tracing Result"));
     click_label(&mut app, &ctx, "Outlines with Source Image");
-    assert_eq!(selected_trace(&app).map(|t| t.1), Some(vectorcraft_doc::TraceView::OutlinesWithSource));
+    assert_eq!(selected_trace(&app).map(|t| t.1), Some(tsipika_doc::TraceView::OutlinesWithSource));
     assert_eq!(app.session.active().unwrap().selection.objects, traced, "the same object");
     let bar = control_frame(&mut app, &ctx, vec![]);
     click_control(&mut app, &ctx, at(&bar, "Default"));
@@ -585,7 +585,7 @@ fn the_control_bar_and_properties_trace_a_selected_image() {
 #[test]
 fn the_control_bars_mask_clips_the_image_and_selects_the_clipping_path() {
     let mut app = app();
-    let data = vectorcraft_format::base64_encode(&png(30, 30, 72.0));
+    let data = tsipika_format::base64_encode(&png(30, 30, 72.0));
     let img = app.run("file.place", json!({"name": "red.png", "dataBase64": data, "link": false})).unwrap()["ids"][0].as_u64().unwrap();
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
@@ -598,14 +598,14 @@ fn the_control_bars_mask_clips_the_image_and_selects_the_clipping_path() {
 }
 
 #[test]
-fn a_vectorcraft_document_places_linked_and_edit_original_opens_it() {
+fn a_tsipika_document_places_linked_and_edit_original_opens_it() {
     let mut app = app();
     // A one-artboard document with a rectangle.
     let mut src = Session::new();
     src.execute("file.new", &json!({"width": 100, "height": 50})).unwrap();
     src.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 50})).unwrap();
-    let bytes = vectorcraft_format::save_file(&src.active().unwrap().doc);
-    let path = temp_file("badge.vectorcraft", &bytes);
+    let bytes = tsipika_format::save_file(&src.active().unwrap().doc);
+    let path = temp_file("badge.tsipika", &bytes);
     place_picked(&mut app, &path);
     let d = app.ui.dialog.as_ref().expect("the Place dialog");
     assert!(d.bool("link") && d.bool("__documents") && !d.bool("__others"), "Link on, for a document");
@@ -614,7 +614,7 @@ fn a_vectorcraft_document_places_linked_and_edit_original_opens_it() {
     crate::dialogs::confirm(&mut app).unwrap();
     let st = app.session.active().unwrap();
     let id = st.selection.objects[0];
-    let vectorcraft_doc::NodeKind::PlacedDocument(p) = &st.doc.node(id).unwrap().kind else { panic!("not a placed document") };
+    let tsipika_doc::NodeKind::PlacedDocument(p) = &st.doc.node(id).unwrap().kind else { panic!("not a placed document") };
     assert_eq!(p.link.path, path);
     // Edit Original opens the document in a new tab.
     let tabs = app.session.documents().len();
@@ -631,13 +631,13 @@ fn a_vectorcraft_document_places_linked_and_edit_original_opens_it() {
     app.services.pick_open_multi = Some(Box::new(move || both.clone()));
     app.run("file.place", json!({})).unwrap();
     let d = app.ui.dialog.as_ref().unwrap();
-    assert!(crate::dialogs::place::link_tip(d).contains("VectorCraft documents"));
+    assert!(crate::dialogs::place::link_tip(d).contains("Tsipika documents"));
 }
 
 /// Tool key `key` as the Control bar's Apply (Enter) and Cancel (Escape) send it.
-fn tool_key(app: &mut VectorcraftApp, key: vectorcraft_tools::ToolKey) {
+fn tool_key(app: &mut TsipikaApp, key: tsipika_tools::ToolKey) {
     let view = app.view_info();
-    let r = app.session.tool_key(key, vectorcraft_tools::Mods::default(), view);
+    let r = app.session.tool_key(key, tsipika_tools::Mods::default(), view);
     crate::canvas::apply_requests(app, r);
 }
 
@@ -646,7 +646,7 @@ fn tool_key(app: &mut VectorcraftApp, key: vectorcraft_tools::ToolKey) {
 /// leaves the image whole, and both go back to the Selection tool.
 #[test]
 fn crop_image_shows_a_box_that_apply_crops_to() {
-    use vectorcraft_tools::ToolKey;
+    use tsipika_tools::ToolKey;
     let mut app = app();
     place_picked(&mut app, &temp_file("crop.png", &png(100, 50, 72.0)));
     app.ui.dialog.as_mut().unwrap().fields.insert("link".into(), json!(false));
@@ -685,12 +685,12 @@ fn crop_and_rasterize_say_in_the_status_bar_when_an_image_could_not_be_decoded()
     let idat = cut.windows(4).position(|w| w == b"IDAT").unwrap();
     cut.truncate(idat + 8);
     let mut app = app();
-    app.run("file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&cut)})).unwrap();
+    app.run("file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&cut)})).unwrap();
     let whole = selected_image(&app).geometric_bounds().unwrap();
     app.run("ui.cropImage", json!({})).unwrap();
     app.run("tool.setOption", json!({"key": "rect", "value": [whole.x0, whole.y0, whole.width() / 2.0, whole.height()]})).unwrap();
     app.status("");
-    tool_key(&mut app, vectorcraft_tools::ToolKey::Enter);
+    tool_key(&mut app, tsipika_tools::ToolKey::Enter);
     assert_eq!(app.ui.status, WARNING, "Crop Image's Apply");
     // Undo puts the image back as placed; then Rasterize runs on it.
     app.run("edit.undo", json!({})).unwrap();
@@ -701,7 +701,7 @@ fn crop_and_rasterize_say_in_the_status_bar_when_an_image_could_not_be_decoded()
 
 /// One headless frame of the whole window at `time` → how long the app asked to wait before the
 /// next one.
-fn frame_at(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64) -> std::time::Duration {
+fn frame_at(app: &mut TsipikaApp, ctx: &egui::Context, time: f64) -> std::time::Duration {
     let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), time: Some(time), ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| {
         app.logic(ui.ctx());
@@ -713,7 +713,7 @@ fn frame_at(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64) -> std::ti
 
 /// The window sits idle for `secs` from `*time` (a frame now, then only the frames the app asks
 /// for) or until `done` → whether it was.
-fn idle(app: &mut VectorcraftApp, ctx: &egui::Context, time: &mut f64, secs: f64, done: &dyn Fn(&VectorcraftApp) -> bool) -> bool {
+fn idle(app: &mut TsipikaApp, ctx: &egui::Context, time: &mut f64, secs: f64, done: &dyn Fn(&TsipikaApp) -> bool) -> bool {
     let end = *time + secs;
     let real_end = std::time::Instant::now() + std::time::Duration::from_secs(20);
     loop {
@@ -759,8 +759,8 @@ fn a_file_placed_while_idle_follows_its_changes() {
     std::thread::sleep(std::time::Duration::from_millis(30));
     let changed = png(60, 30, 72.0);
     std::fs::write(&path, &changed).unwrap();
-    let hash = vectorcraft_doc::links::hash_bytes(&changed);
-    let updated = |app: &VectorcraftApp| {
+    let hash = tsipika_doc::links::hash_bytes(&changed);
+    let updated = |app: &TsipikaApp| {
         let st = app.session.active().unwrap();
         matches!(&st.doc.node(id).unwrap().kind, NodeKind::Image(im) if im.link.as_ref().and_then(|l| l.hash.as_deref()) == Some(hash.as_str()))
     };

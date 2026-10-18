@@ -1,6 +1,6 @@
 //! Independent literal-search contract tests. These pass on the old implementation too:
 //! this optimization must preserve the current deliberately narrow PDF handling.
-use designcraft_pdf::add_page_entries;
+use pejy_pdf::add_page_entries;
 
 fn fixture(kids: &str, objects: &[u8]) -> Vec<u8> {
     let mut pdf =

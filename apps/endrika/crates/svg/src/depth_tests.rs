@@ -1,5 +1,5 @@
 use super::*;
-use figcraft_color::{Color, Paint};
+use endrika_color::{Color, Paint};
 
 fn nested(depth: usize) -> (Document, NodeId, NodeId) {
     let mut doc = Document::new("export depth");
@@ -54,6 +54,6 @@ fn export_depth_ignores_hidden_subtrees_and_checks_masks_and_raster_fallbacks() 
     doc.get_mut(inner).unwrap().is_mask = true;
     assert!(matches!(try_export_svg(&doc, &[root], &SvgOptions::default()), Err(SvgError::Depth(_))));
     doc.get_mut(inner).unwrap().is_mask = false;
-    doc.get_mut(root).unwrap().effects = vec![figcraft_doc::Effect { kind: EffectKind::LayerBlur(figcraft_doc::Blur::uniform(1.0)), visible: true }];
+    doc.get_mut(root).unwrap().effects = vec![endrika_doc::Effect { kind: EffectKind::LayerBlur(endrika_doc::Blur::uniform(1.0)), visible: true }];
     assert!(matches!(try_export_svg(&doc, &[root], &SvgOptions::default()), Err(SvgError::Depth(_))));
 }

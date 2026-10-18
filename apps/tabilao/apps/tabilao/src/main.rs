@@ -56,6 +56,7 @@ impl eframe::App for App {
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.0.ui(ui);
+        mahay_about::banner(ui.ctx());
     }
     fn on_exit(&mut self) {
         print::finish_pending_jobs();
@@ -351,6 +352,7 @@ fn main() -> eframe::Result<()> {
                     return Err("the app was already created".into());
                 };
                 SheetApp::setup_context_for_language(&cc.egui_ctx, app.ui.dark, app.ui.language);
+                mahay_about::register_desktop(mahay_about::AppInfo { id: "tabilao", name: "Tabilao" }, &cc.egui_ctx);
                 if let Some(port) = control_port {
                     match control_server::start(port, cc.egui_ctx.clone()) {
                         Ok(rx) => app.control_rx = Some(rx),

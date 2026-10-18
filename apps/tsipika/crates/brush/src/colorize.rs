@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, Node};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{AppearanceItem, Node};
 
 use crate::Colorization;
 
@@ -86,7 +86,7 @@ pub fn tint_node(n: &mut Node, color: &Color, amount: f32) {
             *p = Paint::solid(c.lerp(color, amount));
         }
     }
-    if let vectorcraft_doc::NodeKind::Text(t) = &mut n.kind {
+    if let tsipika_doc::NodeKind::Text(t) = &mut n.kind {
         for r in &mut t.runs {
             if let Paint::Solid { color: c, .. } = &mut r.style.fill {
                 *c = c.lerp(color, amount);

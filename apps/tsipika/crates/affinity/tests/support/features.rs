@@ -4,8 +4,8 @@
 //! paint, masks, image pixels and text runs). A deliberate reader/Debug change needs review;
 //! input authenticity is independently checked with SHA256 by the corpus gate.
 use std::collections::{BTreeMap, BTreeSet};
-use vectorcraft_affinity::model::{Document, Kind, Node};
-use vectorcraft_affinity::paint::Paint;
+use tsipika_affinity::model::{Document, Kind, Node};
+use tsipika_affinity::paint::Paint;
 
 pub fn signature(doc: &Document) -> String {
     fn visit(nodes: &[Node], counts: &mut BTreeMap<&'static str, usize>, fonts: &mut BTreeSet<String>, boards: &mut Vec<String>, depth: usize) {

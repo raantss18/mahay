@@ -3,7 +3,7 @@
 use std::io::Write;
 
 use crate::{ImportOptions, ImportReport, import_with_report};
-use vectorcraft_doc::NodeKind;
+use tsipika_doc::NodeKind;
 
 fn stream(entries: &str, bytes: &[u8]) -> Vec<u8> {
     let mut out = format!("<< /Length {} {entries} >>\nstream\n", bytes.len()).into_bytes();

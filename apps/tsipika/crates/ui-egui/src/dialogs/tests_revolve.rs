@@ -2,10 +2,10 @@
 use super::*;
 use crate::{dialogs, theme};
 use egui::{Event, PointerButton, Rect, Vec2, pos2};
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 struct Harness {
-    app: VectorcraftApp,
+    app: TsipikaApp,
     ctx: egui::Context,
     screen: Vec2,
     texts: Vec<(String, Rect)>,
@@ -18,7 +18,7 @@ impl Harness {
 
     /// The dialog of 3D effect `effect` on a path drawn from SVG path data `d`.
     fn with(d: &str, effect: &str, screen: Vec2) -> Self {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width":300,"height":300})).unwrap();
         app.run("path.create", json!({"d": d})).unwrap();
         app.run("paint.setFill", json!({"color":"#338ad6"})).unwrap();
@@ -108,7 +108,7 @@ fn values_labels_sliders_and_reset_dots_change_the_live_effect_in_one_undo_step(
     let node = h.app.session.doc().unwrap().doc.node(h.app.session.doc().unwrap().selection.objects[0]).unwrap();
     assert_eq!(node.appearance.effects[0].params["angle"], json!(h.value("angle")));
     h.click(h.response("revolve-reset-all").center());
-    let defaults = vectorcraft_effects::default_params(REVOLVE).unwrap();
+    let defaults = tsipika_effects::default_params(REVOLVE).unwrap();
     let dialog = h.app.ui.dialog.as_ref().unwrap();
     for (key, value) in defaults.as_object().unwrap() {
         assert_eq!(dialog.fields.get(key), Some(value), "reset all: {key}");
@@ -178,13 +178,13 @@ fn automatic_smooth_shading_previews_saves_and_respects_cancel_and_one_step_undo
         assert!(!h.app.ui.dialog.as_ref().unwrap().fields.contains_key("smoothShading"));
         let art = |h: &Harness| {
             let state = h.app.session.doc().unwrap();
-            vectorcraft_effects::revolve_art(state.doc.node(state.selection.objects[0]).unwrap()).unwrap()
+            tsipika_effects::revolve_art(state.doc.node(state.selection.objects[0]).unwrap()).unwrap()
         };
-        let gradients = |n: &vectorcraft_doc::Node| {
+        let gradients = |n: &tsipika_doc::Node| {
             let mut count = 0;
             n.walk(&mut |face| {
                 count += face.appearance.items.iter().filter(|item| {
-                    matches!(item, vectorcraft_doc::AppearanceItem::Fill(fill) if matches!(fill.paint, vectorcraft_doc::color::Paint::Gradient(_)))
+                    matches!(item, tsipika_doc::AppearanceItem::Fill(fill) if matches!(fill.paint, tsipika_doc::color::Paint::Gradient(_)))
                 }).count();
             });
             count
@@ -204,9 +204,9 @@ fn automatic_smooth_shading_previews_saves_and_respects_cancel_and_one_step_undo
             dialogs::confirm(&mut h.app).unwrap();
             let state = h.app.session.doc().unwrap();
             let node = state.doc.node(state.selection.objects[0]).unwrap();
-            let loaded = vectorcraft_format::load(&vectorcraft_format::save(&state.doc, false)).unwrap();
+            let loaded = tsipika_format::load(&tsipika_format::save(&state.doc, false)).unwrap();
             assert!(!node.appearance.effects[0].params.as_object().unwrap().contains_key("smoothShading"));
-            assert_eq!(vectorcraft_effects::revolve_art(loaded.node(node.id).unwrap()), vectorcraft_effects::revolve_art(node));
+            assert_eq!(tsipika_effects::revolve_art(loaded.node(node.id).unwrap()), tsipika_effects::revolve_art(node));
             h.app.run("edit.undo", json!({})).unwrap();
         } else {
             dialogs::cancel(&mut h.app);
@@ -231,7 +231,7 @@ fn advanced_visibility_option_is_saved_resettable_and_leaves_preview_geometry_co
         },
     ]);
     h.settle();
-    let before = vectorcraft_effects::revolve_art({
+    let before = tsipika_effects::revolve_art({
         let state = h.app.session.doc().unwrap();
         state.doc.node(state.selection.objects[0]).unwrap()
     })
@@ -242,7 +242,7 @@ fn advanced_visibility_option_is_saved_resettable_and_leaves_preview_geometry_co
     let state = h.app.session.doc().unwrap();
     let node = state.doc.node(state.selection.objects[0]).unwrap();
     assert_eq!(node.appearance.effects[0].params["expandVisibleOnly"], json!(false));
-    assert_eq!(vectorcraft_effects::revolve_art(node), Some(before));
+    assert_eq!(tsipika_effects::revolve_art(node), Some(before));
     h.click(h.response(("revolve-reset", "expandVisibleOnly")).center());
     assert!(h.app.ui.dialog.as_ref().unwrap().bool("expandVisibleOnly"));
     h.click(h.rect("Keep visible surfaces only when expanding").center());
@@ -250,7 +250,7 @@ fn advanced_visibility_option_is_saved_resettable_and_leaves_preview_geometry_co
     assert!(h.app.ui.dialog.as_ref().unwrap().bool("expandVisibleOnly"));
     dialogs::confirm(&mut h.app).unwrap();
     let state = h.app.session.doc().unwrap();
-    let loaded = vectorcraft_format::load(&vectorcraft_format::save(&state.doc, false)).unwrap();
+    let loaded = tsipika_format::load(&tsipika_format::save(&state.doc, false)).unwrap();
     assert_eq!(loaded.node(state.selection.objects[0]).unwrap().appearance.effects[0].params["expandVisibleOnly"], json!(true));
 }
 
@@ -258,7 +258,7 @@ fn advanced_visibility_option_is_saved_resettable_and_leaves_preview_geometry_co
 /// Position presets and the artboard gizmo turning about the centre of the art.
 #[test]
 fn the_other_3d_effects_show_their_options_and_position_presets() {
-    use vectorcraft_effects::{EXTRUDE, INFLATE, ROTATE, ROTATION_PRESETS};
+    use tsipika_effects::{EXTRUDE, INFLATE, ROTATE, ROTATION_PRESETS};
     let square = "M100 100 L200 100 L200 200 L100 200 Z";
     for (effect, own) in [
         (EXTRUDE, &["Depth", "Twist", "Taper", "Cap", "Bevel", "Bevel Shape", "Space", "Bevel Inside", "Bevel both sides"][..]),
@@ -297,7 +297,7 @@ fn the_other_3d_effects_show_their_options_and_position_presets() {
 
 #[test]
 fn extrude_bevel_options_enable_with_a_bevel_shape() {
-    let mut h = Harness::with("M100 100 L200 100 L200 200 L100 200 Z", vectorcraft_effects::EXTRUDE, vec2(1400.0, 1000.0));
+    let mut h = Harness::with("M100 100 L200 100 L200 200 L100 200 Z", tsipika_effects::EXTRUDE, vec2(1400.0, 1000.0));
     h.settle();
     let width = h.response(("revolve-reset", "bevelWidth"));
     assert!(!h.ctx.read_response(Id::new(("revolve-reset", "bevelWidth"))).unwrap().enabled(), "no bevel: its sizes are off");
@@ -318,7 +318,7 @@ fn cap_checkbox_previews_resets_and_respects_cancel_and_one_step_undo() {
         h.settle();
         let art = |h: &Harness| {
             let state = h.app.session.doc().unwrap();
-            vectorcraft_effects::revolve_art(state.doc.node(state.selection.objects[0]).unwrap()).unwrap()
+            tsipika_effects::revolve_art(state.doc.node(state.selection.objects[0]).unwrap()).unwrap()
         };
         assert!(h.app.ui.dialog.as_ref().unwrap().bool("cap"), "Cap starts on");
         let capped = art(&h);
@@ -336,7 +336,7 @@ fn cap_checkbox_previews_resets_and_respects_cancel_and_one_step_undo() {
             dialogs::confirm(&mut h.app).unwrap();
             let state = h.app.session.doc().unwrap();
             assert_eq!(state.doc.node(state.selection.objects[0]).unwrap().appearance.effects[0].params["cap"], json!(false));
-            let loaded = vectorcraft_format::load(&vectorcraft_format::save(&state.doc, false)).unwrap();
+            let loaded = tsipika_format::load(&tsipika_format::save(&state.doc, false)).unwrap();
             assert_eq!(loaded.node(state.selection.objects[0]).unwrap().appearance.effects[0].params["cap"], json!(false));
             h.app.run("edit.undo", json!({})).unwrap();
         } else {
@@ -370,7 +370,7 @@ fn light_picker_previews_and_reset_dot_and_cancel_restore_white() {
 
 #[test]
 fn every_3d_dialog_has_color_and_reset_all_restores_white() {
-    for id in [REVOLVE, EXTRUDE, INFLATE, vectorcraft_effects::ROTATE] {
+    for id in [REVOLVE, EXTRUDE, INFLATE, tsipika_effects::ROTATE] {
         let mut h = Harness::with("M100 100L200 100L200 200L100 200Z", id, vec2(1280.0, 900.0));
         h.settle();
         h.click(h.rect("Lighting").center());
@@ -389,7 +389,7 @@ fn every_3d_dialog_has_color_and_reset_all_restores_white() {
 
 #[test]
 fn light_list_add_select_edit_delete_and_reset_keep_each_light_independent() {
-    for effect in [REVOLVE, EXTRUDE, INFLATE, vectorcraft_effects::ROTATE] {
+    for effect in [REVOLVE, EXTRUDE, INFLATE, tsipika_effects::ROTATE] {
         let mut h = Harness::with("M100 100L200 100L200 200L100 200Z", effect, vec2(1280.0, 900.0));
         let before = h.app.session.doc().unwrap().doc.clone();
         h.settle();

@@ -143,14 +143,14 @@ fn only_pq_has_static_metadata_and_it_is_what_h264_writes() {
     assert!(ColorSignal::default().static_metadata().is_none());
     let (md, cll) = ColorSignal::PQ.static_metadata().unwrap();
     assert_eq!(cll, (0, 0));
-    assert_eq!(md, filmcraft_isobmff::MasteringDisplay::bt2020(1000.0, 0.0001));
+    assert_eq!(md, hetsika_isobmff::MasteringDisplay::bt2020(1000.0, 0.0001));
     assert_eq!(md.to_bytes().len(), 24);
     // the box on the sample entry is the same value
-    let mut e = filmcraft_isobmff::SampleEntry::hevc(Default::default(), 64, 64);
+    let mut e = hetsika_isobmff::SampleEntry::hevc(Default::default(), 64, 64);
     ColorSignal::PQ.apply_to(&mut e, false);
     let v = e.video.as_ref().unwrap();
     assert_eq!((v.mastering_display, v.content_light), (Some(md), Some((0, 0))));
-    let mut e = filmcraft_isobmff::SampleEntry::hevc(Default::default(), 64, 64);
+    let mut e = hetsika_isobmff::SampleEntry::hevc(Default::default(), 64, 64);
     ColorSignal::HLG.apply_to(&mut e, false);
     let v = e.video.as_ref().unwrap();
     assert!(v.color.is_some() && v.mastering_display.is_none() && v.content_light.is_none());
@@ -203,13 +203,13 @@ fn the_software_h264_sei_is_the_static_metadata_laid_out_as_messages() {
 /// #2142: SDR gets its `colr` box as well (nclc in MOV, nclx in MP4), and no HDR metadata.
 #[test]
 fn sdr_gets_a_colr_box_and_no_hdr_metadata() {
-    let mut e = filmcraft_isobmff::SampleEntry::prores(filmcraft_isobmff::FourCc(*b"apch"), 64, 64);
+    let mut e = hetsika_isobmff::SampleEntry::prores(hetsika_isobmff::FourCc(*b"apch"), 64, 64);
     ColorSignal::default().apply_to(&mut e, true);
     let v = e.video.as_ref().unwrap();
-    assert_eq!(v.color, Some(filmcraft_isobmff::ColorInfo::Nclc { primaries: 1, transfer: 1, matrix: 1 }));
+    assert_eq!(v.color, Some(hetsika_isobmff::ColorInfo::Nclc { primaries: 1, transfer: 1, matrix: 1 }));
     assert!(v.mastering_display.is_none() && v.content_light.is_none());
-    let mut e = filmcraft_isobmff::SampleEntry::hevc(Default::default(), 64, 64);
+    let mut e = hetsika_isobmff::SampleEntry::hevc(Default::default(), 64, 64);
     ColorSignal::default().apply_to(&mut e, false);
     let v = e.video.as_ref().unwrap();
-    assert_eq!(v.color, Some(filmcraft_isobmff::ColorInfo::Nclx { primaries: 1, transfer: 1, matrix: 1, full_range: false }));
+    assert_eq!(v.color, Some(hetsika_isobmff::ColorInfo::Nclx { primaries: 1, transfer: 1, matrix: 1, full_range: false }));
 }

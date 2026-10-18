@@ -1,6 +1,6 @@
 use egui::{Pos2, RawInput, Rect, vec2};
-use figcraft_engine::Session;
-use figcraft_ui_egui::{FigApp, NoServices, control};
+use endrika_engine::Session;
+use endrika_ui_egui::{FigApp, NoServices, control};
 use serde_json::json;
 
 fn frame(ctx: &egui::Context, app: &mut FigApp, time: f64) {

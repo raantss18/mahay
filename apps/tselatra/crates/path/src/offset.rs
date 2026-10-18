@@ -2,7 +2,7 @@
 //! offsetting (kurbo's stroker offsets curves analytically and refits them) and robust overlap
 //! removal (the boolean sweep).
 //!
-//! Adapted from VectorCraft's `vectorcraft-pathops` (`crates/pathops/src/offset.rs`; our own code,
+//! Adapted from Tsipika's `tsipika-pathops` (`crates/pathops/src/offset.rs`; our own code,
 //! MIT OR Apache-2.0).
 
 use kurbo::{BezPath, PathEl, Stroke, StrokeOpts};

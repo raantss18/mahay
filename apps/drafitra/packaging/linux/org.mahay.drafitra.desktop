@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Drafitra
+GenericName=Computer-Aided Design
+Comment=Draft, dimension and plot 2D drawings; open DXF and DWG files
+Exec=drafitra %F
+TryExec=drafitra
+Icon=org.mahay.drafitra
+Terminal=false
+StartupNotify=true
+StartupWMClass=org.mahay.drafitra
+Categories=Graphics;Engineering;VectorGraphics;
+MimeType=image/vnd.dxf;image/vnd.dwg;application/x-dxf;application/acad;
+Keywords=cad;drafting;dxf;dwg;drawing;engineering;architecture;mechanical;

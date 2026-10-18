@@ -4,7 +4,7 @@
 use crate::Session;
 use crate::components::tests::{button, copy_of, ex, fill, healthy, idv, kids, node};
 use crate::components::*;
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::json;
 
 /// A 24×24 icon component at (`x`, 300) with one 20×20 rectangle named `layer`.

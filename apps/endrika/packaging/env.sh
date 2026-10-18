@@ -3,15 +3,15 @@
 #
 # Exports:
 #   ROOT                  workspace root
-#   VERSION               [workspace.package] version from Cargo.toml (override: FIGCRAFT_VERSION)
+#   VERSION               [workspace.package] version from Cargo.toml (override: ENDRIKA_VERSION)
 #   DIST                  output directory for release artifacts (default: $ROOT/dist/release)
-#   FIGCRAFT_BUILD_SHA    git commit baked into the binaries (apps/figcraft/build.rs)
-#   FIGCRAFT_BUILD_DATE   UTC build date, YYYY-MM-DD
+#   ENDRIKA_BUILD_SHA    git commit baked into the binaries (apps/endrika/build.rs)
+#   ENDRIKA_BUILD_DATE   UTC build date, YYYY-MM-DD
 #   CARGO_TARGET_DIR      cargo's target dir (default: $ROOT/target)
 # Sets (not exported):
-#   BINS                  the binaries to build and ship: figcraft, plus figcraft-cli when the
-#                         workspace has apps/figcraft-cli
-#   HAS_CLI               1 when figcraft-cli is part of the build, else 0
+#   BINS                  the binaries to build and ship: endrika, plus endrika-cli when the
+#                         workspace has apps/endrika-cli
+#   HAS_CLI               1 when endrika-cli is part of the build, else 0
 #   CARGO_PKGS            `-p <bin>` arguments for cargo build
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -26,7 +26,7 @@ workspace_version() {
   ' "$ROOT/Cargo.toml"
 }
 
-VERSION="${FIGCRAFT_VERSION:-$(workspace_version)}"
+VERSION="${ENDRIKA_VERSION:-$(workspace_version)}"
 if [ -z "$VERSION" ]; then
   echo "error: could not read [workspace.package] version from $ROOT/Cargo.toml" >&2
   exit 1
@@ -37,18 +37,18 @@ DIST="${DIST:-$ROOT/dist/release}"
 mkdir -p "$DIST"
 export DIST
 
-if [ -z "${FIGCRAFT_BUILD_SHA:-}" ]; then
-  FIGCRAFT_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+if [ -z "${ENDRIKA_BUILD_SHA:-}" ]; then
+  ENDRIKA_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
 fi
-export FIGCRAFT_BUILD_SHA
-export FIGCRAFT_BUILD_DATE="${FIGCRAFT_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
+export ENDRIKA_BUILD_SHA
+export ENDRIKA_BUILD_DATE="${ENDRIKA_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 
-# The headless CLI ships next to the app once apps/figcraft-cli exists.
-BINS=(figcraft)
+# The headless CLI ships next to the app once apps/endrika-cli exists.
+BINS=(endrika)
 HAS_CLI=0
-if [ -f "$ROOT/apps/figcraft-cli/Cargo.toml" ]; then
-  BINS+=(figcraft-cli)
+if [ -f "$ROOT/apps/endrika-cli/Cargo.toml" ]; then
+  BINS+=(endrika-cli)
   HAS_CLI=1
 fi
 CARGO_PKGS=()
@@ -58,7 +58,7 @@ unset _bin
 # The binary used for a `--version` smoke test: the CLI when shipped, else the app (which answers
 # --version before opening a window).
 smoke_bin() {
-  if [ "$HAS_CLI" = 1 ]; then echo figcraft-cli; else echo figcraft; fi
+  if [ "$HAS_CLI" = 1 ]; then echo endrika-cli; else echo endrika; fi
 }
 
 # Emit a GitHub Actions warning (plain stderr outside Actions).
@@ -86,12 +86,12 @@ copy_docs() {
   copy_font_licences "$dest"
 }
 
-# Builds made with craft-fonts (CRAFT_FONTS_DIR, all official releases) embed its fonts, which
-# are OFL-1.1: ship each font's licence as OFL-<family-dir>.txt. No-op without CRAFT_FONTS_DIR.
+# Builds made with mahay-fonts (MAHAY_FONTS_DIR, all official releases) embed its fonts, which
+# are OFL-1.1: ship each font's licence as OFL-<family-dir>.txt. No-op without MAHAY_FONTS_DIR.
 copy_font_licences() {
   local dest="$1" lic fam
-  [ -n "${CRAFT_FONTS_DIR:-}" ] || return 0
-  for lic in "$CRAFT_FONTS_DIR"/fonts/*/OFL.txt; do
+  [ -n "${MAHAY_FONTS_DIR:-}" ] || return 0
+  for lic in "$MAHAY_FONTS_DIR"/fonts/*/OFL.txt; do
     [ -f "$lic" ] || continue
     fam="$(basename "$(dirname "$lic")")"
     cp "$lic" "$dest/OFL-$fam.txt"

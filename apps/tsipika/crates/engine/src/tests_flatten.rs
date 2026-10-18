@@ -2,10 +2,10 @@
 //! complex regions, the options and presets, undo and the look of the result.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::{AppearanceItem, Node, NodeKind};
-use vectorcraft_geom::{BezPath, Point, Rect, Shape};
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::{AppearanceItem, Node, NodeKind};
+use tsipika_geom::{BezPath, Point, Rect, Shape};
+use tsipika_render::{Rendered, Renderer};
 
 use super::tests_menucmds::{place_undecodable_png, warns_undecoded};
 use super::*;
@@ -160,7 +160,7 @@ fn every_blend_mode_flattens_to_its_pixels() {
             // The overlap is the reference formula's colour.
             let [r, g, b] = [0xcc, 0x66, 0x33].map(|v| v as f32 / 255.0);
             let src = [0x4d, 0x99, 0xe6].map(|v| v as f32 / 255.0);
-            let want = vectorcraft_color::blend::composite(mode, [r, g, b, 1.0], [src[0], src[1], src[2], *opacity as f32 / 100.0]);
+            let want = tsipika_color::blend::composite(mode, [r, g, b, 1.0], [src[0], src[1], src[2], *opacity as f32 / 100.0]);
             let overlap = regions(&s, ids[0]).into_iter().find(|r| outline(r).winding(Point::new(85.0, 85.0)) != 0).unwrap();
             let got = shown(&overlap);
             assert!((0..3).all(|i| (want[i] * 255.0 - got[i] as f32).abs() <= 0.5 + 1e-3), "{mode:?} at {opacity}%: {got:?} vs {want:?}");
@@ -404,7 +404,7 @@ fn outlined_type_keeps_its_gradient_on_the_outlines_its_transform_effect_moves()
         flatten(&mut s, json!({"ids": [t], "textToOutlines": true}));
         diffs.push(changed(&picture(&s), &reference));
         // The outlines draw the same after the document is saved and opened again.
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
         diffs.push(changed(&Renderer::new().render_region(&back, Rect::new(0.0, 0.0, 200.0, 200.0), 1.0, true), &reference));
     }
     assert!(diffs.iter().all(|&d| d < 0.0002), "shares of the pixels that changed: {diffs:?}");

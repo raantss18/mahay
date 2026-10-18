@@ -19,8 +19,8 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind, PerspectiveAttachment};
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use tsipika_doc::{Document, Node, NodeId, NodeKind, PerspectiveAttachment};
+use tsipika_geom::{Affine, Point, Rect, Vec2};
 
 use crate::bbox::{Handle as BoxHandle, scale_for_drag};
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
@@ -77,7 +77,7 @@ impl Plane {
 /// Plane Switching widget: (plane, face quad) list and the "no plane" circle (centre, radius).
 pub type WidgetGeom = (Vec<(Plane, [Point; 4])>, (Point, f64));
 
-pub use vectorcraft_geom::Homography;
+pub use tsipika_geom::Homography;
 
 fn two() -> u8 {
     2
@@ -729,11 +729,11 @@ fn mapped_bounds(n: &Node, hi: &Homography) -> Option<Rect> {
                     }
                 }
             }
-            acc = vectorcraft_geom::union_opt(acc, path.bounds());
+            acc = tsipika_geom::union_opt(acc, path.bounds());
         }
         NodeKind::Layer { .. } | NodeKind::Group { .. } | NodeKind::Compound { .. } | NodeKind::Blend { .. } => {}
         _ => match c.geometric_bounds().map(|b| hi.map_rect_bbox(b)) {
-            Some(Some(b)) => acc = vectorcraft_geom::union_opt(acc, Some(b)),
+            Some(Some(b)) => acc = tsipika_geom::union_opt(acc, Some(b)),
             Some(None) => ok = false,
             None => {}
         },
@@ -1147,7 +1147,7 @@ impl Tool for PerspectiveSelectionTool {
                     self.drag = SelDrag::Scale { ids: cx.selection.objects.clone(), plane, depth, rect, handle };
                     return vec![Action::Begin("Scale in Perspective".into())];
                 }
-                let Some(hit) = vectorcraft_doc::hit::hit_test(cx.doc, p, cx.hit_options()) else {
+                let Some(hit) = tsipika_doc::hit::hit_test(cx.doc, p, cx.hit_options()) else {
                     return vec![Action::Exec("select.set".into(), json!({"ids": []}))];
                 };
                 let top = hit.top_object(cx.isolation);
@@ -1207,7 +1207,7 @@ impl Tool for PerspectiveSelectionTool {
                     return vec![w.options()];
                 }
                 // Type in perspective: Edit Text, then type.
-                match vectorcraft_doc::hit::hit_test(cx.doc, p, cx.hit_options()).map(|h| h.top_object(cx.isolation)) {
+                match tsipika_doc::hit::hit_test(cx.doc, p, cx.hit_options()).map(|h| h.top_object(cx.isolation)) {
                     Some(id) if cx.doc.node(id).is_some_and(|n| matches!(n.kind, NodeKind::Text(_)) && n.projection().is_some()) => {
                         vec![Action::Exec("perspective.editText".into(), json!({"id": id.0})), Action::SwitchTool("type".into())]
                     }
@@ -1302,7 +1302,7 @@ impl Tool for PerspectiveSelectionTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     fn grid(kind: u8) -> PerspectiveGrid {
         PerspectiveGrid::preset(kind, Rect::new(0.0, 0.0, 800.0, 600.0))

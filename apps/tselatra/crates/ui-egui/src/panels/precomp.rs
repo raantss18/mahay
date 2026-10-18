@@ -3,12 +3,12 @@
 //! (the flow of nested comps, click to open) and the Composition Mini-Flowchart popup (Tab).
 
 use crate::i18n::{tr, tr_args};
-use effectcraft_engine::project::{ItemId, LayerSource, Project};
+use tselatra_engine::project::{ItemId, LayerSource, Project};
 use egui::{Align2, Color32, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 // ---------------------------------------------------------------- flow graph
 
@@ -70,7 +70,7 @@ pub struct PrecomposeDraft {
 }
 
 /// Open the Pre-compose dialog for the selected (or given) layers.
-pub fn open(app: &mut EffectcraftApp, p: &serde_json::Value) -> Result<(), String> {
+pub fn open(app: &mut TselatraApp, p: &serde_json::Value) -> Result<(), String> {
     let s = &app.session;
     let c = s.active_comp().ok_or("no composition is open")?;
     let layers: Vec<u64> = match p.get("layers").and_then(|v| v.as_array()) {
@@ -80,7 +80,7 @@ pub fn open(app: &mut EffectcraftApp, p: &serde_json::Value) -> Result<(), Strin
     if layers.is_empty() {
         return Err("select the layers to pre-compose".into());
     }
-    let first = c.layer(effectcraft_engine::project::LayerId(layers[0]));
+    let first = c.layer(tselatra_engine::project::LayerId(layers[0]));
     let can_leave = layers.len() == 1 && first.is_some_and(|l| l.source.item().is_some());
     let n = s.project.comps().count() + 1;
     let base = if layers.len() == 1 { first.map(|l| format!("{} Comp 1", l.name)) } else { None };
@@ -108,7 +108,7 @@ pub fn draft_params(d: &PrecomposeDraft) -> serde_json::Value {
     })
 }
 
-pub fn dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn dialog(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut d = app.dialog_state.precompose.clone();
     let (mut ok, mut cancel) = (false, false);
     super::dialogs::modal(ctx, "Pre-compose", vec2(520.0, 360.0), t, |ui| {
@@ -175,12 +175,12 @@ pub fn dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
 pub const NAV_H: f32 = 22.0;
 
 /// Whether the active comp has a flow to show (it is nested somewhere or nests others).
-pub fn has_flow(app: &EffectcraftApp) -> bool {
+pub fn has_flow(app: &TselatraApp) -> bool {
     app.session.active_comp_id().is_some_and(|c| !upstream(&app.session.project, c).is_empty() || !downstream(&app.session.project, c).is_empty())
 }
 
 /// The Composition Navigator bar: the upstream chain › active comp › (dim) its precomps.
-pub fn navigator(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn navigator(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let Some(cid) = app.session.active_comp_id() else { return };
     let p = ui.painter().with_clip_rect(rect);
@@ -236,7 +236,7 @@ pub fn navigator(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 }
 
 /// Composition Mini-Flowchart: upstream comps → active → downstream comps; click to open.
-pub fn mini_flowchart(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn mini_flowchart(app: &mut TselatraApp, ctx: &egui::Context) {
     let Some(at) = app.ui.mini_flowchart else { return };
     let Some(cid) = app.session.active_comp_id() else {
         app.ui.mini_flowchart = None;
@@ -255,7 +255,7 @@ pub fn mini_flowchart(app: &mut EffectcraftApp, ctx: &egui::Context) {
             let h = rows * 26.0 + 8.0;
             let (rect, _) = ui.allocate_exact_size(vec2(col_w * 3.0 + 60.0, h), Sense::hover());
             let p = ui.painter().clone();
-            let node = |ui: &mut egui::Ui, app: &mut EffectcraftApp, r: Rect, id: ItemId, active: bool| {
+            let node = |ui: &mut egui::Ui, app: &mut TselatraApp, r: Rect, id: ItemId, active: bool| {
                 let resp = ui.interact(r, egui::Id::new(("mfc", id.0)), Sense::click());
                 p.rect_filled(
                     r,
@@ -319,7 +319,7 @@ pub fn mini_flowchart(app: &mut EffectcraftApp, ctx: &egui::Context) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_engine::Session;
+    use tselatra_engine::Session;
 
     #[test]
     fn flow_chain_and_precompose_dialog_params() {
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(chain(&s.project, inner, &s.state.open_comps), vec![main, mid, inner]);
         assert_eq!(chain(&s.project, main, &[]), vec![main]);
 
-        let mut app = EffectcraftApp::new(s);
+        let mut app = TselatraApp::new(s);
         app.session.open_comp(main);
         let top = app.session.active_comp().unwrap().layers[0].id.0;
         app.session.execute("layer.select", json!({"layers": [top]})).unwrap();

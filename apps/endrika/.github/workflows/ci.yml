@@ -1,6 +1,6 @@
 # CI for pull requests and main: format, clippy, tests, dependency layering, asset attribution and
 # the wasm32 check (the same gates as `cargo xtask ci`). Linux only: macOS is built and tested only
-# by release.yml (the org's macOS runners are kept for releases; craftrules release/playbook.md),
+# by release.yml (the org's macOS runners are kept for releases; mahay-rules release/playbook.md),
 # and Windows/FreeBSD packaging have their own workflows.
 name: CI
 
@@ -58,7 +58,7 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
-      # Without craft-fonts (the optional CRAFT_FONTS_DIR input, which .cargo/config.toml points at
+      # Without mahay-fonts (the optional MAHAY_FONTS_DIR input, which .cargo/config.toml points at
       # a sibling checkout that CI doesn't have): everything must build and pass without it.
       - name: Test
         run: cargo test --workspace --locked
@@ -83,6 +83,6 @@ jobs:
           key: wasm32
           save-if: ${{ github.ref == 'refs/heads/main' }}
           cache-on-failure: true
-      # The engine, the UI crate and apps/figcraft-web must keep compiling for the browser.
+      # The engine, the UI crate and apps/endrika-web must keep compiling for the browser.
       - name: Check wasm-safe crates
         run: cargo run --locked -q -p xtask -- wasm

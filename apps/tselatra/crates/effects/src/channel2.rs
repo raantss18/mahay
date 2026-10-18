@@ -2,9 +2,9 @@
 //! Arithmetic) and CC Composite. Second layers come from layer parameters through the effect
 //! host; with no layer chosen the effect uses the layer itself, as After Effects does.
 
-use effectcraft_color::{BlendMode, blend_pixel, hsl_to_rgb, luminance, rgb_to_hsl};
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
+use tselatra_color::{BlendMode, blend_pixel, hsl_to_rgb, luminance, rgb_to_hsl};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
 use rayon::prelude::*;
 
 use crate::util::{layer_or_self, lerp4, premul, unpremul};
@@ -349,7 +349,7 @@ pub fn specs() -> Vec<EffectSpec> {
 pub(crate) mod tests {
     use super::*;
     use crate::{EffectEnv, EffectHost, LayerPixels, run_fx};
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
 
     /// A host that knows one other layer (id 7).
     pub(crate) struct FakeHost(pub Image);

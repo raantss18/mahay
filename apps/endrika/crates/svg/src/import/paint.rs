@@ -1,12 +1,12 @@
-//! SVG paints → FigCraft paints: colours; gradients as editable gradients with their handles
+//! SVG paints → Endrika paints: colours; gradients as editable gradients with their handles
 //! placed exactly (any `gradientTransform`, skewed or not), `reflect` and `repeat` spreads baked
 //! into the stops across the layer's box and a focal point as the centre; patterns as image fills.
 //! A pattern of one image becomes that image (fill, fit or cropped when it shows once, tiled when
 //! it repeats); any other pattern is drawn into a tile image first.
 
-use figcraft_color::{Color, ColorStop, Gradient, GradientKind, ImagePaint, ImageScaleMode, Paint, PaintKind};
-use figcraft_doc::{Document, NodeKind};
-use figcraft_geom::{Affine, Point, Rect, Vec2};
+use endrika_color::{Color, ColorStop, Gradient, GradientKind, ImagePaint, ImageScaleMode, Paint, PaintKind};
+use endrika_doc::{Document, NodeKind};
+use endrika_geom::{Affine, Point, Rect, Vec2};
 
 use super::shape::length_scale;
 use super::{Ctx, add_image, children, finite, xf};
@@ -132,15 +132,15 @@ fn pattern(cx: &mut Ctx, pat: &usvg::Pattern, t: Target) -> Option<Paint> {
         };
         let s = img.size();
         let (iw, ih) = (f64::from(s.width()), f64::from(s.height()));
-        let b = figcraft_geom::transform_rect_bbox(m, Rect::new(0.0, 0.0, iw, ih));
+        let b = endrika_geom::transform_rect_bbox(m, Rect::new(0.0, 0.0, iw, ih));
         (tile_rect.contains(b.origin()) && tile_rect.contains(Point::new(b.x1, b.y1))).then(|| (add_image(cx.doc, bytes, iw, ih), iw, ih, m))
     });
     let (hash, iw, ih, content) = match lone {
         Some(l) => l,
         None => render_tile(cx, pat, tile)?,
     };
-    let image = figcraft_geom::transform_rect_bbox(content, Rect::new(0.0, 0.0, iw, ih));
-    let node = figcraft_geom::transform_rect_bbox(tile.inverse(), Rect::new(0.0, 0.0, t.size.0, t.size.1));
+    let image = endrika_geom::transform_rect_bbox(content, Rect::new(0.0, 0.0, iw, ih));
+    let node = endrika_geom::transform_rect_bbox(tile.inverse(), Rect::new(0.0, 0.0, t.size.0, t.size.1));
     // The copies of the image (one per tile) that show in the layer's box.
     let copies = |lo: f64, hi: f64, ilo: f64, ihi: f64, period: f64| -> (f64, f64) {
         let eps = 1e-6;
@@ -156,7 +156,7 @@ fn pattern(cx: &mut Ctx, pat: &usvg::Pattern, t: Target) -> Option<Paint> {
         let m = tile * Affine::translate((kx.0 * rw, ky.0 * rh)) * content;
         let (w, h) = t.size;
         let same = |mode: ImageScaleMode| {
-            let ts = figcraft_render::paint::image_transform(&ImagePaint { scale_mode: mode, ..ip.clone() }, iw, ih, w, h);
+            let ts = endrika_render::paint::image_transform(&ImagePaint { scale_mode: mode, ..ip.clone() }, iw, ih, w, h);
             let k = xf(ts).as_coeffs();
             m.as_coeffs().iter().zip(k).all(|(a, b)| (a - b).abs() <= 1e-3 * (1.0 + a.abs()))
         };
@@ -255,10 +255,10 @@ fn render_tile(cx: &mut Ctx, pat: &usvg::Pattern, tile: Affine) -> Option<(Strin
         std::mem::take(&mut scx.notes)
     };
     cx.notes.extend(notes);
-    let view = figcraft_render::View { origin: (0.0, 0.0), scale: k, width: pw as u32, height: ph as u32 };
-    let mut pix = figcraft_render::Pixmap::new(pw as u32, ph as u32)?;
-    figcraft_render::render_nodes_into(&sub, &[frame], &view, &mut pix);
-    let png = figcraft_render::encode_png(&pix).ok()?;
+    let view = endrika_render::View { origin: (0.0, 0.0), scale: k, width: pw as u32, height: ph as u32 };
+    let mut pix = endrika_render::Pixmap::new(pw as u32, ph as u32)?;
+    endrika_render::render_nodes_into(&sub, &[frame], &view, &mut pix);
+    let png = endrika_render::encode_png(&pix).ok()?;
     let hash = add_image(cx.doc, std::sync::Arc::new(png), pw, ph);
     Some((hash, pw, ph, Affine::scale_non_uniform(rw / pw, rh / ph)))
 }

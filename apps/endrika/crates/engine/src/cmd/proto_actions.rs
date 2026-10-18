@@ -10,8 +10,8 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_doc::proto::*;
-use figcraft_doc::*;
+use endrika_doc::proto::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::CommandSpec;
@@ -140,7 +140,7 @@ pub fn placeholder(kind: VariableType) -> VariableValue {
         VariableType::Number => VariableValue::Number(0.0),
         VariableType::String => VariableValue::String(String::new()),
         VariableType::Boolean => VariableValue::Boolean(true),
-        VariableType::Color => VariableValue::Color(figcraft_color::Color::BLACK),
+        VariableType::Color => VariableValue::Color(endrika_color::Color::BLACK),
     }
 }
 

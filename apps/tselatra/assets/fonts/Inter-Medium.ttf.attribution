@@ -4,5 +4,5 @@ author:       The Inter Project Authors (Rasmus Andersson et al.)
 source:       https://github.com/rsms/inter
 license:      OFL-1.1
 license-file: assets/fonts/OFL-Inter.txt
-added:        2026-10-01 by Claude (agent) for Brandon Thomas (copied from FilmCraft)
+added:        2026-10-01 by Claude (agent) for Brandon Thomas (copied from Hetsika)
 notes:        Unmodified font file, embedded via include_bytes! in the text engine (crates/text/src/fonts.rs), which also supplies it to the UI (crates/ui-egui/src/theme.rs).

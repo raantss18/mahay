@@ -1,19 +1,19 @@
 [package]
-name = "lightcraft-raw"
+name = "hazavana-raw"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LightCraft RAW decoding, demosaicing and DNG colour model (L1)"
+description = "Hazavana RAW decoding, demosaicing and DNG colour model (L1)"
 
 [lints]
 workspace = true
 
 [dependencies]
-lightcraft-tiff = { workspace = true }
-lightcraft-meta = { workspace = true }
-lightcraft-raster = { workspace = true }
-lightcraft-color = { workspace = true }
-lightcraft-geom = { workspace = true }
+hazavana-tiff = { workspace = true }
+hazavana-meta = { workspace = true }
+hazavana-raster = { workspace = true }
+hazavana-color = { workspace = true }
+hazavana-geom = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 rayon = { workspace = true }
@@ -30,7 +30,7 @@ jxl = ["dep:jxl-oxide"]
 
 [dev-dependencies]
 # tests record why they skip (`cargo xtask ci` lists the skips)
-lightcraft-testkit = { workspace = true }
+hazavana-testkit = { workspace = true }
 proptest = { workspace = true }
 zune-jpegxl = { workspace = true }
 # Pinned CC0 corpus identities; not a product dependency.

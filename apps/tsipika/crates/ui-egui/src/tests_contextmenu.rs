@@ -3,26 +3,26 @@
 
 use egui::{Event, PointerButton, Pos2, Rect, pos2, vec2};
 use serde_json::json;
-use vectorcraft_doc::{NodeId, NodeKind};
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use tsipika_doc::{NodeId, NodeKind};
+use tsipika_engine::Session;
+use tsipika_geom::Point;
 
 use crate::canvas::Xf;
 use crate::menus::{self, Item};
-use crate::{VectorcraftApp, canvas};
+use crate::{TsipikaApp, canvas};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app
 }
 
-fn rect(app: &mut VectorcraftApp, x: f64, y: f64) -> NodeId {
+fn rect(app: &mut TsipikaApp, x: f64, y: f64) -> NodeId {
     NodeId(app.run("shape.rectangle", json!({"x": x, "y": y, "width": 100, "height": 100})).unwrap()["id"].as_u64().unwrap())
 }
 
 /// One headless frame of the canvas on an 800 × 600 window → the text painted, with its rect.
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
     let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), events, ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| canvas::show(app, ui));
     out.textures_delta.clear();
@@ -43,7 +43,7 @@ fn press(pos: Pos2, button: PointerButton, pressed: bool) -> Event {
 }
 
 /// Click `button` at `pos` (move, press, release, then a frame to show the result).
-fn click(app: &mut VectorcraftApp, ctx: &egui::Context, pos: Pos2, button: PointerButton) -> Vec<(String, Rect)> {
+fn click(app: &mut TsipikaApp, ctx: &egui::Context, pos: Pos2, button: PointerButton) -> Vec<(String, Rect)> {
     frame(app, ctx, vec![Event::PointerMoved(pos)]);
     frame(app, ctx, vec![press(pos, button, true)]);
     frame(app, ctx, vec![press(pos, button, false)]);
@@ -51,7 +51,7 @@ fn click(app: &mut VectorcraftApp, ctx: &egui::Context, pos: Pos2, button: Point
 }
 
 /// Where document point `p` is on screen (after a first frame laid the canvas out).
-fn screen(app: &VectorcraftApp, x: f64, y: f64) -> Pos2 {
+fn screen(app: &TsipikaApp, x: f64, y: f64) -> Pos2 {
     Xf::new(app.canvas_rect.unwrap(), app.view().unwrap()).to_screen(Point::new(x, y))
 }
 
@@ -146,7 +146,7 @@ fn right_click_on_a_locked_object_offers_unlock_by_its_name() {
 /// swaps them — the same effect as Preferences ▸ Units ▸ General (`document.setUnits`).
 #[test]
 fn right_clicking_a_ruler_swaps_the_document_units() {
-    use vectorcraft_doc::Unit;
+    use tsipika_doc::Unit;
     let mut app = app();
     app.ui.view.rulers = true;
     let ctx = egui::Context::default();

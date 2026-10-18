@@ -1,21 +1,21 @@
 [package]
-name = "lightcraft-gpu"
+name = "hazavana-gpu"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LightCraft GPU develop pipeline: wgpu compute (WGSL) twin of the CPU pipeline, which stays the reference (L3)"
+description = "Hazavana GPU develop pipeline: wgpu compute (WGSL) twin of the CPU pipeline, which stays the reference (L3)"
 
 [lints]
 workspace = true
 
 [dependencies]
-lightcraft-denoise = { workspace = true, optional = true }
-lightcraft-geom = { workspace = true }
-lightcraft-color = { workspace = true }
-lightcraft-raster = { workspace = true }
-lightcraft-develop = { workspace = true }
-lightcraft-faces = { workspace = true }
-lightcraft-pipeline = { workspace = true }
+hazavana-denoise = { workspace = true, optional = true }
+hazavana-geom = { workspace = true }
+hazavana-color = { workspace = true }
+hazavana-raster = { workspace = true }
+hazavana-develop = { workspace = true }
+hazavana-faces = { workspace = true }
+hazavana-pipeline = { workspace = true }
 log = { workspace = true }
 
 # Native only: Metal / Vulkan / DX12 through wgpu (pure Rust; the drivers are the system's).
@@ -27,10 +27,10 @@ bytemuck = { workspace = true }
 
 [features]
 default = []
-denoise = ["dep:lightcraft-denoise", "lightcraft-denoise/runtime"]
+denoise = ["dep:hazavana-denoise", "hazavana-denoise/runtime"]
 
 [dev-dependencies]
 # tests record why they skip (`cargo xtask ci` lists the skips)
-lightcraft-testkit = { workspace = true }
-lightcraft-scenes = { workspace = true }
-lightcraft-raw = { workspace = true }
+hazavana-testkit = { workspace = true }
+hazavana-scenes = { workspace = true }
+hazavana-raw = { workspace = true }

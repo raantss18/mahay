@@ -1,5 +1,5 @@
 //! Third-party VST3 plugins: discovery (`engine.vst3_plugins`). Hosting itself lives in
-//! `soundcraft-vst3-host`; id lookup for the mixer commands is shared with CLAP in
+//! `feo-vst3-host`; id lookup for the mixer commands is shared with CLAP in
 //! `cmd::clap::plugin_info`.
 
 use super::*;
@@ -16,9 +16,9 @@ pub fn specs() -> Vec<CommandSpec> {
         always,
         |_, p| {
             let list = if p.get("rescan").and_then(Value::as_bool).unwrap_or(false) {
-                soundcraft_vst3_host::rescan()
+                feo_vst3_host::rescan()
             } else {
-                soundcraft_vst3_host::scan()
+                feo_vst3_host::scan()
             };
             Ok(json!(list))
         }

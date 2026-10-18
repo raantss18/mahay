@@ -1,5 +1,5 @@
 [package]
-name = "filmcraft-gpu"
+name = "hetsika-gpu"
 description = "wgpu compositor: YUV/RGB layer sampling, linear-light premultiplied compositing in WGSL"
 version.workspace = true
 edition.workspace = true
@@ -10,12 +10,12 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-filmcraft-color = { workspace = true }
-filmcraft-frame = { workspace = true }
-filmcraft-geom = { workspace = true }
-filmcraft-project = { workspace = true }
-filmcraft-render = { workspace = true }
-filmcraft-time = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-frame = { workspace = true }
+hetsika-geom = { workspace = true }
+hetsika-project = { workspace = true }
+hetsika-render = { workspace = true }
+hetsika-time = { workspace = true }
 wgpu = { version = "30", default-features = false, features = ["wgsl"] }
 log = { workspace = true }
 pollster = "0.4"
@@ -23,8 +23,8 @@ rayon = { workspace = true }
 
 [dev-dependencies]
 pollster = "0.4"
-filmcraft-export = { workspace = true }
+hetsika-export = { workspace = true }
 image = { version = "0.25", default-features = false, features = ["png"] }
 wgpu = { version = "30", features = ["wgsl", "metal", "vulkan", "dx12", "gles"] }
-filmcraft-media = { workspace = true }
-filmcraft-time = { workspace = true }
+hetsika-media = { workspace = true }
+hetsika-time = { workspace = true }

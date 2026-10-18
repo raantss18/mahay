@@ -4,10 +4,10 @@
 //! Time Remap is a `timeRemap` property at the top of the layer's tree whose value is the
 //! source time (seconds) to show; its keys live in layer time like every other property.
 
-use effectcraft_keyframe::{Keyframe, Value as KV};
-use effectcraft_project::build::Ids;
-use effectcraft_project::{Layer, LayerId, LayerSource, Node, ParamUi, Property};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, Value as KV};
+use tselatra_project::build::Ids;
+use tselatra_project::{Layer, LayerId, LayerSource, Node, ParamUi, Property};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, f_p, has_layers, layers_p, str_p};
@@ -185,8 +185,8 @@ fn freeze(s: &mut Session, p: &Value, last: bool) -> Result<Value> {
         return Err(bad("layer.freezeFrame", "freezing needs a footage or composition layer"));
     }
     // What each layer shows now (honouring an existing remap) — evaluated before the edit.
-    let ectx = effectcraft_render::EvalCtx { project: &s.project, comp_id: cid, comp, time: cti, expr: s.expr.as_deref(), footage: Some(s.footage.as_ref()) };
-    let now: Vec<(effectcraft_project::LayerId, f64)> = comp
+    let ectx = tselatra_render::EvalCtx { project: &s.project, comp_id: cid, comp, time: cti, expr: s.expr.as_deref(), footage: Some(s.footage.as_ref()) };
+    let now: Vec<(tselatra_project::LayerId, f64)> = comp
         .layers
         .iter()
         .filter(|l| ids.contains(&l.id) && remappable(l))
@@ -210,7 +210,7 @@ fn freeze(s: &mut Session, p: &Value, last: bool) -> Result<Value> {
             if last {
                 // Play normally up to the last frame, then hold it to the end of the comp.
                 let mut end = Keyframe::new(lt.max(lin), KV::Scalar(*src));
-                end.out_interp = effectcraft_keyframe::Interp::Hold;
+                end.out_interp = tselatra_keyframe::Interp::Hold;
                 pr.keys = vec![Keyframe::new(lin.min(lt), KV::Scalar(lin.min(lt).seconds())), end];
                 pr.keys.dedup_by_key(|k| k.time);
                 l.out_point = cdur;

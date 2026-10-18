@@ -12,8 +12,8 @@
 //! VR Color Gradients' inverse-distance weights are normalised by the nearest point (the same
 //! ratios without f32 overflow). VR De-Noise reuses the noise family's guided filter and median.
 
-use effectcraft_effects::EffectCtx;
-use effectcraft_raster::hash_noise;
+use tselatra_effects::EffectCtx;
+use tselatra_raster::hash_noise;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::GBuf;
@@ -103,7 +103,7 @@ fn per_eye(e: &mut Enc, img: &GpuImage, layout: u32, mut f: impl FnMut(&mut Enc,
 }
 
 fn rot(ctx: &EffectCtx, t: &str, p: &str, r: &str) -> [[f32; 3]; 3] {
-    effectcraft_effects::vr_rotation(ctx.params.f(t), ctx.params.f(p), ctx.params.f(r)).map(|r| r.map(|v| v as f32))
+    tselatra_effects::vr_rotation(ctx.params.f(t), ctx.params.f(p), ctx.params.f(r)).map(|r| r.map(|v| v as f32))
 }
 
 fn put_matrix(p: &mut Params, at: usize, m: &[[f32; 3]; 3]) {
@@ -162,7 +162,7 @@ fn sphere_blur(e: &mut Enc, img: &GpuImage, sigma: f64) -> GpuImage {
         return img.clone();
     }
     let (w, h) = (img.width as usize, img.height as usize);
-    let radii = effectcraft_effects::util::box_radii(sigma, 3);
+    let radii = tselatra_effects::util::box_radii(sigma, 3);
     let mut cur = img.clone();
     for &r in &radii {
         let rows: Vec<f32> = (0..h)
@@ -292,7 +292,7 @@ fn denoise(e: &mut Enc, ctx: &EffectCtx, b: &GBuf) -> Option<GpuImage> {
 
 /// BLEND_OPTS → (none, blend mode id).
 fn blend(i: u32) -> (u32, u32) {
-    use effectcraft_color::BlendMode::*;
+    use tselatra_color::BlendMode::*;
     let m = match i {
         0 => return (1, 0),
         2 => Add,
@@ -310,7 +310,7 @@ fn chromatic(e: &mut Enc, ctx: &EffectCtx, img: &GpuImage) -> Option<GpuImage> {
     if k.iter().all(|v| *v == 0.0) {
         return Some(img.clone());
     }
-    let r = effectcraft_effects::vr_rotation(pr.f("centerTilt"), pr.f("centerPan"), 0.0);
+    let r = tselatra_effects::vr_rotation(pr.f("centerTilt"), pr.f("centerPan"), 0.0);
     let c = [r[0][2], r[1][2], r[2][2]].map(|v| v as f32);
     let mut p = op(0);
     p.u[0][1] = pr.b("falloffInvert") as u32;
@@ -334,7 +334,7 @@ fn gradients(e: &mut Enc, ctx: &EffectCtx, img: &GpuImage) -> Option<GpuImage> {
             continue;
         }
         let pt = pr.v2(&format!("point{i}"));
-        let dir = effectcraft_effects::vr_equi_dir(pt[0], pt[1], lw, lh);
+        let dir = tselatra_effects::vr_equi_dir(pt[0], pt[1], lw, lh);
         let c = pr.color(&format!("color{i}"));
         d.extend([dir[0] as f32, dir[1] as f32, dir[2] as f32, c[0], c[1], c[2]]);
     }
@@ -392,7 +392,7 @@ fn glitch(e: &mut Enc, ctx: &EffectCtx, img: &GpuImage) -> Option<GpuImage> {
     let base = if rate > 0.0 { ctx.time * rate } else { 0.0 } + evo;
     let slot = base.floor() as i64 as u32;
     let frac = base - base.floor();
-    let tr = effectcraft_effects::vr_rotation(g("target/tilt", 0.0), g("target/pan", 0.0), 0.0);
+    let tr = tselatra_effects::vr_rotation(g("target/tilt", 0.0), g("target/pan", 0.0), 0.0);
     let target = [tr[0][2], tr[1][2], tr[2][2]].map(|v| v as f32);
     let radius = g("target/radius", 0.0).to_radians() as f32;
     let feather = g("target/feather", 0.0).to_radians() as f32;

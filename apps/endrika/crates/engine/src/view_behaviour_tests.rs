@@ -16,8 +16,8 @@ use crate::params::id_of;
 use crate::snap::Targets;
 use crate::tools::{PointerEvent, PointerKind};
 use crate::{Session, ViewState, distance, guides};
-use figcraft_doc::{GridAlign, GridKind, LayoutGrid, NodeId};
-use figcraft_geom::{Point, Rect};
+use endrika_doc::{GridAlign, GridKind, LayoutGrid, NodeId};
+use endrika_geom::{Point, Rect};
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -608,14 +608,14 @@ fn layout_grid_columns_rows_and_grids_lay_out_as_documented() {
         ),
     ];
     for (g, (w, h), first, last, count, why) in rows {
-        let r = figcraft_layout::grid_lines(&g, w, h);
+        let r = endrika_layout::grid_lines(&g, w, h);
         let span = |r: &Rect| if g.kind == GridKind::Columns { (r.x0, r.x1) } else { (r.y0, r.y1) };
         assert_eq!(r.len(), count, "{why}");
         let (a, b) = (span(r.first().unwrap()), span(r.last().unwrap()));
         assert!(near(a.0, first.0) && near(a.1, first.1) && near(b.0, last.0) && near(b.1, last.1), "{why}: {a:?} … {b:?}");
     }
     // A square grid: lines every `size` both ways.
-    let r = figcraft_layout::grid_lines(&LayoutGrid { size: 10.0, ..LayoutGrid::default() }, 40.0, 20.0);
+    let r = endrika_layout::grid_lines(&LayoutGrid { size: 10.0, ..LayoutGrid::default() }, 40.0, 20.0);
     assert_eq!(r.len(), 5 + 3, "a grid of 10 draws a line every 10 pixels across and down");
     assert_eq!(LayoutGrid::default().size, 10.0, "the default grid is 10 pixels");
     assert_eq!((LayoutGrid::columns().count, LayoutGrid::columns().gutter), (5, 20.0), "docs silent: new columns are 5 with 20 gutters (pinned)");
@@ -661,12 +661,12 @@ fn layers_snap_to_layout_grids() {
         ex(&mut s, "view.layoutGrids", json!({"on": shown}));
         if rotation != 0.0 {
             ex(&mut s, "node.set", json!({"id": f, "props": {"rotation": rotation}}));
-            assert!(!figcraft_layout::grids_shown(s.doc().unwrap(), f), "{why}");
-            let (gx, gy) = figcraft_layout::grid_snap_lines(s.doc().unwrap(), f);
+            assert!(!endrika_layout::grids_shown(s.doc().unwrap(), f), "{why}");
+            let (gx, gy) = endrika_layout::grid_snap_lines(s.doc().unwrap(), f);
             assert!(gx.is_empty() && gy.is_empty(), "{why}");
             continue;
         }
-        assert!(figcraft_layout::grids_shown(s.doc().unwrap(), f));
+        assert!(endrika_layout::grids_shown(s.doc().unwrap(), f));
         assert_eq!(snap(&s, r), want, "{why}");
     }
     // Docs silent: an auto layout frame's grids still snap its absolutely placed layers (pinned).
@@ -674,7 +674,7 @@ fn layers_snap_to_layout_grids() {
     let (f, r) = grid_frame(&mut s, json!([cols]));
     ex(&mut s, "layout.add", json!({"ids": [f], "direction": "vertical"}));
     ex(&mut s, "node.set", json!({"ids": [r], "props": {"absolute": true}}));
-    let (gx, _) = figcraft_layout::grid_snap_lines(s.doc().unwrap(), f);
+    let (gx, _) = endrika_layout::grid_snap_lines(s.doc().unwrap(), f);
     assert_eq!(gx.len(), 10, "docs silent: auto layout frames keep their layout grids (pinned): {gx:?}");
     let t = Targets::gather(s.doc().unwrap(), s.page().unwrap(), &[r]);
     assert!(gx.iter().all(|x| t.xs.iter().any(|(tx, _, _)| tx == x)), "docs silent: they snap its absolutely placed layers (pinned)");

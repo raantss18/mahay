@@ -2,10 +2,10 @@
 //! step), and dragged interactively the way a click on a grip starts it, with a preview and a
 //! typed distance. The drawing is the synthetic DOOR block of the io tests, with grips added.
 
-use cadcraft_engine::doc::dynblock::GripPart;
-use cadcraft_engine::doc::{Handle, Space};
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::{Input, Session};
+use drafitra_engine::doc::dynblock::GripPart;
+use drafitra_engine::doc::{Handle, Space};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::{Input, Session};
 use serde_json::{Value, json};
 
 /// DXF text from lines of `code value`.
@@ -31,7 +31,7 @@ fn session() -> (Session, Handle) {
         .replace("91 5\n93 32\n95 6\n360 67", "91 5\n93 32\n95 6\n360 67\n92 -1\n92 -1\n92 -1\n92 -1\n91 6\n93 32\n95 9\n360 68")
         .replace("95 1\n333 63\n", "95 2\n333 63\n333 68\n")
         .replace("0 BLOCKFLIPGRIP", &format!("{grip}0 BLOCKFLIPGRIP"));
-    let d = cadcraft_io::read_dxf(dxf(&src).as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(dxf(&src).as_bytes()).unwrap();
     let mut s = Session::empty();
     s.open_drawing(d, "door", None);
     let r = s.execute("insert", &json!({ "name": "Door", "at": [100, 0] })).unwrap();

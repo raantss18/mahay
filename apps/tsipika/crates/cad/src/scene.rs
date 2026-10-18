@@ -7,10 +7,10 @@ use std::collections::HashMap;
 use std::io::Cursor;
 
 use kurbo::PathEl;
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{AppearanceItem, Dash, Document, ImageObject, Node, NodeKind, StrokeLayer, SymbolBoxes, TextKind, TextObject, Unit};
-use vectorcraft_effects::stroke;
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, Point, Rect};
+use tsipika_color::Paint;
+use tsipika_doc::{AppearanceItem, Dash, Document, ImageObject, Node, NodeKind, StrokeLayer, SymbolBoxes, TextKind, TextObject, Unit};
+use tsipika_effects::stroke;
+use tsipika_geom::{Affine, BezPath, FillRule, PathData, Point, Rect};
 
 use crate::aci::nearest_aci;
 use crate::writer::{Codes, Drawing, EntityStyle, Handle, ImageDef, Layer, LineType, fixed};
@@ -181,7 +181,7 @@ pub(crate) struct Scene<'a> {
     /// Image keys → index into `images` (`None`: left out).
     by_key: HashMap<String, Option<usize>>,
     warnings: Vec<String>,
-    brushes: Option<Vec<vectorcraft_brush::Brush>>,
+    brushes: Option<Vec<tsipika_brush::Brush>>,
     extents: Option<[f64; 4]>,
     /// The opacity of the containers around the current object.
     opacity: f32,
@@ -326,7 +326,7 @@ impl<'a> Scene<'a> {
             | NodeKind::Repeat(_)
             | NodeKind::PlacedDocument(_)
             | NodeKind::Intertwine { .. } => {
-                let g = vectorcraft_effects::expand_live_deep(Some(self.doc), n);
+                let g = tsipika_effects::expand_live_deep(Some(self.doc), n);
                 for c in g.children().into_iter().flatten() {
                     self.node(c, false);
                 }
@@ -355,13 +355,13 @@ impl<'a> Scene<'a> {
 
     /// Warn about what DXF can't hold in `n`'s look.
     fn note_losses(&mut self, n: &Node) {
-        if n.blend != vectorcraft_color::BlendMode::Normal {
+        if n.blend != tsipika_color::BlendMode::Normal {
             self.warn("blending modes are left out");
         }
         if n.extras().mask.as_ref().is_some_and(|m| !m.disabled) {
             self.warn("opacity masks are left out");
         }
-        let raster = |fx: &[vectorcraft_doc::Effect]| fx.iter().any(|e| e.visible && vectorcraft_effects::is_raster(&e.id));
+        let raster = |fx: &[tsipika_doc::Effect]| fx.iter().any(|e| e.visible && tsipika_effects::is_raster(&e.id));
         if raster(&n.appearance.effects) || n.appearance.items.iter().any(|i| raster(i.effects())) {
             self.warn("raster effects (shadows, glows, blurs, feathering) are left out");
         }
@@ -386,7 +386,7 @@ impl<'a> Scene<'a> {
     /// One colour for a paint: a solid colour, the average of a gradient's stops, or a pattern's
     /// first solid fill.
     fn paint_rgb(&mut self, p: &Paint) -> Option<[u8; 3]> {
-        let rgb = |c: &vectorcraft_color::Color| {
+        let rgb = |c: &tsipika_color::Color| {
             let [r, g, b, _] = c.to_rgba8(1.0);
             [r, g, b]
         };
@@ -509,9 +509,9 @@ impl<'a> Scene<'a> {
 
     fn brush_art(&mut self, bp: &BezPath, st: &StrokeLayer) -> Option<Vec<Node>> {
         let doc = self.doc;
-        let brushes = self.brushes.get_or_insert_with(|| vectorcraft_brush::library(doc));
+        let brushes = self.brushes.get_or_insert_with(|| tsipika_brush::library(doc));
         let b = st.brush.as_deref().and_then(|name| brushes.iter().find(|b| b.name == name))?;
-        Some(vectorcraft_brush::stroke_pieces(doc, b, bp, st))
+        Some(tsipika_brush::stroke_pieces(doc, b, bp, st))
     }
 
     /// A filled area as its outlines followed by a solid hatch (R12: the outlines alone). Laser
@@ -525,7 +525,7 @@ impl<'a> Scene<'a> {
         }
         let several = bp.elements().iter().filter(|e| matches!(e, PathEl::MoveTo(_))).count() > 1;
         let normalized = (rule == FillRule::NonZero && several && !clean)
-            .then(|| vectorcraft_pathops::try_normalize(&PathData::from_bezpath(bp), rule).ok())
+            .then(|| tsipika_pathops::try_normalize(&PathData::from_bezpath(bp), rule).ok())
             .flatten()
             .map(|p| p.to_bezpath());
         let outline = normalized.as_ref().unwrap_or(bp);
@@ -682,7 +682,7 @@ impl<'a> Scene<'a> {
     fn text(&mut self, n: &Node, t: &TextObject) {
         let outline = self.o.preserve == Preserve::Appearance || self.o.outline_text || matches!(t.kind, TextKind::OnPath { .. });
         if outline {
-            if let Some(o) = vectorcraft_effects::outline_text(n) {
+            if let Some(o) = tsipika_effects::outline_text(n) {
                 self.node(&o, true);
             }
             return;
@@ -690,7 +690,7 @@ impl<'a> Scene<'a> {
         if !n.appearance.items.is_empty() {
             self.warn(TYPE_ITEMS);
         }
-        let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+        let layout = tsipika_text::layout(tsipika_text::FontDb::global(), t);
         let plain = t.plain_text();
         let xf = self.to_dxf * t.xf;
         let [a, b, c, d, _, _] = xf.as_coeffs();
@@ -848,7 +848,7 @@ impl<'a> Scene<'a> {
 }
 
 /// The first visible solid fill colour in `n` (pattern art).
-fn first_solid(n: &Node) -> Option<vectorcraft_color::Color> {
+fn first_solid(n: &Node) -> Option<tsipika_color::Color> {
     let own = n.appearance.items.iter().find_map(|i| match i {
         AppearanceItem::Fill(f) if f.visible => f.paint.color(),
         _ => None,

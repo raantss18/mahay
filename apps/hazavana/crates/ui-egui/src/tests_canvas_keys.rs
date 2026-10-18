@@ -3,16 +3,16 @@
 
 use std::time::Duration;
 
-use lightcraft_develop::MaskShape;
+use hazavana_develop::MaskShape;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services, canvas_keys};
+use crate::{HazavanaApp, Services, canvas_keys};
 
 const T: Duration = Duration::from_secs(20);
 
 fn detail(panel: &str) -> Headless {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     // pins on whatever the pointer does: these tests move handles with the keyboard, and a headless
     // pointer is never over the photo, where the Tool Overlay's default Auto shows them
@@ -32,7 +32,7 @@ fn exec(h: &mut Headless, command: &str, params: serde_json::Value) -> serde_jso
     r["result"].clone()
 }
 
-fn develop(h: &Headless) -> lightcraft_develop::DevelopSettings {
+fn develop(h: &Headless) -> hazavana_develop::DevelopSettings {
     let id = h.app.session.active().expect("active photo");
     (*h.app.session.develop_of(id).unwrap_or_default()).clone()
 }

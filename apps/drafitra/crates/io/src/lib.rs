@@ -1,8 +1,8 @@
-//! CADCraft file formats: DXF/DWG read, SVG and SVGZ import, SVG/PNG/PDF export (plotting).
+//! Drafitra file formats: DXF/DWG read, SVG and SVGZ import, SVG/PNG/PDF export (plotting).
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
-/// What a DXF file holds that CADCraft doesn't model, kept and written back (#528).
+/// What a DXF file holds that Drafitra doesn't model, kept and written back (#528).
 mod dxf_raw;
 
 mod dxf_ext;
@@ -20,10 +20,10 @@ mod svg_read;
 /// Multilines and their styles (MLINE, MLINESTYLE).
 mod dxf_mline;
 
-use cadcraft_doc::{Drawing, Space};
-use cadcraft_geom::Bounds2;
+use drafitra_doc::{Drawing, Space};
+use drafitra_geom::Bounds2;
 
-pub use cadcraft_dxf::Version;
+pub use drafitra_dxf::Version;
 pub use dxf_read::entity_from_groups;
 pub use dxf_write::entity_groups;
 pub use pdf::{PdfOptions, pdf, plot};
@@ -38,9 +38,9 @@ pub struct SaveOptions {
 }
 
 /// The version a drawing is saved in when none is asked for: the version of the file it was
-/// read from (`$ACADVER`, the nearest one CADCraft writes), and 2018 for a new drawing.
+/// read from (`$ACADVER`, the nearest one Drafitra writes), and 2018 for a new drawing.
 pub fn save_version(d: &Drawing) -> Version {
-    d.header.get("ACADVER").and_then(cadcraft_doc::HVal::as_str).and_then(Version::for_acadver).unwrap_or_default()
+    d.header.get("ACADVER").and_then(drafitra_doc::HVal::as_str).and_then(Version::for_acadver).unwrap_or_default()
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -60,8 +60,8 @@ fn ext(name: &str) -> String {
 /// Read a drawing; the format comes from the content (DXF ASCII/binary, DWG) or the name
 /// (SVG and gzip-compressed SVGZ).
 pub fn read(bytes: &[u8], name: &str) -> Result<Drawing> {
-    if cadcraft_dwg::is_dwg(bytes) {
-        let (dxf, notes) = cadcraft_dwg::dwg_to_dxf_noted(bytes, cadcraft_dwg::Limits::DEFAULT).map_err(IoError::Format)?;
+    if drafitra_dwg::is_dwg(bytes) {
+        let (dxf, notes) = drafitra_dwg::dwg_to_dxf_noted(bytes, drafitra_dwg::Limits::DEFAULT).map_err(IoError::Format)?;
         let mut d = dxf_read::read(&dxf).map_err(|e| IoError::Format(format!("{e} (in the DXF converted from this DWG)")))?;
         d.read_notes = notes;
         return Ok(d);
@@ -89,9 +89,9 @@ pub fn write_with(d: &Drawing, name: &str, opts: &SaveOptions) -> Result<Vec<u8>
         "dxf" | "" => {
             let tags = dxf_write::tags(d, version);
             Ok(if opts.binary {
-                cadcraft_dxf::write_binary(&tags, version.utf8())
+                drafitra_dxf::write_binary(&tags, version.utf8())
             } else {
-                cadcraft_dxf::write_ascii_as(&tags, version.utf8()).into_bytes()
+                drafitra_dxf::write_ascii_as(&tags, version.utf8()).into_bytes()
             })
         }
         // The DWG bridge reads our R2000 DXF and writes the DWG at the version asked for. Without
@@ -99,7 +99,7 @@ pub fn write_with(d: &Drawing, name: &str, opts: &SaveOptions) -> Result<Vec<u8>
         // gradients, so a drawing from an R2000 DXF doesn't lose them by default.
         "dwg" if !opts.binary => {
             let version = opts.version.unwrap_or_else(|| version.max(Version::R2004));
-            cadcraft_dwg::dxf_to_dwg_as(dxf_write::dwg_bridge(d, version).as_bytes(), version.code()).map_err(IoError::Format)
+            drafitra_dwg::dxf_to_dwg_as(dxf_write::dwg_bridge(d, version).as_bytes(), version.code()).map_err(IoError::Format)
         }
         e if opts.binary => Err(IoError::Format(format!("binary output is for DXF files, not `{e}`"))),
         _ => write_framed(d, name, None),
@@ -166,17 +166,17 @@ pub fn png(d: &Drawing, space: &Space, width: u32, height: u32) -> Result<Vec<u8
 /// extents (5% margin) when `window` is `None`. Objects are drawn with their transparency, as on
 /// screen.
 pub fn png_framed(d: &Drawing, space: &Space, width: u32, height: u32, window: Option<Bounds2>) -> Result<Vec<u8>> {
-    let list = cadcraft_render::build(d, space, &cadcraft_render::Options { transparency: true, ..cadcraft_render::Options::default() });
+    let list = drafitra_render::build(d, space, &drafitra_render::Options { transparency: true, ..drafitra_render::Options::default() });
     let view = png_view(&list.bounds, width, height, window);
-    cadcraft_render::raster::render_png(&list, &view, &cadcraft_render::raster::RasterOptions::default())
+    drafitra_render::raster::render_png(&list, &view, &drafitra_render::raster::RasterOptions::default())
         .ok_or_else(|| IoError::Format("render failed".into()))
 }
 
 /// The raster view a PNG export uses.
-pub fn png_view(extents: &Bounds2, width: u32, height: u32, window: Option<Bounds2>) -> cadcraft_render::raster::View {
+pub fn png_view(extents: &Bounds2, width: u32, height: u32, window: Option<Bounds2>) -> drafitra_render::raster::View {
     match window {
-        Some(w) => cadcraft_render::raster::View::fit(&w, width, height, 0.0),
-        None => cadcraft_render::raster::View::fit(extents, width, height, 0.05),
+        Some(w) => drafitra_render::raster::View::fit(&w, width, height, 0.0),
+        None => drafitra_render::raster::View::fit(extents, width, height, 0.05),
     }
 }
 

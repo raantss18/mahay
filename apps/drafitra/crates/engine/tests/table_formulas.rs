@@ -2,8 +2,8 @@
 //! recalculated on edit, row/column insertion and REGEN; cycles and bad input show an error text
 //! and never panic. TABLEDIT and TABLEEXPORT.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Table};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Table};
 use serde_json::{Value, json};
 
 /// A 2-column table without title/header: A1..A3 = 1, 2, 3; B column empty.
@@ -17,7 +17,7 @@ fn session() -> (Session, String) {
 }
 
 fn table(s: &Session, h: &str) -> Table {
-    let h = cadcraft_engine::doc::Handle::parse_hex(h).unwrap();
+    let h = drafitra_engine::doc::Handle::parse_hex(h).unwrap();
     match &s.doc().unwrap().entity(h).unwrap().kind {
         EntityKind::Table(t) => t.clone(),
         _ => panic!("not a table"),
@@ -105,7 +105,7 @@ fn regen_recalculates() {
     let (mut s, h) = session();
     set(&mut s, &h, 3, 0, "=Sum(A1:A3)");
     // Make the shown value stale, as a foreign file could.
-    let hh = cadcraft_engine::doc::Handle::parse_hex(&h).unwrap();
+    let hh = drafitra_engine::doc::Handle::parse_hex(&h).unwrap();
     s.doc_mut()
         .unwrap()
         .modify_entity(hh, |e| {
@@ -139,7 +139,7 @@ fn tableexport_writes_csv() {
     set(&mut s, &h, 0, 1, "a, \"b\"");
     let r = s.execute("tableexport", &json!({ "handle": h })).unwrap();
     assert_eq!(r["csv"], "1,\"a, \"\"b\"\"\"\r\n2,\r\n3,\r\n6,\r\n");
-    let dir = std::env::temp_dir().join(format!("cadcraft-tableexport-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-tableexport-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("t.csv");
     s.execute("tableexport", &json!({ "handle": h, "path": path.to_str().unwrap(), "separator": "tab" })).unwrap();

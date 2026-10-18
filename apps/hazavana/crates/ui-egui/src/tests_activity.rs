@@ -2,18 +2,18 @@
 
 use std::time::Duration;
 
-use lightcraft_engine::activity::{Cancel, TaskInfo, Unit};
+use hazavana_engine::activity::{Cancel, TaskInfo, Unit};
 use serde_json::json;
 
 use crate::headless::Headless;
 use crate::panels::activity::{WIDTH, count_text};
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 // generous: merges and renders run on worker threads that a busy machine (a full workspace test run) slows a lot
 const T: Duration = Duration::from_secs(60);
 
 fn demo() -> Headless {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     // let the first renders finish: a render still running when the test binary exits can crash in the
     // GPU driver's teardown (the preview pool doesn't join its workers)
@@ -207,7 +207,7 @@ fn start_export(h: &mut Headless, n: usize) {
     h.step();
     if let Some(crate::state::Dialog::Export { full_size, resize, dir, .. }) = &mut h.app.ui.dialog {
         *full_size = false;
-        *resize = lightcraft_engine::export::Resize::long_edge(64);
+        *resize = hazavana_engine::export::Resize::long_edge(64);
         *dir = "/lc-test-out".into();
     }
     let r = h.request("ui.dialog.confirm", json!({}), T);
@@ -248,10 +248,10 @@ fn slow_import(tag: &str, n: usize) -> (Headless, std::path::PathBuf) {
     for i in 0..n {
         std::fs::write(dir.join(format!("IMG_{i:03}.jpg")), format!("not really a jpeg {i}")).unwrap();
     }
-    let mut s = lightcraft_engine::Session::new();
+    let mut s = hazavana_engine::Session::new();
     s.media.file_probe = Some(std::sync::Arc::new(|p: &str| {
         std::thread::sleep(Duration::from_millis(100));
-        Ok(lightcraft_engine::media::ProbeInfo {
+        Ok(hazavana_engine::media::ProbeInfo {
             width: 60,
             height: 40,
             format: "JPEG".into(),
@@ -259,7 +259,7 @@ fn slow_import(tag: &str, n: usize) -> (Headless, std::path::PathBuf) {
             ..Default::default()
         })
     }));
-    let mut h = Headless::new(LightcraftApp::new(s, Services { png: None, ..Default::default() }), [1200.0, 800.0], 1.0);
+    let mut h = Headless::new(HazavanaApp::new(s, Services { png: None, ..Default::default() }), [1200.0, 800.0], 1.0);
     h.settle(T);
     (h, dir)
 }
@@ -325,16 +325,16 @@ fn bracket(tag: &str) -> (Headless, std::path::PathBuf) {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let mut paths = Vec::new();
-    for (i, bytes) in lightcraft_merge::synth::bracket_dngs(1600, 1200, &[-2.0, 0.0, 2.0]).unwrap().into_iter().enumerate() {
+    for (i, bytes) in hazavana_merge::synth::bracket_dngs(1600, 1200, &[-2.0, 0.0, 2.0]).unwrap().into_iter().enumerate() {
         let p = dir.join(format!("IMG_{i}.dng"));
         std::fs::write(&p, bytes).unwrap();
         paths.push(p.to_string_lossy().to_string());
     }
-    let mut session = lightcraft_engine::Session::new().with_fs();
+    let mut session = hazavana_engine::Session::new().with_fs();
     let r = session.execute("library.import", &json!({"paths": paths})).unwrap();
     let ids: Vec<u64> = r["imported"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap()).collect();
     session.execute("library.select", &json!({"ids": ids})).unwrap();
-    let app = LightcraftApp::new(session, Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(session, Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     h.settle(T);
     (h, dir)
@@ -404,13 +404,13 @@ fn batch_merge_runs_each_set_in_turn() {
     let mut paths = Vec::new();
     // different exposures, or the import would take set B for duplicates of set A
     for (set, evs) in [("A", [-2.0, 0.0, 2.0]), ("B", [-1.5, 0.5, 2.5]), ("C", [-1.0, 1.0, 3.0])] {
-        for (i, bytes) in lightcraft_merge::synth::bracket_dngs(1600, 1200, &evs).unwrap().into_iter().enumerate() {
+        for (i, bytes) in hazavana_merge::synth::bracket_dngs(1600, 1200, &evs).unwrap().into_iter().enumerate() {
             let p = dir.join(format!("{set}_{i}.dng"));
             std::fs::write(&p, bytes).unwrap();
             paths.push(p.to_string_lossy().to_string());
         }
     }
-    let mut session = lightcraft_engine::Session::new().with_fs();
+    let mut session = hazavana_engine::Session::new().with_fs();
     let r = session.execute("library.import", &json!({"paths": paths})).unwrap();
     let ids: Vec<u64> = r["imported"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap()).collect();
     assert_eq!(ids.len(), 9);
@@ -418,7 +418,7 @@ fn batch_merge_runs_each_set_in_turn() {
         session.execute("stack.group", &json!({"ids": set})).unwrap();
     }
     session.execute("library.select", &json!({"ids": ids})).unwrap();
-    let app = LightcraftApp::new(session, Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(session, Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     h.settle(T);
     let r = crate::menus::run_ui_command(&mut h.app, "merge.hdrBatch", &json!({})).unwrap().unwrap();

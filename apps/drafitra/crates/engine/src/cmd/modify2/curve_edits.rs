@@ -1,10 +1,10 @@
 //! EXTEND, LENGTHEN, JOIN, FILLET and closed-spline TRIM for elliptical arcs and splines (#466).
 //!
 //! The curve mathematics (knot insertion, joining, tangent extensions, arc length) lives in
-//! `cadcraft_geom::Spline` / `cadcraft_geom::Ellipse`; this module applies it to entities.
+//! `drafitra_geom::Spline` / `drafitra_geom::Ellipse`; this module applies it to entities.
 
-use cadcraft_doc::{Entity, EntityKind, Handle};
-use cadcraft_geom::{
+use drafitra_doc::{Entity, EntityKind, Handle};
+use drafitra_geom::{
     Arc, Circle, CornerFit, Ellipse, Line, Polyline, Segment, Spline, TAU, TanCurve, Vec2, angle_in_sweep, ccw_sweep, intersect_ext, norm_angle,
     tangent_circles,
 };
@@ -65,7 +65,7 @@ fn too_short() -> crate::EngineError {
 }
 
 /// LENGTHEN an elliptical arc along its ellipse at the end nearest `pick`.
-pub(super) fn lengthen_ellipse(e: &cadcraft_doc::Ellipse, pick: Option<Vec2>, mode: LenMode) -> Result<EntityKind> {
+pub(super) fn lengthen_ellipse(e: &drafitra_doc::Ellipse, pick: Option<Vec2>, mode: LenMode) -> Result<EntityKind> {
     let g = ellipse_of(e);
     if g.is_full() {
         return Err(other("Cannot lengthen a closed ellipse."));
@@ -78,7 +78,7 @@ pub(super) fn lengthen_ellipse(e: &cadcraft_doc::Ellipse, pick: Option<Vec2>, mo
         LenMode::Total(t) => t,
         LenMode::To(q) => {
             let t = g.param_of(q);
-            let sweep = if at_end { cadcraft_geom::ccw_sweep(g.start, t) } else { cadcraft_geom::ccw_sweep(t, g.end) };
+            let sweep = if at_end { drafitra_geom::ccw_sweep(g.start, t) } else { drafitra_geom::ccw_sweep(t, g.end) };
             if !(sweep > 1e-9 && sweep < TAU - 1e-9) {
                 return Err(too_short());
             }
@@ -196,7 +196,7 @@ fn spline_pieces(k: &EntityKind) -> Vec<Spline> {
     match k {
         EntityKind::Line(l) if !l.a.xy().near(l.b.xy(), 1e-12) => vec![Spline::from_line(l.a.xy(), l.b.xy(), 1)],
         EntityKind::Arc(a) => {
-            let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+            let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
             arc(g.center, g.radius, g.start, g.sweep()).into_iter().collect()
         }
         EntityKind::LwPolyline(p) if !p.closed => Polyline { vertices: p.vertices.clone(), closed: false }
@@ -375,7 +375,7 @@ fn fillet_trim(k: &EntityKind, pick: Vec2, t: f64, at: Vec2) -> Option<(Option<E
 }
 
 /// FILLET where one or both objects are an elliptical arc or a spline: the tangent circle comes
-/// from `cadcraft_geom::tangent_circles` (the solution touching nearest the picks); each object
+/// from `drafitra_geom::tangent_circles` (the solution touching nearest the picks); each object
 /// is trimmed or extended to its touch point. Radius 0 meets them at their crossing.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn fillet_curvy(s: &mut Session, h1: Handle, p1: Vec2, h2: Handle, p2: Vec2, r: f64, e1: &Entity, e2: &Entity) -> Result<Option<Handle>> {

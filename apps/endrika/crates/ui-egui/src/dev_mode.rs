@@ -6,13 +6,13 @@
 //! (links for developers) and the plugins that only read the document.
 
 use egui::{Align2, Color32, CornerRadius, Id, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_doc::{Annotation, AnnotationCategory, CodeLink, DevStatus, Document, NodeId};
-use figcraft_engine::annotations::{self, PINNABLE, Pinnable};
-use figcraft_engine::code_connect;
-use figcraft_engine::codegen::{CodeLang, code_for};
-use figcraft_engine::devinspect::{self, DevItem, Prop};
-use figcraft_engine::plugins::Access;
-use figcraft_engine::{components, dev_resources};
+use endrika_doc::{Annotation, AnnotationCategory, CodeLink, DevStatus, Document, NodeId};
+use endrika_engine::annotations::{self, PINNABLE, Pinnable};
+use endrika_engine::code_connect;
+use endrika_engine::codegen::{CodeLang, code_for};
+use endrika_engine::devinspect::{self, DevItem, Prop};
+use endrika_engine::plugins::Access;
+use endrika_engine::{components, dev_resources};
 use serde_json::json;
 
 use crate::a11y::Tip;
@@ -235,8 +235,8 @@ impl Callout {
             let mid = y + 9.0;
             painter.text(pos2(x, mid), Align2::LEFT_CENTER, tr(p.label), regular(10.0), t.text_secondary);
             let mut vx = x + 84.0;
-            if let Some(c) = v.as_ref().and_then(|v| v.color.as_deref()).and_then(figcraft_color::Color::from_hex) {
-                widgets::paint_swatch(painter, Rect::from_center_size(pos2(vx + 5.0, mid), vec2(10.0, 10.0)), &figcraft_color::Paint::solid(c));
+            if let Some(c) = v.as_ref().and_then(|v| v.color.as_deref()).and_then(endrika_color::Color::from_hex) {
+                widgets::paint_swatch(painter, Rect::from_center_size(pos2(vx + 5.0, mid), vec2(10.0, 10.0)), &endrika_color::Paint::solid(c));
                 vx += 15.0;
             }
             // The style or variable reads better than its value.
@@ -285,7 +285,7 @@ pub fn code(app: &mut FigApp, ui: &Ui, id: NodeId, lang: CodeLang) -> String {
 /// change the preview and the code only (returned when any is set: the Code section shows it),
 /// never the document.
 pub fn playground_section(app: &mut FigApp, ui: &mut Ui, doc: &Document, id: NodeId, lang: CodeLang) -> Option<String> {
-    figcraft_engine::playground::component_of(doc, id)?;
+    endrika_engine::playground::component_of(doc, id)?;
     let t = Tokens::get(ui.ctx());
     let Ok((uid, revision)) = app.session.ds().map(|d| (d.uid, d.revision)) else { return None };
     let play = &mut app.ui.dev.playground;
@@ -295,13 +295,13 @@ pub fn playground_section(app: &mut FigApp, ui: &mut Ui, doc: &Document, id: Nod
     let key: PlayKey = (uid, revision, id, serde_json::Value::Object(play.values.clone()).to_string(), lang);
     if play.shown.as_ref().is_none_or(|(k, _)| *k != key) {
         // Values the component no longer takes (a property renamed or removed) are dropped.
-        let built = figcraft_engine::playground::build(doc, id, &play.values).or_else(|_| {
+        let built = endrika_engine::playground::build(doc, id, &play.values).or_else(|_| {
             play.values.clear();
-            figcraft_engine::playground::build(doc, id, &play.values)
+            endrika_engine::playground::build(doc, id, &play.values)
         });
         let played = built.ok().map(|(copy, inst)| Played {
             preview: crate::assets_panel::thumbnail(ui.ctx(), &copy, inst, 416.0),
-            properties: figcraft_engine::playground::properties(&copy, inst)["properties"].as_array().cloned().unwrap_or_default(),
+            properties: endrika_engine::playground::properties(&copy, inst)["properties"].as_array().cloned().unwrap_or_default(),
             code: code_for(&copy, inst, lang),
         });
         let key = (uid, revision, id, serde_json::Value::Object(play.values.clone()).to_string(), lang);
@@ -500,7 +500,7 @@ pub fn status(app: &mut FigApp, ui: &mut Ui, doc: &Document, sel: &[NodeId]) {
     row(ui, 32.0, |ui| crate::section_panel::status_dropdown(app, ui, doc, sel, w));
     if let [id] = sel {
         let changed = doc.node(*id).is_some_and(|n| n.dev_status == DevStatus::ReadyForDev && n.dev_changed);
-        let focused = app.session.ds().ok().and_then(figcraft_engine::DocState::focused) == Some(*id);
+        let focused = app.session.ds().ok().and_then(endrika_engine::DocState::focused) == Some(*id);
         row(ui, 32.0, |ui| {
             ui.spacing_mut().item_spacing.x = 8.0;
             if !focused && widgets::button(ui, tr("Focus view"), false, true).on_hover_text(tr("Show only this on the canvas")).clicked() {
@@ -637,7 +637,7 @@ pub fn dev_resources_section(app: &mut FigApp, ui: &mut Ui, doc: &Document, id: 
         crate::a11y::link(&resp, name);
         // Opened only on a click, never fetched, and a dev resource's URL comes from the
         // document, so only a web link opens.
-        if resp.on_hover_text(url.as_str()).clicked() && figcraft_engine::doc_urls::openable(url) {
+        if resp.on_hover_text(url.as_str()).clicked() && endrika_engine::doc_urls::openable(url) {
             ui.ctx().open_url(egui::OpenUrl::new_tab(url));
         }
         if let Some(i) = item.index {

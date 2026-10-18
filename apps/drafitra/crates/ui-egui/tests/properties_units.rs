@@ -2,9 +2,9 @@
 //! them (feet and inches included), distances are shown in the drawing's units, and text that
 //! isn't a number is reported instead of being dropped.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
+use drafitra_ui_egui::{CadApp, Services};
 use egui::{Key, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{Queryable, by};
@@ -19,7 +19,7 @@ fn palettes(lunits: i64) -> Harness<'static, CadApp> {
     let mut h = Harness::builder().with_size(vec2(400.0, 1400.0)).build_ui_state(
         |ui, app: &mut CadApp| {
             app.logic(&ui.ctx().clone());
-            cadcraft_ui_egui::palettes::right_palettes(app, ui);
+            drafitra_ui_egui::palettes::right_palettes(app, ui);
         },
         app,
     );

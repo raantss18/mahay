@@ -10,8 +10,8 @@
 //!   (preferred ones first), select it, reset it to the main's default content.
 
 use egui::{Id, Sense, Ui, vec2};
-use figcraft_doc::*;
-use figcraft_engine::components::{
+use endrika_doc::*;
+use endrika_engine::components::{
     PROP_BINDING, default_variant, inside_instance, owning_component, owning_instance, slot_def, slot_edited, slots_of, variant_conflicts,
     variant_options, variant_props, variant_set,
 };
@@ -460,7 +460,7 @@ fn bind_ui(app: &mut FigApp, ui: &mut Ui, doc: &Document, n: &Node) {
 /// Overridden property groups of a layer inside an instance, each with a reset button.
 fn overrides_ui(app: &mut FigApp, ui: &mut Ui, n: &Node) {
     let t = Tokens::get(ui.ctx());
-    let groups: Vec<String> = n.overrides.iter().filter(|g| figcraft_engine::components::OVERRIDE_GROUPS.contains(&g.as_str())).cloned().collect();
+    let groups: Vec<String> = n.overrides.iter().filter(|g| endrika_engine::components::OVERRIDE_GROUPS.contains(&g.as_str())).cloned().collect();
     if groups.is_empty() {
         return;
     }
@@ -615,7 +615,7 @@ fn instance_ui(app: &mut FigApp, ui: &mut Ui, doc: &Document, n: &Node) {
     instance_props(app, ui, doc, n, &comps);
     // Exposed nested instances: their properties, under their names.
     if !nested {
-        for c in figcraft_engine::components::exposed_copies(doc, id) {
+        for c in endrika_engine::components::exposed_copies(doc, id) {
             let Some(cn) = doc.node(c) else { continue };
             row(ui, 28.0, |ui| {
                 let (r, _) = ui.allocate_exact_size(vec2(14.0, 14.0), Sense::hover());
@@ -629,7 +629,7 @@ fn instance_ui(app: &mut FigApp, ui: &mut Ui, doc: &Document, n: &Node) {
 
 /// An instance placed inside a main component (not inside another instance).
 fn nested_in_main(doc: &Document, id: NodeId) -> bool {
-    !inside_instance(doc, id) && figcraft_engine::components::owning_component(doc, id).is_some_and(|c| c != id)
+    !inside_instance(doc, id) && endrika_engine::components::owning_component(doc, id).is_some_and(|c| c != id)
 }
 
 /// Variant and component property controls for instance `n`.
@@ -663,7 +663,7 @@ fn instance_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, n: &Node, comps
     }
     // Boolean, text and instance-swap properties.
     for (k, d) in prop_defs(doc, *component) {
-        let v = props.get(&k).cloned().unwrap_or_else(|| figcraft_engine::components::prop_default_value(&d));
+        let v = props.get(&k).cloned().unwrap_or_else(|| endrika_engine::components::prop_default_value(&d));
         row(ui, 32.0, |ui| {
             prop_label(ui, &k, type_icon(&d));
             let w = ui.available_width().max(60.0);
@@ -689,7 +689,7 @@ fn instance_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, n: &Node, comps
                     });
                 }
                 PropDef::InstanceSwap { preferred, .. } => {
-                    let cur = figcraft_engine::params::id_of(&v);
+                    let cur = endrika_engine::params::id_of(&v);
                     let label = cur.and_then(|c| doc.node(c)).map(|c| c.name.clone()).unwrap_or_else(|| tr("None").into());
                     let resp = widgets::dropdown(ui, &label, w, Some(Icon::Instance));
                     menu_popup(&resp).width(200.0).show(|ui| {

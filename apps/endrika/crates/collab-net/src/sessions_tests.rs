@@ -6,9 +6,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
-use figcraft_engine::live::{Event, Live, Presence, Role, Status};
+use endrika_doc::NodeId;
+use endrika_engine::Session;
+use endrika_engine::live::{Event, Live, Presence, Role, Status};
 use serde_json::{Value, json};
 
 use crate::NetLink;

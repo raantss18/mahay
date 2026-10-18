@@ -7,10 +7,10 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::sim::Rng;
-use figcraft_collab::{Client, ClientMsg, Limits, Outgoing, Server, ServerMsg};
-use figcraft_doc::{Document, NodeId};
-use figcraft_geom::Affine;
+use endrika_collab::sim::Rng;
+use endrika_collab::{Client, ClientMsg, Limits, Outgoing, Server, ServerMsg};
+use endrika_doc::{Document, NodeId};
+use endrika_geom::Affine;
 use serde_json::json;
 
 use crate::Session;
@@ -18,7 +18,7 @@ use crate::collab_tests::{base, random_command};
 use crate::live::{Event, Role, Status};
 use crate::live_tests::{Mock, Script, info};
 
-const LINK: &str = "figcraft://join?host=127.0.0.1:47900&file=f&token=t";
+const LINK: &str = "endrika://join?host=127.0.0.1:47900&file=f&token=t";
 
 /// One person: an engine session with a scripted link, what it sent that the server hasn't had
 /// yet, and what the server sent that it hasn't taken in yet.
@@ -79,7 +79,7 @@ impl Room {
             let to: Vec<usize> = to.into_iter().filter(|i| self.people[*i].online).collect();
             for i in to {
                 // Through the binary encoding, like the network.
-                let m = figcraft_collab::message::decode(&figcraft_collab::message::encode(&msg).unwrap(), usize::MAX).unwrap();
+                let m = endrika_collab::message::decode(&endrika_collab::message::encode(&msg).unwrap(), usize::MAX).unwrap();
                 self.people[i].down.push_back(Event::Sync(m));
             }
         }
@@ -155,7 +155,7 @@ impl Room {
         for (i, p) in self.people.iter().enumerate() {
             let c = p.s.live().client().unwrap();
             assert_eq!(c.pending(), 0, "person {i}");
-            assert!(c.view() == self.server.replica(), "person {i}: {}", figcraft_collab::sim::describe(self.server.replica(), c.view()));
+            assert!(c.view() == self.server.replica(), "person {i}: {}", endrika_collab::sim::describe(self.server.replica(), c.view()));
             assert!(*p.s.doc().unwrap() == *self.server.document(), "person {i}: the canvas shows the session's document");
         }
     }

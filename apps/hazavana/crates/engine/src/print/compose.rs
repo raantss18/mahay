@@ -15,10 +15,10 @@ use super::{MAX_JOB_PAGES, MAX_JOB_PIXELS, MAX_PAGE_PIXELS, PageRaster};
 use crate::Session;
 use crate::export::{ExportOptions, output_size};
 use crate::media::RenderJob;
-use lightcraft_catalog::PhotoId;
-use lightcraft_color::transfer::srgb_to_linear;
-use lightcraft_color::{REC2020, SRGB};
-use lightcraft_pipeline::{DeepSamples, OutputDepth, OutputSpace};
+use hazavana_catalog::PhotoId;
+use hazavana_color::transfer::srgb_to_linear;
+use hazavana_color::{REC2020, SRGB};
+use hazavana_pipeline::{DeepSamples, OutputDepth, OutputSpace};
 use serde::{Deserialize, Serialize};
 
 /// Most photos one print job takes.
@@ -474,13 +474,13 @@ impl Marks {
         // centred in the bottom margin, and on the paper when the margin is thinner than the text
         let top = |h: f32| (area_bottom + (page_h - area_bottom - h) / 2.0).clamp(0.0, (page_h - h).max(0.0));
         if self.numbers
-            && let Some(t) = crate::text::TextLayout::new(&number.to_string(), self.text_px, false, crate::fonts::CRAFT_FONTS)
+            && let Some(t) = crate::text::TextLayout::new(&number.to_string(), self.text_px, false, crate::fonts::MAHAY_FONTS)
         {
             let x = ((area.x + area.w) as f32 - t.width).max(0.0);
             draw_text(page, &t, x, top(t.height), self.ink);
         }
         if let Some(info) = &self.info
-            && let Some(t) = crate::text::TextLayout::new(info, self.text_px, false, crate::fonts::CRAFT_FONTS)
+            && let Some(t) = crate::text::TextLayout::new(info, self.text_px, false, crate::fonts::MAHAY_FONTS)
         {
             draw_text(page, &t, area.x as f32, top(t.height), self.ink);
         }

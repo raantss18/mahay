@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use super::tests_export::{frame, kind, set};
 use super::*;
@@ -16,7 +16,7 @@ type Log = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
 /// An app with two unstroked squares (selected); `web` gives it a download service (recorded in
 /// the log) instead of a file manager.
-fn app(web: bool) -> (VectorcraftApp, Log, [u64; 2]) {
+fn app(web: bool) -> (TsipikaApp, Log, [u64; 2]) {
     let log = Log::default();
     let l = log.clone();
     let mut services = Services::default();
@@ -31,20 +31,20 @@ fn app(web: bool) -> (VectorcraftApp, Log, [u64; 2]) {
             Ok(())
         }));
     }
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
-    app.session.paint.stroke = vectorcraft_color::Paint::None;
+    app.session.paint.stroke = tsipika_color::Paint::None;
     let mut rect = |x: f64| app.run("shape.rectangle", json!({"x": x, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap();
     let ids = [rect(10.0), rect(100.0)];
     app.run("select.set", json!({"ids": ids})).unwrap();
     (app, log, ids)
 }
 
-fn field(app: &VectorcraftApp, k: &str) -> Value {
+fn field(app: &TsipikaApp, k: &str) -> Value {
     app.ui.dialog.as_ref().expect("a dialog is open").fields.get(k).cloned().unwrap_or(Value::Null)
 }
 
-fn assets(app: &mut VectorcraftApp) -> Vec<Value> {
+fn assets(app: &mut TsipikaApp) -> Vec<Value> {
     app.run("assets.list", json!({})).unwrap()["assets"].as_array().unwrap().clone()
 }
 

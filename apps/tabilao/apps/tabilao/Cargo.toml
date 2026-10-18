@@ -11,6 +11,7 @@ description = "Tabilao desktop app"
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 tabilao-engine = { workspace = true }
 tabilao-ui-egui = { workspace = true }
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11"] }

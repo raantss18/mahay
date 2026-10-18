@@ -2,15 +2,15 @@
 //!
 //! | Format | Container / files | Video | Alpha | Audio |
 //! |---|---|---|---|---|
-//! | H.264 | MP4 | FilmCraft H.264 High, 8-bit 4:2:0 BT.709 limited, VBR | no | AAC-LC (FilmCraft), mono/stereo |
-//! | ProRes | QuickTime MOV | FilmCraft ProRes 422 Proxy/LT/422/HQ, 10-bit; 4444/4444 XQ 4:4:4 | 4444 (16-bit alpha coding) | PCM 16/24-bit or 32-bit float, mono/stereo |
+//! | H.264 | MP4 | Hetsika H.264 High, 8-bit 4:2:0 BT.709 limited, VBR | no | AAC-LC (Hetsika), mono/stereo |
+//! | ProRes | QuickTime MOV | Hetsika ProRes 422 Proxy/LT/422/HQ, 10-bit; 4444/4444 XQ 4:4:4 | 4444 (16-bit alpha coding) | PCM 16/24-bit or 32-bit float, mono/stereo |
 //! | Uncompressed | QuickTime MOV (`raw `) | 8-bit RGB (depth 24, rows padded to even bytes) or ARGB (depth 32) | RGB + Alpha (straight or premultiplied) | PCM 16/24-bit or 32-bit float, mono/stereo |
 //! | PNG / JPEG / TIFF sequence | one file per frame | 8-bit | PNG, TIFF | — |
 //! | OpenEXR sequence | one file per frame | 32-bit float, linear light, premultiplied | yes | — |
 //! | Animated GIF | GIF89a | 256-colour palette per frame (NeuQuant) | 1-bit | — |
-//! | WebM | WebM (Matroska) | VP9 profile 0 (`effectcraft-vp9enc`: key + inter frames, a key frame every 2 s, loop filter), 8-bit 4:2:0; or AV1 (`effectcraft-av1enc`) | VP9 alpha (BlockAdditional) | Opus (`effectcraft-opusenc`: SILK / hybrid / CELT by bitrate and application), 48 kHz |
-//! | HEVC | MP4 (`hvc1`) | `effectcraft-hevcenc` Main / Main 10 4:2:0, I + P slices, bitrate or constant quality, level, key-frame interval | no | AAC-LC (FilmCraft) |
-//! | AV1 | MP4 (`av01`) | `effectcraft-av1enc` Main 8/10-bit 4:2:0, key + inter frames | no | AAC-LC (FilmCraft) |
+//! | WebM | WebM (Matroska) | VP9 profile 0 (`tselatra-vp9enc`: key + inter frames, a key frame every 2 s, loop filter), 8-bit 4:2:0; or AV1 (`tselatra-av1enc`) | VP9 alpha (BlockAdditional) | Opus (`tselatra-opusenc`: SILK / hybrid / CELT by bitrate and application), 48 kHz |
+//! | HEVC | MP4 (`hvc1`) | `tselatra-hevcenc` Main / Main 10 4:2:0, I + P slices, bitrate or constant quality, level, key-frame interval | no | AAC-LC (Hetsika) |
+//! | AV1 | MP4 (`av01`) | `tselatra-av1enc` Main 8/10-bit 4:2:0, key + inter frames | no | AAC-LC (Hetsika) |
 //! | WAV / AIFF | RIFF WAVE / AIFF (AIFF-C for float) | — | — | PCM 16/24-bit or 32-bit float, mono/stereo (audio only) |
 //!
 //! Every frame goes through [`pipeline`]: the Render Settings overrides (Effects, Solo Switches,
@@ -24,7 +24,7 @@
 //! Frames are rendered in parallel batches (rayon; one batch ≈ one frame per core) and handed to
 //! the encoder in order. They share the job's layer cache, as viewer frames share the viewer's:
 //! static and transform-only layers render once per job. Progress is reported after each batch through a callback that can cancel
-//! the job by returning `false`. Codecs and the MP4/MOV muxer are FilmCraft's pure-Rust crates
+//! the job by returning `false`. Codecs and the MP4/MOV muxer are Hetsika's pure-Rust crates
 //! (plan ADR 0001); nothing outside this crate touches them.
 //!
 //! H.264 requires even dimensions: odd output sizes are cropped by one pixel (padded when the
@@ -42,13 +42,13 @@ mod webm_av1;
 
 use web_time::Instant;
 
-use effectcraft_project::render_queue::{AudioOutput, Channels, OutputFormat, OutputModule, RenderLog, RenderQuality, RenderSettings, sequence_path};
-use effectcraft_project::{Comp, ItemId, Project};
-use effectcraft_raster::Image;
-use effectcraft_render::{ExprHost, FootageSource};
+use tselatra_project::render_queue::{AudioOutput, Channels, OutputFormat, OutputModule, RenderLog, RenderQuality, RenderSettings, sequence_path};
+use tselatra_project::{Comp, ItemId, Project};
+use tselatra_raster::Image;
+use tselatra_render::{ExprHost, FootageSource};
 
-pub use effectcraft_project::render_queue;
-pub use effectcraft_project::render_queue::StorageQuota;
+pub use tselatra_project::render_queue;
+pub use tselatra_project::render_queue::StorageQuota;
 pub use out::Sink;
 pub(crate) use pipeline::Cx;
 
@@ -79,7 +79,7 @@ pub struct Job<'a> {
     pub expr: Option<&'a dyn ExprHost>,
     /// GPU compositor: used for every frame of the job when the project's renderer is Mercury
     /// GPU Acceleration (frames it declines render on the CPU).
-    pub accel: Option<&'a dyn effectcraft_render::Accelerator>,
+    pub accel: Option<&'a dyn tselatra_render::Accelerator>,
     pub comp: ItemId,
     pub settings: &'a RenderSettings,
     pub output: &'a OutputModule,
@@ -158,18 +158,18 @@ pub fn wants_audio(job: &Job) -> bool {
         && match job.output.audio {
             AudioOutput::On => true,
             AudioOutput::Off => false,
-            AudioOutput::Auto => effectcraft_render::audio::comp_has_audio(job.project, job.comp),
+            AudioOutput::Auto => tselatra_render::audio::comp_has_audio(job.project, job.comp),
         }
 }
 
 /// Run the export (blocking). `progress` is called after every batch; returning `false` cancels.
 pub fn export(job: &Job, progress: &mut dyn FnMut(&Progress) -> bool) -> Result<Report> {
-    effectcraft_render::passes::block_on(export_async(job, progress))
+    tselatra_render::passes::block_on(export_async(job, progress))
 }
 
 /// [`export`] as a future: with an accelerator whose readbacks are deferred (WebGPU in a
 /// browser worker) every frame renders in passes, awaiting the device in between
-/// ([`effectcraft_render::passes`]); otherwise it never waits and frames render in parallel
+/// ([`tselatra_render::passes`]); otherwise it never waits and frames render in parallel
 /// batches as in [`export`].
 pub async fn export_async(job: &Job<'_>, progress: &mut dyn FnMut(&Progress) -> bool) -> Result<Report> {
     let t0 = Instant::now();

@@ -9,14 +9,14 @@
 use crate::i18n::tr_args;
 use std::collections::{BTreeMap, BTreeSet};
 
-use effectcraft_engine::project::{ItemId, ItemKind, LayerSource, Project};
+use tselatra_engine::project::{ItemId, ItemKind, LayerSource, Project};
 use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 /// Flowchart panel options (the panel's switches).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -192,12 +192,12 @@ pub fn layout(g: &FlowGraph, vertical: bool) -> Vec<[f32; 2]> {
 }
 
 /// The comp the panel charts.
-pub fn root(app: &EffectcraftApp) -> Option<ItemId> {
+pub fn root(app: &TselatraApp) -> Option<ItemId> {
     app.ui.flowchart.root.map(ItemId).filter(|r| app.session.project.comp(*r).is_some()).or_else(|| app.session.active_comp_id())
 }
 
 /// `flowchart.options` / `flowchart.graph` (UI commands).
-pub fn command(app: &mut EffectcraftApp, id: &str, p: &Value) -> Result<Value, String> {
+pub fn command(app: &mut TselatraApp, id: &str, p: &Value) -> Result<Value, String> {
     let o = &mut app.ui.flowchart;
     let b = |k: &str| p.get(k).and_then(Value::as_bool);
     if let Some(v) = b("layers") {
@@ -244,7 +244,7 @@ fn kind_style(kind: &str) -> (Icon, Color32) {
 }
 
 /// Draw the Flowchart panel.
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let ctx = ui.ctx().clone();
     let p = ui.painter().with_clip_rect(rect);
@@ -376,7 +376,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_engine::Session;
+    use tselatra_engine::Session;
 
     /// Main ⊃ Mid ⊃ Inner (with a solid), Main also uses Inner directly.
     fn session() -> (Session, ItemId, ItemId, ItemId) {
@@ -433,7 +433,7 @@ mod tests {
         let mut p = (*s.project).clone();
         let mut c = (*p.comp(mid).unwrap()).clone();
         let mut l = c.layers[0].clone();
-        l.id = effectcraft_engine::project::LayerId(9999);
+        l.id = tselatra_engine::project::LayerId(9999);
         l.source = LayerSource::Comp { item: main };
         c.layers.push(l);
         if let Some(ItemKind::Comp(arc)) = p.items.get_mut(&mid).map(|i| &mut i.kind) {
@@ -449,7 +449,7 @@ mod tests {
     #[test]
     fn options_command() {
         let (s, main, ..) = session();
-        let mut app = EffectcraftApp::new(s);
+        let mut app = TselatraApp::new(s);
         let r = command(&mut app, "flowchart.options", &json!({"layers": true, "direction": "tb"})).unwrap();
         assert_eq!(r["direction"], "tb");
         assert!(app.ui.flowchart.layers && app.ui.flowchart.vertical);

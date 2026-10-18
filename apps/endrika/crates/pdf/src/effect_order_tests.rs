@@ -4,8 +4,8 @@
 use super::*;
 use crate::backdrop_tests::{pdf_vs_png, scene};
 use crate::tests::inflated;
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Blur, BlurType, Effect, EffectKind, NodeKind, Shadow, StrokeAlign};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Blur, BlurType, Effect, EffectKind, NodeKind, Shadow, StrokeAlign};
 
 const FILL: &str = "0.2 0.4 0.8 rg";
 const CHILD: &str = "1 0 0 rg";

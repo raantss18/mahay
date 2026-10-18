@@ -1,12 +1,9 @@
-VectorCraft app icon (vectorcraft.svg, vectorcraft-small.svg and every file derived from them in this
-directory: vectorcraft-1024.png, vectorcraft-macos-512.png, vectorcraft.icns, vectorcraft.ico, hicolor/).
+Tsipika app icon (every file in this directory).
 
-Original artwork made for this project by the project owner, drawn in ArtCraft and vectorised for
-VectorCraft (no third-party material). Licensed like the rest of VectorCraft, under either of
+Original artwork for Mahay, generated from brand/svg/tsipika.svg by brand/generate.py and
+brand/apply.py. No third-party material. Licensed like the rest of Mahay, under either of
 
   * Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
   * MIT license (https://opensource.org/licenses/MIT)
 
-at your option.
-
-Regenerate the derived files with packaging/icons.sh.
+at your option. See docs/BRAND.md for how to use the Mahay marks.

@@ -2,7 +2,7 @@
 //! default area width, and stay inside the window: drawn headless.
 
 use egui::{Color32, Event, Order, PointerButton, Pos2, RawInput, Rect, pos2, vec2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 
 use crate::right::{menu_item, menu_popup, menu_row_width};
 use crate::theme::regular;

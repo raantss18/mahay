@@ -4,18 +4,18 @@
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use super::shortcut_import::{Code, KIND, Review, Row, Status, report};
 use super::*;
 use crate::{io, shortcut_editor, theme};
 
-fn app() -> VectorcraftApp {
-    VectorcraftApp::new(Session::new(), Default::default())
+fn app() -> TsipikaApp {
+    TsipikaApp::new(Session::new(), Default::default())
 }
 
 /// One headless frame of the dialog layer, with `events`.
-fn frame(app: &mut VectorcraftApp, events: Vec<egui::Event>) {
+fn frame(app: &mut TsipikaApp, events: Vec<egui::Event>) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     theme::apply(&ctx, Default::default());
@@ -27,15 +27,15 @@ fn press(key: egui::Key) -> egui::Event {
     egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::NONE }
 }
 
-fn dialog(app: &VectorcraftApp) -> &Dialog {
+fn dialog(app: &TsipikaApp) -> &Dialog {
     app.ui.dialog.as_ref().unwrap()
 }
 
-fn set(app: &mut VectorcraftApp, key: &str, v: Value) {
+fn set(app: &mut TsipikaApp, key: &str, v: Value) {
     app.ui.dialog.as_mut().unwrap().fields.insert(key.into(), v);
 }
 
-fn remember(app: &mut VectorcraftApp, matches: Value) {
+fn remember(app: &mut TsipikaApp, matches: Value) {
     app.run("importMatches.set", json!({ "matches": matches })).unwrap();
 }
 
@@ -115,7 +115,7 @@ fn a_key_with_no_equivalent_needs_no_modifiers() {
 const SET: &str = "/Menus {\n /Edit {\n  /Acme\\ Undo { /Context 0 /Modifiers 11 /Represent 0 /Key 902 }\n  /Acme\\ Copy { /Modifiers 11 /Key 902 }\n }\n /Acme\\ Pen { /Modifiers 11 /Key 901 }\n /Acme\\ Gadget { /Modifiers 0 /Key 48 }\n}\n";
 
 /// The answers an earlier import left for [`SET`].
-fn earlier_answers(app: &mut VectorcraftApp) {
+fn earlier_answers(app: &mut TsipikaApp) {
     remember(
         app,
         json!([
@@ -158,7 +158,7 @@ fn kys_files_open_the_review() {
     // A file in another form says so, and opens nothing.
     app.ui.dialog = None;
     let e = io::open_bytes(&mut app, "Other.kys", b"<?xml version=\"1.0\"?><shortcuts/>", None).unwrap_err();
-    assert_eq!(e, vectorcraft_engine::cmd::shortcutset::NOT_READABLE);
+    assert_eq!(e, tsipika_engine::cmd::shortcutset::NOT_READABLE);
     assert!(app.ui.dialog.is_none());
 }
 
@@ -211,7 +211,7 @@ fn cancel_and_apply_go_back_to_keyboard_shortcuts() {
     assert_eq!((dialog(&app).kind.as_str(), dialog(&app).fields["overrides"].clone()), ("shortcuts", json!({"edit.preferences": "Cmd+Alt+Shift+9"})));
     // Escape goes back the same way, and closes Keyboard Shortcuts after that.
     super::shortcut_import::open(&mut app, "/sets/Acme Keys.kys", SET.as_bytes()).unwrap();
-    let escape = |app: &mut VectorcraftApp| {
+    let escape = |app: &mut TsipikaApp| {
         let ctx = egui::Context::default();
         let mut out =
             ctx.run_ui(egui::RawInput { events: vec![press(egui::Key::Escape)], ..Default::default() }, |ui| crate::shortcuts::handle(app, ui.ctx()));
@@ -257,7 +257,7 @@ fn cancel_goes_back_to_keyboard_shortcuts_before_a_waiting_missing_fonts_dialog(
 #[test]
 fn a_set_dropped_with_no_document_open_opens_the_review() {
     let mut app = app();
-    let dir = vectorcraft_testkit::temp_dir("shortcut-import-drop");
+    let dir = tsipika_testkit::temp_dir("shortcut-import-drop");
     let kys = dir.join("Dropped.kys");
     std::fs::write(&kys, SET).unwrap();
     app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
@@ -326,8 +326,8 @@ fn remembered_choices_answer_the_next_import() {
 }
 
 /// What the import matches say `name` of `kind` stands for.
-fn importmatches_target(app: &VectorcraftApp, kind: &str, name: &str) -> Option<String> {
-    vectorcraft_engine::cmd::importmatches::targets(&app.session.prefs).get(&(kind, name)).map(|t| t.to_string())
+fn importmatches_target(app: &TsipikaApp, kind: &str, name: &str) -> Option<String> {
+    tsipika_engine::cmd::importmatches::targets(&app.session.prefs).get(&(kind, name)).map(|t| t.to_string())
 }
 
 #[test]
@@ -353,7 +353,7 @@ fn a_key_press_answers_the_code_being_recorded() {
 #[test]
 fn keyboard_shortcuts_import_reads_both_kinds_of_set() {
     let mut app = app();
-    let dir = vectorcraft_testkit::temp_dir("shortcut-import-path");
+    let dir = tsipika_testkit::temp_dir("shortcut-import-path");
     let kys = dir.join("On Disk.kys");
     std::fs::write(&kys, SET).unwrap();
     let kys = kys.to_string_lossy().to_string();
@@ -387,7 +387,7 @@ fn keyboard_shortcuts_import_reads_both_kinds_of_set() {
     app.ui.dialog = None;
     app.run("ui.shortcutImportDialog", json!({ "path": kys })).unwrap();
     assert_eq!((Review::of(dialog(&app)).rows.len(), dialog(&app).str("name")), (4, "On Disk".into()));
-    let b64 = vectorcraft_format::base64_encode(SET.as_bytes());
+    let b64 = tsipika_format::base64_encode(SET.as_bytes());
     let r = app.run("ui.shortcutImportDialog", json!({"dataBase64": b64, "name": "Sent.kys"})).unwrap();
     assert_eq!((r["entries"].as_u64(), dialog(&app).str("name")), (Some(4), "Sent".into()));
     // A file past the reader's cap opens with what fits, marked truncated.
@@ -419,7 +419,7 @@ fn many_rows_draw_and_filter() {
 
 /// The texts the sixth frame of the dialog layer painted on `screen`, each with its rectangle and
 /// the rectangle it was clipped to.
-fn painted_on(app: &mut VectorcraftApp, screen: egui::Rect) -> Vec<(String, egui::Rect, egui::Rect)> {
+fn painted_on(app: &mut TsipikaApp, screen: egui::Rect) -> Vec<(String, egui::Rect, egui::Rect)> {
     fn collect(s: &egui::Shape, clip: egui::Rect, v: &mut Vec<(String, egui::Rect, egui::Rect)>) {
         match s {
             egui::Shape::Text(t) => v.push((t.galley.text().to_string(), t.visual_bounding_rect(), clip)),

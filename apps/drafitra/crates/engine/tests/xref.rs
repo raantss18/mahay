@@ -5,31 +5,31 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::color::Color;
-use cadcraft_engine::doc::geom::Vec3;
-use cadcraft_engine::doc::{Block, Circle, Drawing, Entity, EntityKind, Handle, Insert, Layer, Line, Linetype, MAX_BLOCK_DEPTH, XrefStatus};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::color::Color;
+use drafitra_engine::doc::geom::Vec3;
+use drafitra_engine::doc::{Block, Circle, Drawing, Entity, EntityKind, Handle, Insert, Layer, Line, Linetype, MAX_BLOCK_DEPTH, XrefStatus};
 use serde_json::json;
 
 fn hooks() {
     set_io(IoHooks {
-        read: |b, name| cadcraft_io::read(b, name).map_err(|e| e.to_string()),
-        write: |d, name| cadcraft_io::write(d, name).map_err(|e| e.to_string()),
+        read: |b, name| drafitra_io::read(b, name).map_err(|e| e.to_string()),
+        write: |d, name| drafitra_io::write(d, name).map_err(|e| e.to_string()),
         plot: None,
     });
 }
 
 /// A fresh folder for one test.
 fn folder(tag: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("cadcraft-xref-{}-{tag}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-xref-{}-{tag}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }
 
 fn save(d: &Drawing, path: &Path) {
-    std::fs::write(path, cadcraft_io::write(d, &path.to_string_lossy()).unwrap()).unwrap();
+    std::fs::write(path, drafitra_io::write(d, &path.to_string_lossy()).unwrap()).unwrap();
 }
 
 fn line(d: &mut Drawing, layer: &str, a: (f64, f64), b: (f64, f64)) {
@@ -115,13 +115,13 @@ fn attach_loads_the_file_and_saving_keeps_only_the_reference() {
     let d = s.doc().unwrap();
     assert_eq!(d.layer("site|Walls").map(|l| l.color), Some(Color::Index(1)), "layers come prefixed");
     assert!(d.block("site|Tree").is_some(), "its blocks too");
-    let ext = d.extents(&cadcraft_engine::doc::Space::Model);
+    let ext = d.extents(&drafitra_engine::doc::Space::Model);
     assert!(ext.max.x >= 110.0 - 1e-9, "the xref is drawn where it was placed: {ext:?}");
 
     // Saved: the xref block with its path and no objects, and none of its symbols but its layers
     // (their settings in the host are the host's, #886).
     s.execute("qsave", &json!({})).unwrap();
-    let saved = cadcraft_io::read(&std::fs::read(&host).unwrap(), "host.dxf").unwrap();
+    let saved = drafitra_io::read(&std::fs::read(&host).unwrap(), "host.dxf").unwrap();
     let b = saved.block("site").unwrap();
     assert_eq!((b.xref_path.as_deref(), b.entities.len()), (Some("site.dxf"), 0));
     assert_eq!(saved.layer("site|Walls").map(|l| l.color), Some(Color::Index(1)));
@@ -226,7 +226,7 @@ fn missing_files_leave_the_host_intact() {
     assert!(s.log.iter().any(|m| m.contains("gone") && m.contains("not loaded")), "{:?}", s.log);
     // The reference survives a save.
     s.execute("qsave", &json!({})).unwrap();
-    let saved = cadcraft_io::read(&std::fs::read(&host).unwrap(), "host.dxf").unwrap();
+    let saved = drafitra_io::read(&std::fs::read(&host).unwrap(), "host.dxf").unwrap();
     assert_eq!(saved.block("gone").and_then(|b| b.xref_path.clone()).as_deref(), Some("gone.dxf"));
 
     // Attaching a file that isn't there changes nothing.
@@ -251,7 +251,7 @@ fn overlays_do_not_load_in_the_drawings_that_reference_their_host() {
     open(&mut s, &plan);
     assert_eq!(status(&s, "site"), Some(XrefStatus::Loaded), "an overlay loads in its own host");
     s.execute("qsave", &json!({})).unwrap();
-    let saved = cadcraft_io::read(&std::fs::read(&plan).unwrap(), "plan.dxf").unwrap();
+    let saved = drafitra_io::read(&std::fs::read(&plan).unwrap(), "plan.dxf").unwrap();
     assert!(saved.block("site").unwrap().xref_overlay, "the overlay flag is saved");
 
     // Attached plan: its overlaid site isn't loaded; an attached one would be.
@@ -328,7 +328,7 @@ fn bind_makes_the_xref_part_of_the_drawing() {
 
     // It is saved as a normal block now.
     s.execute("qsave", &json!({})).unwrap();
-    let saved = cadcraft_io::read(&std::fs::read(&host).unwrap(), "host.dxf").unwrap();
+    let saved = drafitra_io::read(&std::fs::read(&host).unwrap(), "host.dxf").unwrap();
     assert_eq!(saved.block("site").map(|b| b.entities.len()), Some(2));
     assert!(saved.layer("site$1$Walls").is_some());
 

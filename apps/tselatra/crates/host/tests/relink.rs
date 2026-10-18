@@ -3,14 +3,14 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_engine::project::ItemKind;
+use tselatra_engine::project::ItemKind;
 use serde_json::json;
 
 fn icon() -> Vec<u8> {
-    std::fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/app-icon/hicolor/16x16/apps/ai.storyteller.effectcraft.png")).unwrap()
+    std::fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/app-icon/hicolor/16x16/apps/org.mahay.tselatra.png")).unwrap()
 }
 
-fn footage_paths(s: &effectcraft_engine::Session) -> Vec<(u64, String, bool)> {
+fn footage_paths(s: &tselatra_engine::Session) -> Vec<(u64, String, bool)> {
     let mut v: Vec<(u64, String, bool)> = s
         .project
         .items
@@ -32,7 +32,7 @@ fn replacing_a_missing_file_relinks_the_others_that_moved_with_it() {
     std::fs::create_dir_all(old.join("stills")).unwrap();
     std::fs::write(old.join("stills/a.png"), icon()).unwrap();
     std::fs::write(old.join("stills/b.png"), icon()).unwrap();
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let paths: Vec<String> = ["stills/a.png", "stills/b.png"].iter().map(|p| old.join(p).to_string_lossy().to_string()).collect();
     s.execute("file.import", json!({"paths": paths, "sequence": false})).unwrap();
     let before = footage_paths(&s);

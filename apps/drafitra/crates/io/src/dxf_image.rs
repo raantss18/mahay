@@ -1,15 +1,15 @@
 //! Raster images in DXF (DXF Reference: IMAGE entity; IMAGEDEF, IMAGEDEF_REACTOR and
 //! RASTERVARIABLES objects). An IMAGE entity holds the placement, clip boundary and display
 //! settings; it points (group 340) to an IMAGEDEF object holding the file path, which the
-//! `ACAD_IMAGE_DICT` dictionary names. CADCraft keeps this data so images survive save and
+//! `ACAD_IMAGE_DICT` dictionary names. Drafitra keeps this data so images survive save and
 //! reopen; the pixels themselves are not loaded.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, EntityKind, EntityStore, Handle, Image};
-use cadcraft_dxf::{Section, Tag};
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_doc::{Drawing, EntityKind, EntityStore, Handle, Image};
+use drafitra_dxf::{Section, Tag};
+use drafitra_geom::{Vec2, Vec3};
 
 /// Most clip boundary vertices kept per image (hostile files).
 const MAX_CLIP: usize = 100_000;
@@ -211,7 +211,7 @@ fn def_name(i: &Image) -> String {
 }
 
 /// Allocate the IMAGEDEF, IMAGEDEF_REACTOR and dictionary handles for every image entity.
-pub(crate) fn plan<'a>(entities: impl Iterator<Item = &'a cadcraft_doc::Entity>, mut next: impl FnMut() -> String) -> Plan {
+pub(crate) fn plan<'a>(entities: impl Iterator<Item = &'a drafitra_doc::Entity>, mut next: impl FnMut() -> String) -> Plan {
     let mut p = Plan::default();
     let mut index: HashMap<(String, String), usize> = HashMap::new();
     let mut used: HashSet<String> = HashSet::new();

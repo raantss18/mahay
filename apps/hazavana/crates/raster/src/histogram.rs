@@ -39,7 +39,7 @@ impl HdrBins {
             return 0;
         }
         if v <= 1.0 {
-            let e = lightcraft_color::transfer::linear_to_srgb(v);
+            let e = hazavana_color::transfer::linear_to_srgb(v);
             return ((e * (from - 1) as f32 + 0.5) as usize).min(from - 1);
         }
         let stops = if self.stops.is_finite() { self.stops.max(1e-3) } else { 1e-3 };

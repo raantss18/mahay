@@ -5,8 +5,8 @@ use serde_json::json;
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind, selection_box, selection_frame};
-use figcraft_doc::NodeId;
-use figcraft_geom::{Affine, Point};
+use endrika_doc::NodeId;
+use endrika_geom::{Affine, Point};
 
 fn rect(s: &mut Session, x: f64, y: f64, rotation: f64) -> NodeId {
     let id = id_of(&s.execute("shape.rectangle", &json!({"x": x, "y": y, "width": 100, "height": 50})).unwrap()["id"]).unwrap();
@@ -74,7 +74,7 @@ fn resizing_a_rotated_multi_selection_scales_along_its_axes() {
     for i in ids {
         let n = doc.node(i).unwrap();
         assert!(near(n.width, 150.0) && near(n.height, 100.0), "{} {}", n.width, n.height);
-        assert!(near(figcraft_geom::rotation_degrees(n.transform), 30.0));
+        assert!(near(endrika_geom::rotation_degrees(n.transform), 30.0));
     }
     // One undo step restores both.
     s.execute("edit.undo", &json!({})).unwrap();

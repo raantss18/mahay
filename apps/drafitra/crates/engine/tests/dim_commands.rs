@@ -1,16 +1,16 @@
 //! DIMEDIT (Home/New/Rotate/Oblique), DIMJOGGED, DIMJOGLINE, DIMBREAK and DIMINSPECT: the JSON
 //! forms, the prompt sequences and what they draw.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Dimension, EntityKind, Handle};
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::render::{DimGeometry, LineRole};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{Dimension, EntityKind, Handle};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::render::{DimGeometry, LineRole};
 use serde_json::{Value, json};
 
 fn dim_of(s: &Session, h: &str) -> (Dimension, DimGeometry) {
     let d = s.doc().unwrap();
     match &d.entity(Handle::parse_hex(h).unwrap()).unwrap().kind {
-        EntityKind::Dimension(dm) => (dm.clone(), cadcraft_engine::render::dimension_in(d, dm)),
+        EntityKind::Dimension(dm) => (dm.clone(), drafitra_engine::render::dimension_in(d, dm)),
         k => panic!("not a dimension: {k:?}"),
     }
 }
@@ -212,7 +212,7 @@ fn inspection_dimensions() {
     let plain = {
         let mut p = dm.clone();
         p.marks.inspect = None;
-        cadcraft_engine::render::dimension_in(s.doc().unwrap(), &p)
+        drafitra_engine::render::dimension_in(s.doc().unwrap(), &p)
     };
     assert_eq!(g.lines_of(LineRole::Dim).count(), plain.lines_of(LineRole::Dim).count() + 6);
     s.execute("diminspect", &json!({ "handles": [h], "shape": "none", "label": "", "rate": "" })).unwrap();
@@ -249,9 +249,9 @@ fn marks_follow_move_and_rotate_and_hostile_values_do_not_panic() {
     d.modify_entity(hh, |e| {
         if let EntityKind::Dimension(dm) = &mut e.kind {
             dm.marks.oblique = Some(f64::NAN);
-            dm.marks.jog_line = Some(cadcraft_engine::geom::Vec3::new(f64::INFINITY, 0.0, 0.0));
-            dm.marks.breaks.push(cadcraft_engine::doc::DimBreak { at: Default::default(), size: f64::NAN, auto: false });
-            dm.marks.inspect = Some(cadcraft_engine::doc::Inspection { shape: 9, label: "x".into(), rate: String::new() });
+            dm.marks.jog_line = Some(drafitra_engine::geom::Vec3::new(f64::INFINITY, 0.0, 0.0));
+            dm.marks.breaks.push(drafitra_engine::doc::DimBreak { at: Default::default(), size: f64::NAN, auto: false });
+            dm.marks.inspect = Some(drafitra_engine::doc::Inspection { shape: 9, label: "x".into(), rate: String::new() });
         }
     })
     .unwrap();

@@ -3,8 +3,8 @@
 use std::f64::consts::PI;
 
 use kurbo::{ParamCurve, Point, Rect, Shape as _};
-use vectorcraft_geom::{FillRule, PathData, SubPath};
-use vectorcraft_pathops::*;
+use tsipika_geom::{FillRule, PathData, SubPath};
+use tsipika_pathops::*;
 
 const NZ: FillRule = FillRule::NonZero;
 
@@ -441,7 +441,7 @@ fn timing_unite_1000_circles() {
 
 #[test]
 fn remove_anchor_refits_the_curve_round_it() {
-    use vectorcraft_geom::Anchor;
+    use tsipika_geom::Anchor;
     let (p0, p3) = (Point::new(0.0, 0.0), Point::new(100.0, 0.0));
     let original =
         SubPath::new(vec![Anchor::with_handles(p0, p0, Point::new(30.0, 80.0)), Anchor::with_handles(p3, Point::new(70.0, 80.0), p3)], false);

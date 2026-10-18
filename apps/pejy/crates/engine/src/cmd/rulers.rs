@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::Document;
+use pejy_doc::Document;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, point_param};
@@ -86,8 +86,8 @@ pub(crate) fn keep_zero_point(now: &Document, to: &mut Arc<Document>) {
 
 #[cfg(test)]
 mod tests {
-    use designcraft_doc::{ItemId, SpreadRef};
-    use designcraft_geom::Point;
+    use pejy_doc::{ItemId, SpreadRef};
+    use pejy_geom::Point;
     use serde_json::json;
 
     use crate::Session;
@@ -168,7 +168,7 @@ mod tests {
             let b = d.item(ItemId(id)).unwrap().bounds();
             b.x0 - d.ruler_origin(SpreadRef::Doc(1), b.center().x).unwrap().x
         };
-        assert_eq!(s.doc().unwrap().doc.settings.ruler_origin, designcraft_doc::RulerOrigin::Spread, "the default");
+        assert_eq!(s.doc().unwrap().doc.settings.ruler_origin, pejy_doc::RulerOrigin::Spread, "the default");
         for (origin, l, r) in [("spread", 90.0, 690.0), ("page", 90.0, 78.0), ("spine", -522.0, 78.0)] {
             s.execute("document.preferences", &json!({"rulerOrigin": origin})).unwrap();
             assert_eq!((x_of(&s, left), x_of(&s, right)), (l, r), "{origin}");
@@ -193,18 +193,18 @@ mod tests {
         let d = s.doc().unwrap().doc.clone();
         let json = serde_json::to_string(&*d).unwrap();
         assert!(!json.contains("zeroPoint"), "the default isn't written");
-        let back: designcraft_doc::Document = serde_json::from_str(&json).unwrap();
+        let back: pejy_doc::Document = serde_json::from_str(&json).unwrap();
         assert_eq!(back.settings.zero_point, [0.0, 0.0]);
         assert!(!back.settings.zero_point_locked);
         s.execute("view.zeroPoint", &json!({"at": [12, 34]})).unwrap();
         s.execute("view.lockZeroPoint", &json!({"on": true})).unwrap();
         let json = serde_json::to_string(&*s.doc().unwrap().doc).unwrap();
-        let back: designcraft_doc::Document = serde_json::from_str(&json).unwrap();
+        let back: pejy_doc::Document = serde_json::from_str(&json).unwrap();
         assert_eq!(back.settings.zero_point, [12.0, 34.0]);
         assert!(back.settings.zero_point_locked);
         // A file can hold any numbers; rulers and X/Y read them kept on the pasteboard.
         let far = json.replace("[12.0,34.0]", "[1e300,-1e300]");
-        let back: designcraft_doc::Document = serde_json::from_str(&far).unwrap();
+        let back: pejy_doc::Document = serde_json::from_str(&far).unwrap();
         let [x, y] = back.zero_point();
         assert!(x.is_finite() && y.is_finite() && x < 1e4 && y > -1e4, "{x} {y}");
     }

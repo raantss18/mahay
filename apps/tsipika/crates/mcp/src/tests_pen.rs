@@ -19,7 +19,7 @@ fn gesture(pts: &[(f64, f64)]) -> Value {
 }
 
 /// The anchors of each path, in paint order.
-fn paths(h: &Headless) -> Vec<Vec<vectorcraft_geom::Anchor>> {
+fn paths(h: &Headless) -> Vec<Vec<tsipika_geom::Anchor>> {
     let mut v = vec![];
     h.session.doc().unwrap().doc.walk(|n| {
         if let Some(p) = n.path_data() {
@@ -41,7 +41,7 @@ fn cmd_with_the_pen_edits_the_path_being_drawn() {
     drag["mods"] = json!({"cmd": true});
     let r = text(&call_tool(&mut h, "pointer_gesture", &drag));
     assert_eq!(r["tool"], "pen", "{r}");
-    assert_eq!(paths(&h)[0][1].h_out, vectorcraft_geom::Point::new(250.0, 263.0));
+    assert_eq!(paths(&h)[0][1].h_out, tsipika_geom::Point::new(250.0, 263.0));
     text(&call_tool(&mut h, "pointer_gesture", &gesture(&[(300.0, 350.0)])));
     assert_eq!(paths(&h).iter().map(Vec::len).collect::<Vec<_>>(), [3], "the same path, three anchors");
 }
@@ -62,5 +62,5 @@ fn a_drag_from_the_first_anchor_closes_the_path() {
     d.walk(|n| closed.extend(n.path_data().map(|p| p.is_closed())));
     assert_eq!(closed, [true], "one path, closed");
     let first = paths(&h)[0][0];
-    assert_eq!((first.h_in, first.h_out), (vectorcraft_geom::Point::new(40.0, 348.0), vectorcraft_geom::Point::new(160.0, 252.0)));
+    assert_eq!((first.h_in, first.h_out), (tsipika_geom::Point::new(40.0, 348.0), tsipika_geom::Point::new(160.0, 252.0)));
 }

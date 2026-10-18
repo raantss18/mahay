@@ -33,7 +33,7 @@ disallowed-methods = [
     { path = "std::path::Path::symlink_metadata", reason = "use file_access (automation roots)" },
     { path = "std::path::Path::read_dir", reason = "use file_access::read_dir (automation roots)" },
     { path = "std::path::Path::canonicalize", reason = "use file_access (automation roots)" },
-    { path = "figcraft_format::write_file_atomic", reason = "use file_access::write (automation roots)" },
-    { path = "figcraft_format::save_file", reason = "use file_access::write (automation roots)" },
-    { path = "figcraft_format::load_file", reason = "use file_access::read (automation roots)" },
+    { path = "endrika_format::write_file_atomic", reason = "use file_access::write (automation roots)" },
+    { path = "endrika_format::save_file", reason = "use file_access::write (automation roots)" },
+    { path = "endrika_format::load_file", reason = "use file_access::read (automation roots)" },
 ]

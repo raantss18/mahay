@@ -8,12 +8,12 @@ mod corpus;
 #[path = "../../affinity/tests/support/text_fixture.rs"]
 mod fixture;
 use fixture::*;
-use vectorcraft_affinity::synth::{F, tag};
-use vectorcraft_doc::{
+use tsipika_affinity::synth::{F, tag};
+use tsipika_doc::{
     Document, Node, NodeKind, TextObject,
     text::{CharStyle, Justify, TextKind},
 };
-use vectorcraft_engine::cmd::fileio;
+use tsipika_engine::cmd::fileio;
 
 fn texts(d: &Document) -> Vec<&TextObject> {
     fn walk<'a>(n: &'a Node, out: &mut Vec<&'a TextObject>) {
@@ -59,8 +59,8 @@ fn unicode_mixed_fonts_line_breaks_and_styles_remain_editable_after_save() {
     assert_eq!(t.para.justify, Justify::Center);
     assert!(matches!(t.kind, TextKind::Point));
     assert_eq!(t.xf.as_coeffs(), [1.0, 0.0, 0.0, 1.0, 187.5, 87.0]);
-    let saved = vectorcraft_format::save_file(&loaded.doc);
-    let restored = vectorcraft_format::load(&saved).unwrap();
+    let saved = tsipika_format::save_file(&loaded.doc);
+    let restored = tsipika_format::load(&saved).unwrap();
     assert_eq!(texts(&restored)[0], t);
 }
 
@@ -91,7 +91,7 @@ fn frame_type_keeps_dimensions_alignment_and_unit_conversion() {
 #[test]
 fn a_frame_too_short_for_its_first_line_is_made_taller_with_a_warning() {
     // #1423: a title taller than its frame (60 pt type in a 50 pt frame) drew nothing.
-    let lines = |t: &TextObject| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).lines.len();
+    let lines = |t: &TextObject| tsipika_text::layout(tsipika_text::FontDb::global(), t).lines.len();
     let title = |size: f64| import(vec![block(utf8("T"), vec![run(1, Some(attrs("Frame", "", 400, false, size)))], &[3])], true, 144.0, IDENTITY);
     let short = title(120.0);
     let t = texts(&short.doc)[0];
@@ -173,7 +173,7 @@ fn caps_and_feature_overrides_pass_through_to_editable_type() {
     assert!(t.runs[0].style.all_caps);
     assert_eq!(t.runs[0].style.features, ["-liga", "ss01", "cv01"]);
     assert!(loaded.warnings.iter().any(|w| w.contains("retained but not rendered")));
-    let restored = vectorcraft_format::load(&vectorcraft_format::save_file(&loaded.doc)).unwrap();
+    let restored = tsipika_format::load(&tsipika_format::save_file(&loaded.doc)).unwrap();
     assert_eq!(texts(&restored)[0], t);
 }
 
@@ -198,7 +198,7 @@ fn pinned_affinity3_text_opens_as_editable_unicode_with_resolved_emoji_font() {
     {
         let loaded = load(name);
         assert!(!texts(&loaded.doc).is_empty(), "{name}");
-        let restored = vectorcraft_format::load(&vectorcraft_format::save_file(&loaded.doc)).unwrap();
+        let restored = tsipika_format::load(&tsipika_format::save_file(&loaded.doc)).unwrap();
         assert_eq!(texts(&restored), texts(&loaded.doc), "{name}");
     }
 }
@@ -207,7 +207,7 @@ fn pinned_affinity3_text_opens_as_editable_unicode_with_resolved_emoji_font() {
 fn installed_postscript_identity_overrides_ambiguous_family_and_weight() {
     // This is an OS font metadata check. No font file is committed or required; the structural
     // fallback cases above always run, including when the optional font repository is absent.
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     let Some((family, face_style)) = db.by_postscript_name("DejaVuSans") else {
         eprintln!("DejaVuSans is not installed; exact PostScript face test skipped");
         return;

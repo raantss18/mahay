@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 use super::{pstate, selection_len, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets::{self, menu_item};
 
 /// What Align aligns to. The Align To choice kept with the UI state ([`crate::UiState::align_to`])
@@ -54,19 +54,19 @@ pub fn align_params(base: Value, to: AlignTo, n_selected: usize) -> Value {
 /// bar and the Properties panel send: the artboard for a single selected object, else the key object
 /// while there is one, else the Align To choice. Object → Align sends it too while every selected
 /// object is selected whole ([`crate::menus::invoke`]).
-pub fn with_align_to(app: &VectorcraftApp, base: Value) -> Value {
+pub fn with_align_to(app: &TsipikaApp, base: Value) -> Value {
     align_params(base, align_to(app), objects_aligned(app))
 }
 
 /// The selected objects that Align aligns as objects: none while anchor points are selected
 /// (Direct Selection), since the points align and a single path's points must not go to the
 /// artboard as a single object does (#1636).
-fn objects_aligned(app: &VectorcraftApp) -> usize {
+fn objects_aligned(app: &TsipikaApp) -> usize {
     if has_anchors(app) { 0 } else { selection_len(app) }
 }
 
 /// Whether anchor points are selected (Direct Selection): Align and Distribute then act on the points.
-fn has_anchors(app: &VectorcraftApp) -> bool {
+fn has_anchors(app: &TsipikaApp) -> bool {
     app.session.active().is_some_and(|st| !st.selection.anchors.is_empty())
 }
 
@@ -91,7 +91,7 @@ pub const DISTRIBUTE: [(&str, &str, &str, &str); 6] = [
 /// The six align buttons of the Control bar and the Properties panel, `size` points square.
 /// They align to what the Align panel's Align To says (the key object while there is one), as
 /// its own buttons do (#789).
-pub fn align_buttons(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) {
+pub fn align_buttons(app: &mut TsipikaApp, ui: &mut Ui, size: f32) {
     for (i, (icon, tip, axis, v)) in [
         ("align-start-vertical", "Horizontal Align Left", "horizontal", "left"),
         ("align-center-vertical", "Horizontal Align Center", "horizontal", "center"),
@@ -113,12 +113,12 @@ pub fn align_buttons(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) {
 }
 
 /// Whether the selection has a key object.
-fn has_key(app: &VectorcraftApp) -> bool {
+fn has_key(app: &TsipikaApp) -> bool {
     app.session.active().is_some_and(|st| st.selection.key.is_some())
 }
 
 /// The topmost selected object, the last in paint order.
-fn topmost(app: &VectorcraftApp) -> Option<vectorcraft_doc::NodeId> {
+fn topmost(app: &TsipikaApp) -> Option<tsipika_doc::NodeId> {
     app.session.active().and_then(|st| st.selection.in_paint_order(&st.doc).last().copied())
 }
 
@@ -126,11 +126,11 @@ fn topmost(app: &VectorcraftApp) -> Option<vectorcraft_doc::NodeId> {
 /// selection makes it the key, and Align to Key Object makes the topmost one the key), else the
 /// stored Align To choice, Selection or Artboard. The Distribute Objects and Distribute Spacing
 /// buttons send it as their `to`.
-fn align_to(app: &VectorcraftApp) -> AlignTo {
+fn align_to(app: &TsipikaApp) -> AlignTo {
     if has_key(app) { AlignTo::Key } else { app.ui.align_to }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let n = selection_len(app);
     let to = align_to(app);
     // `spacing` is the Distribute Spacing value. The Distribute Objects and Distribute Spacing
@@ -232,7 +232,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let hidden: bool = pstate(ui.ctx(), "align-hide-options");
     if menu_item(ui, if hidden { tl!("Show Options") } else { tl!("Hide Options") }, true, false) {
         set_pstate(ui.ctx(), "align-hide-options", !hidden);
@@ -271,7 +271,7 @@ mod tests {
     /// object to the artboard.
     #[test]
     fn a_lone_object_aligns_to_the_artboard() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -279,12 +279,12 @@ mod tests {
         app.run("select.set", json!({"ids": [a, b]})).unwrap();
         app.run("select.key", json!({"id": b})).unwrap();
         app.run("select.toggle", json!({"id": a})).unwrap();
-        let id = vectorcraft_doc::NodeId(b.as_u64().unwrap());
-        let bounds = |app: &VectorcraftApp| app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
+        let id = tsipika_doc::NodeId(b.as_u64().unwrap());
+        let bounds = |app: &TsipikaApp| app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
         // `align_buttons` (the Control bar and the Properties panel): one frame finds the first
         // button, and the next clicks Horizontal Align Right, the third.
         let at = std::cell::Cell::new(egui::Pos2::ZERO);
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| {
                 ui.horizontal(|ui| {
                     at.set(ui.cursor().min);
@@ -317,7 +317,7 @@ mod tests {
     /// choosing Align to Selection lets the key go.
     #[test]
     fn a_key_object_makes_align_align_to_it() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -331,8 +331,8 @@ mod tests {
 
     /// Two rectangles, the back one at x 10 and the front one at x 80, selected front first →
     /// (the app, the back one's id, the front one's id).
-    fn back_and_front() -> (VectorcraftApp, Value, Value) {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    fn back_and_front() -> (TsipikaApp, Value, Value) {
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let back = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let front = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -342,7 +342,7 @@ mod tests {
 
     /// One frame of the Align panel → its Align To buttons (Selection, Key Object, Artboard) and
     /// its Horizontal Align Left button.
-    fn panel_buttons(app: &mut VectorcraftApp, ctx: &egui::Context) -> ([egui::Rect; 3], egui::Rect) {
+    fn panel_buttons(app: &mut TsipikaApp, ctx: &egui::Context) -> ([egui::Rect; 3], egui::Rect) {
         frame_events(ctx, app, vec![], show);
         // The 28-point buttons are Distribute Spacing's two and then Align To's three.
         let mut small = widget_rects(ctx, egui::vec2(28.0, 28.0));
@@ -354,8 +354,8 @@ mod tests {
     }
 
     /// The left edge of object `id`.
-    fn left_edge(app: &VectorcraftApp, id: &Value) -> f64 {
-        let id = vectorcraft_doc::NodeId(id.as_u64().unwrap());
+    fn left_edge(app: &TsipikaApp, id: &Value) -> f64 {
+        let id = tsipika_doc::NodeId(id.as_u64().unwrap());
         app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap().x0
     }
 
@@ -368,7 +368,7 @@ mod tests {
         let ctx = egui::Context::default();
         let ([_, key, _], left) = panel_buttons(&mut app, &ctx);
         click(&ctx, &mut app, key.center(), show);
-        let key_object = |app: &VectorcraftApp| app.session.active().unwrap().selection.key.map(|k| k.0);
+        let key_object = |app: &TsipikaApp| app.session.active().unwrap().selection.key.map(|k| k.0);
         assert_eq!(key_object(&app), front.as_u64(), "the front rectangle, selected first");
         app.run("select.set", json!({"ids": [back, front]})).unwrap();
         click(&ctx, &mut app, key.center(), show);
@@ -445,7 +445,7 @@ mod tests {
     }
 
     /// One frame of the Align panel → the rects of the Align To buttons drawn as chosen.
-    fn chosen_align_to(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<egui::Rect> {
+    fn chosen_align_to(app: &mut TsipikaApp, ctx: &egui::Context) -> Vec<egui::Rect> {
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| show(app, ui));
         out.textures_delta.clear();
         let fill = crate::theme::Tokens::get(ctx).tool_active;
@@ -486,7 +486,7 @@ mod tests {
     /// #789: the Control bar's and the Properties panel's align buttons follow Align To too.
     #[test]
     fn the_other_align_buttons_align_to_the_align_to_choice() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -495,7 +495,7 @@ mod tests {
         app.ui.align_to = AlignTo::Artboard;
         // One frame finds the first button (Horizontal Align Right is third); the next clicks it.
         let at = std::cell::Cell::new(egui::Pos2::ZERO);
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| {
                 ui.horizontal(|ui| {
                     at.set(ui.cursor().min);
@@ -510,13 +510,13 @@ mod tests {
         frame(&mut app, vec![egui::Event::PointerMoved(right), press(true)]);
         frame(&mut app, vec![press(false)]);
         let st = app.session.active().unwrap();
-        let x1 = |id: &serde_json::Value| st.doc.bounds_of(&[vectorcraft_doc::NodeId(id.as_u64().unwrap())], false).unwrap().x1;
+        let x1 = |id: &serde_json::Value| st.doc.bounds_of(&[tsipika_doc::NodeId(id.as_u64().unwrap())], false).unwrap().x1;
         assert_eq!((x1(&a), x1(&b)), (200.0, 200.0), "both to the artboard's right edge");
     }
 
     /// One frame of the Align panel → its Horizontal Distribute Left and Horizontal Distribute
     /// Space buttons.
-    fn distribute_buttons(app: &mut VectorcraftApp, ctx: &egui::Context) -> (egui::Rect, egui::Rect) {
+    fn distribute_buttons(app: &mut TsipikaApp, ctx: &egui::Context) -> (egui::Rect, egui::Rect) {
         frame_events(ctx, app, vec![], show);
         // The lower row of 32-point buttons is Distribute Objects': Vertical Distribute Top, Center
         // and Bottom, then Horizontal Distribute Left, Center and Right.
@@ -537,7 +537,7 @@ mod tests {
     /// between them equal. With Align to Selection chosen, the outermost objects stay put.
     #[test]
     fn the_distribute_buttons_follow_align_to_artboard() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200, "artboards": 2})).unwrap();
         let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
         let ids: Vec<Value> = [(10, 20), (50, 40), (120, 20)]
@@ -545,7 +545,7 @@ mod tests {
             .map(|(x, w)| app.run("shape.rectangle", json!({"x": x, "y": 10, "width": w, "height": 10})).unwrap()["id"].clone())
             .collect();
         app.run("select.set", json!({"ids": ids})).unwrap();
-        let lefts = |app: &VectorcraftApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
+        let lefts = |app: &TsipikaApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
         let ctx = egui::Context::default();
         let (left, space) = distribute_buttons(&mut app, &ctx);
         click(&ctx, &mut app, left.center(), show);
@@ -568,16 +568,16 @@ mod tests {
     /// they send no spacing.
     #[test]
     fn the_distribute_objects_buttons_send_the_spacing_with_a_key_object() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let ids: Vec<Value> = [(10, 20), (50, 40), (120, 20)]
             .into_iter()
             .map(|(x, w)| app.run("shape.rectangle", json!({"x": x, "y": 10, "width": w, "height": 10})).unwrap()["id"].clone())
             .collect();
         app.run("select.set", json!({"ids": ids})).unwrap();
-        let lefts = |app: &VectorcraftApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
+        let lefts = |app: &TsipikaApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
         // The command and its `to` and `spacing` params (the app adds the active artboard).
-        let sent = |app: &VectorcraftApp| {
+        let sent = |app: &TsipikaApp| {
             let (id, p) = app.session.journal.last().unwrap();
             (id.clone(), p["to"].clone(), p.get("spacing").cloned())
         };
@@ -598,7 +598,7 @@ mod tests {
     }
 
     /// Runs the Object → Align item `label` as a click on it does.
-    fn object_align(app: &mut VectorcraftApp, label: &str) {
+    fn object_align(app: &mut TsipikaApp, label: &str) {
         let entry = crate::menus::menu_entries(app).into_iter().find(|e| e.path == ["Object", "Align"] && e.label == label).expect("menu item");
         let (id, p) = crate::menus::click_target(&entry.label, entry.command.as_deref().unwrap(), &entry.params);
         crate::menus::invoke(app, &id, p);
@@ -609,13 +609,13 @@ mod tests {
     /// artboard too.
     #[test]
     fn object_align_follows_align_to() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200, "artboards": 2})).unwrap();
         let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
-        let bounds = |app: &VectorcraftApp, id: &Value| {
-            app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap()
+        let bounds = |app: &TsipikaApp, id: &Value| {
+            app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap()
         };
         app.run("select.set", json!({"ids": [b]})).unwrap();
         object_align(&mut app, "Horizontal Align Left");
@@ -631,11 +631,11 @@ mod tests {
     /// one path align to their own bounds with Align to Selection and with Align to Artboard chosen.
     #[test]
     fn object_align_aligns_anchor_points_to_each_other() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("path.create", json!({"d": "M100 40 L200 60 L150 160 Z"})).unwrap()["id"].as_u64().unwrap();
-        let anchors = |app: &VectorcraftApp| -> Vec<(f64, f64)> {
-            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let anchors = |app: &TsipikaApp| -> Vec<(f64, f64)> {
+            let node = app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap();
             node.path_data().unwrap().anchors().map(|(_, _, a)| (a.p.x, a.p.y)).collect()
         };
         for to in [AlignTo::Selection, AlignTo::Artboard] {
@@ -653,11 +653,11 @@ mod tests {
     /// the stored choice. With Align to Artboard chosen the points go to the artboard.
     #[test]
     fn anchor_points_of_one_path_align_to_each_other() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("path.create", json!({"d": "M100 40 L200 60 L150 160 Z"})).unwrap()["id"].as_u64().unwrap();
-        let xs = |app: &VectorcraftApp| -> Vec<f64> {
-            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let xs = |app: &TsipikaApp| -> Vec<f64> {
+            let node = app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap();
             node.path_data().unwrap().anchors().map(|(_, _, a)| a.p.x).collect()
         };
         app.run("select.anchors", json!({"id": id, "anchors": [[0, 0], [0, 1]], "mode": "set"})).unwrap();
@@ -675,7 +675,7 @@ mod tests {
     /// #1636: the Distribute buttons work on the anchor points of one path (one object selected).
     #[test]
     fn distribute_buttons_space_the_anchor_points_of_one_path() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("path.create", json!({"d": "M10 10 L20 50 L100 30"})).unwrap()["id"].as_u64().unwrap();
         app.run("select.anchors", json!({"id": id, "anchors": [[0, 0], [0, 1], [0, 2]], "mode": "set"})).unwrap();
@@ -690,7 +690,7 @@ mod tests {
         assert_eq!(row.len(), 6, "the Distribute row");
         let hit = row[4].center();
         click(&ctx, &mut app, hit, show);
-        let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let node = app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap();
         let xs: Vec<f64> = node.path_data().unwrap().anchors().map(|(_, _, a)| a.p.x).collect();
         assert_eq!(xs, [10.0, 55.0, 100.0], "{}", app.ui.status);
     }

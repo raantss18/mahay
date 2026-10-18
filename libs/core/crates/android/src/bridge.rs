@@ -17,9 +17,21 @@ pub struct EguiBridge {
 }
 
 impl EguiBridge {
-    pub fn new(ctx: &egui::Context) -> Self {
-        let ctx = ctx.clone();
-        crate::set_waker(move || ctx.request_repaint());
+    /// Set up the bridge for `app` and start its automatic updates (checked at start-up, then
+    /// every 24 hours; the update bar appears when one is downloaded and verified).
+    pub fn new(ctx: &egui::Context, app: mahay_about::AppInfo) -> Self {
+        let waker_ctx = ctx.clone();
+        crate::set_waker(move || waker_ctx.request_repaint());
+        let lang = mahay_about::Lang::from_tag(&crate::locale());
+        let dir = crate::data_dir().unwrap_or_else(|| std::path::PathBuf::from("/data/local/tmp"));
+        let repaint = ctx.clone();
+        let checker = mahay_update::Checker::new(app.id, dir, true, move || repaint.request_repaint());
+        mahay_about::register(app, lang, checker, Box::new(|update| {
+            if !mahay_update::still_valid(update) {
+                return Err("The downloaded update was changed on disk; it will be downloaded again.".into());
+            }
+            crate::install_apk(&update.path)
+        }));
         Self::default()
     }
 
@@ -47,6 +59,7 @@ impl EguiBridge {
     /// Show the soft keyboard while a text field has focus, and copy what the app copied to the
     /// Android clipboard (egui-winit has no clipboard on Android).
     pub fn after_ui(&mut self, ctx: &egui::Context) {
+        mahay_about::banner(ctx);
         let dark = ctx.global_style().visuals.dark_mode;
         if self.dark_bars != Some(dark) {
             self.dark_bars = Some(dark);

@@ -3,7 +3,7 @@
 //! (it joins but can't host).
 
 use egui::{Event, Key};
-use figcraft_engine::live::{Event as LiveEvent, HostOptions, LiveLink, Presence, SessionInfo, Status};
+use endrika_engine::live::{Event as LiveEvent, HostOptions, LiveLink, Presence, SessionInfo, Status};
 use serde_json::json;
 
 use crate::live_tests::{Harness, has_text, text_center};
@@ -49,9 +49,9 @@ fn escape_closes_the_join_dialog_and_keeps_the_selection() {
 #[test]
 fn opening_the_app_with_an_invite_link_asks_before_joining() {
     let (mut h, _) = Harness::new();
-    let link = "figcraft://join?host=127.0.0.1:47900&file=abc&token=AbCdEfGhIjKlMnOpQrStUv";
+    let link = "endrika://join?host=127.0.0.1:47900&file=abc&token=AbCdEfGhIjKlMnOpQrStUv";
     crate::live::open_invite(&mut h.app, &format!(" {link} "));
-    // The system hands the app whatever `figcraft://` link was followed, which may come from a
+    // The system hands the app whatever `endrika://` link was followed, which may come from a
     // page or a message, so the link is shown and confirmed rather than acted on.
     assert_eq!(h.app.ui.live.join.as_deref(), Some(link), "the dialog opens with the link filled in");
     assert_eq!(h.app.session.live().status, Status::Off, "nothing is joined until the person confirms");
@@ -72,7 +72,7 @@ impl LiveLink for Browser {
     }
     fn leave(&mut self, _: u64) {}
     fn presence(&mut self, _: u64, _: &Presence) {}
-    fn send(&mut self, _: u64, _: figcraft_engine::figcraft_collab::message::ClientMsg) {}
+    fn send(&mut self, _: u64, _: endrika_engine::endrika_collab::message::ClientMsg) {}
     fn poll(&mut self) -> Vec<(u64, LiveEvent)> {
         Vec::new()
     }
@@ -82,8 +82,8 @@ impl LiveLink for Browser {
 fn a_link_that_cant_be_used_opens_the_dialog_with_it() {
     let (mut h, _) = Harness::new();
     h.app.session.live.install(Box::new(Browser));
-    crate::live::open_invite(&mut h.app, "figcraft://nope");
-    assert_eq!(h.app.ui.live.join.as_deref(), Some("figcraft://nope"), "the link stays in the field to fix");
+    crate::live::open_invite(&mut h.app, "endrika://nope");
+    assert_eq!(h.app.ui.live.join.as_deref(), Some("endrika://nope"), "the link stays in the field to fix");
     // The link is not tried until the person presses Join, so its reason shows then, not now.
     assert!(h.app.ui.last_error.is_none());
     assert_eq!(h.app.session.live().status, Status::Off);
@@ -104,6 +104,6 @@ fn the_browser_joins_but_does_not_host() {
     assert!(has_text(&shapes, "Join with a code") && has_text(&shapes, "Join"));
     assert!(has_text(
         &shapes,
-        "In the browser you can join sessions the desktop app hosts and files on a FigCraft server. A page opened over https reaches other computers only through wss:// links (a server behind TLS)."
+        "In the browser you can join sessions the desktop app hosts and files on a Endrika server. A page opened over https reaches other computers only through wss:// links (a server behind TLS)."
     ));
 }

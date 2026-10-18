@@ -7,7 +7,7 @@
 use egui::{Color32, CornerRadius, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 
 /// The tool the widget belongs to.
@@ -43,7 +43,7 @@ pub(crate) fn rect(ctx: &egui::Context) -> Option<Rect> {
 
 /// Show the widget in `canvas` (the canvas's area inside the rulers) while the Free Transform
 /// tool is active.
-pub(crate) fn show(app: &mut VectorcraftApp, ui: &Ui, canvas: Rect) {
+pub(crate) fn show(app: &mut TsipikaApp, ui: &Ui, canvas: Rect) {
     if app.session.tool_id() != TOOL {
         return;
     }
@@ -123,26 +123,26 @@ fn paint(ui: &Ui, glyph: Glyph, r: Rect, color: Color32) {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
-    use vectorcraft_geom::Point;
+    use tsipika_engine::Session;
+    use tsipika_geom::Point;
 
     use super::*;
     use crate::canvas::Xf;
 
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) {
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), events, ..Default::default() };
         ctx.run_ui(raw, |ui| crate::canvas::show(app, ui)).textures_delta.clear();
     }
 
     /// A press and release at `at`, then a frame to settle.
-    fn click(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2) {
+    fn click(app: &mut TsipikaApp, ctx: &egui::Context, at: Pos2) {
         let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
         frame(app, ctx, vec![egui::Event::PointerMoved(at), button(true)]);
         frame(app, ctx, vec![button(false)]);
         frame(app, ctx, vec![]);
     }
 
-    fn options(app: &VectorcraftApp) -> (String, bool) {
+    fn options(app: &TsipikaApp) -> (String, bool) {
         let o = app.session.tool_options();
         (o["mode"].as_str().unwrap_or_default().to_string(), o["constrain"].as_bool().unwrap_or_default())
     }
@@ -151,7 +151,7 @@ mod tests {
     /// (inert in the distort modes); a corner dragged in Free Distort moves that corner alone.
     #[test]
     fn the_widget_sets_the_mode_and_a_corner_drag_then_distorts() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
         let id = app.session.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 100, "height": 60})).unwrap()["id"].clone();
         app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
@@ -190,7 +190,7 @@ mod tests {
         frame(&mut app, &ctx, vec![button(to, false)]);
         frame(&mut app, &ctx, vec![]);
         let st = app.session.active().unwrap();
-        let node = st.doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap();
+        let node = st.doc.node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap();
         let pts: Vec<Point> = node.path_data().unwrap().anchors().map(|(.., a)| a.p).collect();
         let near = |q: Point| pts.iter().any(|p| p.distance(q) < 0.5);
         assert!(

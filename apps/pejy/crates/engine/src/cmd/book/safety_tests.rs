@@ -5,15 +5,15 @@ use serde_json::json;
 #[test]
 fn a_commit_failure_reports_the_completed_prefix_and_cleans_staging() {
     let dir = tempfile::tempdir().unwrap();
-    let first = dir.path().join("first.designcraft");
-    let second = dir.path().join("second.designcraft");
-    let third = dir.path().join("third.designcraft");
+    let first = dir.path().join("first.pejy");
+    let second = dir.path().join("second.pejy");
+    let third = dir.path().join("third.pejy");
     let mut s = Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let old = (*s.doc().unwrap().doc).clone();
     let mut changed = old.clone();
     changed.sections.first_mut().unwrap().start_number = Some(9);
-    let old_bytes = designcraft_format::save(&old).unwrap();
+    let old_bytes = pejy_format::save(&old).unwrap();
     for path in [&first, &second, &third] {
         std::fs::write(path, &old_bytes).unwrap();
     }
@@ -36,7 +36,7 @@ fn a_commit_failure_reports_the_completed_prefix_and_cleans_staging() {
     let completed = error.split("completed chapter paths:").nth(1).unwrap();
     // The completed list uses debug formatting, which escapes Windows path separators.
     assert_eq!(completed.trim(), format!("{:?}", [first.to_str().unwrap()]), "{error}");
-    assert_eq!(designcraft_format::load(&std::fs::read(first).unwrap()).unwrap().sections.first().unwrap().start_number, Some(9));
+    assert_eq!(pejy_format::load(&std::fs::read(first).unwrap()).unwrap().sections.first().unwrap().start_number, Some(9));
     assert_eq!(std::fs::read(second).unwrap(), old_bytes);
     assert_eq!(std::fs::read(third).unwrap(), old_bytes);
     assert!(!staging.exists(), "temporary chapter snapshots must be removed on a partial failure");

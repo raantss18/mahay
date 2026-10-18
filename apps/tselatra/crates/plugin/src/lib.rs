@@ -1,7 +1,7 @@
-//! # effectcraft-plugin (L3)
+//! # tselatra-plugin (L3)
 //!
 //! Loads **WebAssembly effect plug-ins** (plug-in API v1, see `docs/plugins.md`) into the effect
-//! registry ([`effectcraft_effects::plugin`]). A plug-in is a `.wasm` (or `.wat`) module with
+//! registry ([`tselatra_effects::plugin`]). A plug-in is a `.wasm` (or `.wat`) module with
 //! no imports that exports:
 //!
 //! | export | signature | |
@@ -24,8 +24,8 @@
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use effectcraft_effects::EffectSpec;
-pub use effectcraft_effects::plugin::{EffectPlugin, PLUGIN_API_VERSION, PluginFrame, PluginManifest, PluginParams, register_plugin};
+use tselatra_effects::EffectSpec;
+pub use tselatra_effects::plugin::{EffectPlugin, PLUGIN_API_VERSION, PluginFrame, PluginManifest, PluginParams, register_plugin};
 
 #[cfg(feature = "wasm")]
 mod wasm;
@@ -53,7 +53,7 @@ pub fn load_wasm(bytes: &[u8], source: &str) -> Result<&'static EffectSpec, Stri
 /// [`load_wasm`] for the engine's plug-in loader hook: `{id, name, category, version, api}`.
 pub fn loader(bytes: &[u8], source: &str) -> Result<serde_json::Value, String> {
     let spec = load_wasm(bytes, source)?;
-    let m = effectcraft_effects::plugin::plugin(spec.id).map(|p| p.manifest().clone());
+    let m = tselatra_effects::plugin::plugin(spec.id).map(|p| p.manifest().clone());
     Ok(serde_json::json!({
         "id": spec.id,
         "name": spec.name,

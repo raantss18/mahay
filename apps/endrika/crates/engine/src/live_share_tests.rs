@@ -7,8 +7,8 @@
 use std::net::Ipv4Addr;
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::code::{self, Local};
-use figcraft_collab::message::ClientMsg;
+use endrika_collab::code::{self, Local};
+use endrika_collab::message::ClientMsg;
 use serde_json::{Value, json};
 
 use crate::live::{
@@ -42,7 +42,7 @@ impl LiveLink for Link {
         let mut s = self.0.lock().unwrap();
         s.session = session;
         // As the network link does: a short secret when the session is shared with a code.
-        let link = if opts.short { HOST.link() } else { "figcraft://join?host=192.168.1.20:47900&file=f&token=AbCdEfGhIjKlMnOpQrStUv".to_string() };
+        let link = if opts.short { HOST.link() } else { "endrika://join?host=192.168.1.20:47900&file=f&token=AbCdEfGhIjKlMnOpQrStUv".to_string() };
         s.hosted.push(opts);
         Ok(SessionInfo {
             role: Role::Host,
@@ -51,7 +51,7 @@ impl LiveLink for Link {
             color: "#0D99FF".into(),
             file_name: "Shared".into(),
             pages: vec![],
-            url: link.replace("figcraft://join?host=", "ws://"),
+            url: link.replace("endrika://join?host=", "ws://"),
             link,
             address: "192.168.1.20:47900".into(),
             network: true,
@@ -59,7 +59,7 @@ impl LiveLink for Link {
         })
     }
     fn join(&mut self, session: u64, link: &str, _: &str) -> Result<(), String> {
-        if !link.starts_with("figcraft://join?") {
+        if !link.starts_with("endrika://join?") {
             return Err("that's not a live session invite".into());
         }
         let mut s = self.0.lock().unwrap();
@@ -115,7 +115,7 @@ fn err(s: &mut Session, cmd: &str, p: Value) -> String {
 fn links(n: usize, codes: Option<(&str, &str)>) -> Shared {
     let link = |what: &str, code: Option<&str>| SharedLink {
         id: format!("{what}{n}"),
-        link: format!("figcraft://join?server=wss://share.example:443/&file=f1&token=Share{what}Share{what}0{n}"),
+        link: format!("endrika://join?server=wss://share.example:443/&file=f1&token=Share{what}Share{what}0{n}"),
         code: code.map(str::to_string),
     };
     Shared { edit: link("edit", codes.map(|c| c.0)), view: Some(link("view", codes.map(|c| c.1))) }
@@ -124,7 +124,7 @@ fn links(n: usize, codes: Option<(&str, &str)>) -> Shared {
 /// The file is on the server and joined: its owner's links, and what others join with (codes
 /// too, when given).
 fn on_the_server(s: &mut Session, script: &Arc<Mutex<Script>>, codes: Option<(&str, &str)>) {
-    let link = |token: &str| format!("figcraft://join?server=wss://share.example:443/&file=f1&token={token}");
+    let link = |token: &str| format!("endrika://join?server=wss://share.example:443/&file=f1&token={token}");
     let published = Published {
         server: "wss://share.example:443/".into(),
         file: "f1".into(),
@@ -164,7 +164,7 @@ fn on_the_server_unshared(s: &mut Session, script: &Arc<Mutex<Script>>) {
 fn the_built_in_server_is_the_default_and_can_be_changed_or_turned_off() {
     let (mut s, _) = session();
     assert_eq!(s.prefs.publish_server, DEFAULT_SERVER);
-    // A build may ship without one (`FIGCRAFT_DEFAULT_SERVER=`); any it ships is TLS.
+    // A build may ship without one (`ENDRIKA_DEFAULT_SERVER=`); any it ships is TLS.
     assert!(
         DEFAULT_SERVER.is_empty() || (DEFAULT_SERVER.starts_with("wss://") && DEFAULT_SERVER.ends_with('/')),
         "TLS, and an address the preference itself accepts"
@@ -363,9 +363,9 @@ fn sharing_on_the_local_network_shows_a_code_that_carries_the_address() {
 fn joining_takes_a_code_of_either_kind_or_a_link() {
     let (mut s, script) = session();
     ex(&mut s, "pref.publishServer", json!({"url": "wss://share.example/"}));
-    let asks = "figcraft://join?server=wss://share.example/&code=K7M2QX9TD";
+    let asks = "endrika://join?server=wss://share.example/&code=K7M2QX9TD";
     let local = HOST.link();
-    let link = "figcraft://join?host=10.0.0.5:47900&file=abc&token=AbCdEfGhIjKlMnOpQrStUv";
+    let link = "endrika://join?host=10.0.0.5:47900&file=abc&token=AbCdEfGhIjKlMnOpQrStUv";
     let shown = code::grouped(&HOST.code());
     let table: [(Value, &str); 8] = [
         (json!({"code": "K7M-2QX-9TD"}), asks),

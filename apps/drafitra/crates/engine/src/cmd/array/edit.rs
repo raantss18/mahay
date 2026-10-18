@@ -8,10 +8,10 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use cadcraft_doc::{
+use drafitra_doc::{
     ArrayKind, ArrayParams, Block, Drawing, Entity, EntityKind, Handle, Insert, MAX_BLOCK_DEPTH, ReplacedItem, SourceEdit, entity_bounds,
 };
-use cadcraft_geom::{Bounds2, Mat3, Vec2};
+use drafitra_geom::{Bounds2, Mat3, Vec2};
 use serde_json::{Value, json};
 
 use super::super::helpers::v3;
@@ -463,7 +463,7 @@ fn run_arrayedit(s: &mut Session, p: &Value) -> Result<Value> {
         match r.get("items") {
             Some(Value::String(t)) if t.eq_ignore_ascii_case("source") => a.source = name,
             Some(Value::Array(list)) => {
-                for v in list.iter().take(cadcraft_doc::MAX_ARRAY_ITEMS as usize) {
+                for v in list.iter().take(drafitra_doc::MAX_ARRAY_ITEMS as usize) {
                     let (i, j, level) = item_param(v).ok_or_else(|| bad("arrayedit", "`replace.items` holds [i, j, level] item numbers"))?;
                     a.replaced.push(ReplacedItem { i, j, level, block: name.clone() });
                 }

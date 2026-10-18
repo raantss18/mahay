@@ -1,27 +1,27 @@
 //! Headless checks for on-canvas text editing in the viewer and the Character / Paragraph panels
 //! acting on the selection (egui_kittest, UI logic only: no GPU needed).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::commands::text_edit::layer_doc;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_engine::commands::text_edit::layer_doc;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui::{Event, Key, Modifiers, PointerButton, Pos2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn app() -> EffectcraftApp {
+fn app() -> TselatraApp {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Type", "width": 640, "height": 360, "duration": 2})).unwrap();
-    EffectcraftApp::new(s)
+    TselatraApp::new(s)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> egui::Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> egui::Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     egui::Rect::from_min_size(egui::pos2(e.rect[0], e.rect[1]), egui::vec2(e.rect[2], e.rect[3]))
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, modifiers: Modifiers) {
+fn click(h: &mut Harness<'_, TselatraApp>, p: Pos2, modifiers: Modifiers) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: true, modifiers });
     h.run_steps(1);
@@ -29,7 +29,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, modifiers: Modifiers) {
     h.run_steps(2);
 }
 
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.input_mut().events.push(Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
     h.run_steps(1);
@@ -41,18 +41,18 @@ fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2) {
     h.run_steps(2);
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key, modifiers: Modifiers) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key, modifiers: Modifiers) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers });
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers });
     h.run_steps(2);
 }
 
-fn type_text(h: &mut Harness<'_, EffectcraftApp>, t: &str) {
+fn type_text(h: &mut Harness<'_, TselatraApp>, t: &str) {
     h.input_mut().events.push(Event::Text(t.into()));
     h.run_steps(2);
 }
 
-fn edited(h: &Harness<'_, EffectcraftApp>) -> (u64, String, usize, usize) {
+fn edited(h: &Harness<'_, TselatraApp>) -> (u64, String, usize, usize) {
     let s = &h.state().session;
     let e = s.state.text_edit.clone().expect("editing");
     (e.layer.0, layer_doc(s, e.layer).unwrap().text, e.anchor, e.caret)
@@ -73,8 +73,8 @@ fn type_tool_skips_hidden_and_unsoloed_text_layers() {
         let (target, value) = if switch == "video" { (ids[1], false) } else { (ids[0], true) };
         s.execute("layer.setSwitch", json!({"layers": [target], "switch": switch, "value": value})).unwrap();
         s.execute("edit.deselectAll", json!({})).unwrap();
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| EffectcraftApp::new(s));
-        h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Type;
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(move |_| TselatraApp::new(s));
+        h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Type;
         h.run_steps(3);
         let comp = rect(&h, "viewer.comp");
         let k = comp.width() / 640.0;
@@ -87,13 +87,13 @@ fn type_tool_skips_hidden_and_unsoloed_text_layers() {
 fn modal_blocks_background_text_events() {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app());
     h.run_steps(3);
-    h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Type;
+    h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Type;
     h.run_steps(1);
     let p = rect(&h, "viewer.comp").center();
     click(&mut h, p, Modifiers::NONE);
     type_text(&mut h, "Preserve");
     let before = edited(&h).1;
-    h.state_mut().dialog = Some(effectcraft_ui_egui::Dialog::About);
+    h.state_mut().dialog = Some(tselatra_ui_egui::Dialog::About);
     h.run_steps(3);
     h.input_mut().events.push(Event::Text("changed".into()));
     h.input_mut().events.push(Event::Paste("pasted".into()));
@@ -106,7 +106,7 @@ fn type_tool_click_type_edit_and_commit() {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| app());
     h.state_mut().show_panel(PanelKind::Composition);
     h.run_steps(3);
-    h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Type;
+    h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Type;
     h.run_steps(1);
     let comp = rect(&h, "viewer.comp");
     // Click: a point text layer in edit mode, caret ready.
@@ -172,14 +172,14 @@ fn clicking_another_panel_stops_typing_into_text() {
         let solid = s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080"})).unwrap()["layer"].as_u64().unwrap();
         let title =
             s.execute("layer.newText", json!({"text": "Title", "size": 80, "position": [100, 120], "justify": "left"})).unwrap()["layer"].as_u64().unwrap();
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| TselatraApp::new(s));
         h.state_mut().show_panel(PanelKind::Composition);
         h.run_steps(3);
-        let layers = |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layers.len();
+        let layers = |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layers.len();
         // (Its row moves down as text layers are added.)
-        let row = |h: &Harness<'_, EffectcraftApp>| rect(h, &format!("timeline.layer.{solid}.row")).center();
+        let row = |h: &Harness<'_, TselatraApp>| rect(h, &format!("timeline.layer.{solid}.row")).center();
         if type_tool {
-            h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Type;
+            h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Type;
             h.run_steps(1);
             let at = rect(&h, "viewer.comp").center();
             click(&mut h, at, Modifiers::NONE);
@@ -218,7 +218,7 @@ fn clicking_another_panel_stops_typing_into_text() {
         h.run_steps(2);
         assert_eq!(layer_doc(&h.state().session, LayerId(lid)).unwrap().text, text, "type_tool {type_tool}: the text is unchanged");
         assert!(h.state().playback.playing, "type_tool {type_tool}: Space plays");
-        assert_eq!(type_tool, matches!(h.state().ui.tool, effectcraft_ui_egui::state::Tool::Type), "the tool is kept");
+        assert_eq!(type_tool, matches!(h.state().ui.tool, tselatra_ui_egui::state::Tool::Type), "the tool is kept");
     }
 }
 
@@ -231,11 +231,11 @@ fn opening_a_formatting_tab_keeps_the_text_selection() {
     s.execute("comp.new", json!({"name": "Type", "width": 640, "height": 360, "duration": 2})).unwrap();
     let lid =
         s.execute("layer.newText", json!({"text": "Hello world", "size": 80, "position": [60, 200], "justify": "left"})).unwrap()["layer"].as_u64().unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| TselatraApp::new(s));
     h.run_steps(3);
     let ctx = h.ctx.clone();
     // Effects & Presets shown, Properties, Character and Paragraph behind it.
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "Undocked Panels"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.workspace", json!({"name": "Undocked Panels"})).unwrap();
     h.state_mut().session.execute("text.edit", json!({"layer": lid})).unwrap();
     h.state_mut().session.execute("text.setSelection", json!({"anchor": 0, "caret": 5})).unwrap();
     h.run_steps(3);
@@ -261,7 +261,7 @@ fn keys_after_a_click_away_in_the_same_frame_skip_the_text() {
     s.execute("comp.new", json!({"name": "Type", "width": 640, "height": 360, "duration": 2})).unwrap();
     let solid = s.execute("layer.newSolid", json!({"name": "Plate", "color": "#406080"})).unwrap()["layer"].as_u64().unwrap();
     let lid = s.execute("layer.newText", json!({"text": "Hello", "size": 80, "position": [60, 200], "justify": "left"})).unwrap()["layer"].as_u64().unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| TselatraApp::new(s));
     h.state_mut().show_panel(PanelKind::Composition);
     h.run_steps(3);
     h.state_mut().session.execute("text.edit", json!({"layer": lid, "caret": 5})).unwrap();
@@ -281,7 +281,7 @@ fn keys_after_a_click_away_in_the_same_frame_skip_the_text() {
         key(Key::Delete, false),
     ]);
     h.run_steps(3);
-    let comp = |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layers.len();
+    let comp = |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layers.len();
     assert_eq!(layer_doc(&h.state().session, LayerId(lid)).unwrap().text, "HelloA", "only the key before the click");
     assert!(h.state().session.state.text_edit.is_none(), "the click ended the edit");
     assert_eq!((comp(&h), h.state().playback.playing), (2, false), "the keys after it ran no shortcut");
@@ -296,20 +296,20 @@ fn switching_from_type_to_selection_commits_and_moves_text_layer() {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| app());
     h.state_mut().show_panel(PanelKind::Composition);
     h.run_steps(3);
-    h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Type;
+    h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Type;
     h.run_steps(1);
     let comp = rect(&h, "viewer.comp");
     let k = comp.width() / 640.0;
     click(&mut h, comp.min + egui::vec2(320.0 * k, 180.0 * k), Modifiers::NONE);
     type_text(&mut h, "Move me");
     let layer_id = h.state().session.state.text_edit.as_ref().unwrap().layer;
-    let layer_position = |h: &Harness<'_, EffectcraftApp>| {
+    let layer_position = |h: &Harness<'_, TselatraApp>| {
         h.state().session.active_comp().unwrap().layer(layer_id).unwrap().props.prop("transform/position").unwrap().value.as_vec3()
     };
     let original_text = layer_doc(&h.state().session, layer_id).unwrap().text;
     let before = layer_position(&h);
 
-    h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Selection;
+    h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Selection;
     h.run_steps(2);
     assert!(h.state().session.state.text_edit.is_none(), "leaving the Type tool commits text editing");
     type_text(&mut h, " ignored");
@@ -327,7 +327,7 @@ fn double_click_enters_editing_and_selects_words() {
     s.execute("comp.new", json!({"name": "Type", "width": 640, "height": 360, "duration": 2})).unwrap();
     let lid =
         s.execute("layer.newText", json!({"text": "alpha beta", "size": 80, "position": [100, 200], "justify": "left"})).unwrap()["layer"].as_u64().unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| TselatraApp::new(s));
     h.state_mut().show_panel(PanelKind::Composition);
     h.run_steps(3);
     // A point inside "beta" (comp space → window).
@@ -358,7 +358,7 @@ fn double_click_enters_editing_and_selects_words() {
     let r = rect(&h, "paragraph.right");
     click(&mut h, r.center(), Modifiers::NONE);
     let doc = layer_doc(&h.state().session, LayerId(lid)).unwrap();
-    assert_eq!(doc.justify, effectcraft_engine::keyframe::Justify::Right);
+    assert_eq!(doc.justify, tselatra_engine::keyframe::Justify::Right);
     for id in
         ["paragraph.indentLeft", "paragraph.spaceBefore", "paragraph.direction", "paragraph.composer", "paragraph.hangingPunctuation", "paragraph.justifyAll"]
     {
@@ -371,7 +371,7 @@ fn type_tool_drag_makes_paragraph_text_with_box_handles() {
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(|_| app());
     h.state_mut().show_panel(PanelKind::Composition);
     h.run_steps(3);
-    h.state_mut().ui.tool = effectcraft_ui_egui::state::Tool::Type;
+    h.state_mut().ui.tool = tselatra_ui_egui::state::Tool::Type;
     h.run_steps(1);
     let comp = rect(&h, "viewer.comp");
     let a = comp.min + egui::vec2(comp.width() * 0.2, comp.height() * 0.2);
@@ -418,14 +418,14 @@ fn layer_new_text_menu_and_shortcut_start_typing_into_source_text() {
         let mut s = Session::default();
         s.execute("comp.new", json!({"name": "Type", "width": 640, "height": 360, "duration": 2})).unwrap();
         s.execute("layer.newSolid", json!({"color": "#ffffff"})).unwrap();
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| TselatraApp::new(s));
         h.state_mut().show_panel(PanelKind::Composition);
         h.run_steps(3);
         if via_shortcut {
             key(&mut h, Key::T, Modifiers::COMMAND | Modifiers::ALT | Modifiers::SHIFT);
         } else {
             let ctx = h.ctx.clone();
-            effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newText", json!({})).unwrap();
+            tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "layer.newText", json!({})).unwrap();
             h.run_steps(2);
         }
         let (lid, text, _, _) = edited(&h);
@@ -447,7 +447,7 @@ fn timeline_double_click_on_a_text_layer_edits_its_text() {
         let mut s = Session::default();
         s.execute("comp.new", json!({"name": "Type", "width": 640, "height": 360, "duration": 2})).unwrap();
         let lid = s.execute("layer.newText", json!({"text": "alpha beta"})).unwrap()["layer"].as_u64().unwrap();
-        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| EffectcraftApp::new(s));
+        let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| TselatraApp::new(s));
         h.state_mut().show_panel(PanelKind::Composition);
         h.run_steps(3);
         let p = rect(&h, &format!("timeline.layer.{lid}.{target}")).center();
@@ -550,7 +550,7 @@ fn type_tool_selected_text_preference_skips_ineligible_layers_and_falls_back_to_
             "inactive" => {
                 let cid = a.session.active_comp_id().unwrap();
                 std::sync::Arc::make_mut(&mut a.session.project).comp_mut(cid).unwrap().layer_mut(LayerId(original)).unwrap().out_point =
-                    effectcraft_engine::time::Tick::ZERO;
+                    tselatra_engine::time::Tick::ZERO;
             }
             "unsoloed" => {
                 a.session.execute("layer.setSwitch", json!({"layers": [topmost], "switch": "solo", "value": true})).unwrap();
@@ -561,7 +561,7 @@ fn type_tool_selected_text_preference_skips_ineligible_layers_and_falls_back_to_
             _ => {}
         }
         a.session.state.selected_layers = if exclusion == "unselected" { vec![] } else { vec![LayerId(original)] };
-        a.ui.tool = effectcraft_ui_egui::state::Tool::Type;
+        a.ui.tool = tselatra_ui_egui::state::Tool::Type;
         let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| a);
         h.run_steps(3);
         let comp = rect(&h, "viewer.comp");

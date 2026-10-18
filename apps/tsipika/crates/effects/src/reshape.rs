@@ -11,8 +11,8 @@
 
 use std::sync::Arc;
 
-use vectorcraft_doc::{Appearance, AppearanceItem, Effect, Node, NodeKind};
-use vectorcraft_geom::{Affine, FillRule, PathData, Rect, shapes};
+use tsipika_doc::{Appearance, AppearanceItem, Effect, Node, NodeKind};
+use tsipika_geom::{Affine, FillRule, PathData, Rect, shapes};
 
 use crate::{GeomContext, apply_one, is_geometry, merged_params};
 
@@ -53,15 +53,15 @@ pub fn has_item_geometry(n: &Node) -> bool {
 
 /// The glyph outlines of type `t` in text space with its underline and strikethrough bars: one
 /// path per run, and all of them as one.
-pub(crate) fn glyph_outlines(t: &vectorcraft_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::BezPath) {
+pub(crate) fn glyph_outlines(t: &tsipika_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::BezPath) {
     let (runs, all, _) = laid_out(t);
     (runs, all)
 }
 
 /// [`glyph_outlines`] and the bounds of `t`'s layout in text space.
-fn laid_out(t: &vectorcraft_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::BezPath, Rect) {
-    let db = vectorcraft_text::FontDb::global();
-    let layout = vectorcraft_text::layout(db, t);
+fn laid_out(t: &tsipika_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::BezPath, Rect) {
+    let db = tsipika_text::FontDb::global();
+    let layout = tsipika_text::layout(db, t);
     let mut runs = vec![kurbo::BezPath::new(); t.runs.len()];
     let mut all = kurbo::BezPath::new();
     for g in &layout.glyphs {
@@ -71,7 +71,7 @@ fn laid_out(t: &vectorcraft_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::Bez
         all.extend(g.outline.iter());
     }
     // Underline and strikethrough bars, painted as their run's type is (#847).
-    for (run, bar) in vectorcraft_text::decorations(&layout, db, t) {
+    for (run, bar) in tsipika_text::decorations(&layout, db, t) {
         if let Some(r) = runs.get_mut(run) {
             r.extend(bar.iter());
         }
@@ -87,12 +87,12 @@ fn laid_out(t: &vectorcraft_doc::TextObject) -> (Vec<kurbo::BezPath>, kurbo::Bez
 /// transforms its pattern tiles; its unplaced gradients are first fixed to the layout's bounds in
 /// text space. The object's own unplaced gradients are fixed to the bounding box of those bounds
 /// in the document. The group is marked as type's outlines
-/// ([`vectorcraft_doc::NodeExtras::type_outlines`]).
+/// ([`tsipika_doc::NodeExtras::type_outlines`]).
 pub fn outline_text(n: &Node) -> Option<Node> {
     let NodeKind::Text(t) = &n.kind else { return None };
     let (runs, all, bounds) = laid_out(t);
     let path = |bp: &kurbo::BezPath| PathData::from_bezpath(bp).transformed(t.xf);
-    let scaling = vectorcraft_doc::Scaling { strokes: true, patterns: true, ..Default::default() };
+    let scaling = tsipika_doc::Scaling { strokes: true, patterns: true, ..Default::default() };
     let mut children: Vec<Arc<Node>> = runs
         .iter()
         .zip(&t.runs)
@@ -148,7 +148,7 @@ pub fn outline_art(n: &Node, symbol_art: Option<&Node>) -> Option<Node> {
             one.appearance.effects.clear();
             Node::group(n.id, vec![Arc::new(one)])
         }
-        _ if vectorcraft_doc::live::is_live(n) => vectorcraft_doc::live::expand_deep(n, Some(hook)),
+        _ if tsipika_doc::live::is_live(n) => tsipika_doc::live::expand_deep(n, Some(hook)),
         _ => return None,
     };
     outline_nested_text(&mut art, false);
@@ -156,7 +156,7 @@ pub fn outline_art(n: &Node, symbol_art: Option<&Node>) -> Option<Node> {
     art.blend = Default::default();
     art.isolate = false;
     // One element: its pieces never knock each other out.
-    art.knockout = vectorcraft_doc::Knockout::Off;
+    art.knockout = tsipika_doc::Knockout::Off;
     art.extras_mut().mask = None;
     art.appearance.effects.clear();
     Some(art)
@@ -242,7 +242,7 @@ pub(crate) fn as_art(n: &Node, symbol_art: Option<&Node>) -> Option<Node> {
     out.blend = n.blend;
     out.isolate = n.isolate;
     // One element: its pieces never knock each other out.
-    out.knockout = vectorcraft_doc::Knockout::Off;
+    out.knockout = tsipika_doc::Knockout::Off;
     out.knockout_shape = n.knockout_shape;
     out.extras_mut().mask = n.extras().mask.clone();
     out.appearance.effects = n.appearance.effects.iter().filter(|e| !is_geometry(&e.id)).cloned().collect();
@@ -251,13 +251,13 @@ pub(crate) fn as_art(n: &Node, symbol_art: Option<&Node>) -> Option<Node> {
 
 /// Map every path under `art` (and its gradients) through the projective map `h`, curves split
 /// finely enough to follow it.
-fn project_leaves(art: &mut Node, h: &vectorcraft_geom::Homography) {
-    let f = |p: vectorcraft_geom::Point| h.apply(p).unwrap_or(p);
+fn project_leaves(art: &mut Node, h: &tsipika_geom::Homography) {
+    let f = |p: tsipika_geom::Point| h.apply(p).unwrap_or(p);
     let piece = art.geometric_bounds().map_or(1.0, |b| (b.width().max(b.height()) / 64.0).max(0.25));
-    let project = |path: &mut PathData| *path = vectorcraft_doc::live::map_nonlinear(path, piece, f);
+    let project = |path: &mut PathData| *path = tsipika_doc::live::map_nonlinear(path, piece, f);
     for_each_leaf(art, &mut |leaf| {
         leaf.pin_gradients();
-        leaf.appearance.warp_gradients(&|p| h.affine_at(p).unwrap_or(vectorcraft_geom::Affine::IDENTITY));
+        leaf.appearance.warp_gradients(&|p| h.affine_at(p).unwrap_or(tsipika_geom::Affine::IDENTITY));
         match &mut leaf.kind {
             NodeKind::Path { path, live, .. } => {
                 project(path);
@@ -333,7 +333,7 @@ fn copy_with_gradients(leaf: &mut Node, path: &PathData, m: Affine, copies: usiz
         }
         xf *= m;
         let mut copy = leaf.clone();
-        copy.transform(xf, vectorcraft_doc::Scaling::default());
+        copy.transform(xf, tsipika_doc::Scaling::default());
         if !copy.geometric_bounds().is_some_and(crate::distort::within_reach) {
             break;
         }
@@ -386,13 +386,13 @@ fn follow_boxes(ap: &mut Appearance, from: Rect, to: Rect) {
     for i in &mut ap.items {
         match i {
             AppearanceItem::Fill(f) => {
-                if let vectorcraft_doc::color::Paint::Gradient(g) = &mut f.paint {
+                if let tsipika_doc::color::Paint::Gradient(g) = &mut f.paint {
                     g.transform(box_map(from, to));
                 }
             }
             AppearanceItem::Stroke(s) => {
                 let m = box_map(s.paint_bounds(from), s.paint_bounds(to));
-                if let vectorcraft_doc::color::Paint::Gradient(g) = &mut s.paint {
+                if let tsipika_doc::color::Paint::Gradient(g) = &mut s.paint {
                     g.transform(m);
                 }
             }
@@ -402,7 +402,7 @@ fn follow_boxes(ap: &mut Appearance, from: Rect, to: Rect) {
 
 /// The map that takes box `from` onto box `to` along each axis (along an axis `from` has no extent
 /// on, a move from its center to `to`'s).
-fn box_map(from: Rect, to: Rect) -> vectorcraft_geom::Affine {
+fn box_map(from: Rect, to: Rect) -> tsipika_geom::Affine {
     let axis = |a0: f64, a1: f64, b0: f64, b1: f64| {
         if (a1 - a0).abs() > 1e-12 {
             let s = (b1 - b0) / (a1 - a0);
@@ -413,7 +413,7 @@ fn box_map(from: Rect, to: Rect) -> vectorcraft_geom::Affine {
     };
     let (sx, tx) = axis(from.x0, from.x1, to.x0, to.x1);
     let (sy, ty) = axis(from.y0, from.y1, to.y0, to.y1);
-    vectorcraft_geom::Affine::new([sx, 0.0, 0.0, sy, tx, ty])
+    tsipika_geom::Affine::new([sx, 0.0, 0.0, sy, tx, ty])
 }
 
 /// Apply the Transform effect's map `m` to every image and symbol instance under `n`, as
@@ -491,7 +491,7 @@ fn placed_count(n: &Node) -> usize {
 /// it reach every member.
 pub(crate) fn outlined_members(n: &Node) -> Node {
     let hook: &dyn Fn(&Node) -> Option<Node> = &outline_text;
-    let mut art = vectorcraft_doc::live::expand_deep(n, Some(hook));
+    let mut art = tsipika_doc::live::expand_deep(n, Some(hook));
     outline_nested_text(&mut art, false);
     art
 }

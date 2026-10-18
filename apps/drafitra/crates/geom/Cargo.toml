@@ -1,6 +1,6 @@
 [package]
-name = "cadcraft-geom"
-description = "CADCraft geometry: f64 vectors, curves, arcs, splines, intersections, offsets, snaps"
+name = "drafitra-geom"
+description = "Drafitra geometry: f64 vectors, curves, arcs, splines, intersections, offsets, snaps"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use figcraft_color::{ColorProfile, ImageFilters};
-use figcraft_doc::ImageData;
+use endrika_color::{ColorProfile, ImageFilters};
+use endrika_doc::ImageData;
 use image::{ExtendedColorType, ImageEncoder, RgbaImage};
 
 use crate::image_profile::{MAX_ICC_BYTES, Source};
@@ -214,7 +214,7 @@ fn display_p3_images_round_trip_and_convert() {
     let to_srgb = ColorProfile::DisplayP3.conversion_to(ColorProfile::Srgb);
     for ((same, srgb), src) in pixels(&tagged, ColorProfile::DisplayP3).iter().zip(pixels(&tagged, ColorProfile::Srgb)).zip(img.pixels()).take(3) {
         assert!((0..3).all(|i| same[i].abs_diff(src[i]) <= 1), "{same:?} vs {src:?}");
-        let want = to_srgb.apply(figcraft_color::Color::from_rgba8(src[0], src[1], src[2], 255)).to_rgba8();
+        let want = to_srgb.apply(endrika_color::Color::from_rgba8(src[0], src[1], src[2], 255)).to_rgba8();
         assert!((0..3).all(|i| srgb[i].abs_diff(want[i]) <= 2), "{srgb:?} vs {want:?}");
     }
 }

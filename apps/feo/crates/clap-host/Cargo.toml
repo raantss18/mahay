@@ -1,6 +1,6 @@
 [package]
-name = "soundcraft-clap-host"
-description = "SoundCraft CLAP plugin host: scans, loads and runs third-party CLAP plugins behind the safe soundcraft-dsp Plugin trait (the only crate with unsafe code)"
+name = "feo-clap-host"
+description = "Feo CLAP plugin host: scans, loads and runs third-party CLAP plugins behind the safe feo-dsp Plugin trait (the only crate with unsafe code)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-soundcraft-dsp.workspace = true
+feo-dsp.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 log.workspace = true
@@ -25,7 +25,7 @@ harness = false
 clap-sys = "0.5"
 libloading = "0.8"
 
-# The isolated unsafe helper crate (craftrules never-crash): this crate opts out of the workspace
+# The isolated unsafe helper crate (mahay-rules never-crash): this crate opts out of the workspace
 # `unsafe_code = "forbid"` for itself only. It denies unsafe everywhere and allows it solely on the
 # FFI module (`src/ffi.rs`). The rest mirrors `[workspace.lints]`.
 [lints.rust]

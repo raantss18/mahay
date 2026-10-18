@@ -1,20 +1,20 @@
 //! Text: real, selectable text in embedded (subset) fonts, positioned glyph by glyph from the
-//! `figcraft_text` layout the renderer uses, with outline fallbacks.
+//! `endrika_text` layout the renderer uses, with outline fallbacks.
 
 use std::collections::BTreeSet;
 use std::ops::Range;
 use std::sync::Arc;
 
-use figcraft_doc::{Node, NodeKind};
-use figcraft_geom::{Affine, BezPath};
-use figcraft_text::fontdb::FontBytes;
-use figcraft_text::{Face, Glyph, TextLayout};
+use endrika_doc::{Node, NodeKind};
+use endrika_geom::{Affine, BezPath};
+use endrika_text::fontdb::FontBytes;
+use endrika_text::{Face, Glyph, TextLayout};
 use krilla::geom::Point;
 use krilla::paint::{Fill, FillRule};
 use krilla::surface::Surface;
 use krilla::text::{Font, GlyphId, KrillaGlyph};
 
-use figcraft_color::{GradientKind, Paint, PaintKind};
+use endrika_color::{GradientKind, Paint, PaintKind};
 
 use crate::draw::{Exporter, above, affine_ok, blend, stroke_rule, to_xf, vector_paint};
 use crate::raster::Raster;
@@ -36,7 +36,7 @@ struct Run {
 /// Draw a text node; `xf` maps its local space to the page.
 pub(crate) fn draw_text(ex: &mut Exporter, s: &mut Surface, n: &Node, xf: Affine, inner: &[Raster]) {
     let NodeKind::Text(t) = &n.kind else { return };
-    let Some((layout, dy)) = figcraft_text::layout_node(n) else { return };
+    let Some((layout, dy)) = endrika_text::layout_node(n) else { return };
     let gxf = xf * Affine::translate((0.0, dy));
     if !affine_ok(gxf) {
         return;
@@ -86,7 +86,7 @@ pub(crate) fn draw_text(ex: &mut Exporter, s: &mut Surface, n: &Node, xf: Affine
     ex.place_inner(s, inner);
     // Glyph outlines are closed: inside and outside strokes clip to them, as on the canvas (#615).
     for outlines in &stroked {
-        let area = figcraft_render::draw::stroke_area(n, outlines, true);
+        let area = endrika_render::draw::stroke_area(n, outlines, true);
         for p in &n.strokes {
             ex.fill(s, &area, stroke_rule(n, true), p, w, h, gxf);
         }
@@ -118,7 +118,7 @@ fn record_links(ex: &mut Exporter, layout: &TextLayout, gxf: Affine) {
             if let Some((url, x0, x1)) = run.take()
                 && ex.links.len() < MAX_LINKS
             {
-                let area = gxf.transform_rect_bbox(figcraft_geom::Rect::new(x0, line.top, x1, line.top + line.height));
+                let area = gxf.transform_rect_bbox(endrika_geom::Rect::new(x0, line.top, x1, line.top + line.height));
                 ex.links.push((area, url.to_string()));
             }
             run = link;

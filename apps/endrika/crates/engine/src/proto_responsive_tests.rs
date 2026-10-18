@@ -2,8 +2,8 @@
 //! respond), device colours and custom device sizes: the settings through `proto.settings`, saved
 //! in the file, and [`respond`] on a document.
 
-use figcraft_doc::proto::PrototypeSettings;
-use figcraft_doc::{Document, NodeId, NodeKind};
+use endrika_doc::proto::PrototypeSettings;
+use endrika_doc::{Document, NodeId, NodeKind};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -117,8 +117,8 @@ fn settings_are_saved_and_old_files_read_as_before() {
     ex(&mut s, "proto.settings", json!({"device": "Android Compact", "color": "Green", "responsive": true}));
     ex(&mut s, "proto.settings", json!({"width": 800, "height": 600}));
     ex(&mut s, "proto.settings", json!({"device": "Android Compact", "color": "Green"}));
-    let bytes = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    let (doc, _) = figcraft_format::load_bytes(&bytes).unwrap();
+    let bytes = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    let (doc, _) = endrika_format::load_bytes(&bytes).unwrap();
     let NodeKind::Page { prototype, .. } = &doc.node(doc.pages[0]).unwrap().kind else { panic!("not a page") };
     assert_eq!(prototype, &settings(&s));
     assert!(prototype.responsive);

@@ -212,7 +212,7 @@ mod tests {
         }
     }
 
-    // ---- Replica of the RFC 6716 decoder inverse MDCT (as in FilmCraft's decoder) ----
+    // ---- Replica of the RFC 6716 decoder inverse MDCT (as in Hetsika's decoder) ----
 
     fn imdct_backward(n_full: usize, input: &[f32], out: &mut [f32], window: &[f32]) {
         let n2 = n_full >> 1;

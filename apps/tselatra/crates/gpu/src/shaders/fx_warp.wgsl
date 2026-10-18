@@ -1,5 +1,5 @@
 // GPU effects (warp family): see src/fx_warp.rs. Warp, CC Bend It, CC Page Turn, Smear, Reshape,
-// Color Emboss and Cartoon, each mirroring the CPU effect in effectcraft-effects operation for
+// Color Emboss and Cartoon, each mirroring the CPU effect in tselatra-effects operation for
 // operation. Coordinates are pixel centres (x + 0.5, y + 0.5) in buffer pixels, as in
 // util::remap; scalar set-up (radii, angles, outlines, correspondence) is computed on the CPU in
 // f64 and passed in.

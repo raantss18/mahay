@@ -1,0 +1,54 @@
+[package]
+name = "hazavana"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+default-run = "hazavana"
+
+[lints]
+workspace = true
+
+[features]
+default = ["denoise"]
+denoise = ["hazavana-engine/denoise"]
+rawnind-model = ["denoise", "hazavana-engine/rawnind-model"]
+# Open HEIC/HEIF photos (the optional hazavana-heif crate). Not default so distributors choose
+# it (HEVC patents); build with `--features heif` to include it.
+heif = ["hazavana-codecs/heif"]
+
+[dependencies]
+hazavana-engine = { workspace = true, features = ["sam"] }
+hazavana-sysmem = { workspace = true }
+hazavana-ui-egui = { workspace = true }
+hazavana-codecs = { workspace = true }
+hazavana-raster = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "glow", "accesskit", "wayland", "x11"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+# probing the window's renderer before it opens (`window_gpu`)
+pollster = { workspace = true }
+log = { workspace = true }
+
+[build-dependencies]
+# Icon + VERSIONINFO for hazavana.exe; build.rs only uses it when targeting Windows.
+winresource = "0.1"
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+winit = { version = "0.30", default-features = false, features = ["x11"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rfd = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+muda = { workspace = true }
+objc2 = { workspace = true }
+objc2-app-kit = { workspace = true }
+objc2-foundation = { workspace = true }
+
+[dev-dependencies]
+# tests record why they skip (`cargo xtask ci` lists the skips)
+hazavana-testkit = { workspace = true }

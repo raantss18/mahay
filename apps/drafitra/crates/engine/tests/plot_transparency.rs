@@ -2,12 +2,12 @@
 //! plot's own option, and PLOTTRANSPARENCYOVERRIDE (0 never, 1 the setting, 2 always) deciding
 //! what the plotter is told.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, base64_decode, set_io};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, base64_decode, set_io};
 use serde_json::{Value, json};
 
 /// A plotter that echoes the `plotTransparency` it was given (`none` when it got none).
-fn fake_plot(_: &cadcraft_doc::Drawing, _: &cadcraft_doc::Space, opts: &Value) -> Result<Vec<u8>, String> {
+fn fake_plot(_: &drafitra_doc::Drawing, _: &drafitra_doc::Space, opts: &Value) -> Result<Vec<u8>, String> {
     Ok(opts.get("plotTransparency").map_or("none".to_string(), Value::to_string).into_bytes())
 }
 
@@ -64,7 +64,7 @@ fn preview_follows_the_plot_setting() {
     // A red solid hatch at 50 % over the line.
     s.execute("rectang", &json!({"p1": [10, -10], "p2": [90, 10]})).unwrap();
     s.execute("hatch", &json!({"points": [[50, 5]], "pattern": "SOLID"})).unwrap();
-    let hatch = s.doc().unwrap().model.iter().find(|e| matches!(e.kind, cadcraft_doc::EntityKind::Hatch(_))).map(|e| e.handle).unwrap();
+    let hatch = s.doc().unwrap().model.iter().find(|e| matches!(e.kind, drafitra_doc::EntityKind::Hatch(_))).map(|e| e.handle).unwrap();
     s.execute("draworder", &json!({"handles": [hatch.hex()], "order": "front"})).unwrap();
     s.execute("properties.set", &json!({"handles": [hatch.hex()], "color": 1, "transparency": 50})).unwrap();
     let preview = |s: &mut Session, p: Value| s.execute("preview", &p).unwrap()["data"].as_str().unwrap().to_string();

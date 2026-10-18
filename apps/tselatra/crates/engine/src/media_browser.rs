@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use effectcraft_project::{Footage, FootageKind, Item, ItemKind, Project};
+use tselatra_project::{Footage, FootageKind, Item, ItemKind, Project};
 
 /// Media Browser state (in [`crate::EditorState`], serde for agents).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

@@ -3,7 +3,7 @@
 
 use crate::{MainWindow, SoundApp};
 use serde_json::{Value, json};
-use soundcraft_engine::catalog;
+use feo_engine::catalog;
 
 /// UI-layer commands: (id, label, catalog path or "", shortcut).
 pub const UI_COMMANDS: &[(&str, &str, &str, Option<&str>)] = &[
@@ -23,7 +23,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, Option<&str>)] = &[
     ("window.narrow_mix", "Narrow Mix", "View > Narrow Mix", Some("Cmd+Alt+M")),
     ("window.session_info", "Session Info", "", None),
     ("window.audio_health", "Session Audio Health", "", None),
-    ("window.about", "About SoundCraft", "", None),
+    ("window.about", "About Feo", "", None),
     ("window.close", "Close Window", "Window > Close Window", Some("Cmd+W")),
     ("window.hide_floating", "Hide All Floating Windows", "Window > Hide All Floating Windows", Some("Cmd+Ctrl+W")),
     ("window.midi_editor", "MIDI Editor", "Window > MIDI Editor", None),
@@ -220,8 +220,8 @@ pub fn menu_bar(app: &mut SoundApp, ui: &mut egui::Ui) {
         ui,
         |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
-                ui.menu_button("SoundCraft", |ui| {
-                    if ui.button("About SoundCraft").clicked() {
+                ui.menu_button("Feo", |ui| {
+                    if ui.button("About Feo").clicked() {
                         app.ui.show_about = true;
                     }
                     if ui.button("Session Info").clicked() {
@@ -312,7 +312,7 @@ pub fn item_state(app: &SoundApp, path: &str, id: Option<&str>) -> (bool, bool) 
         {
             true
         }
-        Some(i) => soundcraft_engine::find_command(i).is_some_and(|c| (c.enabled)(&app.engine).is_ok() && !app.engine.blocked_while_recording(i)),
+        Some(i) => feo_engine::find_command(i).is_some_and(|c| (c.enabled)(&app.engine).is_ok() && !app.engine.blocked_while_recording(i)),
         None => false,
     };
     (enabled, checked_state(app, path, id))
@@ -405,7 +405,7 @@ fn params_for(path: &str, id: &str) -> Value {
     }
 }
 
-/// Menu items that open a SoundCraft window when clicked (programmatic calls still run the command).
+/// Menu items that open a Feo window when clicked (programmatic calls still run the command).
 const MENU_WINDOWS: &[(&str, &str)] = &[
     ("Setup > Appearance", "window.ui_customization"),
     ("Setup > Hardware...", "window.playback_engine"),
@@ -422,7 +422,7 @@ const MENU_WINDOWS: &[(&str, &str)] = &[
 
 /// The shortcut of an engine or window command.
 pub fn shortcut_for(id: &str) -> Option<&'static str> {
-    soundcraft_engine::find_command(id).map_or_else(|| UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.3), |c| c.shortcut)
+    feo_engine::find_command(id).map_or_else(|| UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.3), |c| c.shortcut)
 }
 
 /// Undo and Redo name the step they would undo or redo; other items keep their catalog label.
@@ -687,7 +687,7 @@ mod tests {
 
     #[test]
     fn programmatic_dialog_commands_stay_closed_and_the_menu_opens_them() {
-        let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+        let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
         let err = app.run("ui.new_tracks_dialog", json!({})).unwrap_err();
         assert!(err.contains("track.new"), "{err}");
         let err = app.run("ui.bounce_dialog", json!({})).unwrap_err();
@@ -703,14 +703,14 @@ mod tests {
 
     #[test]
     fn save_asks_for_a_path_until_the_session_has_one() {
-        let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+        let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
         invoke_menu(&mut app, "session.save", "File > Save Session");
         assert!(matches!(&app.dialogs.open, Some(crate::dialogs::Dialog::PathPrompt { cmd, .. }) if cmd == "session.save_as"));
         app.dialogs.open = None;
         assert!(invoke_shortcut_dialog(&mut app, "session.save"));
         app.dialogs.open = None;
 
-        let dir = std::env::temp_dir().join(format!("soundcraft-save-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-save-{}", std::process::id()));
         let path = dir.join("Song.scraft");
         app.run("session.save_as", json!({"path": path.to_string_lossy()})).unwrap();
         app.run("track.new", json!({})).unwrap();

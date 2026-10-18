@@ -33,3 +33,4 @@ arboard = { version = "3.6" }
 open = "5"
 ron = "0.12"
 mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }

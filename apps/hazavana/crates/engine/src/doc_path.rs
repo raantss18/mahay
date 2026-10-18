@@ -1,15 +1,15 @@
-//! Paths stored in a file LightCraft reads but the user did not choose path by path, such as the
+//! Paths stored in a file Hazavana reads but the user did not choose path by path, such as the
 //! originals a Lightroom catalog lists.
 //!
 //! Such a path reaches the file system only through [`resolve`]: a relative path is taken from the
 //! document's folder, and only local files, or files on the network share the document itself is
-//! on, are looked at (see `craft_docpath`). A path that is not followed is handled like a missing
+//! on, are looked at (see `mahay_docpath`). A path that is not followed is handled like a missing
 //! file.
 
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-pub use craft_docpath::Refused;
+pub use mahay_docpath::Refused;
 
 /// Why a stored path is not followed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,7 +38,7 @@ impl std::error::Error for NotFollowed {}
 /// was opened from.
 pub fn resolve(stored: &str, document: Option<&Path>) -> Result<PathBuf, NotFollowed> {
     let document = document.map(|d| if d.is_relative() { std::path::absolute(d).unwrap_or_else(|_| d.to_path_buf()) } else { d.to_path_buf() });
-    let path = craft_docpath::resolve(stored, document.as_deref()).map_err(NotFollowed::Refused)?;
+    let path = mahay_docpath::resolve(stored, document.as_deref()).map_err(NotFollowed::Refused)?;
     // A path that is still relative would be taken from the working directory, which the
     // document does not choose.
     if path.is_relative() {

@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use base64::Engine as _;
-use figcraft_doc::*;
-use figcraft_format::Version;
+use endrika_doc::*;
+use endrika_format::Version;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, ok};
@@ -30,7 +30,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "file.open",
             "Open",
-            "{path | data (base64) + name (tells the format; opens as a new unsaved document), variables? (REST: the local variables JSON as an object, JSON text or a path; default `<name>.variables.json` or `variables.json` next to the file)} (.figcraft, .json: FigCraft or REST API file JSON, .fig (best effort), .svg, .png, .jpg …); REST and .fig imports return `warnings`; a file opened anew returns `summary` {name, pages, layers, images} (one that was already open just returns its `index`)",
+            "{path | data (base64) + name (tells the format; opens as a new unsaved document), variables? (REST: the local variables JSON as an object, JSON text or a path; default `<name>.variables.json` or `variables.json` next to the file)} (.endrika, .json: Endrika or REST API file JSON, .fig (best effort), .svg, .png, .jpg …); REST and .fig imports return `warnings`; a file opened anew returns `summary` {name, pages, layers, images} (one that was already open just returns its `index`)",
             false,
             open
         ),
@@ -51,7 +51,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "file.saveAs",
             "Save as",
-            "{path} (no extension adds .figcraft); a .fig path writes an experimental export copy of the shown document with `warnings`, keeping the native path, unsaved changes and version preview",
+            "{path} (no extension adds .endrika); a .fig path writes an experimental export copy of the shown document with `warnings`, keeping the native path, unsaved changes and version preview",
             false,
             save_as
         ),
@@ -86,7 +86,7 @@ pub fn specs() -> Vec<CommandSpec> {
         spec!(
             "file.import",
             "Import",
-            "{path | data (base64) + name, x?, y?, center? (SVG: centre it on x, y), variables? (REST: the local variables JSON as an object, JSON text or a path)}  SVG becomes an editable frame (shapes, text, gradients, masks, effects; with `warnings` for what it left out), images become image layers, .figcraft, REST API file JSON and .fig pages are appended with their variables and flows (REST and .fig: with `warnings`; those return `summary` {name, pages, layers, images} of the file read)",
+            "{path | data (base64) + name, x?, y?, center? (SVG: centre it on x, y), variables? (REST: the local variables JSON as an object, JSON text or a path)}  SVG becomes an editable frame (shapes, text, gradients, masks, effects; with `warnings` for what it left out), images become image layers, .endrika, REST API file JSON and .fig pages are appended with their variables and flows (REST and .fig: with `warnings`; those return `summary` {name, pages, layers, images} of the file read)",
             true,
             import
         ),
@@ -172,11 +172,11 @@ pub fn specs() -> Vec<CommandSpec> {
             let i = version_index(CMD, ds, p)?;
             let description = string(p, "description");
             let v = ds.versions_mut().get_mut(i).ok_or_else(|| bad(CMD, "no such version"))?;
-            v.name = figcraft_format::clip(name.trim(), figcraft_format::MAX_VERSION_NAME);
+            v.name = endrika_format::clip(name.trim(), endrika_format::MAX_VERSION_NAME);
             // A titled autosave is a named version (never dropped to make room).
             v.auto = false;
             if let Some(d) = description {
-                v.description = figcraft_format::clip(d.trim(), figcraft_format::MAX_VERSION_DESCRIPTION);
+                v.description = endrika_format::clip(d.trim(), endrika_format::MAX_VERSION_DESCRIPTION);
             }
             Ok(version_json(i, v))
         }),
@@ -290,12 +290,12 @@ const AUTOSAVE: &str = "Autosave";
 /// never dropped, so a history full of them takes nothing (None).
 pub(crate) fn add_version(ds: &mut DocState, name: &str, description: &str, auto: bool) -> Option<Value> {
     let autos = ds.versions.iter().filter(|v| v.auto).count();
-    if ((auto && autos >= MAX_AUTOSAVES) || ds.versions.len() >= figcraft_format::MAX_VERSIONS)
+    if ((auto && autos >= MAX_AUTOSAVES) || ds.versions.len() >= endrika_format::MAX_VERSIONS)
         && let Some(oldest) = ds.versions.iter().position(|v| v.auto)
     {
         ds.versions_mut().remove(oldest);
     }
-    if ds.versions.len() >= figcraft_format::MAX_VERSIONS {
+    if ds.versions.len() >= endrika_format::MAX_VERSIONS {
         return None;
     }
     let mut v = snapshot_version(ds, name, description);
@@ -371,10 +371,10 @@ pub(crate) fn unique_id(taken: impl Fn(&str) -> bool) -> String {
 /// `file.saveVersion`; on a branch tab the version goes into the branch's own history.
 fn save_version(s: &mut Session, p: &Value) -> Result<Value> {
     let ds = s.ds_mut()?;
-    if ds.versions.len() >= figcraft_format::MAX_VERSIONS {
+    if ds.versions.len() >= endrika_format::MAX_VERSIONS {
         return Err(EngineError::Disabled(
             "file.saveVersion".into(),
-            format!("the version history is full ({} versions): delete old versions first", figcraft_format::MAX_VERSIONS),
+            format!("the version history is full ({} versions): delete old versions first", endrika_format::MAX_VERSIONS),
         ));
     }
     let name =
@@ -384,7 +384,7 @@ fn save_version(s: &mut Session, p: &Value) -> Result<Value> {
     add_version(ds, &name, description.trim(), false).ok_or_else(|| {
         EngineError::Disabled(
             "file.saveVersion".into(),
-            format!("the version history is full ({} versions): delete old versions first", figcraft_format::MAX_VERSIONS),
+            format!("the version history is full ({} versions): delete old versions first", endrika_format::MAX_VERSIONS),
         )
     })
 }
@@ -429,7 +429,7 @@ fn restore_version(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// The recovery copy at `path` as a document with unsaved changes and no path.
 pub(crate) fn recovered(path: &str) -> Result<DocState> {
-    let loaded = read(path).and_then(|b| figcraft_format::load_bytes_with_versions(&b).map_err(|e| EngineError::Other(e.to_string())))?;
+    let loaded = read(path).and_then(|b| endrika_format::load_bytes_with_versions(&b).map_err(|e| EngineError::Other(e.to_string())))?;
     Ok(DocState::new(loaded.doc, None).with_versions(loaded.versions).with_branches(loaded.branches).unsaved())
 }
 
@@ -449,7 +449,7 @@ pub(crate) fn read_capped(path: &str, max: u64) -> Result<Vec<u8>> {
 }
 
 /// Write `bytes` to `path` through a uniquely named, exclusively created staging file and one
-/// atomic rename (see [`figcraft_format::write_file_atomic`]): a failed or interrupted write never
+/// atomic rename (see [`endrika_format::write_file_atomic`]): a failed or interrupted write never
 /// truncates `path`, and no file or symlink at a staging name is ever written through.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn write(path: &str, bytes: &[u8]) -> Result<()> {
@@ -481,12 +481,12 @@ pub fn load(path: &str) -> Result<(Document, Vec<String>)> {
 }
 
 pub fn load_bytes(bytes: &[u8], name_hint: &str) -> Result<(Document, Vec<String>)> {
-    load_with(bytes, name_hint, None, &figcraft_format::rest::no_images).map(|(l, _)| (l.doc, l.issues))
+    load_with(bytes, name_hint, None, &endrika_format::rest::no_images).map(|(l, _)| (l.doc, l.issues))
 }
 
 /// [`load`] with the version history, also telling whether the file was REST API file JSON. A REST
 /// import reads its variables from `variables`, else from a variables JSON next to the file.
-pub fn load_path(path: &str, variables: Option<&Value>) -> Result<(figcraft_format::Loaded, bool)> {
+pub fn load_path(path: &str, variables: Option<&Value>) -> Result<(endrika_format::Loaded, bool)> {
     let bytes = read(path)?;
     let sibling = if variables.is_none() { sibling_variables(path) } else { None };
     load_with(&bytes, path, variables.or(sibling.as_ref()), &rest_images(path))
@@ -499,35 +499,35 @@ fn load_with(
     bytes: &[u8],
     name_hint: &str,
     variables: Option<&Value>,
-    images: figcraft_format::rest::ImageResolver,
-) -> Result<(figcraft_format::Loaded, bool)> {
+    images: endrika_format::rest::ImageResolver,
+) -> Result<(endrika_format::Loaded, bool)> {
     match ext(name_hint).as_str() {
         "svg" => {
             let mut doc = Document::new(file_stem(name_hint));
             let page = doc.first_page().ok_or(EngineError::NoDocument)?;
-            let notes = figcraft_svg::import_svg_with_notes(&mut doc, bytes, page, 0.0, 0.0, &file_stem(name_hint))
+            let notes = endrika_svg::import_svg_with_notes(&mut doc, bytes, page, 0.0, 0.0, &file_stem(name_hint))
                 .map_err(|e| EngineError::Other(e.to_string()))?
                 .notes;
-            Ok((figcraft_format::Loaded { issues: notes, ..doc.into() }, false))
+            Ok((endrika_format::Loaded { issues: notes, ..doc.into() }, false))
         }
         "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "tif" | "tiff" => {
             let mut doc = Document::new(file_stem(name_hint));
             let page = doc.first_page().ok_or(EngineError::NoDocument)?;
-            let (hash, w, h) = figcraft_format::add_image(&mut doc, bytes.to_vec()).map_err(|e| EngineError::Other(e.to_string()))?;
+            let (hash, w, h) = endrika_format::add_image(&mut doc, bytes.to_vec()).map_err(|e| EngineError::Other(e.to_string()))?;
             let id = doc.create(page, NodeKind::Rectangle, &file_stem(name_hint), 0.0, 0.0, f64::from(w), f64::from(h))?;
-            doc.get_mut(id)?.fills = vec![figcraft_color::Paint::image(hash, figcraft_color::ImageScaleMode::Fill)];
+            doc.get_mut(id)?.fills = vec![endrika_color::Paint::image(hash, endrika_color::ImageScaleMode::Fill)];
             Ok((doc.into(), false))
         }
         _ => {
             if let Some(r) = load_fig(bytes, &file_stem(name_hint)) {
                 return Ok((r?, true));
             }
-            if let Some(r) = figcraft_format::rest::try_import_with(bytes, variables, images) {
+            if let Some(r) = endrika_format::rest::try_import_with(bytes, variables, images) {
                 let (mut doc, warnings) = r.map_err(|e| EngineError::Other(e.to_string()))?;
                 link_instances(&mut doc);
-                return Ok((figcraft_format::Loaded { issues: warnings, ..doc.into() }, true));
+                return Ok((endrika_format::Loaded { issues: warnings, ..doc.into() }, true));
             }
-            let mut loaded = figcraft_format::load_bytes_with_versions(bytes).map_err(|e| EngineError::Other(e.to_string()))?;
+            let mut loaded = endrika_format::load_bytes_with_versions(bytes).map_err(|e| EngineError::Other(e.to_string()))?;
             if loaded.doc.name.is_empty() {
                 loaded.doc.name = file_stem(name_hint);
             }
@@ -537,11 +537,11 @@ fn load_with(
 }
 
 /// Gives `None` when `bytes` are not a `.fig` file. Then other readers can try.
-pub(crate) fn load_fig(bytes: &[u8], name: &str) -> Option<Result<figcraft_format::Loaded>> {
-    let r = figcraft_format::fig::try_import(bytes, name)?;
+pub(crate) fn load_fig(bytes: &[u8], name: &str) -> Option<Result<endrika_format::Loaded>> {
+    let r = endrika_format::fig::try_import(bytes, name)?;
     Some(r.map_err(|e| EngineError::Other(e.to_string())).map(|(mut doc, warnings)| {
         link_instances(&mut doc);
-        figcraft_format::Loaded { issues: warnings, ..doc.into() }
+        endrika_format::Loaded { issues: warnings, ..doc.into() }
     }))
 }
 
@@ -582,7 +582,7 @@ fn rest_images(path: &str) -> impl Fn(&str) -> Option<Vec<u8>> {
 
 #[cfg(target_arch = "wasm32")]
 fn rest_images(_path: &str) -> impl Fn(&str) -> Option<Vec<u8>> {
-    figcraft_format::rest::no_images
+    endrika_format::rest::no_images
 }
 
 /// Largest variables JSON read from disk.
@@ -600,7 +600,7 @@ fn sibling_variables(path: &str) -> Option<Value> {
     let dir = file.parent()?;
     [format!("{}.variables.json", file_stem(path)), "variables.json".to_string()].iter().map(|n| dir.join(n)).filter(|c| c != file).find_map(|c| {
         let v: Value = serde_json::from_slice(&crate::file_access::read_capped(c, MAX_VARIABLES_FILE).ok()?).ok()?;
-        figcraft_format::rest::is_variables_json(&v).then_some(v)
+        endrika_format::rest::is_variables_json(&v).then_some(v)
     })
 }
 
@@ -619,7 +619,7 @@ pub(crate) fn variables_param(cmd: &str, p: &Value) -> Result<Option<Value>> {
         Some(Value::String(path)) => parse(&read(path)?)?,
         Some(_) => return Err(bad(cmd, "variables: the local variables JSON (an object, JSON text or a path)")),
     };
-    if !figcraft_format::rest::is_variables_json(&v) {
+    if !endrika_format::rest::is_variables_json(&v) {
         return Err(bad(cmd, "variables: expected the local variables JSON (`meta.variableCollections` and `meta.variables`)"));
     }
     Ok(Some(v))
@@ -694,7 +694,7 @@ fn open(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let (loaded, rest) = load_path(&path, variables.as_ref())?;
     remember(s, &path);
-    let native = !rest && matches!(ext(&path).as_str(), "figcraft" | "json");
+    let native = !rest && matches!(ext(&path).as_str(), "endrika" | "json");
     let warnings = rest || ext(&path) == "svg";
     // A native file that lost something (a damaged image, say): the app says so, not only the result.
     if native && !loaded.issues.is_empty() {
@@ -717,7 +717,7 @@ fn open_data(s: &mut Session, data: &str, p: &Value, variables: Option<&Value>) 
     let name = req_string("file.open", p, "name")?;
     let data = data.split_once(',').map_or(data, |(_, b)| b);
     let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|e| bad("file.open", e.to_string()))?;
-    let (loaded, rest) = load_with(&bytes, &name, variables, &figcraft_format::rest::no_images)?;
+    let (loaded, rest) = load_with(&bytes, &name, variables, &endrika_format::rest::no_images)?;
     let warnings = rest || ext(&name) == "svg";
     let summary = import_summary(&loaded.doc);
     s.docs.push(DocState::new(loaded.doc, None).with_versions(loaded.versions).with_branches(loaded.branches));
@@ -732,17 +732,17 @@ pub fn thumbnail(doc: &Document) -> Option<Vec<u8>> {
     let page = doc.first_page()?;
     let b = doc.page_content_bounds(page)?;
     let scale = (400.0 / b.width().max(b.height()).max(1.0)).min(2.0);
-    let view = figcraft_render::View {
+    let view = endrika_render::View {
         origin: (b.x0, b.y0),
         scale,
         width: (b.width() * scale).ceil().max(1.0) as u32,
         height: (b.height() * scale).ceil().max(1.0) as u32,
     };
-    let pix = figcraft_render::render_view(doc, page, &view, &Default::default())?;
-    figcraft_render::encode_png(&pix).ok()
+    let pix = endrika_render::render_view(doc, page, &view, &Default::default())?;
+    endrika_render::encode_png(&pix).ok()
 }
 
-/// The `.figcraft` file for a document: content, thumbnail and version history.
+/// The `.endrika` file for a document: content, thumbnail and version history.
 pub fn file_bytes(ds: &DocState) -> Result<Vec<u8>> {
     FileSnapshot::of(ds).encode()
 }
@@ -759,7 +759,7 @@ pub struct FileSnapshot {
     saved: Arc<Document>,
     page: NodeId,
     versions: Vec<Version>,
-    branches: Vec<figcraft_format::Branch>,
+    branches: Vec<endrika_format::Branch>,
 }
 
 impl FileSnapshot {
@@ -781,7 +781,7 @@ impl FileSnapshot {
         let mut doc = (*self.doc).clone();
         doc.current_page = Some(self.page);
         let thumb = thumbnail(&doc);
-        figcraft_format::save_bytes_with_history(&doc, thumb.as_deref(), &self.versions, &self.branches)
+        endrika_format::save_bytes_with_history(&doc, thumb.as_deref(), &self.versions, &self.branches)
             .map_err(|e| EngineError::Other(e.to_string()))
     }
 
@@ -817,7 +817,7 @@ fn color_profile(s: &mut Session, p: &Value) -> Result<Value> {
         s.request_ui("dialog.colorProfile", json!({}));
         return Ok(json!({"profile": s.doc()?.color_profile.id(), "changed": false}));
     };
-    let profile = figcraft_color::ColorProfile::parse(&name).ok_or_else(|| bad(cmd, "profile: srgb or displayP3"))?;
+    let profile = endrika_color::ColorProfile::parse(&name).ok_or_else(|| bad(cmd, "profile: srgb or displayP3"))?;
     let convert = boolean(p, "convert").unwrap_or(true);
     let changed = s.doc()?.color_profile != profile && s.doc_mut()?.set_color_profile(profile, convert);
     Ok(json!({"profile": profile.id(), "changed": changed}))
@@ -872,7 +872,7 @@ fn save_as(s: &mut Session, p: &Value) -> Result<Value> {
     match string(p, "path") {
         Some(mut path) => {
             if ext(&path).is_empty() {
-                path.push_str(".figcraft");
+                path.push_str(".endrika");
             }
             save_to(s, path)
         }
@@ -891,7 +891,7 @@ pub fn export_bytes(doc: &Document, ids: &[NodeId], format: ExportFormat, scale:
 /// The page area exporting `ids` with `setting` covers: what they paint (a clipping frame's own
 /// area), or their boxes with "include bounding box" and for slices. Hidden layers paint nothing,
 /// so they take no room next to visible ones (a hidden-only export keeps its own area).
-pub fn export_area(doc: &Document, ids: &[NodeId], setting: &ExportSetting) -> Option<figcraft_geom::Rect> {
+pub fn export_area(doc: &Document, ids: &[NodeId], setting: &ExportSetting) -> Option<endrika_geom::Rect> {
     let any_visible = ids.iter().any(|i| doc.node(*i).is_some_and(|n| n.visible));
     ids.iter()
         .filter_map(|i| {
@@ -902,7 +902,7 @@ pub fn export_area(doc: &Document, ids: &[NodeId], setting: &ExportSetting) -> O
             } else if any_visible && node.is_some_and(|n| !n.visible) {
                 None
             } else {
-                figcraft_render::export_bounds(doc, *i)
+                endrika_render::export_bounds(doc, *i)
             }
         })
         .reduce(|a, b| a.union(b))
@@ -927,7 +927,7 @@ pub fn export_bytes_with(doc: &Document, ids: &[NodeId], setting: &ExportSetting
     }
     let drawn = drawn_layers(doc, ids, setting);
     if matches!(setting.format, ExportFormat::Svg | ExportFormat::Pdf) {
-        figcraft_render::check_export_depth(doc, &drawn).map_err(|e| EngineError::Other(e.to_string()))?;
+        endrika_render::check_export_depth(doc, &drawn).map_err(|e| EngineError::Other(e.to_string()))?;
     }
     let area = export_area(doc, ids, setting).ok_or_else(nothing)?;
     // The layers' own area unless an option or a slice says otherwise.
@@ -937,14 +937,14 @@ pub fn export_bytes_with(doc: &Document, ids: &[NodeId], setting: &ExportSetting
     match setting.format {
         // SVG and PDF colours are sRGB: a Display P3 file exports converted (out-of-gamut colours clip).
         ExportFormat::Svg => {
-            let opts = figcraft_svg::SvgOptions {
+            let opts = endrika_svg::SvgOptions {
                 include_ids: setting.svg_id_attribute,
                 outline_text: setting.svg_outline_text,
                 simplify_stroke: setting.svg_simplify_stroke,
                 bounds: Some(area),
             };
-            figcraft_svg::try_export_svg(&doc.in_srgb(), &drawn, &opts).map(String::into_bytes).map_err(|e| match e {
-                figcraft_svg::SvgError::Empty => nothing(),
+            endrika_svg::try_export_svg(&doc.in_srgb(), &drawn, &opts).map(String::into_bytes).map_err(|e| match e {
+                endrika_svg::SvgError::Empty => nothing(),
                 other => EngineError::Other(other.to_string()),
             })
         }
@@ -956,18 +956,18 @@ pub fn export_bytes_with(doc: &Document, ids: &[NodeId], setting: &ExportSetting
             pdf_bytes(doc, &groups, &setting.print, (!own_area).then_some(area))
         }
         _ => {
-            let pix = figcraft_render::render_area(doc, &drawn, area, scale)
+            let pix = endrika_render::render_area(doc, &drawn, area, scale)
                 .ok_or_else(|| EngineError::Other("render failed (empty or too large)".into()))?;
-            figcraft_render::encode_export(&pix, setting.format, doc.color_profile).map_err(EngineError::Other)
+            endrika_render::encode_export(&pix, setting.format, doc.color_profile).map_err(EngineError::Other)
         }
     }
 }
 
 /// What Copy as PNG puts on the clipboard: the layers together, at 2x (in the document's colour
 /// profile; the clipboard wants sRGB).
-pub fn copy_png(doc: &Document, ids: &[NodeId]) -> Option<figcraft_render::Pixmap> {
+pub fn copy_png(doc: &Document, ids: &[NodeId]) -> Option<endrika_render::Pixmap> {
     let area = export_area(doc, ids, &ExportSetting::default())?;
-    figcraft_render::render_area(doc, &super::edit::z_sorted(doc, ids), area, 2.0)
+    endrika_render::render_area(doc, &super::edit::z_sorted(doc, ids), area, 2.0)
 }
 
 fn export(s: &mut Session, p: &Value) -> Result<Value> {
@@ -1021,14 +1021,14 @@ fn export_fig(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// `doc` as a `.fig` file (with a thumbnail) and the warnings about what was left out.
 pub fn fig_bytes(doc: &Document) -> Result<(Vec<u8>, Vec<String>)> {
-    figcraft_format::fig::export(doc, thumbnail(doc).as_deref()).map_err(|e| EngineError::Other(e.to_string()))
+    endrika_format::fig::export(doc, thumbnail(doc).as_deref()).map_err(|e| EngineError::Other(e.to_string()))
 }
 
 /// The scale that gives `ids` (their export area together) `setting`'s export size.
 pub fn export_scale(doc: &Document, ids: &[NodeId], setting: &ExportSetting) -> f64 {
     // Size-based exports ask for bounds before encoding. Let encoding report the depth error
     // without entering a recursive bounds walk here; SVG/PDF do not use this raster scale.
-    if matches!(setting.format, ExportFormat::Svg | ExportFormat::Pdf) && figcraft_render::check_export_depth(doc, ids).is_err() {
+    if matches!(setting.format, ExportFormat::Svg | ExportFormat::Pdf) && endrika_render::check_export_depth(doc, ids).is_err() {
         return 1.0;
     }
     export_area(doc, ids, setting).map_or(1.0, |b| setting.size.scale_for(b.width(), b.height()))
@@ -1200,9 +1200,9 @@ fn export_layers(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// A PDF with one page per group of layers (an sRGB document), titled after the file; `area`
 /// sizes a single page to that page area instead of the layers' bounds.
-fn pdf_bytes(doc: &Document, groups: &[Vec<NodeId>], print: &PrintSettings, area: Option<figcraft_geom::Rect>) -> Result<Vec<u8>> {
-    let opts = figcraft_pdf::PdfOptions { title: Some(doc.name.clone()), print: *print, area, ..Default::default() };
-    figcraft_pdf::export_groups(doc, groups, &opts).map_err(|e| EngineError::Other(e.to_string()))
+fn pdf_bytes(doc: &Document, groups: &[Vec<NodeId>], print: &PrintSettings, area: Option<endrika_geom::Rect>) -> Result<Vec<u8>> {
+    let opts = endrika_pdf::PdfOptions { title: Some(doc.name.clone()), print: *print, area, ..Default::default() };
+    endrika_pdf::export_groups(doc, groups, &opts).map_err(|e| EngineError::Other(e.to_string()))
 }
 
 /// Every top-level frame of `page` (reading order) as one PDF page each, and the page count.
@@ -1257,13 +1257,13 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
             let doc = s.doc_mut()?;
             let (x, y) = (x.unwrap_or(center.0), y.unwrap_or(center.1));
             let imported =
-                figcraft_svg::import_svg_with_notes(doc, &bytes, page, x, y, &file_stem(&name)).map_err(|e| EngineError::Other(e.to_string()))?;
+                endrika_svg::import_svg_with_notes(doc, &bytes, page, x, y, &file_stem(&name)).map_err(|e| EngineError::Other(e.to_string()))?;
             let id = imported.frame;
             // Centred on the point (a paste lands in the middle of the view).
             if boolean(p, "center").unwrap_or(false)
                 && let Some(n) = doc.node_mut(id)
             {
-                n.transform = figcraft_geom::Affine::translate(((x - n.width / 2.0).round(), (y - n.height / 2.0).round()));
+                n.transform = endrika_geom::Affine::translate(((x - n.width / 2.0).round(), (y - n.height / 2.0).round()));
             }
             s.set_selection(vec![id]);
             let mut out = json!({"id": id});
@@ -1272,11 +1272,11 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
             }
             Ok(out)
         }
-        "figcraft" | "json" | "fig" => {
+        "endrika" | "json" | "fig" => {
             let resolver = path.as_deref().map(rest_images);
-            let images: figcraft_format::rest::ImageResolver = match &resolver {
+            let images: endrika_format::rest::ImageResolver = match &resolver {
                 Some(r) => r,
-                None => &figcraft_format::rest::no_images,
+                None => &endrika_format::rest::no_images,
             };
             let sibling = if variables.is_none() { path.as_deref().and_then(sibling_variables) } else { None };
             let (other, rest) = load_with(&bytes, &name, variables.as_ref().or(sibling.as_ref()), images)?;
@@ -1509,7 +1509,7 @@ mod rest_import_tests {
         let data = base64::engine::general_purpose::STANDARD.encode(&bytes);
         let mut s = Session::new();
         let recent = s.prefs.recent_files.clone();
-        let r = s.execute("file.open", &json!({"data": data, "name": "Dropped.figcraft"})).unwrap();
+        let r = s.execute("file.open", &json!({"data": data, "name": "Dropped.endrika"})).unwrap();
         let open = s.docs.len();
         assert_eq!(r["index"], open - 1, "a document of its own, made active");
         assert_eq!(s.ds().unwrap().path, None, "no path to save over");
@@ -1522,7 +1522,7 @@ mod rest_import_tests {
 
     #[test]
     fn open_and_import_rest_json() {
-        let dir = std::env::temp_dir().join(format!("figcraft-rest-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("endrika-rest-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("images")).unwrap();
         let png = {
             let mut d = Document::new("x");
@@ -1542,7 +1542,7 @@ mod rest_import_tests {
         assert_eq!(s.ds().unwrap().path, None, "an import is never saved over its JSON");
         let doc = s.doc().unwrap();
         let photo = doc.nodes().find(|n| n.name == "Photo").unwrap();
-        let figcraft_color::PaintKind::Image(img) = &photo.fills[0].kind else { panic!() };
+        let endrika_color::PaintKind::Image(img) = &photo.fills[0].kind else { panic!() };
         assert_eq!(doc.images.get(&img.image).map(|i| (i.width, i.height)), Some((3, 2)), "read from images/ next to the file");
 
         // Import into another document: pages are appended and references follow the new ids.
@@ -1570,7 +1570,7 @@ mod staging_write_tests {
     use super::*;
 
     fn dir(name: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("figcraft-engine-staging-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("endrika-engine-staging-{name}-{}", std::process::id()));
         std::fs::create_dir_all(&d).unwrap();
         d
     }
@@ -1592,7 +1592,7 @@ mod staging_write_tests {
         let path = d.join("shot.svg");
         // The old deterministic staging name, held by an unrelated file: the write must pick its
         // own staging name instead of truncating this one.
-        let old = d.join("shot.svg.tmp-figcraft");
+        let old = d.join("shot.svg.tmp-endrika");
         std::fs::write(&old, b"not yours").unwrap();
         write(&path.to_string_lossy(), b"<svg/>").unwrap();
         assert_eq!(std::fs::read(&path).unwrap(), b"<svg/>");
@@ -1608,7 +1608,7 @@ mod staging_write_tests {
         let path = d.join("shot.svg");
         let victim = d.join("victim.txt");
         std::fs::write(&victim, b"innocent").unwrap();
-        let old = d.join("shot.svg.tmp-figcraft");
+        let old = d.join("shot.svg.tmp-endrika");
         if !symlink(&old, &victim) {
             return; // Making a symlink needs privileges on some Windows setups.
         }

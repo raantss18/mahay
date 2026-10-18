@@ -2,8 +2,8 @@
 
 use super::*;
 use kurbo::Shape;
-use vectorcraft_doc::{AreaFit, CharStyle, TextKind};
-use vectorcraft_geom::PathData;
+use tsipika_doc::{AreaFit, CharStyle, TextKind};
+use tsipika_geom::PathData;
 
 const COPY: &str = "Typography is the craft of arranging type to make written language legible, readable and appealing when displayed. \
 The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing and letter spacing, and adjusting the space \
@@ -140,7 +140,7 @@ fn shrink_text_guards_degenerate_sizes() {
 
 #[test]
 fn shrink_text_follows_top_to_top_leading_and_character_alignment() {
-    use vectorcraft_doc::{CharAlign, LeadingModel, TextRun};
+    use tsipika_doc::{CharAlign, LeadingModel, TextRun};
     // Mixed sizes aligned on the em box centre, leading measured from em box top to top.
     let mut t = area(COPY, 14.0, Rect::new(0.0, 0.0, 200.0, 90.0), shrink(20.0));
     t.para.leading_model = LeadingModel::EmBoxTop;

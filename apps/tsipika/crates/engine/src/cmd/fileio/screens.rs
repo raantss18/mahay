@@ -13,8 +13,8 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::Document;
-use vectorcraft_geom::Rect;
+use tsipika_doc::Document;
+use tsipika_geom::Rect;
 
 use super::super::*;
 use super::encode::single_artboard;
@@ -197,7 +197,7 @@ impl Row {
         }
         let format = writable(C, Some(str_param(row, "format").unwrap_or("png")), None)?;
         if matches!(format.id, "template" | "txt" | "dxf" | "emf" | "wmf") {
-            return Err(bad(C, "Export for Screens writes png, png8, jpg, webp, gif, tiff, bmp, tga, psd, svg, svgz, pdf, eps, ai or vectorcraft"));
+            return Err(bad(C, "Export for Screens writes png, png8, jpg, webp, gif, tiff, bmp, tga, psd, svg, svgz, pdf, eps, ai or tsipika"));
         }
         // Vector formats have no pixel size: it doesn't apply and adds no @2x suffix (not even one
         // left over from a raster row switched to SVG or PDF).
@@ -238,7 +238,7 @@ impl Row {
     /// Formats that hold a whole document to edit (native, Illustrator, EPS): written from a
     /// document of the item alone, one artboard, rather than with an `artboard` option.
     fn whole_document(&self) -> bool {
-        matches!(self.format.id, "vectorcraft" | "ai" | "eps")
+        matches!(self.format.id, "tsipika" | "ai" | "eps")
     }
 
     /// The encoder options for `region`, `artboard` of the document written.
@@ -387,7 +387,7 @@ impl<'a> Naming<'a> {
         let prefix = file_part(o.prefix.as_deref().unwrap_or(""));
         let when = match o.date.as_deref() {
             Some(d) => naming::parse_date(d).ok_or_else(|| bad(C, format!("date `{d}`: YYYY-MM-DD")))?,
-            None => vectorcraft_doc::metadata::output_time().map_or([1970, 1, 1, 0, 0, 0], vectorcraft_doc::metadata::civil),
+            None => tsipika_doc::metadata::output_time().map_or([1970, 1, 1, 0, 0, 0], tsipika_doc::metadata::civil),
         };
         let per_file = match o.counter_per.as_deref() {
             None | Some("item") => false,
@@ -726,7 +726,7 @@ pub(crate) fn export(s: &mut Session, p: &Value) -> Result<Value> {
                 Ok(json!({ "path": path, "bytes": zip.len(), "files": names, "warnings": warnings }))
             }
             None => Ok(
-                json!({ "name": zip_name, "dataBase64": vectorcraft_format::base64_encode(&zip), "bytes": zip.len(), "files": names, "warnings": warnings }),
+                json!({ "name": zip_name, "dataBase64": tsipika_format::base64_encode(&zip), "bytes": zip.len(), "files": names, "warnings": warnings }),
             ),
         };
     }
@@ -734,7 +734,7 @@ pub(crate) fn export(s: &mut Session, p: &Value) -> Result<Value> {
         Some(_) => json!({ "files": out.written, "warnings": warnings }),
         None => {
             let files: Vec<Value> =
-                out.kept.iter().map(|(name, bytes)| json!({ "name": name, "dataBase64": vectorcraft_format::base64_encode(bytes) })).collect();
+                out.kept.iter().map(|(name, bytes)| json!({ "name": name, "dataBase64": tsipika_format::base64_encode(bytes) })).collect();
             json!({ "files": files, "warnings": warnings })
         }
     })
@@ -802,7 +802,7 @@ fn items(
         // The bounds of all visible art, as the one artboard of the files that aren't PDFs (a PDF
         // row writes every artboard of the document itself).
         let (whole, region) = if crop {
-            let bounds = vectorcraft_render::encode::art_bounds(doc).ok_or_else(|| bad(C, "nothing to export: the document has no visible art"))?;
+            let bounds = tsipika_render::encode::art_bounds(doc).ok_or_else(|| bad(C, "nothing to export: the document has no visible art"))?;
             (Arc::new(single_artboard(doc, bounds, "Document")), bounds)
         } else {
             (doc.clone(), Rect::ZERO)

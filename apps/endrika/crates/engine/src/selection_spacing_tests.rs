@@ -1,5 +1,5 @@
 use crate::{Session, selection_spacing::selection_spacing};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::json;
 
 fn rect(s: &mut Session, x: f64, y: f64, w: f64, h: f64, parent: Option<NodeId>) -> NodeId {

@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 
 use crate::params::id_of;
 use crate::{EngineError, Session};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -88,7 +88,7 @@ fn the_preview_shows_the_values() {
     let doc = s.doc().unwrap().clone();
     let pixel = |values: Value, x: u32, y: u32| {
         let (copy, shown) = crate::playground::build(&doc, inst, values.as_object().unwrap()).unwrap();
-        let pix = figcraft_render::render_node(&copy, shown, 1.0).unwrap();
+        let pix = endrika_render::render_node(&copy, shown, 1.0).unwrap();
         let i = ((y * pix.width() + x) * 4) as usize;
         [pix.data()[i], pix.data()[i + 1], pix.data()[i + 2]]
     };
@@ -102,7 +102,7 @@ fn the_preview_shows_the_values() {
         assert_eq!(pixel(values.clone(), at.0, at.1), want, "{values}: {why}");
     }
     // A PNG on request.
-    let dir = std::env::temp_dir().join(format!("figcraft-playground-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-playground-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("p.png");
     let out = run(&mut s, "component.playground", json!({"id": inst, "path": path.to_string_lossy(), "scale": 1}));

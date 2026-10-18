@@ -1,7 +1,7 @@
 //! Pattern editing: the Tile Edge Color preference and Pattern Options' Show Swatch Bounds.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::pattern::PatternDef;
+use tsipika_doc::pattern::PatternDef;
 
 use super::*;
 
@@ -34,8 +34,8 @@ fn show_swatch_bounds_is_a_pattern_option_that_saves() {
     assert!(!def(&s).show_swatch_bounds);
     run(&mut s, "edit.redo", json!({}));
     // Saved with the document; files from before the option load with it off.
-    let bytes = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-    let back = vectorcraft_format::load(&bytes).unwrap();
+    let bytes = tsipika_format::save(&s.doc().unwrap().doc, false);
+    let back = tsipika_format::load(&bytes).unwrap();
     assert_eq!(back.patterns, s.doc().unwrap().doc.patterns);
     assert!(back.pattern("Dots").unwrap().show_swatch_bounds);
     let mut old = serde_json::to_value(def(&s)).unwrap();
@@ -47,8 +47,8 @@ fn show_swatch_bounds_is_a_pattern_option_that_saves() {
 fn tile_edge_color_is_a_preference_that_redraws_pattern_editing() {
     let mut s = editing();
     let default = run(&mut s, "prefs.get", json!({"key": "patternTileEdgeColor"}));
-    let [r, g, b] = vectorcraft_doc::LAYER_COLORS[0].1;
-    assert_eq!(default, vectorcraft_color::Color::rgb8(r, g, b).to_hex());
+    let [r, g, b] = tsipika_doc::LAYER_COLORS[0].1;
+    assert_eq!(default, tsipika_color::Color::rgb8(r, g, b).to_hex());
     let rev = s.doc().unwrap().revision;
     run(&mut s, "prefs.set", json!({"key": "patternTileEdgeColor", "value": "FF0000"}));
     assert_eq!(s.prefs.pattern_tile_edge_color, "#ff0000");

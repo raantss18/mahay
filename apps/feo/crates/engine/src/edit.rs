@@ -5,8 +5,8 @@
 //! Placing a clip overwrites whatever is under it (like the incumbent's Slip mode); Shuffle
 //! mode also ripples later clips.
 
-use soundcraft_model::{AutoParam, AutomationPoint, Clip, ClipContent, ClipId, Fade, FadeShape, Session, Track, TrackId};
-use soundcraft_time::{Range, SampleRate, Samples, TempoMap};
+use feo_model::{AutoParam, AutomationPoint, Clip, ClipContent, ClipId, Fade, FadeShape, Session, Track, TrackId};
+use feo_time::{Range, SampleRate, Samples, TempoMap};
 use std::collections::{HashMap, HashSet};
 
 /// Edit-state flag: the Edit cursor and selections snap to the grid in Shuffle, Slip and Spot.
@@ -163,7 +163,7 @@ pub fn copy_range(s: &Session, track: TrackId, range: Range) -> Vec<Clip> {
 /// sounds (muted clips stay silent). Returns false for tracks that aren't MIDI or instrument tracks.
 pub fn consolidate_midi(s: &mut Session, track: TrackId, range: Range) -> bool {
     let Some(name) = s.track(track).filter(|t| t.kind.is_midi()).map(|t| t.name.clone()) else { return false };
-    let mut merged = soundcraft_midi::Sequence::default();
+    let mut merged = feo_midi::Sequence::default();
     {
         let t = TimeCtx::of(s);
         let base = t.ticks(range.start);
@@ -841,7 +841,7 @@ pub fn delete_fades(s: &mut Session, track: TrackId, range: Range) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soundcraft_model::{ChannelFormat, Source, SourceId, TrackKind};
+    use feo_model::{ChannelFormat, Source, SourceId, TrackKind};
 
     fn session_with_clip() -> (Session, TrackId) {
         let mut s = Session::default();
@@ -853,7 +853,7 @@ mod tests {
             channels: 1,
             frames: 10_000,
             sample_rate: 48_000,
-            format: soundcraft_audio_io::FileFormat::Wav,
+            format: feo_audio_io::FileFormat::Wav,
             time_reference: 0,
             unsaved: false,
         });

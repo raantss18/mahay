@@ -6,7 +6,7 @@
 //! host callbacks read are leaked `Box`es freed only after the unit is disposed, and output buffers
 //! are re-pointed before each render.
 
-use soundcraft_dsp::Transport;
+use feo_dsp::Transport;
 use std::ffi::{CStr, c_char, c_void};
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};

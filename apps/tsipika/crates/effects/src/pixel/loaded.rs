@@ -9,7 +9,7 @@
 use std::io::Cursor;
 use std::sync::{Arc, Mutex, PoisonError};
 
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 use super::texture::luma;
 
@@ -69,12 +69,12 @@ impl LoadedTexture {
         Some(base64_encode(&png))
     }
 
-    /// The texture of a PNG's gray levels, decoded within [`vectorcraft_doc::MAX_RASTER_ALLOC`];
+    /// The texture of a PNG's gray levels, decoded within [`tsipika_doc::MAX_RASTER_ALLOC`];
     /// `None` when `png` isn't a PNG or holds no pixels.
     fn from_png(png: &[u8]) -> Option<Self> {
         let mut reader = image::ImageReader::with_format(Cursor::new(png), image::ImageFormat::Png);
         let mut limits = image::Limits::default();
-        limits.max_alloc = Some(vectorcraft_doc::MAX_RASTER_ALLOC);
+        limits.max_alloc = Some(tsipika_doc::MAX_RASTER_ALLOC);
         reader.limits(limits);
         let img = reader.decode().ok()?.to_luma8();
         let (width, height) = img.dimensions();
@@ -122,7 +122,7 @@ pub fn texture(stored: &str) -> Option<Arc<LoadedTexture>> {
 
 const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/// Standard base64 (RFC 4648, with padding), written as `vectorcraft_format::base64_encode`
+/// Standard base64 (RFC 4648, with padding), written as `tsipika_format::base64_encode`
 /// writes it.
 fn base64_encode(data: &[u8]) -> String {
     let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
@@ -137,7 +137,7 @@ fn base64_encode(data: &[u8]) -> String {
 }
 
 /// Standard base64 (RFC 4648, with padding; whitespace skipped), read as
-/// `vectorcraft_format::base64_decode` reads it; `None` when it isn't base64.
+/// `tsipika_format::base64_decode` reads it; `None` when it isn't base64.
 fn base64_decode(s: &str) -> Option<Vec<u8>> {
     let val = |c: u8| B64.iter().position(|&b| b == c).map(|p| p as u32);
     let clean: Vec<u8> = s.bytes().filter(|b| !b.is_ascii_whitespace()).collect();

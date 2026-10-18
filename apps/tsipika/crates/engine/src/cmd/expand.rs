@@ -8,14 +8,14 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms::Model;
-use vectorcraft_color::freeform::spread_scale;
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::appearance::{AppearanceItem, FillLayer};
-use vectorcraft_doc::live::{GradientMesh, lerp_color};
-use vectorcraft_doc::pattern::{PatternDef, place_art};
-use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind, Scaling};
-use vectorcraft_geom::{Affine, PathData, Point, Rect, SubPath, Vec2, shapes};
+use tsipika_color::cms::Model;
+use tsipika_color::freeform::spread_scale;
+use tsipika_color::{Color, Gradient, GradientKind, GradientPaint, Paint};
+use tsipika_doc::appearance::{AppearanceItem, FillLayer};
+use tsipika_doc::live::{GradientMesh, lerp_color};
+use tsipika_doc::pattern::{PatternDef, place_art};
+use tsipika_doc::{Appearance, Document, Node, NodeId, NodeKind, Scaling};
+use tsipika_geom::{Affine, PathData, Point, Rect, SubPath, Vec2, shapes};
 
 use super::edit::selected_roots;
 use super::menucmds::{run_raw, squash};
@@ -352,7 +352,7 @@ fn gradient_art(d: &mut Document, l: &Node, path: &PathData, bounds: Rect, f: &F
 /// path (a plain path then), and every geometry effect of its own removed. `None` when it has no
 /// visible geometry effect.
 fn reshaped(l: &Node) -> Option<Node> {
-    use vectorcraft_render::effects::{GeomContext, apply_geometry_with, has_geometry, is_geometry};
+    use tsipika_render::effects::{GeomContext, apply_geometry_with, has_geometry, is_geometry};
     if !has_geometry(&l.appearance.effects) {
         return None;
     }
@@ -367,7 +367,7 @@ fn reshaped(l: &Node) -> Option<Node> {
 /// and box: when the fill has visible geometry effects, `l` with the outline they make of `path`
 /// as a plain path, and that outline's box.
 fn fill_shape(l: &Node, f: &FillLayer, path: &PathData, bounds: Rect) -> Option<(Node, PathData, Rect)> {
-    use vectorcraft_render::effects::{GeomContext, apply_geometry_with, has_geometry};
+    use tsipika_render::effects::{GeomContext, apply_geometry_with, has_geometry};
     if !has_geometry(&f.effects) {
         return Some((l.clone(), path.clone(), bounds));
     }
@@ -389,8 +389,8 @@ fn with_path(l: &Node, path: PathData) -> Node {
 
 /// The effects of fill `f` that stay on its expanded art: all but its geometry effects, which
 /// shape the outline it paints ([`fill_shape`]).
-fn fill_effects(f: &FillLayer) -> Vec<vectorcraft_doc::Effect> {
-    f.effects.iter().filter(|e| !vectorcraft_render::effects::is_geometry(&e.id)).cloned().collect()
+fn fill_effects(f: &FillLayer) -> Vec<tsipika_doc::Effect> {
+    f.effects.iter().filter(|e| !tsipika_render::effects::is_geometry(&e.id)).cloned().collect()
 }
 
 /// Replace every pattern fill of the selected paths by the tiles it paints (see [`expand_patterns`]).
@@ -475,10 +475,10 @@ fn pattern_tiles(d: &mut Document, def: &PatternDef, xf: Affine, bounds: Rect) -
     let Some(def) = seeds_baked(def) else {
         return vec![];
     };
-    let brushes = vectorcraft_brush::library(d);
+    let brushes = tsipika_brush::library(d);
     let def = random_brushes_baked(d, &brushes, def);
     let def = &*def;
-    let scaling = Scaling { strokes: true, effects: Some(vectorcraft_render::effects::scale_effect), patterns: true, ..Scaling::default() };
+    let scaling = Scaling { strokes: true, effects: Some(tsipika_render::effects::scale_effect), patterns: true, ..Scaling::default() };
     if scales_evenly(xf) && (moves_only(xf) || !def.art.iter().any(|a| has_geometry_effects(a))) {
         return def.instances_in_with(xf, bounds, scaling);
     }
@@ -495,7 +495,7 @@ fn pattern_tiles(d: &mut Document, def: &PatternDef, xf: Affine, bounds: Rect) -
 }
 
 /// Pattern `def` with each path in its art (opacity masks included) that has a random Transform
-/// effect baked into filled art ([`bake_appearance`](vectorcraft_render::effects::bake_appearance))
+/// effect baked into filled art ([`bake_appearance`](tsipika_render::effects::bake_appearance))
 /// while it keeps its own id: the effect takes its seed from the id, and the canvas draws the art
 /// with those ids for every tile, while the tiles get ids of their own. `None` when something
 /// other than a path has such an effect.
@@ -513,7 +513,7 @@ fn seeds_baked(def: &PatternDef) -> Option<std::borrow::Cow<'_, PatternDef>> {
 /// takes its seed from the path's points, and the canvas draws the art there for every tile.
 fn random_brushes_baked<'a>(
     d: &mut Document,
-    brushes: &[vectorcraft_brush::Brush],
+    brushes: &[tsipika_brush::Brush],
     def: std::borrow::Cow<'a, PatternDef>,
 ) -> std::borrow::Cow<'a, PatternDef> {
     if !def.art.iter().any(|a| has_random_brush(brushes, a)) {
@@ -526,8 +526,8 @@ fn random_brushes_baked<'a>(
 
 /// Does brush `name` of `brushes` draw different art for different points: a calligraphic or
 /// scatter brush with Random variation, or a bristle brush?
-fn draws_random_art(brushes: &[vectorcraft_brush::Brush], name: &str) -> bool {
-    use vectorcraft_brush::{BrushKind, Variation};
+fn draws_random_art(brushes: &[tsipika_brush::Brush], name: &str) -> bool {
+    use tsipika_brush::{BrushKind, Variation};
     brushes.iter().find(|b| b.name == name).is_some_and(|b| match &b.kind {
         BrushKind::Calligraphic(c) => c.modes().contains(&Variation::Random),
         BrushKind::Scatter(s) => s.modes().contains(&Variation::Random),
@@ -537,22 +537,22 @@ fn draws_random_art(brushes: &[vectorcraft_brush::Brush], name: &str) -> bool {
 }
 
 /// Is `n` a path with a visible stroke whose brush varies at random ([`draws_random_art`])?
-fn random_brushed(brushes: &[vectorcraft_brush::Brush], n: &Node) -> bool {
-    let random = |st: &vectorcraft_doc::appearance::StrokeLayer| st.visible && st.brush.as_deref().is_some_and(|b| draws_random_art(brushes, b));
+fn random_brushed(brushes: &[tsipika_brush::Brush], n: &Node) -> bool {
+    let random = |st: &tsipika_doc::appearance::StrokeLayer| st.visible && st.brush.as_deref().is_some_and(|b| draws_random_art(brushes, b));
     matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. })
         && n.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Stroke(st) if random(st)))
 }
 
 /// Does `n`, something in it or one of their opacity masks have a stroke whose brush varies at
 /// random ([`random_brushed`])?
-fn has_random_brush(brushes: &[vectorcraft_brush::Brush], n: &Node) -> bool {
+fn has_random_brush(brushes: &[tsipika_brush::Brush], n: &Node) -> bool {
     random_brushed(brushes, n)
         || n.extras().mask.as_ref().is_some_and(|m| has_random_brush(brushes, &m.art))
         || (!matches!(n.kind, NodeKind::Compound { .. }) && n.children().is_some_and(|c| c.iter().any(|c| has_random_brush(brushes, c))))
 }
 
 /// `n` with the paths in it whose brush varies at random [`prepared`] ([`random_brushes_baked`]).
-fn bake_random_brushes(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n: &Node) -> Node {
+fn bake_random_brushes(d: &mut Document, brushes: &[tsipika_brush::Brush], n: &Node) -> Node {
     if !has_random_brush(brushes, n) {
         return n.clone();
     }
@@ -573,7 +573,7 @@ fn bake_random_brushes(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n
 
 /// Does `n`, something in it or one of their opacity masks have a visible geometry effect?
 fn has_geometry_effects(n: &Node) -> bool {
-    let geometry = |e: &vectorcraft_doc::Effect| e.visible && vectorcraft_render::effects::is_geometry(&e.id);
+    let geometry = |e: &tsipika_doc::Effect| e.visible && tsipika_render::effects::is_geometry(&e.id);
     n.appearance.effects.iter().any(geometry)
         || n.appearance.items.iter().any(|i| i.effects().iter().any(geometry))
         || n.extras().mask.as_ref().is_some_and(|m| has_geometry_effects(&m.art))
@@ -597,7 +597,7 @@ fn moves_only(a: Affine) -> bool {
 /// Does `n` have a visible Transform effect with Random on, its own or a fill's or stroke's?
 fn seeded_here(n: &Node) -> bool {
     let seeded =
-        |e: &vectorcraft_doc::Effect| e.visible && e.id == "distort.transform" && e.params.get("random").and_then(Value::as_bool) == Some(true);
+        |e: &tsipika_doc::Effect| e.visible && e.id == "distort.transform" && e.params.get("random").and_then(Value::as_bool) == Some(true);
     n.appearance.effects.iter().any(seeded) || n.appearance.items.iter().any(|i| i.effects().iter().any(seeded))
 }
 
@@ -619,7 +619,7 @@ fn bake_seeded(n: &Node) -> Option<Node> {
         if !matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. }) {
             return None;
         }
-        vectorcraft_render::effects::bake_appearance(n)?
+        tsipika_render::effects::bake_appearance(n)?
     } else {
         n.clone()
     };
@@ -637,9 +637,9 @@ fn bake_seeded(n: &Node) -> Option<Node> {
 /// Does `n`, something in it or one of their opacity masks have a visible effect that [`prepared`]
 /// cannot bake: a raster or 3D effect, or a geometry effect on something other than a path?
 fn has_unbakeable_effects(n: &Node) -> bool {
-    use vectorcraft_render::effects::{is_geometry, is_raster, is_three_d};
+    use tsipika_render::effects::{is_geometry, is_raster, is_three_d};
     let path = matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. });
-    let unbakeable = |e: &vectorcraft_doc::Effect| e.visible && (is_raster(&e.id) || is_three_d(&e.id) || (!path && is_geometry(&e.id)));
+    let unbakeable = |e: &tsipika_doc::Effect| e.visible && (is_raster(&e.id) || is_three_d(&e.id) || (!path && is_geometry(&e.id)));
     n.appearance.effects.iter().any(unbakeable)
         || n.appearance.items.iter().any(|i| i.effects().iter().any(unbakeable))
         || n.extras().mask.as_ref().is_some_and(|m| has_unbakeable_effects(&m.art))
@@ -649,7 +649,7 @@ fn has_unbakeable_effects(n: &Node) -> bool {
 /// Tile art `n` ready for a turn, flip, stretch or shear: the strokes and geometry effects of its
 /// paths baked ([`baked`], [`outline_brushed`]) and its live shapes turned into plain paths (a
 /// stretch would rebuild their corners round), in its opacity masks too.
-fn prepared(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n: &Node) -> Node {
+fn prepared(d: &mut Document, brushes: &[tsipika_brush::Brush], n: &Node) -> Node {
     let mut t = baked(n);
     outline_brushed(d, brushes, &mut t);
     drop_live(&mut t);
@@ -658,7 +658,7 @@ fn prepared(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n: &Node) ->
 }
 
 /// The opacity masks of `n` and of everything in it [`prepared`].
-fn prepare_masks(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n: &mut Node) {
+fn prepare_masks(d: &mut Document, brushes: &[tsipika_brush::Brush], n: &mut Node) {
     if let Some(m) = n.extras_if_any().and_then(|e| e.mask.as_mut()) {
         m.art = Arc::new(prepared(d, brushes, &m.art));
     }
@@ -669,7 +669,7 @@ fn prepare_masks(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n: &mut
 
 /// `n` with each path in it that has a brushed stroke turned into filled art and brush art
 /// ([`outline_strokes`]).
-fn outline_brushed(d: &mut Document, brushes: &[vectorcraft_brush::Brush], n: &mut Node) {
+fn outline_brushed(d: &mut Document, brushes: &[tsipika_brush::Brush], n: &mut Node) {
     if matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. }) {
         let brushed = n.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Stroke(st) if st.brush.is_some()));
         if brushed && let Some(o) = outline_strokes(d, brushes, n) {
@@ -691,9 +691,9 @@ fn scales_evenly(a: Affine) -> bool {
 }
 
 /// `n` with the strokes and geometry effects of each path in it baked into filled art
-/// ([`bake_appearance`](vectorcraft_render::effects::bake_appearance)).
+/// ([`bake_appearance`](tsipika_render::effects::bake_appearance)).
 fn baked(n: &Node) -> Node {
-    if let Some(b) = vectorcraft_render::effects::bake_appearance(n) {
+    if let Some(b) = tsipika_render::effects::bake_appearance(n) {
         return b;
     }
     let mut n = n.clone();
@@ -721,7 +721,7 @@ fn tile_art(d: &mut Document, l: &Node, f: &FillLayer, tiles: &[Node]) -> Option
 /// The colour and opacity gradient fill `g` paints at a document point of an object whose box is
 /// `bounds`, as the canvas draws it (the end colours continue past the ends). Colours stay in the
 /// color model their stops share; display RGB where models differ. Freeform points mix in the
-/// model they share ([`vectorcraft_color::Freeform::model_field`]); where their models differ, the
+/// model they share ([`tsipika_color::Freeform::model_field`]); where their models differ, the
 /// RGB color they mix to is stored in `doc_model` (the document's model) the way `paint.setFill`
 /// stores an RGB color ([`super::paint::stored_color`]).
 pub(crate) fn gradient_sampler(g: &GradientPaint, bounds: Rect, doc_model: Model) -> Box<dyn Fn(Point) -> (Color, f32) + '_> {
@@ -802,7 +802,7 @@ impl Frame {
         let (mut t0, mut t1) = range(&|c| (c - geom.start).dot(along) / along.hypot2());
         let (s0, s1) = range(&|c| (c - geom.start).dot(normal));
         if radial {
-            let geom = vectorcraft_color::GradientGeom { end: geom.start + along, ..geom };
+            let geom = tsipika_color::GradientGeom { end: geom.start + along, ..geom };
             (t0, t1) = (0.0, range(&|c| geom.param_at(GradientKind::Radial, c)).1);
         }
         // Keep a sliver of span so the art maps back invertibly.

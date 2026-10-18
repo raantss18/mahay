@@ -5,10 +5,10 @@
 </filter></defs>
 
 <rect width="660" height="400" fill="#efe9dc"/><rect width="660" height="400" filter="url(#grain)"/>
-<g clip-path="url(#panel)"><rect width="232" height="400" fill="#e8573f"/><g transform="translate(-62.5,-31.0) scale(1.05)"><image href="../../../assets/app-icon/vectorcraft-small.svg" width="512" height="512"/></g></g>
+<g clip-path="url(#panel)"><rect width="232" height="400" fill="#e8573f"/><g transform="translate(-62.5,-31.0) scale(1.05)"><image href="../../../assets/app-icon/tsipika-small.svg" width="512" height="512"/></g></g>
 <line x1="232.5" y1="0" x2="232.5" y2="400" stroke="#0b0b0c" stroke-width="1.2"/>
 <line x1="236.5" y1="0" x2="236.5" y2="400" stroke="#0b0b0c" stroke-width="0.5"/>
-<text x="266" y="72" font-family="Inter" font-weight="600" font-size="30" letter-spacing="-0.5" fill="#0b0b0c">VectorCraft</text>
+<text x="266" y="72" font-family="Inter" font-weight="600" font-size="30" letter-spacing="-0.5" fill="#0b0b0c">Tsipika</text>
 <line x1="267" y1="88.5" x2="624" y2="88.5" stroke="#0b0b0c" stroke-width="0.6"/>
 <path d="M271.5,81.5 L276,88.5 L271.5,95.5 L267,88.5 Z" fill="#e8573f"/>
 <text x="267" y="112" font-family="JetBrains Mono" font-size="9" fill="#0b0b0c" fill-opacity="0.7">Path · 2 anchors · 2 pt stroke</text>

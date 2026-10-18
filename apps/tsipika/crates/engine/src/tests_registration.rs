@@ -2,12 +2,12 @@
 //! Marks (Registration, every artboard, Japanese marks) and Effect → Crop Marks.
 
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_doc::{Document, Node};
-use vectorcraft_geom::Affine;
-use vectorcraft_render::proof::ProofSetup;
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_color::Paint;
+use tsipika_color::swatch::REGISTRATION;
+use tsipika_doc::{Document, Node};
+use tsipika_geom::Affine;
+use tsipika_render::proof::ProofSetup;
+use tsipika_render::{RenderOptions, Renderer};
 
 use super::*;
 use crate::tests_colormgmt::GLOBAL;
@@ -31,7 +31,7 @@ fn node(s: &Session, id: NodeId) -> Node {
 }
 
 /// The 4× render of `doc` (400×400 px), on white, showing `plates` only when given.
-fn render(doc: &Document, plates: Option<&[&str]>) -> vectorcraft_render::Rendered {
+fn render(doc: &Document, plates: Option<&[&str]>) -> tsipika_render::Rendered {
     let proof = plates.map(|p| ProofSetup { separations: Some(p.iter().map(|n| n.to_string()).collect()), ..Default::default() });
     let mut r = Renderer::new();
     r.threads = 0;
@@ -103,9 +103,9 @@ fn pdf_writes_registration_as_separation_all() {
     let mut s = session();
     run(&mut s, "shape.rectangle", json!({"x": 30, "y": 30, "width": 40, "height": 40}));
     run(&mut s, "object.createTrimMarks", json!({}));
-    let bytes = vectorcraft_pdf::export(
+    let bytes = tsipika_pdf::export(
         &s.doc().unwrap().doc,
-        &vectorcraft_pdf::PdfOptions { created: Some(0), ..vectorcraft_pdf::PdfOptions::uncompressed() },
+        &tsipika_pdf::PdfOptions { created: Some(0), ..tsipika_pdf::PdfOptions::uncompressed() },
     )
     .unwrap();
     let pdf = String::from_utf8_lossy(&bytes);
@@ -126,7 +126,7 @@ fn trim_marks_cover_every_artboard_and_take_the_japanese_style() {
     assert!(s.doc().unwrap().doc.layers[0].children().unwrap().is_empty(), "one undo step");
     // Japanese marks: double lines at the trim and bleed edges, and centre marks.
     run(&mut s, "prefs.set", json!({"key": "japaneseCropMarks", "value": true}));
-    assert_eq!(s.crop_mark_style(), vectorcraft_doc::marks::MarkStyle::Japanese);
+    assert_eq!(s.crop_mark_style(), tsipika_doc::marks::MarkStyle::Japanese);
     assert!(s.execute("object.createTrimMarks", &json!({"allArtboards": false})).is_err(), "nothing selected to mark");
     let r = run(&mut s, "object.createTrimMarks", json!({}));
     let first = node(&s, NodeId(r["ids"][0].as_u64().unwrap()));
@@ -158,7 +158,7 @@ fn crop_marks_effect_follows_the_object() {
     assert_eq!(mark(&s, 48)[0], 255, "nothing left behind");
     assert!(mark(&s, 88)[0] < 200);
     // SVG export and Expand Appearance draw the marks as paths.
-    let svg = vectorcraft_svg::export(&s.doc().unwrap().doc, &Default::default());
+    let svg = tsipika_svg::export(&s.doc().unwrap().doc, &Default::default());
     assert_eq!(svg.matches("<path").count(), 9, "{svg}");
     run(&mut s, "effect.expandAppearance", json!({}));
     let n = node(&s, a);
@@ -167,6 +167,6 @@ fn crop_marks_effect_follows_the_object() {
     // Japanese crop marks.
     let b = id_of(&run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})));
     run(&mut s, "effect.apply", json!({"ids": [b.0], "effect": "cropMarks", "params": {"style": "japanese"}}));
-    let art = vectorcraft_render::effects::crop_marks_art(&node(&s, b)).unwrap();
+    let art = tsipika_render::effects::crop_marks_art(&node(&s, b)).unwrap();
     assert_eq!(art.children().unwrap()[1].children().unwrap().len(), 24);
 }

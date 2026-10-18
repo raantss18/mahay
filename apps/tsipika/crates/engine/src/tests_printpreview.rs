@@ -86,7 +86,7 @@ fn preview_fallback(s: &mut Session, settings: Value) -> Vec<String> {
 fn type_that_prints_in_the_fallback_font_is_named() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 200, "artboards": 2})).unwrap();
-    type_in(&mut s, 10.0, 50.0, vectorcraft_text::FALLBACK_FAMILY);
+    type_in(&mut s, 10.0, 50.0, tsipika_text::FALLBACK_FAMILY);
     assert_eq!(preview_fallback(&mut s, json!({})), Vec::<String>::new(), "an installed family");
     // The warning PDF export gives.
     let id = type_in(&mut s, 10.0, 100.0, "Nonexistent Sans Probe");
@@ -127,7 +127,7 @@ fn type_that_does_not_fit_its_frame_counts_only_where_it_shows() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
     let area = json!({"width": 100, "height": 20});
-    let p = json!({"x": 10, "y": 10, "text": "Ab\nCd\nEf\nGh", "font": vectorcraft_text::FALLBACK_FAMILY, "size": 12, "area": area});
+    let p = json!({"x": 10, "y": 10, "text": "Ab\nCd\nEf\nGh", "font": tsipika_text::FALLBACK_FAMILY, "size": 12, "area": area});
     let id = s.execute("text.create", &p).unwrap()["id"].as_u64().unwrap();
     s.execute("text.setStyle", &json!({"ids": [id], "font": "Nonexistent Sans Probe", "start": 9, "end": 11})).unwrap();
     assert_eq!(preview_fallback(&mut s, json!({})), Vec::<String>::new(), "only the first line shows");
@@ -140,11 +140,11 @@ fn type_that_does_not_fit_its_frame_counts_only_where_it_shows() {
     s.execute("object.pattern.done", &json!({})).unwrap();
     s.execute("select.set", &json!({"ids": [tile]})).unwrap();
     s.execute("edit.clear", &json!({})).unwrap();
-    s.execute("text.setStyle", &json!({"ids": [id], "font": vectorcraft_text::FALLBACK_FAMILY})).unwrap();
+    s.execute("text.setStyle", &json!({"ids": [id], "font": tsipika_text::FALLBACK_FAMILY})).unwrap();
     s.execute("text.setStyle", &json!({"ids": [id], "tracking": 10, "start": 9, "end": 11})).unwrap();
     s.edit("pattern", |d, _| {
-        if let vectorcraft_doc::NodeKind::Text(t) = &mut d.node_mut(vectorcraft_doc::NodeId(id)).unwrap().kind {
-            t.runs.last_mut().unwrap().style.fill = vectorcraft_color::Paint::Pattern { pattern: "Words".into(), xf: Default::default() };
+        if let tsipika_doc::NodeKind::Text(t) = &mut d.node_mut(tsipika_doc::NodeId(id)).unwrap().kind {
+            t.runs.last_mut().unwrap().style.fill = tsipika_color::Paint::Pattern { pattern: "Words".into(), xf: Default::default() };
         }
         Ok(())
     })
@@ -267,7 +267,7 @@ fn symbol_instances_and_inline_graphics_print_the_type_of_their_symbol() {
     assert_eq!(preview_fallback(&mut s, json!({"artboards": "range", "range": "1"})), Vec::<String>::new());
     assert_eq!(preview_fallback(&mut s, json!({"artboards": "range", "range": "2"})).len(), 1);
     // An inline graphic in type on the first artboard prints its symbol's art.
-    let id = type_in(&mut s, 10.0, 50.0, vectorcraft_text::FALLBACK_FAMILY);
+    let id = type_in(&mut s, 10.0, 50.0, tsipika_text::FALLBACK_FAMILY);
     s.execute("text.insertInline", &json!({"id": id, "at": 0, "symbol": "Label"})).unwrap();
     assert_eq!(preview_fallback(&mut s, json!({"artboards": "range", "range": "1"})).len(), 1);
 }
@@ -277,8 +277,8 @@ fn a_placed_document_prints_its_type() {
     let mut src = Session::new();
     src.execute("file.new", &json!({"width": 100, "height": 50})).unwrap();
     type_in(&mut src, 10.0, 30.0, "Nonexistent Sans Probe");
-    let path = std::env::temp_dir().join(format!("vc-printfonts-{}.vectorcraft", std::process::id()));
-    std::fs::write(&path, vectorcraft_format::save_file(&src.doc().unwrap().doc)).unwrap();
+    let path = std::env::temp_dir().join(format!("vc-printfonts-{}.tsipika", std::process::id()));
+    std::fs::write(&path, tsipika_format::save_file(&src.doc().unwrap().doc)).unwrap();
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
     s.execute("file.place", &json!({"path": path.to_string_lossy(), "at": [150, 100]})).unwrap();
@@ -336,7 +336,7 @@ fn a_pattern_prints_the_type_of_its_tile() {
     s.execute("paint.setFill", &json!({"ids": [shape], "swatch": "Words"})).unwrap();
     assert_eq!(preview_fallback(&mut s, json!({})).len(), 1);
     // A hidden fill paints nothing.
-    let n = s.doc().unwrap().doc.node(vectorcraft_doc::NodeId(shape.as_u64().unwrap())).unwrap().clone();
+    let n = s.doc().unwrap().doc.node(tsipika_doc::NodeId(shape.as_u64().unwrap())).unwrap().clone();
     let fill = n.appearance.items.iter().position(|i| i.is_fill()).unwrap();
     s.execute("appearance.setItem", &json!({"ids": [shape], "index": fill, "visible": false})).unwrap();
     assert_eq!(preview_fallback(&mut s, json!({})), Vec::<String>::new());

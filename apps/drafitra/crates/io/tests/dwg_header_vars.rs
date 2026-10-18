@@ -3,8 +3,8 @@
 //! variables out; the snap grid's origin and rotation live in the `*ACTIVE` VPORT record.
 #![cfg(not(target_arch = "wasm32"))]
 
-use cadcraft_doc::{Drawing, HVal};
-use cadcraft_geom::Vec3;
+use drafitra_doc::{Drawing, HVal};
+use drafitra_geom::Vec3;
 
 fn drawing() -> Drawing {
     let mut d = Drawing::new_metric();
@@ -49,14 +49,14 @@ fn check(name: &str, r: &Drawing) {
 #[test]
 fn header_settings_round_trip_through_dxf() {
     let d = drawing();
-    let r = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&d).as_bytes()).unwrap();
+    let r = drafitra_io::read_dxf(drafitra_io::write_dxf(&d).as_bytes()).unwrap();
     check("DXF", &r);
 }
 
 #[test]
 fn header_settings_round_trip_through_dwg() {
     let d = drawing();
-    let dwg = cadcraft_io::write(&d, "x.dwg").unwrap();
-    let r = cadcraft_io::read(&dwg, "x.dwg").unwrap();
+    let dwg = drafitra_io::write(&d, "x.dwg").unwrap();
+    let r = drafitra_io::read(&dwg, "x.dwg").unwrap();
     check("DWG", &r);
 }

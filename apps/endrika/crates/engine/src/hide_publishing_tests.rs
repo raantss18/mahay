@@ -3,7 +3,7 @@
 //! (a leading `.` or `_`), so the command writes the name: one undo step, saved and synced like
 //! any rename, and honoured by the next publish.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use crate::library::{hidden_name, with_hidden_name};
@@ -131,10 +131,10 @@ fn it_is_synced_like_any_edit() {
     // What a live session sends is the change between two documents: the rename is one.
     let mut s = Session::new();
     let a = component(&mut s, "Button", 0.0);
-    let mut replica = figcraft_collab::Replica::new(s.doc().unwrap().clone());
+    let mut replica = endrika_collab::Replica::new(s.doc().unwrap().clone());
     ex(&mut s, CMD, json!({"ids": [a]}));
-    let d = figcraft_collab::diff(&replica, s.doc().unwrap()).unwrap();
+    let d = endrika_collab::diff(&replica, s.doc().unwrap()).unwrap();
     assert!(!d.changes.is_empty(), "the change is one a session sends");
-    replica.apply(&d.changes, figcraft_collab::Mode::Strict).unwrap();
+    replica.apply(&d.changes, endrika_collab::Mode::Strict).unwrap();
     assert_eq!(replica.document().node(a).unwrap().name, ".Button");
 }

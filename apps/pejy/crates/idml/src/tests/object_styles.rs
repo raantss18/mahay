@@ -1,6 +1,6 @@
 //! Page items take the values their object style chain gives wherever the item has none.
 
-use designcraft_geom::corners::CornerShape;
+use pejy_geom::corners::CornerShape;
 
 use super::*;
 
@@ -43,7 +43,7 @@ fn fixture(styles: &str, items: &[(&str, &str)]) -> Document {
     import_idml(&zip_files(&[("designmap.xml", &designmap), ("Spreads/Spread_s.xml", &spread)])).unwrap()
 }
 
-fn assert_round(it: &designcraft_doc::Item, size: f64) {
+fn assert_round(it: &pejy_doc::Item, size: f64) {
     for c in it.corners.corners {
         assert_eq!(c.shape, CornerShape::Rounded, "{:?}", it.corners);
         assert!((c.size - size).abs() < 1e-9, "{:?}", it.corners);
@@ -114,7 +114,7 @@ fn values_resolve_through_the_based_on_chain_attribute_by_attribute() {
     assert!(ds.on, "Mode from the grandparent style");
     assert!((ds.opacity - 0.5).abs() < 1e-6);
     assert!((ds.distance - 2.0f64.hypot(2.0)).abs() < 1e-9);
-    assert_eq!(it.wrap.mode, designcraft_doc::WrapMode::BoundingBox);
+    assert_eq!(it.wrap.mode, pejy_doc::WrapMode::BoundingBox);
     assert_eq!(it.wrap.offsets, [9.0, 4.0, 4.0, 4.0]);
 }
 
@@ -152,8 +152,8 @@ fn item_overrides_and_disabled_categories_turn_style_effects_off() {
 #[test]
 fn exported_frames_keep_their_own_values_over_their_object_style() {
     let mut d = small_doc();
-    let style = designcraft_doc::TextFrameOptions { columns: 2, column_rule: true, column_rule_weight: 3.0, ..Default::default() };
-    std::sync::Arc::make_mut(&mut d.styles).object.push(designcraft_doc::ObjectStyle {
+    let style = pejy_doc::TextFrameOptions { columns: 2, column_rule: true, column_rule_weight: 3.0, ..Default::default() };
+    std::sync::Arc::make_mut(&mut d.styles).object.push(pejy_doc::ObjectStyle {
         name: "Ruled".into(),
         text_frame: Some(style),
         ..Default::default()
@@ -181,14 +181,14 @@ fn text_wrap_side_and_contour_come_from_the_style_for_frames_and_placed_graphics
         </Image>"#;
     let d = fixture(styles, &[(r#"AppliedObjectStyle="ObjectStyle/Contour""#, ""), ("", image)]);
     let frame = &d.spreads[0].items[0].wrap;
-    assert_eq!(frame.mode, designcraft_doc::WrapMode::Contour);
-    assert_eq!(frame.side, designcraft_doc::WrapSide::LeftSide);
-    assert_eq!(frame.contour, designcraft_doc::ContourType::BoundingBox);
+    assert_eq!(frame.mode, pejy_doc::WrapMode::Contour);
+    assert_eq!(frame.side, pejy_doc::WrapSide::LeftSide);
+    assert_eq!(frame.contour, pejy_doc::ContourType::BoundingBox);
     assert_eq!(frame.offsets, [3.0; 4]);
-    let designcraft_doc::Content::Graphic(g) = &d.spreads[0].items[1].content else { panic!("{:?}", d.spreads[0].items[1].content) };
-    assert_eq!(g.wrap.mode, designcraft_doc::WrapMode::Contour);
-    assert_eq!(g.wrap.side, designcraft_doc::WrapSide::RightSide, "the graphic's own side wins");
-    assert_eq!(g.wrap.contour, designcraft_doc::ContourType::BoundingBox);
+    let pejy_doc::Content::Graphic(g) = &d.spreads[0].items[1].content else { panic!("{:?}", d.spreads[0].items[1].content) };
+    assert_eq!(g.wrap.mode, pejy_doc::WrapMode::Contour);
+    assert_eq!(g.wrap.side, pejy_doc::WrapSide::RightSide, "the graphic's own side wins");
+    assert_eq!(g.wrap.contour, pejy_doc::ContourType::BoundingBox);
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn feathers_come_from_the_object_style_unless_its_category_turns_them_off() {
             ),
         ],
     );
-    let fx: Vec<&designcraft_doc::Effects> = d.spreads[0].items.iter().map(|i| &i.effects).collect();
+    let fx: Vec<&pejy_doc::Effects> = d.spreads[0].items.iter().map(|i| &i.effects).collect();
     assert!(fx[0].gradient_feather.on && fx[0].gradient_feather.radial, "{:?}", fx[0]);
     assert!(fx[0].directional_feather.on);
     assert_eq!(fx[0].directional_feather.widths, [5.0, 3.0, 6.0, 4.0]);

@@ -310,11 +310,11 @@ fn renamed_labels_show_in_the_label_menu_and_apply_by_name() {
     s.execute("prefs.set", json!({"key": "labels.0.color", "value": "#102030"})).unwrap();
     let red = crate::menus::entries().into_iter().find(|(_, e)| e.command == "edit.label" && e.params["label"] == "Red").unwrap().1;
     assert_eq!(crate::menus::entry_label(&s, red), "Hot Sauce");
-    assert_eq!(s.prefs.label_rgb(effectcraft_color::Label::Red), [0x10, 0x20, 0x30]);
+    assert_eq!(s.prefs.label_rgb(tselatra_color::Label::Red), [0x10, 0x20, 0x30]);
     s.execute("edit.label", json!({"label": "Yellow"})).unwrap();
     s.execute("edit.label", json!({"label": "hot sauce"})).unwrap();
     let l = &s.active_comp().unwrap().layers[0];
-    assert_eq!(l.label, effectcraft_color::Label::Red);
+    assert_eq!(l.label, tselatra_color::Label::Red);
 }
 
 #[test]
@@ -323,8 +323,8 @@ fn cache_budgets_are_applied() {
     s.execute("prefs.set", json!({"key": "memory.layerCacheMb", "value": 128})).unwrap();
     assert_eq!(s.layer_cache.budget(), 128 << 20);
     struct Src(std::sync::Mutex<usize>);
-    impl effectcraft_render::FootageSource for Src {
-        fn frame(&self, _: effectcraft_project::ItemId, _: &effectcraft_project::Footage, _: effectcraft_time::Tick) -> Option<Arc<effectcraft_raster::Image>> {
+    impl tselatra_render::FootageSource for Src {
+        fn frame(&self, _: tselatra_project::ItemId, _: &tselatra_project::Footage, _: tselatra_time::Tick) -> Option<Arc<tselatra_raster::Image>> {
             None
         }
         fn set_cache_budget(&self, b: usize) {
@@ -341,9 +341,9 @@ fn cache_budgets_are_applied() {
 fn new_layers_start_at_the_current_time_when_asked() {
     let mut s = session_with_comp();
     let nested = s.execute("comp.new", json!({"name": "Nested", "open": false})).unwrap()["comp"].as_u64().unwrap();
-    s.set_time(effectcraft_time::Tick::from_seconds_f64(2.0));
+    s.set_time(tselatra_time::Tick::from_seconds_f64(2.0));
     s.execute("layer.addItem", json!({"item": nested})).unwrap();
-    assert_eq!(s.active_comp().unwrap().layers[0].start_time, effectcraft_time::Tick::ZERO);
+    assert_eq!(s.active_comp().unwrap().layers[0].start_time, tselatra_time::Tick::ZERO);
     s.execute("prefs.set", json!({"key": "general.createLayersAtCompStart", "value": false})).unwrap();
     s.execute("layer.addItem", json!({"item": nested})).unwrap();
     assert_eq!(s.active_comp().unwrap().layers[0].start_time.seconds().round(), 2.0);
@@ -377,7 +377,7 @@ fn new_project_template_and_default_renderer() {
     assert!(s.path.is_none(), "a template opens untitled");
     s.execute("prefs.set", json!({"key": "threeD.defaultRenderer", "value": "advanced"})).unwrap();
     s.execute("comp.new", json!({})).unwrap();
-    assert_eq!(s.active_comp().unwrap().renderer, effectcraft_project::Renderer::Advanced3D);
+    assert_eq!(s.active_comp().unwrap().renderer, tselatra_project::Renderer::Advanced3D);
     let _ = std::fs::remove_dir_all(d);
 }
 
@@ -1077,7 +1077,7 @@ fn interface_language_is_validated_persisted_and_backward_compatible() {
 
 #[test]
 fn unicode_label_colors_fall_back_without_panicking() {
-    use effectcraft_color::Label;
+    use tselatra_color::Label;
     let mut s = Session::default();
     let default = s.prefs.label_rgb(Label::Red);
     for color in ["#€abc", "#a€bc", "#abc€"] {
@@ -1105,20 +1105,20 @@ fn render_backend_says_why_it_renders_on_the_cpu() {
 #[test]
 fn gpu_summary_names_the_adapter_or_says_why_there_is_none() {
     use crate::sysinfo::gpu_summary;
-    use effectcraft_render::{Accelerator, FxStep, Renderer};
+    use tselatra_render::{Accelerator, FxStep, Renderer};
 
     struct Named;
     impl Accelerator for Named {
         fn name(&self) -> String {
             "NVIDIA GeForce RTX 4070 (Vulkan)".into()
         }
-        fn comp_frame(&self, _: &Renderer, _: crate::project::ItemId, _: effectcraft_time::Tick) -> Option<effectcraft_raster::Image> {
+        fn comp_frame(&self, _: &Renderer, _: crate::project::ItemId, _: tselatra_time::Tick) -> Option<tselatra_raster::Image> {
             None
         }
         fn supports_effect(&self, _: &str) -> bool {
             false
         }
-        fn effects(&self, _: &[FxStep], _: &effectcraft_effects::Buf, _: Option<f32>) -> Option<effectcraft_effects::Buf> {
+        fn effects(&self, _: &[FxStep], _: &tselatra_effects::Buf, _: Option<f32>) -> Option<tselatra_effects::Buf> {
             None
         }
     }

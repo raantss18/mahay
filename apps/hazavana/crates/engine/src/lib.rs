@@ -1,4 +1,4 @@
-//! The LightCraft engine façade.
+//! The Hazavana engine façade.
 //!
 //! Every user-visible action is a command with a stable id (`photo.rate`, `develop.set`,
 //! `album.create`, `mask.add`…) and JSON parameters. The egui UI, the CLI, the control channel and
@@ -12,7 +12,7 @@
 
 // Model/cache types remain available without linking the optional inference crate.
 #[cfg(not(feature = "denoise"))]
-extern crate lightcraft_denoise_core as lightcraft_denoise;
+extern crate hazavana_denoise_core as hazavana_denoise;
 
 pub mod activity;
 #[cfg(not(target_arch = "wasm32"))]
@@ -87,13 +87,13 @@ use std::sync::Arc;
 
 pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
 pub use errors::{AiModel, ErrorKind};
-pub use fonts::{CRAFT_FONTS, CraftFont};
-use lightcraft_catalog::{Catalog, Filter, Op, PhotoId, Sort};
-use lightcraft_develop::DevelopSettings;
+pub use fonts::{MAHAY_FONTS, MahayFont};
+use hazavana_catalog::{Catalog, Filter, Op, PhotoId, Sort};
+use hazavana_develop::DevelopSettings;
 pub use media::{RenderJob, SourceLevel};
 use serde_json::Value;
 pub use view::{Browse, FilterChip, LibrarySource, Selection, SelectionState, filter_chips};
-pub use {lightcraft_catalog as catalog, lightcraft_develop as develop, lightcraft_gpu as gpu, lightcraft_pipeline as pipeline};
+pub use {hazavana_catalog as catalog, hazavana_develop as develop, hazavana_gpu as gpu, hazavana_pipeline as pipeline};
 
 #[derive(Debug, thiserror::Error)]
 pub enum EngineError {
@@ -104,18 +104,18 @@ pub enum EngineError {
     #[error("invalid parameters for `{cmd}`: {msg}")]
     BadParams { cmd: String, msg: String },
     #[error("{0}")]
-    Catalog(#[from] lightcraft_catalog::CatalogError),
+    Catalog(#[from] hazavana_catalog::CatalogError),
     /// The command's change is applied (in memory, undoable) but its journal records could not
     /// be written. They stay queued and are written by the next successful save.
-    #[error("saved in memory but not written to disk: {0}; LightCraft will retry")]
+    #[error("saved in memory but not written to disk: {0}; Hazavana will retry")]
     NotSaved(String),
-    /// Another process (the app, `lightcraft-cli`, another computer) has the library open.
+    /// Another process (the app, `hazavana-cli`, another computer) has the library open.
     #[error("{0}")]
     LibraryInUse(String),
     /// The folder (or file) asked for is a Lightroom Classic catalog or part of one, not a
-    /// LightCraft library (issue #891): nothing was created or opened. `catalog`: the `.lrcat`
+    /// Hazavana library (issue #891): nothing was created or opened. `catalog`: the `.lrcat`
     /// to import with `library.importLightroom`, when one was found.
-    #[error("{} is a Lightroom Classic catalog, not a LightCraft library; import it into a LightCraft library with File ▸ Import Lightroom Catalog…{}", path.display(), catalog.as_ref().map_or(String::new(), |c| format!(" ({})", c.display())))]
+    #[error("{} is a Lightroom Classic catalog, not a Hazavana library; import it into a Hazavana library with File ▸ Import Lightroom Catalog…{}", path.display(), catalog.as_ref().map_or(String::new(), |c| format!(" ({})", c.display())))]
     LightroomCatalog { path: std::path::PathBuf, catalog: Option<std::path::PathBuf> },
     /// The work was cancelled (by the person, an agent or a newer request): not a failure.
     #[error("{0}")]
@@ -252,7 +252,7 @@ pub struct Session {
     /// Reverse geocoding: the parsed place names and their download (`metadata.*PlaceNames`).
     pub place_names: cmd::geocode::PlaceNames,
     /// The user's own list of models to download (`catalog.json` in the models folder), as last read.
-    pub(crate) face_catalog: lightcraft_faces::catalog::Catalog,
+    pub(crate) face_catalog: hazavana_faces::catalog::Catalog,
     /// The loaded recognition model and the face embeddings made with it.
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) faces: faces_index::FacesState,
@@ -271,7 +271,7 @@ pub struct Session {
     /// The photo that was active before the current one (Paste Settings from Previous).
     pub previous_active: Option<PhotoId>,
     /// Groups last used for Copy (Lightroom remembers them).
-    pub copy_groups: Vec<lightcraft_develop::SettingsGroup>,
+    pub copy_groups: Vec<hazavana_develop::SettingsGroup>,
     /// Built-in then user presets; its generation tells savers and caches when it changed.
     pub presets: presets::PresetList,
     /// Favourite profile ids (persisted with the library, like preset favourites).
@@ -330,7 +330,7 @@ pub struct Session {
     /// Imported `.cube` LUT profiles.
     pub lut_profiles: Vec<cmd::lut_profiles::LutProfile>,
     /// The target album B adds to (`None` = the Quick Collection).
-    pub target_album: Option<lightcraft_catalog::AlbumId>,
+    pub target_album: Option<hazavana_catalog::AlbumId>,
     /// Auto import: files seen in the watched folder and their size then (a file is imported once
     /// its size held between two scans).
     pub auto_import_seen: std::collections::HashMap<String, u64>,
@@ -393,7 +393,7 @@ pub struct Session {
     /// Apple Photos imports run on a worker by default (`export.addToPhotos` without `wait`,
     /// `app.export` without `background`): set by the desktop app, which answers control requests
     /// on its UI thread. Off (the default), they wait for Photos, so a one-shot process
-    /// (lightcraft-cli, a script) never ends in the middle of one.
+    /// (hazavana-cli, a script) never ends in the middle of one.
     #[cfg(not(target_arch = "wasm32"))]
     pub apple_photos_background: bool,
 }
@@ -449,7 +449,7 @@ impl Session {
             browse: None,
             library_folder: None,
             previous_active: None,
-            copy_groups: lightcraft_develop::SettingsGroup::default_copy(),
+            copy_groups: hazavana_develop::SettingsGroup::default_copy(),
             presets: presets::PresetList::new(presets::builtin()),
             profile_favorites: Vec::new(),
             profile_recent: Vec::new(),
@@ -499,7 +499,7 @@ impl Session {
             slide_templates_cache: None,
             slide_backdrop: Default::default(),
             smart_previews_dir: None,
-            forget_local_days: lightcraft_catalog::DEFAULT_FORGET_DAYS,
+            forget_local_days: hazavana_catalog::DEFAULT_FORGET_DAYS,
             #[cfg(not(target_arch = "wasm32"))]
             apple_photos: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -651,7 +651,7 @@ impl Session {
 
     /// The box to cut a face's picture from: the detector's, when the scan has looked at the face (every face is then shown
     /// equally close, however loosely or tightly its own region was drawn), else the region's own box.
-    pub fn face_view(&self, id: PhotoId, rect: lightcraft_geom::Rect) -> lightcraft_geom::Rect {
+    pub fn face_view(&self, id: PhotoId, rect: hazavana_geom::Rect) -> hazavana_geom::Rect {
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(v) = self.faces.index.view(id.0, &rect) {
             return v;
@@ -660,7 +660,7 @@ impl Session {
         rect
     }
 
-    /// Apply an op that is LightCraft's own bookkeeping rather than something the user did (faces found by the background
+    /// Apply an op that is Hazavana's own bookkeeping rather than something the user did (faces found by the background
     /// scan, a raw's as-shot white read by a decode, raws rechecked after an update): journaled like any op, but not
     /// an undo step, and it leaves the redo stack alone.
     pub(crate) fn apply_system(&mut self, op: Op) -> Result<()> {
@@ -680,8 +680,8 @@ impl Session {
         }
         let mut versions = p.versions.clone();
         let created = (self.clock)();
-        let name = lightcraft_catalog::dates::display_time(&created);
-        versions.push(lightcraft_catalog::Version { name, created, settings: p.develop.clone(), auto: true });
+        let name = hazavana_catalog::dates::display_time(&created);
+        versions.push(hazavana_catalog::Version { name, created, settings: p.develop.clone(), auto: true });
         let autos = versions.iter().filter(|v| v.auto).count();
         if autos > AUTO_VERSIONS
             && let Some(i) = versions.iter().position(|v| v.auto)
@@ -887,7 +887,7 @@ impl Session {
         {
             return self.apply_silent(Op::SetDevelop { id, settings, label: label.into(), edited: Some(now) });
         }
-        let mut ops = vec![self.develop_op(id, (*settings).clone(), label).ok_or(lightcraft_catalog::CatalogError::NoPhoto(id))?];
+        let mut ops = vec![self.develop_op(id, (*settings).clone(), label).ok_or(hazavana_catalog::CatalogError::NoPhoto(id))?];
         ops.extend(self.auto_sync_ops(id, &settings, label));
         let op = if ops.len() == 1 { ops.remove(0) } else { Op::Batch { ops } };
         self.commit(label, op)
@@ -922,7 +922,7 @@ impl Session {
             .filter(|x| **x != id)
             .filter_map(|x| self.develop_of(*x).map(|d| (*x, d)))
             .filter_map(|(x, d)| {
-                let synced = lightcraft_develop::apply_partial(&d, &delta, 1.0);
+                let synced = hazavana_develop::apply_partial(&d, &delta, 1.0);
                 (synced != *d).then(|| self.develop_op(x, synced, label)).flatten()
             })
             .collect()
@@ -932,7 +932,7 @@ impl Session {
     pub fn develop_op(&self, id: PhotoId, settings: DevelopSettings, label: &str) -> Option<Op> {
         self.catalog.photo(id)?;
         let settings = Arc::new(settings);
-        let step = lightcraft_catalog::HistoryStep { label: label.into(), settings: settings.clone() };
+        let step = hazavana_catalog::HistoryStep { label: label.into(), settings: settings.clone() };
         Some(Op::Batch {
             ops: vec![Op::SetDevelop { id, settings, label: label.into(), edited: Some((self.clock)()) }, Op::PushHistory { id, step }],
         })
@@ -989,7 +989,7 @@ impl Session {
         }
         if self.visible_key.as_ref() != Some(&key) {
             // "in the last N days" rules count back from the session's clock
-            lightcraft_catalog::rules::set_now(Some((self.clock)()));
+            hazavana_catalog::rules::set_now(Some((self.clock)()));
             let f = self.view_filter(self.source, &self.filter);
             // A held view keeps the photos it shows that stopped matching what is asked of them (a smart album's
             // rules, a flag, the filter bar), as long as they are still where the view looks: in the library for
@@ -1010,7 +1010,7 @@ impl Session {
             });
             // Views whose order or photos are not the query's alone are worked out whole each time: an album in
             // its own order, Recently Added (how far back it reaches moves with every import), Missing Photos.
-            let own_order = matches!(self.source, LibrarySource::Album(a) if self.sort.key == lightcraft_catalog::SortKey::CaptureDate
+            let own_order = matches!(self.source, LibrarySource::Album(a) if self.sort.key == hazavana_catalog::SortKey::CaptureDate
                 && self.filter == Filter::default()
                 && self.catalog.album(a).is_some_and(|al| !al.is_smart()));
             let whole = own_order || matches!(self.source, LibrarySource::RecentlyAdded | LibrarySource::Missing);
@@ -1050,7 +1050,7 @@ impl Session {
                 return self.visible();
             }
             if matches!(self.source, LibrarySource::Album(_))
-                && self.sort.key == lightcraft_catalog::SortKey::CaptureDate
+                && self.sort.key == hazavana_catalog::SortKey::CaptureDate
                 && let LibrarySource::Album(a) = self.source
                 && let Some(al) = self.catalog.album(a)
                 && !al.is_smart()
@@ -1074,7 +1074,7 @@ impl Session {
                     let key = |id: &PhotoId| cat.photo(*id).map(|p| p.imported.clone()).unwrap_or_default();
                     let name = |id: &PhotoId| cat.photo(*id).map(|p| p.file_name.as_str());
                     let by_name = match (name(a), name(b)) {
-                        (Some(x), Some(y)) => lightcraft_catalog::query::cmp_name(x, y),
+                        (Some(x), Some(y)) => hazavana_catalog::query::cmp_name(x, y),
                         _ => std::cmp::Ordering::Equal,
                     };
                     key(b).cmp(&key(a)).then(by_name).then(a.cmp(b))

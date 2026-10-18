@@ -1,6 +1,6 @@
 # Control protocol
 
-`lightcraft --control 7980` (or `LIGHTCRAFT_CONTROL_PORT=7980`) starts a JSON-lines server on
+`hazavana --control 7980` (or `HAZAVANA_CONTROL_PORT=7980`) starts a JSON-lines server on
 `127.0.0.1:7980` (loopback only). One request per line, one reply per line, in order:
 
 ```text
@@ -14,7 +14,7 @@ if the app has not started it and draws no frame for 5 s. The reply is then `{"o
 and the app never runs that request later, so a retry doesn't do it twice. This happens on
 Wayland when the window is on a hidden workspace or minimized: the compositor sends no frame
 callbacks, so the app's loop is paused. Keep the window on screen while you drive it, or use
-headless snapshots or `lightcraft-cli mcp` without `--connect`. A request that has already started
+headless snapshots or `hazavana-cli mcp` without `--connect`. A request that has already started
 (a long command blocks frames) still gets the full 60 s.
 
 **Only requests are read.** Every line must be a JSON object with a string `method` (`id` and `params` are
@@ -26,17 +26,17 @@ it on that connection runs. This keeps an HTTP request (for example a web page's
 UI thread, and at most 16 connections are served at once (further ones get an error line and are closed). Clients
 that hit an error reply should reconnect. The port has no authentication, so only enable it when you need it. The MCP server's connect
 mode ([mcp.md](mcp.md)) is a thin layer over this channel. Implementation:
-`crates/ui-egui/src/control.rs` (methods) and `apps/lightcraft/src/control_server.rs` (transport).
+`crates/ui-egui/src/control.rs` (methods) and `apps/hazavana/src/control_server.rs` (transport).
 
 ## Isolated automation profiles
 
-Set `LIGHTCRAFT_CONFIG_DIR` to a fresh directory to isolate UI preferences, app logs, the emergency
+Set `HAZAVANA_CONFIG_DIR` to a fresh directory to isolate UI preferences, app logs, the emergency
 panic log, the GPU initialization marker, camera profiles and default model folders. The nonempty
 value is used as the complete settings directory. Unset retains the normal platform paths; an explicit
 empty value disables the settings directory, while the emergency panic log retains its system-temp path.
 Explicit model-directory environment variables still take precedence over their defaults.
 Also pass `--library DIR` with a separate scratch library: the configuration override does not change
-the default photo-library location. Do not use `--memory` or `LIGHTCRAFT_NO_PREFS` when testing persistence.
+the default photo-library location. Do not use `--memory` or `HAZAVANA_NO_PREFS` when testing persistence.
 
 A native acceptance run must reject the stderr message `rendering headlessly`: `ui.screenshot`
 automatically uses the CPU fallback after two seconds without a presented frame. That fallback is useful
@@ -98,8 +98,8 @@ filmstrip is visible.
 | `app.quit` | — | Close the app |
 
 White balance (`develop.set` with `wb.temp` / `wb.tint`, `develop.wb`, `develop.wbPick`) is in Kelvin and tint on
-raws with colour matrices — in the file (DNG) or measured for the camera model (`lightcraft_raw::spectral`; issue
-#730) — and on raws whose white-balance presets give the scale (`lightcraft_raw::kelvin_presets`), where As Shot
+raws with colour matrices — in the file (DNG) or measured for the camera model (`hazavana_raw::spectral`; issue
+#730) — and on raws whose white-balance presets give the scale (`hazavana_raw::kelvin_presets`), where As Shot
 reads the file's as-shot white; rendered files and raws without matrices use a relative scale
 whose 6500 K / 0 is the as-shot look (the Edit panel shows it as −100..+100). The stored `wb` of such a Kelvin raw
 says `"scale": "kelvin"`; a partial settings JSON given to `develop.merge` or a preset whose `wb` sets `temp` / `tint`
@@ -138,7 +138,7 @@ within that brush component; it is distinct from subtracting the component from 
 
 With a persistent library, every command that changes something is written to the catalog journal (fsynced) before
 it replies. If that write fails (disk full, volume gone, permissions), the command replies `ok: false` with
-`"saved in memory but not written to disk: <reason>; LightCraft will retry"`. The change itself **is** applied (and
+`"saved in memory but not written to disk: <reason>; Hazavana will retry"`. The change itself **is** applied (and
 undoable) and stays queued: the next command, and the app's frame loop every couple of seconds, retry the write, so
 nothing is lost once the disk is writable again — unless the app quits first. Meanwhile `ui.inspect` → `unsaved`
 is `{ops, error}` (else `null`), `library.info` reports `unsavedOps` / `unsavedError`, and the top bar's cloud icon
@@ -157,14 +157,14 @@ writes nothing. `app.openLibrary` opening a library ends it.
 
 ### Open Library on a Lightroom catalog
 
-`app.openLibrary` never makes a LightCraft library inside a Lightroom Classic catalog (issue #891): given the catalog
+`app.openLibrary` never makes a Hazavana library inside a Lightroom Classic catalog (issue #891): given the catalog
 folder (it holds a `*.lrcat`), one of its `*.lrdata` / `*.lrcat-data` folders or `Backups/`, the `.lrcat` itself or
 its `-wal` / `-shm` / `.lock` files, it keeps the library open now and returns `{opened: false, lightroomCatalog:
 <the .lrcat found, or null>, path}`; the window shows a dialog whose `button:dialogOk` (Import Lightroom Catalog…, or
 `ui.dialog.confirm`) runs `file.importLightroom` with that catalog (no catalog found: it asks for one) and
-`button:dialogCancel` (`ui.dialog.cancel`) does nothing. A folder that is a LightCraft library (`catalog.snap` / `catalog.log`) always
+`button:dialogCancel` (`ui.dialog.cancel`) does nothing. A folder that is a Hazavana library (`catalog.snap` / `catalog.log`) always
 opens as one. With no library open (the library problem window) it is an error instead. The engine refuses the same
-places (`EngineError::LightroomCatalog`, so `lightcraft-cli --library` and `mcp --library` too). `library.importLightroom
+places (`EngineError::LightroomCatalog`, so `hazavana-cli --library` and `mcp --library` too). `library.importLightroom
 {status: true}` reports the catalog's `path` after the task ends as well as while it runs.
 
 ## External controllers
@@ -229,14 +229,14 @@ at each read, not every intermediate change.
 The same queries and edits are available through the connected CLI:
 
 ```sh
-lightcraft-cli run --connect 127.0.0.1:7980 library.state photo.inspect develop.controls section=light
-lightcraft-cli run --connect 127.0.0.1:7980 develop.adjust control=light.exposure delta=0.1 photo.inspect
+hazavana-cli run --connect 127.0.0.1:7980 library.state photo.inspect develop.controls section=light
+hazavana-cli run --connect 127.0.0.1:7980 develop.adjust control=light.exposure delta=0.1 photo.inspect
 ```
 
-For MCP, use `lightcraft-cli mcp --connect 127.0.0.1:7980`: `run_command` reaches the commands above,
+For MCP, use `hazavana-cli mcp --connect 127.0.0.1:7980`: `run_command` reaches the commands above,
 `list_controls` / `set_develop` provide slider helpers, and `resources/read` polls
-`lightcraft://library`, `lightcraft://photo/active`, `lightcraft://develop/active` and
-`lightcraft://controls` ([mcp.md](mcp.md#resources)). Headless CLI/MCP mode owns a separate engine
+`hazavana://library`, `hazavana://photo/active`, `hazavana://develop/active` and
+`hazavana://controls` ([mcp.md](mcp.md#resources)). Headless CLI/MCP mode owns a separate engine
 session; use connect mode for feedback from edits in the desktop app.
 
 ## Headless rendering (no window, no GPU)
@@ -248,15 +248,15 @@ scissor clipping as egui's GPU backends, so the image matches the window (minus 
 - **In the running app:** `{"method": "ui.screenshot", "params": {"path": "a.png", "headless": true}}`.
   The UI is drawn into an offscreen context from the app's logic tick, which keeps running when the
   window is occluded or the display sleeps/locks. Windowed screenshots fall back to this after 2 s.
-- **Without any app window:** `lightcraft-cli snapshot` runs a whole app session headlessly.
+- **Without any app window:** `hazavana-cli snapshot` runs a whole app session headlessly.
   Photo development also defaults to the CPU, so the initial frames do not discover a GPU adapter
-  or load a graphics driver. `LIGHTCRAFT_GPU=1` does not opt snapshots back into GPU rendering.
+  or load a graphics driver. `HAZAVANA_GPU=1` does not opt snapshots back into GPU rendering.
   This applies only to the snapshot session: even `--library DIR` leaves the desktop app's saved
   `ui.json` preferences untouched. It answers the same control requests (same handler) from a JSON-lines script:
 
 ```text
-lightcraft-cli snapshot --demo -o grid.png --size 1600x1000 [--scale 2]
-lightcraft-cli snapshot --library DIR --script tour.jsonl -o shot.png
+hazavana-cli snapshot --demo -o grid.png --size 1600x1000 [--scale 2]
+hazavana-cli snapshot --library DIR --script tour.jsonl -o shot.png
 ```
 
 Headless screenshot dimensions must be finite and at least one logical point, with a finite,

@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (Swedish catalog added: complete catalog, menu headings, native-speaker terminology review; previously: complete current Korean catalog with Hangul font coverage) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
 
-How far CADCraft's interface and drawing text are from AutoCAD's languages. Summarised in
+How far Drafitra's interface and drawing text are from AutoCAD's languages. Summarised in
 [ROADMAP.md](../ROADMAP.md#languages); work items in [gaps.md](gaps.md#localization).
 
 ## What the target ships
@@ -18,7 +18,7 @@ language-pack list, not measured here). AutoCAD's spell checker ships about 20 d
 Drawing text in AutoCAD: TrueType and SHX big fonts (CJK), Unicode `\U+` escapes, complex-script
 shaping and right-to-left text through TrueType, vertical SHX text styles.
 
-## What CADCraft has
+## What Drafitra has
 
 - **A display-time string catalog** (`crates/ui-egui/src/i18n/`, landed with #36): a TSV per
   language (context, English source, translation, `@plural` rows), Edit → Interface Language with
@@ -43,7 +43,7 @@ shaping and right-to-left text through TrueType, vertical SHX text styles.
 
 ## Languages
 
-Order and columns from craftrules' progress-docs standard. Every UI percentage is **measured**
+Order and columns from mahay-rules' progress-docs standard. Every UI percentage is **measured**
 from the catalogs (0 rows for every language without a catalog file). Hours are **estimated**:
 about 3–5 h per language for an Opus 5.5 agent to translate the ~990 catalog rows and fix layout,
 plus native review by a human; extending the catalog to the remaining English-only strings
@@ -62,7 +62,7 @@ plus native review by a human; extending the catalog to the remaining English-on
 | Indonesian | id | 0 (0%) | 0% | Latin: yes | no | none | 3–5 h |
 | Japanese | ja | 0 (0%) | 0% | CJK glyphs render; IME pending; no vertical text | no | none | 4–6 h |
 | German | de | 989 catalog rows (≈ 100% of the catalog; ≈ 80% of all UI strings, estimated: engine diagnostics and uncatalogued text stay English) | dialogs and tooltips yes; command reference searchable in German | Latin: yes (bundled egui fonts cover ä ö ü Ä Ö Ü ß; long strings will need layout checks) | no native review | partial | 1–2 h |
-| Korean | ko | 1,235 rows (1,229 ordinary, 4 menu, 2 count); full existing catalog union and marked UI coverage | dialogs, tooltips, Options and translated command-reference labels | UI requires catalog-covering installed or optional craft-fonts Hang/Kore face; English fallback without one; IME fixes still pending | original AI-assisted translation; independent native proofreading pending | complete current catalog; English-only interface gaps remain | native review + platform layout/IME validation |
+| Korean | ko | 1,235 rows (1,229 ordinary, 4 menu, 2 count); full existing catalog union and marked UI coverage | dialogs, tooltips, Options and translated command-reference labels | UI requires catalog-covering installed or optional mahay-fonts Hang/Kore face; English fallback without one; IME fixes still pending | original AI-assisted translation; independent native proofreading pending | complete current catalog; English-only interface gaps remain | native review + platform layout/IME validation |
 | Vietnamese | vi | 0 (0%) | 0% | Latin with stacked diacritics: renders per code point, untested | no | none | 3–5 h |
 | Ukrainian | uk | 989 catalog rows (≈ 100% of the catalog; ≈ 80% of all UI strings, estimated: engine diagnostics and uncatalogued text stay English) | dialogs and tooltips yes; command reference searchable in Ukrainian | Cyrillic: yes (bundled egui fonts) | translated by a contributor; no second review | partial | 2–4 h |
 | Czech | cs | 1,202 catalog rows; reference catalog and marked UI literals covered | dialogs and tooltips yes; contextual menu headings; command reference searchable in Czech | Latin: yes (bundled egui proportional and monospace fonts; Czech letters and quotes tested) | AI-assisted by @Losminek; independent review pass; not yet proofread by a native speaker | complete current catalog; English-only interface gaps remain | native review + shared English-only UI work |
@@ -72,7 +72,7 @@ plus native review by a human; extending the catalog to the remaining English-on
 Other languages shipped: Ukrainian, Brazilian Portuguese, German, Czech, Russian, French, Italian, Korean and Swedish.
 Czech, Swedish and Brazilian Portuguese cover the reference catalog and every marked UI literal; engine diagnostics and uncatalogued text
 remain English. AutoCAD for Mac ships 7
-non-English languages (zh-Hans, es, fr, ja, de, ko, it); of those, CADCraft now ships German and Korean,
+non-English languages (zh-Hans, es, fr, ja, de, ko, it); of those, Drafitra now ships German and Korean,
 and additionally Ukrainian, which AutoCAD for Mac doesn't ship.
 
 **Total to put all twelve at `full`:** about 55–95 Opus 5.5 hours (catalog extension 4–6 h,

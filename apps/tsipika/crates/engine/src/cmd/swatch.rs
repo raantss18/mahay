@@ -1,10 +1,10 @@
 //! The Swatches panel: new, delete and duplicate swatches, colour groups and sorting.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint, Swatch, SwatchGroup, tint_percent};
-use vectorcraft_doc::pattern::pattern_paint;
-use vectorcraft_doc::swatches::{LinkFn, color_name, node_colors};
-use vectorcraft_doc::{Document, NodeId};
+use tsipika_color::{Color, Paint, Swatch, SwatchGroup, tint_percent};
+use tsipika_doc::pattern::pattern_paint;
+use tsipika_doc::swatches::{LinkFn, color_name, node_colors};
+use tsipika_doc::{Document, NodeId};
 
 use super::paint::paint_from;
 use super::*;
@@ -443,8 +443,8 @@ fn name_param(p: &Value, key: &str) -> Option<String> {
 /// `c` converted to a Swatch Options colour mode through the colour settings (HSB is an RGB view;
 /// Web snaps each channel to a multiple of 0x33).
 fn convert_to_mode(c: Color, mode: &str, cmd: &str) -> Result<Color> {
-    use vectorcraft_color::cms::Model;
-    let cms = vectorcraft_color::cms::active();
+    use tsipika_color::cms::Model;
+    let cms = tsipika_color::cms::active();
     let to = |m: Model| cms.convert(&c, m, cms.settings().intent);
     Ok(match mode.to_ascii_lowercase().as_str() {
         "gray" | "grayscale" => to(Model::Gray),
@@ -543,7 +543,7 @@ fn swatch_edit(s: &mut Session, p: &Value) -> Result<Value> {
         Some(v) => match (if given("mode") { paint_from(s, &keeping_model(v))? } else { paint_from(s, v)? }, &sw.paint) {
             (Some(Paint::Solid { color, .. }), Paint::Solid { .. }) => Some(Paint::solid(color)),
             (Some(Paint::Gradient(g)), Paint::Gradient(_)) => {
-                Some(Paint::Gradient(Box::new(vectorcraft_color::GradientPaint { geom: None, swatch: None, ..*g })))
+                Some(Paint::Gradient(Box::new(tsipika_color::GradientPaint { geom: None, swatch: None, ..*g })))
             }
             (Some(new @ Paint::Pattern { .. }), Paint::Pattern { .. }) => Some(new),
             _ => return Err(bad(C, format!("`{name}` takes a paint of its own kind (colour, gradient or pattern)"))),
@@ -619,7 +619,7 @@ fn swatch_list(s: &mut Session, p: &Value) -> Result<Value> {
     // The built-in Registration swatch lists after None, as the panel shows it.
     let none = d.swatches.iter().take_while(|w| w.paint.is_none()).count();
     let (specials, rest) = d.swatches.split_at(none);
-    let all = specials.iter().chain([vectorcraft_color::swatch::registration()]).chain(rest);
+    let all = specials.iter().chain([tsipika_color::swatch::registration()]).chain(rest);
     let ungrouped = all.filter(|_| only.is_none()).map(|w| swatch_json(w, None));
     let grouped = groups.iter().flat_map(|g| g.swatches.iter().map(|w| swatch_json(w, Some(&g.name))));
     let swatches: Vec<Value> = ungrouped.chain(grouped).collect();

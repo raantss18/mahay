@@ -2,9 +2,9 @@
 //! and the links SVG export writes for objects with a URL.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{ImageMap, NodeKind};
-use vectorcraft_geom::{Affine, FillRule};
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_doc::{ImageMap, NodeKind};
+use tsipika_geom::{Affine, FillRule};
+use tsipika_render::{RenderOptions, Renderer};
 
 use super::*;
 
@@ -167,7 +167,7 @@ fn attributes_survive_a_native_round_trip() {
     let a = rect(&mut s, 10.0);
     run(&mut s, "attributes.set", json!({"showCenter": false, "imageMap": "polygon", "url": "https://example.com/x", "note": "keep"}));
     let doc = s.doc().unwrap().doc.clone();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(a).unwrap().extras().attrs, doc.node(a).unwrap().extras().attrs);
     assert!(back.node(a).unwrap().extras().attrs.is_some());
 }
@@ -178,10 +178,10 @@ fn svg_export_links_objects_and_import_reads_the_links_back() {
     let a = rect(&mut s, 10.0);
     rect(&mut s, 50.0);
     run(&mut s, "attributes.set", json!({"ids": [a.0], "url": "https://example.com/?a=1&b=2"}));
-    let svg = vectorcraft_svg::export(&s.doc().unwrap().doc, &Default::default());
+    let svg = tsipika_svg::export(&s.doc().unwrap().doc, &Default::default());
     assert_eq!(svg.matches("<a ").count(), 1, "{svg}");
     assert!(svg.contains("xlink:href=\"https://example.com/?a=1&amp;b=2\""), "{svg}");
-    let back = vectorcraft_svg::import(&svg).unwrap();
+    let back = tsipika_svg::import(&svg).unwrap();
     let mut urls = vec![];
     back.walk(|n| {
         if let NodeKind::Path { .. } = n.kind {
@@ -210,7 +210,7 @@ fn object_data_is_set_saved_and_written_to_svg() {
     }
     let svg = run(&mut s, "document.serialize", json!({"format": "svg"}))["text"].as_str().unwrap().to_string();
     assert!(svg.contains("data-pivot=\"60,100\" data-z=\"3\""), "{svg}");
-    let native = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-    let back = vectorcraft_format::load(&native).unwrap();
+    let native = tsipika_format::save(&s.doc().unwrap().doc, false);
+    let back = tsipika_format::load(&native).unwrap();
     assert_eq!(back.node(a).unwrap().extras().attrs, s.doc().unwrap().doc.node(a).unwrap().extras().attrs);
 }

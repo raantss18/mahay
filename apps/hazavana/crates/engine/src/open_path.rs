@@ -7,13 +7,13 @@
 //! (Windows) or `Evil.app`, `go.command` (macOS) would be executed on one click (issue #2135).
 //!
 //! [`openable`] is the one gate every such hand-over goes through: the path must be a regular
-//! file whose extension is one LightCraft itself reads ([`crate::import::EXTENSIONS`], which
+//! file whose extension is one Hazavana itself reads ([`crate::import::EXTENSIONS`], which
 //! already covers the Edit In copy formats `tif`/`tiff`/`psd`), and what a link resolves to must
 //! be one too, so a `photo.jpg` pointing at `/bin/sh` is refused as well. What comes back is the
 //! absolute path to hand over; what comes back on refusal is the sentence to show the user.
 //!
 //! Nothing here opens, stats-for-content or reads the file: it only decides whether the path may
-//! leave LightCraft. Catalog import applies the same test ([`crate::lightroom_catalog`]), so a
+//! leave Hazavana. Catalog import applies the same test ([`crate::lightroom_catalog`]), so a
 //! refused original never becomes a library record in the first place.
 
 use std::path::Path;
@@ -29,7 +29,7 @@ pub fn openable(path: &str, label: &str) -> Result<String, String> {
         l => l.to_string(),
     };
     if !is_media(p) {
-        return Err(format!("{name} isn't one of the file types LightCraft reads, so it isn't handed to another application"));
+        return Err(format!("{name} isn't one of the file types Hazavana reads, so it isn't handed to another application"));
     }
     match std::fs::metadata(p) {
         Ok(m) if m.is_file() => {}
@@ -40,13 +40,13 @@ pub fn openable(path: &str, label: &str) -> Result<String, String> {
     if let Ok(target) = p.canonicalize()
         && !is_media(&target)
     {
-        return Err(format!("{name} points at {}, which isn't a file type LightCraft reads", target.display()));
+        return Err(format!("{name} points at {}, which isn't a file type Hazavana reads", target.display()));
     }
     let absolute = std::path::absolute(p).map_err(|e| format!("{name}: {e}"))?;
     Ok(absolute.to_string_lossy().into_owned())
 }
 
-/// Whether `path`'s extension is one LightCraft reads (the Edit In copy formats included).
+/// Whether `path`'s extension is one Hazavana reads (the Edit In copy formats included).
 pub fn is_media(path: &Path) -> bool {
     crate::import::is_supported(path)
 }
@@ -62,18 +62,18 @@ mod tests {
     }
 
     #[test]
-    fn only_file_types_lightcraft_reads_are_handed_over() {
+    fn only_file_types_hazavana_reads_are_handed_over() {
         let dir = std::env::temp_dir().join(format!("lc-openable-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         for good in ["DSC_1.NEF", "a.jpg", "copy-Edit.tif", "copy-Edit.psd"] {
             let path = write(&dir, good);
-            assert_eq!(openable(&path, "").unwrap(), path, "{good} is a photo LightCraft reads");
+            assert_eq!(openable(&path, "").unwrap(), path, "{good} is a photo Hazavana reads");
         }
         for bad in ["payload.exe", "shortcut.lnk", "run.bat", "page.hta", "go.command", "no-extension"] {
             let path = write(&dir, bad);
             let e = openable(&path, "").unwrap_err();
-            assert!(e.contains(bad) && e.contains("file types LightCraft reads"), "{bad}: {e}");
+            assert!(e.contains(bad) && e.contains("file types Hazavana reads"), "{bad}: {e}");
         }
         // a bundle (macOS `.app`) and any other folder are not files
         let bundle = dir.join("Evil.app");

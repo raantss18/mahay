@@ -5,7 +5,7 @@
 use std::cell::{Cell, RefCell};
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Rect, vec2};
-use vectorcraft_doc::Unit;
+use tsipika_doc::Unit;
 
 use crate::widgets;
 
@@ -256,12 +256,12 @@ fn math_before_the_unit_suffix_evaluates_in_every_unit() {
     assert_eq!(Unit::Points.parse("1in/2 mm"), Some(36.0));
     assert_eq!(Unit::Points.parse("10/0 px"), None);
     // Unitless fields.
-    assert_eq!(vectorcraft_doc::parse_number("45*2"), Some(90.0));
-    assert_eq!(vectorcraft_doc::parse_number(" 100 / 4 "), Some(25.0));
-    assert_eq!(vectorcraft_doc::parse_number("+5"), Some(5.0));
-    assert_eq!(vectorcraft_doc::parse_number("-5"), Some(-5.0));
-    assert_eq!(vectorcraft_doc::parse_number("3 mm"), None);
-    assert_eq!(vectorcraft_doc::parse_number("inf"), None);
+    assert_eq!(tsipika_doc::parse_number("45*2"), Some(90.0));
+    assert_eq!(tsipika_doc::parse_number(" 100 / 4 "), Some(25.0));
+    assert_eq!(tsipika_doc::parse_number("+5"), Some(5.0));
+    assert_eq!(tsipika_doc::parse_number("-5"), Some(-5.0));
+    assert_eq!(tsipika_doc::parse_number("3 mm"), None);
+    assert_eq!(tsipika_doc::parse_number("inf"), None);
 }
 
 #[test]

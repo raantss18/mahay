@@ -1,9 +1,9 @@
 //! Saving a drawing as DXF or DWG at a chosen version (2000–2018) and as binary DXF (#421).
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_geom::Vec3;
-use cadcraft_io::{SaveOptions, Version, read, save_version, write, write_dxf, write_with};
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::*;
+use drafitra_geom::Vec3;
+use drafitra_io::{SaveOptions, Version, read, save_version, write, write_dxf, write_with};
 
 const INTL: &str = "图号 Café Ø 😀";
 
@@ -62,7 +62,7 @@ fn opts(version: Version, binary: bool) -> SaveOptions {
 }
 
 fn acadver(bytes: &[u8]) -> String {
-    let tags = cadcraft_dxf::parse(bytes).unwrap();
+    let tags = drafitra_dxf::parse(bytes).unwrap();
     tags.windows(2).find(|w| w[0].code == 9 && w[0].str() == "$ACADVER").map(|w| w[1].str()).unwrap_or_default()
 }
 
@@ -85,7 +85,7 @@ fn dxf_at_every_version_reads_back_the_same() {
             let bytes = write_with(&d, "x.dxf", &opts(v, binary)).unwrap();
             let what = format!("{v} binary={binary}");
             assert_eq!(acadver(&bytes), v.code(), "{what}");
-            assert_eq!(cadcraft_dxf::is_binary(&bytes), binary, "{what}");
+            assert_eq!(drafitra_dxf::is_binary(&bytes), binary, "{what}");
             let raw = bytes.windows("图号".len()).any(|w| w == "图号".as_bytes());
             assert_eq!(raw, v.utf8(), "{what}: UTF-8 text from 2007, \\U+ escapes before");
             if !v.utf8() && !binary {
@@ -99,7 +99,7 @@ fn dxf_at_every_version_reads_back_the_same() {
     }
 }
 
-/// R2000 ASCII is exactly the R2000 DXF CADCraft always wrote.
+/// R2000 ASCII is exactly the R2000 DXF Drafitra always wrote.
 #[test]
 fn r2000_ascii_is_unchanged() {
     let d = sample();
@@ -107,7 +107,7 @@ fn r2000_ascii_is_unchanged() {
 }
 
 /// Without a version asked for: 2018 for a new drawing, otherwise the file's own version (the
-/// nearest one CADCraft writes for older or newer files).
+/// nearest one Drafitra writes for older or newer files).
 #[test]
 fn default_version_is_the_drawings_own() {
     let d = sample();
@@ -135,7 +135,7 @@ fn dwg_at_every_version_reads_back() {
     let d = sample();
     for v in Version::ALL {
         let dwg = write_with(&d, "x.dwg", &opts(v, false)).unwrap();
-        assert_eq!(cadcraft_dwg::version(&dwg).as_deref(), Some(v.code()), "{v}");
+        assert_eq!(drafitra_dwg::version(&dwg).as_deref(), Some(v.code()), "{v}");
         let back = read(&dwg, "x.dwg").unwrap();
         assert_eq!(save_version(&back), v, "{v}");
         assert_eq!(back.model.len(), d.model.len(), "{v}");
@@ -156,6 +156,6 @@ fn dwg_at_every_version_reads_back() {
 #[test]
 fn dwg_default_is_at_least_2004() {
     let from_r2000 = read(write_dxf(&sample()).as_bytes(), "x.dxf").unwrap();
-    assert_eq!(cadcraft_dwg::version(&write(&from_r2000, "x.dwg").unwrap()).as_deref(), Some("AC1018"));
-    assert_eq!(cadcraft_dwg::version(&write(&sample(), "x.dwg").unwrap()).as_deref(), Some("AC1032"));
+    assert_eq!(drafitra_dwg::version(&write(&from_r2000, "x.dwg").unwrap()).as_deref(), Some("AC1018"));
+    assert_eq!(drafitra_dwg::version(&write(&sample(), "x.dwg").unwrap()).as_deref(), Some("AC1032"));
 }

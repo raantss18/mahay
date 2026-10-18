@@ -4,7 +4,7 @@
 //! and its holes wind in opposite directions and need no point-in-polygon test to tell apart.
 
 use std::collections::HashMap;
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 /// Edge ids: `(y * w + x) * 2` is the horizontal edge from `(x, y)` to `(x + 1, y)`, `+ 1` the
 /// vertical edge from `(x, y)` to `(x, y + 1)`.

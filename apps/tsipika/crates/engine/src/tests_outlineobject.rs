@@ -2,7 +2,7 @@
 //! drawn, exported and expanded as its glyph outlines while it stays editable type.
 
 use serde_json::json;
-use vectorcraft_doc::{Node, NodeKind};
+use tsipika_doc::{Node, NodeKind};
 
 use super::*;
 
@@ -62,16 +62,16 @@ fn type_with_outline_object_stays_editable_type_and_keeps_its_bounds() {
     });
     assert_eq!(after, before);
     // A native save keeps the effect.
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     let ids: Vec<String> = back.node(id).unwrap().appearance.effects.iter().map(|e| e.id.clone()).collect();
     assert_eq!(ids, ["path.outlineObject"]);
     // The type is still type, drawn as its outlines, and a text edit changes them.
     let n = node(&s, id);
     assert!(matches!(n.kind, NodeKind::Text(_)));
-    let drawn = vectorcraft_render::effects::reshape(&n, None).unwrap();
+    let drawn = tsipika_render::effects::reshape(&n, None).unwrap();
     assert_eq!(count_text(&drawn), 0);
     s.execute("text.setText", &json!({"id": id.0, "text": "OUTLINED TYPE"})).unwrap();
-    let longer = vectorcraft_render::effects::reshape(&node(&s, id), None).unwrap();
+    let longer = tsipika_render::effects::reshape(&node(&s, id), None).unwrap();
     assert!(longer.geometric_bounds().unwrap().width() > drawn.geometric_bounds().unwrap().width() + 50.0);
 }
 
@@ -81,7 +81,7 @@ fn type_with_outline_object_exports_and_expands_as_paths() {
     let id = text(&mut s);
     apply(&mut s, id);
     let doc = s.doc().unwrap().doc.clone();
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
+    let svg = tsipika_svg::export(&doc, &Default::default());
     assert!(!svg.contains("<text") && !svg.contains("OUTLINE"), "{svg}");
     // Expand Appearance leaves paths and no type, in one undo step.
     let undo = s.doc().unwrap().history.undo.len();

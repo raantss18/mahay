@@ -14,7 +14,7 @@
 //! two runs is a point of a sloped edge (its middle is on the edge, the corners beside it are not).
 
 use kurbo::Vec2;
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 use crate::contour::Loop;
 

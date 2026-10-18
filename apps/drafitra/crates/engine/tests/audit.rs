@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, base64_encode, set_io};
-use cadcraft_engine::doc::{AssocSnap, Block, Circle, Common, DimAssoc, Drawing, Entity, EntityKind, Group, HVal, Handle, Insert, Line, Space, Text};
-use cadcraft_engine::geom::Vec3;
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, base64_encode, set_io};
+use drafitra_engine::doc::{AssocSnap, Block, Circle, Common, DimAssoc, Drawing, Entity, EntityKind, Group, HVal, Handle, Insert, Line, Space, Text};
+use drafitra_engine::geom::Vec3;
 use serde_json::{Value, json};
 
 fn line(a: (f64, f64), b: (f64, f64)) -> EntityKind {
@@ -187,8 +187,8 @@ fn a_clean_drawing_is_left_alone() {
     assert_eq!(s.state().unwrap().undo.len(), undo, "no undo step for nothing");
 
     // What the sample drawings and the drawing commands make is not an error.
-    for d in [cadcraft_engine::sample::bracket(), cadcraft_engine::sample::floor_plan()] {
-        let r = cadcraft_engine::audit::check(&d);
+    for d in [drafitra_engine::sample::bracket(), drafitra_engine::sample::floor_plan()] {
+        let r = drafitra_engine::audit::check(&d);
         assert!(r.issues.is_empty(), "{}", r.message());
     }
     s.execute("dimlinear", &json!({"p1": [0, 0], "p2": [4, 0], "at": [2, 2]})).unwrap();
@@ -231,7 +231,7 @@ fn missing_standard_entries_and_layer_zero_are_recreated() {
     d.text_styles.clear();
     d.dim_styles.clear();
     d.linetypes.retain(|l| !l.name.eq_ignore_ascii_case("Continuous"));
-    d.layers.push(cadcraft_engine::doc::Layer { linetype: "Dashed9".into(), ..cadcraft_engine::doc::Layer::new("L1") });
+    d.layers.push(drafitra_engine::doc::Layer { linetype: "Dashed9".into(), ..drafitra_engine::doc::Layer::new("L1") });
     let r = s.execute("audit", &json!({"fix": true})).unwrap();
     assert!(r["errors"].as_u64().unwrap() >= 5, "{r:#}");
     let d = s.doc().unwrap();
@@ -281,7 +281,7 @@ fn recover_opens_the_file_with_the_fixes_applied() {
     assert_eq!(st.doc.model.len(), 1);
 
     // By path, typed at the command line.
-    let dir = std::env::temp_dir().join(format!("cadcraft-recover-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-recover-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("site.dxf");
     std::fs::write(&path, b"0\nEOF\n").unwrap();

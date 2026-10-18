@@ -13,11 +13,11 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{Receiver, TryRecvError};
 
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_color::cms::{self, Cms};
+use tsipika_color::Color;
+use tsipika_color::cms::{self, Cms};
 
 use crate::menus::opt_bool;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// What the sampler answers: the picked color's display sRGB components (0 to 1), `None` when the
 /// person canceled it, or an error.
@@ -51,24 +51,24 @@ pub(crate) fn picker_id() -> u64 {
 pub struct Waiting {
     answer: Receiver<Answer>,
     target: Target,
-    /// The document active when it was shown ([`vectorcraft_engine::DocState::uid`]).
+    /// The document active when it was shown ([`tsipika_engine::DocState::uid`]).
     doc: Option<u64>,
 }
 
 /// The host can show a color sampler.
-pub fn available(app: &VectorcraftApp) -> bool {
+pub fn available(app: &TsipikaApp) -> bool {
     app.services.screen_color.is_some()
 }
 
 /// The open Color Picker dialog, as [`Target::Picker`] names it.
-fn open_picker(app: &VectorcraftApp) -> Option<Target> {
+fn open_picker(app: &TsipikaApp) -> Option<Target> {
     let d = app.ui.dialog.as_ref().filter(|d| crate::dialogs::DialogKind::of(&d.kind) == Some(crate::dialogs::DialogKind::ColorPicker))?;
     d.fields.get(PICKER_ID).and_then(Value::as_u64).map(Target::Picker)
 }
 
 /// `ui.sampleScreenColor {stroke?, picker?}`: show the sampler for the fill, the stroke (default:
 /// the proxy in front) or, with `picker`, the open Color Picker.
-pub fn start(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn start(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let stroke = opt_bool(p, "stroke")?.unwrap_or(!app.session.fill_active);
     let target = if opt_bool(p, "picker")?.unwrap_or(false) {
         open_picker(app).ok_or("the Color Picker is not open")?
@@ -104,7 +104,7 @@ pub fn srgb_from_hex(hex: &str) -> Option<[f32; 3]> {
 }
 
 /// Each frame: take the sampler's answer when it has arrived.
-pub(crate) fn poll(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub(crate) fn poll(app: &mut TsipikaApp, ctx: &egui::Context) {
     let Some(w) = &app.screen_sampler else { return };
     let answer = match w.answer.try_recv() {
         Ok(answer) => answer,
@@ -147,7 +147,7 @@ pub(crate) fn poll(app: &mut VectorcraftApp, ctx: &egui::Context) {
 }
 
 /// The eyedropper button that starts the sampler (gray without one). Returns true when clicked.
-pub(crate) fn button(app: &VectorcraftApp, ui: &mut egui::Ui) -> bool {
+pub(crate) fn button(app: &TsipikaApp, ui: &mut egui::Ui) -> bool {
     let on = available(app);
     let tip = if on { tl!("Sample Color from Screen") } else { tl!("This system has no screen color sampler") };
     widgets::icon_button_enabled(ui, "pipette", tip, app.screen_sampler.is_some(), on, 24.0).clicked()
@@ -159,8 +159,8 @@ mod tests {
     use std::rc::Rc;
     use std::sync::mpsc::{Sender, channel};
 
-    use vectorcraft_color::cms::{ColorSettings, DISPLAY_P3};
-    use vectorcraft_engine::Session;
+    use tsipika_color::cms::{ColorSettings, DISPLAY_P3};
+    use tsipika_engine::Session;
 
     use super::*;
 
@@ -168,8 +168,8 @@ mod tests {
     type Shown = Rc<RefCell<Vec<Sender<Answer>>>>;
 
     /// An app with a document and a selected rectangle, whose host has a stand-in sampler.
-    fn app() -> (VectorcraftApp, Shown) {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> (TsipikaApp, Shown) {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
         let shown = Shown::default();
@@ -183,18 +183,18 @@ mod tests {
     }
 
     /// The person picks `hex` (or cancels, `None`) in the last sampler shown; the next frame takes it.
-    fn pick(app: &mut VectorcraftApp, shown: &Shown, hex: Option<&str>) {
+    fn pick(app: &mut TsipikaApp, shown: &Shown, hex: Option<&str>) {
         let srgb = hex.map(|h| Color::from_hex(h).unwrap().to_rgb());
         shown.borrow().last().unwrap().send(Ok(srgb)).unwrap();
         poll(app, &egui::Context::default());
     }
 
-    fn paints(app: &VectorcraftApp) -> (String, String) {
+    fn paints(app: &TsipikaApp) -> (String, String) {
         let (f, s) = crate::panels::current_paints(app);
         (f.color().map_or("none".into(), |c| c.to_hex()), s.color().map_or("none".into(), |c| c.to_hex()))
     }
 
-    fn undo_len(app: &VectorcraftApp) -> usize {
+    fn undo_len(app: &TsipikaApp) -> usize {
         app.session.doc().unwrap().history.undo.len()
     }
 
@@ -237,7 +237,7 @@ mod tests {
         let (mut app, shown) = app();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let frame = |app: &mut VectorcraftApp| {
+        let frame = |app: &mut TsipikaApp| {
             let mut out = ctx.run_ui(Default::default(), |ui| crate::dialogs::show(app, ui.ctx()));
             out.textures_delta.clear();
         };
@@ -249,7 +249,7 @@ mod tests {
         app.run("ui.sampleScreenColor", json!({"picker": true})).unwrap();
         pick(&mut app, &shown, Some("#123456"));
         let d = app.ui.dialog.as_ref().unwrap();
-        assert_eq!(d.fields.get("color").and_then(vectorcraft_engine::cmd::color_value).map(|c| c.to_hex()).as_deref(), Some("#123456"));
+        assert_eq!(d.fields.get("color").and_then(tsipika_engine::cmd::color_value).map(|c| c.to_hex()).as_deref(), Some("#123456"));
         frame(&mut app);
         assert_eq!(app.ui.dialog.as_ref().unwrap().str("hex"), "123456");
         assert_eq!(paints(&app).0, "#123456", "previewed on the selection");
@@ -302,7 +302,7 @@ mod tests {
         app.run("ui.colorPicker", json!({})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 900.0));
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| {
                 app.logic(ui.ctx());
@@ -343,7 +343,7 @@ mod tests {
     fn inspect_reports_the_open_sampler() {
         let (mut app, shown) = app();
         let ctx = egui::Context::default();
-        let open = |app: &VectorcraftApp| crate::control::inspect(app, &ctx)["screenSampler"].clone();
+        let open = |app: &TsipikaApp| crate::control::inspect(app, &ctx)["screenSampler"].clone();
         assert_eq!(open(&app), json!(false));
         app.run("ui.sampleScreenColor", json!({})).unwrap();
         assert_eq!(open(&app), json!(true));
@@ -446,8 +446,8 @@ mod tests {
     fn junk_params_never_panic() {
         let (mut app, shown) = app();
         let doc = crate::menus::UI_COMMANDS.iter().find(|c| c.0 == "ui.sampleScreenColor").unwrap().3;
-        let mut params = vectorcraft_testkit::strategies::junk_params(doc, "/nonexistent");
-        params.extend(vectorcraft_testkit::strategies::junk_values());
+        let mut params = tsipika_testkit::strategies::junk_params(doc, "/nonexistent");
+        params.extend(tsipika_testkit::strategies::junk_values());
         assert!(params.len() > 40);
         for p in params {
             let _ = app.run("ui.sampleScreenColor", p);

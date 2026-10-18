@@ -2,7 +2,7 @@
 //! (DXF group 11), like every justification but baseline-left; group 10 is then a computed point
 //! on the baseline (#342).
 
-use cadcraft_doc::{EntityKind, Space, entity_bounds};
+use drafitra_doc::{EntityKind, Space, entity_bounds};
 
 /// One TEXT, height 1, "AB", group 72 = 0 and group 73 = `v`, with group 10 at `p10`, group 11 at
 /// `p11`, and `extra` group codes.
@@ -15,8 +15,8 @@ fn dxf(v: i32, p10: (f64, f64), p11: (f64, f64), extra: &str) -> String {
 
 /// (rendered box, extents box) of the drawing's only object, as (min x, min y, max x, max y).
 fn boxes(text: &str) -> ([f64; 4], [f64; 4]) {
-    let d = cadcraft_io::read(text.as_bytes(), "t.dxf").unwrap();
-    let r = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default()).bounds;
+    let d = drafitra_io::read(text.as_bytes(), "t.dxf").unwrap();
+    let r = drafitra_render::build(&d, &Space::Model, &drafitra_render::Options::default()).bounds;
     let e = d.model.iter().find(|e| matches!(e.kind, EntityKind::Text(_))).map(|e| entity_bounds(&d, e, 0)).unwrap();
     ([r.min.x, r.min.y, r.max.x, r.max.y], [e.min.x, e.min.y, e.max.x, e.max.y])
 }

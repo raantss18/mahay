@@ -195,7 +195,7 @@ impl Frame {
         #[cfg(not(feature = "threads"))]
         {
             // Rows are decoded before use on the calling thread; a missing one (never expected)
-            // reads as mid-grey intra rather than aborting. (SoundCraft change: was `expect`.)
+            // reads as mid-grey intra rather than aborting. (Feo change: was `expect`.)
             self.rows[r].get_or_init(|| FrameRow::grey(self.mb_w))
         }
     }

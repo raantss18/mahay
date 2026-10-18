@@ -20,7 +20,7 @@
 
 use egui::accesskit::{self, Role, Toggled};
 use egui::{Context, CornerRadius, Event, FocusDirection, Id, Key, LayerId, Modifiers, Order, Pos2, Rect, Response, Stroke, StrokeKind, Ui};
-use figcraft_engine::keymap;
+use endrika_engine::keymap;
 
 use crate::FigApp;
 use crate::i18n::tr;
@@ -250,7 +250,7 @@ struct Shared {
 }
 
 fn shared<R>(ctx: &Context, f: impl FnOnce(&mut Shared) -> R) -> R {
-    ctx.data_mut(|d| f(d.get_temp_mut_or_default::<Shared>(Id::new("figcraft_a11y"))))
+    ctx.data_mut(|d| f(d.get_temp_mut_or_default::<Shared>(Id::new("endrika_a11y"))))
 }
 
 /// Whether a widget other than the canvas has the keyboard (a field, a focused button): the

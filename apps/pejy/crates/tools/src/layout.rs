@@ -1,8 +1,8 @@
 //! Where spreads sit on the canvas (the pasteboard): stacked vertically, spines aligned at x = 0,
 //! parents shown on their own canvas when a parent spread is being edited.
 
-use designcraft_doc::{Document, SpreadRef};
-use designcraft_geom::{Affine, Point, Rect, Vec2};
+use pejy_doc::{Document, SpreadRef};
+use pejy_geom::{Affine, Point, Rect, Vec2};
 use serde::Serialize;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
@@ -120,7 +120,7 @@ fn dist_y(r: Rect, y: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use designcraft_doc::build::NewDocument;
+    use pejy_doc::build::NewDocument;
 
     #[test]
     fn spreads_stack_on_the_spine() {

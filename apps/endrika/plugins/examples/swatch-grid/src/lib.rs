@@ -2,7 +2,7 @@
 //! optionally labelled. Two commands: a panel to pick one of the built-in palettes and Generate
 //! (the palette picked last is remembered for next time), and a form taking hex colours.
 
-use figcraft_plugin_sdk::{Event, Input, Result, Value, call, close_ui, entry, json, log, notify, set_setting, setting, show_ui};
+use endrika_plugin_sdk::{Event, Input, Result, Value, call, close_ui, entry, json, log, notify, set_setting, setting, show_ui};
 
 /// The labels' colour unless the panel picks another.
 const LABEL: &str = "#000000";

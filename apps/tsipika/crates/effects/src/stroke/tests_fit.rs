@@ -1,8 +1,8 @@
 //! Dashes fitted to corners and path ends, and variable-width strokes with dashes and joins.
 
 use kurbo::{BezPath, ParamCurveArclen, PathEl, Point, Rect, Shape};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Dash, LineCap, LineJoin, StrokeLayer, WidthProfile};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Dash, LineCap, LineJoin, StrokeLayer, WidthProfile};
 
 use super::*;
 

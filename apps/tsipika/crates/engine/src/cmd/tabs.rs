@@ -1,7 +1,7 @@
 //! Window → Type → Tabs: tab stops of the selected text objects' paragraphs.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeKind, TabAlign, TabStop};
+use tsipika_doc::{NodeKind, TabAlign, TabStop};
 
 use super::typecmd::{TextRange, para_span, refresh_bounds, text_targets};
 use super::*;
@@ -122,8 +122,8 @@ mod tests {
         let id = s.execute("text.create", &json!({"x": 10, "y": 20, "text": "AAA\t20", "size": 12})).unwrap()["id"].as_u64().unwrap();
         s.execute("text.tabs.set", &json!({"stops": [{"position": 200, "align": "left", "leader": ".", "alignOn": "."}]})).unwrap();
         let st = s.doc().unwrap();
-        let Some(vectorcraft_doc::NodeKind::Text(t)) = st.doc.node(vectorcraft_doc::NodeId(id)).map(|n| &n.kind) else { panic!() };
-        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+        let Some(tsipika_doc::NodeKind::Text(t)) = st.doc.node(tsipika_doc::NodeId(id)).map(|n| &n.kind) else { panic!() };
+        let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
         let x_of = |b: usize| lay.glyphs.iter().find(|g| g.byte == b).unwrap().origin.x;
         let (from, to) = (x_of(3), x_of(4));
         assert!(to - from > 150.0, "{from}..{to}");

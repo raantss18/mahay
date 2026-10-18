@@ -3,12 +3,12 @@
 use std::io::Read;
 use std::sync::Arc;
 
-use designcraft_compose::Cache;
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{
+use pejy_compose::Cache;
+use pejy_doc::build::NewDocument;
+use pejy_doc::{
     Asset, AssetId, Content, Document, Fill, Graphic, Item, ItemId, ParaFormat, Shape, SpreadRef, Stroke, StrokeType, TextFrameOptions,
 };
-use designcraft_geom::{Affine, Rect, shapes};
+use pejy_geom::{Affine, Rect, shapes};
 
 use crate::{LineBreaks, PptxError, PptxOptions, export_pptx};
 
@@ -169,7 +169,7 @@ fn threaded_story_splits_at_its_frames() {
     let f2 = rect_item(&mut d, Rect::new(300.0, 72.0, 388.0, 400.0), Shape::Rectangle);
     edit(&mut d, f2, |it| {
         it.fill = Fill::none();
-        it.content = Content::Text(designcraft_doc::TextFrame { story: sid, options: TextFrameOptions::default() });
+        it.content = Content::Text(pejy_doc::TextFrame { story: sid, options: TextFrameOptions::default() });
     });
     if let Some(st) = d.stories.get_mut(&sid) {
         Arc::make_mut(st).frames = vec![f1, f2];
@@ -215,7 +215,7 @@ fn pictures_are_cropped_to_their_frames() {
             asset,
             size: (200.0, 100.0),
             xf: Affine::translate((50.0, 100.0)),
-            auto_fit: designcraft_doc::Fitting::None,
+            auto_fit: pejy_doc::Fitting::None,
             fit_align: 0,
             crop: [0.0; 4],
             clip: None,
@@ -258,7 +258,7 @@ fn bad_pages_and_hostile_geometry_are_errors_not_crashes() {
 
 #[test]
 fn fonts_embed_as_embedded_opentype() {
-    let face = designcraft_fonts::FontDb::global().face("Source Serif 4", "Regular");
+    let face = pejy_fonts::FontDb::global().face("Source Serif 4", "Regular");
     let eot = crate::fonts::eot(&face).unwrap();
     let le32 = |at: usize| u32::from_le_bytes([eot[at], eot[at + 1], eot[at + 2], eot[at + 3]]);
     assert_eq!(le32(0) as usize, eot.len());
@@ -283,8 +283,8 @@ fn fonts_embed_as_embedded_opentype() {
 
 #[test]
 fn fonts_whose_licence_forbids_outline_embedding_are_not_embedded() {
-    use designcraft_fonts::testing::{font_with, with_fs_type};
-    let db = designcraft_fonts::FontDb::with_font_dirs(vec![]);
+    use pejy_fonts::testing::{font_with, with_fs_type};
+    let db = pejy_fonts::FontDb::with_font_dirs(vec![]);
     // Restricted (0x0002, 0x0003 with reserved bit 0) and Bitmap embedding only (bit 9, with any
     // other bits) refuse; Installable, Preview & Print and Editable embed.
     for (fs_type, embeds) in [(0x0000, true), (0x0004, true), (0x0008, true), (0x0002, false), (0x0003, false), (0x0200, false), (0x0208, false)] {

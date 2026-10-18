@@ -1,11 +1,11 @@
 //! A passive Composition viewer applies the same monitor conversion as the active one (#547).
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::{EffectcraftApp, menus, panels::viewers};
+use tselatra_engine::Session;
+use tselatra_ui_egui::{TselatraApp, menus, panels::viewers};
 use egui::{Color32, Context, ImageData, RawInput, Rect, pos2, vec2};
 use serde_json::json;
 use std::collections::HashMap;
 
-fn frames(app: &mut EffectcraftApp, ctx: &Context, textures: &mut HashMap<String, Vec<Color32>>) {
+fn frames(app: &mut TselatraApp, ctx: &Context, textures: &mut HashMap<String, Vec<Color32>>) {
     for _ in 0..4 {
         let mut output = ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(256.0, 256.0))), ..Default::default() }, |ui| {
             viewers::show(app, ui, 0, Rect::from_min_size(pos2(0.0, 0.0), vec2(128.0, 256.0)));
@@ -36,7 +36,7 @@ fn passive_viewer_matches_the_monitor_conversion() {
     s.execute("comp.new", json!({"name": "Display test", "width": 16, "height": 16, "duration": 1})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Color", "color": "#406080", "width": 16, "height": 16})).unwrap();
     s.execute("edit.deselectAll", json!({})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     let ctx = Context::default();
     menus::invoke(&mut app, &ctx, "view.newViewer", json!({})).unwrap();
     let mut textures = HashMap::new();

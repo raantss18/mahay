@@ -1,17 +1,17 @@
-//! Footage import for EffectCraft (layer **L3**: it implements `effectcraft_render::FootageSource`).
+//! Footage import for Tselatra (layer **L3**: it implements `tselatra_render::FootageSource`).
 //!
-//! - [`probe`] / [`probe_bytes`]: inspect a file and describe it as an [`effectcraft_project::Footage`]
+//! - [`probe`] / [`probe_bytes`]: inspect a file and describe it as an [`tselatra_project::Footage`]
 //!   (video, still, image sequence or audio; size, rate, duration, streams, codec, alpha).
-//! - [`MediaPool`]: decodes footage frames on demand into [`effectcraft_raster::Image`]s
+//! - [`MediaPool`]: decodes footage frames on demand into [`tselatra_raster::Image`]s
 //!   (premultiplied f32, sRGB/Rec.709-encoded values, as the compositor expects) with a
 //!   memory-budgeted LRU frame cache, one decoder per source, and the decoder kept positioned for
 //!   sequential playback. Also audio ([`MediaPool::audio_samples`]) and thumbnails.
 //!
 //! Video containers (MP4/MOV, Matroska/WebM, MXF OP1a / OP-Atom) and codecs (H.264, HEVC, VP9,
-//! AV1, ProRes, DNxHD, MPEG-2, MJPEG; AAC, Opus, PCM, MP3/FLAC/Vorbis) come from FilmCraft's pure-Rust crates (git dependency,
-//! pinned; `plan/adr/0001`). FilmCraft types never leave this crate. Stills use the `image` crate
+//! AV1, ProRes, DNxHD, MPEG-2, MJPEG; AAC, Opus, PCM, MP3/FLAC/Vorbis) come from Hetsika's pure-Rust crates (git dependency,
+//! pinned; `plan/adr/0001`). Hetsika types never leave this crate. Stills use the `image` crate
 //! (PNG, JPEG, GIF, WebP, TIFF, BMP, OpenEXR, Targa, Radiance HDR); Photoshop documents (merged image or one layer) come
-//! from `effectcraft-psd` and SVG from `effectcraft-svg` (rasterised at any scale).
+//! from `tselatra-psd` and SVG from `tselatra-svg` (rasterised at any scale).
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -39,16 +39,16 @@ pub enum MediaError {
     Unsupported(String),
     #[error("decode error: {0}")]
     Decode(String),
-    /// The read was called off before it finished (see [`effectcraft_render::FootageSource::cancellable`]).
+    /// The read was called off before it finished (see [`tselatra_render::FootageSource::cancellable`]).
     #[error("cancelled")]
     Cancelled,
 }
 
 pub type Result<T> = std::result::Result<T, MediaError>;
 
-impl From<filmcraft_media::MediaError> for MediaError {
-    fn from(e: filmcraft_media::MediaError) -> Self {
-        use filmcraft_media::MediaError as F;
+impl From<hetsika_media::MediaError> for MediaError {
+    fn from(e: hetsika_media::MediaError) -> Self {
+        use hetsika_media::MediaError as F;
         match e {
             F::Unsupported(s) => MediaError::Unsupported(s),
             F::Io(s) | F::Offline(s) => MediaError::Io(s),
@@ -62,7 +62,7 @@ impl From<filmcraft_media::MediaError> for MediaError {
 pub const STILL_EXTENSIONS: &[&str] =
     &["png", "jpg", "jpeg", "gif", "webp", "tif", "tiff", "bmp", "exr", "tga", "hdr", "psd", "psb", "svg", "pdf", "ai", "eps"];
 /// File extensions recognised as audio-only files.
-pub const AUDIO_EXTENSIONS: &[&str] = filmcraft_media::AUDIO_EXTENSIONS;
+pub const AUDIO_EXTENSIONS: &[&str] = hetsika_media::AUDIO_EXTENSIONS;
 /// File extensions recognised as movies.
 pub const VIDEO_EXTENSIONS: &[&str] = &["mp4", "m4v", "mov", "mkv", "webm", "mxf"];
 
@@ -96,6 +96,6 @@ pub(crate) fn still_format(path: &str, bytes: &[u8]) -> Option<image::ImageForma
     }
 }
 
-pub(crate) fn rate_from_fc(r: filmcraft_time::FrameRate) -> effectcraft_time::FrameRate {
-    if r.num > 0 && r.den > 0 { effectcraft_time::FrameRate::new(r.num, r.den) } else { effectcraft_time::FrameRate::FPS_30 }
+pub(crate) fn rate_from_fc(r: hetsika_time::FrameRate) -> tselatra_time::FrameRate {
+    if r.num > 0 && r.den > 0 { tselatra_time::FrameRate::new(r.num, r.den) } else { tselatra_time::FrameRate::FPS_30 }
 }

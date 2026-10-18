@@ -12,11 +12,11 @@ fn mask_type_prop_inspects_and_undoes() {
     let r = id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 100})).unwrap()["id"]).unwrap();
     s.execute("object.mask", &json!({"ids": [m, r]})).unwrap();
     s.execute("node.set", &json!({"id": m, "props": {"maskType": "luminance"}})).unwrap();
-    assert_eq!(s.doc().unwrap().node(m).unwrap().mask_type, figcraft_doc::MaskType::Luminance);
+    assert_eq!(s.doc().unwrap().node(m).unwrap().mask_type, endrika_doc::MaskType::Luminance);
     let v = s.execute("node.get", &json!({"id": m})).unwrap();
     assert_eq!(v["maskType"], json!("luminance"), "{v}");
     s.undo().unwrap();
-    assert_eq!(s.doc().unwrap().node(m).unwrap().mask_type, figcraft_doc::MaskType::Alpha);
+    assert_eq!(s.doc().unwrap().node(m).unwrap().mask_type, endrika_doc::MaskType::Alpha);
     for bad in [json!("sparkly"), json!(3), json!(null)] {
         assert!(s.execute("node.set", &json!({"id": m, "props": {"maskType": bad}})).is_err());
     }

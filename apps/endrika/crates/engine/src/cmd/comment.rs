@@ -4,7 +4,7 @@
 //! message). `author` is who is acting (default: the name from Preferences, `pref.userName`): only
 //! a message's author edits or deletes it, and only the thread's author deletes the thread.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, ok};
@@ -14,8 +14,8 @@ use crate::{Session, bad, spec};
 /// The name comments are signed with until the user sets theirs.
 pub const DEFAULT_AUTHOR: &str = "You";
 
-/// Links to a thread: `figcraft://comment/<id>`.
-const LINK_PREFIX: &str = "figcraft://comment/";
+/// Links to a thread: `endrika://comment/<id>`.
+const LINK_PREFIX: &str = "endrika://comment/";
 
 /// Longest accepted reaction (bytes): one emoji with its modifiers.
 const MAX_EMOJI: usize = 32;

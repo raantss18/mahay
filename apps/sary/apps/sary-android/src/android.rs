@@ -26,7 +26,7 @@ fn android_main(app: AndroidApp) {
                     app.set_wgpu(rs);
                 }
             }
-            Ok(Box::new(Shell { app, bridge: EguiBridge::new(&cc.egui_ctx) }))
+            Ok(Box::new(Shell { app, bridge: EguiBridge::new(&cc.egui_ctx, mahay_about::AppInfo { id: "sary", name: "Sary" }) }))
         }),
     );
     if let Err(e) = result {

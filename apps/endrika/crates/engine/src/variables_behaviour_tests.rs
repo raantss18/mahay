@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::{LineHeight, Node, NodeId, VariableType, VariableValue};
+use endrika_doc::{LineHeight, Node, NodeId, VariableType, VariableValue};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -52,7 +52,7 @@ fn types_and_their_starting_values() {
     let mut s = Session::new();
     run(&mut s, "variable.createCollection", json!({"name": "C", "modes": ["A", "B"]}));
     let cases: [(&str, VariableType, VariableValue); 4] = [
-        ("color", VariableType::Color, VariableValue::Color(figcraft_color::Color::BLACK)),
+        ("color", VariableType::Color, VariableValue::Color(endrika_color::Color::BLACK)),
         ("number", VariableType::Number, VariableValue::Number(0.0)),
         ("string", VariableType::String, VariableValue::String(String::new())),
         ("boolean", VariableType::Boolean, VariableValue::Boolean(true)),
@@ -161,7 +161,7 @@ fn scopes_limit_pickers_only() {
     // Binding out of scope still works (scopes are about pickers).
     run(&mut s, "variable.bind", json!({"ids": [r], "field": "width", "variable": "radius"}));
     assert_eq!(node(&s, r).width, 8.0);
-    let number = figcraft_doc::scopes_for(VariableType::Number).iter().map(|(k, _)| *k).collect::<Vec<_>>();
+    let number = endrika_doc::scopes_for(VariableType::Number).iter().map(|(k, _)| *k).collect::<Vec<_>>();
     for want in [
         "GAP",
         "CORNER_RADIUS",
@@ -180,7 +180,7 @@ fn scopes_limit_pickers_only() {
         assert!(number.contains(&want), "number scope {want}");
     }
     let doc = s.doc().unwrap();
-    let t = figcraft_doc::NodeId(0);
+    let t = endrika_doc::NodeId(0);
     let fields: [(&str, &str); 3] =
         [("fontWeight", "FONT_WEIGHT"), ("paragraphSpacing", "PARAGRAPH_SPACING"), ("paragraphIndent", "PARAGRAPH_INDENT")];
     for (field, scope) in fields {

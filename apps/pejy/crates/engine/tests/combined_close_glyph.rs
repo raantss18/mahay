@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use designcraft_compose::Cache;
-use designcraft_doc::{Document, StoryId};
-use designcraft_engine::Session;
-use designcraft_render::Renderer;
+use pejy_compose::Cache;
+use pejy_doc::{Document, StoryId};
+use pejy_engine::Session;
+use pejy_render::Renderer;
 use serde_json::json;
 
 fn serial_renderer() -> Renderer {
@@ -112,8 +112,8 @@ fn in_flight_old_document_remains_valid_while_reopened_story_uses_a_new_cache() 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn scoped_font_jobs_and_owned_layouts_survive_close_and_same_story_reopen() {
-    use designcraft_engine::FontScope;
-    use designcraft_fonts::{FontDb, testing::font_with_glyph};
+    use pejy_engine::FontScope;
+    use pejy_fonts::{FontDb, testing::font_with_glyph};
 
     const FAMILY: &str = "Memory Scoped Font";
     let root = std::env::temp_dir().join(format!("dc-memory-scoped-fonts-{}", std::process::id()));

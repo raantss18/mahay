@@ -1,7 +1,7 @@
 //! Effect names in the interface language, keyed by effect id (#821).
 //!
 //! The generated Effect menu, Effect Controls, the Timeline and Effects & Presets draw an
-//! effect's name. The registry (`effectcraft_effects`) keeps the English name: scripts,
+//! effect's name. The registry (`tselatra_effects`) keeps the English name: scripts,
 //! expressions, MCP and the control channel match on it, and the property tree stores it as the
 //! effect group's name. Only the *drawing* goes through this catalog, so a project file stays
 //! identical whichever interface language opens it.
@@ -27,7 +27,7 @@
 //! The Simplified Chinese names come from the installed After Effects 2026 (26.5.0.89)
 //! Simplified Chinese interface, its 21 category folder names included; `Cryptomatte`,
 //! `EXtractoR`, `IDentifier`, `Key Light` and `Unmult` stay in English as brand names, and
-//! `Face Measurements` / `Face Track Points` are EffectCraft's own effects, so their wording is
+//! `Face Measurements` / `Face Track Points` are Tselatra's own effects, so their wording is
 //! ours.
 
 use std::collections::HashMap;
@@ -437,7 +437,7 @@ const TRADITIONAL_CHINESE: &[Row] = &[];
 /// one catalog instead of inventing a second mechanism. A translator fills one row per effect,
 /// ids from [`SIMPLIFIED_CHINESE`]; the names Adobe's Japanese interface leaves in English (the
 /// `CC` series, the `VR` set, the `OCIO` set, `Cryptomatte`, `EXtractoR`, `IDentifier`,
-/// `Key Light`, `Unmult`, `Twirl (Legacy)` and the two EffectCraft-only effects) repeat that
+/// `Key Light`, `Unmult`, `Twirl (Legacy)` and the two Tselatra-only effects) repeat that
 /// English name here rather than being left out.
 ///
 /// The rows below were read from the installed After Effects 2026 (26.5) Japanese interface
@@ -522,7 +522,7 @@ const SIMPLIFIED_CHINESE_CATEGORIES: &[(&str, &str)] = &[
 mod tests {
     use super::*;
     use crate::i18n::set_current;
-    use effectcraft_engine::effects;
+    use tselatra_engine::effects;
 
     /// Every effect in the registry has a row, and that row still carries the registry's English
     /// name. A new effect, a rename or a removal fails here rather than drawing an English name

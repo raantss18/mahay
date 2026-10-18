@@ -1,9 +1,9 @@
 //! Width points, Liquify, Puppet Warp and Perspective Grid commands and tools.
 
 use serde_json::json;
-use vectorcraft_geom::{PathData, Point, Rect, Shape};
-use vectorcraft_tools::distort::perspective::{PerspectiveGrid, Plane};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_geom::{PathData, Point, Rect, Shape};
+use tsipika_tools::distort::perspective::{PerspectiveGrid, Plane};
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 use super::*;
 
@@ -478,15 +478,15 @@ fn perspective_selection_moves_within_the_plane() {
     s.execute("perspective.grid.snap", &json!({"on": false})).unwrap();
     let g = grid(&s);
     let before: Vec<Point> = path(&s, a).anchors().map(|(_, _, an)| g.to_plane(Plane::Right, an.p).unwrap()).collect();
-    let centre = before.iter().fold(vectorcraft_geom::Vec2::ZERO, |a, p| a + p.to_vec2()) / before.len() as f64;
+    let centre = before.iter().fold(tsipika_geom::Vec2::ZERO, |a, p| a + p.to_vec2()) / before.len() as f64;
     let from = g.to_page(Plane::Right, centre.to_point()).unwrap();
-    let to = g.to_page(Plane::Right, (centre + vectorcraft_geom::Vec2::new(40.0, 20.0)).to_point()).unwrap();
+    let to = g.to_page(Plane::Right, (centre + tsipika_geom::Vec2::new(40.0, 20.0)).to_point()).unwrap();
     let n = undo_len(&s);
     gesture(&mut s, "perspectiveSelection", &[(from.x, from.y), (to.x, to.y), (to.x, to.y)], Mods::default());
     assert_eq!(undo_len(&s), n + 1);
     let after: Vec<Point> = path(&s, a).anchors().map(|(_, _, an)| g.to_plane(Plane::Right, an.p).unwrap()).collect();
     for (b, c) in before.iter().zip(&after) {
-        assert!((*c - *b - vectorcraft_geom::Vec2::new(40.0, 20.0)).hypot() < 1e-6, "{b:?} → {c:?}");
+        assert!((*c - *b - tsipika_geom::Vec2::new(40.0, 20.0)).hypot() < 1e-6, "{b:?} → {c:?}");
     }
 }
 
@@ -578,7 +578,7 @@ fn perspective_moves_that_move_nothing_record_no_undo_step() {
     let g = grid(&s);
     let (_, _, b) = g.plane_bounds(&s.doc().unwrap().doc, &[a]).unwrap();
     let past = |v: f64| (v / g.cell).ceil() * g.cell + 0.3 - v;
-    let (c, dv) = (b.center(), vectorcraft_geom::Vec2::new(past(b.x0), past(b.y0)));
+    let (c, dv) = (b.center(), tsipika_geom::Vec2::new(past(b.x0), past(b.y0)));
     let (from, to) = (g.to_page(Plane::Right, c).unwrap(), g.to_page(Plane::Right, c + dv).unwrap());
     s.execute("perspective.move", &json!({"from": [from.x, from.y], "to": [to.x, to.y]})).unwrap();
     with_a_step_to_redo(&mut s);

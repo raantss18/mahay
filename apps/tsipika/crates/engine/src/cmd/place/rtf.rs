@@ -1,5 +1,5 @@
 //! Placing an RTF file: its text set as area type with the character and paragraph formatting
-//! VectorCraft has, read as the Rich Text Format (RTF) Specification 1.9.1 describes the format
+//! Tsipika has, read as the Rich Text Format (RTF) Specification 1.9.1 describes the format
 //! (<https://www.microsoft.com/en-us/download/details.aspx?id=10725>).
 //!
 //! - Text: `\par`, `\line` and `\sect` start a new paragraph, and so does `\row` (the end of a
@@ -28,7 +28,7 @@
 
 use std::collections::HashMap;
 
-use vectorcraft_doc::{CharPosition, CharStyle, Justify, ParaDirection, ParaStyle, ScriptMetrics, TextRun};
+use tsipika_doc::{CharPosition, CharStyle, Justify, ParaDirection, ParaStyle, ScriptMetrics, TextRun};
 
 use super::text::{self, Story};
 use super::*;
@@ -428,7 +428,7 @@ impl Reader {
             self.group.dest = parent.dest;
             return;
         }
-        // An ignorable destination (`\*`): VectorCraft reads none of them.
+        // An ignorable destination (`\*`): Tsipika reads none of them.
         if starred {
             self.group.dest = Dest::Skip;
             return;
@@ -551,7 +551,7 @@ impl Reader {
         s.size = (f64::from(c.half_points) / 2.0).clamp(0.1, 1296.0);
         s.baseline_shift = (f64::from(c.shift) / 2.0).clamp(-1296.0, 1296.0);
         if let Some(Some([r, g, b])) = usize::try_from(c.color).ok().and_then(|i| self.colors.get(i)) {
-            s.fill = Paint::solid(vectorcraft_color::Color::rgb8(*r, *g, *b));
+            s.fill = Paint::solid(tsipika_color::Color::rgb8(*r, *g, *b));
         }
         s.underline = c.underline;
         s.strikethrough = c.strike;

@@ -1,5 +1,5 @@
 //! PNG text chunks (`tEXt`, uncompressed `iTXt`) read back; the PNG writer adds them
-//! ([`vectorcraft_render::encode::png::with_text`]).
+//! ([`tsipika_render::encode::png::with_text`]).
 
 /// The `tEXt` and uncompressed `iTXt` entries of a PNG before its image data: (keyword, text).
 pub fn text(png: &[u8]) -> Vec<(String, String)> {
@@ -29,13 +29,13 @@ pub fn text(png: &[u8]) -> Vec<(String, String)> {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_render::encode::png::with_text;
+    use tsipika_render::encode::png::with_text;
 
     use super::*;
 
     #[test]
     fn text_chunks_round_trip_and_stay_valid() {
-        let png = vectorcraft_render::Rendered { width: 2, height: 1, pixels: vec![255; 8] }.to_png().unwrap();
+        let png = tsipika_render::Rendered { width: 2, height: 1, pixels: vec![255; 8] }.to_png().unwrap();
         let out = with_text(png.clone(), &[("Title", "Café".into()), ("Author", "Łukasz".into()), ("bad\u{1}", "x".into())]);
         assert_eq!(text(&out), [("Title".to_string(), "Café".to_string()), ("Author".into(), "Łukasz".into())]);
         // Still a PNG every decoder reads (the CRCs check out).

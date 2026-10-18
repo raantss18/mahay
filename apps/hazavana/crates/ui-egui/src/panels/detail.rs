@@ -2,13 +2,13 @@
 //! on-canvas tools (crop, brush/gradient masks, remove spots, white-balance picker).
 
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
-use lightcraft_catalog::PhotoId;
-use lightcraft_develop::{DevelopSettings, MaskShape};
-use lightcraft_geom::{Affine, Point};
-use lightcraft_pipeline::geometry::Frame;
+use hazavana_catalog::PhotoId;
+use hazavana_develop::{DevelopSettings, MaskShape};
+use hazavana_geom::{Affine, Point};
+use hazavana_pipeline::geometry::Frame;
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::render::Slot;
 use crate::state::{BeforeAfter, RightPanel, ToolOverlay, Zoom};
 use crate::theme::Tokens;
@@ -33,7 +33,7 @@ pub enum Gesture {
     },
     CropHandle {
         handle: u8,
-        start: lightcraft_geom::Rect,
+        start: hazavana_geom::Rect,
         angle: f64,
     },
     /// Straighten tool: a line drawn along something that should be level (or plumb).
@@ -159,7 +159,7 @@ fn bounded_pan(area: Rect, size: egui::Vec2, pan: (f32, f32)) -> (f32, f32) {
     (bound(area.width(), size.x, pan.0), bound(area.height(), size.y, pan.1))
 }
 
-pub(crate) fn pan_image(app: &mut LightcraftApp, area: Rect, img: Rect, delta: egui::Vec2) {
+pub(crate) fn pan_image(app: &mut HazavanaApp, area: Rect, img: Rect, delta: egui::Vec2) {
     let centre = area.center() - img.min - delta;
     let pan = bounded_pan(area, img.size(), (centre.x / img.width().max(1.0), centre.y / img.height().max(1.0)));
     let _ = app.run("view.navigate", json!({"pan": pan}));
@@ -181,7 +181,7 @@ fn wheel_notches(events: &[egui::Event]) -> f32 {
 }
 
 /// Native pinch (also modifier-wheel zoom) and two-finger scroll, scoped to this image view.
-pub(crate) fn navigate_gesture(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, area: Rect, img: Rect, native: [usize; 2]) -> bool {
+pub(crate) fn navigate_gesture(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, area: Rect, img: Rect, native: [usize; 2]) -> bool {
     if !resp.hovered() {
         return false;
     }
@@ -250,7 +250,7 @@ pub(crate) fn output_px(frame: &Frame) -> [usize; 2] {
 
 /// The camera's focus point of `photo` in the displayed frame (its crop, rotation and flips), as the
 /// normalized box over the drawn image: `None` when the photo has none or it is cropped away.
-pub(crate) fn focus_box(photo: &lightcraft_catalog::Photo) -> Option<lightcraft_geom::Rect> {
+pub(crate) fn focus_box(photo: &hazavana_catalog::Photo) -> Option<hazavana_geom::Rect> {
     let f = photo.meta.focus.as_ref()?;
     let d = &photo.develop;
     let frame = Frame::with_lens(photo.width.max(1) as usize, photo.height.max(1) as usize, d, true, photo.embedded_lens.as_ref());
@@ -264,7 +264,7 @@ pub(crate) fn focus_box(photo: &lightcraft_catalog::Photo) -> Option<lightcraft_
     });
     let xs = corners.map(|c| c.0);
     let ys = corners.map(|c| c.1);
-    let out = lightcraft_geom::Rect {
+    let out = hazavana_geom::Rect {
         x0: xs.iter().copied().fold(f64::INFINITY, f64::min),
         y0: ys.iter().copied().fold(f64::INFINITY, f64::min),
         x1: xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
@@ -279,7 +279,7 @@ pub(crate) fn focus_box(photo: &lightcraft_catalog::Photo) -> Option<lightcraft_
 }
 
 /// Where Toggle Zoom centres the view on the photo's focus point (`app.ui.pan`), if it has one in frame.
-pub(crate) fn focus_pan(app: &LightcraftApp, id: PhotoId) -> Option<(f32, f32)> {
+pub(crate) fn focus_pan(app: &HazavanaApp, id: PhotoId) -> Option<(f32, f32)> {
     let r = focus_box(app.session.catalog.photo(id)?)?;
     Some((((r.x0 + r.x1) / 2.0) as f32, ((r.y0 + r.y1) / 2.0) as f32))
 }
@@ -287,7 +287,7 @@ pub(crate) fn focus_pan(app: &LightcraftApp, id: PhotoId) -> Option<(f32, f32)> 
 /// Draw the camera's focus box over a photo drawn in `img` (View ▸ Show Focus Point): green corner
 /// brackets with a dark keyline, the way cameras show their AF frame, never smaller than 14 pt.
 /// `key` names it for tests and the control channel (`canvas:focusPoint`, `compare:focusPoint:<id>`).
-pub(crate) fn draw_focus_point(p: &egui::Painter, img: Rect, photo: &lightcraft_catalog::Photo, key: &str) {
+pub(crate) fn draw_focus_point(p: &egui::Painter, img: Rect, photo: &hazavana_catalog::Photo, key: &str) {
     let Some(r) = focus_box(photo) else { return };
     let at = |x: f64, y: f64| pos2(img.left() + x as f32 * img.width(), img.top() + y as f32 * img.height());
     let b = Rect::from_two_pos(at(r.x0, r.y0), at(r.x1, r.y1));
@@ -322,15 +322,15 @@ fn animated_rect(ctx: &egui::Context, anim: &mut bool, target: Rect) -> Rect {
 /// Mask overlays (one mask, or every visible mask at once) are evaluated from the same mask
 /// alphas as the full render; the other diagnostic overlays either need whole-frame context or
 /// deliberately replace the loupe.
-pub(crate) fn overlay_supports_window(overlay: lightcraft_pipeline::Overlay) -> bool {
-    use lightcraft_pipeline::Overlay;
+pub(crate) fn overlay_supports_window(overlay: hazavana_pipeline::Overlay) -> bool {
+    use hazavana_pipeline::Overlay;
     matches!(overlay, Overlay::None | Overlay::Mask { .. } | Overlay::AllMasks { .. })
 }
 
 /// What a window render of the loupe needs to know about the view it belongs to.
 struct WindowCtx {
     id: PhotoId,
-    overlay: lightcraft_pipeline::Overlay,
+    overlay: hazavana_pipeline::Overlay,
     /// Long edge of the frame the windows are cut from (`None`: no windows).
     frame_edge: Option<usize>,
     drawn_long: f32,
@@ -361,7 +361,7 @@ struct WindowView {
 
 /// Ask for the window of `v` that holds what is on screen; remember it so its texture can be
 /// drawn where it belongs. `None`: no window is wanted (or possible) for this view.
-fn request_window(app: &mut LightcraftApp, c: &WindowCtx, v: &WindowView) -> Option<crate::region::RegionView> {
+fn request_window(app: &mut HazavanaApp, c: &WindowCtx, v: &WindowView) -> Option<crate::region::RegionView> {
     let frame_edge = c.frame_edge?;
     // while a pinch or scroll runs the windows there are keep being drawn, magnified: no new one
     // per frame (zooming out would ask for ever wider ones)
@@ -381,7 +381,7 @@ fn request_window(app: &mut LightcraftApp, c: &WindowCtx, v: &WindowView) -> Opt
     );
     let win = crate::region::window_for(fw, fh, visible, crate::region::max_span(c.texture_side))?;
     // a window waits for the original another window job is decoding (see `defer_window`)
-    let original_held = app.session.media.has_source(c.id, lightcraft_engine::SourceLevel::for_size(fw.max(fh)));
+    let original_held = app.session.media.has_source(c.id, hazavana_engine::SourceLevel::for_size(fw.max(fh)));
     let window_pending = app.renderer.is_pending(Slot::Region) || app.renderer.is_pending(Slot::RegionBefore);
     if crate::region::defer_window(window_pending, original_held) {
         return if v.before { app.region_before_view } else { app.region_view }.filter(|w| w.photo == c.id);
@@ -400,7 +400,7 @@ fn request_window(app: &mut LightcraftApp, c: &WindowCtx, v: &WindowView) -> Opt
     // a drag renders drafts of the window, as it does of the whole frame. The Before tile stays
     // plain; the After tile carries the same mask overlay as the whole-frame render.
     let job = if c.interacting { job.draft() } else { job };
-    let overlay = if v.before { lightcraft_pipeline::Overlay::None } else { c.overlay };
+    let overlay = if v.before { hazavana_pipeline::Overlay::None } else { c.overlay };
     let job = if v.before { job } else { job.with_hidden_grading(app.ui.grading_hidden_for(c.id)) };
     // the After window is proofed like the whole-frame render under it; the Before side is
     // never proofed (its whole-frame render isn't either)
@@ -422,7 +422,7 @@ fn request_window(app: &mut LightcraftApp, c: &WindowCtx, v: &WindowView) -> Opt
 
 /// Draw `v`'s window texture over the whole-frame render, if it is the one asked for (or, in a
 /// drag, an earlier draft of it).
-fn draw_window(p: &egui::Painter, app: &LightcraftApp, c: &WindowCtx, v: &WindowView, wanted: &crate::region::RegionView) {
+fn draw_window(p: &egui::Painter, app: &HazavanaApp, c: &WindowCtx, v: &WindowView, wanted: &crate::region::RegionView) {
     let Some(tex) = app.renderer.textures.get(&v.slot).filter(|t| t.photo == c.id) else { return };
     let Some(tile) = app.region_tiles.get(&(v.before, tex.key)).filter(|t| t.is_current(c.id, wanted.full, wanted.settings, c.interacting)) else {
         return;
@@ -433,7 +433,7 @@ fn draw_window(p: &egui::Painter, app: &LightcraftApp, c: &WindowCtx, v: &Window
     p.image(tex.tex.id(), dst, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
 }
 
-pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let full = ui.max_rect();
     let fullscreen = app.ui.fullscreen;
@@ -526,9 +526,9 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
     // a drag drafts at full size where the GPU draws the view (by the GPU's own rule, `handles`;
     // `ready` first: `available` would wait for a device still being created)
     let gpu = interacting
-        && lightcraft_engine::gpu::handles(lightcraft_pipeline::OutputDepth::U8, app.ui.soft_proof, overlay)
-        && lightcraft_engine::gpu::ready()
-        && lightcraft_engine::gpu::available();
+        && hazavana_engine::gpu::handles(hazavana_pipeline::OutputDepth::U8, app.ui.soft_proof, overlay)
+        && hazavana_engine::gpu::ready()
+        && hazavana_engine::gpu::available();
     let shown = app.renderer.textures.get(&Slot::Main).filter(|t| t.photo == id && t.quick.is_none()).map(|t| (t.key, t.ms));
     let drag = app.session.interaction.as_ref().map(|i| (i.photo, i.label.as_str()));
     let draft = app.drag_scale.scale(drag, gpu, shown.map(|(key, _)| key));
@@ -912,7 +912,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
 
 /// The info overlay at the canvas' top left (`view.infoOverlay`): file name with the capture date
 /// and size, or with the camera and exposure.
-fn info_overlay(app: &LightcraftApp, p: &egui::Painter, canvas: Rect, photo: &lightcraft_catalog::Photo) {
+fn info_overlay(app: &HazavanaApp, p: &egui::Painter, canvas: Rect, photo: &hazavana_catalog::Photo) {
     use crate::state::InfoOverlay;
     let lines: Vec<String> = match app.ui.info_overlay {
         InfoOverlay::Off => return,
@@ -965,7 +965,7 @@ enum RegionEdit {
     /// The × was clicked.
     Remove(usize),
     /// A handle drag ended: the region's new box (normalized, upright frame).
-    Resize(usize, lightcraft_geom::Rect),
+    Resize(usize, hazavana_geom::Rect),
     /// A name was typed or picked for the face.
     Name(usize, String),
     /// The name box's offer to set up face recognition was pressed.
@@ -987,14 +987,14 @@ const REGION_HANDLES: [(f32, f32, egui::CursorIcon); 8] = [
 /// Face/pet/focus regions read from XMP (MWG-RS), drawn as boxes over the photo. Hovering a box shows
 /// a × in its corner and eight resize handles. A drag previews the new box live and is reported once,
 /// on release (one undo step); the × reports the region to remove. Both are catalog-only edits:
-/// LightCraft doesn't write regions to XMP. Regions are stored on the upright (EXIF-oriented) photo;
+/// Hazavana doesn't write regions to XMP. Regions are stored on the upright (EXIF-oriented) photo;
 /// `orient` is the user's Rotate / Flip on top of it, which the loupe's normalized frame includes.
 fn region_overlay(
     ui: &egui::Ui,
     p: &egui::Painter,
     map: &CanvasMap,
-    photo: &lightcraft_catalog::Photo,
-    orient: lightcraft_geom::Orientation,
+    photo: &hazavana_catalog::Photo,
+    orient: hazavana_geom::Orientation,
     hints: Option<&super::faces::Hints>,
     people: &[String],
     editing: &mut Option<crate::state::NameEdit>,
@@ -1005,7 +1005,7 @@ fn region_overlay(
     let pointer = ui.input(|i| i.pointer.hover_pos());
     // the box being dragged: (region index, its box so far)
     let drag_key = egui::Id::new("region-drag");
-    let live: Option<(usize, lightcraft_geom::Rect)> = ui.data(|d| d.get_temp(drag_key));
+    let live: Option<(usize, hazavana_geom::Rect)> = ui.data(|d| d.get_temp(drag_key));
     let mut edit = None;
     for (index, r) in photo.meta.regions.iter().enumerate() {
         let dragging = live.filter(|(i, _)| *i == index);
@@ -1041,7 +1041,7 @@ fn region_overlay(
                         n.max.y = pp.y.max(n.min.y + 12.0);
                     }
                     let (a, b) = (map.norm(n.min), map.norm(n.max));
-                    let shown = lightcraft_geom::Rect {
+                    let shown = hazavana_geom::Rect {
                         x0: a.x.min(b.x).clamp(0.0, 1.0),
                         y0: a.y.min(b.y).clamp(0.0, 1.0),
                         x1: a.x.max(b.x).clamp(0.0, 1.0),
@@ -1053,10 +1053,10 @@ fn region_overlay(
                     ui.ctx().request_repaint();
                 }
                 if resp.drag_stopped() {
-                    if let Some((i, new)) = ui.data(|d| d.get_temp::<(usize, lightcraft_geom::Rect)>(drag_key)) {
+                    if let Some((i, new)) = ui.data(|d| d.get_temp::<(usize, hazavana_geom::Rect)>(drag_key)) {
                         edit = Some(RegionEdit::Resize(i, new));
                     }
-                    ui.data_mut(|d| d.remove_temp::<(usize, lightcraft_geom::Rect)>(drag_key));
+                    ui.data_mut(|d| d.remove_temp::<(usize, hazavana_geom::Rect)>(drag_key));
                 }
             }
         }
@@ -1077,7 +1077,7 @@ fn region_overlay(
             }
         }
         // what the label says: the name, a guess to confirm ("Jane Doe?"), or on hover an invitation to name the face
-        let is_face = r.kind == lightcraft_meta::RegionKind::Face;
+        let is_face = r.kind == hazavana_meta::RegionKind::Face;
         let hint = hints.and_then(|h| h.by_index.get(&index));
         let hovered = pointer.is_some_and(|h| rect.expand(3.0).contains(h));
         let editing_this = editing.as_ref().is_some_and(|e| e.photo == photo.id.0 && e.index == index);
@@ -1136,8 +1136,8 @@ fn region_overlay(
 /// A small pill at the loupe's top left naming the active filters: the filmstrip and Next / Previous
 /// follow them, so a filter must never be invisible here. A click clears them all. It sits in the
 /// canvas margin, so the photo does not move.
-fn filter_pill(app: &mut LightcraftApp, ui: &mut egui::Ui, canvas: Rect) {
-    let chips = lightcraft_engine::filter_chips(&app.session.filter, &app.session.catalog);
+fn filter_pill(app: &mut HazavanaApp, ui: &mut egui::Ui, canvas: Rect) {
+    let chips = hazavana_engine::filter_chips(&app.session.filter, &app.session.catalog);
     if chips.is_empty() {
         return;
     }
@@ -1192,7 +1192,7 @@ const NAV_W: f32 = 180.0;
 
 /// The Navigator: while zoomed in, a mini map of the photo at the canvas' bottom right with the
 /// visible region outlined; click or drag on it to pan. Returns the area it covers.
-fn navigator(app: &mut LightcraftApp, ui: &mut egui::Ui, canvas: Rect, img: Rect, id: PhotoId) -> Option<Rect> {
+fn navigator(app: &mut HazavanaApp, ui: &mut egui::Ui, canvas: Rect, img: Rect, id: PhotoId) -> Option<Rect> {
     let zoomed = img.width() > canvas.width() + 1.0 || img.height() > canvas.height() + 1.0;
     if !app.ui.navigator || !zoomed || app.ui.fullscreen {
         return None;
@@ -1287,23 +1287,23 @@ pub(crate) fn loupe_pill(ui: &egui::Ui, canvas: Rect, over: Rect, navigator: Opt
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn failed_pill(
     ui: &egui::Ui,
-    app: &LightcraftApp,
-    photo: &lightcraft_catalog::Photo,
+    app: &HazavanaApp,
+    photo: &hazavana_catalog::Photo,
     canvas: Rect,
     over: Rect,
     navigator: Option<Rect>,
     id: &str,
     error: &str,
 ) {
-    let offline = matches!(&photo.source, lightcraft_catalog::Source::File { path } if app.session.media.availability.is_offline(path));
+    let offline = matches!(&photo.source, hazavana_catalog::Source::File { path } if app.session.media.availability.is_offline(path));
     let text = crate::i18n::tr(if offline { "Original offline · no smart preview" } else { "This photo can't be opened" });
     let r = loupe_pill(ui, canvas, over, navigator, id, text, true);
     let resp = ui.interact(r, egui::Id::new(("render-failed", id)), Sense::hover()).on_hover_text(error);
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Label, true, format!("{text}: {error}")));
 }
 
-fn quick_name(q: lightcraft_engine::media::QuickSource) -> &'static str {
-    use lightcraft_engine::media::QuickSource;
+fn quick_name(q: hazavana_engine::media::QuickSource) -> &'static str {
+    use hazavana_engine::media::QuickSource;
     match q {
         QuickSource::Cached => "cached",
         QuickSource::Embedded => "embedded",
@@ -1314,7 +1314,7 @@ fn quick_name(q: lightcraft_engine::media::QuickSource) -> &'static str {
 /// Targeted adjustment tool: dragging up/down on the photo raises/lowers the tone-curve region or
 /// the colour-mixer bands under the press point (`develop.targeted`, one call per whole step, all
 /// in one interaction = one undo step).
-fn targeted_drag(app: &mut LightcraftApp, resp: &egui::Response, map: &CanvasMap, target: &str) {
+fn targeted_drag(app: &mut HazavanaApp, resp: &egui::Response, map: &CanvasMap, target: &str) {
     if resp.drag_started()
         && let Some(q) = resp.interact_pointer_pos()
     {
@@ -1344,8 +1344,8 @@ fn targeted_drag(app: &mut LightcraftApp, resp: &egui::Response, map: &CanvasMap
 
 /// The diagnostic overlay the loupe shows (the selected mask, Point Color's visualized range,
 /// Visualize Spots).
-pub(crate) fn view_overlay(app: &LightcraftApp, d: &DevelopSettings) -> lightcraft_pipeline::Overlay {
-    use lightcraft_pipeline::{MaskView, Overlay};
+pub(crate) fn view_overlay(app: &HazavanaApp, d: &DevelopSettings) -> hazavana_pipeline::Overlay {
+    use hazavana_pipeline::{MaskView, Overlay};
     if app.ui.fullscreen {
         return Overlay::None;
     }
@@ -1383,7 +1383,7 @@ pub(crate) fn view_overlay(app: &LightcraftApp, d: &DevelopSettings) -> lightcra
     Overlay::None
 }
 
-fn clipping_overlay(app: &LightcraftApp, p: &egui::Painter, r: Rect) {
+fn clipping_overlay(app: &HazavanaApp, p: &egui::Painter, r: Rect) {
     // Highlight clipped regions using the histogram's extremes isn't spatial; show a subtle frame hint.
     if let Some(h) = app.renderer.textures.get(&Slot::Main).and_then(|t| t.histogram.as_ref()) {
         let (lo, hi) = h.clipping();
@@ -1396,7 +1396,7 @@ fn clipping_overlay(app: &LightcraftApp, p: &egui::Painter, r: Rect) {
     }
 }
 
-fn general_cursor(app: &LightcraftApp, ui: &egui::Ui, resp: &egui::Response, img: Rect, canvas: Rect) {
+fn general_cursor(app: &HazavanaApp, ui: &egui::Ui, resp: &egui::Response, img: Rect, canvas: Rect) {
     // A panel or overlay under the pointer keeps its own cursor.
     if !resp.dragged() && !resp.hovered() {
         return;
@@ -1417,7 +1417,7 @@ fn general_cursor(app: &LightcraftApp, ui: &egui::Ui, resp: &egui::Response, img
 }
 
 fn general_interaction(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     resp: &egui::Response,
     map: &CanvasMap,
@@ -1478,7 +1478,7 @@ fn general_interaction(
 
 // ------------------------------------------------------------------------ crop
 
-fn crop_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, frame: &Frame, d: &DevelopSettings, id: PhotoId) {
+fn crop_overlay(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, frame: &Frame, d: &DevelopSettings, id: PhotoId) {
     if app.ui.tool == "guidedUpright" {
         guided_overlay(app, ui, resp, map, frame, d);
         return;
@@ -1607,7 +1607,7 @@ fn crop_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Respons
         match app.gesture.clone() {
             Some(Gesture::CropHandle { handle, start, angle }) => {
                 // The crop model decides what the drag does (anchor, aspect lock, image bounds): see
-                // `lightcraft_geom::drag_crop`; the UI only reports where the pointer started and is.
+                // `hazavana_geom::drag_crop`; the UI only reports where the pointer started and is.
                 let n = to_straight(map.norm(q), angle, frame);
                 let orig = ui.input(|i| i.pointer.press_origin()).map(|q0| to_straight(map.norm(q0), angle, frame)).unwrap_or(n);
                 // Shift keeps the current proportions for this drag only; the Lock toggle is untouched.
@@ -1656,7 +1656,7 @@ const CROP_HANDLE_NAMES: [&str; 9] = [
 /// undo step each), as a pointer drag from its place would. Return applies the crop. True when the
 /// frame is over (the crop was applied).
 fn crop_keys(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     map: &CanvasMap,
     handles: &[Pos2],
@@ -1699,7 +1699,7 @@ fn crop_keys(
 /// The crop angle as the rotation readout shows it: like the Straighten value, in degrees.
 pub(crate) fn crop_angle_label(angle: f64) -> String {
     let shown =
-        lightcraft_develop::controls::find("crop.angle").map_or_else(|| format!("{angle:.2}"), |spec| crate::widgets::shown_value(spec, angle));
+        hazavana_develop::controls::find("crop.angle").map_or_else(|| format!("{angle:.2}"), |spec| crate::widgets::shown_value(spec, angle));
     // the slider's format turns a rounded −0.00 into "0": every zero reads "0.00", the angle's
     // usual two decimals
     let shown = if shown == "0" { "0.00".to_string() } else { shown };
@@ -1774,7 +1774,7 @@ fn angle_readout(ui: &egui::Ui, at: Pos2, angle: f64, bounds: Rect) {
 
 /// Guided Upright: draw up to four guides along lines that should be vertical or horizontal. Guides are
 /// stored in lens-corrected (pre-perspective) coordinates, so they stay attached to the image as it warps.
-fn guided_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, frame: &Frame, d: &DevelopSettings) {
+fn guided_overlay(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, frame: &Frame, d: &DevelopSettings) {
     let p = ui.painter_at(map.rect.expand(8.0));
     let col = Color32::from_rgb(255, 196, 40);
     let draw = |a: Pos2, b: Pos2| {
@@ -1983,7 +1983,7 @@ fn radial_body_contains(shape: &MaskShape, at: Point, map: &CanvasMap) -> bool {
 /// Colour Range eyedropper: a click samples the colour under it for the selected mask's
 /// colour range, at normalized frame coordinates (crop, rotation and zoom aware);
 /// ⇧-click adds a sample (up to 5).
-fn color_range_pick(app: &mut LightcraftApp, ui: &egui::Ui, resp: &egui::Response, map: &CanvasMap) {
+fn color_range_pick(app: &mut HazavanaApp, ui: &egui::Ui, resp: &egui::Response, map: &CanvasMap) {
     if resp.clicked()
         && let Some(q) = resp.interact_pointer_pos()
     {
@@ -1998,7 +1998,7 @@ fn color_range_pick(app: &mut LightcraftApp, ui: &egui::Ui, resp: &egui::Respons
 /// The Masking tool on the photo: outlines and handles of the selected mask, a pin per mask
 /// component (click selects its mask, drag moves the component), and brush painting. The mask
 /// itself shows as a rendered overlay ([`view_overlay`]).
-fn mask_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, d: &DevelopSettings) {
+fn mask_overlay(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, d: &DevelopSettings) {
     let long = (map.rect.width().max(map.rect.height())) as f64;
     let active = app.session.active_mask;
     let clip = app.canvas_rect.unwrap_or(map.rect);
@@ -2265,7 +2265,7 @@ fn mask_handle_name(mask: &str, shape: &MaskShape, handle: u8) -> String {
 
 /// Keyboard stand-ins for the mask handles and pins: an arrow press moves the focused one by a
 /// step (one undo step), as dragging it would; Return on a pin selects its mask.
-fn mask_keys(app: &mut LightcraftApp, ui: &mut egui::Ui, map: &CanvasMap, d: &DevelopSettings, grips: &[(u32, usize, u8, Pos2)]) {
+fn mask_keys(app: &mut HazavanaApp, ui: &mut egui::Ui, map: &CanvasMap, d: &DevelopSettings, grips: &[(u32, usize, u8, Pos2)]) {
     for &(mid, ci, handle, q) in grips {
         let Some(m) = d.masks.iter().find(|m| m.id == mid) else { continue };
         let Some(shape) = m.components.get(ci).map(|c| &c.shape) else { continue };
@@ -2300,7 +2300,7 @@ fn frame_long_norm(map: &CanvasMap) -> (f64, f64) {
 
 /// Auto's condition for the Tool Overlay (Shift+H): the pointer is over the photo, or a pin is
 /// being dragged.
-fn pins_live(app: &LightcraftApp, resp: &egui::Response, map: &CanvasMap) -> bool {
+fn pins_live(app: &HazavanaApp, resp: &egui::Response, map: &CanvasMap) -> bool {
     resp.hover_pos().is_some_and(|q| map.rect.contains(q))
         || matches!(app.gesture, Some(Gesture::SpotMove { .. } | Gesture::MaskHandle { .. }))
         // a handle moved with the keyboard stays shown while it has the focus
@@ -2318,7 +2318,7 @@ fn pin(p: &egui::Painter, c: Pos2, sel: bool) {
 /// click a pin to select its spot, drag a target or source to move it, paint elsewhere to add one.
 /// The Tool Overlay mode (Shift+H) says which spots show; a hidden spot can't be grabbed, so a
 /// click there adds a new one.
-fn remove_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, d: &DevelopSettings) {
+fn remove_overlay(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, d: &DevelopSettings) {
     let long = (map.rect.width().max(map.rect.height())) as f64;
     let active = app.session.active_spot.filter(|i| *i < d.spots.len());
     let (mode, live) = (app.ui.tool_overlay, pins_live(app, resp, map));
@@ -2448,7 +2448,7 @@ fn remove_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Respo
 /// Keyboard stand-ins for the Remove tool: each spot's target and source (an arrow press moves
 /// it a step, one undo step; Return selects the spot), and a placement point that the arrows move
 /// and Return turns into a new spot of the brush's size there. True when a spot was added.
-fn spot_keys(app: &mut LightcraftApp, ui: &mut egui::Ui, map: &CanvasMap, d: &DevelopSettings, grips: &[(usize, bool, Pos2, f32)]) -> bool {
+fn spot_keys(app: &mut HazavanaApp, ui: &mut egui::Ui, map: &CanvasMap, d: &DevelopSettings, grips: &[(usize, bool, Pos2, f32)]) -> bool {
     for &(spot, source, q, _) in grips {
         let at = map.norm(q);
         let name =
@@ -2503,7 +2503,7 @@ fn spot_keys(app: &mut LightcraftApp, ui: &mut egui::Ui, map: &CanvasMap, d: &De
 // ------------------------------------------------------------------------ red eye
 
 /// Red Eye tool: drag an ellipse over an eye (a new correction), click one to select it.
-fn eye_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, d: &DevelopSettings) {
+fn eye_overlay(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, map: &CanvasMap, d: &DevelopSettings) {
     // screen points per long-edge unit
     let o = map.screen(Point::new(0.0, 0.0));
     let (sx, sy) = (map.screen(Point::new(1.0, 0.0)).distance(o), map.screen(Point::new(0.0, 1.0)).distance(o));
@@ -2566,7 +2566,7 @@ fn film_label(name: &str) -> String {
     if name.chars().nth(14).is_some() { format!("{}…", name.chars().take(13).collect::<String>()) } else { name.to_string() }
 }
 
-pub(crate) fn filmstrip(app: &mut LightcraftApp, ui: &mut egui::Ui, r: Rect) {
+pub(crate) fn filmstrip(app: &mut HazavanaApp, ui: &mut egui::Ui, r: Rect) {
     let t = Tokens::get(ui.ctx());
     ui.painter().rect_filled(r, 0.0, t.canvas);
     ui.painter().rect_filled(Rect::from_min_size(r.min, vec2(r.width(), 4.0)), 0.0, Color32::from_gray(0x20));
@@ -2607,10 +2607,10 @@ pub(crate) fn filmstrip(app: &mut LightcraftApp, ui: &mut egui::Ui, r: Rect) {
             crate::widgets::announce(&resp, app.session.catalog.photo(*id).map(|p| p.file_name.clone()).unwrap_or_default());
             register(ui.ctx(), format!("film:{}", id.0), cr);
             let state = app.session.selection.state_of(*id);
-            let sel = state == lightcraft_engine::SelectionState::Active;
+            let sel = state == hazavana_engine::SelectionState::Active;
             let p = ui.painter();
             let label = app.session.catalog.photo(*id).and_then(|ph| ph.label);
-            let selected = state != lightcraft_engine::SelectionState::NotSelected;
+            let selected = state != hazavana_engine::SelectionState::NotSelected;
             let base = if selected {
                 t.cell_selected
             } else if resp.hovered() {
@@ -2634,7 +2634,7 @@ pub(crate) fn filmstrip(app: &mut LightcraftApp, ui: &mut egui::Ui, r: Rect) {
                 p.image(tex.tex.id(), fr, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
                 if sel {
                     p.rect_stroke(fr, 0.0, Stroke::new(1.5, Color32::WHITE), StrokeKind::Outside);
-                } else if state == lightcraft_engine::SelectionState::Selected {
+                } else if state == hazavana_engine::SelectionState::Selected {
                     p.rect_stroke(fr, 0.0, Stroke::new(1.5, Color32::from_gray(170)), StrokeKind::Outside);
                 }
                 if app.ui.settings.film_badges
@@ -2682,9 +2682,9 @@ pub(crate) fn filmstrip(app: &mut LightcraftApp, ui: &mut egui::Ui, r: Rect) {
 }
 
 /// Rating, flag and edited badges along a filmstrip thumbnail's bottom edge (Settings → Interface).
-fn film_badges(p: &egui::Painter, t: &Tokens, fr: Rect, ph: &lightcraft_catalog::Photo) {
+fn film_badges(p: &egui::Painter, t: &Tokens, fr: Rect, ph: &hazavana_catalog::Photo) {
     use crate::icons::{Icon, paint};
-    use lightcraft_catalog::Flag;
+    use hazavana_catalog::Flag;
     let edited = ph.is_edited();
     if ph.rating == 0 && ph.flag == Flag::None && !edited {
         return;
@@ -2753,7 +2753,7 @@ mod preview_geometry_tests {
 /// Straighten tool: drag along a horizon (or a vertical) to set the crop angle; double-click = Auto.
 /// The image is shown unrotated in the crop view, so the line's on-screen angle is its image angle.
 /// `held`: drawn with ⌘ held in the crop tool, which stays active afterwards.
-fn straighten_overlay(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, held: bool) {
+fn straighten_overlay(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, held: bool) {
     ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
     if !held && resp.double_clicked() {
         let _ = app.run("crop.autoStraighten", json!({}));
@@ -3060,7 +3060,7 @@ mod filter_pill_tests {
     /// from the top one.
     #[test]
     fn the_filter_pill_is_inset_equally_from_both_edges() {
-        let mut app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), crate::Services { png: None, ..Default::default() });
+        let mut app = HazavanaApp::new(hazavana_engine::Session::with_demo(), crate::Services { png: None, ..Default::default() });
         app.session.filter.text = "717".into();
         let ctx = egui::Context::default();
         let canvas = Rect::from_min_size(pos2(52.0, 82.0), vec2(800.0, 500.0));
@@ -3083,7 +3083,7 @@ mod info_overlay_tests {
     /// copy one point off, each line read doubled.
     #[test]
     fn the_info_overlay_shadow_is_dark() {
-        let mut app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), crate::Services { png: None, ..Default::default() });
+        let mut app = HazavanaApp::new(hazavana_engine::Session::with_demo(), crate::Services { png: None, ..Default::default() });
         app.ui.info_overlay = crate::state::InfoOverlay::Basic;
         let photo = app.session.catalog.photos().next().map(|p| (**p).clone()).expect("the demo catalog has photos");
         let ctx = egui::Context::default();

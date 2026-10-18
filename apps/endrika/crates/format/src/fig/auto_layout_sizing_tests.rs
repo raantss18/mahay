@@ -2,7 +2,7 @@
 //! code and REST file JSON: the sizing a file records, an auto layout frame that records none, and
 //! text that hugs by its resize mode. Also how distributed main-axis alignment reads.
 
-use figcraft_doc::{Document, MainAlign, Sizing};
+use endrika_doc::{Document, MainAlign, Sizing};
 use serde_json::{Value, json};
 
 use super::kiwi::{Kv, Schema};
@@ -161,7 +161,7 @@ fn text_hugs_by_its_resize_mode() {
     let copy = inst.children.first().and_then(|c| doc.node(*c)).unwrap();
     assert_eq!((copy.child_layout.sizing_h, copy.child_layout.sizing_v), (Hug, Hug));
     let bare = doc.nodes().find(|n| n.name == "Bare instance").unwrap();
-    assert_eq!(bare.layout.as_ref().map(|l| l.mode), Some(figcraft_doc::LayoutMode::Horizontal));
+    assert_eq!(bare.layout.as_ref().map(|l| l.mode), Some(endrika_doc::LayoutMode::Horizontal));
     assert_eq!((bare.child_layout.sizing_h, bare.child_layout.sizing_v), (Hug, Hug));
 }
 

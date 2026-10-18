@@ -4,28 +4,28 @@ members = ["crates/*", "apps/*", "xtask"]
 # default-members
 
 [workspace.package]
-version = "0.9.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.90"
-repository = "https://github.com/storytold/cadcraft"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
 # internal
-cadcraft-geom = { path = "crates/geom" }
-cadcraft-dxf = { path = "crates/dxf" }
-cadcraft-dwg = { path = "crates/dwg" }
-cadcraft-color = { path = "crates/color" }
-cadcraft-doc = { path = "crates/doc" }
-cadcraft-constraints = { path = "crates/constraints" }
-cadcraft-fonts = { path = "crates/fonts" }
-cadcraft-render = { path = "crates/render" }
-cadcraft-io = { path = "crates/io" }
-cadcraft-engine = { path = "crates/engine" }
-cadcraft-ui-egui = { path = "crates/ui-egui" }
-cadcraft-mcp = { path = "crates/mcp" }
+drafitra-geom = { path = "crates/geom" }
+drafitra-dxf = { path = "crates/dxf" }
+drafitra-dwg = { path = "crates/dwg" }
+drafitra-color = { path = "crates/color" }
+drafitra-doc = { path = "crates/doc" }
+drafitra-constraints = { path = "crates/constraints" }
+drafitra-fonts = { path = "crates/fonts" }
+drafitra-render = { path = "crates/render" }
+drafitra-io = { path = "crates/io" }
+drafitra-engine = { path = "crates/engine" }
+drafitra-ui-egui = { path = "crates/ui-egui" }
+drafitra-mcp = { path = "crates/mcp" }
 # Which paths stored in a drawing (xrefs, data links) may be opened.
-craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "82a24b006eefa036b43c09a67fb9a3fbd17ffe63" }
+mahay-docpath = { path = "../../libs/core/crates/docpath", version = "0.1.0" }
 
 # foundation
 thiserror = "2"
@@ -48,7 +48,7 @@ encoding_rs = "0.8.35"
 quick-xml = "0.41"
 
 # ui
-craft-ui = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "5c874d51eeb3de70e735c8ce87a59a7dedd47675", features = ["serde"] }
+mahay-ui = { path = "../../libs/core/crates/ui", version = "0.1.0", features = ["serde"] }
 egui = "0.36"
 egui_kittest = "0.36"
 eframe = { version = "0.36", default-features = false }
@@ -76,3 +76,16 @@ opt-level = 3
 lto = "thin"
 codegen-units = 16
 debug = 0
+
+[patch.crates-io]
+# Android backends through mahay-android (document picker, clipboard); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+arboard = { path = "../../libs/core/vendor/arboard" }
+
+# Android release: size first, whole-program LTO, no symbols.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true
+opt-level = "s"

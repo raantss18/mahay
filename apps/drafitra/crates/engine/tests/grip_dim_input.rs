@@ -1,11 +1,11 @@
 //! Grip dimensional input (#519): while one grip is stretched, the dimensions it changes can be
 //! typed (DYNDIVIS, DYNDIGRIP).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle};
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::grip_dims::{GripDimKind, grip_dims, resolve};
-use cadcraft_engine::{Input, sysvars};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::grip_dims::{GripDimKind, grip_dims, resolve};
+use drafitra_engine::{Input, sysvars};
 use serde_json::json;
 
 fn handle(r: serde_json::Value) -> Handle {

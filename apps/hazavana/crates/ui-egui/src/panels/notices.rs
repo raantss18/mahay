@@ -6,14 +6,14 @@ use egui::{Align2, RichText, vec2};
 
 use crate::theme::Tokens;
 use crate::widgets::register;
-use crate::{LightcraftApp, QuitPrompt};
+use crate::{HazavanaApp, QuitPrompt};
 
 /// Collect the library's settings-file warnings (each is shown once), and the no-GPU notice once the GPU device has
 /// been tried.
-pub fn logic(app: &mut LightcraftApp) {
+pub fn logic(app: &mut HazavanaApp) {
     let new = app.session.take_library_warnings();
     app.notices.extend(new);
-    use lightcraft_engine::gpu;
+    use hazavana_engine::gpu;
     if app.gpu_notice && app.gpu_applied == Some(true) && gpu::ready() {
         app.gpu_notice = false;
         if !gpu::available() {
@@ -24,14 +24,14 @@ pub fn logic(app: &mut LightcraftApp) {
 
 /// What to tell the user when GPU rendering is on (`enabled`) but the GPU could not be used for `reason`: only when no
 /// graphics adapter was found at all ("no GPU adapter among …", e.g. no Vulkan loader on Linux), which makes every
-/// render much slower without saying so. Nothing when it was turned off (preference, `LIGHTCRAFT_GPU`), a software
+/// render much slower without saying so. Nothing when it was turned off (preference, `HAZAVANA_GPU`), a software
 /// adapter was skipped, or it failed later; Settings ▸ Performance and Help ▸ System Info show those.
 pub fn gpu_notice(reason: Option<&str>, enabled: bool) -> Option<String> {
     if !enabled || !reason?.starts_with("no GPU adapter") {
         return None;
     }
     let mut text =
-        crate::i18n::tr("No graphics processor found: LightCraft renders on the CPU, which is much slower. Details in Help → System Info.")
+        crate::i18n::tr("No graphics processor found: Hazavana renders on the CPU, which is much slower. Details in Help → System Info.")
             .to_string();
     if cfg!(target_os = "linux") {
         text.push(' ');
@@ -43,7 +43,7 @@ pub fn gpu_notice(reason: Option<&str>, enabled: bool) -> Option<String> {
 /// The window may close now (`true`), or the quit prompt is shown (`false`). Running tasks that
 /// can be cancelled (an import, an export…) are asked about first; then changes that couldn't be
 /// written are retried — the log, then a snapshot of everything in memory.
-pub fn may_close(app: &mut LightcraftApp) -> bool {
+pub fn may_close(app: &mut HazavanaApp) -> bool {
     if app.quit_confirmed {
         return true;
     }
@@ -125,7 +125,7 @@ fn window(ctx: &egui::Context, id: &str, title: &str, text: &str, buttons: &[(&s
     chosen
 }
 
-pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut HazavanaApp, ctx: &egui::Context) {
     if let Some(QuitPrompt::Tasks(text)) = app.quit_prompt.clone() {
         let buttons = [("quitAnyway", "Quit Anyway", Choice::QuitAnyway), ("quitCancel", "Cancel", Choice::Cancel)];
         let Some(i) = window(ctx, "quit-tasks", "Quit while tasks are running?", &text, &buttons) else { return };
@@ -182,8 +182,8 @@ mod tests {
         assert_eq!(text.contains("nix develop"), cfg!(target_os = "linux"), "{text}");
         assert_eq!(gpu_notice(Some(none), false), None, "the preference is off");
         for reason in [
-            "disabled by LIGHTCRAFT_GPU=0",
-            "disabled by LIGHTCRAFT_GPU_BACKEND=off",
+            "disabled by HAZAVANA_GPU=0",
+            "disabled by HAZAVANA_GPU_BACKEND=off",
             "disabled by the GPU rendering preference (app.gpu)",
             "software adapter (llvmpipe (LLVM 19.1.7, 256 bits)) skipped: the CPU pipeline is faster",
             "stopped after a GPU failure: device lost",

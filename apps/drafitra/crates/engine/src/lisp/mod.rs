@@ -16,7 +16,7 @@ pub mod value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, Handle};
+use drafitra_doc::{Drawing, Handle};
 
 use crate::{Input, Prompt, Session};
 use eval::{Ctx, Machine, Need, Outcome};
@@ -53,7 +53,7 @@ pub struct Env {
     pub files: HashMap<u32, builtins::LispFile>,
     pub next_file: u32,
     /// Entities `entdel` deleted (it brings them back when called again), with their space.
-    pub deleted: HashMap<Handle, (cadcraft_doc::Space, Arc<cadcraft_doc::Entity>)>,
+    pub deleted: HashMap<Handle, (drafitra_doc::Space, Arc<drafitra_doc::Entity>)>,
     /// Every entity's handle in creation order, for the drawing it was taken from (`entnext`).
     pub order: Option<(usize, Arc<Vec<Handle>>)>,
     /// `tblnext`'s place in each table.
@@ -500,14 +500,14 @@ impl Session {
 
     /// The rubber band of a waiting `get…` function: a rectangle from `getcorner`'s corner, a
     /// line from the base point of the others. `None` when no routine waits for input.
-    pub(crate) fn lisp_preview(&self, cursor: cadcraft_geom::Vec2) -> Option<Vec<cadcraft_doc::EntityKind>> {
+    pub(crate) fn lisp_preview(&self, cursor: drafitra_geom::Vec2) -> Option<Vec<drafitra_doc::EntityKind>> {
         let Need::Get(req) = self.lisp.run.as_ref()?.waiting.as_ref()? else { return None };
         let line =
-            |a: cadcraft_geom::Vec2, b: cadcraft_geom::Vec2| cadcraft_doc::EntityKind::Line(cadcraft_doc::Line { a: a.to3(0.0), b: b.to3(0.0) });
-        let Some(b) = req.first.or(req.base).map(|p| cadcraft_geom::Vec2::new(p[0], p[1])) else { return Some(Vec::new()) };
+            |a: drafitra_geom::Vec2, b: drafitra_geom::Vec2| drafitra_doc::EntityKind::Line(drafitra_doc::Line { a: a.to3(0.0), b: b.to3(0.0) });
+        let Some(b) = req.first.or(req.base).map(|p| drafitra_geom::Vec2::new(p[0], p[1])) else { return Some(Vec::new()) };
         Some(match req.kind {
             input::GetKind::Corner => {
-                let (c1, c2) = (cadcraft_geom::Vec2::new(cursor.x, b.y), cadcraft_geom::Vec2::new(b.x, cursor.y));
+                let (c1, c2) = (drafitra_geom::Vec2::new(cursor.x, b.y), drafitra_geom::Vec2::new(b.x, cursor.y));
                 vec![line(b, c1), line(c1, cursor), line(cursor, c2), line(c2, b)]
             }
             input::GetKind::Point | input::GetKind::Dist | input::GetKind::Angle { .. } => vec![line(b, cursor)],

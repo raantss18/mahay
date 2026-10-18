@@ -4,8 +4,8 @@
 //! oracle): direct on a buffer with masks, another layer and audio at full and half resolution
 //! and as adjustment, and composited at 8 and 32 bpc.
 
-use effectcraft_keyframe::Value;
-use effectcraft_time::Tick;
+use tselatra_keyframe::Value;
+use tselatra_time::Tick;
 
 use crate::tests::{c, n};
 use crate::tests_fx_pixel2::{e, env_case, env_case_allow, env_case_at, off, on, pt};

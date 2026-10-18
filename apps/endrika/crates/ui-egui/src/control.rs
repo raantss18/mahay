@@ -28,8 +28,8 @@
 //! panels; without it, requests go to the window last in front.
 
 use egui::Context;
-use figcraft_engine::cmd::comment::{Filter, Sort};
-use figcraft_engine::{PointerEvent, PointerKind};
+use endrika_engine::cmd::comment::{Filter, Sort};
+use endrika_engine::{PointerEvent, PointerKind};
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -207,7 +207,7 @@ fn shot_reply(img: &egui::ColorImage, path: Option<&str>) -> Result<Value, Strin
     let png = png.into_inner();
     match path {
         Some(path) => {
-            figcraft_engine::file_access::write(path, &png).map_err(|e| e.to_string())?;
+            endrika_engine::file_access::write(path, &png).map_err(|e| e.to_string())?;
             Ok(json!({"path": path, "width": w, "height": h}))
         }
         None => {
@@ -220,7 +220,7 @@ fn shot_reply(img: &egui::ColorImage, path: Option<&str>) -> Result<Value, Strin
 /// A controller button given as its standard-layout index, its key trigger name ("Gamepad A") or
 /// its short name ("A", "LB", "Up").
 fn pad_name(v: &Value) -> Option<&'static str> {
-    use figcraft_doc::proto::{GAMEPAD_BUTTONS, gamepad_button};
+    use endrika_doc::proto::{GAMEPAD_BUTTONS, gamepad_button};
     if let Some(i) = v.as_u64() {
         return usize::try_from(i).ok().and_then(gamepad_button);
     }
@@ -245,19 +245,19 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
             r
         }
         "engine.commands" => Ok(Value::Array(
-            figcraft_engine::all_commands()
+            endrika_engine::all_commands()
                 .iter()
                 .map(|c| json!({"id": c.id, "label": c.label, "params": c.params, "menu": c.menu(), "shortcut": c.shortcut(), "undoable": c.history}))
                 .collect(),
         )),
         "document.inspect" => {
             let depth = p.get("depth").and_then(Value::as_u64).unwrap_or(8) as usize;
-            Ok(figcraft_engine::inspect::document(&app.session, depth, b(p, "allPages")))
+            Ok(endrika_engine::inspect::document(&app.session, depth, b(p, "allPages")))
         }
         "node.get" => {
-            let id = p.get("id").and_then(figcraft_engine::params::id_of).ok_or("`id` required")?;
+            let id = p.get("id").and_then(endrika_engine::params::id_of).ok_or("`id` required")?;
             let depth = p.get("depth").and_then(Value::as_u64).unwrap_or(1) as usize;
-            app.session.doc().map(|d| figcraft_engine::inspect::node_json(d, id, depth)).map_err(|e| e.to_string())
+            app.session.doc().map(|d| endrika_engine::inspect::node_json(d, id, depth)).map_err(|e| e.to_string())
         }
         "window.new" => {
             let index = p.get("index").and_then(Value::as_u64).map(|i| i as usize);
@@ -276,17 +276,17 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
         "ui.pointer" => pointer(app, p),
         "ui.key" => {
             let key = p.get("key").and_then(Value::as_str).ok_or("`key` required")?;
-            let m = figcraft_engine::keymap::Mods { shift: b(p, "shift"), alt: b(p, "alt"), cmd: b(p, "cmd"), ctrl: b(p, "ctrl") };
+            let m = endrika_engine::keymap::Mods { shift: b(p, "shift"), alt: b(p, "alt"), cmd: b(p, "cmd"), ctrl: b(p, "ctrl") };
             let platform = crate::shortcuts::platform();
-            use figcraft_engine::keymap::{Context, lookup, normalize};
+            use endrika_engine::keymap::{Context, lookup, normalize};
             // Text editing keys go to the editor (after the shortcuts live while editing).
             if app.session.ds().map(|d| d.text_edit.is_some()).unwrap_or(false) {
                 if let Some(bd) = lookup(platform, Context::Text, key, m).filter(|_| m.cmd || m.alt || m.ctrl) {
                     crate::menus::invoke(app, bd.id);
                     return Ok(json!({"command": bd.id}));
                 }
-                let (word, line) = figcraft_engine::keymap::text_motion(platform, key, m);
-                figcraft_engine::textedit::key(&mut app.session, key, m.shift, word, line).map_err(|e| e.to_string())?;
+                let (word, line) = endrika_engine::keymap::text_motion(platform, key, m);
+                endrika_engine::textedit::key(&mut app.session, key, m.shift, word, line).map_err(|e| e.to_string())?;
                 return Ok(json!({"ok": true}));
             }
             // Vector edit mode and shape builder keys (tools, nudging points, delete, join, Enter).
@@ -294,7 +294,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
                 return Ok(json!({"ok": true}));
             }
             // The Comment tool's arrows step through the comment threads.
-            if app.session.tool.tool == figcraft_engine::ToolId::Comment && m.is_none() && matches!(key, "ArrowUp" | "ArrowDown" | "Up" | "Down") {
+            if app.session.tool.tool == endrika_engine::ToolId::Comment && m.is_none() && matches!(key, "ArrowUp" | "ArrowDown" | "Up" | "Down") {
                 let r = crate::comments::step(app, ctx, if matches!(key, "ArrowUp" | "Up") { -1 } else { 1 });
                 return Ok(json!({"comment": r.and_then(|v| v.get("id").cloned())}));
             }
@@ -370,7 +370,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
                         modifiers: mods,
                     });
                 } else if let Some(g) = e.get("gamepad") {
-                    let names = figcraft_doc::proto::GAMEPAD_BUTTONS.join(", ");
+                    let names = endrika_doc::proto::GAMEPAD_BUTTONS.join(", ");
                     pads.push(pad_name(g).ok_or_else(|| format!("unknown controller button {g} (an index 0-16 or one of {names})"))?.to_string());
                 } else if b(e, "leave") {
                     events.push(egui::Event::PointerGone);
@@ -401,7 +401,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
         }
         "ui.type" => {
             let text = p.get("text").and_then(Value::as_str).ok_or("`text` required")?;
-            figcraft_engine::textedit::insert(&mut app.session, text).map_err(|e| e.to_string())?;
+            endrika_engine::textedit::insert(&mut app.session, text).map_err(|e| e.to_string())?;
             Ok(json!({"ok": true}))
         }
         "ui.menu.invoke" => {
@@ -589,7 +589,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
                 Some(Value::Array(a)) => {
                     let id = a.first().and_then(Value::as_u64).ok_or("protoEditor: [layer id, interaction index]")?;
                     let k = a.get(1).and_then(Value::as_u64).unwrap_or(0) as usize;
-                    crate::proto_panel::open_editor(ctx, Some((figcraft_doc::NodeId(id), k)));
+                    crate::proto_panel::open_editor(ctx, Some((endrika_doc::NodeId(id), k)));
                 }
                 _ => {}
             }
@@ -627,7 +627,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
             }
             // The Color profile dialog: a profile id opens it with that profile chosen, null closes it.
             if let Some(v) = p.get("colorProfileDialog") {
-                app.ui.color_profile = v.as_str().and_then(figcraft_color::ColorProfile::parse);
+                app.ui.color_profile = v.as_str().and_then(endrika_color::ColorProfile::parse);
             }
             if let Some(v) = p.get("exportPreview").and_then(Value::as_bool) {
                 app.ui.export_thumb = v;
@@ -635,7 +635,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
             // Dev Mode's compare view: a ready-for-dev frame or section opens it, null closes it;
             // `devCompareMode` is sideBySide or overlay, `devCompareSplit` the overlay slider (0–1).
             if let Some(v) = p.get("devCompare") {
-                app.ui.dev.compare = figcraft_engine::params::id_of(v).map(crate::dev_compare::CompareView::new);
+                app.ui.dev.compare = endrika_engine::params::id_of(v).map(crate::dev_compare::CompareView::new);
             }
             if let Some(c) = app.ui.dev.compare.as_mut() {
                 match p.get("devCompareMode").and_then(Value::as_str) {
@@ -658,7 +658,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
             }
             if let (Some(r), Some(picks)) = (app.ui.branch_review.as_mut(), p.get("branchReviewPicks").and_then(Value::as_object)) {
                 for (k, v) in picks {
-                    let side = v.as_str().and_then(figcraft_engine::branches::Side::parse).ok_or("branchReviewPicks: \"branch\" or \"main\"")?;
+                    let side = v.as_str().and_then(endrika_engine::branches::Side::parse).ok_or("branchReviewPicks: \"branch\" or \"main\"")?;
                     r.picks.insert(k.clone(), side);
                 }
             }
@@ -674,8 +674,8 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
         }
         "ui.render" => {
             let scale = p.get("scale").and_then(Value::as_f64).unwrap_or(1.0);
-            let ids: Vec<figcraft_doc::NodeId> =
-                p.get("ids").and_then(Value::as_array).map(|a| a.iter().filter_map(figcraft_engine::params::id_of).collect()).unwrap_or_default();
+            let ids: Vec<endrika_doc::NodeId> =
+                p.get("ids").and_then(Value::as_array).map(|a| a.iter().filter_map(endrika_engine::params::id_of).collect()).unwrap_or_default();
             let mut params = json!({"format": "png", "scale": scale});
             if let Some(path) = p.get("path").and_then(Value::as_str) {
                 params["path"] = json!(path);

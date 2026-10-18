@@ -6,8 +6,8 @@
 //! there, a drag makes one of the dragged size. Clicking the frame on the other side of an
 //! existing link breaks the thread there. Shift autoflows, Alt stays loaded with the rest.
 
-use designcraft_doc::{Document, Item, ItemId, SpreadRef};
-use designcraft_geom::{Point, Rect};
+use pejy_doc::{Document, Item, ItemId, SpreadRef};
+use pejy_geom::{Point, Rect};
 use serde_json::{Value, json};
 
 use crate::{CanvasLayout, Cursor, Mods, Overlay, ToolContext, rect_json, spread_json};

@@ -1,4 +1,4 @@
-// Sort Layers by In Point — an EffectCraft sample script (original work, MIT OR Apache-2.0).
+// Sort Layers by In Point — an Tselatra sample script (original work, MIT OR Apache-2.0).
 //
 // Reorders the selected layers of the active composition (all layers when none are selected)
 // so the layer that starts first is on top. Layers with the same in point keep their order.

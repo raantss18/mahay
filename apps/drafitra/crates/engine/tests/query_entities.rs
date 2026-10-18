@@ -1,7 +1,7 @@
 //! The `entities` query (control channel `engine.execute`, MCP `query_entities`) rejects malformed
 //! filters instead of ignoring them and returning everything.
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 use serde_json::json;
 
 #[test]

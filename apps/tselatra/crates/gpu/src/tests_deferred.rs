@@ -5,11 +5,11 @@
 
 use std::sync::OnceLock;
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::build;
-use effectcraft_project::{BitDepth, Comp, ItemKind, LayerSource};
-use effectcraft_render::{Accelerator, Backend, LayerCache, RenderOpts, Renderer};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_keyframe::Value;
+use tselatra_project::build;
+use tselatra_project::{BitDepth, Comp, ItemKind, LayerSource};
+use tselatra_render::{Accelerator, Backend, LayerCache, RenderOpts, Renderer};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::Gpu;
 use crate::tests::{Pattern, Scene, diff, n, set, tolerance, v3};
@@ -37,7 +37,7 @@ pub(crate) fn deferred_gpu() -> Option<(&'static Gpu, std::sync::MutexGuard<'sta
 /// layer is blurred inside and outside (a chain whose input is another chain's result).
 pub(crate) fn scene() -> Scene {
     let cpu_only = "ec.generate.fractal";
-    assert!(!effectcraft_effects::GPU_EFFECTS.contains(&cpu_only));
+    assert!(!tselatra_effects::GPU_EFFECTS.contains(&cpu_only));
     let mut s = Scene::new(BitDepth::Bpc32);
     let mut bg = s.footage(97, 61);
     s.effect(&mut bg, "ec.blur.gaussian", &[("blurriness", n(5.0))]);
@@ -50,7 +50,7 @@ pub(crate) fn scene() -> Scene {
     s.push(solid);
     // Precomp: a footage layer blurred inside; the precomp layer blurred again outside.
     let inner = Comp::new(60, 40, FrameRate::FPS_30, Tick::from_seconds_f64(2.0));
-    let inner_id = s.p.add_item("Inner", effectcraft_color::Label::Blue, None, ItemKind::Comp(inner.clone().into()));
+    let inner_id = s.p.add_item("Inner", tselatra_color::Label::Blue, None, ItemKind::Comp(inner.clone().into()));
     {
         let mut ins = Scene { p: std::mem::take(&mut s.p), cid: inner_id, comp: inner };
         let mut l = ins.footage(50, 30);
@@ -66,7 +66,7 @@ pub(crate) fn scene() -> Scene {
 }
 
 /// Render in passes with deferred readbacks; returns the frame and the number of passes.
-pub(crate) fn render_passes(g: &Gpu, s: &Scene, opts: RenderOpts, cache: &LayerCache, t: Tick) -> (effectcraft_raster::Image, usize) {
+pub(crate) fn render_passes(g: &Gpu, s: &Scene, opts: RenderOpts, cache: &LayerCache, t: Tick) -> (tselatra_raster::Image, usize) {
     cache.set_gate(g.miss_gate());
     let mut r = Renderer::new(&s.p, &Pattern, opts);
     r.accel = Some(g);

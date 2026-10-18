@@ -1,5 +1,5 @@
 [package]
-name = "filmcraft-golden"
+name = "hetsika-golden"
 description = "Golden-image tests for the CPU renderer/compositor and GPU-vs-CPU parity (test-only crate)"
 version.workspace = true
 edition.workspace = true
@@ -15,14 +15,14 @@ workspace = true
 [dependencies]
 
 [dev-dependencies]
-filmcraft-testkit = { workspace = true }
-filmcraft-color = { workspace = true }
-filmcraft-frame = { workspace = true }
-filmcraft-time = { workspace = true }
-filmcraft-geom = { workspace = true }
-filmcraft-media = { workspace = true }
-filmcraft-project = { workspace = true }
-filmcraft-render = { workspace = true }
-filmcraft-gpu = { workspace = true }
+hetsika-testkit = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-frame = { workspace = true }
+hetsika-time = { workspace = true }
+hetsika-geom = { workspace = true }
+hetsika-media = { workspace = true }
+hetsika-project = { workspace = true }
+hetsika-render = { workspace = true }
+hetsika-gpu = { workspace = true }
 pollster = "0.4"
 wgpu = { version = "30", features = ["wgsl", "metal", "vulkan", "dx12", "gles"] }

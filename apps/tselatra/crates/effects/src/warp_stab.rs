@@ -2,10 +2,10 @@
 //!
 //! The analysis (feature tracking and per-frame motion fits) runs as a background job in the
 //! engine (`warp.analyze`) and is stored, as JSON, in the instance's hidden **Analysis**
-//! parameter ([`effectcraft_track::stabilize::WarpAnalysis`]); **Analysis Key** records what
+//! parameter ([`tselatra_track::stabilize::WarpAnalysis`]); **Analysis Key** records what
 //! the analysis was made from (the layer's source, in/out points and time mapping) so edits that
 //! change the frames invalidate it. Rendering derives the stabilization plan from the analysis
-//! and the Stabilization / Borders / Advanced settings ([`effectcraft_track::stabilize::plan`],
+//! and the Stabilization / Borders / Advanced settings ([`tselatra_track::stabilize::plan`],
 //! cached per analysis and settings) and warps each frame by its corrective transform:
 //!
 //! - **Stabilize Only** shows the moving frame edges, **Stabilize, Crop** crops to the region
@@ -18,7 +18,7 @@
 //! - **Show Track Points** draws the analysed background features.
 //!
 //! *Subspace Warp* warps each frame with a content-preserving mesh fitted to the analysis'
-//! subspace-smoothed feature trajectories ([`effectcraft_track::subspace`]); analyses made
+//! subspace-smoothed feature trajectories ([`tselatra_track::subspace`]); analyses made
 //! before trajectories were stored fall back to a perspective warp. *Rolling Shutter Ripple*
 //! picks the mesh: Automatic Reduction (12 × 8, stiffer) or Enhanced Reduction (twice the rows,
 //! softer), which follows the row-wise wobble of rolling-shutter shake more closely.
@@ -29,11 +29,11 @@ use std::collections::HashMap;
 use std::hash::Hasher;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
-use effectcraft_track::Homography;
-use effectcraft_track::stabilize::{Framing, Method, Plan, Ripple, StabResult, StabSettings, WarpAnalysis, plan};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
+use tselatra_track::Homography;
+use tselatra_track::stabilize::{Framing, Method, Plan, Ripple, StabResult, StabSettings, WarpAnalysis, plan};
 use rayon::prelude::*;
 
 use crate::{Buf, EffectCtx, EffectSpec, Params, num, p, popup, slider};
@@ -534,7 +534,7 @@ fn dot(img: &mut Image, c: [f64; 2], r: f64, col: Px) {
 mod tests {
     use super::*;
     use crate::EffectEnv;
-    use effectcraft_track::stabilize::FrameMotion;
+    use tselatra_track::stabilize::FrameMotion;
 
     fn analysis_json(n: usize, w: f64, h: f64, shift: impl Fn(usize) -> [f64; 2]) -> String {
         let mut a = WarpAnalysis { version: 1, start: 0.0, frame_duration: 1.0 / 25.0, size: [w, h], detailed: false, frames: vec![], tracks: vec![] };

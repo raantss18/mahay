@@ -17,7 +17,7 @@ fn session(artboards: usize) -> Session {
 fn print_ps(s: &mut Session, mut p: Value) -> (String, Value) {
     p["format"] = json!("postscript");
     let v = s.execute("file.print", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (String::from_utf8(bytes).unwrap(), v)
 }
 
@@ -78,7 +78,7 @@ fn a_ps_path_prints_postscript_and_pdf_stays_the_default() {
     assert!(bytes.starts_with(b"%!PS-Adobe-3.0"));
     let _ = std::fs::remove_file(&path);
     // The file reads back: the rectangle on the first page.
-    let back = vectorcraft_eps::import(&bytes).unwrap();
+    let back = tsipika_eps::import(&bytes).unwrap();
     assert!(!back.document.layers[0].children().unwrap().is_empty());
     for bad in [json!({"format": "ps2"}), json!({"format": "postscript", "level": 1}), json!({"format": "postscript", "flattenerPreset": "nope"})] {
         assert!(matches!(s.execute("file.print", &bad), Err(EngineError::BadParams { .. })), "{bad}");

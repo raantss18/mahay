@@ -1,8 +1,8 @@
 //! Effects on groups in the PDF export: a background blur shows through the outlines of the
 //! group's layers and matches the PNG; an inner shadow is an image cast from the layers' pixels.
 
-use figcraft_color::Color;
-use figcraft_doc::{Blur, Effect, EffectKind, NodeKind, Shadow};
+use endrika_color::Color;
+use endrika_doc::{Blur, Effect, EffectKind, NodeKind, Shadow};
 
 use crate::backdrop_tests::{pdf_vs_png, scene};
 use crate::draw::Exporter;
@@ -32,13 +32,13 @@ fn a_groups_inner_shadow_is_an_image_of_its_layers_shade() {
     d.reparent(pane, g, None).unwrap();
     let n = d.get_mut(pane).unwrap();
     n.effects.clear();
-    n.fills = vec![figcraft_color::Paint::solid(Color::WHITE)];
+    n.fills = vec![endrika_color::Paint::solid(Color::WHITE)];
     let shadow = Shadow { color: Color::BLACK, offset: (6.0, 6.0), radius: 0.0, ..Shadow::default() };
     d.get_mut(g).unwrap().effects = on(EffectKind::InnerShadow(shadow));
     let opts = PdfOptions::default();
     let mut ex = Exporter::new(&d, &opts);
-    let b = figcraft_render::export_bounds(&d, f).unwrap();
-    (ex.page_origin, ex.page_rect, ex.page_ids) = (figcraft_geom::Affine::translate((-b.x0, -b.y0)), b, vec![f]);
+    let b = endrika_render::export_bounds(&d, f).unwrap();
+    (ex.page_origin, ex.page_rect, ex.page_ids) = (endrika_geom::Affine::translate((-b.x0, -b.y0)), b, vec![f]);
     let sh = ex.shadows(g).unwrap();
     assert_eq!((sh.inner.len(), sh.drop.len()), (1, 0));
     // With the shadow the file holds one more image than without.

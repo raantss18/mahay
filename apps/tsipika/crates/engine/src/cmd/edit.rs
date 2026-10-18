@@ -4,8 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, RulerMode, Unit};
-use vectorcraft_geom::{Affine, Point, Vec2};
+use tsipika_doc::{Document, Node, NodeId, RulerMode, Unit};
+use tsipika_geom::{Affine, Point, Vec2};
 
 use super::clipboard::SwatchChoices;
 use super::*;
@@ -194,7 +194,7 @@ fn doc_node(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let doc = &s.doc()?.doc;
     let n = doc.node(id).ok_or(EngineError::NoNode(id))?;
-    opts.compound_member = doc.parent_of(id).and_then(|p| doc.node(p)).is_some_and(|p| matches!(p.kind, vectorcraft_doc::NodeKind::Compound { .. }));
+    opts.compound_member = doc.parent_of(id).and_then(|p| doc.node(p)).is_some_and(|p| matches!(p.kind, tsipika_doc::NodeKind::Compound { .. }));
     if summary { Ok(inspect::node_summary_opts(n, opts, &doc.symbol_boxes())) } else { Ok(serde_json::to_value(n).unwrap_or(Value::Null)) }
 }
 
@@ -441,7 +441,7 @@ fn clear_history(s: &mut Session, _: &Value) -> Result<Value> {
 }
 
 /// `selection` for an undo (redo) step, sharing that of `like`, the step beside it, when the same.
-fn shared_selection(selection: vectorcraft_doc::Selection, like: Option<&crate::HistoryEntry>) -> Arc<vectorcraft_doc::Selection> {
+fn shared_selection(selection: tsipika_doc::Selection, like: Option<&crate::HistoryEntry>) -> Arc<tsipika_doc::Selection> {
     match like {
         Some(l) if *l.selection == selection => l.selection.clone(),
         _ => Arc::new(selection),
@@ -480,7 +480,7 @@ fn roots_within(doc: &Document, ids: Vec<NodeId>, members: bool) -> Vec<NodeId> 
             let path = paths.get(&id);
             let parent = path.and_then(|p| p.split_last()).map(|(_, up)| up).filter(|up| !up.is_empty());
             match parent.and_then(|up| doc.node_at(up).map(|n| (up, n))) {
-                Some((up, n)) if matches!(n.kind, vectorcraft_doc::NodeKind::Compound { .. }) && !members => (n.id, Some(up.to_vec())),
+                Some((up, n)) if matches!(n.kind, tsipika_doc::NodeKind::Compound { .. }) && !members => (n.id, Some(up.to_vec())),
                 _ => (id, path.cloned()),
             }
         })
@@ -605,7 +605,7 @@ fn paste(s: &mut Session, p: &Value, mode: PasteMode) -> Result<Value> {
 /// Place the objects of `clip` (a library graphic) into the active document centred on `center`,
 /// as one undo step: their resources come along as a paste's do, a swatch whose name the document
 /// gives another colour merged into the document's.
-pub(crate) fn place_clip(s: &mut Session, clip: &Clipboard, center: vectorcraft_geom::Point) -> Result<Value> {
+pub(crate) fn place_clip(s: &mut Session, clip: &Clipboard, center: tsipika_geom::Point) -> Result<Value> {
     let choices = SwatchChoices::parse(PasteMode::Library.label(), &json!({}))?;
     paste_clip(s, &json!({ "center": [center.x, center.y] }), PasteMode::Library, clip, &choices)
 }
@@ -742,7 +742,7 @@ fn duplicate(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Duplicate `roots` directly above each original, transform the copies, select them
 /// ([`copy_above`]).
-pub(crate) fn duplicate_in(d: &mut Document, sel: &mut vectorcraft_doc::Selection, roots: &[NodeId], xf: Affine) -> Result<Vec<NodeId>> {
+pub(crate) fn duplicate_in(d: &mut Document, sel: &mut tsipika_doc::Selection, roots: &[NodeId], xf: Affine) -> Result<Vec<NodeId>> {
     let out = copy_above(d, roots, |_, _, c| c.transform(xf, true))?;
     sel.set(out.iter().copied());
     Ok(out)

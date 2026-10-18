@@ -5,10 +5,10 @@
 
 use egui::{Sense, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Intent, ProfileKind};
-use vectorcraft_render::proof;
+use tsipika_color::cms::{self, Intent, ProfileKind};
+use tsipika_render::proof;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, dim_label, menu_item};
 
@@ -22,13 +22,13 @@ const PROOF_TARGETS: [(&str, &str); 7] = [
     ("tritanopia", "Color blindness – Tritanopia-type"),
 ];
 
-fn run(app: &mut VectorcraftApp, id: &str, p: Value) {
+fn run(app: &mut TsipikaApp, id: &str, p: Value) {
     if let Err(e) = app.run(id, p) {
         app.ui.status = e;
     }
 }
 
-fn plates_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn plates_section(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let v = proof::view();
     let on = v.separations.is_some();
@@ -83,7 +83,7 @@ fn profile_dropdown(ui: &mut Ui, id: &str, current: &str, kind: ProfileKind, ext
     widgets::dropdown_names(ui, id, super::label_or_name(current, extra == Some(current)), &refs, 210.0).and_then(|i| names.get(i).cloned())
 }
 
-fn settings_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn settings_section(app: &mut TsipikaApp, ui: &mut Ui) {
     let st = cms::active_settings();
     widgets::section_header(ui, tl!("Color Settings"));
     ui.horizontal(|ui| {
@@ -130,7 +130,7 @@ fn settings_section(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
     });
     if let Some(d) = app.session.active() {
-        let (_, cmyk) = vectorcraft_engine::cmd::colormgmt::doc_profiles(&d.doc);
+        let (_, cmyk) = tsipika_engine::cmd::colormgmt::doc_profiles(&d.doc);
         const WORKING: &str = "Working CMYK (don't tag)";
         ui.horizontal(|ui| {
             ui.label(tl!("Assign:"));
@@ -142,7 +142,7 @@ fn settings_section(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-fn proof_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn proof_section(app: &mut TsipikaApp, ui: &mut Ui) {
     let v = proof::view();
     widgets::section_header(ui, tl!("Proof Setup"));
     let cur = v.setup.target.id();
@@ -165,7 +165,7 @@ fn proof_section(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     plates_section(app, ui);
     widgets::divider(ui);
     proof_section(app, ui);
@@ -173,7 +173,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     settings_section(app, ui);
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let v = proof::view();
     if menu_item(ui, tl!("Overprint Preview"), true, v.overprint) {
         run(app, "view.overprintPreview", json!({}));
@@ -190,13 +190,13 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// The panel's Proof Setup list offers the targets of View › Proof Setup, in the same order and
     /// with the same labels, and each one is a target `view.proofSetup` accepts.
     #[test]
     fn proof_targets_match_the_proof_setup_menu() {
-        let app = VectorcraftApp::new(Session::new(), Default::default());
+        let app = TsipikaApp::new(Session::new(), Default::default());
         let menu: Vec<(String, String)> = crate::menus::menu_entries(&app)
             .into_iter()
             .filter(|e| e.path == ["View", "Proof Setup"] && e.command.as_deref() == Some("view.proofSetup"))

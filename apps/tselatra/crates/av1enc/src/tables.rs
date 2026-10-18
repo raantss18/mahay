@@ -1,4 +1,4 @@
-// Tables mirrored from filmcraft-av1's spec_tables.rs, which extracts them from the AV1 Bitstream &
+// Tables mirrored from hetsika-av1's spec_tables.rs, which extracts them from the AV1 Bitstream &
 // Decoding Process Specification v1.0.0 with Errata 1. Only the tables this encoder uses are kept.
 #![allow(dead_code, clippy::unreadable_literal)]
 

@@ -1,4 +1,4 @@
-//! SoundCraft audio file I/O.
+//! Feo audio file I/O.
 //!
 //! Bytes in, bytes out (no filesystem access, so the crate also builds for `wasm32`):
 //!

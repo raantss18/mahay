@@ -91,7 +91,7 @@ pub fn helper_tools(has_ui: bool) -> Vec<Value> {
         tool(
             "command_run",
             "Run command",
-            "Run any LightCraft command by id with JSON params (see command_list for ids and parameter docs), e.g. {id: \"photo.rate\", params: {rating: 4}}.",
+            "Run any Hazavana command by id with JSON params (see command_list for ids and parameter docs), e.g. {id: \"photo.rate\", params: {rating: 4}}.",
             json!({"id": {"type": "string", "description": "Command id"}, "params": {"type": "object", "description": "Command parameters", "additionalProperties": true}}),
             &["id"],
         ),
@@ -133,7 +133,7 @@ pub fn helper_tools(has_ui: bool) -> Vec<Value> {
         tool(
             "run_command",
             "Run command",
-            "Run any LightCraft command by id with JSON params (see list_commands for ids and parameter docs), e.g. {command: \"photo.rate\", params: {rating: 4}}.",
+            "Run any Hazavana command by id with JSON params (see list_commands for ids and parameter docs), e.g. {command: \"photo.rate\", params: {rating: 4}}.",
             json!({"command": {"type": "string"}, "params": {"type": "object", "description": "Command parameters", "additionalProperties": true}}),
             &["command"],
         ),
@@ -264,7 +264,7 @@ pub fn helper_tools(has_ui: bool) -> Vec<Value> {
                 "bitDepth": {"type": "integer", "enum": [8, 10, 16, 32], "description": "Bits per channel: PNG 8|16 (default 8), TIFF 8|16|32 (default 16; 32 = linear float with a linear profile), PSD 8|16 (default 16), AVIF 8|10, JPEG XL 8|16; JPEG/WebP are 8-bit"},
                 "hdr": {"type": "boolean", "description": "HDR output for photos edited in HDR (develop.hdr): JPEG as an ISO 21496-1 gain map JPEG, AVIF as 10-bit, PNG and JPEG XL as 16-bit Rec. 2020 PQ, 32-bit TIFF with highlights above 1; other formats and SDR edits export as usual"},
                 "hdrTransfer": {"type": "string", "enum": ["pq", "hlg"], "description": "Transfer curve of HDR AVIF output (default pq): pq = SMPTE ST 2084, hlg = ITU-R BT.2100 hybrid log-gamma"},
-                "addToPhotos": {"type": "boolean", "description": "macOS: after writing the files, add them to Apple Photos (Apple Events to Photos' import; the first time, macOS asks the user to allow LightCraft to control Photos). The outcome is `applePhotos` in the result, the import job: {job, running, requested, album, imported?, ids?, warning?, error?}; headless waits for Photos, the desktop app returns the running job (outcome: command export.photosImports {job}). The files are written either way. An error before exporting on other platforms, or while another import is reserved or running"},
+                "addToPhotos": {"type": "boolean", "description": "macOS: after writing the files, add them to Apple Photos (Apple Events to Photos' import; the first time, macOS asks the user to allow Hazavana to control Photos). The outcome is `applePhotos` in the result, the import job: {job, running, requested, album, imported?, ids?, warning?, error?}; headless waits for Photos, the desktop app returns the running job (outcome: command export.photosImports {job}). The files are written either way. An error before exporting on other platforms, or while another import is reserved or running"},
                 "photosAlbum": {"type": "string", "description": "With addToPhotos: the album to add them to, a top-level Photos album of exactly this name, made when missing (several of that name: nothing is added); default none"},
                 "watermark": {"description": "Text, or {text, vertical (boolean; defaults to false: upright columns right to left), size (text height as a fraction of the short edge, 0.005..0.5; default 0.035), opacity (0..1; default 0.7), anchor (topLeft|top|topRight|left|center|right|bottomLeft|bottom|bottomRight), insetX (margin from the left or right edge as a fraction of the short edge, 0..0.4; default 0.025), insetY (margin from the top or bottom edge, same units), inset (sets both), rotation (degrees clockwise: 0|90|180|270; default 0; the watermark is sized before it is turned), color [r,g,b] (sRGB 0..255), shadow (boolean), image (path of a graphic drawn instead of the text), imageWidth (fraction of the photo's width, 0.01..1; default 0.2)}. Unknown keys and out-of-range sizes are errors"}
             }),
@@ -279,7 +279,7 @@ pub fn helper_tools(has_ui: bool) -> Vec<Value> {
             tool(
                 "screenshot",
                 "Screenshot",
-                "Capture the LightCraft window (after pending renders finish) and return it as an image.",
+                "Capture the Hazavana window (after pending renders finish) and return it as an image.",
                 json!({"maxSize": {"type": "integer", "description": "Downscale so the long edge is at most this (default 1600)"}, "format": {"type": "string", "enum": ["png", "jpeg"]}, "path": {"type": "string", "description": "Also save the screenshot here"}}),
                 &[],
             ),
@@ -439,7 +439,7 @@ fn activate(b: &mut dyn Backend, args: &Value) -> Result<(), String> {
 
 fn temp_path(tag: &str) -> std::path::PathBuf {
     static N: AtomicU64 = AtomicU64::new(0);
-    std::env::temp_dir().join(format!("lightcraft-mcp-{}-{}-{tag}.png", std::process::id(), N.fetch_add(1, Ordering::Relaxed)))
+    std::env::temp_dir().join(format!("hazavana-mcp-{}-{}-{tag}.png", std::process::id(), N.fetch_add(1, Ordering::Relaxed)))
 }
 
 /// Read a PNG the backend wrote, optionally downscale / re-encode as JPEG, and wrap it as image
@@ -455,10 +455,10 @@ fn image_result(file: &std::path::Path, max: Option<u32>, format: &str, save_to:
     let too_big = max.is_some_and(|m| w.max(h) > m);
     let (bytes, w, h) = if jpeg || too_big {
         let opts = match max {
-            Some(m) => lightcraft_codecs::DecodeOptions::fit(m, m),
-            None => lightcraft_codecs::DecodeOptions::default(),
+            Some(m) => hazavana_codecs::DecodeOptions::fit(m, m),
+            None => hazavana_codecs::DecodeOptions::default(),
         };
-        let d = match lightcraft_codecs::decode(&bytes, opts) {
+        let d = match hazavana_codecs::decode(&bytes, opts) {
             Ok(d) => d,
             Err(e) => return ToolResult::error(format!("cannot decode rendered image: {e}")),
         };
@@ -471,7 +471,7 @@ fn image_result(file: &std::path::Path, max: Option<u32>, format: &str, save_to:
         (bytes, w, h)
     };
     if let Some(p) = save_to
-        && let Err(e) = lightcraft_engine::export::write_file(p, &bytes)
+        && let Err(e) = hazavana_engine::export::write_file(p, &bytes)
     {
         return ToolResult::error(e);
     }

@@ -1,7 +1,7 @@
 //! Arrange: align, distribute, tidy, z-order, flips, rotations and numeric transforms.
 
-use figcraft_doc::*;
-use figcraft_geom::{Affine, Point, Rect};
+use endrika_doc::*;
+use endrika_geom::{Affine, Point, Rect};
 use serde_json::{Value, json};
 
 use super::edit::{roots, z_sorted};
@@ -147,7 +147,7 @@ pub fn move_world(doc: &mut Document, id: NodeId, dx: f64, dy: f64) -> Result<()
 
 pub fn rotate_world(doc: &mut Document, id: NodeId, pivot: Point, deg: f64) -> Result<()> {
     let world = doc.world_transform(id);
-    let nw = figcraft_geom::rotate_about(world, pivot, deg);
+    let nw = endrika_geom::rotate_about(world, pivot, deg);
     doc.set_world_transform(id, nw)?;
     Ok(())
 }
@@ -372,7 +372,7 @@ fn flip(s: &mut Session, p: &Value, horizontal: bool) -> Result<Value> {
 }
 
 fn rotate_by(s: &mut Session, p: &Value, deg: f64) -> Result<Value> {
-    if let Some(r) = crate::vectoredit::transform::transform_in_edit_mode(s, p, |b| figcraft_geom::rotate_about(Affine::IDENTITY, b.center(), deg)) {
+    if let Some(r) = crate::vectoredit::transform::transform_in_edit_mode(s, p, |b| endrika_geom::rotate_about(Affine::IDENTITY, b.center(), deg)) {
         return r;
     }
     let ids = req_targets("rotate", s, p)?;
@@ -397,10 +397,10 @@ fn turn_pivot(s: &Session, ids: &[NodeId]) -> Result<Option<Point>> {
 pub fn scale_node(doc: &mut Document, id: NodeId, k: f64) -> Result<()> {
     let k = if k.is_finite() && k > 0.0 { k } else { return Ok(()) };
     let sub = doc.subtree(id);
-    let tiles = |paints: &mut Vec<figcraft_color::Paint>| {
+    let tiles = |paints: &mut Vec<endrika_color::Paint>| {
         for p in paints {
-            if let figcraft_color::PaintKind::Image(img) = &mut p.kind
-                && img.scale_mode == figcraft_color::ImageScaleMode::Tile
+            if let endrika_color::PaintKind::Image(img) = &mut p.kind
+                && img.scale_mode == endrika_color::ImageScaleMode::Tile
             {
                 img.scale *= k;
             }

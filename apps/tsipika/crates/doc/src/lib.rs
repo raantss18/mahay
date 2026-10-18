@@ -1,4 +1,4 @@
-//! VectorCraft document model: artboards, layers and objects, appearance, swatches (pure data + serde).
+//! Tsipika document model: artboards, layers and objects, appearance, swatches (pure data + serde).
 //!
 //! Documents are persistent trees: children are `Arc<Node>`, and edits go through
 //! [`Document::node_mut`], which clones only the nodes on the path from the root to the edited node.
@@ -123,12 +123,12 @@ pub use text::{
 };
 pub use trace::TraceView;
 pub use variables::{DataSet, DataValue, Variable, VariableKind, Variables};
-pub use vectorcraft_color as color;
-pub use vectorcraft_geom as geom;
+pub use tsipika_color as color;
+pub use tsipika_geom as geom;
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_color::{Swatch, SwatchGroup};
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use tsipika_color::{Swatch, SwatchGroup};
+use tsipika_geom::{Affine, Point, Rect, Vec2};
 
 /// Coordinates beyond this many points exceed the supported document range.
 pub const MAX_COORD: f64 = 4.0e6;
@@ -403,10 +403,10 @@ pub enum ColorMode {
 
 impl ColorMode {
     /// The colour model new colours take in a document of this mode.
-    pub fn model(self) -> vectorcraft_color::cms::Model {
+    pub fn model(self) -> tsipika_color::cms::Model {
         match self {
-            ColorMode::Rgb => vectorcraft_color::cms::Model::Rgb,
-            ColorMode::Cmyk => vectorcraft_color::cms::Model::Cmyk,
+            ColorMode::Rgb => tsipika_color::cms::Model::Rgb,
+            ColorMode::Cmyk => tsipika_color::cms::Model::Cmyk,
         }
     }
 }
@@ -518,7 +518,7 @@ pub struct GraphicStyle {
     #[serde(default = "one", skip_serializing_if = "skip::is_one")]
     pub opacity: f32,
     #[serde(default, skip_serializing_if = "skip::is_default")]
-    pub blend: vectorcraft_color::BlendMode,
+    pub blend: tsipika_color::BlendMode,
     #[serde(default, skip_serializing_if = "skip::is_default")]
     pub isolate: bool,
     #[serde(default, skip_serializing_if = "skip::is_default")]
@@ -758,7 +758,7 @@ pub struct Document {
     /// them (on, the default); off, auto slices cover the art and the slices.
     #[serde(default = "yes", skip_serializing_if = "skip::is_true")]
     pub slices_clip_to_artboard: bool,
-    /// File → Print: the print settings saved with the document (`vectorcraft_pdf::PrintSettings`
+    /// File → Print: the print settings saved with the document (`tsipika_pdf::PrintSettings`
     /// as JSON: the print engine sits above this crate); `None` until they are set up.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub print_setup: Option<serde_json::Value>,
@@ -847,7 +847,7 @@ impl Document {
 
     /// [`Document::new`] in colour `mode`, with that mode's default swatches.
     pub fn new_with_mode(width: f64, height: f64, mode: ColorMode) -> Self {
-        let (swatches, swatch_groups) = vectorcraft_color::default_swatches(mode.model());
+        let (swatches, swatch_groups) = tsipika_color::default_swatches(mode.model());
         let mut d = Self {
             version: FORMAT_VERSION,
             title: "Untitled-1".into(),
@@ -1367,13 +1367,13 @@ impl Document {
     pub fn bounds_of(&self, ids: &[NodeId], visual: bool) -> Option<Rect> {
         let symbols = self.symbol_boxes();
         ids.iter().filter_map(|id| self.node(*id)).fold(None, |acc, n| {
-            vectorcraft_geom::union_opt(acc, if visual { n.visual_bounds_with(&symbols) } else { n.geometric_bounds_with(&symbols) })
+            tsipika_geom::union_opt(acc, if visual { n.visual_bounds_with(&symbols) } else { n.geometric_bounds_with(&symbols) })
         })
     }
     /// Visual bounds of all art, with symbol instances measured by their art.
     pub fn art_bounds(&self) -> Option<Rect> {
         let symbols = self.symbol_boxes();
-        self.layers.iter().fold(None, |acc, l| vectorcraft_geom::union_opt(acc, l.visual_bounds_with(&symbols)))
+        self.layers.iter().fold(None, |acc, l| tsipika_geom::union_opt(acc, l.visual_bounds_with(&symbols)))
     }
     /// Artboard index containing point `p` (topmost = last), its edges included
     /// ([`Document::artboard_holding`]).
@@ -1758,7 +1758,7 @@ impl Document {
 }
 
 fn default_graphic_styles() -> Vec<GraphicStyle> {
-    use vectorcraft_color::{Color, Paint};
+    use tsipika_color::{Color, Paint};
     let solid = |hex| Paint::solid(Color::from_hex(hex).unwrap_or(Color::BLACK));
     [
         GraphicStyle::new(DEFAULT_GRAPHIC_STYLE, Appearance::default_art()),
@@ -1801,7 +1801,7 @@ impl Document {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_geom::shapes;
+    use tsipika_geom::shapes;
 
     fn doc_with_rects() -> (Document, NodeId, NodeId) {
         let mut d = Document::new(612.0, 792.0);

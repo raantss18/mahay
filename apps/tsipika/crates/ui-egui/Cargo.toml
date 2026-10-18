@@ -1,31 +1,31 @@
 [package]
-name = "vectorcraft-ui-egui"
+name = "tsipika-ui-egui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft egui frontend (menus, panels, tools and canvas); swappable — nothing below depends on it"
+description = "Tsipika egui frontend (menus, panels, tools and canvas); swappable — nothing below depends on it"
 
 [lints]
 workspace = true
 
 [dependencies]
-craft-ui = { workspace = true }
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-render = { workspace = true }
-vectorcraft-text = { workspace = true }
-vectorcraft-tools = { workspace = true }
-vectorcraft-engine = { workspace = true }
-vectorcraft-svg = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-three-d = { workspace = true }
-vectorcraft-plugins = { workspace = true }
-vectorcraft-pdf = { workspace = true }
-vectorcraft-cad = { workspace = true }
-vectorcraft-eps = { workspace = true }
-vectorcraft-format = { workspace = true }
+mahay-ui = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-doc = { workspace = true }
+tsipika-brush = { workspace = true }
+tsipika-render = { workspace = true }
+tsipika-text = { workspace = true }
+tsipika-tools = { workspace = true }
+tsipika-engine = { workspace = true }
+tsipika-svg = { workspace = true }
+tsipika-effects = { workspace = true }
+tsipika-three-d = { workspace = true }
+tsipika-plugins = { workspace = true }
+tsipika-pdf = { workspace = true }
+tsipika-cad = { workspace = true }
+tsipika-eps = { workspace = true }
+tsipika-format = { workspace = true }
 egui = { workspace = true }
 egui_extras = { workspace = true }
 image = { workspace = true }
@@ -40,9 +40,9 @@ web-time = "1"
 
 [dev-dependencies]
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+tsipika-text = { workspace = true, features = ["test-fonts"] }
 wat = { workspace = true }
 
 [build-dependencies]

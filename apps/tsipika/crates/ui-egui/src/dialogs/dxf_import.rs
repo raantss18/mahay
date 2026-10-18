@@ -11,13 +11,13 @@
 //! lineweight, centring and layer choices for the next one; errors keep the dialog open.
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::fileio;
+use tsipika_engine::cmd::fileio;
 
 use super::DialogSpec;
 use super::document_setup::{LABEL, check, choice};
 use super::import_pdf::{DialogFile, other_place_params, place_source, preview_texture, show_preview, with_file};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, io, widgets};
+use crate::{TsipikaApp, io, widgets};
 
 pub const KIND: &str = "dxfImport";
 
@@ -36,11 +36,11 @@ const REMEMBERED: [&str; 4] = ["fit", "scaleLineweights", "center", "mergeLayers
 
 /// Open `bytes` (or place them with the `file.place` params `place`) through the dialog when they
 /// are a DXF drawing; false when they aren't (or can't be read: the loader then says why).
-pub fn offer(app: &mut VectorcraftApp, name: &str, bytes: &[u8], path: Option<String>, place: Option<&Value>) -> bool {
+pub fn offer(app: &mut TsipikaApp, name: &str, bytes: &[u8], path: Option<String>, place: Option<&Value>) -> bool {
     if fileio::detect(name, bytes).is_none_or(|f| f.id != "dxf") {
         return false;
     }
-    let Ok(info) = vectorcraft_cad::info(bytes) else { return false };
+    let Ok(info) = tsipika_cad::info(bytes) else { return false };
     app.ui.dialog_file = Some(DialogFile::new(bytes.to_vec()));
     let mut fields = json!({
         "mode": if place.is_some() { "place" } else { "open" },
@@ -75,7 +75,7 @@ pub fn offer(app: &mut VectorcraftApp, name: &str, bytes: &[u8], path: Option<St
 
 /// `file.place` with params `p` asks first (true) when they name a `.dxf` drawing and no `dxf`
 /// options.
-pub fn offer_place(app: &mut VectorcraftApp, p: &Value) -> bool {
+pub fn offer_place(app: &mut TsipikaApp, p: &Value) -> bool {
     let named = p.get("path").or_else(|| p.get("name")).and_then(Value::as_str).map(fileio::extension);
     if p.get("dxf").is_some() || named.as_deref() != Some("dxf") {
         return false;
@@ -102,7 +102,7 @@ fn options(d: &Dialog) -> Value {
 }
 
 /// OK: open or place the drawing with the options.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let file = app.ui.dialog_file.clone().ok_or("the drawing is no longer loaded")?;
     let dxf = options(d);
     app.ui.dxf_import = Value::Object(REMEMBERED.iter().map(|k| (k.to_string(), dxf[*k].clone())).collect());
@@ -129,7 +129,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     }
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     ui.horizontal_top(|ui| {
         ui.vertical(|ui| {
             show_preview(ui, preview(app, ui.ctx(), d).as_ref(), PREVIEW);
@@ -160,19 +160,19 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// The chosen layout fitted to the preview, rendered once per drawing and layout.
-fn preview(app: &mut VectorcraftApp, ctx: &egui::Context, d: &Dialog) -> Option<egui::TextureHandle> {
+fn preview(app: &mut TsipikaApp, ctx: &egui::Context, d: &Dialog) -> Option<egui::TextureHandle> {
     let file = app.ui.dialog_file.clone()?;
     let layout = d.str("layout");
     let key = egui::Id::new(("dxf-preview", file.token, layout.as_str()));
-    let o = vectorcraft_cad::ImportOptions { layout: Some(layout.clone()), fit: true, ..Default::default() };
+    let o = tsipika_cad::ImportOptions { layout: Some(layout.clone()), fit: true, ..Default::default() };
     // A layout that can't be read shows an empty preview (and isn't read again).
-    preview_texture(app, ctx, key, "dxf-preview", PREVIEW, || vectorcraft_cad::import(&file.bytes, &o).ok().map(|r| r.document))
+    preview_texture(app, ctx, key, "dxf-preview", PREVIEW, || tsipika_cad::import(&file.bytes, &o).ok().map(|r| r.document))
 }
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_engine::Session;
-    use vectorcraft_engine::doc::NodeKind;
+    use tsipika_engine::Session;
+    use tsipika_engine::doc::NodeKind;
 
     use super::*;
 
@@ -203,17 +203,17 @@ mod tests {
         pairs.iter().map(|(c, v)| format!("{c:>3}\n{v}\n")).collect::<String>().into_bytes()
     }
 
-    fn frame(app: &mut VectorcraftApp) -> String {
+    fn frame(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
-    fn set(app: &mut VectorcraftApp, k: &str, v: Value) {
+    fn set(app: &mut TsipikaApp, k: &str, v: Value) {
         app.ui.dialog.as_mut().unwrap().fields.insert(k.into(), v);
     }
 
     #[test]
     fn opening_a_drawing_asks_for_the_import_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         io::open_bytes(&mut app, "plan.dxf", &drawing(), None).unwrap();
         let d = app.ui.dialog.as_ref().unwrap();
         assert_eq!((d.kind.as_str(), d.str("mode"), d.str("layout"), d.str("unit")), (KIND, "open".into(), "Model".into(), "Millimeters".into()));
@@ -254,7 +254,7 @@ mod tests {
 
     #[test]
     fn bad_options_keep_the_dialog_open() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         io::open_bytes(&mut app, "plan.dxf", &drawing(), None).unwrap();
         set(&mut app, "layout", json!("Sheet 9"));
         assert!(super::super::confirm(&mut app).is_err());
@@ -269,9 +269,9 @@ mod tests {
 
     #[test]
     fn placing_a_drawing_asks_then_places_one_group() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 600, "height": 400})).unwrap();
-        let p = json!({"name": "plan.dxf", "dataBase64": vectorcraft_format::base64_encode(&drawing()), "template": false});
+        let p = json!({"name": "plan.dxf", "dataBase64": tsipika_format::base64_encode(&drawing()), "template": false});
         crate::place::run(&mut app, &p).unwrap();
         let d = app.ui.dialog.as_ref().unwrap();
         assert_eq!((d.kind.as_str(), d.str("mode")), (KIND, "place".into()));

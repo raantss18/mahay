@@ -5,7 +5,7 @@
 //! while the tool is active (as View → Show Print Tiling does).
 
 use serde_json::json;
-use vectorcraft_geom::{Point, Rect};
+use tsipika_geom::{Point, Rect};
 
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
 
@@ -99,7 +99,7 @@ impl Tool for PrintTilingTool {
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     use super::*;
     use crate::testutil::{cx, doc_with_rect, paint};

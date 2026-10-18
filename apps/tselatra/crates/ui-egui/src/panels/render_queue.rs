@@ -12,17 +12,17 @@
 //! key frame interval, Make Template) open a form that runs the same command.
 
 use crate::i18n::{tr, tr_args};
-use effectcraft_engine::project::render_queue::{
+use tselatra_engine::project::render_queue::{
     AlphaMode, AudioFormat, AudioOutput, Channels, ColorDepth, CurrentOrOff, EffectsMode, FieldRender, OpusApplication, OutputFormat, PostRenderAction,
     ProResProfile, Pulldown, RESIZE_PRESETS, RenderLog, RenderQuality, RenderQueueItem, RenderStatus, ResizeQuality, SwitchOverride, TimeSpan, WebmVideoCodec,
 };
-use effectcraft_engine::project::render_templates::RenderTemplates;
+use tselatra_engine::project::render_templates::RenderTemplates;
 use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Value, json};
 
 use crate::theme::Tokens;
 use crate::widgets::check_label as mark;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 const TOP_H: f32 = 74.0;
 const HEAD_H: f32 = 22.0;
@@ -78,7 +78,7 @@ fn settings_menu(it: &RenderQueueItem, templates: &RenderTemplates) -> Vec<(Stri
         v.push((mark(s.resolution_label() == l, &format!("Resolution: {l}")), json!({"resolution": k})));
     }
     v.push(("-".into(), Value::Null));
-    for (u, k) in effectcraft_engine::project::render_queue::ProxyUse::ALL.iter().zip(["current", "all", "comp", "none"]) {
+    for (u, k) in tselatra_engine::project::render_queue::ProxyUse::ALL.iter().zip(["current", "all", "comp", "none"]) {
         v.push((mark(s.proxy_use == *u, &tr_args("Proxy Use: {}", &[&(u.label())])), json!({"proxyUse": k})));
     }
     for (e, k) in EffectsMode::ALL.iter().zip(["current", "allOn", "allOff"]) {
@@ -255,8 +255,8 @@ fn output_menu(it: &RenderQueueItem, available: &[OutputFormat], templates: &Ren
 }
 
 /// HEVC / AV1 options: profile, level, rate control (bitrate or constant quality), key frames.
-fn codec_menu(o: &effectcraft_engine::project::render_queue::OutputModule, v: &mut Vec<(String, Value)>) {
-    use effectcraft_engine::project::render_queue::{CodecProfile, RateControlMode, VideoCodecOptions};
+fn codec_menu(o: &tselatra_engine::project::render_queue::OutputModule, v: &mut Vec<(String, Value)>) {
+    use tselatra_engine::project::render_queue::{CodecProfile, RateControlMode, VideoCodecOptions};
     let c = &o.codec;
     v.push(("-".into(), Value::Null));
     for p in CodecProfile::ALL {
@@ -298,7 +298,7 @@ fn codec_menu(o: &effectcraft_engine::project::render_queue::OutputModule, v: &m
 }
 
 /// Open the form behind a `{"form": …}` menu entry.
-fn open_menu_form(app: &mut EffectcraftApp, it: &RenderQueueItem, form: &str) {
+fn open_menu_form(app: &mut TselatraApp, it: &RenderQueueItem, form: &str) {
     use crate::panels::forms::{Field, form as open};
     let id = it.id;
     let o = &it.output;
@@ -399,11 +399,11 @@ fn output_to_menu(it: &RenderQueueItem) -> Vec<(String, Value)> {
 /// Output To's save dialog, as After Effects' Output Movie To: it opens at the current output
 /// (folder and name, which ends in the format's extension) and offers that extension. `None`
 /// when the host has no save dialog; `Some(None)` when the dialog was cancelled.
-fn pick_output(app: &EffectcraftApp, it: &RenderQueueItem) -> Option<Option<String>> {
+fn pick_output(app: &TselatraApp, it: &RenderQueueItem) -> Option<Option<String>> {
     app.hooks.save_dialog(&app.session.resolve_output(it).unwrap_or_default())
 }
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let queue: Vec<RenderQueueItem> = app.session.project.render_queue.clone();
@@ -414,10 +414,10 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     app.auto.add("renderQueue.drop", rect, "Drop compositions to queue");
     if !rendering
         && let Some(crate::panels::DragPayload::Item(id)) = egui::DragAndDrop::payload::<crate::panels::DragPayload>(ui.ctx()).as_deref()
-        && app.session.project.comp(effectcraft_engine::project::ItemId(*id)).is_some()
+        && app.session.project.comp(tselatra_engine::project::ItemId(*id)).is_some()
         && ui.input(|i| i.pointer.hover_pos()).is_some_and(|pos| rect.contains(pos))
     {
-        let ids: Vec<u64> = if app.session.state.project_selection.contains(&effectcraft_engine::project::ItemId(*id)) {
+        let ids: Vec<u64> = if app.session.state.project_selection.contains(&tselatra_engine::project::ItemId(*id)) {
             app.session.state.project_selection.iter().filter(|i| app.session.project.comp(**i).is_some()).map(|i| i.0).collect()
         } else {
             vec![*id]

@@ -6,7 +6,7 @@
 //! start a selection window in the drawing). What the overlays do goes through commands:
 //! `zoom.extents` (Top face, Home), `ui.toggle.viewcube`, `ui.toggle.ucsicon`.
 //!
-//! CADCraft's model view is a 2D plan view of the World Coordinate System: there is no view
+//! Drafitra's model view is a 2D plan view of the World Coordinate System: there is no view
 //! twist, no 3D view direction and no user coordinate system yet, so the compass ring explains
 //! that instead of rotating, and the WCS menu lists the only coordinate system there is.
 
@@ -183,7 +183,7 @@ pub fn ucs_icon(app: &mut CadApp, ui: &mut egui::Ui, canvas: Rect) {
 fn ucs_menu(app: &mut CadApp, popup: egui::Popup<'_>) {
     let mut hide = false;
     popup.show(|ui| {
-        ui.radio(true, "World (WCS)").on_hover_text("CADCraft draws in the World Coordinate System; user coordinate systems aren't available yet.");
+        ui.radio(true, "World (WCS)").on_hover_text("Drafitra draws in the World Coordinate System; user coordinate systems aren't available yet.");
         ui.separator();
         if ui.button("Hide UCS Icon").clicked() {
             hide = true;
@@ -198,7 +198,7 @@ fn ucs_menu(app: &mut CadApp, popup: egui::Popup<'_>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_engine::Session;
+    use drafitra_engine::Session;
 
     /// The app with the sample drawing, laid out once in a 1400×900 window.
     fn app_and_ctx() -> (CadApp, egui::Context) {

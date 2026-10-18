@@ -11,8 +11,8 @@
 //! one command on release.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
-use vectorcraft_geom::Point;
+use tsipika_doc::NodeId;
+use tsipika_geom::Point;
 
 use super::{FEEDBACK, points_json, polyline};
 use crate::guides::DrawSnap;
@@ -378,7 +378,7 @@ impl Tool for GestureTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     fn drag(t: &mut GestureTool, cx: &ToolContext, pts: &[(f64, f64)], m: Mods) -> Vec<Vec<Action>> {
         let mut v = vec![t.pointer(cx, &PointerEvent::new(PointerKind::Down, pts[0].0, pts[0].1))];

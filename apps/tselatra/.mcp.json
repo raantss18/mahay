@@ -1,12 +1,12 @@
 {
   "mcpServers": {
-    "effectcraft": {
+    "tselatra": {
       "command": "cargo",
-      "args": ["run", "--quiet", "--release", "-p", "effectcraft-cli", "--", "mcp", "--demo"]
+      "args": ["run", "--quiet", "--release", "-p", "tselatra-cli", "--", "mcp", "--demo"]
     },
-    "effectcraft-app": {
+    "tselatra-app": {
       "command": "cargo",
-      "args": ["run", "--quiet", "--release", "-p", "effectcraft-cli", "--", "mcp", "--bridge", "9877"]
+      "args": ["run", "--quiet", "--release", "-p", "tselatra-cli", "--", "mcp", "--bridge", "9877"]
     }
   }
 }

@@ -2,7 +2,7 @@
 //! sidebar, then figures, charts and a table placed on a grid auto layout. The charts are drawn
 //! from vectors, rectangles and arcs that follow their plot's size.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use super::glyphs::{self, Glyph};

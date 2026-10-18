@@ -1,8 +1,8 @@
 //! Several people creating styles, variables, collections, modes and comments at once with real
 //! commands: each gets ids from its own client space, so nothing created is overwritten.
 
-use figcraft_collab::sim::Sim;
-use figcraft_collab::{Change, Entry};
+use endrika_collab::sim::Sim;
+use endrika_collab::{Change, Entry};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -83,7 +83,7 @@ fn a_style_made_in_a_session_syncs_as_an_entry_of_the_creators_space() {
     let r = s.execute("style.create", &json!({"type": "paint", "name": "Mine", "value": "#FF0000"})).unwrap();
     let sid = r["id"].as_str().unwrap().to_string();
     let doc = s.doc().unwrap().clone();
-    let batch = figcraft_collab::diff(sim.clients()[1].view(), &doc).unwrap();
+    let batch = endrika_collab::diff(sim.clients()[1].view(), &doc).unwrap();
     let entry =
         batch.changes.iter().find_map(|c| if let Change::Put { entry: e @ Entry::Style(_), .. } = c { Some(e.clone()) } else { None }).unwrap();
     assert_eq!(entry, Entry::Style(sid));

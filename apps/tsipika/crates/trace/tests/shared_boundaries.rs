@@ -21,7 +21,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use kurbo::{BezPath, CubicBez, ParamCurve, ParamCurveExtrema, ParamCurveNearest, Point, Rect, Shape};
-use vectorcraft_trace::{Method, Mode, Raster, TraceParams, TraceResult, trace};
+use tsipika_trace::{Method, Mode, Raster, TraceParams, TraceResult, trace};
 
 /// How far (px) a point of one path's outline may lie from its neighbour's outline.
 const TOL: f64 = 1e-3;
@@ -152,7 +152,7 @@ impl Seams {
     }
 }
 
-fn segments(p: &vectorcraft_trace::TracedPath) -> Vec<CubicBez> {
+fn segments(p: &tsipika_trace::TracedPath) -> Vec<CubicBez> {
     p.path.subpaths.iter().flat_map(|sp| (0..sp.segment_count()).map(move |i| sp.segment(i))).collect()
 }
 

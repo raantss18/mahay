@@ -2,11 +2,11 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** trivial (delay compensation includes the master faders' inserts (#351); previously minor: bounces stream to disk) · **Target:** Avid Pro Tools Ultimate 2026.4.1
 
-SoundCraft is a Cargo workspace of small crates with enforced layering (`cargo xtask layers`).
+Feo is a Cargo workspace of small crates with enforced layering (`cargo xtask layers`).
 Nothing below the UI knows about egui, so the interface can be replaced.
 
-The UI package pins `craft-ui` for common icon-button and track record-enable interactions.
-SoundCraft supplies each state's colors, border, radius and icon painter; selection and command
+The UI package pins `mahay-ui` for common icon-button and track record-enable interactions.
+Feo supplies each state's colors, border, radius and icon painter; selection and command
 dispatch remain in the toolbar and track controls. The single-shape frame option preserves the
 existing fill/border blending when controls are disabled. Specialized transport Play/Stop/Record styling,
 nonlinear meters, faders, pan gestures, fonts and the live theme resolver remain local. Shared adapters read the current palette. The UI
@@ -21,12 +21,12 @@ L3  mix                                         (the mix engine)
 L4  engine      playback                        (commands, undo, I/O · audio devices)
 L5  automation                                  (MCP server, control-channel client)
 L6  ui-egui                                     (the user interface)
-    apps: soundcraft (desktop) · soundcraft-cli · soundcraft-web (wasm)
+    apps: feo (desktop) · feo-cli · feo-web (wasm)
 ```
 
 ## The document
 
-`soundcraft_model::Session` is plain data (serde): tracks with playlists of clips, mixer state
+`feo_model::Session` is plain data (serde): tracks with playlists of clips, mixer state
 (inserts, sends, routing, automation lanes), tempo and meter maps, memory locations, groups,
 busses, and `EditState` (selection, tools, modes, view flags). Decoded audio lives in a
 `SourcePool` of `Arc`s that is not serialised; cloning a session is cheap. Sessions save as
@@ -44,12 +44,12 @@ report.
 
 ## Audio
 
-`soundcraft_mix::MixEngine::render(session, pos, frames, out)` renders one block: clips (gain,
+`feo_mix::MixEngine::render(session, pos, frames, out)` renders one block: clips (gain,
 fades, clip effects) → trim → inserts → pre-fader sends → fader/mute (automation, VCA, trim
 automation) → post-fader sends → pan → busses → aux inputs → master faders. Independent strips
 process in parallel; plugin delay compensation aligns every path, the master faders' inserts included. The same engine renders
 bounces offline (`RangeRender`, streamed to the file block by block) and realtime playback
-(`soundcraft_playback::Player`, which owns it on the audio thread and receives new session
+(`feo_playback::Player`, which owns it on the audio thread and receives new session
 snapshots through a channel).
 
 Device I/O today is the system's *default* output and *default* input device, opened as two
@@ -58,11 +58,11 @@ they differ. There is no device or buffer-size selection, no ASIO, and no MIDI d
 (see [`hardware-parity.md`](hardware-parity.md)). Sources are decoded whole into the `SourcePool`
 and recordings are captured in memory until stop.
 
-`soundcraft-video` holds our own H.264, ProRes and Motion JPEG decoders and the ISO-BMFF demuxer
+`feo-video` holds our own H.264, ProRes and Motion JPEG decoders and the ISO-BMFF demuxer
 for the video track. Hosted plugins (`clap-host`, `vst3-host`, `au-host`) are scanned, created and
 destroyed off the audio thread; only `process` runs on it.
 
-The cpal callbacks mark their thread (`soundcraft_playback::mark_audio_thread`). Code that may run
+The cpal callbacks mark their thread (`feo_playback::mark_audio_thread`). Code that may run
 there can ask `on_audio_thread()` before doing anything that blocks; the desktop app's logger does,
 so a `log::` record from the audio thread (a stream error, a full synth event queue, a hosted
 plugin's failed `process`, a CLAP plugin's own log call) is kept without waiting and written later
@@ -71,7 +71,7 @@ by the UI thread (see README › Logs).
 ## Agent control
 
 The desktop app's control channel (JSON lines over TCP) exposes engine commands, inspection,
-synthetic input and screenshots; `soundcraft-cli mcp` wraps either a headless engine or a running
+synthetic input and screenshots; `feo-cli mcp` wraps either a headless engine or a running
 app as an MCP server. See `control-protocol.md` and `mcp.md`.
 
 ## Revision history

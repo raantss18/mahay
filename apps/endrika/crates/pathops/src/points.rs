@@ -2,8 +2,8 @@
 //! run by run (a run ends at end points, junctions and points with a join of their own), each run
 //! taking the caps of the points it ends at, and each point's own join is drawn over the break.
 
-use figcraft_doc::{StrokeCap, StrokeProps, StrokeRun, VectorNetwork};
-use figcraft_geom::kurbo::{self, BezPath, Cap};
+use endrika_doc::{StrokeCap, StrokeProps, StrokeRun, VectorNetwork};
+use endrika_geom::kurbo::{self, BezPath, Cap};
 
 use crate::{kcap, kjoin};
 

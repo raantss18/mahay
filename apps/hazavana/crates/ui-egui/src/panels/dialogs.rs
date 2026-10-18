@@ -1,9 +1,9 @@
 //! Modal dialogs (new album, rename, create preset, choose settings to copy, export, about, shortcuts).
 
-use lightcraft_develop::{ControlSpec, Section, SettingsGroup, Track};
+use hazavana_develop::{ControlSpec, Section, SettingsGroup, Track};
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::state::Dialog;
 use crate::theme::Tokens;
 
@@ -15,15 +15,15 @@ const RENAME_PREVIEW_ROWS: usize = 6;
 /// rows are planned on a worker thread, and only when the template, start number, photos or
 /// catalog change — never once per frame.
 pub(crate) fn rename_preview(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ctx: &egui::Context,
     template: &str,
     start: usize,
-) -> (Option<Vec<lightcraft_engine::rename::RenamePlan>>, usize) {
+) -> (Option<Vec<hazavana_engine::rename::RenamePlan>>, usize) {
     use std::hash::{Hash, Hasher};
-    type Rows = std::sync::Arc<std::sync::Mutex<Option<Vec<lightcraft_engine::rename::RenamePlan>>>>;
+    type Rows = std::sync::Arc<std::sync::Mutex<Option<Vec<hazavana_engine::rename::RenamePlan>>>>;
     let ids = app.session.selected();
-    let photos = lightcraft_engine::rename::rename_photos(&app.session.catalog, &ids);
+    let photos = hazavana_engine::rename::rename_photos(&app.session.catalog, &ids);
     let total = photos.len();
     let mut h = std::collections::hash_map::DefaultHasher::new();
     (template, start, app.session.catalog.revision, &ids).hash(&mut h);
@@ -40,7 +40,7 @@ pub(crate) fn rename_preview(
     let (out, template, repaint) = (rows.clone(), template.to_string(), ctx.clone());
     let exists = app.session.media.availability.probe();
     let work = move || {
-        let plans = lightcraft_engine::rename::plan_rename_photos(&first, &template, start, &|f| exists(f));
+        let plans = hazavana_engine::rename::plan_rename_photos(&first, &template, start, &|f| exists(f));
         *out.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(plans);
         repaint.request_repaint();
     };
@@ -61,19 +61,19 @@ pub(crate) fn rename_preview(
 /// replaces it. The watermark is redrawn on a copy only when it, the output size or the picture
 /// changes, which is quick at this size, so the preview follows the sliders.
 fn watermark_preview(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
-    wm: &lightcraft_engine::export::Watermark,
-    resize: Option<lightcraft_engine::export::Resize>,
+    wm: &hazavana_engine::export::Watermark,
+    resize: Option<hazavana_engine::export::Resize>,
 ) {
     use std::hash::{Hash, Hasher};
     // (pictures received so far: 1 the thumbnail, 2 the sharp render; the latest, or why none came)
-    type Base = std::sync::Arc<std::sync::Mutex<(u8, Option<Result<lightcraft_raster::Rgba8, String>>)>>;
-    type Shown = (u64, u8, lightcraft_engine::export::Watermark, usize, egui::TextureHandle);
+    type Base = std::sync::Arc<std::sync::Mutex<(u8, Option<Result<hazavana_raster::Rgba8, String>>)>>;
+    type Shown = (u64, u8, hazavana_engine::export::Watermark, usize, egui::TextureHandle);
     let t = Tokens::get(ui.ctx());
     let Some(&id) = app.session.selected().first() else { return };
     let Some(photo) = app.session.catalog.photo(id).cloned() else { return };
-    let (out_w, out_h) = lightcraft_engine::export::output_size(&photo, &lightcraft_engine::export::ExportOptions { resize, ..Default::default() });
+    let (out_w, out_h) = hazavana_engine::export::output_size(&photo, &hazavana_engine::export::ExportOptions { resize, ..Default::default() });
     let export_short = out_w.min(out_h);
     // pixels across the dialog, in steps so a scroll bar or a point of layout doesn't re-render
     let step = 128.0;
@@ -140,7 +140,7 @@ fn watermark_preview(
                     return;
                 }
             };
-            lightcraft_engine::export::draw_watermark_preview(&mut img, wm, export_short);
+            hazavana_engine::export::draw_watermark_preview(&mut img, wm, export_short);
             // shown through the monitor profile like every other preview
             if let Some(d) = app.renderer.display()
                 && let Err(e) = d.profile.from_srgb(&mut img)
@@ -175,16 +175,16 @@ pub const WHATS_NEW: &str = include_str!("../../../../docs/whats-new.md");
 /// doesn't carry over to the other dialogs.
 fn window_id(dialog: &Dialog) -> egui::Id {
     egui::Id::new(match dialog {
-        Dialog::Import { .. } => "lightcraft-import-dialog",
-        Dialog::Print => "lightcraft-print-dialog",
-        Dialog::Settings { .. } => "lightcraft-settings-dialog",
-        _ => "lightcraft-dialog",
+        Dialog::Import { .. } => "hazavana-import-dialog",
+        Dialog::Print => "hazavana-print-dialog",
+        Dialog::Settings { .. } => "hazavana-settings-dialog",
+        _ => "hazavana-dialog",
     })
 }
 
 /// Block the underlying panels from the first frame, before the window establishes its modal
 /// layer. Close background menus on entry; popups subsequently opened inside the dialog stay usable.
-pub(crate) fn prepare(app: &LightcraftApp, ui: &mut egui::Ui) {
+pub(crate) fn prepare(app: &HazavanaApp, ui: &mut egui::Ui) {
     let Some(dialog) = &app.ui.dialog else { return };
     ui.disable();
     let layer = egui::LayerId::new(egui::Order::Middle, window_id(dialog));
@@ -193,7 +193,7 @@ pub(crate) fn prepare(app: &LightcraftApp, ui: &mut egui::Ui) {
     }
 }
 
-pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut HazavanaApp, ctx: &egui::Context) {
     let Some(mut dlg) = app.ui.dialog.clone() else { return };
     let at_start = dlg.clone();
     // Esc with a popup open in the dialog (a dropdown, a date picker's calendar) closes the popup
@@ -271,7 +271,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
         // (nothing to download from in this build: the dialog explains the manual install)
         Dialog::SamModel { .. } if sam_by_hand(&app.session.segmenter) => "Install the SAM 3 Model",
         Dialog::SamModel { .. } => "Download the SAM 3 Model?",
-        Dialog::About => "About LightCraft",
+        Dialog::About => "About Hazavana",
         Dialog::Shortcuts => "Keyboard Shortcuts",
     }
     .to_string();
@@ -445,7 +445,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     crate::widgets::register(ui.ctx(), "field:smartName", r.rect);
                     ui.add_space(6.0);
                     // the folder an album made from a folder view carries is not in the editor, but it counts
-                    let folder = id.and_then(|id| app.session.catalog.album(lightcraft_catalog::AlbumId(id))).and_then(|a| a.smart.as_deref().and_then(|f| f.library_folder.clone()));
+                    let folder = id.and_then(|id| app.session.catalog.album(hazavana_catalog::AlbumId(id))).and_then(|a| a.smart.as_deref().and_then(|f| f.library_folder.clone()));
                     // problems, count and albums: cached until the catalog or the rules change (not per frame)
                     let now = (app.session.clock)();
                     let view = app.caches.rules_view(&app.session.catalog, rules, *id, folder, &now);
@@ -473,7 +473,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     let now = (app.session.clock)();
                     let minute = if rules.depends_on_now() { now.get(..16).unwrap_or(&now) } else { "" };
                     let n = app.caches.dialog_count(&app.session.catalog, ("smartAlbum", format!("{rules:?}"), minute), || {
-                        lightcraft_catalog::rules::set_now(Some(now.clone()));
+                        hazavana_catalog::rules::set_now(Some(now.clone()));
                         app.session.catalog.query(&rules, &Default::default()).len()
                     });
                     ui.label(egui::RichText::new(crate::i18n::tr_format!("Matches: {}", crate::i18n::filter_label(&rules, &app.session.catalog))).color(t.text_label));
@@ -517,12 +517,12 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     let active = app.session.active().and_then(|id| app.session.catalog.photo(id)).map(|p| (p.file_name.clone(), p.date().to_string()));
                     if let Some((name, cur)) = active {
                         let delta = match mode.as_str() {
-                            "set" => lightcraft_catalog::dates::normalize_iso(time)
-                                .and_then(|t| Some(lightcraft_catalog::dates::iso_seconds(&t)? - lightcraft_catalog::dates::iso_seconds(&cur)?)),
+                            "set" => hazavana_catalog::dates::normalize_iso(time)
+                                .and_then(|t| Some(hazavana_catalog::dates::iso_seconds(&t)? - hazavana_catalog::dates::iso_seconds(&cur)?)),
                             "shift" => params["shift"].as_i64(),
                             _ => Some((*zone as f64 * 3600.0).round() as i64),
                         };
-                        let after = delta.and_then(|d| lightcraft_catalog::dates::shift_iso(&cur, d));
+                        let after = delta.and_then(|d| hazavana_catalog::dates::shift_iso(&cur, d));
                         ui.label(
                             egui::RichText::new(match after {
                                 Some(a) => format!("{name}: {} → {}", cur.replace('T', " "), a.replace('T', " ")),
@@ -538,7 +538,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                 Dialog::LabelNames { names, save_as } => {
                     names.resize(5, String::new());
                     // start from a set
-                    let sets = lightcraft_engine::cmd::manage::label_sets_json(&app.session);
+                    let sets = hazavana_engine::cmd::manage::label_sets_json(&app.session);
                     field(ui, "Set", |ui| {
                         ui.spacing_mut().item_spacing.x = 4.0;
                         for set in sets["sets"].as_array().into_iter().flatten() {
@@ -548,7 +548,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                             }
                         }
                     });
-                    for (i, l) in lightcraft_catalog::ColorLabel::ALL.iter().enumerate() {
+                    for (i, l) in hazavana_catalog::ColorLabel::ALL.iter().enumerate() {
                         let colour = format!("{l:?}");
                         field(ui, &colour, |ui| {
                             let (r, _) = ui.allocate_exact_size(egui::vec2(14.0, 14.0), egui::Sense::hover());
@@ -650,7 +650,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                 }
                 Dialog::RenameKeyword { from, to } => {
                     let n = app.caches.dialog_count(&app.session.catalog, ("renameKeyword", from.as_str()), || {
-                        app.session.catalog.photos().filter(|p| p.meta.keywords.iter().any(|k| lightcraft_catalog::keywords::is_under(k, from))).count()
+                        app.session.catalog.photos().filter(|p| p.meta.keywords.iter().any(|k| hazavana_catalog::keywords::is_under(k, from))).count()
                     });
                     if dialog_field(ui, "field:keywordName", to, "New name") {
                         confirm = true;
@@ -670,7 +670,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                         .caches
                         .suggestions(&app.session.catalog, from, into, 12)
                         .iter()
-                        .filter(|k| !from.iter().any(|f| lightcraft_catalog::keywords::is_under(k, f)))
+                        .filter(|k| !from.iter().any(|f| hazavana_catalog::keywords::is_under(k, f)))
                         .cloned()
                         .collect();
                     ui.horizontal_wrapped(|ui| {
@@ -737,7 +737,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     ui.label(crate::i18n::tr("Choose a PDF destination after confirming. Print the PDF from your viewer."));
                 }
                 Dialog::Export { opts, full_size, resize, preset_name, limit_kb, dir } => {
-                    use lightcraft_engine::export::{ExportFormat as F, MetadataPolicy as M, SharpenAmount as A, SharpenFor as S};
+                    use hazavana_engine::export::{ExportFormat as F, MetadataPolicy as M, SharpenAmount as A, SharpenFor as S};
                     let n = app.session.selection.ids.len().max(1);
                     ui.label(egui::RichText::new(crate::i18n::tr_format!("{n} photo{}", if n == 1 { "" } else { "s" }, n = n)).color(t.text_dim));
                     // Preset: load a built-in or saved set of options into the dialog
@@ -759,7 +759,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                         if let Some(name) = chosen
                             && let Ok(params) = app.session.export_params(&json!({"preset": name}))
                         {
-                            let o = lightcraft_engine::export::ExportOptions::from_json(&params);
+                            let o = hazavana_engine::export::ExportOptions::from_json(&params);
                             *full_size = o.resize.is_none();
                             *resize = o.resize.unwrap_or_default();
                             *limit_kb = o.limit_kb.unwrap_or(0);
@@ -796,7 +796,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                         opts.bit_depth = None;
                     }
                     let rendered = opts.format.is_rendered();
-                    let depths = lightcraft_engine::export::ExportOptions::bit_depths(opts.format);
+                    let depths = hazavana_engine::export::ExportOptions::bit_depths(opts.format);
                     if rendered && depths.len() > 1 {
                         let mut bd = opts.bit_depth.filter(|b| depths.iter().any(|d| d.0 == *b)).unwrap_or(depths[0].0);
                         choices(ui, "Bit depth", "exportBitDepth", depths, &mut bd);
@@ -809,13 +809,13 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                             ui.label(egui::RichText::new(crate::i18n::tr("HDR TIFF needs 32-bit float.")).color(t.text_dim));
                         }
                         if opts.hdr && opts.format == F::Avif {
-                            use lightcraft_engine::export::HdrCurve as H;
+                            use hazavana_engine::export::HdrCurve as H;
                             choices(ui, "HDR curve", "exportHdrCurve", &[(H::Pq, "PQ"), (H::Hlg, "HLG")], &mut opts.hdr_transfer);
                         }
                     }
                     if !rendered {
                     } else if opts.format == F::Avif && opts.hdr {
-                        let label = if opts.hdr_transfer == lightcraft_engine::export::HdrCurve::Hlg {
+                        let label = if opts.hdr_transfer == hazavana_engine::export::HdrCurve::Hlg {
                             crate::i18n::tr("Color space: Rec. 2020 HLG (HDR AVIF)")
                         } else {
                             crate::i18n::tr("Color space: Rec. 2020 PQ (HDR AVIF)")
@@ -829,7 +829,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     } else if opts.format == F::Avif {
                         ui.label(egui::RichText::new(crate::i18n::tr("Color space: sRGB (AVIF)")).color(t.text_dim));
                     } else {
-                        use lightcraft_engine::export::OutputSpace as C;
+                        use hazavana_engine::export::OutputSpace as C;
                         choices(
                             ui,
                             "Color space",
@@ -859,7 +859,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                         }
                     }
                     if opts.format == F::Jxl {
-                        use lightcraft_engine::export::JxlEffort as E;
+                        use hazavana_engine::export::JxlEffort as E;
                         choices(ui, "Effort", "exportJxlEffort", &[(E::Fast, "Fast"), (E::Normal, "Normal")], &mut opts.jxl_effort);
                         let tip = "Shows a coarse version first and refines it as the file loads";
                         ui.checkbox(&mut opts.jxl_progressive, crate::i18n::tr("Progressive")).on_hover_text(crate::i18n::tr(tip));
@@ -904,7 +904,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     }
                     let mut wm_on = opts.watermark.is_some();
                     if ui.checkbox(&mut wm_on, crate::i18n::tr("Watermark")).changed() {
-                        opts.watermark = wm_on.then(|| lightcraft_engine::export::Watermark { text: "© ".into(), ..Default::default() });
+                        opts.watermark = wm_on.then(|| hazavana_engine::export::Watermark { text: "© ".into(), ..Default::default() });
                     }
                     let wm_shown = opts.watermark.clone();
                     if let Some(wm) = &wm_shown {
@@ -961,7 +961,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                         }
                         // like Lightroom Classic: a margin from the side edges and one from the top and bottom
                         // edges, each unused (greyed) when the position is centred along that axis
-                        use lightcraft_engine::export::Anchor as P;
+                        use hazavana_engine::export::Anchor as P;
                         let across = !matches!(wm.anchor, P::Top | P::Center | P::Bottom);
                         if let Some(v) = crate::widgets::slider(ui, &WM_INSET_X, wm.inset_x as f64 * 100.0, across, None).value {
                             wm.inset_x = (v / 100.0) as f32;
@@ -981,11 +981,11 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     }
                     ui.add_space(4.0);
                     if opts.format == F::Tiff {
-                        use lightcraft_engine::export::TiffCompression as Z;
+                        use hazavana_engine::export::TiffCompression as Z;
                         choices(ui, "Compression", "exportTiffCompression", &[(Z::None, "None"), (Z::Lzw, "LZW"), (Z::Deflate, "ZIP")], &mut opts.tiff_compression);
                     }
                     if opts.format == F::Dng {
-                        use lightcraft_engine::export::DngCompression as Z;
+                        use hazavana_engine::export::DngCompression as Z;
                         choices(ui, "Compression", "exportDngCompression", &[(Z::Lossless, "Lossless"), (Z::Deflate, "ZIP"), (Z::Uncompressed, "None"), (Z::Lossy, "Lossy")], &mut opts.dng_compression);
                     }
                     let naming_id = egui::Id::new("export-naming");
@@ -1007,7 +1007,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     }
                     // like Lightroom Classic's Export To: one folder, or each photo's own folder (not on
                     // the web, where originals live in the browser's storage, not in folders)
-                    use lightcraft_engine::export::DestinationMode as D;
+                    use hazavana_engine::export::DestinationMode as D;
                     if !cfg!(target_arch = "wasm32") || opts.destination_mode != D::SpecificFolder {
                     choices(
                         ui,
@@ -1034,7 +1034,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                     field(ui, "Subfolder", |ui| {
                         crate::widgets::named(ui.add(egui::TextEdit::singleline(&mut opts.subfolder).hint_text(crate::i18n::tr("none")).desired_width(f32::INFINITY)), crate::i18n::tr("Subfolder"))
                     });
-                    use lightcraft_engine::export::Conflict as K;
+                    use hazavana_engine::export::Conflict as K;
                     choices(
                         ui,
                         "If file exists",
@@ -1052,7 +1052,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                                 crate::widgets::named(ui.add(egui::TextEdit::singleline(&mut opts.photos_album).hint_text(crate::i18n::tr("none")).desired_width(f32::INFINITY)), crate::i18n::tr("Album"))
                             });
                             ui.label(
-                                egui::RichText::new(crate::i18n::tr("The first time, macOS asks whether LightCraft may control Photos."))
+                                egui::RichText::new(crate::i18n::tr("The first time, macOS asks whether Hazavana may control Photos."))
                                     .size(11.0)
                                     .color(t.text_dim),
                             );
@@ -1241,7 +1241,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                 }
                 d @ Dialog::SynchronizeFolder { .. } => crate::sync::body(app, ui, d),
                 Dialog::LightroomCatalog { folder, catalog } => {
-                    ui.label(crate::i18n::tr("This is a Lightroom catalog, not a LightCraft library. Import it into a LightCraft library instead?"));
+                    ui.label(crate::i18n::tr("This is a Lightroom catalog, not a Hazavana library. Import it into a Hazavana library instead?"));
                     ui.label(egui::RichText::new(catalog.as_deref().unwrap_or(folder.as_str())).color(t.text_dim));
                     ui.label(
                         egui::RichText::new(crate::i18n::tr(
@@ -1283,14 +1283,14 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                         1 => crate::credits::contributors_ui(app, ui),
                         2 => crate::credits::models_ui(ui),
                         _ => {
-                            ui.label(egui::RichText::new("LightCraft").font(t.semibold(20.0)).color(t.text));
+                            ui.label(egui::RichText::new("Hazavana").font(t.semibold(20.0)).color(t.text));
                             ui.label(crate::i18n::tr_format!("Version {} — a clean-room, pure-Rust photo library and raw developer.", env!("CARGO_PKG_VERSION")));
                             ui.label(crate::i18n::tr_format!(
                                 "MIT OR Apache-2.0. Fonts: {} (OFL). Icons: original.",
                                 crate::theme::font_credits(app.chinese_font.is_some())
                             ));
                             ui.add_space(10.0);
-                            let r = crate::button::Button::new("Join the ArtCraft Discord")
+                            let r = crate::button::Button::new("Join the Mahay discussions")
                                 .primary()
                                 .large()
                                 .min_width(260.0)
@@ -1302,9 +1302,9 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                             }
                             ui.add_space(6.0);
                             for (label, url) in [
-                                ("LightCraft website", crate::links::APP_PAGE),
+                                ("Hazavana website", crate::links::APP_PAGE),
                                 ("Source code on GitHub", crate::links::GITHUB),
-                                ("ArtCraft — more creative apps", crate::links::WEBSITE),
+                                ("Mahay — more creative apps", crate::links::WEBSITE),
                             ] {
                                 let r = ui.link(crate::i18n::tr(label)).on_hover_text(url);
                                 if r.clicked() {
@@ -1325,7 +1325,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
             let row_w = ui.available_width().max(ui.min_rect().width()).max(1.0);
             let row_h = ui.spacing().interact_size.y;
             ui.allocate_ui_with_layout(egui::vec2(row_w, row_h), egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                // a model file LightCraft cannot use has nothing to confirm, nor has a dialog that
+                // a model file Hazavana cannot use has nothing to confirm, nor has a dialog that
                 // only shows something (one Close, no Cancel / OK)
                 let unusable_model = matches!(&dlg, Dialog::DenoiseModel { info, .. } | Dialog::FaceModel { info, .. } if info["kind"] == "unsupported");
                 let informational = unusable_model || matches!(dlg, Dialog::LightroomResult { first: None, .. }) || only_shows(&dlg);
@@ -1391,7 +1391,7 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                             Dialog::DenoiseModel { accepted: false, .. } | Dialog::FaceModel { accepted: false, .. } | Dialog::SynchronizeFolder { counts: None, .. }
                         )
                             // smart-album rules that can't mean anything wait to be fixed
-                            && !matches!(&dlg, Dialog::SmartRules { id, rules, .. } if !rules.check_for(&app.session.catalog, id.map(lightcraft_catalog::AlbumId)).is_empty()));
+                            && !matches!(&dlg, Dialog::SmartRules { id, rules, .. } if !rules.check_for(&app.session.catalog, id.map(hazavana_catalog::AlbumId)).is_empty()));
                 let primary = !informational && can_confirm && confirm_style(&dlg) == ConfirmStyle::Primary;
                 use crate::button::{Button, Kind};
                 // (each kind of dialog its own buttons: the keyboard's place doesn't carry from a
@@ -1588,21 +1588,21 @@ pub fn fmt_gap(v: f64) -> String {
 
 /// Whether a dialog stays open after its action succeeded (the SAM 3 dialog while the model
 /// downloads).
-pub fn keeps_open(app: &LightcraftApp, dlg: &Dialog) -> bool {
+pub fn keeps_open(app: &HazavanaApp, dlg: &Dialog) -> bool {
     matches!(dlg, Dialog::SamModel { .. }) && !app.session.segmenter.installed()
 }
 
 /// No SAM 3 model, no download running and nowhere to download it from: installing it by hand is
 /// all the dialog can offer.
-fn sam_by_hand(sam: &lightcraft_engine::segment::Segmenter) -> bool {
+fn sam_by_hand(sam: &hazavana_engine::segment::Segmenter) -> bool {
     !sam.installed() && !sam.download_status().running && sam.mirrors().is_empty()
 }
 
 /// The model installation guide.
-const SAM_HELP: &str = "https://github.com/storytold/lightcraft/blob/main/docs/ai-masks.md#getting-the-model";
+const SAM_HELP: &str = "https://github.com/raantss18/mahay/blob/main/docs/ai-masks.md#getting-the-model";
 
 /// Open the configured SAM 3 folder itself; revealing a file opens its parent instead.
-pub(crate) fn show_model_folder(app: &mut LightcraftApp) -> Result<serde_json::Value, String> {
+pub(crate) fn show_model_folder(app: &mut HazavanaApp) -> Result<serde_json::Value, String> {
     let dir = app.session.segmenter.dir.as_ref().ok_or("no folder is set for the SAM 3 model")?;
     let path = dir.to_str().ok_or("the model folder path is not valid UTF-8")?;
     let open = app.services.open_with.as_mut().ok_or("opening model folders is not available here")?;
@@ -1630,8 +1630,8 @@ pub(crate) fn show_model_folder(app: &mut LightcraftApp) -> Result<serde_json::V
 }
 
 /// The SAM 3 dialog: what the model is, its size and licence, and the download's progress.
-fn sam_model_body(app: &mut LightcraftApp, ui: &mut egui::Ui, error: Option<&str>) {
-    use lightcraft_engine::segment::{LICENSE_NAME, LICENSE_URL, MODEL_BYTES};
+fn sam_model_body(app: &mut HazavanaApp, ui: &mut egui::Ui, error: Option<&str>) {
+    use hazavana_engine::segment::{LICENSE_NAME, LICENSE_URL, MODEL_BYTES};
     let t = Tokens::get(ui.ctx());
     let seg = &app.session.segmenter;
     let d = seg.download_status();
@@ -1641,7 +1641,7 @@ fn sam_model_body(app: &mut LightcraftApp, ui: &mut egui::Ui, error: Option<&str
     }
     let gb = |b: u64| b as f64 / 1e9;
     ui.label(crate::i18n::tr(
-        "Object and Describe masks use SAM 3, Meta's segmentation model. It isn't part of LightCraft, and everything else works without it.",
+        "Object and Describe masks use SAM 3, Meta's segmentation model. It isn't part of Hazavana, and everything else works without it.",
     ));
     let dir = seg.dir.as_ref().map(|d| d.display().to_string()).unwrap_or_default();
     ui.label(format!("{} {:.1} GB, {} {dir}", crate::i18n::tr("A one-time download of about"), gb(MODEL_BYTES), crate::i18n::tr("saved in")));
@@ -1649,7 +1649,7 @@ fn sam_model_body(app: &mut LightcraftApp, ui: &mut egui::Ui, error: Option<&str
         egui::RichText::new(format!(
             "{} {LICENSE_NAME} — {}",
             crate::i18n::tr("Licence:"),
-            crate::i18n::tr("Meta's terms, not LightCraft's. Downloading it means accepting them.")
+            crate::i18n::tr("Meta's terms, not Hazavana's. Downloading it means accepting them.")
         ))
         .color(t.text_label),
     );
@@ -1708,7 +1708,7 @@ fn sam_model_body(app: &mut LightcraftApp, ui: &mut egui::Ui, error: Option<&str
 }
 
 /// Runs a command that creates an album and asks the Albums tree to open the folders down to it.
-fn created_in(app: &mut LightcraftApp, command: &str, params: serde_json::Value) -> Result<serde_json::Value, String> {
+fn created_in(app: &mut HazavanaApp, command: &str, params: serde_json::Value) -> Result<serde_json::Value, String> {
     let r = app.run(command, params)?;
     app.ui.reveal_album = r.get("id").and_then(serde_json::Value::as_u64);
     Ok(r)
@@ -1716,8 +1716,8 @@ fn created_in(app: &mut LightcraftApp, command: &str, params: serde_json::Value)
 
 /// The albums an Album rule in smart album `editing` picks from, in the sidebar's order: the album
 /// itself and any smart album that tests it (testing it back would loop) are blocked, with why.
-pub(crate) fn album_entries(cat: &lightcraft_catalog::Catalog, editing: Option<u64>) -> Vec<crate::album_picker::AlbumEntry> {
-    let editing = editing.map(lightcraft_catalog::AlbumId);
+pub(crate) fn album_entries(cat: &hazavana_catalog::Catalog, editing: Option<u64>) -> Vec<crate::album_picker::AlbumEntry> {
+    let editing = editing.map(hazavana_catalog::AlbumId);
     crate::album_picker::entries_from(cat, |a| match editing {
         Some(e) if a.id == e => Some(crate::i18n::tr("This is the album you're editing").to_string()),
         Some(e) if cat.album_reaches(a.id, e) => Some(crate::i18n::tr("It tests this album, so testing it back would loop").to_string()),
@@ -1725,12 +1725,12 @@ pub(crate) fn album_entries(cat: &lightcraft_catalog::Catalog, editing: Option<u
     })
 }
 
-pub fn confirm_dialog(app: &mut LightcraftApp, dlg: &Dialog) -> Result<serde_json::Value, String> {
+pub fn confirm_dialog(app: &mut HazavanaApp, dlg: &Dialog) -> Result<serde_json::Value, String> {
     match dlg {
         Dialog::LightroomResult { first, .. } => {
             if let Some(first) = first {
                 app.run("library.source", json!({"kind": "all"}))?;
-                let mut filter = serde_json::to_value(lightcraft_catalog::Filter::default()).map_err(|e| e.to_string())?;
+                let mut filter = serde_json::to_value(hazavana_catalog::Filter::default()).map_err(|e| e.to_string())?;
                 // The filter command merges a patch; these defaults are omitted by serde.
                 filter["only"] = json!([]);
                 filter["labels"] = json!([]);
@@ -1774,7 +1774,7 @@ pub fn confirm_dialog(app: &mut LightcraftApp, dlg: &Dialog) -> Result<serde_jso
         ),
         Dialog::LabelNames { names, save_as } => {
             let mut m = serde_json::Map::new();
-            for (l, n) in lightcraft_catalog::ColorLabel::ALL.iter().zip(names) {
+            for (l, n) in hazavana_catalog::ColorLabel::ALL.iter().zip(names) {
                 m.insert(format!("{l:?}").to_lowercase(), if n.trim().is_empty() { serde_json::Value::Null } else { json!(n.trim()) });
             }
             let r = app.run("label.setNames", json!({"names": m}));
@@ -1834,12 +1834,12 @@ pub fn confirm_dialog(app: &mut LightcraftApp, dlg: &Dialog) -> Result<serde_jso
         }
         Dialog::DeleteKeyword { keyword, .. } => app.run("keyword.delete", json!({"keyword": keyword})),
         Dialog::KeywordSet { replaces, name, slots, as_new } => {
-            use lightcraft_catalog::keywords::same;
+            use hazavana_catalog::keywords::same;
             let name = name.trim();
             if name.is_empty() {
                 return Err(crate::i18n::tr("A keyword set needs a name").to_string());
             }
-            if same(name, lightcraft_engine::cmd::keywords::RECENT) {
+            if same(name, hazavana_engine::cmd::keywords::RECENT) {
                 return Err(crate::i18n::tr("Recent Keywords is built in: choose another name").to_string());
             }
             // the set it renames: none when saving as new, or when it was deleted meanwhile (then it is
@@ -1879,7 +1879,7 @@ pub fn confirm_dialog(app: &mut LightcraftApp, dlg: &Dialog) -> Result<serde_jso
         }
         Dialog::SmartRules { id, name, rules, parent } => {
             // refused before anything changes (not even the name)
-            if let Some(problem) = rules.check_for(&app.session.catalog, id.map(lightcraft_catalog::AlbumId)).first() {
+            if let Some(problem) = rules.check_for(&app.session.catalog, id.map(hazavana_catalog::AlbumId)).first() {
                 return Err(problem.to_string());
             }
             let name = if name.trim().is_empty() { "Smart Album".to_string() } else { name.trim().to_string() };
@@ -1940,19 +1940,19 @@ pub fn confirm_dialog(app: &mut LightcraftApp, dlg: &Dialog) -> Result<serde_jso
 }
 
 /// Open a one-field dialog that runs `command` with `params` + `{key: typed value}`.
-pub fn prompt(app: &mut LightcraftApp, title: &str, hint: &str, value: &str, command: &str, params: serde_json::Value, key: &str) {
+pub fn prompt(app: &mut HazavanaApp, title: &str, hint: &str, value: &str, command: &str, params: serde_json::Value, key: &str) {
     app.ui.dialog =
         Some(Dialog::TextPrompt { title: title.into(), hint: hint.into(), value: value.into(), command: command.into(), params, key: key.into() });
 }
 
 /// The Export dialog's choices as `app.export` params (without the folder).
 fn export_dialog_params(
-    opts: &lightcraft_engine::export::ExportOptions,
+    opts: &hazavana_engine::export::ExportOptions,
     full_size: bool,
-    resize: &lightcraft_engine::export::Resize,
+    resize: &hazavana_engine::export::Resize,
     limit_kb: u32,
 ) -> serde_json::Value {
-    let o = lightcraft_engine::export::ExportOptions {
+    let o = hazavana_engine::export::ExportOptions {
         resize: (!full_size).then_some(*resize),
         limit_kb: (limit_kb > 0).then_some(limit_kb),
         ..opts.clone()
@@ -2011,8 +2011,8 @@ const START_NUMBER: ControlSpec = spec("export.startNumber", "Start number", 1.0
 const PPI: ControlSpec = spec("export.ppi", "Resolution (ppi)", 1.0, 1200.0, 240.0, 1.0);
 
 /// Image Sizing: full size, or a resize mode and its value(s), don't enlarge, ppi.
-fn export_size(ui: &mut egui::Ui, full: &mut bool, r: &mut lightcraft_engine::export::Resize, ppi: &mut u16) {
-    use lightcraft_engine::export::ResizeMode as R;
+fn export_size(ui: &mut egui::Ui, full: &mut bool, r: &mut hazavana_engine::export::Resize, ppi: &mut u16) {
+    use hazavana_engine::export::ResizeMode as R;
     const MODES: [(R, &str); 7] = [
         (R::LongEdge, "Long Edge"),
         (R::ShortEdge, "Short Edge"),
@@ -2073,8 +2073,8 @@ fn export_size(ui: &mut egui::Ui, full: &mut bool, r: &mut lightcraft_engine::ex
 }
 /// All nine positions supported by both the text and graphic watermark renderer.
 /// Keep them in grid order so bottom-centre and edge-centre anchors are available in Export.
-const WM_POSITIONS: [(lightcraft_engine::export::Anchor, &str); 9] = {
-    use lightcraft_engine::export::Anchor::*;
+const WM_POSITIONS: [(hazavana_engine::export::Anchor, &str); 9] = {
+    use hazavana_engine::export::Anchor::*;
     [(TopLeft, "↖"), (Top, "↑"), (TopRight, "↗"), (Left, "←"), (Center, "•"), (Right, "→"), (BottomLeft, "↙"), (Bottom, "↓"), (BottomRight, "↘")]
 };
 
@@ -2100,8 +2100,8 @@ fn num(ui: &mut egui::Ui, spec: &ControlSpec, v: &mut f64) -> bool {
 /// A labelled row (fixed label column).
 /// View ▸ Export Slideshow…: what to write (PDF, JPEG sequence, video) and how big; where comes
 /// after (a save dialog).
-fn slideshow_export_body(app: &mut LightcraftApp, ui: &mut egui::Ui, settings: &mut lightcraft_engine::slideshow_export::ExportSettings) {
-    use lightcraft_engine::slideshow_export::{ExportSettings, Format};
+fn slideshow_export_body(app: &mut HazavanaApp, ui: &mut egui::Ui, settings: &mut hazavana_engine::slideshow_export::ExportSettings) {
+    use hazavana_engine::slideshow_export::{ExportSettings, Format};
     let t = Tokens::get(ui.ctx());
     let photos = app.session.visible_cloned().len();
     let slide = app.session.slideshow.slide_duration;
@@ -2198,7 +2198,7 @@ struct PersonRenamePlan {
 }
 
 /// What renaming `from` to `to` would do, using the same rules as `faces.renamePerson`.
-fn person_rename_plan(cat: &lightcraft_catalog::Catalog, from: &str, to: &str) -> PersonRenamePlan {
+fn person_rename_plan(cat: &hazavana_catalog::Catalog, from: &str, to: &str) -> PersonRenamePlan {
     let to_trim = to.trim();
     if to_trim.is_empty() {
         return PersonRenamePlan { faces: 0, needs_merge: false, block: Some("Type a name") };
@@ -2213,7 +2213,7 @@ fn person_rename_plan(cat: &lightcraft_catalog::Catalog, from: &str, to: &str) -
     let mut needs_merge = false;
     if !from_key.is_empty() {
         for photo in cat.photos().filter(|p| p.in_library()) {
-            for region in photo.meta.regions.iter().filter(|r| r.kind == lightcraft_meta::RegionKind::Face) {
+            for region in photo.meta.regions.iter().filter(|r| r.kind == hazavana_meta::RegionKind::Face) {
                 let Some(name) = region.name.as_deref().map(str::trim).filter(|n| !n.is_empty()) else { continue };
                 let key = name.to_lowercase();
                 if key == from_key {
@@ -2263,7 +2263,7 @@ fn just_opened(ui: &egui::Ui, key: &str) -> bool {
 #[cfg(test)]
 mod watermark_position_tests {
     use super::WM_POSITIONS;
-    use lightcraft_engine::export::Anchor;
+    use hazavana_engine::export::Anchor;
 
     #[test]
     fn export_dialog_offers_every_rendered_anchor_exactly_once() {

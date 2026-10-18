@@ -1,9 +1,9 @@
 //! The app's control channel answers `cmdline.key` like `cmdline.input` and like the headless MCP
 //! backend (`crates/mcp/tests/cmdline_key.rs`): a refused Enter is echoed and reported in `error`.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::control::{ControlRequest, Outcome, handle};
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_ui_egui::control::{ControlRequest, Outcome, handle};
+use drafitra_ui_egui::{CadApp, Services};
 use serde_json::{Value, json};
 
 fn call(app: &mut CadApp, method: &str, params: Value) -> Value {

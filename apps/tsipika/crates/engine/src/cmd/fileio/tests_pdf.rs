@@ -13,7 +13,7 @@ fn session(artboards: usize) -> Session {
 }
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 fn export(s: &mut Session, p: Value) -> Value {
@@ -25,7 +25,7 @@ fn warnings(v: &Value) -> Vec<String> {
 }
 
 fn pages(bytes: &[u8]) -> usize {
-    vectorcraft_pdf::import(bytes).unwrap().artboards.len()
+    tsipika_pdf::import(bytes).unwrap().artboards.len()
 }
 
 /// `p` plus `format: pdf` (the same options through `document.export`).
@@ -143,9 +143,9 @@ fn every_pdf_leaves_out_an_image_that_cant_be_decoded() {
     // no image.
     let drawn = |bytes: &[u8]| {
         let mut images = vec![];
-        vectorcraft_pdf::import(bytes).unwrap().walk(|n| {
-            if !n.is_container() && !matches!(n.kind, vectorcraft_doc::NodeKind::Path { clipping: true, .. }) {
-                images.push(matches!(n.kind, vectorcraft_doc::NodeKind::Image(_)));
+        tsipika_pdf::import(bytes).unwrap().walk(|n| {
+            if !n.is_container() && !matches!(n.kind, tsipika_doc::NodeKind::Path { clipping: true, .. }) {
+                images.push(matches!(n.kind, tsipika_doc::NodeKind::Image(_)));
             }
         });
         images
@@ -166,14 +166,14 @@ fn every_pdf_leaves_out_an_image_that_cant_be_decoded() {
     // The .ai file reopens with the image as it was placed, from the image bytes in its editing data.
     let ai = b64(&s.execute("file.saveCopy", &json!({"format": "ai"})).unwrap());
     let placed = s.doc().unwrap().doc.images.clone();
-    s.execute("document.open", &json!({"name": "cut.ai", "dataBase64": vectorcraft_format::base64_encode(&ai)})).unwrap();
+    s.execute("document.open", &json!({"name": "cut.ai", "dataBase64": tsipika_format::base64_encode(&ai)})).unwrap();
     let reopened = &s.doc().unwrap().doc;
-    assert!(reopened.node(cut).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Image(_))));
+    assert!(reopened.node(cut).is_some_and(|n| matches!(n.kind, tsipika_doc::NodeKind::Image(_))));
     assert_eq!(reopened.images, placed);
     // Export for Screens, a native file carrying a PDF, and the PDF that Copy offers are written.
     let r = s.execute("document.exportForScreens", &json!({"formats": [{"format": "pdf"}]})).unwrap();
     assert_eq!(drawn(&b64(&r["files"][0])), [false]);
-    assert!(s.execute("file.saveCopy", &json!({"format": "vectorcraft", "pdfCompatible": true})).is_ok());
+    assert!(s.execute("file.saveCopy", &json!({"format": "tsipika", "pdfCompatible": true})).is_ok());
     s.execute("select.set", &json!({"ids": [cut.0]})).unwrap();
     s.execute("edit.copy", &json!({})).unwrap();
     assert!(b64(&s.execute("clipboard.exportPdf", &json!({})).unwrap()).starts_with(b"%PDF"));

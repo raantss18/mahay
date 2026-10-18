@@ -1,8 +1,8 @@
 //! The OS cursor over the drawing area (#39): hidden under the drawn crosshair by default, kept
 //! visible with `systemCursor` so screen magnifiers and other assistive tech can follow it.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_ui_egui::{CadApp, Services};
 
 /// The cursor icon the app asks for with the pointer in the middle of the drawing area.
 fn canvas_cursor(app: &mut CadApp) -> egui::CursorIcon {

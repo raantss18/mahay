@@ -2,8 +2,8 @@
 //! options, DIVIDE/MEASURE, REVCLOUD, WIPEOUT, XLINE options, 3DPOLY, MLINE, HELIX, spline by
 //! control vertices, CENTERMARK and CENTERLINE. Each has a JSON form and a prompt sequence.
 
-use cadcraft_doc::{EntityKind, Handle, Helix, HelixConstrain, Point, Polyline3d, RayLine, Wipeout};
-use cadcraft_geom::{Arc, Circle, Ellipse, Line, PolyVertex, Polyline, Spline, TAU, Vec2, Vec3, norm_angle, shoelace};
+use drafitra_doc::{EntityKind, Handle, Helix, HelixConstrain, Point, Polyline3d, RayLine, Wipeout};
+use drafitra_geom::{Arc, Circle, Ellipse, Line, PolyVertex, Polyline, Spline, TAU, Vec2, Vec3, norm_angle, shoelace};
 use serde_json::{Value, json};
 
 use super::curves::{self, Chain, MAX_GEN, TanObj};
@@ -663,7 +663,7 @@ fn axis_ellipse_params(cmd: &str, p: &Value) -> Result<Ellipse> {
 }
 
 fn ellipse_kind(e: &Ellipse) -> EntityKind {
-    EntityKind::Ellipse(cadcraft_doc::Ellipse { center: v3(e.center), major: v3(e.major), ratio: e.ratio, start: e.start, end: e.end })
+    EntityKind::Ellipse(drafitra_doc::Ellipse { center: v3(e.center), major: v3(e.major), ratio: e.ratio, start: e.start, end: e.end })
 }
 
 fn run_ellipse_axis(s: &mut Session, p: &Value) -> Result<Value> {
@@ -926,7 +926,7 @@ pub(crate) fn cloud_vertices(boundary: &[Vec2], arc_len: f64, per_edge: bool, re
         }
     } else {
         let chain = Chain {
-            segs: (0..n).filter_map(|i| Some(cadcraft_geom::Segment::Line(Line::new(*pts.get(i)?, *pts.get((i + 1) % n)?)))).collect(),
+            segs: (0..n).filter_map(|i| Some(drafitra_geom::Segment::Line(Line::new(*pts.get(i)?, *pts.get((i + 1) % n)?)))).collect(),
             closed: true,
         };
         let k = ((perim / arc_len).round() as usize).clamp(3, MAX_GEN);
@@ -1307,7 +1307,7 @@ fn linear_of(s: &Session, h: Handle, pick: Option<Vec2>) -> Result<(Vec2, Vec2)>
                 None => segs.first(),
             };
             match seg {
-                Some(cadcraft_geom::Segment::Line(l)) => Ok((l.a, l.dir())),
+                Some(drafitra_geom::Segment::Line(l)) => Ok((l.a, l.dir())),
                 _ => Err(other("Select a line object.")),
             }
         }
@@ -2177,7 +2177,7 @@ impl Interactive for SplineCvM {
 fn add_center_line(s: &mut Session, a: Vec2, b: Vec2) -> Result<Handle> {
     let d = s.doc_mut()?;
     if d.linetype("CENTER").is_none()
-        && let Some(lt) = cadcraft_doc::library::standard_linetypes_for(d).into_iter().find(|l| l.name == "CENTER")
+        && let Some(lt) = drafitra_doc::library::standard_linetypes_for(d).into_iter().find(|l| l.name == "CENTER")
     {
         d.linetypes.push(lt);
     }

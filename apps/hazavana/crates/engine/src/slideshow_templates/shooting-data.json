@@ -1,5 +1,5 @@
 {
-  "format": "lightcraft.slideshowTemplate",
+  "format": "hazavana.slideshowTemplate",
   "version": 1,
   "name": "Shooting Data",
   "description": "A dark slate backdrop with the exposure, ISO and focal length, then the camera and lens, under each photo.",

@@ -36,7 +36,7 @@ pub(crate) fn sample_pdf(object_stream: bool) -> Vec<u8> {
 
 fn px(doc: &Doc, x: i64, y: i64) -> [f32; 4] {
     let (w, h) = doc.pixel_size();
-    let img = effectcraft_svg::rasterize(doc, w, h, 1.0);
+    let img = tselatra_svg::rasterize(doc, w, h, 1.0);
     img.get(x, y)
 }
 
@@ -54,7 +54,7 @@ fn pdf_paths_clip_gradient_and_layers() {
         }
         assert!(doc.skipped.contains(&"text (no font)".to_string()), "{:?}", doc.skipped);
         let (w, h) = doc.pixel_size();
-        let img = effectcraft_svg::rasterize(&doc, w, h, 1.0);
+        let img = tselatra_svg::rasterize(&doc, w, h, 1.0);
         let at = |x: i64, y: i64| img.get(x, y);
         // Red rectangle clipped to x ≥ 10, over the green background.
         assert!(at(30, 50)[0] > 0.99 && at(30, 50)[1] < 0.01, "{:?}", at(30, 50));
@@ -72,7 +72,7 @@ fn pdf_paths_clip_gradient_and_layers() {
         let art = layer_doc(&doc, 1);
         assert_eq!(px(&art, 5, 50)[3], 0.0);
         // Continuous rasterisation: twice the size stays sharp at the clip edge.
-        let big = effectcraft_svg::rasterize(&doc, 400, 200, 2.0);
+        let big = tselatra_svg::rasterize(&doc, 400, 200, 2.0);
         assert!(big.get(21, 100)[0] > 0.99 && big.get(18, 100)[1] > 0.99);
     }
 }
@@ -97,7 +97,7 @@ fn pdf_forms_rotation_cmyk_and_alpha() {
     // Rotated a quarter turn: 50 × 100.
     assert_eq!((doc.width, doc.height), (50.0, 100.0));
     let (w, h) = doc.pixel_size();
-    let img = effectcraft_svg::rasterize(&doc, w, h, 1.0);
+    let img = tselatra_svg::rasterize(&doc, w, h, 1.0);
     // The form (CMYK red, clipped to its 10×10 box, scaled ×2) covers PDF (0..20, 0..20); the
     // half-transparent black square covers PDF (0..10, 0..10). /Rotate 90: PDF (x, y) → (y, x).
     let red = img.get(15, 15);
@@ -346,12 +346,12 @@ pub(crate) fn page_pdf(content: &str, resources: &str, extra: Objs) -> Vec<u8> {
     pdf(&objs, 1)
 }
 
-pub(crate) fn render(doc: &Doc) -> effectcraft_raster::Image {
+pub(crate) fn render(doc: &Doc) -> tselatra_raster::Image {
     let (w, h) = doc.pixel_size();
-    effectcraft_svg::rasterize(doc, w, h, 1.0)
+    tselatra_svg::rasterize(doc, w, h, 1.0)
 }
 
-pub(crate) fn coverage(img: &effectcraft_raster::Image, x0: i64, y0: i64, x1: i64, y1: i64) -> f32 {
+pub(crate) fn coverage(img: &tselatra_raster::Image, x0: i64, y0: i64, x1: i64, y1: i64) -> f32 {
     let mut s = 0.0;
     for y in y0..y1 {
         for x in x0..x1 {
@@ -362,7 +362,7 @@ pub(crate) fn coverage(img: &effectcraft_raster::Image, x0: i64, y0: i64, x1: i6
 }
 
 pub(crate) fn shape_names(doc: &Doc) -> Vec<String> {
-    fn walk(g: &effectcraft_svg::Group, out: &mut Vec<String>) {
+    fn walk(g: &tselatra_svg::Group, out: &mut Vec<String>) {
         for c in &g.children {
             match c {
                 Node::Group(s) => walk(s, out),
@@ -473,7 +473,7 @@ fn text_with_a_type3_font() {
 #[test]
 fn text_with_standard_fonts_embedded_truetype_and_cid_fonts() {
     use skrifa::MetadataProvider;
-    let inter = effectcraft_text::fonts::INTER_REGULAR.to_vec();
+    let inter = tselatra_text::fonts::INTER_REGULAR.to_vec();
     // Not embedded: Helvetica drawn with the bundled sans serif.
     let std14 = page_pdf("BT /F1 60 Tf 10 30 Td (Hi) Tj ET", "/Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >>", vec![]);
     let doc = parse(&std14).unwrap();
@@ -1053,8 +1053,8 @@ fn retained_layers_keep_strokes_clips_and_empty_layers() {
         let full = layer_doc(&doc, i);
         let (cropped, offset) = layer_doc_with_sizes(&doc, i, true);
         let (w, h) = cropped.pixel_size();
-        let image = effectcraft_svg::rasterize(&cropped, w, h, 1.0);
-        let original = effectcraft_svg::rasterize(&full, 200, 100, 1.0);
+        let image = tselatra_svg::rasterize(&cropped, w, h, 1.0);
+        let original = tselatra_svg::rasterize(&full, 200, 100, 1.0);
         for y in 0..100 {
             for x in 0..200 {
                 let a = image.get(x - offset[0] as i64, y - offset[1] as i64);
@@ -1069,7 +1069,7 @@ fn retained_layers_keep_strokes_clips_and_empty_layers() {
 
 #[test]
 fn retained_layers_measure_transformed_artwork_without_rasterizing() {
-    let doc = effectcraft_svg::parse(br#"<svg width="120" height="80"><g transform="translate(60,0)"><rect x="10" y="20" width="30" height="10" transform="rotate(90)"/></g><path d="M 10 20 L 30 20" fill="none" stroke="red" stroke-width="4" stroke-linecap="square"/></svg>"#).unwrap();
+    let doc = tselatra_svg::parse(br#"<svg width="120" height="80"><g transform="translate(60,0)"><rect x="10" y="20" width="30" height="10" transform="rotate(90)"/></g><path d="M 10 20 L 30 20" fill="none" stroke="red" stroke-width="4" stroke-linecap="square"/></svg>"#).unwrap();
     let (rotated, offset) = layer_doc_with_sizes(&doc, 0, true);
     assert_eq!(offset, [30.0, 10.0]);
     assert_eq!(rotated.pixel_size(), (10, 30));
@@ -1080,7 +1080,7 @@ fn retained_layers_measure_transformed_artwork_without_rasterizing() {
 
 #[test]
 fn retained_layers_preserve_artwork_beyond_the_bounds_depth_limit() {
-    let mut doc = effectcraft_svg::parse(br#"<svg width="120" height="80"><rect x="20" y="15" width="30" height="20"/></svg>"#).unwrap();
+    let mut doc = tselatra_svg::parse(br#"<svg width="120" height="80"><rect x="20" y="15" width="30" height="20"/></svg>"#).unwrap();
     for _ in 0..300 {
         let mut group = Group::new("nested");
         group.children = std::mem::take(&mut doc.root.children);

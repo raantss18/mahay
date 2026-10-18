@@ -4,10 +4,10 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::text::{CharStyle, TextObject};
-use vectorcraft_doc::{Appearance, Effect, ImageBlob, ImageObject, Node, NodeKind, Symbol};
-use vectorcraft_geom::{Point, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::text::{CharStyle, TextObject};
+use tsipika_doc::{Appearance, Effect, ImageBlob, ImageObject, Node, NodeKind, Symbol};
+use tsipika_geom::{Point, shapes};
 
 use super::*;
 

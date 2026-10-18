@@ -1,9 +1,9 @@
 //! Object › Select (stacking order, container and content, objects in a group) and Object ›
 //! Convert Shape.
 
-use designcraft_doc::{Content, Document, Item, ItemId, ItemLoc, Selection, Shape, SpreadRef};
-use designcraft_geom::corners::{CornerOptions, CornerShape};
-use designcraft_geom::{Point, Rect, shapes};
+use pejy_doc::{Content, Document, Item, ItemId, ItemLoc, Selection, Shape, SpreadRef};
+use pejy_geom::corners::{CornerOptions, CornerShape};
+use pejy_geom::{Point, Rect, shapes};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, has_selection, ok, str_param, targets};
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(ids(&s), [b]);
         let g = s.execute("object.group", &json!({"ids": [a, b]})).unwrap()["id"].as_u64().unwrap();
         s.execute("edit.deselectAll", &json!({})).unwrap();
-        s.doc_mut().unwrap().selection = designcraft_doc::Selection::items(vec![designcraft_doc::ItemId(g)]);
+        s.doc_mut().unwrap().selection = pejy_doc::Selection::items(vec![pejy_doc::ItemId(g)]);
         s.execute("select.content", &json!({})).unwrap();
         let first = ids(&s)[0];
         assert!(first == a || first == b);
@@ -233,7 +233,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let a = s.execute("frame.create", &json!({"rect": [100, 100, 200, 160]})).unwrap()["id"].as_u64().unwrap();
-        let item = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(a)).unwrap().clone();
+        let item = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(a)).unwrap().clone();
         for to in ["ellipse", "triangle", "polygon", "roundedRectangle", "rectangle"] {
             s.execute("object.convertShape", &json!({"to": to})).unwrap();
             let b = item(&s).bounds();
@@ -241,7 +241,7 @@ mod tests {
         }
         s.execute("object.convertShape", &json!({"to": "orthogonalLine"})).unwrap();
         let it = item(&s);
-        assert_eq!(it.shape, designcraft_doc::Shape::GraphicLine);
+        assert_eq!(it.shape, pejy_doc::Shape::GraphicLine);
         assert_eq!(it.bounds().height(), 0.0);
         s.execute("object.convertShape", &json!({"to": "closedPath"})).unwrap();
         assert!(item(&s).path.subpaths[0].closed);

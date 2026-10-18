@@ -35,7 +35,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "{space: cmyk|rgb} — the colour space transparency is composited in for output",
             has_doc,
             |s, p| {
-                let space: designcraft_doc::BlendSpace = p
+                let space: pejy_doc::BlendSpace = p
                     .get("space")
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
                     .ok_or_else(|| bad("edit.transparencyBlendSpace", "`space`: cmyk or rgb"))?;
@@ -133,13 +133,13 @@ mod tests {
             .unwrap();
         assert_eq!(r["horizontalUnits"], "millimeters");
         let st = &s.doc().unwrap().doc.settings;
-        assert_eq!(st.horizontal_units, designcraft_geom::Unit::Millimeters);
+        assert_eq!(st.horizontal_units, pejy_geom::Unit::Millimeters);
         assert_eq!(st.keyboard_increment, 2.5);
         assert_eq!(st.grid.subdivisions, 4);
         assert_eq!(st.grid.horizontal, 72.0, "the rest of the grid is kept");
         assert!(s.execute("document.preferences", &json!({"pageWidth": 100})).is_err(), "Document Setup's, not Preferences'");
         s.execute("edit.undo", &json!({})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.settings.horizontal_units, designcraft_geom::Unit::Picas);
+        assert_eq!(s.doc().unwrap().doc.settings.horizontal_units, pejy_geom::Unit::Picas);
     }
 }
 
@@ -154,7 +154,7 @@ mod advanced_type_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "x2"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("text.select", &json!({"story": r["story"], "anchor": 1, "focus": 2})).unwrap();
         s.execute("type.char", &json!({"position": "superscript"})).unwrap();
         let glyph = |s: &Session| {
@@ -185,7 +185,7 @@ mod advanced_type_idml_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         s.execute("document.preferences", &json!({"advancedType": {"subscriptPosition": 12.5}})).unwrap();
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
         assert_eq!(back.settings.advanced_type.subscript_position, 12.5);
         assert_eq!(back.settings.advanced_type.superscript_size, 58.3);
     }
@@ -208,20 +208,20 @@ mod highlight_tests {
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 3})).unwrap();
         s.execute("type.para", &json!({"align": "fullyJustified"})).unwrap();
         s.execute("type.char", &json!({"tracking": 50})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let d = s.doc().unwrap().doc.clone();
         let cs = s.cache.get(&d, sid, None);
         assert!(cs.frames[0].lines.iter().any(|l| l.hj > 0), "some line breaks the word-spacing limits");
         assert!(cs.styles.iter().any(|st| st.custom_tracking));
         let render = |hj: bool, tr: bool| {
-            let mut r = designcraft_render::Renderer::new();
+            let mut r = pejy_render::Renderer::new();
             r.threads = 0;
-            let o = designcraft_render::RenderOptions { highlight_hj: hj, highlight_custom_tracking: tr, ..Default::default() };
+            let o = pejy_render::RenderOptions { highlight_hj: hj, highlight_custom_tracking: tr, ..Default::default() };
             r.render_page(&d, &s.cache, 0, 1.0, false, &o).unwrap()
         };
         let plain = render(false, false);
         let lit = render(true, true);
-        let count = |img: &designcraft_render::Rendered, pred: &dyn Fn([u8; 4]) -> bool| {
+        let count = |img: &pejy_render::Rendered, pred: &dyn Fn([u8; 4]) -> bool| {
             (72..172).flat_map(|x| (72..400).map(move |y| (x, y))).filter(|&(x, y)| pred(img.pixel(x, y))).count()
         };
         let yellow = |p: [u8; 4]| p[0] > 240 && p[1] > 200 && p[2] < 190;
@@ -245,7 +245,7 @@ mod keep_highlight_tests {
         let text = "word ".repeat(120);
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 160], "content": "text", "text": text, "caret": false})).unwrap();
         s.execute("object.textFrameOptions", &json!({"ids": [r["id"]], "columns": 2})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let flagged = |s: &Session| s.cache.get(&s.doc().unwrap().doc, sid, None).frames[0].lines.iter().any(|l| l.keep_violation);
         assert!(!flagged(&s), "no keep options, no violation");
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 0})).unwrap();
@@ -264,10 +264,10 @@ mod blend_space_tests {
     fn blend_space_is_set_and_kept_in_idml() {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.settings.blend_space, designcraft_doc::BlendSpace::Cmyk);
+        assert_eq!(s.doc().unwrap().doc.settings.blend_space, pejy_doc::BlendSpace::Cmyk);
         s.execute("edit.transparencyBlendSpace", &json!({"space": "rgb"})).unwrap();
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
-        assert_eq!(back.settings.blend_space, designcraft_doc::BlendSpace::Rgb);
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        assert_eq!(back.settings.blend_space, pejy_doc::BlendSpace::Rgb);
         assert!(s.execute("edit.transparencyBlendSpace", &json!({"space": "lab"})).is_err());
     }
 }
@@ -284,10 +284,10 @@ mod glyph_fallback_tests {
         s.execute("file.new", &json!({})).unwrap();
         assert_eq!(s.execute("document.preferences", &json!({})).unwrap()["glyphFallback"], false, "new documents: off");
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "語"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let gid = |s: &Session| s.cache.get(&s.doc().unwrap().doc, sid, None).frames[0].lines[0].glyphs[0].gid;
         assert_eq!(gid(&s), 0);
-        designcraft_fonts::FontDb::global().add_font(designcraft_fonts::testing::font_with("DC Test Prefs Helper", &['語']).unwrap());
+        pejy_fonts::FontDb::global().add_font(pejy_fonts::testing::font_with("DC Test Prefs Helper", &['語']).unwrap());
         assert_eq!(s.execute("document.preferences", &json!({"glyphFallback": true})).unwrap()["glyphFallback"], true);
         assert!(s.doc().unwrap().doc.settings.glyph_fallback);
         assert_ne!(gid(&s), 0, "drawn from a fallback font");
@@ -301,7 +301,7 @@ mod glyph_fallback_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         s.execute("document.preferences", &json!({"glyphFallback": true})).unwrap();
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
         assert!(!back.settings.glyph_fallback, "as InDesign draws them");
     }
 }

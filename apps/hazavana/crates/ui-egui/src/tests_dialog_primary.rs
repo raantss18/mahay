@@ -8,7 +8,7 @@ use serde_json::json;
 
 use crate::headless::Headless;
 use crate::panels::dialogs::{ConfirmStyle, confirm_style};
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 
@@ -17,8 +17,8 @@ fn rect(h: &Headless, id: &str) -> egui::Rect {
 }
 
 fn png(dir: &std::path::Path, name: &str) -> String {
-    let img = lightcraft_raster::Rgba8 { width: 8, height: 8, data: vec![[90, 120, 160, 255]; 64] };
-    let bytes = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&img), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+    let img = hazavana_raster::Rgba8 { width: 8, height: 8, data: vec![[90, 120, 160, 255]; 64] };
+    let bytes = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&img), &hazavana_codecs::EncodeMeta::default()).unwrap();
     let p = dir.join(name);
     std::fs::write(&p, bytes).unwrap();
     p.to_string_lossy().to_string()
@@ -31,7 +31,7 @@ fn the_import_review_puts_its_confirm_on_the_right_as_the_primary_action() {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let paths = [png(&dir, "a.png"), png(&dir, "b.png")];
-    let app = LightcraftApp::new(lightcraft_engine::Session::new().with_fs(), Services::default());
+    let app = HazavanaApp::new(hazavana_engine::Session::new().with_fs(), Services::default());
     let mut h = Headless::new(app, [1400.0, 1000.0], 1.0);
     h.step();
     h.app.run("file.addPhotos", json!({"paths": paths})).unwrap();
@@ -57,7 +57,7 @@ fn constructive_confirms_are_primary_and_destructive_ones_plain() {
 fn a_dialog_wider_than_its_content_still_ends_its_footer_at_its_edge() {
     // Auto-Stack's title makes it wider than its slider and note: the buttons go to the edge, and
     // the window doesn't grow for them
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services::default());
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services::default());
     let mut h = Headless::new(app, [1400.0, 1000.0], 1.0);
     h.step();
     h.app.run("dialog.autoStack", json!({})).unwrap();

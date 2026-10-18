@@ -2,7 +2,7 @@
 //! CMYK pixels go through their own profile, else the working CMYK space. Every raster decode
 //! path (JPEG, PNG, TIFF, WebP, PSD) converts here, once, when the image is decoded.
 //!
-//! Colour management is craft-cms's ([`Profile`], [`Transform`], [`TransformOptions`],
+//! Colour management is mahay-cms's ([`Profile`], [`Transform`], [`TransformOptions`],
 //! [`Intent`], [`Builtin`]); black point compensation is its, as set in the colour settings.
 //!
 //! Profiles are untrusted input: one that is too large, can't be parsed, doesn't match the
@@ -11,10 +11,10 @@
 
 use std::sync::Arc;
 
-use designcraft_color::{Color, cms::Cms};
+use pejy_color::{Color, cms::Cms};
 use image::RgbaImage;
 
-pub use craft_cms::{Builtin, ColorSpace, Intent, Profile, Transform, TransformOptions};
+pub use mahay_cms::{Builtin, ColorSpace, Intent, Profile, Transform, TransformOptions};
 
 use crate::CmykRaster;
 
@@ -50,7 +50,7 @@ impl DisplayColour {
     /// The active colour settings (Edit → Color Settings): working CMYK space, intent and black
     /// point compensation.
     pub fn active() -> Self {
-        Self::of(&designcraft_color::cms::active())
+        Self::of(&pejy_color::cms::active())
     }
 
     pub fn of(cms: &Cms) -> Self {
@@ -108,7 +108,7 @@ fn parse(icc: &[u8], pixels: ColorSpace) -> Option<Profile> {
 /// A transform from `src` to display sRGB, reusing one built earlier for the same profiles and
 /// options (CMYK transforms build a large table).
 fn to_srgb(src: &Profile, options: TransformOptions) -> Option<Arc<Transform>> {
-    match craft_cms::cached(src, Builtin::Srgb.profile(), options) {
+    match mahay_cms::cached(src, Builtin::Srgb.profile(), options) {
         Ok(x) if x.inputs() == src.channels() && x.outputs() == 3 => Some(x),
         Ok(_) => {
             log::warn!("image ICC profile to sRGB: unexpected channel counts; profile ignored");

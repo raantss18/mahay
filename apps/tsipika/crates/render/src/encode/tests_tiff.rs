@@ -46,7 +46,7 @@ fn byte_order_writes_an_ii_or_mm_header() {
         assert_eq!(&file[..4], magic);
         let rgb: Vec<u8> = px.chunks(4).flat_map(|p| &p[..3]).copied().collect();
         assert_eq!(pixels(&file), rgb, "{order:?}");
-        assert_eq!(decoder(&file).get_tag_ascii_string(Tag::Software).unwrap(), "VectorCraft");
+        assert_eq!(decoder(&file).get_tag_ascii_string(Tag::Software).unwrap(), "Tsipika");
     }
     for (s, o) in [("little", ByteOrder::Little), ("MM", ByteOrder::Big), ("mac", ByteOrder::Big), ("ii", ByteOrder::Little), ("big", ByteOrder::Big)]
     {

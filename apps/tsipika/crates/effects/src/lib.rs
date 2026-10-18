@@ -1,4 +1,4 @@
-//! VectorCraft live effects (Illustrator's Effect menu).
+//! Tsipika live effects (Illustrator's Effect menu).
 //!
 //! Effects live in appearance stacks as [`Effect`] `{id, params, visible}` records. This crate
 //! interprets them:
@@ -21,7 +21,7 @@
 //! - [`clip_outline`] is the region a clip group clips to, shared by the renderer and the SVG and
 //!   PDF writers.
 //! - **Plug-in effects** (`plugin.<plug-in id>`, Effect › Plug-ins) are geometry effects run by an
-//!   installed WebAssembly plug-in (`vectorcraft-plugins`); [`effect_info`] describes them like
+//!   installed WebAssembly plug-in (`tsipika-plugins`); [`effect_info`] describes them like
 //!   built-in ones, and an effect whose plug-in isn't installed leaves the geometry as it is.
 //! - **Colour adjustments** (Brightness/Contrast, Curves, Levels, Hue/Saturation, Shift to Color,
 //!   Temperature/Tint) recolour what an object paints with: [`adjust`] evaluates them for the
@@ -56,8 +56,8 @@ mod tests;
 mod tests_scale;
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::{AppearanceItem, Effect, Node, NodeKind, StrokeLayer};
-use vectorcraft_geom::{BezPath, FillRule, PathData, Rect};
+use tsipika_doc::{AppearanceItem, Effect, Node, NodeKind, StrokeLayer};
+use tsipika_geom::{BezPath, FillRule, PathData, Rect};
 
 pub use adjust::{
     ADJUSTMENTS, CHANNELS, ColorMap, ImageHook, adjust, adjust_in_document, color_map, curve_at, curve_points, has_adjustment, is_adjustment,
@@ -345,28 +345,28 @@ pub fn effect_catalog() -> Vec<EffectInfo> {
             "artistic.cutout",
             "Cutout…",
             ARTISTIC,
-            "{levels: 2..8 (4; steps per colour channel: more levels, more flat colours), edgeSimplicity: 0..10 (4; simpler, smoother edges), edgeFidelity: 1..3 (2; keeps more of the edges' detail)} redraws the object as flat pieces of coloured paper, each piece painted in the average colour that falls into it, keeping its coverage. Original visual approximation; chosen VectorCraft defaults.",
+            "{levels: 2..8 (4; steps per colour channel: more levels, more flat colours), edgeSimplicity: 0..10 (4; simpler, smoother edges), edgeFidelity: 1..3 (2; keeps more of the edges' detail)} redraws the object as flat pieces of coloured paper, each piece painted in the average colour that falls into it, keeping its coverage. Original visual approximation; chosen Tsipika defaults.",
             json!({"levels": 4.0, "edgeSimplicity": 4.0, "edgeFidelity": 2.0}),
         ),
         r(
             "artistic.filmGrain",
             "Film Grain…",
             ARTISTIC,
-            "{grain: 0..20 (4; monochrome noise in shadows and midtones), highlightArea: 0..20 (0; widens the bright highlight area), intensity: 0..10 (10; highlight strength and quieter highlight grain)}. Smooth document-space grain follows translations; minification uses approximate footprint filtering. Coverage and pure white are preserved; black takes light speckles, and saturated colour channels may clip. Grain 0 with either highlightArea 0 or intensity 0 leaves the art unchanged. Original visual approximation; chosen VectorCraft defaults.",
+            "{grain: 0..20 (4; monochrome noise in shadows and midtones), highlightArea: 0..20 (0; widens the bright highlight area), intensity: 0..10 (10; highlight strength and quieter highlight grain)}. Smooth document-space grain follows translations; minification uses approximate footprint filtering. Coverage and pure white are preserved; black takes light speckles, and saturated colour channels may clip. Grain 0 with either highlightArea 0 or intensity 0 leaves the art unchanged. Original visual approximation; chosen Tsipika defaults.",
             json!({"grain": 4.0, "highlightArea": 0.0, "intensity": 10.0}),
         ),
         r(
             "artistic.neonGlow",
             "Neon Glow…",
             ARTISTIC,
-            "{glowSize: -24..24 (5; above 0 the light areas glow, below 0 the dark ones; farther from 0 spreads the glow wider), glowBrightness: 0..50 (15; a stronger glow over dimmer greys), color: \"#rrggbb\" (\"#4da6ff\"; the glow's colour)} redraws the object in greys lit by a coloured glow, keeping its coverage. Original visual approximation; chosen VectorCraft defaults.",
+            "{glowSize: -24..24 (5; above 0 the light areas glow, below 0 the dark ones; farther from 0 spreads the glow wider), glowBrightness: 0..50 (15; a stronger glow over dimmer greys), color: \"#rrggbb\" (\"#4da6ff\"; the glow's colour)} redraws the object in greys lit by a coloured glow, keeping its coverage. Original visual approximation; chosen Tsipika defaults.",
             json!({"glowSize": 5.0, "glowBrightness": 15.0, "color": "#4da6ff"}),
         ),
         r(
             "artistic.posterEdges",
             "Poster Edges…",
             ARTISTIC,
-            "{edgeThickness: 0..10 (2; wider lines), edgeIntensity: 0..10 (1; darker lines, on fainter edges too), posterization: 0..6 (2; posterization + 2 levels per colour channel)} reduces the object's colours and draws black lines on its edges, keeping its coverage. Original visual approximation; chosen VectorCraft defaults.",
+            "{edgeThickness: 0..10 (2; wider lines), edgeIntensity: 0..10 (1; darker lines, on fainter edges too), posterization: 0..6 (2; posterization + 2 levels per colour channel)} reduces the object's colours and draws black lines on its edges, keeping its coverage. Original visual approximation; chosen Tsipika defaults.",
             json!({"edgeThickness": 2.0, "edgeIntensity": 1.0, "posterization": 2.0}),
         ),
         r(
@@ -471,7 +471,7 @@ pub fn effect_catalog() -> Vec<EffectInfo> {
             "sketch.halftonePattern",
             "Halftone Pattern…",
             SKETCH,
-            "{size: pt 1..12 (1; how far apart the screen's dots, rings or lines are), contrast: 0..50 (5; 50 draws pure black and white), patternType: \"circle\"|\"dot\"|\"line\" (\"dot\"; rings round the object's centre, dots on a square grid, horizontal lines)} redraws the object in black ink on white paper through a halftone screen whose ink covers as much as the colour is dark, keeping its coverage. Original visual approximation; chosen VectorCraft defaults.",
+            "{size: pt 1..12 (1; how far apart the screen's dots, rings or lines are), contrast: 0..50 (5; 50 draws pure black and white), patternType: \"circle\"|\"dot\"|\"line\" (\"dot\"; rings round the object's centre, dots on a square grid, horizontal lines)} redraws the object in black ink on white paper through a halftone screen whose ink covers as much as the colour is dark, keeping its coverage. Original visual approximation; chosen Tsipika defaults.",
             json!({"size": 1.0, "contrast": 5.0, "patternType": "dot"}),
         ),
         r(
@@ -663,8 +663,8 @@ pub fn effect_info(id: &str) -> Option<EffectInfo> {
 
 /// The catalogue entry of the installed effect plug-in with effect id `id` (`plugin.<id>`).
 fn plugin_info(id: &str) -> Option<EffectInfo> {
-    use vectorcraft_plugins::registry::intern;
-    let p = vectorcraft_plugins::effect::installed(id)?;
+    use tsipika_plugins::registry::intern;
+    let p = tsipika_plugins::effect::installed(id)?;
     let m = p.manifest();
     let dots = if m.params.is_empty() || m.name.ends_with('…') { "" } else { "…" };
     Some(EffectInfo {
@@ -680,7 +680,7 @@ fn plugin_info(id: &str) -> Option<EffectInfo> {
 
 /// The installed effect plug-ins as catalogue entries (Effect › Plug-ins), by plug-in id.
 pub fn plugin_effects() -> Vec<EffectInfo> {
-    vectorcraft_plugins::registry::list().iter().filter_map(|p| plugin_info(&vectorcraft_plugins::effect::effect_id(p.id()))).collect()
+    tsipika_plugins::registry::list().iter().filter_map(|p| plugin_info(&tsipika_plugins::effect::effect_id(p.id()))).collect()
 }
 
 /// Dialog defaults for `id` (`None` for unknown effects).
@@ -698,7 +698,7 @@ pub fn merged_params(id: &str, params: &Value) -> Value {
     let mut out = match catalog_index().get(id).map(|e| &e.defaults) {
         Some(Value::Object(m)) => m.clone(),
         Some(_) => Map::new(),
-        None => vectorcraft_plugins::effect::installed(id).map(|p| p.manifest().defaults()).unwrap_or_default(),
+        None => tsipika_plugins::effect::installed(id).map(|p| p.manifest().defaults()).unwrap_or_default(),
     };
     // Upgraded before the defaults are under it: a default angle is no angle given.
     if let Value::Object(p) = upgrade_params(id, params) {
@@ -736,7 +736,7 @@ fn upgrade_light(id: &str, m: &mut Map<String, Value>) {
         return;
     }
     let degrees = |v: Option<Value>, default: f64| v.and_then(|v| v.as_f64()).unwrap_or(default);
-    let (rotation, height, behind) = vectorcraft_three_d::light_from_azimuth_elevation(degrees(azimuth, -45.0), degrees(elevation, 45.0));
+    let (rotation, height, behind) = tsipika_three_d::light_from_azimuth_elevation(degrees(azimuth, -45.0), degrees(elevation, 45.0));
     m.insert("lightRotation".into(), json!(rotation));
     m.insert("lightHeight".into(), json!(height));
     m.insert("lightBehind".into(), json!(behind));
@@ -748,7 +748,7 @@ fn upgrade_perspective(id: &str, m: &mut Map<String, Value>) {
     }
     let Some(strength) = m.remove("perspective") else { return };
     if !m.contains_key("perspectiveAngle") {
-        let angle = vectorcraft_three_d::perspective_from_strength(strength.as_f64().unwrap_or(0.0) / 100.0);
+        let angle = tsipika_three_d::perspective_from_strength(strength.as_f64().unwrap_or(0.0) / 100.0);
         m.insert("perspectiveAngle".into(), json!(angle));
     }
 }
@@ -771,7 +771,7 @@ fn upgrade_scribble(id: &str, m: &mut Map<String, Value>) {
 /// A new effect record with default parameters (overridden by `params`).
 pub fn new_effect(id: &str, params: &Value) -> Option<Effect> {
     if !catalog_index().contains_key(id) {
-        vectorcraft_plugins::effect::installed(id)?;
+        tsipika_plugins::effect::installed(id)?;
     }
     Some(Effect { id: id.to_string(), params: merged_params(id, params), visible: true })
 }
@@ -809,7 +809,7 @@ pub fn is_geometry(id: &str) -> bool {
         && !is_adjustment(id)
         && id != CROP_MARKS
         && !is_three_d(id)
-        && (catalog_index().contains_key(id) || vectorcraft_plugins::effect::plugin_id(id).is_some())
+        && (catalog_index().contains_key(id) || tsipika_plugins::effect::plugin_id(id).is_some())
 }
 
 /// Any visible geometry effect in the list?
@@ -820,13 +820,13 @@ pub fn has_geometry(effects: &[Effect]) -> bool {
 /// Does `n` have a visible plug-in effect, its own or a fill's or stroke's? Such an effect draws
 /// what the plug-in installed under its id draws ([`plugin_revision`]).
 pub fn has_plugin_effect(n: &Node) -> bool {
-    let plugin = |e: &Effect| e.visible && vectorcraft_plugins::effect::plugin_id(&e.id).is_some();
+    let plugin = |e: &Effect| e.visible && tsipika_plugins::effect::plugin_id(&e.id).is_some();
     n.appearance.effects.iter().any(plugin) || n.appearance.items.iter().any(|i| i.effects().iter().any(plugin))
 }
 
 /// The plug-in registry's revision, which changes whenever a plug-in is installed or removed.
 pub fn plugin_revision() -> u64 {
-    vectorcraft_plugins::registry::revision()
+    tsipika_plugins::registry::revision()
 }
 
 /// Context the geometry effects may need from the object's appearance.
@@ -896,8 +896,8 @@ pub fn apply_geometry_bez(effects: &[Effect], path: &BezPath, bounds: Rect, ctx:
 
 pub(crate) fn apply_one(id: &str, p: &Value, path: &PathData, b: Rect, ctx: &GeomContext) -> PathData {
     use util::*;
-    if let Some(plugin) = vectorcraft_plugins::effect::plugin_id(id) {
-        return vectorcraft_plugins::effect::apply(plugin, p, path, b, ctx.rule).unwrap_or_else(|| path.clone());
+    if let Some(plugin) = tsipika_plugins::effect::plugin_id(id) {
+        return tsipika_plugins::effect::apply(plugin, p, path, b, ctx.rule).unwrap_or_else(|| path.clone());
     }
     match id {
         "distort.freeDistort" => distort::free_distort(path, b, p),
@@ -912,7 +912,7 @@ pub(crate) fn apply_one(id: &str, p: &Value, path: &PathData, b: Rect, ctx: &Geo
             if off.abs() < 1e-9 {
                 return path.clone();
             }
-            vectorcraft_pathops::offset_path(path, off, join(p, "joins"), num(p, "miterLimit", 4.0).clamp(1.0, 500.0))
+            tsipika_pathops::offset_path(path, off, join(p, "joins"), num(p, "miterLimit", 4.0).clamp(1.0, 500.0))
         }
         // Outline Object returns the geometry unchanged. Type reaches every geometry effect as its
         // glyph outlines (`reshape::reshape`), so type that carries it is drawn as those outlines.
@@ -922,7 +922,7 @@ pub(crate) fn apply_one(id: &str, p: &Value, path: &PathData, b: Rect, ctx: &Geo
             let base = match ctx.stroke {
                 Some(s) => s,
                 None => {
-                    fallback = StrokeLayer::new(vectorcraft_doc::color::Paint::None, 1.0);
+                    fallback = StrokeLayer::new(tsipika_doc::color::Paint::None, 1.0);
                     &fallback
                 }
             };

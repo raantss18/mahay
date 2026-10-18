@@ -11,7 +11,7 @@ use std::borrow::Cow;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 use kurbo::{Affine, BezPath, ParamCurve, ParamCurveArclen, PathSeg, Point, Shape, Vec2};
-use vectorcraft_doc::{ArrowAlign, Arrowhead, StrokeLayer};
+use tsipika_doc::{ArrowAlign, Arrowhead, StrokeLayer};
 
 use super::{ARCLEN_ACCURACY, StrokePieces, cap_extent, push_seg, segments, subpaths, tangent, unit};
 

@@ -5,9 +5,9 @@
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 
-use vectorcraft_geom::corners::{Corner, cut_corners, fitted_radii, path_corners};
-use vectorcraft_geom::shapes::{self, CornerKind};
-use vectorcraft_geom::{Affine, PathData, Rect};
+use tsipika_geom::corners::{Corner, cut_corners, fitted_radii, path_corners};
+use tsipika_geom::shapes::{self, CornerKind};
+use tsipika_geom::{Affine, PathData, Rect};
 
 use crate::node::{LiveShape, Node, NodeKind};
 use crate::selection::AnchorRef;
@@ -190,7 +190,7 @@ pub fn set_corners(path: &mut PathData, live: &mut Option<Box<LiveShape>>, corne
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_geom::{Point, SubPath};
+    use tsipika_geom::{Point, SubPath};
 
     fn set(v: &[usize]) -> BTreeSet<usize> {
         v.iter().copied().collect()

@@ -15,7 +15,7 @@
   timestamp server, ...). Optional overrides: WINDOWS_TIMESTAMP_URL, SIGNTOOL (path to signtool.exe).
 
 .EXAMPLE
-  pwsh packaging/windows/sign.ps1 dist/figcraft.exe dist/FigCraft.msi
+  pwsh packaging/windows/sign.ps1 dist/endrika.exe dist/Endrika.msi
 #>
 param(
   [Parameter(Mandatory = $true, ValueFromRemainingArguments = $true)]
@@ -55,8 +55,8 @@ if (-not $haveCert -and -not $haveAzure) {
 }
 
 $script:SignTool = Find-SignTool
-$common = @('sign', '/v', '/fd', 'SHA256', '/td', 'SHA256', '/d', 'FigCraft', '/du', 'https://github.com/storytold/figcraft')
-$tmp = Join-Path ([IO.Path]::GetTempPath()) "figcraft-sign-$PID"
+$common = @('sign', '/v', '/fd', 'SHA256', '/td', 'SHA256', '/d', 'Endrika', '/du', 'https://github.com/raantss18/mahay')
+$tmp = Join-Path ([IO.Path]::GetTempPath()) "endrika-sign-$PID"
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 
 try {

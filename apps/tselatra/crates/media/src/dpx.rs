@@ -10,7 +10,7 @@
 //! encoding, signed or float samples, Y'CbCr, packed 10/12-bit, transposed images) is refused
 //! with an error naming it. Every field is read with bounds checks.
 
-use effectcraft_project::{AlphaMode, Footage};
+use tselatra_project::{AlphaMode, Footage};
 use rayon::prelude::*;
 
 use crate::{MediaError, Result};

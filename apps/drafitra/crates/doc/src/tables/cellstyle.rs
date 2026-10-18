@@ -2,7 +2,7 @@
 //! ones. A cell style sets the text (style, height, colour, alignment), the cell (fill, margins,
 //! borders) and how numbers are shown.
 
-use cadcraft_color::Color;
+use drafitra_color::Color;
 use serde::{Deserialize, Serialize};
 
 use crate::{Lineweight, Table, TableStyle};
@@ -224,7 +224,7 @@ pub fn positional_cell_style(row: usize, title: bool, header: bool) -> &'static 
 impl Default for Table {
     fn default() -> Self {
         Table {
-            insert: cadcraft_geom::Vec3::new(0.0, 0.0, 0.0),
+            insert: drafitra_geom::Vec3::new(0.0, 0.0, 0.0),
             col_widths: Vec::new(),
             row_heights: Vec::new(),
             cells: Vec::new(),

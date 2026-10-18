@@ -3,7 +3,7 @@
 //! backdrops, styles, colour variables and the document colours. Image pixels are not values and
 //! are left alone.
 
-use figcraft_color::{Color, ColorProfile, ImageFilters};
+use endrika_color::{Color, ColorProfile, ImageFilters};
 use serde::{Deserialize, Serialize};
 
 use crate::proto::Action;

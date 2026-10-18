@@ -1,17 +1,17 @@
-# CADCraft roadmap
+# Drafitra roadmap
 
 **Stage: pre-alpha** · next: alpha, ~2 points (38% → 40% ready for real work) and ~125–190 Opus 5.5 hours away (the four failing core workflows of the [alpha gate](docs/roadmap.md#alpha-gate))
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** minor (hours to ~95% for each readiness number) · **Target:** Autodesk AutoCAD 2027
 
-CADCraft targets full parity with AutoCAD (2D drafting first, then annotation, layouts and
+Drafitra targets full parity with AutoCAD (2D drafting first, then annotation, layouts and
 plotting, DWG, parametrics and 3D), plus what AutoCAD doesn't have: agent control over MCP, a
 scriptable CLI, a web build, Linux and FreeBSD builds, and a free licence.
 
 **Why pre-alpha:** four of AutoCAD's five core workflows fail the [alpha gate](docs/roadmap.md#alpha-gate).
 Precise drafting lacks object snap tracking and has stubbed TRIM/EXTEND/OFFSET options; blocks
 can't be edited in a block editor (REFEDIT edits them in place, xrefs not yet); plots ignore plot styles; and a DWG saved by
-CADCraft drops everything it doesn't model and has never been checked in
+Drafitra drops everything it doesn't model and has never been checked in
 AutoCAD. Dimensioning passes. Ready for real work (≈ 38%) is also under the ~40% alpha bar. Beta
 is ≈ 600–930 h away.
 
@@ -80,7 +80,7 @@ Hours are Opus 5.5 agent wall-clock hours, calibrated on this repo's own build: 
 
 ## Languages
 
-AutoCAD 2027 for Mac ships 8 interface languages; CADCraft ships English plus partial
+AutoCAD 2027 for Mac ships 8 interface languages; Drafitra ships English plus partial
 Ukrainian and German. Detail: [localization-parity.md](docs/localization-parity.md).
 
 | Language | Status | UI translated |
@@ -122,8 +122,8 @@ Ranked; detail and the full beta checklist in [docs/roadmap.md](docs/roadmap.md)
 | 2026-10-12 | HATCHEDIT refuses an explicit bad `scale` or `angle` before it edits anything, so a rejected request leaves the drawing, undo and redo as they were (#724) |
 | 2026-10-10 | Merged main: Ukrainian interface (#36, first string catalog), Dynamic Input pointer boxes with Tab and relative entry (#60), press-drag selection windows (#63), WIPEOUT and hatch gradients kept through DXF/DWG save (#147, #162), SETVAR DIM* as style overrides (#129), UNITS dialog (#38), close-window save prompt (#47), DIMANGULAR on circles (#20), cargo fmt fixed on main. UI/UX 40% → 43% (dynamic input 15% → 45%), localization 3% → 5%; ready for real work ≈ 37% → 38% (weighted 37.2% → 37.7%), mainstream 27% → 28%, essentials 45% → 46%. Beta is now ~37 points away; hours unchanged within rounding. |
 | 2026-10-10 | Added mainstream practitioner (≈ 27%) and essentials user (≈ 45%) numbers; ready for real work unchanged at ≈ 37%. User evidence: 2 praise comments, 0 "switched from AutoCAD" reports, 27 of 37 open issues on the core path. |
-| 2026-10-10 | Stage re-normalized from alpha to **pre-alpha** under the craftrules core-workflow gate: drafting with tracking, blocks, plotting and lossless DWG save fail; dimensioning passes. Alpha is ≈ 125–190 h away. |
-| 2026-10-10 | Full re-measure against AutoCAD 2027 for Mac in the craftrules progress-docs format: menu breadth 245/491 (50%), ready for real work ≈ 37%, stage alpha. Remaining estimates rose (≈ 570 h → 1,300–2,100 h) on new evidence: behaviour audits found tracking/extension/parallel snaps and dynamic input are not real, saves drop unmodelled content, DWG saves as R2000, and the old estimate had no localization, ecosystem, stability, platform or AI rows. New docs: target-app-parity, gaps, roadmap, architecture, localization, file-format, hardware, UI and geometry parity; `docs/parity.md` became `docs/parity-checklist.md`. |
+| 2026-10-10 | Stage re-normalized from alpha to **pre-alpha** under the mahay-rules core-workflow gate: drafting with tracking, blocks, plotting and lossless DWG save fail; dimensioning passes. Alpha is ≈ 125–190 h away. |
+| 2026-10-10 | Full re-measure against AutoCAD 2027 for Mac in the mahay-rules progress-docs format: menu breadth 245/491 (50%), ready for real work ≈ 37%, stage alpha. Remaining estimates rose (≈ 570 h → 1,300–2,100 h) on new evidence: behaviour audits found tracking/extension/parallel snaps and dynamic input are not real, saves drop unmodelled content, DWG saves as R2000, and the old estimate had no localization, ecosystem, stability, platform or AI rows. New docs: target-app-parity, gaps, roadmap, architecture, localization, file-format, hardware, UI and geometry parity; `docs/parity.md` became `docs/parity-checklist.md`. |
 | 2026-10-10 | About 60 community PRs merged in a day: DXF fidelity (transparency, LWPOLYLINE elevation, frozen VP layers, dimension text rotation, arc-length dims, non-ASCII escapes), CJK font fallback, Save/Don't Save on close, Light/System themes, F2 history, trackpad pan, Linux XWayland drag-and-drop, correctness fixes across draw/modify/constraints. Release v0.4.0. |
 | 2026-10-08 | Releases v0.1.0–v0.3.0: Flatpak, AppImage updates, signed macOS universal, Windows x64/x86/arm64, Linux, FreeBSD and web builds. |
 | 2026-10-07 | Old assessment: menu breadth 233/491 (47%), ≈ 29% weighted parity, 2D drafting ≈ 55%, ≈ 570 h remaining; milestones as reported then: M1 ~85%, M2 ~65%, M3 ~75%, M4 ~50%, M5 ~35%, M6 ~55%, M7 ~55%, M8 ~20%, M9 ~60%, M10 ~70%, M11 0%, M12 ~25%, M13 ~10%. |

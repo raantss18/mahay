@@ -10,7 +10,7 @@ use std::time::{Duration, SystemTime};
 
 use egui::accesskit::Role;
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Shape};
-use figcraft_engine::{Prefs, Session};
+use endrika_engine::{Prefs, Session};
 use serde_json::{Value, json};
 
 use crate::Services;
@@ -82,8 +82,8 @@ fn sorting_by_modified_created_and_name_either_way() {
     let files = || {
         vec![
             shown("/a/beta.fig", Some(300), Some(10)),
-            shown("/a/Alpha.figcraft", Some(100), Some(30)),
-            shown("/b/gone.figcraft", None, None),
+            shown("/a/Alpha.endrika", Some(100), Some(30)),
+            shown("/b/gone.endrika", None, None),
             shown("/a/charlie.svg", Some(200), None),
         ]
     };
@@ -141,18 +141,18 @@ fn png(w: u32, h: u32) -> Vec<u8> {
     out
 }
 
-/// A folder of recent files: `pic.figcraft` (a picture on a dark page, edited 3 hours ago),
-/// `empty.figcraft` (nothing on a light grey page, edited 2 days ago), `art.fig` (a picture, edited
-/// just now), `icon.svg`, and `gone.figcraft` (missing).
+/// A folder of recent files: `pic.endrika` (a picture on a dark page, edited 3 hours ago),
+/// `empty.endrika` (nothing on a light grey page, edited 2 days ago), `art.fig` (a picture, edited
+/// just now), `icon.svg`, and `gone.endrika` (missing).
 fn files(name: &str) -> (PathBuf, Vec<String>) {
-    let dir = std::env::temp_dir().join(format!("figcraft-home-recents-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-home-recents-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let doc = |rgb: f32| {
-        let mut d = figcraft_doc::Document::new("File");
+        let mut d = endrika_doc::Document::new("File");
         let p = d.first_page().unwrap();
-        if let Some(figcraft_doc::NodeKind::Page { background, .. }) = d.node_mut(p).map(|n| &mut n.kind) {
-            *background = figcraft_color::Color { r: rgb, g: rgb, b: rgb, a: 1.0 };
+        if let Some(endrika_doc::NodeKind::Page { background, .. }) = d.node_mut(p).map(|n| &mut n.kind) {
+            *background = endrika_color::Color { r: rgb, g: rgb, b: rgb, a: 1.0 };
         }
         d
     };
@@ -164,11 +164,11 @@ fn files(name: &str) -> (PathBuf, Vec<String>) {
         path.to_string_lossy().into_owned()
     };
     let paths = vec![
-        write("pic.figcraft", figcraft_format::save_bytes(&doc(0.1), Some(&png(64, 32))).unwrap(), 3 * HOUR + 60),
-        write("empty.figcraft", figcraft_format::save_bytes(&doc(0.9), None).unwrap(), 2 * DAY + 60),
-        write("art.fig", figcraft_format::fig::export(&doc(0.2), Some(&png(20, 40))).unwrap().0, 0),
+        write("pic.endrika", endrika_format::save_bytes(&doc(0.1), Some(&png(64, 32))).unwrap(), 3 * HOUR + 60),
+        write("empty.endrika", endrika_format::save_bytes(&doc(0.9), None).unwrap(), 2 * DAY + 60),
+        write("art.fig", endrika_format::fig::export(&doc(0.2), Some(&png(20, 40))).unwrap().0, 0),
         write("icon.svg", b"<svg xmlns='http://www.w3.org/2000/svg'/>".to_vec(), 5 * 60),
-        dir.join("gone.figcraft").to_string_lossy().into_owned(),
+        dir.join("gone.endrika").to_string_lossy().into_owned(),
     ];
     (dir, paths)
 }
@@ -278,7 +278,7 @@ fn cards_show_pictures_on_their_page_colour_with_name_and_time() {
     assert_eq!(file(&r, "gone")["exists"], false);
     assert_eq!(images(&s), 2, "two pictures drawn");
     // Each picture sits on its file's page colour (not one fixed colour).
-    let page = |v: f32| crate::theme::c32(figcraft_color::Color { r: v, g: v, b: v, a: 1.0 });
+    let page = |v: f32| crate::theme::c32(endrika_color::Color { r: v, g: v, b: v, a: 1.0 });
     assert!(rects_of(&s, page(0.1)) >= 1 && rects_of(&s, page(0.9)) >= 1 && rects_of(&s, page(0.2)) >= 1);
     // The footer: the file's name and when it was edited, or that it's gone.
     for want in
@@ -296,7 +296,7 @@ fn only_cards_in_view_read_their_pictures() {
     // Twelve files: the last rows are below the window.
     let bytes = std::fs::read(&paths[0]).unwrap();
     for i in 0..8 {
-        let p = dir.join(format!("more{i}.figcraft"));
+        let p = dir.join(format!("more{i}.endrika"));
         std::fs::write(&p, &bytes).unwrap();
         paths.push(p.to_string_lossy().into_owned());
     }
@@ -311,7 +311,7 @@ fn only_cards_in_view_read_their_pictures() {
     let r = recents(&u);
     let pictures: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f["picture"].as_str().unwrap()).collect();
     assert_eq!(pictures.len(), 12);
-    // A to Z: art.fig, empty.figcraft, gone.figcraft (missing: nothing to read) on the first row.
+    // A to Z: art.fig, empty.endrika, gone.endrika (missing: nothing to read) on the first row.
     assert_eq!(pictures.get(..3), Some(["picture", "page", "none"].as_slice()), "the first row is read: {pictures:?}");
     assert!(pictures.iter().skip(9).all(|p| *p == "none"), "the last row is not: {pictures:?}");
 }

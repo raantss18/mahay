@@ -22,7 +22,7 @@ mod entity;
 mod reader;
 mod text;
 
-use vectorcraft_doc::{Document, Unit};
+use tsipika_doc::{Document, Unit};
 
 pub use reader::BINARY_SENTINEL;
 

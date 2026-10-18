@@ -5,7 +5,7 @@
 //!
 //! Fields: `__action` (the save command it finishes), `__pick` (file name and format
 //! editable), `path`, `format`, and one field per option (agents set them with `ui.dialog.set`).
-//! Native and `.ai` files show their save options (VectorCraft Options after Save As): each
+//! Native and `.ai` files show their save options (Tsipika Options after Save As): each
 //! artboard to a separate file, with `all` (true: every artboard) or `range`, Include Linked Files,
 //! Embed ICC Profiles, Create PDF-Compatible File and Use Compression. A `.ai` file's Version comes
 //! first: PDF-compatible, or legacy version 7 (`aiVersion: "7"`, a file per artboard), which takes
@@ -17,12 +17,12 @@
 use std::sync::OnceLock;
 
 use serde_json::{Map, Value, json};
-use vectorcraft_engine::cmd::fileio::{self, ArtboardPick, Format, FormatOption, SAVE_FORMATS, SaveMode, TEMPLATE_FORMATS};
+use tsipika_engine::cmd::fileio::{self, ArtboardPick, Format, FormatOption, SAVE_FORMATS, SaveMode, TEMPLATE_FORMATS};
 
 use super::{DialogResult, DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, io, widgets};
+use crate::{TsipikaApp, io, widgets};
 
 /// Dialog kind.
 pub const KIND: &str = "saveOptions";
@@ -30,7 +30,7 @@ pub const KIND: &str = "saveOptions";
 pub(super) const SPEC: DialogSpec = DialogSpec { heading, body, confirm, min_width: 380.0, ok_enabled: Some(can_save), ..DialogSpec::FORM };
 
 /// OK saves a legacy `.ai` file only with an artboard checked.
-fn can_save(app: &VectorcraftApp, d: &Dialog) -> bool {
+fn can_save(app: &TsipikaApp, d: &Dialog) -> bool {
     !legacy_ai(d) || picked_boards(d, app.session.active().map_or(0, |st| st.doc.artboards.len())).iter().any(|b| *b)
 }
 
@@ -51,7 +51,7 @@ fn heading(d: &Dialog) -> String {
 
 /// `f`'s options with the values a save would use (`file.formatOptions`: as last saved in that
 /// format, else the defaults). Text options start empty rather than null.
-pub(crate) fn option_values(app: &mut VectorcraftApp, f: &Format) -> Map<String, Value> {
+pub(crate) fn option_values(app: &mut TsipikaApp, f: &Format) -> Map<String, Value> {
     let v = app.session.execute("file.formatOptions", &json!({ "format": f.id })).unwrap_or_default();
     f.options
         .iter()
@@ -141,7 +141,7 @@ fn template_labels() -> &'static [&'static str] {
     LABELS.get_or_init(|| TEMPLATE_FORMATS.iter().filter_map(|id| fileio::format(id)).map(|f| f.label).collect())
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let Some(f) = fileio::format(&d.str("format")) else { return false };
     let mut switch = None;
@@ -200,7 +200,7 @@ fn picked_boards(d: &Dialog, n: usize) -> Vec<bool> {
 
 /// The file each checked artboard is saved to (`None` for the others): the file itself when one
 /// is checked, else `{stem}-{artboard}.ai` beside it, as the save names them.
-fn board_files(app: &VectorcraftApp, d: &Dialog, boards: &[bool]) -> Vec<Option<String>> {
+fn board_files(app: &TsipikaApp, d: &Dialog, boards: &[bool]) -> Vec<Option<String>> {
     let checked: Vec<usize> = boards.iter().enumerate().filter(|(_, on)| **on).map(|(i, _)| i).collect();
     let path = d.str("path");
     let file = std::path::Path::new(path.trim());
@@ -242,7 +242,7 @@ fn elide_before_tail(ui: &egui::Ui, text: &str, tail: usize, font: &egui::FontId
 }
 
 /// Legacy `.ai`: the artboards to save, as thumbnails to check; each is saved as a file of its own.
-fn artboard_picker(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn artboard_picker(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     const TILE: egui::Vec2 = egui::vec2(116.0, 84.0);
     let t = Tokens::get(ui.ctx());
     let names: Vec<String> = app.session.active().map(|st| st.doc.artboards.iter().map(|a| a.name.clone()).collect()).unwrap_or_default();
@@ -324,7 +324,7 @@ fn artboard_picker(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) 
 }
 
 /// One option: a checkbox, an artboard menu, a version menu, a number or a text field.
-fn option_row(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, o: &FormatOption) {
+fn option_row(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog, o: &FormatOption) {
     let t = Tokens::get(ui.ctx());
     let label = label(o);
     let value = d.fields.get(o.name).cloned().unwrap_or(Value::Null);
@@ -409,7 +409,7 @@ fn option_row(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, o: &Forma
 }
 
 /// Web Save As: another format brings its own options and file extension.
-fn switch_format(app: &mut VectorcraftApp, d: &mut Dialog, id: &str) {
+fn switch_format(app: &mut TsipikaApp, d: &mut Dialog, id: &str) {
     let (Some(old), Some(new)) = (fileio::format(&d.str("format")), fileio::format(id)) else { return };
     for o in old.options {
         d.fields.remove(o.name);
@@ -428,7 +428,7 @@ fn with_extension(path: &str, f: &Format) -> String {
 }
 
 /// Write the file with the chosen options (blank ones fall back to the format's defaults).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> DialogResult {
     let f = fileio::format(&d.str("format")).ok_or("unknown format")?;
     let path = d.str("path");
     if path.trim().is_empty() {
@@ -473,7 +473,7 @@ mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::{FilePick, Services, theme};
@@ -481,7 +481,7 @@ mod tests {
     type Written = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
     /// A desktop app whose save panel answers `picked` and records what it was shown.
-    fn desktop(picked: &'static str) -> (VectorcraftApp, Written, Rc<RefCell<Vec<FilePick>>>) {
+    fn desktop(picked: &'static str) -> (TsipikaApp, Written, Rc<RefCell<Vec<FilePick>>>) {
         let (written, picks) = (Written::default(), Rc::new(RefCell::new(vec![])));
         let (w, p) = (written.clone(), picks.clone());
         let services = Services {
@@ -499,7 +499,7 @@ mod tests {
     }
 
     /// A browser app: saves are downloads.
-    fn web() -> (VectorcraftApp, Written) {
+    fn web() -> (TsipikaApp, Written) {
         let written = Written::default();
         let w = written.clone();
         let services = Services {
@@ -512,15 +512,15 @@ mod tests {
         (with_art(services), written)
     }
 
-    fn with_art(services: Services) -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), services);
+    fn with_art(services: Services) -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), services);
         app.run("file.new", json!({"width": 100, "height": 80})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
         app
     }
 
     /// One headless frame of the dialog layer; `enter` presses OK.
-    fn frame(app: &mut VectorcraftApp, enter: bool) {
+    fn frame(app: &mut TsipikaApp, enter: bool) {
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);
         let events = if enter {
@@ -532,7 +532,7 @@ mod tests {
         out.textures_delta.clear();
     }
 
-    fn dialog(app: &VectorcraftApp) -> &Dialog {
+    fn dialog(app: &TsipikaApp) -> &Dialog {
         app.ui.dialog.as_ref().expect("a dialog is open")
     }
 
@@ -544,8 +544,8 @@ mod tests {
         // The save panel offers every save format, the document's own first.
         let pick = &picks.borrow()[0];
         let labels: Vec<&str> = pick.filters.iter().map(|f| f.0).collect();
-        assert_eq!(labels, ["VectorCraft", "VectorCraft Template", "PDF", "SVG", "SVG Compressed", "PDF-compatible .ai"]);
-        assert_eq!(pick.name, "Untitled-1.vectorcraft");
+        assert_eq!(labels, ["Tsipika", "Tsipika Template", "PDF", "SVG", "SVG Compressed", "PDF-compatible .ai"]);
+        assert_eq!(pick.name, "Untitled-1.tsipika");
         let d = dialog(&app);
         assert_eq!((d.kind.as_str(), d.str("path").as_str(), d.str("mode").as_str()), ("svgOptions", "art.svg", "save"));
         assert!(written.borrow().is_empty(), "nothing is written before OK");
@@ -610,10 +610,10 @@ mod tests {
         app.ui.dialog.as_mut().unwrap().fields.insert("aiVersion".into(), json!("7"));
         frame(&mut app, false);
         assert_eq!(dialog(&app).fields["boards"], json!([true, true, true, true]), "every artboard to start with");
-        if let Some(dir) = std::env::var_os("CRAFT_UI_SAVE_OPTIONS_SHOT") {
+        if let Some(dir) = std::env::var_os("MAHAY_UI_SAVE_OPTIONS_SHOT") {
             let mut ready = false;
             let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 760.0)).wgpu().build_ui_state(
-                move |ui, app: &mut VectorcraftApp| {
+                move |ui, app: &mut TsipikaApp| {
                     if !ready {
                         theme::install_fonts(ui.ctx());
                         theme::apply(ui.ctx(), theme::Brightness::MediumDark);
@@ -661,7 +661,7 @@ mod tests {
         assert_eq!(dialog(&app).fields["boards"], json!([true, false, true, false]));
     }
 
-    fn board_files_of(app: &VectorcraftApp, boards: [bool; 4]) -> Vec<Option<String>> {
+    fn board_files_of(app: &TsipikaApp, boards: [bool; 4]) -> Vec<Option<String>> {
         let d = Dialog { kind: KIND.into(), fields: [("path".to_string(), json!("art.ai"))].into_iter().collect() };
         board_files(app, &d, &boards)
     }
@@ -669,9 +669,9 @@ mod tests {
     #[test]
     fn the_enter_that_closed_the_save_panel_does_not_confirm_the_options() {
         let (mut app, written, _) = desktop("again.ai");
-        let dir = vectorcraft_testkit::temp_dir("ai-options-enter");
+        let dir = tsipika_testkit::temp_dir("ai-options-enter");
         let orig = dir.join("orig.ai");
-        std::fs::write(&orig, vectorcraft_testkit::ai::ai(&vectorcraft_testkit::ai::sample_data(), vectorcraft_testkit::ai::page_pdf())).unwrap();
+        std::fs::write(&orig, tsipika_testkit::ai::ai(&tsipika_testkit::ai::sample_data(), tsipika_testkit::ai::page_pdf())).unwrap();
         app.run("document.open", json!({"path": orig.to_string_lossy()})).unwrap();
         assert_eq!(app.run("file.saveAs", json!({})).unwrap()["pending"], KIND);
         frame(&mut app, true);
@@ -686,37 +686,37 @@ mod tests {
 
     #[test]
     fn save_a_copy_and_template_suggest_their_names() {
-        let (mut app, written, picks) = desktop("copy.vectorcraft");
-        let folder = vectorcraft_testkit::temp_dir("save-template-dialog");
+        let (mut app, written, picks) = desktop("copy.tsipika");
+        let folder = tsipika_testkit::temp_dir("save-template-dialog");
         app.session.prefs.templates_folder = folder.to_string_lossy().into_owned();
         app.run("file.saveCopy", json!({})).unwrap();
-        assert_eq!(picks.borrow()[0].name, "Untitled-1 copy.vectorcraft");
+        assert_eq!(picks.borrow()[0].name, "Untitled-1 copy.tsipika");
         assert!(app.ui.dialog.is_none(), "the native format has no options");
-        assert!(vectorcraft_format::sniff(&written.borrow()[0].1));
+        assert!(tsipika_format::sniff(&written.borrow()[0].1));
         assert!(app.session.active().unwrap().path.is_none() && app.session.active().unwrap().is_dirty());
         app.run("file.saveAsTemplate", json!({})).unwrap();
         let pick = &picks.borrow()[1];
         assert_eq!(pick.name, "Untitled-1 template.vctemplate");
         assert_eq!(pick.folder.as_deref().map(std::path::Path::new), Some(folder.as_path()));
-        assert_eq!(pick.filters, [("VectorCraft Template", &["vctemplate"][..]), ("PDF-compatible .ait template", &["ait"][..])]);
-        assert_eq!(written.borrow()[1].0, "copy.vectorcraft.vctemplate", "the picked name, with the template's extension");
+        assert_eq!(pick.filters, [("Tsipika Template", &["vctemplate"][..]), ("PDF-compatible .ait template", &["ait"][..])]);
+        assert_eq!(written.borrow()[1].0, "copy.tsipika.vctemplate", "the picked name, with the template's extension");
     }
 
     #[test]
     fn save_as_template_writes_ait_when_it_is_picked() {
         let (mut app, written, _) = desktop("flyer.ait");
-        app.session.prefs.templates_folder = vectorcraft_testkit::temp_dir("save-template-ait").to_string_lossy().into_owned();
+        app.session.prefs.templates_folder = tsipika_testkit::temp_dir("save-template-ait").to_string_lossy().into_owned();
         app.run("file.saveAsTemplate", json!({})).unwrap();
         assert!(app.ui.dialog.is_none(), "a template asks no options");
         let (path, bytes) = written.borrow()[0].clone();
         assert_eq!(path, "flyer.ait", "the picked name is kept");
-        assert!(bytes.starts_with(b"%PDF") && vectorcraft_pdf::editing(&bytes).is_some(), "a PDF carrying the document");
+        assert!(bytes.starts_with(b"%PDF") && tsipika_pdf::editing(&bytes).is_some(), "a PDF carrying the document");
         assert!(app.session.active().unwrap().path.is_none() && app.session.active().unwrap().is_dirty());
         // The web's dialog picks the format: .vctemplate first, .ait beside it.
         let (mut app, written) = web();
         app.run("file.saveAsTemplate", json!({})).unwrap();
         assert_eq!((heading(dialog(&app)).as_str(), dialog(&app).str("format").as_str()), ("Save as Template", "template"));
-        assert_eq!(template_labels(), ["VectorCraft Template", "PDF-compatible .ait template"]);
+        assert_eq!(template_labels(), ["Tsipika Template", "PDF-compatible .ait template"]);
         frame(&mut app, false);
         let mut d = app.ui.dialog.take().unwrap();
         switch_format(&mut app, &mut d, "ait");
@@ -742,14 +742,14 @@ mod tests {
     #[test]
     fn save_as_template_adds_its_extension_to_a_save_formats_name() {
         for (picked, saved) in
-            [("card.pdf", "card.pdf.vctemplate"), ("card.vectorcraft", "card.vectorcraft.vctemplate"), ("card.svg", "card.svg.vctemplate")]
+            [("card.pdf", "card.pdf.vctemplate"), ("card.tsipika", "card.tsipika.vctemplate"), ("card.svg", "card.svg.vctemplate")]
         {
             let (mut app, written, _) = desktop(picked);
-            app.session.prefs.templates_folder = vectorcraft_testkit::temp_dir("save-template-ext").to_string_lossy().into_owned();
+            app.session.prefs.templates_folder = tsipika_testkit::temp_dir("save-template-ext").to_string_lossy().into_owned();
             app.run("file.saveAsTemplate", json!({})).unwrap();
             let (path, bytes) = written.borrow()[0].clone();
             assert_eq!(path, saved, "typed {picked}");
-            assert!(vectorcraft_format::load(&bytes).is_ok_and(|d| d.template), "typed {picked}: a native template");
+            assert!(tsipika_format::load(&bytes).is_ok_and(|d| d.template), "typed {picked}: a native template");
         }
     }
 
@@ -758,7 +758,7 @@ mod tests {
         let (mut app, written) = web();
         app.run("file.saveAs", json!({})).unwrap();
         let d = dialog(&app);
-        assert_eq!((heading(d).as_str(), d.str("path").as_str(), d.str("format").as_str()), ("Save As", "Untitled-1.vectorcraft", "vectorcraft"));
+        assert_eq!((heading(d).as_str(), d.str("path").as_str(), d.str("format").as_str()), ("Save As", "Untitled-1.tsipika", "tsipika"));
         frame(&mut app, false);
         let mut d = app.ui.dialog.take().unwrap();
         switch_format(&mut app, &mut d, "pdf");

@@ -1,0 +1,8 @@
+asset:        mahay-mark.png
+title:        Mahay symbol ("A" mark), blue
+author:       Mahay Team
+source:       original work (first-party Mahay brand asset supplied by the Mahay Team)
+license:      LicenseRef-Mahay-Trademark — Mahay name, wordmark and logos are trademarks of the Mahay Team, not open source and not covered by Tselatra's MIT OR Apache-2.0 license; usable only unmodified and only in the context of Tselatra, under docs/brand/LICENSE-brand.txt.
+license-file: docs/brand/LICENSE-brand.txt
+added:        2026-10-01 by Claude (agent) for Brandon Thomas
+notes:        First-party Mahay brand mark owned by the Mahay Team, kept in docs/brand for the README and brand use: the one exception to the open-licence rule (AGENTS.md §1.8). Forks and modified versions must remove it (docs/brand/LICENSE-brand.txt).

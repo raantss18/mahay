@@ -3,9 +3,9 @@
 
 use crate::local::{denoise, log_lum, nr_params};
 use crate::{RenderRequest, SourceInfo, plan, render};
-use lightcraft_develop::DevelopSettings;
-use lightcraft_raster::resample::{Filter, resize};
-use lightcraft_raster::{Rgb32f, Rgba8};
+use hazavana_develop::DevelopSettings;
+use hazavana_raster::resample::{Filter, resize};
+use hazavana_raster::{Rgb32f, Rgba8};
 
 const W: usize = 1536;
 const H: usize = 1024;
@@ -204,7 +204,7 @@ fn crop_does_not_change_the_noise_reduction_scale() {
     let info = SourceInfo::default();
     assert!((plan(&src, &info, &s, &RenderRequest::fit(400, 200)).detail_scale - 1.0).abs() < 1e-6);
     let mut cropped = s.clone();
-    cropped.crop.geometry.rect = lightcraft_geom::Rect::new(0.25, 0.25, 0.75, 0.75);
+    cropped.crop.geometry.rect = hazavana_geom::Rect::new(0.25, 0.25, 0.75, 0.75);
     let p = plan(&src, &info, &cropped, &RenderRequest::fit(200, 100));
     assert_eq!((p.w, p.h), (200, 100));
     assert!((p.detail_scale - 1.0).abs() < 1e-6, "{}", p.detail_scale);

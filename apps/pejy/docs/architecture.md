@@ -1,8 +1,8 @@
-# DesignCraft architecture
+# Pejy architecture
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (shared PDF writing) · **Target:** Adobe InDesign 2026
 
-How DesignCraft is built today. The design notes behind it are in `plan/architecture.md`
+How Pejy is built today. The design notes behind it are in `plan/architecture.md`
 (local, gitignored); this file describes what the code on `main` does. Agents: AGENTS.md has the
 rules (never crash, everything is a command, layering, clean-room).
 
@@ -17,22 +17,22 @@ lines of Rust, 1,122 tests (2026-10-10). Pure Rust, no C dependencies by default
 | L0 | `geom` | kurbo re-export, units and measurement parsing (`1p6`, `12mm`, `3in+2p`), corner shapes, polygons, transforms, hit testing | 2.5k |
 | L0 | `color` | CMYK/RGB/Gray (Lab in CMS), swatches, tints, gradients, blend modes, ASE, ICC colour management (`cms/`), colour harmony | 2.9k |
 | L1 | `doc` | the document model: spreads, pages, parents, layers, items, stories (text + run lists), tables, notes, styles of five kinds, swatches, sections, variables, CJK and Arabic attributes | 10.2k |
-| L1 | `fonts` | font database (bundled OFL fonts, system fonts, document fonts, optional craft-fonts), metrics, outlines (skrifa), shaping (harfrust), variable instances, font classification for menus | 3.5k |
+| L1 | `fonts` | font database (bundled OFL fonts, system fonts, document fonts, optional mahay-fonts), metrics, outlines (skrifa), shaping (harfrust), variable instances, font classification for menus | 3.5k |
 | L2 | `compose` | the text engine: style resolution, shaping, Knuth–Plass and single-line breaking, Liang hyphenation, justification, tabs, keeps, columns, span/split, baseline grid, vertical justification, wrap, threading, overset, anchored objects, footnotes, tables, bidi, CJK (ruby, warichu, kinsoku), caret and hit testing | 11.7k |
 | L2 | `images` | decoding placed graphics (PNG, JPEG, GIF, WebP, TIFF incl. CMYK, BMP, PSD composite, EPS preview) | 1.6k |
 | L3 | `render` | document to pixels with vello_cpu (SIMD, multithreaded): items, composed text, images with mips, gradients, effects, damage regions, placed PDF via hayro | 3.5k |
-| L3 | `pdf` | PDF export through craft-pdf with Krilla: real text with subset fonts, CMYK and spot, bleed and marks, tagged PDF, links, forms, transitions, PDF/X-4 and PDF/A-2b | 5.0k |
+| L3 | `pdf` | PDF export through mahay-pdf with Krilla: real text with subset fonts, CMYK and spot, bleed and marks, tagged PDF, links, forms, transitions, PDF/X-4 and PDF/A-2b | 5.0k |
 | L3 | `idml` | IDML import and export (designmap, spreads, parents, stories, styles, graphics, preferences; CJK and Arabic attributes) | 8.0k |
 | L3 | `epub` | EPUB 3 reflowable and fixed-layout export | 0.9k |
 | L3 | `textimport` | Word (.docx), RTF, Excel (.xlsx), Tagged Text import; text export | 1.8k |
-| L3 | `format` | the native `.designcraft` zip (`document.json`, `assets/`, `meta.json`, optional `preview.png`), versioned | 0.3k |
+| L3 | `format` | the native `.pejy` zip (`document.json`, `assets/`, `meta.json`, optional `preview.png`), versioned | 0.3k |
 | L4 | `tools` | tool state machines: pointer events and modifiers to commands and overlays; snapping and smart guides | 5.9k |
 | L5 | `engine` | `Session`: documents, history, selection, the command registry (446 commands in `cmd/`), compose cache, preflight, find/change, scripts, recovery, links | 29.3k |
 | L6 | `ui-egui` | the InDesign-style egui frontend: menus, Control panel, Tools, dock and panels, dialogs, canvas, theme tokens, i18n, the control channel | 33.4k |
 | L6 | `mcp` | MCP server over stdio, headless or proxying to the running app | 1.7k |
-| L7 | `apps/designcraft` | desktop binary (eframe/wgpu), file dialogs, control server | 1.6k |
-| L7 | `apps/designcraft-cli` | headless CLI: `run`, `script`, `app`, `describe`, `commands`, `mcp` | 1.2k |
-| L7 | `apps/designcraft-web` | the same UI in WASM (WebGPU, WebGL2 fallback) | 0.3k |
+| L7 | `apps/pejy` | desktop binary (eframe/wgpu), file dialogs, control server | 1.6k |
+| L7 | `apps/pejy-cli` | headless CLI: `run`, `script`, `app`, `describe`, `commands`, `mcp` | 1.2k |
+| L7 | `apps/pejy-web` | the same UI in WASM (WebGPU, WebGL2 fallback) | 0.3k |
 
 `cargo xtask layers` enforces the layering: a crate depends only on lower layers (with the
 intra-layer orders geom → color and doc → fonts); nothing below L6 depends on egui, eframe, winit
@@ -77,15 +77,15 @@ are re-rendered and patched (damage regions, pixel-identical to a full render). 
 Metal, DirectX 12, Vulkan, OpenGL; WebGPU/WebGL2 on the web) only presents; the backend is chosen
 before the window exists, with a start-up fallback list in `gpu.json`, and the adapter (the GPU
 that drives the display first) by the app, which starts again on the next one when an adapter
-fails or hangs at start-up (`apps/designcraft/src/gpu.rs`).
+fails or hangs at start-up (`apps/pejy/src/gpu.rs`).
 
 ## File I/O
 
-Native `.designcraft` (zip + JSON); IDML both ways; PDF, EPUB, HTML, PNG/JPEG, text, XML export;
+Native `.pejy` (zip + JSON); IDML both ways; PDF, EPUB, HTML, PNG/JPEG, text, XML export;
 placed graphics through `images` (PDF/AI pages through hayro); Word/RTF/Excel/Tagged Text through
 `textimport`. INDD is not readable. Details: [file-format-parity.md](file-format-parity.md).
 
-PDF authoring uses the independently pinned `craft-pdf` writer and patched Krilla. Document,
+PDF authoring uses the independently pinned `mahay-pdf` writer and patched Krilla. Document,
 booklet and merge entry points guard the full export; a failed native drawing unwind returns
 an error and incomplete backend state cannot serialize. Layout, shaping, PDF/X processing and
 print preparation remain app-owned. Reader dependencies and the UI/print pins are unchanged.
@@ -95,7 +95,7 @@ See [pdf-backend.md](pdf-backend.md) for dependency and failure contracts.
 
 The desktop app opens a loopback JSON-lines control channel (`--control PORT`) with
 `engine.execute`, inspection, real input injection (`ui.pointer`, `ui.key`, `ui.click`, `ui.drag`),
-dialog control, screenshots and offscreen renders. `designcraft-cli mcp` exposes the same as MCP
+dialog control, screenshots and offscreen renders. `pejy-cli mcp` exposes the same as MCP
 tools, headless or connected to the app. See [agents.md](agents.md), [mcp.md](mcp.md),
 [control-protocol.md](control-protocol.md).
 

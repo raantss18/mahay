@@ -16,8 +16,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, PoisonError, RwLock};
 
-use designcraft_fonts::{FontFace, ScopedFonts};
-use designcraft_geom::{BezPath, PathEl, Point};
+use pejy_fonts::{FontFace, ScopedFonts};
+use pejy_geom::{BezPath, PathEl, Point};
 
 use crate::shape::Glyph;
 
@@ -51,7 +51,7 @@ impl Profile {
             return Profile { bands };
         }
         // A glyph drawn far outside its em is no letter (a hostile font): no profile, no kerning.
-        let bbox = designcraft_geom::Shape::bounding_box(path);
+        let bbox = pejy_geom::Shape::bounding_box(path);
         if !(bbox.x0.is_finite() && bbox.y0.is_finite() && bbox.x1.is_finite() && bbox.y1.is_finite())
             || bbox.width() > MAX_EXTENT * upem
             || bbox.height() > MAX_EXTENT * upem
@@ -87,7 +87,7 @@ impl Profile {
         };
         // Curves are flattened to a fraction of a band: finer makes no difference to the bands.
         let (mut cur, mut start) = (Point::ZERO, Point::ZERO);
-        designcraft_geom::kurbo::flatten(path.iter(), h / 4.0, |el| match el {
+        pejy_geom::kurbo::flatten(path.iter(), h / 4.0, |el| match el {
             PathEl::MoveTo(p) => {
                 cur = p;
                 start = p;
@@ -221,10 +221,10 @@ pub(crate) fn kern_run(db: &ScopedFonts<'_>, run: &mut [Glyph], tracking: f64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use designcraft_geom::Rect;
+    use pejy_geom::Rect;
 
     fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> BezPath {
-        designcraft_geom::Shape::to_path(&Rect::new(x0, y0, x1, y1), 0.1)
+        pejy_geom::Shape::to_path(&Rect::new(x0, y0, x1, y1), 0.1)
     }
 
     #[test]

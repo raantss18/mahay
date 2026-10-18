@@ -8,7 +8,7 @@
 //! Caption text is kept as written (lines separated by `\n`, inline `<i>`/`<b>`/`<u>` tags and
 //! WebVTT cue settings preserved) so files round-trip; renderers strip markup for display.
 
-use filmcraft_time::{Tick, TimeRange};
+use hetsika_time::{Tick, TimeRange};
 use serde::{Deserialize, Serialize};
 
 use crate::{ClipId, TrackId};
@@ -74,7 +74,7 @@ pub enum CaptionAnchor {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct CaptionStyle {
-    /// Font family name (bundled, craft-fonts or system); unknown or empty names fall back to Inter.
+    /// Font family name (bundled, mahay-fonts or system); unknown or empty names fall back to Inter.
     pub font: String,
     /// Font size in pixels for a 1080-line frame (scaled with the frame height).
     pub size: f32,

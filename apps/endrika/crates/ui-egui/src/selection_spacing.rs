@@ -2,8 +2,8 @@
 use std::sync::Arc;
 
 use egui::{CursorIcon, Id, Pos2, Rect, Stroke, Ui, vec2};
-use figcraft_doc::{Document, NodeId};
-use figcraft_engine::selection_spacing::{Axis, SelectionSpacing, selection_spacing};
+use endrika_doc::{Document, NodeId};
+use endrika_engine::selection_spacing::{Axis, SelectionSpacing, selection_spacing};
 use serde_json::json;
 
 use crate::FigApp;
@@ -88,13 +88,13 @@ struct Handle {
     hit: Rect,
 }
 
-fn bounds(doc: &Document, ids: &[NodeId]) -> Option<figcraft_geom::Rect> {
+fn bounds(doc: &Document, ids: &[NodeId]) -> Option<endrika_geom::Rect> {
     ids.iter().filter_map(|id| doc.world_bounds(*id)).reduce(|a, b| a.union(b))
 }
 
 fn handles(app: &FigApp, axis: &Axis) -> Vec<Handle> {
     let Ok(doc) = app.session.doc() else { return vec![] };
-    let cross = |b: figcraft_geom::Rect| if axis.vertical { (b.x0, b.x1) } else { (b.y0, b.y1) };
+    let cross = |b: endrika_geom::Rect| if axis.vertical { (b.x0, b.x1) } else { (b.y0, b.y1) };
     let mut out = Vec::new();
     for pair in axis.tracks.windows(2) {
         let Some((a, b)) = pair.first().zip(pair.get(1)) else { continue };
@@ -129,7 +129,7 @@ fn handles(app: &FigApp, axis: &Axis) -> Vec<Handle> {
 fn available(app: &FigApp) -> bool {
     app.ui.right_tab == crate::RightTab::Design
         && app.ui.picker.is_none()
-        && app.session.tool.tool == figcraft_engine::ToolId::Move
+        && app.session.tool.tool == endrika_engine::ToolId::Move
         && !app.session.tool.busy()
         && app.session.ds().is_ok_and(|d| d.text_edit.is_none() && d.vector_edit.is_none())
 }
@@ -137,7 +137,7 @@ fn available(app: &FigApp) -> bool {
 pub fn cancel(app: &mut FigApp, ctx: &egui::Context) -> bool {
     let drag = ctx.data(|d| d.get_temp::<Drag>(drag_id()));
     if let Some(drag) = &drag {
-        figcraft_engine::selection_spacing::cancel_gesture(&mut app.session, drag.uid);
+        endrika_engine::selection_spacing::cancel_gesture(&mut app.session, drag.uid);
         ctx.data_mut(|d| d.remove::<Drag>(drag_id()));
     }
     drag.is_some()
@@ -267,7 +267,7 @@ pub fn draw(app: &FigApp, painter: &egui::Painter) {
 mod cache_tests {
     use super::*;
     use crate::NoServices;
-    use figcraft_engine::Session;
+    use endrika_engine::Session;
 
     fn setup() -> (FigApp, egui::Context, Vec<NodeId>) {
         let mut session = Session::new();

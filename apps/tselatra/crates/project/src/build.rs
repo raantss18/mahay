@@ -1,8 +1,8 @@
 //! Builders for the standard property groups and layers.
 
-use effectcraft_color::{BlendMode, Label};
-use effectcraft_keyframe::{Gradient, ShapePath, TextDoc, Value};
-use effectcraft_time::Tick;
+use tselatra_color::{BlendMode, Label};
+use tselatra_keyframe::{Gradient, ShapePath, TextDoc, Value};
+use tselatra_time::Tick;
 
 use crate::props::{GroupKind, MaskMode, ParamUi, PropGroup, Property};
 use crate::{Comp, Layer, LayerId, LayerSource, LightKind, Project, Switches};
@@ -810,7 +810,7 @@ pub fn layer(project: &mut Project, comp: &Comp, name: &str, source: LayerSource
     let mut tr = transform(&mut ids, anchor, [cw / 2.0, ch / 2.0]);
     if let LayerSource::Camera = source {
         // Two-node camera default: point of interest at the comp centre, camera at -zoom.
-        let zoom = effectcraft_geom::default_camera_zoom(cw);
+        let zoom = tselatra_geom::default_camera_zoom(cw);
         tr = ids
             .group("transform", "Transform")
             .with(ids.prop("poi", "Point of Interest", Value::Vec3([cw / 2.0, ch / 2.0, 0.0])).with_ui(ParamUi::Point3).spatial())

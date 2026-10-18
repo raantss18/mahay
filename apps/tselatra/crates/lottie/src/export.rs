@@ -1,9 +1,9 @@
-//! EffectCraft composition → Lottie document.
+//! Tselatra composition → Lottie document.
 
 use std::collections::BTreeSet;
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::{Comp, FootageKind, GroupKind, ItemId, ItemKind, Layer, LayerSource, MaskMode, MatteKind, Project, PropGroup};
+use tselatra_keyframe::Value;
+use tselatra_project::{Comp, FootageKind, GroupKind, ItemId, ItemKind, Layer, LayerSource, MaskMode, MatteKind, Project, PropGroup};
 use serde_json::{Map, Value as Json, json};
 
 use crate::anim::{self, Ex, export_prop};
@@ -32,7 +32,7 @@ impl ExportResult {
 }
 
 /// One supported effect: Lottie effect type and its parameter list in Lottie order:
-/// (EffectCraft param id or "" for a Lottie-only param, Lottie value type, scale to Lottie,
+/// (Tselatra param id or "" for a Lottie-only param, Lottie value type, scale to Lottie,
 /// constant value for Lottie-only params).
 pub(crate) struct FxMap {
     pub id: &'static str,
@@ -159,7 +159,7 @@ fn mime_of(path: &str) -> &'static str {
 }
 
 impl Doc<'_> {
-    fn frame(&self, t: effectcraft_time::Tick) -> f64 {
+    fn frame(&self, t: tselatra_time::Tick) -> f64 {
         self.ex.tb.frame(t)
     }
 
@@ -415,7 +415,7 @@ impl Doc<'_> {
         }
         let ks = self.transform(l);
         o.insert("ks".into(), ks);
-        o.insert("ao".into(), json!((l.auto_orient == effectcraft_project::AutoOrient::AlongPath) as u8));
+        o.insert("ao".into(), json!((l.auto_orient == tselatra_project::AutoOrient::AlongPath) as u8));
         o.insert("ip".into(), json!(self.frame(l.in_point)));
         o.insert("op".into(), json!(self.frame(l.out_point)));
         o.insert("st".into(), json!(self.frame(l.start_time)));
@@ -456,7 +456,7 @@ impl Doc<'_> {
         if !l.markers.is_empty() {
             self.ex.warn(format!("{name}: layer markers are not part of Lottie (composition markers are exported)"));
         }
-        if l.props.sub(effectcraft_project::styles::GROUP).is_some_and(|g| g.groups().any(|s| s.enabled && s.match_id != effectcraft_project::styles::BLENDING))
+        if l.props.sub(tselatra_project::styles::GROUP).is_some_and(|g| g.groups().any(|s| s.enabled && s.match_id != tselatra_project::styles::BLENDING))
         {
             self.ex.warn(format!("{name}: layer styles are not exported"));
         }
@@ -509,7 +509,7 @@ pub fn export_comp(project: &Project, comp: ItemId, opts: &ExportOptions, read: 
 pub fn to_dotlottie(res: &ExportResult, id: &str) -> Vec<u8> {
     let id: String = id.chars().map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
     let id = if id.is_empty() { "animation".to_string() } else { id };
-    let manifest = json!({"version": "1", "generator": "EffectCraft", "author": "", "animations": [{"id": id, "speed": 1, "loop": true}]});
+    let manifest = json!({"version": "1", "generator": "Tselatra", "author": "", "animations": [{"id": id, "speed": 1, "loop": true}]});
     crate::zip::store(&[
         ("manifest.json".into(), serde_json::to_vec(&manifest).unwrap_or_default()),
         (format!("animations/{id}.json"), serde_json::to_vec(&res.json).unwrap_or_default()),

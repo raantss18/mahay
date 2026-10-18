@@ -414,52 +414,52 @@ pub fn font_families() -> Vec<FontFamily> {
     vec![FontFamily::Proportional, FontFamily::Monospace, FontFamily::Name("semibold".into()), FontFamily::Name("medium".into())]
 }
 
-/// Install the Latin UI fonts, Chinese fallback (craft-fonts or an installed face), Japanese
-/// craft-fonts, Arabic and Hebrew fallbacks (craft-fonts or installed faces, [`crate::rtl`]) and
+/// Install the Latin UI fonts, Chinese fallback (mahay-fonts or an installed face), Japanese
+/// mahay-fonts, Arabic and Hebrew fallbacks (mahay-fonts or installed faces, [`crate::rtl`]) and
 /// egui visuals. Document names keep their glyphs in every interface language.
 pub fn install(ctx: &egui::Context, t: &Tokens) {
     let mut fonts = FontDefinitions::default();
-    fonts.font_data.insert("inter".into(), Arc::new(FontData::from_static(filmcraft_text::fonts::INTER_REGULAR)));
-    fonts.font_data.insert("inter-medium".into(), Arc::new(FontData::from_static(filmcraft_text::fonts::INTER_MEDIUM)));
-    fonts.font_data.insert("inter-semibold".into(), Arc::new(FontData::from_static(filmcraft_text::fonts::INTER_SEMIBOLD)));
-    fonts.font_data.insert("jbmono".into(), Arc::new(FontData::from_static(filmcraft_text::fonts::JETBRAINS_MONO_REGULAR)));
+    fonts.font_data.insert("inter".into(), Arc::new(FontData::from_static(hetsika_text::fonts::INTER_REGULAR)));
+    fonts.font_data.insert("inter-medium".into(), Arc::new(FontData::from_static(hetsika_text::fonts::INTER_MEDIUM)));
+    fonts.font_data.insert("inter-semibold".into(), Arc::new(FontData::from_static(hetsika_text::fonts::INTER_SEMIBOLD)));
+    fonts.font_data.insert("jbmono".into(), Arc::new(FontData::from_static(hetsika_text::fonts::JETBRAINS_MONO_REGULAR)));
     fonts.families.entry(FontFamily::Proportional).or_default().insert(0, "inter".into());
     fonts.families.entry(FontFamily::Monospace).or_default().insert(0, "jbmono".into());
     fonts.families.insert(FontFamily::Name("semibold".into()), vec!["inter-semibold".into(), "inter".into()]);
     fonts.families.insert(FontFamily::Name("medium".into()), vec!["inter-medium".into(), "inter".into()]);
     // Japanese before Chinese: the two share code points, and Japanese text must keep Japanese
     // glyph forms; Chinese faces still cover the hanzi Japanese fonts lack
-    add_craft_fonts(&mut fonts);
+    add_mahay_fonts(&mut fonts);
     crate::cjk::install(&mut fonts);
     crate::rtl::install(&mut fonts);
     ctx.set_fonts(fonts);
     apply_visuals(ctx, t);
 }
 
-/// Name of the egui font for a craft-fonts entry.
-fn craft_font_name(f: &filmcraft_text::fonts::CraftFont) -> String {
+/// Name of the egui font for a mahay-fonts entry.
+fn mahay_font_name(f: &hetsika_text::fonts::MahayFont) -> String {
     format!("craft:{} {}", f.family, f.style)
 }
 
-/// Append the Japanese craft-fonts (empty unless built with `CRAFT_FONTS_DIR`) as the last fallbacks
+/// Append the Japanese mahay-fonts (empty unless built with `MAHAY_FONTS_DIR`) as the last fallbacks
 /// of every font family, after the app's own fonts: BIZ UDPGothic first (bold before regular in
 /// the "semibold" and "medium" families), then the other Japanese faces.
-fn add_craft_fonts(fonts: &mut FontDefinitions) {
-    let jpan: Vec<_> = filmcraft_text::fonts::craft_japanese().collect();
+fn add_mahay_fonts(fonts: &mut FontDefinitions) {
+    let jpan: Vec<_> = hetsika_text::fonts::mahay_japanese().collect();
     for f in &jpan {
-        fonts.font_data.insert(craft_font_name(f), Arc::new(FontData::from_static(f.bytes)));
+        fonts.font_data.insert(mahay_font_name(f), Arc::new(FontData::from_static(f.bytes)));
     }
     for (family, stack) in fonts.families.iter_mut() {
         let heavy = matches!(family, FontFamily::Name(n) if matches!(n.as_ref(), "semibold" | "medium"));
         let mut order = jpan.clone();
         order.sort_by_key(|f| (!f.family.contains("Gothic"), (f.style == "Bold") != heavy));
-        stack.extend(order.iter().map(|f| craft_font_name(f)));
+        stack.extend(order.iter().map(|f| mahay_font_name(f)));
     }
 }
 
 pub fn apply_visuals(ctx: &egui::Context, t: &Tokens) {
     let light = t.kind == ThemeKind::Light;
-    // FilmCraft decides between light and dark itself (Settings ▸ Appearance ▸ Appearance Mode), so
+    // Hetsika decides between light and dark itself (Settings ▸ Appearance ▸ Appearance Mode), so
     // egui must not switch to its other built-in style when the system appearance changes.
     ctx.set_theme(if light { egui::Theme::Light } else { egui::Theme::Dark });
     let mut v = if light { Visuals::light() } else { Visuals::dark() };
@@ -579,7 +579,7 @@ mod tests {
 
     #[test]
     fn the_default_highlight_leaves_the_theme_blues_as_designed() {
-        let default = filmcraft_engine::settings::parse_hex(filmcraft_engine::settings::DEFAULT_HIGHLIGHT);
+        let default = hetsika_engine::settings::parse_hex(hetsika_engine::settings::DEFAULT_HIGHLIGHT);
         for k in [ThemeKind::Dark, ThemeKind::Medium, ThemeKind::Light] {
             assert_eq!(highlight_blues(&Tokens::for_kind(k).with_appearance(default, false)), highlight_blues(&Tokens::for_kind(k)), "{k:?}");
         }
@@ -603,12 +603,12 @@ mod tests {
     #[test]
     fn chinese_names_render_in_every_theme_and_font_family() {
         const CHINESE: &str = "中文旁白音乐声轨测试简体汉语繁體漢語车";
-        filmcraft_text::fonts::scan_system();
-        let available = filmcraft_text::fonts::all_faces()
+        hetsika_text::fonts::scan_system();
+        let available = hetsika_text::fonts::all_faces()
             .iter()
-            .any(|f| matches!(f.info.origin, "system" | filmcraft_text::fonts::CRAFT_ORIGIN) && CHINESE.chars().all(|c| f.has_char(c)));
+            .any(|f| matches!(f.info.origin, "system" | hetsika_text::fonts::MAHAY_ORIGIN) && CHINESE.chars().all(|c| f.has_char(c)));
         if !available {
-            eprintln!("SKIPPED: no craft-fonts or installed Chinese font");
+            eprintln!("SKIPPED: no mahay-fonts or installed Chinese font");
             return;
         }
         let ctx = egui::Context::default();
@@ -633,12 +633,12 @@ mod tests {
         ctx.run_ui(egui::RawInput::default(), |_| {}).textures_delta.clear();
     }
 
-    /// Typed, pasted or IME-composed Hangul draws real glyphs, not the missing-glyph box (artcraft#2093).
+    /// Typed, pasted or IME-composed Hangul draws real glyphs, not the missing-glyph box (mahay#2093).
     #[test]
     fn korean_text_renders_with_an_installed_korean_font() {
         const KOREAN: &str = "한국어 입력 테스트";
-        filmcraft_text::fonts::scan_system();
-        let available = filmcraft_text::fonts::all_faces().iter().any(|f| f.info.origin == "system" && KOREAN.chars().all(|c| f.has_char(c)));
+        hetsika_text::fonts::scan_system();
+        let available = hetsika_text::fonts::all_faces().iter().any(|f| f.info.origin == "system" && KOREAN.chars().all(|c| f.has_char(c)));
         if !available {
             eprintln!("SKIPPED: no installed Korean font");
             return;
@@ -660,19 +660,19 @@ mod tests {
         ctx.run_ui(egui::RawInput::default(), |_| {}).textures_delta.clear();
     }
 
-    /// Built with craft-fonts: every font family ends with the Japanese faces (BIZ UDPGothic
+    /// Built with mahay-fonts: every font family ends with the Japanese faces (BIZ UDPGothic
     /// first), and Japanese text gets real glyphs, not the replacement box.
     #[test]
-    fn japanese_renders_with_craft_fonts() {
-        if filmcraft_text::fonts::craft_japanese().next().is_none() {
-            eprintln!("SKIPPED: built without craft-fonts (set CRAFT_FONTS_DIR to run)");
+    fn japanese_renders_with_mahay_fonts() {
+        if hetsika_text::fonts::mahay_japanese().next().is_none() {
+            eprintln!("SKIPPED: built without mahay-fonts (set MAHAY_FONTS_DIR to run)");
             return;
         }
         let ctx = installed();
         ctx.fonts_mut(|fonts| {
             let defs = fonts.definitions().clone();
             for (family, stack) in &defs.families {
-                // installed right-to-left faces (Hebrew is not in craft-fonts) come after the craft run
+                // installed right-to-left faces (Hebrew is not in mahay-fonts) come after the craft run
                 let stack: Vec<&String> = stack.iter().filter(|n| !crate::rtl::is_system_face(n)).collect();
                 let first = stack.iter().position(|n| n.starts_with("craft:")).unwrap_or(stack.len());
                 assert!(first > 0 && stack[first..].iter().all(|n| n.starts_with("craft:")), "{family:?}: {stack:?}");
@@ -693,11 +693,11 @@ mod tests {
         assert!(galley.size().x > 13.0 * 4.0, "{:?}", galley.size());
     }
 
-    /// Latin text keeps its UI faces, with or without craft-fonts and system Chinese fonts.
+    /// Latin text keeps its UI faces, with or without mahay-fonts and system Chinese fonts.
     #[test]
-    fn works_without_craft_fonts() {
+    fn works_without_mahay_fonts() {
         let ctx = installed();
-        let n = filmcraft_text::fonts::craft_japanese().count() + crate::cjk::craft_fonts().count() + crate::rtl::craft_fonts().count();
+        let n = hetsika_text::fonts::mahay_japanese().count() + crate::cjk::mahay_fonts().count() + crate::rtl::mahay_fonts().count();
         ctx.fonts_mut(|fonts| {
             let defs = fonts.definitions().clone();
             assert_eq!(defs.font_data.keys().filter(|k| k.starts_with("craft:")).count(), n);

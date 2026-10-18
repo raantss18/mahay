@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use egui::{Event, vec2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;
@@ -25,7 +25,7 @@ fn settle(u: &mut Ui) {
 #[test]
 fn a_drag_shows_on_the_canvas_while_it_moves() {
     let mut s = Session::new();
-    let id = |v: serde_json::Value| figcraft_engine::params::id_of(&v["id"]).unwrap();
+    let id = |v: serde_json::Value| endrika_engine::params::id_of(&v["id"]).unwrap();
     let f = id(s.execute("frame.create", &json!({"x": 100, "y": 100, "width": 300, "height": 200})).unwrap());
     s.execute("node.set", &json!({"id": f, "rotation": 25})).unwrap();
     let r =
@@ -64,7 +64,7 @@ fn a_drag_shows_on_the_canvas_while_it_moves() {
 fn releasing_a_canvas_drag_outside_finishes_the_interaction() {
     let mut s = Session::new();
     let r =
-        figcraft_engine::params::id_of(&s.execute("shape.rectangle", &json!({"x": 40, "y": 40, "width": 80, "height": 60})).unwrap()["id"]).unwrap();
+        endrika_engine::params::id_of(&s.execute("shape.rectangle", &json!({"x": 40, "y": 40, "width": 80, "height": 60})).unwrap()["id"]).unwrap();
     s.execute("select.set", &json!({"ids": [r]})).unwrap();
     let mut u = Ui::new(s);
     let start = u.app.to_screen(80.0, 70.0);
@@ -88,7 +88,7 @@ fn key(u: &mut Ui, key: egui::Key) {
 fn a_drag_released_off_the_window_ends_where_the_pointer_was_last_seen_and_later_edits_stay() {
     // #278: a drag left open made a later text edit roll back the changes made since.
     let mut s = Session::new();
-    let id = |v: serde_json::Value| figcraft_engine::params::id_of(&v["id"]).unwrap();
+    let id = |v: serde_json::Value| endrika_engine::params::id_of(&v["id"]).unwrap();
     let kept = id(s.execute("shape.rectangle", &json!({"x": 40, "y": 400, "width": 80, "height": 40})).unwrap());
     let gone = id(s.execute("shape.rectangle", &json!({"x": 160, "y": 400, "width": 80, "height": 40})).unwrap());
     let text = id(s.execute("text.create", &json!({"text": "A", "x": 40, "y": 500})).unwrap());

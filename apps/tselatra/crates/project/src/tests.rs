@@ -1,5 +1,5 @@
-use effectcraft_keyframe::{Keyframe, ShapePath, Value};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_keyframe::{Keyframe, ShapePath, Value};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::build::{self, Ids};
 use crate::{Comp, ItemKind, LayerSource, MaskMode, Project, Solid};
@@ -7,10 +7,10 @@ use crate::{Comp, ItemKind, LayerSource, MaskMode, Project, Solid};
 fn project_with_layer() -> (Project, crate::ItemId) {
     let mut p = Project::default();
     let comp = Comp::new(1920, 1080, FrameRate::FPS_29_97, Tick::from_seconds_f64(10.0));
-    let cid = p.add_item("Main", effectcraft_color::Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));
+    let cid = p.add_item("Main", tselatra_color::Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));
     let sid = p.add_item(
         "Red Solid",
-        effectcraft_color::Label::Red,
+        tselatra_color::Label::Red,
         None,
         ItemKind::Solid(Solid { color: [1.0, 0.0, 0.0], width: 1920, height: 1080, pixel_aspect: 1.0 }),
     );
@@ -173,7 +173,7 @@ fn project_files_name_their_version_and_always_read_back() {
 #[test]
 fn project_files_remember_the_open_comps() {
     let (p, cid) = project_with_layer();
-    let view = crate::SavedView { active_comp: Some(cid), open_comps: vec![cid], comp_times: [(cid, effectcraft_time::Tick(4_237_833_600))].into() };
+    let view = crate::SavedView { active_comp: Some(cid), open_comps: vec![cid], comp_times: [(cid, tselatra_time::Tick(4_237_833_600))].into() };
     let text = p.to_file_json_with_view(&view).unwrap();
     assert_eq!(crate::saved_view(&text), view);
     assert_eq!(Project::from_json(&text).unwrap(), p, "the view is not part of the project");
@@ -183,7 +183,7 @@ fn project_files_remember_the_open_comps() {
     assert_eq!(crate::saved_view(&odd), crate::SavedView { active_comp: None, ..view.clone() });
     // Entries that aren't an id and a whole tick count are skipped; the rest are kept.
     let times = text.replacen("\"compTimes\": {", "\"compTimes\": {\"x\": 1, \"7\": \"a\", \"8\": 1.5, \"9\": -4,", 1);
-    let expect = [(cid, effectcraft_time::Tick(4_237_833_600)), (crate::ItemId(9), effectcraft_time::Tick(-4))].into();
+    let expect = [(cid, tselatra_time::Tick(4_237_833_600)), (crate::ItemId(9), tselatra_time::Tick(-4))].into();
     assert_eq!(crate::saved_view(&times).comp_times, expect);
     let not_a_map = text.replacen("\"compTimes\": {", "\"compTimes\": [], \"unused\": {", 1);
     assert_eq!(crate::saved_view(&not_a_map), crate::SavedView { comp_times: Default::default(), ..view });
@@ -196,8 +196,8 @@ fn item_users_count_layers_in_every_comp() {
     let (mut p, main) = project_with_layer();
     let sid = p.find_by_name("Red Solid").unwrap().id;
     let comp = p.comp(main).unwrap().clone();
-    let pre = p.add_item("A Precomp", effectcraft_color::Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));
-    let unused = p.add_item("Unused", effectcraft_color::Label::Red, None, ItemKind::Solid(Solid { color: [0.0; 3], width: 8, height: 8, pixel_aspect: 1.0 }));
+    let pre = p.add_item("A Precomp", tselatra_color::Label::Sandstone, None, ItemKind::Comp(comp.clone().into()));
+    let unused = p.add_item("Unused", tselatra_color::Label::Red, None, ItemKind::Solid(Solid { color: [0.0; 3], width: 8, height: 8, pixel_aspect: 1.0 }));
     // Two more layers of the solid in the precomp (it starts with one, cloned from Main), and the
     // precomp nested in Main.
     for _ in 0..2 {

@@ -3,10 +3,10 @@
 //! Direct on a buffer (full and half resolution) and composited at 8 and 32 bpc, at a time
 //! where the simulations have something to show.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::BitDepth;
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_keyframe::Value;
+use tselatra_project::BitDepth;
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
 
 use crate::tests::{Scene, c, check, compare_at, diff, gpu, n, opts, pattern, set};
 
@@ -25,19 +25,19 @@ pub(crate) fn off() -> Value {
 /// The effect alone on a buffer at layer time `t` (`allow` = fraction of pixels over 1e-3).
 pub(crate) fn direct(id: &str, vals: &[(&str, Value)], t: f64, allow: f64) {
     let Some(g) = gpu() else { return };
-    let spec = effectcraft_effects::find(id).unwrap();
+    let spec = tselatra_effects::find(id).unwrap();
     let size = [70.0, 44.0];
     let mut params =
-        effectcraft_effects::Params { values: spec.params.iter().map(|ps| (ps.id.to_string(), effectcraft_effects::default_value(ps, size))).collect() };
+        tselatra_effects::Params { values: spec.params.iter().map(|ps| (ps.id.to_string(), tselatra_effects::default_value(ps, size))).collect() };
     for (k, v) in vals {
         params.values.insert(k.to_string(), v.clone());
     }
     for scale in [1.0, 0.5] {
         let img = pattern(7, (size[0] * scale) as u32, (size[1] * scale) as u32);
-        let buf = effectcraft_effects::Buf { img, offset: [0.0, 0.0], scale };
-        let ctx = || effectcraft_effects::EffectCtx { params: &params, time: t, layer_size: size, seed: 11, adjustment: false, env: Default::default() };
+        let buf = tselatra_effects::Buf { img, offset: [0.0, 0.0], scale };
+        let ctx = || tselatra_effects::EffectCtx { params: &params, time: t, layer_size: size, seed: 11, adjustment: false, env: Default::default() };
         let cpu = (spec.render)(&ctx(), buf.clone());
-        let out = effectcraft_render::Accelerator::effects(g, &[effectcraft_render::FxStep { spec, ctx: ctx() }], &buf, None).expect("the GPU runs the effect");
+        let out = tselatra_render::Accelerator::effects(g, &[tselatra_render::FxStep { spec, ctx: ctx() }], &buf, None).expect("the GPU runs the effect");
         assert_eq!((out.offset, out.scale), (cpu.offset, cpu.scale), "{id}: geometry");
         let d = diff(&cpu.img, &out.img, 1e-3);
         assert!(

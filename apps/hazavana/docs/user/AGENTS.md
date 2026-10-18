@@ -1,13 +1,13 @@
 # User docs: rules for agents and contributors
 
 Everything in this folder (except this file, CLAUDE.md and README.md) is published at
-https://getartcraft.com/docs/lightcraft. The file path is the URL:
-`troubleshooting/raw-photos-look-dull.md` → `/docs/lightcraft/troubleshooting/raw-photos-look-dull`.
+https://github.com/raantss18/mahay The file path is the URL:
+`troubleshooting/raw-photos-look-dull.md` → `/docs/hazavana/troubleshooting/raw-photos-look-dull`.
 Renaming a file breaks links, so add the old path to `redirect_from` when you rename.
 
 ## Who reads this
 
-Artists and photographers using LightCraft, Discord mods answering them, and AI assistants looking
+Artists and photographers using Hazavana, Discord mods answering them, and AI assistants looking
 things up for either. Write for a photographer, not a developer.
 
 ## Page rules
@@ -16,9 +16,9 @@ things up for either. Write for a photographer, not a developer.
 - Plain words, short sentences, numbered steps for anything the reader does.
 - Start the body at `##`. The page title comes from frontmatter.
 - Link to other pages instead of repeating them. Use relative links to the `.md` file:
-  `[Install LightCraft](../getting-started/install.md)`.
+  `[Install Hazavana](../getting-started/install.md)`.
 - No marketing copy, no "simply", no claims you have not checked in the code or a release.
-- Call the product "LightCraft", as the app, its downloads and getartcraft.com do.
+- Call the product "Hazavana", as the app, its downloads and mahay.com do.
 - Name UI labels exactly as the app shows them, in **bold**.
 - Troubleshooting pages: `## Symptoms`, `## Fix`, `## Why this happens` (optional),
   `## Still stuck?` (link the issue tracker or Discord).
@@ -30,7 +30,7 @@ things up for either. Write for a photographer, not a developer.
     description: One sentence for search results, link previews and AI summaries.
     order: 10                 # optional, sorts within the folder (lower first)
     verified: 0.6.0           # optional, app version you last checked this page against
-    redirect_from: [old/path] # optional, old URLs (relative to /docs/lightcraft)
+    redirect_from: [old/path] # optional, old URLs (relative to /docs/hazavana)
     ---
 
 Only `key: value` and `key: [a, b]` lines work. Quote values that start with a quote or contain ` #`.
@@ -50,9 +50,9 @@ drafts and are not published.
 
 ## Check before you push
 
-    node <path to your artcraft-services checkout>/frontend/apps/artcraft-website-next/scripts/docs/core.mjs docs/user
+    node <path to your mahay-services checkout>/frontend/apps/mahay-website-next/scripts/docs/core.mjs docs/user
 
-The checker lives in storytold/artcraft-services. A CI check will be added once it is on that repo's main branch.
+The checker lives in raantss18/mahay-services. A CI check will be added once it is on that repo's main branch.
 
 ## Support PRs
 

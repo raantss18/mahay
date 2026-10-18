@@ -7,12 +7,12 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use vectorcraft_doc::links::LinkInfo;
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind, Symbol};
-use vectorcraft_format::{ICC_MIME, PRETTY_MAX_BYTES, PRETTY_MAX_OBJECTS, SaveOptions, load, load_file, pdf_content, save_file, save_with};
-use vectorcraft_geom::path::{PathData, SubPath};
-use vectorcraft_geom::{Affine, Point};
-use vectorcraft_testkit::fixtures::DocBuilder;
+use tsipika_doc::links::LinkInfo;
+use tsipika_doc::{Document, ImageBlob, ImageObject, Node, NodeKind, Symbol};
+use tsipika_format::{ICC_MIME, PRETTY_MAX_BYTES, PRETTY_MAX_OBJECTS, SaveOptions, load, load_file, pdf_content, save_file, save_with};
+use tsipika_geom::path::{PathData, SubPath};
+use tsipika_geom::{Affine, Point};
+use tsipika_testkit::fixtures::DocBuilder;
 
 fn json_of(bytes: &[u8]) -> Value {
     serde_json::from_slice(bytes).unwrap()

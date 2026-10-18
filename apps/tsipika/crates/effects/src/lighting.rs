@@ -1,7 +1,7 @@
 //! Shared conversion and vector paint shading for the 3D effects' directional lights.
 use serde_json::Value;
-use vectorcraft_doc::color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, FillLayer};
+use tsipika_doc::color::{Color, Paint};
+use tsipika_doc::{AppearanceItem, FillLayer};
 
 fn parse(v: &Value) -> Option<Color> {
     let s = v.as_str()?;
@@ -23,12 +23,12 @@ pub(crate) fn validate(p: &Value) -> Result<(), String> {
     Ok(())
 }
 
-pub(crate) fn lights(p: &Value) -> Option<vectorcraft_three_d::Lights> {
+pub(crate) fn lights(p: &Value) -> Option<tsipika_three_d::Lights> {
     p.get("lights").filter(|v| !v.is_null()).and_then(|v| parse_lights(v).ok())
 }
 
-fn parse_lights(v: &Value) -> Result<vectorcraft_three_d::Lights, String> {
-    use vectorcraft_three_d::{Light, Lights, MAX_LIGHTS};
+fn parse_lights(v: &Value) -> Result<tsipika_three_d::Lights, String> {
+    use tsipika_three_d::{Light, Lights, MAX_LIGHTS};
     let list = v.as_array().filter(|v| !v.is_empty() && v.len() <= MAX_LIGHTS).ok_or("lights must contain one to ten lights")?;
     let mut out = Vec::with_capacity(list.len());
     for item in list {
@@ -68,8 +68,8 @@ pub(crate) fn shade(c: Color, rgb: [f64; 3]) -> Color {
     Color::rgb(r * rgb[0] as f32, g * rgb[1] as f32, b * rgb[2] as f32)
 }
 
-pub(crate) fn smooth_paint(g: vectorcraft_three_d::LightGradient, color: Color) -> Paint {
-    use vectorcraft_doc::color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
+pub(crate) fn smooth_paint(g: tsipika_three_d::LightGradient, color: Color) -> Paint {
+    use tsipika_doc::color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
     let stops = g.stops().into_iter().map(|(at, rgb)| GradientStop::new(at, shade(color, rgb))).collect();
     let mut p = GradientPaint::new(Gradient { kind: GradientKind::Linear, stops });
     p.geom = Some(GradientGeom { start: g.diffuse.start, end: g.diffuse.end, aspect: 1.0, focal: None });
@@ -79,42 +79,42 @@ pub(crate) fn smooth_paint(g: vectorcraft_three_d::LightGradient, color: Color) 
 /// Multiply two independently placed vector gradients before applying the face's coverage
 /// once. Separately antialiasing the source and light along each triangle edge leaves seams.
 pub(crate) fn gradient_art(
-    id: vectorcraft_doc::NodeId,
-    path: &vectorcraft_geom::PathData,
+    id: tsipika_doc::NodeId,
+    path: &tsipika_geom::PathData,
     paint: &Paint,
-    light: vectorcraft_three_d::LightGradient,
-) -> vectorcraft_doc::Node {
+    light: tsipika_three_d::LightGradient,
+) -> tsipika_doc::Node {
     composed_art(id, path, paint, Ramp::Single(light), 0.75)
 }
 
 pub(crate) fn rgb_gradient_art(
-    id: vectorcraft_doc::NodeId,
-    path: &vectorcraft_geom::PathData,
+    id: tsipika_doc::NodeId,
+    path: &tsipika_geom::PathData,
     paint: &Paint,
-    light: vectorcraft_three_d::RgbGradient,
-) -> vectorcraft_doc::Node {
+    light: tsipika_three_d::RgbGradient,
+) -> tsipika_doc::Node {
     composed_art(id, path, paint, Ramp::Rgb(light), 0.75)
 }
 
 /// Smooth Inflate triangles keep the seam within their narrow projected footprint.
 pub(crate) fn facet_art(
-    id: vectorcraft_doc::NodeId,
-    path: &vectorcraft_geom::PathData,
+    id: tsipika_doc::NodeId,
+    path: &tsipika_geom::PathData,
     paint: &Paint,
-    light: vectorcraft_three_d::RgbGradient,
+    light: tsipika_three_d::RgbGradient,
     seam: f64,
-) -> vectorcraft_doc::Node {
+) -> tsipika_doc::Node {
     let [r, g, b] = light.channels;
     if r == g && g == b {
-        let light = vectorcraft_three_d::LightGradient { diffuse: r, ambient: 0.0, color: [1.0; 3] };
+        let light = tsipika_three_d::LightGradient { diffuse: r, ambient: 0.0, color: [1.0; 3] };
         if let Some(color) = paint.color() {
             let paint = smooth_paint(light, color);
-            let mut edge = vectorcraft_doc::StrokeLayer::new(paint.clone(), seam);
-            edge.join = vectorcraft_doc::LineJoin::Round;
-            return vectorcraft_doc::Node::path(
+            let mut edge = tsipika_doc::StrokeLayer::new(paint.clone(), seam);
+            edge.join = tsipika_doc::LineJoin::Round;
+            return tsipika_doc::Node::path(
                 id,
                 path.clone(),
-                vectorcraft_doc::Appearance {
+                tsipika_doc::Appearance {
                     items: vec![AppearanceItem::Fill(FillLayer::new(paint)), AppearanceItem::Stroke(edge)],
                     ..Default::default()
                 },
@@ -127,12 +127,12 @@ pub(crate) fn facet_art(
 
 /// Composite smooth solid-fill facets with one clip and three channel groups per surface.
 /// Black channel backdrops keep shared edges opaque before the final coverage is applied.
-pub(crate) fn solid_surface(id: vectorcraft_doc::NodeId, facets: &[vectorcraft_three_d::Facet], paint: &Paint) -> vectorcraft_doc::Node {
+pub(crate) fn solid_surface(id: tsipika_doc::NodeId, facets: &[tsipika_three_d::Facet], paint: &Paint) -> tsipika_doc::Node {
     use kurbo::Shape;
     use std::sync::Arc;
-    use vectorcraft_doc::color::BlendMode;
-    use vectorcraft_doc::{Appearance, Node, NodeKind, StrokeLayer};
-    use vectorcraft_geom::{BezPath, PathData, Rect, shapes};
+    use tsipika_doc::color::BlendMode;
+    use tsipika_doc::{Appearance, Node, NodeKind, StrokeLayer};
+    use tsipika_geom::{BezPath, PathData, Rect, shapes};
 
     let mut boundary = BezPath::new();
     let mut bounds = None;
@@ -159,12 +159,12 @@ pub(crate) fn solid_surface(id: vectorcraft_doc::NodeId, facets: &[vectorcraft_t
             let mut children = vec![Arc::new(cover(Paint::solid(Color::BLACK)))];
             children.extend(facets.iter().map(|face| {
                 let paint = if let Some(ramp) = face.rgb_gradient {
-                    smooth_paint(vectorcraft_three_d::LightGradient { diffuse: ramp.channels[channel], ambient: 0.0, color }, Color::WHITE)
+                    smooth_paint(tsipika_three_d::LightGradient { diffuse: ramp.channels[channel], ambient: 0.0, color }, Color::WHITE)
                 } else {
                     Paint::solid(shade(Color::WHITE, color.map(|c| c * face.illumination[channel])))
                 };
                 let mut edge = StrokeLayer::new(paint.clone(), (face.thickness() / 2.0).clamp(0.05, 0.75));
-                edge.join = vectorcraft_doc::LineJoin::Round;
+                edge.join = tsipika_doc::LineJoin::Round;
                 Arc::new(Node::path(
                     id,
                     face.path(),
@@ -186,8 +186,8 @@ pub(crate) fn solid_surface(id: vectorcraft_doc::NodeId, facets: &[vectorcraft_t
 }
 
 enum Ramp {
-    Single(vectorcraft_three_d::LightGradient),
-    Rgb(vectorcraft_three_d::RgbGradient),
+    Single(tsipika_three_d::LightGradient),
+    Rgb(tsipika_three_d::RgbGradient),
 }
 
 /// Separate a gradient's color and coverage so a tessellated surface can apply its opacity
@@ -217,12 +217,12 @@ pub(crate) fn opaque_paint(paint: &Paint) -> (Paint, Option<Paint>) {
     (base, transparent.then_some(mask))
 }
 
-fn composed_art(id: vectorcraft_doc::NodeId, path: &vectorcraft_geom::PathData, paint: &Paint, light: Ramp, seam: f64) -> vectorcraft_doc::Node {
+fn composed_art(id: tsipika_doc::NodeId, path: &tsipika_geom::PathData, paint: &Paint, light: Ramp, seam: f64) -> tsipika_doc::Node {
     use kurbo::Shape;
     use std::sync::Arc;
-    use vectorcraft_doc::color::BlendMode;
-    use vectorcraft_doc::{Appearance, Node, NodeKind, OpacityMask};
-    use vectorcraft_geom::{Rect, shapes};
+    use tsipika_doc::color::BlendMode;
+    use tsipika_doc::{Appearance, Node, NodeKind, OpacityMask};
+    use tsipika_geom::{Rect, shapes};
     let (base, mask) = opaque_paint(paint);
     // Clip once to the union of this single-contour face and its round seam stroke.
     // Align their winding so the nonzero fill adds coverage instead of cancelling it.
@@ -232,7 +232,7 @@ fn composed_art(id: vectorcraft_doc::NodeId, path: &vectorcraft_geom::PathData, 
         boundary = boundary.reverse_subpaths();
     }
     footprint.extend(boundary.iter());
-    let clip = Node::path(id, vectorcraft_geom::PathData::from_bezpath(&footprint), Appearance::default());
+    let clip = Node::path(id, tsipika_geom::PathData::from_bezpath(&footprint), Appearance::default());
     // Opaque rectangles cover the complete seam stroke, without separately antialiasing
     // either ramp. Opaque sources need only vector clipping, not full-frame opacity masks.
     let bounds = path.bounds().unwrap_or(Rect::ZERO).inflate(1.0, 1.0);
@@ -249,7 +249,7 @@ fn composed_art(id: vectorcraft_doc::NodeId, path: &vectorcraft_geom::PathData, 
                     if let Some(value) = color.get_mut(channel) {
                         *value = 1.0;
                     }
-                    let mut layer = cover(smooth_paint(vectorcraft_three_d::LightGradient { diffuse: *gradient, ambient: 0.0, color }, Color::WHITE));
+                    let mut layer = cover(smooth_paint(tsipika_three_d::LightGradient { diffuse: *gradient, ambient: 0.0, color }, Color::WHITE));
                     // Screen adds disjoint R, G and B channels exactly; no light is clamped
                     // separately. Each ramp already holds the sum of all directional lights.
                     layer.blend = BlendMode::Screen;
@@ -282,7 +282,7 @@ pub(crate) fn fills(paint: &Paint, rgb: [f64; 3], brightness: f64, colored: bool
     // shades the ramp itself, keeping placement, stops, midpoint and opacity as vector data.
     if matches!(paint, Paint::Gradient(_)) && colored {
         let mut shaded = paint.clone();
-        vectorcraft_doc::recolor::map_paint(&mut shaded, &shade);
+        tsipika_doc::recolor::map_paint(&mut shaded, &shade);
         if let Paint::Gradient(g) = &mut shaded {
             g.swatch = None;
         }
@@ -299,8 +299,8 @@ pub(crate) fn fills(paint: &Paint, rgb: [f64; 3], brightness: f64, colored: bool
 mod tests {
     use super::*;
     use serde_json::json;
-    use vectorcraft_doc::color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
-    use vectorcraft_geom::Point;
+    use tsipika_doc::color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
+    use tsipika_geom::Point;
 
     #[test]
     fn command_contract_is_strict_and_loaded_invalid_colors_fall_back_to_white() {
@@ -324,7 +324,7 @@ mod tests {
         let p = json!({"lights":[{}, {"color":"#0000ff","intensity":40}], "lightColor":"#ff0000"});
         let list = lights(&p).unwrap();
         assert_eq!(list.iter().count(), 2);
-        assert_eq!(*list.iter().next().unwrap(), vectorcraft_three_d::Light::default());
+        assert_eq!(*list.iter().next().unwrap(), tsipika_three_d::Light::default());
         assert_eq!(list.iter().nth(1).unwrap().color, [0.0, 0.0, 1.0]);
     }
 
@@ -358,8 +358,8 @@ mod tests {
         freeform.gradient.kind = GradientKind::Freeform;
         freeform.gradient.stops = vec![GradientStop::new(0.0, Color::BLACK)];
         freeform.swatch = Some("Original ramp".into());
-        freeform.freeform = Some(vectorcraft_doc::color::Freeform {
-            points: vec![vectorcraft_doc::color::FreeformPoint::new(Point::new(12.0, 18.0), Color::WHITE)],
+        freeform.freeform = Some(tsipika_doc::color::Freeform {
+            points: vec![tsipika_doc::color::FreeformPoint::new(Point::new(12.0, 18.0), Color::WHITE)],
             ..Default::default()
         });
         let original = Paint::Gradient(freeform);

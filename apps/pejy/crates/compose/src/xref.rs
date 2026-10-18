@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use designcraft_doc::{Document, Story, StoryId, XREF_MARK, xref};
+use pejy_doc::{Document, Story, StoryId, XREF_MARK, xref};
 
 use crate::ComposedStory;
 

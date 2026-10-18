@@ -22,7 +22,7 @@ use crate::{EngineError, Event, Result, Session, cmd, scriptui};
 /// The settings-store folders of installed scripts.
 pub const SCRIPTS_DIR: &str = "Scripts";
 pub const PANELS_DIR: &str = "Scripts/ScriptUI Panels";
-/// The ScriptUI panels open when EffectCraft last quit (settings store), reopened at launch.
+/// The ScriptUI panels open when Tselatra last quit (settings store), reopened at launch.
 pub const OPEN_PANELS_FILE: &str = "scriptui_panels.json";
 /// Scripts' `app.settings` in the settings store: `{section: {key: value}}`, as After Effects
 /// keeps them in its preferences.
@@ -96,8 +96,8 @@ fn settings_save(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(Value::Null)
 }
 
-/// Scripts that ship with EffectCraft (original work): (file name, ScriptUI panel, source, code).
-/// `sample`s show how to script EffectCraft; `extension`s (in `extensions/`) are optional tools
+/// Scripts that ship with Tselatra (original work): (file name, ScriptUI panel, source, code).
+/// `sample`s show how to script Tselatra; `extension`s (in `extensions/`) are optional tools
 /// built on the public scripting API, outside the core, like third-party scripts in After Effects.
 pub const BUNDLED: &[(&str, bool, &str, &str)] = &[
     ("Create Null at Selected Layers.jsx", false, "sample", include_str!("../../scripts/Create Null at Selected Layers.jsx")),
@@ -255,7 +255,7 @@ pub(crate) fn open_panel_names(s: &Session) -> Vec<String> {
     s.script_ui.windows.iter().filter(|w| w.kind == scriptui::WindowKind::Panel).map(|w| w.script.clone()).collect()
 }
 
-/// The panels open when EffectCraft last quit (`{"open": [names]}`); a missing or unreadable
+/// The panels open when Tselatra last quit (`{"open": [names]}`); a missing or unreadable
 /// file is none.
 fn remembered_panels(s: &Session) -> Vec<String> {
     let text = s.config.as_ref().and_then(|c| c.read(OPEN_PANELS_FILE)).unwrap_or_default();
@@ -287,7 +287,7 @@ pub(crate) fn forget_closed_panels(s: &Session, before: &[String]) {
     }
 }
 
-/// `window.restoreScriptPanels`: open the ScriptUI panels that were open when EffectCraft last
+/// `window.restoreScriptPanels`: open the ScriptUI panels that were open when Tselatra last
 /// quit (frontends call it once at launch). Panels whose script is gone or fails are reported
 /// and forgotten; the others still open.
 fn restore_panels(s: &mut Session, _: &Value) -> Result<Value> {
@@ -370,7 +370,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Restore ScriptUI Panels",
             [],
             None,
-            "{} → reopens the ScriptUI panels open when EffectCraft last quit (frontends call it at launch) → {opened: [name], failed: [{name, error}]}",
+            "{} → reopens the ScriptUI panels open when Tselatra last quit (frontends call it at launch) → {opened: [name], failed: [{name, error}]}",
             always,
             restore_panels
         ),

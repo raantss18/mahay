@@ -2,9 +2,9 @@
 //! tool's corners and the Pen's anchors land, and the guides they show.
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_geom::{Point, Rect};
-use vectorcraft_tools::{Mods, Overlay, PointerEvent, PointerKind};
+use tsipika_doc::NodeId;
+use tsipika_geom::{Point, Rect};
+use tsipika_tools::{Mods, Overlay, PointerEvent, PointerKind};
 
 use super::*;
 use crate::tooling::ViewInfo;

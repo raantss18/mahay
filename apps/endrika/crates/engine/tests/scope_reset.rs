@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 fn scopes(session: &Session, variable: &str) -> Option<Vec<String>> {

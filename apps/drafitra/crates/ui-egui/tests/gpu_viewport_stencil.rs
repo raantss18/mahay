@@ -5,10 +5,10 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::doc::Handle;
-use cadcraft_engine::geom::{Bounds2, Vec2};
-use cadcraft_engine::render::{DPrim, DisplayList, Kind};
-use cadcraft_ui_egui::gpu::{self, CanvasCallback, GpuFaults, LAYER_HIGHLIGHT, LAYER_MASK, LAYER_VIEWPORT, MeshSlot, Stencil};
+use drafitra_engine::doc::Handle;
+use drafitra_engine::geom::{Bounds2, Vec2};
+use drafitra_engine::render::{DPrim, DisplayList, Kind};
+use drafitra_ui_egui::gpu::{self, CanvasCallback, GpuFaults, LAYER_HIGHLIGHT, LAYER_MASK, LAYER_VIEWPORT, MeshSlot, Stencil};
 use egui_wgpu::wgpu;
 use egui_wgpu::{CallbackTrait, ScreenDescriptor};
 
@@ -20,7 +20,7 @@ fn tris(pts: Vec<Vec2>) -> DisplayList {
     let len = pts.len() as u32;
     let bounds = Bounds2::from_points(pts.iter().copied());
     let prim =
-        DPrim { handle: Handle(1), color: cadcraft_color::Rgb(0, 0, 0), aci7: false, lw: 0.0, transparency: 0, kind: Kind::Tris, start: 0, len };
+        DPrim { handle: Handle(1), color: drafitra_color::Rgb(0, 0, 0), aci7: false, lw: 0.0, transparency: 0, kind: Kind::Tris, start: 0, len };
     DisplayList { prims: vec![prim], tris: pts, bounds, ..Default::default() }
 }
 
@@ -36,7 +36,7 @@ fn fan(outline: &[Vec2]) -> DisplayList {
 /// A callback drawing `list` on `layer`, one world unit per pixel, world (32, 32) at the centre.
 fn callback(list: &DisplayList, layer: usize, key: u64, stencil: Stencil) -> CanvasCallback {
     let slot: MeshSlot = Arc::default();
-    *slot.lock().unwrap() = Some(gpu::build_mesh(list, Vec2::ZERO, cadcraft_color::Rgb(255, 255, 255), false));
+    *slot.lock().unwrap() = Some(gpu::build_mesh(list, Vec2::ZERO, drafitra_color::Rgb(255, 255, 255), false));
     CanvasCallback { key, slot, offset: [-32.0, -32.0], scale: 1.0, center: [32.0, 32.0], layer, xform: gpu::IDENTITY_XFORM, dash: 0.0, stencil }
 }
 
@@ -149,7 +149,7 @@ fn clipped_viewport_contents_draw_only_inside_their_outline() {
     let line = DisplayList {
         prims: vec![DPrim {
             handle: Handle(1),
-            color: cadcraft_color::Rgb(0, 0, 0),
+            color: drafitra_color::Rgb(0, 0, 0),
             aci7: false,
             lw: 0.0,
             transparency: 0,

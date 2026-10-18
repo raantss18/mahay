@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_doc::clipnest::MAX_NEST;
-use vectorcraft_doc::{LayerColor, LineCap, Node, NodeKind};
-use vectorcraft_geom::Rect;
+use tsipika_doc::clipnest::MAX_NEST;
+use tsipika_doc::{LayerColor, LineCap, Node, NodeKind};
+use tsipika_geom::Rect;
 
 use crate::import::import;
 
@@ -121,7 +121,7 @@ fn a_postscript_ai_whose_layers_cant_be_read_says_why() {
     assert!(e.contains("`Adobe_packedarray`") && e.contains("its layers couldn't be read either") && e.contains("`frobnicate`"), "{e}");
 }
 
-/// An Illustrator 3 file of paths alone, as image editors export their paths (storytold/photocraft#6036):
+/// An Illustrator 3 file of paths alone, as image editors export their paths (raantss18/sary#6036):
 /// no prolog and no layers, the paths unpainted (`n` closes, `N` doesn't), a compound path of two.
 const PATHS_ONLY: &str = "%!PS-Adobe-2.0 EPSF-1.2\n%%Creator: an image editor\n%%BoundingBox: 0 0 200 100\n\
     %AI3_Cropmarks: 0 0 200 100\n%%EndComments\n%%EndProlog\n%%BeginSetup\n%%EndSetup\n\

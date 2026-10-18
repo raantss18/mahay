@@ -1,20 +1,20 @@
 [package]
-name = "vectorcraft-render"
+name = "tsipika-render"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft renderer: document to pixels (vello_cpu backend)"
+description = "Tsipika renderer: document to pixels (vello_cpu backend)"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-text = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-doc = { workspace = true }
+tsipika-text = { workspace = true }
+tsipika-effects = { workspace = true }
+tsipika-brush = { workspace = true }
 vello_cpu = { workspace = true }
 # Filter types (Gaussian blur, drop shadow) are not re-exported by vello_cpu 0.2.
 vello_common = { version = "0.2", default-features = false }
@@ -30,11 +30,11 @@ log = { workspace = true }
 vello_cpu = { workspace = true, features = ["multithreading"] }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+tsipika-text = { workspace = true, features = ["test-fonts"] }
 # Live-effect plug-ins the cache tests install, written in WebAssembly text.
-vectorcraft-plugins = { workspace = true }
+tsipika-plugins = { workspace = true }
 wat = { workspace = true }
 # Decoders the export tests read their files back with.
 image = { workspace = true, features = ["tga"] }

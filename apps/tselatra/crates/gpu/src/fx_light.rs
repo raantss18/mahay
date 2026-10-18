@@ -4,7 +4,7 @@
 //! computed on the CPU in f64 as the CPU effect does; the kernels work relative to the centre.
 //! Light Sweep's softened alpha plane is the CPU's `gauss_plane` (box passes, edges repeated).
 
-use effectcraft_effects::EffectCtx;
+use tselatra_effects::EffectCtx;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, gaussian_blur};

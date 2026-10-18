@@ -1,8 +1,8 @@
 //! Colored 3D lighting remains a live command and survives native and vector output.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId};
-use vectorcraft_engine::Session;
+use tsipika_doc::{Document, Node, NodeId};
+use tsipika_engine::Session;
 
 const EFFECTS: [&str; 4] = ["threeD.revolve", "threeD.extrude", "threeD.inflate", "threeD.rotate"];
 
@@ -41,7 +41,7 @@ fn all_four_light_colors_save_reopen_undo_and_expand_without_editing_source() {
         s.execute("effect.setParams", &change).unwrap();
         assert_eq!(doc(&s).node(id).unwrap().path_data(), Some(&path));
         let red = doc(&s).clone();
-        let reopened = vectorcraft_format::load(&vectorcraft_format::save(&red, false)).unwrap();
+        let reopened = tsipika_format::load(&tsipika_format::save(&red, false)).unwrap();
         assert_eq!(reopened.node(id).unwrap().appearance.effects[0].params["lightColor"], json!("#ff0000"));
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(doc(&s), &original);
@@ -54,7 +54,7 @@ fn all_four_light_colors_save_reopen_undo_and_expand_without_editing_source() {
             assert!(text.contains("#ff4040"), "front plane is white under red light and neutral 25% ambient: {text}");
         }
         let pdf = s.execute("document.serialize", &json!({"format":"pdf"})).unwrap();
-        let bytes = vectorcraft_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
+        let bytes = tsipika_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
         assert!(!bytes.windows(b"/Subtype /Image".len()).any(|s| s == b"/Subtype /Image"), "{effect}");
         assert_eq!(doc(&s), &red, "exports leave the live document intact");
         s.execute("effect.expandAppearance", &json!({})).unwrap();
@@ -98,13 +98,13 @@ fn capped_profile() -> (Session, NodeId) {
     (s, NodeId(r["id"].as_u64().unwrap()))
 }
 
-fn render(d: &Document) -> vectorcraft_render::Rendered {
-    vectorcraft_render::Renderer::new().render(
+fn render(d: &Document) -> tsipika_render::Rendered {
+    tsipika_render::Renderer::new().render(
         d,
         400,
         400,
         kurbo::Affine::IDENTITY,
-        &vectorcraft_render::RenderOptions { background: None, artboards: false, ..Default::default() },
+        &tsipika_render::RenderOptions { background: None, artboards: false, ..Default::default() },
     )
 }
 
@@ -116,7 +116,7 @@ fn vector_exports(s: &mut Session) -> String {
         "continuous curved cap boundaries survive export"
     );
     let pdf = s.execute("document.serialize", &json!({"format":"pdf"})).unwrap();
-    let bytes = vectorcraft_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
     assert!(!bytes.windows(b"/Subtype /Image".len()).any(|s| s == b"/Subtype /Image"));
     svg
 }
@@ -168,7 +168,7 @@ fn colored_smooth_source_gradients_keep_alpha_and_vector_output() {
         .unwrap();
         let red = render(doc(&s));
         if opacity == 1.0 {
-            let vectorcraft_doc::color::Paint::Gradient(source) = doc(&s).node(id).unwrap().appearance.items[0].paint() else {
+            let tsipika_doc::color::Paint::Gradient(source) = doc(&s).node(id).unwrap().appearance.items[0].paint() else {
                 panic!("source gradient")
             };
             let mut checked = 0;
@@ -218,7 +218,7 @@ fn colored_smooth_source_gradients_keep_alpha_and_vector_output() {
         } else {
             assert!(!svg.contains("<mask"), "opaque faces use vector clipping without opacity-mask buffers");
         }
-        let imported = vectorcraft_svg::import(&svg).unwrap();
+        let imported = tsipika_svg::import(&svg).unwrap();
         let svg_image = render(&imported);
         let mut checked = 0;
         for y in (110..290).step_by(11) {
@@ -253,7 +253,7 @@ fn multiple_lights_survive_commands_history_native_save_and_vector_expansion() {
         s.execute("effect.setParams", &change).unwrap();
         let lit = doc(&s).clone();
         assert_eq!(params(&s, id)["lights"], lights);
-        let restored = vectorcraft_format::load(&vectorcraft_format::save(&lit, false)).unwrap();
+        let restored = tsipika_format::load(&tsipika_format::save(&lit, false)).unwrap();
         assert_eq!(restored.node(id).unwrap().appearance.effects[0].params["lights"], lights);
         assert_eq!(doc(&s).node(id).unwrap().path_data(), Some(&source));
         s.execute("edit.undo", &json!({})).unwrap();
@@ -267,7 +267,7 @@ fn multiple_lights_survive_commands_history_native_save_and_vector_expansion() {
         let svg = s.execute("document.serialize", &json!({"format":"svg"})).unwrap()["text"].as_str().unwrap().to_owned();
         assert!(!svg.contains("<image"));
         let pdf = s.execute("document.serialize", &json!({"format":"pdf"})).unwrap();
-        let bytes = vectorcraft_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
+        let bytes = tsipika_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
         assert!(!bytes.windows(b"/Subtype /Image".len()).any(|s| s == b"/Subtype /Image"));
         s.execute("effect.expandAppearance", &json!({})).unwrap();
         let expanded = render(doc(&s));
@@ -356,7 +356,7 @@ fn smooth_multi_light_color_varies_in_two_directions_and_stays_vector_with_sourc
         }
         let svg = vector_exports(&mut s);
         assert!(svg.contains("screen") && svg.contains("multiply"));
-        let imported = vectorcraft_svg::import(&svg).unwrap();
+        let imported = tsipika_svg::import(&svg).unwrap();
         let roundtrip = render(&imported);
         for y in (150..250).step_by(13) {
             for x in (90..185).step_by(13) {
@@ -381,12 +381,12 @@ fn inflate_lighting_has_no_polygon_steps_and_stays_vector_after_expansion() {
     // Check the export pipeline's continuous shading. The 8-bit canvas is also reviewed
     // natively at high zoom; it can quantize a short gradient ramp differently at 1:1.
     let render = |d: &Document| {
-        vectorcraft_render::Renderer::new().render(
+        tsipika_render::Renderer::new().render(
             d,
             400,
             400,
             kurbo::Affine::IDENTITY,
-            &vectorcraft_render::RenderOptions { background: None, artboards: false, precise: true, supersample: true, ..Default::default() },
+            &tsipika_render::RenderOptions { background: None, artboards: false, precise: true, supersample: true, ..Default::default() },
         )
     };
     let mut s = Session::new();
@@ -415,7 +415,7 @@ fn inflate_lighting_has_no_polygon_steps_and_stays_vector_after_expansion() {
     }
     let svg = s.execute("document.serialize", &json!({"format":"svg"})).unwrap()["text"].as_str().unwrap().to_owned();
     assert!(svg.contains("linearGradient") && svg.contains("screen") && !svg.contains("<image"));
-    let roundtrip = render(&vectorcraft_svg::import(&svg).unwrap());
+    let roundtrip = render(&tsipika_svg::import(&svg).unwrap());
     for y in (110..290).step_by(9) {
         for x in (110..290).step_by(9) {
             let a = live.pixel(x, y);
@@ -440,7 +440,7 @@ fn inflate_lighting_has_no_polygon_steps_and_stays_vector_after_expansion() {
     assert!((150..=156).contains(&live.pixel(200, 200)[3]), "surface opacity is applied once: {:?}", live.pixel(200, 200));
     let svg = vector_exports(&mut s);
     assert!(svg.contains("linearGradient") && svg.contains("screen") && svg.contains("multiply"));
-    let imported = vectorcraft_svg::import(&svg).unwrap();
+    let imported = tsipika_svg::import(&svg).unwrap();
     let roundtrip = render(&imported);
     for y in (155..245).step_by(9) {
         for x in (155..245).step_by(9) {

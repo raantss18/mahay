@@ -3,9 +3,9 @@
 //! Geometry works in the frame's local coordinates (the space its path and corner sizes live in)
 //! and maps through the frame's canvas transform, so rotated and sheared frames work unchanged.
 
-use designcraft_doc::{ItemId, Shape};
-use designcraft_geom::corners::{Corner, CornerOptions, CornerShape};
-use designcraft_geom::{Affine, Point, Vec2};
+use pejy_doc::{ItemId, Shape};
+use pejy_geom::corners::{Corner, CornerOptions, CornerShape};
+use pejy_geom::{Affine, Point, Vec2};
 use serde_json::{Value, json};
 
 use crate::ToolContext;

@@ -14,8 +14,8 @@
 //!   is composed again with the objects where the previous pass placed them until they stop
 //!   moving, at most [`MAX_PASSES`] more times.
 
-use designcraft_doc::{AnchorPosition, AnchoredObject, Document, Item, OBJECT_MARK, PageSide, SpreadRef, Story, StoryId, WrapMode};
-use designcraft_geom::Affine;
+use pejy_doc::{AnchorPosition, AnchoredObject, Document, Item, OBJECT_MARK, PageSide, SpreadRef, Story, StoryId, WrapMode};
+use pejy_geom::Affine;
 
 use crate::{ComposeOptions, ComposedStory, Exclusion, FrameSpec};
 

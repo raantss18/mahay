@@ -5,7 +5,7 @@
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
 
-use figcraft_mcp::{Attached, Backend, Headless, Server};
+use endrika_mcp::{Attached, Backend, Headless, Server};
 use serde_json::{Value, json};
 
 fn fake_app() -> u16 {

@@ -4,8 +4,8 @@
 //! keyframe governs the segment leaving it: Linear, Hold, Bezier (with influence/speed handles),
 //! Auto Bezier, Continuous Bezier, Ease In/Out (Bezier presets) — Premiere's temporal set.
 
-use filmcraft_geom::Vec2;
-use filmcraft_time::Tick;
+use hetsika_geom::Vec2;
+use hetsika_time::Tick;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

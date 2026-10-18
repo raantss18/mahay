@@ -11,7 +11,7 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-use vectorcraft_doc::HyphenationOptions;
+use tsipika_doc::HyphenationOptions;
 
 /// Only words at least this long are hyphenated (Illustrator's default: longer than 5 letters).
 pub const MIN_WORD: usize = 6;

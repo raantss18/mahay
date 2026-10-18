@@ -1,8 +1,8 @@
 //! Draw commands: LINE, PLINE, CIRCLE, ARC, RECTANG, POLYGON, ELLIPSE, POINT, XLINE, RAY,
 //! SPLINE, DONUT, TEXT, MTEXT. Each has a JSON form and an interactive prompt sequence.
 
-use cadcraft_doc::{EntityKind, HAlign, MText, Point, RayLine, Text, VAlign};
-use cadcraft_geom::{Arc, Circle, Ellipse, PolyVertex, Polyline, Spline, Vec2, arc_to_bulge, bulge_to_arc};
+use drafitra_doc::{EntityKind, HAlign, MText, Point, RayLine, Text, VAlign};
+use drafitra_geom::{Arc, Circle, Ellipse, PolyVertex, Polyline, Spline, Vec2, arc_to_bulge, bulge_to_arc};
 use serde_json::{Value, json};
 
 use super::helpers::*;
@@ -93,7 +93,7 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
-fn added(h: cadcraft_doc::Handle) -> Result<Value> {
+fn added(h: drafitra_doc::Handle) -> Result<Value> {
     Ok(json!({ "handle": h.hex() }))
 }
 
@@ -236,7 +236,7 @@ fn run_ellipse(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let start = f64_or(p, "start", 0.0).to_radians();
     let end = f64_or(p, "end", 360.0).to_radians();
-    added(s.add_entity(EntityKind::Ellipse(cadcraft_doc::Ellipse { center: v3(c), major: v3(m), ratio, start, end }))?)
+    added(s.add_entity(EntityKind::Ellipse(drafitra_doc::Ellipse { center: v3(c), major: v3(m), ratio, start, end }))?)
 }
 
 fn run_point(s: &mut Session, p: &Value) -> Result<Value> {
@@ -391,7 +391,7 @@ fn run_mtext(s: &mut Session, p: &Value) -> Result<Value> {
 #[derive(Default)]
 struct LineM {
     pts: Vec<Vec2>,
-    handles: Vec<cadcraft_doc::Handle>,
+    handles: Vec<drafitra_doc::Handle>,
     /// A first point picked as a deferred tangent/perpendicular, resolved by the next point.
     first: Option<snap::Deferred>,
 }
@@ -507,7 +507,7 @@ struct PlineM {
     /// Total width at the start and end of the next segment (Width / Halfwidth answers).
     start_w: f64,
     end_w: f64,
-    handle: Option<cadcraft_doc::Handle>,
+    handle: Option<drafitra_doc::Handle>,
     /// 1 = asking the starting width, 2 = the ending width.
     asking_width: u8,
     /// The widths are being asked as half-widths (centre line to edge).
@@ -1021,12 +1021,12 @@ impl EllipseM {
             self.ellipse = Some(e);
             return Ok(Step::Continue);
         }
-        s.add_entity(EntityKind::Ellipse(cadcraft_doc::Ellipse {
+        s.add_entity(EntityKind::Ellipse(drafitra_doc::Ellipse {
             center: v3(e.center),
             major: v3(e.major),
             ratio: e.ratio,
             start: 0.0,
-            end: cadcraft_geom::TAU,
+            end: drafitra_geom::TAU,
         }))?;
         Ok(Step::Done)
     }
@@ -1061,7 +1061,7 @@ impl Interactive for EllipseM {
     }
     fn input(&mut self, s: &mut Session, i: Input) -> Result<Step> {
         if let Some(e) = self.ellipse {
-            let ge = Ellipse { start: 0.0, end: cadcraft_geom::TAU, ..e };
+            let ge = Ellipse { start: 0.0, end: drafitra_geom::TAU, ..e };
             let ang = match i {
                 Input::Keyword(k) => {
                     match k.as_str() {
@@ -1072,12 +1072,12 @@ impl Interactive for EllipseM {
                     return Ok(Step::Continue);
                 }
                 // A parameter is the angle from the major axis taken as the parameter itself.
-                Input::Point(p) if self.param => cadcraft_geom::norm_angle((p - e.center).angle() - e.major.angle()),
+                Input::Point(p) if self.param => drafitra_geom::norm_angle((p - e.center).angle() - e.major.angle()),
                 Input::Point(p) => ge.param_of(p),
                 Input::Text(t) => {
                     let a = s.angle_settings().amount(&t).ok_or_else(|| crate::EngineError::Other("Requires an angle.".into()))?;
                     if self.param {
-                        cadcraft_geom::norm_angle(a)
+                        drafitra_geom::norm_angle(a)
                     } else {
                         // A typed angle is a true angle from the major axis; convert it to an ellipse parameter like a picked point.
                         ge.param_of(e.center + Vec2::from_angle(a + e.major.angle()))
@@ -1091,7 +1091,7 @@ impl Interactive for EllipseM {
                     return Ok(Step::Continue);
                 }
                 Some(st) => {
-                    s.add_entity(EntityKind::Ellipse(cadcraft_doc::Ellipse {
+                    s.add_entity(EntityKind::Ellipse(drafitra_doc::Ellipse {
                         center: v3(e.center),
                         major: v3(e.major),
                         ratio: e.ratio,
@@ -1154,12 +1154,12 @@ impl Interactive for EllipseM {
         }
         let e = if self.rotation { self.axis().and_then(|(ctr, _)| self.rotated((c - ctr).angle())) } else { self.build(c) };
         e.map(|e| {
-            vec![EntityKind::Ellipse(cadcraft_doc::Ellipse {
+            vec![EntityKind::Ellipse(drafitra_doc::Ellipse {
                 center: v3(e.center),
                 major: v3(e.major),
                 ratio: e.ratio,
                 start: 0.0,
-                end: cadcraft_geom::TAU,
+                end: drafitra_geom::TAU,
             })]
         })
         .unwrap_or_default()
@@ -1245,7 +1245,7 @@ struct SplineM {
     /// `Method` > `CV` hands over to the control-vertex machine (`spline.cv`).
     delegate: Option<Box<dyn Interactive>>,
     /// Knots, end tangents and fit tolerance chosen so far.
-    opts: cadcraft_geom::FitOptions,
+    opts: drafitra_geom::FitOptions,
     /// An option asking a further question (Knots, Tangency, toLerance, Object).
     ask: Option<super::spline_opts::SplineAsk>,
 }

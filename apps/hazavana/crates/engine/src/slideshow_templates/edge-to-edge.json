@@ -1,5 +1,5 @@
 {
-  "format": "lightcraft.slideshowTemplate",
+  "format": "hazavana.slideshowTemplate",
   "version": 1,
   "name": "Edge to Edge",
   "description": "Every photo cropped to fill the whole screen, with slow crossfades.",

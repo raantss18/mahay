@@ -187,6 +187,7 @@ dependencies = [
  "ndk-context",
  "ndk-sys",
  "num_enum",
+ "simd_cesu8",
  "thiserror 2.0.21",
 ]
 
@@ -195,6 +196,23 @@ name = "android-properties"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
+
+[[package]]
+name = "android_log-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84521a3cf562bc62942e294181d9eef17eb38ceb8c68677bc49f144e4c3d4f8d"
+
+[[package]]
+name = "android_logger"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbb4e440d04be07da1f1bf44fb4495ebd58669372fe0cffa6e48595ac5bd88a3"
+dependencies = [
+ "android_log-sys",
+ "env_filter",
+ "log",
+]
 
 [[package]]
 name = "android_system_properties"
@@ -208,12 +226,11 @@ dependencies = [
 [[package]]
 name = "arboard"
 version = "3.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
 dependencies = [
  "clipboard-win",
  "image",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -221,7 +238,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.60.2",
+ "windows-sys 0.52.0",
  "x11rb",
 ]
 
@@ -969,29 +986,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "craft-docpath"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=82a24b006eefa036b43c09a67fb9a3fbd17ffe63#82a24b006eefa036b43c09a67fb9a3fbd17ffe63"
-
-[[package]]
-name = "craft-pdf"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d#ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d"
-dependencies = [
- "hayro-syntax",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "craft-ui"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51eeb3de70e735c8ce87a59a7dedd47675"
-dependencies = [
- "egui",
- "serde",
-]
-
-[[package]]
 name = "crc32fast"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1159,551 +1153,6 @@ checksum = "0656a7530b9e2841ee7a5f983965bdd9840c32f4012f759cfd44b912cced6b34"
 dependencies = [
  "bytemuck",
  "emath",
-]
-
-[[package]]
-name = "effectcraft"
-version = "0.12.0"
-dependencies = [
- "cpal",
- "effectcraft-engine",
- "effectcraft-host",
- "effectcraft-ui-egui",
- "eframe",
- "egui",
- "fmv-macos-events",
- "log",
- "muda",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "pollster 0.4.0",
- "rfd",
- "serde",
- "serde_json",
- "winit",
- "winresource",
- "zbus",
-]
-
-[[package]]
-name = "effectcraft-automation"
-version = "0.12.0"
-dependencies = [
- "effectcraft-engine",
- "effectcraft-host",
- "effectcraft-script",
- "image",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "effectcraft-av1enc"
-version = "0.12.0"
-dependencies = [
- "filmcraft-av1",
-]
-
-[[package]]
-name = "effectcraft-cli"
-version = "0.12.0"
-dependencies = [
- "cpu-time",
- "effectcraft-automation",
- "effectcraft-engine",
- "effectcraft-gpu",
- "effectcraft-host",
- "effectcraft-render",
- "effectcraft-time",
- "effectcraft-ui-egui",
- "image",
- "serde_json",
-]
-
-[[package]]
-name = "effectcraft-color"
-version = "0.12.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "effectcraft-effects"
-version = "0.12.0"
-dependencies = [
- "effectcraft-color",
- "effectcraft-geom",
- "effectcraft-keyframe",
- "effectcraft-project",
- "effectcraft-raster",
- "effectcraft-segment",
- "effectcraft-track",
- "log",
- "rayon",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "effectcraft-engine"
-version = "0.12.0"
-dependencies = [
- "craft-docpath",
- "effectcraft-color",
- "effectcraft-effects",
- "effectcraft-geom",
- "effectcraft-interchange",
- "effectcraft-keyframe",
- "effectcraft-lottie",
- "effectcraft-model",
- "effectcraft-path",
- "effectcraft-pdf",
- "effectcraft-project",
- "effectcraft-psd",
- "effectcraft-raster",
- "effectcraft-render",
- "effectcraft-segment",
- "effectcraft-svg",
- "effectcraft-text",
- "effectcraft-time",
- "effectcraft-track",
- "exr",
- "image",
- "kurbo",
- "log",
- "rayon",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "effectcraft-export"
-version = "0.12.0"
-dependencies = [
- "effectcraft-av1enc",
- "effectcraft-color",
- "effectcraft-effects",
- "effectcraft-hevcenc",
- "effectcraft-keyframe",
- "effectcraft-media",
- "effectcraft-opusenc",
- "effectcraft-project",
- "effectcraft-raster",
- "effectcraft-render",
- "effectcraft-time",
- "effectcraft-vp9enc",
- "filmcraft-aac",
- "filmcraft-h264enc",
- "filmcraft-isobmff",
- "filmcraft-opus",
- "filmcraft-prores",
- "filmcraft-vp9",
- "gif",
- "image",
- "log",
- "rayon",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "effectcraft-expr"
-version = "0.12.0"
-dependencies = [
- "boa_engine",
- "effectcraft-color",
- "effectcraft-effects",
- "effectcraft-geom",
- "effectcraft-keyframe",
- "effectcraft-path",
- "effectcraft-project",
- "effectcraft-render",
- "effectcraft-text",
- "effectcraft-time",
- "serde_json",
-]
-
-[[package]]
-name = "effectcraft-geom"
-version = "0.12.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "effectcraft-gpu"
-version = "0.12.0"
-dependencies = [
- "bytemuck",
- "effectcraft-color",
- "effectcraft-effects",
- "effectcraft-geom",
- "effectcraft-keyframe",
- "effectcraft-project",
- "effectcraft-raster",
- "effectcraft-render",
- "effectcraft-text",
- "effectcraft-time",
- "js-sys",
- "log",
- "pollster 0.4.0",
- "wasm-bindgen",
- "web-time",
- "wgpu",
-]
-
-[[package]]
-name = "effectcraft-hevcenc"
-version = "0.12.0"
-dependencies = [
- "filmcraft-hevc",
-]
-
-[[package]]
-name = "effectcraft-host"
-version = "0.12.0"
-dependencies = [
- "effectcraft-engine",
- "effectcraft-export",
- "effectcraft-expr",
- "effectcraft-interchange",
- "effectcraft-media",
- "effectcraft-pdf",
- "effectcraft-plugin",
- "effectcraft-project",
- "effectcraft-psd",
- "effectcraft-raster",
- "effectcraft-script",
- "effectcraft-svg",
- "effectcraft-time",
- "exr",
- "gif",
- "image",
- "log",
- "rayon",
- "serde_json",
-]
-
-[[package]]
-name = "effectcraft-interchange"
-version = "0.12.0"
-dependencies = [
- "effectcraft-color",
- "effectcraft-keyframe",
- "effectcraft-project",
- "effectcraft-time",
- "filmcraft-color",
- "filmcraft-geom",
- "filmcraft-interchange",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-time",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "effectcraft-keyframe"
-version = "0.12.0"
-dependencies = [
- "effectcraft-color",
- "effectcraft-geom",
- "effectcraft-time",
- "proptest",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "effectcraft-lottie"
-version = "0.12.0"
-dependencies = [
- "craft-docpath",
- "effectcraft-color",
- "effectcraft-effects",
- "effectcraft-keyframe",
- "effectcraft-path",
- "effectcraft-project",
- "effectcraft-render",
- "effectcraft-text",
- "effectcraft-time",
- "kurbo",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "effectcraft-media"
-version = "0.12.0"
-dependencies = [
- "craft-docpath",
- "effectcraft-model",
- "effectcraft-pdf",
- "effectcraft-project",
- "effectcraft-psd",
- "effectcraft-raster",
- "effectcraft-render",
- "effectcraft-svg",
- "effectcraft-time",
- "exr",
- "filmcraft-codecs",
- "filmcraft-color",
- "filmcraft-frame",
- "filmcraft-isobmff",
- "filmcraft-media",
- "filmcraft-time",
- "gif",
- "image",
- "log",
- "rayon",
- "serde_json",
- "symphonia",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "effectcraft-model"
-version = "0.12.0"
-dependencies = [
- "effectcraft-geom",
- "image",
- "miniz_oxide 0.8.9",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "effectcraft-opusenc"
-version = "0.12.0"
-dependencies = [
- "filmcraft-opus",
-]
-
-[[package]]
-name = "effectcraft-path"
-version = "0.12.0"
-dependencies = [
- "effectcraft-geom",
- "effectcraft-keyframe",
- "effectcraft-raster",
- "kurbo",
- "linesweeper",
- "tiny-skia",
-]
-
-[[package]]
-name = "effectcraft-pdf"
-version = "0.12.0"
-dependencies = [
- "craft-pdf",
- "effectcraft-raster",
- "effectcraft-svg",
- "effectcraft-text",
- "image",
- "kurbo",
- "miniz_oxide 0.8.9",
- "skrifa",
- "wasm-bindgen-test",
- "zune-jpeg",
-]
-
-[[package]]
-name = "effectcraft-plugin"
-version = "0.12.0"
-dependencies = [
- "effectcraft-effects",
- "effectcraft-keyframe",
- "effectcraft-project",
- "effectcraft-raster",
- "serde_json",
- "wasmi",
-]
-
-[[package]]
-name = "effectcraft-project"
-version = "0.12.0"
-dependencies = [
- "effectcraft-color",
- "effectcraft-geom",
- "effectcraft-keyframe",
- "effectcraft-time",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "effectcraft-psd"
-version = "0.12.0"
-dependencies = [
- "miniz_oxide 0.8.9",
-]
-
-[[package]]
-name = "effectcraft-raster"
-version = "0.12.0"
-dependencies = [
- "effectcraft-color",
- "effectcraft-geom",
- "rayon",
-]
-
-[[package]]
-name = "effectcraft-render"
-version = "0.12.0"
-dependencies = [
- "effectcraft-color",
- "effectcraft-effects",
- "effectcraft-geom",
- "effectcraft-keyframe",
- "effectcraft-model",
- "effectcraft-path",
- "effectcraft-project",
- "effectcraft-raster",
- "effectcraft-text",
- "effectcraft-time",
- "kurbo",
- "log",
- "lz4_flex",
- "rayon",
- "serde",
- "web-time",
-]
-
-[[package]]
-name = "effectcraft-script"
-version = "0.12.0"
-dependencies = [
- "boa_engine",
- "effectcraft-engine",
- "effectcraft-expr",
- "effectcraft-keyframe",
- "effectcraft-path",
- "effectcraft-project",
- "effectcraft-psd",
- "effectcraft-render",
- "effectcraft-time",
- "serde_json",
- "web-time",
-]
-
-[[package]]
-name = "effectcraft-segment"
-version = "0.12.0"
-dependencies = [
- "miniz_oxide 0.8.9",
- "ndarray",
- "rayon",
-]
-
-[[package]]
-name = "effectcraft-svg"
-version = "0.12.0"
-dependencies = [
- "effectcraft-geom",
- "effectcraft-path",
- "effectcraft-raster",
- "kurbo",
- "rayon",
- "roxmltree",
-]
-
-[[package]]
-name = "effectcraft-text"
-version = "0.12.0"
-dependencies = [
- "effectcraft-keyframe",
- "harfrust",
- "kurbo",
- "skrifa",
- "unicode-bidi",
- "unicode-linebreak",
-]
-
-[[package]]
-name = "effectcraft-time"
-version = "0.12.0"
-dependencies = [
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "effectcraft-track"
-version = "0.12.0"
-dependencies = [
- "effectcraft-raster",
- "effectcraft-segment",
- "rayon",
- "serde",
- "serde_json",
- "web-time",
-]
-
-[[package]]
-name = "effectcraft-ui-egui"
-version = "0.12.0"
-dependencies = [
- "craft-ui",
- "effectcraft-color",
- "effectcraft-engine",
- "effectcraft-geom",
- "effectcraft-gpu",
- "effectcraft-host",
- "effectcraft-keyframe",
- "effectcraft-path",
- "effectcraft-project",
- "effectcraft-render",
- "effectcraft-text",
- "effectcraft-time",
- "eframe",
- "egui",
- "egui_kittest",
- "exr",
- "image",
- "kurbo",
- "log",
- "pollster 0.4.0",
- "rayon",
- "serde",
- "serde_json",
- "sys-locale",
- "toml",
- "web-time",
-]
-
-[[package]]
-name = "effectcraft-vp9enc"
-version = "0.12.0"
-
-[[package]]
-name = "effectcraft-web"
-version = "0.12.0"
-dependencies = [
- "effectcraft-engine",
- "effectcraft-export",
- "effectcraft-expr",
- "effectcraft-gpu",
- "effectcraft-host",
- "effectcraft-media",
- "effectcraft-ui-egui",
- "eframe",
- "egui",
- "js-sys",
- "log",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "web-time",
 ]
 
 [[package]]
@@ -1892,6 +1341,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_filter"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bf3c259d255ca70051b30e2e95b5446cdb8949ac4cd22c0d7fd634d89f568e2"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "epaint"
 version = "0.36.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2048,261 +1506,6 @@ name = "fearless_simd"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97b65636e5b9ef369943878ac74335ba1c55c1cb6adbf1e2c293c624248d693"
-
-[[package]]
-name = "filmcraft-aac"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-ac3"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-av1"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-bitstream"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-
-[[package]]
-name = "filmcraft-cfb"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-
-[[package]]
-name = "filmcraft-codecs"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-aac",
- "filmcraft-ac3",
- "filmcraft-av1",
- "filmcraft-bitstream",
- "filmcraft-color",
- "filmcraft-dnx",
- "filmcraft-frame",
- "filmcraft-h264",
- "filmcraft-hevc",
- "filmcraft-isobmff",
- "filmcraft-matroska",
- "filmcraft-media",
- "filmcraft-mpeg2v",
- "filmcraft-mpegts",
- "filmcraft-mxf",
- "filmcraft-ogg",
- "filmcraft-opus",
- "filmcraft-prores",
- "filmcraft-time",
- "filmcraft-vp9",
- "image",
- "log",
- "symphonia",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
-name = "filmcraft-color"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "filmcraft-dnx"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-frame"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-color",
- "filmcraft-time",
- "rayon",
- "serde",
-]
-
-[[package]]
-name = "filmcraft-geom"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "filmcraft-h264"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-h264enc"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-hevc"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-interchange"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-cfb",
- "filmcraft-color",
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-project",
- "filmcraft-time",
- "roxmltree",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-isobmff"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-matroska"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-
-[[package]]
-name = "filmcraft-media"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-color",
- "filmcraft-frame",
- "filmcraft-time",
- "image",
- "rayon",
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mpeg2v"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mpegts"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-mxf"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-
-[[package]]
-name = "filmcraft-ogg"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-
-[[package]]
-name = "filmcraft-opus"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-
-[[package]]
-name = "filmcraft-project"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-color",
- "filmcraft-geom",
- "filmcraft-media",
- "filmcraft-time",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-prores"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "filmcraft-time"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "filmcraft-vp9"
-version = "0.1.1"
-source = "git+https://github.com/storytold/filmcraft?rev=2c5ba7a72619935f0481f99d59409e0d1844b234#2c5ba7a72619935f0481f99d59409e0d1844b234"
-dependencies = [
- "filmcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
 
 [[package]]
 name = "find-msvc-tools"
@@ -2728,7 +1931,6 @@ checksum = "c75ab947623ef4ccaa7acf0579edf7cbb5a73838e3839a7be73335e522f433a1"
 [[package]]
 name = "hayro-syntax"
 version = "0.7.2"
-source = "git+https://github.com/storytold/craft-libs?rev=ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d#ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d"
 dependencies = [
  "hayro-jbig2",
  "hayro-jpeg2000",
@@ -2749,6 +1951,277 @@ name = "hermit-abi"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
+
+[[package]]
+name = "hetsika-aac"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-ac3"
+version = "0.2.0"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-apv"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-av1"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-avi"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-bitstream"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-cfb"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-codecs"
+version = "0.2.0"
+dependencies = [
+ "hetsika-aac",
+ "hetsika-ac3",
+ "hetsika-apv",
+ "hetsika-av1",
+ "hetsika-avi",
+ "hetsika-bitstream",
+ "hetsika-color",
+ "hetsika-dnx",
+ "hetsika-frame",
+ "hetsika-h264",
+ "hetsika-hevc",
+ "hetsika-isobmff",
+ "hetsika-matroska",
+ "hetsika-media",
+ "hetsika-mpa",
+ "hetsika-mpeg2v",
+ "hetsika-mpegts",
+ "hetsika-mxf",
+ "hetsika-ogg",
+ "hetsika-opus",
+ "hetsika-prores",
+ "hetsika-time",
+ "hetsika-vp8",
+ "hetsika-vp9",
+ "image",
+ "log",
+ "rayon",
+ "symphonia",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "hetsika-color"
+version = "0.2.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "hetsika-dng"
+version = "0.2.0"
+dependencies = [
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-dnx"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-frame"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-time",
+ "rayon",
+ "serde",
+]
+
+[[package]]
+name = "hetsika-geom"
+version = "0.2.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "hetsika-h264"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-h264enc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-hevc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-interchange"
+version = "0.2.0"
+dependencies = [
+ "hetsika-cfb",
+ "hetsika-color",
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-time",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-isobmff"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-matroska"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-media"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-dng",
+ "hetsika-frame",
+ "hetsika-time",
+ "image",
+ "rayon",
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mpa"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mpeg2v"
+version = "0.2.0"
+dependencies = [
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mpegts"
+version = "0.2.0"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-mxf"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-ogg"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-opus"
+version = "0.2.0"
+
+[[package]]
+name = "hetsika-project"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-geom",
+ "hetsika-media",
+ "hetsika-time",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-prores"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-time"
+version = "0.2.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "hetsika-vp8"
+version = "0.2.0"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "hetsika-vp9"
+version = "0.2.0"
+dependencies = [
+ "hetsika-bitstream",
+ "rayon",
+ "thiserror 2.0.21",
+]
 
 [[package]]
 name = "hex"
@@ -3191,6 +2664,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "mahay-android"
+version = "0.1.0"
+dependencies = [
+ "android-activity",
+ "android_logger",
+ "jni 0.21.1",
+ "log",
+]
+
+[[package]]
+name = "mahay-docpath"
+version = "0.1.0"
+
+[[package]]
+name = "mahay-pdf"
+version = "0.1.0"
+dependencies = [
+ "hayro-syntax",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "mahay-ui"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "serde",
 ]
 
 [[package]]
@@ -4456,14 +3959,13 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 [[package]]
 name = "rfd"
 version = "0.17.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
 dependencies = [
  "block2 0.6.2",
  "dispatch2",
  "js-sys",
  "libc",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -5348,6 +4850,551 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "tselatra"
+version = "0.2.0"
+dependencies = [
+ "cpal",
+ "eframe",
+ "egui",
+ "fmv-macos-events",
+ "log",
+ "muda",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "pollster 0.4.0",
+ "rfd",
+ "serde",
+ "serde_json",
+ "tselatra-engine",
+ "tselatra-host",
+ "tselatra-ui-egui",
+ "winit",
+ "winresource",
+ "zbus",
+]
+
+[[package]]
+name = "tselatra-automation"
+version = "0.2.0"
+dependencies = [
+ "image",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tselatra-engine",
+ "tselatra-host",
+ "tselatra-script",
+]
+
+[[package]]
+name = "tselatra-av1enc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-av1",
+]
+
+[[package]]
+name = "tselatra-cli"
+version = "0.2.0"
+dependencies = [
+ "cpu-time",
+ "image",
+ "serde_json",
+ "tselatra-automation",
+ "tselatra-engine",
+ "tselatra-gpu",
+ "tselatra-host",
+ "tselatra-render",
+ "tselatra-time",
+ "tselatra-ui-egui",
+]
+
+[[package]]
+name = "tselatra-color"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "tselatra-effects"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tselatra-color",
+ "tselatra-geom",
+ "tselatra-keyframe",
+ "tselatra-project",
+ "tselatra-raster",
+ "tselatra-segment",
+ "tselatra-track",
+]
+
+[[package]]
+name = "tselatra-engine"
+version = "0.2.0"
+dependencies = [
+ "exr",
+ "image",
+ "kurbo",
+ "log",
+ "mahay-docpath",
+ "rayon",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tselatra-color",
+ "tselatra-effects",
+ "tselatra-geom",
+ "tselatra-interchange",
+ "tselatra-keyframe",
+ "tselatra-lottie",
+ "tselatra-model",
+ "tselatra-path",
+ "tselatra-pdf",
+ "tselatra-project",
+ "tselatra-psd",
+ "tselatra-raster",
+ "tselatra-render",
+ "tselatra-segment",
+ "tselatra-svg",
+ "tselatra-text",
+ "tselatra-time",
+ "tselatra-track",
+ "web-time",
+]
+
+[[package]]
+name = "tselatra-export"
+version = "0.2.0"
+dependencies = [
+ "gif",
+ "hetsika-aac",
+ "hetsika-h264enc",
+ "hetsika-isobmff",
+ "hetsika-opus",
+ "hetsika-prores",
+ "hetsika-vp9",
+ "image",
+ "log",
+ "rayon",
+ "thiserror 2.0.21",
+ "tselatra-av1enc",
+ "tselatra-color",
+ "tselatra-effects",
+ "tselatra-hevcenc",
+ "tselatra-keyframe",
+ "tselatra-media",
+ "tselatra-opusenc",
+ "tselatra-project",
+ "tselatra-raster",
+ "tselatra-render",
+ "tselatra-time",
+ "tselatra-vp9enc",
+ "web-time",
+]
+
+[[package]]
+name = "tselatra-expr"
+version = "0.2.0"
+dependencies = [
+ "boa_engine",
+ "serde_json",
+ "tselatra-color",
+ "tselatra-effects",
+ "tselatra-geom",
+ "tselatra-keyframe",
+ "tselatra-path",
+ "tselatra-project",
+ "tselatra-render",
+ "tselatra-text",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-geom"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "tselatra-gpu"
+version = "0.2.0"
+dependencies = [
+ "bytemuck",
+ "js-sys",
+ "log",
+ "pollster 0.4.0",
+ "tselatra-color",
+ "tselatra-effects",
+ "tselatra-geom",
+ "tselatra-keyframe",
+ "tselatra-project",
+ "tselatra-raster",
+ "tselatra-render",
+ "tselatra-text",
+ "tselatra-time",
+ "wasm-bindgen",
+ "web-time",
+ "wgpu",
+]
+
+[[package]]
+name = "tselatra-hevcenc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-hevc",
+]
+
+[[package]]
+name = "tselatra-host"
+version = "0.2.0"
+dependencies = [
+ "exr",
+ "gif",
+ "image",
+ "log",
+ "rayon",
+ "serde_json",
+ "tselatra-engine",
+ "tselatra-export",
+ "tselatra-expr",
+ "tselatra-interchange",
+ "tselatra-media",
+ "tselatra-pdf",
+ "tselatra-plugin",
+ "tselatra-project",
+ "tselatra-psd",
+ "tselatra-raster",
+ "tselatra-script",
+ "tselatra-svg",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-interchange"
+version = "0.2.0"
+dependencies = [
+ "hetsika-color",
+ "hetsika-geom",
+ "hetsika-interchange",
+ "hetsika-media",
+ "hetsika-project",
+ "hetsika-time",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tselatra-color",
+ "tselatra-keyframe",
+ "tselatra-project",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-keyframe"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+ "serde_json",
+ "tselatra-color",
+ "tselatra-geom",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-lottie"
+version = "0.2.0"
+dependencies = [
+ "kurbo",
+ "mahay-docpath",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tselatra-color",
+ "tselatra-effects",
+ "tselatra-keyframe",
+ "tselatra-path",
+ "tselatra-project",
+ "tselatra-render",
+ "tselatra-text",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-media"
+version = "0.2.0"
+dependencies = [
+ "exr",
+ "gif",
+ "hetsika-codecs",
+ "hetsika-color",
+ "hetsika-frame",
+ "hetsika-isobmff",
+ "hetsika-media",
+ "hetsika-time",
+ "image",
+ "log",
+ "mahay-docpath",
+ "rayon",
+ "serde_json",
+ "symphonia",
+ "thiserror 2.0.21",
+ "tselatra-model",
+ "tselatra-pdf",
+ "tselatra-project",
+ "tselatra-psd",
+ "tselatra-raster",
+ "tselatra-render",
+ "tselatra-svg",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-model"
+version = "0.2.0"
+dependencies = [
+ "image",
+ "miniz_oxide 0.8.9",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tselatra-geom",
+]
+
+[[package]]
+name = "tselatra-opusenc"
+version = "0.2.0"
+dependencies = [
+ "hetsika-opus",
+]
+
+[[package]]
+name = "tselatra-path"
+version = "0.2.0"
+dependencies = [
+ "kurbo",
+ "linesweeper",
+ "tiny-skia",
+ "tselatra-geom",
+ "tselatra-keyframe",
+ "tselatra-raster",
+]
+
+[[package]]
+name = "tselatra-pdf"
+version = "0.2.0"
+dependencies = [
+ "image",
+ "kurbo",
+ "mahay-pdf",
+ "miniz_oxide 0.8.9",
+ "skrifa",
+ "tselatra-raster",
+ "tselatra-svg",
+ "tselatra-text",
+ "wasm-bindgen-test",
+ "zune-jpeg",
+]
+
+[[package]]
+name = "tselatra-plugin"
+version = "0.2.0"
+dependencies = [
+ "serde_json",
+ "tselatra-effects",
+ "tselatra-keyframe",
+ "tselatra-project",
+ "tselatra-raster",
+ "wasmi",
+]
+
+[[package]]
+name = "tselatra-project"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tselatra-color",
+ "tselatra-geom",
+ "tselatra-keyframe",
+ "tselatra-time",
+]
+
+[[package]]
+name = "tselatra-psd"
+version = "0.2.0"
+dependencies = [
+ "miniz_oxide 0.8.9",
+]
+
+[[package]]
+name = "tselatra-raster"
+version = "0.2.0"
+dependencies = [
+ "rayon",
+ "tselatra-color",
+ "tselatra-geom",
+]
+
+[[package]]
+name = "tselatra-render"
+version = "0.2.0"
+dependencies = [
+ "kurbo",
+ "log",
+ "lz4_flex",
+ "rayon",
+ "serde",
+ "tselatra-color",
+ "tselatra-effects",
+ "tselatra-geom",
+ "tselatra-keyframe",
+ "tselatra-model",
+ "tselatra-path",
+ "tselatra-project",
+ "tselatra-raster",
+ "tselatra-text",
+ "tselatra-time",
+ "web-time",
+]
+
+[[package]]
+name = "tselatra-script"
+version = "0.2.0"
+dependencies = [
+ "boa_engine",
+ "serde_json",
+ "tselatra-engine",
+ "tselatra-expr",
+ "tselatra-keyframe",
+ "tselatra-path",
+ "tselatra-project",
+ "tselatra-psd",
+ "tselatra-render",
+ "tselatra-time",
+ "web-time",
+]
+
+[[package]]
+name = "tselatra-segment"
+version = "0.2.0"
+dependencies = [
+ "miniz_oxide 0.8.9",
+ "ndarray",
+ "rayon",
+]
+
+[[package]]
+name = "tselatra-svg"
+version = "0.2.0"
+dependencies = [
+ "kurbo",
+ "rayon",
+ "roxmltree",
+ "tselatra-geom",
+ "tselatra-path",
+ "tselatra-raster",
+]
+
+[[package]]
+name = "tselatra-text"
+version = "0.2.0"
+dependencies = [
+ "harfrust",
+ "kurbo",
+ "skrifa",
+ "tselatra-keyframe",
+ "unicode-bidi",
+ "unicode-linebreak",
+]
+
+[[package]]
+name = "tselatra-time"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "serde",
+]
+
+[[package]]
+name = "tselatra-track"
+version = "0.2.0"
+dependencies = [
+ "rayon",
+ "serde",
+ "serde_json",
+ "tselatra-raster",
+ "tselatra-segment",
+ "web-time",
+]
+
+[[package]]
+name = "tselatra-ui-egui"
+version = "0.2.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_kittest",
+ "exr",
+ "image",
+ "kurbo",
+ "log",
+ "mahay-ui",
+ "pollster 0.4.0",
+ "rayon",
+ "serde",
+ "serde_json",
+ "sys-locale",
+ "toml",
+ "tselatra-color",
+ "tselatra-engine",
+ "tselatra-geom",
+ "tselatra-gpu",
+ "tselatra-host",
+ "tselatra-keyframe",
+ "tselatra-path",
+ "tselatra-project",
+ "tselatra-render",
+ "tselatra-text",
+ "tselatra-time",
+ "web-time",
+]
+
+[[package]]
+name = "tselatra-vp9enc"
+version = "0.2.0"
+
+[[package]]
+name = "tselatra-web"
+version = "0.2.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "js-sys",
+ "log",
+ "serde",
+ "serde_json",
+ "tselatra-engine",
+ "tselatra-export",
+ "tselatra-expr",
+ "tselatra-gpu",
+ "tselatra-host",
+ "tselatra-media",
+ "tselatra-ui-egui",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "web-time",
 ]
 
 [[package]]
@@ -6261,15 +6308,6 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
-version = "0.60.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb"
-dependencies = [
- "windows-targets 0.53.5",
-]
-
-[[package]]
-name = "windows-sys"
 version = "0.61.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
@@ -6301,28 +6339,11 @@ dependencies = [
  "windows_aarch64_gnullvm 0.52.6",
  "windows_aarch64_msvc 0.52.6",
  "windows_i686_gnu 0.52.6",
- "windows_i686_gnullvm 0.52.6",
+ "windows_i686_gnullvm",
  "windows_i686_msvc 0.52.6",
  "windows_x86_64_gnu 0.52.6",
  "windows_x86_64_gnullvm 0.52.6",
  "windows_x86_64_msvc 0.52.6",
-]
-
-[[package]]
-name = "windows-targets"
-version = "0.53.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4945f9f551b88e0d65f3db0bc25c33b8acea4d9e41163edf90dcd0b19f9069f3"
-dependencies = [
- "windows-link",
- "windows_aarch64_gnullvm 0.53.1",
- "windows_aarch64_msvc 0.53.1",
- "windows_i686_gnu 0.53.1",
- "windows_i686_gnullvm 0.53.1",
- "windows_i686_msvc 0.53.1",
- "windows_x86_64_gnu 0.53.1",
- "windows_x86_64_gnullvm 0.53.1",
- "windows_x86_64_msvc 0.53.1",
 ]
 
 [[package]]
@@ -6347,12 +6368,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
 
 [[package]]
-name = "windows_aarch64_gnullvm"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9d8416fa8b42f5c947f8482c43e7d89e73a173cead56d044f6a56104a6d1b53"
-
-[[package]]
 name = "windows_aarch64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6363,12 +6378,6 @@ name = "windows_aarch64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
-
-[[package]]
-name = "windows_aarch64_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9d782e804c2f632e395708e99a94275910eb9100b2114651e04744e9b125006"
 
 [[package]]
 name = "windows_i686_gnu"
@@ -6383,22 +6392,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
 
 [[package]]
-name = "windows_i686_gnu"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "960e6da069d81e09becb0ca57a65220ddff016ff2d6af6a223cf372a506593a3"
-
-[[package]]
 name = "windows_i686_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
-
-[[package]]
-name = "windows_i686_gnullvm"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa7359d10048f68ab8b09fa71c3daccfb0e9b559aed648a8f95469c27057180c"
 
 [[package]]
 name = "windows_i686_msvc"
@@ -6413,12 +6410,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
 
 [[package]]
-name = "windows_i686_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e7ac75179f18232fe9c285163565a57ef8d3c89254a30685b57d83a38d326c2"
-
-[[package]]
 name = "windows_x86_64_gnu"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6429,12 +6420,6 @@ name = "windows_x86_64_gnu"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
-
-[[package]]
-name = "windows_x86_64_gnu"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c3842cdd74a865a8066ab39c8a7a473c0778a3f29370b5fd6b4b9aa7df4a499"
 
 [[package]]
 name = "windows_x86_64_gnullvm"
@@ -6449,12 +6434,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
 
 [[package]]
-name = "windows_x86_64_gnullvm"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ffa179e2d07eee8ad8f57493436566c7cc30ac536a3379fdf008f47f6bb7ae1"
-
-[[package]]
 name = "windows_x86_64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6465,12 +6444,6 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
-
-[[package]]
-name = "windows_x86_64_msvc"
-version = "0.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6bbff5f0aada427a1e5a6da5f1f98158182f26556f345ac9e04d36d0ebed650"
 
 [[package]]
 name = "winit"
@@ -6625,7 +6598,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.12.0"
+version = "0.2.0"
 dependencies = [
  "serde_json",
 ]

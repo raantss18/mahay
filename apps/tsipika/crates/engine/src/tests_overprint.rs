@@ -2,9 +2,9 @@
 //! legacy Overprint Black list, and Edit → Edit Colors → Overprint Black.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeKind};
-use vectorcraft_geom::Affine;
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_doc::{Document, Node, NodeKind};
+use tsipika_geom::Affine;
+use tsipika_render::{RenderOptions, Renderer};
 
 use super::*;
 
@@ -87,7 +87,7 @@ fn cyan_stroke_overprinting_yellow_previews_green_under_the_stroke_only() {
     // Separations Preview implies overprint preview.
     let mut r = Renderer::new();
     r.threads = 0;
-    let seps = vectorcraft_render::proof::ProofSetup { separations: Some(vec!["Yellow".into()]), ..Default::default() };
+    let seps = tsipika_render::proof::ProofSetup { separations: Some(vec!["Yellow".into()]), ..Default::default() };
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), proof: Some(seps), ..Default::default() };
     let px = r.render(&doc, 100, 100, Affine::IDENTITY, &opts).pixel(stroke.0, stroke.1);
     assert!(px[0] < 100, "the yellow plate keeps its ink under the overprinting stroke: {px:?}");
@@ -159,7 +159,7 @@ fn overprinting_type_previews_through() {
     let t = NodeId(s.execute("text.create", &json!({"x": 5, "y": 90, "text": "H", "size": 90})).unwrap()["id"].as_u64().unwrap());
     s.execute("paint.setFill", &json!({"ids": [t.0], "color": cyan_ink()})).unwrap();
     let doc = s.doc().unwrap().doc.clone();
-    let b = vectorcraft_render::Renderer::new().render(&doc, 100, 100, Affine::IDENTITY, &RenderOptions::default());
+    let b = tsipika_render::Renderer::new().render(&doc, 100, 100, Affine::IDENTITY, &RenderOptions::default());
     // A pixel the glyph covers.
     let (x, y) = (0..100u32).flat_map(|y| (0..100u32).map(move |x| (x, y))).find(|&(x, y)| cyan(b.pixel(x, y))).expect("the glyph draws");
     s.execute("object.setOverprint", &json!({"fill": true, "ids": [t.0]})).unwrap();
@@ -175,11 +175,11 @@ fn old_documents_with_an_overprint_black_list_still_preview() {
     // How older versions stored Overprint Black.
     let mut old = (*s.doc().unwrap().doc).clone();
     old.unknown.insert("overprintBlack".into(), json!([k.0]));
-    let bytes = vectorcraft_format::save(&old, false);
+    let bytes = tsipika_format::save(&old, false);
     let text = String::from_utf8(bytes.clone()).unwrap();
     assert!(text.contains("\"overprintBlack\"") && !text.contains("\"overprint\""));
 
-    let doc = vectorcraft_format::load(&bytes).unwrap();
+    let doc = tsipika_format::load(&bytes).unwrap();
     assert!(!doc.unknown.contains_key("overprintBlack"), "migrated on load");
     let n = doc.node(k).unwrap();
     assert!(n.appearance.fill().unwrap().overprint && !n.appearance.stroke().unwrap().overprint, "the black fill, not the cyan stroke");
@@ -189,7 +189,7 @@ fn old_documents_with_an_overprint_black_list_still_preview() {
     assert!((knock[0] as i32 - knock[2] as i32).abs() < 8, "knockout without the preview: {knock:?}");
 
     // The flags round-trip through the native format.
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(k).unwrap().appearance, n.appearance);
 }
 

@@ -1,7 +1,7 @@
-//! DesignCraft PDF export (print), written with `krilla`.
+//! Pejy PDF export (print), written with `krilla`.
 //!
 //! [`export_pdf`] writes one PDF page per document page (or per spread) and mirrors the renderer's
-//! walk (`designcraft-render`): layers back to front, parent items first (with page-number markers
+//! walk (`pejy-render`): layers back to front, parent items first (with page-number markers
 //! resolved for each page), then the spread's own items. What goes into the file:
 //!
 //! - **Boxes:** MediaBox = trim + bleed (+ room for printer's marks), TrimBox = the page, BleedBox =
@@ -23,7 +23,7 @@
 //!   right characters), so text is selectable and searchable.
 //! - **Marks:** crop marks, bleed marks and a page-information line, drawn in `[Registration]`.
 //! - **Standards:** PDF/A-2b through krilla's validator and PDF/X-4 output intent/identification
-//!   with built-in conformance checks. `designcraft-cli validate-pdf` exposes those checks for CI.
+//!   with built-in conformance checks. `pejy-cli validate-pdf` exposes those checks for CI.
 //!
 //! Not yet: tagged PDF, bookmarks, hyperlinks, overprint, layers as optional content.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -200,8 +200,8 @@ pub fn parse_page_range(s: &str, count: usize) -> Result<Vec<usize>> {
     Ok(out)
 }
 
-impl From<craft_pdf::write::WriteError> for PdfError {
-    fn from(error: craft_pdf::write::WriteError) -> Self {
+impl From<mahay_pdf::write::WriteError> for PdfError {
+    fn from(error: mahay_pdf::write::WriteError) -> Self {
         Self::Write(error.to_string())
     }
 }
@@ -214,7 +214,7 @@ mod tests;
 // Run the same public API/output contracts with the unit-only colliding cache hasher as well
 // as the production RandomState used by the integration-test executable.
 #[cfg(test)]
-extern crate self as designcraft_pdf;
+extern crate self as pejy_pdf;
 #[cfg(test)]
 #[path = "../tests/support/image_content_cache_contract.rs"]
 mod image_content_cache_collision_exports;

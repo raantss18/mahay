@@ -1,12 +1,12 @@
-//! Write FigCraft plugins in Rust.
+//! Write Endrika plugins in Rust.
 //!
 //! A plugin is a `cdylib` built for `wasm32-unknown-unknown`. It gets the command the user picked
-//! with its parameters and the selection, and acts on the document by calling FigCraft commands
-//! (the ids `figcraft-cli commands` lists) with JSON parameters. Everything one run does is one
+//! with its parameters and the selection, and acts on the document by calling Endrika commands
+//! (the ids `endrika-cli commands` lists) with JSON parameters. Everything one run does is one
 //! undo step; when the run returns an error (or panics), the document is put back.
 //!
 //! ```ignore
-//! use figcraft_plugin_sdk::{Input, Result, Value, call, entry, json};
+//! use endrika_plugin_sdk::{Input, Result, Value, call, entry, json};
 //!
 //! fn run(input: Input) -> Result<Value> {
 //!     for id in &input.selection {
@@ -18,7 +18,7 @@
 //! entry!(run);
 //! ```
 //!
-//! A plugin can also show a panel ([`show_ui`]): FigCraft draws its controls and calls the plugin
+//! A plugin can also show a panel ([`show_ui`]): Endrika draws its controls and calls the plugin
 //! again for each button press or changed value, with [`Input::event`] set. The module stays
 //! loaded while the panel is open, so statics keep their values between those calls. Settings
 //! ([`setting`], [`set_setting`]) last from one run to the next.
@@ -82,7 +82,7 @@ pub struct Event {
 }
 
 impl Input {
-    /// Parse the input JSON FigCraft hands to the plugin.
+    /// Parse the input JSON Endrika hands to the plugin.
     pub fn parse(text: &str) -> Result<Input> {
         let v: Value = serde_json::from_str(text).map_err(|e| format!("input: {e}"))?;
         Ok(Input {
@@ -120,7 +120,7 @@ fn ids(v: Option<&Value>) -> Vec<u64> {
     v.and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_u64).collect()).unwrap_or_default()
 }
 
-/// Run FigCraft command `command` with `params`: its result, or why it was refused or failed.
+/// Run Endrika command `command` with `params`: its result, or why it was refused or failed.
 pub fn call(command: &str, params: &Value) -> Result<Value> {
     let params = serde_json::to_string(params).map_err(|e| e.to_string())?;
     let status = host::call(command.as_bytes(), params.as_bytes());
@@ -138,7 +138,7 @@ pub fn selection() -> Vec<u64> {
     ids(serde_json::from_slice::<Value>(&reply).ok().as_ref())
 }
 
-/// A line for the run's log (returned with the result, and in FigCraft's log).
+/// A line for the run's log (returned with the result, and in Endrika's log).
 pub fn log(line: &str) {
     host::log(line.as_bytes());
 }
@@ -187,7 +187,7 @@ pub fn delete_setting(key: &str) {
     host::setting_delete(key.as_bytes());
 }
 
-/// The body of `figcraft_run` (use [`entry!`]): read the input, run `f`, hand back its output.
+/// The body of `endrika_run` (use [`entry!`]): read the input, run `f`, hand back its output.
 pub fn run_plugin(input_len: i32, f: fn(Input) -> Result<Value>) -> i32 {
     let input = host::reply();
     let input = input.get(..usize::try_from(input_len).unwrap_or(0)).unwrap_or(&input);
@@ -209,13 +209,13 @@ pub fn run_plugin(input_len: i32, f: fn(Input) -> Result<Value>) -> i32 {
 macro_rules! entry {
     ($f:path) => {
         #[unsafe(no_mangle)]
-        pub extern "C" fn figcraft_run(input_len: i32) -> i32 {
+        pub extern "C" fn endrika_run(input_len: i32) -> i32 {
             $crate::run_plugin(input_len, $f)
         }
     };
 }
 
-/// The host functions FigCraft provides (module `figcraft`).
+/// The host functions Endrika provides (module `endrika`).
 #[cfg(target_arch = "wasm32")]
 #[allow(unsafe_code)]
 mod host {
@@ -223,7 +223,7 @@ mod host {
     use alloc::vec::Vec;
 
     mod sys {
-        #[link(wasm_import_module = "figcraft")]
+        #[link(wasm_import_module = "endrika")]
         unsafe extern "C" {
             pub fn call(cmd: *const u8, cmd_len: usize, params: *const u8, params_len: usize) -> i32;
             pub fn selection() -> i32;
@@ -297,7 +297,7 @@ mod host {
         0
     }
     pub fn reply() -> Vec<u8> {
-        b"not running inside FigCraft".to_vec()
+        b"not running inside Endrika".to_vec()
     }
     pub fn log(_s: &[u8]) {}
     pub fn notify(_s: &[u8]) {}

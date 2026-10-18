@@ -1,7 +1,7 @@
 //! Table breaking: a long table drawn in several parts side by side or one below the other, with
 //! the label rows repeated, and data links (the table's cells filled from a CSV file).
 
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_geom::{Bounds2, Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::Table;

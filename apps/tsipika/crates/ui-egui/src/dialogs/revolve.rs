@@ -4,19 +4,19 @@
 
 use egui::{Align2, FontId, Id, Pos2, Sense, Stroke, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_effects::{EXTRUDE, INFLATE, REVOLVE, ROTATION_PRESETS};
+use tsipika_doc::Unit;
+use tsipika_effects::{EXTRUDE, INFLATE, REVOLVE, ROTATION_PRESETS};
 
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, scrub, widgets};
+use crate::{TsipikaApp, scrub, widgets};
 
 const LABEL_W: f32 = 102.0;
 const VALUE_W: f32 = 74.0;
 const SIDE_W: f32 = 354.0;
 
 /// Sized to the screen, with scrolling inside the body so OK and Cancel stay reachable.
-pub(super) fn body(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+pub(super) fn body(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     // Values start in drag mode; clicking or Tab enters their text editor.
     ui.data_mut(|m| m.remove::<bool>(widgets::dialog_focus_flag()));
     let screen = ui.ctx().content_rect();
@@ -35,7 +35,7 @@ pub(super) fn body(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
         });
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let id = d.str("__effect");
-            let defaults = vectorcraft_effects::default_params(&id).unwrap_or(json!({}));
+            let defaults = tsipika_effects::default_params(&id).unwrap_or(json!({}));
             let changed = defaults.as_object().is_some_and(|m| {
                 m.iter().any(|(k, v)| v.as_f64().map_or_else(|| d.fields.get(k) != Some(v), |default| (d.f64(k, default) - default).abs() > 1e-6))
             });
@@ -60,7 +60,7 @@ pub(super) fn body(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
     });
 }
 
-fn controls(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn controls(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     ui.spacing_mut().item_spacing.y = 4.0;
     let id = d.str("__effect");
     if id != REVOLVE {
@@ -142,7 +142,7 @@ fn c3(s: &'static str) -> &'static str {
 
 /// Extrude & Bevel and Inflate: Object, Rotation and Lighting tabs (Rotate has no Object tab).
 /// The rotation gizmo shows on the first two, the light gizmo on Lighting.
-fn solid_controls(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, id: &str) {
+fn solid_controls(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog, id: &str) {
     let object = id == EXTRUDE || id == INFLATE;
     let mut tabs = vec![];
     if object {
@@ -247,7 +247,7 @@ fn view_controls(ui: &mut egui::Ui, d: &mut Dialog) {
 /// A dropdown of `options` (value, label) for `key`, with its reset dot.
 fn choice(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, options: &[(Value, &str)]) {
     let id = d.str("__effect");
-    let default = vectorcraft_effects::default_params(&id).and_then(|p| p.get(key).cloned()).unwrap_or(Value::Null);
+    let default = tsipika_effects::default_params(&id).and_then(|p| p.get(key).cloned()).unwrap_or(Value::Null);
     let value = d.fields.get(key).cloned().unwrap_or_else(|| default.clone());
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 6.0;
@@ -320,7 +320,7 @@ const LIGHT_KEYS: [(&str, &str); 6] = [
 ];
 
 fn explicit_lights(d: &Dialog) -> Option<&Vec<Value>> {
-    d.fields.get("lights").and_then(Value::as_array).filter(|v| !v.is_empty() && v.len() <= vectorcraft_three_d::MAX_LIGHTS)
+    d.fields.get("lights").and_then(Value::as_array).filter(|v| !v.is_empty() && v.len() <= tsipika_three_d::MAX_LIGHTS)
 }
 
 fn light_index(d: &Dialog, count: usize) -> usize {
@@ -335,7 +335,7 @@ pub(super) fn selected_light(d: &Dialog) -> Dialog {
     if let Some(list) = explicit_lights(d)
         && let Some(light) = list.get(light_index(d, list.len()))
     {
-        let defaults = vectorcraft_effects::default_params(&d.str("__effect")).unwrap_or(json!({}));
+        let defaults = tsipika_effects::default_params(&d.str("__effect")).unwrap_or(json!({}));
         for (key, field) in LIGHT_KEYS {
             if let Some(value) = light.get(key).or_else(|| defaults.get(field)) {
                 selected.fields.insert(field.into(), value.clone());
@@ -345,8 +345,8 @@ pub(super) fn selected_light(d: &Dialog) -> Dialog {
     selected
 }
 
-pub(super) fn light_options(d: &Dialog) -> vectorcraft_three_d::Revolve {
-    vectorcraft_effects::revolve_options(&super::form::params(&selected_light(d)))
+pub(super) fn light_options(d: &Dialog) -> tsipika_three_d::Revolve {
+    tsipika_effects::revolve_options(&super::form::params(&selected_light(d)))
 }
 
 fn light_record(d: &Dialog) -> Value {
@@ -393,9 +393,9 @@ fn light_list(ui: &mut egui::Ui, d: &mut Dialog) {
         }
     });
     ui.horizontal(|ui| {
-        if ui.add_enabled(list.len() < vectorcraft_three_d::MAX_LIGHTS, egui::Button::new(tl!("Add Light"))).clicked() {
+        if ui.add_enabled(list.len() < tsipika_three_d::MAX_LIGHTS, egui::Button::new(tl!("Add Light"))).clicked() {
             let mut added = selected_light(d);
-            let defaults = vectorcraft_effects::default_params(&d.str("__effect")).unwrap_or(json!({}));
+            let defaults = tsipika_effects::default_params(&d.str("__effect")).unwrap_or(json!({}));
             for (_, key) in LIGHT_KEYS {
                 if let Some(value) = defaults.get(key) {
                     added.fields.insert(key.into(), value.clone());
@@ -428,8 +428,8 @@ fn light_color(ui: &mut egui::Ui, d: &mut Dialog) {
             .get("lightColor")
             .and_then(Value::as_str)
             .filter(|s| s.len() == 7 && s.starts_with('#'))
-            .and_then(vectorcraft_color::Color::from_hex)
-            .unwrap_or(vectorcraft_color::Color::WHITE);
+            .and_then(tsipika_color::Color::from_hex)
+            .unwrap_or(tsipika_color::Color::WHITE);
         // Light colors are display RGB, independent of the document's working profile.
         let mut rgb = color.to_rgb_uncalibrated().map(|c| (c * 255.0).round() as u8);
         if ui.color_edit_button_srgb(&mut rgb).on_hover_text(tl!("Color")).changed() {
@@ -462,7 +462,7 @@ fn rail_width(ui: &egui::Ui) -> f32 {
 /// A value can be typed, dragged, scrubbed by its label, or moved on its slider.
 #[allow(clippy::too_many_arguments)]
 fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64, f64), suffix: &str, decimals: usize, unit: Option<Unit>) {
-    let default = vectorcraft_effects::default_params(&d.str("__effect")).and_then(|p| p.get(key).and_then(Value::as_f64)).unwrap_or(0.0);
+    let default = tsipika_effects::default_params(&d.str("__effect")).and_then(|p| p.get(key).and_then(Value::as_f64)).unwrap_or(0.0);
     let from = |n| unit.map_or(n, |u| u.from_pt(n));
     let to = |n| unit.map_or(n, |u| u.to_pt(n));
     let typed = unit.map(|u| widgets::typed_unit(ui.ctx(), u));
@@ -488,7 +488,7 @@ fn number(ui: &mut egui::Ui, d: &mut Dialog, key: &str, name: &str, range: (f64,
                         .update_while_editing(false)
                         .custom_parser(|s| {
                             unit.map_or_else(
-                                || vectorcraft_doc::parse_number(&s.replace(['°', '%'], "")),
+                                || tsipika_doc::parse_number(&s.replace(['°', '%'], "")),
                                 |u| typed.unwrap_or(u).parse(s).map(|v| u.from_pt(v)),
                             )
                         }),

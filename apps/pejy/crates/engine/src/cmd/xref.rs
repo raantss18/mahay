@@ -1,6 +1,6 @@
 //! Type › Hyperlinks & Cross-References: text anchors, cross-references and their formats.
 
-use designcraft_doc::{CrossRef, StoryId, TextSel, XrefFormat};
+use pejy_doc::{CrossRef, StoryId, TextSel, XrefFormat};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -53,7 +53,7 @@ fn in_story_text(s: &Session) -> std::result::Result<(), String> {
 }
 
 /// The destination anchor from params, creating a paragraph anchor when needed.
-fn destination(d: &mut designcraft_doc::Document, p: &Value) -> Result<u64> {
+fn destination(d: &mut pejy_doc::Document, p: &Value) -> Result<u64> {
     if let Some(a) = p.get("anchor").and_then(Value::as_u64) {
         return d.find_anchor(a).map(|_| a).ok_or_else(|| bad("xref.insert", format!("no anchor {a}")));
     }
@@ -90,12 +90,12 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
             t2.anchor += grew;
             t2.focus += grew;
         }
-        let st = d.story_mut(t.story).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+        let st = d.story_mut(t.story).ok_or(pejy_doc::DocError::NoStory(t.story))?;
         let r = t2.range();
         let r = r.start.min(st.len())..r.end.min(st.len());
         st.delete(r.clone());
         st.insert_xref(r.start, CrossRef { target, format });
-        let pos = r.start + designcraft_doc::XREF_MARK.len_utf8();
+        let pos = r.start + pejy_doc::XREF_MARK.len_utf8();
         sel.text = Some(TextSel { anchor: pos, focus: pos, ..t2 });
         Ok(json!({"target": target, "pos": r.start}))
     })
@@ -105,10 +105,10 @@ fn create_anchor(s: &mut Session, p: &Value) -> Result<Value> {
     let name = str_param(p, "name").ok_or_else(|| bad("anchor.create", "missing name"))?.to_string();
     s.edit(|d, sel| {
         let t = sel.text.ok_or_else(|| bad("anchor.create", "no insertion point"))?;
-        let st = d.story_mut(t.story).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+        let st = d.story_mut(t.story).ok_or(pejy_doc::DocError::NoStory(t.story))?;
         let at = t.range().start.min(st.len());
         let id = st.insert_anchor(at, &name);
-        let pos = t.focus + designcraft_doc::ANCHOR_MARK.len_utf8();
+        let pos = t.focus + pejy_doc::ANCHOR_MARK.len_utf8();
         sel.text = Some(TextSel { anchor: pos, focus: pos, ..t });
         Ok(json!({"id": id}))
     })
@@ -119,8 +119,8 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
     let index = s.cache.xref_index(&d);
     let mut out = Vec::new();
     for st in d.stories.values() {
-        for ((pos, _), x) in st.text.match_indices(designcraft_doc::XREF_MARK).zip(&st.xrefs) {
-            let text = designcraft_compose::xref::xref_text(&d, x, Some(&index));
+        for ((pos, _), x) in st.text.match_indices(pejy_doc::XREF_MARK).zip(&st.xrefs) {
+            let text = pejy_compose::xref::xref_text(&d, x, Some(&index));
             out.push(json!({"story": st.id.0, "pos": pos, "target": x.target, "format": x.format, "text": text}));
         }
     }
@@ -159,7 +159,7 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
         if d.xref_format(&format).is_none() {
             return Err(bad("xref.setFormat", format!("no cross-reference format `{format}`")));
         }
-        let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+        let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
         let x = st.xrefs.get_mut(k).ok_or_else(|| bad("xref.setFormat", "no such cross-reference"))?;
         std::sync::Arc::make_mut(x).format = format;
         st.rev = st.rev.wrapping_add(1);
@@ -180,16 +180,16 @@ mod tests {
         let r = s
             .execute("frame.create", &json!({"spread": sp, "rect": [72, 72, 400, 200], "content": "text", "text": "Results: what we found"}))
             .unwrap();
-        let head = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let head = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 200], "content": "text", "text": "See ."})).unwrap();
-        let src = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let src = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": src.0, "anchor": 4, "focus": 4})).unwrap();
         s.execute("xref.insert", &json!({"paragraph": "Results"})).unwrap();
         let l = s.execute("xref.list", &json!({})).unwrap();
         assert_eq!(l[0]["text"], "\u{201C}Results: what we found\u{201D} on page 3");
         // Edit the heading: the reference follows without an update step.
         // The paragraph now starts with its (zero-width) anchor mark.
-        let at = designcraft_doc::ANCHOR_MARK.len_utf8();
+        let at = pejy_doc::ANCHOR_MARK.len_utf8();
         s.execute("text.select", &json!({"story": head.0, "anchor": at, "focus": at})).unwrap();
         s.execute("text.insert", &json!({"text": "Key "})).unwrap();
         let l = s.execute("xref.list", &json!({})).unwrap();

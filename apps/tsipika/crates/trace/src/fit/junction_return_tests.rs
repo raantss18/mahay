@@ -123,7 +123,7 @@ fn returning_piece_has_the_same_boundary_in_its_abutting_neighbour() {
                 crate::trace(&image, &crate::TraceParams { corners: 0., paths: 0., noise: 0, ignore_white: false, ..crate::TraceParams::default() });
             let ink = if inverse { [255, 255, 255] } else { [0, 0, 0] };
             let dot = res.paths.iter().find(|p| p.color == ink && p.pixels == 1).expect("corner mark is retained");
-            let cubics = |p: &vectorcraft_geom::PathData| {
+            let cubics = |p: &tsipika_geom::PathData| {
                 p.subpaths
                     .iter()
                     .flat_map(|s| {

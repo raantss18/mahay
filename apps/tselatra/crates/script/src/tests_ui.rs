@@ -4,16 +4,16 @@
 
 use std::sync::Arc;
 
-use effectcraft_engine::Session;
-use effectcraft_engine::scriptui::{WidgetKind, WindowKind};
+use tselatra_engine::Session;
+use tselatra_engine::scriptui::{WidgetKind, WindowKind};
 use serde_json::{Value, json};
 
 use crate::run_code;
 
 fn session() -> Session {
-    let mut s = Session { expr: Some(Arc::new(effectcraft_expr::Expressions)), ..Default::default() };
+    let mut s = Session { expr: Some(Arc::new(tselatra_expr::Expressions)), ..Default::default() };
     crate::install(&mut s);
-    s.config = Some(Arc::new(effectcraft_engine::config::MemoryConfig::default()));
+    s.config = Some(Arc::new(tselatra_engine::config::MemoryConfig::default()));
     s
 }
 
@@ -93,7 +93,7 @@ fn palette_controls_run_their_handlers() {
     let r = s.execute("scriptui.click", json!({"widget": "make"})).unwrap();
     assert_eq!(r["output"], "made Crate 200");
     assert_eq!(layer_names(&s), ["Crate"]);
-    assert!(s.active_comp().unwrap().layers[0].source == effectcraft_engine::project::LayerSource::Null);
+    assert!(s.active_comp().unwrap().layers[0].source == tselatra_engine::project::LayerSource::Null);
     // The handler updated a label: the published tree follows.
     let w = s.script_ui.windows[0].clone();
     assert_eq!(w.root.children[2].children[1].text, "made 2");
@@ -192,7 +192,7 @@ fn layout_and_handler_errors() {
 #[test]
 fn console_windows_run_inline() {
     let mut s = session();
-    let req = effectcraft_engine::ScriptRequest {
+    let req = tselatra_engine::ScriptRequest {
         code: "var cw = new Window('palette', 'Console UI'); var cb = cw.add('button', undefined, 'Hi'); var hits = 0; cb.onClick = function () { hits++; writeLn('hit ' + hits); }; cw.show(); 1",
         name: "Script Console",
         console: true,
@@ -203,12 +203,12 @@ fn console_windows_run_inline() {
     let r = s.execute("scriptui.click", json!({"widget": "Hi"})).unwrap();
     assert_eq!(r["output"], "hit 1");
     // The console context sees the handler's state.
-    let o = crate::run(&mut s, &effectcraft_engine::ScriptRequest { code: "hits", name: "Script Console", console: true });
+    let o = crate::run(&mut s, &tselatra_engine::ScriptRequest { code: "hits", name: "Script Console", console: true });
     assert_eq!(o.result, json!(1));
     // Dialogs don't block in the console.
     let o = crate::run(
         &mut s,
-        &effectcraft_engine::ScriptRequest { code: "var dd = new Window('dialog', 'D'); dd.show(); 'went on'", name: "Script Console", console: true },
+        &tselatra_engine::ScriptRequest { code: "var dd = new Window('dialog', 'D'); dd.show(); 'went on'", name: "Script Console", console: true },
     );
     assert_eq!(o.result, json!("went on"));
     assert_eq!(s.script_ui.windows.len(), 2);

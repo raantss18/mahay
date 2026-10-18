@@ -4,11 +4,11 @@
 //! options, a Solid Color swatch the colour picker, Alt-click still steps through the kinds, and
 //! with no such gradient selected the swatch opens the options as before.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::keyframe::Value;
-use effectcraft_engine::project::{LayerId, PropGroup};
-use effectcraft_ui_egui::state::Tool;
-use effectcraft_ui_egui::{Dialog, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_engine::keyframe::Value;
+use tselatra_engine::project::{LayerId, PropGroup};
+use tselatra_ui_egui::state::Tool;
+use tselatra_ui_egui::{Dialog, TselatraApp};
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -21,7 +21,7 @@ fn colors(g: &PropGroup, paint: &str) -> Option<u64> {
 
 /// A rectangle shape layer (selected unless `select` is false) with `items` added to its
 /// contents, and the toolbar set with `tool` (shape.toolOptions).
-fn setup(items: &[&str], tool: serde_json::Value, select: bool) -> (Harness<'static, EffectcraftApp>, u64) {
+fn setup(items: &[&str], tool: serde_json::Value, select: bool) -> (Harness<'static, TselatraApp>, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 640, "height": 360, "duration": 4})).unwrap();
     let l = s.execute("layer.newShape", json!({"kind": "rect"})).unwrap()["layer"].as_u64().unwrap();
@@ -38,7 +38,7 @@ fn setup(items: &[&str], tool: serde_json::Value, select: bool) -> (Harness<'sta
     }
     s.state.selected_layers = if select { vec![LayerId(l)] } else { vec![] };
     s.state.selected_props.clear();
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     // With no shape layer selected, Fill / Stroke show while a shape tool is active.
     if !select {
         h.state_mut().ui.tool = Tool::Rectangle;
@@ -47,12 +47,12 @@ fn setup(items: &[&str], tool: serde_json::Value, select: bool) -> (Harness<'sta
     (h, l)
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let r = h.state().auto.find(id).unwrap_or_else(|| panic!("no automation id {id}")).rect;
     pos2(r[0] + r[2] / 2.0, r[1] + r[3] / 2.0)
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str, modifiers: Modifiers) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str, modifiers: Modifiers) {
     let p = center(h, id);
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
     h.input_mut().events.push(Event::PointerMoved(p));
@@ -65,12 +65,12 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str, modifiers: Modifiers) {
     h.run_steps(3);
 }
 
-fn layer_colors(h: &Harness<'_, EffectcraftApp>, l: u64, paint: &str) -> u64 {
+fn layer_colors(h: &Harness<'_, TselatraApp>, l: u64, paint: &str) -> u64 {
     colors(&h.state().session.active_comp().unwrap().layer(LayerId(l)).unwrap().props, paint).expect("the gradient")
 }
 
 /// The options popup is open (its kind buttons are in the automation tree).
-fn options_open(h: &Harness<'_, EffectcraftApp>, key: &str) -> bool {
+fn options_open(h: &Harness<'_, TselatraApp>, key: &str) -> bool {
     h.state().auto.find(&format!("header.{key}Options.solid")).is_some()
 }
 

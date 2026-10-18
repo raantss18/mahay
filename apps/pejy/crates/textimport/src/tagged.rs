@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use designcraft_doc::{CharFormat, Document, Story, StoryId, story::NO_CHAR_STYLE};
+use pejy_doc::{CharFormat, Document, Story, StoryId, story::NO_CHAR_STYLE};
 
 use crate::{ImportError, Imported, ImportedStyle};
 
@@ -40,7 +40,7 @@ pub fn tagged_text(doc: &Document, story: &Story) -> String {
             if a >= b {
                 continue;
             }
-            if doc.conditions_hide(f.over.conditions.as_deref().unwrap_or(&[])) || f.over.change == Some(designcraft_doc::ChangeMark::Deleted) {
+            if doc.conditions_hide(f.over.conditions.as_deref().unwrap_or(&[])) || f.over.change == Some(pejy_doc::ChangeMark::Deleted) {
                 continue;
             }
             let mut open = Vec::new();
@@ -238,7 +238,7 @@ mod tests {
         let i = import("<ASCII-WIN>\r\n<Version:7>\r\n<ParaStyle:Body>A<0xD83D><0xDE00>B <0xD842><0xDFB7><0x7530>".as_bytes()).unwrap();
         assert_eq!(i.story.text, "A\u{1F600}B \u{20BB7}\u{7530}");
         // What the exporter writes comes back.
-        let doc = Document::new(&designcraft_doc::build::NewDocument::default());
+        let doc = Document::new(&pejy_doc::build::NewDocument::default());
         let back = import(tagged_text(&doc, &i.story).as_bytes()).unwrap();
         assert_eq!(back.story.text, i.story.text);
         // Half a pair is not a character: it is still left out.
@@ -247,7 +247,7 @@ mod tests {
 
     #[test]
     fn tagged_text_keeps_a_leading_empty_paragraph() {
-        let doc = Document::new(&designcraft_doc::build::NewDocument::default());
+        let doc = Document::new(&pejy_doc::build::NewDocument::default());
         let mut story = Story::new(StoryId(0));
         story.insert(0, "\nText");
         story.paras[0].style = "Head".into();
@@ -269,7 +269,7 @@ mod tests {
         assert_eq!(i.story.char_format_at(i.story.text.find("big").unwrap() + 1).over.size, Some(18.0));
         assert_eq!(i.para_styles.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(), ["Head", "Body"]);
         // Export and back.
-        let doc = Document::new(&designcraft_doc::build::NewDocument::default());
+        let doc = Document::new(&pejy_doc::build::NewDocument::default());
         let out = tagged_text(&doc, &i.story);
         assert!(out.starts_with("<ASCII-WIN>") && out.contains("Caf<0x00E9>") && out.contains("<CharStyle:Em>word<CharStyle:>"), "{out}");
         let back = import(out.as_bytes()).unwrap();

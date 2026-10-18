@@ -10,12 +10,12 @@
 use std::sync::mpsc::TryRecvError;
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::Session;
-use effectcraft_engine::offload::{Inbox, Offload, Post, WorkerRequest};
-use effectcraft_engine::remote::{FrameMsg, FrameReply, FrameServer, Mirror};
-use effectcraft_engine::render::RenderOpts;
-use effectcraft_ui_egui::frames::{FrameImage, FrameKey, Frames, RemoteDone, RemoteFrame, RemoteFrames, RemoteJob, RenderSource};
-use effectcraft_ui_egui::{ControlRequest, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_engine::offload::{Inbox, Offload, Post, WorkerRequest};
+use tselatra_engine::remote::{FrameMsg, FrameReply, FrameServer, Mirror};
+use tselatra_engine::render::RenderOpts;
+use tselatra_ui_egui::frames::{FrameImage, FrameKey, Frames, RemoteDone, RemoteFrame, RemoteFrames, RemoteJob, RenderSource};
+use tselatra_ui_egui::{ControlRequest, TselatraApp};
 use egui_kittest::Harness;
 use serde_json::json;
 
@@ -107,7 +107,7 @@ fn viewer_frames_render_remotely_from_project_diffs() {
     let opts = RenderOpts { scale: 0.25, guides: true, ..Default::default() };
     let key = |s: &Session, f: i64| FrameKey {
         revision: s.revision,
-        content: effectcraft_ui_egui::frames::comp_content(&s.project, comp),
+        content: tselatra_ui_egui::frames::comp_content(&s.project, comp),
         comp: comp.0,
         frame: f,
         scale: 250,
@@ -138,7 +138,7 @@ fn viewer_frames_render_remotely_from_project_diffs() {
         FrameImage::Cpu(c) => c,
         FrameImage::Gpu(_) => unreachable!(),
     };
-    let local = effectcraft_ui_egui::frames::to_color_image(&s.render(comp, c.frame_rate.tick_of(10), opts));
+    let local = tselatra_ui_egui::frames::to_color_image(&s.render(comp, c.frame_rate.tick_of(10), opts));
     assert_eq!(img.size, local.size);
     assert_eq!(img.pixels, local.pixels);
     assert!(frames.is_cached(&key(&s, 1)));
@@ -155,7 +155,7 @@ fn viewer_frames_render_remotely_from_project_diffs() {
     worker.deliver();
     assert_eq!(worker.syncs.lock().unwrap().last(), Some(&"patch"));
     let FrameImage::Cpu(img) = frames.get(&key(&s, 10)).unwrap() else { unreachable!() };
-    let local = effectcraft_ui_egui::frames::to_color_image(&s.render(comp, c.frame_rate.tick_of(10), opts));
+    let local = tselatra_ui_egui::frames::to_color_image(&s.render(comp, c.frame_rate.tick_of(10), opts));
     assert_eq!(img.pixels, local.pixels);
     // A lost frame is released (requested again later), not cached.
     frames.request(&source(&s), key(&s, 20), comp, c.frame_rate.tick_of(20), opts);
@@ -180,9 +180,9 @@ impl Offload for Manual {
     fn cancel(&self, _: u64) {}
 }
 
-fn exporter() -> Arc<effectcraft_host::FileExporter> {
+fn exporter() -> Arc<tselatra_host::FileExporter> {
     let sink: Arc<dyn Fn(&str, Vec<u8>) + Send + Sync> = Arc::new(|_: &str, _: Vec<u8>| {});
-    Arc::new(effectcraft_host::FileExporter { sink: Some(sink) })
+    Arc::new(tselatra_host::FileExporter { sink: Some(sink) })
 }
 
 #[test]
@@ -193,7 +193,7 @@ fn waiting_commands_reply_when_their_offloaded_job_ends() {
     s.execute("layer.newSolid", json!({"color": "#406080"})).unwrap();
     s.execute("renderQueue.add", json!({"format": "gif", "output": "/w.gif"})).unwrap();
     let (tx, rx) = std::sync::mpsc::channel();
-    let mut h = Harness::builder().with_size(egui::vec2(1280.0, 800.0)).build_eframe(|_| EffectcraftApp::new(s).with_control(rx));
+    let mut h = Harness::builder().with_size(egui::vec2(1280.0, 800.0)).build_eframe(|_| TselatraApp::new(s).with_control(rx));
     h.run_steps(2);
     // `renderQueue.render` waits by default: the job goes to the worker, the reply waits.
     let (req, reply) = ControlRequest::new("engine.execute", json!({"command": "renderQueue.render", "params": {}}));
@@ -205,7 +205,7 @@ fn waiting_commands_reply_when_their_offloaded_job_ends() {
     // The worker runs it.
     let mut w = Session { exporter: Some(exporter()), ..Default::default() };
     let post: Post = std::rc::Rc::new(move |r| inbox.push(r));
-    effectcraft_engine::offload::run_request(&mut w, job, &post);
+    tselatra_engine::offload::run_request(&mut w, job, &post);
     h.run_steps(4);
     let v = reply.try_recv().expect("replied once the job ended");
     assert_eq!(v["ok"], true, "{v}");
@@ -224,8 +224,8 @@ fn waiting_commands_reply_when_their_offloaded_job_ends() {
 /// different analyses complete in the same UI frame.
 #[test]
 fn waiting_commands_report_only_their_own_completion_errors() {
-    use effectcraft_engine::offload::JobKind;
-    use effectcraft_ui_egui::control::JobWaiter;
+    use tselatra_engine::offload::JobKind;
+    use tselatra_ui_egui::control::JobWaiter;
 
     for (kind, job_id) in [
         (JobKind::Render, "render"),
@@ -239,7 +239,7 @@ fn waiting_commands_report_only_their_own_completion_errors() {
         (JobKind::ContentFill, "contentFill"),
     ] {
         let other = if kind == JobKind::Track { JobKind::Warp } else { JobKind::Track };
-        let mut app = EffectcraftApp::new(Session::default());
+        let mut app = TselatraApp::new(Session::default());
         app.session.offload_log = vec![(kind, Some("old error".into())), (other, Some("unrelated failure".into())), (kind, None)];
         let waiter = || JobWaiter { command: "analysis".into(), params: json!({}), result: json!({"running": true}), jobs: vec![job_id.into()], log_cursor: 1 };
         let result = waiter().finish(&mut app);
@@ -252,9 +252,9 @@ fn waiting_commands_report_only_their_own_completion_errors() {
 
 #[test]
 fn waiting_command_sees_its_error_after_the_completion_log_rolls_over() {
-    use effectcraft_engine::offload::JobKind;
-    use effectcraft_ui_egui::control::JobWaiter;
-    let mut app = EffectcraftApp::new(Session::default());
+    use tselatra_engine::offload::JobKind;
+    use tselatra_ui_egui::control::JobWaiter;
+    let mut app = TselatraApp::new(Session::default());
     app.session.offload_log = vec![(JobKind::Warp, None); 31];
     app.session.offload_log.push((JobKind::Track, Some("nothing was applied".into())));
     app.session.offload_log_start = 1;

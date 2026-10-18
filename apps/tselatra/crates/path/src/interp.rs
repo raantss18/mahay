@@ -15,7 +15,7 @@
 //!   shapes turn instead of collapsing; *Bending Resistance* weights that rigid component
 //!   against the straight-line one.
 
-use effectcraft_keyframe::ShapePath;
+use tselatra_keyframe::ShapePath;
 
 /// Matching Method.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -277,7 +277,7 @@ fn rotate(p: &ShapePath, k: usize) -> ShapePath {
         in_tangents: r(&p.in_tangents),
         out_tangents: r(&p.out_tangents),
         closed: p.closed,
-        feather: p.feather.iter().map(|f| effectcraft_keyframe::FeatherPoint { segment: (f.segment + n - k % n) % n, ..*f }).collect(),
+        feather: p.feather.iter().map(|f| tselatra_keyframe::FeatherPoint { segment: (f.segment + n - k % n) % n, ..*f }).collect(),
     }
 }
 

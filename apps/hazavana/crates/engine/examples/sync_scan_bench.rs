@@ -2,12 +2,12 @@
 //! unchanged: the walk, and the check of every photo and its sidecar. Reads the folder; writes
 //! nothing there, and probes no file (the library is made from the folder's own listing).
 //!
-//! `cargo run --release -p lightcraft-engine --example sync_scan_bench -- <folder>`
+//! `cargo run --release -p hazavana-engine --example sync_scan_bench -- <folder>`
 use std::time::Instant;
 
-use lightcraft_catalog::{Op, Photo, Source};
-use lightcraft_engine::Session;
-use lightcraft_engine::sync::{SyncInput, SyncProgress, scan_with};
+use hazavana_catalog::{Op, Photo, Source};
+use hazavana_engine::Session;
+use hazavana_engine::sync::{SyncInput, SyncProgress, scan_with};
 
 fn main() {
     let Some(folder) = std::env::args().nth(1) else {
@@ -16,7 +16,7 @@ fn main() {
     };
     let mut s = Session::new();
     let t = Instant::now();
-    let files = lightcraft_engine::import::expand(std::slice::from_ref(&folder), None);
+    let files = hazavana_engine::import::expand(std::slice::from_ref(&folder), None);
     println!("{} files listed in {:.1} s (the library is made of them)", files.len(), t.elapsed().as_secs_f64());
     for f in &files {
         let id = s.catalog.alloc_photo_id();

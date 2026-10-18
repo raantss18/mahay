@@ -8,8 +8,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use cadcraft_doc::{Circle, Common, Entity, EntityKind, Handle};
-use cadcraft_geom::{TAU, Vec2, Vec3, ccw_sweep, norm_angle};
+use drafitra_doc::{Circle, Common, Entity, EntityKind, Handle};
+use drafitra_geom::{TAU, Vec2, Vec3, ccw_sweep, norm_angle};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase, number};
@@ -549,7 +549,7 @@ fn same_circle(group: &[usize], cands: &[Cand], o: &Opts, gone: &mut [bool], cha
 
 /// Drop zero-length segments and join consecutive collinear straight segments of a polyline
 /// (constant width only). Returns how many segments went.
-fn optimize_pline(pl: &mut cadcraft_doc::LwPolyline, q: f64) -> usize {
+fn optimize_pline(pl: &mut drafitra_doc::LwPolyline, q: f64) -> usize {
     let before = pl.vertices.len();
     let min = if pl.closed { 3 } else { 2 };
     // Zero-length segments: the vertex after one takes over its successor's segment.
@@ -574,7 +574,7 @@ fn optimize_pline(pl: &mut cadcraft_doc::LwPolyline, q: f64) -> usize {
         pl.vertices.pop();
     }
     // Collinear straight segments going the same way.
-    let plain = |v: &cadcraft_geom::PolyVertex| v.bulge == 0.0 && v.start_width == 0.0 && v.end_width == 0.0;
+    let plain = |v: &drafitra_geom::PolyVertex| v.bulge == 0.0 && v.start_width == 0.0 && v.end_width == 0.0;
     let mut i = 0;
     while pl.vertices.len() > min && i + 2 < pl.vertices.len() {
         let (Some(a), Some(b), Some(c)) = (pl.vertices.get(i).copied(), pl.vertices.get(i + 1).copied(), pl.vertices.get(i + 2).copied()) else {

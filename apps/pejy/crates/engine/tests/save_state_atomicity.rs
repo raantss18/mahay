@@ -3,14 +3,14 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use designcraft_engine::Session;
+use pejy_engine::Session;
 use serde_json::json;
 
 fn linked_document(root: &Path) -> (Session, std::path::PathBuf) {
     let source = root.join("source/contacts.csv");
     std::fs::create_dir_all(source.parent().unwrap()).unwrap();
     std::fs::write(&source, "Name\nAda\n").unwrap();
-    let original = root.join("original/template.designcraft");
+    let original = root.join("original/template.pejy");
     std::fs::create_dir_all(original.parent().unwrap()).unwrap();
     let mut session = Session::new();
     session.execute("file.new", &json!({})).unwrap();
@@ -28,7 +28,7 @@ fn failed_save_as_preserves_document_saved_state_history_and_original_file() {
     let before = session.doc().unwrap().clone();
     let journal = session.journal.clone();
     let original_bytes = std::fs::read(&original).unwrap();
-    let destination = temp.path().join("missing/elsewhere/template.designcraft");
+    let destination = temp.path().join("missing/elsewhere/template.pejy");
 
     assert!(session.execute("file.saveAs", &json!({"path": destination})).is_err());
 
@@ -52,12 +52,12 @@ fn save_a_copy_rebases_its_data_source_without_changing_the_open_document() {
     let (mut session, original) = linked_document(temp.path());
     let before = session.doc().unwrap().clone();
     let original_bytes = std::fs::read(&original).unwrap();
-    let destination = temp.path().join("copies/nested/template.designcraft");
+    let destination = temp.path().join("copies/nested/template.pejy");
     std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
 
     session.execute("file.saveACopy", &json!({"path": destination})).unwrap();
 
-    let copy = designcraft_format::load(&std::fs::read(destination).unwrap()).unwrap();
+    let copy = pejy_format::load(&std::fs::read(destination).unwrap()).unwrap();
     assert_eq!(copy.data_merge.sources[0].relative_path.as_deref().map(Path::new), Some(Path::new("../../source/contacts.csv")));
     let after = session.doc().unwrap();
     assert!(Arc::ptr_eq(&before.doc, &after.doc));

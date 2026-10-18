@@ -1,8 +1,8 @@
 //! Clips: windows onto audio sources or MIDI sequences, placed on a playlist.
 
 use crate::{ClipId, MAX_NAME_CHARS, SourceId, truncate_chars};
-use soundcraft_midi::Sequence;
-use soundcraft_time::{MAX_POSITION, Range, Samples};
+use feo_midi::Sequence;
+use feo_time::{MAX_POSITION, Range, Samples};
 
 /// Fade curve shapes (Pro Tools offers standard, equal-power, S-curve and custom presets).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, serde::Serialize, serde::Deserialize)]

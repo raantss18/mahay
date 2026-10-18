@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, Group, Handle};
+use drafitra_doc::{Drawing, Group, Handle};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase};

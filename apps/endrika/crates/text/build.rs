@@ -1,35 +1,35 @@
-//! Embeds the optional craft-fonts build input (`CRAFT_FONTS_DIR`): both `fonts/manifest.txt` and the
+//! Embeds the optional mahay-fonts build input (`MAHAY_FONTS_DIR`): both `fonts/manifest.txt` and the
 //! opt-in Latin presentation fonts in `fonts/latin-manifest.txt` (Inter, Roboto, …). Unset or missing,
-//! `CRAFT_FONTS` is empty and the app uses system fonts. Recipe: craft-fonts `docs/integration.md`.
-//! Noto Sans CJK only with `FIGCRAFT_EMBED_CJK` set (the web build's only way to show CJK UI text).
+//! `MAHAY_FONTS` is empty and the app uses system fonts. Recipe: mahay-fonts `docs/integration.md`.
+//! Noto Sans CJK only with `ENDRIKA_EMBED_CJK` set (the web build's only way to show CJK UI text).
 use std::fmt::Write as _;
 use std::path::PathBuf;
 
 fn main() {
-    println!("cargo::rerun-if-env-changed=CRAFT_FONTS_DIR");
-    println!("cargo::rerun-if-env-changed=CRAFT_FONTS_REQUIRED");
-    println!("cargo::rerun-if-env-changed=FIGCRAFT_EMBED_CJK");
-    let mut src = String::from("pub static CRAFT_FONTS: &[CraftFont] = &[\n");
-    if let Some(dir) = std::env::var_os("CRAFT_FONTS_DIR").map(PathBuf::from) {
+    println!("cargo::rerun-if-env-changed=MAHAY_FONTS_DIR");
+    println!("cargo::rerun-if-env-changed=MAHAY_FONTS_REQUIRED");
+    println!("cargo::rerun-if-env-changed=ENDRIKA_EMBED_CJK");
+    let mut src = String::from("pub static MAHAY_FONTS: &[MahayFont] = &[\n");
+    if let Some(dir) = std::env::var_os("MAHAY_FONTS_DIR").map(PathBuf::from) {
         let mut ok = false;
         for manifest in ["fonts/latin-manifest.txt", "fonts/manifest.txt"] {
-            match craft_fonts(&dir, manifest) {
+            match mahay_fonts(&dir, manifest) {
                 Ok(entries) => {
                     ok = true;
                     src.push_str(&entries);
                 }
-                Err(e) if std::env::var_os("CRAFT_FONTS_REQUIRED").is_some() => {
-                    println!("cargo::error=CRAFT_FONTS_DIR={}: {e}", dir.display());
+                Err(e) if std::env::var_os("MAHAY_FONTS_REQUIRED").is_some() => {
+                    println!("cargo::error=MAHAY_FONTS_DIR={}: {e}", dir.display());
                 }
-                Err(e) => println!("cargo::warning=craft-fonts {manifest} skipped: CRAFT_FONTS_DIR={}: {e}", dir.display()),
+                Err(e) => println!("cargo::warning=mahay-fonts {manifest} skipped: MAHAY_FONTS_DIR={}: {e}", dir.display()),
             }
         }
         if !ok {
-            println!("cargo::warning=building without craft-fonts (once it is there, `cargo clean -p figcraft-text` makes the next build use it)");
+            println!("cargo::warning=building without mahay-fonts (once it is there, `cargo clean -p endrika-text` makes the next build use it)");
         }
     }
     src.push_str("];\n");
-    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("craft_fonts.rs");
+    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("mahay_fonts.rs");
     if let Err(e) = std::fs::write(&out, src) {
         println!("cargo::error=writing {}: {e}", out.display());
     }
@@ -39,8 +39,8 @@ fn main() {
 ///
 /// Cargo takes a watched path that doesn't exist as changed on every build, and then rebuilds this
 /// crate and every crate that depends on it each time. So a missing manifest is never watched
-/// itself: its folder is, when there is one (a craft-fonts checkout without the Latin manifest).
-/// With no craft-fonts at all there is nothing to watch, so the build can't notice it arriving:
+/// itself: its folder is, when there is one (a mahay-fonts checkout without the Latin manifest).
+/// With no mahay-fonts at all there is nothing to watch, so the build can't notice it arriving:
 /// the warning in `main` says how to pick it up.
 fn watch(manifest: &std::path::Path) {
     let watched = if manifest.exists() { Some(manifest) } else { manifest.parent().filter(|folder| folder.is_dir()) };
@@ -49,7 +49,7 @@ fn watch(manifest: &std::path::Path) {
     }
 }
 
-fn craft_fonts(dir: &std::path::Path, manifest_rel: &str) -> Result<String, String> {
+fn mahay_fonts(dir: &std::path::Path, manifest_rel: &str) -> Result<String, String> {
     let manifest = dir.join(manifest_rel);
     watch(&manifest);
     let text = std::fs::read_to_string(&manifest).map_err(|e| format!("{}: {e}", manifest.display()))?;
@@ -62,7 +62,7 @@ fn craft_fonts(dir: &std::path::Path, manifest_rel: &str) -> Result<String, Stri
         };
         // CJK fonts are large; the desktop app finds system CJK fonts instead unless asked.
         let cjk = scripts.contains("Hans");
-        if cjk && std::env::var_os("FIGCRAFT_EMBED_CJK").is_none() {
+        if cjk && std::env::var_os("ENDRIKA_EMBED_CJK").is_none() {
             continue;
         }
         // Web builds have a size budget: Inter, plus Noto Sans CJK (every CJK script, for CJK UI
@@ -72,7 +72,7 @@ fn craft_fonts(dir: &std::path::Path, manifest_rel: &str) -> Result<String, Stri
         }
         let path = dir.join(file).canonicalize().map_err(|e| format!("{file}: {e}"))?;
         println!("cargo::rerun-if-changed={}", path.display());
-        let _ = writeln!(out, "    CraftFont {{ family: {family:?}, style: {style:?}, bytes: include_bytes!({:?}) }},", path.display().to_string());
+        let _ = writeln!(out, "    MahayFont {{ family: {family:?}, style: {style:?}, bytes: include_bytes!({:?}) }},", path.display().to_string());
     }
     Ok(out)
 }

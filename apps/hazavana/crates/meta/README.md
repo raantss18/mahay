@@ -1,4 +1,4 @@
-# lightcraft-meta (L1)
+# hazavana-meta (L1)
 
 Photo metadata: EXIF, XMP (read + write), IPTC-IIM, and the containers that carry them.
 
@@ -7,10 +7,10 @@ Photo metadata: EXIF, XMP (read + write), IPTC-IIM, and the containers that carr
 | Function | Purpose |
 |---|---|
 | `read_exif(&[u8]) -> Metadata` | TIFF-structured Exif block (whole TIFF/DNG/raw file, or JPEG APP1 payload with/without `Exif\0\0`). `try_read_exif` reports header errors. |
-| `from_tiff(&Tiff) -> Metadata` | Same, from an already parsed stream (used by `lightcraft-raw`). |
+| `from_tiff(&Tiff) -> Metadata` | Same, from an already parsed stream (used by `hazavana-raw`). |
 | `embedded(&[u8]) -> Embedded` | Sniffs JPEG / PNG / WebP / TIFF and returns the Exif, XMP (+ extended XMP), ICC and IPTC blocks. `jpeg_segments`, `png_chunks`, `webp_chunks` are the per-container walkers. |
 | `parse_xmp(&str) -> Result<XmpData>` | Metadata + the opaque `lc:settings` JSON + every property (`prefix:name`, structs flattened as `a:b/c:d`). |
-| `write_xmp(&Metadata, Option<&str>) -> String` | Complete `<?xpacket?>` packet; the second argument is LightCraft's full develop settings JSON. |
+| `write_xmp(&Metadata, Option<&str>) -> String` | Complete `<?xpacket?>` packet; the second argument is Hazavana's full develop settings JSON. |
 | `parse_iptc(&[u8]) -> Metadata` | IIM record 2: title (2:5), keywords (2:25), by-line (2:80), copyright (2:116), caption (2:120), date/time created (2:55/2:60). |
 | `extract(&[u8]) -> Metadata` | Everything for a whole file. Precedence: EXIF → IPTC fills gaps → XMP overrides user fields (rating, label, title, caption, artist, copyright, keywords, GPS) and fills the rest. |
 
@@ -22,7 +22,7 @@ user fields (artist, copyright, title, caption, keywords, hierarchical keywords,
 ## XMP namespaces
 
 Written: `dc`, `xmp`, `photoshop`, `exif`, `exifEX`, `tiff`, `lr` (`hierarchicalSubject`) and ours,
-`lc` = `http://ns.lightcraft.app/lc/1.0/` (`lc:settings`, an opaque JSON string). Reading canonicalises
+`lc` = `http://ns.hazavana.app/lc/1.0/` (`lc:settings`, an opaque JSON string). Reading canonicalises
 prefixes by namespace URI, handles attribute and element forms, `rdf:Seq`/`Bag`/`Alt` (x-default first),
 `rdf:parseType="Resource"` and nested-description structs, predefined and numeric entities. Nesting depth
 and node count are limited.

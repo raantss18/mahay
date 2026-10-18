@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use cadcraft_engine::doc::Handle;
-use cadcraft_render::DisplayList;
+use drafitra_engine::doc::Handle;
+use drafitra_render::DisplayList;
 use egui::{Rect, RichText, Stroke, vec2};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ struct Cache {
 }
 
 fn id() -> egui::Id {
-    egui::Id::new("cadcraft-compare-overlay")
+    egui::Id::new("drafitra-compare-overlay")
 }
 
 /// Draw the comparison over the canvas when it was made for the drawing and tab shown.
@@ -40,11 +40,11 @@ pub(super) fn paint(app: &mut CadApp, ctx: &egui::Context, p: &egui::Painter, xf
     let key = (st.uid, st.revision, Arc::as_ptr(&c.other) as usize, c.differences(), band);
     let mut cache: Cache = ctx.data_mut(|d| d.get_temp(id())).unwrap_or_default();
     if cache.key != key || cache.ours.is_none() {
-        let opts = cadcraft_render::Options { tolerance: 0.5 / xf.scale.max(1e-12), ..Default::default() };
+        let opts = drafitra_render::Options { tolerance: 0.5 / xf.scale.max(1e-12), ..Default::default() };
         let ours: Vec<Handle> = c.added.iter().copied().chain(c.changed.iter().map(|(a, _)| *a)).take(MAX_DRAWN).collect();
         let theirs: Vec<Handle> = c.removed.iter().copied().chain(c.changed.iter().map(|(_, b)| *b)).take(MAX_DRAWN).collect();
-        let list = |d: &cadcraft_engine::doc::Drawing, hs: &[Handle]| {
-            Arc::new(cadcraft_render::build_entities(d, hs.iter().filter_map(|h| d.entity(*h)).map(|e| e.as_ref()), &opts))
+        let list = |d: &drafitra_engine::doc::Drawing, hs: &[Handle]| {
+            Arc::new(drafitra_render::build_entities(d, hs.iter().filter_map(|h| d.entity(*h)).map(|e| e.as_ref()), &opts))
         };
         cache = Cache { key, ours: Some(list(&st.doc, &ours)), theirs: Some(list(&c.other, &theirs)) };
         ctx.data_mut(|d| d.insert_temp(id(), cache.clone()));

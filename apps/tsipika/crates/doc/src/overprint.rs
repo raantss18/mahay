@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{BlendMode, Color, Paint};
+use tsipika_color::{BlendMode, Color, Paint};
 
 use crate::{Document, Node, NodeId, NodeKind};
 
@@ -181,7 +181,7 @@ pub fn clear_overprints(a: &mut Arc<Node>) {
 mod tests {
     use super::*;
     use crate::{Appearance, CharStyle, TextObject};
-    use vectorcraft_geom::Point;
+    use tsipika_geom::Point;
 
     fn cmyk(c: f32, m: f32, y: f32, k: f32) -> Paint {
         Paint::solid(Color::cmyk(c, m, y, k))
@@ -209,7 +209,7 @@ mod tests {
         assert!(!n.has_overprint());
 
         // Gradients count when every stop is black.
-        let mut g = vectorcraft_color::GradientPaint::new(Default::default());
+        let mut g = tsipika_color::GradientPaint::new(Default::default());
         for s in &mut g.gradient.stops {
             s.color = Color::cmyk(0.0, 0.0, 0.0, 1.0);
         }

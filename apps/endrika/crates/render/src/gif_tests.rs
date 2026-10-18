@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use figcraft_color::{ColorProfile, ImageFilters, ImageScaleMode, Paint};
-use figcraft_doc::{Document, ImageData, NodeKind};
+use endrika_color::{ColorProfile, ImageFilters, ImageScaleMode, Paint};
+use endrika_doc::{Document, ImageData, NodeKind};
 use image::codecs::gif::{GifEncoder, Repeat};
 use image::{Delay, Frame, RgbaImage};
 

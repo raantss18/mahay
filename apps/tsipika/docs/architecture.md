@@ -1,8 +1,8 @@
 # Architecture
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (shared PDF reader and writer; app output policy and editable-import adapter retained; verified PngSuite downloads, #1729; synthetic control-input budgets, #1709; desktop printing uses craft-print; Windows 7 fallback retained) · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (shared PDF reader and writer; app output policy and editable-import adapter retained; verified PngSuite downloads, #1729; synthetic control-input budgets, #1709; desktop printing uses mahay-print; Windows 7 fallback retained) · **Target:** Adobe Illustrator 2026 (30.x)
 
-How VectorCraft is built today. The design rationale lives in the local, gitignored `plan/architecture.md`;
+How Tsipika is built today. The design rationale lives in the local, gitignored `plan/architecture.md`;
 this file describes what is committed. Day-to-day rules (clean-room, never crash, quality gates) are in
 [`AGENTS.md`](../AGENTS.md) and [development.md](development.md).
 
@@ -26,7 +26,7 @@ nothing below L6 depends on a UI toolkit (egui, eframe, winit, rfd). Table: `xta
 | L4 | `tools` | tool state machines: pointer events in, commands and overlays out (Pen, Direct Selection, smart guides…) |
 | L5 | `engine` | sessions, history (unlimited undo by structural sharing), selection, the command registry (~710 commands), file I/O, the panic guard |
 | L6 | `ui-egui`, `mcp` | the egui front end (menus, panels, dialogs, canvas, i18n); the MCP server (JSON-RPC over stdio) |
-| L7 | `apps/vectorcraft`, `apps/vectorcraft-cli`, `apps/vectorcraft-web`, `xtask` | desktop app (eframe, wgpu), CLI (`run`, `convert`, `info`, `bench`, `perf`, `mcp`), browser runner (WebGPU, WebGL2 fallback), build tooling |
+| L7 | `apps/tsipika`, `apps/tsipika-cli`, `apps/tsipika-web`, `xtask` | desktop app (eframe, wgpu), CLI (`run`, `convert`, `info`, `bench`, `perf`, `mcp`), browser runner (WebGPU, WebGL2 fallback), build tooling |
 
 `testkit` holds test helpers (fixtures, generators, render comparison) and is only a dev-dependency.
 
@@ -47,19 +47,19 @@ effects are rendered offscreen per object and cached while panning. See
 
 ## Files
 
-The native `.vectorcraft` format is versioned, compressed JSON with embedded images, saved atomically, readable
+The native `.tsipika` format is versioned, compressed JSON with embedded images, saved atomically, readable
 down to v1 and from the old `.drawcraft` name. The `FORMATS` table in `crates/engine/src/cmd/fileio/mod.rs`
 lists every format read or written; importers are fuzzed (`crates/engine/tests/import_fuzz.rs`). See
 [file-format-parity.md](file-format-parity.md).
 
-Desktop printer discovery and PDF submission use `craft-print`, pinned to an immutable
-craft-libs revision. The engine still owns sheet composition, copies, separations and colour
+Desktop printer discovery and PDF submission use `mahay-print`, pinned to an immutable
+mahay-libs revision. The engine still owns sheet composition, copies, separations and colour
 management. Submission runs on the existing background worker; its receipt or refusal
 reaches the status bar, and Quit waits for pending submissions. Windows 7 retains WMI discovery
 and the installed viewer's Print/PrintTo verb;
 its target excludes the shared backend because Windows.Data.Pdf is unavailable there.
 
-PDF writing uses the optional `craft-pdf` writer at an immutable craft-libs revision. Shared
+PDF writing uses the optional `mahay-pdf` writer at an immutable mahay-libs revision. Shared
 configuration, metadata, font preparation and guarded serialization leave drawing, colour
 policy, layers, editing data and print composition in this app. `cargo xtask pdf-deps` verifies
 the shared facade and patched Krilla and Hayro sources at the same revision.
@@ -73,14 +73,14 @@ See [pdf-backend.md](pdf-backend.md).
   injection and screenshots ([control-protocol.md](control-protocol.md)). Synthetic gestures are validated
   before queue mutation; the pending input queue is capped, and control requests yield after a bounded
   batch per frame (#1709).
-- **MCP:** `vectorcraft-cli mcp`, attached to a running app or headless ([mcp.md](mcp.md)).
+- **MCP:** `tsipika-cli mcp`, attached to a running app or headless ([mcp.md](mcp.md)).
 - **Sandboxing:** `--automation-read-root` / `--automation-write-root` confine what agents read and write.
 
 ## Robustness
 
 No panics in shipped code (workspace clippy lints ban `unwrap`, `expect`, `panic!` and friends outside tests);
-`vectorcraft_engine::guard` catches a panic at every entry point and rolls the document back; Data Recovery
-saves copies in the background. See [development.md](development.md#robustness-vectorcraft-never-crashes).
+`tsipika_engine::guard` catches a panic at every entry point and rolls the document back; Data Recovery
+saves copies in the background. See [development.md](development.md#robustness-tsipika-never-crashes).
 
 ## Corpus fetching
 
@@ -93,7 +93,7 @@ saves copies in the background. See [development.md](development.md#robustness-v
 | 2026-10-13 | minor | Pinned PngSuite HTTPS files verified by SHA-256 before publication; bounded downloads replace archive extraction (#1729). Scores and hours unchanged. |
 | 2026-10-13 | minor | Bounded synthetic control input (#1709): counts and queued events validated before mutation; control-channel bursts yield between frames. Scores and hours unchanged. |
 | 2026-10-13 | minor | PDF.R1: editable PDF import uses the shared pinned reader; layer and overprint scans preserve state across content windows and reject known incomplete input. Synthetic streaming, decoder-limit and dependency-source regressions added; scores and hours unchanged. |
-| 2026-10-13 | minor | PDF writer setup and guarded finalization use craft-pdf; drawing and output policy remain app-owned. |
-| 2026-10-12 | minor | Desktop PDF spooler shared through craft-print; exact physical sizes, composed copies and Windows 7 fallback retained. Scores and remaining gaps unchanged. |
+| 2026-10-13 | minor | PDF writer setup and guarded finalization use mahay-pdf; drawing and output policy remain app-owned. |
+| 2026-10-12 | minor | Desktop PDF spooler shared through mahay-print; exact physical sizes, composed copies and Windows 7 fallback retained. Scores and remaining gaps unchanged. |
 | 2026-10-10 | minor | Added the `three-d` crate |
 | 2026-10-10 | major | First version, from the workspace, the layering table and the existing docs |

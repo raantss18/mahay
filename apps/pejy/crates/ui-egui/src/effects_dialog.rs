@@ -3,7 +3,7 @@
 //! its name shows its settings and turns it on), the settings on the right in the document's
 //! units, Preview on the page while it is open, and OK as one undo step (`object.effects`).
 
-use designcraft_geom::{Unit, format_measure, units::parse_measure};
+use pejy_geom::{Unit, format_measure, units::parse_measure};
 use serde_json::{Value, json};
 
 use crate::DesignApp;
@@ -65,8 +65,8 @@ pub fn open(app: &mut DesignApp, page: &str) {
 }
 
 /// Every effect's settings, those still at their defaults included (the document leaves them out).
-fn effects_json(e: &designcraft_doc::Effects) -> Value {
-    use designcraft_doc::{Bevel, DirectionalFeather, DropShadow, FeatherOptions, GradientFeather, InnerGlow, InnerShadow, OuterGlow, Satin};
+fn effects_json(e: &pejy_doc::Effects) -> Value {
+    use pejy_doc::{Bevel, DirectionalFeather, DropShadow, FeatherOptions, GradientFeather, InnerGlow, InnerShadow, OuterGlow, Satin};
     let mut fx = serde_json::to_value(e).unwrap_or_else(|_| json!({}));
     let defaults = [
         ("dropShadow", serde_json::to_value(DropShadow::default())),
@@ -284,7 +284,7 @@ fn page_ui(app: &DesignApp, ui: &mut egui::Ui, d: &mut Dialog, page: &str) {
                 row(ui, "Mode:");
                 let cur = d.fields.get("blend").and_then(Value::as_str).unwrap_or("Normal").to_string();
                 egui::ComboBox::from_id_salt("fx_blend").selected_text(tr(&cur)).width(150.0).show_ui(ui, |ui| {
-                    for m in designcraft_color::BlendMode::ALL {
+                    for m in pejy_color::BlendMode::ALL {
                         if ui.selectable_label(m.label() == cur, tr(m.label())).clicked() {
                             d.fields.insert("blend".into(), json!(m.label()));
                         }
@@ -347,12 +347,12 @@ fn page_ui(app: &DesignApp, ui: &mut egui::Ui, d: &mut Dialog, page: &str) {
                 if key == "innerGlow" {
                     row(ui, "Mode:");
                     let cur = d.fields.get("fx").and_then(|f| f["innerGlow"]["mode"].as_str()).unwrap_or("Screen").to_string();
-                    let label = |m: &designcraft_color::BlendMode| {
+                    let label = |m: &pejy_color::BlendMode| {
                         serde_json::to_value(m).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default()
                     };
-                    let shown = designcraft_color::BlendMode::ALL.iter().find(|m| label(m) == cur).map_or("Screen", |m| m.label());
+                    let shown = pejy_color::BlendMode::ALL.iter().find(|m| label(m) == cur).map_or("Screen", |m| m.label());
                     egui::ComboBox::from_id_salt("fx_glow_mode").selected_text(tr(shown)).width(150.0).show_ui(ui, |ui| {
-                        for m in designcraft_color::BlendMode::ALL {
+                        for m in pejy_color::BlendMode::ALL {
                             if ui.selectable_label(label(&m) == cur, tr(m.label())).clicked() {
                                 set(d, &["innerGlow", "mode"], json!(label(&m)));
                             }
@@ -626,7 +626,7 @@ mod tests {
     }
 
     fn app_with_frame() -> (DesignApp, u64) {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("document.preferences", json!({"horizontalUnits": "inches", "verticalUnits": "inches"})).unwrap();
         let id = app.run("frame.create", json!({"rect": [100, 100, 300, 300]})).unwrap()["id"].as_u64().unwrap();
@@ -673,7 +673,7 @@ mod tests {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx, "en");
         let undo = |app: &DesignApp| app.session.doc().unwrap().history.undo.len();
-        let fx = |app: &DesignApp| app.session.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().effects.clone();
+        let fx = |app: &DesignApp| app.session.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().effects.clone();
         let u0 = undo(&app);
         // Object › Effects › Inner Shadow… (as the menu activates it): the dialog, on that page.
         crate::menus::activate(&mut app, "object.innerShadow", &Value::Null);
@@ -720,7 +720,7 @@ mod tests {
         let e = fx(&app);
         assert!(e.inner_shadow.on && e.inner_shadow.size == 9.0);
         assert_eq!(undo(&app), u0 + 1, "one undo step");
-        assert!((app.session.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().opacity - 0.8).abs() < 1e-6);
+        assert!((app.session.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().opacity - 0.8).abs() < 1e-6);
         app.run("edit.undo", json!({})).unwrap();
         assert!(!fx(&app).inner_shadow.on);
     }

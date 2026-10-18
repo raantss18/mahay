@@ -1,8 +1,8 @@
 //! Mirror Repeat's on-canvas axis. Drawing and hit testing share document-space geometry;
 //! gestures preview the existing Repeat Options command and commit as one undo step.
 use serde_json::json;
-use vectorcraft_doc::{Document, NodeId, NodeKind, Selection, pattern::RepeatKind};
-use vectorcraft_geom::{Point, Vec2};
+use tsipika_doc::{Document, NodeId, NodeKind, Selection, pattern::RepeatKind};
+use tsipika_geom::{Point, Vec2};
 
 use crate::{Action, Cursor, Mods, ToolContext};
 
@@ -150,7 +150,7 @@ mod tests {
     use super::*;
     use crate::testutil::{cx, doc_with_rect, paint};
     use std::sync::Arc;
-    use vectorcraft_doc::pattern::RepeatSpec;
+    use tsipika_doc::pattern::RepeatSpec;
 
     #[test]
     fn mirror_axis_hit_targets_match_zoom_and_reject_invalid_geometry() {

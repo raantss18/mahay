@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use egui::{Color32, CornerRadius, Id, Pos2, Rect, Shape, Stroke, StrokeKind, pos2, vec2};
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 use serde_json::{Value, json};
 
 use crate::theme::ACCENT;
@@ -77,7 +77,7 @@ fn noodles(app: &FigApp, ctx: &egui::Context, doc: &Arc<Document>, page: NodeId)
         let Some(n) = doc.node(id) else { continue };
         let Some(from) = screen_rect(app, doc, id) else { continue };
         for (k, it) in n.interactions.iter().enumerate() {
-            let Some(dest) = figcraft_doc::proto::walk(&it.actions).find_map(|a| a.dest()) else { continue };
+            let Some(dest) = endrika_doc::proto::walk(&it.actions).find_map(|a| a.dest()) else { continue };
             // Change-to targets are variants; draw to them as they are.
             let Some(to) = screen_rect(app, doc, dest) else { continue };
             if doc.page_of(dest) != Some(page) {
@@ -174,7 +174,7 @@ pub fn draw(app: &FigApp, painter: &egui::Painter) {
             && let Some(dest) = doc
                 .node(nd.source)
                 .and_then(|n| n.interactions.get(nd.index))
-                .and_then(|it| figcraft_doc::proto::walk(&it.actions).find_map(|a| a.dest()))
+                .and_then(|it| endrika_doc::proto::walk(&it.actions).find_map(|a| a.dest()))
             && let Some(r) = screen_rect(app, doc, dest)
         {
             painter.rect_stroke(r, CornerRadius::ZERO, Stroke::new(1.0, ACCENT.gamma_multiply(0.7)), StrokeKind::Outside);

@@ -2,8 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_engine::config::{FileOps, StdFiles};
-use effectcraft_engine::{Session, autosave, prefs::Prefs};
+use tselatra_engine::config::{FileOps, StdFiles};
+use tselatra_engine::{Session, autosave, prefs::Prefs};
 use serde_json::{Value, json};
 
 pub(crate) struct AutoSave {
@@ -22,7 +22,7 @@ impl AutoSave {
             root.join(autosave::AUTOSAVE_FOLDER).join("MCP")
         };
         if base.to_str().is_none() {
-            return Err(std::io::Error::other("the MCP auto-save folder must be valid UTF-8; set EFFECTCRAFT_CONFIG_DIR to a UTF-8 path"));
+            return Err(std::io::Error::other("the MCP auto-save folder must be valid UTF-8; set TSELATRA_CONFIG_DIR to a UTF-8 path"));
         }
         std::fs::create_dir_all(&base)?;
         let previous = previous_sessions(&base);

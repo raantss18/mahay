@@ -5,7 +5,7 @@
 //! the history, the file's branches: create one, open one, review and merge, archive.
 
 use egui::{Align2, CornerRadius, Id, Rect, Sense, Stroke, Ui, pos2, vec2};
-use figcraft_engine::branches::BranchState;
+use endrika_engine::branches::BranchState;
 use serde_json::json;
 
 use crate::FigApp;
@@ -153,7 +153,7 @@ pub fn panel(app: &mut FigApp, ui: &mut Ui) {
     let branches: Vec<BranchRow> = app
         .session
         .docs
-        .get(figcraft_engine::branches::file_tab(&app.session))
+        .get(endrika_engine::branches::file_tab(&app.session))
         .map(|m| m.branches.iter().map(|b| BranchRow { id: b.id.clone(), name: b.name.clone(), time: b.time, state: b.state }).collect())
         .unwrap_or_default();
     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {

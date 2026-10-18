@@ -1,16 +1,16 @@
 //! Lumetri Scopes panel (Window ▸ Lumetri Scopes): waveform (RGB / Luma / YC), vectorscope
 //! (YUV / HLS), histogram and parade (RGB / YUV) of the active composition's frame at the current
 //! time, with the colour standard (Rec. 601 / 709 / 2020), 8-bit or float scale and clamp. The
-//! maths is `effectcraft_raster::scopes`; agents read the same numbers with `scopes.analyze`.
+//! maths is `tselatra_raster::scopes`; agents read the same numbers with `scopes.analyze`.
 
 use crate::i18n::tr;
-use effectcraft_engine::commands::panels_cmds::scope_frame;
-use effectcraft_engine::raster::scopes::{self, ColorStandard, Scope, ScopeKind, ScopeOpts};
+use tselatra_engine::commands::panels_cmds::scope_frame;
+use tselatra_engine::raster::scopes::{self, ColorStandard, Scope, ScopeKind, ScopeOpts};
 use egui::{Align2, Color32, Rect, Stroke, pos2, vec2};
 use serde::{Deserialize, Serialize};
 
 use super::panel_kit as kit;
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::theme::Tokens;
 
 /// Panel options (serde in the UI state).
@@ -38,7 +38,7 @@ struct Cached {
     tex: Option<egui::TextureHandle>,
 }
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     p.rect_filled(rect, 0.0, t.panel_bg);

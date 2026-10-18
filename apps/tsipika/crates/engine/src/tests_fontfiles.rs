@@ -1,6 +1,6 @@
 //! Missing fonts: listed (`text.missingFonts`), their files found in a folder on threads of their
 //! own (`text.findFontFiles`), and copied into a folder without replacing a file there. These tests
-//! never set VectorCraft's Fonts folder and never add a font to the process's font database:
+//! never set Tsipika's Fonts folder and never add a font to the process's font database:
 //! `tests/font_folder.rs` does both, in a process of its own.
 
 use std::path::{Path, PathBuf};
@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use vectorcraft_text::FontMatch;
+use tsipika_text::FontMatch;
 
 use crate::cmd::findfiles::{self, Limits, Rules, Visitor};
 use crate::cmd::fontfiles::{self, FontSearch, MAX_FONT_FILE, Sought, copy_into};
@@ -16,7 +16,7 @@ use crate::{EngineError, Session};
 
 /// A fresh temporary folder (canonical, as a search reports it).
 fn folder(tag: &str) -> PathBuf {
-    let dir = vectorcraft_testkit::temp_dir(&format!("fontfiles-{tag}"));
+    let dir = tsipika_testkit::temp_dir(&format!("fontfiles-{tag}"));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     findfiles::plain(std::fs::canonicalize(&dir).unwrap())
@@ -57,9 +57,9 @@ fn missing_fonts_are_listed_symbols_included() {
     s.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
     text(&mut s, 20.0, "No Such Font Family", "Regular");
     // Type naming another version of a missing font is listed with it.
-    let other = vectorcraft_doc::NodeId(text(&mut s, 40.0, "No Such Font Family", "Regular"));
+    let other = tsipika_doc::NodeId(text(&mut s, 40.0, "No Such Font Family", "Regular"));
     s.edit("version", |d, _| {
-        if let vectorcraft_doc::NodeKind::Text(t) = &mut d.node_mut(other).unwrap().kind {
+        if let tsipika_doc::NodeKind::Text(t) = &mut d.node_mut(other).unwrap().kind {
             t.runs.iter_mut().for_each(|r| r.style.font_version = Some("Version 2.000".into()));
         }
         Ok(())
@@ -99,7 +99,7 @@ fn missing_fonts_are_listed_symbols_included() {
 #[test]
 fn an_overlong_font_name_leaves_the_other_fonts_searchable() {
     let root = folder("long-name");
-    std::fs::write(root.join("Findme.otf"), vectorcraft_testkit::fonts::renamed("Findme Sans 3")).unwrap();
+    std::fs::write(root.join("Findme.otf"), tsipika_testkit::fonts::renamed("Findme Sans 3")).unwrap();
     let mut s = session_for(&root);
     s.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
     text(&mut s, 20.0, &"L".repeat(300), "Regular");
@@ -121,9 +121,9 @@ fn the_fonts_folder_next_to_a_document_in_another_apps_folder_isnt_offered() {
     s.search_rules = Some(Rules { home: Some(home.clone()), ..Rules::default() });
     for (dir, offered) in [("Library/Mail Downloads/pkg", false), ("Documents/pkg", true)] {
         std::fs::create_dir_all(home.join(dir).join("Fonts")).unwrap();
-        let mut doc = vectorcraft_doc::Document::new(100.0, 100.0);
+        let mut doc = tsipika_doc::Document::new(100.0, 100.0);
         doc.title = "doc".into();
-        s.add_document(doc, Some(home.join(dir).join("doc.vectorcraft").to_string_lossy().into_owned()));
+        s.add_document(doc, Some(home.join(dir).join("doc.tsipika").to_string_lossy().into_owned()));
         text(&mut s, 20.0, "No Such Font Family", "Regular");
         let r = s.execute("text.missingFonts", &json!({})).unwrap();
         assert_eq!(r.get("fontsNextToDocument").is_some(), offered, "{dir}: {r}");
@@ -139,10 +139,10 @@ fn the_fonts_folder_next_to_a_document_is_an_absolute_path() {
     std::fs::create_dir_all(root.join("pkg/Fonts")).unwrap();
     let cwd = std::env::current_dir().unwrap();
     let up = "../".repeat(cwd.components().count().saturating_sub(1));
-    let relative = format!("{up}{}", root.join("pkg/doc.vectorcraft").strip_prefix("/").unwrap().display());
+    let relative = format!("{up}{}", root.join("pkg/doc.tsipika").strip_prefix("/").unwrap().display());
     assert!(Path::new(&relative).is_relative());
     let mut s = session_for(&root);
-    let mut doc = vectorcraft_doc::Document::new(100.0, 100.0);
+    let mut doc = tsipika_doc::Document::new(100.0, 100.0);
     doc.title = "doc".into();
     s.add_document(doc, Some(relative));
     text(&mut s, 20.0, "No Such Font Family", "Regular");
@@ -157,7 +157,7 @@ fn the_fonts_folder_next_to_a_document_is_an_absolute_path() {
 fn a_search_finds_a_missing_fonts_file_by_its_names() {
     let root = folder("find");
     std::fs::create_dir_all(root.join("x/y")).unwrap();
-    std::fs::write(root.join("x/y/Findme.otf"), vectorcraft_testkit::fonts::renamed("Findme Sans 3")).unwrap();
+    std::fs::write(root.join("x/y/Findme.otf"), tsipika_testkit::fonts::renamed("Findme Sans 3")).unwrap();
     std::fs::write(root.join("other.ttf"), bundled("SourceSerif4-Regular.ttf")).unwrap();
     std::fs::write(root.join("readme.txt"), "Findme Sans 3").unwrap();
     let mut s = session_for(&root);
@@ -197,7 +197,7 @@ fn junk_search_params_never_fail_internally() {
     text(&mut s, 20.0, "No Such Font Family", "Regular");
     let internal = |r: &crate::Result<Value>| matches!(r, Err(EngineError::Internal { .. }));
     let mut cases = vec![];
-    for v in vectorcraft_testkit::strategies::junk_values() {
+    for v in tsipika_testkit::strategies::junk_values() {
         cases.extend([
             json!({"folder": root, "maxSeconds": v}),
             json!({"folder": root, "fonts": v}),
@@ -275,7 +275,7 @@ fn stop_ends_only_the_search_it_names() {
 }
 
 #[test]
-fn adding_fonts_needs_vectorcraft_s_fonts_folder() {
+fn adding_fonts_needs_tsipika_s_fonts_folder() {
     let mut s = Session::new();
     let r = s.execute("text.addFontFiles", &json!({"files": ["/fonts/a.ttf"]}));
     assert!(matches!(&r, Err(EngineError::Other(m)) if m.contains("isn't set here")), "{r:?}");
@@ -361,7 +361,7 @@ fn only_font_files_are_copied() {
 fn a_search_skips_font_files_too_large_to_add() {
     let root = folder("too-large");
     let (big, small) = (root.join("big").join("Sizeme.otf"), root.join("small").join("Sizeme.otf"));
-    let font = vectorcraft_testkit::fonts::renamed("Sizeme Sans 3");
+    let font = tsipika_testkit::fonts::renamed("Sizeme Sans 3");
     for path in [&big, &small] {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(path, &font).unwrap();
@@ -381,7 +381,7 @@ fn a_search_skips_font_files_too_large_to_add() {
 #[cfg(target_os = "macos")]
 #[test]
 fn suitcase_fonts_are_found_and_copied_with_their_fork() {
-    use vectorcraft_testkit::fonts::{renamed, suitcase_fork};
+    use tsipika_testkit::fonts::{renamed, suitcase_fork};
     let root = folder("suitcase");
     let (src, dest) = (root.join("src"), root.join("dest"));
     std::fs::create_dir_all(src.join("sub")).unwrap();
@@ -410,7 +410,7 @@ fn suitcase_fonts_are_found_and_copied_with_their_fork() {
     assert_eq!((r["fonts"][0]["files"].clone(), r["searched"]["fontFiles"].as_u64()), (json!([suit]), Some(2)), "{r}");
     let r = copy_into(std::slice::from_ref(&found), &dest);
     assert_eq!(r.copied, [(found.clone(), dest.join("Suitme"))]);
-    assert!(vectorcraft_text::is_suitcase(&dest.join("Suitme")));
+    assert!(tsipika_text::is_suitcase(&dest.join("Suitme")));
     assert_eq!(std::fs::read(dest.join("Suitme/..namedfork/rsrc")).unwrap(), fork);
     // The same suitcase again is kept; another of that name gets a number.
     assert_eq!(copy_into(std::slice::from_ref(&found), &dest).kept, [(found.clone(), dest.join("Suitme"))]);
@@ -423,7 +423,7 @@ fn suitcase_fonts_are_found_and_copied_with_their_fork() {
     assert_eq!(copy_into(std::slice::from_ref(&named), &dest).copied, [(named.clone(), dest.join("Suitext.ttf"))]);
     assert_eq!(std::fs::read(dest.join("Suitext.ttf/..namedfork/rsrc")).unwrap(), named_fork);
     // The font scan reads the copies.
-    let db = vectorcraft_text::FontDb::with_font_dirs(vec![dest.clone()]);
+    let db = tsipika_text::FontDb::with_font_dirs(vec![dest.clone()]);
     assert_eq!((db.styles("Suitme Sans 3"), db.styles("Other Sans 33")), (vec!["Regular".to_string()], vec!["Regular".to_string()]));
     let _ = std::fs::remove_dir_all(&root);
 }

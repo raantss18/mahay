@@ -13,8 +13,8 @@ use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::io::Write;
 
-use designcraft_doc::geom::{Affine, Rect};
-use designcraft_doc::{
+use pejy_doc::geom::{Affine, Rect};
+use pejy_doc::{
     Align, AnchorPosition, AnchoredObject, CharAttrs, CharProps, Content, Document, ENDNOTE_REF, FOOTNOTE_REF, Item, ItemId, OBJECT_MARK, ParaProps,
     SpreadRef, Story, StoryId, Styles, Table, story,
 };
@@ -54,7 +54,7 @@ pub fn stylesheet_fonts(doc: &Document) -> Vec<(String, String)> {
     let st: &Styles = &doc.styles;
     let mut out: Vec<(String, String)> = Vec::new();
     for ps in &st.paragraph {
-        if ps.name == designcraft_doc::NO_PARA_STYLE {
+        if ps.name == pejy_doc::NO_PARA_STYLE {
             continue;
         }
         let (_, cp) = st.resolve_para_style(&ps.name);
@@ -228,7 +228,7 @@ pub fn export_fixed_epub(doc: &Document, pages: &[FixedPage], opts: &EpubOptions
     );
     let author = opts.author.as_deref().map(|a| format!("<dc:creator>{}</dc:creator>", xml_text(a))).unwrap_or_default();
     let opf = format!(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\" prefix=\"rendition: http://www.idpf.org/vocab/rendition/#\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{}</dc:identifier>\n<dc:title>{}</dc:title>\n<dc:language>{lang}</dc:language>{author}\n<meta property=\"dcterms:modified\">{modified}</meta>\n<meta property=\"rendition:layout\">pre-paginated</meta>\n<meta property=\"rendition:spread\">auto</meta>\n<meta name=\"original-resolution\" content=\"{vw}x{vh}\"/>\n<meta name=\"generator\" content=\"DesignCraft\"/>\n</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{spine}</spine>\n</package>\n",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\" prefix=\"rendition: http://www.idpf.org/vocab/rendition/#\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{}</dc:identifier>\n<dc:title>{}</dc:title>\n<dc:language>{lang}</dc:language>{author}\n<meta property=\"dcterms:modified\">{modified}</meta>\n<meta property=\"rendition:layout\">pre-paginated</meta>\n<meta property=\"rendition:spread\">auto</meta>\n<meta name=\"original-resolution\" content=\"{vw}x{vh}\"/>\n<meta name=\"generator\" content=\"Pejy\"/>\n</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{spine}</spine>\n</package>\n",
         xml_text(&id),
         xml_text(&title)
     );
@@ -424,8 +424,8 @@ fn char_css(doc: &Document, c: &CharProps, base_size: f64, generics: &BTreeMap<S
         let _ = write!(out, "letter-spacing: {:.3}em; ", c.tracking / 1000.0);
     }
     match c.capitalization {
-        designcraft_doc::Capitalization::AllCaps => out.push_str("text-transform: uppercase; "),
-        designcraft_doc::Capitalization::SmallCaps | designcraft_doc::Capitalization::OpenTypeAllSmallCaps => {
+        pejy_doc::Capitalization::AllCaps => out.push_str("text-transform: uppercase; "),
+        pejy_doc::Capitalization::SmallCaps | pejy_doc::Capitalization::OpenTypeAllSmallCaps => {
             out.push_str("font-variant: small-caps; ")
         }
         _ => {}
@@ -490,13 +490,13 @@ fn stylesheet_with(doc: &Document, generics: &BTreeMap<String, String>, fonts: &
     );
     let (pc, cc) = (para_classes(st), char_classes(st));
     for ps in &st.paragraph {
-        if ps.name == designcraft_doc::NO_PARA_STYLE {
+        if ps.name == pejy_doc::NO_PARA_STYLE {
             continue;
         }
         let (pp, cp) = st.resolve_para_style(&ps.name);
         let lead = match cp.leading {
-            designcraft_doc::Leading::Auto => pp.auto_leading,
-            designcraft_doc::Leading::Points(v) => v / cp.size.max(1.0),
+            pejy_doc::Leading::Auto => pp.auto_leading,
+            pejy_doc::Leading::Points(v) => v / cp.size.max(1.0),
         };
         let mut rule = String::new();
         para_css(&pp, base, lead, &mut rule);
@@ -556,7 +556,7 @@ fn override_css(doc: &Document, o: &CharAttrs) -> String {
     if o.underline == Some(true) {
         s.push_str("text-decoration: underline; ");
     }
-    if o.capitalization == Some(designcraft_doc::Capitalization::AllCaps) {
+    if o.capitalization == Some(pejy_doc::Capitalization::AllCaps) {
         s.push_str("text-transform: uppercase; ");
     }
     s.trim_end().to_string()
@@ -703,15 +703,15 @@ impl<'a, 'f> StoryWriter<'a, 'f> {
                 // Export Tagging: the style's element and class.
                 let (tag, class) = export_mapping(&doc.styles, &pf.style, false, &self.pc);
                 let props = doc.styles.resolve_para(pf).0;
-                let rtl = props.direction == designcraft_doc::TextDirection::RightToLeft;
+                let rtl = props.direction == pejy_doc::TextDirection::RightToLeft;
                 let continues_pre = tag == "pre" && pre.as_ref() == Some(&(class.clone(), rtl));
                 if !continues_pre && pre.take().is_some() {
                     out.push_str("</pre>\n");
                 }
                 let list_tag = (tag == "li").then_some(match props.list_type {
-                    designcraft_doc::ListType::Numbers => "ol",
-                    designcraft_doc::ListType::Bullets => "ul",
-                    designcraft_doc::ListType::None => "ul style=\"list-style:none\"",
+                    pejy_doc::ListType::Numbers => "ol",
+                    pejy_doc::ListType::Bullets => "ul",
+                    pejy_doc::ListType::None => "ul style=\"list-style:none\"",
                 });
                 if list != list_tag {
                     close_list(&mut list, out);
@@ -775,7 +775,7 @@ impl<'a, 'f> StoryWriter<'a, 'f> {
                 continue;
             }
             // Hidden conditional text isn't exported.
-            if f.over.conditions.as_deref().is_some_and(|c| doc.conditions_hide(c)) || f.over.change == Some(designcraft_doc::ChangeMark::Deleted) {
+            if f.over.conditions.as_deref().is_some_and(|c| doc.conditions_hide(c)) || f.over.change == Some(pejy_doc::ChangeMark::Deleted) {
                 continue;
             }
             let Some(raw) = st.text.get(a..b) else { continue };
@@ -833,9 +833,9 @@ impl<'a, 'f> StoryWriter<'a, 'f> {
         match &o.position {
             AnchorPosition::AboveLine { align, .. } if !out.is_empty() => {
                 let align = match align {
-                    designcraft_doc::anchored::AnchorAlign::Left => "left",
-                    designcraft_doc::anchored::AnchorAlign::Center => "center",
-                    designcraft_doc::anchored::AnchorAlign::Right => "right",
+                    pejy_doc::anchored::AnchorAlign::Left => "left",
+                    pejy_doc::anchored::AnchorAlign::Center => "center",
+                    pejy_doc::anchored::AnchorAlign::Right => "right",
                 };
                 format!("<span class=\"anchored\" style=\"display:block;text-align:{align}\">{out}</span>")
             }
@@ -856,7 +856,7 @@ impl<'a, 'f> StoryWriter<'a, 'f> {
         }
         let mime = safe_mime(&a.mime);
         // Video and sound: an HTML5 player (with the poster, when there is one).
-        if let Some(kind) = designcraft_doc::media_kind(mime) {
+        if let Some(kind) = pejy_doc::media_kind(mime) {
             let name = asset_path("media", a, mime);
             self.images.insert(name.clone(), (mime, a.data.as_slice()));
             let m = it.media.clone().unwrap_or_default();
@@ -1001,10 +1001,10 @@ impl<'a, 'f> StoryWriter<'a, 'f> {
 
 /// Run text with variables replaced by their values.
 fn run_text(doc: &Document, raw: &str) -> String {
-    if raw.chars().any(|c| designcraft_doc::vars::var_index(c).is_some()) {
+    if raw.chars().any(|c| pejy_doc::vars::var_index(c).is_some()) {
         let sub: String = raw
             .chars()
-            .map(|c| match designcraft_doc::vars::var_index(c) {
+            .map(|c| match pejy_doc::vars::var_index(c) {
                 Some(i) => doc.variable_value(i, None).unwrap_or_default(),
                 None => c.to_string(),
             })
@@ -1237,7 +1237,7 @@ pub fn reading_order(doc: &Document) -> Vec<Block> {
 /// Package path of an asset: `{dir}/{name}-{id}.{ext}`, the name from its original file name
 /// (lowercase ASCII, so the package stays readable) and the id keeping two assets of the same
 /// name apart.
-fn asset_path(dir: &str, a: &designcraft_doc::Asset, mime: &str) -> String {
+fn asset_path(dir: &str, a: &pejy_doc::Asset, mime: &str) -> String {
     let stem = a.name.rsplit(['/', '\\']).next().unwrap_or("");
     let stem = stem.rsplit_once('.').map_or(stem, |(s, _)| s);
     let name: String = stem.chars().map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '-' }).collect();
@@ -1346,7 +1346,7 @@ pub fn export_html(doc: &Document, opts: &HtmlOptions) -> String {
     let lang = language_tag(language);
     let body = body_html(doc, false, &|_, mime, data| format!("data:{mime};base64,{}", base64(data))).html;
     format!(
-        "<!DOCTYPE html>\n<html lang=\"{lang}\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta name=\"generator\" content=\"DesignCraft\">\n<title>{}</title>\n<style>\nbody {{ max-width: 40em; margin: 2em auto; padding: 0 1em; }}\nfigure {{ margin: 1em 0; }} figure img {{ max-width: 100%; height: auto; }}\n{}</style>\n</head>\n<body>\n{body}</body>\n</html>\n",
+        "<!DOCTYPE html>\n<html lang=\"{lang}\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta name=\"generator\" content=\"Pejy\">\n<title>{}</title>\n<style>\nbody {{ max-width: 40em; margin: 2em auto; padding: 0 1em; }}\nfigure {{ margin: 1em 0; }} figure img {{ max-width: 100%; height: auto; }}\n{}</style>\n</head>\n<body>\n{body}</body>\n</html>\n",
         xml_text(&title),
         stylesheet_with(doc, &opts.generic_families, &[])
     )
@@ -1430,7 +1430,7 @@ pub fn export_epub(doc: &Document, opts: &EpubOptions) -> Result<Vec<u8>, EpubEr
     let cover_spine = if opts.cover.is_some() { "<itemref idref=\"cover\"/>\n" } else { "" };
     let author = opts.author.as_deref().map(|a| format!("<dc:creator>{}</dc:creator>", xml_text(a))).unwrap_or_default();
     let opf = format!(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{}</dc:identifier>\n<dc:title>{}</dc:title>\n<dc:language>{lang}</dc:language>{author}\n<meta property=\"dcterms:modified\">{modified}</meta>\n<meta name=\"generator\" content=\"DesignCraft\"/>\n</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{cover_spine}{spine}</spine>\n</package>\n",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"bookid\" xml:lang=\"{lang}\">\n<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<dc:identifier id=\"bookid\">{}</dc:identifier>\n<dc:title>{}</dc:title>\n<dc:language>{lang}</dc:language>{author}\n<meta property=\"dcterms:modified\">{modified}</meta>\n<meta name=\"generator\" content=\"Pejy\"/>\n</metadata>\n<manifest>\n{manifest}</manifest>\n<spine>\n{cover_spine}{spine}</spine>\n</package>\n",
         xml_text(&id),
         xml_text(&title)
     );
@@ -1483,9 +1483,9 @@ pub fn export_epub(doc: &Document, opts: &EpubOptions) -> Result<Vec<u8>, EpubEr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use designcraft_doc::build::NewDocument;
-    use designcraft_doc::geom::{Affine, Rect, shapes};
-    use designcraft_doc::{Asset, AssetId, Content, Graphic, Item, ItemId, ParaFormat, Shape, SpreadRef, Story, StoryId, Table};
+    use pejy_doc::build::NewDocument;
+    use pejy_doc::geom::{Affine, Rect, shapes};
+    use pejy_doc::{Asset, AssetId, Content, Graphic, Item, ItemId, ParaFormat, Shape, SpreadRef, Story, StoryId, Table};
     use std::io::Read;
     use std::sync::Arc;
 
@@ -1547,17 +1547,17 @@ mod tests {
             });
             item
         };
-        let inline = designcraft_doc::AnchoredObject::new(graphic(&mut d, "inline"), designcraft_doc::AnchorPosition::Inline { y_offset: 0.0 });
-        let above = designcraft_doc::AnchoredObject::new(
+        let inline = pejy_doc::AnchoredObject::new(graphic(&mut d, "inline"), pejy_doc::AnchorPosition::Inline { y_offset: 0.0 });
+        let above = pejy_doc::AnchoredObject::new(
             graphic(&mut d, "above"),
-            designcraft_doc::AnchorPosition::AboveLine { align: designcraft_doc::anchored::AnchorAlign::Center, space_before: 0.0, space_after: 0.0 },
+            pejy_doc::AnchorPosition::AboveLine { align: pejy_doc::anchored::AnchorAlign::Center, space_before: 0.0, space_after: 0.0 },
         );
         let st = d.story_mut(sid).unwrap();
         st.insert_object(1, inline);
         // Byte offsets: "A" (1), the mark (3), "B\nC" (3): the second object goes between C and D.
         st.insert_object(7, above);
         // An anchored image without alt text is decorative and reported, like a placed one.
-        let bare = designcraft_doc::AnchoredObject::new(graphic(&mut d, ""), designcraft_doc::AnchorPosition::Inline { y_offset: 0.0 });
+        let bare = pejy_doc::AnchoredObject::new(graphic(&mut d, ""), pejy_doc::AnchorPosition::Inline { y_offset: 0.0 });
         let end = d.story(sid).unwrap().text.len();
         d.story_mut(sid).unwrap().insert_object(end, bare);
         assert_eq!(images_without_alt(&d), vec!["dot.png".to_string()]);
@@ -1634,13 +1634,13 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         for (name, tag, list) in [
-            ("Bullet", "li", Some(designcraft_doc::ListType::Bullets)),
-            ("Number", "li", Some(designcraft_doc::ListType::Numbers)),
+            ("Bullet", "li", Some(pejy_doc::ListType::Bullets)),
+            ("Number", "li", Some(pejy_doc::ListType::Numbers)),
             ("Typed", "li", None),
             ("Code", "pre", None),
         ] {
-            let para = designcraft_doc::ParaAttrs { list_type: list, ..Default::default() };
-            d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+            let para = pejy_doc::ParaAttrs { list_type: list, ..Default::default() };
+            d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
                 name: name.into(),
                 based_on: None,
                 next_style: None,
@@ -1648,7 +1648,7 @@ mod tests {
                 chars: CharAttrs::default(),
                 shortcut: String::new(),
             });
-            d.styles_mut().export_tags.insert(format!("p:{name}"), designcraft_doc::ExportTag { tag: tag.into(), class: String::new() });
+            d.styles_mut().export_tags.insert(format!("p:{name}"), pejy_doc::ExportTag { tag: tag.into(), class: String::new() });
         }
         let text = "Intro\nfirst\nsecond\none\ntwo\nx = 1\ny = 2\nEnd\n• typed";
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 300.0, 300.0), lid, text, ParaFormat::default()).unwrap();
@@ -1683,7 +1683,7 @@ mod tests {
         let mut d = Document::new(&NewDocument { pages: 2, ..Default::default() });
         let lid = d.default_layer();
         for (name, tag) in [("Chapter", "h1"), ("Section", "h2")] {
-            d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+            d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
                 name: name.into(),
                 based_on: None,
                 next_style: None,
@@ -1691,7 +1691,7 @@ mod tests {
                 chars: CharAttrs::default(),
                 shortcut: String::new(),
             });
-            d.styles_mut().export_tags.insert(format!("p:{name}"), designcraft_doc::ExportTag { tag: tag.into(), class: String::new() });
+            d.styles_mut().export_tags.insert(format!("p:{name}"), pejy_doc::ExportTag { tag: tag.into(), class: String::new() });
         }
         let text = "One\nBody\nOne point one\nMore\nTwo\nText";
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 300.0, 300.0), lid, text, ParaFormat::default()).unwrap();
@@ -1761,7 +1761,7 @@ mod tests {
     fn chapters_are_split_at_h1() {
         let mut d = Document::new(&NewDocument { pages: 3, ..Default::default() });
         let lid = d.default_layer();
-        d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+        d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
             name: "Chapter".into(),
             based_on: None,
             next_style: None,
@@ -1769,7 +1769,7 @@ mod tests {
             chars: CharAttrs::default(),
             shortcut: String::new(),
         });
-        d.styles_mut().export_tags.insert("p:Chapter".into(), designcraft_doc::ExportTag { tag: "h1".into(), class: String::new() });
+        d.styles_mut().export_tags.insert("p:Chapter".into(), pejy_doc::ExportTag { tag: "h1".into(), class: String::new() });
         // A title page without a heading, then a story that opens with a chapter and has a
         // second one in the middle.
         d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 300.0, 100.0), lid, "Title page", ParaFormat::default()).unwrap();
@@ -1809,7 +1809,7 @@ mod tests {
     fn note_links_point_at_the_chapter_file_of_their_target() {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
-        d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+        d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
             name: "Chapter".into(),
             based_on: None,
             next_style: None,
@@ -1817,7 +1817,7 @@ mod tests {
             chars: CharAttrs::default(),
             shortcut: String::new(),
         });
-        d.styles_mut().export_tags.insert("p:Chapter".into(), designcraft_doc::ExportTag { tag: "h1".into(), class: String::new() });
+        d.styles_mut().export_tags.insert("p:Chapter".into(), pejy_doc::ExportTag { tag: "h1".into(), class: String::new() });
         let (_, sid) = d
             .add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 300.0, 400.0), lid, "One\nFirst text\nTwo\nSecond text", ParaFormat::default())
             .unwrap();
@@ -1859,7 +1859,7 @@ mod tests {
         let mut d = Document::new(&NewDocument::default());
         let lid = d.default_layer();
         for (name, size) in [("見出し", 30.0), ("本文", 10.0), ("Body Text", 12.0), ("Body-Text", 20.0)] {
-            d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+            d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
                 name: name.into(),
                 based_on: None,
                 next_style: None,
@@ -2031,7 +2031,7 @@ mod tests {
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 300.0, 100.0), lid, "A&B <C> \"D\"", ParaFormat::default()).unwrap();
         d.styles_mut()
             .export_tags
-            .insert(format!("p:{}", story::BASIC_PARAGRAPH), designcraft_doc::ExportTag { tag: "h2".into(), class: "Primary \"Copy\"".into() });
+            .insert(format!("p:{}", story::BASIC_PARAGRAPH), pejy_doc::ExportTag { tag: "h2".into(), class: "Primary \"Copy\"".into() });
         if let Some(basic) = d.styles_mut().paragraph.iter_mut().find(|s| s.name == story::BASIC_PARAGRAPH) {
             basic.chars.font_family = Some("Quoted \"Serif\" <Alt>".into());
         }
@@ -2154,10 +2154,10 @@ mod tests {
     /// block first: `aside` and `table` can't sit inside `ul` or `pre`.
     #[test]
     fn notes_and_tables_close_an_open_list_or_pre_block() {
-        for (tag, list, open, close) in [("li", Some(designcraft_doc::ListType::Bullets), "<ul>", "</ul>"), ("pre", None, "<pre", "</pre>")] {
+        for (tag, list, open, close) in [("li", Some(pejy_doc::ListType::Bullets), "<ul>", "</ul>"), ("pre", None, "<pre", "</pre>")] {
             let mut d = tables_and_notes();
-            let para = designcraft_doc::ParaAttrs { list_type: list, ..Default::default() };
-            d.styles_mut().paragraph.push(designcraft_doc::ParagraphStyle {
+            let para = pejy_doc::ParaAttrs { list_type: list, ..Default::default() };
+            d.styles_mut().paragraph.push(pejy_doc::ParagraphStyle {
                 name: "Grouped".into(),
                 based_on: None,
                 next_style: None,
@@ -2165,7 +2165,7 @@ mod tests {
                 chars: CharAttrs::default(),
                 shortcut: String::new(),
             });
-            d.styles_mut().export_tags.insert("p:Grouped".into(), designcraft_doc::ExportTag { tag: tag.into(), class: String::new() });
+            d.styles_mut().export_tags.insert("p:Grouped".into(), pejy_doc::ExportTag { tag: tag.into(), class: String::new() });
             let sid = d.stories.keys().copied().find(|sid| d.story(*sid).is_some_and(|st| !st.notes.is_empty())).unwrap();
             for p in &mut d.story_mut(sid).unwrap().paras {
                 p.style = "Grouped".into();

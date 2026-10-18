@@ -23,9 +23,9 @@
 //! and a drag draws a rectangle for the new frame (`text.thread.add`). Escape drops the loaded text.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::hit::{hit_test, marquee, objects_at};
-use vectorcraft_doc::{NodeId, OrientedBox};
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use tsipika_doc::hit::{hit_test, marquee, objects_at};
+use tsipika_doc::{NodeId, OrientedBox};
+use tsipika_geom::{Affine, Point, Rect, Vec2};
 
 use crate::bbox::{Handle, hit_handle, in_rotate_zone, move_delta, rotate_for_drag, scale_for_drag};
 use crate::corners::{self, CornerDrag, over_widget};
@@ -249,7 +249,7 @@ impl MoveSnap {
 /// two edges and its centre is nearest a gridline, however far that is.
 fn grid_pull(r: Rect, step: f64) -> Vec2 {
     let pull = |vs: [f64; 3]| {
-        vs.iter().map(|v| vectorcraft_geom::snap::snap_to_grid(*v, step, 0.0) - v).min_by(|a, b| a.abs().total_cmp(&b.abs())).unwrap_or(0.0)
+        vs.iter().map(|v| tsipika_geom::snap::snap_to_grid(*v, step, 0.0) - v).min_by(|a, b| a.abs().total_cmp(&b.abs())).unwrap_or(0.0)
     };
     Vec2::new(pull([r.x0, r.center().x, r.x1]), pull([r.y0, r.center().y, r.y1]))
 }
@@ -273,7 +273,7 @@ pub fn selection_box(cx: &ToolContext) -> Option<OrientedBox> {
 
 /// The objects of `ids` that lie entirely inside marquee `r`, edges included, measured by their
 /// geometric bounds with symbol instances measured by their art
-/// ([`vectorcraft_doc::Node::geometric_bounds_with`]).
+/// ([`tsipika_doc::Node::geometric_bounds_with`]).
 pub(crate) fn inside(cx: &ToolContext, r: Rect, ids: Vec<NodeId>) -> Vec<NodeId> {
     let symbols = cx.doc.symbol_boxes();
     let within = |b: Rect| r.min_x() <= b.min_x() && b.max_x() <= r.max_x() && r.min_y() <= b.min_y() && b.max_y() <= r.max_y();
@@ -369,8 +369,8 @@ fn thread_params(cx: &ToolContext, from: NodeId, start: Point, end: Point) -> Va
     if r.width() > cx.tol(6.0) && r.height() > cx.tol(6.0) {
         return json!({ "from": from.0, "rect": [r.x0, r.y0, r.width(), r.height()] });
     }
-    let frame = |n: &vectorcraft_doc::Node| {
-        is_area_type(n) || matches!(&n.kind, vectorcraft_doc::NodeKind::Path { path, .. } if path.subpaths.first().is_some_and(|s| s.closed))
+    let frame = |n: &tsipika_doc::Node| {
+        is_area_type(n) || matches!(&n.kind, tsipika_doc::NodeKind::Path { path, .. } if path.subpaths.first().is_some_and(|s| s.closed))
     };
     let to =
         hit_test(cx.doc, start, cx.hit_options()).map(|h| h.top_object(cx.isolation)).filter(|id| *id != from && cx.doc.node(*id).is_some_and(frame));
@@ -489,7 +489,7 @@ impl Tool for SelectionTool {
                 }
                 if let Some(h) = hit_test(cx.doc, p, cx.hit_options()) {
                     let top = h.top_object(cx.isolation);
-                    if cx.doc.node(top).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Text(_))) {
+                    if cx.doc.node(top).is_some_and(|n| matches!(n.kind, tsipika_doc::NodeKind::Text(_))) {
                         return vec![Action::SwitchTool("type".into())];
                     }
                     // An object that [`isolates`], not the one already isolated.
@@ -703,7 +703,7 @@ impl Tool for SelectionTool {
 
     fn overlays(&self, cx: &ToolContext) -> Vec<Overlay> {
         let mut o = pathtype::overlays(cx);
-        if let Some(source) = cx.isolation.and_then(|id| cx.doc.node(id)).filter(|n| n.name.as_deref() == Some(vectorcraft_doc::shaper::SOURCES)) {
+        if let Some(source) = cx.isolation.and_then(|id| cx.doc.node(id)).filter(|n| n.name.as_deref() == Some(tsipika_doc::shaper::SOURCES)) {
             for n in source.children().into_iter().flatten() {
                 if let Some(path) = n.path_data() {
                     o.push(Overlay::Path { path: path.to_bezpath(), color: [0x80, 0x80, 0x80], width: 1.0, dashed: true });
@@ -819,16 +819,16 @@ fn can_be_key(cx: &ToolContext, id: NodeId) -> bool {
 
 /// Is `n` area type (text in a frame) whose frame the tools reshape? Type in perspective isn't:
 /// it transforms whole.
-pub(crate) fn is_area_type(n: &vectorcraft_doc::Node) -> bool {
+pub(crate) fn is_area_type(n: &tsipika_doc::Node) -> bool {
     n.extras().perspective.is_none()
-        && matches!(&n.kind, vectorcraft_doc::NodeKind::Text(t) if matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }))
+        && matches!(&n.kind, tsipika_doc::NodeKind::Text(t) if matches!(t.kind, tsipika_doc::TextKind::Area { .. }))
 }
 
 /// Does a double-click or the Control bar's Isolate Selected Object button isolate an object of
 /// this kind? A group, a compound path or a single path, image, mesh or placed file does. Blends,
 /// envelopes, repeats and symbol instances do not; they have editing modes of their own.
-pub fn isolates(kind: &vectorcraft_doc::NodeKind) -> bool {
-    use vectorcraft_doc::NodeKind as K;
+pub fn isolates(kind: &tsipika_doc::NodeKind) -> bool {
+    use tsipika_doc::NodeKind as K;
     matches!(kind, K::Group { .. } | K::Compound { .. } | K::Path { .. } | K::Image(_) | K::Mesh(_) | K::PlacedDocument(_))
 }
 
@@ -844,7 +844,7 @@ pub(crate) fn release_guide_at(cx: &ToolContext, p: Point, m: Mods) -> Option<Ac
         return Some(Action::Exec("view.guides.release".into(), json!({ "index": i })));
     }
     let leaf = hit_test(cx.doc, p, cx.hit_options())?.leaf;
-    let guide = cx.doc.node(leaf).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Path { guide: true, .. }));
+    let guide = cx.doc.node(leaf).is_some_and(|n| matches!(n.kind, tsipika_doc::NodeKind::Path { guide: true, .. }));
     guide.then(|| Action::Exec("view.guides.release".into(), json!({ "ids": [leaf.0] })))
 }
 
@@ -866,7 +866,7 @@ fn handle_cursor(h: Handle, angle: f64) -> Cursor {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     fn ev(kind: PointerKind, x: f64, y: f64) -> PointerEvent {
         PointerEvent::new(kind, x, y)
@@ -880,8 +880,8 @@ mod tests {
         let l = d.layers[0].id;
         let tri = d.alloc_id();
         let pts = [Point::new(350.3, 250.0), Point::new(300.0, 320.0), Point::new(420.0, 330.0)];
-        let path = vectorcraft_geom::PathData::single(vectorcraft_geom::SubPath::polyline(&pts, true));
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(tri, path, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let path = tsipika_geom::PathData::single(tsipika_geom::SubPath::polyline(&pts, true));
+        d.insert(Some(l), 1, tsipika_doc::Node::path(tri, path, tsipika_doc::Appearance::default_art())).unwrap();
         let (none, mut picked) = (Selection::default(), Selection::default());
         picked.add(id);
         let p = paint();
@@ -900,15 +900,15 @@ mod tests {
     /// A corner-radius drag is a transform, so the sharp selection box hides while the radius changes.
     #[test]
     fn a_corner_drag_counts_as_transforming_once_it_moves() {
-        use vectorcraft_doc::{Appearance, LiveShape, Node, NodeKind};
+        use tsipika_doc::{Appearance, LiveShape, Node, NodeKind};
         let live = LiveShape::Rectangle {
             w: 100.0,
             h: 100.0,
             radii: [0.0; 4],
             kinds: Default::default(),
-            xf: vectorcraft_geom::Affine::translate((100.0, 100.0)),
+            xf: tsipika_geom::Affine::translate((100.0, 100.0)),
         };
-        let mut d = vectorcraft_doc::Document::new(500.0, 500.0);
+        let mut d = tsipika_doc::Document::new(500.0, 500.0);
         let id = d.alloc_id();
         let mut n = Node::path(id, live.to_path(), Appearance::default_art());
         if let NodeKind::Path { live: slot, .. } = &mut n.kind {
@@ -976,7 +976,7 @@ mod tests {
     #[test]
     fn a_press_on_a_ruler_guide_picks_it_over_the_art() {
         let (mut d, _) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 150.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 150.0));
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -998,8 +998,8 @@ mod tests {
     #[test]
     fn a_cmd_shift_double_click_releases_the_guide_under_the_pointer() {
         let (mut d, id) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
-        let Some(vectorcraft_doc::NodeKind::Path { guide, .. }) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("the rectangle is a path") };
+        d.guides.push(tsipika_doc::Guide::new(false, 300.0));
+        let Some(tsipika_doc::NodeKind::Path { guide, .. }) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("the rectangle is a path") };
         *guide = true;
         let s = Selection::default();
         let p = paint();
@@ -1072,7 +1072,7 @@ mod tests {
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 300.0));
         let mut c = cx(&d, &s, &p);
         c.screen = turned_view(90.0);
         assert!((c.view_angle() - 90.0).abs() < 1e-9);
@@ -1121,7 +1121,7 @@ mod tests {
     #[test]
     fn a_move_snaps_the_grabbed_point_to_a_ruler_guide_with_smart_guides_on() {
         let (mut d, id) = doc_with_rect();
-        d.guides = vec![vectorcraft_doc::Guide::new(true, 173.4)];
+        d.guides = vec![tsipika_doc::Guide::new(true, 173.4)];
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1143,7 +1143,7 @@ mod tests {
     /// gathered before the previews moved it); released, the move doesn't.
     #[test]
     fn an_alt_copy_snaps_to_the_original_left_behind() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, id) = doc_with_rect();
         // An artboard whose edges and centre are out of reach.
         d.artboards[0].rect = Rect::new(0.0, 0.0, 1000.0, 1000.0);
@@ -1161,7 +1161,7 @@ mod tests {
         let mut moved = d.clone();
         let l = moved.layers[0].id;
         moved.remove(id).unwrap();
-        let r = vectorcraft_geom::shapes::rectangle(Rect::new(150.0, 100.0, 250.0, 200.0));
+        let r = tsipika_geom::shapes::rectangle(Rect::new(150.0, 100.0, 250.0, 200.0));
         moved.insert(Some(l), 0, Node::path(id, r, Appearance::default_art())).unwrap();
         let c = cx(&moved, &s, &p);
         let alt = Mods { alt: true, ..Mods::default() };
@@ -1175,12 +1175,12 @@ mod tests {
     /// one); Alt, which leaves a copy behind, the double arrowhead.
     #[test]
     fn a_move_shows_the_filled_arrow_hollow_on_a_snap_and_alt_the_copy_cursor() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         d.artboards[0].rect = Rect::new(0.0, 0.0, 1000.0, 1000.0);
         let l = d.layers[0].id;
         let b = d.alloc_id();
-        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 300.0, 400.0, 400.0));
+        let sq = tsipika_geom::shapes::rectangle(Rect::new(300.0, 300.0, 400.0, 400.0));
         d.insert(Some(l), 1, Node::path(b, sq, Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.add(b);
@@ -1267,11 +1267,11 @@ mod tests {
     /// axis its line runs along, and on a diagonal on the axis that needs the shorter way there.
     #[test]
     fn a_shift_move_snapped_to_pixels_stays_on_its_line() {
-        let mut d = vectorcraft_doc::Document::new(500.0, 500.0);
+        let mut d = tsipika_doc::Document::new(500.0, 500.0);
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let square = vectorcraft_geom::shapes::rectangle(Rect::new(100.3, 100.4, 200.3, 200.4));
-        d.insert(Some(l), 0, vectorcraft_doc::Node::path(id, square, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let square = tsipika_geom::shapes::rectangle(Rect::new(100.3, 100.4, 200.3, 200.4));
+        d.insert(Some(l), 0, tsipika_doc::Node::path(id, square, tsipika_doc::Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1299,7 +1299,7 @@ mod tests {
             d.insert(
                 Some(l),
                 1,
-                vectorcraft_doc::Node::path(other, vectorcraft_geom::shapes::rectangle(r), vectorcraft_doc::Appearance::default_art()),
+                tsipika_doc::Node::path(other, tsipika_geom::shapes::rectangle(r), tsipika_doc::Appearance::default_art()),
             )
             .unwrap();
             (d, id)
@@ -1339,8 +1339,8 @@ mod tests {
         let l = d.layers[0].id;
         for x in [330.0, 440.0] {
             let other = d.alloc_id();
-            let sq = vectorcraft_geom::shapes::rectangle(Rect::new(x, 102.0, x + 50.0, 202.0));
-            d.insert(Some(l), 1, vectorcraft_doc::Node::path(other, sq, vectorcraft_doc::Appearance::default_art())).unwrap();
+            let sq = tsipika_geom::shapes::rectangle(Rect::new(x, 102.0, x + 50.0, 202.0));
+            d.insert(Some(l), 1, tsipika_doc::Node::path(other, sq, tsipika_doc::Appearance::default_art())).unwrap();
         }
         let mut s = Selection::default();
         s.add(id);
@@ -1359,9 +1359,9 @@ mod tests {
         let (mut d, id) = doc_with_rect();
         let l = d.layers[0].id;
         let other = d.alloc_id();
-        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 151.5, 350.0, 201.5));
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(other, sq, vectorcraft_doc::Appearance::default_art())).unwrap();
-        d.guides = vec![vectorcraft_doc::Guide::new(true, 420.5)];
+        let sq = tsipika_geom::shapes::rectangle(Rect::new(300.0, 151.5, 350.0, 201.5));
+        d.insert(Some(l), 1, tsipika_doc::Node::path(other, sq, tsipika_doc::Appearance::default_art())).unwrap();
+        d.guides = vec![tsipika_doc::Guide::new(true, 420.5)];
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1375,7 +1375,7 @@ mod tests {
         assert!(moved_by(m, (270.5, 270.5)), "{m:?}");
         // Smart Guides on, the selection alone with a ruler guide 1.5 below the grabbed point.
         let (mut d, id) = doc_with_rect();
-        d.guides = vec![vectorcraft_doc::Guide::new(false, 330.5)];
+        d.guides = vec![tsipika_doc::Guide::new(false, 330.5)];
         let mut s = Selection::default();
         s.add(id);
         let (m, _) = shift_moved(&cx(&d, &s, &p), (329.0, 329.0));
@@ -1461,8 +1461,8 @@ mod tests {
     /// click inside an isolated compound path picks a member.
     #[test]
     fn a_click_makes_only_a_selected_top_level_object_the_key() {
-        use vectorcraft_doc::{Appearance, Document, LayerColor, Node, NodeKind};
-        use vectorcraft_geom::shapes;
+        use tsipika_doc::{Appearance, Document, LayerColor, Node, NodeKind};
+        use tsipika_geom::shapes;
         let p = paint();
         let click = |d: &Document, s: &Selection, isolation: NodeId| {
             let c = ToolContext { isolation: Some(isolation), ..cx(d, s, &p) };
@@ -1553,10 +1553,10 @@ mod tests {
     /// (a group whole), and E pressed again makes it take what it touches. Only a marquee takes E.
     #[test]
     fn e_during_a_marquee_takes_only_the_objects_inside() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, inside) = doc_with_rect();
         let l = d.layers[0].id;
-        let rect = |id, r| Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art());
+        let rect = |id, r| Node::path(id, tsipika_geom::shapes::rectangle(r), Appearance::default_art());
         let (touched, g, a, b) = (d.alloc_id(), d.alloc_id(), d.alloc_id(), d.alloc_id());
         d.insert(Some(l), 1, rect(touched, Rect::new(250.0, 100.0, 350.0, 200.0))).unwrap();
         // A group with one member inside the marquee and one outside it.
@@ -1606,8 +1606,8 @@ mod tests {
     fn e_during_a_marquee_takes_only_the_guides_inside() {
         let (mut d, id) = doc_with_rect();
         let board = d.artboards[0].id;
-        d.guides.push(vectorcraft_doc::Guide::new(true, 150.0));
-        d.guides.push(vectorcraft_doc::Guide { artboard: Some(board), ..vectorcraft_doc::Guide::new(false, 150.0) });
+        d.guides.push(tsipika_doc::Guide::new(true, 150.0));
+        d.guides.push(tsipika_doc::Guide { artboard: Some(board), ..tsipika_doc::Guide::new(false, 150.0) });
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1630,7 +1630,7 @@ mod tests {
     #[test]
     fn marquee_selects_ruler_guides() {
         let (mut d, id) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 80.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 80.0));
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1650,7 +1650,7 @@ mod tests {
     #[test]
     fn marquee_selects_only_guide() {
         let (mut d, _) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(true, 20.0));
+        d.guides.push(tsipika_doc::Guide::new(true, 20.0));
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1667,7 +1667,7 @@ mod tests {
     #[test]
     fn marquee_ignores_locked_guides() {
         let (mut d, id) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 80.0));
+        d.guides.push(tsipika_doc::Guide::new(false, 80.0));
         let s = Selection::default();
         let p = paint();
         let mut cx_locked = cx(&d, &s, &p);
@@ -1696,12 +1696,12 @@ mod tests {
 
     #[test]
     fn handle_drag_snaps_to_the_other_objects_with_smart_guides() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
         let r = Rect::new(250.0, 100.0, 300.0, 150.0);
-        d.insert(Some(l), 1, Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
+        d.insert(Some(l), 1, Node::path(id, tsipika_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1785,13 +1785,13 @@ mod tests {
     /// ruler guides still pull it within the Snapping Tolerance (4 px), as a move does (#1534).
     #[test]
     fn handle_drag_snaps_to_anchors_and_ruler_guides_with_snap_to_point() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, id) = doc_with_rect();
         let l = d.layers[0].id;
         let other = d.alloc_id();
-        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(250.0, 250.0, 300.0, 300.0));
+        let sq = tsipika_geom::shapes::rectangle(Rect::new(250.0, 250.0, 300.0, 300.0));
         d.insert(Some(l), 1, Node::path(other, sq, Appearance::default_art())).unwrap();
-        d.guides = vec![vectorcraft_doc::Guide::new(true, 230.5)];
+        d.guides = vec![tsipika_doc::Guide::new(true, 230.5)];
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1821,11 +1821,11 @@ mod tests {
     /// far a dragged handle is pulled.
     #[test]
     fn smart_guide_display_preferences_drive_the_readouts_and_the_pull() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        d.insert(Some(l), 1, Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(250.0, 100.0, 300.0, 150.0)), Appearance::default_art()))
+        d.insert(Some(l), 1, Node::path(id, tsipika_geom::shapes::rectangle(Rect::new(250.0, 100.0, 300.0, 150.0)), Appearance::default_art()))
             .unwrap();
         let mut s = Selection::default();
         s.add(id);
@@ -1866,7 +1866,7 @@ mod tests {
 
     #[test]
     fn handle_drag_of_a_turned_box_snaps_on_the_page() {
-        use vectorcraft_doc::{Appearance, Node};
+        use tsipika_doc::{Appearance, Node};
         let matrix = |a: &[Action]| {
             let Action::Preview(_, v) = &a[0] else { panic!("{a:?}") };
             let m: Vec<f64> = v["matrix"].as_array().unwrap().iter().map(|x| x.as_f64().unwrap()).collect();
@@ -1878,7 +1878,7 @@ mod tests {
             let l = d.layers[0].id;
             let id = d.alloc_id();
             let r = Rect::new(250.0, 100.0, 300.0, 150.0);
-            d.insert(Some(l), 1, Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
+            d.insert(Some(l), 1, Node::path(id, tsipika_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
             let c = Point::new(275.0, 125.0);
             d.node_mut(id)
                 .unwrap()
@@ -1974,12 +1974,12 @@ mod tests {
 
     /// [`doc_with_area_type`] with more text than its frame holds, selected; the rectangle's id and
     /// where the frame's out port is.
-    fn overflowing_area_type() -> (vectorcraft_doc::Document, NodeId, NodeId, Point) {
+    fn overflowing_area_type() -> (tsipika_doc::Document, NodeId, NodeId, Point) {
         let (mut d, id) = doc_with_area_type();
         let rect = d.children(Some(d.layers[0].id)).unwrap()[0].id;
-        let Some(vectorcraft_doc::NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("not text") };
-        let style = vectorcraft_doc::CharStyle { size: 20.0, ..Default::default() };
-        t.runs = vec![vectorcraft_doc::TextRun::new("Words that fill more than the frame holds. ".repeat(20), style)];
+        let Some(tsipika_doc::NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("not text") };
+        let style = tsipika_doc::CharStyle { size: 20.0, ..Default::default() };
+        t.runs = vec![tsipika_doc::TextRun::new("Words that fill more than the frame holds. ".repeat(20), style)];
         // On the frame's right side, above its bottom-right corner (120 × 40 at 100%).
         let port = t.xf * Point::new(120.0, 40.0 - crate::text::PORT_RISE_PX);
         (d, id, rect, port)

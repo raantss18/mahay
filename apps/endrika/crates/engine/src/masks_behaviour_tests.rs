@@ -8,8 +8,8 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::NodeId;
-use figcraft_geom::Point;
+use endrika_doc::NodeId;
+use endrika_geom::Point;
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -34,7 +34,7 @@ fn board(s: &mut Session, w: f64, h: f64) -> NodeId {
 
 /// The RGB of `node` rendered at 1x, at (`x`, `y`) of its export box.
 fn rgb(s: &Session, node: NodeId, x: u32, y: u32) -> [u8; 3] {
-    let pix = figcraft_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
     let i = ((y * pix.width() + x) * 4) as usize;
     let d = pix.data();
     [d[i], d[i + 1], d[i + 2]]
@@ -207,12 +207,12 @@ fn a_mask_groups_box_and_exports_are_the_masks() {
     let c = rect(&mut s, -30.0, -30.0, 200.0, 200.0, "#FF0000", None);
     let g = id(ex(&mut s, "object.mask", json!({"ids": [m, c]})));
     assert_eq!(wb(&s, g), (0.0, 0.0, 50.0, 40.0));
-    let px = figcraft_render::render_node(s.doc().unwrap(), g, 1.0).unwrap();
+    let px = endrika_render::render_node(s.doc().unwrap(), g, 1.0).unwrap();
     assert_eq!((px.width(), px.height()), (50, 40));
     assert_eq!(rgb(&s, g, 25, 20), RED);
-    let svg = figcraft_svg::export_svg(s.doc().unwrap(), &[g], &figcraft_svg::SvgOptions::default()).unwrap();
+    let svg = endrika_svg::export_svg(s.doc().unwrap(), &[g], &endrika_svg::SvgOptions::default()).unwrap();
     assert!(svg.contains("viewBox=\"0 0 50 40\""), "{svg}");
-    assert!(figcraft_pdf::export_nodes_pdf(s.doc().unwrap(), &[g]).is_ok());
+    assert!(endrika_pdf::export_nodes_pdf(s.doc().unwrap(), &[g]).is_ok());
     // Moving the masked layer doesn't change the box; moving the mask does.
     ex(&mut s, "transform.move", json!({"ids": [c], "dx": 10, "dy": 0}));
     assert_eq!(wb(&s, g), (0.0, 0.0, 50.0, 40.0));

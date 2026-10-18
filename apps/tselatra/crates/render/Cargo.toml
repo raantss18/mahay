@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-render"
+name = "tselatra-render"
 description = "The CPU compositor: property evaluation, layer sources (solids, footage, text, shapes, precomps), masks, effects, track mattes, 2D/3D transforms, motion blur and blending"
 version.workspace = true
 edition.workspace = true
@@ -10,17 +10,17 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-effectcraft-time = { workspace = true }
-effectcraft-geom = { workspace = true }
-effectcraft-color = { workspace = true }
-effectcraft-keyframe = { workspace = true }
-effectcraft-project = { workspace = true }
-effectcraft-raster = { workspace = true }
-effectcraft-path = { workspace = true }
-effectcraft-text = { workspace = true }
-effectcraft-effects = { workspace = true }
+tselatra-time = { workspace = true }
+tselatra-geom = { workspace = true }
+tselatra-color = { workspace = true }
+tselatra-keyframe = { workspace = true }
+tselatra-project = { workspace = true }
+tselatra-raster = { workspace = true }
+tselatra-path = { workspace = true }
+tselatra-text = { workspace = true }
+tselatra-effects = { workspace = true }
 lz4_flex = { version = "0.11", default-features = false, features = ["std", "safe-encode", "safe-decode", "checked-decode"] }
-effectcraft-model = { workspace = true }
+tselatra-model = { workspace = true }
 kurbo = { workspace = true }
 rayon = { workspace = true }
 web-time = { workspace = true }

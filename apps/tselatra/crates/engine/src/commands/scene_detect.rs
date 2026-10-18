@@ -1,14 +1,14 @@
 //! Layer ▸ Scene Edit Detection…: find the cuts in a footage (or precomp) layer and Create
 //! Markers, Split Layers, or Split and Precompose at them. The analysis
-//! (`effectcraft_raster::cuts`: colour histograms + motion-compensated difference, adaptive peak
+//! (`tselatra_raster::cuts`: colour histograms + motion-compensated difference, adaptive peak
 //! threshold) runs as a background job (Window ▸ Progress).
 
 use std::sync::Arc;
 
-use effectcraft_project::{ItemId, LayerId, Marker, Project};
-use effectcraft_raster::cuts::{self, CutOpts};
-use effectcraft_render::{ExprHost, FootageSource, LayerCache, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_project::{ItemId, LayerId, Marker, Project};
+use tselatra_raster::cuts::{self, CutOpts};
+use tselatra_render::{ExprHost, FootageSource, LayerCache, RenderOpts, Renderer};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, f_p, has_layers, layer_p, str_p};
@@ -31,7 +31,7 @@ impl LayerFrames {
         LayerFrames { project: s.project.clone(), footage: s.footage.clone(), expr: s.expr.clone(), cache: s.layer_cache.clone(), comp, layer }
     }
     /// Run `f` with a frame getter: comp time → (layer source pixels, offset in layer space).
-    pub fn with<R>(&self, f: impl FnOnce(&(dyn Fn(Tick) -> Option<(Arc<effectcraft_raster::Image>, [f64; 2])> + Sync)) -> R) -> Option<R> {
+    pub fn with<R>(&self, f: impl FnOnce(&(dyn Fn(Tick) -> Option<(Arc<tselatra_raster::Image>, [f64; 2])> + Sync)) -> R) -> Option<R> {
         let comp = self.project.comp(self.comp)?;
         let layer = comp.layer(self.layer)?;
         let mut r = Renderer::new(&self.project, self.footage.as_ref(), RenderOpts::default());

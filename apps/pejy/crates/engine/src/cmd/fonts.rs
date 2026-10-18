@@ -4,8 +4,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use designcraft_doc::{CharAttrs, Document, Story};
-use designcraft_fonts::FontSource;
+use pejy_doc::{CharAttrs, Document, Story};
+use pejy_fonts::FontSource;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -60,7 +60,7 @@ fn list(d: &Document) -> Vec<Value> {
 }
 
 pub(super) fn used_fonts(d: &Document) -> Vec<UsedFont> {
-    let db = designcraft_fonts::FontDb::global().scoped(d.font_scope);
+    let db = pejy_fonts::FontDb::global().scoped(d.font_scope);
     let mut used: BTreeMap<(String, String), (usize, std::collections::BTreeSet<char>)> = BTreeMap::new();
     for_each_story(d, &mut |st| {
         let ranges = st.para_ranges();
@@ -147,7 +147,7 @@ fn replace(s: &mut Session, p: &Value) -> Result<Value> {
     let style = str_param(p, "style").map(str::to_string);
     let to_family = str_param(p, "toFamily").ok_or_else(|| bad("font.replace", "missing toFamily"))?.to_string();
     let to_style = str_param(p, "toStyle").map(str::to_string);
-    let db = designcraft_fonts::FontDb::global().scoped(s.doc()?.doc.font_scope);
+    let db = pejy_fonts::FontDb::global().scoped(s.doc()?.doc.font_scope);
     if family.trim().is_empty() || to_family.trim().is_empty() || !db.has_family(&to_family) {
         return Err(bad("font.replace", "Choose an available replacement font family"));
     }
@@ -259,7 +259,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Some text here."})).unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 4})).unwrap();
         s.execute("type.char", &json!({"fontFamily": "Nonexistent Sans", "fontStyle": "Bold"})).unwrap();
         let l = s.execute("font.list", &json!({})).unwrap();
@@ -286,7 +286,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Some text here."})).unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 15})).unwrap();
         s.execute("type.char", &json!({"fontFamily": "Source Serif 4 (OTF)", "fontStyle": "Bold"})).unwrap();
         let l = s.execute("font.list", &json!({})).unwrap();
@@ -321,7 +321,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Text"})).unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 4})).unwrap();
         s.execute("type.char", &json!({"fontFamily": "Source Serif 4", "fontStyle": "Regular "})).unwrap();
         let l = s.execute("font.list", &json!({})).unwrap();
@@ -336,14 +336,14 @@ mod tests {
 #[cfg(test)]
 mod composite_tests {
     use super::*;
-    use designcraft_doc::{
+    use pejy_doc::{
         ParaFormat,
         cjk::{CompositeFont, CompositeFontEntry},
     };
 
     #[test]
     fn inventory_resolves_composites_in_nested_cell_notes() {
-        use designcraft_doc::{StoryId, Table, build::NewDocument};
+        use pejy_doc::{StoryId, Table, build::NewDocument};
         let mut d = Document::new(&NewDocument::default());
         d.styles_mut().composite_fonts.push(CompositeFont {
             name: "Mixed".into(),

@@ -1,4 +1,4 @@
-//! FigCraft geometry.
+//! Endrika geometry.
 //!
 //! Re-exports [`kurbo`] and adds the shape builders a design tool needs: rectangles with independent
 //! corner radii and corner smoothing (the "squircle" continuous-curvature corner), regular polygons

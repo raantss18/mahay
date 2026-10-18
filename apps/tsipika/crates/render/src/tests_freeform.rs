@@ -1,10 +1,10 @@
 //! Freeform gradients: the rendered colour grid against the colour field.
 
 use super::*;
-use vectorcraft_color::freeform::spread_scale;
-use vectorcraft_color::{Color, Freeform, FreeformPoint, Gradient, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::{Point, shapes};
+use tsipika_color::freeform::spread_scale;
+use tsipika_color::{Color, Freeform, FreeformPoint, Gradient, GradientKind, GradientPaint, Paint};
+use tsipika_doc::{Appearance, Node};
+use tsipika_geom::{Point, shapes};
 
 /// Red at the top left, blue at the bottom right, a half-transparent green at the top right.
 fn freeform() -> Freeform {
@@ -26,7 +26,7 @@ fn paint(f: Option<Freeform>) -> Paint {
 }
 
 /// A 100 × 100 document with `shape` (on 0..100) painted `fill`, at `opacity`.
-fn doc(shape: vectorcraft_geom::PathData, fill: Paint, opacity: f32) -> Document {
+fn doc(shape: tsipika_geom::PathData, fill: Paint, opacity: f32) -> Document {
     let mut d = Document::new(100.0, 100.0);
     let id = d.alloc_id();
     let mut n = Node::path(id, shape, Appearance::basic(fill, Paint::None, 0.0));

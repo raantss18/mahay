@@ -3,9 +3,9 @@
 //!
 //! Coordinates are in layer space. Edits of an animated Mask Path set a key at the current time.
 
-use effectcraft_keyframe::{ShapePath, Value as KV};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Layer, MaskMode, PropGroup, Uid};
+use tselatra_keyframe::{ShapePath, Value as KV};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Layer, MaskMode, PropGroup, Uid};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, has_comp, has_layers, layer_mut, layer_p, merge_p, resolve_layer, str_p};
@@ -40,7 +40,7 @@ fn find_mask<'a>(masks: &'a mut PropGroup, key: &Value) -> Option<&'a mut PropGr
 
 /// Whether a group holds an editable Bezier path (a mask, or a shape layer's Path item).
 pub(crate) fn is_path_group(g: &PropGroup) -> bool {
-    matches!(g.get("path").map(|p| &p.value), Some(KV::Path(_))) && (matches!(g.kind, effectcraft_project::GroupKind::Mask { .. }) || g.match_id == "path")
+    matches!(g.get("path").map(|p| &p.value), Some(KV::Path(_))) && (matches!(g.kind, tselatra_project::GroupKind::Mask { .. }) || g.match_id == "path")
 }
 
 /// A mask (uid, 1-based index or name) or, by uid, a shape layer's Path item.
@@ -110,7 +110,7 @@ pub(crate) fn apply_count_op(sp: &mut ShapePath, op: &CountOp) {
 }
 
 /// Repeat `op` on every keyframe of `pr` other than the one at `lt`.
-fn sync_keys(pr: &mut effectcraft_project::Property, lt: effectcraft_time::Tick, op: &CountOp) {
+fn sync_keys(pr: &mut tselatra_project::Property, lt: tselatra_time::Tick, op: &CountOp) {
     for k in pr.keys.iter_mut().filter(|k| k.time != lt) {
         if let KV::Path(sp) = &mut k.value {
             apply_count_op(sp, op);
@@ -247,7 +247,7 @@ fn vertex_groups(s: &Session, p: &Value) -> Result<std::collections::BTreeMap<(u
 fn select_vertices(s: &mut Session, p: &Value) -> Result<Value> {
     let g = vertex_groups(s, &json!({"vertices": p.get("vertices").cloned().unwrap_or(json!([]))}))?;
     let sel: Vec<VertexRef> =
-        g.into_iter().flat_map(|((l, m), is)| is.into_iter().map(move |i| VertexRef { layer: effectcraft_project::LayerId(l), mask: m, index: i })).collect();
+        g.into_iter().flat_map(|((l, m), is)| is.into_iter().map(move |i| VertexRef { layer: tselatra_project::LayerId(l), mask: m, index: i })).collect();
     if b_p(p, "add").unwrap_or(false) {
         for v in sel {
             if let Some(i) = s.state.selected_vertices.iter().position(|x| *x == v) {
@@ -284,7 +284,7 @@ fn edit_vertices_counted(s: &mut Session, p: &Value, label: &str, removes: bool,
     s.edit(label, merge_p(p), |proj, _| {
         let comp = proj.comp_mut(cid).ok_or(EngineError::NoComp)?;
         for ((l, m), idx) in &groups {
-            let Some(layer) = comp.layer_mut(effectcraft_project::LayerId(*l)) else { continue };
+            let Some(layer) = comp.layer_mut(tselatra_project::LayerId(*l)) else { continue };
             let lt = layer.layer_time(t);
             let Some(g) = layer.props.find_group_mut(*m).filter(|g| is_path_group(g)) else { continue };
             let roto = super::paths::is_roto(g);
@@ -465,12 +465,12 @@ pub(crate) fn nearest_on_path(sp: &ShapePath, q: [f64; 2]) -> Option<(usize, f64
 /// Whether a layer-space point is inside a closed path.
 fn inside_path(sp: &ShapePath, q: [f64; 2]) -> bool {
     sp.closed && {
-        let cov = effectcraft_path::fill_coverage(
-            &[effectcraft_path::to_kurbo(sp)],
-            &effectcraft_geom::Mat3::translate(effectcraft_geom::vec2(-q[0] + 0.5, -q[1] + 0.5)),
+        let cov = tselatra_path::fill_coverage(
+            &[tselatra_path::to_kurbo(sp)],
+            &tselatra_geom::Mat3::translate(tselatra_geom::vec2(-q[0] + 0.5, -q[1] + 0.5)),
             1,
             1,
-            effectcraft_path::FillRule::NonZero,
+            tselatra_path::FillRule::NonZero,
         );
         cov.data[0] >= 0.5
     }
@@ -524,7 +524,7 @@ fn feather_add(s: &mut Session, p: &Value) -> Result<Value> {
             }
             (None, None) => return Err(bad(c, "give `segment` (and `t`) or `point`")),
         };
-        sp.feather.push(effectcraft_keyframe::FeatherPoint { segment: seg, t, radius: r, tension });
+        sp.feather.push(tselatra_keyframe::FeatherPoint { segment: seg, t, radius: r, tension });
         Ok(sp.feather.len() - 1)
     })?;
     Ok(json!({"mask": uid, "index": i}))

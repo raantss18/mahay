@@ -1,0 +1,30 @@
+[package]
+name = "endrika-android"
+description = "Endrika on Android (phone and tablet): the eframe app inside MahayActivity."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+# No `[lints] workspace = true`: `android_main` must be `#[unsafe(no_mangle)]`.
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[target.'cfg(target_os = "android")'.dependencies]
+endrika-engine = { workspace = true }
+endrika-ui-egui = { workspace = true }
+endrika-collab-net = { workspace = true }
+endrika-format = { workspace = true }
+endrika-text = { workspace = true }
+egui = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "android-game-activity"] }
+serde_json = { workspace = true }
+log = { workspace = true }
+rfd = { workspace = true }
+arboard = { workspace = true, features = ["image-data"] }
+webbrowser = { workspace = true }
+image = { workspace = true }
+mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }

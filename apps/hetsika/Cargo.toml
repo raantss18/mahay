@@ -4,63 +4,63 @@ members = ["crates/*", "apps/*", "xtask"]
 default-members = ["crates/*", "apps/*", "xtask"]
 
 [workspace.package]
-version = "0.9.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/filmcraft"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
 # internal
-filmcraft-time = { path = "crates/time" }
-filmcraft-geom = { path = "crates/geom" }
-filmcraft-color = { path = "crates/color" }
-filmcraft-bitstream = { path = "crates/bitstream" }
-filmcraft-isobmff = { path = "crates/isobmff" }
-filmcraft-avi = { path = "crates/avi" }
-filmcraft-matroska = { path = "crates/matroska" }
-filmcraft-mxf = { path = "crates/mxf" }
-filmcraft-cfb = { path = "crates/cfb" }
-filmcraft-mpegts = { path = "crates/mpegts" }
-filmcraft-mpeg2v = { path = "crates/mpeg2v" }
-filmcraft-ac3 = { path = "crates/ac3" }
-filmcraft-mpa = { path = "crates/mpa" }
-filmcraft-ogg = { path = "crates/ogg" }
-filmcraft-h264 = { path = "crates/h264" }
-filmcraft-hevc = { path = "crates/hevc" }
-filmcraft-vp8 = { path = "crates/vp8" }
-filmcraft-vp9 = { path = "crates/vp9" }
-filmcraft-prores = { path = "crates/prores" }
-filmcraft-dnx = { path = "crates/dnx" }
-filmcraft-apv = { path = "crates/apv" }
-filmcraft-dng = { path = "crates/dng" }
-filmcraft-av1 = { path = "crates/av1" }
-filmcraft-aac = { path = "crates/aac" }
-filmcraft-flac = { path = "crates/flac" }
-filmcraft-opus = { path = "crates/opus" }
-filmcraft-h264enc = { path = "crates/h264enc" }
-filmcraft-audio-dsp = { path = "crates/audio-dsp" }
-filmcraft-frame = { path = "crates/frame" }
-filmcraft-media = { path = "crates/media" }
-filmcraft-codecs = { path = "crates/codecs" }
-filmcraft-project = { path = "crates/project" }
-filmcraft-edit = { path = "crates/edit" }
-filmcraft-interchange = { path = "crates/interchange" }
-filmcraft-text = { path = "crates/text" }
-filmcraft-captions = { path = "crates/captions" }
-filmcraft-speech = { path = "crates/speech" }
-filmcraft-tts = { path = "crates/tts" }
-filmcraft-tts-text = { path = "crates/tts-text" }
-filmcraft-render = { path = "crates/render" }
-filmcraft-gpu = { path = "crates/gpu" }
-filmcraft-scopes = { path = "crates/scopes" }
-filmcraft-export = { path = "crates/export" }
-filmcraft-format = { path = "crates/format" }
-filmcraft-engine = { path = "crates/engine" }
-filmcraft-ui-egui = { path = "crates/ui-egui" }
-filmcraft-automation = { path = "crates/automation" }
-filmcraft-platform = { path = "crates/platform" }
-filmcraft-testkit = { path = "crates/testkit" }
+hetsika-time = { path = "crates/time" }
+hetsika-geom = { path = "crates/geom" }
+hetsika-color = { path = "crates/color" }
+hetsika-bitstream = { path = "crates/bitstream" }
+hetsika-isobmff = { path = "crates/isobmff" }
+hetsika-avi = { path = "crates/avi" }
+hetsika-matroska = { path = "crates/matroska" }
+hetsika-mxf = { path = "crates/mxf" }
+hetsika-cfb = { path = "crates/cfb" }
+hetsika-mpegts = { path = "crates/mpegts" }
+hetsika-mpeg2v = { path = "crates/mpeg2v" }
+hetsika-ac3 = { path = "crates/ac3" }
+hetsika-mpa = { path = "crates/mpa" }
+hetsika-ogg = { path = "crates/ogg" }
+hetsika-h264 = { path = "crates/h264" }
+hetsika-hevc = { path = "crates/hevc" }
+hetsika-vp8 = { path = "crates/vp8" }
+hetsika-vp9 = { path = "crates/vp9" }
+hetsika-prores = { path = "crates/prores" }
+hetsika-dnx = { path = "crates/dnx" }
+hetsika-apv = { path = "crates/apv" }
+hetsika-dng = { path = "crates/dng" }
+hetsika-av1 = { path = "crates/av1" }
+hetsika-aac = { path = "crates/aac" }
+hetsika-flac = { path = "crates/flac" }
+hetsika-opus = { path = "crates/opus" }
+hetsika-h264enc = { path = "crates/h264enc" }
+hetsika-audio-dsp = { path = "crates/audio-dsp" }
+hetsika-frame = { path = "crates/frame" }
+hetsika-media = { path = "crates/media" }
+hetsika-codecs = { path = "crates/codecs" }
+hetsika-project = { path = "crates/project" }
+hetsika-edit = { path = "crates/edit" }
+hetsika-interchange = { path = "crates/interchange" }
+hetsika-text = { path = "crates/text" }
+hetsika-captions = { path = "crates/captions" }
+hetsika-speech = { path = "crates/speech" }
+hetsika-tts = { path = "crates/tts" }
+hetsika-tts-text = { path = "crates/tts-text" }
+hetsika-render = { path = "crates/render" }
+hetsika-gpu = { path = "crates/gpu" }
+hetsika-scopes = { path = "crates/scopes" }
+hetsika-export = { path = "crates/export" }
+hetsika-format = { path = "crates/format" }
+hetsika-engine = { path = "crates/engine" }
+hetsika-ui-egui = { path = "crates/ui-egui" }
+hetsika-automation = { path = "crates/automation" }
+hetsika-platform = { path = "crates/platform" }
+hetsika-testkit = { path = "crates/testkit" }
 
 # foundation
 thiserror = "2"
@@ -70,11 +70,11 @@ log = "0.4"
 rayon = "1"
 proptest = "1"
 roxmltree = "0.21"
-craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "82a24b006eefa036b43c09a67fb9a3fbd17ffe63" }
+mahay-docpath = { path = "../../libs/core/crates/docpath", version = "0.1.0" }
 
 # ui
 # Shared frontend components; keep this dependency above the engine boundary.
-craft-ui = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "5c874d51eeb3de70e735c8ce87a59a7dedd47675", features = ["serde"] }
+mahay-ui = { path = "../../libs/core/crates/ui", version = "0.1.0", features = ["serde"] }
 egui = "0.36"
 eframe = { version = "0.36", default-features = false }
 egui_kittest = "0.36"
@@ -97,52 +97,65 @@ opt-level = 2
 opt-level = 1
 
 # Codec hot loops: debug-build tests (RFC/oracle vectors) are minutes slower below opt-level 3.
-[profile.dev.package.filmcraft-h264]
+[profile.dev.package.hetsika-h264]
 opt-level = 3
 
-[profile.dev.package.filmcraft-h264enc]
+[profile.dev.package.hetsika-h264enc]
 opt-level = 3
 
-[profile.dev.package.filmcraft-hevc]
+[profile.dev.package.hetsika-hevc]
 opt-level = 3
 
-[profile.dev.package.filmcraft-prores]
+[profile.dev.package.hetsika-prores]
 opt-level = 3
 
-[profile.dev.package.filmcraft-dnx]
+[profile.dev.package.hetsika-dnx]
 opt-level = 3
 
-[profile.dev.package.filmcraft-apv]
+[profile.dev.package.hetsika-apv]
 opt-level = 3
 
-[profile.dev.package.filmcraft-dng]
+[profile.dev.package.hetsika-dng]
 opt-level = 3
 
-[profile.dev.package.filmcraft-av1]
+[profile.dev.package.hetsika-av1]
 opt-level = 3
 
-[profile.dev.package.filmcraft-aac]
+[profile.dev.package.hetsika-aac]
 opt-level = 3
 
-[profile.dev.package.filmcraft-flac]
+[profile.dev.package.hetsika-flac]
 opt-level = 3
 
 # Audio effects: realtime-factor tests and long convolution / spectral runs.
-[profile.dev.package.filmcraft-audio-dsp]
+[profile.dev.package.hetsika-audio-dsp]
 opt-level = 3
 
-[profile.dev.package.filmcraft-mxf]
+[profile.dev.package.hetsika-mxf]
 opt-level = 3
 
-[profile.dev.package.filmcraft-opus]
+[profile.dev.package.hetsika-opus]
 opt-level = 3
 
-[profile.dev.package.filmcraft-vp8]
+[profile.dev.package.hetsika-vp8]
 opt-level = 3
 
-[profile.dev.package.filmcraft-vp9]
+[profile.dev.package.hetsika-vp9]
 opt-level = 3
 
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+[patch.crates-io]
+# Android backends through mahay-android (document picker, clipboard); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+arboard = { path = "../../libs/core/vendor/arboard" }
+
+# Android release: size first, whole-program LTO, no symbols.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true
+opt-level = "s"

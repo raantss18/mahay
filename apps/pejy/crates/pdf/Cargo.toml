@@ -1,22 +1,22 @@
 [package]
-name = "designcraft-pdf"
+name = "pejy-pdf"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft PDF export (krilla): real text with embedded font subsets, CMYK/spot colour, bleed and printer's marks"
+description = "Pejy PDF export (krilla): real text with embedded font subsets, CMYK/spot colour, bleed and printer's marks"
 
 [lints]
 workspace = true
 
 [dependencies]
-designcraft-geom = { workspace = true }
-designcraft-color = { workspace = true }
-designcraft-doc = { workspace = true }
-designcraft-fonts = { workspace = true }
-designcraft-compose = { workspace = true }
-craft-pdf = { workspace = true, features = ["write-pdf"] }
+pejy-geom = { workspace = true }
+pejy-color = { workspace = true }
+pejy-doc = { workspace = true }
+pejy-fonts = { workspace = true }
+pejy-compose = { workspace = true }
+mahay-pdf = { workspace = true, features = ["write-pdf"] }
 krilla-svg = { workspace = true }
-designcraft-images = { workspace = true }
+pejy-images = { workspace = true }
 image = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
@@ -28,4 +28,4 @@ hayro-interpret = { version = "0.7.0", default-features = false, features = ["em
 hayro-cmap = "0.1"
 kurbo = { workspace = true }
 tiff = { workspace = true }
-designcraft-fonts = { workspace = true, features = ["testing"] }
+pejy-fonts = { workspace = true, features = ["testing"] }

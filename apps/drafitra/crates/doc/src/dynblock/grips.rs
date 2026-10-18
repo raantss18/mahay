@@ -7,7 +7,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_geom::{Vec2, Vec3};
 use serde::Serialize;
 
 use super::{ParameterKind, Value, custom_properties, dynamic_block, reference};

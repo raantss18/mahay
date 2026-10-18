@@ -1,4 +1,4 @@
-//! What names and codes in other apps' files stand for in VectorCraft, as the user confirmed them on
+//! What names and codes in other apps' files stand for in Tsipika, as the user confirmed them on
 //! import: a shortcut set's entry names, and its key and modifier codes. They are kept with the
 //! preferences on the user's machine, so a later import proposes them and asks only about the rest
 //! (`importMatches.*`).
@@ -19,7 +19,7 @@ const MAX_TEXT: usize = 1024;
 /// modifier codes.
 pub const KINDS: &[&str] = &["name", "key", "modifiers"];
 
-/// A name or code in another app's file and what it stands for in VectorCraft
+/// A name or code in another app's file and what it stands for in Tsipika
 /// ([`crate::Prefs::import_matches`]). Missing fields read as empty, so a preferences file with a
 /// damaged match still loads.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -54,7 +54,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Remember Import Matches",
             [],
             None,
-            "{matches: [{kind: name|key|modifiers, name: as the file writes it (codes in decimal), target: a command id, tool:<id> or panel:<id> (name), a key as Edit › Keyboard Shortcuts writes it (key), modifiers as it writes them, such as Cmd+Shift (modifiers), \"\" for no equivalent (no modifiers for kind modifiers), or null to forget the match, label?}]} remember what names and codes in another app's file stand for in VectorCraft, for later imports (at most 20,000 matches; names, targets and labels up to 1,024 bytes) → {count}",
+            "{matches: [{kind: name|key|modifiers, name: as the file writes it (codes in decimal), target: a command id, tool:<id> or panel:<id> (name), a key as Edit › Keyboard Shortcuts writes it (key), modifiers as it writes them, such as Cmd+Shift (modifiers), \"\" for no equivalent (no modifiers for kind modifiers), or null to forget the match, label?}]} remember what names and codes in another app's file stand for in Tsipika, for later imports (at most 20,000 matches; names, targets and labels up to 1,024 bytes) → {count}",
             always,
             set
         ),

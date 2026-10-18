@@ -7,9 +7,9 @@
 //! objects selected, they neither draw nor hit-test any bracket.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::{NodeId, NodeKind, TextKind};
-use vectorcraft_geom::kurbo::{Line, ParamCurveNearest};
-use vectorcraft_geom::{Affine, ArcPath, Point, Vec2};
+use tsipika_doc::{NodeId, NodeKind, TextKind};
+use tsipika_geom::kurbo::{Line, ParamCurveNearest};
+use tsipika_geom::{Affine, ArcPath, Point, Vec2};
 
 use crate::{Action, Overlay, PointerEvent, ToolContext};
 
@@ -236,7 +236,7 @@ mod tests {
     use super::*;
     use crate::testutil::*;
     use crate::{Cursor, Mods, PointerKind, Tool};
-    use vectorcraft_doc::{Document, Selection};
+    use tsipika_doc::{Document, Selection};
 
     fn selected(id: NodeId) -> Selection {
         let mut s = Selection::default();
@@ -293,7 +293,7 @@ mod tests {
         let add = |d: &mut Document, s: &mut Selection, n: usize| {
             for _ in 0..n {
                 let copy = d.alloc_id();
-                d.insert(Some(l), usize::MAX, vectorcraft_doc::Node::new(copy, kind.clone())).unwrap();
+                d.insert(Some(l), usize::MAX, tsipika_doc::Node::new(copy, kind.clone())).unwrap();
                 s.add(copy);
             }
         };

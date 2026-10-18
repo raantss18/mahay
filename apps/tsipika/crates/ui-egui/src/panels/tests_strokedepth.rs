@@ -2,13 +2,13 @@
 //! Delete Profile and Reset Profiles, and the Profile dropdown listing saved profiles.
 
 use serde_json::json;
-use vectorcraft_doc::WidthProfile;
+use tsipika_doc::WidthProfile;
 
 use super::tests_appearance::{click, frame_events, run, text_rect};
 use super::*;
 
-fn app_with_line() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+fn app_with_line() -> TsipikaApp {
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     run(&mut app, "shape.line", json!({"x1": 10, "y1": 100, "x2": 150, "y2": 100}));
     app
@@ -19,7 +19,7 @@ fn custom() -> WidthProfile {
 }
 
 /// Give the selected line `p` as its variable width.
-fn set_profile(app: &mut VectorcraftApp, p: WidthProfile) {
+fn set_profile(app: &mut TsipikaApp, p: WidthProfile) {
     app.session
         .edit("Width", |d, sel| {
             let id = sel.objects[0];
@@ -29,12 +29,12 @@ fn set_profile(app: &mut VectorcraftApp, p: WidthProfile) {
         .unwrap();
 }
 
-fn panel_and_menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn panel_and_menu(app: &mut TsipikaApp, ui: &mut Ui) {
     stroke::show(app, ui);
     stroke::menu(app, ui);
 }
 
-fn profile_points(app: &VectorcraftApp) -> Option<Vec<(f64, f64, f64)>> {
+fn profile_points(app: &TsipikaApp) -> Option<Vec<(f64, f64, f64)>> {
     current_stroke(app).and_then(|s| s.profile).map(|p| p.points)
 }
 
@@ -90,11 +90,11 @@ fn dropdown_lists_saved_profiles_and_applies_them() {
 
 #[test]
 fn every_arrowhead_preview_draws_its_head() {
-    use vectorcraft_doc::Arrowhead;
+    use tsipika_doc::Arrowhead;
     // Rendered on transparent: the head adds ink to its half of the preview.
     let ink = |a: Option<Arrowhead>, start: bool| {
         let d = stroke::arrow_doc(a, start, 56.0, 22.0).unwrap();
-        let img = vectorcraft_render::Renderer::new().render_region(&d, vectorcraft_geom::Rect::new(0.0, 0.0, 56.0, 22.0), 2.0, false);
+        let img = tsipika_render::Renderer::new().render_region(&d, tsipika_geom::Rect::new(0.0, 0.0, 56.0, 22.0), 2.0, false);
         let xs = if start { 0..56 } else { 56..112 };
         xs.flat_map(|x| (0..44).map(move |y| (x, y))).filter(|&(x, y)| img.pixel(x, y)[3] > 64).count()
     };
@@ -116,5 +116,5 @@ fn arrowhead_dropdown_offers_the_new_heads() {
     click(&ctx, &mut app, egui::pos2(label.right() + 2.0 * sp + 64.0 + 32.0, label.center().y), stroke::show);
     let t = frame_events(&ctx, &mut app, vec![], stroke::show);
     click(&ctx, &mut app, text_rect(&t, "Barbed").center(), stroke::show);
-    assert_eq!(current_stroke(&app).and_then(|s| s.end_arrow), Some(vectorcraft_doc::Arrowhead::Barbed));
+    assert_eq!(current_stroke(&app).and_then(|s| s.end_arrow), Some(tsipika_doc::Arrowhead::Barbed));
 }

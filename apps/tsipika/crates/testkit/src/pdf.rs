@@ -70,7 +70,7 @@ pub fn pdf_with(pages: &[PdfPage], extra: &[&str], password: Option<&str>) -> Ve
 
 /// [`pdf_with`] with more entries in the catalog (`/OCProperties << … >>`).
 pub fn pdf_with_catalog(pages: &[PdfPage], extra: &[&str], catalog: &str, password: Option<&str>) -> Vec<u8> {
-    let id = md5(b"vectorcraft test file");
+    let id = md5(b"tsipika test file");
     // (O, U, file key) of the standard security handler, revision 2, permissions -4.
     let crypt = password.map(|pw| {
         let owner_key = md5(&padded(&format!("{pw}-owner")));

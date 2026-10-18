@@ -1,17 +1,17 @@
 //! Real app command dispatch using egui input, without rendering an image or linking a facade.
 use egui::{Key, Modifiers};
-use lightcraft_catalog::{Flag, Op, Photo, PhotoId, Source};
+use hazavana_catalog::{Flag, Op, Photo, PhotoId, Source};
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::state::{Dialog, RightPanel, ViewMode};
 
-fn app() -> lightcraft_engine::Result<LightcraftApp> {
-    let mut s = lightcraft_engine::Session::new();
+fn app() -> hazavana_engine::Result<HazavanaApp> {
+    let mut s = hazavana_engine::Session::new();
     for (id, rating) in [(1, 0), (2, 2), (3, 5)] {
         let mut photo = Photo::new(
             PhotoId(id),
-            Source::File { path: format!("/lightcraft-relative-rating-keys/{id}.jpg") },
+            Source::File { path: format!("/hazavana-relative-rating-keys/{id}.jpg") },
             &format!("{id}.jpg"),
             "JPEG",
             40,
@@ -23,18 +23,18 @@ fn app() -> lightcraft_engine::Result<LightcraftApp> {
     }
     s.execute("library.sort", &json!({"key": "fileName", "ascending": true}))?;
     s.execute("library.select", &json!({"ids": [1, 2, 3], "active": 2}))?;
-    Ok(LightcraftApp::new(s, crate::Services { png: None, ..Default::default() }))
+    Ok(HazavanaApp::new(s, crate::Services { png: None, ..Default::default() }))
 }
 
-fn ratings(app: &LightcraftApp) -> lightcraft_engine::Result<Vec<u8>> {
+fn ratings(app: &HazavanaApp) -> hazavana_engine::Result<Vec<u8>> {
     (1..=3)
         .map(|id| {
-            app.session.catalog.photo(PhotoId(id)).map(|p| p.rating).ok_or_else(|| lightcraft_catalog::CatalogError::NoPhoto(PhotoId(id)).into())
+            app.session.catalog.photo(PhotoId(id)).map(|p| p.rating).ok_or_else(|| hazavana_catalog::CatalogError::NoPhoto(PhotoId(id)).into())
         })
         .collect()
 }
 
-fn frame(app: &mut LightcraftApp, ctx: &egui::Context, key: Option<Key>, text: Option<&mut String>) {
+fn frame(app: &mut HazavanaApp, ctx: &egui::Context, key: Option<Key>, text: Option<&mut String>) {
     let events = key
         .map(|key| egui::Event::Key { key, physical_key: Some(key), pressed: true, repeat: false, modifiers: Modifiers::NONE })
         .into_iter()

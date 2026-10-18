@@ -9,11 +9,11 @@ use std::sync::Arc;
 
 use egui::{Color32, CornerRadius, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_tools::{Mods, TOOL_GROUPS, ToolInfo, ToolKey, tool_info};
+use tsipika_color::Paint;
+use tsipika_tools::{Mods, TOOL_GROUPS, ToolInfo, ToolKey, tool_info};
 
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, icons, widgets};
+use crate::{TsipikaApp, icons, widgets};
 
 const PITCH: f32 = 30.0;
 const WIDTH: f32 = 48.0;
@@ -75,7 +75,7 @@ pub(crate) fn tip(t: &ToolInfo) -> String {
 
 /// Slots of the current layout, as Edit Toolbar left it: (category label for the first slot of a
 /// category, tool ids).
-pub(crate) fn slots(app: &VectorcraftApp) -> Vec<(Option<&'static str>, Vec<&'static str>)> {
+pub(crate) fn slots(app: &TsipikaApp) -> Vec<(Option<&'static str>, Vec<&'static str>)> {
     if let Some(edited) = crate::edit_toolbar::edited_slots(app) {
         edited
     } else if app.ui.toolbar_advanced {
@@ -86,7 +86,7 @@ pub(crate) fn slots(app: &VectorcraftApp) -> Vec<(Option<&'static str>, Vec<&'st
 }
 
 /// Remember the tool shown in the slot that contains `id`.
-pub fn remember(app: &mut VectorcraftApp, id: &str) {
+pub fn remember(app: &mut TsipikaApp, id: &str) {
     for (_, s) in slots(app) {
         if s.contains(&id) {
             app.ui.slot_tool.insert(s[0].to_string(), id.to_string());
@@ -94,7 +94,7 @@ pub fn remember(app: &mut VectorcraftApp, id: &str) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     // The user's choice alone: a window too short for the tools scrolls them.
     let cols = if app.ui.toolbar_double { 2 } else { 1 };
@@ -137,7 +137,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// The Tools panel's contents, docked or floating at `floating`.
-fn body(app: &mut VectorcraftApp, ui: &mut Ui, cols: usize, floating: Option<egui::Pos2>) {
+fn body(app: &mut TsipikaApp, ui: &mut Ui, cols: usize, floating: Option<egui::Pos2>) {
     let t = Tokens::get(ui.ctx());
     let all = slots(app);
     let bounds = ui.max_rect();
@@ -328,15 +328,15 @@ fn flyout_press(ui: &Ui, resp: &egui::Response, rect: egui::Rect) -> Option<Flyo
 /// Reflect and Shear tools' are their Object › Transform dialogs, the selection tools' are the
 /// Move dialog, and the Pencil, Paintbrush, Smooth, Blob Brush and Eraser tools' are their Tool
 /// Options.
-pub fn open_options(app: &mut VectorcraftApp, tool: &str) -> Result<serde_json::Value, String> {
+pub fn open_options(app: &mut TsipikaApp, tool: &str) -> Result<serde_json::Value, String> {
     match tool {
         "dimension" => crate::dialogs::dimension::open(app),
         "hand" => app.run("view.fitArtboard", json!({})),
         "zoom" => app.run("view.actualSize", json!({})),
         "rotate" | "scale" | "reflect" | "shear" | "selection" | "directSelection" | "groupSelection" => {
-            let dialog = if vectorcraft_tools::catalog::is_selection_tool(tool) { "move" } else { tool };
+            let dialog = if tsipika_tools::catalog::is_selection_tool(tool) { "move" } else { tool };
             let id = format!("object.{dialog}");
-            if let Some(c) = vectorcraft_engine::find_command(&id) {
+            if let Some(c) = tsipika_engine::find_command(&id) {
                 (c.enabled)(&app.session)?;
             }
             crate::menus::invoke(app, &id, json!({}));
@@ -363,14 +363,14 @@ pub fn open_options(app: &mut VectorcraftApp, tool: &str) -> Result<serde_json::
         // A double click on the Print Tiling tool puts the pages back where the placement puts them.
         "printTiling" => app.run("print.tiling.set", json!({ "reset": true })),
         // The Liquify tools: their Tool Options (the Global Brush Dimensions and the tool's own).
-        _ if vectorcraft_tools::settings::LIQUIFY.contains(&tool) => crate::dialogs::liquify::open(app, tool),
+        _ if tsipika_tools::settings::LIQUIFY.contains(&tool) => crate::dialogs::liquify::open(app, tool),
         // The freehand tools: their Tool Options (Fidelity, fill, the tolerances, the brush size).
         _ if crate::dialogs::freehand::TOOLS.contains(&tool) => crate::dialogs::freehand::open(app, tool),
         // The Symbolism tools: the brush they share.
-        _ if vectorcraft_tools::settings::SYMBOLISM.contains(&tool) => Ok(crate::dialogs::symbolism_options::open(app, tool)),
+        _ if tsipika_tools::settings::SYMBOLISM.contains(&tool) => Ok(crate::dialogs::symbolism_options::open(app, tool)),
         // The graph tools: Graph Type for the selected graph.
-        _ if vectorcraft_tools::extra::is_graph_tool(tool) => crate::menus::graph_dialog(app, "graph.setType"),
-        _ if vectorcraft_tools::tool_info(tool).is_none() => Err(format!("unknown tool `{tool}`")),
+        _ if tsipika_tools::extra::is_graph_tool(tool) => crate::menus::graph_dialog(app, "graph.setType"),
+        _ if tsipika_tools::tool_info(tool).is_none() => Err(format!("unknown tool `{tool}`")),
         _ => Err(format!("the {tool} tool has no options")),
     }
 }
@@ -378,7 +378,7 @@ pub fn open_options(app: &mut VectorcraftApp, tool: &str) -> Result<serde_json::
 /// The active tool's options in the Control bar: Mirror & Cut's axis and the side it keeps, Puppet
 /// Warp's mesh and pins (set through `tool.setOption`). The Artboard tool's options are drawn by
 /// [`crate::panels::artboards::control_bar`].
-pub fn control_bar_options(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn control_bar_options(app: &mut TsipikaApp, ui: &mut Ui) {
     if app.session.tool_id() == "dimension" {
         return crate::dialogs::dimension::controls(app, ui);
     }
@@ -391,7 +391,7 @@ pub fn control_bar_options(app: &mut VectorcraftApp, ui: &mut Ui) {
     if app.session.tool_id() == "puppetWarp" {
         return puppet_warp_options(app, ui);
     }
-    if app.session.tool_id() == vectorcraft_tools::cropimage::ID {
+    if app.session.tool_id() == tsipika_tools::cropimage::ID {
         return crop_options(app, ui);
     }
     if app.session.tool_id() != "mirrorCut" {
@@ -413,12 +413,12 @@ pub fn control_bar_options(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// Crop Image's box: its centre (X, Y) and size (W, H) in the general unit, set through the tool's
 /// `rect` option, then Apply (Enter) and Cancel (Escape).
-fn crop_options(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn crop_options(app: &mut TsipikaApp, ui: &mut Ui) {
     let set = app.session.tool_options()["rect"].as_array().and_then(|v| match v.iter().filter_map(Value::as_f64).collect::<Vec<_>>()[..] {
-        [x, y, w, h] => Some(vectorcraft_geom::Rect::new(x, y, x + w, y + h)),
+        [x, y, w, h] => Some(tsipika_geom::Rect::new(x, y, x + w, y + h)),
         _ => None,
     });
-    let Some((_, _, r)) = app.session.active().and_then(|st| vectorcraft_tools::cropimage::crop_box(&st.doc, &st.selection, set)) else { return };
+    let Some((_, _, r)) = app.session.active().and_then(|st| tsipika_tools::cropimage::crop_box(&st.doc, &st.selection, set)) else { return };
     let t = Tokens::get(ui.ctx());
     let units = app.session.general_unit();
     let c = r.center();
@@ -451,7 +451,7 @@ fn crop_options(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// large as the toolbar's `cols` (one or two) leave room for (#1129): in two columns the proxy and
 /// buttons grow and the three drawing modes show side by side.
 /// The All Tools drawer's Show section hides any of them but Edit Toolbar.
-fn bottom_controls(app: &mut VectorcraftApp, ui: &mut Ui, t: &Tokens, cols: usize) {
+fn bottom_controls(app: &mut TsipikaApp, ui: &mut Ui, t: &Tokens, cols: usize) {
     let two = cols == 2;
     let show = app.ui.toolbar_show;
     if show.fill_stroke {
@@ -484,9 +484,9 @@ fn bottom_controls(app: &mut VectorcraftApp, ui: &mut Ui, t: &Tokens, cols: usiz
         ui.add_space(6.0);
     }
     let modes = [
-        (vectorcraft_engine::DrawMode::Normal, "dc-draw-normal", "Draw Normal", "normal"),
-        (vectorcraft_engine::DrawMode::Behind, "dc-draw-behind", "Draw Behind", "behind"),
-        (vectorcraft_engine::DrawMode::Inside, "dc-draw-inside", "Draw Inside", "inside"),
+        (tsipika_engine::DrawMode::Normal, "dc-draw-normal", "Draw Normal", "normal"),
+        (tsipika_engine::DrawMode::Behind, "dc-draw-behind", "Draw Behind", "behind"),
+        (tsipika_engine::DrawMode::Inside, "dc-draw-inside", "Draw Inside", "inside"),
     ];
     if two && show.draw_mode {
         // Side by side, each one a click away.
@@ -504,7 +504,7 @@ fn bottom_controls(app: &mut VectorcraftApp, ui: &mut Ui, t: &Tokens, cols: usiz
         if !two
             && show.draw_mode
             && let Some((mode, icon, name, _)) = modes.into_iter().find(|m| m.0 == app.session.draw_mode)
-            && widgets::icon_button(ui, icon, &format!("{} (Shift+D)", tl!(name)), mode != vectorcraft_engine::DrawMode::Normal, 26.0).clicked()
+            && widgets::icon_button(ui, icon, &format!("{} (Shift+D)", tl!(name)), mode != tsipika_engine::DrawMode::Normal, 26.0).clicked()
         {
             app.run("view.drawMode", json!({})).ok();
         }
@@ -528,7 +528,7 @@ const FLOAT_AT: [f32; 2] = [90.0, 100.0];
 /// Float the toolbar group (of the current layout) holding `tool` as a strip of tool buttons, put
 /// it back in the toolbar, or toggle (`floating` omitted), as a flyout's tear-off bar and the
 /// strip's × do (`window.floatTools`). Returns the new state.
-pub fn float_group(app: &mut VectorcraftApp, tool: &str, floating: Option<bool>) -> Result<bool, String> {
+pub fn float_group(app: &mut TsipikaApp, tool: &str, floating: Option<bool>) -> Result<bool, String> {
     let Some((_, group)) = slots(app).into_iter().find(|(_, s)| s.len() > 1 && s.contains(&tool)) else {
         return Err(format!("{tool} isn't in a toolbar group of several tools"));
     };
@@ -547,7 +547,7 @@ pub fn float_group(app: &mut VectorcraftApp, tool: &str, floating: Option<bool>)
 }
 
 /// Whether the group whose first tool is `key` floats as its own panel.
-fn is_floating(app: &VectorcraftApp, key: &str) -> bool {
+fn is_floating(app: &TsipikaApp, key: &str) -> bool {
     app.ui.floating_flyouts.iter().any(|f| f.tools.first().is_some_and(|k| k == key))
 }
 
@@ -720,7 +720,7 @@ fn press_travel(ctx: &egui::Context) -> Option<egui::Vec2> {
     ctx.input(|i| i.pointer.press_origin().zip(i.pointer.interact_pos()).map(|(a, b)| b - a))
 }
 
-fn flyout(app: &mut VectorcraftApp, ctx: &egui::Context) {
+fn flyout(app: &mut TsipikaApp, ctx: &egui::Context) {
     if app.ui.flyout.is_none() {
         return;
     }
@@ -769,7 +769,7 @@ fn flyout(app: &mut VectorcraftApp, ctx: &egui::Context) {
 }
 
 /// The flyouts torn off the toolbar, each floating where its bar was dragged; its × puts it back.
-fn floating(app: &mut VectorcraftApp, ctx: &egui::Context) {
+fn floating(app: &mut TsipikaApp, ctx: &egui::Context) {
     if app.ui.floating_flyouts.is_empty() {
         return;
     }
@@ -823,7 +823,7 @@ fn floating(app: &mut VectorcraftApp, ctx: &egui::Context) {
 
 /// The Puppet Warp tool's Control bar: Expand (how far the mesh reaches past the art), Show Mesh
 /// and Select All Pins.
-fn puppet_warp_options(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn puppet_warp_options(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let opts = app.session.tool_options();
     ui.label(egui::RichText::new(tl!("Expand:")).size(12.0).color(t.text));
@@ -845,18 +845,18 @@ fn puppet_warp_options(app: &mut VectorcraftApp, ui: &mut Ui) {
 pub(crate) mod tests {
     use egui::accesskit::{Role, Toggled};
     use egui::{Event, PointerButton, Pos2};
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::widgets::accessibility_tests::{role_and_state, tree};
 
     /// One headless frame of the toolbar; returns the tool buttons' rects, top to bottom.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<egui::Rect> {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<egui::Rect> {
         frame_in(app, ctx, time, events, 1200.0)
     }
 
     /// [`frame`] in a window `height` points tall.
-    fn frame_in(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, events: Vec<Event>, height: f32) -> Vec<egui::Rect> {
+    fn frame_in(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, events: Vec<Event>, height: f32) -> Vec<egui::Rect> {
         let input = egui::RawInput {
             time: Some(time),
             events,
@@ -884,7 +884,7 @@ pub(crate) mod tests {
 
     #[test]
     fn the_toolbar_scrolls_in_a_short_window() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let ctx = egui::Context::default();
         // 500 pt: even two columns don't fit, so Edit Toolbar (the last button) starts below the window.
@@ -908,7 +908,7 @@ pub(crate) mod tests {
     /// line, docked and floating, in one or two columns (docked, they sat 2½ pt right of centre).
     #[test]
     fn the_tool_buttons_are_centred_in_the_panel() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let ctx = egui::Context::default();
         for (double, floating) in [(false, None), (true, None), (false, Some([100.0, 100.0])), (true, Some([100.0, 100.0]))] {
@@ -938,7 +938,7 @@ pub(crate) mod tests {
     /// the title bar's column toggle and grip and the paint buttons under the tools.
     #[test]
     fn screen_readers_name_the_tool_buttons_and_the_active_tool() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         app.select_tool("pen");
         let tree = tree(|ui| show(&mut app, ui));
@@ -954,7 +954,7 @@ pub(crate) mod tests {
     /// graph tool Graph Type for the selected graph, and the Magic Wand tool its panel.
     #[test]
     fn more_tools_open_their_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         // Without the Artboard tool, the window's artboard.
         assert_eq!(open_options(&mut app, "artboard").unwrap()["dialog"], "artboardOptions");
@@ -983,7 +983,7 @@ pub(crate) mod tests {
     }
 
     /// A double-click at `at`, `time` seconds in (a second apart from the last).
-    fn double_click(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, at: Pos2) {
+    fn double_click(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, at: Pos2) {
         let b = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
         frame(app, ctx, time, vec![Event::PointerMoved(at), b(true), b(false), b(true), b(false)]);
         frame(app, ctx, time + 0.1, vec![]);
@@ -991,7 +991,7 @@ pub(crate) mod tests {
 
     #[test]
     fn double_clicking_a_tool_button_opens_its_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let ctx = egui::Context::default();
         let buttons = frame(&mut app, &ctx, 0.0, vec![]);
@@ -1015,7 +1015,7 @@ pub(crate) mod tests {
 
     #[test]
     fn double_clicking_the_hand_zoom_and_transform_tools() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(660.0, 460.0)));
         app.run("view.setZoom", json!({"zoom": 333, "center": [10, 10]})).unwrap();
@@ -1037,13 +1037,13 @@ pub(crate) mod tests {
         app.run("tool.options", json!({"tool": "rotate"})).unwrap();
         app.ui.dialog.as_mut().unwrap().fields.insert("angle".into(), json!(90));
         crate::dialogs::confirm(&mut app).unwrap();
-        let b = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
+        let b = app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
         assert!((b.x0 - 20.0).abs() < 1e-9 && (b.y0 - 0.0).abs() < 1e-9 && (b.width() - 20.0).abs() < 1e-9, "{b:?}");
     }
 
     #[test]
     fn double_clicking_a_selection_tool_opens_the_move_dialog() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let ctx = egui::Context::default();
         // The Selection tool's button is the first one.
@@ -1064,7 +1064,7 @@ pub(crate) mod tests {
         app.run("tool.options", json!({"tool": "selection"})).unwrap();
         app.ui.dialog.as_mut().unwrap().fields.insert("dx".into(), json!("25 pt"));
         crate::dialogs::confirm(&mut app).unwrap();
-        let b = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
+        let b = app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().geometric_bounds().unwrap();
         assert_eq!((b.x0, b.y0), (35.0, 10.0));
     }
 
@@ -1100,7 +1100,7 @@ pub(crate) mod tests {
 
     #[test]
     fn right_clicking_a_tool_group_opens_its_flyout() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let ctx = egui::Context::default();
         let buttons = frame(&mut app, &ctx, 0.0, vec![]);
@@ -1137,7 +1137,7 @@ pub(crate) mod tests {
     }
 
     /// The Shapes group's button (Selection, Direct Selection, Lasso, then Rectangle).
-    fn shapes_button(app: &mut VectorcraftApp, ctx: &egui::Context) -> egui::Rect {
+    fn shapes_button(app: &mut TsipikaApp, ctx: &egui::Context) -> egui::Rect {
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         frame(app, ctx, 0.0, vec![])[3]
     }
@@ -1145,7 +1145,7 @@ pub(crate) mod tests {
     #[test]
     fn a_held_press_asks_for_the_frame_that_opens_the_flyout() {
         // egui draws only on input: a still press must schedule the frame where it becomes long.
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         let at = shapes_button(&mut app, &ctx).center();
         let p = Event::PointerButton { pos: at, button: PointerButton::Primary, pressed: true, modifiers: Default::default() };
@@ -1162,7 +1162,7 @@ pub(crate) mod tests {
 
     #[test]
     fn pressing_the_corner_triangle_opens_the_flyout_at_once() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         let button = shapes_button(&mut app, &ctx);
         let at = button.right_bottom() - vec2(4.0, 4.0);
@@ -1182,7 +1182,7 @@ pub(crate) mod tests {
 
     #[test]
     fn the_flyout_opens_on_the_right_press_even_when_its_tool_is_active() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         let at = shapes_button(&mut app, &ctx).center();
         app.select_tool("rectangle");
@@ -1210,7 +1210,7 @@ pub(crate) mod tests {
     #[test]
     fn type_button_long_press_selects_vertical_type_in_both_layouts() {
         for advanced in [false, true] {
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+            let mut app = TsipikaApp::new(Session::new(), Default::default());
             app.ui.toolbar_advanced = advanced;
             let all = slots(&app);
             let index = all.iter().position(|(_, tools)| tools.contains(&"type")).unwrap();
@@ -1238,7 +1238,7 @@ pub(crate) mod tests {
     }
 
     /// A press at `from`, dragged through `to` (one frame each), then released.
-    fn drag(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, from: Pos2, to: &[Pos2]) {
+    fn drag(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, from: Pos2, to: &[Pos2]) {
         let b = |pos, pressed| Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Default::default() };
         frame(app, ctx, time, vec![Event::PointerMoved(from), b(from, true)]);
         for (k, p) in to.iter().enumerate() {
@@ -1250,12 +1250,12 @@ pub(crate) mod tests {
     }
 
     /// A click at `at`.
-    fn click(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, at: Pos2, button: PointerButton) {
+    fn click(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, at: Pos2, button: PointerButton) {
         click_in(app, ctx, time, at, button, 1200.0);
     }
 
     /// [`click`] in a window `height` points tall; returns the tool buttons' rects after it.
-    fn click_in(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, at: Pos2, button: PointerButton, height: f32) -> Vec<egui::Rect> {
+    fn click_in(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, at: Pos2, button: PointerButton, height: f32) -> Vec<egui::Rect> {
         let b = |pressed| Event::PointerButton { pos: at, button, pressed, modifiers: Default::default() };
         frame_in(app, ctx, time, vec![Event::PointerMoved(at), b(true)], height);
         frame_in(app, ctx, time + 0.05, vec![b(false)], height);
@@ -1266,7 +1266,7 @@ pub(crate) mod tests {
     /// drawing modes sit side by side, each setting its mode (#1129).
     #[test]
     fn the_paint_and_drawing_mode_buttons_fit_the_toolbar_width() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", serde_json::json!({"width": 200, "height": 200})).unwrap();
         let ctx = egui::Context::default();
         frame_in(&mut app, &ctx, 0.0, vec![], 900.0);
@@ -1278,7 +1278,7 @@ pub(crate) mod tests {
         assert_eq!(modes.len(), 3, "the three drawing modes side by side");
         assert!(modes.iter().all(|r| (r.top() - modes[0].top()).abs() < 0.5), "{modes:?}");
         click_in(&mut app, &ctx, 2.0, modes[1].center(), PointerButton::Primary, 900.0);
-        assert_eq!(app.session.draw_mode, vectorcraft_engine::DrawMode::Behind);
+        assert_eq!(app.session.draw_mode, tsipika_engine::DrawMode::Behind);
     }
 
     /// How many columns of tool buttons `rects` make.
@@ -1307,7 +1307,7 @@ pub(crate) mod tests {
     /// the last. With the labels, each group starts its own row under its name.
     #[test]
     fn the_tools_run_on_without_group_labels() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let ctx = egui::Context::default();
         let one = frame_in(&mut app, &ctx, 0.0, vec![], 1600.0);
@@ -1327,7 +1327,7 @@ pub(crate) mod tests {
 
     #[test]
     fn the_double_arrow_toggles_one_and_two_columns_in_a_short_window() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         // 700 pt: too short for the single column, which scrolls instead of turning into two.
         assert_eq!(columns(&frame_in(&mut app, &ctx, 0.0, vec![], 700.0)), 1);
@@ -1340,7 +1340,7 @@ pub(crate) mod tests {
 
     #[test]
     fn the_columns_command_toggles_or_sets_the_toolbar_columns() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         assert_eq!(app.run("window.toolbarColumns", json!({})).unwrap(), json!(true));
         assert_eq!(columns(&frame_in(&mut app, &ctx, 0.0, vec![], 700.0)), 2);
@@ -1356,7 +1356,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_flyout_dragged_by_its_bar_floats_until_its_close_box_puts_it_back() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         let at = shapes_button(&mut app, &ctx).center();
         click(&mut app, &ctx, 1.0, at, PointerButton::Secondary);
@@ -1401,7 +1401,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_click_on_a_flyouts_bar_tears_it_off() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         let at = shapes_button(&mut app, &ctx).center();
         click(&mut app, &ctx, 1.0, at, PointerButton::Secondary);
@@ -1418,7 +1418,7 @@ pub(crate) mod tests {
 
     #[test]
     fn releasing_a_long_press_over_the_flyouts_bar_tears_it_off() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         let at = shapes_button(&mut app, &ctx).center();
         let b = |pos, pressed| Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Default::default() };
@@ -1435,8 +1435,8 @@ pub(crate) mod tests {
 
     #[test]
     fn window_float_tools_floats_and_puts_back_a_group() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
-        let check = |app: &VectorcraftApp| crate::menus::checked(app, "window.floatTools", &json!({"tool": "star"}));
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
+        let check = |app: &TsipikaApp| crate::menus::checked(app, "window.floatTools", &json!({"tool": "star"}));
         assert_eq!(app.run("window.floatTools", json!({"tool": "star"})).unwrap(), json!(true));
         let [f] = app.ui.floating_flyouts.as_slice() else { panic!("one strip: {:?}", app.ui.floating_flyouts) };
         assert_eq!(f.tools.first().map(String::as_str), Some("rectangle"), "the Basic toolbar's Shapes group");
@@ -1459,7 +1459,7 @@ pub(crate) mod tests {
 
     #[test]
     fn workspaces_keep_floating_flyouts_and_reset_puts_them_back() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("window.floatTools", json!({"tool": "pen"})).unwrap();
         app.run("window.workspace.new", json!({"name": "Strips"})).unwrap();
         app.run("window.workspace", json!({"name": "Essentials"})).unwrap();
@@ -1485,7 +1485,7 @@ pub(crate) mod tests {
 
     #[test]
     fn floating_flyouts_survive_saved_preferences_and_stay_on_screen() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.ui.floating_flyouts.push(crate::state::FloatingFlyout { tools: vec!["pen".into(), "addAnchor".into()], pos: [5000.0, 10.0] });
         let saved = serde_json::to_value(&app.ui).unwrap();
         let back: crate::state::UiState = serde_json::from_value(saved.clone()).unwrap();
@@ -1517,10 +1517,10 @@ pub(crate) mod tests {
                 _ => {}
             }
         }
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let draw = |app: &mut VectorcraftApp| {
+        let draw = |app: &mut TsipikaApp| {
             let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(400.0, 1600.0))), ..Default::default() };
             let mut out = ctx.run_ui(raw, |ui| show(app, ui));
             out.textures_delta.clear();
@@ -1536,7 +1536,7 @@ pub(crate) mod tests {
     }
 
     /// Hover `at` for two seconds, coming from elsewhere: the texts painted meanwhile.
-    fn hovered_texts(app: &mut VectorcraftApp, ctx: &egui::Context, t0: f64, at: Pos2) -> Vec<String> {
+    fn hovered_texts(app: &mut TsipikaApp, ctx: &egui::Context, t0: f64, at: Pos2) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -1570,7 +1570,7 @@ pub(crate) mod tests {
 
     #[test]
     fn a_floating_flyouts_buttons_have_tool_tips_when_tool_tips_are_on() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         let tools: Vec<String> = ["rectangle", "roundedRectangle", "star"].map(String::from).to_vec();
         app.ui.floating_flyouts.push(crate::state::FloatingFlyout { tools, pos: [150.0, 600.0] });
         let ctx = egui::Context::default();
@@ -1591,7 +1591,7 @@ pub(crate) mod tests {
     #[test]
     fn screen_readers_name_a_flyouts_rows_and_a_floating_strips_buttons() {
         let name = |id| tool_info(id).map(tip).unwrap_or_default();
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let group: Vec<String> = ["rectangle", "roundedRectangle", "ellipse"].map(String::from).to_vec();
         let flyout = tree(|ui| {

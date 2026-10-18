@@ -1,9 +1,9 @@
-//! ICC profiles through `craft-cms` (pure Rust): built-in RGB and CMYK spaces and user-supplied
+//! ICC profiles through `mahay-cms` (pure Rust): built-in RGB and CMYK spaces and user-supplied
 //! `.icc` files.
 
 use std::sync::{Arc, OnceLock};
 
-use craft_cms::{Builtin, ColorSpace, Profile, Transform, TransformOptions};
+use mahay_cms::{Builtin, ColorSpace, Profile, Transform, TransformOptions};
 
 use super::lab::Lab;
 use super::{CmsError, Intent, ProfileKind};
@@ -151,7 +151,7 @@ fn builtin(name: &str, b: Builtin) -> Option<IccProfile> {
     IccProfile::from_profile(Some(name.to_string()), Arc::new(b.profile().clone())).ok()
 }
 
-/// Built-in RGB working spaces from craft-cms's built-in profiles.
+/// Built-in RGB working spaces from mahay-cms's built-in profiles.
 pub fn builtin_rgb(name: &str) -> Option<IccProfile> {
     let b = match name {
         super::ADOBE_RGB => Builtin::AdobeRgbCompat,

@@ -1,6 +1,6 @@
-# LightCraft — instructions for agents
+# Hazavana — instructions for agents
 
-LightCraft is a clean-room, open-source, pure-Rust photo library + non-destructive raw developer targeting Adobe Lightroom parity (and beyond). Native on macOS, Windows, Linux; web via WASM. Sibling of `../pdfcraft` (Acrobat), `../photocraft` (Photoshop), `../vectorcraft` (Illustrator) and `../filmcraft` (Premiere), with the same conventions.
+Hazavana is a clean-room, open-source, pure-Rust photo library + non-destructive raw developer targeting Adobe Lightroom parity (and beyond). Native on macOS, Windows, Linux; web via WASM. Sibling of `../taratasy` (Acrobat), `../sary` (Photoshop), `../tsipika` (Illustrator) and `../hetsika` (Premiere), with the same conventions.
 
 ## Start every session here
 1. Read `plan/STATUS.md` (current milestone, next unchecked task, blockers).
@@ -15,7 +15,7 @@ LightCraft is a clean-room, open-source, pure-Rust photo library + non-destructi
    tracker is [`docs/parity-checklist.md`](docs/parity-checklist.md) (one row per feature, menu item and shortcut).
    When you land a feature, update its row(s) and the gap entry in the same commit, and the numbers in `ROADMAP.md` /
    `docs/target-app-parity.md` when a listed gap closes (bump each doc's *Last updated* line and revision history, per
-   craftrules `standards/progress-docs.md`); `cargo xtask parity` (part of `ci`) checks that every `cmd:`/`ctl:` id and
+   mahay-rules `standards/progress-docs.md`); `cargo xtask parity` (part of `ci`) checks that every `cmd:`/`ctl:` id and
    path the tracker cites still exists and that `docs/gaps.md` lists each gap once, and `cargo xtask parity --write`
    refreshes its summary.
 5. Follow the autonomous operation protocol (`plan/execution-plan.md` §7). Don't stop to ask unless §7 lists the decision as the user's.
@@ -30,11 +30,11 @@ branches can still break each other (e.g. a new struct field vs. a new construct
 and often so a crash loses minutes, not hours.
 
 ## Never crash (outranks feature work)
-People trust LightCraft with their photo libraries and edits; a crash loses their work. A malformed raw/JPEG/XMP, a bad
+People trust Hazavana with their photo libraries and edits; a crash loses their work. A malformed raw/JPEG/XMP, a bad
 command, control or MCP argument, a corrupt catalog or settings file, or a full disk must produce an error the user (or
 agent) can act on, never a panic. Don't ship a feature by adding a panic path, and fix a crash before building on top
-of it. Full standard: `../craftrules/standards/never-crash.md`
-([storytold/craftrules](https://github.com/storytold/craftrules/blob/main/standards/never-crash.md)).
+of it. Full standard: `../mahay-rules/standards/never-crash.md`
+([raantss18/mahay-rules](https://github.com/raantss18/mahay-rules/blob/main/standards/never-crash.md)).
 - **Non-test code never panics:** no `unwrap()`, `expect()`, `panic!`, `unreachable!`, `todo!`, `unimplemented!`, and
   no `unsafe`. Return the crate's error type through `Result` and `?`; use `ok_or(..)?`, `let … else`, `if let`, or a
   fallback (`unwrap_or…`) only where it can't silently corrupt a document. An unfinished feature returns an
@@ -74,26 +74,26 @@ of it. Full standard: `../craftrules/standards/never-crash.md`
 - **Never use any iconography, image, artwork, font, sound or other asset from Adobe products** (no Lightroom/Creative Cloud icons, no screenshots, no presets/profiles/LUTs, no UI bitmaps — not even as a temporary placeholder or "reference copy"). Observing Adobe's UI to imitate *layout and behaviour* is allowed; copying or tracing its assets is not.
 - **This includes Adobe's open-licensed assets**: no Source Sans/Serif/Code or Source Han fonts, no Adobe Fonts, no
   Adobe-published icon sets, sample photos, colour profiles or LUTs — even when OFL/MIT. The UI font is Inter (OFL);
-  Japanese and Chinese fonts come from craft-fonts (below). **One exception (maintainer decision, 2026-10-07): Noto
-  Sans/Serif CJK** (Google-branded, OFL, co-developed with Adobe as Source Han) is allowed via craft-fonts for Chinese
+  Japanese and Chinese fonts come from mahay-fonts (below). **One exception (maintainer decision, 2026-10-07): Noto
+  Sans/Serif CJK** (Google-branded, OFL, co-developed with Adobe as Source Han) is allowed via mahay-fonts for Chinese
   text, because nearly every OFL Chinese face derives from it. Use it unmodified under its OFL; this does not open the
   door to Source Han under Adobe's name or to any other Adobe asset.
 - Every asset in the repository must be one of: **our own original work** (e.g. icons drawn in code as vectors, procedurally generated demo photos), **public domain / CC0**, **Creative Commons** (CC-BY / CC-BY-SA with attribution honoured), **OFL** (fonts), or **permissive open-source** (MIT/Apache-2.0/BSD/ISC) — or contributed by a person who created the asset and licenses it openly.
-- **Exception: `docs/brand/`.** The ArtCraft name, wordmark and logos there are ArtCraft Team trademarks, not open source and not covered by LightCraft's MIT OR Apache-2.0 licence (`LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE`); their terms are in `docs/brand/LICENSE-brand.txt`. Use them only unmodified and never redraw, recolour or derive from them.
+- **Exception: `docs/brand/`.** The Mahay name, wordmark and logos there are Mahay Team trademarks, not open source and not covered by Hazavana's MIT OR Apache-2.0 licence (`LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE`); their terms are in `docs/brand/LICENSE-brand.txt`. Use them only unmodified and never redraw, recolour or derive from them.
 - **Every asset must have an entry in `assets/ATTRIBUTION.md`** (path, title, author/creator, source URL or "original work", licence, date added, modifications) and its licence text when required (e.g. `assets/fonts/OFL-*.txt`). Add the entry in the same commit as the asset. Assets without an attribution entry must not be committed.
-- **Fonts live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), never in this repo.** Don't commit
-  font files here (Inter, already in `assets/fonts/`, is the one exception); add new fonts to craft-fonts. LightCraft
-  uses it as the optional build input `CRAFT_FONTS_DIR`: `git clone https://github.com/storytold/craft-fonts ../craft-fonts`
-  then `CRAFT_FONTS_DIR=../craft-fonts cargo run -p lightcraft` (or any cargo/xtask command). `crates/engine/build.rs`
-  embeds the manifest's fonts as `lightcraft_engine::CRAFT_FONTS` (wasm32: BIZ UDPGothic Regular only); `cargo xtask web`
+- **Fonts live in [raantss18/mahay-fonts](https://github.com/raantss18/mahay), never in this repo.** Don't commit
+  font files here (Inter, already in `assets/fonts/`, is the one exception); add new fonts to mahay-fonts. Hazavana
+  uses it as the optional build input `MAHAY_FONTS_DIR`: `git clone https://github.com/raantss18/mahay ../mahay-fonts`
+  then `MAHAY_FONTS_DIR=../mahay-fonts cargo run -p hazavana` (or any cargo/xtask command). `crates/engine/build.rs`
+  embeds the manifest's fonts as `hazavana_engine::MAHAY_FONTS` (wasm32: BIZ UDPGothic Regular only); `cargo xtask web`
   ships Noto Sans CJK SC Regular as a separate asset loaded by the UI before startup. The UI
   (`theme::font_definitions`) and the export watermark renderer use CJK faces (picked by script) as fallbacks after Inter; the UI also falls back on the faces of other scripts (Thai, Arabic, …). Unset,
-  `CRAFT_FONTS` is empty: everything builds, tests and runs, but Chinese and Japanese text lack glyphs. Releases always build
-  with it (`release.yml`, `CRAFT_FONTS_REQUIRED=1`) and ship the fonts' OFL licences. Tests that need these fonts skip
-  without it; the FreeBSD CI job runs them with it. Rules: craftrules
-  [`standards/fonts.md`](https://github.com/storytold/craftrules/blob/main/standards/fonts.md).
+  `MAHAY_FONTS` is empty: everything builds, tests and runs, but Chinese and Japanese text lack glyphs. Releases always build
+  with it (`release.yml`, `MAHAY_FONTS_REQUIRED=1`) and ship the fonts' OFL licences. Tests that need these fonts skip
+  without it; the FreeBSD CI job runs them with it. Rules: mahay-rules
+  [`standards/fonts.md`](https://github.com/raantss18/mahay-rules/blob/main/standards/fonts.md).
 - Icons drawn in code (e.g. `crates/ui-egui/src/icons.rs`) are original work and are recorded in `assets/ATTRIBUTION.md` as such; do not trace them from Adobe icons.
-- Demo/test images: generated procedurally by `lightcraft-scenes`, or CC0 downloads kept in the gitignored `corpus/` with their source recorded. Screenshots of Adobe apps live only in the gitignored `plan/` and are never committed or published.
+- Demo/test images: generated procedurally by `hazavana-scenes`, or CC0 downloads kept in the gitignored `corpus/` with their source recorded. Screenshots of Adobe apps live only in the gitignored `plan/` and are never committed or published.
 - **Enforced:** `cargo xtask assets` (in `ci`) fails when an image/icon/font/sound/video/raw/ICC/XMP file is not matched
   by a path pattern in the first column of `assets/ATTRIBUTION.md`, when a referenced licence file is missing, when a
   file name suggests Adobe material, or when an Adobe profile/template format (`.dcp`, `.lcp`, `.lrtemplate`, …) appears.
@@ -101,18 +101,18 @@ of it. Full standard: `../craftrules/standards/never-crash.md`
 - When in doubt about an asset's licence: don't use it.
 
 ## Running and looking at the app
-- `cargo run --release -p lightcraft -- --control 7980` opens the desktop app with the JSON-lines control server (see `docs/control-protocol.md`).
+- `cargo run --release -p hazavana -- --control 7980` opens the desktop app with the JSON-lines control server (see `docs/control-protocol.md`).
 - **Never send OS-level synthetic input** (osascript/System Events keystrokes or clicks, `cliclick`, accessibility
-  automation): it goes to whatever window is frontmost — the user's terminal or other apps. Drive LightCraft only
+  automation): it goes to whatever window is frontmost — the user's terminal or other apps. Drive Hazavana only
   through its control channel (`ui.key`, `ui.pointer`, `ui.clickWidget`, `ui.menu.invoke`) or headless snapshots.
 - For UI work, **look at the result**: drive via the control channel and take `ui.screenshot`, compare with `plan/lightroom/screenshots/`.
 - **Unattended (display asleep/locked, CI, nightly runs): prefer headless snapshots** — no window needed:
-  `lightcraft-cli snapshot --demo --script tour.jsonl -o out.png --size 1600x1000` (control-protocol requests,
+  `hazavana-cli snapshot --demo --script tour.jsonl -o out.png --size 1600x1000` (control-protocol requests,
   one per line; see `docs/control-protocol.md` → Headless rendering). In a running app use
   `ui.screenshot {"path": …, "headless": true}`; windowed screenshots fall back to headless after 2 s.
-- MCP: `lightcraft-cli mcp` (headless, `--demo` for the procedural library) or `lightcraft-cli mcp --connect` (drives
-  the running app). See `docs/mcp.md`. Quick non-UI checks: `lightcraft-cli render in.jpg -o out.jpg --set light.exposure=1`.
-- Export goes through `lightcraft_engine::export` (one encoder for app, CLI, MCP and web); UI-only commands live in
+- MCP: `hazavana-cli mcp` (headless, `--demo` for the procedural library) or `hazavana-cli mcp --connect` (drives
+  the running app). See `docs/mcp.md`. Quick non-UI checks: `hazavana-cli render in.jpg -o out.jpg --set light.exposure=1`.
+- Export goes through `hazavana_engine::export` (one encoder for app, CLI, MCP and web); UI-only commands live in
   `crates/ui-egui/src/menus.rs`.
 - Text boxes use `crates/ui-egui/src/text_field.rs` (`TextField`), not `egui::TextEdit`: it gives every field the
   Cut / Copy / Paste / Select All menu, Esc restoring the text, and reports how an edit ended. Give each a widget id
@@ -120,28 +120,28 @@ of it. Full standard: `../craftrules/standards/never-crash.md`
 - Shell gotcha: `mv`/`cp` are aliased interactive here — use `/bin/mv -f` / `/bin/cp -f`.
 - Parallel agents: separate git worktrees and `CARGO_TARGET_DIR=target/agent-<name>`; each agent uses its **own control port** (pick one in 18000–19999, never the default 7980) and its own scratch subfolder (`<scratch>/<agent-name>/`) — never `rm -rf` shared paths; delete your target dir when done (disk is shared); keep every `Cargo.toml` valid at all times (the `crates/*` glob means one broken manifest breaks everyone).
 - Test corpora: `cargo xtask corpus --download` into `corpus/` (gitignored, CC0 only). Never commit media.
-- Shared real-file test corpora (Photoshop-authored PSDs, etc.) live in [`storytold/photocraft-corpus`](https://github.com/storytold/photocraft-corpus), explained in [craftrules `standards/test-corpora.md`](https://github.com/storytold/craftrules/blob/main/standards/test-corpora.md). Never commit large binary fixtures to this repo; fetch them pinned by commit and sha256-verified, as PhotoCraft does with `cargo xtask corpus`.
+- Shared real-file test corpora (Photoshop-authored PSDs, etc.) live in [`raantss18/sary-corpus`](https://github.com/raantss18/mahay-corpus), explained in [mahay-rules `standards/test-corpora.md`](https://github.com/raantss18/mahay-rules/blob/main/standards/test-corpora.md). Never commit large binary fixtures to this repo; fetch them pinned by commit and sha256-verified, as Sary does with `cargo xtask corpus`.
 
 ## Testing & performance (do this often)
 - Unit/property tests next to the code; end-to-end tests drive real binaries (`crates/mcp/tests/e2e.rs`,
-  `apps/lightcraft-cli/tests/`). New features need at least one test that would fail without them.
+  `apps/hazavana-cli/tests/`). New features need at least one test that would fail without them.
 - **Run the app after every user-visible change**: launch with `--control 7980`, drive it with a JSON-lines script
   (`docs/showcase/run.py file.jsonl`), take `ui.screenshot`, and look at it. Check `ui.inspect` → `perf`.
 - **Benchmarks:** `cargo xtask bench` (24 MP raw from corpus; CPU and GPU columns) appends to `target/bench/history.jsonl`
   and flags CPU-time regressions > 20 % vs the previous run (`--strict` to fail). Run it before and after perf work.
-- **Measure, don't guess**: `LIGHTCRAFT_PROFILE=1` prints per-stage pipeline timings to stderr; time CLI renders
+- **Measure, don't guess**: `HAZAVANA_PROFILE=1` prints per-stage pipeline timings to stderr; time CLI renders
   with `/usr/bin/time`. Record numbers in `plan/STATUS.md` → Metrics. Budgets: slider update ≤ 16 ms (draft) / loupe
   ≤ 60 ms on ~2.5 MP; export ≤ 1 s per 24 MP JPEG.
-- Never commit media: test images are procedural (`lightcraft-scenes`) or CC0 downloads in the gitignored `corpus/`.
-- A test that can't run here (no GPU, corpus file, craft-fonts face, model) calls `lightcraft_testkit::skip!(Gpu, "why")`
+- Never commit media: test images are procedural (`hazavana-scenes`) or CC0 downloads in the gitignored `corpus/`.
+- A test that can't run here (no GPU, corpus file, mahay-fonts face, model) calls `hazavana_testkit::skip!(Gpu, "why")`
   before it returns, not a bare `eprintln!`. `cargo xtask ci` then lists the skips and the machine's GPU adapters and
   data, and writes `target/ci/report.json` and `target/ci/summary.md` (Markdown for a PR).
 
 ## Map of the code
 `geom`, `color`, `raster`, `tiff` (L0) → `raw`, `codecs`, `meta`, `develop` (L1) → `pipeline` → `catalog` → `engine`
-→ `ui-egui`, `mcp` (L5) → apps `lightcraft` (desktop), `lightcraft-cli` (render/commands/MCP). `scenes` generates demo
+→ `ui-egui`, `mcp` (L5) → apps `hazavana` (desktop), `hazavana-cli` (render/commands/MCP). `scenes` generates demo
 photos. `xtask` = tooling (`ci`, `layers`, `assets`, `parity`, `wasm`, `corpus`, `stats`); `testkit` = test helpers
 (dev-dependency only). `flake.nix` +
-`nix/package.nix` = the Nix package (`nix build` builds both binaries with the craft-fonts input, installs the
+`nix/package.nix` = the Nix package (`nix build` builds both binaries with the mahay-fonts input, installs the
 desktop file/icons/AppStream metadata and runs `cargo test --workspace`; `nix develop` = dev shell). Community-maintained; CI only
 evaluates it (`.github/workflows/nix.yml`), so the build may lag behind the workspace; see README → Quick start.

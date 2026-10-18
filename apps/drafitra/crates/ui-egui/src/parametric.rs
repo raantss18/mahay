@@ -6,8 +6,8 @@
 //! Every edit runs an engine command (`parameters {name, expr}` / `{delete}`); this module only
 //! draws and collects input.
 
-use cadcraft_doc::{ConstraintKind, DistAxis, Drawing, EntityKind, GeomRef, Handle, Sub};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{ConstraintKind, DistAxis, Drawing, EntityKind, GeomRef, Handle, Sub};
+use drafitra_geom::Vec2;
 use egui::{Color32, Pos2, Rect, Sense, Shape, Stroke, pos2, vec2};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -103,7 +103,7 @@ fn ent_kind(d: &Drawing, h: Handle) -> Option<&EntityKind> {
     d.entity(h).map(|e| &e.kind)
 }
 
-fn poly_vertex(p: &cadcraft_doc::LwPolyline, i: u32) -> Option<Vec2> {
+fn poly_vertex(p: &drafitra_doc::LwPolyline, i: u32) -> Option<Vec2> {
     p.vertices.get(usize::try_from(i).ok()?).map(|v| v.p)
 }
 
@@ -114,7 +114,7 @@ fn ref_point(d: &Drawing, r: &GeomRef) -> Option<Vec2> {
         (EntityKind::Line(l), Sub::End) => Some(l.b.xy()),
         (EntityKind::Line(l), Sub::Mid) => Some(l.a.xy().mid(l.b.xy())),
         (EntityKind::Arc(a), s) => {
-            let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+            let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
             match s {
                 Sub::Start => Some(g.start_point()),
                 Sub::End => Some(g.end_point()),
@@ -285,7 +285,7 @@ pub fn draw_overlay(app: &mut CadApp, ui: &mut egui::Ui, painter: &egui::Painter
         // A plain number shows the formatted value; an expression shows itself (`d2=d1/2`).
         let label_value = match (c.expr.trim().parse::<f64>().is_ok(), value) {
             (true, Some(v)) if c.kind == ConstraintKind::Angular => format!("{}°", trim_num(v, 2)),
-            (true, Some(v)) => cadcraft_engine::units::format_distance(v, lu, lp),
+            (true, Some(v)) => drafitra_engine::units::format_distance(v, lu, lp),
             _ => c.expr.clone(),
         };
         let label = format!("{}={}", c.name, label_value);

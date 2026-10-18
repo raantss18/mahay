@@ -9,15 +9,15 @@
 //! is dropped. Every change is an engine command, so it is undoable and agent-drivable.
 
 use crate::i18n::tr;
-use effectcraft_engine::project::{Comp, Layer, Marker};
-use effectcraft_engine::time::Tick;
+use tselatra_engine::project::{Comp, Layer, Marker};
+use tselatra_engine::time::Tick;
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::{Value, json};
 
 use super::timeline::TMap;
 use crate::icons::{self, Icon};
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 /// Which marker a gesture or the dialog refers to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -62,7 +62,7 @@ pub struct MarkerDraft {
 }
 
 /// Open the Composition/Layer Marker dialog for `m`.
-pub fn open_dialog(app: &mut EffectcraftApp, m: MarkerRef) -> Result<(), String> {
+pub fn open_dialog(app: &mut TselatraApp, m: MarkerRef) -> Result<(), String> {
     let mut p = json!({});
     if let Some(l) = m.layer {
         p["layer"] = json!(l);
@@ -88,8 +88,8 @@ pub fn open_dialog(app: &mut EffectcraftApp, m: MarkerRef) -> Result<(), String>
             .map(|a| a.iter().map(|kv| (kv[0].as_str().unwrap_or_default().to_string(), kv[1].as_str().unwrap_or_default().to_string())).collect())
             .unwrap_or_default(),
         protected: v["protected"].as_bool().unwrap_or(false),
-        label: effectcraft_engine::color::Label::from_name(&s("label"))
-            .and_then(|l| effectcraft_engine::color::Label::ALL.iter().position(|x| *x == l))
+        label: tselatra_engine::color::Label::from_name(&s("label"))
+            .and_then(|l| tselatra_engine::color::Label::ALL.iter().position(|x| *x == l))
             .unwrap_or(0),
     };
     app.dialog = Some(Dialog::Marker);
@@ -115,13 +115,13 @@ pub fn draft_params(d: &MarkerDraft) -> Value {
     p
 }
 
-fn text_field(ui: &mut egui::Ui, app: &mut EffectcraftApp, id: &str, v: &mut String, w: f32) {
+fn text_field(ui: &mut egui::Ui, app: &mut TselatraApp, id: &str, v: &mut String, w: f32) {
     let r = ui.add(egui::TextEdit::singleline(v).desired_width(w));
     app.auto.add(id, r.rect, id);
 }
 
 /// The Composition/Layer Marker dialog.
-pub fn dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn dialog(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     let mut d = app.dialog_state.marker.clone();
     let (mut ok, mut cancel, mut delete) = (false, false, false);
     // Cmd+Backspace (Ctrl elsewhere) is Delete, in a text field too.
@@ -195,7 +195,7 @@ pub fn dialog(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
             app.auto.add("dialog.marker.protected", r.rect, "Protected Region");
             ui.add_space(20.0);
             ui.label(tr("Label:"));
-            let labels = effectcraft_engine::color::Label::ALL;
+            let labels = tselatra_engine::color::Label::ALL;
             let cur = labels.get(d.label).copied().unwrap_or_default();
             let r = egui::ComboBox::from_id_salt("dialog.marker.label").selected_text(app.session.prefs.label_name(cur)).show_ui(ui, |ui| {
                 for (i, l) in labels.into_iter().enumerate() {
@@ -248,7 +248,7 @@ fn drag_state_id() -> egui::Id {
 }
 
 /// Snap `t` (comp seconds) to the CTI, the work area and other marker times within 8 px.
-fn snap(app: &EffectcraftApp, comp: &Comp, tm: TMap, t: f64, skip: MarkerRef) -> f64 {
+fn snap(app: &TselatraApp, comp: &Comp, tm: TMap, t: f64, skip: MarkerRef) -> f64 {
     let fr = comp.frame_rate;
     let mut t = fr.snap_nearest(Tick::from_seconds_f64(t.max(0.0))).seconds();
     if !app.session.state.snapping {
@@ -264,8 +264,8 @@ fn snap(app: &EffectcraftApp, comp: &Comp, tm: TMap, t: f64, skip: MarkerRef) ->
 }
 
 /// A marker's colour: its label's, pale yellow without one.
-fn marker_color(t: &Tokens, label: effectcraft_engine::color::Label) -> Color32 {
-    if label == effectcraft_engine::color::Label::None { Color32::from_rgb(0xd8, 0xd8, 0x60) } else { t.label(label) }
+fn marker_color(t: &Tokens, label: tselatra_engine::color::Label) -> Color32 {
+    if label == tselatra_engine::color::Label::None { Color32::from_rgb(0xd8, 0xd8, 0x60) } else { t.label(label) }
 }
 
 /// The marker glyph at `x` from `y0`, `h` points tall: a tab pointing down at the time.
@@ -277,7 +277,7 @@ fn marker_shape(x: f32, y0: f32, h: f32) -> Vec<Pos2> {
 /// Draw one marker (triangle + duration bar + comment) at `x` in a strip `[y0, y1]` and handle
 /// its gestures. `comp_t` is the marker's comp time.
 #[allow(clippy::too_many_arguments)]
-fn marker(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, comp: &Comp, tm: TMap, m: &Marker, comp_t: f64, r: MarkerRef, y0: f32, y1: f32) {
+fn marker(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, comp: &Comp, tm: TMap, m: &Marker, comp_t: f64, r: MarkerRef, y0: f32, y1: f32) {
     let t = app.tokens;
     let ctx = ui.ctx().clone();
     let x = tm.x(comp_t);
@@ -345,7 +345,7 @@ fn marker(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, comp: 
         app.session.history.merge_key = None;
     }
     crate::widgets::context_menu(&resp, |ui| {
-        let run = |ui: &mut egui::Ui, label: &str, cmd: &str, params: Value, app: &mut EffectcraftApp| {
+        let run = |ui: &mut egui::Ui, label: &str, cmd: &str, params: Value, app: &mut TselatraApp| {
             if ui.button(label).clicked() {
                 if cmd == "dialog" {
                     let _ = open_dialog(app, r);
@@ -371,7 +371,7 @@ fn marker(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, comp: 
 }
 
 /// Composition markers in the ruler strip `[y0, y1]`, protected regions over `rows`.
-pub(crate) fn comp_markers(app: &mut EffectcraftApp, ui: &mut egui::Ui, comp: &Comp, tm: TMap, strip: Rect, rows: Rect) {
+pub(crate) fn comp_markers(app: &mut TselatraApp, ui: &mut egui::Ui, comp: &Comp, tm: TMap, strip: Rect, rows: Rect) {
     let p = ui.painter().with_clip_rect(strip);
     let rp = ui.painter().with_clip_rect(rows);
     for m in comp.markers.iter().filter(|m| m.protected && m.duration > Tick(0)) {
@@ -389,7 +389,7 @@ pub(crate) fn comp_markers(app: &mut EffectcraftApp, ui: &mut egui::Ui, comp: &C
 /// (#275): drag a marker out of it and it follows the pointer along the marker strip `strip`
 /// (snapping like a dragged marker); dropping it there adds a composition marker at that time,
 /// one undo step. Dropped back on the bin or outside the time graph's width, nothing is added.
-pub(crate) fn marker_bin(app: &mut EffectcraftApp, ui: &mut egui::Ui, comp: &Comp, tm: TMap, bin: Rect, strip: Rect) {
+pub(crate) fn marker_bin(app: &mut TselatraApp, ui: &mut egui::Ui, comp: &Comp, tm: TMap, bin: Rect, strip: Rect) {
     let t = app.tokens;
     let resp = ui.interact(bin, egui::Id::new("marker-bin"), Sense::drag()).on_hover_text(tr("Composition marker bin: drag a marker to the time ruler"));
     app.auto.add("timeline.markerBin", bin, "Composition marker bin");
@@ -405,7 +405,7 @@ pub(crate) fn marker_bin(app: &mut EffectcraftApp, ui: &mut egui::Ui, comp: &Com
     let Some(at) = at else { return };
     if resp.dragged() {
         let h = strip.height().min(10.0);
-        let col = marker_color(&t, effectcraft_engine::color::Label::None);
+        let col = marker_color(&t, tselatra_engine::color::Label::None);
         let p = ui.painter().with_clip_rect(strip);
         p.add(egui::Shape::convex_polygon(marker_shape(tm.x(at), strip.min.y, h), col, Stroke::NONE));
     }
@@ -418,7 +418,7 @@ pub(crate) fn marker_bin(app: &mut EffectcraftApp, ui: &mut egui::Ui, comp: &Com
 
 /// Layer markers on a layer's row `r`; on a precomp layer, its comp's markers too (read-only,
 /// outlined: hover names them, a double-click opens the nested comp at the marker).
-pub(crate) fn layer_markers(app: &mut EffectcraftApp, ui: &mut egui::Ui, clip: Rect, comp: &Comp, layer: &Layer, tm: TMap, r: Rect) {
+pub(crate) fn layer_markers(app: &mut TselatraApp, ui: &mut egui::Ui, clip: Rect, comp: &Comp, layer: &Layer, tm: TMap, r: Rect) {
     let p = ui.painter().with_clip_rect(clip);
     nested_markers(app, ui, &p, comp, layer, tm, r);
     for (i, m) in layer.markers.iter().enumerate() {
@@ -427,8 +427,8 @@ pub(crate) fn layer_markers(app: &mut EffectcraftApp, ui: &mut egui::Ui, clip: R
 }
 
 /// The nested comp's markers on a precomp layer's bar (`markers.nested`).
-fn nested_markers(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, comp: &Comp, layer: &Layer, tm: TMap, r: Rect) {
-    let effectcraft_engine::project::LayerSource::Comp { item } = layer.source else { return };
+fn nested_markers(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, comp: &Comp, layer: &Layer, tm: TMap, r: Rect) {
+    let tselatra_engine::project::LayerSource::Comp { item } = layer.source else { return };
     let Some(cid) = app.session.active_comp_id() else { return };
     let project = app.session.project.clone();
     let Some(nc) = project.comp(item) else { return };
@@ -440,7 +440,7 @@ fn nested_markers(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter
     let cached = ui.ctx().data(|d| d.get_temp::<(u64, Vec<(Tick, usize)>)>(key)).filter(|(r, _)| *r == rev);
     let at = cached.map(|(_, v)| v).unwrap_or_else(|| {
         let v: Vec<(Tick, usize)> =
-            effectcraft_engine::commands::markers::nested_markers(&project, cid, comp, layer).into_iter().map(|(t, i, _)| (t, i)).collect();
+            tselatra_engine::commands::markers::nested_markers(&project, cid, comp, layer).into_iter().map(|(t, i, _)| (t, i)).collect();
         ui.ctx().data_mut(|d| d.insert_temp(key, (rev, v.clone())));
         v
     });
@@ -475,20 +475,20 @@ mod tests {
 
     #[test]
     fn marker_dialog_reads_and_writes_every_field() {
-        let mut s = effectcraft_engine::Session::default();
+        let mut s = tselatra_engine::Session::default();
         s.execute("comp.new", json!({"name": "M", "width": 100, "height": 100, "frameRate": 30, "duration": 4})).unwrap();
         s.execute("markers.set", json!({"new": true, "time": 1.0, "comment": "hello", "cuePoint": {"name": "c", "params": [["a", "1"]]}, "label": "Blue"}))
             .unwrap();
-        let mut app = EffectcraftApp::new(s);
+        let mut app = TselatraApp::new(s);
         open_dialog(&mut app, MarkerRef { layer: None, index: 0 }).unwrap();
         assert_eq!(app.dialog, Some(Dialog::Marker));
         let d = &mut app.dialog_state.marker;
         assert_eq!((d.time, d.comment.as_str(), d.cue, d.cue_name.as_str()), (1.0, "hello", true, "c"));
         assert_eq!(d.cue_params, vec![("a".to_string(), "1".to_string())]);
-        assert_eq!(effectcraft_engine::color::Label::ALL[d.label].name(), "Blue");
+        assert_eq!(tselatra_engine::color::Label::ALL[d.label].name(), "Blue");
         d.duration = 0.5;
         d.chapter = "Ch".into();
-        d.url = "https://getartcraft.com".into();
+        d.url = "https://github.com/raantss18/mahay".into();
         d.frame_target = "_self".into();
         d.protected = true;
         d.cue = false;

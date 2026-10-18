@@ -1,5 +1,5 @@
-//! Encode a short comp to every output format and decode it back: through EffectCraft's own
-//! media layer (FilmCraft decoders) for MP4/MOV, the `image`/`gif` crates for stills and GIF,
+//! Encode a short comp to every output format and decode it back: through Tselatra's own
+//! media layer (Hetsika decoders) for MP4/MOV, the `image`/`gif` crates for stills and GIF,
 //! and — when installed — ffprobe as an external oracle (skipped otherwise).
 //!
 //! The comp: 64×48 @ 10 fps, 1.2 s (12 frames), dark-blue background, a red solid of 32×48
@@ -9,14 +9,14 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use effectcraft_color::Label;
-use effectcraft_export::render_queue::{AudioOutput, Channels, OutputFormat, OutputModule, ProResProfile, RenderSettings, TimeSpan, sequence_path};
-use effectcraft_export::{Job, Progress, export};
-use effectcraft_media::MediaPool;
-use effectcraft_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid, build};
-use effectcraft_raster::Image;
-use effectcraft_render::{FootageSource, NoFootage};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_export::render_queue::{AudioOutput, Channels, OutputFormat, OutputModule, ProResProfile, RenderSettings, TimeSpan, sequence_path};
+use tselatra_export::{Job, Progress, export};
+use tselatra_media::MediaPool;
+use tselatra_project::{Comp, ItemId, ItemKind, LayerSource, Project, Solid, build};
+use tselatra_raster::Image;
+use tselatra_render::{FootageSource, NoFootage};
+use tselatra_time::{FrameRate, Tick};
 
 const W: u32 = 64;
 const H: u32 = 48;
@@ -39,7 +39,7 @@ fn project(audio: Option<&Path>) -> (Project, ItemId) {
     l.in_point = comp.frame_rate.tick_of(5);
     comp.layers.push(l);
     if let Some(path) = audio {
-        let f = effectcraft_media::probe(path).expect("probe wav");
+        let f = tselatra_media::probe(path).expect("probe wav");
         let fid = p.add_item("tone.wav", Label::SeaFoam, None, ItemKind::Footage(f));
         let l = build::layer(&mut p, &comp, "tone", LayerSource::Footage { item: fid }, (0, 0), None);
         comp.layers.push(l);
@@ -52,12 +52,12 @@ fn settings() -> RenderSettings {
     RenderSettings { time_span: TimeSpan::LengthOfComp, ..Default::default() }
 }
 
-fn run(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &OutputModule, path: &Path) -> effectcraft_export::Report {
+fn run(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &OutputModule, path: &Path) -> tselatra_export::Report {
     run_frames(p, cid, footage, om, path, FRAMES)
 }
 
 /// [`run`] for a comp of `frames` frames.
-fn run_frames(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &OutputModule, path: &Path, frames: u64) -> effectcraft_export::Report {
+fn run_frames(p: &Project, cid: ItemId, footage: &dyn FootageSource, om: &OutputModule, path: &Path, frames: u64) -> tselatra_export::Report {
     let s = settings();
     let path = path.to_string_lossy().to_string();
     let job = Job {
@@ -106,8 +106,8 @@ fn check_frame(img: &Image, k: u64, tol: f32) {
     assert!(near([c[0], c[1], c[2]], want, tol), "frame {k} centre {c:?} want {want:?}");
 }
 
-fn decode_movie(path: &Path, frames: u64, tol: f32) -> effectcraft_project::Footage {
-    let f = effectcraft_media::probe(path).expect("probe our output");
+fn decode_movie(path: &Path, frames: u64, tol: f32) -> tselatra_project::Footage {
+    let f = tselatra_media::probe(path).expect("probe our output");
     assert_eq!((f.width, f.height), (W, H));
     assert!(f.has_video);
     let n = f.frame_rate.frame_at(f.duration - Tick(1)) + 1;
@@ -223,7 +223,7 @@ fn prores_4444_with_alpha() {
     let om = OutputModule { channels: Channels::Rgba, prores_profile: ProResProfile::Hq, ..OutputModule::for_format(OutputFormat::ProRes) };
     let path = d.join("alpha.mov");
     run(&p, cid, &NoFootage, &om, &path);
-    let f = effectcraft_media::probe(&path).expect("probe");
+    let f = tselatra_media::probe(&path).expect("probe");
     let img = MediaPool::new().frame_at(&f, f.frame_rate.tick_of(7)).expect("decode");
     assert!(px(&img, 2, 2)[3] < 0.02, "corner transparent: {:?}", px(&img, 2, 2));
     let c = px(&img, W / 2, H / 2);
@@ -285,7 +285,7 @@ fn exr_sequence_is_linear() {
 /// A 32 bpc project whose only layer is a full-frame opaque solid of the given colour.
 fn bright_project(color: [f32; 3]) -> (Project, ItemId) {
     let mut p = Project::default();
-    p.settings.bit_depth = effectcraft_project::BitDepth::Bpc32;
+    p.settings.bit_depth = tselatra_project::BitDepth::Bpc32;
     let comp = Comp::new(W, H, FrameRate::new(10, 1), Tick::from_seconds_f64(0.1));
     let sid = p.add_item("Bright", Label::Red, None, ItemKind::Solid(Solid { color, width: W, height: H, pixel_aspect: 1.0 }));
     let mut comp = comp;
@@ -323,7 +323,7 @@ fn exr_centre(color: [f32; 3], channels: Channels, name: &str) -> [f32; 4] {
 
 /// The sRGB decode of the frame the writer is handed (the solid is sRGB-encoded in the frame).
 fn lin(v: f32) -> f32 {
-    effectcraft_color::srgb_to_linear(v)
+    tselatra_color::srgb_to_linear(v)
 }
 
 #[test]
@@ -395,7 +395,7 @@ fn cancel_stops_early() {
         nested_switches: true,
     };
     let r = export(&job, &mut |_| false);
-    assert!(matches!(r, Err(effectcraft_export::ExportError::Cancelled)));
+    assert!(matches!(r, Err(tselatra_export::ExportError::Cancelled)));
     let written = std::fs::read_dir(&d).map(|r| r.count()).unwrap_or(0);
     assert_eq!(written, 0, "cancelled before the first batch");
 }
@@ -444,7 +444,7 @@ fn movies_carry_audio() {
         let path = d.join(name);
         let r = run(&p, cid, &pool, &om, &path);
         assert!(r.audio, "{name}: auto audio is on for a comp with a sound layer");
-        let f = effectcraft_media::probe(&path).expect("probe");
+        let f = tselatra_media::probe(&path).expect("probe");
         assert!(f.has_audio, "{name}");
         let dec = MediaPool::new();
         let s = dec.audio_samples(&f, Tick::from_seconds_f64(0.3), 24_000, 48_000);
@@ -466,7 +466,7 @@ fn movies_carry_audio() {
         let om = OutputModule { audio: AudioOutput::Off, ..om };
         let path = d.join(format!("silent-{name}"));
         assert!(!run(&p, cid, &pool, &om, &path).audio);
-        assert!(!effectcraft_media::probe(&path).expect("probe").has_audio);
+        assert!(!tselatra_media::probe(&path).expect("probe").has_audio);
     }
 }
 
@@ -502,7 +502,7 @@ fn movies_carry_resampled_footage_audio() {
     let fps = FrameRate::new(30000, 1001);
     let mut p = Project::default();
     let mut comp = Comp::new(W, H, fps, fps.tick_of(60));
-    let fid = p.add_item("clip.mp4", Label::SeaFoam, None, ItemKind::Footage(effectcraft_media::probe(&clip).expect("probe clip")));
+    let fid = p.add_item("clip.mp4", Label::SeaFoam, None, ItemKind::Footage(tselatra_media::probe(&clip).expect("probe clip")));
     let l = build::layer(&mut p, &comp, "clip", LayerSource::Footage { item: fid }, (64, 48), None);
     comp.layers.push(l);
     let cid = p.add_item("Comp 1", Label::Sandstone, None, ItemKind::Comp(comp.into()));
@@ -533,7 +533,7 @@ fn webm_vp9_opus_roundtrip() {
     let path = d.join("comp.webm");
     let r = run(&p, cid, &pool, &om, &path);
     assert!(r.audio && r.bytes > 200, "{r:?}");
-    // Decoded back through FilmCraft (Matroska demuxer, VP9 and Opus decoders).
+    // Decoded back through Hetsika (Matroska demuxer, VP9 and Opus decoders).
     let f = decode_movie(&path, FRAMES, 0.08);
     assert!(f.has_audio);
     let s = MediaPool::new().audio_samples(&f, Tick::from_seconds_f64(0.3), 24_000, 48_000);
@@ -554,7 +554,7 @@ fn webm_with_alpha() {
     let om = OutputModule { channels: Channels::Rgba, ..OutputModule::for_format(OutputFormat::WebM) };
     let path = d.join("alpha.webm");
     run(&p, cid, &NoFootage, &om, &path);
-    let f = effectcraft_media::probe(&path).expect("probe our output");
+    let f = tselatra_media::probe(&path).expect("probe our output");
     assert_eq!((f.width, f.height), (W, H));
     let bytes = std::fs::read(&path).unwrap();
     // AlphaMode element (0x53C0) and BlockAdditions (0x75A1).
@@ -596,8 +596,8 @@ fn wav_and_aiff_audio_only() {
         // 1.2 s of 48 kHz 16-bit stereo.
         assert!((bytes.len() as i64 - 57_600 * 4).abs() < 200, "{name}: {}", bytes.len());
         let l = if fmt == OutputFormat::Wav {
-            // Decoded by FilmCraft.
-            let f = effectcraft_media::probe(&path).expect("probe audio");
+            // Decoded by Hetsika.
+            let f = tselatra_media::probe(&path).expect("probe audio");
             assert!(f.has_audio && !f.has_video, "{name}");
             let s = MediaPool::new().audio_samples(&f, Tick::from_seconds_f64(0.3), 24_000, 48_000);
             rms(s.iter().step_by(2).copied())
@@ -614,10 +614,10 @@ fn wav_and_aiff_audio_only() {
     }
 }
 
-/// An AIFF EffectCraft renders imports back (#1428): plain 16-bit and AIFF-C `fl32`.
+/// An AIFF Tselatra renders imports back (#1428): plain 16-bit and AIFF-C `fl32`.
 #[test]
 fn rendered_aiff_imports_back() {
-    use effectcraft_export::render_queue::AudioFormat;
+    use tselatra_export::render_queue::AudioFormat;
     let d = out_dir("aiff-import");
     let wav = d.join("tone.wav");
     write_tone(&wav, 2.0);
@@ -628,7 +628,7 @@ fn rendered_aiff_imports_back() {
         let om = OutputModule { audio_sample_rate: 44_100, audio_channels: 2, audio_format: format, ..OutputModule::for_format(OutputFormat::Aiff) };
         let path = d.join(name);
         assert!(run(&p, cid, &pool, &om, &path).audio);
-        let f = effectcraft_media::probe(&path).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let f = tselatra_media::probe(&path).unwrap_or_else(|e| panic!("{name}: {e}"));
         assert!(f.has_audio && !f.has_video, "{name}");
         assert_eq!(f.duration, Tick::from_seconds_f64(1.2), "{name}: 52 920 frames at 44.1 kHz");
         // Tone on the left, silence on the right: the two channels are read as two.

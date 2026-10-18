@@ -1,6 +1,6 @@
 //! Document Setup options the renderer honours.
 
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
 
 use super::*;
 

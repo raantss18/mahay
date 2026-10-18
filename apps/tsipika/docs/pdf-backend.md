@@ -1,6 +1,6 @@
 # PDF backend
 
-PDF writing uses `craft-pdf` from `storytold/craft-libs`, pinned to
+PDF writing uses `mahay-pdf` from `raantss18/mahay-libs`, pinned to
 `ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d`. Its `write` feature supplies Krilla configuration,
 metadata construction, fallible font preparation and serialization, and native unwind guards.
 The dependency disables default features and enables `write` and `interpret`.
@@ -9,10 +9,10 @@ PDF test fixtures enable `simple-text` through a dev dependency.
 The PDF crate explicitly retains the `flate2` `zlib-rs` feature previously supplied
 by the registry reader, preserving compressed export bytes and their derived document IDs.
 
-VectorCraft owns document traversal, drawing, font selection and embedding policy, colour
+Tsipika owns document traversal, drawing, font selection and embedding policy, colour
 conversion, presets, page boxes, layers, editing data, postprocessing and print composition.
-Editable import keeps its VectorCraft adapter, layer routing, colour policy and text decisions.
-Desktop printer submission remains in `craft-print`.
+Editable import keeps its Tsipika adapter, layer routing, colour policy and text decisions.
+Desktop printer submission remains in `mahay-print`.
 
 The shared writer vendors Krilla 0.8.2 with an unwind-safe cleanup and poisoning patch.
 The root `[patch.crates-io]` selects that copy from the same immutable revision: Cargo does
@@ -24,10 +24,10 @@ its upstream provenance and authored patch are recorded in the shared repository
 
 Export and print construction, drawing and postprocessing run inside the shared native
 unwind guard. These guards do not catch WASM aborts or process-wide allocation failures.
-VectorCraft retains its finite-coordinate checks and the existing behavior that omits art
+Tsipika retains its finite-coordinate checks and the existing behavior that omits art
 outside the writer's supported coordinate range. Font preparation checks the shared
 512 MiB per-font copy limit and variation coordinates before allocation; failure preserves
-VectorCraft's reported outline fallback. The writer is not a peak-memory or runtime budget.
+Tsipika's reported outline fallback. The writer is not a peak-memory or runtime budget.
 
 PDF reading uses the same shared revision's patched Hayro syntax 0.7.2, interpreter 0.7.0
 and JBIG2 0.3.0. This snapshot also retains CCITT 0.3.0 and JPEG 2000 0.3.5.
@@ -52,9 +52,9 @@ EOF remain valid. The typed iterator does not classify every malformed operator,
 is known-incomplete rejection rather than a general PDF validity certificate.
 
 The three patched Hayro crates and Krilla are selected in the root `[patch.crates-io]`
-from the same immutable revision as `craft-pdf`. `cargo xtask pdf-deps` rejects missing,
+from the same immutable revision as `mahay-pdf`. `cargo xtask pdf-deps` rejects missing,
 duplicate, local-path, registry and mismatched revisions for those five packages.
-`craft-print` and `craft-ui` keep their existing independent revisions.
+`mahay-print` and `mahay-ui` keep their existing independent revisions.
 
 Dependency asset hashes and sources are in `ASSETS.md`; redistributed license texts are
 in `licenses/pdf-backend`. Package staging carries those texts together with `NOTICE`

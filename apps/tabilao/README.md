@@ -311,7 +311,7 @@ And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and vid
 </p>
 
 <p align="center">
-  <a href="https://github.com/raantss18/mahay/discussions"><b>discord.gg/mahay</b></a> ·
+  <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
   <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
   <a href="https://github.com/raantss18/mahay">Tabilao</a>

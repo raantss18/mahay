@@ -16,19 +16,19 @@
 use crate::i18n::{tr, tr_args};
 use std::sync::Arc;
 
-use effectcraft_engine::Session;
-use effectcraft_engine::effects::camera_tracker as ct;
-use effectcraft_engine::geom::{Mat3, vec2 as gv2};
-use effectcraft_engine::keyframe::Value;
-use effectcraft_engine::project::{Comp, Layer, LayerId, PropGroup, Uid};
-use effectcraft_engine::render::EvalCtx;
-use effectcraft_engine::track::camtrack::{CameraSolve, CameraTracks, Target, point_color};
+use tselatra_engine::Session;
+use tselatra_engine::effects::camera_tracker as ct;
+use tselatra_engine::geom::{Mat3, vec2 as gv2};
+use tselatra_engine::keyframe::Value;
+use tselatra_engine::project::{Comp, Layer, LayerId, PropGroup, Uid};
+use tselatra_engine::render::EvalCtx;
+use tselatra_engine::track::camtrack::{CameraSolve, CameraTracks, Target, point_color};
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
 use super::viewer::ViewerMap;
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 /// The tracker whose points the viewer shows.
 struct Active {
@@ -50,7 +50,7 @@ struct Active {
 type Hit = (u32, Pos2, f32);
 
 fn tracker_group(l: &Layer, uid: Uid) -> Option<&PropGroup> {
-    l.props.find_group(uid).filter(|g| matches!(&g.kind, effectcraft_engine::project::GroupKind::Effect { effect } if effect == ct::ID))
+    l.props.find_group(uid).filter(|g| matches!(&g.kind, tselatra_engine::project::GroupKind::Effect { effect } if effect == ct::ID))
 }
 
 /// The selected 3D Camera Tracker effect on an active layer (After Effects shows the points
@@ -60,8 +60,8 @@ fn active(s: &Session, comp: &Comp, ectx: &EvalCtx, l2c: &dyn Fn(&EvalCtx, &Laye
     for (lid, uid) in &s.state.selected_props {
         let Some(l) = comp.layer(*lid).filter(|l| l.is_active_at(time)) else { continue };
         let Some(g) = tracker_group(l, *uid) else { continue };
-        let params = effectcraft_engine::camera_track::static_params(g);
-        let val = |id: &str| effectcraft_engine::effects::warp_stab::param(&params, id).cloned();
+        let params = tselatra_engine::camera_track::static_params(g);
+        let val = |id: &str| tselatra_engine::effects::warp_stab::param(&params, id).cloned();
         let solve = ct::solve(&params);
         let tracks = ct::tracks(&params);
         let lt = l.layer_time(time).seconds();
@@ -147,7 +147,7 @@ fn triangle_at(hits: &[Hit], hp: Pos2) -> Option<[u32; 3]> {
     None
 }
 
-fn run(app: &mut EffectcraftApp, ctx: &egui::Context, cmd: &str, p: serde_json::Value) {
+fn run(app: &mut TselatraApp, ctx: &egui::Context, cmd: &str, p: serde_json::Value) {
     if let Err(e) = crate::menus::invoke(app, ctx, cmd, p) {
         app.ui.status = e;
     }
@@ -156,7 +156,7 @@ fn run(app: &mut EffectcraftApp, ctx: &egui::Context, cmd: &str, p: serde_json::
 /// The viewer overlay and its interaction (call after the viewer's own gestures so it takes
 /// the clicks while a 3D Camera Tracker is selected).
 pub fn viewer_hook(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     map: &ViewerMap,
@@ -242,7 +242,7 @@ pub fn viewer_hook(
     // Hover target / the selection's target.
     if marquee.is_none() {
         if let Some(t3) = tri
-            && let Some(t) = effectcraft_engine::camera_track::target_for(&sv, &t3, a.frame)
+            && let Some(t) = tselatra_engine::camera_track::target_for(&sv, &t3, a.frame)
         {
             let ps: Vec<Pos2> = t3.iter().filter_map(|i| hits.iter().find(|h| h.0 == *i)).map(|h| h.1).collect();
             if ps.len() == 3 {
@@ -250,7 +250,7 @@ pub fn viewer_hook(
             }
             draw_target(painter, &a, map, &sv, &t);
         } else if !selected.is_empty()
-            && let Some(t) = effectcraft_engine::camera_track::target_for(&sv, &selected, a.frame)
+            && let Some(t) = tselatra_engine::camera_track::target_for(&sv, &selected, a.frame)
         {
             draw_target(painter, &a, map, &sv, &t);
         }
@@ -355,13 +355,13 @@ pub fn viewer_hook(
 
 /// "Analyzing in background (step 1 of 2)" / "Solving camera" over the analysed layer, and a
 /// warning when the solve failed (unless Hide Warning Banner).
-fn banner(app: &mut EffectcraftApp, painter: &egui::Painter, map: &ViewerMap, ectx: &EvalCtx, l2c: &dyn Fn(&EvalCtx, &Layer) -> Mat3) {
+fn banner(app: &mut TselatraApp, painter: &egui::Painter, map: &ViewerMap, ectx: &EvalCtx, l2c: &dyn Fn(&EvalCtx, &Layer) -> Mat3) {
     let comp = ectx.comp;
     let time = ectx.time;
     let cid = ectx.comp_id;
-    let draw = |app: &mut EffectcraftApp, layer: &Layer, text: String, color: Color32, id: &str| {
+    let draw = |app: &mut TselatraApp, layer: &Layer, text: String, color: Color32, id: &str| {
         let m = l2c(ectx, layer);
-        let (w, h) = effectcraft_engine::render::source_size(&app.session.project, layer);
+        let (w, h) = tselatra_engine::render::source_size(&app.session.project, layer);
         let c = m.apply(gv2(w as f64 / 2.0, h as f64 / 2.0));
         let at = map.to_screen([c.x, c.y]);
         let galley = painter.layout_no_wrap(text.clone(), Tokens::medium(13.0), Color32::WHITE);
@@ -382,9 +382,9 @@ fn banner(app: &mut EffectcraftApp, painter: &egui::Painter, map: &ViewerMap, ec
     // A failed solve: tracks without a solve while nothing is running or queued.
     for l in comp.layers.iter().filter(|l| l.is_active_at(time)) {
         let Some(fx) = l.effects() else { continue };
-        for g in fx.groups().filter(|g| matches!(&g.kind, effectcraft_engine::project::GroupKind::Effect { effect } if effect == ct::ID)) {
-            let params = effectcraft_engine::camera_track::static_params(g);
-            let hide = effectcraft_engine::effects::warp_stab::param(&params, "advanced/hideWarningBanner").is_some_and(Value::as_bool);
+        for g in fx.groups().filter(|g| matches!(&g.kind, tselatra_engine::project::GroupKind::Effect { effect } if effect == ct::ID)) {
+            let params = tselatra_engine::camera_track::static_params(g);
+            let hide = tselatra_engine::effects::warp_stab::param(&params, "advanced/hideWarningBanner").is_some_and(Value::as_bool);
             let solve_key = matches!(g.prop(ct::SOLVE_KEY).map(|p| &p.value), Some(Value::Str(s)) if !s.is_empty());
             let failed = solve_key && ct::tracks(&params).is_some() && ct::solve(&params).is_none();
             if failed && !hide && !app.session.camera_pending.iter().any(|(_, ll, u)| *ll == l.id && *u == g.uid) {
@@ -398,7 +398,7 @@ fn banner(app: &mut EffectcraftApp, painter: &egui::Painter, map: &ViewerMap, ec
 /// Effect Controls: Analyze / Cancel, Create Camera and the solve report.
 #[allow(clippy::too_many_arguments)]
 pub fn editor(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     layer: &Layer,
@@ -423,7 +423,7 @@ pub fn editor(
         }
         app.auto.add(&format!("effectControls.cameraTracker.{}.cancel", g.uid), b2, "Cancel");
     }
-    let params = effectcraft_engine::camera_track::static_params(g);
+    let params = tselatra_engine::camera_track::static_params(g);
     let solve = ct::solve(&params);
     if solve.is_some() {
         if widgets::text_button(ui, b3, "Create Camera", false, &t, egui::Id::new(("ct-camera", g.uid))).clicked() {

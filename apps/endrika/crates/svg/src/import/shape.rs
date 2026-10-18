@@ -4,8 +4,8 @@
 //! recognised the same way. The test is geometric: every sampled point of the outline lies on the
 //! candidate's outline and the lengths agree.
 
-use figcraft_geom::kurbo::{ParamCurve, PathEl};
-use figcraft_geom::{Affine, BezPath, Point, Rect, Shape, Vec2};
+use endrika_geom::kurbo::{ParamCurve, PathEl};
+use endrika_geom::{Affine, BezPath, Point, Rect, Shape, Vec2};
 
 /// A primitive found in a path, in the path's own coordinates.
 #[derive(Clone, Copy, Debug, PartialEq)]

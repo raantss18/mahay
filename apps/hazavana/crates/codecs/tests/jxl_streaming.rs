@@ -1,8 +1,8 @@
 #![cfg(all(feature = "jxl", not(target_arch = "wasm32")))]
 
-use lightcraft_codecs::exif::minimal_exif;
-use lightcraft_codecs::*;
-use lightcraft_raster::Rgba8;
+use hazavana_codecs::exif::minimal_exif;
+use hazavana_codecs::*;
+use hazavana_raster::Rgba8;
 
 fn codestream(bytes: &[u8]) -> Vec<u8> {
     if bytes.starts_with(b"\xff\x0a") {

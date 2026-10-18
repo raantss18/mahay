@@ -2,7 +2,7 @@
 
 use crate::props::{Effect, LayoutGrid};
 use crate::text::TextStyle;
-use figcraft_color::{Color, Paint};
+use endrika_color::{Color, Paint};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 

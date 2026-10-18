@@ -2,7 +2,7 @@
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|other" forms;
 # `@msg` = a status or error message).
 #
-# Clean-room: written from the meaning of VectorCraft's English labels in standard Finnish, using
+# Clean-room: written from the meaning of Tsipika's English labels in standard Finnish, using
 # ordinary vector-illustration vocabulary (piirtoalusta, polku, ankkuripiste, viiva, täyttö,
 # värimalli, liukuväri, leikkausmaski, taso). No other application's Finnish localisation resource,
 # string table or product UI was consulted or copied, and no other catalog was used as a source;
@@ -31,7 +31,7 @@
 	Chop Design	Leikkaa malli
 	Scale Design	Skaalaa malli
 	Glowing Edges…	Hehkuvat reunat…
-	About VectorCraft	Tietoja VectorCraftista
+	About Tsipika	Tietoja Tsipikaista
 	Align to Path	Tasaa polkuun
 	Cut Path at Selected Anchor Points	Leikkaa polku valituista ankkuripisteistä
 	Join Our Discord	Liity Discordiimme
@@ -41,7 +41,7 @@
 	Medium Dark	Keskitumma
 	Medium Light	Keskivaalea
 	Light	Vaalea
-	Quit VectorCraft	Lopeta VectorCraft
+	Quit Tsipika	Lopeta Tsipika
 	File	Tiedosto
 	New…	Uusi…
 	New from Template…	Uusi mallipohjasta…
@@ -123,7 +123,7 @@
 	Keyboard Shortcuts…	Pikanäppäimet…
 	Import Shortcut Set	Tuo pikanäppäinjoukko
 	Import Shortcut Set…	Tuo pikanäppäinjoukko…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	Tiedoston jokainen merkintä vastaa VectorCraftin työkalua, komentoa tai paneelia. Tarkista vastaavuudet ja vastaa jäljelle jääviin.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	Tiedoston jokainen merkintä vastaa Tsipikain työkalua, komentoa tai paneelia. Tarkista vastaavuudet ja vastaa jäljelle jääviin.
 	Keys	Näppäimet
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	Tiedosto tallentaa näppäimet ja muuntonäppäimet koodeina. Tarkista ehdotetut merkitykset ja vastaa koodeihin, joita ei vielä tunneta.
 	Click, then press the key this code stands for (Esc cancels)	Napsauta ja paina näppäintä, jota tämä koodi tarkoittaa (Esc peruuttaa)
@@ -133,7 +133,7 @@
 	not known yet	ei vielä tiedossa
 	Shortcuts	Pikanäppäimet
 	In the File	Tiedostossa
-	In VectorCraft	VectorCraftissa
+	In Tsipika	Tsipikaissa
 	Needs Attention Only	Vain huomiota vaativat
 	Ready	Valmis
 	Needs a choice	Vaatii valinnan
@@ -142,7 +142,7 @@
 	Tools take a single key (optionally with Shift)	Työkaluille annetaan yksi näppäin (valinnaisesti Vaihto-näppäimen kanssa)
 	A later row takes this shortcut	Myöhempi rivi käyttää tätä pikanäppäintä
 	Same item as a later row	Sama kohde kuin myöhemmällä rivillä
-	Start from VectorCraft Defaults	Aloita VectorCraftin oletuksista
+	Start from Tsipika Defaults	Aloita Tsipikain oletuksista
 	Add to the Current Shortcuts	Lisää nykyisiin pikanäppäimiin
 	Remember My Choices	Muista valintani
 	{ready} of {total} ready	{ready}/{total} valmiina
@@ -156,7 +156,7 @@
 	Forget Import Matches	Unohda tuonnin vastaavuudet
 @plural	agrees with {n} default shortcut|agrees with {n} default shortcuts	vastaa {n} oletuspikanäppäintä|vastaa {n} oletuspikanäppäintä
 @plural	{n} part of the file wasn't read|{n} parts of the file weren't read	{n} tiedoston osa jäi lukematta|{n} tiedoston osaa jäi lukematta
-@msg	This shortcut file is in a form VectorCraft can't read.	Tämä pikanäppäintiedosto on muodossa, jota VectorCraft ei pysty lukemaan.
+@msg	This shortcut file is in a form Tsipika can't read.	Tämä pikanäppäintiedosto on muodossa, jota Tsipika ei pysty lukemaan.
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	ei pikanäppäinjoukko: teksti ei ala vinoviivalla alkavalla nimellä ja avaavalla aaltosulkeella
 	Preferences…	Asetukset…
 	Object	Objekti
@@ -491,7 +491,7 @@
 	Working CMYK	Työ-CMYK
 	RGB	RGB
 	sRGB IEC61966-2.1	sRGB IEC61966-2.1
-	VectorCraft Generic CMYK (SWOP-like)	VectorCraftin yleinen CMYK (SWOP-tyyppinen)
+	Tsipika Generic CMYK (SWOP-like)	Tsipikain yleinen CMYK (SWOP-tyyppinen)
 	Legacy Macintosh RGB (Gamma 1.8)	Vanha Macintosh RGB (gamma 1.8)
 	Internet Standard RGB (sRGB)	Internetin standardi-RGB (sRGB)
 	Monitor RGB	Näytön RGB
@@ -691,11 +691,11 @@
 	Save Swatch Library…	Tallenna värimallikirjasto…
 	Symbol Libraries	Symbolikirjastot
 	Help	Ohje
-	ArtCraft Website	ArtCraft-verkkosivusto
-	VectorCraft on getartcraft.com	VectorCraft getartcraft.comissa
-	VectorCraft on GitHub	VectorCraft GitHubissa
+	Mahay Website	Mahay-verkkosivusto
+	Tsipika on mahay.com	Tsipika mahay.comissa
+	Tsipika on GitHub	Tsipika GitHubissa
 	Search Commands…	Hae komentoja…
-	VectorCraft Help…	VectorCraft-ohje…
+	Tsipika Help…	Tsipika-ohje…
 	Auto Color	Automaattinen väri
 	Automatic	Automaattinen
 	Isolate Selected Group	Eristä valittu ryhmä
@@ -745,7 +745,7 @@
 	Dock Panel	Telakoi paneeli
 	Float Tool Group	Kelluta työkaluryhmä
 	Services	Palvelut
-	Hide VectorCraft	Piilota VectorCraft
+	Hide Tsipika	Piilota Tsipika
 	Hide Others	Piilota muut
 	Minimize	Pienennä
 	Zoom	Zoomaa
@@ -1942,8 +1942,8 @@ lighting	Light	Valo
 	Select All Bound Objects	Valitse kaikki sidotut objektit
 	Multiple objects	Useita objekteja
 	Graphics: {adapter}	Grafiikka: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	Osa ArtCraftia. MIT OR Apache-2.0. Fontit: Source Sans 3, Inter, JetBrains Mono (OFL). Kuvakkeet: Lucide (ISC) + VectorCraft.
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + VectorCraft.	Osa ArtCraftia. MIT OR Apache-2.0. Fontit: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Kuvakkeet: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Osa Mahayia. MIT OR Apache-2.0. Fontit: Source Sans 3, Inter, JetBrains Mono (OFL). Kuvakkeet: Lucide (ISC) + Tsipika.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Tsipika.	Osa Mahayia. MIT OR Apache-2.0. Fontit: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Kuvakkeet: Lucide (ISC) + Tsipika.
 	Version {version} — open-source vector illustration in pure Rust.	Versio {version} — avoimen lähdekoodin vektorikuvitusohjelma puhtaalla Rustilla.
 	Align to Page	Tasaa sivuun
 	Smooth Color	Tasainen väri
@@ -2244,7 +2244,7 @@ lighting	Light	Valo
 	{count} folder(s) or file(s) couldn't be read	{count} kansiota tai tiedostoa ei voitu lukea
 	The search stopped at its limit: search a smaller folder.	Haku pysähtyi rajaansa: hae pienemmästä kansiosta.
 	Copy only fonts you own or are licensed to install.	Kopioi vain fontteja, jotka omistat tai joiden asentamiseen sinulla on lisenssi.
-	VectorCraft copies the fonts to {folder}.	VectorCraft kopioi fontit kansioon {folder}.
+	Tsipika copies the fonts to {folder}.	Tsipika kopioi fontit kansioon {folder}.
 	Apply to All ({count} more missing)	Käytä kaikkiin ({count} muuta puuttuu)
 	Ignore	Ohita
 	Linked File Not Found	Linkitettyä tiedostoa ei löydy
@@ -2333,7 +2333,7 @@ lighting	Light	Valo
 	On: one locked object showing the document, updated when it changes.	Päällä: yksi lukittu objekti, joka näyttää asiakirjan ja päivittyy sen muuttuessa.
 	Off: an editable copy of its art, embedded in this document.	Pois: muokattava kopio sen kuvituksesta upotettuna tähän asiakirjaan.
 	Images: link to the file instead of only embedding it.	Kuvat: linkitä tiedostoon sen sijaan, että se vain upotetaan.
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft-asiakirjat: yksi lukittu objekti, joka päivittyy tiedoston muuttuessa.
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika-asiakirjat: yksi lukittu objekti, joka päivittyy tiedoston muuttuessa.
 	Alignment:	Tasaus:
 	Applies when the linked file is relinked or updated.	Koskee tilannetta, jossa linkitetty tiedosto linkitetään uudelleen tai päivitetään.
 	Bounds (Fill Proportionally)	Rajat (täytä suhteellisesti)
@@ -2414,7 +2414,7 @@ lighting	Light	Valo
 	A new preset starting from the selected one	Uusi esiasetus valitun pohjalta
 	Differences from {preset}:	Erot esiasetukseen {preset}:
 	Differences from [Default]:	Erot esiasetukseen [Oletus]:
-	Differences from VectorCraft Default:	Erot esiasetukseen VectorCraft-oletus:
+	Differences from Tsipika Default:	Erot esiasetukseen Tsipika-oletus:
 	Edit…	Muokkaa…
 	None.	Ei mitään.
 	Presets:	Esiasetukset:
@@ -2464,7 +2464,7 @@ lighting	Light	Valo
 	3 Color Job	3 värin työ
 	Recover Documents	Palauta asiakirjat
 	Restored documents open unsaved: save them to keep them.	Palautetut asiakirjat avautuvat tallentamattomina: tallenna ne, jos haluat säilyttää ne.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft ei sulkeutunut normaalisti viime kerralla. Näissä asiakirjoissa oli tallentamattomia muutoksia:
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika ei sulkeutunut normaalisti viime kerralla. Näissä asiakirjoissa oli tallentamattomia muutoksia:
 	Do you want to save the changes you made to “{name}”?	Haluatko tallentaa asiakirjaan ”{name}” tekemäsi muutokset?
 	Don't Save	Älä tallenna
 	Your changes will be lost if you don't save them.	Muutokset menetetään, jos niitä ei tallenneta.
@@ -2531,7 +2531,7 @@ lighting	Light	Valo
 	Color images	Värikuvat
 	Compatibility:	Yhteensopivuus:
 	PDF 1.7	PDF 1.7
-	VectorCraft Default	VectorCraft-oletus
+	Tsipika Default	Tsipika-oletus
 	High Quality Print	Korkealaatuinen tuloste
 	[High Quality Print]	[Korkealaatuinen tuloste]
 	Press Quality	Painolaatu
@@ -2544,7 +2544,7 @@ lighting	Light	Valo
 	[PDF/X-3:2002]	[PDF/X-3:2002]
 	PDF/X-4:2010	PDF/X-4:2010
 	[PDF/X-4:2010]	[PDF/X-4:2010]
-	Keeps the document editable: VectorCraft reopens the PDF with nothing lost. For files you'll edit again.	Pitää asiakirjan muokattavana: VectorCraft avaa PDF:n uudelleen ilman menetyksiä. Tiedostoille, joita muokataan uudelleen.
+	Keeps the document editable: Tsipika reopens the PDF with nothing lost. For files you'll edit again.	Pitää asiakirjan muokattavana: Tsipika avaa PDF:n uudelleen ilman menetyksiä. Tiedostoille, joita muokataan uudelleen.
 	Compress text and line art	Pakkaa teksti ja viivapiirrokset
 	Compression	Pakkaus
 	Compression › Color › Above Ppi	Pakkaus › Väri › Yli ppi
@@ -2622,14 +2622,14 @@ lighting	Light	Valo
 	A File…	Tiedosto…
 	GPL palettes keep solid colours only, as RGB.	GPL-paletit säilyttävät vain tasavärit RGB-muodossa.
 	Save Swatch Library	Tallenna värimallikirjasto
-	VectorCraft Swatches (.vcswatches)	VectorCraft-värimallit (.vcswatches)
+	Tsipika Swatches (.vcswatches)	Tsipika-värimallit (.vcswatches)
 	Save To:	Tallenna kohteeseen:
 	Saved to User Defined: {}	Tallennettu käyttäjän määrittämiin: {}
 	Selected Swatches Only	Vain valitut värimallit
 	Selected Swatches Only (0)	Vain valitut värimallit (0)
 	User Defined Libraries	Käyttäjän määrittämät kirjastot
 	Copy Report	Kopioi raportti
-	VectorCraft read this script without running it.	VectorCraft luki tämän komentosarjan suorittamatta sitä.
+	Tsipika read this script without running it.	Tsipika luki tämän komentosarjan suorittamatta sitä.
 	Needs nothing beyond plain JavaScript	Tarvitsee vain tavallista JavaScriptiä
 	Needs the script language's own objects or directives	Tarvitsee komentosarjakielen omia objekteja tai direktiivejä
 	Needs the document model	Tarvitsee asiakirjamallin
@@ -3551,7 +3551,7 @@ axis	Both	Molemmat
 	Print as Bitmap	Tulosta bittikarttana
 	Draft	Vedos
 	Default	Oletus
-	[VectorCraft Default]	[VectorCraft-oletus]
+	[Tsipika Default]	[Tsipika-oletus]
 	Magenta	Magenta
 	Page	Sivu
 	Print Tiling	Tulostuksen ruudutus
@@ -3643,7 +3643,7 @@ axis	Both	Molemmat
 	Width	Leveys
 	:	:
 effect	Regular	Normaali
-	Saving Poster.vectorcraft	Tallennetaan Poster.vectorcraft
+	Saving Poster.tsipika	Tallennetaan Poster.tsipika
 	Community	Yhteisö
 	Hide Bar	Piilota palkki
 	More Options	Lisää asetuksia
@@ -3655,11 +3655,11 @@ effect	Regular	Normaali
 	Quickly start a new file	Aloita uusi tiedosto nopeasti
 	Recent Files	Viimeisimmät tiedostot
 	Vector illustration — fast, open, scriptable.	Vektorikuvitusta – nopea, avoin, skriptattava.
-	Welcome to VectorCraft	Tervetuloa VectorCraftiin
-	ArtCraft website	ArtCraftin verkkosivusto
+	Welcome to Tsipika	Tervetuloa Tsipikaiin
+	Mahay website	Mahayin verkkosivusto
 	Discord	Discord
 	Join our Discord	Liity Discordiimme
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Liity ArtCraft-yhteisöön Discordissa (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Liity Mahay-yhteisöön Discordissa (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Lähdekoodi GitHubissa
 	All Tools	Kaikki työkalut
 	Draw	Piirrä
@@ -3704,9 +3704,9 @@ effect	Regular	Normaali
 	Opened with {} note(s): {}	Avattu, huomautuksia {}: {}
 	Revert to the saved version of “{name}”?	Palautetaanko tiedoston ”{name}” tallennettu versio?
 	Replace “{name}”, the file this document was opened from?	Korvataanko ”{name}”, tiedosto, josta tämä asiakirja avattiin?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Avattaessa jätettiin pois se, mitä VectorCraft ei vielä osaa lukea ({what}), joten korvaaminen hävittää sen pysyvästi. Säilytä se tallentamalla toisella nimellä.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Avattaessa jätettiin pois se, mitä Tsipika ei vielä osaa lukea ({what}), joten korvaaminen hävittää sen pysyvästi. Säilytä se tallentamalla toisella nimellä.
 	“{name}” already exists. Replace it?	”{name}” on jo olemassa. Korvataanko se?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Tallennusikkunan nimi oli ”{typed}”, ja VectorCraft lisäsi tiedostotyypin tunnisteen. Tiedoston korvaaminen kirjoittaa sen sisällön yli.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	Tallennusikkunan nimi oli ”{typed}”, ja Tsipika lisäsi tiedostotyypin tunnisteen. Tiedoston korvaaminen kirjoittaa sen sisällön yli.
 	Saved {path}	Tallennettu {path}
 	Saved {path} with {} note(s): {first}	Tallennettu {path}, huomautuksia {}: {first}
 	Saving	Tallennetaan
@@ -3715,7 +3715,7 @@ effect	Regular	Normaali
 	Dashed Line	Katkoviiva
 	Panel menu	Paneelivalikko
 	Unembed…	Poista upotus…
-	Applies the next time VectorCraft starts.	Tulee voimaan, kun VectorCraft käynnistetään seuraavan kerran.
+	Applies the next time Tsipika starts.	Tulee voimaan, kun Tsipika käynnistetään seuraavan kerran.
 	Enable Contextual Task Bar	Ota kontekstuaalinen tehtäväpalkki käyttöön
 	Next	Seuraava
 	OK	OK
@@ -4098,7 +4098,7 @@ imageTrace	Outline	Ääriviiva
 @msg	can't encode the document: {0}	asiakirjaa ei voi koodata: {0}
 @msg	can't parse shortcut `{c}`	pikanäppäintä `{c}` ei voi jäsentää
 @msg	can't parse shortcut `{s}` for `{k}`	pikanäppäintä `{s}` kohteelle `{k}` ei voi jäsentää
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	versiota {0} ei voi tallentaa: VectorCraft kirjoittaa versioita {MIN_VERSION}–{VERSION}
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	versiota {0} ei voi tallentaa: Tsipika kirjoittaa versioita {MIN_VERSION}–{VERSION}
 @msg	can't write .{ext} images	.{ext}-kuvia ei voi kirjoittaa
 @msg	cannot distort a zero-size bounding box	nollakokoista rajausruutua ei voi vääristää
 @msg	cannot read PDF: {0}	ei voi lukea PDF-tiedostoa: {0}
@@ -4124,7 +4124,7 @@ imageTrace	Outline	Ääriviiva
 @msg	empty brush stroke	tyhjä sivellinviiva
 @msg	empty cutter	tyhjä leikkaaja
 @msg	empty path	tyhjä polku
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	tiedostoversio {0} on uudempi kuin tämä VectorCraft tukee ({VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	tiedostoversio {0} on uudempi kuin tämä Tsipika tukee ({VERSION})
 @msg	freeform point {i} needs `at` [x, y] and a valid `color`	vapaamuotoinen piste {i} tarvitsee arvon `at` [x, y] ja kelvollisen arvon `color`
 @msg	freeform line {i} must be an array of point indices	vapaamuotoisen viivan {i} on oltava pisteindeksien taulukko
 @msg	give both `start` and `end` [x, y] (or neither)	anna sekä `start` että `end` [x, y] (tai ei kumpaakaan)
@@ -4145,9 +4145,9 @@ imageTrace	Outline	Ääriviiva
 @msg	invalid PDF setting: {0}	virheellinen PDF-asetus: {0}
 @msg	invalid image data for `{0}`	virheellinen kuvadata kohteelle `{0}`
 @msg	invalid parameters for `{cmd}`: {msg}	virheelliset parametrit kohteelle `{cmd}`: {msg}
-@msg	is not an image VectorCraft reads	ei ole kuva, jota VectorCraft lukee
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	se käyttää kohdetta `{at}`, jota VectorCraftin PostScript-lukija ei tunne
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	se käyttää kohdetta `{at}`, jota VectorCraftin PostScript-lukija ei tunne, proseduurissa {procs}
+@msg	is not an image Tsipika reads	ei ole kuva, jota Tsipika lukee
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	se käyttää kohdetta `{at}`, jota Tsipikain PostScript-lukija ei tunne
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	se käyttää kohdetta `{at}`, jota Tsipikain PostScript-lukija ei tunne, proseduurissa {procs}
 @msg	its Windows metafile preview was opened instead, which may simplify the art	sen sijaan avattiin sen Windows-metatiedoston esikatselu, mikä voi yksinkertaistaa kuvitusta
 @msg	its preview was placed instead, at screen resolution	sen sijaan sijoitettiin sen esikatselu näytön tarkkuudella
 @msg	join needs open paths	liittäminen vaatii avoimia polkuja
@@ -4255,8 +4255,8 @@ imageTrace	Outline	Ääriviiva
 @msg	no user workspace `{from}`	ei käyttäjän työtilaa `{from}`
 @msg	node {_1} is not text	solmu {_1} ei ole tekstiä
 @msg	not a DXF drawing	ei DXF-piirustus
-@msg	not a VectorCraft file: {0}	ei VectorCraft-tiedosto: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	ei VectorCraftin pikanäppäinjoukko (`overrides` puuttuu)
+@msg	not a Tsipika file: {0}	ei Tsipika-tiedosto: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	ei Tsipikain pikanäppäinjoukko (`overrides` puuttuu)
 @msg	not a blend	ei sulautus
 @msg	not a graphic style library (format `{_1}`)	ei grafiikkatyylikirjasto (muoto `{_1}`)
 @msg	not a stored central record	ei tallennettu keskushakemistotietue
@@ -4491,11 +4491,11 @@ imageTrace	Outline	Ääriviiva
 @msg	Sent to {_1}	Lähetettiin kohteeseen {_1}
 @msg	{_1} files	{_1}-tiedostot
 @msg	The graphics were lost and have been restarted	Grafiikka menetettiin ja se käynnistettiin uudelleen
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	Ensin kokeiltu grafiikkasuoritin ei pystynyt näyttämään ikkunaa, joten VectorCraft käynnistyi uudelleen: {summary}
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	VectorCraftin edellinen käynnistys päättyi grafiikkasuorittimella {name} ennen kuin sen ikkuna tuli näkyviin, joten se käynnistyi: {summary}. Jos haluat kokeilla tätä grafiikkasuoritinta uudelleen, muuta kohtaa Asetukset › Suorituskyky › Grafiikkasuoritin tai käynnistä WGPU_BACKEND-muuttuja asetettuna
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	VectorCraftin edellinen käynnistys päättyi grafiikkasuorittimien luetteloinnin aikana, joten se käynnistyi pelkällä OpenGL:llä: {summary}. Jos haluat kokeilla muita grafiikkataustoja uudelleen, muuta kohtaa Asetukset › Suorituskyky › Grafiikkasuoritin tai käynnistä WGPU_BACKEND-muuttuja asetettuna
-@msg	Loading VectorCraft…	Ladataan VectorCraftia…
-@msg	VectorCraft failed to start: {e}	VectorCraftin käynnistys epäonnistui: {e}
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	Ensin kokeiltu grafiikkasuoritin ei pystynyt näyttämään ikkunaa, joten Tsipika käynnistyi uudelleen: {summary}
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Tsipikain edellinen käynnistys päättyi grafiikkasuorittimella {name} ennen kuin sen ikkuna tuli näkyviin, joten se käynnistyi: {summary}. Jos haluat kokeilla tätä grafiikkasuoritinta uudelleen, muuta kohtaa Asetukset › Suorituskyky › Grafiikkasuoritin tai käynnistä WGPU_BACKEND-muuttuja asetettuna
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Tsipikain edellinen käynnistys päättyi grafiikkasuorittimien luetteloinnin aikana, joten se käynnistyi pelkällä OpenGL:llä: {summary}. Jos haluat kokeilla muita grafiikkataustoja uudelleen, muuta kohtaa Asetukset › Suorituskyky › Grafiikkasuoritin tai käynnistä WGPU_BACKEND-muuttuja asetettuna
+@msg	Loading Tsipika…	Ladataan Tsipikaia…
+@msg	Tsipika failed to start: {e}	Tsipikain käynnistys epäonnistui: {e}
 @msg	A browser with WebGPU or WebGL2 is required.	Vaaditaan selain, joka tukee WebGPU:ta tai WebGL2:ta.
 @msg	The graphics were lost and couldn't be restarted.	Grafiikka menetettiin, eikä sitä voitu käynnistää uudelleen.
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	Tallentamattomat muutokset säilytetään tässä selaimessa: lataa sivu uudelleen saadaksesi ne takaisin.
@@ -4517,25 +4517,25 @@ imageTrace	Outline	Ääriviiva
 @msg	it has more than {MAX_NODES} objects	siinä on yli {MAX_NODES} objektia
 @msg	it has no layers	siinä ei ole tasoja
 @msg	it has too many values in a row	siinä on liian monta arvoa rivissä
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	siinä on {_1}, jota VectorCraft ei vielä lue siitä
+@msg	it has {_1}, which Tsipika doesn't read from it yet	siinä on {_1}, jota Tsipika ei vielä lue siitä
 @msg	its objects are nested too deeply	sen objektit ovat liian syvällä sisäkkäin
 @msg	its section ending with `%{end}` doesn't end	sen `%{end}`-merkintään päättyvä osio ei pääty
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	objektit, joilla on useita täyttöjä tai viivoja, tehosteita tai siveltimiä, tuotiin piirretyn näköisinä ({_1}): niiden ulkoasua ei voi vielä muokata
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	liukuväriä “{name}” ei ole määritetty tiedostossa: sen tilalla on tasaväri
-@msg	an image VectorCraft can't read was left out	kuva, jota VectorCraft ei voi lukea, jätettiin pois
+@msg	an image Tsipika can't read was left out	kuva, jota Tsipika ei voi lukea, jätettiin pois
 @msg	an image whose data is cut short was left out	kuva, jonka data on katkennut, jätettiin pois
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	linkitetyt kuvat näyttävät tiedostoon tallennetun matalan tarkkuuden esikatselun, kunnes niiden tiedostot löytyvät: linkitä ne uudelleen Linkit-paneelissa
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	aluetekstin kehykset, jotka olivat liian matalia yhdelle riville niiden fontilla, korotettiin ({_1}): muuten niiden teksti ei näkyisi
 @msg	its editing data doesn't say where its art is	sen muokkaustiedoista ei selviä kuvituksen sijainti
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	tämä tiedosto tallennettiin ilman PDF-yhteensopivuutta, eikä sen muokkaustietoja voi lukea ({why})
 @msg	No fonts are missing in this document	Tästä asiakirjasta ei puutu fontteja
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft ei hae muiden sovellusten tai järjestelmän kansioista: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft ei hae Users-kansion Shared- tai Public-kansiosta: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika ei hae muiden sovellusten tai järjestelmän kansioista: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika ei hae Users-kansion Shared- tai Public-kansiosta: {path}
 @msg	{path} is not a folder	{path} ei ole kansio
 @msg	the search couldn't start: try again in a moment	hakua ei voitu aloittaa: yritä hetken kuluttua uudelleen
 @msg	searching a folder isn't available on the web	kansion haku ei ole käytettävissä verkossa
 @msg	every search thread stopped on an internal error (please report this bug)	jokainen hakusäie pysähtyi sisäiseen virheeseen (ilmoita tästä virheestä)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	VectorCraftin Fonts-kansiota ei ole määritetty täällä: työpöytäsovellus ja vectorcraft-cli määrittävät sen
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	Tsipikain Fonts-kansiota ei ole määritetty täällä: työpöytäsovellus ja tsipika-cli määrittävät sen
 @msg	choose the font files to add	valitse lisättävät fonttitiedostot
 @msg	{n} font file(s) are now in {folder}	{n} fonttitiedosto(a) on nyt kansiossa {folder}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	{n} fonttitiedosto(a) on nyt kansiossa {folder}; {failed} ei voitu lisätä: {reason}
@@ -4670,7 +4670,7 @@ imageTrace	Outline	Ääriviiva
 	All shortcuts reset to defaults.	Kaikki pikanäppäimet palautettiin oletuksiin.
 	Imported. Press OK to keep the imported set.	Tuotu. Säilytä tuotu joukko painamalla OK.
 	⚠ {chord} was already used by {names} — it has been removed there.	Huomio: {chord} oli jo käytössä kohteessa {names} — se on poistettu sieltä.
-	VectorCraft Defaults	VectorCraftin oletukset
+	Tsipika Defaults	Tsipikain oletukset
 @plural	{n} shortcut is assigned more than once|{n} shortcuts are assigned more than once	{n} pikanäppäin on määritetty useammin kuin kerran|{n} pikanäppäintä on määritetty useammin kuin kerran
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	Simuloi tulostaa päällepainatukset siten kuin päällepainatuksen esikatselu ne näyttää; erottelut säilyttävät ne aina. Esiasetus litistää läpinäkyvyyden ennen tulostusta (PostScript-tiedostoissa se litistetään aina).
 	Preserve	Säilytä
@@ -4898,7 +4898,7 @@ file-filter	PDF presets	PDF-esiasetukset
 file-filter	Print presets	Tulostuksen esiasetukset
 file-filter	SVG Compressed	Pakattu SVG
 file-filter	PDF-compatible .ai	PDF-yhteensopiva .ai
-file-filter	VectorCraft Template	VectorCraft-malli
+file-filter	Tsipika Template	Tsipika-malli
 file-filter	Templates	Mallit
 diagnostics	render	renderöinti
 diagnostics	ui	käyttöliittymä
@@ -4909,7 +4909,7 @@ diagnostics	ui	käyttöliittymä
 @plural	{n} commit|{n} commits	{n} commit|{n} commitia
 gradient-kind	Radial	Säteittäinen
 mark-style	Japanese	Japanilainen
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	pakattu tiedosto purkautuu suuremmaksi kuin VectorCraft lukee ({_1} MB asiakirjaa, {_2} MB kuvaa kohden)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	pakattu tiedosto purkautuu suuremmaksi kuin Tsipika lukee ({_1} MB asiakirjaa, {_2} MB kuvaa kohden)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	asiakirja on liian suuri pakattuna tallennettavaksi ({0}): tallenna se Käytä pakkausta -asetus pois päältä
 @msg	the file stopped being read (please report this bug)	tiedoston lukeminen keskeytyi (ilmoita tästä virheestä)
 	Concentric Dividers:	Samankeskiset jakajat:

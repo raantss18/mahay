@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use designcraft_color::SwatchValue;
+use pejy_color::SwatchValue;
 
 use crate::Document;
 use crate::attrs::{CharAttrs, ParaAttrs};

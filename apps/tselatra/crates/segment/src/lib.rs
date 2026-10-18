@@ -3,11 +3,11 @@
 //! - [`MaskModel`]: what Roto Brush asks of a model, the foreground probability of each pixel of a
 //!   frame given prompts (foreground / background points from the strokes, a box, a prior mask).
 //!   Anything implementing it can be plugged in; the classical graph-cut segmenter in
-//!   `effectcraft-track` stays the built-in fallback when no model is chosen.
+//!   `tselatra-track` stays the built-in fallback when no model is chosen.
 //! - [`face::FaceModel`]: what face tracking asks of a model: find a face in a region, follow it
 //!   from frame to frame. The classical face tracker stays the built-in fallback.
 //! - [`MODELS`]: the registry. Every entry is open source under a licence compatible with
-//!   EffectCraft's (MIT OR Apache-2.0), with its authors, source, size and SHA-256. Weights are
+//!   Tselatra's (MIT OR Apache-2.0), with its authors, source, size and SHA-256. Weights are
 //!   never bundled: they are fetched on demand (or installed from a file), verified ([`sha256`])
 //!   and loaded by [`load`].
 //! - [`pt`]: a PyTorch checkpoint reader; [`tflite`]: a TensorFlow Lite reader and interpreter;
@@ -157,7 +157,7 @@ pub fn load(id: &str, bytes: &[u8]) -> Result<Loaded> {
 /// The notice kept next to installed weights: what they are, who made them, their licence.
 pub fn notice(m: &ModelInfo) -> String {
     format!(
-        "{}\n\nAuthors: {}\nLicence: {} (full text: https://spdx.org/licenses/{}.html; as stated by the authors: {})\nSource: {}\nProject: {}\n\nDownloaded unmodified from the source above. EffectCraft runs it with its own implementation\nand is not affiliated with or endorsed by its authors.\n",
+        "{}\n\nAuthors: {}\nLicence: {} (full text: https://spdx.org/licenses/{}.html; as stated by the authors: {})\nSource: {}\nProject: {}\n\nDownloaded unmodified from the source above. Tselatra runs it with its own implementation\nand is not affiliated with or endorsed by its authors.\n",
         m.name, m.authors, m.licence, m.licence, m.licence_url, m.url, m.homepage
     )
 }

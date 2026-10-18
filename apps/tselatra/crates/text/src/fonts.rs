@@ -96,13 +96,13 @@ impl DirectorySource {
         // folders (/run/host/…) and the folders the fontconfig configuration names.
         #[cfg(all(unix, not(target_os = "macos"), not(target_arch = "wasm32")))]
         dirs.extend(crate::font_dirs::unix_font_dirs(&crate::font_dirs::FontEnv::from_process()));
-        dirs.extend(extra_dirs(std::env::var_os("EFFECTCRAFT_FONT_DIRS").as_deref()));
+        dirs.extend(extra_dirs(std::env::var_os("TSELATRA_FONT_DIRS").as_deref()));
         Self { dirs }
     }
 }
 
-/// Extra font folders from `EFFECTCRAFT_FONT_DIRS` (a path list, `:`-separated, `;` on Windows), so a
-/// tool can hand EffectCraft its own font library without installing the fonts system-wide.
+/// Extra font folders from `TSELATRA_FONT_DIRS` (a path list, `:`-separated, `;` on Windows), so a
+/// tool can hand Tselatra its own font library without installing the fonts system-wide.
 fn extra_dirs(var: Option<&std::ffi::OsStr>) -> Vec<PathBuf> {
     var.map(|v| std::env::split_paths(v).filter(|p| !p.as_os_str().is_empty()).collect()).unwrap_or_default()
 }
@@ -751,10 +751,10 @@ fn requested_cjk_locale() -> Option<String> {
 }
 
 /// The CJK locale to use: [`set_cjk_locale`] when the host asked for one, otherwise the locale
-/// environment (`LANG`, `LC_ALL`, `LC_CTYPE`; `EFFECTCRAFT_CJK_LOCALE` overrides them).
+/// environment (`LANG`, `LC_ALL`, `LC_CTYPE`; `TSELATRA_CJK_LOCALE` overrides them).
 fn active_cjk_locale() -> String {
     requested_cjk_locale().unwrap_or_else(|| {
-        ["EFFECTCRAFT_CJK_LOCALE", "LC_ALL", "LC_CTYPE", "LANG"]
+        ["TSELATRA_CJK_LOCALE", "LC_ALL", "LC_CTYPE", "LANG"]
             .iter()
             .filter_map(|k| std::env::var(k).ok())
             .map(|v| v.trim().to_ascii_lowercase())
@@ -1062,11 +1062,11 @@ mod tests {
     /// font menus list every instance.
     #[test]
     fn variable_named_instances_resolve_and_list() {
-        const FAMILY: &str = "EffectCraft Instance Test";
+        const FAMILY: &str = "Tselatra Instance Test";
         let instances = [
-            ("Light", 300.0, Some("EffectCraftInstanceTest-Light")),
-            ("Regular", 400.0, Some("EffectCraftInstanceTest-Regular")),
-            ("Black", 900.0, Some("EffectCraftInstanceTest-Black")),
+            ("Light", 300.0, Some("TselatraInstanceTest-Light")),
+            ("Regular", 400.0, Some("TselatraInstanceTest-Regular")),
+            ("Black", 900.0, Some("TselatraInstanceTest-Black")),
             ("Extra Bold", 800.0, None),
         ];
         assert_eq!(add_font_data(crate::sfnt::test_font::variable(FAMILY, &instances, true)).len(), 1);
@@ -1084,11 +1084,11 @@ mod tests {
         assert!(!bold.synth_bold, "{bold:?}");
         assert_eq!(wght(&bold), vec![("wght".to_string(), 800.0)]);
         // By PostScript name, the font's own and the derived one, and by full name.
-        let ps = resolve("EffectCraftInstanceTest-Black", "Regular");
+        let ps = resolve("TselatraInstanceTest-Black", "Regular");
         assert!(!ps.missing && ps.face == black.face, "{ps:?}");
         assert_eq!(wght(&ps), vec![("wght".to_string(), 900.0)]);
-        assert_eq!(wght(&resolve("EffectCraftInstanceTest-ExtraBold", "")), vec![("wght".to_string(), 800.0)]);
-        assert_eq!(wght(&resolve("effectcraft instance test extra bold", "")), vec![("wght".to_string(), 800.0)]);
+        assert_eq!(wght(&resolve("TselatraInstanceTest-ExtraBold", "")), vec![("wght".to_string(), 800.0)]);
+        assert_eq!(wght(&resolve("tselatra instance test extra bold", "")), vec![("wght".to_string(), 800.0)]);
         // The font menu lists every instance, in weight order.
         let fams = families();
         let styles = &fams.iter().find(|(f, _)| f == FAMILY).unwrap().1;

@@ -2,7 +2,7 @@
 //! sequence number, catches up with the batches it missed (or a snapshot once they're no longer
 //! logged), settles what the server did with its batches meanwhile, and sends the rest.
 
-use figcraft_doc::{Document, NodeKind};
+use endrika_doc::{Document, NodeKind};
 
 use crate::message::{self, ClientMsg, Hello, ServerMsg};
 use crate::sim::Sim;

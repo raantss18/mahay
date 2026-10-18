@@ -1,11 +1,11 @@
 //! A gradient between process colours shows the inks' blend, as InDesign shows it.
-use designcraft_color::swatch::Swatch;
-use designcraft_color::{Color, Gradient, GradientKind, GradientStop, SwatchValue};
-use designcraft_compose::Cache;
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{Document, Fill, Item, ItemId, Shape, SpreadRef, Stroke};
-use designcraft_geom::{Affine, Rect, shapes};
-use designcraft_render::{Placed, RenderOptions, Renderer};
+use pejy_color::swatch::Swatch;
+use pejy_color::{Color, Gradient, GradientKind, GradientStop, SwatchValue};
+use pejy_compose::Cache;
+use pejy_doc::build::NewDocument;
+use pejy_doc::{Document, Fill, Item, ItemId, Shape, SpreadRef, Stroke};
+use pejy_geom::{Affine, Rect, shapes};
+use pejy_render::{Placed, RenderOptions, Renderer};
 
 #[test]
 fn a_cmyk_gradient_is_c50_m50_halfway() {

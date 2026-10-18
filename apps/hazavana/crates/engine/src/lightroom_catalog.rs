@@ -9,8 +9,8 @@ use std::sync::{
 };
 
 use crate::lightroom_sqlite::{Database, LiveTable, Value as SqlValue};
-use lightcraft_catalog::{Album, Flag, Op, Photo, PhotoId, Source};
-use lightcraft_geom::{Affine, Orientation, Point, Rect};
+use hazavana_catalog::{Album, Flag, Op, Photo, PhotoId, Source};
+use hazavana_geom::{Affine, Orientation, Point, Rect};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -567,7 +567,7 @@ pub fn read_with_progress(path: &Path, cancel: &AtomicBool, total: &AtomicUsize,
     Ok(out)
 }
 
-/// Drop the catalog's images whose original is not a file type LightCraft reads, saying so in the
+/// Drop the catalog's images whose original is not a file type Hazavana reads, saying so in the
 /// import's warnings.
 ///
 /// The catalog decides these paths, and a record it leaves behind is one click from the system
@@ -604,7 +604,7 @@ pub(crate) fn refuse_non_media(data: &mut CatalogImport) {
         if !refused.contains(&p.source_id) {
             return true;
         }
-        warnings.push(format!("image {}: not imported; {} isn't one of the file types LightCraft reads", p.source_id, p.path));
+        warnings.push(format!("image {}: not imported; {} isn't one of the file types Hazavana reads", p.source_id, p.path));
         false
     });
     data.warnings.extend(warnings);
@@ -661,10 +661,10 @@ fn lightroom_orientation(code: &str) -> Option<Orientation> {
     ALL.into_iter().find(|&o| code.chars().eq([corner(o, 0.0, 0.0), corner(o, 1.0, 0.0)]))
 }
 
-/// Lightroom's crop in LightCraft's frame. `crs` gives the crop's top-left (`CropLeft`, `CropTop`)
+/// Lightroom's crop in Hazavana's frame. `crs` gives the crop's top-left (`CropLeft`, `CropTop`)
 /// and bottom-right (`CropRight`, `CropBottom`) corners on the stored image (before orientation and
 /// straightening), normalized to its size, plus a straighten angle that turns the other way to
-/// LightCraft's. LightCraft's crop is a rectangle in the oriented image rotated by `angle` about its
+/// Hazavana's. Hazavana's crop is a rectangle in the oriented image rotated by `angle` about its
 /// centre, normalized to the oriented image's size, so the corners go through the orientation and
 /// then the rotation; `stored_aspect` (width / height of the stored image) matters once the
 /// rectangle turns. On a real catalog this reproduced the frame aspect of all 223 straightened crops
@@ -769,7 +769,7 @@ fn apply(s: &mut crate::Session, data: CatalogImport, update_existing: bool) -> 
     if let Some(path) = index_path {
         s.persist()?;
         let bytes = serde_json::to_vec(&applied.index).map_err(|e| error(e.to_string()))?;
-        lightcraft_catalog::safe_file::write_atomic(&path, &bytes).map_err(|e| error(e.to_string()))?;
+        hazavana_catalog::safe_file::write_atomic(&path, &bytes).map_err(|e| error(e.to_string()))?;
     }
     Ok(applied.report)
 }
@@ -787,7 +787,7 @@ pub(crate) struct ApplyPrepared<'a> {
 
 pub(crate) fn apply_prepared(s: &mut crate::Session, mut data: CatalogImport, context: ApplyPrepared<'_>) -> crate::Result<AppliedImport> {
     let ApplyPrepared { update_existing, files, index, archive_path, missing_sources, undo0 } = context;
-    // nothing but a file type LightCraft reads becomes a record, whichever route got here (#2135)
+    // nothing but a file type Hazavana reads becomes a record, whichever route got here (#2135)
     refuse_non_media(&mut data);
     validate(&data).map_err(error)?;
     let mut warnings = data.warnings.clone();
@@ -860,7 +860,7 @@ pub(crate) fn apply_prepared(s: &mut crate::Session, mut data: CatalogImport, co
                 &now,
             );
             if ["RAW", "DNG", "ARW", "CR2", "CR3", "NEF", "NRW", "RAF", "ORF", "RW2", "PEF"].contains(&p.format.to_uppercase().as_str()) {
-                p.kind = lightcraft_catalog::MediaKind::Raw;
+                p.kind = hazavana_catalog::MediaKind::Raw;
             }
             p
         };
@@ -906,7 +906,7 @@ pub(crate) fn apply_prepared(s: &mut crate::Session, mut data: CatalogImport, co
                 stored_aspect,
             ) {
                 Ok((partial, unknown)) => {
-                    p.develop = Arc::new(lightcraft_develop::apply_partial(&p.develop, &partial, 1.0));
+                    p.develop = Arc::new(hazavana_develop::apply_partial(&p.develop, &partial, 1.0));
                     p.edited = Some(now.clone());
                     if !unknown.is_empty() {
                         unmapped.insert(src.source_id, unknown);
@@ -957,7 +957,7 @@ pub(crate) fn apply_prepared(s: &mut crate::Session, mut data: CatalogImport, co
             .collections
             .get(&collection_key)
             .copied()
-            .map(lightcraft_catalog::AlbumId)
+            .map(hazavana_catalog::AlbumId)
             .filter(|id| s.catalog.album(*id).is_some())
             .unwrap_or_else(|| s.catalog.alloc_album_id());
         index.collections.insert(collection_key, id.0);
@@ -1026,7 +1026,7 @@ pub(crate) fn apply_prepared(s: &mut crate::Session, mut data: CatalogImport, co
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_geom::CropGeometry;
+    use hazavana_geom::CropGeometry;
     fn row(v: Value) -> Row {
         serde_json::from_value(v).unwrap()
     }
@@ -1102,7 +1102,7 @@ mod tests {
         assert_eq!(r["photos"], 2, "only the real master and its copy: {r}");
         assert!(s.catalog.photos().all(|p| !matches!(&p.source, Source::File { path } if path.ends_with(".exe"))), "the program was catalogued");
         let warnings = r["warnings"].to_string();
-        assert!(warnings.contains("payload.exe") && warnings.contains("file types LightCraft reads"), "{warnings}");
+        assert!(warnings.contains("payload.exe") && warnings.contains("file types Hazavana reads"), "{warnings}");
         assert!(warnings.contains("image 4: not imported"), "the virtual copy of the refused original goes with it: {warnings}");
     }
 
@@ -1189,7 +1189,7 @@ mod tests {
         let data = sample();
         apply(&mut s, data.clone(), false).unwrap();
         let id = s.catalog.photos().find(|p| p.copy_of.is_none()).unwrap().id;
-        s.set_develop(id, lightcraft_develop::DevelopSettings::default(), "Personal edit").unwrap();
+        s.set_develop(id, hazavana_develop::DevelopSettings::default(), "Personal edit").unwrap();
         let r = apply(&mut s, data.clone(), false).unwrap();
         assert!(r["preservedExistingEdits"].as_u64().unwrap() > 0);
         assert_eq!(s.catalog.photo(id).unwrap().develop.light.exposure, 0.0);
@@ -1258,7 +1258,7 @@ mod tests {
         assert_eq!(crop["rect"]["y1"], 1.0);
         assert_eq!(crop["angle"], 0.0);
         assert!(!unknown.iter().any(|k| k.starts_with("CropLeft")), "{unknown:?}");
-        // an angle alone still means a crop (Lightroom's angle turns the other way to LightCraft's)
+        // an angle alone still means a crop (Lightroom's angle turns the other way to Hazavana's)
         let (partial, unknown) = mapped_settings("s = { CropAngle = -1.5 }", crate::crs::Target::RawAbsolute, 1.5, Orientation::Normal, 1.5).unwrap();
         assert_eq!(partial["crop"]["geometry"]["angle"], 1.5);
         assert!(!unknown.iter().any(|k| k.starts_with("CropAngle")), "{unknown:?}");
@@ -1310,7 +1310,7 @@ mod tests {
         assert!(partial.get("crop").is_none());
     }
 
-    /// The `crs` corners and angle Lightroom would store for LightCraft crop `g` on a stored image
+    /// The `crs` corners and angle Lightroom would store for Hazavana crop `g` on a stored image
     /// of aspect `w` (height 1) shown with orientation `o`.
     fn lightroom_crop(g: CropGeometry, o: Orientation, w: f64) -> String {
         let (ow, oh) = if o.swaps_axes() { (1.0, w) } else { (w, 1.0) };
@@ -1447,7 +1447,7 @@ mod tests {
 
     #[test]
     fn persistent_reimport_keeps_copy_and_collection_ids_and_capture_time() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-lrcat-reimport-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-lrcat-reimport-{}", std::process::id()));
         let mut s = crate::Session::new();
         s.open_library(&dir, false).unwrap();
         let mut data = sample();
@@ -1569,7 +1569,7 @@ mod tests {
     #[test]
     fn reads_native_sqlite_tables_without_lightroom_or_external_processes() {
         let bytes = native_catalog(&photo_tables(("/catalog/", "")));
-        let path = std::env::temp_dir().join(format!("lightcraft-native-catalog-{}.lrcat", std::process::id()));
+        let path = std::env::temp_dir().join(format!("hazavana-native-catalog-{}.lrcat", std::process::id()));
         std::fs::write(&path, &bytes).unwrap();
         let catalog = read(&path).unwrap();
         assert_eq!(catalog.photos.len(), 1);
@@ -1583,7 +1583,7 @@ mod tests {
 
     #[test]
     fn preparation_skips_missing_original_probes_but_keeps_catalog_records() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-lrcat-offline-probes-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-lrcat-offline-probes-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let source = dir.join("source.lrcat");
         let root = dir.join("offline");
@@ -1613,7 +1613,7 @@ mod tests {
 
     #[test]
     fn probed_original_is_counted_once_and_reimport_adds_nothing() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-lrcat-present-probes-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-lrcat-present-probes-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("Photos")).unwrap();
         let source = dir.join("source.lrcat");
         std::fs::write(dir.join("Photos/test.ARW"), b"original").unwrap();
@@ -1640,7 +1640,7 @@ mod tests {
 
     #[test]
     fn a_root_missing_here_is_found_relative_to_the_catalog() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-relocated-catalog-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-relocated-catalog-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Lightroom")).unwrap();
         std::fs::create_dir_all(dir.join("RAW")).unwrap();
@@ -1659,7 +1659,7 @@ mod tests {
 
     #[test]
     fn originals_on_other_computers_are_never_looked_at_or_added() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-lrcat-remote-roots-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-lrcat-remote-roots-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Photos")).unwrap();
         std::fs::write(dir.join("Photos/test.ARW"), b"original").unwrap();

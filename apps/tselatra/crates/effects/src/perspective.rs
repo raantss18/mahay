@@ -5,9 +5,9 @@
 //! angle `a` sits in the direction `(sin a, -cos a)` (y grows downwards). 3D vectors use x right,
 //! y down, z towards the viewer.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px, gaussian_blur};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px, gaussian_blur};
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, layer_rect, premul, smoothstep, unpremul};

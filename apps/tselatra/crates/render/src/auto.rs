@@ -14,7 +14,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use effectcraft_project::ItemId;
+use tselatra_project::ItemId;
 
 /// Which frames share timing history: one comp at one output scale on one path.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

@@ -4,7 +4,7 @@
 //! `s`; tangents are blended across the gentle vertices of flattened curves (so warped art bends
 //! smoothly) but stay discontinuous at real corners (so art folds there, like Illustrator).
 
-use vectorcraft_geom::{BezPath, PathEl, Point, Vec2};
+use tsipika_geom::{BezPath, PathEl, Point, Vec2};
 
 /// Turn angle (degrees) above which a vertex is a corner.
 pub const CORNER_DEG: f64 = 30.0;

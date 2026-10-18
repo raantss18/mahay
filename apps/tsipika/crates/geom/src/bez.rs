@@ -1,6 +1,6 @@
 //! Walking a [`BezPath`] as strokes see it: its subpaths (open or closed), their segments, unit
-//! tangents and corners. Shared by the stroke geometry (`vectorcraft-effects`) and the visual
-//! bounds and hit testing of strokes (`vectorcraft-doc`).
+//! tangents and corners. Shared by the stroke geometry (`tsipika-effects`) and the visual
+//! bounds and hit testing of strokes (`tsipika-doc`).
 
 use kurbo::{BezPath, ParamCurve, ParamCurveDeriv, PathEl, PathSeg, Vec2};
 

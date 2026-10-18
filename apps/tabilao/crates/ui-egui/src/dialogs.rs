@@ -1468,29 +1468,9 @@ fn form_fields(ui: &mut egui::Ui, d: &mut Dialog) {
     });
 }
 
-/// Help ▸ About Tabilao: the app, its contributors and the AI models that helped. The credits
-/// are compiled in (`crate::credits`, docs/contributors.md).
-fn about(ui: &mut egui::Ui, d: &mut Dialog) {
-    ui.horizontal(|ui| {
-        for tab in ["About", "Contributors", "Models"] {
-            if ui.selectable_label(d.tab == tab, tab).clicked() {
-                d.tab = tab.to_string();
-            }
-        }
-    });
-    ui.separator();
-    match d.tab.as_str() {
-        "Contributors" => crate::credits::contributors_ui(ui),
-        "Models" => crate::credits::models_ui(ui),
-        _ => {
-            ui.heading("Tabilao");
-            ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
-            ui.add_space(4.0);
-            ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of Mahay.");
-            ui.hyperlink_to("mahay.com/apps/tabilao", "https://github.com/raantss18/mahay");
-            ui.hyperlink_to("Join the Mahay discussions", "https://github.com/raantss18/mahay/discussions");
-        }
-    }
+/// Help ▸ About Tabilao: the shared Mahay About page (version, updates, author, licences).
+fn about(ui: &mut egui::Ui, _d: &mut Dialog) {
+    mahay_about::page(ui, mahay_about::AppInfo { id: "tabilao", name: "Tabilao" });
 }
 
 /// The Macros dialog: lists Tabilao's own recorded scripts and (if the file carries one) the

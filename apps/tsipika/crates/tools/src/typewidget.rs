@@ -4,8 +4,8 @@
 //! The Selection tool hits it and the canvas draws it from the same geometry.
 
 use serde_json::json;
-use vectorcraft_doc::{Document, NodeId, NodeKind, OrientedBox, Selection, TextKind};
-use vectorcraft_geom::Point;
+use tsipika_doc::{Document, NodeId, NodeKind, OrientedBox, Selection, TextKind};
+use tsipika_geom::Point;
 
 use crate::select::selection_box;
 use crate::{Action, ToolContext};
@@ -80,7 +80,7 @@ pub fn double_click(cx: &ToolContext, p: Point) -> Option<Action> {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_doc::{Node, TextObject};
+    use tsipika_doc::{Node, TextObject};
 
     use super::*;
     use crate::select::SelectionTool;
@@ -112,7 +112,7 @@ mod tests {
             for k in [PointerKind::Down, PointerKind::Up, PointerKind::Down, PointerKind::Up] {
                 assert_eq!(t.pointer(&c, &ev(k, w.at)), vec![], "{k:?}");
             }
-            let a = t.pointer(&c, &ev(PointerKind::DoubleClick, w.at + vectorcraft_geom::Vec2::new(2.0, 0.0)));
+            let a = t.pointer(&c, &ev(PointerKind::DoubleClick, w.at + tsipika_geom::Vec2::new(2.0, 0.0)));
             assert_eq!(a, vec![Action::Exec(cmd.into(), json!({ "ids": [id.0] }))]);
             assert_eq!(t.cursor(&c, w.at, Mods::default()), Cursor::TypeWidget);
             // A double-click on the type itself still edits it.

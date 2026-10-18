@@ -1,30 +1,30 @@
 [package]
-name = "designcraft-engine"
+name = "pejy-engine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft engine: session, documents, history, selection, command registry, tool hosting"
+description = "Pejy engine: session, documents, history, selection, command registry, tool hosting"
 
 [lints]
 workspace = true
 
 [dependencies]
-craft-print = { workspace = true }
-craft-docpath = { workspace = true }
-designcraft-images = { workspace = true }
-designcraft-geom = { workspace = true }
-designcraft-color = { workspace = true }
-designcraft-doc = { workspace = true }
-designcraft-fonts = { workspace = true }
-designcraft-compose = { workspace = true }
-designcraft-render = { workspace = true }
-designcraft-format = { workspace = true }
-designcraft-epub = { workspace = true }
-designcraft-pptx = { workspace = true }
-designcraft-textimport = { workspace = true }
-designcraft-pdf = { workspace = true }
-designcraft-tools = { workspace = true }
-designcraft-idml = { workspace = true }
+mahay-print = { workspace = true }
+mahay-docpath = { workspace = true }
+pejy-images = { workspace = true }
+pejy-geom = { workspace = true }
+pejy-color = { workspace = true }
+pejy-doc = { workspace = true }
+pejy-fonts = { workspace = true }
+pejy-compose = { workspace = true }
+pejy-render = { workspace = true }
+pejy-format = { workspace = true }
+pejy-epub = { workspace = true }
+pejy-pptx = { workspace = true }
+pejy-textimport = { workspace = true }
+pejy-pdf = { workspace = true }
+pejy-tools = { workspace = true }
+pejy-idml = { workspace = true }
 indd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -35,14 +35,14 @@ caseless = { workspace = true }
 unicode-segmentation = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-craft-atomic = { workspace = true }
+mahay-atomic = { workspace = true }
 tempfile = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 same-file = { workspace = true }
 
 [dev-dependencies]
-designcraft-fonts = { workspace = true, features = ["testing"] }
+pejy-fonts = { workspace = true, features = ["testing"] }
 zip = { workspace = true }
 hayro-syntax = "0.7.2"
 hayro-interpret = { version = "0.7.0", default-features = false, features = ["embed-fonts"] }

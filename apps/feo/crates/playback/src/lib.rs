@@ -15,7 +15,7 @@
 //! Plugins and threads: hosted third-party plugins (CLAP/VST3) are created, given their stored
 //! state and prepared on the thread that calls [`Player::update_session`] (the UI thread), and
 //! travel to the audio thread together with the session snapshot that needs them; the mix
-//! engine adopts them (see `soundcraft_mix`'s crate docs). Instances the engine retires, and the
+//! engine adopts them (see `feo_mix`'s crate docs). Instances the engine retires, and the
 //! session snapshots the callback replaces, come back on return channels and are dropped on the UI
 //! thread ([`Player::idle`]). Plugin editors are driven, and plugin states for saving read
 //! ([`Player::capture_states`]), on the UI thread
@@ -27,10 +27,10 @@ pub mod record;
 
 pub use devices::AudioConfig;
 
-use soundcraft_dsp::{Plugin, PluginEditor, PluginStateReader};
-use soundcraft_mix::{MAX_CHANNELS, MixEngine, PreparedInstance, StripMeter, itu_stereo_fold, main_channels};
-use soundcraft_model::{Session, TrackId};
-use soundcraft_time::{Range, Samples};
+use feo_dsp::{Plugin, PluginEditor, PluginStateReader};
+use feo_mix::{MAX_CHANNELS, MixEngine, PreparedInstance, StripMeter, itu_stereo_fold, main_channels};
+use feo_model::{Session, TrackId};
+use feo_time::{Range, Samples};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, Ordering};
 use std::sync::mpsc::{Receiver, Sender, SyncSender, channel, sync_channel};
@@ -43,7 +43,7 @@ const OLD_SESSIONS: usize = 16;
 
 /// The realtime audio thread marker lives in the mix engine, which carries it into the strips it
 /// renders on worker threads; the cpal callbacks here set it.
-pub use soundcraft_mix::{mark_audio_thread, on_audio_thread};
+pub use feo_mix::{mark_audio_thread, on_audio_thread};
 
 /// Meter values for the UI.
 #[derive(Debug, Clone, Default)]
@@ -585,7 +585,7 @@ impl Player {
         side: Mutex<Side>,
         gtx: Sender<Vec<Box<dyn Plugin>>>,
     ) -> Player {
-        let s = Arc::new(Session::new("Untitled", soundcraft_time::SampleRate::new(rate).unwrap_or_default()));
+        let s = Arc::new(Session::new("Untitled", feo_time::SampleRate::new(rate).unwrap_or_default()));
         Player::silent_clock_with(shared, tx, rx, s, side, gtx)
     }
 
@@ -602,7 +602,7 @@ impl Player {
         let mut state = AudioState::new(rx, Arc::clone(&shared), session, f64::from(rate), gtx);
         let fault = Arc::new(Fault::default());
         let failed = Arc::clone(&fault);
-        let spawn = std::thread::Builder::new().name("soundcraft-clock".into()).spawn(move || {
+        let spawn = std::thread::Builder::new().name("feo-clock".into()).spawn(move || {
             let mut buf = vec![0.0f32; 4096];
             let mut last = std::time::Instant::now();
             loop {
@@ -814,7 +814,7 @@ impl Side {
             }
             self.rate = sr;
         }
-        let specs = soundcraft_mix::instance_specs(s);
+        let specs = feo_mix::instance_specs(s);
         let stale: Vec<(TrackId, usize)> = self.shadow.keys().filter(|k| !specs.iter().any(|x| (x.track, x.slot) == **k)).copied().collect();
         for k in stale {
             self.forget(k);
@@ -826,10 +826,10 @@ impl Side {
                 continue;
             }
             self.forget(key);
-            let made = soundcraft_mix::create_instance(&spec.id, spec.state.as_deref(), sr, BLOCK, spec.ch);
+            let made = feo_mix::create_instance(&spec.id, spec.state.as_deref(), sr, BLOCK, spec.ch);
             log::debug!("plugin instance for {:?} slot {}: {} ({} ch, created: {})", spec.track, spec.slot, spec.id, spec.ch, made.is_some());
             self.shadow.insert(key, (spec.id.clone(), spec.ch, made.is_some()));
-            if let Some(soundcraft_mix::NewInstance { mut plugin, refused_state }) = made {
+            if let Some(feo_mix::NewInstance { mut plugin, refused_state }) = made {
                 if let Some(e) = plugin.editor() {
                     self.editors.insert(key, e);
                 }
@@ -1024,7 +1024,7 @@ mod tests {
 
     #[test]
     fn audio_state_plays_and_stops_at_end() {
-        let s = Arc::new(soundcraft_model::Session::default());
+        let s = Arc::new(feo_model::Session::default());
         let shared = Arc::new(Shared {
             position: AtomicI64::new(0),
             playing: AtomicBool::new(false),
@@ -1042,7 +1042,7 @@ mod tests {
 
     #[test]
     fn short_device_callbacks_render_short_mix_blocks() {
-        let s = Arc::new(soundcraft_model::Session::default());
+        let s = Arc::new(feo_model::Session::default());
         let shared = Arc::new(Shared {
             position: AtomicI64::new(0),
             playing: AtomicBool::new(false),
@@ -1059,12 +1059,12 @@ mod tests {
 
     #[test]
     fn surround_main_maps_to_device_channels_or_folds_down() {
-        use soundcraft_model::{ChannelFormat, Clip, SourceAudio, SourceId, TrackKind};
-        let mut s = soundcraft_model::Session::default();
+        use feo_model::{ChannelFormat, Clip, SourceAudio, SourceId, TrackKind};
+        let mut s = feo_model::Session::default();
         s.outputs[0].format = ChannelFormat::Surround51;
         let t = s.add_track(TrackKind::Audio, ChannelFormat::Surround51, None);
         let chans: Vec<Vec<f32>> = (0..6).map(|c| vec![0.1 * (c + 1) as f32; 48_000]).collect();
-        s.pool.insert(SourceId(5), Arc::new(SourceAudio::new(soundcraft_audio_io::AudioBuffer { sample_rate: 48_000, channels: chans })));
+        s.pool.insert(SourceId(5), Arc::new(SourceAudio::new(feo_audio_io::AudioBuffer { sample_rate: 48_000, channels: chans })));
         let id = s.new_clip_id();
         s.track_mut(t).unwrap().playlist_mut().unwrap().clips.push(Clip::audio(id, "x", SourceId(5), 0, 0, 48_000));
         let s = Arc::new(s);
@@ -1096,8 +1096,8 @@ mod tests {
 
     #[test]
     fn instances_arrive_with_the_session_and_leave_through_the_return_channel() {
-        use soundcraft_model::{ChannelFormat, Insert, TrackKind};
-        let mut s = soundcraft_model::Session::default();
+        use feo_model::{ChannelFormat, Insert, TrackKind};
+        let mut s = feo_model::Session::default();
         let t = s.add_track(TrackKind::Audio, ChannelFormat::Stereo, None);
         s.track_mut(t).unwrap().mixer.inserts[1] = Some(Insert::new("clap:test.fake"));
         let s = Arc::new(s);
@@ -1109,25 +1109,25 @@ mod tests {
         });
         let (tx, rx) = channel();
         let (gtx, grx) = channel();
-        let mut st = AudioState::new(rx, Arc::clone(&shared), Arc::new(soundcraft_model::Session::default()), 48_000.0, gtx);
-        let plugin = soundcraft_dsp::create("gain").unwrap();
+        let mut st = AudioState::new(rx, Arc::clone(&shared), Arc::new(feo_model::Session::default()), 48_000.0, gtx);
+        let plugin = feo_dsp::create("gain").unwrap();
         tx.send(Cmd::Session(Arc::clone(&s), vec![PreparedInstance { track: t, slot: 1, id: "clap:test.fake".into(), ch: 2, plugin }])).unwrap();
         let mut out = vec![0.0f32; 256];
         st.fill(&mut out, 2);
         assert!(grx.try_recv().is_err(), "nothing retired yet");
         // A session without the insert retires the instance to the return channel.
-        tx.send(Cmd::Session(Arc::new(soundcraft_model::Session::default()), Vec::new())).unwrap();
+        tx.send(Cmd::Session(Arc::new(feo_model::Session::default()), Vec::new())).unwrap();
         st.fill(&mut out, 2);
         assert_eq!(grx.try_recv().unwrap().len(), 1);
         // A sample-rate change rebuilds the engine without dropping plugins on this thread.
         tx.send(Cmd::Session(
             Arc::clone(&s),
-            vec![PreparedInstance { track: t, slot: 1, id: "clap:test.fake".into(), ch: 2, plugin: soundcraft_dsp::create("gain").unwrap() }],
+            vec![PreparedInstance { track: t, slot: 1, id: "clap:test.fake".into(), ch: 2, plugin: feo_dsp::create("gain").unwrap() }],
         ))
         .unwrap();
         st.fill(&mut out, 2);
         let mut s44 = (*s).clone();
-        s44.sample_rate = soundcraft_time::SampleRate::new(44_100).unwrap();
+        s44.sample_rate = feo_time::SampleRate::new(44_100).unwrap();
         tx.send(Cmd::Session(Arc::new(s44), Vec::new())).unwrap();
         st.fill(&mut out, 2);
         assert_eq!(grx.try_recv().unwrap().len(), 1);
@@ -1138,10 +1138,10 @@ mod tests {
         let mut side = Side::new(48_000.0, channel().1);
         let (a, b) = (TrackId(1), TrackId(2));
         side.states.insert((b, 0), Box::new(|| Some(b"b0".to_vec())));
-        side.states.insert((a, soundcraft_mix::INSTRUMENT_SLOT), Box::new(|| Some(b"synth".to_vec())));
+        side.states.insert((a, feo_mix::INSTRUMENT_SLOT), Box::new(|| Some(b"synth".to_vec())));
         side.states.insert((a, 3), Box::new(|| Some(b"a3".to_vec())));
         side.states.insert((a, 4), Box::new(|| None));
-        let want = vec![(a, 3, b"a3".to_vec()), (a, soundcraft_mix::INSTRUMENT_SLOT, b"synth".to_vec()), (b, 0, b"b0".to_vec())];
+        let want = vec![(a, 3, b"a3".to_vec()), (a, feo_mix::INSTRUMENT_SLOT, b"synth".to_vec()), (b, 0, b"b0".to_vec())];
         assert_eq!(side.capture_states(), want);
         side.forget((a, 3));
         assert_eq!(side.capture_states(), want[1..]);
@@ -1176,9 +1176,9 @@ mod tests {
 
     #[test]
     fn side_creates_each_missing_instance_once() {
-        use soundcraft_model::{ChannelFormat, Insert, TrackKind};
+        use feo_model::{ChannelFormat, Insert, TrackKind};
         let mut side = Side::new(48_000.0, channel().1);
-        let mut s = soundcraft_model::Session::default();
+        let mut s = feo_model::Session::default();
         let t = s.add_track(TrackKind::Audio, ChannelFormat::Mono, None);
         s.track_mut(t).unwrap().mixer.inserts[0] = Some(Insert::new("clap:does.not.exist"));
         s.track_mut(t).unwrap().mixer.inserts[1] = Some(Insert::new("gain"));
@@ -1201,13 +1201,13 @@ mod tests {
         });
         let (tx, rx) = channel();
         let (gtx, grx) = channel();
-        let mut st = AudioState::new(rx, shared, Arc::new(soundcraft_model::Session::default()), 48_000.0, gtx);
+        let mut st = AudioState::new(rx, shared, Arc::new(feo_model::Session::default()), 48_000.0, gtx);
         let mut side = Side::new(48_000.0, grx);
         side.return_old_sessions(&tx);
         let mut out = vec![0.0f32; 256];
         let mut watched = Vec::new();
         for _ in 0..3 * OLD_SESSIONS {
-            let s = Arc::new(soundcraft_model::Session::default());
+            let s = Arc::new(feo_model::Session::default());
             watched.push(Arc::downgrade(&s));
             side.collect_garbage();
             tx.send(Cmd::Session(s, Vec::new())).unwrap();
@@ -1221,7 +1221,7 @@ mod tests {
 
     #[test]
     fn looping_wraps() {
-        let s = Arc::new(soundcraft_model::Session::default());
+        let s = Arc::new(feo_model::Session::default());
         let shared = Arc::new(Shared {
             position: AtomicI64::new(0),
             playing: AtomicBool::new(false),
@@ -1240,14 +1240,14 @@ mod tests {
 
     #[test]
     fn locate_while_playing_drops_the_old_position_audio() {
-        use soundcraft_model::{ChannelFormat, Clip, Insert, SourceAudio, SourceId, TrackKind};
+        use feo_model::{ChannelFormat, Clip, Insert, SourceAudio, SourceId, TrackKind};
         for (plugin, params) in [("compressor", &[("lookahead", 5.0), ("ratio", 1.0)][..]), ("room_reverb", &[][..])] {
-            let mut s = soundcraft_model::Session::default();
+            let mut s = feo_model::Session::default();
             s.edit.click = false;
             let t = s.add_track(TrackKind::Audio, ChannelFormat::Mono, None);
             s.pool.insert(
                 SourceId(5),
-                Arc::new(SourceAudio::new(soundcraft_audio_io::AudioBuffer { sample_rate: 48_000, channels: vec![vec![0.5; 4800]] })),
+                Arc::new(SourceAudio::new(feo_audio_io::AudioBuffer { sample_rate: 48_000, channels: vec![vec![0.5; 4800]] })),
             );
             let id = s.new_clip_id();
             let tr = s.track_mut(t).unwrap();
@@ -1283,8 +1283,8 @@ mod tests {
 
     #[test]
     fn armed_tracks_are_heard_and_metered_after_playback_stops() {
-        use soundcraft_model::{ChannelFormat, TrackKind};
-        let mut s = soundcraft_model::Session::default();
+        use feo_model::{ChannelFormat, TrackKind};
+        let mut s = feo_model::Session::default();
         let t = s.add_track(TrackKind::Audio, ChannelFormat::Mono, None);
         s.track_mut(t).unwrap().mixer.record_arm = true;
         let shared = Arc::new(Shared {

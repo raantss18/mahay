@@ -9,6 +9,7 @@ description = "Tabilao egui frontend (Excel-style UI); swappable — nothing bel
 workspace = true
 
 [dependencies]
+mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-ui = { path = "../../../../libs/core/crates/ui" }
 tabilao-engine = { workspace = true }
 tabilao-chart = { workspace = true }

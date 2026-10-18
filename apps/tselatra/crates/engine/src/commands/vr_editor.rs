@@ -7,8 +7,8 @@
 //! The view orientation is not stored separately: it is read back from the Front camera
 //! (`camera = view × face base`), so editing a camera by hand shows up here too.
 
-use effectcraft_geom::{Mat4, vec3};
-use effectcraft_project::{GroupKind, ItemId, LayerId, LayerSource, Project};
+use tselatra_geom::{Mat4, vec3};
+use tselatra_project::{GroupKind, ItemId, LayerId, LayerSource, Project};
 use serde_json::{Value, json};
 
 use super::app_more::{CELLS_3X2, FACES, ae, grouped, orientation_for_axes};

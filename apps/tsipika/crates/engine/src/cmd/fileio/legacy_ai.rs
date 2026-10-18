@@ -1,5 +1,5 @@
 //! Save As › `.ai` with `aiVersion: "7"`: legacy `.ai` files of version 7 (the PostScript-form `.ai`
-//! that `vectorcraft_eps::export_legacy_ai` writes), which keep the layers, groups, compound
+//! that `tsipika_eps::export_legacy_ai` writes), which keep the layers, groups, compound
 //! paths and clipping groups that a PDF-compatible `.ai` loses in apps reading only its PDF part
 //! (#868).
 //!
@@ -28,9 +28,9 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::{Anchor, FillRule, PathData, Point, Rect, SubPath};
+use tsipika_color::BlendMode;
+use tsipika_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::{Anchor, FillRule, PathData, Point, Rect, SubPath};
 
 use super::super::*;
 use super::{ArtboardPick, Encoded, Format};
@@ -59,8 +59,8 @@ enum SeeThrough {
 }
 
 /// Where a legacy `.ai`'s hidden objects go (`hiddenObjects`): the format hides only layers.
-fn hidden_objects(cmd: &str, p: &Value) -> Result<vectorcraft_eps::HiddenObjects> {
-    use vectorcraft_eps::HiddenObjects;
+fn hidden_objects(cmd: &str, p: &Value) -> Result<tsipika_eps::HiddenObjects> {
+    use tsipika_eps::HiddenObjects;
     match p.get("hiddenObjects") {
         None | Some(Value::Null) => Ok(HiddenObjects::Layer),
         Some(Value::String(v)) if v.trim().is_empty() || v.trim().eq_ignore_ascii_case("layer") => Ok(HiddenObjects::Layer),
@@ -88,8 +88,8 @@ fn see_through(cmd: &str, p: &Value) -> Result<SeeThrough> {
     }
 }
 
-/// What the format loses against a VectorCraft document, reported with every save.
-const FIDELITY: &str = "a legacy .ai (version 7) keeps layers, groups, compound paths, clipping groups, type, colours, gradients and images, not the rest: save as VectorCraft to keep everything editable";
+/// What the format loses against a Tsipika document, reported with every save.
+const FIDELITY: &str = "a legacy .ai (version 7) keeps layers, groups, compound paths, clipping groups, type, colours, gradients and images, not the rest: save as Tsipika to keep everything editable";
 const FLATTENED: &str =
     "transparent images (see-through pixels, opacity or a blending mode) are flattened with the art under them into opaque images";
 const OMITTED: &str = "transparent images (see-through pixels, opacity or a blending mode) are left out";
@@ -110,8 +110,8 @@ pub(super) fn encode(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result
     if boards.len() > 1 {
         enc.warnings.push(SEPARATE.to_string());
     }
-    let created = vectorcraft_doc::metadata::output_time();
-    let failed = vectorcraft_render::decode_failures();
+    let created = tsipika_doc::metadata::output_time();
+    let failed = tsipika_render::decode_failures();
     for b in boards {
         let one = super::save::artboard_doc(doc, b);
         let (full, placed) = crate::cmd::place::document::full_documents(&one);
@@ -128,8 +128,8 @@ pub(super) fn encode(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result
                 }
             }
         }
-        let o = vectorcraft_eps::LegacyAiOptions { title: doc.title.clone(), created, hidden, outline_text };
-        let out = vectorcraft_eps::export_legacy_ai(&d, &o).map_err(|e| bad(cmd, e))?;
+        let o = tsipika_eps::LegacyAiOptions { title: doc.title.clone(), created, hidden, outline_text };
+        let out = tsipika_eps::export_legacy_ai(&d, &o).map_err(|e| bad(cmd, e))?;
         for w in placed.iter().chain(&out.warnings) {
             note(&mut enc.warnings, w);
         }
@@ -145,7 +145,7 @@ pub(super) fn encode(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result
 
 /// Expand Appearance of every layer's art whose appearance the format can't hold.
 fn expand_appearances(d: &mut Document) {
-    let brushes = vectorcraft_brush::library(d);
+    let brushes = tsipika_brush::library(d);
     let layers: Vec<NodeId> = d.layers.iter().map(|l| l.id).collect();
     let mut out = vec![];
     for id in layers {
@@ -241,7 +241,7 @@ fn flattened(src: &Document, at: usize, id: NodeId) -> Result<Option<Flat>> {
     with.layers = src.layers.iter().filter_map(|l| up_to(l, at, &mut i)).map(Arc::new).collect();
     let mut without = with.clone();
     without.remove(id)?;
-    let mut r = vectorcraft_render::Renderer::new();
+    let mut r = tsipika_render::Renderer::new();
     let shown = r.render_region(&with, region, scale, true);
     let under = r.render_region(&without, region, scale, true);
     let (w, h) = (shown.width as usize, shown.height as usize);
@@ -273,11 +273,11 @@ fn flattened(src: &Document, at: usize, id: NodeId) -> Result<Option<Flat>> {
     for y in py0..py1 {
         pixels.extend_from_slice(shown.pixels.get((y * w + px0) * 4..(y * w + px1) * 4).unwrap_or_default());
     }
-    let crop = vectorcraft_render::Rendered { width: (px1 - px0) as u32, height: (py1 - py0) as u32, pixels };
+    let crop = tsipika_render::Rendered { width: (px1 - px0) as u32, height: (py1 - py0) as u32, pixels };
     let png = crop.to_png().map_err(EngineError::Other)?;
     let at = |x: usize, y: usize| Point::new(region.x0 + (x.min(w)) as f64 / scale, region.y0 + (y.min(h)) as f64 / scale);
     let mut clip = PathData::new(vec![]);
-    for comp in vectorcraft_trace::trace_mask(&cells, cw, ch) {
+    for comp in tsipika_trace::trace_mask(&cells, cw, ch) {
         for lp in std::iter::once(&comp.outer).chain(&comp.holes) {
             let pts: Vec<(i32, i32)> = corners(&lp.pts);
             let anchors = pts.iter().map(|&(x, y)| Anchor::corner(at(x.max(0) as usize * c, y.max(0) as usize * c))).collect();

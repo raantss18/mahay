@@ -77,7 +77,7 @@ fn dwg_is_listed_but_points_to_dxf() {
 
 #[test]
 fn the_dxf_options_dialog_needs_a_document() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     assert!(app.run("ui.dxfOptionsDialog", json!({})).is_err());
     assert!(!crate::menus::enabled(&app, "ui.dxfOptionsDialog"));
 }

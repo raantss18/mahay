@@ -4,16 +4,16 @@
 //! - **Photoshop Layers** writes a layered PSD (crates/psd's writer): one pixel layer per comp
 //!   layer, each rendered in isolation (solo, Normal mode, 100% opacity) and cropped to its
 //!   pixels, carrying the layer's blend mode and opacity, plus the flattened frame as the merged
-//!   image. Photoshop (and EffectCraft's PSD import) rebuild the frame from the layers.
+//!   image. Photoshop (and Tselatra's PSD import) rebuild the frame from the layers.
 //! - **ProEXR** writes one multi-layer OpenEXR (half-float-free, 32-bit float, linear light,
 //!   premultiplied): the composite as `R`, `G`, `B`, `A` plus one `<layer name>.R/G/B/A` channel
 //!   set per layer (the layer-prefixed channel convention multi-layer EXR readers use).
 
-use effectcraft_color::BlendMode;
-use effectcraft_project::{ItemId, LayerId, Project};
-use effectcraft_raster::Image;
-use effectcraft_render::{Backend, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_color::BlendMode;
+use tselatra_project::{ItemId, LayerId, Project};
+use tselatra_raster::Image;
+use tselatra_render::{Backend, RenderOpts, Renderer};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, comp_id, f_p, has_comp, str_p};
@@ -67,7 +67,7 @@ fn isolate(s: &Session, cid: ItemId, t: Tick, scale: f64) -> Result<(Image, Vec<
                 if let Some(o) = l.props.prop_mut("transform/opacity") {
                     o.keys.clear();
                     o.expr = None;
-                    o.value = effectcraft_keyframe::Value::Scalar(100.0);
+                    o.value = tselatra_keyframe::Value::Scalar(100.0);
                 }
             }
         }
@@ -109,8 +109,8 @@ fn alpha_bounds(img: &Image) -> Option<(u32, u32, u32, u32)> {
 
 /// The layered PSD bytes of a frame.
 pub fn layered_psd(s: &Session, cid: ItemId, t: Tick, scale: f64) -> Result<(Vec<u8>, usize, u32, u32)> {
-    use effectcraft_psd::Rect;
-    use effectcraft_psd::write::{WDoc, WLayer, write};
+    use tselatra_psd::Rect;
+    use tselatra_psd::write::{WDoc, WLayer, write};
     let (full, layers) = isolate(s, cid, t, scale)?;
     let mut doc = WDoc::new(full.width, full.height);
     let n = layers.len();
@@ -160,7 +160,7 @@ pub fn layered_exr(s: &Session, cid: ItemId, t: Tick, scale: f64) -> Result<(Vec
     use exr::prelude::*;
     let (full, layers) = isolate(s, cid, t, scale)?;
     let (w, h) = (full.width as usize, full.height as usize);
-    let planes = |img: &effectcraft_raster::Image| -> [Vec<f32>; 4] {
+    let planes = |img: &tselatra_raster::Image| -> [Vec<f32>; 4] {
         let mut out: [Vec<f32>; 4] = Default::default();
         for p in &img.data {
             let sp = straight(*p);
@@ -174,7 +174,7 @@ pub fn layered_exr(s: &Session, cid: ItemId, t: Tick, scale: f64) -> Result<(Vec
     };
     let mut channels = vec![];
     let mut names = vec![];
-    let mut push = |prefix: &str, img: &effectcraft_raster::Image| {
+    let mut push = |prefix: &str, img: &tselatra_raster::Image| {
         for (c, data) in ["R", "G", "B", "A"].iter().zip(planes(img)) {
             let n = if prefix.is_empty() { c.to_string() } else { format!("{prefix}.{c}") };
             names.push(n.clone());

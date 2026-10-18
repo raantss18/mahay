@@ -4,12 +4,12 @@
 
 use std::sync::{Arc, Mutex};
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::clipboard;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::color::Color;
-use cadcraft_engine::doc::{Block, Common, Drawing, Entity, EntityKind, Handle, Insert, Layer, Line};
-use cadcraft_engine::geom::{Vec2, Vec3};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::clipboard;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::color::Color;
+use drafitra_engine::doc::{Block, Common, Drawing, Entity, EntityKind, Handle, Insert, Layer, Line};
+use drafitra_engine::geom::{Vec2, Vec3};
 use serde_json::json;
 
 fn line(d: &mut Drawing, layer: &str, a: (f64, f64), b: (f64, f64)) -> Entity {
@@ -130,7 +130,7 @@ fn pasteorig_pastes_only_into_another_drawing() {
     assert!(s.execute("pasteorig", &json!({})).is_err());
     assert!(s.start("pasteorig").is_err());
     assert_eq!(s.doc().unwrap().model.len(), 2);
-    let info = cadcraft_engine::find_command("pasteorig").unwrap().info(&s);
+    let info = drafitra_engine::find_command("pasteorig").unwrap().info(&s);
     assert!(!info.enabled);
 
     // In another drawing it pastes at the same coordinates without asking.
@@ -144,7 +144,7 @@ fn pasteorig_pastes_only_into_another_drawing() {
     // PASTECLIP asks for the insertion point and places the base point there.
     s.start("pasteclip").unwrap();
     assert!(s.prompt_text().contains("insertion point"), "{}", s.prompt_text());
-    s.input(cadcraft_engine::Input::Point(Vec2::new(0.0, 0.0))).unwrap();
+    s.input(drafitra_engine::Input::Point(Vec2::new(0.0, 0.0))).unwrap();
     assert!(s.running.is_none());
     let pasted = model(&s);
     assert_eq!(pasted.len(), 4);
@@ -199,7 +199,7 @@ fn clipboard_travels_as_text() {
     assert!(written.block("DOOR").is_some() && written.layer("HINGE").is_some());
     assert_eq!(written.header.point("INSBASE"), Some(Vec3::new(10.0, 0.0, 0.0)));
 
-    // Another CADCraft (here: a fresh session) pastes it, with its layers and blocks.
+    // Another Drafitra (here: a fresh session) pastes it, with its layers and blocks.
     let mut t = Session::empty();
     t.open_drawing(drawing_b(), "B", None);
     assert!(!clipboard::load_system_text(&mut t, "just some words"));

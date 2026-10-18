@@ -2,22 +2,22 @@
 //! background strokes, Refine Edge strokes along soft edges; the matte overlay (Alpha Boundary in
 //! pink, Alpha, Alpha Overlay), the segmentation span bar and the Freeze button.
 
-use effectcraft_engine::effects::roto as fx;
-use effectcraft_engine::project::{Comp, Layer};
-use effectcraft_engine::render::{EvalCtx, RenderOpts, Renderer};
+use tselatra_engine::effects::roto as fx;
+use tselatra_engine::project::{Comp, Layer};
+use tselatra_engine::render::{EvalCtx, RenderOpts, Renderer};
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::json;
 
 use crate::i18n::tr;
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 /// Position of the layer's first Roto Brush & Refine Edge effect.
 pub fn roto_index(layer: &Layer) -> Option<usize> {
-    layer.effects()?.groups().position(|g| matches!(&g.kind, effectcraft_engine::project::GroupKind::Effect { effect } if effect == fx::ID))
+    layer.effects()?.groups().position(|g| matches!(&g.kind, tselatra_engine::project::GroupKind::Effect { effect } if effect == fx::ID))
 }
 
-fn roto_group(layer: &Layer) -> Option<&effectcraft_engine::project::PropGroup> {
+fn roto_group(layer: &Layer) -> Option<&tselatra_engine::project::PropGroup> {
     layer.effects()?.groups().nth(roto_index(layer)?)
 }
 
@@ -42,7 +42,7 @@ fn c32(c: [f64; 3], a: u8) -> Color32 {
 
 /// Draw the matte overlay of the Roto Brush on `layer` (the panel shows the effect's input).
 pub fn draw_overlay(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ctx: &egui::Context,
     painter: &egui::Painter,
     comp: &Comp,
@@ -91,7 +91,7 @@ pub fn draw_overlay(
             let search = roto_group(layer).filter(|g| g.prop("rotoBrushPropagation/viewSearchRegion").is_some_and(|p| p.value.as_bool())).map(|g| {
                 let r = g.prop("rotoBrushPropagation/searchRadius").map(|p| p.value.as_f64()).unwrap_or(15.0) * scale;
                 let bin: Vec<u8> = alpha.iter().map(|a| (*a >= 0.5) as u8).collect();
-                let sd = effectcraft_engine::track::roto::matting::signed_distance(&bin, w, h);
+                let sd = tselatra_engine::track::roto::matting::signed_distance(&bin, w, h);
                 (sd, r as f32)
             });
             for y in 0..h as i64 {
@@ -137,7 +137,7 @@ pub fn draw_overlay(
 
 /// Pointer handling for the Roto Brush / Refine Edge tools. Returns true when it handled input.
 pub fn interact(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     area: Rect,
@@ -229,7 +229,7 @@ pub fn interact(
     true
 }
 
-fn run_stroke(app: &mut EffectcraftApp, layer: u64, kind: &str, points: &[[f64; 2]], radius: f64) {
+fn run_stroke(app: &mut TselatraApp, layer: u64, kind: &str, points: &[[f64; 2]], radius: f64) {
     let r = app.session.execute("roto.stroke", json!({"layer": layer, "kind": kind, "points": points, "radius": radius}));
     if let Err(e) = r {
         app.ui.status = e.to_string();
@@ -239,15 +239,15 @@ fn run_stroke(app: &mut EffectcraftApp, layer: u64, kind: &str, points: &[[f64; 
 /// The segmentation span bar (above the panel's bottom bar): the layer's frames, the span, the
 /// base frame (yellow), computed frames (green) and stroke frames. Click to go to a frame; drag
 /// the span's ends to change it.
-pub fn span_bar(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, r: Rect, comp: &Comp, layer: &Layer) {
+pub fn span_bar(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, r: Rect, comp: &Comp, layer: &Layer) {
     let t = app.tokens;
     let Some(g) = roto_group(layer) else { return };
     let Some(cid) = app.session.active_comp_id() else { return };
     let uid = g.uid;
-    let params = effectcraft_engine::effects::flatten_params(g, &mut |p| p.value.clone());
+    let params = tselatra_engine::effects::flatten_params(g, &mut |p| p.value.clone());
     let d = fx::data(&params);
     p.rect_filled(r, 0.0, t.panel_bg);
-    let lim = effectcraft_engine::roto::frame_limits(comp, layer);
+    let lim = tselatra_engine::roto::frame_limits(comp, layer);
     let n = (lim[1] - lim[0] + 1).max(1) as f32;
     let track = Rect::from_min_max(pos2(r.min.x + 10.0, r.min.y + 4.0), pos2(r.max.x - 10.0, r.max.y - 4.0));
     let x_of = |f: f64| track.min.x + ((f - lim[0] as f64) / n as f64) as f32 * track.width();
@@ -315,7 +315,7 @@ pub fn span_bar(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, 
 }
 
 /// View-mode toggles and Freeze / Propagate buttons in the Layer panel's bottom bar, from `x`.
-pub fn bar_buttons(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painter, bar: Rect, x: f32, layer: &Layer) {
+pub fn bar_buttons(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, bar: Rect, x: f32, layer: &Layer) {
     let t = app.tokens;
     let mut x = x;
     let view = app.session.state.roto.view.clone();
@@ -331,7 +331,7 @@ pub fn bar_buttons(app: &mut EffectcraftApp, ui: &mut egui::Ui, p: &egui::Painte
     }
     let Some(g) = roto_group(layer) else { return };
     let uid = g.uid;
-    let params = effectcraft_engine::effects::flatten_params(g, &mut |p| p.value.clone());
+    let params = tselatra_engine::effects::flatten_params(g, &mut |p| p.value.clone());
     let frozen = fx::is_frozen(&params);
     let running = app.session.is_roto_running();
     x += 8.0;

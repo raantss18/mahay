@@ -1,15 +1,15 @@
-# VectorCraft MCP server
+# Tsipika MCP server
 
-`vectorcraft-cli mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio
+`tsipika-cli mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio
 (newline-delimited JSON-RPC 2.0; see [Protocol](#protocol) for version negotiation). Agents use it to
-draw, inspect and look at VectorCraft documents.
+draw, inspect and look at Tsipika documents.
 
 It has two backends:
 
 | Mode | How | What works |
 |---|---|---|
-| **Remote** | `vectorcraft-cli mcp --connect 127.0.0.1:7979` (the app must run with `vectorcraft --control 7979`) | Everything. Tool calls are forwarded over the [control protocol](control-protocol.md), so you watch the app change live. |
-| **Headless** | `vectorcraft-cli mcp --headless` | An in-process engine session with a CPU renderer. Everything except the UI-only tools (`inspect_ui`, `type_text`, `open_panel`, `screenshot {window:true}`). |
+| **Remote** | `tsipika-cli mcp --connect 127.0.0.1:7979` (the app must run with `tsipika --control 7979`) | Everything. Tool calls are forwarded over the [control protocol](control-protocol.md), so you watch the app change live. |
+| **Headless** | `tsipika-cli mcp --headless` | An in-process engine session with a CPU renderer. Everything except the UI-only tools (`inspect_ui`, `type_text`, `open_panel`, `screenshot {window:true}`). |
 
 With no flag, the server tries `127.0.0.1:7979` and falls back to headless. Logs go to stderr; stdout carries
 only protocol messages.
@@ -17,50 +17,50 @@ only protocol messages.
 ## Build and register
 
 ```sh
-cargo build --release -p vectorcraft-cli
-claude mcp add vectorcraft -- "$PWD/target/release/vectorcraft-cli" mcp
+cargo build --release -p tsipika-cli
+claude mcp add tsipika -- "$PWD/target/release/tsipika-cli" mcp
 # or pin a mode:
-claude mcp add vectorcraft-headless -- "$PWD/target/release/vectorcraft-cli" mcp --headless
-claude mcp add vectorcraft-app -- "$PWD/target/release/vectorcraft-cli" mcp --connect 127.0.0.1:7979
+claude mcp add tsipika-headless -- "$PWD/target/release/tsipika-cli" mcp --headless
+claude mcp add tsipika-app -- "$PWD/target/release/tsipika-cli" mcp --connect 127.0.0.1:7979
 ```
 
 Other clients use the same command in their JSON config:
 
 ```json
-{"mcpServers": {"vectorcraft": {"command": "/abs/path/target/release/vectorcraft-cli", "args": ["mcp"]}}}
+{"mcpServers": {"tsipika": {"command": "/abs/path/target/release/tsipika-cli", "args": ["mcp"]}}}
 ```
 
-For a live session, start the app first: `cargo run --release -p vectorcraft -- --control 7979`.
+For a live session, start the app first: `cargo run --release -p tsipika -- --control 7979`.
 
 ### From an installed release
 
-The release packages ship `vectorcraft-cli` alongside the desktop app, so no build is needed:
+The release packages ship `tsipika-cli` alongside the desktop app, so no build is needed:
 
 | Install | CLI |
 |---|---|
-| Windows (MSI) | `C:\Program Files\VectorCraft\vectorcraft-cli.exe` by default (wherever you installed it otherwise), not on `PATH` |
-| Linux (deb, rpm) | `/usr/bin/vectorcraft-cli` |
-| macOS | the separate `vectorcraft-cli-<version>-macos-<arch>.zip` release asset (the `.app` holds only the desktop app) |
+| Windows (MSI) | `C:\Program Files\Tsipika\tsipika-cli.exe` by default (wherever you installed it otherwise), not on `PATH` |
+| Linux (deb, rpm) | `/usr/bin/tsipika-cli` |
+| macOS | the separate `tsipika-cli-<version>-macos-<arch>.zip` release asset (the `.app` holds only the desktop app) |
 
 ```sh
 # Windows, default install folder
-claude mcp add vectorcraft -- "C:\Program Files\VectorCraft\vectorcraft-cli.exe" mcp
+claude mcp add tsipika -- "C:\Program Files\Tsipika\tsipika-cli.exe" mcp
 # Linux, or macOS with the CLI unzipped onto PATH
-claude mcp add vectorcraft -- vectorcraft-cli mcp
+claude mcp add tsipika -- tsipika-cli mcp
 ```
 
 ## Confining file access
 
 ```sh
-vectorcraft-cli mcp --automation-read-root /work/project --automation-write-root /work/project/out
+tsipika-cli mcp --automation-read-root /work/project --automation-write-root /work/project/out
 ```
 
 ```json
-{"mcpServers": {"vectorcraft": {"command": "/abs/path/target/release/vectorcraft-cli",
+{"mcpServers": {"tsipika": {"command": "/abs/path/target/release/tsipika-cli",
   "args": ["mcp", "--automation-read-root", "/work/project", "--automation-write-root", "/work/project/out"]}}}
 ```
 
-The two flags (PhotoCraft and the other Craft apps take the same ones, so one client config works across
+The two flags (Sary and the other Mahay apps take the same ones, so one client config works across
 the suite) keep the agent to the folders you give it:
 
 - Every file a command reads must lie inside the **read root**: `open_file`, `file.place`, relinking and
@@ -87,14 +87,14 @@ the suite) keep the agent to the folders you give it:
   Links in an opened document that point outside the read root show as missing.
 - The preferences that move folders the app reads or writes on its own (`fontsFolder`,
   `pluginsFolder`, `recoveryFolder`, `templatesFolder`) can only be set inside the roots. The app's own folders
-  (preferences, Data Recovery, the User Defined library folders, VectorCraft's Fonts folder) are not
+  (preferences, Data Recovery, the User Defined library folders, Tsipika's Fonts folder) are not
   confined: no agent names a path there.
 - The roots must be existing folders; a missing one stops the server with an error. Each flag is
   given once (`--flag <dir>` or `--flag=<dir>`).
 
 The flags confine the headless server and imply `--headless`; `--connect` with them is an error, since
 the server would otherwise talk to an app that isn't confined. A running app confines itself: start it
-with the same flags, `vectorcraft --control 7979 --automation-read-root <dir> --automation-write-root
+with the same flags, `tsipika --control 7979 --automation-read-root <dir> --automation-write-root
 <dir>`, and connect as usual (see [Control protocol](control-protocol.md#confining-file-access)). The
 server then writes nothing itself: `screenshot {path}` asks the app to write the file.
 
@@ -154,21 +154,21 @@ arguments filled in. A missing required argument is `-32602`.
 
 ```sh
 echo '{"jsonrpc":"2.0","id":1,"method":"prompts/get","params":{"name":"poster","arguments":{"brief":"a jazz festival"}}}' \
-  | vectorcraft-cli mcp --headless
+  | tsipika-cli mcp --headless
 ```
 
 ### Resource templates
 
-`vectorcraft://document` (summary), `vectorcraft://document/json` (the whole model), and
-`vectorcraft://commands` (the live command catalog with enabled state) are the fixed resources. The templates read one thing at a time, which matters on a real document: the full model
+`tsipika://document` (summary), `tsipika://document/json` (the whole model), and
+`tsipika://commands` (the live command catalog with enabled state) are the fixed resources. The templates read one thing at a time, which matters on a real document: the full model
 is thousands of lines an agent pays for again on every change.
 
 | `uriTemplate` | Reads |
 |---|---|
-| `vectorcraft://object/{id}` | One layer or object with its children, bounds and paint: `document.node {id, summary: true}`, the node as `document.inspect` lists it. A large container can be sliced with `run_command document.node {id, summary: true, depth?, childLimit?}` (a level that shows fewer children reports `childCount`) |
-| `vectorcraft://command/{id}` | One command: label, menu path, shortcut, parameter description, enablement |
-| `vectorcraft://effect/{id}` | One live effect with its parameters and defaults |
-| `vectorcraft://swatch/{name}` | One swatch, colour, gradient or pattern swatch (percent-encode spaces) |
+| `tsipika://object/{id}` | One layer or object with its children, bounds and paint: `document.node {id, summary: true}`, the node as `document.inspect` lists it. A large container can be sliced with `run_command document.node {id, summary: true, depth?, childLimit?}` (a level that shows fewer children reports `childCount`) |
+| `tsipika://command/{id}` | One command: label, menu path, shortcut, parameter description, enablement |
+| `tsipika://effect/{id}` | One live effect with its parameters and defaults |
+| `tsipika://swatch/{name}` | One swatch, colour, gradient or pattern swatch (percent-encode spaces) |
 
 An unknown URI is `-32002`; a template with no value, or a value that names nothing, is `-32602`.
 
@@ -220,9 +220,9 @@ place. From then on the engine's own `log` records arrive as `notifications/mess
 `logger` and `data`. A `null` level turns it back off. Nothing is sent before the client asks, and
 records queued at the old level are dropped rather than replayed at the new one.
 
-Installing the logger that receives those records is `vectorcraft-cli`'s job, not the library's: a
+Installing the logger that receives those records is `tsipika-cli`'s job, not the library's: a
 crate that installed one would override whatever logger an embedder had already set up. Embedding
-`vectorcraft-mcp` directly means calling `vectorcraft_mcp::logging::install()` yourself if you want
+`tsipika-mcp` directly means calling `tsipika_mcp::logging::install()` yourself if you want
 log records to reach your client.
 
 ### Long calls: cancellation, progress and a busy engine
@@ -255,7 +255,7 @@ while an export runs (#2165, #2171, #2172):
   that sends a few quick calls together sees no difference. At most 64 lines wait; past that the
   server stops reading until the engine catches up.
 
-`vectorcraft_mcp::Server::serve` takes the input and the output on separate threads (`Send`), and
+`tsipika_mcp::Server::serve` takes the input and the output on separate threads (`Send`), and
 `Server::with_busy_after` changes the two seconds. Calling `handle_line` directly is as before:
 one line in, one reply out, no threads.
 
@@ -281,7 +281,7 @@ is here and subscriptions are not.
 
 ### Common command tools
 
-These names match the conventions in [FilmCraft #28](https://github.com/storytold/filmcraft/pull/28).
+These names match the conventions in [Hetsika #28](https://github.com/storytold/filmcraft/pull/28).
 The older names below remain listed because existing workflows use them.
 
 | Tool | Arguments and result |
@@ -342,11 +342,11 @@ objects' fills or strokes differ (`fillMixed` / `strokeMixed`, drawn as a "?" pr
 | `invoke_menu` | `{command, params?}` | Invokes a menu item by command id. Includes UI commands such as `view.*` and `window.*` in remote mode. |
 | `open_panel` | `{panel}` | Remote only. `panel` is a panel id (`layers`, `swatches`, `colorGuide`, …, as `window.panel` takes) or its display label (`"Color Guide"`), in any case. |
 | `screenshot` | `{path?, scale?, artboard?, window?}` | Returns MCP image content (`image/png`, base64) plus a text block. Renders the artboard; `window:true` captures the app window (remote only). With `path` the backend (the headless session or the app) writes the PNG there too. |
-| `open_file` | `{path}` | Opens any readable file as a new active document: `.vectorcraft`/`.drawcraft`, `.vctemplate`, `.svg`/`.svgz`, `.pdf`/`.ai`, `.ait`, `.eps`/`.epsf`, `.ps`, `.dxf`, `.emf`, `.wmf`, PNG, JPEG, GIF, WebP, TIFF, BMP, Targa (`.tga`/`.vda`/`.icb`/`.vst`), PSD/PSB (an image opens as a document of its pixel size; a Photoshop file as its merged image). Templates (`.vctemplate`, `.ait`) open as a new untitled document. PDF, `.ai` and SVG files saved with Preserve Editing reopen as the document they carry. The reply is `document.open`'s: its `warnings` say what didn't come in as it was (an EPS whose PostScript can't be read opens as its preview, and the warning names the PostScript error, the operator and the procedure). `run_command document.formats` lists the formats. |
-| `save_file` | `{path?}` | Runs `document.save`: the document's own file in its own format (native `.vectorcraft` unless it was opened from or saved as SVG, PDF or a restorable `.ai`; then `warnings` say what that format loses). A path's extension picks the format (`.vectorcraft`, `.vctemplate`, `.pdf`, `.svg`, `.svgz`, `.ai`: a PDF carrying the native document, which reopens editable). |
-| `export` | `{path?, format?, scale?, artboard?, range?, selection?, outlineText?, options?}` | `svg`, `svgz`, `pdf`, `eps`, `dxf`, `emf`, `wmf`, `png`, `jpg`, `webp`, `gif`, `png8` (an indexed `.png`), `tiff`, `bmp`, `tga`, `psd` (layered), `txt` (the document's text), `vectorcraft` or `template` (a native template). The tool's `format` enum and `document.formats` list them, generated from the engine's format table. When `format` is omitted, it comes from the path's extension. PDF writes one page per artboard: all of them, or `artboard` (0-based) / `range` (`"1-3, 5"`, 1-based); the other formats write one artboard. `options` carries more format options (e.g. `{"quality": 80}` for JPEG). `selection: true` exports the selected objects cropped to their bounds (the reply adds their `bounds`, and reports `format` and the encoder's `warnings` as a whole-document export does); `outlineText: true` writes SVG text as paths. Template layers are left out, live effects are kept, and exporting `vectorcraft` never changes the document's path. Without `path` the bytes come back as `dataBase64`. Both backends run the same `document.export` call. |
+| `open_file` | `{path}` | Opens any readable file as a new active document: `.tsipika`/`.drawcraft`, `.vctemplate`, `.svg`/`.svgz`, `.pdf`/`.ai`, `.ait`, `.eps`/`.epsf`, `.ps`, `.dxf`, `.emf`, `.wmf`, PNG, JPEG, GIF, WebP, TIFF, BMP, Targa (`.tga`/`.vda`/`.icb`/`.vst`), PSD/PSB (an image opens as a document of its pixel size; a Photoshop file as its merged image). Templates (`.vctemplate`, `.ait`) open as a new untitled document. PDF, `.ai` and SVG files saved with Preserve Editing reopen as the document they carry. The reply is `document.open`'s: its `warnings` say what didn't come in as it was (an EPS whose PostScript can't be read opens as its preview, and the warning names the PostScript error, the operator and the procedure). `run_command document.formats` lists the formats. |
+| `save_file` | `{path?}` | Runs `document.save`: the document's own file in its own format (native `.tsipika` unless it was opened from or saved as SVG, PDF or a restorable `.ai`; then `warnings` say what that format loses). A path's extension picks the format (`.tsipika`, `.vctemplate`, `.pdf`, `.svg`, `.svgz`, `.ai`: a PDF carrying the native document, which reopens editable). |
+| `export` | `{path?, format?, scale?, artboard?, range?, selection?, outlineText?, options?}` | `svg`, `svgz`, `pdf`, `eps`, `dxf`, `emf`, `wmf`, `png`, `jpg`, `webp`, `gif`, `png8` (an indexed `.png`), `tiff`, `bmp`, `tga`, `psd` (layered), `txt` (the document's text), `tsipika` or `template` (a native template). The tool's `format` enum and `document.formats` list them, generated from the engine's format table. When `format` is omitted, it comes from the path's extension. PDF writes one page per artboard: all of them, or `artboard` (0-based) / `range` (`"1-3, 5"`, 1-based); the other formats write one artboard. `options` carries more format options (e.g. `{"quality": 80}` for JPEG). `selection: true` exports the selected objects cropped to their bounds (the reply adds their `bounds`, and reports `format` and the encoder's `warnings` as a whole-document export does); `outlineText: true` writes SVG text as paths. Template layers are left out, live effects are kept, and exporting `tsipika` never changes the document's path. Without `path` the bytes come back as `dataBase64`. Both backends run the same `document.export` call. |
 | `add_text` | `{text, x?, y?, width?, height?, fit?, fitMinPercent?, path?, mode?, pathEffect?, size?, font?, color?, justify?, vertical?}` | Point type at (x, y) (`justify`: `left`, `center` or `right` starts, centres or ends each line on x); area type with `width`/`height` (`fit`: `none`, `autoHeight`, `shrinkText`, as `text.areaOptions`); or `path` + `mode` (`area`/`onPath`) to flow text in or along a path, with `pathEffect` (`rainbow`, `skew`, `3dRibbon`, `stairStep`, `gravity`); `justify` (also `auto`, `justifyAll`) aligns the paragraphs of every kind, as `text.setStyle` does later. `vertical: true` uses the existing vertical writing mode for every kind (default `false`, horizontal). Returns `{id}`, with `overflow: true` when the text doesn't fit its frame or path. |
-| `export` | `{path?, format?, scale?, artboard?, range?, selection?, outlineText?, options?}` | `svg`, `svgz`, `pdf`, `ai` (the PDF-compatible `.ai` that Save writes, which carries the document when every artboard is written in order), `eps`, `dxf`, `emf`, `wmf`, `png`, `jpg`, `webp`, `gif`, `png8` (an indexed `.png`), `tiff`, `bmp`, `tga`, `psd` (layered), `txt` (the document's text), `vectorcraft` or `template` (a native template). The tool's `format` enum and `document.formats` list them, generated from the engine's format table. When `format` is omitted, it comes from the path's extension. PDF and `.ai` write one page per artboard: all of them, or `artboard` (0-based) / `range` (`"1-3, 5"`, 1-based). SVG, SVGZ and EPS write one file per chosen artboard. Rasters, DXF, EMF and WMF write one artboard, or one file per chosen artboard with `options: {"useArtboards": true}`. Rasters also take `options: {"rect": [x, y, width, height]}` (page points, y down): that area of the page at the given `ppi`/`scale`, without an artboard and without changing the document; it is refused with `artboard`, `range` or `useArtboards`, with a non-positive or non-finite size, and for non-raster formats. `options` carries more format options (e.g. `{"quality": 80}` for JPEG). `selection: true` exports the selected objects cropped to their bounds (the reply adds their `bounds`, and reports `format` and the encoder's `warnings` as a whole-document export does); `outlineText: true` writes SVG text as paths. Template layers are left out, live effects are kept, and exporting `vectorcraft` never changes the document's path. Without `path` the bytes come back as `dataBase64`. Both backends run the same `document.export` call. |
+| `export` | `{path?, format?, scale?, artboard?, range?, selection?, outlineText?, options?}` | `svg`, `svgz`, `pdf`, `ai` (the PDF-compatible `.ai` that Save writes, which carries the document when every artboard is written in order), `eps`, `dxf`, `emf`, `wmf`, `png`, `jpg`, `webp`, `gif`, `png8` (an indexed `.png`), `tiff`, `bmp`, `tga`, `psd` (layered), `txt` (the document's text), `tsipika` or `template` (a native template). The tool's `format` enum and `document.formats` list them, generated from the engine's format table. When `format` is omitted, it comes from the path's extension. PDF and `.ai` write one page per artboard: all of them, or `artboard` (0-based) / `range` (`"1-3, 5"`, 1-based). SVG, SVGZ and EPS write one file per chosen artboard. Rasters, DXF, EMF and WMF write one artboard, or one file per chosen artboard with `options: {"useArtboards": true}`. Rasters also take `options: {"rect": [x, y, width, height]}` (page points, y down): that area of the page at the given `ppi`/`scale`, without an artboard and without changing the document; it is refused with `artboard`, `range` or `useArtboards`, with a non-positive or non-finite size, and for non-raster formats. `options` carries more format options (e.g. `{"quality": 80}` for JPEG). `selection: true` exports the selected objects cropped to their bounds (the reply adds their `bounds`, and reports `format` and the encoder's `warnings` as a whole-document export does); `outlineText: true` writes SVG text as paths. Template layers are left out, live effects are kept, and exporting `tsipika` never changes the document's path. Without `path` the bytes come back as `dataBase64`. Both backends run the same `document.export` call. |
 | `add_text` | `{text, x?, y?, width?, height?, fit?, fitMinPercent?, path?, mode?, pathEffect?, size?, font?, color?, justify?}` | Point type at (x, y) (`justify`: `left`, `center` or `right` starts, centres or ends each line on x); area type with `width`/`height` (`fit`: `none`, `autoHeight`, `shrinkText`, as `text.areaOptions`); or `path` + `mode` (`area`/`onPath`) to flow text in or along a path, with `pathEffect` (`rainbow`, `skew`, `3dRibbon`, `stairStep`, `gravity`); `justify` (also `auto`, `justifyAll`) aligns the paragraphs of every kind, as `text.setStyle` does later. Returns `{id}`, with `overflow: true` when the text doesn't fit its frame or path. |
 | `apply_effect` | `{effect?, params?, ids?}` | Appends a live effect. Without `effect`, returns the effect catalogue with parameters and defaults. |
 | `pathfinder` | `{operation, ids?}` | `unite`, `minusFront`, `intersect`, `exclude`, `divide`, `trim`, `merge`, `crop`, `outline`, `minusBack`. For a live version, apply the `pathfinder.*` effect to a group (`effect.apply` groups several loose selected objects first). |
@@ -511,9 +511,9 @@ found in the SVG's folder; only files on this computer or the SVG's network shar
 absolute paths) stay linked images (see Linked images); SVG files and `data:` SVGs become art; a file that
 can't be read becomes a placeholder in its box, named in `warnings` and `missingLinks`.
 
-Native files: `run_command document.save {compress: true}` writes a gzip-compressed `.vectorcraft` (the
+Native files: `run_command document.save {compress: true}` writes a gzip-compressed `.tsipika` (the
 `useCompression` preference makes that the default for saves; compressed files open like any other, told apart by
-their content). `version: 2` or `1` writes a file older VectorCraft versions open (format name `drawcraft`, never
+their content). `version: 2` or `1` writes a file older Tsipika versions open (format name `drawcraft`, never
 compressed), and `preview: true` embeds a PNG of the first artboard, at most 256 px on its longer side. A save writes
 a temporary file and renames it over the old one, so a failed save never damages the file; only the images the
 document uses are written, and document keys written by a newer version are kept.
@@ -524,13 +524,13 @@ Fixed resources and the four templates (same as [Resource templates](#resource-t
 
 | URI | Content |
 |---|---|
-| `vectorcraft://document` | `document.inspect` summary (JSON) |
-| `vectorcraft://document/json` | The complete document model (JSON) |
-| `vectorcraft://commands` | Live command catalog with enabled state |
-| `vectorcraft://object/{id}` | One layer or object (`document.node {id, summary: true}`) |
-| `vectorcraft://command/{id}` | One command's metadata and enablement |
-| `vectorcraft://effect/{id}` | One live effect with parameters and defaults |
-| `vectorcraft://swatch/{name}` | One swatch (percent-encode spaces) |
+| `tsipika://document` | `document.inspect` summary (JSON) |
+| `tsipika://document/json` | The complete document model (JSON) |
+| `tsipika://commands` | Live command catalog with enabled state |
+| `tsipika://object/{id}` | One layer or object (`document.node {id, summary: true}`) |
+| `tsipika://command/{id}` | One command's metadata and enablement |
+| `tsipika://effect/{id}` | One live effect with parameters and defaults |
+| `tsipika://swatch/{name}` | One swatch (percent-encode spaces) |
 
 ## Examples
 
@@ -690,8 +690,8 @@ paints under its layers, which isn't art). `layers: false` gives one layer per p
 {"name":"run_command","arguments":{"command":"document.open","params":{"path":"/tmp/map.pdf","textAs":"outlines","layers":false}}}
 ```
 
-Preserve Editing (`preserveEditing`, on in the `VectorCraft Default` preset) embeds the native document in the PDF as
-an embedded file (`vectorcraft-editing.vectorcraft`; files named `drawcraft-editing.drawcraft` are read too) with a
+Preserve Editing (`preserveEditing`, on in the `Tsipika Default` preset) embeds the native document in the PDF as
+an embedded file (`tsipika-editing.tsipika`; files named `drawcraft-editing.drawcraft` are read too) with a
 hash of the pages it was written with. `open_file` / `document.open` of such a PDF, `.ai` or `.ait` (no `pages` picked) restores the
 document exactly (`restored: true`); when another app changed the pages, or the data can't be read, the artwork is
 imported instead and the first warning says why. Choosing a standard turns it off (PDF/A refuses it). Save to a `.ai`
@@ -705,7 +705,7 @@ of `range` (default all; `{name}-{artboard}.ai` when several, listed in the resu
 `hiddenObjects: "layer"` (default: a hidden layer of each layer's hidden objects), `"omit"` or `"visible"`, and
 `outlineText: true` to write type as outlines instead of text objects. When an image in art that is flattened or whose
 raster effects are expanded can't be decoded, the result does not show it, and `warnings` carries "an image couldn't
-be decoded and is missing from the picture" once. From the CLI: `vectorcraft-cli convert in.svg
+be decoded and is missing from the picture" once. From the CLI: `tsipika-cli convert in.svg
 out.ai --ai-version 7 [--hidden-objects layer|omit|visible] [--transparent-images flatten|omit] [--outline-text]
 [--range R]`. `document.export`, `serialize`, `exportSelection` and `exportForScreens` refuse a `.ait` path or
 `format: "ait"` with an error that names `file.saveAsTemplate`, which writes it. The CLI's `run --export x.ait` and
@@ -780,30 +780,30 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"draw_shape","arguments":{"shape":"ellipse","x":10,"y":10,"width":100,"height":80,"fill":"#ff0000"}}}' \
   '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"inspect_document","arguments":{}}}' \
-  | target/release/vectorcraft-cli mcp --headless
+  | target/release/tsipika-cli mcp --headless
 ```
 
 ## Headless batch CLI
 
 ```sh
-vectorcraft-cli commands                          # command catalogue (JSON)
-vectorcraft-cli run --in in.svg \
+tsipika-cli commands                          # command catalogue (JSON)
+tsipika-cli run --in in.svg \
   --cmd select.all --cmd paint.setFill --params '{"color":"#ff0000"}' \
   --export out.svg --export out.png --scale 2
-vectorcraft-cli run --cmd file.new --params '{"width":800,"height":600}' \
+tsipika-cli run --cmd file.new --params '{"width":800,"height":600}' \
   --cmd shape.star --params '{"cx":400,"cy":300,"radius1":200,"radius2":90}' \
-  --export star.vectorcraft
+  --export star.tsipika
 ```
 
 `run` prints one JSON line per step (`open`, `cmd`, `export`) and exits non-zero on the first failure. `--params`
 applies to the `--cmd` just before it. `run` also accepts the host commands `file.open`, `file.save`, `file.export`,
 `file.exportForScreens` and `tool.select`. `run --in`, `convert` and `info` read every format `document.open` reads
-(`vectorcraft-cli --help` lists them).
+(`tsipika-cli --help` lists them).
 
 ### What a headless session remembers
 
-`vectorcraft-cli run` and the headless `mcp` server keep two things between runs, in folders next to the
-preferences (the folder the desktop app uses, so both see the same ones; `VECTORCRAFT_CONFIG_DIR` moves it):
+`tsipika-cli run` and the headless `mcp` server keep two things between runs, in folders next to the
+preferences (the folder the desktop app uses, so both see the same ones; `TSIPIKA_CONFIG_DIR` moves it):
 
 - **Saved PDF presets** (`pdf.preset.save`, `.delete`, `.import`): one `.vcpdfpresets` file per preset in
   `PDF Presets`, written as the command runs. Presets saved earlier are there at the next start and work as
@@ -815,15 +815,15 @@ preferences (the folder the desktop app uses, so both see the same ones; `VECTOR
   copy (not while it is a working space).
 
 Not remembered: Color Settings, the document, anything else. Nothing is read or written when
-`VECTORCRAFT_NO_PREFS` is set, and a server confined with `--automation-read-root` or
+`TSIPIKA_NO_PREFS` is set, and a server confined with `--automation-read-root` or
 `--automation-write-root` keeps nothing either (the folders are outside its roots). A file that is damaged, too large
 (a profile over 32 MB, a presets file over 1 MB) or not a valid preset or profile is skipped and logged. When the
 desktop app starts, the presets it kept in its preferences file before this folder existed are moved into it; after
-that the folder is the one place they live, so a preset deleted by `vectorcraft-cli` is gone in the app too.
+that the folder is the one place they live, so a preset deleted by `tsipika-cli` is gone in the app too.
 
 ### Reproducible output
 
-PNG, PDF, EPS, legacy `.ai`, packaged zips and saved `.vectorcraft` files record the time they were
+PNG, PDF, EPS, legacy `.ai`, packaged zips and saved `.tsipika` files record the time they were
 made in (PDF `CreationDate` and `ModDate`, the PNG `Creation Time` entry, a zip entry's date, a
 document's `created` and `modified`), so the same commands run twice gave different bytes though the
 pixels matched (#2880). Setting **`SOURCE_DATE_EPOCH`** to a non-negative whole number of seconds
@@ -831,7 +831,7 @@ since the epoch records that instant instead of the clock, and the bytes repeat
 (<https://reproducible-builds.org/specs/source-date-epoch/>):
 
 ```sh
-SOURCE_DATE_EPOCH=1791208980 vectorcraft-cli run --cmd file.new --params '{}' --export out.pdf
+SOURCE_DATE_EPOCH=1791208980 tsipika-cli run --cmd file.new --params '{}' --export out.pdf
 ```
 
 A command that takes its own date (`file.new {created}`, a save's `modified`) still wins over the
@@ -925,7 +925,7 @@ open isn't a step), and `$last…` from the step before. A path goes into object
 reference that names no value fails the step, so a command never runs with one left in it:
 
 ```sh
-vectorcraft-cli run --cmd file.new --params '{"width":600,"height":200}'   --cmd text.create --params '{"x":10,"y":60,"text":"plain and bold words","size":30}'   --cmd text.setRangeStyle --params '{"id":"$1.id","start":10,"end":14,"style":"Bold"}'
+tsipika-cli run --cmd file.new --params '{"width":600,"height":200}'   --cmd text.create --params '{"x":10,"y":60,"text":"plain and bold words","size":30}'   --cmd text.setRangeStyle --params '{"id":"$1.id","start":10,"end":14,"style":"Bold"}'
 ```
 
 ## Checking scripts written for the reference app
@@ -995,7 +995,7 @@ the included files too.
 ```
 
 ```sh
-vectorcraft-cli run --cmd script.check --params '{"path": "Tidy Layers.jsx"}'
+tsipika-cli run --cmd script.check --params '{"path": "Tidy Layers.jsx"}'
 ```
 
 ## Transparency and opacity masks
@@ -1179,7 +1179,7 @@ Guides) can't be picked. An artboard guide is picked, drawn and snapped to acros
 
 ## Symbols, brushes, variables and Image Trace
 
-These families are in the live catalog (`command_list` / `vectorcraft://commands`); the prompt `trace-and-style`
+These families are in the live catalog (`command_list` / `tsipika://commands`); the prompt `trace-and-style`
 already walks Image Trace. Short agent entry points:
 
 - Symbols: `symbol.list` (each row includes `registration` 0..8 and `exportType`: `movieClip`|`graphic`),
@@ -1222,7 +1222,7 @@ already walks Image Trace. Short agent entry points:
   Export end the file name of a step with `format` in that `format`, in lower case and without a leading dot, when it
   is one of the format's extensions (`.svg` and `SVG` give `.svg`, `.JPEG` gives `.jpeg`), and otherwise in the
   format's first extension (`png8` gives `.png`, `template` gives `.vctemplate`). A step without `format` keeps the
-  source file's extension (`.vectorcraft` over data sets).
+  source file's extension (`.tsipika` over data sets).
 - Image Trace: `imageTrace.presets`, `imageTrace.make {id?, preset?, params?, view?}` (or `imageTrace.makeAndExpand`),
   `imageTrace.setView`, `imageTrace.expand`, `imageTrace.release`.
 - Live Paint: `livePaint.make`, `livePaint.merge`, `livePaint.fill {group?, point}`, `livePaint.strokeEdge`,
@@ -2075,7 +2075,7 @@ copies would number more than 10,000 or take more than 20,000,000 bytes of docum
 effect is written as outlines.
 
 ```json
-{"name":"run_command","arguments":{"command":"document.exportPdf","params":{"path":"/tmp/press.pdf","output":{"conversion":"preserveNumbers","destination":"VectorCraft Generic CMYK (SWOP-like)","profiles":"destination","outputIntent":"VectorCraft Generic CMYK (SWOP-like)","trapped":true},"advanced":{"outlineText":false}}}}
+{"name":"run_command","arguments":{"command":"document.exportPdf","params":{"path":"/tmp/press.pdf","output":{"conversion":"preserveNumbers","destination":"Tsipika Generic CMYK (SWOP-like)","profiles":"destination","outputIntent":"Tsipika Generic CMYK (SWOP-like)","trapped":true},"advanced":{"outlineText":false}}}}
 ```
 
 ## Scale Strokes & Effects
@@ -2273,7 +2273,7 @@ The Selection & Anchor Display and General preferences apply to `pointer_gesture
 {"name":"pointer_gesture","arguments":{"tool":"selection","mods":{"cmd":true},"events":[{"kind":"down","x":175,"y":125},{"kind":"up","x":175,"y":125}]}}
 ```
 
-The preferences for the view need the desktop app (`vectorcraft-cli mcp --connect`): `zoomWithMouseWheel` (the
+The preferences for the view need the desktop app (`tsipika-cli mcp --connect`): `zoomWithMouseWheel` (the
 wheel zooms about the pointer, Shift-wheel scrolls up and down, Cmd/Ctrl-wheel sideways; the control channel's
 `ui.wheel` turns the wheel), `trackpadRotateView` (on by default: a two-finger rotation on a Mac trackpad, in the
 macOS app or in Safari, turns the view about the pointer once it reaches 5°; with it off, the gesture does not turn
@@ -2414,7 +2414,7 @@ Pen's second anchor at (150, 431), in line with the square's centre.
 
 File Handling › `appendConverted` (on by default): an older native file (the former `.drawcraft` extension or an
 older format version) opens titled `<name> [Converted]`, and Save doesn't write over it: `document.save` without a
-`path` answers with a suggested `.vectorcraft` name (the app asks for one). Off, it opens under its own name and Save
+`path` answers with a suggested `.tsipika` name (the app asks for one). Off, it opens under its own name and Save
 writes over it.
 
 ## Width points
@@ -2480,7 +2480,7 @@ path's direction; an inside or outside stroke spans the side it shows on). `pain
 strokeMode: "within"|"along"|"across"}` sets it (the Gradient panel's Stroke buttons), and `document.inspect` reports it
 as `strokeOptions.gradientMode`. Width profiles, dashes and arrowheads keep working: the gradient runs on through gaps
 and into the heads. Outline Stroke and Expand turn such a stroke into gradient meshes clipped to its outline; SVG and PDF
-write it as slices of linear gradients clipped to the outline (`vectorcraft_svg::export_with_report` and the PDF
+write it as slices of linear gradients clipped to the outline (`tsipika_svg::export_with_report` and the PDF
 report warn about it).
 
 ```json
@@ -2552,7 +2552,7 @@ each range, and a size of 0 or less is read as 1 pt.
 `file.place` puts another file's art into the active document as one undo step without touching the clipboard:
 a raster image at 100% of its physical size (the resolution its file declares, else 72 ppi; linked to its `path`
 unless `link: false`; a Photoshop document as its merged image), an SVG as one group (fitted by its art's bounds; with `crop: "crop"` given, framed and clipped by its viewBox, #788), a PDF/.ai page as one clipped group, with the images, symbols, patterns
-and swatches it uses. A VectorCraft document read from `path` is a placed document: one locked object showing its
+and swatches it uses. A Tsipika document read from `path` is a placed document: one locked object showing its
 artboard `page` (or, with `crop: "bounding"`, its art's bounds), linked to the file and read again when it changes
 (see Linked images), and vectors in every output; with `link: false` (or from `dataBase64`) it is an editable copy
 of its art, as one clipped group. `at` centres it, `rect` fits it, `replace`
@@ -2727,7 +2727,7 @@ is mixed with middle gray by its alpha.
 ## Linked images
 
 A placed image linked to its file (`file.place {path}`, Link on) records the file's absolute path, its size,
-modification time and hash, and keeps a low-resolution preview (at most 256 px a side): a `.vectorcraft` save writes
+modification time and hash, and keeps a low-resolution preview (at most 256 px a side): a `.tsipika` save writes
 the preview instead of the pixels, plus the path relative to the saved file. `document.open` reads
 the linked files again, looking for each at its path, then at its relative path and by name in the document's folder
 (so a folder moved with its links still opens). Only files on this computer, or on the network share the document is
@@ -2760,7 +2760,7 @@ that includes a placed document fails and relinks nothing; placed documents are 
 files are. Find in Folder… in the Linked File Not Found dialog and in the Links panel menu (`ui.findLinksInFolder`) runs
 both. The web build has no folder search.
 
-Placed documents (a `.vectorcraft` file placed linked) work the same way: the document keeps the file's bytes and a
+Placed documents (a `.tsipika` file placed linked) work the same way: the document keeps the file's bytes and a
 preview (JPEG or PNG, 1 px per point, at most 1024 px a side), and a save writes the preview (Include Linked Files:
 the file); output reads the file again, or uses the preview with a warning when it is gone or changed.
 `links.list` and `links.info` give them `document: true` and the artboard's `pageWidth` and `pageHeight` (pt).
@@ -2805,7 +2805,7 @@ paragraphs or runs are refused.
 
 ## PDF presets
 
-`pdf.preset.list` lists the built-in presets (`VectorCraft Default`, which preserves editing, then High Quality Print,
+`pdf.preset.list` lists the built-in presets (`Tsipika Default`, which preserves editing, then High Quality Print,
 Press Quality, Smallest File Size and the PDF/X presets, `builtIn: true`; `supported` says the writer produces the
 preset's standard) and the saved ones, each with its `description` and `settings`. `pdf.preset.save {name?,
 newName?, description?, preset?, …document.exportPdf options}` creates or changes a saved preset (a change starts from
@@ -2814,7 +2814,7 @@ the preset's own settings; `newName` renames it; built-in presets are read-only;
 (without `path` it returns `data`), and `pdf.preset.import {path? | data? | dataBase64?, replace?}` adds a file's
 presets (names in use get a number unless `replace`). Saved presets work as `preset`
 in `document.exportPdf`, `document.pdfSettings`, `document.export`/`serialize` with format `pdf` and `.ai` saves.
-They are kept across restarts, in the desktop app and in `vectorcraft-cli` alike (see
+They are kept across restarts, in the desktop app and in `tsipika-cli` alike (see
 [What a headless session remembers](#what-a-headless-session-remembers)).
 
 ```json
@@ -2844,7 +2844,7 @@ Cut publish the formats to the system clipboard, and a Paste outside text editin
 copied (SVG, then PDF, then text, then a bitmap; SVG markup in text counts as SVG). A background thread makes the
 formats and they are published when they are ready. While that thread has a save, an export, a print or a recovery
 copy to finish, Copy and Cut make and publish them at once. When another Copy or Cut, or a copy of text in
-VectorCraft, comes first, they are dropped. Pasting what VectorCraft copied keeps the lossless internal clipboard,
+Tsipika, comes first, they are dropped. Pasting what Tsipika copied keeps the lossless internal clipboard,
 also before its formats are published. While a text field or the Type tool has the keyboard, the app waits for
 them. Windows carries every format both ways and pastes a bitmap from PNG, else
 from the device-independent bitmap screenshots copy (`CF_DIBV5`, then `CF_DIB`; alpha kept, opaque when it is zero
@@ -2940,10 +2940,10 @@ except for a placed document, which opens in a tab.
 ## Package and Document Info
 
 `file.package {folder?, name?, copyLinks?, linksFolder?, relink?, copyFonts?, report?}` copies a saved document (an
-unsaved one is an error) into `folder/name` (default name `<document> Folder`): `<document>.vectorcraft`, its linked
+unsaved one is an error) into `folder/name` (default name `<document> Folder`): `<document>.tsipika`, its linked
 files in `Links/` (relinked: the packaged document points at the copies; the open one doesn't change), the fonts its
 type uses in `Fonts/` (fonts whose licence doesn't allow embedding are listed in `skippedFonts` instead) and
-`<document> Report.txt`. A placed `.vectorcraft` document is packaged with its own linked files and fonts, relinked to
+`<document> Report.txt`. A placed `.tsipika` document is packaged with its own linked files and fonts, relinked to
 the copies (each file copied once); one that can't be read is copied as it is, and a cycle of placed documents or one
 past the nesting limit stops there, each with a line in `warnings` and the report. A `folder/name` where a packaged file
 would replace the document or one of its linked files (the document's own folder, say) is an error, and nothing is
@@ -3025,7 +3025,7 @@ Batch exports (#1935):
   suffix ends the name; `date` sets the day the pattern uses). Different files it names alike get `-2`, `-3`….
 - **Folders:** `folders: "none" | "rows" | "format" | "item" | "itemFormat"` (all in one, a folder per row, per
   extension, per item, or item then extension).
-- **Formats:** rows may also be `eps`, `ai` and `vectorcraft` (a document of the item alone). A PDF row with
+- **Formats:** rows may also be `eps`, `ai` and `tsipika` (a document of the item alone). A PDF row with
   `marks` (`{trim, registration, colorBars, pageInfo}`) and a suffix such as `-print` sits next to a plain PDF row.
 - **Presets:** `document.exportPresets.list` (built-in: Logo Package, Print-Ready PDF), `.save {name, settings}`
   (kept with the preferences) and `.delete {name}`; `exportPreset: "<name>"` uses one under the call's own params.
@@ -3125,7 +3125,7 @@ Modified documents get recovery copies (`file.recovery.save`; the app runs it ev
 `autosaveRecovery` is on, skipping documents of more than 20,000 objects while `recoveryOffForComplex` is on). A copy
 goes when its document is saved, reverted or closed, so copies still there after the app quits were left by a crash.
 The copies live in the `recoveryFolder` preference's folder (default: `Data Recovery` beside the app's preferences;
-none when the app runs with `VECTORCRAFT_NO_PREFS`) or, on the web, in browser storage.
+none when the app runs with `TSIPIKA_NO_PREFS`) or, on the web, in browser storage.
 
 Each running app (each browser tab) keeps its copies in an area of its own (`<area>/<name>`): a sub-folder whose
 `.lock` file it keeps locked while it runs, or on the web an area with a heartbeat it refreshes every minute and a Web
@@ -3137,7 +3137,7 @@ again. Several apps running at once (agents' instances included) never see each 
 and an area being restored or discarded is held, so two apps launched together never both take it.
 
 `file.recovery.list` → `{copies: [{file, title, path, format, saved, open, running}], location}` (`open`: the copy of a
-document open here; `running`: kept by another VectorCraft that is running). `file.recovery.restore {file?}` opens
+document open here; `running`: kept by another Tsipika that is running). `file.recovery.restore {file?}` opens
 copies left behind (default: all) as `"<name> [Recovered]"`: modified, and Save asks where to save them (suggesting
 their original file); the copy moves into this app's area. `file.recovery.discard {file?}` deletes them. Without a
 folder or browser storage the commands are disabled and say how to set one.
@@ -3150,7 +3150,7 @@ folder or browser storage the commands are disabled and say how to set one.
 
 ## Native save options
 
-`document.save` / `file.saveAs` / `file.saveCopy` to a native (`.vectorcraft`, `.vctemplate`) or `.ai` file take, flat
+`document.save` / `file.saveAs` / `file.saveCopy` to a native (`.tsipika`, `.vctemplate`) or `.ai` file take, flat
 or in `options` (`file.formatOptions {format}` lists them with their values):
 
 - `separateArtboards: true` also writes each artboard of `range` (`"1-3, 5"`, default `"all"`) to
@@ -3163,11 +3163,11 @@ or in `options` (`file.formatOptions {format}` lists them with their values):
   (default true) with false write blank pages around the native document (smaller; other apps show empty pages).
 - `.ai` only: `compress` (default true) is the PDF option `compression.compressText`.
 
-File → Save As asks for these in the save options dialog (VectorCraft Options) after the save panel; Save, Save a Copy
+File → Save As asks for these in the save options dialog (Tsipika Options) after the save panel; Save, Save a Copy
 and Save as Template reuse the options as last saved (or Use Compression).
 
 ```json
-{"name":"run_command","arguments":{"command":"file.saveAs","params":{"path":"/tmp/set.vectorcraft","separateArtboards":true,"range":"2-3","includeLinked":true}}}
+{"name":"run_command","arguments":{"command":"file.saveAs","params":{"path":"/tmp/set.tsipika","separateArtboards":true,"range":"2-3","includeLinked":true}}}
 {"name":"run_command","arguments":{"command":"file.saveAs","params":{"path":"/tmp/set.ai","pdfCompatible":false}}}
 ```
 
@@ -3185,7 +3185,7 @@ white and gradients and patterns as one colour. What a format leaves out comes b
 
 `document.open` and `file.place` read `.emf` and `.wmf` (placeable or not) into one artboard, the picture's frame, and
 one layer: paths with their fills and strokes (pens become strokes with caps, joins and dashes), clipping groups,
-images and point type in the font the file names. Records VectorCraft doesn't read (EMF+ drawing among them) are
+images and point type in the font the file names. Records Tsipika doesn't read (EMF+ drawing among them) are
 skipped with one warning. `clipboard.importEmf {dataBase64, center?}` loads an EMF or WMF picture into the clipboard
 for `edit.paste`; the app pastes `image/emf` from the system clipboard ahead of text and bitmaps when the platform's
 clipboard service offers it (the Windows desktop service doesn't read metafiles yet).
@@ -3363,7 +3363,7 @@ refused with the list of presets.
 
 `document.open` and `file.place` read `.eps`, `.epsf` and `.ps` files, and PostScript by any name (an `.ai` saved
 without PDF compatibility opens as artwork; an `.ait` one as a new untitled document). A `.ps` file reports the format
-`ps`, which `document.export` doesn't write (`file.print` writes PostScript). An EPS file VectorCraft wrote restores the
+`ps`, which `document.export` doesn't write (`file.print` writes PostScript). An EPS file Tsipika wrote restores the
 document it carries (`restored: true`, as Preserve Editing does for PDF and SVG); when that document can't be read the
 PostScript is read instead and the first warning says why.
 
@@ -3411,7 +3411,7 @@ its standard: what it still breaks (transparency, RGB in PDF/X-1a, a font not em
 writing a file that only claims the standard.
 
 ```json
-{"name":"run_command","arguments":{"command":"document.exportPdf","params":{"path":"/tmp/press.pdf","preset":"PDF/X-1a:2001","output":{"outputIntent":"VectorCraft Generic CMYK (SWOP-like)","outputCondition":"Coated","trapped":false}}}}
+{"name":"run_command","arguments":{"command":"document.exportPdf","params":{"path":"/tmp/press.pdf","preset":"PDF/X-1a:2001","output":{"outputIntent":"Tsipika Generic CMYK (SWOP-like)","outputCondition":"Coated","trapped":false}}}}
 ```
 
 ## Print tiling
@@ -3452,7 +3452,7 @@ colours keep their numbers with `preserveNumbers`), so a CMYK profile writes dev
 CMYK one. Settings saved before these options load with their defaults.
 
 ```json
-{"name":"run_command","arguments":{"command":"file.print","params":{"path":"/tmp/proof.pdf","settings":{"advanced":{"overprints":"simulate","flattenerPreset":"High Resolution"},"color":{"profile":"VectorCraft Generic CMYK (SWOP-like)","intent":"perceptual"}}}}}
+{"name":"run_command","arguments":{"command":"file.print","params":{"path":"/tmp/proof.pdf","settings":{"advanced":{"overprints":"simulate","flattenerPreset":"High Resolution"},"color":{"profile":"Tsipika Generic CMYK (SWOP-like)","intent":"perceptual"}}}}}
 ```
 
 ### Rotated bounding boxes
@@ -3897,7 +3897,7 @@ to `object.setBounds`, which scales the other dimension by the same factor; agen
 ## Plug-ins
 
 WebAssembly plug-ins ([plugins.md](plugins.md)) are reached through commands; the desktop app and an unconfined
-`vectorcraft-cli` keep the ones `plugin.install` installs in a `Plug-ins` folder next to the preferences and install
+`tsipika-cli` keep the ones `plugin.install` installs in a `Plug-ins` folder next to the preferences and install
 them again at startup (`plugin.remove` deletes them there):
 `plugin.install {path | dataBase64}` installs one, `plugin.list` / `plugin.info {id}` describe them (parameters,
 schema, defaults). An object filter runs on the selected paths and compound paths with `plugin.run {id, params}` (one
@@ -3907,7 +3907,7 @@ id `plugin.<id>`: `effect.apply`, `effect.setParams` and `effect.expandAppearanc
 
 ```json
 {"name":"run_command","arguments":{"command":"plugin.install","params":{"path":"/plugins/desaturate.wasm"}}}
-{"name":"run_command","arguments":{"command":"plugin.run","params":{"id":"org.vectorcraft.example.desaturate","params":{"amount":60}}}}
+{"name":"run_command","arguments":{"command":"plugin.run","params":{"id":"org.tsipika.example.desaturate","params":{"amount":60}}}}
 {"name":"run_command","arguments":{"command":"effect.apply","params":{"effect":"plugin.org.example.wobble","params":{"size":4}}}}
 ```
 
@@ -3937,18 +3937,18 @@ art that can't be decoded is sampled as blank (no dots, or full dots with `inver
 
 Type can use the bundled fonts, fonts added to the session and the fonts installed on the system (none on the web):
 the system's and the user's font folders (Windows: `Fonts` and `%LOCALAPPDATA%\Microsoft\Windows\Fonts`, plus fonts
-registered outside them, such as fonts installed as shortcuts, and in the desktop app and `vectorcraft-cli` (MCP
+registered outside them, such as fonts installed as shortcuts, and in the desktop app and `tsipika-cli` (MCP
 included) the fonts in DirectWrite's system font collection, such as those Adobe Fonts activates while Creative Cloud runs; macOS: `/System/Library/Fonts`, `/Library/Fonts`,
-`/Network/Library/Fonts`, `~/Library/Fonts` and downloaded system fonts, plus in the desktop app and `vectorcraft-cli`
+`/Network/Library/Fonts`, `~/Library/Fonts` and downloaded system fonts, plus in the desktop app and `tsipika-cli`
 the fonts CoreText's font manager lists outside them, such as those apps and font managers register from their own
 folders; Linux and BSD: `/usr/share/fonts`,
 `/usr/local/share/fonts`, `~/.fonts` and the XDG data folders' `fonts`, `~/.local/share/fonts` among them, in a
 Flatpak sandbox the host's fonts, and the folders fontconfig's configuration lists (`<dir>` in `/etc/fonts/fonts.conf`
-and the files it includes: where packages add theirs, such as TeX fonts under `/usr/share/texmf/fonts`)). Faces without outlines VectorCraft draws (no `glyf`, `CFF`, `CFF2` or `VARC` table, such
+and the files it includes: where packages add theirs, such as TeX fonts under `/usr/share/texmf/fonts`)). Faces without outlines Tsipika draws (no `glyf`, `CFF`, `CFF2` or `VARC` table, such
 as bitmap-only fonts) are left out. The scan also reads the folder the `fontsFolder` preference names (Preferences › Type ›
-Additional Fonts Folder) with its subfolders and, in the desktop app and `vectorcraft-cli`, VectorCraft's own `Fonts` folder
-next to the preferences: `~/Library/Application Support/VectorCraft/Fonts` on macOS, `%APPDATA%\VectorCraft\Fonts` on
-Windows, and `$XDG_CONFIG_HOME/vectorcraft/Fonts` or `~/.config/vectorcraft/Fonts` on Linux and BSD. `text.addFontFiles`
+Additional Fonts Folder) with its subfolders and, in the desktop app and `tsipika-cli`, Tsipika's own `Fonts` folder
+next to the preferences: `~/Library/Application Support/Tsipika/Fonts` on macOS, `%APPDATA%\Tsipika\Fonts` on
+Windows, and `$XDG_CONFIG_HOME/tsipika/Fonts` or `~/.config/tsipika/Fonts` on Linux and BSD. `text.addFontFiles`
 copies fonts into that folder. The installed fonts are cataloged once per session (in the background when the app starts, else on the first lookup
 by family name), so opening, placing, pasting and importing files find them whatever ran before. `text.fontList`
 lists every family available, the installed ones included, each by its English (canonical) name — the same string
@@ -3999,13 +3999,13 @@ folders whose contents are in the cloud, and it follows no links; a picked folde
 that goes through a link is searched at its target. Programs installed in other folders, such as a folder on another
 drive, are searched as any other folder is.
 
-`text.addFontFiles {files}` copies files that the session's last search found into VectorCraft's `Fonts` folder, then
+`text.addFontFiles {files}` copies files that the session's last search found into Tsipika's `Fonts` folder, then
 scans the fonts again, and type set in them redraws. It copies only regular `.ttf`, `.otf`, `.ttc`, `.otc`, `.woff`
 and `.woff2` files and suitcase fonts (with their resource fork), at most 256 MB a file and 1 GB in all, and lists any
 other file in `skipped`. It never replaces a file: the names `Name.otf`, `Name 2.otf` up to `Name 99.otf` are tried in
 turn until one is free, which gets the copy, or is a file with the same contents, which is kept (`kept`).
 Copy only fonts you own or are licensed to install. `command.batch` returns before a search ends; later requests over MCP or the control channel poll
-`text.findFontFiles {}`. `vectorcraft-cli run` stops the search when its last step ends. The web build has no Fonts
+`text.findFontFiles {}`. `tsipika-cli run` stops the search when its last step ends. The web build has no Fonts
 folder and no folder search.
 
 ```json
@@ -4298,9 +4298,9 @@ entry, listed with its `name`, its `section` (the names of the blocks around it)
 (`key`, `modifiers`, `context`, `represent`) and its `line`. `codes` counts the entries that use each key and modifier
 code, and `unread` lists the tokens the reader skipped, with their lines. The reader stops at 4 MiB, 16 open blocks,
 20,000 entries and 8 MiB of names over the entries and their sections, cuts names at 1,024 bytes, and sets `truncated` when it reaches one of these limits. An XML shortcut
-file fails with "This shortcut file is in a form VectorCraft can't read."
+file fails with "This shortcut file is in a form Tsipika can't read."
 
-The import matches record what the names and codes in such files stand for in VectorCraft. They are kept with the
+The import matches record what the names and codes in such files stand for in Tsipika. They are kept with the
 preferences, and resetting the preferences keeps them. `importMatches.set {matches: [{kind, name, target, label?}]}`
 records them: kind `name` maps an entry name to a command id, `tool:<id>` or `panel:<id>`, and kinds `key` and
 `modifiers` map a code, written in decimal, to a key or to modifiers as Edit › Keyboard Shortcuts writes them (`K`,
@@ -4311,7 +4311,7 @@ the saved `key` or `mods` to each code.
 
 In the desktop app, Edit › Keyboard Shortcuts › Import… and File › Open show such a file in Import Shortcut Set
 (`ui.shortcutImportDialog {path? | dataBase64?, name?}` over the control channel). The dialog proposes targets from
-the entry names and decodes the codes that VectorCraft's default shortcuts agree on.
+the entry names and decodes the codes that Tsipika's default shortcuts agree on.
 
 ```json
 {"name":"run_command","arguments":{"command":"shortcutSet.read","params":{"path":"/Users/me/Studio.kys"}}}

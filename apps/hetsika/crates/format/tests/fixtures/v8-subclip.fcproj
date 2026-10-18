@@ -1,11 +1,11 @@
 {
- "format": "filmcraft.project",
+ "format": "hetsika.project",
  "schema_version": 8,
- "generator": "FilmCraft 0.1.0",
+ "generator": "Hetsika 0.1.0",
  "project": {
   "name": "Schema 8 Edit",
   "settings": {
-   "renderer": "FilmCraft GPU Acceleration (wgpu)",
+   "renderer": "Hetsika GPU Acceleration (wgpu)",
    "video_display": "Timecode",
    "audio_display_samples": true,
    "default_still_duration": 1270080000000,

@@ -5,9 +5,9 @@
 //! as images of the effected object.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeKind;
-use vectorcraft_geom::Rect;
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_doc::NodeKind;
+use tsipika_geom::Rect;
+use tsipika_render::{Rendered, Renderer};
 
 use super::*;
 
@@ -113,7 +113,7 @@ fn listed_applied_edited_and_undone() {
     }
     // Numbers far out of range are stored as given and read clamped; the canvas still draws.
     for (id, _) in EFFECTS {
-        let defaults = vectorcraft_render::effects::default_params(id).unwrap();
+        let defaults = tsipika_render::effects::default_params(id).unwrap();
         let junk: serde_json::Map<String, Value> = defaults
             .as_object()
             .unwrap()
@@ -165,7 +165,7 @@ fn halftone_pattern_settings_survive_a_save_and_open() {
     let set = json!({"size": 7.0, "contrast": 20.0, "patternType": "line"});
     s.execute("effect.apply", &json!({"effect": "sketch.halftonePattern", "ids": [g], "params": set})).unwrap();
     let drawn = render(&s);
-    let doc = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let doc = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(doc.node(NodeId(g)).unwrap().appearance.effects[0].params, set);
     assert_eq!(Renderer::new().render_region(&doc, Rect::new(0.0, 0.0, 200.0, 200.0), 1.0, true).pixels, drawn.pixels);
     // Each setting shows: changing any one draws differently.
@@ -210,7 +210,7 @@ fn artistic_settings_survive_a_save_and_open() {
         let g = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
         s.execute("effect.apply", &json!({"effect": id, "ids": [g], "params": set})).unwrap();
         let drawn = render(&s);
-        let doc = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let doc = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
         assert_eq!(doc.node(NodeId(g)).unwrap().appearance.effects[0].params, set, "{id}");
         assert_eq!(Renderer::new().render_region(&doc, Rect::new(0.0, 0.0, 200.0, 200.0), 1.0, true).pixels, drawn.pixels, "{id}");
         for change in changes {
@@ -242,25 +242,25 @@ fn glass_params(s: &Session, g: u64) -> Value {
 #[test]
 fn glass_loads_a_texture_saves_it_and_draws_it() {
     let png = rings_png();
-    let data = vectorcraft_format::base64_encode(&png);
+    let data = tsipika_format::base64_encode(&png);
     let (mut s, g) = striped();
     let file = json!({"name": "rings.png", "dataBase64": data});
     s.execute("effect.apply", &json!({"effect": "distort.glass", "ids": [g], "params": {"distortion": 12, "textureImage": file}})).unwrap();
     let p = glass_params(&s, g);
     assert_eq!(p["texture"], json!("loaded"), "loading a texture picks it");
     let stored = p["textureImage"].as_str().unwrap().to_string();
-    let texture = vectorcraft_render::effects::pixel::texture(&stored).unwrap();
+    let texture = tsipika_render::effects::pixel::texture(&stored).unwrap();
     assert_eq!(texture.size(), (12, 10));
     let loaded = render(&s);
     // The same Glass with each built-in texture draws differently.
-    for (_, builtin) in vectorcraft_render::effects::pixel::GLASS_TEXTURES {
+    for (_, builtin) in tsipika_render::effects::pixel::GLASS_TEXTURES {
         s.execute("effect.setParams", &json!({"index": 0, "ids": [g], "params": {"texture": builtin}})).unwrap();
         assert!(mean_diff(&loaded, &render(&s)) > 0.001, "{builtin}");
     }
     s.execute("effect.setParams", &json!({"index": 0, "ids": [g], "params": {"texture": "loaded"}})).unwrap();
     assert_eq!(render(&s).pixels, loaded.pixels, "the texture stayed with the effect");
     // Saved and opened again: the same texture, drawn the same.
-    let doc = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let doc = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(doc.node(NodeId(g)).unwrap().appearance.effects[0].params, glass_params(&s, g));
     assert_eq!(Renderer::new().render_region(&doc, Rect::new(0.0, 0.0, 200.0, 200.0), 1.0, true).pixels, loaded.pixels);
     // The same file by path, through Effect Options, stores the same texture.
@@ -289,10 +289,10 @@ fn glass_loads_a_texture_saves_it_and_draws_it() {
 #[test]
 fn glass_refuses_a_texture_that_is_not_an_image() {
     let (mut s, g) = striped();
-    let junk = vectorcraft_format::base64_encode(b"not an image");
+    let junk = tsipika_format::base64_encode(b"not an image");
     let not_stored = "textureImage: give {path} or {name, dataBase64}";
     let refused = [
-        (json!({"name": "a.png", "dataBase64": junk}), "not an image VectorCraft reads"),
+        (json!({"name": "a.png", "dataBase64": junk}), "not an image Tsipika reads"),
         (json!("bm90IGEgdGV4dHVyZQ=="), not_stored),
         (json!(5), not_stored),
         (json!({"path": "C:/no/such/texture.png"}), "texture.png"),
@@ -332,7 +332,7 @@ fn pdf_and_svg_write_the_effected_object_as_an_image() {
         // PDF: an image that reads back as the canvas shows it.
         let r = crate::cmd::rasterfx::export_pdf_with_report(&doc, &Default::default()).unwrap();
         assert!(r.warnings.is_empty(), "{id}: {:?}", r.warnings);
-        let back = vectorcraft_pdf::import(&r.bytes).unwrap();
+        let back = tsipika_pdf::import(&r.bytes).unwrap();
         let diff = mean_diff(&render(&s), &Renderer::new().render_region(&back, Rect::new(0.0, 0.0, 200.0, 200.0), 1.0, true));
         assert!(diff < 0.03, "{id}: PDF reads back {:.2}% off", diff * 100.0);
         // SVG: the object becomes an image; a Gaussian Blur alone stays a live filter.

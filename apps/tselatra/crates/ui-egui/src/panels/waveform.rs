@@ -1,19 +1,19 @@
 //! Audio waveforms for the Timeline's Audio > Waveform property (revealed with `LL`).
 //!
 //! Each footage item's audio is summarised once into min/max peaks
-//! (`effectcraft_render::audio::footage_peaks`, [`BINS_PER_SEC`] bins per second) on a
+//! (`tselatra_render::audio::footage_peaks`, [`BINS_PER_SEC`] bins per second) on a
 //! background thread; the timeline draws from that summary at any zoom.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::project::{ItemId, ItemKind, Layer, LayerSource, Project, Property};
-use effectcraft_engine::render::audio::db_to_gain;
-use effectcraft_engine::time::Tick;
+use tselatra_engine::project::{ItemId, ItemKind, Layer, LayerSource, Project, Property};
+use tselatra_engine::render::audio::db_to_gain;
+use tselatra_engine::time::Tick;
 use egui::{Color32, Painter, Rect, Stroke, pos2};
 
 use super::timeline::TMap;
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 
 /// Peak-summary resolution.
 pub const BINS_PER_SEC: u32 = 200;
@@ -40,7 +40,7 @@ pub fn audio_item(project: &Project, l: &Layer) -> Option<ItemId> {
 }
 
 /// The summary for `item`, starting its computation on first request.
-pub fn summary(app: &EffectcraftApp, ctx: &egui::Context, item: ItemId) -> Option<Arc<Summary>> {
+pub fn summary(app: &TselatraApp, ctx: &egui::Context, item: ItemId) -> Option<Arc<Summary>> {
     let mut m = app.waveforms.map.lock().ok()?;
     if let Some(s) = m.get(&item.0) {
         return s.clone();
@@ -53,12 +53,12 @@ pub fn summary(app: &EffectcraftApp, ctx: &egui::Context, item: ItemId) -> Optio
     std::thread::Builder::new()
         .name("ec-waveform".into())
         .spawn(move || {
-            use effectcraft_engine::media_cache;
+            use tselatra_engine::media_cache;
             let file = cache.filter(|_| !f.missing).and_then(|d| media_cache::peaks_path(&d, &f.path, BINS_PER_SEC));
             let peaks = match file.as_deref().and_then(media_cache::load_peaks) {
                 Some(p) => p,
                 None => {
-                    let p = effectcraft_engine::render::audio::footage_peaks(footage.as_ref(), item, &f, f.duration, BINS_PER_SEC);
+                    let p = tselatra_engine::render::audio::footage_peaks(footage.as_ref(), item, &f, f.duration, BINS_PER_SEC);
                     if let Some(file) = &file
                         && let Err(e) = media_cache::store_peaks(file, &p)
                     {
@@ -126,7 +126,7 @@ pub(crate) fn draw(p: &Painter, rect: Rect, tm: &TMap, layer: &Layer, s: &Summar
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_engine::project::Value;
+    use tselatra_engine::project::Value;
 
     #[test]
     fn waveform_follows_audio_levels() {

@@ -1,24 +1,24 @@
 [package]
-name = "designcraft-render"
+name = "pejy-render"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft renderer: spreads, pages, frames, composed text and images to pixels (vello_cpu)"
+description = "Pejy renderer: spreads, pages, frames, composed text and images to pixels (vello_cpu)"
 
 [lints]
 workspace = true
 
 [dependencies]
-designcraft-geom = { workspace = true }
-designcraft-color = { workspace = true }
-designcraft-doc = { workspace = true }
-designcraft-fonts = { workspace = true }
-designcraft-compose = { workspace = true }
+pejy-geom = { workspace = true }
+pejy-color = { workspace = true }
+pejy-doc = { workspace = true }
+pejy-fonts = { workspace = true }
+pejy-compose = { workspace = true }
 vello_cpu = { workspace = true }
 vello_common = { workspace = true }
 image = { workspace = true }
 hayro = { workspace = true }
-designcraft-images = { workspace = true }
+pejy-images = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
 

@@ -1,8 +1,8 @@
 //! Application panel identities and persistence around the shared docking renderer.
 //! Document contents remain owned by their existing view implementations.
 
-use craft_ui::docking::{Action, DockArea, DockStyle, Layout, Location, Node, PanelLimits, Permissions, Placement, Zone};
-use craft_ui::layout::{SplitAxis, SplitSize};
+use mahay_ui::docking::{Action, DockArea, DockStyle, Layout, Location, Node, PanelLimits, Permissions, Placement, Zone};
+use mahay_ui::layout::{SplitAxis, SplitSize};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -91,8 +91,8 @@ impl Default for Workspace {
                         tabs(Panel::Canvas),
                         Node::Stack {
                             entries: vec![
-                                craft_ui::docking::StackEntry { panel: Panel::Layers, open: true, height: Some(280.0) },
-                                craft_ui::docking::StackEntry { panel: Panel::Properties, open: true, height: None },
+                                mahay_ui::docking::StackEntry { panel: Panel::Layers, open: true, height: Some(280.0) },
+                                mahay_ui::docking::StackEntry { panel: Panel::Properties, open: true, height: None },
                             ],
                         },
                     ),
@@ -140,7 +140,7 @@ impl Workspace {
             }
             let mut probe = self.layout.clone();
             if let Err(error) = probe.restore(*panel, location)
-                && error != craft_ui::docking::DockError::MissingTarget
+                && error != mahay_ui::docking::DockError::MissingTarget
             {
                 return Err(error.to_string());
             }
@@ -336,7 +336,7 @@ pub fn show(app: &mut crate::CadApp, ui: &mut egui::Ui) {
     style.border = egui::Stroke::new(1.0, t.border);
     style.accent = t.accent;
     style.font = crate::theme::body();
-    let output = DockArea::new(egui::Id::new("cadcraft-docking")).show_with_limits(
+    let output = DockArea::new(egui::Id::new("drafitra-docking")).show_with_limits(
         ui,
         &workspace.layout,
         &style,
@@ -372,7 +372,7 @@ pub fn show(app: &mut crate::CadApp, ui: &mut egui::Ui) {
     let _ = sync(&mut workspace, app);
     let stale = workspace.layout != rendered.layout || workspace.hidden != rendered.hidden;
     if stale {
-        craft_ui::docking::cancel_drag::<Panel>(ui.ctx(), egui::Id::new("cadcraft-docking"));
+        mahay_ui::docking::cancel_drag::<Panel>(ui.ctx(), egui::Id::new("drafitra-docking"));
     }
     publish_visibility(app, &workspace);
     app.ui.docking = workspace;

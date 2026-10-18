@@ -1,8 +1,8 @@
 //! A multileader's spline leader and block content (#408) survive save and reopen: they are
 //! written as a native MULTILEADER (#459).
 
-use cadcraft_doc::{Block, Common, Drawing, Entity, EntityKind, Handle, Insert, Line, MLeader, Space};
-use cadcraft_geom::Vec3;
+use drafitra_doc::{Block, Common, Drawing, Entity, EntityKind, Handle, Insert, Line, MLeader, Space};
+use drafitra_geom::Vec3;
 
 #[test]
 fn spline_leader_and_block_content_are_written() {
@@ -31,8 +31,8 @@ fn spline_leader_and_block_content_are_written() {
         }),
     };
     d.add(&Space::Model, Common::default(), EntityKind::MLeader(m)).unwrap();
-    let bytes = cadcraft_io::write(&d, "a.dxf").unwrap();
-    let back = cadcraft_io::read(&bytes, "a.dxf").unwrap();
+    let bytes = drafitra_io::write(&d, "a.dxf").unwrap();
+    let back = drafitra_io::read(&bytes, "a.dxf").unwrap();
     assert!(back.model.iter().any(|e| matches!(&e.kind, EntityKind::MLeader(m) if m.spline
         && m.leaders.first().is_some_and(|l| l.len() == 2)
         && m.block.as_ref().is_some_and(|i| i.block == "TAG" && i.insert == Vec3::new(11.0, 0.0, 0.0)))));

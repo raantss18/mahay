@@ -4,7 +4,7 @@
 //! the last test pins sizes that were measured, for the one font build they were measured with.
 
 use super::*;
-use figcraft_doc::{LetterSpacing, LineHeight, TextAutoResize, TextData};
+use endrika_doc::{LetterSpacing, LineHeight, TextAutoResize, TextData};
 
 fn face() -> Option<std::sync::Arc<Face>> {
     scan_system_fonts();

@@ -2,7 +2,7 @@
 //! editor), committing a typed name when it closes.
 
 use egui::{Id, Pos2, RawInput, Rect, vec2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use super::*;
@@ -81,9 +81,9 @@ fn picker_draws_every_view_and_commits_a_typed_name_on_close() {
 }
 
 /// A session with a text layer and text styles "Type/Heading" and "Type/Body" (the layer uses Body).
-fn text_session() -> (Session, figcraft_doc::NodeId) {
+fn text_session() -> (Session, endrika_doc::NodeId) {
     let mut s = Session::new();
-    let t = figcraft_engine::params::id_of(&s.execute("text.create", &json!({"text": "Hello", "x": 0, "y": 0})).unwrap()["id"]).unwrap();
+    let t = endrika_engine::params::id_of(&s.execute("text.create", &json!({"text": "Hello", "x": 0, "y": 0})).unwrap()["id"]).unwrap();
     s.execute(
         "style.create",
         &json!({"type": "text", "name": "Type/Heading", "value": {"fontFamily": "Inter", "fontStyle": "Bold", "fontSize": 32}}),
@@ -114,7 +114,7 @@ fn text_styles_preview_on_hover_and_apply_on_click() {
         let p = Pos2::new(area.center().x - 40.0, y as f32);
         frame_with(&ctx, &mut app, &mut time, vec![egui::Event::PointerMoved(p)]);
         frame(&ctx, &mut app, &mut time);
-        if figcraft_engine::textpreview::active(&app.session) {
+        if endrika_engine::textpreview::active(&app.session) {
             over = Some(p);
             break;
         }
@@ -125,7 +125,7 @@ fn text_styles_preview_on_hover_and_apply_on_click() {
     // Away from the popover the preview ends.
     frame_with(&ctx, &mut app, &mut time, vec![egui::Event::PointerMoved(Pos2::new(600.0, 600.0))]);
     frame(&ctx, &mut app, &mut time);
-    assert!(!figcraft_engine::textpreview::active(&app.session));
+    assert!(!endrika_engine::textpreview::active(&app.session));
     assert_eq!(size(&app), 14.0);
     // A click applies it: one undo step, and the picker closes.
     let press = |pressed| egui::Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
@@ -149,12 +149,12 @@ fn chars_linked_to_several_styles_show_mixed() {
     assert_eq!(text_link(&app, &doc, &[t]), None, "mixed");
     let mut app = app;
     // Editing the first two chars: they link to one style.
-    figcraft_engine::textedit::begin(&mut app.session, t, Some(0), false).unwrap();
-    figcraft_engine::textedit::set_caret(&mut app.session, 2, true).unwrap();
+    endrika_engine::textedit::begin(&mut app.session, t, Some(0), false).unwrap();
+    endrika_engine::textedit::set_caret(&mut app.session, 2, true).unwrap();
     let doc = app.session.doc().unwrap().clone();
     assert_eq!(text_link(&app, &doc, &[t]), Some(doc.style("Type/Heading").map(|s| s.id.clone())));
     // The panel draws the chip ("Mixed" when the edit spans both).
-    figcraft_engine::textedit::set_caret(&mut app.session, 4, true).unwrap();
+    endrika_engine::textedit::set_caret(&mut app.session, 4, true).unwrap();
     let ctx = egui::Context::default();
     let mut time = 0.0;
     for _ in 0..3 {
@@ -230,7 +230,7 @@ fn commit_text_field(def: &TextStyle, field: &str, typed: &str) -> Option<TextSt
 
 #[test]
 fn text_style_editor_commits_line_height_and_letter_spacing() {
-    use figcraft_doc::{LetterSpacing, LineHeight};
+    use endrika_doc::{LetterSpacing, LineHeight};
     let def = TextStyle { line_height: LineHeight::Auto, letter_spacing: LetterSpacing::Percent(0.0), ..Default::default() };
     let lh = |def: &TextStyle, s: &str| commit_text_field(def, "ts_lh", s).map(|d| d.line_height);
     let ls = |def: &TextStyle, s: &str| commit_text_field(def, "ts_ls", s).map(|d| d.letter_spacing);

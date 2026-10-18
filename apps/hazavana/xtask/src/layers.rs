@@ -30,7 +30,7 @@ impl Class {
     }
 }
 
-/// The layering table. Names are package names without the `lightcraft-`
+/// The layering table. Names are package names without the `hazavana-`
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
@@ -64,7 +64,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("mcp", Class::Layer(5)),
     ("testkit", Class::Testkit),
     // L6 apps and tooling
-    ("lightcraft", Class::Exempt),
+    ("hazavana", Class::Exempt),
     ("cli", Class::Exempt),
     ("web", Class::Exempt),
     ("xtask", Class::Exempt),
@@ -94,13 +94,13 @@ fn intra_layer_allowed(from: &str, to: &str) -> bool {
 
 /// External crates that constitute a UI toolkit / windowing dependency.
 /// Entries ending in `*` are prefixes.
-pub const UI_CRATES: &[&str] = &["craft-ui", "egui", "eframe", "winit", "egui_kittest", "rfd", "bevy*"];
+pub const UI_CRATES: &[&str] = &["mahay-ui", "egui", "eframe", "winit", "egui_kittest", "rfd", "bevy*"];
 
 /// First layer allowed to use UI crates.
 pub const UI_MIN_LAYER: u8 = 5;
 
 pub fn short_name(pkg: &str) -> &str {
-    pkg.strip_prefix("lightcraft-").unwrap_or(pkg)
+    pkg.strip_prefix("hazavana-").unwrap_or(pkg)
 }
 
 pub fn classify(pkg: &str) -> Option<Class> {
@@ -158,7 +158,7 @@ impl std::fmt::Display for Violation {
                 write!(f, "{krate}: standalone crate must not depend on workspace crate {dep}")
             }
             Violation::TestkitAsNormalDep { krate } => {
-                write!(f, "{krate}: lightcraft-testkit may only be a dev-dependency")
+                write!(f, "{krate}: hazavana-testkit may only be a dev-dependency")
             }
             Violation::UiBelowL5 { krate, dep, layer } => {
                 write!(f, "{krate} (L{layer}) depends on UI crate `{dep}`; UI toolkits are only allowed in L5+")
@@ -263,54 +263,54 @@ mod tests {
     #[test]
     fn clean_downward_graph_passes() {
         let g = [
-            c("lightcraft-geom", &[("serde", Normal, false)]),
-            c("lightcraft-develop", &[("lightcraft-geom", Normal, true)]),
-            c("lightcraft-engine", &[("lightcraft-develop", Normal, true), ("lightcraft-testkit", Dev, true)]),
-            c("lightcraft-ui-egui", &[("lightcraft-engine", Normal, true), ("egui", Normal, false)]),
-            c("lightcraft-cli", &[("lightcraft-ui-egui", Normal, true)]),
+            c("hazavana-geom", &[("serde", Normal, false)]),
+            c("hazavana-develop", &[("hazavana-geom", Normal, true)]),
+            c("hazavana-engine", &[("hazavana-develop", Normal, true), ("hazavana-testkit", Dev, true)]),
+            c("hazavana-ui-egui", &[("hazavana-engine", Normal, true), ("egui", Normal, false)]),
+            c("hazavana-cli", &[("hazavana-ui-egui", Normal, true)]),
         ];
         assert!(check(&g).is_empty(), "{:?}", check(&g));
     }
 
     #[test]
     fn upward_dependency_flagged() {
-        let v = check(&[c("lightcraft-develop", &[("lightcraft-engine", Normal, true)])]);
+        let v = check(&[c("hazavana-develop", &[("hazavana-engine", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 1, to: 4, .. }]));
     }
 
     #[test]
     fn sideways_dependency_flagged() {
-        let v = check(&[c("lightcraft-catalog", &[("lightcraft-preview", Normal, true)])]);
+        let v = check(&[c("hazavana-catalog", &[("hazavana-preview", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 3, to: 3, .. }]));
     }
 
     #[test]
     fn l0_chain_allowed_one_way() {
-        assert!(check(&[c("lightcraft-raster", &[("lightcraft-color", Normal, true)])]).is_empty());
-        assert!(!check(&[c("lightcraft-color", &[("lightcraft-raster", Normal, true)])]).is_empty());
+        assert!(check(&[c("hazavana-raster", &[("hazavana-color", Normal, true)])]).is_empty());
+        assert!(!check(&[c("hazavana-color", &[("hazavana-raster", Normal, true)])]).is_empty());
     }
 
     #[test]
     fn ui_crates_forbidden_below_l5() {
-        for dep in ["craft-ui", "egui", "eframe", "winit", "rfd"] {
-            let v = check(&[c("lightcraft-engine", &[(dep, Normal, false)])]);
+        for dep in ["mahay-ui", "egui", "eframe", "winit", "rfd"] {
+            let v = check(&[c("hazavana-engine", &[(dep, Normal, false)])]);
             assert!(matches!(v[..], [Violation::UiBelowL5 { .. }]), "{dep}");
         }
-        assert!(check(&[c("lightcraft-mcp", &[("winit", Normal, false)])]).is_empty());
+        assert!(check(&[c("hazavana-mcp", &[("winit", Normal, false)])]).is_empty());
     }
 
     #[test]
     fn unregistered_and_testkit_rules() {
-        let v = check(&[c("lightcraft-mystery", &[])]);
-        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "lightcraft-mystery"));
-        assert!(!check(&[c("lightcraft-pipeline", &[("lightcraft-testkit", Normal, true)])]).is_empty());
-        assert!(check(&[c("lightcraft-pipeline", &[("lightcraft-testkit", Dev, true)])]).is_empty());
+        let v = check(&[c("hazavana-mystery", &[])]);
+        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "hazavana-mystery"));
+        assert!(!check(&[c("hazavana-pipeline", &[("hazavana-testkit", Normal, true)])]).is_empty());
+        assert!(check(&[c("hazavana-pipeline", &[("hazavana-testkit", Dev, true)])]).is_empty());
     }
 
     #[test]
     fn apps_exempt() {
-        for app in ["lightcraft", "lightcraft-cli", "lightcraft-web", "xtask"] {
-            assert!(check(&[c(app, &[("egui", Normal, false), ("lightcraft-ui-egui", Normal, true)])]).is_empty());
+        for app in ["hazavana", "hazavana-cli", "hazavana-web", "xtask"] {
+            assert!(check(&[c(app, &[("egui", Normal, false), ("hazavana-ui-egui", Normal, true)])]).is_empty());
         }
     }
 }

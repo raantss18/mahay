@@ -1,8 +1,8 @@
 //! Graphic Styles panel depth: Merge Graphic Styles, moving styles and Override Character Color.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::{GraphicStyle, NodeId, NodeKind};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::{GraphicStyle, NodeId, NodeKind};
 
 use super::*;
 

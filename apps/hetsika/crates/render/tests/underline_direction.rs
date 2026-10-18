@@ -1,10 +1,10 @@
 //! Horizontal vs vertical graphic text with underline (letter A, 60 px).
-use filmcraft_geom::{Affine, Vec2};
-use filmcraft_project::graphic::{new_text_layer, new_vertical_text_layer};
-use filmcraft_project::{EffectInstance, ParamValue};
-use filmcraft_render::graphic_clip::render_graphic_layers;
-use filmcraft_render::image::Image;
-use filmcraft_time::Tick;
+use hetsika_geom::{Affine, Vec2};
+use hetsika_project::graphic::{new_text_layer, new_vertical_text_layer};
+use hetsika_project::{EffectInstance, ParamValue};
+use hetsika_render::graphic_clip::render_graphic_layers;
+use hetsika_render::image::Image;
+use hetsika_time::Tick;
 
 fn set(e: &mut EffectInstance, k: &str, v: ParamValue) {
     e.params.get_mut(k).unwrap_or_else(|| panic!("{k}")).value = v;

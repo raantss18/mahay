@@ -3,10 +3,10 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, CharStyle, Document, ImageBlob, ImageObject, Node, NodeKind, TextKind, TextObject, TextRun};
-use vectorcraft_geom::{Affine, Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, ImageMode, ObjectIds, Styling, export, export_full, import};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, CharStyle, Document, ImageBlob, ImageObject, Node, NodeKind, TextKind, TextObject, TextRun};
+use tsipika_geom::{Affine, Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, ImageMode, ObjectIds, Styling, export, export_full, import};
 
 /// A red rectangle with an awkward name, point type and area type of two paragraphs each.
 fn doc() -> Document {
@@ -103,7 +103,7 @@ fn linked_images_are_named_after_their_bytes() {
 
 #[test]
 fn cmyk_tiffs_are_written_as_png() {
-    let inks = vectorcraft_doc::cmyk::Inks::new(2, 2, [0u8, 0, 0, 0].repeat(4)).unwrap();
+    let inks = tsipika_doc::cmyk::Inks::new(2, 2, [0u8, 0, 0, 0].repeat(4)).unwrap();
     let mut d = image_doc("cmyk", vec![]);
     d.images.insert("cmyk".into(), ImageBlob::cmyk_tiff(&inks).unwrap());
     // Browsers don't show TIFF: embedded and linked images are PNG.

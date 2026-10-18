@@ -7,8 +7,8 @@
 
 use std::io::Cursor;
 
-use effectcraft_project::{AlphaMode, Footage, FootageKind};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_project::{AlphaMode, Footage, FootageKind};
+use tselatra_time::{FrameRate, Tick};
 use image::{AnimationDecoder, DynamicImage, codecs::gif::GifDecoder};
 
 use crate::{MediaError, Result};
@@ -129,8 +129,8 @@ impl Anim {
 
 #[cfg(test)]
 mod tests {
-    use effectcraft_project::{Footage, FootageKind};
-    use effectcraft_time::{FrameRate, Tick};
+    use tselatra_project::{Footage, FootageKind};
+    use tselatra_time::{FrameRate, Tick};
 
     use crate::{MediaPool, probe_bytes};
 

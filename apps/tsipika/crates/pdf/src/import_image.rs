@@ -6,11 +6,11 @@
 //! carries it as the image's opacity mask ([`has_mask`]). Every other image is read as RGB by the
 //! interpreter.
 
-use craft_pdf::syntax::Filter;
-use craft_pdf::syntax::object::stream::ImageDecodeParams;
-use craft_pdf::syntax::object::{Array, Dict, Name, Stream};
-use vectorcraft_doc::ImageBlob;
-use vectorcraft_doc::cmyk::{Inks, MAX_CMYK_PIXELS, jpeg_components};
+use mahay_pdf::syntax::Filter;
+use mahay_pdf::syntax::object::stream::ImageDecodeParams;
+use mahay_pdf::syntax::object::{Array, Dict, Name, Stream};
+use tsipika_doc::ImageBlob;
+use tsipika_doc::cmyk::{Inks, MAX_CMYK_PIXELS, jpeg_components};
 
 /// A CMYK image read as RGB: why.
 pub(crate) const UNREAD: &str = "CMYK images whose samples couldn't be read in CMYK were imported in RGB";

@@ -6,9 +6,9 @@
 //! DIMPOST, DIMTOL/DIMLIM with DIMTZIN and DIMTOLJ, DIMALT with DIMALTU/DIMALTZ/DIMALTRND,
 //! DIMAZIN, DIMARCSYM).
 
-use cadcraft_doc::{DimKind, DimStyle, Dimension};
-use cadcraft_fonts::{MTextParams, TextFont};
-use cadcraft_geom::{Arc, Vec2, ccw_sweep};
+use drafitra_doc::{DimKind, DimStyle, Dimension};
+use drafitra_fonts::{MTextParams, TextFont};
+use drafitra_geom::{Arc, Vec2, ccw_sweep};
 
 use crate::units::{NumFormat, format_angle, format_decimal, format_linear};
 
@@ -37,7 +37,7 @@ pub struct DimGeometry {
     /// Text glyph outlines (TrueType), grouped per glyph.
     pub text_glyphs: Vec<Vec<Vec<Vec2>>>,
     /// The font glyphs of `text_glyphs` (outline indices into it).
-    pub text_runs: Vec<cadcraft_fonts::TextGlyph>,
+    pub text_runs: Vec<drafitra_fonts::TextGlyph>,
     pub text_pos: Vec2,
     /// The measured value (DXF group 42): a length, or the angle in radians.
     pub measurement: f64,
@@ -190,14 +190,14 @@ pub struct ArrowGeom {
 }
 
 fn circle_pts(c: Vec2, r: f64) -> Vec<Vec2> {
-    (0..=24).map(|i| c + Vec2::from_angle(f64::from(i) * cadcraft_geom::TAU / 24.0) * r).collect()
+    (0..=24).map(|i| c + Vec2::from_angle(f64::from(i) * drafitra_geom::TAU / 24.0) * r).collect()
 }
 
 fn disc(c: Vec2, r: f64) -> Vec<Vec2> {
     let mut t = Vec::with_capacity(72);
     for i in 0..24 {
-        let a0 = f64::from(i) * cadcraft_geom::TAU / 24.0;
-        let a1 = f64::from(i + 1) * cadcraft_geom::TAU / 24.0;
+        let a0 = f64::from(i) * drafitra_geom::TAU / 24.0;
+        let a1 = f64::from(i + 1) * drafitra_geom::TAU / 24.0;
         t.extend_from_slice(&[c, c + Vec2::from_angle(a0) * r, c + Vec2::from_angle(a1) * r]);
     }
     t
@@ -445,7 +445,7 @@ fn ext_line(origin: Vec2, foot: Vec2, st: &DimStyle, k: f64) -> Option<Vec<Vec2>
 
 /// An angle reduced to the readable range (text never upside down).
 fn readable(a: f64) -> f64 {
-    let mut a = cadcraft_geom::norm_angle(a);
+    let mut a = drafitra_geom::norm_angle(a);
     if a > std::f64::consts::FRAC_PI_2 + 1e-9 && a <= 3.0 * std::f64::consts::FRAC_PI_2 + 1e-9 {
         a -= std::f64::consts::PI;
     }
@@ -493,7 +493,7 @@ pub fn dimension_geometry_with(d: &Dimension, st: &DimStyle, dimscale: f64, font
         if text.is_empty() {
             return (0.0, 0.0);
         }
-        let l = cadcraft_fonts::layout_mtext_with(text, &params(Vec2::ZERO, 0.0));
+        let l = drafitra_fonts::layout_mtext_with(text, &params(Vec2::ZERO, 0.0));
         (l.bounds.width(), l.bounds.height())
     };
     let mut text_angle = 0.0;
@@ -813,14 +813,14 @@ pub fn dimension_geometry_with(d: &Dimension, st: &DimStyle, dimscale: f64, font
             let (vertex, a1, a2, arc_pt) = if matches!(d.kind, DimKind::Angular3P) {
                 (d.p15.xy(), d.p13.xy(), d.p14.xy(), d.defpt.xy())
             } else {
-                let v = cadcraft_geom::line_line_infinite(d.p13.xy(), d.p14.xy(), d.defpt.xy(), d.p15.xy()).map(|x| x.0).unwrap_or(d.p14.xy());
+                let v = drafitra_geom::line_line_infinite(d.p13.xy(), d.p14.xy(), d.defpt.xy(), d.p15.xy()).map(|x| x.0).unwrap_or(d.p14.xy());
                 (v, d.p14.xy(), d.p15.xy(), d.p16.xy())
             };
             let r = vertex.dist(arc_pt).max(1e-9);
             let s = vertex.angle_to(a1);
             let e = vertex.angle_to(a2);
             let arc =
-                if cadcraft_geom::angle_in_sweep(vertex.angle_to(arc_pt), s, e) { Arc::new(vertex, r, s, e) } else { Arc::new(vertex, r, e, s) };
+                if drafitra_geom::angle_in_sweep(vertex.angle_to(arc_pt), s, e) { Arc::new(vertex, r, s, e) } else { Arc::new(vertex, r, e, s) };
             let sweep = ccw_sweep(arc.start, arc.end);
             g.measurement = sweep;
             // DIMAZIN 1 / 2 suppress leading / trailing zeros (DIMZIN's bits 4 / 8).
@@ -838,7 +838,7 @@ pub fn dimension_geometry_with(d: &Dimension, st: &DimStyle, dimscale: f64, font
             // leg 1, and each leg keeps its own extension line, DIMSE1/2 and DIMBLK1/2.
             let (start, finish) = ((sp, -(sp - vertex).perp().normalized()), (ep, (ep - vertex).perp().normalized()));
             let ((p1, dir1), (p2, dir2)) =
-                if cadcraft_geom::angle_in_sweep(vertex.angle_to(arc_pt), s, e) { (start, finish) } else { (finish, start) };
+                if drafitra_geom::angle_in_sweep(vertex.angle_to(arc_pt), s, e) { (start, finish) } else { (finish, start) };
             if !st.suppress_ext1 {
                 g.ext_n(ext_line(vertex + (p1 - vertex).normalized() * vertex.dist(a1).min(r), p1, st, k), false);
             }
@@ -957,12 +957,12 @@ pub fn dimension_geometry_with(d: &Dimension, st: &DimStyle, dimscale: f64, font
             g.dim(ends);
         }
     }
-    g.value = decode_value(&cadcraft_fonts::plain_mtext(&g.mtext));
+    g.value = decode_value(&drafitra_fonts::plain_mtext(&g.mtext));
     if !g.mtext.is_empty() {
-        let l = cadcraft_fonts::layout_mtext_with(&g.mtext, &params(text_mid, text_angle));
+        let l = drafitra_fonts::layout_mtext_with(&g.mtext, &params(text_mid, text_angle));
         for p in l.pieces {
             let base = g.text_glyphs.len();
-            g.text_runs.extend(p.shaped.text.into_iter().map(|t| cadcraft_fonts::TextGlyph { outline: t.outline + base, ..t }));
+            g.text_runs.extend(p.shaped.text.into_iter().map(|t| drafitra_fonts::TextGlyph { outline: t.outline + base, ..t }));
             g.text.extend(p.shaped.strokes);
             g.text_glyphs.extend(p.shaped.glyphs);
         }
@@ -974,13 +974,13 @@ pub fn dimension_geometry_with(d: &Dimension, st: &DimStyle, dimscale: f64, font
 
 /// `%%` codes in the plain value become their characters (`%%c` → ⌀, `%%p` → ±, `%%d` → °).
 fn decode_value(s: &str) -> String {
-    cadcraft_fonts::decode_controls(s).into_iter().map(|(c, _, _)| c).collect()
+    drafitra_fonts::decode_controls(s).into_iter().map(|(c, _, _)| c).collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_geom::Vec3;
+    use drafitra_geom::Vec3;
 
     fn lin(p1: (f64, f64), p2: (f64, f64), on: (f64, f64), rot: f64) -> Dimension {
         Dimension {
@@ -1009,8 +1009,8 @@ mod tests {
         s
     }
 
-    fn bbox(pts: &[Vec<Vec2>]) -> cadcraft_geom::Bounds2 {
-        cadcraft_geom::Bounds2::from_points(pts.iter().flatten().copied())
+    fn bbox(pts: &[Vec<Vec2>]) -> drafitra_geom::Bounds2 {
+        drafitra_geom::Bounds2::from_points(pts.iter().flatten().copied())
     }
 
     #[test]
@@ -1302,7 +1302,7 @@ mod tests {
         let mut d = lin((0.0, 0.0), (0.0, 0.0), (0.0, 0.0), 0.0);
         d.kind = DimKind::Radius;
         d.p15 = Vec3::new(10.0, 0.0, 0.0);
-        d.marks.jogged = Some(cadcraft_doc::JoggedRadius { center: Vec3::new(0.0, -4.0, 0.0), jog: Vec3::new(5.0, -2.0, 0.0) });
+        d.marks.jogged = Some(drafitra_doc::JoggedRadius { center: Vec3::new(0.0, -4.0, 0.0), jog: Vec3::new(5.0, -2.0, 0.0) });
         // Finite control: the jogged line runs from the arrowhead on the arc to the override centre.
         let g = dimension_geometry(&d, &DimStyle::default(), 1.0);
         let jog = g.lines.iter().find(|l| l.len() == 4).expect("jogged dimension line");

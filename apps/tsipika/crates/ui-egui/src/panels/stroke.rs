@@ -3,14 +3,14 @@
 
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, ArrowAlign, Arrowhead, Dash, Document, LineCap, LineJoin, Node, StrokeAlign, StrokeLayer, Unit, WidthProfile};
-use vectorcraft_engine::inspect::StrokeMixed;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, ArrowAlign, Arrowhead, Dash, Document, LineCap, LineJoin, Node, StrokeAlign, StrokeLayer, Unit, WidthProfile};
+use tsipika_engine::inspect::StrokeMixed;
 
 use super::{character, current_stroke, pstate, set_pstate, stroke_mixed};
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 /// Stroke weight dropdown presets in points, from the ladder of `unit` (Units > Stroke): each
 /// unit has its own ladder of round values in that unit, so the dropdown reads `0.25 mm`, not the
@@ -97,7 +97,7 @@ fn arrow_label(a: Option<Arrowhead>) -> &'static str {
 
 /// Apply Stroke panel options (`stroke.set` params): while the Type tool edits text, to the
 /// selected characters' stroke.
-fn set(app: &mut VectorcraftApp, p: Value) {
+fn set(app: &mut TsipikaApp, p: Value) {
     if character::text_editing(app).is_some() {
         character::range_style(app, json!({ "strokeOptions": p }));
     } else {
@@ -107,12 +107,12 @@ fn set(app: &mut VectorcraftApp, p: Value) {
 
 /// The weight the Stroke panel, Control bar and Properties panel show: blank where the selected
 /// objects differ, the default for new art without a stroke.
-pub(crate) fn shown_weight(app: &VectorcraftApp, st: Option<&StrokeLayer>, mixed: &StrokeMixed) -> Option<f64> {
+pub(crate) fn shown_weight(app: &TsipikaApp, st: Option<&StrokeLayer>, mixed: &StrokeMixed) -> Option<f64> {
     (!mixed.weight).then(|| st.map_or(app.session.paint.stroke_width, |s| s.width))
 }
 
 /// The weight spinner (Stroke panel, Control bar): Units > Stroke, presets, blank when mixed.
-pub(crate) fn weight_field(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, weight: Option<f64>, width: f32) {
+pub(crate) fn weight_field(app: &mut TsipikaApp, ui: &mut Ui, id: &str, weight: Option<f64>, width: f32) {
     let unit = app.session.stroke_unit();
     if let Some(w) = widgets::spin_field(ui, id, weight, unit, width, 1.0, 0.0, &weight_presets(unit)) {
         set(app, json!({"weight": w}));
@@ -121,7 +121,7 @@ pub(crate) fn weight_field(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, weig
 
 /// The underlined Stroke link (`label`: the Control bar's "Stroke:", the Properties panel's
 /// "Stroke"): a click toggles the Stroke panel in a popover under it.
-pub(crate) fn link(app: &mut VectorcraftApp, ui: &mut Ui, label: &str) {
+pub(crate) fn link(app: &mut TsipikaApp, ui: &mut Ui, label: &str) {
     let t = Tokens::get(ui.ctx());
     let resp = ui.link(egui::RichText::new(label).size(12.0).color(t.text).underline()).on_hover_text(tl!("Stroke options"));
     widgets::popover(&resp, resp.clicked(), |ui| {
@@ -130,7 +130,7 @@ pub(crate) fn link(app: &mut VectorcraftApp, ui: &mut Ui, label: &str) {
     });
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let st = current_stroke(app);
     let mixed = stroke_mixed(app, ui.ctx());
@@ -323,11 +323,11 @@ pub(super) fn arrow_doc(a: Option<Arrowhead>, start: bool, w: f64, h: f64) -> Op
     } else {
         st.end_arrow = a
     }
-    let mut bp = vectorcraft_geom::BezPath::new();
+    let mut bp = tsipika_geom::BezPath::new();
     bp.move_to((3.0, h / 2.0));
     bp.line_to((w - 3.0, h / 2.0));
     let (id, l) = (doc.alloc_id(), doc.layers[0].id);
-    doc.insert(Some(l), 0, Node::path(id, vectorcraft_geom::PathData::from_bezpath(&bp), ap)).ok()?;
+    doc.insert(Some(l), 0, Node::path(id, tsipika_geom::PathData::from_bezpath(&bp), ap)).ok()?;
     Some(doc)
 }
 
@@ -410,7 +410,7 @@ pub fn paint_profile(ui: &Ui, r: Rect, points: Option<&[(f64, f64, f64)]>, color
 /// The Profile dropdown (Stroke panel, Control bar): the stroke's own silhouette on the button
 /// (a custom profile too), the built-in profiles and then the saved ones in the list. Returns the
 /// id or name picked.
-pub(crate) fn profile_dropdown(app: &VectorcraftApp, ui: &mut Ui, cur: Option<&WidthProfile>) -> Option<String> {
+pub(crate) fn profile_dropdown(app: &TsipikaApp, ui: &mut Ui, cur: Option<&WidthProfile>) -> Option<String> {
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(vec2(100.0, 24.0), Sense::click());
     ui.painter().rect_filled(r, 2, t.input);
@@ -453,7 +453,7 @@ pub(crate) fn profile_dropdown(app: &VectorcraftApp, ui: &mut Ui, cur: Option<&W
     out
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let hidden: bool = pstate(ui.ctx(), "stroke-hide-options");
     if menu_item(ui, if hidden { tl!("Show Options") } else { tl!("Hide Options") }, true, false) {
         set_pstate(ui.ctx(), "stroke-hide-options", !hidden);
@@ -530,7 +530,7 @@ mod tests {
 
     #[test]
     fn arrow_align_buttons_need_a_head() {
-        let mut st = StrokeLayer::new(vectorcraft_color::Paint::None, 1.0);
+        let mut st = StrokeLayer::new(tsipika_color::Paint::None, 1.0);
         assert_eq!(arrow_align_state(None), (ArrowAlign::Extend, false));
         assert_eq!(arrow_align_state(Some(&st)), (ArrowAlign::Extend, false));
         st.start_arrow = Some(Arrowhead::Bar);
@@ -542,7 +542,7 @@ mod tests {
     }
 
     /// Run the panel and its ≡ menu for one headless frame.
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
             show(app, ui);
@@ -553,9 +553,9 @@ mod tests {
 
     #[test]
     fn panel_draws_for_lines_with_and_without_heads() {
-        use vectorcraft_engine::Session;
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
-        let r = |app: &mut VectorcraftApp, id: &str, p: Value| app.session.execute(id, &p).unwrap();
+        use tsipika_engine::Session;
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
+        let r = |app: &mut TsipikaApp, id: &str, p: Value| app.session.execute(id, &p).unwrap();
         r(&mut app, "file.new", json!({"width": 100, "height": 100}));
         frame(&mut app);
         r(&mut app, "shape.line", json!({"x1": 10, "y1": 50, "x2": 90, "y2": 50}));
@@ -571,10 +571,10 @@ mod tests {
 
     #[test]
     fn while_typing_the_panel_strokes_the_selected_characters() {
-        use vectorcraft_doc::NodeKind;
-        use vectorcraft_engine::{Session, ViewInfo};
-        use vectorcraft_tools::{PointerEvent, PointerKind};
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        use tsipika_doc::NodeKind;
+        use tsipika_engine::{Session, ViewInfo};
+        use tsipika_tools::{PointerEvent, PointerKind};
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
         let v = ViewInfo::default();
         app.session.select_tool("type", v).unwrap();

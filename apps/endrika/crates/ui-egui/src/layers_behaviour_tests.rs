@@ -5,8 +5,8 @@
 //! behaviour. What the gestures do to the document is in the engine's `panels_behaviour_tests`.
 
 use egui::{Event, Id, Modifiers, Pos2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;

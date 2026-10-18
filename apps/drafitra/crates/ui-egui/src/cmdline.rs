@@ -3,7 +3,7 @@
 
 use std::collections::HashSet;
 
-use cadcraft_engine::Input;
+use drafitra_engine::Input;
 use egui::{Key, Pos2, Rect, Sense, Stroke, pos2, vec2};
 
 use crate::CadApp;
@@ -13,7 +13,7 @@ use crate::theme::Tokens;
 pub struct CmdLine {
     pub buffer: String,
     /// The selection as of the last frame, to notice when it changes.
-    seen_selection: Vec<cadcraft_doc::Handle>,
+    seen_selection: Vec<drafitra_doc::Handle>,
     /// Something was typed at the command line since the selection was made.
     typed_since_selection: bool,
     pub history: Vec<String>,
@@ -46,7 +46,7 @@ pub fn dyn_frame(app: &CadApp) -> Option<crate::dyninput::Frame> {
     if !st.dynmode || app.session.pending_window.is_some() {
         return None;
     }
-    let p = app.session.current_prompt().filter(cadcraft_engine::pointmod::accepts)?;
+    let p = app.session.current_prompt().filter(drafitra_engine::pointmod::accepts)?;
     Some(crate::dyninput::Frame { base: p.base, cartesian: st.dynpi_cartesian, absolute: st.dynpi_absolute })
 }
 
@@ -119,8 +119,8 @@ fn suggestions(prefix: &str) -> Vec<Suggestion> {
     let mut seen_ids: HashSet<&'static str> = HashSet::new();
 
     // 1. Exact match: alias resolution or exact command name match.
-    let resolved = cadcraft_engine::cmd::resolve_alias(&p);
-    if let Some(spec) = cadcraft_engine::cmd::find_command(&resolved)
+    let resolved = drafitra_engine::cmd::resolve_alias(&p);
+    if let Some(spec) = drafitra_engine::cmd::find_command(&resolved)
         && !spec.id.contains('.')
     {
         let display =
@@ -130,8 +130,8 @@ fn suggestions(prefix: &str) -> Vec<Suggestion> {
     }
 
     // 2. Command ID prefix matches (excluding already matched exact command).
-    let mut id_matches: Vec<&'static cadcraft_engine::CommandSpec> =
-        cadcraft_engine::command_specs().iter().filter(|c| !c.id.contains('.') && !seen_ids.contains(c.id) && c.id.starts_with(&p)).collect();
+    let mut id_matches: Vec<&'static drafitra_engine::CommandSpec> =
+        drafitra_engine::command_specs().iter().filter(|c| !c.id.contains('.') && !seen_ids.contains(c.id) && c.id.starts_with(&p)).collect();
     id_matches.sort_by_key(|c| (c.id.len(), c.id));
     for c in id_matches {
         out.push(Suggestion { id: c.id.to_ascii_uppercase(), display: c.id.to_ascii_uppercase(), label: c.label });
@@ -139,8 +139,8 @@ fn suggestions(prefix: &str) -> Vec<Suggestion> {
     }
 
     // 3. Command alias prefix matches (for commands not yet added).
-    let mut alias_matches: Vec<(&'static str, &'static cadcraft_engine::CommandSpec)> = Vec::new();
-    for c in cadcraft_engine::command_specs() {
+    let mut alias_matches: Vec<(&'static str, &'static drafitra_engine::CommandSpec)> = Vec::new();
+    for c in drafitra_engine::command_specs() {
         if c.id.contains('.') || seen_ids.contains(c.id) {
             continue;
         }
@@ -166,7 +166,7 @@ fn suggestions(prefix: &str) -> Vec<Suggestion> {
 
 impl CmdLine {
     /// Track the selection: a new selection starts with nothing typed since.
-    pub fn watch_selection(&mut self, sel: &[cadcraft_doc::Handle]) {
+    pub fn watch_selection(&mut self, sel: &[drafitra_doc::Handle]) {
         if self.seen_selection != sel {
             self.seen_selection = sel.to_vec();
             self.typed_since_selection = false;
@@ -646,7 +646,7 @@ fn history_window(app: &CadApp, ui: &mut egui::Ui, r: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_engine::Session;
+    use drafitra_engine::Session;
     use egui::{Event, PointerButton};
 
     #[test]
@@ -736,7 +736,7 @@ mod tests {
 #[cfg(test)]
 mod delete_key_tests {
     use super::*;
-    use cadcraft_doc::Handle;
+    use drafitra_doc::Handle;
 
     const PRESS: KeyPress = KeyPress { repeat: false, plain: true };
 
@@ -817,7 +817,7 @@ mod autocomplete_tests {
 
     #[test]
     fn tab_autocompletes_alias_to_resolved_command() {
-        let mut app = CadApp::new(cadcraft_engine::Session::empty(), crate::Services::default());
+        let mut app = CadApp::new(drafitra_engine::Session::empty(), crate::Services::default());
         app.cmd.buffer = "rec".to_string();
         tab(&mut app);
         assert_eq!(app.cmd.buffer, "RECTANG");

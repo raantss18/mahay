@@ -2,8 +2,8 @@
 //! repeated (every other period mirrored, for reflect) as many times as the painted area needs,
 //! and the gradient stretched over those periods.
 
-use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientStop};
-use vectorcraft_geom::{Point, Rect};
+use tsipika_color::{Gradient, GradientGeom, GradientKind, GradientStop};
+use tsipika_geom::{Point, Rect};
 
 /// Most periods a gradient is expanded to.
 pub(super) const MAX_PERIODS: usize = 64;
@@ -88,7 +88,7 @@ fn mirror(period: &[GradientStop]) -> Vec<GradientStop> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_color::Color;
+    use tsipika_color::Color;
 
     fn stops() -> Vec<GradientStop> {
         let mut a = GradientStop::new(0.0, Color::BLACK);

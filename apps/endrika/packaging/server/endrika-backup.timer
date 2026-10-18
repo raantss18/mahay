@@ -1,0 +1,14 @@
+# Runs endrika-backup.service every night (see that file).
+#   sudo systemctl enable --now endrika-backup.timer
+#   systemctl list-timers endrika-backup.timer
+
+[Unit]
+Description=Nightly backup of endrika-server's data directory
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

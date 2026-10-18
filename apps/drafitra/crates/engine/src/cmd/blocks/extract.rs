@@ -4,8 +4,8 @@
 
 use std::collections::BTreeMap;
 
-use cadcraft_doc::{EntityKind, Insert};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{EntityKind, Insert};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 use crate::cmd::curves::KW;
@@ -89,7 +89,7 @@ fn matches(spec: &str, text: &str) -> bool {
 }
 
 /// The attribute values of `ins`: its own, then the constant ones of its block.
-fn values(d: &cadcraft_doc::Drawing, ins: &Insert) -> Vec<(String, String)> {
+fn values(d: &drafitra_doc::Drawing, ins: &Insert) -> Vec<(String, String)> {
     let mut v: Vec<(String, String)> = ins.attribs.iter().map(|a| (a.tag.to_ascii_uppercase(), a.text.value.clone())).collect();
     if let Some(b) = d.block(&ins.block) {
         for e in b.entities.iter() {
@@ -107,7 +107,7 @@ fn values(d: &cadcraft_doc::Drawing, ins: &Insert) -> Vec<(String, String)> {
 /// The block references to extract from: `handles` when given, else model space and the layouts.
 fn found(s: &Session, p: &Value, o: &Options) -> Result<Vec<Found>> {
     let d = s.doc()?;
-    let ents: Vec<std::sync::Arc<cadcraft_doc::Entity>> = if p.get("handles").is_some() || p.get("handle").is_some() {
+    let ents: Vec<std::sync::Arc<drafitra_doc::Entity>> = if p.get("handles").is_some() || p.get("handle").is_some() {
         targets(s, p)?.iter().filter_map(|h| d.entity(*h).cloned()).collect()
     } else {
         d.model.iter().chain(d.layouts.iter().flat_map(|l| l.entities.iter())).cloned().collect()

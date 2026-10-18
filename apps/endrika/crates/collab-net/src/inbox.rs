@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use figcraft_engine::live::{Event, Presence};
+use endrika_engine::live::{Event, Presence};
 
 /// Wakes the UI (the desktop app passes egui's `request_repaint`).
 pub type Waker = Arc<dyn Fn() + Send + Sync>;
@@ -60,7 +60,7 @@ impl Inbox {
 
     /// Everything since the last drain: the events in order, then the latest presence of each
     /// peer.
-    pub fn drain(&self) -> Vec<figcraft_engine::live::Event> {
+    pub fn drain(&self) -> Vec<endrika_engine::live::Event> {
         let mut s = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let mut out: Vec<Event> = s.events.drain(..).collect();
         out.extend(std::mem::take(&mut s.presence).into_iter().map(|(id, p)| Event::Presence(id, p)));

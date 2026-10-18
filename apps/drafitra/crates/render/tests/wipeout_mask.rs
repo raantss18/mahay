@@ -1,10 +1,10 @@
 //! Wipeouts hide what is drawn before them and show their frame per WIPEOUTFRAME (issue #291).
 
-use cadcraft_color::Rgb;
-use cadcraft_doc::{Common, Drawing, EntityKind, Line, Space, Wipeout};
-use cadcraft_geom::{Vec2, Vec3};
-use cadcraft_render::raster::{RasterOptions, View, render};
-use cadcraft_render::{DisplayList, Kind, Options, build, build_plot};
+use drafitra_color::Rgb;
+use drafitra_doc::{Common, Drawing, EntityKind, Line, Space, Wipeout};
+use drafitra_geom::{Vec2, Vec3};
+use drafitra_render::raster::{RasterOptions, View, render};
+use drafitra_render::{DisplayList, Kind, Options, build, build_plot};
 
 fn line() -> EntityKind {
     EntityKind::Line(Line { a: Vec3::new(0.0, 0.0, 0.0), b: Vec3::new(10.0, 10.0, 0.0) })

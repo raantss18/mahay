@@ -1,40 +1,40 @@
 [package]
-name = "vectorcraft-engine"
+name = "tsipika-engine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft engine: sessions, history, selection, the command registry"
+description = "Tsipika engine: sessions, history, selection, the command registry"
 
 [lints]
 workspace = true
 
 [features]
 default = ["bundled-fonts"]
-# The fonts vectorcraft-text bundles (see its `bundled-fonts`). Embedders that supply every font at
-# run time (`vectorcraft_text::FontDb::add_font`) build with `default-features = false`.
-bundled-fonts = ["vectorcraft-text/bundled-fonts"]
+# The fonts tsipika-text bundles (see its `bundled-fonts`). Embedders that supply every font at
+# run time (`tsipika_text::FontDb::add_font`) build with `default-features = false`.
+bundled-fonts = ["tsipika-text/bundled-fonts"]
 
 [dependencies]
 # Which paths stored in documents may be opened.
-craft-docpath = { workspace = true }
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-tools = { workspace = true }
-vectorcraft-text = { workspace = true }
-vectorcraft-render = { workspace = true }
-vectorcraft-pathops = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-trace = { workspace = true }
-vectorcraft-svg = { workspace = true }
-vectorcraft-format = { workspace = true }
-vectorcraft-pdf = { workspace = true }
-vectorcraft-cad = { workspace = true }
-vectorcraft-eps = { workspace = true }
-vectorcraft-metafile = { workspace = true }
-vectorcraft-plugins = { workspace = true }
-vectorcraft-affinity = { workspace = true }
-vectorcraft-scriptcheck = { workspace = true }
+mahay-docpath = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-doc = { workspace = true }
+tsipika-tools = { workspace = true }
+tsipika-text = { workspace = true }
+tsipika-render = { workspace = true }
+tsipika-pathops = { workspace = true }
+tsipika-brush = { workspace = true }
+tsipika-trace = { workspace = true }
+tsipika-svg = { workspace = true }
+tsipika-format = { workspace = true }
+tsipika-pdf = { workspace = true }
+tsipika-cad = { workspace = true }
+tsipika-eps = { workspace = true }
+tsipika-metafile = { workspace = true }
+tsipika-plugins = { workspace = true }
+tsipika-affinity = { workspace = true }
+tsipika-scriptcheck = { workspace = true }
 image = { workspace = true }
 flate2 = { workspace = true }
 # The XML parts of Word documents placed as type (place/docx.rs).
@@ -46,12 +46,12 @@ thiserror = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]
-vectorcraft-affinity = { workspace = true, features = ["synth"] }
+tsipika-affinity = { workspace = true, features = ["synth"] }
 crc32fast = { workspace = true }
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 proptest = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+tsipika-text = { workspace = true, features = ["test-fonts"] }
 wat = { workspace = true }
 # Zstandard streams for the Illustrator editing data fuzz tests.
 ruzstd = { workspace = true }

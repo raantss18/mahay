@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_engine::Session;
+use tselatra_engine::Session;
 use serde_json::json;
 
 use crate::{Outcome, run_code};
@@ -81,18 +81,18 @@ fn eval_file_is_bounded_and_gated() {
 }
 
 #[test]
-fn bridgetalk_identifies_effectcraft() {
+fn bridgetalk_identifies_tselatra() {
     let mut s = session();
     let o = run_code(
         &mut s,
         "[typeof BridgeTalk, BridgeTalk.appName, BridgeTalk.appVersion, BridgeTalk.appSpecifier, BridgeTalk.isRunning('aftereffects'), \
-         BridgeTalk.getSpecifier('effectcraft'), BridgeTalk.getStatus('photoshop'), new BridgeTalk().sender]",
+         BridgeTalk.getSpecifier('tselatra'), BridgeTalk.getStatus('photoshop'), new BridgeTalk().sender]",
         "bt.jsx",
     );
     assert!(o.error.is_none(), "{:?}", o.error);
     let v = env!("CARGO_PKG_VERSION");
-    let spec = format!("effectcraft-{v}");
-    assert_eq!(o.result, json!(["function", "effectcraft", v, spec, false, spec, "ISNOTINSTALLED", spec]));
+    let spec = format!("tselatra-{v}");
+    assert_eq!(o.result, json!(["function", "tselatra", v, spec, false, spec, "ISNOTINSTALLED", spec]));
     // Messages to other applications are unsupported, with a clear error.
     let e = run_code(&mut s, "var bt = new BridgeTalk(); bt.target = 'photoshop'; bt.body = '1'; bt.send();", "bt.jsx").error.expect("unsupported");
     assert!(e.message.contains("not supported"), "{e:?}");

@@ -5,16 +5,16 @@
 //! leaves the document as it was, or as a document that then renders and exports, without a
 //! panic.
 //!
-//! `PROPTEST_CASES=2000 cargo test -p vectorcraft-engine --test plugin_fuzz` runs a deeper search.
+//! `PROPTEST_CASES=2000 cargo test -p tsipika-engine --test plugin_fuzz` runs a deeper search.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use proptest::prelude::*;
 use serde_json::{Map, Value, json};
-use vectorcraft_engine::Session;
-use vectorcraft_plugins::wat as tpl;
-use vectorcraft_testkit::catch_quiet;
-use vectorcraft_testkit::fixtures::rich_session;
+use tsipika_engine::Session;
+use tsipika_plugins::wat as tpl;
+use tsipika_testkit::catch_quiet;
+use tsipika_testkit::fixtures::rich_session;
 
 const DESATURATE: &[u8] = include_bytes!("../../plugins/tests/fixtures/desaturate.wasm");
 
@@ -28,20 +28,20 @@ fn config() -> ProptestConfig {
 }
 
 fn install(s: &mut Session, wasm: &[u8]) -> Result<Value, String> {
-    s.execute("plugin.install", &json!({"dataBase64": vectorcraft_format::base64_encode(wasm)})).map_err(|e| e.to_string())
+    s.execute("plugin.install", &json!({"dataBase64": tsipika_format::base64_encode(wasm)})).map_err(|e| e.to_string())
 }
 
 /// The document renders and exports without panicking.
 fn renders(s: &Session, what: &str) -> Result<(), TestCaseError> {
     let d = &s.doc().unwrap().doc;
     let r = catch_quiet(|| {
-        let mut r = vectorcraft_render::Renderer::new();
+        let mut r = tsipika_render::Renderer::new();
         if let Some(ab) = d.artboards.first() {
             let _ = r.render_region(d, ab.rect, 0.25, true).to_png();
         }
-        let _ = vectorcraft_svg::export(d, &vectorcraft_svg::ExportOptions::default());
-        let _ = vectorcraft_engine::export_pdf(d, &vectorcraft_pdf::PdfOptions::default());
-        let _ = vectorcraft_format::save_file(d);
+        let _ = tsipika_svg::export(d, &tsipika_svg::ExportOptions::default());
+        let _ = tsipika_engine::export_pdf(d, &tsipika_pdf::PdfOptions::default());
+        let _ = tsipika_format::save_file(d);
     });
     r.map_err(|msg| TestCaseError::fail(format!("{what}: panicked: {msg}")))
 }
@@ -221,7 +221,7 @@ proptest! {
         let mut s = rich_session();
         s.execute("select.all", &json!({})).unwrap();
         let st = s.doc().unwrap();
-        let inputs: Vec<u64> = vectorcraft_plugins::objects::filter_targets(&st.doc, &st.selection.objects).iter().map(|i| i.0).collect();
+        let inputs: Vec<u64> = tsipika_plugins::objects::filter_targets(&st.doc, &st.selection.objects).iter().map(|i| i.0).collect();
         let out = output(&objects, &inputs, junk);
         let id = if effect { "fuzz.effect" } else { "fuzz.filter" };
         let src = tpl::returning(&tpl::manifest(id, if effect { "effect" } else { "filter" }, "{}"), &out);

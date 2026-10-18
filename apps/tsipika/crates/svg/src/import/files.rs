@@ -10,7 +10,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use usvg::{ImageHrefResolver, ImageKind, roxmltree};
-use vectorcraft_doc::LinkInfo;
+use tsipika_doc::LinkInfo;
 
 use super::{Edits, href};
 use crate::ImportOptions;
@@ -82,13 +82,13 @@ fn percent_decoded(s: &str) -> String {
 /// Where href `h` points: the path its link keeps, and the file to read when it may be read (a
 /// local file, or one on the network share the SVG is on). A relative path is taken from
 /// `folder`, the SVG's own, made absolute against the working directory when it isn't; without
-/// a folder, only absolute paths are read (see `craft_docpath`). The link keeps the path as
+/// a folder, only absolute paths are read (see `mahay_docpath`). The link keeps the path as
 /// written (decoded) when the folder does not change the path it resolves to, and the path found
 /// when it does (a relative path, or on Windows a path rooted without a drive); the link of a
 /// `file:` URL keeps the path it names.
 fn target(h: &str, folder: Option<&str>) -> (String, Option<String>) {
     let h = h.trim();
-    // `craft_docpath` decodes a `file:` URL itself; any other href is decoded here, once.
+    // `mahay_docpath` decodes a `file:` URL itself; any other href is decoded here, once.
     let file_url = h.get(..5).is_some_and(|s| s.eq_ignore_ascii_case("file:"));
     let stored = if file_url { h.to_string() } else { percent_decoded(h) };
     if !file_url && stored.contains("://") {
@@ -99,10 +99,10 @@ fn target(h: &str, folder: Option<&str>) -> (String, Option<String>) {
         let f = Path::new(f);
         if f.is_absolute() { f.to_path_buf() } else { std::path::absolute(f).unwrap_or_else(|_| f.to_path_buf()) }.join("-")
     });
-    match craft_docpath::resolve(&stored, document.as_deref()) {
+    match mahay_docpath::resolve(&stored, document.as_deref()) {
         Ok(path) => {
             let file = path.is_absolute().then(|| path.to_string_lossy().into_owned());
-            let as_written = !file_url && craft_docpath::resolve(&stored, None).as_ref() == Ok(&path);
+            let as_written = !file_url && mahay_docpath::resolve(&stored, None).as_ref() == Ok(&path);
             let link = if as_written { stored } else { path.to_string_lossy().into_owned() };
             (link, file)
         }
@@ -128,7 +128,7 @@ impl Files {
                 let (path, file) = target(h, opts.folder);
                 let read = file.and_then(|file| opts.read.and_then(|read| read(&file)));
                 let source = match read {
-                    Some((bytes, link)) => files.source(bytes, link).ok_or("is not an image VectorCraft reads"),
+                    Some((bytes, link)) => files.source(bytes, link).ok_or("is not an image Tsipika reads"),
                     None => Err("not found"),
                 };
                 let source = source.or_else(|why| {
@@ -251,7 +251,7 @@ mod tests {
     }
 
     /// Without a folder, a link keeps its path as the href spells it, on every system; with one, a
-    /// drive path keeps it too. The file to read is the absolute path that `craft_docpath`
+    /// drive path keeps it too. The file to read is the absolute path that `mahay_docpath`
     /// resolves on the running system.
     #[test]
     fn links_keep_hrefs_as_written() {

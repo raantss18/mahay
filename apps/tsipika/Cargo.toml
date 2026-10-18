@@ -1,47 +1,47 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
-default-members = ["crates/*", "apps/vectorcraft", "apps/vectorcraft-cli", "xtask"]
+default-members = ["crates/*", "apps/tsipika", "apps/tsipika-cli", "xtask"]
 
 [workspace.package]
-version = "0.13.1"
+version = "0.2.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/vectorcraft"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
-craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d", default-features = false, features = ["interpret", "write"] }
-craft-print = { git = "https://github.com/storytold/craft-libs", rev = "d991bf6792f8ade99c51358bf3c1d902c8cd96b5" }
-craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "82a24b006eefa036b43c09a67fb9a3fbd17ffe63" }
-craft-ui = { git = "https://github.com/storytold/craft-libs", rev = "5c874d51eeb3de70e735c8ce87a59a7dedd47675", features = ["serde"] }
+mahay-pdf = { path = "../../libs/core/crates/pdf", default-features = false, features = ["interpret", "write"] }
+mahay-print = { path = "../../libs/core/crates/print" }
+mahay-docpath = { path = "../../libs/core/crates/docpath", version = "0.1.0" }
+mahay-ui = { path = "../../libs/core/crates/ui", features = ["serde"] }
 # internal
-vectorcraft-geom = { path = "crates/geom" }
-vectorcraft-color = { path = "crates/color" }
-vectorcraft-doc = { path = "crates/doc" }
-vectorcraft-pathops = { path = "crates/pathops" }
-vectorcraft-brush = { path = "crates/brush" }
-vectorcraft-trace = { path = "crates/trace" }
+tsipika-geom = { path = "crates/geom" }
+tsipika-color = { path = "crates/color" }
+tsipika-doc = { path = "crates/doc" }
+tsipika-pathops = { path = "crates/pathops" }
+tsipika-brush = { path = "crates/brush" }
+tsipika-trace = { path = "crates/trace" }
 # Without its default `bundled-fonts`: the engine turns them on (its own default feature), so a
 # library crate never forces them on an embedder that supplies its fonts at run time.
-vectorcraft-text = { path = "crates/text", default-features = false }
-vectorcraft-effects = { path = "crates/effects" }
-vectorcraft-three-d = { path = "crates/three-d" }
-vectorcraft-render = { path = "crates/render" }
-vectorcraft-svg = { path = "crates/svg" }
-vectorcraft-pdf = { path = "crates/pdf" }
-vectorcraft-format = { path = "crates/format" }
-vectorcraft-tools = { path = "crates/tools" }
-vectorcraft-engine = { path = "crates/engine" }
-vectorcraft-ui-egui = { path = "crates/ui-egui" }
-vectorcraft-mcp = { path = "crates/mcp" }
-vectorcraft-testkit = { path = "crates/testkit" }
-vectorcraft-cad = { path = "crates/cad" }
-vectorcraft-eps = { path = "crates/eps" }
-vectorcraft-metafile = { path = "crates/metafile" }
-vectorcraft-plugins = { path = "crates/plugins" }
-vectorcraft-affinity = { path = "crates/affinity" }
-vectorcraft-scriptcheck = { path = "crates/scriptcheck" }
+tsipika-text = { path = "crates/text", default-features = false }
+tsipika-effects = { path = "crates/effects" }
+tsipika-three-d = { path = "crates/three-d" }
+tsipika-render = { path = "crates/render" }
+tsipika-svg = { path = "crates/svg" }
+tsipika-pdf = { path = "crates/pdf" }
+tsipika-format = { path = "crates/format" }
+tsipika-tools = { path = "crates/tools" }
+tsipika-engine = { path = "crates/engine" }
+tsipika-ui-egui = { path = "crates/ui-egui" }
+tsipika-mcp = { path = "crates/mcp" }
+tsipika-testkit = { path = "crates/testkit" }
+tsipika-cad = { path = "crates/cad" }
+tsipika-eps = { path = "crates/eps" }
+tsipika-metafile = { path = "crates/metafile" }
+tsipika-plugins = { path = "crates/plugins" }
+tsipika-affinity = { path = "crates/affinity" }
+tsipika-scriptcheck = { path = "crates/scriptcheck" }
 
 # foundation
 kurbo = { version = "0.13", features = ["serde"] }
@@ -63,7 +63,7 @@ wat = "1.228"
 
 # rendering / formats
 # Without `text` (glyph runs, through glifo and a second skrifa): the renderer draws the outlines
-# vectorcraft-text gives it. The other default features stay.
+# tsipika-text gives it. The other default features stay.
 vello_cpu = { version = "0.2", default-features = false, features = ["std", "png", "u8_pipeline", "f32_pipeline"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "tiff", "bmp", "tga"] }
 # Without `text` and the system fonts (fontdb, harfrust and skrifa, at other versions than ours):
@@ -85,7 +85,7 @@ ruzstd = { version = "0.9.1", default-features = false, features = ["std"] }
 hayro-ccitt = "0.3"
 jpeg-encoder = { version = "0.6", default-features = false, features = ["std"] }
 gif = { version = "0.14", default-features = false, features = ["std", "raii_no_panic"] }
-# CMYK image samples (vectorcraft-doc's cmyk module): the image crate's own TIFF and JPEG
+# CMYK image samples (tsipika-doc's cmyk module): the image crate's own TIFF and JPEG
 # decoders, read directly (the image crate converts CMYK to RGB).
 tiff = "0.11"
 zune-jpeg = "0.5"
@@ -105,7 +105,7 @@ unsafe_code = "deny"
 
 [workspace.lints.clippy]
 dbg_macro = "warn"
-# VectorCraft never crashes: shipped code returns `Result`/`Option` instead of panicking (see
+# Tsipika never crashes: shipped code returns `Result`/`Option` instead of panicking (see
 # AGENTS.md › Robustness). Tests may unwrap (clippy.toml).
 unwrap_used = "deny"
 expect_used = "deny"
@@ -125,7 +125,18 @@ lto = "thin"
 codegen-units = 1
 
 [patch.crates-io]
-hayro-syntax = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d" }
-hayro-interpret = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d" }
-hayro-jbig2 = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d" }
-krilla = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d" }
+# Android backends through mahay-android (document picker, clipboard); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+arboard = { path = "../../libs/core/vendor/arboard" }
+hayro-syntax = { path = "../../libs/core/vendor/hayro-syntax" }
+hayro-interpret = { path = "../../libs/core/vendor/hayro-interpret" }
+hayro-jbig2 = { path = "../../libs/core/vendor/hayro-jbig2" }
+krilla = { path = "../../libs/core/vendor/krilla" }
+
+# Android release: size first, whole-program LTO, no symbols.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true
+opt-level = "s"

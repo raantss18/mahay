@@ -376,6 +376,38 @@ pub fn still_valid(update: &Downloaded) -> bool {
     file_sha256(&update.path).as_deref() == Some(update.sha256.as_str())
 }
 
+/// Linux AppImage: the running AppImage (`$APPIMAGE`), when the app runs from one.
+pub fn running_appimage() -> Option<PathBuf> {
+    if !cfg!(all(target_os = "linux", not(target_os = "android"))) {
+        return None;
+    }
+    std::env::var_os("APPIMAGE").map(PathBuf::from).filter(|p| p.is_file())
+}
+
+/// Linux AppImage: replace the running AppImage with the verified update (copy next to it,
+/// check again, make executable, rename over it: atomic on the same file system), start the
+/// new one and exit. Returns only on failure.
+pub fn install_appimage(update: &Downloaded) -> Result<(), String> {
+    let target = running_appimage().ok_or("Mahay isn't running from an AppImage: update it with your package manager.")?;
+    if !still_valid(update) {
+        return Err(Error::BadHash.to_string());
+    }
+    let tmp = target.with_extension("new");
+    std::fs::copy(&update.path, &tmp).map_err(|e| e.to_string())?;
+    if file_sha256(&tmp).as_deref() != Some(update.sha256.as_str()) {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(Error::BadHash.to_string());
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
+    }
+    std::fs::rename(&tmp, &target).map_err(|e| e.to_string())?;
+    std::process::Command::new(&target).spawn().map_err(|e| e.to_string())?;
+    std::process::exit(0);
+}
+
 /// The notes of every version newer than `installed`, from the release's `CHANGELOG.md`.
 pub fn notes_since(release: &Release, installed: &str) -> Option<String> {
     let url = format!("https://raw.githubusercontent.com/{REPO}/v{}/CHANGELOG.md", release.version);

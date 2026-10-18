@@ -1,8 +1,8 @@
 //! Blend modes and transparency groups in PDF export.
 
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node, NodeId};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::{Appearance, Document, Node, NodeId};
+use tsipika_geom::{Rect, shapes};
 
 use crate::*;
 
@@ -93,7 +93,7 @@ fn a_knockout_group_with_blending_elements_is_non_isolated_unless_isolated() {
         let mut d = half_group(isolate);
         let g = d.layers[0].children().unwrap()[1].id;
         let n = d.node_mut(g).unwrap();
-        (n.opacity, n.knockout) = (1.0, vectorcraft_doc::Knockout::On);
+        (n.opacity, n.knockout) = (1.0, tsipika_doc::Knockout::On);
         assert_eq!(text(&d).contains("/Itrue"), isolate, "isolate {isolate}");
     }
 }

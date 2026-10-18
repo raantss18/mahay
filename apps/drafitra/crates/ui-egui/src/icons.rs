@@ -1,9 +1,9 @@
-//! CADCraft's icon set, drawn in code (original work, MIT OR Apache-2.0 with the codebase).
+//! Drafitra's icon set, drawn in code (original work, MIT OR Apache-2.0 with the codebase).
 //!
 //! Icons are line drawings on a 24×24 design grid: light strokes for existing geometry, blue for
 //! the geometry a command creates and orange dots for picked points.
 
-use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
+use mahay_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
 use egui::{Color32, Painter, Pos2, Rect, Stroke, pos2};
 
 use crate::theme::Tokens;
@@ -908,7 +908,7 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
     }
 }
 
-/// A shared button interaction with CADCraft's original multicolor icon painting.
+/// A shared button interaction with Drafitra's original multicolor icon painting.
 pub fn button(ui: &mut egui::Ui, icon: Icon, size: f32, tooltip: &str, selected: bool) -> egui::Response {
     let t = Tokens::get();
     let visuals = |fill| ButtonVisuals { fill, stroke: Stroke::NONE, icon: t.icon };

@@ -1,7 +1,7 @@
 //! Panel moves use the real app shell, retain commands, and survive a complete UI-state reload.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services, UiState, docking::Panel};
+use drafitra_engine::Session;
+use drafitra_ui_egui::{CadApp, Services, UiState, docking::Panel};
 use egui::{Event, Modifiers, PointerButton, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -114,7 +114,7 @@ fn docking_renders_default_float_and_redocked_at_normal_and_narrow_sizes() {
                 let content = harness.state().ui.docking.layout.panels();
                 assert_eq!(content.len(), 4);
                 assert!(content.contains(&&Panel::Canvas));
-                if let Ok(directory) = std::env::var("CRAFT_UI_DOCKING_DIR") {
+                if let Ok(directory) = std::env::var("MAHAY_UI_DOCKING_DIR") {
                     std::fs::create_dir_all(&directory).unwrap();
                     harness.render().unwrap().save(format!("{directory}/cad-{width}-{scale}-{state}.png")).unwrap();
                 }
@@ -125,7 +125,7 @@ fn docking_renders_default_float_and_redocked_at_normal_and_narrow_sizes() {
 
 #[test]
 fn automation_reaches_split_stack_resize_and_tab_reorder_through_the_same_handler() {
-    use craft_ui::{docking::Action, layout::SplitSize};
+    use mahay_ui::{docking::Action, layout::SplitSize};
     let mut h = harness(None, 1280.0, 1.0);
     h.state_mut()
         .run(
@@ -171,9 +171,9 @@ fn stack_boundary_resizes_by_pointer_and_keyboard_without_changing_the_drawing()
 
 #[test]
 fn grouped_restore_preserves_order_and_rectangle_in_both_close_orders_after_reload() {
-    use craft_ui::docking::{Action, Placement};
+    use mahay_ui::docking::{Action, Placement};
     for order in [[Panel::Layers, Panel::Properties], [Panel::Properties, Panel::Layers]] {
-        let mut workspace = cadcraft_ui_egui::docking::Workspace::default();
+        let mut workspace = drafitra_ui_egui::docking::Workspace::default();
         let rect = [50.0, 60.0, 320.0, 400.0];
         workspace.apply(Action::Float { panel: Panel::Layers, rect }).unwrap();
         workspace
@@ -278,7 +278,7 @@ fn reset_typed_in_canvas_preserves_authoritative_workspace_replacement() {
     h.run_steps(3);
     let drawing = h.state().session.doc().unwrap().clone();
     type_command(&mut h, "ui.dock.reset");
-    let expected = cadcraft_ui_egui::docking::Workspace::default();
+    let expected = drafitra_ui_egui::docking::Workspace::default();
     assert_eq!(h.state().ui.docking.layout, expected.layout);
     assert_eq!(h.state().ui.docking.hidden, expected.hidden);
     assert_eq!(h.state().session.doc().unwrap(), &drawing);
@@ -286,8 +286,8 @@ fn reset_typed_in_canvas_preserves_authoritative_workspace_replacement() {
 
 #[test]
 fn canvas_reset_during_splitter_drag_discards_old_resize_and_ends_gesture() {
-    use craft_ui::docking::Action;
-    use craft_ui::layout::SplitSize;
+    use mahay_ui::docking::Action;
+    use mahay_ui::layout::SplitSize;
     let mut h = harness(None, 1280.0, 1.0);
     // Give the old root divider a size different from Reset's 220px ToolSets pane.
     h.state_mut()
@@ -300,7 +300,7 @@ fn canvas_reset_during_splitter_drag_discards_old_resize_and_ends_gesture() {
         .unwrap();
     h.run_steps(3);
     let drawing = h.state().session.doc().unwrap().clone();
-    let splitter = egui::Id::new("cadcraft-docking").with(("split", Vec::<bool>::new()));
+    let splitter = egui::Id::new("drafitra-docking").with(("split", Vec::<bool>::new()));
     let from = h.ctx.read_response(splitter).expect("rendered root divider").rect.center();
     h.event(Event::PointerMoved(from));
     h.run_steps(1);
@@ -319,7 +319,7 @@ fn canvas_reset_during_splitter_drag_discards_old_resize_and_ends_gesture() {
     h.event(Event::Text("ui.dock.reset".into()));
     h.event(Event::Key { key: egui::Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(1);
-    let expected = cadcraft_ui_egui::docking::Workspace::default();
+    let expected = drafitra_ui_egui::docking::Workspace::default();
     assert!(h.state().cmd.buffer.is_empty(), "Canvas submitted the actual reset command");
     assert_eq!(h.state().ui.docking.layout, expected.layout, "old-frame resize must not modify Reset's tree");
     assert_eq!(h.state().ui.docking.hidden, expected.hidden);

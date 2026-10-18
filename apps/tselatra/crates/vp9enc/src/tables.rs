@@ -1,5 +1,5 @@
 //! Tables from the VP9 Bitstream & Decoding Process Specification v0.6 (section 10), as
-//! transcribed in FilmCraft's first-party decoder `filmcraft-vp9` (MIT OR Apache-2.0, the same
+//! transcribed in Hetsika's first-party decoder `hetsika-vp9` (MIT OR Apache-2.0, the same
 //! licence as this crate).
 
 #![allow(clippy::unreadable_literal)]

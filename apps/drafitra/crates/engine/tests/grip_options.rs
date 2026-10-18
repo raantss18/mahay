@@ -2,9 +2,9 @@
 //! Copy, Undo, Reference and eXit; Enter cycles the modes; several grips can be hot at once.
 //! A whole grip edit, copies included, is one undo step.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle};
-use cadcraft_engine::geom::Vec2;
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle};
+use drafitra_engine::geom::Vec2;
 use serde_json::json;
 
 fn line(s: &mut Session, a: [f64; 2], b: [f64; 2]) -> Handle {

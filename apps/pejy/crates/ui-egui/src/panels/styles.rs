@@ -43,7 +43,7 @@ fn list(app: &mut DesignApp, ui: &mut egui::Ui, para: bool) {
         g
     };
     for n in names.iter().filter(|n| !n.contains('/')) {
-        if para && n == designcraft_doc::NO_PARA_STYLE {
+        if para && n == pejy_doc::NO_PARA_STYLE {
             continue;
         }
         style_row(app, ui, para, n, current.as_deref(), overrides > 0, &groups, &t);
@@ -119,7 +119,7 @@ fn style_row(app: &mut DesignApp, ui: &mut egui::Ui, para: bool, n: &str, curren
     let row_label = format!("{label}{}", if current == Some(n) && overridden { "+" } else { "" });
     resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, current == Some(n), &row_label));
     crate::rtl::paint(ui.painter(), row.min + vec2(8.0, 11.0), egui::Align2::LEFT_CENTER, &row_label, egui::FontId::proportional(12.5), t.text);
-    let editable = n != if para { designcraft_doc::NO_PARA_STYLE } else { designcraft_doc::NO_CHAR_STYLE };
+    let editable = n != if para { pejy_doc::NO_PARA_STYLE } else { pejy_doc::NO_CHAR_STYLE };
     if resp.double_clicked() && editable {
         crate::dialogs::open_style_options(app, para, n);
     } else if resp.clicked() {
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn selected_style_context_menu_redefines_its_format() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let frame = app.run("frame.create", json!({"rect":[36,36,300,200],"content":"text","text":"Headline"})).unwrap();
         app.run("text.select", json!({"story":frame["story"],"anchor":0,"focus":8})).unwrap();
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn paragraph_color_override_is_marked_and_cleared_from_the_row_menu() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let f = app.run("frame.create", json!({"rect": [36,36,300,200], "content": "text", "text": "Header"})).unwrap();
         app.run("text.select", json!({"story": f["story"], "anchor": 0, "focus": 6})).unwrap();
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn named_character_styles_and_redundant_local_values_are_not_paragraph_overrides() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let f = app.run("frame.create", json!({"rect": [36,36,300,200], "content": "text", "text": "Body text"})).unwrap();
         app.run("text.select", json!({"story": f["story"], "anchor": 0, "focus": 4})).unwrap();
@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn character_style_plus_captures_selection_for_reuse() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         let frame = app.run("frame.create", json!({"rect": [36, 36, 300, 200], "content": "text", "text": "alpha beta"})).unwrap();
         app.run("text.select", json!({"story": frame["story"], "anchor": 0, "focus": 5})).unwrap();
@@ -313,7 +313,7 @@ mod tests {
         h.run_steps(3);
         let app = h.state_mut();
         let style = app.session.doc().unwrap().doc.styles.char_style("Character Style 1").unwrap();
-        assert_eq!(style.chars, designcraft_doc::CharAttrs { underline: Some(true), ..Default::default() });
+        assert_eq!(style.chars, pejy_doc::CharAttrs { underline: Some(true), ..Default::default() });
         assert_eq!(app.session.doc().unwrap().selection, selection);
         assert_eq!(app.session.doc().unwrap().history.undo.len(), undo_len + 1);
         app.run("text.select", json!({"story": frame["story"], "anchor": 6, "focus": 10})).unwrap();

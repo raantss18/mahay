@@ -3,9 +3,9 @@
 
 use std::collections::HashMap;
 
-use cadcraft_color::Color;
-use cadcraft_doc::{CellBorder, CellStyle, Drawing, Lineweight, Table, TableStyle};
-use cadcraft_geom::Vec2;
+use drafitra_color::Color;
+use drafitra_doc::{CellBorder, CellStyle, Drawing, Lineweight, Table, TableStyle};
+use drafitra_geom::Vec2;
 
 use crate::{Builder, Ctx, Ink, ink};
 
@@ -135,7 +135,7 @@ pub fn table_geometry(d: &Drawing, t: &Table) -> TableGeom {
 /// `origin`; merges are cut at the part's edge.
 fn part_table(t: &Table, rows: &[usize], origin: Vec2) -> Table {
     let cols = t.col_widths.len();
-    let mut cells: Vec<Vec<cadcraft_doc::TableCell>> = rows.iter().map(|r| t.cells.get(*r).cloned().unwrap_or_default()).collect();
+    let mut cells: Vec<Vec<drafitra_doc::TableCell>> = rows.iter().map(|r| t.cells.get(*r).cloned().unwrap_or_default()).collect();
     for (i, row) in cells.iter_mut().enumerate() {
         row.resize_with(cols, Default::default);
         for cell in row.iter_mut() {
@@ -353,17 +353,17 @@ pub(crate) fn draw(b: &mut Builder, ctx: &Ctx, t: &Table, rgb: Ink, lw: f32) {
     }
     for tx in &g.texts {
         let ts = crate::text_style(ctx.d, &tx.style);
-        let font = cadcraft_fonts::TextFont::resolve(&ts.font);
+        let font = drafitra_fonts::TextFont::resolve(&ts.font);
         // Cell content is MTEXT (`\P`, `{\Q15;…}`, `\F…;`): laid out as such, at the cell's
         // alignment point (its numbering is MTEXT's attachment).
-        let mp = cadcraft_fonts::MTextParams {
+        let mp = drafitra_fonts::MTextParams {
             attach: tx.attach,
             font,
             width_factor: ts.width_factor,
             oblique: ts.oblique,
-            ..cadcraft_fonts::MTextParams::new(tx.at, tx.height)
+            ..drafitra_fonts::MTextParams::new(tx.at, tx.height)
         };
-        let layout = cadcraft_fonts::layout_mtext_with(&tx.text, &mp);
+        let layout = drafitra_fonts::layout_mtext_with(&tx.text, &mp);
         for piece in &layout.pieces {
             b.shaped(ctx, style_ink(tx.color, rgb), lw, &piece.shaped);
         }

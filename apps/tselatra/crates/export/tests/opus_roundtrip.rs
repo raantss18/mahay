@@ -1,9 +1,9 @@
-//! Round trip of `effectcraft-opusenc` through FilmCraft's spec-derived Opus decoder, plus an
+//! Round trip of `tselatra-opusenc` through Hetsika's spec-derived Opus decoder, plus an
 //! ffmpeg oracle (skipped when ffmpeg is not installed) reading an Ogg Opus file written here.
 
 use std::process::Command;
 
-use effectcraft_opusenc::OpusEncoder;
+use tselatra_opusenc::OpusEncoder;
 
 const SR: f32 = 48_000.0;
 const FRAME: usize = OpusEncoder::FRAME_SIZE;
@@ -20,9 +20,9 @@ fn encode(pcm: &[f32], channels: u8, bitrate: u32) -> (OpusEncoder, Vec<Vec<u8>>
     (enc, packets)
 }
 
-/// Decodes with filmcraft-opus, drops the pre-skip and returns planar channels of `len` samples.
+/// Decodes with hetsika-opus, drops the pre-skip and returns planar channels of `len` samples.
 fn decode(head: &[u8], packets: &[Vec<u8>], len: usize) -> Vec<Vec<f32>> {
-    let mut dec = filmcraft_opus::Decoder::new(head).expect("OpusHead");
+    let mut dec = hetsika_opus::Decoder::new(head).expect("OpusHead");
     dec.set_trim_pre_skip(true);
     let mut out: Vec<Vec<f32>> = vec![Vec::new(); dec.channels()];
     for p in packets {
@@ -303,7 +303,7 @@ fn ogg_page(out: &mut Vec<u8>, packet: &[u8], header_type: u8, granule: u64, seq
 fn ogg_opus(enc: &OpusEncoder, packets: &[Vec<u8>], len: usize) -> Vec<u8> {
     let mut out = Vec::new();
     ogg_page(&mut out, &enc.opus_head(), 0x02, 0, 0);
-    let vendor = b"effectcraft-opusenc";
+    let vendor = b"tselatra-opusenc";
     let mut tags = b"OpusTags".to_vec();
     tags.extend_from_slice(&(vendor.len() as u32).to_le_bytes());
     tags.extend_from_slice(vendor);
@@ -342,7 +342,7 @@ fn ffmpeg_oracle_decodes_ogg_opus() {
             }
         }
         let (enc, packets) = encode(&pcm, channels, rate);
-        let path = std::env::temp_dir().join(format!("effectcraft-opusenc-{}-{channels}.opus", std::process::id()));
+        let path = std::env::temp_dir().join(format!("tselatra-opusenc-{}-{channels}.opus", std::process::id()));
         std::fs::write(&path, ogg_opus(&enc, &packets, len)).unwrap();
         let out = Command::new("ffmpeg")
             .args(["-v", "error", "-i"])

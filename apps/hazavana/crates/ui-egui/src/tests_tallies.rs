@@ -5,13 +5,13 @@ use std::sync::Arc;
 
 use serde_json::json;
 
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 /// A library of photos that are files in folders, taken on different days (the demo's photos are in no folder),
 /// some of them keyworded.
-fn app() -> LightcraftApp {
-    use lightcraft_catalog::{Op, Photo, Source};
-    let mut s = lightcraft_engine::Session::new();
+fn app() -> HazavanaApp {
+    use hazavana_catalog::{Op, Photo, Source};
+    let mut s = hazavana_engine::Session::new();
     let mut ids = Vec::new();
     for i in 0..60usize {
         let id = s.catalog.alloc_photo_id();
@@ -23,11 +23,11 @@ fn app() -> LightcraftApp {
     }
     s.execute("library.select", &json!({"ids": ids.iter().step_by(2).collect::<Vec<_>>()})).unwrap();
     s.execute("photo.setMeta", &json!({"addKeywords": ["travel"]})).unwrap();
-    LightcraftApp::new(s, Services { png: None, ..Default::default() })
+    HazavanaApp::new(s, Services { png: None, ..Default::default() })
 }
 
 /// The tallies as the panels would show them now.
-fn shown(a: &mut LightcraftApp) -> String {
+fn shown(a: &mut HazavanaApp) -> String {
     let cat = &a.session.catalog;
     format!(
         "{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
@@ -40,7 +40,7 @@ fn shown(a: &mut LightcraftApp) -> String {
 }
 
 /// The same tallies made from every photo.
-fn fresh(a: &LightcraftApp) -> String {
+fn fresh(a: &HazavanaApp) -> String {
     let cat = &a.session.catalog;
     format!(
         "{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
@@ -58,7 +58,7 @@ fn a_tally_kept_through_an_edit_is_the_tally_made_from_every_photo() {
     let ids: Vec<u64> = a.session.visible_cloned().iter().map(|p| p.0).collect();
     let mut dice = 5u64;
     let mut roll = |sides: usize| {
-        dice = lightcraft_catalog::mix64(dice);
+        dice = hazavana_catalog::mix64(dice);
         (dice % sides as u64) as usize
     };
     assert_eq!(shown(&mut a), fresh(&a));
@@ -71,7 +71,7 @@ fn a_tally_kept_through_an_edit_is_the_tally_made_from_every_photo() {
         let flag = ["pick", "reject", "none"][roll(3)];
         // where a file is, when a photo was taken, a photo that comes or goes for good
         {
-            use lightcraft_catalog::{Op, Photo, PhotoId, Source};
+            use hazavana_catalog::{Op, Photo, PhotoId, Source};
             let n = roll(1000);
             let moved = match roll(8) {
                 0 => {
@@ -122,7 +122,7 @@ fn a_rating_or_a_slider_keeps_every_tally_and_a_keyword_keeps_the_folders_and_da
     let mut a = app();
     let id = a.session.visible_cloned()[0].0;
     a.session.execute("library.select", &json!({"ids": [id]})).unwrap();
-    let look = |a: &mut LightcraftApp| {
+    let look = |a: &mut HazavanaApp| {
         let cat = &a.session.catalog;
         (a.caches.folder_tree(cat), a.caches.keyword_tree(cat), a.caches.date_groups(cat), a.caches.person_names(cat))
     };

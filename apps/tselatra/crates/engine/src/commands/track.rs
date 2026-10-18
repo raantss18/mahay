@@ -5,10 +5,10 @@
 //! A tracker is addressed by `layer` (the tracked layer, a.k.a. Motion Source) and `tracker`
 //! (group uid, name or 1-based index); both default to the Tracker panel's Current Track.
 
-use effectcraft_project::build::Ids;
-use effectcraft_project::tracking::{self, LowConfidence, TrackChannel, TrackKind, TrackerSettings};
-use effectcraft_project::{ItemId, Layer, LayerId, Node, PropGroup, Uid, Value};
-use effectcraft_time::Tick;
+use tselatra_project::build::Ids;
+use tselatra_project::tracking::{self, LowConfidence, TrackChannel, TrackKind, TrackerSettings};
+use tselatra_project::{ItemId, Layer, LayerId, Node, PropGroup, Uid, Value};
+use tselatra_time::Tick;
 use serde_json::json;
 
 use super::{CommandSpec, b_p, bad, comp_id, f_p, frontend, has_comp, layer_mut, layer_p, resolve_layer, str_p};
@@ -82,7 +82,7 @@ pub fn specs() -> Vec<CommandSpec> {
 // ---------- enablement ----------
 
 fn trackable(l: &Layer) -> bool {
-    l.has_video() && !matches!(l.source, effectcraft_project::LayerSource::Text | effectcraft_project::LayerSource::Shape)
+    l.has_video() && !matches!(l.source, tselatra_project::LayerSource::Text | tselatra_project::LayerSource::Shape)
 }
 
 fn can_track(s: &Session) -> std::result::Result<(), String> {
@@ -146,12 +146,12 @@ pub(crate) fn current(s: &Session, p: &V, cmd: &str) -> Result<(ItemId, LayerId,
     Ok((cid, lid, uid))
 }
 
-fn tracker_mut(proj: &mut effectcraft_project::Project, cid: ItemId, lid: LayerId, uid: Uid) -> Result<&mut PropGroup> {
+fn tracker_mut(proj: &mut tselatra_project::Project, cid: ItemId, lid: LayerId, uid: Uid) -> Result<&mut PropGroup> {
     layer_mut(proj, cid, lid)?.props.find_group_mut(uid).ok_or_else(|| EngineError::Other("tracker gone".into()))
 }
 
 fn layer_size(s: &Session, cid: ItemId, l: &Layer) -> [f64; 2] {
-    let (w, h) = effectcraft_render::source_size(&s.project, l);
+    let (w, h) = tselatra_render::source_size(&s.project, l);
     if w == 0 {
         let c = s.project.comp(cid);
         c.map(|c| [c.width as f64, c.height as f64]).unwrap_or([1920.0, 1080.0])
@@ -161,7 +161,7 @@ fn layer_size(s: &Session, cid: ItemId, l: &Layer) -> [f64; 2] {
 }
 
 /// The layer directly above `lid` (the default Motion Target).
-fn layer_above(comp: &effectcraft_project::Comp, lid: LayerId) -> Option<LayerId> {
+fn layer_above(comp: &tselatra_project::Comp, lid: LayerId) -> Option<LayerId> {
     let i = comp.layers.iter().position(|l| l.id == lid)?;
     i.checked_sub(1).map(|i| comp.layers[i].id)
 }
@@ -337,11 +337,11 @@ fn options(s: &mut Session, p: &V) -> Result<V> {
     };
     let action = match str_p(p, "action") {
         None => None,
-        Some(a) => Some(match effectcraft_track::ConfidenceAction::from_name(a) {
-            Some(effectcraft_track::ConfidenceAction::Continue) => LowConfidence::Continue,
-            Some(effectcraft_track::ConfidenceAction::Stop) => LowConfidence::Stop,
-            Some(effectcraft_track::ConfidenceAction::Extrapolate) => LowConfidence::Extrapolate,
-            Some(effectcraft_track::ConfidenceAction::Adapt) => LowConfidence::Adapt,
+        Some(a) => Some(match tselatra_track::ConfidenceAction::from_name(a) {
+            Some(tselatra_track::ConfidenceAction::Continue) => LowConfidence::Continue,
+            Some(tselatra_track::ConfidenceAction::Stop) => LowConfidence::Stop,
+            Some(tselatra_track::ConfidenceAction::Extrapolate) => LowConfidence::Extrapolate,
+            Some(tselatra_track::ConfidenceAction::Adapt) => LowConfidence::Adapt,
             None => return Err(bad("track.options", "action: continue|stop|extrapolate|adapt")),
         }),
     };
@@ -470,7 +470,7 @@ fn analyze(s: &mut Session, p: &V) -> Result<V> {
 
 /// Comp times to analyse from the CTI (`now`) in `dir`, bounded by `start` / `end` and the
 /// layer's In/Out points; the first is the start frame.
-pub(crate) fn analysis_times(comp: &effectcraft_project::Comp, layer: &Layer, dir: Direction, now: Tick, start: Option<Tick>, end: Option<Tick>) -> Vec<Tick> {
+pub(crate) fn analysis_times(comp: &tselatra_project::Comp, layer: &Layer, dir: Direction, now: Tick, start: Option<Tick>, end: Option<Tick>) -> Vec<Tick> {
     let fd = comp.frame_duration();
     let lo = layer.in_point.max(Tick::ZERO);
     let hi = layer.out_point.min(comp.duration) - fd;

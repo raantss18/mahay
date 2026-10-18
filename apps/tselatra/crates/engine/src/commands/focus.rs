@@ -2,9 +2,9 @@
 //! Layer (both add an expression to Focus Distance, as After Effects does) and Set Focus Distance
 //! to Layer (a one-off value).
 
-use effectcraft_geom::vec3;
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::{Comp, Expression, ItemId, LayerId};
+use tselatra_geom::vec3;
+use tselatra_keyframe::Value as KV;
+use tselatra_project::{Comp, Expression, ItemId, LayerId};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, comp_id, layer_mut, resolve_layer};
@@ -65,11 +65,11 @@ fn link_layer(s: &mut Session, p: &Value) -> Result<Value> {
 /// Camera depth of `target`'s anchor point at the current time.
 pub(crate) fn focus_depth(s: &Session, cid: ItemId, cam: LayerId, target: LayerId) -> Option<f64> {
     let comp = s.project.comp(cid)?;
-    let mut ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, s.time_of(cid));
+    let mut ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, s.time_of(cid));
     ctx.expr = s.expr.as_deref();
     let c = ctx.comp.layer(cam)?;
     let t = ctx.comp.layer(target)?;
-    let cs = effectcraft_render::three_d::camera::layer_camera(&ctx, c);
+    let cs = tselatra_render::three_d::camera::layer_camera(&ctx, c);
     let a = t.transform().map(|tr| ctx.v3(t, tr, "anchor", [0.0; 3])).unwrap_or([0.0; 3]);
     Some(cs.depth(ctx.world_matrix(t).apply(vec3(a[0], a[1], a[2]))))
 }

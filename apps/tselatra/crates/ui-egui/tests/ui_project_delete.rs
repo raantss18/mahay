@@ -1,15 +1,15 @@
 //! Project-panel deletion uses its selection, even when a Timeline layer is still selected.
 //! Shift+Delete deletes it without asking (Delete Project Items Without Confirmation).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::{Footage, FootageKind, ItemId, ItemKind, LayerId};
-use effectcraft_ui_egui::dock::PanelKind;
-use effectcraft_ui_egui::{Dialog, EffectcraftApp};
+use tselatra_engine::Session;
+use tselatra_engine::project::{Footage, FootageKind, ItemId, ItemKind, LayerId};
+use tselatra_ui_egui::dock::PanelKind;
+use tselatra_ui_egui::{Dialog, TselatraApp};
 use egui::{Event, Key, Modifiers, pos2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn harness() -> (Harness<'static, EffectcraftApp>, Vec<ItemId>, LayerId) {
+fn harness() -> (Harness<'static, TselatraApp>, Vec<ItemId>, LayerId) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Delete me", "width": 320, "height": 180, "duration": 4})).unwrap();
     let comp = s.active_comp_id().unwrap();
@@ -24,14 +24,14 @@ fn harness() -> (Harness<'static, EffectcraftApp>, Vec<ItemId>, LayerId) {
     );
     let folder = ItemId(s.execute("project.newFolder", json!({"name": "Folder"})).unwrap()["item"].as_u64().unwrap());
     let keep = LayerId(s.execute("layer.newNull", json!({"name": "Keep this layer"})).unwrap()["layer"].as_u64().unwrap());
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     let folders: Vec<u64> = h.state().session.project.items.values().filter(|i| i.is_folder()).map(|i| i.id.0).collect();
     h.state_mut().ui.project_open_folders.extend(folders);
     h.run_steps(3);
     (h, vec![comp, solid, footage, folder], keep)
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str, modifiers: Modifiers) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str, modifiers: Modifiers) {
     // Let a dialog opened by the previous input finish its first (sizing) frame, so its buttons
     // are where the automation tree says.
     h.run_steps(2);
@@ -46,7 +46,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str, modifiers: Modifiers) {
     h.input_mut().events.push(Event::ModifiersChanged(Modifiers::NONE));
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key, modifiers: Modifiers) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key, modifiers: Modifiers) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers });
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers });
     h.run_steps(2);
@@ -60,7 +60,7 @@ enum ShiftDelete {
     WindowsCut,
 }
 
-fn shift_delete(h: &mut Harness<'_, EffectcraftApp>, how: ShiftDelete) {
+fn shift_delete(h: &mut Harness<'_, TselatraApp>, how: ShiftDelete) {
     match how {
         ShiftDelete::Key => key(h, Key::Delete, Modifiers::SHIFT),
         // Shift down, Cut and Shift up all in one frame.
@@ -69,7 +69,7 @@ fn shift_delete(h: &mut Harness<'_, EffectcraftApp>, how: ShiftDelete) {
 }
 
 /// Queue `events` together and run them as one frame.
-fn frame(h: &mut Harness<'_, EffectcraftApp>, events: &[Event]) {
+fn frame(h: &mut Harness<'_, TselatraApp>, events: &[Event]) {
     h.input_mut().events.extend(events.iter().cloned());
     h.step();
     h.run_steps(2);
@@ -79,7 +79,7 @@ const SHIFT_DELETE: [ShiftDelete; 2] = [ShiftDelete::Key, ShiftDelete::WindowsCu
 
 /// Items that compositions use ask first, as in After Effects: answer Delete when asked.
 /// Returns whether it asked.
-fn confirm_if_asked(h: &mut Harness<'_, EffectcraftApp>) -> bool {
+fn confirm_if_asked(h: &mut Harness<'_, TselatraApp>) -> bool {
     if h.state().dialog != Some(Dialog::DeleteItems) {
         return false;
     }
@@ -175,7 +175,7 @@ fn typing_dialogs_and_modified_keys_do_not_delete_project_items() {
         key(&mut h, k, m);
         assert_eq!(h.state().session.project, project, "{m:?}+{k:?}");
     }
-    h.state_mut().dialog = Some(effectcraft_ui_egui::Dialog::About);
+    h.state_mut().dialog = Some(tselatra_ui_egui::Dialog::About);
     key(&mut h, Key::Delete, Modifiers::NONE);
     for how in SHIFT_DELETE {
         shift_delete(&mut h, how);
@@ -205,7 +205,7 @@ fn deleting_items_in_use_asks_first() {
     let solid = items[1];
     let usage = h.state_mut().session.execute("project.usage", json!({"items": [solid.0]})).unwrap();
     assert_eq!(usage, json!({"items": 1, "layers": 1, "comps": 1}));
-    let uses = |h: &Harness<'_, EffectcraftApp>| {
+    let uses = |h: &Harness<'_, TselatraApp>| {
         h.state().session.project.comps().flat_map(|(_, c)| c.layers.iter()).filter(|l| l.source.item() == Some(solid)).count()
     };
     click(&mut h, &format!("project.item.{}.name", solid.0), Modifiers::NONE);

@@ -2,10 +2,10 @@
 //! and what each refuses (RGB in PDF/X-1a, transparency in PDF/X-1a and PDF/X-3, passwords).
 
 use serde_json::json;
-use vectorcraft_color::cms::{self, GENERIC_CMYK, SRGB};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::{Affine, Rect, shapes};
+use tsipika_color::cms::{self, GENERIC_CMYK, SRGB};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::{Affine, Rect, shapes};
 
 use crate::*;
 

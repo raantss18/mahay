@@ -10,12 +10,12 @@
 //! `object.slice.divide`.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_doc::{CellAlign, CellVAlign, SliceKind};
+use tsipika_color::Color;
+use tsipika_doc::{CellAlign, CellVAlign, SliceKind};
 
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Slice Options.
 pub const OPTIONS: &str = "sliceOptions";
@@ -33,7 +33,7 @@ const LABEL_W: f32 = 110.0;
 const FIELD_W: f32 = 220.0;
 
 /// Open Slice Options on the selected slices' options (those of the first one).
-pub fn open_options(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open_options(app: &mut TsipikaApp) -> Result<Value, String> {
     let v = app.session.execute("object.slice.options", &json!({})).map_err(|e| e.to_string())?;
     let mut fields: Map<String, Value> = v.as_object().cloned().unwrap_or_default();
     let html = fields.remove("htmlText").unwrap_or(json!(false));
@@ -43,7 +43,7 @@ pub fn open_options(app: &mut VectorcraftApp) -> Result<Value, String> {
 }
 
 /// Open Divide Slices: two rows and two columns, the sizes halving the first selected slice.
-pub fn open_divide(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open_divide(app: &mut TsipikaApp) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document open")?;
     let first = st.selection.slices.iter().chain(&st.selection.objects).find_map(|id| st.doc.slice_bounds(*id));
     let (w, h) = first.map_or((50.0, 50.0), |r| (r.width() / 2.0, r.height() / 2.0));
@@ -59,7 +59,7 @@ fn pairs<T: Copy>(all: &[T], key: fn(T) -> &'static str, label: fn(T) -> &'stati
     all.iter().map(|v| (key(*v), label(*v))).collect()
 }
 
-fn options_body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn options_body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let kinds: Vec<_> = SliceKind::ALL.iter().filter(|k| **k != SliceKind::HtmlText || d.bool("__html")).copied().collect();
     form::choice(ui, d, "kind", tl!("Slice Type:"), (LABEL_W, FIELD_W), &pairs(&kinds, SliceKind::key, SliceKind::label));
     ui.add_space(6.0);
@@ -124,14 +124,14 @@ fn background_row(ui: &mut egui::Ui, d: &mut Dialog) {
     });
 }
 
-fn options_confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn options_confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let p: Map<String, Value> = d.fields.iter().filter(|(k, _)| !k.starts_with("__")).map(|(k, v)| (k.clone(), v.clone())).collect();
     run_and_close(app, "object.slice.options", Value::Object(p))
 }
 
 /// One direction of Divide Slices: the checkbox, then "N slices …, evenly spaced" or "N pt per
 /// slice".
-fn divide_section(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, keys: [&str; 4], labels: [&str; 2]) {
+fn divide_section(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog, keys: [&str; 4], labels: [&str; 2]) {
     let [on, count, mode, size] = keys;
     if widgets::check(ui, labels[0], d.bool(on), true) {
         d.fields.insert(on.into(), json!(!d.bool(on)));
@@ -160,7 +160,7 @@ fn divide_section(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, keys:
     });
 }
 
-fn divide_body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn divide_body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     divide_section(app, ui, d, ["divideRows", "rows", "rowMode", "rowHeight"], [tl!("Divide Horizontally Into"), tl!("slices down, evenly spaced")]);
     ui.add_space(8.0);
     divide_section(
@@ -173,7 +173,7 @@ fn divide_body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> b
     false
 }
 
-fn divide_confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn divide_confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut p = json!({});
     for [on, count, mode, size] in [["divideRows", "rows", "rowMode", "rowHeight"], ["divideColumns", "columns", "columnMode", "columnWidth"]] {
         if !d.bool(on) {
@@ -194,26 +194,26 @@ fn divide_confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
-        app.session.paint.stroke = vectorcraft_color::Paint::None;
+        app.session.paint.stroke = tsipika_color::Paint::None;
         let id = app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 60, "height": 40})).unwrap()["id"].as_u64().unwrap();
         app.run("object.slice.make", json!({"ids": [id]})).unwrap();
         app
     }
 
     /// Draw the open dialog once, headlessly.
-    fn draw(app: &mut VectorcraftApp) {
+    fn draw(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(Default::default(), |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
     }
 
-    fn set(app: &mut VectorcraftApp, k: &str, v: Value) {
+    fn set(app: &mut TsipikaApp, k: &str, v: Value) {
         app.ui.dialog.as_mut().unwrap().fields.insert(k.into(), v);
     }
 

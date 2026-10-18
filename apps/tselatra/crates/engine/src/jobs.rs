@@ -308,7 +308,7 @@ impl Session {
 
     /// Fold the undo steps recorded since the project was `snap` into one step called `name`
     /// (commands built from several commands).
-    pub fn collapse_undo(&mut self, name: &str, snap: &Arc<effectcraft_project::Project>) {
+    pub fn collapse_undo(&mut self, name: &str, snap: &Arc<tselatra_project::Project>) {
         let h = &mut self.history;
         let Some(start) = h.undo.iter().rposition(|(_, p)| Arc::ptr_eq(p, snap)) else { return };
         let first = h.undo[start].1.clone();

@@ -1,7 +1,7 @@
 //! Signals (cursor chat, spotlight): who gets them, how the server cleans them, and what a
 //! newcomer is told.
 
-use figcraft_doc::Document;
+use endrika_doc::Document;
 
 use crate::message::{ClientMsg, Hello, ServerMsg, Signal, client_version, reads_signals};
 use crate::{Client, Limits, Outgoing, Server};

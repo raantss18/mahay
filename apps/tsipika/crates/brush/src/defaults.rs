@@ -4,9 +4,9 @@
 
 use std::sync::{Arc, OnceLock};
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, FillLayer, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Anchor, FillRule, PathData, Point, Rect, SubPath, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, FillLayer, Node, NodeId, NodeKind};
+use tsipika_geom::{Anchor, FillRule, PathData, Point, Rect, SubPath, shapes};
 
 use crate::{ArtBrush, ArtScale, Bristle, BristleShape, Brush, BrushKind, Calligraphic, Colorization, Direction, PatternBrush, PatternFit, Scatter};
 

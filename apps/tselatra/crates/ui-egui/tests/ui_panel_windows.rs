@@ -1,19 +1,19 @@
 //! Multiple monitors (#486): a panel moves out of the main window into a native window of its
 //! own (Move Panel to New Window), which can be placed on another screen, and back.
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::{PanelKind, PanelWindow};
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::{PanelKind, PanelWindow};
 use egui::vec2;
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn invoke(app: &mut EffectcraftApp, ctx: &egui::Context, params: serde_json::Value) -> Result<serde_json::Value, String> {
-    effectcraft_ui_egui::menus::invoke(app, ctx, "window.panelWindow", params)
+fn invoke(app: &mut TselatraApp, ctx: &egui::Context, params: serde_json::Value) -> Result<serde_json::Value, String> {
+    tselatra_ui_egui::menus::invoke(app, ctx, "window.panelWindow", params)
 }
 
 #[test]
 fn panel_window_command_moves_a_docked_panel_into_its_own_window_and_back() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     let ctx = egui::Context::default();
     assert!(app.ui.dock.contains(PanelKind::Project));
     assert_eq!(invoke(&mut app, &ctx, json!({"panel": "Project", "window": true})).unwrap(), json!({"window": true}));
@@ -43,7 +43,7 @@ fn panel_window_command_moves_a_docked_panel_into_its_own_window_and_back() {
 
 #[test]
 fn a_panel_in_its_own_window_leaves_the_main_window() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     app.ui.start_screen = false;
     let mut h = Harness::builder().with_size(vec2(1200.0, 760.0)).build_eframe(move |_| app);
     h.run_steps(3);
@@ -58,7 +58,7 @@ fn a_panel_in_its_own_window_leaves_the_main_window() {
     assert!(h.state().auto.elements.iter().any(|e| e.id == "panel.Project"));
     // Docking it back into the main window closes the window entry.
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.dockPanel", json!({"panel": "Project", "anchor": "Timeline"})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.dockPanel", json!({"panel": "Project", "anchor": "Timeline"})).unwrap();
     h.run_steps(2);
     assert!(h.state().ui.panel_windows.is_empty());
     assert!(!h.state().in_panel_window(PanelKind::Project));
@@ -66,10 +66,10 @@ fn a_panel_in_its_own_window_leaves_the_main_window() {
 
 #[test]
 fn panel_windows_survive_restart_with_hostile_places_made_safe() {
-    use effectcraft_engine::config::MemoryConfig;
+    use tselatra_engine::config::MemoryConfig;
     use std::sync::Arc;
     let store = Arc::new(MemoryConfig::default());
-    let mut app = EffectcraftApp::new(Session { config: Some(store.clone()), ..Default::default() });
+    let mut app = TselatraApp::new(Session { config: Some(store.clone()), ..Default::default() });
     let ctx = egui::Context::default();
     invoke(&mut app, &ctx, json!({"panel": "Project", "window": true})).unwrap();
     let hostile = [1.0e9, -3.0e12, 1.0e9, 0.5];
@@ -79,7 +79,7 @@ fn panel_windows_survive_restart_with_hostile_places_made_safe() {
     // A window for a panel that doesn't float is dropped on load.
     app.ui.panel_windows.push(PanelWindow { panel: PanelKind::Timeline, rect: [10.0, 10.0, 300.0, 200.0] });
     eframe::App::on_exit(&mut app);
-    let restarted = EffectcraftApp::new(Session { config: Some(store), ..Default::default() });
+    let restarted = TselatraApp::new(Session { config: Some(store), ..Default::default() });
     assert_eq!(restarted.ui.panel_windows, vec![PanelWindow { panel: PanelKind::Project, rect: PanelWindow::sanitized(hostile) }]);
     let [x, y, w, h] = PanelWindow::sanitized(hostile);
     assert!(x <= 100_000.0 && y >= -100_000.0 && (160.0..=16_384.0).contains(&w) && (100.0..=16_384.0).contains(&h));

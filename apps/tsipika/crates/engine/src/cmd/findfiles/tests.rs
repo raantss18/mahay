@@ -46,7 +46,7 @@ impl Visitor for Blocked {
 /// A fresh folder (canonical, as a search reports it) holding `paths`: files, and folders where
 /// they end in `/`.
 fn tree(tag: &str, paths: &[&str]) -> PathBuf {
-    let root = vectorcraft_testkit::temp_dir(&format!("findfiles-{tag}"));
+    let root = tsipika_testkit::temp_dir(&format!("findfiles-{tag}"));
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(&root).unwrap();
     for p in paths {

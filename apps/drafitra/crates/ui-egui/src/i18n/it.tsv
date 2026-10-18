@@ -1,6 +1,6 @@
-# CADCraft Italian interface catalog — original translations by Emanuele Bottelli (AI-assisted, Claude).
+# Drafitra Italian interface catalog — original translations by Emanuele Bottelli (AI-assisted, Claude).
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # UTF-8: context<TAB>English source<TAB>Italian translation.
 # Empty context = ordinary label; menu = menu-bar heading; @plural = one|other forms with {n}.
 # Keep command IDs, keywords, technology/product names and user data unchanged.
@@ -55,7 +55,7 @@ menu	Modify	Edita
 	> Greater than	> Maggiore di
 	A variable name starts with a letter and has only letters, digits and _	Un nome di variabile inizia con una lettera e contiene solo lettere, cifre e _
 	About	Informazioni
-	About CADCraft	Informazioni su CADCraft
+	About Drafitra	Informazioni su Drafitra
 	Absolute	Assoluto
 	Add Leader	Aggiungi direttrice
 	Additional angles	Angoli aggiuntivi
@@ -116,7 +116,7 @@ menu	Modify	Edita
 	ByBlock	DaBlocco
 	ByColor	DaColore
 	ByLayer	DaLayer
-	CADCraft Help	Aiuto di CADCraft
+	Drafitra Help	Aiuto di Drafitra
 	Cancel	Annulla
 	Cartesian (x, y)	Cartesiane (x, y)
 	Center	Centro
@@ -441,7 +441,7 @@ menu	Modify	Edita
 	Jogged	Spezzata
 	Jogged Linear	Lineare spezzata
 	Join	Unisci
-	Join the ArtCraft Discord…	Unisciti al Discord di ArtCraft…
+	Join the Mahay Discord…	Unisciti al Discord di Mahay…
 	Join us on Discord	Unisciti a noi su Discord
 	Isometric Plane	Piano isometrico
 	Isometric snap	Snap isometrico
@@ -582,7 +582,7 @@ menu	Modify	Edita
 	Offset	Offset
 	On	Attivato
 	On/Off	Attiva/Disattiva
-	One of the Crafting Apps by the ArtCraft team and community.	Una delle Crafting App del team e della comunità ArtCraft.
+	One of the Mahay apps by the Mahay team and community.	Una delle Crafting App del team e della comunità Mahay.
 	Only in this drawing: {n}	Solo in questo disegno: {n}
 	Only in {name}: {n}	Solo in {name}: {n}
 	Open (⌘O)	Apri (⌘O)
@@ -700,7 +700,7 @@ menu	Modify	Edita
 	Quick Select...	Selezione rapida...
 	QuickCalc	CalcRapida
 	QuickCalc Pick	Punto CalcRapida
-	Quit CADCraft	Esci da CADCraft
+	Quit Drafitra	Esci da Drafitra
 	Radius	Raggio
 	Raster Image	Immagine raster
 	Ray	Semiretta
@@ -928,7 +928,7 @@ menu	Modify	Edita
 	Specify insertion point	Specificare il punto di inserimento
 	A drawing opened from a file keeps that file's format.	Un disegno aperto da un file conserva il formato di quel file.
 	An array that would create more objects than this is refused.	Una serie che creerebbe più oggetti di così viene rifiutata.
-	CADCraft keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	CADCraft conserva queste preferenze, le modalità di snap ad oggetto e le impostazioni di disegno per il tuo account utente e le ripristina all'avvio.
+	Drafitra keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	Drafitra conserva queste preferenze, le modalità di snap ad oggetto e le impostazioni di disegno per il tuo account utente e le ripristina all'avvio.
 	Changes apply at once and are kept for next time.	Le modifiche si applicano subito e restano per la prossima volta.
 	Command line history	Cronologia della riga di comando
 	Copy as JSON	Copia come JSON
@@ -1176,7 +1176,7 @@ menu	Modify	Edita
 @plural	{n} contributor	{n} collaboratore|{n} collaboratori
 	Drawing as bytes	Disegno in byte
 	Services	Servizi
-	Hide CADCraft	Nascondi CADCraft
+	Hide Drafitra	Nascondi Drafitra
 	Hide Others	Nascondi altre
 	Accessibility	Accessibilità
 	Show System Cursor	Mostra cursore di sistema

@@ -1,7 +1,7 @@
 //! Offset Path and Outline Stroke.
 
 use kurbo::{BezPath, PathEl, Stroke, StrokeOpts};
-use vectorcraft_geom::{FillRule, PathData, SubPath};
+use tsipika_geom::{FillRule, PathData, SubPath};
 
 pub use kurbo::{Cap, Join};
 

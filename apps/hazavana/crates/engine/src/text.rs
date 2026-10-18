@@ -1,5 +1,5 @@
 //! Text drawing in pure Rust, shared by the export watermark and the slideshow overlays: Inter
-//! SemiBold (bundled) first, then the craft-fonts CJK faces as fallbacks ([`faces`]); glyph outlines
+//! SemiBold (bundled) first, then the mahay-fonts CJK faces as fallbacks ([`faces`]); glyph outlines
 //! from `ab_glyph`, vertical CJK cells shaped with `harfrust`. [`TextLayout`] lays a string out
 //! once (lines split at `\n`, kerning within a face) and reports its size, so callers can anchor
 //! it before drawing; drawing hands out per-pixel coverage, and the caller blends.
@@ -15,11 +15,11 @@ pub static TEXT_FONT: &[u8] = include_bytes!("../../../assets/fonts/Inter-SemiBo
 /// Most characters one layout draws (longer text is cut there), so hostile text stays cheap.
 pub const MAX_CHARS: usize = 4000;
 
-/// The text faces: Inter first, then the craft-fonts CJK faces (Mincho first, the watermark's
+/// The text faces: Inter first, then the mahay-fonts CJK faces (Mincho first, the watermark's
 /// serif look; then any other CJK face — drawn text has no UI language, so every CJK script is
-/// offered). Without craft-fonts that is Inter alone, and CJK characters draw as Inter's
+/// offered). Without mahay-fonts that is Inter alone, and CJK characters draw as Inter's
 /// missing-glyph box.
-pub fn faces(craft: &'static [crate::fonts::CraftFont]) -> Vec<FontRef<'static>> {
+pub fn faces(craft: &'static [crate::fonts::MahayFont]) -> Vec<FontRef<'static>> {
     let mut cjk: Vec<_> = crate::fonts::cjk(craft).collect();
     cjk.sort_by_key(|f| !f.is_mincho());
     std::iter::once(TEXT_FONT).chain(cjk.into_iter().map(|f| f.bytes)).filter_map(|bytes| FontRef::try_from_slice(bytes).ok()).collect()
@@ -66,7 +66,7 @@ pub struct TextLayout {
 impl TextLayout {
     /// `text` (cut at [`MAX_CHARS`]) at `px` pixels a line; `None` when there is nothing to draw
     /// (empty text, a non-finite or non-positive size).
-    pub fn new(text: &str, px: f32, vertical: bool, craft: &'static [crate::fonts::CraftFont]) -> Option<TextLayout> {
+    pub fn new(text: &str, px: f32, vertical: bool, craft: &'static [crate::fonts::MahayFont]) -> Option<TextLayout> {
         use unicode_segmentation::UnicodeSegmentation;
         if text.is_empty() || !px.is_finite() || px <= 0.0 {
             return None;

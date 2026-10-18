@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, EntityKind, Handle};
-use cadcraft_geom::{Bounds2, Line, Vec2, line_line};
+use drafitra_doc::{Drawing, EntityKind, Handle};
+use drafitra_geom::{Bounds2, Line, Vec2, line_line};
 use serde_json::{Value, json};
 
 use super::helpers::{line, lwpoly, rect_vertices};

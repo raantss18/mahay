@@ -5,7 +5,7 @@
 
 use super::geom::{Cubic, bez};
 use kurbo::Vec2;
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 const MAX_DEPTH: usize = 14;
 

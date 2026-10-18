@@ -4,9 +4,9 @@
 //! selected; File ▸ New in the dark theme makes a dark page.
 
 use egui::{Event, Key, Modifiers};
-use figcraft_color::Color;
-use figcraft_doc::{NodeId, NodeKind};
-use figcraft_engine::Session;
+use endrika_color::Color;
+use endrika_doc::{NodeId, NodeKind};
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;

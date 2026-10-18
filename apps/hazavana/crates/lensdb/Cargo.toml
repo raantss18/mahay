@@ -1,5 +1,5 @@
 [package]
-name = "lightcraft-lensdb"
+name = "hazavana-lensdb"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,6 +9,6 @@ description = "Lens correction profiles: distortion, TCA and vignetting models, 
 workspace = true
 
 [dependencies]
-lightcraft-develop = { workspace = true }
-lightcraft-geom = { workspace = true }
+hazavana-develop = { workspace = true }
+hazavana-geom = { workspace = true }
 quick-xml = { workspace = true }

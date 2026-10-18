@@ -1,11 +1,11 @@
 //! GPU colour-correction family effects vs the CPU effects (the oracle): direct on a buffer at
 //! full and half resolution, as adjustment, and composited at 8 and 32 bpc.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::{BitDepth, Comp, ItemKind, LayerSource, build};
-use effectcraft_render::RenderOpts;
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::{BitDepth, Comp, ItemKind, LayerSource, build};
+use tselatra_render::RenderOpts;
+use tselatra_time::{FrameRate, Tick};
 
 use crate::tests::{Scene, c, check, compare_at, effect_case, n, opts, set};
 
@@ -56,7 +56,7 @@ fn colour_replacement() {
     effect_case("ec.color.photofilter", &[]);
     effect_case(
         "ec.color.photofilter",
-        &[("filter", e(effectcraft_effects::PHOTO_FILTER_CUSTOM)), ("color", c(0.2, 0.7, 0.4)), ("density", n(60.0)), ("preserveLuminosity", off())],
+        &[("filter", e(tselatra_effects::PHOTO_FILTER_CUSTOM)), ("color", c(0.2, 0.7, 0.4)), ("density", n(60.0)), ("preserveLuminosity", off())],
     );
     effect_case("ec.color.changetocolor", &[("from", c(0.8, 0.4, 0.3)), ("to", c(0.2, 0.5, 0.9)), ("toleranceGroup/hue", n(15.0))]);
     effect_case(

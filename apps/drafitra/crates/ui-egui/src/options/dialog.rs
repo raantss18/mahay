@@ -221,8 +221,8 @@ fn files(app: &CadApp, ui: &mut egui::Ui, changes: &mut Map<String, Value>) {
         ui.end_row();
 
         ui.label(crate::tl!("Automatic save every"));
-        let mut minutes = cadcraft_engine::autosave::savetime();
-        let max = cadcraft_engine::autosave::MAX_SAVETIME;
+        let mut minutes = drafitra_engine::autosave::savetime();
+        let max = drafitra_engine::autosave::MAX_SAVETIME;
         if ui.add(egui::DragValue::new(&mut minutes).range(0..=max).suffix(format!(" {}", crate::tl!("min")))).changed() {
             changes.insert("SAVETIME".into(), json!(minutes));
         }
@@ -231,7 +231,7 @@ fn files(app: &CadApp, ui: &mut egui::Ui, changes: &mut Map<String, Value>) {
         ui.label(crate::tl!("Automatic save file location"));
         // Edited as text; the folder changes when the field loses focus.
         let id = egui::Id::new("cc_options_savefilepath");
-        let current = cadcraft_engine::autosave::savefilepath();
+        let current = drafitra_engine::autosave::savefilepath();
         let mut path = ui.data(|d| d.get_temp::<String>(id)).unwrap_or_else(|| current.clone());
         let r = ui.add(egui::TextEdit::singleline(&mut path).desired_width(330.0));
         if r.changed() {
@@ -369,7 +369,7 @@ fn heading(ui: &mut egui::Ui, text: &str) {
 
 /// Visual Effect Settings: the selection area (window and crossing fills) and the objects the
 /// cursor never highlights (PREVIEWFILTER). Changes apply at once, as on the Options tabs.
-fn visual_effects(ctx: &egui::Context, st: &cadcraft_engine::Settings, open: &mut bool, changes: &mut Map<String, Value>) {
+fn visual_effects(ctx: &egui::Context, st: &drafitra_engine::Settings, open: &mut bool, changes: &mut Map<String, Value>) {
     let mut close = false;
     egui::Window::new(crate::tl!("Visual Effect Settings"))
         .id(egui::Id::new("cc_visual_effects"))
@@ -431,7 +431,7 @@ fn visual_effects(ctx: &egui::Context, st: &cadcraft_engine::Settings, open: &mu
 /// A colour by its index (ACI 1-255): a swatch and the number; a change goes into `changes`.
 fn aci_row(ui: &mut egui::Ui, current: u8, key: &str, changes: &mut Map<String, Value>) {
     ui.horizontal(|ui| {
-        let c = cadcraft_color::aci_rgb(current);
+        let c = drafitra_color::aci_rgb(current);
         let (r, _) = ui.allocate_exact_size(vec2(16.0, 16.0), egui::Sense::hover());
         ui.painter().rect_filled(r, 2.0, Color32::from_rgb(c.0, c.1, c.2));
         let mut v = current;
@@ -473,7 +473,7 @@ fn preferences(app: &CadApp, ui: &mut egui::Ui, changes: &mut Map<String, Value>
 
 fn profiles(app: &CadApp, ui: &mut egui::Ui, changes: &mut Map<String, Value>) {
     ui.label(crate::tl!(
-        "CADCraft keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts."
+        "Drafitra keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts."
     ));
     ui.add_space(8.0);
     ui.horizontal(|ui| {

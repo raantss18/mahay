@@ -1,5 +1,5 @@
 //! Fractional sample interpolation (8.5.3.3.3) and default weighted prediction (8-262), mirrored
-//! from the filmcraft-hevc decoder. Reference sample fetches clamp to the picture (8-228, 8-229).
+//! from the hetsika-hevc decoder. Reference sample fetches clamp to the picture (8-228, 8-229).
 
 use crate::tables::{CHROMA_FILTER, LUMA_FILTER};
 

@@ -1,4 +1,4 @@
-// Create Null at Selected Layers — an EffectCraft sample script (original work, MIT OR
+// Create Null at Selected Layers — an Tselatra sample script (original work, MIT OR
 // Apache-2.0).
 //
 // Adds a null at the centroid of the selected layers' positions (at the current time) and

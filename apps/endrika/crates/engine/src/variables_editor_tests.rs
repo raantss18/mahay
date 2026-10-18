@@ -91,7 +91,7 @@ fn aliases_follow_their_target_and_refuse_loops_and_other_types() {
     // Stored by id, resolved through the target.
     let sm = s.doc().unwrap().variables.get("space/sm").unwrap().id.clone();
     let md = s.doc().unwrap().variables.get("space/md").cloned().unwrap();
-    assert!(md.values.values().any(|v| *v == figcraft_doc::VariableValue::Alias(sm.clone())));
+    assert!(md.values.values().any(|v| *v == endrika_doc::VariableValue::Alias(sm.clone())));
     assert_eq!(s.doc().unwrap().node(f).unwrap().width, 8.0);
     ex(&mut s, "variable.set", json!({"variable": "space/sm", "value": 12}));
     assert_eq!(s.doc().unwrap().node(f).unwrap().width, 12.0);

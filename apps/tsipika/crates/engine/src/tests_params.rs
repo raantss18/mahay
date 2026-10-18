@@ -99,7 +99,7 @@ fn a_batch_checks_its_steps() {
 /// is named (`effect.apply`) and where the document says which it is (`effect.setParams`).
 #[test]
 fn effect_params_are_the_effects_own() {
-    use vectorcraft_render::effects::effect_catalog;
+    use tsipika_render::effects::effect_catalog;
     for e in effect_catalog() {
         doc_keys(e.params).unwrap_or_else(|why| panic!("{}: {why}", e.id));
         check_effect_params("effect.apply", e.id, &e.defaults).unwrap_or_else(|why| panic!("{}'s defaults: {why}", e.id));

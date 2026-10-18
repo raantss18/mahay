@@ -6,9 +6,9 @@
 //! it and the canvas draws it from the same geometry.
 
 use serde_json::json;
-use vectorcraft_doc::shaper::SOURCES;
-use vectorcraft_doc::{Document, NodeId, Selection};
-use vectorcraft_geom::Point;
+use tsipika_doc::shaper::SOURCES;
+use tsipika_doc::{Document, NodeId, Selection};
+use tsipika_geom::Point;
 
 use crate::{Action, ToolContext};
 
@@ -106,7 +106,7 @@ mod tests {
             assert_eq!((w.group, w.construction, w.at), (g, false, Point::new(166.0, 350.0)));
             let isolate = vec![Action::Exec("object.isolate".into(), json!({ "id": g.0 }))];
             assert_eq!(SelectionTool::default().pointer(&c, &ev(PointerKind::Down, w.at)), isolate);
-            assert_eq!(ShaperTool::default().pointer(&c, &ev(PointerKind::Down, w.at + vectorcraft_geom::Vec2::new(0.0, 5.0))), isolate);
+            assert_eq!(ShaperTool::default().pointer(&c, &ev(PointerKind::Down, w.at + tsipika_geom::Vec2::new(0.0, 5.0))), isolate);
             // A double-click on it does nothing more than its two clicks.
             assert_eq!(SelectionTool::default().pointer(&c, &ev(PointerKind::DoubleClick, w.at)), vec![]);
             assert_eq!(ShaperTool::default().pointer(&c, &ev(PointerKind::DoubleClick, w.at)), vec![]);
@@ -146,8 +146,8 @@ mod tests {
         s.add(g);
         let c = cx(&d, &s, &p);
         let w = ShaperWidget::of(c.doc, c.selection, c.isolation, c.zoom).unwrap();
-        assert!(over_widget(&c, w.at + vectorcraft_geom::Vec2::new(7.0, 0.0)));
-        assert!(!over_widget(&c, w.at + vectorcraft_geom::Vec2::new(8.0, 0.0)));
+        assert!(over_widget(&c, w.at + tsipika_geom::Vec2::new(7.0, 0.0)));
+        assert!(!over_widget(&c, w.at + tsipika_geom::Vec2::new(8.0, 0.0)));
         // A locked group has none.
         d.node_mut(g).unwrap().locked = true;
         assert!(widget(&d, &[g]).is_none());

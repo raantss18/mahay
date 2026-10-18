@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use super::DialogSpec;
 use crate::picks::PickRequest;
 use crate::state::Dialog;
-use crate::{FilePick, VectorcraftApp, widgets};
+use crate::{FilePick, TsipikaApp, widgets};
 
 /// The dialog kind of JavaScript Files.
 pub const KIND: &str = "javascriptFiles";
@@ -30,7 +30,7 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 };
 
 /// Open JavaScript Files for the active document.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     if app.session.active().is_none() {
         return Err("no document open".into());
     }
@@ -48,7 +48,7 @@ fn pick() -> FilePick {
 
 /// Choose…: the file picked in the open dialog into File or URL, as a `file:///` URL
 /// ([`crate::io::file_url`]).
-fn choose(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<(), String> {
+fn choose(app: &mut TsipikaApp, d: &mut Dialog) -> Result<(), String> {
     if let Some(path) = crate::picks::open(app, &pick()) {
         d.fields.insert("file".into(), json!(crate::io::file_url(&path)));
     }
@@ -63,7 +63,7 @@ enum Action {
     Remove,
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let files: Vec<String> = app.session.active().map(|st| st.doc.svg_scripts.clone()).unwrap_or_default();
     let selected = d.str("selected");
     let mut act = None;
@@ -126,10 +126,10 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// One headless frame of the dialog's body: the texts drawn.
-    fn frame(app: &mut VectorcraftApp, d: &mut Dialog) -> Vec<String> {
+    fn frame(app: &mut TsipikaApp, d: &mut Dialog) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn opens_on_the_documents_linked_files() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         assert!(open(&mut app).is_err(), "no document");
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("svgInteractivity.addFile", &json!({"file": "scripts/menu.js"})).unwrap();
@@ -168,7 +168,7 @@ mod tests {
     /// spaces percent-encoded.
     #[test]
     fn choose_puts_the_picked_file_in_as_a_file_url() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         let picked = std::env::temp_dir().join("my menu.js").to_string_lossy().into_owned();
         app.services.pick_open = Some(Box::new(move |_: &FilePick| Some(picked.clone())));

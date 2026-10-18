@@ -37,6 +37,7 @@ impl eframe::App for App {
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.0.ui(ui);
+        mahay_about::banner(ui.ctx());
     }
     fn on_exit(&mut self) {
         save_prefs(&self.0);
@@ -236,6 +237,7 @@ fn main() -> eframe::Result {
         options,
         Box::new(move |cc| {
             let mut app = SlideApp::new(Session::new(), services());
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "seho", name: "Seho" }, &cc.egui_ctx);
             load_prefs(&mut app);
             // AutoRecover: reopen what a previous run left unsaved, then keep it current.
             if std::env::var_os("SEHO_NO_RECOVERY").is_none() {

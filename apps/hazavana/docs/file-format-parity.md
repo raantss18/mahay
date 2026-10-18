@@ -13,7 +13,7 @@ import and export formats. Ours come from `crates/codecs/src/sniff.rs`, `crates/
 
 ## Images (non-raw)
 
-| Format | Target reads | Target writes | LightCraft reads | LightCraft writes | Notes / tests |
+| Format | Target reads | Target writes | Hazavana reads | Hazavana writes | Notes / tests |
 |---|---|---|---|---|---|
 | JPEG | ✅ | ✅ | ✅ (parallel decoder, ICC, EXIF orientation) | ✅ quality, size limit, ICC, metadata; Huffman tables optimized per image (issue #1373) | `crates/codecs/src/jpeg.rs`, `crates/codecs/src/jpeg_par.rs`, export tests |
 | TIFF | ✅ 8/16/32-bit | ✅ 8/16-bit, LZW/ZIP | ✅ 1–64-bit integer, 16–64-bit float, bilevel, CCITT fax, WhiteIsZero | ✅ 8/16-bit, 32-bit float linear, none / LZW / ZIP | `crates/tiff`, `crates/codecs/src/tiff_codec.rs` |
@@ -34,7 +34,7 @@ import and export formats. Ours come from `crates/codecs/src/sniff.rs`, `crates/
 
 ## Colour spaces and profiles
 
-| Feature | Target | LightCraft |
+| Feature | Target | Hazavana |
 |---|---|---|
 | Export colour spaces | sRGB, Adobe RGB, Display P3, ProPhoto, Rec.2020, custom ICC | ✅ sRGB, Display P3, Adobe RGB-compatible, ProPhoto, Rec.2020 with gamut mapping (CPU and GPU), embedded ICC; ⬜ custom ICC output profiles; AVIF stays sRGB |
 | Input ICC (JPEG / TIFF / PNG) | ✅ | ✅ matrix / TRC and LUT profiles (moxcms) |
@@ -42,7 +42,7 @@ import and export formats. Ours come from `crates/codecs/src/sniff.rs`, `crates/
 
 ## Metadata, sidecars, presets and catalogs
 
-| Format | Target | LightCraft | Notes |
+| Format | Target | Hazavana | Notes |
 |---|---|---|---|
 | XMP sidecars (`crs:` develop settings, ratings, keywords, regions) | read / write | ✅ read / write, manual (⌘S) and automatic | [xmp-interop.md](xmp-interop.md) |
 | EXIF / IPTC / XMP embedded on export | ✅ | ✅ with metadata filters | `crates/meta` |

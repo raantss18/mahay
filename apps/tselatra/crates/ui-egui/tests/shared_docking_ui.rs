@@ -1,8 +1,8 @@
-//! Existing EffectCraft workspaces use shared transactions without changing their saved schema.
-use craft_ui::docking::{Action, Placement, Zone};
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::{
-    EffectcraftApp,
+//! Existing Tselatra workspaces use shared transactions without changing their saved schema.
+use mahay_ui::docking::{Action, Placement, Zone};
+use tselatra_engine::Session;
+use tselatra_ui_egui::{
+    TselatraApp,
     dock::{self, DockNode, Layout, PanelKind, SplitSize, StackEntry},
 };
 use egui::{Event, Modifiers, PointerButton, Rect, pos2, vec2};
@@ -59,9 +59,9 @@ fn every_builtin_workspace_and_dynamic_identity_roundtrips() {
             DockNode::Split { size, .. } => Action::ResizeSplit {
                 path: vec![],
                 size: match *size {
-                    SplitSize::Ratio(v) => craft_ui::layout::SplitSize::Ratio(v),
-                    SplitSize::FixedA(v) => craft_ui::layout::SplitSize::FixedFirst(v),
-                    SplitSize::FixedB(v) => craft_ui::layout::SplitSize::FixedSecond(v),
+                    SplitSize::Ratio(v) => mahay_ui::layout::SplitSize::Ratio(v),
+                    SplitSize::FixedA(v) => mahay_ui::layout::SplitSize::FixedFirst(v),
+                    SplitSize::FixedB(v) => mahay_ui::layout::SplitSize::FixedSecond(v),
                 },
             },
             DockNode::Tabs { panels, .. } => Action::Move { panel: panels[0], anchor: panels[1], placement: Placement::Tab { before: Some(panels[0]) } },
@@ -83,11 +83,11 @@ fn every_builtin_workspace_and_dynamic_identity_roundtrips() {
     assert!(layout.root.is_visible(PanelKind::ScriptPanel(77)));
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let element = h.state().auto.find(id).unwrap_or_else(|| panic!("missing {id}"));
     Rect::from_min_size(pos2(element.rect[0], element.rect[1]), vec2(element.rect[2], element.rect[3]))
 }
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: egui::Pos2, to: egui::Pos2, modifiers: Modifiers) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: egui::Pos2, to: egui::Pos2, modifiers: Modifiers) {
     h.event(Event::ModifiersChanged(modifiers));
     h.event(Event::PointerMoved(from));
     h.step();
@@ -109,7 +109,7 @@ fn pointer_drop_merges_floats_and_redocks_without_project_changes() {
     session.execute("comp.new", json!({"name": "Docking composition", "width": 320, "height": 180, "duration": 4})).unwrap();
     session.execute("layer.newSolid", json!({"name": "Teal plate", "width": 320, "height": 180, "color": "#245b68"})).unwrap();
     session.execute("layer.newSolid", json!({"name": "Coral tile", "width": 110, "height": 70, "color": "#ee7859"})).unwrap();
-    let mut app = EffectcraftApp::new(session);
+    let mut app = TselatraApp::new(session);
     app.ui.start_screen = false;
     app.ui.dock = DockNode::Split {
         vertical: false,
@@ -123,7 +123,7 @@ fn pointer_drop_merges_floats_and_redocks_without_project_changes() {
         a: Box::new(app.ui.dock),
         b: Box::new(DockNode::Tabs { panels: vec![PanelKind::Timeline], active: 0 }),
     };
-    let snapshots = std::env::var_os("CRAFT_UI_DOCKING_SNAPSHOT_DIR").map(std::path::PathBuf::from);
+    let snapshots = std::env::var_os("MAHAY_UI_DOCKING_SNAPSHOT_DIR").map(std::path::PathBuf::from);
     let mut builder = Harness::builder().with_size(vec2(1200.0, 760.0));
     if snapshots.is_some() {
         builder = builder.wgpu();
@@ -189,7 +189,7 @@ fn pointer_drop_merges_floats_and_redocks_without_project_changes() {
 
     if let Some(directory) = &snapshots {
         std::fs::create_dir_all(directory).unwrap();
-        h.render().unwrap().save(directory.join("effectcraft-floating.png")).unwrap();
+        h.render().unwrap().save(directory.join("tselatra-floating.png")).unwrap();
     }
     let from = rect(&h, "panel.tab.Info").center();
     let to = rect(&h, "panel.Audio").center();
@@ -212,10 +212,10 @@ fn pointer_drop_merges_floats_and_redocks_without_project_changes() {
     assert_eq!(h.state().session.state.viewer.exposure, 0.0);
     action_log.push(action_state(&h, "viewer-reset-exposure"));
     if let Some(directory) = &snapshots {
-        std::fs::write(directory.join("effectcraft-actions.json"), serde_json::to_vec_pretty(&action_log).unwrap()).unwrap();
+        std::fs::write(directory.join("tselatra-actions.json"), serde_json::to_vec_pretty(&action_log).unwrap()).unwrap();
     }
     if let Some(directory) = &snapshots {
-        h.render().unwrap().save(directory.join("effectcraft-redocked.png")).unwrap();
+        h.render().unwrap().save(directory.join("tselatra-redocked.png")).unwrap();
     }
     assert!(std::sync::Arc::ptr_eq(&project, &h.state().session.project));
 }
@@ -230,18 +230,18 @@ fn same_group(root: &DockNode, first: PanelKind, second: PanelKind) -> bool {
 
 #[test]
 fn current_and_named_floating_layouts_survive_restart() {
-    use effectcraft_engine::config::MemoryConfig;
+    use tselatra_engine::config::MemoryConfig;
     use std::sync::Arc;
     let store = Arc::new(MemoryConfig::default());
-    let mut app = EffectcraftApp::new(Session { config: Some(store.clone()), ..Default::default() });
+    let mut app = TselatraApp::new(Session { config: Some(store.clone()), ..Default::default() });
     assert!(app.edit_layout(|layout| layout.apply(Action::Float { panel: PanelKind::Project, rect: [45.0, 65.0, 430.0, 310.0] }).is_ok()));
     let ctx = egui::Context::default();
-    effectcraft_ui_egui::menus::invoke(&mut app, &ctx, "window.saveWorkspaceAs", json!({"name": "Shared float"})).unwrap();
+    tselatra_ui_egui::menus::invoke(&mut app, &ctx, "window.saveWorkspaceAs", json!({"name": "Shared float"})).unwrap();
     let saved = app.ui.floating.clone();
     assert!(app.edit_layout(|layout| layout.apply(Action::MoveFloating { panel: PanelKind::Project, rect: [75.0, 95.0, 480.0, 360.0] }).is_ok()));
     let current = app.ui.floating.clone();
     eframe::App::on_exit(&mut app);
-    let mut restarted = EffectcraftApp::new(Session { config: Some(store), ..Default::default() });
+    let mut restarted = TselatraApp::new(Session { config: Some(store), ..Default::default() });
     assert_eq!(restarted.ui.floating, current);
     restarted.set_workspace("Default");
     restarted.set_workspace("Shared float");
@@ -261,11 +261,11 @@ fn tabs_containing(root: &DockNode, panel: PanelKind) -> Vec<PanelKind> {
 
 #[test]
 fn float_command_rejects_malformed_rectangles_atomically() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     let before = app.ui.dock.clone();
     let ctx = egui::Context::default();
     for rect in [json!([1, 2, 300]), json!([1, 2, 300, 200, 7]), json!([1, 2, 1e100, 200]), json!("rectangle")] {
-        assert!(effectcraft_ui_egui::menus::invoke(&mut app, &ctx, "window.floatPanel", json!({"panel": "Project", "rect": rect})).is_err());
+        assert!(tselatra_ui_egui::menus::invoke(&mut app, &ctx, "window.floatPanel", json!({"panel": "Project", "rect": rect})).is_err());
         assert_eq!(app.ui.dock, before);
         assert!(app.ui.floating.is_empty());
     }
@@ -278,10 +278,10 @@ fn float_command_rejects_malformed_rectangles_atomically() {
 /// floating area's own widget ("Double use of widget ID").
 #[test]
 fn floating_panel_dragged_past_the_window_edge_is_drawn_at_its_rect() {
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(Session::default()));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(Session::default()));
     h.run_steps(3);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.floatPanel", json!({"panel": "Preview", "rect": [600.0, 400.0, 360.0, 300.0]})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "window.floatPanel", json!({"panel": "Preview", "rect": [600.0, 400.0, 360.0, 300.0]})).unwrap();
     h.run_steps(3);
     let strip = rect(&h, "panel.float.0.move");
     let from = pos2(strip.right() - 24.0, strip.center().y);
@@ -296,13 +296,13 @@ fn floating_panel_dragged_past_the_window_edge_is_drawn_at_its_rect() {
     assert_eq!(h.state().ui.floating[0].rect[1], moved[1] - 200.0);
 }
 
-fn action_state(h: &Harness<'_, EffectcraftApp>, action: &str) -> serde_json::Value {
+fn action_state(h: &Harness<'_, TselatraApp>, action: &str) -> serde_json::Value {
     json!({"action": action, "dock": h.state().ui.dock, "floating": h.state().ui.floating, "focused": h.state().ui.focused})
 }
 
 #[test]
 fn catalog_docking_action_supports_resize_reorder_and_floating_geometry() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     app.ui.dock = DockNode::Split {
         vertical: false,
         size: SplitSize::FixedA(300.0),
@@ -311,19 +311,19 @@ fn catalog_docking_action_supports_resize_reorder_and_floating_geometry() {
     };
     let ctx = egui::Context::default();
     for action in [
-        Action::ResizeSplit { path: vec![], size: craft_ui::layout::SplitSize::FixedFirst(360.0) },
+        Action::ResizeSplit { path: vec![], size: mahay_ui::layout::SplitSize::FixedFirst(360.0) },
         Action::Move { panel: PanelKind::Info, anchor: PanelKind::Project, placement: Placement::Tab { before: Some(PanelKind::Project) } },
         Action::Float { panel: PanelKind::Info, rect: [20.0, 40.0, 300.0, 200.0] },
         Action::MoveFloating { panel: PanelKind::Info, rect: [45.0, 65.0, 330.0, 240.0] },
     ] {
-        effectcraft_ui_egui::menus::invoke(&mut app, &ctx, "window.dockAction", json!({"action": action})).unwrap();
+        tselatra_ui_egui::menus::invoke(&mut app, &ctx, "window.dockAction", json!({"action": action})).unwrap();
     }
     assert_eq!(app.ui.floating[0].rect, [45.0, 65.0, 330.0, 240.0]);
     let DockNode::Split { size, .. } = &app.ui.dock else { panic!("split lost") };
     assert_eq!(*size, SplitSize::FixedA(360.0));
     let before = json!({"dock": app.ui.dock, "floating": app.ui.floating});
     assert!(
-        effectcraft_ui_egui::menus::invoke(
+        tselatra_ui_egui::menus::invoke(
             &mut app,
             &ctx,
             "window.dockAction",
@@ -338,11 +338,11 @@ fn catalog_docking_action_supports_resize_reorder_and_floating_geometry() {
 
 #[test]
 fn catalog_close_keeps_dynamic_panel_identity() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     app.ui.dock = DockNode::Tabs { panels: vec![PanelKind::Composition, PanelKind::Viewer(42), PanelKind::ScriptPanel(77)], active: 1 };
     let ctx = egui::Context::default();
     for panel in [PanelKind::Viewer(42), PanelKind::ScriptPanel(77)] {
-        effectcraft_ui_egui::menus::invoke(&mut app, &ctx, "window.dockAction", json!({"action": Action::Close { panel }})).unwrap();
+        tselatra_ui_egui::menus::invoke(&mut app, &ctx, "window.dockAction", json!({"action": Action::Close { panel }})).unwrap();
         assert!(!app.ui.dock.contains(panel));
     }
     assert!(app.ui.dock.contains(PanelKind::Composition));
@@ -352,7 +352,7 @@ fn catalog_close_keeps_dynamic_panel_identity() {
 fn accordion_resize_routes_pointer_and_keyboard_without_changing_closed_entries() {
     let mut session = Session::default();
     session.execute("comp.new", json!({"width": 160, "height": 90, "duration": 1})).unwrap();
-    let mut app = EffectcraftApp::new(session);
+    let mut app = TselatraApp::new(session);
     app.ui.start_screen = false;
     let mut h = Harness::builder().with_size(vec2(1000.0, 720.0)).build_eframe(move |_| app);
     h.run_steps(4);
@@ -385,7 +385,7 @@ fn accordion_resize_routes_pointer_and_keyboard_without_changing_closed_entries(
 
 #[test]
 fn legacy_close_repairs_selection_but_transactions_remain_strict() {
-    use effectcraft_ui_egui::dock::Floating;
+    use tselatra_ui_egui::dock::Floating;
     let mut root = DockNode::Tabs { panels: vec![PanelKind::Properties, PanelKind::Align, PanelKind::EffectsPresets], active: usize::MAX };
     root.close(PanelKind::History);
     assert!(root.is_visible(PanelKind::EffectsPresets));
@@ -410,7 +410,7 @@ fn legacy_close_repairs_selection_but_transactions_remain_strict() {
 
 #[test]
 fn failed_close_preserves_viewer_lifecycle_and_maximize_state() {
-    let mut app = EffectcraftApp::new(Session::default());
+    let mut app = TselatraApp::new(Session::default());
     app.ui.dock = DockNode::Tabs { panels: vec![PanelKind::Composition, PanelKind::Viewer(42)], active: usize::MAX };
     app.ui.maximized = Some(PanelKind::Viewer(42));
     app.ui.viewers.insert(42, None);

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build the browser version and zip it:  $DIST/lightcraft-web-<version>.zip
+# Build the browser version and zip it:  $DIST/hazavana-web-<version>.zip
 #
 # Usage: packaging/web/package.sh [--skip-build]
 #
 # Needs: the wasm32-unknown-unknown target and the wasm-bindgen CLI at the version in Cargo.lock
-# (see docs/web.md); `cargo xtask web` builds it. The zip holds a self-contained static site in lightcraft-web-<version>/ that works
+# (see docs/web.md); `cargo xtask web` builds it. The zip holds a self-contained static site in hazavana-web-<version>/ that works
 # from any URL path and inside an <iframe>. Hosting notes: packaging/web/README.md.
 set -euo pipefail
 # shellcheck source=../env.sh
@@ -42,7 +42,7 @@ if grep -Eq '(src|href)="/[^/]' "$SITE/index.html"; then
   exit 1
 fi
 
-NAME="lightcraft-web-$VERSION"
+NAME="hazavana-web-$VERSION"
 WORK="$CARGO_TARGET_DIR/web-package"
 rm -rf "$WORK"
 mkdir -p "$WORK/$NAME"

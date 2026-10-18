@@ -10,7 +10,7 @@
 use serde_json::{Value, json};
 
 use crate::state::Dialog;
-use crate::{VectorcraftApp, io};
+use crate::{TsipikaApp, io};
 
 /// Dialog kind. Fields: `index` (document), `uid` (the same document, which `index` may no longer
 /// point at once a file dialog answers), `name` (its title), `then` (`close`, `closeAll` or `quit`:
@@ -19,12 +19,12 @@ pub const KIND: &str = "saveChanges";
 
 /// Nothing closes while a file dialog's sheet is on the window (macOS): what asked for it runs
 /// again when it answers. (Elsewhere the dialog is a window of its own, and closing goes on.)
-fn refuse_while_picking(app: &VectorcraftApp) -> Result<(), String> {
+fn refuse_while_picking(app: &TsipikaApp) -> Result<(), String> {
     if app.file_sheet_open() { Err(crate::picks::busy().into()) } else { Ok(()) }
 }
 
 /// File → Close (or a tab's ×) for document `i`.
-pub fn close(app: &mut VectorcraftApp, i: usize) -> Result<Value, String> {
+pub fn close(app: &mut TsipikaApp, i: usize) -> Result<Value, String> {
     refuse_while_picking(app)?;
     // A save still running decides whether there is anything left to save.
     crate::background::wait_all(app);
@@ -34,7 +34,7 @@ pub fn close(app: &mut VectorcraftApp, i: usize) -> Result<Value, String> {
 
 /// File → Close All (`then` = `closeAll`) or Quit (`quit`): ask about the next modified document,
 /// or finish once none is left.
-pub fn close_all(app: &mut VectorcraftApp, then: &str) -> Result<Value, String> {
+pub fn close_all(app: &mut TsipikaApp, then: &str) -> Result<Value, String> {
     refuse_while_picking(app)?;
     crate::background::wait_all(app);
     if let Some(i) = app.session.documents().iter().position(|d| d.is_dirty()) {
@@ -42,7 +42,7 @@ pub fn close_all(app: &mut VectorcraftApp, then: &str) -> Result<Value, String> 
     }
     if then == "quit" {
         // Nothing unsaved is left: no recovery copies either.
-        vectorcraft_engine::cmd::recovery::forget_all(&mut app.session);
+        tsipika_engine::cmd::recovery::forget_all(&mut app.session);
         // The host closes the window.
         app.ui.status = "quit".into();
         return Ok(Value::Null);
@@ -56,12 +56,12 @@ pub fn close_all(app: &mut VectorcraftApp, then: &str) -> Result<Value, String> 
 }
 
 /// Is any open document modified (the window's close button must ask first)?
-pub fn any_dirty(app: &VectorcraftApp) -> bool {
+pub fn any_dirty(app: &TsipikaApp) -> bool {
     app.session.documents().iter().any(|d| d.is_dirty())
 }
 
 /// Show document `i` and ask whether to save it.
-fn ask(app: &mut VectorcraftApp, i: usize, then: &str) -> Result<Value, String> {
+fn ask(app: &mut TsipikaApp, i: usize, then: &str) -> Result<Value, String> {
     app.session.set_active(i);
     let doc = &app.session.documents()[i];
     let (name, uid) = (doc.title(), doc.uid);
@@ -70,7 +70,7 @@ fn ask(app: &mut VectorcraftApp, i: usize, then: &str) -> Result<Value, String> 
 }
 
 /// Close document `i` through the engine command, keeping `views` aligned with the documents.
-fn close_now(app: &mut VectorcraftApp, i: usize) -> Result<Value, String> {
+fn close_now(app: &mut TsipikaApp, i: usize) -> Result<Value, String> {
     let r = app.session.execute("file.close", &json!({ "index": i })).map_err(|e| e.to_string())?;
     if i < app.views.len() {
         app.views.remove(i);
@@ -87,7 +87,7 @@ fn close_now(app: &mut VectorcraftApp, i: usize) -> Result<Value, String> {
 }
 
 /// Answer the open dialog: save (or, with `discard`, don't), close the document and carry on.
-pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn confirm(app: &mut TsipikaApp) -> Result<Value, String> {
     let d = app.ui.dialog.take().ok_or("no dialog open")?;
     let docs = app.session.documents();
     // By its uid: documents may have closed while its Save dialog was open.
@@ -98,7 +98,7 @@ pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
     let i = i.ok_or("no such document")?;
     if !d.bool("discard") {
         app.session.set_active(i);
-        let r = io::save(app, vectorcraft_engine::cmd::fileio::SaveMode::Save, &json!({}), false)?;
+        let r = io::save(app, tsipika_engine::cmd::fileio::SaveMode::Save, &json!({}), false)?;
         // A save that asks first (replacing a file that would lose what opening it left out) keeps
         // the document open: it closes once saved.
         if r.get("pending").is_some() {
@@ -123,35 +123,35 @@ pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
 mod tests {
     use super::*;
     use std::sync::{Arc, Mutex};
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    /// An app whose Save As picks `out.vectorcraft` and records written paths.
-    fn app() -> (VectorcraftApp, Arc<Mutex<Vec<String>>>) {
+    /// An app whose Save As picks `out.tsipika` and records written paths.
+    fn app() -> (TsipikaApp, Arc<Mutex<Vec<String>>>) {
         let written = Arc::new(Mutex::new(vec![]));
         let w = written.clone();
         let services = crate::Services {
-            pick_save: Some(Box::new(|_: &crate::FilePick| Some("out.vectorcraft".to_string()))),
+            pick_save: Some(Box::new(|_: &crate::FilePick| Some("out.tsipika".to_string()))),
             write: Some(Box::new(move |p: &str, _: &[u8]| {
                 w.lock().unwrap().push(p.to_string());
                 Ok(())
             })),
             ..Default::default()
         };
-        (VectorcraftApp::new(Session::new(), services), written)
+        (TsipikaApp::new(Session::new(), services), written)
     }
 
-    fn new_doc(app: &mut VectorcraftApp, dirty: bool) {
+    fn new_doc(app: &mut TsipikaApp, dirty: bool) {
         app.run("file.new", json!({ "width": 100, "height": 100 })).unwrap();
         if dirty {
             app.run("shape.rectangle", json!({ "x": 0, "y": 0, "width": 10, "height": 10 })).unwrap();
         }
     }
 
-    fn docs(app: &VectorcraftApp) -> usize {
+    fn docs(app: &TsipikaApp) -> usize {
         app.session.documents().len()
     }
 
-    fn pending(app: &VectorcraftApp) -> Option<usize> {
+    fn pending(app: &TsipikaApp) -> Option<usize> {
         app.ui.dialog.as_ref().filter(|d| d.kind == KIND).and_then(|d| d.fields["index"].as_u64()).map(|i| i as usize)
     }
 
@@ -186,7 +186,7 @@ mod tests {
         // Save writes the file (Save As for an untitled document), then closes it.
         app.run("file.close", json!({ "index": 0 })).unwrap();
         confirm(&mut app).unwrap();
-        assert_eq!(*written.lock().unwrap(), vec!["out.vectorcraft".to_string()]);
+        assert_eq!(*written.lock().unwrap(), vec!["out.tsipika".to_string()]);
         assert_eq!((docs(&app), app.views.len()), (1, 1));
     }
 
@@ -234,7 +234,7 @@ mod tests {
         // #830: it answered null at once, before the question.
         let (mut app, _) = app();
         let ctx = egui::Context::default();
-        let quit = |app: &mut VectorcraftApp| {
+        let quit = |app: &mut TsipikaApp| {
             let (req, _rx) = crate::control::ControlRequest::new("app.quit", json!({}));
             let crate::control::Outcome::Done(r) = crate::control::handle(app, &ctx, &req) else { panic!("not done") };
             r
@@ -243,7 +243,7 @@ mod tests {
         assert_eq!(quit(&mut app), json!({"ok": true, "result": {"pending": KIND}}));
         assert_eq!((pending(&app), app.ui.status.as_str()), (Some(0), ""));
         app.ui.dialog = None;
-        app.run("file.save", json!({"path": "/docs/saved.vectorcraft"})).unwrap();
+        app.run("file.save", json!({"path": "/docs/saved.tsipika"})).unwrap();
         assert_eq!(quit(&mut app), json!({"ok": true, "result": null}));
         assert_eq!(app.ui.status, "quit");
     }

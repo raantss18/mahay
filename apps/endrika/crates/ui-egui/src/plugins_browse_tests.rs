@@ -7,10 +7,10 @@
 use std::sync::{Arc, Mutex};
 
 use egui::Pos2;
-use figcraft_engine::Session;
-use figcraft_engine::figcraft_collab::message::{ClientMsg, PluginEntry, PluginReply, PluginReq};
-use figcraft_engine::live::{Event, HostOptions, LiveLink, NetReply, NetRequest, Presence, SessionInfo};
-use figcraft_engine::plugin_directory::bundle::{Bundle, sha256_hex};
+use endrika_engine::Session;
+use endrika_engine::endrika_collab::message::{ClientMsg, PluginEntry, PluginReply, PluginReq};
+use endrika_engine::live::{Event, HostOptions, LiveLink, NetReply, NetRequest, Presence, SessionInfo};
+use endrika_engine::plugin_directory::bundle::{Bundle, sha256_hex};
 use serde_json::json;
 
 use crate::layers_drag_tests::Ui;
@@ -105,10 +105,10 @@ fn deliver(wire: &Arc<Mutex<Wire>>, bytes: &[u8]) -> usize {
 }
 
 /// Services that keep what the app saved.
-struct Saved(Arc<Mutex<Vec<figcraft_engine::Prefs>>>);
+struct Saved(Arc<Mutex<Vec<endrika_engine::Prefs>>>);
 
 impl crate::Services for Saved {
-    fn save_prefs(&mut self, prefs: &figcraft_engine::Prefs) {
+    fn save_prefs(&mut self, prefs: &endrika_engine::Prefs) {
         self.0.lock().unwrap().push(prefs.clone());
     }
 }
@@ -137,7 +137,7 @@ fn click(u: &mut Ui, at: Pos2) {
 
 fn bundle() -> Vec<u8> {
     let wasm =
-        wat::parse_str(r#"(module (memory (export "memory") 1) (func (export "figcraft_run") (param i32) (result i32) i32.const 0))"#).unwrap();
+        wat::parse_str(r#"(module (memory (export "memory") 1) (func (export "endrika_run") (param i32) (result i32) i32.const 0))"#).unwrap();
     let manifest = json!({"id": ID, "name": "Grid maker", "version": "1.0.0", "main": "g.wasm", "permissions": {"access": "write", "commands": ["shape.rectangle"]}});
     Bundle { manifest: manifest.to_string(), wasm, assets: Vec::new() }.encode()
 }

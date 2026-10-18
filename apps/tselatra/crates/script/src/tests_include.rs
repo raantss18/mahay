@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_engine::Session;
+use tselatra_engine::Session;
 use serde_json::json;
 
 use crate::{Outcome, run_code};

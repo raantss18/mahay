@@ -1,14 +1,14 @@
 //! Multileaders are saved as native MULTILEADER entities (with their MLEADERSTYLE) and read
 //! back as multileaders (#459), instead of being broken into LEADER + MTEXT / INSERT.
 
-use cadcraft_doc::*;
-use cadcraft_geom::Vec3;
+use drafitra_doc::*;
+use drafitra_geom::Vec3;
 
 /// Saved as 2007 DXF: older versions have no MULTILEADER (they get LEADER + MTEXT / INSERT).
 fn roundtrip(d: &Drawing) -> (String, Drawing) {
-    let opts = cadcraft_io::SaveOptions { version: Some(cadcraft_io::Version::R2007), binary: false };
-    let text = String::from_utf8(cadcraft_io::write_with(d, "x.dxf", &opts).unwrap()).unwrap();
-    let back = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let opts = drafitra_io::SaveOptions { version: Some(drafitra_io::Version::R2007), binary: false };
+    let text = String::from_utf8(drafitra_io::write_with(d, "x.dxf", &opts).unwrap()).unwrap();
+    let back = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     (text, back)
 }
 
@@ -204,7 +204,7 @@ fn foreign_multileader_with_two_landings() {
 304\nLEADER_LINE{\n10\n0.0\n20\n0.0\n30\n0.0\n91\n0\n305\n}\n303\n}\n\
 302\nLEADER{\n10\n20.0\n20\n5.0\n30\n0.0\n40\n0.5\n304\nLEADER_LINE{\n10\n25.0\n20\n0.0\n30\n0.0\n305\n}\n303\n}\n\
 301\n}\n170\n1\n291\n1\n172\n2\n";
-    let d = cadcraft_io::read_dxf(dxf_with(body).as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(dxf_with(body).as_bytes()).unwrap();
     let got = mleaders(&d);
     assert_eq!(got.len(), 1);
     let m = got[0];
@@ -235,7 +235,7 @@ fn hostile_multileaders_do_not_panic() {
         format!("300\nCONTEXT_DATA{{\n{many_roots}"),
     ];
     for body in &cases {
-        let d = cadcraft_io::read_dxf(dxf_with(body).as_bytes()).unwrap();
+        let d = drafitra_io::read_dxf(dxf_with(body).as_bytes()).unwrap();
         for m in mleaders(&d) {
             assert!(m.leaders.len() <= 4096);
             assert!(m.landing.x.is_finite() && m.landing.y.is_finite());
@@ -246,7 +246,7 @@ fn hostile_multileaders_do_not_panic() {
             }
         }
         // And the result saves.
-        let _ = cadcraft_io::write_dxf(&d);
+        let _ = drafitra_io::write_dxf(&d);
     }
 }
 
@@ -259,8 +259,8 @@ fn multileader_through_dwg() {
     d.mleader_styles.push(MLeaderStyle { name: "Callout".into(), arrow_size: 0.3, ..MLeaderStyle::default() });
     let m = text_mleader();
     d.add(&Space::Model, Common::default(), EntityKind::MLeader(m.clone())).unwrap();
-    let dwg = cadcraft_io::write(&d, "x.dwg").unwrap();
-    let back = cadcraft_io::read(&dwg, "x.dwg").unwrap();
+    let dwg = drafitra_io::write(&d, "x.dwg").unwrap();
+    let back = drafitra_io::read(&dwg, "x.dwg").unwrap();
     let got = mleaders(&back);
     assert_eq!(got.len(), 1, "{:?}", back.model.iter().map(|e| e.kind.dxf_name()).collect::<Vec<_>>());
     assert_eq!(*got[0], m);

@@ -1,6 +1,6 @@
 //! Application-owned panel IDs and commands around the shared docking layout.
 
-use craft_ui::docking::{Action, Floating, Layout, Node, Placement, Zone};
+use mahay_ui::docking::{Action, Floating, Layout, Node, Placement, Zone};
 use serde_json::{Value, json};
 
 use crate::DesignApp;
@@ -15,14 +15,14 @@ struct LegacyDrag {
 
 pub(crate) fn cancel_gesture(app: &mut DesignApp, ctx: &egui::Context) {
     cancel_legacy_drag(app, ctx);
-    craft_ui::docking::cancel_drag::<String>(ctx, egui::Id::new("designcraft-panel-docking"));
+    mahay_ui::docking::cancel_drag::<String>(ctx, egui::Id::new("pejy-panel-docking"));
 }
 
 fn cancel_legacy_drag(app: &mut DesignApp, ctx: &egui::Context) -> bool {
-    let key = egui::Id::new("designcraft-panel-docking").with("legacy-origin");
+    let key = egui::Id::new("pejy-panel-docking").with("legacy-origin");
     let previous = ctx.data_mut(|data| data.remove_temp::<LegacyDrag>(key));
     if let Some(previous) = previous {
-        craft_ui::docking::cancel_drag::<String>(ctx, egui::Id::new("designcraft-panel-docking"));
+        mahay_ui::docking::cancel_drag::<String>(ctx, egui::Id::new("pejy-panel-docking"));
         if previous.generation != app.ui.docking_generation {
             return false;
         }
@@ -79,7 +79,7 @@ fn tab_group(layout: &Layout<String>, panel: &str) -> Vec<String> {
     let mut seen = 0usize;
     while let Some(node) = visit.pop() {
         seen = seen.saturating_add(1);
-        if seen > 2 * craft_ui::docking::MAX_PANELS {
+        if seen > 2 * mahay_ui::docking::MAX_PANELS {
             break;
         }
         match node {
@@ -100,7 +100,7 @@ fn open_in_stack(layout: &Layout<String>, panel: &str) -> bool {
     let mut seen = 0usize;
     while let Some(node) = visit.pop() {
         seen = seen.saturating_add(1);
-        if seen > 2 * craft_ui::docking::MAX_PANELS {
+        if seen > 2 * mahay_ui::docking::MAX_PANELS {
             break;
         }
         match node {
@@ -196,7 +196,7 @@ pub(crate) fn command(app: &mut DesignApp, id: &str, params: &Value) -> Option<R
 }
 
 // UI output and automation share this atomic dispatcher. The application owns the registry
-// and saved return locations; craft-ui owns tree validation and structural changes.
+// and saved return locations; mahay-ui owns tree validation and structural changes.
 fn apply_action(app: &mut DesignApp, action: Action<String>) -> Result<Value, String> {
     let registered = |id: &String| normalize(id) == Some(id.as_str());
     let known = match &action {
@@ -215,7 +215,7 @@ fn apply_action(app: &mut DesignApp, action: Action<String>) -> Result<Value, St
         | Action::MoveFloating { panel, .. }
         | Action::SetStackOpen { panel, .. }
         | Action::ResizeStack { panel, .. } => registered(panel),
-        Action::ResizeSplit { path, .. } => path.len() <= craft_ui::docking::MAX_DEPTH,
+        Action::ResizeSplit { path, .. } => path.len() <= mahay_ui::docking::MAX_DEPTH,
     };
     if !known {
         return Err("docking action contains an unknown panel or an excessive split path".into());
@@ -257,7 +257,7 @@ fn front_tabs(layout: &Layout<String>) -> Vec<String> {
     let mut out = Vec::new();
     let mut visit: Vec<&Node<String>> = layout.root.iter().collect();
     while let Some(node) = visit.pop() {
-        if out.len() > craft_ui::docking::MAX_PANELS {
+        if out.len() > mahay_ui::docking::MAX_PANELS {
             break;
         }
         match node {
@@ -278,7 +278,7 @@ fn restore_front_tabs(layout: &mut Layout<String>, front: &[String]) {
     let mut seen = 0usize;
     while let Some(node) = visit.pop() {
         seen = seen.saturating_add(1);
-        if seen > 2 * craft_ui::docking::MAX_PANELS {
+        if seen > 2 * mahay_ui::docking::MAX_PANELS {
             break;
         }
         match node {
@@ -431,14 +431,14 @@ fn change(app: &mut DesignApp, operation: &str, params: &Value) -> Result<Value,
 }
 
 pub(crate) fn show(app: &mut DesignApp, ui: &mut egui::Ui) -> bool {
-    let area = egui::Id::new("designcraft-panel-docking");
+    let area = egui::Id::new("pejy-panel-docking");
     let changed_workspace = ui.ctx().data_mut(|data| {
         let previous = data.get_temp::<u64>(area.with("generation"));
         data.insert_temp(area.with("generation"), app.ui.docking_generation);
         previous.is_some_and(|generation| generation != app.ui.docking_generation)
     });
     if changed_workspace {
-        craft_ui::docking::cancel_drag::<String>(ui.ctx(), area);
+        mahay_ui::docking::cancel_drag::<String>(ui.ctx(), area);
         ui.ctx().data_mut(|data| data.remove::<LegacyDrag>(area.with("legacy-origin")));
     }
 
@@ -469,7 +469,7 @@ pub(crate) fn show(app: &mut DesignApp, ui: &mut egui::Ui) -> bool {
     let t = crate::theme::Tokens::get(ui.ctx());
     let language = app.ui.language.clone();
     let mut draw = |ui: &mut egui::Ui| {
-        let mut style = craft_ui::docking::DockStyle::from_ui(ui);
+        let mut style = mahay_ui::docking::DockStyle::from_ui(ui);
         style.tab_height = 27.0;
         style.background = t.panel;
         style.tab_background = t.tab_strip;
@@ -484,7 +484,7 @@ pub(crate) fn show(app: &mut DesignApp, ui: &mut egui::Ui) -> bool {
         style.panels_label = crate::i18n::tr(&language, "Panels").to_owned();
         style.resize_label = crate::i18n::tr(&language, "Resize panels").to_owned();
         style.resize_window_label = crate::i18n::tr(&language, "Resize panel window").to_owned();
-        let mut area = craft_ui::docking::DockArea::new(egui::Id::new("designcraft-panel-docking")).blocked_rects(&blocked);
+        let mut area = mahay_ui::docking::DockArea::new(egui::Id::new("pejy-panel-docking")).blocked_rects(&blocked);
         if let Some(panel) = &raise {
             area = area.raise_panel(panel.clone());
         }
@@ -500,8 +500,8 @@ pub(crate) fn show(app: &mut DesignApp, ui: &mut egui::Ui) -> bool {
                 .to_owned()
             },
             // Close comes from the panel's own tab commands, so the surface doesn't add another.
-            |_| craft_ui::docking::Permissions { closable: false, ..Default::default() },
-            |_| craft_ui::docking::PanelLimits { min: egui::vec2(220.0, 80.0), ..Default::default() },
+            |_| mahay_ui::docking::Permissions { closable: false, ..Default::default() },
+            |_| mahay_ui::docking::PanelLimits { min: egui::vec2(220.0, 80.0), ..Default::default() },
             &mut PanelContent(app),
         )
     };
@@ -526,7 +526,7 @@ pub(crate) fn show(app: &mut DesignApp, ui: &mut egui::Ui) -> bool {
         if !output.actions.iter().any(|action| matches!(action, Action::Move { .. } | Action::Float { .. })) && cancel_legacy_drag(app, ui.ctx()) {
             return app.ui.docking.is_some();
         }
-        ui.ctx().data_mut(|data| data.remove::<LegacyDrag>(egui::Id::new("designcraft-panel-docking").with("legacy-origin")));
+        ui.ctx().data_mut(|data| data.remove::<LegacyDrag>(egui::Id::new("pejy-panel-docking").with("legacy-origin")));
     }
     for action in output.actions {
         if let Err(error) = app.run("window.panel.layout", json!({"action": action})) {
@@ -580,11 +580,11 @@ pub(crate) fn legacy_tab(app: &mut DesignApp, ui: &mut egui::Ui, panel: &str, re
             egui::vec2(bounds.width().clamp(240.0, 600.0), bounds.height().clamp(200.0, 600.0)),
         );
         if ensure(&mut layout, id).is_ok()
-            && craft_ui::docking::begin_drag(ui.ctx(), egui::Id::new("designcraft-panel-docking"), id.to_string(), source)
+            && mahay_ui::docking::begin_drag(ui.ctx(), egui::Id::new("pejy-panel-docking"), id.to_string(), source)
         {
             ui.ctx().data_mut(|data| {
                 data.insert_temp(
-                    egui::Id::new("designcraft-panel-docking").with("legacy-origin"),
+                    egui::Id::new("pejy-panel-docking").with("legacy-origin"),
                     LegacyDrag {
                         layout: app.ui.docking.clone(),
                         open_panel: app.ui.open_panel.clone(),
@@ -653,7 +653,7 @@ pub(crate) fn panel_menu(app: &mut DesignApp, ui: &mut egui::Ui, panel: &str) {
 }
 
 struct PanelContent<'a>(&'a mut DesignApp);
-impl craft_ui::docking::DockContent<String> for PanelContent<'_> {
+impl mahay_ui::docking::DockContent<String> for PanelContent<'_> {
     fn body(&mut self, ui: &mut egui::Ui, id: &String) {
         egui::Frame::NONE.inner_margin(egui::Margin::same(8)).show(ui, |ui| {
             if crate::dock::scrolls_itself(id) {

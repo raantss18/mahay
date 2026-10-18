@@ -9,8 +9,8 @@
 //! The PDF and SVG exports, which have no pixels to read, render what lies under the layer instead
 //! ([`effects_beneath`]) and draw the same [`effects`] from it.
 
-use figcraft_doc::{Document, EffectKind, Node, NodeId, NodeKind};
-use figcraft_geom::{Affine, Rect};
+use endrika_doc::{Document, EffectKind, Node, NodeId, NodeKind};
+use endrika_geom::{Affine, Rect};
 use tiny_skia::{Mask, Pixmap, PixmapPaint, Transform};
 
 use crate::shadow::{Outline, spread_alpha};
@@ -27,7 +27,7 @@ pub struct Under<'a> {
     /// Where this surface's top-left pixel lands on `pix`.
     pub at: (i32, i32),
     pub opacity: f32,
-    pub blend: figcraft_color::BlendMode,
+    pub blend: endrika_color::BlendMode,
     /// What this surface is clipped by when composited, in its own pixels.
     pub clip: Option<&'a Mask>,
     /// The surface started as a copy of `pix` there and goes back in its place through `clip`
@@ -40,7 +40,7 @@ pub struct Under<'a> {
 impl<'a> Under<'a> {
     /// A surface drawn at `at` onto `pix` (itself over `below`), as is.
     pub fn new(pix: &'a Pixmap, at: (i32, i32), below: Option<&'a Under<'a>>) -> Self {
-        Under { pix, at, opacity: 1.0, blend: figcraft_color::BlendMode::Normal, clip: None, replaces: false, below }
+        Under { pix, at, opacity: 1.0, blend: endrika_color::BlendMode::Normal, clip: None, replaces: false, below }
     }
 }
 
@@ -204,7 +204,7 @@ pub fn outline(doc: &Document, n: &Node) -> Option<Outline> {
 /// Where node `id`'s shape lies on its page (what its backdrop effects cover).
 pub fn shape_bounds(doc: &Document, id: NodeId) -> Option<Rect> {
     let shape = outline(doc, doc.node(id)?)?;
-    Some(figcraft_geom::transform_rect_bbox(doc.world_transform(id), figcraft_geom::Shape::bounding_box(&shape.0)))
+    Some(endrika_geom::transform_rect_bbox(doc.world_transform(id), endrika_geom::Shape::bounding_box(&shape.0)))
 }
 
 /// Node `id`'s backdrop effects as `view`'s pixels (a view of its [`shape_bounds`]), drawn from a

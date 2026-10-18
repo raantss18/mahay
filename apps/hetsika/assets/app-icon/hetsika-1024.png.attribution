@@ -1,0 +1,8 @@
+asset:        hetsika-1024.png
+title:        Hetsika app icon, 1024 px render
+author:       Brandon Thomas (Hetsika owner), for the Hetsika project
+source:       original work (drawn by the owner in Mahay, then vectorised)
+license:      MIT OR Apache-2.0
+license-file: assets/app-icon/LICENSE.txt
+added:        2026-10-02 by Claude (agent) for Brandon Thomas
+notes:        Rendered from hetsika.svg with resvg by packaging/icons.sh.

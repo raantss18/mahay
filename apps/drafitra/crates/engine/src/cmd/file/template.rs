@@ -3,11 +3,11 @@
 //!
 //! A new drawing from a template is the template's content (layers, styles, layouts, objects…)
 //! as an untitled drawing: saving asks for a name, so the template file is never overwritten by
-//! accident. CADCraft ships no template; templates are the user's files.
+//! accident. Drafitra ships no template; templates are the user's files.
 
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 
-use cadcraft_doc::Drawing;
+use drafitra_doc::Drawing;
 use serde_json::{Value, json};
 
 use super::*;
@@ -49,7 +49,7 @@ pub(super) fn run_new(s: &mut Session, p: &Value) -> Result<Option<Value>> {
     let i = s.open_drawing(d, &title, None);
     // An empty template shows its drawing limits.
     if let Some(st) = s.docs.get_mut(i)
-        && st.doc.extents(&cadcraft_doc::Space::Model).is_empty()
+        && st.doc.extents(&drafitra_doc::Space::Model).is_empty()
         && let (Some(lo), Some(hi)) = (st.doc.header.point("LIMMIN"), st.doc.header.point("LIMMAX"))
         && lo.x.is_finite()
         && lo.y.is_finite()
@@ -58,7 +58,7 @@ pub(super) fn run_new(s: &mut Session, p: &Value) -> Result<Option<Value>> {
         && hi.x > lo.x
         && hi.y > lo.y
     {
-        let center = cadcraft_geom::Vec2::new((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0);
+        let center = drafitra_geom::Vec2::new((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0);
         st.set_view_quiet(crate::View { center, height: (hi.y - lo.y).max(1e-6) });
     }
     Ok(Some(json!({ "index": i, "title": title, "template": path })))

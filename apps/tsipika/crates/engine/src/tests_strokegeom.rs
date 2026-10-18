@@ -2,7 +2,7 @@
 //! the width-profile presets.
 
 use serde_json::json;
-use vectorcraft_doc::{ArrowAlign, StrokeLayer, WidthProfile};
+use tsipika_doc::{ArrowAlign, StrokeLayer, WidthProfile};
 
 use super::*;
 
@@ -23,7 +23,7 @@ fn arrow_align_is_set_per_stroke_and_validated() {
     assert_eq!(stroke(&s, id).arrow_align, ArrowAlign::Extend);
     s.execute("stroke.set", &json!({"endArrow": "TriangleOpen", "arrowAlign": "tip"})).unwrap();
     let st = stroke(&s, id);
-    assert_eq!((st.end_arrow, st.arrow_align), (Some(vectorcraft_doc::Arrowhead::TriangleOpen), ArrowAlign::Tip));
+    assert_eq!((st.end_arrow, st.arrow_align), (Some(tsipika_doc::Arrowhead::TriangleOpen), ArrowAlign::Tip));
     s.execute("stroke.set", &json!({"arrowAlign": "extend", "ids": [id.0]})).unwrap();
     assert_eq!(stroke(&s, id).arrow_align, ArrowAlign::Extend);
     assert!(s.execute("stroke.set", &json!({"arrowAlign": "middle"})).is_err());
@@ -50,7 +50,7 @@ fn profiles_come_from_the_preset_catalogue() {
     }
     assert!(spec.params.contains("arrowAlign"));
     // …and every arrowhead name `startArrow`/`endArrow` accept.
-    for a in vectorcraft_doc::Arrowhead::ALL {
+    for a in tsipika_doc::Arrowhead::ALL {
         let name = serde_json::to_value(a).unwrap();
         assert!(spec.params.contains(name.as_str().unwrap()), "{name}");
         s.execute("stroke.set", &json!({"endArrow": name})).unwrap();
@@ -67,10 +67,10 @@ fn arrow_align_and_profiles_survive_the_native_format() {
     )
     .unwrap();
     let doc = &s.doc().unwrap().doc;
-    let back = vectorcraft_format::load(&vectorcraft_format::save(doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(doc, false)).unwrap();
     assert_eq!(back.node(id).unwrap().appearance.stroke().unwrap(), &stroke(&s, id));
     // A stroke with the default alignment writes nothing new, so older builds read it unchanged.
     s.execute("stroke.set", &json!({"arrowAlign": "extend"})).unwrap();
-    let text = String::from_utf8(vectorcraft_format::save(&s.doc().unwrap().doc, true)).unwrap();
+    let text = String::from_utf8(tsipika_format::save(&s.doc().unwrap().doc, true)).unwrap();
     assert!(!text.contains("arrow_align"));
 }

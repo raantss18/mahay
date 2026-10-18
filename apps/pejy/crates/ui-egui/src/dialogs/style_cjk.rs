@@ -5,8 +5,8 @@
 //! dialog's style edit command. The Ruby dialog (Type › Ruby…) shows the four ruby sections over
 //! the selected text and applies them with `type.ruby`.
 
-use designcraft_doc::cjk::Kinsoku;
-use designcraft_doc::cjk_settings::KentenKind;
+use pejy_doc::cjk::Kinsoku;
+use pejy_doc::cjk_settings::KentenKind;
 use serde_json::{Value, json};
 
 use super::{CharFields, Dialog, char_check, char_choice, char_number};
@@ -91,7 +91,7 @@ pub(super) fn section_ui(
     id: &str,
     cf: &CharFields,
     para: Option<&Value>,
-    doc: &designcraft_doc::Document,
+    doc: &pejy_doc::Document,
 ) {
     let lang = app.ui.language.clone();
     let lang = lang.as_str();
@@ -330,7 +330,7 @@ fn ruby_longer(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields) {
 
 /// Ruby Color / Kenten Color (`prefix` "ruby" or "kenten"): the fill or stroke swatch (Text
 /// Color: the text's own), its tint and the stroke weight (empty: the text's), and overprint.
-fn adornment_color(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields, doc: &designcraft_doc::Document, prefix: &str) {
+fn adornment_color(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields, doc: &pejy_doc::Document, prefix: &str) {
     let target = format!("cjk.{prefix}ColorTarget");
     let stroke = d.s(&target) == "stroke";
     ui.horizontal(|ui| {
@@ -494,7 +494,7 @@ pub(super) fn pick_kenten(d: &mut Dialog, cf: &CharFields, kind: Option<KentenKi
 /// Kenten Settings: distance, position, size, alignment, scales, the kind, and for a custom mark
 /// its font and characters.
 fn kenten(app: &mut DesignApp, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields) {
-    use designcraft_doc::cjk_settings::KENTEN_MARK_MAX_CHARS;
+    use pejy_doc::cjk_settings::KENTEN_MARK_MAX_CHARS;
     let lang = app.ui.language.clone();
     let lang = lang.as_str();
     let on = cf.get(d, "kenten").as_bool();
@@ -579,7 +579,7 @@ fn shatai(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields) {
 fn auto_tate_chu_yoko(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, pv: &Value) {
     grid("cjkautotcy").show(ui, |ui| {
         crate::rtl::label(ui, tr(lang, "Tate-chu-yoko Digits:"));
-        para_count(ui, d, pv, "autoTcy", (0.0, f64::from(designcraft_compose::shape::AUTO_TCY_MAX)));
+        para_count(ui, d, pv, "autoTcy", (0.0, f64::from(pejy_compose::shape::AUTO_TCY_MAX)));
         ui.end_row();
     });
     para_check(ui, d, pv, "autoTcyIncludeRoman", tr(lang, "Include Roman Characters"));
@@ -681,7 +681,7 @@ const BUILT_IN_KINSOKU: &[(&str, &str)] = &[
 
 /// The Kinsoku Set menu: no kinsoku, the built-in sets, then every other named set the document's
 /// paragraph styles and paragraphs use (the model keeps each set by value, not in a list).
-pub(super) fn kinsoku_sets(doc: &designcraft_doc::Document) -> Vec<Kinsoku> {
+pub(super) fn kinsoku_sets(doc: &pejy_doc::Document) -> Vec<Kinsoku> {
     let mut sets = vec![Kinsoku::default()];
     sets.extend(BUILT_IN_KINSOKU.iter().filter_map(|(name, _)| Kinsoku::named(name)));
     let used = doc.styles.paragraph.iter().map(|s| &s.para.kinsoku).chain(doc.stories.values().flat_map(|s| s.paras.iter().map(|p| &p.para.kinsoku)));
@@ -707,7 +707,7 @@ fn mojikumi_value(v: &str) -> &str {
 
 /// The Mojikumi Set menu as (value, label): none (empty label), the document's sets, and the
 /// `current` value when it names a set the document doesn't define (kept as imported).
-pub(super) fn mojikumi_sets(doc: &designcraft_doc::Document, current: &str) -> Vec<(String, String)> {
+pub(super) fn mojikumi_sets(doc: &pejy_doc::Document, current: &str) -> Vec<(String, String)> {
     let mut out = vec![(String::new(), String::new())];
     for t in &doc.styles.mojikumi_tables {
         let v = format!("MojikumiTable/{}", t.name);
@@ -724,7 +724,7 @@ pub(super) fn mojikumi_sets(doc: &designcraft_doc::Document, current: &str) -> V
 
 /// Japanese Composition Settings: kinsoku, hanging, bunri-kinshi, mojikumi, the leading model,
 /// rensuuji, rotated roman in vertical text, line-end ideographic spaces and roman word breaks.
-fn japanese_composition(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields, pv: &Value, doc: &designcraft_doc::Document) {
+fn japanese_composition(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &CharFields, pv: &Value, doc: &pejy_doc::Document) {
     egui::Grid::new("cjkcomp").num_columns(2).spacing([8.0, 6.0]).show(ui, |ui| {
         crate::rtl::label(ui, crate::i18n::tr(lang, "Kinsoku Set:"));
         let sets = kinsoku_sets(doc);
@@ -813,8 +813,8 @@ fn japanese_composition(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, cf: &Char
 /// Grid Settings: the point of each line that sits on the baseline grid (or none), only the
 /// first line, gyoudori and paragraph gyoudori.
 fn grid_settings(lang: &str, ui: &mut egui::Ui, d: &mut Dialog, pv: &Value) {
-    use designcraft_doc::GridAlign;
-    use designcraft_doc::cjk::CharacterAlignment as R;
+    use pejy_doc::GridAlign;
+    use pejy_doc::cjk::CharacterAlignment as R;
     let cur: GridAlign = serde_json::from_value(para_value(d, pv, "gridAlign")).unwrap_or_default();
     let reference: R = serde_json::from_value(para_value(d, pv, "gridReference")).unwrap_or_default();
     let set = |d: &mut Dialog, g: GridAlign| {
@@ -889,7 +889,7 @@ mod tests {
 
     /// A document with paragraph style Body on its text and character style Emphasis.
     fn app_with_text() -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("style.paragraph.create", json!({"name": "Body"})).unwrap();
         app.run("style.character.create", json!({"name": "Emphasis", "chars": {"fontStyle": "Italic"}})).unwrap();
@@ -986,7 +986,7 @@ mod tests {
         let mut app = app_with_text();
         app.run("prefs.set", json!({"cjkFeatures": true})).unwrap();
         if let Some(st) = app.session.active_mut() {
-            let table = designcraft_doc::cjk::MojikumiTable { name: "Body Text".into(), ..Default::default() };
+            let table = pejy_doc::cjk::MojikumiTable { name: "Body Text".into(), ..Default::default() };
             std::sync::Arc::make_mut(&mut st.doc).styles_mut().mojikumi_tables.push(table);
         }
         let doc = app.session.active().unwrap().doc.clone();
@@ -1013,7 +1013,7 @@ mod tests {
         let st = doc.styles.para("Body").unwrap();
         assert_eq!(st.para.kinsoku, Some(Some(hard)));
         assert_eq!(st.para.mojikumi.as_deref(), Some("MojikumiTable/Body Text"));
-        assert_eq!(st.para.kinsoku_hang, Some(designcraft_doc::cjk::KinsokuHang::Regular));
+        assert_eq!(st.para.kinsoku_hang, Some(pejy_doc::cjk::KinsokuHang::Regular));
         assert_eq!((st.chars.kenten, st.chars.kenten_kind), (Some(true), Some(KentenKind::BlackCircle)));
         assert_eq!(st.chars.kenten_character.as_deref(), Some("\u{25CF}"));
         let a = app.run("type.selectionAttrs", json!({})).unwrap();
@@ -1045,7 +1045,7 @@ mod tests {
 
     #[test]
     fn ruby_alignment_and_shatai_angle_reach_the_style_and_its_paragraph() {
-        use designcraft_doc::ruby::RubyAlignment;
+        use pejy_doc::ruby::RubyAlignment;
         let mut app = app_with_text();
         app.run("prefs.set", json!({"cjkFeatures": true})).unwrap();
         let ctx = egui::Context::default();
@@ -1069,7 +1069,7 @@ mod tests {
         let st = doc.styles.para("Body").unwrap();
         assert_eq!(st.chars.ruby_alignment, Some(RubyAlignment::EqualAki));
         assert_eq!((st.chars.shatai_magnification, st.chars.shatai_angle), (Some(20.0), Some(60.0)));
-        assert_eq!((st.para.grid_reference, st.para.grid_gyoudori), (Some(designcraft_doc::cjk::CharacterAlignment::EmCenter), Some(2)));
+        assert_eq!((st.para.grid_reference, st.para.grid_gyoudori), (Some(pejy_doc::cjk::CharacterAlignment::EmCenter), Some(2)));
         let a = app.run("type.selectionAttrs", json!({})).unwrap();
         assert_eq!(a["chars"]["rubyAlignment"], "equalAki", "the paragraph follows its style");
         assert_eq!(a["chars"]["shataiAngle"], 60.0);

@@ -2395,38 +2395,11 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             ok || cancel
         }
         Dialog::About { tab } => {
-            ui.set_width(660.0);
-            ui.horizontal(|ui| {
-                for (i, l) in ["About", "Contributors", "Models"].into_iter().enumerate() {
-                    let i = i as u8;
-                    if ui.selectable_label(*tab == i, tl!(l)).clicked() {
-                        *tab = i;
-                    }
-                }
-            });
-            ui.separator();
-            match *tab {
-                1 => crate::credits::contributors_ui(ui),
-                2 => crate::credits::models_ui(ui),
-                _ => {
-                    ui.label(egui::RichText::new(tl!("Soratra")).font(semibold(22.0)));
-                    let build = option_env!("SORATRA_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
-                    ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
-                    ui.label(tl!(
-                        "A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team."
-                    ));
-                    ui.add_space(6.0);
-                    ui.hyperlink_to(tl!("mahay.com/apps/soratra"), "https://github.com/raantss18/mahay");
-                    ui.hyperlink_to(tl!("Join the discussions: github.com/raantss18/mahay/discussions"), "https://github.com/raantss18/mahay/discussions");
-                    ui.hyperlink_to(tl!("Source code: github.com/raantss18/soratra"), "https://github.com/raantss18/mahay");
-                    ui.add_space(6.0);
-                    ui.label(
-                        egui::RichText::new(tl!("MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors."))
-                            .small()
-                            .weak(),
-                    );
-                }
-            }
+            // The shared Mahay About page (version, updates, author, licences).
+            let _ = tab;
+            ui.set_width(560.0);
+            ui.set_max_height(520.0);
+            mahay_about::page(ui, mahay_about::AppInfo { id: "soratra", name: "Soratra" });
             let (ok, cancel) = buttons(ui, tl!("Close"));
             ok || cancel
         }

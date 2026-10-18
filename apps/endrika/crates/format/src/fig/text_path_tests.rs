@@ -20,7 +20,7 @@ message Blob byte[] bytes
 message NodeChange GUID guid, ParentIndex parentIndex, NodeType type, string name, Vector size, Matrix transform, TextData textData, float fontSize, FontName fontName, TextPathStart textPathStart, VectorData vectorData, StyleType styleType, StyleId styleIdForText, TextDecoration textDecoration
 message Message NodeChange[] nodeChanges, Blob[] blobs
 ";
-use figcraft_doc::{NodeKind, TextPath};
+use endrika_doc::{NodeKind, TextPath};
 
 fn o(fields: Vec<(&'static str, Kv<'static>)>) -> Kv<'static> {
     Kv::Object(fields)

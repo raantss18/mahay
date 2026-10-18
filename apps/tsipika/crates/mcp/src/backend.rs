@@ -7,7 +7,7 @@ use std::time::Duration;
 use serde_json::{Value, json};
 
 /// Something that answers control-channel methods (`engine.execute`, `document.inspect`,
-/// `ui.pointer`, `ui.render`, `app.export`, …). See `vectorcraft_ui_egui::control` for the list.
+/// `ui.pointer`, `ui.render`, `app.export`, …). See `tsipika_ui_egui::control` for the list.
 pub trait Backend {
     /// Call one method. `Ok` carries the `result`, `Err` the error message.
     fn call(&mut self, method: &str, params: Value) -> Result<Value, String>;
@@ -17,7 +17,7 @@ pub trait Backend {
     fn describe(&self) -> String;
 }
 
-/// A running VectorCraft app, reached through its loopback control port.
+/// A running Tsipika app, reached through its loopback control port.
 pub struct Remote {
     addr: String,
     conn: Option<(BufReader<TcpStream>, TcpStream)>,
@@ -86,13 +86,13 @@ impl Remote {
     }
 
     /// Wait until the app starts to answer, giving up when the call is cancelled
-    /// ([`vectorcraft_engine::cancel`]): the app has no way to stop what it runs, but this server
+    /// ([`tsipika_engine::cancel`]): the app has no way to stop what it runs, but this server
     /// stops waiting for it (the connection is dropped, so a late answer can't be mistaken for
     /// the next call's). Without a cancellable call this is just the read the caller does next.
     fn wait_for_reply(stream: &TcpStream) -> std::io::Result<()> {
         const POLL: Duration = Duration::from_millis(100);
         const LIMIT: Duration = Duration::from_secs(90);
-        if !vectorcraft_engine::cancel::is_cancellable() {
+        if !tsipika_engine::cancel::is_cancellable() {
             return Ok(());
         }
         let start = std::time::Instant::now();
@@ -103,7 +103,7 @@ impl Remote {
                 // Bytes (or the end of the stream) to read now.
                 Ok(_) => break Ok(()),
                 Err(e) if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => {
-                    if vectorcraft_engine::cancel::is_cancelled() {
+                    if tsipika_engine::cancel::is_cancelled() {
                         break Err(std::io::Error::new(
                             std::io::ErrorKind::Interrupted,
                             "cancelled; the app may still finish what it was asked, which can't be stopped from here",
@@ -146,7 +146,7 @@ impl Backend for Remote {
     fn call(&mut self, method: &str, params: Value) -> Result<Value, String> {
         self.prepare_connection().map_err(|e| {
             self.conn = None;
-            format!("VectorCraft app at {} is not reachable: {e}; `{method}`: nothing was sent", self.addr)
+            format!("Tsipika app at {} is not reachable: {e}; `{method}`: nothing was sent", self.addr)
         })?;
         let id = self.next_id;
         self.next_id += 1;
@@ -159,14 +159,14 @@ impl Backend for Remote {
             })
             .map_err(|e| {
                 self.conn = None;
-                format!("VectorCraft app at {}: `{method}` failed: {e}; operation may have completed; inspect state before retrying", self.addr)
+                format!("Tsipika app at {}: `{method}` failed: {e}; operation may have completed; inspect state before retrying", self.addr)
             })?;
         if v.get("id").is_none() && v.get("ok").and_then(Value::as_bool) == Some(false) {
             // The app's refusals carry no id (too many connections, a line it would not read):
             // it ran nothing and closes the connection, so the next call starts a fresh one.
             self.conn = None;
             let why = v.get("error").and_then(Value::as_str).unwrap_or("unknown error");
-            return Err(format!("VectorCraft app at {} refused `{method}`: {why}; nothing was run", self.addr));
+            return Err(format!("Tsipika app at {} refused `{method}`: {why}; nothing was run", self.addr));
         }
         if v.get("id") != Some(&json!(id)) {
             // Not the answer to this call: the stream is desynchronised (or the endpoint faulty),
@@ -174,7 +174,7 @@ impl Backend for Remote {
             // still have completed, as with any reply that never arrived whole (#1728).
             self.conn = None;
             return Err(format!(
-                "VectorCraft app at {}: reply id mismatch (expected {id}); connection dropped; operation may have completed; inspect state before retrying",
+                "Tsipika app at {}: reply id mismatch (expected {id}); connection dropped; operation may have completed; inspect state before retrying",
                 self.addr
             ));
         }

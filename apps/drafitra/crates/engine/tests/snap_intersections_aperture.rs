@@ -1,8 +1,8 @@
 //! Finite and apparent intersection behavior around the cursor aperture.
 
-use cadcraft_doc::{Common, Drawing, Ellipse, EntityKind, Line, Space};
-use cadcraft_engine::snap::{self, SnapHit, mode};
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_doc::{Common, Drawing, Ellipse, EntityKind, Line, Space};
+use drafitra_engine::snap::{self, SnapHit, mode};
+use drafitra_geom::{Vec2, Vec3};
 
 fn add_line(d: &mut Drawing, a: Vec2, b: Vec2) {
     d.add(&Space::Model, Common::default(), EntityKind::Line(Line { a: a.to3(0.0), b: b.to3(0.0) })).unwrap();
@@ -70,7 +70,7 @@ fn tessellated_line_parameter_tolerance_is_preserved() {
 fn large_tessellated_chord_parameter_slack_is_not_pruned() {
     let mut d = Drawing::new_imperial();
     let radius = 1e12;
-    let step = std::f64::consts::TAU / cadcraft_geom::arc_segments(radius, std::f64::consts::TAU, radius * 1e-3) as f64;
+    let step = std::f64::consts::TAU / drafitra_geom::arc_segments(radius, std::f64::consts::TAU, radius * 1e-3) as f64;
     let next = Vec2::new(-radius + radius * step.cos(), radius * 0.5 * step.sin());
     let t = 1.0 / next.x;
     assert!(t.abs() < 1e-9);
@@ -133,7 +133,7 @@ fn real_intersection_keeps_precedence_when_app_is_also_enabled() {
 #[test]
 fn line_and_circle_intersections_remain_available() {
     let mut d = Drawing::new_imperial();
-    d.add(&Space::Model, Common::default(), EntityKind::Circle(cadcraft_doc::Circle { center: Vec3::ZERO, radius: 2.0 })).unwrap();
+    d.add(&Space::Model, Common::default(), EntityKind::Circle(drafitra_doc::Circle { center: Vec3::ZERO, radius: 2.0 })).unwrap();
     add_line(&mut d, Vec2::new(-3.0, 0.0), Vec2::new(3.0, 0.0));
     add_line(&mut d, Vec2::new(0.0, -3.0), Vec2::new(0.0, 3.0));
 

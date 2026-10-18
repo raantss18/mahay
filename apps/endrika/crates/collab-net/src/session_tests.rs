@@ -4,9 +4,9 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
-use figcraft_engine::live::Status;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
+use endrika_engine::live::Status;
 use serde_json::{Value, json};
 
 use crate::NetLink;
@@ -43,7 +43,7 @@ fn host_and_join() -> (Session, Session, u32, u32) {
     assert_eq!(r["role"], "host");
     assert_eq!(r["network"], false, "shared on this machine only by default");
     let link = r["link"].as_str().unwrap().to_string();
-    assert!(link.starts_with("figcraft://join?host=127.0.0.1:"), "{link}");
+    assert!(link.starts_with("endrika://join?host=127.0.0.1:"), "{link}");
     let r = guest.execute("collab.join", &json!({"link": link})).unwrap();
     assert_eq!(r["status"], "connecting");
     pump(&mut host, &mut guest, "the join", |h, g| {
@@ -132,7 +132,7 @@ fn the_host_stopping_ends_the_session_for_guests() {
 #[test]
 fn a_bad_invite_is_reported() {
     let mut guest = session("Ada");
-    let e = guest.execute("collab.join", &json!({"link": "figcraft://join?host=nope"})).unwrap_err().to_string();
+    let e = guest.execute("collab.join", &json!({"link": "endrika://join?host=nope"})).unwrap_err().to_string();
     assert!(e.contains("invite"), "{e}");
     let mut host = session("Hana");
     let r: Value = host.execute("collab.host", &json!({"port": 0})).unwrap();
@@ -143,8 +143,8 @@ fn a_bad_invite_is_reported() {
 }
 
 /// The synced properties of two documents agree (nothing to send from one to the other).
-fn same(a: &figcraft_doc::Document, b: &figcraft_doc::Document) -> bool {
-    figcraft_collab::diff(&figcraft_collab::Replica::new(a.clone()), b).is_ok_and(|d| d.changes.is_empty())
+fn same(a: &endrika_doc::Document, b: &endrika_doc::Document) -> bool {
+    endrika_collab::diff(&endrika_collab::Replica::new(a.clone()), b).is_ok_and(|d| d.changes.is_empty())
 }
 
 fn id_of(v: &Value) -> u64 {
@@ -189,22 +189,22 @@ fn edits_sync_between_apps() {
     let ellipse = id_of(&a.execute("shape.ellipse", &json!({"x": 0, "y": 200, "width": 30, "height": 30})).unwrap());
     a.live_sync();
     a.execute("edit.delete", &json!({"ids": [ellipse]})).unwrap();
-    all(&mut host, &mut a, &mut b, "Ada's rectangle at Bo", &|_, _, b| b.doc().unwrap().contains(figcraft_doc::NodeId(rect)));
+    all(&mut host, &mut a, &mut b, "Ada's rectangle at Bo", &|_, _, b| b.doc().unwrap().contains(endrika_doc::NodeId(rect)));
     b.execute("node.set", &json!({"ids": [rect], "props": {"name": "Card"}})).unwrap();
     let text = id_of(&host.execute("text.create", &json!({"x": 10, "y": 300, "text": "Hello"})).unwrap());
     all(&mut host, &mut a, &mut b, "everyone agreeing", &|h, a, b| {
         let (hd, ad, bd) = (h.doc().unwrap(), a.doc().unwrap(), b.doc().unwrap());
         same(hd, ad)
             && same(hd, bd)
-            && ad.contains(figcraft_doc::NodeId(text))
-            && hd.node(figcraft_doc::NodeId(rect)).is_some_and(|n| n.name == "Card")
+            && ad.contains(endrika_doc::NodeId(text))
+            && hd.node(endrika_doc::NodeId(rect)).is_some_and(|n| n.name == "Card")
     });
     let (hd, ad) = (host.doc().unwrap().clone(), a.doc().unwrap().clone());
-    let n = ad.node(figcraft_doc::NodeId(rect)).unwrap();
+    let n = ad.node(endrika_doc::NodeId(rect)).unwrap();
     assert_eq!(n.name, "Card");
-    assert!(!ad.contains(figcraft_doc::NodeId(ellipse)), "the deleted ellipse is gone everywhere");
-    assert!(!b.doc().unwrap().contains(figcraft_doc::NodeId(ellipse)));
-    assert_eq!(hd.node(figcraft_doc::NodeId(rect)).unwrap().fills, n.fills, "the colour came across");
+    assert!(!ad.contains(endrika_doc::NodeId(ellipse)), "the deleted ellipse is gone everywhere");
+    assert!(!b.doc().unwrap().contains(endrika_doc::NodeId(ellipse)));
+    assert_eq!(hd.node(endrika_doc::NodeId(rect)).unwrap().fills, n.fills, "the colour came across");
     // And the server's: someone joining now gets its document in the welcome.
     let mut c = session("Cy");
     c.execute("collab.join", &json!({"link": link})).unwrap();

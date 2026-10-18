@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use effectcraft_engine::config::ConfigStore;
+use tselatra_engine::config::ConfigStore;
 use serde::{Deserialize, Serialize};
 
 use crate::dock::{DockNode, Floating, PanelKind, PanelWindow, SplitSize};
@@ -281,7 +281,7 @@ impl WorkspaceStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_engine::config::MemoryConfig;
+    use tselatra_engine::config::MemoryConfig;
 
     #[test]
     fn corrupt_or_future_workspace_keeps_defaults_and_original_file() {
@@ -390,7 +390,7 @@ mod tests {
         ui.saved_workspaces.insert("Two views".into(), DockNode::Tabs { panels: vec![PanelKind::Composition, PanelKind::Viewer(5)], active: 0 });
         ui.viewers.insert(2, Some(42));
         assert!(store.save(Some(&config), &ui).unwrap());
-        let mut app = crate::EffectcraftApp::new(effectcraft_engine::Session::default());
+        let mut app = crate::TselatraApp::new(tselatra_engine::Session::default());
         WorkspaceStore::load(Some(&config), &mut app.ui);
         assert_eq!(app.ui.viewers.get(&2), Some(&None));
         assert_eq!(app.ui.viewers.get(&5), Some(&None));

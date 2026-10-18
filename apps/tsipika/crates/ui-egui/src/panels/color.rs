@@ -14,12 +14,12 @@
 
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, GradientKind, Paint};
+use tsipika_color::{Color, GradientKind, Paint};
 
 use super::{active_paint, color_json, live_run, pstate, set_pstate};
 use crate::theme::Tokens;
 use crate::widgets::{self, Live, menu_item};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -183,7 +183,7 @@ pub fn spectrum_at(mode: Mode, x: f32, y: f32) -> Color {
             Color::cmyk(c0, m, yy, k)
         }
         Mode::WebSafe => web_safe(&c),
-        Mode::Lab => c.in_model(vectorcraft_color::cms::Model::Lab),
+        Mode::Lab => c.in_model(tsipika_color::cms::Model::Lab),
         _ => c,
     }
 }
@@ -226,7 +226,7 @@ pub(crate) fn warning_chip(ui: &mut Ui, (icon, warning): (&str, &str), fix: &Col
 
 /// The printable colour closest to `c` (its working-CMYK reproduction, back in RGB) when `c` is out
 /// of the CMYK gamut, through `color.convert`.
-pub(crate) fn in_gamut(app: &mut VectorcraftApp, c: &Color) -> Option<Color> {
+pub(crate) fn in_gamut(app: &mut TsipikaApp, c: &Color) -> Option<Color> {
     let r = app.run("color.convert", json!({"color": color_json(c), "to": "cmyk"})).ok()?;
     if !r["outOfGamut"].as_bool()? {
         return None;
@@ -238,7 +238,7 @@ pub(crate) fn in_gamut(app: &mut VectorcraftApp, c: &Color) -> Option<Color> {
 }
 
 /// [`in_gamut`], cached under `key` for the last colour asked (panels ask every frame).
-pub(crate) fn gamut_fix(app: &mut VectorcraftApp, ctx: &egui::Context, key: &str, c: &Color) -> Option<Color> {
+pub(crate) fn gamut_fix(app: &mut TsipikaApp, ctx: &egui::Context, key: &str, c: &Color) -> Option<Color> {
     match pstate::<Option<(Color, Option<Color>)>>(ctx, key) {
         Some((k, fix)) if k == *c => fix,
         _ => {
@@ -271,7 +271,7 @@ pub fn deserialize_hide_options<'de, D: serde::Deserializer<'de>>(d: D) -> Resul
 
 /// The mode the panel shows `color` in: with nothing selected (the defaults for new art) the mode
 /// picked last, which the app keeps between sessions, else [`display_mode`].
-fn shown_mode(app: &VectorcraftApp, color: Option<&Color>) -> Mode {
+fn shown_mode(app: &TsipikaApp, color: Option<&Color>) -> Mode {
     let defaults = app.session.active().is_none_or(|st| st.selection.subjects().is_empty());
     match app.ui.color_mode {
         Some(m) if defaults => m,
@@ -347,7 +347,7 @@ struct Tint {
 
 impl Tint {
     /// The tint `link` (a swatch name) and `tint` show: `None` unless the swatch is a global colour.
-    fn of(app: &VectorcraftApp, link: Option<&str>, tint: f32) -> Option<Self> {
+    fn of(app: &TsipikaApp, link: Option<&str>, tint: f32) -> Option<Self> {
         let name = link?;
         let d = &app.session.active()?.doc;
         let spot = d.swatch(name)?.spot;
@@ -379,13 +379,13 @@ impl Target {
 }
 
 /// The active proxy's colour or gradient stop; no colour for None, patterns and a "?" proxy.
-fn target(app: &VectorcraftApp, ui: &Ui) -> Target {
+fn target(app: &TsipikaApp, ui: &Ui) -> Target {
     target_with(app, super::active_mixed(app, ui.ctx()))
 }
 
 /// [`target`] with `mixed` for a "?" active proxy: the panel reads it from its per-frame cache,
 /// `ui.colorPanel` from the session.
-fn target_with(app: &VectorcraftApp, mixed: bool) -> Target {
+fn target_with(app: &TsipikaApp, mixed: bool) -> Target {
     if mixed {
         return Target::Paint(None, None);
     }
@@ -409,7 +409,7 @@ fn target_with(app: &VectorcraftApp, mixed: bool) -> Target {
 
 /// Apply `c` to the target, or with `behind` (an Alt-click) to the inactive proxy as a solid
 /// colour, keeping the active proxy in front.
-fn apply(app: &mut VectorcraftApp, tgt: &Target, c: Color, phase: Live, behind: bool) {
+fn apply(app: &mut TsipikaApp, tgt: &Target, c: Color, phase: Live, behind: bool) {
     match tgt {
         Target::Stop { paint: Paint::Gradient(g), index, .. } if !behind => {
             let mut stops = g.gradient.stops.clone();
@@ -431,7 +431,7 @@ fn apply(app: &mut VectorcraftApp, tgt: &Target, c: Color, phase: Live, behind: 
 }
 
 /// Set the target's tint of its swatch to `t` (0..1), keeping the link (the T slider).
-fn apply_tint(app: &mut VectorcraftApp, tgt: &Target, tint: &Tint, t: f32, phase: Live) {
+fn apply_tint(app: &mut TsipikaApp, tgt: &Target, tint: &Tint, t: f32, phase: Live) {
     match tgt {
         Target::Stop { paint: Paint::Gradient(g), index, .. } => {
             let mut stops = g.gradient.stops.clone();
@@ -449,7 +449,7 @@ fn apply_tint(app: &mut VectorcraftApp, tgt: &Target, tint: &Tint, t: f32, phase
 
 /// Switch the panel to `mode`, converting the colour to its model (a tint becomes a process
 /// colour).
-fn set_mode(app: &mut VectorcraftApp, tgt: &Target, mode: Mode) {
+fn set_mode(app: &mut TsipikaApp, tgt: &Target, mode: Mode) {
     app.ui.color_mode = Some(mode);
     if let Some(c) = tgt.color() {
         let conv = convert_to(mode, &c);
@@ -463,7 +463,7 @@ fn set_mode(app: &mut VectorcraftApp, tgt: &Target, mode: Mode) {
 /// Options (true) or Hide Options (false). → {mode, options, shown}: the mode picked last (null:
 /// none yet), whether the options show, and the mode the panel shows the color in (`tint` for a
 /// tint of a global or spot swatch).
-pub(crate) fn command(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn command(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let mode = match p.get("mode") {
         None | Some(Value::Null) => None,
         Some(v) => Some(menu_mode(v).ok_or("`mode` must be grayscale, rgb, hsb, cmyk or websafe")?),
@@ -535,7 +535,7 @@ fn spectrum(ui: &mut Ui, mode: Mode, size: egui::Vec2) -> Option<SpectrumHit> {
     Some(SpectrumHit::Pick(spectrum_at(mode, (p.x - r.left()) / r.width(), (p.y - r.top()) / r.height()), phase))
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let tgt = target(app, ui);
     let color = tgt.color();
@@ -698,7 +698,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let hidden = app.ui.color_hide_options;
     if menu_item(ui, if hidden { tl!("Show Options") } else { tl!("Hide Options") }, true, false) {
         command(app, &json!({ "options": hidden })).ok();
@@ -751,10 +751,10 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
         app
@@ -762,13 +762,13 @@ mod tests {
 
     /// Run the panel for one frame with `events` and `modifiers`; returns the spectrum's rect (when
     /// the options are shown) and the panel's height.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>, modifiers: egui::Modifiers) -> (Option<Rect>, f32) {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>, modifiers: egui::Modifiers) -> (Option<Rect>, f32) {
         frame_with(app, ctx, events, modifiers, "color-spectrum")
     }
 
     /// [`frame`] returning the rect of the panel's widget `id` instead of the spectrum's.
     fn frame_with(
-        app: &mut VectorcraftApp,
+        app: &mut TsipikaApp,
         ctx: &egui::Context,
         events: Vec<egui::Event>,
         modifiers: egui::Modifiers,
@@ -786,7 +786,7 @@ mod tests {
     }
 
     /// Click the spectrum at (x, y) (0..1 each) with `modifiers` held.
-    fn click_spectrum(app: &mut VectorcraftApp, ctx: &egui::Context, (x, y): (f32, f32), modifiers: egui::Modifiers) {
+    fn click_spectrum(app: &mut TsipikaApp, ctx: &egui::Context, (x, y): (f32, f32), modifiers: egui::Modifiers) {
         let r = frame(app, ctx, vec![], modifiers).0.expect("the spectrum is drawn");
         let pos = egui::pos2(r.left() + x * r.width(), r.top() + y * r.height());
         let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers };
@@ -839,7 +839,7 @@ mod tests {
         assert_eq!(g.freeform.map(|f| f.points[0].color), Some(orange));
     }
 
-    fn paints_hex(app: &VectorcraftApp) -> (String, String) {
+    fn paints_hex(app: &TsipikaApp) -> (String, String) {
         let (f, s) = crate::panels::current_paints(app);
         (f.color().map(|c| c.to_hex()).unwrap_or_default(), s.color().map(|c| c.to_hex()).unwrap_or_default())
     }
@@ -919,7 +919,7 @@ mod tests {
     }
 
     /// The slider labels one frame of the panel draws.
-    fn slider_labels(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<String> {
+    fn slider_labels(app: &mut TsipikaApp, ctx: &egui::Context) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -952,7 +952,7 @@ mod tests {
         assert_eq!(slider_labels(&mut app, &ctx), ["C", "M", "Y", "K"]);
         // Quit and start again: the saved UI state comes back, the session and the panel are new.
         let saved: crate::UiState = serde_json::from_value(serde_json::to_value(&app.ui).unwrap()).unwrap();
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.ui = saved.sanitized();
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("file.documentColorMode", json!({"mode": "cmyk"})).unwrap();
@@ -983,7 +983,7 @@ mod tests {
         assert_eq!((Mode::Lab.value_at(1, 0.0), Mode::Lab.value_at(0, 1.0)), (-128.0, 100.0));
         assert_eq!((Mode::Rgb.value_at(0, 0.5), Mode::WebSafe.value_at(0, 0.45)), (128.0, 102.0), "other modes as before");
         assert_eq!(track_color(Mode::Lab, &[50.0, -20.0, 30.0], 1, 0.0), Color::lab(50.0, -128.0, 30.0));
-        assert_eq!(convert_to(Mode::Lab, &Color::rgb(1.0, 0.0, 0.0)).model(), vectorcraft_color::cms::Model::Lab);
+        assert_eq!(convert_to(Mode::Lab, &Color::rgb(1.0, 0.0, 0.0)).model(), tsipika_color::cms::Model::Lab);
         // In the panel: a Lab fill shows L, a, b.
         let mut app = app();
         let ctx = egui::Context::default();
@@ -1042,7 +1042,7 @@ mod tests {
         let mut app = app();
         let ctx = egui::Context::default();
         // One frame of the proxy alone; returns the stroke square's rect.
-        let run = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+        let run = |app: &mut TsipikaApp, time: f64, events: Vec<egui::Event>| {
             let input = egui::RawInput { time: Some(time), events, ..Default::default() };
             let mut rect = None;
             let mut out = ctx.run_ui(input, |ui| {
@@ -1079,7 +1079,7 @@ mod tests {
         });
         // The chip's name and the T row are drawn; a click on the slider's right part raises the
         // tint and keeps the link.
-        let texts = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let texts = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
             fn walk(s: &egui::Shape, out: &mut Vec<(String, egui::Pos2)>) {
                 match s {
                     egui::Shape::Text(t) => out.push((t.galley.text().to_string(), t.pos + t.galley.rect.center().to_vec2())),
@@ -1212,10 +1212,10 @@ mod tests {
         let doc = crate::menus::UI_COMMANDS.iter().find(|c| c.0 == "ui.colorPanel").expect("registered").3;
         let mut app = app();
         app.run("paint.setFill", json!({"color": "#336699"})).unwrap();
-        for p in vectorcraft_testkit::strategies::junk_params(doc, "/nonexistent").into_iter().chain(vectorcraft_testkit::strategies::junk_values()) {
+        for p in tsipika_testkit::strategies::junk_params(doc, "/nonexistent").into_iter().chain(tsipika_testkit::strategies::junk_values()) {
             let _ = app.run("ui.colorPanel", p);
         }
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         assert_eq!(app.run("ui.colorPanel", json!({"mode": "cmyk"})).unwrap()["mode"], "cmyk");
     }
 

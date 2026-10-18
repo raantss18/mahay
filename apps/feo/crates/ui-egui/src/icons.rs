@@ -1,4 +1,4 @@
-//! Icons drawn procedurally with the egui painter. Original SoundCraft artwork (MIT OR Apache-2.0);
+//! Icons drawn procedurally with the egui painter. Original Feo artwork (MIT OR Apache-2.0);
 //! no image files and nothing derived from any other product's icons.
 
 use egui::{Color32, Painter, Pos2, Rect, Shape, Stroke, pos2, vec2};

@@ -20,8 +20,8 @@
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, PuppetPin, PuppetPins};
-use vectorcraft_geom::{BezPath, Point, Rect};
+use tsipika_doc::{Document, Node, NodeId, PuppetPin, PuppetPins};
+use tsipika_geom::{BezPath, Point, Rect};
 
 use super::arap::{self, Mesh, MeshOptions, default_pins};
 use super::{BLUE, collect_points, warp_node_with};
@@ -354,7 +354,7 @@ impl Tool for PuppetWarpTool {
                 self.off_mesh = None;
                 let Some(c) = self.pins(cx) else {
                     // Click an object to select it: its pins appear at once.
-                    if let Some(h) = vectorcraft_doc::hit::hit_test(cx.doc, p, cx.hit_options()) {
+                    if let Some(h) = tsipika_doc::hit::hit_test(cx.doc, p, cx.hit_options()) {
                         return vec![
                             Action::Exec("select.set".into(), json!({"ids": [h.top_object(cx.isolation).0]})),
                             Action::Notify("pins".into()),
@@ -526,7 +526,7 @@ impl Tool for PuppetWarpTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     fn alt() -> Mods {
         Mods { alt: true, ..Default::default() }

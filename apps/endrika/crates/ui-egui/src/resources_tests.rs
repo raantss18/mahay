@@ -3,7 +3,7 @@
 
 use egui::accesskit::Role;
 use egui::{Event, Key, Modifiers, Pos2, pos2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 
 use crate::LeftTab;
 use crate::layers_drag_tests::Ui;

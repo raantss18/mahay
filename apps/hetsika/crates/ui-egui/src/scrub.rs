@@ -9,9 +9,9 @@
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use filmcraft_time::Tick;
+use hetsika_time::Tick;
 
-use crate::FilmcraftApp;
+use crate::HetsikaApp;
 
 /// Length of the grain played after each move.
 pub const GRAIN_S: f64 = 0.08;
@@ -48,7 +48,7 @@ impl ScrubAudio {
     }
 }
 
-impl FilmcraftApp {
+impl HetsikaApp {
     /// Once a frame: play a grain when the playhead moved under a held mouse button.
     pub(crate) fn scrub_audio(&mut self, ctx: &egui::Context) {
         let (now, down) = ctx.input(|i| (i.time, i.pointer.any_down()));
@@ -57,7 +57,7 @@ impl FilmcraftApp {
         }
     }
 
-    /// [`FilmcraftApp::scrub_audio`] with the clock and the button state given. Returns whether
+    /// [`HetsikaApp::scrub_audio`] with the clock and the button state given. Returns whether
     /// the scrub stream is still open.
     pub fn scrub_tick(&mut self, now: f64, down: bool) -> bool {
         let ph = self.session.playhead();
@@ -195,11 +195,11 @@ mod tests {
         }
     }
 
-    fn app(scrub_audio: bool) -> (FilmcraftApp, Arc<Mutex<Option<Fill>>>) {
-        let mut s = filmcraft_engine::Session::default();
+    fn app(scrub_audio: bool) -> (HetsikaApp, Arc<Mutex<Option<Fill>>>) {
+        let mut s = hetsika_engine::Session::default();
         s.execute("file.openDemoProject", serde_json::json!({})).unwrap();
         s.prefs.audio.scrub_audio = scrub_audio;
-        let mut app = FilmcraftApp::new(s);
+        let mut app = HetsikaApp::new(s);
         let fill = Arc::new(Mutex::new(None));
         app.audio = Some(Box::new(Out { fill: fill.clone() }));
         (app, fill)

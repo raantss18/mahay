@@ -1,12 +1,12 @@
-//! Name and enumeration mappings between the DesignCraft model and IDML.
+//! Name and enumeration mappings between the Pejy model and IDML.
 
-use designcraft_color::BlendMode;
-use designcraft_doc::{
+use pejy_color::BlendMode;
+use pejy_doc::{
     Align, Arrowhead, AutoSize, Cap, Capitalization, ClippingKind, ContourType, FirstBaseline, Join, Leading, NumberStyle, Position, StartParagraph,
     StrokeAlign, StrokeType, TabAlign, VerticalJustification, WrapMode, WrapSide,
 };
-use designcraft_geom::Unit;
-use designcraft_geom::corners::CornerShape;
+use pejy_geom::Unit;
+use pejy_geom::corners::CornerShape;
 
 /// `%` → `%25`, `:` → `%3a` (IDML Self-id escaping).
 const ANCHORS: [&str; 9] = [
@@ -21,8 +21,8 @@ const ANCHORS: [&str; 9] = [
     "BottomRightAnchor",
 ];
 
-pub fn anchor_rel_out(r: designcraft_doc::anchored::AnchorRelative, vertical: bool) -> &'static str {
-    use designcraft_doc::anchored::AnchorRelative as R;
+pub fn anchor_rel_out(r: pejy_doc::anchored::AnchorRelative, vertical: bool) -> &'static str {
+    use pejy_doc::anchored::AnchorRelative as R;
     match r {
         R::Anchor if vertical => "LineBaseline",
         R::Anchor => "AnchorLocation",
@@ -33,8 +33,8 @@ pub fn anchor_rel_out(r: designcraft_doc::anchored::AnchorRelative, vertical: bo
     }
 }
 
-pub fn anchor_rel_in(s: &str) -> designcraft_doc::anchored::AnchorRelative {
-    use designcraft_doc::anchored::AnchorRelative as R;
+pub fn anchor_rel_in(s: &str) -> pejy_doc::anchored::AnchorRelative {
+    use pejy_doc::anchored::AnchorRelative as R;
     match s {
         "TextFrame" => R::TextFrame,
         "ColumnEdge" => R::ColumnEdge,
@@ -45,8 +45,8 @@ pub fn anchor_rel_in(s: &str) -> designcraft_doc::anchored::AnchorRelative {
 }
 
 /// `PDFAttribute` `PDFCrop` for a placed PDF's crop choice.
-pub fn pdf_crop_out(c: designcraft_doc::PdfCrop) -> &'static str {
-    use designcraft_doc::PdfCrop as C;
+pub fn pdf_crop_out(c: pejy_doc::PdfCrop) -> &'static str {
+    use pejy_doc::PdfCrop as C;
     match c {
         C::Crop => "CropPDF",
         C::Art => "CropArt",
@@ -59,8 +59,8 @@ pub fn pdf_crop_out(c: designcraft_doc::PdfCrop) -> &'static str {
 }
 
 /// A placed PDF's crop choice from `PDFCrop` (the crop box when unknown).
-pub fn pdf_crop_in(s: &str) -> designcraft_doc::PdfCrop {
-    use designcraft_doc::PdfCrop as C;
+pub fn pdf_crop_in(s: &str) -> pejy_doc::PdfCrop {
+    use pejy_doc::PdfCrop as C;
     C::ALL.into_iter().find(|c| pdf_crop_out(*c) == s).unwrap_or(C::Crop)
 }
 
@@ -72,8 +72,8 @@ pub fn anchor_in(s: &str) -> u8 {
     ANCHORS.iter().position(|a| *a == s).unwrap_or(4) as u8
 }
 
-pub fn fitting_out(f: designcraft_doc::Fitting) -> &'static str {
-    use designcraft_doc::Fitting as F;
+pub fn fitting_out(f: pejy_doc::Fitting) -> &'static str {
+    use pejy_doc::Fitting as F;
     match f {
         F::None => "None",
         F::FillProportionally => "FillProportionally",
@@ -83,8 +83,8 @@ pub fn fitting_out(f: designcraft_doc::Fitting) -> &'static str {
     }
 }
 
-pub fn fitting_in(s: &str) -> designcraft_doc::Fitting {
-    use designcraft_doc::Fitting as F;
+pub fn fitting_in(s: &str) -> pejy_doc::Fitting {
+    use pejy_doc::Fitting as F;
     match s {
         "FillProportionally" => F::FillProportionally,
         "Proportionally" => F::FitProportionally,
@@ -94,8 +94,8 @@ pub fn fitting_in(s: &str) -> designcraft_doc::Fitting {
     }
 }
 
-pub fn liquid_rule_out(rule: designcraft_doc::LiquidRule) -> &'static str {
-    use designcraft_doc::LiquidRule as R;
+pub fn liquid_rule_out(rule: pejy_doc::LiquidRule) -> &'static str {
+    use pejy_doc::LiquidRule as R;
     match rule {
         R::Off => "Off",
         R::Scale => "Scale",
@@ -106,8 +106,8 @@ pub fn liquid_rule_out(rule: designcraft_doc::LiquidRule) -> &'static str {
     }
 }
 
-pub fn liquid_rule_in(s: &str) -> designcraft_doc::LiquidRule {
-    use designcraft_doc::LiquidRule as R;
+pub fn liquid_rule_in(s: &str) -> pejy_doc::LiquidRule {
+    use pejy_doc::LiquidRule as R;
     match s {
         "Off" => R::Off,
         "Scale" => R::Scale,
@@ -386,60 +386,60 @@ pub fn arrow_in(s: &str) -> Arrowhead {
     .unwrap_or(Arrowhead::None)
 }
 
-pub fn box_width_out(w: designcraft_doc::BoxWidth) -> &'static str {
+pub fn box_width_out(w: pejy_doc::BoxWidth) -> &'static str {
     match w {
-        designcraft_doc::BoxWidth::Column => "ColumnWidth",
-        designcraft_doc::BoxWidth::Text => "TextWidth",
+        pejy_doc::BoxWidth::Column => "ColumnWidth",
+        pejy_doc::BoxWidth::Text => "TextWidth",
     }
 }
-pub fn box_width_in(s: &str) -> designcraft_doc::BoxWidth {
-    if s == "TextWidth" { designcraft_doc::BoxWidth::Text } else { designcraft_doc::BoxWidth::Column }
+pub fn box_width_in(s: &str) -> pejy_doc::BoxWidth {
+    if s == "TextWidth" { pejy_doc::BoxWidth::Text } else { pejy_doc::BoxWidth::Column }
 }
 
-pub fn box_top_out(t: designcraft_doc::BoxTop) -> &'static str {
+pub fn box_top_out(t: pejy_doc::BoxTop) -> &'static str {
     match t {
-        designcraft_doc::BoxTop::Ascent => "AscentTopOrigin",
-        designcraft_doc::BoxTop::Baseline => "BaselineTopOrigin",
-        designcraft_doc::BoxTop::EmBox => "EmBoxTopOrigin",
-        designcraft_doc::BoxTop::Leading => "LeadingTopOrigin",
+        pejy_doc::BoxTop::Ascent => "AscentTopOrigin",
+        pejy_doc::BoxTop::Baseline => "BaselineTopOrigin",
+        pejy_doc::BoxTop::EmBox => "EmBoxTopOrigin",
+        pejy_doc::BoxTop::Leading => "LeadingTopOrigin",
     }
 }
-pub fn box_top_in(s: &str) -> designcraft_doc::BoxTop {
+pub fn box_top_in(s: &str) -> pejy_doc::BoxTop {
     match s {
-        "BaselineTopOrigin" => designcraft_doc::BoxTop::Baseline,
-        "EmBoxTopOrigin" => designcraft_doc::BoxTop::EmBox,
-        "LeadingTopOrigin" => designcraft_doc::BoxTop::Leading,
-        _ => designcraft_doc::BoxTop::Ascent,
+        "BaselineTopOrigin" => pejy_doc::BoxTop::Baseline,
+        "EmBoxTopOrigin" => pejy_doc::BoxTop::EmBox,
+        "LeadingTopOrigin" => pejy_doc::BoxTop::Leading,
+        _ => pejy_doc::BoxTop::Ascent,
     }
 }
 
-pub fn box_bottom_out(b: designcraft_doc::BoxBottom) -> &'static str {
+pub fn box_bottom_out(b: pejy_doc::BoxBottom) -> &'static str {
     match b {
-        designcraft_doc::BoxBottom::Descent => "DescentBottomOrigin",
-        designcraft_doc::BoxBottom::Baseline => "BaselineBottomOrigin",
-        designcraft_doc::BoxBottom::EmBox => "EmBoxBottomOrigin",
+        pejy_doc::BoxBottom::Descent => "DescentBottomOrigin",
+        pejy_doc::BoxBottom::Baseline => "BaselineBottomOrigin",
+        pejy_doc::BoxBottom::EmBox => "EmBoxBottomOrigin",
     }
 }
-pub fn box_bottom_in(s: &str) -> designcraft_doc::BoxBottom {
+pub fn box_bottom_in(s: &str) -> pejy_doc::BoxBottom {
     match s {
-        "BaselineBottomOrigin" => designcraft_doc::BoxBottom::Baseline,
-        "EmBoxBottomOrigin" => designcraft_doc::BoxBottom::EmBox,
-        _ => designcraft_doc::BoxBottom::Descent,
+        "BaselineBottomOrigin" => pejy_doc::BoxBottom::Baseline,
+        "EmBoxBottomOrigin" => pejy_doc::BoxBottom::EmBox,
+        _ => pejy_doc::BoxBottom::Descent,
     }
 }
 
-pub fn list_align_out(a: designcraft_doc::ListAlign) -> &'static str {
+pub fn list_align_out(a: pejy_doc::ListAlign) -> &'static str {
     match a {
-        designcraft_doc::ListAlign::Left => "LeftAlign",
-        designcraft_doc::ListAlign::Center => "CenterAlign",
-        designcraft_doc::ListAlign::Right => "RightAlign",
+        pejy_doc::ListAlign::Left => "LeftAlign",
+        pejy_doc::ListAlign::Center => "CenterAlign",
+        pejy_doc::ListAlign::Right => "RightAlign",
     }
 }
-pub fn list_align_in(s: &str) -> designcraft_doc::ListAlign {
+pub fn list_align_in(s: &str) -> pejy_doc::ListAlign {
     match s {
-        "CenterAlign" => designcraft_doc::ListAlign::Center,
-        "RightAlign" => designcraft_doc::ListAlign::Right,
-        _ => designcraft_doc::ListAlign::Left,
+        "CenterAlign" => pejy_doc::ListAlign::Center,
+        "RightAlign" => pejy_doc::ListAlign::Right,
+        _ => pejy_doc::ListAlign::Left,
     }
 }
 
@@ -670,10 +670,10 @@ pub fn unit_in(s: &str) -> Unit {
 
 /// IDML layer colour enumeration names for our layer colour table.
 pub fn layer_color_out(c: [u8; 3]) -> Option<String> {
-    designcraft_doc::LAYER_COLORS.iter().find(|(_, v)| *v == c).map(|(n, _)| n.replace(' ', ""))
+    pejy_doc::LAYER_COLORS.iter().find(|(_, v)| *v == c).map(|(n, _)| n.replace(' ', ""))
 }
 pub fn layer_color_in(s: &str) -> Option<[u8; 3]> {
-    designcraft_doc::LAYER_COLORS.iter().find(|(n, _)| n.replace(' ', "") == s).map(|(_, v)| *v)
+    pejy_doc::LAYER_COLORS.iter().find(|(n, _)| n.replace(' ', "") == s).map(|(_, v)| *v)
 }
 
 /// Format a number compactly (no trailing zeros, no `-0`).
@@ -739,17 +739,17 @@ pub fn note_style_in(s: &str) -> NumberStyle {
         s => number_style_in(s),
     }
 }
-pub const NOTE_RESTART: [(designcraft_doc::notes::NoteRestart, &str); 4] = [
-    (designcraft_doc::notes::NoteRestart::Never, "DontRestart"),
-    (designcraft_doc::notes::NoteRestart::Page, "PageRestart"),
-    (designcraft_doc::notes::NoteRestart::Spread, "SpreadRestart"),
-    (designcraft_doc::notes::NoteRestart::Section, "SectionRestart"),
+pub const NOTE_RESTART: [(pejy_doc::notes::NoteRestart, &str); 4] = [
+    (pejy_doc::notes::NoteRestart::Never, "DontRestart"),
+    (pejy_doc::notes::NoteRestart::Page, "PageRestart"),
+    (pejy_doc::notes::NoteRestart::Spread, "SpreadRestart"),
+    (pejy_doc::notes::NoteRestart::Section, "SectionRestart"),
 ];
-pub const NOTE_AFFIX: [(designcraft_doc::notes::AffixIn, &str); 4] = [
-    (designcraft_doc::notes::AffixIn::None, "NoPrefixSuffix"),
-    (designcraft_doc::notes::AffixIn::Reference, "PrefixSuffixReference"),
-    (designcraft_doc::notes::AffixIn::Text, "PrefixSuffixMarker"),
-    (designcraft_doc::notes::AffixIn::Both, "PrefixSuffixBoth"),
+pub const NOTE_AFFIX: [(pejy_doc::notes::AffixIn, &str); 4] = [
+    (pejy_doc::notes::AffixIn::None, "NoPrefixSuffix"),
+    (pejy_doc::notes::AffixIn::Reference, "PrefixSuffixReference"),
+    (pejy_doc::notes::AffixIn::Text, "PrefixSuffixMarker"),
+    (pejy_doc::notes::AffixIn::Both, "PrefixSuffixBoth"),
 ];
 pub fn note_marker_out(p: Position) -> &'static str {
     match p {
@@ -767,8 +767,8 @@ pub fn note_marker_in(s: &str) -> Position {
 }
 
 /// Nested-style delimiter → (property type, value).
-pub fn nested_until_out(u: &designcraft_doc::NestedUntil) -> (&'static str, String) {
-    use designcraft_doc::NestedUntil as N;
+pub fn nested_until_out(u: &pejy_doc::NestedUntil) -> (&'static str, String) {
+    use pejy_doc::NestedUntil as N;
     let e = |v: &str| ("enumeration", v.to_string());
     match u {
         N::Sentences => e("Sentence"),
@@ -785,8 +785,8 @@ pub fn nested_until_out(u: &designcraft_doc::NestedUntil) -> (&'static str, Stri
     }
 }
 
-pub fn nested_until_in(ty: &str, v: &str) -> designcraft_doc::NestedUntil {
-    use designcraft_doc::NestedUntil as N;
+pub fn nested_until_in(ty: &str, v: &str) -> pejy_doc::NestedUntil {
+    use pejy_doc::NestedUntil as N;
     if ty == "string" {
         return N::Chars(v.to_string());
     }
@@ -804,26 +804,26 @@ pub fn nested_until_in(ty: &str, v: &str) -> designcraft_doc::NestedUntil {
     }
 }
 
-pub fn path_align_out(a: designcraft_doc::PathAlign) -> &'static str {
+pub fn path_align_out(a: pejy_doc::PathAlign) -> &'static str {
     match a {
-        designcraft_doc::PathAlign::Baseline => "BaselineAlignment",
-        designcraft_doc::PathAlign::Ascender => "AscenderAlignment",
-        designcraft_doc::PathAlign::Descender => "DescenderAlignment",
-        designcraft_doc::PathAlign::Center => "CenterAlignment",
+        pejy_doc::PathAlign::Baseline => "BaselineAlignment",
+        pejy_doc::PathAlign::Ascender => "AscenderAlignment",
+        pejy_doc::PathAlign::Descender => "DescenderAlignment",
+        pejy_doc::PathAlign::Center => "CenterAlignment",
     }
 }
 
-pub fn path_align_in(v: &str) -> designcraft_doc::PathAlign {
+pub fn path_align_in(v: &str) -> pejy_doc::PathAlign {
     match v {
-        "AscenderAlignment" => designcraft_doc::PathAlign::Ascender,
-        "DescenderAlignment" => designcraft_doc::PathAlign::Descender,
-        "CenterAlignment" => designcraft_doc::PathAlign::Center,
-        _ => designcraft_doc::PathAlign::Baseline,
+        "AscenderAlignment" => pejy_doc::PathAlign::Ascender,
+        "DescenderAlignment" => pejy_doc::PathAlign::Descender,
+        "CenterAlignment" => pejy_doc::PathAlign::Center,
+        _ => pejy_doc::PathAlign::Baseline,
     }
 }
 
-pub fn digits_out(d: designcraft_doc::Digits) -> &'static str {
-    use designcraft_doc::Digits;
+pub fn digits_out(d: pejy_doc::Digits) -> &'static str {
+    use pejy_doc::Digits;
     match d {
         Digits::Default => "DefaultDigits",
         Digits::Arabic => "ArabicDigits",
@@ -832,8 +832,8 @@ pub fn digits_out(d: designcraft_doc::Digits) -> &'static str {
         Digits::Native => "NativeDigits",
     }
 }
-pub fn digits_in(s: &str) -> Option<designcraft_doc::Digits> {
-    use designcraft_doc::Digits;
+pub fn digits_in(s: &str) -> Option<pejy_doc::Digits> {
+    use pejy_doc::Digits;
     [Digits::Default, Digits::Arabic, Digits::Hindi, Digits::Farsi, Digits::Native].into_iter().find(|d| digits_out(*d) == s)
 }
 

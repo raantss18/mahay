@@ -1,6 +1,6 @@
 //! Automation roots (#715): the folders the files an agent's commands read and write must lie in.
 //!
-//! `figcraft-cli mcp --automation-read-root DIR --automation-write-root DIR` and the desktop app
+//! `endrika-cli mcp --automation-read-root DIR --automation-write-root DIR` and the desktop app
 //! started with the same flags run their work [`confined`] to [`Roots`]: while a scope is active on
 //! the thread, every file the engine reads must lie inside a read or a write root and every file it
 //! writes inside a write root; anything else is an ordinary error. The engine reaches the file
@@ -266,7 +266,7 @@ pub fn read_dir(path: impl AsRef<Path>) -> Result<Vec<PathBuf>> {
 }
 
 /// Write `bytes` to `path` through a uniquely named staging file and one atomic rename (see
-/// [`figcraft_format::write_file_atomic`]).
+/// [`endrika_format::write_file_atomic`]).
 pub fn write(path: impl AsRef<Path>, bytes: &[u8]) -> Result<()> {
     let path = path.as_ref();
     write_atomic(&allow(path, Access::Write)?, bytes).map_err(io(path))
@@ -274,7 +274,7 @@ pub fn write(path: impl AsRef<Path>, bytes: &[u8]) -> Result<()> {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
-    figcraft_format::write_file_atomic(path, bytes)
+    endrika_format::write_file_atomic(path, bytes)
 }
 
 #[cfg(target_arch = "wasm32")]

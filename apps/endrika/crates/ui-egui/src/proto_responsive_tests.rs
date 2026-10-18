@@ -3,8 +3,8 @@
 //! panel, and library collections in the Design panel's variable modes.
 
 use egui::{Key, pos2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::present_tests::{Ui, id, setup};
@@ -116,9 +116,9 @@ fn prototype_panel_shows_colours_custom_sizes_and_responsive() {
 
 /// A library file with a "Brand" collection (Light/Dark) saved under the temp dir.
 fn brand_library(tag: &str) -> (String, String) {
-    let dir = std::env::temp_dir().join(format!("figcraft-libmodes-{}-{tag}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-libmodes-{}-{tag}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("brand.figcraft").to_string_lossy().into_owned();
+    let path = dir.join("brand.endrika").to_string_lossy().into_owned();
     let mut lib = Session::new();
     let ex = |s: &mut Session, c: &str, p: Value| s.execute(c, &p).unwrap();
     ex(&mut lib, "file.rename", json!({"name": "Brand kit"}));

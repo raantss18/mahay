@@ -5,7 +5,7 @@
 //! `object.intertwine.arrange` picks overlap areas, by a click (`at`) or by an enclosed path drawn
 //! around them (`area`), and changes which member is drawn on top there: each member keeps the
 //! area where it is drawn over the others (`NodeExtras::intertwine`, see
-//! `vectorcraft_doc::intertwine`). Object › Expand turns the group into a plain group of what it
+//! `tsipika_doc::intertwine`). Object › Expand turns the group into a plain group of what it
 //! draws ([`expand_intertwines`]), which Ungroup takes apart.
 //!
 //! An overlap area is a face of the planar arrangement of what the members paint (their fills and
@@ -19,10 +19,10 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{FillRule, PathData, Point, SubPath};
-use vectorcraft_pathops as po;
-use vectorcraft_tools::intertwine::{Face, drawn_order, face_at, faces, faces_in, is_intertwine, nonempty};
+use tsipika_doc::{Document, Node, NodeId, NodeKind};
+use tsipika_geom::{FillRule, PathData, Point, SubPath};
+use tsipika_pathops as po;
+use tsipika_tools::intertwine::{Face, drawn_order, face_at, faces, faces_in, is_intertwine, nonempty};
 
 use super::edit::selected_roots;
 use super::pathops::Beside;
@@ -106,7 +106,7 @@ fn refused(d: &Document, n: &Node) -> Option<&'static str> {
             NodeKind::Intertwine { .. } => Some("an Intertwine group"),
             NodeKind::Repeat(_) => Some("a Repeat"),
             NodeKind::Group { .. } if c.extras().graph.is_some() => Some("a graph"),
-            NodeKind::Group { .. } if vectorcraft_tools::builder::is_live_paint(c) => Some("a Live Paint group"),
+            NodeKind::Group { .. } if tsipika_tools::builder::is_live_paint(c) => Some("a Live Paint group"),
             _ => None,
         });
     });
@@ -190,12 +190,12 @@ fn release(s: &mut Session, _: &Value) -> Result<Value> {
 // ---------- Expand ----------
 
 /// Replace Intertwine group `id` by a plain group of the art it draws
-/// ([`vectorcraft_doc::intertwine::expand`]: its objects, then each part drawn over the others as a
+/// ([`tsipika_doc::intertwine::expand`]: its objects, then each part drawn over the others as a
 /// clip group), keeping everything about the group itself; the generated art gets ids of its own.
 fn expand_group(d: &mut Document, id: NodeId) -> Result<()> {
     let Some(mut g) = d.node(id).cloned() else { return Ok(()) };
     let NodeKind::Intertwine { children } = &g.kind else { return Ok(()) };
-    g.kind = NodeKind::Group { children: vectorcraft_doc::intertwine::expand(children).into_iter().map(Arc::new).collect(), clip: false };
+    g.kind = NodeKind::Group { children: tsipika_doc::intertwine::expand(children).into_iter().map(Arc::new).collect(), clip: false };
     super::live::fix_ids(d, &mut g);
     *d.node_mut(id).ok_or(EngineError::NoNode(id))? = g;
     Ok(())

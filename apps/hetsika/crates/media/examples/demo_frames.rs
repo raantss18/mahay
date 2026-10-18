@@ -1,6 +1,6 @@
-//! Writes a contact sheet of the generator outputs: `cargo run -p filmcraft-media --example demo_frames -- out.png`
-use filmcraft_media::generators::{DemoScene, Generator, render};
-use filmcraft_time::FrameRate;
+//! Writes a contact sheet of the generator outputs: `cargo run -p hetsika-media --example demo_frames -- out.png`
+use hetsika_media::generators::{DemoScene, Generator, render};
+use hetsika_time::FrameRate;
 
 fn main() {
     let out = std::env::args().nth(1).unwrap_or_else(|| "demo_frames.png".into());

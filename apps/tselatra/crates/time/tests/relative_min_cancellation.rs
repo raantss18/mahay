@@ -1,4 +1,4 @@
-use effectcraft_time::{FrameRate, parse_timecode};
+use tselatra_time::{FrameRate, parse_timecode};
 
 const RELATIVE_NEGATIVE_MIN_FIELD: &str = "-0:0:0:-9223372036854775808";
 

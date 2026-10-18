@@ -2,13 +2,13 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::{PageTransition, TransitionKind};
+use pejy_doc::{PageTransition, TransitionKind};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc};
 use crate::Result;
 
-fn spreads_of(d: &designcraft_doc::Document, p: &Value) -> Result<Vec<usize>> {
+fn spreads_of(d: &pejy_doc::Document, p: &Value) -> Result<Vec<usize>> {
     if p.get("all").and_then(Value::as_bool) == Some(true) {
         return Ok((0..d.spreads.len()).collect());
     }
@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(text.matches("/Trans<<").count(), 2);
         assert!(text.contains("/S/Wipe") && text.contains("/D 2.00"));
         // The updated file still reads, with all its pages.
-        assert_eq!(designcraft_render::pdf_page_count(&bytes), Some(3));
+        assert_eq!(pejy_render::pdf_page_count(&bytes), Some(3));
         // Exported as spreads: one PDF page.
         let r = s.execute("file.exportPdf", &json!({"spreads": true})).unwrap();
         let bytes = super::super::file::base64_decode(r["base64"].as_str().unwrap());
@@ -104,7 +104,7 @@ mod tests {
         s.execute("object.opacity", &json!({"ids": [id], "opacity": 0.5})).unwrap();
         let r = s.execute("file.exportPdf", &json!({"pages": [1]})).unwrap();
         let bytes = super::super::file::base64_decode(r["base64"].as_str().unwrap());
-        assert_eq!(designcraft_render::pdf_page_count(&bytes), Some(1));
+        assert_eq!(pejy_render::pdf_page_count(&bytes), Some(1));
         s.execute("page.transition", &json!({"pages": [1], "kind": "fade"})).unwrap();
         let r = s.execute("file.exportPdf", &json!({"pages": [1]})).unwrap();
         let text = String::from_utf8_lossy(&super::super::file::base64_decode(r["base64"].as_str().unwrap())).to_string();

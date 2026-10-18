@@ -1,5 +1,5 @@
 //! Placing a Word document (`.docx`): its text set as area type with the character and paragraph
-//! formatting VectorCraft has, read as ECMA-376 Part 1 describes WordprocessingML
+//! formatting Tsipika has, read as ECMA-376 Part 1 describes WordprocessingML
 //! (<https://ecma-international.org/publications-and-standards/standards/ecma-376/>), in its
 //! Transitional and Strict namespaces.
 //!
@@ -37,7 +37,7 @@
 use std::collections::HashMap;
 
 use roxmltree::Node;
-use vectorcraft_doc::{CharPosition, CharStyle, Justify, ParaDirection, ParaStyle, ScriptMetrics, TextRun};
+use tsipika_doc::{CharPosition, CharStyle, Justify, ParaDirection, ParaStyle, ScriptMetrics, TextRun};
 
 use super::text::{self, Story};
 use super::*;
@@ -123,9 +123,9 @@ fn package_error(cmd: &str, e: ReadError) -> EngineError {
         match e {
             ReadError::NotZip => "not a Word document: it isn't a ZIP package".to_string(),
             ReadError::TooManyFiles => format!("the Word document's package has more than {MAX_FILES} files"),
-            ReadError::Zip64 => "the Word document's package uses ZIP64 records, which VectorCraft doesn't read".to_string(),
+            ReadError::Zip64 => "the Word document's package uses ZIP64 records, which Tsipika doesn't read".to_string(),
             ReadError::Encrypted(name) => format!("`{name}` in the Word document is encrypted"),
-            ReadError::Method(name, m) => format!("`{name}` in the Word document uses compression method {m}, which VectorCraft doesn't read"),
+            ReadError::Method(name, m) => format!("`{name}` in the Word document uses compression method {m}, which Tsipika doesn't read"),
             ReadError::TooLarge(name) => format!("`{name}` in the Word document is too large to place (at most {} MB unpacked)", MAX_PART >> 20),
             ReadError::Damaged(name) if name.is_empty() => "the Word document's package is damaged".to_string(),
             ReadError::Damaged(name) => format!("the Word document's package is damaged: `{name}` can't be read"),
@@ -315,7 +315,7 @@ struct RunProps {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 struct Chars {
     font: Option<usize>,
-    /// None: VectorCraft's default size.
+    /// None: Tsipika's default size.
     half_points: Option<f64>,
     bold: bool,
     italic: bool,
@@ -798,7 +798,7 @@ impl Reader {
         }
         s.baseline_shift = (c.shift / 2.0).clamp(-1296.0, 1296.0);
         if let Some([r, g, b]) = c.color {
-            s.fill = Paint::solid(vectorcraft_color::Color::rgb8(r, g, b));
+            s.fill = Paint::solid(tsipika_color::Color::rgb8(r, g, b));
         }
         s.underline = c.underline;
         s.strikethrough = c.strike || c.dstrike;

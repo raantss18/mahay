@@ -4,7 +4,7 @@
 //! its submenu by itself. Here every level of a menu gets only the room it has below the bar (a
 //! submenu: from its row down, or up to the bar when egui opens it upward) and scrolls inside
 //! it: wheel, dragging, and ▲ / ▼ strips that scroll while the pointer rests on them, like
-//! native menus on a small display. The same approach as PhotoCraft's menu bar (its #319).
+//! native menus on a small display. The same approach as Sary's menu bar (its #319).
 
 use egui::{Id, Rect, Sense, Ui, vec2};
 

@@ -32,6 +32,6 @@ jobs:
       - name: Fetch pinned and checksum-verified corpus
         run: cargo xtask corpus --affinity
       - name: Parse every file and freeze actual Affinity 3 feature retention
-        run: cargo test -p vectorcraft-affinity --all-features -- --nocapture
+        run: cargo test -p tsipika-affinity --all-features -- --nocapture
       - name: Check every artboard, native save, SVG, PDF and PSD exports
-        run: cargo test -p vectorcraft-engine --test affinity_artboards --test affinity_text --test affinity_corpus -- --nocapture
+        run: cargo test -p tsipika-engine --test affinity_artboards --test affinity_text --test affinity_corpus -- --nocapture

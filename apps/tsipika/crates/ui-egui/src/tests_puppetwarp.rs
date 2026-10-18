@@ -1,13 +1,13 @@
 //! The Puppet Warp tool in the UI: its Control bar (Expand, Show Mesh, Select All Pins) and hint.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, chrome, tests_labels::painted_text};
+use crate::{TsipikaApp, chrome, tests_labels::painted_text};
 
 #[test]
 fn the_control_bar_shows_puppet_warp_options() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
     app.run("shape.rectangle", json!({"x": 50, "y": 50, "width": 200, "height": 100})).unwrap();
     app.run("tool.select", json!({"tool": "puppetWarp"})).unwrap();
@@ -27,7 +27,7 @@ fn the_control_bar_shows_puppet_warp_options() {
 
 #[test]
 fn the_hint_bar_explains_puppet_warp() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
     app.run("tool.select", json!({"tool": "puppetWarp"})).unwrap();
     let text = painted_text(&mut app, chrome::hint_bar).replace('\n', "");

@@ -1,10 +1,10 @@
 //! Commands behind the Progress, Media Browser, Metadata and Lumetri Scopes panels.
 
-use effectcraft_project::ItemId;
-use effectcraft_raster::Image;
-use effectcraft_raster::scopes::{self, ColorStandard, ScopeKind, ScopeOpts};
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_project::ItemId;
+use tselatra_raster::Image;
+use tselatra_raster::scopes::{self, ColorStandard, ScopeKind, ScopeOpts};
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, f_p, str_p};

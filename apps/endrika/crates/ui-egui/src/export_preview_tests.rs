@@ -3,8 +3,8 @@
 //! transparency checkerboard next to a correct export. And its setting rows: a size only for
 //! images.
 
-use figcraft_doc::{Document, NodeId};
-use figcraft_engine::Session;
+use endrika_doc::{Document, NodeId};
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::assets_panel::thumbnail_pixmap;
@@ -17,8 +17,8 @@ fn doc_after(commands: &[(&str, Value)]) -> (Document, Vec<NodeId>) {
 }
 
 /// Whether the pixmap paints anything (any pixel not fully transparent).
-fn paints(pix: &figcraft_render::Pixmap) -> bool {
-    figcraft_render::to_rgba8(pix).as_chunks::<4>().0.iter().any(|p| p.get(3).copied().unwrap_or(0) > 0)
+fn paints(pix: &endrika_render::Pixmap) -> bool {
+    endrika_render::to_rgba8(pix).as_chunks::<4>().0.iter().any(|p| p.get(3).copied().unwrap_or(0) > 0)
 }
 
 #[test]

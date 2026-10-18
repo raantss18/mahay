@@ -2,18 +2,18 @@
 
 use egui::{Pos2, vec2};
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app
 }
 
 /// One headless canvas frame on an 800 × 600 window; the texts it painted.
-fn frame_texts(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<String> {
+fn frame_texts(app: &mut TsipikaApp, ctx: &egui::Context) -> Vec<String> {
     let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| crate::canvas::show(app, ui));
     out.textures_delta.clear();

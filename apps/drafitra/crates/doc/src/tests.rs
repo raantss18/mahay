@@ -1,5 +1,5 @@
 use crate::*;
-use cadcraft_geom::{Bounds2, Mat3, PolyVertex, Vec2, Vec3};
+use drafitra_geom::{Bounds2, Mat3, PolyVertex, Vec2, Vec3};
 
 fn line(a: (f64, f64), b: (f64, f64)) -> EntityKind {
     EntityKind::Line(Line { a: Vec3::new(a.0, a.1, 0.0), b: Vec3::new(b.0, b.1, 0.0) })
@@ -137,7 +137,7 @@ fn transform_arc_mirror_keeps_shape() {
     let mut k = EntityKind::Arc(Arc { center: Vec3::ZERO, radius: 1.0, start: 0.0, end: std::f64::consts::FRAC_PI_2 });
     k.transform(&Mat3::mirror(Vec2::ZERO, Vec2::Y));
     if let EntityKind::Arc(a) = k {
-        let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+        let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
         assert!(g.mid_point().near(Vec2::from_angle(3.0 * std::f64::consts::FRAC_PI_4), 1e-9));
     } else {
         panic!()

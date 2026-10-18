@@ -2,16 +2,16 @@
 //! Keywords, Versions, Activity.
 
 use egui::{Align2, Rect, Sense, pos2, vec2};
-use lightcraft_catalog::PhotoId;
+use hazavana_catalog::PhotoId;
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::icons::{Icon, paint};
 use crate::state::RightPanel;
 use crate::theme::Tokens;
 use crate::widgets::{divider, register, slider, text_button};
 
-pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let frame = egui::Frame::NONE.fill(t.chrome).stroke(egui::Stroke::new(1.0, t.divider));
     frame.show(ui, |ui| {
@@ -99,14 +99,14 @@ pub fn header(ui: &mut egui::Ui, title: &str) {
 
 /// A panel title that folds its section shut and open again (`section:{id}`; kept in
 /// [`crate::state::UiState::folded_sections`]). Says whether the section is open.
-pub fn fold_header(app: &mut LightcraftApp, ui: &mut egui::Ui, id: &str, title: &str) -> bool {
+pub fn fold_header(app: &mut HazavanaApp, ui: &mut egui::Ui, id: &str, title: &str) -> bool {
     let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 46.0), Sense::click());
     let title = crate::i18n::tr(title);
     fold_title(app, ui, id, r, &resp, title)
 }
 
 /// [`fold_header`] for a title whose room is already taken (`r`, answering as `resp`).
-pub fn fold_title(app: &mut LightcraftApp, ui: &egui::Ui, id: &str, r: Rect, resp: &egui::Response, title: &str) -> bool {
+pub fn fold_title(app: &mut HazavanaApp, ui: &egui::Ui, id: &str, r: Rect, resp: &egui::Response, title: &str) -> bool {
     let t = Tokens::get(ui.ctx());
     let open = !app.ui.section_folded(id);
     resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::CollapsingHeader, true, open, title));
@@ -177,7 +177,7 @@ fn aspect_label(aspect: Option<(u32, u32)>, original: Option<f64>) -> String {
 }
 
 /// "Custom" row of the aspect menu: two number fields and an Apply button (`crop.aspect` `[w, h]`).
-fn custom_aspect(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+fn custom_aspect(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let key = egui::Id::new("crop-custom-aspect");
     let (mut w, mut h): (String, String) = ui.data_mut(|d| d.get_temp(key)).unwrap_or_else(|| ("3".into(), "2".into()));
     let mut apply = false;
@@ -197,7 +197,7 @@ fn custom_aspect(app: &mut LightcraftApp, ui: &mut egui::Ui) {
         // Accept `3`, `2.5` and `3,5`; anything else (zero, negative, text, huge) is ignored.
         let num = |t: &str| t.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite() && *v > 0.0 && *v <= 1000.0);
         if let (Some(x), Some(y)) = (num(&w), num(&h))
-            && (1.0 / lightcraft_geom::MAX_RATIO..=lightcraft_geom::MAX_RATIO).contains(&(x / y))
+            && (1.0 / hazavana_geom::MAX_RATIO..=hazavana_geom::MAX_RATIO).contains(&(x / y))
         {
             let _ = app.run("crop.aspect", json!({"aspect": [x, y]}));
             ui.close();
@@ -206,7 +206,7 @@ fn custom_aspect(app: &mut LightcraftApp, ui: &mut egui::Ui) {
     ui.data_mut(|d| d.insert_temp(key, (w, h)));
 }
 
-fn crop(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn crop(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     let d = app.session.develop_of(id).unwrap_or_default();
     header(ui, "Crop");
     padded(ui, |ui| {
@@ -259,7 +259,7 @@ fn crop(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             }
         });
     });
-    let ang = lightcraft_develop::controls::find("crop.angle").copied();
+    let ang = hazavana_develop::controls::find("crop.angle").copied();
     if let Some(spec) = ang {
         let out = slider(ui, &spec, d.crop.geometry.angle, true, Some("Straighten"));
         super::edit::apply_slider_out(app, &spec, out, |app, v| app.run("crop.straighten", json!({"angle": v})));
@@ -351,7 +351,7 @@ fn crop(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     padded(ui, |ui| {
         ui.label(crate::i18n::tr("Upright"));
         {
-            use lightcraft_develop::Upright;
+            use hazavana_develop::Upright;
             let modes = [
                 ("Off", Upright::Off, "off"),
                 ("Auto", Upright::Auto, "auto"),
@@ -368,10 +368,10 @@ fn crop(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
                 app.ui.tool = if mode == Upright::Guided { "guidedUpright".into() } else { String::new() };
             }
         }
-        let guided = d.geometry.upright == lightcraft_develop::Upright::Guided;
+        let guided = d.geometry.upright == hazavana_develop::Upright::Guided;
         ui.horizontal_wrapped(|ui| {
             if !guided
-                && d.geometry.upright != lightcraft_develop::Upright::Off
+                && d.geometry.upright != hazavana_develop::Upright::Off
                 && text_button(ui, "uprightUpdate", crate::i18n::tr("Update"), false).clicked()
             {
                 let mode = serde_json::to_value(d.geometry.upright).unwrap_or_default();
@@ -403,14 +403,14 @@ fn crop(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             let _ = app.run("develop.merge", json!({"settings": {"geometry": {"constrain_crop": c}}, "label": "Constrain Crop"}));
         }
     });
-    for spec in lightcraft_develop::controls::in_section(lightcraft_develop::Section::Geometry).filter(|c| c.id != "crop.angle") {
-        let v = lightcraft_develop::controls::get(&d, spec.id).unwrap_or(spec.default);
+    for spec in hazavana_develop::controls::in_section(hazavana_develop::Section::Geometry).filter(|c| c.id != "crop.angle") {
+        let v = hazavana_develop::controls::get(&d, spec.id).unwrap_or(spec.default);
         let out = slider(ui, spec, v, true, None);
         super::edit::apply_slider_out(app, spec, out, |app, v| app.run("develop.set", json!({"control": spec.id, "value": v})));
     }
 }
 
-fn remove(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn remove(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     let d = app.session.develop_of(id).unwrap_or_default();
     header(ui, "Remove");
     padded(ui, |ui| {
@@ -452,23 +452,23 @@ fn remove(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
         (app.ui.remove_size, app.ui.remove_feather, app.ui.remove_opacity) = (sp.size as f32, sp.feather as f32, sp.opacity as f32);
         divider(ui);
         let mode = match sp.mode {
-            lightcraft_develop::SpotMode::Heal => "Heal",
-            lightcraft_develop::SpotMode::Clone => "Clone",
-            lightcraft_develop::SpotMode::Remove => "Remove",
-            lightcraft_develop::SpotMode::Fill => "Content-Aware",
+            hazavana_develop::SpotMode::Heal => "Heal",
+            hazavana_develop::SpotMode::Clone => "Clone",
+            hazavana_develop::SpotMode::Remove => "Remove",
+            hazavana_develop::SpotMode::Fill => "Content-Aware",
         };
         super::edit::sub_title(ui, &crate::i18n::tr_format!("{mode} spot {} of {}", i + 1, d.spots.len(), mode = crate::i18n::tr(mode)));
     }
-    let plain = |id: &'static str, label: &'static str, min: f64, max: f64, default: f64| lightcraft_develop::ControlSpec {
+    let plain = |id: &'static str, label: &'static str, min: f64, max: f64, default: f64| hazavana_develop::ControlSpec {
         id,
         label,
-        section: lightcraft_develop::Section::Detail,
+        section: hazavana_develop::Section::Detail,
         min,
         max,
         default,
         step: 1.0,
         decimals: 0,
-        track: lightcraft_develop::Track::Plain,
+        track: hazavana_develop::Track::Plain,
     };
     let sliders = [
         (plain("ui.removeSize", "Size", 1.0, 250.0, 20.0), "size", (app.ui.remove_size * 1000.0) as f64),
@@ -508,16 +508,16 @@ fn remove(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             app.ui.visualize_spots = v;
         }
     });
-    let spec = lightcraft_develop::ControlSpec {
+    let spec = hazavana_develop::ControlSpec {
         id: "ui.spotsThreshold",
         label: "Threshold",
-        section: lightcraft_develop::Section::Detail,
+        section: hazavana_develop::Section::Detail,
         min: 0.0,
         max: 100.0,
         default: 50.0,
         step: 1.0,
         decimals: 0,
-        track: lightcraft_develop::Track::Plain,
+        track: hazavana_develop::Track::Plain,
     };
     let out = slider(ui, &spec, app.ui.spots_threshold as f64, app.ui.visualize_spots, None);
     if let Some(v) = out.value {
@@ -536,7 +536,7 @@ fn remove(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
 
 /// Tool Overlay: when the spot and mask pins show on the photo (Auto / Always / Selected / Never;
 /// Shift+H steps through them). Remove and Masking panels.
-pub(crate) fn tool_overlay_options(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub(crate) fn tool_overlay_options(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     use crate::state::ToolOverlay;
     let t = Tokens::get(ui.ctx());
     ui.horizontal(|ui| {
@@ -556,7 +556,7 @@ pub(crate) fn tool_overlay_options(app: &mut LightcraftApp, ui: &mut egui::Ui) {
     });
 }
 
-fn red_eye(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn red_eye(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     let d = app.session.develop_of(id).unwrap_or_default();
     header(ui, "Red Eye");
     padded(ui, |ui| {
@@ -594,8 +594,8 @@ fn red_eye(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     );
     for k in ["pupilSize", "darken"] {
         let cid = format!("redEye.{i}.{k}");
-        let Some(spec) = lightcraft_develop::controls::find(&cid) else { continue };
-        let v = lightcraft_develop::controls::get(&d, &cid).unwrap_or(spec.default);
+        let Some(spec) = hazavana_develop::controls::find(&cid) else { continue };
+        let v = hazavana_develop::controls::get(&d, &cid).unwrap_or(spec.default);
         let out = slider(ui, spec, v, true, None);
         super::edit::apply_slider_out(app, spec, out, |app, v| app.run("develop.set", json!({"control": cid, "value": v})));
     }
@@ -620,7 +620,7 @@ fn red_eye(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     });
 }
 
-fn info(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn info(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     let Some(p) = app.session.catalog.photo(id).cloned() else { return };
     header(ui, "Info");
     let t = Tokens::get(ui.ctx());
@@ -648,7 +648,7 @@ fn info(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
         ui.add_space(6.0);
         // colour label: one swatch per label (hover shows its name); clicking the current one clears it
         ui.horizontal(|ui| {
-            for l in lightcraft_catalog::ColorLabel::ALL {
+            for l in hazavana_catalog::ColorLabel::ALL {
                 let (r, resp) = ui.allocate_exact_size(vec2(22.0, 22.0), Sense::click());
                 crate::widgets::announce(&resp, crate::i18n::tr(&format!("{l:?}")));
                 let key = format!("{l:?}").to_lowercase();
@@ -703,8 +703,8 @@ fn info(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
         small(ui, "File Path");
         ui.horizontal(|ui| {
             let path = match &p.source {
-                lightcraft_catalog::Source::File { path } => path.clone(),
-                lightcraft_catalog::Source::Demo { .. } => crate::i18n::tr("Generated demo photo").into(),
+                hazavana_catalog::Source::File { path } => path.clone(),
+                hazavana_catalog::Source::Demo { .. } => crate::i18n::tr("Generated demo photo").into(),
             };
             ui.add(egui::Label::new(egui::RichText::new(path).size(12.0).color(t.text_label)).truncate());
             if crate::menus::ui_enabled(app, "app.showInFinder") {
@@ -791,12 +791,12 @@ fn info(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
         }
         // offline originals / smart previews
         // (cached answers, checked off the UI thread: unknown counts as online / no smart preview)
-        if let lightcraft_catalog::Source::File { path } = &p.source {
+        if let hazavana_catalog::Source::File { path } = &p.source {
             let avail = &app.session.media.availability;
             let online = !avail.is_offline(path);
             let smart = app.session.media.smart_dir.as_ref().is_some_and(|d| {
-                let shard = lightcraft_engine::smart::sharded_file_path(d, &p);
-                let legacy = d.join(lightcraft_engine::smart::file_name(&p));
+                let shard = hazavana_engine::smart::sharded_file_path(d, &p);
+                let legacy = d.join(hazavana_engine::smart::file_name(&p));
                 avail.exists(&shard.to_string_lossy()) == Some(true) || avail.exists(&legacy.to_string_lossy()) == Some(true)
             });
             if !online || smart {
@@ -821,7 +821,7 @@ fn info(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
 
 /// The camera card at the top of Info: camera, lens, size · file size and format, then the
 /// capture settings.
-fn camera_card(ui: &mut egui::Ui, p: &lightcraft_catalog::Photo) {
+fn camera_card(ui: &mut egui::Ui, p: &hazavana_catalog::Photo) {
     let t = Tokens::get(ui.ctx());
     let m = &p.meta;
     egui::Frame::NONE.fill(t.canvas).corner_radius(6.0).inner_margin(egui::Margin::symmetric(12, 10)).show(ui, |ui| {
@@ -873,7 +873,7 @@ fn camera_card(ui: &mut egui::Ui, p: &lightcraft_catalog::Photo) {
 
 /// The camera's focus mode, AF area and tracking in the interface language ("AF-C · Wide · Animal Eye
 /// Tracking"), or `None` when the photo has no focus point.
-pub(crate) fn focus_text(f: Option<&lightcraft_meta::FocusPoint>) -> Option<String> {
+pub(crate) fn focus_text(f: Option<&hazavana_meta::FocusPoint>) -> Option<String> {
     let f = f?;
     let words: Vec<&str> = f.words().into_iter().map(crate::i18n::tr).collect();
     Some(if words.is_empty() { crate::i18n::tr("Focus point").to_string() } else { words.join(" · ") })
@@ -890,11 +890,11 @@ fn human_size(bytes: u64) -> String {
 /// A labelled metadata text field: the typed text lives in egui memory while focused and is
 /// saved (photo.setMeta `key`) when the field loses focus.
 /// Copyright Status: Unknown / Copyrighted / Public Domain (`xmpRights:Marked`).
-fn copyright_status(app: &mut LightcraftApp, ui: &mut egui::Ui, current: lightcraft_catalog::CopyrightStatus) {
+fn copyright_status(app: &mut HazavanaApp, ui: &mut egui::Ui, current: hazavana_catalog::CopyrightStatus) {
     let t = Tokens::get(ui.ctx());
     ui.label(egui::RichText::new(crate::i18n::tr("Copyright Status")).size(11.5).color(t.text_dim));
     let r = crate::widgets::combo_box("info-copyright-status").selected_text(crate::i18n::tr(current.label())).show_ui(ui, |ui| {
-        for st in lightcraft_catalog::CopyrightStatus::ALL {
+        for st in hazavana_catalog::CopyrightStatus::ALL {
             if ui.selectable_label(st == current, crate::i18n::tr(st.label())).clicked() && st != current {
                 let _ = app.run("photo.setMeta", json!({"copyrightStatus": st.id()}));
             }
@@ -904,7 +904,7 @@ fn copyright_status(app: &mut LightcraftApp, ui: &mut egui::Ui, current: lightcr
     ui.add_space(6.0);
 }
 
-fn meta_field(app: &mut LightcraftApp, ui: &mut egui::Ui, label: &str, key: &str, value: &str, lines: usize) {
+fn meta_field(app: &mut HazavanaApp, ui: &mut egui::Ui, label: &str, key: &str, value: &str, lines: usize) {
     let t = Tokens::get(ui.ctx());
     ui.label(egui::RichText::new(crate::i18n::tr(label)).size(11.5).color(t.text_dim));
     let id = egui::Id::new(("info-field", key));
@@ -929,7 +929,7 @@ fn meta_field(app: &mut LightcraftApp, ui: &mut egui::Ui, label: &str, key: &str
     ui.add_space(6.0);
 }
 
-fn keywords(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn keywords(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     // (the box is the selection's: the active photo only says that there is one)
     if app.session.catalog.photo(id).is_none() {
         return;
@@ -944,7 +944,7 @@ fn keywords(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
 
 /// The Keywording box: the field that adds keywords, the selection's keywords, the keyword set,
 /// the painter and the suggestions.
-fn keywording(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+fn keywording(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     padded(ui, |ui| {
         let kid = egui::Id::new("kw-input");
@@ -1030,7 +1030,7 @@ fn keywording(app: &mut LightcraftApp, ui: &mut egui::Ui) {
         // this edit (the shared field does)
         let returned = r.ending == Some(crate::text_field::Ending::Return) && !text.trim().is_empty();
         // a new name goes inside the default parent (Put New Keywords Inside This Keyword)
-        let as_typed = |app: &LightcraftApp, text: &str| -> Vec<String> {
+        let as_typed = |app: &HazavanaApp, text: &str| -> Vec<String> {
             text.split(',').map(|s| app.session.catalog.typed_keyword(s)).filter(|s| !s.is_empty()).collect()
         };
         let adding: Option<Vec<String>> = match picked {
@@ -1154,22 +1154,22 @@ fn hold_list_in_place(ui: &mut egui::Ui, top: f32) {
 
 /// The keyword set: pick a set, then nine buttons (⌥1–⌥9) that toggle its keywords on the
 /// selected photos; "Save as Set…" keeps the current nine under a name.
-fn keyword_set(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+fn keyword_set(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     // on: every selected photo has it (⌥1–⌥9 then take it off them); partly on: only some do
     let selection = app.session.selected();
     let chips = app.caches.keyword_chips(&app.session.catalog, &selection);
     let t = Tokens::get(ui.ctx());
-    let sets = lightcraft_engine::cmd::keywords::keyword_sets_json(&app.session);
+    let sets = hazavana_engine::cmd::keywords::keyword_sets_json(&app.session);
     let current = sets["current"].as_str().unwrap_or_default().to_string();
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new(crate::i18n::tr("Keyword Set")).color(t.text_dim));
         let combo = crate::widgets::combo_box("kw-set")
-            .selected_text(crate::i18n::builtin_label(&current, current == lightcraft_engine::cmd::keywords::RECENT))
+            .selected_text(crate::i18n::builtin_label(&current, current == hazavana_engine::cmd::keywords::RECENT))
             .show_ui(ui, |ui| {
                 for set in sets["sets"].as_array().into_iter().flatten() {
                     let name = set["name"].as_str().unwrap_or_default();
                     if ui
-                        .selectable_label(name == current, crate::i18n::builtin_label(name, name == lightcraft_engine::cmd::keywords::RECENT))
+                        .selectable_label(name == current, crate::i18n::builtin_label(name, name == hazavana_engine::cmd::keywords::RECENT))
                         .clicked()
                     {
                         let _ = app.run("keyword.useSet", json!({"name": name}));
@@ -1183,7 +1183,7 @@ fn keyword_set(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                     let mut slots: Vec<String> =
                         sets["keywords"].as_array().into_iter().flatten().filter_map(|k| k.as_str().map(str::to_string)).collect();
                     slots.resize(9, String::new());
-                    let named = current != lightcraft_engine::cmd::keywords::RECENT;
+                    let named = current != hazavana_engine::cmd::keywords::RECENT;
                     app.ui.dialog = Some(crate::state::Dialog::KeywordSet {
                         replaces: named.then(|| current.clone()),
                         name: if named { current.clone() } else { String::new() },
@@ -1201,7 +1201,7 @@ fn keyword_set(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                         key: "name".into(),
                     });
                 }
-                if current != lightcraft_engine::cmd::keywords::RECENT
+                if current != hazavana_engine::cmd::keywords::RECENT
                     && ui.button(crate::i18n::tr_format!("Delete “{current}”", current = current)).clicked()
                 {
                     let _ = app.run("keyword.deleteSet", json!({"name": current}));
@@ -1226,7 +1226,7 @@ fn keyword_set(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                 }
                 continue;
             }
-            let chip = chips.iter().find(|c| lightcraft_catalog::keywords::same(&c.path, &lightcraft_catalog::keywords::clean(k)));
+            let chip = chips.iter().find(|c| hazavana_catalog::keywords::same(&c.path, &hazavana_catalog::keywords::clean(k)));
             let on = chip.is_some_and(|c| c.on_all());
             let some = chip.is_some() && !on;
             let short = format!("{}{}", k.rsplit('|').next().unwrap_or(k), if some { " *" } else { "" });
@@ -1252,7 +1252,7 @@ fn keyword_set(app: &mut LightcraftApp, ui: &mut egui::Ui) {
     });
 }
 
-fn versions(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn versions(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     let Some(p) = app.session.catalog.photo(id).cloned() else { return };
     header(ui, "Versions");
     let t = Tokens::get(ui.ctx());
@@ -1261,7 +1261,7 @@ fn versions(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             let _ = app.run("version.create", json!({}));
         }
         ui.add_space(8.0);
-        // Named (made by you) and Auto (made by LightCraft) versions
+        // Named (made by you) and Auto (made by Hazavana) versions
         let tab_id = egui::Id::new("versions-tab");
         let mut auto: bool = ui.data(|d| d.get_temp(tab_id)).unwrap_or(false);
         let named_n = p.versions.iter().filter(|v| !v.auto).count();
@@ -1274,7 +1274,7 @@ fn versions(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             ui.data_mut(|d| d.insert_temp(tab_id, auto));
         }
         ui.add_space(6.0);
-        let shown: Vec<(usize, &lightcraft_catalog::Version)> = p.versions.iter().enumerate().filter(|(_, v)| v.auto == auto).collect();
+        let shown: Vec<(usize, &hazavana_catalog::Version)> = p.versions.iter().enumerate().filter(|(_, v)| v.auto == auto).collect();
         if shown.is_empty() {
             let msg = if auto { "No automatic versions." } else { "No versions yet. Create one to keep this look." };
             ui.label(egui::RichText::new(crate::i18n::tr(msg)).color(t.text_dim));
@@ -1348,7 +1348,7 @@ fn short_time(iso: &str) -> String {
     if crate::i18n::language() != crate::i18n::Locale::En {
         return crate::i18n::display_time(iso);
     }
-    let long = lightcraft_catalog::dates::display_time(iso);
+    let long = hazavana_catalog::dates::display_time(iso);
     // "September 30, 2026 at 12:00:00 PM" → month abbreviated, seconds dropped
     let (date, time) = long.split_once(" at ").map_or((long.as_str(), None), |(d, t)| (d, Some(t)));
     let date = match date.split_once(' ') {
@@ -1378,7 +1378,7 @@ fn history_row(i: usize, cursor: Option<usize>) -> HistoryRow {
     }
 }
 
-fn activity(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
+fn activity(app: &mut HazavanaApp, ui: &mut egui::Ui, id: PhotoId) {
     let Some(p) = app.session.catalog.photo(id).cloned() else { return };
     header(ui, "History");
     let t = Tokens::get(ui.ctx());

@@ -4,10 +4,10 @@
 
 use std::sync::Arc;
 
-use designcraft_compose::Cache;
-use designcraft_doc::Document;
-use designcraft_geom::Affine;
-use designcraft_render::{Placed, RenderOptions, Rendered};
+use pejy_compose::Cache;
+use pejy_doc::Document;
+use pejy_geom::Affine;
+use pejy_render::{Placed, RenderOptions, Rendered};
 
 pub struct Job {
     pub token: u64,
@@ -38,9 +38,9 @@ impl Worker {
         let (tx, jobs) = std::sync::mpsc::channel::<Job>();
         let (done_tx, rx) = std::sync::mpsc::channel::<Done>();
         std::thread::Builder::new()
-            .name("designcraft-render".into())
+            .name("pejy-render".into())
             .spawn(move || {
-                let mut r = designcraft_render::Renderer::new();
+                let mut r = pejy_render::Renderer::new();
                 while let Ok(mut job) = jobs.recv() {
                     // Only the newest job matters.
                     while let Ok(newer) = jobs.try_recv() {

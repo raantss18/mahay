@@ -3,7 +3,7 @@ use super::*;
 const BASIC: &[u8] = include_bytes!("../tests/fixtures/basic-shapes.svg");
 const PATHS: &[u8] = include_bytes!("../tests/fixtures/paths-gradients.svg");
 
-fn px(img: &effectcraft_raster::Image, x: u32, y: u32) -> [f32; 4] {
+fn px(img: &tselatra_raster::Image, x: u32, y: u32) -> [f32; 4] {
     img.data[img.idx(x, y)]
 }
 

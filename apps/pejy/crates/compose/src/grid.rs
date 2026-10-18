@@ -9,7 +9,7 @@
 //! from its first line's reference to its last's. The next line starts on the grid line after the
 //! band.
 
-use designcraft_doc::cjk::CharacterAlignment as Reference;
+use pejy_doc::cjk::CharacterAlignment as Reference;
 
 use crate::shape::Glyph;
 

@@ -1,9 +1,9 @@
 //! Render Queue panel input: choosing a Render Settings template from an item's menu (#117).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::render_queue::RenderQuality;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_engine::project::render_queue::RenderQuality;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui::{Event, Modifiers, Pos2, pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -11,7 +11,7 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
     h.step();
@@ -28,7 +28,7 @@ fn render_settings_template_applies_from_a_menu_moved_to_fit_the_window() {
     s.execute("renderQueue.add", json!({})).unwrap();
     let id = s.project.render_queue[0].id;
     assert_eq!(s.project.render_queue[0].settings.name, "Best Settings");
-    let mut app = Some(EffectcraftApp::new(s));
+    let mut app = Some(TselatraApp::new(s));
     let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| app.take().expect("app"));
     // Twirl the item open, as clicking its twirl does.
     h.ctx.data_mut(|d| d.insert_temp(egui::Id::new("rq-ui"), (vec![id], None::<u64>)));
@@ -47,7 +47,7 @@ fn render_settings_template_applies_from_a_menu_moved_to_fit_the_window() {
     assert!(h.query_by_label_contains("Quality: Draft").is_none(), "the menu closed after the choice");
 }
 
-fn click_with(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, modifiers: Modifiers) {
+fn click_with(h: &mut Harness<'_, TselatraApp>, p: Pos2, modifiers: Modifiers) {
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers });
@@ -69,7 +69,7 @@ fn clicking_the_output_file_name_opens_the_save_dialog() {
     let id = s.project.render_queue[0].id;
     let expected_default = s.resolve_output(&s.project.render_queue[0]).unwrap();
     let ext = s.project.render_queue[0].output.format.extension();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     let asked: Rc<RefCell<Vec<(String, String)>>> = Rc::default();
     let log = asked.clone();
     let chosen = std::env::temp_dir().join(format!("chosen.{ext}")).to_string_lossy().to_string();
@@ -88,7 +88,7 @@ fn clicking_the_output_file_name_opens_the_save_dialog() {
     click_with(&mut h, at, Modifiers::NONE);
     assert_eq!(*asked.borrow(), [(expected_default, ext.to_string())], "the dialog opened at the current output");
     assert_eq!(h.state().session.project.render_queue[0].output.output, chosen);
-    let editing = |h: &Harness<'_, EffectcraftApp>| h.ctx.data(|d| d.get_temp::<(u64, String)>(egui::Id::new("rq-edit-output")));
+    let editing = |h: &Harness<'_, TselatraApp>| h.ctx.data(|d| d.get_temp::<(u64, String)>(egui::Id::new("rq-edit-output")));
     assert_eq!(editing(&h), None, "no inline editor");
     // Alt-click edits the template text instead.
     click_with(&mut h, at, Modifiers::ALT);

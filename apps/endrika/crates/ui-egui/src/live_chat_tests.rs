@@ -2,7 +2,7 @@
 //! typing, Enter, Escape), the spotlight banner and your avatar's menu.
 
 use egui::{Event, Key, Modifiers, pos2};
-use figcraft_engine::live::{Event as LiveEvent, Signal};
+use endrika_engine::live::{Event as LiveEvent, Signal};
 
 use crate::live_tests::{Harness, cursor, has_text, text_center, texts};
 
@@ -93,7 +93,7 @@ fn spotlight_banner_and_your_avatar_menu() {
     let page = h.page();
     h.send(vec![
         LiveEvent::Signal(1, Signal::spotlight(true)),
-        LiveEvent::Presence(1, figcraft_engine::live::Presence { viewport: Some((page, 0.0, 0.0, 600.0, 400.0)), ..Default::default() }),
+        LiveEvent::Presence(1, endrika_engine::live::Presence { viewport: Some((page, 0.0, 0.0, 600.0, 400.0)), ..Default::default() }),
     ]);
     let shapes = h.frames(2);
     assert_eq!(h.app.session.live().follow, Some(1));

@@ -1,8 +1,8 @@
 //! VPLAYER typed at the command line asks for an option, layer names and the viewports to change
 //! instead of running the next inputs as commands.
 
-use cadcraft_doc::{EntityKind, Handle, Viewport};
-use cadcraft_engine::Session;
+use drafitra_doc::{EntityKind, Handle, Viewport};
+use drafitra_engine::Session;
 use serde_json::json;
 
 fn vp(s: &Session, h: &str) -> Viewport {

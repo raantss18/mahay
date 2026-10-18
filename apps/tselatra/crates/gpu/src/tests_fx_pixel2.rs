@@ -5,12 +5,12 @@
 //! oracle): direct on a buffer at full and half resolution, as adjustment, and composited at 8
 //! and 32 bpc. Also the helpers for effects that read masks, other layers and audio.
 
-use effectcraft_effects::{Buf, EffectEnv, EffectHost, LayerPixels, MaskShape};
-use effectcraft_keyframe::{ShapePath, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{BitDepth, MaskMode};
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_effects::{Buf, EffectEnv, EffectHost, LayerPixels, MaskShape};
+use tselatra_keyframe::{ShapePath, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{BitDepth, MaskMode};
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
 
 use crate::tests::{Scene, c, check, compare_at, diff, effect_case, gpu, n, opts, pattern, set};
 
@@ -73,9 +73,9 @@ impl EffectHost for Host {
 /// `allow` = fraction of pixels allowed over 1e-3.
 pub(crate) fn direct_env(id: &str, vals: &[(&str, Value)], allow: f64) {
     let Some(g) = gpu() else { return };
-    let spec = effectcraft_effects::find(id).unwrap();
+    let spec = tselatra_effects::find(id).unwrap();
     let mut params =
-        effectcraft_effects::Params { values: spec.params.iter().map(|ps| (ps.id.to_string(), effectcraft_effects::default_value(ps, SIZE))).collect() };
+        tselatra_effects::Params { values: spec.params.iter().map(|ps| (ps.id.to_string(), tselatra_effects::default_value(ps, SIZE))).collect() };
     for (k, v) in vals {
         assert!(params.values.contains_key(*k), "{id}: no {k}");
         params.values.insert(k.to_string(), v.clone());
@@ -94,10 +94,10 @@ pub(crate) fn direct_env(id: &str, vals: &[(&str, Value)], allow: f64) {
                 buf.pad(3);
             }
             let env = EffectEnv { masks: &masks, host: Some(&host), comp_time: 0.25, frame_rate: 30.0, ..Default::default() };
-            let ctx = || effectcraft_effects::EffectCtx { params: &params, time: 0.25, layer_size: SIZE, seed: 11, adjustment, env };
+            let ctx = || tselatra_effects::EffectCtx { params: &params, time: 0.25, layer_size: SIZE, seed: 11, adjustment, env };
             let cpu = (spec.render)(&ctx(), buf.clone());
             let out =
-                effectcraft_render::Accelerator::effects(g, &[effectcraft_render::FxStep { spec, ctx: ctx() }], &buf, None).expect("the GPU runs the effect");
+                tselatra_render::Accelerator::effects(g, &[tselatra_render::FxStep { spec, ctx: ctx() }], &buf, None).expect("the GPU runs the effect");
             assert_eq!((out.offset, out.scale), (cpu.offset, cpu.scale), "{id}: geometry");
             let d = diff(&cpu.img, &out.img, 1e-3);
             assert!(

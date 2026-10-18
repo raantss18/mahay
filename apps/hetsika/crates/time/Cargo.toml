@@ -1,5 +1,5 @@
 [package]
-name = "filmcraft-time"
+name = "hetsika-time"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

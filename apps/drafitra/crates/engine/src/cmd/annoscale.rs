@@ -3,7 +3,7 @@
 //! objects show (ANNOALLVISIBLE) and the current annotation scale (CANNOSCALE with
 //! ANNOAUTOSCALE).
 
-use cadcraft_doc::{AnnoScale, Drawing, EntityKind, Handle, MAX_SCALES, is_annotative};
+use drafitra_doc::{AnnoScale, Drawing, EntityKind, Handle, MAX_SCALES, is_annotative};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase, SelectRun};
@@ -94,7 +94,7 @@ pub(crate) fn set_current(s: &mut Session, name: &str) -> Result<()> {
     let d = s.doc_mut()?;
     d.header.set_str("CANNOSCALE", &sc.name);
     if auto {
-        let usable = |e: &cadcraft_doc::Entity| d.layer(&e.common.layer).is_none_or(|l| l.visible() && !l.locked);
+        let usable = |e: &drafitra_doc::Entity| d.layer(&e.common.layer).is_none_or(|l| l.visible() && !l.locked);
         let hs: Vec<Handle> = d.model.iter().filter(|e| is_annotative(e) && usable(e)).map(|e| e.handle).collect();
         for h in hs {
             add_scale(d, h, &sc);
@@ -230,13 +230,13 @@ fn run_annoupdate(s: &mut Session, p: &Value) -> Result<Value> {
     let plan: Vec<(Handle, bool)> = hs
         .iter()
         .filter_map(|h| d.entity(*h))
-        .filter(|e| cadcraft_doc::can_be_annotative(&e.kind) && !matches!(e.kind, EntityKind::Hatch(_)))
+        .filter(|e| drafitra_doc::can_be_annotative(&e.kind) && !matches!(e.kind, EntityKind::Hatch(_)))
         .map(|e| (e.handle, d.annotative_by_style(&e.kind)))
         .filter(|(h, want)| d.entity(*h).is_some_and(|e| is_annotative(e) != *want))
         .collect();
     let d = s.doc_mut()?;
     for (h, want) in &plan {
-        d.modify_entity(*h, |e| cadcraft_doc::set_annotative(e, *want, &cur))?;
+        d.modify_entity(*h, |e| drafitra_doc::set_annotative(e, *want, &cur))?;
     }
     Ok(json!({ "updated": plan.len(), "message": format!("{} object(s) updated", plan.len()) }))
 }
@@ -300,7 +300,7 @@ fn delete_from_list(d: &mut Drawing, name: &str) -> Result<()> {
 /// Replace the list with the default metric or imperial one, keeping scales in use.
 fn reset_list(d: &mut Drawing, metric: bool) {
     let keep = in_use(d);
-    let mut list = if metric { cadcraft_doc::metric_scales() } else { cadcraft_doc::imperial_scales() };
+    let mut list = if metric { drafitra_doc::metric_scales() } else { drafitra_doc::imperial_scales() };
     for sc in keep {
         if !list.iter().any(|l| l.name.eq_ignore_ascii_case(&sc.name)) {
             list.push(sc);

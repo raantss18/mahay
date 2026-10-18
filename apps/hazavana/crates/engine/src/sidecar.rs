@@ -7,8 +7,8 @@
 //! A sidecar is written only beside an original that is an existing file at an absolute path;
 //! otherwise the save fails.
 //!
-//! An existing sidecar is never replaced wholesale (issue #92): LightCraft's properties
-//! ([`OWNED`], [`OWNED_IF_STATED`]) are merged into it ([`lightcraft_meta::merge_xmp`]) and
+//! An existing sidecar is never replaced wholesale (issue #92): Hazavana's properties
+//! ([`OWNED`], [`OWNED_IF_STATED`]) are merged into it ([`hazavana_meta::merge_xmp`]) and
 //! everything else — another editor's `crs:` develop settings, `xmpMM` history, unknown
 //! namespaces — is kept byte for byte. A sidecar that can't be read as XMP is first copied to
 //! `<name>.xmp.bak-<time>` (never overwritten), then replaced. Writes are atomic (temp file,
@@ -29,8 +29,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use lightcraft_catalog::{ColorLabel, Flag, MediaKind, Op, Photo, PhotoId, Source};
-use lightcraft_develop::DevelopSettings;
+use hazavana_catalog::{ColorLabel, Flag, MediaKind, Op, Photo, PhotoId, Source};
+use hazavana_develop::DevelopSettings;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -115,7 +115,7 @@ pub struct SidecarData {
     pub alt_text: Option<String>,
     pub extended_description: Option<String>,
     pub keywords: Option<Vec<String>>,
-    pub regions: Option<Vec<lightcraft_meta::Region>>,
+    pub regions: Option<Vec<hazavana_meta::Region>>,
     /// Capture time (ISO 8601) from `exif:DateTimeOriginal`, `photoshop:DateCreated` or
     /// `xmp:CreateDate` (first found). Used only when the file itself has no capture time.
     pub captured: Option<String>,
@@ -137,7 +137,7 @@ pub enum DevelopPatch {
 /// ([`crate::crs::Target`]: absolute Kelvin for raws with a measured illuminant, a shift from the
 /// as-shot white for everything developed relative to it).
 pub fn parse_sidecar(xmp: &str, target: crate::crs::Target) -> std::result::Result<SidecarData, String> {
-    let d = lightcraft_meta::parse_xmp(xmp).map_err(|e| e.to_string())?;
+    let d = hazavana_meta::parse_xmp(xmp).map_err(|e| e.to_string())?;
     let m = &d.metadata;
     let lc = |k: &str| d.properties.get(&format!("lc:{k}")).and_then(|v| v.first()).cloned();
     let mut out = SidecarData {
@@ -155,10 +155,10 @@ pub fn parse_sidecar(xmp: &str, target: crate::crs::Target) -> std::result::Resu
         alt_text: m.alt_text.clone(),
         extended_description: m.extended_description.clone(),
         keywords: (!m.keywords.is_empty() || !m.hierarchical_keywords.is_empty())
-            .then(|| lightcraft_catalog::keywords::from_file(&m.keywords, &m.hierarchical_keywords)),
+            .then(|| hazavana_catalog::keywords::from_file(&m.keywords, &m.hierarchical_keywords)),
         // A sidecar that has `mwg-rs:Regions` at all (even an empty list) was written by an app that
         // knows about regions, so it's authoritative: its list, empty or not, replaces the catalog's.
-        // One without it (most writers, LightCraft's own included, which keeps another app's
+        // One without it (most writers, Hazavana's own included, which keeps another app's
         // `mwg-rs:Regions` byte for byte but never writes one) says nothing about regions, and the
         // photo's are kept.
         regions: d.values.contains_key("mwg-rs:Regions").then(|| m.regions.clone()),
@@ -284,7 +284,7 @@ pub fn merge_into(p: &mut Photo, sc: &SidecarData, now: &str) -> bool {
         }
     }
     if let Some(marked) = sc.copyright_marked {
-        m.copyright_status = lightcraft_catalog::CopyrightStatus::from_marked(Some(marked));
+        m.copyright_status = hazavana_catalog::CopyrightStatus::from_marked(Some(marked));
     }
     if let Some(k) = &sc.keywords {
         m.keywords = k.clone();
@@ -299,7 +299,7 @@ pub fn merge_into(p: &mut Photo, sc: &SidecarData, now: &str) -> bool {
             if p.width > 0 && p.height > 0 {
                 crate::crs_masks::refit_radials(&mut v, crate::crs_masks::DEFAULT_ASPECT, p.width as f64 / p.height as f64);
             }
-            lightcraft_develop::apply_partial(&p.develop, &v, 1.0)
+            hazavana_develop::apply_partial(&p.develop, &v, 1.0)
         }
         None => return false,
     };
@@ -314,7 +314,7 @@ pub fn merge_into(p: &mut Photo, sc: &SidecarData, now: &str) -> bool {
 impl SidecarData {
     /// Read the label through the catalog's label names: other editors write the label's name
     /// (a custom set's "To Do" as well as "Red"); unknown names clear the label.
-    pub fn resolve_label(mut self, cat: &lightcraft_catalog::Catalog) -> Self {
+    pub fn resolve_label(mut self, cat: &hazavana_catalog::Catalog) -> Self {
         if let Some(t) = &self.label_text {
             self.label = Some(if t.is_empty() { None } else { cat.label_from_name(t) });
         }
@@ -324,16 +324,16 @@ impl SidecarData {
 
 /// The sidecar packet for a photo; the colour label is written by its name in `cat` (custom
 /// label names included, as other editors do).
-pub fn sidecar_packet(p: &Photo, cat: &lightcraft_catalog::Catalog) -> String {
+pub fn sidecar_packet(p: &Photo, cat: &hazavana_catalog::Catalog) -> String {
     sidecar_packet_with(p, cat, false)
 }
 
 /// [`sidecar_packet`], without any location (GPS, sublocation, city, state, country) when
 /// `remove_location` is set (an export with "Remove location info").
-pub fn sidecar_packet_with(p: &Photo, cat: &lightcraft_catalog::Catalog, remove_location: bool) -> String {
+pub fn sidecar_packet_with(p: &Photo, cat: &hazavana_catalog::Catalog, remove_location: bool) -> String {
     let nz = |s: &str| (!s.trim().is_empty()).then(|| s.to_string());
-    let meta = lightcraft_meta::Metadata {
-        software: Some("LightCraft".into()),
+    let meta = hazavana_meta::Metadata {
+        software: Some("Hazavana".into()),
         title: nz(&p.meta.title),
         caption: nz(&p.meta.caption),
         alt_text: nz(&p.meta.alt_text),
@@ -350,8 +350,8 @@ pub fn sidecar_packet_with(p: &Photo, cat: &lightcraft_catalog::Catalog, remove_
         keywords: p.meta.keywords.clone(),
         rating: Some(p.rating.min(5) as i8),
         label: p.label.map(|l| cat.label_name(l)),
-        capture_time: p.captured.as_deref().and_then(lightcraft_meta::DateTime::parse_iso),
-        gps: p.meta.gps.map(|(latitude, longitude)| lightcraft_meta::Gps { latitude, longitude, altitude: None }),
+        capture_time: p.captured.as_deref().and_then(hazavana_meta::DateTime::parse_iso),
+        gps: p.meta.gps.map(|(latitude, longitude)| hazavana_meta::Gps { latitude, longitude, altitude: None }),
         ..Default::default()
     };
     let mut meta = meta;
@@ -368,11 +368,11 @@ pub fn sidecar_packet_with(p: &Photo, cat: &lightcraft_catalog::Catalog, remove_
     if !remove_location && !p.meta.location.trim().is_empty() {
         lc.push(("location", p.meta.location.as_str()));
     }
-    lightcraft_meta::write_xmp_lc(&meta, &lc)
+    hazavana_meta::write_xmp_lc(&meta, &lc)
 }
 
-/// The properties LightCraft writes and owns in a sidecar: replaced on every save (removed when
-/// LightCraft has no value, so clearing a field clears it in the file too). All of them are read
+/// The properties Hazavana writes and owns in a sidecar: replaced on every save (removed when
+/// Hazavana has no value, so clearing a field clears it in the file too). All of them are read
 /// back on import and by Read Metadata from File.
 pub const OWNED: &[&str] = &[
     "xmp:Rating",
@@ -394,14 +394,14 @@ pub const OWNED: &[&str] = &[
     "lc:*",
 ];
 
-/// Properties replaced only when LightCraft has a value (capture time; GPS, which LightCraft
-/// doesn't read from sidecars): otherwise the sidecar's own value stays. Anything else LightCraft
+/// Properties replaced only when Hazavana has a value (capture time; GPS, which Hazavana
+/// doesn't read from sidecars): otherwise the sidecar's own value stays. Anything else Hazavana
 /// writes (`xmp:CreatorTool`) goes only into new sidecars.
 pub const OWNED_IF_STATED: &[&str] = &["exif:DateTimeOriginal", "photoshop:DateCreated", "exif:GPSLatitude", "exif:GPSLongitude"];
 
 /// Write `data` to `path` atomically: a temp file next to it, synced, then renamed over it.
 fn write_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
-    lightcraft_catalog::safe_file::write_atomic(path, data)
+    hazavana_catalog::safe_file::write_atomic(path, data)
 }
 
 /// Copy `path` to a new `<name>.bak-<stamp>` (`-1`, `-2`… if taken; never overwriting).
@@ -447,10 +447,10 @@ fn sidecar_contents(path: &Path, fresh: String, stamp: &str) -> std::io::Result<
     if bytes.iter().all(u8::is_ascii_whitespace) {
         return Ok((fresh, false, None));
     }
-    let rules = lightcraft_meta::MergeRules { owned: OWNED, owned_if_present: OWNED_IF_STATED };
+    let rules = hazavana_meta::MergeRules { owned: OWNED, owned_if_present: OWNED_IF_STATED };
     match std::str::from_utf8(&bytes)
         .map_err(|e| e.to_string())
-        .and_then(|old| lightcraft_meta::merge_xmp(old, &fresh, rules).map_err(|e| e.to_string()))
+        .and_then(|old| hazavana_meta::merge_xmp(old, &fresh, rules).map_err(|e| e.to_string()))
     {
         Ok(merged) => Ok((merged, true, None)),
         Err(why) => {
@@ -509,7 +509,7 @@ pub fn read_packet(original: &str, kind: MediaKind, naming: SidecarNaming) -> Op
     }
     if kind == MediaKind::Raw {
         let bytes = std::fs::read(original).ok()?;
-        let x = lightcraft_meta::embedded(&bytes).xmp?;
+        let x = hazavana_meta::embedded(&bytes).xmp?;
         return Some((x, PathBuf::from(original)));
     }
     None
@@ -537,7 +537,7 @@ impl StemOwners {
     /// [`StemOwners::among`] must agree with for the photos it is asked about (this is how the
     /// owners were worked out before, for every write).
     #[cfg(test)]
-    pub(crate) fn of(cat: &lightcraft_catalog::Catalog) -> StemOwners {
+    pub(crate) fn of(cat: &hazavana_catalog::Catalog) -> StemOwners {
         let mut best: HashMap<String, ((bool, String, u64), PhotoId, usize)> = HashMap::new();
         for p in cat.photos().filter(|p| p.copy_of.is_none()) {
             let Some(path) = file_path(p) else { continue };
@@ -554,7 +554,7 @@ impl StemOwners {
     /// The owners of the stems photos `ids` map to: all that naming those photos needs. The
     /// library is passed over once, and only files of those stems are looked at closer, so a
     /// sidecar written for one photo does not cost a table of the whole library.
-    pub(crate) fn among(cat: &lightcraft_catalog::Catalog, ids: &[PhotoId]) -> StemOwners {
+    pub(crate) fn among(cat: &hazavana_catalog::Catalog, ids: &[PhotoId]) -> StemOwners {
         let wanted: std::collections::HashSet<String> =
             ids.iter().filter_map(|id| cat.photo(*id)).filter_map(|p| file_path(p)).map(stem_key).collect();
         if wanted.is_empty() {
@@ -564,7 +564,7 @@ impl StemOwners {
     }
 
     /// The owners of the shared stems in `wanted`.
-    fn where_wanted(cat: &lightcraft_catalog::Catalog, wanted: &std::collections::HashSet<String>) -> StemOwners {
+    fn where_wanted(cat: &hazavana_catalog::Catalog, wanted: &std::collections::HashSet<String>) -> StemOwners {
         // per stem: (raw first, then file name, then id) of the best candidate; and how many
         let mut best: HashMap<String, ((bool, String, u64), PhotoId, usize)> = HashMap::new();
         let mut key = String::new();
@@ -595,7 +595,7 @@ impl StemOwners {
 
 /// How the sidecar of each of photos `ids` is named in library `cat`, whose naming is `naming`
 /// ([`Session::sidecar_namings`], for a thread that has the library and not the session).
-pub(crate) fn namings_in(cat: &lightcraft_catalog::Catalog, naming: SidecarNaming, ids: &[PhotoId]) -> Vec<SidecarNaming> {
+pub(crate) fn namings_in(cat: &hazavana_catalog::Catalog, naming: SidecarNaming, ids: &[PhotoId]) -> Vec<SidecarNaming> {
     let owners = (naming == SidecarNaming::Stem).then(|| StemOwners::among(cat, ids));
     ids.iter()
         .map(|id| match (cat.photo(*id), &owners) {
@@ -629,7 +629,7 @@ impl Session {
     }
 
     pub(crate) fn save_sidecar_with(&mut self, id: PhotoId, owners: &StemOwners) -> Result<SidecarSaved> {
-        let p = self.catalog.photo(id).ok_or(lightcraft_catalog::CatalogError::NoPhoto(id))?;
+        let p = self.catalog.photo(id).ok_or(hazavana_catalog::CatalogError::NoPhoto(id))?;
         if p.copy_of.is_some() {
             return Err(EngineError::Other(format!("{} is a virtual copy: its settings live only in the library", p.file_name)));
         }
@@ -662,7 +662,7 @@ impl Session {
         let listed = existing.iter().find(|path| crate::rename::RealFs.listed(path)).cloned();
         let path = listed.or_else(|| existing.into_iter().next()).unwrap_or(preferred);
         self.validate_sidecar_packets_for_paths(std::slice::from_ref(&path), &crate::rename::RealFs)?;
-        let p = self.catalog.photo(id).ok_or(lightcraft_catalog::CatalogError::NoPhoto(id))?;
+        let p = self.catalog.photo(id).ok_or(hazavana_catalog::CatalogError::NoPhoto(id))?;
         let err = |e: std::io::Error| EngineError::Other(format!("{}: {e}", path.display()));
         let (data, merged, backup) = sidecar_contents(&path, sidecar_packet(p, &self.catalog), &(self.clock)()).map_err(err)?;
         write_atomic(&path, data.as_bytes()).map_err(err)?;
@@ -677,7 +677,7 @@ impl Session {
 
     /// Like [`Session::read_sidecar_op`], retaining transient diagnostics for the command report.
     pub fn read_sidecar_op_with_warnings(&self, id: PhotoId) -> Result<Option<(Op, PathBuf, Vec<crate::import::ImportWarning>)>> {
-        let p = self.catalog.photo(id).ok_or(lightcraft_catalog::CatalogError::NoPhoto(id))?;
+        let p = self.catalog.photo(id).ok_or(hazavana_catalog::CatalogError::NoPhoto(id))?;
         let Some(orig) = file_path(p) else { return Ok(None) };
         let Some((packet, from)) = read_packet(orig, p.kind, self.sidecar_naming(id)) else { return Ok(None) };
         let sc = parse_sidecar(&packet, crate::crs::Target::for_photo(p)).map_err(|e| EngineError::Other(format!("{}: {e}", from.display())))?;
@@ -692,7 +692,7 @@ impl Session {
     /// The op that applies what a sidecar says (already read and parsed, e.g. on a worker
     /// thread) to photo `id`: the sidecar wins. No file is read.
     pub fn sidecar_op(&self, id: PhotoId, sc: SidecarData) -> Result<Op> {
-        let p = self.catalog.photo(id).ok_or(lightcraft_catalog::CatalogError::NoPhoto(id))?;
+        let p = self.catalog.photo(id).ok_or(hazavana_catalog::CatalogError::NoPhoto(id))?;
         let sc = sc.resolve_label(&self.catalog);
         let mut q = (**p).clone();
         let develop_changed = merge_into(&mut q, &sc, &(self.clock)());
@@ -794,7 +794,7 @@ impl Session {
 mod tests {
     #[test]
     fn sidecars_are_written_only_beside_an_existing_original() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-sidecar-local-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-sidecar-local-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("IMG_1.jpg"), b"original").unwrap();
@@ -820,17 +820,17 @@ mod tests {
     /// gives the photo its keywords as paths.
     #[test]
     fn sidecar_keywords_keep_their_hierarchy() {
-        let m = lightcraft_meta::Metadata {
+        let m = hazavana_meta::Metadata {
             keywords: vec!["Lisbon".into(), "Places".into()],
             hierarchical_keywords: vec!["Places|Lisbon".into()],
             ..Default::default()
         };
-        let sc = super::parse_sidecar(&lightcraft_meta::write_xmp(&m, None), crate::crs::Target::Rendered).unwrap();
+        let sc = super::parse_sidecar(&hazavana_meta::write_xmp(&m, None), crate::crs::Target::Rendered).unwrap();
         assert_eq!(sc.keywords, Some(vec!["Places|Lisbon".to_string()]));
     }
 
     use super::*;
-    use lightcraft_catalog::Meta;
+    use hazavana_catalog::Meta;
 
     fn photo() -> Photo {
         let mut p = Photo::new(PhotoId(7), Source::File { path: "/x/IMG_1.jpg".into() }, "IMG_1.jpg", "JPEG", 40, 30, "2026-01-01T00:00:00");
@@ -852,7 +852,7 @@ mod tests {
         d.light.exposure = 0.75;
         d.effects.clarity = 22.0;
         d.crop.geometry.angle = 2.5;
-        d.masks.push(lightcraft_develop::Mask { id: 1, ..Default::default() });
+        d.masks.push(hazavana_develop::Mask { id: 1, ..Default::default() });
         p.develop = Arc::new(d);
         p
     }
@@ -866,7 +866,7 @@ mod tests {
     #[test]
     fn packet_roundtrip_restores_everything() {
         let p = photo();
-        let x = sidecar_packet(&p, &lightcraft_catalog::Catalog::new());
+        let x = sidecar_packet(&p, &hazavana_catalog::Catalog::new());
         let sc = parse_sidecar(&x, crate::crs::Target::Rendered).unwrap();
         assert_eq!(sc.rating, Some(4));
         assert_eq!(sc.flag, Some(Flag::Pick));

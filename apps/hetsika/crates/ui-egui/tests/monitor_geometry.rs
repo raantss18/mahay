@@ -3,25 +3,25 @@
 use egui::{Event, Modifiers, PointerButton, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
-use filmcraft_engine::Session;
-use filmcraft_ui_egui::{
-    FilmcraftApp,
+use hetsika_engine::Session;
+use hetsika_ui_egui::{
+    HetsikaApp,
     dock::{self, DockNode, PanelKind, SeqTabs},
     panels::monitor::{self, Which},
     theme::{self, ThemeKind},
 };
 use serde_json::json;
 
-fn harness(width: f32, kind: ThemeKind, which: Which) -> Harness<'static, FilmcraftApp> {
+fn harness(width: f32, kind: ThemeKind, which: Which) -> Harness<'static, HetsikaApp> {
     harness_at_scale(width, kind, which, 1.0)
 }
 
-fn harness_at_scale(width: f32, kind: ThemeKind, which: Which, scale: f32) -> Harness<'static, FilmcraftApp> {
+fn harness_at_scale(width: f32, kind: ThemeKind, which: Which, scale: f32) -> Harness<'static, HetsikaApp> {
     let mut session = Session::default();
     session.execute("file.openDemoProject", json!({})).unwrap();
     session.execute("source.open", json!({"item":5})).unwrap();
     let mut h = Harness::builder().with_size(vec2(width, 340.0)).with_pixels_per_point(scale).build_ui_state(
-        move |ui, app: &mut FilmcraftApp| {
+        move |ui, app: &mut HetsikaApp| {
             app.set_theme(ui.ctx(), kind);
             app.auto.begin_frame();
             let panel = if which == Which::Source { PanelKind::Source } else { PanelKind::Program };
@@ -33,23 +33,23 @@ fn harness_at_scale(width: f32, kind: ThemeKind, which: Which, scale: f32) -> Ha
                 dock::draw_group_chrome(ui, &group, panel, &SeqTabs::default(), &app.tokens, &mut app.auto);
                 monitor::show(app, ui, group.content, which);
             }
-            let source = filmcraft_ui_egui::panels::dragged_source(ui);
+            let source = hetsika_ui_egui::panels::dragged_source(ui);
             ui.ctx().data_mut(|data| data.insert_temp(egui::Id::new("observed-source-drag"), source));
         },
-        FilmcraftApp::new(session),
+        HetsikaApp::new(session),
     );
     theme::install(&h.ctx, &h.state().tokens);
     h.run_steps(4);
     h
 }
 
-fn element(h: &Harness<'_, FilmcraftApp>, id: &str) -> Rect {
+fn element(h: &Harness<'_, HetsikaApp>, id: &str) -> Rect {
     let element = h.state().auto.elements.iter().find(|element| element.id == id).unwrap_or_else(|| panic!("missing {id}"));
     let [x, y, w, h] = element.rect;
     Rect::from_min_size(pos2(x, y), vec2(w, h))
 }
 
-fn click(h: &mut Harness<'_, FilmcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, HetsikaApp>, id: &str) {
     let pos = element(h, id).center();
     h.event(Event::PointerMoved(pos));
     for pressed in [true, false] {
@@ -72,7 +72,7 @@ fn monitor_readouts_and_dropdowns_do_not_overlap() {
             for width in [720.0, 500.0, 300.0, 250.0] {
                 for scale in [1.0, 2.0] {
                     let mut h = harness_at_scale(width, kind, which, scale);
-                    if let Ok(directory) = std::env::var("CRAFT_UI_VISUAL_DIR") {
+                    if let Ok(directory) = std::env::var("MAHAY_UI_VISUAL_DIR") {
                         std::fs::create_dir_all(&directory).unwrap();
                         h.render().unwrap().save(format!("{directory}/film-{prefix}-{kind:?}-{width}-{scale}x.png")).unwrap();
                     }
@@ -158,7 +158,7 @@ fn transport_editor_keeps_its_own_space_and_customizes_compact_controls() {
         let id = "program.transport.editor.playback.toggle";
         let target = element(&h, id);
         if width == 90.0
-            && let Ok(directory) = std::env::var("CRAFT_UI_VISUAL_DIR")
+            && let Ok(directory) = std::env::var("MAHAY_UI_VISUAL_DIR")
         {
             std::fs::create_dir_all(&directory).unwrap();
             h.render().unwrap().save(format!("{directory}/film-program-editor-90.png")).unwrap();
@@ -232,7 +232,7 @@ fn source_drag_choices(width: f32) {
         h.run_steps(2);
         let source = h
             .ctx
-            .data(|data| data.get_temp::<Option<filmcraft_ui_egui::panels::source_drag::SourceDrag>>(egui::Id::new("observed-source-drag")))
+            .data(|data| data.get_temp::<Option<hetsika_ui_egui::panels::source_drag::SourceDrag>>(egui::Id::new("observed-source-drag")))
             .flatten()
             .expect("drag must create the production Source payload");
         assert_eq!((source.video, source.audio), (video, audio));

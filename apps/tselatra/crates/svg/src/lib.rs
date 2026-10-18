@@ -110,18 +110,18 @@ pub struct Stroke {
 }
 
 impl Stroke {
-    fn style(&self) -> effectcraft_path::StrokeStyle {
-        effectcraft_path::StrokeStyle {
+    fn style(&self) -> tselatra_path::StrokeStyle {
+        tselatra_path::StrokeStyle {
             width: self.width,
             cap: match self.cap {
-                Cap::Butt => effectcraft_path::Cap::Butt,
-                Cap::Round => effectcraft_path::Cap::Round,
-                Cap::Square => effectcraft_path::Cap::Square,
+                Cap::Butt => tselatra_path::Cap::Butt,
+                Cap::Round => tselatra_path::Cap::Round,
+                Cap::Square => tselatra_path::Cap::Square,
             },
             join: match self.join {
-                Join::Miter => effectcraft_path::Join::Miter,
-                Join::Round => effectcraft_path::Join::Round,
-                Join::Bevel => effectcraft_path::Join::Bevel,
+                Join::Miter => tselatra_path::Join::Miter,
+                Join::Round => tselatra_path::Join::Round,
+                Join::Bevel => tselatra_path::Join::Bevel,
             },
             miter: self.miter,
             dash: self.dash.clone(),

@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::lists::BoundList;

@@ -163,7 +163,7 @@ fn completions_come_from_the_live_catalogues() {
         &mut s,
         3,
         "completion/complete",
-        json!({"ref": {"type": "ref/resource", "uri": "vectorcraft://object/{id}"}, "argument": {"name": "id", "value": ""}}),
+        json!({"ref": {"type": "ref/resource", "uri": "tsipika://object/{id}"}, "argument": {"name": "id", "value": ""}}),
     );
     let values = v["completion"]["values"].as_array().map_or(0, Vec::len);
     assert!(values > 0, "{v}");
@@ -181,26 +181,26 @@ fn templates_are_listed_and_readable() {
 
     let id = rectangle(&mut s, 2);
 
-    let read = result(&mut s, 3, "resources/read", json!({"uri": format!("vectorcraft://object/{id}")}));
+    let read = result(&mut s, 3, "resources/read", json!({"uri": format!("tsipika://object/{id}")}));
     let body: Value = serde_json::from_str(read["contents"][0]["text"].as_str().unwrap_or("{}")).unwrap_or_default();
     assert_eq!(body["id"].as_i64(), Some(id), "{body}");
     assert!(body["bounds"].is_object(), "{body}");
 
     // A command definition is one small read instead of the whole 400-command catalogue.
-    let read = result(&mut s, 4, "resources/read", json!({"uri": "vectorcraft://command/paint.setFill"}));
+    let read = result(&mut s, 4, "resources/read", json!({"uri": "tsipika://command/paint.setFill"}));
     let body: Value = serde_json::from_str(read["contents"][0]["text"].as_str().unwrap_or("{}")).unwrap_or_default();
     assert_eq!(body["id"], "paint.setFill", "{body}");
     assert!(body["params"].as_str().is_some_and(|p| !p.is_empty()), "{body}");
 
     // An effect's parameters and defaults.
-    let read = result(&mut s, 5, "resources/read", json!({"uri": "vectorcraft://effect/stylize.dropShadow"}));
+    let read = result(&mut s, 5, "resources/read", json!({"uri": "tsipika://effect/stylize.dropShadow"}));
     let body: Value = serde_json::from_str(read["contents"][0]["text"].as_str().unwrap_or("{}")).unwrap_or_default();
     assert_eq!(body["id"], "stylize.dropShadow", "{body}");
 
     // Missing values and unknown resources are distinguishable.
-    assert_eq!(err_code(&mut s, 6, "resources/read", json!({"uri": "vectorcraft://object/"})), -32602);
-    assert_eq!(err_code(&mut s, 7, "resources/read", json!({"uri": "vectorcraft://command/nope"})), -32602);
-    assert_eq!(err_code(&mut s, 8, "resources/read", json!({"uri": "vectorcraft://nope"})), -32002);
+    assert_eq!(err_code(&mut s, 6, "resources/read", json!({"uri": "tsipika://object/"})), -32602);
+    assert_eq!(err_code(&mut s, 7, "resources/read", json!({"uri": "tsipika://command/nope"})), -32602);
+    assert_eq!(err_code(&mut s, 8, "resources/read", json!({"uri": "tsipika://nope"})), -32002);
 }
 
 // ---------- logging ----------

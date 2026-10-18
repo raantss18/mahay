@@ -3,8 +3,8 @@
 //! MCP left users stuck (#282: `midi.new_clip` had no UI path, so an empty instrument track could
 //! never get a MIDI clip).
 
-use soundcraft_engine::{catalog, cmd::command_specs};
-use soundcraft_ui_egui::menus::{self, MenuNode};
+use feo_engine::{catalog, cmd::command_specs};
+use feo_ui_egui::menus::{self, MenuNode};
 use std::collections::HashSet;
 use std::path::Path;
 

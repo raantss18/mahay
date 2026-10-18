@@ -13,7 +13,7 @@ are in [`localization-zh-hans.md`](localization-zh-hans.md), [`localization-zh-h
 1. **Translate the two catalogs.** Copy `locales/ja.json` and `locales/ja-formats.json` to
    `locales/<code>.json` and `locales/<code>-formats.json`, then translate the values. Keys are the
    English source strings and must stay byte-for-byte identical. The plain catalog may grow at its
-   own pace: a message it lacks shows in English, and `cargo test -p lightcraft-ui-egui i18n::tests
+   own pace: a message it lacks shows in English, and `cargo test -p hazavana-ui-egui i18n::tests
    -- --nocapture` lists the gaps (it fails on an empty entry or mismatched placeholders). The
    formats catalog must carry every message (the build fails otherwise; a message copied in English,
    value equal to its key, is an untranslated placeholder until someone translates it), including the date
@@ -44,9 +44,9 @@ are in [`localization-zh-hans.md`](localization-zh-hans.md), [`localization-zh-h
    `LANGUAGE_COMMANDS` and `language_from_command` in `src/menus.rs`, and to the
    `language_commands_cover_every_language` test. Settings read the locale table; menus and
    the control channel share the language-command mapping.
-3. **Make sure the glyphs exist.** The script drives which craft-fonts faces the UI installs: a
+3. **Make sure the glyphs exist.** The script drives which mahay-fonts faces the UI installs: a
    language whose script has no face in the build shows boxes (the test says so instead of failing).
-   Fonts live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), never here; a
+   Fonts live in [raantss18/mahay-fonts](https://github.com/raantss18/mahay), never here; a
    missing face is added there, not worked around in this repository. Sentence-cased messages go
    through `i18n::upper_first`, which leaves Georgian lowercase (upper-casing Mkhedruli would make
    Mtavruli).
@@ -86,15 +86,15 @@ tr_format!("Added {n} photo{} to “{}”", if n == 1 { "" } else { "s" }, album
 ## Testing and looking at it
 
 ```sh
-cargo test -p lightcraft-ui-egui i18n::tests                       # catalogs, keys, placeholders, commands
-CRAFT_FONTS_DIR=../craft-fonts cargo test -p lightcraft-ui-egui i18n::tests   # + glyph coverage
+cargo test -p hazavana-ui-egui i18n::tests                       # catalogs, keys, placeholders, commands
+MAHAY_FONTS_DIR=../mahay-fonts cargo test -p hazavana-ui-egui i18n::tests   # + glyph coverage
 ```
 
-The glyph tests are skipped without `CRAFT_FONTS_DIR` (there are no CJK faces to check then).
+The glyph tests are skipped without `MAHAY_FONTS_DIR` (there are no CJK faces to check then).
 To look at a language, render it headless:
 
 ```sh
-LIGHTCRAFT_LANGUAGE=zh-hans lightcraft-cli snapshot --demo --script tour.jsonl -o out.png --size 1600x1000
+HAZAVANA_LANGUAGE=zh-hans hazavana-cli snapshot --demo --script tour.jsonl -o out.png --size 1600x1000
 ```
 
 or, with the app running (`--control 7980`), run the language command
@@ -103,7 +103,7 @@ or, with the app running (`--control 7980`), run the language command
 ## Language codes and settings
 
 The settings file stores the BCP-47 code, never the Rust variant name, so a language can be renamed
-in code without invalidating anyone's saved preference. `LIGHTCRAFT_LANGUAGE` accepts what a system
+in code without invalidating anyone's saved preference. `HAZAVANA_LANGUAGE` accepts what a system
 locale looks like (`zh_Hans`, `zh-CN`, `en_US`, `ja_JP.UTF-8`) and falls back to the base language
 when a region has no dedicated entry.
 

@@ -1,22 +1,22 @@
-# Hosting DesignCraft for the web
+# Hosting Pejy for the web
 
-`designcraft-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`) holds a
-static site in `designcraft-web-<version>/`:
+`pejy-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`) holds a
+static site in `pejy-web-<version>/`:
 
 | File | What it is |
 |---|---|
 | `index.html` | The page. It loads everything through relative URLs. |
-| `designcraft-web-<hash>.js` | wasm-bindgen glue (generated, ES module) |
-| `designcraft-web-<hash>_bg.wasm` | The app, about 13 MB, or 5 MB with compression |
+| `pejy-web-<hash>.js` | wasm-bindgen glue (generated, ES module) |
+| `pejy-web-<hash>_bg.wasm` | The app, about 13 MB, or 5 MB with compression |
 | `_headers`, `.htaccess` | Sample header rules for Netlify/Cloudflare Pages and Apache |
 
 There is no server-side code. Upload the folder's contents anywhere that serves static files.
 
 ## Any path works
 
-All URLs in `index.html` are relative (`public_url = "./"` in `apps/designcraft-web/Trunk.toml`),
+All URLs in `index.html` are relative (`public_url = "./"` in `apps/pejy-web/Trunk.toml`),
 so the site works at a domain root (`https://example.com/`), under a prefix
-(`https://example.com/tools/designcraft/`) and from a CDN bucket. The asset names carry a content
+(`https://example.com/tools/pejy/`) and from a CDN bucket. The asset names carry a content
 hash, so they can be cached forever. Only `index.html` needs revalidation.
 
 ## Required server settings
@@ -31,7 +31,7 @@ hash, so they can be cached forever. Only `index.html` needs revalidation.
   `.js` files, and `no-cache` on `index.html`.
 - **HTTPS:** WebGPU (and the clipboard) only work in a secure context, which means `https://`
   or `http://localhost`. Over plain HTTP elsewhere, the app falls back to WebGL2.
-- **No special isolation headers:** DesignCraft doesn't use `SharedArrayBuffer`, so it doesn't
+- **No special isolation headers:** Pejy doesn't use `SharedArrayBuffer`, so it doesn't
   need `Cross-Origin-Opener-Policy` or `Cross-Origin-Embedder-Policy`. If your site already sends
   COEP `require-corp`, also send `Cross-Origin-Resource-Policy: same-origin` (or `cross-origin`
   when the files live on a CDN) on the app's files.
@@ -39,7 +39,7 @@ hash, so they can be cached forever. Only `index.html` needs revalidation.
 nginx example:
 
 ```nginx
-location /designcraft/ {
+location /pejy/ {
     types { application/wasm wasm; text/javascript js; text/html html; }
     gzip on;
     gzip_types application/wasm text/javascript text/html;
@@ -54,8 +54,8 @@ Local test: `python3 -m http.server 8765` inside the folder, then open http://lo
 
 ```html
 <iframe
-  src="https://example.com/designcraft/"
-  title="DesignCraft image editor"
+  src="https://example.com/pejy/"
+  title="Pejy image editor"
   style="width: 100%; height: 720px; border: 0;"
   allow="fullscreen; clipboard-read; clipboard-write"
   allowfullscreen>
@@ -75,7 +75,7 @@ Local test: `python3 -m http.server 8765` inside the folder, then open http://lo
 
 ## Renderer selection and fallback flags
 
-DesignCraft renders with wgpu. It uses **WebGPU** when the browser has it and falls back to
+Pejy renders with wgpu. It uses **WebGPU** when the browser has it and falls back to
 **WebGL2** on its own. URL query flags override this, and they work on the iframe `src` too:
 
 | Flag | Effect |
@@ -84,6 +84,6 @@ DesignCraft renders with wgpu. It uses **WebGPU** when the browser has it and fa
 | `?webgl` | Force the WebGL2 backend (useful when a WebGPU driver misbehaves) |
 | `?cpu` | Force the CPU canvas path (slowest, most compatible) |
 
-For example: `<iframe src="https://example.com/designcraft/?webgl" ...>`.
+For example: `<iframe src="https://example.com/pejy/?webgl" ...>`.
 
 A browser with neither WebGPU nor WebGL2 gets a message in place of the app.

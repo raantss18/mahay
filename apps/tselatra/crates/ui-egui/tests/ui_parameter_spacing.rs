@@ -1,10 +1,10 @@
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::{EffectcraftApp, dock::PanelKind};
+use tselatra_engine::Session;
+use tselatra_ui_egui::{TselatraApp, dock::PanelKind};
 use egui::{Event, Modifiers, PointerButton, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn setup() -> (EffectcraftApp, u64, u64, u64) {
+fn setup() -> (TselatraApp, u64, u64, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"width":640,"height":360,"duration":4})).unwrap();
     let lid = s.execute("layer.newSolid", json!({"name":"Plate","color":"#406080"})).unwrap()["layer"].as_u64().unwrap();
@@ -13,13 +13,13 @@ fn setup() -> (EffectcraftApp, u64, u64, u64) {
     let fx = s.active_comp().unwrap().layers[0].effects().unwrap();
     let param = |uid, id| fx.groups().find(|g| g.uid == uid).unwrap().get(id).unwrap().uid;
     let (checkbox, point) = (param(checkbox, "checkbox"), param(point, "point"));
-    let mut a = EffectcraftApp::new(s);
+    let mut a = TselatraApp::new(s);
     a.show_panel(PanelKind::EffectControls);
     a.ui.timeline.search = "Checkbox".into();
     (a, lid, checkbox, point)
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let r = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}")).rect;
     let p = pos2(r[0] + r[2] / 2.0, r[1] + r[3] / 2.0);
     h.event(Event::PointerMoved(p));
@@ -39,7 +39,7 @@ fn fixed_compact_rows_preserve_checkbox_and_point_hit_targets() {
     let tl = h.state().auto.find(&format!("timeline.prop.{checkbox}.row")).unwrap().rect;
     assert_eq!(fx[3], 20.0);
     assert_eq!(tl[3], 19.0);
-    let value = |h: &Harness<'_, EffectcraftApp>| h.state().session.active_comp().unwrap().layers[0].props.find(checkbox).unwrap().value.clone();
+    let value = |h: &Harness<'_, TselatraApp>| h.state().session.active_comp().unwrap().layers[0].props.find(checkbox).unwrap().value.clone();
     let before = value(&h);
     click(&mut h, &format!("effectControls.prop.{checkbox}.value"));
     assert_ne!(value(&h), before);
@@ -62,13 +62,13 @@ fn nested_groups_keep_indentation_value_alignment_and_effect_gaps_at_fixed_compa
     let (root, basic_id, white_id) = (g.get("highDynamicRange").unwrap().uid, basic.uid, white.uid);
     let (temp, tint, sat) = (white.get("temperature").unwrap().uid, white.get("tint").unwrap().uid, basic.get("saturation").unwrap().uid);
     let closed: Vec<_> = g.groups().filter(|g| g.uid != basic_id).chain(basic.groups().filter(|g| g.uid != white_id)).map(|g| g.uid).collect();
-    let mut a = EffectcraftApp::new(s);
+    let mut a = TselatraApp::new(s);
     a.show_panel(PanelKind::EffectControls);
     a.ui.fx_closed.extend(closed);
     a.ui.timeline.search = "Temperature".into();
     let mut h = Harness::builder().with_size(vec2(1500.0, 1800.0)).build_eframe(|_| a);
     h.run_steps(4);
-    let rect = |h: &Harness<'_, EffectcraftApp>, id: String| h.state().auto.find(&id).unwrap_or_else(|| panic!("no {id}")).rect;
+    let rect = |h: &Harness<'_, TselatraApp>, id: String| h.state().auto.find(&id).unwrap_or_else(|| panic!("no {id}")).rect;
     let name_x = |kind: &str, uid| rect(&h, format!("effectControls.{kind}.{uid}.name"))[0];
     assert!(name_x("effect", fx) < name_x("group", basic_id));
     assert_eq!(name_x("prop", root), name_x("group", basic_id), "siblings align even when their icons differ");

@@ -1,8 +1,8 @@
 //! Masks in SVG export: vector masks as clip paths, alpha and luminance masks as the mask layer
 //! drawn (gradients and opacity kept), alpha ones marked `mask-type:alpha`.
 
-use figcraft_color::{Color, ColorStop, Gradient, GradientKind, Paint};
-use figcraft_doc::{Document, MaskType, NodeId, NodeKind};
+use endrika_color::{Color, ColorStop, Gradient, GradientKind, Paint};
+use endrika_doc::{Document, MaskType, NodeId, NodeKind};
 
 use super::*;
 

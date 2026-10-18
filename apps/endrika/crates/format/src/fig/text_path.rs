@@ -1,6 +1,6 @@
 //! Convert the simple vector network used by text-on-path layers in `.fig` files into a native text path.
 
-use figcraft_doc::{
+use endrika_doc::{
     TextPath,
     geom::{
         BezPath,
@@ -77,7 +77,7 @@ pub(super) fn from_network(net: &Network, sx: f64, sy: f64, t: f64, forward: boo
         start = 1.0 - start;
     }
     let path = TextPath { d: d.to_svg(), start, flip };
-    let lines = figcraft_doc::geom::measure::polylines(&path.path()).ok_or("cannot be measured by text renderer")?;
+    let lines = endrika_doc::geom::measure::polylines(&path.path()).ok_or("cannot be measured by text renderer")?;
     if lines.first().is_none_or(|line| line.length() <= 1e-9) {
         return Err("cannot be measured by text renderer");
     }
@@ -181,7 +181,7 @@ fn cubic(net: &Network, use_: Use, sx: f64, sy: f64) -> Result<(P, P, P, P), &'s
 mod tests {
     use super::*;
     use crate::fig::network::{Segment, Vertex};
-    use figcraft_doc::geom::kurbo::PathEl;
+    use endrika_doc::geom::kurbo::PathEl;
 
     fn vertex(x: f64, y: f64) -> Vertex {
         Vertex { style: 0, x, y }

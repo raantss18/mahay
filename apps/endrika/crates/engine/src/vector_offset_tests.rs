@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::{NodeId, NodeKind};
+use endrika_doc::{NodeId, NodeKind};
 
 fn id(v: &Value) -> NodeId {
     id_of(&v["id"]).unwrap()

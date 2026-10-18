@@ -6,8 +6,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::Arc;
 
-use craft_pdf::syntax::object::{Dict as PdfDict, MaybeRef, Name, ObjRef, Object, ObjectIdentifier, Stream};
-use craft_pdf::syntax::xref::XRef;
+use mahay_pdf::syntax::object::{Dict as PdfDict, MaybeRef, Name, ObjRef, Object, ObjectIdentifier, Stream};
+use mahay_pdf::syntax::xref::XRef;
 
 use crate::Error;
 use crate::object::{Dict, File, Lexer, Obj};
@@ -25,15 +25,15 @@ fn allocation() -> Error {
     Error::Read("PDF object storage could not be allocated".into())
 }
 
-fn open_options() -> craft_pdf::OpenOptions {
-    craft_pdf::OpenOptions {
-        decode_limits: craft_pdf::syntax::DecodeLimits::default().with_max_decoded_stream(crate::object::MAX_OBJECT_STREAM),
+fn open_options() -> mahay_pdf::OpenOptions {
+    mahay_pdf::OpenOptions {
+        decode_limits: mahay_pdf::syntax::DecodeLimits::default().with_max_decoded_stream(crate::object::MAX_OBJECT_STREAM),
         ..Default::default()
     }
 }
 
 pub(crate) fn open(bytes: &[u8]) -> Result<File, Error> {
-    craft_pdf::check_input_size_with(bytes.len(), &open_options()).map_err(|e| Error::Read(e.to_string()))?;
+    mahay_pdf::check_input_size_with(bytes.len(), &open_options()).map_err(|e| Error::Read(e.to_string()))?;
     catch_unwind(AssertUnwindSafe(|| open_inner(bytes))).map_err(|_| Error::Read("PDF parser failed internally".into()))?
 }
 
@@ -55,9 +55,9 @@ fn open_inner(bytes: &[u8]) -> Result<File, Error> {
             }
         }
     }
-    let pdf = craft_pdf::open_slice_with_options(bytes, None, &open_options()).map_err(|error| match error {
-        craft_pdf::OpenError::Load(craft_pdf::syntax::LoadPdfError::Decryption(_)) => Error::Encrypted,
-        craft_pdf::OpenError::Load(craft_pdf::syntax::LoadPdfError::Invalid) => Error::NoPages,
+    let pdf = mahay_pdf::open_slice_with_options(bytes, None, &open_options()).map_err(|error| match error {
+        mahay_pdf::OpenError::Load(mahay_pdf::syntax::LoadPdfError::Decryption(_)) => Error::Encrypted,
+        mahay_pdf::OpenError::Load(mahay_pdf::syntax::LoadPdfError::Invalid) => Error::NoPages,
         other => Error::Read(other.to_string()),
     })?;
     let mut object_streams = Vec::new();
@@ -330,7 +330,7 @@ mod limit_tests {
                 assert_eq!((doc.width, doc.height), (40.0, 20.0));
                 assert_eq!(doc.flatten().len(), 1);
                 assert!(doc.skipped.is_empty(), "{:?}", doc.skipped);
-                assert_eq!(effectcraft_svg::rasterize(&doc, 40, 20, 1.0).get(20, 10), [1.0, 0.0, 0.0, 1.0]);
+                assert_eq!(tselatra_svg::rasterize(&doc, 40, 20, 1.0).get(20, 10), [1.0, 0.0, 0.0, 1.0]);
                 assert_eq!(crate::parse_page(&bytes, 1), Err(crate::Error::PageOutOfRange(1)));
             }
         }
@@ -344,7 +344,7 @@ mod limit_tests {
         assert_eq!(options.decode_limits.max_decoded_stream(), expected);
         assert_eq!(options.max_input_bytes, 512 << 20);
         let bytes = b"%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 40 20] >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF";
-        let pdf = craft_pdf::open_slice_with_options(bytes, None, &options).unwrap();
+        let pdf = mahay_pdf::open_slice_with_options(bytes, None, &options).unwrap();
         assert_eq!(pdf.decode_limits().max_decoded_stream(), expected);
     }
 }

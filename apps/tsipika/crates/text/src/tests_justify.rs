@@ -3,8 +3,8 @@
 
 use super::*;
 use kurbo::{Affine, Shape};
-use vectorcraft_doc::{CharStyle, JustificationOptions, Justify, SingleWordJustify, TextKind};
-use vectorcraft_geom::PathData;
+use tsipika_doc::{CharStyle, JustificationOptions, Justify, SingleWordJustify, TextKind};
+use tsipika_geom::PathData;
 
 fn db() -> &'static FontDb {
     FontDb::global()

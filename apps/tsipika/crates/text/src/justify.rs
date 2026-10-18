@@ -1,7 +1,7 @@
 //! Paragraph panel menu › Justification…: word spacing, letter spacing and glyph scaling.
 //!
 //! Each has a Minimum, a Desired and a Maximum value in percent
-//! ([`vectorcraft_doc::JustificationOptions`]). [`apply_desired`] sets every glyph of a paragraph
+//! ([`tsipika_doc::JustificationOptions`]). [`apply_desired`] sets every glyph of a paragraph
 //! at the Desired values, so they apply to ragged lines too, and returns how far each glyph may
 //! stretch or shrink towards Maximum and Minimum. The every-line composer scores lines by that
 //! flexibility, and [`fit_line`] spreads a justified line's leftover space over it: the word spaces
@@ -11,7 +11,7 @@
 //! Behaviour reference (public documentation):
 //! <https://helpx.adobe.com/illustrator/desktop/design-with-text/edit-format-text/adjust-word-and-letterspacing-in-justified-text.html>.
 
-use vectorcraft_doc::JustificationOptions;
+use tsipika_doc::JustificationOptions;
 
 use crate::shape::SGlyph;
 

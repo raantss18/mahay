@@ -2,7 +2,7 @@
 //! selected chars being edited, edits unlink what they change, style edits follow the links,
 //! detach, delete, create from selected chars, old files; live previews of styles and axis values.
 
-use figcraft_doc::{NodeId, StyleKind, TextData};
+use endrika_doc::{NodeId, StyleKind, TextData};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -141,7 +141,7 @@ fn files_from_before_char_links_link_their_chars() {
     // An old file: the layer is linked, its chars carry nothing.
     let mut doc = s.doc().unwrap().clone();
     let n = doc.get_mut(t).unwrap();
-    if let figcraft_doc::NodeKind::Text(td) = &mut n.kind {
+    if let endrika_doc::NodeKind::Text(td) = &mut n.kind {
         let len = td.char_count();
         td.unlink_text_style(0, len);
     }
@@ -150,8 +150,8 @@ fn files_from_before_char_links_link_their_chars() {
     assert!(links(&s2, t).iter().all(|l| l.as_deref() == Some(h.as_str())));
     assert_eq!(layer_link(&s2, t).as_deref(), Some(h.as_str()));
     // Saved and read back, the links survive.
-    let bytes = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    let (back, _) = figcraft_format::load_bytes(&bytes).unwrap();
+    let bytes = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    let (back, _) = endrika_format::load_bytes(&bytes).unwrap();
     assert_eq!(back.node(t).unwrap().kind.text().unwrap().style.style_id.as_deref(), Some(h.as_str()));
 }
 

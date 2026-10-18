@@ -5,7 +5,7 @@
 use std::cell::Cell;
 
 use serde_json::json;
-use vectorcraft_doc::{CharStyle, NodeKind, Unit};
+use tsipika_doc::{CharStyle, NodeKind, Unit};
 
 use super::tests_appearance::{app_with_rect, click, frame_events, run, text_rect};
 use super::*;
@@ -17,26 +17,26 @@ fn shows(t: &Texts, s: &str) -> bool {
 }
 
 /// [`app_with_rect`] with 12 pt type selected instead; returns its id.
-fn app_with_text() -> (VectorcraftApp, u64) {
+fn app_with_text() -> (TsipikaApp, u64) {
     let mut app = app_with_rect();
     let id = run(&mut app, "text.create", json!({"x": 10, "y": 150, "text": "Hi", "size": 12}))["id"].as_u64().unwrap();
     run(&mut app, "select.set", json!({ "ids": [id] }));
     (app, id)
 }
 
-fn style(app: &VectorcraftApp, id: u64) -> CharStyle {
-    match &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind {
+fn style(app: &TsipikaApp, id: u64) -> CharStyle {
+    match &app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().kind {
         NodeKind::Text(t) => t.first_style(),
         _ => panic!("not type"),
     }
 }
 
-fn undo_len(app: &VectorcraftApp) -> usize {
+fn undo_len(app: &TsipikaApp) -> usize {
     app.session.active().unwrap().history.undo.len()
 }
 
 /// A 120 pt Font Size combo in a row; `at` keeps where it starts.
-fn size_combo(at: &Cell<egui::Pos2>) -> impl FnMut(&mut VectorcraftApp, &mut Ui) + '_ {
+fn size_combo(at: &Cell<egui::Pos2>) -> impl FnMut(&mut TsipikaApp, &mut Ui) + '_ {
     |app, ui| {
         at.set(ui.max_rect().min);
         ui.horizontal(|ui| character::size_field(app, ui, "size", 120.0));

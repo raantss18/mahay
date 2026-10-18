@@ -7,12 +7,12 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Effect, Node, NodeKind};
-use vectorcraft_effects::RasterFx;
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, export, import, import_with_report};
-use vectorcraft_testkit::raster::{Image, assert_similar, render_artboard};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_doc::{Appearance, Document, Effect, Node, NodeKind};
+use tsipika_effects::RasterFx;
+use tsipika_geom::{Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, export, import, import_with_report};
+use tsipika_testkit::raster::{Image, assert_similar, render_artboard};
 
 fn svg(body: &str) -> String {
     format!(r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="120">{body}</svg>"#)
@@ -182,7 +182,7 @@ fn a_gaussian_blur_becomes_the_effect_with_its_radius() {
 
 /// The one drop shadow of the only object: (dx, dy, blur, colour, opacity %).
 fn shadow(d: &Document) -> (f64, f64, f64, Color, f32) {
-    let fx = vectorcraft_effects::raster_effects(&effects(d));
+    let fx = tsipika_effects::raster_effects(&effects(d));
     match fx.as_slice() {
         [RasterFx::DropShadow { dx, dy, blur, color, opacity, mode, darkness }] => {
             assert_eq!(*mode, BlendMode::Normal, "filters composite normally");
@@ -288,8 +288,8 @@ fn exported_effects_import_as_the_same_effects() {
         d.insert(Some(l), 0, n).unwrap();
         let (back, w) = import_with_report(&export(&d, &ExportOptions::default())).unwrap();
         assert!(w.is_empty(), "{w:?}");
-        let got = vectorcraft_effects::raster_effects(&art(&back)[0].appearance.effects);
-        assert_eq!(got, vectorcraft_effects::raster_effects(&effects), "{effects:?}");
+        let got = tsipika_effects::raster_effects(&art(&back)[0].appearance.effects);
+        assert_eq!(got, tsipika_effects::raster_effects(&effects), "{effects:?}");
     }
 }
 
@@ -345,21 +345,21 @@ fn symbols_and_effects_export_import_export_is_stable() {
         shapes::ellipse(Rect::new(0.0, 0.0, 20.0, 20.0)),
         Appearance::basic(Paint::solid(Color::rgb8(200, 30, 30)), Paint::None, 0.0),
     );
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Dot".into(), art: Arc::new(dot) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Dot".into(), art: Arc::new(dot) });
     let l = d.layers[0].id;
     for x in [10.0, 60.0] {
         let id = d.alloc_id();
         d.insert(
             Some(l),
             usize::MAX,
-            Node::new(id, NodeKind::SymbolInstance { symbol: "Dot".into(), xf: vectorcraft_geom::Affine::translate((x, 40.0)) }),
+            Node::new(id, NodeKind::SymbolInstance { symbol: "Dot".into(), xf: tsipika_geom::Affine::translate((x, 40.0)) }),
         )
         .unwrap();
     }
     let mut blurred = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(120.0, 30.0, 180.0, 90.0)), Appearance::default_art());
     blurred.appearance.effects.push(Effect { id: "stylize.dropShadow".into(), params: json!({"x": 3.0, "y": 3.0, "blur": 2.0}), visible: true });
     d.insert(Some(l), usize::MAX, blurred).unwrap();
-    let opts = ExportOptions { object_ids: vectorcraft_svg::ObjectIds::Minimal, ..Default::default() };
+    let opts = ExportOptions { object_ids: tsipika_svg::ObjectIds::Minimal, ..Default::default() };
     let first = export(&d, &opts);
     let second = export(&import(&first).unwrap(), &opts);
     let strip = |s: &str| s.lines().filter(|l| !l.contains("<title>")).collect::<Vec<_>>().join("\n");

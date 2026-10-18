@@ -7,8 +7,8 @@
 
 use std::fmt::Write;
 
-use designcraft_doc::story::{FORCED_LINE_BREAK, NEXT_PAGE_NUMBER, PAGE_NUMBER, PREV_PAGE_NUMBER, TABLE_ANCHOR};
-use designcraft_doc::{Align, Document, Position, Story};
+use pejy_doc::story::{FORCED_LINE_BREAK, NEXT_PAGE_NUMBER, PAGE_NUMBER, PREV_PAGE_NUMBER, TABLE_ANCHOR};
+use pejy_doc::{Align, Document, Position, Story};
 
 /// Characters of a run as plain text (`None`: dropped).
 fn plain_char(c: char) -> Option<&'static str> {
@@ -32,7 +32,7 @@ fn table_text(story: &Story, id: u64, nl: &str) -> String {
 pub fn plain_text(story: &Story) -> String {
     // Tracked deletions aren't part of the text.
     let deleted: Vec<std::ops::Range<usize>> =
-        story.runs().filter(|(_, f)| f.over.change == Some(designcraft_doc::ChangeMark::Deleted)).map(|(r, _)| r).collect();
+        story.runs().filter(|(_, f)| f.over.change == Some(pejy_doc::ChangeMark::Deleted)).map(|(r, _)| r).collect();
     let mut out = String::with_capacity(story.text.len() + 16);
     for (i, r) in story.para_ranges().into_iter().enumerate() {
         if i > 0 {
@@ -100,7 +100,7 @@ pub fn rtf(doc: &Document, story: &Story) -> String {
             }
             let cp = styles.resolve_char(&base, f);
             // Hidden conditional text isn't exported.
-            if doc.conditions_hide(&cp.conditions) || cp.change == designcraft_doc::ChangeMark::Deleted {
+            if doc.conditions_hide(&cp.conditions) || cp.change == pejy_doc::ChangeMark::Deleted {
                 continue;
             }
             if !fonts.contains(&cp.font_family) {
@@ -188,8 +188,8 @@ pub fn rtf(doc: &Document, story: &Story) -> String {
 
 #[cfg(test)]
 mod tests {
-    use designcraft_doc::build::NewDocument;
-    use designcraft_doc::{CharAttrs, ParaAttrs, StoryId};
+    use pejy_doc::build::NewDocument;
+    use pejy_doc::{CharAttrs, ParaAttrs, StoryId};
 
     use super::*;
 

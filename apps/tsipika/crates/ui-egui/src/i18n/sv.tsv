@@ -5,7 +5,7 @@
 #            a trailing "…" (dialog commands) is kept.
 #   lines starting with # and blank lines are ignored.
 #
-# Written from VectorCraft's English strings, using ordinary Swedish software vocabulary. No other catalog
+# Written from Tsipika's English strings, using ordinary Swedish software vocabulary. No other catalog
 # and no proprietary localisation was translated from or copied. Labels use sentence case, commands
 # are imperatives; product, format and key-cap names keep their spelling.
 
@@ -79,7 +79,7 @@
 	A lower value follows the stroke closely; a higher one gives fewer points and smoother curves.	Ett lägre värde följer konturen noga; ett högre ger färre punkter och jämnare kurvor.
 	A new preset starting from the selected one	En ny förinställning baserad på den markerade
 	A saved copy of the selected preset	En sparad kopia av den markerade förinställningen
-	About VectorCraft	Om VectorCraft
+	About Tsipika	Om Tsipika
 	above	ovanför
 	Absolute Position	Absolut position
 	Accurate	Exakt
@@ -182,7 +182,7 @@
 	Appearance Panel	Utseendepanel
 	Appearance panel	Utseendepanelen
 	Applies when the linked file is relinked or updated.	Gäller när den länkade filen länkas om eller uppdateras.
-	Applies the next time VectorCraft starts.	Gäller nästa gång VectorCraft startas.
+	Applies the next time Tsipika starts.	Gäller nästa gång Tsipika startas.
 	Apply	Använd
 	Apply Brush	Använd pensel
 	Apply Character Style	Använd teckenstil
@@ -220,8 +220,8 @@
 	Artboard {number}	Rityta {number}
 	Artboard:	Rityta:
 	Artboards	Ritytor
-	ArtCraft Website	ArtCrafts webbplats
-	ArtCraft website	ArtCrafts webbplats
+	Mahay Website	Mahays webbplats
+	Mahay website	Mahays webbplats
 	Artwork Colors	Färger i grafiken
 	As Multiple Assets	Som flera tillgångar
 	As Single Asset	Som en enda tillgång
@@ -365,7 +365,7 @@
 	Check Script	Kontrollera skript
 	Check Script…	Kontrollera skript…
 	Copy Report	Kopiera rapport
-	VectorCraft read this script without running it.	VectorCraft läste skriptet utan att köra det.
+	Tsipika read this script without running it.	Tsipika läste skriptet utan att köra det.
 	Needs nothing beyond plain JavaScript	Kräver inget utöver vanlig JavaScript
 	Needs the script language's own objects or directives	Kräver skriptspråkets egna objekt eller direktiv
 	Needs the document model	Kräver dokumentmodellen
@@ -1506,7 +1506,7 @@
 	Join	Foga samman
 	Join Our Discord	Gå med i vår Discord
 	Join our Discord	Gå med i vår Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Gå med i ArtCraft-gemenskapen på Discord (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Gå med i Mahay-gemenskapen på Discord (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Foga samman raderna i varje stycke
 	Join Tool	Sammanfogningsverktyg
 	Justification…	Justering…
@@ -1529,7 +1529,7 @@
 	Keyboard Shortcuts…	Kortkommandon…
 	Import Shortcut Set	Importera kortkommandouppsättning
 	Import Shortcut Set…	Importera kortkommandouppsättning…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	Varje post i filen matchas mot ett verktyg, kommando eller en panel i VectorCraft. Kontrollera matchningarna och besvara det som återstår.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	Varje post i filen matchas mot ett verktyg, kommando eller en panel i Tsipika. Kontrollera matchningarna och besvara det som återstår.
 	Keys	Tangenter
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	Filen anger tangenter och modifieringstangenter som koder. Kontrollera de föreslagna betydelserna och besvara de koder som ännu inte är kända.
 	Click, then press the key this code stands for (Esc cancels)	Klicka och tryck sedan på tangenten som koden står för (Esc avbryter)
@@ -1539,7 +1539,7 @@
 	not known yet	ännu okänt
 	Shortcuts	Kortkommandon
 	In the File	I filen
-	In VectorCraft	I VectorCraft
+	In Tsipika	I Tsipika
 	Needs Attention Only	Endast de som kräver åtgärd
 	Ready	Klar
 	Needs a choice	Kräver ett val
@@ -1548,7 +1548,7 @@
 	Tools take a single key (optionally with Shift)	Verktyg använder en enda tangent (eventuellt med Shift)
 	A later row takes this shortcut	En senare rad använder detta kortkommando
 	Same item as a later row	Samma objekt som en senare rad
-	Start from VectorCraft Defaults	Utgå från standardvärdena i VectorCraft
+	Start from Tsipika Defaults	Utgå från standardvärdena i Tsipika
 	Add to the Current Shortcuts	Lägg till i aktuella kortkommandon
 	Remember My Choices	Kom ihåg mina val
 	{ready} of {total} ready	{ready} av {total} klara
@@ -2137,7 +2137,7 @@
 	Paragraph Style Options	Alternativ för styckestil
 	Paragraph Styles	Styckestilar
 	Paragraph Symbol	Styckesymbol
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	Del av ArtCraft. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono (OFL). Ikoner: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Del av Mahay. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono (OFL). Ikoner: Lucide (ISC) + Tsipika.
 	Password	Lösenord
 	Paste	Klistra in
 	Paste in Back	Klistra in bakom
@@ -2315,7 +2315,7 @@
 	Quarter Space	Fjärdedels blanksteg
 	Quick Actions	Snabbåtgärder
 	Quickly start a new file	Skapa snabbt en ny fil
-	Quit VectorCraft	Avsluta VectorCraft
+	Quit Tsipika	Avsluta Tsipika
 	Radar Graph Tool	Verktyget Radardiagram
 	Radial	Radiell
 	Radial Glows	Radiellt sken
@@ -2440,7 +2440,7 @@
 	{count} folder(s) or file(s) couldn't be read	{count} mapp(ar) eller fil(er) kunde inte läsas
 	The search stopped at its limit: search a smaller folder.	Sökningen stoppades vid sin gräns: sök i en mindre mapp.
 	Copy only fonts you own or are licensed to install.	Kopiera bara typsnitt som du äger eller har licens att installera.
-	VectorCraft copies the fonts to {folder}.	VectorCraft kopierar typsnitten till {folder}.
+	Tsipika copies the fonts to {folder}.	Tsipika kopierar typsnitten till {folder}.
 	Registered Trademark Symbol	Symbol för registrerat varumärke
 	Registration marks	Passmärken
 	Registry name:	Registernamn:
@@ -2548,9 +2548,9 @@
 	Revert	Återgå
 	Revert to the saved version of “{name}”?	Vill du återgå till den sparade versionen av ”{name}”?
 	Replace “{name}”, the file this document was opened from?	Vill du ersätta ”{name}”, filen som dokumentet öppnades från?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	När filen öppnades utelämnades det som VectorCraft inte kan läsa än ({what}), så om du ersätter den förloras det för gott. Spara under ett annat namn för att behålla det.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	När filen öppnades utelämnades det som Tsipika inte kan läsa än ({what}), så om du ersätter den förloras det för gott. Spara under ett annat namn för att behålla det.
 	“{name}” already exists. Replace it?	”{name}” finns redan. Vill du ersätta den?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Namnet i sparpanelen var ”{typed}”, och VectorCraft lade till filtypens filändelse. Om du ersätter filen skrivs innehållet över.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	Namnet i sparpanelen var ”{typed}”, och Tsipika lade till filtypens filändelse. Om du ersätter filen skrivs innehållet över.
 	Revolve…	Rotera runt axel…
 	RGB Color	RGB-färg
 	Right	Höger
@@ -2691,7 +2691,7 @@
 	Saves the current bars, toolbar and panel layout.	Sparar aktuella fält, verktygsfält och panellayout.
 	Save…	Spara…
 	Saving	Sparar
-	Saving Poster.vectorcraft	Sparar Poster.vectorcraft
+	Saving Poster.tsipika	Sparar Poster.tsipika
 	Saving recovery data for {}	Sparar återställningsdata för {}
 	Saving {}	Sparar {}
 	Scale	Skala
@@ -3383,10 +3383,10 @@
 	Vector Halftone	Vektorrastrering
 	Vector Halftone…	Vektorrastrering…
 	Vector illustration — fast, open, scriptable.	Vektorillustration – snabb, öppen, skriptbar.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft avslutades inte normalt förra gången. De här dokumenten hade osparade ändringar:
-	VectorCraft Help…	VectorCraft-hjälp…
-	VectorCraft on getartcraft.com	VectorCraft på getartcraft.com
-	VectorCraft on GitHub	VectorCraft på GitHub
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika avslutades inte normalt förra gången. De här dokumenten hade osparade ändringar:
+	Tsipika Help…	Tsipika-hjälp…
+	Tsipika on mahay.com	Tsipika på mahay.com
+	Tsipika on GitHub	Tsipika på GitHub
 	Vectors	Vektorer
 	Version {version} — open-source vector illustration in pure Rust.	Version {version} – vektorillustration med öppen källkod i ren Rust.
 	Version:	Version:
@@ -3426,7 +3426,7 @@
 	Web Snap:	Fäst mot webbfärger:
 	Weight	Tjocklek
 	Weight:	Tjocklek:
-	Welcome to VectorCraft	Välkommen till VectorCraft
+	Welcome to Tsipika	Välkommen till Tsipika
 	When pasting text	När text klistras in
 	White	Vit
 	Widget Position:	Widgetens position:
@@ -3709,7 +3709,7 @@ axis	Both	Båda
 @msg	Split Into Grid: select paths large enough for the grid	Dela upp i rutnät: markera banor som är tillräckligt stora för rutnätet
 @msg	Targa files are RGB: colorModel rgb	Targa-filer är RGB: colorModel rgb
 @msg	Text Wrap: select a wrap object	Textombrytning: markera ett ombrytningsobjekt
-@msg	This shortcut file is in a form VectorCraft can't read.	Den här kortkommandofilen har ett format som VectorCraft inte kan läsa.
+@msg	This shortcut file is in a form Tsipika can't read.	Den här kortkommandofilen har ett format som Tsipika inte kan läsa.
 @msg	`aspect` must be a number (%)	`aspect` måste vara ett tal (%)
 @msg	`at` must be [x, y]	`at` måste vara [x, y]
 @msg	`color` must be a colour	`color` måste vara en färg
@@ -3798,7 +3798,7 @@ axis	Both	Båda
 @msg	can't encode the document: {0}	kan inte koda dokumentet: {0}
 @msg	can't parse shortcut `{c}`	kan inte tolka kortkommandot `{c}`
 @msg	can't parse shortcut `{s}` for `{k}`	kan inte tolka kortkommandot `{s}` för `{k}`
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	kan inte spara version {0}: VectorCraft skriver version {MIN_VERSION} till {VERSION}
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	kan inte spara version {0}: Tsipika skriver version {MIN_VERSION} till {VERSION}
 @msg	can't write .{ext} images	kan inte skriva .{ext}-bilder
 @msg	cannot distort a zero-size bounding box	kan inte förvränga en avgränsningsram med storleken noll
 @msg	cannot read PDF: {0}	kan inte läsa PDF: {0}
@@ -3824,7 +3824,7 @@ axis	Both	Båda
 @msg	empty brush stroke	tomt penseldrag
 @msg	empty cutter	tom klippform
 @msg	empty path	tom bana
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	filversion {0} är nyare än vad denna version av VectorCraft stöder ({VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	filversion {0} är nyare än vad denna version av Tsipika stöder ({VERSION})
 @msg	freeform point {i} needs `at` [x, y] and a valid `color`	fri punkt {i} behöver `at` [x, y] och en giltig `color`
 @msg	freeform line {i} must be an array of point indices	fri linje {i} måste vara en lista med punktindex
 @msg	give both `start` and `end` [x, y] (or neither)	ange både `start` och `end` [x, y] (eller ingen av dem)
@@ -3845,9 +3845,9 @@ axis	Both	Båda
 @msg	invalid PDF setting: {0}	ogiltig PDF-inställning: {0}
 @msg	invalid image data for `{0}`	ogiltiga bilddata för `{0}`
 @msg	invalid parameters for `{cmd}`: {msg}	ogiltiga parametrar för `{cmd}`: {msg}
-@msg	is not an image VectorCraft reads	är inte en bild som VectorCraft kan läsa
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	den använder `{at}`, som VectorCrafts PostScript-läsare inte känner till
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	den använder `{at}`, som VectorCrafts PostScript-läsare inte känner till, i {procs}
+@msg	is not an image Tsipika reads	är inte en bild som Tsipika kan läsa
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	den använder `{at}`, som Tsipikas PostScript-läsare inte känner till
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	den använder `{at}`, som Tsipikas PostScript-läsare inte känner till, i {procs}
 @msg	its Windows metafile preview was opened instead, which may simplify the art	filens förhandsgranskning som Windows-metafil öppnades i stället, vilket kan förenkla bilden
 @msg	its preview was placed instead, at screen resolution	dess förhandsgranskning placerades i stället, i skärmupplösning
 @msg	join needs open paths	foga samman kräver öppna banor
@@ -3955,8 +3955,8 @@ axis	Both	Båda
 @msg	no user workspace `{from}`	ingen användararbetsyta `{from}`
 @msg	node {_1} is not text	nod {_1} är inte text
 @msg	not a DXF drawing	inte en DXF-ritning
-@msg	not a VectorCraft file: {0}	inte en VectorCraft-fil: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	inte en kortkommandouppsättning för VectorCraft (`overrides` saknas)
+@msg	not a Tsipika file: {0}	inte en Tsipika-fil: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	inte en kortkommandouppsättning för Tsipika (`overrides` saknas)
 @msg	not a blend	inte en blandning
 @msg	not a graphic style library (format `{_1}`)	inte ett bibliotek med grafiska stilar (format `{_1}`)
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	inte en kortkommandouppsättning: texten börjar inte med ett namn med snedstreck och en öppnande klammerparentes
@@ -4193,11 +4193,11 @@ axis	Both	Båda
 @msg	Sent to {_1}	Skickat till {_1}
 @msg	{_1} files	{_1}-filer
 @msg	The graphics were lost and have been restarted	Grafiken förlorades och har startats om
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	Grafikprocessorn som prövades först kunde inte visa fönstret, så VectorCraft startade om med {summary}
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Den senaste starten av VectorCraft avbröts på {name} innan fönstret visades, så det startade med {summary}. Om du vill prova den grafikprocessorn igen ändrar du Inställningar › Prestanda › Grafikprocessor eller startar med WGPU_BACKEND angiven
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Den senaste starten av VectorCraft avbröts medan grafikprocessorerna listades, så det startade med {summary} med enbart OpenGL. Om du vill prova de andra grafikgränssnitten igen ändrar du Inställningar › Prestanda › Grafikprocessor eller startar med WGPU_BACKEND angiven
-@msg	Loading VectorCraft…	Läser in VectorCraft…
-@msg	VectorCraft failed to start: {e}	VectorCraft kunde inte starta: {e}
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	Grafikprocessorn som prövades först kunde inte visa fönstret, så Tsipika startade om med {summary}
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Den senaste starten av Tsipika avbröts på {name} innan fönstret visades, så det startade med {summary}. Om du vill prova den grafikprocessorn igen ändrar du Inställningar › Prestanda › Grafikprocessor eller startar med WGPU_BACKEND angiven
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Den senaste starten av Tsipika avbröts medan grafikprocessorerna listades, så det startade med {summary} med enbart OpenGL. Om du vill prova de andra grafikgränssnitten igen ändrar du Inställningar › Prestanda › Grafikprocessor eller startar med WGPU_BACKEND angiven
+@msg	Loading Tsipika…	Läser in Tsipika…
+@msg	Tsipika failed to start: {e}	Tsipika kunde inte starta: {e}
 @msg	A browser with WebGPU or WebGL2 is required.	En webbläsare med WebGPU eller WebGL2 krävs.
 @msg	The graphics were lost and couldn't be restarted.	Grafiken förlorades och kunde inte startas om.
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	Dina osparade ändringar finns kvar i den här webbläsaren: läs in sidan igen för att få tillbaka dem.
@@ -4219,25 +4219,25 @@ axis	Both	Båda
 @msg	it has more than {MAX_NODES} objects	den har fler än {MAX_NODES} objekt
 @msg	it has no layers	den har inga lager
 @msg	it has too many values in a row	den har för många värden på en rad
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	den innehåller {_1}, som VectorCraft inte kan läsa från den än
+@msg	it has {_1}, which Tsipika doesn't read from it yet	den innehåller {_1}, som Tsipika inte kan läsa från den än
 @msg	its objects are nested too deeply	dess objekt är för djupt kapslade
 @msg	its section ending with `%{end}` doesn't end	dess avsnitt som slutar med `%{end}` avslutas aldrig
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	objekt med flera fyllningar eller konturer, effekter eller penslar importerades som sitt ritade utseende ({_1}): deras utseende går inte att redigera än
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	övertoningen ”{name}” är inte definierad i filen: en enfärgad fyllning används i stället
-@msg	an image VectorCraft can't read was left out	en bild som VectorCraft inte kan läsa utelämnades
+@msg	an image Tsipika can't read was left out	en bild som Tsipika inte kan läsa utelämnades
 @msg	an image whose data is cut short was left out	en bild med avkortade data utelämnades
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	länkade bilder visar förhandsgranskningen med låg upplösning som sparats i filen tills deras filer hittas: länka om dem i panelen Länkar
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	områdestext i ramar som var för låga för en rad i det teckensnitt den visas med fick högre ramar ({_1}): annars skulle texten inte synas
 @msg	its editing data doesn't say where its art is	dess redigeringsdata anger inte var dess grafik finns
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	den här filen sparades utan PDF-kompatibilitet och dess redigeringsdata kan inte läsas ({why})
 @msg	No fonts are missing in this document	Inga teckensnitt saknas i det här dokumentet
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft söker inte i andra appars eller systemets mappar: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft söker inte i mappen Shared eller Public under Users: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika söker inte i andra appars eller systemets mappar: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika söker inte i mappen Shared eller Public under Users: {path}
 @msg	{path} is not a folder	{path} är inte en mapp
 @msg	the search couldn't start: try again in a moment	sökningen kunde inte starta: försök igen om en stund
 @msg	searching a folder isn't available on the web	sökning i en mapp är inte tillgänglig på webben
 @msg	every search thread stopped on an internal error (please report this bug)	alla söktrådar stoppades av ett internt fel (rapportera gärna felet)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	VectorCrafts mapp Fonts anges inte här: den anges av skrivbordsappen och vectorcraft-cli
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	Tsipikas mapp Fonts anges inte här: den anges av skrivbordsappen och tsipika-cli
 @msg	choose the font files to add	välj de typsnittsfiler som ska läggas till
 @msg	{n} font file(s) are now in {folder}	{n} teckensnittsfil(er) finns nu i {folder}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	{n} teckensnittsfil(er) finns nu i {folder}; {failed} kunde inte läggas till: {reason}
@@ -4252,7 +4252,7 @@ axis	Both	Båda
 @msg	No linked files to look for	Inga länkade filer att leta efter
 @msg	Relinked {n} image(s); {name} couldn't be relinked: {reason}	Omlänkade {n} bild(er); {name} kunde inte omlänkas: {reason}
 	Services	Tjänster
-	Hide VectorCraft	Göm VectorCraft
+	Hide Tsipika	Göm Tsipika
 	Zoom	Zoom
 	Bring All to Front	Lägg alla överst
 	Settings	Inställningar
@@ -4260,7 +4260,7 @@ axis	Both	Båda
 	On: one locked object showing the document, updated when it changes.	På: ett låst objekt som visar dokumentet och uppdateras när det ändras.
 	Off: an editable copy of its art, embedded in this document.	Av: en redigerbar kopia av grafiken, inbäddad i det här dokumentet.
 	Images: link to the file instead of only embedding it.	Bilder: länka till filen i stället för att bara bädda in den.
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft-dokument: ett låst objekt som uppdateras när filen ändras.
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika-dokument: ett låst objekt som uppdateras när filen ändras.
 	A file dialog is open: choose there first	En fildialog är öppen: välj där först
 	The document was closed while its file dialog was open	Dokumentet stängdes medan dess fildialogruta var öppen
 	The dialog was closed before its file dialog answered	Dialogrutan stängdes innan dess fildialogruta svarade
@@ -4502,7 +4502,7 @@ lighting	Light	Ljus
 	Edge Intensity	Kantintensitet
 	Posterization	Posterisering
 	Highlight Area	Högdagerområde
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	den komprimerade filen packas upp till mer än VectorCraft läser ({_1} MB dokument, {_2} MB per bild)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	den komprimerade filen packas upp till mer än Tsipika läser ({_1} MB dokument, {_2} MB per bild)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	dokumentet är för stort för att sparas komprimerat ({0}): spara det med Använd komprimering avstängt
 @msg	the file stopped being read (please report this bug)	läsningen av filen avbröts (rapportera gärna den här buggen)
 	Concentric Dividers:	Koncentriska avdelare:
@@ -4650,7 +4650,7 @@ lighting	Light	Ljus
 	DWG (use DXF)	DWG (använd DXF)
 	Default Graphic Style	Standardgrafikstil
 	Diamond (open)	Romb (öppen)
-	Differences from VectorCraft Default:	Skillnader från VectorCraft-standard:
+	Differences from Tsipika Default:	Skillnader från Tsipika-standard:
 	Differences from [Default]:	Skillnader från [Standard]:
 	Diffusion	Diffusion
 	Direct Selection	Direktmarkering
@@ -4718,7 +4718,7 @@ lighting	Light	Ljus
 	Inserting, deleting and rotating pages	Infoga, radera och rotera sidor
 	Joins:	Hörn:
 	Justify	Marginaljustera
-	Keeps the document editable: VectorCraft reopens the PDF with nothing lost. For files you'll edit again.	Håller dokumentet redigerbart: VectorCraft öppnar PDF-filen igen utan att något går förlorat. För filer du ska redigera igen.
+	Keeps the document editable: Tsipika reopens the PDF with nothing lost. For files you'll edit again.	Håller dokumentet redigerbart: Tsipika öppnar PDF-filen igen utan att något går förlorat. För filer du ska redigera igen.
 	Keyboard Shortcuts	Kortkommandon
 	Kite	Drake
 	LF (macOS, Linux)	LF (macOS, Linux)
@@ -4768,7 +4768,7 @@ lighting	Light	Ljus
 	PDF/X-4:2010	PDF/X-4:2010
 	PRs	PR:er
 	Page Cover 1640×624	Sidomslag 1640×624
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + VectorCraft.	Del av ArtCraft. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikoner: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Tsipika.	Del av Mahay. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikoner: Lucide (ISC) + Tsipika.
 	Pattern Swatches	Mönsterfärgrutor
 	Pen	Penna
 	Pentagram	Pentagram
@@ -4906,10 +4906,10 @@ lighting	Light	Ljus
 	Up (right reading)	Upp (rättläst)
 	Use Default	Använd standard
 	Variation	Variation
-	VectorCraft Default	VectorCraft-standard
-	VectorCraft Defaults	VectorCraft-standardvärden
-	VectorCraft Generic CMYK (SWOP-like)	VectorCraft allmän CMYK (SWOP-liknande)
-	VectorCraft Swatches (.vcswatches)	VectorCraft-färgrutor (.vcswatches)
+	Tsipika Default	Tsipika-standard
+	Tsipika Defaults	Tsipika-standardvärden
+	Tsipika Generic CMYK (SWOP-like)	Tsipika allmän CMYK (SWOP-liknande)
+	Tsipika Swatches (.vcswatches)	Tsipika-färgrutor (.vcswatches)
 	Vertical Align	Vertikal justering
 	Vertical Area Type	Vertikal områdestext
 	Vertical Type	Vertikal text
@@ -4946,7 +4946,7 @@ lighting	Light	Ljus
 	[PDF/X-4:2010]	[PDF/X-4:2010]
 	[Press Quality]	[Tryckkvalitet]
 	[Smallest File Size]	[Minsta filstorlek]
-	[VectorCraft Default]	[VectorCraft-standard]
+	[Tsipika Default]	[Tsipika-standard]
 	of	av
 	sRGB IEC61966-2.1	sRGB IEC61966-2.1
 	x Height	x-höjd
@@ -4974,7 +4974,7 @@ file-filter	Print presets	Utskriftsförinställningar
 file-filter	SVG Compressed	SVG komprimerad
 file-filter	Swatch libraries	Färgrutebibliotek
 file-filter	Templates	Mallar
-file-filter	VectorCraft Template	VectorCraft-mall
+file-filter	Tsipika Template	Tsipika-mall
 gradient-kind	Radial	Radiell
 mark-style	Japanese	Japanska
 theme	Appearance	Utseende

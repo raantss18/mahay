@@ -131,7 +131,7 @@ impl Selection {
     }
     /// With direct-selected anchors, what a transform of them measures from: the box around those
     /// anchors and the objects selected whole (`visual`: with their strokes). `None` without any.
-    pub fn anchor_bounds(&self, doc: &Document, visual: bool) -> Option<vectorcraft_geom::Rect> {
+    pub fn anchor_bounds(&self, doc: &Document, visual: bool) -> Option<tsipika_geom::Rect> {
         if self.anchors.is_empty() {
             return None;
         }
@@ -139,13 +139,13 @@ impl Selection {
         for (id, set) in &self.anchors {
             let Some(NodeKind::Path { path, .. }) = doc.node(*id).map(|n| &n.kind) else { continue };
             for a in set.iter().filter_map(|&(si, ai)| path.subpaths.get(si)?.anchors.get(ai)) {
-                acc = vectorcraft_geom::union_opt(acc, Some(vectorcraft_geom::Rect::from_points(a.p, a.p)));
+                acc = tsipika_geom::union_opt(acc, Some(tsipika_geom::Rect::from_points(a.p, a.p)));
             }
         }
         acc
     }
     /// Which direction handles belong to selected segments; both for an anchor selection.
-    pub fn handle_sides(&self, id: NodeId, si: usize, ai: usize, sp: &vectorcraft_geom::SubPath) -> (bool, bool) {
+    pub fn handle_sides(&self, id: NodeId, si: usize, ai: usize, sp: &tsipika_geom::SubPath) -> (bool, bool) {
         let Some(segments) = self.segments.get(&id) else { return (true, true) };
         let previous = ai.checked_sub(1).or_else(|| sp.closed.then_some(sp.segment_count()).and_then(|n| n.checked_sub(1)));
         (previous.is_some_and(|i| segments.contains(&(si, i))), segments.contains(&(si, ai)))

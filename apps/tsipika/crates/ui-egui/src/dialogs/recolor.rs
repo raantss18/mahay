@@ -22,18 +22,18 @@
 
 use egui::{Rect, Sense, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::harmony::{Harmony, move_on_wheel};
-use vectorcraft_color::recolor::{ColorKey, Method};
-use vectorcraft_color::{Color, keep_model};
-use vectorcraft_engine::cmd::color_value;
-use vectorcraft_engine::cmd::swatchlib;
+use tsipika_color::harmony::{Harmony, move_on_wheel};
+use tsipika_color::recolor::{ColorKey, Method};
+use tsipika_color::{Color, keep_model};
+use tsipika_engine::cmd::color_value;
+use tsipika_engine::cmd::swatchlib;
 
 use super::{DialogSpec, form};
 use crate::panels::c32;
 use crate::panels::swatches::{DOCUMENT_SWATCHES, colour_libraries, limit_key};
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Recolor Artwork.
 pub const KIND: &str = "recolor";
@@ -64,7 +64,7 @@ const PRESETS: [&str; 5] = ["Custom", "1 Color Job", "2 Color Job", "3 Color Job
 /// count (an n-colour job) or the new colours to assign (without art or a group they are the
 /// rows, which OK saves as a new colour group); `library` limits to a library or "document" (""
 /// picks the first library).
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document open")?;
     let art = !st.selection.is_empty();
     let group = p.get("group").and_then(Value::as_str);
@@ -119,7 +119,7 @@ fn key(c: &Color) -> Value {
 /// The name a new colour group (opened on colours alone) starts with.
 const NEW_GROUP: &str = "Color Group";
 
-fn first_library(app: &VectorcraftApp) -> Option<String> {
+fn first_library(app: &TsipikaApp) -> Option<String> {
     colour_libraries(app).into_iter().next().map(|l| l.id)
 }
 
@@ -134,7 +134,7 @@ fn reduce_params(d: &Dialog) -> Value {
 
 /// Reduce the art's colours into rows again when the count, preserve flags or library changed
 /// (assigning a group's colours or the opener's colours as the new colours).
-fn sync(app: &mut VectorcraftApp, d: &mut Dialog) {
+fn sync(app: &mut TsipikaApp, d: &mut Dialog) {
     const DONE: &str = "__reduced";
     let sig = reduce_params(d);
     if !d.bool("__art") || d.fields.get(DONE) == Some(&sig) {
@@ -159,7 +159,7 @@ fn sync(app: &mut VectorcraftApp, d: &mut Dialog) {
 }
 
 /// With Limit to Library, the rows' new colours snap to the library's nearest colours.
-fn snap(app: &VectorcraftApp, d: &Dialog, rows: &mut [Value]) {
+fn snap(app: &TsipikaApp, d: &Dialog, rows: &mut [Value]) {
     let Some(palette) = Some(d.str("limitTo")).filter(|l| !l.is_empty()).and_then(|l| swatchlib::limit_palette(&app.session, &l)) else { return };
     for r in rows {
         if let Some(c) = to_color(r) {
@@ -207,7 +207,7 @@ fn apply_params(d: &Dialog) -> Value {
     p
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     sync(app, d);
     let t = Tokens::get(ui.ctx());
     ui.horizontal(|ui| {
@@ -250,7 +250,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
 
 /// OK: keep the previewed recolour as one undo step (or apply it, e.g. to a colour group only; or
 /// save colours opened alone as a new colour group).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut d = d.clone();
     sync(app, &mut d);
     if d.bool("__newGroup") {
@@ -269,7 +269,7 @@ fn preset_of(d: &Dialog) -> usize {
     }
 }
 
-fn set_preset(app: &VectorcraftApp, d: &mut Dialog, i: usize) {
+fn set_preset(app: &TsipikaApp, d: &mut Dialog, i: usize) {
     match i {
         1..=3 => {
             d.fields.insert("colors".into(), json!(i));
@@ -291,7 +291,7 @@ fn chip(ui: &Ui, r: Rect, c: Color, dim: bool) {
 }
 
 /// The Assign tab. Returns true when the rows changed.
-fn assign_tab(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog, rows: &mut Vec<Value>) -> bool {
+fn assign_tab(app: &mut TsipikaApp, ui: &mut Ui, d: &mut Dialog, rows: &mut Vec<Value>) -> bool {
     let t = Tokens::get(ui.ctx());
     let mut changed = false;
     let total: usize = rows.iter().map(|r| r["from"].as_array().map_or(0, Vec::len)).sum();
@@ -452,7 +452,7 @@ fn assign_tab(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog, rows: &mut 
             // Import a library (.ase, .acb, .gpl, .vcswatches or a document's swatches) and limit to it.
             if app.services.pick_open.is_some() && widgets::icon_button(ui, "folder-open", tl!("Other Library…"), false, 24.0).clicked() {
                 let r = crate::picks::in_dialog(app, d, |app, d| {
-                    let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::open_filters().collect(), ..Default::default() };
+                    let pick = crate::FilePick { filters: tsipika_engine::cmd::fileio::open_filters().collect(), ..Default::default() };
                     let Some(path) = crate::picks::open(app, &pick) else { return Ok(()) };
                     let r = app.run("swatch.library.load", json!({ "path": path }))?;
                     d.fields.insert("limitTo".into(), r["library"].clone());
@@ -672,7 +672,7 @@ mod tests {
     /// In a CMYK document colors opened alone are saved as a new color group in their own model.
     #[test]
     fn a_new_group_from_colors_keeps_their_model_in_a_cmyk_document() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100, "colorMode": "cmyk"})).unwrap();
         app.run("ui.recolorDialog", json!({"colors": ["#ff8000"]})).unwrap();
         let d = app.ui.dialog.clone().expect("Recolor Artwork opens");

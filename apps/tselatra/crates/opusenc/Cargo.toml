@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-opusenc"
+name = "tselatra-opusenc"
 description = "Clean-room pure-Rust Opus encoder (RFC 6716 SILK NB/MB/WB, hybrid SWB/FB and CELT FB modes, 48 kHz, 20 ms; RFC 7845 OpusHead) for WebM export audio"
 version.workspace = true
 edition.workspace = true
@@ -12,4 +12,4 @@ workspace = true
 [dependencies]
 
 [dev-dependencies]
-filmcraft-opus = { workspace = true }
+hetsika-opus = { workspace = true }

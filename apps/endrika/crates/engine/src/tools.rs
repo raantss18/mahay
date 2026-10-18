@@ -4,9 +4,9 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_doc::geometry::select_target;
-use figcraft_doc::*;
-use figcraft_geom::{Affine, Point, Rect, Vec2};
+use endrika_doc::geometry::select_target;
+use endrika_doc::*;
+use endrika_geom::{Affine, Point, Rect, Vec2};
 use serde::Serialize;
 use serde_json::json;
 
@@ -461,7 +461,7 @@ pub struct ToolState {
     /// hover on one as on its frame.
     pub labels: Vec<(NodeId, [Point; 4])>,
     /// The brush the Pencil draws with (`tool.pencilBrush`; `None`: a plain stroke).
-    pub pencil_brush: Option<figcraft_doc::Brush>,
+    pub pencil_brush: Option<endrika_doc::Brush>,
 }
 
 /// Pen pressure along drawn samples as width profile points `[t, scale]`: `t` by length, at most
@@ -558,12 +558,12 @@ pub fn anchor_name(a: (u8, u8)) -> &'static str {
 /// background (None: the model's default, black). The background is the nearest layer from `parent`
 /// out whose top visible fill is a mostly opaque solid colour, else the page (#362). For text made
 /// in the app: by the Text tool, or by a command that names no fill while the interface is up.
-pub(crate) fn readable_text_fills(doc: &Document, parent: NodeId) -> Option<Vec<figcraft_color::Paint>> {
+pub(crate) fn readable_text_fills(doc: &Document, parent: NodeId) -> Option<Vec<endrika_color::Paint>> {
     let dark = std::iter::once(parent).chain(doc.ancestors(parent)).filter_map(|id| doc.node(id)).find_map(|n| match &n.kind {
         NodeKind::Page { background, .. } => Some(background.is_dark()),
         _ => n.fills.iter().rev().find(|p| p.visible).and_then(|p| p.solid_color()).filter(|c| c.a >= 0.5).map(|c| c.is_dark()),
     });
-    dark.unwrap_or(false).then(|| vec![figcraft_color::Paint::solid(figcraft_color::Color::WHITE)])
+    dark.unwrap_or(false).then(|| vec![endrika_color::Paint::solid(endrika_color::Color::WHITE)])
 }
 
 const ANCHORS: [&str; 9] = ["tl", "t", "tr", "l", "c", "r", "bl", "b", "br"];
@@ -605,7 +605,7 @@ pub fn selection_frame(doc: &Document, sel: &[NodeId]) -> Option<(Affine, f64, f
     let inv = rot.inverse();
     let b = ids
         .iter()
-        .filter_map(|i| Some(figcraft_geom::transform_rect_bbox(inv * doc.world_transform(*i), doc.node(*i)?.local_rect())))
+        .filter_map(|i| Some(endrika_geom::transform_rect_bbox(inv * doc.world_transform(*i), doc.node(*i)?.local_rect())))
         .reduce(|a, b| a.union(b))?;
     Some((rot * Affine::translate((b.x0, b.y0)), b.width(), b.height()))
 }
@@ -662,7 +662,7 @@ fn on_corner_square(doc: &Document, sel: &[NodeId], p: Point, zoom: f64) -> bool
 pub const SMALL_BOX_PX: f64 = 16.0;
 
 /// The stroke the Pencil draws: its colour and weight (the canvas previews it the same).
-pub const PENCIL_STROKE: (figcraft_color::Color, f64) = (figcraft_color::Color::BLACK, 2.0);
+pub const PENCIL_STROKE: (endrika_color::Color, f64) = (endrika_color::Color::BLACK, 2.0);
 
 /// The shorter and longer sides, in screen pixels, of the box with `corners` (tl, tr, br, bl).
 pub fn box_sides_px(corners: &[Point; 4], zoom: f64) -> (f64, f64) {
@@ -693,10 +693,10 @@ pub fn handle_at_corners(corners: &[Point; 4], p: Point, zoom: f64, is_line: boo
         return corner;
     }
     if !is_line {
-        use figcraft_geom::kurbo::ParamCurveNearest;
+        use endrika_geom::kurbo::ParamCurveNearest;
         let edge = nearest(&mut (0..4).filter_map(|i| {
             let (a, b) = (corners.get(i)?, corners.get((i + 1) % 4)?);
-            let near = figcraft_geom::kurbo::Line::new(*a, *b).nearest(p, 0.001);
+            let near = endrika_geom::kurbo::Line::new(*a, *b).nearest(p, 0.001);
             let d = near.distance_sq.sqrt();
             (d <= edge_reach && near.t > 0.05 && near.t < 0.95).then_some((d, Handle::Edge(i as u8)))
         }));
@@ -730,7 +730,7 @@ pub(crate) fn handle_cursor(c: &[Point; 4], h: Handle) -> Cursor {
             let b = c.get((i as usize + 2) % 4).copied().unwrap_or_default();
             // Along the box's own axes at 45°, not the diagonal, so wide or tall boxes still get a
             // diagonal cursor. A box with no width or height falls back to the diagonal.
-            let unit = |v: figcraft_geom::kurbo::Vec2| {
+            let unit = |v: endrika_geom::kurbo::Vec2| {
                 let len = v.hypot();
                 (len.is_finite() && len > 1e-9).then(|| v / len)
             };
@@ -893,7 +893,7 @@ impl Session {
     pub(crate) fn marquee_selection(&self, r: Rect, within: Option<NodeId>, deep: bool, base: &[NodeId], additive: bool) -> Result<Vec<NodeId>> {
         let (doc, page) = (self.doc()?, self.page()?);
         let mut hits =
-            if deep { figcraft_doc::geometry::marquee_deep(doc, page, r) } else { figcraft_doc::geometry::marquee_select(doc, page, r, within) };
+            if deep { endrika_doc::geometry::marquee_deep(doc, page, r) } else { endrika_doc::geometry::marquee_select(doc, page, r, within) };
         if let Some(f) = self.ds()?.focused() {
             hits.retain(|h| *h != f && doc.is_ancestor(f, *h));
         }
@@ -1538,7 +1538,7 @@ impl Session {
                 let len = v.hypot();
                 let world = Affine::translate(a.to_vec2()) * Affine::rotate(v.atan2());
                 doc.set_world_transform(id, world)?;
-                figcraft_layout::set_size(doc, id, len, 0.0);
+                endrika_layout::set_size(doc, id, len, 0.0);
                 Ok(())
             })?;
             self.tool.overlay.guides = guides;
@@ -1573,7 +1573,7 @@ impl Session {
                 if kept.is_empty() {
                     crate::cmd::props::resize_node(doc, *id, nw.max(0.01), nh.max(0.01))?;
                 } else {
-                    figcraft_layout::set_size(doc, *id, nw.max(0.01), nh.max(0.01));
+                    endrika_layout::set_size(doc, *id, nw.max(0.01), nh.max(0.01));
                     crate::cmd::props::restore_worlds(doc, &kept)?;
                 }
                 let n = doc.get_mut(*id)?;
@@ -1600,7 +1600,7 @@ impl Session {
             for (id, world, w, h) in &nodes {
                 let local = inv * *world;
                 let center = local * Point::new(w / 2.0, h / 2.0);
-                let (kw, kh) = figcraft_layout::axis_factors(local, sx, sy);
+                let (kw, kh) = endrika_layout::axis_factors(local, sx, sy);
                 let (w2, h2) = (w * kw, h * kh);
                 let lin = (mirror * local).with_translation(Vec2::ZERO);
                 let origin = Point::new(x0 + center.x * sx, y0 + center.y * sy) - lin * Point::new(w2 / 2.0, h2 / 2.0);
@@ -1917,7 +1917,7 @@ impl Session {
             return crate::vectoredit::begin_many(self, &ids);
         }
         // Groups, frames and boolean groups: select one level deeper (the layer under the pointer).
-        let deeper = figcraft_doc::geometry::enter_target(&doc, leaf, &sel);
+        let deeper = endrika_doc::geometry::enter_target(&doc, leaf, &sel);
         if deeper != target || !sel.contains(&deeper) {
             self.set_selection(vec![deeper]);
         }
@@ -1940,7 +1940,7 @@ impl Session {
         let doc = self.doc()?;
         let n = doc.get(id)?;
         let local = doc.world_transform(id).inverse() * p;
-        let Some((layout, dy)) = figcraft_text::layout_node(n) else { return Ok(0) };
+        let Some((layout, dy)) = endrika_text::layout_node(n) else { return Ok(0) };
         Ok(layout.hit(local.x, local.y - dy))
     }
 
@@ -1982,7 +1982,7 @@ impl Session {
         if let Some(fills) = readable_text_fills(d, parent) {
             n.fills = fills;
         }
-        if let Some((w, h)) = figcraft_text::auto_size(&n) {
+        if let Some((w, h)) = endrika_text::auto_size(&n) {
             n.width = w.max(1.0);
             n.height = h;
         }
@@ -2022,10 +2022,10 @@ impl Session {
     fn eyedrop(&mut self, ev: &PointerEvent) -> Result<()> {
         let ds = self.ds()?;
         let doc = ds.doc.clone();
-        let view = figcraft_render::View { origin: (ev.x, ev.y), scale: ev.zoom.max(0.01), width: 1, height: 1 };
-        let Some(pix) = figcraft_render::render_view(&doc, ds.page, &view, &Default::default()) else { return Ok(()) };
-        let rgba = figcraft_render::to_rgba8(&pix);
-        let c = figcraft_color::Color::from_rgba8(
+        let view = endrika_render::View { origin: (ev.x, ev.y), scale: ev.zoom.max(0.01), width: 1, height: 1 };
+        let Some(pix) = endrika_render::render_view(&doc, ds.page, &view, &Default::default()) else { return Ok(()) };
+        let rgba = endrika_render::to_rgba8(&pix);
+        let c = endrika_color::Color::from_rgba8(
             rgba.first().copied().unwrap_or(0),
             rgba.get(1).copied().unwrap_or(0),
             rgba.get(2).copied().unwrap_or(0),
@@ -2125,7 +2125,7 @@ impl Session {
         let inv = pw.inverse();
         // Anchors and handles into the parent's space.
         let pts: Vec<(Point, Point, Point)> = pen.points.iter().map(|(p, i, o)| (inv * *p, inv * (*p + *i), inv * (*p + *o))).collect();
-        let mut path = figcraft_geom::BezPath::new();
+        let mut path = endrika_geom::BezPath::new();
         for (k, (p, _, _)) in pts.iter().enumerate() {
             if k == 0 {
                 path.move_to(*p);
@@ -2139,7 +2139,7 @@ impl Session {
             path.curve_to(last.2, first.1, first.0);
             path.close_path();
         }
-        use figcraft_geom::Shape;
+        use endrika_geom::Shape;
         let bb = path.bounding_box();
         path.apply_affine(Affine::translate((-bb.x0, -bb.y0)));
         let mut net = VectorNetwork::from_path(&path);
@@ -2164,7 +2164,7 @@ impl Session {
                 let id = doc.alloc_id();
                 let mut n = Node::new(id, NodeKind::Vector { network: VectorNetwork::default() }, "Vector", 0.0, 0.0);
                 n.fills.clear();
-                n.strokes = vec![figcraft_color::Paint::solid(figcraft_color::Color::BLACK)];
+                n.strokes = vec![endrika_color::Paint::solid(endrika_color::Color::BLACK)];
                 n.stroke.align = StrokeAlign::Center;
                 doc.insert(n, parent, None)?;
                 id
@@ -2176,7 +2176,7 @@ impl Session {
         n.height = bb.height();
         n.transform = Affine::translate((bb.x0, bb.y0));
         if pen.closed && n.fills.is_empty() {
-            n.fills = vec![figcraft_color::Paint::solid(figcraft_color::Color::DEFAULT_SHAPE)];
+            n.fills = vec![endrika_color::Paint::solid(endrika_color::Color::DEFAULT_SHAPE)];
         }
         ds.selection = vec![id];
         ds.revision += 1;
@@ -2228,7 +2228,7 @@ impl Session {
             return Ok(());
         }
         // Smooth: fit a curve through the samples.
-        let mut poly = figcraft_geom::BezPath::new();
+        let mut poly = endrika_geom::BezPath::new();
         for (k, p) in points.iter().enumerate() {
             if k == 0 {
                 poly.move_to(*p);
@@ -2236,7 +2236,7 @@ impl Session {
                 poly.line_to(*p);
             }
         }
-        let fitted = figcraft_geom::kurbo::simplify::simplify_bezpath(poly.iter(), 0.75, &Default::default());
+        let fitted = endrika_geom::kurbo::simplify::simplify_bezpath(poly.iter(), 0.75, &Default::default());
         let d = fitted.to_svg();
         let page = self.page()?;
         let parent = frame_at(self.doc()?, page, points.first().copied().unwrap_or_default(), &[]).unwrap_or(page);
@@ -2314,11 +2314,11 @@ impl Session {
         // Outline mode draws no fills: shapes are clicked on their outlines, reaching what's behind.
         if let Some(v) = self.ds().ok().map(|d| &d.view).filter(|v| v.outlines) {
             // What it draws besides the shapes can be clicked too.
-            let also = figcraft_doc::geometry::OutlineHits { hidden: v.outline_hidden, bounds: v.outline_bounds };
-            return figcraft_doc::geometry::hit_outlines(doc, focus.unwrap_or(page), p, tol, Some(&result), also);
+            let also = endrika_doc::geometry::OutlineHits { hidden: v.outline_hidden, bounds: v.outline_bounds };
+            return endrika_doc::geometry::hit_outlines(doc, focus.unwrap_or(page), p, tol, Some(&result), also);
         }
         match focus {
-            Some(f) => figcraft_doc::geometry::hit_in(doc, f, p, tol, Some(&result)),
+            Some(f) => endrika_doc::geometry::hit_in(doc, f, p, tol, Some(&result)),
             None => doc.hit_test(page, p, tol, Some(&result)),
         }
     }

@@ -6,14 +6,14 @@
 //! step. On an error the dialog stays open.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::CopyrightStatus;
-use vectorcraft_doc::metadata::MAX_RATING;
+use tsipika_doc::CopyrightStatus;
+use tsipika_doc::metadata::MAX_RATING;
 
 use super::document_setup::{LABEL, choice};
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, icons, widgets};
+use crate::{TsipikaApp, icons, widgets};
 
 pub(super) const KIND: &str = "fileInfo";
 /// The keyword being typed.
@@ -25,14 +25,14 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("File Info").into(), body, confirm, min_width: 500.0, max_width: Some(500.0), ..DialogSpec::FORM };
 
 /// Open File Info on the active document's.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let mut fields = app.session.execute("file.info", &json!({})).map_err(|e| e.to_string())?;
     fields[PENDING] = json!("");
     app.ui.dialog = Some(Dialog::new(KIND, fields));
     Ok(Value::Null)
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut d = d.clone();
     // A keyword typed but not added yet is kept.
     add_keywords(&mut d);
@@ -60,7 +60,7 @@ fn add_keywords(d: &mut Dialog) {
     d.fields.insert(PENDING.into(), json!(""));
 }
 
-fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     for (key, label) in [("title", tl!("Document Title:")), ("author", tl!("Author:")), ("authorTitle", tl!("Author Title:"))] {
         widgets::label_row(ui, label, LABEL, |ui| {
@@ -193,11 +193,11 @@ fn chips(ui: &mut egui::Ui, d: &mut Dialog) {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    use crate::VectorcraftApp;
+    use crate::TsipikaApp;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         crate::theme::apply(&ctx, Default::default());
@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn file_info_draws_and_ok_is_one_undo_step() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         // The menu item and its shortcut open the dialog; agents use ui.fileInfoDialog.
         crate::menus::invoke(&mut app, "file.info", json!({}));
@@ -224,7 +224,7 @@ mod tests {
         assert!(app.ui.dialog.is_none());
         let st = app.session.active().unwrap();
         let m = &st.doc.metadata;
-        assert_eq!((m.author.as_str(), m.rating, m.copyright_status), ("Ada", 4, vectorcraft_doc::CopyrightStatus::Copyrighted));
+        assert_eq!((m.author.as_str(), m.rating, m.copyright_status), ("Ada", 4, tsipika_doc::CopyrightStatus::Copyrighted));
         assert_eq!(m.keywords, ["poster", "print", "blue"], "typed keywords join the chips, each once");
         assert_eq!(st.history.undo.len(), 1);
         // A bad value keeps the dialog open.

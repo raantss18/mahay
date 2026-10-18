@@ -1,17 +1,17 @@
 //! The backtick (`) key cycles the flag of the selection / active photo; Cmd+Up / Cmd+Down raise / lower it.
 use egui::{Key, Modifiers};
-use lightcraft_catalog::{Flag, Op, Photo, PhotoId, Source};
+use hazavana_catalog::{Flag, Op, Photo, PhotoId, Source};
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::state::ViewMode;
 
-fn app() -> lightcraft_engine::Result<LightcraftApp> {
-    let mut s = lightcraft_engine::Session::new();
+fn app() -> hazavana_engine::Result<HazavanaApp> {
+    let mut s = hazavana_engine::Session::new();
     for id in 1..=3 {
         let photo = Photo::new(
             PhotoId(id),
-            Source::File { path: format!("/lightcraft-flag-cycle-keys/{id}.jpg") },
+            Source::File { path: format!("/hazavana-flag-cycle-keys/{id}.jpg") },
             &format!("{id}.jpg"),
             "JPEG",
             40,
@@ -22,14 +22,14 @@ fn app() -> lightcraft_engine::Result<LightcraftApp> {
     }
     s.execute("library.sort", &json!({"key": "fileName", "ascending": true}))?;
     s.execute("library.select", &json!({"ids": [2]}))?;
-    Ok(LightcraftApp::new(s, crate::Services { png: None, ..Default::default() }))
+    Ok(HazavanaApp::new(s, crate::Services { png: None, ..Default::default() }))
 }
 
-fn flags(app: &LightcraftApp) -> Vec<Flag> {
+fn flags(app: &HazavanaApp) -> Vec<Flag> {
     (1..=3).map(|id| app.session.catalog.photo(PhotoId(id)).unwrap().flag).collect()
 }
 
-fn frame(app: &mut LightcraftApp, ctx: &egui::Context, key: Option<(Key, Modifiers)>, text: Option<&mut String>) {
+fn frame(app: &mut HazavanaApp, ctx: &egui::Context, key: Option<(Key, Modifiers)>, text: Option<&mut String>) {
     let events =
         key.map(|(key, modifiers)| egui::Event::Key { key, physical_key: Some(key), pressed: true, repeat: false, modifiers }).into_iter().collect();
     let mut text = text;
@@ -45,7 +45,7 @@ fn frame(app: &mut LightcraftApp, ctx: &egui::Context, key: Option<(Key, Modifie
     out.textures_delta.clear();
 }
 
-fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
+fn tick(app: &mut HazavanaApp, ctx: &egui::Context) {
     frame(app, ctx, Some((Key::Backtick, Modifiers::NONE)), None);
 }
 

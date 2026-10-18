@@ -7,14 +7,14 @@ use serde_json::json;
 
 use crate::headless::Headless;
 use crate::state::LightsOut;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn loupe() -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let mut app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let mut app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     app.ui.settings.gpu = false;
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail", "right": "edit"}), T);

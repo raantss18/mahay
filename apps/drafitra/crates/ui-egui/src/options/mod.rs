@@ -1,10 +1,10 @@
 //! OPTIONS: the user's preferences, in one dialog and one JSON form.
 //!
-//! Typed (OPTIONS, OP), chosen from Tools ▸ Options… or, on macOS, CADCraft ▸ Settings… (⌘,),
+//! Typed (OPTIONS, OP), chosen from Tools ▸ Options… or, on macOS, Drafitra ▸ Settings… (⌘,),
 //! OPTIONS opens the Options dialog ([`dialog`]). A JSON call never opens it: `options {}` reports
 //! every preference and `options {"PICKBOX": 5, "modelBackground": "#ffffff"}` changes some (all
 //! or nothing; `"reset": true` restores the defaults first). Upper-case names are the engine's
-//! profile variables (`cadcraft_engine::cmd::options`); camel-case names are the interface's own:
+//! profile variables (`drafitra_engine::cmd::options`); camel-case names are the interface's own:
 //!
 //! | name | value |
 //! |---|---|
@@ -41,7 +41,7 @@ use crate::animation::AnimationPref;
 use crate::theme::{self, ThemePref};
 
 /// The host storage key for [`CadApp::profile_json`].
-pub const PROFILE_KEY: &str = "cadcraft.profile";
+pub const PROFILE_KEY: &str = "drafitra.profile";
 
 /// The largest saved profile [`CadApp::load_profile`] reads.
 const MAX_PROFILE_BYTES: usize = 64 * 1024;
@@ -180,7 +180,7 @@ fn parse_ui(key: &str, v: &Value, c: &mut UiChanges) -> Result<bool, String> {
         }
         "timeSensitiveRightClick" => c.time_sensitive_right_click = Some(v.as_bool().ok_or("timeSensitiveRightClick must be true or false")?),
         k if k.eq_ignore_ascii_case("SAVETIME") => {
-            let max = cadcraft_engine::autosave::MAX_SAVETIME;
+            let max = drafitra_engine::autosave::MAX_SAVETIME;
             let n = v
                 .as_f64()
                 .filter(|n| n.is_finite() && (0.0..=f64::from(max)).contains(n))
@@ -211,8 +211,8 @@ fn ui_json(app: &CadApp) -> Map<String, Value> {
     m.insert("selectionColor".into(), color_json(o.selection_color));
     m.insert("snapMarkerSize".into(), json!(o.snap_marker_size));
     m.insert("saveVersion".into(), json!(app.ui.save_version));
-    m.insert("SAVETIME".into(), json!(cadcraft_engine::autosave::savetime()));
-    m.insert("SAVEFILEPATH".into(), json!(cadcraft_engine::autosave::savefilepath()));
+    m.insert("SAVETIME".into(), json!(drafitra_engine::autosave::savetime()));
+    m.insert("SAVEFILEPATH".into(), json!(drafitra_engine::autosave::savefilepath()));
     m.insert("timeSensitiveRightClick".into(), json!(o.time_sensitive_right_click));
     m
 }
@@ -220,7 +220,7 @@ fn ui_json(app: &CadApp) -> Map<String, Value> {
 /// Every preference: the interface's and the engine's profile variables.
 pub fn report(app: &CadApp) -> Value {
     let mut m = ui_json(app);
-    if let Value::Object(engine) = cadcraft_engine::cmd::options::profile(&app.session) {
+    if let Value::Object(engine) = drafitra_engine::cmd::options::profile(&app.session) {
         m.extend(engine);
     }
     Value::Object(m)
@@ -276,10 +276,10 @@ fn run_json(app: &mut CadApp, params: &Value) -> Result<Value, String> {
         app.ui.save_version = v.year().to_string();
     }
     if let Some(m) = ui.savetime {
-        cadcraft_engine::autosave::set_savetime(m);
+        drafitra_engine::autosave::set_savetime(m);
     }
     if let Some(p) = &ui.savefilepath {
-        cadcraft_engine::autosave::set_savefilepath(p);
+        drafitra_engine::autosave::set_savefilepath(p);
     }
     if let Some(b) = ui.time_sensitive_right_click {
         app.options.time_sensitive_right_click = b;
@@ -307,7 +307,7 @@ impl CadApp {
     pub fn profile_json(&self) -> String {
         json!({
             "version": 1,
-            "sysvars": cadcraft_engine::cmd::options::profile(&self.session),
+            "sysvars": drafitra_engine::cmd::options::profile(&self.session),
             "systemCursor": self.ui.system_cursor,
             "modelBackground": color_json(self.options.model_background),
             "paperBackground": color_json(self.options.paper_background),
@@ -326,7 +326,7 @@ impl CadApp {
         }
         let Ok(v) = serde_json::from_str::<Value>(json) else { return };
         if let Some(vars) = v.get("sysvars") {
-            cadcraft_engine::cmd::options::restore(&mut self.session, vars);
+            drafitra_engine::cmd::options::restore(&mut self.session, vars);
         }
         let mut c = UiChanges::default();
         for key in ["systemCursor", "modelBackground", "paperBackground", "selectionColor", "snapMarkerSize", "timeSensitiveRightClick"] {
@@ -334,7 +334,7 @@ impl CadApp {
                 let _ = parse_ui(key, value, &mut c);
             }
         }
-        // CADCRAFT_SYSTEM_CURSOR=1 turns the system cursor on whatever was saved.
+        // DRAFITRA_SYSTEM_CURSOR=1 turns the system cursor on whatever was saved.
         if c.system_cursor == Some(true) {
             self.ui.system_cursor = true;
         }

@@ -12,7 +12,7 @@ player, 21 gestures among them; the tail: `crates/engine/src/proto_tail_tests.rs
 `crates/ui-egui/src/present_tail_tests.rs`, 5 tests), and all pass. Not yet checked against
 larger real prototypes. Remaining: 2–5 h.
 
-| Group | Figma | FigCraft | Missing |
+| Group | Figma | Endrika | Missing |
 |---|---|---|---|
 | Triggers | On click, on drag, while hovering, while pressing, key/gamepad, mouse enter, mouse leave, mouse down, mouse up, after delay, on media hit, on media end | 10: OnClick, OnHover, OnPress, OnDrag, MouseEnter, MouseLeave, MouseDown, MouseUp, AfterDelay, KeyPress (keys, combinations and controller buttons) | media triggers, delays on mouse enter/leave/down/up; controllers on macOS, Linux and FreeBSD |
 | Actions | Navigate to, change to, back, scroll to, open link, open / swap / close overlay, set variable, set variable mode, conditional, play/pause/mute/seek media | 11: Navigate, Back, ScrollTo (with an offset), OpenOverlay, SwapOverlay, CloseOverlay, OpenUrl, ChangeTo, SetVariable, SetVariableMode, Conditional | media actions |

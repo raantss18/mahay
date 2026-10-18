@@ -1,6 +1,6 @@
 //! Text node data: characters plus a base style and styled runs.
 
-use figcraft_color::{Color, Paint};
+use endrika_color::{Color, Paint};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -436,13 +436,13 @@ pub struct TextPath {
 
 impl TextPath {
     /// A text path following `path` (layer space).
-    pub fn new(path: &figcraft_geom::BezPath) -> Self {
+    pub fn new(path: &endrika_geom::BezPath) -> Self {
         Self { d: path.to_svg(), start: 0.0, flip: false }
     }
 
     /// The path (empty when `d` doesn't parse).
-    pub fn path(&self) -> figcraft_geom::BezPath {
-        figcraft_geom::BezPath::from_svg(&self.d).unwrap_or_default()
+    pub fn path(&self) -> endrika_geom::BezPath {
+        endrika_geom::BezPath::from_svg(&self.d).unwrap_or_default()
     }
 
     /// The start offset clamped into 0..1 (NaN: 0).
@@ -454,7 +454,7 @@ impl TextPath {
     pub fn scale(&mut self, sx: f64, sy: f64) {
         if sx.is_finite() && sy.is_finite() {
             let mut p = self.path();
-            p.apply_affine(figcraft_geom::Affine::scale_non_uniform(sx, sy));
+            p.apply_affine(endrika_geom::Affine::scale_non_uniform(sx, sy));
             self.d = p.to_svg();
         }
     }

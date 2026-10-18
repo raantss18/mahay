@@ -8,7 +8,7 @@
 //! - [`LensDb::find_camera`] / [`LensDb::find_lens`]: identification from EXIF make / model / lens model strings,
 //!   with mount and crop-factor handling.
 //! - [`Profile::correction`]: the profile at a shot's focal length (and aperture / distance for vignetting),
-//!   interpolated between calibrated points, expressed as [`lightcraft_develop::EmbeddedLens`] for a given image.
+//!   interpolated between calibrated points, expressed as [`hazavana_develop::EmbeddedLens`] for a given image.
 //!
 //! Sources: the lensfun database format and model formulas as described in lensfun's published documentation
 //! (database file format and lens calibration pages; no lensfun code was read), Panorama Tools' distortion model
@@ -22,8 +22,8 @@ mod xml;
 
 use std::path::Path;
 
-use lightcraft_develop::{EmbeddedLens, EmbeddedVignette, EmbeddedWarp};
-use lightcraft_geom::Point;
+use hazavana_develop::{EmbeddedLens, EmbeddedVignette, EmbeddedWarp};
+use hazavana_geom::Point;
 pub use model::{Distortion, Tca, Vignetting};
 
 /// Largest database file read (lensfun's biggest file is well under 1 MB).

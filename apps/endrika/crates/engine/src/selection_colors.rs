@@ -4,8 +4,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_color::{Paint, PaintKind};
-use figcraft_doc::{Document, NodeId, NodeKind, StyleKind};
+use endrika_color::{Paint, PaintKind};
+use endrika_doc::{Document, NodeId, NodeKind, StyleKind};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -155,7 +155,7 @@ fn checked_targets(s: &Session, p: &Value, cmd: &str) -> Result<Vec<PaintTarget>
 
 /// Detach variables only where the explicit edit changed their value. In particular, an
 /// opacity edit keeps the color binding and a range edit keeps other characters' node bindings.
-fn unbind_changed(n: &mut figcraft_doc::Node, t: &PaintTarget, old: &Paint, new: &Paint) {
+fn unbind_changed(n: &mut endrika_doc::Node, t: &PaintTarget, old: &Paint, new: &Paint) {
     // Range fills override the node's paints; the node binding still belongs to other chars.
     if t.range.is_some() {
         return;

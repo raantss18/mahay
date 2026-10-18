@@ -13,8 +13,8 @@
 //!
 //! The canvas draws the lines and places the labels so they never overlap (see the UI crate).
 
-use figcraft_doc::{Document, NodeId, NodeKind};
-use figcraft_geom::{Point, Rect};
+use endrika_doc::{Document, NodeId, NodeKind};
+use endrika_geom::{Point, Rect};
 use serde_json::{Value, json};
 
 use crate::cmd::CommandSpec;
@@ -284,7 +284,7 @@ pub fn padding(doc: &Document, frame: NodeId) -> Vec<Guide> {
         .filter_map(|c| doc.node(*c))
         .filter(|c| c.visible && !c.child_layout.absolute && !matches!(c.kind, NodeKind::Slice))
         .take(MAX_BOXES)
-        .map(|c| figcraft_geom::transform_rect_bbox(c.transform, c.local_rect()))
+        .map(|c| endrika_geom::transform_rect_bbox(c.transform, c.local_rect()))
         .filter(|r| r.is_finite())
         .collect();
     let content = kids.iter().copied().reduce(|a, b| a.union(b));

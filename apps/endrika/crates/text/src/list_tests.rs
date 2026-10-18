@@ -1,7 +1,7 @@
 //! List markers: every bullet of a list takes the paragraph style's font, even when a line starts
 //! with a char only a fallback font draws (Hebrew, Arabic…).
 
-use figcraft_doc::{ListStyle, TextData};
+use endrika_doc::{ListStyle, TextData};
 
 use crate::layout;
 

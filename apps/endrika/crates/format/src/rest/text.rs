@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_doc::{
+use endrika_doc::{
     DecorationLength, DecorationStyle, LetterSpacing, LineHeight, ListStyle, ParaList, StyleRun, TextAlignH, TextAlignV, TextAutoResize, TextCase,
     TextData, TextDecoration, TextPath, TextStyle,
 };
@@ -79,11 +79,11 @@ fn paragraph(s: &Value, td: &mut TextData) {
     td.hanging_punctuation = flag(s, "hangingPunctuation").unwrap_or(false);
     td.hanging_list = flag(s, "hangingList").unwrap_or(false);
     if text(s, "leadingTrim") == Some("CAP_HEIGHT") {
-        td.leading_trim = figcraft_doc::LeadingTrim::CapHeight;
+        td.leading_trim = endrika_doc::LeadingTrim::CapHeight;
     }
     if let Some(flags) = s.get("openTypeFlags").and_then(Value::as_object) {
         for (tag, on) in flags.iter().take(64) {
-            if figcraft_doc::valid_feature_tag(&tag.to_ascii_lowercase()) {
+            if endrika_doc::valid_feature_tag(&tag.to_ascii_lowercase()) {
                 td.features.insert(tag.to_ascii_lowercase(), on.as_f64().is_some_and(|x| x != 0.0) || on.as_bool() == Some(true));
             }
         }

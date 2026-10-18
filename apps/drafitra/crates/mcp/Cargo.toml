@@ -1,6 +1,6 @@
 [package]
-name = "cadcraft-mcp"
-description = "CADCraft MCP server: JSON-RPC 2.0 over stdio, driving a running app or a headless session"
+name = "drafitra-mcp"
+description = "Drafitra MCP server: JSON-RPC 2.0 over stdio, driving a running app or a headless session"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,8 +9,8 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-cadcraft-engine = { workspace = true }
-cadcraft-render = { workspace = true }
-cadcraft-io = { workspace = true }
+drafitra-engine = { workspace = true }
+drafitra-render = { workspace = true }
+drafitra-io = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }

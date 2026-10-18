@@ -1,7 +1,7 @@
 //! Paints: gradient handles exact under any transform, spreads unrolled, patterns as image fills.
 
-use figcraft_color::{Gradient, GradientKind, ImageScaleMode, Paint, PaintKind};
-use figcraft_doc::{Document, Node};
+use endrika_color::{Gradient, GradientKind, ImageScaleMode, Paint, PaintKind};
+use endrika_doc::{Document, Node};
 
 use super::import_svg_with_notes;
 
@@ -88,7 +88,7 @@ fn opacity_and_stop_opacity_carry_over() {
 
 const PNG: &str = "iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAIAAADwyuo0AAAAE0lEQVR4nGP4z8AARGDiPwMyBwBnsgf5Q2OaZwAAAABJRU5ErkJggg==";
 
-fn image_paint(svg: &str) -> (figcraft_color::ImagePaint, Document) {
+fn image_paint(svg: &str) -> (endrika_color::ImagePaint, Document) {
     let (d, nodes, _) = import(svg);
     match nodes.get(1).and_then(|n| n.fills.first()).map(|p| p.kind.clone()) {
         Some(PaintKind::Image(i)) => (i, d),

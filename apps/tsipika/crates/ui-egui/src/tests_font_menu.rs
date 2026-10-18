@@ -1,11 +1,11 @@
 //! The font menu's samples, ↑/↓ highlight with live preview, and applying or undoing the preview.
 
 use serde_json::json;
-use vectorcraft_doc::NodeKind;
-use vectorcraft_engine::Session;
-use vectorcraft_text::FontDb;
+use tsipika_doc::NodeKind;
+use tsipika_engine::Session;
+use tsipika_text::FontDb;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::font_menu::{FontPick, MenuLook, font_menu};
 
 fn key(k: egui::Key) -> Vec<egui::Event> {
@@ -92,15 +92,15 @@ fn samples_show_the_text_in_the_family_or_a_generic_sample() {
 #[test]
 fn preview_changes_the_text_live_and_only_a_choice_is_a_step() {
     let ctx = egui::Context::default();
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
     let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Gagaku", "font": "Inter"})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
-    let font = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind {
+    let font = |app: &TsipikaApp| match &app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().kind {
         NodeKind::Text(t) => t.first_style().font_family,
         _ => String::new(),
     };
-    let steps = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.len();
+    let steps = |app: &TsipikaApp| app.session.active().unwrap().history.undo.len();
     assert_eq!(crate::font_menu::sample_text(&app).as_deref(), Some("Gagaku"));
     let before = steps(&app);
     crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Source Serif 4".into(), None));
@@ -121,7 +121,7 @@ fn preview_changes_the_text_live_and_only_a_choice_is_a_step() {
 #[test]
 fn a_preview_left_open_by_a_menu_that_is_gone_is_undone() {
     let ctx = egui::Context::default();
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
     let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Gagaku", "font": "Inter"})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
@@ -130,7 +130,7 @@ fn a_preview_left_open_by_a_menu_that_is_gone_is_undone() {
     assert!(app.session.in_interaction());
     crate::font_menu::end_stale_preview(&mut app, &ctx);
     assert!(!app.session.in_interaction(), "no menu drawn: the preview is undone");
-    let font = match &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind {
+    let font = match &app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().kind {
         NodeKind::Text(t) => t.first_style().font_family,
         _ => String::new(),
     };
@@ -146,7 +146,7 @@ fn a_preview_left_open_by_a_menu_that_is_gone_is_undone() {
 fn a_press_outside_the_menu_ends_the_preview_at_once() {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
     let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Gagaku", "font": "Inter"})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
@@ -181,7 +181,7 @@ fn a_press_outside_the_menu_ends_the_preview_at_once() {
 
 #[test]
 fn bundled_families_are_classified() {
-    use vectorcraft_text::FontClass;
+    use tsipika_text::FontClass;
     let db = FontDb::global();
     let class = |f: &str| db.family_traits(f).class;
     assert_eq!(class("JetBrains Mono"), FontClass::Monospaced);
@@ -277,7 +277,7 @@ fn styles_listed_above_the_highlight_leave_it_on_its_family() {
 
 #[test]
 fn stars_mark_favourites_and_the_preferences_size_the_rows() {
-    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut app = TsipikaApp::new(Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     crate::font_menu::apply(&mut app, &ctx, FontPick::Favorite("Inter".into()));
     crate::font_menu::apply(&mut app, &ctx, FontPick::Favorite("Source Serif 4".into()));
@@ -297,15 +297,15 @@ fn stars_mark_favourites_and_the_preferences_size_the_rows() {
 /// previews on the document, a choice is just returned, and a star is still toggled.
 #[test]
 fn menus_that_only_pick_a_font_leave_the_document_alone() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
     let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Gagaku", "font": "Inter"})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
-    let font = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind {
+    let font = |app: &TsipikaApp| match &app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().kind {
         NodeKind::Text(t) => t.first_style().font_family,
         _ => String::new(),
     };
-    let steps = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.len();
+    let steps = |app: &TsipikaApp| app.session.active().unwrap().history.undo.len();
     let before = steps(&app);
     use crate::font_menu::picked;
     assert_eq!(picked(&mut app, None), None);
@@ -378,17 +378,17 @@ fn the_search_field_stays_put_while_the_list_scrolls() {
 fn a_preview_stays_put_while_the_menu_is_still() {
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
     let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Gagaku", "font": "Inter"})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
-    let font = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().kind {
+    let font = |app: &TsipikaApp| match &app.session.active().unwrap().doc.node(tsipika_doc::NodeId(id)).unwrap().kind {
         NodeKind::Text(t) => t.first_style().font_family,
         _ => String::new(),
     };
-    let revision = |app: &VectorcraftApp| app.session.active().unwrap().revision;
+    let revision = |app: &TsipikaApp| app.session.active().unwrap().revision;
     // A panel's frame: the menu shows the text's font, and what it picks is applied.
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let input =
             egui::RawInput { events, screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(600.0, 800.0))), ..Default::default() };
         let current = font(app);

@@ -12,10 +12,10 @@
 use std::sync::LazyLock;
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::cmd::FlattenOptions;
-use vectorcraft_engine::cmd::fileio::{SaveMode, pdf};
-use vectorcraft_pdf::{
+use tsipika_doc::Unit;
+use tsipika_engine::cmd::FlattenOptions;
+use tsipika_engine::cmd::fileio::{SaveMode, pdf};
+use tsipika_pdf::{
     Changes, Choice, ColorConversion, Compatibility, Downsample, Encryption, ImageCodec, JpegQuality, MarkKind, MonoCodec, Overprint, PdfSettings,
     Printing, ProfileInclusion, Standard,
 };
@@ -23,7 +23,7 @@ use vectorcraft_pdf::{
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, io, widgets};
+use crate::{TsipikaApp, io, widgets};
 
 pub(super) const KIND: &str = "savePdf";
 
@@ -53,7 +53,7 @@ static DEFAULTS: LazyLock<Value> = LazyLock::new(|| serde_json::to_value(PdfSett
 /// Is `name` a built-in PDF preset's? Those are ours (translated where listed); the saved ones are
 /// names.
 pub(super) fn is_builtin_preset(name: &str) -> bool {
-    static NAMES: LazyLock<Vec<String>> = LazyLock::new(|| vectorcraft_pdf::builtin_presets().into_iter().map(|p| p.name).collect());
+    static NAMES: LazyLock<Vec<String>> = LazyLock::new(|| tsipika_pdf::builtin_presets().into_iter().map(|p| p.name).collect());
     NAMES.iter().any(|n| n == name)
 }
 
@@ -76,7 +76,7 @@ pub(super) const TOP_LABEL_WIDTH: f32 = LIST_WIDTH + 26.0;
 
 /// Open the dialog with `params` (`document.exportPdf` options and `path?`) applied over their
 /// preset.
-pub fn open(app: &mut VectorcraftApp, params: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, params: &Value) -> Result<Value, String> {
     let mut fields = settings_fields(app, params)?;
     let s = |k: &str| params.get(k).and_then(Value::as_str);
     fields.insert("preset".into(), json!(s("preset").unwrap_or(pdf::DEFAULT_PRESET)));
@@ -93,7 +93,7 @@ pub fn open(app: &mut VectorcraftApp, params: &Value) -> Result<Value, String> {
 
 /// The settings `params` ask for (their preset, built-in or saved, with their options applied) as
 /// dialog fields. A standard the writer can't produce yet still shows (Save PDF then says so).
-fn settings_fields(app: &VectorcraftApp, params: &Value) -> Result<Map<String, Value>, String> {
+fn settings_fields(app: &TsipikaApp, params: &Value) -> Result<Map<String, Value>, String> {
     let settings = pdf::resolve("ui.savePdfDialog", params, &app.session.prefs.pdf_presets).map_err(|e| e.to_string())?;
     match serde_json::to_value(settings).map_err(|e| e.to_string())? {
         Value::Object(fields) => Ok(fields),
@@ -115,7 +115,7 @@ fn params(d: &Dialog) -> Value {
 /// Save PDF: write the file (a PDF copy, or the PDF a Save As / Save a Copy asked for, `__save`);
 /// the dialog stays open when that fails (bad range, cancelled save…). While Save Preset… asks for
 /// a name, OK (and Enter) saves the preset instead.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     if d.fields.contains_key(SAVE_AS) {
         let mut d = d.clone();
         let r = save_preset(app, &mut d);
@@ -144,7 +144,7 @@ fn preset_params(d: &Dialog) -> Value {
 }
 
 /// Save Preset…: save the settings under the typed name and pick that preset.
-fn save_preset(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<Value, String> {
+fn save_preset(app: &mut TsipikaApp, d: &mut Dialog) -> Result<Value, String> {
     let mut p = preset_params(d);
     p["name"] = json!(d.str(SAVE_AS));
     let r = app.run("pdf.preset.save", p)?;
@@ -156,7 +156,7 @@ fn save_preset(app: &mut VectorcraftApp, d: &mut Dialog) -> Result<Value, String
 
 /// Open the preset editor on the saved preset `name`, or on a new preset starting from `preset`
 /// (default: the app default).
-pub fn open_preset(app: &mut VectorcraftApp, params: &Value) -> Result<Value, String> {
+pub fn open_preset(app: &mut TsipikaApp, params: &Value) -> Result<Value, String> {
     let s = |k: &str| params.get(k).and_then(Value::as_str);
     let (base, name, description, editing) = match s("name") {
         Some(name) => {
@@ -177,7 +177,7 @@ pub fn open_preset(app: &mut VectorcraftApp, params: &Value) -> Result<Value, St
 
 /// Save Preset (the preset editor's OK): `pdf.preset.save`, then back to Edit → PDF Presets on it.
 /// A new preset may not take the name of another one.
-fn confirm_preset(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm_preset(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut p = preset_params(d);
     let (name, editing) = (d.str("name"), d.str(EDITING));
     if editing.is_empty() {
@@ -313,7 +313,7 @@ pub(super) fn text(ui: &mut egui::Ui, d: &mut Dialog, path: &str, enabled: bool)
 
 // ---------- the dialog ----------
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let editor = d.kind == PRESET_KIND;
     if editor {
@@ -403,7 +403,7 @@ fn standard_chosen(d: &mut Dialog, standard: Standard) {
 
 /// The Preset row (the presets, built-in and saved, and Save Preset…) and, while Save Preset…
 /// asks for a name, the row taking it.
-fn preset_rows(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn preset_rows(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     row_with(ui, tl!("Preset:"), TOP_LABEL_WIDTH, |ui| {
         let presets = pdf::presets(&app.session);
         let names: Vec<&str> = presets.iter().map(String::as_str).collect();
@@ -441,7 +441,7 @@ fn preset_rows(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 }
 
 /// Replace the settings with preset `name`'s (the artboard choice and path stay).
-fn apply_preset(app: &mut VectorcraftApp, d: &mut Dialog, name: &str) {
+fn apply_preset(app: &mut TsipikaApp, d: &mut Dialog, name: &str) {
     match settings_fields(app, &json!({ "preset": name })) {
         Ok(settings) => {
             d.fields.extend(settings);
@@ -518,7 +518,7 @@ fn compression(ui: &mut egui::Ui, d: &mut Dialog) {
     flag(ui, d, "compression.compressText", tl!("Compress text and line art"), true);
 }
 
-pub(super) fn marks_and_bleeds(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+pub(super) fn marks_and_bleeds(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let unit = app.session.general_unit();
     const MARKS: [(&str, &str); 4] = [
         ("marks.trim", "Trim marks"),
@@ -590,7 +590,7 @@ pub(super) fn profile_pick(ui: &mut egui::Ui, d: &mut Dialog, path: &str, names:
 }
 
 fn output(ui: &mut egui::Ui, d: &mut Dialog) {
-    let profiles = vectorcraft_color::cms::profiles();
+    let profiles = tsipika_color::cms::profiles();
     let names = |blank: &'static str| -> Vec<&str> { std::iter::once(blank).chain(profiles.iter().map(|p| p.name.as_str())).collect() };
     let standard = choice::<Standard>(d, "standard").unwrap_or_default();
     heading(ui, tl!("Color"));
@@ -627,7 +627,7 @@ fn output(ui: &mut egui::Ui, d: &mut Dialog) {
     }
 }
 
-fn advanced(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn advanced(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     heading(ui, tl!("Fonts"));
     let outline = get(d, "advanced.outlineText").as_bool() == Some(true);
     row(ui, tl!("Subset fonts below:"), |ui| {
@@ -747,7 +747,7 @@ pub(super) fn option_label(option: &str) -> String {
 
 /// `document.pdfSettings` for the dialog with the document's warnings (an export in memory),
 /// cached until a field or the document changes.
-fn summary_of(app: &mut VectorcraftApp, ctx: &egui::Context, p: &Value) -> Result<Value, String> {
+fn summary_of(app: &mut TsipikaApp, ctx: &egui::Context, p: &Value) -> Result<Value, String> {
     let revision = app.session.active().map_or(0, |s| s.revision);
     let stamp = egui::Id::new((p.to_string(), revision));
     let key = egui::Id::new("save-pdf-summary");
@@ -763,7 +763,7 @@ fn summary_of(app: &mut VectorcraftApp, ctx: &egui::Context, p: &Value) -> Resul
     v
 }
 
-fn summary(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn summary(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let t = Tokens::get(ui.ctx());
     let v = match summary_of(app, ui.ctx(), &params(d)) {
         Ok(v) => v,
@@ -815,7 +815,7 @@ mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::Services;
@@ -825,12 +825,12 @@ mod tests {
     /// The built-in presets are told from saved ones by name (only theirs are translated).
     #[test]
     fn built_in_presets_are_known_by_name() {
-        assert!(vectorcraft_pdf::builtin_presets().iter().all(|p| is_builtin_preset(&p.name)));
+        assert!(tsipika_pdf::builtin_presets().iter().all(|p| is_builtin_preset(&p.name)));
         assert!(is_builtin_preset(pdf::DEFAULT_PRESET) && !is_builtin_preset("Default") && !is_builtin_preset("My Preset"));
     }
 
     /// An app with two artboards whose writer and URL opener record what they get.
-    fn app() -> (VectorcraftApp, Log, Log) {
+    fn app() -> (TsipikaApp, Log, Log) {
         let (written, opened) = (Log::default(), Log::default());
         let (w, o) = (written.clone(), opened.clone());
         let services = Services {
@@ -841,21 +841,21 @@ mod tests {
             open_url: Some(Box::new(move |u: &str| o.borrow_mut().push((u.to_string(), vec![])))),
             ..Default::default()
         };
-        let mut app = VectorcraftApp::new(Session::new(), services);
+        let mut app = TsipikaApp::new(Session::new(), services);
         app.run("file.new", json!({"width": 120, "height": 90, "artboards": 3})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
         (app, written, opened)
     }
 
     /// One headless frame of the dialog layer.
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
     }
 
-    fn set_field(app: &mut VectorcraftApp, path: &str, v: Value) {
+    fn set_field(app: &mut TsipikaApp, path: &str, v: Value) {
         set(app.ui.dialog.as_mut().expect("dialog open"), path, v);
     }
 
@@ -898,7 +898,7 @@ mod tests {
         assert_eq!(w.len(), 1);
         assert_eq!(w[0].0, "/tmp/out.pdf");
         assert!(w[0].1.starts_with(b"%PDF-1.5"), "compatibility reaches the writer");
-        assert_eq!(vectorcraft_pdf::import(&w[0].1).unwrap().artboards.len(), 2, "range 1,3");
+        assert_eq!(tsipika_pdf::import(&w[0].1).unwrap().artboards.len(), 2, "range 1,3");
         assert!(!String::from_utf8_lossy(&w[0].1).contains("/FlateDecode"), "uncompressed content");
         assert_eq!(opened.borrow().len(), 1, "View PDF after Saving opens the file once");
         let url = &opened.borrow()[0].0;
@@ -953,7 +953,7 @@ mod tests {
         let idat = cut.windows(4).position(|w| w == b"IDAT").unwrap();
         cut.truncate(idat + 8);
         // The image is placed on the first artboard.
-        app.run("file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&cut), "at": [60, 50]})).unwrap();
+        app.run("file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&cut), "at": [60, 50]})).unwrap();
         app.run("ui.savePdfDialog", json!({"path": "/tmp/cut.pdf"})).unwrap();
         super::super::confirm(&mut app).unwrap();
         assert_eq!(app.ui.status, "Saved /tmp/cut.pdf with 1 note(s): an image couldn't be decoded and is missing from the picture");
@@ -994,11 +994,11 @@ mod tests {
         let r = super::super::confirm(&mut app).unwrap();
         assert_eq!(r["warnings"], json!([]), "marks and bleed are applied");
         let bytes = &written.borrow()[0].1;
-        let page = &vectorcraft_pdf::info(bytes, None).unwrap().pages[0];
-        let trim = page.boxes.iter().find(|(b, _)| *b == vectorcraft_pdf::CropTo::Trim).unwrap().1;
+        let page = &tsipika_pdf::info(bytes, None).unwrap().pages[0];
+        let trim = page.boxes.iter().find(|(b, _)| *b == tsipika_pdf::CropTo::Trim).unwrap().1;
         assert_eq!((trim.width(), trim.x0), (120.0, 9.0 + 18.0 + 0.25), "the trim box is the artboard, inside the bleed and marks");
         let mut ellipse = false;
-        vectorcraft_pdf::import(bytes).unwrap().walk(|n| {
+        tsipika_pdf::import(bytes).unwrap().walk(|n| {
             let b = n.path_data().and_then(|p| p.bounds()).unwrap_or_default();
             ellipse |= (b.width() - 20.0).abs() < 0.1 && (b.height() - 20.0).abs() < 0.1;
         });
@@ -1072,7 +1072,7 @@ mod tests {
         }
         let r = super::super::confirm(&mut app).unwrap();
         assert_eq!(r["warnings"], json!([]));
-        let back = vectorcraft_pdf::import(&written.borrow()[0].1).unwrap();
+        let back = tsipika_pdf::import(&written.borrow()[0].1).unwrap();
         let names: Vec<_> = back.layers.iter().filter_map(|l| l.name.clone()).collect();
         // The empty pages of the other artboards come in as page layers.
         assert_eq!(names[..2], ["Layer 1", "Notes"]);

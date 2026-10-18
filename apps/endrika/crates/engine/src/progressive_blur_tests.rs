@@ -6,13 +6,13 @@ use serde_json::json;
 use crate::Session;
 use crate::codegen::{CodeLang, code_for};
 use crate::params::id_of;
-use figcraft_doc::{Blur, BlurType, EffectKind, MAX_BLUR_RADIUS};
+use endrika_doc::{Blur, BlurType, EffectKind, MAX_BLUR_RADIUS};
 
-fn rect(s: &mut Session) -> figcraft_doc::NodeId {
+fn rect(s: &mut Session) -> endrika_doc::NodeId {
     id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 60})).unwrap()["id"]).unwrap()
 }
 
-fn blur(s: &Session, id: figcraft_doc::NodeId, i: usize) -> Blur {
+fn blur(s: &Session, id: endrika_doc::NodeId, i: usize) -> Blur {
     s.doc().unwrap().node(id).unwrap().effects[i].blur().cloned().unwrap()
 }
 
@@ -102,8 +102,8 @@ fn hostile_progressive_values_are_capped_and_render() {
         assert!(e.blur().unwrap().max_radius() <= MAX_BLUR_RADIUS);
     }
     let page = doc.first_page().unwrap();
-    let view = figcraft_render::View { origin: (-20.0, -20.0), scale: 1.0, width: 160, height: 120 };
-    assert!(figcraft_render::render_view(doc, page, &view, &figcraft_render::Options::default()).is_some());
+    let view = endrika_render::View { origin: (-20.0, -20.0), scale: 1.0, width: 160, height: 120 };
+    assert!(endrika_render::render_view(doc, page, &view, &endrika_render::Options::default()).is_some());
     let props = crate::devinspect::properties(doc, r);
     assert!(props.iter().any(|s| s.title == "Effects"));
 }

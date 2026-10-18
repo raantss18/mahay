@@ -1,9 +1,9 @@
 //! Text on a path: each glyph of a laid-out text turned and moved onto the path, its baseline on
-//! the path at the point its advance centre falls on (see [`figcraft_doc::TextPath`]).
+//! the path at the point its advance centre falls on (see [`endrika_doc::TextPath`]).
 
-use figcraft_doc::{TextAlignH, TextPath};
-use figcraft_geom::measure::{Polyline, polylines};
-use figcraft_geom::{Affine, Point, Vec2};
+use endrika_doc::{TextAlignH, TextPath};
+use endrika_geom::measure::{Polyline, polylines};
+use endrika_geom::{Affine, Point, Vec2};
 
 use crate::TextLayout;
 

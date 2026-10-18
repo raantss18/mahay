@@ -7,13 +7,13 @@ use std::sync::Arc;
 use std::sync::mpsc::{Sender, channel};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Node, NodeKind};
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::clipboard::{BITMAP, Flavour, PDF, PNG, SVG, TEXT};
-use vectorcraft_geom::Point;
-use vectorcraft_tools::{PointerEvent, PointerKind};
+use tsipika_doc::{Node, NodeKind};
+use tsipika_engine::Session;
+use tsipika_engine::cmd::clipboard::{BITMAP, Flavour, PDF, PNG, SVG, TEXT};
+use tsipika_geom::Point;
+use tsipika_tools::{PointerEvent, PointerKind};
 
-use crate::{Services, SystemClipboard, VectorcraftApp, background, menus};
+use crate::{Services, SystemClipboard, TsipikaApp, background, menus};
 
 /// The fake clipboard's contents: what the app wrote, or what "another app" copied.
 #[derive(Default)]
@@ -52,10 +52,10 @@ impl SystemClipboard for Fake {
 }
 
 /// An app with a document and a fake system clipboard, the view centred on (250, 180).
-pub(super) fn app() -> (VectorcraftApp, Rc<RefCell<Board>>) {
+pub(super) fn app() -> (TsipikaApp, Rc<RefCell<Board>>) {
     let board = Rc::new(RefCell::new(Board::default()));
     let services = Services { system_clipboard: Some(Box::new(Fake(board.clone()))), ..Default::default() };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     run(&mut app, "file.new", json!({"width": 400, "height": 300}));
     let v = app.view_mut().unwrap();
     (v.center, v.fitted) = (Point::new(250.0, 180.0), true);
@@ -69,11 +69,11 @@ pub(super) fn copy_elsewhere(board: &Rc<RefCell<Board>>, flavours: Vec<(&'static
     *b = Board { flavours, ours: false, writes: b.writes };
 }
 
-pub(super) fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+pub(super) fn run(app: &mut TsipikaApp, id: &str, p: Value) -> Value {
     app.run(id, p).unwrap_or_else(|e| panic!("{id}: {e}"))
 }
 
-pub(super) fn copy_rect(app: &mut VectorcraftApp) {
+pub(super) fn copy_rect(app: &mut TsipikaApp) {
     let id = run(app, "shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 20}))["id"].clone();
     run(app, "paint.setFill", json!({"color": "#ff0000"}));
     run(app, "select.set", json!({"ids": [id]}));
@@ -85,12 +85,12 @@ fn written(board: &Rc<RefCell<Board>>) -> Vec<&'static str> {
 }
 
 /// The objects the last paste selected.
-pub(super) fn pasted(app: &VectorcraftApp) -> Vec<Node> {
+pub(super) fn pasted(app: &TsipikaApp) -> Vec<Node> {
     let st = app.session.active().unwrap();
     st.selection.objects.iter().map(|id| st.doc.node(*id).unwrap().clone()).collect()
 }
 
-fn count(app: &VectorcraftApp) -> usize {
+fn count(app: &TsipikaApp) -> usize {
     app.session.active().unwrap().doc.layers[0].children().unwrap().len()
 }
 
@@ -104,7 +104,7 @@ pub(super) fn blue_png() -> Vec<u8> {
 
 /// One headless frame of app logic (shortcuts too, from the second frame on) delivering `events`,
 /// in the test's one context (in a new one the app starts its fonts over).
-fn frame(app: &mut VectorcraftApp, events: Vec<egui::Event>) {
+fn frame(app: &mut TsipikaApp, events: Vec<egui::Event>) {
     thread_local! {
         static CTX: egui::Context = egui::Context::default();
     }
@@ -117,7 +117,7 @@ fn key(key: egui::Key, pressed: bool, modifiers: egui::Modifiers) -> egui::Event
 }
 
 /// [`app`] with the background worker of a host that writes from any thread, as the desktop app's.
-fn app_with_worker() -> (VectorcraftApp, Rc<RefCell<Board>>) {
+fn app_with_worker() -> (TsipikaApp, Rc<RefCell<Board>>) {
     let (mut app, board) = app();
     app.services.write_shared = Some(Arc::new(|_: &str, _: &[u8]| Err("no files are written here".into())));
     (app, board)
@@ -125,14 +125,14 @@ fn app_with_worker() -> (VectorcraftApp, Rc<RefCell<Board>>) {
 
 /// [`app_with_worker`], its worker busy with a job labeled `label` (none: another Copy's formats)
 /// until the sender is dropped, or for 10 s.
-fn app_with_busy_worker(label: &str) -> (VectorcraftApp, Rc<RefCell<Board>>, Sender<()>) {
+fn app_with_busy_worker(label: &str) -> (TsipikaApp, Rc<RefCell<Board>>, Sender<()>) {
     let (mut app, board) = app_with_worker();
     let hold = hold_worker(&mut app, label);
     (app, board, hold)
 }
 
 /// Start a job labeled `label` that holds the worker until the sender is dropped, or for 10 s.
-fn hold_worker(app: &mut VectorcraftApp, label: &str) -> Sender<()> {
+fn hold_worker(app: &mut TsipikaApp, label: &str) -> Sender<()> {
     let (hold, held) = channel::<()>();
     let work = move |_: background::Writer| {
         let _ = held.recv_timeout(std::time::Duration::from_secs(10));
@@ -145,7 +145,7 @@ fn hold_worker(app: &mut VectorcraftApp, label: &str) -> Sender<()> {
 /// One headless frame of the whole window (app logic, then layout), in a context this test thread
 /// keeps for these frames; `copy`: text copied through egui in it, as a text field or the Type
 /// tool copies.
-fn window_frame(app: &mut VectorcraftApp, copy: Option<&str>) {
+fn window_frame(app: &mut TsipikaApp, copy: Option<&str>) {
     thread_local! {
         static CTX: egui::Context = egui::Context::default();
     }
@@ -232,7 +232,7 @@ fn a_later_copy_replaces_formats_not_written_yet() {
 /// formats at once: they don't wait for that work.
 #[test]
 fn a_copy_while_the_worker_saves_writes_the_formats_at_once() {
-    let (mut app, board, hold) = app_with_busy_worker("Saving a.vectorcraft");
+    let (mut app, board, hold) = app_with_busy_worker("Saving a.tsipika");
     copy_elsewhere(&board, vec![(TEXT, b"Words another app copied".to_vec())]);
     copy_rect(&mut app);
     assert_eq!(written(&board), [TEXT, SVG, PNG]);
@@ -261,7 +261,7 @@ fn copy_says_in_the_status_bar_when_an_image_could_not_be_decoded() {
         copy_rect(&mut app);
         background::wait_all(&mut app);
         assert_eq!(app.ui.status, "Ready", "worker {worker}: no note");
-        run(&mut app, "file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&png)}));
+        run(&mut app, "file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&png)}));
         app.status("Ready");
         run(&mut app, "edit.copy", json!({}));
         background::wait_all(&mut app);
@@ -299,7 +299,7 @@ fn the_menus_paste_into_a_field_waits_for_the_formats() {
     run(&mut app, "select.set", json!({"ids": [t]}));
     copy_elsewhere(&board, vec![(TEXT, b"Words another app copied".to_vec())]);
     run(&mut app, "edit.copy", json!({}));
-    let hold = hold_worker(&mut app, "Saving a.vectorcraft");
+    let hold = hold_worker(&mut app, "Saving a.tsipika");
     // A text field with the keyboard; in the second frame Paste is chosen from the menu.
     let (ctx, id, mut field) = (egui::Context::default(), egui::Id::new("field"), String::new());
     for paste in [false, true] {
@@ -326,14 +326,14 @@ fn a_paste_chord_into_type_waits_for_the_formats() {
     let (mut app, board) = app_with_worker();
     frame(&mut app, vec![]);
     frame(&mut app, vec![]);
-    let texts = |app: &VectorcraftApp| -> Vec<String> {
+    let texts = |app: &TsipikaApp| -> Vec<String> {
         let layer = &app.session.active().unwrap().doc.layers[0];
         layer.children().unwrap().iter().filter_map(|n| if let NodeKind::Text(t) = &n.kind { Some(t.plain_text()) } else { None }).collect()
     };
     // The chord's release comes after the Paste event egui sends when the clipboard holds text.
     let release = || key(egui::Key::V, false, egui::Modifiers::COMMAND);
     let read = || vec![egui::Event::Paste("Words another app copied".into()), release()];
-    let paste_into_new_type = |app: &mut VectorcraftApp, y: f64, frames: Vec<Vec<egui::Event>>| {
+    let paste_into_new_type = |app: &mut TsipikaApp, y: f64, frames: Vec<Vec<egui::Event>>| {
         app.select_tool("type");
         let view = app.view_info();
         for kind in [PointerKind::Down, PointerKind::Up] {
@@ -396,15 +396,15 @@ fn the_worker_makes_the_formats_the_session_makes() {
     // Copy the selection, then compare the formats the worker wrote with the session's. A PDF is
     // dated to the second it is made in, so when formats with a PDF differ and the clock has moved
     // to another second since the Copy, they are compared again after another Copy.
-    let check = |app: &mut VectorcraftApp, what: &str, mimes: &[&str]| {
+    let check = |app: &mut TsipikaApp, what: &str, mimes: &[&str]| {
         for _ in 0..100 {
-            let second = vectorcraft_doc::metadata::output_time();
+            let second = tsipika_doc::metadata::output_time();
             run(app, "edit.copy", json!({}));
             assert_eq!(app.background.jobs.len(), 1, "{what}: made on the worker");
             background::wait_all(app);
             assert_eq!(written(&board), mimes, "{what}");
             let session = app.session.clipboard_flavours();
-            let dated = mimes.contains(&PDF) && vectorcraft_doc::metadata::output_time() != second;
+            let dated = mimes.contains(&PDF) && tsipika_doc::metadata::output_time() != second;
             if board.borrow().flavours == session || !dated {
                 assert_eq!(board.borrow().flavours, session, "{what}");
                 return;
@@ -424,7 +424,7 @@ fn the_worker_makes_the_formats_the_session_makes() {
     run(&mut app, "effect.apply", json!({"effect": "stylize.dropShadow", "params": {"x": 3}}));
     run(&mut app, "object.setProps", json!({"opacity": 50}));
     check(&mut app, "a group", &[TEXT, SVG, PNG]);
-    run(&mut app, "clipboard.importImage", json!({"dataBase64": vectorcraft_format::base64_encode(&blue_png())}));
+    run(&mut app, "clipboard.importImage", json!({"dataBase64": tsipika_format::base64_encode(&blue_png())}));
     run(&mut app, "edit.paste", json!({}));
     check(&mut app, "an embedded image", &[TEXT, SVG, PNG]);
     let t = run(&mut app, "text.create", json!({"x": 20, "y": 250, "text": "Words"}))["id"].clone();
@@ -545,7 +545,7 @@ fn keyboard_paste_of_a_bitmap_without_a_paste_event() {
 #[test]
 fn without_the_service_plain_text_is_still_not_pasted() {
     // The web: SVG text through egui only (see shortcuts' copy_and_paste_events_use_the_system_clipboard).
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     frame(&mut app, vec![]);
     frame(&mut app, vec![key(egui::Key::V, false, egui::Modifiers::COMMAND)]);
@@ -556,7 +556,7 @@ fn without_the_service_plain_text_is_still_not_pasted() {
 #[test]
 fn a_picture_the_host_read_from_a_paste_pastes_without_the_service() {
     // The web: the page's paste event carries the picture, egui's Paste event no text.
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 400, "height": 300}));
     let v = app.view_mut().unwrap();
     (v.center, v.fitted) = (Point::new(250.0, 180.0), true);

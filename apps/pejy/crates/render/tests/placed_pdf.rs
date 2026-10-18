@@ -1,19 +1,19 @@
-//! Placed PDFs are drawn through pdfcraft's patched hayro crates. Calculator functions whose `idiv`
+//! Placed PDFs are drawn through taratasy's patched hayro crates. Calculator functions whose `idiv`
 //! divides by zero or overflows, stitching functions nested a hundred thousand deep, and mesh
 //! shadings with points far off the page, ten thousand overlapping triangles or forty thousand
 //! patches do not panic, overflow the stack or take more than a minute, and the rest of the page is
 //! drawn. A page with a `/UserUnit` is sized in points, and so are its boxes. The function and mesh
-//! cases follow pdfcraft's tests in `crates/render/src/raster.rs`.
+//! cases follow taratasy's tests in `crates/render/src/raster.rs`.
 
 use std::sync::Arc;
 use std::sync::mpsc::{self, RecvTimeoutError};
 use std::time::Duration;
 
-use designcraft_compose::Cache;
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{Asset, AssetId, Content, Document, Graphic, Item, ItemId, PdfCrop, Shape, SpreadRef};
-use designcraft_geom::{Affine, Rect, shapes};
-use designcraft_render::{Rendered, Renderer, pdf_crop_box, pdf_page_size};
+use pejy_compose::Cache;
+use pejy_doc::build::NewDocument;
+use pejy_doc::{Asset, AssetId, Content, Document, Graphic, Item, ItemId, PdfCrop, Shape, SpreadRef};
+use pejy_geom::{Affine, Rect, shapes};
+use pejy_render::{Rendered, Renderer, pdf_crop_box, pdf_page_size};
 use hayro::hayro_interpret::Function;
 use hayro::hayro_syntax::Pdf;
 use hayro::hayro_syntax::object::{Object, ObjectIdentifier};

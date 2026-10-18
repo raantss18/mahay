@@ -38,7 +38,7 @@ macro_rules! link {
     )
 }
 
-// VectorCraft compatibility patch: windows-sys 0.61.2 binds CoTaskMemFree to
+// Tsipika compatibility patch: windows-sys 0.61.2 binds CoTaskMemFree to
 // combase.dll (Windows 8+). The same API is exported by ole32.dll on Windows 7.
 // Redirect only this known API; leave every other binding unchanged.
 #[cfg(all(windows, not(target_arch = "x86"), target_vendor = "win7"))]

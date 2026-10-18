@@ -1,7 +1,7 @@
 //! TOLERANCE: geometric tolerances (feature control frames) and their explosion.
 
-use cadcraft_doc::{Drawing, Entity, EntityKind, GdtDatum, GdtFrame, GdtLine, GdtPrim, GdtSymbol, GdtTol, Handle, MAX_FRAME_CHARS, Tolerance};
-use cadcraft_geom::{PolyVertex, Vec2};
+use drafitra_doc::{Drawing, Entity, EntityKind, GdtDatum, GdtFrame, GdtLine, GdtPrim, GdtSymbol, GdtTol, Handle, MAX_FRAME_CHARS, Tolerance};
+use drafitra_geom::{PolyVertex, Vec2};
 use serde_json::{Value, json};
 
 use super::helpers::{line, lwpoly, v3};
@@ -117,7 +117,7 @@ fn frame_text(p: &Value) -> Result<String> {
         _ => String::new(),
     };
     let f = GdtFrame { lines, height, projected: bool_or(p, "projected", false), datum_id: str_param(p, "datumId").unwrap_or("").to_string() };
-    Ok(cadcraft_doc::compose_frame(&f))
+    Ok(drafitra_doc::compose_frame(&f))
 }
 
 fn current_dimstyle(s: &Session) -> String {
@@ -131,7 +131,7 @@ fn make(style: String, at: Vec2, rotation: f64, text: String) -> Tolerance {
 fn run_tolerance(s: &mut Session, p: &Value) -> Result<Value> {
     let at = point_req("tolerance", p, "at")?;
     let text = frame_text(p)?;
-    if cadcraft_doc::parse_frame(&text).iter().flatten().all(cadcraft_doc::compartment_is_empty) {
+    if drafitra_doc::parse_frame(&text).iter().flatten().all(drafitra_doc::compartment_is_empty) {
         return Err(bad("tolerance", "the feature control frame is empty"));
     }
     let style = str_param(p, "style").map(str::to_string).unwrap_or_else(|| current_dimstyle(s));
@@ -177,11 +177,11 @@ impl ToleranceM {
         ToleranceM { step: 0, line: GdtLine { symbol: Some(GdtSymbol::Position), ..Default::default() }, style: current_dimstyle(s) }
     }
     fn text(&self) -> String {
-        cadcraft_doc::compose_frame(&GdtFrame { lines: vec![self.line.clone()], ..Default::default() })
+        drafitra_doc::compose_frame(&GdtFrame { lines: vec![self.line.clone()], ..Default::default() })
     }
     fn at_location(&mut self, s: &mut Session) -> Step {
         self.step = 6;
-        if cadcraft_doc::parse_frame(&self.text()).iter().flatten().all(cadcraft_doc::compartment_is_empty) {
+        if drafitra_doc::parse_frame(&self.text()).iter().flatten().all(drafitra_doc::compartment_is_empty) {
             s.echo("The feature control frame is empty.");
             return Step::Cancel;
         }
@@ -272,7 +272,7 @@ impl Interactive for ToleranceM {
 /// EXPLODE of a feature control frame: lines, circles, arcs, solids (arrowheads) and texts in the
 /// dimension style's text style.
 pub(crate) fn explode(d: &Drawing, e: &Entity, t: &Tolerance) -> Vec<Entity> {
-    let g = cadcraft_render::tolerance_in(d, t);
+    let g = drafitra_render::tolerance_in(d, t);
     let st = d.dim_style(&t.style).cloned().unwrap_or_default();
     let wf = d.text_style(&st.text_style).map(|s| s.width_factor).filter(|w| w.is_finite() && *w > 0.0).unwrap_or(1.0);
     let mk = |kind| Entity { handle: Handle(0), common: e.common.clone(), kind };
@@ -285,17 +285,17 @@ pub(crate) fn explode(d: &Drawing, e: &Entity, t: &Tolerance) -> Vec<Entity> {
                 _ => {}
             },
             GdtPrim::Circle { center, radius } => v.push(mk(super::helpers::circle(*center, *radius))),
-            GdtPrim::Arc { center, radius, start, end } => v.push(mk(EntityKind::Arc(cadcraft_doc::Arc {
+            GdtPrim::Arc { center, radius, start, end } => v.push(mk(EntityKind::Arc(drafitra_doc::Arc {
                 center: v3(*center),
                 radius: *radius,
-                start: cadcraft_geom::norm_angle(*start),
-                end: cadcraft_geom::norm_angle(*end),
+                start: drafitra_geom::norm_angle(*start),
+                end: drafitra_geom::norm_angle(*end),
             }))),
-            GdtPrim::Fill([a, b, c]) => v.push(mk(EntityKind::Solid(cadcraft_doc::Solid { corners: [v3(*a), v3(*b), v3(*c), v3(*c)] }))),
+            GdtPrim::Fill([a, b, c]) => v.push(mk(EntityKind::Solid(drafitra_doc::Solid { corners: [v3(*a), v3(*b), v3(*c), v3(*c)] }))),
         }
     }
     for tx in &g.texts {
-        v.push(mk(EntityKind::Text(cadcraft_doc::Text {
+        v.push(mk(EntityKind::Text(drafitra_doc::Text {
             insert: v3(tx.pos),
             align_pt: None,
             height: tx.height,

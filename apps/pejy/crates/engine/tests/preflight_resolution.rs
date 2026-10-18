@@ -1,9 +1,9 @@
 //! Effective raster resolution follows image, frame and ancestor transforms in spread space.
 use std::sync::Arc;
 
-use designcraft_doc::{Content, Intent, ItemId};
-use designcraft_engine::{Session, cmd::base64_encode};
-use designcraft_geom::Affine;
+use pejy_doc::{Content, Intent, ItemId};
+use pejy_engine::{Session, cmd::base64_encode};
+use pejy_geom::Affine;
 use serde_json::{Value, json};
 
 fn place(s: &mut Session, name: &str, bytes: &[u8]) -> ItemId {
@@ -16,9 +16,9 @@ fn raster() -> (Session, ItemId) {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 1000, "height": 1000, "facingPages": false})).unwrap();
     // 600 × 300 pixels at 144 × 72 points: 300 ppi in both directions.
-    let png = designcraft_render::Rendered { width: 600, height: 300, pixels: vec![200; 600 * 300 * 4] }.to_png();
+    let png = pejy_render::Rendered { width: 600, height: 300, pixels: vec![200; 600 * 300 * 4] }.to_png();
     let id = place(&mut s, "photo.png", &png);
-    assert_eq!(s.doc().unwrap().doc.item(id).unwrap().inner_bounds().size(), designcraft_geom::Size::new(144.0, 72.0));
+    assert_eq!(s.doc().unwrap().doc.item(id).unwrap().inner_bounds().size(), pejy_geom::Size::new(144.0, 72.0));
     (s, id)
 }
 
@@ -33,7 +33,7 @@ fn facing_raster() -> (Session, ItemId) {
     assert_eq!(d.first_page_of_spread(1), 1);
     assert_eq!(d.spreads[1].pages[0].x, 0.0);
     assert_eq!(d.spreads[1].pages[1].x, 612.0);
-    let png = designcraft_render::Rendered { width: 600, height: 300, pixels: vec![200; 600 * 300 * 4] }.to_png();
+    let png = pejy_render::Rendered { width: 600, height: 300, pixels: vec![200; 600 * 300 * 4] }.to_png();
     let placed = s
         .execute(
             "file.place",
@@ -45,8 +45,8 @@ fn facing_raster() -> (Session, ItemId) {
         .unwrap();
     let id = ItemId(placed["id"].as_u64().unwrap());
     let d = &s.doc().unwrap().doc;
-    assert_eq!(d.find(id).unwrap().spread, designcraft_doc::SpreadRef::Doc(1));
-    assert_eq!(d.item(id).unwrap().inner_bounds().size(), designcraft_geom::Size::new(144.0, 72.0));
+    assert_eq!(d.find(id).unwrap().spread, pejy_doc::SpreadRef::Doc(1));
+    assert_eq!(d.item(id).unwrap().inner_bounds().size(), pejy_geom::Size::new(144.0, 72.0));
     (s, id)
 }
 

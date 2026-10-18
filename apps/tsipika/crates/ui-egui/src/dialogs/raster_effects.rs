@@ -6,13 +6,13 @@
 //! Effect › Rasterize… with the same widgets.
 
 use serde_json::{Value, json};
-use vectorcraft_effects::RASTERIZE;
+use tsipika_effects::RASTERIZE;
 
 use super::DialogSpec;
 use super::document_setup::{LABEL, check, choice};
 use super::effect::own_choices;
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 pub(super) const KIND: &str = "rasterEffectsSettings";
 const CMD: &str = "document.rasterEffectsSettings";
@@ -29,13 +29,13 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 };
 
 /// Open the dialog on the active document's settings.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let fields = app.session.execute(CMD, &json!({})).map_err(|e| e.to_string())?;
     app.ui.dialog = Some(Dialog::new(KIND, fields));
     Ok(Value::Null)
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let r = app.run(CMD, Value::Object(d.fields.clone()));
     if r.is_ok() {
         app.ui.dialog = None;
@@ -43,7 +43,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     r
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     // Resolution: a preset, or Other with its own value.
     let ppi = d.f64("resolution", 72.0);
     let preset = RESOLUTIONS.iter().position(|(p, _)| (*p - ppi).abs() < 1e-9);
@@ -66,7 +66,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     });
     ui.add_space(4.0);
     let own =
-        if app.session.active().is_some_and(|s| s.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk) { ("cmyk", "CMYK") } else { ("rgb", "RGB") };
+        if app.session.active().is_some_and(|s| s.doc.color_mode == tsipika_doc::ColorMode::Cmyk) { ("cmyk", "CMYK") } else { ("rgb", "RGB") };
     choice(ui, d, "colorModel", tl!("Color Model:"), &[own, ("grayscale", tl!("Grayscale")), ("bitmap", tl!("Bitmap"))]);
     ui.add_space(6.0);
     widgets::label_row(ui, tl!("Background:"), LABEL, |ui| {
@@ -100,8 +100,8 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 /// The options of Effect › Rasterize… in its effect dialog, with this dialog's widgets: Color
 /// Model, Resolution (a preset, Use Document Raster Effects Resolution or Other) and Background,
 /// then an Anti-aliasing menu, Create Clipping Mask and Add … Around Object.
-pub(super) fn effect_fields(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
-    let cmyk = app.session.active().is_some_and(|s| s.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk);
+pub(super) fn effect_fields(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
+    let cmyk = app.session.active().is_some_and(|s| s.doc.color_mode == tsipika_doc::ColorMode::Cmyk);
     let models: Vec<(&str, &str)> =
         own_choices(RASTERIZE, "colorModel", cmyk).unwrap_or_default().into_iter().map(|(label, value)| (value, label)).collect();
     choice(ui, d, "colorModel", tl!("Color Model:"), &models);
@@ -142,7 +142,7 @@ pub(super) fn effect_fields(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dia
     ui.add_space(10.0);
     widgets::subheader(ui, tl!("Options"));
     widgets::label_row(ui, tl!("Anti-aliasing:"), LABEL, |ui| {
-        use vectorcraft_render::AntiAlias;
+        use tsipika_render::AntiAlias;
         let aa = AntiAlias::from_id(&d.str("antiAlias")).unwrap_or(AntiAlias::Art);
         if let Some(i) = widgets::dropdown(ui, "rasterize-aa", aa.label(), &AntiAlias::ALL.map(AntiAlias::label), 170.0) {
             d.fields.insert("antiAlias".into(), json!(AntiAlias::ALL.get(i).copied().unwrap_or(AntiAlias::Art).id()));
@@ -163,11 +163,11 @@ pub(super) fn effect_fields(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dia
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    use crate::VectorcraftApp;
+    use crate::TsipikaApp;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         crate::theme::apply(&ctx, Default::default());
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn raster_effects_settings_draw_and_ok_is_one_undo_step() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         crate::menus::invoke(&mut app, "document.rasterEffectsSettings", json!({}));
         let d = app.ui.dialog.as_mut().unwrap();
@@ -194,8 +194,8 @@ mod tests {
         assert!(app.ui.dialog.is_none());
         let st = app.session.active().unwrap();
         let r = &st.doc.raster_effects;
-        assert_eq!((st.doc.raster_effects_ppi, r.add_around, r.background), (200.0, 36.0, vectorcraft_doc::Background::White));
-        assert_eq!(r.color_model, vectorcraft_doc::RasterColorModel::Grayscale);
+        assert_eq!((st.doc.raster_effects_ppi, r.add_around, r.background), (200.0, 36.0, tsipika_doc::Background::White));
+        assert_eq!(r.color_model, tsipika_doc::RasterColorModel::Grayscale);
         assert_eq!(st.history.undo.len(), 1);
         // A bad value keeps the dialog open.
         app.run("ui.rasterEffectsSettingsDialog", json!({})).unwrap();
@@ -213,12 +213,12 @@ mod tests {
         );
         crate::dialogs::confirm(&mut app).unwrap();
         let st = app.session.active().unwrap();
-        assert!(st.selection.objects.iter().any(|id| matches!(st.doc.node(*id).map(|n| &n.kind), Some(vectorcraft_doc::NodeKind::Image(_)))));
+        assert!(st.selection.objects.iter().any(|id| matches!(st.doc.node(*id).map(|n| &n.kind), Some(tsipika_doc::NodeKind::Image(_)))));
     }
 
     #[test]
     fn rasterize_effect_dialog_previews_and_ok_applies_its_options_as_one_undo_step() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
         let steps = app.session.active().unwrap().history.undo.len();
@@ -237,10 +237,10 @@ mod tests {
         frame(&mut app);
         crate::dialogs::confirm(&mut app).unwrap();
         let st = app.session.active().unwrap();
-        let n = st.doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let n = st.doc.node(tsipika_doc::NodeId(id)).unwrap();
         let (e, p) = (&n.appearance.effects[0], &n.appearance.effects[0].params);
         assert_eq!((e.id.as_str(), &p["resolution"], &p["background"], &p["antiAlias"]), ("rasterize", &json!(200), &json!("white"), &json!("none")));
-        assert!(matches!(n.kind, vectorcraft_doc::NodeKind::Path { .. }), "the rectangle stays a path");
+        assert!(matches!(n.kind, tsipika_doc::NodeKind::Path { .. }), "the rectangle stays a path");
         assert_eq!(st.history.undo.len(), steps + 1);
     }
 }

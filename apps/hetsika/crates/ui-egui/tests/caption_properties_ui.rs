@@ -4,13 +4,13 @@
 use std::sync::mpsc::{Sender, channel};
 
 use egui_kittest::Harness;
-use filmcraft_engine::Session;
-use filmcraft_ui_egui::FilmcraftApp;
-use filmcraft_ui_egui::control::ControlRequest;
+use hetsika_engine::Session;
+use hetsika_ui_egui::HetsikaApp;
+use hetsika_ui_egui::control::ControlRequest;
 use serde_json::{Value, json};
 
 struct Driver {
-    harness: Harness<'static, FilmcraftApp>,
+    harness: Harness<'static, HetsikaApp>,
     tx: Sender<ControlRequest>,
 }
 
@@ -52,7 +52,7 @@ impl Driver {
 
 #[test]
 fn properties_panel_edits_the_selected_caption() {
-    let dir = std::env::temp_dir().join(format!("filmcraft-caption-props-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("hetsika-caption-props-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("temp dir");
     let srt = dir.join("two.srt");
     std::fs::write(&srt, "1\n00:00:01,000 --> 00:00:02,500\nFirst line\n\n2\n00:00:03,000 --> 00:00:04,000\nSecond line\n").expect("write srt");
@@ -60,7 +60,7 @@ fn properties_panel_edits_the_selected_caption() {
     let mut session = Session::default();
     session.execute("file.openDemoProject", json!({})).expect("demo project");
     let (tx, rx) = channel();
-    let app = FilmcraftApp::new(session).with_control(rx);
+    let app = HetsikaApp::new(session).with_control(rx);
     let harness = Harness::builder().with_size(egui::vec2(1600.0, 980.0)).with_max_steps(10_000).build_eframe(move |_cc| app);
     let mut d = Driver { harness, tx };
     d.frames(4);

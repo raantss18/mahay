@@ -13,7 +13,7 @@ use std::os::fd::AsRawFd;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
-use filmcraft_frame::VideoFrame;
+use hetsika_frame::VideoFrame;
 use libloading::Library;
 
 use super::Accel;

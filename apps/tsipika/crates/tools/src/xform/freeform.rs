@@ -12,11 +12,11 @@
 //! existing point first starts the line from it. Delete or Backspace removes the selected point.
 
 use serde_json::{Value, json};
-use vectorcraft_color::freeform::LineHit;
-use vectorcraft_color::{Color, Freeform, FreeformMode, FreeformPoint};
-use vectorcraft_doc::NodeId;
-use vectorcraft_doc::hit::hit_test;
-use vectorcraft_geom::{Point, Shape, Vec2};
+use tsipika_color::freeform::LineHit;
+use tsipika_color::{Color, Freeform, FreeformMode, FreeformPoint};
+use tsipika_doc::NodeId;
+use tsipika_doc::hit::hit_test;
+use tsipika_geom::{Point, Shape, Vec2};
 
 use super::paint_owner;
 use crate::{Action, Cursor, Overlay, ToolContext, ToolKey};
@@ -97,7 +97,7 @@ impl Annotator {
         if let Some(i) = self.selected(cx) {
             let (r, handle) = self.ring(cx, i);
             if r > 0.0 {
-                let path = vectorcraft_geom::kurbo::Circle::new(f.points[i].at, r).to_path(cx.tol(0.25));
+                let path = tsipika_geom::kurbo::Circle::new(f.points[i].at, r).to_path(cx.tol(0.25));
                 o.push(Overlay::Path { path, color: LINE, width: 1.0, dashed: true });
             }
             o.push(Overlay::Handle { p: handle, color: LINE });
@@ -112,10 +112,10 @@ impl Annotator {
 }
 
 /// The segment a click at `to` would add to the line drawn from point `from`.
-fn rubber_band(f: &Freeform, from: usize, to: Point) -> vectorcraft_geom::BezPath {
+fn rubber_band(f: &Freeform, from: usize, to: Point) -> tsipika_geom::BezPath {
     let mut f = f.clone();
     let i = f.add_point(FreeformPoint::new(to, Color::BLACK));
-    let mut bp = vectorcraft_geom::BezPath::new();
+    let mut bp = tsipika_geom::BezPath::new();
     if let Some(c) = f.connect(from, i).and_then(|l| f.segments(l).into_iter().find(|c| c.p0 == to || c.p3 == to)) {
         bp.move_to(c.p0);
         bp.curve_to(c.p1, c.p2, c.p3);
@@ -342,14 +342,14 @@ mod tests {
     use super::*;
     use crate::testutil::*;
     use crate::{PointerEvent, PointerKind, Tool};
-    use vectorcraft_color::{FreeformPoint, Gradient, GradientKind, GradientPaint, Paint};
-    use vectorcraft_doc::{Document, Selection};
+    use tsipika_color::{FreeformPoint, Gradient, GradientKind, GradientPaint, Paint};
+    use tsipika_doc::{Document, Selection};
 
     /// The test rectangle (100..200) with three points; `lines` mode joins new ones.
     fn doc(mode: FreeformMode) -> (Document, Selection) {
         let (mut d, id) = doc_with_rect();
         let mut g = GradientPaint::new(Gradient { kind: GradientKind::Freeform, ..Default::default() });
-        let pt = |x, y| FreeformPoint { spread: 0.2, ..FreeformPoint::new(Point::new(x, y), vectorcraft_color::Color::rgb(1.0, 0.0, 0.0)) };
+        let pt = |x, y| FreeformPoint { spread: 0.2, ..FreeformPoint::new(Point::new(x, y), tsipika_color::Color::rgb(1.0, 0.0, 0.0)) };
         g.freeform = Some(Freeform { points: vec![pt(120.0, 120.0), pt(180.0, 120.0), pt(150.0, 180.0)], lines: vec![vec![0, 1]], mode });
         d.node_mut(id).unwrap().appearance.set_fill(Paint::Gradient(Box::new(g)));
         let mut s = Selection::default();

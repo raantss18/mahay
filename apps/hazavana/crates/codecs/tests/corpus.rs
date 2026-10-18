@@ -1,12 +1,12 @@
 //! Corpus tests over `corpus/images/**`, `corpus/pngsuite/**` and `corpus/raw/**` (git-ignored; fetched
 //! with `cargo xtask corpus --download`). Each test skips cleanly when its directory is absent.
-//! `LIGHTCRAFT_CORPUS` overrides the corpus root.
+//! `HAZAVANA_CORPUS` overrides the corpus root.
 
-use lightcraft_codecs::*;
+use hazavana_codecs::*;
 use std::path::{Path, PathBuf};
 
 fn corpus_root() -> PathBuf {
-    std::env::var_os("LIGHTCRAFT_CORPUS").map(PathBuf::from).unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
+    std::env::var_os("HAZAVANA_CORPUS").map(PathBuf::from).unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"))
 }
 
 fn files(dir: &Path) -> Vec<PathBuf> {
@@ -31,7 +31,7 @@ fn files(dir: &Path) -> Vec<PathBuf> {
 fn corpus_images_decode() {
     let dir = corpus_root().join("images");
     if !dir.is_dir() {
-        lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
         return;
     }
     let (mut ok, mut unsupported) = (0, 0);
@@ -57,7 +57,7 @@ fn corpus_images_decode() {
 fn corpus_pngsuite() {
     let dir = corpus_root().join("pngsuite");
     if !dir.is_dir() {
-        lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
         return;
     }
     let mut n = 0;
@@ -83,7 +83,7 @@ fn corpus_pngsuite() {
 fn corpus_raw_is_routed() {
     let dir = corpus_root().join("raw");
     if !dir.is_dir() {
-        lightcraft_testkit::skip!(Corpus, "{} absent", dir.display());
+        hazavana_testkit::skip!(Corpus, "{} absent", dir.display());
         return;
     }
     for p in files(&dir) {
@@ -100,10 +100,10 @@ fn corpus_raw_is_routed() {
 /// Parse the OS-provided ICC profiles when present (macOS ColorSync; read-only, nothing copied).
 #[test]
 fn system_icc_profiles() {
-    use lightcraft_codecs::icc::{IccColorModel, IccKind, parse};
+    use hazavana_codecs::icc::{IccColorModel, IccKind, parse};
     let dir = Path::new("/System/Library/ColorSync/Profiles");
     if !dir.is_dir() {
-        lightcraft_testkit::skip!(System, "no system ICC profiles");
+        hazavana_testkit::skip!(System, "no system ICC profiles");
         return;
     }
     let expect = [

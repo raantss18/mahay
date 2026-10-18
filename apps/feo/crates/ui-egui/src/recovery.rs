@@ -34,7 +34,7 @@ pub fn show(app: &mut SoundApp, ctx: &egui::Context) {
     }
     match recover {
         Some(true) => app.recover(&left),
-        Some(false) => soundcraft_engine::autosave::discard(&left),
+        Some(false) => feo_engine::autosave::discard(&left),
         None => {}
     }
 }

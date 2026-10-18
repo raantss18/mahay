@@ -8,9 +8,9 @@
 
 use std::f64::consts::PI;
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::generate3::{Seg, mask_px, poly_segs, raster_segs};
@@ -185,7 +185,7 @@ pub struct TextLook {
     pub opacity: f32,
 }
 
-/// One drawing pass of Basic Text / Path Text, shared with the GPU compositor (effectcraft-gpu
+/// One drawing pass of Basic Text / Path Text, shared with the GPU compositor (tselatra-gpu
 /// `fx_gen2`): glyph stroke polylines (buffer px) of radius `r`, drawn with `look` over the
 /// result of the previous pass.
 #[derive(Clone, Debug)]
@@ -434,7 +434,7 @@ fn numbers(ctx: &EffectCtx, b: Buf) -> Buf {
     draw_plan(b, &plan)
 }
 
-/// Numbers and Timecode for the GPU compositor (effectcraft-gpu `fx_text`): the glyph
+/// Numbers and Timecode for the GPU compositor (tselatra-gpu `fx_text`): the glyph
 /// coverage is rasterised here (the fill in x, the stroke ring in y, opacity applied), the
 /// kernel composites it.
 #[derive(Clone, Debug)]
@@ -782,7 +782,7 @@ impl Bolt<'_> {
     }
 }
 
-/// Lightning, shared with the GPU compositor (effectcraft-gpu `fx_gen2`): the bolt segments
+/// Lightning, shared with the GPU compositor (tselatra-gpu `fx_gen2`): the bolt segments
 /// (outer radius per segment) and how they are drawn.
 #[derive(Clone, Debug)]
 pub struct BoltPlan {

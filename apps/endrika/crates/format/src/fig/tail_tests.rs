@@ -2,8 +2,8 @@
 //! have (sticky notes, shapes with text, connectors, tables) and variable prototype actions, on
 //! fixtures built in code with the parent module's helpers.
 
-use figcraft_doc::proto::Action;
-use figcraft_doc::{HandleMirroring, StrokeCap, StrokeJoin, WindingRule};
+use endrika_doc::proto::Action;
+use endrika_doc::{HandleMirroring, StrokeCap, StrokeJoin, WindingRule};
 
 use super::super::network::{self, Network, Region, Segment, Vertex};
 use super::*;
@@ -264,7 +264,7 @@ fn tail_canvas() -> Vec<u8> {
     canvas(&schema(), &tail_message())
 }
 
-fn network_of<'d>(doc: &'d figcraft_doc::Document, name: &str) -> &'d figcraft_doc::VectorNetwork {
+fn network_of<'d>(doc: &'d endrika_doc::Document, name: &str) -> &'d endrika_doc::VectorNetwork {
     match &named(doc, name).kind {
         NodeKind::Vector { network } => network,
         k => panic!("{name} is {k:?}"),
@@ -360,14 +360,14 @@ fn other_layer_kinds_import_as_the_closest_layers() {
     // A shape with text: its outline as a vector (with the paint), then the text.
     let bubble = named(&doc, "Bubble");
     assert!(bubble.fills.is_empty());
-    let kids: Vec<&figcraft_doc::Node> = bubble.children.iter().map(|c| doc.node(*c).unwrap()).collect();
+    let kids: Vec<&endrika_doc::Node> = bubble.children.iter().map(|c| doc.node(*c).unwrap()).collect();
     assert!(matches!(kids[0].kind, NodeKind::Vector { .. }) && kids[0].fills.len() == 1);
     assert_eq!(text_of(bubble.children[1]), "Hi");
     // A connector from a free point to the centre of a sibling, with its end cap.
     let link = named(&doc, "Link");
     let world = doc.world_transform(link.id);
     let ends: Vec<(f64, f64)> =
-        network_of(&doc, "Link").vertices.iter().map(|v| world * figcraft_doc::geom::Point::new(v.x, v.y)).map(|p| (p.x, p.y)).collect();
+        network_of(&doc, "Link").vertices.iter().map(|v| world * endrika_doc::geom::Point::new(v.x, v.y)).map(|p| (p.x, p.y)).collect();
     assert_eq!(ends, [(0.0, 300.0), (450.0, 50.0)]);
     assert_eq!(link.stroke.cap_end, StrokeCap::TriangleArrow);
     // A table: a frame.

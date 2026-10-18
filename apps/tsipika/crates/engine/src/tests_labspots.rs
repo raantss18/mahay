@@ -3,9 +3,9 @@
 //! saved setting.
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Model};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_render::proof;
+use tsipika_color::cms::{self, Model};
+use tsipika_color::{Color, Paint};
+use tsipika_render::proof;
 
 use super::tests_colormgmt::GLOBAL;
 use super::*;
@@ -20,7 +20,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     s.execute(id, &p).unwrap_or_else(|e| panic!("{id} {p}: {e}"))
 }
 
-fn doc(s: &Session) -> &vectorcraft_doc::Document {
+fn doc(s: &Session) -> &tsipika_doc::Document {
     &s.doc().unwrap().doc
 }
 
@@ -134,23 +134,23 @@ fn colour_values_parse_lab() {
 fn spot_options_and_lab_colours_round_trip() {
     let _g = GLOBAL.lock().unwrap_or_else(|e| e.into_inner());
     let (mut s, id) = lab_ink();
-    let saved = vectorcraft_format::save(doc(&s), false);
+    let saved = tsipika_format::save(doc(&s), false);
     assert!(!String::from_utf8_lossy(&saved).contains("spot_use_lab"), "the default isn't written");
     run(&mut s, "swatch.spotOptions", json!({"useLab": false}));
     let d = doc(&s).clone();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&d, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&d, false)).unwrap();
     assert!(!back.spot_use_lab);
     assert_eq!(back.swatch("Lab Ink").unwrap().paint.color(), Some(LAB));
     assert_eq!(back.node(id).unwrap().appearance.fill_paint(), d.node(id).unwrap().appearance.fill_paint());
     // Files from before the option use Lab values.
     let mut v: Value = serde_json::to_value(&d).unwrap();
     v.as_object_mut().unwrap().remove("spot_use_lab");
-    assert!(serde_json::from_value::<vectorcraft_doc::Document>(v).unwrap().spot_use_lab);
+    assert!(serde_json::from_value::<tsipika_doc::Document>(v).unwrap().spot_use_lab);
 }
 
 fn pdf_bytes(s: &Session) -> Vec<u8> {
-    let opts = vectorcraft_pdf::PdfOptions { created: Some(0), ..vectorcraft_pdf::PdfOptions::uncompressed() };
-    vectorcraft_pdf::export(doc(s), &opts).unwrap()
+    let opts = tsipika_pdf::PdfOptions { created: Some(0), ..tsipika_pdf::PdfOptions::uncompressed() };
+    tsipika_pdf::export(doc(s), &opts).unwrap()
 }
 
 /// Every in-use cross-reference entry points at its object, and `startxref` at the table.
@@ -190,7 +190,7 @@ fn lab_spots_export_with_a_lab_alternate() {
     assert!(text.contains("/ShadingType 2"), "the gradient is still a shading");
     assert_xref_valid(&pdf);
     // The file reads back: the 40 % tint shows as that tint of the Lab colour.
-    let back = vectorcraft_pdf::import(&pdf).unwrap();
+    let back = tsipika_pdf::import(&pdf).unwrap();
     let mut fills = vec![];
     back.visit_paints(&mut |p| fills.extend(p.color()));
     let want = LAB.tinted(0.4).to_rgba8(1.0);

@@ -1,14 +1,14 @@
 //! `document.open` PDF options `textAs` and `layers`.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeKind;
-use vectorcraft_pdf::TextAs;
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with_catalog};
+use tsipika_doc::NodeKind;
+use tsipika_pdf::TextAs;
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with_catalog};
 
 use super::*;
 
 fn open(s: &mut Session, bytes: &[u8], extra: Value) -> crate::Result<Value> {
-    let mut p = json!({"name": "art.pdf", "dataBase64": vectorcraft_format::base64_encode(bytes)});
+    let mut p = json!({"name": "art.pdf", "dataBase64": tsipika_format::base64_encode(bytes)});
     if let (Some(o), Value::Object(e)) = (p.as_object_mut(), extra) {
         o.extend(e);
     }
@@ -71,7 +71,7 @@ fn ai_layer_names_are_read_as_pdf_doc_encoding() {
     };
     let bytes = pdf_with_catalog(&[page], &[r"<< /Type /OCG /Name (Art\205final) >>", "<< /Type /OCG /Name (Notes) >>"], &catalog, None);
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "art.ai", "dataBase64": vectorcraft_format::base64_encode(&bytes)})).unwrap();
+    s.execute("document.open", &json!({"name": "art.ai", "dataBase64": tsipika_format::base64_encode(&bytes)})).unwrap();
     let names: Vec<String> = s.active().unwrap().doc.layers.iter().map(|l| l.name.clone().unwrap_or_default()).collect();
     assert_eq!(names, ["Art\u{2013}final", "Notes"]);
 }
@@ -99,7 +99,7 @@ fn exports_that_draw_type_in_a_missing_font_say_it_is_the_fallback_font() {
     assert!(r["warnings"].to_string().contains(&family), "opening lists it: {r}");
     let warned = |s: &mut Session, p: Value| {
         let w = s.execute("document.serialize", &p).unwrap()["warnings"].to_string();
-        w.contains(&family) && w.contains(vectorcraft_text::FALLBACK_FAMILY)
+        w.contains(&family) && w.contains(tsipika_text::FALLBACK_FAMILY)
     };
     for p in [
         json!({"format": "pdf"}),
@@ -113,7 +113,7 @@ fn exports_that_draw_type_in_a_missing_font_say_it_is_the_fallback_font() {
         assert!(warned(&mut s, p.clone()), "{p}");
     }
     // Live SVG type and the native file name the font itself.
-    for p in [json!({"format": "svg", "outlineText": false}), json!({"format": "vectorcraft"}), json!({"format": "txt"})] {
+    for p in [json!({"format": "svg", "outlineText": false}), json!({"format": "tsipika"}), json!({"format": "txt"})] {
         assert!(!warned(&mut s, p.clone()), "{p}");
     }
     let pdf_export = s.execute("document.exportPdf", &json!({})).unwrap();

@@ -1,7 +1,7 @@
 //! Curve-preserving boolean operations on filled [`BezPath`]s, built on `linesweeper`'s robust
 //! sweep-line topology (MIT OR Apache-2.0).
 //!
-//! Adapted from VectorCraft's `vectorcraft-pathops` (`crates/pathops/src/boolean.rs`; our own code,
+//! Adapted from Tsipika's `tsipika-pathops` (`crates/pathops/src/boolean.rs`; our own code,
 //! MIT OR Apache-2.0), reworked to take and return kurbo paths directly.
 //!
 //! Inputs are closed implicitly (a filled open path is painted as if closed). The sweep splits

@@ -2,7 +2,7 @@
 //! compare it with what it was when it was marked, and the focus view on one frame.
 //! (Wrapping layers in a new section is `object.wrapInSection`, with the other wrappers.)
 
-use figcraft_doc::{DevStatus, NodeId, NodeKind};
+use endrika_doc::{DevStatus, NodeId, NodeKind};
 use serde_json::{Value, json};
 
 use super::CommandSpec;

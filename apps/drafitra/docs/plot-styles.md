@@ -1,6 +1,6 @@
 # Plot styles
 
-A plot style table decides how objects print. CADCraft applies it to PDF plots (PLOT,
+A plot style table decides how objects print. Drafitra applies it to PDF plots (PLOT,
 EXPORTPDF and anything that plots through them). It also applies it to a layout shown with
 **Display plot styles** on: on screen and in the layout's PNG and SVG exports.
 
@@ -33,7 +33,7 @@ Colour 7 prints black.
   `diamond` points out one half width. `object` is round, as lines are drawn anyway.
 - **`fill`** replaces the solid fill of filled areas: 2D solids, traces, wide polylines,
   solid hatches and filled text. `solid` and `object` keep it solid. The patterns are
-  CADCraft's own definitions, measured on paper and anchored to the sheet's origin. They
+  Drafitra's own definitions, measured on paper and anchored to the sheet's origin. They
   repeat every 1 mm:
 
 | Fill | Pattern |
@@ -51,7 +51,7 @@ plot draws them at its plot scale.
 
 ### Built-in tables
 
-These are CADCraft's own definitions, not copies of any vendor's files.
+These are Drafitra's own definitions, not copies of any vendor's files.
 
 | Table | What it does |
 |---|---|
@@ -92,7 +92,7 @@ object's" are omitted.
 
 ```json
 {
-  "cadcraftPlotStyleTable": 1,
+  "drafitraPlotStyleTable": 1,
   "name": "office.stb",
   "description": "Office pens",
   "kind": "named",
@@ -127,5 +127,5 @@ Binary `.ctb`/`.stb` files are not read. We haven't found a public specification
   `ACAD_PLOTSTYLENAME` is an `ACDBDICTIONARYWDFLT` whose entries name `ACDBPLACEHOLDER` objects
   (default `Normal`). Layers and objects point at them with group 390. An object without a 390
   is `ByLayer`. `ByBlock` isn't written, so it reads back as `ByLayer`.
-- Tables kept in the drawing travel in the `CADCRAFT_PLOTSTYLES` XRECORD (JSON) of the named
+- Tables kept in the drawing travel in the `DRAFITRA_PLOTSTYLES` XRECORD (JSON) of the named
   object dictionary.

@@ -1,4 +1,4 @@
-//! Deblocking filter (8.7.2) over a whole reconstructed picture, mirrored from the filmcraft-hevc
+//! Deblocking filter (8.7.2) over a whole reconstructed picture, mirrored from the hetsika-hevc
 //! decoder: all vertical edges on the 8x8 grid first, then all horizontal edges. One slice, one QP,
 //! uni-directional prediction from a single reference picture, offsets 0.
 

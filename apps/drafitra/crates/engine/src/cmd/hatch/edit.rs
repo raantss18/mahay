@@ -2,9 +2,9 @@
 //! associativity (unlink, or link to boundary objects), separate hatches and recreated
 //! boundaries of existing hatches.
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Drawing, EntityKind, Gradient, Handle, Hatch, HatchLoop, entity_bounds};
-use cadcraft_geom::{Bounds2, Polyline, Vec2, point_in_polygon};
+use drafitra_color::Color;
+use drafitra_doc::{Drawing, EntityKind, Gradient, Handle, Hatch, HatchLoop, entity_bounds};
+use drafitra_geom::{Bounds2, Polyline, Vec2, point_in_polygon};
 use serde_json::{Value, json};
 
 use super::assoc::{detach, same_shape};
@@ -50,7 +50,7 @@ fn link(d: &Drawing, handle: Handle, h: &mut Hatch, boundary: Option<&[Handle]>,
         *budget -= 1;
         let lb = Bounds2::from_points(outline(l));
         let eps = 1e-4 * (1.0 + lb.width() + lb.height());
-        let fits = |e: &cadcraft_doc::Entity| {
+        let fits = |e: &drafitra_doc::Entity| {
             let eb = entity_bounds(d, e, 0);
             e.handle != handle
                 && eb.min.dist(lb.min) <= eps
@@ -78,7 +78,7 @@ fn link(d: &Drawing, handle: Handle, h: &mut Hatch, boundary: Option<&[Handle]>,
 fn areas(h: &Hatch) -> Vec<Vec<HatchLoop>> {
     let polys: Vec<Vec<Vec2>> = h.loops.iter().map(outline).collect();
     let first: Vec<Option<Vec2>> = polys.iter().map(|p| p.first().copied()).collect();
-    let area = |i: usize| polys.get(i).map_or(0.0, |p| cadcraft_geom::shoelace(p).abs());
+    let area = |i: usize| polys.get(i).map_or(0.0, |p| drafitra_geom::shoelace(p).abs());
     // The loops containing each loop, smallest first.
     let parents: Vec<Vec<usize>> = (0..polys.len())
         .map(|i| {
@@ -152,7 +152,7 @@ fn properties(h: &mut Hatch, p: &Value) {
         if !h.solid {
             // A library pattern is drawn from the library; a loaded .pat pattern brings its lines;
             // any other name is the hatch's own and keeps its definition.
-            if cadcraft_doc::library::pattern(&h.pattern).is_some() {
+            if drafitra_doc::library::pattern(&h.pattern).is_some() {
                 h.pattern_lines.clear();
             } else if let Some(user) = super::patfile::user_pattern(&h.pattern) {
                 h.pattern_lines = user.lines;
@@ -284,11 +284,11 @@ pub(super) fn run_hatchedit(s: &mut Session, p: &Value) -> Result<Value> {
     if grad.is_some() && str_param(p, "pattern").map(|v| v.trim().to_ascii_uppercase()).is_some_and(|v| !v.is_empty() && v != "SOLID") {
         return Err(bad("hatchedit", "give `pattern` or `gradient`, not both"));
     }
-    // Like the prompt: a pattern must be one CADCraft defines, SOLID, or the hatches' own (a
+    // Like the prompt: a pattern must be one Drafitra defines, SOLID, or the hatches' own (a
     // pattern read from a file keeps its definition).
     if let Some(up) = str_param(p, "pattern").map(|v| v.trim().to_ascii_uppercase()).filter(|v| !v.is_empty())
         && up != "SOLID"
-        && cadcraft_doc::library::pattern(&up).is_none()
+        && drafitra_doc::library::pattern(&up).is_none()
         && super::patfile::user_pattern(&up).is_none()
     {
         let d = s.doc()?;
@@ -490,7 +490,7 @@ impl Interactive for HatchEditM {
             (Ask::Pattern, _) => {
                 if let Some(t) = text.filter(|t| !t.is_empty()) {
                     let up = t.to_ascii_uppercase();
-                    if cadcraft_doc::library::pattern(&up).is_none() && super::patfile::user_pattern(&up).is_none() {
+                    if drafitra_doc::library::pattern(&up).is_none() && super::patfile::user_pattern(&up).is_none() {
                         s.echo(format!("Unknown pattern {up}."));
                         return Ok(Step::Continue);
                     }

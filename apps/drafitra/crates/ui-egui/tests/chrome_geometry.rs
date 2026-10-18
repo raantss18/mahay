@@ -1,8 +1,8 @@
 //! The real app's painted geometry at native and compact window sizes.
 
-use cadcraft_engine::Session;
-use cadcraft_geom::Vec2;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_geom::Vec2;
+use drafitra_ui_egui::{CadApp, Services};
 use egui::{Rect, Shape, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -52,7 +52,7 @@ fn status_labels_never_overlap_at_standard_and_compact_sizes() {
         for scale in [1.0, 2.0] {
             for message in [false, true] {
                 let mut h = harness(width, height, scale, message);
-                if let Ok(directory) = std::env::var("CRAFT_UI_VISUAL_DIR") {
+                if let Ok(directory) = std::env::var("MAHAY_UI_VISUAL_DIR") {
                     std::fs::create_dir_all(&directory).unwrap();
                     h.render().unwrap().save(format!("{directory}/cad-{width}-{scale}-{message}.png")).unwrap();
                 }

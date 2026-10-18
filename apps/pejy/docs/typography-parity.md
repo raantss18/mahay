@@ -14,13 +14,13 @@ against InDesign is **unmeasured**, which is the main gap.
 ## Fidelity: how we'd know
 
 There is no oracle yet. What exists: unit tests of break points and invariants in
-`crates/compose/src/tests.rs` (172 tests in the crate), IDML files built by DesignCraft and opened
+`crates/compose/src/tests.rs` (172 tests in the crate), IDML files built by Pejy and opened
 in InDesign 2026 by hand, and user reports comparing the two (#179, #180, #181, #282–#295).
 
 **Needed (gap 4 in [gaps.md](gaps.md)):** a set of synthetic stories (our own text and fonts:
-Source Serif 4, Inter, Shippori Mincho from craft-fonts) covering each row below, set in InDesign
+Source Serif 4, Inter, Shippori Mincho from mahay-fonts) covering each row below, set in InDesign
 2026 by observation on the owner's Mac (results under `plan/`, never committed), exported as IDML;
-DesignCraft opens the IDML and a test compares per paragraph: line count, break positions (by
+Pejy opens the IDML and a test compares per paragraph: line count, break positions (by
 character offset), last-line width, overset and frame fit. Report the share of paragraphs whose
 breaks match exactly. Target for beta: ≥ 90% of Latin body paragraphs identical, 100% fit in the
 same frames.
@@ -30,7 +30,7 @@ same frames.
 Status: **✓** present and believed close · **~** present, known differences or partial · **✗** missing.
 Fidelity: **unmeasured** unless stated.
 
-| Area | InDesign 2026 | DesignCraft | Status | Notes / evidence |
+| Area | InDesign 2026 | Pejy | Status | Notes / evidence |
 |---|---|---|---|---|
 | Paragraph Composer | Adobe's multi-line composer | Knuth–Plass total fit, fitness classes, hyphen penalties | ~ | same family of algorithm, Adobe's weights unknown; breaks will differ on some paragraphs |
 | Single-line Composer | greedy | greedy with the same ranges | ✓ | |

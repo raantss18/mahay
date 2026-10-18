@@ -2,7 +2,7 @@
 //! numbering of the section that starts at the current page, then the document's chapter
 //! numbering. OK applies `layout.section` and `layout.chapterNumbering`.
 
-use designcraft_doc::{ChapterSource, NumberStyle};
+use pejy_doc::{ChapterSource, NumberStyle};
 use egui::{Align, Layout, Ui, vec2};
 use serde_json::{Value, json};
 
@@ -30,7 +30,7 @@ const FIELD_W: f32 = 84.0;
 
 /// Open the dialog for the section at the page in view.
 pub(crate) fn open(app: &mut DesignApp) {
-    let Ok(chapter) = designcraft_engine::cmd::chapter_numbering(&app.session) else { return };
+    let Ok(chapter) = pejy_engine::cmd::chapter_numbering(&app.session) else { return };
     let current = crate::canvas::current_page(app).unwrap_or(0);
     let Some(st) = app.session.active() else { return };
     let doc = &st.doc;
@@ -236,7 +236,7 @@ mod tests {
 
     /// A four-page document with Numbering & Section Options open (on page 1).
     fn open_app() -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"pages": 4})).unwrap();
         crate::menus::activate(&mut app, "layout.section", &Value::Null);
         app

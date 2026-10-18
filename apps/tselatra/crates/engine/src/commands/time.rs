@@ -1,7 +1,7 @@
 //! Time navigation (CTI) commands.
 
-use effectcraft_project::{Comp, TimeDisplayStyle};
-use effectcraft_time::Tick;
+use tselatra_project::{Comp, TimeDisplayStyle};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, f_p, has_comp, str_p};
@@ -22,9 +22,9 @@ pub fn display_time(s: &Session, comp: &Comp, t: Tick) -> String {
     match st.time_display {
         TimeDisplayStyle::Frames => format!("{:05}", fr.frame_at(t) + st.frame_start),
         TimeDisplayStyle::Feet35 | TimeDisplayStyle::Feet16 => {
-            effectcraft_time::format_feet_frames(fr.frame_at(t + comp.display_start) + st.frame_start, st.time_display.frames_per_foot().unwrap_or(16))
+            tselatra_time::format_feet_frames(fr.frame_at(t + comp.display_start) + st.frame_start, st.time_display.frames_per_foot().unwrap_or(16))
         }
-        TimeDisplayStyle::Timecode => effectcraft_time::format_timecode_ae(fr.frame_at(t + comp.display_start), fr, false),
+        TimeDisplayStyle::Timecode => tselatra_time::format_timecode_ae(fr.frame_at(t + comp.display_start), fr, false),
     }
 }
 
@@ -36,13 +36,13 @@ pub fn parse_display_time(s: &Session, comp: &Comp, text: &str, current: i64) ->
     match st.time_display.frames_per_foot() {
         Some(pf) => {
             let start = fr.frame_at(comp.display_start) + st.frame_start;
-            effectcraft_time::parse_feet_frames(text, pf, current + start).map(|f| f - start).map_err(|e| e.0)
+            tselatra_time::parse_feet_frames(text, pf, current + start).map(|f| f - start).map_err(|e| e.0)
         }
         None => {
             // The Timeline shows non-drop timecode (`:`), so typed `:`/`.` text is read as non-drop
             // too; only explicit `;` fields mean drop-frame (#890).
             let drop_frame = fr.supports_drop_frame() && text.contains(';');
-            let parsed = effectcraft_time::parse_timecode(text, fr, drop_frame, current).map_err(|e| e.0)?;
+            let parsed = tselatra_time::parse_timecode(text, fr, drop_frame, current).map_err(|e| e.0)?;
             let relative = text.trim().starts_with('+') || text.trim().starts_with('-');
             if relative {
                 Ok(parsed)

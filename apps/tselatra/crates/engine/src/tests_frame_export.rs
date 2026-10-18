@@ -29,7 +29,7 @@ fn photoshop_layers_writes_one_psd_layer_per_comp_layer() {
     let path = dir.join("frame.psd").to_string_lossy().to_string();
     let r = s.execute("comp.saveFrameAsPsd", json!({"path": path})).unwrap();
     assert_eq!(r["layers"], 2);
-    let psd = effectcraft_psd::Psd::parse(std::fs::read(&path).unwrap()).unwrap();
+    let psd = tselatra_psd::Psd::parse(std::fs::read(&path).unwrap()).unwrap();
     assert_eq!((psd.width, psd.height), (32, 32));
     let names: Vec<&str> = psd.layers.iter().map(|l| l.name.as_str()).collect();
     assert_eq!(names, ["Red", "Blue.Box"], "bottom first");
@@ -119,7 +119,7 @@ fn proexr_keeps_values_above_one_in_32_bpc() {
     let src = [1.5, 1.25, 0.75];
     let (comp, layer) = proexr_centre(src, 32);
     for i in 0..3 {
-        let want = effectcraft_color::srgb_to_linear(src[i] as f32);
+        let want = tselatra_color::srgb_to_linear(src[i] as f32);
         for got in [comp[i], layer[i]] {
             assert!((got - want).abs() < 1e-3 * want.max(1.0), "channel {i}: got {got}, want {want} ({comp:?} / {layer:?})");
         }

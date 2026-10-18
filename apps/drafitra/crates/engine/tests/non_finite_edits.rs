@@ -1,7 +1,7 @@
 //! Edits whose result would have infinite or undefined coordinates fail and leave the drawing as it
 //! was, whether they come as JSON (MCP, control channel) or are typed at the command line.
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 use serde_json::{Value, json};
 
 fn circle(s: &mut Session) -> String {

@@ -1,7 +1,7 @@
 //! Counter: a widget on the canvas with − and + buttons around a count. Each click calls the
 //! plugin back with the widget's state; it hands back the new count and the redrawn widget.
 
-use figcraft_plugin_sdk::{Input, Result, Value, entry, json, render_widget};
+use endrika_plugin_sdk::{Input, Result, Value, entry, json, render_widget};
 
 /// The count stays within ± this.
 const LIMIT: i64 = 999_999;

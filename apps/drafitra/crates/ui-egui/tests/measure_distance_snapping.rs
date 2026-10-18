@@ -1,10 +1,10 @@
 //! Measure Distance uses real pointer snaps in MODEL and PAPER, including viewport scale (#516).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{Common, Drawing, EntityKind, Line, Space, Viewport};
-use cadcraft_engine::geom::{Vec2, Vec3};
-use cadcraft_engine::snap::mode;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{Common, Drawing, EntityKind, Line, Space, Viewport};
+use drafitra_engine::geom::{Vec2, Vec3};
+use drafitra_engine::snap::mode;
+use drafitra_ui_egui::{CadApp, Services};
 use egui::{Event, Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -72,7 +72,7 @@ fn click(h: &mut Harness<'_, CadApp>, pos: Pos2) {
 }
 
 fn measure(paper: bool) {
-    let shots = std::env::var_os("CADCRAFT_MEASURE_SHOTS").map(std::path::PathBuf::from);
+    let shots = std::env::var_os("DRAFITRA_MEASURE_SHOTS").map(std::path::PathBuf::from);
     let mut h = harness(paper, shots.is_some());
     let dirty_before = h.state().session.state().unwrap().is_dirty();
     h.get_by_role_and_label(egui::accesskit::Role::Button, "Measure Distance").click();

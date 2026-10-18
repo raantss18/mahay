@@ -1,9 +1,9 @@
 //! `cargo xtask web-fonts`: the Trunk `post_build` hook (`apps/*-web/Trunk.toml`). Copies the
-//! craft-fonts faces listed in `crates/text/web-fonts.txt` from `$CRAFT_FONTS_DIR` into the site,
+//! mahay-fonts faces listed in `crates/text/web-fonts.txt` from `$MAHAY_FONTS_DIR` into the site,
 //! each at `fonts/<first 16 hex digits of its SHA-256>/<file>` with its licence beside it: the URLs
 //! `crates/text/build.rs` puts in `WEB_FONTS` (both use `crates/text/build/web_fonts.rs`).
 //!
-//! A no-op without `CRAFT_FONTS_DIR`. A listed face the checkout lacks (an older craft-fonts) is
+//! A no-op without `MAHAY_FONTS_DIR`. A listed face the checkout lacks (an older mahay-fonts) is
 //! skipped with a warning, as `build.rs` does; a file whose SHA-256 doesn't match the manifest is an
 //! error (a corrupt checkout). Rust rather than a shell script, so the hook runs wherever cargo does.
 
@@ -15,26 +15,26 @@ use crate::sha256;
 #[path = "../../crates/text/build/web_fonts.rs"]
 mod list;
 
-/// The hook: reads `CRAFT_FONTS_DIR` and Trunk's `TRUNK_STAGING_DIR`.
+/// The hook: reads `MAHAY_FONTS_DIR` and Trunk's `TRUNK_STAGING_DIR`.
 pub fn run(root: &Path) -> Result<(), String> {
     let var = |name| std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from);
-    run_with(root, var("CRAFT_FONTS_DIR"), var("TRUNK_STAGING_DIR"))
+    run_with(root, var("MAHAY_FONTS_DIR"), var("TRUNK_STAGING_DIR"))
 }
 
-fn run_with(root: &Path, craft_fonts: Option<PathBuf>, staging: Option<PathBuf>) -> Result<(), String> {
-    let Some(dir) = craft_fonts else { return Ok(()) };
+fn run_with(root: &Path, mahay_fonts: Option<PathBuf>, staging: Option<PathBuf>) -> Result<(), String> {
+    let Some(dir) = mahay_fonts else { return Ok(()) };
     // Relative like build.rs: from the workspace root, not the directory Trunk runs hooks in.
     let dir = if dir.is_absolute() { dir } else { root.join(dir) };
     let staging = staging.ok_or("TRUNK_STAGING_DIR is unset: run this as the Trunk post_build hook")?;
     let (copied, skipped) = copy(&root.join("crates/text/web-fonts.txt"), &dir, &staging)?;
     if !skipped.is_empty() {
-        eprintln!("warning: web build won't fetch {} (not in CRAFT_FONTS_DIR={}; an older craft-fonts?)", skipped.join(", "), dir.display());
+        eprintln!("warning: web build won't fetch {} (not in MAHAY_FONTS_DIR={}; an older mahay-fonts?)", skipped.join(", "), dir.display());
     }
     println!("web-fonts: copied {copied} font(s) into {}", staging.join("fonts").display());
     Ok(())
 }
 
-/// Copy the faces `list_path` names from the craft-fonts checkout `dir` into `site` (at their
+/// Copy the faces `list_path` names from the mahay-fonts checkout `dir` into `site` (at their
 /// `fonts/…` URLs). Returns how many were copied and the listed faces the checkout lacks.
 fn copy(list_path: &Path, dir: &Path, site: &Path) -> Result<(usize, Vec<String>), String> {
     let read = |p: &Path| std::fs::read_to_string(p).map_err(|e| format!("{}: {e}", p.display()));
@@ -71,11 +71,11 @@ fn copy(list_path: &Path, dir: &Path, site: &Path) -> Result<(usize, Vec<String>
 mod tests {
     use super::*;
 
-    /// A fake craft-fonts checkout with one face, and a list naming it plus one it lacks.
+    /// A fake mahay-fonts checkout with one face, and a list naming it plus one it lacks.
     fn fixture(name: &str, manifest_sha: Option<&str>) -> (PathBuf, PathBuf, PathBuf, String) {
         let base = std::env::temp_dir().join(format!("xtask-web-fonts-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
-        let dir = base.join("craft-fonts");
+        let dir = base.join("mahay-fonts");
         std::fs::create_dir_all(dir.join("fonts/a")).unwrap();
         std::fs::write(dir.join("fonts/a/A-Regular.ttf"), b"font bytes").unwrap();
         std::fs::write(dir.join("fonts/a/OFL.txt"), b"licence").unwrap();
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn without_craft_fonts_the_hook_does_nothing() {
+    fn without_mahay_fonts_the_hook_does_nothing() {
         let (_, _, site, _) = fixture("noop", None);
         run_with(Path::new("/nonexistent"), None, None).unwrap();
         assert!(!site.exists());

@@ -1,8 +1,8 @@
 //! Snap/grid spacing uses legacy HEADER variables and the current *ACTIVE VPORT (#607).
 
-use cadcraft_doc::{Drawing, HVal};
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_doc::{Drawing, HVal};
+use drafitra_dxf::{Tag, records, sections};
+use drafitra_geom::{Vec2, Vec3};
 
 fn header(snap: Vec2, grid: Vec2) -> Vec<Tag> {
     let mut tags = Vec::new();
@@ -24,7 +24,7 @@ fn read(header: &[Tag], vports: &[Vec<Tag>]) -> Drawing {
         tags.extend_from_slice(vp);
     }
     tags.extend([Tag::s(0, "ENDTAB"), Tag::s(0, "ENDSEC"), Tag::s(0, "EOF")]);
-    cadcraft_io::read_dxf(cadcraft_dxf::write_ascii(&tags).as_bytes()).unwrap()
+    drafitra_io::read_dxf(drafitra_dxf::write_ascii(&tags).as_bytes()).unwrap()
 }
 
 fn assert_units(d: &Drawing, snap: Vec2, grid: Vec2) {
@@ -42,8 +42,8 @@ fn writes_spacing_to_header_and_active_vport_and_roundtrips() {
     let mut d = Drawing::new_imperial();
     d.header.set("SNAPUNIT", HVal::Point(snap.to3(0.0)));
     d.header.set("GRIDUNIT", HVal::Point(grid.to3(0.0)));
-    let text = cadcraft_io::write_dxf(&d);
-    let tags = cadcraft_dxf::parse_ascii(&text).unwrap();
+    let text = drafitra_io::write_dxf(&d);
+    let tags = drafitra_dxf::parse_ascii(&text).unwrap();
     let sections = sections(&tags);
     let header = &sections.iter().find(|s| s.name == "HEADER").unwrap().tags;
     for (name, unit) in [("$SNAPUNIT", snap), ("$GRIDUNIT", grid)] {
@@ -58,7 +58,7 @@ fn writes_spacing_to_header_and_active_vport_and_roundtrips() {
         records.iter().find(|(kind, t)| kind == "VPORT" && t.iter().any(|t| t.code == 2 && t.str().eq_ignore_ascii_case("*ACTIVE"))).unwrap();
     assert_eq!((number(active, 14), number(active, 24)), (snap.x, snap.y));
     assert_eq!((number(active, 15), number(active, 25)), (grid.x, grid.y));
-    assert_units(&cadcraft_io::read_dxf(text.as_bytes()).unwrap(), snap, grid);
+    assert_units(&drafitra_io::read_dxf(text.as_bytes()).unwrap(), snap, grid);
 }
 
 #[test]
@@ -97,8 +97,8 @@ fn missing_or_invalid_legacy_spacing_uses_the_default() {
 fn zero_grid_components_roundtrip_as_follow_snap_spacing() {
     let mut d = Drawing::new_imperial();
     d.header.set("GRIDUNIT", HVal::Point(Vec3::new(0.0, 0.75, 0.0)));
-    let text = cadcraft_io::write_dxf(&d);
-    assert_units(&cadcraft_io::read_dxf(text.as_bytes()).unwrap(), Vec2::new(0.5, 0.5), Vec2::new(0.0, 0.75));
+    let text = drafitra_io::write_dxf(&d);
+    assert_units(&drafitra_io::read_dxf(text.as_bytes()).unwrap(), Vec2::new(0.5, 0.5), Vec2::new(0.0, 0.75));
 }
 
 #[test]
@@ -106,6 +106,6 @@ fn invalid_in_memory_spacing_exports_safe_defaults() {
     let mut d = Drawing::new_imperial();
     d.header.set("SNAPUNIT", HVal::Point(Vec3::new(f64::NAN, f64::INFINITY, 0.0)));
     d.header.set("GRIDUNIT", HVal::Point(Vec3::new(-1.0, 0.75, 0.0)));
-    let text = cadcraft_io::write_dxf(&d);
-    assert_units(&cadcraft_io::read_dxf(text.as_bytes()).unwrap(), Vec2::new(0.5, 0.5), Vec2::new(0.5, 0.5));
+    let text = drafitra_io::write_dxf(&d);
+    assert_units(&drafitra_io::read_dxf(text.as_bytes()).unwrap(), Vec2::new(0.5, 0.5), Vec2::new(0.5, 0.5));
 }

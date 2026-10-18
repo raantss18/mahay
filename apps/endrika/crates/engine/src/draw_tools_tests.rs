@@ -5,14 +5,14 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_color::PaintKind;
-use figcraft_doc::{NodeId, NodeKind};
+use endrika_color::PaintKind;
+use endrika_doc::{NodeId, NodeKind};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
 }
 
-fn text_path(s: &Session, t: NodeId) -> Option<figcraft_doc::TextPath> {
+fn text_path(s: &Session, t: NodeId) -> Option<endrika_doc::TextPath> {
     match &s.doc().unwrap().node(t)?.kind {
         NodeKind::Text(td) => td.path.as_deref().cloned(),
         _ => None,
@@ -21,7 +21,7 @@ fn text_path(s: &Session, t: NodeId) -> Option<figcraft_doc::TextPath> {
 
 /// The RGBA of `node` rendered at 1x, at (`x`, `y`) of its box.
 fn pixel(s: &Session, node: NodeId, x: u32, y: u32) -> [u8; 4] {
-    let pix = figcraft_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
     let i = ((y * pix.width() + x) * 4) as usize;
     let d = pix.data();
     [d[i], d[i + 1], d[i + 2], d[i + 3]]
@@ -50,7 +50,7 @@ fn text_goes_onto_a_path_and_off_again() {
     // Resizing scales the path with the box.
     let w = s.doc().unwrap().node(t).unwrap().width;
     s.execute("transform.resize", &json!({"ids": [t], "width": w * 2.0})).unwrap();
-    let bb = figcraft_geom::Shape::bounding_box(&text_path(&s, t).unwrap().path());
+    let bb = endrika_geom::Shape::bounding_box(&text_path(&s, t).unwrap().path());
     assert!((bb.width() - w * 2.0).abs() < 1.0, "{bb:?}");
     s.execute("text.removeFromPath", &json!({"ids": [t]})).unwrap();
     assert!(text_path(&s, t).is_none());
@@ -63,7 +63,7 @@ fn text_goes_onto_a_path_and_off_again() {
 #[test]
 fn svg_text_paths_import_as_text_on_a_path() {
     // SVG text is parsed with Inter standing in for every family (CI has no fonts).
-    if figcraft_text::find_face("Inter", "Regular").is_none() {
+    if endrika_text::find_face("Inter", "Regular").is_none() {
         eprintln!("no Inter; skipping");
         return;
     }
@@ -71,12 +71,12 @@ fn svg_text_paths_import_as_text_on_a_path() {
     let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><path id="p" d="M10 80 Q100 0 190 80" fill="none"/><text font-size="12"><textPath href="#p" startOffset="50%" text-anchor="middle">Curved words</textPath></text></svg>"##;
     let doc = s.doc_mut().unwrap();
     let page = doc.current_page.unwrap();
-    figcraft_svg::import_svg(doc, svg, page, 0.0, 0.0, "curve").unwrap();
+    endrika_svg::import_svg(doc, svg, page, 0.0, 0.0, "curve").unwrap();
     let texts: Vec<_> = s.doc().unwrap().nodes().filter_map(|n| n.kind.text().cloned()).collect();
     let t = texts.iter().find(|t| t.characters == "Curved words").expect("a text layer");
     let tp = t.path.as_ref().expect("on a path");
     assert!((tp.start - 0.5).abs() < 0.01, "{}", tp.start);
-    assert_eq!(t.align_h, figcraft_doc::TextAlignH::Center);
+    assert_eq!(t.align_h, endrika_doc::TextAlignH::Center);
 }
 
 #[test]
@@ -115,9 +115,9 @@ fn pattern_fills_tile_their_source_live() {
     assert_eq!(sources.len(), 2);
     assert_ne!(sources[0], sources[1], "each copy tiles its own source");
     // Exports: SVG as a <pattern> of vectors, PDF without failing.
-    let svg = figcraft_svg::export_svg(doc, &[r], &figcraft_svg::SvgOptions::default()).unwrap();
+    let svg = endrika_svg::export_svg(doc, &[r], &endrika_svg::SvgOptions::default()).unwrap();
     assert!(svg.contains("<pattern") && svg.contains("fill=\"url(#pattern"), "{svg}");
-    assert!(figcraft_pdf::export_nodes_pdf(doc, &[r]).is_ok());
+    assert!(endrika_pdf::export_nodes_pdf(doc, &[r]).is_ok());
 }
 
 #[test]
@@ -127,7 +127,7 @@ fn a_pattern_of_itself_draws_nothing_instead_of_recursing() {
     // Hand-written (the command refuses this): the layer tiles itself.
     s.execute("fill.set", &json!({"ids": [r], "paint": {"type": "pattern", "source": r.0, "scale": 0.25}})).unwrap();
     let doc = s.doc().unwrap();
-    assert!(figcraft_render::render_node(doc, r, 1.0).is_some());
-    assert!(figcraft_svg::export_svg(doc, &[r], &figcraft_svg::SvgOptions::default()).is_some());
-    assert!(figcraft_pdf::export_nodes_pdf(doc, &[r]).is_ok());
+    assert!(endrika_render::render_node(doc, r, 1.0).is_some());
+    assert!(endrika_svg::export_svg(doc, &[r], &endrika_svg::SvgOptions::default()).is_some());
+    assert!(endrika_pdf::export_nodes_pdf(doc, &[r]).is_ok());
 }

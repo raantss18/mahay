@@ -6,8 +6,8 @@ use serde_json::json;
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind, ToolId};
-use figcraft_doc::NodeId;
-use figcraft_geom::Point;
+use endrika_doc::NodeId;
+use endrika_geom::Point;
 
 fn rect(s: &mut Session) -> NodeId {
     let r = id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 100})).unwrap()["id"]).unwrap();
@@ -71,13 +71,13 @@ fn rotation_field_and_rotate_commands_turn_about_a_moved_origin() {
     s.execute("node.set", &json!({"ids": [r], "props": {"rotation": 30}})).unwrap();
     let doc = s.doc().unwrap();
     assert!(near(doc.world_transform(r) * Point::new(100.0, 100.0), Point::new(100.0, 100.0)));
-    assert!((figcraft_geom::rotation_degrees(doc.node(r).unwrap().transform) - 30.0).abs() < 1e-6);
+    assert!((endrika_geom::rotation_degrees(doc.node(r).unwrap().transform) - 30.0).abs() < 1e-6);
     // So do Rotate 90° and transform.rotate without a pivot.
     s.execute("object.rotateLeft", &json!({})).unwrap();
     s.execute("transform.rotate", &json!({"degrees": 15})).unwrap();
     let doc = s.doc().unwrap();
     assert!(near(doc.world_transform(r) * Point::new(100.0, 100.0), Point::new(100.0, 100.0)));
-    assert!((figcraft_geom::rotation_degrees(doc.node(r).unwrap().transform) - 135.0).abs() < 1e-6);
+    assert!((endrika_geom::rotation_degrees(doc.node(r).unwrap().transform) - 135.0).abs() < 1e-6);
     // Another layer's field turns about its own centre, as before.
     let other = id_of(&s.execute("shape.rectangle", &json!({"x": 300, "y": 0, "width": 100, "height": 100})).unwrap()["id"]).unwrap();
     s.execute("select.set", &json!({"ids": [r]})).unwrap();

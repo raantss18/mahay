@@ -19,9 +19,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use vectorcraft_doc::color::Paint;
-use vectorcraft_doc::{Appearance, AppearanceItem, Document, Effect, FillLayer, Knockout, Node, NodeKind, StrokeLayer};
-use vectorcraft_geom::{Affine, FillRule, PathData, Rect, Vec2};
+use tsipika_doc::color::Paint;
+use tsipika_doc::{Appearance, AppearanceItem, Document, Effect, FillLayer, Knockout, Node, NodeKind, StrokeLayer};
+use tsipika_geom::{Affine, FillRule, PathData, Rect, Vec2};
 
 use crate::distort::{transform_move, transform_offsets};
 use crate::group::{has_own_paint, paints};
@@ -31,7 +31,7 @@ use crate::{
     has_item_geometry, has_pathfinder, is_geometry, is_pathfinder, merged_params, needs_outline, outline_text, reshape,
 };
 
-fn item_effects(item: &AppearanceItem) -> &[vectorcraft_doc::Effect] {
+fn item_effects(item: &AppearanceItem) -> &[tsipika_doc::Effect] {
     match item {
         AppearanceItem::Fill(f) => &f.effects,
         AppearanceItem::Stroke(s) => &s.effects,
@@ -69,11 +69,11 @@ fn geometry(n: &Node) -> Option<(PathData, FillRule)> {
     }
 }
 
-fn apply(effects: &[vectorcraft_doc::Effect], path: &PathData, ctx: &GeomContext) -> PathData {
+fn apply(effects: &[tsipika_doc::Effect], path: &PathData, ctx: &GeomContext) -> PathData {
     if !has_geometry(effects) || path.is_empty() {
         return path.clone();
     }
-    let b = vectorcraft_geom::Shape::bounding_box(&path.to_bezpath());
+    let b = tsipika_geom::Shape::bounding_box(&path.to_bezpath());
     apply_geometry_with(effects, path, b, ctx)
 }
 
@@ -90,7 +90,7 @@ fn path_kind(d: &mut Document, path: PathData, rule: FillRule) -> NodeKind {
 /// `n` with its geometry effects evaluated (`None` = unchanged).
 fn bake_node(d: &mut Document, n: &Node) -> Option<Node> {
     // A cancelled export leaves the rest of the document as it is: the caller drops the result.
-    if !needs_bake(n) || vectorcraft_doc::cancel::is_cancelled() {
+    if !needs_bake(n) || tsipika_doc::cancel::is_cancelled() {
         return None;
     }
     // Colour adjustments: the object recoloured (inside it too), then baked as it is.
@@ -171,7 +171,7 @@ fn bake_pieces(d: &mut Document, mut m: Node) -> Node {
 
 /// Give `n` and its descendants a new id wherever one was already `seen` (the pieces evaluated art
 /// copies from its source keep ids of their own).
-pub fn fresh_ids(d: &mut Document, n: &mut Node, seen: &mut std::collections::HashSet<vectorcraft_doc::NodeId>) {
+pub fn fresh_ids(d: &mut Document, n: &mut Node, seen: &mut std::collections::HashSet<tsipika_doc::NodeId>) {
     if !seen.insert(n.id) {
         n.id = d.alloc_id();
         seen.insert(n.id);
@@ -363,7 +363,7 @@ fn container_keeping_type(n: &Node) -> Option<Node> {
         return None;
     }
     let hook: &dyn Fn(&Node) -> Option<Node> = &outline_text;
-    let mut m = vectorcraft_doc::live::expand_deep(n, Some(hook));
+    let mut m = tsipika_doc::live::expand_deep(n, Some(hook));
     let mut kept = false;
     keep(&mut m, &moves, false, &mut kept);
     if !kept {
@@ -597,15 +597,15 @@ pub fn bake_document(doc: &Document) -> Option<Document> {
 mod tests {
     use super::*;
     use serde_json::json;
-    use vectorcraft_color::{Color, Paint};
-    use vectorcraft_doc::{CharStyle, Effect, NodeId, TextObject};
-    use vectorcraft_geom::{Point, Rect, shapes};
+    use tsipika_color::{Color, Paint};
+    use tsipika_doc::{CharStyle, Effect, NodeId, TextObject};
+    use tsipika_geom::{Point, Rect, shapes};
 
-    /// Type tests need glyph outlines, which only the optional craft-fonts build input provides.
-    fn skip_without_craft_fonts() -> bool {
-        let skip = vectorcraft_text::CRAFT_FONTS.is_empty();
+    /// Type tests need glyph outlines, which only the optional mahay-fonts build input provides.
+    fn skip_without_mahay_fonts() -> bool {
+        let skip = tsipika_text::MAHAY_FONTS.is_empty();
         if skip {
-            eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout to run it)");
+            eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout to run it)");
         }
         skip
     }
@@ -675,8 +675,8 @@ mod tests {
         let mut n = Node::path(NodeId(50), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 100.0)), Appearance::default_art());
         if let AppearanceItem::Stroke(s) = &mut n.appearance.items[1] {
             s.width = 10.0;
-            s.paint = Paint::Gradient(Box::new(vectorcraft_color::GradientPaint::new(Default::default())));
-            s.gradient_mode = vectorcraft_doc::StrokeGradientMode::Along;
+            s.paint = Paint::Gradient(Box::new(tsipika_color::GradientPaint::new(Default::default())));
+            s.gradient_mode = tsipika_doc::StrokeGradientMode::Along;
             s.opacity = 0.5;
         }
         let m = bake_appearance(&n).unwrap();
@@ -715,7 +715,7 @@ mod tests {
 
     #[test]
     fn type_moved_or_copied_by_a_groups_transform_effect_stays_type() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         for (params, origins, square) in [
@@ -749,7 +749,7 @@ mod tests {
 
     #[test]
     fn hidden_type_in_a_group_that_keeps_its_type_stays_hidden() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let mut g = type_group(vec![fx("distort.transform", json!({"moveH": 200, "copies": 1}))]);
@@ -763,7 +763,7 @@ mod tests {
 
     #[test]
     fn type_outlined_next_to_type_that_stays_type_keeps_its_look() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let mut g = type_group(vec![fx("distort.transform", json!({"moveH": 200, "copies": 1}))]);
@@ -788,7 +788,7 @@ mod tests {
 
     #[test]
     fn type_in_a_clipping_group_with_a_fill_of_its_own_is_outlined_plain() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let mut g = type_group(vec![fx("distort.transform", json!({"moveH": 200, "copies": 1}))]);
@@ -809,7 +809,7 @@ mod tests {
 
     #[test]
     fn type_with_its_own_transform_effect_copies_stays_type() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let mut n = type_node(50);
@@ -858,7 +858,7 @@ mod tests {
 
     #[test]
     fn type_whose_copies_paint_over_each_other_is_still_outlined() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let moves = vec![fx("distort.transform", json!({"moveV": 40, "copies": 1}))];
@@ -876,7 +876,7 @@ mod tests {
 
     #[test]
     fn type_with_a_look_of_its_own_in_a_moved_group_is_still_outlined() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let moves = vec![fx("distort.transform", json!({"moveV": 40, "copies": 1}))];
@@ -890,7 +890,7 @@ mod tests {
         shadowed.appearance.effects.push(fx("stylize.dropShadow", json!({})));
         let mut gradient = type_node(50);
         if let NodeKind::Text(t) = &mut gradient.kind {
-            t.runs[0].style.fill = Paint::Gradient(Box::new(vectorcraft_color::GradientPaint::new(vectorcraft_color::Gradient::default())));
+            t.runs[0].style.fill = Paint::Gradient(Box::new(tsipika_color::GradientPaint::new(tsipika_color::Gradient::default())));
         }
         let mut reshaped = type_node(50);
         let mut fill = FillLayer::new(Paint::solid(Color::BLACK));
@@ -951,7 +951,7 @@ mod tests {
 
     #[test]
     fn type_whose_copies_hold_too_much_is_still_outlined() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let spaced = |spaces: usize| {
@@ -991,7 +991,7 @@ mod tests {
 
     #[test]
     fn type_in_a_pathfinder_group_inside_a_moved_group_is_still_outlined() {
-        if skip_without_craft_fonts() {
+        if skip_without_mahay_fonts() {
             return;
         }
         let mut inner = type_group(vec![fx("pathfinder.add", json!({}))]);
@@ -1010,7 +1010,7 @@ mod tests {
         // A 10 pt line with `n` anchors.
         let line = |n: usize| {
             let pts: Vec<Point> = (0..n).map(|i| Point::new(i as f64 * 10.0 / n as f64, 0.0)).collect();
-            PathData::new(vec![vectorcraft_geom::SubPath::polyline(&pts, false)])
+            PathData::new(vec![tsipika_geom::SubPath::polyline(&pts, false)])
         };
         let right = json!({"moveH": 10, "copies": 1000});
         let down = json!({"moveV": 10, "copies": 1});
@@ -1029,7 +1029,7 @@ mod tests {
     }
     /// A 10 pt square painted with a red to blue gradient and a Transform effect with 2 copies.
     fn gradient_copies(id: u64) -> Node {
-        use vectorcraft_color::{Gradient, GradientKind, GradientPaint, GradientStop};
+        use tsipika_color::{Gradient, GradientKind, GradientPaint, GradientStop};
         let stops = vec![GradientStop::new(0.0, Color::rgb(1.0, 0.0, 0.0)), GradientStop::new(1.0, Color::rgb(0.0, 0.0, 1.0))];
         let paint = Paint::Gradient(Box::new(GradientPaint::new(Gradient { kind: GradientKind::Linear, stops })));
         let mut n = Node::path(NodeId(id), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::basic(paint, Paint::None, 0.0));

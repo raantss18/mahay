@@ -4,8 +4,8 @@
 //! The UI calls [`Session::grip_edit`]; every edit runs through a `grip.*` command so it is
 //! undoable and reachable from scripts, the control channel and MCP.
 
-use cadcraft_doc::{DimKind, EntityKind, Handle, LwPolyline};
-use cadcraft_geom::{Arc, EPS, Mat3, Polyline, Vec2, Vec3, norm_angle};
+use drafitra_doc::{DimKind, EntityKind, Handle, LwPolyline};
+use drafitra_geom::{Arc, EPS, Mat3, Polyline, Vec2, Vec3, norm_angle};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -300,8 +300,8 @@ pub fn stretch_grip(kind: &EntityKind, index: usize, to: Vec2) -> Option<EntityK
     Some(k)
 }
 
-fn shift_params(e: &mut cadcraft_doc::Ellipse, by: f64) {
-    let full = (cadcraft_geom::ccw_sweep(e.start, e.end) - cadcraft_geom::TAU).abs() < 1e-9;
+fn shift_params(e: &mut drafitra_doc::Ellipse, by: f64) {
+    let full = (drafitra_geom::ccw_sweep(e.start, e.end) - drafitra_geom::TAU).abs() < 1e-9;
     if !full {
         e.start = norm_angle(e.start + by);
         e.end = norm_angle(e.end + by);
@@ -409,7 +409,7 @@ pub fn grip_action(kind: &EntityKind, index: usize, action: GripAction, to: Opti
             let v = p.vertices.get_mut(at)?;
             // The segment is split in two straight ones.
             v.bulge = 0.0;
-            let nv = cadcraft_geom::PolyVertex { p: to, bulge: 0.0, ..*v };
+            let nv = drafitra_geom::PolyVertex { p: to, bulge: 0.0, ..*v };
             p.vertices.insert(at + 1, nv);
         }
         (EntityKind::LwPolyline(p), GripAction::RemoveVertex) => {
@@ -471,8 +471,8 @@ pub fn grip_action(kind: &EntityKind, index: usize, action: GripAction, to: Opti
             } else {
                 a.end = ang;
             }
-            let sweep = cadcraft_geom::ccw_sweep(a.start, a.end);
-            if !(sweep > 1e-9 && sweep < cadcraft_geom::TAU - 1e-9) {
+            let sweep = drafitra_geom::ccw_sweep(a.start, a.end);
+            if !(sweep > 1e-9 && sweep < drafitra_geom::TAU - 1e-9) {
                 return None;
             }
         }

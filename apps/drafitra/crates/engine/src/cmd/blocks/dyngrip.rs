@@ -3,9 +3,9 @@
 //! grip begins, with the reference re-evaluated under the cursor as its preview. Typing a number
 //! at a distance's grip sets the distance.
 
-use cadcraft_doc::dynblock::{self, GripPart, GripShape};
-use cadcraft_doc::{Drawing, EntityKind, Handle};
-use cadcraft_geom::Vec2;
+use drafitra_doc::dynblock::{self, GripPart, GripShape};
+use drafitra_doc::{Drawing, EntityKind, Handle};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 use crate::cmd::{bad, point_param, str_param};

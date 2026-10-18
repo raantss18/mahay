@@ -1,7 +1,7 @@
 //! Parameter parsing, deterministic noise and path-mapping helpers.
 
 use serde_json::Value;
-use vectorcraft_geom::{Anchor, CubicBez, ParamCurve, Point, Rect, SubPath, Vec2};
+use tsipika_geom::{Anchor, CubicBez, ParamCurve, Point, Rect, SubPath, Vec2};
 
 /// Number param (also accepts numeric strings such as `"10 pt"`); non-finite → default.
 pub fn num(p: &Value, key: &str, default: f64) -> f64 {
@@ -30,11 +30,11 @@ pub fn text<'a>(p: &'a Value, key: &str, default: &'a str) -> &'a str {
     p.get(key).and_then(Value::as_str).unwrap_or(default)
 }
 
-pub fn join(p: &Value, key: &str) -> vectorcraft_pathops::Join {
+pub fn join(p: &Value, key: &str) -> tsipika_pathops::Join {
     match text(p, key, "miter").to_ascii_lowercase().as_str() {
-        "round" => vectorcraft_pathops::Join::Round,
-        "bevel" => vectorcraft_pathops::Join::Bevel,
-        _ => vectorcraft_pathops::Join::Miter,
+        "round" => tsipika_pathops::Join::Round,
+        "bevel" => tsipika_pathops::Join::Bevel,
+        _ => tsipika_pathops::Join::Miter,
     }
 }
 
@@ -69,8 +69,8 @@ pub fn seg_cubic(sp: &SubPath, i: usize) -> CubicBez {
     if sp.segment_is_line(i) { CubicBez::new(c.p0, c.p0.lerp(c.p3, 1.0 / 3.0), c.p0.lerp(c.p3, 2.0 / 3.0), c.p3) } else { c }
 }
 
-/// Non-linear path mapping (shared with live envelopes in `vectorcraft-doc`).
-pub use vectorcraft_doc::live::map_nonlinear;
+/// Non-linear path mapping (shared with live envelopes in `tsipika-doc`).
+pub use tsipika_doc::live::map_nonlinear;
 
 /// Smooth subpath through `pts` (Catmull-Rom tangents, see [`turn_tangent`] for sharp turns).
 pub fn catmull_rom(pts: &[Point], closed: bool, tension: f64) -> SubPath {

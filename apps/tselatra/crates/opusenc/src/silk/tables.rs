@@ -3,7 +3,7 @@
 //! PDFs are written as in the RFC (`{...}/256`) and converted at compile time to the inverse-CDF
 //! form consumed by the range coder.
 //!
-//! Copied from FilmCraft's first-party, spec-derived `filmcraft-opus` decoder (MIT OR
+//! Copied from Hetsika's first-party, spec-derived `hetsika-opus` decoder (MIT OR
 //! Apache-2.0) so encoder and decoder share exactly the same values.
 
 /// Converts a PDF (summing to 256) into an inverse CDF (`256 - cdf[i+1]`).

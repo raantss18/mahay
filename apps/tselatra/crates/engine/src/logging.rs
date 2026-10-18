@@ -1,16 +1,16 @@
 //! The `log` logger. Records go to standard error and, on the desktop, to a session log that
-//! every launch starts afresh: `Logs/effectcraft.log` in the settings folder, with the two runs
-//! before it kept as `effectcraft.1.log` and `effectcraft.2.log`, so the log of a run that
+//! every launch starts afresh: `Logs/tselatra.log` in the settings folder, with the two runs
+//! before it kept as `tselatra.1.log` and `tselatra.2.log`, so the log of a run that
 //! crashed survives the next start. A launch from the Dock, the Start menu or a launcher has no
 //! terminal, so that file is what a bug report can attach. The last few hundred warnings and
 //! errors are also kept in memory for the System Compatibility Report.
 //!
-//! Levels: `info` for EffectCraft's own crates, `warn` for everything else (wgpu and naga are
+//! Levels: `info` for Tselatra's own crates, `warn` for everything else (wgpu and naga are
 //! chatty). `RUST_LOG` replaces that (a level such as `debug`, or per target:
-//! `effectcraft=debug,wgpu=warn`).
+//! `tselatra=debug,wgpu=warn`).
 //!
 //! Help ▸ Enable Logging ([`set_enabled`], the `help.enableLogging` command) additionally appends
-//! every EffectCraft record to `Logs/EffectCraft Log.txt`, across launches.
+//! every Tselatra record to `Logs/Tselatra Log.txt`, across launches.
 //!
 //! Frontends call [`install`] once at startup and the desktop app [`attach_session_log`] once the
 //! settings folder is known; records logged before that are kept (up to [`MAX_PENDING`]) and
@@ -27,15 +27,15 @@ use std::sync::{Mutex, OnceLock, PoisonError};
 use log::LevelFilter;
 
 /// The session log's name inside the `Logs` folder.
-pub const SESSION_LOG: &str = "effectcraft.log";
-/// How many previous session logs are kept (`effectcraft.1.log` … `effectcraft.<KEEP>.log`).
+pub const SESSION_LOG: &str = "tselatra.log";
+/// How many previous session logs are kept (`tselatra.1.log` … `tselatra.<KEEP>.log`).
 pub const KEEP: usize = 2;
 /// The session log stops growing past this size (a runaway warning can't fill the disk).
 pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 /// Records kept in memory until the session log is attached.
 pub const MAX_PENDING: usize = 512;
 /// The filter when `RUST_LOG` is unset or empty.
-pub const DEFAULT_FILTER: &str = "warn,effectcraft=info";
+pub const DEFAULT_FILTER: &str = "warn,tselatra=info";
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 /// The filter for standard error and the session log: (target prefix or every target, level).
@@ -54,7 +54,7 @@ const RECENT: usize = 300;
 
 impl log::Log for Logger {
     fn enabled(&self, m: &log::Metadata) -> bool {
-        m.level() <= log::Level::Warn || (ENABLED.load(Ordering::Relaxed) && m.target().starts_with("effectcraft")) || shown(m)
+        m.level() <= log::Level::Warn || (ENABLED.load(Ordering::Relaxed) && m.target().starts_with("tselatra")) || shown(m)
     }
     fn log(&self, r: &log::Record) {
         if !self.enabled(r.metadata()) {
@@ -180,11 +180,11 @@ pub fn log_dir(config_dir: Option<&Path>) -> PathBuf {
 
 /// Help ▸ Enable Logging's file inside `config_dir` (the settings folder), or the temporary folder.
 pub fn log_path(config_dir: Option<&Path>) -> PathBuf {
-    log_dir(config_dir).join("EffectCraft Log.txt")
+    log_dir(config_dir).join("Tselatra Log.txt")
 }
 
 fn numbered(dir: &Path, n: usize) -> PathBuf {
-    if n == 0 { dir.join(SESSION_LOG) } else { dir.join(format!("effectcraft.{n}.log")) }
+    if n == 0 { dir.join(SESSION_LOG) } else { dir.join(format!("tselatra.{n}.log")) }
 }
 
 /// Shift the previous session logs up one (`.log` → `.1.log` → … → `.<KEEP>.log`, the oldest
@@ -203,7 +203,7 @@ fn rotate(dir: &Path) -> std::io::Result<(PathBuf, File)> {
 }
 
 /// Rotate the session logs in `dir` (the `Logs` folder, see [`log_dir`]) and write records to
-/// a fresh `effectcraft.log` there, first the ones logged so far; returns its path.
+/// a fresh `tselatra.log` there, first the ones logged so far; returns its path.
 pub fn attach_session_log(dir: &Path) -> Result<PathBuf, String> {
     let (path, file) = rotate(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let mut sink = SESSION.lock().unwrap_or_else(PoisonError::into_inner);
@@ -289,7 +289,7 @@ pub fn set_enabled(on: bool, file: PathBuf) -> std::io::Result<()> {
             std::fs::create_dir_all(d)?;
         }
         let mut f = std::fs::OpenOptions::new().create(true).append(true).open(&file)?;
-        writeln!(f, "{} INFO  effectcraft: logging enabled ({} {})", timestamp(unix_millis()), std::env::consts::OS, env!("CARGO_PKG_VERSION"))?;
+        writeln!(f, "{} INFO  tselatra: logging enabled ({} {})", timestamp(unix_millis()), std::env::consts::OS, env!("CARGO_PKG_VERSION"))?;
     }
     if let Ok(mut st) = STATE.lock() {
         st.file = Some(file);
@@ -320,11 +320,11 @@ mod tests {
     /// `RUST_LOG` picks what start-up prints to stderr (#234).
     #[test]
     fn rust_log_filters_by_level_and_target() {
-        let f = parse_filter("info, wgpu=warn,wgpu_core=debug, effectcraft , bogus=loud");
+        let f = parse_filter("info, wgpu=warn,wgpu_core=debug, tselatra , bogus=loud");
         assert_eq!(level_for(&f, "eframe::native"), LevelFilter::Info);
         assert_eq!(level_for(&f, "wgpu_hal::metal"), LevelFilter::Warn);
         assert_eq!(level_for(&f, "wgpu_core::device"), LevelFilter::Debug, "the longest matching target wins");
-        assert_eq!(level_for(&f, "effectcraft_ui_egui"), LevelFilter::Trace, "a bare target: every level");
+        assert_eq!(level_for(&f, "tselatra_ui_egui"), LevelFilter::Trace, "a bare target: every level");
         assert_eq!(f.len(), 4, "an unknown level is skipped");
         assert_eq!(level_for(&parse_filter("wgpu=debug"), "winit"), LevelFilter::Off);
         assert!(parse_filter("").is_empty());
@@ -332,7 +332,7 @@ mod tests {
 
     fn temp_dir(tag: &str) -> PathBuf {
         static N: AtomicUsize = AtomicUsize::new(0);
-        let d = std::env::temp_dir().join(format!("effectcraft-logging-{tag}-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+        let d = std::env::temp_dir().join(format!("tselatra-logging-{tag}-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
         let _ = std::fs::remove_dir_all(&d);
         d
     }
@@ -341,12 +341,12 @@ mod tests {
         std::fs::read_to_string(path).unwrap()
     }
 
-    /// Without `RUST_LOG`, EffectCraft's own info records and everyone's warnings are shown.
+    /// Without `RUST_LOG`, Tselatra's own info records and everyone's warnings are shown.
     #[test]
-    fn the_default_filter_shows_effectcraft_info_and_other_crates_warnings() {
+    fn the_default_filter_shows_tselatra_info_and_other_crates_warnings() {
         let f = parse_filter(DEFAULT_FILTER);
-        assert_eq!(level_for(&f, "effectcraft"), LevelFilter::Info);
-        assert_eq!(level_for(&f, "effectcraft_ui_egui::app"), LevelFilter::Info);
+        assert_eq!(level_for(&f, "tselatra"), LevelFilter::Info);
+        assert_eq!(level_for(&f, "tselatra_ui_egui::app"), LevelFilter::Info);
         assert_eq!(level_for(&f, "wgpu_core::device"), LevelFilter::Warn);
         assert_eq!(level_for(&f, "naga"), LevelFilter::Warn);
     }
@@ -372,9 +372,9 @@ mod tests {
             std::fs::write(&path, format!("run {run}")).unwrap();
         }
         assert_eq!(read(&dir.join(SESSION_LOG)), "run 4");
-        assert_eq!(read(&dir.join("effectcraft.1.log")), "run 3");
-        assert_eq!(read(&dir.join("effectcraft.2.log")), "run 2");
-        assert!(!dir.join("effectcraft.3.log").exists(), "only {KEEP} old logs are kept");
+        assert_eq!(read(&dir.join("tselatra.1.log")), "run 3");
+        assert_eq!(read(&dir.join("tselatra.2.log")), "run 2");
+        assert!(!dir.join("tselatra.3.log").exists(), "only {KEEP} old logs are kept");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -432,8 +432,8 @@ mod tests {
     #[test]
     fn a_line_carries_time_level_thread_target_and_message() {
         assert_eq!(
-            format_line("2026-10-08T07:59:17.728Z", log::Level::Warn, "main", "effectcraft_engine::autosave", "disk full\n"),
-            "2026-10-08T07:59:17.728Z WARN  [main] effectcraft_engine::autosave: disk full"
+            format_line("2026-10-08T07:59:17.728Z", log::Level::Warn, "main", "tselatra_engine::autosave", "disk full\n"),
+            "2026-10-08T07:59:17.728Z WARN  [main] tselatra_engine::autosave: disk full"
         );
     }
 }

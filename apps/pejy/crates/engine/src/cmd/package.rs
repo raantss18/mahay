@@ -11,9 +11,9 @@ use std::io::Write;
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
 use crate::{EngineError, Result, Session};
-use designcraft_compose::ComposedStory;
-use designcraft_doc::{AssetId, Document};
-use designcraft_fonts::{FaceRef, FontFace, FontSource};
+use pejy_compose::ComposedStory;
+use pejy_doc::{AssetId, Document};
+use pejy_fonts::{FaceRef, FontFace, FontSource};
 use serde_json::{Value, json};
 
 const MAX_OUTPUT_COMPONENT_BYTES: usize = 200;
@@ -127,7 +127,7 @@ impl OutputRoot {
         let parent = path.parent().ok_or_else(|| path_error(path, "output file has no parent directory"))?;
         self.validate_directory(parent)?;
         let mut builder = tempfile::Builder::new();
-        builder.prefix(".designcraft-package-").suffix(".tmp");
+        builder.prefix(".pejy-package-").suffix(".tmp");
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -315,7 +315,7 @@ fn write_links(d: &Document, root: &OutputRoot, dir: &Path, only: Option<&[Asset
 /// report adds after the font's name (nothing when copied).
 fn copy_font(root: &OutputRoot, face: &FontFace, dir: &Path, copied: &mut Vec<PathBuf>, taken: &mut Vec<String>, files: &mut Vec<PathBuf>) -> String {
     let from = match &face.source {
-        FontSource::Bundled => return " — included with DesignCraft".into(),
+        FontSource::Bundled => return " — included with Pejy".into(),
         FontSource::Memory => return " — not copied: no font file".into(),
         FontSource::Installed(p) | FontSource::Document(p) => p,
     };
@@ -389,12 +389,12 @@ fn package(s: &mut Session, p: &Value) -> Result<Value> {
     let d = s.doc()?.doc.clone();
     let links_dir = root.child("Links")?;
     let (packed, mut files) = write_links(&d, &root, &links_dir, None)?;
-    let doc_path = package_output_path(&dir, &title, "designcraft")?;
+    let doc_path = package_output_path(&dir, &title, "pejy")?;
     root.write(&doc_path, &super::to_bytes(&packed)?)?;
     files.insert(0, doc_path);
     // The font files, and what the report says about each font.
-    let db = designcraft_fonts::FontDb::global().scoped(d.font_scope);
-    let fonts_dir = root.child(designcraft_fonts::DOCUMENT_FONTS_FOLDER)?;
+    let db = pejy_fonts::FontDb::global().scoped(d.font_scope);
+    let fonts_dir = root.child(pejy_fonts::DOCUMENT_FONTS_FOLDER)?;
     let (mut copied, mut taken) = (Vec::new(), Vec::new());
     let (mut font_lines, mut named) = (Vec::new(), Vec::new());
     for f in fonts.as_array().into_iter().flatten() {
@@ -420,13 +420,13 @@ fn package(s: &mut Session, p: &Value) -> Result<Value> {
     if p.get("idml").and_then(Value::as_bool).unwrap_or(true) {
         let path = package_output_path(&dir, &title, "idml")?;
         // The images are in Links/ beside it: link them there, without embedded copies.
-        let opts = designcraft_idml::ExportOptions { embed_images: false };
-        root.write(&path, &designcraft_idml::export_idml_with(&packed, &opts))?;
+        let opts = pejy_idml::ExportOptions { embed_images: false };
+        root.write(&path, &pejy_idml::export_idml_with(&packed, &opts))?;
         files.push(path);
     }
     if p.get("pdf").and_then(Value::as_bool).unwrap_or(false) {
         let path = package_output_path(&dir, &title, "pdf")?;
-        let bytes = designcraft_pdf::export_pdf(&super::interchange::with_pdf_boxes(&packed), &s.cache, &Default::default())
+        let bytes = pejy_pdf::export_pdf(&super::interchange::with_pdf_boxes(&packed), &s.cache, &Default::default())
             .map_err(|e| EngineError::Other(e.to_string()))?;
         root.write(&path, &bytes)?;
         files.push(path);
@@ -481,14 +481,14 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("dc-package-relocation-{}-{nonce}", std::process::id()));
         let original = dir.join("original");
         let moved = dir.join("moved");
-        let png = designcraft_render::Rendered { width: 4, height: 3, pixels: [30, 90, 180, 255].repeat(12) }.to_png();
+        let png = pejy_render::Rendered { width: 4, height: 3, pixels: [30, 90, 180, 255].repeat(12) }.to_png();
         let mut s = Session::new();
         s.execute("file.new", &json!({"title": "OwnedPackage", "width": 72, "height": 72})).unwrap();
         s.execute("file.place", &json!({"base64": super::super::base64_encode(&png), "name": "owned.png", "x": 5, "y": 5, "width": 16})).unwrap();
         s.execute("file.package", &json!({"dir": original.to_string_lossy(), "idml": true, "pdf": false})).unwrap();
         std::fs::rename(&original, &moved).unwrap();
         let expected = std::path::absolute(moved.join("Links").join("owned.png")).unwrap();
-        for (command, extension) in [("file.open", "designcraft"), ("file.openIdml", "idml")] {
+        for (command, extension) in [("file.open", "pejy"), ("file.openIdml", "idml")] {
             let mut opened = Session::new();
             opened.execute(command, &json!({"path": moved.join(format!("OwnedPackage.{extension}")).to_string_lossy()})).unwrap();
             let asset = opened.doc().unwrap().doc.assets.values().next().unwrap();
@@ -506,7 +506,7 @@ mod tests {
     fn package_idml_links_the_links_folder_and_embeds_nothing() {
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let dir = std::env::temp_dir().join(format!("dc-package-idml-links-{}-{nonce}", std::process::id()));
-        let png = designcraft_render::Rendered { width: 4, height: 3, pixels: [30, 90, 180, 255].repeat(12) }.to_png();
+        let png = pejy_render::Rendered { width: 4, height: 3, pixels: [30, 90, 180, 255].repeat(12) }.to_png();
         let mut s = Session::new();
         s.execute("file.new", &json!({"title": "LinkedPackage", "width": 72, "height": 72})).unwrap();
         s.execute("file.place", &json!({"base64": super::super::base64_encode(&png), "name": "my photo.png", "x": 5, "y": 5, "width": 16})).unwrap();
@@ -524,7 +524,7 @@ mod tests {
         let uri = format!("file:{}", linked.to_string_lossy().replace(' ', "%20"));
         assert!(spreads.contains(&format!(r#"LinkResourceURI="{uri}""#)), "{spreads}");
         assert!(!spreads.contains("<Contents") && !spreads.contains(r#"StoredState="Embedded""#), "no image is embedded");
-        let back = designcraft_idml::import_idml_with(&idml, &|_| None).unwrap();
+        let back = pejy_idml::import_idml_with(&idml, &|_| None).unwrap();
         let asset = back.assets.values().next().unwrap();
         assert!(asset.data.is_empty(), "no image is embedded");
         assert_eq!(asset.link.as_deref(), linked.to_str());
@@ -564,7 +564,7 @@ mod tests {
         assert!(!r["files"].to_string().contains("gone.svg"), "{}", r["files"]);
         let report = r["report"].as_str().unwrap();
         assert!(report.contains("gone.svg (missing)"), "{report}");
-        for (command, extension) in [("file.open", "designcraft"), ("file.openIdml", "idml")] {
+        for (command, extension) in [("file.open", "pejy"), ("file.openIdml", "idml")] {
             let mut opened = Session::new();
             opened.execute(command, &json!({"path": out.join(format!("TwoLinks.{extension}")).to_string_lossy()})).unwrap();
             assert_eq!(status(&mut opened, "gone.svg"), Some(json!("missing")), "{extension}");
@@ -587,7 +587,7 @@ mod tests {
         let out = dir.join("Pkg");
         let r = s.execute("file.package", &json!({"dir": out.to_string_lossy(), "pdf": true, "instructions": "Print on matte."})).unwrap();
         let files: Vec<String> = r["files"].as_array().unwrap().iter().map(|f| f.as_str().unwrap().to_string()).collect();
-        assert!(files.iter().any(|f| f.ends_with(".designcraft")));
+        assert!(files.iter().any(|f| f.ends_with(".pejy")));
         assert!(files.iter().any(|f| f.ends_with(".idml")));
         assert!(files.iter().any(|f| f.ends_with(".pdf")));
         assert!(out.join("Links").join("logo.svg").exists());
@@ -595,7 +595,7 @@ mod tests {
         assert!(report.contains("Print on matte.") && report.contains("logo.svg"), "{report}");
         assert!(report.contains("Preflight:"), "{report}");
         // The packaged document links to its Links folder.
-        let doc_file = files.iter().find(|f| f.ends_with(".designcraft")).unwrap();
+        let doc_file = files.iter().find(|f| f.ends_with(".pejy")).unwrap();
         let packed = super::super::from_bytes(&std::fs::read(doc_file).unwrap()).unwrap();
         let link = packed.assets.values().next().unwrap().link.clone().unwrap();
         assert!(link.contains("Links"), "{link}");
@@ -608,8 +608,8 @@ mod tests {
 
     #[test]
     fn package_copies_the_fonts_their_licences_allow() {
-        use designcraft_fonts::DOCUMENT_FONTS_FOLDER;
-        use designcraft_fonts::testing::{font_with, with_fs_type};
+        use pejy_fonts::DOCUMENT_FONTS_FOLDER;
+        use pejy_fonts::testing::{font_with, with_fs_type};
         const FREE: &str = "DocFont Package Free";
         const RESTRICTED: &str = "DocFont Package Restricted";
         let dir = std::env::temp_dir().join(format!("dc-package-fonts-{}", std::process::id()));
@@ -632,7 +632,7 @@ mod tests {
             s.execute("text.select", &json!({"story": r["story"], "anchor": a, "focus": b})).unwrap();
             s.execute("type.char", &json!({"fontFamily": family, "fontStyle": "Regular"})).unwrap();
         }
-        let src = dir.join("src").join("Fonts.designcraft");
+        let src = dir.join("src").join("Fonts.pejy");
         s.execute("file.save", &json!({"path": src.to_string_lossy()})).unwrap();
         let mut s = Session::new();
         assert_eq!(s.execute("file.open", &json!({"path": src.to_string_lossy()})).unwrap()["documentFonts"], 2);
@@ -655,7 +655,7 @@ mod tests {
         let report = r["report"].as_str().unwrap();
         assert!(report.contains(&format!("{RESTRICTED} Regular — not copied: its licence doesn't allow it")), "{report}");
         assert!(report.contains(&format!("{FREE} Regular\n")), "{report}");
-        assert!(report.contains(&format!("{} Regular — included with DesignCraft", designcraft_fonts::DEFAULT_FAMILY)), "{report}");
+        assert!(report.contains(&format!("{} Regular — included with Pejy", pejy_fonts::DEFAULT_FAMILY)), "{report}");
         // The packaged document opens with its fonts.
         let doc = r["files"][0].as_str().unwrap().to_string();
         assert_eq!(Session::new().execute("file.open", &json!({"path": doc})).unwrap()["documentFonts"], 1);
@@ -668,8 +668,8 @@ mod tests {
 
     #[test]
     fn package_copies_the_fallback_fonts_that_draw_text() {
-        use designcraft_fonts::DOCUMENT_FONTS_FOLDER;
-        use designcraft_fonts::testing::{font_with, with_fs_type};
+        use pejy_fonts::DOCUMENT_FONTS_FOLDER;
+        use pejy_fonts::testing::{font_with, with_fs_type};
         const NAMED: &str = "DocFont Fallback Named";
         const HELPER: &str = "DocFont Fallback Helper";
         const RESTRICTED: &str = "DocFont Fallback Restricted";
@@ -690,7 +690,7 @@ mod tests {
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": text})).unwrap();
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": text.len()})).unwrap();
         s.execute("type.char", &json!({"fontFamily": NAMED, "fontStyle": "Regular"})).unwrap();
-        let src = dir.join("src").join("Fallback.designcraft");
+        let src = dir.join("src").join("Fallback.pejy");
         // Written without File › Save's preview: drawing it before the document's fonts load would
         // pull in a system font that covers these characters (Unifont CSUR does) and draws them
         // ahead of the document's own fonts in this process.
@@ -717,8 +717,8 @@ mod tests {
 
     #[test]
     fn packaged_fonts_keep_a_font_extension() {
-        use designcraft_fonts::DOCUMENT_FONTS_FOLDER;
-        use designcraft_fonts::testing::{font_with, installed_face};
+        use pejy_fonts::DOCUMENT_FONTS_FOLDER;
+        use pejy_fonts::testing::{font_with, installed_face};
         // A font service's file without an extension is copied under a name the reopened
         // package loads.
         let dir = std::env::temp_dir().join(format!("dc-package-font-ext-{}", std::process::id()));
@@ -734,7 +734,7 @@ mod tests {
         let (mut copied, mut taken, mut files) = (Vec::new(), Vec::new(), Vec::new());
         assert_eq!(copy_font(&root, &face, &fonts, &mut copied, &mut taken, &mut files), "");
         assert_eq!(files, [fonts.join("12345.ttf")]);
-        let db = designcraft_fonts::FontDb::global();
+        let db = pejy_fonts::FontDb::global();
         let loaded = db.load_document_fonts(&fonts, &|_| Ok(()));
         assert_eq!((loaded.faces, loaded.skipped.len()), (1, 0), "{:?}", loaded.skipped);
         db.close_scope(loaded.scope);
@@ -774,7 +774,7 @@ mod tests {
         let r = s.execute("file.package", &json!({"dir": dir.to_string_lossy(), "idml": false})).unwrap();
         let files = r["files"].as_array().unwrap();
         assert!(files.iter().all(|path| Path::new(path.as_str().unwrap()).starts_with(&dir)));
-        assert!(dir.join("Annual_ Review.designcraft").is_file());
+        assert!(dir.join("Annual_ Review.pejy").is_file());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -783,7 +783,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("dc-package-overwrite-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let document = dir.join("Annual.designcraft");
+        let document = dir.join("Annual.pejy");
         std::fs::write(&document, b"previous package").unwrap();
         #[cfg(unix)]
         {
@@ -797,7 +797,7 @@ mod tests {
         s.execute("file.package", &json!({"dir": dir.to_string_lossy(), "idml": false})).unwrap();
         s.execute("file.package", &json!({"dir": dir.to_string_lossy(), "idml": false})).unwrap();
         assert!(super::super::from_bytes(&std::fs::read(&document).unwrap()).is_ok());
-        assert!(!dir.join(designcraft_fonts::DOCUMENT_FONTS_FOLDER).exists());
+        assert!(!dir.join(pejy_fonts::DOCUMENT_FONTS_FOLDER).exists());
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -814,7 +814,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"title": "Relative"})).unwrap();
         s.execute("file.package", &json!({"dir": dir.to_string_lossy(), "idml": false})).unwrap();
-        assert!(dir.join("Relative.designcraft").is_file());
+        assert!(dir.join("Relative.pejy").is_file());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -834,7 +834,7 @@ mod tests {
         let redirected_root = base.join("redirected-package");
         symlink(&outside, &redirected_root).unwrap();
         assert!(s.execute("file.package", &json!({"dir": redirected_root.to_string_lossy(), "idml": false})).is_err());
-        assert!(!outside.join("Annual.designcraft").exists());
+        assert!(!outside.join("Annual.pejy").exists());
         std::fs::remove_file(&redirected_root).unwrap();
 
         // A linked folder above the package is followed, as `/tmp` is on macOS.
@@ -842,20 +842,20 @@ mod tests {
         symlink(&outside, &linked_parent).unwrap();
         let nested_package = linked_parent.join("nested").join("Package");
         s.execute("file.package", &json!({"dir": nested_package.to_string_lossy(), "idml": false})).unwrap();
-        assert!(outside.join("nested").join("Package").join("Annual.designcraft").is_file());
+        assert!(outside.join("nested").join("Package").join("Annual.pejy").is_file());
         std::fs::remove_file(&linked_parent).unwrap();
 
         let package = base.join("Package");
         std::fs::create_dir_all(&package).unwrap();
         symlink(&outside, package.join("Links")).unwrap();
         assert!(s.execute("file.package", &json!({"dir": package.to_string_lossy(), "idml": false})).is_err());
-        assert!(!outside.join("Annual.designcraft").exists());
+        assert!(!outside.join("Annual.pejy").exists());
         std::fs::remove_file(package.join("Links")).unwrap();
         std::fs::create_dir(package.join("Links")).unwrap();
 
-        let kept = outside.join("kept.designcraft");
+        let kept = outside.join("kept.pejy");
         std::fs::write(&kept, b"kept").unwrap();
-        symlink(&kept, package.join("Annual.designcraft")).unwrap();
+        symlink(&kept, package.join("Annual.pejy")).unwrap();
         assert!(s.execute("file.package", &json!({"dir": package.to_string_lossy(), "idml": false})).is_err());
         assert_eq!(std::fs::read(&kept).unwrap(), b"kept");
         let _ = std::fs::remove_dir_all(&base);
@@ -882,7 +882,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"title": "Annual"})).unwrap();
         assert!(s.execute("file.package", &json!({"dir": redirected.to_string_lossy(), "idml": false})).is_err());
-        assert!(!outside.join("Annual.designcraft").exists());
+        assert!(!outside.join("Annual.pejy").exists());
         std::fs::remove_dir(&redirected).unwrap();
         let _ = std::fs::remove_dir_all(&base);
     }

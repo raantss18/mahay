@@ -4,13 +4,13 @@
 //! Automation ids: `viewer.exprErrors`, `viewer.exprErrors.prev`, `viewer.exprErrors.next`.
 
 use crate::i18n::tr;
-use effectcraft_engine::commands::expr_tools::ExprError;
-use effectcraft_engine::project::ItemId;
+use tselatra_engine::commands::expr_tools::ExprError;
+use tselatra_engine::project::ItemId;
 use egui::{Align2, Color32, Rect, Sense, pos2, vec2};
 use serde_json::json;
 use std::sync::Arc;
 
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::theme::Tokens;
 
 /// Height of the bar.
@@ -28,7 +28,7 @@ fn cache_id(cid: ItemId) -> egui::Id {
 }
 
 /// Both layout and painting read the same completed diagnostics; neither evaluates expressions.
-fn errors(app: &mut EffectcraftApp, ctx: &egui::Context, cid: ItemId) -> Cache {
+fn errors(app: &mut TselatraApp, ctx: &egui::Context, cid: ItemId) -> Cache {
     let mut c: Cache = ctx.data(|d| d.get_temp(cache_id(cid))).unwrap_or_default();
     let interacting = app.playback.playing || ctx.input(|i| i.pointer.any_down()) || app.ui.viewer.interacting || app.ui.viewer.property_interacting;
     c.errors = app.expression_diagnostics.errors(&app.session, ctx, cid, interacting);
@@ -42,11 +42,11 @@ fn errors(app: &mut EffectcraftApp, ctx: &egui::Context, cid: ItemId) -> Cache {
 }
 
 /// Height the bar needs for `cid` (0 when every expression evaluates).
-pub fn height(app: &mut EffectcraftApp, ctx: &egui::Context, cid: ItemId) -> f32 {
+pub fn height(app: &mut TselatraApp, ctx: &egui::Context, cid: ItemId) -> f32 {
     if errors(app, ctx, cid).errors.is_empty() { 0.0 } else { HEIGHT }
 }
 
-pub fn draw(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect, cid: ItemId) {
+pub fn draw(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect, cid: ItemId) {
     let t = app.tokens;
     let ctx = ui.ctx().clone();
     let mut c = errors(app, &ctx, cid);

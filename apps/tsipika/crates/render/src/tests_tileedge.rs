@@ -1,10 +1,10 @@
 //! Pattern editing mode: the tile edge in the Tile Edge Color, and Show Swatch Bounds.
 
 use super::*;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::pattern::{PatternDef, PatternEdit, TileType};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::shapes;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::pattern::{PatternDef, PatternEdit, TileType};
+use tsipika_doc::{Appearance, Node};
+use tsipika_geom::shapes;
 
 /// A document editing a 20×20 pattern tile of type `tt` (a red 10×10 square in its corner, no
 /// preview copies), its tile edge and swatch bounds shown as asked.

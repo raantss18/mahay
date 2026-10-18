@@ -1,5 +1,5 @@
 [package]
-name = "vectorcraft-three-d"
+name = "tsipika-three-d"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,5 +9,5 @@ description = "Portable 3D effect geometry (revolve, extrude and bevel, inflate,
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-pathops = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-pathops = { workspace = true }

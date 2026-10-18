@@ -9,7 +9,7 @@ use crate::keymap::{Context, GESTURES, Group, KEYS, Mods, Platform, display, loo
 use crate::params::id_of;
 use crate::tools::ToolId;
 use crate::{EngineError, Session};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 const PLATFORMS: [Platform; 2] = [Platform::Mac, Platform::Other];
 

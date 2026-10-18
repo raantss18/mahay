@@ -1,8 +1,8 @@
 //! Noise and texture: grains in the layer's own coordinates (stable under pans), colour modes,
 //! size and density; texture scattering edges, clipped or not.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, EffectKind, NodeId, NodeKind, Noise, NoiseMode, Texture};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, EffectKind, NodeId, NodeKind, Noise, NoiseMode, Texture};
 
 use super::*;
 
@@ -98,7 +98,7 @@ fn noise_grains_have_their_size_and_stay_put() {
 
 #[test]
 fn noise_blend_mode_applies() {
-    let (d, r) = square(noise(Noise { density: 1.0, color: Color::WHITE, blend: figcraft_color::BlendMode::Multiply, ..Noise::default() }));
+    let (d, r) = square(noise(Noise { density: 1.0, color: Color::WHITE, blend: endrika_color::BlendMode::Multiply, ..Noise::default() }));
     // White multiplied changes nothing.
     assert!(inside(&render_at(&d, r, (0.0, 0.0), 1.0)).iter().all(|c| *c == [128, 128, 128, 255]));
 }

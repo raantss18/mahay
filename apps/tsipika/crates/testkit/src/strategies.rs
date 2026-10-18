@@ -2,8 +2,8 @@
 
 use proptest::prelude::*;
 use serde_json::{Value, json};
-use vectorcraft_engine::{Session, command_specs};
-use vectorcraft_geom::{Anchor, PathData, Point, Rect, SubPath};
+use tsipika_engine::{Session, command_specs};
+use tsipika_geom::{Anchor, PathData, Point, Rect, SubPath};
 
 use crate::fixtures::{art_nodes, top_level_ids};
 
@@ -59,12 +59,12 @@ pub fn polygon_path(pts: &[Point]) -> PathData {
 
 /// An axis-aligned ellipse as a path.
 pub fn arb_ellipse() -> impl Strategy<Value = PathData> {
-    arb_rect().prop_map(vectorcraft_geom::shapes::ellipse)
+    arb_rect().prop_map(tsipika_geom::shapes::ellipse)
 }
 
 /// Rectangles, ellipses and star-shaped polygons.
 pub fn arb_closed_shape() -> impl Strategy<Value = PathData> {
-    prop_oneof![arb_rect().prop_map(vectorcraft_geom::shapes::rectangle), arb_ellipse(), arb_star_polygon().prop_map(|p| polygon_path(&p)),]
+    prop_oneof![arb_rect().prop_map(tsipika_geom::shapes::rectangle), arb_ellipse(), arb_star_polygon().prop_map(|p| polygon_path(&p)),]
 }
 
 /// A random cubic Bézier path (open or closed, possibly several subpaths, arbitrary handles).
@@ -264,7 +264,7 @@ pub fn arb_ops(len: std::ops::Range<usize>) -> impl Strategy<Value = Vec<Op>> {
     prop::collection::vec(arb_op(), len)
 }
 
-fn pick(ids: &[vectorcraft_doc::NodeId], i: usize) -> Option<u64> {
+fn pick(ids: &[tsipika_doc::NodeId], i: usize) -> Option<u64> {
     if ids.is_empty() { None } else { Some(ids[i % ids.len()].0) }
 }
 
@@ -280,7 +280,7 @@ impl Op {
                 art_nodes(d)
                     .iter()
                     .filter(|n| {
-                        !d.parent_of(n.id).and_then(|p| d.node(p)).is_some_and(|p| matches!(p.kind, vectorcraft_doc::NodeKind::Compound { .. }))
+                        !d.parent_of(n.id).and_then(|p| d.node(p)).is_some_and(|p| matches!(p.kind, tsipika_doc::NodeKind::Compound { .. }))
                     })
                     .map(|n| n.id)
                     .collect()
@@ -406,7 +406,7 @@ impl Op {
     }
 
     /// Apply this op to the session.
-    pub fn apply(&self, s: &mut Session) -> vectorcraft_engine::Result<Value> {
+    pub fn apply(&self, s: &mut Session) -> tsipika_engine::Result<Value> {
         let (id, p) = self.command(s);
         s.execute(&id, &p)
     }
@@ -414,7 +414,7 @@ impl Op {
 
 /// Keep the unused-import lint quiet when only some helpers are used.
 #[doc(hidden)]
-pub fn _top_level(s: &Session) -> Vec<vectorcraft_doc::NodeId> {
+pub fn _top_level(s: &Session) -> Vec<tsipika_doc::NodeId> {
     s.active().map(|d| top_level_ids(&d.doc)).unwrap_or_default()
 }
 

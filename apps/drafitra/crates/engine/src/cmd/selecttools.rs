@@ -5,7 +5,7 @@
 //! [`Drawing::hidden_objects`], which display, selection, snapping and plotting skip and which
 //! is never written to a file. Hiding and showing are undoable like any other change.
 
-use cadcraft_doc::{Drawing, Entity, EntityKind, Handle};
+use drafitra_doc::{Drawing, Entity, EntityKind, Handle};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase, SelectRun};

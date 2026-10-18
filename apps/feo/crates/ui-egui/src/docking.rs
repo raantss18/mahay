@@ -1,8 +1,8 @@
 //! Application panel identities and persistence around the shared docking renderer.
 //! Document contents remain owned by their existing view implementations.
 
-use craft_ui::docking::{Action, DockArea, DockStyle, Layout, Location, Node, PanelLimits, Permissions, Placement, Zone};
-use craft_ui::layout::{SplitAxis, SplitSize};
+use mahay_ui::docking::{Action, DockArea, DockStyle, Layout, Location, Node, PanelLimits, Permissions, Placement, Zone};
+use mahay_ui::layout::{SplitAxis, SplitSize};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -92,8 +92,8 @@ impl Default for Workspace {
                     tabs(Panel::Midi),
                 )),
                 floating: vec![
-                    craft_ui::docking::Floating { panels: vec![Panel::Memory], active: 0, rect: [160.0, 120.0, 480.0, 280.0] },
-                    craft_ui::docking::Floating { panels: vec![Panel::History], active: 0, rect: [680.0, 120.0, 260.0, 300.0] },
+                    mahay_ui::docking::Floating { panels: vec![Panel::Memory], active: 0, rect: [160.0, 120.0, 480.0, 280.0] },
+                    mahay_ui::docking::Floating { panels: vec![Panel::History], active: 0, rect: [680.0, 120.0, 260.0, 300.0] },
                 ],
             },
             hidden: Vec::new(),
@@ -137,7 +137,7 @@ impl Workspace {
             }
             let mut probe = self.layout.clone();
             if let Err(error) = probe.restore(*panel, location)
-                && error != craft_ui::docking::DockError::MissingTarget
+                && error != mahay_ui::docking::DockError::MissingTarget
             {
                 return Err(error.to_string());
             }
@@ -329,7 +329,7 @@ fn cancel_replaced_workspace(app: &crate::SoundApp, previous: &Workspace, next: 
     if (previous.layout != next.layout || previous.hidden != next.hidden)
         && let Some(ctx) = &app.docking_context
     {
-        craft_ui::docking::cancel_drag::<Panel>(ctx, egui::Id::new(("soundcraft-docking", edit)));
+        mahay_ui::docking::cancel_drag::<Panel>(ctx, egui::Id::new(("feo-docking", edit)));
     }
 }
 
@@ -407,7 +407,7 @@ pub fn show(app: &mut crate::SoundApp, ui: &mut egui::Ui, window: crate::MainWin
     style.border = egui::Stroke::new(1.0, t.border);
     style.accent = t.accent;
     style.font = crate::theme::regular(11.5);
-    let output = DockArea::new(egui::Id::new(("soundcraft-docking", edit))).show_with_limits(
+    let output = DockArea::new(egui::Id::new(("feo-docking", edit))).show_with_limits(
         ui,
         &workspace.layout,
         &style,
@@ -426,7 +426,7 @@ pub fn show(app: &mut crate::SoundApp, ui: &mut egui::Ui, window: crate::MainWin
             Panel::Tracks => crate::panels::tracks_and_groups(app, ui),
             Panel::Clips => crate::panels::clip_list(app, ui),
             Panel::Midi => {
-                ui.ctx().data_mut(|data| data.insert_temp(egui::Id::new("soundcraft-midi-body"), ui.max_rect()));
+                ui.ctx().data_mut(|data| data.insert_temp(egui::Id::new("feo-midi-body"), ui.max_rect()));
                 minimum_body(ui, egui::vec2(420.0, 260.0), |ui| crate::midi_editor::show(app, ui));
             }
             Panel::Memory => crate::panels::memory_locations(app, ui),

@@ -656,7 +656,7 @@ mod nearest_tests {
 
     /// Opt-in microbenchmark: compares the same nearest-neighbour queries, without image IO.
     #[test]
-    #[ignore = "run with cargo test -p vectorcraft-render nearest_palette_benchmark --release -- --ignored --nocapture"]
+    #[ignore = "run with cargo test -p tsipika-render nearest_palette_benchmark --release -- --ignored --nocapture"]
     fn nearest_palette_benchmark() {
         use std::time::Instant;
 

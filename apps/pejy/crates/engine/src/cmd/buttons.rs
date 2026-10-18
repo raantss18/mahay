@@ -1,7 +1,7 @@
 //! Window › Interactive › Buttons and Forms: objects that act when clicked in an interactive PDF
 //! (go to a page, the next / previous / first / last page, or a URL).
 
-use designcraft_doc::ButtonAction;
+use pejy_doc::ButtonAction;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_selection, targets};
@@ -57,7 +57,7 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection,
             |s, p| {
                 let ids = targets(s, p)?;
-                let kind: designcraft_doc::FieldKind = serde_json::from_value(p.get("kind").cloned().unwrap_or(json!("textField")))
+                let kind: pejy_doc::FieldKind = serde_json::from_value(p.get("kind").cloned().unwrap_or(json!("textField")))
                     .map_err(|_| bad("form.set", "`kind`: textField|checkBox|comboBox|listBox|signature"))?;
                 let p = p.clone();
                 s.edit(|d, _| {
@@ -65,7 +65,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         d.all_items().into_iter().filter_map(|i| d.item(i)?.form_field.as_ref().map(|f| f.name.clone())).collect();
                     for (k, id) in ids.iter().enumerate() {
                         let Some(it) = d.item_mut(*id) else { continue };
-                        let mut f = it.form_field.clone().unwrap_or(designcraft_doc::FormField {
+                        let mut f = it.form_field.clone().unwrap_or(pejy_doc::FormField {
                             kind,
                             name: String::new(),
                             value: String::new(),
@@ -81,11 +81,11 @@ pub fn specs() -> Vec<CommandSpec> {
                         if f.name.is_empty() {
                             // A unique default name.
                             let base = match kind {
-                                designcraft_doc::FieldKind::TextField => "Text Field",
-                                designcraft_doc::FieldKind::CheckBox => "Check Box",
-                                designcraft_doc::FieldKind::ComboBox => "Combo Box",
-                                designcraft_doc::FieldKind::ListBox => "List Box",
-                                designcraft_doc::FieldKind::Signature => "Signature",
+                                pejy_doc::FieldKind::TextField => "Text Field",
+                                pejy_doc::FieldKind::CheckBox => "Check Box",
+                                pejy_doc::FieldKind::ComboBox => "Combo Box",
+                                pejy_doc::FieldKind::ListBox => "List Box",
+                                pejy_doc::FieldKind::Signature => "Signature",
                             };
                             let mut n = 1;
                             while taken.contains(&format!("{base} {n}")) {
@@ -176,7 +176,7 @@ mod tests {
         let bytes = super::super::file::base64_decode(r["base64"].as_str().unwrap());
         let text = String::from_utf8_lossy(&bytes);
         assert!(text.contains("/AcroForm<</Fields[") && text.contains("/FT/Tx") && text.contains("(Your name)") && text.contains("/AS/On"), "fields");
-        assert_eq!(designcraft_render::pdf_page_count(&bytes), Some(3), "the update still reads");
+        assert_eq!(pejy_render::pdf_page_count(&bytes), Some(3), "the update still reads");
         assert!(s.execute("button.list", &json!({})).unwrap().as_array().unwrap().is_empty());
     }
 }

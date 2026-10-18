@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use figcraft_engine::{
+use endrika_engine::{
     Session,
     doc::NodeKind,
     tools::{PointerEvent, PointerKind},

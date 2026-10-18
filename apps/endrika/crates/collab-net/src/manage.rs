@@ -6,11 +6,11 @@
 
 use std::time::Duration;
 
-use figcraft_collab::message::{
+use endrika_collab::message::{
     self, Access, Admin, AdminReply, ClientMsg, HostInfo, LibraryReply, LibraryReq, Manage, NewLink, OpenHosting, OpenLibrary, OpenPlugins, PROTOCOL,
     PluginReply, PluginReq, Resolve, ServerMsg,
 };
-use figcraft_engine::live::{Shared, SharedLink};
+use endrika_engine::live::{Shared, SharedLink};
 use tungstenite::{Bytes, Message, WebSocket};
 
 use crate::invite::{Endpoint, Invite};
@@ -201,7 +201,7 @@ pub fn plugins(server: &Endpoint, key: &str, req: PluginReq, limits: &NetLimits,
 fn connect(server: &Endpoint, limits: &NetLimits, timeout: Duration) -> Result<Ws, String> {
     let (stream, _, _) = open(server, timeout, limits)?;
     let (ws, _) = tungstenite::client::client_with_config(server.url(), stream, Some(config(limits.max_server_message)))
-        .map_err(|e| format!("{} doesn't answer as a FigCraft server: {e}", server.display()))?;
+        .map_err(|e| format!("{} doesn't answer as a Endrika server: {e}", server.display()))?;
     ws.get_ref().set_read_timeout(Some(limits.idle_timeout)).map_err(|e| e.to_string())?;
     Ok(ws)
 }

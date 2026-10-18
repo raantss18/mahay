@@ -1,13 +1,13 @@
 //! Effect > Warp uses the existing modal and live-effect commands, without changing envelope art.
 use egui::{Event, Pos2, Rect, Shape, pos2, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::Session;
+use tsipika_doc::NodeId;
+use tsipika_engine::Session;
 
 use super::*;
 
-fn app() -> (VectorcraftApp, NodeId) {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> (TsipikaApp, NodeId) {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     let id = app.run("shape.rectangle", json!({"x": 50, "y": 60, "width": 120, "height": 80})).unwrap()["id"].as_u64().unwrap();
     (app, NodeId(id))
@@ -20,14 +20,14 @@ fn context() -> egui::Context {
     ctx
 }
 
-fn frame_output(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> egui::FullOutput {
+fn frame_output(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) -> egui::FullOutput {
     let input = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1000.0, 800.0))), events, ..Default::default() };
     let mut output = ctx.run_ui(input, |ui| show(app, ui.ctx()));
     output.textures_delta.clear();
     output
 }
 
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
     let output = frame_output(app, ctx, events);
     fn collect(shape: &Shape, clip: Rect, texts: &mut Vec<(String, Rect)>) {
         match shape {
@@ -48,20 +48,20 @@ fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> V
     texts
 }
 
-fn settle(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<(String, Rect)> {
+fn settle(app: &mut TsipikaApp, ctx: &egui::Context) -> Vec<(String, Rect)> {
     for _ in 0..3 {
         frame(app, ctx, vec![]);
     }
     frame(app, ctx, vec![])
 }
 
-fn click_text(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str) {
+fn click_text(app: &mut TsipikaApp, ctx: &egui::Context, label: &str) {
     let texts = frame(app, ctx, vec![]);
     let at = texts.iter().find(|(text, _)| text == label).unwrap_or_else(|| panic!("missing {label:?}: {texts:?}")).1.center();
     click_at(app, ctx, at);
 }
 
-fn click_at(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2) {
+fn click_at(app: &mut TsipikaApp, ctx: &egui::Context, at: Pos2) {
     for event in [
         Event::PointerMoved(at),
         Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() },
@@ -71,14 +71,14 @@ fn click_at(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2) {
     }
 }
 
-fn set(app: &mut VectorcraftApp, values: Value) {
+fn set(app: &mut TsipikaApp, values: Value) {
     // Supply dialog inputs as the control channel does; the production frame previews them.
     app.ui.dialog.as_mut().unwrap().fields.extend(values.as_object().unwrap().clone());
 }
 
 #[test]
 fn warp_options_controls_cover_every_existing_style() {
-    for (style, label) in vectorcraft_effects::WARP_STYLES {
+    for (style, label) in tsipika_effects::WARP_STYLES {
         let (mut app, _) = app();
         app.run("effect.dialog", json!({"effect": format!("warp.{style}"), "item": null})).unwrap();
         let ctx = context();
@@ -216,7 +216,7 @@ fn warp_options_preview_toggle_and_ok_use_latest_values() {
 }
 
 /// Locate the actual painted number beside its row label, without requesting widget focus.
-fn click_number(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str) {
+fn click_number(app: &mut TsipikaApp, ctx: &egui::Context, label: &str) {
     let texts = frame(app, ctx, vec![]);
     let row = texts.iter().find(|(text, _)| text == label).unwrap().1;
     let number = texts
@@ -452,7 +452,7 @@ fn warp_options_mixed_styles_change_only_after_explicit_style_choice() {
     }
 }
 
-fn warp_key(app: &mut VectorcraftApp, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
+fn warp_key(app: &mut TsipikaApp, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
     frame(app, ctx, vec![Event::ModifiersChanged(modifiers), Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }]);
     frame(
         app,
@@ -461,7 +461,7 @@ fn warp_key(app: &mut VectorcraftApp, ctx: &egui::Context, key: egui::Key, modif
     );
 }
 
-fn tab_to_warp_control(app: &mut VectorcraftApp, ctx: &egui::Context, label: &str, modifiers: egui::Modifiers) -> egui::Id {
+fn tab_to_warp_control(app: &mut TsipikaApp, ctx: &egui::Context, label: &str, modifiers: egui::Modifiers) -> egui::Id {
     // The popup container is also a Tab stop: its rectangle contains every option.
     // Require the real widget's focus announcement as well as its visible label.
     for _ in 0..32 {
@@ -516,7 +516,7 @@ fn warp_options_style_keyboard_enter_does_not_accept_dialog() {
         app.session.doc_mut().unwrap().mark_saved();
         let before = app.session.doc().unwrap().doc.clone();
         let selection = app.session.doc().unwrap().selection.clone();
-        let entries = |items: &[vectorcraft_engine::HistoryEntry]| {
+        let entries = |items: &[tsipika_engine::HistoryEntry]| {
             items.iter().map(|entry| (entry.label.clone(), entry.doc.clone(), entry.selection.clone())).collect::<Vec<_>>()
         };
         let undo = entries(&app.session.doc().unwrap().history.undo);

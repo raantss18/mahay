@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 
 use crate::params::id_of;
 use crate::{EngineError, Session};
-use figcraft_doc::{Node, NodeId, StyleKind};
+use endrika_doc::{Node, NodeId, StyleKind};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -188,8 +188,8 @@ fn rest_and_fig_carry_style_bindings() {
     let (_, _, a, b, sid) = two_modes(&mut s);
     run(&mut s, "style.bind", json!({"style": sid, "field": "fill", "variable": "bg"}));
     let doc = s.doc().unwrap().clone();
-    let (bytes, _) = figcraft_format::fig::export(&doc, None).unwrap();
-    let (mut back, warnings) = figcraft_format::fig::import(&bytes, "x").unwrap();
+    let (bytes, _) = endrika_format::fig::export(&doc, None).unwrap();
+    let (mut back, warnings) = endrika_format::fig::import(&bytes, "x").unwrap();
     assert!(warnings.is_empty(), "{warnings:?}");
     // The file gives a styled layer its style's value; opening it resolves that per layer.
     crate::style_vars::after_load(&mut back);

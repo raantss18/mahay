@@ -1,12 +1,12 @@
 //! View → Show Print Tiling (`view.printTiling`) and the Print Tiling tool (`print.tiling.set`):
 //! the pages of the document's print settings drawn on the canvas, from `print.preview`'s layout
-//! (`print.tiling`), and where the tool put them ([`vectorcraft_pdf::TileOrigin`], saved with
+//! (`print.tiling`), and where the tool put them ([`tsipika_pdf::TileOrigin`], saved with
 //! the print settings).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Document;
-use vectorcraft_geom::{Point, Rect};
-use vectorcraft_pdf::{TileOrigin, TilingPage};
+use tsipika_doc::Document;
+use tsipika_geom::{Point, Rect};
+use tsipika_pdf::{TileOrigin, TilingPage};
 
 use super::fileio::pdf::pdf_error;
 use super::print::{settings, to_json};
@@ -61,8 +61,8 @@ pub fn pages(doc: &Document) -> Result<Vec<TilingPage>> {
 fn pages_with(doc: &Document, p: &Value) -> Result<Vec<TilingPage>> {
     const C: &str = "print.tiling";
     let set = settings(C, doc, p)?;
-    let pv = vectorcraft_pdf::preview(doc, &set).map_err(|e| pdf_error(C, e))?;
-    Ok(vectorcraft_pdf::tiling(&pv, &set))
+    let pv = tsipika_pdf::preview(doc, &set).map_err(|e| pdf_error(C, e))?;
+    Ok(tsipika_pdf::tiling(&pv, &set))
 }
 
 fn tiling(s: &mut Session, p: &Value) -> Result<Value> {
@@ -81,7 +81,7 @@ fn point(p: &Value, key: &str) -> Option<Point> {
 /// edge, else one that holds it on its right or bottom edge or within a millionth of a point
 /// outside an edge (the edges `Document::art_on_artboard` counts).
 fn region_holding(regions: &[(Option<usize>, Rect)], at: Point) -> Option<&(Option<usize>, Rect)> {
-    regions.iter().find(|(_, r)| r.contains(at)).or_else(|| regions.iter().find(|(_, r)| vectorcraft_doc::artboard_holds(*r, at)))
+    regions.iter().find(|(_, r)| r.contains(at)).or_else(|| regions.iter().find(|(_, r)| tsipika_doc::artboard_holds(*r, at)))
 }
 
 fn set_origin(s: &mut Session, p: &Value) -> Result<Value> {
@@ -93,7 +93,7 @@ fn set_origin(s: &mut Session, p: &Value) -> Result<Value> {
     } else {
         let at = point(p, "origin").filter(|q| q.x.is_finite() && q.y.is_finite());
         let at = at.ok_or_else(|| bad(SET, "give origin: [x, y], or reset: true"))?;
-        let regions = vectorcraft_pdf::print_regions(doc, &set).map_err(|e| pdf_error(SET, e))?;
+        let regions = tsipika_pdf::print_regions(doc, &set).map_err(|e| pdf_error(SET, e))?;
         let picked = match p.get("artboard").filter(|v| !v.is_null()) {
             Some(v) => {
                 let i = v.as_u64().ok_or_else(|| bad(SET, "artboard must be a 0-based index"))? as usize;

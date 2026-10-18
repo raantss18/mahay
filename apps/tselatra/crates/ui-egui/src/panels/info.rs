@@ -4,9 +4,9 @@ use crate::i18n::{tr, tr_args};
 use egui::{Align2, Color32, Rect, pos2, vec2};
 
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let x0 = rect.min.x + 12.0;
@@ -79,10 +79,10 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                 format!("Duration: {}", {
                     let fr = c.frame_rate;
                     let n = fr.frame_at(l.out_point) - fr.frame_at(l.in_point);
-                    let s = effectcraft_engine::time::format_timecode_frames(n, fr, fr.supports_drop_frame());
+                    let s = tselatra_engine::time::format_timecode_frames(n, fr, fr.supports_drop_frame());
                     if fr.supports_drop_frame() { s } else { s.replace(';', ":") }
                 }),
-                format!("In: {}, Out: {}", tc(l.in_point), tc(effectcraft_engine::time::Tick(l.out_point.0 - c.frame_duration().0))),
+                format!("In: {}, Out: {}", tc(l.in_point), tc(tselatra_engine::time::Tick(l.out_point.0 - c.frame_duration().0))),
             ];
             for line in lines {
                 p.text(pos2(x0, ly), Align2::LEFT_CENTER, line, Tokens::ui(12.0), t.text_dim);
@@ -117,9 +117,9 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                     let key = pr.keys.iter().find(|x| x.time == k.time)?;
                     let tc = crate::panels::timecode(&app.session, &c, l.comp_time(k.time));
                     let v = match &key.value {
-                        effectcraft_engine::keyframe::Value::Scalar(v) => format!("{v:.2}"),
-                        effectcraft_engine::keyframe::Value::Vec2(v) => format!("{:.1}, {:.1}", v[0], v[1]),
-                        effectcraft_engine::keyframe::Value::Vec3(v) => format!("{:.1}, {:.1}, {:.1}", v[0], v[1], v[2]),
+                        tselatra_engine::keyframe::Value::Scalar(v) => format!("{v:.2}"),
+                        tselatra_engine::keyframe::Value::Vec2(v) => format!("{:.1}, {:.1}", v[0], v[1]),
+                        tselatra_engine::keyframe::Value::Vec3(v) => format!("{:.1}, {:.1}, {:.1}", v[0], v[1], v[2]),
                         _ => String::new(),
                     };
                     Some(format!("{}  {tc}  {v}", pr.name).trim_end().to_string())

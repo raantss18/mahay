@@ -3,8 +3,8 @@
 //! DIMREASSOCIATE / DIMDISASSOCIATE, DIMTEDIT, DIMSPACE; DIMEDIT, DIMJOGGED, DIMJOGLINE,
 //! DIMBREAK and DIMINSPECT in `annotate_dimedit.rs`.
 
-use cadcraft_doc::{AssocSnap, DimAssoc, DimKind, Dimension, EntityKind, Handle, MLeader, MText, Prim};
-use cadcraft_geom::{Segment, Vec2, Vec3};
+use drafitra_doc::{AssocSnap, DimAssoc, DimKind, Dimension, EntityKind, Handle, MLeader, MText, Prim};
+use drafitra_geom::{Segment, Vec2, Vec3};
 use serde_json::{Value, json};
 
 use super::helpers::v3;
@@ -190,7 +190,7 @@ fn angular_from_lines(s: &Session, h1: Handle, h2: Handle, at: Vec2) -> Option<E
         _ => None,
     };
     let ((a1, a2), (b1, b2)) = (line(h1)?, line(h2)?);
-    let (v, _, _) = cadcraft_geom::line_line_infinite(a1, a2, b1, b2)?;
+    let (v, _, _) = drafitra_geom::line_line_infinite(a1, a2, b1, b2)?;
     // Use the leg ends on the side of the picked arc location (the quadrant the user meant).
     let pick = |p: Vec2, q: Vec2, snap_p: AssocSnap, snap_q: AssocSnap| {
         let dir = if (p - v).len() > (q - v).len() { (p, snap_p) } else { (q, snap_q) };
@@ -303,7 +303,7 @@ fn run_angular(s: &mut Session, p: &Value) -> Result<Value> {
             Some(EntityKind::Arc(a)) => a,
             _ => return Err(bad("dimangular", "object is not an arc")),
         };
-        let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+        let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
         let k = dim(s, DimKind::Angular3P, at, g.start_point(), g.end_point(), g.center, Vec2::ZERO, "");
         return Ok(json!({ "handle": add_dim(s, k)?.hex() }));
     }
@@ -325,7 +325,7 @@ fn run_arclen(s: &mut Session, p: &Value) -> Result<Value> {
         Some(EntityKind::Arc(a)) => a,
         _ => return Err(bad("dimarc", "object is not an arc")),
     };
-    let ga = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+    let ga = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
     let k = dim(s, DimKind::ArcLength, at, ga.start_point(), ga.end_point(), ga.center, Vec2::ZERO, "");
     Ok(json!({ "handle": add_dim(s, k)?.hex() }))
 }
@@ -477,7 +477,7 @@ fn run_leader(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad("leader", "need 2+ points"));
     }
     let st = style(s);
-    let h = s.add_entity(EntityKind::Leader(cadcraft_doc::Leader {
+    let h = s.add_entity(EntityKind::Leader(drafitra_doc::Leader {
         vertices: pts.iter().map(|q| v3(*q)).collect(),
         arrow: true,
         spline: false,
@@ -860,7 +860,7 @@ impl Interactive for OverrideM {
                 if t.eq_ignore_ascii_case("c") {
                     self.clear = true;
                     self.selecting = Some(super::machines::SelectPhase::default());
-                } else if cadcraft_doc::DimStyle::field_name(&t).is_some() {
+                } else if drafitra_doc::DimStyle::field_name(&t).is_some() {
                     self.var = Some(t);
                 } else {
                     s.echo(format!("Unknown dimension variable \"{t}\"."));
@@ -896,9 +896,9 @@ fn pick_at(s: &Session, p: Vec2) -> Option<Handle> {
 /// The straight or curved piece of `h` picked at `p`: a line, an arc, or the polyline segment nearest `p`.
 fn segment_at(s: &Session, h: Handle, p: Vec2) -> Option<Segment> {
     match &s.doc().ok()?.entity(h)?.kind {
-        EntityKind::Line(l) => Some(Segment::Line(cadcraft_geom::Line::new(l.a.xy(), l.b.xy()))),
-        EntityKind::Arc(a) => Some(Segment::Arc { arc: cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end), ccw: true }),
-        EntityKind::LwPolyline(pl) => cadcraft_geom::Polyline { vertices: pl.vertices.clone(), closed: pl.closed }
+        EntityKind::Line(l) => Some(Segment::Line(drafitra_geom::Line::new(l.a.xy(), l.b.xy()))),
+        EntityKind::Arc(a) => Some(Segment::Arc { arc: drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end), ccw: true }),
+        EntityKind::LwPolyline(pl) => drafitra_geom::Polyline { vertices: pl.vertices.clone(), closed: pl.closed }
             .segments()
             .into_iter()
             .min_by(|x, y| x.closest(p).dist(p).total_cmp(&y.closest(p).dist(p))),
@@ -1060,7 +1060,7 @@ impl Interactive for LinearM {
                 add_dim(s, k)?;
                 if let Some(EntityKind::Dimension(d)) = s.last_dim.and_then(|h| s.doc().ok()?.entity(h).map(|e| e.kind.clone())) {
                     let st = s.doc()?.dim_style(&d.style).cloned().unwrap_or_default();
-                    let g = cadcraft_render::dimension_geometry(&d, &st, 1.0);
+                    let g = drafitra_render::dimension_geometry(&d, &st, 1.0);
                     s.echo(format!("Dimension text = {}", g.value));
                 }
                 Ok(Step::Done)
@@ -1177,7 +1177,7 @@ impl AngularM {
             return Some((*v, *a, *b));
         }
         let ((a1, a2), (b1, b2)) = (self.first?, self.second?);
-        let (v, _, _) = cadcraft_geom::line_line_infinite(a1, a2, b1, b2)?;
+        let (v, _, _) = drafitra_geom::line_line_infinite(a1, a2, b1, b2)?;
         let far = |p: Vec2, q: Vec2| if p.dist(v) > q.dist(v) { p } else { q };
         Some((v, far(a1, a2), far(b1, b2)))
     }
@@ -1274,7 +1274,7 @@ impl Interactive for AngularM {
                 let circle = s
                     .doc()?
                     .entity(h)
-                    .and_then(|e| if let EntityKind::Circle(c) = &e.kind { Some(cadcraft_geom::Circle::new(c.center.xy(), c.radius)) } else { None });
+                    .and_then(|e| if let EntityKind::Circle(c) = &e.kind { Some(drafitra_geom::Circle::new(c.center.xy(), c.radius)) } else { None });
                 if let Some(g) = circle.filter(|_| self.first.is_none()) {
                     // The center is the vertex and the pick the first endpoint; ask for the second.
                     self.vertex = true;
@@ -1311,18 +1311,18 @@ impl Interactive for AngularM {
 
 #[derive(Default)]
 struct ArcLenM {
-    arc: Option<cadcraft_geom::Arc>,
+    arc: Option<drafitra_geom::Arc>,
     text: DimText,
     /// Partial: the points picked so far on the arc (`None` when not choosing a part).
     partial: Option<Vec<Vec2>>,
 }
 
 /// The part of `arc` between the points nearest `p` and `q` (in the arc's direction).
-fn arc_part(arc: &cadcraft_geom::Arc, p: Vec2, q: Vec2) -> Option<cadcraft_geom::Arc> {
+fn arc_part(arc: &drafitra_geom::Arc, p: Vec2, q: Vec2) -> Option<drafitra_geom::Arc> {
     let sweep = arc.sweep();
     // Offset along the arc from its start, clamped to the nearer end when the point is off the arc.
     let along = |x: Vec2| {
-        let t = cadcraft_geom::ccw_sweep(arc.start, arc.center.angle_to(x));
+        let t = drafitra_geom::ccw_sweep(arc.start, arc.center.angle_to(x));
         if t <= sweep {
             t
         } else if t - sweep < std::f64::consts::TAU - t {
@@ -1333,7 +1333,7 @@ fn arc_part(arc: &cadcraft_geom::Arc, p: Vec2, q: Vec2) -> Option<cadcraft_geom:
     };
     let (t1, t2) = (along(p), along(q));
     let (lo, hi) = (t1.min(t2), t1.max(t2));
-    (hi - lo > 1e-9).then(|| cadcraft_geom::Arc::new(arc.center, arc.radius, arc.start + lo, arc.start + hi))
+    (hi - lo > 1e-9).then(|| drafitra_geom::Arc::new(arc.center, arc.radius, arc.start + lo, arc.start + hi))
 }
 
 impl Interactive for ArcLenM {
@@ -1374,7 +1374,7 @@ impl Interactive for ArcLenM {
         match (self.arc, i) {
             (None, Input::Point(p)) => {
                 if let Some(EntityKind::Arc(a)) = pick_at(s, p).and_then(|h| s.doc().ok()?.entity(h).map(|e| e.kind.clone())) {
-                    self.arc = Some(cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end));
+                    self.arc = Some(drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end));
                 } else {
                     s.echo("Select an arc.");
                 }

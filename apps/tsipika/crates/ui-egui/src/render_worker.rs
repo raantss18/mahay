@@ -5,9 +5,9 @@
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
-use vectorcraft_doc::Document;
-use vectorcraft_geom::Affine;
-use vectorcraft_render::{RenderOptions, Rendered, Renderer};
+use tsipika_doc::Document;
+use tsipika_geom::Affine;
+use tsipika_render::{RenderOptions, Rendered, Renderer};
 
 use crate::CacheKey;
 
@@ -24,7 +24,7 @@ pub struct Done {
     pub key: CacheKey,
     pub img: Rendered,
     pub ms: f64,
-    /// [`vectorcraft_render::FrameStats::moved`] of the frame.
+    /// [`tsipika_render::FrameStats::moved`] of the frame.
     pub moved: usize,
 }
 
@@ -43,7 +43,7 @@ impl Worker {
         let (tx, jobs) = channel::<Job>();
         let (done_tx, rx) = channel::<Done>();
         std::thread::Builder::new()
-            .name("vectorcraft-render".into())
+            .name("tsipika-render".into())
             .spawn(move || {
                 let mut r = Renderer::new();
                 while let Ok(mut job) = jobs.recv() {

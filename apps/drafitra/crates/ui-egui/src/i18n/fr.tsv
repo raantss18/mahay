@@ -1,6 +1,6 @@
-# CADCraft French interface catalog — original translations by @pechnikov2026-star.
+# Drafitra French interface catalog — original translations by @pechnikov2026-star.
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # UTF-8: context<TAB>English source<TAB>French translation.
 # Empty context = ordinary label; @plural = one|other forms with {n}.
 # Command IDs, typed keywords, technology/product names and user data stay unchanged.
@@ -28,7 +28,7 @@
 	= Equals	= Égal à
 	> Greater than	> Supérieur à
 	About	À propos
-	About CADCraft	À propos de CADCraft
+	About Drafitra	À propos de Drafitra
 	Absolute	Absolu
 	Add Leader	Ajouter un repère
 	Align	Aligner
@@ -83,7 +83,7 @@
 	ByBlock	DuBloc
 	ByColor	Par couleur
 	ByLayer	DuCalque
-	CADCraft Help	Aide de CADCraft
+	Drafitra Help	Aide de Drafitra
 	Cancel	Annuler
 	Cartesian (x, y)	Cartésien (x, y)
 	Center	Centre
@@ -356,7 +356,7 @@
 	Isolate Layer	Isoler le calque
 	Isometric Drafting	Dessin isométrique
 	Join	Rejoindre
-	Join the ArtCraft Discord…	Rejoindre le Discord d'ArtCraft…
+	Join the Mahay Discord…	Rejoindre le Discord d'Mahay…
 	Join us on Discord	Rejoignez-nous sur Discord
 	Language	Langue
 	Last	Dernier
@@ -485,7 +485,7 @@
 	Offset	Décalage
 	On	Activé
 	On/Off	Activer/Désactiver
-	One of the Crafting Apps by the ArtCraft team and community.	L'une des applications Crafting Apps de l'équipe et de la communauté ArtCraft.
+	One of the Mahay apps by the Mahay team and community.	L'une des applications Mahay apps de l'équipe et de la communauté Mahay.
 	Open (⌘O)	Ouvrir (⌘O)
 	Open Sample Drawing	Ouvrir un dessin d'exemple
 	Open sample drawing	Ouvrir un dessin d'exemple
@@ -585,7 +585,7 @@
 	Quick Select Properties	Propriétés de la sélection rapide
 	Quick Select...	Sélection rapide...
 	QuickCalc	Calculatrice rapide
-	Quit CADCraft	Quitter CADCraft
+	Quit Drafitra	Quitter Drafitra
 	Radius	Rayon
 	Raster Image	Image raster
 	Ray	Rayon
@@ -994,7 +994,7 @@
 @plural	{n} contributor	{n} contributeur|{n} contributeurs
 	Drawing as bytes	Dessin sous forme d'octets
 	Services	Services
-	Hide CADCraft	Masquer CADCraft
+	Hide Drafitra	Masquer Drafitra
 	Hide Others	Masquer les autres
 	Accessibility	Accessibilité
 	Show System Cursor	Afficher le curseur système

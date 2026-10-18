@@ -1,4 +1,4 @@
-//! Constant tables of ITU-T H.265, mirrored from the first-party, spec-derived `filmcraft-hevc`
+//! Constant tables of ITU-T H.265, mirrored from the first-party, spec-derived `hetsika-hevc`
 //! decoder (same organisation, MIT OR Apache-2.0): CABAC context layout and initValues (9.3.2.2),
 //! rangeTabLPS / transIdx (Tables 9-52, 9-53), scans (6.5.3 - 6.5.5), transform matrices (8.6.4.2),
 //! intra angles (Tables 8-5, 8-6), interpolation filters (8.5.3.3.3) and the chroma QP mapping (Table 8-10).

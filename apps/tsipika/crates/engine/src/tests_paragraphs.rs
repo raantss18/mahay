@@ -2,8 +2,8 @@
 //! paragraph, splitting and merging paragraphs while editing, undo and threaded text.
 
 use serde_json::json;
-use vectorcraft_doc::{Justify, NodeId, NodeKind, TextObject};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_doc::{Justify, NodeId, NodeKind, TextObject};
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 use super::*;
 
@@ -47,7 +47,7 @@ fn ranged_paragraph_commands_touch_only_their_paragraphs() {
     assert!(t.runs.iter().any(|r| r.text == "two" && r.style.underline));
     assert!(t.runs.iter().any(|r| r.text.starts_with("one") && !r.style.underline));
     // The layout sees each paragraph's alignment.
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     assert!(lay.lines[1].x0 > lay.lines[0].x0 + 20.0, "the centred line sits right of the left one");
     // No range: every paragraph (as before).
     s.execute("text.setStyle", &json!({"id": id, "justify": "right"})).unwrap();
@@ -75,7 +75,7 @@ fn a_file_with_paragraph_spacing_out_of_range_opens_with_it_in_range() {
     let id = s.execute("text.create", &json!({"x": 40, "y": 60, "size": 20, "text": "Line\tone\nLine two"})).unwrap()["id"].as_u64().unwrap();
     let mut d = (*s.doc().unwrap().doc).clone();
     let Some(NodeKind::Text(t)) = d.node_mut(NodeId(id)).map(|n| &mut n.kind) else { panic!("not text") };
-    let tab = |position| vectorcraft_doc::TabStop { position, align: vectorcraft_doc::TabAlign::Left, leader: String::new(), align_on: '.' };
+    let tab = |position| tsipika_doc::TabStop { position, align: tsipika_doc::TabAlign::Left, leader: String::new(), align_on: '.' };
     let mut first = t.para.clone();
     (first.left_indent, first.first_line_indent, first.space_after) = (f64::MAX, -1e7, 5000.0);
     first.tabs = vec![tab(-5.0), tab(f64::MAX)];
@@ -83,10 +83,10 @@ fn a_file_with_paragraph_spacing_out_of_range_opens_with_it_in_range() {
     (second.right_indent, second.space_before) = (-f64::MAX, 1e7);
     t.set_paragraph_styles(vec![first, second]);
     let attrs = json!({"left_indent": 1e9, "space_after": 2000, "tabs": [serde_json::to_value(tab(-5.0)).unwrap()]});
-    d.para_styles.push(vectorcraft_doc::TextStyleDef { name: "Wide".into(), attrs: attrs.as_object().unwrap().clone() });
-    let data = vectorcraft_format::base64_encode(&vectorcraft_format::save_file(&d));
-    s.execute("document.open", &json!({"name": "spacing.vectorcraft", "dataBase64": data})).unwrap();
-    let max = vectorcraft_doc::MAX_COORD;
+    d.para_styles.push(tsipika_doc::TextStyleDef { name: "Wide".into(), attrs: attrs.as_object().unwrap().clone() });
+    let data = tsipika_format::base64_encode(&tsipika_format::save_file(&d));
+    s.execute("document.open", &json!({"name": "spacing.tsipika", "dataBase64": data})).unwrap();
+    let max = tsipika_doc::MAX_COORD;
     let t = text(&s, id);
     let (p0, p1) = (t.para_at(0), t.para_at(1));
     assert_eq!((p0.left_indent, p0.first_line_indent, p0.space_after), (max, -max, 5000.0));
@@ -135,7 +135,7 @@ fn return_in_the_type_tool_continues_the_paragraph_it_splits() {
     s.execute("text.setStyle", &json!({"id": id, "justify": "center", "start": 5, "end": 5})).unwrap();
     s.select_tool("type", v).unwrap();
     // Click into the first line (right-aligned: it ends at the origin), then End and Return.
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &text(&s, id));
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &text(&s, id));
     let l0 = &lay.lines[0];
     let (x, y) = (100.0 + (l0.x0 + l0.x1) / 2.0, 100.0 + l0.baseline - 5.0);
     for k in [PointerKind::Down, PointerKind::Up] {
@@ -215,7 +215,7 @@ fn threaded_frames_keep_each_paragraphs_style() {
 /// others: only the touched paragraphs change, and the layout reads each paragraph's own.
 #[test]
 fn ranged_set_format_sets_direction_mojikumi_and_leading_model_per_paragraph() {
-    use vectorcraft_doc::{LeadingModel, Mojikumi, ParaDirection};
+    use tsipika_doc::{LeadingModel, Mojikumi, ParaDirection};
     let mut s = session();
     let id = area(&mut s, "Hello.\nHello.");
     // A caret in the second paragraph (byte 9).
@@ -228,7 +228,7 @@ fn ranged_set_format_sets_direction_mojikumi_and_leading_model_per_paragraph() {
     let (p0, p1) = (t.para_at(0).clone(), t.para_at(1).clone());
     assert_eq!((p0.direction, p0.leading_model, p0.mojikumi), (None, LeadingModel::RomanBaseline, Mojikumi::LineEndHalf));
     assert_eq!((p1.direction, p1.leading_model, p1.mojikumi), (Some(ParaDirection::RightToLeft), LeadingModel::EmBoxTop, Mojikumi::None));
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t);
+    let lay = tsipika_text::layout(tsipika_text::FontDb::global(), &t);
     assert!(!lay.lines[0].rtl && lay.lines[1].rtl, "each paragraph's direction");
     // Return in the right-to-left paragraph continues it.
     s.execute("text.editRange", &json!({"id": id, "start": 13, "end": 13, "insert": "\nX"})).unwrap();

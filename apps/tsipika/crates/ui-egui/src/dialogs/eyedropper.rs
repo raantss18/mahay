@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use super::DialogSpec;
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Eyedropper Options.
 pub const KIND: &str = "eyedropperOptions";
@@ -42,7 +42,7 @@ const TREE: &[(&str, &str, u8)] = &[
 ];
 
 /// Open the dialog with the current options.
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     app.ui.dialog = Some(Dialog::new(KIND, json!(app.session.prefs.eyedropper)));
 }
 
@@ -86,7 +86,7 @@ fn tree(ui: &mut egui::Ui, d: &mut Dialog, key: &str, title: &str) {
     });
 }
 
-fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let size = d.fields.get("sampleSize").and_then(Value::as_u64).unwrap_or(1);
     let current = SAMPLE_SIZES.iter().find(|(n, _)| *n == size).map_or(SAMPLE_SIZES[0].1, |s| s.1);
     ui.horizontal(|ui| {
@@ -105,18 +105,18 @@ fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     super::run_and_close(app, "eyedropper.setOptions", Value::Object(d.fields.clone()))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     #[test]
     fn the_trees_set_the_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("tool.options", json!({"tool": "eyedropper"})).unwrap();
         let text = crate::tests_labels::painted_text(&mut app, |app, ui| super::super::show(app, ui.ctx()));
         for label in [

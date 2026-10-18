@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::variables_panel::export_dialog;

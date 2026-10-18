@@ -252,17 +252,17 @@ impl Tokens {
         FontId::new(size, FontFamily::Name("medium".into()))
     }
     /// sRGB colour of an item/layer label (Settings ▸ Labels).
-    pub fn label(&self, l: effectcraft_color::Label) -> Color32 {
-        let i = effectcraft_color::Label::ALL.iter().position(|x| *x == l).unwrap_or(0);
+    pub fn label(&self, l: tselatra_color::Label) -> Color32 {
+        let i = tselatra_color::Label::ALL.iter().position(|x| *x == l).unwrap_or(0);
         self.labels[i]
     }
 
     /// Theme tokens for the current settings: theme, UI brightness and label colours.
     /// The tokens for theme `kind` (resolved from the appearance mode) with the rest of the
     /// Appearance settings: brightness, label colours, gradients.
-    pub fn from_prefs(p: &effectcraft_engine::prefs::Prefs, kind: ThemeKind) -> Tokens {
+    pub fn from_prefs(p: &tselatra_engine::prefs::Prefs, kind: ThemeKind) -> Tokens {
         let mut t = Tokens::for_kind(kind).with_brightness(p.appearance.brightness as f32);
-        for (i, l) in effectcraft_color::Label::ALL.iter().enumerate() {
+        for (i, l) in tselatra_color::Label::ALL.iter().enumerate() {
             let [r, g, b] = p.label_rgb(*l);
             t.labels[i] = Color32::from_rgb(r, g, b);
         }
@@ -312,7 +312,7 @@ impl Tokens {
 }
 
 fn default_labels() -> [Color32; 17] {
-    effectcraft_color::Label::ALL.map(|l| {
+    tselatra_color::Label::ALL.map(|l| {
         let [r, g, b] = l.rgb();
         Color32::from_rgb(r, g, b)
     })
@@ -328,7 +328,7 @@ static JETBRAINS_MONO: &[u8] = include_bytes!("../../../assets/fonts/JetBrainsMo
 /// not the stored `general.language` preference: `system` is already resolved there, so a Chinese
 /// system draws Chinese with the default setting. The CJK fallback that draws the interface's own
 /// script is registered first, so a Chinese interface is drawn by a Chinese face and a Japanese one
-/// by a Japanese face. `install` is called again when the language changes (see the `EffectcraftApp`
+/// by a Japanese face. `install` is called again when the language changes (see the `TselatraApp`
 /// frame loop), so the fonts do not need a restart.
 pub fn install(ctx: &egui::Context, t: &Tokens, language: &str) {
     let mut fonts = FontDefinitions::default();
@@ -393,7 +393,7 @@ fn install_script_fallbacks(family_fonts: &mut FontDefinitions, language: &str) 
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        use effectcraft_text::fonts;
+        use tselatra_text::fonts;
         // Kana is unambiguously Japanese; Han ideographs are shared, so the order decides which
         // language's face draws them.
         const KANA: (char, &str) = ('あ', "japanese-system");
@@ -530,7 +530,7 @@ pub fn apply_visuals(ctx: &egui::Context, t: &Tokens) {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod script_font_tests {
-    use effectcraft_text::fonts;
+    use tselatra_text::fonts;
 
     /// Whether an installed face covers `probe` (else the glyph check is skipped).
     fn installed(probe: char) -> bool {
@@ -717,7 +717,7 @@ mod tests {
 
     #[test]
     fn hangul_gets_a_face_when_one_is_installed() {
-        use effectcraft_text::fonts;
+        use tselatra_text::fonts;
         let mut fonts_def = FontDefinitions::default();
         install_script_fallbacks(&mut fonts_def, "en");
         let base = fonts::resolve("Inter", "Regular").face;

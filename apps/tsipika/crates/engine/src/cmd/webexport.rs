@@ -13,13 +13,13 @@ use std::collections::HashSet;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Value, json};
-use vectorcraft_doc::slices::SliceArea;
-use vectorcraft_doc::{CellAlign, CellVAlign, Document, NodeId, NodeKind, SliceKind};
-use vectorcraft_geom::Rect;
-use vectorcraft_render::AntiAlias;
-use vectorcraft_render::encode::quantize::{self, Dither, Indexed, PaletteOptions, Reduction};
-use vectorcraft_render::encode::web::{self, ColorSort};
-use vectorcraft_render::encode::{gif, jpeg, png};
+use tsipika_doc::slices::SliceArea;
+use tsipika_doc::{CellAlign, CellVAlign, Document, NodeId, NodeKind, SliceKind};
+use tsipika_geom::Rect;
+use tsipika_render::AntiAlias;
+use tsipika_render::encode::quantize::{self, Dither, Indexed, PaletteOptions, Reduction};
+use tsipika_render::encode::web::{self, ColorSort};
+use tsipika_render::encode::{gif, jpeg, png};
 
 use super::*;
 
@@ -233,7 +233,7 @@ impl WebMetadata {
         }
     }
 
-    /// Whether File Info entry `keyword` (as [`vectorcraft_doc::Metadata::png_text`] names it) goes in.
+    /// Whether File Info entry `keyword` (as [`tsipika_doc::Metadata::png_text`] names it) goes in.
     fn keeps(self, keyword: &str) -> bool {
         match self {
             WebMetadata::None => false,
@@ -328,7 +328,7 @@ impl ColorTable {
         }
         list.iter()
             .map(|h| {
-                vectorcraft_color::Color::from_hex(h)
+                tsipika_color::Color::from_hex(h)
                     .map(|c| {
                         let [r, g, b, _] = c.to_rgba8(1.0);
                         [r, g, b]
@@ -551,7 +551,7 @@ pub fn region(doc: &Document, s: &WebSettings) -> std::result::Result<(Rect, f64
         let slices = if s.slices == SliceScope::None { vec![] } else { doc.slice_layout() };
         slices
             .iter()
-            .fold(vectorcraft_render::encode::art_bounds(doc), |acc, a| vectorcraft_geom::union_opt(acc, Some(a.rect)))
+            .fold(tsipika_render::encode::art_bounds(doc), |acc, a| tsipika_geom::union_opt(acc, Some(a.rect)))
             .ok_or("nothing to save: the document has no visible art")?
     };
     let scale = match (s.width, s.height, s.percent) {
@@ -560,7 +560,7 @@ pub fn region(doc: &Document, s: &WebSettings) -> std::result::Result<(Rect, f64
         (None, None, Some(p)) => p / 100.0,
         _ => 1.0,
     };
-    vectorcraft_render::raster_size(r, scale)?;
+    tsipika_render::raster_size(r, scale)?;
     Ok((r, scale))
 }
 
@@ -581,8 +581,8 @@ pub struct WebRender {
 pub fn render(doc: &Document, s: &WebSettings) -> std::result::Result<WebRender, String> {
     let doc = doc.without_edit_modes();
     let (region, scale) = region(&doc, s)?;
-    let page = (doc.setup.background == vectorcraft_doc::Background::White).then_some([255; 4]);
-    let opts = vectorcraft_render::RenderOptions {
+    let page = (doc.setup.background == tsipika_doc::Background::White).then_some([255; 4]);
+    let opts = tsipika_render::RenderOptions {
         background: page,
         skip_templates: true,
         anti_alias: s.anti_alias,
@@ -590,7 +590,7 @@ pub fn render(doc: &Document, s: &WebSettings) -> std::result::Result<WebRender,
         supersample: true,
         ..Default::default()
     };
-    let img = vectorcraft_render::Renderer::new().render_region_with(&doc, region, scale, &opts);
+    let img = tsipika_render::Renderer::new().render_region_with(&doc, region, scale, &opts);
     Ok(WebRender { rgba: img.to_straight(), width: img.width, height: img.height, region, scale })
 }
 
@@ -631,7 +631,7 @@ impl Optimized {
 
 /// `#rrggbb`.
 pub fn hex([r, g, b]: [u8; 3]) -> String {
-    vectorcraft_color::Color::rgb8(r, g, b).to_hex()
+    tsipika_color::Color::rgb8(r, g, b).to_hex()
 }
 
 /// `rgba` (straight, `w`×`h`) flattened on `matte`.
@@ -973,12 +973,12 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
         None => super::fileio::safe_file_name(&super::fileio::file_stem(&st.doc.title)),
     };
     let stem = if stem.trim().is_empty() { "Untitled".to_string() } else { stem };
-    let failed = vectorcraft_render::decode_failures();
+    let failed = tsipika_render::decode_failures();
     let (files, (width, height)) = export_files(&st.doc, &selected, &settings, &stem).map_err(|e| bad(C, e))?;
     let warnings = undecoded(failed);
     let total: usize = files.iter().map(|f| f.bytes.len()).sum();
     let Some(path) = path else {
-        let rows: Vec<Value> = files.iter().map(|f| json!({ "name": f.name, "dataBase64": vectorcraft_format::base64_encode(&f.bytes) })).collect();
+        let rows: Vec<Value> = files.iter().map(|f| json!({ "name": f.name, "dataBase64": tsipika_format::base64_encode(&f.bytes) })).collect();
         return Ok(json!({ "files": rows, "bytes": total, "width": width, "height": height, "warnings": warnings }));
     };
     // Siblings keep the path's own separators.
@@ -1012,7 +1012,7 @@ fn preview(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let st = s.doc()?;
     let doc = &st.doc;
-    let failed = vectorcraft_render::decode_failures();
+    let failed = tsipika_render::decode_failures();
     let r = render(doc, &settings).map_err(|e| bad(P, e))?;
     let warnings = undecoded(failed);
     let areas = doc.slice_layout();
@@ -1046,7 +1046,7 @@ fn preview(s: &mut Session, p: &Value) -> Result<Value> {
         out["mappedToTransparent"] = o.mapped.iter().map(|c| json!(hex(*c))).collect();
     }
     if bool_or(p, "image", false) {
-        out["dataBase64"] = json!(vectorcraft_format::base64_encode(&o.bytes));
+        out["dataBase64"] = json!(tsipika_format::base64_encode(&o.bytes));
     }
     Ok(out)
 }

@@ -7,13 +7,13 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>FigCraft</string>
+  <string>Endrika</string>
   <key>CFBundleName</key>
-  <string>FigCraft</string>
+  <string>Endrika</string>
   <key>CFBundleExecutable</key>
-  <string>FigCraft</string>
+  <string>Endrika</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.figcraft</string>
+  <string>org.mahay.endrika</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -24,12 +24,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>FigCraftVersion</key>
+  <key>EndrikaVersion</key>
   <string>@VERSION@</string>
-  <key>FigCraftBuildCommit</key>
+  <key>EndrikaBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>FigCraft</string>
+  <string>Endrika</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.graphics-design</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
@@ -43,43 +43,43 @@
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © the FigCraft authors. MIT OR Apache-2.0.</string>
+  <string>Copyright © the Endrika authors. MIT OR Apache-2.0.</string>
 
-  <!-- FigCraft's own format. -->
+  <!-- Endrika's own format. -->
   <key>UTExportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.figcraft.document</string>
+      <string>org.mahay.endrika.document</string>
       <key>UTTypeDescription</key>
-      <string>FigCraft Document</string>
+      <string>Endrika Document</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
         <string>public.content</string>
       </array>
       <key>UTTypeIconFile</key>
-      <string>FigCraft</string>
+      <string>Endrika</string>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
-        <array><string>figcraft</string></array>
+        <array><string>endrika</string></array>
         <key>public.mime-type</key>
-        <array><string>application/x-figcraft</string></array>
+        <array><string>application/x-endrika</string></array>
       </dict>
     </dict>
   </array>
 
-  <!-- figcraft://join?... live session invite links open FigCraft. -->
+  <!-- endrika://join?... live session invite links open Endrika. -->
   <key>CFBundleURLTypes</key>
   <array>
     <dict>
       <key>CFBundleURLName</key>
-      <string>ai.storyteller.figcraft.invite</string>
+      <string>org.mahay.endrika.invite</string>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLSchemes</key>
-      <array><string>figcraft</string></array>
+      <array><string>endrika</string></array>
     </dict>
   </array>
 
@@ -87,15 +87,15 @@
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>FigCraft Document</string>
+      <string>Endrika Document</string>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>LSHandlerRank</key>
       <string>Owner</string>
       <key>CFBundleTypeIconFile</key>
-      <string>FigCraft</string>
+      <string>Endrika</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.figcraft.document</string></array>
+      <array><string>org.mahay.endrika.document</string></array>
     </dict>
     <!-- Offered under "Open With", never forced as the default. -->
     <dict>

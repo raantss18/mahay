@@ -1,5 +1,5 @@
 //! The browser client (step 4 of `docs/collab-protocol.md`): the web build joins a session a
-//! desktop app hosts, or a file on a `figcraft-server` (also over `wss://` behind a TLS reverse
+//! desktop app hosts, or a file on a `endrika-server` (also over `wss://` behind a TLS reverse
 //! proxy), through the browser's WebSocket API (`web-sys`), with the same messages as the native
 //! guest. The connection logic is the [`Driver`]'s; this file feeds it the socket's
 //! events and wakes it with a timer. Hosting needs the desktop app (a page can't listen on a
@@ -17,8 +17,8 @@ use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use figcraft_collab::message::{ClientMsg, Presence};
-use figcraft_engine::live::{Event, HostOptions, LiveLink, SessionId, SessionInfo};
+use endrika_collab::message::{ClientMsg, Presence};
+use endrika_engine::live::{Event, HostOptions, LiveLink, SessionId, SessionInfo};
 use wasm_bindgen::JsCast as _;
 use wasm_bindgen::closure::Closure;
 use web_sys::{BinaryType, CloseEvent, MessageEvent, WebSocket};
@@ -170,7 +170,7 @@ impl LiveLink for NetLink {
     fn join(&mut self, session: SessionId, link: &str, name: &str) -> Result<(), String> {
         let (invite, code) = Invite::parse_join(link)?;
         if secure_page() && !invite.server.secure && !invite.loopback() {
-            return Err("this page was loaded over https, and browsers block unencrypted ws:// connections; use a wss:// link (a server behind TLS), open FigCraft from an http:// address (like http://localhost:8767), or join from the desktop app".into());
+            return Err("this page was loaded over https, and browsers block unencrypted ws:// connections; use a wss:// link (a server behind TLS), open Endrika from an http:// address (like http://localhost:8767), or join from the desktop app".into());
         }
         let id = NEXT_ID.with(|n| n.replace(n.get() + 1));
         let inbox = self.sessions.inbox();

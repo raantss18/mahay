@@ -5,7 +5,7 @@ use crate::Session;
 use crate::codegen::{CodeLang, code_for};
 use crate::component_codegen::{ParamKind, describe, main_of};
 use crate::components::tests::{ex, idv};
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 fn code(s: &mut Session, id: NodeId, lang: &str) -> String {

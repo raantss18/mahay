@@ -1,7 +1,7 @@
 //! Hostile input: malformed, extreme and self-referencing SVG, and the corpus mangled byte by
 //! byte. The importer never panics, and whatever it makes is a valid document that renders.
 
-use figcraft_doc::Document;
+use endrika_doc::Document;
 
 use super::import_svg;
 
@@ -11,9 +11,9 @@ fn survive(data: &[u8]) {
     let Some(p) = d.first_page() else { return };
     if let Ok(f) = import_svg(&mut d, data, p, 0.0, 0.0, "x") {
         assert!(d.validate().is_empty(), "{:?}", d.validate());
-        let view = figcraft_render::View { origin: (0.0, 0.0), scale: 0.5, width: 64, height: 64 };
-        if let Some(mut pix) = figcraft_render::Pixmap::new(64, 64) {
-            figcraft_render::render_nodes_into(&d, &[f], &view, &mut pix);
+        let view = endrika_render::View { origin: (0.0, 0.0), scale: 0.5, width: 64, height: 64 };
+        if let Some(mut pix) = endrika_render::Pixmap::new(64, 64) {
+            endrika_render::render_nodes_into(&d, &[f], &view, &mut pix);
         }
     }
 }

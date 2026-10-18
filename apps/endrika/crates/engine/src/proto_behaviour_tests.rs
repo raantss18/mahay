@@ -1,11 +1,11 @@
 //! Prototyping behaviour, written from the public documentation of prototype triggers, actions,
 //! animations, easing and interactive components. Each case states the rule, what it implies and
 //! a one-line derivation; where the documentation is silent the case says so and pins what
-//! FigCraft does. The player's side (gestures, overlays, timers, scrolling, smart animate) is
+//! Endrika does. The player's side (gestures, overlays, timers, scrolling, smart animate) is
 //! `ui-egui`'s `present_behaviour_tests`.
 
-use figcraft_doc::proto::{Action, Direction, Easing, KeyMods, Transition, Trigger};
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::proto::{Action, Direction, Easing, KeyMods, Transition, Trigger};
+use endrika_doc::{Document, NodeId};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -57,7 +57,7 @@ fn key_triggers_fire_for_their_key_or_combination() {
         ("Shift+K", "K", none, false, "not without its modifier"),
         ("Ctrl+Shift+K", "K", ctrl_shift, true, "two modifiers"),
         ("Ctrl+Shift+K", "K", shift, false, "every modifier of the combination must be held"),
-        ("Command+Option+K", "K", alt_cmd, true, "other spellings of the modifiers (FigCraft accepts them)"),
+        ("Command+Option+K", "K", alt_cmd, true, "other spellings of the modifiers (Endrika accepts them)"),
         ("Space", "Space", none, true, "named keys"),
         ("space", "Space", none, true, "names in any case"),
         ("Return", "Enter", none, true, "common other names of keys"),
@@ -183,7 +183,7 @@ fn interactive_button() -> (Session, NodeId, NodeId, NodeId, NodeId) {
         .subtree(button)
         .into_iter()
         .skip(1)
-        .find(|i| matches!(s.doc().unwrap().node(*i).map(|n| &n.kind), Some(figcraft_doc::NodeKind::Instance { .. })));
+        .find(|i| matches!(s.doc().unwrap().node(*i).map(|n| &n.kind), Some(endrika_doc::NodeKind::Instance { .. })));
     (s, screen, button, nested.unwrap(), pressed)
 }
 

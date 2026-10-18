@@ -1,5 +1,5 @@
 //! TLS for `wss://` addresses (native): rustls with ring, trusting Mozilla's root certificates
-//! (compiled in) plus any in the PEM file `FIGCRAFT_CA_FILE` names (a private authority or a
+//! (compiled in) plus any in the PEM file `ENDRIKA_CA_FILE` names (a private authority or a
 //! self-signed server). Certificates are always verified.
 //!
 //! A connection's reader and writer threads share one TLS session ([`Tls`]), each holding it only
@@ -18,7 +18,7 @@ use rustls::pki_types::{CertificateDer, ServerName};
 use rustls::{CertificateError, ClientConfig, ClientConnection, RootCertStore};
 
 /// The variable naming a PEM file of extra certificate authorities to trust.
-pub const CA_FILE: &str = "FIGCRAFT_CA_FILE";
+pub const CA_FILE: &str = "ENDRIKA_CA_FILE";
 
 /// One connection's TLS session, shared by its reader and writer.
 pub type Tls = Arc<Mutex<ClientConnection>>;

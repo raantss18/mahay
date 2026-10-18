@@ -25,7 +25,7 @@ use std::sync::mpsc::Sender;
 
 use serde_json::{Value, json};
 
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::dock::PanelKind;
 use crate::state::{Resolution, Tool};
 
@@ -81,7 +81,7 @@ fn waits(command: &str, params: &Value) -> bool {
 /// Run an engine command. A waiting command (`wait: true`) whose job the session offloads
 /// runs with `wait: false` instead, and the reply waits for the job ([`Outcome::AwaitJobs`]),
 /// so the browser's UI keeps drawing while it runs.
-fn execute_engine(app: &mut EffectcraftApp, id: &str, params: Value) -> Result<Outcome, String> {
+fn execute_engine(app: &mut TselatraApp, id: &str, params: Value) -> Result<Outcome, String> {
     if !app.session.offloads() || !waits(id, &params) {
         return app.session.execute_checked(id, params).map(ok).map_err(|e| e.to_string());
     }
@@ -99,13 +99,13 @@ fn execute_engine(app: &mut EffectcraftApp, id: &str, params: Value) -> Result<O
 
 impl JobWaiter {
     /// Whether its jobs are still running.
-    pub fn pending(&self, app: &EffectcraftApp) -> bool {
+    pub fn pending(&self, app: &TselatraApp) -> bool {
         app.session.jobs().iter().any(|j| self.jobs.contains(&j.id))
     }
 
     /// The reply: what the blocking command would have returned (`running: false`, the final
     /// progress, render items and analysis status), or the job's error.
-    pub fn finish(self, app: &mut EffectcraftApp) -> Value {
+    pub fn finish(self, app: &mut TselatraApp) -> Value {
         let s = &mut app.session;
         s.poll_render();
         let error = s
@@ -157,7 +157,7 @@ fn modifiers(p: &Value) -> egui::Modifiers {
 }
 
 /// Resolve a point from `{id}` (element centre) or `{x, y}`.
-fn point(app: &EffectcraftApp, p: &Value) -> Result<egui::Pos2, String> {
+fn point(app: &TselatraApp, p: &Value) -> Result<egui::Pos2, String> {
     if let Some(id) = p.get("id").and_then(Value::as_str) {
         let e = app.auto.find(id).ok_or_else(|| format!("{RETRY}no element `{id}` (see ui.elements)"))?;
         let fx = p.get("fx").and_then(Value::as_f64).unwrap_or(0.5) as f32;
@@ -169,7 +169,7 @@ fn point(app: &EffectcraftApp, p: &Value) -> Result<egui::Pos2, String> {
     Ok(egui::pos2(x as f32, y as f32))
 }
 
-pub fn handle(app: &mut EffectcraftApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
+pub fn handle(app: &mut TselatraApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
     let p = &req.params;
     let s = |k: &str| p.get(k).and_then(Value::as_str);
     match req.method.as_str() {
@@ -179,7 +179,7 @@ pub fn handle(app: &mut EffectcraftApp, ctx: &egui::Context, req: &ControlReques
             // `engine.execute` runs engine commands exactly as headless (never opens a dialog, e.g.
             // `comp.new {}` creates a default comp); UI-only ids (`tool.*`, `view.*`, `window.*`,
             // `playback.*` …) and `ui.menu.invoke` go through the menu dispatcher like a click.
-            let r = if req.method == "engine.execute" && effectcraft_engine::find_command(id).is_some() {
+            let r = if req.method == "engine.execute" && tselatra_engine::find_command(id).is_some() {
                 execute_engine(app, id, params)
             } else {
                 crate::menus::invoke(app, ctx, id, params).map(ok)
@@ -470,13 +470,13 @@ pub fn handle(app: &mut EffectcraftApp, ctx: &egui::Context, req: &ControlReques
 /// `render.frame {comp?, time?, max_side?, path?, base64?}`: render a comp frame through the session
 /// (independent of the viewer zoom/resolution) and return it as PNG, written to `path` (default a
 /// temp file) or inline as base64 when `base64: true`.
-fn render_frame(app: &EffectcraftApp, p: &Value) -> Outcome {
+fn render_frame(app: &TselatraApp, p: &Value) -> Outcome {
     let s = &app.session;
     let cid = match s.resolve_comp(p.get("comp")) {
         Ok(c) => c,
         Err(e) => return err(e),
     };
-    let t = p.get("time").or(p.get("seconds")).and_then(Value::as_f64).map(effectcraft_time::Tick::from_seconds_f64).unwrap_or_else(|| s.time());
+    let t = p.get("time").or(p.get("seconds")).and_then(Value::as_f64).map(tselatra_time::Tick::from_seconds_f64).unwrap_or_else(|| s.time());
     let max_side = p.get("max_side").or(p.get("maxSide")).and_then(Value::as_u64).unwrap_or(0) as u32;
     let transparent = p.get("transparent").and_then(Value::as_bool).unwrap_or(false);
     let (w, h, rgba) = match s.render_rgba8_alpha(cid, t, max_side, transparent) {
@@ -498,7 +498,7 @@ fn render_frame(app: &EffectcraftApp, p: &Value) -> Outcome {
         .get("path")
         .and_then(Value::as_str)
         .map(str::to_string)
-        .unwrap_or_else(|| std::env::temp_dir().join(format!("effectcraft-frame-{}.png", std::process::id())).to_string_lossy().to_string());
+        .unwrap_or_else(|| std::env::temp_dir().join(format!("tselatra-frame-{}.png", std::process::id())).to_string_lossy().to_string());
     match std::fs::write(&path, png) {
         Ok(()) => {
             out["path"] = json!(path);
@@ -525,7 +525,7 @@ pub fn base64(data: &[u8]) -> String {
     s
 }
 
-pub fn inspect(app: &EffectcraftApp, ctx: &egui::Context) -> Value {
+pub fn inspect(app: &TselatraApp, ctx: &egui::Context) -> Value {
     let size = ctx.content_rect().size();
     let keyboard_focus = ctx.memory(|m| m.focused()).map(|id| {
         let response = ctx.read_response(id);
@@ -592,7 +592,7 @@ pub fn save_screenshot(ctx: &egui::Context, image: &egui::ColorImage, path: Opti
             Err(e) => json!({"ok": false, "error": e}),
         };
     }
-    let path = path.map(str::to_string).unwrap_or_else(|| std::env::temp_dir().join("effectcraft-screenshot.png").to_string_lossy().to_string());
+    let path = path.map(str::to_string).unwrap_or_else(|| std::env::temp_dir().join("tselatra-screenshot.png").to_string_lossy().to_string());
     match encode_png(&rgba, cw as u32, ch as u32) {
         Ok(png) => match std::fs::write(&path, png) {
             Ok(()) => json!({"ok": true, "result": {"path": path, "width": cw, "height": ch}}),

@@ -4,13 +4,13 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::freeform::spread_scale;
-use vectorcraft_color::{Color, Freeform, FreeformPoint, Gradient, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, ImageMode, export_full, import};
-use vectorcraft_testkit::format::base64_decode;
-use vectorcraft_testkit::raster::{assert_similar, render_artboard};
+use tsipika_color::freeform::spread_scale;
+use tsipika_color::{Color, Freeform, FreeformPoint, Gradient, GradientKind, GradientPaint, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, Document, Node, NodeId, NodeKind};
+use tsipika_geom::{Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, ImageMode, export_full, import};
+use tsipika_testkit::format::base64_decode;
+use tsipika_testkit::raster::{assert_similar, render_artboard};
 
 /// Red at the top left, blue at the bottom right, a half-transparent green at the top right.
 fn freeform() -> Paint {
@@ -98,8 +98,8 @@ fn linked_images_write_the_gradient_next_to_the_svg_and_characters_stay_linear()
     assert_eq!(o.linked.len(), 1);
     assert!(o.linked[0].name.ends_with(".png") && o.svg.contains(&format!("xlink:href=\"{}\"", o.linked[0].name)), "{}", o.svg);
     // Characters keep a (linear) gradient paint, with a warning.
-    let style = vectorcraft_doc::CharStyle { size: 30.0, fill: freeform(), ..Default::default() };
-    let t = vectorcraft_doc::TextObject::point(Point::new(20.0, 60.0), "Hi", style);
+    let style = tsipika_doc::CharStyle { size: 30.0, fill: freeform(), ..Default::default() };
+    let t = tsipika_doc::TextObject::point(Point::new(20.0, 60.0), "Hi", style);
     let o = export_full(&doc_with(Node::new(NodeId(0), NodeKind::Text(Box::new(t)))), &ExportOptions::default(), None);
     assert!(o.svg.contains("linearGradient") && !o.svg.contains("<image"), "{}", o.svg);
     assert!(o.warnings.iter().any(|w| w.contains("characters")), "{:?}", o.warnings);

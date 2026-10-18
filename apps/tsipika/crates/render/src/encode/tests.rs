@@ -1,6 +1,6 @@
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Node, NodeKind, TextObject};
-use vectorcraft_geom::{Point, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, CharStyle, Node, NodeKind, TextObject};
+use tsipika_geom::{Point, shapes};
 
 use super::png::{PngOptions, encode, pixels_per_metre};
 use super::*;
@@ -193,7 +193,7 @@ fn anti_alias_none_is_the_same_on_every_thread_count() {
     let id = d.alloc_id();
     let mut n = Node::path(id, shapes::rectangle(Rect::new(20.5, 20.3, 60.4, 59.6)), Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0));
     let glow = serde_json::json!({"color": "#ffffff", "mode": "normal", "opacity": 100, "blur": 4});
-    n.appearance.effects = vec![vectorcraft_doc::Effect { id: "stylize.innerGlow".into(), params: glow, visible: true }];
+    n.appearance.effects = vec![tsipika_doc::Effect { id: "stylize.innerGlow".into(), params: glow, visible: true }];
     let l = d.layers[0].id;
     d.insert(Some(l), 0, n).unwrap();
     let opts = RenderOptions { anti_alias: AntiAlias::None, ..Default::default() };
@@ -234,19 +234,19 @@ fn art_bounds_take_in_the_effects_in_a_symbols_art() {
     let mut d = Document::new(100.0, 100.0);
     let black = Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0);
     let mut art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), black);
-    let shadow = vectorcraft_doc::Effect { id: "stylize.dropShadow".into(), params: serde_json::json!({"x": 8, "y": 0, "blur": 0}), visible: true };
+    let shadow = tsipika_doc::Effect { id: "stylize.dropShadow".into(), params: serde_json::json!({"x": 8, "y": 0, "blur": 0}), visible: true };
     art.appearance.effects.push(shadow);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Box".into(), art: std::sync::Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Box".into(), art: std::sync::Arc::new(art) });
     let (id, l) = (d.alloc_id(), d.layers[0].id);
-    let xf = vectorcraft_geom::Affine::translate((20.0, 20.0));
+    let xf = tsipika_geom::Affine::translate((20.0, 20.0));
     d.insert(Some(l), 0, Node::new(id, NodeKind::SymbolInstance { symbol: "Box".into(), xf })).unwrap();
     let b = art_bounds(&d).unwrap();
     assert!(b.x0 <= 20.0 && b.x1 >= 38.0, "the art from x 20 and its shadow to x 38: {b:?}");
 }
 
 /// A drop shadow 8 pt to the right, without blur.
-fn shadow_right() -> vectorcraft_doc::Effect {
-    vectorcraft_doc::Effect { id: "stylize.dropShadow".into(), params: serde_json::json!({"x": 8, "y": 0, "blur": 0}), visible: true }
+fn shadow_right() -> tsipika_doc::Effect {
+    tsipika_doc::Effect { id: "stylize.dropShadow".into(), params: serde_json::json!({"x": 8, "y": 0, "blur": 0}), visible: true }
 }
 
 #[test]
@@ -257,11 +257,11 @@ fn art_bounds_take_in_the_effects_of_groups_type_and_images() {
     let group = Node::group(d.alloc_id(), vec![std::sync::Arc::new(square)]);
     let t = TextObject::point(Point::new(10.0, 40.0), "Hill", CharStyle { size: 12.0, ..CharStyle::default() });
     let text = Node::new(d.alloc_id(), NodeKind::Text(Box::new(t)));
-    let im = vectorcraft_doc::ImageObject {
+    let im = tsipika_doc::ImageObject {
         key: "image".into(),
         width: 30,
         height: 30,
-        xf: vectorcraft_geom::Affine::translate((20.0, 50.0)),
+        xf: tsipika_geom::Affine::translate((20.0, 50.0)),
         link: None,
         placement: Default::default(),
     };
@@ -296,7 +296,7 @@ fn art_bounds_leave_out_the_hidden_members_of_a_group_with_effects() {
     // A geometry effect on the group's own fill that is turned off.
     group.appearance = Appearance::basic(Paint::None, Paint::None, 0.0).into();
     group.appearance.effects.push(shadow_right());
-    let off = vectorcraft_doc::Effect { id: "distort.transform".into(), params: serde_json::json!({"scaleH": 50}), visible: false };
+    let off = tsipika_doc::Effect { id: "distort.transform".into(), params: serde_json::json!({"scaleH": 50}), visible: false };
     group.appearance.fill_mut().unwrap().effects.push(off);
     let l = d.layers[0].id;
     d.insert(Some(l), 0, group).unwrap();
@@ -315,7 +315,7 @@ fn art_bounds_hold_a_groups_geometry_effect_measured_with_its_hidden_members() {
     hidden.visible = false;
     let mut group = Node::group(d.alloc_id(), [shown, hidden].map(std::sync::Arc::new).to_vec());
     let half = serde_json::json!({"scaleH": 50, "scaleV": 100});
-    group.appearance.effects.push(vectorcraft_doc::Effect { id: "distort.transform".into(), params: half, visible: true });
+    group.appearance.effects.push(tsipika_doc::Effect { id: "distort.transform".into(), params: half, visible: true });
     let l = d.layers[0].id;
     d.insert(Some(l), 0, group).unwrap();
     let b = art_bounds(&d).unwrap();

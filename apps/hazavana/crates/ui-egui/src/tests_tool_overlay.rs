@@ -8,13 +8,13 @@ use serde_json::json;
 use crate::headless::Headless;
 use crate::menubar::MenuNode;
 use crate::state::{RightPanel, ToolOverlay};
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 
 fn detail(panel: &str) -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail"}), T);
     assert_eq!(r["ok"], true, "{r}");

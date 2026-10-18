@@ -5,10 +5,10 @@ use std::sync::Arc;
 
 use super::*;
 use crate::tests::{inflated, page_count, png};
-use figcraft_color::{Color, ImageScaleMode, Paint};
-use figcraft_doc::{Effect, EffectKind, ImageData, MaskType, NodeKind, StyleRun, TextData};
+use endrika_color::{Color, ImageScaleMode, Paint};
+use endrika_doc::{Effect, EffectKind, ImageData, MaskType, NodeKind, StyleRun, TextData};
 
-const URL: &str = "https://example.com/figcraft";
+const URL: &str = "https://example.com/endrika";
 
 fn ellipse() -> NodeKind {
     NodeKind::Ellipse { start: 0.0, sweep: std::f64::consts::TAU, inner: 0.0 }
@@ -90,7 +90,7 @@ fn frosted_doc(radius: f64) -> (Document, NodeId, NodeId) {
         let n = d.get_mut(panel).unwrap();
         n.fills = vec![Paint::solid(Color::from_hex("FFFFFF40").unwrap())];
         n.corners.radii = [12.0; 4];
-        n.effects = vec![Effect { kind: EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(radius)), visible: true }];
+        n.effects = vec![Effect { kind: EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(radius)), visible: true }];
     }
     // Drawn after the panel: never part of its backdrop.
     let above = d.create(f, NodeKind::Rectangle, "Above", 0.0, 0.0, 30.0, 30.0).unwrap();
@@ -115,7 +115,7 @@ fn background_blur_is_a_blurred_backdrop_image() {
 fn backdrop_leaves_out_the_layer_and_what_is_above_it() {
     let (d, f, panel) = frosted_doc(8.0);
     let mut tmp = d.clone();
-    figcraft_render::backdrop::hide_above(&mut tmp, panel, &[f]);
+    endrika_render::backdrop::hide_above(&mut tmp, panel, &[f]);
     let hidden: Vec<&str> = tmp.nodes().filter(|n| !n.visible).map(|n| n.name.as_str()).collect();
     assert_eq!(hidden.len(), 2, "{hidden:?}");
     assert!(hidden.contains(&"Panel") && hidden.contains(&"Above"));
@@ -128,7 +128,7 @@ fn backdrop_leaves_out_the_layer_and_what_is_above_it() {
     let later = d.create(p, NodeKind::Frame, "Later", 0.0, 0.0, 10.0, 10.0).unwrap();
     d.get_mut(f).unwrap().strokes = vec![Paint::solid(Color::BLACK)];
     let mut tmp = d.clone();
-    figcraft_render::backdrop::hide_above(&mut tmp, inner, &[f, later]);
+    endrika_render::backdrop::hide_above(&mut tmp, inner, &[f, later]);
     let hidden: Vec<&str> = tmp.nodes().filter(|n| !n.visible).map(|n| n.name.as_str()).collect();
     assert_eq!(hidden.len(), 3, "{hidden:?}");
     assert!(["Inner", "Sibling", "Later"].iter().all(|h| hidden.contains(h)), "{hidden:?}");
@@ -149,7 +149,7 @@ fn text_hyperlinks_become_link_annotations() {
     td.runs = vec![StyleRun { start: 9, end: 13, style: linked }];
     let t = d.create(f, NodeKind::Text(td), "T", 10.0, 10.0, 280.0, 40.0).unwrap();
     d.get_mut(t).unwrap().fills = vec![Paint::solid(Color::BLACK)];
-    let Some((layout, _)) = figcraft_text::layout_node(d.node(t).unwrap()) else { return };
+    let Some((layout, _)) = endrika_text::layout_node(d.node(t).unwrap()) else { return };
     if layout.glyphs.is_empty() {
         // No fonts on this machine: nothing to lay out or link.
         return;
@@ -210,7 +210,7 @@ fn images_are_embedded_once() {
     assert_eq!(page_count(&pdf), 2);
     assert_eq!(count(&pdf, "/Subtype/Image"), 1, "one image object for every use");
     // Adjusted copies are images of their own.
-    if let figcraft_color::PaintKind::Image(img) = &mut d.get_mut(r).unwrap().fills[0].kind {
+    if let endrika_color::PaintKind::Image(img) = &mut d.get_mut(r).unwrap().fills[0].kind {
         img.filters.exposure = 0.5;
     }
     let pdf = export_pdf(&d, &[f, f2], &PdfOptions::default()).unwrap();
@@ -260,15 +260,15 @@ fn hostile_effects_and_masks_never_panic() {
     }
     // Background blur on a page root itself, and nested three groups deep.
     let (mut d, f, _) = frosted_doc(8.0);
-    d.get_mut(f).unwrap().effects = vec![Effect { kind: EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(4.0)), visible: true }];
+    d.get_mut(f).unwrap().effects = vec![Effect { kind: EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(4.0)), visible: true }];
     assert!(export_pdf(&d, &[f], &PdfOptions::default()).is_ok());
 }
 
 /// Writes PDFs and PNG renders of the documents above for a visual comparison:
-/// `FIGCRAFT_PDF_SAMPLE=/path/stem cargo test -p figcraft-pdf depth_samples`.
+/// `ENDRIKA_PDF_SAMPLE=/path/stem cargo test -p endrika-pdf depth_samples`.
 #[test]
 fn depth_samples() {
-    let Ok(stem) = std::env::var("FIGCRAFT_PDF_SAMPLE") else { return };
+    let Ok(stem) = std::env::var("ENDRIKA_PDF_SAMPLE") else { return };
     let mut docs: Vec<(String, Document, NodeId)> = MaskType::ALL
         .into_iter()
         .map(|k| {
@@ -280,7 +280,7 @@ fn depth_samples() {
     docs.push(("frost".into(), d, f));
     for (name, d, f) in docs {
         std::fs::write(format!("{stem}-{name}.pdf"), export_pdf(&d, &[f], &PdfOptions::default()).unwrap()).unwrap();
-        let pix = figcraft_render::render_node(&d, f, 2.0).unwrap();
-        std::fs::write(format!("{stem}-{name}.png"), figcraft_render::encode_png(&pix).unwrap()).unwrap();
+        let pix = endrika_render::render_node(&d, f, 2.0).unwrap();
+        std::fs::write(format!("{stem}-{name}.png"), endrika_render::encode_png(&pix).unwrap()).unwrap();
     }
 }

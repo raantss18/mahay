@@ -16,8 +16,8 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, EntityKind, EntityStore};
-use cadcraft_geom::{Mat3, Vec2};
+use drafitra_doc::{Drawing, EntityKind, EntityStore};
+use drafitra_geom::{Mat3, Vec2};
 
 use crate::{DocState, EngineError, Result, Snapshot};
 
@@ -156,7 +156,7 @@ impl BlockEdit {
         let template = editor.block(&self.name).or_else(|| host.block(&self.name));
         let mut b = match template {
             Some(b) => (**b).clone(),
-            None => cadcraft_doc::Block::new(name),
+            None => drafitra_doc::Block::new(name),
         };
         // Block names are case-insensitive: an existing block keeps its name's spelling.
         let key = d.blocks.keys().find(|k| k.eq_ignore_ascii_case(name)).cloned().unwrap_or_else(|| name.to_string());
@@ -224,7 +224,7 @@ impl DocState {
             return Ok(());
         }
         let block = match self.doc.block(name) {
-            None if create => Arc::new(cadcraft_doc::Block::new(name)),
+            None if create => Arc::new(drafitra_doc::Block::new(name)),
             _ => {
                 if let Some(why) = refusal(&self.doc, name) {
                     return Err(EngineError::Other(why));
@@ -254,7 +254,7 @@ impl DocState {
         self.undo_ctl = Default::default();
         self.selection.clear();
         self.previous_selection.clear();
-        self.space = cadcraft_doc::Space::Model;
+        self.space = drafitra_doc::Space::Model;
         self.mspace = None;
         self.tiles = Default::default();
         self.views.clear();

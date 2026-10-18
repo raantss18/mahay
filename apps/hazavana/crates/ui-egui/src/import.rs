@@ -9,20 +9,20 @@
 //! one undo step.
 
 use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, Vec2, pos2, vec2};
-use lightcraft_engine::import::{
+use hazavana_engine::import::{
     ImportCandidate, ImportUprightMode, ImportWarning, ImportWarningCode, ScanInput, ScanOutput, ScanProgress, scan_with,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::sync::atomic::Ordering;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::render::Slot;
 use crate::theme::Tokens;
 use crate::widgets::register;
 
 /// Files per batch in the browser build (each batch joins the catalog as it is ready, so the
-/// progress window updates); the desktop's worker uses [`lightcraft_engine::import::batch_size`].
+/// progress window updates); the desktop's worker uses [`hazavana_engine::import::batch_size`].
 #[cfg(target_arch = "wasm32")]
 const BATCH: usize = 8;
 
@@ -214,7 +214,7 @@ impl ImportDialog {
             "" => Ok(None),
             "custom" => {
                 let t = self.folder_template.trim();
-                if let Some(e) = lightcraft_engine::rename::folder_template_error(t) {
+                if let Some(e) = hazavana_engine::rename::folder_template_error(t) {
                     return Err(e);
                 }
                 // a plain folder name ("Imports") is a one-level template too
@@ -230,7 +230,7 @@ impl ImportDialog {
 
 /// A running import (see the module docs). The file-system work — expanding folders, probing,
 /// reading sidecars, copying or placing files — runs on a worker thread
-/// ([`lightcraft_engine::import::ImportJob`]); each batch it readies is added to the catalog on the
+/// ([`hazavana_engine::import::ImportJob`]); each batch it readies is added to the catalog on the
 /// UI thread between frames, so a slow drive never stalls the window.
 #[derive(Debug, Default)]
 pub struct ImportTask {
@@ -261,15 +261,15 @@ pub struct ImportTask {
     /// Auto Import (the watched folder): the selection stays as it is, a short toast when done.
     auto: bool,
     /// Auto Import: the selection to keep.
-    keep_selection: Option<lightcraft_engine::Selection>,
+    keep_selection: Option<hazavana_engine::Selection>,
     /// The selection and source as the import last left them: a change between frames is the
     /// user choosing another photo or view, which the end of the import doesn't take away.
-    left: Option<(lightcraft_engine::Selection, lightcraft_engine::LibrarySource)>,
+    left: Option<(hazavana_engine::Selection, hazavana_engine::LibrarySource)>,
     /// The user chose another photo or view while the import ran.
     moved_on: bool,
     run: Option<ImportRun>,
     /// The import's row in the activity stack (its ✕ and `activity.cancel` set the run's cancel flag).
-    guard: Option<lightcraft_engine::activity::TaskGuard>,
+    guard: Option<hazavana_engine::activity::TaskGuard>,
 }
 
 impl ImportTask {
@@ -294,9 +294,9 @@ impl ImportTask {
 /// slow drives) inline, one batch per frame.
 enum Runner {
     #[cfg(not(target_arch = "wasm32"))]
-    Thread(std::sync::mpsc::Receiver<lightcraft_engine::import::Prepared>),
+    Thread(std::sync::mpsc::Receiver<hazavana_engine::import::Prepared>),
     #[cfg(target_arch = "wasm32")]
-    Inline { job: Box<lightcraft_engine::import::ImportJob>, queue: Vec<String>, files: Option<std::collections::VecDeque<String>> },
+    Inline { job: Box<hazavana_engine::import::ImportJob>, queue: Vec<String>, files: Option<std::collections::VecDeque<String>> },
 }
 
 struct ImportRun {
@@ -304,7 +304,7 @@ struct ImportRun {
     cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
     total: std::sync::Arc<std::sync::atomic::AtomicUsize>,
     done: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-    opts: lightcraft_engine::import::ImportOptions,
+    opts: hazavana_engine::import::ImportOptions,
     now: String,
     album: Option<u64>,
     album_name: Option<String>,
@@ -325,7 +325,7 @@ impl Drop for ImportRun {
 
 impl ImportRun {
     fn start(
-        job: lightcraft_engine::import::ImportJob,
+        job: hazavana_engine::import::ImportJob,
         queue: Vec<String>,
         album: Option<u64>,
         album_name: Option<String>,
@@ -340,7 +340,7 @@ impl ImportRun {
 
     #[cfg(not(target_arch = "wasm32"))]
     fn spawn(
-        mut job: lightcraft_engine::import::ImportJob,
+        mut job: hazavana_engine::import::ImportJob,
         queue: Vec<String>,
         cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
         ctx: &egui::Context,
@@ -349,11 +349,11 @@ impl ImportRun {
         let ctx = ctx.clone();
         let work = move || {
             let files = job.expand(&queue);
-            for chunk in files.chunks(lightcraft_engine::import::batch_size()) {
+            for chunk in files.chunks(hazavana_engine::import::batch_size()) {
                 if cancel.load(Ordering::Relaxed) {
                     break;
                 }
-                let prepared = match lightcraft_engine::guard::catch("import", || job.prepare_files(chunk.to_vec(), &cancel)) {
+                let prepared = match hazavana_engine::guard::catch("import", || job.prepare_files(chunk.to_vec(), &cancel)) {
                     Ok(p) => p,
                     Err(_) => break, // logged; the files readied so far are added
                 };
@@ -371,7 +371,7 @@ impl ImportRun {
 
     #[cfg(target_arch = "wasm32")]
     fn spawn(
-        job: lightcraft_engine::import::ImportJob,
+        job: hazavana_engine::import::ImportJob,
         queue: Vec<String>,
         _cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
         _ctx: &egui::Context,
@@ -380,7 +380,7 @@ impl ImportRun {
     }
 
     /// Readied batches (at most a few per frame). `None` once the worker is done.
-    fn next_batches(&mut self) -> Option<Vec<lightcraft_engine::import::Prepared>> {
+    fn next_batches(&mut self) -> Option<Vec<hazavana_engine::import::Prepared>> {
         match &mut self.runner {
             #[cfg(not(target_arch = "wasm32"))]
             Runner::Thread(rx) => {
@@ -429,18 +429,18 @@ pub struct ScanTask {
     /// What is being scanned (the review's source).
     sources: Vec<String>,
     /// The scan's row in the activity stack (its ✕ and `activity.cancel` set `progress.cancel`).
-    guard: lightcraft_engine::activity::TaskGuard,
+    guard: hazavana_engine::activity::TaskGuard,
 }
 
 /// The activity row of a scan: the review's ("Scanning folder") or the Local view's ("Reading folder").
-fn scan_guard(app: &LightcraftApp, progress: &ScanProgress, browse: bool) -> lightcraft_engine::activity::TaskGuard {
+fn scan_guard(app: &HazavanaApp, progress: &ScanProgress, browse: bool) -> hazavana_engine::activity::TaskGuard {
     let label = if browse { "Reading folder" } else { "Scanning folder" };
-    app.session.activity.start("scan", label, lightcraft_engine::activity::Cancel::Flag(progress.cancel.clone()))
+    app.session.activity.start("scan", label, hazavana_engine::activity::Cancel::Flag(progress.cancel.clone()))
 }
 
 /// An import and a Synchronize Folder never run at once: each readies its files against the
 /// library as it was when it started, so both could add the same file.
-pub(crate) fn busy_synchronizing(app: &LightcraftApp) -> Result<(), String> {
+pub(crate) fn busy_synchronizing(app: &HazavanaApp) -> Result<(), String> {
     if app.sync_run.is_some() { Err(crate::i18n::tr("A folder is being synchronized").to_string()) } else { Ok(()) }
 }
 
@@ -449,7 +449,7 @@ pub(crate) fn busy_synchronizing(app: &LightcraftApp) -> Result<(), String> {
 /// shows up after that opens Import from Device once nothing else is open, and a card that is
 /// taken out and put back in asks again.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn cards_seen(app: &mut LightcraftApp, now: Vec<lightcraft_engine::devices::Device>) {
+pub(crate) fn cards_seen(app: &mut HazavanaApp, now: Vec<hazavana_engine::devices::Device>) {
     let Some(known) = app.ui.known_cards.as_mut() else {
         app.ui.known_cards = Some(now.into_iter().map(|d| d.root).collect());
         return;
@@ -467,7 +467,7 @@ pub(crate) fn cards_seen(app: &mut LightcraftApp, now: Vec<lightcraft_engine::de
 }
 
 /// Scan `paths` in the background, then open the review dialog (see [`poll_scan`]).
-pub fn open(app: &mut LightcraftApp, paths: Vec<String>) -> Result<Value, String> {
+pub fn open(app: &mut HazavanaApp, paths: Vec<String>) -> Result<Value, String> {
     if app.scan.is_some() {
         return Err("a scan is already running".into());
     }
@@ -492,7 +492,7 @@ pub fn open(app: &mut LightcraftApp, paths: Vec<String>) -> Result<Value, String
 /// once, the folder is listed and read on a worker thread (a network share can take minutes),
 /// and the photos then join the view in small batches under a progress window. A browse already
 /// running is replaced; the import review's scan is not.
-pub fn browse(app: &mut LightcraftApp, path: &str, subfolders: Option<bool>) -> Result<Value, String> {
+pub fn browse(app: &mut HazavanaApp, path: &str, subfolders: Option<bool>) -> Result<Value, String> {
     let dir = std::path::absolute(std::path::Path::new(path)).map_err(|e| e.to_string())?;
     if !dir.is_dir() {
         return Err(format!("{path}: not a folder"));
@@ -505,7 +505,7 @@ pub fn browse(app: &mut LightcraftApp, path: &str, subfolders: Option<bool>) -> 
     let running = app.scan.as_ref().is_some_and(|t| t.browse) || app.import.as_ref().is_some_and(|t| t.browse);
     if running && app.session.browse.as_ref().is_some_and(|b| b.path == dir_s && b.subfolders == subfolders) {
         // already reading this folder: clicking it again must not restart the progress
-        app.session.source = lightcraft_engine::LibrarySource::Folder;
+        app.session.source = hazavana_engine::LibrarySource::Folder;
         app.session.keep_active_in_view();
         return Ok(json!({"path": dir_s, "subfolders": subfolders, "scanning": true}));
     }
@@ -513,8 +513,8 @@ pub fn browse(app: &mut LightcraftApp, path: &str, subfolders: Option<bool>) -> 
         t.progress.cancel.store(true, Ordering::Relaxed);
     }
     app.import = None;
-    app.session.browse = Some(lightcraft_engine::Browse { path: dir_s.clone(), subfolders });
-    app.session.source = lightcraft_engine::LibrarySource::Folder;
+    app.session.browse = Some(hazavana_engine::Browse { path: dir_s.clone(), subfolders });
+    app.session.source = hazavana_engine::LibrarySource::Folder;
     // the photos the library already knows from this folder show at once: keep or pick the active one
     app.session.keep_active_in_view();
     let (input, _) = ScanInput::new(&mut app.session, std::slice::from_ref(&dir_s));
@@ -524,7 +524,7 @@ pub fn browse(app: &mut LightcraftApp, path: &str, subfolders: Option<bool>) -> 
     let root = dir_s.clone();
     let job = move || {
         let files: Vec<String> = if subfolders {
-            lightcraft_engine::import::expand(&[root], None)
+            hazavana_engine::import::expand(&[root], None)
         } else {
             let mut v: Vec<String> = std::fs::read_dir(&root)
                 .map(|rd| {
@@ -532,7 +532,7 @@ pub fn browse(app: &mut LightcraftApp, path: &str, subfolders: Option<bool>) -> 
                         .map(|e| e.path())
                         .filter(|f| {
                             f.is_file()
-                                && lightcraft_engine::import::is_supported(f)
+                                && hazavana_engine::import::is_supported(f)
                                 && !f.file_name().is_some_and(|n| n.to_string_lossy().starts_with('.'))
                         })
                         .map(|f| f.to_string_lossy().to_string())
@@ -555,7 +555,7 @@ pub fn browse(app: &mut LightcraftApp, path: &str, subfolders: Option<bool>) -> 
 }
 
 /// Collect a finished scan and open the review (called every frame).
-pub fn poll_scan(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn poll_scan(app: &mut HazavanaApp, ctx: &egui::Context) {
     let Some(task) = app.scan.as_ref() else { return };
     ctx.request_repaint_after(std::time::Duration::from_millis(100));
     let out = match task.rx.try_recv() {
@@ -612,13 +612,13 @@ pub fn poll_scan(app: &mut LightcraftApp, ctx: &egui::Context) {
         .iter()
         .map(|c| {
             c.duplicate.is_some()
-                && c.existing.is_some_and(|id| app.session.catalog.photo(lightcraft_catalog::PhotoId(id)).is_some_and(|p| p.deleted))
+                && c.existing.is_some_and(|id| app.session.catalog.photo(hazavana_catalog::PhotoId(id)).is_some_and(|p| p.deleted))
         })
         .collect();
     d.set_trashed(trashed);
     d.copy = task.copy;
     // only an album the review offers (it may have been deleted while the scan ran)
-    d.album = task.album.filter(|id| app.session.catalog.album(lightcraft_catalog::AlbumId(*id)).is_some_and(|a| !a.folder && !a.is_smart()));
+    d.album = task.album.filter(|id| app.session.catalog.album(hazavana_catalog::AlbumId(*id)).is_some_and(|a| !a.folder && !a.is_smart()));
     d.sources = task.sources;
     app.ui.dialog = Some(crate::state::Dialog::Import { opts: Box::new(d) });
 }
@@ -631,7 +631,7 @@ impl ScanTask {
 }
 
 /// Start importing the dialog's checked files (the dialog's OK / `ui.dialog.confirm`).
-pub fn start(app: &mut LightcraftApp, d: &ImportDialog) -> Result<Value, String> {
+pub fn start(app: &mut HazavanaApp, d: &ImportDialog) -> Result<Value, String> {
     busy_synchronizing(app)?;
     let queue = d.selected_paths();
     if queue.is_empty() {
@@ -683,7 +683,7 @@ pub fn start(app: &mut LightcraftApp, d: &ImportDialog) -> Result<Value, String>
 }
 
 /// Start importing `paths` (files or folders) in the background, e.g. dropped on the window.
-pub fn start_paths(app: &mut LightcraftApp, paths: Vec<String>) -> Result<Value, String> {
+pub fn start_paths(app: &mut HazavanaApp, paths: Vec<String>) -> Result<Value, String> {
     busy_synchronizing(app)?;
     if app.import.is_some() || app.scan.as_ref().is_some_and(|t| !t.browse) {
         return Err("an import is running".into());
@@ -696,13 +696,13 @@ pub fn start_paths(app: &mut LightcraftApp, paths: Vec<String>) -> Result<Value,
 
 /// Advance the import in progress (called every frame): start its worker, then add the batches it
 /// has readied to the catalog.
-pub fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn tick(app: &mut HazavanaApp, ctx: &egui::Context) {
     let Some(mut task) = app.import.take() else { return };
     if task.run.is_none() {
         let mut p = task.params.clone();
         p["paths"] = json!(task.queue);
-        let started = lightcraft_engine::cmd::library::import_params(&app.session, &p)
-            .and_then(|req| Ok((lightcraft_engine::import::ImportJob::new(&mut app.session, req.opts)?, req.album, req.album_name)))
+        let started = hazavana_engine::cmd::library::import_params(&app.session, &p)
+            .and_then(|req| Ok((hazavana_engine::import::ImportJob::new(&mut app.session, req.opts)?, req.album, req.album_name)))
             .map_err(|e| e.to_string())
             .and_then(|(job, album, name)| ImportRun::start(job, std::mem::take(&mut task.queue), album, name, ctx));
         if task.auto {
@@ -711,7 +711,7 @@ pub fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
         match started {
             Ok(run) => {
                 let label = if task.browse { "Reading folder" } else { "Importing" };
-                task.guard = Some(app.session.activity.start("import", label, lightcraft_engine::activity::Cancel::Flag(run.cancel.clone())));
+                task.guard = Some(app.session.activity.start("import", label, hazavana_engine::activity::Cancel::Flag(run.cancel.clone())));
                 task.run = Some(run);
             }
             Err(e) => {
@@ -735,7 +735,7 @@ pub fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
             app.session.selection = sel.clone();
         }
         // a Local folder still on screen: its first photo becomes active once there is one (#1447)
-        if task.browse && app.session.source == lightcraft_engine::LibrarySource::Folder {
+        if task.browse && app.session.source == hazavana_engine::LibrarySource::Folder {
             app.session.keep_active_in_view();
         }
     }
@@ -759,13 +759,13 @@ pub fn tick(app: &mut LightcraftApp, ctx: &egui::Context) {
 }
 
 /// Add one readied batch to the catalog (an undo step merged into the import's at the end).
-fn commit_batch(app: &mut LightcraftApp, task: &mut ImportTask, prepared: lightcraft_engine::import::Prepared) {
+fn commit_batch(app: &mut HazavanaApp, task: &mut ImportTask, prepared: hazavana_engine::import::Prepared) {
     let Some(run) = task.run.as_ref() else { return };
     let n = prepared.len();
     let (opts, now, album, album_name) = (&run.opts, run.now.as_str(), run.album, run.album_name.clone());
     let r = app.session.execute_fn("library.import", |s| {
-        let report = lightcraft_engine::import::commit_prepared(s, opts, now, prepared)?;
-        lightcraft_engine::cmd::library::import_batch_done(s, report, album, album_name.as_deref())
+        let report = hazavana_engine::import::commit_prepared(s, opts, now, prepared)?;
+        hazavana_engine::cmd::library::import_batch_done(s, report, album, album_name.as_deref())
     });
     match r {
         Ok(v) => {
@@ -853,7 +853,7 @@ fn xmp_warnings_text(warnings: &[ImportWarning]) -> String {
 
 /// The import is done (or cancelled): one undo step, show and select the first photo (unless the
 /// user chose another meanwhile), say what happened.
-fn finish(app: &mut LightcraftApp, ctx: &egui::Context, task: ImportTask) {
+fn finish(app: &mut HazavanaApp, ctx: &egui::Context, task: ImportTask) {
     let steps = app.session.undo.len().saturating_sub(task.undo0);
     let plural = |n: usize| if n == 1 { "" } else { "s" };
     let label = if task.imported == 0 && task.restored > 0 {
@@ -883,7 +883,7 @@ fn finish(app: &mut LightcraftApp, ctx: &egui::Context, task: ImportTask) {
     if let Some(f) = task.first.filter(|_| !task.moved_on) {
         // a view the new photos aren't in (an album, Picks, a Local folder) would leave the active
         // photo off screen: show All Photos, as Lightroom shows the import's own collection (#1446)
-        if !app.session.visible().contains(&lightcraft_catalog::PhotoId(f)) {
+        if !app.session.visible().contains(&hazavana_catalog::PhotoId(f)) {
             let _ = app.run("library.source", json!({"kind": "all"}));
         }
         let _ = app.run("library.select", json!({"ids": [f]}));
@@ -936,9 +936,9 @@ fn finish(app: &mut LightcraftApp, ctx: &egui::Context, task: ImportTask) {
 }
 
 /// The photos among `ids` that are in Recently Deleted (each once).
-fn deleted_of(app: &LightcraftApp, ids: &[u64]) -> Vec<u64> {
+fn deleted_of(app: &HazavanaApp, ids: &[u64]) -> Vec<u64> {
     let mut v: Vec<u64> =
-        ids.iter().copied().filter(|&id| app.session.catalog.photo(lightcraft_catalog::PhotoId(id)).is_some_and(|p| p.deleted)).collect();
+        ids.iter().copied().filter(|&id| app.session.catalog.photo(hazavana_catalog::PhotoId(id)).is_some_and(|p| p.deleted)).collect();
     v.sort_unstable();
     v.dedup();
     v
@@ -946,12 +946,12 @@ fn deleted_of(app: &LightcraftApp, ids: &[u64]) -> Vec<u64> {
 
 /// Select the library photos an import skipped as duplicates of, in Recently Deleted (side panel
 /// opened, with how to get them back) or in All Photos, and say so. `false` when there are none.
-fn show_existing(app: &mut LightcraftApp, ctx: &egui::Context, existing: &[u64]) -> bool {
+fn show_existing(app: &mut HazavanaApp, ctx: &egui::Context, existing: &[u64]) -> bool {
     let deleted = deleted_of(app, existing);
     let (kind, mut ids) = if deleted.is_empty() { ("all", existing.to_vec()) } else { ("recentlyDeleted", deleted) };
     ids.sort_unstable();
     ids.dedup();
-    ids.retain(|&id| app.session.catalog.photo(lightcraft_catalog::PhotoId(id)).is_some());
+    ids.retain(|&id| app.session.catalog.photo(hazavana_catalog::PhotoId(id)).is_some());
     if ids.is_empty() || app.run("library.source", json!({"kind": kind})).is_err() {
         return false;
     }
@@ -983,7 +983,7 @@ fn dup_counts(d: &ImportDialog) -> (usize, usize, usize) {
 }
 
 /// The dialog body: options, then the candidate grid.
-pub fn body(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &mut ImportDialog) {
+pub fn body(app: &mut HazavanaApp, ui: &mut egui::Ui, d: &mut ImportDialog) {
     let t = Tokens::get(ui.ctx());
     let n = d.candidates.len();
     let (dups, in_source, trashed) = dup_counts(d);
@@ -1164,7 +1164,7 @@ pub fn body(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &mut ImportDialog) {
                 tag_help(ui, "importFolders", &mut d.folder_template, folders_id);
             }
             let t = Tokens::get(ui.ctx());
-            match lightcraft_engine::rename::folder_template_error(&d.folder_template) {
+            match hazavana_engine::rename::folder_template_error(&d.folder_template) {
                 Some(e) => {
                     ui.label(egui::RichText::new(e).color(t.caution));
                 }
@@ -1312,7 +1312,7 @@ pub fn body(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &mut ImportDialog) {
     });
 }
 
-fn candidate_cell(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &mut ImportDialog, i: usize, rect: Rect) {
+fn candidate_cell(app: &mut HazavanaApp, ui: &mut egui::Ui, d: &mut ImportDialog, i: usize, rect: Rect) {
     let t = Tokens::get(ui.ctx());
     let c = d.candidates[i].clone();
     let ok = d.importable(i);
@@ -1347,7 +1347,7 @@ fn candidate_cell(app: &mut LightcraftApp, ui: &mut egui::Ui, d: &mut ImportDial
         p.line_segment([cb.left_center() + vec2(3.5, 0.5), cb.center_bottom() + vec2(-1.0, -4.0)], Stroke::new(2.0, Color32::WHITE));
         p.line_segment([cb.center_bottom() + vec2(-1.0, -4.0), cb.right_top() + vec2(-3.5, 4.0)], Stroke::new(2.0, Color32::WHITE));
     }
-    let in_trash = c.existing.is_some_and(|id| app.session.catalog.photo(lightcraft_catalog::PhotoId(id)).is_some_and(|p| p.deleted));
+    let in_trash = c.existing.is_some_and(|id| app.session.catalog.photo(hazavana_catalog::PhotoId(id)).is_some_and(|p| p.deleted));
     let badge = match (&c.duplicate, &c.error) {
         // checked with "Leave them", the file goes without `onDeleted`: the engine restores it
         (Some(_), _) if in_trash && on => Some(if d.on_deleted == "fresh" { "Will be replaced" } else { "Will be restored" }),
@@ -1413,7 +1413,7 @@ pub(crate) fn tag_toggle(ui: &mut egui::Ui, key: &str) -> bool {
 
 /// "Unknown tag {x} stays as typed" under a template field, when it has one.
 pub(crate) fn unknown_tags_warning(ui: &mut egui::Ui, template: &str) {
-    let unknown = lightcraft_engine::rename::unknown_tokens(template);
+    let unknown = hazavana_engine::rename::unknown_tokens(template);
     if !unknown.is_empty() {
         let s = if unknown.len() == 1 { "" } else { "s" };
         let text = crate::i18n::tr_format!(
@@ -1448,7 +1448,7 @@ pub(crate) fn insert_at_cursor(ctx: &egui::Context, edit_id: egui::Id, text: &mu
 /// meaning and an example, the `{date:…}` directives and how templates behave. Clicking a tag
 /// (`button:<key>Tag-<i>`) inserts it at the cursor of the field `edit_id`.
 pub(crate) fn tag_help(ui: &mut egui::Ui, key: &str, text: &mut String, edit_id: egui::Id) {
-    use lightcraft_engine::rename::{DATE_DIRECTIVES, TEMPLATE_NOTES, TOKENS, token_example};
+    use hazavana_engine::rename::{DATE_DIRECTIVES, TEMPLATE_NOTES, TOKENS, token_example};
     let t = Tokens::get(ui.ctx());
     egui::Frame::new().fill(t.inset).corner_radius(4.0).inner_margin(6.0).show(ui, |ui| {
         ui.label(
@@ -1489,15 +1489,15 @@ pub const DEFAULT_FOLDER_TEMPLATE: &str = "{date:%Y}/{date:%Y%m%d}";
 
 /// Where the first selected photo would be copied to (destination, folders, name), for the
 /// dialog's example line; `None` without a photo or with an unusable folder template.
-pub fn example_destination(app: &LightcraftApp, d: &ImportDialog) -> Option<String> {
+pub fn example_destination(app: &HazavanaApp, d: &ImportDialog) -> Option<String> {
     let c = d.candidates.iter().zip(&d.checked).enumerate().find(|(i, (_, on))| **on && d.importable(*i)).map(|(_, (c, _))| c)?;
     let organize = match d.organize_param().ok()? {
-        Some(o) => lightcraft_engine::import::Organize::parse(&o)?,
+        Some(o) => hazavana_engine::import::Organize::parse(&o)?,
         None => Default::default(),
     };
-    let mut q = lightcraft_catalog::Photo::new(
-        lightcraft_catalog::PhotoId(0),
-        lightcraft_catalog::Source::File { path: c.path.clone() },
+    let mut q = hazavana_catalog::Photo::new(
+        hazavana_catalog::PhotoId(0),
+        hazavana_catalog::Source::File { path: c.path.clone() },
         &c.name,
         &c.format,
         0,
@@ -1510,7 +1510,7 @@ pub fn example_destination(app: &LightcraftApp, d: &ImportDialog) -> Option<Stri
     if let Some(info) = app.session.import_probes.get(&c.path) {
         q.meta = info.meta.clone();
     }
-    let name = if d.rename.trim().is_empty() { c.name.clone() } else { lightcraft_engine::rename::expand(d.rename.trim(), &q, 1) };
+    let name = if d.rename.trim().is_empty() { c.name.clone() } else { hazavana_engine::rename::expand(d.rename.trim(), &q, 1) };
     let root = if d.destination.trim().is_empty() {
         app.session.library.as_ref().map_or_else(|| "Originals".to_string(), |l| l.dir.join("Originals").to_string_lossy().to_string())
     } else {

@@ -2,8 +2,8 @@
 //! and exports; `template.list` and `file.newFromTemplate` open them (and survive junk); and
 //! building stays fast.
 
-use figcraft_color::Color;
-use figcraft_doc::{Document, NodeKind};
+use endrika_color::Color;
+use endrika_doc::{Document, NodeKind};
 use serde_json::{Value, json};
 
 use crate::templates::{Kind, TEMPLATES, find};
@@ -13,12 +13,12 @@ fn built(id: &str) -> Document {
     // Other tests index the system fonts while these run; text measured before and after would
     // differ, so they are indexed first (a machine without fonts measures with the built-in ones).
     static FONTS: std::sync::Once = std::sync::Once::new();
-    FONTS.call_once(figcraft_text::scan_system_fonts);
+    FONTS.call_once(endrika_text::scan_system_fonts);
     find(id).unwrap().build(Color::DEFAULT_PAGE).unwrap_or_else(|e| panic!("{id}: {e}"))
 }
 
 fn json_of(doc: &Document) -> String {
-    figcraft_format::to_json(doc).unwrap().to_string()
+    endrika_format::to_json(doc).unwrap().to_string()
 }
 
 fn count(doc: &Document, f: impl Fn(&NodeKind) -> bool) -> usize {
@@ -77,7 +77,7 @@ fn templates_use_the_features_they_show() {
     assert!(ds.ids().filter(|id| ds.node(*id).is_some_and(|n| !n.bound.is_empty())).count() > 50, "layers bound to variables");
     assert_eq!(ds.ids().filter(|id| ds.node(*id).is_some_and(|n| !n.var_modes.is_empty())).count(), 4, "frames in Light and in Dark");
     let grid = built("dashboard");
-    assert!(grid.ids().any(|id| grid.node(id).is_some_and(|n| n.layout.as_ref().is_some_and(|l| l.mode == figcraft_doc::LayoutMode::Grid))));
+    assert!(grid.ids().any(|id| grid.node(id).is_some_and(|n| n.layout.as_ref().is_some_and(|l| l.mode == endrika_doc::LayoutMode::Grid))));
     assert!(count(&grid, |k| matches!(k, NodeKind::Vector { .. })) >= 8, "charts drawn from vectors");
     let icons = built("icon-set");
     assert_eq!(components(&icons), 24);
@@ -92,8 +92,8 @@ fn templates_use_the_features_they_show() {
 fn templates_save_and_reopen_losslessly() {
     for t in TEMPLATES {
         let doc = built(t.id);
-        let bytes = figcraft_format::save_bytes(&doc, None).unwrap();
-        let (back, notes) = figcraft_format::load_bytes(&bytes).unwrap();
+        let bytes = endrika_format::save_bytes(&doc, None).unwrap();
+        let (back, notes) = endrika_format::load_bytes(&bytes).unwrap();
         assert_eq!(notes, Vec::<String>::new(), "{}: nothing to repair", t.id);
         assert_eq!(json_of(&back), json_of(&doc), "{}", t.id);
     }

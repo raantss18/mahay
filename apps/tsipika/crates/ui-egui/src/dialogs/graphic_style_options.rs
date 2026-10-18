@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, form};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::state::Dialog;
 
 /// The dialog kind of Graphic Style Options.
@@ -20,7 +20,7 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Graphic Style Options").into(), body, confirm, min_width: 320.0, ..DialogSpec::FORM };
 
 /// Open Graphic Style Options for style `name`, or (`None`) to name a new style from the selection.
-pub fn open(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, name: Option<&str>) -> Result<Value, String> {
     let d = &app.session.active().ok_or("no document open")?.doc;
     let name = match name {
         Some(n) => d.graphic_style(n).ok_or_else(|| format!("no graphic style `{n}`"))?.name.clone(),
@@ -32,7 +32,7 @@ pub fn open(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, Strin
 }
 
 /// Open Graphic Style Options to name the style Merge Graphic Styles makes of `names`.
-pub fn open_merge(app: &mut VectorcraftApp, names: Vec<String>) -> Result<Value, String> {
+pub fn open_merge(app: &mut TsipikaApp, names: Vec<String>) -> Result<Value, String> {
     let d = &app.session.active().ok_or("no document open")?.doc;
     if names.len() < 2 {
         return Err("select two or more graphic styles to merge".into());
@@ -44,7 +44,7 @@ pub fn open_merge(app: &mut VectorcraftApp, names: Vec<String>) -> Result<Value,
     Ok(Value::Null)
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     grid(ui, |ui| {
         label(ui, tl!("Style Name:"));
         form::text(ui, d, "name", 190.0);
@@ -55,7 +55,7 @@ fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 
 /// OK: name the new or merged style, or rename the style. A name another style has keeps the
 /// dialog open.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (name, style) = (d.str("name"), d.str("__style"));
     let merge = d.fields.get("__merge").filter(|m| m.as_array().is_some_and(|a| !a.is_empty()));
     let r = match style.as_str() {
@@ -73,20 +73,20 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap();
         app
     }
 
-    fn set(app: &mut VectorcraftApp, v: &str) {
+    fn set(app: &mut TsipikaApp, v: &str) {
         app.ui.dialog.as_mut().unwrap().fields.insert("name".into(), json!(v));
     }
 
-    fn names(app: &VectorcraftApp) -> Vec<String> {
+    fn names(app: &TsipikaApp) -> Vec<String> {
         app.session.active().unwrap().doc.graphic_styles.iter().map(|g| g.name.clone()).collect()
     }
 

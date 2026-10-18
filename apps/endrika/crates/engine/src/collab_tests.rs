@@ -1,9 +1,9 @@
 //! Collaboration over real commands: every edit round-trips through its change batch, and several
 //! people editing the same file at once all end up with the server's document.
 
-use figcraft_collab::sim::{Rng, Sim};
-use figcraft_collab::{Mode, NoRecompute, Recompute, Replica, diff};
-use figcraft_doc::{Document, NodeId, NodeKind};
+use endrika_collab::sim::{Rng, Sim};
+use endrika_collab::{Mode, NoRecompute, Recompute, Replica, diff};
+use endrika_doc::{Document, NodeId, NodeKind};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -34,8 +34,8 @@ pub(crate) fn base() -> Document {
 /// cycles, deleted targets…).
 pub(crate) fn random_command(doc: &Document, rng: &mut Rng, with_undo: bool) -> (&'static str, Value) {
     let store = doc.libraries.store;
-    let all: Vec<&figcraft_doc::Node> = doc.nodes().filter(|n| store.is_none_or(|st| doc.page_of(n.id) != Some(st))).collect();
-    let ids = |f: &dyn Fn(&figcraft_doc::Node) -> bool| -> Vec<NodeId> { all.iter().filter(|n| f(n)).map(|n| n.id).collect() };
+    let all: Vec<&endrika_doc::Node> = doc.nodes().filter(|n| store.is_none_or(|st| doc.page_of(n.id) != Some(st))).collect();
+    let ids = |f: &dyn Fn(&endrika_doc::Node) -> bool| -> Vec<NodeId> { all.iter().filter(|n| f(n)).map(|n| n.id).collect() };
     let layers = ids(&|n| !n.is_page());
     let containers = ids(&|n| n.kind.is_container() && !matches!(n.kind, NodeKind::Instance { .. }));
     let frames = ids(&|n| matches!(n.kind, NodeKind::Frame));
@@ -163,7 +163,7 @@ fn people_editing_at_once_converge() {
 }
 
 #[test]
-#[ignore = "longer run for development: cargo test -p figcraft-engine collab -- --ignored"]
+#[ignore = "longer run for development: cargo test -p endrika-engine collab -- --ignored"]
 fn many_sessions_converge() {
     for seed in 100..160 {
         let sim = session(seed, 4, 150, &EngineRecompute);

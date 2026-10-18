@@ -1,7 +1,7 @@
 //! Utilities: CAL (expression calculator), FIND (find and replace text), MASSPROP, MEASUREGEOM.
 
-use cadcraft_doc::{EntityKind, Handle};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{EntityKind, Handle};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 use super::*;
@@ -298,11 +298,11 @@ fn run_angle(s: &mut Session, p: &Value) -> Result<Value> {
         };
         let ((a1, a2), (b1, b2)) =
             (line(h1).ok_or_else(|| bad("angle.measure", "h1 is not a line"))?, line(h2).ok_or_else(|| bad("angle.measure", "h2 is not a line"))?);
-        let (x, _, _) = cadcraft_geom::line_line_infinite(a1, a2, b1, b2).ok_or_else(|| bad("angle.measure", "lines are parallel"))?;
+        let (x, _, _) = drafitra_geom::line_line_infinite(a1, a2, b1, b2).ok_or_else(|| bad("angle.measure", "lines are parallel"))?;
         let far = |p: Vec2, q: Vec2| if p.dist(x) > q.dist(x) { p } else { q };
         (x, far(a1, a2), far(b1, b2))
     };
-    let mut ang = (cadcraft_geom::norm_angle(v.angle_to(b) - v.angle_to(a))).to_degrees();
+    let mut ang = (drafitra_geom::norm_angle(v.angle_to(b) - v.angle_to(a))).to_degrees();
     if ang > 180.0 {
         ang = 360.0 - ang;
     }

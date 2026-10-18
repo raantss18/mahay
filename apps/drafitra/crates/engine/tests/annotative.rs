@@ -2,8 +2,8 @@
 //! scale, show only at scales they support unless ANNOALLVISIBLE is 1, and the scale list,
 //! OBJECTSCALE, ANNOAUTOSCALE and ANNOUPDATE manage the scales.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{AnnoDraw, Drawing, Entity, EntityKind, Handle, Space, entity_bounds};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{AnnoDraw, Drawing, Entity, EntityKind, Handle, Space, entity_bounds};
 use serde_json::{Value, json};
 
 fn setvar(s: &mut Session, name: &str, value: Value) {
@@ -34,8 +34,8 @@ fn height(d: &Drawing, h: Handle) -> f64 {
 
 /// Height of what the renderer draws for `h` in model space.
 fn drawn_height(d: &Drawing, h: Handle) -> Option<f64> {
-    let list = cadcraft_engine::render::build(d, &Space::Model, &Default::default());
-    let mut b = cadcraft_engine::geom::Bounds2::EMPTY;
+    let list = drafitra_engine::render::build(d, &Space::Model, &Default::default());
+    let mut b = drafitra_engine::geom::Bounds2::EMPTY;
     for p in list.prims.iter().filter(|p| p.handle == h) {
         for q in list.points(p) {
             b.add(*q);
@@ -210,7 +210,7 @@ fn annotative_multileader_and_hatch() {
     // At 1:2 the hatch pattern doubles: fewer, longer lines over the same area.
     let count = |s: &Session| {
         let d = s.doc().unwrap();
-        let list = cadcraft_engine::render::build(d, &Space::Model, &Default::default());
+        let list = drafitra_engine::render::build(d, &Space::Model, &Default::default());
         list.prims.iter().filter(|p| p.handle == hh).count()
     };
     let n1 = count(&s);
@@ -314,7 +314,7 @@ fn annotative_mtext_columns_follow_the_scale() {
         k => panic!("{k:?}"),
     };
     let ml = Entity {
-        kind: EntityKind::MLeader(cadcraft_engine::doc::MLeader {
+        kind: EntityKind::MLeader(drafitra_engine::doc::MLeader {
             leaders: Vec::new(),
             landing: Default::default(),
             dogleg: 1.0,
@@ -327,7 +327,7 @@ fn annotative_mtext_columns_follow_the_scale() {
         ..e.clone()
     };
     for e in [e, ml] {
-        let t = match cadcraft_engine::doc::anno_scaled(&e, 2.0).kind {
+        let t = match drafitra_engine::doc::anno_scaled(&e, 2.0).kind {
             EntityKind::MText(t) => t,
             EntityKind::MLeader(m) => m.text.unwrap(),
             k => panic!("{k:?}"),

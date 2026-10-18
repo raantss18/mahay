@@ -4,7 +4,7 @@
 //! Sources: the membrane interpolant of P. Pérez, M. Gangnet, A. Blake, *Poisson Image Editing*,
 //! ACM SIGGRAPH 2003 (§3), solved by successive over-relaxation on the 4-connected grid, accelerated
 //! cascadically (solve on a half-resolution grid, prolong bilinearly, a few SOR sweeps per level).
-//! Ported from PhotoCraft's `algo::poisson` (MIT OR Apache-2.0).
+//! Ported from Sary's `algo::poisson` (MIT OR Apache-2.0).
 
 /// Convergence threshold (max per-sweep update) for the SOR sweeps.
 const TOL: f32 = 2e-5;

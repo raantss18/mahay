@@ -1,6 +1,6 @@
 //! Primitive recognition in path data, placement under transforms, dash offsets and layer names.
 
-use figcraft_geom::{Affine, BezPath, Point, Rect};
+use endrika_geom::{Affine, BezPath, Point, Rect};
 
 use super::shape::{Prim, place, recognize};
 use super::{dash_offset, layer_name};
@@ -15,12 +15,12 @@ fn rectangles_are_found_with_their_corner_radius() {
     // Any direction, any starting corner.
     assert!(matches!(recognize(&path("M60 50 V20 H10 V50 Z"), false), Some(Prim::Rect { radius: 0.0, .. })));
     // Rounded: corners as arcs (as cubics).
-    let rounded = figcraft_geom::rounded_rect(80.0, 40.0, [8.0; 4], 0.0);
+    let rounded = endrika_geom::rounded_rect(80.0, 40.0, [8.0; 4], 0.0);
     let Some(Prim::Rect { rect, radius }) = recognize(&rounded, false) else { panic!("{:?}", recognize(&rounded, false)) };
     assert_eq!(rect, Rect::new(0.0, 0.0, 80.0, 40.0));
     assert_eq!(radius, 8.0);
     // A pill: fully rounded ends.
-    let pill = figcraft_geom::rounded_rect(80.0, 20.0, [10.0; 4], 0.0);
+    let pill = endrika_geom::rounded_rect(80.0, 20.0, [10.0; 4], 0.0);
     assert!(matches!(recognize(&pill, false), Some(Prim::Rect { radius: 10.0, .. })));
     // Back at the start without closing: a corner only when there's no stroke to cap the ends.
     assert!(matches!(recognize(&path("M0 0 H40 V40 H0 V0"), true), Some(Prim::Rect { .. })));
@@ -30,11 +30,11 @@ fn rectangles_are_found_with_their_corner_radius() {
 #[test]
 fn circles_and_ellipses_are_found() {
     // Closed by ending where it starts.
-    let e = figcraft_geom::ellipse(60.0, 30.0, 0.0, std::f64::consts::TAU, 0.0);
+    let e = endrika_geom::ellipse(60.0, 30.0, 0.0, std::f64::consts::TAU, 0.0);
     let Some(Prim::Ellipse(r)) = recognize(&e, true) else { panic!("{:?}", recognize(&e, true)) };
     assert!((r.width() - 60.0).abs() < 1e-9 && (r.height() - 30.0).abs() < 1e-9 && r.x0.abs() < 1e-9, "{r:?}");
     // A circle is an ellipse, not a fully rounded square.
-    let c = figcraft_geom::ellipse(40.0, 40.0, 0.0, std::f64::consts::TAU, 0.0);
+    let c = endrika_geom::ellipse(40.0, 40.0, 0.0, std::f64::consts::TAU, 0.0);
     assert!(matches!(recognize(&c, true), Some(Prim::Ellipse(_))));
     // SVG arcs.
     assert!(matches!(recognize(&path("M0 20 A20 20 0 0 1 40 20 A20 20 0 0 1 0 20 Z"), false), Some(Prim::Ellipse(_))));

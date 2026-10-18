@@ -3,8 +3,8 @@
 //! stroke under it.
 
 use kurbo::{BezPath, PathEl, Point, Shape};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{ArrowAlign, Arrowhead, StrokeLayer};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{ArrowAlign, Arrowhead, StrokeLayer};
 
 use super::stroke_pieces;
 

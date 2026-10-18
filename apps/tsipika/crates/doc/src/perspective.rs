@@ -5,7 +5,7 @@
 //! stay attached and deleted objects leave nothing stale behind.
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_geom::{Homography, Rect};
+use tsipika_geom::{Homography, Rect};
 
 use crate::{Node, NodeKind};
 
@@ -59,7 +59,7 @@ impl Node {
     }
 
     /// Keep a projection drawing the same picture moved by `a` (the flat art moves by `a` too).
-    pub(crate) fn transform_projection(&mut self, a: vectorcraft_geom::Affine) {
+    pub(crate) fn transform_projection(&mut self, a: tsipika_geom::Affine) {
         if let Some(p) = self.extras_if_any().and_then(|e| e.perspective.as_deref_mut())
             && let Some(h) = p.homography().and_then(|h| h.conjugated(a))
         {

@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-14 · **Change:** minor (zoom row: soft proofing sharp at 1:1; canvas tools by keyboard; focus-order test; ~50 unnamed hand-drawn widgets named) · **Target:** Adobe Lightroom Classic 15.5 / Lightroom 9.6
 
-How LightCraft's interaction compares with Lightroom's: views, panels, tools and handles, modifier
+How Hazavana's interaction compares with Lightroom's: views, panels, tools and handles, modifier
 keys, shortcuts, zoom, context menus and feel. Rows for individual menu items and shortcuts live in
 [parity-checklist.md](parity-checklist.md) (sections Y and Z, Classic keys); this page is the
 assessment and the notes that don't fit a row. Visual reference for agents: `plan/lightroom/`
@@ -20,7 +20,7 @@ assessment and the notes that don't fit a row. Visual reference for agents: `pla
 
 ## Assessment by area
 
-| Area | Target | LightCraft | Ready | Main gaps |
+| Area | Target | Hazavana | Ready | Main gaps |
 |---|---|---|---:|---|
 | Layout and views | Lightroom: grid / detail / edit; Classic: Library, Develop, Map, Book, Slideshow, Print, Web modules, filmstrip, panels | Lightroom-style single window: Photo Grid, Square Grid, Detail, Compare, Survey (≤ 48), Before / After, People, quick slideshow, second window, filmstrip | 75% | no Classic module switcher (by design) or output modules; dark theme only |
 | Develop panels and sliders | Light, Color, Effects, Detail, Optics, Geometry, Lens Blur, Calibration | every global slider; scrub, double-click reset, Alt-drag previews where implemented | 80% | Lens Blur, Calibration panel depth; slider feel (acceleration, fine Shift-drag) unmeasured |

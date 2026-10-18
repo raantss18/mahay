@@ -29,7 +29,7 @@ fn texture(x: f64, y: f64, seed: u32) -> [f32; 3] {
 }
 
 fn noise(x: u32, y: u32, f: u32) -> f32 {
-    effectcraft_raster::hash_noise(x, y.wrapping_add(f.wrapping_mul(7919)), 99) - 0.5
+    tselatra_raster::hash_noise(x, y.wrapping_add(f.wrapping_mul(7919)), 99) - 0.5
 }
 
 /// Patch pose on a frame: centre, rotation (degrees), scale.

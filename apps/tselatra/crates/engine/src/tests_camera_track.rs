@@ -1,13 +1,13 @@
 //! The 3D Camera Tracker end to end through the commands, on synthetic footage rendered in-test:
 //! textured planes (a floor, a back wall and a box face) seen through a known moving camera.
 
-use effectcraft_effects::camera_tracker as ct;
-use effectcraft_geom::vec3;
-use effectcraft_project::LayerId;
-use effectcraft_raster::Image;
-use effectcraft_render::EvalCtx;
-use effectcraft_render::three_d::camera::active_camera;
-use effectcraft_track::camtrack::linalg::{self, M3, V3};
+use tselatra_effects::camera_tracker as ct;
+use tselatra_geom::vec3;
+use tselatra_project::LayerId;
+use tselatra_raster::Image;
+use tselatra_render::EvalCtx;
+use tselatra_render::three_d::camera::active_camera;
+use tselatra_track::camtrack::linalg::{self, M3, V3};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -89,7 +89,7 @@ fn track_camera_solves_and_creates_layers_on_the_plane() {
     assert_ne!(st["methodUsed"], "Tripod Pan");
     // Method Used / Average Error are reported in the effect.
     let g = s.active_comp().unwrap().layer(clip).unwrap().effects().unwrap().groups().next().unwrap().clone();
-    assert!(matches!(g.prop(ct::METHOD_USED).map(|p| &p.value), Some(effectcraft_keyframe::Value::Str(m)) if !m.is_empty()));
+    assert!(matches!(g.prop(ct::METHOD_USED).map(|p| &p.value), Some(tselatra_keyframe::Value::Str(m)) if !m.is_empty()));
 
     // Pick floor points on frame 12 (their 3D positions lie on y = 1.5 in the true scene: the
     // ones seen below the horizon at the bottom of the frame).
@@ -205,7 +205,7 @@ fn track_camera_solves_and_creates_layers_on_the_plane() {
     assert!(linalg::norm(linalg::sub(front, [0.0, 0.0, -1.0])) < 1e-6, "{front:?}");
 
     // Serde keeps the analysis.
-    let back = effectcraft_project::Project::from_json(&s.project.to_json()).unwrap();
+    let back = tselatra_project::Project::from_json(&s.project.to_json()).unwrap();
     let g2 = back.comp(cid).unwrap().layer(clip).unwrap().props.find_group(uid).unwrap();
     let sv = ct::solve(&crate::camera_track::static_params(g2)).unwrap();
     assert!(sv.ground.is_some());
@@ -283,10 +283,10 @@ fn invalidation_resolve_cancel_and_undo() {
 
 #[test]
 fn effect_parameters_match_after_effects() {
-    let spec = effectcraft_effects::registry().iter().find(|e| e.id == ct::ID).unwrap();
+    let spec = tselatra_effects::registry().iter().find(|e| e.id == ct::ID).unwrap();
     assert_eq!(spec.name, "3D Camera Tracker");
     assert_eq!(spec.category, "Perspective");
-    let names: Vec<&str> = spec.params.iter().filter(|p| !matches!(p.ui, effectcraft_project::ParamUi::Hidden)).map(|p| p.name).collect();
+    let names: Vec<&str> = spec.params.iter().filter(|p| !matches!(p.ui, tselatra_project::ParamUi::Hidden)).map(|p| p.name).collect();
     for n in [
         "Shot Type",
         "Horizontal Angle of View",

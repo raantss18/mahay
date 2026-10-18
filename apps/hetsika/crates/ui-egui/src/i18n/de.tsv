@@ -2,9 +2,9 @@
 #
 # Clean-room: every entry was written from the plain meaning of the English label using ordinary
 # German video-editing vocabulary. No proprietary localisation resource, string table or product UI
-# was consulted or copied; add entries the same way. Like the German catalogs of the other Craft
+# was consulted or copied; add entries the same way. Like the German catalogs of the other Mahay
 # apps, text addresses the user informally ("du") and commands use the infinitive ("Projekt
-# öffnen…"). Product, format and feature names (FilmCraft, ArtCraft, Lumetri, Essential Graphics,
+# öffnen…"). Product, format and feature names (Hetsika, Mahay, Lumetri, Essential Graphics,
 # EDL, AAF…) keep their spelling. This catalog covers every menu, including the native macOS
 # app menu; anything else is shown in English.
 #
@@ -14,7 +14,7 @@
 # menu) = Voreinstellungen. "Timeline" is not translated.
 
 	AAF…	AAF…
-	About FilmCraft	Über FilmCraft
+	About Hetsika	Über Hetsika
 	Add Audio Submix Track	Audio-Submix-Spur hinzufügen
 	Add Caption at Playhead	Untertitel an Abspielposition hinzufügen
 	Add Chapter Marker…	Kapitelmarker hinzufügen…
@@ -40,7 +40,7 @@
 	Apply Default Transitions to Selection	Standardübergänge auf Auswahl anwenden
 	Apply Video Transition	Videoübergang anwenden
 	Arrange	Anordnen
-	ArtCraft Website	ArtCraft-Website
+	Mahay Website	Mahay-Website
 	Assembly	Montage
 	Attach Proxies…	Proxys anhängen…
 	Audio	Audio
@@ -144,9 +144,9 @@
 	File	Datei
 	File…	Datei…
 	Fill frame	Bild füllen
-	FilmCraft Help…	FilmCraft-Hilfe…
-	FilmCraft on GitHub	FilmCraft auf GitHub
-	FilmCraft on getartcraft.com	FilmCraft auf getartcraft.com
+	Hetsika Help…	Hetsika-Hilfe…
+	Hetsika on GitHub	Hetsika auf GitHub
+	Hetsika on mahay.com	Hetsika auf mahay.com
 	Final Cut Pro XML…	Final Cut Pro XML…
 	Find Next	Weitersuchen
 	Find…	Suchen…
@@ -180,7 +180,7 @@
 	Guide Templates	Hilfslinienvorlagen
 	Help	Hilfe
 	Hide All Caption Tracks	Alle Untertitelspuren ausblenden
-	Hide FilmCraft	FilmCraft ausblenden
+	Hide Hetsika	Hetsika ausblenden
 	Hide Others	Andere ausblenden
 	High Quality Playback	Wiedergabe in hoher Qualität
 	History	Verlauf
@@ -195,7 +195,7 @@
 	Install Motion Graphics Template…	Motion-Graphics-Vorlage installieren…
 	Interpret Footage…	Material interpretieren…
 	Iris	Iris
-	Join the ArtCraft Discord…	Dem ArtCraft-Discord beitreten…
+	Join the Mahay Discord…	Dem Mahay-Discord beitreten…
 	Keyboard Shortcuts…	Tastenkürzel…
 	Label	Farbmarkierung
 	Labels…	Farbmarkierungen…
@@ -273,7 +273,7 @@
 	Properties	Eigenschaften
 	Proxy	Proxy
 	Purple	Lila
-	Quit FilmCraft	FilmCraft beenden
+	Quit Hetsika	Hetsika beenden
 	Reconnect Full Resolution Media…	Medien in voller Auflösung neu verknüpfen…
 	Recover Unsaved Changes…	Nicht gespeicherte Änderungen wiederherstellen…
 	Rectangle	Rechteck
@@ -330,7 +330,7 @@
 	Select Previous Graphic	Vorherige Grafik auswählen
 	Select Previous Layer	Vorherige Ebene auswählen
 	Selection Follows Playhead	Auswahl folgt Abspielposition
-	Selection as FilmCraft Project…	Auswahl als FilmCraft-Projekt…
+	Selection as Hetsika Project…	Auswahl als Hetsika-Projekt…
 	Selection…	Auswahl…
 	Send Backward	Schrittweise nach hinten
 	Send to Back	In den Hintergrund

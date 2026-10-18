@@ -2,8 +2,8 @@
 //! editor key edits, time remapping/stretch/reverse/freeze, separate dimensions, pick-whips,
 //! expressions and masks (pen tool). Every command is checked with undo/redo.
 
-use effectcraft_keyframe::{Interp, Value as KV};
-use effectcraft_project::Property;
+use tselatra_keyframe::{Interp, Value as KV};
+use tselatra_project::Property;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -17,7 +17,7 @@ pub(crate) fn setup() -> (Session, u64) {
 }
 
 pub(crate) fn prop(s: &Session, layer: u64, path: &str) -> Property {
-    s.active_comp().unwrap().layer(effectcraft_project::LayerId(layer)).unwrap().props.prop(path).unwrap().clone()
+    s.active_comp().unwrap().layer(tselatra_project::LayerId(layer)).unwrap().props.prop(path).unwrap().clone()
 }
 
 /// Key `path` at the given (time, value) pairs.
@@ -66,7 +66,7 @@ fn easy_ease_family_sets_influence_and_zero_speed() {
     // Eased motion is slow near the key.
     s.execute("keys.easyEase", json!({})).unwrap();
     let p = prop(&s, l, "transform/opacity");
-    let early = p.value_at(effectcraft_time::Tick::from_seconds_f64(0.1)).as_f64();
+    let early = p.value_at(tselatra_time::Tick::from_seconds_f64(0.1)).as_f64();
     assert!(early < 5.0, "{early}");
 }
 
@@ -147,8 +147,8 @@ fn copy_selected_keys_excludes_deselected_properties_and_stale_values() {
                 let k = &p.keys[0];
                 assert_eq!((k.time.seconds(), &k.value), (time, &value));
                 assert_eq!((k.in_interp, k.out_interp), (Interp::Bezier, Interp::Bezier));
-                assert_eq!(k.in_ease[0], effectcraft_keyframe::Ease::EASY);
-                assert_eq!(k.out_ease[0], effectcraft_keyframe::Ease::EASY);
+                assert_eq!(k.in_ease[0], tselatra_keyframe::Ease::EASY);
+                assert_eq!(k.out_ease[0], tselatra_keyframe::Ease::EASY);
             }
             assert_eq!(s.state.selected_keys.len(), 2);
             assert_eq!(prop(s, target, "transform/scale").value, KV::Vec3([100.0; 3]));
@@ -249,7 +249,7 @@ fn velocity_dialog_values_per_dimension_and_continuous() {
 fn spatial_bezier_gives_a_straight_path_handles() {
     let (mut s, l) = setup();
     animate(&mut s, l, "transform/position", &[(0.0, json!([0, 0])), (2.0, json!([300, 0]))]);
-    let mid = prop(&s, l, "transform/position").value_at(effectcraft_time::Tick::from_seconds_f64(0.7)).as_vec3();
+    let mid = prop(&s, l, "transform/position").value_at(tselatra_time::Tick::from_seconds_f64(0.7)).as_vec3();
     select_prop_keys(&mut s, l, "transform/position");
     for (from, handle) in [("autoBezier", 50.0), ("linear", 100.0)] {
         s.execute("keys.interpolation", json!({"spatial": from})).unwrap();
@@ -257,7 +257,7 @@ fn spatial_bezier_gives_a_straight_path_handles() {
         let p = prop(&s, l, "transform/position");
         assert!(p.keys.iter().all(|k| !k.spatial_auto));
         assert_eq!((p.keys[0].spatial_out, p.keys[1].spatial_in), ([handle, 0.0, 0.0], [-handle, 0.0, 0.0]), "from {from}");
-        let now = p.value_at(effectcraft_time::Tick::from_seconds_f64(0.7)).as_vec3();
+        let now = p.value_at(tselatra_time::Tick::from_seconds_f64(0.7)).as_vec3();
         assert!((now[0] - mid[0]).abs() < 0.01 && now[1].abs() < 1e-9, "from {from}: {mid:?} → {now:?}");
     }
 }
@@ -377,7 +377,7 @@ fn pen_tool_draws_edits_and_closes_a_mask() {
     assert_eq!(s.state.selected_vertices.last().unwrap().index, 3);
     // The mask cuts the 100×100 solid (layer centred in the 400×300 comp at 150..250, 100..200).
     let cid = s.active_comp_id().unwrap();
-    let img = s.render(cid, effectcraft_time::Tick::ZERO, effectcraft_render::RenderOpts { scale: 1.0, ..Default::default() });
+    let img = s.render(cid, tselatra_time::Tick::ZERO, tselatra_render::RenderOpts { scale: 1.0, ..Default::default() });
     assert!(img.get(200, 150)[3] > 0.99 && img.get(152, 102)[3] < 0.01);
     // Undo removes the close, redo restores it.
     s.execute("edit.undo", json!({})).unwrap();
@@ -431,7 +431,7 @@ fn reopen_with_short_tangents(s: &mut Session) {
     }
     let mut j: Value = serde_json::from_str(&s.project.to_json()).unwrap();
     cut(&mut j);
-    let p = effectcraft_project::Project::from_json(&j.to_string()).unwrap();
+    let p = tselatra_project::Project::from_json(&j.to_string()).unwrap();
     s.replace_project(p, None);
 }
 
@@ -513,7 +513,7 @@ fn add_expression_without_path_uses_the_selected_property() {
 
 #[test]
 fn layer_comp_and_key_times_stay_frame_aligned() {
-    let aligned = |fr: effectcraft_time::FrameRate, t: effectcraft_time::Tick| fr.snap(t) == t;
+    let aligned = |fr: tselatra_time::FrameRate, t: tselatra_time::Tick| fr.snap(t) == t;
     // The demo project: every comp duration, layer in/out/start and key time is on a frame.
     let mut s = Session::default();
     s.execute("file.openDemoProject", json!({})).unwrap();
@@ -560,8 +560,8 @@ fn time_set_snaps_to_the_nearest_frame_and_ae_timecode() {
     let r = s.execute("time.set", json!({"time": 2.5})).unwrap();
     assert_eq!(r["frame"], 75);
     let fr = s.active_comp().unwrap().frame_rate;
-    assert_eq!(effectcraft_time::format_timecode_ae(75, fr, false), "0:00:02:15");
-    assert_eq!(effectcraft_time::format_timecode_ae(75, fr, true), "0;00;02;15");
+    assert_eq!(tselatra_time::format_timecode_ae(75, fr, false), "0:00:02:15");
+    assert_eq!(tselatra_time::format_timecode_ae(75, fr, true), "0;00;02;15");
 }
 
 /// #890: at 29.97 / 59.94 fps the displayed (non-drop) timecode was read back as drop-frame, so
@@ -627,7 +627,7 @@ fn separate_dimensions_split_and_rejoin() {
         let cid = s.active_comp_id().unwrap();
         let comp = s.project.comp(cid).unwrap();
         let layer = &comp.layers[0];
-        let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, effectcraft_time::Tick::from_seconds_f64(1.0));
+        let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, tselatra_time::Tick::from_seconds_f64(1.0));
         let p = ctx.value(layer, layer.transform().unwrap().get("position").unwrap()).as_vec3();
         assert!((p[0] - 100.0).abs() < 1e-6 && (p[1] - 75.0).abs() < 1e-6, "{p:?}");
     };
@@ -661,11 +661,11 @@ fn parenting_keeps_the_layer_in_place() {
     let world = |s: &Session| {
         let cid = s.active_comp_id().unwrap();
         let comp = s.project.comp(cid).unwrap();
-        let l = comp.layer(effectcraft_project::LayerId(child)).unwrap();
-        let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, effectcraft_time::Tick::ZERO);
+        let l = comp.layer(tselatra_project::LayerId(child)).unwrap();
+        let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, tselatra_time::Tick::ZERO);
         let (m, _) = ctx.layer_to_comp(l);
-        let a = m.apply(effectcraft_geom::vec2(50.0, 50.0));
-        let b = m.apply(effectcraft_geom::vec2(100.0, 50.0));
+        let a = m.apply(tselatra_geom::vec2(50.0, 50.0));
+        let b = m.apply(tselatra_geom::vec2(100.0, 50.0));
         (a, (b.y - a.y).atan2(b.x - a.x).to_degrees(), (b.x - a.x).hypot(b.y - a.y))
     };
     let before = world(&s);
@@ -679,7 +679,7 @@ fn parenting_keeps_the_layer_in_place() {
     let p = prop(&s, child, "transform/position").value.as_vec3();
     assert!((p[0] - 100.0).abs() < 1e-6 && (p[1] - 50.0).abs() < 1e-6, "{p:?}");
     s.execute("edit.undo", json!({})).unwrap();
-    assert!(s.active_comp().unwrap().layer(effectcraft_project::LayerId(child)).unwrap().parent.is_some());
+    assert!(s.active_comp().unwrap().layer(tselatra_project::LayerId(child)).unwrap().parent.is_some());
 }
 
 /// #284: toggling stopwatches with one `merge` key (dragging over them) is one undo step.
@@ -750,7 +750,7 @@ fn reset_gives_a_property_its_default() {
     // Animated: the default becomes the key at the current time (0 s), the 1 s key stays (#1078).
     let rot = prop(&s, l, "transform/rotation");
     assert_eq!(rot.keys.len(), 2);
-    assert_eq!(rot.value_at(effectcraft_time::Tick::ZERO), KV::Scalar(0.0));
+    assert_eq!(rot.value_at(tselatra_time::Tick::ZERO), KV::Scalar(0.0));
     assert_eq!(v(&s, "transform/opacity"), KV::Scalar(100.0));
     assert!(prop(&s, l, "transform/opacity").expr.is_none());
     assert_eq!(v(&s, "effects/#1/blurriness"), blur);
@@ -768,7 +768,7 @@ fn reset_keys_the_default_on_an_animated_property() {
     s.execute("time.set", json!({"time": 1})).unwrap();
     s.execute("prop.reset", json!({"layer": l, "path": "transform/scale"})).unwrap();
     let pr = prop(&s, l, "transform/scale");
-    let at = |sec: f64| pr.value_at(effectcraft_time::Tick::from_seconds_f64(sec));
+    let at = |sec: f64| pr.value_at(tselatra_time::Tick::from_seconds_f64(sec));
     assert_eq!(pr.keys.len(), 3, "the 0 s and 2 s keys stay, one is added at 1 s");
     assert_eq!(at(0.0), KV::Vec3([50.0, 50.0, 100.0]));
     assert_eq!(at(1.0), KV::Vec3([100.0; 3]));
@@ -778,7 +778,7 @@ fn reset_keys_the_default_on_an_animated_property() {
     s.execute("prop.reset", json!({"layer": l, "path": "transform/scale"})).unwrap();
     let pr = prop(&s, l, "transform/scale");
     assert_eq!(pr.keys.len(), 3);
-    assert_eq!(pr.value_at(effectcraft_time::Tick::from_seconds_f64(2.0)), KV::Vec3([100.0; 3]));
+    assert_eq!(pr.value_at(tselatra_time::Tick::from_seconds_f64(2.0)), KV::Vec3([100.0; 3]));
     s.execute("edit.undo", json!({})).unwrap();
     s.execute("edit.undo", json!({})).unwrap();
     assert_eq!(prop(&s, l, "transform/scale").keys.len(), 2);
@@ -846,7 +846,7 @@ fn precomp_setup() -> (Session, u64) {
 /// X of the moving square's centre in the outer comp at `t`.
 fn square_x(s: &Session, t: f64) -> f64 {
     let cid = s.active_comp_id().unwrap();
-    let img = s.render(cid, effectcraft_time::Tick::from_seconds_f64(t), effectcraft_render::RenderOpts { scale: 1.0, ..Default::default() });
+    let img = s.render(cid, tselatra_time::Tick::from_seconds_f64(t), tselatra_render::RenderOpts { scale: 1.0, ..Default::default() });
     let xs: Vec<usize> = (0..img.width as usize).filter(|x| img.get(*x as i64, 50)[3] > 0.5).collect();
     assert!(!xs.is_empty(), "nothing drawn at {t}");
     (xs[0] + xs[xs.len() - 1]) as f64 / 2.0 + 0.5
@@ -980,7 +980,7 @@ fn modified_reveal_is_empty_for_untouched_layers() {
 
 /// Match-id path of property or group `uid` of `layer`.
 fn path_of(s: &Session, layer: u64, uid: u64) -> String {
-    let l = s.active_comp().unwrap().layer(effectcraft_project::LayerId(layer)).unwrap();
+    let l = s.active_comp().unwrap().layer(tselatra_project::LayerId(layer)).unwrap();
     let mut out = String::new();
     for n in l.props.node_chain(uid).unwrap_or_default() {
         out.push('/');
@@ -1171,7 +1171,7 @@ fn property_edits_apply_to_every_selected_layer() {
     let c = s.execute("layer.newSolid", json!({"color": "#00ff00", "width": 50, "height": 50})).unwrap()["layer"].as_u64().unwrap();
     s.execute("prop.set", json!({"layer": b, "path": "transform/position", "value": [10, 20]})).unwrap();
     s.execute("layer.select", json!({"layers": [a, b]})).unwrap();
-    let pos = |s: &Session, l: u64| prop(s, l, "transform/position").value_at(effectcraft_time::Tick::ZERO).components();
+    let pos = |s: &Session, l: u64| prop(s, l, "transform/position").value_at(tselatra_time::Tick::ZERO).components();
     let uid = prop(&s, a, "transform/position").uid;
 
     // Stopwatch on all selected layers, one undo step; the unselected layer is untouched.
@@ -1251,7 +1251,7 @@ fn proportional_scrub_spreads_the_change_by_selection_order() {
     s.execute("prop.set", json!({"layer": b, "prop": pos_uid, "value": [140, 80], "selected": true, "offset": true, "proportional": true})).unwrap();
     let at1 = |s: &Session, l: u64| {
         let p = prop(s, l, "transform/position");
-        (p.keys.len(), p.value_at(effectcraft_time::Tick::from_seconds_f64(1.0)).components()[..2].to_vec())
+        (p.keys.len(), p.value_at(tselatra_time::Tick::from_seconds_f64(1.0)).components()[..2].to_vec())
     };
     assert_eq!(at1(&s, c), (1, vec![100.0, 100.0]), "no key on the first selected layer");
     assert_eq!(at1(&s, a), (2, vec![120.0, 90.0]));
@@ -1276,17 +1276,17 @@ fn proportional_share_is_linear_in_selection_order() {
 fn add_item_keeps_footage_longer_than_the_comp_at_full_length() {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "T", "width": 400, "height": 300, "frameRate": 30, "duration": 4})).unwrap();
-    let f = effectcraft_project::Footage {
+    let f = tselatra_project::Footage {
         width: 100,
         height: 100,
-        kind: effectcraft_project::FootageKind::Video,
+        kind: tselatra_project::FootageKind::Video,
         has_video: true,
-        duration: effectcraft_time::Tick::from_seconds_f64(10.0),
+        duration: tselatra_time::Tick::from_seconds_f64(10.0),
         ..Default::default()
     };
-    let item = std::sync::Arc::make_mut(&mut s.project).add_item("long.mp4", effectcraft_color::Label::None, None, effectcraft_project::ItemKind::Footage(f));
+    let item = std::sync::Arc::make_mut(&mut s.project).add_item("long.mp4", tselatra_color::Label::None, None, tselatra_project::ItemKind::Footage(f));
     let l = s.execute("layer.addItem", json!({"item": item.0})).unwrap()["layer"].as_u64().unwrap();
-    let layer = s.active_comp().unwrap().layer(effectcraft_project::LayerId(l)).unwrap();
+    let layer = s.active_comp().unwrap().layer(tselatra_project::LayerId(l)).unwrap();
     assert_eq!(layer.out_point.seconds(), 10.0);
 }
 
@@ -1311,7 +1311,7 @@ fn relative_trim_moves_every_selected_layer_by_the_same_delta() {
     s.execute("layer.timing", json!({"layers": [a], "in": 0.5, "out": 2.0})).unwrap();
     s.execute("layer.timing", json!({"layers": [b], "in": 1.0, "out": 3.5})).unwrap();
     let io = |s: &Session, l: u64| {
-        let l = s.active_comp().unwrap().layer(effectcraft_project::LayerId(l)).unwrap();
+        let l = s.active_comp().unwrap().layer(tselatra_project::LayerId(l)).unwrap();
         (l.in_point.seconds(), l.out_point.seconds())
     };
     let near = |x: f64, y: f64| (x - y).abs() < 1e-9;

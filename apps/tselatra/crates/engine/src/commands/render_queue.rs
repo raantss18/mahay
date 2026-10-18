@@ -5,13 +5,13 @@
 //! Items are addressed by `item` (the stable id from `renderQueue.add` / `renderQueue.list`) or
 //! `index` (1-based, the # column).
 
-use effectcraft_project::render_queue::{
+use tselatra_project::render_queue::{
     AlphaMode, AudioFormat, AudioOutput, Channels, ColorDepth, CurrentOrOff, DEFAULT_SEQUENCE_TEMPLATE, DEFAULT_TEMPLATE, EffectsMode, FieldRender,
     OutputFormat, OutputModule, PostRenderAction, ProResProfile, Pulldown, RESIZE_PRESETS, RenderLog, RenderQuality, RenderQueueItem, RenderSettings,
     RenderStatus, ResizeQuality, SwitchOverride, TimeSpan, post_render_parse, without_project_extension,
 };
-use effectcraft_project::render_templates::{RenderTemplates, TemplateKind, TemplateSlot};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_project::render_templates::{RenderTemplates, TemplateKind, TemplateSlot};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, comp_id, f_p, has_comp, str_p};
@@ -129,7 +129,7 @@ fn apply_settings(rs: &mut RenderSettings, templates: &RenderTemplates, p: &Valu
         return Err(bad(cmd, "end must be after start"));
     }
     if let Some(u) = str_p(p, "proxyUse") {
-        rs.proxy_use = effectcraft_project::render_queue::ProxyUse::parse(u).ok_or_else(|| bad(cmd, "proxyUse: current|all|comp|none"))?;
+        rs.proxy_use = tselatra_project::render_queue::ProxyUse::parse(u).ok_or_else(|| bad(cmd, "proxyUse: current|all|comp|none"))?;
     }
     match p.get("frameRate") {
         Some(Value::Null) => {
@@ -397,7 +397,7 @@ fn apply_output(om: &mut OutputModule, templates: &RenderTemplates, roi: Option<
 
 /// HEVC / AV1 codec options, the WebM video codec and the Opus audio options.
 fn apply_codec_options(om: &mut OutputModule, p: &Value, cmd: &str) -> Result<bool> {
-    use effectcraft_project::render_queue::{CodecProfile, OpusApplication, RateControlMode, VideoCodecOptions, WebmVideoCodec};
+    use tselatra_project::render_queue::{CodecProfile, OpusApplication, RateControlMode, VideoCodecOptions, WebmVideoCodec};
     let mut any = false;
     if let Some(c) = str_p(p, "webmCodec") {
         om.webm_codec = match c.to_ascii_lowercase().as_str() {
@@ -503,7 +503,7 @@ fn item_json(s: &Session, it: &RenderQueueItem, index: usize) -> Value {
         o.insert("postRenderAction".into(), json!(it.post_render.label()));
         o.insert("logLabel".into(), json!(it.log.label()));
         if let Some(p) = s.resolve_output(it) {
-            o.insert("logPath".into(), json!(effectcraft_project::render_queue::log_path(&p)));
+            o.insert("logPath".into(), json!(tselatra_project::render_queue::log_path(&p)));
         }
         o.insert("width".into(), json!(w));
         o.insert("height".into(), json!(h));
@@ -709,7 +709,7 @@ fn formats(s: &mut Session, _: &Value) -> Result<Value> {
             })
         })
         .collect();
-    use effectcraft_project::render_queue::{CodecProfile, VideoCodecOptions};
+    use tselatra_project::render_queue::{CodecProfile, VideoCodecOptions};
     let level = |l: &u8| format!("{}.{}", l / 10, l % 10);
     Ok(json!({
         "formats": v,

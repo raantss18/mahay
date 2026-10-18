@@ -1,9 +1,9 @@
 [package]
-name = "vectorcraft-geom"
+name = "tsipika-geom"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft geom"
+description = "Tsipika geom"
 
 [lints]
 workspace = true
@@ -14,6 +14,6 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 proptest = { workspace = true }
 serde_json = { workspace = true }

@@ -2,7 +2,7 @@
 //! reference: an arrow at a distance's end (drag it to change the distance), a square at a
 //! position (drag it to move it) and a down-pointing triangle for a list (click it for the
 //! visibility states or lookup values). Dragging runs the engine's dynamic grip edit
-//! ([`cadcraft_engine::Session::start_dyn_grip`]); a list choice runs `blocks.reference.set`.
+//! ([`drafitra_engine::Session::start_dyn_grip`]); a list choice runs `blocks.reference.set`.
 
 use std::sync::Arc;
 
@@ -12,8 +12,8 @@ use serde_json::json;
 use crate::CadApp;
 use crate::canvas::Xf;
 use crate::theme::Tokens;
-use cadcraft_engine::doc::Handle;
-use cadcraft_engine::doc::dynblock::{DynGrip, GripShape};
+use drafitra_engine::doc::Handle;
+use drafitra_engine::doc::dynblock::{DynGrip, GripShape};
 
 /// Most selected references whose grips are shown.
 const MAX_REFERENCES: usize = 200;
@@ -33,10 +33,10 @@ pub(crate) fn of_selection(app: &mut CadApp) -> Arc<Vec<(Handle, DynGrip)>> {
     if app.canvas.dyn_grips.key != key {
         let grips: Vec<(Handle, DynGrip)> = sel
             .iter()
-            .filter(|h| matches!(st.doc.entity(**h).map(|e| &e.kind), Some(cadcraft_engine::doc::EntityKind::Insert(_))))
+            .filter(|h| matches!(st.doc.entity(**h).map(|e| &e.kind), Some(drafitra_engine::doc::EntityKind::Insert(_))))
             .filter(|h| st.doc.entity(**h).is_some_and(|e| !st.doc.layer(&e.common.layer).is_some_and(|l| l.locked)))
             .take(MAX_REFERENCES)
-            .flat_map(|h| cadcraft_engine::doc::dynblock::grips(&st.doc, *h).into_iter().map(move |g| (*h, g)))
+            .flat_map(|h| drafitra_engine::doc::dynblock::grips(&st.doc, *h).into_iter().map(move |g| (*h, g)))
             .collect();
         app.canvas.dyn_grips = Cache { key, grips: Arc::new(grips) };
     }
@@ -124,7 +124,7 @@ pub(crate) fn menu(app: &mut CadApp, ctx: &egui::Context, xf: &Xf) {
         .session
         .state()
         .ok()
-        .and_then(|st| cadcraft_engine::doc::dynblock::custom_properties(&st.doc, h))
+        .and_then(|st| drafitra_engine::doc::dynblock::custom_properties(&st.doc, h))
         .and_then(|(_, ps)| ps.into_iter().find(|p| p.name.eq_ignore_ascii_case(&g.property)))
         .map(|p| p.value)
         .unwrap_or_default();

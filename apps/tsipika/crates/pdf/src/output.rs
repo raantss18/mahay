@@ -27,11 +27,11 @@
 
 use std::sync::{Arc, OnceLock};
 
-use craft_pdf::write::backend as krilla;
+use mahay_pdf::write::backend as krilla;
 use krilla::image::ImageColorspace;
-use vectorcraft_color::Color;
-use vectorcraft_color::cms::{self, Cms, CmykLut, Intent, Model, ProfileKind, ProofLut};
-use vectorcraft_doc::{ColorMode, Document};
+use tsipika_color::Color;
+use tsipika_color::cms::{self, Cms, CmykLut, Intent, Model, ProfileKind, ProofLut};
+use tsipika_doc::{ColorMode, Document};
 
 use crate::patch::{Patch, Xref};
 use crate::{ColorConversion, PdfError, PdfSettings, ProfileInclusion, Standard};

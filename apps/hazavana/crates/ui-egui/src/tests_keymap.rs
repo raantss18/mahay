@@ -8,14 +8,14 @@ use serde_json::json;
 
 use crate::headless::Headless;
 use crate::state::{Dialog, ViewMode};
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn demo() -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail"}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -255,13 +255,13 @@ fn view(h: &mut Headless, p: serde_json::Value) {
 }
 
 /// Make `id` the only selected, active photo.
-fn select(h: &mut Headless, id: lightcraft_catalog::PhotoId) {
+fn select(h: &mut Headless, id: hazavana_catalog::PhotoId) {
     let r = h.request("engine.execute", json!({"command": "library.select", "params": {"ids": [id.0], "active": id.0}}), T);
     assert_eq!(r["ok"], true, "{r}");
 }
 
 /// The demo library in Photo Grid with its middle photo selected: the photos in view, and that one.
-fn grid_demo() -> (Headless, Vec<lightcraft_catalog::PhotoId>, lightcraft_catalog::PhotoId) {
+fn grid_demo() -> (Headless, Vec<hazavana_catalog::PhotoId>, hazavana_catalog::PhotoId) {
     let mut h = demo();
     view(&mut h, json!({ "view": "photoGrid" }));
     let vis = h.app.session.visible_cloned();

@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Spot Colors.
 pub const KIND: &str = "spotColors";
@@ -22,13 +22,13 @@ const CHOICES: [(bool, &str, &str); 2] = [
 ];
 
 /// Open Spot Colors on the active document's setting.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp) -> Result<Value, String> {
     let use_lab = app.session.active().ok_or("no document")?.doc.spot_use_lab;
     app.ui.dialog = Some(Dialog::new(KIND, json!({ "useLab": use_lab })));
     Ok(Value::Null)
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let use_lab = d.bool("useLab");
     grid(ui, |ui| {
         for (i, (value, text, help)) in CHOICES.into_iter().enumerate() {
@@ -49,25 +49,25 @@ fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     run_and_close(app, "swatch.spotOptions", json!({ "useLab": d.bool("useLab") }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_color::Color;
-    use vectorcraft_engine::Session;
+    use tsipika_color::Color;
+    use tsipika_engine::Session;
 
     #[test]
     fn the_dialog_switches_lab_spots_to_cmyk_and_back() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         assert!(app.run("ui.spotColors", json!({})).is_err(), "needs a document");
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app.run("swatch.new", json!({"name": "Ink", "color": {"l": 60, "a": 50, "b": 20}, "spot": true})).unwrap();
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
         app.run("paint.setFill", json!({"swatch": "Ink"})).unwrap();
-        let fill = |app: &VectorcraftApp| crate::panels::current_paints(app).0.color().unwrap();
+        let fill = |app: &TsipikaApp| crate::panels::current_paints(app).0.color().unwrap();
         assert_eq!(fill(&app), Color::lab(60.0, 50.0, 20.0));
         app.run("ui.spotColors", json!({})).unwrap();
         assert!(app.ui.dialog.as_ref().unwrap().bool("useLab"), "opens on the document's setting");

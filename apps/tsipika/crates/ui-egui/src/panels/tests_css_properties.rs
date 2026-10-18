@@ -6,18 +6,18 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_svg::{CssOptions, CssUnits};
+use tsipika_engine::Session;
+use tsipika_svg::{CssOptions, CssUnits};
 
 use super::css_properties::{ALL, ID, OPTIONS, menu, show};
 use super::set_pstate;
 use crate::tests_labels::painted_text;
-use crate::{Services, VectorcraftApp};
+use crate::{Services, TsipikaApp};
 
 type Log = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
 /// An app with a selected red 30 × 20 rectangle; files written go to the log.
-fn app() -> (VectorcraftApp, Log) {
+fn app() -> (TsipikaApp, Log) {
     let log = Log::default();
     let l = log.clone();
     let services = Services {
@@ -27,7 +27,7 @@ fn app() -> (VectorcraftApp, Log) {
         })),
         ..Services::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
     app.run("paint.setFill", json!({"color": "#ff0000"})).unwrap();
@@ -115,7 +115,7 @@ fn export_says_in_the_status_bar_when_an_image_could_not_be_decoded() {
         .unwrap();
     let idat = png.windows(4).position(|w| w == b"IDAT").unwrap();
     png.truncate(idat + 8);
-    app.run("file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&png)})).unwrap();
+    app.run("file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&png)})).unwrap();
     let r = app.run("css.exportFile", json!({"path": "/tmp/site/site.css", "scope": "all", "rasterize": true})).unwrap();
     assert_eq!(r["warnings"], json!([WARNING]));
     assert_eq!(app.ui.status, format!("Exported /tmp/site/site.css with 1 note(s): {WARNING}"));

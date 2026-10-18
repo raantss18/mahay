@@ -14,8 +14,8 @@
 //! writes the result through `node.set` (`cornerRadius`, `topLeftRadius`…, `innerRadius`), one
 //! undo step per drag.
 
-use figcraft_doc::{Document, Node, NodeId, NodeKind};
-use figcraft_geom::{Affine, Point, Vec2};
+use endrika_doc::{Document, Node, NodeId, NodeKind};
+use endrika_geom::{Affine, Point, Vec2};
 use serde::Serialize;
 use serde_json::{Map, Value, json};
 
@@ -73,8 +73,8 @@ fn corners(n: &Node) -> Vec<(Corner, f64)> {
     let (w, h) = (n.width, n.height);
     let r = n.corners.radii;
     match n.kind {
-        NodeKind::Polygon { count } => top(&figcraft_geom::polygon_points(w, h, count), r[0]),
-        NodeKind::Star { count, inner_ratio } => top(&figcraft_geom::star_points(w, h, count, inner_ratio), r[0]),
+        NodeKind::Polygon { count } => top(&endrika_geom::polygon_points(w, h, count), r[0]),
+        NodeKind::Star { count, inner_ratio } => top(&endrika_geom::star_points(w, h, count, inner_ratio), r[0]),
         _ if n.kind.has_independent_corners() => {
             let max_r = w.min(h) / 2.0;
             let quarter = std::f64::consts::FRAC_PI_4;
@@ -110,7 +110,7 @@ fn target<'a>(doc: &'a Document, sel: &[NodeId], zoom: f64) -> Option<(NodeId, &
 
 /// A star's ratio handle (local) for `ratio`.
 fn ratio_point(n: &Node, count: u32, ratio: f64) -> Option<Point> {
-    figcraft_geom::star_points(n.width, n.height, count, ratio).get(1).copied()
+    endrika_geom::star_points(n.width, n.height, count, ratio).get(1).copied()
 }
 
 /// The shape handles of the selection at `zoom` (screen pixels per page unit): each handle and

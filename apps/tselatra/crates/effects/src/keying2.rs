@@ -2,9 +2,9 @@
 //! from masks with colour-based edge estimation and decontamination), Unmult and CC Simple
 //! Wire Removal.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::gaussian_blur;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::gaussian_blur;
 use rayon::prelude::*;
 
 use crate::util::{Plane, dist_to_poly, gauss_plane, layer_or_self, lerp4, morph_frac, point_in_poly, premul, smoothstep, unpremul};
@@ -101,7 +101,7 @@ fn mask_sdf(ctx: &EffectCtx, b: &Buf, idx: &[u32]) -> Option<Plane> {
     Some(pl)
 }
 
-/// Inner/Outer Key's geometry (shared with the GPU compositor, effectcraft-gpu `fx_pixel2`):
+/// Inner/Outer Key's geometry (shared with the GPU compositor, tselatra-gpu `fx_pixel2`):
 /// the trimap of the selected masks and the Cleanup brush strokes, in buffer pixels.
 pub struct InnerOuterPlan {
     /// 1 = known foreground, 0 = known background, 0.5 = unknown.
@@ -484,7 +484,7 @@ mod tests {
     use super::*;
     use crate::channel2::tests::{FakeHost, sample};
     use crate::{EffectEnv, MaskShape, run_fx};
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
 
     #[test]
     fn difference_matte_self_is_transparent_and_other_keeps() {

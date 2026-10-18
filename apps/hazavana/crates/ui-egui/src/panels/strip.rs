@@ -3,7 +3,7 @@
 use egui::vec2;
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::icons::Icon;
 use crate::state::RightPanel;
 use crate::theme::Tokens;
@@ -14,7 +14,7 @@ const BUTTON_H: f32 = 40.0;
 /// Space between tool buttons.
 const GAP: f32 = 6.0;
 
-pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::right("tool_strip")
         .exact_size(t.strip_w)
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn info_ends_as_far_above_the_bottom_as_presets_starts_below_the_top() {
-        let mut app = LightcraftApp::new(lightcraft_engine::Session::new(), Services::default());
+        let mut app = HazavanaApp::new(hazavana_engine::Session::new(), Services::default());
         let mut view = HeadlessView::new();
         let mut widgets = vec![];
         for frame in 0..3 {

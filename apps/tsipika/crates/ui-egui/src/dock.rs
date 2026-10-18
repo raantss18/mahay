@@ -9,7 +9,7 @@ use serde_json::json;
 
 use crate::state::{DockTab, ICON_PANEL_GROUPS, ICON_PANELS};
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, floating, icons, panels, widgets};
+use crate::{TsipikaApp, floating, icons, panels, widgets};
 
 const ICON_COL: f32 = 38.0;
 /// Height of the strip along the top of a dock column that carries its double arrow.
@@ -39,7 +39,7 @@ fn seed_dock_panel_width(ctx: &egui::Context, panel: &str, width: f32) {
     ctx.data_mut(|data| data.insert_persisted(egui::Id::new(panel), state));
 }
 
-pub(crate) fn apply_pending_dock_width(app: &mut VectorcraftApp, ctx: &egui::Context, panel: &str, clamp: fn(f32) -> f32) {
+pub(crate) fn apply_pending_dock_width(app: &mut TsipikaApp, ctx: &egui::Context, panel: &str, clamp: fn(f32) -> f32) {
     if !app.ui.dock_width_pending {
         return;
     }
@@ -49,7 +49,7 @@ pub(crate) fn apply_pending_dock_width(app: &mut VectorcraftApp, ctx: &egui::Con
     app.ui.dock_width_pending = false;
 }
 
-pub(crate) fn note_dock_width(app: &mut VectorcraftApp, ctx: &egui::Context, panel: &str) {
+pub(crate) fn note_dock_width(app: &mut TsipikaApp, ctx: &egui::Context, panel: &str) {
     if let Some(state) = egui::containers::panel::PanelState::load(ctx, egui::Id::new(panel)) {
         let width = state.size().x;
         if width.is_finite() && width > 0.0 {
@@ -81,7 +81,7 @@ pub(crate) fn dock_left_id() -> egui::Id {
 
 /// Collapse the tabbed group to icons or expand it again (`window.collapseDock`). Expanding while
 /// one of its panels is popped out shows that panel's tab instead.
-pub fn set_collapsed(app: &mut VectorcraftApp, collapsed: bool) {
+pub fn set_collapsed(app: &mut TsipikaApp, collapsed: bool) {
     app.ui.dock_collapsed = collapsed;
     app.ui.dock = true;
     if !collapsed && let Some(tab) = app.ui.open_panel.as_deref().and_then(DockTab::from_id) {
@@ -105,7 +105,7 @@ pub(crate) fn collapse_header(ui: &mut Ui, collapsed: bool) -> bool {
 }
 
 /// Run `window.collapseDock` for a click on a double arrow.
-fn toggle(app: &mut VectorcraftApp, collapsed: bool) {
+fn toggle(app: &mut TsipikaApp, collapsed: bool) {
     // It only fails on bad params, which this never sends; show it all the same.
     if let Err(e) = app.run("window.collapseDock", json!({ "collapsed": collapsed })) {
         app.ui.status = e;
@@ -114,7 +114,7 @@ fn toggle(app: &mut VectorcraftApp, collapsed: bool) {
 
 /// One icon of the column: a click pops its panel out (or puts it away); dragged out of the
 /// column (`column`), the panel floats.
-fn panel_icon(app: &mut VectorcraftApp, ui: &mut Ui, id: &'static str, label: &str, icon: &str, _column: Rect) {
+fn panel_icon(app: &mut TsipikaApp, ui: &mut Ui, id: &'static str, label: &str, icon: &str, _column: Rect) {
     let open = app.ui.open_panel.as_deref() == Some(id);
     // Its own id: the icons below it move up when it floats, and mustn't take over its drag.
     let (_, rect) = ui.allocate_space(vec2(30.0, 30.0));
@@ -126,7 +126,7 @@ fn panel_icon(app: &mut VectorcraftApp, ui: &mut Ui, id: &'static str, label: &s
     crate::panel_docking::legacy_tab(app, ui, id, &resp);
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     if crate::panel_docking::show(app, ui) {
         return;
     }
@@ -223,7 +223,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// The tabbed group's tab strip, showing `active`: a click on a tab shows it, a tab dragged out of
 /// the strip floats on its own, and the strip right of the tabs floats the whole group. True when
 /// the shown panel floats now.
-fn tab_strip(app: &mut VectorcraftApp, ui: &mut Ui, active: DockTab) -> bool {
+fn tab_strip(app: &mut TsipikaApp, ui: &mut Ui, active: DockTab) -> bool {
     let t = Tokens::get(ui.ctx());
     let (strip, _) = ui.allocate_exact_size(vec2(ui.available_width(), 33.0), Sense::hover());
     ui.painter().line_segment([strip.left_bottom(), strip.right_bottom()], Stroke::new(1.0, t.divider));
@@ -294,7 +294,7 @@ pub(crate) fn panel_tabs(
         .map(|(i, label)| ui.painter().layout_no_wrap((*label).to_string(), font.clone(), if i == selected { t.text_strong } else { t.text_dim }))
         .collect();
     let natural: Vec<_> = galleys.iter().map(|g| g.size().x + 24.0).collect();
-    let fit = craft_ui::tabs::fit(&natural, selected, area.width(), 40.0, 18.0);
+    let fit = mahay_ui::tabs::fit(&natural, selected, area.width(), 40.0, 18.0);
     let mut out = PanelTabs { responses: Vec::with_capacity(fit.shown.len()), picked: None, right: area.left() };
     for (i, width) in fit.shown {
         let Some((key, _)) = tabs.get(i) else { continue };
@@ -311,7 +311,7 @@ pub(crate) fn panel_tabs(
         } else {
             galley.clone()
         };
-        let resp = craft_ui::tabs::Tab::new(ui.id().with((id, key)), label, i == selected)
+        let resp = mahay_ui::tabs::Tab::new(ui.id().with((id, key)), label, i == selected)
             .sense(Sense::click_and_drag())
             .focus_stroke(Stroke::new(1.0, t.accent))
             .show_at(ui, rect, |ui, _| {
@@ -355,7 +355,7 @@ pub(crate) fn panel_tabs(
 
 /// A panel popped out next to the icon column: an icon panel, or one of the tabbed group's panels
 /// while the dock is collapsed. Dragging its title floats it.
-pub fn floating_panel(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn floating_panel(app: &mut TsipikaApp, ctx: &egui::Context) {
     let open = app.ui.open_panel.as_deref();
     let Some(id) =
         open.and_then(|p| crate::state::all_panels().map(|(q, _)| q).find(|q| *q == p).or_else(|| crate::panels::library_panel::intern(p)))
@@ -448,7 +448,7 @@ pub(crate) fn panel_width(id: &str) -> f32 {
 
 /// Panel `id`'s contents in a popped-out or floating panel `width` wide; the tabbed group's panels
 /// fill (Layers) or scroll (Properties) `tall` points.
-pub(crate) fn panel_body(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, width: f32, tall: f32) {
+pub(crate) fn panel_body(app: &mut TsipikaApp, ui: &mut Ui, id: &str, width: f32, tall: f32) {
     egui::Frame::NONE.inner_margin(egui::Margin::same(10)).show(ui, |ui| {
         ui.set_width(width - 20.0);
         match DockTab::from_id(id) {
@@ -476,7 +476,7 @@ pub(crate) fn panel_body(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, width:
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::toolbar::tests::{wheel, widget_rects};
@@ -575,7 +575,7 @@ mod tests {
 
     #[test]
     fn every_flyout_stays_left_of_the_icon_column() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap()["id"].clone();
         app.run("select.set", json!({ "ids": [id] })).unwrap();
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn the_icon_column_scrolls_in_a_short_window() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);
@@ -626,14 +626,14 @@ mod tests {
 
     /// A frame of the dock and its flyout on a 1600 × 1000 window.
     struct Harness {
-        app: VectorcraftApp,
+        app: TsipikaApp,
         ctx: egui::Context,
         time: f64,
     }
 
     impl Harness {
         fn new() -> Self {
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+            let mut app = TsipikaApp::new(Session::new(), Default::default());
             app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
             app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
             let ctx = egui::Context::default();
@@ -799,7 +799,7 @@ mod tests {
 
     #[test]
     fn the_collapse_command_sets_or_toggles_the_dock() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         assert_eq!(app.run("window.collapseDock", json!({})).unwrap(), json!(true));
         assert!(app.ui.dock_collapsed && crate::menus::checked(&app, "window.collapseDock", &json!({})) == Some(true));
         assert_eq!(app.run("window.collapseDock", json!({"collapsed": true})).unwrap(), json!(true));

@@ -2,7 +2,7 @@
 //! Close, like About, instead of a Cancel / OK pair that both just close them.
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 use serde_json::json;
 use std::time::Duration;
 
@@ -24,7 +24,7 @@ fn open(h: &mut Headless, id: &str) {
 
 #[test]
 fn information_dialogs_end_with_one_close() {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1300.0, 900.0], 1.0);
     h.settle(SETTLE);
     for id in ["app.systemInfo", "dialog.allMetadata", "app.whatsNew"] {

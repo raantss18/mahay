@@ -15,8 +15,8 @@
 //! brush. Noise for Scallop/Crystallize/Wrinkle is a hash of the dab and anchor indices.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::kurbo::ParamCurveArclen;
-use vectorcraft_geom::{Anchor, AnchorKind, PathData, Point, Rect, SubPath, Vec2};
+use tsipika_geom::kurbo::ParamCurveArclen;
+use tsipika_geom::{Anchor, AnchorKind, PathData, Point, Rect, SubPath, Vec2};
 
 use super::ellipse_path;
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext};
@@ -381,9 +381,9 @@ fn subdivide(sp: &mut SubPath, prm: &LiquifyParams, c: Point, spacing: f64) {
             return;
         }
         let cub = sp.segment(seg);
-        let sb = vectorcraft_geom::kurbo::ParamCurveExtrema::bounding_box(&cub);
+        let sb = tsipika_geom::kurbo::ParamCurveExtrema::bounding_box(&cub);
         let touched = sb.intersect(bb).area() > 0.0 || (sb.width() == 0.0 || sb.height() == 0.0) && sb.inflate(1e-6, 1e-6).intersect(bb).area() > 0.0;
-        if !touched || !(0..=8).any(|i| prm.falloff(c, vectorcraft_geom::kurbo::ParamCurve::eval(&cub, i as f64 / 8.0)) > 0.0) {
+        if !touched || !(0..=8).any(|i| prm.falloff(c, tsipika_geom::kurbo::ParamCurve::eval(&cub, i as f64 / 8.0)) > 0.0) {
             seg += 1;
             continue;
         }
@@ -820,7 +820,7 @@ impl Tool for LiquifyTool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_geom::shapes;
+    use tsipika_geom::shapes;
 
     fn square() -> PathData {
         shapes::rectangle(Rect::new(0.0, 0.0, 200.0, 200.0))

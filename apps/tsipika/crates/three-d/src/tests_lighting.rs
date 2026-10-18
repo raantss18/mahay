@@ -33,9 +33,9 @@ fn every_geometry_type_produces_finite_rgb_illumination_without_changing_geometr
     let b = p.bounds().unwrap();
     let view = View { light_height: 90.0, light_color: [1.0, 0.0, 0.0], ..Default::default() };
     let shapes = [
-        plane(&p, vectorcraft_geom::FillRule::NonZero, b, view).unwrap(),
-        extrude(&p, vectorcraft_geom::FillRule::NonZero, b, Extrude::default(), view).unwrap(),
-        inflate(&p, vectorcraft_geom::FillRule::NonZero, b, Inflate::default(), view).unwrap(),
+        plane(&p, tsipika_geom::FillRule::NonZero, b, view).unwrap(),
+        extrude(&p, tsipika_geom::FillRule::NonZero, b, Extrude::default(), view).unwrap(),
+        inflate(&p, tsipika_geom::FillRule::NonZero, b, Inflate::default(), view).unwrap(),
     ];
     for f in shapes.iter().flatten() {
         assert!(f.illumination[0] >= f.illumination[1]);

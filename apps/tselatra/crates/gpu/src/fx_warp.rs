@@ -11,7 +11,7 @@
 //! distance is evaluated in a cancellation-free form so large radii (small bends) keep their
 //! precision too.
 
-use effectcraft_effects::{Buf, EffectCtx, Image};
+use tselatra_effects::{Buf, EffectCtx, Image};
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -102,7 +102,7 @@ fn warp(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
     // the CPU (the CPU effect's own solver) and sampled here.
     if matches!(style, 11 | 14) && (k.abs() > 0.5 || hd != 0.0 || vd != 0.0) {
         let geo = Buf { img: Image::new(0, 0), offset: b.offset, scale: b.scale };
-        let map = e.g.upload_image(&effectcraft_effects::warp_inverse_map(ctx, &geo, b.img.width, b.img.height))?;
+        let map = e.g.upload_image(&tselatra_effects::warp_inverse_map(ctx, &geo, b.img.width, b.img.height))?;
         b.img = run(e, "fxw_remap", &Params::default(), &b.img, Some(&map), None);
         return Some(b);
     }
@@ -118,7 +118,7 @@ fn warp(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
 // ---------------------------------------------------------------- Bezier Warp (distort2::bezier_warp)
 
 fn bezier_warp(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
-    let (n, dest, srcp) = effectcraft_effects::bezier_grid(ctx, b.offset, b.scale);
+    let (n, dest, srcp) = tselatra_effects::bezier_grid(ctx, b.offset, b.scale);
     crate::fx_distort::grid_warp(e, b, n, n, &dest, &srcp)
 }
 
@@ -178,7 +178,7 @@ fn page_turn(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
 // ---------------------------------------------------------------- Smear (distort3::smear)
 
 fn smear(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
-    let Some(s) = effectcraft_effects::smear_setup(ctx, &geometry(&b)) else { return Some(b) };
+    let Some(s) = tselatra_effects::smear_setup(ctx, &geometry(&b)) else { return Some(b) };
     let mut data = Vec::with_capacity(2 * (s.bound.len() + s.moved.len()));
     points(&mut data, &s.bound);
     points(&mut data, &s.moved);
@@ -195,8 +195,8 @@ fn smear(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
 // ---------------------------------------------------------------- Reshape (distort3::reshape)
 
 fn reshape(e: &mut Enc, ctx: &EffectCtx, mut b: GBuf) -> Option<GBuf> {
-    let Some(s) = effectcraft_effects::reshape_setup(ctx, &geometry(&b)) else { return Some(b) };
-    debug_assert_eq!(s.dest.len(), effectcraft_effects::RESHAPE_POINTS);
+    let Some(s) = tselatra_effects::reshape_setup(ctx, &geometry(&b)) else { return Some(b) };
+    debug_assert_eq!(s.dest.len(), tselatra_effects::RESHAPE_POINTS);
     let mut data = Vec::new();
     points(&mut data, &s.dest);
     points(&mut data, &s.disp);

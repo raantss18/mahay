@@ -2,7 +2,7 @@
 //! logical units and the units an inch; without one, the first window origin and extent are the
 //! box, at 1440 units an inch.
 
-use vectorcraft_geom::{Affine, Point, Rect, shapes};
+use tsipika_geom::{Affine, Point, Rect, shapes};
 
 use super::{ArcKind, BrushObj, FontObj, Obj, PenObj, Player};
 use crate::bytes::Reader;
@@ -12,7 +12,7 @@ use crate::{Imported, Kind};
 
 /// Units an inch when the file doesn't say (twips).
 const DEFAULT_INCH: f64 = 1440.0;
-/// Records that change nothing VectorCraft keeps (background, raster and mapping details, palettes,
+/// Records that change nothing Tsipika keeps (background, raster and mapping details, palettes,
 /// escapes).
 const IGNORED: &[u16] = &[
     0x0102, 0x0103, 0x0104, 0x0105, 0x0107, 0x0108, 0x0201, 0x020A, 0x020B, 0x020C, 0x020D, 0x020E, 0x020F, 0x0211, 0x0410, 0x0412, 0x0231, 0x0234,
@@ -152,7 +152,7 @@ pub(super) fn play(bytes: &[u8]) -> Result<Imported, String> {
     let mut out = p.finish();
     // No box given: the art's bounds.
     if frame.is_none()
-        && let Some(b) = out.document.layers.first().and_then(|l| vectorcraft_doc::live::nodes_bounds(l.children().map_or(&[][..], |c| c.as_slice())))
+        && let Some(b) = out.document.layers.first().and_then(|l| tsipika_doc::live::nodes_bounds(l.children().map_or(&[][..], |c| c.as_slice())))
         && let Some(a) = out.document.artboards.first_mut()
     {
         a.rect = Rect::from_origin_size(b.origin(), (b.width().max(1.0), b.height().max(1.0)));

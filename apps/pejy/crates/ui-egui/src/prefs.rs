@@ -1,13 +1,13 @@
 //! Compatibility recovery at the saved-preferences boundary. Command deserialization stays strict.
 
-use craft_ui::docking::{Layout, Location};
+use mahay_ui::docking::{Layout, Location};
 use serde_json::Value;
 
 use crate::UiState;
 
 impl UiState {
     /// Read saved preferences, discarding only unreadable optional docking metadata.
-    /// A layout from a newer craft-ui version must not reset unrelated settings or named workspaces.
+    /// A layout from a newer mahay-ui version must not reset unrelated settings or named workspaces.
     pub fn from_preferences_json(bytes: &[u8]) -> serde_json::Result<Self> {
         let mut saved: Value = serde_json::from_slice(bytes)?;
         recover_docking(&mut saved);
@@ -41,7 +41,7 @@ mod tests {
     use serde_json::json;
 
     fn populated() -> UiState {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), Default::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), Default::default());
         app.run("window.panel.move", json!({"panel":"swatches", "anchor":"layers", "zone":"top"})).unwrap();
         app.run("window.panel.close", json!({"panel":"properties"})).unwrap();
         app.ui.ui_scale = 1.5;

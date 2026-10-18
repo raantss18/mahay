@@ -2,10 +2,10 @@
 //! Tracking methods and Extract & Copy Face Measurements) and Smart Mask Interpolation
 //! (Window ▸ Mask Interpolation).
 
-use effectcraft_keyframe::{Keyframe, ShapePath, Value as KV};
-use effectcraft_path::interp::{self, AddVertices, InterpOpts, Matching};
-use effectcraft_project::{Layer, LayerId, Uid};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, ShapePath, Value as KV};
+use tselatra_path::interp::{self, AddVertices, InterpOpts, Matching};
+use tselatra_project::{Layer, LayerId, Uid};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -155,7 +155,7 @@ fn track_mask(s: &mut Session, p: &Value) -> Result<Value> {
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
     let layer = comp.layer(lid).ok_or(EngineError::NoComp)?;
     let uid = mask_uid(s, layer, p).ok_or_else(|| bad(CMD, format!("layer `{}` has no such mask (select one or pass `mask`)", layer.name)))?;
-    if !layer.has_video() || matches!(layer.source, effectcraft_project::LayerSource::Text | effectcraft_project::LayerSource::Shape) {
+    if !layer.has_video() || matches!(layer.source, tselatra_project::LayerSource::Text | tselatra_project::LayerSource::Shape) {
         return Err(bad(CMD, "the layer has no pixels to track"));
     }
     let method = method_p(p, CMD)?.unwrap_or(s.state.mask_track_method);
@@ -197,7 +197,7 @@ fn track_mask(s: &mut Session, p: &Value) -> Result<Value> {
         "mask": uid,
         "method": method.id(),
         // The engine face tracking tries first (the classic one when the model finds no face).
-        "faceModel": method.is_face().then(|| s.models.face().map_or(effectcraft_segment::CLASSICAL, |m| m.info().id)),
+        "faceModel": method.is_face().then(|| s.models.face().map_or(tselatra_segment::CLASSICAL, |m| m.info().id)),
         "frames": times.len() - 1,
         "start": times[0].seconds(),
         "end": times.last().map(|t| t.seconds()),
@@ -208,8 +208,8 @@ fn track_mask(s: &mut Session, p: &Value) -> Result<Value> {
 
 // ---------------------------------------------------------------- face measurements
 
-fn face_points_layer(s: &Session, p: &Value) -> Option<(effectcraft_project::ItemId, LayerId)> {
-    use effectcraft_effects::face_track::POINTS_ID;
+fn face_points_layer(s: &Session, p: &Value) -> Option<(tselatra_project::ItemId, LayerId)> {
+    use tselatra_effects::face_track::POINTS_ID;
     let has = |l: &Layer| l.effects().is_some_and(|fx| fx.groups().any(|g| g.match_id == POINTS_ID));
     if p.get("layer").is_some() {
         return layer_p(s, p, "track.extractFaceMeasurements").ok();
@@ -228,8 +228,8 @@ fn has_face_points(s: &Session) -> std::result::Result<(), String> {
 /// Extract & Copy Face Measurements: measure the Face Track Points at every keyed time, key them
 /// into the layer's Face Measurements effect and put those keys on the keyframe clipboard.
 fn extract_face(s: &mut Session, p: &Value) -> Result<Value> {
-    use effectcraft_effects::face_track::{MEASUREMENTS_ID, POINTS_ID};
-    use effectcraft_track::face::{LANDMARKS, MEASUREMENTS, N, face_frame, measure};
+    use tselatra_effects::face_track::{MEASUREMENTS_ID, POINTS_ID};
+    use tselatra_track::face::{LANDMARKS, MEASUREMENTS, N, face_frame, measure};
     const CMD: &str = "track.extractFaceMeasurements";
     let (cid, lid) = face_points_layer(s, p).ok_or_else(|| bad(CMD, "no Face Track Points: track a mask with Face Tracking (Detailed Features) first"))?;
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
@@ -263,7 +263,7 @@ fn extract_face(s: &mut Session, p: &Value) -> Result<Value> {
             let Some(pr) = g.get_mut(id) else { continue };
             pr.keys.clear();
             for (t, m) in &rows {
-                effectcraft_keyframe::set_key(&mut pr.keys, Keyframe::new(*t, KV::Scalar(m[k])));
+                tselatra_keyframe::set_key(&mut pr.keys, Keyframe::new(*t, KV::Scalar(m[k])));
             }
         }
         Ok(uid)
@@ -291,7 +291,7 @@ fn extract_face(s: &mut Session, p: &Value) -> Result<Value> {
     s.state.key_clipboard = clip;
     s.state.clip_is_keys = true;
     // The same data as text (tab-separated, one row per frame) for other applications.
-    let mut text = String::from("EffectCraft Face Measurements\n\nFrame\tTime");
+    let mut text = String::from("Tselatra Face Measurements\n\nFrame\tTime");
     for (_, name) in MEASUREMENTS {
         text.push('\t');
         text.push_str(name);
@@ -504,7 +504,7 @@ fn interpolate(s: &mut Session, p: &Value) -> Result<Value> {
         // Keys strictly inside the interpolated span are replaced.
         pr.keys.retain(|k| k.time <= first || k.time >= last || times.contains(&k.time));
         for (t, sp) in &out {
-            effectcraft_keyframe::set_key(&mut pr.keys, Keyframe::new(*t, KV::Path(sp.clone())));
+            tselatra_keyframe::set_key(&mut pr.keys, Keyframe::new(*t, KV::Path(sp.clone())));
         }
         Ok(())
     })?;

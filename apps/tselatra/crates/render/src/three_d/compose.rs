@@ -15,12 +15,12 @@
 
 use std::sync::Arc;
 
-use effectcraft_color::{BlendMode, blend_pixel};
-use effectcraft_effects::Buf;
-use effectcraft_geom::{Mat3, Mat4, Vec3, vec3};
-use effectcraft_project::{Layer, LightKind, MatteKind};
-use effectcraft_raster::{Image, Px, hash_noise};
-use effectcraft_time::Tick;
+use tselatra_color::{BlendMode, blend_pixel};
+use tselatra_effects::Buf;
+use tselatra_geom::{Mat3, Mat4, Vec3, vec3};
+use tselatra_project::{Layer, LightKind, MatteKind};
+use tselatra_raster::{Image, Px, hash_noise};
+use tselatra_time::Tick;
 use rayon::prelude::*;
 
 use super::camera::{CameraState, NEAR, active_camera};
@@ -274,7 +274,7 @@ fn prepare_with<'a>(
     Some(Item {
         layer,
         order,
-        bicubic: matches!(r.sampling(layer), effectcraft_raster::Sampling::Bicubic),
+        bicubic: matches!(r.sampling(layer), tselatra_raster::Sampling::Bicubic),
         buf,
         geos,
         opacity: ctx.opacity(layer) as f32 * r.opacity_mul(),
@@ -384,8 +384,8 @@ fn matte_for(r: &Renderer, ctx: &EvalCtx, layer: &Layer, out: (u32, u32)) -> Opt
                 match tm.kind {
                     MatteKind::Alpha => q[3],
                     MatteKind::AlphaInverted => 1.0 - q[3],
-                    MatteKind::Luma => effectcraft_color::luminance(q[0], q[1], q[2]),
-                    MatteKind::LumaInverted => 1.0 - effectcraft_color::luminance(q[0], q[1], q[2]),
+                    MatteKind::Luma => tselatra_color::luminance(q[0], q[1], q[2]),
+                    MatteKind::LumaInverted => 1.0 - tselatra_color::luminance(q[0], q[1], q[2]),
                 }
                 .clamp(0.0, 1.0)
             })
@@ -429,7 +429,7 @@ pub(crate) fn draw_run(r: &Renderer, ctx: &EvalCtx, run: &[&Layer], canvas: &mut
     let g = gather(r, ctx, run, out);
     let casters: Vec<&Item> = g.items.iter().chain(g.extra.iter()).filter(|i| r.opts.shadows() && i.mat.casts_shadows != 0 && !i.geos.is_empty()).collect();
     composite(canvas, &g.items, &g.lights, &casters, run[0].id.0 as u32);
-    for l in run.iter().filter(|l| r.quality(l) == effectcraft_project::Quality::Wireframe) {
+    for l in run.iter().filter(|l| r.quality(l) == tselatra_project::Quality::Wireframe) {
         r.draw_layer(ctx, l, canvas, false);
     }
 }
@@ -448,7 +448,7 @@ fn gather<'a>(r: &Renderer<'a>, ctx: &EvalCtx<'a>, run: &[&'a Layer], out: (u32,
     let mut items: Vec<Item> = run
         .par_iter()
         .enumerate()
-        .filter(|(_, l)| ctx.opacity(l) > 0.0 && r.quality(l) != effectcraft_project::Quality::Wireframe)
+        .filter(|(_, l)| ctx.opacity(l) > 0.0 && r.quality(l) != tselatra_project::Quality::Wireframe)
         .flat_map_iter(|(i, l)| {
             // Stack order with room for a collapsed precomp's layers in between.
             let i = i * 1024;
@@ -490,7 +490,7 @@ fn collapsed_items<'a>(
     r: &Renderer<'a>,
     ctx: &EvalCtx<'a>,
     layer: &'a Layer,
-    item: effectcraft_project::ItemId,
+    item: tselatra_project::ItemId,
     order: usize,
     out: (u32, u32),
 ) -> Vec<Item<'a>> {
@@ -746,7 +746,7 @@ pub struct Plane3d {
 /// Prepare a run of 3D layers for an accelerator. `None` when the run must be drawn on the CPU
 /// (adjustment, wireframe or environment background layers, Advanced 3D).
 pub(crate) fn gpu_run(r: &Renderer, ctx: &EvalCtx, run: &[&Layer], out: (u32, u32)) -> Option<Run3d> {
-    if run.is_empty() || run.iter().any(|l| l.switches.adjustment || l.environment_background || r.quality(l) == effectcraft_project::Quality::Wireframe) {
+    if run.is_empty() || run.iter().any(|l| l.switches.adjustment || l.environment_background || r.quality(l) == tselatra_project::Quality::Wireframe) {
         return None;
     }
     if super::adv::active(r, ctx) {
@@ -805,8 +805,8 @@ struct AuxFrag {
 /// sorted near → far at each pixel, a 2D layer its coverage on the plane of the comp. The
 /// front-most surface with ≥ 50 % opacity (else the strongest one) provides depth, IDs, normal
 /// and UV; Cryptomatte coverage is each surface's visible share (`α · Π(1 − α_front)`).
-pub(crate) fn aux_pass(r: &Renderer, ctx: &EvalCtx) -> effectcraft_raster::AuxChannels {
-    use effectcraft_raster::channels3d::{BACKGROUND_DEPTH, crypto_float, crypto_hash};
+pub(crate) fn aux_pass(r: &Renderer, ctx: &EvalCtx) -> tselatra_raster::AuxChannels {
+    use tselatra_raster::channels3d::{BACKGROUND_DEPTH, crypto_float, crypto_hash};
     let s = r.opts.scale;
     let (w, h) = (((ctx.comp.width as f64 * s).round() as u32).max(1), ((ctx.comp.height as f64 * s).round() as u32).max(1));
     let out = (w, h);
@@ -944,7 +944,7 @@ pub(crate) fn aux_pass(r: &Renderer, ctx: &EvalCtx) -> effectcraft_raster::AuxCh
             (o, crypto)
         })
         .collect();
-    let mut aux = effectcraft_raster::AuxChannels::new(w, h, s);
+    let mut aux = tselatra_raster::AuxChannels::new(w, h, s);
     for (k, name) in NAMES.iter().enumerate() {
         aux.channels.push((name.to_string(), resolved.iter().map(|r| r.0[k]).collect()));
     }
@@ -965,7 +965,7 @@ pub(crate) fn environment_rotation(ctx: &EvalCtx) -> f32 {
     ctx.comp
         .layers
         .iter()
-        .find(|l| matches!(l.source, effectcraft_project::LayerSource::Light { kind: LightKind::Environment }) && l.is_active_at(ctx.time))
+        .find(|l| matches!(l.source, tselatra_project::LayerSource::Light { kind: LightKind::Environment }) && l.is_active_at(ctx.time))
         .and_then(|l| l.props.sub("lightOptions").map(|g| ctx.f(l, g, "rotation", 0.0)))
         .unwrap_or(0.0)
         .to_radians() as f32

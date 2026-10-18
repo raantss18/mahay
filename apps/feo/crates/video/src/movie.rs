@@ -67,7 +67,7 @@ pub struct MovieInfo {
     pub codec: String,
     /// Human-readable codec description (e.g. "H.264 High", "Apple ProRes 422 HQ").
     pub codec_detail: String,
-    /// True when SoundCraft can decode this picture (otherwise frame requests return `Err`).
+    /// True when Feo can decode this picture (otherwise frame requests return `Err`).
     pub decodable: bool,
     /// The file also has an audio track.
     pub has_audio: bool,
@@ -255,7 +255,7 @@ impl Movie {
             None => (Codec::Unsupported("the video track has no sample description".into()), "unknown", "unknown".into()),
         };
         if u64::from(width) * u64::from(height) > MAX_PIXELS {
-            return Err(VideoError::Unsupported(format!("{width}x{height} is larger than SoundCraft decodes")));
+            return Err(VideoError::Unsupported(format!("{width}x{height} is larger than Feo decodes")));
         }
         let info = MovieInfo {
             width,

@@ -5,7 +5,7 @@
 //! their accuracy at any scale the drawing is imported at.
 
 use kurbo::{Arc, BezPath, Shape, Vec2};
-use vectorcraft_geom::{Affine, Point};
+use tsipika_geom::{Affine, Point};
 
 /// Arcs are approximated to within this fraction of their radius.
 const ARC_TOLERANCE: f64 = 1e-6;
@@ -269,7 +269,7 @@ pub(crate) fn through(pts: &[Point], closed: bool) -> Option<BezPath> {
 }
 
 /// `bp`'s bounds, when it has any finite extent.
-pub(crate) fn bounds(bp: &BezPath) -> Option<vectorcraft_geom::Rect> {
+pub(crate) fn bounds(bp: &BezPath) -> Option<tsipika_geom::Rect> {
     if bp.elements().is_empty() {
         return None;
     }

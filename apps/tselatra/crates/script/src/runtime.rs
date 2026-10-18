@@ -6,9 +6,9 @@ use std::mem::ManuallyDrop;
 use std::sync::Arc;
 
 use boa_engine::{Context, JsNativeError, JsResult, JsString, JsValue, NativeFunction, Source, js_string};
-use effectcraft_engine::history::History;
-use effectcraft_engine::project::Project;
-use effectcraft_engine::{ScriptRequest, Session};
+use tselatra_engine::history::History;
+use tselatra_engine::project::Project;
+use tselatra_engine::{ScriptRequest, Session};
 use serde_json::{Value as J, json};
 
 const PRELUDE: &str = include_str!("prelude.js");
@@ -145,7 +145,7 @@ fn native_exec(_: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsV
 /// Run a command for a script: the `comp` it targets is active while it runs (commands act on
 /// the active comp), then the user's active comp comes back.
 pub(crate) fn exec(s: &mut Session, id: &str, params: J) -> Result<J, String> {
-    use effectcraft_engine::project::ItemId;
+    use tselatra_engine::project::ItemId;
     let target = params.get("comp").and_then(J::as_u64).map(ItemId).filter(|c| s.project.comp(*c).is_some());
     let prev = s.state.active_comp;
     if let Some(c) = target
@@ -165,7 +165,7 @@ pub(crate) fn exec(s: &mut Session, id: &str, params: J) -> Result<J, String> {
 
 /// After a script's command on comp `c`, make `prev` (the comp active before it) active again,
 /// unless the command opened `c` on purpose; with no comp to go back to, `c` stays open.
-fn leave_comp(s: &mut Session, id: &str, c: effectcraft_engine::project::ItemId, prev: Option<effectcraft_engine::project::ItemId>) {
+fn leave_comp(s: &mut Session, id: &str, c: tselatra_engine::project::ItemId, prev: Option<tselatra_engine::project::ItemId>) {
     if prev != Some(c) && s.state.active_comp == Some(c) && id != "comp.open" {
         match prev {
             Some(p) if s.project.comp(p).is_some() => s.activate_comp(p),
@@ -183,8 +183,8 @@ fn leave_comp(s: &mut Session, id: &str, c: effectcraft_engine::project::ItemId,
 /// command's comp): After Effects' per-key methods (`setTemporalEaseAtKey`, `removeKey`…) leave
 /// the user's key selection as it was. Selected keys that no longer exist drop out of it.
 fn exec_on_keys(s: &mut Session, id: &str, params: J, targets: &J) -> Result<J, String> {
-    use effectcraft_engine::KeyRef;
-    use effectcraft_engine::project::{ItemId, LayerId};
+    use tselatra_engine::KeyRef;
+    use tselatra_engine::project::{ItemId, LayerId};
     let cid = params.get("comp").and_then(J::as_u64).map(ItemId).or(s.state.active_comp).ok_or("no composition is open")?;
     let comp = s.project.comp(cid).ok_or("the composition no longer exists")?;
     let mut keys = vec![];
@@ -219,7 +219,7 @@ fn native_query(_: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<Js
     let a = arg_json(args, 1, ctx)?;
     let r = with_active(|act| match kind.as_str() {
         "app" => Ok(json!({
-            "version": format!("26.0 (EffectCraft {})", env!("CARGO_PKG_VERSION")),
+            "version": format!("26.0 (Tselatra {})", env!("CARGO_PKG_VERSION")),
             "buildName": env!("CARGO_PKG_VERSION"),
             "scriptName": act.name,
             "allowFiles": act.session.prefs.scripting.allow_scripts_write_files,
@@ -460,7 +460,7 @@ fn native_file(_: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsV
                 Ok(json!(r.is_ok()))
             }
             "network" => Err(if s.prefs.scripting.allow_scripts_write_files {
-                "network access from scripts is not supported in EffectCraft".to_string()
+                "network access from scripts is not supported in Tselatra".to_string()
             } else {
                 format!("scripts can't access the network unless {GATE} is on")
             }),

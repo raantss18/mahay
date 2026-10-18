@@ -1,6 +1,6 @@
 use serde_json::json;
-use vectorcraft_doc::{Document, NodeId};
-use vectorcraft_geom::{Affine, BezPath};
+use tsipika_doc::{Document, NodeId};
+use tsipika_geom::{Affine, BezPath};
 
 use super::*;
 
@@ -167,7 +167,7 @@ fn an_earlier_perspective_strength_draws_as_its_angle() {
             n.appearance.effects.push(Effect { id: id.into(), params, visible: true });
             art(&n, id).unwrap().visual_bounds().unwrap()
         };
-        let angle = vectorcraft_three_d::perspective_from_strength(0.6);
+        let angle = tsipika_three_d::perspective_from_strength(0.6);
         let old = with(view(json!({"perspective": 60})));
         let new = with(view(json!({"perspectiveAngle": angle})));
         let none = with(view(json!({})));
@@ -209,7 +209,7 @@ fn an_earlier_light_direction_shades_as_its_rotation_and_height() {
                 colours(&art, &mut out);
                 out
             };
-            let (r, h, behind) = vectorcraft_three_d::light_from_azimuth_elevation(azimuth, elevation);
+            let (r, h, behind) = tsipika_three_d::light_from_azimuth_elevation(azimuth, elevation);
             let old = with(json!({"lightAzimuth": azimuth, "lightElevation": elevation}));
             let new = with(json!({"lightRotation": r, "lightHeight": h, "lightBehind": behind}));
             assert!(!old.is_empty() && old.len() == new.len(), "{id}");
@@ -283,7 +283,7 @@ fn legacy_white_inflate_keeps_polygon_faces_and_its_seam_range() {
         assert!(matches!(face.kind, NodeKind::Path { .. }));
         let AppearanceItem::Stroke(stroke) = &face.appearance.items[1] else { panic!("seam") };
         assert!((0.05..=0.75).contains(&stroke.width));
-        assert_eq!(stroke.join, vectorcraft_doc::LineJoin::Miter);
+        assert_eq!(stroke.join, tsipika_doc::LineJoin::Miter);
     }
     // A tiny shape exercises the lower bound, which otherwise disappears at grazing angles.
     n.transform(Affine::scale(0.001), false);

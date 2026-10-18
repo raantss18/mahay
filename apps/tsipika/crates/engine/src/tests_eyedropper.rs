@@ -2,9 +2,9 @@
 //! (reverse) and Shift+Alt-click (append), image pixels, colour models and the preference.
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{ImageBlob, ImageObject, Justify, LineCap, Node, NodeKind};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{ImageBlob, ImageObject, Justify, LineCap, Node, NodeKind};
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 use super::*;
 
@@ -159,7 +159,7 @@ fn clicking_an_image_samples_its_pixel() {
         d.images.insert("px".into(), ImageBlob::png(png));
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let xf = vectorcraft_geom::Affine::translate((300.0, 0.0)) * vectorcraft_geom::Affine::scale(100.0);
+        let xf = tsipika_geom::Affine::translate((300.0, 0.0)) * tsipika_geom::Affine::scale(100.0);
         let im = ImageObject { key: "px".into(), width: 2, height: 1, xf, link: None, placement: Default::default() };
         d.insert(Some(l), 0, Node::new(id, NodeKind::Image(Box::new(im)))).map_err(|e| crate::EngineError::Other(e.to_string()))
     })
@@ -185,7 +185,7 @@ fn cmyk_doc_with_image(px: &[[u8; 4]]) -> Session {
         d.images.insert("px".into(), ImageBlob::png(png));
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let xf = vectorcraft_geom::Affine::translate((300.0, 0.0)) * vectorcraft_geom::Affine::scale(100.0);
+        let xf = tsipika_geom::Affine::translate((300.0, 0.0)) * tsipika_geom::Affine::scale(100.0);
         let im = ImageObject { key: "px".into(), width: w, height: 1, xf, link: None, placement: Default::default() };
         d.insert(Some(l), 0, Node::new(id, NodeKind::Image(Box::new(im)))).map_err(|e| crate::EngineError::Other(e.to_string()))
     })
@@ -195,8 +195,8 @@ fn cmyk_doc_with_image(px: &[[u8; 4]]) -> Session {
 
 /// The CMYK color the color settings separate `rgb` into (with their intent).
 fn managed_cmyk(rgb: Color) -> Color {
-    let cms = vectorcraft_color::cms::active();
-    cms.convert(&rgb, vectorcraft_color::cms::Model::Cmyk, cms.settings().intent)
+    let cms = tsipika_color::cms::active();
+    cms.convert(&rgb, tsipika_color::cms::Model::Cmyk, cms.settings().intent)
 }
 
 /// #2276: an RGB image's pixel sampled into a CMYK document separates through the color
@@ -217,8 +217,8 @@ fn an_rgb_image_sampled_in_a_cmyk_document_separates_through_the_color_settings(
     let got = node(&s, dst).appearance.fill_paint().color().unwrap();
     assert!(matches!(got, Color::Cmyk { .. }), "{got:?}");
     let light = Color::rgb8(224, 238, 255);
-    let off = |c: Color| vectorcraft_color::cms::delta_e2000(c.to_lab(), light.to_lab());
-    let naive = light.in_model(vectorcraft_color::cms::Model::Cmyk);
+    let off = |c: Color| tsipika_color::cms::delta_e2000(c.to_lab(), light.to_lab());
+    let naive = light.in_model(tsipika_color::cms::Model::Cmyk);
     assert!(off(got) < 2.0, "{} is ΔE {} from #e0eeff ({} at ΔE {} before)", got.to_hex(), off(got), naive.to_hex(), off(naive));
 }
 
@@ -339,9 +339,9 @@ fn rgb_gradient_and_mesh_colors_given_to_a_cmyk_document_separate_through_the_co
     assert_eq!(colors(&s)[1], blue);
     // New stops recolor the three points from their CMYK values.
     s.execute("paint.editGradient", &json!({"stops": [{"offset": 0, "color": "#ffffff"}, {"offset": 1, "color": "#ff0000"}]})).unwrap();
-    let stored = vectorcraft_color::Gradient {
+    let stored = tsipika_color::Gradient {
         kind: Default::default(),
-        stops: vec![vectorcraft_color::GradientStop::new(0.0, managed_cmyk(Color::WHITE)), vectorcraft_color::GradientStop::new(1.0, red)],
+        stops: vec![tsipika_color::GradientStop::new(0.0, managed_cmyk(Color::WHITE)), tsipika_color::GradientStop::new(1.0, red)],
     };
     // The points mix in the model the stops share (#2829): CMYK here.
     assert_eq!(colors(&s), [0.0, 0.5, 1.0].map(|t| stored.sample_with(t, Color::lerp_keep_model).0), "{:?}", colors(&s));

@@ -1,9 +1,9 @@
-# filmcraft-speech
+# hetsika-speech
 
-Speech-to-text for FilmCraft's Text panel ▸ Transcript (L2). User-facing behaviour, commands and
+Speech-to-text for Hetsika's Text panel ▸ Transcript (L2). User-facing behaviour, commands and
 model handling: [docs/transcripts.md](../../docs/transcripts.md).
 
-- `Transcriber` trait (mono 16 kHz in, word-timed `filmcraft_project::Transcript` out) and
+- `Transcriber` trait (mono 16 kHz in, word-timed `hetsika_project::Transcript` out) and
   `FixedTranscriber` for tests and agents.
 - `models`: Whisper model catalogue (pinned revisions, SHA-256, sizes, licences) and, with feature
   `download`, the verified downloader (ureq + rustls + RustCrypto). Weights are never bundled.

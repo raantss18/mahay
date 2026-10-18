@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use jpeg_encoder::{ColorType, Density, Encoder};
-use vectorcraft_color::cms::{self, lab};
+use tsipika_color::cms::{self, lab};
 
 use crate::Rendered;
 

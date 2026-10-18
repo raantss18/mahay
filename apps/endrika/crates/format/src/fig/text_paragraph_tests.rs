@@ -85,7 +85,7 @@ fn encoded_fig_maps_paragraph_list_fields_through_native_round_trip() {
     assert_eq!(text.list_spacing, 18.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::CapHeight);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::CapHeight);
     assert_eq!(text.style.font_family, "Inter");
 
     let reset = vec![
@@ -100,7 +100,7 @@ fn encoded_fig_maps_paragraph_list_fields_through_native_round_trip() {
     assert_eq!(text.list_spacing, 0.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::None);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::None);
     assert_eq!(text.style.font_family, "Inter");
 
     let bytes = crate::save_bytes(&inherited, None).unwrap();
@@ -110,7 +110,7 @@ fn encoded_fig_maps_paragraph_list_fields_through_native_round_trip() {
     assert_eq!(text.list_spacing, 18.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::CapHeight);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::CapHeight);
 
     let (_, export_warnings) = export(&inherited, None).unwrap();
     assert!(
@@ -241,7 +241,7 @@ fn encoded_instance_paragraph_overrides_fall_back_only_when_invalid() {
     assert_eq!(text.list_spacing, 24.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::None);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::None);
 
     let reset = vec![
         ("listSpacing", Kv::Float(0.0)),
@@ -257,7 +257,7 @@ fn encoded_instance_paragraph_overrides_fall_back_only_when_invalid() {
     assert_eq!(text.list_spacing, 0.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::None);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::None);
 
     let invalid = vec![
         ("listSpacing", Kv::Float(37.0)),
@@ -273,7 +273,7 @@ fn encoded_instance_paragraph_overrides_fall_back_only_when_invalid() {
     assert_eq!(text.list_spacing, 18.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::CapHeight);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::CapHeight);
 
     let bytes = crate::save_bytes(&doc, None).unwrap();
     let (back, warnings) = crate::load_bytes(&bytes).unwrap();
@@ -284,5 +284,5 @@ fn encoded_instance_paragraph_overrides_fall_back_only_when_invalid() {
     assert_eq!(text.list_spacing, 18.0);
     assert!(!text.hanging_list);
     assert!(!text.hanging_punctuation);
-    assert_eq!(text.leading_trim, figcraft_doc::LeadingTrim::CapHeight);
+    assert_eq!(text.leading_trim, endrika_doc::LeadingTrim::CapHeight);
 }

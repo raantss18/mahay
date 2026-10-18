@@ -7,11 +7,11 @@ use std::io::{BufRead, Write};
 pub const PROTOCOL_VERSION: &str = "2025-06-18";
 const SUPPORTED: &[&str] = &["2025-06-18", "2025-03-26", "2024-11-05"];
 
-const INSTRUCTIONS: &str = "SoundCraft is a digital audio workstation (Pro Tools-class). Everything a user can do is a \
+const INSTRUCTIONS: &str = "Feo is a digital audio workstation (Pro Tools-class). Everything a user can do is a \
 command: call `list_commands` to discover ids and their params, then `execute` (or `batch`). Positions are samples \
 (integers), `{\"seconds\": x}`, or time strings like \"bars_beats:5|1|000\" / \"0:12.500\". Tracks are referenced by id \
 or name. Verify your work with `inspect_session` (tracks, clips, mixer, automation, markers, selection). Programmatic \
-calls never open dialogs. Tools marked APP_ONLY need the desktop app (`soundcraft --control 0` + `soundcraft-cli mcp --connect PORT`).";
+calls never open dialogs. Tools marked APP_ONLY need the desktop app (`feo --control 0` + `feo-cli mcp --connect PORT`).";
 
 pub struct Server<B: Backend> {
     pub backend: B,
@@ -25,7 +25,7 @@ pub fn tool_definitions() -> Vec<Value> {
     vec![
         tool(
             "list_commands",
-            "List SoundCraft commands (id, label, menu path, shortcut, params doc, enabled).",
+            "List Feo commands (id, label, menu path, shortcut, params doc, enabled).",
             json!({"filter": {"type": "string", "description": "substring of id or label"}}),
             &[],
         ),
@@ -205,7 +205,7 @@ impl<B: Backend> Server<B> {
                 Ok(json!({
                     "protocolVersion": ver,
                     "capabilities": {"tools": {}, "resources": {}},
-                    "serverInfo": {"name": "soundcraft", "version": env!("CARGO_PKG_VERSION")},
+                    "serverInfo": {"name": "feo", "version": env!("CARGO_PKG_VERSION")},
                     "instructions": format!("{INSTRUCTIONS}\nBackend: {}.", self.backend.describe()),
                 }))
             }
@@ -217,15 +217,15 @@ impl<B: Backend> Server<B> {
                 Ok(self.call_tool(name, &args))
             }
             "resources/list" => Ok(json!({"resources": [
-                {"uri": "soundcraft://session", "name": "Session", "mimeType": "application/json", "description": "The open session as JSON"},
-                {"uri": "soundcraft://commands", "name": "Commands", "mimeType": "application/json", "description": "All commands"},
+                {"uri": "feo://session", "name": "Session", "mimeType": "application/json", "description": "The open session as JSON"},
+                {"uri": "feo://commands", "name": "Commands", "mimeType": "application/json", "description": "All commands"},
             ]})),
             "resources/templates/list" => Ok(json!({"resourceTemplates": []})),
             "resources/read" => {
                 let uri = params.get("uri").and_then(Value::as_str).unwrap_or("");
                 let r = match uri {
-                    "soundcraft://session" => self.backend.call("session.inspect", json!({"detail": "full"})),
-                    "soundcraft://commands" => self.backend.call("engine.commands", json!({})),
+                    "feo://session" => self.backend.call("session.inspect", json!({"detail": "full"})),
+                    "feo://commands" => self.backend.call("engine.commands", json!({})),
                     _ => Err(format!("unknown resource {uri}")),
                 };
                 match r {

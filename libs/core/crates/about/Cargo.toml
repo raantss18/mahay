@@ -6,10 +6,14 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 repository.workspace = true
+build = "build.rs"
 
 [lints]
 workspace = true
 
 [dependencies]
 egui = { workspace = true }
+
+# Web builds have no updater (the browser always loads the latest page).
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 mahay-update = { workspace = true }

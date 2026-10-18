@@ -4,7 +4,7 @@
 
 use egui::{Event, Pos2, Rect, Vec2, vec2};
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use super::*;
 use crate::theme;
@@ -20,7 +20,7 @@ fn ctx() -> egui::Context {
 }
 
 /// One frame of the dialog layer with `events`: every text drawn, with its screen rect.
-fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<Event>) -> Vec<(String, Rect)> {
+fn frame(ctx: &egui::Context, app: &mut TsipikaApp, events: Vec<Event>) -> Vec<(String, Rect)> {
     let input = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)), events, ..Default::default() };
     let mut out = ctx.run_ui(input, |ui| show(app, ui.ctx()));
     out.textures_delta.clear();
@@ -41,7 +41,7 @@ fn button(pos: Pos2, pressed: bool) -> Event {
 }
 
 /// Drag with the mouse from `from` by `by`, in steps, then let go.
-fn drag(ctx: &egui::Context, app: &mut VectorcraftApp, from: Pos2, by: Vec2) {
+fn drag(ctx: &egui::Context, app: &mut TsipikaApp, from: Pos2, by: Vec2) {
     frame(ctx, app, vec![Event::PointerMoved(from), button(from, true)]);
     for i in 1..=6 {
         frame(ctx, app, vec![Event::PointerMoved(from + by * (i as f32 / 6.0))]);
@@ -50,14 +50,14 @@ fn drag(ctx: &egui::Context, app: &mut VectorcraftApp, from: Pos2, by: Vec2) {
     frame(ctx, app, vec![]);
 }
 
-fn click(ctx: &egui::Context, app: &mut VectorcraftApp, pos: Pos2) -> Vec<(String, Rect)> {
+fn click(ctx: &egui::Context, app: &mut TsipikaApp, pos: Pos2) -> Vec<(String, Rect)> {
     frame(ctx, app, vec![Event::PointerMoved(pos), button(pos, true)]);
     frame(ctx, app, vec![button(pos, false)]);
     frame(ctx, app, vec![])
 }
 
 /// Frames until a window that just opened has measured and placed itself.
-fn settle(ctx: &egui::Context, app: &mut VectorcraftApp) {
+fn settle(ctx: &egui::Context, app: &mut TsipikaApp) {
     for _ in 0..6 {
         frame(ctx, app, vec![]);
     }
@@ -67,8 +67,8 @@ fn rect_of(ctx: &egui::Context, id: egui::Id) -> Rect {
     ctx.memory(|m| m.area_rect(id)).expect("the dialog window was shown")
 }
 
-fn app_with_selection() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app_with_selection() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 400})).unwrap();
     app.run("shape.rectangle", json!({"x": 100, "y": 100, "width": 80, "height": 60})).unwrap();
     app
@@ -79,7 +79,7 @@ fn close_to(a: Vec2, b: Vec2) -> bool {
 }
 
 /// Opens a dialog.
-type Open = fn(&mut VectorcraftApp);
+type Open = fn(&mut TsipikaApp);
 
 /// Every kind of modal window: the shared frame (Offset Path), and the ones drawing their own
 /// window (New Document without a heading, Preferences, Keyboard Shortcuts).
@@ -121,15 +121,15 @@ fn dialogs_move_by_their_heading_stay_on_screen_and_where_they_were_moved() {
 /// Open the dialog of a plug-in of `kind` (`effect` or `filter`) with `count` number settings over a
 /// selection, settle it and `check` it, given its window and heading. The other tests share the
 /// plug-in registry, and the plug-in is removed after.
-fn check_plugin_dialog(kind: &str, count: usize, check: impl FnOnce(&egui::Context, &mut VectorcraftApp, egui::Id, &str)) {
-    use vectorcraft_plugins::wat as tpl;
+fn check_plugin_dialog(kind: &str, count: usize, check: impl FnOnce(&egui::Context, &mut TsipikaApp, egui::Id, &str)) {
+    use tsipika_plugins::wat as tpl;
     let params: Vec<String> = (0..count).map(|i| format!(r#""setting{i}":{{"type":"number","min":0,"max":10,"default":1}}"#)).collect();
     let id = format!("test.ui.{kind}{count}");
     let src = tpl::module(&tpl::manifest(&id, kind, &format!("{{{}}}", params.join(","))), tpl::ECHO, "", 1);
     let (ctx, mut app) = (ctx(), app_with_selection());
-    app.run("plugin.install", json!({"dataBase64": vectorcraft_format::base64_encode(&wat::parse_str(src).unwrap())})).unwrap();
+    app.run("plugin.install", json!({"dataBase64": tsipika_format::base64_encode(&wat::parse_str(src).unwrap())})).unwrap();
     let (command, params, dialog) = match kind {
-        "effect" => ("effect.dialog", json!({"effect": vectorcraft_plugins::effect::effect_id(&id)}), "effect"),
+        "effect" => ("effect.dialog", json!({"effect": tsipika_plugins::effect::effect_id(&id)}), "effect"),
         _ => ("plugin.dialog", json!({"id": id}), plugin::KIND),
     };
     app.run(command, params).unwrap();
@@ -144,7 +144,7 @@ fn check_plugin_dialog(kind: &str, count: usize, check: impl FnOnce(&egui::Conte
 /// settings is as tall as they are.
 #[test]
 fn a_plug_in_dialog_of_many_settings_fits_the_window() {
-    use vectorcraft_plugins::manifest::MAX_PARAMS;
+    use tsipika_plugins::manifest::MAX_PARAMS;
     let screen = Rect::from_min_size(Pos2::ZERO, SCREEN);
     let shown = |texts: &[(String, Rect)], text: &str| texts.iter().find(|(t, r)| t == text && screen.contains_rect(*r)).map(|(_, r)| *r);
     for kind in ["effect", "filter"] {
@@ -207,7 +207,7 @@ fn offset_path_joins_is_a_dropdown() {
     // OK: the same result as the command with round joins (not miter).
     confirm(&mut app).unwrap();
     assert!(app.ui.dialog.is_none());
-    let made = |app: &VectorcraftApp| {
+    let made = |app: &TsipikaApp| {
         let st = app.session.doc().unwrap();
         format!("{:?}", st.doc.node(st.selection.objects[0]).unwrap().kind)
     };
@@ -255,7 +255,7 @@ fn axis_choices_read_as_axes_in_every_complete_language() {
 fn offset_path_previews() {
     let (ctx, mut app) = (ctx(), app_with_selection());
     app.run("select.all", json!({})).unwrap();
-    let count = |app: &VectorcraftApp| app.session.doc().unwrap().doc.layers.iter().map(|l| l.children().map_or(0, |c| c.len())).sum::<usize>();
+    let count = |app: &TsipikaApp| app.session.doc().unwrap().doc.layers.iter().map(|l| l.children().map_or(0, |c| c.len())).sum::<usize>();
     crate::menus::invoke(&mut app, "object.path.offsetPath", json!({}));
     let texts = frame(&ctx, &mut app, vec![]);
     let texts = if texts.is_empty() { frame(&ctx, &mut app, vec![]) } else { texts };
@@ -283,8 +283,8 @@ fn offset_path_remembers_its_last_values() {
     assert_eq!((d.f64("offset", 0.0), d.str("joins"), d.f64("miterLimit", 0.0)), (-4.5, "round".to_string(), 4.0));
 }
 
-fn app_with_dense_path() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app_with_dense_path() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     let anchors: Vec<_> = (0..20).map(|i| json!({"x": 30 + i * 15, "y": 100.0 + (i % 2) as f64 * 0.1})).collect();
     let id = app.run("path.create", json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap();
@@ -363,10 +363,10 @@ fn simplify_dialog_ok_keeps_exactly_one_undo_with_or_without_preview() {
 }
 
 /// Whether every segment of every path in `app`'s document is straight (false with no segments).
-fn only_straight_segments(app: &VectorcraftApp) -> bool {
+fn only_straight_segments(app: &TsipikaApp) -> bool {
     let mut lines = vec![];
     app.session.doc().unwrap().doc.walk(|n| {
-        if let vectorcraft_doc::NodeKind::Path { path, .. } = &n.kind {
+        if let tsipika_doc::NodeKind::Path { path, .. } = &n.kind {
             for sp in &path.subpaths {
                 lines.extend((0..sp.segment_count()).map(|i| sp.segment_is_line(i)));
             }
@@ -385,7 +385,7 @@ fn simplify_dialog_sends_corner_angle_and_straight_lines() {
     settle(&ctx, &mut app);
     let texts = frame(&ctx, &mut app, vec![]);
     assert!(texts.iter().any(|(t, _)| t == "Corner Point Angle Threshold:"), "{texts:?}");
-    let previewed = |app: &VectorcraftApp| app.session.doc().unwrap().interaction.as_ref().and_then(|it| it.preview.clone()).expect("a preview").1;
+    let previewed = |app: &TsipikaApp| app.session.doc().unwrap().interaction.as_ref().and_then(|it| it.preview.clone()).expect("a preview").1;
     assert_eq!((&previewed(&app)["cornerAngle"], &previewed(&app)["straightLines"]), (&json!(30.0), &json!(false)));
     assert!(!only_straight_segments(&app), "the fit keeps the ellipse's curves");
     let straight = texts.iter().find(|(t, _)| t == "Convert to Straight Lines").map(|(_, r)| *r).expect("a Convert to Straight Lines checkbox");
@@ -423,7 +423,7 @@ fn simplify_dialog_show_original_path_outlines_the_paths_before_the_preview() {
     let (ctx, mut app) = (ctx(), app_with_dense_path());
     let st = app.session.doc().unwrap();
     let (id, original) = match st.doc.node(st.selection.objects[0]).map(|n| (n.id, &n.kind)) {
-        Some((id, vectorcraft_doc::NodeKind::Path { path, .. })) => (id, path.clone()),
+        Some((id, tsipika_doc::NodeKind::Path { path, .. })) => (id, path.clone()),
         _ => panic!("a path is selected"),
     };
     crate::menus::invoke(&mut app, "object.path.simplify", json!({}));
@@ -434,7 +434,7 @@ fn simplify_dialog_show_original_path_outlines_the_paths_before_the_preview() {
     click(&ctx, &mut app, show.center());
     assert_eq!(super::path_ops::original_paths(&app), vec![(id, &original)]);
     let simplified = app.session.doc().unwrap().doc.node(id).map(|n| n.kind.clone());
-    assert!(!matches!(simplified, Some(vectorcraft_doc::NodeKind::Path { path, .. }) if path == original), "the preview changed the path");
+    assert!(!matches!(simplified, Some(tsipika_doc::NodeKind::Path { path, .. }) if path == original), "the preview changed the path");
     let preview = frame(&ctx, &mut app, vec![]).into_iter().find(|(t, _)| t == "Preview").map(|(_, r)| r).expect("a Preview checkbox");
     click(&ctx, &mut app, preview.center());
     assert!(super::path_ops::original_paths(&app).is_empty(), "nothing to compare with while Preview is off");

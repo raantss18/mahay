@@ -1,8 +1,8 @@
 //! Synthetic .fig source identity: cached library components, contextual sources, main switches
 //! and invalid provenance.
 
-use figcraft_doc::color::PaintKind;
-use figcraft_doc::{Document, NodeId, NodeKind, PropDef};
+use endrika_doc::color::PaintKind;
+use endrika_doc::{Document, NodeId, NodeKind, PropDef};
 use serde_json::{Value, json};
 
 use super::kiwi::{Kv, Schema};

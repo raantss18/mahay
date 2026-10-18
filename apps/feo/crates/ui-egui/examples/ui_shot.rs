@@ -1,12 +1,12 @@
 //! Render the real UI offscreen (no window, no focus stealing) and save PNGs.
 //!
-//! `cargo run -p soundcraft-ui-egui --example ui_shot -- out.png [script.jsonl] [--blank] [--size WxH] [--system-theme light|dark|none]`
+//! `cargo run -p feo-ui-egui --example ui_shot -- out.png [script.jsonl] [--blank] [--size WxH] [--system-theme light|dark|none]`
 //!
 //! Script lines are control requests (`{"method": "...", "params": {...}}`), `{"shot": "path.png"}`
 //! or `{"steps": n}`. `{"system_theme": "light"}` (also `"dark"` or `"none"`) changes the
 //! simulated OS appearance for subsequent frames. The demo session is loaded unless `--blank`.
 
-use soundcraft_ui_egui::{ControlRequest, Services, SoundApp};
+use feo_ui_egui::{ControlRequest, Services, SoundApp};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 
@@ -23,7 +23,7 @@ fn system_theme(value: &str) -> Option<Option<egui::Theme>> {
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let out = args.first().cloned().unwrap_or_else(|| "soundcraft.png".into());
+    let out = args.first().cloned().unwrap_or_else(|| "feo.png".into());
     let script = args.get(1).filter(|a| !a.starts_with("--")).cloned();
     let blank = args.iter().any(|a| a == "--blank");
     let appearance = if let Some(i) = args.iter().position(|a| a == "--system-theme") {
@@ -42,7 +42,7 @@ fn main() {
         .and_then(|s| s.split_once('x'))
         .and_then(|(a, b)| Some((a.parse::<f32>().ok()?, b.parse::<f32>().ok()?)))
         .unwrap_or((1600.0, 1000.0));
-    let engine = if blank { soundcraft_engine::Engine::default() } else { soundcraft_engine::demo::demo_engine() };
+    let engine = if blank { feo_engine::Engine::default() } else { feo_engine::demo::demo_engine() };
     let (tx, rx) = mpsc::channel::<ControlRequest>();
     let app = SoundApp::new(engine, None, Services::default()).with_control(rx);
     let mut harness =

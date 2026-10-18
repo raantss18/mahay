@@ -15,9 +15,9 @@ use serde_json::{Value, json};
 
 use crate::state::{Dialog, UiState};
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, menus, widgets};
+use crate::{TsipikaApp, menus, widgets};
 
-pub const PRESETS: &[&str] = &["VectorCraft Defaults", "Classic Defaults"];
+pub const PRESETS: &[&str] = &["Tsipika Defaults", "Classic Defaults"];
 pub const CUSTOM: &str = "Custom";
 /// Set names earlier versions saved: (old name, current name).
 pub const LEGACY_PRESETS: &[(&str, &str)] = &[("Illustrator Defaults", "Classic Defaults")]; // brand-ok: legacy preference value
@@ -93,7 +93,7 @@ fn global_override(key: &str) -> Option<&'static str> {
 
 /// Registry default shortcut of a command (engine or UI command).
 pub fn default_command_shortcut(id: &str) -> Option<&'static str> {
-    if let Some(c) = vectorcraft_engine::find_command(id) {
+    if let Some(c) = tsipika_engine::find_command(id) {
         return c.shortcut;
     }
     menus::UI_COMMANDS.iter().find(|c| c.0 == id).map(|c| c.2).filter(|s| !s.is_empty())
@@ -126,7 +126,7 @@ pub const PANEL_SHORTCUTS: &[(&str, &str)] = &[
 /// Default shortcut of an entry key (`tool:<id>`, `panel:<id>` or a command id).
 pub fn default_of(key: &str) -> Option<&'static str> {
     if let Some(t) = key.strip_prefix("tool:") {
-        return vectorcraft_tools::tool_info(t).and_then(|t| t.shortcut);
+        return tsipika_tools::tool_info(t).and_then(|t| t.shortcut);
     }
     if let Some(p) = key.strip_prefix("panel:") {
         return PANEL_SHORTCUTS.iter().find(|(id, _)| *id == p).map(|(_, sc)| *sc);
@@ -170,14 +170,14 @@ pub fn panel_shortcut(panel: &str) -> Option<&'static str> {
 /// Tool whose (effective) shortcut is `key` ("V", "Shift+M").
 pub fn tool_for_key(key: &str) -> Option<&'static str> {
     let n = normalize(key)?;
-    vectorcraft_tools::catalog::all_tools().find(|t| tool_shortcut(t.id).and_then(normalize).as_deref() == Some(n.as_str())).map(|t| t.id)
+    tsipika_tools::catalog::all_tools().find(|t| tool_shortcut(t.id).and_then(normalize).as_deref() == Some(n.as_str())).map(|t| t.id)
 }
 
 /// Command whose effective shortcut is exactly `key` (for single-key command shortcuts: X, D, /).
 pub fn command_for_key(key: &str) -> Option<&'static str> {
     let n = normalize(key)?;
     let hit = |id: &'static str| command_shortcut(id).and_then(normalize).as_deref() == Some(n.as_str());
-    vectorcraft_engine::command_specs().iter().map(|c| c.id).chain(menus::UI_COMMANDS.iter().map(|c| c.0)).find(|id| hit(id))
+    tsipika_engine::command_specs().iter().map(|c| c.id).chain(menus::UI_COMMANDS.iter().map(|c| c.0)).find(|id| hit(id))
 }
 
 // ---------- chords ----------
@@ -253,15 +253,15 @@ pub struct Entry {
 pub fn entries() -> &'static [Entry] {
     static E: OnceLock<Vec<Entry>> = OnceLock::new();
     E.get_or_init(|| {
-        let mut v: Vec<Entry> = vectorcraft_tools::catalog::all_tools()
+        let mut v: Vec<Entry> = tsipika_tools::catalog::all_tools()
             .map(|t| Entry { key: format!("tool:{}", t.id), label: t.label.to_string(), group: "Tools".into(), is_tool: true })
             .collect();
         let mut seen = HashSet::new();
-        for c in vectorcraft_engine::command_specs() {
+        for c in tsipika_engine::command_specs() {
             // Commands outside the menus (panel menu items) are
             // listed when a key alone can run them; queries and aliases never are.
             let listed = if c.menu.is_empty() {
-                c.shortcut.is_some() || (c.journal && !vectorcraft_engine::cmd::is_alias(c.id) && runs_without_params(c.params))
+                c.shortcut.is_some() || (c.journal && !tsipika_engine::cmd::is_alias(c.id) && runs_without_params(c.params))
             } else {
                 true
             };
@@ -378,13 +378,13 @@ pub fn preset(name: &str) -> Option<BTreeMap<String, String>> {
     PRESETS.contains(&set_name(name)).then(BTreeMap::new)
 }
 
-/// Export format: `{"format": "vectorcraft-shortcuts", "set": name, "overrides": {...}}`.
+/// Export format: `{"format": "tsipika-shortcuts", "set": name, "overrides": {...}}`.
 pub fn export_json(set: &str, overrides: &BTreeMap<String, String>) -> Value {
-    json!({"format": "vectorcraft-shortcuts", "version": 1, "set": set, "overrides": overrides})
+    json!({"format": "tsipika-shortcuts", "version": 1, "set": set, "overrides": overrides})
 }
 
 pub fn import_json(v: &Value) -> Result<(String, BTreeMap<String, String>), String> {
-    let o = v.get("overrides").and_then(Value::as_object).ok_or("not a VectorCraft shortcut set (missing `overrides`)")?;
+    let o = v.get("overrides").and_then(Value::as_object).ok_or("not a Tsipika shortcut set (missing `overrides`)")?;
     let mut out = BTreeMap::new();
     for (k, v) in o {
         let s = v.as_str().ok_or_else(|| format!("shortcut for `{k}` must be a string"))?;
@@ -398,7 +398,7 @@ pub fn import_json(v: &Value) -> Result<(String, BTreeMap<String, String>), Stri
 
 // ---------- UI commands ----------
 
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     let ov = serde_json::to_value(&app.ui.shortcut_overrides).unwrap_or(json!({}));
     app.ui.dialog = Some(Dialog::new(
         "shortcuts",
@@ -411,7 +411,7 @@ fn dialog_overrides(d: &Dialog) -> BTreeMap<String, String> {
 }
 
 /// OK: commit the working set.
-pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn confirm(app: &mut TsipikaApp) -> Result<Value, String> {
     let Some(d) = app.ui.dialog.clone() else { return Err("no dialog open".into()) };
     app.ui.shortcut_overrides = dialog_overrides(&d);
     app.ui.shortcut_set = d.str("set");
@@ -421,7 +421,7 @@ pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
 }
 
 /// `shortcuts.*` UI commands. `None` = not ours.
-pub fn run_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
+pub fn run_command(app: &mut TsipikaApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
     let s = |k: &str| p.get(k).and_then(Value::as_str).map(str::to_string);
     let r = match id {
         "edit.keyboardShortcuts" => {
@@ -476,7 +476,7 @@ pub fn run_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Resu
         "shortcuts.export" => {
             let v = export_json(&app.ui.shortcut_set, &app.ui.shortcut_overrides);
             let bytes = serde_json::to_vec_pretty(&v).unwrap_or_default();
-            let pick = crate::FilePick { filters: vec![("Shortcut sets", &["json"])], ..crate::FilePick::named("VectorCraft Shortcuts.json") };
+            let pick = crate::FilePick { filters: vec![("Shortcut sets", &["json"])], ..crate::FilePick::named("Tsipika Shortcuts.json") };
             let path = s("path").or_else(|| crate::picks::save(app, &pick));
             match path {
                 Some(path) => match app.services.write.as_mut() {
@@ -486,7 +486,7 @@ pub fn run_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Resu
                 // Its save dialog is open: the file is written when it answers.
                 None if app.file_dialog_open() => Err("cancelled".into()),
                 None => match app.services.download.as_mut() {
-                    Some(dl) => dl("VectorCraft Shortcuts.json", &bytes).map(|()| Value::Null),
+                    Some(dl) => dl("Tsipika Shortcuts.json", &bytes).map(|()| Value::Null),
                     None => Ok(v),
                 },
             }
@@ -532,7 +532,7 @@ pub fn run_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Resu
 
 /// While recording (here or in Import Shortcut Set), Escape cancels the recording instead of closing
 /// the dialog.
-pub fn is_recording(app: &VectorcraftApp) -> bool {
+pub fn is_recording(app: &TsipikaApp) -> bool {
     app.ui
         .dialog
         .as_ref()
@@ -541,7 +541,7 @@ pub fn is_recording(app: &VectorcraftApp) -> bool {
 
 // ---------- dialog ----------
 
-pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut TsipikaApp, ctx: &egui::Context) {
     let Some(mut d) = app.ui.dialog.clone() else { return };
     let t = Tokens::get(ctx);
     let mut ov = dialog_overrides(&d);
@@ -747,13 +747,13 @@ pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
 }
 
 /// The Keyboard Shortcuts dialog, while it is open.
-fn shortcuts_dialog(app: &VectorcraftApp) -> bool {
+fn shortcuts_dialog(app: &TsipikaApp) -> bool {
     app.ui.dialog.as_ref().is_some_and(|d| d.kind == "shortcuts")
 }
 
 /// The dialog's Import…: the imported set replaces its working set (committed on OK like other
 /// edits).
-fn import_into_dialog(app: &mut VectorcraftApp) {
+fn import_into_dialog(app: &mut TsipikaApp) {
     if !shortcuts_dialog(app) {
         app.status(crate::picks::dialog_gone());
         return;
@@ -776,7 +776,7 @@ fn import_into_dialog(app: &mut VectorcraftApp) {
 }
 
 /// The dialog's Export…: its working set, as edited so far.
-fn export_from_dialog(app: &mut VectorcraftApp) {
+fn export_from_dialog(app: &mut TsipikaApp) {
     if !shortcuts_dialog(app) {
         app.status(crate::picks::dialog_gone());
         return;
@@ -855,7 +855,7 @@ mod tests {
 
     #[test]
     fn a_modifier_pressed_while_recording_waits_for_the_key() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         open(&mut app);
         app.ui.dialog.as_mut().unwrap().fields.insert("__recording".into(), json!("tool:groupSelection"));
         let ctx = egui::Context::default();

@@ -138,7 +138,7 @@ impl Tokens {
 }
 
 fn tokens_id() -> egui::Id {
-    egui::Id::new("figcraft_tokens")
+    egui::Id::new("endrika_tokens")
 }
 
 /// egui's default for how long hover fades and openings animate.
@@ -226,12 +226,12 @@ pub fn on_dark<R>(ui: &mut egui::Ui, f: impl FnOnce(&mut egui::Ui) -> R) -> R {
     r
 }
 
-/// UI fonts: Inter (from the craft-fonts build input) when present, else egui's defaults; with
+/// UI fonts: Inter (from the mahay-fonts build input) when present, else egui's defaults; with
 /// `system`, also system faces for scripts those lack (Hebrew, joined Arabic) so names in them show,
 /// and faces for the CJK scripts in `cjk` ([`crate::cjk`]).
 pub fn install_fonts(ctx: &Context, system: bool, cjk: u8) {
     let mut fonts = FontDefinitions::default();
-    let find = |family: &str, style: &str| figcraft_text::CRAFT_FONTS.iter().find(|f| f.family == family && f.style == style).map(|f| f.bytes);
+    let find = |family: &str, style: &str| endrika_text::MAHAY_FONTS.iter().find(|f| f.family == family && f.style == style).map(|f| f.bytes);
     let regular = find("Inter", "Regular");
     let semibold = find("Inter", "SemiBold").or_else(|| find("Inter", "Bold"));
     if let Some(r) = regular {
@@ -252,16 +252,16 @@ pub fn install_fonts(ctx: &Context, system: bool, cjk: u8) {
     }
     semi.extend(fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default());
     fonts.families.insert(FontFamily::Name("semibold".into()), semi);
-    // CJK and other scripts from craft-fonts as fallbacks (Noto Sans CJK only with FIGCRAFT_EMBED_CJK).
+    // CJK and other scripts from mahay-fonts as fallbacks (Noto Sans CJK only with ENDRIKA_EMBED_CJK).
     const BUILT_IN: [&str; 4] = ["Inter", "BIZ UDPGothic", "Noto Sans CJK SC", "Noto Sans Arabic"];
     let lang = crate::i18n::current().map_or("en", |l| l.code);
     // A Chinese UI draws Han in a Chinese face: the built-in Japanese one goes after the system faces.
     let late = |family: &str| family == "BIZ UDPGothic" && crate::cjk::language(lang) == crate::cjk::HAN;
     let craft = |last: bool| {
-        figcraft_text::CRAFT_FONTS
+        endrika_text::MAHAY_FONTS
             .iter()
             .filter(move |f| f.family != "Inter" && f.style == "Regular" && BUILT_IN.contains(&f.family) && late(f.family) == last)
-            .map(|f| (format!("craft-{}", f.family), FontData::from_static(f.bytes)))
+            .map(|f| (format!("mahay-{}", f.family), FontData::from_static(f.bytes)))
     };
     let mut extra: Vec<(String, FontData)> = craft(false).collect();
     if system {
@@ -269,8 +269,8 @@ pub fn install_fonts(ctx: &Context, system: bool, cjk: u8) {
         let embedded = |c: char| {
             BUILT_IN
                 .into_iter()
-                .filter(|f| !late(f) && figcraft_text::CRAFT_FONTS.iter().any(|cf| cf.family == *f))
-                .filter_map(|f| figcraft_text::find_face(f, "Regular"))
+                .filter(|f| !late(f) && endrika_text::MAHAY_FONTS.iter().any(|cf| cf.family == *f))
+                .filter_map(|f| endrika_text::find_face(f, "Regular"))
                 .any(|x| x.has_char(c))
         };
         let mut taken = Vec::new();
@@ -290,14 +290,14 @@ pub fn install_fonts(ctx: &Context, system: bool, cjk: u8) {
     ctx.set_fonts(fonts);
 }
 
-/// The glyphs macOS shortcuts are written with ([`figcraft_engine::keymap::display`]).
+/// The glyphs macOS shortcuts are written with ([`endrika_engine::keymap::display`]).
 const KEY_SYMBOLS: &str = "⌃⌥⇧⌘⌫↵⇥⇞⇟←→↑↓";
 /// System families that have them, in order of preference.
 const KEY_FAMILIES: [&str; 6] = ["Lucida Grande", "Apple Symbols", "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", "FreeSans"];
 
 /// System faces for the shortcut glyphs the UI's own fonts lack (egui's default face has ⌘ but
 /// not ⌥ or ↵); `taken` as for [`system_fallbacks`].
-fn key_symbol_fallbacks(have: &dyn Fn(char) -> bool, taken: &mut Vec<Arc<figcraft_text::Face>>) -> Vec<(String, FontData)> {
+fn key_symbol_fallbacks(have: &dyn Fn(char) -> bool, taken: &mut Vec<Arc<endrika_text::Face>>) -> Vec<(String, FontData)> {
     system_fallbacks(KEY_SYMBOLS.chars(), &KEY_FAMILIES, have, taken)
 }
 
@@ -308,14 +308,14 @@ pub(crate) fn system_fallbacks(
     samples: impl IntoIterator<Item = char>,
     families: &[&str],
     have: &dyn Fn(char) -> bool,
-    taken: &mut Vec<Arc<figcraft_text::Face>>,
+    taken: &mut Vec<Arc<endrika_text::Face>>,
 ) -> Vec<(String, FontData)> {
     let mut out = Vec::new();
     for c in samples {
         if have(c) || taken.iter().any(|f| f.has_char(c)) {
             continue;
         }
-        let Some(face) = figcraft_text::face_with_char(c, families) else { continue };
+        let Some(face) = endrika_text::face_with_char(c, families) else { continue };
         out.push((format!("system-{}-{}", face.family, face.style), font_data(&face)));
         taken.push(face);
     }
@@ -325,10 +325,10 @@ pub(crate) fn system_fallbacks(
 /// egui font data over a face's bytes, without copying them (CJK faces are 10–20 MB). Font
 /// database faces are never dropped, so a system face's shared bytes are kept for good: leaking
 /// one more reference to them costs a pointer and gives egui the `'static` slice it needs.
-pub fn font_data(face: &figcraft_text::Face) -> FontData {
+pub fn font_data(face: &endrika_text::Face) -> FontData {
     let bytes: &'static [u8] = match &face.bytes {
-        figcraft_text::fontdb::FontBytes::Static(b) => b,
-        figcraft_text::fontdb::FontBytes::Shared(v) => Box::leak(Box::new(v.clone())).as_slice(),
+        endrika_text::fontdb::FontBytes::Static(b) => b,
+        endrika_text::fontdb::FontBytes::Shared(v) => Box::leak(Box::new(v.clone())).as_slice(),
     };
     let mut data = FontData::from_static(bytes);
     data.index = face.index;
@@ -343,26 +343,26 @@ pub fn regular(size: f32) -> FontId {
     FontId::new(size, FontFamily::Proportional)
 }
 
-pub fn c32(c: figcraft_color::Color) -> Color32 {
+pub fn c32(c: endrika_color::Color) -> Color32 {
     let [r, g, b, a] = c.to_rgba8();
     Color32::from_rgba_unmultiplied(r, g, b, a)
 }
 
 fn screen_conversion_id() -> egui::Id {
-    egui::Id::new("figcraft_screen_conversion")
+    egui::Id::new("endrika_screen_conversion")
 }
 
 /// Remember the colour profile of the document on screen (once per frame): document colours drawn
 /// by the UI ([`doc_c32`]) go from it to the screen's sRGB.
-pub fn set_doc_profile(ctx: &Context, profile: figcraft_color::ColorProfile) {
-    let conv = profile.conversion_to(figcraft_color::ColorProfile::Srgb);
+pub fn set_doc_profile(ctx: &Context, profile: endrika_color::ColorProfile) {
+    let conv = profile.conversion_to(endrika_color::ColorProfile::Srgb);
     ctx.data_mut(|d| d.insert_temp(screen_conversion_id(), conv));
 }
 
 /// A document colour (a paint, swatch, background) for the screen: converted from the document's
 /// colour profile to sRGB. UI chrome colours use [`c32`].
-pub fn doc_c32(ctx: &Context, c: figcraft_color::Color) -> Color32 {
-    let conv = ctx.data(|d| d.get_temp::<figcraft_color::ProfileConversion>(screen_conversion_id()));
+pub fn doc_c32(ctx: &Context, c: endrika_color::Color) -> Color32 {
+    let conv = ctx.data(|d| d.get_temp::<endrika_color::ProfileConversion>(screen_conversion_id()));
     c32(conv.map_or(c, |k| k.apply(c)))
 }
 
@@ -372,8 +372,8 @@ mod tests {
 
     #[test]
     fn ui_font_draws_every_mac_shortcut_glyph() {
-        figcraft_text::scan_system_fonts();
-        let lacking: String = KEY_SYMBOLS.chars().filter(|c| figcraft_text::face_with_char(*c, &KEY_FAMILIES).is_none()).collect();
+        endrika_text::scan_system_fonts();
+        let lacking: String = KEY_SYMBOLS.chars().filter(|c| endrika_text::face_with_char(*c, &KEY_FAMILIES).is_none()).collect();
         if !lacking.is_empty() {
             eprintln!("no system face here draws {lacking}; skipping");
             return;

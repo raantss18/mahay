@@ -1,6 +1,6 @@
 use super::canvas::presented_image_rect;
 use egui::{Pos2, Rect, pos2, vec2};
-use figcraft_render::View;
+use endrika_render::View;
 
 #[test]
 fn native_density_rect_aligns_origin_and_preserves_pixel_extent() {

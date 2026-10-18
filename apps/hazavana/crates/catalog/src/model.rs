@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use lightcraft_develop::{DevelopSettings, WbMode};
+use hazavana_develop::{DevelopSettings, WbMode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -89,7 +89,7 @@ impl ColorLabel {
 pub enum Source {
     /// A file on disk (native) or in the browser's storage (web).
     File { path: String },
-    /// A procedurally generated demo scene (by `lightcraft-scenes` id).
+    /// A procedurally generated demo scene (by `hazavana-scenes` id).
     Demo { scene: u32 },
 }
 
@@ -195,15 +195,15 @@ pub struct Meta {
     pub creator: String,
     pub keywords: Vec<String>,
     /// Face/pet/focus regions read from XMP (MWG-RS), on the upright (EXIF-oriented) photo.
-    /// Removing or resizing one edits the catalog only; LightCraft never writes regions to XMP.
+    /// Removing or resizing one edits the catalog only; Hazavana never writes regions to XMP.
     /// Left out of the catalog JSON when empty (most photos), so older catalogs read unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub regions: Vec<lightcraft_meta::Region>,
+    pub regions: Vec<hazavana_meta::Region>,
     /// Where the camera focused (read from the file's maker notes at import or Reload from Disk; Sony
     /// bodies whose files have been checked), on the upright (EXIF-oriented) photo. Read-only: never
     /// written to XMP. Left out of the catalog JSON when unknown, so older catalogs read unchanged.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub focus: Option<lightcraft_meta::FocusPoint>,
+    pub focus: Option<hazavana_meta::FocusPoint>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -276,7 +276,7 @@ pub struct Photo {
     /// Lens corrections embedded in the file (DNG `WarpRectilinear` / `FixVignetteRadial`), applied when
     /// "Enable Profile Corrections" is on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub embedded_lens: Option<lightcraft_develop::EmbeddedLens>,
+    pub embedded_lens: Option<hazavana_develop::EmbeddedLens>,
     /// A virtual copy: the photo it was copied from (it shares that photo's file but has its own
     /// settings, metadata and history).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -335,12 +335,12 @@ pub fn relative_wb_format(format: &str) -> bool {
 /// Whether a raw of `format` shot on `camera` (Exif make and model, as [`Meta::camera`] keeps them) is developed
 /// with a white balance relative to its as-shot look (6500 K / 0 means as shot, as for rendered photographs):
 /// a file without colour matrices ([`relative_wb_format`]) whose camera has none measured either, nor
-/// white-balance presets to read Kelvin from. A camera with matrices in `lightcraft_raw::spectral` edits in Kelvin:
+/// white-balance presets to read Kelvin from. A camera with matrices in `hazavana_raw::spectral` edits in Kelvin:
 /// the matrices turn its as-shot multipliers into a temperature, and the slider back, while its colour look stays
-/// whatever the file's fit gives (issue #730). A camera in `lightcraft_raw::kelvin_presets` does the same through
+/// whatever the file's fit gives (issue #730). A camera in `hazavana_raw::kelvin_presets` does the same through
 /// its own presets. The engine's render path (`files.rs`) decides the same way from the file; both must agree.
 pub fn relative_wb_camera(format: &str, camera: &str) -> bool {
-    relative_wb_format(format) && lightcraft_raw::spectral::find_camera(camera).is_none() && !lightcraft_raw::kelvin_presets::covers_camera(camera)
+    relative_wb_format(format) && hazavana_raw::spectral::find_camera(camera).is_none() && !hazavana_raw::kelvin_presets::covers_camera(camera)
 }
 
 /// This build's version: what a photo's [`Photo::preview_checked`] stamp is compared with. Every
@@ -434,7 +434,7 @@ impl Photo {
     }
     /// The built-in defaults for this photo, before any user default preset: raws start from
     /// their as-shot white balance; embedded lens corrections on when the file has them. They
-    /// carry the photo's own rendering process ([`lightcraft_develop::ProcessVersion`]): which
+    /// carry the photo's own rendering process ([`hazavana_develop::ProcessVersion`]): which
     /// process a photo renders with is not an edit, so comparisons with its defaults (edited?
     /// still as imported?) don't change when a newer process exists. A new photo has the latest.
     pub fn camera_defaults(&self) -> DevelopSettings {
@@ -445,7 +445,7 @@ impl Photo {
             None => DevelopSettings::default(),
         };
         if self.develops_raw() && !relative {
-            d.wb.scale = lightcraft_develop::WbScale::Kelvin;
+            d.wb.scale = hazavana_develop::WbScale::Kelvin;
         }
         if self.embedded_lens.is_some() {
             d.optics.lens_profile = true;
@@ -485,7 +485,7 @@ impl Photo {
     /// differ only in case are one person, as first seen). Pets and unnamed faces are not people.
     pub fn people(&self) -> Vec<&str> {
         let mut out: Vec<&str> = Vec::new();
-        for r in self.meta.regions.iter().filter(|r| r.kind == lightcraft_meta::RegionKind::Face) {
+        for r in self.meta.regions.iter().filter(|r| r.kind == hazavana_meta::RegionKind::Face) {
             let Some(name) = r.name.as_deref().map(str::trim).filter(|n| !n.is_empty()) else { continue };
             if !out.iter().any(|o| o.to_lowercase() == name.to_lowercase()) {
                 out.push(name);
@@ -552,7 +552,7 @@ impl Album {
 #[cfg(test)]
 mod edited_tests {
     use super::*;
-    use lightcraft_develop::WbScale;
+    use hazavana_develop::WbScale;
 
     #[test]
     fn raw_with_import_settings_is_not_edited() {
@@ -570,9 +570,9 @@ mod edited_tests {
 
     #[test]
     fn the_process_a_photo_renders_with_is_not_an_edit() {
-        use lightcraft_develop::ProcessVersion;
+        use hazavana_develop::ProcessVersion;
         // a photo on another process than the latest (a V1 photo once a later process is the
-        // latest, or a photo saved by a newer LightCraft)
+        // latest, or a photo saved by a newer Hazavana)
         let other = ProcessVersion(ProcessVersion::LATEST.0 + 1);
         let mut p = Photo::new(PhotoId(1), Source::Demo { scene: 0 }, "a.dng", "DNG", 10, 10, "2026-10-01T00:00:00");
         p.kind = MediaKind::Raw;

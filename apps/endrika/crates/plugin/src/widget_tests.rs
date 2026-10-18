@@ -83,12 +83,12 @@ fn widget_render_reports_the_description_or_why_not() {
     let bad = r#"{"root":{"type":"text"}}"#;
     let wat = format!(
         r#"(module
-          (import "figcraft" "widget_render" (func $render (param i32 i32) (result i32)))
-          (import "figcraft" "reply_read" (func $reply_read (param i32 i32) (result i32)))
-          (import "figcraft" "set_output" (func $set_output (param i32 i32)))
+          (import "endrika" "widget_render" (func $render (param i32 i32) (result i32)))
+          (import "endrika" "reply_read" (func $reply_read (param i32 i32) (result i32)))
+          (import "endrika" "set_output" (func $set_output (param i32 i32)))
           (memory (export "memory") 1)
           (data (i32.const 100) "{}") (data (i32.const 1000) "{}")
-          (func (export "figcraft_run") (param $n i32) (result i32)
+          (func (export "endrika_run") (param $n i32) (result i32)
             (if (call $render (i32.const 100) (i32.const {}))
               (then (call $set_output (i32.const 5000) (call $reply_read (i32.const 5000) (i32.const 1000)))))
             (drop (call $render (i32.const 1000) (i32.const {})))

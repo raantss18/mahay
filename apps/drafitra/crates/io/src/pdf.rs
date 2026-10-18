@@ -13,10 +13,10 @@
 
 use std::fmt::Write as _;
 
-use cadcraft_color::Rgb;
-use cadcraft_doc::{Drawing, Handle, PageSetup, Space};
-use cadcraft_geom::{Bounds2, Vec2};
-use cadcraft_render::{Kind, Sheet, clip, paper};
+use drafitra_color::Rgb;
+use drafitra_doc::{Drawing, Handle, PageSetup, Space};
+use drafitra_geom::{Bounds2, Vec2};
+use drafitra_render::{Kind, Sheet, clip, paper};
 use serde_json::Value;
 
 use crate::{IoError, Result};
@@ -41,7 +41,7 @@ const MAX_URL: usize = 2048;
 pub struct PdfOptions {
     /// Plot style table name, replacing the page setup's (`"None"` plots without one).
     pub plot_style_table: Option<String>,
-    /// Paper name from [`cadcraft_render::PAPER_SIZES`] (`"A4"`, `"Letter"`, `"ANSI B"`…).
+    /// Paper name from [`drafitra_render::PAPER_SIZES`] (`"A4"`, `"Letter"`, `"ANSI B"`…).
     pub paper: Option<String>,
     /// Custom paper size in millimetres (portrait width, height).
     pub paper_mm: Option<(f64, f64)>,
@@ -380,7 +380,7 @@ struct SheetPage {
     /// Page size in points.
     media: Vec2,
     /// What it draws, the mapping to points and the plot area (points).
-    list: cadcraft_render::DisplayList,
+    list: drafitra_render::DisplayList,
     map: Map,
     clip_pt: Bounds2,
     /// The drawing layers (indices in the layer table) of the content's `/L<i>` marks.
@@ -397,8 +397,8 @@ fn sheet(d: &Drawing, space: &Space, o: &PdfOptions, links_to: &[(Handle, String
     let unit_mm = paper::paper_unit_mm(d);
     let sheet = Sheet::from_page(&page, unit_mm);
     let lineweights = o.lineweights.unwrap_or(if space.is_paper() { page.lineweights } else { true });
-    let plot_style_table = cadcraft_doc::plot_style_table(d, &page.plot_style_table).map(std::sync::Arc::new);
-    let ropts = cadcraft_render::Options {
+    let plot_style_table = drafitra_doc::plot_style_table(d, &page.plot_style_table).map(std::sync::Arc::new);
+    let ropts = drafitra_render::Options {
         transparency: o.plot_transparency.unwrap_or(page.plot_transparency),
         tolerance: 0.001,
         min_dash: 0.0,
@@ -420,7 +420,7 @@ fn sheet(d: &Drawing, space: &Space, o: &PdfOptions, links_to: &[(Handle, String
     let tolerance = if tol.is_finite() && tol > 0.0 { tol } else { ropts.tolerance };
     // Relative point sizes follow the plotted window (else the extents).
     let view_height = window.map(|w| w.height()).unwrap_or(0.0);
-    let list = cadcraft_render::build_plot(d, space, &cadcraft_render::Options { tolerance, view_height, ..ropts });
+    let list = drafitra_render::build_plot(d, space, &drafitra_render::Options { tolerance, view_height, ..ropts });
     let b = window.unwrap_or(list.bounds);
     let s = plot_scale(&b, &sheet, fit, o.scale);
     let map = if fit || matches!(space, Space::Model) {
@@ -431,7 +431,7 @@ fn sheet(d: &Drawing, space: &Space, o: &PdfOptions, links_to: &[(Handle, String
     };
     // Plot style ends, joins and fill patterns at the plot scale (a layout's are already drawn).
     let mut list = list;
-    cadcraft_render::pen::apply(&mut list, map.s * unit_mm);
+    drafitra_render::pen::apply(&mut list, map.s * unit_mm);
     let media = sheet.size * k;
     let clip_pt = if fit || matches!(space, Space::Model) {
         Bounds2::new(sheet.printable.min * k, sheet.printable.max * k)
@@ -499,7 +499,7 @@ fn all_links(d: &Drawing, o: &PdfOptions) -> Vec<(Handle, String)> {
 
 /// The link target of `PE_URL` extended data: the first string (group 1000) after
 /// `1001 PE_URL`, before the next application's data.
-fn pe_url(xdata: &[cadcraft_doc::RawTag]) -> Option<String> {
+fn pe_url(xdata: &[drafitra_doc::RawTag]) -> Option<String> {
     let start = xdata.iter().position(|t| t.code == 1001 && t.value.trim().eq_ignore_ascii_case("PE_URL"))?;
     let url = xdata.get(start + 1..)?.iter().take_while(|t| t.code != 1001).find(|t| t.code == 1000)?.value.trim();
     (!url.is_empty() && url.len() <= MAX_URL).then(|| url.to_string())
@@ -507,7 +507,7 @@ fn pe_url(xdata: &[cadcraft_doc::RawTag]) -> Option<String> {
 
 /// Link annotation rectangles: the area (in points) each linked entity covers on the sheet,
 /// clipped to the plot area.
-fn links(list: &cadcraft_render::DisplayList, map: &Map, clip_pt: &Bounds2, links: &[(Handle, String)]) -> Vec<(Bounds2, String)> {
+fn links(list: &drafitra_render::DisplayList, map: &Map, clip_pt: &Bounds2, links: &[(Handle, String)]) -> Vec<(Bounds2, String)> {
     if links.is_empty() {
         return Vec::new();
     }
@@ -596,11 +596,11 @@ fn color(out: &mut String, c: Rgb, op: &str) {
 /// the transparencies used are returned for the page's `/ExtGState` (see [`ext_gstates`]). A
 /// list without transparency writes no graphics states.
 fn content_stream(
-    list: &cadcraft_render::DisplayList,
+    list: &drafitra_render::DisplayList,
     map: &Map,
     clip_pt: &Bounds2,
     layers: &[u32],
-    texts: &std::collections::HashMap<u32, (usize, &cadcraft_render::PlotText)>,
+    texts: &std::collections::HashMap<u32, (usize, &drafitra_render::PlotText)>,
 ) -> (String, Vec<u8>) {
     let marked: std::collections::HashSet<u32> = layers.iter().copied().collect();
     let white = Rgb(255, 255, 255);
@@ -653,7 +653,7 @@ fn content_stream(
             continue;
         }
         // A wipeout's mask always hides what is under it.
-        let t = if p.kind == Kind::Mask { 0 } else { p.transparency.min(cadcraft_render::MAX_TRANSPARENCY) };
+        let t = if p.kind == Kind::Mask { 0 } else { p.transparency.min(drafitra_render::MAX_TRANSPARENCY) };
         if t != alpha {
             flush(&mut c, &mut pending);
             let _ = writeln!(c, "/T{t} gs");
@@ -770,7 +770,7 @@ fn ext_gstates(alphas: &[u8]) -> String {
     let mut out = String::from(" /ExtGState <<");
     for t in alphas {
         let mut a = String::new();
-        num(&mut a, f64::from(100 - u32::from((*t).min(cadcraft_render::MAX_TRANSPARENCY))) / 100.0);
+        num(&mut a, f64::from(100 - u32::from((*t).min(drafitra_render::MAX_TRANSPARENCY))) / 100.0);
         let _ = write!(out, " /T{t} << /Type /ExtGState /CA {a} /ca {a} >>");
     }
     out.push_str(" >>");
@@ -779,7 +779,7 @@ fn ext_gstates(alphas: &[u8]) -> String {
 
 /// Write one glyph as text: opens a text object and sets the font when needed, then places the
 /// glyph with a text matrix (font size 1: the matrix axes are one em).
-fn glyph(c: &mut String, text_font: &mut Option<Option<usize>>, font: usize, t: &cadcraft_render::PlotText, map: &Map) {
+fn glyph(c: &mut String, text_font: &mut Option<Option<usize>>, font: usize, t: &drafitra_render::PlotText, map: &Map) {
     if text_font.is_none() {
         c.push_str("BT\n");
         *text_font = Some(None);
@@ -961,7 +961,7 @@ fn assemble(d: &Drawing, pages: &[SheetPage], fonts: &fonts::Fonts, o: &PdfOptio
     let labels: Vec<String> = pages.iter().enumerate().map(|(i, p)| format!("{i} << /P {} >>", pdf_string(&p.label))).collect();
     let _ = write!(cat, " /PageLabels << /Nums [{}] >> >>", labels.join(" "));
     objs.set(catalog, cat);
-    let info = objs.add(format!("<< /Producer (CADCraft) /Creator (CADCraft) /Title {} >>", pdf_string(title)));
+    let info = objs.add(format!("<< /Producer (Drafitra) /Creator (Drafitra) /Title {} >>", pdf_string(title)));
     let size: usize = objs.bodies.iter().map(Vec::len).sum();
     let mut out: Vec<u8> = Vec::with_capacity(size + 64 * objs.bodies.len() + 256);
     out.extend_from_slice(b"%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");

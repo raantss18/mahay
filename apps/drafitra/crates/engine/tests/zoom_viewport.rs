@@ -1,8 +1,8 @@
 //! ZOOM inside a layout viewport (MSPACE) works on that viewport, as in AutoCAD: Extents and
 //! Window fit the viewport, nX keeps its centre, nXP sets its scale (#370).
 
-use cadcraft_doc::{EntityKind, Viewport};
-use cadcraft_engine::Session;
+use drafitra_doc::{EntityKind, Viewport};
+use drafitra_engine::Session;
 use serde_json::json;
 
 fn viewport(s: &Session, h: &str) -> Viewport {
@@ -37,7 +37,7 @@ fn zoom_inside_a_viewport_acts_on_the_viewport() {
     // Extents fit the viewport (aspect 1.25): 1000 wide needs a view height of 800.
     s.cmdline("zoom e").unwrap();
     let v = viewport(&s, &h);
-    assert!(v.view_center.near(cadcraft_geom::Vec2::new(500.0, 250.0), 1e-6), "{:?}", v.view_center);
+    assert!(v.view_center.near(drafitra_geom::Vec2::new(500.0, 250.0), 1e-6), "{:?}", v.view_center);
     assert!(v.view_height >= 800.0 && v.view_height < 900.0, "{}", v.view_height);
 
     // nX zooms about the viewport centre.
@@ -51,13 +51,13 @@ fn zoom_inside_a_viewport_acts_on_the_viewport() {
         s.cmdline(t).unwrap();
         let v = viewport(&s, &h);
         assert!((v.height / v.view_height - scale).abs() < 1e-12, "{t}: {}", v.height / v.view_height);
-        assert!(v.view_center.near(cadcraft_geom::Vec2::new(500.0, 250.0), 1e-6), "{t}: {:?}", v.view_center);
+        assert!(v.view_center.near(drafitra_geom::Vec2::new(500.0, 250.0), 1e-6), "{t}: {:?}", v.view_center);
     }
 
     // A window fills the viewport: 200 × 100 at aspect 1.25 → height 160.
     s.cmdline("zoom w 400,200 600,300").unwrap();
     let v = viewport(&s, &h);
-    assert!(v.view_center.near(cadcraft_geom::Vec2::new(500.0, 250.0), 1e-6), "{:?}", v.view_center);
+    assert!(v.view_center.near(drafitra_geom::Vec2::new(500.0, 250.0), 1e-6), "{:?}", v.view_center);
     assert!((v.view_height - 160.0).abs() < 1e-9, "{}", v.view_height);
 
     // The JSON form agrees, and the sheet itself never moves.

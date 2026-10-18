@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use harfrust::{Direction, Feature, Tag, UnicodeBuffer};
 use unicode_bidi::{BidiInfo, Level};
 
-use effectcraft_keyframe::{OpenType, text_doc::paragraph_ranges};
+use tselatra_keyframe::{OpenType, text_doc::paragraph_ranges};
 
 use crate::fonts::{self, FaceId, Resolved};
 
@@ -1132,11 +1132,11 @@ mod tests {
         assert_eq!(ids("1234567890", &plain), ids("1234567890", &ot(|o| o.set_stylistic_set(20, true))), "Inter has no ss20");
         assert_ne!(ids("1/2", &plain), ids("1/2", &ot(|o| o.fractions = true)), "frac");
         assert_ne!(ids("1a 2o No", &plain), ids("1a 2o No", &ot(|o| o.ordinals = true)), "ordn");
-        let tab = measure("1111", &ot(|o| o.figure_width = effectcraft_keyframe::FigureWidth::Tabular));
-        let prop = measure("1111", &ot(|o| o.figure_width = effectcraft_keyframe::FigureWidth::Proportional));
+        let tab = measure("1111", &ot(|o| o.figure_width = tselatra_keyframe::FigureWidth::Tabular));
+        let prop = measure("1111", &ot(|o| o.figure_width = tselatra_keyframe::FigureWidth::Proportional));
         assert!((tab - prop).abs() > 1.0, "tabular {tab} vs proportional {prop}");
         // Old-style figures (Noto Serif).
-        let old = TextStyle { opentype: OpenType { figure_style: effectcraft_keyframe::FigureStyle::OldStyle, ..Default::default() }, ..serif() };
+        let old = TextStyle { opentype: OpenType { figure_style: tselatra_keyframe::FigureStyle::OldStyle, ..Default::default() }, ..serif() };
         assert_ne!(ids("123", &serif()), ids("123", &old), "onum");
         // Contextual alternates are on by default; turning them off can only keep or change glyphs.
         let no_calt = ot(|o| o.contextual_alternates = false);
@@ -1431,7 +1431,7 @@ mod tests {
     /// as if they had been set as variations; axes set on the text itself keep their values.
     #[test]
     fn named_instance_sets_the_base_variations() {
-        const FAMILY: &str = "EffectCraft Layout Instance Test";
+        const FAMILY: &str = "Tselatra Layout Instance Test";
         fonts::add_font_data(crate::sfnt::test_font::variable(FAMILY, &[("Light", 300.0, None), ("Black", 900.0, None)], true));
         let st = |style: &str, variations: Vec<(String, f32)>| TextStyle {
             family: FAMILY.into(),

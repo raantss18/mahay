@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use super::{DialogSpec, form};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Text Import Options.
 pub const KIND: &str = "textImport";
@@ -24,11 +24,11 @@ const LABEL: f32 = 104.0;
 /// Is the file `p` names (`path` or `name`) a text file?
 pub fn is_text(p: &Value) -> bool {
     let name = p.get("path").or_else(|| p.get("name")).and_then(Value::as_str).unwrap_or_default();
-    vectorcraft_engine::cmd::fileio::TEXT_EXTS.contains(&vectorcraft_engine::cmd::fileio::extension(name).as_str())
+    tsipika_engine::cmd::fileio::TEXT_EXTS.contains(&tsipika_engine::cmd::fileio::extension(name).as_str())
 }
 
 /// Ask how to place the text file `params` (`file.place` params) names.
-pub fn open(app: &mut VectorcraftApp, params: &Value) -> Value {
+pub fn open(app: &mut TsipikaApp, params: &Value) -> Value {
     let fields = json!({
         "platform": if cfg!(target_os = "macos") { "mac" } else { "windows" },
         "characterSet": "unicode",
@@ -42,7 +42,7 @@ pub fn open(app: &mut VectorcraftApp, params: &Value) -> Value {
     json!({ "dialog": KIND })
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     widgets::subheader(ui, tl!("Encoding"));
     form::choice(ui, d, "platform", tl!("Platform:"), (LABEL, 180.0), &[("windows", "Windows"), ("mac", "Mac")]);
     form::choice(ui, d, "characterSet", tl!("Character Set:"), (LABEL, 180.0), &[("unicode", "Unicode"), ("ansi", "ANSI")]);
@@ -88,7 +88,7 @@ fn options(d: &Dialog) -> Value {
 }
 
 /// Places the file with the options; closes first, so an error shows in the status bar.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut params = d.fields.get("__params").cloned().unwrap_or_else(|| json!({}));
     params["text"] = options(d);
     app.ui.dialog = None;
@@ -98,19 +98,19 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
-    use vectorcraft_engine::doc::NodeKind;
+    use tsipika_engine::Session;
+    use tsipika_engine::doc::NodeKind;
 
-    fn frame(app: &mut VectorcraftApp) -> String {
+    fn frame(app: &mut TsipikaApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
     #[test]
     fn placing_a_text_file_asks_for_the_import_options_then_places_area_type() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let text = b"one\r\ntwo\r\n\r\nthree\r\n";
-        let file = json!({"name": "notes.txt", "dataBase64": vectorcraft_format::base64_encode(text)});
+        let file = json!({"name": "notes.txt", "dataBase64": tsipika_format::base64_encode(text)});
         let r = app.run("file.place", file).unwrap();
         assert_eq!(r["dialog"], KIND);
         let text = frame(&mut app);
@@ -135,7 +135,7 @@ mod tests {
         let r = super::super::confirm(&mut app).unwrap();
         assert!(app.ui.dialog.is_none());
         let st = app.session.doc().unwrap();
-        let n = st.doc.node(vectorcraft_engine::doc::NodeId(r["ids"][0].as_u64().unwrap())).unwrap();
+        let n = st.doc.node(tsipika_engine::doc::NodeId(r["ids"][0].as_u64().unwrap())).unwrap();
         let NodeKind::Text(t) = &n.kind else { panic!("type") };
         assert_eq!(t.plain_text(), "one two\nthree", "one paragraph per block");
         assert_eq!(st.history.undo.len(), 1);

@@ -3,10 +3,10 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Document, Node, NodeKind, TextObject};
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, export, import};
+use tsipika_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::{Appearance, CharStyle, Document, Node, NodeKind, TextObject};
+use tsipika_geom::{Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, export, import};
 
 fn black_to_white() -> GradientPaint {
     GradientPaint::new(Gradient {
@@ -37,7 +37,7 @@ fn attr(svg: &str, tag: &str, name: &str) -> f64 {
 fn gradient_text_spans_its_layout() {
     let st = CharStyle { size: 24.0, fill: Paint::Gradient(Box::new(black_to_white())), ..CharStyle::default() };
     let t = TextObject::point(Point::new(30.0, 100.0), "Gradient", st);
-    let bounds = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t).bounds;
+    let bounds = tsipika_text::layout(tsipika_text::FontDb::global(), &t).bounds;
     let d = doc_with(|d| vec![Node::new(d.alloc_id(), NodeKind::Text(Box::new(t)))]);
     let svg = export(&d, &ExportOptions::default());
     assert!(svg.contains("fill=\"url(#linear-gradient-1)\""), "{svg}");

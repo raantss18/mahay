@@ -2,9 +2,9 @@
 
 use std::sync::{Arc, Once};
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, EffectKind, Node, NodeId, NodeKind, Shadow, TextAutoResize, TextData};
-use figcraft_geom::Affine;
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, EffectKind, Node, NodeId, NodeKind, Shadow, TextAutoResize, TextData};
+use endrika_geom::Affine;
 
 use crate::{Options, Pixmap, Retained, View, Work, render_view, retained::snap};
 
@@ -12,7 +12,7 @@ use crate::{Options, Pixmap, Retained, View, Work, render_view, retained::snap};
 /// mid-test (a font change makes the next render full).
 fn fonts() {
     static ONCE: Once = Once::new();
-    ONCE.call_once(figcraft_text::scan_system_fonts);
+    ONCE.call_once(endrika_text::scan_system_fonts);
 }
 
 struct Scene {
@@ -59,12 +59,12 @@ fn scene(cut_sensitive: bool) -> Scene {
         solid(d.get_mut(inner).unwrap(), "FFFFFF");
         d.get_mut(inner).unwrap().effects.push(Effect::inner_shadow());
         d.get_mut(inner).unwrap().effects.push(Effect {
-            kind: EffectKind::Noise(figcraft_doc::Noise { size: 1.0, density: 0.3, color: Color::BLACK, ..Default::default() }),
+            kind: EffectKind::Noise(endrika_doc::Noise { size: 1.0, density: 0.3, color: Color::BLACK, ..Default::default() }),
             visible: true,
         });
         let glass = d.create(page, NodeKind::Rectangle, "Glass", 120.0, 280.0, 120.0, 40.0).unwrap();
         d.get_mut(glass).unwrap().fills = vec![Paint::solid(Color::new(1.0, 1.0, 1.0, 0.3))];
-        d.get_mut(glass).unwrap().effects.push(Effect { kind: EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(8.0)), visible: true });
+        d.get_mut(glass).unwrap().effects.push(Effect { kind: EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(8.0)), visible: true });
     }
     Scene { doc: Arc::new(d), page, rect, text, frame, child }
 }
@@ -277,7 +277,7 @@ fn overflowing_text_is_drawn_while_its_box_is_out_of_view() {
     td.auto_resize = TextAutoResize::WidthAndHeight;
     td.style.font_size = 16.0;
     let t = d.create(page, NodeKind::Text(td), "T", 100.0, 10.0, 1.0, 20.0).unwrap();
-    let Some((layout, _)) = figcraft_text::layout_node(d.node(t).unwrap()) else { return };
+    let Some((layout, _)) = endrika_text::layout_node(d.node(t).unwrap()) else { return };
     if layout.glyphs.is_empty() || layout.width < 120.0 {
         return; // no fonts on this machine
     }

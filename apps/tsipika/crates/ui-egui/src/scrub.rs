@@ -11,7 +11,7 @@
 
 use egui::{Context, CursorIcon, Id, Key, Rect, Response, Sense, Ui};
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 
 /// Points of horizontal drag per step.
 pub const PX_PER_STEP: f32 = 2.0;
@@ -82,7 +82,7 @@ pub(crate) fn phase(ctx: &Context) -> Phase {
 
 /// Before the panels draw: while a field is scrubbed, the edits its values make are one undo step.
 /// (The drag's first frame applies nothing, so the group is open before its first value.)
-pub(crate) fn begin_frame(app: &mut VectorcraftApp, ctx: &Context) {
+pub(crate) fn begin_frame(app: &mut TsipikaApp, ctx: &Context) {
     if !app.scrub_group && matches!(phase(ctx), Phase::Dragging | Phase::Released) {
         app.session.begin_undo_group();
         app.scrub_group = true;
@@ -90,7 +90,7 @@ pub(crate) fn begin_frame(app: &mut VectorcraftApp, ctx: &Context) {
 }
 
 /// After the panels: a finished drag closes its undo group; Escape undoes it.
-pub(crate) fn end_frame(app: &mut VectorcraftApp, ctx: &Context) {
+pub(crate) fn end_frame(app: &mut TsipikaApp, ctx: &Context) {
     let phase = phase(ctx);
     if !app.scrub_group || phase == Phase::Dragging {
         return;

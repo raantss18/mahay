@@ -1,8 +1,8 @@
-# Target-app parity: CADCraft vs AutoCAD 2027
+# Target-app parity: Drafitra vs AutoCAD 2027
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (Block Editor for static blocks; blocks evidence updated, numbers not re-measured) · **Target:** Autodesk AutoCAD 2027
 
-The authoritative assessment of how close CADCraft is to AutoCAD, and how much Opus 5.5 work
+The authoritative assessment of how close Drafitra is to AutoCAD, and how much Opus 5.5 work
 remains. [ROADMAP.md](../ROADMAP.md) summarises it, [gaps.md](gaps.md) lists every shortfall,
 and the deep checklists are [geometry-parity.md](geometry-parity.md),
 [ui-parity.md](ui-parity.md), [file-format-parity.md](file-format-parity.md),
@@ -54,7 +54,7 @@ mainstream and essentials numbers use multiplicative discounts.
   the running AutoCAD 2027 for Mac) against the command registry.
 - **Behaviour reference:** `plan/autocad/01-observed-ui.md` and local reference screenshots (black
   box, never committed); Autodesk's public command reference.
-- **CADCraft:** the source on `main` at bd2412f (2026-10-10/11), read by four agents in
+- **Drafitra:** the source on `main` at bd2412f (2026-10-10/11), read by four agents in
   parallel: command-by-command option audits (prompts that print "not available yet"), the
   geometry kernel, DXF/DWG paths, interaction code. Plus the 88 GitHub issues and 47 open PRs.
   Disk was nearly full, so nothing was built or run: `cargo xtask parity` was reproduced by a
@@ -95,8 +95,8 @@ area here; it is counted once, as the file-exchange discount.
 | Exchanging files with AutoCAD users | ×0.80 | saves drop unmodelled entities, images, layer states, multileader styles, true colours and more (#79, #201, #204, #208, #209, #213, #223); never checked in AutoCAD; a 10 MB DWG failed (#57) |
 
 **Mainstream practitioner ≈ 45.3% × 0.90 × 0.85 × 0.80 ≈ 28%** (estimated). It is lower than
-ready for real work (≈ 38%) for CADCraft, unlike most apps: the full number credits additively
-what CADCraft does well beyond 2D drafting (platforms 75%, performance 60%, hardware 45%), while
+ready for real work (≈ 38%) for Drafitra, unlike most apps: the full number credits additively
+what Drafitra does well beyond 2D drafting (platforms 75%, performance 60%, hardware 45%), while
 here the three blockers a working drafter hits every day multiply.
 
 **User evidence** (GitHub issues, PRs and comments, excluding maintainers, counted 2026-10-10):
@@ -183,7 +183,7 @@ file compatibility dominate.
 
 ## Remaining effort and how it was calibrated
 
-**Calibration.** The Claude Code transcripts of the session that built CADCraft show its whole
+**Calibration.** The Claude Code transcripts of the session that built Drafitra show its whole
 first version (about 51,000 lines, 290 commands, 47% menu breadth) took **about 11.5 Opus 5.5
 agent-hours**: 6.9 hours of the lead agent (2026-10-07 02:16–09:08 UTC) plus about 4.6 hours of
 eight sub-agents, some in parallel. (Git commit dates were rewritten earlier than that session
@@ -215,7 +215,7 @@ DWG/DXF corpus (files from people who own them); black-box checks in AutoCAD of 
 | Date | Feature breadth | Weighted parity | Remaining | Note |
 |---|---|---|---|---|
 | 2026-10-10 (merge) | unchanged (233/491 re-scanned) | ready ≈ 38% (37.7%), mainstream ≈ 28%, essentials ≈ 46% | unchanged within rounding | main landed dynamic input pointer boxes (#60), the Ukrainian catalog (#36), WIPEOUT/gradient DXF fixes (#147, #162): UI/UX 40% → 43%, localization 3% → 5% |
-| 2026-10-10 (later) | unchanged | ready for real work ≈ 37% (unchanged: already built from the written dimension weights, no hidden judgement); mainstream practitioner ≈ 27%; essentials user ≈ 45% | unchanged | mainstream and essentials numbers added (craftrules standard) |
+| 2026-10-10 (later) | unchanged | ready for real work ≈ 37% (unchanged: already built from the written dimension weights, no hidden judgement); mainstream practitioner ≈ 27%; essentials user ≈ 45% | unchanged | mainstream and essentials numbers added (mahay-rules standard) |
 | 2026-10-10 | 245/491 (50%), engine-only 233/491 | features ≈ 41%, ready for real work ≈ 37% | 1,300–2,100 h | full re-measure in this format (this file) |
 | 2026-10-07 | 233/491 (47%) | ≈ 29% overall, 2D ≈ 55% | ≈ 570 h | old ROADMAP: milestone percentages reported by the building agents |
 

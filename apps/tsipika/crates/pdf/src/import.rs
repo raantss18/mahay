@@ -1,25 +1,25 @@
-//! PDF → Document (hayro-interpret device that builds a VectorCraft node tree).
+//! PDF → Document (hayro-interpret device that builds a Tsipika node tree).
 
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use craft_pdf::interpret::font::Glyph;
-use craft_pdf::interpret::hayro_cmap::BfString;
-use craft_pdf::interpret::pattern::{Pattern, TilingPattern};
-use craft_pdf::interpret::{
+use mahay_pdf::interpret::font::Glyph;
+use mahay_pdf::interpret::hayro_cmap::BfString;
+use mahay_pdf::interpret::pattern::{Pattern, TilingPattern};
+use mahay_pdf::interpret::{
     CacheKey, ClipPath, Context, Device, GlyphDrawMode, Image, ImageData, InterpreterCache, InterpreterSettings, InterpreterWarning, LumaData,
     MaskType, PathDrawMode, SoftMask, StrokeProps,
 };
-use craft_pdf::syntax::object::Name;
-use craft_pdf::syntax::page::Page;
+use mahay_pdf::syntax::object::Name;
+use mahay_pdf::syntax::page::Page;
 use kurbo::{Affine, BezPath, PathEl, Rect, Shape};
-use vectorcraft_color::{BlendMode, Color, Paint, Swatch};
-use vectorcraft_doc::{
+use tsipika_color::{BlendMode, Color, Paint, Swatch};
+use tsipika_doc::{
     Appearance, AppearanceItem, Artboard, ColorMode, Dash, Document, FillLayer, ImageBlob, ImageObject, Knockout, LayerColor, LineCap, LineJoin,
     Node, NodeId, NodeKind, OpacityMask, PatternDef, StrokeLayer,
 };
-use vectorcraft_geom::{FillRule, PathData};
+use tsipika_geom::{FillRule, PathData};
 
 use crate::import_color::{Colors, Native};
 use crate::import_mask::{MaskSpec, contains, is_rectangle, luminance, mask_spec, white_cover};
@@ -177,7 +177,7 @@ pub fn holds_outlines(doc: &Document) -> bool {
 pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportReport, PdfError> {
     // The interpreter draws forms, patterns, glyphs and masks inside one another by recursion, in
     // large stack frames: it caps that (50 deep), and gets room for the cap whatever thread asks.
-    vectorcraft_doc::depth::with_deep_stack(|| read(bytes, opts))
+    tsipika_doc::depth::with_deep_stack(|| read(bytes, opts))
 }
 
 /// [`import_with_report`] on the thread that asks.
@@ -186,11 +186,11 @@ pub(crate) fn read(bytes: &[u8], opts: &ImportOptions) -> Result<ImportReport, P
 }
 
 #[cfg(test)]
-pub(crate) fn import_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &craft_pdf::OpenOptions) -> Result<ImportReport, PdfError> {
-    vectorcraft_doc::depth::with_deep_stack(|| read_with_reader_options(bytes, opts, reader))
+pub(crate) fn import_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &mahay_pdf::OpenOptions) -> Result<ImportReport, PdfError> {
+    tsipika_doc::depth::with_deep_stack(|| read_with_reader_options(bytes, opts, reader))
 }
 
-fn read_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &craft_pdf::OpenOptions) -> Result<ImportReport, PdfError> {
+fn read_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &mahay_pdf::OpenOptions) -> Result<ImportReport, PdfError> {
     let original = crate::pages::open_with_options(bytes, opts.password.as_deref(), reader)?;
     let picked = crate::pages::picked(opts, original.pages().len())?;
     let mut ocgs = Ocgs::read(&original);
@@ -299,7 +299,7 @@ fn read_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &craft_p
             merge_order(&mut order, &mut known, &marked);
         }
         b.begin_page(scan);
-        craft_pdf::interpret_page(page, &mut ctx, &mut b).map_err(|e| PdfError::Parse(e.to_string()))?;
+        mahay_pdf::interpret_page(page, &mut ctx, &mut b).map_err(|e| PdfError::Parse(e.to_string()))?;
         if incomplete.load(Ordering::Relaxed) {
             return Err(crate::import_scan::incomplete_content());
         }
@@ -374,7 +374,7 @@ fn read_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &craft_p
         art_boxes |= crate::pages::states_art(page);
         let mut right = ab.x1;
         if opts.crop == CropTo::Bounding
-            && let Some(art) = vectorcraft_doc::live::nodes_bounds(&children)
+            && let Some(art) = tsipika_doc::live::nodes_bounds(&children)
         {
             right = right.max(art.x1);
             ab = art;
@@ -454,7 +454,7 @@ fn read_with_reader_options(bytes: &[u8], opts: &ImportOptions, reader: &craft_p
     // A file painted mostly in CMYK opens as a CMYK document (with CMYK default swatches).
     if b.colors.cmyk_document() {
         doc.color_mode = ColorMode::Cmyk;
-        let (swatches, groups) = vectorcraft_color::default_swatches(ColorMode::Cmyk.model());
+        let (swatches, groups) = tsipika_color::default_swatches(ColorMode::Cmyk.model());
         (doc.swatches, doc.swatch_groups) = (swatches.into(), groups.into());
     }
     doc.swatches.extend(b.colors.swatches());
@@ -498,20 +498,20 @@ fn drawn_paths<'a>(page: &'a Page<'a>, mut ctx: Context<'a>) -> Option<usize> {
     struct Count(usize);
     impl<'a> Device<'a> for Count {
         fn set_soft_mask(&mut self, _: Option<SoftMask<'a>>) {}
-        fn set_blend_mode(&mut self, _: craft_pdf::interpret::BlendMode) {}
+        fn set_blend_mode(&mut self, _: mahay_pdf::interpret::BlendMode) {}
         // As `Builder::draw_path` takes them: each fill and each stroke.
-        fn draw_path(&mut self, _: &BezPath, _: Affine, _: &craft_pdf::interpret::Paint<'a>, _: &PathDrawMode) {
+        fn draw_path(&mut self, _: &BezPath, _: Affine, _: &mahay_pdf::interpret::Paint<'a>, _: &PathDrawMode) {
             self.0 += 1;
         }
         fn push_clip_path(&mut self, _: &ClipPath) {}
-        fn push_transparency_group(&mut self, _: f32, _: Option<SoftMask<'a>>, _: craft_pdf::interpret::BlendMode) {}
-        fn draw_glyph(&mut self, _: &Glyph<'a>, _: Affine, _: Affine, _: &craft_pdf::interpret::Paint<'a>, _: &GlyphDrawMode) {}
+        fn push_transparency_group(&mut self, _: f32, _: Option<SoftMask<'a>>, _: mahay_pdf::interpret::BlendMode) {}
+        fn draw_glyph(&mut self, _: &Glyph<'a>, _: Affine, _: Affine, _: &mahay_pdf::interpret::Paint<'a>, _: &GlyphDrawMode) {}
         fn draw_image(&mut self, _: Image<'a, '_>, _: Affine) {}
         fn pop_clip_path(&mut self) {}
         fn pop_transparency_group(&mut self) {}
     }
     let mut count = Count(0);
-    craft_pdf::interpret_page(page, &mut ctx, &mut count).ok()?;
+    mahay_pdf::interpret_page(page, &mut ctx, &mut count).ok()?;
     Some(count.0)
 }
 
@@ -521,7 +521,7 @@ fn drawn_paths<'a>(page: &'a Page<'a>, mut ctx: Context<'a>) -> Option<usize> {
 pub(crate) struct CidText {
     /// CID of each glyph.
     cids: Vec<u16>,
-    table: craft_pdf::interpret::hayro_cmap::CMap,
+    table: mahay_pdf::interpret::hayro_cmap::CMap,
 }
 
 impl CidText {
@@ -530,7 +530,7 @@ impl CidText {
         if data.len() > 64 << 20 {
             return None;
         }
-        use craft_pdf::interpret::hayro_cmap::{CMap, CMapName, load_embedded};
+        use mahay_pdf::interpret::hayro_cmap::{CMap, CMapName, load_embedded};
         use skrifa::raw::ps::cff::{CffFontRef, dict, v1::Cff};
         use skrifa::raw::{FontData, FontRead};
         let cff = Cff::read(FontData::new(data)).ok()?;
@@ -552,15 +552,15 @@ impl CidText {
         Some(Self { cids, table })
     }
 
-    fn unicode(&self, glyph: u32) -> Option<craft_pdf::interpret::hayro_cmap::BfString> {
+    fn unicode(&self, glyph: u32) -> Option<mahay_pdf::interpret::hayro_cmap::BfString> {
         let cid = *self.cids.get(glyph as usize)?;
         self.table.lookup_bf_string(u32::from(cid))
     }
 }
 
 /// A ToUnicode value that names no character: U+FFFD alone (#708).
-fn replacement(u: &craft_pdf::interpret::hayro_cmap::BfString) -> bool {
-    use craft_pdf::interpret::hayro_cmap::BfString;
+fn replacement(u: &mahay_pdf::interpret::hayro_cmap::BfString) -> bool {
+    use mahay_pdf::interpret::hayro_cmap::BfString;
     match u {
         BfString::Char(c) => *c == char::REPLACEMENT_CHARACTER,
         BfString::String(s) => !s.is_empty() && s.chars().all(|c| c == char::REPLACEMENT_CHARACTER),
@@ -593,14 +593,14 @@ const KANGXI: &str = "一丨丶丿乙亅二亠人儿入八冂冖冫几凵刀力�
 /// largest difference between their boxes, in thousandths of an em. `None` when they are clearly
 /// different glyphs (or the face lacks the character); `Some(0)` when there is nothing to compare
 /// (several characters, a vertical form, no ink in either).
-fn glyph_deviation(face: &vectorcraft_text::FontFace, text: &str, o: &craft_pdf::interpret::font::OutlineGlyph, vertical: bool) -> Option<f64> {
+fn glyph_deviation(face: &tsipika_text::FontFace, text: &str, o: &mahay_pdf::interpret::font::OutlineGlyph, vertical: bool) -> Option<f64> {
     let Some(c) = comparable(text, vertical) else { return Some(0.0) };
     let gid = face.glyph_for(c);
     if gid == 0 {
         return None;
     }
     let embedded = o.outline();
-    let installed = vectorcraft_text::FontDb::global().outline(face, gid);
+    let installed = tsipika_text::FontDb::global().outline(face, gid);
     match (embedded.elements().is_empty(), installed.elements().is_empty()) {
         (true, true) => Some(0.0),
         (false, false) => {
@@ -621,16 +621,16 @@ fn glyph_deviation(face: &vectorcraft_text::FontFace, text: &str, o: &craft_pdf:
 /// tell its styles apart, draw a character differently in each style). `None`: no style of the
 /// family has that glyph, so the font isn't the installed one.
 fn matching_face(
-    face: &Arc<vectorcraft_text::FontFace>,
+    face: &Arc<tsipika_text::FontFace>,
     text: &str,
-    o: &craft_pdf::interpret::font::OutlineGlyph,
+    o: &mahay_pdf::interpret::font::OutlineGlyph,
     vertical: bool,
-) -> Option<Arc<vectorcraft_text::FontFace>> {
+) -> Option<Arc<tsipika_text::FontFace>> {
     let own = glyph_deviation(face, text, o, vertical);
     if own == Some(0.0) {
         return Some(face.clone());
     }
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     // Other installed versions of its family and style (a font library keeps old ones), then the
     // family's other styles.
     let versions = db.versions(face).into_iter().skip(1).take(16);
@@ -659,14 +659,14 @@ const IDENTIFIABLE: [std::ops::RangeInclusive<u32>; 6] =
 /// font embedded without a character map still carries the font's own outlines, so a glyph whose
 /// subset code names nothing is found this way. `None` when no glyph matches (another version of
 /// the font, or a glyph that is no character), and for empty glyphs, which every space draws.
-pub(crate) fn identify_glyph(face: &vectorcraft_text::FontFace, embedded: &BezPath) -> Option<char> {
+pub(crate) fn identify_glyph(face: &tsipika_text::FontFace, embedded: &BezPath) -> Option<char> {
     if embedded.elements().is_empty() {
         return None;
     }
     let k = 1000.0 / face.units_per_em();
     // Installed outlines are y-down in font units.
     let to_pdf = Affine::new([k, 0.0, 0.0, -k, 0.0, 0.0]);
-    let db = vectorcraft_text::FontDb::global();
+    let db = tsipika_text::FontDb::global();
     IDENTIFIABLE.iter().cloned().flatten().filter_map(char::from_u32).find(|c| {
         let gid = face.glyph_for(*c);
         gid != 0 && same_shape(embedded, &(to_pdf * db.outline(face, gid).as_ref().clone()))
@@ -710,7 +710,7 @@ struct FontInfo {
     family: String,
     style: String,
     /// The installed face of its PostScript name.
-    face: Option<Arc<vectorcraft_text::FontFace>>,
+    face: Option<Arc<tsipika_text::FontFace>>,
 }
 
 /// The page a PDF-compatible `.ai` paints under its layers is the editor's page, not art: an opaque
@@ -852,7 +852,7 @@ struct Builder<'p> {
     font_chars: HashMap<u128, Option<Arc<HashMap<u32, char>>>>,
     /// Font (cache key) → the installed face that draws its glyphs, decided from its first glyph
     /// that can be compared ([`matching_face`]); `None`: its glyphs differ, so it stays outlines.
-    matched: HashMap<u128, Option<Arc<vectorcraft_text::FontFace>>>,
+    matched: HashMap<u128, Option<Arc<tsipika_text::FontFace>>>,
     /// (Font, glyph) → the character its outline matches in the installed face, for glyphs no
     /// mapping names ([`Builder::identified_char`]).
     identified: HashMap<(u128, u32), Option<char>>,
@@ -895,8 +895,8 @@ struct Builder<'p> {
     lines: HashMap<NodeId, LineFacts>,
 }
 
-fn blend(b: craft_pdf::interpret::BlendMode) -> BlendMode {
-    use craft_pdf::interpret::BlendMode as H;
+fn blend(b: mahay_pdf::interpret::BlendMode) -> BlendMode {
+    use mahay_pdf::interpret::BlendMode as H;
     match b {
         H::Normal => BlendMode::Normal,
         H::Multiply => BlendMode::Multiply,
@@ -917,10 +917,10 @@ fn blend(b: craft_pdf::interpret::BlendMode) -> BlendMode {
     }
 }
 
-fn fill_rule(r: craft_pdf::interpret::FillRule) -> FillRule {
+fn fill_rule(r: mahay_pdf::interpret::FillRule) -> FillRule {
     match r {
-        craft_pdf::interpret::FillRule::NonZero => FillRule::NonZero,
-        craft_pdf::interpret::FillRule::EvenOdd => FillRule::EvenOdd,
+        mahay_pdf::interpret::FillRule::NonZero => FillRule::NonZero,
+        mahay_pdf::interpret::FillRule::EvenOdd => FillRule::EvenOdd,
     }
 }
 
@@ -1128,7 +1128,7 @@ impl<'p> Builder<'p> {
         // The interpreter drew another number of paths than the file was read to paint: which
         // of them overprint can't be trusted.
         if self.scan.overprints && self.paint_at != self.scan.paints.len() {
-            children.iter_mut().for_each(vectorcraft_doc::overprint::clear_overprints);
+            children.iter_mut().for_each(tsipika_doc::overprint::clear_overprints);
             self.warn(OVERPRINT_UNREAD);
         }
         let groups = std::mem::take(&mut self.root_groups);
@@ -1370,12 +1370,12 @@ impl<'p> Builder<'p> {
         &mut self,
         path: &BezPath,
         transform: Affine,
-        paint: &craft_pdf::interpret::Paint<'_>,
+        paint: &mahay_pdf::interpret::Paint<'_>,
         draw_mode: &PathDrawMode,
         walked: Option<Walked>,
     ) -> bool {
         let PathDrawMode::Stroke(props) = draw_mode else { return false };
-        if self.mask.is_some() || self.blend != BlendMode::Normal || matches!(paint, craft_pdf::interpret::Paint::Pattern(_)) {
+        if self.mask.is_some() || self.blend != BlendMode::Normal || matches!(paint, mahay_pdf::interpret::Paint::Pattern(_)) {
             return false;
         }
         let (p, opacity) = self.paint(paint, true, walked);
@@ -1401,18 +1401,18 @@ impl<'p> Builder<'p> {
         true
     }
 
-    /// Convert a hayro paint to a VectorCraft paint and opacity (`stroke`: for a stroke; `walked`:
+    /// Convert a hayro paint to a Tsipika paint and opacity (`stroke`: for a stroke; `walked`:
     /// what it paints in the page's walk, which names its ink).
-    fn paint(&mut self, p: &craft_pdf::interpret::Paint<'_>, stroke: bool, walked: Option<Walked>) -> (Paint, f32) {
-        let pattern = matches!(p, craft_pdf::interpret::Paint::Pattern(_));
+    fn paint(&mut self, p: &mahay_pdf::interpret::Paint<'_>, stroke: bool, walked: Option<Walked>) -> (Paint, f32) {
+        let pattern = matches!(p, mahay_pdf::interpret::Paint::Pattern(_));
         let inks = walked.and_then(|w| self.scan.ink(w, stroke, pattern));
         match p {
-            craft_pdf::interpret::Paint::Color(c) => {
+            mahay_pdf::interpret::Paint::Color(c) => {
                 let [r, g, b, a] = c.to_rgba().components();
                 let paint = self.colors.solid(c, inks).map_or_else(|| Paint::solid(Color::rgb(round3(r), round3(g), round3(b))), Native::paint);
                 (paint, a)
             }
-            craft_pdf::interpret::Paint::Pattern(pat) => match pat.as_ref() {
+            mahay_pdf::interpret::Paint::Pattern(pat) => match pat.as_ref() {
                 Pattern::Shading(sp) => match shading_gradient(sp, &mut self.colors, inks) {
                     Some((g, _)) => (Paint::Gradient(Box::new(g)), sp.opacity),
                     None => {
@@ -1536,7 +1536,7 @@ impl<'p> Builder<'p> {
     /// An image's alpha (its soft mask, stencil mask or colour key, at its own resolution) as a
     /// greyscale image over the image's `w` × `h` pixels (`transform`): its opacity mask. `None`
     /// when it masks nothing.
-    fn alpha_mask(&mut self, key: u128, r: &craft_pdf::interpret::RasterImage<'_>, w: u32, h: u32, transform: Affine) -> Option<OpacityMask> {
+    fn alpha_mask(&mut self, key: u128, r: &mahay_pdf::interpret::RasterImage<'_>, w: u32, h: u32, transform: Affine) -> Option<OpacityMask> {
         let mkey = key ^ 0x5_3a5c;
         if self.opaque.contains(&mkey) {
             return None;
@@ -1589,7 +1589,7 @@ impl<'p> Builder<'p> {
 
     /// Mesh shadings filling `region` (document space): gradient meshes, clipped to the region
     /// when they reach past it.
-    fn draw_meshes(&mut self, meshes: Vec<vectorcraft_doc::live::GradientMesh>, region: &BezPath, opacity: f32) {
+    fn draw_meshes(&mut self, meshes: Vec<tsipika_doc::live::GradientMesh>, region: &BezPath, opacity: f32) {
         let nodes: Vec<Arc<Node>> = meshes.into_iter().map(|m| Arc::new(Node::new(self.id(), NodeKind::Mesh(m)))).collect();
         let Some(art) = bounds(&nodes) else { return };
         let mut content = match <[Arc<Node>; 1]>::try_from(nodes) {
@@ -1608,7 +1608,7 @@ impl<'p> Builder<'p> {
     /// name, else the available family its name reads as; whether it is available.
     /// The character of glyph `glyph` of font `key` that no mapping names, found by its outline in
     /// the installed face of the font's name ([`identify_glyph`]); cached per glyph.
-    fn identified_char(&mut self, key: u128, glyph: u32, o: &craft_pdf::interpret::font::OutlineGlyph) -> Option<char> {
+    fn identified_char(&mut self, key: u128, glyph: u32, o: &mahay_pdf::interpret::font::OutlineGlyph) -> Option<char> {
         if let Some(c) = self.identified.get(&(key, glyph)) {
             return *c;
         }
@@ -1617,7 +1617,7 @@ impl<'p> Builder<'p> {
         c
     }
 
-    fn font_name(&mut self, key: u128, o: &craft_pdf::interpret::font::OutlineGlyph) -> FontInfo {
+    fn font_name(&mut self, key: u128, o: &mahay_pdf::interpret::font::OutlineGlyph) -> FontInfo {
         if let Some(n) = self.font_names.get(&key) {
             return n.clone();
         }
@@ -1629,7 +1629,7 @@ impl<'p> Builder<'p> {
             Some((tag, rest)) if tag.len() == 6 && tag.chars().all(|c| c.is_ascii_uppercase()) => rest.to_string(),
             _ => n.to_string(),
         });
-        let installed = ps.as_deref().and_then(|ps| vectorcraft_text::FontDb::global().find_postscript(ps));
+        let installed = ps.as_deref().and_then(|ps| tsipika_text::FontDb::global().find_postscript(ps));
         let n = match (installed, name) {
             (Some(face), _) => FontInfo { family: face.family.clone(), style: face.style.clone(), face: Some(face) },
             (None, Some(name)) => {
@@ -1641,7 +1641,7 @@ impl<'p> Builder<'p> {
                 FontInfo { family, style, face: None }
             }
             (None, None) => {
-                let d = vectorcraft_doc::CharStyle::default();
+                let d = tsipika_doc::CharStyle::default();
                 FontInfo { family: d.font_family, style: d.font_style, face: None }
             }
         };
@@ -1653,10 +1653,10 @@ impl<'p> Builder<'p> {
     /// its outline (no Unicode text, mirrored, or not type mode).
     fn type_glyph(
         &mut self,
-        o: &craft_pdf::interpret::font::OutlineGlyph,
+        o: &mahay_pdf::interpret::font::OutlineGlyph,
         m: Affine,
         scale: f64,
-        paint: &craft_pdf::interpret::Paint<'_>,
+        paint: &mahay_pdf::interpret::Paint<'_>,
         stroke: Option<&StrokeProps>,
         overprint: bool,
     ) -> bool {
@@ -1731,9 +1731,9 @@ impl<'p> Builder<'p> {
         }
         // A version of the family and style that the two alone don't resolve to: the type names it.
         // Kept per font once its face is decided (until then each glyph asks).
-        let named = |f: &Option<Arc<vectorcraft_text::FontFace>>| {
+        let named = |f: &Option<Arc<tsipika_text::FontFace>>| {
             let f = f.as_ref()?;
-            let default = vectorcraft_text::FontDb::global().face(&f.family, &f.style)?;
+            let default = tsipika_text::FontDb::global().face(&f.family, &f.style)?;
             (default.version != f.version).then(|| f.version.clone())
         };
         let version = match self.versions.get(&key) {
@@ -1816,7 +1816,7 @@ impl<'a> Device<'a> for Builder<'_> {
         }
     }
 
-    fn set_blend_mode(&mut self, blend_mode: craft_pdf::interpret::BlendMode) {
+    fn set_blend_mode(&mut self, blend_mode: mahay_pdf::interpret::BlendMode) {
         let b = blend(blend_mode);
         if b != self.blend {
             self.flush_glyphs();
@@ -1825,7 +1825,7 @@ impl<'a> Device<'a> for Builder<'_> {
         }
     }
 
-    fn draw_path(&mut self, path: &BezPath, transform: Affine, paint: &craft_pdf::interpret::Paint<'a>, draw_mode: &PathDrawMode) {
+    fn draw_path(&mut self, path: &BezPath, transform: Affine, paint: &mahay_pdf::interpret::Paint<'a>, draw_mode: &PathDrawMode) {
         self.flush_glyphs();
         let walked = self.walked(false);
         if self.hold_glyph_stroke(path, transform, paint, draw_mode, walked) {
@@ -1841,11 +1841,11 @@ impl<'a> Device<'a> for Builder<'_> {
             return;
         }
         let shading = match paint {
-            craft_pdf::interpret::Paint::Pattern(p) => match p.as_ref() {
+            mahay_pdf::interpret::Paint::Pattern(p) => match p.as_ref() {
                 Pattern::Shading(sp) => Some(sp),
                 Pattern::Tiling(_) => None,
             },
-            craft_pdf::interpret::Paint::Color(_) => None,
+            mahay_pdf::interpret::Paint::Color(_) => None,
         };
         // Patch and triangle meshes are gradient meshes.
         if let (PathDrawMode::Fill(_), Some(sp)) = (draw_mode, shading)
@@ -1939,12 +1939,12 @@ impl<'a> Device<'a> for Builder<'_> {
         // as its bounding box but cuts its corners away (#1542).
         let redundant = clip_path.path.elements().len() <= 6
             && self.page.area() > 0.0
-            && vectorcraft_geom::hit::polygon_covers_rect(&clip_path.path, self.page, 0.01);
+            && tsipika_geom::hit::polygon_covers_rect(&clip_path.path, self.page, 0.01);
         let kind = if redundant { FrameKind::Skip } else { FrameKind::Clip(Box::new(self.clip_node(&clip_path.path, fill_rule(clip_path.fill)))) };
         self.stack.push(Frame::new(kind));
     }
 
-    fn push_transparency_group(&mut self, opacity: f32, mask: Option<SoftMask<'a>>, blend_mode: craft_pdf::interpret::BlendMode) {
+    fn push_transparency_group(&mut self, opacity: f32, mask: Option<SoftMask<'a>>, blend_mode: mahay_pdf::interpret::BlendMode) {
         self.flush();
         let mask = mask.map(|m| self.soft_mask(&m));
         self.stack.push(Frame::new(FrameKind::Group { opacity, blend: blend(blend_mode), mask, isolate: false, knockout: false }));
@@ -1958,7 +1958,7 @@ impl<'a> Device<'a> for Builder<'_> {
         glyph: &Glyph<'a>,
         transform: Affine,
         glyph_transform: Affine,
-        paint: &craft_pdf::interpret::Paint<'a>,
+        paint: &mahay_pdf::interpret::Paint<'a>,
         draw_mode: &GlyphDrawMode,
     ) {
         self.pending = false;
@@ -2014,7 +2014,7 @@ impl<'a> Device<'a> for Builder<'_> {
             Image::Raster(r) => {
                 let white = self.white_images;
                 // Inside an alpha mask the same image is read again, white (its own cache key).
-                let key = craft_pdf::interpret::CacheKey::cache_key(&r) ^ if white { WHITE_KEY } else { 0 };
+                let key = mahay_pdf::interpret::CacheKey::cache_key(&r) ^ if white { WHITE_KEY } else { 0 };
                 let st = r.stream();
                 let (w, h) = (r.width(), r.height());
                 // CMYK images keep their samples (read once per image).
@@ -2040,7 +2040,7 @@ impl<'a> Device<'a> for Builder<'_> {
                 let cs_ok = dict.get::<Name<'_>>(b"ColorSpace").is_some_and(|n| matches!(n.as_ref(), b"DeviceRGB" | b"DeviceGray"));
                 let jpeg = !white
                     && filters.len() == 1
-                    && matches!(filters[0], craft_pdf::syntax::Filter::DctDecode)
+                    && matches!(filters[0], mahay_pdf::syntax::Filter::DctDecode)
                     && cs_ok
                     && !dict.contains_key(b"SMask")
                     && !dict.contains_key(b"Mask")
@@ -2073,13 +2073,13 @@ impl<'a> Device<'a> for Builder<'_> {
             }
             Image::Stencil(s) => {
                 let white = self.white_images;
-                let key = craft_pdf::interpret::CacheKey::cache_key(&s) ^ if white { WHITE_KEY } else { 0 };
+                let key = mahay_pdf::interpret::CacheKey::cache_key(&s) ^ if white { WHITE_KEY } else { 0 };
                 let mut decoded: Option<Decoded> = None;
                 s.with_stencil(
                     |luma, paint| {
                         let rgb = match paint {
                             _ if white => [255, 255, 255, 255],
-                            craft_pdf::interpret::Paint::Color(c) => c.to_rgba().to_rgba8(),
+                            mahay_pdf::interpret::Paint::Color(c) => c.to_rgba().to_rgba8(),
                             _ => [0, 0, 0, 255],
                         };
                         let rgba = luma.data.iter().flat_map(|a| [rgb[0], rgb[1], rgb[2], *a]).collect();

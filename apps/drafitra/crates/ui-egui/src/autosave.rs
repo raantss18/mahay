@@ -1,9 +1,9 @@
 //! Autosave and Drawing Recovery in the app. The engine decides what to write and writes it
-//! ([`cadcraft_engine::autosave`]); this runs it every frame, keeps SAVETIME and SAVEFILEPATH with
+//! ([`drafitra_engine::autosave`]); this runs it every frame, keeps SAVETIME and SAVEFILEPATH with
 //! the preferences, and shows the Drawing Recovery list after a crash: each autosaved drawing can
 //! be opened (as an unsaved copy) or discarded. On the web there is no autosave yet.
 
-use cadcraft_engine::autosave::{self, Recoverable};
+use drafitra_engine::autosave::{self, Recoverable};
 use egui::{RichText, vec2};
 use serde_json::{Value, json};
 
@@ -11,7 +11,7 @@ use crate::CadApp;
 use crate::theme::Tokens;
 
 /// The host storage key for [`prefs_json`].
-pub const PREFS_KEY: &str = "cadcraft.autosave";
+pub const PREFS_KEY: &str = "drafitra.autosave";
 
 /// SAVETIME and SAVEFILEPATH as JSON for the host's storage.
 pub fn prefs_json() -> String {
@@ -141,7 +141,7 @@ pub fn show(app: &mut CadApp, ctx: &egui::Context) {
         ui.set_width(460.0);
         ui.label(RichText::new("Drawing Recovery").strong());
         ui.add_space(4.0);
-        ui.label("CADCraft did not close normally. These drawings were autosaved:");
+        ui.label("Drafitra did not close normally. These drawings were autosaved:");
         ui.add_space(6.0);
         egui::Grid::new("cc_recovery_list").num_columns(4).spacing(vec2(12.0, 6.0)).show(ui, |ui| {
             for (i, item) in app.recovery.items.iter().enumerate() {
@@ -198,10 +198,10 @@ pub fn gpu_notice(app: &mut CadApp, ctx: &egui::Context) {
         .show(ctx, |ui| {
             ui.set_width(440.0);
             if n.fault.lost {
-                ui.label("The graphics device stopped working (a driver reset or a GPU that stopped responding). CADCraft can't draw again until it restarts.");
+                ui.label("The graphics device stopped working (a driver reset or a GPU that stopped responding). Drafitra can't draw again until it restarts.");
             } else {
                 let times = if n.fault.errors == 1 { String::new() } else { format!(" ({} times)", n.fault.errors) };
-                ui.label(format!("The graphics driver reported an error{times}. CADCraft kept running, but the drawing may not display correctly."));
+                ui.label(format!("The graphics driver reported an error{times}. Drafitra kept running, but the drawing may not display correctly."));
             }
             ui.add_space(4.0);
             match n.autosaved {
@@ -209,7 +209,7 @@ pub fn gpu_notice(app: &mut CadApp, ctx: &egui::Context) {
                 1 => ui.label("A recovery copy of the open drawing with unsaved changes was autosaved."),
                 k => ui.label(format!("Recovery copies of {k} drawings with unsaved changes were autosaved.")),
             };
-            ui.label(RichText::new("Save your work and restart CADCraft. Recovery copies are offered at the next start if needed.").strong());
+            ui.label(RichText::new("Save your work and restart Drafitra. Recovery copies are offered at the next start if needed.").strong());
             ui.add_space(4.0);
             ui.collapsing("Details", |ui| {
                 ui.label(RichText::new(&n.fault.message).color(t.text_dim).monospace());

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Endrika
+GenericName=Interface Design Tool
+Comment=Design and prototype user interfaces
+Exec=endrika %U
+TryExec=endrika
+Icon=org.mahay.endrika
+Terminal=false
+StartupNotify=true
+StartupWMClass=org.mahay.endrika
+Categories=Graphics;2DGraphics;VectorGraphics;X-Design;
+Keywords=design;interface;ui;ux;prototype;wireframe;mockup;vector;layout;components;
+MimeType=application/x-endrika;image/svg+xml;image/png;image/jpeg;x-scheme-handler/endrika;

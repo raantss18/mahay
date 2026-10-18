@@ -6,14 +6,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::printpresets::DEFAULT_PRESET;
+use tsipika_engine::Session;
+use tsipika_engine::cmd::printpresets::DEFAULT_PRESET;
 
 use super::print::{KIND, PRESET_KIND, SECTIONS};
 use super::print_presets::{self, Action};
-use crate::{Services, VectorcraftApp, theme};
+use crate::{Services, TsipikaApp, theme};
 
-fn frame(app: &mut VectorcraftApp) {
+fn frame(app: &mut TsipikaApp) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::show(app, ui.ctx()));
@@ -21,28 +21,28 @@ fn frame(app: &mut VectorcraftApp) {
 }
 
 /// Press a manager button on the preset `current`, as the body does.
-fn press(app: &mut VectorcraftApp, act: Action, current: &str) {
+fn press(app: &mut TsipikaApp, act: Action, current: &str) {
     let mut d = app.ui.dialog.take().unwrap();
     print_presets::run(app, &mut d, act, current).unwrap();
     app.ui.dialog = Some(d);
     frame(app);
 }
 
-fn kind(app: &VectorcraftApp) -> Option<&str> {
+fn kind(app: &TsipikaApp) -> Option<&str> {
     app.ui.dialog.as_ref().map(|d| d.kind.as_str())
 }
 
-fn field(app: &VectorcraftApp, k: &str) -> Value {
+fn field(app: &TsipikaApp, k: &str) -> Value {
     app.ui.dialog.as_ref().and_then(|d| d.fields.get(k).cloned()).unwrap_or_default()
 }
 
-fn set(app: &mut VectorcraftApp, k: &str, v: Value) {
+fn set(app: &mut TsipikaApp, k: &str, v: Value) {
     app.ui.dialog.as_mut().expect("a dialog is open").fields.insert(k.into(), v);
 }
 
 #[test]
 fn the_print_dialog_saves_and_loads_presets() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
     app.run("file.print", json!({})).unwrap();
     assert_eq!(field(&app, "preset"), DEFAULT_PRESET, "never set up: [Default]");
@@ -57,7 +57,7 @@ fn the_print_dialog_saves_and_loads_presets() {
     assert_eq!(field(&app, "preset"), "Proofs");
     assert!(field(&app, "__savePresetAs").is_null());
     let saved = &app.session.prefs.print_presets[0].settings;
-    assert_eq!((saved.copies, saved.media), (4, vectorcraft_pdf::Media::A4));
+    assert_eq!((saved.copies, saved.media), (4, tsipika_pdf::Media::A4));
     // Setting `preset` (the list, or an agent) loads that preset's settings.
     set(&mut app, "preset", json!(DEFAULT_PRESET));
     frame(&mut app);
@@ -89,18 +89,18 @@ fn file_print_with_params_prints_a_preset_by_name() {
         w.borrow_mut().push(b.to_vec());
         Ok(())
     };
-    let mut app = VectorcraftApp::new(Session::new(), Services { write: Some(Box::new(write)), ..Default::default() });
+    let mut app = TsipikaApp::new(Session::new(), Services { write: Some(Box::new(write)), ..Default::default() });
     app.run("file.new", json!({"width": 200, "height": 100, "artboards": 4})).unwrap();
     app.run("print.presets.save", json!({"name": "Sheet", "settings": {"artboards": "range", "range": "4"}})).unwrap();
     let r = app.run("file.print", json!({"path": "/tmp/sheet.pdf", "preset": "Sheet"})).unwrap();
     assert_eq!(r["pages"], 1, "{r}");
-    assert_eq!(vectorcraft_pdf::info(&written.borrow()[0], None).unwrap().pages.len(), 1);
+    assert_eq!(tsipika_pdf::info(&written.borrow()[0], None).unwrap().pages.len(), 1);
 }
 
 #[test]
 fn the_manager_adds_edits_and_deletes_presets_through_the_editor() {
     // Edit → Print Presets works without a document too.
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     assert!(crate::menus::menu_entries(&app).iter().any(|e| e.command.as_deref() == Some("ui.printPresetsDialog") && e.enabled));
     app.run("ui.printPresetsDialog", json!({})).unwrap();
     frame(&mut app);
@@ -150,7 +150,7 @@ fn presets_files_import_and_export() {
         write: Some(Box::new(|p: &str, b: &[u8]| std::fs::write(p, b).map_err(|e| e.to_string()))),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("print.presets.save", json!({"name": "Mine", "settings": {"copies": 2}})).unwrap();
     app.run("ui.printPresetsDialog", json!({"selected": "Mine"})).unwrap();
     press(&mut app, Action::Export, "Mine");

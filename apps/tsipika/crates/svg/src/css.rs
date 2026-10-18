@@ -7,11 +7,11 @@
 use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_color::{BlendMode, Color, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{AppearanceItem, CharStyle, Document, Justify, LineCap, LiveShape, Node, NodeId, NodeKind, StrokeAlign, StrokeLayer, TextKind};
-use vectorcraft_effects::RasterFx;
-use vectorcraft_geom::shapes::{self, CornerKind};
-use vectorcraft_geom::{Affine, PathData, Point, Rect};
+use tsipika_color::{BlendMode, Color, GradientKind, GradientPaint, Paint};
+use tsipika_doc::{AppearanceItem, CharStyle, Document, Justify, LineCap, LiveShape, Node, NodeId, NodeKind, StrokeAlign, StrokeLayer, TextKind};
+use tsipika_effects::RasterFx;
+use tsipika_geom::shapes::{self, CornerKind};
+use tsipika_geom::{Affine, PathData, Point, Rect};
 
 use crate::export::sanitize_id;
 use crate::fmt_num;
@@ -75,7 +75,7 @@ pub(crate) fn transparency(n: &Node) -> Props {
 pub(crate) fn font_descriptor(st: &CharStyle) -> (u16, bool) {
     let fs = st.font_style.to_ascii_lowercase();
     let weight =
-        st.font_axes.get("wght").copied().filter(|w| w.is_finite()).unwrap_or_else(|| f64::from(vectorcraft_text::style_weight(&st.font_style)));
+        st.font_axes.get("wght").copied().filter(|w| w.is_finite()).unwrap_or_else(|| f64::from(tsipika_text::style_weight(&st.font_style)));
     (weight.round().clamp(1.0, 1000.0) as u16, fs.contains("italic") || fs.contains("oblique"))
 }
 
@@ -484,7 +484,7 @@ impl Rules<'_> {
     /// A stroke as a border: weight, style (dashed; dotted for round dots) and colour.
     fn border(&mut self, s: &StrokeLayer, bounds: Rect, art: &mut Art) {
         // Aligned strokes still draw as borders; arrowheads, profiles, brushes and fitted dashes don't.
-        if !vectorcraft_effects::stroke::is_plain(&StrokeLayer { align: StrokeAlign::Center, ..s.clone() }) {
+        if !tsipika_effects::stroke::is_plain(&StrokeLayer { align: StrokeAlign::Center, ..s.clone() }) {
             art.unsupported("arrowheads, width profiles, brushes or dashes fitted to corners");
         }
         let style = match &s.dash {
@@ -525,7 +525,7 @@ impl Rules<'_> {
                 let (dir, angle) = if length > 1e-9 {
                     (v / length, v.x.atan2(-v.y).to_degrees().rem_euclid(360.0))
                 } else {
-                    (vectorcraft_geom::Vec2::new(1.0, 0.0), 90.0)
+                    (tsipika_geom::Vec2::new(1.0, 0.0), 90.0)
                 };
                 let line = (b.width() * dir.x).abs() + (b.height() * dir.y).abs();
                 let from = (geom.start - b.center()).dot(dir);
@@ -550,7 +550,7 @@ impl Rules<'_> {
     }
 
     /// Type: its first character style's font, colour and spacing, its paragraph's alignment.
-    fn type_art(&mut self, n: &Node, t: &vectorcraft_doc::TextObject, art: &mut Art) {
+    fn type_art(&mut self, n: &Node, t: &tsipika_doc::TextObject, art: &mut Art) {
         if matches!(t.kind, TextKind::OnPath { .. }) {
             art.unsupported("type on a path");
         }
@@ -598,12 +598,12 @@ impl Rules<'_> {
     /// shadow with Darkness is left out and the art marked unsupported.
     fn effects(&mut self, n: &Node, text: bool, art: &mut Art) {
         let fx = &n.appearance.effects;
-        if fx.iter().any(|e| e.visible && !vectorcraft_effects::is_raster(&e.id)) {
+        if fx.iter().any(|e| e.visible && !tsipika_effects::is_raster(&e.id)) {
             art.unsupported("live effects");
         }
         let mut shadows = vec![];
         let mut filter = None;
-        for f in vectorcraft_effects::raster_effects(fx) {
+        for f in tsipika_effects::raster_effects(fx) {
             match f {
                 RasterFx::DropShadow { darkness: Some(_), .. } => art.unsupported("drop shadows with Darkness"),
                 RasterFx::DropShadow { opacity, dx, dy, blur, color, .. } => {

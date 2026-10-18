@@ -4,9 +4,9 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Paint, Swatch};
-use vectorcraft_doc::{GraphicStyle, Node, NodeId, PatternDef};
-use vectorcraft_geom::{Point, Rect, shapes};
+use tsipika_color::{Paint, Swatch};
+use tsipika_doc::{GraphicStyle, Node, NodeId, PatternDef};
+use tsipika_geom::{Point, Rect, shapes};
 
 use super::*;
 
@@ -20,7 +20,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     s.execute(id, &p).unwrap_or_else(|e| panic!("{id} {p}: {e}"))
 }
 
-fn doc(s: &Session) -> &vectorcraft_doc::Document {
+fn doc(s: &Session) -> &tsipika_doc::Document {
     &s.doc().unwrap().doc
 }
 
@@ -52,7 +52,7 @@ fn builtin_libraries_are_listed_with_original_styles_using_catalogued_effects() 
             let ap = &st.appearance;
             let item_fx = ap.items.iter().flat_map(|i| i.effects());
             for e in ap.effects.iter().chain(item_fx) {
-                assert!(vectorcraft_render::effects::effect_info(&e.id).is_some(), "{id} / {}: unknown effect {}", st.name, e.id);
+                assert!(tsipika_render::effects::effect_info(&e.id).is_some(), "{id} / {}: unknown effect {}", st.name, e.id);
             }
         }
     }
@@ -120,7 +120,7 @@ fn add_with_apply_styles_the_selection_in_the_same_undo_step() {
 /// A document with pattern `name` (a dot) and its swatch.
 fn add_pattern(s: &mut Session, name: &str, radius: f64) {
     s.edit("Pattern", |d, _| {
-        let dot = Node::path(d.alloc_id(), shapes::ellipse(Rect::new(0.0, 0.0, radius, radius)), vectorcraft_doc::Appearance::default_art());
+        let dot = Node::path(d.alloc_id(), shapes::ellipse(Rect::new(0.0, 0.0, radius, radius)), tsipika_doc::Appearance::default_art());
         d.patterns.push(PatternDef { tile: Rect::new(0.0, 0.0, 10.0, 10.0), ..PatternDef::new(name, vec![Arc::new(dot)]) });
         d.swatches.push(Swatch { name: name.into(), paint: pattern(name), global: false, spot: false });
         Ok(())
@@ -207,7 +207,7 @@ fn user_libraries_and_other_documents_styles() {
     let id = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     run(&mut s, "graphicStyle.new", json!({"name": "Poster Look", "id": id.0}));
     let b64 = run(&mut s, "document.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
-    let r = run(&mut s, "graphicStyle.loadLibrary", json!({"dataBase64": b64, "name": "Poster.vectorcraft"}));
+    let r = run(&mut s, "graphicStyle.loadLibrary", json!({"dataBase64": b64, "name": "Poster.tsipika"}));
     assert_eq!(r["name"], "Poster");
     let (_, lib) = cmd::stylelib::library(&s, r["library"].as_str().unwrap()).unwrap();
     assert!(lib.style("Poster Look").is_some_and(|g: &GraphicStyle| g.id == 0));
@@ -217,8 +217,8 @@ fn user_libraries_and_other_documents_styles() {
 #[test]
 fn every_builtin_style_paints_visibly_on_a_rectangle() {
     let mut s = session();
-    let mut renderer = vectorcraft_render::Renderer::new();
-    for b in vectorcraft_doc::style_libs::STYLE_LIBRARIES {
+    let mut renderer = tsipika_render::Renderer::new();
+    for b in tsipika_doc::style_libs::STYLE_LIBRARIES {
         let (_, lib) = cmd::stylelib::library(&s, b.id).unwrap();
         for g in &lib.styles {
             run(&mut s, "file.new", json!({"width": 100, "height": 100}));

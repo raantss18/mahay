@@ -18,13 +18,13 @@
 //! open the Reset variant while an envelope is selected, as the reference app's do.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{EnvelopeKind, NodeKind};
-use vectorcraft_render::effects::WARP_STYLES;
+use tsipika_doc::{EnvelopeKind, NodeKind};
+use tsipika_render::effects::WARP_STYLES;
 
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kinds.
 pub const WARP: &str = "envelopeWarp";
@@ -58,7 +58,7 @@ pub fn opens(id: &str) -> bool {
 }
 
 /// Open the dialog command `id`'s menu item opens, with the selected envelope's values.
-pub fn open(app: &mut VectorcraftApp, id: &str) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, id: &str) -> Result<Value, String> {
     let info = app.session.execute("object.envelope.info", &json!({})).map_err(|e| e.to_string())?;
     let envelope = !info["id"].is_null();
     if matches!(id, RESET_WARP | RESET_MESH) && !envelope {
@@ -205,7 +205,7 @@ fn options_body(ui: &mut egui::Ui, d: &mut Dialog) {
     }
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     match d.kind.as_str() {
         WARP => warp_body(ui, d),
         MESH => mesh_body(ui, d),
@@ -219,7 +219,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (cmd, p, _) = command(d);
     form::commit_preview(app, cmd, p)
 }
@@ -234,9 +234,9 @@ enum Bar {
 
 /// The selected envelope (or the one whose contents are selected), whether its contents are being
 /// edited, and its settings.
-fn bar_of(app: &VectorcraftApp) -> Option<(bool, Bar)> {
+fn bar_of(app: &TsipikaApp) -> Option<(bool, Bar)> {
     let st = app.session.active()?;
-    let env = st.selection.objects.first().and_then(|id| vectorcraft_doc::live::envelope_of(&st.doc, *id))?;
+    let env = st.selection.objects.first().and_then(|id| tsipika_doc::live::envelope_of(&st.doc, *id))?;
     let NodeKind::Envelope { kind, editing, .. } = &env.kind else { return None };
     let bar = match &**kind {
         EnvelopeKind::Warp { style, bend, h, v, horizontal } => {
@@ -252,7 +252,7 @@ fn bar_of(app: &VectorcraftApp) -> Option<(bool, Bar)> {
 /// whose envelope is being edited, is selected: Edit Envelope / Edit Contents; a warp's style,
 /// orientation, bend and distortions, or a mesh's rows and columns; Reset Envelope Shape; and
 /// Envelope Options.
-pub fn control_bar(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+pub fn control_bar(app: &mut TsipikaApp, ui: &mut egui::Ui) {
     let Some((editing, bar)) = bar_of(app) else { return };
     let mut run: Option<(&str, Value)> = None;
     ui.separator();
@@ -318,26 +318,26 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::live::EnvelopeKind;
-    use vectorcraft_doc::{NodeId, NodeKind};
-    use vectorcraft_engine::Session;
+    use tsipika_doc::live::EnvelopeKind;
+    use tsipika_doc::{NodeId, NodeKind};
+    use tsipika_engine::Session;
 
-    fn app_with_rect() -> (VectorcraftApp, NodeId) {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app_with_rect() -> (TsipikaApp, NodeId) {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 100, "y": 100, "width": 200, "height": 100})).unwrap()["id"].as_u64().unwrap();
         app.run("select.all", json!({})).unwrap();
         (app, NodeId(id))
     }
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
     }
 
-    fn envelope(app: &VectorcraftApp) -> (NodeId, vectorcraft_doc::Node) {
+    fn envelope(app: &TsipikaApp) -> (NodeId, tsipika_doc::Node) {
         let st = app.session.doc().unwrap();
         let id = st.selection.objects[0];
         (id, st.doc.node(id).unwrap().clone())
@@ -382,7 +382,7 @@ mod tests {
 
     #[test]
     fn reset_items_take_the_make_items_place_while_an_envelope_is_selected() {
-        let labels = |app: &VectorcraftApp| -> Vec<String> {
+        let labels = |app: &TsipikaApp| -> Vec<String> {
             crate::menus::menu_entries(app)
                 .into_iter()
                 .filter(|e| e.path.last().map(String::as_str) == Some("Envelope Distort"))
@@ -451,7 +451,7 @@ mod tests {
     fn edit_contents_reads_edit_envelope_while_editing() {
         let (mut app, _) = app_with_rect();
         app.run(MAKE_WARP, json!({})).unwrap();
-        let label = |app: &VectorcraftApp| crate::menus::dynamic_label(app, "object.envelope.editContents", "Edit Contents");
+        let label = |app: &TsipikaApp| crate::menus::dynamic_label(app, "object.envelope.editContents", "Edit Contents");
         assert_eq!(label(&app), "Edit Contents");
         app.run("object.envelope.editContents", json!({})).unwrap();
         assert_eq!(label(&app), "Edit Envelope");
@@ -459,7 +459,7 @@ mod tests {
     }
 
     /// One Control bar frame with `events`; the rectangles of its 24 pt icon buttons, left to right.
-    fn bar_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
+    fn bar_frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
         let screen_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1800.0, 600.0)));
         let mut out = ctx.run_ui(egui::RawInput { events, screen_rect, ..Default::default() }, |ui| crate::chrome::control_bar(app, ui));
         out.textures_delta.clear();
@@ -477,7 +477,7 @@ mod tests {
         assert!(bar_of(&app).is_some_and(|(editing, bar)| !editing && matches!(bar, Bar::Warp { ref style, .. } if style == "arch")));
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let click = |app: &mut VectorcraftApp, at: egui::Pos2| {
+        let click = |app: &mut TsipikaApp, at: egui::Pos2| {
             let button =
                 |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
             bar_frame(app, &ctx, vec![egui::Event::PointerMoved(at), button(true)]);

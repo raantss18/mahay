@@ -2,10 +2,10 @@
 //! the art below the group unless Isolate Blending is on (checked against the reference formulas).
 
 use super::*;
-use vectorcraft_color::blend::{blend_rgb, composite};
-use vectorcraft_color::{BlendMode as Blend, Color, Paint};
-use vectorcraft_doc::{Appearance, Knockout, Node};
-use vectorcraft_geom::shapes;
+use tsipika_color::blend::{blend_rgb, composite};
+use tsipika_color::{BlendMode as Blend, Color, Paint};
+use tsipika_doc::{Appearance, Knockout, Node};
+use tsipika_geom::shapes;
 
 /// The backdrop colour (a full-page rectangle) and the blended child's colour.
 const B: [f32; 3] = [0.8, 0.6, 0.2];
@@ -145,7 +145,7 @@ fn a_masked_object_blends_with_the_backdrop() {
         let mut g = group(d, vec![m], 1.0, Blend::Normal, false);
         // A 50% grey mask over the whole group.
         let art = rect(d, Rect::new(0.0, 0.0, 100.0, 100.0), [0.5; 3]);
-        g.extras_mut().mask = Some(Box::new(vectorcraft_doc::OpacityMask::new(art, true)));
+        g.extras_mut().mask = Some(Box::new(tsipika_doc::OpacityMask::new(art, true)));
         g
     });
     assert_near(render(&d).pixel(50, 50), lerp(B, blend_rgb(Blend::Multiply, B, S), 0.5), "masked multiply");
@@ -277,7 +277,7 @@ fn objects_apart(with: impl Fn(usize) -> bool) -> Document {
     let gray = multiply_in(&mut d, Rect::new(220.0, 20.0, 250.0, 50.0), [0.5; 3]);
     let half = group(&mut d, vec![gray], 0.5, Blend::Normal, false);
     let art = group(&mut d, vec![white, half], 1.0, Blend::Normal, false);
-    masked.extras_mut().mask = Some(Box::new(vectorcraft_doc::OpacityMask::new(art, true)));
+    masked.extras_mut().mask = Some(Box::new(tsipika_doc::OpacityMask::new(art, true)));
     objects.push(masked);
     // Object 3 is a knockout group of two Multiply rectangles that overlap.
     let lower = multiply_in(&mut d, Rect::new(10.0, 110.0, 45.0, 160.0), S);
@@ -326,7 +326,7 @@ fn objects_that_copy_their_backdrop_draw_as_they_do_alone() {
     let (all, none) = (objects_apart(|_| true), objects_apart(|_| false));
     let alone: Vec<Document> = (0..9).map(|i| objects_apart(|j| j == i)).collect();
     let (plain, precise) = (RenderOptions::default(), RenderOptions { precise: true, ..Default::default() });
-    let turned = Affine::rotate_about(0.35, vectorcraft_geom::Point::new(150.0, 150.0));
+    let turned = Affine::rotate_about(0.35, tsipika_geom::Point::new(150.0, 150.0));
     let zoomed = Affine::translate((150.0, 150.0)) * Affine::scale(6.0) * Affine::translate((-35.0, -35.0));
     for (what, threads, view, opts, isolate) in [
         ("one thread", 0, Affine::IDENTITY, &plain, false),

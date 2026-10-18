@@ -2,8 +2,8 @@
 //! continues: SETVAR DIM* overrides count, and DIMSCALE 0 falls back to the drawing's DIMSCALE
 //! (issue #364). DIMSPACE's default spacing uses the same scale.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle};
 use serde_json::{Value, json};
 
 fn dim_line_y(s: &Session, h: &Value) -> f64 {

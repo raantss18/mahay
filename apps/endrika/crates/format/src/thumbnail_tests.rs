@@ -1,9 +1,9 @@
-//! Reading the picture a saved file carries: from `.figcraft` and `.fig` archives and image files,
+//! Reading the picture a saved file carries: from `.endrika` and `.fig` archives and image files,
 //! and `None` (never a panic) for missing, damaged, oversized and non-zip input.
 
 use std::io::{Cursor, Write};
 
-use figcraft_doc::Document;
+use endrika_doc::Document;
 
 use crate::thumbnail::{FileKind, MAX_THUMBNAIL_BYTES, MAX_THUMBNAIL_SIDE, decode_thumbnail, file_thumbnail, thumbnail_png};
 
@@ -28,13 +28,13 @@ fn zip(members: &[(&str, &[u8])]) -> Vec<u8> {
 }
 
 fn dir(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("figcraft-thumbnail-tests-{name}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("endrika-thumbnail-tests-{name}-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d
 }
 
 #[test]
-fn a_figcraft_file_gives_its_thumbnail() {
+fn a_endrika_file_gives_its_thumbnail() {
     let thumb = png(40, 20);
     let bytes = crate::save_bytes(&Document::new("File"), Some(&thumb)).unwrap();
     assert_eq!(thumbnail_png(Cursor::new(&bytes)).as_deref(), Some(thumb.as_slice()));
@@ -42,7 +42,7 @@ fn a_figcraft_file_gives_its_thumbnail() {
     assert_eq!((t.width, t.height, t.rgba.len()), (40, 20, 40 * 20 * 4));
     assert_eq!(t.rgba.get(..4), Some([10, 20, 30, 255].as_slice()));
     // And from disk.
-    let path = dir("figcraft").join("a.figcraft");
+    let path = dir("endrika").join("a.endrika");
     std::fs::write(&path, &bytes).unwrap();
     assert_eq!(file_thumbnail(&path, 640), Some(t));
 }
@@ -74,7 +74,7 @@ fn missing_damaged_oversized_and_non_zip_input_give_none() {
     let bytes = crate::save_bytes(&Document::new("File"), None).unwrap();
     assert_eq!(thumbnail_png(Cursor::new(&bytes)), None);
     // Not a zip: bare JSON, an old-style `.fig`, nothing at all.
-    assert_eq!(thumbnail_png(Cursor::new(b"{\"format\":\"figcraft\"}".as_slice())), None);
+    assert_eq!(thumbnail_png(Cursor::new(b"{\"format\":\"endrika\"}".as_slice())), None);
     assert_eq!(thumbnail_png(Cursor::new(b"fig-kiwi\x0f\0\0\0".as_slice())), None);
     assert_eq!(thumbnail_png(Cursor::new(Vec::new())), None);
     // A thumbnail that isn't a picture, or is cut short.
@@ -105,29 +105,29 @@ fn files_on_disk_by_kind() {
     let svg = d.join("icon.svg");
     std::fs::write(&svg, "<svg xmlns='http://www.w3.org/2000/svg'/>").unwrap();
     assert_eq!(file_thumbnail(&svg, 640), None);
-    assert_eq!(file_thumbnail(&d.join("gone.figcraft"), 640), None);
-    // A `.figcraft` that is plain JSON, and one that is junk.
-    let json = d.join("plain.figcraft");
+    assert_eq!(file_thumbnail(&d.join("gone.endrika"), 640), None);
+    // A `.endrika` that is plain JSON, and one that is junk.
+    let json = d.join("plain.endrika");
     std::fs::write(&json, "{}").unwrap();
     assert_eq!(file_thumbnail(&json, 640), None);
     let junk = d.join("junk.fig");
     std::fs::write(&junk, [0xFFu8; 64]).unwrap();
     assert_eq!(file_thumbnail(&junk, 640), None);
     // A folder named like a file.
-    let folder = d.join("folder.figcraft");
+    let folder = d.join("folder.endrika");
     std::fs::create_dir_all(&folder).unwrap();
     assert_eq!(file_thumbnail(&folder, 640), None);
     let kinds: Vec<FileKind> =
-        ["a.figcraft", "a.FIG", "a.svg", "a.jpeg", "a.webp", "a.txt", "noext"].iter().map(|p| FileKind::of(std::path::Path::new(p))).collect();
-    assert_eq!(kinds, [FileKind::FigCraft, FileKind::Fig, FileKind::Svg, FileKind::Image, FileKind::Image, FileKind::Other, FileKind::Other]);
+        ["a.endrika", "a.FIG", "a.svg", "a.jpeg", "a.webp", "a.txt", "noext"].iter().map(|p| FileKind::of(std::path::Path::new(p))).collect();
+    assert_eq!(kinds, [FileKind::Endrika, FileKind::Fig, FileKind::Svg, FileKind::Image, FileKind::Image, FileKind::Other, FileKind::Other]);
 }
 
 /// A document whose first page is `rgb`.
 fn doc_on(rgb: [f32; 3]) -> Document {
     let mut d = Document::new("File");
     let p = d.first_page().unwrap();
-    if let Some(figcraft_doc::NodeKind::Page { background, .. }) = d.node_mut(p).map(|n| &mut n.kind) {
-        *background = figcraft_doc::color::Color { r: rgb[0], g: rgb[1], b: rgb[2], a: 1.0 };
+    if let Some(endrika_doc::NodeKind::Page { background, .. }) = d.node_mut(p).map(|n| &mut n.kind) {
+        *background = endrika_doc::color::Color { r: rgb[0], g: rgb[1], b: rgb[2], a: 1.0 };
     }
     d
 }
@@ -136,7 +136,7 @@ fn doc_on(rgb: [f32; 3]) -> Document {
 fn previews_carry_the_first_pages_colour() {
     use crate::thumbnail::{Preview, archive_preview, file_preview};
     let thumb = png(8, 4);
-    // `.figcraft`: the first page's background from document.json.
+    // `.endrika`: the first page's background from document.json.
     let bytes = crate::save_bytes(&doc_on([0.1, 0.2, 0.3]), Some(&thumb)).unwrap();
     let p = archive_preview(Cursor::new(&bytes), 640);
     assert_eq!(p.page, Some([0.1, 0.2, 0.3, 1.0]));
@@ -166,7 +166,7 @@ fn previews_carry_the_first_pages_colour() {
     assert_eq!(archive_preview(Cursor::new(zip(&[("document.json", doc)])), 640).page, Some([1.0, 0.0, 0.5, 1.0]));
     // Not an archive, or no file at all.
     assert_eq!(archive_preview(Cursor::new(b"junk".to_vec()), 640), Preview::default());
-    assert_eq!(file_preview(std::path::Path::new("/nonexistent/x.figcraft"), 640), Preview::default());
+    assert_eq!(file_preview(std::path::Path::new("/nonexistent/x.endrika"), 640), Preview::default());
     let d = dir("preview");
     let svg = d.join("a.svg");
     std::fs::write(&svg, "<svg/>").unwrap();

@@ -1,8 +1,8 @@
-//! `ClapPlugin`: a loaded CLAP instance behind the safe `soundcraft_dsp::Plugin` trait.
+//! `ClapPlugin`: a loaded CLAP instance behind the safe `feo_dsp::Plugin` trait.
 
 use crate::ffi::{EVENT_CAP, Event, GuiLink, Instance, NotePort, PortBuffers};
 use clap_sys::ext::note_ports::{CLAP_NOTE_DIALECT_CLAP, CLAP_NOTE_DIALECT_MIDI};
-use soundcraft_dsp::{Plugin, PluginEditor, PluginInfo, Transport};
+use feo_dsp::{Plugin, PluginEditor, PluginInfo, Transport};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
@@ -297,7 +297,7 @@ impl Plugin for ClapPlugin {
         Some(Box::new(ClapEditor { link, info: self.info, ids: self.ids.clone() }))
     }
 
-    fn state_reader(&mut self) -> Option<Box<dyn soundcraft_dsp::PluginStateReader>> {
+    fn state_reader(&mut self) -> Option<Box<dyn feo_dsp::PluginStateReader>> {
         let link = self.inst.state_link()?;
         Some(Box::new(move || link.save_state()))
     }

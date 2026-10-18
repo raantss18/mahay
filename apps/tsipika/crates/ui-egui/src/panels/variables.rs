@@ -10,10 +10,10 @@
 
 use egui::Ui;
 use serde_json::json;
-use vectorcraft_doc::{NodeId, NodeKind, VariableKind};
-use vectorcraft_engine::DocState;
+use tsipika_doc::{NodeId, NodeKind, VariableKind};
+use tsipika_engine::DocState;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::widgets;
 
 /// The panel id, as the dock, the Window menu and `window.panel` name it.
@@ -49,7 +49,7 @@ fn bound_objects(st: &DocState, name: &str) -> Vec<u64> {
 }
 
 /// A row click: highlight the row, and select what it drives (its bindings are left alone).
-pub(crate) fn click_row(app: &mut VectorcraftApp, name: &str, bound: &[u64]) {
+pub(crate) fn click_row(app: &mut TsipikaApp, name: &str, bound: &[u64]) {
     app.run("variable.highlight", json!({"variable": name})).ok();
     if !bound.is_empty() {
         app.run("select.set", json!({"ids": bound})).ok();
@@ -57,7 +57,7 @@ pub(crate) fn click_row(app: &mut VectorcraftApp, name: &str, bound: &[u64]) {
 }
 
 /// Select Bound Object: select what the highlighted variable drives; its bindings stay.
-pub(crate) fn select_bound_object(app: &mut VectorcraftApp) {
+pub(crate) fn select_bound_object(app: &mut TsipikaApp) {
     let ids = app.session.active().map(|st| highlighted_row(st).map(|h| bound_objects(st, &h))).unwrap_or_default().unwrap_or_default();
     if !ids.is_empty() {
         app.run("select.set", json!({"ids": ids})).ok();
@@ -78,7 +78,7 @@ struct Picked {
     selection_graph: bool,
 }
 
-fn picked(st: &vectorcraft_engine::DocState) -> Picked {
+fn picked(st: &tsipika_engine::DocState) -> Picked {
     let selected: Vec<u64> = st.selection.objects.iter().map(|i| i.0).collect();
     let selection_bound = selected.iter().any(|id| st.doc.variables.bindings.contains_key(&NodeId(*id)));
     let single_type = matches!(selected.as_slice(), [one] if st.doc.node(NodeId(*one)).is_some_and(|n| matches!(n.kind, NodeKind::Text(_))));
@@ -88,16 +88,16 @@ fn picked(st: &vectorcraft_engine::DocState) -> Picked {
 }
 
 /// Delete Variable: the highlighted variable only (the command's default); the rest stay.
-pub(crate) fn delete_highlighted(app: &mut VectorcraftApp) {
+pub(crate) fn delete_highlighted(app: &mut TsipikaApp) {
     app.run("variable.delete", json!({})).ok();
 }
 
 /// Delete Data Set: the current one only (the command's default); the rest of the rows stay.
-pub(crate) fn delete_active_dataset(app: &mut VectorcraftApp) {
+pub(crate) fn delete_active_dataset(app: &mut TsipikaApp) {
     app.run("dataset.delete", json!({})).ok();
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let Some(st) = app.session.active() else {
         widgets::dim_label(ui, tl!("No document"));
         return;
@@ -253,7 +253,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// The panel's (≡) menu: the same commands as its bars and lists, for the ones that act on one
 /// row rather than on the selection.
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let Some(st) = app.session.active() else { return };
     let vars: Vec<String> = st.doc.variables.variables.iter().map(|v| v.name.clone()).collect();
     let sets: Vec<String> = st.doc.variables.datasets.iter().map(|d| d.name.clone()).collect();
@@ -333,7 +333,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Variables panel: Import Data Sets… opens a file dialog for a comma- or tab-separated file and runs `dataset.import` on the chosen file.
-fn import_datasets(app: &mut VectorcraftApp) {
+fn import_datasets(app: &mut TsipikaApp) {
     let pick = crate::FilePick { filters: vec![("CSV", &["csv", "tsv", "txt"])], ..Default::default() };
     let Some(path) = crate::picks::open(app, &pick) else { return };
     if let Err(e) = app.run("dataset.import", json!({"path": path})) {
@@ -342,7 +342,7 @@ fn import_datasets(app: &mut VectorcraftApp) {
 }
 
 /// Variables panel: Export Data Sets… — pick a path and run `dataset.export`.
-fn export_datasets(app: &mut VectorcraftApp) {
+fn export_datasets(app: &mut TsipikaApp) {
     let pick = crate::FilePick { name: "datasets.csv".into(), filters: vec![("CSV", &["csv"])], ..Default::default() };
     let Some(path) = crate::picks::save(app, &pick) else { return };
     if let Err(e) = app.run("dataset.export", json!({"path": path})) {
@@ -354,8 +354,8 @@ fn export_datasets(app: &mut VectorcraftApp) {
 mod tests {
     use super::*;
 
-    fn app_with_data() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    fn app_with_data() -> TsipikaApp {
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
         let t = app.session.execute("text.create", &json!({"x": 10, "y": 40, "text": "Alice"})).unwrap()["id"].as_u64().unwrap();
         app.session.execute("variable.define", &json!({"name": "Name", "kind": "text"})).unwrap();
@@ -442,7 +442,7 @@ mod tests {
     /// selection lands on what the row drives with the binding intact, and the others remain.
     #[test]
     fn selecting_and_deleting_act_on_the_highlighted_row_only() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
         let a = app.session.execute("text.create", &json!({"x": 10, "y": 40, "text": "Alice"})).unwrap()["id"].as_u64().unwrap();
         let b = app.session.execute("text.create", &json!({"x": 10, "y": 80, "text": "Bob"})).unwrap()["id"].as_u64().unwrap();
@@ -507,7 +507,7 @@ mod tests {
     /// the panel, its menu and the command palette.
     #[test]
     fn window_variables_opens_the_panel() {
-        let app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         let entries = crate::menus::menu_entries(&app);
         let panel = entries
             .iter()

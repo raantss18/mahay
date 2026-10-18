@@ -1,7 +1,7 @@
-use vectorcraft_color::cms::{self, IccProfile, ProfileKind};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::shapes;
+use tsipika_color::cms::{self, IccProfile, ProfileKind};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Node};
+use tsipika_geom::shapes;
 
 use super::jpeg::{self, ColorModel, JpegOptions, Method};
 use super::*;

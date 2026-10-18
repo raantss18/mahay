@@ -5,12 +5,12 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use effectcraft_color::Label;
-use effectcraft_project::{Footage, FootageKind, ItemId, ItemKind, LayerId, LayerSource, build};
-use effectcraft_raster::Image;
-use effectcraft_raster::inpaint::psnr;
-use effectcraft_render::FootageSource;
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_project::{Footage, FootageKind, ItemId, ItemKind, LayerId, LayerSource, build};
+use tselatra_raster::Image;
+use tselatra_raster::inpaint::psnr;
+use tselatra_render::FootageSource;
+use tselatra_time::{FrameRate, Tick};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -172,7 +172,7 @@ fn scopes_read_the_comp_frame() {
     s.execute("comp.new", json!({"width": 64, "height": 48, "frameRate": 25, "duration": 1})).unwrap();
     s.execute("layer.newSolid", json!({"color": "#ff0000"})).unwrap();
     let v = s.execute("scopes.analyze", json!({"scope": "vectorscopeYuv", "size": 101})).unwrap();
-    let st = effectcraft_raster::scopes::ColorStandard::Rec709;
+    let st = tselatra_raster::scopes::ColorStandard::Rec709;
     let [_, cb, cr] = st.ycbcr([1.0, 0.0, 0.0]);
     assert_eq!(v["peaks"][0], json!([((cb + 0.5) * 100.0).round() as u32, ((0.5 - cr) * 100.0).round() as u32]));
     let h = s.execute("scopes.analyze", json!({"scope": "histogram", "standard": "rec601"})).unwrap();
@@ -244,7 +244,7 @@ fn footage_panel_overlay_and_ripple_insert() {
 
 fn bg(x: f32, y: f32) -> [f32; 4] {
     let s = 0.5 + 0.3 * (x * std::f32::consts::TAU / 10.0).sin();
-    let n = effectcraft_raster::hash_noise(((x.floor() as i64).rem_euclid(20) / 4) as u32, ((y as u32) % 20) / 4, 3);
+    let n = tselatra_raster::hash_noise(((x.floor() as i64).rem_euclid(20) / 4) as u32, ((y as u32) % 20) / 4, 3);
     [s, 0.3 + 0.4 * n, 0.6 - 0.3 * s * n, 1.0]
 }
 
@@ -421,7 +421,7 @@ fn shot_frame(f: u32) -> Image {
                         0.15
                     }
                 }
-                _ => effectcraft_raster::hash_noise((fx.floor() as u32) / 4, y / 4, 5),
+                _ => tselatra_raster::hash_noise((fx.floor() as u32) / 4, y / 4, 5),
             };
             let c = match kind {
                 0 => [v, v * 0.6, 0.2],
@@ -483,9 +483,9 @@ fn disc_frame(f: u32) -> Image {
     img
 }
 
-fn iou_with(path_set: &[effectcraft_keyframe::ShapePath], truth: &Image) -> f64 {
-    let paths: Vec<_> = path_set.iter().map(effectcraft_path::to_kurbo).collect();
-    let cov = effectcraft_path::fill_coverage(&paths, &effectcraft_geom::Mat3::IDENTITY, truth.width, truth.height, effectcraft_path::FillRule::EvenOdd);
+fn iou_with(path_set: &[tselatra_keyframe::ShapePath], truth: &Image) -> f64 {
+    let paths: Vec<_> = path_set.iter().map(tselatra_path::to_kurbo).collect();
+    let cov = tselatra_path::fill_coverage(&paths, &tselatra_geom::Mat3::IDENTITY, truth.width, truth.height, tselatra_path::FillRule::EvenOdd);
     let (mut i, mut u) = (0.0, 0.0);
     for (c, p) in cov.data.iter().zip(&truth.data) {
         let (a, b) = (*c >= 0.5, p[3] >= 0.5);
@@ -495,14 +495,14 @@ fn iou_with(path_set: &[effectcraft_keyframe::ShapePath], truth: &Image) -> f64 
     i / u
 }
 
-fn mask_paths(s: &Session, cid: ItemId, lid: LayerId, lt: Tick) -> Vec<effectcraft_keyframe::ShapePath> {
+fn mask_paths(s: &Session, cid: ItemId, lid: LayerId, lt: Tick) -> Vec<tselatra_keyframe::ShapePath> {
     let l = s.project.comp(cid).unwrap().layer(lid).unwrap();
     l.masks()
         .unwrap()
         .groups()
         .filter(|g| g.get("opacity").unwrap().value_at(lt).as_f64() > 0.0)
         .map(|g| match g.get("path").unwrap().value_at(lt) {
-            effectcraft_project::Value::Path(p) => p,
+            tselatra_project::Value::Path(p) => p,
             _ => panic!("path"),
         })
         .collect()

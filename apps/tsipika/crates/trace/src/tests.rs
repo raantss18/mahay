@@ -1,5 +1,5 @@
 use super::*;
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 const BLACK: [u8; 4] = [0, 0, 0, 255];
 const WHITE: [u8; 4] = [255, 255, 255, 255];
@@ -16,7 +16,7 @@ fn disc(size: u32, cx: f64, cy: f64, r: f64) -> Raster {
 }
 
 /// Net filled area (outer contours positive, holes negative).
-fn net_area(p: &vectorcraft_geom::PathData) -> f64 {
+fn net_area(p: &tsipika_geom::PathData) -> f64 {
     p.subpaths.iter().map(|s| s.area()).sum()
 }
 
@@ -507,7 +507,7 @@ fn strokes(fills: bool) -> TraceParams {
 }
 
 /// Endpoints (first and last anchor) of each open subpath of the stroked paths.
-fn stroked(res: &TraceResult) -> Vec<(&TracedPath, &vectorcraft_geom::SubPath)> {
+fn stroked(res: &TraceResult) -> Vec<(&TracedPath, &tsipika_geom::SubPath)> {
     res.paths.iter().filter(|p| p.stroke.is_some()).flat_map(|p| p.path.subpaths.iter().map(move |s| (p, s))).collect()
 }
 
@@ -744,8 +744,8 @@ fn soft(w: u32, h: u32, inside: impl Fn(f64, f64) -> bool) -> Raster {
 }
 
 /// Points along every curve of `p`.
-fn along(p: &vectorcraft_geom::PathData) -> Vec<Point> {
-    use vectorcraft_geom::ParamCurve;
+fn along(p: &tsipika_geom::PathData) -> Vec<Point> {
+    use tsipika_geom::ParamCurve;
     p.subpaths
         .iter()
         .flat_map(|sp| (0..sp.segment_count()).flat_map(move |i| (0..16).map(move |k| sp.segment(i).eval(f64::from(k) / 16.0))))
@@ -761,7 +761,7 @@ fn an_anti_aliased_disc_is_traced_to_a_fraction_of_a_pixel() {
     assert!(off < 0.12, "{off} px off the circle");
     // Smooth all the way round, with a handful of anchors.
     assert!(res.paths[0].path.anchor_count() <= 8, "{} anchors", res.paths[0].path.anchor_count());
-    assert!(res.paths[0].path.subpaths[0].anchors.iter().all(|a| a.kind == vectorcraft_geom::AnchorKind::Smooth));
+    assert!(res.paths[0].path.subpaths[0].anchors.iter().all(|a| a.kind == tsipika_geom::AnchorKind::Smooth));
 }
 
 #[test]
@@ -989,7 +989,7 @@ fn stacked_layers_go_by_lightness_and_leave_ignored_white_alone() {
 }
 
 /// The cubic pieces of a path: (from, handle, handle, to).
-fn pieces_of(p: &vectorcraft_geom::PathData) -> Vec<[Point; 4]> {
+fn pieces_of(p: &tsipika_geom::PathData) -> Vec<[Point; 4]> {
     p.subpaths
         .iter()
         .flat_map(|sp| {

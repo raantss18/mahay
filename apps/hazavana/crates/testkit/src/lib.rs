@@ -2,14 +2,14 @@
 //! refuses it as a normal dependency. Std only, so every crate can use it at no build cost.
 //!
 //! **Skips.** libtest has no "skipped" status and hides the output of passing tests, so a test that
-//! needs a GPU, a corpus file, the craft-fonts faces or a model, and returns early without them,
+//! needs a GPU, a corpus file, the mahay-fonts faces or a model, and returns early without them,
 //! passes silently: "all steps passed" could mean the GPU tests never ran. Such a test calls
 //! [`skip!`] before it returns:
 //!
 //! ```no_run
 //! # let gpu_available = false;
 //! if !gpu_available {
-//!     lightcraft_testkit::skip!(Gpu, "no GPU adapter");
+//!     hazavana_testkit::skip!(Gpu, "no GPU adapter");
 //!     return;
 //! }
 //! ```
@@ -28,16 +28,16 @@ use std::io::Write as _;
 use std::path::Path;
 
 /// The environment variable naming the file skips are appended to (JSON lines).
-pub const SKIP_LOG_ENV: &str = "LIGHTCRAFT_SKIP_LOG";
+pub const SKIP_LOG_ENV: &str = "HAZAVANA_SKIP_LOG";
 
 /// What a skipped test needed and didn't find.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Need {
-    /// A usable GPU adapter (`lightcraft_gpu::available()`).
+    /// A usable GPU adapter (`hazavana_gpu::available()`).
     Gpu,
     /// A file from the gitignored `corpus/` (`cargo xtask corpus --download`) or a private corpus.
     Corpus,
-    /// Faces from craft-fonts, embedded only in builds with `CRAFT_FONTS_DIR`.
+    /// Faces from mahay-fonts, embedded only in builds with `MAHAY_FONTS_DIR`.
     Fonts,
     /// A model file named by an environment variable (SAM 3, YuNet, …).
     Model,
@@ -155,7 +155,7 @@ mod tests {
     #[test]
     fn binary_names_lose_cargos_hash_only() {
         assert_eq!(binary_name("equivalence-0f3a9c2b1d4e5f60"), "equivalence");
-        assert_eq!(binary_name("lightcraft_engine-0f3a9c2b1d4e5f60"), "lightcraft_engine");
+        assert_eq!(binary_name("hazavana_engine-0f3a9c2b1d4e5f60"), "hazavana_engine");
         assert_eq!(binary_name("sparse_corpus"), "sparse_corpus");
         assert_eq!(binary_name("cr3-corpus"), "cr3-corpus");
         assert_eq!(binary_name("-0f3a9c2b1d4e5f60"), "-0f3a9c2b1d4e5f60");
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn appended_lines_accumulate() {
-        let dir = std::env::temp_dir().join(format!("lightcraft-testkit-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hazavana-testkit-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let log = dir.join("skips.jsonl");
         let _ = std::fs::remove_file(&log);
@@ -185,6 +185,6 @@ mod tests {
 
     #[test]
     fn a_missing_log_directory_does_not_fail_the_test() {
-        append(Path::new("/nonexistent-lightcraft-dir/skips.jsonl"), "{}\n");
+        append(Path::new("/nonexistent-hazavana-dir/skips.jsonl"), "{}\n");
     }
 }

@@ -2,7 +2,7 @@
 //! applied in one undo step, and validation that rejects instead of reinterpreting.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
+use tsipika_doc::NodeId;
 
 use super::tests_links::{BLUE, Folder, RED, bounds, image, place, png, write};
 use super::*;
@@ -32,7 +32,7 @@ fn group(s: &mut Session, ids: &[NodeId]) -> NodeId {
 
 fn plain(s: &Session, id: NodeId) -> String {
     match &s.doc().unwrap().doc.node(id).unwrap().kind {
-        vectorcraft_doc::NodeKind::Text(t) => t.plain_text(),
+        tsipika_doc::NodeKind::Text(t) => t.plain_text(),
         _ => panic!("not text"),
     }
 }
@@ -428,16 +428,16 @@ fn the_variables_lock_is_an_undo_step_and_is_saved() {
     assert_eq!(steps(&s), before + 1, "locking locked variables is not a step");
     assert!(s.doc().unwrap().is_dirty());
 
-    let saved = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-    assert!(vectorcraft_format::load(&saved).unwrap().variables.locked, "a document saved locked opens locked");
+    let saved = tsipika_format::save(&s.doc().unwrap().doc, false);
+    assert!(tsipika_format::load(&saved).unwrap().variables.locked, "a document saved locked opens locked");
     let mut v: Value = serde_json::from_slice(&saved).unwrap();
     assert_eq!(v["document"]["variables"]["locked"], true);
     v["document"]["variables"].as_object_mut().unwrap().remove("locked");
-    assert!(!vectorcraft_format::load(&serde_json::to_vec(&v).unwrap()).unwrap().variables.locked, "a file without the key opens unlocked");
+    assert!(!tsipika_format::load(&serde_json::to_vec(&v).unwrap()).unwrap().variables.locked, "a file without the key opens unlocked");
 
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(!s.doc().unwrap().doc.variables.locked, "undo unlocks");
-    let v: Value = serde_json::from_slice(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let v: Value = serde_json::from_slice(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert!(v["document"].get("variables").is_none_or(|v| v.get("locked").is_none()), "unlocked variables write no key: {v}");
     s.execute("edit.redo", &json!({})).unwrap();
     assert!(s.doc().unwrap().doc.variables.locked, "redo locks again");
@@ -1061,7 +1061,7 @@ fn datasets_csv_keeps_line_breaks_in_quoted_cells() {
     s.execute("dataset.import", &json!({"csv": csv})).unwrap();
     let sets = &s.doc().unwrap().doc.variables.datasets;
     assert_eq!(sets.len(), 1);
-    assert_eq!(sets[0].values.get("Name"), Some(&vectorcraft_doc::DataValue::Text(value.into())));
+    assert_eq!(sets[0].values.get("Name"), Some(&tsipika_doc::DataValue::Text(value.into())));
     assert!(s.execute("dataset.import", &json!({"csv": "name,Name\nX,\"open"})).is_err(), "unclosed quote");
 }
 
@@ -1079,7 +1079,7 @@ fn datasets_csv_keeps_spaces_in_quoted_cells() {
     s.execute("dataset.import", &json!({"csv": csv})).unwrap();
     s.execute("dataset.import", &json!({"csv": "name,Name\nB,  typed  \nC,\" quoted \"  \n"})).unwrap();
     let value = |name: &str| s.doc().unwrap().doc.variables.dataset(name).and_then(|d| d.values.get("Name")).cloned();
-    let text_value = |v: &str| Some(vectorcraft_doc::DataValue::Text(v.into()));
+    let text_value = |v: &str| Some(tsipika_doc::DataValue::Text(v.into()));
     assert_eq!(value("A"), text_value("  padded "));
     assert_eq!(value("B"), text_value("typed"));
     assert_eq!(value("C"), text_value(" quoted "));
@@ -1100,11 +1100,11 @@ fn datasets_csv_reads_tab_separated_files() {
     s.execute("dataset.import", &json!({"csv": "name,Title\nC,one\ttwo"})).unwrap();
     s.execute("dataset.import", &json!({"csv": "name\t\"Last, First\"\nD\tSmith, Jo"})).unwrap();
     let value = |name: &str, var: &str| s.doc().unwrap().doc.variables.dataset(name).and_then(|d| d.values.get(var)).cloned();
-    let text_value = |v: &str| Some(vectorcraft_doc::DataValue::Text(v.into()));
+    let text_value = |v: &str| Some(tsipika_doc::DataValue::Text(v.into()));
     assert_eq!(value("A", "Title"), text_value("Two words"));
-    assert_eq!(value("A", "Show"), Some(vectorcraft_doc::DataValue::Visible(true)));
+    assert_eq!(value("A", "Show"), Some(tsipika_doc::DataValue::Visible(true)));
     assert_eq!(value("B", "Title"), text_value("a, b\tc"));
-    assert_eq!(value("B", "Show"), Some(vectorcraft_doc::DataValue::Visible(false)));
+    assert_eq!(value("B", "Show"), Some(tsipika_doc::DataValue::Visible(false)));
     assert_eq!(value("C", "Title"), text_value("one\ttwo"));
     assert_eq!(value("D", "Last, First"), text_value("Smith, Jo"));
     let unclosed = s.execute("dataset.import", &json!({"csv": "name\tTitle\t\"Show\nA\tx\ttrue"})).unwrap_err().to_string();
@@ -1122,7 +1122,7 @@ fn datasets_csv_without_a_name_column_numbers_the_rows() {
     assert_eq!((imp["imported"].as_u64(), imp["updated"].as_u64()), (Some(2), Some(0)));
     assert_eq!(imp["names"], json!(["Data Set 1", "Data Set 3"]));
     let value = |s: &Session, name: &str| s.doc().unwrap().doc.variables.dataset(name).and_then(|d| d.values.get("Title")).cloned();
-    let text_value = |v: &str| Some(vectorcraft_doc::DataValue::Text(v.into()));
+    let text_value = |v: &str| Some(tsipika_doc::DataValue::Text(v.into()));
     assert_eq!(value(&s, "Data Set 1"), text_value("x"));
     assert_eq!(value(&s, "Data Set 2"), text_value("kept"));
     assert_eq!(value(&s, "Data Set 3"), text_value("y"));
@@ -1170,13 +1170,13 @@ fn datasets_csv_header_prefixes_define_variables() {
         ])
     );
     let value = |s: &Session, var: &str| s.doc().unwrap().doc.variables.dataset("A").and_then(|d| d.values.get(var)).cloned();
-    assert_eq!(value(&s, "Shown"), Some(vectorcraft_doc::DataValue::Visible(true)));
-    assert_eq!(value(&s, "Photo"), Some(vectorcraft_doc::DataValue::Image("a.png".into())));
-    assert_eq!(value(&s, "Title"), Some(vectorcraft_doc::DataValue::Text("x".into())));
+    assert_eq!(value(&s, "Shown"), Some(tsipika_doc::DataValue::Visible(true)));
+    assert_eq!(value(&s, "Photo"), Some(tsipika_doc::DataValue::Image("a.png".into())));
+    assert_eq!(value(&s, "Title"), Some(tsipika_doc::DataValue::Text("x".into())));
 
     let again = s.execute("dataset.import", &json!({"csv": "name\t#Shown\t@Photo\tTitle\nA\tfalse\tb.png\ty"})).unwrap();
     assert_eq!((again["updated"].as_u64(), again["defined"].clone()), (Some(1), json!([])));
-    assert_eq!(value(&s, "Shown"), Some(vectorcraft_doc::DataValue::Visible(false)));
+    assert_eq!(value(&s, "Shown"), Some(tsipika_doc::DataValue::Visible(false)));
 
     let error = |s: &mut Session, csv: &str| s.execute("dataset.import", &json!({"csv": csv})).unwrap_err().to_string();
     let other_kind = error(&mut s, "name,New,#Title\nB,n,true");
@@ -1191,7 +1191,7 @@ fn datasets_csv_header_prefixes_define_variables() {
 
     // Each import is one undo step, which takes back the variables it defined with its rows.
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_eq!(value(&s, "Shown"), Some(vectorcraft_doc::DataValue::Visible(true)));
+    assert_eq!(value(&s, "Shown"), Some(tsipika_doc::DataValue::Visible(true)));
     assert_eq!(s.doc().unwrap().doc.variables.variables.len(), 3);
     s.execute("edit.undo", &json!({})).unwrap();
     let vars = &s.doc().unwrap().doc.variables;
@@ -1214,10 +1214,10 @@ fn datasets_csv_exact_names_win_over_prefixes() {
     let imp = s.execute("dataset.import", &json!({"csv": csv})).unwrap();
     assert_eq!((imp["imported"].as_u64(), imp["defined"].clone()), (Some(1), json!([])));
     let value = |var: &str| s.doc().unwrap().doc.variables.dataset("A").and_then(|d| d.values.get(var)).cloned();
-    assert_eq!(value("#Shown"), Some(vectorcraft_doc::DataValue::Text("hello".into())));
-    assert_eq!(value("@Photo"), Some(vectorcraft_doc::DataValue::Visible(true)));
-    assert_eq!(value("%Chart"), Some(vectorcraft_doc::DataValue::Graph(",Q\nX,3".into())));
-    assert_eq!(value("Shown"), Some(vectorcraft_doc::DataValue::Visible(false)));
+    assert_eq!(value("#Shown"), Some(tsipika_doc::DataValue::Text("hello".into())));
+    assert_eq!(value("@Photo"), Some(tsipika_doc::DataValue::Visible(true)));
+    assert_eq!(value("%Chart"), Some(tsipika_doc::DataValue::Graph(",Q\nX,3".into())));
+    assert_eq!(value("Shown"), Some(tsipika_doc::DataValue::Visible(false)));
     assert_eq!(s.doc().unwrap().doc.variables.variables.len(), 4);
 }
 
@@ -1333,9 +1333,9 @@ fn graph_variable_applies_csv_and_captures() {
     s.execute("dataset.new", &json!({"name": "Alt", "values": {name.clone(): ",Sales\nA,10\nB,20"}})).unwrap();
     let v = s.execute("dataset.select", &json!({"name": "Alt"})).unwrap();
     assert_eq!((v["applied"].as_u64(), v["skipped"].as_u64()), (Some(1), Some(0)));
-    let csv = s.doc().unwrap().doc.variable_value(NodeId(id), vectorcraft_doc::VariableKind::Graph).unwrap();
+    let csv = s.doc().unwrap().doc.variable_value(NodeId(id), tsipika_doc::VariableKind::Graph).unwrap();
     match csv {
-        vectorcraft_doc::DataValue::Graph(c) => assert!(c.contains("10") && c.contains("20"), "{c}"),
+        tsipika_doc::DataValue::Graph(c) => assert!(c.contains("10") && c.contains("20"), "{c}"),
         other => panic!("expected graph csv, got {other:?}"),
     }
     // Binding a non-graph is refused.

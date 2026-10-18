@@ -50,7 +50,7 @@ fn halftone_options() {
     let g = node(&s, NodeId(r["id"].as_u64().unwrap()));
     let inks: Vec<String> = g.children().unwrap().iter().map(|c| fill_hex(c)).collect();
     assert_eq!(inks.len(), 2, "{inks:?}");
-    assert!(g.children().unwrap().iter().all(|c| c.blend == vectorcraft_color::BlendMode::Multiply));
+    assert!(g.children().unwrap().iter().all(|c| c.blend == tsipika_color::BlendMode::Multiply));
     // Light art gets no dots; inverted, it does.
     let mut s = session();
     let id = red_rect(&mut s);

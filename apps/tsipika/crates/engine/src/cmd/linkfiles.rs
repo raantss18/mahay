@@ -1,7 +1,7 @@
 //! Looking for the files of linked images and placed documents in a folder the user picks, and its
 //! subfolders (`links.findFiles`, searched on separate threads: [`super::findfiles`]). A file with
 //! a linked file's name, in any letter case, is ranked by what the link saved
-//! ([`vectorcraft_doc::LinkInfo`]): the same file (its size and hash), the same size (when the link
+//! ([`tsipika_doc::LinkInfo`]): the same file (its size and hash), the same size (when the link
 //! saved no hash, or the file is larger than 1 GB and isn't hashed), or the name only.
 
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeKind;
+use tsipika_doc::NodeKind;
 
 use super::findfiles::{self, Limits, Visitor};
 use super::*;
@@ -96,7 +96,7 @@ impl Visitor for LinkFiles {
             if let Some((Some(saved_size), Some(saved_hash))) = self.saved.get(i)
                 && *saved_size == size
                 && size <= MAX_HASHED
-                && hash.get_or_insert_with(|| std::fs::File::open(path).and_then(vectorcraft_doc::links::hash_reader).ok()).as_ref()
+                && hash.get_or_insert_with(|| std::fs::File::open(path).and_then(tsipika_doc::links::hash_reader).ok()).as_ref()
                     == Some(saved_hash)
             {
                 items.push(n + i);

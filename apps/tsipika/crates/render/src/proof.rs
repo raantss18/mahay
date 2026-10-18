@@ -10,7 +10,7 @@
 //!   Registration swatch print their tint on every plate, spot plates included.
 //!   Placed raster images are not separated (limitation).
 //! * **Overprint Preview** (and Separations Preview, which implies it): fills and strokes that
-//!   overprint ([`vectorcraft_doc::FillLayer::overprint`], characters' too) are drawn with
+//!   overprint ([`tsipika_doc::FillLayer::overprint`], characters' too) are drawn with
 //!   Darken, which approximates their inks printing over the inks below: a zero ink lets the
 //!   inks below show through, where a knockout would replace them.
 //!
@@ -21,12 +21,12 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock, Weak};
 
-use vectorcraft_color::cms::{self, Cms, PROCESS_PLATES};
-pub use vectorcraft_color::cms::{Intent, ProofSetup, ProofTarget};
-use vectorcraft_color::{Color, Swatch, SwatchGroup};
-pub use vectorcraft_doc::inks::{Inks, Link, Plate, inks, map_document_colors, map_node_colors, plates, spot_color};
-use vectorcraft_doc::overprint::darken_overprints;
-use vectorcraft_doc::{Document, Node, NodeId, Shared};
+use tsipika_color::cms::{self, Cms, PROCESS_PLATES};
+pub use tsipika_color::cms::{Intent, ProofSetup, ProofTarget};
+use tsipika_color::{Color, Swatch, SwatchGroup};
+pub use tsipika_doc::inks::{Inks, Link, Plate, inks, map_document_colors, map_node_colors, plates, spot_color};
+use tsipika_doc::overprint::darken_overprints;
+use tsipika_doc::{Document, Node, NodeId, Shared};
 
 use crate::RenderOptions;
 

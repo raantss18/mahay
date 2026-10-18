@@ -1,5 +1,5 @@
 use super::*;
-use figcraft_doc::{TextAlignH, TextData, TextDecoration};
+use endrika_doc::{TextAlignH, TextData, TextDecoration};
 
 fn have_fonts() -> bool {
     db().write().unwrap().default_face().is_some() || {
@@ -33,12 +33,12 @@ fn newline_and_wrap() {
         return;
     }
     let mut t = TextData::new("one two three four five six\nseven");
-    t.auto_resize = figcraft_doc::TextAutoResize::Height;
+    t.auto_resize = endrika_doc::TextAutoResize::Height;
     let l = layout(&t, Some(60.0), None);
     assert!(l.lines.len() >= 3, "{}", l.lines.len());
     assert!(l.lines.iter().all(|ln| ln.width <= 60.0 + 1e-6 || ln.glyph_end - ln.glyph_start <= 1));
     // Auto width ignores the box.
-    t.auto_resize = figcraft_doc::TextAutoResize::WidthAndHeight;
+    t.auto_resize = endrika_doc::TextAutoResize::WidthAndHeight;
     assert_eq!(layout(&t, Some(60.0), None).lines.len(), 2);
 }
 
@@ -48,7 +48,7 @@ fn alignment_and_decoration() {
         return;
     }
     let mut t = TextData::new("Hi");
-    t.auto_resize = figcraft_doc::TextAutoResize::None;
+    t.auto_resize = endrika_doc::TextAutoResize::None;
     t.align_h = TextAlignH::Right;
     t.style.decoration = TextDecoration::Underline;
     let l = layout(&t, Some(200.0), None);
@@ -71,10 +71,10 @@ fn empty_and_hostile_inputs() {
     t.style.font_size = f64::NAN;
     t.characters = "x".into();
     let _ = layout(&t, Some(f64::NAN), Some(-1.0));
-    t.runs.push(figcraft_doc::StyleRun { start: 5, end: 2, style: Default::default() });
+    t.runs.push(endrika_doc::StyleRun { start: 5, end: 2, style: Default::default() });
     let _ = layout(&t, None, None);
     let mut emoji = TextData::new("a😀b 漢字 ß");
-    emoji.style.case = figcraft_doc::TextCase::Upper;
+    emoji.style.case = endrika_doc::TextCase::Upper;
     let l = layout(&emoji, None, None);
     assert!(!l.glyphs.is_empty());
 }
@@ -85,7 +85,7 @@ fn truncate() {
         return;
     }
     let mut t = TextData::new("a very long line of text that will not fit at all");
-    t.auto_resize = figcraft_doc::TextAutoResize::Truncate;
+    t.auto_resize = endrika_doc::TextAutoResize::Truncate;
     let l = layout(&t, Some(80.0), Some(16.0));
     assert!(l.truncated);
     assert_eq!(l.lines.len(), 1);
@@ -96,7 +96,7 @@ fn glyph_paths_have_area() {
     if !have_fonts() {
         return;
     }
-    use figcraft_geom::Shape;
+    use endrika_geom::Shape;
     let t = TextData::new("O");
     let l = layout(&t, None, None);
     let p = l.to_path();
@@ -143,7 +143,7 @@ fn small_caps_native_or_synthesised() {
     let mut t = TextData::new("Ab");
     t.style.font_size = 20.0;
     let orig = layout(&t, None, None);
-    t.style.case = figcraft_doc::TextCase::SmallCaps;
+    t.style.case = endrika_doc::TextCase::SmallCaps;
     let sc = layout(&t, None, None);
     let b = |l: &TextLayout| l.glyphs.iter().find(|g| g.char_start == 1).cloned().unwrap();
     let (ob, sb) = (b(&orig), b(&sc));
@@ -161,7 +161,7 @@ fn small_caps_native_or_synthesised() {
 fn title_case_across_runs() {
     let Some(face) = inter() else { return };
     let mut t = TextData::new("hello world");
-    t.style.case = figcraft_doc::TextCase::Title;
+    t.style.case = endrika_doc::TextCase::Title;
     // "hel" bold, "lo world" regular: the word continues across the run boundary.
     t.restyle(0, 3, |s| s.font_style = "Bold".into());
     let l = layout(&t, None, None);
@@ -176,8 +176,8 @@ fn lists_hang_and_number() {
         return;
     }
     let mut t = TextData::new("one two three four five six seven\nb");
-    t.auto_resize = figcraft_doc::TextAutoResize::Height;
-    t.list = figcraft_doc::ListStyle::Bulleted;
+    t.auto_resize = endrika_doc::TextAutoResize::Height;
+    t.list = endrika_doc::ListStyle::Bulleted;
     t.paragraph_indent = 30.0;
     let l = layout(&t, Some(90.0), None);
     assert!(l.lines.len() >= 3);
@@ -196,7 +196,7 @@ fn lists_hang_and_number() {
 
     // Numbered: ten paragraphs, the text column clears "10.".
     let mut n = TextData::new((1..=10).map(|i| format!("p{i}")).collect::<Vec<_>>().join("\n"));
-    n.list = figcraft_doc::ListStyle::Numbered;
+    n.list = endrika_doc::ListStyle::Numbered;
     let l = layout(&n, None, None);
     assert_eq!(l.lines.len(), 10);
     let last = &l.lines[9];
@@ -212,7 +212,7 @@ fn paragraph_indent_first_line_only() {
         return;
     }
     let mut t = TextData::new("aaa bbb ccc ddd eee fff ggg");
-    t.auto_resize = figcraft_doc::TextAutoResize::Height;
+    t.auto_resize = endrika_doc::TextAutoResize::Height;
     t.paragraph_indent = 20.0;
     let l = layout(&t, Some(70.0), None);
     assert!(l.lines.len() >= 2);
@@ -225,7 +225,7 @@ fn paragraph_indent_first_line_only() {
 fn truncate_max_lines_with_ellipsis() {
     let Some(face) = inter() else { return };
     let mut t = TextData::new("first line\nsecond line\nthird line");
-    t.auto_resize = figcraft_doc::TextAutoResize::Truncate;
+    t.auto_resize = endrika_doc::TextAutoResize::Truncate;
     t.max_lines = 2;
     let l = layout(&t, Some(300.0), Some(1000.0));
     assert!(l.truncated);
@@ -233,7 +233,7 @@ fn truncate_max_lines_with_ellipsis() {
     let last = l.glyphs.last().unwrap();
     assert_eq!(last.gid, face.glyph_for('…'));
     // max_lines is ignored unless truncating.
-    t.auto_resize = figcraft_doc::TextAutoResize::None;
+    t.auto_resize = endrika_doc::TextAutoResize::None;
     assert_eq!(layout(&t, Some(300.0), Some(1000.0)).lines.len(), 3);
 }
 
@@ -243,22 +243,22 @@ fn vertical_alignment_in_fixed_box() {
         return;
     }
     let mut t = TextData::new("Hi");
-    t.auto_resize = figcraft_doc::TextAutoResize::None;
-    t.align_v = figcraft_doc::TextAlignV::Bottom;
-    let mut n = figcraft_doc::Node::new(figcraft_doc::NodeId(1), figcraft_doc::NodeKind::Text(t.clone()), "t", 100.0, 100.0);
+    t.auto_resize = endrika_doc::TextAutoResize::None;
+    t.align_v = endrika_doc::TextAlignV::Bottom;
+    let mut n = endrika_doc::Node::new(endrika_doc::NodeId(1), endrika_doc::NodeKind::Text(t.clone()), "t", 100.0, 100.0);
     let (l, dy) = layout_node(&n).unwrap();
     assert!((dy + l.height - 100.0).abs() < 1e-6);
-    t.align_v = figcraft_doc::TextAlignV::Middle;
-    n.kind = figcraft_doc::NodeKind::Text(t.clone());
+    t.align_v = endrika_doc::TextAlignV::Middle;
+    n.kind = endrika_doc::NodeKind::Text(t.clone());
     let (l, dy) = layout_node(&n).unwrap();
     assert!((dy - (100.0 - l.height) / 2.0).abs() < 1e-6);
     // Auto height ignores vertical alignment.
-    t.auto_resize = figcraft_doc::TextAutoResize::Height;
-    n.kind = figcraft_doc::NodeKind::Text(t);
+    t.auto_resize = endrika_doc::TextAutoResize::Height;
+    n.kind = endrika_doc::NodeKind::Text(t);
     assert_eq!(layout_node(&n).unwrap().1, 0.0);
 }
 
-/// A variable font with a usable weight axis, if one is installed (craft-fonts or the system).
+/// A variable font with a usable weight axis, if one is installed (mahay-fonts or the system).
 fn variable_face() -> Option<std::sync::Arc<Face>> {
     if !have_fonts() {
         return None;
@@ -322,7 +322,7 @@ fn static_fonts_have_no_axes() {
     if face.is_variable() {
         return;
     }
-    let mut st = figcraft_doc::TextStyle::default();
+    let mut st = endrika_doc::TextStyle::default();
     st.variations.insert("wght".into(), 900.0);
     assert!(face.axis_values(&st).is_empty());
     assert!(face.coords(&[700.0]).is_empty());
@@ -439,7 +439,7 @@ fn selection_through_text_end_stays_inside_auto_width_box() {
 }
 
 /// The selection rect drawn on line `li` of `l`, if any.
-fn rect_on(l: &TextLayout, rects: &[figcraft_geom::Rect], li: usize) -> Option<figcraft_geom::Rect> {
+fn rect_on(l: &TextLayout, rects: &[endrika_geom::Rect], li: usize) -> Option<endrika_geom::Rect> {
     let top = l.lines.get(li)?.top;
     rects.iter().find(|r| (r.y0 - top).abs() < 1e-6).copied()
 }

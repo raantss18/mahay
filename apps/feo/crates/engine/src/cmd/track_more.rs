@@ -5,9 +5,9 @@ use super::more_util::{activate_playlist, target_playlist, track_key};
 use super::*;
 use crate::cmd;
 use serde_json::json;
-use soundcraft_dsp::Category;
-use soundcraft_model::{AutoParam, AutomationLane, ChannelFormat, Clip, ClipContent, Insert, Route, Session, Track, TrackId, TrackKind};
-use soundcraft_time::Samples;
+use feo_dsp::Category;
+use feo_model::{AutoParam, AutomationLane, ChannelFormat, Clip, ClipContent, Insert, Route, Session, Track, TrackId, TrackKind};
+use feo_time::Samples;
 
 /// Trim automation lives in a lane addressed past the last insert slot, so the mixer ignores it
 /// until it is coalesced into the volume lane.
@@ -15,7 +15,7 @@ pub fn trim_param() -> AutoParam {
     AutoParam::Plugin { slot: u8::MAX, param: "trim".into() }
 }
 
-const PRESET_FORMAT: &str = "soundcraft-track-preset";
+const PRESET_FORMAT: &str = "feo-track-preset";
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -274,9 +274,9 @@ fn load_preset(e: &mut Engine, p: &Value) -> Result<Value> {
     let text = crate::io::read_text(&path)?;
     let v: Value = serde_json::from_str(&text).map_err(|err| EngineError::Io(format!("{path}: {err}")))?;
     if v.get("format").and_then(Value::as_str) != Some(PRESET_FORMAT) {
-        return Err(EngineError::Io(format!("{path}: not a SoundCraft track preset")));
+        return Err(EngineError::Io(format!("{path}: not a Feo track preset")));
     }
-    let mut mixer: soundcraft_model::Mixer =
+    let mut mixer: feo_model::Mixer =
         serde_json::from_value(v.get("mixer").cloned().unwrap_or(Value::Null)).map_err(|err| EngineError::Io(format!("{path}: {err}")))?;
     mixer.sanitize();
     let instrument: Option<Insert> = v.get("instrument").cloned().and_then(|x| serde_json::from_value(x).ok());
@@ -310,7 +310,7 @@ fn bypass_where(e: &mut Engine, p: &Value, pick: fn(usize, Option<Category>) -> 
             .iter()
             .enumerate()
             .filter_map(|(i, x)| x.as_ref().map(|ins| (i, ins)))
-            .filter(|(i, ins)| pick(*i, soundcraft_dsp::plugin_info(&ins.plugin).map(|info| info.category)))
+            .filter(|(i, ins)| pick(*i, feo_dsp::plugin_info(&ins.plugin).map(|info| info.category)))
             .map(|(i, _)| i)
             .collect()
     };

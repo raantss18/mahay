@@ -34,12 +34,12 @@ commands:
   corpus [--download] [--affinity]
                   show where test corpora live; --download fetches PngSuite into corpus/pngsuite,
                   --affinity the pinned public Affinity documents into corpus/affinity
-  bundle          build dist/VectorCraft.app (macOS) with assets/app-icon/vectorcraft.icns
+  bundle          build dist/Tsipika.app (macOS) with assets/app-icon/tsipika.icns
   ico <out.ico> <png>...
                   pack PNGs into a Windows .ico (used by packaging/icons.sh)
   stats [--exact] count tests and lines per crate (--exact: ask the test harness via `-- --list`)
-  web-fonts       copy the craft-fonts faces in crates/text/web-fonts.txt into the web site (the Trunk
-                  post_build hook; a no-op without CRAFT_FONTS_DIR)
+  web-fonts       copy the mahay-fonts faces in crates/text/web-fonts.txt into the web site (the Trunk
+                  post_build hook; a no-op without MAHAY_FONTS_DIR)
 ";
 
 fn main() -> ExitCode {
@@ -209,10 +209,10 @@ fn cmd_ci() -> Result<(), String> {
         (
             "no-bundled-fonts",
             Box::new(|| {
-                // vectorcraft-text as embedders that bring their own fonts build it.
+                // tsipika-text as embedders that bring their own fonts build it.
                 let mut c = cargo();
-                c.args(["test", "-p", "vectorcraft-text", "--no-default-features", "--test", "without_bundled_fonts"]);
-                run(c, "cargo test -p vectorcraft-text --no-default-features --test without_bundled_fonts")
+                c.args(["test", "-p", "tsipika-text", "--no-default-features", "--test", "without_bundled_fonts"]);
+                run(c, "cargo test -p tsipika-text --no-default-features --test without_bundled_fonts")
             }),
         ),
         ("pdf-deps", Box::new(|| pdf_deps::run(&root()))),

@@ -1,6 +1,6 @@
-//! The DXF/DWG file versions CADCraft writes (DXF Reference, HEADER `$ACADVER`).
+//! The DXF/DWG file versions Drafitra writes (DXF Reference, HEADER `$ACADVER`).
 
-/// A file version CADCraft can save: the AutoCAD release that introduced the format. Each format
+/// A file version Drafitra can save: the AutoCAD release that introduced the format. Each format
 /// also serves the releases after it (2018 is still AutoCAD's current format).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Version {
@@ -54,7 +54,7 @@ impl Version {
         Version::ALL.into_iter().find(|v| v.year() == year || v.code().eq_ignore_ascii_case(s))
     }
 
-    /// The version to save a file of `$ACADVER` `code` in: the same version when CADCraft writes
+    /// The version to save a file of `$ACADVER` `code` in: the same version when Drafitra writes
     /// it, else the nearest one it does (R2000 for older files, 2018 for newer ones); `None` when
     /// the code isn't a version code at all.
     pub fn for_acadver(code: &str) -> Option<Version> {
@@ -75,7 +75,7 @@ impl Version {
     }
 
     /// Whether text in this version's DXF is UTF-8 (2007 and later). Older versions keep text in
-    /// the `$DWGCODEPAGE` code page, which CADCraft avoids by escaping non-ASCII as `\U+XXXX`.
+    /// the `$DWGCODEPAGE` code page, which Drafitra avoids by escaping non-ASCII as `\U+XXXX`.
     pub fn utf8(self) -> bool {
         self >= Version::R2007
     }

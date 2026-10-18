@@ -2,8 +2,8 @@
 //! component's instances, checked as web links (never fetched), saved, synced, undoable and in
 //! what agents inspect.
 
-use figcraft_collab::{Change, Prop, Replica};
-use figcraft_doc::NodeId;
+use endrika_collab::{Change, Prop, Replica};
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -127,15 +127,15 @@ fn links_save_sync_and_show_in_inspect() {
     let before = s.doc().unwrap().clone();
     ok(&mut s, "devResource.add", json!({"id": r, "url": "https://example.com/spec", "name": "Spec"}));
     // A change the collaboration layer syncs.
-    let d = figcraft_collab::diff(&Replica::new(before), s.doc().unwrap()).unwrap();
+    let d = endrika_collab::diff(&Replica::new(before), s.doc().unwrap()).unwrap();
     assert!(d.changes.iter().any(|c| matches!(c, Change::Set { id, prop: Prop::DevResources, .. } if *id == r)), "{:?}", d.changes);
     // What agents inspect (MCP get_node / inspect_document).
     let j = crate::inspect::node_json(s.doc().unwrap(), r, 0);
     assert_eq!(j["devResources"], json!([{"name": "Spec", "url": "https://example.com/spec", "index": 0}]));
     // Saved and reopened.
-    let dir = std::env::temp_dir().join(format!("figcraft-devres-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-devres-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("f.figcraft").to_string_lossy().into_owned();
+    let path = dir.join("f.endrika").to_string_lossy().into_owned();
     ok(&mut s, "file.saveAs", json!({"path": path}));
     let mut t = Session::empty();
     ok(&mut t, "file.open", json!({"path": path}));

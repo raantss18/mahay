@@ -3,14 +3,14 @@
 //! `constraints.inspect` and `constraints.dof`, plus the post-command re-solve hook
 //! ([`after_command`]).
 //!
-//! The solver lives in `cadcraft-constraints`; this module turns picks and JSON parameters into
+//! The solver lives in `drafitra-constraints`; this module turns picks and JSON parameters into
 //! constraint references and keeps the drawing's constraints satisfied after edits.
 
 use std::sync::Arc;
 
-use cadcraft_constraints as cs;
-use cadcraft_doc::{Constraint, ConstraintKind as K, DistAxis, Drawing, EntityKind, GeomRef, Handle, Sub};
-use cadcraft_geom::{Line, Vec2};
+use drafitra_constraints as cs;
+use drafitra_doc::{Constraint, ConstraintKind as K, DistAxis, Drawing, EntityKind, GeomRef, Handle, Sub};
+use drafitra_geom::{Line, Vec2};
 use serde_json::{Value, json};
 
 use super::machines::{SelOutcome, SelectPhase};
@@ -155,7 +155,7 @@ fn char_points(kind: &EntityKind) -> Vec<(Sub, Vec2)> {
     match kind {
         EntityKind::Line(l) => vec![(Sub::Start, l.a.xy()), (Sub::End, l.b.xy()), (Sub::Mid, l.a.xy().mid(l.b.xy()))],
         EntityKind::Arc(a) => {
-            let g = cadcraft_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
+            let g = drafitra_geom::Arc::new(a.center.xy(), a.radius, a.start, a.end);
             vec![(Sub::Start, g.start_point()), (Sub::End, g.end_point()), (Sub::Mid, g.mid_point()), (Sub::Center, g.center)]
         }
         EntityKind::Circle(c) => vec![(Sub::Center, c.center.xy())],
@@ -1049,7 +1049,7 @@ fn infer_after(s: &mut Session, before: &Drawing) {
         return;
     }
     let Some(store) = d.space(&space) else { return };
-    let changed = |e: &Arc<cadcraft_doc::Entity>| before.entity(e.handle).is_none_or(|b| !Arc::ptr_eq(b, e) && **b != **e);
+    let changed = |e: &Arc<drafitra_doc::Entity>| before.entity(e.handle).is_none_or(|b| !Arc::ptr_eq(b, e) && **b != **e);
     let placed: Vec<Handle> = store.iter().filter(|e| cs::supported(&e.kind) && changed(e)).map(|e| e.handle).take(MAX_INFER_PLACED + 1).collect();
     if placed.is_empty() || placed.len() > MAX_INFER_PLACED {
         return;
@@ -1087,7 +1087,7 @@ fn infer_after(s: &mut Session, before: &Drawing) {
         if placed.contains(&e.handle) || !cs::supported(&e.kind) || !d.is_visible(e) {
             continue;
         }
-        let b = cadcraft_doc::entity_bounds(d, e, 0).expand(tol);
+        let b = drafitra_doc::entity_bounds(d, e, 0).expand(tol);
         if pts.iter().any(|p| b.contains(*p)) {
             if others.len() < 150 {
                 others.push(e.handle);

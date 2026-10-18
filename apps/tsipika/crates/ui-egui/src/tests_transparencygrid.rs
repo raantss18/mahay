@@ -2,12 +2,12 @@
 //! (M3.88), and the View menu item follows the active document.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, canvas, menus};
+use crate::{TsipikaApp, canvas, menus};
 
 /// Whether one headless canvas frame paints the grid (one mesh textured with its tile).
-fn draws_grid(app: &mut VectorcraftApp) -> bool {
+fn draws_grid(app: &mut TsipikaApp) -> bool {
     let ctx = egui::Context::default();
     let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))), ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| canvas::show(app, ui));
@@ -25,7 +25,7 @@ fn draws_grid(app: &mut VectorcraftApp) -> bool {
 
 #[test]
 fn the_canvas_shows_the_grid_only_for_documents_that_turn_it_on() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
     assert!(!draws_grid(&mut app));

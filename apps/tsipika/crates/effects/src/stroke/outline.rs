@@ -8,9 +8,9 @@
 //!   Outline Stroke effect).
 
 use kurbo::{BezPath, Rect, Shape};
-use vectorcraft_doc::{LineCap, LineJoin, StrokeAlign, StrokeLayer};
-use vectorcraft_geom::{FillRule, PathData};
-use vectorcraft_pathops::BoolOp;
+use tsipika_doc::{LineCap, LineJoin, StrokeAlign, StrokeLayer};
+use tsipika_geom::{FillRule, PathData};
+use tsipika_pathops::BoolOp;
 
 use super::{StrokePieces, aligned_width, is_closed, line_outline, stroke_pieces};
 
@@ -112,10 +112,10 @@ pub fn outline_region(path: &PathData, rule: FillRule, st: &StrokeLayer) -> Path
     let pieces = stroke_pieces(&bp, st);
     let mut parts = vec![line_outline(&pieces.line, st, aligned_width(st, closed), OUTLINE_TOL)];
     parts.extend(pieces.heads.into_iter().map(|h| h.outline));
-    let region = vectorcraft_pathops::stroke_region(&parts);
+    let region = tsipika_pathops::stroke_region(&parts);
     match st.align {
-        StrokeAlign::Inside if closed => vectorcraft_pathops::boolean(&region, FillRule::NonZero, path, rule, BoolOp::Intersect),
-        StrokeAlign::Outside if closed => vectorcraft_pathops::boolean(&region, FillRule::NonZero, path, rule, BoolOp::Difference),
+        StrokeAlign::Inside if closed => tsipika_pathops::boolean(&region, FillRule::NonZero, path, rule, BoolOp::Intersect),
+        StrokeAlign::Outside if closed => tsipika_pathops::boolean(&region, FillRule::NonZero, path, rule, BoolOp::Difference),
         _ => region,
     }
 }

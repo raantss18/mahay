@@ -6,8 +6,8 @@
 //! entity (a closed polyline, circle, ellipse or spline) whose outline clips what it shows
 //! ([`Viewport::clip`], DXF group 340).
 
-use cadcraft_doc::{Drawing, EntityKind, Handle, Space, Viewport, VportConfig, VportTile};
-use cadcraft_geom::{Bounds2, PolyVertex, Vec2};
+use drafitra_doc::{Drawing, EntityKind, Handle, Space, Viewport, VportConfig, VportTile};
+use drafitra_geom::{Bounds2, PolyVertex, Vec2};
 use serde_json::{Value, json};
 
 use super::super::curves::{self, handle_value};
@@ -23,7 +23,7 @@ const MAX_RESTORED: usize = 64;
 
 /// The polygon outline's extents of a closed paper-space entity usable as a clip boundary.
 fn boundary_bounds(k: &EntityKind) -> Option<Bounds2> {
-    cadcraft_render::clip::boundary_polygon(k).map(Bounds2::from_points)
+    drafitra_render::clip::boundary_polygon(k).map(Bounds2::from_points)
 }
 
 /// The next free viewport id (ids are unique across layouts; 1 is a sheet's own view).
@@ -101,7 +101,7 @@ fn check_boundary(cmd: &str, d: &Drawing, space: &Space, h: Handle) -> Result<Bo
     }
     let b = boundary_bounds(&e.kind).ok_or_else(|| bad(cmd, "the object must be a closed polyline, circle, ellipse or spline"))?;
     // The exact extents (the tessellated outline runs just inside curves).
-    let eb = cadcraft_doc::entity_bounds(d, e, 0);
+    let eb = drafitra_doc::entity_bounds(d, e, 0);
     let b = if eb.is_empty() || !eb.min.is_finite() || !eb.max.is_finite() { b } else { b.union(&eb) };
     if b.width() > 1e7 || b.height() > 1e7 {
         return Err(bad(cmd, "the viewport is too large"));
@@ -361,7 +361,7 @@ fn any_viewport_at(s: &Session, at: Vec2) -> Option<Handle> {
 
 /// Is the paper point `at` inside the viewport (its clip outline when clipped)?
 pub(super) fn contains(d: &Drawing, h: Handle, v: &Viewport, at: Vec2) -> bool {
-    match cadcraft_render::viewport_clip(d, h, v) {
+    match drafitra_render::viewport_clip(d, h, v) {
         Some(c) => c.contains(at),
         None => (at.x - v.center.x).abs() <= v.width / 2.0 && (at.y - v.center.y).abs() <= v.height / 2.0,
     }

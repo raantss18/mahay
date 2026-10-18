@@ -1,11 +1,11 @@
-//! FilmCraft's panel chrome and document tabs over the shared docking transactions.
+//! Hetsika's panel chrome and document tabs over the shared docking transactions.
 
-use craft_ui::docking::{Action, DropTarget, Placement, Zone, resolve_drop};
+use mahay_ui::docking::{Action, DropTarget, Placement, Zone, resolve_drop};
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Value, json};
 
 use crate::dock::{self, DockAction, DockNode, Group, PanelKind};
-use crate::{FilmcraftApp, panels};
+use crate::{HetsikaApp, panels};
 
 /// Single source for rendering and hit testing: saved offscreen positions remain
 /// reachable, and every panel has enough room for its chrome.
@@ -21,7 +21,7 @@ fn drag_id() -> egui::Id {
     egui::Id::new("dock-panel-drag")
 }
 
-pub(crate) fn route(app: &mut FilmcraftApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
+pub(crate) fn route(app: &mut HetsikaApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
     if id == "window.dockAction" {
         return Some((|| {
             let value = params.get("action").cloned().ok_or("missing docking action")?;
@@ -85,7 +85,7 @@ pub(crate) fn default_float_rect(screen: Rect) -> [f32; 4] {
     [center.x - 210.0, center.y - 160.0, 420.0, 320.0]
 }
 
-impl FilmcraftApp {
+impl HetsikaApp {
     fn dock_command(&mut self, ctx: &egui::Context, action: Action<PanelKind>) -> Result<(), String> {
         let value = serde_json::to_value(action).map_err(|error| error.to_string())?;
         crate::menus::invoke(self, ctx, "window.dockAction", json!({"action": value})).map(|_| ())
@@ -119,7 +119,7 @@ impl FilmcraftApp {
         Ok(())
     }
 
-    fn commit_dock(&mut self, change: impl FnOnce(&mut craft_ui::docking::Layout<PanelKind>) -> Result<(), String>) -> Result<(), String> {
+    fn commit_dock(&mut self, change: impl FnOnce(&mut mahay_ui::docking::Layout<PanelKind>) -> Result<(), String>) -> Result<(), String> {
         let mut shared = crate::dock_shared::encode(&self.ui.dock, &self.ui.floating)?;
         shared.validate().map_err(|error| error.to_string())?;
         change(&mut shared)?;
@@ -203,7 +203,7 @@ impl FilmcraftApp {
                     self.session
                         .project
                         .item(*id)
-                        .filter(|item| matches!(item.kind, filmcraft_project::ItemKind::Sequence(_)))
+                        .filter(|item| matches!(item.kind, hetsika_project::ItemKind::Sequence(_)))
                         .map(|item| (id.0, item.name.clone()))
                 })
                 .collect(),

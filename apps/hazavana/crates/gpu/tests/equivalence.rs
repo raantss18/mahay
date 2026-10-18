@@ -1,25 +1,25 @@
 //! CPU ↔ GPU equivalence: the same settings rendered by the CPU pipeline (the reference) and by
-//! `lightcraft_gpu::render`, compared in 8-bit sRGB.
+//! `hazavana_gpu::render`, compared in 8-bit sRGB.
 //!
 //! Bounds (documented in `docs/gpu-pipeline.md`): mean |Δ| < 0.5 LSB and max |Δ| ≤ 3 LSB per
 //! channel for every case. Skips (passes with a note) when no GPU adapter exists, e.g. on CI.
 
 use std::sync::Arc;
 
-use lightcraft_develop::{
+use hazavana_develop::{
     BrushStroke, DevelopSettings, Mask, MaskComponent, MaskOp, MaskShape, Process, Spot, Treatment, VignetteStyle, WbMode, Wheel,
 };
-use lightcraft_geom::{Orientation, Point, Rect};
-use lightcraft_pipeline::{Quality, RenderRequest, SourceInfo, StageCache, render};
-use lightcraft_raster::{Rgb32f, Rgba8};
+use hazavana_geom::{Orientation, Point, Rect};
+use hazavana_pipeline::{Quality, RenderRequest, SourceInfo, StageCache, render};
+use hazavana_raster::{Rgb32f, Rgba8};
 
 const MEAN_LSB: f64 = 0.5;
 const MAX_LSB: u8 = 3;
 
 fn gpu() -> bool {
-    let ok = lightcraft_gpu::available();
+    let ok = hazavana_gpu::available();
     if !ok {
-        lightcraft_testkit::skip!(Gpu, "no GPU adapter");
+        hazavana_testkit::skip!(Gpu, "no GPU adapter");
     }
     ok
 }
@@ -30,7 +30,7 @@ fn camera_tone_and_relative_wb() {
         return;
     }
     let src = scene(2, 320, 240);
-    let curve = lightcraft_pipeline::tone::CameraTone::new(std::array::from_fn(|i| {
+    let curve = hazavana_pipeline::tone::CameraTone::new(std::array::from_fn(|i| {
         let x = 0.004 * 1.18f32.powi(i as i32);
         [x, 1.0 - (-2.0 * x).exp()]
     }))
@@ -51,7 +51,7 @@ fn camera_tone_and_relative_wb() {
 }
 
 fn scene(i: usize, w: usize, h: usize) -> Arc<Rgb32f> {
-    Arc::new(lightcraft_scenes::demo_library()[i].render(w, h))
+    Arc::new(hazavana_scenes::demo_library()[i].render(w, h))
 }
 
 /// (mean |Δ|, max |Δ|, share of channels with |Δ| > 1).
@@ -72,7 +72,7 @@ fn diff(a: &Rgba8, b: &Rgba8) -> (f64, u8, f64) {
 
 fn check(name: &str, src: &Arc<Rgb32f>, info: &SourceInfo, s: &DevelopSettings, req: &RenderRequest) -> (f64, u8) {
     let cpu = render(src, info, s, req).image;
-    let gpu = lightcraft_gpu::render(src, info, s, req, None).expect("gpu render");
+    let gpu = hazavana_gpu::render(src, info, s, req, None).expect("gpu render");
     let (mean, max, over) = diff(&cpu, &gpu.image);
     eprintln!("{name:<28} {}x{}  mean {mean:.4}  max {max}  >1: {:.4}%", cpu.width, cpu.height, over * 100.0);
     assert!(mean < MEAN_LSB && max <= MAX_LSB, "{name}: mean {mean:.4} LSB, max {max} LSB");
@@ -133,7 +133,7 @@ fn banded_full_size_render_matches() {
             invert: false,
             shape: MaskShape::Linear { start: Point::new(0.5, 0.0), end: Point::new(0.5, 0.9) },
         }],
-        adjust: lightcraft_develop::LocalAdjustments { exposure: -0.6, ..Default::default() },
+        adjust: hazavana_develop::LocalAdjustments { exposure: -0.6, ..Default::default() },
         ..Default::default()
     }];
     check("banded 3000×2000", &src, &SourceInfo { raw: true, ..Default::default() }, &s, &RenderRequest::fit(w, h));
@@ -159,7 +159,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
             s.mixer.green.lum = 40.0;
         }),
         ("point color", |s| {
-            use lightcraft_develop::PointColor;
+            use hazavana_develop::PointColor;
             s.point_colors = vec![
                 PointColor {
                     lum: 0.62,
@@ -259,7 +259,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
                         invert: false,
                         shape: MaskShape::Linear { start: Point::new(0.5, 0.0), end: Point::new(0.5, 0.6) },
                     }],
-                    adjust: lightcraft_develop::LocalAdjustments { exposure: -0.8, temp: -30.0, saturation: 20.0, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { exposure: -0.8, temp: -30.0, saturation: 20.0, ..Default::default() },
                     ..Default::default()
                 },
                 Mask {
@@ -277,7 +277,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
                             shape: MaskShape::Linear { start: Point::new(0.0, 0.0), end: Point::new(1.0, 1.0) },
                         },
                     ],
-                    adjust: lightcraft_develop::LocalAdjustments {
+                    adjust: hazavana_develop::LocalAdjustments {
                         shadows: 40.0,
                         clarity: 30.0,
                         contrast: 20.0,
@@ -306,7 +306,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
                         invert: false,
                         shape: MaskShape::Brush { strokes: vec![stroke, erase] },
                     }],
-                    adjust: lightcraft_develop::LocalAdjustments { exposure: 0.7, whites: 20.0, blacks: -20.0, dehaze: 30.0, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { exposure: 0.7, whites: 20.0, blacks: -20.0, dehaze: 30.0, ..Default::default() },
                     ..Default::default()
                 },
                 Mask {
@@ -316,7 +316,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
                         invert: false,
                         shape: MaskShape::LuminanceRange { lo: 0.5, hi: 0.8, lo_feather: 0.1, hi_feather: 0.1 },
                     }],
-                    adjust: lightcraft_develop::LocalAdjustments { highlights: -50.0, texture: 30.0, sharpness: 40.0, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { highlights: -50.0, texture: 30.0, sharpness: 40.0, ..Default::default() },
                     ..Default::default()
                 },
                 Mask {
@@ -326,7 +326,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
                         invert: false,
                         shape: MaskShape::ColorRange { samples: vec![[0.6, -0.05, -0.08]], refine: 50.0 },
                     }],
-                    adjust: lightcraft_develop::LocalAdjustments { saturation: 40.0, tint: 20.0, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { saturation: 40.0, tint: 20.0, ..Default::default() },
                     invert: true,
                     ..Default::default()
                 },
@@ -344,17 +344,17 @@ fn cases() -> Vec<(&'static str, Edit)> {
                             shape: MaskShape::Radial { center: Point::new(0.7, 0.2), rx: 0.1, ry: 0.1, angle: 0.0, feather: 30.0, invert: false },
                         },
                     ],
-                    adjust: lightcraft_develop::LocalAdjustments { exposure: -0.5, dehaze: 40.0, amount: 70.0, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { exposure: -0.5, dehaze: 40.0, amount: 70.0, ..Default::default() },
                     ..Default::default()
                 },
                 Mask {
                     components: vec![MaskComponent { name: None, op: MaskOp::Intersect, invert: false, shape: MaskShape::Subject }],
-                    adjust: lightcraft_develop::LocalAdjustments { exposure: 0.5, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { exposure: 0.5, ..Default::default() },
                     ..Default::default()
                 },
                 Mask {
                     components: vec![MaskComponent { name: None, op: MaskOp::Add, invert: true, shape: MaskShape::Background }],
-                    adjust: lightcraft_develop::LocalAdjustments { saturation: -60.0, ..Default::default() },
+                    adjust: hazavana_develop::LocalAdjustments { saturation: -60.0, ..Default::default() },
                     invert: true,
                     ..Default::default()
                 },
@@ -368,7 +368,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
                 adjust,
                 ..Default::default()
             };
-            use lightcraft_develop::LocalAdjustments as L;
+            use hazavana_develop::LocalAdjustments as L;
             s.masks = vec![
                 m(radial, L { noise: 80.0, moire: 60.0, defringe: 100.0, ..Default::default() }),
                 m(linear, L { noise: -60.0, moire: -40.0, ..Default::default() }),
@@ -391,7 +391,7 @@ fn cases() -> Vec<(&'static str, Edit)> {
             ];
             s.masks = vec![Mask {
                 components: vec![MaskComponent { name: None, op: MaskOp::Add, invert: false, shape: MaskShape::Brush { strokes } }],
-                adjust: lightcraft_develop::LocalAdjustments { exposure: 1.0, saturation: -50.0, ..Default::default() },
+                adjust: hazavana_develop::LocalAdjustments { exposure: 1.0, saturation: -50.0, ..Default::default() },
                 ..Default::default()
             }];
         }),
@@ -437,8 +437,8 @@ fn clipped_highlights_stay_neutral_on_both() {
         return;
     }
     let wb = [2.4f32, 1.0, 1.6];
-    let look = lightcraft_color::Mat3([[0.42, 0.548, 0.04], [0.246, 0.728, 0.033], [-0.247, 0.679, 0.447]]);
-    let luma = |c: [f64; 3]| (0..3).map(|i| c[i] * f64::from(lightcraft_color::LUMA_2020[i])).sum::<f64>();
+    let look = hazavana_color::Mat3([[0.42, 0.548, 0.04], [0.246, 0.728, 0.033], [-0.247, 0.679, 0.447]]);
+    let luma = |c: [f64; 3]| (0..3).map(|i| c[i] * f64::from(hazavana_color::LUMA_2020[i])).sum::<f64>();
     let n = look.inverse().unwrap().apply([1.0; 3]);
     let white = n.map(|v| (v * luma(look.apply([1.0; 3])) / luma(look.apply(n))) as f32);
     // a grey wall with a fully clipped light, a light clipped in green only, and a dark bar with a purple fringe
@@ -457,7 +457,7 @@ fn clipped_highlights_stay_neutral_on_both() {
             [0.3 / wb[0], 0.3, 0.3 / wb[2]]
         }
     });
-    lightcraft_raw::highlight::reconstruct_with(&mut cam, wb, 0.99, white);
+    hazavana_raw::highlight::reconstruct_with(&mut cam, wb, 0.99, white);
     let m = look.to_f32();
     let src = Arc::new(cam.map(|p| {
         let c = [p[0] * wb[0], p[1] * wb[1], p[2] * wb[2]];
@@ -473,7 +473,7 @@ fn clipped_highlights_stay_neutral_on_both() {
     for (name, s) in [("clipped highlights -100", h100), ("clipped highlights #523", issue)] {
         check(name, &src, &info, &s, &req);
         let cpu = render(&src, &info, &s, &req).image;
-        let gpu = lightcraft_gpu::render(&src, &info, &s, &req, None).expect("gpu render").image;
+        let gpu = hazavana_gpu::render(&src, &info, &s, &req, None).expect("gpu render").image;
         for (who, img) in [("CPU", &cpu), ("GPU", &gpu)] {
             let p = img.get(90, 120);
             assert!(p[1] < 250 && p[0].max(p[1]).max(p[2]) - p[0].min(p[1]).min(p[2]) <= 1, "{name} {who}: clipped light {p:?}");
@@ -526,7 +526,7 @@ fn embedded_lens_perspective_edges_match() {
     if !gpu() {
         return;
     }
-    use lightcraft_develop::{EmbeddedLens, EmbeddedVignette, EmbeddedWarp};
+    use hazavana_develop::{EmbeddedLens, EmbeddedVignette, EmbeddedWarp};
     let src = scene(2, 900, 600);
     let raw = SourceInfo { raw: true, ..Default::default() };
     // The unrotated case includes a position only 0.000035 px outside the edge.
@@ -567,8 +567,8 @@ fn cached_renders_match_uncached() {
         s.light.exposure = 0.1 * k as f64;
         s.effects.clarity = 10.0 + 5.0 * (k / 2) as f64;
         s.detail.nr_luminance = 20.0 + 10.0 * (k % 2) as f64;
-        let warm = lightcraft_gpu::render(&src, &info, &s, &req, Some(&cache)).expect("gpu");
-        let fresh = lightcraft_gpu::render(&src, &info, &s, &req, None).expect("gpu");
+        let warm = hazavana_gpu::render(&src, &info, &s, &req, Some(&cache)).expect("gpu");
+        let fresh = hazavana_gpu::render(&src, &info, &s, &req, None).expect("gpu");
         assert_eq!(warm.image, fresh.image, "step {k}");
     }
 }
@@ -600,7 +600,7 @@ fn highlights_shadows_base_matches_on_every_process() {
                     invert: false,
                     shape: MaskShape::Linear { start: Point::new(0.5, 0.0), end: Point::new(0.5, 0.9) },
                 }],
-                adjust: lightcraft_develop::LocalAdjustments { highlights: -70.0, shadows: 40.0, ..Default::default() },
+                adjust: hazavana_develop::LocalAdjustments { highlights: -70.0, shadows: 40.0, ..Default::default() },
                 ..Default::default()
             }];
             check(&format!("{p:?} local highlights {w}"), &src, &raw, &s, &req);
@@ -608,8 +608,8 @@ fn highlights_shadows_base_matches_on_every_process() {
         for p in [Process::V1, Process::V2, Process::V1, Process::V2] {
             let mut s = DevelopSettings { process: p.version(), ..DevelopSettings::default() };
             s.light.highlights = -100.0;
-            let warm = lightcraft_gpu::render(&src, &raw, &s, &req, Some(&cache)).expect("gpu");
-            let fresh = lightcraft_gpu::render(&src, &raw, &s, &req, None).expect("gpu");
+            let warm = hazavana_gpu::render(&src, &raw, &s, &req, Some(&cache)).expect("gpu");
+            let fresh = hazavana_gpu::render(&src, &raw, &s, &req, None).expect("gpu");
             assert_eq!(warm.image, fresh.image, "{p:?} at {w} px, cached");
         }
     }
@@ -624,18 +624,18 @@ fn overlays_match() {
     let src = scene(0, 900, 600);
     let raw = SourceInfo { raw: true, ..Default::default() };
     let s = DevelopSettings {
-        point_colors: vec![lightcraft_develop::PointColor { lum: 0.6, chroma: 0.05, hue: 300.0, hue_shift: 50.0, range: 90.0, ..Default::default() }],
+        point_colors: vec![hazavana_develop::PointColor { lum: 0.6, chroma: 0.05, hue: 300.0, hue_shift: 50.0, range: 90.0, ..Default::default() }],
         ..Default::default()
     };
-    let req = RenderRequest { overlay: lightcraft_pipeline::Overlay::PointColorRange(0), ..RenderRequest::fit(640, 640) };
+    let req = RenderRequest { overlay: hazavana_pipeline::Overlay::PointColorRange(0), ..RenderRequest::fit(640, 640) };
     check("point color range overlay", &src, &raw, &s, &req);
     // Visualize Spots is a binary threshold of a high-pass: a 1-LSB difference near the threshold
     // flips a pixel, so compare the share of differing pixels instead of LSBs.
     let s = DevelopSettings::default();
     for t in [20u8, 50, 90] {
-        let req = RenderRequest { overlay: lightcraft_pipeline::Overlay::Spots(t), ..RenderRequest::fit(640, 640) };
+        let req = RenderRequest { overlay: hazavana_pipeline::Overlay::Spots(t), ..RenderRequest::fit(640, 640) };
         let cpu = render(&src, &raw, &s, &req).image;
-        let gpu = lightcraft_gpu::render(&src, &raw, &s, &req, None).expect("gpu").image;
+        let gpu = hazavana_gpu::render(&src, &raw, &s, &req, None).expect("gpu").image;
         let differ = cpu.data.iter().zip(&gpu.data).filter(|(a, b)| a != b).count() as f64 / cpu.data.len() as f64;
         let white = cpu.data.iter().filter(|p| p[0] == 255).count() as f64 / cpu.data.len() as f64;
         eprintln!("visualize spots t={t:<3}          white {:.3}%  differing {:.4}%", white * 100.0, differ * 100.0);
@@ -673,7 +673,7 @@ fn overlays_match() {
         },
     ];
     s.masks[0].adjust.exposure = 0.5;
-    use lightcraft_pipeline::{MaskView, Overlay};
+    use hazavana_pipeline::{MaskView, Overlay};
     for (id, view) in
         [(1, MaskView::Color), (2, MaskView::ColorOnBw), (2, MaskView::WhiteOnBlack), (3, MaskView::ImageOnWhite), (1, MaskView::ImageOnBlack)]
     {
@@ -702,8 +702,8 @@ fn red_eye_matches() {
     }));
     let info = SourceInfo::default();
     let eyes = vec![
-        lightcraft_develop::RedEye { center: Point::new(0.31, 0.5), rx: 0.06, ry: 0.05, darken: 70.0, ..Default::default() },
-        lightcraft_develop::RedEye {
+        hazavana_develop::RedEye { center: Point::new(0.31, 0.5), rx: 0.06, ry: 0.05, darken: 70.0, ..Default::default() },
+        hazavana_develop::RedEye {
             center: Point::new(0.7, 0.48),
             rx: 0.06,
             ry: 0.06,
@@ -715,7 +715,7 @@ fn red_eye_matches() {
     ];
     let s = DevelopSettings { red_eye: eyes.clone(), ..Default::default() };
     check("red + pet eye", &src, &info, &s, &RenderRequest::fit(800, 800));
-    let g = lightcraft_gpu::render(&src, &info, &s, &RenderRequest::fit(800, 800), None).expect("gpu").image;
+    let g = hazavana_gpu::render(&src, &info, &s, &RenderRequest::fit(800, 800), None).expect("gpu").image;
     let (red, pet) = (g.data[200 * 800 + 250], g.data[190 * 800 + 560]);
     assert!(red[0] < 80 && red[0].abs_diff(red[1]) < 10, "red pupil fixed on the GPU: {red:?}");
     assert!(pet[1] < 80 && pet[0].abs_diff(pet[1]) < 5, "pet pupil darkened on the GPU: {pet:?}");
@@ -745,7 +745,7 @@ fn output_spaces_match() {
     }
     // Export colour spaces: matrix to the target primaries, gamut mapping into the target gamut and
     // its encoding curve, on both renderers. Saturated edits push colours to the gamut edges.
-    use lightcraft_pipeline::OutputSpace;
+    use hazavana_pipeline::OutputSpace;
     let src = scene(0, 900, 600);
     let raw = SourceInfo { raw: true, ..Default::default() };
     for space in OutputSpace::ALL {
@@ -786,7 +786,7 @@ fn windows_match() {
     if !gpu() {
         return;
     }
-    use lightcraft_pipeline::PixelWindow;
+    use hazavana_pipeline::PixelWindow;
     let src = scene(1, 960, 640);
     let info = SourceInfo { raw: true, ..Default::default() };
     let win = PixelWindow { x: 1200, y: 800, w: 640, h: 480 };
@@ -833,21 +833,21 @@ fn a_window_does_not_keep_the_whole_source_on_the_device() {
     if !gpu() {
         return;
     }
-    use lightcraft_pipeline::PixelWindow;
+    use hazavana_pipeline::PixelWindow;
     let src = scene(1, 6000, 4000);
     let info = SourceInfo { raw: true, ..Default::default() };
     let stages = StageCache::default();
     let s = DevelopSettings::default();
     let req = RenderRequest { window: Some(PixelWindow { x: 2000, y: 1500, w: 640, h: 480 }), ..RenderRequest::fit(6000, 4000) };
-    let _ = lightcraft_gpu::render(&src, &info, &s, &req, Some(&stages)).expect("gpu render");
-    let held = lightcraft_gpu::stage_bytes(&stages);
+    let _ = hazavana_gpu::render(&src, &info, &s, &req, Some(&stages)).expect("gpu render");
+    let held = hazavana_gpu::stage_bytes(&stages);
     assert!(held < 100 << 20, "the view's GPU stages hold {} MiB for a 640×480 window", held >> 20);
     // …and the next tick of a drag reuses what is there
     let mut s2 = s.clone();
     s2.light.exposure = 0.5;
-    let again = lightcraft_gpu::render(&src, &info, &s2, &req, Some(&stages)).expect("gpu render");
+    let again = hazavana_gpu::render(&src, &info, &s2, &req, Some(&stages)).expect("gpu render");
     assert_eq!((again.image.width, again.image.height), (640, 480));
-    assert!(lightcraft_gpu::stage_bytes(&stages) < 100 << 20);
+    assert!(hazavana_gpu::stage_bytes(&stages) < 100 << 20);
 }
 
 /// …but the 288 MB is uploaded once for every window of every view of the photo, not once per
@@ -859,21 +859,21 @@ fn windows_of_a_big_photo_share_one_uploaded_source() {
     if !gpu() {
         return;
     }
-    use lightcraft_pipeline::PixelWindow;
+    use hazavana_pipeline::PixelWindow;
     let src = scene(1, 6000, 4000);
     let info = SourceInfo { raw: true, ..Default::default() };
     let s = DevelopSettings::default();
     let (after, before) = (StageCache::default(), StageCache::default());
     let at = |x: usize| RenderRequest { window: Some(PixelWindow { x, y: 1500, w: 640, h: 480 }), ..RenderRequest::fit(6000, 4000) };
-    let start = lightcraft_gpu::source_uploads();
+    let start = hazavana_gpu::source_uploads();
     for (cache, x) in [(&after, 1000), (&after, 1256), (&after, 1512), (&before, 1512), (&before, 1768)] {
-        lightcraft_gpu::render(&src, &info, &s, &at(x), Some(cache)).expect("gpu render");
+        hazavana_gpu::render(&src, &info, &s, &at(x), Some(cache)).expect("gpu render");
     }
-    assert_eq!(lightcraft_gpu::source_uploads() - start, 1, "one upload for five windows of two views");
-    assert!(lightcraft_gpu::shared_source_bytes() >= 280_000_000, "{}", lightcraft_gpu::shared_source_bytes());
-    assert!(lightcraft_gpu::stage_bytes(&after) < 100 << 20, "and it is not in the views' stages");
-    lightcraft_gpu::trim_pool(0);
-    assert_eq!(lightcraft_gpu::shared_source_bytes(), 0, "an idle app gives it back");
-    lightcraft_gpu::render(&src, &info, &s, &at(1000), Some(&after)).expect("gpu render");
-    assert_eq!(lightcraft_gpu::source_uploads() - start, 2);
+    assert_eq!(hazavana_gpu::source_uploads() - start, 1, "one upload for five windows of two views");
+    assert!(hazavana_gpu::shared_source_bytes() >= 280_000_000, "{}", hazavana_gpu::shared_source_bytes());
+    assert!(hazavana_gpu::stage_bytes(&after) < 100 << 20, "and it is not in the views' stages");
+    hazavana_gpu::trim_pool(0);
+    assert_eq!(hazavana_gpu::shared_source_bytes(), 0, "an idle app gives it back");
+    hazavana_gpu::render(&src, &info, &s, &at(1000), Some(&after)).expect("gpu render");
+    assert_eq!(hazavana_gpu::source_uploads() - start, 2);
 }

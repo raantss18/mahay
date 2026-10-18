@@ -1,13 +1,13 @@
 //! Layer ▸ Layer Styles: add / remove / show styles and the comp's Global Light.
 //!
 //! Styles are property groups under the layer's `layerStyles` group (see
-//! [`effectcraft_project::styles`]); their values are edited with `prop.set` like any other
+//! [`tselatra_project::styles`]); their values are edited with `prop.set` like any other
 //! property (`layerStyles/dropShadow/distance`). Global Light is shared by every layer of a comp:
 //! editing one layer's `layerStyles/blendingOptions/globalLightAngle` updates them all.
 
-use effectcraft_project::build::Ids;
-use effectcraft_project::styles::{self as st, GROUP, STYLES};
-use effectcraft_project::{ItemId, LayerId, Uid};
+use tselatra_project::build::Ids;
+use tselatra_project::styles::{self as st, GROUP, STYLES};
+use tselatra_project::{ItemId, LayerId, Uid};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, f_p, has_comp, has_layers, layer_mut, layer_p, layers_p, str_p, time_p};

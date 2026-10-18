@@ -2,10 +2,10 @@
 //! typed), applied to rows and cells, and drawn with their fill, borders, alignment and number
 //! format.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::color::Color;
-use cadcraft_engine::doc::{CellFormat, EntityKind, Handle, Table, TableStyle};
-use cadcraft_engine::render;
+use drafitra_engine::Session;
+use drafitra_engine::doc::color::Color;
+use drafitra_engine::doc::{CellFormat, EntityKind, Handle, Table, TableStyle};
+use drafitra_engine::render;
 use serde_json::json;
 
 fn style(s: &Session, name: &str) -> TableStyle {
@@ -46,7 +46,7 @@ fn define_cell_styles_with_json() {
     assert_eq!((t.align, t.format, t.precision, t.margin_h), (6, CellFormat::Decimal, 2, 0.1));
     assert_eq!(t.borders.top.color, Color::Index(1));
     assert!(!t.borders.inside_v.visible && t.borders.left.visible);
-    assert_eq!(t.borders.left.lineweight, cadcraft_engine::doc::Lineweight::Mm100(50));
+    assert_eq!(t.borders.left.lineweight, drafitra_engine::doc::Lineweight::Mm100(50));
     // Bad values are refused, never stored.
     assert!(s.execute("tablestyle.cellstyle", &json!({ "style": "Costs", "name": "Totals", "align": "XX" })).is_err());
     assert!(s.execute("tablestyle.cellstyle", &json!({ "style": "Costs", "name": "Totals", "textHeight": -1 })).is_err());
@@ -105,7 +105,7 @@ fn styles_are_drawn() {
     let margin = style(&s, "Standard").margin;
     assert!((a.at.x - (8.0 - margin)).abs() < 1e-9);
     // The display list has the fill triangles.
-    let list = render::build(s.doc().unwrap(), &cadcraft_engine::doc::Space::Model, &render::Options::default());
+    let list = render::build(s.doc().unwrap(), &drafitra_engine::doc::Space::Model, &render::Options::default());
     assert!(list.prims.iter().any(|p| p.kind == render::Kind::Tris));
 }
 

@@ -15,7 +15,7 @@
 
 use std::collections::HashMap;
 
-use effectcraft_keyframe::ShapePath;
+use tselatra_keyframe::ShapePath;
 use kurbo::{Point, Vec2};
 
 use crate::fit::{fit_single, unit};
@@ -327,7 +327,7 @@ fn fit_loop(raw: &[[f64; 2]], simp: &[[f64; 2]], round: f64) -> ShapePath {
 mod tests {
     use super::*;
     use crate::{FillRule, fill_coverage, to_kurbo};
-    use effectcraft_geom::Mat3;
+    use tselatra_geom::Mat3;
 
     fn iou(a: &[bool], b: &[f32]) -> f64 {
         let (mut i, mut u) = (0.0, 0.0);

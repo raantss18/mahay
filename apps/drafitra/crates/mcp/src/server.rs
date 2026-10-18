@@ -15,7 +15,7 @@ const INVALID_REQUEST: i64 = -32600;
 const METHOD_NOT_FOUND: i64 = -32601;
 const INVALID_PARAMS: i64 = -32602;
 
-const INSTRUCTIONS: &str = "CADCraft is a 2D/3D CAD drafting app (an AutoCAD clone). Coordinates are drawing units, \
+const INSTRUCTIONS: &str = "Drafitra is a 2D/3D CAD drafting app (an AutoCAD clone). Coordinates are drawing units, \
 y up. Fastest path: command_line with AutoCAD syntax, e.g. `line 0,0 10,0 10,5 c`, `circle 5,2.5 1`, \
 `rectang 0,0 4,3`, `offset 1` then pick, `zoom e`. Or execute with JSON (list_commands shows ids and params). \
 Verify with inspect_drawing / query_entities and look with render.";
@@ -104,7 +104,7 @@ impl Server {
                 Ok(json!({
                     "protocolVersion": version,
                     "capabilities": {"tools": {"listChanged": false}, "resources": {"listChanged": false}},
-                    "serverInfo": {"name": "cadcraft", "title": "CADCraft", "version": env!("CARGO_PKG_VERSION")},
+                    "serverInfo": {"name": "drafitra", "title": "Drafitra", "version": env!("CARGO_PKG_VERSION")},
                     "instructions": format!("{INSTRUCTIONS} Backend: {}.", self.backend.describe()),
                 }))
             }
@@ -116,14 +116,14 @@ impl Server {
                 call_tool(self.backend.as_mut(), name, args).map_err(|m| (INVALID_PARAMS, m))
             }
             "resources/list" => Ok(json!({"resources": [
-                {"uri": "cadcraft://drawing", "name": "Active drawing", "mimeType": "application/json"},
-                {"uri": "cadcraft://commands", "name": "Command catalog", "mimeType": "application/json"},
+                {"uri": "drafitra://drawing", "name": "Active drawing", "mimeType": "application/json"},
+                {"uri": "drafitra://commands", "name": "Command catalog", "mimeType": "application/json"},
             ]})),
             "resources/read" => {
                 let uri = params.get("uri").and_then(Value::as_str).unwrap_or("");
                 let v = match uri {
-                    "cadcraft://drawing" => self.backend.call("drawing.inspect", json!({})),
-                    "cadcraft://commands" => self.backend.call("engine.commands", json!({})),
+                    "drafitra://drawing" => self.backend.call("drawing.inspect", json!({})),
+                    "drafitra://commands" => self.backend.call("engine.commands", json!({})),
                     _ => return Err((-32002, format!("unknown resource `{uri}`"))),
                 }
                 .map_err(|e| (-32603, e))?;

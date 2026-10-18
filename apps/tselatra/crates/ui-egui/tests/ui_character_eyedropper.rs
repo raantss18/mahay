@@ -1,7 +1,7 @@
 //! Character Fill and Stroke can sample a displayed Composition pixel.
-use effectcraft_engine::{Session, commands::text_edit::layer_doc, project::LayerId};
-use effectcraft_ui_egui::{
-    EffectcraftApp,
+use tselatra_engine::{Session, commands::text_edit::layer_doc, project::LayerId};
+use tselatra_ui_egui::{
+    TselatraApp,
     dock::{DockNode, PanelKind, SplitSize},
     panels::viewer::comp_to_screen,
 };
@@ -9,7 +9,7 @@ use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, pos: Pos2) {
+fn click(h: &mut Harness<'_, TselatraApp>, pos: Pos2) {
     h.event(Event::PointerMoved(pos));
     h.step();
     for pressed in [true, false] {
@@ -19,12 +19,12 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, pos: Pos2) {
     h.run_steps(2);
 }
 
-fn click_auto(h: &mut Harness<'_, EffectcraftApp>, id: &str) {
+fn click_auto(h: &mut Harness<'_, TselatraApp>, id: &str) {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("missing {id}")).clone();
     click(h, pos2(e.rect[0] + e.rect[2] * 0.5, e.rect[1] + e.rect[3] * 0.5));
 }
 
-fn settle(h: &mut Harness<'_, EffectcraftApp>) {
+fn settle(h: &mut Harness<'_, TselatraApp>) {
     for _ in 0..600 {
         h.step();
         if h.state().frames.inflight() == 0 && h.state().frames.last_ms.lock().is_ok_and(|v| *v > 0.0) {
@@ -43,7 +43,7 @@ fn character_fill_eyedropper_samples_viewer_and_keeps_text_selection() {
     let text = s.execute("layer.newText", json!({"text": "First second", "font": "Inter"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("text.edit", json!({"layer": text})).unwrap();
     s.execute("text.setSelection", json!({"start": 0, "end": 5})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.set_workspace("Text");
     let builder = Harness::builder().with_size(vec2(1600.0, 1400.0));
     let mut h = if std::env::var_os("EC_SNAPSHOT_DIR").is_some() { builder.wgpu().build_eframe(|_| app) } else { builder.build_eframe(|_| app) };
@@ -69,7 +69,7 @@ fn character_stroke_eyedropper_samples_viewer() {
     s.execute("layer.newSolid", json!({"name": "brat green", "color": "#8ACE00"})).unwrap();
     let text = s.execute("layer.newText", json!({"text": "brat", "font": "Inter"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.setText", json!({"layer": text, "fill": [0.0, 0.0, 0.0], "size": 32.0})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.ui.viewer.show_layer_controls = false;
     app.ui.dock = DockNode::Split {
         vertical: false,

@@ -3,10 +3,10 @@
 //! Timeline reaches the last of thousands of layers; the Progress panel lists the footage check
 //! started by a lazy open.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::perf::{LargeSpec, large_project};
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_engine::perf::{LargeSpec, large_project};
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui_kittest::Harness;
 use serde_json::json;
 
@@ -14,8 +14,8 @@ fn spec() -> LargeSpec {
     LargeSpec { comps: 8, main_layers: 1500, comp_layers: 3, footage: 90, sequence_frames: 12, nest_depth: 3, expression_every: 5, ..Default::default() }
 }
 
-fn harness(s: Session) -> Harness<'static, EffectcraftApp> {
-    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| EffectcraftApp::new(s));
+fn harness(s: Session) -> Harness<'static, TselatraApp> {
+    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     h
 }
@@ -35,14 +35,14 @@ fn project_panel_scrolls_and_reveals_the_selection() {
     h.run_steps(3);
     // Far more rows than fit: a scroll bar, and the bottom rows aren't drawn yet.
     assert!(h.state().auto.find("project.vscroll").is_some());
-    let drawn = |h: &Harness<'_, EffectcraftApp>| {
+    let drawn = |h: &Harness<'_, TselatraApp>| {
         h.state().auto.previous.iter().filter(|e| e.id.starts_with("project.item.") && e.id.matches('.').count() == 2).count()
     };
     let rows = drawn(&h);
     assert!(rows > 5 && rows < 80, "only the rows in view are drawn: {rows}");
     // Selecting an item (a command, an agent) scrolls it into view.
     let footage =
-        h.state().session.project.items.values().filter(|i| matches!(i.kind, effectcraft_engine::project::ItemKind::Footage(_))).map(|i| i.id.0).max().unwrap();
+        h.state().session.project.items.values().filter(|i| matches!(i.kind, tselatra_engine::project::ItemKind::Footage(_))).map(|i| i.id.0).max().unwrap();
     h.state_mut().session.execute("project.select", json!({"items": [footage]})).unwrap();
     h.run_steps(3);
     assert!(h.state().auto.find(&format!("project.item.{footage}")).is_some(), "selected item scrolled into view");
@@ -113,7 +113,7 @@ fn lazy_open_lists_the_footage_check_in_the_progress_panel() {
     }
     assert!(h.state().session.tasks.is_empty());
     let missing =
-        h.state().session.project.items.values().filter(|i| matches!(&i.kind, effectcraft_engine::project::ItemKind::Footage(f) if f.missing)).count();
+        h.state().session.project.items.values().filter(|i| matches!(&i.kind, tselatra_engine::project::ItemKind::Footage(f) if f.missing)).count();
     assert_eq!(missing, spec().footage);
     assert!(!h.state().session.is_dirty(), "the check doesn't modify the project");
     let _ = std::fs::remove_file(path);

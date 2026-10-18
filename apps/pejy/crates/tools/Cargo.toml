@@ -1,17 +1,17 @@
 [package]
-name = "designcraft-tools"
+name = "pejy-tools"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft tools: pointer events in, commands and overlays out (Selection, Direct Selection, frames, Type, Hand, Zoom…)"
+description = "Pejy tools: pointer events in, commands and overlays out (Selection, Direct Selection, frames, Type, Hand, Zoom…)"
 
 [lints]
 workspace = true
 
 [dependencies]
-designcraft-geom = { workspace = true }
-designcraft-color = { workspace = true }
-designcraft-doc = { workspace = true }
-designcraft-compose = { workspace = true }
+pejy-geom = { workspace = true }
+pejy-color = { workspace = true }
+pejy-doc = { workspace = true }
+pejy-compose = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

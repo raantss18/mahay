@@ -3,8 +3,8 @@
 //! 75 (type), 76 (count), 78 (flow reversed), 79 (auto height), 48 (width), 49 (gutter) and
 //! 50 (column heights, after the column type; before it, 50 is the rotation).
 
-use cadcraft_doc::{MText, MTextColumnType, MTextColumns};
-use cadcraft_dxf::Tag;
+use drafitra_doc::{MText, MTextColumnType, MTextColumns};
+use drafitra_dxf::Tag;
 
 /// Upper bound on column heights read from a file.
 const MAX_COLUMNS: usize = 1_000;

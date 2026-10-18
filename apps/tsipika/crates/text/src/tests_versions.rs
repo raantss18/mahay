@@ -3,7 +3,7 @@
 //! the other version is set in it.
 
 use kurbo::Point;
-use vectorcraft_doc::CharStyle;
+use tsipika_doc::CharStyle;
 
 use super::test_fonts::{TWIN_FAMILY as FAMILY, TWIN_VERSIONS as VERSIONS, twin_font};
 use super::*;

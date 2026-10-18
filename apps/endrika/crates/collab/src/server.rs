@@ -3,7 +3,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 use serde::{Deserialize, Serialize};
 
 use crate::change::{Change, Entry, Prop, Target};

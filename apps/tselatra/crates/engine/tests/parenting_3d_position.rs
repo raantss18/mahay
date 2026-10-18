@@ -1,5 +1,5 @@
 //! 3D parenting preserves Position and static poses in uniform parent spaces.
-use effectcraft_engine::{
+use tselatra_engine::{
     Session,
     geom::{Mat4, Vec3, vec3},
     project::{BitDepth, LayerId},
@@ -270,7 +270,7 @@ fn parenting_3d_parent_source_pixel_aspect_is_not_inherited() {
     assert!(error < 1e-8 && pixels < 1e-6, "3D children must not inherit parent source pixel aspect");
 }
 
-fn rotation_properties(s: &Session, c: u64) -> Vec<effectcraft_engine::project::Property> {
+fn rotation_properties(s: &Session, c: u64) -> Vec<tselatra_engine::project::Property> {
     ["rotationX", "rotationY", "rotation"]
         .map(|name| s.active_comp().unwrap().layer(LayerId(c)).unwrap().props.prop(&format!("transform/{name}")).unwrap().clone())
         .into()
@@ -316,7 +316,7 @@ fn parenting_static_orientation_preserves_nonuniform_child_scale_and_axis_rotati
 }
 #[test]
 fn parenting_uniform_parent_preserves_animated_eased_scale() {
-    use effectcraft_engine::keyframe::{Ease, Interp};
+    use tselatra_engine::keyframe::{Ease, Interp};
     let (mut s, p, c) = fixture(true, true);
     for (time, value) in [(0.0, json!([80.0, 120.0, 95.0])), (1.0, json!([135.0, 75.0, 150.0]))] {
         command(&mut s, "prop.addKey", json!({"layer":c,"path":"transform/scale","time":time,"value":value}));
@@ -433,7 +433,7 @@ fn parenting_animated_orientation_and_nonuniform_parent_keep_authored_pose_bound
 /// Position's temporal speed is measured along its spatial path, in parent-space units.
 #[test]
 fn parenting_uniform_parent_preserves_eased_position_at_quarter_times_and_undo() {
-    use effectcraft_engine::keyframe::{Ease, Interp};
+    use tselatra_engine::keyframe::{Ease, Interp};
     let mut maximum_error = 0.0f64;
     for factor in [100.0, 200.0] {
         let (mut s, p, c) = fixture(true, false);
@@ -490,7 +490,7 @@ fn parenting_uniform_parent_preserves_eased_position_at_quarter_times_and_undo()
 /// Position and Point of Interest are re-expressed in the null's space (#1010, #1020).
 #[test]
 fn parenting_camera_to_default_null_preserves_framing() {
-    use effectcraft_engine::render::three_d::camera::layer_frame;
+    use tselatra_engine::render::three_d::camera::layer_frame;
     let mut s = Session::default();
     command(&mut s, "comp.new", json!({"name":"Camera","width":640,"height":360,"duration":2,"frameRate":24}));
     let cam = command(&mut s, "layer.newCamera", json!({"name":"Camera 1"}))["layer"].as_u64().unwrap();

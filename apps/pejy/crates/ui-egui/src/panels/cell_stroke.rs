@@ -6,7 +6,7 @@
 //! double-click on a line chooses all outer or all inner lines; a triple-click chooses all lines,
 //! or none when all were chosen.
 
-use designcraft_doc::StrokeType;
+use pejy_doc::StrokeType;
 use egui::{Pos2, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn stroke_panel_proxy_limits_a_weight_change_to_the_chosen_cell_edges() {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("frame.create", json!({"rect": [72, 72, 400, 400], "content": "text", "caret": true})).unwrap();
         let tid = app.run("table.insert", json!({"rows": 2, "cols": 2})).unwrap()["table"].as_u64().unwrap();

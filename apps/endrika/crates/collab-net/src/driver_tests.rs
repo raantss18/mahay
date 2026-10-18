@@ -7,10 +7,10 @@ use std::net::TcpStream;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use figcraft_collab::message::{self, ClientMsg, Presence, ServerMsg};
-use figcraft_collab::{Client, Limits, Outgoing, Server};
-use figcraft_doc::{Document, NodeId};
-use figcraft_engine::live::{Event, Status};
+use endrika_collab::message::{self, ClientMsg, Presence, ServerMsg};
+use endrika_collab::{Client, Limits, Outgoing, Server};
+use endrika_doc::{Document, NodeId};
+use endrika_engine::live::{Event, Status};
 use tungstenite::protocol::WebSocket;
 use tungstenite::{Bytes, Message};
 

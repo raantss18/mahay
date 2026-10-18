@@ -40,7 +40,7 @@ struct State {
 }
 
 fn id() -> egui::Id {
-    egui::Id::new("cadcraft-quickcalc")
+    egui::Id::new("drafitra-quickcalc")
 }
 
 /// A variable's value as typed into an expression: a number, or a point as `[x,y]`.

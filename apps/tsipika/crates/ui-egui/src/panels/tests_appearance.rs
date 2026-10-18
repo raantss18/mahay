@@ -1,39 +1,39 @@
 //! Headless frames of the Appearance panel and the panels that follow its active item.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::Session;
+use tsipika_doc::Unit;
+use tsipika_engine::Session;
 
 use super::*;
 
-pub(super) fn app_with_rect() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+pub(super) fn app_with_rect() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     let id = run(&mut app, "shape.rectangle", json!({"x": 10, "y": 10, "width": 100, "height": 100}))["id"].clone();
     run(&mut app, "select.set", json!({ "ids": [id] }));
     app
 }
 
-pub(super) fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+pub(super) fn run(app: &mut TsipikaApp, id: &str, p: Value) -> Value {
     app.session.execute(id, &p).unwrap_or_else(|e| panic!("{id}: {e}"))
 }
 
 /// Every text drawn while `f` runs one headless frame.
-fn frame_texts(app: &mut VectorcraftApp, f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<String> {
+fn frame_texts(app: &mut TsipikaApp, f: impl FnMut(&mut TsipikaApp, &mut egui::Ui)) -> Vec<String> {
     let ctx = egui::Context::default();
     frame_in(&ctx, app, f)
 }
 
-fn frame_in(ctx: &egui::Context, app: &mut VectorcraftApp, f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<String> {
+fn frame_in(ctx: &egui::Context, app: &mut TsipikaApp, f: impl FnMut(&mut TsipikaApp, &mut egui::Ui)) -> Vec<String> {
     frame_events(ctx, app, vec![], f).into_iter().map(|(s, _)| s).collect()
 }
 
 /// One headless frame with input `events`: every text drawn, with its screen rect.
 pub(super) fn frame_events(
     ctx: &egui::Context,
-    app: &mut VectorcraftApp,
+    app: &mut TsipikaApp,
     events: Vec<egui::Event>,
-    f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui),
+    f: impl FnMut(&mut TsipikaApp, &mut egui::Ui),
 ) -> Vec<(String, egui::Rect)> {
     frame_raw(ctx, app, egui::RawInput { events, ..Default::default() }, f)
 }
@@ -41,9 +41,9 @@ pub(super) fn frame_events(
 /// One headless frame with input `raw`: every text drawn, with its screen rect.
 pub(super) fn frame_raw(
     ctx: &egui::Context,
-    app: &mut VectorcraftApp,
+    app: &mut TsipikaApp,
     raw: egui::RawInput,
-    mut f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui),
+    mut f: impl FnMut(&mut TsipikaApp, &mut egui::Ui),
 ) -> Vec<(String, egui::Rect)> {
     let mut out = ctx.run_ui(raw, |ui| f(app, ui));
     out.textures_delta.clear();
@@ -62,7 +62,7 @@ pub(super) fn frame_raw(
 }
 
 /// Click at `pos` over three frames of `f` (hover, press, release).
-pub(super) fn click(ctx: &egui::Context, app: &mut VectorcraftApp, pos: egui::Pos2, mut f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) {
+pub(super) fn click(ctx: &egui::Context, app: &mut TsipikaApp, pos: egui::Pos2, mut f: impl FnMut(&mut TsipikaApp, &mut egui::Ui)) {
     let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
     for e in [egui::Event::PointerMoved(pos), button(true), button(false)] {
         frame_events(ctx, app, vec![e], &mut f);
@@ -124,7 +124,7 @@ fn item_effect_rows_toggle_their_eye() {
     // The eye sits in the first column of the effect's row (the label is indented one level).
     let eye = egui::pos2(label.left() - 12.0 - 24.0 - appearance::EYE_W / 2.0, label.center().y);
     click(&ctx, &mut app, eye, appearance::show);
-    let visible = |app: &VectorcraftApp| current_stroke_effects(app)[0].visible;
+    let visible = |app: &TsipikaApp| current_stroke_effects(app)[0].visible;
     assert!(!visible(&app));
     click(&ctx, &mut app, eye, appearance::show);
     assert!(visible(&app));
@@ -133,13 +133,13 @@ fn item_effect_rows_toggle_their_eye() {
     assert_eq!(app.session.appearance_item(), Some(1));
 }
 
-fn current_stroke_effects(app: &VectorcraftApp) -> Vec<vectorcraft_doc::Effect> {
+fn current_stroke_effects(app: &TsipikaApp) -> Vec<tsipika_doc::Effect> {
     first_selected(app).unwrap().appearance.items[1].effects().clone()
 }
 
 #[test]
 fn blend_separators_follow_the_groups() {
-    use vectorcraft_color::BlendMode;
+    use tsipika_color::BlendMode;
     let starts: Vec<BlendMode> =
         (0..BlendMode::ALL.len()).filter(|i| crate::widgets::blend_separator_before(*i)).map(|i| BlendMode::ALL[i]).collect();
     assert_eq!(starts, [BlendMode::Darken, BlendMode::Lighten, BlendMode::Overlay, BlendMode::Difference, BlendMode::Hue]);
@@ -181,7 +181,7 @@ fn opacity_popup_blend_dropdown_sets_the_blend_mode() {
     click(&ctx, &mut app, text_rect(&texts, "Normal").center(), appearance::show);
     let texts = frame_events(&ctx, &mut app, vec![], appearance::show);
     click(&ctx, &mut app, text_rect(&texts, "Multiply").center(), appearance::show);
-    assert_eq!(first_selected(&app).unwrap().blend, vectorcraft_color::BlendMode::Multiply);
+    assert_eq!(first_selected(&app).unwrap().blend, tsipika_color::BlendMode::Multiply);
     // The popup is still open after choosing.
     let texts = frame_events(&ctx, &mut app, vec![], appearance::show);
     assert!(texts.iter().any(|(t, _)| t == "Multiply"), "{texts:?}");

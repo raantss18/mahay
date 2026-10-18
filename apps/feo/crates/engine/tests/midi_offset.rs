@@ -1,9 +1,9 @@
 use serde_json::json;
-use soundcraft_engine::Engine;
-use soundcraft_time::Range;
+use feo_engine::Engine;
+use feo_time::Range;
 
 fn render(e: &Engine) -> Vec<Vec<f32>> {
-    soundcraft_mix::render_range(e.session(), Range::new(0, 72_000), 512)
+    feo_mix::render_range(e.session(), Range::new(0, 72_000), 512)
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::import_report::{MAX_NOTE_CHARS, MAX_NOTES, Report, note_text};
@@ -74,7 +74,7 @@ fn vector_style_notes_are_known_import_notes() {
 
 #[test]
 fn opening_a_rest_json_file_reports_what_was_skipped() {
-    let path = std::env::temp_dir().join(format!("figcraft-import-report-{}.json", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-import-report-{}.json", std::process::id()));
     let file = json!({"document": {"id": "0:0", "name": "Synthetic", "type": "DOCUMENT", "children": [
         {"id": "0:1", "name": "Page 1", "type": "CANVAS", "children": [
             {"id": "1:1", "name": "Card", "type": "FRAME", "size": {"x": 200, "y": 100}, "relativeTransform": [[1, 0, 10], [0, 1, 20]],
@@ -167,7 +167,7 @@ fn the_report_goes_when_its_document_closes_and_counts_omitted_notes_in_the_sing
 
 #[test]
 fn a_dropped_file_shows_its_report_once_it_opens() {
-    let path = std::env::temp_dir().join(format!("figcraft-import-report-drop-{}.json", std::process::id()));
+    let path = std::env::temp_dir().join(format!("endrika-import-report-drop-{}.json", std::process::id()));
     let file = json!({"document": {"id": "0:0", "name": "Dropped", "type": "DOCUMENT", "children": [
         {"id": "0:1", "name": "Page 1", "type": "CANVAS", "children": [{"id": "1:1", "name": "No type"}]}]}});
     std::fs::write(&path, file.to_string()).unwrap();

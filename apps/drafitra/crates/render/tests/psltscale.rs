@@ -1,8 +1,8 @@
 //! PSLTSCALE: model-space linetypes seen through a layout viewport (issue #257).
 
-use cadcraft_doc::{Common, Drawing, EntityKind, Line, Space, Viewport, library};
-use cadcraft_geom::{Vec2, Vec3};
-use cadcraft_render::{Kind, Options, VIEWPORT_CONTENT, build};
+use drafitra_doc::{Common, Drawing, EntityKind, Line, Space, Viewport, library};
+use drafitra_geom::{Vec2, Vec3};
+use drafitra_render::{Kind, Options, VIEWPORT_CONTENT, build};
 
 /// A metric drawing with a 1000-unit DASHED line (pattern 0.5 on, 0.25 off) in model space,
 /// seen through a 1:100 viewport on Layout1.

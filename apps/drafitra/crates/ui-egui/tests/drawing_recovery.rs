@@ -2,16 +2,16 @@
 //! Open makes an unsaved copy whose file stays until it is saved, Discard deletes the file.
 //! SAVETIME and SAVEFILEPATH are process-wide, so everything runs in one test.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::autosave;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_engine::autosave;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::Drawing;
+use drafitra_ui_egui::{CadApp, Services};
 
 #[test]
 fn recovery_list_opens_copies_and_discards_files() {
     set_io(IoHooks { read: |_, _| Ok(Drawing::new_metric()), write: |_, _| Ok(b"0\nEOF\n".to_vec()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-recovery-ui-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-recovery-ui-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let plan = dir.join("Plan.dxf_1-a_3.sv$");
@@ -55,14 +55,14 @@ fn recovery_list_opens_copies_and_discards_files() {
     let _ = std::fs::remove_dir_all(&dir);
 
     // SAVETIME and SAVEFILEPATH survive restarts (process-wide, so checked in this one test).
-    cadcraft_ui_egui::autosave::load_prefs(r#"{"savetime": 25, "saveFilePath": "/tmp/cc-autosave-prefs"}"#);
+    drafitra_ui_egui::autosave::load_prefs(r#"{"savetime": 25, "saveFilePath": "/tmp/cc-autosave-prefs"}"#);
     assert_eq!(autosave::savetime(), 25);
-    let saved = cadcraft_ui_egui::autosave::prefs_json();
-    cadcraft_ui_egui::autosave::load_prefs("not json");
-    cadcraft_ui_egui::autosave::load_prefs(r#"{"savetime": "often"}"#);
+    let saved = drafitra_ui_egui::autosave::prefs_json();
+    drafitra_ui_egui::autosave::load_prefs("not json");
+    drafitra_ui_egui::autosave::load_prefs(r#"{"savetime": "often"}"#);
     assert_eq!(autosave::savetime(), 25, "bad values are ignored");
-    cadcraft_ui_egui::autosave::load_prefs(r#"{"savetime": 0}"#);
+    drafitra_ui_egui::autosave::load_prefs(r#"{"savetime": 0}"#);
     assert_eq!(autosave::savetime(), 0);
-    cadcraft_ui_egui::autosave::load_prefs(&saved);
+    drafitra_ui_egui::autosave::load_prefs(&saved);
     assert_eq!((autosave::savetime(), autosave::savefilepath().as_str()), (25, "/tmp/cc-autosave-prefs"));
 }

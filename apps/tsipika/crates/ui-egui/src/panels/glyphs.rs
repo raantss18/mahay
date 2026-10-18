@@ -6,11 +6,11 @@ use std::collections::HashMap;
 
 use egui::{Color32, Sense, Stroke, StrokeKind, Ui, vec2};
 use serde_json::json;
-use vectorcraft_geom::{Affine, BezPath, PathEl};
-use vectorcraft_text::FontDb;
+use tsipika_geom::{Affine, BezPath, PathEl};
+use tsipika_text::FontDb;
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
 
@@ -23,7 +23,7 @@ const CELL_DEFAULT: usize = 2;
 /// The grid step in [`crate::state::UiState::glyphs_preview`]. `0` means [`CELL_DEFAULT`]; a
 /// stored step is `index + 1`. A value past the steps (a hand-edited preferences file) is the
 /// default too.
-fn cell_index(app: &VectorcraftApp) -> usize {
+fn cell_index(app: &TsipikaApp) -> usize {
     match usize::from(app.ui.glyphs_preview) {
         0 => CELL_DEFAULT,
         n if n <= CELL_STEPS.len() => n - 1,
@@ -31,7 +31,7 @@ fn cell_index(app: &VectorcraftApp) -> usize {
     }
 }
 
-fn set_cell_index(app: &mut VectorcraftApp, index: usize) {
+fn set_cell_index(app: &mut TsipikaApp, index: usize) {
     let index = index.min(CELL_STEPS.len() - 1);
     // `index + 1` is at most `CELL_STEPS.len()` (7), which fits in a `u8`.
     app.ui.glyphs_preview = (index + 1) as u8;
@@ -62,7 +62,7 @@ thread_local! {
 pub(crate) fn rasterize(path: &BezPath, w: usize, h: usize) -> Vec<u8> {
     let mut edges: Vec<(f64, f64, f64, f64)> = vec![];
     let (mut start, mut last) = (None, (0.0, 0.0));
-    vectorcraft_geom::kurbo::flatten(path, 0.1, |el| match el {
+    tsipika_geom::kurbo::flatten(path, 0.1, |el| match el {
         PathEl::MoveTo(p) => {
             if let Some(s) = start.replace((p.x, p.y)) {
                 edges.push((last.0, last.1, s.0, s.1));
@@ -117,7 +117,7 @@ pub(crate) fn rasterize(path: &BezPath, w: usize, h: usize) -> Vec<u8> {
     acc.into_iter().map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8).collect()
 }
 
-fn glyph_texture(ctx: &egui::Context, face: &vectorcraft_text::FontFace, gid: u32, px: u32) -> egui::TextureHandle {
+fn glyph_texture(ctx: &egui::Context, face: &tsipika_text::FontFace, gid: u32, px: u32) -> egui::TextureHandle {
     let key = (face.id(), gid, px);
     if let Some(t) = TEX.with(|c| c.borrow().get(&key).cloned()) {
         return t;
@@ -145,7 +145,7 @@ fn glyph_texture(ctx: &egui::Context, face: &vectorcraft_text::FontFace, gid: u3
 }
 
 /// Insert `ch` at the Type tool's caret, else append it to the selected text.
-fn insert(app: &mut VectorcraftApp, ch: char) {
+fn insert(app: &mut TsipikaApp, ch: char) {
     let s = ch.to_string();
     if app.session.tool_wants_text() {
         let v = app.view_info();
@@ -160,13 +160,13 @@ fn insert(app: &mut VectorcraftApp, ch: char) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let db = FontDb::global();
     let current = super::character::text_style(app).map(|(s, _)| (s.font_family, s.font_style));
     // The panel browses the current text's font unless another font was picked here.
     let picked: Option<(String, String)> = pstate(ui.ctx(), "gl-font");
-    let (family, style) = picked.or(current).unwrap_or_else(|| (vectorcraft_text::FALLBACK_FAMILY.to_string(), "Regular".to_string()));
+    let (family, style) = picked.or(current).unwrap_or_else(|| (tsipika_text::FALLBACK_FAMILY.to_string(), "Regular".to_string()));
     let Some(face) = db.face(&family, &style) else {
         ui.label(egui::RichText::new(tl!("No fonts are available.")).color(t.text_dim));
         return;
@@ -272,7 +272,7 @@ fn zoom_button(ui: &mut Ui, id: &str, label: &str, tip: &str, enabled: bool) -> 
     resp.on_hover_text(tl!(tip)).clicked() && enabled
 }
 
-pub fn menu(_app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(_app: &mut TsipikaApp, ui: &mut Ui) {
     if menu_item(ui, tl!("Use the Selected Text's Font"), true, false) {
         set_pstate::<Option<(String, String)>>(ui.ctx(), "gl-font", None);
     }
@@ -291,7 +291,7 @@ mod tests {
 
     use super::*;
 
-    fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> (Vec<(String, Pos2)>, Vec<f32>) {
+    fn frame(ctx: &egui::Context, app: &mut TsipikaApp, events: Vec<egui::Event>) -> (Vec<(String, Pos2)>, Vec<f32>) {
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(280.0, 420.0))), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| show(app, ui));
         out.textures_delta.clear();
@@ -340,7 +340,7 @@ mod tests {
             .unwrap_or_else(|| panic!("{label} missing in {texts:?}"))
     }
 
-    fn click(ctx: &egui::Context, app: &mut VectorcraftApp, at: Pos2) {
+    fn click(ctx: &egui::Context, app: &mut TsipikaApp, at: Pos2) {
         let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
         frame(ctx, app, vec![egui::Event::PointerMoved(at), button(true)]);
         frame(ctx, app, vec![button(false)]);
@@ -357,7 +357,7 @@ mod tests {
 
     #[test]
     fn zoom_buttons_resize_the_glyph_grid() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         let (texts, sides) = frame(&ctx, &mut app, vec![]);
         if texts.iter().any(|(t, _)| t.contains("No fonts are available")) {
@@ -402,7 +402,7 @@ mod tests {
         assert_eq!(back.glyphs_preview, (CELL_DEFAULT + 2) as u8);
         let old: crate::state::UiState = serde_json::from_value(serde_json::json!({})).unwrap();
         assert_eq!(old.glyphs_preview, 0);
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.ui.glyphs_preview = back.glyphs_preview;
         assert_eq!(cell_index(&app), CELL_DEFAULT + 1);
         app.ui.glyphs_preview = 99;

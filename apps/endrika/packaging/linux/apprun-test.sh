@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
 # Smoke test for packaging/linux/AppRun: the AppImage's desktop integration writes
 # and refreshes the host .desktop entry and icons, is idempotent, honours the opt-out
-# and an unwritable HOME, and always launches the app; `cli` runs figcraft-cli instead.
+# and an unwritable HOME, and always launches the app; `cli` runs endrika-cli instead.
 #
 # Runs in seconds with no build (CI: .github/workflows/packaging-lint.yml).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-APP_ID=ai.storyteller.figcraft
+APP_ID=org.mahay.endrika
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # Fake AppDir with the real AppRun, .desktop template, icons, and a stub binary.
-APPDIR="$TMP/FigCraft.AppDir"
+APPDIR="$TMP/Endrika.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
 install -Dm644 "$HERE/$APP_ID.desktop" "$APPDIR/usr/share/applications/$APP_ID.desktop"
 mkdir -p "$APPDIR/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$APPDIR/usr/share/icons/"
-printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/figcraft"
-chmod +x "$APPDIR/usr/bin/figcraft"
+printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/endrika"
+chmod +x "$APPDIR/usr/bin/endrika"
 
-APPIMAGE="$TMP/figcraft test.AppImage" # spaces on purpose: Exec must stay quoted
+APPIMAGE="$TMP/endrika test.AppImage" # spaces on purpose: Exec must stay quoted
 : >"$APPIMAGE"
 export APPIMAGE
 export HOME="$TMP/home"
@@ -73,7 +73,7 @@ grep -Fxq "Exec=\"$(readlink -f "$APPIMAGE")\" %U" "$DESKTOP" || fail "Exec not 
 
 # 6. Opt-out installs nothing.
 rm -rf "$XDG_DATA_HOME"
-FIGCRAFT_NO_DESKTOP_INTEGRATION=1 "$APPDIR/AppRun" >/dev/null || fail "opt-out launch exited non-zero"
+ENDRIKA_NO_DESKTOP_INTEGRATION=1 "$APPDIR/AppRun" >/dev/null || fail "opt-out launch exited non-zero"
 [ ! -e "$XDG_DATA_HOME" ] || fail "opt-out still integrated"
 
 # 7. An unwritable data dir never blocks the launch.
@@ -95,19 +95,19 @@ out="$(APPIMAGE="$odd" "$APPDIR/AppRun" x)" || fail "launch with an odd path exi
 [ "$out" = "stub: x" ] || fail "odd path: $out"
 [ ! -e "$XDG_DATA_HOME" ] || fail "integrated an AppImage path that needs escaping"
 
-# 10. `cli <args>` runs figcraft-cli with the remaining arguments and integrates nothing.
+# 10. `cli <args>` runs endrika-cli with the remaining arguments and integrates nothing.
 rm -rf "$XDG_DATA_HOME"
-out="$("$APPDIR/AppRun" cli mcp --attach 7979 2>&1)" && fail "cli ran without figcraft-cli in the AppDir"
-[ "$out" = "figcraft: this AppImage was built without figcraft-cli" ] || fail "missing cli: $out"
-printf '#!/bin/sh\necho "cli stub: $*"\n' >"$APPDIR/usr/bin/figcraft-cli"
-chmod +x "$APPDIR/usr/bin/figcraft-cli"
+out="$("$APPDIR/AppRun" cli mcp --attach 7979 2>&1)" && fail "cli ran without endrika-cli in the AppDir"
+[ "$out" = "endrika: this AppImage was built without endrika-cli" ] || fail "missing cli: $out"
+printf '#!/bin/sh\necho "cli stub: $*"\n' >"$APPDIR/usr/bin/endrika-cli"
+chmod +x "$APPDIR/usr/bin/endrika-cli"
 out="$("$APPDIR/AppRun" cli mcp --attach 7979)" || fail "cli launch exited non-zero"
 [ "$out" = "cli stub: mcp --attach 7979" ] || fail "cli arguments not forwarded: $out"
 out="$("$APPDIR/AppRun" cli)" || fail "bare cli launch exited non-zero"
 [ "$out" = "cli stub: " ] || fail "bare cli output: $out"
 [ ! -e "$XDG_DATA_HOME" ] || fail "cli launch integrated the desktop"
 # Only the first argument selects the CLI.
-out="$("$APPDIR/AppRun" file.figcraft cli)" || fail "app launch with a later cli argument exited non-zero"
-[ "$out" = "stub: file.figcraft cli" ] || fail "later cli argument hijacked the launch: $out"
+out="$("$APPDIR/AppRun" file.endrika cli)" || fail "app launch with a later cli argument exited non-zero"
+[ "$out" = "stub: file.endrika cli" ] || fail "later cli argument hijacked the launch: $out"
 
 echo "AppRun desktop integration ok"

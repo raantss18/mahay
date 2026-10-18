@@ -423,7 +423,7 @@ pub enum Route {
 /// A plugin instance on an insert slot.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Insert {
-    /// Registry id from `soundcraft-dsp` (e.g. `eq7`, `comp`).
+    /// Registry id from `feo-dsp` (e.g. `eq7`, `comp`).
     pub plugin: String,
     #[serde(default, deserialize_with = "finite_params")]
     pub params: BTreeMap<String, f32>,

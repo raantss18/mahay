@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 
 use crate::change::{Change, Prop};
 use crate::history::{BACK, BatchKind, FWD, Notice, Step, Touches};

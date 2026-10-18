@@ -3,13 +3,13 @@
 
 use std::sync::Arc;
 
-use designcraft_color::{Color, Gradient, GradientKind, GradientStop, Swatch, SwatchValue};
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{
+use pejy_color::{Color, Gradient, GradientKind, GradientStop, Swatch, SwatchValue};
+use pejy_doc::build::NewDocument;
+use pejy_doc::{
     Align, Asset, AssetId, CharAttrs, CharFormat, CharacterStyle, Content, Document, Fill, FirstBaseline, Graphic, Item, ItemId, Leading, Margins,
     ParaAttrs, ParaFormat, ParagraphStyle, Rule, Shape, SpreadRef, Stroke, VerticalJustification, WrapMode, story,
 };
-use designcraft_geom::{Affine, Rect, shapes};
+use pejy_geom::{Affine, Rect, shapes};
 
 const BODY: &str = "Every page begins as an empty field of possibility. The grid arrives first: margins that frame the reading area, columns that set the rhythm, and a baseline grid that keeps every line in step from one column to the next. Good layout is quiet. It lets the reader move through a story without noticing the machinery that carries them.\n\
 Typography does the heavy lifting. A paragraph composer weighs every possible line break at once, trading a slightly loose line here for a much better one three lines later. The result is an even texture of type, free of rivers and ragged gaps, where hyphens appear only when they truly help.\n\
@@ -54,7 +54,7 @@ fn art_png(w: u32, h: u32, hue: f32) -> Vec<u8> {
             px.push(255);
         }
     }
-    let r = designcraft_render::Rendered { width: w, height: h, pixels: px };
+    let r = pejy_render::Rendered { width: w, height: h, pixels: px };
     r.to_png()
 }
 
@@ -72,7 +72,7 @@ fn image(d: &mut Document, name: &str, w: u32, h: u32, hue: f32) -> AssetId {
     id
 }
 
-fn graphic_frame(d: &mut Document, sr: SpreadRef, r: Rect, asset: AssetId, px: (u32, u32)) -> designcraft_doc::Result<ItemId> {
+fn graphic_frame(d: &mut Document, sr: SpreadRef, r: Rect, asset: AssetId, px: (u32, u32)) -> pejy_doc::Result<ItemId> {
     let id = ItemId(d.alloc());
     let lid = d.default_layer();
     let mut it = Item::new(id, lid, Shape::Rectangle, shapes::rectangle(r));
@@ -83,18 +83,18 @@ fn graphic_frame(d: &mut Document, sr: SpreadRef, r: Rect, asset: AssetId, px: (
         size: (nw, nh),
         xf: Affine::translate((r.x0 + (r.width() - nw * k) / 2.0, r.y0 + (r.height() - nh * k) / 2.0)) * Affine::scale(k),
         clip: None,
-        auto_fit: designcraft_doc::Fitting::FillProportionally,
+        auto_fit: pejy_doc::Fitting::FillProportionally,
         fit_align: 4,
         crop: [0.0; 4],
         wrap: Default::default(),
         fill: Default::default(),
     });
-    it.object_style = designcraft_doc::BASIC_GRAPHICS_FRAME.into();
+    it.object_style = pejy_doc::BASIC_GRAPHICS_FRAME.into();
     d.insert_item(sr, it, None)?;
     Ok(id)
 }
 
-fn text(d: &mut Document, sr: SpreadRef, r: Rect, t: &str, style: &str) -> designcraft_doc::Result<(ItemId, designcraft_doc::StoryId)> {
+fn text(d: &mut Document, sr: SpreadRef, r: Rect, t: &str, style: &str) -> pejy_doc::Result<(ItemId, pejy_doc::StoryId)> {
     let lid = d.default_layer();
     d.add_text_frame(sr, r, lid, t, ParaFormat { style: style.into(), ..Default::default() })
 }
@@ -106,7 +106,7 @@ pub fn magazine() -> Document {
     })
 }
 
-fn build() -> designcraft_doc::Result<Document> {
+fn build() -> pejy_doc::Result<Document> {
     let mut d = Document::new(&NewDocument {
         title: "Quarterly — Spring Issue".into(),
         pages: 4,
@@ -164,7 +164,7 @@ fn build() -> designcraft_doc::Result<Document> {
             ParaAttrs {
                 left_indent: Some(10.0),
                 first_line_indent: Some(-10.0),
-                tabs: Some(vec![designcraft_doc::TabStop {
+                tabs: Some(vec![pejy_doc::TabStop {
                     position: 10.0,
                     align: Default::default(),
                     leader: String::new(),
@@ -202,7 +202,7 @@ fn build() -> designcraft_doc::Result<Document> {
             },
             CharAttrs {
                 tracking: Some(160.0),
-                capitalization: Some(designcraft_doc::Capitalization::AllCaps),
+                capitalization: Some(pejy_doc::Capitalization::AllCaps),
                 fill: Some("Sunset".into()),
                 ..sans("Semibold", 9.0)
             },
@@ -265,7 +265,7 @@ fn build() -> designcraft_doc::Result<Document> {
         let _ = s;
         let (_, _) =
             text(&mut d, pa, Rect::new(w + 312.0, 750.0, w + w - 42.0, 762.0), &format!("SPRING ISSUE  ·  {}", story::PAGE_NUMBER), "Folio")?;
-        if let Some(st) = d.story_mut(designcraft_doc::StoryId(d.next_id - 1)) {
+        if let Some(st) = d.story_mut(pejy_doc::StoryId(d.next_id - 1)) {
             st.format_paras(0..0, |p| p.para.align = Some(Align::Right));
         }
         let lid = d.default_layer();
@@ -415,7 +415,7 @@ fn build() -> designcraft_doc::Result<Document> {
             ["Cyan", "C100", "Charts, links"],
             ["Paper Warm", "M3 Y8", "Pull quotes"],
         ];
-        let mut t = designcraft_doc::Table::new(tid, 4, 3, 1, 0, 258.0);
+        let mut t = pejy_doc::Table::new(tid, 4, 3, 1, 0, 258.0);
         t.columns[0].width = 74.0;
         t.columns[1].width = 90.0;
         t.columns[2].width = 94.0;
@@ -423,31 +423,31 @@ fn build() -> designcraft_doc::Result<Document> {
             let style = if r == 0 { "Table Head" } else { "Table Body" };
             for (c, txt) in row.iter().enumerate() {
                 let Some(cell) = t.cell_mut(r, c) else { continue };
-                *cell = designcraft_doc::Cell::with_text(txt, ParaFormat { style: style.into(), ..Default::default() });
+                *cell = pejy_doc::Cell::with_text(txt, ParaFormat { style: style.into(), ..Default::default() });
                 cell.insets = [4.0, 6.0, 4.0, 6.0];
                 cell.vj = VerticalJustification::Center;
-                let thin = designcraft_doc::CellStroke { weight: 0.5, color: "Ink Plum".into(), tint: 0.35, ..Default::default() };
-                cell.strokes = [thin.clone(), designcraft_doc::CellStroke::none(), thin, designcraft_doc::CellStroke::none()];
+                let thin = pejy_doc::CellStroke { weight: 0.5, color: "Ink Plum".into(), tint: 0.35, ..Default::default() };
+                cell.strokes = [thin.clone(), pejy_doc::CellStroke::none(), thin, pejy_doc::CellStroke::none()];
                 if r == 0 {
                     cell.fill = "Ink Plum".into();
                 }
             }
         }
-        t.options.border = designcraft_doc::CellStroke { weight: 1.0, color: "Ink Plum".into(), ..Default::default() };
+        t.options.border = pejy_doc::CellStroke { weight: 1.0, color: "Ink Plum".into(), ..Default::default() };
         t.options.space_before = 0.0;
-        t.options.alt_rows = Some(designcraft_doc::AltFills {
+        t.options.alt_rows = Some(pejy_doc::AltFills {
             first: 1,
             first_color: "Paper Warm".into(),
             first_tint: 1.0,
             next: 1,
-            next_color: designcraft_color::swatch::NONE.into(),
+            next_color: pejy_color::swatch::NONE.into(),
             next_tint: 1.0,
             skip_first: 0,
             skip_last: 0,
         });
         let end = st.len();
         let anchor = st.insert_table(end, t);
-        st.format_paras(anchor..anchor, |p| p.para.start_paragraph = Some(designcraft_doc::StartParagraph::NextColumn));
+        st.format_paras(anchor..anchor, |p| p.para.start_paragraph = Some(pejy_doc::StartParagraph::NextColumn));
     }
     debug_assert!(d.check().is_ok(), "{:?}", d.check());
     Ok(d)

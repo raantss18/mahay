@@ -1,6 +1,6 @@
 [package]
-name = "effectcraft-script"
-description = "EffectCraft scripting: JavaScript (boa) with an After Effects-style object model (app, project, CompItem, Layer, Property…) over the engine's undoable commands"
+name = "tselatra-script"
+description = "Tselatra scripting: JavaScript (boa) with an After Effects-style object model (app, project, CompItem, Layer, Property…) over the engine's undoable commands"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,12 +10,12 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-effectcraft-engine = { workspace = true }
-effectcraft-project = { workspace = true }
-effectcraft-keyframe = { workspace = true }
-effectcraft-time = { workspace = true }
-effectcraft-render = { workspace = true }
-effectcraft-path = { workspace = true }
+tselatra-engine = { workspace = true }
+tselatra-project = { workspace = true }
+tselatra-keyframe = { workspace = true }
+tselatra-time = { workspace = true }
+tselatra-render = { workspace = true }
+tselatra-path = { workspace = true }
 serde_json = { workspace = true }
 boa_engine = { workspace = true }
 web-time = { workspace = true }
@@ -25,5 +25,5 @@ web-time = { workspace = true }
 boa_engine = { workspace = true, features = ["js"] }
 
 [dev-dependencies]
-effectcraft-expr = { workspace = true }
-effectcraft-psd = { workspace = true }
+tselatra-expr = { workspace = true }
+tselatra-psd = { workspace = true }

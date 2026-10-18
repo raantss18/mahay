@@ -1,8 +1,8 @@
 //! The gear on a Tool Sets category header opens that category's options menu and no longer
 //! collapses the category it sits on.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_ui_egui::{CadApp, Services};
 use egui::vec2;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;

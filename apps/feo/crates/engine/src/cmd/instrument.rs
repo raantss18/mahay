@@ -5,7 +5,7 @@
 use super::*;
 use crate::cmd;
 use serde_json::json;
-use soundcraft_model::{Insert, TrackKind};
+use feo_model::{Insert, TrackKind};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -80,7 +80,7 @@ fn set_instrument_param(e: &mut Engine, p: &Value) -> Result<Value> {
     let t = tracks_required(e, id, p)?.first().copied().ok_or_else(|| bad(id, "no track"))?;
     let ins = e.session_mut().track_mut(t).and_then(|tr| tr.instrument.as_mut()).ok_or_else(|| bad(id, "the track has no instrument"))?;
     // Hosted instruments keep their parameters in their own state.
-    let info = soundcraft_dsp::plugin_info(&ins.plugin).ok_or_else(|| bad(id, format!("`{}` is not a built-in instrument", ins.plugin)))?;
+    let info = feo_dsp::plugin_info(&ins.plugin).ok_or_else(|| bad(id, format!("`{}` is not a built-in instrument", ins.plugin)))?;
     let pi = info.param(&param).ok_or_else(|| bad(id, format!("`{}` has no parameter `{param}`", info.id)))?;
     let v = pi.clamp(value);
     ins.params.insert(param.clone(), v);
@@ -91,9 +91,9 @@ fn set_instrument_param(e: &mut Engine, p: &Value) -> Result<Value> {
 mod tests {
     use crate::Engine;
     use serde_json::json;
-    use soundcraft_midi::{Note, Sequence};
-    use soundcraft_model::{Clip, TrackId};
-    use soundcraft_time::{Range, TICKS_PER_QUARTER};
+    use feo_midi::{Note, Sequence};
+    use feo_model::{Clip, TrackId};
+    use feo_time::{Range, TICKS_PER_QUARTER};
 
     fn track(e: &mut Engine, kind: &str) -> TrackId {
         e.execute("track.new", &json!({"kind": kind})).unwrap();
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(r["plugin"], "drum_synth");
         assert_eq!(instrument_of(&e, t).as_deref(), Some("drum_synth"));
         let params = e.session().track(t).and_then(|tr| tr.instrument.as_ref()).map(|i| i.params.len());
-        assert_eq!(params, soundcraft_dsp::plugin_info("drum_synth").map(|p| p.params.len()), "every parameter at its default");
+        assert_eq!(params, feo_dsp::plugin_info("drum_synth").map(|p| p.params.len()), "every parameter at its default");
         e.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(instrument_of(&e, t).as_deref(), Some("subtractive_synth"));
     }
@@ -144,7 +144,7 @@ mod tests {
         let s = e.session_mut();
         let cid = s.new_clip_id();
         crate::edit::place_clip(s, t, Clip::midi(cid, "note", 0, 48_000 * 4, seq));
-        let out = soundcraft_mix::render_range(e.session(), Range::new(0, 48_000 * secs), 512);
+        let out = feo_mix::render_range(e.session(), Range::new(0, 48_000 * secs), 512);
         let n = out[0].len().max(1) as f32;
         (out[0].iter().map(|x| x * x).sum::<f32>() / n).sqrt()
     }
@@ -169,7 +169,7 @@ mod tests {
         e.execute("mix.instrument", &json!({"track": t.0, "plugin": "subtractive_synth", "params": {"cutoff": 1.0e9}})).unwrap();
         let ins = e.session().track(t).and_then(|tr| tr.instrument.clone()).unwrap();
         assert_eq!(ins.params.get("cutoff"), Some(&20_000.0));
-        assert_eq!(ins.params.len(), soundcraft_dsp::plugin_info("subtractive_synth").map(|p| p.params.len()).unwrap());
+        assert_eq!(ins.params.len(), feo_dsp::plugin_info("subtractive_synth").map(|p| p.params.len()).unwrap());
 
         // Nothing is accepted and then ignored: a parameter beside `plugin`, an unknown id, a value
         // that is not a number and a `params` that is not an object are errors, and change nothing.

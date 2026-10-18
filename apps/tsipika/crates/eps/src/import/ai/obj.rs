@@ -67,7 +67,7 @@ pub(super) struct Obj {
     /// Values closed without a key.
     pub content: Vec<V>,
     /// Vector art enclosed by `X=` … `X+` in an opacity-mask dictionary.
-    pub art: Option<std::sync::Arc<vectorcraft_doc::Node>>,
+    pub art: Option<std::sync::Arc<tsipika_doc::Node>>,
 }
 
 impl Obj {
@@ -127,7 +127,7 @@ pub(super) fn close(o: &mut Obj, stack: &mut Vec<V>, base: usize) {
 
 /// An object name from its XML id (`AI10_ArtUID`).
 pub(super) fn xml_name(id: &str) -> String {
-    vectorcraft_doc::xml_id::to_object_name(id)
+    tsipika_doc::xml_id::to_object_name(id)
 }
 
 #[cfg(test)]

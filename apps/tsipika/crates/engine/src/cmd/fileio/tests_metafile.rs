@@ -2,7 +2,7 @@
 //! open, place, paste, and the format lists.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeKind;
+use tsipika_doc::NodeKind;
 
 use super::*;
 
@@ -13,7 +13,7 @@ fn session(width: f64, height: f64, artboards: usize) -> Session {
 }
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 fn u32_at(b: &[u8], at: usize) -> u32 {
@@ -52,7 +52,7 @@ fn export_writes_an_emf_or_wmf_of_one_artboard() {
     let r = s.execute("document.export", &json!({"format": "emf"})).unwrap();
     assert_eq!(r["format"], "emf");
     let emf = b64(&r);
-    assert_eq!(vectorcraft_metafile::sniff(&emf), Some(vectorcraft_metafile::Kind::Emf));
+    assert_eq!(tsipika_metafile::sniff(&emf), Some(tsipika_metafile::Kind::Emf));
     // The first artboard's frame in 0.01 mm.
     let side = (100.0 * 2540.0 / 72.0f64).round() as i32;
     assert_eq!([i32_at(&emf, 24), i32_at(&emf, 28), i32_at(&emf, 32), i32_at(&emf, 36)], [0, 0, side, side]);
@@ -62,7 +62,7 @@ fn export_writes_an_emf_or_wmf_of_one_artboard() {
     assert_eq!(emf_kinds(&second).iter().filter(|k| **k == 62).count(), 1);
     assert_eq!(b64(&s.execute("document.serialize", &json!({"format": "emf"})).unwrap()), emf);
     let wmf = b64(&s.execute("document.export", &json!({"format": "wmf"})).unwrap());
-    assert_eq!(vectorcraft_metafile::sniff(&wmf), Some(vectorcraft_metafile::Kind::Wmf));
+    assert_eq!(tsipika_metafile::sniff(&wmf), Some(tsipika_metafile::Kind::Wmf));
     assert_eq!(writable_format(None, Some("x/pic.wmf")).unwrap().id, "wmf");
     assert_eq!(writable_format(Some("EMF"), None).unwrap().id, "emf");
     // One file holds one artboard.
@@ -101,7 +101,7 @@ fn metafiles_open_and_place() {
     let emf = b64(&s.execute("document.export", &json!({"format": "emf"})).unwrap());
     let wmf = b64(&s.execute("document.export", &json!({"format": "wmf"})).unwrap());
     for (name, bytes) in [("pic.emf", &emf), ("pic.wmf", &wmf)] {
-        let r = s.execute("document.open", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)})).unwrap();
+        let r = s.execute("document.open", &json!({"name": name, "dataBase64": tsipika_format::base64_encode(bytes)})).unwrap();
         assert_eq!(r["format"], &name[4..]);
         assert_eq!(r["warnings"], json!([]));
         let st = s.doc().unwrap();
@@ -115,7 +115,7 @@ fn metafiles_open_and_place() {
     }
     // Placed: one group clipped to the picture's frame, named after the file.
     let mut s = session(300.0, 300.0, 1);
-    let r = s.execute("file.place", &json!({"name": "pic.emf", "dataBase64": vectorcraft_format::base64_encode(&emf), "at": [150, 150]})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "pic.emf", "dataBase64": tsipika_format::base64_encode(&emf), "at": [150, 150]})).unwrap();
     assert_eq!(r["format"], "emf");
     assert!((r["width"].as_f64().unwrap() - 100.0).abs() < 0.05);
     let st = s.doc().unwrap();
@@ -149,12 +149,12 @@ fn a_pasted_metafile_becomes_objects() {
     let mut src = two_boards();
     let emf = b64(&src.execute("document.export", &json!({"format": "emf"})).unwrap());
     let mut s = session(300.0, 300.0, 1);
-    let r = s.execute("clipboard.importEmf", &json!({"dataBase64": vectorcraft_format::base64_encode(&emf), "center": [150, 150]})).unwrap();
+    let r = s.execute("clipboard.importEmf", &json!({"dataBase64": tsipika_format::base64_encode(&emf), "center": [150, 150]})).unwrap();
     assert_eq!(r["count"], 1);
     s.execute("edit.paste", &json!({"center": [150, 150]})).unwrap();
     let pasted = s.doc().unwrap().doc.layers[0].children().unwrap().clone();
     assert_eq!(pasted.len(), 1);
     let b = pasted[0].geometric_bounds().unwrap();
     assert!((b.center().x - 150.0).abs() < 0.05 && (b.width() - 30.0).abs() < 0.05, "{b:?}");
-    assert!(s.execute("clipboard.importEmf", &json!({"dataBase64": vectorcraft_format::base64_encode(b"%PDF-1.7")})).is_err());
+    assert!(s.execute("clipboard.importEmf", &json!({"dataBase64": tsipika_format::base64_encode(b"%PDF-1.7")})).is_err());
 }

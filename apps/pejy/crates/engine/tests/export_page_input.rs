@@ -1,5 +1,5 @@
 //! Public export-command page input must be rejected before narrowing on 32-bit targets.
-use designcraft_engine::{EngineError, Session};
+use pejy_engine::{EngineError, Session};
 use serde_json::json;
 
 fn rejects(numbers: &[u64]) {

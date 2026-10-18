@@ -15,9 +15,9 @@
 //!
 //! `GEN_GOLDEN_PRINT=1` prints the table (to re-pin after an intended change).
 
-use effectcraft_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, MaskShape, Params, apply, default_value, find};
-use effectcraft_keyframe::Value;
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, MaskShape, Params, apply, default_value, find};
+use tselatra_keyframe::Value;
+use tselatra_raster::Image;
 
 const W: u32 = 64;
 const H: u32 = 48;
@@ -370,7 +370,7 @@ fn audio_spectrum_uses_linear_frequency_and_amplitude() {
             let host = Tone { frequency, amplitude };
             let env = EffectEnv { host: Some(&host), comp_time: 1.0, ..Default::default() };
             let ctx = EffectCtx { params: &params, time: 1.0, layer_size: size, seed: 1, adjustment: false, env };
-            let plan = effectcraft_effects::marks_plan(id, &ctx, &buf).unwrap();
+            let plan = tselatra_effects::marks_plan(id, &ctx, &buf).unwrap();
             assert_eq!(plan.segs.len(), 33);
             let heights: Vec<f64> = plan.segs.iter().map(|seg| (seg.b[1] - seg.a[1]).abs()).collect();
             assert!(heights.iter().all(|height| height.is_finite()));

@@ -6,11 +6,11 @@ version = 4
 name = "counter"
 version = "0.1.0"
 dependencies = [
- "figcraft-plugin-sdk",
+ "endrika-plugin-sdk",
 ]
 
 [[package]]
-name = "figcraft-plugin-sdk"
+name = "endrika-plugin-sdk"
 version = "0.1.0"
 dependencies = [
  "serde_json",
@@ -92,7 +92,7 @@ dependencies = [
 name = "swatch-grid"
 version = "0.1.0"
 dependencies = [
- "figcraft-plugin-sdk",
+ "endrika-plugin-sdk",
 ]
 
 [[package]]
@@ -110,7 +110,7 @@ dependencies = [
 name = "tidy-names"
 version = "0.1.0"
 dependencies = [
- "figcraft-plugin-sdk",
+ "endrika-plugin-sdk",
 ]
 
 [[package]]

@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 
 use egui::{Align2, Color32, CornerRadius, Id, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_engine::templates::{Kind, TEMPLATES, Template};
+use endrika_engine::templates::{Kind, TEMPLATES, Template};
 use serde_json::json;
 
 use crate::FigApp;
@@ -182,7 +182,7 @@ fn dropped(app: &mut FigApp, ctx: &egui::Context) {
     for f in files {
         let path = f.path().to_path_buf();
         if !crate::opens(&path) {
-            app.toast(tr("Drop a .figcraft, .fig, .json, .svg or image file."));
+            app.toast(tr("Drop a .endrika, .fig, .json, .svg or image file."));
             continue;
         }
         // `opens` saw an extension, so there is a file name to tell the format by.
@@ -203,7 +203,7 @@ fn dropped(app: &mut FigApp, ctx: &egui::Context) {
 fn sidebar(app: &mut FigApp, ui: &mut Ui, t: &Tokens, left: Rect) {
     let mut y = left.min.y + 20.0;
     icons::paint(ui.painter(), Rect::from_min_size(pos2(left.min.x + 16.0, y), vec2(20.0, 20.0)), Icon::Logo, ACCENT);
-    ui.painter().text(pos2(left.min.x + 44.0, y + 10.0), Align2::LEFT_CENTER, "FigCraft", semibold(14.0), t.text);
+    ui.painter().text(pos2(left.min.x + 44.0, y + 10.0), Align2::LEFT_CENTER, "Endrika", semibold(14.0), t.text);
     y += 48.0;
     let search = Rect::from_min_size(pos2(left.min.x + 8.0, y), vec2(SIDEBAR - 16.0, widgets::FIELD_H));
     ui.scope_builder(egui::UiBuilder::new().max_rect(search), |ui| {
@@ -252,7 +252,7 @@ fn search_results(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
         subheading(ui, t, tr("Online files"));
         for f in &online {
             count += 1;
-            let host = figcraft_engine::online::server_host(&f.server);
+            let host = endrika_engine::online::server_host(&f.server);
             let icon = crate::online::mark(f.shared.is_some());
             let row = FileRow {
                 mark: Some((icon, if f.shared.is_some() { t.success } else { t.icon_secondary })),
@@ -336,7 +336,7 @@ fn recents(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
     let (mut new_file, mut open) = (false, false);
     ui.horizontal(|ui| {
         new_file = action_card(ui, t, Icon::Plus, tr("New design file"), tr("Start from a blank canvas"));
-        open = action_card(ui, t, Icon::Page, tr("Open file"), tr("Open .figcraft, .svg or images"));
+        open = action_card(ui, t, Icon::Page, tr("Open file"), tr("Open .endrika, .svg or images"));
     });
     if new_file {
         app.run("file.new", json!({}));
@@ -379,7 +379,7 @@ fn recents(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
 /// The Open files list: the documents whose name or path has `query` (lower case; all for ""), a
 /// row each; choosing one shows its tab. How many are listed.
 fn open_files(app: &mut FigApp, ui: &mut Ui, t: &Tokens, query: &str) -> usize {
-    let hit = |d: &&figcraft_engine::DocState| file_matches(&d.doc.name, d.path.as_deref().unwrap_or_default(), query);
+    let hit = |d: &&endrika_engine::DocState| file_matches(&d.doc.name, d.path.as_deref().unwrap_or_default(), query);
     let count = app.session.docs.iter().filter(hit).count();
     if count == 0 {
         return 0;
@@ -404,7 +404,7 @@ fn open_files(app: &mut FigApp, ui: &mut Ui, t: &Tokens, query: &str) -> usize {
 /// The file joined from the home screen (a code, or one of your online files) opened in a tab of
 /// its own: show it. (A join that was left is forgotten.)
 fn opened_join(app: &mut FigApp) {
-    match app.ui.live.home_join.map(|id| app.session.live.get(id).map(figcraft_engine::live::Live::syncing)) {
+    match app.ui.live.home_join.map(|id| app.session.live.get(id).map(endrika_engine::live::Live::syncing)) {
         Some(Some(true)) => {
             app.ui.live.home_join = None;
             app.ui.home = false;
@@ -456,7 +456,7 @@ fn getting_started(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
 
 /// A command's shortcut as this platform writes it, as the keymap has it now.
 pub(crate) fn shortcut(command: &str) -> Option<String> {
-    crate::shortcuts::shortcut(command).map(|key| figcraft_engine::keymap::display(key, crate::shortcuts::platform()))
+    crate::shortcuts::shortcut(command).map(|key| endrika_engine::keymap::display(key, crate::shortcuts::platform()))
 }
 
 /// `text` wrapped at `width`, at most `rows` lines (the last one ends with an ellipsis).
@@ -586,18 +586,18 @@ struct Thumb {
 struct Thumbs(BTreeMap<(&'static str, bool), Option<Thumb>>);
 
 /// Build `template` and render the top of its first page to fit a card.
-fn thumbnail(ctx: &egui::Context, template: &Template, background: figcraft_color::Color) -> Option<Thumb> {
+fn thumbnail(ctx: &egui::Context, template: &Template, background: endrika_color::Color) -> Option<Thumb> {
     let doc = template.build(background).ok()?;
     let frames = doc.node(doc.first_page()?)?.children.clone();
-    let bounds = frames.iter().filter_map(|id| figcraft_render::export_bounds(&doc, *id)).reduce(|a, b| a.union(b))?;
+    let bounds = frames.iter().filter_map(|id| endrika_render::export_bounds(&doc, *id)).reduce(|a, b| a.union(b))?;
     if !(bounds.width() > 0.0 && bounds.height() > 0.0) {
         return None;
     }
     // A page much taller than a card shows its top, as wide as the card.
     let (w, h) = (f64::from(CARD_W - 22.0), f64::from(THUMB_H - 22.0));
-    let area = figcraft_geom::Rect::new(bounds.x0, bounds.y0, bounds.x1, bounds.y1.min(bounds.y0 + bounds.width() * h / w * 1.5));
+    let area = endrika_geom::Rect::new(bounds.x0, bounds.y0, bounds.x1, bounds.y1.min(bounds.y0 + bounds.width() * h / w * 1.5));
     let scale = (w / area.width()).min(h / area.height()) * f64::from(ctx.pixels_per_point());
-    let pix = figcraft_render::render_area(&doc, &frames, area, scale.min(1.0))?;
+    let pix = endrika_render::render_area(&doc, &frames, area, scale.min(1.0))?;
     let image = crate::render_worker::screen_image(&pix, doc.color_profile);
     let texture = ctx.load_texture(format!("template-thumb-{}", template.id), image, egui::TextureOptions::LINEAR);
     Some(Thumb { texture, page: crate::theme::c32(background) })

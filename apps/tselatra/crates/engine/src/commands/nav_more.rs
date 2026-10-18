@@ -2,9 +2,9 @@
 
 use std::collections::BTreeSet;
 
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::{ItemId, LayerSource, Project};
-use effectcraft_time::Tick;
+use tselatra_keyframe::Value as KV;
+use tselatra_project::{ItemId, LayerSource, Project};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, bad, comp_id, has_comp, has_layers, layers_p};
@@ -53,7 +53,7 @@ fn step_mask(s: &mut Session, p: &Value, dir: i64) -> Result<Value> {
     let groups: Vec<_> = masks.groups().collect();
     let n = groups.len() as i64;
     // The selected mask: its group, or a property inside it.
-    let selected = |g: &effectcraft_project::PropGroup| {
+    let selected = |g: &tselatra_project::PropGroup| {
         s.state.selected_props.iter().any(|(l, uid)| *l == lid && (g.find_group(*uid).is_some() || g.find(*uid).is_some()))
     };
     let i = match groups.iter().position(|g| selected(g)) {

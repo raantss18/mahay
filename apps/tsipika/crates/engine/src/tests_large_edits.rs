@@ -6,9 +6,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Appearance, Document, LAYER_COLORS, LayerColor, Node, NodeId, NodeKind};
-use vectorcraft_geom::{FillRule, Rect, shapes};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_doc::{Appearance, Document, LAYER_COLORS, LayerColor, Node, NodeId, NodeKind};
+use tsipika_geom::{FillRule, Rect, shapes};
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 use super::*;
 
@@ -174,7 +174,7 @@ fn duplicate_of_50000_objects_finishes_within_20_s() {
     assert!(ids_in(&r) == copies);
     assert!(layer(&s, 0) == in_turn(&ids, &copies), "each copy directly above its object");
     assert!(selected(&s, &copies));
-    assert_eq!(bounds(&s, copies[0]), square_at(0) + vectorcraft_geom::Vec2::new(5.0, 0.0));
+    assert_eq!(bounds(&s, copies[0]), square_at(0) + tsipika_geom::Vec2::new(5.0, 0.0));
     undo_gives_back(&mut s, &before);
 }
 
@@ -188,7 +188,7 @@ fn transform_with_copy_of_50000_objects_finishes_within_20_s() {
     assert!(layer(&s, 0) == in_turn(&ids, &copies), "each copy directly above its object");
     assert!(selected(&s, &copies));
     let last = ids.len() - 1;
-    assert_eq!(bounds(&s, copies[last]), square_at(last) + vectorcraft_geom::Vec2::new(5.0, 0.0));
+    assert_eq!(bounds(&s, copies[last]), square_at(last) + tsipika_geom::Vec2::new(5.0, 0.0));
     assert_eq!(bounds(&s, ids[last]), square_at(last));
     undo_gives_back(&mut s, &before);
 }
@@ -202,7 +202,7 @@ fn transform_each_with_copy_of_50000_objects_finishes_within_20_s() {
     assert!(ids_in(&r) == copies);
     assert!(layer(&s, 0) == in_turn(&ids, &copies), "each copy directly above its object");
     assert!(selected(&s, &copies));
-    assert_eq!(bounds(&s, copies[1]), square_at(1) + vectorcraft_geom::Vec2::new(5.0, 0.0));
+    assert_eq!(bounds(&s, copies[1]), square_at(1) + tsipika_geom::Vec2::new(5.0, 0.0));
     undo_gives_back(&mut s, &before);
 }
 
@@ -563,7 +563,7 @@ fn artboard_copies_and_cut_keep_order_and_ids() {
     let copies = json!([n, n + 1, n + 2, n + 3, n + 7, n + 8]);
     let copied = [json!([a, n, b, n + 1, c, n + 2, [group, d, e, f], [n + 3, n + 4, n + 5, n + 6]]), json!([g, n + 7, h, n + 8, off])];
     // The copy of h, the last object on the artboard, sits where h sits, moved by `dx`.
-    let moved_by = |s: &Session, dx: f64| bounds(s, NodeId(n + 8)) == bounds(s, NodeId(h)) + vectorcraft_geom::Vec2::new(dx, 0.0);
+    let moved_by = |s: &Session, dx: f64| bounds(s, NodeId(n + 8)) == bounds(s, NodeId(h)) + tsipika_geom::Vec2::new(dx, 0.0);
 
     // Duplicate Artboard places the copy 20 pt right of the last artboard.
     let right = before.artboards.iter().map(|ab| ab.rect.x1).fold(f64::MIN, f64::max);

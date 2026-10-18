@@ -60,7 +60,7 @@ fn a_path_text_and_base64_give_one_report() {
     assert_eq!(by_path["name"], "Tidy.jsx");
     assert_eq!(by_path["problems"], json!([{"code": "unterminatedString", "line": 2}]));
     assert_eq!(check(json!({"data": src, "name": "Tidy.jsx"})), by_path);
-    assert_eq!(check(json!({"dataBase64": vectorcraft_format::base64_encode(src.as_bytes()), "name": "Tidy.jsx"})), by_path);
+    assert_eq!(check(json!({"dataBase64": tsipika_format::base64_encode(src.as_bytes()), "name": "Tidy.jsx"})), by_path);
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -153,11 +153,11 @@ fn kinds_limits_and_bad_params() {
     assert_eq!(kind(json!({"data": "@JSXBIN@ES@2.0@AcmeBody", "name": "a.jsx"})), "compiled");
     assert_eq!(kind(json!({"data": "alert(1);", "name": "a.jsxbin"})), "compiled");
     assert_eq!(kind(json!({"data": "import a from 'a';\nexport default a;\n"})), "module");
-    assert_eq!(kind(json!({"dataBase64": vectorcraft_format::base64_encode(b"var a;\0")})), "notText");
+    assert_eq!(kind(json!({"dataBase64": tsipika_format::base64_encode(b"var a;\0")})), "notText");
     // Past 8 MiB as text and as base64: only the head is decoded.
     let big = "a".repeat((8 << 20) + 1);
     assert_eq!(kind(json!({"data": big})), "tooLarge");
-    assert_eq!(kind(json!({"dataBase64": vectorcraft_format::base64_encode(big.as_bytes())})), "tooLarge");
+    assert_eq!(kind(json!({"dataBase64": tsipika_format::base64_encode(big.as_bytes())})), "tooLarge");
     assert_eq!(kind(json!({"data": &big[1..]})), "script");
     let mut s = Session::new();
     for (p, want) in [

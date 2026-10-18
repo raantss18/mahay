@@ -5,9 +5,9 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use craft_pdf::syntax::Pdf;
-use craft_pdf::syntax::object::{Array, Dict, Object, ObjectIdentifier, Stream, String as PdfString};
-use craft_pdf::write::backend as krilla;
+use mahay_pdf::syntax::Pdf;
+use mahay_pdf::syntax::object::{Array, Dict, Object, ObjectIdentifier, Stream, String as PdfString};
+use mahay_pdf::write::backend as krilla;
 use krilla::embed::{AssociationKind, EmbeddedFile, MimeType};
 use krilla::metadata::DateTime;
 
@@ -17,12 +17,12 @@ use crate::import_scan::text_string;
 use crate::lab_spot::find;
 
 /// The embedded file holding the native document (its name among the PDF's attachments).
-pub const EDITING_FILE: &str = "vectorcraft-editing.vectorcraft";
+pub const EDITING_FILE: &str = "tsipika-editing.tsipika";
 /// The editing file's name from before the project was renamed: still read.
 pub const LEGACY_EDITING_FILE: &str = "drawcraft-editing.drawcraft";
 
 /// The editing file's description: this text, then the hash of the pages.
-const DESCRIPTION: &str = "VectorCraft editing data; page hash ";
+const DESCRIPTION: &str = "Tsipika editing data; page hash ";
 /// Stands for the hash while the PDF is written: as long as a hash, so writing the hash over it
 /// keeps every offset.
 const PLACEHOLDER: &str = "0000000000000000";

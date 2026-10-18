@@ -1,6 +1,6 @@
 //! View → Perspective Grid → Define Grid: `perspective.grid.get` reads the grid (the model, the
 //! Define Grid fields and the station point) and `perspective.grid.define` sets it from those
-//! fields. The model and the camera maths live in `vectorcraft_tools::distort::perspective`.
+//! fields. The model and the camera maths live in `tsipika_tools::distort::perspective`.
 //!
 //! Presets: the built-in views (generated in code, fitted to the first artboard, protected) and
 //! the user's, saved with the preferences ([`crate::Prefs::perspective_presets`]) as Define Grid
@@ -11,13 +11,13 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, NodeId};
-use vectorcraft_geom::{Point, Rect, Vec2};
-use vectorcraft_tools::distort::perspective::Plane;
-use vectorcraft_tools::distort::perspective::define::{BUILTINS, LETTER, first_artboard, is_builtin};
-use vectorcraft_tools::distort::perspective::widget::{WidgetCorner, WidgetPlace};
-use vectorcraft_tools::distort::perspective::{GridDefinition, PerspectiveGrid};
-use vectorcraft_tools::{PointerEvent, PointerKind, ToolKey};
+use tsipika_doc::{Document, NodeId};
+use tsipika_geom::{Point, Rect, Vec2};
+use tsipika_tools::distort::perspective::Plane;
+use tsipika_tools::distort::perspective::define::{BUILTINS, LETTER, first_artboard, is_builtin};
+use tsipika_tools::distort::perspective::widget::{WidgetCorner, WidgetPlace};
+use tsipika_tools::distort::perspective::{GridDefinition, PerspectiveGrid};
+use tsipika_tools::{PointerEvent, PointerKind, ToolKey};
 
 use super::distortcmds::{grid_of, silent, store_grid};
 use super::*;
@@ -210,7 +210,7 @@ impl Session {
 }
 
 /// What `perspective.grid.get` reports for `g`.
-pub(crate) fn grid_info(doc: &vectorcraft_doc::Document, g: &PerspectiveGrid) -> Value {
+pub(crate) fn grid_info(doc: &tsipika_doc::Document, g: &PerspectiveGrid) -> Value {
     let st = g.station();
     json!({
         "grid": g.definition_json(),
@@ -352,7 +352,7 @@ fn presets_import(s: &mut Session, p: &Value) -> Result<Value> {
     let bytes = match (str_param(p, "path"), str_param(p, "data"), str_param(p, "dataBase64")) {
         (Some(path), ..) => super::fileio::read_file(path)?,
         (None, Some(text), _) => text.as_bytes().to_vec(),
-        (None, None, Some(b64)) => vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(C, "bad dataBase64"))?,
+        (None, None, Some(b64)) => tsipika_format::base64_decode(b64).ok_or_else(|| bad(C, "bad dataBase64"))?,
         _ => return Err(bad(C, "give `path`, `data` or `dataBase64`")),
     };
     let file: PresetFile = serde_json::from_slice(&bytes).map_err(|e| bad(C, format!("not a perspective grid presets file: {e}")))?;

@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU32, AtomicU64, AtomicUsize,
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant};
 
-use soundcraft_model::TrackId;
+use feo_model::TrackId;
 
 /// What [`Recorder::finish`] returns: the takes that hold audio and the first problem met.
 pub type Takes = (Vec<(TrackId, PathBuf)>, Option<String>);
@@ -418,7 +418,7 @@ impl TakeWriter {
     }
 
     fn write_header(&mut self) {
-        let header = match soundcraft_audio_io::wav_float_header(self.inputs.len(), self.rate, self.frames) {
+        let header = match feo_audio_io::wav_float_header(self.inputs.len(), self.rate, self.frames) {
             Ok(h) => h,
             Err(e) => return self.fail(e),
         };
@@ -438,7 +438,7 @@ mod tests {
     use super::*;
 
     fn decode(path: &PathBuf) -> Vec<Vec<f32>> {
-        soundcraft_audio_io::decode(&std::fs::read(path).unwrap(), None).unwrap().1.channels
+        feo_audio_io::decode(&std::fs::read(path).unwrap(), None).unwrap().1.channels
     }
 
     #[test]
@@ -502,7 +502,7 @@ mod tests {
 
     #[test]
     fn a_failed_write_is_trouble_while_still_recording() {
-        let dir = std::env::temp_dir().join(format!("soundcraft-failed-take-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-failed-take-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let mut take = TakeWriter::create(TrackId(1), vec![0], dir.join("Vox_01.wav"), 48_000).unwrap();
         take.file = File::open(&take.path).unwrap();
@@ -525,7 +525,7 @@ mod tests {
 
     #[test]
     fn takes_stream_into_their_files() {
-        let dir = std::env::temp_dir().join(format!("soundcraft-takes-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-takes-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let gtr = TakeWriter::create(TrackId(1), vec![1, 2], dir.join("Gtr_01.wav"), 48_000).unwrap();
         let mut vox = TakeWriter::create(TrackId(2), vec![0], dir.join("Vox_01.wav"), 48_000).unwrap();
@@ -553,7 +553,7 @@ mod tests {
 
     #[test]
     fn a_take_sums_itself_up_for_drawing_while_it_records() {
-        let dir = std::env::temp_dir().join(format!("soundcraft-live-take-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-live-take-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let mut take = TakeWriter::create(TrackId(4), vec![2, 0], dir.join("Gtr_01.wav"), 48_000).unwrap();
         let input: Vec<f32> = (0..300).flat_map(|f| [f as f32, -1.0, -(f as f32)]).collect();

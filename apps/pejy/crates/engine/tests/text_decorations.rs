@@ -1,10 +1,10 @@
 //! The same synthetic overlapping runs must paint correctly on screen and in exported PDF.
-use designcraft_color::{Color, Swatch};
-use designcraft_compose::{Cache, compose_story};
-use designcraft_doc::{CharAttrs, Document, ParaFormat, SpreadRef, build::NewDocument};
-use designcraft_geom::{Affine, Rect};
-use designcraft_pdf::{PdfOptions, export_pdf};
-use designcraft_render::{Placed, RenderOptions, Rendered, Renderer};
+use pejy_color::{Color, Swatch};
+use pejy_compose::{Cache, compose_story};
+use pejy_doc::{CharAttrs, Document, ParaFormat, SpreadRef, build::NewDocument};
+use pejy_geom::{Affine, Rect};
+use pejy_pdf::{PdfOptions, export_pdf};
+use pejy_render::{Placed, RenderOptions, Rendered, Renderer};
 
 fn document(decoration: u8, hide_first: bool, hide_second: bool) -> Document {
     let mut d = Document::new(&NewDocument { width: 240.0, height: 240.0, facing_pages: false, ..Default::default() });
@@ -58,7 +58,7 @@ fn raster(d: &Document, threads: u16) -> Rendered {
 
 fn pdf(d: &Document) -> Rendered {
     let bytes = export_pdf(d, &Cache::new(), &PdfOptions::default()).unwrap();
-    let image = designcraft_render::render_pdf_page(&bytes, 0, 480).unwrap();
+    let image = pejy_render::render_pdf_page(&bytes, 0, 480).unwrap();
     assert_eq!((image.width(), image.height()), (480, 480));
     // hayro renders on transparent paper; composite onto the same white backdrop as the canvas.
     let pixels = image

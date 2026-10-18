@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-11 · **Last updated:** 2026-10-14 · **Change:** minor (Polish and Georgian interfaces; catalog counts remain the 2026-10-10 measurement) · **Target:** Adobe InDesign 2026 (21.6)
 
-Per-language status of the DesignCraft interface and of document typesetting in each script.
+Per-language status of the Pejy interface and of document typesetting in each script.
 Script-specific typesetting detail: [cjk.md](cjk.md), [cjk-typography.md](cjk-typography.md),
 [arabic-typography.md](arabic-typography.md). Overall numbers: [target-app-parity.md](target-app-parity.md).
 
@@ -16,7 +16,7 @@ Untranslated strings fall back to English. A script (2026-10-10) built the set o
 interface strings as the union of every catalog's keys, every engine command label and every
 literal passed to `tr`/`t` in the UI crate: **1,724 strings**. A further ~145 capitalized literals
 in the UI crate appear in no catalog (some are test data or proper names), so the true total is
-somewhat higher and every percentage below is a slight overestimate. Help: DesignCraft has no
+somewhat higher and every percentage below is a slight overestimate. Help: Pejy has no
 help content in any language (Help ▸ opens the project's pages).
 
 InDesign 2026 ships 25 interface localizations (`.lproj` folders: cs, da, de, el, en, en_GB, es,
@@ -35,7 +35,7 @@ come as Middle East editions with an English or French interface and right-to-le
 | French | fr | ✓ | 1,438 (83%) | menus, panels, most dialogs; no help | Latin ✓; no French hyphenation | no | partial | 6–10 |
 | Portuguese (Brazil) | pt-br | ✓ (pt) | 1,057 (61%) | menus, panels, some dialogs; no help | Latin ✓; Portuguese hyphenation ✓ | no | partial | 8–12 |
 | Indonesian | id | ✗ | 0 (0%) | none | Latin ✓ | no | none | 12–18 |
-| Japanese | ja | ✓ | 1,644 (95%) | whole interface (#272), vertical-type commands; no help | vertical text, kinsoku, aki, ruby, warichu ✓ (partial depth, cjk.md); canvas IME ✓, not checked by hand (#322); Japanese UI and Mincho fonts from craft-fonts | no | partial | 6–10 (+ IME checks, shared with zh) |
+| Japanese | ja | ✓ | 1,644 (95%) | whole interface (#272), vertical-type commands; no help | vertical text, kinsoku, aki, ruby, warichu ✓ (partial depth, cjk.md); canvas IME ✓, not checked by hand (#322); Japanese UI and Mincho fonts from mahay-fonts | no | partial | 6–10 (+ IME checks, shared with zh) |
 | German | de | ✓ | 1,438 (83%) | menus, panels, most dialogs; no help | Latin ✓; no German hyphenation (InDesign ships 2006 reform patterns) | no | partial | 6–10 |
 | Korean | ko | ✓ | 0 (0%) | none | Korean line breaking at spaces ✓; canvas IME ✓, not checked by hand (#322) | no | none | 15–25 |
 | Vietnamese | vi | ✗ | 0 (0%) | none | Latin with stacked diacritics via harfrust, untested | no | none | 12–18 |
@@ -46,7 +46,7 @@ string is translated and its script renders and edits correctly; none but Englis
 Japanese follow-up (2026-10-11): print ranges, imported style handling, the built-in `(import)`
 caption, table row/column movement and row-height distribution now use the existing translation
 catalog. Print, import options and an active table were rendered in Japanese and English with
-craft-fonts. The language totals above retain their dated measurement; this is a targeted fix.
+mahay-fonts. The language totals above retain their dated measurement; this is a targeted fix.
 
 ## Other shipped languages
 
@@ -58,13 +58,13 @@ craft-fonts. The language totals above retain their dated measurement; this is a
 | Polish | pl | 1,717 (99%), count captions category-first; AI-drafted, awaiting native review | partial |
 | Georgian | ka | 1,724 (~100%: every catalog key plus the command labels the others lack), count captions as `noun: n` | partial (reviewed by a native speaker) |
 
-DesignCraft ships **5** interface languages beyond the twelve; InDesign ships 17 beyond its
+Pejy ships **5** interface languages beyond the twelve; InDesign ships 17 beyond its
 eight of the twelve (cs, da, el, en_GB, fi, hu, it, nb, nl, pl, ro, ru, sq, sv, tr, uk, zh_TW).
 
 ## Document languages
 
 InDesign 2026 hyphenates and spell-checks ~40 languages (Hunspell and Duden dictionaries).
-DesignCraft hyphenates **English, Spanish, Portuguese and Norwegian** and spell-checks **English** only. Text language
+Pejy hyphenates **English, Spanish, Portuguese and Norwegian** and spell-checks **English** only. Text language
 can be set per paragraph and character (Properties, Character panel) and drives quotes and
 locale shaping. See [typography-parity.md](typography-parity.md).
 

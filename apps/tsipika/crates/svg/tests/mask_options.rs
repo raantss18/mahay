@@ -1,14 +1,14 @@
 //! Opacity-mask options survive SVG (M3.87): exported masks list the options that differ from the
-//! defaults in `data-vectorcraft-mask`, and import restores them and the original mask art (without
+//! defaults in `data-tsipika-mask`, and import restores them and the original mask art (without
 //! the backdrop rectangle and inverting filter that draw the options in SVG).
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node, OpacityMask};
-use vectorcraft_geom::{Rect, shapes};
-use vectorcraft_svg::{ExportOptions, export, import_with_report};
-use vectorcraft_testkit::raster::{Image, render_artboard};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node, OpacityMask};
+use tsipika_geom::{Rect, shapes};
+use tsipika_svg::{ExportOptions, export, import_with_report};
+use tsipika_testkit::raster::{Image, render_artboard};
 
 /// A red square masked by white art over its left half.
 fn masked(clip: bool, invert: bool) -> Document {
@@ -38,8 +38,8 @@ fn an_inverted_unclipped_mask_round_trips() {
     {
         let s = export(&masked(clip, invert), &ExportOptions::default());
         match attr {
-            Some(a) => assert!(s.contains(&format!("data-vectorcraft-mask=\"{a}\"")), "{s}"),
-            None => assert!(!s.contains("data-vectorcraft-mask"), "{s}"),
+            Some(a) => assert!(s.contains(&format!("data-tsipika-mask=\"{a}\"")), "{s}"),
+            None => assert!(!s.contains("data-tsipika-mask"), "{s}"),
         }
         let (back, warnings) = import_with_report(&s).unwrap();
         assert!(warnings.is_empty(), "{warnings:?}");

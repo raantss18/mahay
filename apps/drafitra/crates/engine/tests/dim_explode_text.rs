@@ -2,8 +2,8 @@
 //! dimension's overrides and DIMSCALE (0 = the drawing's) set its height, and aligned text keeps
 //! its angle (issue #367).
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle, MText};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle, MText};
 use serde_json::{Value, json};
 
 /// Draw a vertical dimension after `setup`, explode it, and return (drawn text height, drawn
@@ -16,7 +16,7 @@ fn explode_vertical(setup: &[(&str, Value)]) -> (f64, f64, MText) {
     let r = s.execute("dimlinear", &json!({"p1": [0, 0], "p2": [0, 30], "at": [5, 15]})).unwrap();
     let h = Handle::parse_hex(r["handle"].as_str().unwrap()).unwrap();
     let drawn = match &s.doc().unwrap().entity(h).unwrap().kind {
-        EntityKind::Dimension(dm) => cadcraft_engine::render::dimension_in(s.doc().unwrap(), dm),
+        EntityKind::Dimension(dm) => drafitra_engine::render::dimension_in(s.doc().unwrap(), dm),
         k => panic!("not a dimension: {k:?}"),
     };
     s.execute("explode", &json!({"handles": [h.hex()]})).unwrap();

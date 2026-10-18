@@ -1,7 +1,7 @@
 //! Deferred readbacks: rendering on a device whose readbacks cannot be waited for (WebGPU in a
 //! browser worker: a buffer maps only once the worker returns to its event loop).
 //!
-//! A frame renders in passes (see [`effectcraft_render::Accelerator::frame_begin`]). Every
+//! A frame renders in passes (see [`tselatra_render::Accelerator::frame_begin`]). Every
 //! readback the renderer needs is keyed by what determines its pixels: a GPU effect chain by
 //! its input buffer's pixels and the chain's parameters, the top-level frame by comp, time and
 //! render options. A key seen for the first time records the GPU work, starts an asynchronous
@@ -22,8 +22,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use effectcraft_effects::Buf;
-use effectcraft_render::FxStep;
+use tselatra_effects::Buf;
+use tselatra_render::FxStep;
 
 /// Bytes read back for one key, with the geometry they describe.
 #[derive(Clone, Debug)]

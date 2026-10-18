@@ -1,38 +1,38 @@
-# Driving EffectCraft from agents
+# Driving Tselatra from agents
 
-Everything in EffectCraft is an engine command with a stable id and JSON params. Menus, shortcuts,
+Everything in Tselatra is an engine command with a stable id and JSON params. Menus, shortcuts,
 panel gestures, the CLI, the control channel and MCP all go through the same commands, so anything a
 user can do, an agent can do too. There are three ways in:
 
 | Interface | Best for | Needs a window |
 |---|---|---|
-| **MCP** (`effectcraft-cli mcp`) | Claude Code and other MCP clients | no (headless), or yes with `--bridge` |
-| **CLI** (`effectcraft-cli exec/get/set/...`) | one-shot scripting and CI; JSON output with `--json` | no |
-| **Control channel** (`effectcraft --control 9877`) | driving and seeing the live UI; see [control-protocol.md](control-protocol.md) | yes |
+| **MCP** (`tselatra-cli mcp`) | Claude Code and other MCP clients | no (headless), or yes with `--bridge` |
+| **CLI** (`tselatra-cli exec/get/set/...`) | one-shot scripting and CI; JSON output with `--json` | no |
+| **Control channel** (`tselatra --control 9877`) | driving and seeing the live UI; see [control-protocol.md](control-protocol.md) | yes |
 
 ## MCP setup
 
-Build once with `cargo build --release -p effectcraft-cli`, then register the server. For Claude
+Build once with `cargo build --release -p tselatra-cli`, then register the server. For Claude
 Code, add a `.mcp.json` at the project root:
 
 ```json
 {
   "mcpServers": {
-    "effectcraft": {
-      "command": "/path/to/effectcraft/target/release/effectcraft-cli",
+    "tselatra": {
+      "command": "/path/to/tselatra/target/release/tselatra-cli",
       "args": ["mcp"]
     }
   }
 }
 ```
 
-This repository ships a ready-made [`.mcp.json`](../.mcp.json): `effectcraft` (headless, demo
-project loaded) and `effectcraft-app` (bridged to a desktop app started with `--control 9877`). Both
+This repository ships a ready-made [`.mcp.json`](../.mcp.json): `tselatra` (headless, demo
+project loaded) and `tselatra-app` (bridged to a desktop app started with `--control 9877`). Both
 run through `cargo run --release`, so the first start compiles; run
-`cargo build --release -p effectcraft-cli` once beforehand to avoid an MCP startup timeout.
+`cargo build --release -p tselatra-cli` once beforehand to avoid an MCP startup timeout.
 
 You can also register it from the command line:
-`claude mcp add effectcraft -- /path/to/target/release/effectcraft-cli mcp`. Other clients (Claude
+`claude mcp add tselatra -- /path/to/target/release/tselatra-cli mcp`. Other clients (Claude
 Desktop, Cursor and the like) take the same `command` and `args`.
 
 - **Headless** (`["mcp"]`): an in-process session with no window. Add `"--demo"` or
@@ -40,7 +40,7 @@ Desktop, Cursor and the like) take the same `command` and `args`.
   unless you add `"--gpu"` (`["mcp", "--gpu"]`), which attaches the GPU compositor on a device of
   its own; if no adapter is usable the server says why and exits. `get_project`'s `renderer`
   (`render.backend`) reports `active` (`gpu` / `cpu`) and, on the CPU, `why`.
-- **Bridge** (`["mcp", "--bridge", "9877"]`): drives a running `effectcraft --control 9877`, so you
+- **Bridge** (`["mcp", "--bridge", "9877"]`): drives a running `tselatra --control 9877`, so you
   see every change live. Bridge mode adds `screenshot` and the `ui_*` tools.
 
 After a broken connection, the bridge retries explicitly read-only control queries once.
@@ -50,19 +50,19 @@ retrying. A later call reconnects; timeouts and malformed replies are never auto
 
 ### From an installed release
 
-The release packages ship `effectcraft-cli` alongside the desktop app, so no build is needed:
+The release packages ship `tselatra-cli` alongside the desktop app, so no build is needed:
 
 | Install | CLI |
 |---|---|
-| Windows (MSI) | `C:\Program Files\EffectCraft\effectcraft-cli.exe` by default (wherever you installed it otherwise), not on `PATH` |
-| Linux (deb, rpm) | `/usr/bin/effectcraft-cli` |
-| macOS | the separate `effectcraft-cli-<version>-macos-<arch>.zip` release asset (the `.app` holds only the desktop app) |
+| Windows (MSI) | `C:\Program Files\Tselatra\tselatra-cli.exe` by default (wherever you installed it otherwise), not on `PATH` |
+| Linux (deb, rpm) | `/usr/bin/tselatra-cli` |
+| macOS | the separate `tselatra-cli-<version>-macos-<arch>.zip` release asset (the `.app` holds only the desktop app) |
 
 ```sh
 # Windows, default install folder
-claude mcp add effectcraft -- "C:\Program Files\EffectCraft\effectcraft-cli.exe" mcp
+claude mcp add tselatra -- "C:\Program Files\Tselatra\tselatra-cli.exe" mcp
 # Linux, or macOS with the CLI unzipped onto PATH
-claude mcp add effectcraft -- effectcraft-cli mcp
+claude mcp add tselatra -- tselatra-cli mcp
 ```
 
 The server speaks JSON-RPC 2.0 over stdio, one message per line, and supports MCP protocol versions
@@ -70,21 +70,21 @@ The server speaks JSON-RPC 2.0 over stdio, one message per line, and supports MC
 
 ### Keeping headless work across restarts
 
-Start `effectcraft-cli mcp --autosave` (MCP args `["mcp", "--autosave"]`) to preserve
+Start `tselatra-cli mcp --autosave` (MCP args `["mcp", "--autosave"]`) to preserve
 unsaved headless work. Each tool call that changes a dirty project writes a checkpoint before
 its reply is sent, so even killing the server after that reply leaves the work on disk. EOF
 and transport errors also flush outstanding changes. Queries do not rotate the saved versions.
 A failed checkpoint adds a warning to the tool reply; the edit remains in memory and the next
 call retries. Use `save_project {path}` to a writable location before disconnecting if warned.
 
-Each server has its own folder under `<config directory>/EffectCraft Auto-Save/MCP/` (or
+Each server has its own folder under `<config directory>/Tselatra Auto-Save/MCP/` (or
 `<custom Auto-Save folder>/MCP/`). The maximum-version setting applies within that folder.
 `--autosave` enables these checkpoints regardless of the desktop's Auto-Save toggle and interval;
 it reads settings without writing desktop preferences, shortcuts or crash-recovery state.
-`EFFECTCRAFT_CONFIG_DIR` overrides the platform config directory. Session folders are retained
+`TSELATRA_CONFIG_DIR` overrides the platform config directory. Session folders are retained
 for recovery; remove old folders once their work is saved elsewhere.
 
-`initialize` instructions and `_meta.effectcraftAutoSave` list the current folder and up to five
+`initialize` instructions and `_meta.tselatraAutoSave` list the current folder and up to five
 previous dirty sessions; `get_project.autosave` also reports the latest checkpoint and errors.
 Recover explicitly with `open_project {"path":"<checkpoint .ecproj>"}`, then
 `save_project {"path":"Recovered.ecproj"}`. Prior sessions may still be running and are never
@@ -216,7 +216,7 @@ Things that tripped up a long agent-driven session (a multi-scene 3D piece built
 
 ### Cookbook (from end-to-end QA)
 
-The scenarios in `crates/automation/tests/qa/` and `apps/effectcraft-cli/tests/qa_template.rs`
+The scenarios in `crates/automation/tests/qa/` and `apps/tselatra-cli/tests/qa_template.rs`
 build real projects through these interfaces; they are worked examples of everything below.
 
 * **Name things when you create them**: `layer.newText`, `layer.newShape`, `layer.newSolid`,
@@ -301,7 +301,7 @@ build real projects through these interfaces; they are worked examples of everyt
   "control":"Title","value":"John Smith"}`); a command that targets an explicit `comp` runs even
   when the active comp would disable it (`essential.exportTemplate {"comp":"Lower Third", …}`).
   The CLI also renders an exported template directly:
-  `effectcraft-cli render --template lt.ectemplate --values values.json --out 'title_[#####].png'`.
+  `tselatra-cli render --template lt.ectemplate --values values.json --out 'title_[#####].png'`.
   `values.json` is an object such as `{"Title":"John Smith","Bar Color":"#00c080","Bar Opacity":50}`;
   names follow `essential.set`, including its case-insensitive matching. A Media Replacement
   control takes a footage file path (`{"Clip":"/in/clipB.mp4"}`, or `{"path": …}`), which is
@@ -347,7 +347,7 @@ pass `"wait": true` to block until it finishes, which is what the CLI and headle
    adapt-feature and "If Confidence is Below" behaviour; `track.status` reports the track points.
 
 ```sh
-effectcraft-cli run clip.ecproj track.motion '{"layer":"#2"}' \
+tselatra-cli run clip.ecproj track.motion '{"layer":"#2"}' \
   track.setPoint '{"point":1,"center":[812,440]}' \
   track.analyze '{"wait":true}' track.apply '{}' --save
 ```
@@ -379,7 +379,7 @@ face method returns `faceModel`, the engine it tries first (the classical one wh
 no face in the mask).
 
 ```sh
-effectcraft-cli run clip.ecproj face.model.download '{"id":"mediapipe-face","wait":true}' face.model.select '{"id":"mediapipe-face","wait":true}' \
+tselatra-cli run clip.ecproj face.model.download '{"id":"mediapipe-face","wait":true}' face.model.select '{"id":"mediapipe-face","wait":true}' \
   track.mask '{"layer":"#1","mask":1,"method":"faceDetailed","direction":"forward","wait":true}' --save
 ```
 
@@ -392,8 +392,8 @@ ends the same vertex count with a matched correspondence. Options: `keyframeRate
 panel's defaults.
 
 ```sh
-effectcraft-cli exec track.mask '{"layer":"#2","mask":1,"method":"perspective","wait":true}' clip.ecproj --save
-effectcraft-cli exec mask.interpolate '{"layer":"#2","mask":"Mask 1","times":[0,2],"addVertices":10}' clip.ecproj --save --json
+tselatra-cli exec track.mask '{"layer":"#2","mask":1,"method":"perspective","wait":true}' clip.ecproj --save
+tselatra-cli exec mask.interpolate '{"layer":"#2","mask":"Mask 1","times":[0,2],"addVertices":10}' clip.ecproj --save --json
 ```
 
 ### Warp Stabilizer
@@ -417,10 +417,10 @@ scenes with depth stabilise where one perspective transform cannot;
 softer mesh) tunes it.
 
 ```sh
-effectcraft-cli run shaky.ecproj track.warpStabilizer '{"layer":"#1","wait":true}' \
+tselatra-cli run shaky.ecproj track.warpStabilizer '{"layer":"#1","wait":true}' \
   prop.set '{"layer":"#1","path":"effects/#1/stabilization/result","value":1}' --save
-effectcraft-cli exec warp.analyze '{"layer":"#1","wait":true}' shaky.ecproj --save --json
-effectcraft-cli exec warp.status '{"layer":"#1"}' shaky.ecproj --json
+tselatra-cli exec warp.analyze '{"layer":"#1","wait":true}' shaky.ecproj --save --json
+tselatra-cli exec warp.status '{"layer":"#1"}' shaky.ecproj --json
 ```
 
 ### 3D Camera Tracker
@@ -450,9 +450,9 @@ Changing the layer's frames clears the analysis; changing `effects/#1/shotType`,
 `effects/#1/horizontalAngleOfView`, `effects/#1/advanced/solveMethod` re-solves the stored tracks.
 
 ```sh
-effectcraft-cli run shot.ecproj track.camera '{"layer":"#1","wait":true}' \
+tselatra-cli run shot.ecproj track.camera '{"layer":"#1","wait":true}' \
   camera.points '{}' --json
-effectcraft-cli run shot.ecproj camera.createFromSolve '{"kind":"solid","points":[12,40,77]}' --save
+tselatra-cli run shot.ecproj camera.createFromSolve '{"kind":"solid","points":[12,40,77]}' --save
 ```
 
 ### Roto Brush & Refine Edge
@@ -486,12 +486,12 @@ Trained model (Roto Brush 2.0 / 3.0):
   classic engine (1.0) and the chosen model (2.0, 3.0).
 
 ```sh
-effectcraft-cli run clip.ecproj roto.model.install '{"path":"mobile_sam.pt"}' roto.model.select '{"id":"mobilesam","wait":true}' \
+tselatra-cli run clip.ecproj roto.model.install '{"path":"mobile_sam.pt"}' roto.model.select '{"id":"mobilesam","wait":true}' \
   roto.stroke '{"layer":"#1","points":[[300,200],[360,230]],"radius":10}' roto.propagate '{"layer":"#1","wait":true}' --save
 ```
 
 ```sh
-effectcraft-cli run clip.ecproj roto.stroke '{"layer":"#1","points":[[300,200],[360,230]],"radius":10}' \
+tselatra-cli run clip.ecproj roto.stroke '{"layer":"#1","points":[[300,200],[360,230]],"radius":10}' \
   roto.stroke '{"layer":"#1","kind":"bg","points":[[40,40],[600,40]],"radius":12}' \
   roto.propagate '{"layer":"#1","wait":true}' roto.freeze '{"layer":"#1","wait":true}' --save
 ```
@@ -512,7 +512,7 @@ Media & Disk Cache), computed Object Matte and Roto Brush segmentations are also
 by what they are made of, so reopening a project reuses them.
 
 ```sh
-effectcraft-cli run clip.ecproj objectMatte.apply '{"layer":"#1","point":[320,200],"box":[250,120,400,300]}' \
+tselatra-cli run clip.ecproj objectMatte.apply '{"layer":"#1","point":[320,200],"box":[250,120,400,300]}' \
   objectMatte.propagate '{"layer":"#1","wait":true}' objectMatte.freeze '{"layer":"#1","wait":true}' --save
 ```
 
@@ -547,13 +547,13 @@ one of its `styles` to `layer.setText {"font", "style"}`. A variable font's name
 sets the instance's axis values, and `variations` set on the text override them axis by axis.
 `text.fontFeatures` says which OpenType options a font draws with its own glyphs.
 A tool with its own font library can hand it over without installing it: folders listed in
-`EFFECTCRAFT_FONT_DIRS` (a path list, `:`-separated, `;` on Windows) are scanned like the system font folders.
+`TSELATRA_FONT_DIRS` (a path list, `:`-separated, `;` on Windows) are scanned like the system font folders.
 On Linux and the BSDs the system font folders are `/usr/share/fonts`, `/usr/local/share/fonts`,
 `~/.local/share/fonts`, `~/.fonts`, `$XDG_DATA_HOME/fonts`, `fonts` in each `$XDG_DATA_DIRS` folder,
 every `<dir>` the fontconfig configuration names (`/etc/fonts/fonts.conf` with its includes,
 `~/.config/fontconfig/fonts.conf`) and, in the Flatpak, the host's fonts under `/run/host`. The
 Flatpak can't see other folders; grant one with
-`flatpak override --user --filesystem=<dir>:ro --env=EFFECTCRAFT_FONT_DIRS=<dir> ai.storyteller.effectcraft`.
+`flatpak override --user --filesystem=<dir>:ro --env=TSELATRA_FONT_DIRS=<dir> org.mahay.tselatra`.
 
 In expressions, `text.sourceText.style` / `getStyleAt(i, t)` read styles and the setters
 (`setFontSize(v, start?, count?)`, `setFillColor`, `setText`, `setJustification`…) return a
@@ -653,29 +653,29 @@ on stdout. Errors print `{"error": ...}` and exit with status 1; usage errors, s
 option, exit with status 2 before anything runs.
 
 ```sh
-effectcraft-cli info --json
-effectcraft-cli commands --filter keys
-effectcraft-cli exec --list --schemas --json                     # every command with its params JSON Schema
-effectcraft-cli exec comp.new --params '{"name":"Main","width":1280,"height":720}' --empty --save-as main.ecproj
-effectcraft-cli exec layer.newSolid '{"color":"#3366ff"}' main.ecproj --save
-effectcraft-cli props Main '#1' --project main.ecproj           # flat property list with paths
-effectcraft-cli set Main '#1' transform/opacity 40 main.ecproj --save
-effectcraft-cli set Main '#1' transform/position '[100,360]' --time 0 main.ecproj --save
-effectcraft-cli get Main '#1' transform/position --time 0.5 main.ecproj --json
-effectcraft-cli run main.ecproj comp.open '{"comp":"Main"}' time.set '{"time":1}' --json
-effectcraft-cli render-frame main.ecproj --time 1 --max-side 640 --out f.png --json
-effectcraft-cli exec layer.newNull --bridge 9877                 # same commands, against the live app
-effectcraft-cli exec file.exportLottie '{"comp":"Main","path":"main.json","includeExpressions":true}' main.ecproj --json
-effectcraft-cli exec file.importLottie '{"path":"anim.json"}' main.ecproj --save
-effectcraft-cli render main.ecproj --comp Main --out main.mov --format prores --progress   # progress lines on stderr for a program that reads them
+tselatra-cli info --json
+tselatra-cli commands --filter keys
+tselatra-cli exec --list --schemas --json                     # every command with its params JSON Schema
+tselatra-cli exec comp.new --params '{"name":"Main","width":1280,"height":720}' --empty --save-as main.ecproj
+tselatra-cli exec layer.newSolid '{"color":"#3366ff"}' main.ecproj --save
+tselatra-cli props Main '#1' --project main.ecproj           # flat property list with paths
+tselatra-cli set Main '#1' transform/opacity 40 main.ecproj --save
+tselatra-cli set Main '#1' transform/position '[100,360]' --time 0 main.ecproj --save
+tselatra-cli get Main '#1' transform/position --time 0.5 main.ecproj --json
+tselatra-cli run main.ecproj comp.open '{"comp":"Main"}' time.set '{"time":1}' --json
+tselatra-cli render-frame main.ecproj --time 1 --max-side 640 --out f.png --json
+tselatra-cli exec layer.newNull --bridge 9877                 # same commands, against the live app
+tselatra-cli exec file.exportLottie '{"comp":"Main","path":"main.json","includeExpressions":true}' main.ecproj --json
+tselatra-cli exec file.importLottie '{"path":"anim.json"}' main.ecproj --save
+tselatra-cli render main.ecproj --comp Main --out main.mov --format prores --progress   # progress lines on stderr for a program that reads them
 ```
 
 Scripts written against After Effects' documented scripting API run with `script`:
 
 ```sh
-effectcraft-cli script build.jsx --save-as main.ecproj     # empty project unless one is given
-effectcraft-cli script --eval 'app.project.item(1).numLayers' main.ecproj --json
-effectcraft-cli script tweak.jsx --bridge 9877              # against the live app
+tselatra-cli script build.jsx --save-as main.ecproj     # empty project unless one is given
+tselatra-cli script --eval 'app.project.item(1).numLayers' main.ecproj --json
+tselatra-cli script tweak.jsx --bridge 9877              # against the live app
 ```
 
 `writeLn`/`$.writeln`/`alert` output is printed, then the value of the last expression. A script
@@ -692,9 +692,9 @@ Premiere Pro interop goes through timeline interchange (MCP: the `execute_comman
 with the same ids):
 
 ```sh
-effectcraft-cli exec file.importTimeline '{"path":"edit.xml"}' main.ecproj --save      # FCP7 XML / .fcpxml / .otio / .edl / .aaf / .omf
-effectcraft-cli exec file.exportTimeline '{"comp":"Main","path":"Main.xml"}' main.ecproj --json
-effectcraft-cli exec file.exportTimeline '{"comp":"Main","path":"Main.otio","prerender":"none"}' main.ecproj
+tselatra-cli exec file.importTimeline '{"path":"edit.xml"}' main.ecproj --save      # FCP7 XML / .fcpxml / .otio / .edl / .aaf / .omf
+tselatra-cli exec file.exportTimeline '{"comp":"Main","path":"Main.xml"}' main.ecproj --json
+tselatra-cli exec file.exportTimeline '{"comp":"Main","path":"Main.otio","prerender":"none"}' main.ecproj
 ```
 
 `file.importTimeline` returns `{format, folder, comps, allComps, items, missing, warnings}`
@@ -710,7 +710,7 @@ not read or written.
 
 ## Seeing the UI
 
-To work on the UI, start the app with `cargo run -p effectcraft -- --control 9877` (add `--demo` to
+To work on the UI, start the app with `cargo run -p tselatra -- --control 9877` (add `--demo` to
 open the demo project; without it the app starts with an empty project) and use MCP bridge
 mode or the raw control channel. A good loop is: `ui_elements` to find an id, `ui_click` or `ui_drag`
 to act, then `screenshot {"panel":"Timeline"}` to check the result. `render_frame` shows the
@@ -719,7 +719,7 @@ composition itself at any zoom.
 ### Effects & Presets
 
 The native Effects & Presets panel's options menu includes **Copy Presets Folder Path**. It copies
-the folder the panel scans: `EC_PRESETS_DIR` when set, otherwise `~/Documents/EffectCraft/Presets`
+the folder the panel scans: `EC_PRESETS_DIR` when set, otherwise `~/Documents/Tselatra/Presets`
 using `HOME` or `USERPROFILE`. Relative paths are resolved to an absolute path. The folder may
 not exist yet; this action does not create it.
 Over the live UI control channel, `ui.menu.invoke {"id":"effects.copyPresetsFolderPath"}` copies

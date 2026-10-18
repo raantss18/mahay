@@ -3,7 +3,7 @@
 use std::net::IpAddr;
 use std::time::Duration;
 
-/// Transport limits (the collaboration core has its own: [`figcraft_collab::Limits`]).
+/// Transport limits (the collaboration core has its own: [`endrika_collab::Limits`]).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NetLimits {
     /// Sockets a host keeps open at once, joined or not.
@@ -61,7 +61,7 @@ impl Default for NetLimits {
     fn default() -> Self {
         Self {
             max_connections: 64,
-            max_client_message: figcraft_collab::Limits::default().max_message_bytes,
+            max_client_message: endrika_collab::Limits::default().max_message_bytes,
             max_hello: 64 << 10,
             max_server_message: 1 << 30,
             rate: 100.0,

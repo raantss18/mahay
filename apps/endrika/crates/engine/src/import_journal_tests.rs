@@ -38,7 +38,7 @@ fn batch_wrappers_do_not_retain_import_payloads() {
 
 #[test]
 fn path_imports_and_ordinary_edits_are_still_journaled() {
-    let dir = std::env::temp_dir().join(format!("figcraft-import-journal-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-import-journal-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("kit.svg");
     std::fs::write(&path, SVG).unwrap();

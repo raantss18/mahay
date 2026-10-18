@@ -7,9 +7,9 @@
 //! hashing and re-pinning (`SIM_GOLDEN_PRINT=1`, `SIM_GOLDEN_OUT=<dir>`) as `sim_golden.rs`: any
 //! change to the CPU output of these effects, however small, fails the test.
 
-use effectcraft_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params, apply, default_value, find};
-use effectcraft_keyframe::Value;
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, EffectCtx, EffectEnv, EffectHost, LayerPixels, Params, apply, default_value, find};
+use tselatra_keyframe::Value;
+use tselatra_raster::Image;
 
 const W: u32 = 64;
 const H: u32 = 48;

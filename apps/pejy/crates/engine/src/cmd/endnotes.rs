@@ -1,7 +1,7 @@
 //! Type › Insert Endnote and Document Endnote Options. Endnote text lives with its reference;
 //! the endnote frame (made on a new last page with the first endnote) lists them all.
 
-use designcraft_doc::{ParaFormat, SpreadRef, StoryId};
+use pejy_doc::{ParaFormat, SpreadRef, StoryId};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, has_text, ok};
@@ -25,7 +25,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let style = d.endnote_options.para_style.clone();
                 let st = d.story_mut(sid).ok_or_else(|| bad("endnote.edit", "no such story"))?;
                 let n = st.endnote_mut(id).ok_or_else(|| bad("endnote.edit", format!("no endnote {id}")))?;
-                n.text = designcraft_doc::Story::with_text(StoryId(0), &text, ParaFormat { style, ..Default::default() });
+                n.text = pejy_doc::Story::with_text(StoryId(0), &text, ParaFormat { style, ..Default::default() });
                 ok()
             })
         }),
@@ -36,11 +36,11 @@ pub fn specs() -> Vec<CommandSpec> {
                 let k = st.endnotes.iter().position(|n| n.id == id).ok_or_else(|| bad("endnote.delete", format!("no endnote {id}")))?;
                 let at = st
                     .text
-                    .match_indices(designcraft_doc::ENDNOTE_REF)
+                    .match_indices(pejy_doc::ENDNOTE_REF)
                     .nth(k)
                     .map(|(i, _)| i)
                     .ok_or_else(|| bad("endnote.delete", format!("endnote {id} has no reference in the text")))?;
-                st.delete(at..at + designcraft_doc::ENDNOTE_REF.len_utf8());
+                st.delete(at..at + pejy_doc::ENDNOTE_REF.len_utf8());
                 ok()
             })
         }),
@@ -74,7 +74,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         n.insert(k.clone(), v.clone());
                     }
                 }
-                let opts: designcraft_doc::EndnoteOptions = serde_json::from_value(new.clone()).map_err(|e| bad("endnote.options", e.to_string()))?;
+                let opts: pejy_doc::EndnoteOptions = serde_json::from_value(new.clone()).map_err(|e| bad("endnote.options", e.to_string()))?;
                 if new != cur {
                     s.edit(|d, _| {
                         d.endnote_options = opts;
@@ -124,7 +124,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
         let id = story
             .insert_endnote(at, &text, ParaFormat { style, ..Default::default() })
             .ok_or_else(|| bad(ID, "the story's endnotes don't match its references"))?;
-        let caret = at + designcraft_doc::ENDNOTE_REF.len_utf8();
+        let caret = at + pejy_doc::ENDNOTE_REF.len_utf8();
         if let Some(t) = &mut sel.text {
             (t.anchor, t.focus) = (caret, caret);
         }
@@ -157,7 +157,7 @@ mod tests {
         let esid = d.endnote_story.unwrap();
         assert_eq!(d.stories[&esid].text, "Endnotes\n1\tEarlier.\n2\tFirst source.", "numbered in text order");
         // The references are numbered in the composed text.
-        let sid = designcraft_doc::StoryId(a["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(a["story"].as_u64().unwrap());
         let cs = s.cache.get(&d, sid, None);
         let shown = cs.frames[0].lines[0].glyphs.len();
         assert!(shown > "Alpha beta.".chars().count(), "reference numbers take glyphs");
@@ -168,7 +168,7 @@ mod tests {
         s.execute("endnote.delete", &json!({"story": r0["story"], "id": r0["id"]})).unwrap();
         let d = s.doc().unwrap().doc.clone();
         assert_eq!(d.stories[&esid].text, "Notes\ni\tEdited.");
-        assert_eq!(d.stories[&sid].text.matches(designcraft_doc::ENDNOTE_REF).count(), 1);
+        assert_eq!(d.stories[&sid].text.matches(pejy_doc::ENDNOTE_REF).count(), 1);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc().unwrap().doc.stories[&esid].text, "Notes\ni\tEarlier.\nii\tEdited.");
     }

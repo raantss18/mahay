@@ -2,8 +2,8 @@
 //! raster effects resolution, background, presets, Recent and Saved.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Background, ColorMode, Unit};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{Background, ColorMode, Unit};
+use tsipika_geom::Rect;
 
 use super::*;
 
@@ -72,7 +72,7 @@ fn every_setting_reaches_the_document() {
     assert_eq!(d.color_mode, ColorMode::Cmyk);
     assert_eq!(d.raster_effects_ppi, 150.0);
     // Saved and reopened, the settings stay.
-    let back = vectorcraft_format::load(&vectorcraft_format::save_file(d)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save_file(d)).unwrap();
     assert_eq!((back.raster_effects_ppi, back.setup.bleed, back.setup.background), (150.0, d.setup.bleed, Background::White));
 }
 
@@ -89,7 +89,7 @@ fn a_white_background_exports_opaque() {
     let alpha = |bg: &str| {
         let mut s = new_doc(json!({"width": 20, "height": 20, "backgroundContents": bg}));
         let r = s.execute("document.export", &json!({"format": "png"})).unwrap();
-        let png = vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
+        let png = tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
         image::load_from_memory(&png).unwrap().to_rgba8().get_pixel(10, 10).0
     };
     assert_eq!(alpha("white"), [255, 255, 255, 255]);

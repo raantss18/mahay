@@ -1,8 +1,8 @@
 //! Clipping against axis-aligned rectangles (viewport contents, plot sheets) and against
 //! arbitrary polygons (clipped viewports, [`PolyClip`]).
 
-use cadcraft_doc::EntityKind;
-use cadcraft_geom::{Bounds2, Polyline, Vec2};
+use drafitra_doc::EntityKind;
+use drafitra_geom::{Bounds2, Polyline, Vec2};
 
 /// Clip the segment `a`→`b` to `r` (Liang–Barsky). Returns the parameter range kept.
 fn clip_params(a: Vec2, d: Vec2, r: &Bounds2, mut t0: f64, mut t1: f64) -> Option<(f64, f64)> {
@@ -200,14 +200,14 @@ pub fn boundary_polygon(k: &EntityKind) -> Option<Vec<Vec2>> {
             pts.extend(p.points.iter().take(1_000_000).map(|v| v.xy()));
         }
         EntityKind::Circle(c) => {
-            let g = cadcraft_geom::Circle::new(c.center.xy(), c.radius);
+            let g = drafitra_geom::Circle::new(c.center.xy(), c.radius);
             if !(c.radius.is_finite() && c.radius > 0.0) {
                 return None;
             }
             g.tessellate(c.radius * 2e-3, &mut pts);
         }
         EntityKind::Ellipse(e) => {
-            let g = cadcraft_geom::Ellipse { center: e.center.xy(), major: e.major.xy(), ratio: e.ratio, start: e.start, end: e.end };
+            let g = drafitra_geom::Ellipse { center: e.center.xy(), major: e.major.xy(), ratio: e.ratio, start: e.start, end: e.end };
             let r = g.major.len();
             if !g.is_full() || !(r.is_finite() && r > 0.0 && e.ratio.is_finite() && e.ratio > 0.0) {
                 return None;
@@ -242,7 +242,7 @@ fn clean_polygon(pts: Vec<Vec2>) -> Option<Vec<Vec2>> {
         out.pop();
     }
     let b = Bounds2::from_points(out.iter().copied());
-    (out.len() >= 3 && b.width() > 1e-12 && b.height() > 1e-12 && cadcraft_geom::shoelace(&out).abs() > 1e-18).then_some(out)
+    (out.len() >= 3 && b.width() > 1e-12 && b.height() > 1e-12 && drafitra_geom::shoelace(&out).abs() > 1e-18).then_some(out)
 }
 
 /// A clip region bounded by a polygon (even-odd, so self-touching outlines work), with its
@@ -511,7 +511,7 @@ mod tests {
         let fill =
             [Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0), Vec2::new(10.0, 10.0), Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0), Vec2::new(0.0, 10.0)];
         let t = c.clip_triangles(&fill);
-        let area: f64 = t.as_chunks::<3>().0.iter().map(|t| cadcraft_geom::shoelace(t).abs()).sum();
+        let area: f64 = t.as_chunks::<3>().0.iter().map(|t| drafitra_geom::shoelace(t).abs()).sum();
         assert!((area - 75.0).abs() < 1e-6, "{area}");
         assert!(t.iter().all(|p| !(p.x > 5.0 + 1e-9 && p.y > 5.0 + 1e-9)));
     }

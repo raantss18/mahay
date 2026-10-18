@@ -17,7 +17,7 @@
 //! standard forbids that is still there refuses the export, rather than a file claiming a
 //! standard it breaks.
 
-use vectorcraft_color::cms::{self, Cms, ProfileKind};
+use tsipika_color::cms::{self, Cms, ProfileKind};
 
 use crate::lab_spot::find;
 use crate::patch::{Patch, Xref};

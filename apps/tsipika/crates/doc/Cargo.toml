@@ -1,16 +1,16 @@
 [package]
-name = "vectorcraft-doc"
+name = "tsipika-doc"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft document model: artboards, layers, objects, appearance (pure data + serde)"
+description = "Tsipika document model: artboards, layers, objects, appearance (pure data + serde)"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
 kurbo = { workspace = true }
 image = { workspace = true }
 tiff = { workspace = true }

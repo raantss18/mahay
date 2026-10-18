@@ -8,13 +8,13 @@
 //! taken gets a fresh one. Pasted objects get new handles.
 //!
 //! The clipboard can also travel as DXF text ([`system_text`], [`load_system_text`]), so a front
-//! end can put it on the system clipboard and paste it into another CADCraft window.
+//! end can put it on the system clipboard and paste it into another Drafitra window.
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::sync::Arc;
 
-use cadcraft_doc::{Block, Drawing, Entity, EntityKind, HVal, Handle};
-use cadcraft_geom::{Mat3, Vec2};
+use drafitra_doc::{Block, Drawing, Entity, EntityKind, HVal, Handle};
+use drafitra_geom::{Mat3, Vec2};
 
 use super::{bad, has_doc};
 use crate::{Result, Session};

@@ -1,6 +1,6 @@
-# vectorcraft-pathops
+# tsipika-pathops
 
-Path operations for VectorCraft: booleans, the Pathfinder panel, Shape Builder regions, Live Paint planar maps, offset path, outline stroke, simplify and the other Object → Path commands. Everything takes and returns `vectorcraft_geom::PathData`.
+Path operations for Tsipika: booleans, the Pathfinder panel, Shape Builder regions, Live Paint planar maps, offset path, outline stroke, simplify and the other Object → Path commands. Everything takes and returns `tsipika_geom::PathData`.
 
 ## Booleans (curve-preserving)
 

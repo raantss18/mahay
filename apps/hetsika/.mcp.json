@@ -1,11 +1,11 @@
 {
   "mcpServers": {
-    "filmcraft": {
-      "command": "target/release/filmcraft-cli",
+    "hetsika": {
+      "command": "target/release/hetsika-cli",
       "args": ["mcp", "--bridge", "127.0.0.1:9876"]
     },
-    "filmcraft-headless": {
-      "command": "target/release/filmcraft-cli",
+    "hetsika-headless": {
+      "command": "target/release/hetsika-cli",
       "args": ["mcp", "--demo"]
     }
   }

@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
-use cadcraft_doc::Drawing;
+use drafitra_doc::Drawing;
 use serde::Serialize;
 
 use crate::Session;
@@ -66,7 +66,7 @@ pub fn file_name(title: &str, instance: &str, uid: u64) -> String {
 }
 
 /// Whether `s` has the form of an app instance id (`<process id>-<start time in hex>`, see
-/// `instance_id`). Only file names built from one are treated as CADCraft's own, so files of
+/// `instance_id`). Only file names built from one are treated as Drafitra's own, so files of
 /// other programs in the autosave folder are never offered for recovery or deleted.
 pub fn is_instance_id(s: &str) -> bool {
     let Some((pid, time)) = s.split_once('-') else { return false };

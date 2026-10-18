@@ -1,11 +1,11 @@
 //! The left "My Photos" panel: library sources, albums tree, and date groups.
 
 use egui::{Align2, Rect, Sense, pos2, vec2};
-use lightcraft_catalog::{Album, AlbumId, FolderNode, KeywordNode};
-use lightcraft_engine::LibrarySource;
+use hazavana_catalog::{Album, AlbumId, FolderNode, KeywordNode};
+use hazavana_engine::LibrarySource;
 use serde_json::json;
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 use crate::icons::{Icon, paint};
 use crate::sidebar::SidebarSection;
 use crate::theme::Tokens;
@@ -37,7 +37,7 @@ fn note_width(ui: &egui::Ui, w: f32) {
 }
 
 fn row(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     id: &str,
     icon: Icon,
@@ -51,7 +51,7 @@ fn row(
 
 /// [`row`] whose spoken name is `spoken` when the painted `label` is a shortened form of it.
 fn row_named(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     id: &str,
     icon: Icon,
@@ -68,7 +68,7 @@ fn row_named(
 /// label's dot (`mark`) before the count.
 #[allow(clippy::too_many_arguments)]
 fn row_sensed(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     id: &str,
     icon: Icon,
@@ -146,7 +146,7 @@ fn row_sensed(
 /// rows scroll by), and the caller skips it. A library can have thousands of keywords or folders,
 /// and drawing them all every frame slows the whole app down (issue #1011). A row the sidebar is
 /// asked to scroll to is drawn. `label`, `count` and `mark` as for [`row_sensed`].
-fn out_of_sight(app: &LightcraftApp, ui: &mut egui::Ui, id: &str, label: &str, count: Option<usize>, indent: f32, mark: bool) -> bool {
+fn out_of_sight(app: &HazavanaApp, ui: &mut egui::Ui, id: &str, label: &str, count: Option<usize>, indent: f32, mark: bool) -> bool {
     let r = Rect::from_min_size(ui.cursor().min, vec2(ui.available_width(), ROW_HEIGHT));
     if ui.is_rect_visible(r) || scroll_asked(ui, id) {
         return false;
@@ -220,11 +220,11 @@ const SECTION_HEADER: f32 = 34.0;
 /// draws. Every section goes through here, so they all fold, space and announce themselves alike.
 /// `rows`: how many rows the section lists at its top level (a folded header says so).
 fn section(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     section: SidebarSection,
     rows: usize,
-    body: impl FnOnce(&mut LightcraftApp, &mut egui::Ui),
+    body: impl FnOnce(&mut HazavanaApp, &mut egui::Ui),
 ) -> PlacedSection {
     ui.add_space(SECTION_GAP);
     let (header, _) = ui.allocate_exact_size(vec2(ui.available_width(), SECTION_HEADER), Sense::hover());
@@ -267,7 +267,7 @@ fn visible_right(ui: &egui::Ui) -> f32 {
 /// the sidebar (widget `sidebarSectionPinned:<id>`), so it is always clear which section the rows
 /// belong to, and the section can be folded, moved or hidden from anywhere in a long list. The
 /// next section's header pushes it out as it arrives. `view_top`: where the visible part starts.
-fn pinned_header(app: &mut LightcraftApp, ui: &mut egui::Ui, placed: &[PlacedSection], view_top: f32) {
+fn pinned_header(app: &mut HazavanaApp, ui: &mut egui::Ui, placed: &[PlacedSection], view_top: f32) {
     let pinned = placed.iter().find(|p| p.open && p.top < view_top && p.bottom > view_top);
     let rect = pinned.map(|p| {
         let top = view_top.min(p.bottom - SECTION_HEADER);
@@ -329,7 +329,7 @@ pub(crate) fn section_drop_before(placed: &[PlacedSection], y: f32) -> Option<Si
 
 /// While a section is dragged by its header: a line shows where it would go, releasing over the
 /// sidebar moves it there (`view.sidebarMoveSection`), releasing elsewhere or Esc leaves it.
-fn section_drag(app: &mut LightcraftApp, ui: &mut egui::Ui, placed: &[PlacedSection]) {
+fn section_drag(app: &mut HazavanaApp, ui: &mut egui::Ui, placed: &[PlacedSection]) {
     let Some(dragged) = app.ui.dragging_section else { return };
     let (released, pos, esc) = ui.input(|i| (i.pointer.primary_released(), i.pointer.latest_pos(), i.key_pressed(egui::Key::Escape)));
     if esc {
@@ -369,7 +369,7 @@ fn section_drag(app: &mut LightcraftApp, ui: &mut egui::Ui, placed: &[PlacedSect
 
 /// The dragged section's name follows the pointer; a drag that ended anywhere (also outside the
 /// sidebar, or with the sidebar closed) is over.
-pub fn section_drag_feedback(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn section_drag_feedback(app: &mut HazavanaApp, ctx: &egui::Context) {
     let Some(section) = app.ui.dragging_section else { return };
     let (down, pos) = ctx.input(|i| (i.pointer.primary_down(), i.pointer.latest_pos()));
     if !down || !app.ui.left_panel {
@@ -394,7 +394,7 @@ pub fn section_drag_feedback(app: &mut LightcraftApp, ctx: &egui::Context) {
 /// it survives restarts), and what the section adds to its header (its button, see `header_button`) sits at
 /// the visible edge. A folded section says how many rows it holds (`rows`, with View ▸ Show Photo
 /// Counts). `pinned`: this is the copy kept at the top of the sidebar (see `pinned_header`).
-fn section_header(app: &mut LightcraftApp, ui: &mut egui::Ui, section: SidebarSection, r: Rect, rows: usize, pinned: bool) -> HeaderOutcome {
+fn section_header(app: &mut HazavanaApp, ui: &mut egui::Ui, section: SidebarSection, r: Rect, rows: usize, pinned: bool) -> HeaderOutcome {
     let t = Tokens::get(ui.ctx());
     let id = section.id();
     let title = crate::i18n::tr(section.title());
@@ -462,9 +462,9 @@ struct HeaderButton {
 /// What a header's button does when clicked.
 enum HeaderAction {
     /// Does it at once (usually: opens a dialog).
-    Run(fn(&mut LightcraftApp, &egui::Context)),
+    Run(fn(&mut HazavanaApp, &egui::Context)),
     /// Opens a menu with these items.
-    Menu(fn(&mut LightcraftApp, &mut egui::Ui)),
+    Menu(fn(&mut HazavanaApp, &mut egui::Ui)),
 }
 
 /// The button a section has at the end of its header, if it has one. This is the one place that
@@ -490,7 +490,7 @@ fn header_button_rect(ui: &egui::Ui, header: Rect) -> Rect {
 }
 
 /// Draw `button` at the end of `header` and act on it.
-fn show_header_button(app: &mut LightcraftApp, ui: &mut egui::Ui, header: Rect, button: &HeaderButton) {
+fn show_header_button(app: &mut HazavanaApp, ui: &mut egui::Ui, header: Rect, button: &HeaderButton) {
     let mut hdr =
         ui.new_child(egui::UiBuilder::new().max_rect(header_button_rect(ui, header)).layout(egui::Layout::right_to_left(egui::Align::Center)));
     let resp = icon_button(&mut hdr, button.id, button.icon, vec2(HEADER_BUTTON, HEADER_BUTTON), false, true, button.tooltip);
@@ -509,7 +509,7 @@ fn show_header_button(app: &mut LightcraftApp, ui: &mut egui::Ui, header: Rect, 
 /// Keywords' +: Create Keyword Tag, for a keyword at the usual place for new ones (not inside
 /// whatever is picked in the Keyword List, which may not even be on screen).
 /// Made from here, the keyword is shown here: Keywords opens down to it (`reveal_keyword`).
-fn new_keyword(app: &mut LightcraftApp, _ctx: &egui::Context) {
+fn new_keyword(app: &mut HazavanaApp, _ctx: &egui::Context) {
     let mut dialog = crate::panels::keyword_list::create_dialog_inside(app, None);
     if let crate::state::Dialog::KeywordTag { reveal, .. } = &mut dialog {
         *reveal = true;
@@ -520,7 +520,7 @@ fn new_keyword(app: &mut LightcraftApp, _ctx: &egui::Context) {
 /// The menu of a section's header (`on`) and of the My Photos title (`None`): hide this section,
 /// show or hide any section, and go back to the usual arrangement. Its items are widgets
 /// `sidebarMenu:hide`, `sidebarMenu:section:<id>` and `sidebarMenu:reset`.
-fn sections_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, on: Option<SidebarSection>) {
+fn sections_menu(app: &mut HazavanaApp, ui: &mut egui::Ui, on: Option<SidebarSection>) {
     let mut run = None;
     if let Some(section) = on {
         let hide = ui.button(crate::i18n::tr("Hide This Section"));
@@ -559,7 +559,7 @@ fn sections_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, on: Option<SidebarS
 }
 
 /// The menu of Albums' +: Create Album, Smart Album, Folder…
-fn new_album_menu(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+fn new_album_menu(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     if ui.button(crate::i18n::tr("Create Album…")).clicked() {
         app.ui.dialog = Some(crate::state::Dialog::NewAlbum { name: String::new(), folder: false, parent: None, include_selected: true });
     }
@@ -567,7 +567,7 @@ fn new_album_menu(app: &mut LightcraftApp, ui: &mut egui::Ui) {
         app.ui.dialog = Some(crate::state::Dialog::SmartRules {
             id: None,
             name: String::new(),
-            rules: lightcraft_catalog::RuleSet { rules: vec![crate::panels::rules_editor::new_rule()], ..Default::default() },
+            rules: hazavana_catalog::RuleSet { rules: vec![crate::panels::rules_editor::new_rule()], ..Default::default() },
             parent: None,
         });
     }
@@ -586,7 +586,7 @@ fn new_album_menu(app: &mut LightcraftApp, ui: &mut egui::Ui) {
     }
 }
 
-pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let frame = egui::Frame::NONE.fill(t.chrome).stroke(egui::Stroke::new(1.0, t.divider));
     frame.show(ui, |ui| {
@@ -719,7 +719,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
 
 /// Albums: the tree of albums and the folders they are sorted into. `reveal`: an album just made,
 /// whose folders open down to it.
-fn albums_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, reveal: Option<u64>) {
+fn albums_rows(app: &mut HazavanaApp, ui: &mut egui::Ui, reveal: Option<u64>) {
     let kids: AlbumKids = app.session.catalog.album_children_by_parent().into_iter().map(|(k, v)| (k, v.into_iter().cloned().collect())).collect();
     let cat = &app.session.catalog;
     let mut open_to = Vec::new();
@@ -732,7 +732,7 @@ fn albums_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, reveal: Option<u64>) 
 }
 
 /// By Date: year → month → day; a click filters by that prefix, the triangle opens a level.
-fn date_rows(app: &mut LightcraftApp, ui: &mut egui::Ui) {
+fn date_rows(app: &mut HazavanaApp, ui: &mut egui::Ui) {
     let groups = app.caches.date_groups(&app.session.catalog);
     for g in groups.iter() {
         if date_row(app, ui, &g.year, &crate::i18n::date_group_label(&g.year, true), g.count, 0.0) {
@@ -753,7 +753,7 @@ fn date_rows(app: &mut LightcraftApp, ui: &mut egui::Ui) {
 /// `cmd::missing::checked_path`). Checking stats every file, which on a network share takes
 /// seconds, so it runs on a worker thread: the count shown is the last finished one, refreshed
 /// at most every 5 s, and at once (after the running check) when the catalog changed.
-fn missing_count(app: &mut LightcraftApp, ui: &mut egui::Ui) -> usize {
+fn missing_count(app: &mut HazavanaApp, ui: &mut egui::Ui) -> usize {
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering::Relaxed};
     #[derive(Clone, Default)]
     struct Job {
@@ -769,7 +769,7 @@ fn missing_count(app: &mut LightcraftApp, ui: &mut egui::Ui) -> usize {
     let fresh = now - job.at < 5.0 && job.rev == rev;
     if !fresh && !job.running.load(Relaxed) {
         // the same scope as the Missing Photos view: library photos only, never Local browse records
-        let paths = lightcraft_engine::cmd::missing::candidates(&app.session.catalog);
+        let paths = hazavana_engine::cmd::missing::candidates(&app.session.catalog);
         job.running.store(true, Relaxed);
         job.at = now;
         job.rev = rev;
@@ -799,7 +799,7 @@ struct LocalNow {
 /// Downloads, the home folder, the folder being browsed, and the folders kept with Browse
 /// Folder…. Worked out every frame the sidebar shows, drawn or not: the row listed for this
 /// session only (`local_browse_root`) follows the browsing. `None` where there is no Local (web).
-fn local_now(app: &mut LightcraftApp, ui: &egui::Ui) -> Option<LocalNow> {
+fn local_now(app: &mut HazavanaApp, ui: &egui::Ui) -> Option<LocalNow> {
     if !SidebarSection::Local.available() {
         return None;
     }
@@ -825,7 +825,7 @@ fn local_now(app: &mut LightcraftApp, ui: &egui::Ui) -> Option<LocalNow> {
 }
 
 /// Local's rows: each place as a folder tree, Browse Folder…, and the way back for hidden places.
-fn local_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, now: &LocalNow) {
+fn local_rows(app: &mut HazavanaApp, ui: &mut egui::Ui, now: &LocalNow) {
     let (local, current) = (&now.places, now.current.as_deref());
     for (i, (name, path)) in local.places.iter().enumerate() {
         let transient = local.browse_root.as_deref() == Some(path.as_str());
@@ -859,9 +859,9 @@ fn local_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, now: &LocalNow) {
 }
 
 /// Whether two paths name the same folder, however they are spelled (separators, trailing
-/// slash, `.`/`..`, drive-letter case; see `lightcraft_catalog::query::folder_key`).
+/// slash, `.`/`..`, drive-letter case; see `hazavana_catalog::query::folder_key`).
 pub(crate) fn same_folder(a: &str, b: &str) -> bool {
-    a == b || lightcraft_catalog::query::folder_key(a) == lightcraft_catalog::query::folder_key(b)
+    a == b || hazavana_catalog::query::folder_key(a) == hazavana_catalog::query::folder_key(b)
 }
 
 /// Local's top-level folders and how the folder being browsed sits among them.
@@ -895,7 +895,7 @@ pub(crate) fn local_places(
     browse_root: Option<&str>,
     hidden: &[String],
 ) -> LocalPlaces {
-    use lightcraft_catalog::query::{folder_key, folder_within};
+    use hazavana_catalog::query::{folder_key, folder_within};
     let is_hidden = |p: &str| hidden.iter().any(|h| same_folder(h, p));
     let mut places = builtin;
     for path in saved {
@@ -1027,7 +1027,7 @@ pub(crate) fn fs_cached<T: Clone + Send + 'static>(ui: &egui::Ui, kind: &'static
 /// triangles have ids of their own, else the copy drawn last takes the other's clicks (#1093).
 #[allow(clippy::too_many_arguments)]
 fn folder_tree(
-    app: &mut LightcraftApp,
+    app: &mut HazavanaApp,
     ui: &mut egui::Ui,
     place: &str,
     name: &str,
@@ -1039,7 +1039,7 @@ fn folder_tree(
 ) {
     let open_id = egui::Id::new(("folder-open", place.to_string(), path.to_string()));
     let sel = current.is_some_and(|c| same_folder(c, path));
-    let on_the_way = !sel && current.is_some_and(|c| lightcraft_catalog::query::folder_within(c, path));
+    let on_the_way = !sel && current.is_some_and(|c| hazavana_catalog::query::folder_within(c, path));
     let mut open = tree_open(ui, open_id, false);
     if reveal && on_the_way {
         // opened once per browsed folder: collapsing it again afterwards sticks
@@ -1120,7 +1120,7 @@ fn folder_tree(
 }
 
 /// One By Date row (`key`: `YYYY`, `YYYY-MM` or `YYYY-MM-DD`); returns whether it is open.
-fn date_row(app: &mut LightcraftApp, ui: &mut egui::Ui, key: &str, label: &str, count: usize, indent: f32) -> bool {
+fn date_row(app: &mut HazavanaApp, ui: &mut egui::Ui, key: &str, label: &str, count: usize, indent: f32) -> bool {
     let open_id = egui::Id::new(("date-open", key.to_string()));
     let mut open = tree_open(ui, open_id, false);
     let sel = app.session.filter.date.as_deref() == Some(key);
@@ -1139,7 +1139,7 @@ fn date_row(app: &mut LightcraftApp, ui: &mut egui::Ui, key: &str, label: &str, 
 /// By Date and Keywords count every photo in the library, so choosing a row shows those photos
 /// from All Photos, not from whatever album or folder happened to be open, where they could be
 /// missing (issue #341). Only when choosing (`on`), not when clearing the row again.
-pub(crate) fn browse_all_photos(app: &mut LightcraftApp, on: bool) {
+pub(crate) fn browse_all_photos(app: &mut HazavanaApp, on: bool) {
     if on && app.session.source != LibrarySource::All {
         let _ = app.run("library.source", json!({"kind": "all"}));
     }
@@ -1149,7 +1149,7 @@ pub(crate) fn browse_all_photos(app: &mut LightcraftApp, on: bool) {
 type AlbumKids = std::collections::HashMap<Option<AlbumId>, Vec<Album>>;
 
 /// `open_to`: folders forced open this frame (the way down to an album that was just made).
-fn albums_tree(app: &mut LightcraftApp, ui: &mut egui::Ui, all: &AlbumKids, parent: Option<AlbumId>, indent: f32, open_to: &[AlbumId]) {
+fn albums_tree(app: &mut HazavanaApp, ui: &mut egui::Ui, all: &AlbumKids, parent: Option<AlbumId>, indent: f32, open_to: &[AlbumId]) {
     // 64 folders deep at most (16 points a level): a catalog that loops must not overflow the stack
     if indent > 64.0 * 16.0 {
         return;
@@ -1273,7 +1273,7 @@ pub fn auto_scroll_speed(y: f32, top: f32, bottom: f32) -> f32 {
 /// While an album, or photos from the grid, are dragged over the sidebar: scrolls it when the
 /// pointer is near its top or bottom edge, so rows beyond the visible part can be reached. Call
 /// inside the scroll area.
-fn drag_auto_scroll(app: &LightcraftApp, ui: &egui::Ui) {
+fn drag_auto_scroll(app: &HazavanaApp, ui: &egui::Ui) {
     if app.ui.dragging_album.is_none() && app.ui.dragging_photos.is_none() && app.ui.dragging_section.is_none() {
         return;
     }
@@ -1304,7 +1304,7 @@ const HOVER_OPEN_SECS: f64 = 0.6;
 
 /// Whether the album `dragged` may be dropped into the folder `target` (`None`: the top level):
 /// a folder other than where it already is, and not itself or something inside it.
-fn can_drop_album(app: &LightcraftApp, dragged: AlbumId, target: Option<AlbumId>) -> bool {
+fn can_drop_album(app: &HazavanaApp, dragged: AlbumId, target: Option<AlbumId>) -> bool {
     let Some(d) = app.session.catalog.album(dragged) else { return false };
     match target {
         None => d.parent.is_some(),
@@ -1313,7 +1313,7 @@ fn can_drop_album(app: &LightcraftApp, dragged: AlbumId, target: Option<AlbumId>
 }
 
 /// Ends a drag that ran `result`: the folders down to the album open so it shows in its new place.
-fn finish_drop(app: &mut LightcraftApp, ui: &egui::Ui, dragged: AlbumId, result: Result<serde_json::Value, String>) {
+fn finish_drop(app: &mut HazavanaApp, ui: &egui::Ui, dragged: AlbumId, result: Result<serde_json::Value, String>) {
     forget_hover(app, ui.ctx());
     match result {
         Ok(_) => {
@@ -1326,7 +1326,7 @@ fn finish_drop(app: &mut LightcraftApp, ui: &egui::Ui, dragged: AlbumId, result:
 }
 
 /// Forgets how long the pointer rested on each folder (a new drag starts counting again).
-fn forget_hover(app: &LightcraftApp, ctx: &egui::Context) {
+fn forget_hover(app: &HazavanaApp, ctx: &egui::Context) {
     let ids: Vec<u64> = app.session.catalog.albums().filter(|a| a.folder).map(|a| a.id.0).collect();
     ctx.data_mut(|d| {
         for id in ids {
@@ -1336,14 +1336,14 @@ fn forget_hover(app: &LightcraftApp, ctx: &egui::Context) {
 }
 
 /// Moves the dragged album into a folder (`album.move`, one undo step; `None`: the top level).
-fn drop_album(app: &mut LightcraftApp, ui: &egui::Ui, dragged: AlbumId, target: Option<AlbumId>) {
+fn drop_album(app: &mut HazavanaApp, ui: &egui::Ui, dragged: AlbumId, target: Option<AlbumId>) {
     let r = app.run("album.move", json!({"id": dragged.0, "parent": target.map(|t| t.0)}));
     finish_drop(app, ui, dragged, r);
 }
 
 /// Places the dragged album in `parent` before the sibling `before` (`None`: last of its kind), by
 /// hand (`album.reorder`, one undo step).
-fn place_album(app: &mut LightcraftApp, ui: &egui::Ui, dragged: AlbumId, parent: Option<AlbumId>, before: Option<AlbumId>) {
+fn place_album(app: &mut HazavanaApp, ui: &egui::Ui, dragged: AlbumId, parent: Option<AlbumId>, before: Option<AlbumId>) {
     let r = app.run("album.reorder", json!({"id": dragged.0, "parent": parent.map(|p| p.0), "before": before.map(|b| b.0)}));
     finish_drop(app, ui, dragged, r);
 }
@@ -1363,7 +1363,7 @@ enum AlbumDrop {
 /// middle and beside it by its edges; an album over an album goes before it by its top half and
 /// after it by its bottom half; a folder over an album does nothing. Placing where it already
 /// is, or inside itself, is nothing too. `expanded`: `target` is a folder shown open.
-fn album_drop_at(app: &LightcraftApp, dragged: AlbumId, target: &Album, frac: f32, expanded: bool) -> Option<AlbumDrop> {
+fn album_drop_at(app: &HazavanaApp, dragged: AlbumId, target: &Album, frac: f32, expanded: bool) -> Option<AlbumDrop> {
     let cat = &app.session.catalog;
     let d = cat.album(dragged)?;
     let into = || can_drop_album(app, dragged, Some(target.id)).then_some(AlbumDrop::Into(target.id));
@@ -1397,7 +1397,7 @@ fn album_drop_at(app: &LightcraftApp, dragged: AlbumId, target: &Album, frac: f3
 /// inside it, a line above or below the row when it would go beside it, and the move or placement
 /// done on release. A closed folder with something inside (`open`) opens once the pointer rests on
 /// it; returns whether it did.
-fn album_drag_over(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, row: &Album, open: Option<&mut bool>, indent: f32) -> bool {
+fn album_drag_over(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, row: &Album, open: Option<&mut bool>, indent: f32) -> bool {
     let hover_id = egui::Id::new(("album-hover", row.id.0));
     let Some(dragged) = app.ui.dragging_album.map(AlbumId) else { return false };
     let pos = ui.input(|i| i.pointer.latest_pos()).filter(|_| pointer_over_row(ui, resp.rect));
@@ -1455,7 +1455,7 @@ fn album_drag_over(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Resp
 /// While an album that sits in a folder is dragged: the "Albums" header takes it back to the top
 /// level (outlined, with a hint). The header stays in view however long the tree is, and nothing
 /// moves when it appears.
-fn top_level_drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, header: Rect) {
+fn top_level_drop_target(app: &mut HazavanaApp, ui: &mut egui::Ui, header: Rect) {
     let Some(dragged) = app.ui.dragging_album.map(AlbumId) else { return };
     if !can_drop_album(app, dragged, None) {
         return;
@@ -1475,7 +1475,7 @@ fn top_level_drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, header: Rec
 
 /// While an album is dragged in the sidebar: its name at the pointer; the drag ends when the
 /// button is up (the drop targets act on the release frame, before this runs).
-pub fn album_drag_feedback(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn album_drag_feedback(app: &mut HazavanaApp, ctx: &egui::Context) {
     let Some(id) = app.ui.dragging_album else { return };
     let (released, down, pos, esc) =
         ctx.input(|i| (i.pointer.primary_released(), i.pointer.primary_down(), i.pointer.latest_pos(), i.key_pressed(egui::Key::Escape)));
@@ -1496,7 +1496,7 @@ pub fn album_drag_feedback(app: &mut LightcraftApp, ctx: &egui::Context) {
 
 /// An album row while photos are dragged from the grid: highlighted under the pointer; a
 /// release there adds them.
-fn drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, a: &Album) {
+fn drop_target(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, a: &Album) {
     let Some(ids) = app.ui.dragging_photos.clone() else { return };
     // only where the row can be seen: not scrolled out of the sidebar or beneath the pinned header
     let over = pointer_over_row(ui, resp.rect);
@@ -1506,7 +1506,7 @@ fn drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response
     let released = ui.input(|i| i.pointer.any_released());
     // albums hold library photos (issue #684): Local ones can't be dropped in; the row doesn't
     // light up, and a release says why
-    let photos: Vec<lightcraft_catalog::PhotoId> = ids.iter().map(|id| lightcraft_catalog::PhotoId(*id)).collect();
+    let photos: Vec<hazavana_catalog::PhotoId> = ids.iter().map(|id| hazavana_catalog::PhotoId(*id)).collect();
     if super::grid::local_only(app, &photos) {
         ui.ctx().set_cursor_icon(egui::CursorIcon::NotAllowed);
         if released {
@@ -1539,7 +1539,7 @@ fn drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response
     }
 }
 
-fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
+fn folder_menu(app: &mut HazavanaApp, resp: &egui::Response, a: &Album) {
     resp.context_menu(|ui| {
         if a.folder {
             // the same commands as File ▸ New…, aimed at this folder
@@ -1595,7 +1595,7 @@ fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
                 }
                 // like File ▸ Import from Device: one entry per camera or card found
                 let device = crate::widgets::menu_button(ui, crate::i18n::tr("Import from Device"), |ui| {
-                    let devices = lightcraft_engine::devices::devices();
+                    let devices = hazavana_engine::devices::devices();
                     if devices.is_empty() {
                         ui.add_enabled(false, egui::Button::new(crate::i18n::tr("No Camera or Card Found")));
                     }
@@ -1633,7 +1633,7 @@ fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
         }
         if !a.folder {
             // export: show the album, select its photos, then the dialog / a preset
-            let show_all = |app: &mut LightcraftApp| {
+            let show_all = |app: &mut HazavanaApp| {
                 let _ = app.run("library.source", json!({"kind": "album", "id": a.id.0}));
                 let _ = app.run("library.selectAll", json!({}));
             };
@@ -1687,7 +1687,7 @@ fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
 }
 
 /// Whether `id` is `ancestor` or lies inside it.
-fn is_within(app: &LightcraftApp, id: lightcraft_catalog::AlbumId, ancestor: lightcraft_catalog::AlbumId) -> bool {
+fn is_within(app: &HazavanaApp, id: hazavana_catalog::AlbumId, ancestor: hazavana_catalog::AlbumId) -> bool {
     let mut cur = Some(id);
     let mut guard = 0;
     while let Some(c) = cur {
@@ -1704,17 +1704,17 @@ fn is_within(app: &LightcraftApp, id: lightcraft_catalog::AlbumId, ancestor: lig
 }
 
 // "Folders" (drawn in `show`): where on disk the library's photos were imported from, with photo counts (see
-// `lightcraft_catalog::folders`). A click makes that folder the source, like an album or a Local
+// `hazavana_catalog::folders`). A click makes that folder the source, like an album or a Local
 // folder: its photos and those of the folders inside it fill the grid. The triangle opens a
 // level. Only folders holding imported photos are listed; every folder on disk is under Local.
 
 /// Whenever the shown folder changes (a click, an agent, a rename or its undo), open the rows
 /// above it so it is on screen; folding one by hand afterwards sticks until the choice changes.
-fn reveal_chosen(app: &LightcraftApp, ui: &egui::Ui, tree: &[FolderNode]) {
+fn reveal_chosen(app: &HazavanaApp, ui: &egui::Ui, tree: &[FolderNode]) {
     let shown = app.session.library_folder.clone().filter(|_| app.session.source == LibrarySource::LibraryFolder);
-    let chosen = shown.filter(|c| !lightcraft_catalog::query::folder_key(c).is_empty());
+    let chosen = shown.filter(|c| !hazavana_catalog::query::folder_key(c).is_empty());
     let seen = egui::Id::new("libfolder-revealed");
-    let now = chosen.as_deref().map(lightcraft_catalog::query::folder_key);
+    let now = chosen.as_deref().map(hazavana_catalog::query::folder_key);
     if ui.data(|d| d.get_temp::<Option<String>>(seen)) == Some(now.clone()) {
         return;
     }
@@ -1722,8 +1722,8 @@ fn reveal_chosen(app: &LightcraftApp, ui: &egui::Ui, tree: &[FolderNode]) {
     let Some(chosen) = chosen else { return };
     fn open_above(ui: &egui::Ui, nodes: &[FolderNode], chosen: &str) {
         for n in nodes {
-            if lightcraft_catalog::query::folder_within(chosen, &n.path) && !same_folder(chosen, &n.path) {
-                let key = lightcraft_catalog::query::folder_key(&n.path);
+            if hazavana_catalog::query::folder_within(chosen, &n.path) && !same_folder(chosen, &n.path) {
+                let key = hazavana_catalog::query::folder_key(&n.path);
                 ui.data_mut(|d| d.insert_temp(egui::Id::new(("libfolder-open", key)), true));
                 open_above(ui, &n.children, chosen);
             }
@@ -1732,9 +1732,9 @@ fn reveal_chosen(app: &LightcraftApp, ui: &egui::Ui, tree: &[FolderNode]) {
     open_above(ui, tree, &chosen);
 }
 
-fn folder_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, nodes: &[FolderNode], indent: f32) {
+fn folder_rows(app: &mut HazavanaApp, ui: &mut egui::Ui, nodes: &[FolderNode], indent: f32) {
     for n in nodes {
-        let key = lightcraft_catalog::query::folder_key(&n.path);
+        let key = hazavana_catalog::query::folder_key(&n.path);
         let open_id = egui::Id::new(("libfolder-open", key.clone()));
         // a disk starts open, and so does a folder that holds nothing itself and leads to one
         // folder (`Users` → `me`): the first row where the library branches is what you look for
@@ -1754,7 +1754,7 @@ fn folder_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, nodes: &[FolderNode],
 
 /// One drawn row of [`folder_rows`], shown as `name`; `open_id` and `open` are its triangle's.
 #[allow(clippy::too_many_arguments)]
-fn folder_row(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode, id: &str, name: &str, indent: f32, open_id: egui::Id, open: &mut bool) {
+fn folder_row(app: &mut HazavanaApp, ui: &mut egui::Ui, n: &FolderNode, id: &str, name: &str, indent: f32, open_id: egui::Id, open: &mut bool) {
     let sel = n.selectable
         && app.session.source == LibrarySource::LibraryFolder
         && app.session.library_folder.as_deref().is_some_and(|f| same_folder(f, &n.path));
@@ -1796,7 +1796,7 @@ const SPRING_OPEN_SECONDS: f64 = 0.7;
 /// they will go, as the same gesture onto an album only adds them to it. Held over a closed row,
 /// it opens. Photos that can't go there leave it dark (a row covering several disks; Local photos,
 /// not in the library) and a release says why; photos already there say so.
-fn folder_drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::Response, n: &FolderNode, open_id: egui::Id, open: &mut bool) {
+fn folder_drop_target(app: &mut HazavanaApp, ui: &mut egui::Ui, resp: &egui::Response, n: &FolderNode, open_id: egui::Id, open: &mut bool) {
     let Some(ids) = app.ui.dragging_photos.clone() else { return };
     // only where the row can be seen: not scrolled out of the sidebar or beneath the pinned header
     if !pointer_over_row(ui, resp.rect) {
@@ -1804,7 +1804,7 @@ fn folder_drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::R
     }
     spring_open(ui, n, open_id, open);
     let name = std::path::Path::new(&n.path).file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_else(|| n.name.clone());
-    let photos: Vec<_> = ids.iter().filter_map(|id| app.session.catalog.photo(lightcraft_catalog::PhotoId(*id))).collect();
+    let photos: Vec<_> = ids.iter().filter_map(|id| app.session.catalog.photo(hazavana_catalog::PhotoId(*id))).collect();
     let refused = if !n.selectable {
         Some(crate::i18n::tr("This row covers more than one disk: drop on a folder inside it"))
     } else if photos.iter().any(|p| p.local) {
@@ -1812,8 +1812,8 @@ fn folder_drop_target(app: &mut LightcraftApp, ui: &mut egui::Ui, resp: &egui::R
     } else {
         None
     };
-    let here = |p: &lightcraft_catalog::Photo| match &p.source {
-        lightcraft_catalog::Source::File { path } => std::path::Path::new(path).parent().is_some_and(|d| same_folder(&d.to_string_lossy(), &n.path)),
+    let here = |p: &hazavana_catalog::Photo| match &p.source {
+        hazavana_catalog::Source::File { path } => std::path::Path::new(path).parent().is_some_and(|d| same_folder(&d.to_string_lossy(), &n.path)),
         _ => false,
     };
     let all_here = !photos.is_empty() && photos.iter().all(|p| here(p));
@@ -1882,13 +1882,13 @@ fn spring_open(ui: &egui::Ui, n: &FolderNode, open_id: egui::Id, open: &mut bool
 /// Move photos (`ids`, else the selection) into the folder `path` on disk (`photo.moveToFolder`).
 /// Photos that leave the view leave the selection, so nothing done next (Delete, an edit) reaches
 /// photos no longer on screen. How many moved, or why none did.
-pub(crate) fn move_photos(app: &mut LightcraftApp, ids: Option<&[u64]>, path: &str) -> Result<u64, String> {
+pub(crate) fn move_photos(app: &mut HazavanaApp, ids: Option<&[u64]>, path: &str) -> Result<u64, String> {
     let mut params = json!({"folder": path});
     if let Some(ids) = ids {
         params["ids"] = json!(ids);
     }
     let r = app.run("photo.moveToFolder", params)?;
-    let visible: std::collections::HashSet<lightcraft_catalog::PhotoId> = app.session.visible_cloned().into_iter().collect();
+    let visible: std::collections::HashSet<hazavana_catalog::PhotoId> = app.session.visible_cloned().into_iter().collect();
     let sel = &mut app.session.selection;
     sel.ids.retain(|id| visible.contains(id));
     if sel.active.is_some_and(|a| !visible.contains(&a)) {
@@ -1908,7 +1908,7 @@ pub(crate) fn moved_text(n: u64, name: &str) -> String {
 }
 
 /// [`move_photos`], saying how it went in a toast.
-fn move_photos_here(app: &mut LightcraftApp, ctx: &egui::Context, ids: Option<&[u64]>, path: &str, name: &str) {
+fn move_photos_here(app: &mut HazavanaApp, ctx: &egui::Context, ids: Option<&[u64]>, path: &str, name: &str) {
     match move_photos(app, ids, path) {
         Ok(n) => app.toast(ctx, moved_text(n, name)),
         Err(e) => app.toast(ctx, e),
@@ -1917,7 +1917,7 @@ fn move_photos_here(app: &mut LightcraftApp, ctx: &egui::Context, ids: Option<&[
 
 /// The context menu of a Folders row: a folder's own, a disk's (remove it), none for the
 /// startup disk.
-fn row_menu(app: &mut LightcraftApp, resp: &egui::Response, n: &FolderNode) {
+fn row_menu(app: &mut HazavanaApp, resp: &egui::Response, n: &FolderNode) {
     if !n.volume {
         folder_menu_for_library(app, resp, n);
     } else if n.path != "/" {
@@ -1940,7 +1940,7 @@ fn row_menu(app: &mut LightcraftApp, resp: &egui::Response, n: &FolderNode) {
 
 /// Locate Missing Files… of a Folders row: choose where this folder moved, then let the existing
 /// background finder relink only this folder's photos (including the folders inside it).
-fn locate_missing_item(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode) {
+fn locate_missing_item(app: &mut HazavanaApp, ui: &mut egui::Ui, n: &FolderNode) {
     let r = ui.button(crate::i18n::tr("Locate Missing Files…"));
     register(ui.ctx(), "folderLocateMissing", r.rect);
     if r.clicked() {
@@ -1956,7 +1956,7 @@ fn locate_missing_item(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNod
 /// holding other folders. `None` when no library photo lies in `path` or inside it. Reads the
 /// cached Folders tree only; the disk is not touched.
 fn library_node_for(tree: &[FolderNode], path: &str) -> Option<(FolderNode, String)> {
-    use lightcraft_catalog::query::folder_within;
+    use hazavana_catalog::query::folder_within;
     fn exact<'a>(tree: &'a [FolderNode], path: &str) -> Option<&'a FolderNode> {
         tree.iter().find_map(|n| if same_folder(&n.path, path) { Some(n) } else { exact(&n.children, path) })
     }
@@ -1964,7 +1964,7 @@ fn library_node_for(tree: &[FolderNode], path: &str) -> Option<(FolderNode, Stri
         tree.iter().any(|n| (n.count > 0 && folder_within(&n.path, path)) || any_inside(&n.children, path))
     }
     if let Some(n) = exact(tree, path).filter(|n| n.count > 0) {
-        return Some((n.clone(), lightcraft_catalog::folders::folder_label(&n.path)));
+        return Some((n.clone(), hazavana_catalog::folders::folder_label(&n.path)));
     }
     if !any_inside(tree, path) {
         return None;
@@ -1985,7 +1985,7 @@ fn library_node_for(tree: &[FolderNode], path: &str) -> Option<(FolderNode, Stri
 
 /// Synchronize Folder… of a Folders row (widget `folderSynchronize`): opens its dialog, which
 /// scans the folder in the background.
-fn synchronize_item(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode, name: &str) {
+fn synchronize_item(app: &mut HazavanaApp, ui: &mut egui::Ui, n: &FolderNode, name: &str) {
     let r = ui
         .button(crate::i18n::tr("Synchronize Folder…"))
         .on_hover_text(crate::i18n::tr("Find photos added to or missing from this folder on disk, and XMP sidecars changed by other apps"));
@@ -2001,7 +2001,7 @@ fn synchronize_item(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode, 
 
 /// Set Color Label ▸ of a Folders row (`folder.label`; the submenu is widget `folderLabelMenu`,
 /// its colours `folderLabel:<colour>`).
-fn folder_label_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode) {
+fn folder_label_menu(app: &mut HazavanaApp, ui: &mut egui::Ui, n: &FolderNode) {
     let menu = crate::widgets::menu_button(ui, crate::i18n::tr("Set Color Label"), |ui| {
         if let Some(l) = crate::panels::grid::label_items(app, ui, n.label, "folderLabel") {
             if let Err(e) = app.run("folder.label", json!({"path": n.path, "label": crate::panels::grid::label_param(l)})) {
@@ -2015,11 +2015,11 @@ fn folder_label_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode)
 
 /// The context menu of a folder row: the folder's disk actions (the same as Local's, photos
 /// follow) and taking its photos out of the library.
-fn folder_menu_for_library(app: &mut LightcraftApp, resp: &egui::Response, n: &FolderNode) {
+fn folder_menu_for_library(app: &mut HazavanaApp, resp: &egui::Response, n: &FolderNode) {
     let path = n.path.as_str();
     let name = std::path::Path::new(path).file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
     // what dialogs call it: the last two names, so same-named folders are told apart
-    let label = lightcraft_catalog::folders::folder_label(path);
+    let label = hazavana_catalog::folders::folder_label(path);
     resp.context_menu(|ui| {
         if ui.button(crate::i18n::tr("Rename Folder…")).clicked() {
             app.ui.dialog = Some(crate::state::Dialog::TextPrompt {
@@ -2088,7 +2088,7 @@ fn folder_menu_for_library(app: &mut LightcraftApp, resp: &egui::Response, n: &F
 /// "Keywords": the library's keyword tree with photo counts (`a|b|c` keywords nest). A click
 /// filters the grid by the keyword (children included), the triangle opens a level, and the
 /// context menu renames, merges or deletes the keyword across the library.
-fn keyword_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, nodes: &[KeywordNode], indent: f32) {
+fn keyword_rows(app: &mut HazavanaApp, ui: &mut egui::Ui, nodes: &[KeywordNode], indent: f32) {
     for n in nodes {
         // leaves (most keywords) have no open state to look up
         let open_id = (!n.children.is_empty()).then(|| egui::Id::new(("kw-open", n.path.to_lowercase())));
@@ -2104,7 +2104,7 @@ fn keyword_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, nodes: &[KeywordNode
 }
 
 /// One drawn row of [`keyword_rows`]; `open_id` and `open` are its triangle's when it has rows inside it.
-fn keyword_row(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &KeywordNode, id: &str, indent: f32, open_id: Option<egui::Id>, open: &mut bool) {
+fn keyword_row(app: &mut HazavanaApp, ui: &mut egui::Ui, n: &KeywordNode, id: &str, indent: f32, open_id: Option<egui::Id>, open: &mut bool) {
     let sel = app.session.filter.keyword.as_deref().is_some_and(|k| k.eq_ignore_ascii_case(&n.path));
     let resp = row(app, ui, id, Icon::Tag, &n.name, Some(n.count), sel, indent);
     if let Some(k) = open_id {
@@ -2260,9 +2260,9 @@ mod tests {
     fn a_local_folder_lines_up_with_the_rows_above_and_its_triangle_stays_left_of_the_icon() {
         use crate::Services;
         use crate::headless::HeadlessView;
-        let mut app = crate::LightcraftApp::new(lightcraft_engine::Session::new(), Services::default());
+        let mut app = crate::HazavanaApp::new(hazavana_engine::Session::new(), Services::default());
         let mut view = HeadlessView::new();
-        let path = "/lightcraft-test/Pictures";
+        let path = "/hazavana-test/Pictures";
         let mut widgets = vec![];
         for frame in 0..3 {
             let raw = HeadlessView::raw_input(egui::vec2(300.0, 200.0), 1.0, frame as f64 / 60.0, vec![]);

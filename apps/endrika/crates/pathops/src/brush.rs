@@ -5,8 +5,8 @@
 //! brush along the path. The result may overlap itself; fill it with the non-zero rule.
 
 use crate::width::{Polyline, polylines};
-use figcraft_doc::{Brush, StrokeProps};
-use figcraft_geom::kurbo::{self, Affine, BezPath, PathEl, Point, Vec2};
+use endrika_doc::{Brush, StrokeProps};
+use endrika_geom::kurbo::{self, Affine, BezPath, PathEl, Point, Vec2};
 
 /// What a preset does with its shape.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -83,7 +83,7 @@ fn shape(id: &str) -> Option<BezPath> {
         }
         "dots" => p.extend(kurbo::Shape::path_elements(&kurbo::Circle::new((0.0, 0.0), 0.5), 0.01)),
         "stars" => {
-            let pts = figcraft_geom::star_points(1.0, 1.0, 5, 0.4);
+            let pts = endrika_geom::star_points(1.0, 1.0, 5, 0.4);
             for (i, q) in pts.iter().enumerate() {
                 let q = Point::new(q.x - 0.5, q.y - 0.5);
                 if i == 0 { p.move_to(q) } else { p.line_to(q) }

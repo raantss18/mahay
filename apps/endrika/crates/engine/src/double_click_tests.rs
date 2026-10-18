@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -15,9 +15,9 @@ fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
 
 /// A frame holding a group of a rectangle and a text layer at (60, 60); returns (group, text).
 fn scene(s: &mut Session) -> (NodeId, NodeId) {
-    // The text is measured with a font: without craft-fonts that is a system one, scanned here
+    // The text is measured with a font: without mahay-fonts that is a system one, scanned here
     // rather than by whichever test happens to run first (#333).
-    figcraft_text::scan_system_fonts();
+    endrika_text::scan_system_fonts();
     let f = id_of(&ex(s, "frame.create", json!({"x": 0, "y": 0, "width": 400, "height": 300}))["id"]).unwrap();
     let r = id_of(&ex(s, "shape.rectangle", json!({"x": 40, "y": 40, "width": 200, "height": 60, "parent": f}))["id"]).unwrap();
     let t = id_of(&ex(s, "text.create", json!({"text": "Hi there", "x": 60, "y": 60, "parent": f, "props": {"fontSize": 16}}))["id"]).unwrap();

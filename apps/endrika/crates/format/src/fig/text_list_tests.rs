@@ -1,7 +1,7 @@
 //! Numbered lists that start past 1 (#686): each text line says where its list starts counting,
 //! less one (`listStartOffset`). Fixtures built in code with the parent module's helpers.
 
-use figcraft_doc::{ListStyle, NodeKind, ParaList};
+use endrika_doc::{ListStyle, NodeKind, ParaList};
 
 use super::*;
 
@@ -40,7 +40,7 @@ fn text_node(id: u64, name: &str, chars: &str, lines: Vec<Kv<'static>>) -> Kv<'s
     )
 }
 
-fn starts(doc: &figcraft_doc::Document, name: &str) -> Vec<(ListStyle, u32)> {
+fn starts(doc: &endrika_doc::Document, name: &str) -> Vec<(ListStyle, u32)> {
     let NodeKind::Text(t) = &named(doc, name).kind else { panic!("{name} is no text") };
     (0..t.paragraph_count()).map(|p| t.para_list(p)).map(|p: ParaList| (p.list, p.start_offset)).collect()
 }
@@ -71,10 +71,10 @@ fn numbered_lists_keep_their_start() {
 
 #[test]
 fn the_export_writes_where_a_list_starts() {
-    let mut doc = figcraft_doc::Document::new("Lists");
+    let mut doc = endrika_doc::Document::new("Lists");
     let page = doc.first_page().unwrap();
     use ListStyle::{Bulleted as B, None as P, Numbered as N};
-    let mut td = figcraft_doc::TextData::new("two\nthree\nplain\nsix\ndot");
+    let mut td = endrika_doc::TextData::new("two\nthree\nplain\nsix\ndot");
     let pl = |list, start_offset| ParaList { list, indent: 0, start_offset };
     td.paragraphs = vec![pl(N, 1), pl(N, 0), pl(P, 0), pl(N, 5), pl(B, 4)];
     doc.create(page, NodeKind::Text(td), "List", 0.0, 0.0, 200.0, 80.0).unwrap();

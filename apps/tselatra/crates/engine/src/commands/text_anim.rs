@@ -1,10 +1,10 @@
 //! Text animation: Animation ▸ Animate Text / Add Text Selector, the Timeline's "Animate:" and
-//! "Add:" pop-ups, Enable Per-character 3D, and EffectCraft's own text animator presets.
+//! "Add:" pop-ups, Enable Per-character 3D, and Tselatra's own text animator presets.
 
-use effectcraft_keyframe::{Keyframe, Value as KV};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{Layer, LayerSource, Node, PropGroup};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, Value as KV};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{Layer, LayerSource, Node, PropGroup};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 use std::sync::OnceLock;
 
@@ -208,8 +208,8 @@ fn set_animators_3d(ids: &mut Ids, l: &mut Layer, on: bool) {
         let has_rot = props.get("rotation").is_some();
         if on && has_rot && props.get("rotationX").is_none() {
             let at = props.children.iter().position(|c| c.match_id() == "rotation").unwrap_or(0);
-            let rx = ids.prop("rotationX", "X Rotation", KV::Scalar(0.0)).with_ui(effectcraft_project::ParamUi::Angle);
-            let ry = ids.prop("rotationY", "Y Rotation", KV::Scalar(0.0)).with_ui(effectcraft_project::ParamUi::Angle);
+            let rx = ids.prop("rotationX", "X Rotation", KV::Scalar(0.0)).with_ui(tselatra_project::ParamUi::Angle);
+            let ry = ids.prop("rotationY", "Y Rotation", KV::Scalar(0.0)).with_ui(tselatra_project::ParamUi::Angle);
             props.children.insert(at, ry.into());
             props.children.insert(at, rx.into());
         }
@@ -235,7 +235,7 @@ fn enable_per_char(s: &mut Session, p: &Value) -> Result<Value> {
             return Err(bad(C, "not a text layer"));
         }
         if l.props.prop("text/perChar3d").is_none() {
-            let mut pc = ids.prop("perChar3d", "Per-character 3D", KV::Bool(false)).with_ui(effectcraft_project::ParamUi::Hidden);
+            let mut pc = ids.prop("perChar3d", "Per-character 3D", KV::Bool(false)).with_ui(tselatra_project::ParamUi::Hidden);
             pc.static_only = true;
             if let Some(t) = l.props.sub_mut("text") {
                 t.children.insert(1, pc.into());
@@ -386,8 +386,8 @@ fn font_axes(s: &mut Session, p: &Value) -> Result<Value> {
     let Some(KV::Text(doc)) = layer.props.prop("text/sourceText").map(|pr| pr.value_at(layer.layer_time(s.time()))) else {
         return Err(bad(C, "not a text layer"));
     };
-    let face = effectcraft_text::layout_doc(&doc).glyphs.first().map(|g| g.face).unwrap_or_else(|| effectcraft_text::resolve(&doc.font, &doc.style).face);
-    let axes = effectcraft_text::variable::font_axes(face);
+    let face = tselatra_text::layout_doc(&doc).glyphs.first().map(|g| g.face).unwrap_or_else(|| tselatra_text::resolve(&doc.font, &doc.style).face);
+    let axes = tselatra_text::variable::font_axes(face);
     let list = || json!(axes.iter().map(|a| json!({"tag": a.tag, "name": a.name, "min": a.min, "default": a.default, "max": a.max})).collect::<Vec<_>>());
     let Some(want) = str_p(p, "axis") else { return Ok(json!({"font": doc.font, "axes": list()})) };
     if axes.is_empty() {
@@ -406,8 +406,8 @@ fn font_axes(s: &mut Session, p: &Value) -> Result<Value> {
         let mut next = proj.next_id;
         let mut ids = Ids(&mut next);
         let prop = ids
-            .prop(&format!("{}{}", effectcraft_render::text::AXIS_PREFIX, axis.tag.trim_end()), &axis.name, KV::Scalar(0.0))
-            .with_ui(effectcraft_project::ParamUi::Number);
+            .prop(&format!("{}{}", tselatra_render::text::AXIS_PREFIX, axis.tag.trim_end()), &axis.name, KV::Scalar(0.0))
+            .with_ui(tselatra_project::ParamUi::Number);
         let l = layer_mut(proj, cid, lid)?;
         let uid = match target {
             Some(a) => {

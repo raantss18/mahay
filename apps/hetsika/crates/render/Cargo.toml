@@ -1,5 +1,5 @@
 [package]
-name = "filmcraft-render"
+name = "hetsika-render"
 description = "Sequence evaluation and CPU reference compositor (linear-light premultiplied f32)"
 version.workspace = true
 edition.workspace = true
@@ -10,15 +10,15 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-filmcraft-time = { workspace = true }
-filmcraft-geom = { workspace = true }
-filmcraft-color = { workspace = true }
-filmcraft-frame = { workspace = true }
-filmcraft-media = { workspace = true }
-filmcraft-project = { workspace = true }
-filmcraft-audio-dsp = { workspace = true }
-filmcraft-captions = { workspace = true }
-filmcraft-text = { workspace = true }
+hetsika-time = { workspace = true }
+hetsika-geom = { workspace = true }
+hetsika-color = { workspace = true }
+hetsika-frame = { workspace = true }
+hetsika-media = { workspace = true }
+hetsika-project = { workspace = true }
+hetsika-audio-dsp = { workspace = true }
+hetsika-captions = { workspace = true }
+hetsika-text = { workspace = true }
 rayon = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build and package FilmCraft for FreeBSD:
+# Build and package Hetsika for FreeBSD:
 #
-#   $DIST/filmcraft-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
-#       filmcraft-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
-#       share/metainfo, share/doc/filmcraft}
+#   $DIST/hetsika-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
+#       hetsika-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
+#       share/metainfo, share/doc/hetsika}
 #
 # Install by copying the tree's contents into /usr/local:
-#   tar -xzf filmcraft-<version>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local
+#   tar -xzf hetsika-<version>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local
 #
 # Usage: packaging/freebsd/package.sh [--skip-build] [--dry-run]
 #   --dry-run   stage the tree from stub binaries and list it, without building (works on any OS)
@@ -16,7 +16,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 LINUX="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.filmcraft
+APP_ID=org.mahay.hetsika
 
 SKIP_BUILD=0
 DRY_RUN=0
@@ -40,14 +40,14 @@ if [ "$DRY_RUN" = 0 ] && [ "$(uname -s)" != FreeBSD ]; then
   echo "error: build on FreeBSD (or pass --dry-run to check the tree layout)" >&2
   exit 2
 fi
-BASENAME="filmcraft-$VERSION-freebsd-$ARCH"
+BASENAME="hetsika-$VERSION-freebsd-$ARCH"
 
-echo "==> FilmCraft $VERSION for FreeBSD $ARCH"
+echo "==> Hetsika $VERSION for FreeBSD $ARCH"
 
 # The release VM has 12 GB; full parallelism on the biggest crates runs it out of memory.
 export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"
 if [ "$SKIP_BUILD" = 0 ]; then
-  (cd "$ROOT" && cargo build --release --locked -p filmcraft -p filmcraft-cli)
+  (cd "$ROOT" && cargo build --release --locked -p hetsika -p hetsika-cli)
 fi
 WORK="$CARGO_TARGET_DIR/freebsd-package"
 STAGE="$WORK/$BASENAME"
@@ -61,7 +61,7 @@ if [ "$DRY_RUN" = 1 ]; then
   BIN="$WORK/stub-bin"
   OUT_DIR="$WORK"
   mkdir -p "$BIN"
-  for b in filmcraft filmcraft-cli; do
+  for b in hetsika hetsika-cli; do
     printf '#!/bin/sh\necho "%s %s (dry-run stub)"\n' "$b" "$VERSION" >"$BIN/$b"
     chmod 755 "$BIN/$b"
   done
@@ -70,23 +70,23 @@ fi
 # ---- stage a /usr/local-style tree --------------------------------------------------------------
 # FreeBSD's install(1) has no -D: create the directories first.
 mkdir -p "$STAGE/bin" "$STAGE/share/applications" "$STAGE/share/mime/packages" \
-  "$STAGE/share/metainfo" "$STAGE/share/icons" "$STAGE/share/doc/filmcraft"
-install -m 755 "$BIN/filmcraft" "$BIN/filmcraft-cli" "$STAGE/bin/"
-strip "$STAGE/bin/filmcraft" "$STAGE/bin/filmcraft-cli" 2>/dev/null || true
+  "$STAGE/share/metainfo" "$STAGE/share/icons" "$STAGE/share/doc/hetsika"
+install -m 755 "$BIN/hetsika" "$BIN/hetsika-cli" "$STAGE/bin/"
+strip "$STAGE/bin/hetsika" "$STAGE/bin/hetsika-cli" 2>/dev/null || true
 # The desktop entry, MIME type, metainfo and icons are the freedesktop files Linux ships.
 install -m 644 "$LINUX/$APP_ID.desktop" "$STAGE/share/applications/$APP_ID.desktop"
 install -m 644 "$LINUX/$APP_ID.mime.xml" "$STAGE/share/mime/packages/$APP_ID.xml"
-sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$FILMCRAFT_BUILD_DATE/g" \
+sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$HETSIKA_BUILD_DATE/g" \
   "$LINUX/$APP_ID.metainfo.xml.in" >"$STAGE/share/metainfo/$APP_ID.metainfo.xml"
 cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/share/icons/"
-copy_docs "$STAGE/share/doc/filmcraft"
+copy_docs "$STAGE/share/doc/hetsika"
 for f in NOTICE ATTRIBUTION.md; do
-  if [ -f "$ROOT/$f" ]; then install -m 644 "$ROOT/$f" "$STAGE/share/doc/filmcraft/"; fi
+  if [ -f "$ROOT/$f" ]; then install -m 644 "$ROOT/$f" "$STAGE/share/doc/hetsika/"; fi
 done
 
-for f in bin/filmcraft bin/filmcraft-cli "share/applications/$APP_ID.desktop" \
+for f in bin/hetsika bin/hetsika-cli "share/applications/$APP_ID.desktop" \
   "share/icons/hicolor/256x256/apps/$APP_ID.png" "share/icons/hicolor/scalable/apps/$APP_ID.svg" \
-  share/doc/filmcraft/LICENSE-MIT share/doc/filmcraft/LICENSE-APACHE; do
+  share/doc/hetsika/LICENSE-MIT share/doc/hetsika/LICENSE-APACHE; do
   if [ ! -e "$STAGE/$f" ]; then echo "error: $f is missing from the package" >&2; exit 1; fi
 done
 
@@ -95,7 +95,7 @@ mkdir -p "$OUT_DIR"
 tar -C "$WORK" -czf "$OUT_DIR/$BASENAME.tar.gz" "$BASENAME"
 echo "wrote $OUT_DIR/$BASENAME.tar.gz"
 
-"$STAGE/bin/filmcraft-cli" --version
+"$STAGE/bin/hetsika-cli" --version
 if [ "$DRY_RUN" = 1 ]; then
   echo "==> dry run: tarball contents"
   tar -tzvf "$OUT_DIR/$BASENAME.tar.gz"

@@ -1,22 +1,22 @@
 [package]
-name = "vectorcraft-svg"
+name = "tsipika-svg"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft SVG import and export"
+description = "Tsipika SVG import and export"
 
 [lints]
 workspace = true
 
 [dependencies]
 # Which paths stored in documents may be opened.
-craft-docpath = { workspace = true }
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-text = { workspace = true }
+mahay-docpath = { workspace = true }
+tsipika-geom = { workspace = true }
+tsipika-color = { workspace = true }
+tsipika-doc = { workspace = true }
+tsipika-effects = { workspace = true }
+tsipika-brush = { workspace = true }
+tsipika-text = { workspace = true }
 kurbo = { workspace = true }
 usvg = { workspace = true }
 thiserror = { workspace = true }
@@ -33,10 +33,10 @@ svgtypes = "0.16"
 # Reading embedded font subsets back.
 skrifa = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+tsipika-text = { workspace = true, features = ["test-fonts"] }
 resvg = { version = "0.45", default-features = false }
 # usvg as a reference viewer that lays text out in a font (text_layout.rs).
 usvg = { workspace = true, features = ["text"] }
-vectorcraft-testkit = { workspace = true }
+tsipika-testkit = { workspace = true }
 proptest = { workspace = true }
 image = { workspace = true }

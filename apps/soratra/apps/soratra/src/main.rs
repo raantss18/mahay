@@ -90,6 +90,7 @@ impl eframe::App for App {
     }
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         self.0.ui(ui);
+        mahay_about::banner(ui.ctx());
         self.3.show(frame);
     }
     fn on_exit(&mut self) {
@@ -419,6 +420,7 @@ fn main() -> eframe::Result {
             let region = region::system();
             let doc = if sample { soratra_engine::sample::sample_document() } else { soratra_engine::blank_document(&region) };
             let (file_dialog, dialogs) = file_dialogs::hook(&cc.egui_ctx);
+            mahay_about::register_desktop(mahay_about::AppInfo { id: "soratra", name: "Soratra" }, &cc.egui_ctx);
             let mut session = Session::new(doc);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));

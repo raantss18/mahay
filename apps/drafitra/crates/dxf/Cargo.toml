@@ -1,5 +1,5 @@
 [package]
-name = "cadcraft-dxf"
+name = "drafitra-dxf"
 description = "Standalone DXF tag reader/writer (ASCII and binary, pre-2007 code pages), from the published DXF reference"
 version.workspace = true
 edition.workspace = true

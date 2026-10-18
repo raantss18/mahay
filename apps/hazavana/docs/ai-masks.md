@@ -1,10 +1,10 @@
 # AI masks (Object and Describe)
 
-LightCraft selects objects with **SAM 3** (Segment Anything with Concepts, Meta 2025), run in
+Hazavana selects objects with **SAM 3** (Segment Anything with Concepts, Meta 2025), run in
 pure Rust by `crates/segment` on [candle](https://github.com/huggingface/candle): on the GPU
 through Metal on macOS, on the CPU elsewhere (for now).
 
-**The model is optional.** It is not part of LightCraft, and nothing requires it: without it,
+**The model is optional.** It is not part of Hazavana, and nothing requires it: without it,
 Object and Describe offer to download it, every other feature (and every existing mask, see
 below) works, and no render, export or command ever waits for it.
 
@@ -49,15 +49,15 @@ a Mac runs SAM 3. Build both ends from the same revision. On the Mac, install th
 as described below, then run:
 
 ```sh
-cargo build --release --locked -p lightcraft-segment --bin lightcraft-sam3-worker
-target/release/lightcraft-sam3-worker "$HOME/Library/Application Support/LightCraft/models/sam3" 127.0.0.1:8793
+cargo build --release --locked -p hazavana-segment --bin hazavana-sam3-worker
+target/release/hazavana-sam3-worker "$HOME/Library/Application Support/Hazavana/models/sam3" 127.0.0.1:8793
 ```
 
-On the editing computer, start an SSH tunnel in one terminal and LightCraft in another:
+On the editing computer, start an SSH tunnel in one terminal and Hazavana in another:
 
 ```sh
 ssh -N -T -o ExitOnForwardFailure=yes -L 127.0.0.1:8793:127.0.0.1:8793 user@your-mac
-LIGHTCRAFT_SAM3_REMOTE=127.0.0.1:8793 lightcraft
+HAZAVANA_SAM3_REMOTE=127.0.0.1:8793 hazavana
 ```
 
 Object clicks, Describe prompts, and detail refinement use the remote worker. Only the
@@ -75,18 +75,18 @@ this only on machines whose local users you trust.
 
 No local weights are required in remote mode. An unavailable worker produces an explicit
 error, not a silent CPU fallback. Restore the tunnel and retry. Unset
-`LIGHTCRAFT_SAM3_REMOTE` to use the local model again. This offloads segmentation only,
+`HAZAVANA_SAM3_REMOTE` to use the local model again. This offloads segmentation only,
 not RAW development, denoising, or upscaling. The model licence below still applies.
 
 ## Getting the model
 
 ### In the app (recommended)
 
-The first time you pick Object or Describe without the model, LightCraft asks:
+The first time you pick Object or Describe without the model, Hazavana asks:
 
 > **Download the SAM 3 model?** Object and Describe masks use SAM 3, Meta's segmentation model.
-> It isn't part of LightCraft, and everything else works without it. Download it once (about
-> 3.4 GB) · *folder*. Licence: SAM License (Meta) — Meta's terms, not LightCraft's. Downloading
+> It isn't part of Hazavana, and everything else works without it. Download it once (about
+> 3.4 GB) · *folder*. Licence: SAM License (Meta) — Meta's terms, not Hazavana's. Downloading
 > it means accepting them. [Read the SAM License] — **Not Now** / **Download**
 
 Nothing is downloaded until you choose **Download**. The download runs in the background (close
@@ -95,9 +95,9 @@ where it stopped if interrupted (also after quitting), and tries the next downlo
 one fails or stalls. Each file is written as `<name>.part` and moved into the model folder only
 when complete and verified — `model.safetensors` must have the exact size and SHA-256 of Meta's
 official checkpoint; a file that doesn't match is deleted, never used. If no location works, the
-dialog says why and LightCraft carries on without the model.
+dialog says why and Hazavana carries on without the model.
 
-Agents and scripts use the same commands (control channel, `lightcraft-cli mcp --connect`):
+Agents and scripts use the same commands (control channel, `hazavana-cli mcp --connect`):
 `segment.model.status`, `segment.model.download {"acknowledged": true}` (refused without the
 explicit `acknowledged`: pass it only after the user agreed to the download and the licence),
 `segment.model.cancel`.
@@ -107,13 +107,13 @@ explicit `acknowledged`: pass it only after the user agreed to the download and 
 The model is fetched from an ordered list of mirrors: base URLs where `<base>/model.safetensors`,
 `<base>/vocab.json` and `<base>/merges.txt` live. The list is, in order:
 
-1. `LIGHTCRAFT_SAM3_MIRRORS` (environment variable; URLs separated by commas or spaces);
-2. the file `models/sam3-mirrors.txt` in LightCraft's settings folder (one URL per line, `#`
-   comments) — `~/Library/Application Support/LightCraft/` (macOS), `%APPDATA%\LightCraft\`
-   (Windows), `~/.config/lightcraft/` (Linux);
+1. `HAZAVANA_SAM3_MIRRORS` (environment variable; URLs separated by commas or spaces);
+2. the file `models/sam3-mirrors.txt` in Hazavana's settings folder (one URL per line, `#`
+   comments) — `~/Library/Application Support/Hazavana/` (macOS), `%APPDATA%\Hazavana\`
+   (Windows), `~/.config/hazavana/` (Linux);
 3. the built-in list, `DEFAULT_MIRRORS` in `crates/segment/src/fetch/mod.rs`.
 
-> **Maintainers:** the built-in list is **empty** until LightCraft's own CDN locations exist
+> **Maintainers:** the built-in list is **empty** until Hazavana's own CDN locations exist
 > (see the `TODO(maintainer)` there): add them in order of preference, host the three files
 > unchanged, and pin `vocab.json` / `merges.txt` (size + SHA-256) in `SAM3_FILES` at the same
 > time. Until then the in-app download needs a user-configured mirror, and the dialog says so:
@@ -125,11 +125,11 @@ licence there, wait for approval and download with their own token). Someone wit
 use it as their mirror:
 
 ```sh
-LIGHTCRAFT_SAM3_MIRRORS=https://huggingface.co/facebook/sam3/resolve/main \
-LIGHTCRAFT_SAM3_TOKEN=hf_... lightcraft
+HAZAVANA_SAM3_MIRRORS=https://huggingface.co/facebook/sam3/resolve/main \
+HAZAVANA_SAM3_TOKEN=hf_... hazavana
 ```
 
-(`LIGHTCRAFT_SAM3_TOKEN` is sent as a bearer token only over https, and only to the mirror's own
+(`HAZAVANA_SAM3_TOKEN` is sent as a bearer token only over https, and only to the mirror's own
 host — not to the storage host it redirects to.)
 
 The download is plain HTTP/1.1 over TLS in pure Rust (rustls with the RustCrypto provider and
@@ -139,7 +139,7 @@ the Mozilla root certificates; no OpenSSL, `ring` or `aws-lc`, nothing compiled 
 ### By hand
 
 Put `model.safetensors`, `vocab.json` and `merges.txt` from `facebook/sam3` in the model folder:
-`models/sam3/` in the settings folder above, or the folder `LIGHTCRAFT_SAM3_DIR` names. Developers
+`models/sam3/` in the settings folder above, or the folder `HAZAVANA_SAM3_DIR` names. Developers
 can use the installer scripts, which download from Hugging Face with your token and verify the
 weights:
 
@@ -154,7 +154,7 @@ $env:HF_TOKEN = "hf_..."; .\tools\install-sam3.ps1   # Windows
 
 ## Licence of the model
 
-LightCraft's code is MIT OR Apache-2.0; `crates/segment` (a port of Apache-2.0 code) is
+Hazavana's code is MIT OR Apache-2.0; `crates/segment` (a port of Apache-2.0 code) is
 Apache-2.0. **The SAM 3 weights are neither**: they are Meta's, released under the **SAM
 License** (<https://github.com/facebookresearch/sam3/blob/main/LICENSE>), a custom licence that
 is not an OSI open-source licence. It grants a non-exclusive, worldwide, non-transferable,
@@ -194,7 +194,7 @@ Therefore:
 `download` is `{running, done, total, file, error, cancelled, finished}`: `cancelled` is true when the last
 download was cancelled (its `error` says so in words; decide on the flag). An AI mask command refused because
 the model is not installed (or still downloading) fails with an error that starts with "The SAM 3 model is
-not installed"; inside LightCraft it is `ErrorKind::ModelMissing(Sam3)`, which is what the app offers the
+not installed"; inside Hazavana it is `ErrorKind::ModelMissing(Sam3)`, which is what the app offers the
 download on.
 
 Coordinates are normalized to the uncropped, oriented photo, like every mask shape. `seg` passes
@@ -205,7 +205,7 @@ installed" that says how to get it.
 In the desktop app the commands don't wait for the model: `mask.objectPoint` returns
 `{pending: true}` and the selection is applied when it's computed (one undo step per settled
 selection); `mask.add {kind: "prompt"}` returns `{pending: true}` and the mask appears when
-something is found (or a message says nothing was). `lightcraft-cli` and the headless MCP server
+something is found (or a message says nothing was). `hazavana-cli` and the headless MCP server
 wait and return the result (when built with the `sam` feature; the default CLI has no AI masks).
 
 ## Implementation notes
@@ -215,10 +215,10 @@ wait and return the result (when built with the `sam` feature; the default CLI h
   with 2-D RoPE and windowed attention, the feature pyramids, the SAM 2-style prompt encoder and
   two-way mask decoder for clicks, and the CLIP text encoder, DETR encoder/decoder (box
   relative-position bias, presence token) and pixel decoder for text. The CLIP tokenizer is a
-  small BPE in `tokenizer.rs`. The downloader (original code) is the `lightcraft-fetch` crate, shared by any model that is downloaded; `fetch/` here says what SAM 3 needs.
+  small BPE in `tokenizer.rs`. The downloader (original code) is the `hazavana-fetch` crate, shared by any model that is downloaded; `fetch/` here says what SAM 3 needs.
 - candle is pinned at 0.9.2: later releases make `candle-core` depend on `tokenizers` with the
   Oniguruma C library, and the product is pure Rust. Weights are read with positional reads (no
-  memory map: `unsafe` stays in `lightcraft-sysmem`), only the tensors a path needs, and every
+  memory map: `unsafe` stays in `hazavana-sysmem`), only the tensors a path needs, and every
   tensor's byte range is checked against the file's length when it is opened (a truncated or
   damaged file is an error, never a crash).
 - The engine (`crates/engine/src/segment/`) owns one worker thread with the model and the last
@@ -239,5 +239,5 @@ wait and return the result (when built with the `sam` feature; the default CLI h
 ```sh
 python3 -m venv .venv-sam3 && .venv-sam3/bin/pip install -r tools/requirements-sam3-reference.txt
 .venv-sam3/bin/python tools/sam3_reference.py photo.jpg ref.safetensors
-LIGHTCRAFT_SAM3_DIR=<model dir> LIGHTCRAFT_SAM3_REF=ref.safetensors cargo test -p lightcraft-segment --release -- --nocapture
+HAZAVANA_SAM3_DIR=<model dir> HAZAVANA_SAM3_REF=ref.safetensors cargo test -p hazavana-segment --release -- --nocapture
 ```

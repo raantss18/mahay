@@ -5,7 +5,7 @@
 //!   embedded (the driver converts); a printer / paper ICC profile converts the page to the device's
 //!   own values here and names the profile as the document's output intent, so the driver must not
 //!   convert again.
-//! - **Intent, black point compensation, print adjustment**: [`lightcraft_codecs::print`].
+//! - **Intent, black point compensation, print adjustment**: [`hazavana_codecs::print`].
 //! - **Print sharpening** (Low / Standard / High for Matte or Glossy paper): each photo is sharpened
 //!   at its print size before it goes on the page, with the export sharpener.
 //! - **Depth**: 16 bits per component by default (no banding from the profile conversion); 8 bits
@@ -16,9 +16,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use lightcraft_codecs::display::MAX_PROFILE_BYTES;
-use lightcraft_codecs::print::{PrintColor, PrintTarget, PrintTransform};
-use lightcraft_codecs::{NamedSpace, proof::ProofIntent};
+use hazavana_codecs::display::MAX_PROFILE_BYTES;
+use hazavana_codecs::print::{PrintColor, PrintTarget, PrintTransform};
+use hazavana_codecs::{NamedSpace, proof::ProofIntent};
 use serde::{Deserialize, Serialize};
 
 use crate::export::{DeepImage, DeepSamples, OutputSpace, SharpenAmount, SharpenFor, output_sharpen_deep};
@@ -248,7 +248,7 @@ pub fn is_print_ready(photo: &DeepImage) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_codecs::print::print_adjust;
+    use hazavana_codecs::print::print_adjust;
 
     fn scratch(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("lc-print-color-{}-{name}", std::process::id()));
@@ -302,7 +302,7 @@ mod tests {
     fn a_printer_profile_converts_and_becomes_the_output_intent() {
         let dir = scratch("icc");
         let path = dir.join("Studio Glossy.icc");
-        std::fs::write(&path, lightcraft_codecs::icc::write_named(NamedSpace::AdobeRgb)).unwrap();
+        std::fs::write(&path, hazavana_codecs::icc::write_named(NamedSpace::AdobeRgb)).unwrap();
         let settings =
             PrintColorSettings { profile: PrintProfile::Icc { path }, intent: PrintIntent::Relative, sixteen_bit: false, ..Default::default() };
         let job = PrintColorJob::new(&settings).unwrap();

@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (Korean covers the whole interface, #508) · **Target:** Adobe Premiere Pro 2026 (26.5.2)
 
-Per-language status of FilmCraft's interface. Premiere 26.5.2 ships 10 interface languages (the
+Per-language status of Hetsika's interface. Premiere 26.5.2 ships 10 interface languages (the
 installed bundle's `.lproj` folders): German, English, Spanish, French, Italian, Japanese, Korean,
 Portuguese (Brazil), Russian, Simplified Chinese.
 
@@ -22,7 +22,7 @@ label; `ja.tsv`, `fr.tsv` and `pt-br.tsv` have the same entries but are not yet 
 entry without a Spanish one). Engine error messages, the
 control channel, the CLI and MCP stay English.
 
-Fonts come from [craft-fonts](https://github.com/storytold/craft-fonts) (`CRAFT_FONTS_DIR`, all
+Fonts come from [mahay-fonts](https://github.com/raantss18/mahay) (`MAHAY_FONTS_DIR`, all
 official releases) or an installed system face; without one, switching to Japanese or Chinese is
 refused with a message. Simplified Chinese is picked for `zh`, `zh-CN`, `zh-SG`, `zh-Hans`, not
 Traditional locales. Ukrainian uses the bundled Cyrillic interface fonts. Vertical text in titles
@@ -51,7 +51,7 @@ whole interface, one PR) at ~4–8 h per language for the catalog plus tests.
 | Indonesian | id | 3,541 (same entries as Spanish, plus the macOS Settings item); must cover the core menus, no entry without a Spanish one | as Spanish | Latin (bundled fonts); System Language also maps the legacy `in` code | not recorded; welcome | partial (#867) | review |
 | Japanese | ja | 3,487 (99.7%) | as zh-cn; system-font kanji may pick the Chinese fallback (#547) | CJK fonts, vertical title text | not recorded | partial | 4–8 h + review |
 | German | de | 371 (10.6%) | menus only | Latin | yes (#630) | menus only | 5–9 h + review |
-| Korean | ko | 3,573 (same entries as Spanish, plus the macOS Settings item) | as Spanish | installed system Hangul font (Malgun Gothic, Apple SD Gothic Neo, Noto Sans CJK KR…); refused without one | not recorded; welcome | partial (#508) | review; Hangul in craft-fonts for the web |
+| Korean | ko | 3,573 (same entries as Spanish, plus the macOS Settings item) | as Spanish | installed system Hangul font (Malgun Gothic, Apple SD Gothic Neo, Noto Sans CJK KR…); refused without one | not recorded; welcome | partial (#508) | review; Hangul in mahay-fonts for the web |
 | Vietnamese | vi | 0 (0%) | — | Latin with stacked diacritics (font coverage to check) | — | none | 6–12 h + review |
 | *Other shipped:* Italian | it | 3,573 (same entries as Spanish, plus the macOS Settings item); must cover the core menus, no entry without a Spanish one | as Spanish | Latin (bundled fonts) | not recorded; welcome | partial | review |
 | *Other shipped:* Ukrainian | uk | 351 (10.0%) | menus only | Cyrillic (bundled) | not recorded | menus only | 5–9 h |

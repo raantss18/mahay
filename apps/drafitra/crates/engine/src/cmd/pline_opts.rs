@@ -2,7 +2,7 @@
 //! CEnter, Direction, Radius and Second pt, and line mode's Length. Each ends in the next
 //! segment from the last vertex `st`: its end point and bulge.
 
-use cadcraft_geom::{Arc, TAU, Vec2, arc_to_bulge};
+use drafitra_geom::{Arc, TAU, Vec2, arc_to_bulge};
 
 use super::curves::{arc_sca, arc_scl, arc_sea, arc_sed, arc_ser};
 use super::machines::number;

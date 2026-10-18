@@ -7,8 +7,8 @@
 //! `(N·H)^shininess` takes the light's colour mixed towards the layer's colour by Metal.
 //! A comp without lights shows 3D layers unlit.
 
-use effectcraft_geom::{Vec3, vec3};
-use effectcraft_project::{Layer, LightKind};
+use tselatra_geom::{Vec3, vec3};
+use tselatra_project::{Layer, LightKind};
 
 use super::camera::layer_frame;
 use crate::EvalCtx;
@@ -40,7 +40,7 @@ pub struct LightState {
 impl LightState {
     /// Evaluate a light layer.
     pub fn from_layer(ctx: &EvalCtx, layer: &Layer) -> Option<LightState> {
-        let effectcraft_project::LayerSource::Light { kind } = layer.source else { return None };
+        let tselatra_project::LayerSource::Light { kind } = layer.source else { return None };
         let g = layer.props.sub("lightOptions")?;
         let intensity = ctx.f(layer, g, "intensity", 100.0) / 100.0;
         let c = ctx.color(layer, g, "color");
@@ -125,7 +125,7 @@ pub fn lights_at(ctx: &EvalCtx) -> Vec<LightState> {
             l.is_light()
                 && l.switches.video
                 && l.is_active_at(ctx.time)
-                && l.source != (effectcraft_project::LayerSource::Light { kind: LightKind::Environment })
+                && l.source != (tselatra_project::LayerSource::Light { kind: LightKind::Environment })
         })
         .filter_map(|l| LightState::from_layer(ctx, l))
         .collect()

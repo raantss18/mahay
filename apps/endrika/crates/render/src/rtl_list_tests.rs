@@ -2,7 +2,7 @@
 //! and in the outlines the SVG export writes: the bullet ends at the box's right edge with a clear
 //! gap between it and the text on its left. (The PDF export draws the same laid-out glyphs.)
 
-use figcraft_doc::{Document, ListStyle, NodeId, NodeKind, TextAlignH, TextAutoResize, TextData};
+use endrika_doc::{Document, ListStyle, NodeId, NodeKind, TextAlignH, TextAutoResize, TextData};
 
 use super::*;
 
@@ -24,8 +24,8 @@ fn doc() -> (Document, NodeId, TextData) {
 /// The bullet's span and where the text ends, from the layout; None without Hebrew fonts.
 fn spans(td: &TextData) -> Option<((f64, f64), f64)> {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(figcraft_text::scan_system_fonts);
-    let l = figcraft_text::layout(td, Some(W), None);
+    ONCE.call_once(endrika_text::scan_system_fonts);
+    let l = endrika_text::layout(td, Some(W), None);
     if l.glyphs.is_empty() || l.glyphs.iter().any(|g| g.gid == 0) {
         eprintln!("no font for Hebrew; skipping");
         return None;
@@ -52,10 +52,10 @@ fn the_bullet_of_a_right_to_left_paragraph_draws_on_the_right() {
         .elements()
         .iter()
         .flat_map(|e| match e {
-            figcraft_geom::kurbo::PathEl::MoveTo(p) | figcraft_geom::kurbo::PathEl::LineTo(p) => vec![p.x],
-            figcraft_geom::kurbo::PathEl::QuadTo(a, p) => vec![a.x, p.x],
-            figcraft_geom::kurbo::PathEl::CurveTo(a, b, p) => vec![a.x, b.x, p.x],
-            figcraft_geom::kurbo::PathEl::ClosePath => vec![],
+            endrika_geom::kurbo::PathEl::MoveTo(p) | endrika_geom::kurbo::PathEl::LineTo(p) => vec![p.x],
+            endrika_geom::kurbo::PathEl::QuadTo(a, p) => vec![a.x, p.x],
+            endrika_geom::kurbo::PathEl::CurveTo(a, b, p) => vec![a.x, b.x, p.x],
+            endrika_geom::kurbo::PathEl::ClosePath => vec![],
         })
         .collect();
     assert!(xs.iter().any(|x| (m0..=m1).contains(x)));

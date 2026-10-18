@@ -2,7 +2,7 @@
 //! channel (`crates/ui-egui/tests/control_cmdline_key.rs`): a refused Enter is echoed and reported
 //! in `error`, and the call itself succeeds.
 
-use cadcraft_mcp::{Backend, Headless};
+use drafitra_mcp::{Backend, Headless};
 use serde_json::{Value, json};
 
 fn keys(v: &Value) -> Vec<String> {

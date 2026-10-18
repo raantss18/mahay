@@ -3,7 +3,7 @@
 use super::{MAX_DEPTH, Mapper, View};
 use crate::fig::kiwi::Kv;
 use crate::rest::MAX_NODES;
-use figcraft_doc::geom::Affine;
+use endrika_doc::geom::Affine;
 
 fn obj(fields: Vec<(&'static str, Kv<'static>)>) -> Kv<'static> {
     Kv::Object(fields)

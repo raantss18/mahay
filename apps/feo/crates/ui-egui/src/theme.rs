@@ -470,7 +470,7 @@ pub fn apply(ctx: &egui::Context, light: bool) {
     // pinning egui's theme also pins the window appearance and hides later OS changes.
     ctx.set_theme(egui::ThemePreference::System);
     // Both egui style branches must use our resolved palette: egui can select either branch
-    // as the OS changes, including while SoundCraft's manual Light/Dark choice stays fixed.
+    // as the OS changes, including while Feo's manual Light/Dark choice stays fixed.
     ctx.all_styles_mut(|s| {
         s.visuals = v.clone();
         s.spacing.item_spacing = egui::vec2(6.0, 4.0);
@@ -492,7 +492,7 @@ mod tests {
         // exclusive against other threads (so a frame cannot flip it mid-test).
         let outer = lock_test_palette();
         let inner = lock_test_palette();
-        let app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+        let app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
         let (tx, rx) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
             let _held = lock_test_palette();
@@ -535,7 +535,7 @@ mod tests {
 
     #[test]
     fn theme_command_sets_and_reports_the_mode() {
-        let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+        let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
         assert_eq!(app.run("ui.theme", json!({})), Ok(json!({"mode": "dark"})));
         assert_eq!(app.run("ui.theme", json!({"mode": "light"})), Ok(json!({"mode": "light"})));
         assert_eq!(app.ui.theme, ThemeMode::Light);
@@ -590,13 +590,13 @@ mod tests {
         let appearances = [Some(egui::Theme::Light), Some(egui::Theme::Dark), Some(egui::Theme::Light), None];
         for initial in [Some(egui::Theme::Light), Some(egui::Theme::Dark), None] {
             let ctx = egui::Context::default();
-            let mut app = SoundApp::new(soundcraft_engine::Engine::default(), None, Services::default());
+            let mut app = SoundApp::new(feo_engine::Engine::default(), None, Services::default());
             app.ui = serde_json::from_value(json!({"theme": "system"})).unwrap();
             frame(&mut app, &ctx, initial, initial == Some(egui::Theme::Light));
         }
 
         let ctx = egui::Context::default();
-        let mut engine = soundcraft_engine::demo::demo_engine();
+        let mut engine = feo_engine::demo::demo_engine();
         let track = engine.session_mut().tracks.first_mut().unwrap();
         track.color = [19, 83, 147];
         track.playlists.iter_mut().flat_map(|playlist| &mut playlist.clips).next().unwrap().color = Some([211, 57, 99]);

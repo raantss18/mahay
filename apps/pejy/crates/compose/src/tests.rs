@@ -1,6 +1,6 @@
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::{Align, Composer, Document, ParaAttrs, ParaFormat, SpreadRef};
-use designcraft_geom::Rect;
+use pejy_doc::build::NewDocument;
+use pejy_doc::{Align, Composer, Document, ParaAttrs, ParaFormat, SpreadRef};
+use pejy_geom::Rect;
 
 use super::*;
 
@@ -11,7 +11,7 @@ fn long_wrapped_paragraph_rechecks_width_after_estimated_slots_end() {
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.font_family = Some("Source Serif 4".into());
         f.over.size = Some(13.0);
-        f.over.leading = Some(designcraft_doc::Leading::Points(17.0));
+        f.over.leading = Some(pejy_doc::Leading::Points(17.0));
     });
     add_wrap_objects(&mut d, &[(Rect::new(180.0, 135.0, 440.0, 568.3333333333334), [13.5; 4], WrapMode::Contour)]);
     let composed = compose_story(&d, sid, &ComposeOptions::default());
@@ -163,7 +163,7 @@ fn wrap_pushes_text_aside() {
     let lid = d.default_layer();
     let id = ItemId(d.alloc());
     let mut it =
-        designcraft_doc::Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 60.0)));
+        pejy_doc::Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 60.0)));
     it.wrap.mode = WrapMode::BoundingBox;
     it.wrap.offsets = [0.0, 0.0, 6.0, 6.0];
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
@@ -180,10 +180,10 @@ fn wrap_pushes_text_aside() {
 fn tombstone(frame: Rect, wrap: Rect) -> (Document, StoryId) {
     let (mut d, sid, _) = doc_with("X", frame, ParaAttrs::default());
     let st = d.story_mut(sid).unwrap();
-    st.paras[0].chars = designcraft_doc::CharAttrs { size: Some(14.0), ..Default::default() };
+    st.paras[0].chars = pejy_doc::CharAttrs { size: Some(14.0), ..Default::default() };
     st.format_chars(0..1, |f| f.over.size = Some(7.6));
     let lid = d.default_layer();
-    let mut it = designcraft_doc::Item::new(ItemId(d.alloc()), lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(wrap));
+    let mut it = pejy_doc::Item::new(ItemId(d.alloc()), lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(wrap));
     it.wrap.mode = WrapMode::BoundingBox;
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
     (d, sid)
@@ -267,7 +267,7 @@ fn add_wrap_objects(d: &mut Document, objects: &[(Rect, [f64; 4], WrapMode)]) {
     let lid = d.default_layer();
     for &(r, offsets, mode) in objects {
         let id = ItemId(d.alloc());
-        let mut it = designcraft_doc::Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(r));
+        let mut it = pejy_doc::Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(r));
         it.wrap.mode = mode;
         it.wrap.offsets = offsets;
         d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
@@ -280,7 +280,7 @@ fn wrap_doc(para: ParaAttrs, objects: &[(Rect, [f64; 4], WrapMode)]) -> (Documen
     let (mut d, sid, _) = doc_with(&text, Rect::new(36.0, 36.0, 324.0, 564.0), para);
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.size = Some(10.0);
-        f.over.leading = Some(designcraft_doc::Leading::Points(12.0));
+        f.over.leading = Some(pejy_doc::Leading::Points(12.0));
     });
     add_wrap_objects(&mut d, objects);
     (d, sid)
@@ -298,7 +298,7 @@ fn jump_doc(text: &str, objects: &[(Rect, [f64; 4])]) -> (Document, StoryId, Ite
     let (mut d, sid, fid) = doc_with(text, Rect::new(36.0, 62.36, 324.0, 532.91), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.size = Some(14.0);
-        f.over.leading = Some(designcraft_doc::Leading::Points(18.0));
+        f.over.leading = Some(pejy_doc::Leading::Points(18.0));
     });
     d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.first_baseline = FirstBaseline::Leading;
     let objects: Vec<_> = objects.iter().map(|&(r, o)| (r, o, WrapMode::JumpObject)).collect();
@@ -509,7 +509,7 @@ fn doc_with_ellipse(mode: WrapMode, side: WrapSide) -> (Document, StoryId) {
     let lid = d.default_layer();
     let id = ItemId(d.alloc());
     let mut it =
-        designcraft_doc::Item::new(id, lid, designcraft_doc::Shape::Oval, designcraft_geom::shapes::ellipse(Rect::new(110.0, 100.0, 190.0, 200.0)));
+        pejy_doc::Item::new(id, lid, pejy_doc::Shape::Oval, pejy_geom::shapes::ellipse(Rect::new(110.0, 100.0, 190.0, 200.0)));
     it.wrap.mode = mode;
     it.wrap.side = side;
     it.wrap.offsets = [4.0; 4];
@@ -548,22 +548,22 @@ fn wrap_on_both_sides_sets_text_left_then_right_of_the_object() {
 /// downwards, text reaches further in at the narrow top than at the wide bottom.
 #[test]
 fn same_as_clipping_wrap_follows_the_clipping_path() {
-    use designcraft_geom::{PathData, Point, SubPath};
+    use pejy_geom::{PathData, Point, SubPath};
     let (mut d, sid, _) = doc_with(&[LOREM; 4].join(" "), Rect::new(0.0, 0.0, 300.0, 800.0), ParaAttrs::default());
     let lid = d.default_layer();
     let id = ItemId(d.alloc());
-    let mut it = designcraft_doc::Item::new(
+    let mut it = pejy_doc::Item::new(
         id,
         lid,
-        designcraft_doc::Shape::Rectangle,
-        designcraft_geom::shapes::rectangle(Rect::new(150.0, 100.0, 300.0, 300.0)),
+        pejy_doc::Shape::Rectangle,
+        pejy_geom::shapes::rectangle(Rect::new(150.0, 100.0, 300.0, 300.0)),
     );
     let triangle = PathData::single(SubPath::polyline(&[Point::new(75.0, 0.0), Point::new(150.0, 200.0), Point::new(0.0, 200.0)], true));
-    it.content = designcraft_doc::Content::Graphic(designcraft_doc::Graphic {
-        asset: designcraft_doc::AssetId(1),
+    it.content = pejy_doc::Content::Graphic(pejy_doc::Graphic {
+        asset: pejy_doc::AssetId(1),
         size: (150.0, 200.0),
-        xf: designcraft_geom::Affine::translate((150.0, 100.0)),
-        clip: Some(std::sync::Arc::new(designcraft_doc::ClippingPath::new(designcraft_doc::ClippingKind::DetectEdges, triangle))),
+        xf: pejy_geom::Affine::translate((150.0, 100.0)),
+        clip: Some(std::sync::Arc::new(pejy_doc::ClippingPath::new(pejy_doc::ClippingKind::DetectEdges, triangle))),
         auto_fit: Default::default(),
         fit_align: 0,
         crop: [0.0; 4],
@@ -572,7 +572,7 @@ fn same_as_clipping_wrap_follows_the_clipping_path() {
     });
     it.wrap.mode = WrapMode::Contour;
     it.wrap.side = WrapSide::LeftSide;
-    it.wrap.contour = designcraft_doc::ContourType::SameAsClipping;
+    it.wrap.contour = pejy_doc::ContourType::SameAsClipping;
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let beside: Vec<&Line> = cs.frames[0].lines.iter().filter(|l| l.baseline - l.ascent > 100.0 && l.baseline + l.descent < 300.0).collect();
@@ -589,7 +589,7 @@ fn sliver_wrap(para: ParaAttrs) -> (Document, StoryId, String) {
     let lid = d.default_layer();
     let id = ItemId(d.alloc());
     let mut it =
-        designcraft_doc::Item::new(id, lid, designcraft_doc::Shape::Oval, designcraft_geom::shapes::ellipse(Rect::new(150.0, 100.0, 276.0, 220.0)));
+        pejy_doc::Item::new(id, lid, pejy_doc::Shape::Oval, pejy_geom::shapes::ellipse(Rect::new(150.0, 100.0, 276.0, 220.0)));
     it.wrap.mode = WrapMode::Contour;
     it.wrap.side = WrapSide::BothSides;
     it.wrap.offsets = [4.0; 4];
@@ -673,10 +673,10 @@ fn contour_wrap_follows_the_outline_band_by_band() {
 }
 
 /// A contour wrap with a slanted right edge, x = 100 + 2(y − 50) for y in 50..100, text to its right.
-fn doc_with_slant(contour: designcraft_geom::path::PathData) -> (Document, StoryId) {
+fn doc_with_slant(contour: pejy_geom::path::PathData) -> (Document, StoryId) {
     let (mut d, sid, _) = doc_with(&[LOREM; 2].join(" "), Rect::new(0.0, 0.0, 300.0, 800.0), ParaAttrs::default());
     let lid = d.default_layer();
-    let mut it = designcraft_doc::Item::new(ItemId(d.alloc()), lid, designcraft_doc::Shape::Polygon, contour);
+    let mut it = pejy_doc::Item::new(ItemId(d.alloc()), lid, pejy_doc::Shape::Polygon, contour);
     it.wrap.mode = WrapMode::Contour;
     it.wrap.side = WrapSide::RightSide;
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
@@ -686,7 +686,7 @@ fn doc_with_slant(contour: designcraft_geom::path::PathData) -> (Document, Story
 #[test]
 fn a_line_meets_the_wrap_from_its_top_to_its_baseline() {
     let pts = [Point::new(0.0, 50.0), Point::new(100.0, 50.0), Point::new(200.0, 100.0), Point::new(0.0, 100.0)];
-    let path = designcraft_geom::path::PathData::single(designcraft_geom::path::SubPath::polyline(&pts, true));
+    let path = pejy_geom::path::PathData::single(pejy_geom::path::SubPath::polyline(&pts, true));
     let (d, sid) = doc_with_slant(path);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let beside: Vec<&Line> = cs.frames[0].lines.iter().filter(|l| l.baseline - l.ascent > 50.0 && l.baseline < 100.0).collect();
@@ -704,15 +704,15 @@ fn an_image_contour_stops_at_its_frame() {
     let lid = d.default_layer();
     // An L-shaped frame: its right edge is at x = 150 down to y = 150, then at 250 below.
     let pts = [(0.0, 50.0), (150.0, 50.0), (150.0, 150.0), (250.0, 150.0), (250.0, 200.0), (0.0, 200.0)].map(|(x, y)| Point::new(x, y));
-    let frame = designcraft_geom::path::PathData::single(designcraft_geom::path::SubPath::polyline(&pts, true));
-    let mut it = designcraft_doc::Item::new(ItemId(d.alloc()), lid, designcraft_doc::Shape::Polygon, frame);
+    let frame = pejy_geom::path::PathData::single(pejy_geom::path::SubPath::polyline(&pts, true));
+    let mut it = pejy_doc::Item::new(ItemId(d.alloc()), lid, pejy_doc::Shape::Polygon, frame);
     // The image overhangs the frame on every side.
-    it.content = designcraft_doc::Content::Graphic(designcraft_doc::Graphic {
-        asset: designcraft_doc::AssetId(d.alloc()),
+    it.content = pejy_doc::Content::Graphic(pejy_doc::Graphic {
+        asset: pejy_doc::AssetId(d.alloc()),
         size: (300.0, 250.0),
-        xf: designcraft_geom::Affine::IDENTITY,
+        xf: pejy_geom::Affine::IDENTITY,
         clip: None,
-        auto_fit: designcraft_doc::Fitting::None,
+        auto_fit: pejy_doc::Fitting::None,
         fit_align: 4,
         crop: [0.0; 4],
         wrap: Default::default(),
@@ -720,7 +720,7 @@ fn an_image_contour_stops_at_its_frame() {
     });
     it.wrap.mode = WrapMode::Contour;
     it.wrap.side = WrapSide::RightSide;
-    it.wrap.contour = designcraft_doc::ContourType::BoundingBox;
+    it.wrap.contour = pejy_doc::ContourType::BoundingBox;
     it.wrap.offsets = [4.0; 4];
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -740,22 +740,22 @@ fn an_image_contour_stops_at_its_frame() {
 fn a_clipping_path_contour_stops_at_its_frame() {
     let (mut d, sid, _) = doc_with(&[LOREM; 4].join(" "), Rect::new(0.0, 0.0, 300.0, 800.0), ParaAttrs::default());
     let lid = d.default_layer();
-    let mut it = designcraft_doc::Item::new(
+    let mut it = pejy_doc::Item::new(
         ItemId(d.alloc()),
         lid,
-        designcraft_doc::Shape::Rectangle,
-        designcraft_geom::shapes::rectangle(Rect::new(150.0, 100.0, 300.0, 300.0)),
+        pejy_doc::Shape::Rectangle,
+        pejy_geom::shapes::rectangle(Rect::new(150.0, 100.0, 300.0, 300.0)),
     );
     // The clip path reaches 100 pt left of the frame.
-    let wide = designcraft_geom::path::PathData::single(designcraft_geom::path::SubPath::polyline(
+    let wide = pejy_geom::path::PathData::single(pejy_geom::path::SubPath::polyline(
         &[Point::new(-100.0, 0.0), Point::new(150.0, 0.0), Point::new(150.0, 200.0), Point::new(-100.0, 200.0)],
         true,
     ));
-    it.content = designcraft_doc::Content::Graphic(designcraft_doc::Graphic {
-        asset: designcraft_doc::AssetId(1),
+    it.content = pejy_doc::Content::Graphic(pejy_doc::Graphic {
+        asset: pejy_doc::AssetId(1),
         size: (150.0, 200.0),
-        xf: designcraft_geom::Affine::translate((150.0, 100.0)),
-        clip: Some(std::sync::Arc::new(designcraft_doc::ClippingPath::new(designcraft_doc::ClippingKind::DetectEdges, wide))),
+        xf: pejy_geom::Affine::translate((150.0, 100.0)),
+        clip: Some(std::sync::Arc::new(pejy_doc::ClippingPath::new(pejy_doc::ClippingKind::DetectEdges, wide))),
         auto_fit: Default::default(),
         fit_align: 0,
         crop: [0.0; 4],
@@ -764,7 +764,7 @@ fn a_clipping_path_contour_stops_at_its_frame() {
     });
     it.wrap.mode = WrapMode::Contour;
     it.wrap.side = WrapSide::LeftSide;
-    it.wrap.contour = designcraft_doc::ContourType::SameAsClipping;
+    it.wrap.contour = pejy_doc::ContourType::SameAsClipping;
     it.wrap.offsets = [4.0; 4];
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -779,7 +779,7 @@ fn a_clipping_path_contour_stops_at_its_frame() {
 fn paragraph_composer_is_no_worse_than_greedy() {
     // Sum of squared slack over lines (excluding last) should not exceed the greedy result.
     let measure = 180.0;
-    let mk = |c: designcraft_doc::Composer| {
+    let mk = |c: pejy_doc::Composer| {
         let (d, sid, _) = doc_with(
             &[LOREM; 2].join(" "),
             Rect::new(0.0, 0.0, measure, 4000.0),
@@ -790,15 +790,15 @@ fn paragraph_composer_is_no_worse_than_greedy() {
         let n = lines.len();
         lines[..n - 1].iter().map(|l| (l.x1 - l.end_x).powi(2)).sum::<f64>()
     };
-    let kp = mk(designcraft_doc::Composer::Paragraph);
-    let gr = mk(designcraft_doc::Composer::SingleLine);
+    let kp = mk(pejy_doc::Composer::Paragraph);
+    let gr = mk(pejy_doc::Composer::SingleLine);
     assert!(kp <= gr * 1.05 + 1.0, "kp {kp} greedy {gr}");
 }
 
 #[test]
 fn tabs_align_to_stops() {
     let pa = ParaAttrs {
-        tabs: Some(vec![designcraft_doc::TabStop { position: 100.0, align: TabAlign::Right, leader: String::new(), align_on: String::new() }]),
+        tabs: Some(vec![pejy_doc::TabStop { position: 100.0, align: TabAlign::Right, leader: String::new(), align_on: String::new() }]),
         ..Default::default()
     };
     let (d, sid, _) = doc_with("Name\t42", Rect::new(0.0, 0.0, 300.0, 100.0), pa);
@@ -890,7 +890,7 @@ fn glyph_scaling_and_letter_spacing_are_applied() {
 }
 
 /// Width of `text` set at 48 pt with `kerning`, and the advance of each visible glyph.
-fn set_with_kerning(text: &str, kerning: designcraft_doc::Kerning) -> (f64, Vec<(char, f64)>) {
+fn set_with_kerning(text: &str, kerning: pejy_doc::Kerning) -> (f64, Vec<(char, f64)>) {
     let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 2000.0, 200.0), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.size = Some(48.0);
@@ -904,7 +904,7 @@ fn set_with_kerning(text: &str, kerning: designcraft_doc::Kerning) -> (f64, Vec<
 
 #[test]
 fn optical_kerning_closes_open_pairs_and_leaves_stems() {
-    use designcraft_doc::Kerning;
+    use pejy_doc::Kerning;
     // `AV` and `To` set tighter than unkerned; `nn`, the reference pair, stays as the font set it.
     for pair in ["AV", "To", "r."] {
         let (none, _) = set_with_kerning(pair, Kerning::None);
@@ -923,7 +923,7 @@ fn optical_kerning_closes_open_pairs_and_leaves_stems() {
 
 #[test]
 fn optical_kerning_is_bounded_and_skips_spaces() {
-    use designcraft_doc::Kerning;
+    use pejy_doc::Kerning;
     let text = "Sphinx of black quartz, judge my vow. 1997 “Park” AWAY";
     let (_, none) = set_with_kerning(text, Kerning::None);
     let (_, optical) = set_with_kerning(text, Kerning::Optical);
@@ -943,7 +943,7 @@ fn optical_kerning_is_bounded_and_skips_spaces() {
 
 #[test]
 fn optical_kerning_leaves_dash_pairs_alone() {
-    use designcraft_doc::Kerning;
+    use pejy_doc::Kerning;
     // Two bars end to end have a near-zero ink gap; pulling them towards the stem gap would
     // break `--` and the double em dash `——` that Chinese sets as one continuous rule.
     for text in ["--", "\u{2014}\u{2014}", "a--b", "\u{2013}\u{2013}"] {
@@ -977,7 +977,7 @@ fn hyphen_limit_is_a_hard_constraint() {
 #[test]
 fn hyphenation_zone_limits_ragged_hyphens() {
     let text = CORPUS.join(" ");
-    let count = |zone: f64, composer: designcraft_doc::Composer| {
+    let count = |zone: f64, composer: pejy_doc::Composer| {
         let para =
             ParaAttrs { align: Some(Align::Left), hyph_zone: Some(zone), composer: Some(composer), hyph_weight: Some(0.0), ..Default::default() };
         let (d, sid, _) = doc_with(&text, Rect::new(0.0, 0.0, 110.0, 100_000.0), para);
@@ -986,12 +986,12 @@ fn hyphenation_zone_limits_ragged_hyphens() {
     };
     // Single-line Composer: a huge zone leaves only words that start a line (no space to break
     // at) hyphenable.
-    let c = designcraft_doc::Composer::SingleLine;
+    let c = pejy_doc::Composer::SingleLine;
     let (free, zoned, huge) = (count(0.0, c), count(36.0, c), count(1000.0, c));
     assert!(free > 0 && zoned <= free && huge * 4 <= free, "{c:?}: {free} {zoned} {huge}");
     // The zone is the Single-line Composer's only (InDesign): the Paragraph Composer hyphenates
     // the same whatever it is.
-    let c = designcraft_doc::Composer::Paragraph;
+    let c = pejy_doc::Composer::Paragraph;
     let (free, zoned, huge) = (count(0.0, c), count(36.0, c), count(1000.0, c));
     assert!(free > 0 && zoned == free && huge == free, "{c:?}: {free} {zoned} {huge}");
 }
@@ -1371,7 +1371,7 @@ fn perf_compose_300k_story() {
 
 #[test]
 fn column_break_moves_following_text() {
-    let text = format!("First column text.{}Second column text.", designcraft_doc::story::COLUMN_BREAK);
+    let text = format!("First column text.{}Second column text.", pejy_doc::story::COLUMN_BREAK);
     let (mut d, sid, fid) = doc_with(&text, Rect::new(0.0, 0.0, 400.0, 300.0), ParaAttrs::default());
     d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.columns = 2;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -1386,7 +1386,7 @@ fn column_break_moves_following_text() {
 /// or even for those breaks), with no empty line where the break was.
 #[test]
 fn break_characters_end_their_paragraph_and_keep_page_parity() {
-    use designcraft_doc::story::{EVEN_PAGE_BREAK, ODD_PAGE_BREAK, PAGE_BREAK};
+    use pejy_doc::story::{EVEN_PAGE_BREAK, ODD_PAGE_BREAK, PAGE_BREAK};
     let mut d = Document::new(&NewDocument { pages: 4, facing_pages: false, primary_text_frame: true, ..Default::default() });
     let sid = d.settings.primary_story.unwrap();
     let text = format!("one{ODD_PAGE_BREAK}\ntwo{EVEN_PAGE_BREAK}\nthree{PAGE_BREAK}\nfour");
@@ -1403,8 +1403,8 @@ fn break_characters_end_their_paragraph_and_keep_page_parity() {
 /// (or Next Even Page) still moves it when that frame is on a page of the other parity.
 #[test]
 fn odd_and_even_page_starts_keep_parity_at_the_top_of_a_frame() {
-    use designcraft_doc::StartParagraph;
-    use designcraft_doc::story::PAGE_BREAK;
+    use pejy_doc::StartParagraph;
+    use pejy_doc::story::PAGE_BREAK;
     let pages_of = |start: StartParagraph| {
         let mut d = Document::new(&NewDocument { pages: 4, facing_pages: false, primary_text_frame: true, ..Default::default() });
         let sid = d.settings.primary_story.unwrap();
@@ -1426,7 +1426,7 @@ fn odd_and_even_page_starts_keep_parity_at_the_top_of_a_frame() {
 fn line_before_a_break_character_is_a_last_line() {
     // As in InDesign: column, frame and page breaks end the paragraph's last line (set with the
     // last-line alignment), while a forced line break inside a justified paragraph is justified.
-    use designcraft_doc::story::{COLUMN_BREAK, FORCED_LINE_BREAK, FRAME_BREAK, PAGE_BREAK};
+    use pejy_doc::story::{COLUMN_BREAK, FORCED_LINE_BREAK, FRAME_BREAK, PAGE_BREAK};
     for (brk, align, justified) in [
         (COLUMN_BREAK, Align::LeftJustified, false),
         (FRAME_BREAK, Align::LeftJustified, false),
@@ -1459,7 +1459,7 @@ fn tabs_without_stops_use_default_half_inch() {
 
 // ---------- tables ----------
 
-fn table_doc(frame: Rect, t: designcraft_doc::Table) -> (Document, StoryId, ItemId) {
+fn table_doc(frame: Rect, t: pejy_doc::Table) -> (Document, StoryId, ItemId) {
     let (mut d, sid, fid) = doc_with("Intro", frame, ParaAttrs::default());
     let st = d.story_mut(sid).unwrap();
     let end = st.len();
@@ -1470,8 +1470,8 @@ fn table_doc(frame: Rect, t: designcraft_doc::Table) -> (Document, StoryId, Item
     (d, sid, fid)
 }
 
-fn filled(rows: usize, cols: usize, header: usize, width: f64) -> designcraft_doc::Table {
-    let mut t = designcraft_doc::Table::new(77, rows, cols, header, 0, width);
+fn filled(rows: usize, cols: usize, header: usize, width: f64) -> pejy_doc::Table {
+    let mut t = pejy_doc::Table::new(77, rows, cols, header, 0, width);
     for r in 0..t.nrows() {
         for c in 0..t.ncols() {
             t.cell_mut(r, c).unwrap().text.insert(0, &format!("R{r}C{c}"));
@@ -1485,7 +1485,7 @@ fn table_rows_fit_their_content() {
     let mut t = filled(3, 3, 1, 300.0);
     t.cell_mut(2, 1).unwrap().text.insert(0, &format!("{LOREM} "));
     t.rows[3].height = 50.0;
-    t.rows[3].mode = designcraft_doc::RowHeightMode::Exactly;
+    t.rows[3].mode = pejy_doc::RowHeightMode::Exactly;
     let (d, sid, _) = table_doc(Rect::new(0.0, 0.0, 400.0, 1000.0), t);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(!cs.is_overset());
@@ -1582,9 +1582,9 @@ fn table_cells_hit_test_and_place_carets() {
 #[test]
 fn table_fills_and_merged_cells() {
     let mut t = filled(4, 3, 1, 300.0);
-    t.options.alt_rows = Some(designcraft_doc::AltFills { first: 1, next: 1, ..Default::default() });
+    t.options.alt_rows = Some(pejy_doc::AltFills { first: 1, next: 1, ..Default::default() });
     t.cell_mut(0, 0).unwrap().fill = "[Black]".into();
-    t.merge(designcraft_doc::CellRange::new(1, 1, 2, 2)).unwrap();
+    t.merge(pejy_doc::CellRange::new(1, 1, 2, 2)).unwrap();
     let (d, sid, _) = table_doc(Rect::new(0.0, 0.0, 300.0, 1000.0), t);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let tf = &cs.frames[0].tables[0];
@@ -1601,17 +1601,17 @@ fn table_fills_and_merged_cells() {
 
 #[test]
 fn tab_leaders_fill_the_gap() {
-    let mut doc = designcraft_doc::Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut doc = pejy_doc::Document::new(&pejy_doc::build::NewDocument::default());
     let lid = doc.default_layer();
-    let pf = designcraft_doc::ParaFormat {
-        para: designcraft_doc::ParaAttrs {
-            tabs: Some(vec![designcraft_doc::TabStop { position: 200.0, align: TabAlign::Right, leader: ".".into(), align_on: String::new() }]),
+    let pf = pejy_doc::ParaFormat {
+        para: pejy_doc::ParaAttrs {
+            tabs: Some(vec![pejy_doc::TabStop { position: 200.0, align: TabAlign::Right, leader: ".".into(), align_on: String::new() }]),
             ..Default::default()
         },
         ..Default::default()
     };
     let (_, sid) =
-        doc.add_text_frame(designcraft_doc::SpreadRef::Doc(0), designcraft_geom::Rect::new(0.0, 0.0, 300.0, 100.0), lid, "Intro\t12", pf).unwrap();
+        doc.add_text_frame(pejy_doc::SpreadRef::Doc(0), pejy_geom::Rect::new(0.0, 0.0, 300.0, 100.0), lid, "Intro\t12", pf).unwrap();
     let cs = crate::compose_story(&doc, sid, &Default::default());
     let line = &cs.frames[0].lines[0];
     let dots: Vec<&crate::PlacedGlyph> = line.glyphs.iter().filter(|g| g.len == 0 && g.visible).collect();
@@ -1636,7 +1636,7 @@ fn right_indent_tab_leaders_follow_stop_precedence_without_moving_text() {
     for (name, right_indent, stops, expected) in cases {
         let tabs = stops
             .into_iter()
-            .map(|(position, leader)| designcraft_doc::TabStop { position, align: TabAlign::Right, leader: leader.into(), align_on: String::new() })
+            .map(|(position, leader)| pejy_doc::TabStop { position, align: TabAlign::Right, leader: leader.into(), align_on: String::new() })
             .collect();
         let para = ParaAttrs { tabs: Some(tabs), left_indent: Some(12.0), right_indent: Some(right_indent), ..Default::default() };
         // Translation and left/right indents distinguish the tab origin from line/absolute x.
@@ -1677,7 +1677,7 @@ fn right_indent_tab_leaders_use_the_tab_format_and_regular_tab_drawing() {
     for ch in [story::RIGHT_INDENT_TAB, '\t'] {
         let text = format!("Intro{ch}12");
         let para = ParaAttrs {
-            tabs: Some(vec![designcraft_doc::TabStop { position: 300.0, align: TabAlign::Right, leader: ".-".into(), align_on: String::new() }]),
+            tabs: Some(vec![pejy_doc::TabStop { position: 300.0, align: TabAlign::Right, leader: ".-".into(), align_on: String::new() }]),
             ..Default::default()
         };
         let (mut d, sid, _) = doc_with(&text, Rect::new(72.0, 36.0, 372.0, 136.0), para);
@@ -1726,7 +1726,7 @@ fn right_indent_tab_leaders_do_not_draw_when_the_gap_cannot_fit_a_pattern() {
     assert!(pattern_width > 0.01);
     for gap in [0.0, pattern_width / 2.0] {
         let para = ParaAttrs {
-            tabs: Some(vec![designcraft_doc::TabStop { position: 1.0, align: TabAlign::Left, leader: "-".into(), align_on: String::new() }]),
+            tabs: Some(vec![pejy_doc::TabStop { position: 1.0, align: TabAlign::Left, leader: "-".into(), align_on: String::new() }]),
             ..Default::default()
         };
         let (d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, natural + gap, 100.0), para);
@@ -1835,7 +1835,7 @@ fn footnote_first_line_wraps_at_the_column_edge_after_its_number() {
     // wraps at the same right edge as the others, whatever the separator. A tab separator
     // reaches the footnote style's tab stop.
     let tab_at = |position: f64| {
-        let stop = designcraft_doc::TabStop { position, align: TabAlign::Left, leader: String::new(), align_on: String::new() };
+        let stop = pejy_doc::TabStop { position, align: TabAlign::Left, leader: String::new(), align_on: String::new() };
         ParaAttrs { tabs: Some(vec![stop]), ..Default::default() }
     };
     let right_edge = |l: &Line, source: &str| {
@@ -1940,15 +1940,15 @@ fn right_to_left_runs_are_ordered_visually() {
     assert!(x_of(alef) > x_of(bet) && x_of(bet) > x_of(gimel), "Hebrew reversed");
     assert!(x_of(0) < x_of(gimel) && x_of(alef) < x_of(11), "Latin around it stays in place");
     // A right-to-left paragraph puts its first word on the right.
-    let rtl = ParaAttrs { direction: Some(designcraft_doc::TextDirection::RightToLeft), ..Default::default() };
+    let rtl = ParaAttrs { direction: Some(pejy_doc::TextDirection::RightToLeft), ..Default::default() };
     let (d, sid, _) = doc_with("\u{5D0}\u{5D1} abc", Rect::new(36.0, 36.0, 500.0, 200.0), rtl);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let l = all_lines(&cs)[0];
     let x_of = |byte: usize| l.glyphs.iter().find(|g| g.byte == byte).map(|g| g.x).unwrap();
     assert!(x_of(0) > x_of(5), "the Hebrew word (first in the text) is right of the Latin one");
     // Shaping keeps clusters in text order.
-    let face = designcraft_fonts::FontDb::global().face(designcraft_fonts::DEFAULT_FAMILY, "Regular");
-    let g = designcraft_fonts::shape(&face, "ab \u{5D0}\u{5D1}", &[], |c| c);
+    let face = pejy_fonts::FontDb::global().face(pejy_fonts::DEFAULT_FAMILY, "Regular");
+    let g = pejy_fonts::shape(&face, "ab \u{5D0}\u{5D1}", &[], |c| c);
     assert!(g.windows(2).all(|w| w[0].cluster <= w[1].cluster), "{:?}", g.iter().map(|g| g.cluster).collect::<Vec<_>>());
 }
 
@@ -1957,7 +1957,7 @@ fn bidi_matches_the_reference_order() {
     use unicode_bidi::{BidiInfo, Level};
     let text = "English then \u{645}\u{631}\u{62D}\u{628}\u{627} \u{628}\u{627}\u{644}\u{639}\u{627}\u{644}\u{645} 123 and \u{5E9}\u{5DC}\u{5D5}\u{5DD} \u{5E2}\u{5D5}\u{5DC}\u{5DD} end.";
     for rtl in [false, true] {
-        let dir = if rtl { designcraft_doc::TextDirection::RightToLeft } else { designcraft_doc::TextDirection::LeftToRight };
+        let dir = if rtl { pejy_doc::TextDirection::RightToLeft } else { pejy_doc::TextDirection::LeftToRight };
         let (d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 2000.0, 200.0), ParaAttrs { direction: Some(dir), ..Default::default() });
         let cs = compose_story(&d, sid, &ComposeOptions::default());
         let l = all_lines(&cs)[0];
@@ -1973,7 +1973,7 @@ fn bidi_matches_the_reference_order() {
 
 #[test]
 fn carets_in_right_to_left_text_follow_the_drawing() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     // "abc" then an Arabic word, in a left-to-right paragraph.
     let text = "abc سلام";
@@ -2014,11 +2014,11 @@ fn kashidas_without_tatweel_fall_back_to_spaces() {
 }
 
 fn check_kashida_justification(db: &FontDb, require_fallback: bool) {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let text = "بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم مالك يوم الدين اياك نعبد واياك نستعين";
     let pf = ParaFormat {
-        para: ParaAttrs { align: Some(Align::RightJustified), direction: Some(designcraft_doc::TextDirection::RightToLeft), ..Default::default() },
+        para: ParaAttrs { align: Some(Align::RightJustified), direction: Some(pejy_doc::TextDirection::RightToLeft), ..Default::default() },
         ..Default::default()
     };
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 260.0, 400.0), lid, text, pf).unwrap();
@@ -2057,11 +2057,11 @@ fn check_kashida_justification(db: &FontDb, require_fallback: bool) {
 
 #[test]
 fn digits_option_draws_figures_in_another_script() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 400.0, 200.0), lid, "No. 2024", ParaFormat::default()).unwrap();
     let plain = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.clone();
-    d.story_mut(sid).unwrap().format_chars(0..8, |f| f.over.digits = Some(designcraft_doc::Digits::Hindi));
+    d.story_mut(sid).unwrap().format_chars(0..8, |f| f.over.digits = Some(pejy_doc::Digits::Hindi));
     let hindi = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.clone();
     // One glyph per digit, each still mapped to its own source character.
     let digits: Vec<_> = hindi.iter().filter(|g| g.byte >= 4 && g.len > 0).collect();
@@ -2074,16 +2074,16 @@ fn digits_option_draws_figures_in_another_script() {
 
 #[test]
 fn page_numbers_take_the_digits_option() {
-    use designcraft_fonts::testing::font_mapping;
+    use pejy_fonts::testing::font_mapping;
     // Draws ١ as X, every other character as itself.
     let glyphs = [('N', 'N'), ('o', 'o'), ('.', '.'), (' ', ' '), ('1', '1'), ('\u{661}', 'X')];
-    designcraft_fonts::FontDb::global().add_font(font_mapping("DC Test Page Digits", &glyphs).unwrap());
+    pejy_fonts::FontDb::global().add_font(font_mapping("DC Test Page Digits", &glyphs).unwrap());
     // The glyph drawn at byte 4: the page number, or a typed Arabic-Indic one.
     let fourth = |text: &str| {
         let (mut d, sid, _) = doc_with(text, Rect::new(100.0, 100.0, 400.0, 200.0), ParaAttrs::default());
         d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
             f.over.font_family = Some("DC Test Page Digits".into());
-            f.over.digits = Some(designcraft_doc::Digits::Hindi);
+            f.over.digits = Some(pejy_doc::Digits::Hindi);
         });
         let cs = compose_story(&d, sid, &ComposeOptions::default());
         cs.frames[0].lines[0].glyphs.iter().find(|g| g.byte == 4).map(|g| g.gid).unwrap()
@@ -2093,7 +2093,7 @@ fn page_numbers_take_the_digits_option() {
 
 #[test]
 fn digits_option_draws_page_numbers_and_list_numbers_in_that_script() {
-    use designcraft_doc::{Digits, ListType};
+    use pejy_doc::{Digits, ListType};
     let gids = |text: &str, list: Option<ListType>, digits: Option<Digits>| {
         let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 300.0, 100.0), ParaAttrs { list_type: list, ..Default::default() });
         if let Some(dg) = digits {
@@ -2111,7 +2111,7 @@ fn digits_option_draws_page_numbers_and_list_numbers_in_that_script() {
 
 #[test]
 fn ruby_and_kenten_sit_over_their_text() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 400.0, 200.0), lid, "漢字です", ParaFormat::default()).unwrap();
     let base_n = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.len();
@@ -2139,8 +2139,8 @@ fn ruby_and_kenten_sit_over_their_text() {
 
 /// `text` on one line, composed plain and then with the ruby attributes `set` on `range`: the
 /// plain glyphs, and the ruby line (its ruby glyphs follow the text's) with its story.
-fn ruby_compose(text: &str, range: std::ops::Range<usize>, set: impl Fn(&mut designcraft_doc::CharAttrs)) -> (Vec<PlacedGlyph>, Line, ComposedStory) {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+fn ruby_compose(text: &str, range: std::ops::Range<usize>, set: impl Fn(&mut pejy_doc::CharAttrs)) -> (Vec<PlacedGlyph>, Line, ComposedStory) {
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 400.0, 200.0), lid, text, ParaFormat::default()).unwrap();
     let plain = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.clone();
@@ -2169,7 +2169,7 @@ fn group_ruby_spreads_1_2_1_over_the_word_and_mono_ruby_sits_over_each_character
     // Mono: かん over 漢 and じ centred on 字; the U+3000 separator isn't drawn.
     let (plain, l, _) = ruby_compose("漢字です", kanji, |a| {
         a.ruby = Some("かん\u{3000}じ".into());
-        a.ruby_type = Some(designcraft_doc::ruby::RubyType::PerCharacter);
+        a.ruby_type = Some(pejy_doc::ruby::RubyType::PerCharacter);
     });
     let ruby = &l.glyphs[plain.len()..];
     assert_eq!(ruby.len(), 3);
@@ -2207,7 +2207,7 @@ fn ruby_is_half_size_by_default_and_can_sit_below_in_its_own_colour() {
     let kanji = 0.."漢字".len();
     let (plain, l, cs) = ruby_compose("漢字です", kanji.clone(), |a| {
         a.ruby = Some("かんじ".into());
-        a.ruby_position = Some(designcraft_doc::ruby::RubyPosition::BelowLeft);
+        a.ruby_position = Some(pejy_doc::ruby::RubyPosition::BelowLeft);
     });
     let ruby = &l.glyphs[plain.len()..];
     let size = cs.styles[l.glyphs[0].style as usize].size;
@@ -2229,8 +2229,8 @@ fn ruby_is_half_size_by_default_and_can_sit_below_in_its_own_colour() {
 
 #[test]
 fn ruby_moves_out_past_kenten_on_the_same_side() {
-    use designcraft_doc::cjk_settings::KentenPosition;
-    use designcraft_doc::ruby::RubyPosition;
+    use pejy_doc::cjk_settings::KentenPosition;
+    use pejy_doc::ruby::RubyPosition;
     let kanji = 0.."漢字".len();
     // The ruby glyphs' baseline, and the outer edge of the kenten's em box (y down).
     let compose = |ruby: RubyPosition, kenten: Option<KentenPosition>| {
@@ -2277,7 +2277,7 @@ fn ruby_moves_out_past_kenten_on_the_same_side() {
 
 #[test]
 fn ruby_and_kenten_overprint_their_own_run_styles() {
-    use designcraft_doc::cjk_settings::AdornmentOverprint as O;
+    use pejy_doc::cjk_settings::AdornmentOverprint as O;
     let kanji = 0.."漢字".len();
     let (plain, l, cs) = ruby_compose("漢字です", kanji, |a| {
         a.ruby = Some("かんじ".into());
@@ -2301,7 +2301,7 @@ fn longer_ruby_never_overhangs_a_line_edge_or_more_than_its_neighbours_take() {
     // take (one ruby character, 6 pt, each). A line edge takes none, so the group stays on the
     // line of each kana it overhangs.
     let text = "かな字".repeat(12);
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 190.0, 500.0), lid, &text, ParaFormat::default()).unwrap();
     for (k, _) in text.match_indices('字') {
@@ -2329,7 +2329,7 @@ fn longer_ruby_never_overhangs_a_line_edge_or_more_than_its_neighbours_take() {
 #[test]
 fn warichu_stacks_the_run_inside_the_line_and_closes_up() {
     let text = "ABCDEFGHZ";
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, text, ParaFormat::default()).unwrap();
     let plain = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.clone();
@@ -2337,7 +2337,7 @@ fn warichu_stacks_the_run_inside_the_line_and_closes_up() {
     let sx0 = plain.iter().find(|g| g.byte == 0 && g.len > 0).unwrap().sx;
     d.story_mut(sid).unwrap().format_chars(0..8, |f| {
         f.over.warichu = Some(true);
-        f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+        f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
     });
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let l = &cs.frames[0].lines[0];
@@ -2359,7 +2359,7 @@ fn warichu_stacks_the_run_inside_the_line_and_closes_up() {
 #[test]
 fn warichu_line_spacing_from_a_document_stays_finite() {
     for spacing in [1e308, -1e308, f64::INFINITY, f64::NAN] {
-        let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+        let mut d = Document::new(&pejy_doc::build::NewDocument::default());
         let lid = d.default_layer();
         let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, "ABCDEFGHZ", ParaFormat::default()).unwrap();
         d.story_mut(sid).unwrap().format_chars(0..8, |f| {
@@ -2379,7 +2379,7 @@ fn warichu_line_spacing_from_a_document_stays_finite() {
 
 #[test]
 fn warichu_break_minimum_keeps_a_short_run_on_one_line() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, "ABCD", ParaFormat::default()).unwrap();
     d.story_mut(sid).unwrap().format_chars(0..4, |f| {
@@ -2397,13 +2397,13 @@ fn warichu_break_minimum_keeps_a_short_run_on_one_line() {
 
 #[test]
 fn warichu_break_minimums_apply_to_the_first_and_last_line() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, "ABCDEFGH", ParaFormat::default()).unwrap();
     d.story_mut(sid).unwrap().format_chars(0..8, |f| {
         f.over.warichu = Some(true);
         f.over.warichu_lines = Some(2);
-        f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+        f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
         f.over.warichu_chars_before_break = Some(1);
         f.over.warichu_chars_after_break = Some(5);
     });
@@ -2418,13 +2418,13 @@ fn warichu_break_minimums_apply_to_the_first_and_last_line() {
 
 #[test]
 fn warichu_rows_balance_by_width() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, "IIIIWWWW", ParaFormat::default()).unwrap();
     d.story_mut(sid).unwrap().format_chars(0..8, |f| {
         f.over.warichu = Some(true);
         f.over.warichu_lines = Some(2);
-        f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+        f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
     });
     let l = &compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0];
     let run: Vec<_> = l.glyphs.iter().filter(|g| g.len > 0 && g.byte < 8).collect();
@@ -2437,12 +2437,12 @@ fn warichu_rows_balance_by_width() {
 
 #[test]
 fn warichu_negative_spacing_tightens_the_rows() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, "ABCDEFGH", ParaFormat::default()).unwrap();
     d.story_mut(sid).unwrap().format_chars(0..8, |f| {
         f.over.warichu = Some(true);
-        f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+        f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
         f.over.warichu_line_spacing = Some(-1.0);
     });
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -2456,13 +2456,13 @@ fn warichu_negative_spacing_tightens_the_rows() {
 #[test]
 fn warichu_tab_leaders_stay_in_the_gap() {
     let frame = |warichu: bool| {
-        let mut doc = Document::new(&designcraft_doc::build::NewDocument::default());
+        let mut doc = Document::new(&pejy_doc::build::NewDocument::default());
         let lid = doc.default_layer();
         let pf = ParaFormat {
             para: ParaAttrs {
-                tabs: Some(vec![designcraft_doc::TabStop {
+                tabs: Some(vec![pejy_doc::TabStop {
                     position: 200.0,
-                    align: designcraft_doc::TabAlign::Right,
+                    align: pejy_doc::TabAlign::Right,
                     leader: ".".into(),
                     align_on: String::new(),
                 }]),
@@ -2475,7 +2475,7 @@ fn warichu_tab_leaders_stay_in_the_gap() {
             let at = "Intro\t".len();
             doc.story_mut(sid).unwrap().format_chars(at..at + 8, |f| {
                 f.over.warichu = Some(true);
-                f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+                f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
             });
         }
         let cs = compose_story(&doc, sid, &ComposeOptions::default());
@@ -2496,12 +2496,12 @@ fn warichu_tab_leaders_stay_in_the_gap() {
 #[test]
 fn warichu_hit_caret_and_selection_follow_each_row() {
     let text = "ABCDEFGHZ";
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(36.0, 36.0, 500.0, 200.0), lid, text, ParaFormat::default()).unwrap();
     d.story_mut(sid).unwrap().format_chars(0..8, |f| {
         f.over.warichu = Some(true);
-        f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+        f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
     });
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let l = &cs.frames[0].lines[0];
@@ -2515,17 +2515,17 @@ fn warichu_hit_caret_and_selection_follow_each_row() {
     assert!((y0 - (l.baseline + top.y)).abs() < 1e-6 && (y4 - (l.baseline + bot.y)).abs() < 1e-6, "caret sits on the row");
     assert!(asc < l.ascent * 0.8, "the row caret is shorter than the parent line");
     assert!((y_end - l.baseline).abs() < 1e-6 && (x_end - l.end_x).abs() < 1e-3, "the line end stays on the parent baseline");
-    let click = |g: &PlacedGlyph| hit(&cs, 0, designcraft_geom::Point::new(g.x + g.adv * 0.25, l.baseline + g.y)).unwrap();
+    let click = |g: &PlacedGlyph| hit(&cs, 0, pejy_geom::Point::new(g.x + g.adv * 0.25, l.baseline + g.y)).unwrap();
     assert_eq!(click(top), 0);
     assert_eq!(click(bot), 4);
-    assert_eq!(hit(&cs, 0, designcraft_geom::Point::new(z.x + z.adv * 0.25, l.baseline)).unwrap(), 8);
+    assert_eq!(hit(&cs, 0, pejy_geom::Point::new(z.x + z.adv * 0.25, l.baseline)).unwrap(), 8);
     let up = adjacent_row(l, bot.x + bot.adv * 0.25, l.baseline + bot.y, true).unwrap();
-    assert!(hit(&cs, 0, designcraft_geom::Point::new(bot.x + bot.adv * 0.25, up)).unwrap() < 4);
+    assert!(hit(&cs, 0, pejy_geom::Point::new(bot.x + bot.adv * 0.25, up)).unwrap() < 4);
     assert!(adjacent_row(l, top.x + 0.1, l.baseline + top.y, true).is_none(), "the top row does not move up inside the note");
     assert!(adjacent_row(l, z.x + 0.1, l.baseline, false).is_none(), "the character after the note is not inside a row");
     let quads = highlight_quads(l, 0, 8, false);
     assert_eq!(quads.len(), 2, "one band per row");
-    let mid_y = |q: &[designcraft_geom::Point; 4]| (q[0].y + q[2].y) / 2.0;
+    let mid_y = |q: &[pejy_geom::Point; 4]| (q[0].y + q[2].y) / 2.0;
     assert!(mid_y(&quads[0]) < l.baseline && mid_y(&quads[1]) > l.baseline, "the bands sit on either side of the parent baseline");
     let style = &cs.styles[top.style as usize];
     assert!((rule_baseline(style, l, top) - (l.baseline + top.y)).abs() < 1e-9);
@@ -2535,7 +2535,7 @@ fn warichu_hit_caret_and_selection_follow_each_row() {
 
 #[test]
 fn tate_chu_yoko_sets_digits_across_one_em() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (_, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 200.0, 400.0), lid, "令和12年", ParaFormat::default()).unwrap();
     let at = "令和".len();
@@ -2575,7 +2575,7 @@ fn tate_chu_yoko_sets_digits_across_one_em() {
 
 #[test]
 fn vertical_frames_compose_in_the_turned_box() {
-    let mut d = Document::new(&designcraft_doc::build::NewDocument::default());
+    let mut d = Document::new(&pejy_doc::build::NewDocument::default());
     let lid = d.default_layer();
     let (fid, sid) =
         d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 200.0, 400.0), lid, "縦書きの文章です。Latin", ParaFormat::default()).unwrap();
@@ -2594,8 +2594,8 @@ fn vertical_frames_compose_in_the_turned_box() {
     assert!(!l.glyphs.iter().rev().find(|g| g.len > 0).unwrap().upright, "Latin turns");
     // Text space → frame: the first line sits at the right edge and runs down.
     let xf = d.text_xf(d.item(fid).unwrap());
-    let p0 = xf * designcraft_geom::Point::new(l.glyphs[0].x, l.baseline);
-    let p1 = xf * designcraft_geom::Point::new(l.glyphs[3].x, l.baseline);
+    let p0 = xf * pejy_geom::Point::new(l.glyphs[0].x, l.baseline);
+    let p1 = xf * pejy_geom::Point::new(l.glyphs[3].x, l.baseline);
     assert!(p0.x > 150.0 && p1.y > p0.y && (p1.x - p0.x).abs() < 1e-6, "{p0:?} {p1:?}");
 }
 
@@ -2642,7 +2642,7 @@ fn baseline_fit_doc(text: &str, height: f64) -> (Document, StoryId, ItemId) {
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.font_family = Some("Source Serif 4".into());
         f.over.size = Some(8.0);
-        f.over.leading = Some(designcraft_doc::Leading::Points(11.0));
+        f.over.leading = Some(pejy_doc::Leading::Points(11.0));
     });
     (d, sid, fid)
 }
@@ -2650,7 +2650,7 @@ fn baseline_fit_doc(text: &str, height: f64) -> (Document, StoryId, ItemId) {
 #[test]
 fn horizontal_text_fits_its_baseline_at_the_bottom_inset() {
     // Include spaces, a nonprinting anchor and real descenders, rather than only capitals.
-    let text = format!("{}Map gaps ", designcraft_doc::ANCHOR_MARK);
+    let text = format!("{}Map gaps ", pejy_doc::ANCHOR_MARK);
     let (d, sid, _) = baseline_fit_doc(&text, 10.0);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(!cs.is_overset());
@@ -2696,7 +2696,7 @@ fn baseline_beyond_bottom_still_oversets_and_threads() {
 fn vertical_text_keeps_its_full_cross_line_extent() {
     let (mut d, sid, fid) = baseline_fit_doc("Map", 200.0);
     let it = d.item_mut(fid).unwrap();
-    it.path = designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 200.0));
+    it.path = pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 200.0));
     d.story_mut(sid).unwrap().vertical = true;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(cs.is_overset());
@@ -2706,13 +2706,13 @@ fn vertical_text_keeps_its_full_cross_line_extent() {
 #[test]
 fn inline_objects_still_clear_the_bottom_edge() {
     let (mut d, sid, _) = baseline_fit_doc("Text", 10.0);
-    let it = designcraft_doc::Item::new(
+    let it = pejy_doc::Item::new(
         ItemId(d.alloc()),
         d.default_layer(),
-        designcraft_doc::Shape::Rectangle,
-        designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 6.0, 6.0)),
+        pejy_doc::Shape::Rectangle,
+        pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 6.0, 6.0)),
     );
-    d.story_mut(sid).unwrap().insert_object(0, designcraft_doc::AnchoredObject::new(it, designcraft_doc::AnchorPosition::Inline { y_offset: -3.0 }));
+    d.story_mut(sid).unwrap().insert_object(0, pejy_doc::AnchoredObject::new(it, pejy_doc::AnchorPosition::Inline { y_offset: -3.0 }));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(cs.is_overset());
     assert_eq!(cs.line_count(), 0);
@@ -2721,13 +2721,13 @@ fn inline_objects_still_clear_the_bottom_edge() {
 #[test]
 fn custom_anchors_do_not_change_bottom_baseline_fitting() {
     let (mut d, sid, _) = baseline_fit_doc("Text", 10.0);
-    let it = designcraft_doc::Item::new(
+    let it = pejy_doc::Item::new(
         ItemId(d.alloc()),
         d.default_layer(),
-        designcraft_doc::Shape::Rectangle,
-        designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 6.0, 6.0)),
+        pejy_doc::Shape::Rectangle,
+        pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 6.0, 6.0)),
     );
-    let pos = designcraft_doc::AnchorPosition::Custom {
+    let pos = pejy_doc::AnchorPosition::Custom {
         x_relative: Default::default(),
         y_relative: Default::default(),
         x_offset: 0.0,
@@ -2736,7 +2736,7 @@ fn custom_anchors_do_not_change_bottom_baseline_fitting() {
         ref_point: 0,
         keep_within_column: false,
     };
-    d.story_mut(sid).unwrap().insert_object(0, designcraft_doc::AnchoredObject::new(it, pos));
+    d.story_mut(sid).unwrap().insert_object(0, pejy_doc::AnchoredObject::new(it, pos));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(!cs.is_overset());
     assert_eq!(cs.line_count(), 1);
@@ -2760,19 +2760,19 @@ fn baseline_shift_keeps_its_metrics_and_glyph_offset_at_bottom() {
 fn path_text_keeps_the_original_vertical_fit_limit() {
     // A path's synthetic layout area is not an ordinary text frame: admitting a
     // second line would paint both lines on the same path, regardless of leading.
-    for separator in ['\n', designcraft_doc::story::FORCED_LINE_BREAK] {
+    for separator in ['\n', pejy_doc::story::FORCED_LINE_BREAK] {
         for leading in [8.0, 10.0] {
             let text = format!("HELLO{separator}WORLD");
             let (mut d, sid, fid) = doc_with(&text, Rect::new(0.0, 0.0, 200.0, 100.0), ParaAttrs::default());
             let it = d.item_mut(fid).unwrap();
-            it.shape = designcraft_doc::Shape::Path;
-            it.path = designcraft_geom::shapes::line(Point::ZERO, Point::new(200.0, 0.0));
+            it.shape = pejy_doc::Shape::Path;
+            it.path = pejy_geom::shapes::line(Point::ZERO, Point::new(200.0, 0.0));
             it.text_frame_mut().unwrap().options.path =
-                Some(designcraft_doc::PathType { start: 0.0, end: None, flip: false, align: designcraft_doc::PathAlign::Baseline });
+                Some(pejy_doc::PathType { start: 0.0, end: None, flip: false, align: pejy_doc::PathAlign::Baseline });
             d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
                 f.over.font_family = Some("Source Serif 4".into());
                 f.over.size = Some(20.0);
-                f.over.leading = Some(designcraft_doc::Leading::Points(leading));
+                f.over.leading = Some(pejy_doc::Leading::Points(leading));
             });
             let cs = compose_story(&d, sid, &ComposeOptions::default());
             assert_eq!(cs.line_count(), 1, "{separator:?}, leading {leading}");
@@ -2787,16 +2787,16 @@ fn path_text_keeps_the_original_vertical_fit_limit() {
 fn path_text_with_a_nan_length_composes() {
     let (mut d, sid, fid) = doc_with("HELLO", Rect::new(0.0, 0.0, 200.0, 100.0), ParaAttrs::default());
     let it = d.item_mut(fid).unwrap();
-    it.shape = designcraft_doc::Shape::Path;
-    it.path = designcraft_geom::shapes::line(Point::ZERO, Point::new(f64::NAN, 0.0));
+    it.shape = pejy_doc::Shape::Path;
+    it.path = pejy_geom::shapes::line(Point::ZERO, Point::new(f64::NAN, 0.0));
     it.text_frame_mut().unwrap().options.path =
-        Some(designcraft_doc::PathType { start: 0.0, end: Some(50.0), flip: false, align: designcraft_doc::PathAlign::Baseline });
+        Some(pejy_doc::PathType { start: 0.0, end: Some(50.0), flip: false, align: pejy_doc::PathAlign::Baseline });
     let _ = compose_story(&d, sid, &ComposeOptions::default());
 }
 
 fn two_keep_frames(text: &str) -> (Document, StoryId, ItemId, ItemId) {
     let (mut d, sid, first) = baseline_fit_doc(text, 48.0);
-    d.item_mut(first).unwrap().path = designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 75.0, 48.0));
+    d.item_mut(first).unwrap().path = pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 75.0, 48.0));
     let lid = d.default_layer();
     let (second, _) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 0.0, 210.0, 69.0), lid, "", ParaFormat::default()).unwrap();
     let options = d.item(first).unwrap().text_frame().unwrap().options.clone();
@@ -2848,7 +2848,7 @@ const CAP_HEIGHT: usize = 88;
 /// 660, x height 486) renamed to `family` (13 characters, the length of "Source Sans 3"), with the
 /// OS/2 fields at the given offsets set, or without an OS/2 table for `None`.
 fn test_font(family: &str, os2_fields: Option<&[(usize, i16)]>) -> Vec<u8> {
-    let mut b = designcraft_fonts::bundled()[0].to_vec();
+    let mut b = pejy_fonts::bundled()[0].to_vec();
     assert_eq!(family.len(), "Source Sans 3".len());
     let utf16 = |s: &str| s.encode_utf16().flat_map(u16::to_be_bytes).collect::<Vec<u8>>();
     for (from, to) in [(utf16("Source Sans 3"), utf16(family)), (b"Source Sans 3".to_vec(), family.as_bytes().to_vec())] {
@@ -2880,12 +2880,12 @@ fn typo_test_font(family: &str, typo_ascender: Option<i16>) -> Vec<u8> {
 
 /// First baseline (frame space) of a 20 pt line in `family` in a frame at y = 36 with a 4 pt top
 /// inset, set up by `opts`.
-fn first_baseline_in(family: &str, opts: impl Fn(&mut designcraft_doc::TextFrameOptions)) -> f64 {
+fn first_baseline_in(family: &str, opts: impl Fn(&mut pejy_doc::TextFrameOptions)) -> f64 {
     first_baseline_in_dir(family, false, opts)
 }
 
 /// [`first_baseline_in`] in a vertical story when `vertical`.
-fn first_baseline_in_dir(family: &str, vertical: bool, opts: impl Fn(&mut designcraft_doc::TextFrameOptions)) -> f64 {
+fn first_baseline_in_dir(family: &str, vertical: bool, opts: impl Fn(&mut pejy_doc::TextFrameOptions)) -> f64 {
     let (mut d, sid, fid) = doc_with("Hxg Hxg", Rect::new(36.0, 36.0, 300.0, 300.0), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0..7, |f| {
         f.over.font_family = Some(family.into());
@@ -2902,8 +2902,8 @@ fn first_baseline_in_dir(family: &str, vertical: bool, opts: impl Fn(&mut design
 
 #[test]
 fn ascent_first_baseline_uses_the_typographic_ascender() {
-    use designcraft_doc::FirstBaseline;
-    let db = designcraft_fonts::FontDb::global();
+    use pejy_doc::FirstBaseline;
+    let db = pejy_fonts::FontDb::global();
     db.add_font(typo_test_font("TypoAscent 07", Some(700)));
     let face = db.face("TypoAscent 07", "Regular");
     assert_eq!(face.family, "TypoAscent 07");
@@ -2947,8 +2947,8 @@ fn ascent_first_baseline_uses_the_typographic_ascender() {
 
 #[test]
 fn em_box_first_baseline_follows_base_then_the_typo_box_or_the_cap_height() {
-    use designcraft_doc::FirstBaseline;
-    let db = designcraft_fonts::FontDb::global();
+    use pejy_doc::FirstBaseline;
+    let db = pejy_fonts::FontDb::global();
     // [`test_font`] (typo descender -326, cap height 660), with or without its `BASE` table, whose
     // em box bottom (`ideo`) is at -170 units.
     let add = |family: &str, base: bool, fields: &[(usize, i16)]| {
@@ -3001,16 +3001,16 @@ fn em_box_first_baseline_follows_base_then_the_typo_box_or_the_cap_height() {
 
 #[test]
 fn em_box_first_baseline_in_a_latin_font_with_a_one_em_typo_box_follows_the_cap_height() {
-    use designcraft_doc::FirstBaseline;
+    use pejy_doc::FirstBaseline;
     // DejaVu Serif: 2048 units per em, typo ascender 1556 and descender -492 (one em), cap height
     // 1493. Read from the system fonts; the test skips where it isn't installed.
-    let Some(bytes) = designcraft_fonts::system_font_dirs().iter().find_map(|dir| {
+    let Some(bytes) = pejy_fonts::system_font_dirs().iter().find_map(|dir| {
         ["truetype/dejavu/DejaVuSerif.ttf", "dejavu/DejaVuSerif.ttf", "DejaVuSerif.ttf"].iter().find_map(|p| std::fs::read(dir.join(p)).ok())
     }) else {
         eprintln!("skipped: DejaVu Serif isn't installed");
         return;
     };
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     db.add_font(bytes);
     let face = db.face("DejaVu Serif", "Book");
     assert_eq!(face.family, "DejaVu Serif");
@@ -3031,8 +3031,8 @@ fn em_box_first_baseline_in_a_latin_font_with_a_one_em_typo_box_follows_the_cap_
 
 #[test]
 fn em_box_first_baseline_ignores_baseline_shift() {
-    use designcraft_doc::FirstBaseline;
-    let db = designcraft_fonts::FontDb::global();
+    use pejy_doc::FirstBaseline;
+    let db = pejy_fonts::FontDb::global();
     // Source Sans 3's `BASE` em box tops 0.83 em above the baseline.
     db.add_font(test_font("EmBoxShft 830", Some(&[])));
     let (mut d, sid, fid) = doc_with("Hxg Hxg", Rect::new(36.0, 36.0, 300.0, 300.0), ParaAttrs::default());
@@ -3057,7 +3057,7 @@ fn em_box_first_baseline_ignores_baseline_shift() {
 
 #[test]
 fn ascent_first_baseline_falls_back_to_the_ascent_without_a_usable_typo_ascender() {
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     // No OS/2 table, a negative and an absurd typo ascender: the (hhea) ascent, 1 em.
     for (family, typo) in [("TypoAscentNoO", None), ("TypoAscentNeg", Some(-300)), ("TypoAscentBig", Some(i16::MAX))] {
         db.add_font(typo_test_font(family, typo));
@@ -3071,7 +3071,7 @@ fn ascent_first_baseline_falls_back_to_the_ascent_without_a_usable_typo_ascender
 
 #[test]
 fn vertical_frames_keep_the_ascent_first_baseline() {
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     db.add_font(typo_test_font("TypoAscentVrt", Some(700)));
     let b = first_baseline_in_dir("TypoAscentVrt", true, |o| {
         o.inset = [0.0; 4];
@@ -3082,7 +3082,7 @@ fn vertical_frames_keep_the_ascent_first_baseline() {
 
 #[test]
 fn a_visible_frame_stroke_insets_the_text() {
-    use designcraft_doc::{Stroke, StrokeAlign};
+    use pejy_doc::{Stroke, StrokeAlign};
     let line = |stroke: Option<(StrokeAlign, &str)>| {
         let (mut d, sid, fid) = doc_with("Hxg", Rect::new(36.0, 36.0, 300.0, 300.0), ParaAttrs::default());
         let it = d.item_mut(fid).unwrap();
@@ -3093,7 +3093,7 @@ fn a_visible_frame_stroke_insets_the_text() {
         let l = &compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0];
         (l.baseline, l.x0, l.x1)
     };
-    let black = designcraft_color::swatch::BLACK;
+    let black = pejy_color::swatch::BLACK;
     let (b, x0, x1) = line(None);
     // The part of the 4 pt stroke inside the frame: half of it centred, all of it inside, none
     // outside or without a colour; on the left and right as on the top.
@@ -3101,7 +3101,7 @@ fn a_visible_frame_stroke_insets_the_text() {
         ((StrokeAlign::Center, black), 2.0),
         ((StrokeAlign::Inside, black), 4.0),
         ((StrokeAlign::Outside, black), 0.0),
-        ((StrokeAlign::Inside, designcraft_color::swatch::NONE), 0.0),
+        ((StrokeAlign::Inside, pejy_color::swatch::NONE), 0.0),
     ] {
         let (sb, sx0, sx1) = line(Some(stroke));
         assert!((sb - (b + d)).abs() < 1e-6, "{stroke:?}: baseline {sb} vs {b}");
@@ -3111,7 +3111,7 @@ fn a_visible_frame_stroke_insets_the_text() {
 
 #[test]
 fn list_labels_do_not_raise_the_ascent_first_baseline() {
-    use designcraft_doc::{CharAttrs, ListType};
+    use pejy_doc::{CharAttrs, ListType};
     // The paragraph's own character size (the label's) is 40 pt; its text is 10 pt (Source Sans 3:
     // typo ascender 1 em).
     let line = |text: &str, list: ListType| {
@@ -3155,7 +3155,7 @@ fn spaces_count_toward_the_ascent_first_baseline() {
 
 #[test]
 fn vertical_scale_does_not_move_the_ascent_first_baseline() {
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     db.add_font(typo_test_font("TypoAscentVSc", Some(700)));
     let line = |v_scale: f64| {
         let (mut d, sid, fid) = doc_with("Hxg", Rect::new(36.0, 36.0, 300.0, 300.0), ParaAttrs::default());
@@ -3178,8 +3178,8 @@ fn vertical_scale_does_not_move_the_ascent_first_baseline() {
 
 #[test]
 fn cap_height_and_x_height_first_baselines_use_the_fonts_cap_and_x_heights() {
-    use designcraft_doc::FirstBaseline;
-    let db = designcraft_fonts::FontDb::global();
+    use pejy_doc::FirstBaseline;
+    let db = pejy_fonts::FontDb::global();
     db.add_font(test_font("CapXHeight 01", Some(&[(CAP_HEIGHT, 500), (X_HEIGHT, 300)])));
     let face = db.face("CapXHeight 01", "Regular");
     assert_eq!(face.family, "CapXHeight 01");
@@ -3218,8 +3218,8 @@ fn cap_height_and_x_height_first_baselines_use_the_fonts_cap_and_x_heights() {
 
 #[test]
 fn cap_height_and_x_height_fall_back_without_usable_os2_values() {
-    use designcraft_doc::FirstBaseline;
-    let db = designcraft_fonts::FontDb::global();
+    use pejy_doc::FirstBaseline;
+    let db = pejy_fonts::FontDb::global();
     // No OS/2 table, zero / negative and absurd values: the top of the H (0.656 em) and of the x
     // (0.486 em).
     let zero: &[(usize, i16)] = &[(CAP_HEIGHT, 0), (X_HEIGHT, -40)];
@@ -3237,8 +3237,8 @@ fn cap_height_and_x_height_fall_back_without_usable_os2_values() {
 
 #[test]
 fn vertical_frames_keep_the_cap_height_and_x_height_first_baselines() {
-    use designcraft_doc::FirstBaseline;
-    let db = designcraft_fonts::FontDb::global();
+    use pejy_doc::FirstBaseline;
+    let db = pejy_fonts::FontDb::global();
     db.add_font(test_font("CapXHeightVrt", Some(&[(CAP_HEIGHT, 500), (X_HEIGHT, 300)])));
     let at = |kind: FirstBaseline| {
         first_baseline_in_dir("CapXHeightVrt", true, |o| {
@@ -3261,7 +3261,7 @@ fn drop_doc(text: &str, para: ParaAttrs) -> (Document, StoryId, ItemId) {
 fn drop_doc_in(text: &str, rect: Rect, para: ParaAttrs) -> (Document, StoryId, ItemId) {
     let (mut d, sid, fid) = doc_with(text, rect, para);
     for p in &mut d.story_mut(sid).unwrap().paras {
-        p.chars = designcraft_doc::CharAttrs { size: Some(10.0), leading: Some(designcraft_doc::Leading::Points(12.0)), ..Default::default() };
+        p.chars = pejy_doc::CharAttrs { size: Some(10.0), leading: Some(pejy_doc::Leading::Points(12.0)), ..Default::default() };
     }
     (d, sid, fid)
 }
@@ -3319,7 +3319,7 @@ fn tab_beside_a_drop_cap_is_measured_from_the_drop_cap() {
     // The line breaker measures a tab from where the line starts, which beside a drop cap is
     // after the drop cap: measured from the frame edge, the tab looks wider and the line breaks
     // a word early.
-    let stop = designcraft_doc::TabStop { position: 100.0, align: TabAlign::Left, leader: String::new(), align_on: String::new() };
+    let stop = pejy_doc::TabStop { position: 100.0, align: TabAlign::Left, leader: String::new(), align_on: String::new() };
     let para = ParaAttrs { tabs: Some(vec![stop]), hyphenate: Some(false), ..drop_cap(3, 1) };
     let text = format!("Wort\t{LOREM}");
     let (d, sid, _) = drop_doc(&text, para);
@@ -3344,7 +3344,7 @@ fn warichu_on_a_drop_cap_line_leaves_the_drop_cap_alone() {
     assert_eq!(caret(&plain, 1).map(|c| (c.2, c.3)), Some((pl.baseline, pl.ascent)));
     d.story_mut(sid).unwrap().format_chars(1..9, |f| {
         f.over.warichu = Some(true);
-        f.over.warichu_alignment = Some(designcraft_doc::cjk::WarichuAlignment::Left);
+        f.over.warichu_alignment = Some(pejy_doc::cjk::WarichuAlignment::Left);
     });
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let l = &cs.frames[0].lines[0];
@@ -3361,7 +3361,7 @@ fn warichu_on_a_drop_cap_line_leaves_the_drop_cap_alone() {
     assert_eq!(caret(&cs, 0).map(|c| c.2), Some(dc_box.baseline));
     assert!((caret(&cs, 1).unwrap().2 - (l.baseline + top.y)).abs() < 1e-6);
     assert_eq!(caret(&cs, 10).map(|c| (c.2, c.3)), Some((l.baseline, l.ascent)));
-    let click = |g: &PlacedGlyph| hit(&cs, 0, designcraft_geom::Point::new(g.x + g.adv * 0.25, l.baseline + g.y)).unwrap();
+    let click = |g: &PlacedGlyph| hit(&cs, 0, pejy_geom::Point::new(g.x + g.adv * 0.25, l.baseline + g.y)).unwrap();
     assert_eq!((click(top), click(bot), click(after)), (1, 5, 10));
     // Selecting the drop cap and the note: the drop cap's band and one per row.
     assert_eq!(highlight_quads(l, 0, 9, false).len(), 3);
@@ -3463,7 +3463,7 @@ fn drop_cap_stays_with_the_first_line_across_a_column_break() {
 
 #[test]
 fn drop_cap_in_right_to_left_paragraphs_is_on_the_right() {
-    let para = ParaAttrs { direction: Some(designcraft_doc::TextDirection::RightToLeft), align: Some(Align::Right), ..drop_cap(2, 1) };
+    let para = ParaAttrs { direction: Some(pejy_doc::TextDirection::RightToLeft), align: Some(Align::Right), ..drop_cap(2, 1) };
     let (d, sid, _) = drop_doc(LOREM, para);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
@@ -3487,10 +3487,10 @@ fn vertical_frames_set_no_drop_cap() {
 fn drop_cap_takes_its_character_style_and_nested_styles_count_it() {
     let (mut d, sid, _) = drop_doc(LOREM, ParaAttrs { drop_cap_style: Some("Initial".into()), ..drop_cap(2, 3) });
     for (name, fill) in [("Initial", "Initial Red"), ("Lead", "Lead Blue")] {
-        std::sync::Arc::make_mut(&mut d.styles).character.push(designcraft_doc::CharacterStyle {
+        std::sync::Arc::make_mut(&mut d.styles).character.push(pejy_doc::CharacterStyle {
             name: name.into(),
             based_on: None,
-            chars: designcraft_doc::CharAttrs { fill: Some(fill.into()), ..Default::default() },
+            chars: pejy_doc::CharAttrs { fill: Some(fill.into()), ..Default::default() },
             shortcut: String::new(),
         });
     }
@@ -3503,7 +3503,7 @@ fn drop_cap_takes_its_character_style_and_nested_styles_count_it() {
     assert_eq!(fill(&cs, at(3)), "[Black]");
     // The drop cap's style is a leading "through 1 drop cap" nested style: the nested styles start
     // after the drop cap.
-    let one = designcraft_doc::NestedStyle { style: "Lead".into(), through: true, count: 1, until: designcraft_doc::NestedUntil::Characters };
+    let one = pejy_doc::NestedStyle { style: "Lead".into(), through: true, count: 1, until: pejy_doc::NestedUntil::Characters };
     d.story_mut(sid).unwrap().paras[0].para.nested_styles = Some(vec![one]);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let l = &cs.frames[0].lines[0];
@@ -3511,9 +3511,9 @@ fn drop_cap_takes_its_character_style_and_nested_styles_count_it() {
     assert_eq!(fill(&cs, at(0)), "Initial Red");
     assert_eq!((fill(&cs, at(3)), fill(&cs, at(4))), ("Lead Blue".to_string(), "[Black]".to_string()));
     // A nested style "through 1 drop cap" covers the drop cap; the next one starts after it.
-    let ns = |style: &str, until: designcraft_doc::NestedUntil| designcraft_doc::NestedStyle { style: style.into(), through: true, count: 1, until };
+    let ns = |style: &str, until: pejy_doc::NestedUntil| pejy_doc::NestedStyle { style: style.into(), through: true, count: 1, until };
     d.story_mut(sid).unwrap().paras[0].para = ParaAttrs {
-        nested_styles: Some(vec![ns("Lead", designcraft_doc::NestedUntil::Dropcap), ns("Initial", designcraft_doc::NestedUntil::Words)]),
+        nested_styles: Some(vec![ns("Lead", pejy_doc::NestedUntil::Dropcap), ns("Initial", pejy_doc::NestedUntil::Words)]),
         ..drop_cap(2, 3)
     };
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -3551,7 +3551,7 @@ fn drop_cap_caret_and_hit_testing() {
 fn drop_cap_on_a_baseline_grid_reaches_down_by_grid_steps() {
     // Lines on a 15 pt baseline grid (not the 12 pt leading): the drop cap reaches down two grid
     // steps, to line 3.
-    let (mut d, sid, _) = drop_doc(LOREM, ParaAttrs { grid_align: Some(designcraft_doc::GridAlign::AllLines), ..drop_cap(3, 1) });
+    let (mut d, sid, _) = drop_doc(LOREM, ParaAttrs { grid_align: Some(pejy_doc::GridAlign::AllLines), ..drop_cap(3, 1) });
     d.settings.baseline_grid.increment = 15.0;
     d.settings.baseline_grid.start = 0.0;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -3570,7 +3570,7 @@ fn drop_cap_on_a_baseline_grid_reaches_down_by_grid_steps() {
 /// leadings of the text after it, not to where line N is set.
 #[test]
 fn drop_cap_reaches_down_by_the_text_leading_past_a_line_with_larger_leading() {
-    use designcraft_doc::{CharAttrs, Composer, Leading};
+    use pejy_doc::{CharAttrs, Composer, Leading};
     let text = [LOREM; 2].join(" ");
     let para = ParaAttrs { composer: Some(Composer::SingleLine), ..drop_cap(3, 1) };
     let (mut d, sid, _) = doc_with(&text, Rect::new(0.0, 0.0, 300.0, 1000.0), para);
@@ -3610,7 +3610,7 @@ fn space_after_a_drop_cap_does_not_widen_the_indent() {
 /// the tabs in it advance to the paragraph's tab stops.
 #[test]
 fn one_line_drop_cap_keeps_its_size_and_sets_its_tabs() {
-    let stop = |position, align| designcraft_doc::TabStop { position, align, leader: String::new(), align_on: String::new() };
+    let stop = |position, align| pejy_doc::TabStop { position, align, leader: String::new(), align_on: String::new() };
     let para = ParaAttrs { tabs: Some(vec![stop(30.0, TabAlign::Right), stop(40.0, TabAlign::Left)]), ..drop_cap(1, 3) };
     let (mut d, sid, _) = drop_doc(&format!("\t7\t{LOREM}"), para);
     d.story_mut(sid).unwrap().format_chars(0..3, |f| f.over.size = Some(8.0));
@@ -3628,9 +3628,9 @@ fn one_line_drop_cap_keeps_its_size_and_sets_its_tabs() {
 /// edge.
 #[test]
 fn right_to_left_drop_cap_sets_its_tabs_from_the_right_edge() {
-    let stop = |position, align| designcraft_doc::TabStop { position, align, leader: String::new(), align_on: String::new() };
+    let stop = |position, align| pejy_doc::TabStop { position, align, leader: String::new(), align_on: String::new() };
     let para = ParaAttrs {
-        direction: Some(designcraft_doc::TextDirection::RightToLeft),
+        direction: Some(pejy_doc::TextDirection::RightToLeft),
         align: Some(Align::Right),
         tabs: Some(vec![stop(30.0, TabAlign::Right), stop(40.0, TabAlign::Left)]),
         ..drop_cap(1, 3)
@@ -3650,7 +3650,7 @@ fn right_to_left_drop_cap_sets_its_tabs_from_the_right_edge() {
 /// rule above, the last character's for the rule below. A swatch colour is used as is.
 #[test]
 fn text_color_rules_follow_the_text() {
-    use designcraft_doc::{CharAttrs, CharFormat, Rule, TEXT_COLOR};
+    use pejy_doc::{CharAttrs, CharFormat, Rule, TEXT_COLOR};
     let rule = Rule { on: true, weight: 2.0, ..Default::default() };
     let para = ParaAttrs { rule_above: Some(rule.clone()), rule_below: Some(rule.clone()), ..Default::default() };
     let (mut d, sid, fid) = doc_with("Red then blue", Rect::new(0.0, 0.0, 300.0, 200.0), para);
@@ -3682,11 +3682,11 @@ fn drop_cap_aligns_its_left_edge() {
         let para = ParaAttrs { left_indent: Some(10.0), drop_cap_align_left: align, ..drop_cap(2, 1) };
         let (mut d, sid, _) = doc_with(&text, Rect::new(0.0, 0.0, 300.0, 1000.0), para);
         d.story_mut(sid).unwrap().paras[0].chars =
-            designcraft_doc::CharAttrs { size: Some(14.0), leading: Some(designcraft_doc::Leading::Points(18.0)), ..Default::default() };
+            pejy_doc::CharAttrs { size: Some(14.0), leading: Some(pejy_doc::Leading::Points(18.0)), ..Default::default() };
         compose_story(&d, sid, &ComposeOptions::default())
     };
-    use designcraft_geom::Shape as _;
-    let ink_left = |g: &PlacedGlyph| g.x + designcraft_fonts::FontDb::global().outline(g.face.get(), g.gid).bounding_box().x0 * g.sx;
+    use pejy_geom::Shape as _;
+    let ink_left = |g: &PlacedGlyph| g.x + pejy_fonts::FontDb::global().outline(g.face.get(), g.gid).bounding_box().x0 * g.sx;
     for align in [None, Some(true), Some(false)] {
         let cs = compose(align);
         let lines = all_lines(&cs);
@@ -3742,9 +3742,9 @@ fn colour_change_keeps_kerning_and_ligatures_keep_colour() {
     let xs = |l: &Line| l.glyphs.iter().map(|g| (g.x, g.adv)).collect::<Vec<_>>();
     let kerned = line(&d);
     // The font kerns "ay" (otherwise this test proves nothing).
-    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(designcraft_doc::Kerning::None));
+    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(pejy_doc::Kerning::None));
     assert_ne!(xs(&line(&d)), xs(&kerned), "Source Serif 4 Bold kerns a–y");
-    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(designcraft_doc::Kerning::Metrics));
+    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(pejy_doc::Kerning::Metrics));
     // Colour the first "a": positions are unchanged, only its style differs.
     d.story_mut(sid).unwrap().format_chars(0..1, |f| f.over.fill = Some("Cyan".into()));
     let coloured = line(&d);
@@ -3780,9 +3780,9 @@ fn kenten_character_change_keeps_kerning() {
         cs.frames[0].lines[0].glyphs.iter().filter(|g| g.len > 0).map(|g| (g.byte, g.x, g.adv)).collect::<Vec<_>>()
     };
     let kerned = xs(&d);
-    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(designcraft_doc::Kerning::None));
+    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(pejy_doc::Kerning::None));
     assert_ne!(xs(&d), kerned, "Source Serif 4 Bold kerns a–y");
-    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(designcraft_doc::Kerning::Metrics));
+    d.story_mut(sid).unwrap().format_chars(0..4, |f| f.over.kerning = Some(pejy_doc::Kerning::Metrics));
     d.story_mut(sid).unwrap().format_chars(0..1, |f| f.over.kenten_character = Some("●".into()));
     assert_eq!(xs(&d), kerned, "a kenten character change must not change spacing");
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -3805,7 +3805,7 @@ fn empty_paragraph_takes_its_marks_format() {
     let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 200.0, 200.0), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.size = Some(6.0);
-        f.over.leading = Some(designcraft_doc::Leading::Points(8.0));
+        f.over.leading = Some(pejy_doc::Leading::Points(8.0));
     });
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
@@ -3825,7 +3825,7 @@ fn empty_paragraph_uses_its_own_mark_not_the_previous_one() {
     st.format_chars(0..4, |f| f.over.size = Some(20.0));
     st.format_chars(4..text.len(), |f| {
         f.over.size = Some(6.0);
-        f.over.leading = Some(designcraft_doc::Leading::Points(8.0));
+        f.over.leading = Some(pejy_doc::Leading::Points(8.0));
     });
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
@@ -3908,7 +3908,7 @@ fn cjk_aki_adds_space_without_scaling_outlines() {
 
 #[test]
 fn cjk_jidori_sets_group_width_and_survives_narrow_frames() {
-    for composer in [designcraft_doc::Composer::SingleLine, designcraft_doc::Composer::Paragraph] {
+    for composer in [pejy_doc::Composer::SingleLine, pejy_doc::Composer::Paragraph] {
         let (mut d, sid, _) = doc_with(
             "AB",
             Rect::new(0.0, 0.0, 30.0, 150.0),
@@ -3932,8 +3932,8 @@ fn cjk_tsume_removes_sidebearings_without_collapsing_ink() {
     let a = &old.frames[0].lines[0];
     let b = &new.frames[0].lines[0];
     let g = &b.glyphs[0];
-    let outline = designcraft_fonts::FontDb::global().outline(&g.face, g.gid);
-    let ink_width = designcraft_geom::Shape::bounding_box(&*outline).width() * g.sx;
+    let outline = pejy_fonts::FontDb::global().outline(&g.face, g.gid);
+    let ink_width = pejy_geom::Shape::bounding_box(&*outline).width() * g.sx;
     assert!(ink_width > 0.0);
     assert!((b.end_x - b.x0 - 2.0 * ink_width).abs() < 1e-6);
     assert!(b.end_x < a.end_x);
@@ -3942,7 +3942,7 @@ fn cjk_tsume_removes_sidebearings_without_collapsing_ink() {
 
 #[test]
 fn cjk_composite_font_selects_entries_before_shaping() {
-    use designcraft_doc::cjk::{CompositeFont, CompositeFontEntry};
+    use pejy_doc::cjk::{CompositeFont, CompositeFontEntry};
     let (mut d, sid, _) = doc_with("A1B", Rect::new(0.0, 0.0, 300.0, 100.0), ParaAttrs::default());
     std::sync::Arc::make_mut(&mut d.styles).composite_fonts.push(CompositeFont {
         name: "Mixed".into(),
@@ -3964,7 +3964,7 @@ fn cjk_composite_font_selects_entries_before_shaping() {
 
 #[test]
 fn cjk_bunri_does_not_split_double_dash() {
-    for composer in [designcraft_doc::Composer::SingleLine, designcraft_doc::Composer::Paragraph] {
+    for composer in [pejy_doc::Composer::SingleLine, pejy_doc::Composer::Paragraph] {
         let (d, sid, _) =
             doc_with("--", Rect::new(0.0, 0.0, 5.0, 100.0), ParaAttrs { composer: Some(composer), bunri_kinshi: Some(true), ..Default::default() });
         let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -3978,8 +3978,8 @@ fn cjk_custom_kinsoku_disables_selected_breaks() {
         "甲乙丙丁",
         Rect::new(0.0, 0.0, 25.0, 200.0),
         ParaAttrs {
-            composer: Some(designcraft_doc::Composer::SingleLine),
-            kinsoku: Some(Some(designcraft_doc::cjk::Kinsoku { name: "Test".into(), no_start: "乙丙丁".into(), ..Default::default() })),
+            composer: Some(pejy_doc::Composer::SingleLine),
+            kinsoku: Some(Some(pejy_doc::cjk::Kinsoku { name: "Test".into(), no_start: "乙丙丁".into(), ..Default::default() })),
             ..Default::default()
         },
     );
@@ -3997,8 +3997,8 @@ fn cjk_center_leading_measures_em_centers_across_different_sizes() {
     let lines_with = |para: ParaAttrs| {
         let (mut d, sid, _) = doc_with("A\nB", Rect::new(0.0, 0.0, 300.0, 200.0), para);
         d.story_mut(sid).unwrap().format_chars(0..3, |f| {
-            f.over.leading = Some(designcraft_doc::Leading::Points(30.0));
-            f.over.leading_model = Some(designcraft_doc::cjk::LeadingModel::Center);
+            f.over.leading = Some(pejy_doc::Leading::Points(30.0));
+            f.over.leading_model = Some(pejy_doc::cjk::LeadingModel::Center);
         });
         d.story_mut(sid).unwrap().format_chars(0..1, |f| f.over.size = Some(24.0));
         let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -4023,14 +4023,14 @@ fn cjk_aki_below_sets_the_upper_lines_leading_below_it() {
     let lines_with = |para: ParaAttrs| {
         let (mut d, sid, _) = doc_with("A\nB", Rect::new(0.0, 0.0, 300.0, 200.0), para);
         let st = d.story_mut(sid).unwrap();
-        st.format_chars(0..3, |f| f.over.leading_model = Some(designcraft_doc::cjk::LeadingModel::AkiBelow));
+        st.format_chars(0..3, |f| f.over.leading_model = Some(pejy_doc::cjk::LeadingModel::AkiBelow));
         st.format_chars(0..2, |f| {
             f.over.size = Some(24.0);
-            f.over.leading = Some(designcraft_doc::Leading::Points(40.0));
+            f.over.leading = Some(pejy_doc::Leading::Points(40.0));
         });
         st.format_chars(2..3, |f| {
             f.over.size = Some(12.0);
-            f.over.leading = Some(designcraft_doc::Leading::Points(20.0));
+            f.over.leading = Some(pejy_doc::Leading::Points(20.0));
         });
         let cs = compose_story(&d, sid, &ComposeOptions::default());
         all_lines(&cs).into_iter().cloned().collect::<Vec<_>>()
@@ -4053,11 +4053,11 @@ fn cjk_aki_below_sets_the_upper_lines_leading_below_it() {
 
 #[test]
 fn cjk_aki_below_measures_em_tops_and_aki_above_em_bottoms() {
-    use designcraft_doc::cjk::LeadingModel;
+    use pejy_doc::cjk::LeadingModel;
     for (model, top) in [(LeadingModel::AkiBelow, true), (LeadingModel::AkiAbove, false)] {
         let (mut d, sid, _) = doc_with("A\nB", Rect::new(0.0, 0.0, 300.0, 200.0), japanese());
         d.story_mut(sid).unwrap().format_chars(0..3, |f| {
-            f.over.leading = Some(designcraft_doc::Leading::Points(30.0));
+            f.over.leading = Some(pejy_doc::Leading::Points(30.0));
             f.over.leading_model = Some(model);
         });
         d.story_mut(sid).unwrap().format_chars(0..1, |f| f.over.size = Some(24.0));
@@ -4081,7 +4081,7 @@ fn cjk_em_center_alignment_moves_small_characters() {
     let line_with = |para: ParaAttrs| {
         let (mut d, sid, _) = doc_with("AB", Rect::new(0.0, 0.0, 300.0, 100.0), para);
         d.story_mut(sid).unwrap().format_chars(0..1, |f| f.over.size = Some(24.0));
-        d.story_mut(sid).unwrap().format_chars(0..2, |f| f.over.character_alignment = Some(designcraft_doc::cjk::CharacterAlignment::EmCenter));
+        d.story_mut(sid).unwrap().format_chars(0..2, |f| f.over.character_alignment = Some(pejy_doc::cjk::CharacterAlignment::EmCenter));
         compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].clone()
     };
     let line = line_with(japanese());
@@ -4099,7 +4099,7 @@ fn cjk_em_center_alignment_moves_small_characters() {
 
 #[test]
 fn smaller_cjk_run_aligns_to_the_line_em_box_centre() {
-    use designcraft_doc::cjk::CharacterAlignment;
+    use pejy_doc::cjk::CharacterAlignment;
     let text = "Ab 甲乙 cd";
     let run = "Ab ".len().."Ab 甲乙".len();
     // Em box centre (y down) of a placed glyph: its font's BASE em box, else 0.88/-0.12 em.
@@ -4135,14 +4135,14 @@ fn smaller_cjk_run_aligns_to_the_line_em_box_centre() {
 
 #[test]
 fn cjk_hanging_punctuation_uses_frame_edge_without_changing_glyph_size() {
-    let k = designcraft_doc::cjk::Kinsoku { name: "Test".into(), no_start: ",".into(), hanging: ",".into(), ..Default::default() };
+    let k = pejy_doc::cjk::Kinsoku { name: "Test".into(), no_start: ",".into(), hanging: ",".into(), ..Default::default() };
     let (mut d, sid, fid) = doc_with(
         "AB,",
         Rect::new(0.0, 0.0, 300.0, 100.0),
         ParaAttrs {
-            composer: Some(designcraft_doc::Composer::SingleLine),
+            composer: Some(pejy_doc::Composer::SingleLine),
             kinsoku: Some(Some(k)),
-            kinsoku_hang: Some(designcraft_doc::cjk::KinsokuHang::Regular),
+            kinsoku_hang: Some(pejy_doc::cjk::KinsokuHang::Regular),
             ..Default::default()
         },
     );
@@ -4151,7 +4151,7 @@ fn cjk_hanging_punctuation_uses_frame_edge_without_changing_glyph_size() {
     let text_w = line.glyphs.iter().take(2).map(|g| g.adv).sum::<f64>();
     // A fresh frame whose measure fits the letters, but not the comma.
     let frame = d.item_mut(fid).unwrap();
-    frame.path = designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, text_w + 1.0, 100.0));
+    frame.path = pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, text_w + 1.0, 100.0));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert_eq!(all_lines(&cs).len(), 1);
     assert_eq!(cs.frames[0].lines[0].glyphs.last().unwrap().sx, line.glyphs.last().unwrap().sx);
@@ -4193,7 +4193,7 @@ fn arabic_bidi_keeps_paragraph_context_across_forced_lines() {
 fn arabic_character_direction_override_survives_line_layout() {
     let text = "abc 123 def";
     let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 600.0, 200.0), ParaAttrs::default());
-    d.story_mut(sid).unwrap().format_chars(4..7, |f| f.over.character_direction = Some(designcraft_doc::arabic::CharacterDirection::RightToLeft));
+    d.story_mut(sid).unwrap().format_chars(4..7, |f| f.over.character_direction = Some(pejy_doc::arabic::CharacterDirection::RightToLeft));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let line = all_lines(&cs)[0];
     let x = |byte| line.glyphs.iter().find(|g| g.byte == byte).unwrap().x;
@@ -4203,8 +4203,8 @@ fn arabic_character_direction_override_survives_line_layout() {
 
 #[test]
 fn arabic_fallback_marks_stay_with_bases_and_custom_offsets_move_only_marks() {
-    let db = designcraft_fonts::FontDb::global();
-    let Some(face) = db.fallback_for('ب', db.face(designcraft_fonts::DEFAULT_FAMILY, "Regular").id(), None) else { return };
+    let db = pejy_fonts::FontDb::global();
+    let Some(face) = db.fallback_for('ب', db.face(pejy_fonts::DEFAULT_FAMILY, "Regular").id(), None) else { return };
     if !face.covers('ُ') {
         return;
     }
@@ -4254,7 +4254,7 @@ fn arabic_character_kashida_switch_prevents_insertion() {
     let (mut d, sid, _) = doc_with(
         text,
         Rect::new(0.0, 0.0, 160.0, 300.0),
-        ParaAttrs { direction: Some(designcraft_doc::TextDirection::RightToLeft), align: Some(Align::RightJustified), ..Default::default() },
+        ParaAttrs { direction: Some(pejy_doc::TextDirection::RightToLeft), align: Some(Align::RightJustified), ..Default::default() },
     );
     d.settings.glyph_fallback = true;
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| f.over.allow_kashidas = Some(false));
@@ -4266,7 +4266,7 @@ fn arabic_character_kashida_switch_prevents_insertion() {
 fn arabic_indic_digit_conversion_retains_original_utf8_ranges() {
     let text = "١٢٣";
     let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 200.0, 100.0), ParaAttrs::default());
-    d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| f.over.digits = Some(designcraft_doc::Digits::Arabic));
+    d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| f.over.digits = Some(pejy_doc::Digits::Arabic));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let gs = &cs.frames[0].lines[0].glyphs;
     assert_eq!(gs.iter().map(|g| (g.byte, g.len)).collect::<Vec<_>>(), [(0, 2), (2, 2), (4, 2)]);
@@ -4292,9 +4292,9 @@ fn arabic_contextual_digits_follow_strong_text_across_style_changes() {
 
 #[test]
 fn arabic_story_direction_flows_right_column_first() {
-    let text = format!("first{}second", designcraft_doc::story::COLUMN_BREAK);
+    let text = format!("first{}second", pejy_doc::story::COLUMN_BREAK);
     let (mut d, sid, fid) = doc_with(&text, Rect::new(0.0, 0.0, 300.0, 200.0), ParaAttrs::default());
-    d.story_mut(sid).unwrap().direction = designcraft_doc::TextDirection::RightToLeft;
+    d.story_mut(sid).unwrap().direction = pejy_doc::TextDirection::RightToLeft;
     d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.columns = 2;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
@@ -4305,11 +4305,11 @@ fn arabic_story_direction_flows_right_column_first() {
 
 #[test]
 fn arabic_rtl_table_keeps_logical_indices_and_merged_cell_hit_testing() {
-    let mut t = designcraft_doc::Table::new(987, 2, 3, 0, 0, 240.0);
-    t.options.direction = designcraft_doc::TextDirection::RightToLeft;
-    t.cell_mut(0, 0).unwrap().text = designcraft_doc::Story::with_text(StoryId(0), "Right", ParaFormat::default());
-    t.cell_mut(0, 2).unwrap().text = designcraft_doc::Story::with_text(StoryId(0), "Left", ParaFormat::default());
-    t.merge(designcraft_doc::CellRange::new(1, 0, 1, 1)).unwrap();
+    let mut t = pejy_doc::Table::new(987, 2, 3, 0, 0, 240.0);
+    t.options.direction = pejy_doc::TextDirection::RightToLeft;
+    t.cell_mut(0, 0).unwrap().text = pejy_doc::Story::with_text(StoryId(0), "Right", ParaFormat::default());
+    t.cell_mut(0, 2).unwrap().text = pejy_doc::Story::with_text(StoryId(0), "Left", ParaFormat::default());
+    t.merge(pejy_doc::CellRange::new(1, 0, 1, 1)).unwrap();
     let (d, sid, _) = table_doc(Rect::new(0.0, 0.0, 400.0, 400.0), t);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let (_, _, right) = table::find_cell(&cs, 987, 0, 0).unwrap();
@@ -4326,7 +4326,7 @@ fn arabic_kashida_moves_marks_with_their_cluster_and_respects_nonjoiners() {
     let (mut d, sid, _) = doc_with(
         text,
         Rect::new(0.0, 0.0, 180.0, 100.0),
-        ParaAttrs { direction: Some(designcraft_doc::TextDirection::RightToLeft), align: Some(Align::FullyJustified), ..Default::default() },
+        ParaAttrs { direction: Some(pejy_doc::TextDirection::RightToLeft), align: Some(Align::FullyJustified), ..Default::default() },
     );
     d.settings.glyph_fallback = true;
     let with = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.clone();
@@ -4346,7 +4346,7 @@ fn arabic_kashida_moves_marks_with_their_cluster_and_respects_nonjoiners() {
     let (mut d, sid, _) = doc_with(
         text,
         Rect::new(0.0, 0.0, 180.0, 100.0),
-        ParaAttrs { direction: Some(designcraft_doc::TextDirection::RightToLeft), align: Some(Align::FullyJustified), ..Default::default() },
+        ParaAttrs { direction: Some(pejy_doc::TextDirection::RightToLeft), align: Some(Align::FullyJustified), ..Default::default() },
     );
     d.settings.glyph_fallback = true;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -4368,7 +4368,7 @@ fn arabic_explicit_isolated_forms_disable_contextual_joining() {
 
 #[test]
 fn arabic_character_overrides_mirror_brackets_using_final_levels() {
-    use designcraft_doc::arabic::CharacterDirection as D;
+    use pejy_doc::arabic::CharacterDirection as D;
     for (text, direction, mirrored) in [("(123)", D::RightToLeft, true), ("(ب)", D::LeftToRight, false)] {
         let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 300.0, 100.0), ParaAttrs::default());
         d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| f.over.character_direction = Some(direction));
@@ -4403,8 +4403,8 @@ fn language_picks_localized_forms_through_the_word_cache() {
 
 #[test]
 fn chinese_and_japanese_take_their_localized_forms() {
-    // Noto Sans CJK SC (craft-fonts) draws 直 differently for Japanese (`locl`).
-    let Some(noto) = designcraft_fonts::CRAFT_FONTS.iter().find(|f| f.family == "Noto Sans CJK SC") else { return };
+    // Noto Sans CJK SC (mahay-fonts) draws 直 differently for Japanese (`locl`).
+    let Some(noto) = pejy_fonts::MAHAY_FONTS.iter().find(|f| f.family == "Noto Sans CJK SC") else { return };
     FontDb::global().add_font(noto.bytes.to_vec());
     let gid = |language: &str| {
         let (mut d, sid, _) = doc_with("直", Rect::new(36.0, 36.0, 300.0, 100.0), ParaAttrs::default());
@@ -4424,10 +4424,10 @@ fn chinese_and_japanese_take_their_localized_forms() {
 
 #[test]
 fn cjk_fallback_follows_the_language() {
-    use designcraft_fonts::testing::font_with;
+    use pejy_fonts::testing::font_with;
     // Stand-ins for Hiragino Mincho ProN (the Japanese chain's first system font) and Songti SC
     // (first in the Simplified Chinese chain); the real ones when installed.
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     db.add_font(font_with("Hiragino Mincho ProN", &['直']).unwrap());
     db.add_font(font_with("Songti SC", &['直']).unwrap());
     // (face of the Latin letter, face of the ideograph)
@@ -4440,8 +4440,8 @@ fn cjk_fallback_follows_the_language() {
         (face_at(0), face_at(1))
     };
     assert_eq!(faces_of("Chinese: Simplified").1.family, "Songti SC");
-    // Japanese: the craft-fonts faces lead the chain (Mincho first), then the system fonts.
-    let japanese = designcraft_fonts::japanese_document_fonts().first().map_or("Hiragino Mincho ProN", |f| f.family);
+    // Japanese: the mahay-fonts faces lead the chain (Mincho first), then the system fonts.
+    let japanese = pejy_fonts::japanese_document_fonts().first().map_or("Hiragino Mincho ProN", |f| f.family);
     assert_eq!(faces_of("Japanese").1.family, japanese);
     // Without a CJK language, the language-blind search.
     let (primary, han) = faces_of("English: USA");
@@ -4452,7 +4452,7 @@ fn cjk_fallback_follows_the_language() {
 fn malayalam_falls_back_to_a_font_that_forms_its_conjuncts() {
     // Run against the installed fonts: on macOS the first file mapping Malayalam is Arial
     // Unicode MS, which leaves ക്ഷ as three glyphs.
-    let db = designcraft_fonts::FontDb::global();
+    let db = pejy_fonts::FontDb::global();
     if !["Malayalam Sangam MN", "Malayalam MN", "Nirmala UI", "Noto Sans Malayalam"].iter().any(|f| db.has_family(f)) {
         return;
     }
@@ -4467,9 +4467,9 @@ fn malayalam_falls_back_to_a_font_that_forms_its_conjuncts() {
 
 #[test]
 fn missing_glyphs_are_the_fonts_box_unless_fallback_is_on() {
-    use designcraft_fonts::testing::font_with;
+    use pejy_fonts::testing::font_with;
     // Some font draws 語 when fallback fonts are allowed (a system CJK font, or this stand-in).
-    designcraft_fonts::FontDb::global().add_font(font_with("DC Test Missing Glyph Helper", &['語']).unwrap());
+    pejy_fonts::FontDb::global().add_font(font_with("DC Test Missing Glyph Helper", &['語']).unwrap());
     let text = "a語";
     let (mut d, sid, _) = doc_with(text, Rect::new(36.0, 36.0, 300.0, 100.0), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| f.over.language = Some("Japanese".into()));
@@ -4479,11 +4479,11 @@ fn missing_glyphs_are_the_fonts_box_unless_fallback_is_on() {
     };
     assert!(!d.settings.glyph_fallback, "new documents draw missing glyphs as InDesign does");
     let (face, gid, adv) = glyph_at(&d, 1);
-    assert_eq!((face.family.as_str(), gid), (designcraft_fonts::DEFAULT_FAMILY, 0), "Source Serif 4's .notdef");
+    assert_eq!((face.family.as_str(), gid), (pejy_fonts::DEFAULT_FAMILY, 0), "Source Serif 4's .notdef");
     assert!((adv - face.advance(0) * 12.0 / face.upem).abs() < 1e-6, "its advance: {adv}");
     d.settings.glyph_fallback = true;
     let (face, gid, _) = glyph_at(&d, 1);
-    assert_ne!(face.family, designcraft_fonts::DEFAULT_FAMILY);
+    assert_ne!(face.family, pejy_fonts::DEFAULT_FAMILY);
     assert_ne!(gid, 0, "a fallback font draws it");
 }
 
@@ -4491,8 +4491,8 @@ fn missing_glyphs_are_the_fonts_box_unless_fallback_is_on() {
 /// in text shaped as one piece across a colour change.
 #[test]
 fn a_missing_fonts_substitute_takes_fallback_fonts() {
-    use designcraft_fonts::testing::font_with;
-    designcraft_fonts::FontDb::global().add_font(font_with("DC Test Missing Glyph Helper", &['語']).unwrap());
+    use pejy_fonts::testing::font_with;
+    pejy_fonts::FontDb::global().add_font(font_with("DC Test Missing Glyph Helper", &['語']).unwrap());
     let text = "a語b語";
     let (mut d, sid, _) = doc_with(text, Rect::new(36.0, 36.0, 300.0, 100.0), ParaAttrs::default());
     {
@@ -4508,16 +4508,16 @@ fn a_missing_fonts_substitute_takes_fallback_fonts() {
     let glyphs: Vec<&PlacedGlyph> = all_lines(&cs).into_iter().flat_map(|l| l.glyphs.iter()).filter(|g| text[g.byte..].starts_with('語')).collect();
     assert_eq!(glyphs.len(), 2);
     for g in glyphs {
-        assert_ne!(g.face.family, designcraft_fonts::DEFAULT_FAMILY, "byte {}", g.byte);
+        assert_ne!(g.face.family, pejy_fonts::DEFAULT_FAMILY, "byte {}", g.byte);
         assert_ne!(g.gid, 0, "byte {}: a fallback font draws it", g.byte);
     }
 }
 
 #[test]
 fn a_mark_starting_a_run_is_shaped_with_its_base() {
-    use designcraft_fonts::testing::font_with;
+    use pejy_fonts::testing::font_with;
     const HEBREW: &str = "DC Test Hebrew Points";
-    designcraft_fonts::FontDb::global().add_font(font_with(HEBREW, &['ש', '\u{5C2}', 'ל']).unwrap());
+    pejy_fonts::FontDb::global().add_font(font_with(HEBREW, &['ש', '\u{5C2}', 'ל']).unwrap());
     // Shin, then sin dot and lamed in a run that only turns ligatures off.
     let text = "ש\u{5C2}ל";
     let mark = "ש".len();
@@ -4542,16 +4542,16 @@ fn a_mark_starting_a_run_is_shaped_with_its_base() {
     assert_eq!((dot.0.family.as_str(), dot.2), (base.0.family.as_str(), 0), "the sin dot goes with its shin: {g:?}");
     assert_ne!(dot.1, 0, "{g:?}");
     // The run's own font lacks the mark: its box, whatever font the letter before it has.
-    let g = glyphs(HEBREW, Some(designcraft_fonts::DEFAULT_FAMILY));
+    let g = glyphs(HEBREW, Some(pejy_fonts::DEFAULT_FAMILY));
     let dot = g.iter().find(|x| x.2 == mark).unwrap();
-    assert_eq!((dot.0.family.as_str(), dot.1), (designcraft_fonts::DEFAULT_FAMILY, 0), "{g:?}");
+    assert_eq!((dot.0.family.as_str(), dot.1), (pejy_fonts::DEFAULT_FAMILY, 0), "{g:?}");
 }
 
 #[test]
 fn kenten_missing_from_the_font_are_its_box_unless_fallback_is_on() {
-    use designcraft_fonts::testing::font_with;
+    use pejy_fonts::testing::font_with;
     // Some font draws the sesame dot when fallback fonts are allowed (a system font, or this one).
-    designcraft_fonts::FontDb::global().add_font(font_with("DC Test Kenten Helper", &['\u{FE45}']).unwrap());
+    pejy_fonts::FontDb::global().add_font(font_with("DC Test Kenten Helper", &['\u{FE45}']).unwrap());
     let (mut d, sid, _) = doc_with("ab", Rect::new(36.0, 36.0, 300.0, 100.0), ParaAttrs::default());
     let plain = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.len();
     d.story_mut(sid).unwrap().format_chars(0..2, |f| f.over.kenten = Some(true));
@@ -4561,16 +4561,16 @@ fn kenten_missing_from_the_font_are_its_box_unless_fallback_is_on() {
     };
     let missing = marks(&d);
     assert_eq!(missing.len(), 2);
-    assert!(missing.iter().all(|(family, gid)| family == designcraft_fonts::DEFAULT_FAMILY && *gid == 0), "{missing:?}");
+    assert!(missing.iter().all(|(family, gid)| family == pejy_fonts::DEFAULT_FAMILY && *gid == 0), "{missing:?}");
     d.settings.glyph_fallback = true;
     let drawn = marks(&d);
     assert_eq!(drawn.len(), 2);
-    assert!(drawn.iter().all(|(family, gid)| family != designcraft_fonts::DEFAULT_FAMILY && *gid != 0), "{drawn:?}");
+    assert!(drawn.iter().all(|(family, gid)| family != pejy_fonts::DEFAULT_FAMILY && *gid != 0), "{drawn:?}");
 }
 
 #[test]
 fn each_document_shapes_words_in_its_own_fonts() {
-    use designcraft_fonts::testing::font_with_glyph;
+    use pejy_fonts::testing::font_with_glyph;
     const FAMILY: &str = "DocFont Word Cache";
     // Two documents' fonts of one name: the same words, drawn as `X` in one and `O` in the other.
     let root = std::env::temp_dir().join(format!("dc-compose-docfonts-{}", std::process::id()));
@@ -4579,7 +4579,7 @@ fn each_document_shapes_words_in_its_own_fonts() {
         let folder = root.join(name);
         std::fs::create_dir_all(&folder).unwrap();
         std::fs::write(folder.join("word.ttf"), font_with_glyph(FAMILY, &['a', 'b', ' '], glyph).unwrap()).unwrap();
-        scopes.push((designcraft_fonts::FontDb::global().load_document_fonts(&folder, &|_| Ok(())).scope, glyph));
+        scopes.push((pejy_fonts::FontDb::global().load_document_fonts(&folder, &|_| Ok(())).scope, glyph));
     }
     let text = "ab ab ab ab";
     let mut faces = Vec::new();
@@ -4592,7 +4592,7 @@ fn each_document_shapes_words_in_its_own_fonts() {
             all_lines(&cs).into_iter().flat_map(|l| l.glyphs.iter()).filter(|g| text[g.byte..].starts_with('a')).collect();
         assert_eq!(glyphs.len(), 4);
         let face = glyphs[0].face;
-        let drawn = designcraft_fonts::FontDb::global().face(designcraft_fonts::FALLBACK_FAMILY, "Regular").glyph_for(glyph);
+        let drawn = pejy_fonts::FontDb::global().face(pejy_fonts::FALLBACK_FAMILY, "Regular").glyph_for(glyph);
         assert!(glyphs.iter().all(|g| g.face == face && g.gid == drawn), "scope {scope}: {glyph}");
         faces.push(face);
     }
@@ -4602,8 +4602,8 @@ fn each_document_shapes_words_in_its_own_fonts() {
 
 #[test]
 fn composite_fonts_draw_from_the_documents_fonts() {
-    use designcraft_doc::cjk::{CompositeFont, CompositeFontEntry};
-    use designcraft_fonts::testing::font_with_glyph;
+    use pejy_doc::cjk::{CompositeFont, CompositeFontEntry};
+    use pejy_fonts::testing::font_with_glyph;
     const FAMILY: &str = "DocFont Composite Member";
     // A composite font whose digits come from a font only the document has.
     let folder = std::env::temp_dir().join(format!("dc-compose-composite-docfont-{}", std::process::id()));
@@ -4615,7 +4615,7 @@ fn composite_fonts_draw_from_the_documents_fonts() {
     std::sync::Arc::make_mut(&mut d.styles).composite_fonts.push(CompositeFont {
         name: "Mixed".into(),
         entries: vec![
-            CompositeFontEntry { family: designcraft_fonts::DEFAULT_FAMILY.into(), ..Default::default() },
+            CompositeFontEntry { family: pejy_fonts::DEFAULT_FAMILY.into(), ..Default::default() },
             CompositeFontEntry { characters: "0123456789".into(), family: FAMILY.into(), ..Default::default() },
         ],
     });
@@ -4637,8 +4637,8 @@ const KO_LONG: &str = "가나다라마바사아자차카타파하」";
 /// A Korean paragraph in a narrow frame (70 pt), set in a stand-in font covering the samples.
 fn korean_doc(text: &str, language: &str, para: ParaAttrs) -> (Document, StoryId) {
     let chars: Vec<char> = [KO_WORDS, KO_HANJA, KO_PUNCT, KO_LONG].concat().chars().collect();
-    let font = designcraft_fonts::testing::font_with("DC Test Korean", &chars).unwrap();
-    designcraft_fonts::FontDb::global().add_font(font);
+    let font = pejy_fonts::testing::font_with("DC Test Korean", &chars).unwrap();
+    pejy_fonts::FontDb::global().add_font(font);
     let (mut d, sid, _) = doc_with(text, Rect::new(36.0, 36.0, 106.0, 400.0), para);
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| {
         f.over.font_family = Some("DC Test Korean".into());
@@ -4657,7 +4657,7 @@ fn lines_starting_mid_word(d: &Document, sid: StoryId, text: &str) -> Vec<String
 
 #[test]
 fn korean_breaks_at_spaces() {
-    for composer in [designcraft_doc::Composer::Paragraph, designcraft_doc::Composer::SingleLine] {
+    for composer in [pejy_doc::Composer::Paragraph, pejy_doc::Composer::SingleLine] {
         for align in [Align::Left, Align::LeftJustified] {
             let para = ParaAttrs { composer: Some(composer), align: Some(align), ..Default::default() };
             // By script: Hangul is set word by word whatever the language.
@@ -4672,9 +4672,9 @@ fn korean_breaks_at_spaces() {
 
 #[test]
 fn korean_breaks_at_spaces_under_a_kinsoku_set() {
-    let set = designcraft_doc::cjk::Kinsoku::named("KoreanKinsoku");
+    let set = pejy_doc::cjk::Kinsoku::named("KoreanKinsoku");
     assert!(set.is_some());
-    for composer in [designcraft_doc::Composer::Paragraph, designcraft_doc::Composer::SingleLine] {
+    for composer in [pejy_doc::Composer::Paragraph, pejy_doc::Composer::SingleLine] {
         let para = ParaAttrs { composer: Some(composer), kinsoku: Some(set.clone()), ..Default::default() };
         let (d, sid) = korean_doc(KO_WORDS, "Korean", para.clone());
         let mid = lines_starting_mid_word(&d, sid, KO_WORDS);
@@ -4686,14 +4686,14 @@ fn korean_breaks_at_spaces_under_a_kinsoku_set() {
 
 #[test]
 fn korean_character_breaks_on_request() {
-    let para = ParaAttrs { korean_char_breaks: Some(true), composer: Some(designcraft_doc::Composer::SingleLine), ..Default::default() };
+    let para = ParaAttrs { korean_char_breaks: Some(true), composer: Some(pejy_doc::Composer::SingleLine), ..Default::default() };
     let (d, sid) = korean_doc(KO_WORDS, "Korean", para);
     assert!(!lines_starting_mid_word(&d, sid, KO_WORDS).is_empty(), "breaks between syllables");
 }
 
 #[test]
 fn korean_by_its_locale_code_breaks_at_spaces() {
-    let para = ParaAttrs { composer: Some(designcraft_doc::Composer::SingleLine), ..Default::default() };
+    let para = ParaAttrs { composer: Some(pejy_doc::Composer::SingleLine), ..Default::default() };
     let (d, sid) = korean_doc(KO_HANJA, "ko_KR", para);
     let mid = lines_starting_mid_word(&d, sid, KO_HANJA);
     assert!(mid.is_empty(), "{mid:?}");
@@ -4701,7 +4701,7 @@ fn korean_by_its_locale_code_breaks_at_spaces() {
 
 #[test]
 fn hanja_in_korean_text_breaks_at_spaces() {
-    let para = ParaAttrs { composer: Some(designcraft_doc::Composer::SingleLine), ..Default::default() };
+    let para = ParaAttrs { composer: Some(pejy_doc::Composer::SingleLine), ..Default::default() };
     let (d, sid) = korean_doc(KO_HANJA, "Korean", para.clone());
     let mid = lines_starting_mid_word(&d, sid, KO_HANJA);
     assert!(mid.is_empty(), "{mid:?}");
@@ -4719,7 +4719,7 @@ fn korean_lines_keep_kinsoku() {
     for text in std::iter::once(KO_PUNCT.to_string()).chain(long) {
         let text = text.as_str();
         for char_breaks in [false, true] {
-            for composer in [designcraft_doc::Composer::Paragraph, designcraft_doc::Composer::SingleLine] {
+            for composer in [pejy_doc::Composer::Paragraph, pejy_doc::Composer::SingleLine] {
                 let para = ParaAttrs { korean_char_breaks: Some(char_breaks), composer: Some(composer), ..Default::default() };
                 let (d, sid) = korean_doc(text, "Korean", para);
                 let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -4736,37 +4736,37 @@ fn korean_lines_keep_kinsoku() {
 /// with vertical metrics, every glyph one em down the line and 120 units below its vertical
 /// origin, except ヸ (drawn as O): 1.024 em. No vertical forms. Added to the global database once.
 fn vertical_test_font() -> &'static str {
-    use designcraft_fonts::testing::{font_mapping, with_vmtx};
+    use pejy_fonts::testing::{font_mapping, with_vmtx};
     const FAMILY: &str = "DC Test Vertical";
     static ADDED: std::sync::Once = std::sync::Once::new();
     ADDED.call_once(|| {
         let glyphs = [('一', 'X'), ('二', 'X'), ('日', 'X'), ('本', 'X'), ('ま', 'o'), ('ヸ', 'O'), ('、', ','), ('A', 'A'), ('b', 'b')];
         let base = font_mapping(FAMILY, &glyphs).unwrap();
-        let scratch = designcraft_fonts::FontDb::with_font_dirs(vec![]);
+        let scratch = pejy_fonts::FontDb::with_font_dirs(vec![]);
         scratch.add_font(base.clone());
         let wi = u16::try_from(scratch.face(FAMILY, "Regular").glyph_for('ヸ')).unwrap();
-        designcraft_fonts::FontDb::global().add_font(with_vmtx(&base, (1000, 120), &[(wi, 1024, 100)]).unwrap());
+        pejy_fonts::FontDb::global().add_font(with_vmtx(&base, (1000, 120), &[(wi, 1024, 100)]).unwrap());
     });
     FAMILY
 }
 
-/// Shippori Mincho (vertical forms, `vpal`) when built with craft-fonts; else `None`, with a note.
+/// Shippori Mincho (vertical forms, `vpal`) when built with mahay-fonts; else `None`, with a note.
 fn shippori() -> Option<&'static str> {
-    if !designcraft_fonts::japanese_fonts().any(|f| f.family == "Shippori Mincho") {
-        eprintln!("skipped Shippori Mincho: built without craft-fonts (set CRAFT_FONTS_DIR to a checkout)");
+    if !pejy_fonts::japanese_fonts().any(|f| f.family == "Shippori Mincho") {
+        eprintln!("skipped Shippori Mincho: built without mahay-fonts (set MAHAY_FONTS_DIR to a checkout)");
         return None;
     }
     Some("Shippori Mincho")
 }
 
-/// The fonts vertical layout is checked in: the synthetic one, and Shippori Mincho with craft-fonts.
+/// The fonts vertical layout is checked in: the synthetic one, and Shippori Mincho with mahay-fonts.
 fn vertical_families() -> Vec<&'static str> {
     std::iter::once(vertical_test_font()).chain(shippori()).collect()
 }
 
 /// A vertical frame (no inset) with `text` in `family` at 20 pt (and `over`), and its first line
 /// with the frame's first column.
-fn vertical_line(family: &str, text: &str, over: impl Fn(&mut designcraft_doc::CharFormat)) -> (Line, Rect) {
+fn vertical_line(family: &str, text: &str, over: impl Fn(&mut pejy_doc::CharFormat)) -> (Line, Rect) {
     let mut d = Document::new(&NewDocument::default());
     let lid = d.default_layer();
     let (fid, sid) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(100.0, 100.0, 200.0, 500.0), lid, text, ParaFormat::default()).unwrap();
@@ -4789,8 +4789,8 @@ fn vertical_line(family: &str, text: &str, over: impl Fn(&mut designcraft_doc::C
 
 /// Text-space bounds of a glyph's ink as drawn in a vertical frame.
 fn vertical_ink(g: &PlacedGlyph, baseline: f64) -> Rect {
-    use designcraft_geom::{Affine, Shape};
-    let ink = designcraft_fonts::FontDb::global().outline(&g.face, g.gid).bounding_box();
+    use pejy_geom::{Affine, Shape};
+    let ink = pejy_fonts::FontDb::global().outline(&g.face, g.gid).bounding_box();
     let mut a = Affine::translate((g.x, baseline + g.y)) * Affine::scale_non_uniform(g.sx, g.sy);
     if let Some(turn) = g.vertical_xf(baseline) {
         a = turn * a;
@@ -4890,7 +4890,7 @@ fn vertical_lines_fit_the_em_box() {
 /// A drop cap set in one of the document's own fonts measures its side bearing in that font.
 #[test]
 fn drop_cap_in_a_document_font_aligns_its_left_edge() {
-    use designcraft_geom::Shape as _;
+    use pejy_geom::Shape as _;
     const FAMILY: &str = "DocFont Drop Cap";
     let text = format!("Once {LOREM}");
     let mut chars: Vec<char> = text.chars().collect();
@@ -4898,8 +4898,8 @@ fn drop_cap_in_a_document_font_aligns_its_left_edge() {
     chars.dedup();
     let folder = std::env::temp_dir().join(format!("dc-compose-dropcap-docfont-{}", std::process::id()));
     std::fs::create_dir_all(&folder).unwrap();
-    std::fs::write(folder.join("dropcap.ttf"), designcraft_fonts::testing::font_with_glyph(FAMILY, &chars, 'O').unwrap()).unwrap();
-    let scope = designcraft_fonts::FontDb::global().load_document_fonts(&folder, &|_| Ok(())).scope;
+    std::fs::write(folder.join("dropcap.ttf"), pejy_fonts::testing::font_with_glyph(FAMILY, &chars, 'O').unwrap()).unwrap();
+    let scope = pejy_fonts::FontDb::global().load_document_fonts(&folder, &|_| Ok(())).scope;
     let para = ParaAttrs { left_indent: Some(10.0), ..drop_cap(2, 1) };
     let (mut d, sid, _) = doc_with(&text, Rect::new(0.0, 0.0, 300.0, 1000.0), para);
     d.font_scope = scope;
@@ -4907,7 +4907,7 @@ fn drop_cap_in_a_document_font_aligns_its_left_edge() {
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let dc = &all_lines(&cs)[0].glyphs[0];
     assert_eq!(dc.face.family, FAMILY);
-    let ink_left = dc.x + designcraft_fonts::FontDb::global().outline(dc.face.get(), dc.gid).bounding_box().x0 * dc.sx;
+    let ink_left = dc.x + pejy_fonts::FontDb::global().outline(dc.face.get(), dc.gid).bounding_box().x0 * dc.sx;
     assert!(ink_left - dc.x > 0.5, "the O has a visible side bearing");
     assert!((ink_left - 10.0).abs() < 1e-6, "ink at {ink_left}");
     let _ = std::fs::remove_dir_all(&folder);
@@ -4915,7 +4915,7 @@ fn drop_cap_in_a_document_font_aligns_its_left_edge() {
 
 #[test]
 fn embedded_text_frames_compose_and_footnotes_retain_object_sources() {
-    use designcraft_doc::{AnchorPosition, AnchoredObject};
+    use pejy_doc::{AnchorPosition, AnchoredObject};
     let (mut d, body, _) = doc_with("Body", Rect::new(20.0, 20.0, 400.0, 600.0), ParaAttrs::default());
     let (fid, child) =
         d.add_text_frame(SpreadRef::Doc(0), Rect::new(0.0, 0.0, 80.0, 40.0), d.default_layer(), "Embedded", ParaFormat::default()).unwrap();
@@ -4939,7 +4939,7 @@ fn embedded_text_frames_compose_and_footnotes_retain_object_sources() {
     let note = Arc::make_mut(&mut d.story_mut(body).unwrap().notes[0]);
     let anchor = Arc::make_mut(&mut note.text.objects[0]);
     let original_path = anchor.item.path.clone();
-    anchor.item.path = designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 80.0, 1.0));
+    anchor.item.path = pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 80.0, 1.0));
     assert!(cache.get(&d, child, None).is_overset(), "embedded frame geometry must invalidate cached composition");
     Arc::make_mut(&mut Arc::make_mut(&mut d.story_mut(body).unwrap().notes[0]).text.objects[0]).item.path = original_path;
 
@@ -4954,9 +4954,9 @@ fn embedded_text_frames_compose_and_footnotes_retain_object_sources() {
 
 #[test]
 fn inline_object_only_line_does_not_reserve_phantom_font_descent() {
-    use designcraft_doc::{AnchorPosition, AnchoredObject, Item, Shape};
+    use pejy_doc::{AnchorPosition, AnchoredObject, Item, Shape};
     let (mut d, sid, _) = doc_with("", Rect::new(0.0, 0.0, 10.0, 15.0), ParaAttrs::default());
-    let item = Item::new(ItemId(d.alloc()), d.default_layer(), Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 7.0, 9.0)));
+    let item = Item::new(ItemId(d.alloc()), d.default_layer(), Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 7.0, 9.0)));
     d.story_mut(sid).unwrap().insert_object(0, AnchoredObject::new(item, AnchorPosition::Inline { y_offset: 5.0 }));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(!cs.is_overset());
@@ -4970,7 +4970,7 @@ fn inline_object_only_line_does_not_reserve_phantom_font_descent() {
 
 #[test]
 fn composite_metrics_and_character_mappings_apply_inside_footnotes() {
-    use designcraft_doc::cjk::{CompositeFont, CompositeFontEntry};
+    use pejy_doc::cjk::{CompositeFont, CompositeFontEntry};
     let (mut d, sid, _) = doc_with("Body", Rect::new(0.0, 0.0, 300.0, 300.0), ParaAttrs::default());
     d.styles_mut().composite_fonts.push(CompositeFont {
         name: "Mixed".into(),
@@ -5009,7 +5009,7 @@ fn composite_metrics_and_character_mappings_apply_inside_footnotes() {
 
 #[test]
 fn generated_note_labels_resolve_composite_components_and_keep_one_anchor() {
-    use designcraft_doc::cjk::{CompositeFont, CompositeFontEntry};
+    use pejy_doc::cjk::{CompositeFont, CompositeFontEntry};
     let (mut d, sid, _) = doc_with("Body", Rect::new(0.0, 0.0, 300.0, 300.0), ParaAttrs::default());
     d.styles_mut().composite_fonts.push(CompositeFont {
         name: "Generated Mixed".into(),
@@ -5018,7 +5018,7 @@ fn generated_note_labels_resolve_composite_components_and_keep_one_anchor() {
             CompositeFontEntry { characters: "[]".into(), family: "Inter".into(), relative_size: 0.8, ..Default::default() },
         ],
     });
-    d.footnote_options.affix_in = designcraft_doc::notes::AffixIn::Both;
+    d.footnote_options.affix_in = pejy_doc::notes::AffixIn::Both;
     d.footnote_options.prefix = "[".into();
     d.footnote_options.suffix = "]".into();
     let story = d.story_mut(sid).unwrap();
@@ -5036,10 +5036,10 @@ fn generated_note_labels_resolve_composite_components_and_keep_one_anchor() {
 
 #[test]
 fn generated_note_labels_use_coverage_fallback() {
-    let font = designcraft_fonts::testing::font_with("Generated Label Coverage", &['\u{E888}']).unwrap();
-    designcraft_fonts::FontDb::global().add_font(font);
+    let font = pejy_fonts::testing::font_with("Generated Label Coverage", &['\u{E888}']).unwrap();
+    pejy_fonts::FontDb::global().add_font(font);
     let (mut d, sid, _) = doc_with("Body", Rect::new(0.0, 0.0, 300.0, 300.0), ParaAttrs::default());
-    d.footnote_options.affix_in = designcraft_doc::notes::AffixIn::Both;
+    d.footnote_options.affix_in = pejy_doc::notes::AffixIn::Both;
     d.footnote_options.prefix = "\u{E888}".into();
     d.footnote_options.suffix = "".into();
     d.settings.glyph_fallback = true;
@@ -5052,7 +5052,7 @@ fn generated_note_labels_use_coverage_fallback() {
 
 #[test]
 fn mojikumi_custom_pairs_change_positions_and_breaks_without_font_scaling() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with(
         "A1A1A1",
         Rect::new(0.0, 0.0, 55.0, 300.0),
@@ -5079,7 +5079,7 @@ fn mojikumi_custom_pairs_change_positions_and_breaks_without_font_scaling() {
 
 #[test]
 fn mojikumi_paragraph_indent_adds_to_paragraph_settings_and_rounds_no_glyphs() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with(
         "ABC",
         Rect::new(0.0, 0.0, 200.0, 100.0),
@@ -5106,7 +5106,7 @@ fn mojikumi_paragraph_indent_adds_to_paragraph_settings_and_rounds_no_glyphs() {
 
 #[test]
 fn mojikumi_justifies_cjk_without_spaces_and_respects_fixed_spacing() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with(
         "A1A1",
         Rect::new(0.0, 0.0, 100.0, 100.0),
@@ -5132,7 +5132,7 @@ fn mojikumi_justifies_cjk_without_spaces_and_respects_fixed_spacing() {
 
 #[test]
 fn mojikumi_fixed_pairs_are_not_stretched_by_single_word_justification() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with(
         "A1A1",
         Rect::new(0.0, 0.0, 150.0, 100.0),
@@ -5164,7 +5164,7 @@ fn mojikumi_fixed_pairs_are_not_stretched_by_single_word_justification() {
 
 #[test]
 fn mojikumi_kinsoku_push_in_and_push_out_select_different_legal_breaks() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let text = "甲乙丙丁戊己庚辛";
     let (mut d, sid, _) = doc_with(
         text,
@@ -5201,7 +5201,7 @@ fn mojikumi_kinsoku_push_in_and_push_out_select_different_legal_breaks() {
 
 #[test]
 fn mojikumi_priority_and_elastic_line_start_are_used_in_placement() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with("A1B2", Rect::new(0.0, 0.0, 45.0, 100.0), ParaAttrs::default());
     let natural = compose_story(&d, sid, &ComposeOptions::default());
     let middle_gap = all_lines(&natural)[0].glyphs[2].x - all_lines(&natural)[0].glyphs[1].x;
@@ -5266,7 +5266,7 @@ fn mojikumi_priority_and_elastic_line_start_are_used_in_placement() {
 
 #[test]
 fn mojikumi_equal_priority_shares_leading_and_internal_space() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with("A1", Rect::new(0.0, 0.0, 40.0, 100.0), ParaAttrs::default());
     let natural = compose_story(&d, sid, &ComposeOptions::default());
     let old = all_lines(&natural)[0];
@@ -5299,7 +5299,7 @@ fn mojikumi_equal_priority_shares_leading_and_internal_space() {
 
 #[test]
 fn mojikumi_nonfloating_and_leading_only_compression_fit_ragged_lines() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     for composer in [Composer::SingleLine, Composer::Paragraph] {
         for leading in [true, false] {
             let (mut d, sid, _) = doc_with(
@@ -5373,7 +5373,7 @@ fn assert_no_overlap(ft: &FrameText) {
 
 #[test]
 fn mojikumi_places_custom_gap_after_combining_marks() {
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
     let (mut d, sid, _) = doc_with("A\u{0323}\u{0301}1", Rect::new(0.0, 0.0, 200.0, 100.0), ParaAttrs::default());
     let natural = compose_story(&d, sid, &ComposeOptions::default());
     let old = &all_lines(&natural)[0].glyphs;
@@ -5404,8 +5404,8 @@ fn mojikumi_places_custom_gap_after_combining_marks() {
 #[test]
 fn mojikumi_does_not_restore_fullwidth_blanks_to_narrow_tracked_punctuation() {
     let family = "Mojikumi Narrow Body";
-    let font = designcraft_fonts::testing::font_mapping(family, &[('（', 'i'), ('A', 'A')]).unwrap();
-    designcraft_fonts::FontDb::global().add_font(font);
+    let font = pejy_fonts::testing::font_mapping(family, &[('（', 'i'), ('A', 'A')]).unwrap();
+    pejy_fonts::FontDb::global().add_font(font);
     let (mut d, sid, _) = doc_with("（A", Rect::new(0.0, 0.0, 200.0, 100.0), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0.."（A".len(), |f| {
         f.over.font_family = Some(family.into());
@@ -5423,8 +5423,8 @@ fn mojikumi_does_not_restore_fullwidth_blanks_to_narrow_tracked_punctuation() {
 #[test]
 fn mojikumi_one_em_line_end_set_sets_closing_punctuation_full_width_at_line_end() {
     let family = "Mojikumi Full Stop";
-    let font = designcraft_fonts::testing::font_mapping(family, &[('（', '‰'), ('一', '‰'), ('。', '‰')]).unwrap();
-    designcraft_fonts::FontDb::global().add_font(font);
+    let font = pejy_fonts::testing::font_mapping(family, &[('（', '‰'), ('一', '‰'), ('。', '‰')]).unwrap();
+    pejy_fonts::FontDb::global().add_font(font);
     let text = "（一。";
     let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 200.0, 100.0), ParaAttrs::default());
     d.story_mut(sid).unwrap().format_chars(0..text.len(), |f| f.over.font_family = Some(family.into()));
@@ -5501,7 +5501,7 @@ fn column_rules_centre_on_unequal_gutters_and_ignore_bad_weights() {
 #[test]
 fn column_rules_in_right_to_left_and_vertical_frames() {
     let (_, _, rules) = ruled("نص", Rect::new(0.0, 0.0, 300.0, 200.0), 2, |d, sid| {
-        d.story_mut(sid).unwrap().direction = designcraft_doc::TextDirection::RightToLeft;
+        d.story_mut(sid).unwrap().direction = pejy_doc::TextDirection::RightToLeft;
     });
     assert_eq!(rules.len(), 1);
     assert!((rules[0].center().x - 150.0).abs() < 1e-9, "{rules:?}");
@@ -5518,7 +5518,7 @@ fn column_rules_in_right_to_left_and_vertical_frames() {
 fn column_rules_break_around_paragraphs_that_span_columns() {
     let text = format!("A heading that spans both columns\n{LOREM} {LOREM}");
     let (d, fid, rules) = ruled(&text, Rect::new(0.0, 0.0, 300.0, 400.0), 2, |d, sid| {
-        d.story_mut(sid).unwrap().paras[0].para.span_columns = Some(designcraft_doc::SpanColumns::Span(0));
+        d.story_mut(sid).unwrap().paras[0].para.span_columns = Some(pejy_doc::SpanColumns::Span(0));
     });
     let sid = d.item(fid).unwrap().text_frame().unwrap().story;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -5661,7 +5661,7 @@ fn text_after_a_spanning_paragraph_threads_into_the_next_frame() {
 #[test]
 fn spanning_paragraph_in_rtl_and_vertical_frames() {
     let (mut d, sid, _, h) = span_doc(2, 4, Rect::new(0.0, 0.0, 540.0, 500.0));
-    d.story_mut(sid).unwrap().direction = designcraft_doc::TextDirection::RightToLeft;
+    d.story_mut(sid).unwrap().direction = pejy_doc::TextDirection::RightToLeft;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert!(!cs.is_overset());
     assert_span_layout(&cs.frames[0], h);
@@ -5710,7 +5710,7 @@ fn column_rules_break_around_a_spanning_paragraph_between_bands() {
 #[test]
 fn justified_line_with_a_tab_justifies_the_text_after_its_last_tab() {
     // InDesign justifies only the text after a line's last (left) tab; tab stops stay aligned.
-    let stop = |align| designcraft_doc::TabStop { position: 100.0, align, leader: String::new(), align_on: String::new() };
+    let stop = |align| pejy_doc::TabStop { position: 100.0, align, leader: String::new(), align_on: String::new() };
     let text = "Name\t42 and some words\u{2028}more";
     let x_of = |l: &Line, byte: usize| l.glyphs.iter().find(|g| g.byte == byte && g.len > 0).map(|g| g.x).unwrap();
     let left = ParaAttrs { align: Some(Align::LeftJustified), tabs: Some(vec![stop(TabAlign::Left)]), ..Default::default() };
@@ -5750,8 +5750,8 @@ fn justified_line_with_a_tab_justifies_the_text_after_its_last_tab() {
 #[test]
 fn mojikumi_justification_after_a_tab_keeps_the_text_before_it() {
     // Justification (mojikumi included) adjusts only the text after a line's last tab.
-    use designcraft_doc::cjk::{MojikumiAki, MojikumiTable};
-    let stop = designcraft_doc::TabStop { position: 100.0, align: TabAlign::Left, leader: String::new(), align_on: String::new() };
+    use pejy_doc::cjk::{MojikumiAki, MojikumiTable};
+    let stop = pejy_doc::TabStop { position: 100.0, align: TabAlign::Left, leader: String::new(), align_on: String::new() };
     let compose = |align| {
         let para =
             ParaAttrs { align: Some(align), mojikumi: Some("MojikumiTable/Elastic".into()), tabs: Some(vec![stop.clone()]), ..Default::default() };
@@ -5784,7 +5784,7 @@ fn mojikumi_justification_after_a_tab_keeps_the_text_before_it() {
 
 #[test]
 fn list_first_line_wraps_at_the_column_edge_after_its_label() {
-    use designcraft_doc::{ListType, TabStop};
+    use pejy_doc::{ListType, TabStop};
     // A hanging indent (left 18, first line −18): the label sits at the column start, a tab
     // after it reaches the left indent (an implicit stop when no explicit stop comes first), and
     // the first line wraps at the same right edge as the others.
@@ -5851,7 +5851,7 @@ fn tracked_lines(text: &str, width: f64, para: ParaAttrs, tracking: f64) -> Vec<
 
 #[test]
 fn a_word_longer_than_the_line_breaks_at_the_column_edge() {
-    use designcraft_doc::Composer;
+    use pejy_doc::Composer;
     let word = "n".repeat(60);
     let long = format!("Then {word} and on");
     for tracking in [0.0, 740.0] {
@@ -5879,7 +5879,7 @@ fn a_word_longer_than_the_line_breaks_at_the_column_edge() {
 
 #[test]
 fn a_line_that_exactly_fills_the_measure_fits() {
-    use designcraft_doc::Composer;
+    use pejy_doc::Composer;
     let text = "#knowyourplastic";
     let one = &tracked_lines(text, 1e5, ParaAttrs::default(), 0.0)[0];
     // The measure a rounding error short of the natural width.
@@ -6011,9 +6011,9 @@ fn list_labels(cs: &ComposedStory, alphabet: &str) -> Vec<String> {
 
 const LABEL_CHARS: &str = "0123456789ABCDIVXabcdivx.\u{2022} Tabel";
 
-fn numbered(style: designcraft_doc::NumberStyle, expression: &str) -> ParaAttrs {
+fn numbered(style: pejy_doc::NumberStyle, expression: &str) -> ParaAttrs {
     ParaAttrs {
-        list_type: Some(designcraft_doc::ListType::Numbers),
+        list_type: Some(pejy_doc::ListType::Numbers),
         number_style: Some(style),
         number_expression: Some(expression.into()),
         ..Default::default()
@@ -6022,7 +6022,7 @@ fn numbered(style: designcraft_doc::NumberStyle, expression: &str) -> ParaAttrs 
 
 #[test]
 fn numbered_lists_follow_their_format_and_expression() {
-    use designcraft_doc::NumberStyle as N;
+    use pejy_doc::NumberStyle as N;
     let cases: [(N, &str, [&str; 3]); 4] = [
         (N::UpperLetters, "^#.^t", ["A.", "B.", "C."]),
         (N::LowerRoman, "^#.^t", ["i.", "ii.", "iii."]),
@@ -6038,7 +6038,7 @@ fn numbered_lists_follow_their_format_and_expression() {
 
 #[test]
 fn numbering_from_the_largest_start_number_does_not_overflow() {
-    let (mut d, sid, _) = doc_with("One\nTwo", Rect::new(0.0, 0.0, 300.0, 300.0), numbered(designcraft_doc::NumberStyle::Arabic, "^#."));
+    let (mut d, sid, _) = doc_with("One\nTwo", Rect::new(0.0, 0.0, 300.0, 300.0), numbered(pejy_doc::NumberStyle::Arabic, "^#."));
     d.story_mut(sid).unwrap().paras[0].para.start_at = Some(Some(u32::MAX));
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let max = format!("{}.", u32::MAX);
@@ -6047,16 +6047,16 @@ fn numbering_from_the_largest_start_number_does_not_overflow() {
 
 #[test]
 fn empty_paragraphs_get_no_bullet_or_number() {
-    let bullets = ParaAttrs { list_type: Some(designcraft_doc::ListType::Bullets), ..Default::default() };
+    let bullets = ParaAttrs { list_type: Some(pejy_doc::ListType::Bullets), ..Default::default() };
     let (d, sid, _) = doc_with("One\n\nTwo\n", Rect::new(0.0, 0.0, 300.0, 300.0), bullets);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     assert_eq!(list_labels(&cs, LABEL_CHARS), ["\u{2022}", "", "\u{2022}", ""]);
     // An empty paragraph doesn't use up a number, in a story's own list or a named one.
     for name in ["", "Steps"] {
-        let attrs = ParaAttrs { list_name: Some(name.into()), ..numbered(designcraft_doc::NumberStyle::Arabic, "^#.^t") };
+        let attrs = ParaAttrs { list_name: Some(name.into()), ..numbered(pejy_doc::NumberStyle::Arabic, "^#.^t") };
         let (mut d, sid, _) = doc_with("One\n\nTwo\n", Rect::new(0.0, 0.0, 300.0, 300.0), attrs);
         if !name.is_empty() {
-            d.settings.lists.push(designcraft_doc::NumberedList { name: name.into(), continue_across_stories: false });
+            d.settings.lists.push(pejy_doc::NumberedList { name: name.into(), continue_across_stories: false });
         }
         let cs = compose_story(&d, sid, &ComposeOptions::default());
         assert_eq!(list_labels(&cs, LABEL_CHARS), ["1.", "", "2.", ""], "list `{name}`");
@@ -6140,12 +6140,12 @@ fn grep_style_in_the_documents_dialect_keeps_short_words_with_the_next() {
     let text = "Мы и он в доме и в саду, а она у окна и с книгой в руках у стола.";
     let para = ParaAttrs {
         align: Some(Align::Left),
-        grep_styles: Some(vec![designcraft_doc::GrepStyle { style: "nobreak".into(), pattern: r"\b\l{1,2}\h".into() }]),
+        grep_styles: Some(vec![pejy_doc::GrepStyle { style: "nobreak".into(), pattern: r"\b\l{1,2}\h".into() }]),
         ..Default::default()
     };
     let (mut d, sid, _) = doc_with(text, Rect::new(0.0, 0.0, 70.0, 1000.0), para);
-    let chars = designcraft_doc::CharAttrs { no_break: Some(true), ..Default::default() };
-    std::sync::Arc::make_mut(&mut d.styles).character.push(designcraft_doc::CharacterStyle {
+    let chars = pejy_doc::CharAttrs { no_break: Some(true), ..Default::default() };
+    std::sync::Arc::make_mut(&mut d.styles).character.push(pejy_doc::CharacterStyle {
         name: "nobreak".into(),
         based_on: None,
         chars,
@@ -6169,13 +6169,13 @@ fn bordered(text: &str, rect: Rect, para: ParaAttrs) -> ComposedStory {
     compose_story(&d, sid, &ComposeOptions::default())
 }
 
-fn has_curves(bp: &designcraft_geom::BezPath) -> bool {
-    bp.elements().iter().any(|e| matches!(e, designcraft_geom::PathEl::CurveTo(..) | designcraft_geom::PathEl::QuadTo(..)))
+fn has_curves(bp: &pejy_geom::BezPath) -> bool {
+    bp.elements().iter().any(|e| matches!(e, pejy_geom::PathEl::CurveTo(..) | pejy_geom::PathEl::QuadTo(..)))
 }
 
 #[test]
 fn rounded_border_corners_are_curves_and_dotted_borders_paint_their_gap_first() {
-    use designcraft_geom::corners::{Corner, CornerShape};
+    use pejy_geom::corners::{Corner, CornerShape};
     let rounded = [Corner { shape: CornerShape::Rounded, size: 6.0 }; 4];
     let cs = bordered("Boxed text", Rect::new(0.0, 0.0, 300.0, 200.0), ParaAttrs { border_corners: Some(rounded), ..Default::default() });
     let paths: Vec<_> = cs.frames[0].decos.iter().filter_map(|dc| dc.path.as_ref()).collect();
@@ -6185,7 +6185,7 @@ fn rounded_border_corners_are_curves_and_dotted_borders_paint_their_gap_first() 
     let cs = bordered("Boxed text", Rect::new(0.0, 0.0, 300.0, 200.0), ParaAttrs::default());
     assert!(cs.frames[0].decos.iter().all(|dc| dc.path.is_none()));
     // A dotted border with a gap colour: the gap under the dots.
-    let dotted = ParaAttrs { border_type: Some(designcraft_doc::StrokeType::Dotted), border_gap_color: Some("[Paper]".into()), ..Default::default() };
+    let dotted = ParaAttrs { border_type: Some(pejy_doc::StrokeType::Dotted), border_gap_color: Some("[Paper]".into()), ..Default::default() };
     let cs = bordered("Boxed text", Rect::new(0.0, 0.0, 300.0, 200.0), dotted);
     let colors: Vec<&str> = cs.frames[0].decos.iter().filter(|dc| dc.path.is_some()).map(|dc| dc.color.as_str()).collect();
     assert_eq!(colors, ["[Paper]", "[Black]"]);
@@ -6200,7 +6200,7 @@ fn border_width(cs: &ComposedStory) -> f64 {
 fn a_text_width_border_is_narrower_than_a_column_width_one() {
     let rect = Rect::new(0.0, 0.0, 300.0, 200.0);
     let column = border_width(&bordered("Short", rect, ParaAttrs::default()));
-    let text = border_width(&bordered("Short", rect, ParaAttrs { border_width: Some(designcraft_doc::BoxWidth::Text), ..Default::default() }));
+    let text = border_width(&bordered("Short", rect, ParaAttrs { border_width: Some(pejy_doc::BoxWidth::Text), ..Default::default() }));
     assert!((column - 302.0).abs() < 1e-6, "column and both side strokes: {column}");
     assert!(text > 2.0 && text < 60.0, "text: {text}");
 }
@@ -6315,7 +6315,7 @@ fn first_lines(cs: &ComposedStory) -> Vec<&Line> {
 
 #[test]
 fn a_right_aligned_number_ends_at_the_line_start() {
-    use designcraft_doc::{ListAlign, ListType};
+    use pejy_doc::{ListAlign, ListType};
     let compose = |align: ListAlign| {
         let para = ParaAttrs {
             list_type: Some(ListType::Numbers),
@@ -6342,7 +6342,7 @@ fn a_right_aligned_number_ends_at_the_line_start() {
 
 #[test]
 fn level_two_numbering_restarts_after_level_one() {
-    let para = numbered(designcraft_doc::NumberStyle::Arabic, "^1.^#");
+    let para = numbered(pejy_doc::NumberStyle::Arabic, "^1.^#");
     let (mut d, sid, _) = doc_with("A\nB\nC\nD\nE", Rect::new(0.0, 0.0, 300.0, 300.0), para);
     for (p, level) in d.story_mut(sid).unwrap().paras.iter_mut().zip([1, 2, 2, 1, 2]) {
         p.para.list_level = Some(level);
@@ -6360,7 +6360,7 @@ fn level_two_numbering_restarts_after_level_one() {
 
 #[test]
 fn the_tab_position_places_the_text_after_the_label() {
-    use designcraft_doc::ListType;
+    use pejy_doc::ListType;
     let compose = |tab: Option<f64>| {
         let para = ParaAttrs { list_type: Some(ListType::Bullets), list_tab: Some(tab), ..Default::default() };
         let (d, sid, _) = doc_with("Item", Rect::new(0.0, 0.0, 300.0, 200.0), para);
@@ -6395,13 +6395,13 @@ fn paragraph_mark_size_counts_in_its_line_auto_leading() {
 
 /// The centre of a placed glyph's ink, relative to its line's baseline.
 fn ink_centre(g: &PlacedGlyph) -> Point {
-    let r = designcraft_geom::Shape::bounding_box(&*FontDb::global().outline(&g.face, g.gid));
+    let r = pejy_geom::Shape::bounding_box(&*FontDb::global().outline(&g.face, g.gid));
     Point::new(g.x + (r.x0 + r.x1) / 2.0 * g.sx, g.y + (r.y0 + r.y1) / 2.0 * g.sy)
 }
 
 #[test]
 fn kenten_sit_above_or_below_at_their_size_and_distance() {
-    use designcraft_doc::cjk_settings::{KentenKind, KentenPosition};
+    use pejy_doc::cjk_settings::{KentenKind, KentenPosition};
     let (mut d, sid, _) = doc_with("AB", Rect::new(36.0, 36.0, 300.0, 100.0), ParaAttrs::default());
     let plain = compose_story(&d, sid, &ComposeOptions::default()).frames[0].lines[0].glyphs.len();
     let set = |d: &mut Document, position: KentenPosition| {
@@ -6546,7 +6546,7 @@ fn rotate_roman_stands_half_width_characters_upright() {
 
 #[test]
 fn roman_word_break_breaks_inside_words_without_hyphens() {
-    let para = ParaAttrs { composer: Some(designcraft_doc::Composer::SingleLine), hyphenate: Some(false), ..Default::default() };
+    let para = ParaAttrs { composer: Some(pejy_doc::Composer::SingleLine), hyphenate: Some(false), ..Default::default() };
     let first_line = |rwb: bool| {
         let (d, sid, _) = doc_with("ab cdefghijklm", Rect::new(0.0, 0.0, 40.0, 300.0), ParaAttrs { roman_word_break: Some(rwb), ..para.clone() });
         let cs = compose_story(&d, sid, &ComposeOptions::default());
@@ -6585,8 +6585,8 @@ fn on_grid(y: f64, (start, inc): (f64, f64)) -> bool {
 
 #[test]
 fn grid_alignment_puts_the_chosen_point_on_the_grid() {
-    use designcraft_doc::cjk::CharacterAlignment as R;
-    let para = |r: R| ParaAttrs { grid_align: Some(designcraft_doc::GridAlign::AllLines), grid_reference: Some(r), ..Default::default() };
+    use pejy_doc::cjk::CharacterAlignment as R;
+    let para = |r: R| ParaAttrs { grid_align: Some(pejy_doc::GridAlign::AllLines), grid_reference: Some(r), ..Default::default() };
     let (roman, grid) = grid_doc("AB\nCD", para(R::Baseline), |_, _| {});
     assert!(roman.iter().all(|l| on_grid(l.baseline, grid)));
     let (centred, grid) = grid_doc("AB\nCD", para(R::EmCenter), |_, _| {});
@@ -6599,8 +6599,8 @@ fn grid_alignment_puts_the_chosen_point_on_the_grid() {
 
 #[test]
 fn gyoudori_two_lines_centres_a_heading_in_two_grid_lines() {
-    use designcraft_doc::cjk::CharacterAlignment as R;
-    let para = ParaAttrs { grid_align: Some(designcraft_doc::GridAlign::AllLines), grid_reference: Some(R::EmCenter), ..Default::default() };
+    use pejy_doc::cjk::CharacterAlignment as R;
+    let para = ParaAttrs { grid_align: Some(pejy_doc::GridAlign::AllLines), grid_reference: Some(R::EmCenter), ..Default::default() };
     let (lines, grid) = grid_doc("Head\nBody text", para, |d, sid| {
         let st = d.story_mut(sid).unwrap();
         st.format_chars(0..4, |f| f.over.size = Some(18.0));
@@ -6614,9 +6614,9 @@ fn gyoudori_two_lines_centres_a_heading_in_two_grid_lines() {
 
 #[test]
 fn paragraph_gyoudori_centres_the_whole_paragraph() {
-    use designcraft_doc::cjk::CharacterAlignment as R;
+    use pejy_doc::cjk::CharacterAlignment as R;
     let para = ParaAttrs {
-        grid_align: Some(designcraft_doc::GridAlign::AllLines),
+        grid_align: Some(pejy_doc::GridAlign::AllLines),
         grid_reference: Some(R::EmCenter),
         grid_gyoudori: Some(4),
         paragraph_gyoudori: Some(true),
@@ -6643,8 +6643,8 @@ fn hostile_cjk_settings_compose_without_panicking() {
         auto_tcy_include_roman: Some(true),
         rotate_roman: Some(true),
         roman_word_break: Some(true),
-        grid_align: Some(designcraft_doc::GridAlign::AllLines),
-        grid_reference: Some(designcraft_doc::cjk::CharacterAlignment::IcfBottom),
+        grid_align: Some(pejy_doc::GridAlign::AllLines),
+        grid_reference: Some(pejy_doc::cjk::CharacterAlignment::IcfBottom),
         grid_gyoudori: Some(u32::MAX),
         paragraph_gyoudori: Some(true),
         ..Default::default()
@@ -6656,7 +6656,7 @@ fn hostile_cjk_settings_compose_without_panicking() {
             let len = st.len();
             st.format_chars(0..len, |f| {
                 f.over.kenten = Some(true);
-                f.over.kenten_kind = Some(designcraft_doc::cjk_settings::KentenKind::Custom);
+                f.over.kenten_kind = Some(pejy_doc::cjk_settings::KentenKind::Custom);
                 f.over.kenten_character = Some("★".repeat(100_000));
                 f.over.kenten_font = Some("No Such Font".into());
                 f.over.kenten_size = Some(Some(1e308));
@@ -6675,16 +6675,16 @@ fn hostile_cjk_settings_compose_without_panicking() {
 /// A 100×60 rectangle anchored at `at` in `sid`, custom-positioned with its top-left at
 /// (`x`, `y`) from the top-left of the anchor's frame (`y_rel`: from the anchor's baseline).
 fn anchor_box(d: &mut Document, sid: StoryId, at: usize, x: f64, y: f64, y_rel: bool, wrap: WrapMode) {
-    use designcraft_doc::anchored::AnchorRelative as R;
+    use pejy_doc::anchored::AnchorRelative as R;
     let lid = d.default_layer();
-    let mut it = designcraft_doc::Item::new(
+    let mut it = pejy_doc::Item::new(
         ItemId(d.alloc()),
         lid,
-        designcraft_doc::Shape::Rectangle,
-        designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 60.0)),
+        pejy_doc::Shape::Rectangle,
+        pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 60.0)),
     );
     it.wrap.mode = wrap;
-    let position = designcraft_doc::AnchorPosition::Custom {
+    let position = pejy_doc::AnchorPosition::Custom {
         x_relative: R::TextFrame,
         y_relative: if y_rel { R::Anchor } else { R::TextFrame },
         x_offset: x,
@@ -6693,7 +6693,7 @@ fn anchor_box(d: &mut Document, sid: StoryId, at: usize, x: f64, y: f64, y_rel: 
         ref_point: 0,
         keep_within_column: false,
     };
-    d.story_mut(sid).unwrap().insert_object(at, designcraft_doc::AnchoredObject::new(it, position));
+    d.story_mut(sid).unwrap().insert_object(at, pejy_doc::AnchoredObject::new(it, position));
 }
 
 /// Lines whose band (top to baseline) meets `y0..y1`.
@@ -6737,22 +6737,22 @@ fn anchored_object_wraps_another_storys_text() {
 /// text left and right of it, closer in where the oval narrows.
 #[test]
 fn anchored_object_wraps_with_its_contour_and_side() {
-    use designcraft_doc::anchored::AnchorRelative as R;
+    use pejy_doc::anchored::AnchorRelative as R;
     let long = [LOREM; 4].join(" ");
     let (mut d, a, fa) = doc_with("Anchor here.", Rect::new(0.0, 0.0, 300.0, 400.0), ParaAttrs::default());
     let lid = d.default_layer();
     let (_, b) = d.add_text_frame(SpreadRef::Doc(0), Rect::new(320.0, 0.0, 620.0, 400.0), lid, &long, ParaFormat::default()).unwrap();
     let left = all_lines(&compose_story(&d, b, &ComposeOptions::default()))[0].x0;
     let area = d.item(fa).unwrap().text_area();
-    let mut it = designcraft_doc::Item::new(
+    let mut it = pejy_doc::Item::new(
         ItemId(d.alloc()),
         lid,
-        designcraft_doc::Shape::Oval,
-        designcraft_geom::shapes::ellipse(Rect::new(0.0, 0.0, 100.0, 100.0)),
+        pejy_doc::Shape::Oval,
+        pejy_geom::shapes::ellipse(Rect::new(0.0, 0.0, 100.0, 100.0)),
     );
     it.wrap.mode = WrapMode::Contour;
     it.wrap.side = WrapSide::BothSides;
-    let position = designcraft_doc::AnchorPosition::Custom {
+    let position = pejy_doc::AnchorPosition::Custom {
         x_relative: R::TextFrame,
         y_relative: R::TextFrame,
         x_offset: left + 100.0 - area.x0,
@@ -6761,7 +6761,7 @@ fn anchored_object_wraps_with_its_contour_and_side() {
         ref_point: 0,
         keep_within_column: false,
     };
-    d.story_mut(a).unwrap().insert_object(0, designcraft_doc::AnchoredObject::new(it, position));
+    d.story_mut(a).unwrap().insert_object(0, pejy_doc::AnchoredObject::new(it, position));
     let cs = compose_story(&d, b, &ComposeOptions::default());
     let lines = all_lines(&cs);
     let pairs: Vec<(&Line, &Line)> = lines.windows(2).filter(|w| w[0].baseline == w[1].baseline).map(|w| (w[0], w[1])).collect();
@@ -6773,7 +6773,7 @@ fn anchored_object_wraps_with_its_contour_and_side() {
     assert!(top > mid + 5.0, "top {top}, middle {mid}");
 }
 
-const OBJECT_LEN: usize = designcraft_doc::OBJECT_MARK.len_utf8();
+const OBJECT_LEN: usize = pejy_doc::OBJECT_MARK.len_utf8();
 
 #[test]
 fn anchored_object_wraps_its_own_storys_later_lines() {
@@ -6818,7 +6818,7 @@ fn anchored_wrap_that_moves_its_own_anchor_terminates() {
     // every line, the anchor's too, and the object with it.
     let text = [LOREM; 2].join(" ");
     let (mut d, sid, fid) = doc_with(&text, Rect::new(0.0, 0.0, 300.0, 500.0), ParaAttrs::default());
-    d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.vertical_justification = designcraft_doc::VerticalJustification::Center;
+    d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.vertical_justification = pejy_doc::VerticalJustification::Center;
     let plain = compose_story(&d, sid, &ComposeOptions::default());
     let at = all_lines(&plain)[1].range.start + 2;
     anchor_box(&mut d, sid, at, 0.0, -20.0, true, WrapMode::JumpObject);
@@ -6950,7 +6950,7 @@ fn balance_columns_leaves_a_frame_the_text_runs_on_from() {
 fn balance_columns_starts_after_a_column_break() {
     // The first paragraph ends with a column break: the first column holds it alone and the
     // other two share the rest.
-    let text = format!("{LOREM}{}\n{}", designcraft_doc::story::COLUMN_BREAK, [LOREM; 3].join("\n"));
+    let text = format!("{LOREM}{}\n{}", pejy_doc::story::COLUMN_BREAK, [LOREM; 3].join("\n"));
     let (mut d, sid, fid) = doc_with(&text, Rect::new(0.0, 0.0, 540.0, 500.0), ParaAttrs::default());
     let o = &mut d.item_mut(fid).unwrap().text_frame_mut().unwrap().options;
     o.columns = 3;
@@ -6965,7 +6965,7 @@ fn balance_columns_starts_after_a_column_break() {
     assert!(c[2] > 0 && c[1] >= c[2] && c[1] - c[2] <= 1, "{c:?}");
 }
 
-fn shaped_doc(path: designcraft_geom::PathData, rect: Rect, inset: f64) -> (Document, StoryId, ItemId) {
+fn shaped_doc(path: pejy_geom::PathData, rect: Rect, inset: f64) -> (Document, StoryId, ItemId) {
     let (mut d, sid, fid) = doc_with(&[LOREM; 4].join(" "), rect, ParaAttrs::default());
     let it = d.item_mut(fid).unwrap();
     it.path = path;
@@ -7001,7 +7001,7 @@ fn ellipse_clearance(r: Rect, p: (f64, f64)) -> f64 {
 #[test]
 fn oval_frame_sets_lines_inside_the_ellipse() {
     let r = Rect::new(0.0, 0.0, 300.0, 200.0);
-    let (d, sid, _) = shaped_doc(designcraft_geom::shapes::ellipse(r), r, 0.0);
+    let (d, sid, _) = shaped_doc(pejy_geom::shapes::ellipse(r), r, 0.0);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
     assert!(lines.len() >= 8, "{}", lines.len());
@@ -7021,7 +7021,7 @@ fn oval_frame_sets_lines_inside_the_ellipse() {
 #[test]
 fn oval_frame_keeps_lines_an_inset_inside_the_outline() {
     let r = Rect::new(0.0, 0.0, 300.0, 240.0);
-    let (d, sid, _) = shaped_doc(designcraft_geom::shapes::ellipse(r), r, 10.0);
+    let (d, sid, _) = shaped_doc(pejy_geom::shapes::ellipse(r), r, 10.0);
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
     assert!(lines.len() >= 6, "{}", lines.len());
@@ -7034,7 +7034,7 @@ fn oval_frame_keeps_lines_an_inset_inside_the_outline() {
 
 #[test]
 fn triangle_frame_lines_widen_downward() {
-    use designcraft_geom::{Anchor, PathData, Point, SubPath};
+    use pejy_geom::{Anchor, PathData, Point, SubPath};
     let r = Rect::new(0.0, 0.0, 300.0, 300.0);
     let tri = [Point::new(150.0, 0.0), Point::new(300.0, 300.0), Point::new(0.0, 300.0)];
     let path = PathData::single(SubPath { anchors: tri.iter().map(|&p| Anchor::corner(p)).collect(), closed: true });
@@ -7055,7 +7055,7 @@ fn triangle_frame_lines_widen_downward() {
 
 #[test]
 fn rectangular_frame_paths_keep_the_rectangular_layout() {
-    use designcraft_geom::{Anchor, PathData, Point, SubPath};
+    use pejy_geom::{Anchor, PathData, Point, SubPath};
     let r = Rect::new(20.0, 30.0, 260.0, 400.0);
     let (d, sid, _) = doc_with(&[LOREM; 4].join(" "), r, ParaAttrs::default());
     let plain = compose_story(&d, sid, &ComposeOptions::default());
@@ -7073,11 +7073,11 @@ fn rectangular_frame_paths_keep_the_rectangular_layout() {
 #[test]
 fn resizing_an_oval_frame_reflows_its_lines() {
     let r = Rect::new(0.0, 0.0, 240.0, 200.0);
-    let (mut d, sid, fid) = shaped_doc(designcraft_geom::shapes::ellipse(r), r, 0.0);
+    let (mut d, sid, fid) = shaped_doc(pejy_geom::shapes::ellipse(r), r, 0.0);
     let cache = Cache::new();
     let small = cache.get(&d, sid, None);
     let big_r = Rect::new(0.0, 0.0, 400.0, 300.0);
-    d.item_mut(fid).unwrap().path = designcraft_geom::shapes::ellipse(big_r);
+    d.item_mut(fid).unwrap().path = pejy_geom::shapes::ellipse(big_r);
     let big = cache.get(&d, sid, None);
     let (ls, lb) = (all_lines(&small), all_lines(&big));
     assert!(lb.len() > ls.len(), "{} vs {}", lb.len(), ls.len());
@@ -7092,7 +7092,7 @@ fn resizing_an_oval_frame_reflows_its_lines() {
 #[test]
 fn vertical_oval_frame_sets_columns_inside_the_turned_ellipse() {
     let r = Rect::new(0.0, 0.0, 300.0, 200.0);
-    let (mut d, sid, _) = shaped_doc(designcraft_geom::shapes::ellipse(r), r, 0.0);
+    let (mut d, sid, _) = shaped_doc(pejy_geom::shapes::ellipse(r), r, 0.0);
     d.story_mut(sid).unwrap().vertical = true;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
@@ -7109,7 +7109,7 @@ fn vertical_oval_frame_sets_columns_inside_the_turned_ellipse() {
 #[test]
 fn oval_frame_columns_each_follow_the_outline() {
     let r = Rect::new(0.0, 0.0, 400.0, 300.0);
-    let (mut d, sid, fid) = shaped_doc(designcraft_geom::shapes::ellipse(r), r, 0.0);
+    let (mut d, sid, fid) = shaped_doc(pejy_geom::shapes::ellipse(r), r, 0.0);
     d.item_mut(fid).unwrap().text_frame_mut().unwrap().options.columns = 2;
     let cs = compose_story(&d, sid, &ComposeOptions::default());
     let lines = all_lines(&cs);
@@ -7123,7 +7123,7 @@ fn oval_frame_columns_each_follow_the_outline() {
 
 #[test]
 fn degenerate_frame_outlines_compose_without_panicking() {
-    use designcraft_geom::{Anchor, PathData, Point, SubPath};
+    use pejy_geom::{Anchor, PathData, Point, SubPath};
     let tri = |pts: [(f64, f64); 3]| {
         PathData::single(SubPath { anchors: pts.iter().map(|&(x, y)| Anchor::corner(Point::new(x, y))).collect(), closed: true })
     };
@@ -7131,7 +7131,7 @@ fn degenerate_frame_outlines_compose_without_panicking() {
     for path in [
         tri([(0.0, 0.0), (100.0, 100.0), (200.0, 200.0)]),
         tri([(0.0, 0.0), (f64::NAN, 100.0), (200.0, 200.0)]),
-        designcraft_geom::shapes::ellipse(Rect::new(-1e15, -1e15, 1e15, 1e15)),
+        pejy_geom::shapes::ellipse(Rect::new(-1e15, -1e15, 1e15, 1e15)),
     ] {
         let (d, sid, _) = shaped_doc(path, r, 1e300);
         let _ = compose_story(&d, sid, &ComposeOptions::default());
@@ -7157,7 +7157,7 @@ fn cache_recomposes_when_a_wrap_layer_is_hidden() {
     let lid = d.default_layer();
     let id = ItemId(d.alloc());
     let mut it =
-        designcraft_doc::Item::new(id, lid, designcraft_doc::Shape::Rectangle, designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 60.0)));
+        pejy_doc::Item::new(id, lid, pejy_doc::Shape::Rectangle, pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 60.0)));
     it.wrap.mode = WrapMode::BoundingBox;
     d.insert_item(SpreadRef::Doc(0), it, None).unwrap();
     let cache = Cache::new();

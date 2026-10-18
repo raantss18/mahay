@@ -4,14 +4,14 @@
 
 use egui::{Key, Modifiers};
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
-use vectorcraft_tools::{PointerEvent, PointerKind};
+use tsipika_engine::Session;
+use tsipika_tools::{PointerEvent, PointerKind};
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 
 /// A 300×300 document with a selected 10 pt line from (100, 200) to (300, 200) → its id.
-fn app_with_line() -> (VectorcraftApp, u64) {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app_with_line() -> (TsipikaApp, u64) {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 400})).unwrap();
     let id = app.run("shape.line", json!({"x1": 100, "y1": 200, "x2": 300, "y2": 200})).unwrap()["id"].as_u64().unwrap();
     app.run("stroke.set", json!({"weight": 10})).unwrap();
@@ -20,7 +20,7 @@ fn app_with_line() -> (VectorcraftApp, u64) {
 }
 
 /// One frame pressing `key` through the shortcut handler.
-fn press(app: &mut VectorcraftApp, key: Key) {
+fn press(app: &mut TsipikaApp, key: Key) {
     let ctx = egui::Context::default();
     let ev = egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE };
     let mut out = ctx.run_ui(egui::RawInput { events: vec![ev], ..Default::default() }, |ui| crate::shortcuts::handle(app, ui.ctx()));
@@ -29,7 +29,7 @@ fn press(app: &mut VectorcraftApp, key: Key) {
 
 #[test]
 fn escape_leaves_artboard_editing_after_cancelling_an_active_drag() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 400})).unwrap();
     app.select_tool("artboard");
     press(&mut app, Key::Escape);
@@ -49,19 +49,19 @@ fn escape_leaves_artboard_editing_after_cancelling_an_active_drag() {
     assert_eq!(app.session.tool_id(), "selection", "next Escape leaves artboard editing");
 }
 
-fn click(app: &mut VectorcraftApp, x: f64, y: f64) {
+fn click(app: &mut TsipikaApp, x: f64, y: f64) {
     let v = app.view_info();
     for kind in [PointerKind::Down, PointerKind::Up] {
         app.session.pointer(&PointerEvent::new(kind, x, y), v).unwrap();
     }
 }
 
-fn exists(app: &VectorcraftApp, id: u64) -> bool {
-    app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).is_some()
+fn exists(app: &TsipikaApp, id: u64) -> bool {
+    app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).is_some()
 }
 
-fn width_points(app: &VectorcraftApp, id: u64) -> Value {
-    let n = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).cloned().unwrap();
+fn width_points(app: &TsipikaApp, id: u64) -> Value {
+    let n = app.session.doc().unwrap().doc.node(tsipika_doc::NodeId(id)).cloned().unwrap();
     json!(n.appearance.stroke().unwrap().profile.as_ref().map(|p| p.points.len()))
 }
 
@@ -86,12 +86,12 @@ fn delete_and_backspace_remove_the_selected_width_point_then_clear() {
 #[test]
 fn delete_and_backspace_remove_the_selected_pin_then_clear() {
     for key in [Key::Delete, Key::Backspace] {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 400})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 100, "y": 100, "width": 200, "height": 100})).unwrap()["id"].as_u64().unwrap();
         app.run("select.set", json!({"ids": [id]})).unwrap();
         app.select_tool("puppetWarp");
-        let pins = |app: &VectorcraftApp| app.session.tool_options()["pins"].as_array().map_or(0, Vec::len);
+        let pins = |app: &TsipikaApp| app.session.tool_options()["pins"].as_array().map_or(0, Vec::len);
         // A click on the art away from the automatic pins adds a pin and selects it.
         click(&mut app, 112.0, 188.0);
         let n = pins(&app);
@@ -104,8 +104,8 @@ fn delete_and_backspace_remove_the_selected_pin_then_clear() {
     }
 }
 
-fn artboard_keys_app(boards: usize) -> (VectorcraftApp, u64) {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn artboard_keys_app(boards: usize) -> (TsipikaApp, u64) {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 400, "artboards": boards})).unwrap();
     let id = app.run("shape.rectangle", json!({"x": 20, "y": 20, "width": 40, "height": 30})).unwrap()["id"].as_u64().unwrap();
     app.run("select.set", json!({"ids": [id]})).unwrap();
@@ -184,7 +184,7 @@ fn delete_artboards_with_key(key: Key, select_all: bool) {
     let st = app.session.doc().unwrap();
     assert_eq!(st.doc.artboards, vec![before.artboards[survivor].clone()], "the correct original board record survives");
     assert_eq!(st.selection, selection);
-    assert_eq!(st.doc.node(vectorcraft_doc::NodeId(id)), before.node(vectorcraft_doc::NodeId(id)), "artwork is unchanged");
+    assert_eq!(st.doc.node(tsipika_doc::NodeId(id)), before.node(tsipika_doc::NodeId(id)), "artwork is unchanged");
     assert_eq!(st.history.undo.len(), undo + 1);
     assert_eq!(st.history.undo.last().unwrap().label, "Delete Artboard");
     assert!(st.history.redo.is_empty());
@@ -228,11 +228,11 @@ fn artboard_keys_history_sequence(redo_before_delete: bool) {
             let selection = st.selection.clone();
             let undo = st.history.undo.len();
             let survivor = if select_all { 0 } else { 1 };
-            let check = |app: &VectorcraftApp, indices: &[usize], undo: usize, redo: usize, dirty: bool| {
+            let check = |app: &TsipikaApp, indices: &[usize], undo: usize, redo: usize, dirty: bool| {
                 let st = app.session.doc().unwrap();
                 let expected: Vec<_> = indices.iter().map(|&i| before.artboards[i].clone()).collect();
                 assert_eq!(st.doc.artboards, expected, "{key:?}: survivor IDs, order and full records");
-                assert_eq!(st.doc.node(vectorcraft_doc::NodeId(id)), before.node(vectorcraft_doc::NodeId(id)), "selected artwork stays unchanged");
+                assert_eq!(st.doc.node(tsipika_doc::NodeId(id)), before.node(tsipika_doc::NodeId(id)), "selected artwork stays unchanged");
                 assert_eq!(st.selection, selection);
                 assert_eq!((st.history.undo.len(), st.history.redo.len()), (undo, redo));
                 assert_eq!(st.is_dirty(), dirty);

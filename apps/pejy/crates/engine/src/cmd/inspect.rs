@@ -1,6 +1,6 @@
 //! Queries for agents and UIs: document structure, items, pages.
 
-use designcraft_doc::{Content, Item};
+use pejy_doc::{Content, Item};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, cmd, has_doc};
@@ -10,7 +10,7 @@ pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(query "document.inspect", "Inspect Document", [], None, "{} → pages, spreads, items, stories (with overset), styles, swatches, selection", has_doc, inspect),
         cmd!(query "app.links", "Community & Project Links", [], None,
-            "{} → {discord, website, appPage, github, issues} (ArtCraft Discord, website, DesignCraft page and repository)", always, |_, _| Ok(crate::links::all())),
+            "{} → {discord, website, appPage, github, issues} (Mahay Discord, website, Pejy page and repository)", always, |_, _| Ok(crate::links::all())),
         cmd!(query "document.list", "List Documents", [], None, "{}", always, |s, _| {
             let preview = s.new_document_preview();
             Ok(json!(s
@@ -29,13 +29,13 @@ pub fn specs() -> Vec<CommandSpec> {
         }),
         cmd!(noundo "tool.select", "Select Tool", [], None, "{tool: selection|directSelection|type|rectangleFrame|…}", always, |s, p| {
             let t = p.get("tool").and_then(Value::as_str).unwrap_or("selection");
-            if designcraft_tools::tool_info(t).is_none() && t != "placeGun" {
+            if pejy_tools::tool_info(t).is_none() && t != "placeGun" {
                 return Err(super::bad("tool.select", format!("unknown tool `{t}`")));
             }
             s.set_tool(t);
             Ok(json!({"tool": s.tool_id()}))
         }),
-        cmd!(query "tool.list", "List Tools", [], None, "{}", always, |_, _| Ok(serde_json::to_value(designcraft_tools::TOOL_GROUPS).unwrap_or_default())),
+        cmd!(query "tool.list", "List Tools", [], None, "{}", always, |_, _| Ok(serde_json::to_value(pejy_tools::TOOL_GROUPS).unwrap_or_default())),
         cmd!(query "document.history", "History", [], None, "{}", has_doc, |s, _| {
             let st = s.doc()?;
             Ok(json!({"undo": st.history.undo.iter().map(|e| &e.label).collect::<Vec<_>>(), "redo": st.history.redo.iter().map(|e| &e.label).collect::<Vec<_>>()}))

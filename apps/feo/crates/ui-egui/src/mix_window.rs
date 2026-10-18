@@ -8,8 +8,8 @@ use crate::widgets::{
 };
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::json;
-use soundcraft_model::{ChannelFormat, Route, SurroundPan, Track, TrackId, TrackKind};
-use soundcraft_playback::MeterSnapshot;
+use feo_model::{ChannelFormat, Route, SurroundPan, Track, TrackId, TrackKind};
+use feo_playback::MeterSnapshot;
 
 pub fn strip_width(narrow: bool) -> f32 {
     if narrow { 64.0 } else { 98.0 }
@@ -25,7 +25,7 @@ pub fn show(app: &mut SoundApp, ui: &mut Ui) {
 pub fn show_separate(app: &mut SoundApp, ctx: &egui::Context) {
     let title = format!("{}  —  Mix", app.engine.session().name);
     let builder = egui::ViewportBuilder::default().with_title(title).with_inner_size([1100.0, 720.0]).with_min_inner_size([480.0, 320.0]);
-    ctx.show_viewport_immediate(egui::ViewportId::from_hash_of("soundcraft.mix"), builder, |ui, _class| {
+    ctx.show_viewport_immediate(egui::ViewportId::from_hash_of("feo.mix"), builder, |ui, _class| {
         ui.set_style(ui.ctx().global_style());
         if std::mem::take(&mut app.focus_mix) {
             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Focus);
@@ -74,12 +74,12 @@ fn output_format(app: &SoundApp, track: &Track) -> ChannelFormat {
 /// Speaker dots of a format, placed on the panner square.
 fn panner_speakers(fmt: ChannelFormat) -> Vec<PannerSpeaker> {
     let sp = fmt.speakers();
-    let layout: Vec<soundcraft_dsp::pan::SpeakerPos> =
-        sp.iter().map(|s| soundcraft_dsp::pan::SpeakerPos { az: s.azimuth(), el: s.elevation(), lfe: s.is_lfe() }).collect();
+    let layout: Vec<feo_dsp::pan::SpeakerPos> =
+        sp.iter().map(|s| feo_dsp::pan::SpeakerPos { az: s.azimuth(), el: s.elevation(), lfe: s.is_lfe() }).collect();
     sp.iter()
         .filter(|s| !s.is_lfe())
         .map(|s| {
-            let (x, y) = soundcraft_dsp::pan::azimuth_to_puck(&layout, s.azimuth());
+            let (x, y) = feo_dsp::pan::azimuth_to_puck(&layout, s.azimuth());
             PannerSpeaker { label: s.label(), x, y, height: s.is_height() }
         })
         .collect()
@@ -248,9 +248,9 @@ fn strip(app: &mut SoundApp, ui: &mut Ui, id: TrackId, snap: Option<&MeterSnapsh
             let freqs: Vec<f32> = (0..n).map(|i| 20.0 * 1000f32.powf(i as f32 / (n - 1) as f32)).collect();
             let params: Vec<(&str, f32)> = ins.params.iter().map(|(k, v)| (k.as_str(), *v)).collect();
             let resp = if ins.plugin == "eq_7band" {
-                soundcraft_dsp::eq7_response(&params, &freqs, 48_000.0)
+                feo_dsp::eq7_response(&params, &freqs, 48_000.0)
             } else {
-                soundcraft_dsp::eq1_response(&params, &freqs, 48_000.0)
+                feo_dsp::eq1_response(&params, &freqs, 48_000.0)
             };
             let pts: Vec<egui::Pos2> = resp
                 .iter()
@@ -297,15 +297,15 @@ fn strip(app: &mut SoundApp, ui: &mut Ui, id: TrackId, snap: Option<&MeterSnapsh
         ui.painter().text(pos2(am_r.center().x, am_r.min.y - 1.0), Align2::CENTER_BOTTOM, "", regular(9.0), t.text_dim);
         let mut c = ui.new_child(egui::UiBuilder::new().max_rect(am_r));
         let mode = track.mixer.automation_mode;
-        let col = if mode == soundcraft_model::AutomationMode::Read {
+        let col = if mode == feo_model::AutomationMode::Read {
             t.auto_read
-        } else if mode == soundcraft_model::AutomationMode::Off {
+        } else if mode == feo_model::AutomationMode::Off {
             t.text_dim
         } else {
             t.auto_write
         };
         let full_label = format!("auto {}", mode.label());
-        let label = if mode == soundcraft_model::AutomationMode::TouchLatch {
+        let label = if mode == feo_model::AutomationMode::TouchLatch {
             if narrow { "t/l" } else { mode.label() }
         } else if narrow {
             mode.label()
@@ -314,7 +314,7 @@ fn strip(app: &mut SoundApp, ui: &mut Ui, id: TrackId, snap: Option<&MeterSnapsh
         };
         let resp = selector_box_with_tooltip(&mut c, am_r.width(), am_r.height(), label, col, &full_label);
         egui::Popup::menu(&resp).show(|ui| {
-            for m in soundcraft_model::AutomationMode::ALL {
+            for m in feo_model::AutomationMode::ALL {
                 if ui.selectable_label(m == mode, m.label()).clicked() {
                     let _ = app.run("mix.automation_mode", json!({"track": id.0, "mode": m.label()}));
                 }
@@ -421,7 +421,7 @@ fn strip(app: &mut SoundApp, ui: &mut Ui, id: TrackId, snap: Option<&MeterSnapsh
         meter_scale(ui.painter(), mr, mr.min.x - 1.0);
     }
     let strip_fmt = if track.kind == TrackKind::Master { app.engine.session().main_format() } else { track.format };
-    let all_chans = strip_fmt.channels().min(soundcraft_mix::MAX_CHANNELS);
+    let all_chans = strip_fmt.channels().min(feo_mix::MAX_CHANNELS);
     let chans = if track.kind == TrackKind::Master { 2 } else { track.channels().min(2) };
     if all_chans > 2 {
         // One bar per channel, labelled (L R C LFE …).
@@ -493,7 +493,7 @@ fn strip(app: &mut SoundApp, ui: &mut Ui, id: TrackId, snap: Option<&MeterSnapsh
 /// open from that menu. Dropping an audio file on it loads the sampler.
 pub(crate) fn instrument_slot(app: &mut SoundApp, ui: &mut Ui, track: &Track, r: Rect) {
     let t = Tokens::current();
-    let (id, slot) = (track.id, soundcraft_mix::INSTRUMENT_SLOT);
+    let (id, slot) = (track.id, feo_mix::INSTRUMENT_SLOT);
     let ins = track.instrument.as_ref();
     let info = ins.and_then(|i| plugin_info(&i.plugin));
     let resp = ui.interact(r, ui.id().with(("instrument", id.0)), Sense::click());
@@ -502,7 +502,7 @@ pub(crate) fn instrument_slot(app: &mut SoundApp, ui: &mut Ui, track: &Track, r:
         Some(info) => used_slot(ui.painter(), r, t.slot_face, Mark::Dot, info.short_name, t.text, None),
         None => empty_slot(ui.painter(), r, resp.hovered(), Mark::Dot),
     }
-    let hosted = ins.is_some_and(|i| soundcraft_mix::is_third_party(&i.plugin));
+    let hosted = ins.is_some_and(|i| feo_mix::is_third_party(&i.plugin));
     if resp.clicked() && hosted && !app.ui.plugin_windows.contains(&(id, slot)) {
         app.ui.plugin_windows.push((id, slot));
     }
@@ -633,15 +633,15 @@ pub fn plugin_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, slot: usize, oc
         }
         ui.separator();
     }
-    let mut cats: Vec<soundcraft_dsp::Category> = Vec::new();
-    for p in soundcraft_dsp::plugins() {
+    let mut cats: Vec<feo_dsp::Category> = Vec::new();
+    for p in feo_dsp::plugins() {
         if !p.is_instrument && !cats.contains(&p.category) {
             cats.push(p.category);
         }
     }
     for c in cats {
         ui.menu_button(format!("{c:?}"), |ui| {
-            for p in soundcraft_dsp::plugins().iter().filter(|p| p.category == c && !p.is_instrument) {
+            for p in feo_dsp::plugins().iter().filter(|p| p.category == c && !p.is_instrument) {
                 if ui.button(p.name).clicked() {
                     run_pick(app, ui, "mix.insert", json!({"track": id.0, "slot": slot, "plugin": p.id}));
                 }
@@ -657,7 +657,7 @@ pub fn plugin_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, slot: usize, oc
 /// (until something is typed) its instrument's editor and the built-in, CLAP, VST3 and Audio Units
 /// instruments.
 pub fn instrument_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId) {
-    let slot = soundcraft_mix::INSTRUMENT_SLOT;
+    let slot = feo_mix::INSTRUMENT_SLOT;
     let search = MenuSearch::show(ui, egui::Id::new(("instrument-search", id.0)), "Search instruments…");
     if search.typing() {
         if let Some(plugin) = plugin_search(ui, &search, true) {
@@ -668,7 +668,7 @@ pub fn instrument_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId) {
     let current = app.engine.session().track(id).and_then(|t| t.instrument.clone());
     if let Some(info) = current.as_ref().and_then(|i| plugin_info(&i.plugin)) {
         ui.label(egui::RichText::new(info.name).strong());
-        if current.as_ref().is_some_and(|i| !soundcraft_mix::is_third_party(&i.plugin)) && ui.button("Edit Parameters…").clicked() {
+        if current.as_ref().is_some_and(|i| !feo_mix::is_third_party(&i.plugin)) && ui.button("Edit Parameters…").clicked() {
             if !app.ui.plugin_windows.contains(&(id, slot)) {
                 app.ui.plugin_windows.push((id, slot));
             }
@@ -693,7 +693,7 @@ pub fn instrument_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId) {
     }
     let mut picked = None;
     ui.menu_button("Built-in", |ui| {
-        for p in soundcraft_dsp::plugins().iter().filter(|p| p.is_instrument) {
+        for p in feo_dsp::plugins().iter().filter(|p| p.is_instrument) {
             if ui.button(p.name).clicked() {
                 picked = Some(p.id.to_string());
             }
@@ -719,10 +719,10 @@ fn run_pick(app: &mut SoundApp, ui: &Ui, cmd: &str, params: serde_json::Value) {
 /// (listing them creates no instances) and whichever of CLAP and VST3 have been scanned, with a
 /// button to scan each of the others. Returns the id picked.
 fn plugin_search(ui: &mut Ui, search: &MenuSearch, instruments: bool) -> Option<String> {
-    let mut built_in: Vec<&soundcraft_dsp::PluginInfo> =
-        soundcraft_dsp::plugins().iter().copied().filter(|p| p.is_instrument == instruments && search.matches(p.name)).collect();
+    let mut built_in: Vec<&feo_dsp::PluginInfo> =
+        feo_dsp::plugins().iter().copied().filter(|p| p.is_instrument == instruments && search.matches(p.name)).collect();
     built_in.sort_by_cached_key(|p| p.name.to_lowercase());
-    let (clap, vst3) = (soundcraft_clap_host::cached(), soundcraft_vst3_host::cached());
+    let (clap, vst3) = (feo_clap_host::cached(), feo_vst3_host::cached());
     let mut hosted: Vec<(MenuPlugin, &str)> = Vec::new();
     for d in clap.iter().flatten().filter(|d| d.is_instrument == instruments) {
         hosted.push((MenuPlugin { id: d.id.clone(), name: d.name.clone(), vendor: d.vendor.clone() }, "CLAP"));
@@ -730,7 +730,7 @@ fn plugin_search(ui: &mut Ui, search: &MenuSearch, instruments: bool) -> Option<
     for d in vst3.iter().flatten().filter(|d| d.is_instrument == instruments) {
         hosted.push((MenuPlugin { id: d.id.clone(), name: d.name.clone(), vendor: d.vendor.clone() }, "VST3"));
     }
-    for d in soundcraft_au_host::scan().into_iter().filter(|d| d.is_instrument == instruments) {
+    for d in feo_au_host::scan().into_iter().filter(|d| d.is_instrument == instruments) {
         hosted.push((MenuPlugin { id: d.id, name: d.name, vendor: d.vendor }, "AU"));
     }
     hosted.retain(|(p, _)| search.matches(&p.name) || search.matches(&p.vendor));
@@ -751,10 +751,10 @@ fn plugin_search(ui: &mut Ui, search: &MenuSearch, instruments: bool) -> Option<
         ui.separator();
         ui.horizontal(|ui| {
             if clap.is_none() && ui.small_button("Scan CLAP").clicked() {
-                soundcraft_clap_host::scan();
+                feo_clap_host::scan();
             }
             if vst3.is_none() && ui.small_button("Scan VST3").clicked() {
-                soundcraft_vst3_host::scan();
+                feo_vst3_host::scan();
             }
         });
     }
@@ -846,20 +846,20 @@ struct MenuPlugin {
 fn hosted_menus(ui: &mut Ui, instruments: bool) -> Option<String> {
     let mut picked = None;
     ui.menu_button("CLAP", |ui| {
-        let list = soundcraft_clap_host::scan().into_iter().filter(|d| d.is_instrument == instruments);
+        let list = feo_clap_host::scan().into_iter().filter(|d| d.is_instrument == instruments);
         if let Some(p) = vendor_menus(ui, list.map(|d| MenuPlugin { id: d.id, name: d.name, vendor: d.vendor }).collect(), "No CLAP plugins found") {
             picked = Some(p);
         }
     });
     ui.menu_button("VST3", |ui| {
-        let list = soundcraft_vst3_host::scan().into_iter().filter(|d| d.is_instrument == instruments);
+        let list = feo_vst3_host::scan().into_iter().filter(|d| d.is_instrument == instruments);
         if let Some(p) = vendor_menus(ui, list.map(|d| MenuPlugin { id: d.id, name: d.name, vendor: d.vendor }).collect(), "No VST3 plugins found") {
             picked = Some(p);
         }
     });
     if cfg!(target_os = "macos") {
         ui.menu_button("Audio Units", |ui| {
-            let list = soundcraft_au_host::scan().into_iter().filter(|d| d.is_instrument == instruments);
+            let list = feo_au_host::scan().into_iter().filter(|d| d.is_instrument == instruments);
             if let Some(p) = vendor_menus(ui, list.map(|d| MenuPlugin { id: d.id, name: d.name, vendor: d.vendor }).collect(), "No Audio Units found")
             {
                 picked = Some(p);
@@ -899,11 +899,11 @@ fn vendor_menus(ui: &mut Ui, mut list: Vec<MenuPlugin>, none: &str) -> Option<St
 
 /// A built-in plugin's description, else a hosted CLAP (`clap:<id>`), VST3 (`vst3:<class id>`) or
 /// Audio Unit (`au:<type>:<subtype>:<manufacturer>`) plugin's.
-pub fn plugin_info(id: &str) -> Option<&'static soundcraft_dsp::PluginInfo> {
-    soundcraft_dsp::plugin_info(id)
-        .or_else(|| soundcraft_clap_host::plugin_info(id))
-        .or_else(|| soundcraft_vst3_host::plugin_info(id))
-        .or_else(|| soundcraft_au_host::plugin_info(id))
+pub fn plugin_info(id: &str) -> Option<&'static feo_dsp::PluginInfo> {
+    feo_dsp::plugin_info(id)
+        .or_else(|| feo_clap_host::plugin_info(id))
+        .or_else(|| feo_vst3_host::plugin_info(id))
+        .or_else(|| feo_au_host::plugin_info(id))
 }
 
 pub(crate) fn send_slot(app: &mut SoundApp, ui: &mut Ui, track: &Track, slot: usize, r: Rect) {
@@ -921,7 +921,7 @@ pub(crate) fn send_slot(app: &mut SoundApp, ui: &mut Ui, track: &Track, slot: us
     match &snd {
         Some(s) => {
             let name = route_name(app, &s.target);
-            let level = soundcraft_model::fader_db_to_pos(s.level_db);
+            let level = feo_model::fader_db_to_pos(s.level_db);
             let color = if s.mute { t.mute } else { t.text };
             used_slot(ui.painter(), r, t.slot_face, mark, &name, color, Some(level));
             let which = (b'A' + slot as u8) as char;
@@ -1057,7 +1057,7 @@ fn send_window_contents(app: &mut SoundApp, ctx: &egui::Context) {
 }
 
 /// Secondary controls live behind the amount readout, separate from the bus selector like Logic.
-fn send_options_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, slot: usize, send: &soundcraft_model::SendSlot) {
+fn send_options_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, slot: usize, send: &feo_model::SendSlot) {
     ui.set_min_width(230.0);
     ui.strong(format!("Send {} · {}", (b'A' + slot as u8) as char, route_name(app, &send.target)));
     let mut db = send.level_db.max(-60.0);
@@ -1107,7 +1107,7 @@ fn send_options_menu(app: &mut SoundApp, ui: &mut Ui, id: TrackId, slot: usize, 
 /// so it runs smoothly down to −∞ and back. About 0.15 dB a point near 0 dB (0.02 when fine).
 fn dragged_send_db(db: f32, dy: f32, fine: bool) -> f32 {
     let per_point = if fine { 0.0004 } else { 0.003 };
-    soundcraft_model::fader_pos_to_db(soundcraft_model::fader_db_to_pos(db) - dy * per_point)
+    feo_model::fader_pos_to_db(feo_model::fader_db_to_pos(db) - dy * per_point)
 }
 
 /// Paint a value until clicked, then replace it with a focused text field. Enter or clicking away
@@ -1206,7 +1206,7 @@ fn send_level_scale(ui: &mut Ui, db: f32) {
     let line_y = r.min.y + 4.0;
     ui.painter().line_segment([pos2(r.min.x, line_y), pos2(r.max.x, line_y)], Stroke::new(1.0, t.border));
     for (i, mark) in [-60.0f32, -24.0, -10.0, 0.0, 6.0, 12.0].into_iter().enumerate() {
-        let x = r.min.x + r.width() * soundcraft_model::fader_db_to_pos(mark);
+        let x = r.min.x + r.width() * feo_model::fader_db_to_pos(mark);
         ui.painter().line_segment([pos2(x, line_y - 3.0), pos2(x, line_y + 3.0)], Stroke::new(1.0, t.text_dim));
         let align = if i == 0 {
             Align2::LEFT_TOP
@@ -1218,7 +1218,7 @@ fn send_level_scale(ui: &mut Ui, db: f32) {
         let label = if mark > 0.0 { format!("+{mark:.0}") } else { format!("{mark:.0}") };
         ui.painter().text(pos2(x, line_y + 5.0), align, label, regular(8.0), t.text_dim);
     }
-    let x = r.min.x + r.width() * soundcraft_model::fader_db_to_pos(db);
+    let x = r.min.x + r.width() * feo_model::fader_db_to_pos(db);
     ui.painter().line_segment([pos2(x, r.min.y), pos2(x, line_y + 3.0)], Stroke::new(2.0, t.counter_text));
 }
 

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tselatra MSI (WiX Toolset v5: `dotnet tool install -g wix`). Built by package.ps1:
+
+    wix build tselatra.wxs installer-ui.wxs -arch x64 -d Version=1.2.3 -d BinDir=... -d IconPath=... -o out.msi
+
+  Per-machine install into Program Files (or a folder the user picks), a Start Menu shortcut and,
+  unless DESKTOPSHORTCUT=0 (the wizard's "Create a desktop shortcut" box), a desktop shortcut.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Tselatra"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="AACA8593-C6ED-40A8-BA6C-CB325D8529F9"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Tselatra motion graphics and visual effects" Manufacturer="Learning Machines LLC" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Tselatra is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <!-- The setup wizard (installer-ui.wxs): pick the folder on a fresh install. -->
+    <UIRef Id="TselatraUI" />
+
+    <Icon Id="TselatraIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="TselatraIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/raantss18/mahay/discussions" />
+
+    <!-- An upgrade, repair or silent reinstall goes where the installed copy already is: the App Paths
+         "Path" value written below, or for releases before this installer change (no Path value; they
+         could be put elsewhere with INSTALLFOLDER=...) the folder of the tselatra.exe that App Paths names. A
+         "file" search with no FileSearch inside yields that file's folder. A folder passed on the
+         command line (INSTALLFOLDER=...) wins. -->
+    <Property Id="INSTALLFOLDER" Secure="yes" />
+    <Property Id="PREVIOUSINSTALLFOLDER" Secure="yes">
+      <RegistrySearch Id="PreviousInstallFolder" Root="HKLM" Type="directory"
+          Key="Software\Microsoft\Windows\CurrentVersion\App Paths\tselatra.exe" Name="Path" />
+    </Property>
+    <Property Id="PREVIOUSEXEFOLDER" Secure="yes">
+      <RegistrySearch Id="PreviousExeFolder" Root="HKLM" Type="file"
+          Key="Software\Microsoft\Windows\CurrentVersion\App Paths\tselatra.exe" />
+    </Property>
+    <SetProperty Id="INSTALLFOLDER" Value="[PREVIOUSINSTALLFOLDER]" After="AppSearch" Sequence="both"
+        Condition="PREVIOUSINSTALLFOLDER AND NOT INSTALLFOLDER" />
+    <SetProperty Id="INSTALLFOLDER" Action="SetINSTALLFOLDERFromExe" Value="[PREVIOUSEXEFOLDER]"
+        After="SetINSTALLFOLDER" Sequence="both" Condition="PREVIOUSEXEFOLDER AND NOT INSTALLFOLDER" />
+
+    <!-- The desktop shortcut: on by default for a fresh install (a box in the wizard, or
+         DESKTOPSHORTCUT=0 silently); an upgrade keeps what the installed copy chose, and adds none
+         to an install from before this option. -->
+    <Property Id="DESKTOPSHORTCUT" Value="1" Secure="yes" />
+    <Property Id="PREVIOUSDESKTOPSHORTCUT" Secure="yes">
+      <RegistrySearch Id="PreviousDesktopShortcut" Root="HKLM" Type="raw" Key="Software\Tselatra" Name="DesktopShortcut" />
+    </Property>
+    <SetProperty Id="DESKTOPSHORTCUT" Value="[PREVIOUSDESKTOPSHORTCUT]" After="SetINSTALLFOLDERFromExe" Sequence="both"
+        Condition="WIX_UPGRADE_DETECTED" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Tselatra" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="Main" Title="Tselatra" Level="1">
+      <ComponentGroupRef Id="TselatraFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="TselatraFiles" Directory="INSTALLFOLDER">
+      <Component Id="TselatraApp" Guid="BA719860-95FE-4154-B265-47006B8E9083">
+        <File Id="TselatraExe" Source="$(var.BinDir)\tselatra.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Tselatra"
+              Description="Tselatra motion graphics and visual effects" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
+              Icon="TselatraIcon.ico" IconIndex="0" />
+        </File>
+
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\tselatra.exe" Value="[#TselatraExe]" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\tselatra.exe" Name="Path" Value="[INSTALLFOLDER]" Type="string" />
+        <!-- The desktop shortcut choice, for the next upgrade (empty: none). -->
+        <RegistryValue Root="HKLM" Key="Software\Tselatra" Name="DesktopShortcut" Value="[DESKTOPSHORTCUT]" Type="string" />
+      </Component>
+
+      <Component Id="TselatraCli">
+        <File Id="TselatraCliExe" Source="$(var.BinDir)\tselatra-cli.exe" KeyPath="yes" />
+      </Component>
+
+      <!-- A component under the user's profile folders needs an HKCU key path (ICE38, ICE43). -->
+      <Component Id="DesktopShortcut" Directory="DesktopFolder" Condition="DESKTOPSHORTCUT = &quot;1&quot;">
+        <Shortcut Id="DesktopShortcut" Name="Tselatra" Description="Tselatra motion graphics and visual effects"
+            Target="[#TselatraExe]" WorkingDirectory="INSTALLFOLDER" Icon="TselatraIcon.ico" IconIndex="0" />
+        <RegistryValue Root="HKCU" Key="Software\Tselatra" Name="DesktopShortcut" Value="1" Type="string" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

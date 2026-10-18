@@ -1,11 +1,11 @@
-//! Synthetic large documents for benchmarks (`figcraft-cli perf`) and scale tests.
+//! Synthetic large documents for benchmarks (`endrika-cli perf`) and scale tests.
 //!
 //! A page of "screens" (top-level frames) laid out in a grid. Each screen holds an auto layout
 //! header (text and icons), a card group, three instances of a shared button component and a grid
 //! of rectangles, ellipses and text, so every layer kind the hot paths care about is present.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{AutoLayout, DocResult, Document, NodeId, NodeKind};
+use endrika_color::{Color, Paint};
+use endrika_doc::{AutoLayout, DocResult, Document, NodeId, NodeKind};
 
 /// Screen size and spacing (page units).
 pub const SCREEN_W: f64 = 360.0;
@@ -15,7 +15,7 @@ pub const SCREEN_GAP: f64 = 80.0;
 pub const PER_SCREEN: usize = 50;
 
 fn text(content: &str) -> NodeKind {
-    NodeKind::Text(figcraft_doc::TextData::new(content))
+    NodeKind::Text(endrika_doc::TextData::new(content))
 }
 
 fn ellipse() -> NodeKind {
@@ -32,7 +32,7 @@ fn fill(doc: &mut Document, id: NodeId, c: Color) {
 /// the document and its page.
 pub fn large_document(layers: usize) -> DocResult<(Document, NodeId)> {
     let mut doc = Document::new("Synthetic");
-    let page = doc.first_page().ok_or(figcraft_doc::DocError::Invalid("new document has no page".into()))?;
+    let page = doc.first_page().ok_or(endrika_doc::DocError::Invalid("new document has no page".into()))?;
     let layers = layers.clamp(10, 2_000_000);
     // The shared button component (3 layers), above the screens.
     let button =
@@ -133,10 +133,10 @@ mod tests {
         for n in [10, 11, 12, 13, 14, 15] {
             let (doc, page) = super::large_document(n).unwrap();
             let nodes: Vec<_> = doc.subtree(page).into_iter().filter_map(|id| doc.node(id)).collect();
-            let has = |f: &dyn Fn(&figcraft_doc::Node) -> bool| nodes.iter().any(|node| f(node));
-            assert!(has(&|x| matches!(x.kind, figcraft_doc::NodeKind::Rectangle) && x.name == "Rectangle"), "{n}: no rectangle");
+            let has = |f: &dyn Fn(&endrika_doc::Node) -> bool| nodes.iter().any(|node| f(node));
+            assert!(has(&|x| matches!(x.kind, endrika_doc::NodeKind::Rectangle) && x.name == "Rectangle"), "{n}: no rectangle");
             assert!(has(&|x| x.name == "Title"), "{n}: no title");
-            assert!(has(&|x| matches!(x.kind, figcraft_doc::NodeKind::Component { .. })), "{n}: no component");
+            assert!(has(&|x| matches!(x.kind, endrika_doc::NodeKind::Component { .. })), "{n}: no component");
         }
     }
 }

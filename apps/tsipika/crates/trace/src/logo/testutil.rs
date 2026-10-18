@@ -1,6 +1,6 @@
 //! Shared synthetic shapes for tests (no brand artwork: everything is made here from scratch).
 
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 /// A square from (10, 10) to (30, 30) with corners rounded to radius `rad`, as a dense loop.
 pub(crate) fn rounded_square(rad: f64) -> Vec<Point> {

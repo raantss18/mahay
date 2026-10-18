@@ -8,11 +8,11 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::clipboard::Flavour;
+use tsipika_engine::Session;
+use tsipika_engine::cmd::clipboard::Flavour;
 
 use crate::tests_sysclip::{copy_rect, run};
-use crate::{Services, SystemClipboard, VectorcraftApp, menus};
+use crate::{Services, SystemClipboard, TsipikaApp, menus};
 
 /// What the clipboard handles saw: the thread each `has()` ran on, and how many handles are alive.
 #[derive(Default)]
@@ -67,19 +67,19 @@ impl SystemClipboard for Slow {
 
 /// An app whose two clipboard handles record into `rec`: the UI's says `inline`, the probe's
 /// `probe`, each after `delay`.
-fn app(rec: &Arc<Recorder>, delay: Duration, inline: bool, probe: Option<bool>) -> VectorcraftApp {
+fn app(rec: &Arc<Recorder>, delay: Duration, inline: bool, probe: Option<bool>) -> TsipikaApp {
     let make = {
         let rec = Arc::clone(rec);
         move || Slow::boxed(&rec, delay, probe)
     };
     let services =
         Services { system_clipboard: Some(Slow::boxed(rec, delay, Some(inline))), clipboard_probe: Some(Box::new(make)), ..Default::default() };
-    VectorcraftApp::new(Session::new(), services)
+    TsipikaApp::new(Session::new(), services)
 }
 
 /// One headless frame of app logic in the test's one context (a new one would restart the fonts),
 /// half a second after the last: past the in-line check's throttle, so it would run every frame.
-fn frame(app: &mut VectorcraftApp) {
+fn frame(app: &mut TsipikaApp) {
     thread_local! {
         static CTX: egui::Context = egui::Context::default();
         static NOW: std::cell::Cell<f64> = const { std::cell::Cell::new(0.0) };
@@ -93,7 +93,7 @@ fn frame(app: &mut VectorcraftApp) {
 }
 
 /// Frames for `wait`, or until `done` holds; whether it does.
-fn frames_until(app: &mut VectorcraftApp, wait: Duration, done: impl Fn(&VectorcraftApp) -> bool) -> bool {
+fn frames_until(app: &mut TsipikaApp, wait: Duration, done: impl Fn(&TsipikaApp) -> bool) -> bool {
     let end = Instant::now() + wait;
     loop {
         frame(app);
@@ -120,7 +120,7 @@ fn a_slow_clipboard_is_read_off_the_ui_thread() {
     assert!(frames_until(&mut app, Duration::from_secs(60), |app| app.system_paste), "the probe's verdict never arrived");
     assert!(menus::enabled(&app, "edit.paste"));
     let threads = rec.threads.lock().unwrap().clone();
-    assert!(threads.iter().all(|n| n.as_deref() == Some("vectorcraft-clip")), "checked on: {threads:?}");
+    assert!(threads.iter().all(|n| n.as_deref() == Some("tsipika-clip")), "checked on: {threads:?}");
 }
 
 #[test]
@@ -152,5 +152,5 @@ fn without_its_thread_the_check_runs_in_line_again() {
     assert!(frames_until(&mut app, Duration::from_secs(60), |app| app.system_paste), "no fallback");
     assert!(app.clipboard_probe.is_none());
     let threads = rec.threads.lock().unwrap().clone();
-    assert_eq!(threads.first().cloned().flatten().as_deref(), Some("vectorcraft-clip"), "{threads:?}");
+    assert_eq!(threads.first().cloned().flatten().as_deref(), Some("tsipika-clip"), "{threads:?}");
 }

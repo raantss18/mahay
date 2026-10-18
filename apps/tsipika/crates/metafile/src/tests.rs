@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Gradient, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Dash, Document, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeId, NodeKind, TextObject};
-use vectorcraft_geom::{Affine, PathData, Point, Rect, shapes};
+use tsipika_color::{Color, Gradient, GradientPaint, Paint};
+use tsipika_doc::{Appearance, CharStyle, Dash, Document, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeId, NodeKind, TextObject};
+use tsipika_geom::{Affine, PathData, Point, Rect, shapes};
 
 use crate::*;
 
@@ -129,7 +129,7 @@ fn emf_header_frame_is_the_region_in_hundredths_of_a_millimetre() {
     let off = u32_at(b, 64) as usize;
     assert_eq!(off, 108);
     let desc: Vec<u16> = (0..n).map(|i| u16_at(b, off + 2 * i)).collect();
-    assert!(String::from_utf16_lossy(&desc).starts_with("VectorCraft\0"));
+    assert!(String::from_utf16_lossy(&desc).starts_with("Tsipika\0"));
     // An empty picture has empty bounds.
     let empty = emf(&doc_with(72.0, 72.0, vec![]));
     assert_eq!([i32_at(&empty.bytes, 8), i32_at(&empty.bytes, 16)], [0, -1]);
@@ -336,7 +336,7 @@ fn an_instance_whose_art_reaches_the_artboard_is_written() {
     let inst = Node::new(NodeId(0), NodeKind::SymbolInstance { symbol: "Far".into(), xf: Affine::translate((-50.0, -50.0)) });
     let mut d = doc_with(100.0, 100.0, vec![inst]);
     let art = path(shapes::rectangle(Rect::new(100.0, 100.0, 140.0, 140.0)), red(), Paint::None, 0.0);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
     let k = kinds(&emf_records(&emf(&d).bytes));
     assert!(k.contains(&39), "a brush fills the art: {k:?}");
 }

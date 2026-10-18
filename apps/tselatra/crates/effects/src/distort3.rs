@@ -7,10 +7,10 @@
 
 use std::f64::consts::{PI, TAU};
 
-use effectcraft_geom::{Mat3, vec2};
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_geom::{Mat3, vec2};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::util::{Plane, dist_to_poly, gauss_plane, layer_or_self, pick, point_in_poly, poly_length, poly_point_at, premul, remap, src_at, unpremul};
@@ -805,7 +805,7 @@ fn upscale(ctx: &EffectCtx, mut b: Buf) -> Buf {
     }
     let detail = (ctx.params.f("detail") / 100.0) as f32;
     let noise = ctx.params.f("reduceNoise") / 100.0;
-    let src = if noise > 0.0 { effectcraft_raster::gaussian_blur(&b.img, noise * 1.5, noise * 1.5, true) } else { b.img.clone() };
+    let src = if noise > 0.0 { tselatra_raster::gaussian_blur(&b.img, noise * 1.5, noise * 1.5, true) } else { b.img.clone() };
     let lc = [ctx.layer_size[0] * 0.5, ctx.layer_size[1] * 0.5];
     // Alpha: Bilinear (index 0) resamples the alpha channel bilinearly, Bicubic like the colour.
     let bilinear_alpha = ctx.params.e("alpha") == 0;
@@ -846,7 +846,7 @@ fn upscale(ctx: &EffectCtx, mut b: Buf) -> Buf {
     };
     if detail > 0.0 {
         let sigma = 0.6 * k;
-        let blur = effectcraft_raster::gaussian_blur(&out, sigma, sigma, true);
+        let blur = tselatra_raster::gaussian_blur(&out, sigma, sigma, true);
         out.data.par_iter_mut().zip(blur.data.par_iter()).for_each(|(p, q)| {
             let a = p[3];
             for c in 0..3 {
@@ -1287,7 +1287,7 @@ mod tests {
         params.values.insert("base".into(), pt(20.0, 40.0));
         let ctx = EffectCtx { params: &params, time: 0.0, layer_size: [40.0, 40.0], seed: 1, adjustment: false, env: Default::default() };
         let full = crate::apply(s, &ctx, Buf { img: img(40, 40), offset: [0.0; 2], scale: 1.0 });
-        let half = crate::apply(s, &ctx, Buf { img: effectcraft_raster::resample(&img(40, 40), 20, 20), offset: [0.0; 2], scale: 0.5 });
+        let half = crate::apply(s, &ctx, Buf { img: tselatra_raster::resample(&img(40, 40), 20, 20), offset: [0.0; 2], scale: 0.5 });
         let a = full.img.sample_bilinear(20.0, 4.0)[3];
         let b = half.img.sample_bilinear(10.0, 2.0)[3];
         assert!((a - b).abs() < 0.3);

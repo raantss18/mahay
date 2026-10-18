@@ -19,8 +19,8 @@ mod width;
 
 use std::sync::Arc;
 
-use vectorcraft_doc::{Node, NodeKind};
-use vectorcraft_geom::{Homography, Point};
+use tsipika_doc::{Node, NodeKind};
+use tsipika_geom::{Homography, Point};
 
 use crate::Tool;
 
@@ -98,7 +98,7 @@ fn warp_node(n: &mut Node, f: &dyn Fn(Point) -> Point, h: Option<&Homography>) {
     n.appearance.warp_gradients(&|p| affine_near(f, p, eps));
 }
 
-pub use vectorcraft_doc::live::affine_near;
+pub use tsipika_doc::live::affine_near;
 
 /// Every anchor and handle position in `n` (for meshes and bounds).
 pub fn collect_points(n: &Node, out: &mut Vec<Point>) {
@@ -123,23 +123,23 @@ pub fn collect_points(n: &Node, out: &mut Vec<Point>) {
 pub(crate) const BLUE: [u8; 3] = [0x4a, 0x7c, 0xff];
 
 /// A small diamond polygon at `p` (half-diagonal `r`).
-pub(crate) fn diamond(p: Point, r: f64) -> vectorcraft_geom::BezPath {
+pub(crate) fn diamond(p: Point, r: f64) -> tsipika_geom::BezPath {
     crate::xform::polygon(&[Point::new(p.x, p.y - r), Point::new(p.x + r, p.y), Point::new(p.x, p.y + r), Point::new(p.x - r, p.y)], true)
 }
 
 /// A circle / ellipse outline for brush feedback.
-pub(crate) fn ellipse_path(c: Point, rx: f64, ry: f64, angle_deg: f64) -> vectorcraft_geom::BezPath {
-    use vectorcraft_geom::Shape;
-    let e = vectorcraft_geom::kurbo::Ellipse::new(c, (rx.max(0.01), ry.max(0.01)), angle_deg.to_radians());
+pub(crate) fn ellipse_path(c: Point, rx: f64, ry: f64, angle_deg: f64) -> tsipika_geom::BezPath {
+    use tsipika_geom::Shape;
+    let e = tsipika_geom::kurbo::Ellipse::new(c, (rx.max(0.01), ry.max(0.01)), angle_deg.to_radians());
     e.to_path(0.05)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_color::{Gradient, GradientPaint, Paint};
-    use vectorcraft_doc::Appearance;
-    use vectorcraft_geom::{Affine, PathData, Rect, shapes};
+    use tsipika_color::{Gradient, GradientPaint, Paint};
+    use tsipika_doc::Appearance;
+    use tsipika_geom::{Affine, PathData, Rect, shapes};
 
     #[test]
     fn create_covers_all_distort_tools() {
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn warp_node_maps_all_points_and_drops_live_shape() {
-        let mut n = Node::path(vectorcraft_doc::NodeId(1), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::default_art());
+        let mut n = Node::path(tsipika_doc::NodeId(1), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::default_art());
         warp_node_with(&mut n, &|p| Point::new(p.x * 2.0, p.y + 1.0));
         let b = n.geometric_bounds().unwrap();
         assert_eq!((b.x0, b.y0, b.x1, b.y1), (0.0, 1.0, 20.0, 11.0));
@@ -177,7 +177,7 @@ mod tests {
     fn warp_pins_and_maps_gradients_once() {
         let grad = Paint::Gradient(Box::new(GradientPaint::new(Gradient::default())));
         let mut n =
-            Node::path(vectorcraft_doc::NodeId(1), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::basic(grad, Paint::None, 0.0));
+            Node::path(tsipika_doc::NodeId(1), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::basic(grad, Paint::None, 0.0));
         warp_node_with(&mut n, &|p| Point::new(p.x * 2.0, p.y + 1.0));
         let Paint::Gradient(g) = n.appearance.fill_paint() else { panic!() };
         let geom = g.geom.expect("pinned before the warp");

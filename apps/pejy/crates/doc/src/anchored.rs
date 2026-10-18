@@ -95,7 +95,7 @@ impl AnchoredObject {
     /// Wrap `item`, moving it so its bounds start at the origin.
     pub fn new(mut item: Item, position: AnchorPosition) -> Self {
         let b = item.bounds();
-        item.xf = designcraft_geom::Affine::translate((-b.x0, -b.y0)) * item.xf;
+        item.xf = pejy_geom::Affine::translate((-b.x0, -b.y0)) * item.xf;
         AnchoredObject { item, position }
     }
 
@@ -109,7 +109,7 @@ impl AnchoredObject {
 impl Default for AnchoredObject {
     /// An empty placeholder (an object mark typed or pasted without its object).
     fn default() -> Self {
-        let path = designcraft_geom::shapes::rectangle(designcraft_geom::Rect::new(0.0, 0.0, 0.0, 0.0));
+        let path = pejy_geom::shapes::rectangle(pejy_geom::Rect::new(0.0, 0.0, 0.0, 0.0));
         let item = Item::new(crate::ids::ItemId(0), crate::ids::LayerId(0), crate::item::Shape::Rectangle, path);
         AnchoredObject { item, position: AnchorPosition::default() }
     }

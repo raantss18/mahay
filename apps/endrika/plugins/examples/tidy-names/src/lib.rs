@@ -1,7 +1,7 @@
 //! Tidy names: cleans up the selected layers' names (extra spaces, the "copy" left by duplicating)
 //! and optionally their letter case, inside the selection too.
 
-use figcraft_plugin_sdk::{Input, Result, Value, call, entry, json, notify};
+use endrika_plugin_sdk::{Input, Result, Value, call, entry, json, notify};
 
 /// Layers looked at in one run, at most.
 const MAX_LAYERS: usize = 10_000;

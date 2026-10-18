@@ -3,16 +3,16 @@
 //! layer, and `footage.reloadChanged` (Settings ▸ Import ▸ Automatically Reload Footage) finds
 //! changed files by itself.
 
-use effectcraft_engine::render::RenderOpts;
-use effectcraft_engine::{Session, footage_reload};
-use effectcraft_project::{Footage, ItemId, ItemKind};
-use effectcraft_psd::Rect;
-use effectcraft_psd::write::*;
-use effectcraft_time::Tick;
+use tselatra_engine::render::RenderOpts;
+use tselatra_engine::{Session, footage_reload};
+use tselatra_project::{Footage, ItemId, ItemKind};
+use tselatra_psd::Rect;
+use tselatra_psd::write::*;
+use tselatra_time::Tick;
 use serde_json::json;
 
 fn tmp(name: &str) -> String {
-    let d = std::env::temp_dir().join(format!("effectcraft-host-reload-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("tselatra-host-reload-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d.join(name).to_string_lossy().to_string()
 }
@@ -60,7 +60,7 @@ fn near(a: [f32; 3], b: [f32; 4]) -> bool {
 
 /// A flat file as footage in a comp of its size: (session, footage item, comp).
 fn flat_in_comp(path: &str) -> (Session, ItemId, ItemId) {
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let r = s.execute_checked("file.import", json!({"paths": [path]})).unwrap();
     let item = ItemId(r["items"][0].as_u64().unwrap());
     s.execute_checked("comp.new", json!({"name": "C", "width": 64, "height": 48, "frameRate": 30, "duration": 1})).unwrap();
@@ -88,7 +88,7 @@ fn reload_keeps_a_photoshop_layer_item_on_its_layer() {
     let mut d = WDoc::new(64, 48);
     d.layers = vec![WLayer::solid("Background", Rect::new(0, 0, 64, 48), RED), WLayer::solid("Patch", Rect::new(0, 0, 32, 48), BLUE)];
     std::fs::write(&path, write(&d)).unwrap();
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let r = s.execute_checked("file.import", json!({"paths": [path], "importAs": "compositionLayerSizes"})).unwrap();
     let cid = ItemId(r["comps"][0].as_u64().unwrap());
     let items: Vec<ItemId> = r["items"].as_array().unwrap().iter().filter_map(|v| v.as_u64()).map(ItemId).collect();
@@ -178,7 +178,7 @@ fn image_sequences_reload_by_themselves_only_with_all_footage() {
     let (a, b) = (tmp("seq_0001.png"), tmp("seq_0002.png"));
     png(&a, 255);
     png(&b, 255);
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let r = s.execute_checked("file.import", json!({"paths": [&a], "sequence": true})).unwrap();
     let item = ItemId(r["items"][0].as_u64().unwrap());
     assert_eq!(footage(&s, item).sequence.len(), 2, "imported as a sequence");
@@ -227,7 +227,7 @@ fn fresh_layered_composition_import_refreshes_its_sources() {
         let (red, blue) = (flat(RED, false), flat(BLUE, false));
         assert_eq!(red.len(), blue.len(), "the overwritten file has the same byte size");
         std::fs::write(&path, red).unwrap();
-        let mut s = effectcraft_host::session();
+        let mut s = tselatra_host::session();
         let old_comp = layered_comp(&mut s, &path, import_as);
         assert!(near(pixel(&s, old_comp, 32, 24), RED));
         s.execute_checked("file.newProject", json!({})).unwrap();
@@ -235,7 +235,7 @@ fn fresh_layered_composition_import_refreshes_its_sources() {
         s.drain_events();
         let comp = layered_comp(&mut s, &path, import_as);
         assert_eq!(comp, old_comp, "new projects reuse their item ids");
-        assert!(!s.drain_events().contains(&effectcraft_engine::Event::PurgeCaches), "import must retain the RAM preview");
+        assert!(!s.drain_events().contains(&tselatra_engine::Event::PurgeCaches), "import must retain the RAM preview");
         assert!(near(pixel(&s, comp, 32, 24), BLUE), "layered import showed {:?}", pixel(&s, comp, 32, 24));
         std::fs::remove_file(path).unwrap();
     }
@@ -247,7 +247,7 @@ fn layered_reimport_refreshes_existing_layers_and_keeps_unrelated_decoded_files(
     let other = tmp("layered-unchanged.psd");
     std::fs::write(&path, flat(RED, false)).unwrap();
     std::fs::write(&other, flat(GREEN, false)).unwrap();
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let comp = layered_comp(&mut s, &path, "compositionLayerSizes");
     let r = s.execute_checked("file.import", json!({"paths": [&other]})).unwrap();
     let other_item = ItemId(r["items"][0].as_u64().unwrap());
@@ -259,7 +259,7 @@ fn layered_reimport_refreshes_existing_layers_and_keeps_unrelated_decoded_files(
     save(&path, &flat(BLUE, false));
     s.drain_events();
     layered_comp(&mut s, &path, "compositionLayerSizes");
-    assert!(!s.drain_events().contains(&effectcraft_engine::Event::PurgeCaches), "import must retain the RAM preview");
+    assert!(!s.drain_events().contains(&tselatra_engine::Event::PurgeCaches), "import must retain the RAM preview");
     assert!(near(pixel(&s, comp, 32, 24), BLUE), "existing layers see the refreshed source");
     assert!(std::sync::Arc::ptr_eq(&cached, &s.footage.frame(other_item, &other_footage, Tick::ZERO).unwrap()));
     assert_eq!(s.history.undo.len(), undo + 1, "composition import stays one undo step");
@@ -276,7 +276,7 @@ fn background_import_refreshes_layered_sources_before_the_probe_job_finishes() {
     let other = tmp("layered-background.png");
     std::fs::write(&path, flat(RED, false)).unwrap();
     image::RgbaImage::from_pixel(64, 48, image::Rgba([0, 255, 0, 255])).save(&other).unwrap();
-    let mut s = effectcraft_host::session();
+    let mut s = tselatra_host::session();
     let comp = layered_comp(&mut s, &path, "compositionLayerSizes");
     assert!(near(pixel(&s, comp, 32, 24), RED));
     save(&path, &flat(BLUE, false));
@@ -285,7 +285,7 @@ fn background_import_refreshes_layered_sources_before_the_probe_job_finishes() {
     assert_eq!(r["started"], true, "ordinary footage is probed in a background job");
     assert!(near(pixel(&s, comp, 32, 24), BLUE), "composition sources are refreshed before the job is applied");
     s.wait_jobs();
-    assert!(!s.drain_events().contains(&effectcraft_engine::Event::PurgeCaches), "import must retain the RAM preview");
+    assert!(!s.drain_events().contains(&tselatra_engine::Event::PurgeCaches), "import must retain the RAM preview");
     assert!(near(pixel(&s, s.active_comp_id().unwrap(), 32, 24), BLUE));
     std::fs::remove_file(path).unwrap();
     std::fs::remove_file(other).unwrap();

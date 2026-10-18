@@ -9,7 +9,7 @@
 
 use std::collections::{HashMap, VecDeque};
 
-use cadcraft_doc::{CellFormat, Table, TableStyle};
+use drafitra_doc::{CellFormat, Table, TableStyle};
 
 /// The longest formula accepted (characters).
 pub const MAX_FORMULA_LEN: usize = 1024;
@@ -24,7 +24,7 @@ const MAX_DEP_VISITS: usize = 4_000_000;
 /// Arguments of one function call.
 const MAX_ARGS: usize = 256;
 
-/// Why a formula has no value. The texts are CADCraft's own.
+/// Why a formula has no value. The texts are Drafitra's own.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FormulaError {
     /// Not a formula we can read.

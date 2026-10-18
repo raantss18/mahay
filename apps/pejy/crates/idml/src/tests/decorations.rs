@@ -35,9 +35,9 @@ fn assert_style_resets(d: &Document) {
     assert_eq!(base.underline_color, "[Black]");
     assert_eq!(base.strikethrough_color, "[Black]");
     assert!(reset.underline_color.is_empty() && reset.strikethrough_color.is_empty());
-    let reset = d.styles.resolve_char(&base, &designcraft_doc::CharFormat { style: "CLeaf".into(), ..Default::default() });
+    let reset = d.styles.resolve_char(&base, &pejy_doc::CharFormat { style: "CLeaf".into(), ..Default::default() });
     assert!(reset.underline_color.is_empty() && reset.strikethrough_color.is_empty());
-    let inherited = d.styles.resolve_char(&base, &designcraft_doc::CharFormat { style: "CInherit".into(), ..Default::default() });
+    let inherited = d.styles.resolve_char(&base, &pejy_doc::CharFormat { style: "CInherit".into(), ..Default::default() });
     assert_eq!(inherited.underline_color, "[Black]");
     assert_eq!(inherited.strikethrough_color, "[Black]");
     assert!(d.styles.char_style("CInherit").unwrap().chars.underline_color.is_none());

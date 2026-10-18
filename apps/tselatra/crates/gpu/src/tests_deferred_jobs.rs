@@ -1,12 +1,12 @@
 //! Deferred readbacks for what job workers and frame workers render besides effect chains:
 //! GPU particles and Advanced 3D read back under keys too, so they render on the device in
-//! passes; and the job loops' pass driver (`effectcraft_render::passes`) settles natively.
+//! passes; and the job loops' pass driver (`tselatra_render::passes`) settles natively.
 
-use effectcraft_effects::EffectCtx;
-use effectcraft_project::BitDepth;
-use effectcraft_render::three_d::adv;
-use effectcraft_render::{Accelerator, Backend, LayerCache, NoFootage, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_effects::EffectCtx;
+use tselatra_project::BitDepth;
+use tselatra_render::three_d::adv;
+use tselatra_render::{Accelerator, Backend, LayerCache, NoFootage, RenderOpts, Renderer};
+use tselatra_time::Tick;
 
 use crate::tests::{Pattern, diff, n, tolerance};
 use crate::tests_adv3d::{off_share, run_of, scene, scene_project};
@@ -30,10 +30,10 @@ fn particles_resolve_in_passes() {
         let p = params(id, &vals);
         let ctx = |env| EffectCtx { params: &p, time: 1.5, layer_size: [320.0, 240.0], seed: 5, adjustment: false, env };
         let run = |c: &EffectCtx| {
-            if id == "ec.sim.particleplayground" { effectcraft_effects::playground_state(c) } else { effectcraft_effects::particle_state(id, c) }
+            if id == "ec.sim.particleplayground" { tselatra_effects::playground_state(c) } else { tselatra_effects::particle_state(id, c) }
         };
         let cpu = run(&ctx(Default::default())).unwrap();
-        let env = || effectcraft_effects::EffectEnv { host: Some(&host), ..Default::default() };
+        let env = || tselatra_effects::EffectEnv { host: Some(&host), ..Default::default() };
         g.frame_begin();
         g.pass_begin();
         // First pass: the simulation runs, its readback starts; no particles yet, the pass missed.
@@ -97,13 +97,13 @@ fn job_frames_render_in_passes() {
     r.accel = Some(g);
     r.cache = Some(&cache);
     let before = g.deferred_stats().unwrap();
-    let img = effectcraft_render::passes::block_on(effectcraft_render::passes::comp_frame(&r, s.cid, t));
+    let img = tselatra_render::passes::block_on(tselatra_render::passes::comp_frame(&r, s.cid, t));
     let after = g.deferred_stats().unwrap();
     assert!(after.0 - before.0 >= 2 && after.1 > before.1, "rendered in passes with readbacks: {before:?} → {after:?}");
     assert_eq!(img.data, want.data);
     let cpu = Renderer::new(&s.p, &Pattern, RenderOpts { backend: Backend::Cpu, ..Default::default() }).comp_frame_cpu(s.cid, t);
     assert_eq!(diff(&cpu, &img, tolerance(BitDepth::Bpc32) * 2.0).over, 0);
     // `in_passes` without a deferred accelerator: one pass, at once.
-    let one = effectcraft_render::passes::block_on(effectcraft_render::passes::in_passes(None, |_| 7));
+    let one = tselatra_render::passes::block_on(tselatra_render::passes::in_passes(None, |_| 7));
     assert_eq!((one.value, one.passes, one.accelerated), (7, 1, false));
 }

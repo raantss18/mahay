@@ -4,7 +4,7 @@
 
 use std::path::Path;
 
-use lightcraft_catalog::{MediaKind, Op, Source};
+use hazavana_catalog::{MediaKind, Op, Source};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_active, has_selection};
@@ -35,15 +35,15 @@ pub(crate) fn write_dng_with(file_bytes: Option<&crate::merge::ByteReader>, path
         Some(r) => r(path)?,
         None => std::fs::read(path).map_err(|e| format!("{path}: {e}"))?,
     };
-    let mut raw = lightcraft_raw::decode(&bytes).map_err(|e| format!("{path}: {e}"))?;
+    let mut raw = hazavana_raw::decode(&bytes).map_err(|e| format!("{path}: {e}"))?;
     crate::camera_preview::with_starting_colour(&mut raw, &bytes);
     drop(bytes);
-    let dng = lightcraft_raw::write_dng(&raw, &lightcraft_raw::DngWriteOptions { xmp: (!packet.is_empty()).then_some(packet), ..Default::default() })
+    let dng = hazavana_raw::write_dng(&raw, &hazavana_raw::DngWriteOptions { xmp: (!packet.is_empty()).then_some(packet), ..Default::default() })
         .map_err(|e| e.to_string())?;
-    let back = lightcraft_raw::decode(&dng).map_err(|e| format!("{path}: the DNG written for it doesn't decode ({e}); the raw is kept"))?;
+    let back = hazavana_raw::decode(&dng).map_err(|e| format!("{path}: the DNG written for it doesn't decode ({e}); the raw is kept"))?;
     let same = match (&back.data, &raw.data) {
-        (lightcraft_raw::RawData::U16(a), lightcraft_raw::RawData::U16(b)) => a == b,
-        (lightcraft_raw::RawData::F32(a), lightcraft_raw::RawData::F32(b)) => {
+        (hazavana_raw::RawData::U16(a), hazavana_raw::RawData::U16(b)) => a == b,
+        (hazavana_raw::RawData::F32(a), hazavana_raw::RawData::F32(b)) => {
             a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits())
         }
         _ => false,
@@ -52,7 +52,7 @@ pub(crate) fn write_dng_with(file_bytes: Option<&crate::merge::ByteReader>, path
         return Err(format!("{path}: the DNG written for it doesn't hold the same raw data; the raw is kept"));
     }
     drop((raw, back));
-    let out = lightcraft_catalog::safe_file::write_new_unique(&mut dng_names(path), &dng)
+    let out = hazavana_catalog::safe_file::write_new_unique(&mut dng_names(path), &dng)
         .map_err(|e| format!("{path}: could not write its DNG ({e}); the raw is kept"))?;
     Ok(out.to_string_lossy().to_string())
 }
@@ -134,10 +134,10 @@ fn edit_external(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(C, format!("{} photos selected: edit at most {MAX_EDIT_COPIES} at a time", ids.len())));
     }
     let space = match super::str_param(p, "colorSpace").unwrap_or("adobeRgb") {
-        "srgb" => lightcraft_pipeline::OutputSpace::Srgb,
-        "displayP3" => lightcraft_pipeline::OutputSpace::DisplayP3,
-        "prophoto" | "proPhoto" => lightcraft_pipeline::OutputSpace::ProPhoto,
-        _ => lightcraft_pipeline::OutputSpace::AdobeRgb,
+        "srgb" => hazavana_pipeline::OutputSpace::Srgb,
+        "displayP3" => hazavana_pipeline::OutputSpace::DisplayP3,
+        "prophoto" | "proPhoto" => hazavana_pipeline::OutputSpace::ProPhoto,
+        _ => hazavana_pipeline::OutputSpace::AdobeRgb,
     };
     let format = match super::str_param(p, "format").unwrap_or("tiff") {
         "tiff" | "tif" => crate::export::ExportFormat::Tiff,
@@ -161,7 +161,7 @@ fn edit_external(s: &mut Session, p: &Value) -> Result<Value> {
     for id in ids {
         copies.push(edit_copy(s, p, id, &opts)?);
     }
-    let new: Vec<lightcraft_catalog::PhotoId> = copies.iter().filter_map(|c| c["id"].as_u64()).map(lightcraft_catalog::PhotoId).collect();
+    let new: Vec<hazavana_catalog::PhotoId> = copies.iter().filter_map(|c| c["id"].as_u64()).map(hazavana_catalog::PhotoId).collect();
     s.selection = crate::Selection { active: new.first().copied(), ids: new };
     let first = copies.first().cloned().unwrap_or(Value::Null);
     Ok(json!({"path": first["path"], "id": first["id"], "original": first["original"], "copies": copies}))
@@ -172,7 +172,7 @@ const MAX_EDIT_COPIES: usize = 50;
 
 /// One photo's edit copy for [`edit_external`]: rendered with `opts` next to its original (a demo
 /// photo into `dir`), added to the library and stacked on top of the original, expanded.
-fn edit_copy(s: &mut Session, p: &Value, id: lightcraft_catalog::PhotoId, opts: &crate::export::ExportOptions) -> Result<Value> {
+fn edit_copy(s: &mut Session, p: &Value, id: hazavana_catalog::PhotoId, opts: &crate::export::ExportOptions) -> Result<Value> {
     const C: &str = "photo.editExternal";
     let ph = s.catalog.photo(id).cloned().ok_or_else(|| bad(C, format!("no photo {}", id.0)))?;
     let dir = match &ph.source {
@@ -202,11 +202,11 @@ fn edit_copy(s: &mut Session, p: &Value, id: lightcraft_catalog::PhotoId, opts: 
 
 /// The op that brings a photo up to date with what its file is now (`info`, a fresh probe), or
 /// `None` when nothing changed. Covers a raw that became decodable (or stopped being: a different
-/// file relinked), i.e. a change of [`lightcraft_catalog::Photo::preview_only`], and a
+/// file relinked), i.e. a change of [`hazavana_catalog::Photo::preview_only`], and a
 /// preview-only photo this version hasn't checked yet: its stamp is refreshed so it isn't probed
-/// again (see [`lightcraft_catalog::Photo::preview_checked`]).
-pub(crate) fn content_op(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalog::Photo, info: crate::media::ProbeInfo) -> Option<Op> {
-    let preview_checked = lightcraft_catalog::preview_stamp(&info.preview_only);
+/// again (see [`hazavana_catalog::Photo::preview_checked`]).
+pub(crate) fn content_op(id: hazavana_catalog::PhotoId, ph: &hazavana_catalog::Photo, info: crate::media::ProbeInfo) -> Option<Op> {
+    let preview_checked = hazavana_catalog::preview_stamp(&info.preview_only);
     let same = info.content_hash == ph.content_hash
         && info.file_size == ph.file_size
         && (info.width, info.height) == (ph.width, ph.height)
@@ -224,7 +224,7 @@ pub(crate) fn content_op(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalo
 }
 
 /// Ops that fill a photo's empty camera fields (camera, lens, exposure, GPS, capture time) from a fresh probe.
-fn fill_missing_meta(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalog::Photo, info: &crate::media::ProbeInfo) -> Vec<Op> {
+fn fill_missing_meta(id: hazavana_catalog::PhotoId, ph: &hazavana_catalog::Photo, info: &crate::media::ProbeInfo) -> Vec<Op> {
     let (mut m, src) = (ph.meta.clone(), &info.meta);
     let before = m.clone();
     if m.camera.is_empty() {
@@ -259,7 +259,7 @@ fn fill_missing_meta(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalog::P
 /// photo's correction stayed off. When the photo gains lens data and its develop settings are still
 /// what import gave it, the lens correction is turned on as import would; an edited photo keeps
 /// its settings.
-pub(crate) fn lens_ops(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalog::Photo, info: &crate::media::ProbeInfo) -> Vec<Op> {
+pub(crate) fn lens_ops(id: hazavana_catalog::PhotoId, ph: &hazavana_catalog::Photo, info: &crate::media::ProbeInfo) -> Vec<Op> {
     if info.embedded_lens == ph.embedded_lens {
         return Vec::new();
     }
@@ -276,7 +276,7 @@ pub(crate) fn lens_ops(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalog:
 /// The op that gives a raw the as-shot white balance its file reads now (`info`, a fresh probe), or none when the
 /// catalog already has it or the photo is not a raw edited in Kelvin. A raw imported before its camera's matrices
 /// gave it a Kelvin scale keeps the relative scale's 6500 / 0 until a decode or Reload reads the file (issue #730).
-pub(crate) fn as_shot_wb_op(id: lightcraft_catalog::PhotoId, ph: &lightcraft_catalog::Photo, info: &crate::media::ProbeInfo) -> Option<Op> {
+pub(crate) fn as_shot_wb_op(id: hazavana_catalog::PhotoId, ph: &hazavana_catalog::Photo, info: &crate::media::ProbeInfo) -> Option<Op> {
     let read = info.as_shot_wb.filter(|(t, tint)| t.is_finite() && tint.is_finite())?;
     (ph.develops_raw() && !ph.relative_wb() && ph.as_shot_wb != Some(read)).then_some(Op::SetAsShotWb { id, wb: Some(read) })
 }
@@ -285,11 +285,11 @@ pub(crate) fn as_shot_wb_op(id: lightcraft_catalog::PhotoId, ph: &lightcraft_cat
 /// (`info`, a fresh probe), appended to `ops`; the photos they change are appended to `changed`.
 /// Reload and the preview-only recheck (`library.recheckPreviewOnly`) share it.
 pub(crate) fn reload_ops(
-    cat: &lightcraft_catalog::Catalog,
-    id: lightcraft_catalog::PhotoId,
+    cat: &hazavana_catalog::Catalog,
+    id: hazavana_catalog::PhotoId,
     info: &crate::media::ProbeInfo,
     ops: &mut Vec<Op>,
-    changed: &mut Vec<lightcraft_catalog::PhotoId>,
+    changed: &mut Vec<hazavana_catalog::PhotoId>,
 ) {
     let Some(ph) = cat.photo(id) else { return };
     // camera fields the catalog lacks (e.g. a raw imported before its format was read) are filled in;
@@ -316,7 +316,7 @@ pub(crate) fn reload_ops(
 /// dimensions and content hash, cached sources dropped. → {reloaded: [ids]}
 fn reload(s: &mut Session, p: &Value) -> Result<Value> {
     let ids = s.targets(p)?;
-    let paths: Vec<(lightcraft_catalog::PhotoId, String)> = ids
+    let paths: Vec<(hazavana_catalog::PhotoId, String)> = ids
         .iter()
         .filter_map(|id| match s.catalog.photo(*id).map(|ph| ph.source.clone()) {
             Some(Source::File { path }) => Some((*id, path)),
@@ -410,7 +410,7 @@ pub fn edit_specs() -> Vec<CommandSpec> {
             "Edit Copy for External Editor",
             [],
             None,
-            "{ids?, colorSpace?: adobeRgb (default) | proPhoto | displayP3 | srgb, format?: tiff (default) | psd, bitDepth?: 16 (default) | 8, dir?} — render each selected photo (or `ids`, at most 50) with its edits as `<name>-Edit.tif` (or `.psd`, flat, which PhotoCraft saves back to in place) next to it, add each stacked on its original and select the copies → {path, id, original (the first copy), copies: [{path, id, original}]} (the app then opens them in the external editor)",
+            "{ids?, colorSpace?: adobeRgb (default) | proPhoto | displayP3 | srgb, format?: tiff (default) | psd, bitDepth?: 16 (default) | 8, dir?} — render each selected photo (or `ids`, at most 50) with its edits as `<name>-Edit.tif` (or `.psd`, flat, which Sary saves back to in place) next to it, add each stacked on its original and select the copies → {path, id, original (the first copy), copies: [{path, id, original}]} (the app then opens them in the external editor)",
             has_active,
             edit_external
         ),
@@ -420,7 +420,7 @@ pub fn edit_specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_catalog::{Photo, PhotoId, Source};
+    use hazavana_catalog::{Photo, PhotoId, Source};
 
     /// Reload fills camera fields a photo lacks (a CR3 imported before CR3 metadata was read) and keeps
     /// everything already set.
@@ -449,8 +449,8 @@ mod tests {
     /// and never replaces one it has.
     #[test]
     fn reload_fills_a_missing_focus_point() {
-        let fp = |x: f64| lightcraft_meta::FocusPoint {
-            rect: lightcraft_meta::Rect { x0: x, y0: 0.4, x1: x + 0.02, y1: 0.42 },
+        let fp = |x: f64| hazavana_meta::FocusPoint {
+            rect: hazavana_meta::Rect { x0: x, y0: 0.4, x1: x + 0.02, y1: 0.42 },
             mode: Some("AF-C".into()),
             area: None,
             tracking: None,
@@ -466,17 +466,17 @@ mod tests {
         assert!(fill_missing_meta(PhotoId(1), &ph, &info).is_empty(), "a known focus point is kept");
     }
 
-    fn lens() -> lightcraft_develop::EmbeddedLens {
-        lightcraft_develop::EmbeddedLens {
-            warp: Some(lightcraft_develop::EmbeddedWarp { planes: [[1.0, -0.1, 0.03, 0.0, 0.0, 0.0]; 3], ..Default::default() }),
+    fn lens() -> hazavana_develop::EmbeddedLens {
+        hazavana_develop::EmbeddedLens {
+            warp: Some(hazavana_develop::EmbeddedWarp { planes: [[1.0, -0.1, 0.03, 0.0, 0.0, 0.0]; 3], ..Default::default() }),
             vignette: None,
             stages: Default::default(),
         }
     }
-    fn old_rw2() -> lightcraft_catalog::Photo {
+    fn old_rw2() -> hazavana_catalog::Photo {
         // as an older build catalogued it: no lens data, correction off
-        lightcraft_catalog::Photo::new(
-            lightcraft_catalog::PhotoId(1),
+        hazavana_catalog::Photo::new(
+            hazavana_catalog::PhotoId(1),
             Source::File { path: "/x.rw2".into() },
             "x.rw2",
             "RW2",
@@ -495,12 +495,12 @@ mod tests {
         let Some(Op::SetDevelop { settings, .. }) = ops.get(1) else { panic!("{ops:?}") };
         assert!(settings.optics.lens_profile);
         // once applied, the photo is still "unedited" and has what import would have given it
-        let mut c = lightcraft_catalog::Catalog::default();
+        let mut c = hazavana_catalog::Catalog::default();
         c.apply(Op::AddPhoto { photo: Box::new(ph) }).unwrap();
         for op in ops {
             c.apply(op).unwrap();
         }
-        let after = c.photo(lightcraft_catalog::PhotoId(1)).unwrap();
+        let after = c.photo(hazavana_catalog::PhotoId(1)).unwrap();
         assert_eq!(after.embedded_lens, Some(lens()));
         assert!(!after.is_edited());
         assert_eq!(*after.develop, after.camera_defaults());
@@ -534,12 +534,12 @@ mod tests {
     /// gets it on Reload, the render changes to the corrected one, and Undo takes it all back.
     #[test]
     fn corpus_reload_corrects_an_rw2_catalogued_without_lens_data() {
-        let root = std::env::var_os("LIGHTCRAFT_CORPUS")
+        let root = std::env::var_os("HAZAVANA_CORPUS")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus"));
         let f = root.join("raw/rw2-panasonic-gx80.rw2");
         if !f.exists() {
-            lightcraft_testkit::skip!(Corpus, "{} absent", f.display());
+            hazavana_testkit::skip!(Corpus, "{} absent", f.display());
             return;
         }
         let mut s = Session::new().with_fs();

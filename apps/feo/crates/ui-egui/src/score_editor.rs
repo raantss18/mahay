@@ -7,8 +7,8 @@
 use crate::SoundApp;
 use crate::theme::{bold, regular};
 use egui::{Align2, Color32, Pos2, Rect, Sense, Shape, Stroke, pos2, vec2};
-use soundcraft_model::ClipContent;
-use soundcraft_time::TICKS_PER_QUARTER;
+use feo_model::ClipContent;
+use feo_time::TICKS_PER_QUARTER;
 
 const STEP: f32 = 6.0; // half the distance between staff lines
 

@@ -2,7 +2,7 @@
 //! and Default Swatches.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
+use tsipika_color::{Color, Paint};
 
 use super::*;
 
@@ -16,7 +16,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     s.execute(id, &p).unwrap_or_else(|e| panic!("{id} {p}: {e}"))
 }
 
-fn doc(s: &Session) -> &vectorcraft_doc::Document {
+fn doc(s: &Session) -> &tsipika_doc::Document {
     &s.doc().unwrap().doc
 }
 
@@ -91,14 +91,14 @@ fn add_with_apply_paints_the_selection_in_the_same_undo_step() {
     let before = undo_len(&s);
     let r = run(&mut s, "swatch.library.add", json!({"library": "web-safe-216", "names": ["#FF6600"], "apply": "fill"}));
     assert_eq!((r["added"].clone(), r["applied"].clone()), (json!(["#FF6600"]), json!("#FF6600")));
-    let fill = doc(&s).node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
+    let fill = doc(&s).node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
     assert_eq!(fill.color().map(|c| c.to_hex()), Some("#ff6600".into()));
     assert_eq!(undo_len(&s), before + 1, "added and applied as one step");
     run(&mut s, "edit.undo", json!({}));
     assert!(doc(&s).swatch("#FF6600").is_none());
     // A gradient swatch applied to the stroke; an existing swatch is applied without an add.
     run(&mut s, "swatch.library.add", json!({"library": "metallic-gradients", "names": ["Gold"], "apply": "stroke"}));
-    let n = doc(&s).node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap();
+    let n = doc(&s).node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap();
     assert!(matches!(n.appearance.stroke_paint(), Paint::Gradient(_)));
     let r = run(&mut s, "swatch.library.add", json!({"library": "metallic-gradients", "names": ["Gold"], "apply": "fill"}));
     assert_eq!((r["added"].clone(), r["applied"].clone()), (json!([]), json!("Gold")));
@@ -125,7 +125,7 @@ fn reset_defaults_restores_missing_swatches_or_replaces_them() {
     run(&mut s, "swatch.resetDefaults", json!({"replace": true}));
     let d = doc(&s);
     assert_eq!(d.swatches_iter().map(|w| w.name.clone()).collect::<Vec<_>>(), defaults);
-    let fill = d.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
+    let fill = d.node(tsipika_doc::NodeId(id.as_u64().unwrap())).unwrap().appearance.fill_paint();
     assert_eq!(fill, Paint::solid(Color::from_hex("#abcdef").unwrap()));
     assert_eq!(s.paint.fill, Paint::solid(Color::from_hex("#abcdef").unwrap()), "the default fill is unlinked too");
 }
@@ -194,7 +194,7 @@ fn another_documents_swatches_load_as_a_library() {
     let mut s = session();
     run(&mut s, "swatch.new", json!({"name": "Signal", "color": "#ff3300"}));
     let b64 = run(&mut s, "document.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
-    let r = run(&mut s, "swatch.library.load", json!({"dataBase64": b64, "name": "Poster.vectorcraft"}));
+    let r = run(&mut s, "swatch.library.load", json!({"dataBase64": b64, "name": "Poster.tsipika"}));
     assert_eq!(r["name"], "Poster");
     let (_, lib) = cmd::swatchlib::library(&s, r["library"].as_str().unwrap()).unwrap();
     assert!(lib.swatch("Signal").is_some() && lib.swatch("[None]").is_none());
@@ -203,9 +203,9 @@ fn another_documents_swatches_load_as_a_library() {
 
 #[test]
 fn swatch_exchange_files_load_add_and_list_as_user_libraries() {
-    let bytes = vectorcraft_testkit::ase::sample();
+    let bytes = tsipika_testkit::ase::sample();
     let mut s = session();
-    let r = run(&mut s, "swatch.library.load", json!({"dataBase64": vectorcraft_format::base64_encode(&bytes), "name": "Brand.ase"}));
+    let r = run(&mut s, "swatch.library.load", json!({"dataBase64": tsipika_format::base64_encode(&bytes), "name": "Brand.ase"}));
     assert_eq!((r["library"].as_str(), r["name"].as_str(), r["count"].as_u64()), (Some("loaded/Brand.ase"), Some("Brand"), Some(4)));
     let g = run(&mut s, "swatch.library.get", json!({"library": r["library"]}));
     let swatches = g["swatches"].as_array().unwrap();
@@ -219,7 +219,7 @@ fn swatch_exchange_files_load_add_and_list_as_user_libraries() {
     assert!(d.swatch("Ink").is_some_and(|w| w.spot && w.global));
     assert_eq!(d.swatch_groups.iter().find(|g| g.name == "Neutrals").map(|g| g.swatches.len()), Some(2));
     // A damaged file is an error from the swatch exchange reader, not from the document loader.
-    let cut = vectorcraft_format::base64_encode(&bytes[..bytes.len() - 1]);
+    let cut = tsipika_format::base64_encode(&bytes[..bytes.len() - 1]);
     let e = s.execute("swatch.library.load", &json!({"dataBase64": cut, "name": "Cut.ase"})).unwrap_err().to_string();
     assert!(e.contains("cut short"), "{e}");
     // `.ase` files in the user library folder are User Defined libraries.
@@ -249,7 +249,7 @@ fn swatch_exchange_files_save_with_models_kinds_and_groups() {
     assert_eq!(r["format"], "ase");
     assert!(r.get("data").is_none(), "a binary file comes back as dataBase64");
     let b64 = r["dataBase64"].as_str().unwrap().to_string();
-    assert!(vectorcraft_format::base64_decode(&b64).unwrap().starts_with(b"ASEF"));
+    assert!(tsipika_format::base64_decode(&b64).unwrap().starts_with(b"ASEF"));
     let r = run(&mut s, "swatch.library.load", json!({"dataBase64": b64, "name": "Brand Kit.ase"}));
     let (_, lib) = cmd::swatchlib::library(&s, r["library"].as_str().unwrap()).unwrap();
     assert_eq!(lib.name, "Brand Kit", "named after the file");
@@ -305,7 +305,7 @@ fn save_counts_the_swatches_the_file_holds() {
 
 #[test]
 fn loaded_libraries_copy_into_the_user_folder_without_replacing_files() {
-    use vectorcraft_testkit::ase::{Block, ase, sample};
+    use tsipika_testkit::ase::{Block, ase, sample};
     let dir = temp_dir("copy");
     let (user, elsewhere) = (dir.join("user"), dir.join("elsewhere"));
     std::fs::create_dir_all(&user).unwrap();
@@ -349,8 +349,8 @@ fn loaded_libraries_copy_into_the_user_folder_without_replacing_files() {
     // A document's swatches and a library loaded from data are written as .vcswatches.
     run(&mut s, "swatch.new", json!({"name": "Signal", "color": "#ff3300"}));
     let b64 = run(&mut s, "document.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
-    let poster = elsewhere.join("Poster.vectorcraft");
-    std::fs::write(&poster, vectorcraft_format::base64_decode(&b64).unwrap()).unwrap();
+    let poster = elsewhere.join("Poster.tsipika");
+    std::fs::write(&poster, tsipika_format::base64_decode(&b64).unwrap()).unwrap();
     let loaded = run(&mut s, "swatch.library.load", json!({ "path": poster.to_string_lossy() }))["library"].clone();
     let r = run(&mut s, "swatch.library.copyToUser", json!({ "library": loaded }));
     assert_eq!((r["library"].as_str(), r["copied"].as_bool()), (Some("user/Poster.vcswatches"), Some(true)));
@@ -359,7 +359,7 @@ fn loaded_libraries_copy_into_the_user_folder_without_replacing_files() {
     let loaded = run(&mut s, "swatch.library.load", json!({ "path": poster.to_string_lossy() }))["library"].clone();
     let r = run(&mut s, "swatch.library.copyToUser", json!({ "library": loaded }));
     assert_eq!((r["library"].as_str(), r["copied"].as_bool()), (Some("user/Poster.vcswatches"), Some(false)));
-    let kit = vectorcraft_format::base64_encode(&sample());
+    let kit = tsipika_format::base64_encode(&sample());
     let loaded = run(&mut s, "swatch.library.load", json!({"dataBase64": kit, "name": "Kit.ase"}))["library"].clone();
     assert_eq!(run(&mut s, "swatch.library.copyToUser", json!({ "library": loaded }))["library"], "user/Kit.vcswatches");
     // A library without a name is copied as Library.
@@ -394,7 +394,7 @@ fn loaded_libraries_copy_into_the_user_folder_without_replacing_files() {
 
 #[test]
 fn a_library_group_stays_one_group_when_a_swatch_has_its_name() {
-    use vectorcraft_testkit::ase::{Block, ase};
+    use tsipika_testkit::ase::{Block, ase};
     let mut s = session();
     assert!(doc(&s).swatch("Blue").is_some(), "a new document has a swatch named Blue");
     let bytes = ase(&[
@@ -406,7 +406,7 @@ fn a_library_group_stays_one_group_when_a_swatch_has_its_name() {
         Block::Color("Frost", b"RGB ", &[0.9, 0.95, 1.0], 2),
         Block::GroupEnd,
     ]);
-    let r = run(&mut s, "swatch.library.load", json!({"dataBase64": vectorcraft_format::base64_encode(&bytes), "name": "Blues.ase"}));
+    let r = run(&mut s, "swatch.library.load", json!({"dataBase64": tsipika_format::base64_encode(&bytes), "name": "Blues.ase"}));
     run(&mut s, "swatch.library.add", json!({"library": r["library"]}));
     let groups: Vec<(&str, Vec<&str>)> =
         doc(&s).swatch_groups.iter().map(|g| (g.name.as_str(), g.swatches.iter().map(|w| w.name.as_str()).collect())).collect();
@@ -417,7 +417,7 @@ fn a_library_group_stays_one_group_when_a_swatch_has_its_name() {
 #[test]
 fn text_libraries_sent_as_bytes_load_when_they_are_not_valid_utf8() {
     let mut s = session();
-    let latin1 = vectorcraft_format::base64_encode(b"GIMP Palette\n237 28 36 Rouge fonc\xe9\n");
+    let latin1 = tsipika_format::base64_encode(b"GIMP Palette\n237 28 36 Rouge fonc\xe9\n");
     let r = run(&mut s, "swatch.library.load", json!({"dataBase64": latin1, "name": "Rouge.gpl"}));
     assert_eq!(r["count"], 1);
 }
@@ -439,7 +439,7 @@ fn gradient_libraries_are_listed_and_gradient_swatches_rename_and_take_new_gradi
         json!({"gradient": {"kind": "radial", "stops": [{"offset": 0, "color": "#ff0000"}, {"offset": 1, "color": "#0000ff"}], "swatch": "Early"}});
     run(&mut s, "swatch.edit", json!({"name": "Early", "paint": g}));
     let Paint::Gradient(gp) = &doc(&s).swatch("Early").unwrap().paint else { panic!("a gradient") };
-    assert_eq!((gp.gradient.kind, gp.gradient.stops.len(), gp.swatch.clone(), gp.geom), (vectorcraft_color::GradientKind::Radial, 2, None, None));
+    assert_eq!((gp.gradient.kind, gp.gradient.stops.len(), gp.swatch.clone(), gp.geom), (tsipika_color::GradientKind::Radial, 2, None, None));
     assert_eq!(undo_len(&s), undo + 1);
     // Kinds don't mix; a colour replaces a colour.
     assert!(s.execute("swatch.edit", &json!({"name": "Early", "paint": {"color": "#00ff00"}})).is_err());

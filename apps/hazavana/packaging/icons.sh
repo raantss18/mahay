@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate every app icon file from assets/app-icon/lightcraft.svg.
+# Regenerate every app icon file from assets/app-icon/hazavana.svg.
 #
 # Needs: resvg (brew install resvg / cargo install resvg). On macOS, iconutil also writes the
 # .icns. The outputs are committed, so building and packaging never need these tools.
@@ -8,8 +8,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/assets/app-icon"
-SVG="$DIR/lightcraft.svg"
-ID="ai.storyteller.lightcraft"
+SVG="$DIR/hazavana.svg"
+ID="org.mahay.hazavana"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -24,9 +24,9 @@ grep -q 'viewBox="-62 -62 636 636"' "$MAC" || { echo "error: unexpected viewBox 
 
 render() { resvg -w "$2" -h "$2" "$1" "$3" </dev/null; }
 
-render "$SVG" 1024 "$DIR/lightcraft-1024.png"
-# Runtime window/Dock icon on macOS (embedded by apps/lightcraft/src/main.rs).
-render "$MAC" 512 "$DIR/lightcraft-macos-512.png"
+render "$SVG" 1024 "$DIR/hazavana-1024.png"
+# Runtime window/Dock icon on macOS (embedded by apps/hazavana/src/main.rs).
+render "$MAC" 512 "$DIR/hazavana-macos-512.png"
 
 # Linux hicolor theme (also the runtime window icon on Windows and Linux: 256x256).
 for s in 16 24 32 48 64 128 256 512; do
@@ -34,7 +34,7 @@ for s in 16 24 32 48 64 128 256 512; do
   render "$SVG" "$s" "$DIR/hicolor/${s}x${s}/apps/$ID.png"
 done
 mkdir -p "$DIR/hicolor/scalable/apps"
-cp "$DIR/lightcraft-small.svg" "$DIR/hicolor/scalable/apps/$ID.svg"
+cp "$DIR/hazavana-small.svg" "$DIR/hicolor/scalable/apps/$ID.svg"
 
 # Windows .ico.
 ICO_PNGS=()
@@ -42,18 +42,18 @@ for s in 16 20 24 32 40 48 64 128 256; do
   render "$SVG" "$s" "$TMP/ico-$s.png"
   ICO_PNGS+=("$TMP/ico-$s.png")
 done
-(cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/lightcraft.ico" "${ICO_PNGS[@]}")
+(cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/hazavana.ico" "${ICO_PNGS[@]}")
 
 # macOS .icns.
 if command -v iconutil >/dev/null; then
-  SET="$TMP/lightcraft.iconset"
+  SET="$TMP/hazavana.iconset"
   mkdir -p "$SET"
   for s in 16 32 128 256 512; do
     render "$MAC" "$s" "$SET/icon_${s}x${s}.png"
     render "$MAC" $((s * 2)) "$SET/icon_${s}x${s}@2x.png"
   done
-  iconutil -c icns -o "$DIR/lightcraft.icns" "$SET"
+  iconutil -c icns -o "$DIR/hazavana.icns" "$SET"
 else
-  echo "warning: iconutil not found (macOS only); lightcraft.icns not regenerated" >&2
+  echo "warning: iconutil not found (macOS only); hazavana.icns not regenerated" >&2
 fi
 echo "icons written to $DIR"

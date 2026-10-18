@@ -86,7 +86,7 @@ pub(crate) fn user_units(pdf: Vec<u8>, units: &[f64]) -> Result<Vec<u8>, PdfErro
 pub(crate) fn modification_date(pdf: Vec<u8>, modified: i64) -> Result<Vec<u8>, PdfError> {
     let failed = |why: &str| PdfError::Write(format!("can't write the file's modification date: {why}"));
     let Parsed { xref, objects, trailer, root, .. } = linearize::parse(&pdf).map_err(failed)?;
-    let [y, mo, d, h, mi, s] = vectorcraft_doc::metadata::civil(modified);
+    let [y, mo, d, h, mi, s] = tsipika_doc::metadata::civil(modified);
     let mut patch = Patch::new(&xref);
     if let Some(&Obj::Ref(n, _)) = trailer.get(b"Info")
         && let Some(Obj::Str { start, end, .. }) = objects.get(&n).and_then(|o| o.value.get(b"ModDate"))

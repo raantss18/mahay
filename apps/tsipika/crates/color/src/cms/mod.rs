@@ -30,7 +30,7 @@ pub const WIDE_GAMUT_RGB: &str = "Wide Gamut RGB (1998 primaries)";
 pub const DISPLAY_P3: &str = "Display P3";
 pub const PROPHOTO_RGB: &str = "ProPhoto RGB";
 /// Our parametric press model (see [`generic`]). Not an Adobe/ECI profile.
-pub const GENERIC_CMYK: &str = "VectorCraft Generic CMYK (SWOP-like)";
+pub const GENERIC_CMYK: &str = "Tsipika Generic CMYK (SWOP-like)";
 /// Profile-free CMYK (`rgb = (1−c)(1−k)` …): uncalibrated, kept for legacy numbers.
 pub const DEVICE_CMYK: &str = "Device CMYK (uncalibrated)";
 /// The grey space greyscale exports are written in: sRGB's tone curve (a grey shows as on screen).

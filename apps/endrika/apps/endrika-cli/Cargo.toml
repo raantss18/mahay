@@ -1,0 +1,24 @@
+[package]
+name = "endrika-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Endrika command line: info, export, convert, render, scripted commands, MCP server, perf"
+
+[[bin]]
+name = "endrika-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+endrika-engine = { workspace = true }
+endrika-doc = { workspace = true }
+endrika-render = { workspace = true }
+endrika-text = { workspace = true }
+endrika-svg = { workspace = true }
+endrika-format = { workspace = true }
+endrika-mcp = { workspace = true }
+serde_json = { workspace = true }

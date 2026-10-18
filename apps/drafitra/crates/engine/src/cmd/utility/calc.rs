@@ -1,7 +1,7 @@
 //! The CAL / QuickCalc evaluator: numbers and points (`[x,y]`, `[d<a]`), arithmetic and vector
 //! arithmetic, numeric and geometric functions; unit conversion; values picked from the drawing.
 
-use cadcraft_geom::Vec2;
+use drafitra_geom::Vec2;
 use serde_json::{Map, Value, json};
 
 /// Longest expression accepted.

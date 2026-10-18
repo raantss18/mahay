@@ -4,16 +4,16 @@
 
 use std::sync::{Arc, Once};
 
-use figcraft_color::{Color, ImageScaleMode, Paint};
-use figcraft_doc::{Document, ImageData, NodeId, NodeKind, TextData};
-use figcraft_geom::{Affine, Rect};
+use endrika_color::{Color, ImageScaleMode, Paint};
+use endrika_doc::{Document, ImageData, NodeId, NodeKind, TextData};
+use endrika_geom::{Affine, Rect};
 
 use crate::retained_tests::assert_same;
 use crate::{Options, Pixmap, Retained, View, backdrop, lod, render_node, render_view, render_view_single};
 
 fn fonts() {
     static ONCE: Once = Once::new();
-    ONCE.call_once(figcraft_text::scan_system_fonts);
+    ONCE.call_once(endrika_text::scan_system_fonts);
 }
 
 fn solid(hex: &str) -> Vec<Paint> {
@@ -50,7 +50,7 @@ fn cards() -> (Document, NodeId) {
         title.style.font_size = 16.0;
         d.create(card, NodeKind::Text(title), "Title", 84.0, 36.0, 110.0, 20.0).unwrap();
         let mut body = TextData::new("Some body text that wraps onto a second line");
-        body.auto_resize = figcraft_doc::TextAutoResize::Height;
+        body.auto_resize = endrika_doc::TextAutoResize::Height;
         body.style.font_size = 11.0;
         d.create(card, NodeKind::Text(body), "Body", 84.0, 60.0, 110.0, 30.0).unwrap();
     }

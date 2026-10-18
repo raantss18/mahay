@@ -2,10 +2,10 @@
 //! blurs (Channel, Compound, CC Vector), bokeh (Camera Lens Blur), radial streaks and small
 //! utilities (Reduce Interlace Flicker, CC Cross Blur).
 
-use effectcraft_color::luminance;
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px, gaussian_blur};
+use tselatra_color::luminance;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px, gaussian_blur};
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, premul, unpremul};
@@ -319,7 +319,7 @@ fn camera_lens_blur(ctx: &EffectCtx, mut b: Buf) -> Buf {
     let linear = ctx.params.b("useLinear");
     let to_lin = |px: &mut [f32; 4]| {
         let (c, a) = unpremul(*px);
-        *px = premul(c.map(effectcraft_color::srgb_to_linear), a);
+        *px = premul(c.map(tselatra_color::srgb_to_linear), a);
     };
     // Highlights: boost bright pixels before the blur so they bloom into bokeh shapes; Saturation
     // keeps their colour (100) or pushes the added energy towards white (0).
@@ -441,7 +441,7 @@ fn camera_lens_blur(ctx: &EffectCtx, mut b: Buf) -> Buf {
         px[3] = px[3].clamp(0.0, 1.0);
         if linear {
             let (c, a) = unpremul(px);
-            px = premul(c.map(|v| effectcraft_color::linear_to_srgb(v.max(0.0))), a);
+            px = premul(c.map(|v| tselatra_color::linear_to_srgb(v.max(0.0))), a);
         }
         px
     };
@@ -624,8 +624,8 @@ fn cross_blur(ctx: &EffectCtx, mut b: Buf) -> Buf {
         b.pad((rx.max(ry) * 3) as u32 + 1);
     }
     let repeat = ctx.adjustment;
-    let hz = effectcraft_raster::box_blur(&b.img, rx, 0, 3, repeat);
-    let vt = effectcraft_raster::box_blur(&b.img, 0, ry, 3, repeat);
+    let hz = tselatra_raster::box_blur(&b.img, rx, 0, 3, repeat);
+    let vt = tselatra_raster::box_blur(&b.img, 0, ry, 3, repeat);
     let mode = ctx.params.e("transferMode");
     b.img.data.par_iter_mut().enumerate().for_each(|(i, px)| {
         let (a, v) = (hz.data[i], vt.data[i]);

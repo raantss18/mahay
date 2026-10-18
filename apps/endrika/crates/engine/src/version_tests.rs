@@ -1,12 +1,12 @@
 //! Version history: save, list, restore (one undo step), rename, delete, duplicate, persistence in
-//! the `.figcraft` file and bad parameters.
+//! the `.endrika` file and bad parameters.
 
 use serde_json::{Value, json};
 
 use crate::params::id_of;
 use crate::{EngineError, Session};
 
-fn rect(s: &mut Session, x: f64) -> figcraft_doc::NodeId {
+fn rect(s: &mut Session, x: f64) -> endrika_doc::NodeId {
     id_of(&s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap()["id"]).unwrap()
 }
 
@@ -75,7 +75,7 @@ fn rename_delete_duplicate() {
     assert!(s.execute("version.rename", &json!({"index": 0, "name": "   "})).is_err());
     // Long names are clipped.
     s.execute("version.rename", &json!({"index": 1, "name": "x".repeat(5000)})).unwrap();
-    assert_eq!(list(&mut s)[1]["name"].as_str().unwrap().chars().count(), figcraft_format::MAX_VERSION_NAME);
+    assert_eq!(list(&mut s)[1]["name"].as_str().unwrap().chars().count(), endrika_format::MAX_VERSION_NAME);
 
     // Duplicate opens the version in a new tab without touching this one.
     let before = count(&s);
@@ -129,12 +129,12 @@ fn bad_indexes_and_ids_are_rejected() {
 #[test]
 fn history_is_capped() {
     let mut s = Session::new();
-    for i in 0..figcraft_format::MAX_VERSIONS {
+    for i in 0..endrika_format::MAX_VERSIONS {
         s.execute("file.saveVersion", &json!({"name": format!("v{i}")})).unwrap();
     }
     assert!(matches!(s.execute("file.saveVersion", &json!({})), Err(EngineError::Disabled(..))));
     let l = list(&mut s);
-    assert_eq!(l.len(), figcraft_format::MAX_VERSIONS);
+    assert_eq!(l.len(), endrika_format::MAX_VERSIONS);
     // Ids are unique even when saved within the same millisecond.
     let ids: std::collections::BTreeSet<&str> = l.iter().filter_map(|v| v["id"].as_str()).collect();
     assert_eq!(ids.len(), l.len());
@@ -142,9 +142,9 @@ fn history_is_capped() {
 
 #[test]
 fn versions_persist_in_the_file() {
-    let dir = std::env::temp_dir().join(format!("figcraft-versions-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-versions-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("history.figcraft").to_string_lossy().to_string();
+    let path = dir.join("history.endrika").to_string_lossy().to_string();
     let mut s = Session::new();
     rect(&mut s, 0.0);
     let one = count(&s);

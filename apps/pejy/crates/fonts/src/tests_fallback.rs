@@ -8,7 +8,7 @@ const HANGUL: char = '한';
 const KANA: char = 'あ';
 const BOPOMOFO: char = 'ㄅ';
 
-/// A database of the bundled fonts (and the craft-fonts Japanese faces, when built with them)
+/// A database of the bundled fonts (and the mahay-fonts Japanese faces, when built with them)
 /// only, no system fonts, plus `fonts` as (family, chars).
 fn db_with(fonts: &[(&str, &[char])]) -> FontDb {
     let db = FontDb::with_font_dirs(vec![]);
@@ -22,8 +22,8 @@ fn family(db: &FontDb, c: char, language: Option<&str>) -> Option<String> {
     db.fallback_for(c, 0, language).map(|f| f.family.clone())
 }
 
-/// The families the Japanese chain finds, in order: the craft-fonts Japanese faces (none without
-/// craft-fonts), then `installed`, the stand-ins for system fonts (in chain order).
+/// The families the Japanese chain finds, in order: the mahay-fonts Japanese faces (none without
+/// mahay-fonts), then `installed`, the stand-ins for system fonts (in chain order).
 fn japanese_chain_with(installed: &[&'static str]) -> Vec<&'static str> {
     let mut v: Vec<&'static str> = Vec::new();
     for f in crate::japanese_document_fonts() {
@@ -36,7 +36,7 @@ fn japanese_chain_with(installed: &[&'static str]) -> Vec<&'static str> {
 }
 
 /// What the language-blind search finds first for CJK text when `added` is the first added font
-/// covering it: the craft-fonts Japanese faces load ahead of added fonts.
+/// covering it: the mahay-fonts Japanese faces load ahead of added fonts.
 fn first_loaded(added: &'static str) -> &'static str {
     japanese_chain_with(&[added])[0]
 }
@@ -50,7 +50,7 @@ fn ideographs_follow_the_language() {
     assert_eq!(family(&db, HAN, Some("ko")).as_deref(), Some("AppleMyungjo"));
     assert_eq!(family(&db, HAN, Some("ko-KR")).as_deref(), Some("AppleMyungjo"), "the language decides, whatever the region");
     let ja = japanese_chain_with(&["Hiragino Mincho ProN"])[0];
-    assert_eq!(family(&db, HAN, Some("ja")).as_deref(), Some(ja), "the craft-fonts faces lead the Japanese chain, then system fonts");
+    assert_eq!(family(&db, HAN, Some("ja")).as_deref(), Some(ja), "the mahay-fonts faces lead the Japanese chain, then system fonts");
     assert_eq!(family(&db, HAN, Some("ja-JP")).as_deref(), Some(ja));
     // CJK punctuation follows the language too.
     let db = db_with(&[("Other CJK", &['、']), ("Songti SC", &['、'])]);
@@ -93,7 +93,7 @@ fn the_script_decides_where_it_is_unambiguous() {
 #[test]
 fn without_a_chain_font_the_fallback_is_unchanged() {
     let db = db_with(&[("Other CJK", &[HANGUL])]);
-    // Without craft-fonts nothing covers the ideograph; with it, its first Japanese face does.
+    // Without mahay-fonts nothing covers the ideograph; with it, its first Japanese face does.
     let craft = japanese_chain_with(&[]).first().copied();
     for language in ["zh-Hans", "zh-Hant", "ko", "ja"] {
         assert_eq!(family(&db, HAN, Some(language)).as_deref(), craft, "{language}");

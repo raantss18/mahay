@@ -2,39 +2,39 @@
 //! enabled by SVG on the system clipboard, and the Layers panel's Paste Remembers Layers.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::NodeId;
+use tsipika_engine::Session;
+use tsipika_geom::Point;
 
-use crate::{Services, VectorcraftApp, dialogs, menus};
+use crate::{Services, TsipikaApp, dialogs, menus};
 
-fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+fn run(app: &mut TsipikaApp, id: &str, p: Value) -> Value {
     app.run(id, p).unwrap_or_else(|e| panic!("{id}: {e}"))
 }
 
-fn rect(app: &mut VectorcraftApp) -> NodeId {
+fn rect(app: &mut TsipikaApp) -> NodeId {
     NodeId(run(app, "shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 20}))["id"].as_u64().unwrap())
 }
 
-fn copy(app: &mut VectorcraftApp, id: NodeId) {
+fn copy(app: &mut TsipikaApp, id: NodeId) {
     run(app, "select.set", json!({"ids": [id.0]}));
     run(app, "edit.copy", json!({}));
 }
 
 /// Objects on the active document's first layer.
-fn objects(app: &VectorcraftApp) -> Vec<NodeId> {
+fn objects(app: &TsipikaApp) -> Vec<NodeId> {
     app.session.active().unwrap().doc.layers[0].children().unwrap().iter().map(|n| n.id).collect()
 }
 
-fn swatch(app: &mut VectorcraftApp, name: &str, hex: &str) {
+fn swatch(app: &mut TsipikaApp, name: &str, hex: &str) {
     run(app, "swatch.new", json!({"name": name, "color": hex, "global": true}));
 }
 
 /// A rectangle filled with global swatch Brand (red) and stroked with Ink (black) copied from one
 /// document, and a second document (active) whose Brand is blue and Ink green.
-fn conflicting() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn conflicting() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     swatch(&mut app, "Brand", "#ff0000");
     swatch(&mut app, "Ink", "#000000");
@@ -48,7 +48,7 @@ fn conflicting() -> VectorcraftApp {
     app
 }
 
-fn paints(app: &VectorcraftApp) -> (Paint, Paint) {
+fn paints(app: &TsipikaApp) -> (Paint, Paint) {
     let st = app.session.active().unwrap();
     let n = st.doc.node(objects(app)[0]).unwrap();
     (n.appearance.fill_paint(), n.appearance.stroke().unwrap().paint.clone())
@@ -58,7 +58,7 @@ fn linked(hex: &str, name: &str) -> Paint {
     Paint::Solid { color: Color::from_hex(hex).unwrap(), swatch: Some(name.into()), tint: 1.0 }
 }
 
-fn set(app: &mut VectorcraftApp, k: &str, v: Value) {
+fn set(app: &mut TsipikaApp, k: &str, v: Value) {
     app.ui.dialog.as_mut().unwrap().fields.insert(k.into(), v);
 }
 
@@ -106,7 +106,7 @@ fn apply_to_all_answers_the_rest_and_cancel_pastes_nothing() {
 
 #[test]
 fn paste_goes_to_the_centre_of_the_view() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 400, "height": 300}));
     let r = rect(&mut app);
     copy(&mut app, r);
@@ -120,9 +120,9 @@ fn paste_goes_to_the_centre_of_the_view() {
 const SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><rect width="5" height="5"/><circle cx="15" cy="5" r="5"/></svg>"##;
 
 /// An app whose system clipboard holds `text`, with a document, after one frame.
-fn with_system_clipboard(text: &'static str) -> VectorcraftApp {
+fn with_system_clipboard(text: &'static str) -> TsipikaApp {
     let services = Services { clipboard_read: Some(Box::new(move || Some(text.to_string()))), ..Default::default() };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     assert!(!menus::enabled(&app, "edit.paste"), "not checked before a frame");
     let ctx = egui::Context::default();
@@ -150,11 +150,11 @@ fn paste_menu_items_are_enabled_by_svg_on_the_system_clipboard() {
 
 #[test]
 fn the_layers_panel_menu_toggles_paste_remembers_layers() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| crate::panels::layers::menu(app, ui));
         out.textures_delta.clear();
         let mut texts = vec![];

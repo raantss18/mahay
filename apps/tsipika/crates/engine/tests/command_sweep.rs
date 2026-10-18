@@ -5,22 +5,22 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::{Value, json};
-use vectorcraft_engine::{Session, command_specs};
-use vectorcraft_testkit::catch_quiet;
-use vectorcraft_testkit::fixtures::Fixture;
-use vectorcraft_testkit::invariants::{check_all, check_session, doc_json};
-use vectorcraft_testkit::strategies::{junk_params, junk_values, param_keys};
+use tsipika_engine::{Session, command_specs};
+use tsipika_testkit::catch_quiet;
+use tsipika_testkit::fixtures::Fixture;
+use tsipika_testkit::invariants::{check_all, check_session, doc_json};
+use tsipika_testkit::strategies::{junk_params, junk_values, param_keys};
 
 /// Commands that replace/close the active document or touch the filesystem are fine to call, but a
 /// few need their paths redirected into a temp dir (handled by `junk_params`).
 fn safe_path() -> String {
-    vectorcraft_testkit::temp_dir("sweep").join("out.bin").to_string_lossy().to_string()
+    tsipika_testkit::temp_dir("sweep").join("out.bin").to_string_lossy().to_string()
 }
 
 /// `r`, after failing the case if the command panicked. The engine's guard reports a panic as
 /// `EngineError::Internal`.
-fn no_panic(r: Result<Value, vectorcraft_engine::EngineError>) -> Result<Value, vectorcraft_engine::EngineError> {
-    if let Err(vectorcraft_engine::EngineError::Internal { cmd, msg }) = &r {
+fn no_panic(r: Result<Value, tsipika_engine::EngineError>) -> Result<Value, tsipika_engine::EngineError> {
+    if let Err(tsipika_engine::EngineError::Internal { cmd, msg }) = &r {
         panic!("{cmd} panicked: {msg}");
     }
     r
@@ -80,7 +80,7 @@ fn every_command_without_a_document() {
         match catch_quiet(|| no_panic(s.execute(c.id, &json!({})))) {
             Err(p) => failures.push(format!("PANIC {} with no document: {p}", c.id)),
             // Anything that needs a document must say so via enablement, not fail later.
-            Ok(Err(vectorcraft_engine::EngineError::NoDocument)) => failures.push(format!("{}: enabled without a document but needs one", c.id)),
+            Ok(Err(tsipika_engine::EngineError::NoDocument)) => failures.push(format!("{}: enabled without a document but needs one", c.id)),
             Ok(_) => {}
         }
         if s.in_interaction() {
@@ -116,7 +116,7 @@ fn bug_huge_transform_makes_document_unloadable() {
     ] {
         let mut s = Fixture::Multi.session();
         if no_panic(s.execute(id, &p)).is_ok() {
-            vectorcraft_testkit::invariants::check_native_roundtrip(&s.doc().unwrap().doc).unwrap_or_else(|e| panic!("{id} {p}: {e}"));
+            tsipika_testkit::invariants::check_native_roundtrip(&s.doc().unwrap().doc).unwrap_or_else(|e| panic!("{id} {p}: {e}"));
         }
     }
 }
@@ -132,7 +132,7 @@ fn distribute_with_a_huge_spacing_from_the_key_object() {
             s.execute("select.key", &json!({"id": id.0})).unwrap();
             if no_panic(s.execute("object.distribute", &p)).is_ok() {
                 check_session(&s).unwrap_or_else(|e| panic!("key {key}, {p}: {e}"));
-                vectorcraft_testkit::invariants::check_native_roundtrip(&s.doc().unwrap().doc).unwrap_or_else(|e| panic!("key {key}, {p}: {e}"));
+                tsipika_testkit::invariants::check_native_roundtrip(&s.doc().unwrap().doc).unwrap_or_else(|e| panic!("key {key}, {p}: {e}"));
             }
         }
     }
@@ -144,7 +144,7 @@ fn bug_artboard_huge_props_break_svg() {
         let mut s = Fixture::Single.session();
         let p = json!({"index": 0, key: 1e308});
         if no_panic(s.execute("artboard.setProps", &p)).is_ok() {
-            vectorcraft_testkit::invariants::check_svg_roundtrip(&s.doc().unwrap().doc).unwrap_or_else(|e| panic!("{p}: {}", &e[..e.len().min(200)]));
+            tsipika_testkit::invariants::check_svg_roundtrip(&s.doc().unwrap().doc).unwrap_or_else(|e| panic!("{p}: {}", &e[..e.len().min(200)]));
         }
     }
 }
@@ -403,7 +403,7 @@ fn structured_junk() {
         ("document.open", json!({"name": "x.svg", "dataBase64": "!!!"})),
         ("document.open", json!({"name": "x.svg", "dataBase64": "PHN2Zz4="})),
         ("document.open", json!({"name": "x.pdf", "dataBase64": "JVBERi0xLjQK"})),
-        ("document.open", json!({"name": "x.vectorcraft", "dataBase64": "e30="})),
+        ("document.open", json!({"name": "x.tsipika", "dataBase64": "e30="})),
         ("document.activate", json!({"index": 99})),
         ("file.close", json!({"index": 99})),
         ("file.new", json!({"width": -1, "height": 0, "artboards": 1000000})),
@@ -570,7 +570,7 @@ fn every_command_undoes_exactly() {
             let _ = no_panic(s.execute("edit.undo", &json!({})));
             let after = doc_json(&s.doc().unwrap().doc);
             if after != before {
-                failures.push(format!("{}: {}", c.id, vectorcraft_testkit::invariants::first_diff(&before, &after, "$")));
+                failures.push(format!("{}: {}", c.id, tsipika_testkit::invariants::first_diff(&before, &after, "$")));
             }
         } else if doc_json(&s.doc().unwrap().doc) != before && !c.params.contains("View state: not an undo step") {
             failures.push(format!("{}: changed the document without an undo step", c.id));
@@ -584,18 +584,18 @@ fn every_command_undoes_exactly() {
 #[test]
 fn recovery_commands_with_a_damaged_store_and_junk_params() {
     use std::sync::Arc;
-    use vectorcraft_engine::cmd::recovery::{MemoryStore, RecoveryStore};
+    use tsipika_engine::cmd::recovery::{MemoryStore, RecoveryStore};
     let store = Arc::new(MemoryStore::default());
     for (name, bytes) in [
-        ("1-1/bad-1.vectorcraft", &b"{not json"[..]),
+        ("1-1/bad-1.tsipika", &b"{not json"[..]),
         ("1-1/bad-1.json", b"[1, 2"),
-        ("1-1/gz-1.vectorcraft", &[0x1f, 0x8b, 0, 1, 2][..]),
+        ("1-1/gz-1.tsipika", &[0x1f, 0x8b, 0, 1, 2][..]),
         ("1-1/meta-only.json", br#"{"title": 5, "path": [], "saved": "x"}"#),
         ("2-1/heartbeat", b"not a number"),
-        ("2-1/x.vectorcraft", b"{}"),
-        ("../escape.vectorcraft", b"{}"),
-        ("no-area.vectorcraft", b"{}"),
-        ("/.vectorcraft", b"{}"),
+        ("2-1/x.tsipika", b"{}"),
+        ("../escape.tsipika", b"{}"),
+        ("no-area.tsipika", b"{}"),
+        ("/.tsipika", b"{}"),
     ] {
         store.write(name, bytes).unwrap();
     }
@@ -664,7 +664,7 @@ fn envelope_commands_with_junk_params_on_envelopes() {
 /// round-trips and exports.
 #[test]
 fn text_commands_with_junk_params_on_inline_graphics() {
-    use vectorcraft_testkit::fixtures::{ellipse, exec, id_of, select};
+    use tsipika_testkit::fixtures::{ellipse, exec, id_of, select};
     let path = safe_path();
     let setup = || {
         let mut s = Fixture::Multi.session();
@@ -740,8 +740,8 @@ fn text_commands_with_junk_params_on_inline_graphics() {
 /// transform) with junk rows and columns: never a panic or a broken tree.
 #[test]
 fn gradient_mesh_from_images_with_junk_params() {
-    use vectorcraft_doc::{ImageBlob, ImageObject, LinkInfo, Node, NodeKind};
-    use vectorcraft_geom::Affine;
+    use tsipika_doc::{ImageBlob, ImageObject, LinkInfo, Node, NodeKind};
+    use tsipika_geom::Affine;
     let img = image::RgbaImage::from_fn(5, 3, |x, y| image::Rgba([x as u8 * 50, y as u8 * 90, 7, if x == 2 { 0 } else { 255 }]));
     let mut png = vec![];
     img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();

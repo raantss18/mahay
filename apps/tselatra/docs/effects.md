@@ -1,9 +1,9 @@
 # Effects
 
 <!-- Generated from the effect registry (crates/effects/src/catalog.rs); do not edit by hand.
-     Regenerate: UPDATE_DOCS=1 cargo test -p effectcraft-effects --lib effects_doc_is_current -->
+     Regenerate: UPDATE_DOCS=1 cargo test -p tselatra-effects --lib effects_doc_is_current -->
 
-EffectCraft ships 307 effects with 3032 parameters in total, grouped into the same categories as the Effects & Presets panel. Every effect is our own implementation, written from public behaviour descriptions and standard image-processing literature. Parameter names, order, popup options, units, defaults and ranges follow the reference application so that projects, expressions and muscle memory carry over.
+Tselatra ships 307 effects with 3032 parameters in total, grouped into the same categories as the Effects & Presets panel. Every effect is our own implementation, written from public behaviour descriptions and standard image-processing literature. Parameter names, order, popup options, units, defaults and ranges follow the reference application so that projects, expressions and muscle memory carry over.
 
 - **GPU**: 280 effects also run on the GPU compositor with identical results.
 - **32**: 307 effects process 32-bit float (HDR, overbright) pixels without clamping.

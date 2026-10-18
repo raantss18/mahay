@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://getartcraft.com/">
+  <a href="https://github.com/raantss18/mahay">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/storytold/vectorcraft/main/docs/brand/artcraft-logo-white.png">
-      <img alt="ArtCraft" src="https://raw.githubusercontent.com/storytold/vectorcraft/main/docs/brand/artcraft-logo.png" width="200">
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/raantss18/tsipika/main/docs/brand/mahay-logo-white.png">
+      <img alt="Mahay" src="https://raw.githubusercontent.com/raantss18/tsipika/main/docs/brand/mahay-logo.png" width="200">
     </picture>
   </a>
 </p>
 
-<h1 align="center">FigCraft</h1>
+<h1 align="center">Endrika</h1>
 
 <p align="center">
   <b>Interface design and prototyping: open source, collaborative and built in pure Rust.</b><br>
@@ -23,37 +23,37 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://github.com/raantss18/mahay/discussions"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/figcraft"><b>FigCraft on getartcraft.com</b></a> ·
-  <a href="https://getartcraft.com/">ArtCraft</a> ·
-  <a href="https://getartcraft.com/apps">All Crafting Apps</a>
+  <a href="https://github.com/raantss18/mahay"><b>Endrika on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay</a> ·
+  <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
 
 <br>
 
 <p align="center">
-  <img src="docs/images/shot-1-hero.png" alt="FigCraft in its dark theme editing the Ridgeline hiking app: three phone screens (Home in light mode, a trail detail page and Home in dark mode) on the canvas, the Featured trail card instance selected, the layers panel showing the screen's auto layout tree, and the Design panel showing the instance's Fill and Hug auto layout sizing, its Theme variable mode and a fill bound to the surface colour variable" width="100%">
-  <br><sub><b>Ridgeline</b>: auto layout screens built from components, with Light and Dark modes from one set of colour variables · <code>examples/ridgeline-app.figcraft</code></sub>
+  <img src="docs/images/shot-1-hero.png" alt="Endrika in its dark theme editing the Ridgeline hiking app: three phone screens (Home in light mode, a trail detail page and Home in dark mode) on the canvas, the Featured trail card instance selected, the layers panel showing the screen's auto layout tree, and the Design panel showing the instance's Fill and Hug auto layout sizing, its Theme variable mode and a fill bound to the surface colour variable" width="100%">
+  <br><sub><b>Ridgeline</b>: auto layout screens built from components, with Light and Dark modes from one set of colour variables · <code>examples/ridgeline-app.endrika</code></sub>
 </p>
 
 <br>
 
 > [!NOTE]
-> **ArtCraft is a community of artists from all walks of life.** Designers, illustrators, developers,
-> musicians, game makers &mdash; if you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/artcraft).**
+> **Mahay is a community of artists from all walks of life.** Designers, illustrators, developers,
+> musicians, game makers &mdash; if you make things, you're one of us. **[Come say hi on Discord](https://github.com/raantss18/mahay/discussions).**
 
 <p align="center">
   <a href="#a-look-around">A look around</a> ·
-  <a href="#made-in-figcraft">Made in FigCraft</a> ·
+  <a href="#made-in-endrika">Made in Endrika</a> ·
   <a href="#features">Features</a> ·
   <a href="#built-for-agents">Agents</a> ·
   <a href="#under-the-hood">Under the hood</a> ·
   <a href="#get-started">Get started</a> ·
-  <a href="#the-crafting-apps">Crafting Apps</a> ·
-  <a href="https://discord.gg/artcraft">Discord</a>
+  <a href="#the-crafting-apps">Mahay apps</a> ·
+  <a href="https://github.com/raantss18/mahay/discussions">Discord</a>
 </p>
 
 <br>
@@ -70,7 +70,7 @@
     </td>
     <td width="25%" valign="top">
       <h3>🔌 Offline and private</h3>
-      Your files are plain <code>.figcraft</code> archives on your own disk. No account, no telemetry, and nothing leaves your computer unless you share a file (<a href="#privacy-and-online-sharing">what sharing sends where</a>). SVG, PNG, JPG, WebP and PDF in and out; <code>.fig</code> files open (best effort), and so do designs exported as the public REST API file JSON, with their prototypes and variables.
+      Your files are plain <code>.endrika</code> archives on your own disk. No account, no telemetry, and nothing leaves your computer unless you share a file (<a href="#privacy-and-online-sharing">what sharing sends where</a>). SVG, PNG, JPG, WebP and PDF in and out; <code>.fig</code> files open (best effort), and so do designs exported as the public REST API file JSON, with their prototypes and variables.
     </td>
     <td width="25%" valign="top">
       <h3>🤖 Agent-ready</h3>
@@ -87,39 +87,39 @@
 <tr>
 <td width="50%" valign="top">
   <img src="docs/images/shot-2-components.png" alt="The Ridgeline UI design system open with the Assets panel on the left showing live thumbnails of the Button, Difficulty, Search field, Toggle and icon components; a Button component set of nine variants laid out in a three-by-three grid auto layout is selected, and the Design panel lists its Style (Primary, Tonal, Outline) and State (Default, Hover, Disabled) variant properties" width="100%">
-  <p align="center"><sub><b>Components and variants</b>: component sets, variant properties and the Assets panel · <code>examples/ridgeline-design-system.figcraft</code></sub></p>
+  <p align="center"><sub><b>Components and variants</b>: component sets, variant properties and the Assets panel · <code>examples/ridgeline-design-system.endrika</code></sub></p>
 </td>
 <td width="50%" valign="top">
   <img src="docs/images/shot-3-prototype.png" alt="Four onboarding phone screens in the Prototype tab, joined by blue connection curves from the Get started, Continue, Allow location and Not now buttons to the next screens; the Get started button is selected and the Prototype panel shows its On click, Navigate to 2 Interests interaction" width="100%">
-  <p align="center"><sub><b>Prototyping</b>: connections, transitions, back actions and a flow · <code>examples/ridgeline-onboarding.figcraft</code></sub></p>
+  <p align="center"><sub><b>Prototyping</b>: connections, transitions, back actions and a flow · <code>examples/ridgeline-onboarding.endrika</code></sub></p>
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
   <img src="docs/images/shot-4-devmode.png" alt="Dev Mode on the Ridgeline home screen: the frame carries a Ready for dev badge, a Development annotation callout points at the featured trail card, a trail row instance is selected and the Inspect panel shows generated React code with a TrailRow props interface and the instance's title and details values" width="100%">
-  <p align="center"><sub><b>Dev Mode</b>: ready-for-dev status, annotations and React code where component properties become props · <code>examples/ridgeline-app.figcraft</code></sub></p>
+  <p align="center"><sub><b>Dev Mode</b>: ready-for-dev status, annotations and React code where component properties become props · <code>examples/ridgeline-app.endrika</code></sub></p>
 </td>
 <td width="50%" valign="top">
   <img src="docs/images/shot-5-vector.png" alt="Vector edit mode on a wave path with a gradient, tapered variable-width stroke: its anchor points, Bezier handles and the transform box of the selected points are visible, with the vector edit toolbar at the bottom; above it are a boolean-built mountain mark and an angular-gradient knot of excluded rings" width="100%">
-  <p align="center"><sub><b>Vector networks</b>: points and handles, variable-width strokes, booleans that stay editable · <code>examples/glass-and-vectors.figcraft</code></sub></p>
+  <p align="center"><sub><b>Vector networks</b>: points and handles, variable-width strokes, booleans that stay editable · <code>examples/glass-and-vectors.endrika</code></sub></p>
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
   <img src="docs/images/shot-6-dashboard-light.png" alt="The light UI theme with a web analytics dashboard for a fictional trail operator: a dark sidebar, KPI cards with sparklines, a grouped bar chart, a donut chart, a table of top trails and an area chart, with the frame's 12-column layout grid showing as tinted columns and its fill linked to a paint style" width="100%">
-  <p align="center"><sub><b>Layout grids and styles, light theme</b>: a 12-column grid, paint, text, effect and grid styles, charts drawn from shapes · <code>examples/ridgeline-studio-dashboard.figcraft</code></sub></p>
+  <p align="center"><sub><b>Layout grids and styles, light theme</b>: a 12-column grid, paint, text, effect and grid styles, charts drawn from shapes · <code>examples/ridgeline-studio-dashboard.endrika</code></sub></p>
 </td>
 <td width="50%" valign="top">
   <img src="docs/images/shot-7-collab.png" alt="A live session seen from one participant's window: avatars of three people in the top right, a Priya Nair is spotlighting banner with a Follow button, Priya's green cursor and selection outline on the dark home screen's trail card, and Jonas Ortiz's purple cursor and selection on the Start hike button with his cursor chat bubble asking whether the button should stay pinned while scrolling" width="100%">
-  <p align="center"><sub><b>Live sessions</b>: three apps on one <code>figcraft-server</code> file, with cursors, selections, cursor chat and spotlight</sub></p>
+  <p align="center"><sub><b>Live sessions</b>: three apps on one <code>endrika-server</code> file, with cursors, selections, cursor chat and spotlight</sub></p>
 </td>
 </tr>
 </table>
 
-## Made in FigCraft
+## Made in Endrika
 
-Every design below was built entirely through FigCraft's command API, the same one the MCP server
-exposes to agents, and exported at 2x by FigCraft's own renderer. The source files are in
+Every design below was built entirely through Endrika's command API, the same one the MCP server
+exposes to agents, and exported at 2x by Endrika's own renderer. The source files are in
 [`examples/`](examples).
 
 <table>
@@ -187,7 +187,7 @@ exposes to agents, and exported at 2x by FigCraft's own renderer. The source fil
   <tr>
     <td width="50%" valign="top">
       <h3>Type that sets beautifully</h3>
-      Text edited in place on the canvas (with inline IME composition), mixed styles within a paragraph, auto width and auto height, line height, letter and paragraph spacing, decoration, case, lists, OpenType features, variable font axes and text styles, right-to-left and mixed-direction text (Arabic, Hebrew) with the Unicode bidi algorithm, shaped with HarfRust and the open fonts from craft-fonts plus your system fonts.
+      Text edited in place on the canvas (with inline IME composition), mixed styles within a paragraph, auto width and auto height, line height, letter and paragraph spacing, decoration, case, lists, OpenType features, variable font axes and text styles, right-to-left and mixed-direction text (Arabic, Hebrew) with the Unicode bidi algorithm, shaped with HarfRust and the open fonts from mahay-fonts plus your system fonts.
     </td>
     <td width="50%" valign="top">
       <h3>Prototype and hand off</h3>
@@ -204,21 +204,21 @@ Every menu item, tool and gesture runs a command from one registry of 400+ comma
 
 ```sh
 # Headless: render and export
-figcraft-cli render landing.figcraft -o landing.png --scale 2
-figcraft-cli export landing.figcraft -o out/ --format svg
+endrika-cli render landing.endrika -o landing.png --scale 2
+endrika-cli export landing.endrika -o out/ --format svg
 
 # Run a script of commands without a window
-figcraft-cli run build-card.json --out card.figcraft
+endrika-cli run build-card.json --out card.endrika
 
 # Every command, with its parameters
-figcraft-cli commands --filter autoLayout
+endrika-cli commands --filter autoLayout
 
 # Let an agent drive it over MCP (headless, or attached to the running app)
-figcraft-cli mcp
-figcraft-cli mcp --attach 47800
+endrika-cli mcp
+endrika-cli mcp --attach 47800
 ```
 
-The desktop app also offers a loopback-only control channel (`figcraft --control <port>`) for inspecting UI state, driving tools with pointer and key events, and taking screenshots. See [`docs/control-protocol.md`](docs/control-protocol.md), [`docs/mcp.md`](docs/mcp.md) and [`docs/cli.md`](docs/cli.md).
+The desktop app also offers a loopback-only control channel (`endrika --control <port>`) for inspecting UI state, driving tools with pointer and key events, and taking screenshots. See [`docs/control-protocol.md`](docs/control-protocol.md), [`docs/mcp.md`](docs/mcp.md) and [`docs/cli.md`](docs/cli.md).
 
 ## Under the hood
 
@@ -230,28 +230,28 @@ The desktop app also offers a loopback-only control channel (`figcraft --control
 - **Languages:** English, Russian and Turkish (reviewed by native speakers), and Spanish, French, German, Brazilian Portuguese, Japanese, Korean, Simplified Chinese, Czech and Indonesian drafts, picked in Preferences or taken from the system or browser and switched live; adding a language is one catalog file ([`docs/translating.md`](docs/translating.md)).
 - **Plugins:** sandboxed WebAssembly plugins (a metered, pure-Rust interpreter with a memory cap and no file or network access, in the browser too) that act through the same commands, each run one undo step, within the permissions their manifest asks for. A Rust SDK and three example plugins are in [`plugins/`](plugins); see [`docs/plugins.md`](docs/plugins.md).
 - **Live sessions (preview):** share the open file from the app (Share ▸ Start sharing: online through a server, or on your local network), give the others the short join code it shows (or the invite link), and edit it together: everyone's changes sync live, with cursors, selections, avatars and follow, and undo takes back only your own changes. Others join from the desktop app (invite links open it) or from the browser build. See [`docs/collab-protocol.md`](docs/collab-protocol.md).
-- **A server of your own (preview):** `figcraft-server` keeps a team's files, publishes them from the app (File ▸ Publish to server…, or Share ▸ Online with your server in Preferences) and hands out share links and join codes that let people edit or only view; files survive restarts and apps reconnect where they were. No accounts yet: links are the access. Releases ship it for Linux, and the desktop app joins over `wss://`; [hosting it on a rented Linux server](docs/server.md#deploy-on-a-linux-server) takes a systemd unit and Caddy or nginx (or Docker). See [`docs/server.md`](docs/server.md).
+- **A server of your own (preview):** `endrika-server` keeps a team's files, publishes them from the app (File ▸ Publish to server…, or Share ▸ Online with your server in Preferences) and hands out share links and join codes that let people edit or only view; files survive restarts and apps reconnect where they were. No accounts yet: links are the access. Releases ship it for Linux, and the desktop app joins over `wss://`; [hosting it on a rented Linux server](docs/server.md#deploy-on-a-linux-server) takes a systemd unit and Caddy or nginx (or Docker). See [`docs/server.md`](docs/server.md).
 - **Never crashes:** no `unwrap`, `expect` or `panic` in shipped code, enforced by clippy; commands run behind a guard so a bug fails one action, not your session.
 - **Clean-room:** implemented from public documentation and observed behaviour only. No proprietary code, file formats, icons or images.
 
 ## Get started
 
 ```sh
-git clone https://github.com/storytold/figcraft
-cd figcraft
-cargo run --release -p figcraft            # the desktop app
-cargo run --release -p figcraft-server     # the collaboration server (docs/server.md)
+git clone https://github.com/raantss18/mahay
+cd endrika
+cargo run --release -p endrika            # the desktop app
+cargo run --release -p endrika-server     # the collaboration server (docs/server.md)
 cargo test --workspace                     # the test suite
 cargo xtask ci                             # fmt, clippy, tests, layering and asset checks
 ```
 
-Fonts for the UI and the Text tool come from [craft-fonts](https://github.com/storytold/craft-fonts), cloned next to this repository (`../craft-fonts`); without it FigCraft falls back to your system fonts.
+Fonts for the UI and the Text tool come from [mahay-fonts](https://github.com/raantss18/mahay), cloned next to this repository (`../mahay-fonts`); without it Endrika falls back to your system fonts.
 
 ```sh
-git clone https://github.com/storytold/craft-fonts ../craft-fonts
+git clone https://github.com/raantss18/mahay ../mahay-fonts
 ```
 
-If you clone it after a first build, run `cargo clean -p figcraft-text` once so the next build embeds the fonts.
+If you clone it after a first build, run `cargo clean -p endrika-text` once so the next build embeds the fonts.
 
 **Start from a template.** The home screen's Templates tab has eight starter files (a mobile app, a landing page, a dashboard, a design system starter, a wireframe kit, social post sizes, presentation slides and an icon set starter), also under File ▸ New from template…. They are built in code from original, synthetic content, so scripts and agents can open them too: `file.newFromTemplate {template}` ([`docs/mcp.md`](docs/mcp.md#starter-templates)).
 
@@ -259,14 +259,14 @@ For the web build, install [trunk](https://trunkrs.dev/) and run `cargo xtask wa
 
 New contributors and AI agents: start with [`AGENTS.md`](AGENTS.md), then [`docs/`](docs/).
 
-Installers for macOS (universal, signed and notarized), Windows (x64, x86 and arm64), Linux (AppImage, `.deb`, `.rpm`, Flatpak and tarball), FreeBSD and the web are attached to each [GitHub release](https://github.com/storytold/figcraft/releases). Maintainers: [`docs/releasing.md`](docs/releasing.md) explains how releases are built, signed and published.
+Installers for macOS (universal, signed and notarized), Windows (x64, x86 and arm64), Linux (AppImage, `.deb`, `.rpm`, Flatpak and tarball), FreeBSD and the web are attached to each [GitHub release](https://github.com/raantss18/mahay/releases). Maintainers: [`docs/releasing.md`](docs/releasing.md) explains how releases are built, signed and published.
 
 > [!IMPORTANT]
-> **Status:** FigCraft is in **alpha**: about 49% of the way to replacing proprietary tools for real work, by our own estimate. Nearly all tracked interface design actions in the menu checklist are wired ([`docs/parity-checklist.md`](docs/parity-checklist.md)) and the core editor works end to end, but FigCraft opens `.fig` files only best effort, has only a first preview of multiplayer (live sessions hosted from the app or a self-hosted server, with per-person undo and share links to edit or to view; no accounts, teams or cloud yet), runs its own WebAssembly plugins, and hasn't been checked against real design documents. The honest, area-by-area picture is in the [roadmap](ROADMAP.md) and [`docs/target-app-parity.md`](docs/target-app-parity.md). Expect rough edges and please file issues, or tell us what broke on [Discord](https://discord.gg/artcraft).
+> **Status:** Endrika is in **alpha**: about 49% of the way to replacing proprietary tools for real work, by our own estimate. Nearly all tracked interface design actions in the menu checklist are wired ([`docs/parity-checklist.md`](docs/parity-checklist.md)) and the core editor works end to end, but Endrika opens `.fig` files only best effort, has only a first preview of multiplayer (live sessions hosted from the app or a self-hosted server, with per-person undo and share links to edit or to view; no accounts, teams or cloud yet), runs its own WebAssembly plugins, and hasn't been checked against real design documents. The honest, area-by-area picture is in the [roadmap](ROADMAP.md) and [`docs/target-app-parity.md`](docs/target-app-parity.md). Expect rough edges and please file issues, or tell us what broke on [Discord](https://github.com/raantss18/mahay/discussions).
 
 ## Privacy and online sharing
 
-FigCraft works offline: it has no account and no telemetry, and it contacts no server until you
+Endrika works offline: it has no account and no telemetry, and it contacts no server until you
 share or join a file. Live sessions are a **preview**. Before you share anything that matters,
 know what sharing does:
 
@@ -289,31 +289,31 @@ know what sharing does:
 
 The default server's terms are in [`docs/online-sharing-terms.md`](docs/online-sharing-terms.md).
 
-## The Crafting Apps
+## The Mahay apps
 
-FigCraft is one of the **Crafting Apps**: free, open-source creative tools from the
-[ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
+Endrika is one of the **Mahay apps**: free, open-source creative tools from the
+[Mahay](https://github.com/raantss18/mahay) team, each written from scratch in Rust and each able to
 stand on its own.
 
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
-| <img src="assets/app-icon/hicolor/64x64/apps/ai.storyteller.figcraft.png" alt="" width="32" height="32"> | **FigCraft** | **Interface design, components and prototypes · you are here** | [GitHub](https://github.com/storytold/figcraft) | [Website](https://getartcraft.com/apps/figcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.photocraft.png" alt="" width="32" height="32"> | **PhotoCraft** | Image editing | [GitHub](https://github.com/storytold/photocraft) | [Website](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.vectorcraft.png" alt="" width="32" height="32"> | **VectorCraft** | Vector illustration | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://getartcraft.com/apps/vectorcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.filmcraft.png" alt="" width="32" height="32"> | **FilmCraft** | Video editing, color and sound | [GitHub](https://github.com/storytold/filmcraft) | [Website](https://getartcraft.com/apps/filmcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.lightcraft.png" alt="" width="32" height="32"> | **LightCraft** | Photo library and raw development | [GitHub](https://github.com/storytold/lightcraft) | [Website](https://getartcraft.com/apps/lightcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | Page layout and publishing | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
+| <img src="assets/app-icon/hicolor/64x64/apps/org.mahay.endrika.png" alt="" width="32" height="32"> | **Endrika** | **Interface design, components and prototypes · you are here** | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/org.mahay.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tselatra/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tselatra.png" alt="" width="32" height="32"> | **Tselatra** | Motion graphics and visual effects | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/pejy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.pejy.png" alt="" width="32" height="32"> | **Pejy** | Page layout and publishing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 
-And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
+And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and video studio for artists who want real control.
 
-The Crafting Apps share the same conventions: clean-room and pure Rust, native on macOS, Windows, Linux and FreeBSD, in the browser via WebAssembly, and fully drivable by agents.
+The Mahay apps share the same conventions: clean-room and pure Rust, native on macOS, Windows, Linux and FreeBSD, in the browser via WebAssembly, and fully drivable by agents.
 
 <br>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://github.com/raantss18/mahay/discussions"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <h3 align="center">Come make things with us</h3>
@@ -322,37 +322,37 @@ The Crafting Apps share the same conventions: clean-room and pure Rust, native o
   Our Discord is where people who make things hang out: designers sketching their first app,
   developers who just want a button to look right, illustrators, filmmakers, type nerds, and
   plenty of people still working out what they like to make. Share what you're building, ask for
-  help, tell us what's broken or what you wish FigCraft could do. You're welcome here.
+  help, tell us what's broken or what you wish Endrika could do. You're welcome here.
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
-  <a href="https://getartcraft.com/">getartcraft.com</a> ·
-  <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/figcraft">FigCraft</a>
+  <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
+  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
+  <a href="https://github.com/raantss18/mahay">Endrika</a>
 </p>
 
 ---
 
 ## License and credits
 
-FigCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the FigCraft contributors. Required notices are in [NOTICE](NOTICE).
+Endrika is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+Copyright (c) 2026 Mahay Team and the Endrika contributors. Required notices are in [NOTICE](NOTICE).
 
-Every icon in FigCraft is drawn in code or made for this project, and bundled fonts, images and other
+Every icon in Endrika is drawn in code or made for this project, and bundled fonts, images and other
 assets keep their own open licenses; each one is listed with its author, source and license in
 [ATTRIBUTION.md](ATTRIBUTION.md).
 
-The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
-ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and FigCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+The Mahay name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
+Mahay Team and are not covered by this license. They may be used only unmodified, and only as
+part of this repository and Endrika, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 Forks and modified versions must remove them.
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="https://raw.githubusercontent.com/storytold/vectorcraft/main/docs/brand/artcraft-mark.png" width="28"></a><br>
-  <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
+  <a href="https://github.com/raantss18/mahay"><img alt="Mahay" src="https://raw.githubusercontent.com/raantss18/tsipika/main/docs/brand/mahay-mark.png" width="28"></a><br>
+  <sub>Made by the <a href="https://github.com/raantss18/mahay">Mahay</a> team and community.</sub>
 </p>
 
 ## Star history
 
-[![Star History Chart](https://api.star-history.com/svg?repos=storytold/figcraft&type=Date&legend=top-left)](https://www.star-history.com/?repos=storytold%2Ffigcraft&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=raantss18/endrika&type=Date&legend=top-left)](https://www.star-history.com/?repos=raantss18%2Fendrika&type=date&legend=top-left)

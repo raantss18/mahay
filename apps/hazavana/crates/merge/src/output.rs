@@ -1,5 +1,5 @@
 //! Merge results as linear DNGs (`PhotometricInterpretation = LinearRaw`, three samples per
-//! pixel), written with LightCraft's own TIFF/DNG writer.
+//! pixel), written with Hazavana's own TIFF/DNG writer.
 //!
 //! - Pixel values are scaled so the brightest pixel sits just below 1.0 (the white level); the
 //!   scale is carried in `BaselineExposure`, so a default rendering looks like the reference frame.
@@ -12,11 +12,11 @@
 //! - Lens corrections (an HDR merge's: the reference frame's, [`crate::Frame::lens`]) go in `OpcodeList3`, where the
 //!   develop settings' profile corrections find them as they do in the sources.
 
-use lightcraft_color::{D50, D65, Mat3, bradford};
-use lightcraft_geom::Orientation;
-use lightcraft_meta::Metadata;
-use lightcraft_raster::Rgb32f;
-use lightcraft_raw::{BlackLevel, ColorData, DngCompression, DngWriteOptions, Opcode, OpcodeLists, RawData, RawFormat, RawImage, Rect};
+use hazavana_color::{D50, D65, Mat3, bradford};
+use hazavana_geom::Orientation;
+use hazavana_meta::Metadata;
+use hazavana_raster::Rgb32f;
+use hazavana_raw::{BlackLevel, ColorData, DngCompression, DngWriteOptions, Opcode, OpcodeLists, RawData, RawFormat, RawImage, Rect};
 
 use crate::frame::FrameColor;
 use crate::{MergeError, Result};
@@ -118,7 +118,7 @@ pub fn write_linear_dng(
         lens_metadata: Default::default(),
     };
     let compression = DngCompression::Deflate { tile: 256, half: samples == DngSamples::Half };
-    lightcraft_raw::write_dng(&raw, &DngWriteOptions { compression, ..Default::default() }).map_err(|e| MergeError::Output(e.to_string()))
+    hazavana_raw::write_dng(&raw, &DngWriteOptions { compression, ..Default::default() }).map_err(|e| MergeError::Output(e.to_string()))
 }
 
 #[cfg(test)]
@@ -128,31 +128,31 @@ mod tests {
     #[test]
     fn linear_dng_round_trips_through_the_raw_decoder() {
         let img = Rgb32f::from_fn(80, 60, |x, y| [x as f32 / 20.0, y as f32 / 30.0, 0.3]);
-        let color = FrameColor::Linear { to_xyz_d50: bradford(D65, D50).mul(&lightcraft_color::SRGB.to_xyz()) };
+        let color = FrameColor::Linear { to_xyz_d50: bradford(D65, D50).mul(&hazavana_color::SRGB.to_xyz()) };
         let bytes = write_linear_dng(&img, &color, Orientation::Normal, &Metadata::default(), 0.0, DngSamples::Half, &[]).unwrap();
-        let raw = lightcraft_raw::decode(&bytes).unwrap();
+        let raw = hazavana_raw::decode(&bytes).unwrap();
         assert_eq!((raw.width, raw.height, raw.cpp), (80, 60, 3));
         let gain = 2f32.powf(raw.color.baseline_exposure as f32);
-        let back = raw.develop(lightcraft_raw::Method::Bilinear).unwrap();
+        let back = raw.develop(hazavana_raw::Method::Bilinear).unwrap();
         for (a, b) in img.data.iter().zip(&back.data) {
             for c in 0..3 {
                 assert!((a[c] - b[c] * gain).abs() <= a[c] * 2e-3 + 1e-5, "{a:?} {b:?}");
             }
         }
         // the colour model maps the source white to neutral (no white-balance shift)
-        let xy = lightcraft_raw::color::as_shot_white_xy(&raw);
+        let xy = hazavana_raw::color::as_shot_white_xy(&raw);
         assert!((xy.x - D65.x).abs() < 2e-3 && (xy.y - D65.y).abs() < 2e-3, "{xy:?}");
-        let t = lightcraft_raw::color::camera_transform(&raw, xy);
+        let t = hazavana_raw::color::camera_transform(&raw, xy);
         let white = t.matrix.apply([t.wb[0] as f64, t.wb[1] as f64, t.wb[2] as f64]);
         assert!(white.iter().all(|v| (v - white[0]).abs() < 1e-3), "{white:?}");
         // sRGB red maps to the Rec.2020 coordinates of sRGB red
         let red = t.matrix.apply([t.wb[0] as f64, 0.0, 0.0]);
-        let want = lightcraft_color::SRGB.to_space(&lightcraft_color::REC2020).apply([1.0, 0.0, 0.0]);
+        let want = hazavana_color::SRGB.to_space(&hazavana_color::REC2020).apply([1.0, 0.0, 0.0]);
         let k = white[0];
         for c in 0..3 {
             assert!((red[c] / k - want[c]).abs() < 5e-3, "{red:?} vs {want:?}");
         }
         let u16 = write_linear_dng(&img, &color, Orientation::Normal, &Metadata::default(), 0.0, DngSamples::U16, &[]).unwrap();
-        assert!(lightcraft_raw::decode(&u16).is_ok());
+        assert!(hazavana_raw::decode(&u16).is_ok());
     }
 }

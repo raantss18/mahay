@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** major (first per-language status) · **Target:** Avid Pro Tools Ultimate 2026.4.1
 
-SoundCraft is English only. There is no string catalog: every menu label, dialog and tooltip is a
+Feo is English only. There is no string catalog: every menu label, dialog and tooltip is a
 literal in Rust (`crates/engine/src/cmd/*`, `crates/ui-egui/src/*`). Pro Tools ships its UI in
 **8 languages** (bundle `.lproj` folders: English, German, Spanish, French, Japanese, Korean,
 Simplified Chinese, Traditional Chinese).

@@ -2,8 +2,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::{EngineError, Session};
+use tsipika_doc::NodeId;
+use tsipika_engine::{EngineError, Session};
 
 fn compound() -> (Session, NodeId, NodeId, NodeId) {
     let mut s = Session::new();

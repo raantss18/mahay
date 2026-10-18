@@ -1,16 +1,16 @@
 //! Guide Layer in the layer context menus (Timeline rows and the Composition viewer), a plain item
 //! (no check mark) that toggles the switch on the selection, and the guide mark by a guide layer's
 //! name.
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Event, Modifiers, PointerButton, Pos2, Rect, pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT as _, Queryable as _};
 use serde_json::json;
 
 /// A 640×360 comp with two 200×200 solids, "Left" at (160, 180) and "Right" at (480, 180).
-fn harness() -> (Harness<'static, EffectcraftApp>, LayerId, LayerId) {
+fn harness() -> (Harness<'static, TselatraApp>, LayerId, LayerId) {
     let mut session = Session::default();
     session.execute("comp.new", json!({"name": "Guides", "width": 640, "height": 360, "duration": 4})).unwrap();
     let mut solid = |name: &str, x: f64| {
@@ -20,17 +20,17 @@ fn harness() -> (Harness<'static, EffectcraftApp>, LayerId, LayerId) {
     };
     let left = solid("Left", 160.0);
     let right = solid("Right", 480.0);
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(session));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(session));
     h.run_steps(3);
     (h, left, right)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("missing {id}"));
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, button: PointerButton) {
+fn click(h: &mut Harness<'_, TselatraApp>, p: Pos2, button: PointerButton) {
     for pressed in [true, false] {
         h.input_mut().events.push(Event::PointerMoved(p));
         h.input_mut().events.push(Event::PointerButton { pos: p, button, pressed, modifiers: Modifiers::NONE });
@@ -39,28 +39,28 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, button: PointerButton) {
     h.run_steps(3);
 }
 
-fn guide(h: &Harness<'_, EffectcraftApp>, id: LayerId) -> bool {
+fn guide(h: &Harness<'_, TselatraApp>, id: LayerId) -> bool {
     h.state().session.active_comp().unwrap().layer(id).unwrap().switches.guide
 }
 
-fn snapshot(h: &mut Harness<'_, EffectcraftApp>, name: &str) {
+fn snapshot(h: &mut Harness<'_, TselatraApp>, name: &str) {
     if let Ok(dir) = std::env::var("GUIDE_LAYER_SNAPSHOTS") {
         h.render().unwrap().save(format!("{dir}/{name}.png")).unwrap();
     }
 }
 
 /// The open menu's Guide Layer item carries no check mark (a plain toggle).
-fn plain(h: &Harness<'_, EffectcraftApp>) -> bool {
+fn plain(h: &Harness<'_, TselatraApp>) -> bool {
     !h.get_by_label_contains("Guide Layer").accesskit_node().label().unwrap_or_default().contains('✔')
 }
 
-fn row(h: &Harness<'_, EffectcraftApp>, id: LayerId) -> Pos2 {
+fn row(h: &Harness<'_, TselatraApp>, id: LayerId) -> Pos2 {
     let r = rect(h, &format!("timeline.layer.{}.row", id.0));
     pos2(r.min.x + 210.0, r.center().y)
 }
 
 /// The Guide Layer item of the open menu `prefix`.
-fn guide_item(h: &Harness<'_, EffectcraftApp>, prefix: &str) -> Rect {
+fn guide_item(h: &Harness<'_, TselatraApp>, prefix: &str) -> Rect {
     rect(h, &format!("{prefix}.switch.guide"))
 }
 

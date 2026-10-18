@@ -6,11 +6,11 @@
 //! Values stay gamma-encoded: like After Effects, footage pixels enter the working space as they
 //! are encoded in the file. Alpha follows the footage's [`AlphaMode`] interpretation.
 
-use effectcraft_project::{AlphaMode, Footage};
-use effectcraft_raster::{Image, Px};
-use effectcraft_render::FloatCurve;
-use filmcraft_color::{Matrix, Range};
-use filmcraft_frame::{Chroma, PixelData, VideoFrame};
+use tselatra_project::{AlphaMode, Footage};
+use tselatra_raster::{Image, Px};
+use tselatra_render::FloatCurve;
+use hetsika_color::{Matrix, Range};
+use hetsika_frame::{Chroma, PixelData, VideoFrame};
 use rayon::prelude::*;
 
 /// How to turn a (colour, alpha) sample into a premultiplied pixel.
@@ -62,13 +62,13 @@ impl AlphaOp {
     }
 }
 
-/// Convert a FilmCraft frame to an [`Image`].
+/// Convert a Hetsika frame to an [`Image`].
 #[cfg(test)]
 pub(crate) fn frame_to_image(f: &VideoFrame, op: AlphaOp) -> Image {
     frame_to_image_in(f, op, Vec::new())
 }
 
-/// Convert a FilmCraft frame to an [`Image`], reusing `buf`'s allocation when it is large enough
+/// Convert a Hetsika frame to an [`Image`], reusing `buf`'s allocation when it is large enough
 /// (every pixel is overwritten, so a recycled frame's contents do not matter).
 pub(crate) fn frame_to_image_in(f: &VideoFrame, op: AlphaOp, mut buf: Vec<Px>) -> Image {
     let (w, h) = (f.width as usize, f.height as usize);
@@ -140,7 +140,7 @@ pub(crate) fn turned(img: Image, turn: image::metadata::Orientation) -> Image {
     Image { width: tw as u32, height: th as u32, data }
 }
 
-/// A FilmCraft frame for a render that shows it at `w` × `h`, at most half its size each way:
+/// A Hetsika frame for a render that shows it at `w` × `h`, at most half its size each way:
 /// what `resample(&frame_to_image(f, op), w, h)` makes, converting a quarter of the pixels.
 /// Opaque 4:2:0 Y'CbCr is box-filtered to half size before conversion (each 2×2 block of luma,
 /// and the [1 6 1]/8 neighbourhood of its chroma sample: the mean of the upsampled chroma its
@@ -161,7 +161,7 @@ pub(crate) fn frame_to_image_scaled(f: &VideoFrame, w: u32, h: u32) -> Option<Im
         }
         _ => return None,
     };
-    Some(if (half.width, half.height) == (w, h) { half } else { effectcraft_raster::resample(&half, w, h) })
+    Some(if (half.width, half.height) == (w, h) { half } else { tselatra_raster::resample(&half, w, h) })
 }
 
 /// An opaque 4:2:0 frame of even size `w` × `h` converted at half that size (see
@@ -415,23 +415,23 @@ mod tests {
     use super::*;
     use std::sync::Arc;
 
-    fn yuv_frame(y: u8, u: u8, v: u8, color: filmcraft_color::ColorInfo) -> VideoFrame {
+    fn yuv_frame(y: u8, u: u8, v: u8, color: hetsika_color::ColorInfo) -> VideoFrame {
         VideoFrame {
             width: 4,
             height: 2,
             data: PixelData::Yuv8 { planes: [Arc::new(vec![y; 8]), Arc::new(vec![u; 2]), Arc::new(vec![v; 2])], chroma: Chroma::C420, alpha: None },
             color,
             par: (1, 1),
-            pts: filmcraft_time::Tick::ZERO,
+            pts: hetsika_time::Tick::ZERO,
         }
     }
 
     #[test]
     fn limited_range_grey_and_white() {
         let op = AlphaOp::new(AlphaMode::Straight, [0.0; 3]);
-        let img = frame_to_image(&yuv_frame(235, 128, 128, filmcraft_color::ColorInfo::REC709), op);
+        let img = frame_to_image(&yuv_frame(235, 128, 128, hetsika_color::ColorInfo::REC709), op);
         assert!(img.data.iter().all(|p| (p[0] - 1.0).abs() < 1e-5 && (p[1] - 1.0).abs() < 1e-5 && p[3] == 1.0));
-        let img = frame_to_image(&yuv_frame(126, 128, 128, filmcraft_color::ColorInfo::REC709), op);
+        let img = frame_to_image(&yuv_frame(126, 128, 128, hetsika_color::ColorInfo::REC709), op);
         assert!((img.data[0][0] - 110.0 / 219.0).abs() < 1e-5);
     }
 
@@ -448,9 +448,9 @@ mod tests {
                 chroma: Chroma::C420,
                 alpha: None,
             },
-            color: filmcraft_color::ColorInfo::REC709,
+            color: hetsika_color::ColorInfo::REC709,
             par: (1, 1),
-            pts: filmcraft_time::Tick::ZERO,
+            pts: hetsika_time::Tick::ZERO,
         }
     }
 
@@ -460,7 +460,7 @@ mod tests {
         let full = frame_to_image(&f, AlphaOp::new(AlphaMode::Straight, [0.0; 3]));
         for (w, h) in [(48, 32), (32, 21), (24, 16), (13, 9)] {
             let scaled = frame_to_image_scaled(&f, w, h).expect("4:2:0, at most half size");
-            let want = effectcraft_raster::resample(&full, w, h);
+            let want = tselatra_raster::resample(&full, w, h);
             assert_eq!((scaled.width, scaled.height), (w, h));
             let worst = scaled.data.iter().zip(&want.data).flat_map(|(a, b)| (0..4).map(move |c| (a[c] - b[c]).abs())).fold(0.0f32, f32::max);
             assert!(worst < 1e-5, "{w}×{h}: {worst}");
@@ -468,7 +468,7 @@ mod tests {
         // More than half the size, odd sizes, other chroma layouts: convert the full frame.
         assert!(frame_to_image_scaled(&f, 49, 32).is_none());
         assert!(frame_to_image_scaled(&smooth_420(95, 64), 40, 30).is_none());
-        assert!(frame_to_image_scaled(&yuv_frame(100, 128, 128, filmcraft_color::ColorInfo::REC709), 2, 1).is_some());
+        assert!(frame_to_image_scaled(&yuv_frame(100, 128, 128, hetsika_color::ColorInfo::REC709), 2, 1).is_some());
         let mut f444 = smooth_420(96, 64);
         if let PixelData::Yuv8 { chroma, .. } = &mut f444.data {
             *chroma = Chroma::C444;
@@ -480,7 +480,7 @@ mod tests {
     fn bt709_red() {
         // 8-bit limited BT.709 red: Y 63, Cb 102, Cr 240
         let op = AlphaOp::new(AlphaMode::Straight, [0.0; 3]);
-        let p = frame_to_image(&yuv_frame(63, 102, 240, filmcraft_color::ColorInfo::REC709), op).data[0];
+        let p = frame_to_image(&yuv_frame(63, 102, 240, hetsika_color::ColorInfo::REC709), op).data[0];
         assert!(p[0] > 0.98 && p[1] < 0.02 && p[2] < 0.02, "{p:?}");
     }
 
@@ -505,7 +505,7 @@ mod tests {
         assert!((p[0] - 0.5).abs() < 1e-3 && (p[1] - 1.0).abs() < 1e-5 && p[2] > 1.5, "{p:?}");
     }
 
-    /// `cargo test -p effectcraft-media --lib bench -- --ignored --nocapture`
+    /// `cargo test -p tselatra-media --lib bench -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn bench_convert_1080p() {
@@ -518,9 +518,9 @@ mod tests {
                 chroma: Chroma::C420,
                 alpha: None,
             },
-            color: filmcraft_color::ColorInfo::REC709,
+            color: hetsika_color::ColorInfo::REC709,
             par: (1, 1),
-            pts: filmcraft_time::Tick::ZERO,
+            pts: hetsika_time::Tick::ZERO,
         };
         let op = AlphaOp::new(AlphaMode::Straight, [0.0; 3]);
         for _ in 0..3 {

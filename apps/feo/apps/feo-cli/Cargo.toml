@@ -1,0 +1,21 @@
+[package]
+name = "feo-cli"
+description = "Feo command line: headless editing, conversion, bounce, MCP server, app control"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "feo-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+feo-engine.workspace = true
+feo-automation.workspace = true
+feo-audio-io.workspace = true
+feo-dsp.workspace = true
+serde_json.workspace = true

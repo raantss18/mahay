@@ -1,8 +1,8 @@
 //! Shared helpers for the SILK/hybrid round-trip tests: synthetic signals, encoding, decoding
-//! with FilmCraft's spec-derived decoder, delay-searched SNR and an Ogg Opus writer for ffmpeg.
+//! with Hetsika's spec-derived decoder, delay-searched SNR and an Ogg Opus writer for ffmpeg.
 #![allow(dead_code)]
 
-use effectcraft_opusenc::OpusEncoder;
+use tselatra_opusenc::OpusEncoder;
 
 pub const SR: f64 = 48_000.0;
 pub const FRAME: usize = OpusEncoder::FRAME_SIZE;
@@ -124,9 +124,9 @@ pub fn encode(mut enc: OpusEncoder, planar: &[Vec<f32>]) -> (OpusEncoder, Vec<Ve
     (enc, packets)
 }
 
-/// Decodes with filmcraft-opus, drops the pre-skip and returns planar channels (full length).
+/// Decodes with hetsika-opus, drops the pre-skip and returns planar channels (full length).
 pub fn decode(head: &[u8], packets: &[Vec<u8>]) -> Vec<Vec<f32>> {
-    let mut dec = filmcraft_opus::Decoder::new(head).expect("OpusHead");
+    let mut dec = hetsika_opus::Decoder::new(head).expect("OpusHead");
     dec.set_trim_pre_skip(true);
     let mut out: Vec<Vec<f32>> = vec![Vec::new(); dec.channels()];
     for p in packets {
@@ -269,7 +269,7 @@ fn ogg_page(out: &mut Vec<u8>, packet: &[u8], header_type: u8, granule: u64, seq
 pub fn ogg_opus(enc: &OpusEncoder, packets: &[Vec<u8>], len: usize) -> Vec<u8> {
     let mut out = Vec::new();
     ogg_page(&mut out, &enc.opus_head(), 0x02, 0, 0);
-    let vendor = b"effectcraft-opusenc";
+    let vendor = b"tselatra-opusenc";
     let mut tags = b"OpusTags".to_vec();
     tags.extend_from_slice(&(vendor.len() as u32).to_le_bytes());
     tags.extend_from_slice(vendor);

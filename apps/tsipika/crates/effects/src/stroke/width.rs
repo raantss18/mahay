@@ -11,7 +11,7 @@
 use std::f64::consts::PI;
 
 use kurbo::{BezPath, ParamCurve, PathEl, PathSeg, Point, Vec2};
-use vectorcraft_doc::{LineCap, LineJoin, StrokeLayer, WidthProfile};
+use tsipika_doc::{LineCap, LineJoin, StrokeLayer, WidthProfile};
 
 use super::{kink, segments, subpaths, unit};
 
@@ -300,7 +300,7 @@ mod tests {
     }
 
     fn capped(cap: LineCap) -> StrokeLayer {
-        let mut st = StrokeLayer::new(vectorcraft_color::Paint::None, 10.0);
+        let mut st = StrokeLayer::new(tsipika_color::Paint::None, 10.0);
         st.cap = cap;
         st
     }

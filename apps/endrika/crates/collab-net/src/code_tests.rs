@@ -1,16 +1,16 @@
 //! Join codes over the network: a file shared on the local network joined by its code (two
 //! engine sessions over loopback), what the browser's driver does with an online code, a server
-//! older than join codes, and the links that name a code. (A `figcraft-server` handing codes out
+//! older than join codes, and the links that name a code. (A `endrika-server` handing codes out
 //! and resolving them is tested in its own crate, with the same link.)
 
 use std::net::{Ipv4Addr, TcpListener};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use figcraft_collab::code::{self, Code, Local};
-use figcraft_collab::message::{self, ClientMsg, PROTOCOL, ServerMsg};
-use figcraft_engine::Session;
-use figcraft_engine::live::{Event, Status};
+use endrika_collab::code::{self, Code, Local};
+use endrika_collab::message::{self, ClientMsg, PROTOCOL, ServerMsg};
+use endrika_engine::Session;
+use endrika_engine::live::{Event, Status};
 use serde_json::json;
 use tungstenite::{Bytes, Message};
 
@@ -113,23 +113,23 @@ fn a_local_code_with_the_wrong_secret_or_a_typo_doesnt_join() {
 
 #[test]
 fn links_can_name_a_join_code() {
-    let (invite, found) = Invite::parse_join("figcraft://join?server=wss://share.example/&code=k7m-2qx-9td").unwrap();
+    let (invite, found) = Invite::parse_join("endrika://join?server=wss://share.example/&code=k7m-2qx-9td").unwrap();
     assert_eq!((invite.server.url(), invite.file.as_str(), invite.token.as_str()), ("wss://share.example:443/".to_string(), "", ""));
     assert_eq!(found.as_deref(), Some("K7M2QX9TD"));
-    let (invite, found) = Invite::parse_join(" figcraft://join?host=127.0.0.1:47900&code=K7M2QX9TD ").unwrap();
+    let (invite, found) = Invite::parse_join(" endrika://join?host=127.0.0.1:47900&code=K7M2QX9TD ").unwrap();
     assert_eq!((invite.server, found.as_deref()), (Endpoint::plain("127.0.0.1:47900"), Some("K7M2QX9TD")));
     // A link with a file and a token is read as before.
-    let link = "figcraft://join?host=127.0.0.1:47900&file=abc&token=AbCdEfGhIjKlMnOpQrStUv";
+    let link = "endrika://join?host=127.0.0.1:47900&file=abc&token=AbCdEfGhIjKlMnOpQrStUv";
     assert_eq!(Invite::parse_join(link).unwrap(), (Invite::parse(link).unwrap(), None));
     for bad in [
-        "figcraft://join?server=wss://share.example/&code=",
-        "figcraft://join?server=wss://share.example/&code=K7M",
-        "figcraft://join?code=K7M2QX9TD",
+        "endrika://join?server=wss://share.example/&code=",
+        "endrika://join?server=wss://share.example/&code=K7M",
+        "endrika://join?code=K7M2QX9TD",
     ] {
         assert!(Invite::parse_join(bad).is_err(), "{bad}");
     }
     // Where a file's link is needed (team libraries), a code isn't one.
-    let e = Invite::parse("figcraft://join?server=wss://share.example/&code=K7M2QX9TD").unwrap_err();
+    let e = Invite::parse("endrika://join?server=wss://share.example/&code=K7M2QX9TD").unwrap_err();
     assert!(e.contains("join code") && !e.contains("K7M"), "{e}");
 }
 
@@ -154,7 +154,7 @@ fn old_server() -> (Endpoint, std::thread::JoinHandle<()>) {
 /// A server from before join codes that manages a file's links as it always did: two connections,
 /// the first makes links, the second (asked for codes) can't read the request.
 fn old_server_with_links() -> (Endpoint, std::thread::JoinHandle<()>) {
-    use figcraft_collab::message::{Admin, AdminReply, LinkInfo, NewLink};
+    use endrika_collab::message::{Admin, AdminReply, LinkInfo, NewLink};
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let at = Endpoint::plain(listener.local_addr().unwrap().to_string());
     let t = std::thread::spawn(move || {
@@ -258,7 +258,7 @@ impl Socket for Script {
 
 /// The browser's driver joining with a code at a server.
 fn driver(t0: web_time::Instant) -> (Driver<Script>, Inbox) {
-    let (invite, found) = Invite::parse_join("figcraft://join?server=ws://127.0.0.1:47900/&code=K7M2QX9TD").unwrap();
+    let (invite, found) = Invite::parse_join("endrika://join?server=ws://127.0.0.1:47900/&code=K7M2QX9TD").unwrap();
     let inbox = Inbox::new(Arc::new(|| {}));
     let cfg = GuestConfig { code: found, ..GuestConfig::new(invite, "Ada".into()) };
     (Driver::start(Script::default(), cfg, inbox.clone(), t0), inbox)

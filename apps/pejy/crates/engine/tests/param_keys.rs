@@ -1,7 +1,7 @@
 //! #776: callers from outside are checked with `check_params`; `Session::execute` itself takes
 //! what it is given, so a journal written by an older version still replays.
 
-use designcraft_engine::{Session, check_params};
+use pejy_engine::{Session, check_params};
 use serde_json::json;
 
 #[test]

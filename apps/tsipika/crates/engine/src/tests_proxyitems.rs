@@ -3,9 +3,9 @@
 //! proxy focus can be set directly (M3.51).
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::PathData;
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Node};
+use tsipika_geom::PathData;
 
 use super::*;
 

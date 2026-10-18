@@ -1,7 +1,7 @@
 //! The output side shared by the PDF and PostScript interpreters: an open-group stack (clipping
 //! groups, optional-content layers) that collects shapes into the SVG render tree.
 
-use effectcraft_svg::{Affine, BezPath, FillRule, Geom, Group, Node, Paint, Shape, Stroke};
+use tselatra_svg::{Affine, BezPath, FillRule, Geom, Group, Node, Paint, Shape, Stroke};
 
 /// The most elements a path being built holds: an operator that would add more stops the
 /// PostScript program, or the PDF content stream.

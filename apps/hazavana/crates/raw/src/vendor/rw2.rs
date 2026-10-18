@@ -72,7 +72,7 @@
 //! Lens distortion (tag `0x0119`, ExifTool name DistortionInfo; ExifTool's names for its words were the only outside
 //! input, their meaning below is our own measurement). The tag holds 16 little-endian 16-bit words. The camera's
 //! own correction, which its embedded JPEG shows, is applied as an `OpcodeList3` `WarpRectilinear` (the DNG form
-//! LightCraft already applies under "Enable Profile Corrections"):
+//! Hazavana already applies under "Enable Profile Corrections"):
 //!
 //! - Word 7, low 4 bits: 1 = correction on [0 on the DMC-GH1, whose JPEG matches the uncorrected render].
 //! - Word 12: the normalisation radius in pixels, the half diagonal of the active area [2870 for 4592 × 3448
@@ -101,8 +101,8 @@
 use super::pef::{Bits, Huffman, diff};
 use super::{active_rows, white_from_data};
 use crate::{BlackLevel, Cfa, ColorData, MAX_SAMPLES, Mode, Opcode, OpcodeLists, RawData, RawError, RawFormat, RawImage, Rect, Result};
-use lightcraft_geom::Orientation;
-use lightcraft_tiff::{ByteOrder, Ifd, Tiff, Value, tags as t};
+use hazavana_geom::Orientation;
+use hazavana_tiff::{ByteOrder, Ifd, Tiff, Value, tags as t};
 use rayon::prelude::*;
 
 const SENSOR_WIDTH: u16 = 0x0002;
@@ -592,7 +592,7 @@ pub(crate) fn decode(bytes: &[u8], mode: Mode) -> Result<RawImage> {
         [Some(r), Some(g), Some(b)] if r > 0.0 && g > 0.0 && b > 0.0 => Some([(r / g) as f32, 1.0, (b / g) as f32]),
         _ => None,
     };
-    let mut metadata = lightcraft_meta::from_tiff(&tiff);
+    let mut metadata = hazavana_meta::from_tiff(&tiff);
     metadata.width = Some(crop.width as u32);
     metadata.height = Some(crop.height as u32);
     if metadata.iso.is_none() {
@@ -659,7 +659,7 @@ fn distortion(ifd: &Ifd, active: Rect) -> Option<Opcode> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lightcraft_tiff::{IfdBuilder, TiffWriter};
+    use hazavana_tiff::{IfdBuilder, TiffWriter};
 
     /// Writes bit fields into a 16-byte block from bit 127 down (the inverse of [`Fields`]).
     struct FieldWriter {

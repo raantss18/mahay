@@ -2,11 +2,11 @@
 //! Controls draw the catalog's name, while the effect ids, the property tree's group name, the
 //! automation labels and `effect.list` stay English.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
-use effectcraft_ui_egui::native_menu::{NativeNode, build as native_menu};
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
+use tselatra_ui_egui::native_menu::{NativeNode, build as native_menu};
 use egui::vec2;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -17,7 +17,7 @@ const BLUR: &str = "ec.blur.gaussian";
 const BLUR_EN: &str = "Gaussian Blur";
 const BLUR_ZH: &str = "高斯模糊";
 
-fn harness(language: &str) -> (Harness<'static, EffectcraftApp>, u64) {
+fn harness(language: &str) -> (Harness<'static, TselatraApp>, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 640, "height": 360, "frameRate": 30, "duration": 10})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Back", "color": "#20c040"})).unwrap();
@@ -28,7 +28,7 @@ fn harness(language: &str) -> (Harness<'static, EffectcraftApp>, u64) {
     s.state.selected_layers = vec![LayerId(layer)];
     s.state.selected_props.clear();
     s.prefs.general.language = language.to_string();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.show_panel(PanelKind::EffectControls);
     app.show_panel(PanelKind::EffectsPresets);
     app.show_panel(PanelKind::Timeline);
@@ -39,14 +39,14 @@ fn harness(language: &str) -> (Harness<'static, EffectcraftApp>, u64) {
 
 /// How many widgets draw a label containing `needle` (the Effect Controls header registers its
 /// drawn name with the accessibility tree, so a translated name shows up here).
-fn drawn(h: &Harness<'_, EffectcraftApp>, needle: &str) -> usize {
+fn drawn(h: &Harness<'_, TselatraApp>, needle: &str) -> usize {
     h.query_all_by_label_contains(needle).count()
 }
 
 /// The label the native menu gives the `effect.apply` entry for effect `id`, under top-level menu
 /// `top` and category `category`. The in-window menu bar builds its labels through the same
 /// `entry_label`, so this covers both menu bars.
-fn menu_label(h: &Harness<'_, EffectcraftApp>, top: &str, category: &str, id: &str) -> Option<String> {
+fn menu_label(h: &Harness<'_, TselatraApp>, top: &str, category: &str, id: &str) -> Option<String> {
     let menu = native_menu(h.state());
     let effect = menu.menus.iter().find_map(|n| match n {
         NativeNode::Submenu { label, children } if label == top => Some(children),
@@ -86,7 +86,7 @@ fn the_generated_effect_menu_is_translated() {
 }
 
 /// Right-click the Effect Controls header of effect `fx`.
-fn open_effect_menu(h: &mut Harness<'_, EffectcraftApp>, fx: u64) {
+fn open_effect_menu(h: &mut Harness<'_, TselatraApp>, fx: u64) {
     let e = h.state().auto.find(&format!("effectControls.effect.{fx}")).expect("the effect's header").rect;
     let pos = egui::pos2(e[0] + e[2] / 2.0, e[1] + e[3] / 2.0);
     h.event(egui::Event::PointerMoved(pos));

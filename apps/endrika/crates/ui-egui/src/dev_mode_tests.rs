@@ -3,14 +3,14 @@
 //! does; the focus view's Escape; the annotation filter.
 
 use egui::{Key, pos2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::dev_compare::Mode;
 use crate::dev_mode::CategoryFilter;
 use crate::present_tests::{Ui, id};
 
-fn setup() -> (Ui, figcraft_doc::NodeId, figcraft_doc::NodeId) {
+fn setup() -> (Ui, endrika_doc::NodeId, endrika_doc::NodeId) {
     let mut s = Session::new();
     let f = id(&s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 300, "height": 400, "name": "Login"})).unwrap());
     let r = id(&s

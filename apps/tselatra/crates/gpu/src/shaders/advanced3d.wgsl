@@ -1,5 +1,5 @@
 // Advanced 3D: rasterised meshes with physically based shading. A step-for-step port of
-// `effectcraft_render::three_d::adv::shade` (Cook–Torrance GGX + Lambert, image-based light
+// `tselatra_render::three_d::adv::shade` (Cook–Torrance GGX + Lambert, image-based light
 // from an equirectangular environment, PCF shadow maps); the CPU rasteriser is the reference.
 
 struct Globals {

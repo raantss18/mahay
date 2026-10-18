@@ -25,8 +25,8 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 
-use effectcraft_effects::Buf;
-use effectcraft_raster::Image;
+use tselatra_effects::Buf;
+use tselatra_raster::Image;
 
 /// File format version (part of the folder layout).
 const VERSION: &str = "v1";
@@ -89,7 +89,7 @@ struct Meta {
 
 /// The cache's index: entry sizes and least-recently-used order under a size limit. Portable
 /// (no file system): [`DiskCache`] keeps one over its folder, and the browser keeps one over the
-/// Origin Private File System (`apps/effectcraft-web`, where the files are written by workers).
+/// Origin Private File System (`apps/tselatra-web`, where the files are written by workers).
 #[derive(Default)]
 pub struct DiskIndex {
     map: HashMap<(Kind, u128), Meta>,
@@ -276,17 +276,17 @@ pub fn default_folder() -> PathBuf {
     if cfg!(target_os = "macos")
         && let Some(h) = &home
     {
-        return h.join("Library/Caches/EffectCraft/Disk Cache");
+        return h.join("Library/Caches/Tselatra/Disk Cache");
     }
     if cfg!(windows)
         && let Some(l) = std::env::var_os("LOCALAPPDATA")
     {
-        return PathBuf::from(l).join("EffectCraft").join("Disk Cache");
+        return PathBuf::from(l).join("Tselatra").join("Disk Cache");
     }
     if let Some(x) = std::env::var_os("XDG_CACHE_HOME") {
-        return PathBuf::from(x).join("effectcraft/disk-cache");
+        return PathBuf::from(x).join("tselatra/disk-cache");
     }
-    home.map(|h| h.join(".cache/effectcraft/disk-cache")).unwrap_or_else(|| std::env::temp_dir().join("effectcraft-disk-cache"))
+    home.map(|h| h.join(".cache/tselatra/disk-cache")).unwrap_or_else(|| std::env::temp_dir().join("tselatra-disk-cache"))
 }
 
 impl DiskCache {
@@ -562,14 +562,14 @@ impl DiskCache {
     }
 
     /// A segmentation (chain key, scale) written by [`DiskCache::put_seg`].
-    pub fn get_seg(&self, key: u64, scale: f64) -> Option<effectcraft_effects::roto::FrameSeg> {
+    pub fn get_seg(&self, key: u64, scale: f64) -> Option<tselatra_effects::roto::FrameSeg> {
         let p = self.read(Kind::Matte, seg_key(key, scale))?;
         let raw = lz4_flex::decompress_size_prepended(&p).ok()?;
-        effectcraft_effects::roto::FrameSeg::from_bytes(&raw)
+        tselatra_effects::roto::FrameSeg::from_bytes(&raw)
     }
 
     /// Queue a segmentation for writing.
-    pub fn put_seg(&self, key: u64, scale: f64, seg: &effectcraft_effects::roto::FrameSeg) {
+    pub fn put_seg(&self, key: u64, scale: f64, seg: &tselatra_effects::roto::FrameSeg) {
         let k = seg_key(key, scale);
         if self.contains(Kind::Matte, k) {
             return;
@@ -658,11 +658,11 @@ fn seg_key(key: u64, scale: f64) -> u128 {
     h.finish()
 }
 
-impl effectcraft_effects::roto::SegStore for DiskCache {
-    fn get_seg(&self, key: u64, scale: f64) -> Option<effectcraft_effects::roto::FrameSeg> {
+impl tselatra_effects::roto::SegStore for DiskCache {
+    fn get_seg(&self, key: u64, scale: f64) -> Option<tselatra_effects::roto::FrameSeg> {
         DiskCache::get_seg(self, key, scale)
     }
-    fn put_seg(&self, key: u64, scale: f64, seg: &effectcraft_effects::roto::FrameSeg) {
+    fn put_seg(&self, key: u64, scale: f64, seg: &tselatra_effects::roto::FrameSeg) {
         DiskCache::put_seg(self, key, scale, seg);
     }
 }
@@ -772,7 +772,7 @@ fn decode_layer(p: &[u8]) -> Option<Buf> {
 // ---------------------------------------------------------------- content keys
 
 /// Bump when rendering changes in a way that makes old disk entries wrong.
-const RENDER_VERSION: &str = "effectcraft-render-2";
+const RENDER_VERSION: &str = "tselatra-render-2";
 
 fn hash_debug(h: &mut Hash128, v: &impl std::fmt::Debug) {
     h.write(format!("{v:?}").as_bytes());
@@ -794,7 +794,7 @@ fn file_stamp(h: &mut Hash128, path: &str) {
     }
 }
 
-fn footage_stamp(h: &mut Hash128, f: &effectcraft_project::Footage) {
+fn footage_stamp(h: &mut Hash128, f: &tselatra_project::Footage) {
     file_stamp(h, &f.path);
     for p in &f.sequence {
         file_stamp(h, p);
@@ -803,11 +803,11 @@ fn footage_stamp(h: &mut Hash128, f: &effectcraft_project::Footage) {
 
 /// Salt for layer cache keys on disk: the renderer version and every footage file's identity
 /// (layer keys name footage items, not file contents).
-pub fn footage_salt(project: &effectcraft_project::Project) -> u64 {
+pub fn footage_salt(project: &tselatra_project::Project) -> u64 {
     let mut h = Hash128::default();
     h.write(RENDER_VERSION.as_bytes());
     for (id, it) in &project.items {
-        if let effectcraft_project::ItemKind::Footage(f) = &it.kind {
+        if let tselatra_project::ItemKind::Footage(f) = &it.kind {
             h.write_u64(id.0);
             hash_debug(&mut h, f);
             footage_stamp(&mut h, f);
@@ -821,8 +821,8 @@ pub fn footage_salt(project: &effectcraft_project::Project) -> u64 {
 /// uses (nested comps, footage, solids, their proxies and Use Proxy switches, footage and proxy
 /// files' size and time). With expressions in play (which can read any comp) the whole project
 /// counts. Switches that don't change pixels (Audio, Lock, Shy, Hide Shy Layers) don't count.
-pub fn comp_content_key(project: &effectcraft_project::Project, comp: effectcraft_project::ItemId) -> u128 {
-    use effectcraft_project::{ItemKind, LayerSource};
+pub fn comp_content_key(project: &tselatra_project::Project, comp: tselatra_project::ItemId) -> u128 {
+    use tselatra_project::{ItemKind, LayerSource};
     let mut h = Hash128::default();
     h.write(RENDER_VERSION.as_bytes());
     hash_debug(&mut h, &project.settings);
@@ -845,7 +845,7 @@ pub fn comp_content_key(project: &effectcraft_project::Project, comp: effectcraf
             }
         }
     }
-    let ids: Vec<effectcraft_project::ItemId> = if expressions { project.items.keys().copied().collect() } else { seen.into_iter().collect() };
+    let ids: Vec<tselatra_project::ItemId> = if expressions { project.items.keys().copied().collect() } else { seen.into_iter().collect() };
     for id in ids {
         let Some(it) = project.item(id) else { continue };
         h.write_u64(id.0);
@@ -881,7 +881,7 @@ mod tests {
     use super::*;
 
     fn tmpdir(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("effectcraft-disk-cache-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("tselatra-disk-cache-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         d
     }
@@ -933,7 +933,7 @@ mod tests {
     /// the size limit like every entry, and a damaged file is a miss.
     #[test]
     fn segmentations_round_trip_and_reopen() {
-        use effectcraft_effects::roto::FrameSeg;
+        use tselatra_effects::roto::FrameSeg;
         let dir = tmpdir("seg");
         let dc = DiskCache::open(&dir, 1 << 30).unwrap();
         let seg = FrameSeg { w: 7, h: 5, matte: (0..35).map(|i| (i % 3 == 0) as u8).collect(), refine: vec![0; 35], ..Default::default() };

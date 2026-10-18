@@ -1,11 +1,11 @@
 //! A prototype's Open link action carries a URL from the document and fires from whatever trigger
 //! the prototype sets, including a delay, so the player hands the opener only a web link
-//! ([`figcraft_engine::doc_urls`]). Without that, a saved document opens `javascript:` in the web
+//! ([`endrika_engine::doc_urls`]). Without that, a saved document opens `javascript:` in the web
 //! build's own origin (stored XSS) and `smb:`/`ms-…:` through the desktop's handlers.
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_engine::Session;
+use endrika_engine::Session;
 use serde_json::{Value, json};
 
 use crate::Services;
@@ -64,7 +64,7 @@ fn a_prototype_cannot_open_a_script_or_handler_url() {
         "smb://attacker.example/share/x",
         // Handed to an application handler by the desktop.
         "ms-msdt:/id PCWDiagnostic",
-        "figcraft://join?host=127.0.0.1:47900&file=f&token=t",
+        "endrika://join?host=127.0.0.1:47900&file=f&token=t",
     ] {
         assert!(opens_after_a_delay(url).is_empty(), "{url:?} must never reach the opener");
     }

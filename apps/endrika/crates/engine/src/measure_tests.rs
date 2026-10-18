@@ -8,8 +8,8 @@ use crate::distance::{between, label, to_guide};
 use crate::params::id_of;
 use crate::snap::Guide;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::NodeId;
-use figcraft_geom::Rect;
+use endrika_doc::NodeId;
+use endrika_geom::Rect;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))

@@ -3,7 +3,7 @@
 use crate::components::tests::{card, copy_of, ex, idv, node};
 use crate::devcompare::{ChangeKind, Comparison, compare};
 use crate::{EngineError, Session};
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::json;
 
 /// A ready-for-dev "Screen" frame holding a "Title" text, a "Button" rectangle and a "Badge" group.
@@ -203,20 +203,20 @@ fn the_compare_command_and_its_errors() {
 fn snapshots_are_saved_and_old_files_open() {
     let mut s = Session::new();
     let sc = screen(&mut s);
-    let plain = figcraft_format::to_json(s.doc().unwrap()).unwrap();
+    let plain = endrika_format::to_json(s.doc().unwrap()).unwrap();
     assert!(plain.get("devSnapshots").is_none() && plain.get("dev_snapshots").is_none(), "nothing written without a change");
     ex(&mut s, "node.set", json!({"id": sc.button, "props": {"width": 136}}));
-    let bytes = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    let (back, issues) = figcraft_format::load_bytes(&bytes).unwrap();
+    let bytes = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    let (back, issues) = endrika_format::load_bytes(&bytes).unwrap();
     assert!(issues.is_empty(), "{issues:?}");
     assert_eq!(back.dev_snapshots, s.doc().unwrap().dev_snapshots);
     assert_eq!(texts(&compare(&back, sc.frame), sc.button), vec!["width 120 → 136"]);
     // A file from before snapshots (the field missing) still opens.
-    let mut v = figcraft_format::to_json(&back).unwrap();
+    let mut v = endrika_format::to_json(&back).unwrap();
     if let Some(o) = v.as_object_mut() {
         o.retain(|k, _| !k.to_lowercase().contains("snapshot"));
     }
-    let (old, _) = figcraft_format::from_json(&v.to_string()).unwrap();
+    let (old, _) = endrika_format::from_json(&v.to_string()).unwrap();
     assert!(old.dev_snapshots.is_empty());
     assert!(!compare(&old, sc.frame).snapshot);
 }

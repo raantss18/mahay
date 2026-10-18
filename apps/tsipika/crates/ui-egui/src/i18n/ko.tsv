@@ -1,7 +1,7 @@
 # Korean (ko) catalog. Same format as zh-hant.tsv:  context <TAB> source <TAB> translation
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|other" forms).
 #
-# Clean-room: written from the meaning of VectorCraft's English labels in ordinary Korean
+# Clean-room: written from the meaning of Tsipika's English labels in ordinary Korean
 # vocabulary; no other application's Korean localisation was copied. AI-drafted; native review welcome.
 # Left in English on purpose (`MENU_KEEP_AS_IS` in the tests): the product name, language names,
 # OpenType, the built-in workspace names and the bracketed perspective grid preset names.
@@ -10,7 +10,7 @@
 	Edge Width	가장자리 너비
 	Edge Brightness	가장자리 밝기
 	Smoothness	부드러움
-	About VectorCraft	VectorCraft 정보
+	About Tsipika	Tsipika 정보
 	All Scripts	모든 스크립트
 	Anchors:	앵커:
 	Any Kind	모든 종류
@@ -66,7 +66,7 @@
 	Medium Dark	약간 어둡게
 	Medium Light	약간 밝게
 	Light	밝게
-	Quit VectorCraft	VectorCraft 종료
+	Quit Tsipika	Tsipika 종료
 	File	파일
 	New…	새로 만들기…
 	New from Template…	템플릿에서 새로 만들기…
@@ -681,11 +681,11 @@
 	Save Swatch Library…	견본 라이브러리 저장…
 	Symbol Libraries	심볼 라이브러리
 	Help	도움말
-	ArtCraft Website	ArtCraft 웹사이트
-	VectorCraft on getartcraft.com	getartcraft.com의 VectorCraft
-	VectorCraft on GitHub	GitHub의 VectorCraft
+	Mahay Website	Mahay 웹사이트
+	Tsipika on mahay.com	mahay.com의 Tsipika
+	Tsipika on GitHub	GitHub의 Tsipika
 	Search Commands…	명령 검색…
-	VectorCraft Help…	VectorCraft 도움말…
+	Tsipika Help…	Tsipika 도움말…
 	Preview	미리 보기
 	Show Edges	가장자리 표시
 	Show Corner Widget	모퉁이 위젯 표시
@@ -869,7 +869,7 @@
 	Appearance Panel	모양새 패널
 	Appearance of Black	검정 표시 방식
 	Appearance panel	모양새 패널
-	Applies the next time VectorCraft starts.	다음에 VectorCraft를 시작할 때 적용됩니다.
+	Applies the next time Tsipika starts.	다음에 Tsipika를 시작할 때 적용됩니다.
 	Applies when the linked file is relinked or updated.	링크된 파일을 다시 연결하거나 업데이트할 때 적용됩니다.
 	Apply Brush	브러시 적용
 	Apply Character Style	문자 스타일 적용
@@ -889,7 +889,7 @@
 	Arrange: Bring to Front	배열: 맨 앞으로 가져오기
 	Arrowheads:	화살촉:
 	Art using a deleted global swatch keeps its colour.	삭제된 글로벌 견본을 사용한 아트워크는 색상을 유지합니다.
-	ArtCraft website	ArtCraft 웹사이트
+	Mahay website	Mahay 웹사이트
 	Artboard Options	아트보드 옵션
 	Artboard Options…	아트보드 옵션…
 	Artboard Tool	아트보드 도구
@@ -976,7 +976,7 @@
 	Check Script	스크립트 확인
 	Check Script…	스크립트 확인…
 	Copy Report	보고서 복사
-	VectorCraft read this script without running it.	VectorCraft가 이 스크립트를 실행하지 않고 읽었습니다.
+	Tsipika read this script without running it.	Tsipika가 이 스크립트를 실행하지 않고 읽었습니다.
 	Needs nothing beyond plain JavaScript	일반 JavaScript 외에는 필요 없음
 	Needs the script language's own objects or directives	스크립트 언어 자체의 개체 또는 지시문 필요
 	Needs the document model	문서 모델 필요
@@ -1733,7 +1733,7 @@
 # Import Shortcut Set (Keyboard Shortcuts › Import…, File › Open of a .kys file) and its commands.
 	Import Shortcut Set	단축키 세트 가져오기
 	Import Shortcut Set…	단축키 세트 가져오기…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	파일의 각 항목은 VectorCraft의 도구, 명령 또는 패널에 대응됩니다. 대응을 확인하고 남은 항목을 정하세요.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	파일의 각 항목은 Tsipika의 도구, 명령 또는 패널에 대응됩니다. 대응을 확인하고 남은 항목을 정하세요.
 	Keys	키
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	파일은 키와 보조 키를 코드로 기록합니다. 제안된 의미를 확인하고 아직 알 수 없는 코드의 의미를 정하세요.
 	Click, then press the key this code stands for (Esc cancels)	클릭한 다음 이 코드에 해당하는 키를 누르세요(Esc로 취소)
@@ -1744,7 +1744,7 @@
 	Shortcuts	단축키
 	Shortcut	단축키
 	In the File	파일에서
-	In VectorCraft	VectorCraft에서
+	In Tsipika	Tsipika에서
 	Needs Attention Only	확인이 필요한 항목만
 	Ready	준비됨
 	Needs a choice	선택 필요
@@ -1753,7 +1753,7 @@
 	Tools take a single key (optionally with Shift)	도구에는 키 하나만 지정할 수 있습니다(Shift 포함 가능)
 	A later row takes this shortcut	뒤의 행이 이 단축키를 사용합니다
 	Same item as a later row	뒤의 행과 같은 항목
-	Start from VectorCraft Defaults	VectorCraft 기본값에서 시작
+	Start from Tsipika Defaults	Tsipika 기본값에서 시작
 	Add to the Current Shortcuts	현재 단축키에 추가
 	Remember My Choices	내 선택 기억
 	{ready} of {total} ready	준비됨 {ready}/{total}
@@ -1799,7 +1799,7 @@
 	Italian	이탈리아어
 	Join Tool	결합 도구
 	Join our Discord	Discord 참여하기
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Discord에서 ArtCraft 커뮤니티에 참여하세요 (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Discord에서 Mahay 커뮤니티에 참여하세요 (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	각 단락의 줄 결합
 	Justification…	양끝 맞춤…
 	Keep Formatting	서식 유지
@@ -2485,7 +2485,7 @@ mark-style	Japanese	일본식
 	{count} folder(s) or file(s) couldn't be read	폴더 또는 파일 {count}개를 읽을 수 없음
 	The search stopped at its limit: search a smaller folder.	검색이 한도에서 중단됨: 더 작은 폴더를 검색하세요.
 	Copy only fonts you own or are licensed to install.	소유했거나 설치 라이선스가 있는 글꼴만 복사하세요.
-	VectorCraft copies the fonts to {folder}.	VectorCraft가 글꼴을 {folder}에 복사합니다.
+	Tsipika copies the fonts to {folder}.	Tsipika가 글꼴을 {folder}에 복사합니다.
 	Registry name:	등록 이름:
 	Release Compound Shape	컴파운드 모양 해제
 	Release Opacity Mask	불투명 마스크 해제
@@ -2561,9 +2561,9 @@ mark-style	Japanese	일본식
 	Reverse Path Direction On	패스 방향 반전 켜기
 	Revert to the saved version of “{name}”?	“{name}”을(를) 저장된 버전으로 되돌리시겠습니까?
 	Replace “{name}”, the file this document was opened from?	이 문서를 연 원본 파일 “{name}”을(를) 바꾸시겠습니까?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	파일을 열 때 VectorCraft가 아직 읽지 못하는 내용({what})이 제외되어, 덮어쓰면 해당 내용이 영구적으로 사라집니다. 보존하려면 다른 이름으로 저장하세요.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	파일을 열 때 Tsipika가 아직 읽지 못하는 내용({what})이 제외되어, 덮어쓰면 해당 내용이 영구적으로 사라집니다. 보존하려면 다른 이름으로 저장하세요.
 	“{name}” already exists. Replace it?	“{name}”이(가) 이미 있습니다. 바꾸시겠습니까?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	저장 패널의 이름은 “{typed}”였고, VectorCraft가 파일 형식의 확장자를 붙였습니다. 파일을 바꾸면 내용을 덮어씁니다.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	저장 패널의 이름은 “{typed}”였고, Tsipika가 파일 형식의 확장자를 붙였습니다. 파일을 바꾸면 내용을 덮어씁니다.
 	Right Grid:	오른쪽 격자:
 	Right Indent	오른쪽 들여쓰기
 	Right Plane	오른쪽 평면
@@ -3086,7 +3086,7 @@ mark-style	Japanese	일본식
 	Variation:	변형:
 	Vector Halftone	벡터 하프톤
 	Vector illustration — fast, open, scriptable.	벡터 일러스트레이션 — 빠르고 개방적이며 스크립트 지원.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft가 지난번에 정상적으로 종료되지 않았습니다. 다음 문서에 저장되지 않은 변경 사항이 있었습니다:
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika가 지난번에 정상적으로 종료되지 않았습니다. 다음 문서에 저장되지 않은 변경 사항이 있었습니다:
 	Vectors	벡터
 	Version {version} — open-source vector illustration in pure Rust.	버전 {version} — 순수 Rust로 만든 오픈 소스 벡터 일러스트레이션.
 	Version:	버전:
@@ -3107,7 +3107,7 @@ mark-style	Japanese	일본식
 	Web Shift	웹 이동
 	Web Snap:	웹 스냅:
 	Weight:	두께:
-	Welcome to VectorCraft	VectorCraft에 오신 것을 환영합니다
+	Welcome to Tsipika	Tsipika에 오신 것을 환영합니다
 	When pasting text	텍스트를 붙여넣을 때
 	White	흰색
 	Widget Position:	위젯 위치:
@@ -3304,7 +3304,7 @@ file-filter	PDF presets	PDF 프리셋
 file-filter	Print presets	인쇄 프리셋
 file-filter	SVG Compressed	압축된 SVG
 file-filter	PDF-compatible .ai	PDF 호환 .ai
-file-filter	VectorCraft Template	VectorCraft 템플릿
+file-filter	Tsipika Template	Tsipika 템플릿
 file-filter	Templates	템플릿
 	Focal Fill	초점 칠
 	Focal Stroke	초점 선
@@ -3425,7 +3425,7 @@ file-filter	Templates	템플릿
 	Packaged {n} file(s){note}	파일 {n}개를 패키지했습니다{note}
 	Page information	페이지 정보
 	Paragraph Style	단락 스타일
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	ArtCraft의 일부입니다. MIT OR Apache-2.0. 글꼴: Source Sans 3, Inter, JetBrains Mono (OFL). 아이콘: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Mahay의 일부입니다. MIT OR Apache-2.0. 글꼴: Source Sans 3, Inter, JetBrains Mono (OFL). 아이콘: Lucide (ISC) + Tsipika.
 	Perspective grid presets	원근 격자 프리셋
 	Phone 390×844	휴대폰 390×844
 	Place onto a new locked, dimmed template layer below the current layer	현재 레이어 아래의 잠기고 흐리게 처리된 새 템플릿 레이어에 배치
@@ -3652,7 +3652,7 @@ axis	Both	양쪽
 	Drag to the window's left edge to dock	창 왼쪽 가장자리로 드래그하여 고정
 	Float Tool Group	도구 그룹 분리
 	Services	서비스
-	Hide VectorCraft	VectorCraft 숨기기
+	Hide Tsipika	Tsipika 숨기기
 	Zoom	확대/축소
 	Bring All to Front	모두 앞으로 가져오기
 	Settings	설정
@@ -3661,7 +3661,7 @@ theme	Appearance	외관
 	On: one locked object showing the document, updated when it changes.	켬: 문서를 보여 주는 잠긴 개체 하나로, 문서가 바뀌면 업데이트됩니다.
 	Off: an editable copy of its art, embedded in this document.	끔: 이 문서에 포함된 편집 가능한 아트웍 복사본입니다.
 	Images: link to the file instead of only embedding it.	이미지: 포함만 하지 않고 파일에 연결합니다.
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft 문서: 잠긴 개체 하나로, 파일이 바뀌면 업데이트됩니다.
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika 문서: 잠긴 개체 하나로, 파일이 바뀌면 업데이트됩니다.
 	A file dialog is open: choose there first	파일 대화상자가 열려 있습니다. 먼저 그곳에서 선택하세요
 	The document was closed while its file dialog was open	파일 대화상자가 열려 있는 동안 문서가 닫혔습니다
 	The dialog was closed before its file dialog answered	파일 대화상자가 응답하기 전에 대화상자가 닫혔습니다
@@ -3731,15 +3731,15 @@ theme	Appearance	외관
 @msg	its type is to come in as outlines, which only its page has	문자를 윤곽선으로 가져오도록 되어 있으나, 이는 해당 페이지에만 있습니다
 @msg	{_1} files	{_1} 파일
 @msg	A browser with WebGPU or WebGL2 is required.	WebGPU 또는 WebGL2를 지원하는 브라우저가 필요합니다.
-@msg	Loading VectorCraft…	VectorCraft 불러오는 중…
+@msg	Loading Tsipika…	Tsipika 불러오는 중…
 @msg	Reload the page to go on (changes not saved yet may be lost).	계속하려면 페이지를 새로 고치세요(아직 저장하지 않은 변경 내용은 사라질 수 있습니다).
 @msg	The graphics were lost and couldn't be restarted.	그래픽을 잃었으며 다시 시작할 수 없습니다.
 @msg	The graphics were lost and have been restarted	그래픽을 잃어 다시 시작했습니다
-@msg	VectorCraft failed to start: {e}	VectorCraft를 시작하지 못했습니다: {e}
+@msg	Tsipika failed to start: {e}	Tsipika를 시작하지 못했습니다: {e}
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	저장하지 않은 변경 내용은 이 브라우저에 보관되어 있습니다. 페이지를 새로 고치면 복원할 수 있습니다.
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	처음 시도한 그래픽 프로세서가 창을 표시하지 못해 {summary}에서 VectorCraft를 다시 시작했습니다
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	지난번 VectorCraft 시작이 창이 나타나기 전에 {name}에서 끝나서 {summary}에서 시작했습니다. 이 그래픽 프로세서를 다시 시도하려면 환경 설정 › 성능 › 그래픽 프로세서를 변경하거나 WGPU_BACKEND를 설정하고 시작하세요
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	지난번 VectorCraft 시작이 그래픽 프로세서 목록을 가져오는 중에 끝나서 OpenGL만 사용해 {summary}에서 시작했습니다. 다른 그래픽 백엔드를 다시 시도하려면 환경 설정 › 성능 › 그래픽 프로세서를 변경하거나 WGPU_BACKEND를 설정하고 시작하세요
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	처음 시도한 그래픽 프로세서가 창을 표시하지 못해 {summary}에서 Tsipika를 다시 시작했습니다
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	지난번 Tsipika 시작이 창이 나타나기 전에 {name}에서 끝나서 {summary}에서 시작했습니다. 이 그래픽 프로세서를 다시 시도하려면 환경 설정 › 성능 › 그래픽 프로세서를 변경하거나 WGPU_BACKEND를 설정하고 시작하세요
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	지난번 Tsipika 시작이 그래픽 프로세서 목록을 가져오는 중에 끝나서 OpenGL만 사용해 {summary}에서 시작했습니다. 다른 그래픽 백엔드를 다시 시도하려면 환경 설정 › 성능 › 그래픽 프로세서를 변경하거나 WGPU_BACKEND를 설정하고 시작하세요
 @msg	not a DXF drawing	DXF 도면이 아닙니다
 @msg	scale must be a number from {_1} to {_2}, not {s}	배율은 {_1}에서 {_2} 사이의 숫자여야 합니다: {s}
 @msg	the artboard to fit must be a positive size up to {_1} pt	맞출 아트보드는 최대 {_1} pt까지의 양수 크기여야 합니다
@@ -4027,10 +4027,10 @@ theme	Appearance	외관
 @msg	it has more than {MAX_NODES} objects	개체가 {MAX_NODES}개를 넘습니다
 @msg	it has no layers	레이어가 없습니다
 @msg	it has too many values in a row	한 줄에 값이 너무 많습니다
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	{_1}이(가) 있으며, VectorCraft는 아직 이를 읽지 못합니다
+@msg	it has {_1}, which Tsipika doesn't read from it yet	{_1}이(가) 있으며, Tsipika는 아직 이를 읽지 못합니다
 @msg	its objects are nested too deeply	개체가 너무 깊게 중첩되어 있습니다
 @msg	its section ending with `%{end}` doesn't end	`%{end}`로 끝나는 구역이 끝나지 않습니다
-@msg	an image VectorCraft can't read was left out	VectorCraft가 읽을 수 없는 이미지는 제외했습니다
+@msg	an image Tsipika can't read was left out	Tsipika가 읽을 수 없는 이미지는 제외했습니다
 @msg	an image whose data is cut short was left out	데이터가 잘린 이미지는 제외했습니다
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	연결된 그림은 해당 파일을 찾을 때까지 파일에 저장된 저해상도 미리 보기로 표시됩니다: 링크 패널에서 다시 연결하세요
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	표시되는 글꼴의 한 줄보다 낮은 프레임의 영역 문자는 프레임을 더 높였습니다({_1}). 그렇지 않으면 문자가 표시되지 않습니다
@@ -4047,7 +4047,7 @@ theme	Appearance	외관
 @msg	a PostScript error ({name} in `{op}`: {at})	PostScript 오류({name}, `{op}`: {at})
 @msg	a PostScript error ({name} in `{op}`: {at}), in {procs}	PostScript 오류({name}, `{op}`: {at}), 위치: {procs}
 @msg	a PostScript error ({name})	PostScript 오류({name})
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	`{at}`을(를) 사용하며, VectorCraft의 PostScript 판독기는 이를 알지 못합니다
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	`{at}`을(를) 사용하며, Tsipika의 PostScript 판독기는 이를 알지 못합니다
 @msg	the file was read up to an error ({why}): what follows it was left out	오류({why})까지 파일을 읽었으며, 그 뒤의 내용은 제외했습니다
 @msg	this file's PostScript couldn't be read ({why}): {what}	이 파일의 PostScript를 읽을 수 없습니다({why}): {what}
 @msg	it has no page	페이지가 없습니다
@@ -4065,7 +4065,7 @@ theme	Appearance	외관
 @msg	its Windows metafile preview was opened instead, which may simplify the art	대신 Windows 메타파일 미리 보기를 열었으며, 아트웍이 단순화될 수 있습니다
 @msg	its preview was placed instead, at screen resolution	대신 미리 보기를 화면 해상도로 가져왔습니다
 @msg	shadings of more than 4096 patches or triangles were left out	패치나 삼각형이 4096개를 넘는 셰이딩은 제외했습니다
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	`{at}`을(를) 사용하며({procs}), VectorCraft의 PostScript 판독기는 이를 알지 못합니다
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	`{at}`을(를) 사용하며({procs}), Tsipika의 PostScript 판독기는 이를 알지 못합니다
 @msg	the export region is not finite	내보내기 영역이 유한하지 않습니다
 @msg	a page out of range	범위를 벗어난 페이지
 @msg	a page's placement is not finite	페이지 배치가 유한하지 않습니다
@@ -4074,10 +4074,10 @@ theme	Appearance	외관
 @msg	the preview image is empty	미리 보기 이미지가 비어 있습니다
 @msg	the thumbnail image is malformed	섬네일 이미지가 올바르지 않습니다
 @msg	can't encode the document: {0}	문서를 인코딩할 수 없습니다: {0}
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	버전 {0}(으)로 저장할 수 없습니다: VectorCraft는 버전 {MIN_VERSION}~{VERSION}을(를) 기록합니다
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	파일 버전 {0}은(는) 이 VectorCraft가 지원하는 버전({VERSION})보다 높습니다
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	버전 {0}(으)로 저장할 수 없습니다: Tsipika는 버전 {MIN_VERSION}~{VERSION}을(를) 기록합니다
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	파일 버전 {0}은(는) 이 Tsipika가 지원하는 버전({VERSION})보다 높습니다
 @msg	invalid image data for `{0}`	`{0}`의 이미지 데이터가 올바르지 않습니다
-@msg	not a VectorCraft file: {0}	VectorCraft 파일이 아닙니다: {0}
+@msg	not a Tsipika file: {0}	Tsipika 파일이 아닙니다: {0}
 @msg	the compressed file unpacks to more than {_1} MB	압축된 파일의 압축을 풀면 {_1}MB를 넘습니다
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	버전 {0} 파일은 압축할 수 없습니다: 버전 {COMPRESSED_SINCE} 이상만 압축 파일을 엽니다
 @msg	a bitmap is empty	비트맵이 비어 있습니다
@@ -4125,7 +4125,7 @@ theme	Appearance	외관
 @msg	plug-in output: {0}	플러그인 출력: {0}
 @msg	plug-in parameters: {0}	플러그인 매개변수: {0}
 @msg	plug-in trapped: {0}	플러그인 중단됨: {0}
-@msg	is not an image VectorCraft reads	VectorCraft가 읽는 이미지가 아닙니다
+@msg	is not an image Tsipika reads	Tsipika가 읽는 이미지가 아닙니다
 @msg	not found	찾을 수 없습니다
 @msg	SVG parse error: {0}	SVG 구문 분석 오류: {0}
 @msg	decimals must be {_1}–{_2} (got {_3})	소수 자릿수는 {_1}~{_2}이어야 합니다({_3} 입력됨)
@@ -4313,10 +4313,10 @@ theme	Appearance	외관
 @msg	no dialog open	열린 대화상자가 없습니다
 @msg	no file reader	파일 판독기가 없습니다
 @msg	no file writer	파일 기록기가 없습니다
-@msg	not a VectorCraft shortcut set (missing `overrides`)	VectorCraft 단축키 세트가 아닙니다(`overrides`가 없음)
+@msg	not a Tsipika shortcut set (missing `overrides`)	Tsipika 단축키 세트가 아닙니다(`overrides`가 없음)
 @msg	not a blend	블렌드가 아닙니다
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	단축키 세트가 아닙니다: 텍스트가 슬래시 이름과 여는 중괄호로 시작하지 않습니다
-@msg	This shortcut file is in a form VectorCraft can't read.	이 단축키 파일은 VectorCraft가 읽을 수 없는 형식입니다.
+@msg	This shortcut file is in a form Tsipika can't read.	이 단축키 파일은 Tsipika가 읽을 수 없는 형식입니다.
 @msg	shortcut for `{k}` must be a string	`{k}`의 단축키는 문자열이어야 합니다
 @msg	tool shortcuts must be a single key (optionally with Shift)	도구 단축키는 키 하나여야 합니다(Shift 포함 가능)
 @msg	unknown preset (one of {_1})	알 수 없는 프리셋({_1} 중 하나)
@@ -4338,13 +4338,13 @@ theme	Appearance	외관
 @msg	x and y must be finite	x와 y는 유한한 값이어야 합니다
 @msg	t, dx and dy must be finite	t, dx, dy는 유한한 값이어야 합니다
 @msg	No fonts are missing in this document	이 문서에는 누락된 글꼴이 없습니다
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft는 다른 앱이나 시스템의 폴더를 검색하지 않습니다: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft는 사용자 폴더의 공유 또는 공용 폴더를 검색하지 않습니다: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika는 다른 앱이나 시스템의 폴더를 검색하지 않습니다: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika는 사용자 폴더의 공유 또는 공용 폴더를 검색하지 않습니다: {path}
 @msg	{path} is not a folder	{path}은(는) 폴더가 아닙니다
 @msg	the search couldn't start: try again in a moment	검색을 시작할 수 없습니다: 잠시 후 다시 시도하세요
 @msg	searching a folder isn't available on the web	웹에서는 폴더 검색을 사용할 수 없습니다
 @msg	every search thread stopped on an internal error (please report this bug)	내부 오류로 모든 검색 스레드가 중지되었습니다(이 버그를 신고해 주세요)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	여기에는 VectorCraft의 글꼴 폴더가 설정되어 있지 않습니다: 데스크톱 앱과 vectorcraft-cli가 설정합니다
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	여기에는 Tsipika의 글꼴 폴더가 설정되어 있지 않습니다: 데스크톱 앱과 tsipika-cli가 설정합니다
 @msg	choose the font files to add	추가할 글꼴 파일을 선택하세요
 @msg	{n} font file(s) are now in {folder}	글꼴 파일 {n}개가 이제 {folder}에 있습니다
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	글꼴 파일 {n}개가 이제 {folder}에 있으며, {failed}개는 추가할 수 없었습니다: {reason}
@@ -4574,7 +4574,7 @@ lighting	Light	광원
 	Edge Intensity	가장자리 강도
 	Posterization	포스터화
 	Highlight Area	하이라이트 영역
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	압축된 파일의 압축을 풀면 VectorCraft가 읽을 수 있는 한도를 넘습니다(문서 {_1}MB, 이미지당 {_2}MB)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	압축된 파일의 압축을 풀면 Tsipika가 읽을 수 있는 한도를 넘습니다(문서 {_1}MB, 이미지당 {_2}MB)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	문서가 너무 커서 압축 저장할 수 없습니다({0}): 압축 사용을 끄고 저장하세요
 @msg	the file stopped being read (please report this bug)	파일 읽기가 중단되었습니다(이 버그를 신고해 주세요)
 	Concentric Dividers:	동심원 구분선:

@@ -3,9 +3,9 @@
 
 use std::sync::{PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use vectorcraft_doc::text::{CharStyle, TextObject};
-use vectorcraft_doc::{Node, NodeKind};
-use vectorcraft_geom::Point;
+use tsipika_doc::text::{CharStyle, TextObject};
+use tsipika_doc::{Node, NodeKind};
+use tsipika_geom::Point;
 
 use super::*;
 
@@ -52,7 +52,7 @@ fn type_redraws_when_its_font_becomes_available() {
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
     let mut r = Renderer::new();
     let before = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
-    assert!(vectorcraft_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
+    assert!(tsipika_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
     let after = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
     assert_ne!(before, after, "drawn in the font that arrived");
     assert_eq!(after, Renderer::new().render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");
@@ -71,13 +71,13 @@ fn type_with_raster_effects_redraws_when_its_font_becomes_available() {
     for (i, (id, params)) in effects.into_iter().enumerate() {
         let style = CharStyle { size: 50.0, font_family: FAMILY.into(), ..Default::default() };
         let mut n = Node::new(d.alloc_id(), NodeKind::Text(Box::new(TextObject::point(Point::new(10.0, 60.0 + 70.0 * i as f64), "Hamburg", style))));
-        n.appearance.effects.push(vectorcraft_doc::Effect { id: id.into(), params, visible: true });
+        n.appearance.effects.push(tsipika_doc::Effect { id: id.into(), params, visible: true });
         d.insert(Some(l), i, n).unwrap();
     }
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
     let mut r = Renderer::new();
     let before = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
-    assert!(vectorcraft_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
+    assert!(tsipika_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
     let after = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
     assert_ne!(before, after, "drawn in the font that arrived");
     assert_eq!(after, Renderer::new().render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");
@@ -88,9 +88,9 @@ fn type_with_raster_effects_redraws_when_its_font_becomes_available() {
 /// Alternate Glyphs.
 #[test]
 fn variable_font_settings_are_not_highlighted_as_substituted_glyphs() {
-    use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
+    use tsipika_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
     let _adding = adding_fonts();
-    vectorcraft_text::FontDb::global().add_font(two_axis_font().unwrap());
+    tsipika_text::FontDb::global().add_font(two_axis_font().unwrap());
     let font_axes = [("wght".to_string(), 650.0)].into_iter().collect();
     let style = CharStyle { size: 40.0, font_family: TWO_AXIS_FAMILY.into(), font_axes, ..Default::default() };
     let t = TextObject::point(Point::new(10.0, 60.0), "lIn", style);
@@ -113,8 +113,8 @@ fn translucent_blended_and_shadowed_type_redraws_when_its_font_becomes_available
         let mut n = Node::new(d.alloc_id(), NodeKind::Text(Box::new(TextObject::point(Point::new(10.0, 40.0 + 45.0 * i as f64), "Hamburg", style))));
         match i {
             0 => n.opacity = 0.8,
-            1 => n.blend = vectorcraft_color::BlendMode::Multiply,
-            _ => n.appearance.effects.push(vectorcraft_doc::Effect {
+            1 => n.blend = tsipika_color::BlendMode::Multiply,
+            _ => n.appearance.effects.push(tsipika_doc::Effect {
                 id: "stylize.dropShadow".into(),
                 params: serde_json::json!({"x": 4, "y": 4, "blur": 1, "opacity": 100}),
                 visible: true,
@@ -126,7 +126,7 @@ fn translucent_blended_and_shadowed_type_redraws_when_its_font_becomes_available
     let mut r = Renderer::new();
     let before = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
     assert_eq!(r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, before, "drawn again from the kept glyph geometry");
-    assert!(vectorcraft_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
+    assert!(tsipika_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
     let after = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
     assert_ne!(before, after, "drawn in the font that arrived");
     assert_eq!(after, Renderer::new().render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");
@@ -141,15 +141,15 @@ fn symbol_type_redraws_when_its_font_becomes_available() {
     let mut d = Document::new(300.0, 150.0);
     let style = CharStyle { size: 60.0, font_family: FAMILY.into(), ..Default::default() };
     let mut t = Node::new(d.alloc_id(), NodeKind::Text(Box::new(TextObject::point(Point::new(-140.0, 25.0), "Hamburg", style))));
-    t.appearance.effects.push(vectorcraft_doc::Effect { id: "distort.transform".into(), params: serde_json::json!({"moveH": 0.0}), visible: true });
+    t.appearance.effects.push(tsipika_doc::Effect { id: "distort.transform".into(), params: serde_json::json!({"moveH": 0.0}), visible: true });
     let art = Node::group(d.alloc_id(), vec![Arc::new(t)]);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Word".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Word".into(), art: Arc::new(art) });
     let (l, id) = (d.layers[0].id, d.alloc_id());
     d.insert(Some(l), 0, Node::new(id, NodeKind::SymbolInstance { symbol: "Word".into(), xf: Affine::translate((150.0, 75.0)) })).unwrap();
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
     let mut r = Renderer::new();
     let before = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
-    assert!(vectorcraft_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
+    assert!(tsipika_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
     let after = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
     assert_ne!(before, after, "drawn in the font that arrived");
     assert_eq!(after, Renderer::new().render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");
@@ -170,11 +170,11 @@ fn enveloped_type_redraws_when_its_font_becomes_available() {
     let typed = word(&mut d, Point::new(10.0, 60.0));
     let art = word(&mut d, Point::new(-140.0, 20.0));
     let art = Node::group(d.alloc_id(), vec![Arc::new(art)]);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Word".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Word".into(), art: Arc::new(art) });
     let shown = Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Word".into(), xf: Affine::translate((150.0, 120.0)) });
     let l = d.layers[0].id;
     for (i, content) in [typed, shown].into_iter().enumerate() {
-        let kind = vectorcraft_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 30.0, h: 0.0, v: 0.0, horizontal: true };
+        let kind = tsipika_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 30.0, h: 0.0, v: 0.0, horizontal: true };
         let envelope = NodeKind::Envelope {
             content: vec![Arc::new(content)],
             kind: Box::new(kind),
@@ -189,7 +189,7 @@ fn enveloped_type_redraws_when_its_font_becomes_available() {
     let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
     let mut r = Renderer::new();
     let before = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
-    assert!(vectorcraft_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
+    assert!(tsipika_text::FontDb::global().add_font(serif_as(FAMILY)) > 0);
     let after = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
     assert_ne!(before, after, "drawn in the font that arrived");
     assert_eq!(after, Renderer::new().render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, "as a new renderer draws it");
@@ -201,8 +201,8 @@ fn enveloped_type_redraws_when_its_font_becomes_available() {
 #[test]
 fn enveloped_type_under_effects_redraws_when_its_font_becomes_available() {
     let _adding = adding_fonts();
-    use vectorcraft_color::{Color, Paint};
-    use vectorcraft_doc::{AppearanceItem, Effect, FillLayer};
+    use tsipika_color::{Color, Paint};
+    use tsipika_doc::{AppearanceItem, Effect, FillLayer};
     let cases = [
         ("Shadow Serif 4", "the envelope with a drop shadow"),
         ("Effect Serif 4", "the group with a geometry effect"),
@@ -212,7 +212,7 @@ fn enveloped_type_under_effects_redraws_when_its_font_becomes_available() {
         let mut d = Document::new(300.0, 150.0);
         let style = CharStyle { size: 50.0, font_family: family.into(), ..Default::default() };
         let typed = Node::new(d.alloc_id(), NodeKind::Text(Box::new(TextObject::point(Point::new(10.0, 80.0), "Hamburg", style))));
-        let kind = vectorcraft_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 30.0, h: 0.0, v: 0.0, horizontal: true };
+        let kind = tsipika_doc::EnvelopeKind::Warp { style: "arc".into(), bend: 30.0, h: 0.0, v: 0.0, horizontal: true };
         let envelope = NodeKind::Envelope {
             content: vec![Arc::new(typed)],
             kind: Box::new(kind),
@@ -241,7 +241,7 @@ fn enveloped_type_under_effects_redraws_when_its_font_becomes_available() {
         let opts = RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
         let mut r = Renderer::new();
         let before = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
-        assert!(vectorcraft_text::FontDb::global().add_font(serif_as(family)) > 0);
+        assert!(tsipika_text::FontDb::global().add_font(serif_as(family)) > 0);
         let after = r.render(&d, 300, 150, Affine::IDENTITY, &opts).pixels;
         assert_ne!(before, after, "{what}: drawn in the font that arrived");
         assert_eq!(after, Renderer::new().render(&d, 300, 150, Affine::IDENTITY, &opts).pixels, "{what}: as a new renderer draws it");

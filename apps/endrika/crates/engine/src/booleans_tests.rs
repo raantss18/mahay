@@ -8,8 +8,8 @@ use crate::Session;
 use crate::booleans::{distinct_op, operand_op, outlined_operands, shown_op};
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::{BoolOp, NodeId, NodeKind};
-use figcraft_geom::Shape;
+use endrika_doc::{BoolOp, NodeId, NodeKind};
+use endrika_geom::Shape;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -27,7 +27,7 @@ fn click(s: &mut Session, x: f64, y: f64, cmd: bool) {
 /// A layer's filled area (a boolean group's result; none of these have holes).
 fn area(s: &Session, id: NodeId) -> f64 {
     let doc = s.doc().unwrap();
-    figcraft_render::node_outline(doc, doc.node(id).unwrap()).unwrap().0.area().abs()
+    endrika_render::node_outline(doc, doc.node(id).unwrap()).unwrap().0.area().abs()
 }
 
 /// A 100 × 100 square at the origin minus one at (50, 50): (group, bottom, top), nothing
@@ -202,7 +202,7 @@ fn boolean_commands_survive_junk() {
                 panic!("{cmd} panicked on {j}: {msg}");
             }
             if let Some(n) = s.doc().unwrap().node(g) {
-                let _ = figcraft_render::node_outline(s.doc().unwrap(), n);
+                let _ = endrika_render::node_outline(s.doc().unwrap(), n);
             }
         }
     }

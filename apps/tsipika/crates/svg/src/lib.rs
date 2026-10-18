@@ -1,4 +1,4 @@
-//! VectorCraft SVG import and export.
+//! Tsipika SVG import and export.
 //!
 //! * [`export`] / [`export_full`] write a [`Document`] as SVG 1.1 with our own writer, as set by
 //!   [`ExportOptions`] (presentation attributes, inline styles, style entities or internal CSS
@@ -45,7 +45,7 @@
 //!   one is absolute. The document's units follow the unit of the root `width` (pixels when it has
 //!   none).
 //! * `<mask>` imports as a luminance opacity mask; a mask we exported keeps its options and art
-//!   (its `data-vectorcraft-mask="noclip invert"` lists the options that differ from clipping and
+//!   (its `data-tsipika-mask="noclip invert"` lists the options that differ from clipping and
 //!   not inverted). Nested clip paths (`<clipPath clip-path>`) are clip groups in clip groups.
 //! * Filters that are a Gaussian blur, a drop shadow (`feDropShadow` or the usual chains of offset,
 //!   blur, flood or colour matrix, composite and merge), a glow or a feather (as we export them)
@@ -87,8 +87,8 @@ pub use css::{CssOptions, CssRule, CssSheet, CssUnits, css_rules};
 
 use serde::{Deserialize, Serialize};
 
-pub use vectorcraft_doc::Document;
-pub use vectorcraft_doc::TextObject;
+pub use tsipika_doc::Document;
+pub use tsipika_doc::TextObject;
 
 /// How style properties are written (SVG Options → Styling).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -201,7 +201,7 @@ pub struct ExportOptions {
     pub responsive: bool,
     /// Fonts → Convert to Outlines: text becomes paths (portable, no font needed to view it).
     pub outline_text: bool,
-    /// Embed the native document (passed to [`export_full`]) in `<metadata>` so VectorCraft
+    /// Embed the native document (passed to [`export_full`]) in `<metadata>` so Tsipika
     /// reopens the SVG with nothing lost (see [`editing`]).
     pub preserve_editing: bool,
     /// Write `<metadata>` with the document's title, format and File Info (Dublin Core).
@@ -335,7 +335,7 @@ pub fn export_full(doc: &Document, opts: &ExportOptions, native: Option<&[u8]>) 
 }
 
 /// The XML namespace of the editing data [`ExportOptions::preserve_editing`] embeds.
-pub const EDITING_NS: &str = "urn:vectorcraft:editing";
+pub const EDITING_NS: &str = "urn:tsipika:editing";
 
 /// The native document an SVG carries ([`ExportOptions::preserve_editing`]).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -510,16 +510,16 @@ pub use import::MAX_ELEMENT_DEPTH;
 pub fn import_with(svg: &str, opts: &ImportOptions) -> Result<(Document, Vec<String>), SvgError> {
     // usvg converts the tree by recursion, in large stack frames: the nesting it is given is
     // capped (`import::depth`), and it gets room for that cap whatever thread asks.
-    vectorcraft_doc::depth::with_deep_stack(|| import::import(svg, opts))
+    tsipika_doc::depth::with_deep_stack(|| import::import(svg, opts))
 }
 
 /// Reads a linked file: its bytes and the link to it (absolute path, size, time and hash), or
 /// `None` when there is no readable file at the (absolute) path.
-pub type ReadFile<'a> = &'a (dyn Fn(&str) -> Option<(Vec<u8>, vectorcraft_doc::LinkInfo)> + Sync);
+pub type ReadFile<'a> = &'a (dyn Fn(&str) -> Option<(Vec<u8>, tsipika_doc::LinkInfo)> + Sync);
 
 /// How [`import_with`] reads the files an SVG's `<image>` elements link to.
 ///
-/// A raster file stays linked ([`vectorcraft_doc::ImageObject::link`]); an SVG file imports as
+/// A raster file stays linked ([`tsipika_doc::ImageObject::link`]); an SVG file imports as
 /// vector art. A file that can't be read imports as a placeholder that keeps the link (and a
 /// warning), so it can be relinked.
 #[derive(Clone, Copy, Default)]

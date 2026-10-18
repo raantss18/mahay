@@ -747,7 +747,7 @@ const RARE_ISLANDS: usize = 3;
 /// The palette is otherwise median cut (Heckbert 1982) refined by k-means (Lloyd 1982); keeping
 /// salient colours that are rare by area follows the idea of salient-colour preservation in
 /// palette reduction (Fukuda et al. 2019, doi:10.1117/12.2521607). The rule and its numbers are
-/// VectorCraft's own.
+/// Tsipika's own.
 fn rare_colours(img: &Raster, own: &[bool], hk: &HistKey, centers: &[[f64; 3]]) -> Vec<[f64; 3]> {
     let px = img.rgba.as_chunks::<4>().0;
     if centers.is_empty() || own.len() != px.len() {

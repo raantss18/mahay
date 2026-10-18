@@ -1,4 +1,4 @@
-//! The CADCraft engine.
+//! The Drafitra engine.
 //!
 //! Every user-visible action is a command with a stable id (AutoCAD's command names in lower
 //! case: `line`, `circle`, `zoom`, `layer`…, plus dotted ids for UI operations). Commands run two
@@ -33,14 +33,14 @@ pub mod units;
 
 use std::sync::Arc;
 
-use cadcraft_doc::{Common, Drawing, Entity, EntityKind, Handle, Space};
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_doc::{Common, Drawing, Entity, EntityKind, Handle, Space};
+use drafitra_geom::{Bounds2, Vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub use cadcraft_doc as doc;
-pub use cadcraft_geom as geom;
-pub use cadcraft_render as render;
+pub use drafitra_doc as doc;
+pub use drafitra_geom as geom;
+pub use drafitra_render as render;
 pub use cmd::hatch::{HatchPicks, PatternChoice, PickMode, pattern_choices};
 pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
 pub use prompt::{Accept, Drag, Input, Interactive, Picker, Prompt, Step};
@@ -62,8 +62,8 @@ pub enum EngineError {
     Internal(String, String),
 }
 
-impl From<cadcraft_doc::DocError> for EngineError {
-    fn from(e: cadcraft_doc::DocError) -> Self {
+impl From<drafitra_doc::DocError> for EngineError {
+    fn from(e: drafitra_doc::DocError) -> Self {
         EngineError::Other(e.to_string())
     }
 }
@@ -210,11 +210,11 @@ impl DocState {
         if self.active_viewport().is_some() { Space::Model } else { self.space.clone() }
     }
     /// The active MSPACE viewport, if it still exists in the current layout.
-    pub fn active_viewport(&self) -> Option<(Handle, cadcraft_doc::Viewport)> {
+    pub fn active_viewport(&self) -> Option<(Handle, drafitra_doc::Viewport)> {
         let h = self.mspace?;
         let e = self.doc.space(&self.space)?.get(h)?;
         match &e.kind {
-            cadcraft_doc::EntityKind::Viewport(v) if v.height > 1e-12 && v.view_height > 1e-12 => Some((h, v.clone())),
+            drafitra_doc::EntityKind::Viewport(v) if v.height > 1e-12 && v.view_height > 1e-12 => Some((h, v.clone())),
             _ => None,
         }
     }
@@ -258,7 +258,7 @@ impl DocState {
                 let doc = Arc::make_mut(&mut self.doc);
                 if let Some(store) = doc.space_mut(&self.space.clone()) {
                     store.modify(h, |e| {
-                        if let cadcraft_doc::EntityKind::Viewport(x) = &mut e.kind {
+                        if let drafitra_doc::EntityKind::Viewport(x) = &mut e.kind {
                             x.view_center = center;
                             x.view_height = height;
                         }
@@ -297,7 +297,7 @@ impl DocState {
     /// The active MSPACE viewport when ZOOM works on its own view, as in AutoCAD: extents and
     /// windows fit the viewport, and zooms keep its centre. A locked viewport keeps its scale, so
     /// zooming it moves the sheet instead (see `store_view`).
-    pub fn zoom_viewport(&self) -> Option<cadcraft_doc::Viewport> {
+    pub fn zoom_viewport(&self) -> Option<drafitra_doc::Viewport> {
         self.active_viewport().map(|(_, v)| v).filter(|v| !v.locked && v.width > 1e-12)
     }
     /// The view ZOOM starts from: the model view of the active unlocked viewport, else [`Self::view`].
@@ -665,7 +665,7 @@ pub struct Session {
     /// Where `clipboard` came from and the layers, styles and blocks its objects need.
     pub clipboard_source: Option<cmd::clipboard::ClipSource>,
     /// The window last picked with PLOTWINDOW (the Plot dialog's "Window <").
-    pub plot_window: Option<cadcraft_geom::Bounds2>,
+    pub plot_window: Option<drafitra_geom::Bounds2>,
     /// AutoLISP: each drawing's symbols and the routine running ([`lisp`]).
     lisp: lisp::LispState,
     /// How the last LISP run ended (its value or error message).
@@ -824,9 +824,9 @@ impl Session {
         let h = &d.header;
         Common {
             layer: h.str("CLAYER", "0"),
-            color: cadcraft_color::Color::from_aci(h.i64("CECOLOR", 256) as i16),
+            color: drafitra_color::Color::from_aci(h.i64("CECOLOR", 256) as i16),
             linetype: h.str("CELTYPE", "ByLayer"),
-            lineweight: cadcraft_doc::Lineweight::from_dxf(h.i64("CELWEIGHT", -1) as i16),
+            lineweight: drafitra_doc::Lineweight::from_dxf(h.i64("CELWEIGHT", -1) as i16),
             ltscale: h.f64("CELTSCALE", 1.0),
             plot_style: h.str("CPLOTSTYLE", "ByLayer"),
             ..Common::default()
@@ -840,7 +840,7 @@ impl Session {
         let true_color = self.doc()?.header.get("CECOLOR_RGB").and_then(|v| v.as_i64());
         let mut common = common;
         if let Some(rgb) = true_color {
-            common.color = cadcraft_color::Color::True(cadcraft_color::Rgb::from_u32(rgb as u32));
+            common.color = drafitra_color::Color::True(drafitra_color::Rgb::from_u32(rgb as u32));
         }
         // Text, dimensions, multileaders, hatches and block references of annotative styles are
         // annotative, supporting the current annotation scale.
@@ -1343,7 +1343,7 @@ impl Session {
 
     /// The multiline text the running command is collecting, for the in-place editor
     /// ([`Interactive::editing_mtext`]).
-    pub fn editing_mtext(&self) -> Option<cadcraft_doc::MText> {
+    pub fn editing_mtext(&self) -> Option<drafitra_doc::MText> {
         self.running.as_ref().and_then(|r| r.machine.editing_mtext())
     }
 
@@ -1685,7 +1685,7 @@ impl Session {
     pub fn zoom_limits(&self) -> Result<Bounds2> {
         let d = self.doc()?;
         if let Space::Paper(name) = self.space()
-            && let Some(sheet) = cadcraft_render::sheet(d, &name)
+            && let Some(sheet) = drafitra_render::sheet(d, &name)
         {
             return Ok(sheet.bounds());
         }

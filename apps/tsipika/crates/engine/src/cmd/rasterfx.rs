@@ -17,14 +17,14 @@
 use std::sync::Arc;
 
 use serde_json::{Map, Value, json};
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::rastersettings::MAX_ADD_AROUND;
-use vectorcraft_doc::{
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::rastersettings::MAX_ADD_AROUND;
+use tsipika_doc::{
     Appearance, AppearanceItem, ColorMode, Document, Effect, ImageBlob, ImageObject, Node, NodeId, NodeKind, RasterColorModel, StrokeLayer,
 };
-use vectorcraft_geom::{Affine, FillRule, PathData, Rect};
-use vectorcraft_render::effects::{self, RasterFx};
-use vectorcraft_render::{AntiAlias, RenderOptions};
+use tsipika_geom::{Affine, FillRule, PathData, Rect};
+use tsipika_render::effects::{self, RasterFx};
+use tsipika_render::{AntiAlias, RenderOptions};
 
 use super::*;
 
@@ -148,23 +148,23 @@ pub(crate) fn clip_group(d: &mut Document, path: PathData, rule: FillRule, art: 
 }
 
 /// Render `nodes` alone over transparency: (premultiplied pixels, width, height).
-fn render(doc: &Document, nodes: Vec<Node>, region: Rect, scale: f64, anti_alias: AntiAlias) -> vectorcraft_render::Rendered {
+fn render(doc: &Document, nodes: Vec<Node>, region: Rect, scale: f64, anti_alias: AntiAlias) -> tsipika_render::Rendered {
     let mut tmp = doc.clone();
-    let mut layer = Node::layer(NodeId(u64::MAX), "raster", vectorcraft_doc::LayerColor::Preset(0));
+    let mut layer = Node::layer(NodeId(u64::MAX), "raster", tsipika_doc::LayerColor::Preset(0));
     if let Some(ch) = layer.children_mut() {
         *ch = nodes.into_iter().map(Arc::new).collect();
     }
     tmp.layers = vec![Arc::new(layer)];
-    let mut r = vectorcraft_render::Renderer::new();
+    let mut r = tsipika_render::Renderer::new();
     r.threads = 0;
     // Art Optimized is supersampled, as in exports: shapes meeting edge to edge leave no seam.
     r.render_region_with(&tmp, region, scale, &RenderOptions { skip_templates: true, anti_alias, supersample: true, ..Default::default() })
 }
 
-/// The note for pixels drawn since [`vectorcraft_render::decode_failures`] stood at `failed`, when
+/// The note for pixels drawn since [`tsipika_render::decode_failures`] stood at `failed`, when
 /// an image among them couldn't be decoded and so drew nothing; `None` otherwise.
 pub(crate) fn undecoded_warning(failed: u64) -> Option<&'static str> {
-    (vectorcraft_render::decode_failures() > failed).then_some("an image couldn't be decoded and is missing from the picture")
+    (tsipika_render::decode_failures() > failed).then_some("an image couldn't be decoded and is missing from the picture")
 }
 
 /// Pixels per point of raster effects rendered as images (the document's raster effects
@@ -183,7 +183,7 @@ pub(crate) fn effects_scale(doc: &Document) -> f64 {
 pub(crate) fn effect_image(out: &mut Document, whole: &Node, knockout: Option<&Node>, scale: f64) -> Option<Node> {
     // What it paints (its members' effects included), and how far its fills' and strokes' raster
     // effects reach beyond that.
-    let b = vectorcraft_render::painted_bounds(out, whole)?;
+    let b = tsipika_render::painted_bounds(out, whole)?;
     let look = out.raster_effects.clone();
     let reach = whole.appearance.items.iter().map(|i| effects::outset(i.effects(), b)).fold(0.0, f64::max) + 2.0 + look.add_around;
     let b = b.inflate(reach, reach);
@@ -430,7 +430,7 @@ fn split_items(out: &mut Document, n: &Node) -> Option<Node> {
 /// instance alone has no size to render its effects' image over. `None` for other objects.
 fn placed_symbol(d: &Document, n: &Node) -> Option<Node> {
     let NodeKind::SymbolInstance { symbol, xf } = &n.kind else { return None };
-    let mut art = vectorcraft_render::instance_art(&d.symbols.iter().find(|s| s.name == *symbol)?.art, n);
+    let mut art = tsipika_render::instance_art(&d.symbols.iter().find(|s| s.name == *symbol)?.art, n);
     art.transform(*xf, false);
     let mut g = n.clone();
     g.kind = NodeKind::Group { children: vec![Arc::new(art)], clip: false };
@@ -481,7 +481,7 @@ fn walk_mask(out: &mut Document, n: &mut Node, report: &mut FlattenReport) {
 /// them; one whose effects change it (blur, feather, inner glow) becomes the image.
 fn walk(out: &mut Document, n: &Node, report: &mut FlattenReport) -> Option<Node> {
     // A cancelled export leaves the rest of the document as it is: the caller drops the result.
-    if vectorcraft_doc::cancel::is_cancelled() {
+    if tsipika_doc::cancel::is_cancelled() {
         return None;
     }
     let checkpoint = report.checkpoint();
@@ -590,7 +590,7 @@ fn flatten(doc: &Document, report: &mut FlattenReport) -> Option<Document> {
 }
 
 /// PDF bytes for `doc`, with raster effects rendered as images.
-pub fn export_pdf(doc: &Document, opts: &vectorcraft_pdf::PdfOptions) -> std::result::Result<Vec<u8>, vectorcraft_pdf::PdfError> {
+pub fn export_pdf(doc: &Document, opts: &tsipika_pdf::PdfOptions) -> std::result::Result<Vec<u8>, tsipika_pdf::PdfError> {
     export_pdf_with_report(doc, opts).map(|r| r.bytes)
 }
 
@@ -598,13 +598,13 @@ pub fn export_pdf(doc: &Document, opts: &vectorcraft_pdf::PdfOptions) -> std::re
 /// approximated or left out).
 pub fn export_pdf_with_report(
     doc: &Document,
-    opts: &vectorcraft_pdf::PdfOptions,
-) -> std::result::Result<vectorcraft_pdf::ExportReport, vectorcraft_pdf::PdfError> {
+    opts: &tsipika_pdf::PdfOptions,
+) -> std::result::Result<tsipika_pdf::ExportReport, tsipika_pdf::PdfError> {
     let mut report = FlattenReport::new(Which::All, doc);
     let flat = flatten(doc, &mut report);
     // Flattening stops early when cancelled, leaving a half-flattened copy that must not be written.
-    vectorcraft_doc::cancel::check().map_err(|_| vectorcraft_pdf::PdfError::Cancelled)?;
-    let mut exported = vectorcraft_pdf::export_with_report(flat.as_ref().unwrap_or(doc), opts)?;
+    tsipika_doc::cancel::check().map_err(|_| tsipika_pdf::PdfError::Cancelled)?;
+    let mut exported = tsipika_pdf::export_with_report(flat.as_ref().unwrap_or(doc), opts)?;
     exported.warnings.extend(report.warnings());
     Ok(exported)
 }
@@ -612,7 +612,7 @@ pub fn export_pdf_with_report(
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_doc::NodeKind;
+    use tsipika_doc::NodeKind;
 
     use crate::Session;
 
@@ -641,6 +641,6 @@ mod tests {
         let text = String::from_utf8_lossy(&pdf);
         assert!(text.contains("/Image"), "the PDF embeds the effect images");
         // The source document is untouched.
-        assert!(s.doc().unwrap().doc.node(vectorcraft_doc::NodeId(r)).unwrap().appearance.effects.len() == 1);
+        assert!(s.doc().unwrap().doc.node(tsipika_doc::NodeId(r)).unwrap().appearance.effects.len() == 1);
     }
 }

@@ -291,7 +291,7 @@ impl Entropy {
         for i in 0u8..4 {
             h.update(state.hash_one(i).to_le_bytes());
         }
-        h.update(vectorcraft_doc::metadata::now_unix().unwrap_or_default().to_le_bytes());
+        h.update(tsipika_doc::metadata::now_unix().unwrap_or_default().to_le_bytes());
         for m in material {
             h.update((m.len() as u64).to_le_bytes());
             h.update(m);

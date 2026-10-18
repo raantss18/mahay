@@ -8,10 +8,10 @@
 //! at once.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_plugins::{Kind, registry};
+use tsipika_plugins::{Kind, registry};
 
 use super::{DialogSpec, form};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::menus::Item;
 use crate::state::Dialog;
 
@@ -54,7 +54,7 @@ pub fn object_menu() -> Vec<Item> {
 /// Effect › Plug-ins: the live-effect plug-ins (`None` while none is installed). Effects without
 /// options apply at once, as built-in ones do.
 pub fn effect_menu() -> Option<Item> {
-    let items: Vec<Item> = vectorcraft_effects::plugin_effects()
+    let items: Vec<Item> = tsipika_effects::plugin_effects()
         .into_iter()
         .map(|e| match e.defaults.as_object().is_some_and(|o| o.is_empty()) {
             true => Item::Cmd(e.label, "effect.apply", json!({ "effect": e.id })),
@@ -66,7 +66,7 @@ pub fn effect_menu() -> Option<Item> {
 
 /// `plugin.dialog {id, params?}`: run filter `id` at once when it takes no parameters or `params`
 /// are given, else open its dialog prefilled with its defaults.
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let id = p.get("id").and_then(Value::as_str).ok_or("missing `id` (see plugin.list)")?;
     let plugin = registry::get(id).ok_or_else(|| format!("no plug-in {id:?} is installed"))?;
     let m = plugin.manifest();
@@ -89,7 +89,7 @@ fn params(d: &Dialog) -> Value {
     json!({"id": d.str("__plugin"), "params": form::params(d)})
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     // A plug-in uninstalled while its dialog is open closes it.
     let Some(plugin) = registry::get(&d.str("__plugin")) else { return true };
     let m = plugin.manifest();
@@ -103,6 +103,6 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     form::commit_preview(app, CMD, params(d))
 }

@@ -1,6 +1,6 @@
 //! Blur › Radial Blur and Smart Blur (Normal, Edge Only and Overlay Edge).
 
-use vectorcraft_geom::{Affine, Point, Vec2};
+use tsipika_geom::{Affine, Point, Vec2};
 
 use super::{PixelSpace, Px16, box_blur, pick, to8, to16};
 

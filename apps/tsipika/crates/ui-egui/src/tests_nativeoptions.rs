@@ -1,4 +1,4 @@
-//! VectorCraft Options after Save As: each artboard to a separate file (All or a range), Include
+//! Tsipika Options after Save As: each artboard to a separate file (All or a range), Include
 //! Linked Files, Embed ICC Profiles, Create PDF-Compatible File, Use Compression and Preview; the
 //! web's Save As dialog shows them too.
 
@@ -8,7 +8,7 @@ use crate::tests_svg::app;
 use crate::{dialogs, theme};
 
 /// One headless frame of the dialog layer.
-fn frame(app: &mut crate::VectorcraftApp) {
+fn frame(app: &mut crate::TsipikaApp) {
     let ctx = egui::Context::default();
     theme::install_fonts(&ctx);
     let mut out = ctx.run_ui(egui::RawInput::default(), |ui| dialogs::show(app, ui.ctx()));
@@ -16,7 +16,7 @@ fn frame(app: &mut crate::VectorcraftApp) {
 }
 
 /// Add artboards B and C, a rectangle on each.
-fn three_boards(app: &mut crate::VectorcraftApp) {
+fn three_boards(app: &mut crate::TsipikaApp) {
     for (x, name) in [(200, "B"), (400, "C")] {
         app.run("artboard.new", json!({"x": x, "y": 0, "width": 100, "height": 80, "name": name})).unwrap();
         app.run("shape.rectangle", json!({"x": x + 10, "y": 10, "width": 20, "height": 20})).unwrap();
@@ -25,14 +25,14 @@ fn three_boards(app: &mut crate::VectorcraftApp) {
 
 #[test]
 fn save_as_native_asks_for_its_options_and_writes_every_artboard() {
-    let (mut app, written) = app("/tmp/doc.vectorcraft");
+    let (mut app, written) = app("/tmp/doc.tsipika");
     three_boards(&mut app);
     let r = app.run("file.saveAs", Value::Null).unwrap();
     assert_eq!(r["pending"], "saveOptions");
     let d = app.ui.dialog.as_ref().unwrap();
     assert_eq!(
         (d.str("format").as_str(), d.bool("separateArtboards"), d.bool("embedProfiles"), d.bool("pdfCompatible")),
-        ("vectorcraft", false, true, false)
+        ("tsipika", false, true, false)
     );
     assert!(written.borrow().is_empty(), "nothing is written before OK");
     frame(&mut app);
@@ -47,9 +47,9 @@ fn save_as_native_asks_for_its_options_and_writes_every_artboard() {
     app.ui.dialog.as_mut().unwrap().fields.insert("range".into(), json!("2-3"));
     let r = dialogs::confirm(&mut app).unwrap();
     let names: Vec<String> = written.borrow().iter().map(|(p, _)| p.clone()).collect();
-    assert_eq!(names, ["/tmp/doc.vectorcraft", "/tmp/doc-B.vectorcraft", "/tmp/doc-C.vectorcraft"], "{r}");
+    assert_eq!(names, ["/tmp/doc.tsipika", "/tmp/doc-B.tsipika", "/tmp/doc-C.tsipika"], "{r}");
     let st = app.session.active().unwrap();
-    assert_eq!((st.path.as_deref(), st.is_dirty()), (Some("/tmp/doc.vectorcraft"), false));
+    assert_eq!((st.path.as_deref(), st.is_dirty()), (Some("/tmp/doc.tsipika"), false));
     // Save writes them again with the same options, without asking.
     app.run("shape.ellipse", json!({"x": 50, "y": 40, "width": 10, "height": 10})).unwrap();
     app.run("file.save", Value::Null).unwrap();
@@ -66,7 +66,7 @@ fn save_as_native_asks_for_its_options_and_writes_every_artboard() {
 
 #[test]
 fn save_a_copy_and_save_dont_ask_and_options_reach_the_file() {
-    let (mut app, written) = app("/tmp/plain.vectorcraft");
+    let (mut app, written) = app("/tmp/plain.tsipika");
     // Save of an untitled document goes straight to the file, as before.
     app.run("file.save", Value::Null).unwrap();
     assert!(app.ui.dialog.is_none());
@@ -77,8 +77,8 @@ fn save_a_copy_and_save_dont_ask_and_options_reach_the_file() {
     d.fields.insert("compress".into(), json!(false));
     dialogs::confirm(&mut app).unwrap();
     let bytes = written.borrow()[1].1.clone();
-    assert!(vectorcraft_format::pdf_content(&bytes).is_some_and(|p| p.starts_with(b"%PDF")));
-    assert!(!vectorcraft_format::is_compressed(&bytes));
+    assert!(tsipika_format::pdf_content(&bytes).is_some_and(|p| p.starts_with(b"%PDF")));
+    assert!(!tsipika_format::is_compressed(&bytes));
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn the_web_save_as_dialog_shows_the_native_options() {
         })),
         ..Default::default()
     };
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), services);
+    let mut app = crate::TsipikaApp::new(tsipika_engine::Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 80})).unwrap();
     three_boards(&mut app);
     app.run("file.saveAs", Value::Null).unwrap();
@@ -102,5 +102,5 @@ fn the_web_save_as_dialog_shows_the_native_options() {
     d.fields.insert("separateArtboards".into(), json!(true));
     dialogs::confirm(&mut app).unwrap();
     let names: Vec<String> = written.borrow().iter().map(|(p, _)| p.clone()).collect();
-    assert_eq!(names, ["Untitled-1.vectorcraft", "Untitled-1-Artboard-1.vectorcraft", "Untitled-1-B.vectorcraft", "Untitled-1-C.vectorcraft"]);
+    assert_eq!(names, ["Untitled-1.tsipika", "Untitled-1-Artboard-1.tsipika", "Untitled-1-B.tsipika", "Untitled-1-C.tsipika"]);
 }

@@ -1,6 +1,6 @@
 //! Layout collisions must not dispatch both the physical and logical shortcuts.
-use effectcraft_engine::Session;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Event, Key, Modifiers, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
@@ -9,7 +9,7 @@ use serde_json::json;
 fn physical_shortcuts_distinguish_azerty_zoom_keys() {
     let mut s = Session::default();
     s.execute("comp.new", json!({"width": 320, "height": 180, "duration": 60})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.ui.timeline.pps = Some(100.0);
     for (command, keys) in [("timeline.zoomIn", "Physical+6"), ("timeline.zoomOut", "Physical+Minus")] {
         app.session.execute("shortcuts.set", json!({"command": command, "keys": keys})).unwrap();
@@ -46,7 +46,7 @@ fn shifted_one_toggles_only_selected_video_and_iso_key_maximizes() {
     s.execute("layer.newSolid", json!({"name": "Unselected"})).unwrap();
     let selected = s.execute("layer.newSolid", json!({"name": "Selected"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.select", json!({"layers": [selected]})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.session.execute("shortcuts.set", json!({"command": "layer.setSwitch", "params": {"switch": "video"}, "keys": "Shift+1"})).unwrap();
     app.session.execute("shortcuts.set", json!({"command": "window.maximizePanel", "keys": "IntlBackslash"})).unwrap();
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).build_eframe(|_| app);
@@ -70,11 +70,11 @@ fn timeline_shift_p_reveals_instead_of_adding_a_text_animator() {
     let mut s = Session::default();
     s.execute("comp.new", json!({"width": 320, "height": 180})).unwrap();
     s.execute("layer.newSolid", json!({"name": "Box"})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.session.execute("shortcuts.set", json!({"command": "layer.addTextAnimator", "params": {"properties": ["position"]}, "keys": "Shift+P"})).unwrap();
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).build_eframe(|_| app);
     h.run_steps(3);
-    h.state_mut().ui.focused = effectcraft_ui_egui::dock::PanelKind::Timeline;
+    h.state_mut().ui.focused = tselatra_ui_egui::dock::PanelKind::Timeline;
     h.event(Event::Key { key: Key::P, physical_key: Some(Key::P), pressed: true, repeat: false, modifiers: Modifiers::SHIFT });
     h.step();
     assert!(h.state().ui.timeline.reveal.contains(&"position".to_string()));

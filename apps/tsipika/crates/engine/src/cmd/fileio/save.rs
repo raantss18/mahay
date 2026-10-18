@@ -10,7 +10,7 @@ use std::io::Write as _;
 use std::sync::Arc;
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::Document;
+use tsipika_doc::Document;
 
 use super::super::*;
 use super::{
@@ -20,7 +20,7 @@ use crate::{DocState, Prefs};
 
 /// The formats Save As offers, in menu order (append-only). The other writable formats are exports:
 /// they never become the document's own file.
-pub const SAVE_FORMATS: &[&str] = &["vectorcraft", "template", "pdf", "svg", "svgz", "ai"];
+pub const SAVE_FORMATS: &[&str] = &["tsipika", "template", "pdf", "svg", "svgz", "ai"];
 
 /// The formats Save as Template writes, the default first: a native template, or a
 /// PDF-compatible `.ait` (written as a `.ai` file is).
@@ -115,13 +115,13 @@ fn stamp_doc_dates(d: &mut Document, at: i64) {
     d.metadata.modified = Some(at);
 }
 
-/// The Templates folder: the `templatesFolder` preference, else `VectorCraft Templates` in the
+/// The Templates folder: the `templatesFolder` preference, else `Tsipika Templates` in the
 /// user's documents folder (none where there is no home folder, as on the web).
 pub fn templates_folder(prefs: &Prefs) -> Option<String> {
     if !prefs.templates_folder.is_empty() {
         return Some(prefs.templates_folder.clone());
     }
-    Some(documents_folder()?.join("VectorCraft Templates").to_string_lossy().to_string())
+    Some(documents_folder()?.join("Tsipika Templates").to_string_lossy().to_string())
 }
 
 /// The Templates folder for a file dialog to start in (#703): made when it's missing; where it
@@ -196,7 +196,7 @@ fn save_format_of(f: &str) -> std::result::Result<&'static Format, String> {
 /// The format Save writes for `format` (an id or extension), else the format `path`'s extension
 /// names, else native (see [`SAVE_FORMATS`]); other formats are exports.
 pub fn save_format(format: Option<&str>, path: Option<&str>) -> std::result::Result<&'static Format, String> {
-    save_format_of(format.or_else(|| path.and_then(format_for_name).map(|f| f.id)).unwrap_or("vectorcraft"))
+    save_format_of(format.or_else(|| path.and_then(format_for_name).map(|f| f.id)).unwrap_or("tsipika"))
 }
 
 /// `path` for a template in format `f`: kept when its extension names `f`, with the extension
@@ -284,7 +284,7 @@ fn reads_option(f: &Format, key: &str) -> bool {
 /// Formats that carry the whole native document: they lose nothing, and record links relative to
 /// where they are written. A `.ai` or `.ait` file is a PDF carrying it.
 fn is_native(f: &Format) -> bool {
-    matches!(f.id, "vectorcraft" | "template" | "ai" | "ait")
+    matches!(f.id, "tsipika" | "template" | "ai" | "ait")
 }
 
 fn is_pdf(f: &Format) -> bool {
@@ -316,7 +316,7 @@ fn doc_to_save(st: &DocState, f: &Format) -> Arc<Document> {
 fn fidelity_warning(f: &Format) -> Option<String> {
     (!is_native(f)).then(|| {
         format!(
-            "{} keeps the artwork but not everything a VectorCraft document holds (editable effects, symbols, swatches, styles): save as VectorCraft to keep it all editable",
+            "{} keeps the artwork but not everything a Tsipika document holds (editable effects, symbols, swatches, styles): save as Tsipika to keep it all editable",
             f.label
         )
     })
@@ -397,8 +397,8 @@ pub(super) fn artboard_doc(doc: &Document, i: usize) -> Document {
 }
 
 /// Keep in layer `n` (and its sublayers) only the objects touching `r`.
-fn keep_on(n: &mut Arc<vectorcraft_doc::Node>, r: vectorcraft_geom::Rect) {
-    let touches = |b: vectorcraft_geom::Rect| b.x0 <= r.x1 && b.x1 >= r.x0 && b.y0 <= r.y1 && b.y1 >= r.y0;
+fn keep_on(n: &mut Arc<tsipika_doc::Node>, r: tsipika_geom::Rect) {
+    let touches = |b: tsipika_geom::Rect| b.x0 <= r.x1 && b.x1 >= r.x0 && b.y0 <= r.y1 && b.y1 >= r.y0;
     if let Some(children) = Arc::make_mut(n).children_mut() {
         children.retain(|c| c.is_layer() || c.visual_bounds().is_some_and(touches));
         for c in children.iter_mut().filter(|c| c.is_layer()) {
@@ -419,7 +419,7 @@ fn blank_pages(doc: &Document) -> Document {
 }
 
 /// Why a `.ai` file saved without PDF content looks empty elsewhere.
-const NOT_PDF_COMPATIBLE: &str = "saved without PDF content: VectorCraft opens it as before, other apps show empty pages";
+const NOT_PDF_COMPATIBLE: &str = "saved without PDF content: Tsipika opens it as before, other apps show empty pages";
 
 /// The shared Save and Export encoder for PDF-compatible `.ai` files (and `.ait` templates, the
 /// same file).
@@ -501,7 +501,7 @@ fn job_for_stamped(s: &Session, st: &DocState, plan: SavePlan, stamped: Option<i
         params.entry("hiddenLayers").or_insert(Value::Bool(true));
     }
     let mut params = Value::Object(params);
-    if matches!(plan.format.id, "vectorcraft" | "template") {
+    if matches!(plan.format.id, "tsipika" | "template") {
         // Not remembered with the options: the preference decides each time it isn't given.
         params = with_compression_pref(&s.prefs, &params);
         super::native::save_options(cmd, plan.format, &doc, &params)?;
@@ -602,11 +602,11 @@ impl SaveJob {
     /// Is the file written as it is encoded by [`SaveJob::write_streamed`]? A native file (or
     /// template) to a path, without a file per artboard.
     pub fn streams(&self) -> bool {
-        self.plan.path.is_some() && matches!(self.plan.format.id, "vectorcraft" | "template") && self.boards.is_empty()
+        self.plan.path.is_some() && matches!(self.plan.format.id, "tsipika" | "template") && self.boards.is_empty()
     }
 
     /// [`SaveJob::write`] through `stream`, which writes the file at a path with what the filler
-    /// it is given writes (atomically, as [`vectorcraft_format::write_atomic_with`]). A native
+    /// it is given writes (atomically, as [`tsipika_format::write_atomic_with`]). A native
     /// file goes into it as it is encoded ([`SaveJob::streams`]), never held whole in memory;
     /// other files are encoded first, then written into it.
     pub fn write_streamed(&self, stream: StreamWrite) -> Result<Value> {
@@ -684,7 +684,7 @@ impl SaveJob {
     pub fn complete(self, s: &mut Session, uid: u64) {
         let saved = self.plan.retargets() && self.plan.path.is_some();
         // The other open documents that place this one show the new version.
-        let written = self.plan.path.clone().filter(|_| matches!(self.plan.format.id, "vectorcraft" | "template"));
+        let written = self.plan.path.clone().filter(|_| matches!(self.plan.format.id, "tsipika" | "template"));
         if let Some(st) = s.document_mut(uid) {
             self.finish(st);
         }
@@ -744,7 +744,7 @@ fn revert(s: &mut Session, _: &Value) -> Result<Value> {
 fn format_options(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "file.formatOptions";
     let st = s.active();
-    let id = str_param(p, "format").or(st.map(|d| d.format)).unwrap_or("vectorcraft");
+    let id = str_param(p, "format").or(st.map(|d| d.format)).unwrap_or("tsipika");
     let f = format(id)
         .filter(|f| f.write || SAVE_FORMATS.contains(&f.id) || TEMPLATE_FORMATS.contains(&f.id))
         .ok_or_else(|| bad(C, format!("`{id}` is no writable format (see document.formats)")))?;
@@ -754,7 +754,7 @@ fn format_options(s: &mut Session, p: &Value) -> Result<Value> {
     let mut v = f.to_json();
     if let Some(options) = v["options"].as_object_mut() {
         for (name, o) in options.iter_mut() {
-            let default = prefs.get(name).filter(|_| matches!(f.id, "vectorcraft" | "template")).unwrap_or(&o["default"]);
+            let default = prefs.get(name).filter(|_| matches!(f.id, "tsipika" | "template")).unwrap_or(&o["default"]);
             o["value"] = saved.and_then(|m| m.get(name)).unwrap_or(default).clone();
         }
     }
@@ -770,7 +770,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
             "Save Document",
             [],
             None,
-            "{path?, format?: vectorcraft|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own format), options?: {…the format's options, see file.formatOptions; default: as last saved}, svg?: {…SVG options} (an SVG save keeps hidden layers, display:none, unless hiddenLayers is false), …the SVG and PDF options given flat instead, compress?: bool (native, also in options: gzip; default: the useCompression preference), version?: 4 (3, 2 or 1: for older VectorCraft versions; 1 and 2 are never compressed), preview?: false (embed a PNG of the first artboard, at most 256 px), separateArtboards?: false (native and .ai: also save each artboard of `range` to <name>-<artboard>.<ext> beside the file, holding that artboard and the art touching it; the result's files lists every file written), range?: \"1-3, 5\"|\"all\" (default; with separateArtboards), includeLinked?: false (keep linked files' own pixels, not just their previews; they stay linked), embedProfiles?: true (carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing), pdfCompatible?: false for native (also carry a PDF of every artboard) | true for .ai (false: blank pages, only the native document; a .ai file's compress, default true, is its compression.compressText), modified?: Unix seconds|null (the File Info modified date, and created date when there is none, a save to a file stamps; default now, recorded in the journal so a replay matches; null: leave the dates)} → {path, format, bytes, warnings, files?: [path…] (the file and its artboards' files), linked?: [path…] (images an SVG links to)}. Save writes one artboard, except a .ai file: a PDF-compatible file of every artboard carrying the native document (preserveEditing always on; PDF options flat or in options), which document.open restores exactly; separateArtboards writes more files, one per artboard. Without a path it writes the document's own file in its own format: a document opened from or saved as SVG/PDF saves as that again (warnings name what the format loses). No path known (never saved, converted from an older version, restored by Data Recovery, or another format) → {dataBase64, format, name, folder?, warnings} and the document stays modified",
+            "{path?, format?: tsipika|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own format), options?: {…the format's options, see file.formatOptions; default: as last saved}, svg?: {…SVG options} (an SVG save keeps hidden layers, display:none, unless hiddenLayers is false), …the SVG and PDF options given flat instead, compress?: bool (native, also in options: gzip; default: the useCompression preference), version?: 4 (3, 2 or 1: for older Tsipika versions; 1 and 2 are never compressed), preview?: false (embed a PNG of the first artboard, at most 256 px), separateArtboards?: false (native and .ai: also save each artboard of `range` to <name>-<artboard>.<ext> beside the file, holding that artboard and the art touching it; the result's files lists every file written), range?: \"1-3, 5\"|\"all\" (default; with separateArtboards), includeLinked?: false (keep linked files' own pixels, not just their previews; they stay linked), embedProfiles?: true (carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing), pdfCompatible?: false for native (also carry a PDF of every artboard) | true for .ai (false: blank pages, only the native document; a .ai file's compress, default true, is its compression.compressText), modified?: Unix seconds|null (the File Info modified date, and created date when there is none, a save to a file stamps; default now, recorded in the journal so a replay matches; null: leave the dates)} → {path, format, bytes, warnings, files?: [path…] (the file and its artboards' files), linked?: [path…] (images an SVG links to)}. Save writes one artboard, except a .ai file: a PDF-compatible file of every artboard carrying the native document (preserveEditing always on; PDF options flat or in options), which document.open restores exactly; separateArtboards writes more files, one per artboard. Without a path it writes the document's own file in its own format: a document opened from or saved as SVG/PDF saves as that again (warnings name what the format loses). No path known (never saved, converted from an older version, restored by Data Recovery, or another format) → {dataBase64, format, name, folder?, warnings} and the document stays modified",
             has_doc,
             |s, p| save(s, SaveMode::Save, p)
         ),
@@ -779,7 +779,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
             "Save As…",
             ["File"],
             Some("Cmd+Shift+S"),
-            "{…as document.save} {path?, format?: vectorcraft|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own; ait, a .ait template, is written by file.saveAsTemplate), options?, svg?, modified?} the document takes on the new path, name and format (except a template, which is always a copy) → {path, format, bytes, warnings}; no path → {dataBase64, format, name, folder?, warnings}",
+            "{…as document.save} {path?, format?: tsipika|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own; ait, a .ait template, is written by file.saveAsTemplate), options?, svg?, modified?} the document takes on the new path, name and format (except a template, which is always a copy) → {path, format, bytes, warnings}; no path → {dataBase64, format, name, folder?, warnings}",
             has_doc,
             |s, p| save(s, SaveMode::SaveAs, p)
         ),
@@ -856,7 +856,7 @@ mod tests_folders {
         let _ = std::fs::remove_dir_all(&base);
         std::fs::create_dir_all(&base).unwrap();
         let mut prefs = crate::Prefs::default();
-        let wanted = base.join("Modelli").join("VectorCraft Templates");
+        let wanted = base.join("Modelli").join("Tsipika Templates");
         prefs.templates_folder = wanted.to_string_lossy().into_owned();
         assert_eq!(super::templates_dialog_folder(&prefs).map(PathBuf::from), Some(wanted.clone()));
         assert!(wanted.is_dir(), "made");

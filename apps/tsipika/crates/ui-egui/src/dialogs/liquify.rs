@@ -9,13 +9,13 @@
 //! Crystallize, Wrinkle); `horizontal`, `vertical` (Wrinkle, %); `showBrush`.
 
 use serde_json::{Map, Value, json};
-use vectorcraft_tools::distort::liquify::LiquifyKind;
+use tsipika_tools::distort::liquify::LiquifyKind;
 
 use super::document_setup::check;
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of the Liquify Tool Options.
 pub const KIND: &str = "liquifyOptions";
@@ -57,7 +57,7 @@ fn heading(d: &Dialog) -> String {
 }
 
 /// Open the options of Liquify tool `tool` with its current values.
-pub fn open(app: &mut VectorcraftApp, tool: &str) -> Result<Value, String> {
+pub fn open(app: &mut TsipikaApp, tool: &str) -> Result<Value, String> {
     let k = LiquifyKind::parse(tool).ok_or_else(|| format!("`{tool}` isn't a Liquify tool"))?;
     let o = app.session.tool_options_of(k.id());
     let mut fields: Map<String, Value> = KEYS.iter().filter_map(|key| Some((key.to_string(), o.get(*key)?.clone()))).collect();
@@ -76,7 +76,7 @@ fn slider(ui: &mut egui::Ui, d: &mut Dialog, (key, label): (&str, &str), range: 
     form::slider_w(ui, d, (key, label, LABEL_W), range, suffix, &|_| rail);
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let k = kind(d);
     let unit = app.session.general_unit();
     widgets::subheader(ui, tl!("Global Brush Dimensions"));
@@ -138,7 +138,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// OK: set the tool's options (percentages back to 0..1).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let mut values: Map<String, Value> = KEYS.iter().filter_map(|k| Some((k.to_string(), d.fields.get(*k)?.clone()))).collect();
     for key in PERCENT {
         if values.contains_key(key) {
@@ -151,10 +151,10 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app
     }
@@ -223,7 +223,7 @@ mod tests {
         app.run("select.set", json!({"ids": []})).unwrap();
         app.select_tool("bloat");
         let view = app.view_info();
-        crate::canvas::dispatch(&mut app, &vectorcraft_tools::PointerEvent::new(vectorcraft_tools::PointerKind::Down, 105.0, 95.0), view);
+        crate::canvas::dispatch(&mut app, &tsipika_tools::PointerEvent::new(tsipika_tools::PointerKind::Down, 105.0, 95.0), view);
         assert!(app.ui.status.contains("Bloat left 1 object under the brush"), "{}", app.ui.status);
     }
 }

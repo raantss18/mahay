@@ -7,11 +7,11 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use vectorcraft_color::freeform::{painted_box, spread_scale};
-use vectorcraft_color::{BlendMode, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{AppearanceItem, Dash, Document, ImageObject, LineCap, LineJoin, Node, NodeKind, StrokeLayer, SymbolBoxes};
-use vectorcraft_effects::stroke;
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, Shape};
+use tsipika_color::freeform::{painted_box, spread_scale};
+use tsipika_color::{BlendMode, GradientKind, GradientPaint, Paint};
+use tsipika_doc::{AppearanceItem, Dash, Document, ImageObject, LineCap, LineJoin, Node, NodeKind, StrokeLayer, SymbolBoxes};
+use tsipika_effects::stroke;
+use tsipika_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, Shape};
 
 use crate::dib::Rgba;
 
@@ -75,13 +75,13 @@ fn overlaps(a: Rect, b: Rect) -> bool {
     a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1
 }
 
-fn rgb_of(c: &vectorcraft_color::Color) -> [u8; 3] {
+fn rgb_of(c: &tsipika_color::Color) -> [u8; 3] {
     let [r, g, b, _] = c.to_rgba8(1.0);
     [r, g, b]
 }
 
 /// The first visible solid fill colour in `n` (a pattern tile's art).
-fn first_solid(n: &Node) -> Option<vectorcraft_color::Color> {
+fn first_solid(n: &Node) -> Option<tsipika_color::Color> {
     let own = n.appearance.items.iter().find_map(|i| match i {
         AppearanceItem::Fill(f) if f.visible => f.paint.color(),
         _ => None,
@@ -110,7 +110,7 @@ pub(crate) struct Scene<'a> {
     warnings: Vec<String>,
     /// Decoded images by key (`None`: can't be decoded, left out).
     images: HashMap<String, Option<Arc<Rgba>>>,
-    brushes: Option<Vec<vectorcraft_brush::Brush>>,
+    brushes: Option<Vec<tsipika_brush::Brush>>,
     /// The opacity of the containers around the current object.
     opacity: f32,
     /// Symbols, brush art and pattern tiles being written inside one another.
@@ -186,7 +186,7 @@ impl<'a> Scene<'a> {
                 self.shape(n, &bp, *rule);
             }
             NodeKind::Text(_) => {
-                if let Some(o) = vectorcraft_effects::outline_text(n) {
+                if let Some(o) = tsipika_effects::outline_text(n) {
                     self.node(&o, true);
                 }
             }
@@ -209,7 +209,7 @@ impl<'a> Scene<'a> {
             | NodeKind::Repeat(_)
             | NodeKind::PlacedDocument(_)
             | NodeKind::Intertwine { .. } => {
-                let g = vectorcraft_effects::expand_live_deep(Some(self.doc), n);
+                let g = tsipika_effects::expand_live_deep(Some(self.doc), n);
                 for c in g.children().into_iter().flatten() {
                     self.node(c, false);
                 }
@@ -228,7 +228,7 @@ impl<'a> Scene<'a> {
         let paint = first.clip_paint();
         let outline = if self.clips {
             // Nothing to clip by hides the clipped art (as on the canvas).
-            let Some((path, rule)) = vectorcraft_effects::clip_outline(first) else { return };
+            let Some((path, rule)) = tsipika_effects::clip_outline(first) else { return };
             Some((path, rule))
         } else {
             self.warn(CLIPPING);
@@ -258,7 +258,7 @@ impl<'a> Scene<'a> {
         if n.extras().mask.as_ref().is_some_and(|m| !m.disabled) {
             self.warn(MASKS);
         }
-        let raster = |fx: &[vectorcraft_doc::Effect]| fx.iter().any(|e| e.visible && vectorcraft_effects::is_raster(&e.id));
+        let raster = |fx: &[tsipika_doc::Effect]| fx.iter().any(|e| e.visible && tsipika_effects::is_raster(&e.id));
         if raster(&n.appearance.effects) || n.appearance.items.iter().any(|i| raster(i.effects())) {
             self.warn(RASTER_FX);
         }
@@ -406,9 +406,9 @@ impl<'a> Scene<'a> {
 
     fn brush_art(&mut self, bp: &BezPath, st: &StrokeLayer) -> Option<Vec<Node>> {
         let doc = self.doc;
-        let brushes = self.brushes.get_or_insert_with(|| vectorcraft_brush::library(doc));
+        let brushes = self.brushes.get_or_insert_with(|| tsipika_brush::library(doc));
         let b = st.brush.as_deref().and_then(|name| brushes.iter().find(|b| b.name == name))?;
-        Some(vectorcraft_brush::stroke_pieces(doc, b, bp, st))
+        Some(tsipika_brush::stroke_pieces(doc, b, bp, st))
     }
 
     /// A placed image, decoded once per image.

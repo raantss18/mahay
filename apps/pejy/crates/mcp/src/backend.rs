@@ -7,7 +7,7 @@ use std::time::Duration;
 use serde_json::{Value, json};
 
 /// Something that answers control-channel methods (`engine.execute`, `document.inspect`,
-/// `ui.pointer`, `ui.render`, …). See `designcraft_ui_egui::control` for the full list.
+/// `ui.pointer`, `ui.render`, …). See `pejy_ui_egui::control` for the full list.
 pub trait Backend {
     /// Call one method. `Ok` carries the `result`, `Err` the error message.
     fn call(&mut self, method: &str, params: Value) -> Result<Value, String>;
@@ -17,13 +17,13 @@ pub trait Backend {
     /// `render_page`). A backend that confines file access (see [`crate::Headless`]) applies it
     /// here too.
     fn write_file(&mut self, path: &str, bytes: &[u8]) -> Result<(), String> {
-        designcraft_engine::io::write_file(path, bytes)
+        pejy_engine::io::write_file(path, bytes)
     }
     /// Short human description ("headless", "connected to 127.0.0.1:7979").
     fn describe(&self) -> String;
 }
 
-/// A running DesignCraft app, reached through its loopback control port.
+/// A running Pejy app, reached through its loopback control port.
 pub struct Remote {
     addr: String,
     conn: Option<(BufReader<TcpStream>, TcpStream)>,
@@ -103,13 +103,13 @@ impl Backend for Remote {
         let line = json!({"id": id, "method": method, "params": params}).to_string();
         if let Err(e) = self.prepare_connection() {
             self.conn = None;
-            return Err(format!("DesignCraft app at {} is not reachable: {e}; nothing was sent", self.addr));
+            return Err(format!("Pejy app at {} is not reachable: {e}; nothing was sent", self.addr));
         }
         let reply = match self.roundtrip(&line) {
             Ok(r) => r,
             Err(e) => {
                 self.conn = None;
-                return Err(format!("DesignCraft app at {}: {e}; operation may have completed; inspect state before retrying", self.addr));
+                return Err(format!("Pejy app at {}: {e}; operation may have completed; inspect state before retrying", self.addr));
             }
         };
         let v: Value = serde_json::from_str(reply.trim()).map_err(|e| format!("bad reply from app: {e}"))?;
@@ -125,7 +125,7 @@ impl Backend for Remote {
     }
 
     fn describe(&self) -> String {
-        format!("connected to the DesignCraft app at {}", self.addr)
+        format!("connected to the Pejy app at {}", self.addr)
     }
 }
 

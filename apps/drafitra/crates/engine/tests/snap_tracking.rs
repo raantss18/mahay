@@ -1,11 +1,11 @@
 //! Object snap tracking (OTRACK, F11) and the Extension, Parallel and Apparent Intersection
 //! snaps, driven through `Session::snap_cursor` as the UI does, without the UI.
 
-use cadcraft_doc::{Common, EntityKind, Insert, Line, Space};
-use cadcraft_engine::Session;
-use cadcraft_engine::geom::{Vec2, Vec3};
-use cadcraft_engine::snap::tracking::{Acquired, CursorQuery, CursorSnap, DWELL, MAX_ACQUIRED, PathKind, polar_angles};
-use cadcraft_engine::snap::{self, mode};
+use drafitra_doc::{Common, EntityKind, Insert, Line, Space};
+use drafitra_engine::Session;
+use drafitra_engine::geom::{Vec2, Vec3};
+use drafitra_engine::snap::tracking::{Acquired, CursorQuery, CursorSnap, DWELL, MAX_ACQUIRED, PathKind, polar_angles};
+use drafitra_engine::snap::{self, mode};
 use serde_json::json;
 
 const APERTURE: f64 = 0.5;
@@ -245,7 +245,7 @@ fn apparent_intersection_where_extensions_meet() {
     assert_eq!((h.mode, h.name), (mode::APP, "Apparent Intersection"));
     assert!(h.point.near(v(12.0, 0.0), 1e-9));
     // Intersection alone needs them to really cross.
-    assert!(snap::osnap(s.doc().unwrap(), &cadcraft_engine::doc::Space::Model, v(11.9, 0.05), APERTURE, mode::INT, None, false).is_none());
+    assert!(snap::osnap(s.doc().unwrap(), &drafitra_engine::doc::Space::Model, v(11.9, 0.05), APERTURE, mode::INT, None, false).is_none());
 
     // A far object rested on first: its extension meets the one under the cursor.
     let mut s = session(mode::APP);
@@ -305,7 +305,7 @@ fn shift_to_acquire() {
 #[test]
 fn sysvars_polarmode_polaraddang_autosnap() {
     let mut s = Session::new();
-    let get = |s: &Session, n: &str| cadcraft_engine::sysvars::get(s, n).unwrap();
+    let get = |s: &Session, n: &str| drafitra_engine::sysvars::get(s, n).unwrap();
     setvar(&mut s, "POLARMODE", json!(6));
     assert_eq!(get(&s, "POLARMODE"), json!(6));
     setvar(&mut s, "POLARADDANG", json!("15;22.5"));

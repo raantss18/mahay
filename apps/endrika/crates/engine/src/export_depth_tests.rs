@@ -1,6 +1,6 @@
 use crate::Session;
 use crate::cmd::file::{export_bytes, export_bytes_with};
-use figcraft_doc::{ExportFormat, ExportSetting, NodeId, NodeKind};
+use endrika_doc::{ExportFormat, ExportSetting, NodeId, NodeKind};
 use serde_json::json;
 
 fn nested(depth: usize) -> (Session, NodeId) {
@@ -19,7 +19,7 @@ fn nested(depth: usize) -> (Session, NodeId) {
 fn export_depth_errors_reach_commands_and_preserve_existing_files() {
     let (mut s, root) = nested(257);
     let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("figcraft-export-depth-{}-{stamp}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-export-depth-{}-{stamp}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     for format in [ExportFormat::Svg, ExportFormat::Pdf] {
         let path = dir.join(format!("deep.{}", format.ext()));

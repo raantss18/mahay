@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-raster"
+name = "tselatra-raster"
 description = "f32 premultiplied RGBA images: sampling, projective warps, blurs, convolution, compositing (rayon-parallel)"
 version.workspace = true
 edition.workspace = true
@@ -10,6 +10,6 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-effectcraft-geom = { workspace = true }
-effectcraft-color = { workspace = true }
+tselatra-geom = { workspace = true }
+tselatra-color = { workspace = true }
 rayon = { workspace = true }

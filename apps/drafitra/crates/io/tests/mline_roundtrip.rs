@@ -3,10 +3,10 @@
 //! `ACAD_MLINESTYLE` dictionary, as the DXF Reference describes. Foreign files read the same way,
 //! and hostile ones don't panic.
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Common, Drawing, EntityKind, MLine, MLineCaps, MLineCut, MLineElement, MLineJust, MLineStyle, Space};
-use cadcraft_dxf::{Tag, records, sections};
-use cadcraft_geom::Vec2;
+use drafitra_color::Color;
+use drafitra_doc::{Common, Drawing, EntityKind, MLine, MLineCaps, MLineCut, MLineElement, MLineJust, MLineStyle, Space};
+use drafitra_dxf::{Tag, records, sections};
+use drafitra_geom::Vec2;
 
 fn mlines(d: &Drawing) -> Vec<MLine> {
     d.model
@@ -55,8 +55,8 @@ fn mlines_and_styles_survive_save_and_reopen() {
     d.add(&Space::Model, Common { layer: "Walls".into(), ..Common::default() }, EntityKind::MLine(open.clone())).unwrap();
     d.add(&Space::Model, Common::default(), EntityKind::MLine(closed.clone())).unwrap();
 
-    let saved = cadcraft_io::write_dxf(&d);
-    let back = cadcraft_io::read_dxf(saved.as_bytes()).unwrap();
+    let saved = drafitra_io::write_dxf(&d);
+    let back = drafitra_io::read_dxf(saved.as_bytes()).unwrap();
     let [a, b] = mlines(&back).try_into().unwrap();
     // The geometry as drawn is the same, breaks included.
     assert_eq!(a.def, wall());
@@ -84,7 +84,7 @@ fn mlines_and_styles_survive_save_and_reopen() {
     assert_eq!(back.header.f64("CMLSCALE", 0.0), 2.5);
 
     // The file links up as the DXF Reference describes.
-    let tags = cadcraft_dxf::parse(saved.as_bytes()).unwrap();
+    let tags = drafitra_dxf::parse(saved.as_bytes()).unwrap();
     let secs = sections(&tags);
     let recs = |name: &str| records(&secs.iter().find(|s| s.name == name).unwrap().tags);
     let val = |t: &[Tag], c: i32| t.iter().find(|g| g.code == c).map(Tag::str).unwrap_or_default();
@@ -99,7 +99,7 @@ fn mlines_and_styles_survive_save_and_reopen() {
     assert!(objs.iter().any(|(k, t)| k == "DICTIONARY" && t.iter().any(|g| g.code == 3 && g.str() == "ACAD_MLINESTYLE")));
 
     // Saving again is stable.
-    let again = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&back).as_bytes()).unwrap();
+    let again = drafitra_io::read_dxf(drafitra_io::write_dxf(&back).as_bytes()).unwrap();
     assert_eq!(mlines(&again).len(), 2);
     assert_eq!(mlines(&again)[0].def, wall());
 }
@@ -224,7 +224,7 @@ fn foreign_dxf() -> String {
 
 #[test]
 fn foreign_mline_reads_with_its_style() {
-    let d = cadcraft_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(foreign_dxf().as_bytes()).unwrap();
     let [m] = mlines(&d).try_into().unwrap();
     assert_eq!(m.style, "Duo");
     assert_eq!(m.def.elements.iter().map(|e| (e.offset, e.color)).collect::<Vec<_>>(), vec![(0.25, Color::Index(1)), (-0.25, Color::ByLayer)]);
@@ -247,13 +247,13 @@ fn mline_without_its_style_keeps_its_offsets() {
     let text = foreign_dxf();
     let cut = text.find("0\nSECTION\n2\nOBJECTS").unwrap();
     let text = format!("{}0\nEOF\n", &text[..cut]);
-    let d = cadcraft_io::read_dxf(text.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(text.as_bytes()).unwrap();
     let [m] = mlines(&d).try_into().unwrap();
     let mut offs = m.offsets();
     offs.sort_by(f64::total_cmp);
     assert!(near(offs[0], -1.0) && near(offs[1], 1.0), "{offs:?}");
     // And it saves with a style of its own.
-    let back = cadcraft_io::read_dxf(cadcraft_io::write_dxf(&d).as_bytes()).unwrap();
+    let back = drafitra_io::read_dxf(drafitra_io::write_dxf(&d).as_bytes()).unwrap();
     assert!(back.mline_style("Duo").is_some());
     assert_eq!(mlines(&back)[0].geometry().lines.len(), m.geometry().lines.len());
 }
@@ -272,13 +272,13 @@ fn hostile_mline_does_not_panic() {
         huge.push_str("49\nnan\n62\n99999\n6\n\n");
     }
     huge.push_str("0\nENDSEC\n0\nEOF\n");
-    let d = cadcraft_io::read_dxf(huge.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(huge.as_bytes()).unwrap();
     for m in mlines(&d) {
-        assert!(m.def.elements.len() <= cadcraft_doc::MAX_MLINE_ELEMENTS);
+        assert!(m.def.elements.len() <= drafitra_doc::MAX_MLINE_ELEMENTS);
         let _ = m.geometry();
     }
-    let _ = cadcraft_io::write_dxf(&d);
-    let _ = cadcraft_render::build(&d, &Space::Model, &cadcraft_render::Options::default());
+    let _ = drafitra_io::write_dxf(&d);
+    let _ = drafitra_render::build(&d, &Space::Model, &drafitra_render::Options::default());
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -289,8 +289,8 @@ fn mline_survives_dwg_save_and_reopen() {
     let mut m = MLine::new(&wall(), &[Vec2::new(0.0, 0.0), Vec2::new(8.0, 0.0), Vec2::new(8.0, 6.0)], false, MLineJust::Top, 1.5);
     m.vertices[0].cuts.push(MLineCut { element: 1, start: 2.0, end: 3.0 });
     d.add(&Space::Model, Common::default(), EntityKind::MLine(m.clone())).unwrap();
-    let dwg = cadcraft_io::write(&d, "x.dwg").unwrap();
-    let back = cadcraft_io::read(&dwg, "x.dwg").unwrap();
+    let dwg = drafitra_io::write(&d, "x.dwg").unwrap();
+    let back = drafitra_io::read(&dwg, "x.dwg").unwrap();
     let [b] = mlines(&back).try_into().unwrap();
     assert_eq!((b.style.as_str(), b.def.elements.len(), b.justification, b.points()), ("Wall", 3, MLineJust::Top, m.points()));
     assert_eq!(b.geometry().lines.len(), m.geometry().lines.len());

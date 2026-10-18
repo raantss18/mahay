@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{BlendMode, Color};
-use vectorcraft_doc::{Document, LayerColor, Node};
-use vectorcraft_geom::Rect;
-use vectorcraft_testkit::fixtures::DocBuilder;
+use tsipika_color::{BlendMode, Color};
+use tsipika_doc::{Document, LayerColor, Node};
+use tsipika_geom::Rect;
+use tsipika_testkit::fixtures::DocBuilder;
 
 use super::jpeg::ColorModel;
 use super::psd::{MAX_SIDE, PsdOptions};
@@ -263,7 +263,7 @@ fn guides_are_not_layers() {
     let mut b = DocBuilder::new(20.0, 20.0);
     b.rect(Rect::new(0.0, 0.0, 5.0, 5.0), Color::rgb8(0, 0, 0), |_| {});
     b.rect(Rect::new(0.0, 10.0, 20.0, 10.0), Color::rgb8(0, 0, 0), |n: &mut Node| {
-        if let vectorcraft_doc::NodeKind::Path { guide, .. } = &mut n.kind {
+        if let tsipika_doc::NodeKind::Path { guide, .. } = &mut n.kind {
             *guide = true;
         }
     });

@@ -6,7 +6,7 @@
 //! self-contained and `Send`: frontends run it on a worker thread; if the source wasn't cached yet
 //! the job loads it and hands it back in the [`RenderResult`] so the cache can keep it.
 //!
-//! Rendered thumbnails are cached too ([`lightcraft_preview::PreviewCache`]: memory LRU, plus a
+//! Rendered thumbnails are cached too ([`hazavana_preview::PreviewCache`]: memory LRU, plus a
 //! disk cache in the library's `thumbs/` folder), keyed by the photo's content hash, the develop
 //! settings hash, the size and [`RENDER_CACHE_VERSION`] — so reopening a library shows its grid
 //! without decoding a single original, and an edit simply produces a new key.
@@ -19,11 +19,11 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Weak};
 
-use lightcraft_catalog::{MediaKind, Op, Photo, PhotoId, Source};
-use lightcraft_develop::DevelopSettings;
-use lightcraft_pipeline::{Quality, RenderRequest, Rendered, SourceInfo, StageCache};
-use lightcraft_preview::{Hash128, Hasher128, Lru, PreviewCache};
-use lightcraft_raster::{Histogram, Rgb32f, Rgba8};
+use hazavana_catalog::{MediaKind, Op, Photo, PhotoId, Source};
+use hazavana_develop::DevelopSettings;
+use hazavana_pipeline::{Quality, RenderRequest, Rendered, SourceInfo, StageCache};
+use hazavana_preview::{Hash128, Hasher128, Lru, PreviewCache};
+use hazavana_raster::{Histogram, Rgb32f, Rgba8};
 use serde::{Deserialize, Serialize};
 
 const SETTINGS_HASH_ENTRIES: usize = 1024;
@@ -180,7 +180,7 @@ pub struct DecodedSource {
     pub info: Option<SourceInfo>,
     /// A smart preview's stored camera tone curve: the one decoder fact its pixels need that the
     /// catalog's header facts lack (used when `info` is `None`).
-    pub camera_tone: Option<lightcraft_pipeline::tone::CameraTone>,
+    pub camera_tone: Option<hazavana_pipeline::tone::CameraTone>,
     /// The same picture developed from the AI-denoised mosaic, when the photo has one cached.
     pub denoised: Option<Arc<Twin>>,
 }
@@ -209,7 +209,7 @@ impl DecodedSource {
             return img.clone();
         }
         let mut mixed = (*self.image).clone();
-        if !lightcraft_denoise::product::blend(&mut mixed, &twin.image, thousandths as f32 / 1000.0) {
+        if !hazavana_denoise::product::blend(&mut mixed, &twin.image, thousandths as f32 / 1000.0) {
             return self.image.clone();
         }
         let mixed = Arc::new(mixed);
@@ -246,7 +246,7 @@ pub enum SourceRef {
         max_edge: usize,
     },
     Demo {
-        scene: Box<lightcraft_scenes::Scene>,
+        scene: Box<hazavana_scenes::Scene>,
         max_edge: usize,
     },
     File {
@@ -277,7 +277,7 @@ impl SourceRef {
                 if from.image.width.max(from.image.height) <= *max_edge {
                     return Ok((**from).clone());
                 }
-                let image = lightcraft_raster::resample::fit(&from.image, *max_edge, *max_edge, lightcraft_raster::resample::Filter::Box);
+                let image = hazavana_raster::resample::fit(&from.image, *max_edge, *max_edge, hazavana_raster::resample::Filter::Box);
                 return Ok(DecodedSource { image: Arc::new(image), denoised: None, ..(**from).clone() });
             }
             SourceRef::Demo { scene, max_edge } => crate::demo::scene_pixels(scene, *max_edge)?,
@@ -336,7 +336,7 @@ pub struct MediaCache {
     settings_hashes: SettingsHashes,
     /// Decoded thumbnail-level sources (LRU by bytes).
     thumbs: Lru<PhotoId, DecodedSource>,
-    /// Decoded preview-level sources with their last use ([`lightcraft_preview::next_tick`]).
+    /// Decoded preview-level sources with their last use ([`hazavana_preview::next_tick`]).
     previews: Vec<(PhotoId, DecodedSource, u64)>,
     /// The last full-resolution originals (exports, zoomed views; ~300 MB each at 24 MP), with
     /// their last use. Normally one; see [`Self::set_full_capacity`].
@@ -360,7 +360,7 @@ pub struct MediaCache {
     /// Whether originals (and smart previews) are on disk: cached and checked off the UI thread
     /// in the app (see [`crate::availability`]).
     pub availability: crate::availability::Availability,
-    scenes: Vec<lightcraft_scenes::Scene>,
+    scenes: Vec<hazavana_scenes::Scene>,
     /// Rendered thumbnails (memory, plus disk once a library is attached).
     pub rendered: Arc<PreviewCache>,
     /// Which photos have a cached denoised picture, and how to read it.
@@ -555,11 +555,11 @@ impl MediaCache {
         match level {
             SourceLevel::Thumb => self.thumbs.get(&id).cloned(),
             SourceLevel::Preview => self.previews.iter_mut().find(|e| e.0 == id).map(|e| {
-                e.2 = lightcraft_preview::next_tick();
+                e.2 = hazavana_preview::next_tick();
                 e.1.clone()
             }),
             SourceLevel::Full => self.full.iter_mut().find(|e| e.0 == id).map(|e| {
-                e.2 = lightcraft_preview::next_tick();
+                e.2 = hazavana_preview::next_tick();
                 e.1.clone()
             }),
         }
@@ -586,7 +586,7 @@ impl MediaCache {
     }
 
     fn insert_source(&mut self, id: PhotoId, level: SourceLevel, img: DecodedSource) {
-        let tick = lightcraft_preview::next_tick();
+        let tick = hazavana_preview::next_tick();
         match level {
             SourceLevel::Thumb => {
                 let cost = img.bytes();
@@ -714,7 +714,7 @@ impl MediaCache {
         match origin {
             Source::Demo { scene } => {
                 if self.scenes.is_empty() {
-                    self.scenes = lightcraft_scenes::demo_library();
+                    self.scenes = hazavana_scenes::demo_library();
                 }
                 match self.scenes.iter().find(|s| s.id == *scene) {
                     Some(s) => SourceRef::Demo { scene: Box::new(s.clone()), max_edge },
@@ -771,7 +771,7 @@ pub struct RenderResult {
     pub key: u64,
     pub rendered: Result<Rendered, String>,
     /// Set when this job's render was tried on the GPU and fell back to the CPU: why
-    /// ([`lightcraft_gpu::Fallback::Failed`]). The result is the CPU render either way.
+    /// ([`hazavana_gpu::Fallback::Failed`]). The result is the CPU render either way.
     pub gpu_fallback: Option<String>,
     /// A source that was loaded by this job (to be inserted into the cache).
     pub loaded: Option<DecodedSource>,
@@ -794,24 +794,24 @@ impl RenderJob {
 
     /// Draw a diagnostic overlay over the result (e.g. Point Color's visualized range). Gets its
     /// own result key.
-    pub fn with_overlay(mut self, overlay: lightcraft_pipeline::Overlay) -> Self {
+    pub fn with_overlay(mut self, overlay: hazavana_pipeline::Overlay) -> Self {
         if self.request.overlay != overlay {
             self.key ^= self.request.overlay.key().wrapping_mul(0x9e37_79b9_7f4a_7c15);
             self.request.overlay = overlay;
             self.key ^= overlay.key().wrapping_mul(0x9e37_79b9_7f4a_7c15);
         }
         // a diagnostic view (visualized range / spots) must never become the photo's cached preview
-        if overlay != lightcraft_pipeline::Overlay::None {
+        if overlay != hazavana_pipeline::Overlay::None {
             self.view_cache = None;
         }
         self
     }
 
-    /// Soft-proof the result (see [`lightcraft_pipeline::Proof`]). Gets its own result key and is
+    /// Soft-proof the result (see [`hazavana_pipeline::Proof`]). Gets its own result key and is
     /// never kept as the photo's cached preview.
-    pub fn with_proof(mut self, proof: Option<lightcraft_pipeline::Proof>) -> Self {
+    pub fn with_proof(mut self, proof: Option<hazavana_pipeline::Proof>) -> Self {
         if self.request.proof != proof {
-            let k = |p: Option<lightcraft_pipeline::Proof>| p.map_or(0, |p| p.key()).wrapping_mul(0xc2b2_ae3d_27d4_eb4f);
+            let k = |p: Option<hazavana_pipeline::Proof>| p.map_or(0, |p| p.key()).wrapping_mul(0xc2b2_ae3d_27d4_eb4f);
             self.key ^= k(self.request.proof) ^ k(proof);
             self.request.proof = proof;
         }
@@ -832,7 +832,7 @@ impl RenderJob {
         let g = &mut s.grading;
         for (off, wheel) in hidden.into_iter().zip([&mut g.shadows, &mut g.midtones, &mut g.highlights]) {
             if off {
-                *wheel = lightcraft_develop::Wheel::default();
+                *wheel = hazavana_develop::Wheel::default();
             }
         }
         let bits = hidden.iter().enumerate().fold(0u64, |b, (i, h)| b | ((*h as u64) << i));
@@ -856,7 +856,7 @@ impl RenderJob {
     /// [`crate::display::present`] converts their sRGB results.
     pub fn with_display(mut self, display: Option<Arc<crate::display::Display>>) -> Self {
         // (a slide is composed in sRGB, backdrop colours included; the frontend presents it)
-        if self.cache.is_some() || self.slide.is_some() || self.request.depth != lightcraft_pipeline::OutputDepth::U8 {
+        if self.cache.is_some() || self.slide.is_some() || self.request.depth != hazavana_pipeline::OutputDepth::U8 {
             return self;
         }
         let k = |d: &Option<Arc<crate::display::Display>>| d.as_ref().map_or(0, |d| d.id()).wrapping_mul(0xd6e8_feb8_6659_fd93);
@@ -955,7 +955,7 @@ impl RenderJob {
         let was_loaded = matches!(self.source, SourceRef::Loaded(_));
         // The app is closing (issue #620): nobody is left to show this, and quitting waits for the
         // jobs that are running. Without this, one that lost the GPU mid-way would render on the CPU.
-        let closing = || lightcraft_gpu::shutting_down().then(|| "LightCraft is closing".to_string());
+        let closing = || hazavana_gpu::shutting_down().then(|| "Hazavana is closing".to_string());
         let source = match closing() {
             Some(e) => Err(e),
             None => self.source.load_source().and_then(|s| closing().map_or(Ok(s), Err)),
@@ -1012,16 +1012,16 @@ impl RenderJob {
     }
 }
 
-/// Render `src`: on the GPU when `gpu` is set and a GPU is available (`lightcraft_gpu`), else on
+/// Render `src`: on the GPU when `gpu` is set and a GPU is available (`hazavana_gpu`), else on
 /// the CPU, reusing `stages` either way. Both produce the same image within 1–3 LSB (see
-/// `docs/gpu-pipeline.md`); `LIGHTCRAFT_GPU=0` or [`lightcraft_gpu::set_enabled`] forces the CPU.
+/// `docs/gpu-pipeline.md`); `HAZAVANA_GPU=0` or [`hazavana_gpu::set_enabled`] forces the CPU.
 pub fn develop(src: &Arc<Rgb32f>, info: &SourceInfo, s: &DevelopSettings, req: &RenderRequest, stages: Option<&StageCache>, gpu: bool) -> Rendered {
     develop_reporting(src, info, s, req, stages, gpu).0
 }
 
 /// [`develop`], also saying why the render fell back from the GPU to the CPU when it did (`None`:
 /// it rendered on the GPU, or the GPU was not tried). The reason is this render's own, not the
-/// process-wide [`lightcraft_gpu::last_fallback`].
+/// process-wide [`hazavana_gpu::last_fallback`].
 pub fn develop_reporting(
     src: &Arc<Rgb32f>,
     info: &SourceInfo,
@@ -1032,7 +1032,7 @@ pub fn develop_reporting(
 ) -> (Rendered, Option<String>) {
     let (mut rendered, fallback) = develop_image(src, info, s, req, stages, gpu);
     // an HDR edit's preview is its SDR rendition: its histogram shows the HDR range instead
-    if let Some(h) = lightcraft_pipeline::hdr_histogram(src, info, s, req) {
+    if let Some(h) = hazavana_pipeline::hdr_histogram(src, info, s, req) {
         rendered.histogram = h;
     }
     (rendered, fallback)
@@ -1048,21 +1048,21 @@ fn develop_image(
 ) -> (Rendered, Option<String>) {
     // LUT profiles have no GPU stage: they render on the CPU
     let fallback = if gpu
-        && !lightcraft_pipeline::lut::is_lut_profile(&s.profile.id)
+        && !hazavana_pipeline::lut::is_lut_profile(&s.profile.id)
         && !s.masks.iter().any(|m| m.visible && m.refine > 0.0)
         && req.proof.is_none()
     {
-        match lightcraft_gpu::try_render(src, info, s, req, stages) {
+        match hazavana_gpu::try_render(src, info, s, req, stages) {
             Ok(r) => return (r, None),
-            Err(lightcraft_gpu::Fallback::Failed(why)) => Some(why),
-            Err(lightcraft_gpu::Fallback::NotTried) => None,
+            Err(hazavana_gpu::Fallback::Failed(why)) => Some(why),
+            Err(hazavana_gpu::Fallback::NotTried) => None,
         }
     } else {
         None
     };
     let rendered = match stages {
-        Some(st) => lightcraft_pipeline::render_cached(src, info, s, req, st),
-        None => lightcraft_pipeline::render(src, info, s, req),
+        Some(st) => hazavana_pipeline::render_cached(src, info, s, req, st),
+        None => hazavana_pipeline::render(src, info, s, req),
     };
     (rendered, fallback)
 }
@@ -1331,7 +1331,7 @@ impl crate::Session {
     /// level is the smallest that keeps the face sharp, up to the preview. Cached (memory and the
     /// library's thumbnail cache on disk) like [`Self::variant_job`], and `key` likewise follows
     /// the content: a later launch shows the tile without reading the original.
-    pub fn face_job(&mut self, id: PhotoId, face: lightcraft_geom::Rect, edge: usize) -> Option<RenderJob> {
+    pub fn face_job(&mut self, id: PhotoId, face: hazavana_geom::Rect, edge: usize) -> Option<RenderJob> {
         let p = self.catalog.photo(id)?.clone();
         // `face` is on the upright (EXIF-oriented) photo; the crop below is in the frame after the
         // user's Rotate Left/Right, so carry the box (and the photo's size) over to it.
@@ -1345,9 +1345,9 @@ impl crate::Session {
         let (cx, cy) = ((face.x0 + face.x1) / 2.0 * w, (face.y0 + face.y1) / 2.0 * h);
         let (cx, cy) = (if cx.is_finite() { cx } else { w / 2.0 }, if cy.is_finite() { cy } else { h / 2.0 });
         let (x0, y0) = (cx.clamp(side / 2.0, w - side / 2.0) - side / 2.0, cy.clamp(side / 2.0, h - side / 2.0) - side / 2.0);
-        let rect = lightcraft_geom::Rect { x0: x0 / w, y0: y0 / h, x1: (x0 + side) / w, y1: (y0 + side) / h };
+        let rect = hazavana_geom::Rect { x0: x0 / w, y0: y0 / h, x1: (x0 + side) / w, y1: (y0 + side) / h };
         let mut settings = (*p.develop).clone();
-        settings.crop = lightcraft_develop::Crop { geometry: lightcraft_geom::CropGeometry { rect, angle: 0.0 }, ..Default::default() };
+        settings.crop = hazavana_develop::Crop { geometry: hazavana_geom::CropGeometry { rect, angle: 0.0 }, ..Default::default() };
         let edge = face_edge(edge);
         // pixels along the long edge that leave `edge` across the crop
         let needed = (edge as f64 * w.max(h) / side).ceil().min(SourceLevel::Preview.max_edge() as f64);
@@ -1380,9 +1380,9 @@ impl crate::Session {
     /// unedited raw (whose grid thumbnail is that preview too) not known to be offline, upright as
     /// imported, with a preview loader installed. `rect` is the square around the face, `edge` the
     /// tile, `needed` the source's long edge the develop render would ask for.
-    fn face_preview_cut(&self, p: &Photo, rect: lightcraft_geom::Rect, edge: usize, needed: usize) -> Option<crate::face_tiles::PreviewCut> {
+    fn face_preview_cut(&self, p: &Photo, rect: hazavana_geom::Rect, edge: usize, needed: usize) -> Option<crate::face_tiles::PreviewCut> {
         let (path, loader) = self.embedded_of(p)?;
-        if p.develop.orientation != lightcraft_geom::Orientation::Normal || self.media.availability.is_offline(&path) || p.width == 0 || p.height == 0
+        if p.develop.orientation != hazavana_geom::Orientation::Normal || self.media.availability.is_offline(&path) || p.width == 0 || p.height == 0
         {
             return None;
         }
@@ -1423,7 +1423,7 @@ impl crate::Session {
         id: PhotoId,
         full_w: usize,
         full_h: usize,
-        window: lightcraft_pipeline::PixelWindow,
+        window: hazavana_pipeline::PixelWindow,
         apply_crop: bool,
     ) -> Option<RenderJob> {
         self.region_job_of(id, full_w, full_h, window, apply_crop, false)
@@ -1435,7 +1435,7 @@ impl crate::Session {
         id: PhotoId,
         full_w: usize,
         full_h: usize,
-        window: lightcraft_pipeline::PixelWindow,
+        window: hazavana_pipeline::PixelWindow,
         apply_crop: bool,
     ) -> Option<RenderJob> {
         self.region_job_of(id, full_w, full_h, window, apply_crop, true)
@@ -1446,7 +1446,7 @@ impl crate::Session {
         id: PhotoId,
         full_w: usize,
         full_h: usize,
-        window: lightcraft_pipeline::PixelWindow,
+        window: hazavana_pipeline::PixelWindow,
         apply_crop: bool,
         before: bool,
     ) -> Option<RenderJob> {
@@ -1454,7 +1454,7 @@ impl crate::Session {
         // what the window's spots and Auto Mask strokes read must fit in one render: else the
         // caller keeps the whole-frame render (a window alone would come out wrong)
         let p = self.catalog.photo(id)?;
-        let frame = lightcraft_pipeline::geometry::Frame::with_lens(
+        let frame = hazavana_pipeline::geometry::Frame::with_lens(
             p.width.max(1) as usize,
             p.height.max(1) as usize,
             &job.settings,
@@ -1462,7 +1462,7 @@ impl crate::Session {
             p.embedded_lens.as_ref(),
         );
         let ppl = frame.px_per_long(full_w);
-        lightcraft_pipeline::spots::window_for_reads_checked(&job.settings, &frame, full_w, full_h, ppl, window.clamped(full_w, full_h))?;
+        hazavana_pipeline::spots::window_for_reads_checked(&job.settings, &frame, full_w, full_h, ppl, window.clamped(full_w, full_h))?;
         job.request.window = Some(window);
         job.key = Hasher128::new()
             .u64(job.key)
@@ -1592,8 +1592,8 @@ impl crate::Session {
         id: PhotoId,
         max_w: usize,
         max_h: usize,
-        space: lightcraft_pipeline::OutputSpace,
-        depth: lightcraft_pipeline::OutputDepth,
+        space: hazavana_pipeline::OutputSpace,
+        depth: hazavana_pipeline::OutputDepth,
     ) -> Result<Rendered, String> {
         let r = self.export_job(id, max_w, max_h, space, depth)?.run();
         self.accept(&r);
@@ -1606,8 +1606,8 @@ impl crate::Session {
         id: PhotoId,
         max_w: usize,
         max_h: usize,
-        space: lightcraft_pipeline::OutputSpace,
-        depth: lightcraft_pipeline::OutputDepth,
+        space: hazavana_pipeline::OutputSpace,
+        depth: hazavana_pipeline::OutputDepth,
     ) -> Result<RenderJob, String> {
         let mut job = self.render_job(id, max_w, max_h, false, true).ok_or("no such photo")?;
         // An export is made from the denoised picture its Denoise amount asks for, made when the job runs if the
@@ -1644,7 +1644,7 @@ impl crate::Session {
     }
 }
 
-/// What an import learns from a file header (set by the app from `lightcraft-codecs`/`-raw`).
+/// What an import learns from a file header (set by the app from `hazavana-codecs`/`-raw`).
 #[derive(Clone, Debug, Default)]
 pub struct ProbeInfo {
     pub width: u32,
@@ -1657,18 +1657,18 @@ pub struct ProbeInfo {
     /// capture date of a file whose metadata has none, as Lightroom does (exports saved without
     /// metadata would otherwise all land under "Unknown Date").
     pub file_modified: Option<String>,
-    pub meta: lightcraft_catalog::Meta,
+    pub meta: hazavana_catalog::Meta,
     pub as_shot_wb: Option<(f64, f64)>,
     /// Hash of the file's bytes (hex), for duplicate detection. When it is a 32-digit
-    /// [`lightcraft_preview::hash_bytes`] of the whole file (as the native probe computes it),
+    /// [`hazavana_preview::hash_bytes`] of the whole file (as the native probe computes it),
     /// Import → Copy verifies each copy against it instead of reading the source again.
     pub content_hash: Option<String>,
     /// Lens corrections embedded in the file (DNG opcodes).
-    pub embedded_lens: Option<lightcraft_develop::EmbeddedLens>,
+    pub embedded_lens: Option<hazavana_develop::EmbeddedLens>,
     /// The file's embedded XMP packet (raw/DNG files), for develop settings stored inside the file.
     pub xmp: Option<String>,
     /// A raw variant that can't be decoded yet: why. The file is described (and will be shown and
-    /// edited) from its embedded preview; see [`lightcraft_catalog::Photo::preview_only`].
+    /// edited) from its embedded preview; see [`hazavana_catalog::Photo::preview_only`].
     pub preview_only: Option<String>,
 }
 
@@ -1846,7 +1846,7 @@ mod tests {
 
     #[test]
     fn decoder_info_survives_render_jobs_cache_and_eviction() {
-        let tone = lightcraft_pipeline::tone::CameraTone::new(std::array::from_fn(|i| {
+        let tone = hazavana_pipeline::tone::CameraTone::new(std::array::from_fn(|i| {
             let x = 0.01 * (i + 1) as f32;
             [x, (x * 2.0).min(0.9)]
         }))
@@ -1871,7 +1871,7 @@ mod tests {
         job.settings = Arc::new(DevelopSettings::default());
         let r = job.clone().run();
         assert_eq!(r.loaded.as_ref().unwrap().info.as_ref(), Some(&info));
-        let expected = lightcraft_pipeline::render(&r.loaded.as_ref().unwrap().image, &info, &job.settings, &job.request);
+        let expected = hazavana_pipeline::render(&r.loaded.as_ref().unwrap().image, &info, &job.settings, &job.request);
         assert_eq!(r.rendered.as_ref().unwrap().image.data, expected.image.data);
         s.accept(&r);
         job.source = s.media.source_ref(s.catalog.photo(id).unwrap(), job.level);
@@ -1888,14 +1888,14 @@ mod tests {
     /// and the panel then reads As Shot in Kelvin while the stored settings keep their look.
     #[test]
     fn old_relative_white_balance_on_a_kelvin_camera_keeps_its_look_and_learns_the_as_shot_white() {
-        use lightcraft_develop::{WbMode, WbScale};
+        use hazavana_develop::{WbMode, WbScale};
         let mut s = crate::Session::new();
         let id = s.catalog.alloc_photo_id();
         let mut p = Photo::new(id, Source::File { path: "/photos/DSC00001.ARW".into() }, "DSC00001.ARW", "ARW", 64, 64, "2026-01-01T00:00:00");
         p.kind = MediaKind::Raw;
         p.meta.camera = "SONY ILCE-7M3".into();
         p.as_shot_wb = Some((6500.0, 0.0));
-        let mut d = lightcraft_develop::DevelopSettings::for_raw(6500.0, 0.0);
+        let mut d = hazavana_develop::DevelopSettings::for_raw(6500.0, 0.0);
         (d.wb.mode, d.wb.temp, d.wb.tint) = (WbMode::Custom, 5800.0, 3.0);
         assert_eq!(d.wb.scale, WbScale::Legacy);
         p.develop = Arc::new(d.clone());
@@ -1928,11 +1928,11 @@ mod tests {
         let new = r.rendered.as_ref().unwrap().image.data.clone();
         // the old pipeline: the same settings against the relative-scale source facts of an older build
         let old_info = SourceInfo { raw: true, relative_wb: true, as_shot_temp: 6500.0, as_shot_tint: 0.0, ..Default::default() };
-        let old = lightcraft_pipeline::render(&pixels, &old_info, &d, &request).image.data;
+        let old = hazavana_pipeline::render(&pixels, &old_info, &d, &request).image.data;
         assert_eq!(new, old, "the look of an existing edit changed");
         assert_ne!(
             new,
-            lightcraft_pipeline::render(&pixels, &decoded, &lightcraft_develop::DevelopSettings::for_raw(4986.0, -2.0), &request).image.data
+            hazavana_pipeline::render(&pixels, &decoded, &hazavana_develop::DevelopSettings::for_raw(4986.0, -2.0), &request).image.data
         );
         // accepting the result records the as-shot white, journaled but not undoable, and the settings are untouched
         s.accept(&r);
@@ -1945,15 +1945,15 @@ mod tests {
         // the panel reads the white balance in effect in Kelvin: the value the relative edit renders as
         let info = s.source_info(id);
         assert_eq!((info.as_shot_temp, info.as_shot_tint), (4986.0, -2.0));
-        let shown = lightcraft_pipeline::local::effective_wb(&info, &d);
-        assert_eq!(shown, lightcraft_pipeline::local::legacy_to_kelvin(5800.0, 3.0, (4986.0, -2.0)));
+        let shown = hazavana_pipeline::local::effective_wb(&info, &d);
+        assert_eq!(shown, hazavana_pipeline::local::legacy_to_kelvin(5800.0, 3.0, (4986.0, -2.0)));
         assert!(shown.0 < 4986.0 && shown.0 > 4000.0, "{shown:?}");
         // accepting again changes nothing more
         let log = s.pending_log.len();
         s.accept(&r);
         assert_eq!(s.pending_log.len(), log);
         // a catalog-only (proxy) render of the same settings before the decode gave the same pixels too
-        let proxy = lightcraft_pipeline::render(&pixels, &header, &d, &request).image.data;
+        let proxy = hazavana_pipeline::render(&pixels, &header, &d, &request).image.data;
         assert_eq!(proxy, old, "a smart preview of an existing edit changed");
     }
 
@@ -1972,7 +1972,7 @@ mod tests {
         assert!(m.get(PhotoId(1), SourceLevel::Preview).is_some() && m.get(PhotoId(3), SourceLevel::Preview).is_some());
         // a thumbnail source and a rendered preview compete in the same budget
         m.insert(PhotoId(4), SourceLevel::Thumb, img(500));
-        m.rendered.put(Hash128(7), Arc::new(lightcraft_raster::Rgba8::new(1000, 1000)));
+        m.rendered.put(Hash128(7), Arc::new(hazavana_raster::Rgba8::new(1000, 1000)));
         assert!(m.held() <= 30 * mb, "{}", m.held());
         // the newest preview (the one on screen) is never evicted, even alone over budget
         m.set_budget(mb);
@@ -2103,7 +2103,7 @@ mod tests {
     // from the original, with a key of its own
     #[test]
     fn region_jobs_render_a_window_of_the_zoomed_frame() {
-        use lightcraft_pipeline::PixelWindow;
+        use hazavana_pipeline::PixelWindow;
         let mut s = crate::Session::with_demo();
         let p = s.catalog.photos().next().unwrap().clone();
         let (w, h) = (p.width as usize, p.height as usize);
@@ -2136,7 +2136,7 @@ mod tests {
         // the uncropped photo at 1600 px: the preview is plenty
         assert_eq!(s.render_job(id, 1600, 1600, false, true).unwrap().level, SourceLevel::Preview);
         // a crop to 30 % of each side shown 1600 px long needs 1600 / 0.3 px of the source
-        d.crop.geometry.rect = lightcraft_geom::Rect { x0: 0.2, y0: 0.2, x1: 0.5, y1: 0.5 };
+        d.crop.geometry.rect = hazavana_geom::Rect { x0: 0.2, y0: 0.2, x1: 0.5, y1: 0.5 };
         s.set_develop(id, d, "Crop").unwrap();
         assert_eq!(s.render_job(id, 1600, 1600, false, true).unwrap().level, SourceLevel::Full);
         // …but with the crop tool open (the whole photo shown) it does not
@@ -2148,16 +2148,16 @@ mod tests {
     // a window whose spot reads from further away than a render can hold is refused
     #[test]
     fn a_region_job_is_refused_when_a_spot_reads_beyond_what_fits() {
-        use lightcraft_pipeline::PixelWindow;
+        use hazavana_pipeline::PixelWindow;
         let mut s = crate::Session::with_demo();
         let id = s.active().unwrap();
         let p = s.catalog.photo(id).unwrap().clone();
         let (w, h) = (p.width as usize * 8, p.height as usize * 8);
         let mut d = (*s.develop_of(id).unwrap()).clone();
-        d.spots.push(lightcraft_develop::Spot {
-            points: vec![lightcraft_geom::Point::new(0.2, 0.5)],
+        d.spots.push(hazavana_develop::Spot {
+            points: vec![hazavana_geom::Point::new(0.2, 0.5)],
             size: 0.01,
-            source_offset: Some(lightcraft_geom::Point::new(0.6, 0.0)),
+            source_offset: Some(hazavana_geom::Point::new(0.6, 0.0)),
             ..Default::default()
         });
         s.set_develop(id, d, "Spot").unwrap();
@@ -2171,7 +2171,7 @@ mod tests {
     // without its edits (the crop is kept), with a key of its own
     #[test]
     fn a_before_window_shows_the_unedited_look() {
-        use lightcraft_pipeline::PixelWindow;
+        use hazavana_pipeline::PixelWindow;
         let mut s = crate::Session::with_demo();
         let id = s.active().unwrap();
         let p = s.catalog.photo(id).unwrap().clone();
@@ -2194,7 +2194,7 @@ mod tests {
     // at a corner, with tone, colour and detail edits on a camera-sized photo
     #[test]
     fn one_to_one_window_pixels_are_export_pixels() {
-        use lightcraft_pipeline::{OutputDepth, OutputSpace, PixelWindow};
+        use hazavana_pipeline::{OutputDepth, OutputSpace, PixelWindow};
         let mut s = crate::Session::with_demo();
         let id = s.active().unwrap();
         let p = s.catalog.photo(id).unwrap().clone();
@@ -2229,7 +2229,7 @@ mod tests {
     fn a_thumbnail_is_cut_from_the_decoded_preview() {
         let mut s = crate::Session::new();
         let p = Photo::new(PhotoId(1), Source::File { path: "/nowhere/a.ARW".into() }, "a.ARW", "ARW", 2400, 1600, "");
-        s.catalog.apply(lightcraft_catalog::Op::AddPhoto { photo: Box::new(p.clone()) }).unwrap();
+        s.catalog.apply(hazavana_catalog::Op::AddPhoto { photo: Box::new(p.clone()) }).unwrap();
         s.media.insert(p.id, SourceLevel::Preview, Arc::new(Rgb32f::from_fn(2400, 1600, |x, _| [x as f32 / 2400.0, 0.5, 0.25])));
         let job = s.thumb_job(p.id, 512).unwrap();
         assert!(matches!(job.source, SourceRef::Fit { .. }));

@@ -1,4 +1,4 @@
-# LightCraft на русском
+# Hazavana на русском
 
 Выберите **Правка → Язык → Русский** или **Настройки → Общие → Язык**. Выбор применяется сразу
 и сохраняется для следующего запуска (`language: "ru"` в `ui.json`).
@@ -18,6 +18,6 @@
 компилятором Rust при сборке. Английские окончания множественного числа скрываются через `{:.0}`.
 
 ```sh
-cargo test -p lightcraft-ui-egui i18n::tests -- --nocapture
-LIGHTCRAFT_LANGUAGE=ru lightcraft-cli snapshot --demo -o russian.png --size 1600x1000
+cargo test -p hazavana-ui-egui i18n::tests -- --nocapture
+HAZAVANA_LANGUAGE=ru hazavana-cli snapshot --demo -o russian.png --size 1600x1000
 ```

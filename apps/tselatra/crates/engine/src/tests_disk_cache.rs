@@ -7,7 +7,7 @@ use crate::Session;
 use crate::render::RenderOpts;
 
 fn folder(name: &str) -> String {
-    let d = std::env::temp_dir().join(format!("effectcraft-session-disk-{name}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("tselatra-session-disk-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     d.to_string_lossy().to_string()
 }
@@ -20,7 +20,7 @@ fn session(dir: &str) -> Session {
     s
 }
 
-fn project(s: &mut Session) -> effectcraft_project::ItemId {
+fn project(s: &mut Session) -> tselatra_project::ItemId {
     s.execute("comp.new", json!({"name": "D", "width": 160, "height": 90, "frameRate": 30, "duration": 1})).unwrap();
     s.execute("layer.newSolid", json!({"color": "#3080ff", "width": 80, "height": 40})).unwrap();
     s.execute("effect.apply", json!({"layer": "#1", "effect": "Gaussian Blur"})).unwrap();
@@ -80,21 +80,21 @@ fn disk_cache_settings_persistence_and_invalidation() {
 fn footage_changes_change_the_salt() {
     let dir = folder("salt");
     let mut s = session(&dir);
-    let foot = std::env::temp_dir().join(format!("effectcraft-salt-{}.png", std::process::id()));
+    let foot = std::env::temp_dir().join(format!("tselatra-salt-{}.png", std::process::id()));
     std::fs::write(&foot, b"one").unwrap();
     s.edit("add", None, |p, _| {
-        let f = effectcraft_project::Footage {
+        let f = tselatra_project::Footage {
             path: foot.to_string_lossy().to_string(),
-            kind: effectcraft_project::FootageKind::Still,
+            kind: tselatra_project::FootageKind::Still,
             width: 1,
             height: 1,
             pixel_aspect: 1.0,
-            frame_rate: effectcraft_time::FrameRate::FPS_30,
+            frame_rate: tselatra_time::FrameRate::FPS_30,
             native_rate: None,
-            duration: effectcraft_time::Tick::ZERO,
+            duration: tselatra_time::Tick::ZERO,
             has_video: true,
             has_audio: false,
-            alpha: effectcraft_project::AlphaMode::Ignore,
+            alpha: tselatra_project::AlphaMode::Ignore,
             premul_color: [0.0; 3],
             loop_count: 1,
             codec: "PNG".into(),
@@ -104,33 +104,33 @@ fn footage_changes_change_the_salt() {
             layer: None,
             ..Default::default()
         };
-        p.add_item("f.png", effectcraft_color::Label::Lavender, None, effectcraft_project::ItemKind::Footage(f));
+        p.add_item("f.png", tselatra_color::Label::Lavender, None, tselatra_project::ItemKind::Footage(f));
         Ok(())
     })
     .unwrap();
-    let a = effectcraft_render::disk_cache::footage_salt(&s.project);
+    let a = tselatra_render::disk_cache::footage_salt(&s.project);
     std::fs::write(&foot, b"two, longer").unwrap();
-    let b = effectcraft_render::disk_cache::footage_salt(&s.project);
+    let b = tselatra_render::disk_cache::footage_salt(&s.project);
     assert_ne!(a, b);
     let cid = project(&mut s);
-    let k1 = effectcraft_render::disk_cache::comp_content_key(&s.project, cid);
+    let k1 = tselatra_render::disk_cache::comp_content_key(&s.project, cid);
     s.execute("prop.set", json!({"layer": "#1", "path": "transform/opacity", "value": 50})).unwrap();
-    let k2 = effectcraft_render::disk_cache::comp_content_key(&s.project, cid);
+    let k2 = tselatra_render::disk_cache::comp_content_key(&s.project, cid);
     assert_ne!(k1, k2);
     // Switches that don't change pixels (Audio, Lock, Shy, Hide Shy Layers) don't change it (#103).
     for sw in ["audio", "lock", "shy"] {
         s.execute("layer.setSwitch", json!({"layers": ["#1"], "switch": sw, "value": sw != "audio"})).unwrap();
     }
     s.execute("comp.setSwitch", json!({"switch": "hideShy", "value": true})).unwrap();
-    assert_eq!(effectcraft_render::disk_cache::comp_content_key(&s.project, cid), k2);
+    assert_eq!(tselatra_render::disk_cache::comp_content_key(&s.project, cid), k2);
     // Unrelated comps do not change it.
     s.execute("comp.new", json!({"name": "Other", "width": 10, "height": 10, "frameRate": 30, "duration": 1})).unwrap();
-    assert_eq!(effectcraft_render::disk_cache::comp_content_key(&s.project, cid), k2);
+    assert_eq!(tselatra_render::disk_cache::comp_content_key(&s.project, cid), k2);
     // A proxy, and its Use Proxy switch, change the pixels.
     let set_proxy = |s: &mut Session, enabled: bool| {
         let it = std::sync::Arc::make_mut(&mut s.project).items.get_mut(&cid).unwrap();
-        it.proxy = Some(Box::new(effectcraft_project::Proxy { footage: effectcraft_project::Footage::default(), enabled }));
-        effectcraft_render::disk_cache::comp_content_key(&s.project, cid)
+        it.proxy = Some(Box::new(tselatra_project::Proxy { footage: tselatra_project::Footage::default(), enabled }));
+        tselatra_render::disk_cache::comp_content_key(&s.project, cid)
     };
     let k3 = set_proxy(&mut s, true);
     assert_ne!(k3, k2);

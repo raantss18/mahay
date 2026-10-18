@@ -1,8 +1,8 @@
 //! A ripple trim ahead of a split edit: the later clip's sound starts before its picture (a J cut)
 //! and has to move with it.
 
-use filmcraft_project::ClipId;
-use filmcraft_time::Tick;
+use hetsika_project::ClipId;
+use hetsika_time::Tick;
 use serde_json::json;
 
 use crate::Session;

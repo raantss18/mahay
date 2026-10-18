@@ -1,10 +1,10 @@
 //! Typed angles follow the drawing's angle settings: AUNITS for bare numbers, directions
 //! measured from ANGBASE in the ANGDIR sense, `<<` / `<<<` overrides.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::units::AngleSettings;
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::units::AngleSettings;
 use serde_json::json;
 
 fn setvar(s: &mut Session, name: &str, value: serde_json::Value) {
@@ -87,9 +87,9 @@ fn json_and_default_parsing_keep_degrees_from_east() {
         EntityKind::Line(l) => assert_near(l.b.xy(), 0.0, 10.0, "JSON @10<90"),
         k => panic!("expected a line, got {k:?}"),
     }
-    assert!((cadcraft_engine::units::parse_angle("90").unwrap() - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
+    assert!((drafitra_engine::units::parse_angle("90").unwrap() - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
     // SETVAR reports ANGBASE in degrees.
-    let v = cadcraft_engine::sysvars::get(&s, "ANGBASE").unwrap();
+    let v = drafitra_engine::sysvars::get(&s, "ANGBASE").unwrap();
     assert!((v.as_f64().unwrap() - 90.0).abs() < 1e-9, "{v}");
     let a = AngleSettings { aunits: 0, angbase: 0.0, clockwise: false };
     assert_eq!(a.direction(""), None);

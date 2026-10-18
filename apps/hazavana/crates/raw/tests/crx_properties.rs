@@ -2,7 +2,7 @@
 //!
 //! `vendor/crx` and the 5/3 synthesis in `vendor/crx_wavelet` are `pub(crate)`, so every property here
 //! wraps a synthetic CRX stream in a minimal CR3 container (ftyp + moov + a CRAW track with CMP1/CDI1)
-//! and calls [`lightcraft_raw::decode`]. The CRX entropy streams are produced by reference encoders in
+//! and calls [`hazavana_raw::decode`]. The CRX entropy streams are produced by reference encoders in
 //! this file that mirror the documented coders (MED prediction, signed mapping, adaptive Rice, the
 //! MELCODE zero run, the QP map predictor — sources cited in `crates/raw/src/vendor/crx.rs`).
 //!
@@ -27,7 +27,7 @@
 //! The case budget is proptest's default (256 per property); the `PROPTEST_CASES` environment variable
 //! overrides it.
 
-use lightcraft_raw::{RawData, RawError, RawFormat, RawImage, decode, probe, probe_info};
+use hazavana_raw::{RawData, RawError, RawFormat, RawImage, decode, probe, probe_info};
 use proptest::prelude::*;
 
 // --- reference entropy coders (mirrors of the decoder's documented bitstream grammar) ---

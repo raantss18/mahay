@@ -1,7 +1,7 @@
 //! Convert the persisted workspace schema to shared docking transactions.
 
-use craft_ui::docking::{Action, Floating as SharedFloating, Layout as SharedLayout, Location, Node, Placement, Zone};
-use craft_ui::layout::{SplitAxis, SplitSize as SharedSplitSize};
+use mahay_ui::docking::{Action, Floating as SharedFloating, Layout as SharedLayout, Location, Node, Placement, Zone};
+use mahay_ui::layout::{SplitAxis, SplitSize as SharedSplitSize};
 
 use crate::dock::{DockNode, Floating, Layout, PanelKind, SplitSize};
 
@@ -37,7 +37,7 @@ fn encode_node(node: &DockNode, depth: usize, count: &mut usize) -> Result<Node<
 fn decode_node(node: Node<PanelKind>) -> Result<DockNode, String> {
     Ok(match node {
         Node::Tabs { panels, active } => DockNode::Tabs { panels, active },
-        Node::Stack { .. } => return Err("FilmCraft does not use stacked panels".into()),
+        Node::Stack { .. } => return Err("Hetsika does not use stacked panels".into()),
         Node::Split { axis, size, first, second } => DockNode::Split {
             vertical: axis == SplitAxis::Vertical,
             size: match size {

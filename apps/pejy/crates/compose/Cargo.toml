@@ -1,9 +1,9 @@
 [package]
-name = "designcraft-compose"
+name = "pejy-compose"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DesignCraft text composition: paragraph composer (Knuth–Plass), hyphenation, justification, columns, threading, wrap"
+description = "Pejy text composition: paragraph composer (Knuth–Plass), hyphenation, justification, columns, threading, wrap"
 
 [lints]
 workspace = true
@@ -13,10 +13,10 @@ unicode-bidi = { workspace = true }
 unicode-segmentation = { workspace = true }
 unicode-bidi-mirroring = { workspace = true }
 unicode-script = { workspace = true }
-designcraft-geom = { workspace = true }
-designcraft-color = { workspace = true }
-designcraft-doc = { workspace = true }
-designcraft-fonts = { workspace = true }
+pejy-geom = { workspace = true }
+pejy-color = { workspace = true }
+pejy-doc = { workspace = true }
+pejy-fonts = { workspace = true }
 log = { workspace = true }
 regex = { workspace = true }
 fancy-regex = { workspace = true }
@@ -24,5 +24,5 @@ miniz_oxide = "0.8"
 hypher = { version = "0.1.8", default-features = false, features = ["alloc", "greek", "portuguese", "spanish", "norwegian"] }
 
 [dev-dependencies]
-designcraft-fonts = { workspace = true, features = ["testing"] }
+pejy-fonts = { workspace = true, features = ["testing"] }
 proptest = { workspace = true }

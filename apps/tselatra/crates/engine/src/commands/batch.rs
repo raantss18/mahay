@@ -94,7 +94,7 @@ fn batch(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// Fold the undo steps recorded since the project was `snap` into one step called `label`.
-fn fold(s: &mut Session, snap: &Arc<effectcraft_project::Project>, label: &str) {
+fn fold(s: &mut Session, snap: &Arc<tselatra_project::Project>, label: &str) {
     let h = &mut s.history;
     let Some(start) = h.undo.iter().rposition(|(_, p)| Arc::ptr_eq(p, snap)) else { return };
     let first = h.undo[start].1.clone();
@@ -142,7 +142,7 @@ mod tests {
         assert_eq!(r["steps"], 3);
         let lid = r["results"][0]["layer"].as_u64().unwrap();
         let comp = s.active_comp().unwrap();
-        let l = comp.layer(effectcraft_project::LayerId(lid)).unwrap();
+        let l = comp.layer(tselatra_project::LayerId(lid)).unwrap();
         assert_eq!(l.name, "Red Box");
         assert_eq!(l.props.prop("transform/opacity").unwrap().value.as_f64(), 40.0);
         assert_eq!(s.history.undo.len(), undo_before + 1, "one undo step");

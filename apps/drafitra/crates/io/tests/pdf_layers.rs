@@ -2,11 +2,11 @@
 //! optional content groups, `layouts` plots several sheets into one file with page labels, and
 //! linked entities get link annotations. The tests parse the written objects.
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Block, Common, Drawing, Entity, EntityKind, Handle, Insert, Layer, Line, Space, Viewport};
-use cadcraft_geom::{Vec2, Vec3};
-use cadcraft_io::pdf::{MAX_PAGES, pdf_sheets};
-use cadcraft_io::{PdfOptions, plot};
+use drafitra_color::Color;
+use drafitra_doc::{Block, Common, Drawing, Entity, EntityKind, Handle, Insert, Layer, Line, Space, Viewport};
+use drafitra_geom::{Vec2, Vec3};
+use drafitra_io::pdf::{MAX_PAGES, pdf_sheets};
+use drafitra_io::{PdfOptions, plot};
 use serde_json::json;
 
 /// The objects of a PDF by number, after checking the cross-reference table points at them.

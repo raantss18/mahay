@@ -59,7 +59,7 @@ fn smart_quotes_and_formatting() {
 /// the Selection tool, and the chosen tool stays.
 #[test]
 fn cmd_held_press_borrows_the_selection_tool_for_one_gesture() {
-    use designcraft_tools::{Mods, PointerEvent, PointerKind};
+    use pejy_tools::{Mods, PointerEvent, PointerKind};
     let mut s = session();
     let v = ViewInfo::at_zoom(1.0);
     let r = s.execute("frame.create", &json!({"rect": [100, 100, 300, 200], "content": "text", "text": "Hello"})).unwrap();
@@ -69,12 +69,12 @@ fn cmd_held_press_borrows_the_selection_tool_for_one_gesture() {
     let cmd = Mods { cmd: true, ..Mods::default() };
     // Cmd-press on the frame selects it as an object (no caret) and a Cmd-drag moves it.
     s.pointer(&PointerEvent::new(PointerKind::Down, 150.0, 150.0).with_mods(cmd), v).unwrap();
-    assert_eq!(s.doc().unwrap().selection.items, vec![designcraft_doc::ItemId(fid)]);
+    assert_eq!(s.doc().unwrap().selection.items, vec![pejy_doc::ItemId(fid)]);
     assert!(s.doc().unwrap().selection.text.is_none(), "no caret: the Selection tool was borrowed");
     s.pointer(&PointerEvent::new(PointerKind::Drag, 170.0, 150.0).with_mods(cmd), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, 200.0, 150.0).with_mods(cmd), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, 200.0, 150.0).with_mods(cmd), v).unwrap();
-    assert_eq!(s.doc().unwrap().doc.item(designcraft_doc::ItemId(fid)).unwrap().bounds().x0, 150.0, "moved by the drag");
+    assert_eq!(s.doc().unwrap().doc.item(pejy_doc::ItemId(fid)).unwrap().bounds().x0, 150.0, "moved by the drag");
     assert_eq!(s.tool_id(), "type", "the chosen tool stays");
     assert!(s.temp_tool.is_none(), "the borrowed tool is gone on release");
     // The next plain press is the Type tool's again: a caret in the frame.
@@ -96,7 +96,7 @@ fn cmd_held_press_borrows_the_selection_tool_for_one_gesture() {
 /// Cmd borrows whichever selection tool was chosen last, whatever the chosen tool is.
 #[test]
 fn cmd_borrows_the_last_used_selection_tool() {
-    use designcraft_tools::{Mods, PointerEvent, PointerKind};
+    use pejy_tools::{Mods, PointerEvent, PointerKind};
     let mut s = session();
     let v = ViewInfo::at_zoom(1.0);
     let cmd = Mods { cmd: true, ..Mods::default() };
@@ -122,7 +122,7 @@ fn tool_gesture_creates_one_undo_step() {
     let mut s = session();
     s.set_tool("rectangle");
     let v = ViewInfo::at_zoom(1.0);
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     s.pointer(&PointerEvent::new(PointerKind::Down, 10.0, 10.0), v).unwrap();
     for i in 1..10 {
         s.pointer(&PointerEvent::new(PointerKind::Drag, 10.0 + i as f64 * 10.0, 10.0 + i as f64 * 5.0), v).unwrap();
@@ -131,7 +131,7 @@ fn tool_gesture_creates_one_undo_step() {
     let st = s.doc().unwrap();
     assert_eq!(st.history.undo.len(), 1);
     assert_eq!(st.doc.spreads[0].items.len(), 1);
-    assert_eq!(st.doc.spreads[0].items[0].bounds(), designcraft_geom::Rect::new(10.0, 10.0, 100.0, 55.0));
+    assert_eq!(st.doc.spreads[0].items[0].bounds(), pejy_geom::Rect::new(10.0, 10.0, 100.0, 55.0));
     // Move with the selection tool.
     s.set_tool("selection");
     s.pointer(&PointerEvent::new(PointerKind::Down, 50.0, 30.0), v).unwrap();
@@ -258,13 +258,13 @@ fn a_command_without_an_undo_step_keeps_the_steps_of_those_it_runs() {
 
 #[test]
 fn shift_move_does_not_take_the_other_axis() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     s.execute("frame.create", &json!({"rect": [80.0, 100.0, 140.0, 140.0], "content": "unassigned"})).unwrap();
     s.execute("guide.add", &json!({"orientation": "horizontal", "position": 102.0, "page": 0})).unwrap();
     s.set_tool("selection");
     let v = ViewInfo::at_zoom(1.0);
-    let shift = designcraft_tools::Mods { shift: true, ..Default::default() };
+    let shift = pejy_tools::Mods { shift: true, ..Default::default() };
     s.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 120.0).with_mods(shift), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, 160.0, 121.0).with_mods(shift), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, 160.0, 121.0).with_mods(shift), v).unwrap();
@@ -275,13 +275,13 @@ fn shift_move_does_not_take_the_other_axis() {
 
 #[test]
 fn cmd_move_does_not_snap() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     s.execute("frame.create", &json!({"rect": [80.0, 100.0, 140.0, 140.0], "content": "unassigned"})).unwrap();
     s.execute("guide.add", &json!({"orientation": "horizontal", "position": 102.0, "page": 0})).unwrap();
     s.set_tool("selection");
     let v = ViewInfo::at_zoom(1.0);
-    let cmd = designcraft_tools::Mods { cmd: true, shift: false, ..Default::default() };
+    let cmd = pejy_tools::Mods { cmd: true, shift: false, ..Default::default() };
     s.pointer(&PointerEvent::new(PointerKind::Down, 110.0, 120.0).with_mods(cmd), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, 160.0, 121.0).with_mods(cmd), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, 160.0, 121.0).with_mods(cmd), v).unwrap();
@@ -292,15 +292,15 @@ fn cmd_move_does_not_snap() {
 
 #[test]
 fn cmd_resize_still_snaps_to_a_guide() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     s.execute("frame.create", &json!({"rect": [100.0, 100.0, 200.0, 180.0], "content": "unassigned"})).unwrap();
     s.execute("guide.add", &json!({"orientation": "vertical", "position": 250.0, "page": 0})).unwrap();
     s.set_tool("selection");
     let v = ViewInfo::at_zoom(1.0);
     let b0 = s.doc().unwrap().doc.spreads[0].items[0].bounds();
-    let right = s.layout().to_canvas(designcraft_doc::SpreadRef::Doc(0), designcraft_geom::Point::new(b0.x1, b0.center().y));
-    let cmd = designcraft_tools::Mods { cmd: true, ..Default::default() };
+    let right = s.layout().to_canvas(pejy_doc::SpreadRef::Doc(0), pejy_geom::Point::new(b0.x1, b0.center().y));
+    let cmd = pejy_tools::Mods { cmd: true, ..Default::default() };
     s.pointer(&PointerEvent::new(PointerKind::Down, right.x, right.y).with_mods(cmd), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, right.x + 47.0, right.y).with_mods(cmd), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, right.x + 47.0, right.y).with_mods(cmd), v).unwrap();
@@ -314,7 +314,7 @@ fn cmd_resize_still_snaps_to_a_guide() {
 
 #[test]
 fn shift_move_on_a_turned_spread_stays_on_the_line() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     s.execute("frame.create", &json!({"rect": [80.0, 100.0, 140.0, 140.0], "content": "unassigned"})).unwrap();
     s.execute("layout.rotateSpreadView", &json!({"angle": 90})).unwrap();
@@ -323,8 +323,8 @@ fn shift_move_on_a_turned_spread_stays_on_the_line() {
     s.set_tool("selection");
     let v = ViewInfo::at_zoom(1.0);
     let b0 = s.doc().unwrap().doc.spreads[0].items[0].bounds();
-    let c = s.layout().to_canvas(designcraft_doc::SpreadRef::Doc(0), b0.center());
-    let shift = designcraft_tools::Mods { shift: true, ..Default::default() };
+    let c = s.layout().to_canvas(pejy_doc::SpreadRef::Doc(0), b0.center());
+    let shift = pejy_tools::Mods { shift: true, ..Default::default() };
     s.pointer(&PointerEvent::new(PointerKind::Down, c.x, c.y).with_mods(shift), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, c.x + 60.0, c.y + 1.0).with_mods(shift), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, c.x + 60.0, c.y + 1.0).with_mods(shift), v).unwrap();
@@ -381,19 +381,19 @@ fn align_and_distribute() {
     }
     s.execute("object.align", &json!({"ids": ids, "edge": "top"})).unwrap();
     let st = s.doc().unwrap();
-    let tops: Vec<f64> = ids.iter().map(|i| st.doc.item(designcraft_doc::ItemId(*i)).unwrap().bounds().y0).collect();
+    let tops: Vec<f64> = ids.iter().map(|i| st.doc.item(pejy_doc::ItemId(*i)).unwrap().bounds().y0).collect();
     assert!(tops.iter().all(|t| (*t - 51.0).abs() < 1e-9), "{tops:?}");
     s.execute("object.distribute", &json!({"ids": ids, "by": "spacing"})).unwrap();
     let st = s.doc().unwrap();
-    let b: Vec<designcraft_geom::Rect> = ids.iter().map(|i| st.doc.item(designcraft_doc::ItemId(*i)).unwrap().bounds()).collect();
+    let b: Vec<pejy_geom::Rect> = ids.iter().map(|i| st.doc.item(pejy_doc::ItemId(*i)).unwrap().bounds()).collect();
     assert!(((b[1].x0 - b[0].x1) - (b[2].x0 - b[1].x1)).abs() < 1e-9);
     s.execute("object.align", &json!({"ids": [ids[0]], "edge": "left", "to": "margins"})).unwrap();
-    assert_eq!(s.doc().unwrap().doc.item(designcraft_doc::ItemId(ids[0])).unwrap().bounds().x0, 36.0);
+    assert_eq!(s.doc().unwrap().doc.item(pejy_doc::ItemId(ids[0])).unwrap().bounds().x0, 36.0);
 }
 
 #[test]
 fn pen_draws_and_direct_selection_edits() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     let v = ViewInfo::at_zoom(1.0);
     s.set_tool("pen");
@@ -423,7 +423,7 @@ fn pen_draws_and_direct_selection_edits() {
     let a = s.doc().unwrap().doc.item(id).unwrap().path.subpaths[0].anchors[0].p;
     // The pen placed this anchor on the baseline at y 96. Dragging toward (90, 80)
     // proposes y 76, and the baseline at 72 is inside the zone, so the anchor lands at (90, 72).
-    assert_eq!(a, designcraft_geom::Point::new(90.0, 72.0));
+    assert_eq!(a, pejy_geom::Point::new(90.0, 72.0));
 }
 
 #[test]
@@ -433,22 +433,22 @@ fn rotate_scale_shear_and_eyedropper() {
     s.execute("object.fill", &json!({"swatch": "C=100 M=0 Y=0 K=0"})).unwrap();
     let b = s.execute("frame.create", &json!({"rect": [300, 100, 340, 140], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
     s.execute("transform.rotate", &json!({"ids": [a], "angle": 90})).unwrap();
-    let r = s.doc().unwrap().doc.item(designcraft_doc::ItemId(a)).unwrap().bounds();
+    let r = s.doc().unwrap().doc.item(pejy_doc::ItemId(a)).unwrap().bounds();
     assert!((r.width() - 50.0).abs() < 1e-6 && (r.height() - 100.0).abs() < 1e-6, "{r:?}");
     s.execute("transform.scale", &json!({"ids": [b], "sx": 2.0})).unwrap();
-    let r = s.doc().unwrap().doc.item(designcraft_doc::ItemId(b)).unwrap().bounds();
+    let r = s.doc().unwrap().doc.item(pejy_doc::ItemId(b)).unwrap().bounds();
     assert!((r.width() - 80.0).abs() < 1e-6, "{r:?}");
     s.execute("selection.set", &json!({"ids": [b]})).unwrap();
     s.execute("object.matchAttributes", &json!({"from": a})).unwrap();
-    assert_eq!(s.doc().unwrap().doc.item(designcraft_doc::ItemId(b)).unwrap().fill.swatch, "C=100 M=0 Y=0 K=0");
+    assert_eq!(s.doc().unwrap().doc.item(pejy_doc::ItemId(b)).unwrap().fill.swatch, "C=100 M=0 Y=0 K=0");
     s.execute("transform.shear", &json!({"ids": [b], "angle": 20})).unwrap();
 }
 
 #[test]
 fn place_gun_click_drag_and_into_frame() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
-    let png = designcraft_render::Rendered { width: 40, height: 20, pixels: vec![200; 40 * 20 * 4] }.to_png();
+    let png = pejy_render::Rendered { width: 40, height: 20, pixels: vec![200; 40 * 20 * 4] }.to_png();
     let b64 = cmd::base64_encode(&png);
     s.execute("place.load", &json!({"base64": b64, "name": "a.png"})).unwrap();
     assert_eq!(s.tool_id(), "placeGun");
@@ -459,14 +459,14 @@ fn place_gun_click_drag_and_into_frame() {
     let st = s.doc().unwrap();
     let it = st.doc.spreads[0].items.last().unwrap();
     // Dragged 80×200 → fit proportionally: 80×40.
-    assert_eq!(it.bounds(), designcraft_geom::Rect::new(100.0, 100.0, 180.0, 140.0));
+    assert_eq!(it.bounds(), pejy_geom::Rect::new(100.0, 100.0, 180.0, 140.0));
     assert_eq!(s.tool_id(), "selection");
     // Into an empty frame.
     let f = s.execute("frame.create", &json!({"rect": [300, 300, 400, 400], "content": "graphic"})).unwrap()["id"].as_u64().unwrap();
     s.execute("place.load", &json!({"base64": b64})).unwrap();
     s.execute("place.drop", &json!({"frame": f})).unwrap();
-    let graphic_xf = |s: &Session| match &s.doc().unwrap().doc.item(designcraft_doc::ItemId(f)).unwrap().content {
-        designcraft_doc::Content::Graphic(g) => g.xf,
+    let graphic_xf = |s: &Session| match &s.doc().unwrap().doc.item(pejy_doc::ItemId(f)).unwrap().content {
+        pejy_doc::Content::Graphic(g) => g.xf,
         _ => panic!("not a graphic"),
     };
     let placed = graphic_xf(&s);
@@ -494,7 +494,7 @@ fn hyperlinks_and_bookmarks_reach_the_pdf() {
     let mut s = Session::new();
     s.execute("file.newSample", &json!({})).unwrap();
     s.execute("selection.set", &json!({"ids": [39]})).unwrap();
-    s.execute("hyperlink.create", &json!({"url": "https://example.com/designcraft"})).unwrap();
+    s.execute("hyperlink.create", &json!({"url": "https://example.com/pejy"})).unwrap();
     let d = s.execute("document.inspect", &json!({})).unwrap();
     let sid = d["stories"][0]["id"].as_u64().unwrap();
     s.execute("text.select", &json!({"story": sid, "anchor": 0, "focus": 3})).unwrap();
@@ -593,7 +593,7 @@ fn snippets_roundtrip_between_documents() {
     let snip = s.execute("snippet.export", &json!({})).unwrap();
     s.execute("file.new", &json!({})).unwrap();
     let r = s.execute("snippet.place", &json!({"base64": snip["base64"], "x": 36.0, "y": 36.0})).unwrap();
-    let id = designcraft_doc::ItemId(r["ids"][0].as_u64().unwrap());
+    let id = pejy_doc::ItemId(r["ids"][0].as_u64().unwrap());
     let st = s.doc().unwrap();
     let it = st.doc.item(id).unwrap();
     assert_eq!(it.bounds().x0, 36.0);
@@ -613,7 +613,7 @@ fn object_styles_create_and_apply() {
     let b = s.execute("frame.create", &json!({"rect": [200, 36, 300, 136], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
     s.execute("style.object.apply", &json!({"name": "Magenta Box"})).unwrap();
     let d = &s.doc().unwrap().doc;
-    let (ia, ib) = (d.item(designcraft_doc::ItemId(a)).unwrap(), d.item(designcraft_doc::ItemId(b)).unwrap());
+    let (ia, ib) = (d.item(pejy_doc::ItemId(a)).unwrap(), d.item(pejy_doc::ItemId(b)).unwrap());
     assert_eq!(ia.fill, ib.fill);
     assert_eq!(ib.stroke.weight, 4.0);
     assert_eq!(ib.object_style, "Magenta Box");
@@ -621,7 +621,7 @@ fn object_styles_create_and_apply() {
 
 #[test]
 fn object_style_effects_follow_the_style_until_overridden() {
-    use designcraft_doc::{BASIC_GRAPHICS_FRAME, ItemId};
+    use pejy_doc::{BASIC_GRAPHICS_FRAME, ItemId};
     let mut s = session();
     let frame = |s: &mut Session, x: f64| {
         let r = s.execute("frame.create", &json!({"rect": [x, 36, x + 100.0, 136], "content": "unassigned"})).unwrap();
@@ -671,7 +671,7 @@ fn object_style_effects_follow_the_style_until_overridden() {
     let r = s.execute("style.object.edit", &json!({"name": BASIC_GRAPHICS_FRAME, "feather": 4})).unwrap();
     assert_eq!(r["updated"], 1);
     assert!(item(&s, e).effects.drop_shadow.on && item(&s, e).effects.feather == 0.0);
-    assert_eq!(item(&s, f).effects, designcraft_doc::Effects { feather: 4.0, ..Default::default() });
+    assert_eq!(item(&s, f).effects, pejy_doc::Effects { feather: 4.0, ..Default::default() });
     let g = s.execute("frame.create", &json!({"rect": [36, 300, 136, 400], "content": "graphic"})).unwrap()["id"].as_u64().unwrap();
     assert_eq!((item(&s, g).object_style.as_str(), item(&s, g).effects.feather), (BASIC_GRAPHICS_FRAME, 4.0));
     s.execute("style.object.edit", &json!({"name": BASIC_GRAPHICS_FRAME, "effects": null})).unwrap();
@@ -687,7 +687,7 @@ fn object_style_effects_follow_the_style_until_overridden() {
 
 #[test]
 fn object_style_effects_reach_grouped_and_anchored_items() {
-    use designcraft_doc::ItemId;
+    use pejy_doc::ItemId;
     let mut s = session();
     let frame = |s: &mut Session, x: f64| {
         s.execute("frame.create", &json!({"rect": [x, 36, x + 50.0, 86], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap()
@@ -794,7 +794,7 @@ fn object_set_flags_and_wrap_invert() {
     let mut s = session();
     let r = s.execute("frame.create", &json!({"rect": [36, 36, 300, 200]})).unwrap();
     let id = r["id"].as_u64().unwrap();
-    let item = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).cloned().unwrap();
+    let item = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).cloned().unwrap();
     s.execute("object.setFlags", &json!({"ids": [id], "hidden": true})).unwrap();
     assert!(item(&s).hidden);
     s.execute("object.setFlags", &json!({"ids": [id], "hidden": false, "locked": true})).unwrap();
@@ -810,7 +810,7 @@ fn object_set_flags_and_wrap_invert() {
     let w = item(&s).wrap;
     assert_eq!(
         (w.mode, w.side, w.contour),
-        (designcraft_doc::WrapMode::Contour, designcraft_doc::WrapSide::LargestArea, designcraft_doc::ContourType::GraphicFrame)
+        (pejy_doc::WrapMode::Contour, pejy_doc::WrapSide::LargestArea, pejy_doc::ContourType::GraphicFrame)
     );
     assert!(s.execute("object.textWrap", &json!({"contour": "detectEdges"})).is_err());
     assert!(s.execute("object.textWrap", &json!({"side": "middle"})).is_err());
@@ -819,34 +819,34 @@ fn object_set_flags_and_wrap_invert() {
 #[test]
 fn text_wrap_on_selected_content_sets_the_graphic_wrap() {
     let mut s = session();
-    let png = designcraft_render::Rendered { width: 40, height: 20, pixels: vec![200; 40 * 20 * 4] }.to_png();
+    let png = pejy_render::Rendered { width: 40, height: 20, pixels: vec![200; 40 * 20 * 4] }.to_png();
     let f = s.execute("frame.create", &json!({"rect": [300, 300, 400, 400], "content": "graphic"})).unwrap()["id"].as_u64().unwrap();
     s.execute("place.load", &json!({"base64": cmd::base64_encode(&png)})).unwrap();
     s.execute("place.drop", &json!({"frame": f})).unwrap();
-    let item = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(f)).cloned().unwrap();
+    let item = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(f)).cloned().unwrap();
     s.execute("selection.set", &json!({"ids": [f], "content": true})).unwrap();
     s.execute("object.textWrap", &json!({"mode": "boundingBox", "offset": 4})).unwrap();
     let it = item(&s);
-    assert_eq!(it.wrap.mode, designcraft_doc::WrapMode::None, "the frame keeps no wrap");
+    assert_eq!(it.wrap.mode, pejy_doc::WrapMode::None, "the frame keeps no wrap");
     let g = it.graphic().unwrap();
-    assert_eq!((g.wrap.mode, g.wrap.offsets), (designcraft_doc::WrapMode::BoundingBox, [4.0; 4]));
+    assert_eq!((g.wrap.mode, g.wrap.offsets), (pejy_doc::WrapMode::BoundingBox, [4.0; 4]));
     // The frame selected: the frame's own wrap.
     s.execute("selection.set", &json!({"ids": [f]})).unwrap();
     s.execute("object.textWrap", &json!({"mode": "jumpObject"})).unwrap();
     let it = item(&s);
-    assert_eq!((it.wrap.mode, it.graphic().unwrap().wrap.mode), (designcraft_doc::WrapMode::JumpObject, designcraft_doc::WrapMode::BoundingBox));
+    assert_eq!((it.wrap.mode, it.graphic().unwrap().wrap.mode), (pejy_doc::WrapMode::JumpObject, pejy_doc::WrapMode::BoundingBox));
 }
 
 #[test]
 fn custom_wrap_path_follows_resize_and_yields_to_offsets() {
     let mut s = session();
     let r = s.execute("frame.create", &json!({"rect": [0, 0, 100, 100]})).unwrap();
-    let id = designcraft_doc::ItemId(r["id"].as_u64().unwrap());
+    let id = pejy_doc::ItemId(r["id"].as_u64().unwrap());
     s.execute("selection.set", &json!({"ids": [id.0]})).unwrap();
     s.execute("object.textWrap", &json!({"mode": "boundingBox"})).unwrap();
     let inner = s.doc().unwrap().doc.item(id).unwrap().path.clone();
-    let custom = designcraft_geom::PathData::single(designcraft_geom::SubPath::polyline(
-        &[designcraft_geom::Point::new(0.0, 0.0), designcraft_geom::Point::new(40.0, 0.0), designcraft_geom::Point::new(0.0, 100.0)],
+    let custom = pejy_geom::PathData::single(pejy_geom::SubPath::polyline(
+        &[pejy_geom::Point::new(0.0, 0.0), pejy_geom::Point::new(40.0, 0.0), pejy_geom::Point::new(0.0, 100.0)],
         true,
     ));
     s.edit(|d, _| {
@@ -874,7 +874,7 @@ fn custom_wrap_path_follows_resize_and_yields_to_offsets() {
 
 #[test]
 fn gridify_while_drawing_frames() {
-    use designcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+    use pejy_tools::{Mods, PointerEvent, PointerKind, ToolKey};
     let mut s = session();
     let n0 = s.doc().unwrap().doc.spreads[0].items.len();
     s.set_tool("rectangleFrame");
@@ -895,7 +895,7 @@ fn gridify_while_drawing_frames() {
 
 #[test]
 fn gap_tool_drag_moves_the_gap() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     let a = s.execute("frame.create", &json!({"rect": [100, 100, 200, 300]})).unwrap()["id"].as_u64().unwrap();
     s.set_tool("gap");
@@ -904,7 +904,7 @@ fn gap_tool_drag_moves_the_gap() {
     s.pointer(&PointerEvent::new(PointerKind::Drag, 270.0, 205.0), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, 270.0, 205.0), v).unwrap();
     // The gap between the frame and the page's right edge: the frame's right side moved 20.
-    let b = s.doc().unwrap().doc.item(designcraft_doc::ItemId(a)).unwrap().bounds();
+    let b = s.doc().unwrap().doc.item(pejy_doc::ItemId(a)).unwrap().bounds();
     assert_eq!(b.x1, 220.0, "{b:?}");
     assert_eq!(s.doc().unwrap().history.undo.len(), 2, "create + one gap move");
 }
@@ -925,7 +925,7 @@ fn commands_take_non_object_params_without_panicking() {
 /// a new frame is threaded there and the overset text flows into it.
 #[test]
 fn threading_with_the_loaded_text_cursor_on_the_sample() {
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = Session::new();
     s.execute("file.newSample", &json!({})).unwrap();
     let d = s.doc().unwrap().doc.clone();
@@ -937,14 +937,14 @@ fn threading_with_the_loaded_text_cursor_on_the_sample() {
     s.set_tool("selection");
     let v = ViewInfo::at_zoom(1.0);
     let layout = s.layout();
-    let port = designcraft_tools::thread::port_center(&s.doc().unwrap().doc, &layout, first, true, v.zoom).unwrap();
-    let ev = |k, p: designcraft_geom::Point| PointerEvent::new(k, p.x, p.y);
+    let port = pejy_tools::thread::port_center(&s.doc().unwrap().doc, &layout, first, true, v.zoom).unwrap();
+    let ev = |k, p: pejy_geom::Point| PointerEvent::new(k, p.x, p.y);
     s.pointer(&ev(PointerKind::Down, port), v).unwrap();
     s.pointer(&ev(PointerKind::Up, port), v).unwrap();
-    assert_eq!(s.cursor(port + designcraft_geom::Vec2::new(-2000.0, 0.0), Default::default(), v), designcraft_tools::Cursor::LoadedText);
+    assert_eq!(s.cursor(port + pejy_geom::Vec2::new(-2000.0, 0.0), Default::default(), v), pejy_tools::Cursor::LoadedText);
     // On the pasteboard left of the first spread.
     let b = layout.slots[0].bounds;
-    let at = designcraft_geom::Point::new(b.x0 - 300.0, b.y0 + 100.0);
+    let at = pejy_geom::Point::new(b.x0 - 300.0, b.y0 + 100.0);
     let undo = s.doc().unwrap().history.undo.len();
     s.pointer(&ev(PointerKind::Down, at), v).unwrap();
     s.pointer(&ev(PointerKind::Up, at), v).unwrap();
@@ -957,13 +957,13 @@ fn threading_with_the_loaded_text_cursor_on_the_sample() {
     let cs = s.cache.get(&s.doc().unwrap().doc, sid, None);
     assert!(cs.frames.iter().any(|f| f.frame == new && !f.range.is_empty()), "the text flows into the new frame");
     let nb = s.doc().unwrap().doc.item(new).unwrap().bounds();
-    assert!((nb.y0 - layout.to_spread(designcraft_doc::SpreadRef::Doc(0), at).y).abs() < 1e-6, "{nb:?}");
+    assert!((nb.y0 - layout.to_spread(pejy_doc::SpreadRef::Doc(0), at).y).abs() < 1e-6, "{nb:?}");
 }
 
 /// Drag a selection handle of item 0 on spread 0 from the edge point `at` by `by` (canvas units).
-fn drag_handle(s: &mut Session, at: designcraft_geom::Point, by: designcraft_geom::Vec2, v: ViewInfo) {
-    use designcraft_tools::{PointerEvent, PointerKind};
-    let p = s.layout().to_canvas(designcraft_doc::SpreadRef::Doc(0), at);
+fn drag_handle(s: &mut Session, at: pejy_geom::Point, by: pejy_geom::Vec2, v: ViewInfo) {
+    use pejy_tools::{PointerEvent, PointerKind};
+    let p = s.layout().to_canvas(pejy_doc::SpreadRef::Doc(0), at);
     s.pointer(&PointerEvent::new(PointerKind::Down, p.x, p.y), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, p.x + by.x / 2.0, p.y + by.y / 2.0), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, p.x + by.x, p.y + by.y), v).unwrap();
@@ -972,7 +972,7 @@ fn drag_handle(s: &mut Session, at: designcraft_geom::Point, by: designcraft_geo
 
 #[test]
 fn text_frame_resize_snaps_to_the_margins() {
-    use designcraft_geom::{Point, Vec2};
+    use pejy_geom::{Point, Vec2};
     for zoom in [1.0, 0.5] {
         let mut s = Session::new();
         s.execute("file.newSample", &json!({})).unwrap();
@@ -999,13 +999,13 @@ fn text_frame_resize_snaps_to_the_margins() {
 
 #[test]
 fn type_tool_frames_snap_to_the_margins() {
-    use designcraft_geom::Point;
-    use designcraft_tools::{PointerEvent, PointerKind};
+    use pejy_geom::Point;
+    use pejy_tools::{PointerEvent, PointerKind};
     let mut s = session();
     let margin = s.doc().unwrap().doc.spreads[0].pages[0].margin_rect();
     s.set_tool("type");
     let v = ViewInfo::at_zoom(1.0);
-    let c = |s: &Session, x: f64, y: f64| s.layout().to_canvas(designcraft_doc::SpreadRef::Doc(0), Point::new(x, y));
+    let c = |s: &Session, x: f64, y: f64| s.layout().to_canvas(pejy_doc::SpreadRef::Doc(0), Point::new(x, y));
     // From 1.5 pt off the top-left margin corner to 1.5 pt off the right margin.
     let a = c(&s, margin.x0 + 1.5, margin.y0 + 1.5);
     let b = c(&s, margin.x1 - 1.5, margin.y0 + 101.5);
@@ -1023,8 +1023,8 @@ fn type_tool_frames_snap_to_the_margins() {
 
 #[test]
 fn preflight_distinguishes_unplaced_stories_and_locates_footnote_overset() {
-    use designcraft_doc::{AnchorPosition, AnchoredObject, ParaFormat, SpreadRef, Story, StoryId};
-    use designcraft_geom::Rect;
+    use pejy_doc::{AnchorPosition, AnchoredObject, ParaFormat, SpreadRef, Story, StoryId};
+    use pejy_geom::Rect;
     let mut s = session();
     let doc = Arc::make_mut(&mut s.doc_mut().unwrap().doc);
     let layer = doc.default_layer();
@@ -1078,7 +1078,7 @@ fn paragraph_style_edit_persists_attrs_and_rename() {
     {
         let st = s.doc().unwrap();
         let style = st.doc.styles.para(&name).expect("style still exists");
-        assert_eq!(style.para.align, Some(designcraft_doc::Align::Center), "edited attribute persisted");
+        assert_eq!(style.para.align, Some(pejy_doc::Align::Center), "edited attribute persisted");
     }
     // Renaming updates the style definition itself, and every place it's referenced.
     s.execute("style.paragraph.edit", &json!({"name": name, "rename": "Body Text"})).unwrap();
@@ -1106,20 +1106,20 @@ fn paragraph_style_delete_reassigns_affected_text() {
     s.execute("style.paragraph.apply", &json!({"name": name})).unwrap();
     {
         let st = s.doc().unwrap();
-        let story = st.doc.stories.get(&designcraft_doc::StoryId(sid)).expect("story exists");
+        let story = st.doc.stories.get(&pejy_doc::StoryId(sid)).expect("story exists");
         assert_eq!(story.paras[0].style, name, "style applied before delete");
     }
-    s.execute("style.paragraph.delete", &json!({"name": name, "replaceWith": designcraft_doc::BASIC_PARAGRAPH})).unwrap();
+    s.execute("style.paragraph.delete", &json!({"name": name, "replaceWith": pejy_doc::BASIC_PARAGRAPH})).unwrap();
     let st = s.doc().unwrap();
     assert!(st.doc.styles.para(&name).is_none(), "deleted style is gone");
-    let story = st.doc.stories.get(&designcraft_doc::StoryId(sid)).expect("story exists");
-    assert_eq!(story.paras[0].style, designcraft_doc::BASIC_PARAGRAPH, "affected paragraph reassigned to the replacement style");
+    let story = st.doc.stories.get(&pejy_doc::StoryId(sid)).expect("story exists");
+    assert_eq!(story.paras[0].style, pejy_doc::BASIC_PARAGRAPH, "affected paragraph reassigned to the replacement style");
 }
 
 #[test]
 fn paragraph_style_delete_rejects_builtin_styles() {
     let mut s = session();
-    let r = s.execute("style.paragraph.delete", &json!({"name": designcraft_doc::BASIC_PARAGRAPH}));
+    let r = s.execute("style.paragraph.delete", &json!({"name": pejy_doc::BASIC_PARAGRAPH}));
     assert!(r.is_err(), "built-in styles can't be deleted");
 }
 
@@ -1163,38 +1163,38 @@ fn character_style_delete_reassigns_affected_text() {
     s.execute("style.character.apply", &json!({"name": name})).unwrap();
     {
         let st = s.doc().unwrap();
-        let story = st.doc.stories.get(&designcraft_doc::StoryId(sid)).expect("story exists");
+        let story = st.doc.stories.get(&pejy_doc::StoryId(sid)).expect("story exists");
         assert_eq!(story.chars[0].format.style, name, "style applied before delete");
     }
-    s.execute("style.character.delete", &json!({"name": name, "replaceWith": designcraft_doc::NO_CHAR_STYLE})).unwrap();
+    s.execute("style.character.delete", &json!({"name": name, "replaceWith": pejy_doc::NO_CHAR_STYLE})).unwrap();
     let st = s.doc().unwrap();
     assert!(st.doc.styles.char_style(&name).is_none(), "deleted style is gone");
-    let story = st.doc.stories.get(&designcraft_doc::StoryId(sid)).expect("story exists");
-    assert_eq!(story.chars[0].format.style, designcraft_doc::NO_CHAR_STYLE, "affected run reassigned to the replacement style");
+    let story = st.doc.stories.get(&pejy_doc::StoryId(sid)).expect("story exists");
+    assert_eq!(story.chars[0].format.style, pejy_doc::NO_CHAR_STYLE, "affected run reassigned to the replacement style");
 }
 
 #[test]
 fn character_style_delete_rejects_builtin_styles() {
     let mut s = session();
-    let r = s.execute("style.character.delete", &json!({"name": designcraft_doc::NO_CHAR_STYLE}));
+    let r = s.execute("style.character.delete", &json!({"name": pejy_doc::NO_CHAR_STYLE}));
     assert!(r.is_err(), "built-in styles can't be deleted");
 }
 
 #[test]
 fn direct_selection_drag_and_arrow_keys_move_placed_content() {
-    use designcraft_tools::{Mods, PointerEvent, PointerKind, SnapView, ToolKey};
+    use pejy_tools::{Mods, PointerEvent, PointerKind, SnapView, ToolKey};
     let mut s = session();
-    let png = designcraft_render::Rendered { width: 40, height: 20, pixels: vec![200; 40 * 20 * 4] }.to_png();
+    let png = pejy_render::Rendered { width: 40, height: 20, pixels: vec![200; 40 * 20 * 4] }.to_png();
     let f = s.execute("frame.create", &json!({"rect": [100, 100, 300, 300], "content": "graphic"})).unwrap()["id"].as_u64().unwrap();
     s.execute("place.load", &json!({"base64": cmd::base64_encode(&png)})).unwrap();
     s.execute("place.drop", &json!({"frame": f})).unwrap();
     let xfs = |s: &Session| {
-        let it = s.doc().unwrap().doc.item(designcraft_doc::ItemId(f)).unwrap().clone();
+        let it = s.doc().unwrap().doc.item(pejy_doc::ItemId(f)).unwrap().clone();
         (it.xf, it.graphic().unwrap().xf.translation())
     };
     let (frame0, g0) = xfs(&s);
     let v = ViewInfo { snap: SnapView::OFF, ..ViewInfo::at_zoom(1.0) };
-    let at = s.layout().to_canvas(designcraft_doc::SpreadRef::Doc(0), designcraft_geom::Point::new(150.0, 150.0));
+    let at = s.layout().to_canvas(pejy_doc::SpreadRef::Doc(0), pejy_geom::Point::new(150.0, 150.0));
     s.set_tool("directSelection");
     s.pointer(&PointerEvent::new(PointerKind::Down, at.x, at.y), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, at.x + 20.0, at.y + 10.0), v).unwrap();
@@ -1203,7 +1203,7 @@ fn direct_selection_drag_and_arrow_keys_move_placed_content() {
     assert!(s.doc().unwrap().selection.content);
     let (frame1, g1) = xfs(&s);
     assert_eq!(frame1, frame0, "the frame stays");
-    assert_eq!(g1 - g0, designcraft_geom::Vec2::new(30.0, 10.0));
+    assert_eq!(g1 - g0, pejy_geom::Vec2::new(30.0, 10.0));
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(xfs(&s).1, g0, "one undo step");
     // Arrow keys nudge the selected content; Shift nudges ten times as far.
@@ -1212,7 +1212,7 @@ fn direct_selection_drag_and_arrow_keys_move_placed_content() {
     s.tool_key(ToolKey::Down, Mods { shift: true, ..Default::default() }, v).unwrap();
     let (frame2, g2) = xfs(&s);
     assert_eq!(frame2, frame0);
-    assert_eq!(g2 - g0, designcraft_geom::Vec2::new(1.0, 10.0));
+    assert_eq!(g2 - g0, pejy_geom::Vec2::new(1.0, 10.0));
 }
 
 #[test]
@@ -1223,7 +1223,7 @@ fn preflight_notes_an_assumed_mojikumi_base_set_without_calling_the_table_unappl
     let d = std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc);
     std::sync::Arc::make_mut(&mut d.styles)
         .mojikumi_tables
-        .push(designcraft_doc::cjk::MojikumiTable { name: "Baseless".into(), ..Default::default() });
+        .push(pejy_doc::cjk::MojikumiTable { name: "Baseless".into(), ..Default::default() });
     s.execute("text.select", &json!({"story": story, "anchor": 0, "focus": 1})).unwrap();
     s.execute("type.para", &json!({"attrs": {"mojikumi": "MojikumiTable/Baseless"}})).unwrap();
     let result = s.execute("preflight.run", &json!({})).unwrap();
@@ -1235,8 +1235,8 @@ fn preflight_notes_an_assumed_mojikumi_base_set_without_calling_the_table_unappl
 
 #[test]
 fn live_corner_gestures_are_one_undo_step_each() {
-    use designcraft_geom::corners::CornerShape;
-    use designcraft_tools::{Mods, PointerEvent, PointerKind};
+    use pejy_geom::corners::CornerShape;
+    use pejy_tools::{Mods, PointerEvent, PointerKind};
     let mut s = session();
     s.execute("frame.create", &json!({"rect": [100, 100, 300, 250], "content": "graphic"})).unwrap();
     let id = s.doc().unwrap().doc.spreads[0].items[0].id;
@@ -1274,8 +1274,8 @@ fn live_corner_gestures_are_one_undo_step_each() {
 
 #[test]
 fn alt_arrows_kern_at_the_caret_and_track_a_selection() {
-    use designcraft_doc::{Kerning, StoryId};
-    use designcraft_tools::{Mods, ToolKey};
+    use pejy_doc::{Kerning, StoryId};
+    use pejy_tools::{Mods, ToolKey};
     let mut s = session();
     let r = s.execute("frame.create", &json!({"rect": [36, 36, 300, 200], "content": "text", "text": "Hello world"})).unwrap();
     let sid = r["story"].as_u64().unwrap();
@@ -1390,11 +1390,11 @@ fn character_style_delete_reassigns_every_kind_of_reference() {
 
 #[test]
 fn page_tool_selects_a_page_and_its_handles_preview_or_resize_it() {
-    use designcraft_tools::{CanvasLayout, Mods, PointerEvent, PointerKind};
+    use pejy_tools::{CanvasLayout, Mods, PointerEvent, PointerKind};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 612, "height": 792, "facingPages": false})).unwrap();
     let id = s.execute("frame.create", &json!({"rect": [400, 100, 500, 200]})).unwrap()["id"].as_u64().unwrap();
-    let frame = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().bounds();
+    let frame = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().bounds();
     let width = |s: &Session| s.doc().unwrap().doc.spreads[0].pages[0].width;
     // The page on the canvas (a single page is centred on the spine).
     let page = |s: &Session| {
@@ -1424,7 +1424,7 @@ fn page_tool_selects_a_page_and_its_handles_preview_or_resize_it() {
         // Scale keeps proportions: only wider, so the frame is centred on the wider page.
         assert_eq!(frame(s).x0, 706.0, "the Scale rule in the preview: {:?}", frame(s));
     });
-    assert_eq!((width(&s), frame(&s)), (612.0, designcraft_geom::Rect::new(400.0, 100.0, 500.0, 200.0)), "sprung back");
+    assert_eq!((width(&s), frame(&s)), (612.0, pejy_geom::Rect::new(400.0, 100.0, 500.0, 200.0)), "sprung back");
     assert_eq!(s.doc().unwrap().history.undo.len(), undo, "nothing to undo");
     // Alt-drag resizes; with the rule off the frame stays where it is.
     s.execute("liquid.pageRule", &json!({"rule": "off"})).unwrap();
@@ -1449,10 +1449,10 @@ fn page_size_keeps_objects_by_its_anchor() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 400, "height": 400, "facingPages": false})).unwrap();
     let id = s.execute("frame.create", &json!({"rect": [100, 100, 200, 200]})).unwrap()["id"].as_u64().unwrap();
-    let frame = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().bounds();
+    let frame = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().bounds();
     // Bottom-right stays put: 100 wider and 50 taller moves the frame 100 right and 50 down.
     s.execute("layout.pageSize", &json!({"pages": [1], "width": 500, "height": 450, "anchor": 8})).unwrap();
-    assert_eq!(frame(&s), designcraft_geom::Rect::new(200.0, 150.0, 300.0, 250.0));
+    assert_eq!(frame(&s), pejy_geom::Rect::new(200.0, 150.0, 300.0, 250.0));
     // The centre: half of it.
     s.execute("layout.pageSize", &json!({"pages": [1], "width": 700, "height": 450, "anchor": 4})).unwrap();
     assert_eq!(frame(&s).x0, 300.0);
@@ -1466,11 +1466,11 @@ fn controlled_by_parent_takes_the_parent_pages_rule() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 400, "height": 400, "facingPages": false})).unwrap();
     let id = s.execute("frame.create", &json!({"rect": [100, 100, 200, 200]})).unwrap()["id"].as_u64().unwrap();
-    let frame = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().bounds();
+    let frame = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().bounds();
     // The page follows its parent; the parent page re-centres.
     s.execute("liquid.pageRule", &json!({"rule": "controlledByParent", "pages": [1]})).unwrap();
     s.edit(|d, _| {
-        std::sync::Arc::make_mut(&mut d.parents[0]).pages[0].liquid = designcraft_doc::LiquidRule::ReCenter;
+        std::sync::Arc::make_mut(&mut d.parents[0]).pages[0].liquid = pejy_doc::LiquidRule::ReCenter;
         Ok(())
     })
     .unwrap();
@@ -1488,7 +1488,7 @@ fn controlled_by_parent_takes_the_parent_pages_rule() {
 
 #[test]
 fn page_tool_pins_and_locks_objects_on_object_based_pages() {
-    use designcraft_tools::{CanvasLayout, Mods, PointerEvent, PointerKind};
+    use pejy_tools::{CanvasLayout, Mods, PointerEvent, PointerKind};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 612, "height": 792, "facingPages": false})).unwrap();
     let id = s.execute("frame.create", &json!({"rect": [256, 72, 356, 132]})).unwrap()["id"].as_u64().unwrap();
@@ -1497,49 +1497,49 @@ fn page_tool_pins_and_locks_objects_on_object_based_pages() {
     s.set_tool("page");
     let v = ViewInfo::at_zoom(1.0);
     let ev =
-        |kind, p: designcraft_geom::Point, alt: bool| PointerEvent { mods: Mods { alt, ..Default::default() }, ..PointerEvent::new(kind, p.x, p.y) };
+        |kind, p: pejy_geom::Point, alt: bool| PointerEvent { mods: Mods { alt, ..Default::default() }, ..PointerEvent::new(kind, p.x, p.y) };
     let canvas = |s: &Session| {
         let d = &s.doc().unwrap().doc;
         let l = CanvasLayout::new(d, false);
         (
             l.page_rect(d, 0).unwrap(),
-            l.xf(designcraft_doc::SpreadRef::Doc(0)).transform_rect_bbox(d.item(designcraft_doc::ItemId(id)).unwrap().bounds()),
+            l.xf(pejy_doc::SpreadRef::Doc(0)).transform_rect_bbox(d.item(pejy_doc::ItemId(id)).unwrap().bounds()),
         )
     };
-    let click = |s: &mut Session, p: designcraft_geom::Point| {
+    let click = |s: &mut Session, p: pejy_geom::Point| {
         s.pointer(&ev(PointerKind::Down, p, false), v).unwrap();
         s.pointer(&ev(PointerKind::Up, p, false), v).unwrap();
     };
-    let liquid = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().liquid;
+    let liquid = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().liquid;
     // A click on the object selects it with its page; its pins and locks show.
     let (_, o) = canvas(&s);
     click(&mut s, o.center());
     let sel = s.doc().unwrap().selection.clone();
-    assert_eq!((sel.page, sel.items.clone()), (Some(0), vec![designcraft_doc::ItemId(id)]));
+    assert_eq!((sel.page, sel.items.clone()), (Some(0), vec![pejy_doc::ItemId(id)]));
     assert!(
         s.overlays(v)
             .iter()
-            .any(|o| matches!(o, designcraft_tools::Overlay::LiquidPins { pins: [false, false, false, false], resize: [true, true], .. }))
+            .any(|o| matches!(o, pejy_tools::Overlay::LiquidPins { pins: [false, false, false, false], resize: [true, true], .. }))
     );
     // The right pin (14 px outside the right edge) and the width lock (10 px right of the centre).
-    click(&mut s, designcraft_geom::Point::new(o.x1 + 14.0, o.center().y));
-    click(&mut s, designcraft_geom::Point::new(o.center().x + 10.0, o.center().y));
+    click(&mut s, pejy_geom::Point::new(o.x1 + 14.0, o.center().y));
+    click(&mut s, pejy_geom::Point::new(o.center().x + 10.0, o.center().y));
     let l = liquid(&s).unwrap();
     assert!(l.pin_right && !l.resize_width && l.resize_height && !l.pin_left, "{l:?}");
     // Alt-drag the page 100 pt wider: the pinned, width-locked frame keeps its size by the right edge.
     let (p, _) = canvas(&s);
-    let right = designcraft_geom::Point::new(p.x1, p.center().y);
+    let right = pejy_geom::Point::new(p.x1, p.center().y);
     s.pointer(&ev(PointerKind::Down, right, true), v).unwrap();
-    s.pointer(&ev(PointerKind::Drag, right + designcraft_geom::Vec2::new(100.0, 0.0), true), v).unwrap();
-    s.pointer(&ev(PointerKind::Up, right + designcraft_geom::Vec2::new(100.0, 0.0), true), v).unwrap();
+    s.pointer(&ev(PointerKind::Drag, right + pejy_geom::Vec2::new(100.0, 0.0), true), v).unwrap();
+    s.pointer(&ev(PointerKind::Up, right + pejy_geom::Vec2::new(100.0, 0.0), true), v).unwrap();
     let d = &s.doc().unwrap().doc;
-    let (pg, b) = (&d.spreads[0].pages[0], d.item(designcraft_doc::ItemId(id)).unwrap().bounds());
+    let (pg, b) = (&d.spreads[0].pages[0], d.item(pejy_doc::ItemId(id)).unwrap().bounds());
     assert_eq!(pg.width, 712.0);
     assert!((b.width() - 100.0).abs() < 1e-6 && (pg.x + pg.width - b.x1 - 256.0).abs() < 1e-6, "{b:?}");
     // Hovering a pin shows its tooltip.
     let (_, o) = canvas(&s);
-    s.pointer(&ev(PointerKind::Move, designcraft_geom::Point::new(o.x1 + 14.0, o.center().y), false), v).unwrap();
-    assert!(s.overlays(v).iter().any(|o| matches!(o, designcraft_tools::Overlay::Tip { text, .. } if text.starts_with("Object is pinned"))));
+    s.pointer(&ev(PointerKind::Move, pejy_geom::Point::new(o.x1 + 14.0, o.center().y), false), v).unwrap();
+    assert!(s.overlays(v).iter().any(|o| matches!(o, pejy_tools::Overlay::Tip { text, .. } if text.starts_with("Object is pinned"))));
 }
 
 #[test]
@@ -1585,7 +1585,7 @@ fn duplicating_a_page_keeps_its_own_size_rule_guides_and_objects() {
     let d = s.doc().unwrap().doc.clone();
     let (si, pi) = d.page_loc(2).unwrap();
     let pg = &d.spreads[si].pages[pi];
-    assert_eq!((pg.width, pg.height, pg.liquid), (612.0, 792.0, designcraft_doc::LiquidRule::Scale));
+    assert_eq!((pg.width, pg.height, pg.liquid), (612.0, 792.0, pejy_doc::LiquidRule::Scale));
     assert_eq!(pg.guides.len(), 1);
     assert_eq!(d.spreads[si].items.len(), 1);
     // At the end of the document (the New Page button): the business card, not the last page's size.
@@ -1600,7 +1600,7 @@ fn duplicating_a_page_keeps_its_own_size_rule_guides_and_objects() {
 fn the_type_tool_draws_a_text_frame_over_a_locked_frame() {
     // Adobe's "Set up a modern magazine layout" (4:03): with the page frame locked (Cmd+L), the
     // Type tool draws text frames on top of it; the locked frame stays an empty frame.
-    use designcraft_tools::{PointerEvent, PointerKind, SnapView};
+    use pejy_tools::{PointerEvent, PointerKind, SnapView};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 612, "height": 792, "facingPages": false})).unwrap();
     let big = s.execute("frame.create", &json!({"rect": [36, 36, 576, 756], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
@@ -1610,15 +1610,15 @@ fn the_type_tool_draws_a_text_frame_over_a_locked_frame() {
     s.set_tool("type");
     let v = ViewInfo { snap: SnapView::OFF, ..ViewInfo::at_zoom(1.0) };
     let layout = s.layout();
-    let at = |x: f64, y: f64| layout.to_canvas(designcraft_doc::SpreadRef::Doc(0), designcraft_geom::Point::new(x, y));
+    let at = |x: f64, y: f64| layout.to_canvas(pejy_doc::SpreadRef::Doc(0), pejy_geom::Point::new(x, y));
     let (a, b) = (at(100.0, 100.0), at(300.0, 200.0));
     s.pointer(&PointerEvent::new(PointerKind::Down, a.x, a.y), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, 200.0 + a.x - 100.0, a.y + 50.0), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Drag, b.x, b.y), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, b.x, b.y), v).unwrap();
     let d = &s.doc().unwrap().doc;
-    let it = d.item(designcraft_doc::ItemId(big)).unwrap();
-    assert!(matches!(it.content, designcraft_doc::Content::Unassigned), "the locked frame stays empty");
+    let it = d.item(pejy_doc::ItemId(big)).unwrap();
+    assert!(matches!(it.content, pejy_doc::Content::Unassigned), "the locked frame stays empty");
     let frames: Vec<_> = d.spreads[0].items.iter().filter(|i| i.is_text_frame()).collect();
     assert_eq!(frames.len(), 1, "a new text frame");
     let r = frames[0].bounds();
@@ -1628,7 +1628,7 @@ fn the_type_tool_draws_a_text_frame_over_a_locked_frame() {
     // Unlocked, a press inside converts it, as before.
     s.execute("object.unlockAll", &json!({})).unwrap();
     s.execute("text.placeCaret", &json!({"frame": big, "point": [300, 400]})).unwrap();
-    assert!(s.doc().unwrap().doc.item(designcraft_doc::ItemId(big)).unwrap().is_text_frame());
+    assert!(s.doc().unwrap().doc.item(pejy_doc::ItemId(big)).unwrap().is_text_frame());
 }
 
 /// A line is set when its baseline fits in the frame; its descenders may hang below the frame, as

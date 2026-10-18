@@ -12,7 +12,7 @@ fn demo() -> Session {
 fn demo_opens_and_renders() {
     let s = demo();
     let cid = s.active_comp_id().unwrap();
-    let img = s.render(cid, s.time(), effectcraft_render::RenderOpts { scale: 0.25, ..Default::default() });
+    let img = s.render(cid, s.time(), tselatra_render::RenderOpts { scale: 0.25, ..Default::default() });
     assert_eq!((img.width, img.height), (480, 270));
     let lit = img.data.iter().filter(|p| p[3] > 0.99).count();
     assert!(lit > 100_000, "{lit}");
@@ -24,14 +24,14 @@ fn demo_opens_and_renders() {
 fn demo_layer_cache_is_transparent() {
     let mut s = demo();
     let cid = s.active_comp_id().unwrap();
-    let opts = effectcraft_render::RenderOpts { scale: 0.25, ..Default::default() };
+    let opts = tselatra_render::RenderOpts { scale: 0.25, ..Default::default() };
     let uncached = |s: &Session, t: f64| {
-        let mut r = effectcraft_render::Renderer::new(&s.project, s.footage.as_ref(), opts);
+        let mut r = tselatra_render::Renderer::new(&s.project, s.footage.as_ref(), opts);
         r.expr = s.expr.as_deref();
-        r.comp_frame(cid, effectcraft_time::Tick::from_seconds_f64(t))
+        r.comp_frame(cid, tselatra_time::Tick::from_seconds_f64(t))
     };
     let check = |s: &Session, t: f64| {
-        let a = s.render(cid, effectcraft_time::Tick::from_seconds_f64(t), opts);
+        let a = s.render(cid, tselatra_time::Tick::from_seconds_f64(t), opts);
         let b = uncached(s, t);
         assert!(a.data.iter().zip(&b.data).all(|(p, q)| (0..4).all(|c| (p[c] - q[c]).abs() < 1e-6)), "t={t}");
     };
@@ -40,7 +40,7 @@ fn demo_layer_cache_is_transparent() {
     }
     assert!(s.layer_cache.stats().hits > 0);
     // Edit the title's glow through the command layer, then scrub again.
-    let title = s.project.comp(cid).unwrap().layers.iter().find(|l| l.name == "EFFECTCRAFT").map(|l| l.id.0).unwrap();
+    let title = s.project.comp(cid).unwrap().layers.iter().find(|l| l.name == "TSELATRA").map(|l| l.id.0).unwrap();
     s.execute("prop.set", json!({"layer": title, "path": "effects/#1/radius", "value": 5.0})).unwrap();
     for t in [3.0, 0.5] {
         check(&s, t);
@@ -61,7 +61,7 @@ fn add_item_at_a_stack_index_and_time() {
     s.execute("layer.addItem", json!({"item": clip, "index": 2, "time": 1.01})).unwrap();
     assert_eq!(names(&s), ["A", "Clip", "B", "C"]);
     let l = &s.active_comp().unwrap().layers[1];
-    assert_eq!(l.in_point, effectcraft_time::Tick::from_seconds_f64(1.0), "on the nearest frame");
+    assert_eq!(l.in_point, tselatra_time::Tick::from_seconds_f64(1.0), "on the nearest frame");
     // Past the bottom: the bottom.
     s.execute("layer.addItem", json!({"item": clip, "index": 99})).unwrap();
     assert_eq!(names(&s).last().map(String::as_str), Some("Clip 2"));
@@ -72,7 +72,7 @@ fn add_item_at_a_stack_index_and_time() {
 /// layers of the comp that was active, one under the other, where they were dropped (#85, #89).
 #[test]
 fn imported_files_go_into_the_comp_where_they_were_dropped() {
-    use effectcraft_project::{Footage, FootageKind};
+    use tselatra_project::{Footage, FootageKind};
     struct Probe;
     impl crate::Importer for Probe {
         fn probe(&self, path: &str) -> Result<Footage, String> {
@@ -87,8 +87,8 @@ fn imported_files_go_into_the_comp_where_they_were_dropped() {
     let comp = s.active_comp().unwrap();
     assert_eq!(comp.layers.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), ["a.png", "b.png", "Bg"]);
     for l in &comp.layers[..2] {
-        assert_eq!(l.props.prop("transform/position").map(|p| p.value.clone()), Some(effectcraft_keyframe::Value::Vec3([40.0, 50.0, 0.0])));
-        assert_eq!(l.in_point, effectcraft_time::Tick::from_seconds_f64(1.0));
+        assert_eq!(l.props.prop("transform/position").map(|p| p.value.clone()), Some(tselatra_keyframe::Value::Vec3([40.0, 50.0, 0.0])));
+        assert_eq!(l.in_point, tselatra_time::Tick::from_seconds_f64(1.0));
     }
     // Without `addToComp` they only import.
     s.execute("file.import", json!({"paths": ["/drop/c.png"]})).unwrap();
@@ -101,7 +101,7 @@ fn imported_files_go_into_the_comp_where_they_were_dropped() {
 /// in one undo step, all selected, with a count. The same file imported again arrives again.
 #[test]
 fn background_imports_report_progress_and_select_what_arrived() {
-    use effectcraft_project::{Footage, FootageKind, ItemId};
+    use tselatra_project::{Footage, FootageKind, ItemId};
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
     /// Probes file k once `allow` > k (a slow video; 5 s at most, so an import that waits for it
@@ -210,7 +210,7 @@ fn layer_workflow_with_undo() {
     s.execute("keys.move", json!({"delta": 0.5})).unwrap();
     let pos = s.active_comp().unwrap().layers[0].props.prop("transform/position").unwrap().clone();
     assert!((pos.keys[0].time.seconds() - 0.5).abs() < 0.02);
-    assert_eq!(pos.keys[0].out_interp, effectcraft_keyframe::Interp::Bezier);
+    assert_eq!(pos.keys[0].out_interp, tselatra_keyframe::Interp::Bezier);
     // undo back to before the move
     s.execute("edit.undo", json!({})).unwrap();
     let pos = s.active_comp().unwrap().layers[0].props.prop("transform/position").unwrap().clone();
@@ -263,7 +263,7 @@ fn toolbar_fill_and_stroke_paint_selected_shape_layers() {
     let p = paint(&mut s);
     assert_eq!((p["fill"][2].as_f64(), p["strokeWidth"].as_f64()), (Some(1.0), Some(3.0)), "{p}");
     // One stroke, before the fill (paths, stroke, fill), and each change is one undo step.
-    let l = s.active_comp().unwrap().layer(effectcraft_project::LayerId(sh)).unwrap().clone();
+    let l = s.active_comp().unwrap().layer(tselatra_project::LayerId(sh)).unwrap().clone();
     let group = l.props.group("contents/group").unwrap();
     let order: Vec<&str> = group.sub("contents").unwrap().groups().map(|g| g.match_id.as_str()).collect();
     assert_eq!(order, ["rect", "stroke", "fill"]);
@@ -289,7 +289,7 @@ fn toolbar_fill_and_stroke_kinds_change_selected_shape_layers() {
     s.execute("comp.new", json!({"width": 400, "height": 300, "duration": 2})).unwrap();
     let sh = s.execute("layer.newShape", json!({"kind": "rect", "fill": "#ff0000"})).unwrap()["layer"].as_u64().unwrap();
     let items = |s: &Session| -> Vec<(String, bool)> {
-        let l = s.active_comp().unwrap().layer(effectcraft_project::LayerId(sh)).unwrap();
+        let l = s.active_comp().unwrap().layer(tselatra_project::LayerId(sh)).unwrap();
         l.props.group("contents/group/contents").unwrap().groups().map(|g| (g.match_id.clone(), g.enabled)).collect()
     };
     let kinds = |s: &mut Session| {
@@ -309,7 +309,7 @@ fn toolbar_fill_and_stroke_kinds_change_selected_shape_layers() {
     s.execute("shape.fillStroke", json!({"fillType": "solid", "fill": "#ff0000"})).unwrap();
     assert_eq!(centre(&s), red);
     let opacity = |s: &Session, m: &str| {
-        let l = s.active_comp().unwrap().layer(effectcraft_project::LayerId(sh)).unwrap();
+        let l = s.active_comp().unwrap().layer(tselatra_project::LayerId(sh)).unwrap();
         l.props.group(&format!("contents/group/contents/{m}")).unwrap().get("opacity").unwrap().value.as_f64()
     };
     s.execute("prop.set", json!({"layer": sh, "path": "contents/group/contents/fill/opacity", "value": 40})).unwrap();
@@ -344,7 +344,7 @@ fn selecting_a_mask_selects_its_points() {
     s.execute("prop.select", json!({"layer": l, "prop": m1, "selectKeys": false})).unwrap();
     assert_eq!((points(&s, m1), s.state.selected_vertices.len()), (4, 4));
     // Mask Path selects them too; Shift-adding another mask keeps the first.
-    let path = s.active_comp().unwrap().layer(effectcraft_project::LayerId(l)).unwrap().props.find_group(m2).unwrap().get("path").unwrap().uid;
+    let path = s.active_comp().unwrap().layer(tselatra_project::LayerId(l)).unwrap().props.find_group(m2).unwrap().get("path").unwrap().uid;
     s.execute("prop.select", json!({"layer": l, "prop": path, "add": true})).unwrap();
     assert_eq!((points(&s, m1), points(&s, m2)), (4, 4));
     // Another mask replaces them; another property deselects them.
@@ -352,7 +352,7 @@ fn selecting_a_mask_selects_its_points() {
     assert_eq!((points(&s, m1), points(&s, m2)), (0, 4));
     // Delete removes the selected mask (not only its points).
     s.execute("edit.clear", json!({})).unwrap();
-    let masks = |s: &Session| s.active_comp().unwrap().layer(effectcraft_project::LayerId(l)).unwrap().masks().unwrap().children.len();
+    let masks = |s: &Session| s.active_comp().unwrap().layer(tselatra_project::LayerId(l)).unwrap().masks().unwrap().children.len();
     assert_eq!(masks(&s), 1);
     s.execute("prop.select", json!({"layer": l, "path": "transform/opacity"})).unwrap();
     assert!(s.state.selected_vertices.is_empty());
@@ -380,9 +380,9 @@ fn save_and_open_roundtrip() {
 fn help_links_emit_urls() {
     let mut s = Session::default();
     let r = s.execute("help.discord", json!({})).unwrap();
-    assert_eq!(r["url"], "https://discord.gg/artcraft");
+    assert_eq!(r["url"], "https://github.com/raantss18/mahay/discussions");
     assert!(s.drain_events().iter().any(|e| matches!(e, crate::Event::OpenUrl(u) if u.contains("discord"))));
-    assert_eq!(s.execute("help.github", json!({})).unwrap()["url"], "https://github.com/storytold/effectcraft");
+    assert_eq!(s.execute("help.github", json!({})).unwrap()["url"], "https://github.com/raantss18/mahay");
 }
 
 #[test]
@@ -409,7 +409,7 @@ fn time_navigation_per_property() {
         });
     }
     let (uid, times) = found.expect("demo has an animated property");
-    s.set_time(effectcraft_time::Tick::ZERO);
+    s.set_time(tselatra_time::Tick::ZERO);
     let half = comp.frame_duration().0 / 2;
     let expect = times.iter().copied().filter(|t| t.0 > half).min().unwrap();
     s.execute("time.go", json!({"to": "nextKey", "prop": uid})).unwrap();
@@ -423,7 +423,7 @@ fn time_navigation_per_property() {
 
 #[test]
 fn set_text_paragraph_fill_and_leading() {
-    use effectcraft_keyframe::{Justify, Value as KValue};
+    use tselatra_keyframe::{Justify, Value as KValue};
     let mut s = demo();
     let t = s.execute("layer.newText", json!({"text": "Hi"})).unwrap()["layer"].as_u64().unwrap();
     let doc = |s: &Session| {
@@ -485,7 +485,7 @@ fn prop_get_and_render_rgba8() {
     assert_eq!(v["keys"].as_array().unwrap().len(), 2);
     assert_eq!(v["value"][0].as_f64().unwrap(), 100.0);
     let cid = s.resolve_comp(Some(&json!("T"))).unwrap();
-    let (w, h, rgba) = s.render_rgba8(cid, effectcraft_time::Tick::ZERO, 160).unwrap();
+    let (w, h, rgba) = s.render_rgba8(cid, tselatra_time::Tick::ZERO, 160).unwrap();
     assert_eq!((w, h), (160, 90));
     assert_eq!(rgba.len(), (w * h * 4) as usize);
 }
@@ -624,7 +624,7 @@ fn new_text_rejects_malformed_positions_without_creating_a_layer() {
         assert!(s.active_comp().unwrap().layers.is_empty());
     }
     s.execute("layer.newText", json!({"name": "Valid", "text": "Hello", "position": [10, 20]})).unwrap();
-    assert_eq!(s.active_comp().unwrap().layers[0].props.prop("transform/position").unwrap().value, effectcraft_keyframe::Value::Vec3([10.0, 20.0, 0.0]));
+    assert_eq!(s.active_comp().unwrap().layers[0].props.prop("transform/position").unwrap().value, tselatra_keyframe::Value::Vec3([10.0, 20.0, 0.0]));
     s.execute("layer.newText", json!({"text": "No explicit position"})).unwrap();
     assert_eq!(s.active_comp().unwrap().layers.len(), 2);
 }
@@ -632,7 +632,7 @@ fn new_text_rejects_malformed_positions_without_creating_a_layer() {
 /// The active comp and the open comp tabs are saved with the project and restored on open (#748).
 #[test]
 fn reopening_a_project_restores_its_active_comp() {
-    use effectcraft_project::ItemId;
+    use tselatra_project::ItemId;
     let dir = std::env::temp_dir().join(format!("ec-test-748-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("view.ecproj").to_string_lossy().to_string();
@@ -691,8 +691,8 @@ fn reopening_a_project_restores_its_active_comp() {
 /// current time it was saved at, not at 0, where a layer starting later shows nothing (#1714).
 #[test]
 fn reopening_a_project_restores_layer_times_and_current_time() {
-    use effectcraft_project::ItemId;
-    use effectcraft_time::{FrameRate, Tick};
+    use tselatra_project::ItemId;
+    use tselatra_time::{FrameRate, Tick};
     let dir = std::env::temp_dir().join(format!("ec-test-1714-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("times.ecproj").to_string_lossy().to_string();

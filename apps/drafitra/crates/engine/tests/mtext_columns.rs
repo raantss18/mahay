@@ -1,8 +1,8 @@
 //! MTEXT columns and paragraph formatting from the command line, scripts and the JSON form
 //! (#532).
 
-use cadcraft_doc::{EntityKind, MLeader, MText, MTextColumnType, MTextColumns};
-use cadcraft_engine::Session;
+use drafitra_doc::{EntityKind, MLeader, MText, MTextColumnType, MTextColumns};
+use drafitra_engine::Session;
 use serde_json::json;
 
 fn last_mtext(s: &Session) -> MText {
@@ -70,13 +70,13 @@ fn columns_shape_the_drawn_text_and_its_extents() {
     .unwrap();
     let t = last_mtext(&s);
     let d = s.doc().unwrap();
-    let l = cadcraft_engine::render::layout_mtext_entity(d, &t);
+    let l = drafitra_engine::render::layout_mtext_entity(d, &t);
     // Three columns of 10 with two gutters of 2; text in every column, none below the columns.
     assert!((l.bounds.width() - 34.0).abs() < 1e-9, "{:?}", l.bounds);
     let xs: Vec<f64> = l.strokes.iter().flatten().map(|p| p.x).collect();
     assert!(xs.iter().any(|x| *x > 24.0), "text reaches the third column");
     let e = d.model.iter().last().unwrap();
-    let b = cadcraft_doc::entity_bounds(d, e, 0);
+    let b = drafitra_doc::entity_bounds(d, e, 0);
     assert!((b.width() - 34.0).abs() < 1e-9 && (b.height() - 6.0).abs() < 1e-9, "{b:?}");
 }
 

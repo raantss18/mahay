@@ -4,8 +4,8 @@
 //! it gives ([`read_pdf`]).
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::metadata::{MAX_RATING, iso8601};
-use vectorcraft_doc::{ColorMode, CopyrightStatus, DocMetadata, Document};
+use tsipika_doc::metadata::{MAX_RATING, iso8601};
+use tsipika_doc::{ColorMode, CopyrightStatus, DocMetadata, Document};
 
 use super::*;
 
@@ -63,10 +63,10 @@ pub(crate) fn file_info(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(info_json(&s.doc()?.doc))
 }
 
-/// The File Info a PDF or PDF-compatible `.ai` gives ([`vectorcraft_pdf::file_info`]) into `m`: each
+/// The File Info a PDF or PDF-compatible `.ai` gives ([`tsipika_pdf::file_info`]) into `m`: each
 /// field that `file.info` would take (a value it refuses is left out), and the created and
 /// modified dates.
-pub(crate) fn read_pdf(m: &mut DocMetadata, f: vectorcraft_pdf::FileInfo) {
+pub(crate) fn read_pdf(m: &mut DocMetadata, f: tsipika_pdf::FileInfo) {
     let status = f.copyrighted.map(|c| if c { CopyrightStatus::Copyrighted } else { CopyrightStatus::PublicDomain });
     let fields = [
         ("author", f.author.map(Value::from)),

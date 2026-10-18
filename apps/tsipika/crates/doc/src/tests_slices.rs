@@ -1,7 +1,7 @@
 //! Slice layout: object slices follow their objects, clipping, numbering and auto slices.
 
 use proptest::prelude::*;
-use vectorcraft_geom::{Point, Rect, shapes};
+use tsipika_geom::{Point, Rect, shapes};
 
 use crate::slices::auto_slices;
 use crate::{Appearance, Document, Node, Slice, SliceOptions, SliceSource};
@@ -40,7 +40,7 @@ fn an_object_slice_follows_its_object_and_numbers_run_by_rows() {
     assert_eq!(own.number, 3);
     assert_eq!(d.slice_name(own), "Untitled-1_03");
     // Moving the object moves its slice.
-    d.node_mut(a).unwrap().transform(vectorcraft_geom::Affine::translate((-50.0, 0.0)), crate::Scaling::default());
+    d.node_mut(a).unwrap().transform(tsipika_geom::Affine::translate((-50.0, 0.0)), crate::Scaling::default());
     assert_eq!(d.slice_layout().iter().find(|s| s.id == Some(a)).unwrap().rect, Rect::new(50.0, 50.0, 150.0, 150.0));
     // Hidden objects have no slice.
     d.node_mut(a).unwrap().visible = false;

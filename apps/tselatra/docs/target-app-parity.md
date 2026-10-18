@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (issue, catalog and export-format references re-audited against `upstream/main` 470ea7a3; the 10 October re-measure is otherwise unchanged) · **Target:** Adobe After Effects 2026 (26.5.0.89)
 
-The authoritative assessment of how close EffectCraft is to After Effects, and how much work is
+The authoritative assessment of how close Tselatra is to After Effects, and how much work is
 left. [gaps.md](gaps.md) lists every known shortfall one at a time; the
 [ROADMAP](../ROADMAP.md) summarises both. Deep dives: [effects-parity.md](effects-parity.md),
 [scripting-parity.md](scripting-parity.md), [file-format-parity.md](file-format-parity.md),
@@ -171,7 +171,7 @@ Checked on 10 October 2026 when the mainstream and essentials numbers were added
 
 ## Mainstream practitioner and essentials user
 
-Two narrower questions, computed the same way in every craft app (craftrules
+Two narrower questions, computed the same way in every craft app (mahay-rules
 `standards/progress-docs.md`, "Numbers"). The stage still follows the full-target number and the
 [alpha gate](roadmap.md#alpha-gate).
 
@@ -309,7 +309,7 @@ Advanced 3D mode on the GPU; M13.24 runs GPU effects in the browser's render wor
 cache in browser storage and a storage manager; M13.25 added the Home template gallery, Save as
 Template and View ▸ Simulate Output ▸ My Custom RGB; M13.26 Premiere Pro interop through FCP7 XML,
 FCPXML, OTIO, EDL, AAF and OMF (import and export, with pre-renders for layers a timeline can't
-hold); WebM VP9 alpha now imports (FilmCraft); M13.27 pins the CPU simulation effects with golden
+hold); WebM VP9 alpha now imports (Hetsika); M13.27 pins the CPU simulation effects with golden
 hashes.
 
 Out of clean-room scope (no public specification or no permissively licensed data): native
@@ -424,7 +424,7 @@ the disk cache in the formats wave; the 3D Camera Tracker in M12.6.)
 | Area | Weighted parity | Remaining (agent-hours) | Biggest gaps |
 |---|---|---|---|
 | Layers | 88% | 4.8 | motion blur of collapsed precomps (their own motion and the parent camera's) and of animated layer content (lock-aware layer commands, delete keeping children in place, step-by-step Arrange, Transform keeping depth and separated dimensions and links kept on duplicate / paste landed in M3.11; frame blending, collapse transformations and slip edit in M4.3–M4.4) |
-| Output | 97% | 0.8 | Render Settings complete (field render + 3:2 pulldown, effects/solo/guide/depth/blending/blur overrides, time sampling, storage overflow), Output Module crop/ROI/resize, alpha modes, post-render actions, PCM formats, templates with defaults, render logs, Notify (M10.2); WebM VP9 key + inter frames with motion search, loop filter and rate control; M13.4: HEVC export (MP4 `hvc1`, `effectcraft-hevcenc`: Main / Main 10, IDR + P slices, quarter-pel motion, deblocking, bit-exact with ffmpeg) and AV1 export (MP4 `av01` and WebM, `effectcraft-av1enc`: 8/10-bit key + inter frames, quarter-pel motion, loop filter, bit-exact with libdav1d) with profile, level, bitrate / constant-quality and key-frame interval options; Opus SILK (NB/MB/WB, mid/side stereo) and hybrid (SWB/FB) modes chosen by bitrate and Audio/Voice tuning, with the Opus bitrate in the Output Module. HEVC/AV1 import decodes through FilmCraft (MP4/MOV/MKV/WebM); WebM VP9 alpha (BlockAdditions) imports as straight alpha. Left: HEVC/AV1 have no B-frames, multi-reference, SAO/CDEF/restoration or alpha (compression below mature encoders); Opus has no FEC/DTX and only 20 ms frames; Photoshop sequence output, overflow for movies only checks at file creation |
+| Output | 97% | 0.8 | Render Settings complete (field render + 3:2 pulldown, effects/solo/guide/depth/blending/blur overrides, time sampling, storage overflow), Output Module crop/ROI/resize, alpha modes, post-render actions, PCM formats, templates with defaults, render logs, Notify (M10.2); WebM VP9 key + inter frames with motion search, loop filter and rate control; M13.4: HEVC export (MP4 `hvc1`, `tselatra-hevcenc`: Main / Main 10, IDR + P slices, quarter-pel motion, deblocking, bit-exact with ffmpeg) and AV1 export (MP4 `av01` and WebM, `tselatra-av1enc`: 8/10-bit key + inter frames, quarter-pel motion, loop filter, bit-exact with libdav1d) with profile, level, bitrate / constant-quality and key-frame interval options; Opus SILK (NB/MB/WB, mid/side stereo) and hybrid (SWB/FB) modes chosen by bitrate and Audio/Voice tuning, with the Opus bitrate in the Output Module. HEVC/AV1 import decodes through Hetsika (MP4/MOV/MKV/WebM); WebM VP9 alpha (BlockAdditions) imports as straight alpha. Left: HEVC/AV1 have no B-frames, multi-reference, SAO/CDEF/restoration or alpha (compression below mature encoders); Opus has no FEC/DTX and only 20 ms frames; Photoshop sequence output, overflow for movies only checks at file creation |
 | Audio | 85% | 0.5 | audio to keyframes |
 | Import | 97% | 0.5 | JPX / JBIG2 images and predefined non-Identity CJK CMaps inside PDF/AI files, Illustrator EPS relying on Adobe procsets, PSD 3D layers (M13.12: mesh shadings — free-form / lattice Gouraud triangles, Coons and tensor patches — and function-based shadings, CCITT G3 / G4 images, knockout / isolated transparency groups with group alpha and soft masks on the group's result, `/W2` vertical metrics, EPS text with embedded Type 1 / CFF or bundled fonts, and Create Shapes from Vector Layer keeping images as parented footage layers in paint order; M13.6: PDF/AI text with embedded TrueType / CFF / Type 1 / Type 3 fonts and standard-14 fallback to the bundled fonts, Flate / DCT / inline / stencil images with soft masks, Indexed and ICC alternates, luminosity / alpha soft masks, the 16 blend modes, tiling patterns, calculator functions, any page via `file.import page` and the Import dialog, clip groups kept by Create Shapes from Vector Layer as layer masks / Merge Paths; PSD smart-object perspective quads and placed-layer warps — named styles and custom quilt meshes — baked as placed; PDF / PDF-compatible AI / EPS vector footage with Continuously Rasterize, layered composition import and Create Shapes from Vector Layer, and PSD smart objects with embedded files landed in M13.2; PSD as footage/composition/retain layer sizes, SVG footage earlier; PDF / AI Composition - Retain Layer Sizes crops each layer to its artwork in place, #1536) |
 | Automation | ≈ 99% | 0.1 | `.jsxbin` (AUT-2: concave / self-intersecting `onDraw` fills, real images in `drawImage`, image controls and icon buttons landed in M13.11; ScriptUI resource strings, `onDraw`/ScriptUIGraphics, live `onChanging`, `Socket`, Essential Graphics hooks — `addToMotionGraphicsTemplate(As)`, `canAddToMotionGraphicsTemplate`, `exportAsMotionGraphicsTemplate`, `motionGraphicsTemplateName`, controller count/names — and Watch Folder landed in M13.7; the core object model landed in M14.4; ScriptUI windows/dialogs/dockable panels with `scriptui.*` agent commands, File ▸ Scripts install + sample scripts, and the effect plug-in API (EFF-6, WebAssembly) landed in M13.1) |
@@ -547,7 +547,7 @@ axes since M13.6; Advanced 3D's DOF has iris shapes since M13.8).
   readback staging buffers are reused and the 8/16 bpc quantisation after each layer is fused
   into the layer's composite. `bench --gpu` on an M4 Pro under load (both binaries run back to
   back, median of 15): Lower Third 1920×1080 GPU warm 21.0 → 4.1 ms/frame (viewer 11.1 → 2.6;
-  Half 10.1 → 3.1), EffectCraft Intro 27.5 → 7.8 (viewer 21.7 → 3.6), 3D Showcase ≈ 95 → ≈ 60
+  Half 10.1 → 3.1), Tselatra Intro 27.5 → 7.8 (viewer 21.7 → 3.6), 3D Showcase ≈ 95 → ≈ 60
   (viewer ≈ 80 → ≈ 40), Adjustment Layers 93 → 36. In steady state the only transfer left is
   the frame's own readback (0.0 MB uploads per frame on every demo comp; the adjustment
   footprint is now cached and uploaded once).
@@ -693,7 +693,7 @@ Fixes from measured reports:
 
 ### Update: plug-ins and extensions as in After Effects; ease presets become a ScriptUI panel
 
-EffectCraft's core keeps After Effects parity; what After Effects users get from third parties is
+Tselatra's core keeps After Effects parity; what After Effects users get from third parties is
 an extension, on the same extension points After Effects has ([plugins.md](plugins.md) compares
 them: scripts, ScriptUI panels, effect plug-ins, with a guide to writing a panel).
 
@@ -773,7 +773,7 @@ double-click opens the nested comp at the marker. Agents read the same list with
 
 Since (M13.35): Roto Brush can use a trained segmentation model. MSK-4 keeps its score until G1
 measures it against After Effects ([gaps.md](gaps.md)).
-- The model sits behind a swappable interface: `effectcraft_segment::MaskModel` plus a registry
+- The model sits behind a swappable interface: `tselatra_segment::MaskModel` plus a registry
   where every entry must have an open-source licence compatible with ours, a source URL, a size
   and a SHA-256.
 - The first model is **MobileSAM** (Apache-2.0: a TinyViT-5M encoder with Segment Anything's
@@ -797,7 +797,7 @@ measures it against After Effects ([gaps.md](gaps.md)).
 
 Since (M13.36): face tracking can use a trained model too. TRK-3 keeps its score until G1 measures
 it against After Effects ([gaps.md](gaps.md)).
-- The model sits behind `effectcraft_segment::face::FaceModel` (find a face in a region, follow
+- The model sits behind `tselatra_segment::face::FaceModel` (find a face in a region, follow
   it frame to frame), in the same registry as Roto Brush's. A model reports its own points and
   says which are the tracker's landmarks and which trace the face outline, so models can be
   swapped without touching the tracker.
@@ -831,10 +831,10 @@ meanwhile. Footage, solids, proxies and the project settings are hashed by value
 states are kept, so a long drag doesn't hold on to every intermediate state. The disk cache's
 content key now also covers proxies and Use Proxy.
 
-Since (M13.30–M13.31): the Tools bar and About dialog carry the ArtCraft mark. The
+Since (M13.30–M13.31): the Tools bar and About dialog carry the Mahay mark. The
 Home screen is laid out like After Effects' and covers the whole workspace. A left rail holds New
 Project / Open Project, the Home, Templates and Learn pages and, at its foot, the community
-links. The Home page has a "Welcome to EffectCraft" heading, quick-start tiles (New Composition,
+links. The Home page has a "Welcome to Tselatra" heading, quick-start tiles (New Composition,
 Open Demo Project, Import Footage, New from Template) and the recent projects as a filterable
 table with thumbnails and Name / Opened ("3 hours ago") / Size / Kind columns. New automation ids:
 `home.filter`, `home.templates`, `home.file.import`.
@@ -894,7 +894,7 @@ content keys), audio scrubbing, four snapshot slots.
 
 ### Update: M3.14 project files
 
-Project files name the version that wrote them (`savedBy`); opening one that a newer EffectCraft
+Project files name the version that wrote them (`savedBy`); opening one that a newer Tselatra
 saved warns that what this version doesn't know is lost on saving (`file.open` reports
 `savedBy`). Saving checks that the file reads back first, so a value JSON can't hold (NaN)
 fails the save with a message instead of writing a project that can never be opened (the file
@@ -997,7 +997,7 @@ public ICC specification and baked into a 3D LUT for the viewer).
 
 #### M13.26: Premiere Pro interop via timeline interchange
 
-| Feature | After Effects | EffectCraft | Status |
+| Feature | After Effects | Tselatra | Status |
 |---|---|---|---|
 | File ▸ Import ▸ Adobe Premiere Pro Project… | reads `.prproj` | reads Final Cut Pro XML (Premiere's File ▸ Export ▸ Final Cut Pro XML), FCPXML, OTIO, EDL, AAF and OMF (`file.importTimeline`): comps, layers by track, timing/speed/reverse/holds, Motion and Opacity keyframes, dissolves as opacity keys, nested sequences as precomps, audio layers with levels, bins as folders, missing media as placeholders | ≈ 85% |
 | File ▸ Export ▸ Adobe Premiere Pro Project… | writes `.prproj` | writes Final Cut Pro XML `.xml` (also FCPXML, OTIO, EDL, AAF, OMF; `file.exportTimeline`): clips per layer with timing, Motion, Opacity and levels; precomps nested; rendered-only layers pre-rendered to ProRes 4444 with alpha | ≈ 85% |
@@ -1111,20 +1111,20 @@ are pinned bit for bit by golden hashes (`crates/effects/tests/particle_golden.r
 
 - **GPU in the browser's job workers** (WEB-1): each job worker opens its own WebGPU device
   (deferred readbacks) like the frame workers. The Render Queue's export and the analyses'
-  frame loops are futures (`effectcraft_render::passes`, `offload::run_request_async`): every
+  frame loops are futures (`tselatra_render::passes`, `offload::run_request_async`): every
   frame renders in passes on the device and the job awaits the GPU between them, so Render
   Queue renders and the input frames of Warp Stabilizer, 3D Camera Tracker, Track Motion, mask
   tracking and Roto Brush (prefetched before each step) use the GPU. GPU particles and
   Advanced 3D (`raster_3d`, `render_3d`) read back under keys, so they run on the device in
   frame and job workers too (a depth-of-field run still resolves on the CPU, its scenes on
   the GPU). Content-Aware Fill became a job-worker job too (its files go back to browser
-  storage; before, it ran on the page and could not write its folder). `effectcraft.info().workers`
+  storage; before, it ran on the page and could not write its folder). `tselatra.info().workers`
   reports the job workers' adapter and each job's passes and readbacks; the headless-Chrome
   smoke test measures them.
 - **Layer buffers in the browser's disk cache**: frame workers back their layer caches with a
   `PrefetchStore`; the page plans which layer entries to read before a request from the
   previous frames' misses (`LayerPrefetch` over the shared `DiskIndex`, one LRU order for
-  frames and layers), and slow buffers are written to `effectcraft-cache/v1/layers`.
+  frames and layers), and slow buffers are written to `tselatra-cache/v1/layers`.
 - **Templates embed footage**: `templates.saveAs {embedFootage (default true), embedLimitMB
   (default 256)}`; `templates.create {projectPath?, footageDir?}` extracts it.
 - **ICC A2B0 profiles** in View ▸ Simulate Output ▸ My Custom RGB (see above).

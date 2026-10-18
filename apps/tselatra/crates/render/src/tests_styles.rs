@@ -1,11 +1,11 @@
 //! Layer Styles pixel tests.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::{Gradient, Keyframe, ShapePath, Value};
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::styles::{self as st, GROUP};
-use effectcraft_project::{Comp, ItemId, ItemKind, Layer, LayerSource, MaskMode, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::{Gradient, Keyframe, ShapePath, Value};
+use tselatra_project::build::{self, Ids};
+use tselatra_project::styles::{self as st, GROUP};
+use tselatra_project::{Comp, ItemId, ItemKind, Layer, LayerSource, MaskMode, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::{Image, NoFootage, RenderOpts, Renderer, render_frame};
 

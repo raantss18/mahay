@@ -1,7 +1,7 @@
 # Czech (cs) catalog. Same format as zh-hant.tsv:  context <TAB> source <TAB> translation
 # (empty context = a plain UI string; `@id` = a command id; `@plural` = "one|few|other" forms).
 #
-# Clean-room: every entry is written from the meaning of VectorCraft's English label, following
+# Clean-room: every entry is written from the meaning of Tsipika's English label, following
 # common Czech desktop-software conventions (commands in the infinitive, menus as nouns); no other
 # application's Czech localisation was consulted or copied.
 #
@@ -23,7 +23,7 @@
 	Paste Design	Vložit návrh
 	Select Unused	Vybrat nepoužité
 	Glowing Edges…	Zářící okraje…
-	About VectorCraft	O aplikaci VectorCraft
+	About Tsipika	O aplikaci Tsipika
 	Align to Path	Zarovnat k cestě
 	Cut Path at Selected Anchor Points	Rozdělit cestu ve vybraných kotevních bodech
 	Join Our Discord	Připojit se k našemu Discordu
@@ -33,7 +33,7 @@
 	Medium Dark	Středně tmavý
 	Medium Light	Středně světlý
 	Light	Světlý
-	Quit VectorCraft	Ukončit VectorCraft
+	Quit Tsipika	Ukončit Tsipika
 	File	Soubor
 	New…	Nový…
 	New from Template…	Nový ze šablony…
@@ -116,7 +116,7 @@
 # Import Shortcut Set (Keyboard Shortcuts › Import…, File › Open of a .kys file) and its commands.
 	Import Shortcut Set	Importovat sadu klávesových zkratek
 	Import Shortcut Set…	Importovat sadu klávesových zkratek…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	Každá položka souboru je přiřazena k nástroji, příkazu nebo panelu VectorCraftu. Zkontrolujte přiřazení a doplňte, co zbývá.
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	Každá položka souboru je přiřazena k nástroji, příkazu nebo panelu Tsipikau. Zkontrolujte přiřazení a doplňte, co zbývá.
 	Keys	Klávesy
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	Soubor ukládá klávesy a modifikátory jako kódy. Zkontrolujte navržené významy a doplňte ty, které zatím nejsou známé.
 	Click, then press the key this code stands for (Esc cancels)	Klikněte a stiskněte klávesu, kterou tento kód označuje (Esc zruší)
@@ -126,7 +126,7 @@
 	not known yet	zatím není známo
 	Shortcuts	Zkratky
 	In the File	V souboru
-	In VectorCraft	Ve VectorCraftu
+	In Tsipika	Ve Tsipikau
 	Needs Attention Only	Jen řádky vyžadující pozornost
 	Ready	Připraveno
 	Needs a choice	Vyžaduje volbu
@@ -135,7 +135,7 @@
 	Tools take a single key (optionally with Shift)	Nástroje používají jedinou klávesu (volitelně se Shift)
 	A later row takes this shortcut	Tuto zkratku přebírá pozdější řádek
 	Same item as a later row	Stejná položka jako v pozdějším řádku
-	Start from VectorCraft Defaults	Vycházet z výchozích zkratek VectorCraftu
+	Start from Tsipika Defaults	Vycházet z výchozích zkratek Tsipikau
 	Add to the Current Shortcuts	Přidat k aktuálním zkratkám
 	Remember My Choices	Zapamatovat si moje volby
 	{ready} of {total} ready	Připraveno {ready} z {total}
@@ -149,7 +149,7 @@
 	Forget Import Matches	Zapomenout přiřazení z importů
 @plural	agrees with {n} default shortcut|agrees with {n} default shortcuts	shoduje se s {n} výchozí zkratkou|shoduje se s {n} výchozími zkratkami|shoduje se s {n} výchozími zkratkami
 @plural	{n} part of the file wasn't read|{n} parts of the file weren't read	{n} část souboru nebyla přečtena|{n} části souboru nebyly přečteny|{n} částí souboru nebylo přečteno
-@msg	This shortcut file is in a form VectorCraft can't read.	Tento soubor klávesových zkratek je ve formátu, který VectorCraft neumí přečíst.
+@msg	This shortcut file is in a form Tsipika can't read.	Tento soubor klávesových zkratek je ve formátu, který Tsipika neumí přečíst.
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	nejde o sadu klávesových zkratek: text nezačíná názvem s lomítkem a otevírací složenou závorkou
 	Preferences…	Předvolby…
 	Object	Objekt
@@ -497,7 +497,7 @@
 	Working CMYK	Pracovní CMYK
 	RGB	RGB
 	sRGB IEC61966-2.1	sRGB IEC61966-2.1
-	VectorCraft Generic CMYK (SWOP-like)	VectorCraft obecný CMYK (podobný SWOP)
+	Tsipika Generic CMYK (SWOP-like)	Tsipika obecný CMYK (podobný SWOP)
 	Legacy Macintosh RGB (Gamma 1.8)	Starší Macintosh RGB (gama 1,8)
 	Internet Standard RGB (sRGB)	Standardní internetové RGB (sRGB)
 	Monitor RGB	RGB monitoru
@@ -700,11 +700,11 @@
 	Save Swatch Library…	Uložit knihovnu vzorníku…
 	Symbol Libraries	Knihovny symbolů
 	Help	Nápověda
-	ArtCraft Website	Web ArtCraft
-	VectorCraft on getartcraft.com	VectorCraft na getartcraft.com
-	VectorCraft on GitHub	VectorCraft na GitHubu
+	Mahay Website	Web Mahay
+	Tsipika on mahay.com	Tsipika na mahay.com
+	Tsipika on GitHub	Tsipika na GitHubu
 	Search Commands…	Hledat příkazy…
-	VectorCraft Help…	Nápověda VectorCraft…
+	Tsipika Help…	Nápověda Tsipika…
 	Auto Color	Automatická barva
 	Automatic	Automaticky
 	Isolate Selected Group	Izolovat vybranou skupinu
@@ -759,7 +759,7 @@
 
 # The macOS menu bar (native_menu): the app and Window menus' system items, Settings pages.
 	Services	Služby
-	Hide VectorCraft	Skrýt VectorCraft
+	Hide Tsipika	Skrýt Tsipika
 	Hide Others	Skrýt ostatní
 	Minimize	Minimalizovat
 	Zoom	Zvětšení
@@ -1981,8 +1981,8 @@ lighting	Light	Světlo
 
 # Dialogs
 	Graphics: {adapter}	Grafika: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	Součást ArtCraft. MIT OR Apache-2.0. Písma: Source Sans 3, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + VectorCraft.
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + VectorCraft.	Součást ArtCraft. MIT OR Apache-2.0. Písma: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikony: Lucide (ISC) + VectorCraft.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Součást Mahay. MIT OR Apache-2.0. Písma: Source Sans 3, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + Tsipika.
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Tsipika.	Součást Mahay. MIT OR Apache-2.0. Písma: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikony: Lucide (ISC) + Tsipika.
 	Version {version} — open-source vector illustration in pure Rust.	Verze {version} — open-source vektorová ilustrace v čistém Rustu.
 	Align to Page	Zarovnat ke stránce
 	Smooth Color	Plynulá barva
@@ -2289,7 +2289,7 @@ lighting	Light	Světlo
 	{count} folder(s) or file(s) couldn't be read	Nepodařilo se přečíst složek nebo souborů: {count}
 	The search stopped at its limit: search a smaller folder.	Hledání se zastavilo na limitu: prohledejte menší složku.
 	Copy only fonts you own or are licensed to install.	Kopírujte jen písma, která vlastníte nebo máte licenci instalovat.
-	VectorCraft copies the fonts to {folder}.	VectorCraft zkopíruje písma do {folder}.
+	Tsipika copies the fonts to {folder}.	Tsipika zkopíruje písma do {folder}.
 	Apply to All ({count} more missing)	Použít na všechny (chybí ještě {count})
 	Ignore	Ignorovat
 	Linked File Not Found	Propojený soubor nebyl nalezen
@@ -2378,7 +2378,7 @@ lighting	Light	Světlo
 	On: one locked object showing the document, updated when it changes.	Zapnuto: jeden zamčený objekt zobrazující dokument, aktualizovaný při jeho změně.
 	Off: an editable copy of its art, embedded in this document.	Vypnuto: upravitelná kopie jeho kresby vložená do tohoto dokumentu.
 	Images: link to the file instead of only embedding it.	Obrázky: propojit se souborem místo pouhého vložení.
-	VectorCraft documents: one locked object, updated when the file changes.	Dokumenty VectorCraft: jeden zamčený objekt, aktualizovaný při změně souboru.
+	Tsipika documents: one locked object, updated when the file changes.	Dokumenty Tsipika: jeden zamčený objekt, aktualizovaný při změně souboru.
 	Alignment:	Zarovnání:
 	Applies when the linked file is relinked or updated.	Platí při opětovném propojení nebo aktualizaci propojeného souboru.
 	Bounds (Fill Proportionally)	Hranice (vyplnit proporcionálně)
@@ -2459,7 +2459,7 @@ lighting	Light	Světlo
 	A new preset starting from the selected one	Nové přednastavení vycházející z vybraného
 	Differences from {preset}:	Rozdíly oproti {preset}:
 	Differences from [Default]:	Rozdíly oproti [Výchozí]:
-	Differences from VectorCraft Default:	Rozdíly oproti přednastavení Výchozí VectorCraft:
+	Differences from Tsipika Default:	Rozdíly oproti přednastavení Výchozí Tsipika:
 	Edit…	Upravit…
 	None.	Žádné.
 	Presets:	Přednastavení:
@@ -2509,7 +2509,7 @@ lighting	Light	Světlo
 	3 Color Job	Zakázka se 3 barvami
 	Recover Documents	Obnovit dokumenty
 	Restored documents open unsaved: save them to keep them.	Obnovené dokumenty se otevřou neuložené: pokud je chcete zachovat, uložte je.
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft se minule neukončil normálně. Tyto dokumenty měly neuložené změny:
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika se minule neukončil normálně. Tyto dokumenty měly neuložené změny:
 	Do you want to save the changes you made to “{name}”?	Chcete uložit změny provedené v dokumentu „{name}“?
 	Don't Save	Neukládat
 	Your changes will be lost if you don't save them.	Pokud změny neuložíte, budou ztraceny.
@@ -2576,7 +2576,7 @@ lighting	Light	Světlo
 	Color images	Barevné obrazy
 	Compatibility:	Kompatibilita:
 	PDF 1.7	PDF 1.7
-	VectorCraft Default	Výchozí VectorCraft
+	Tsipika Default	Výchozí Tsipika
 	High Quality Print	Tisk ve vysoké kvalitě
 	[High Quality Print]	[Tisk ve vysoké kvalitě]
 	Press Quality	Kvalita pro tiskový stroj
@@ -2589,7 +2589,7 @@ lighting	Light	Světlo
 	[PDF/X-3:2002]	[PDF/X-3:2002]
 	PDF/X-4:2010	PDF/X-4:2010
 	[PDF/X-4:2010]	[PDF/X-4:2010]
-	Keeps the document editable: VectorCraft reopens the PDF with nothing lost. For files you'll edit again.	Zachová možnost úprav dokumentu: VectorCraft znovu otevře PDF bez ztráty dat. Pro soubory, které budete znovu upravovat.
+	Keeps the document editable: Tsipika reopens the PDF with nothing lost. For files you'll edit again.	Zachová možnost úprav dokumentu: Tsipika znovu otevře PDF bez ztráty dat. Pro soubory, které budete znovu upravovat.
 	Compress text and line art	Komprimovat text a perokresbu
 	Compression	Komprese
 	Compression › Color › Above Ppi	Komprese › Barevné › Nad ppi
@@ -2667,14 +2667,14 @@ lighting	Light	Světlo
 	A File…	Soubor…
 	GPL palettes keep solid colours only, as RGB.	Palety GPL uchovávají pouze plné barvy, a to jako RGB.
 	Save Swatch Library	Uložit knihovnu vzorníku
-	VectorCraft Swatches (.vcswatches)	Vzorník VectorCraft (.vcswatches)
+	Tsipika Swatches (.vcswatches)	Vzorník Tsipika (.vcswatches)
 	Save To:	Uložit do:
 	Saved to User Defined: {}	Uloženo do uživatelských knihoven: {}
 	Selected Swatches Only	Pouze vybrané položky vzorníku
 	Selected Swatches Only (0)	Pouze vybrané položky vzorníku (0)
 	User Defined Libraries	Uživatelské knihovny
 	Copy Report	Kopírovat zprávu
-	VectorCraft read this script without running it.	VectorCraft tento skript přečetl, aniž by ho spustil.
+	Tsipika read this script without running it.	Tsipika tento skript přečetl, aniž by ho spustil.
 	Needs nothing beyond plain JavaScript	Nepotřebuje nic kromě běžného JavaScriptu
 	Needs the script language's own objects or directives	Potřebuje vlastní objekty nebo direktivy skriptovacího jazyka
 	Needs the document model	Potřebuje model dokumentu
@@ -3616,7 +3616,7 @@ axis	Both	Obě
 	Print as Bitmap	Tisknout jako bitmapu
 	Draft	Koncept
 	Default	Výchozí
-	[VectorCraft Default]	[Výchozí VectorCraft]
+	[Tsipika Default]	[Výchozí Tsipika]
 	Magenta	Purpurová
 	Page	Stránka
 	Print Tiling	Dlaždice tisku
@@ -3710,7 +3710,7 @@ axis	Both	Obě
 	Width	Šířka
 	:	:
 effect	Regular	Pravidelný
-	Saving Poster.vectorcraft	Ukládání Poster.vectorcraft
+	Saving Poster.tsipika	Ukládání Poster.tsipika
 	Community	Komunita
 	Hide Bar	Skrýt panel
 	More Options	Další možnosti
@@ -3722,11 +3722,11 @@ effect	Regular	Pravidelný
 	Quickly start a new file	Rychle začít nový soubor
 	Recent Files	Nedávné soubory
 	Vector illustration — fast, open, scriptable.	Vektorová ilustrace — rychlá, otevřená, skriptovatelná.
-	Welcome to VectorCraft	Vítejte ve VectorCraftu
-	ArtCraft website	Web ArtCraft
+	Welcome to Tsipika	Vítejte ve Tsipikau
+	Mahay website	Web Mahay
 	Discord	Discord
 	Join our Discord	Připojit se k našemu Discordu
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Připojte se ke komunitě ArtCraft na Discordu (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Připojte se ke komunitě Mahay na Discordu (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Zdrojový kód na GitHubu
 	All Tools	Všechny nástroje
 	Draw	Kresba
@@ -3771,9 +3771,9 @@ effect	Regular	Pravidelný
 	Opened with {} note(s): {}	Otevřeno, poznámky ({}): {}
 	Revert to the saved version of “{name}”?	Vrátit se k uložené verzi dokumentu „{name}“?
 	Replace “{name}”, the file this document was opened from?	Nahradit „{name}“, soubor, ze kterého byl tento dokument otevřen?
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Při otevírání bylo vynecháno, co VectorCraft zatím neumí přečíst ({what}), takže nahrazením se to nenávratně ztratí. Chcete-li to zachovat, uložte dokument pod jiným názvem.
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	Při otevírání bylo vynecháno, co Tsipika zatím neumí přečíst ({what}), takže nahrazením se to nenávratně ztratí. Chcete-li to zachovat, uložte dokument pod jiným názvem.
 	“{name}” already exists. Replace it?	„{name}“ již existuje. Nahradit?
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	Název v panelu ukládání byl „{typed}“ a VectorCraft přidal příponu typu souboru. Nahrazením souboru se přepíše jeho obsah.
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	Název v panelu ukládání byl „{typed}“ a Tsipika přidal příponu typu souboru. Nahrazením souboru se přepíše jeho obsah.
 	Saved {path}	Uloženo: {path}
 	Saved {path} with {} note(s): {first}	Uloženo: {path}, poznámky ({}): {first}
 	Saving	Ukládání
@@ -3782,7 +3782,7 @@ effect	Regular	Pravidelný
 	Dashed Line	Čárkovaná čára
 	Panel menu	Nabídka panelu
 	Unembed…	Zrušit vložení…
-	Applies the next time VectorCraft starts.	Projeví se při příštím spuštění VectorCraftu.
+	Applies the next time Tsipika starts.	Projeví se při příštím spuštění Tsipikau.
 	Enable Contextual Task Bar	Povolit kontextový panel úloh
 	Next	Další
 	OK	OK
@@ -4175,7 +4175,7 @@ imageTrace	Outline	Obrys
 @msg	can't encode the document: {0}	dokument nelze zakódovat: {0}
 @msg	can't parse shortcut `{c}`	klávesovou zkratku `{c}` nelze analyzovat
 @msg	can't parse shortcut `{s}` for `{k}`	klávesovou zkratku `{s}` pro `{k}` nelze analyzovat
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	verzi {0} nelze uložit: VectorCraft zapisuje verze {MIN_VERSION} až {VERSION}
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	verzi {0} nelze uložit: Tsipika zapisuje verze {MIN_VERSION} až {VERSION}
 @msg	can't write .{ext} images	obrázky .{ext} nelze zapisovat
 @msg	cannot distort a zero-size bounding box	ohraničovací rámeček nulové velikosti nelze deformovat
 @msg	cannot read PDF: {0}	PDF nelze přečíst: {0}
@@ -4201,7 +4201,7 @@ imageTrace	Outline	Obrys
 @msg	empty brush stroke	prázdný tah štětcem
 @msg	empty cutter	prázdný řezací objekt
 @msg	empty path	prázdná cesta
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	verze souboru {0} je novější, než tento VectorCraft podporuje ({VERSION})
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	verze souboru {0} je novější, než tento Tsipika podporuje ({VERSION})
 @msg	freeform point {i} needs `at` [x, y] and a valid `color`	volný bod {i} potřebuje `at` [x, y] a platnou `color`
 @msg	freeform line {i} must be an array of point indices	volná čára {i} musí být pole indexů bodů
 @msg	give both `start` and `end` [x, y] (or neither)	zadejte `start` i `end` [x, y] (nebo ani jedno)
@@ -4222,9 +4222,9 @@ imageTrace	Outline	Obrys
 @msg	invalid PDF setting: {0}	neplatné nastavení PDF: {0}
 @msg	invalid image data for `{0}`	neplatná obrazová data pro `{0}`
 @msg	invalid parameters for `{cmd}`: {msg}	neplatné parametry pro `{cmd}`: {msg}
-@msg	is not an image VectorCraft reads	není obraz, který VectorCraft umí přečíst
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	používá `{at}`, které čtečka PostScriptu ve VectorCraftu nezná
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	používá `{at}`, které čtečka PostScriptu ve VectorCraftu nezná, v {procs}
+@msg	is not an image Tsipika reads	není obraz, který Tsipika umí přečíst
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	používá `{at}`, které čtečka PostScriptu ve Tsipikau nezná
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	používá `{at}`, které čtečka PostScriptu ve Tsipikau nezná, v {procs}
 @msg	its Windows metafile preview was opened instead, which may simplify the art	místo něj byl otevřen jeho náhled ve formátu Windows metafile, který může kresbu zjednodušit
 @msg	its preview was placed instead, at screen resolution	místo něj byl umístěn jeho náhled v rozlišení obrazovky
 @msg	join needs open paths	spojení vyžaduje otevřené cesty
@@ -4332,8 +4332,8 @@ imageTrace	Outline	Obrys
 @msg	no user workspace `{from}`	uživatelský pracovní prostor `{from}` neexistuje
 @msg	node {_1} is not text	uzel {_1} není text
 @msg	not a DXF drawing	nejde o výkres DXF
-@msg	not a VectorCraft file: {0}	nejde o soubor VectorCraft: {0}
-@msg	not a VectorCraft shortcut set (missing `overrides`)	nejde o sadu klávesových zkratek VectorCraft (chybí `overrides`)
+@msg	not a Tsipika file: {0}	nejde o soubor Tsipika: {0}
+@msg	not a Tsipika shortcut set (missing `overrides`)	nejde o sadu klávesových zkratek Tsipika (chybí `overrides`)
 @msg	not a blend	nejde o prolnutí
 @msg	not a graphic style library (format `{_1}`)	nejde o knihovnu grafických stylů (formát `{_1}`)
 @msg	not a stored central record	nejde o uložený centrální záznam
@@ -4569,11 +4569,11 @@ imageTrace	Outline	Obrys
 @msg	Sent to {_1}	Odesláno do {_1}
 @msg	{_1} files	Soubory {_1}
 @msg	The graphics were lost and have been restarted	Grafika byla ztracena a byla restartována
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	Grafický procesor zkoušený jako první nedokázal zobrazit okno, proto se VectorCraft znovu spustil na {summary}
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Poslední spuštění aplikace VectorCraft skončilo na {name} dřív, než se zobrazilo okno, proto se spustila na {summary}. Chcete-li tento grafický procesor zkusit znovu, změňte Předvolby › Výkon › Grafický procesor nebo ji spusťte s nastavenou proměnnou WGPU_BACKEND
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Poslední spuštění aplikace VectorCraft skončilo během zjišťování grafických procesorů, proto se spustila na {summary} jen s OpenGL. Chcete-li znovu zkusit ostatní grafická rozhraní, změňte Předvolby › Výkon › Grafický procesor nebo ji spusťte s nastavenou proměnnou WGPU_BACKEND
-@msg	Loading VectorCraft…	Načítání VectorCraftu…
-@msg	VectorCraft failed to start: {e}	VectorCraft se nepodařilo spustit: {e}
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	Grafický procesor zkoušený jako první nedokázal zobrazit okno, proto se Tsipika znovu spustil na {summary}
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Poslední spuštění aplikace Tsipika skončilo na {name} dřív, než se zobrazilo okno, proto se spustila na {summary}. Chcete-li tento grafický procesor zkusit znovu, změňte Předvolby › Výkon › Grafický procesor nebo ji spusťte s nastavenou proměnnou WGPU_BACKEND
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Poslední spuštění aplikace Tsipika skončilo během zjišťování grafických procesorů, proto se spustila na {summary} jen s OpenGL. Chcete-li znovu zkusit ostatní grafická rozhraní, změňte Předvolby › Výkon › Grafický procesor nebo ji spusťte s nastavenou proměnnou WGPU_BACKEND
+@msg	Loading Tsipika…	Načítání Tsipikau…
+@msg	Tsipika failed to start: {e}	Tsipika se nepodařilo spustit: {e}
 @msg	A browser with WebGPU or WebGL2 is required.	Je potřeba prohlížeč s WebGPU nebo WebGL2.
 @msg	The graphics were lost and couldn't be restarted.	Grafika byla ztracena a nepodařilo se ji restartovat.
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	Vaše neuložené změny zůstávají v tomto prohlížeči: obnovte stránku a získáte je zpět.
@@ -4595,25 +4595,25 @@ imageTrace	Outline	Obrys
 @msg	it has more than {MAX_NODES} objects	má více než {MAX_NODES} objektů
 @msg	it has no layers	nemá žádné vrstvy
 @msg	it has too many values in a row	má příliš mnoho hodnot v řadě
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	obsahuje {_1}, což z něj VectorCraft zatím nečte
+@msg	it has {_1}, which Tsipika doesn't read from it yet	obsahuje {_1}, což z něj Tsipika zatím nečte
 @msg	its objects are nested too deeply	jeho objekty jsou vnořené příliš hluboko
 @msg	its section ending with `%{end}` doesn't end	jeho oddíl končící `%{end}` nemá konec
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	objekty s více výplněmi nebo tahy, efekty či štětci byly načteny jako vykreslený vzhled ({_1}): jejich vzhled zatím nelze upravovat
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	přechod „{name}“ není v souboru definován: zastupuje ho plná barva
-@msg	an image VectorCraft can't read was left out	obrázek, který VectorCraft neumí přečíst, byl vynechán
+@msg	an image Tsipika can't read was left out	obrázek, který Tsipika neumí přečíst, byl vynechán
 @msg	an image whose data is cut short was left out	obrázek s useknutými daty byl vynechán
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	propojené obrázky se zobrazují jako náhled v nízkém rozlišení uložený v souboru, dokud se nenajdou jejich soubory: znovu je propojte v panelu Propojení
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	text v oblasti v rámcích příliš nízkých pro řádek písma, ve kterém se zde zobrazuje, dostal vyšší rámce ({_1}): jinak by nebyl vidět
 @msg	its editing data doesn't say where its art is	z jeho dat pro úpravy není zřejmé, kde je kresba
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	tento soubor byl uložen bez kompatibility s PDF a jeho data pro úpravy nelze přečíst ({why})
 @msg	No fonts are missing in this document	V tomto dokumentu nechybí žádná písma
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft neprohledává složky jiných aplikací ani systému: {path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft neprohledává složku Shared ani Public ve složce Users: {path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika neprohledává složky jiných aplikací ani systému: {path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika neprohledává složku Shared ani Public ve složce Users: {path}
 @msg	{path} is not a folder	{path} není složka
 @msg	the search couldn't start: try again in a moment	hledání nelze spustit: zkuste to za chvíli znovu
 @msg	searching a folder isn't available on the web	prohledávání složky není na webu k dispozici
 @msg	every search thread stopped on an internal error (please report this bug)	všechna vlákna hledání se zastavila na vnitřní chybě (nahlaste prosím tuto chybu)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	složka Fonts VectorCraftu zde není nastavena: nastavuje ji desktopová aplikace a vectorcraft-cli
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	složka Fonts Tsipikau zde není nastavena: nastavuje ji desktopová aplikace a tsipika-cli
 @msg	choose the font files to add	vyberte soubory písem, které chcete přidat
 @msg	{n} font file(s) are now in {folder}	soubory písem ({n}) jsou nyní ve složce {folder}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	soubory písem ({n}) jsou nyní ve složce {folder}; nepodařilo se přidat {failed}: {reason}
@@ -4749,7 +4749,7 @@ imageTrace	Outline	Obrys
 	All shortcuts reset to defaults.	Všechny zkratky byly obnoveny na výchozí hodnoty.
 	Imported. Press OK to keep the imported set.	Importováno. Importovanou sadu zachováte stisknutím OK.
 	⚠ {chord} was already used by {names} — it has been removed there.	Pozor: zkratka {chord} už byla použita pro {names} — tam byla odebrána.
-	VectorCraft Defaults	Výchozí VectorCraft
+	Tsipika Defaults	Výchozí Tsipika
 @plural	{n} shortcut is assigned more than once|{n} shortcuts are assigned more than once	{n} zkratka je přiřazena více než jednou|{n} zkratky jsou přiřazeny více než jednou|{n} zkratek je přiřazeno více než jednou
 # Print dialog: overprints note and choice labels
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	Možnost Simulovat vytiskne přetisky tak, jak je ukazuje Náhled přetisků; separace je vždy zachovávají. Přednastavení před tiskem sloučí průhlednost (soubory PostScript ji sloučí vždy).
@@ -4992,7 +4992,7 @@ file-filter	PDF presets	Přednastavení PDF
 file-filter	Print presets	Přednastavení tisku
 file-filter	SVG Compressed	Komprimované SVG
 file-filter	PDF-compatible .ai	.ai kompatibilní s PDF
-file-filter	VectorCraft Template	Šablona VectorCraft
+file-filter	Tsipika Template	Šablona Tsipika
 file-filter	Templates	Šablony
 diagnostics	render	vykreslení
 diagnostics	ui	rozhraní
@@ -5003,7 +5003,7 @@ diagnostics	ui	rozhraní
 @plural	{n} commit|{n} commits	{n} commit|{n} commity|{n} commitů
 gradient-kind	Radial	Kruhový
 mark-style	Japanese	Japonské
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	komprimovaný soubor se rozbalí na více, než VectorCraft přečte ({_1} MB dokumentu, {_2} MB na obrázek)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	komprimovaný soubor se rozbalí na více, než Tsipika přečte ({_1} MB dokumentu, {_2} MB na obrázek)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	dokument je příliš velký pro komprimované uložení ({0}): uložte ho s vypnutou volbou Použít kompresi
 @msg	the file stopped being read (please report this bug)	čtení souboru se přerušilo (nahlaste prosím tuto chybu)
 	Concentric Dividers:	Soustředné dělicí čáry:

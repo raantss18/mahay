@@ -2,7 +2,7 @@
 use super::*;
 use crate::rename::{MoveFs, RealFs};
 use crate::tests_xmp::same_path_or_file;
-use lightcraft_catalog::{Op, Photo, Source};
+use hazavana_catalog::{Op, Photo, Source};
 use serde_json::json;
 
 struct PartialRename {
@@ -41,11 +41,11 @@ impl MoveFs for PartialRename {
     }
 }
 
-const FOREIGN: &[u8] = br#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:fixture="urn:lightcraft:repair-test" xmp:Rating="2" fixture:Marker="keep-me"/></rdf:RDF></x:xmpmeta>"#;
+const FOREIGN: &[u8] = br#"<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:fixture="urn:hazavana:repair-test" xmp:Rating="2" fixture:Marker="keep-me"/></rdf:RDF></x:xmpmeta>"#;
 
 fn png(path: &Path) {
-    let image = lightcraft_raster::Rgba8::from_fn(4, 3, |_, _| [40, 80, 120, 255]);
-    let bytes = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&image), &Default::default()).unwrap();
+    let image = hazavana_raster::Rgba8::from_fn(4, 3, |_, _| [40, 80, 120, 255]);
+    let bytes = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&image), &Default::default()).unwrap();
     std::fs::write(path, bytes).unwrap();
 }
 fn queued(s: &Session) -> Vec<crate::rename::SidecarMove> {

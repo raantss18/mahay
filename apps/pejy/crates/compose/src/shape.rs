@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-use designcraft_doc::{Capitalization, CharProps, Kerning, Leading, Position, Story, Styles, story};
-use designcraft_fonts::{FaceRef, Feature, FontFace, ScopedFonts, ShapedGlyph, feature};
+use pejy_doc::{Capitalization, CharProps, Kerning, Leading, Position, Story, Styles, story};
+use pejy_fonts::{FaceRef, Feature, FontFace, ScopedFonts, ShapedGlyph, feature};
 
 use crate::RunStyle;
 
@@ -60,9 +60,9 @@ pub struct Glyph {
     pub cjk_hang: f64,
     pub moji: crate::mojikumi::Metrics,
     pub ideographic_space_elastic: bool,
-    pub character_alignment: designcraft_doc::cjk::CharacterAlignment,
-    pub leading_model: designcraft_doc::cjk::LeadingModel,
-    pub character_direction: designcraft_doc::arabic::CharacterDirection,
+    pub character_alignment: pejy_doc::cjk::CharacterAlignment,
+    pub leading_model: pejy_doc::cjk::LeadingModel,
+    pub character_direction: pejy_doc::arabic::CharacterDirection,
     pub display_char: char,
     /// Actual shaped character, including generated labels, for glyph diagnostics.
     pub rendered_char: char,
@@ -71,7 +71,7 @@ pub struct Glyph {
     pub allow_kashidas: bool,
     pub safe_tatweel_before: bool,
     pub shaping_rtl: bool,
-    /// The character's language as a BCP 47 tag ([`designcraft_doc::language_tag`]).
+    /// The character's language as a BCP 47 tag ([`pejy_doc::language_tag`]).
     pub lang: Option<&'static str>,
     /// Upright in a vertical frame: shaped top to bottom (`adv` is its vertical advance) and hung
     /// from its vertical origin on the line's centre (see [`crate::PlacedGlyph::vertical_xf`]).
@@ -178,7 +178,7 @@ pub struct SubstCtx {
     /// Footnote reference labels by story byte of the reference character.
     pub notes: HashMap<usize, String>,
     /// Footnote reference formatting: position and character style (`None` = the text's).
-    pub note_position: designcraft_doc::Position,
+    pub note_position: pejy_doc::Position,
     pub note_style: Option<String>,
     /// Cross-reference texts by story byte of the cross-reference mark.
     pub xrefs: HashMap<usize, String>,
@@ -241,7 +241,7 @@ impl StyleTable<'_> {
     fn intern(&mut self, db: &ScopedFonts<'_>, p: &CharProps) -> u32 {
         // Kenten are drawn in a run style of their own (Kenten Color); it has no kenten itself.
         let kenten_mark = if p.kenten {
-            use designcraft_doc::cjk_settings::AdornmentOverprint as O;
+            use pejy_doc::cjk_settings::AdornmentOverprint as O;
             let mut style = self.intern(db, &crate::kenten::mark_props(p));
             // Text has no overprint of its own, so `Auto` is off.
             let (fill, stroke) = (p.kenten_overprint_fill == O::On, p.kenten_overprint_stroke == O::On);
@@ -278,12 +278,12 @@ impl StyleTable<'_> {
             skew: p.skew,
             size: p.size,
             missing_font: *self.missing.entry(p.font_family.clone()).or_insert_with(|| !p.font_family.is_empty() && !db.has_family(&p.font_family)),
-            custom_tracking: p.tracking.abs() > 1e-9 || matches!(p.kerning, designcraft_doc::Kerning::Manual(_)),
+            custom_tracking: p.tracking.abs() > 1e-9 || matches!(p.kerning, pejy_doc::Kerning::Manual(_)),
             condition: p.conditions.first().cloned(),
-            inserted: p.change == designcraft_doc::ChangeMark::Inserted,
+            inserted: p.change == pejy_doc::ChangeMark::Inserted,
             xml_tag: (!p.xml_tag.is_empty()).then(|| p.xml_tag.clone()),
             ruby: (!p.ruby.is_empty()).then(|| crate::ruby::capped(&p.ruby).to_string()),
-            ruby_spec: (!p.ruby.is_empty()).then(|| designcraft_doc::ruby::RubySpec::of(p)),
+            ruby_spec: (!p.ruby.is_empty()).then(|| pejy_doc::ruby::RubySpec::of(p)),
             ruby_unit: None,
             overprint_fill: false,
             overprint_stroke: false,
@@ -329,8 +329,8 @@ pub(crate) fn shape_para(
     auto_leading: TypeEnv,
     sub: &SubstCtx,
     table: &mut StyleTable<'_>,
-    nested: &[designcraft_doc::NestedStyle],
-    grep: &[designcraft_doc::GrepStyle],
+    nested: &[pejy_doc::NestedStyle],
+    grep: &[pejy_doc::GrepStyle],
     lines: &[(std::ops::Range<usize>, String)],
     drop: (usize, &str),
 ) -> ShapedPara {
@@ -343,15 +343,15 @@ pub(crate) fn shape_para(
     // stores it in). Set (`[None]` included), it restyles that entry; a real one stands in for a
     // missing entry. Either way the nested styles after it start after the drop cap.
     let set = Some(drop.1).filter(|s| !s.is_empty());
-    let cap_style = set.filter(|s| *s != designcraft_doc::NO_CHAR_STYLE);
-    let with_cap: Vec<designcraft_doc::NestedStyle>;
+    let cap_style = set.filter(|s| *s != pejy_doc::NO_CHAR_STYLE);
+    let with_cap: Vec<pejy_doc::NestedStyle>;
     let nested = match set {
-        Some(s) if nested.first().is_some_and(designcraft_doc::NestedStyle::is_drop_cap) => {
-            with_cap = std::iter::once(designcraft_doc::NestedStyle::drop_cap(s)).chain(nested.iter().skip(1).cloned()).collect();
+        Some(s) if nested.first().is_some_and(pejy_doc::NestedStyle::is_drop_cap) => {
+            with_cap = std::iter::once(pejy_doc::NestedStyle::drop_cap(s)).chain(nested.iter().skip(1).cloned()).collect();
             &with_cap[..]
         }
         Some(s) if cap_style.is_some() && !nested.is_empty() => {
-            with_cap = std::iter::once(designcraft_doc::NestedStyle::drop_cap(s)).chain(nested.iter().cloned()).collect();
+            with_cap = std::iter::once(pejy_doc::NestedStyle::drop_cap(s)).chain(nested.iter().cloned()).collect();
             &with_cap[..]
         }
         _ => nested,
@@ -365,7 +365,7 @@ pub(crate) fn shape_para(
         overlays.push((range.start..drop.0, s.to_string()));
     }
     // Each run, cut where nested / GREP styles start and end.
-    let mut segments: Vec<(usize, usize, Option<&str>, &designcraft_doc::CharFormat)> = Vec::new();
+    let mut segments: Vec<(usize, usize, Option<&str>, &pejy_doc::CharFormat)> = Vec::new();
     for (rr, fmt) in story.runs() {
         let a = rr.start.max(range.start);
         let b = rr.end.min(range.end);
@@ -394,7 +394,7 @@ pub(crate) fn shape_para(
         let base;
         let para_chars = match overlay {
             Some(st) => {
-                base = styles.resolve_char(para_chars, &designcraft_doc::CharFormat { style: st.to_string(), over: Default::default() });
+                base = styles.resolve_char(para_chars, &pejy_doc::CharFormat { style: st.to_string(), over: Default::default() });
                 &base
             }
             None => para_chars,
@@ -425,12 +425,12 @@ pub(crate) fn shape_para(
         let style = table.intern(db, &props);
         // A missing font's substitute stands in for the whole font: fallback fonts help it.
         let auto_leading = table.env_for(auto_leading, style);
-        let deleted = props.change == designcraft_doc::ChangeMark::Deleted;
+        let deleted = props.change == pejy_doc::ChangeMark::Deleted;
         if deleted || (!props.conditions.is_empty() && props.conditions.iter().all(|c| sub.hidden_conditions.contains(c))) {
             pieces.push(Piece { range: a..b, props, style, env: auto_leading, hidden: true, composite_note: false });
             continue;
         }
-        let is_ref = |c: char| c == designcraft_doc::FOOTNOTE_REF || c == designcraft_doc::ENDNOTE_REF;
+        let is_ref = |c: char| c == pejy_doc::FOOTNOTE_REF || c == pejy_doc::ENDNOTE_REF;
         if !story.text[a..b].contains(is_ref) {
             pieces.push(Piece { range: a..b, props, style, env: auto_leading, hidden: false, composite_note: false });
             continue;
@@ -446,7 +446,7 @@ pub(crate) fn shape_para(
         let rstyle = table.intern(db, &rprops);
         let renv = table.env_for(auto_leading, rstyle);
         let mut ef = fmt.clone();
-        ef.over.position = Some(designcraft_doc::Position::Superscript);
+        ef.over.position = Some(pejy_doc::Position::Superscript);
         let eprops = styles.resolve_char(&resolved_base, &ef);
         let estyle = table.intern(db, &eprops);
         let eenv = table.env_for(auto_leading, estyle);
@@ -457,7 +457,7 @@ pub(crate) fn shape_para(
                 pieces.push(Piece { range: k..i, props: props.clone(), style, env: auto_leading, hidden: false, composite_note: false });
             }
             let e = i + m.len();
-            if m.starts_with(designcraft_doc::ENDNOTE_REF) {
+            if m.starts_with(pejy_doc::ENDNOTE_REF) {
                 pieces.push(Piece { range: i..e, props: eprops.clone(), style: estyle, env: eenv, hidden: false, composite_note: false });
             } else {
                 if styles.composite_font(&rprops.font_family).is_some() {
@@ -498,7 +498,7 @@ pub(crate) fn shape_para(
                 let at = first.range.start;
                 let label = sub.notes.get(&at).map_or("#", String::as_str);
                 let begin = glyphs.len();
-                let mut segments: Vec<(usize, usize, Option<&designcraft_doc::cjk::CompositeFontEntry>)> = Vec::new();
+                let mut segments: Vec<(usize, usize, Option<&pejy_doc::cjk::CompositeFontEntry>)> = Vec::new();
                 for (at, c) in label.char_indices() {
                     let entry = composite.entry(c);
                     if let Some((_, end, _)) = segments.last_mut().filter(|(_, _, previous)| *previous == entry) {
@@ -573,13 +573,13 @@ pub(crate) fn shape_para(
 /// mark to its base, in its base's face. A run in another font, size or colour keeps its marks.
 fn marks_join_their_base<'f>(
     text: &str,
-    resolved: Vec<(usize, usize, CharProps, &'f designcraft_doc::CharFormat, CharProps)>,
-) -> Vec<(usize, usize, CharProps, &'f designcraft_doc::CharFormat, CharProps)> {
+    resolved: Vec<(usize, usize, CharProps, &'f pejy_doc::CharFormat, CharProps)>,
+) -> Vec<(usize, usize, CharProps, &'f pejy_doc::CharFormat, CharProps)> {
     let same_but_features = |a: &CharProps, b: &CharProps| {
         *b == CharProps { ligatures: b.ligatures, kerning: b.kerning, otf_features: b.otf_features.clone(), ..a.clone() }
     };
-    let is_base = |c: char| !c.is_whitespace() && !c.is_control() && !matches!(c, designcraft_doc::FOOTNOTE_REF | designcraft_doc::ENDNOTE_REF);
-    let mut out: Vec<(usize, usize, CharProps, &designcraft_doc::CharFormat, CharProps)> = Vec::with_capacity(resolved.len());
+    let is_base = |c: char| !c.is_whitespace() && !c.is_control() && !matches!(c, pejy_doc::FOOTNOTE_REF | pejy_doc::ENDNOTE_REF);
+    let mut out: Vec<(usize, usize, CharProps, &pejy_doc::CharFormat, CharProps)> = Vec::with_capacity(resolved.len());
     for (a, b, props, fmt, base) in resolved {
         let run = text.get(a..b).unwrap_or("");
         let marks = run.char_indices().find(|(_, c)| !is_mark(*c)).map_or(run.len(), |(i, _)| i);
@@ -691,7 +691,7 @@ fn is_mark(c: char) -> bool {
     unicode_bidi::bidi_class(c) == unicode_bidi::BidiClass::NSM || matches!(c, '\u{200C}' | '\u{200D}')
 }
 
-fn composite_props(db: &ScopedFonts<'_>, base: &CharProps, entry: Option<&designcraft_doc::cjk::CompositeFontEntry>) -> CharProps {
+fn composite_props(db: &ScopedFonts<'_>, base: &CharProps, entry: Option<&pejy_doc::cjk::CompositeFontEntry>) -> CharProps {
     let mut p = base.clone();
     if let Some(e) = entry {
         p.font_family.clone_from(&e.family);
@@ -733,7 +733,7 @@ fn shape_run(
         if p.tsume > 0.0 && !g.ch.is_whitespace() {
             let outline = db.outline(&g.face, g.gid);
             if !outline.elements().is_empty() {
-                let bounds = designcraft_geom::Shape::bounding_box(&*outline);
+                let bounds = pejy_geom::Shape::bounding_box(&*outline);
                 left = (g.dx + bounds.x0 * g.sx).clamp(0.0, g.adv);
                 right = (g.adv - g.dx - bounds.x1 * g.sx).clamp(0.0, g.adv - left);
             }
@@ -783,7 +783,7 @@ fn shape_run_raw(
     let primary = db.face(&p.font_family, &p.font_style);
     // The language picks the fallback for CJK characters the primary font lacks. Without
     // fallback, the primary font sets them: the shaper gives its .notdef (glyph 0).
-    let lang = designcraft_doc::language_tag(&p.language);
+    let lang = pejy_doc::language_tag(&p.language);
     let fallback = |c: char| {
         if auto_leading.glyph_fallback { db.fallback_for(c, primary.id(), lang).unwrap_or_else(|| primary.clone()) } else { primary.clone() }
     };
@@ -832,18 +832,18 @@ fn shape_run_raw(
                 | story::INDENT_HERE
                 | story::RIGHT_INDENT_TAB
                 | story::TABLE_ANCHOR
-                | designcraft_doc::FOOTNOTE_REF
-                | designcraft_doc::ENDNOTE_REF
-                | designcraft_doc::NOTE_MARK
-                | designcraft_doc::XREF_MARK
-                | designcraft_doc::ANCHOR_MARK
-                | designcraft_doc::INDEX_MARK
-                | designcraft_doc::OBJECT_MARK
-        ) || designcraft_doc::vars::var_index(c).is_some();
+                | pejy_doc::FOOTNOTE_REF
+                | pejy_doc::ENDNOTE_REF
+                | pejy_doc::NOTE_MARK
+                | pejy_doc::XREF_MARK
+                | pejy_doc::ANCHOR_MARK
+                | pejy_doc::INDEX_MARK
+                | pejy_doc::OBJECT_MARK
+        ) || pejy_doc::vars::var_index(c).is_some();
         if special {
             flush(seg_start, i, &seg_face, out);
             seg_start = i + c.len_utf8();
-            if let Some(vi) = designcraft_doc::vars::var_index(c) {
+            if let Some(vi) = pejy_doc::vars::var_index(c) {
                 match sub.vars.get(vi).filter(|v| !v.is_empty()) {
                     Some(v) => shape_segment(db, text, i..i + c.len_utf8(), Some(v), p, &primary, auto_leading, styles, out, sub.upright()),
                     None => {
@@ -873,7 +873,7 @@ fn shape_run_raw(
                         shape_segment(db, text, i..i + c.len_utf8(), Some(&s), p, &primary, auto_leading, styles, out, sub.upright());
                     }
                 }
-                designcraft_doc::OBJECT_MARK => {
+                pejy_doc::OBJECT_MARK => {
                     let mut g = control_glyph(&primary, p, auto_leading, styles.at(i), i, c);
                     if let Some(o) = sub.objects.get(&i).filter(|o| !o.custom) {
                         let auto = matches!(p.leading, Leading::Auto);
@@ -901,7 +901,7 @@ fn shape_run_raw(
                     }
                     out.push(g);
                 }
-                designcraft_doc::XREF_MARK => match sub.xrefs.get(&i).filter(|t| !t.is_empty()) {
+                pejy_doc::XREF_MARK => match sub.xrefs.get(&i).filter(|t| !t.is_empty()) {
                     Some(t) => shape_segment(db, text, i..i + c.len_utf8(), Some(t), p, &primary, auto_leading, styles, out, sub.upright()),
                     None => {
                         let mut g = control_glyph(&primary, p, auto_leading, styles.at(i), i, c);
@@ -909,7 +909,7 @@ fn shape_run_raw(
                         out.push(g);
                     }
                 },
-                designcraft_doc::FOOTNOTE_REF | designcraft_doc::ENDNOTE_REF => {
+                pejy_doc::FOOTNOTE_REF | pejy_doc::ENDNOTE_REF => {
                     let s = sub.notes.get(&i).map_or("#", String::as_str);
                     shape_segment(db, text, i..i + c.len_utf8(), Some(s), p, &primary, auto_leading, styles, out, sub.upright());
                 }
@@ -919,8 +919,8 @@ fn shape_run_raw(
                     if c == '\t'
                         || c == story::RIGHT_INDENT_TAB
                         || c == story::TABLE_ANCHOR
-                        || c == designcraft_doc::ANCHOR_MARK
-                        || c == designcraft_doc::INDEX_MARK
+                        || c == pejy_doc::ANCHOR_MARK
+                        || c == pejy_doc::INDEX_MARK
                     {
                         g.adv = 0.0;
                     }
@@ -977,16 +977,16 @@ fn shape_cached(
     vertical: bool,
     (before, after): (&str, &str),
 ) -> Vec<ShapedGlyph> {
-    use designcraft_fonts::ShapeContext;
+    use pejy_fonts::ShapeContext;
     let map = |c: char| if caps { c.to_uppercase().next().unwrap_or(c) } else { c };
     let shape = |s: &str, context: ShapeContext<'_>| {
         if vertical {
-            designcraft_fonts::shape_vertical(face, s, feats, map, context)
+            pejy_fonts::shape_vertical(face, s, feats, map, context)
         } else {
-            designcraft_fonts::shape_with_context(face, s, feats, map, context)
+            pejy_fonts::shape_with_context(face, s, feats, map, context)
         }
     };
-    if src.len() < 2 || !src.contains(' ') || src.chars().any(designcraft_fonts::is_rtl) {
+    if src.len() < 2 || !src.contains(' ') || src.chars().any(pejy_fonts::is_rtl) {
         return shape(src, ShapeContext { before, after, language: lang });
     }
     let words = word_map((face.id(), vertical, caps, format!("{feats:?}"), lang));
@@ -1035,13 +1035,13 @@ fn metrics(face: &FontFace, p: &CharProps, auto_leading: TypeEnv) -> (f64, f64, 
 #[derive(Clone, Copy, Debug)]
 pub struct TypeEnv {
     pub auto_leading: f64,
-    pub adv: designcraft_doc::AdvancedType,
+    pub adv: pejy_doc::AdvancedType,
     /// Characters the font lacks are drawn from fallback fonts (else as its .notdef glyph).
     pub glyph_fallback: bool,
 }
 
 /// Synthesised super/subscript: size and shift from Advanced Type (percent of the font size).
-fn effective_size(p: &CharProps, adv: &designcraft_doc::AdvancedType) -> (f64, f64) {
+fn effective_size(p: &CharProps, adv: &pejy_doc::AdvancedType) -> (f64, f64) {
     match p.position {
         Position::Superscript => (p.size * adv.superscript_size / 100.0, p.baseline_shift + p.size * adv.superscript_position / 100.0),
         Position::Subscript => (p.size * adv.subscript_size / 100.0, p.baseline_shift - p.size * adv.subscript_position / 100.0),
@@ -1091,7 +1091,7 @@ fn control_glyph(face: &Arc<FontFace>, p: &CharProps, auto_leading: TypeEnv, sty
         allow_kashidas: p.allow_kashidas,
         safe_tatweel_before: false,
         shaping_rtl: false,
-        lang: designcraft_doc::language_tag(&p.language),
+        lang: pejy_doc::language_tag(&p.language),
         upright: false,
         list_label: false,
     }
@@ -1113,7 +1113,7 @@ fn shape_segment(
     // Generated labels need the same coverage fallback as ordinary text. Keep the
     // original marker address and one carrier even when several faces draw the label.
     if let Some(label) = replacement.filter(|_| auto_leading.glyph_fallback) {
-        let lang = designcraft_doc::language_tag(&p.language);
+        let lang = pejy_doc::language_tag(&p.language);
         let mut segments: Vec<(usize, usize, Arc<FontFace>)> = Vec::new();
         for (at, c) in label.char_indices() {
             let selected = if face.covers(c) { face.clone() } else { db.fallback_for(c, face.id(), lang).unwrap_or_else(|| face.clone()) };
@@ -1146,14 +1146,14 @@ fn shape_segment(
     let feats = features_for(p);
     // Upright in vertical text, Horizontal Kana takes the vertical kana alternates instead.
     let mut upright_feats = feats.clone();
-    if vertical && designcraft_doc::otf::is_on(&p.otf_features, "hkna") {
+    if vertical && pejy_doc::otf::is_on(&p.otf_features, "hkna") {
         upright_feats.extend(feature("-hkna"));
         upright_feats.extend(feature("vkna"));
     }
     let space = face.advance(face.glyph_for(' ')) * k * hs;
     // The language picks the font's localized forms (`locl`); the text around the run lets
     // letters join across a change of style.
-    let lang = designcraft_doc::language_tag(&p.language);
+    let lang = pejy_doc::language_tag(&p.language);
     // Vertical frames: upright runs top to bottom, the rest (turned as a whole) horizontally.
     // Tate-chu-yoko is set across the line, so it stays horizontal.
     let mut shaped: Vec<ShapedGlyph> = Vec::new();
@@ -1316,9 +1316,9 @@ pub(crate) fn auto_tcy_ranges(text: &str, range: std::ops::Range<usize>, max: u3
 /// The resolved runs of a paragraph with auto tate-chu-yoko runs cut out and marked tate-chu-yoko
 /// (runs already tate-chu-yoko keep theirs).
 fn split_auto_tcy<'f>(
-    resolved: Vec<(usize, usize, CharProps, &'f designcraft_doc::CharFormat, CharProps)>,
+    resolved: Vec<(usize, usize, CharProps, &'f pejy_doc::CharFormat, CharProps)>,
     auto: &[std::ops::Range<usize>],
-) -> Vec<(usize, usize, CharProps, &'f designcraft_doc::CharFormat, CharProps)> {
+) -> Vec<(usize, usize, CharProps, &'f pejy_doc::CharFormat, CharProps)> {
     if auto.is_empty() {
         return resolved;
     }
@@ -1367,7 +1367,7 @@ fn fit_auto_tcy(glyphs: &mut [Glyph], auto: &[std::ops::Range<usize>]) {
 
 /// A hyphen glyph in the face/size of `g`, placed after it (zero source length).
 pub(crate) fn hyphen_after(g: &Glyph) -> Glyph {
-    let gid = designcraft_fonts::first_glyph(&g.face, &['-', '\u{2010}']);
+    let gid = pejy_fonts::first_glyph(&g.face, &['-', '\u{2010}']);
     let mut h = g.clone();
     h.gid = gid;
     h.adv = g.face.advance(gid) * g.sx;
@@ -1384,8 +1384,8 @@ pub(crate) fn hyphen_after(g: &Glyph) -> Glyph {
 
 /// How figures 0–9 are drawn for text with these properties: the Digits setting, or, when it is
 /// Default, by the preceding strong script (`Some(true)` Arabic-script, `Some(false)` other).
-fn digit_mode(p: &designcraft_doc::CharProps, arabic_context: Option<bool>) -> designcraft_doc::Digits {
-    use designcraft_doc::Digits;
+fn digit_mode(p: &pejy_doc::CharProps, arabic_context: Option<bool>) -> pejy_doc::Digits {
+    use pejy_doc::Digits;
     if p.digits != Digits::Default {
         return p.digits;
     }

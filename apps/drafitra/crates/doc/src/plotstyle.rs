@@ -5,7 +5,7 @@
 //! objects name directly. Each style can replace the object's colour, fade it (screening), turn
 //! it grey, and replace its linetype and lineweight.
 //!
-//! CADCraft's built-in tables are our own definitions, not copies of any vendor's files:
+//! Drafitra's built-in tables are our own definitions, not copies of any vendor's files:
 //! [`DEFAULT_CTB`] keeps the object's properties, [`MONOCHROME_CTB`] prints everything black
 //! and [`GRAYSCALE_CTB`] prints every colour as the grey of its luminance; the named
 //! [`DEFAULT_STB`] offers `Normal`, `Black`, `Screened 50%` and `Thick`, and
@@ -14,7 +14,7 @@
 //! Tables are saved as files in our own JSON format (see `docs/plot-styles.md`):
 //! [`PlotStyleTable::to_file_text`] and [`PlotStyleTable::from_file_text`].
 
-use cadcraft_color::Rgb;
+use drafitra_color::Rgb;
 use serde::{Deserialize, Serialize};
 
 /// Built-in colour-dependent table that prints objects with their own properties.
@@ -40,7 +40,7 @@ pub const MAX_NAMED_STYLES: usize = 1024;
 /// Largest table file we read, in bytes.
 pub const MAX_TABLE_FILE: usize = 4 << 20;
 /// Format marker and version of our table files.
-const FILE_MARKER: &str = "cadcraftPlotStyleTable";
+const FILE_MARKER: &str = "drafitraPlotStyleTable";
 const FILE_VERSION: u64 = 1;
 
 /// Number of styles in a colour-dependent table (one per index colour 1..=255).
@@ -129,7 +129,7 @@ fn is_default<T: Default + PartialEq>(v: &T) -> bool {
 
 /// `Option<Rgb>` as `"#rrggbb"` (also read from `[r, g, b]`).
 mod rgb_hex {
-    use cadcraft_color::Rgb;
+    use drafitra_color::Rgb;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(c: &Option<Rgb>, s: S) -> Result<S::Ok, S::Error> {
@@ -361,11 +361,11 @@ impl PlotStyleTable {
         if text.len() > MAX_TABLE_FILE {
             return Err("the plot style table file is too large".into());
         }
-        let v: serde_json::Value = serde_json::from_str(text).map_err(|e| format!("not a CADCraft plot style table: {e}"))?;
+        let v: serde_json::Value = serde_json::from_str(text).map_err(|e| format!("not a Drafitra plot style table: {e}"))?;
         match v.get(FILE_MARKER).and_then(serde_json::Value::as_u64) {
             Some(FILE_VERSION) => {}
-            Some(n) => return Err(format!("plot style table format version {n} is newer than this CADCraft reads")),
-            None => return Err(format!("not a CADCraft plot style table (no `{FILE_MARKER}`)")),
+            Some(n) => return Err(format!("plot style table format version {n} is newer than this Drafitra reads")),
+            None => return Err(format!("not a Drafitra plot style table (no `{FILE_MARKER}`)")),
         }
         let t: PlotStyleTable = serde_json::from_value(v).map_err(|e| format!("bad plot style table: {e}"))?;
         Ok(t.sanitized())
@@ -467,14 +467,14 @@ mod tests {
         for name in BUILTIN_PLOT_STYLE_TABLES {
             let t = PlotStyleTable::builtin(name).unwrap();
             let text = t.to_file_text();
-            assert!(text.contains("\"cadcraftPlotStyleTable\": 1"));
+            assert!(text.contains("\"drafitraPlotStyleTable\": 1"));
             assert_eq!(PlotStyleTable::from_file_text(&text).unwrap(), t, "{name}");
         }
         let mono = PlotStyleTable::builtin(MONOCHROME_CTB).unwrap().to_file_text();
         assert!(mono.contains("\"color\": \"#000000\""), "colours as hex");
         assert!(!mono.contains("screening"), "defaults are left out");
         assert!(PlotStyleTable::from_file_text("{}").is_err());
-        assert!(PlotStyleTable::from_file_text("{\"cadcraftPlotStyleTable\": 9}").is_err());
+        assert!(PlotStyleTable::from_file_text("{\"drafitraPlotStyleTable\": 9}").is_err());
         assert!(PlotStyleTable::from_file_text("not json").is_err());
         let rgb: PlotStyle = serde_json::from_value(serde_json::json!({"name": "x", "color": [1, 2, 3]})).unwrap();
         assert_eq!(rgb.color, Some(Rgb(1, 2, 3)));

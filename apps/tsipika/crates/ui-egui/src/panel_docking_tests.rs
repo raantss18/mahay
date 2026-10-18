@@ -2,8 +2,8 @@ use super::*;
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 
-fn app() -> VectorcraftApp {
-    VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default())
+fn app() -> TsipikaApp {
+    TsipikaApp::new(tsipika_engine::Session::new(), Default::default())
 }
 
 #[test]
@@ -49,10 +49,10 @@ fn invalid_panel_requests_are_atomic_and_do_not_enter_a_custom_workspace() {
     }
 }
 
-fn harness(app: VectorcraftApp, size: egui::Vec2) -> Harness<'static, VectorcraftApp> {
+fn harness(app: TsipikaApp, size: egui::Vec2) -> Harness<'static, TsipikaApp> {
     let mut ready = false;
     let mut harness = Harness::builder().with_size(size).with_step_dt(1.0 / 60.0).build_ui_state(
-        move |ui, app: &mut VectorcraftApp| {
+        move |ui, app: &mut TsipikaApp| {
             if !ready {
                 crate::theme::install_fonts(ui.ctx());
                 egui_extras::install_image_loaders(ui.ctx());
@@ -71,7 +71,7 @@ fn harness(app: VectorcraftApp, size: egui::Vec2) -> Harness<'static, Vectorcraf
     harness
 }
 
-fn drag(h: &mut Harness<'static, VectorcraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'static, TsipikaApp>, from: Pos2, to: Pos2) {
     h.event(Event::PointerMoved(from));
     h.run_steps(1);
     h.event(Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -91,8 +91,8 @@ fn ordinary_panel_tab_drag_enters_shared_docking_and_can_redock_into_another_tab
     drag(&mut h, source, egui::pos2(160.0, 140.0));
     let layout = h.state().ui.docking.as_ref().expect("ordinary tab drag starts shared docking");
     assert!(layout.floating.iter().any(|g| g.panels.contains(&"layers".into())), "{layout:?}");
-    let source = h.ctx.read_response(egui::Id::new("vectorcraft-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
-    let destination = h.ctx.read_response(egui::Id::new("vectorcraft-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
+    let source = h.ctx.read_response(egui::Id::new("tsipika-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
+    let destination = h.ctx.read_response(egui::Id::new("tsipika-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
     drag(&mut h, source, destination);
     let layout = h.state().ui.docking.as_ref().unwrap();
     assert!(!layout.floating.iter().any(|g| g.panels.contains(&"layers".into())));
@@ -136,7 +136,7 @@ fn legacy_float_group_aliases_use_atomic_shared_groups_and_preserve_tools() {
 /// Explicit offscreen evidence; this creates no native windows.
 #[test]
 fn capture_custom_panel_docking_visual_fixtures() {
-    let Some(directory) = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
+    let Some(directory) = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
     std::fs::create_dir_all(&directory).unwrap();
     for theme in crate::theme::Brightness::ALL {
         for width in [800.0, 1280.0] {
@@ -147,7 +147,7 @@ fn capture_custom_panel_docking_visual_fixtures() {
                 app.run("window.panel.float", json!({"panel":"properties","x":30,"y":90,"width":300,"height":440})).unwrap();
                 let mut ready = false;
                 let mut harness = Harness::builder().with_size(vec2(width, 800.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
-                    move |ui, app: &mut VectorcraftApp| {
+                    move |ui, app: &mut TsipikaApp| {
                         if !ready {
                             egui_extras::install_image_loaders(ui.ctx());
                             crate::theme::install_fonts(ui.ctx());
@@ -165,7 +165,7 @@ fn capture_custom_panel_docking_visual_fixtures() {
                 harness.input_mut().max_texture_side = Some(8192);
                 harness.run_steps(5);
                 assert!(valid(harness.state().ui.docking.as_ref().unwrap()));
-                harness.render().unwrap().save(directory.join(format!("vectorcraft-shared-docking-{}-{width}-{scale}x.png", theme.id()))).unwrap();
+                harness.render().unwrap().save(directory.join(format!("tsipika-shared-docking-{}-{width}-{scale}x.png", theme.id()))).unwrap();
             }
         }
     }
@@ -196,7 +196,7 @@ fn serialized_layout_actions_cover_geometry_reorder_accordion_and_atomic_rejecti
     app.run("window.panel.move", json!({"panel":"swatches","anchor":"layers","zone":"top"})).unwrap();
     app.run("window.panel.layout", json!({"action":{"ResizeSplit":{"path":[],"size":{"Ratio":0.35}}}})).unwrap();
     assert!(
-        matches!(app.ui.docking.as_ref().unwrap().root, Some(Node::Split { size: craft_ui::layout::SplitSize::Ratio(value), .. }) if (value - 0.35).abs() < 0.001)
+        matches!(app.ui.docking.as_ref().unwrap().root, Some(Node::Split { size: mahay_ui::layout::SplitSize::Ratio(value), .. }) if (value - 0.35).abs() < 0.001)
     );
     app.run("window.panel.float", json!({"panel":"properties"})).unwrap();
     app.run("window.panel.layout", json!({"action":{"MoveFloating":{"panel":"properties","rect":[44,66,360,450]}}})).unwrap();
@@ -220,7 +220,7 @@ fn serialized_layout_actions_cover_geometry_reorder_accordion_and_atomic_rejecti
         assert_eq!(app.ui.docking_hidden, hidden);
     }
     app.ui.docking = Some(Layout {
-        root: Some(Node::Stack { entries: vec![craft_ui::docking::StackEntry { panel: "layers".into(), open: true, height: Some(100.0) }] }),
+        root: Some(Node::Stack { entries: vec![mahay_ui::docking::StackEntry { panel: "layers".into(), open: true, height: Some(100.0) }] }),
         floating: Vec::new(),
     });
     app.run("window.panel.layout", json!({"action":{"SetStackOpen":{"panel":"layers","open":false}}})).unwrap();
@@ -251,11 +251,11 @@ fn populated_canvas_keeps_a_real_stroke_edit_after_floating_and_redocking() {
     app.run("paint.setFill", json!({"color":"#5297bb"})).unwrap();
     app.run("stroke.set", json!({"weight":8})).unwrap();
     app.run("window.panel.float", json!({"panel":"stroke","x":40,"y":140,"width":310,"height":490})).unwrap();
-    let directory = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from);
+    let directory = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from);
     let builder = Harness::builder().with_size(vec2(1280.0, 800.0));
     let builder = if directory.is_some() { builder.wgpu() } else { builder };
     let mut h = builder.build_ui_state(
-        |ui, app: &mut VectorcraftApp| {
+        |ui, app: &mut TsipikaApp| {
             app.logic(ui.ctx());
             app.ui(ui);
         },
@@ -287,15 +287,15 @@ fn populated_canvas_keeps_a_real_stroke_edit_after_floating_and_redocking() {
     assert_eq!(dash.pattern, [12.0, 12.0]);
     if let Some(directory) = &directory {
         std::fs::create_dir_all(directory).unwrap();
-        h.render().unwrap().save(directory.join("vectorcraft-populated-stroke-floating.png")).unwrap();
+        h.render().unwrap().save(directory.join("tsipika-populated-stroke-floating.png")).unwrap();
     }
-    let from = h.ctx.read_response(egui::Id::new("vectorcraft-panel-docking").with(("tab", &"stroke".to_string()))).unwrap().rect.center();
-    let to = h.ctx.read_response(egui::Id::new("vectorcraft-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
+    let from = h.ctx.read_response(egui::Id::new("tsipika-panel-docking").with(("tab", &"stroke".to_string()))).unwrap().rect.center();
+    let to = h.ctx.read_response(egui::Id::new("tsipika-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
     drag(&mut h, from, to);
     assert!(h.state().ui.docking.as_ref().unwrap().floating.is_empty());
     assert_eq!(crate::panels::current_stroke(h.state()).unwrap().dash.unwrap(), dash);
     if let Some(directory) = &directory {
-        h.render().unwrap().save(directory.join("vectorcraft-populated-stroke-redocked.png")).unwrap();
+        h.render().unwrap().save(directory.join("tsipika-populated-stroke-redocked.png")).unwrap();
     }
 }
 
@@ -465,10 +465,10 @@ fn native_set_close_pointer_restores_shared_split_ownership() {
     app.run("window.panel.float", json!({"panel":"stroke","x":70,"y":90})).unwrap();
     app.run("window.panel.float", json!({"panel":"color","below":"stroke"})).unwrap();
     let mut h = harness(app, vec2(1280.0, 900.0));
-    if let Some(directory) = std::env::var_os("CRAFT_UI_DOCKING_SNAPSHOT_DIR") {
+    if let Some(directory) = std::env::var_os("MAHAY_UI_DOCKING_SNAPSHOT_DIR") {
         let directory = std::path::PathBuf::from(directory);
         std::fs::create_dir_all(&directory).unwrap();
-        h.render().unwrap().save(directory.join("vectorcraft-native-set-shared-split.png")).unwrap();
+        h.render().unwrap().save(directory.join("tsipika-native-set-shared-split.png")).unwrap();
     }
     let area = h.ctx.memory(|m| m.area_rect(crate::floating::area_id("stroke"))).unwrap();
     let at = egui::pos2(area.right() - 10.0, area.top() + 1.0 + crate::floating::TITLE / 2.0);
@@ -585,8 +585,8 @@ fn the_window_menu_item_hides_a_shown_panel_and_shows_it_again() {
         .find(|e| e.path == ["Window"] && e.command.as_deref() == Some("window.panel") && e.params["panel"] == "properties")
         .expect("Window › Properties");
     let params = item.params;
-    let shown = |app: &VectorcraftApp| crate::menus::checked(app, "window.panel", &params) == Some(true);
-    let in_layout = |app: &VectorcraftApp| app.ui.docking.as_ref().is_some_and(|layout| layout.contains(&"properties".into()));
+    let shown = |app: &TsipikaApp| crate::menus::checked(app, "window.panel", &params) == Some(true);
+    let in_layout = |app: &TsipikaApp| app.ui.docking.as_ref().is_some_and(|layout| layout.contains(&"properties".into()));
 
     let mut app = app();
     assert!(app.ui.docking.is_none() && shown(&app), "the default dock shows Properties");
@@ -677,7 +677,7 @@ fn library_panels_float_with_their_names_and_a_persistent_menu_item() {
     for name in ["Pastels", "Brights"] {
         assert!(h.query_all_by_label(name).next().is_some(), "the {name} tab");
     }
-    let click = |h: &mut Harness<'static, VectorcraftApp>, at: Pos2| {
+    let click = |h: &mut Harness<'static, TsipikaApp>, at: Pos2| {
         h.hover_at(at);
         h.run_steps(1);
         for pressed in [true, false] {

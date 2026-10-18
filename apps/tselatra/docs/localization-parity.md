@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (catalogs recounted at `upstream/main` 470ea7a3: menus in 10 languages, panels in 6, Hangul probe (#599)) · **Target:** Adobe After Effects 2026
 
-How much of EffectCraft's interface is translated, language by language, compared with After
+How much of Tselatra's interface is translated, language by language, compared with After
 Effects. [gaps.md](gaps.md) gap 16 and workstream G9 hold the work;
 [target-app-parity.md](target-app-parity.md) the overall numbers.
 
@@ -14,7 +14,7 @@ Chinese (`zh_CN`) and Traditional Chinese (`zh_TW`). Each translates the whole i
 including effect names and parameters. It ships no Hindi, Arabic, Indonesian or Vietnamese
 interface; Arabic and Hebrew text *in layers* is supported through its Middle Eastern text engine.
 
-## How EffectCraft translates
+## How Tselatra translates
 
 - **Menus:** `crates/ui-egui/src/i18n.rs`, one catalog per language keyed by
   `(command, English label)`. A test (`every_translation_key_exists_in_the_actual_menu_tree`)
@@ -76,7 +76,7 @@ the true percentages are slightly lower.
 | Korean | `ko` | 0 | — | Hangul fallback probe added (#599, closed); not checked on macOS here | no | none | 9–13 h + review |
 | Vietnamese | `vi` | 0 | — | Latin with stacked diacritics; untested | no | none (After Effects: none) | 8–12 h + review |
 
-Other languages EffectCraft ships (3):
+Other languages Tselatra ships (3):
 
 | Language | Code | UI strings translated | Status | To `full` |
 |---|---|---|---|---|
@@ -84,7 +84,7 @@ Other languages EffectCraft ships (3):
 | Ukrainian | `uk` | 1,129 (≈ 29%): menus 624 rows, panels 505 | partial | 6–9 h + review |
 | Czech | `cs` | 1,125 (≈ 29%): menus 624 rows, panels 501 | Existing catalog entries covered; unwrapped UI, effects and engine text still in English; AI-assisted, not yet native-speaker proofread | Remaining strings + independent native review |
 
-Russian (`ru`) has a menu catalog (624 rows, ≈ 16%); After Effects also ships Italian, which EffectCraft does not (8–12 h).
+Russian (`ru`) has a menu catalog (624 rows, ≈ 16%); After Effects also ships Italian, which Tselatra does not (8–12 h).
 
 **Overall: ≈ 18%**, the average coverage of After Effects' 10 non-English languages
 (Simplified and Traditional Chinese 29%, Japanese 27%, Brazilian Portuguese 26%, Spanish, French,

@@ -1,6 +1,6 @@
 # Footage: importing files and image sequences
 
-How to bring footage into a project and tell EffectCraft how to read it. Everything here works
+How to bring footage into a project and tell Tselatra how to read it. Everything here works
 the way it does in After Effects, and every step is a command an agent can run too (shown in
 `code`).
 
@@ -17,7 +17,7 @@ Agents: `file.import {"paths": ["/shots/plate.mov", "/shots/logo.psd"]}`.
 ## Image sequences
 
 VFX plates, 3D renders and hand-drawn animation usually come as numbered stills:
-`shot_0001.png`, `shot_0002.png`, … EffectCraft imports such a run as **one footage item** that
+`shot_0001.png`, `shot_0002.png`, … Tselatra imports such a run as **one footage item** that
 plays like a movie. Its name shows the range, for example `shot_[0001-0250].png`, and its type in
 the Project panel is *Image Sequence*.
 
@@ -43,7 +43,7 @@ Other ways in:
 - **In the browser** (the web app) there are no folders to look in, so pick all the frames of
   the sequence at once with the Sequence option on.
 
-Stills of any format EffectCraft reads can form a sequence: PNG, JPEG, TIFF, OpenEXR, BMP and
+Stills of any format Tselatra reads can form a sequence: PNG, JPEG, TIFF, OpenEXR, BMP and
 WebP. Layered and vector documents (PSD, SVG, PDF) import one by one.
 
 **Missing frames.** Where the numbering skips a number (`shot_0003.png` is missing between
@@ -60,7 +60,7 @@ Order.
 
 ## Importing another project
 
-File ▸ Import ▸ EffectCraft Project… (or an `.ecproj` / `.ecprojx` file given to File ▸ Import)
+File ▸ Import ▸ Tselatra Project… (or an `.ecproj` / `.ecprojx` file given to File ▸ Import)
 merges that project into the open one, inside a folder named after the file, as After Effects
 imports an `.aep`. Every item, layer and property id moves past the open project's, so precomps,
 parents, track mattes, Layer Control values, Essential Graphics and tracker targets keep pointing
@@ -78,7 +78,7 @@ used, and layers that ran to the end of the footage keep doing so.
 
 | Setting | What it does |
 |---|---|
-| **Alpha** | *Straight - Unmatted*, *Premultiplied - Matted With Color* (with the matte colour), *Ignore* (opaque), or *Guess* (EffectCraft looks at the first frame). *Invert Alpha* flips it. |
+| **Alpha** | *Straight - Unmatted*, *Premultiplied - Matted With Color* (with the matte colour), *Ignore* (opaque), or *Guess* (Tselatra looks at the first frame). *Invert Alpha* flips it. |
 | **Assume this frame rate** | The rate the frames play at. A 250-frame sequence at 25 fps lasts 10 seconds; at 24 fps, 10.4 seconds. |
 | **Start Timecode** | *Use Source File Timecode* (0:00:00:00), or *Override Start*: the timecode the footage's first frame shows in the Footage panel. It relabels source time only; the frames stay the same. For a 1001–1250 render at 24 fps, Override Start 0:00:41:17 (frame 1001) makes source time count from the render's own frame numbers. |
 | Fields, pixel aspect, loop | As in After Effects. |
@@ -97,7 +97,7 @@ false` goes back to Use Source File Timecode).
 
 ## Multi-layer OpenEXR
 
-Float OpenEXR renders hold linear light; EffectCraft sRGB-encodes them as they are read, like
+Float OpenEXR renders hold linear light; Tselatra sRGB-encodes them as they are read, like
 After Effects with Interpret As Linear Light for 32 bpc, unless the item preserves RGB (above).
 A multi-layer file shows its main RGBA channels, as in After Effects. Renders that keep every
 pass in named layers (Blender's `ViewLayer.Combined`, its compositor's File Output `Image`,

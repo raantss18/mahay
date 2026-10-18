@@ -88,8 +88,8 @@ pub(crate) use mask::split_segment as split_segment_for_tests;
 
 use std::sync::OnceLock;
 
-use effectcraft_project::{Comp, ItemId, Layer, LayerId};
-use effectcraft_time::Tick;
+use tselatra_project::{Comp, ItemId, Layer, LayerId};
+use tselatra_time::Tick;
 use serde_json::Value;
 
 use crate::{EngineError, Result, Session};
@@ -241,7 +241,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
 }
 
 /// Set `footage` as the proxy of `item` (File ▸ Create Proxy's post-render action).
-pub(crate) fn proxy_set(s: &mut Session, item: ItemId, footage: effectcraft_project::Footage) -> Result<()> {
+pub(crate) fn proxy_set(s: &mut Session, item: ItemId, footage: tselatra_project::Footage) -> Result<()> {
     proxy::set_proxy_footage(s, &[item], footage)
 }
 
@@ -409,13 +409,13 @@ pub(crate) fn has_project_selection(s: &Session) -> std::result::Result<(), Stri
 /// none are left, kept for future stubs).
 #[allow(dead_code)]
 pub(crate) fn not_yet(_: &Session) -> std::result::Result<(), String> {
-    Err("not available yet in EffectCraft".into())
+    Err("not available yet in Tselatra".into())
 }
 
 /// `run` of a not-yet-available command.
 #[allow(dead_code)]
 pub(crate) fn not_yet_run(_: &mut Session, _: &Value) -> Result<Value> {
-    Err(EngineError::Other("not available yet in EffectCraft".into()))
+    Err(EngineError::Other("not available yet in Tselatra".into()))
 }
 
 /// Hand a frontend-only command to the UI ([`crate::Event::Frontend`]).
@@ -426,14 +426,14 @@ pub(crate) fn frontend(s: &mut Session, id: &str, p: &Value) -> Result<Value> {
 
 /// Match path of a node (`transform/position`, `effects/#2/blurriness` style with `match#n`
 /// occurrences) so it can be found again on another layer.
-pub fn match_path_of(g: &effectcraft_project::PropGroup, uid: effectcraft_project::Uid) -> Option<String> {
+pub fn match_path_of(g: &tselatra_project::PropGroup, uid: tselatra_project::Uid) -> Option<String> {
     for c in &g.children {
         let nth = g.children.iter().take_while(|x| !std::ptr::eq(*x, c)).filter(|x| x.match_id() == c.match_id()).count() + 1;
         let seg = if nth == 1 { c.match_id().to_string() } else { format!("{}#{nth}", c.match_id()) };
         if c.uid() == uid {
             return Some(seg);
         }
-        if let effectcraft_project::Node::Group(sub) = c
+        if let tselatra_project::Node::Group(sub) = c
             && let Some(rest) = match_path_of(sub, uid)
         {
             return Some(format!("{seg}/{rest}"));
@@ -462,7 +462,7 @@ pub(crate) fn resolve_effect_path(l: &Layer, path: &str) -> String {
 
 /// Selected properties (leaves) of the active comp as (layer, uid); selected groups expand to
 /// their properties.
-pub(crate) fn selected_leaf_props(s: &Session) -> Vec<(LayerId, effectcraft_project::Uid)> {
+pub(crate) fn selected_leaf_props(s: &Session) -> Vec<(LayerId, tselatra_project::Uid)> {
     let Some(comp) = s.active_comp() else { return vec![] };
     let mut out = vec![];
     for (lid, uid) in &s.state.selected_props {
@@ -592,7 +592,7 @@ pub(crate) fn unlocked(s: &Session, cid: ItemId, ids: Vec<LayerId>, cmd: &str) -
 
 /// `visible: [{layer, prop}]`: the properties the Timeline shows (J / K and Select All
 /// Keyframes use only those, as in After Effects). `None` when not given.
-pub(crate) fn visible_p(p: &Value) -> Option<Vec<(LayerId, effectcraft_project::Uid)>> {
+pub(crate) fn visible_p(p: &Value) -> Option<Vec<(LayerId, tselatra_project::Uid)>> {
     let a = p.get("visible")?.as_array()?;
     Some(a.iter().filter_map(|v| Some((LayerId(v.get("layer")?.as_u64()?), v.get("prop")?.as_u64()?))).collect())
 }
@@ -608,6 +608,6 @@ pub(crate) fn time_p(s: &Session, p: &Value, comp: Option<&Comp>) -> Tick {
     s.time()
 }
 
-pub(crate) fn layer_mut(p: &mut effectcraft_project::Project, cid: ItemId, lid: LayerId) -> Result<&mut Layer> {
-    p.comp_mut(cid).ok_or(EngineError::NoComp)?.layer_mut(lid).ok_or(EngineError::Project(effectcraft_project::ProjectError::NoLayer(lid)))
+pub(crate) fn layer_mut(p: &mut tselatra_project::Project, cid: ItemId, lid: LayerId) -> Result<&mut Layer> {
+    p.comp_mut(cid).ok_or(EngineError::NoComp)?.layer_mut(lid).ok_or(EngineError::Project(tselatra_project::ProjectError::NoLayer(lid)))
 }

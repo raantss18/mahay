@@ -1,8 +1,8 @@
 //! Fixed-point NLSF decoding, NLSF→LPC conversion and filter stabilisation
 //! (RFC 6716 §4.2.7.5, with the RFC 8251 §6/§7 overflow fixes).
 //!
-//! This is the decoder's normative arithmetic, mirrored from FilmCraft's first-party,
-//! spec-derived `filmcraft-opus` decoder (MIT OR Apache-2.0): the encoder must reconstruct the
+//! This is the decoder's normative arithmetic, mirrored from Hetsika's first-party,
+//! spec-derived `hetsika-opus` decoder (MIT OR Apache-2.0): the encoder must reconstruct the
 //! quantised NLSFs and LPC coefficients bit-exactly as the decoder does.
 
 use super::tables::*;

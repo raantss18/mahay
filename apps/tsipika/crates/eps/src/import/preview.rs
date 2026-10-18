@@ -2,8 +2,8 @@
 //! PostScript can't be: a TIFF image or a Windows metafile behind the binary header, or an EPSI
 //! bitmap in comments, stretched over the page.
 
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::{Affine, Rect};
+use tsipika_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::{Affine, Rect};
 
 /// Largest EPSI bitmap side read (pixels).
 const MAX_EPSI: usize = 8192;
@@ -58,7 +58,7 @@ fn image_doc(img: image::RgbaImage, frame: Rect) -> Option<Document> {
 
 /// A document of `frame`'s size with the metafile's art stretched from its picture frame over it.
 fn metafile_doc(wmf: &[u8], frame: Rect) -> Option<Document> {
-    let mut doc = vectorcraft_metafile::import(wmf).ok()?.document;
+    let mut doc = tsipika_metafile::import(wmf).ok()?.document;
     let from = doc.artboards.first()?.rect;
     if from.width() <= 0.0 || from.height() <= 0.0 {
         return None;

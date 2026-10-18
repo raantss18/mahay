@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::{Content, Document, Fill, Item, ItemId, Selection, Shape, SpreadRef, Stroke};
-use designcraft_geom::{Affine, BezPath, PathData, SubPath};
+use pejy_doc::{Content, Document, Fill, Item, ItemId, Selection, Shape, SpreadRef, Stroke};
+use pejy_geom::{Affine, BezPath, PathData, SubPath};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_selection, point_param, targets};
@@ -82,7 +82,7 @@ fn orient_holes(path: &mut PathData) {
     let n = path.subpaths.len();
     for i in 0..n {
         let Some(p) = path.subpaths[i].anchors.first().map(|a| a.p) else { continue };
-        let depth = (0..n).filter(|&j| j != i && designcraft_geom::hit::fill_contains(&beziers[j], designcraft_geom::FillRule::NonZero, p)).count();
+        let depth = (0..n).filter(|&j| j != i && pejy_geom::hit::fill_contains(&beziers[j], pejy_geom::FillRule::NonZero, p)).count();
         let sp = &mut path.subpaths[i];
         let cw = sp.area() > 0.0;
         if cw == (depth % 2 == 1) {
@@ -98,10 +98,10 @@ fn make_compound(s: &mut Session, p: &Value) -> Result<Value> {
     }
     s.edit(|d, sel| {
         // Back to front within the spread.
-        let (sr, _) = spread_xf(d, ids[0]).ok_or(designcraft_doc::DocError::NoItem(ids[0]))?;
+        let (sr, _) = spread_xf(d, ids[0]).ok_or(pejy_doc::DocError::NoItem(ids[0]))?;
         let order: Vec<ItemId> = d.spread(sr).map(|sp| sp.items.iter().map(|i| i.id).filter(|i| ids.contains(i)).collect()).unwrap_or_default();
         let base_id = *order.first().ok_or_else(|| bad("object.makeCompoundPath", "the paths must be on one spread"))?;
-        let (_, base_xf) = spread_xf(d, base_id).ok_or(designcraft_doc::DocError::NoItem(base_id))?;
+        let (_, base_xf) = spread_xf(d, base_id).ok_or(pejy_doc::DocError::NoItem(base_id))?;
         let to_base = base_xf.inverse();
         let mut subpaths: Vec<SubPath> = d.item(base_id).map(|i| i.path.subpaths.clone()).unwrap_or_default();
         for id in order.iter().skip(1) {
@@ -113,7 +113,7 @@ fn make_compound(s: &mut Session, p: &Value) -> Result<Value> {
             subpaths.extend(it.path.transformed(to_base * xf).subpaths);
             d.remove_item(*id)?;
         }
-        let it = d.item_mut(base_id).ok_or(designcraft_doc::DocError::NoItem(base_id))?;
+        let it = d.item_mut(base_id).ok_or(pejy_doc::DocError::NoItem(base_id))?;
         it.path = PathData::new(subpaths);
         orient_holes(&mut it.path);
         it.shape = Shape::Path;
@@ -123,7 +123,7 @@ fn make_compound(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn pathfinder(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_geom::pathfinder::{Op, combine};
+    use pejy_geom::pathfinder::{Op, combine};
     let op_s = super::str_param(p, "op").unwrap_or("add");
     let op = Op::parse(op_s).ok_or_else(|| bad("object.pathfinder", format!("unknown op `{op_s}`")))?;
     let ids = targets(s, p)?;
@@ -131,7 +131,7 @@ fn pathfinder(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad("object.pathfinder", "select two or more shapes"));
     }
     s.edit(|d, sel| {
-        let (sr, _) = spread_xf(d, ids[0]).ok_or(designcraft_doc::DocError::NoItem(ids[0]))?;
+        let (sr, _) = spread_xf(d, ids[0]).ok_or(pejy_doc::DocError::NoItem(ids[0]))?;
         let order: Vec<ItemId> = d
             .spread(sr)
             .map(|sp| {
@@ -151,13 +151,13 @@ fn pathfinder(s: &mut Session, p: &Value) -> Result<Value> {
         let shapes: Vec<PathData> =
             order.iter().filter_map(|id| spread_xf(d, *id).and_then(|(_, xf)| Some(d.item(*id)?.path.transformed(xf)))).collect();
         let Some(result) = combine(op, &shapes) else { return Err(bad("object.pathfinder", "the shapes don't overlap: nothing is left")) };
-        let (_, kxf) = spread_xf(d, keep).ok_or(designcraft_doc::DocError::NoItem(keep))?;
+        let (_, kxf) = spread_xf(d, keep).ok_or(pejy_doc::DocError::NoItem(keep))?;
         for id in &order {
             if *id != keep {
                 d.remove_item(*id)?;
             }
         }
-        let it = d.item_mut(keep).ok_or(designcraft_doc::DocError::NoItem(keep))?;
+        let it = d.item_mut(keep).ok_or(pejy_doc::DocError::NoItem(keep))?;
         it.path = result.transformed(kxf.inverse());
         orient_holes(&mut it.path);
         it.shape = Shape::Path;
@@ -212,7 +212,7 @@ fn release_compound(s: &mut Session, p: &Value) -> Result<Value> {
                 out.push(*id);
                 continue;
             }
-            let (sr, _) = spread_xf(d, *id).ok_or(designcraft_doc::DocError::NoItem(*id))?;
+            let (sr, _) = spread_xf(d, *id).ok_or(pejy_doc::DocError::NoItem(*id))?;
             let at = d.spread(sr).and_then(|sp| sp.items.iter().position(|i| i.id == *id));
             for (k, sp) in it.path.subpaths.iter().enumerate() {
                 let mut part = it.clone();
@@ -238,7 +238,7 @@ fn release_compound(s: &mut Session, p: &Value) -> Result<Value> {
 fn create_outlines(s: &mut Session, p: &Value) -> Result<Value> {
     let ids = targets(s, p)?;
     s.edit(|d, sel| {
-        let db = designcraft_fonts::FontDb::global();
+        let db = pejy_fonts::FontDb::global();
         let mut out = Vec::new();
         for id in &ids {
             let Some(it) = d.item(*id).cloned() else { continue };
@@ -246,7 +246,7 @@ fn create_outlines(s: &mut Session, p: &Value) -> Result<Value> {
                 out.push(*id);
                 continue;
             };
-            let cs = designcraft_compose::compose_story(d, tf.story, &Default::default());
+            let cs = pejy_compose::compose_story(d, tf.story, &Default::default());
             let Some(ft) = cs.frame(*id) else { continue };
             // One compound path per line and text look (fill, stroke), grouped: as in InDesign,
             // Ungroup then leaves each line on its own.
@@ -276,18 +276,18 @@ fn create_outlines(s: &mut Session, p: &Value) -> Result<Value> {
             if runs.is_empty() {
                 continue;
             }
-            let (sr, _) = spread_xf(d, *id).ok_or(designcraft_doc::DocError::NoItem(*id))?;
+            let (sr, _) = spread_xf(d, *id).ok_or(pejy_doc::DocError::NoItem(*id))?;
             let at = d.spread(sr).and_then(|sp| sp.items.iter().position(|i| i.id == *id));
             let text_xf = d.text_xf(&it);
             let make = |d: &mut Document, ((_, fill, ft, stroke, stt, sw, behind), bp): ((usize, String, f32, String, f32, f64, bool), BezPath)| {
                 let mut o = Item::new(ItemId(d.alloc()), it.layer, Shape::Path, PathData::from_bezpath(&bp));
                 o.xf = text_xf;
                 o.fill = Fill { swatch: fill, tint: ft, ..Fill::none() };
-                o.stroke = if stroke == designcraft_color::swatch::NONE {
+                o.stroke = if stroke == pejy_color::swatch::NONE {
                     Stroke::none()
                 } else {
                     // A stroke behind the fill lies wholly outside the letters, as an outside-aligned stroke.
-                    let align = if behind { designcraft_doc::StrokeAlign::Outside } else { designcraft_doc::StrokeAlign::Center };
+                    let align = if behind { pejy_doc::StrokeAlign::Outside } else { pejy_doc::StrokeAlign::Center };
                     Stroke { swatch: stroke, tint: stt, weight: sw, align, ..Stroke::default() }
                 };
                 o
@@ -320,8 +320,8 @@ fn split_path(s: &mut Session, p: &Value) -> Result<Value> {
     let at = point_param(p, "at").ok_or_else(|| bad("path.split", "missing at"))?;
     s.edit(|d, sel| {
         super::object::path_editable(d, id, "path.split")?;
-        let (sr, xf) = spread_xf(d, id).ok_or(designcraft_doc::DocError::NoItem(id))?;
-        let it = d.item(id).cloned().ok_or(designcraft_doc::DocError::NoItem(id))?;
+        let (sr, xf) = spread_xf(d, id).ok_or(pejy_doc::DocError::NoItem(id))?;
+        let it = d.item(id).cloned().ok_or(pejy_doc::DocError::NoItem(id))?;
         if !matches!(it.content, Content::Unassigned) {
             return Err(bad("path.split", "only empty paths and frames can be cut"));
         }
@@ -365,7 +365,7 @@ fn split_path(s: &mut Session, p: &Value) -> Result<Value> {
         sp.anchors.clear();
         let mut ids = vec![id];
         let first = pieces.remove(0);
-        let it_m = d.item_mut(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
+        let it_m = d.item_mut(id).ok_or(pejy_doc::DocError::NoItem(id))?;
         it_m.path.subpaths[si] = first;
         it_m.shape = if it_m.shape == Shape::GraphicLine { Shape::GraphicLine } else { Shape::Path };
         for piece in pieces {
@@ -399,7 +399,7 @@ mod tests {
         let it = d.item(ItemId(a)).unwrap();
         assert_eq!(it.path.subpaths.len(), 2);
         // The inner square is a hole: the centre stays white, the ring is black.
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
         let img = rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
         assert!(img.pixel(200, 200)[0] > 200, "hole: {:?}", img.pixel(200, 200));
@@ -455,7 +455,7 @@ mod tests {
         let b = s.execute("frame.create", &json!({"rect": [100, 160, 300, 200]})).unwrap()["id"].as_u64().unwrap();
         s.execute("object.fill", &json!({"ids": [a, b], "swatch": "[Black]"})).unwrap();
         let strips = s.execute("object.pathfinder", &json!({"op": "add", "ids": [a, b]})).unwrap()["id"].as_u64().unwrap();
-        let png = designcraft_render::Rendered { width: 20, height: 20, pixels: [255u8, 255, 255, 255].repeat(400) }.to_png();
+        let png = pejy_render::Rendered { width: 20, height: 20, pixels: [255u8, 255, 255, 255].repeat(400) }.to_png();
         let photo = s.execute("frame.create", &json!({"rect": [80, 80, 320, 220], "content": "graphic"})).unwrap()["id"].as_u64().unwrap();
         s.execute("file.place", &json!({"base64": super::super::base64_encode(&png), "name": "white.png", "frame": photo})).unwrap();
         s.execute("object.fit", &json!({"mode": "fillProportionally", "ids": [photo]})).unwrap();
@@ -468,7 +468,7 @@ mod tests {
         assert_eq!(it.path.subpaths.len(), 2, "cut to the two strips");
         let b = it.bounds();
         assert!((b.x0 - 100.0).abs() < 0.5 && (b.y0 - 100.0).abs() < 0.5 && (b.x1 - 300.0).abs() < 0.5 && (b.y1 - 200.0).abs() < 0.5, "{b:?}");
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
         let img = rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
         assert!(img.pixel(200, 120)[0] > 230, "the photo (white) shows in a strip: {:?}", img.pixel(200, 120));
@@ -482,12 +482,12 @@ mod tests {
         s.execute("object.fill", &json!({"ids": [id], "swatch": "[Black]"})).unwrap();
         s.execute("object.gradientFeather", &json!({"ids": [id], "from": [100, 150], "to": [300, 150]})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
         let img = rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
         let (l, m, r) = (img.pixel(105, 150)[0], img.pixel(200, 150)[0], img.pixel(295, 150)[0]);
         assert!(l < 60 && m > l + 40 && r > 220, "fades left to right: {l} {m} {r}");
-        let pdf = designcraft_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
         let t = String::from_utf8_lossy(&pdf);
         assert!(t.contains("/SMask") || t.contains("/Luminosity"), "a soft mask");
     }
@@ -510,13 +510,13 @@ mod tests {
         for p in [json!({"ids": [g], "from": [120, 180], "to": [320, 180]}), json!({"ids": [g], "angle": 0})] {
             s.execute("object.gradientFeather", &p).unwrap();
             let d = s.doc().unwrap().doc.clone();
-            let mut rr = designcraft_render::Renderer::new();
+            let mut rr = pejy_render::Renderer::new();
             rr.threads = 0;
             let img = rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
             let (l, m, r) = (img.pixel(125, 180)[0], img.pixel(220, 180)[0], img.pixel(315, 180)[0]);
             assert!(l < 60 && m > l + 40 && r > 220, "{p}: fades left to right on screen: {l} {m} {r}");
-            let pdf = designcraft_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
-            let pm = designcraft_render::render_pdf_page(&pdf, 0, 400).unwrap();
+            let pdf = pejy_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
+            let pm = pejy_render::render_pdf_page(&pdf, 0, 400).unwrap();
             // Over white paper.
             let at = |x: usize, y: usize| {
                 let c = pm.data()[y * pm.width() as usize + x];
@@ -549,13 +549,13 @@ mod tests {
             let point = if shadow { (175, 345) } else { (175, 60) };
             let sample = |s: &Session| {
                 let d = &s.doc().unwrap().doc;
-                let mut rr = designcraft_render::Renderer::new();
+                let mut rr = pejy_render::Renderer::new();
                 rr.threads = 0;
                 // Zoomed viewport: the mask must extend over every device pixel.
                 let img = rr.render_page(d, &s.cache, 0, 2.0, false, &Default::default()).unwrap();
                 let screen = img.pixel(point.0 * 2, point.1 * 2)[0];
-                let pdf = designcraft_pdf::export_pdf(d, &s.cache, &Default::default()).unwrap();
-                let pm = designcraft_render::render_pdf_page(&pdf, 0, 400).unwrap();
+                let pdf = pejy_pdf::export_pdf(d, &s.cache, &Default::default()).unwrap();
+                let pm = pejy_render::render_pdf_page(&pdf, 0, 400).unwrap();
                 let c = pm.data()[point.1 as usize * pm.width() as usize + point.0 as usize];
                 [f32::from(screen), c.r as f32 + 255.0 - c.a as f32]
             };

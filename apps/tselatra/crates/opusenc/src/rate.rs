@@ -1,7 +1,7 @@
 //! Pulse cache and bit allocation (RFC 6716 §4.3.3, §4.3.4.1).
 //!
-//! The allocation must be bit-identical to the decoder's, so this mirrors FilmCraft's
-//! spec-derived `filmcraft-opus` decoder (first-party, MIT OR Apache-2.0) step by step; the only
+//! The allocation must be bit-identical to the decoder's, so this mirrors Hetsika's
+//! spec-derived `hetsika-opus` decoder (first-party, MIT OR Apache-2.0) step by step; the only
 //! difference is that the encoder *writes* the band-skip, intensity and dual-stereo symbols.
 
 use crate::range::{BITRES, RangeEncoder, ilog};

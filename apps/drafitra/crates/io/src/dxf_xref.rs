@@ -9,7 +9,7 @@
 
 use std::sync::Arc;
 
-use cadcraft_doc::Drawing;
+use drafitra_doc::Drawing;
 
 /// Whether a symbol name belongs to an attached xref (`xref|name`).
 pub(crate) fn dependent(name: &str) -> bool {

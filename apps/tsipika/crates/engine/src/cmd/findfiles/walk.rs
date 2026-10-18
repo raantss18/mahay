@@ -181,7 +181,7 @@ static POOL: Pool = Pool::new(MAX_LIVE);
 /// from 2 to 8.
 pub fn threads() -> usize {
     let cpus = std::thread::available_parallelism().map_or(2, std::num::NonZero::get);
-    threads_for(cpus, usize::from(vectorcraft_render::default_threads()))
+    threads_for(cpus, usize::from(tsipika_render::default_threads()))
 }
 
 /// [`threads`] on `cpus` logical CPUs with `render` renderer threads.
@@ -283,7 +283,7 @@ pub(crate) fn start_in(
     let mut spawned = 0;
     for _ in 0..n {
         let s = shared.clone();
-        let thread = std::thread::Builder::new().name("vectorcraft-find".into()).spawn(move || {
+        let thread = std::thread::Builder::new().name("tsipika-find".into()).spawn(move || {
             let _alive = Alive(s.clone());
             // A bug in the walk ends this walker and the others go on; when every walker ends this
             // way, the search fails ([`Alive`]).
@@ -399,8 +399,8 @@ impl Shared {
             Ok(folder) if !folder.is_dir() => Err(format!("{path} is not a folder")),
             Ok(folder) => match rules.refusal(&folder) {
                 None => Ok(folder),
-                Some(Refusal::Shared) => Err(format!("VectorCraft doesn't search the Shared or Public folder in Users: {path}")),
-                Some(Refusal::Apps) => Err(format!("VectorCraft doesn't search other apps' or the system's folders: {path}")),
+                Some(Refusal::Shared) => Err(format!("Tsipika doesn't search the Shared or Public folder in Users: {path}")),
+                Some(Refusal::Apps) => Err(format!("Tsipika doesn't search other apps' or the system's folders: {path}")),
             },
         };
         let mut w = self.lock();

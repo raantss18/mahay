@@ -10,16 +10,16 @@
 //! Field: `selected` (a preset's name).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::cmd::perspgrid::{PRESET_EXTS, PRESET_FORMAT};
-use vectorcraft_tools::distort::perspective::GridDefinition;
-use vectorcraft_tools::distort::perspective::define::{BUILTINS, is_builtin};
+use tsipika_doc::Unit;
+use tsipika_engine::cmd::perspgrid::{PRESET_EXTS, PRESET_FORMAT};
+use tsipika_tools::distort::perspective::GridDefinition;
+use tsipika_tools::distort::perspective::define::{BUILTINS, is_builtin};
 
 use super::DialogSpec;
 use crate::menus::Item;
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Perspective Grid Presets.
 pub const KIND: &str = "perspectiveGridPresets";
@@ -45,7 +45,7 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 };
 
 /// Open the presets manager on `selected` (default: the first preset).
-pub fn open(app: &mut VectorcraftApp, selected: Option<&str>) {
+pub fn open(app: &mut TsipikaApp, selected: Option<&str>) {
     app.ui.dialog = Some(Dialog::new(KIND, json!({ "selected": selected.unwrap_or(BUILTINS[0].0) })));
 }
 
@@ -87,7 +87,7 @@ fn details(p: &GridDefinition) -> Vec<(&'static str, String)> {
     rows
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let presets = app.session.perspective_presets();
     let selected = d.str("selected");
@@ -171,7 +171,7 @@ fn select(d: &mut Dialog, name: &str) {
     d.fields.insert("selected".into(), json!(name));
 }
 
-pub(super) fn run(app: &mut VectorcraftApp, d: &mut Dialog, act: Action, current: &str) -> Result<(), String> {
+pub(super) fn run(app: &mut TsipikaApp, d: &mut Dialog, act: Action, current: &str) -> Result<(), String> {
     match act {
         Action::Select(name) => select(d, &name),
         // The editor replaces this dialog; its OK comes back here.
@@ -212,7 +212,7 @@ pub(super) fn run(app: &mut VectorcraftApp, d: &mut Dialog, act: Action, current
 // ---------- the One/Two/Three Point Perspective menus ----------
 
 /// The saved preset a slot id (`ui.perspectiveUserPreset2.1`) stands for.
-pub fn slot_preset(app: &VectorcraftApp, id: &str) -> Option<String> {
+pub fn slot_preset(app: &TsipikaApp, id: &str) -> Option<String> {
     let (kind, n) = id.strip_prefix(SLOT)?.split_once('.')?;
     let (kind, n): (u8, usize) = (kind.parse().ok()?, n.parse().ok()?);
     app.session.prefs.perspective_presets.iter().filter(|p| p.kind == kind).nth(n.checked_sub(1)?).map(|p| p.name.clone())

@@ -1,10 +1,10 @@
-# EffectCraft Roadmap
+# Tselatra Roadmap
 
 **Stage: alpha** · next: beta, ~30 points of "ready for real work" and ~350–620 h away
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (open-issue count, crash list and localization share re-audited against `upstream/main` 470ea7a3) · **Target:** Adobe After Effects 2026 (26.5.0.89)
 
-EffectCraft aims to do what After Effects does, with the same panels, menus and behaviour, written
+Tselatra aims to do what After Effects does, with the same panels, menus and behaviour, written
 from scratch in Rust. This page is the one-page summary; the evidence is in
 [docs/target-app-parity.md](docs/target-app-parity.md), the work list in
 [docs/gaps.md](docs/gaps.md), and the plan in [docs/roadmap.md](docs/roadmap.md).
@@ -113,7 +113,7 @@ Ranked; detail in [docs/roadmap.md](docs/roadmap.md) and [docs/gaps.md](docs/gap
 | 5 | Performance: benchmarks at 1080p / 4K, real-time cached playback, hardware video (G5) | 50–100 |
 | 6 | Localization depth: effect names, all panels, Korean / Italian (G9) | 60–110 |
 
-Come tell us what matters most to you on [Discord](https://discord.gg/artcraft).
+Come tell us what matters most to you on [Discord](https://github.com/raantss18/mahay/discussions).
 
 ## Progress log
 
@@ -143,7 +143,7 @@ Come tell us what matters most to you on [Discord](https://discord.gg/artcraft).
 - UI.3: Shared docking transactions and pointer targets now handle panel moves, splits, tab ordering and floating groups, preserving accordion metadata and the saved workspace schema. Dock dividers use bounded shared geometry and keyboard-accessible resize handles. Tiny layouts no longer reach an invalid floating-point clamp; workspace trees and saved layouts are retained.
 
 - 2026-10-09: Settings ▸ General ▸ Language now translates the interface below the menu bar as well: panels, dialogs, buttons and tooltips read their text through `crates/ui-egui/src/i18n/ui.rs`, keyed by the English source string. Simplified and Traditional Chinese are complete (384 strings); Japanese rows can follow in the same file. A test fails when a converted panel gains a hard-coded string, and another keeps the catalog free of unused rows.
-- 2026-10-08: `effectcraft-cli render --out` resolves a relative path against the working directory, like `--project` (it used the project's folder, which doubled a path that already named it). Render Queue outputs set in a project are unchanged.
+- 2026-10-08: `tselatra-cli render --out` resolves a relative path against the working directory, like `--project` (it used the project's folder, which doubled a path that already named it). Render Queue outputs set in a project are unchanged.
 - 2026-10-08: Long-press a grouped toolbar button to choose its tools, including Horizontal/Vertical Type; releasing the hold keeps the menu open. Existing point/paragraph text creation is unchanged.
 - 2026-10-06: Settings ▸ General ▸ Language persists English/Japanese menu labels (`general.language`); native UI reuses installed Japanese font fallback, with no bundled CJK font. Dialog and panel contents remain English.
 - 2026-10-05: Honest assessment ([docs/gaps.md](docs/gaps.md)): breadth ≈ 99% by our own checklist, real use ≈ 30–50%; workstreams G1–G9.

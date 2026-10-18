@@ -4,10 +4,10 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use vectorcraft_color::{Color, Gradient, GradientPaint, Paint};
-use vectorcraft_doc::{CharStyle, Document, Effect, Node, NodeKind, TextKind, TextObject, TextRun};
-use vectorcraft_geom::{Affine, BezPath, PathData, Point, Rect};
-use vectorcraft_text::{FALLBACK_FAMILY, FontDb};
+use tsipika_color::{Color, Gradient, GradientPaint, Paint};
+use tsipika_doc::{CharStyle, Document, Effect, Node, NodeKind, TextKind, TextObject, TextRun};
+use tsipika_geom::{Affine, BezPath, PathData, Point, Rect};
+use tsipika_text::{FALLBACK_FAMILY, FontDb};
 
 use crate::*;
 
@@ -169,7 +169,7 @@ fn overprinting_runs_are_written_or_left_out_as_other_runs_are() {
     };
     let written = |mut t: TextObject| {
         // The export culls type by the laid-out bounds that the engine keeps in `cached_bounds`.
-        t.cached_bounds = Some(vectorcraft_text::layout(FontDb::global(), &t).bounds);
+        t.cached_bounds = Some(tsipika_text::layout(FontDb::global(), &t).bounds);
         let mut d = doc(vec![t]);
         d.artboards[0].rect = Rect::new(0.0, 0.0, 50.0, 50.0);
         pdf(&d, false).bytes
@@ -187,7 +187,7 @@ fn overprinting_runs_are_written_or_left_out_as_other_runs_are() {
 /// the instance's glyphs where the outlines would be, not the default instance's (#296).
 #[test]
 fn variable_font_instances_are_real_text_in_their_own_glyphs() {
-    use vectorcraft_text::test_fonts::{VARIABLE_CHARS, VARIABLE_FAMILY, variable_font};
+    use tsipika_text::test_fonts::{VARIABLE_CHARS, VARIABLE_FAMILY, variable_font};
     FontDb::global().add_font(variable_font().unwrap());
     let mut widths = vec![];
     for s in ["Regular", "Bold"] {
@@ -209,7 +209,7 @@ fn variable_font_instances_are_real_text_in_their_own_glyphs() {
 /// where its outlines would, between the named instances on either side.
 #[test]
 fn variable_font_settings_are_real_text_in_their_own_glyphs() {
-    use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY, VARIABLE_CHARS, two_axis_font};
+    use tsipika_text::test_fonts::{TWO_AXIS_FAMILY, VARIABLE_CHARS, two_axis_font};
     FontDb::global().add_font(two_axis_font().unwrap());
     let mut widths = vec![];
     for (s, wght) in [("Regular", None), ("Regular", Some(650.0)), ("Bold", None)] {
@@ -295,7 +295,7 @@ fn fonts_whose_licence_forbids_embedding_fall_back_to_outlines() {
 fn type_with_outline_object_is_written_as_paths_with_no_font() {
     let mut d = doc(vec![TextObject::point(Point::new(20.0, 60.0), "Hello World", style(24.0))]);
     let id = d.layers[0].children().unwrap()[0].id;
-    d.node_mut(id).unwrap().appearance.effects.push(vectorcraft_doc::Effect { id: "path.outlineObject".into(), params: json!({}), visible: true });
+    d.node_mut(id).unwrap().appearance.effects.push(tsipika_doc::Effect { id: "path.outlineObject".into(), params: json!({}), visible: true });
     let r = pdf(&d, false);
     let text = String::from_utf8_lossy(&r.bytes);
     assert!(!text.contains("/FontFile") && !text.contains("/Font"), "no font");
@@ -326,7 +326,7 @@ fn pdf_a_takes_real_text() {
 /// A named instance comes back as live type in that style (not the default instance's).
 #[test]
 fn a_variable_font_instance_comes_back_in_its_own_style() {
-    use vectorcraft_text::test_fonts::{VARIABLE_CHARS, VARIABLE_FAMILY, variable_font};
+    use tsipika_text::test_fonts::{VARIABLE_CHARS, VARIABLE_FAMILY, variable_font};
     FontDb::global().add_font(variable_font().unwrap());
     let st = CharStyle { font_family: VARIABLE_FAMILY.into(), font_style: "Bold".into(), ..style(48.0) };
     let d = doc(vec![TextObject::point(Point::new(20.0, 80.0), VARIABLE_CHARS, st)]);
@@ -423,7 +423,7 @@ fn slanted_type_reopens_as_type_that_still_leans() {
 /// names the version, which the family and style alone don't pick.
 #[test]
 fn type_in_another_installed_version_reopens_in_that_version() {
-    use vectorcraft_text::test_fonts::{TWIN_FAMILY, TWIN_VERSIONS, twin_font};
+    use tsipika_text::test_fonts::{TWIN_FAMILY, TWIN_VERSIONS, twin_font};
     // The newer version first: the one the family and style resolve to.
     FontDb::global().add_font(twin_font(true).unwrap());
     FontDb::global().add_font(twin_font(false).unwrap());
@@ -446,7 +446,7 @@ fn origins(d: &Document) -> Vec<Point> {
     let mut out = vec![];
     d.walk(|n| {
         if let NodeKind::Text(t) = &n.kind {
-            out.extend(vectorcraft_text::layout(FontDb::global(), t).glyphs.iter().map(|g| t.xf * g.origin));
+            out.extend(tsipika_text::layout(FontDb::global(), t).glyphs.iter().map(|g| t.xf * g.origin));
         }
     });
     out

@@ -1,11 +1,11 @@
 //! Renders longer than one offline buffer holds are refused, rather than cut short and kept.
 
 use serde_json::{Value, json};
-use soundcraft_audio_io::{AudioBuffer, FileFormat};
-use soundcraft_dsp::offline::MAX_OFFLINE_SAMPLES;
-use soundcraft_engine::Engine;
-use soundcraft_mix::MAX_RENDER_SAMPLES;
-use soundcraft_model::{ChannelFormat, Clip, ClipId, Session, TrackKind};
+use feo_audio_io::{AudioBuffer, FileFormat};
+use feo_dsp::offline::MAX_OFFLINE_SAMPLES;
+use feo_engine::Engine;
+use feo_mix::MAX_RENDER_SAMPLES;
+use feo_model::{ChannelFormat, Clip, ClipId, Session, TrackKind};
 
 /// A stereo track "Talk" with one clip `frames` long. Its source is one second: the commands
 /// refuse on the clip's length before they render anything.
@@ -13,9 +13,9 @@ fn long_clip(frames: usize) -> (Engine, ClipId) {
     let mut s = Session::default();
     let t = s.add_track(TrackKind::Audio, ChannelFormat::Stereo, Some("Talk"));
     let buf = AudioBuffer { sample_rate: 48_000, channels: vec![vec![0.25; 48_000]; 2] };
-    let src = soundcraft_engine::io::add_source(&mut s, "talk", buf, None, FileFormat::Wav);
+    let src = feo_engine::io::add_source(&mut s, "talk", buf, None, FileFormat::Wav);
     let id = s.new_clip_id();
-    soundcraft_engine::edit::place_clip(&mut s, t, Clip::audio(id, "Talk", src, 0, 0, frames as i64));
+    feo_engine::edit::place_clip(&mut s, t, Clip::audio(id, "Talk", src, 0, 0, frames as i64));
     (Engine::new(s), id)
 }
 
@@ -29,7 +29,7 @@ fn refused(e: &mut Engine, cmd: &str, params: &Value) {
 #[test]
 fn clips_longer_than_one_render_are_refused() {
     let (mut e, id) = long_clip(MAX_RENDER_SAMPLES / 2 + 1);
-    let dir = std::env::temp_dir().join(format!("soundcraft-long-renders-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("feo-long-renders-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     refused(&mut e, "clip.gain_render", &json!({"clips": [id.0]}));
     refused(&mut e, "clip.effects_render", &json!({"clips": [id.0]}));

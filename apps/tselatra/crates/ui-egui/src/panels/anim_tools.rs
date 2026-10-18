@@ -11,7 +11,7 @@ use egui::{Align2, Color32, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 const ROW: f32 = 26.0;
 
@@ -20,7 +20,7 @@ fn label(p: &egui::Painter, x: f32, y: f32, s: &str, t: &Tokens) {
 }
 
 /// A dropdown with options; returns the new index when changed.
-fn choice(app: &mut EffectcraftApp, ui: &mut egui::Ui, r: Rect, auto: &str, options: &[&str], cur: usize) -> Option<usize> {
+fn choice(app: &mut TselatraApp, ui: &mut egui::Ui, r: Rect, auto: &str, options: &[&str], cur: usize) -> Option<usize> {
     let t = app.tokens;
     let id = egui::Id::new(("animtool-dd", auto));
     if widgets::dropdown(ui, r, options.get(cur).copied().unwrap_or(""), &t, id).clicked() {
@@ -31,14 +31,14 @@ fn choice(app: &mut EffectcraftApp, ui: &mut egui::Ui, r: Rect, auto: &str, opti
     widgets::popup_menu(ui, id, r.left_bottom(), &opts, Some(cur)).filter(|i| *i != cur)
 }
 
-fn number(app: &mut EffectcraftApp, ui: &mut egui::Ui, at: egui::Pos2, auto: &str, v: f64, speed: f64, range: (f64, f64), dec: usize, suffix: &str) -> f64 {
+fn number(app: &mut TselatraApp, ui: &mut egui::Ui, at: egui::Pos2, auto: &str, v: f64, speed: f64, range: (f64, f64), dec: usize, suffix: &str) -> f64 {
     let t = app.tokens;
     let (r, nv, _) = widgets::hot_number_at(ui, at, egui::Id::new(("animtool-n", auto)), v, speed, range, dec, suffix, &t);
     app.auto.add(auto, r, &format!("{v}"));
     nv.unwrap_or(v)
 }
 
-fn checkbox(app: &mut EffectcraftApp, ui: &mut egui::Ui, at: egui::Pos2, auto: &str, text: &str, on: bool) -> bool {
+fn checkbox(app: &mut TselatraApp, ui: &mut egui::Ui, at: egui::Pos2, auto: &str, text: &str, on: bool) -> bool {
     let t = app.tokens;
     let r = Rect::from_min_size(at, vec2(16.0, 16.0));
     let clicked = widgets::checkbox(ui, r, on, &t, egui::Id::new(("animtool-cb", auto))).clicked();
@@ -47,14 +47,14 @@ fn checkbox(app: &mut EffectcraftApp, ui: &mut egui::Ui, at: egui::Pos2, auto: &
     if clicked { !on } else { on }
 }
 
-fn status_line(app: &EffectcraftApp, ui: &egui::Ui, rect: Rect, y: f32, need: usize) {
+fn status_line(app: &TselatraApp, ui: &egui::Ui, rect: Rect, y: f32, need: usize) {
     let t = app.tokens;
     let n = app.session.state.selected_keys.len();
     let msg = if n >= need { format!("{n} keyframes selected") } else { format!("Select at least {need} keyframes of a property") };
     ui.painter().with_clip_rect(rect).text(pos2(rect.min.x + 12.0, y), Align2::LEFT_CENTER, msg, Tokens::ui(11.0), t.text_faint);
 }
 
-fn apply(app: &mut EffectcraftApp, cmd: &str, params: serde_json::Value) {
+fn apply(app: &mut TselatraApp, cmd: &str, params: serde_json::Value) {
     match app.session.execute(cmd, params) {
         Ok(r) => app.ui.status = format!("{}: {} → {} keyframes", if cmd == "keys.wiggle" { "Wiggler" } else { "Smoother" }, r["before"], r["after"]),
         Err(e) => app.ui.status = e.to_string(),
@@ -62,7 +62,7 @@ fn apply(app: &mut EffectcraftApp, cmd: &str, params: serde_json::Value) {
 }
 
 /// Wiggler panel: Apply To, Noise Type, Dimension, Frequency, Magnitude.
-pub fn wiggler(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn wiggler(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let x0 = rect.min.x + 12.0;
@@ -126,7 +126,7 @@ pub fn wiggler(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 }
 
 /// Smoother panel: Apply To (from the selected property), Tolerance.
-pub fn smoother(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn smoother(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let x0 = rect.min.x + 12.0;
@@ -158,7 +158,7 @@ pub fn smoother(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 }
 
 /// Motion Sketch panel: Capture speed, Smoothing, Show Wireframe / Background, Start Capture.
-pub fn motion_sketch(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn motion_sketch(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let x0 = rect.min.x + 12.0;
@@ -208,7 +208,7 @@ pub fn motion_sketch(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
 #[derive(Clone, Debug)]
 struct Capture {
     t0: f64,
-    start: effectcraft_engine::time::Tick,
+    start: tselatra_engine::time::Tick,
     points: Vec<[f64; 3]>,
 }
 
@@ -219,7 +219,7 @@ fn capture_id() -> egui::Id {
 /// The Motion Sketch overlay on the Composition viewer (`area`): while armed, a press starts
 /// recording, the comp time advances in real time (scaled by the capture speed), and the release
 /// creates the keys. Draws the recorded path and, with Wireframe, the layer's box at the pointer.
-pub fn sketch_overlay(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
+pub fn sketch_overlay(app: &mut TselatraApp, ui: &mut egui::Ui) {
     if !app.ui.anim_tools.sketch_armed {
         return;
     }
@@ -250,7 +250,7 @@ pub fn sketch_overlay(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
             }
             // Play the comp in real time (slowed by the capture speed) while recording.
             let speed = app.ui.anim_tools.sketch_speed.max(1.0) / 100.0;
-            let comp_t = c.start + effectcraft_engine::time::Tick::from_seconds_f64(el * speed);
+            let comp_t = c.start + tselatra_engine::time::Tick::from_seconds_f64(el * speed);
             if let Some(comp) = app.session.active_comp()
                 && comp_t < comp.duration
             {
@@ -300,7 +300,7 @@ pub fn sketch_overlay(app: &mut EffectcraftApp, ui: &mut egui::Ui) {
 /// Quality, Add Mask Shape Vertices, Matching Method, 1:1 Vertex Matches, First Vertices Match;
 /// Apply runs `mask.interpolate` on the selected Mask Path keyframes. The options live in the
 /// editor state (`mask.interpolationOptions`).
-pub fn mask_interpolation(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn mask_interpolation(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().with_clip_rect(rect);
     let x0 = rect.min.x + 12.0;
@@ -324,7 +324,7 @@ pub fn mask_interpolation(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rec
         p.text(pos2(xv + 78.0, y + 9.0), Align2::LEFT_CENTER, "per second", Tokens::ui(12.0), t.text_dim);
     }
     y += ROW;
-    let mut check = |app: &mut EffectcraftApp, y: f32, key: &str, text: &str, on: bool| {
+    let mut check = |app: &mut TselatraApp, y: f32, key: &str, text: &str, on: bool| {
         if checkbox(app, ui, pos2(x0, y + 2.0), &format!("maskInterp.{key}"), text, on) != on {
             changes.insert(key.into(), json!(!on));
         }
@@ -376,7 +376,7 @@ pub fn mask_interpolation(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rec
         changes.insert("matchingMethod".into(), json!(methods[i]));
     }
     y += ROW;
-    let mut check = |app: &mut EffectcraftApp, y: f32, key: &str, text: &str, on: bool| {
+    let mut check = |app: &mut TselatraApp, y: f32, key: &str, text: &str, on: bool| {
         if checkbox(app, ui, pos2(x0, y + 2.0), &format!("maskInterp.{key}"), text, on) != on {
             changes.insert(key.into(), json!(!on));
         }

@@ -1,6 +1,6 @@
-//! File ▸ Export ▸ Lottie JSON… and File ▸ Import ▸ Lottie… (`effectcraft-lottie`).
+//! File ▸ Export ▸ Lottie JSON… and File ▸ Import ▸ Lottie… (`tselatra-lottie`).
 
-use effectcraft_lottie::{ExportOptions, ImportedImage};
+use tselatra_lottie::{ExportOptions, ImportedImage};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, comp_id, has_comp, str_p};
@@ -12,11 +12,11 @@ fn export_lottie(s: &mut Session, p: &Value) -> Result<Value> {
     let opts = ExportOptions { include_expressions: b_p(p, "includeExpressions").unwrap_or(false), text_as_shapes: b_p(p, "textAsShapes").unwrap_or(false) };
     let services = s.services.clone();
     let read = move |f: &str| services.read_file(f).ok();
-    let res = effectcraft_lottie::export_comp(&s.project, cid, &opts, &read).map_err(|e| EngineError::Other(e.to_string()))?;
+    let res = tselatra_lottie::export_comp(&s.project, cid, &opts, &read).map_err(|e| EngineError::Other(e.to_string()))?;
     let dot = path.to_ascii_lowercase().ends_with(".lottie");
     let bytes = if dot {
         let stem = std::path::Path::new(&path).file_stem().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
-        effectcraft_lottie::to_dotlottie(&res, &stem)
+        tselatra_lottie::to_dotlottie(&res, &stem)
     } else {
         res.to_string_compact().into_bytes()
     };
@@ -40,7 +40,7 @@ fn import_lottie(s: &mut Session, p: &Value) -> Result<Value> {
         services.write_file(&file, &img.bytes).ok().map(|_| file)
     };
     let res = s.edit("Import Lottie", None, |proj, st| {
-        let r = effectcraft_lottie::import(proj, &bytes, &stem, &dir, &mut store).map_err(|e| EngineError::Other(e.to_string()))?;
+        let r = tselatra_lottie::import(proj, &bytes, &stem, &dir, &mut store).map_err(|e| EngineError::Other(e.to_string()))?;
         st.project_selection = vec![r.comp];
         Ok(r)
     })?;

@@ -3,13 +3,13 @@
 //! (Set Ground Plane and Origin, Create Text / Solid / Null / Shadow Catcher … and Camera,
 //! Create Multiple …, Delete Selected Points) and the status / points queries.
 
-use effectcraft_color::Label;
-use effectcraft_effects::camera_tracker::{self as ct, CAMERA, DELETED, SOLVE};
-use effectcraft_keyframe::{Justify, TextDoc, Value as KV};
-use effectcraft_project::build;
-use effectcraft_project::{ItemId, ItemKind, Layer, LayerId, LayerSource, LightKind, Project, Solid, Uid};
-use effectcraft_track::camtrack::linalg::{self, V3};
-use effectcraft_track::camtrack::{ShotType, SolveMethod, Target, point_color};
+use tselatra_color::Label;
+use tselatra_effects::camera_tracker::{self as ct, CAMERA, DELETED, SOLVE};
+use tselatra_keyframe::{Justify, TextDoc, Value as KV};
+use tselatra_project::build;
+use tselatra_project::{ItemId, ItemKind, Layer, LayerId, LayerSource, LightKind, Project, Solid, Uid};
+use tselatra_track::camtrack::linalg::{self, V3};
+use tselatra_track::camtrack::{ShotType, SolveMethod, Target, point_color};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, f_p, has_comp, layer_p, str_p};
@@ -265,16 +265,16 @@ fn status(s: &mut Session, p: &Value) -> Result<Value> {
 fn points(s: &mut Session, p: &Value) -> Result<Value> {
     let (cid, lid, uid) = ct_p(s, p, "camera.points")?;
     let pl = placed(&s.project, cid, lid, uid).ok_or_else(|| bad("camera.points", "the camera is not solved yet"))?;
-    let t = f_p(p, "time").map(effectcraft_time::Tick::from_seconds_f64).unwrap_or_else(|| s.time_of(cid));
+    let t = f_p(p, "time").map(tselatra_time::Tick::from_seconds_f64).unwrap_or_else(|| s.time_of(cid));
     let k = pl.frame_at(t);
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
     let layer = comp.layer(lid).ok_or(EngineError::NoComp)?;
-    let ctx = effectcraft_render::EvalCtx::new(&s.project, cid, comp, t);
+    let ctx = tselatra_render::EvalCtx::new(&s.project, cid, comp, t);
     let m = ctx.world_matrix(layer);
     let list: Vec<Value> = ct::projected(&pl.solve, k)
         .into_iter()
         .map(|(id, q, z)| {
-            let c = m.apply(effectcraft_geom::vec3(q[0], q[1], 0.0));
+            let c = m.apply(tselatra_geom::vec3(q[0], q[1], 0.0));
             let sp = pl.solve.point(id).copied().unwrap_or_default();
             let col = point_color(id);
             json!({"id": id, "comp": [c.x, c.y], "layer": q, "depth": z, "world": pl.to_world(sp.pos), "error": sp.error, "color": col, "selected": s.state.camera_points.contains(&id)})
@@ -337,7 +337,7 @@ fn target_p(s: &Session, p: &Value, pl: &Placed, k: usize, cmd: &str) -> Result<
     target_for(&pl.solve, &ids, k).ok_or_else(|| bad(cmd, "those points do not define a plane"))
 }
 
-fn next_name(c: &effectcraft_project::Comp, base: &str) -> String {
+fn next_name(c: &tselatra_project::Comp, base: &str) -> String {
     let n = (1..).find(|i| !c.layers.iter().any(|l| l.name == format!("{base} {i}"))).unwrap_or(1);
     format!("{base} {n}")
 }
@@ -363,7 +363,7 @@ fn insert_above(proj: &mut Project, cid: ItemId, above: LayerId, l: Layer) -> Re
     Ok(id)
 }
 
-fn add_solid(proj: &mut Project, comp: &effectcraft_project::Comp, name: &str, size: u32, color: [f32; 3]) -> Layer {
+fn add_solid(proj: &mut Project, comp: &tselatra_project::Comp, name: &str, size: u32, color: [f32; 3]) -> Layer {
     let folder = proj.folder_named("Solids").unwrap_or_else(|| proj.add_item("Solids", Label::Yellow, None, ItemKind::Folder));
     let sid = proj.add_item(name, Label::Red, Some(folder), ItemKind::Solid(Solid { color, width: size, height: size, pixel_aspect: 1.0 }));
     build::layer(proj, comp, name, LayerSource::Solid { item: sid }, (size, size), None)
@@ -382,7 +382,7 @@ fn create_from_solve(s: &mut Session, p: &Value) -> Result<Value> {
     let src = comp.layer(lid).ok_or(EngineError::NoComp)?.clone();
     let g = src.props.find_group(uid).ok_or(EngineError::NoComp)?;
     let params = static_params(g);
-    let size_pct = effectcraft_effects::warp_stab::param(&params, "targetSize").map(|v| v.as_f64()).unwrap_or(100.0) / 100.0;
+    let size_pct = tselatra_effects::warp_stab::param(&params, "targetSize").map(|v| v.as_f64()).unwrap_or(100.0) / 100.0;
     let existing_cam = params.get(CAMERA).map(|v| v.as_f64() as u64).filter(|id| *id > 0 && comp.layer(LayerId(*id)).is_some_and(Layer::is_camera));
     // Targets: one, or one per selected point (Create Multiple …) sharing the selection's plane.
     let targets: Vec<Target> = if kind == CreateKind::Camera {
@@ -545,7 +545,7 @@ fn delete_points(s: &mut Session, p: &Value) -> Result<Value> {
     let g = comp.layer(lid).and_then(|l| l.props.find_group(uid)).ok_or(EngineError::NoComp)?;
     let params = static_params(g);
     let mut del = ct::deleted(&params);
-    let auto = effectcraft_effects::warp_stab::param(&params, "advanced/autoDeletePoints").is_some_and(KV::as_bool);
+    let auto = tselatra_effects::warp_stab::param(&params, "advanced/autoDeletePoints").is_some_and(KV::as_bool);
     let mut add = ids.clone();
     if auto && let Some(sv) = ct::solve(&params) {
         // Same feature tracked again at other times: solved within 1 % of its depth.

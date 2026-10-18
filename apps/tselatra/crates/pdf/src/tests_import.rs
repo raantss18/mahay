@@ -13,7 +13,7 @@ fn eps(body: &[u8]) -> Doc {
 }
 
 /// The ink columns `(x0, x1)` of a render (alpha > 0.5).
-fn ink_x(img: &effectcraft_raster::Image) -> (i64, i64) {
+fn ink_x(img: &tselatra_raster::Image) -> (i64, i64) {
     let (mut x0, mut x1) = (i64::MAX, i64::MIN);
     for y in 0..img.height as i64 {
         for x in 0..img.width as i64 {
@@ -181,7 +181,7 @@ fn survive(name: &str, bytes: &[u8]) {
                 if let Ok(doc) = parse_page(&m, p) {
                     let (w, h) = doc.pixel_size();
                     let s = 64.0 / (w.max(h).max(1) as f64);
-                    let _ = effectcraft_svg::rasterize(&doc, 64, 64, s);
+                    let _ = tselatra_svg::rasterize(&doc, 64, 64, s);
                     let _ = layer_names(&doc);
                 }
             }
@@ -240,7 +240,7 @@ fn hostile_structures_return_errors_or_draw_nothing() {
     ];
     let bytes = crate::write::pdf(&objs, 1);
     if let Ok(doc) = parse(&bytes) {
-        let _ = effectcraft_svg::rasterize(&doc, 32, 32, 1e-300);
+        let _ = tselatra_svg::rasterize(&doc, 32, 32, 1e-300);
     }
     // Images with absurd sizes and filters.
     let bytes = page_pdf(
@@ -326,7 +326,7 @@ fn truncated_and_corrupt_eps_never_panic() {
         b.extend_from_slice(prog);
         let r = std::panic::catch_unwind(|| {
             if let Ok(doc) = parse(&b) {
-                let _ = effectcraft_svg::rasterize(&doc, 10, 10, 1.0);
+                let _ = tselatra_svg::rasterize(&doc, 10, 10, 1.0);
             }
         });
         assert!(r.is_ok(), "{}", String::from_utf8_lossy(prog));

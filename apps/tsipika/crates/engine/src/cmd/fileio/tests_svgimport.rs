@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 
 use serde_json::json;
-use vectorcraft_doc::{ImageObject, NodeKind};
+use tsipika_doc::{ImageObject, NodeKind};
 
 use super::*;
 
@@ -14,7 +14,7 @@ struct Folder(PathBuf);
 
 impl Folder {
     fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("vectorcraft-svgimport-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tsipika-svgimport-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("img")).unwrap();
         Self(dir)
@@ -85,7 +85,7 @@ fn opening_an_svg_links_its_images_from_its_folder() {
     assert_eq!(r["updated"].as_array().unwrap().len(), 1, "{r}");
     let gone = &images(&s)[1];
     assert_eq!((gone.width, gone.height), (50, 50));
-    let b = gone.xf.transform_rect_bbox(vectorcraft_geom::Rect::new(0.0, 0.0, 50.0, 50.0));
+    let b = gone.xf.transform_rect_bbox(tsipika_geom::Rect::new(0.0, 0.0, 50.0, 50.0));
     assert!((b.x0 - 200.0).abs() < 1e-6 && (b.width() - 100.0).abs() < 1e-6, "{b:?}");
 }
 

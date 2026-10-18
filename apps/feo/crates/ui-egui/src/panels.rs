@@ -4,12 +4,12 @@ use crate::SoundApp;
 use crate::theme::{Tokens, bold, mono, regular, rgb};
 use egui::{Align2, Color32, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::json;
-use soundcraft_model::{ClipId, SourceId};
+use feo_model::{ClipId, SourceId};
 
 /// Drag a Tracks list row to reorder the tracks: a line marks the gap it will land in.
 fn drag_track(app: &mut SoundApp, ui: &Ui, row: Rect, id: u64, dropped: bool) {
     let s = app.engine.session();
-    let (Some(from), Some(p)) = (s.track_index(soundcraft_model::TrackId(id)), ui.ctx().pointer_latest_pos()) else { return };
+    let (Some(from), Some(p)) = (s.track_index(feo_model::TrackId(id)), ui.ctx().pointer_latest_pos()) else { return };
     let spacing = ui.spacing().item_spacing.y;
     let pitch = row.height() + spacing;
     let gap = (from as f32 + ((p.y - row.center().y) / pitch).floor() + 1.0).clamp(0.0, s.tracks.len() as f32);
@@ -78,7 +78,7 @@ pub fn tracks_and_groups(app: &mut SoundApp, ui: &mut Ui) {
             ui.painter().rect_filled(Rect::from_min_size(pos2(r.min.x + 20.0, r.min.y + 3.0), vec2(4.0, 11.0)), 0.0, rgb(color));
             ui.painter().text(pos2(r.min.x + 30.0, r.center().y), Align2::LEFT_CENTER, &name, regular(11.5), if shown { t.text } else { t.text_dim });
             if resp.clicked() {
-                crate::edit_window::click_track(app, soundcraft_model::TrackId(id), ui.input(|i| i.modifiers), |_, _| true);
+                crate::edit_window::click_track(app, feo_model::TrackId(id), ui.input(|i| i.modifiers), |_, _| true);
             }
             if resp.dragged() || resp.drag_stopped() {
                 drag_track(app, ui, r, id, resp.drag_stopped());
@@ -380,11 +380,11 @@ pub(crate) fn memory_locations(app: &mut SoundApp, ui: &mut Ui) {
             .iter()
             .map(|m| {
                 let kind = match m.kind {
-                    soundcraft_model::MarkerKind::Marker => "marker",
-                    soundcraft_model::MarkerKind::Selection => "selection",
-                    soundcraft_model::MarkerKind::None => "none",
+                    feo_model::MarkerKind::Marker => "marker",
+                    feo_model::MarkerKind::Selection => "selection",
+                    feo_model::MarkerKind::None => "none",
                 };
-                let len = if m.kind == soundcraft_model::MarkerKind::Selection { f(m.end - m.start) } else { String::new() };
+                let len = if m.kind == feo_model::MarkerKind::Selection { f(m.end - m.start) } else { String::new() };
                 (m.number, m.name.clone(), f(m.start), len, kind.to_string())
             })
             .collect()
@@ -443,7 +443,7 @@ fn plugin_windows(app: &mut SoundApp, ctx: &egui::Context) {
     let mut keep = Vec::new();
     for (tid, slot) in wins {
         // The instrument slot (an instrument track's instrument) or an insert slot.
-        let instrument = slot == soundcraft_mix::INSTRUMENT_SLOT;
+        let instrument = slot == feo_mix::INSTRUMENT_SLOT;
         let Some((tname, ins)) = app.engine.session().track(tid).and_then(|t| {
             let ins = if instrument { t.instrument.clone() } else { t.mixer.inserts.get(slot).cloned().flatten() };
             ins.map(|i| (t.name.clone(), i))
@@ -469,7 +469,7 @@ fn plugin_windows(app: &mut SoundApp, ctx: &egui::Context) {
                         }
                         ui.menu_button("Presets ▾", |ui| preset_menu(app, ui, tid, slot, info, &ins));
                     }
-                    if soundcraft_mix::is_third_party(&ins.plugin) {
+                    if feo_mix::is_third_party(&ins.plugin) {
                         let open = app.player.as_ref().is_some_and(|p| p.editor_open(tid, slot));
                         let available = app.player.as_ref().is_some_and(|p| p.has_editor(tid, slot));
                         let label = if open { "Close Plugin Editor" } else { "Open Plugin Editor" };
@@ -487,7 +487,7 @@ fn plugin_windows(app: &mut SoundApp, ctx: &egui::Context) {
                         }
                     }
                 });
-                if instrument && soundcraft_mix::is_third_party(&ins.plugin) {
+                if instrument && feo_mix::is_third_party(&ins.plugin) {
                     // A hosted instrument keeps its sounds and settings in its own editor.
                     ui.label(egui::RichText::new("Load and edit sounds in the plugin's own editor.").color(Tokens::current().text_dim));
                     return;
@@ -521,7 +521,7 @@ fn plugin_windows(app: &mut SoundApp, ctx: &egui::Context) {
                                 if instrument && crate::sampler_window::whole_number(&ins.plugin, p.id) {
                                     sl = sl.integer();
                                 }
-                                if p.taper == soundcraft_dsp::Taper::Log && p.min > 0.0 {
+                                if p.taper == feo_dsp::Taper::Log && p.min > 0.0 {
                                     sl = sl.logarithmic(true);
                                 }
                                 ui.add(sl)
@@ -564,7 +564,7 @@ fn plugin_windows(app: &mut SoundApp, ctx: &egui::Context) {
     app.ui.plugin_windows = keep;
 }
 
-fn eq_curve(ui: &mut Ui, id: &str, ins: &soundcraft_model::Insert) {
+fn eq_curve(ui: &mut Ui, id: &str, ins: &feo_model::Insert) {
     let t = Tokens::current();
     let (r, _) = ui.allocate_exact_size(vec2(ui.available_width().max(300.0), 110.0), Sense::hover());
     ui.painter().rect_filled(r, 4.0, Color32::from_rgb(14, 18, 22));
@@ -572,9 +572,9 @@ fn eq_curve(ui: &mut Ui, id: &str, ins: &soundcraft_model::Insert) {
     let freqs: Vec<f32> = (0..n).map(|i| 20.0 * 1000f32.powf(i as f32 / (n - 1) as f32)).collect();
     let params: Vec<(&str, f32)> = ins.params.iter().map(|(k, v)| (k.as_str(), *v)).collect();
     let resp = if id == "eq_7band" {
-        soundcraft_dsp::eq7_response(&params, &freqs, 48_000.0)
+        feo_dsp::eq7_response(&params, &freqs, 48_000.0)
     } else {
-        soundcraft_dsp::eq1_response(&params, &freqs, 48_000.0)
+        feo_dsp::eq1_response(&params, &freqs, 48_000.0)
     };
     for db in [-12.0f32, 0.0, 12.0] {
         let y = r.center().y - db / 18.0 * r.height() * 0.5;
@@ -594,7 +594,7 @@ fn about(app: &mut SoundApp, ctx: &egui::Context) {
         return;
     }
     let tab_id = egui::Id::new("about_tab");
-    egui::Window::new("About SoundCraft").open(&mut open).default_size(vec2(640.0, 420.0)).collapsible(false).show(ctx, |ui| {
+    egui::Window::new("About Feo").open(&mut open).default_size(vec2(640.0, 420.0)).collapsible(false).show(ctx, |ui| {
         let mut tab = ui.data_mut(|d| d.get_temp::<u8>(tab_id)).unwrap_or(0);
         ui.horizontal(|ui| {
             for (i, l) in (0u8..).zip(["About", "Contributors", "Models"]) {
@@ -609,12 +609,12 @@ fn about(app: &mut SoundApp, ctx: &egui::Context) {
             1 => crate::credits::contributors_ui(ui),
             2 => crate::credits::models_ui(ui),
             _ => {
-                ui.label(egui::RichText::new("SoundCraft").font(bold(22.0)));
+                ui.label(egui::RichText::new("Feo").font(bold(22.0)));
                 ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
-                ui.label("An open-source digital audio workstation from the ArtCraft team.");
+                ui.label("An open-source digital audio workstation from the Mahay team.");
                 ui.label("Dual-licensed MIT OR Apache-2.0. Made with Rust and egui.");
-                ui.hyperlink_to("getartcraft.com/apps/soundcraft", "https://getartcraft.com/apps/soundcraft");
-                ui.hyperlink_to("Join us on Discord", "https://discord.gg/artcraft");
+                ui.hyperlink_to("mahay.com/apps/feo", "https://github.com/raantss18/mahay");
+                ui.hyperlink_to("Join the discussions", "https://github.com/raantss18/mahay/discussions");
             }
         }
     });
@@ -627,7 +627,7 @@ fn session_info(app: &mut SoundApp, ctx: &egui::Context) {
         return;
     }
     egui::Window::new("Session Info").open(&mut open).default_size(vec2(480.0, 360.0)).show(ctx, |ui| {
-        let text = soundcraft_engine::inspect::session_text(&app.engine);
+        let text = feo_engine::inspect::session_text(&app.engine);
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.label(egui::RichText::new(text).font(mono(11.0)));
         });
@@ -643,10 +643,10 @@ fn preset_dir(app: &SoundApp, plugin: &str) -> Option<std::path::PathBuf> {
 fn preset_menu(
     app: &mut SoundApp,
     ui: &mut Ui,
-    tid: soundcraft_model::TrackId,
+    tid: feo_model::TrackId,
     slot: usize,
-    info: &soundcraft_dsp::PluginInfo,
-    ins: &soundcraft_model::Insert,
+    info: &feo_dsp::PluginInfo,
+    ins: &feo_model::Insert,
 ) {
     if ui.button("<factory default>").clicked() {
         let defaults: serde_json::Map<String, serde_json::Value> = info.params.iter().map(|p| (p.id.to_string(), json!(p.default))).collect();
@@ -686,8 +686,8 @@ fn preset_menu(
     ui.horizontal(|ui| {
         ui.add(egui::TextEdit::singleline(&mut name).desired_width(140.0));
         if ui.button("Save").clicked() {
-            let clean = soundcraft_engine::io::sanitize_name(&name);
-            let body = json!({"format": "soundcraft-plugin-preset", "plugin": info.id, "params": ins.params});
+            let clean = feo_engine::io::sanitize_name(&name);
+            let body = json!({"format": "feo-plugin-preset", "plugin": info.id, "params": ins.params});
             let ok = std::fs::create_dir_all(&dir).is_ok() && std::fs::write(dir.join(format!("{clean}.json")), body.to_string()).is_ok();
             app.ui.status = if ok { format!("Saved preset {clean}") } else { "Could not save the preset".into() };
             if ok {

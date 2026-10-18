@@ -5,10 +5,10 @@
 
 use std::collections::HashSet;
 
-use vectorcraft_color::{Color, Gradient, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_geom::{Rect, shapes};
-use vectorcraft_svg::{ExportOptions, ObjectIds, Styling, export, import};
+use tsipika_color::{Color, Gradient, GradientPaint, Paint};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_geom::{Rect, shapes};
+use tsipika_svg::{ExportOptions, ObjectIds, Styling, export, import};
 
 /// A document with a named rectangle, an unnamed gradient-filled one and a second layer.
 fn doc(title: &str, shift: f64) -> Document {

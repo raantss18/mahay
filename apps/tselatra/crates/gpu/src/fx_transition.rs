@@ -12,8 +12,8 @@
 //! `util::gauss_plane` steps (box passes, edges repeated). Card Wipe (a 3D card renderer
 //! shared with Card Dance and Shatter) stays on the CPU.
 
-use effectcraft_effects::{Buf, EffectCtx};
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, EffectCtx};
+use tselatra_raster::Image;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -124,7 +124,7 @@ fn shape(b: &GBuf) -> Buf {
 /// when none is chosen.
 fn fitted(e: &mut Enc, ctx: &EffectCtx, b: &GBuf, id: &str, masks_and_effects: bool, stretch: bool) -> Option<Option<GpuImage>> {
     match ctx.layer_param(id, masks_and_effects) {
-        Some(o) => Some(Some(e.g.upload_image(&effectcraft_effects::util::fit_layer(ctx, &shape(b), &o, stretch))?)),
+        Some(o) => Some(Some(e.g.upload_image(&tselatra_effects::util::fit_layer(ctx, &shape(b), &o, stretch))?)),
         None => Some(None),
     }
 }

@@ -6,7 +6,7 @@
 
 use std::collections::{HashSet, VecDeque};
 
-use cadcraft_doc::{Drawing, EntityKind, Handle, STANDARD_MLINE_STYLE};
+use drafitra_doc::{Drawing, EntityKind, Handle, STANDARD_MLINE_STYLE};
 use serde_json::{Map, Value, json};
 
 use super::super::qselect::wildcard;
@@ -26,7 +26,7 @@ enum Kind {
     TextStyles,
     ZeroLength,
     EmptyText,
-    /// An object type CADCraft does not have: nothing to purge.
+    /// An object type Drafitra does not have: nothing to purge.
     Absent,
     All,
 }
@@ -113,7 +113,7 @@ fn json_key(kind: Kind) -> &'static str {
     }
 }
 
-fn entities(d: &Drawing) -> impl Iterator<Item = &std::sync::Arc<cadcraft_doc::Entity>> {
+fn entities(d: &Drawing) -> impl Iterator<Item = &std::sync::Arc<drafitra_doc::Entity>> {
     d.model.iter().chain(d.layouts.iter().flat_map(|l| l.entities.iter())).chain(d.blocks.values().flat_map(|b| b.entities.iter())).take(5_000_000)
 }
 

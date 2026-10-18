@@ -4,16 +4,16 @@
 
 use std::path::Path;
 
-use lightcraft_develop::Preset;
+use hazavana_develop::Preset;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::Session;
 
-/// File extension of LightCraft preset files.
+/// File extension of Hazavana preset files.
 pub const LCPRESET_EXT: &str = "lcpreset";
 /// The `format` tag of a `.lcpreset` file.
-pub const LCPRESET_FORMAT: &str = "lightcraft.preset";
+pub const LCPRESET_FORMAT: &str = "hazavana.preset";
 
 /// A `.lcpreset` file: one or more presets with their groups.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -575,7 +575,7 @@ mod tests {
 
     #[test]
     fn builtin_presets_parse_and_apply() {
-        let base = lightcraft_develop::DevelopSettings::default();
+        let base = hazavana_develop::DevelopSettings::default();
         let mut ids = std::collections::HashSet::new();
         for pr in builtin() {
             assert!(ids.insert(pr.id.clone()));

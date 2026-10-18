@@ -3,7 +3,7 @@
 
 use crate::geometry::{enter_target, select_target};
 use crate::{BoolOp, Document, NodeId, NodeKind};
-use figcraft_geom::Point;
+use endrika_geom::Point;
 
 fn page(d: &Document) -> NodeId {
     d.first_page().unwrap()

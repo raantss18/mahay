@@ -1,4 +1,4 @@
-//! FigCraft path operations.
+//! Endrika path operations.
 //!
 //! - [`boolean`]: Union, Subtract, Intersect and Exclude over any number of closed paths (robust
 //!   sweep-line topology from `linesweeper`); results use the even-odd rule.
@@ -18,8 +18,8 @@ pub mod width;
 #[cfg(test)]
 mod width_tests;
 
-use figcraft_doc::{BoolOp, StrokeAlign, StrokeCap, StrokeJoin, StrokeProps, VectorNetwork};
-use figcraft_geom::kurbo::{self, BezPath, Cap, Join, PathEl, PathSeg, Point, Shape, Vec2};
+use endrika_doc::{BoolOp, StrokeAlign, StrokeCap, StrokeJoin, StrokeProps, VectorNetwork};
+use endrika_geom::kurbo::{self, BezPath, Cap, Join, PathEl, PathSeg, Point, Shape, Vec2};
 
 #[derive(Debug, PartialEq)]
 pub enum PathOpsError {
@@ -57,7 +57,7 @@ pub fn closed(path: &BezPath) -> BezPath {
 }
 
 /// Every coordinate is finite and of a sane magnitude (the sweep needs bounded input).
-pub use figcraft_geom::measure::finite_path as finite;
+pub use endrika_geom::measure::finite_path as finite;
 
 /// Run the sweep library on `f`. Version 0.4 can panic on rare near-degenerate input (an internal
 /// `unwrap` while ordering curves, hit by some font outlines): that is bad input, not a crash.
@@ -432,7 +432,7 @@ pub fn rect_side_strokes(w: f64, h: f64, sides: [f64; 4], align: StrokeAlign) ->
         StrokeAlign::Center => 0.5,
         StrokeAlign::Outside => 1.0,
     };
-    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| figcraft_geom::Rect::new(x0, y0, x1, y1).to_path(0.1);
+    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| endrika_geom::Rect::new(x0, y0, x1, y1).to_path(0.1);
     let mut p = BezPath::new();
     // Outer box edges.
     let (ox0, oy0, ox1, oy1) = (-l * f, -t * f, w + r * f, h + b * f);
@@ -454,7 +454,7 @@ pub fn rect_side_strokes(w: f64, h: f64, sides: [f64; 4], align: StrokeAlign) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use figcraft_geom::Rect;
+    use endrika_geom::Rect;
 
     fn sq(x: f64, y: f64, s: f64) -> BezPath {
         Rect::new(x, y, x + s, y + s).to_path(0.1)
@@ -564,11 +564,11 @@ mod tests {
         path.line_to((20.0, 0.0));
         let net = VectorNetwork {
             vertices: vec![
-                figcraft_doc::Vertex { cap: Some(StrokeCap::Square), ..figcraft_doc::Vertex::new(0.0, 0.0) },
-                figcraft_doc::Vertex { x: 10.0, y: 10.0, radius: 2.0, join: Some(StrokeJoin::Miter), ..figcraft_doc::Vertex::new(10.0, 10.0) },
-                figcraft_doc::Vertex { cap: Some(StrokeCap::Square), ..figcraft_doc::Vertex::new(20.0, 0.0) },
+                endrika_doc::Vertex { cap: Some(StrokeCap::Square), ..endrika_doc::Vertex::new(0.0, 0.0) },
+                endrika_doc::Vertex { x: 10.0, y: 10.0, radius: 2.0, join: Some(StrokeJoin::Miter), ..endrika_doc::Vertex::new(10.0, 10.0) },
+                endrika_doc::Vertex { cap: Some(StrokeCap::Square), ..endrika_doc::Vertex::new(20.0, 0.0) },
             ],
-            segments: vec![figcraft_doc::Segment::line(0, 1), figcraft_doc::Segment::line(1, 2)],
+            segments: vec![endrika_doc::Segment::line(0, 1), endrika_doc::Segment::line(1, 2)],
             ..Default::default()
         };
         let props = StrokeProps { weight: 4.0, ..Default::default() };

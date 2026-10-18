@@ -8,11 +8,11 @@ use serde_json::Value;
 #[cfg(not(target_arch = "wasm32"))]
 use serde_json::json;
 
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 use crate::frames::FrameKey;
 
 /// Run once per frame, before the panels draw.
-pub fn frame(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn frame(app: &mut TselatraApp, ctx: &egui::Context) {
     memory_watch(app, ctx);
     home_on_open(app, ctx);
     video_preview(app, ctx);
@@ -21,7 +21,7 @@ pub fn frame(app: &mut EffectcraftApp, ctx: &egui::Context) {
 /// Import native file drops through the same command as the file picker. Run after the dock
 /// layout to use the current viewer rectangle for drops that also add layers.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn dropped_files(app: &mut EffectcraftApp, ui: &egui::Ui, bounds: Rect) {
+pub fn dropped_files(app: &mut TselatraApp, ui: &egui::Ui, bounds: Rect) {
     use egui::{Align2, Stroke, StrokeKind, vec2};
 
     let ctx = ui.ctx().clone();
@@ -120,7 +120,7 @@ pub fn dropped_files(app: &mut EffectcraftApp, ui: &egui::Ui, bounds: Rect) {
 
 /// Re-read the system's free memory every 30 s (cache budgets follow it; on Windows each
 /// reading starts PowerShell in the background, so it isn't done more often).
-fn memory_watch(app: &mut EffectcraftApp, ctx: &egui::Context) {
+fn memory_watch(app: &mut TselatraApp, ctx: &egui::Context) {
     let now = ctx.input(|i| i.time);
     let id = egui::Id::new("prefs-memory-watch");
     let last = ctx.data(|d| d.get_temp::<f64>(id));
@@ -135,7 +135,7 @@ fn memory_watch(app: &mut EffectcraftApp, ctx: &egui::Context) {
 }
 
 /// Startup ▸ Show Home Screen When Opening a Project.
-fn home_on_open(app: &mut EffectcraftApp, ctx: &egui::Context) {
+fn home_on_open(app: &mut TselatraApp, ctx: &egui::Context) {
     let id = egui::Id::new("prefs-last-project");
     let path = app.session.path.clone();
     let last = ctx.data(|d| d.get_temp::<Option<String>>(id));
@@ -149,13 +149,13 @@ fn home_on_open(app: &mut EffectcraftApp, ctx: &egui::Context) {
 
 /// Video ▸ Mirror on Computer Monitor off: during playback the Composition panel leaves the
 /// frame to the Video Preview window.
-pub fn main_viewer_hidden(app: &EffectcraftApp) -> bool {
+pub fn main_viewer_hidden(app: &TselatraApp) -> bool {
     let v = &app.session.prefs.video;
     v.enable_output && !v.mirror_on_monitor && app.playback.playing
 }
 
 /// Whether the Video Preview window shows now (Disable Video Output When in Background).
-pub fn video_preview_active(app: &EffectcraftApp, focused: bool) -> bool {
+pub fn video_preview_active(app: &TselatraApp, focused: bool) -> bool {
     let v = &app.session.prefs.video;
     v.enable_output && (focused || !v.disable_when_background)
 }
@@ -163,7 +163,7 @@ pub fn video_preview_active(app: &EffectcraftApp, focused: bool) -> bool {
 /// Video ▸ Enable Video Preview Output: a second native window with the current composition
 /// frame, letterboxed on black. Video Device "Full Screen" opens it full screen (move it to the
 /// external display first); Video Output During Playback off holds the last frame while playing.
-fn video_preview(app: &mut EffectcraftApp, ctx: &egui::Context) {
+fn video_preview(app: &mut TselatraApp, ctx: &egui::Context) {
     let focused = ctx.input(|i| i.focused);
     if !video_preview_active(app, focused) {
         return;
@@ -203,7 +203,7 @@ fn video_preview(app: &mut EffectcraftApp, ctx: &egui::Context) {
     }
 
     let mut closed = false;
-    ctx.show_viewport_immediate(egui::ViewportId::from_hash_of("effectcraft-video-preview"), builder, |vctx, _| {
+    ctx.show_viewport_immediate(egui::ViewportId::from_hash_of("tselatra-video-preview"), builder, |vctx, _| {
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(Color32::BLACK)).show(vctx, |ui| {
             let area = ui.max_rect();
             if let Some(t) = &tex {

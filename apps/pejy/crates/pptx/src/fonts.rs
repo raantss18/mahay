@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use designcraft_fonts::FontFace;
+use pejy_fonts::FontFace;
 use skrifa::MetadataProvider;
 use skrifa::string::StringId;
 
@@ -22,7 +22,7 @@ pub struct Fonts {
     /// Glyph → the lowest character mapping to it.
     reverse: HashMap<u32, HashMap<u32, char>>,
     /// Faces the slides use, by (family, bold, italic), in first-use order.
-    pub used: Vec<(RunFont, designcraft_fonts::FaceRef)>,
+    pub used: Vec<(RunFont, pejy_fonts::FaceRef)>,
 }
 
 fn english(face: &FontFace, id: StringId) -> Option<String> {
@@ -43,7 +43,7 @@ fn english(face: &FontFace, id: StringId) -> Option<String> {
 
 impl Fonts {
     /// The run font for a face a slide uses (recorded for embedding).
-    pub fn use_face(&mut self, face: designcraft_fonts::FaceRef) -> RunFont {
+    pub fn use_face(&mut self, face: pejy_fonts::FaceRef) -> RunFont {
         let rf = self.run_font(face.get());
         if !self.used.iter().any(|(u, _)| *u == rf) {
             self.used.push((rf.clone(), face));

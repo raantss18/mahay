@@ -1,6 +1,6 @@
 //! Background export: the Export dialog, File → Export with Preset and Export with Previous hand
 //! their batch to a worker thread so the window stays responsive. Photos are prepared on the UI
-//! thread ([`lightcraft_engine::export::prepare_export`]: cheap, needs the session) and rendered,
+//! thread ([`hazavana_engine::export::prepare_export`]: cheap, needs the session) and rendered,
 //! encoded and written on the worker (several side by side: [`run_batch`]); its row in the
 //! activity stack shows the count, the file in progress and ✕ (issue #345).
 //!
@@ -11,11 +11,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
 
-use lightcraft_engine::activity::{Cancel, TaskGuard};
-use lightcraft_engine::export::{AfterExport, Destination, ExportOptions, PreparedExport, run_batch};
+use hazavana_engine::activity::{Cancel, TaskGuard};
+use hazavana_engine::export::{AfterExport, Destination, ExportOptions, PreparedExport, run_batch};
 use serde_json::{Value, json};
 
-use crate::LightcraftApp;
+use crate::HazavanaApp;
 
 pub struct ExportTask {
     pub total: usize,
@@ -39,7 +39,7 @@ impl ExportTask {
 
 /// Start exporting `items` in the background, then do `after` with the files written (Add to Apple
 /// Photos). Errors per photo are collected, not fatal.
-pub fn start(app: &mut LightcraftApp, items: Vec<PreparedExport>, opts: ExportOptions, to: Destination, after: AfterExport) -> Result<Value, String> {
+pub fn start(app: &mut HazavanaApp, items: Vec<PreparedExport>, opts: ExportOptions, to: Destination, after: AfterExport) -> Result<Value, String> {
     if app.export.is_some() {
         return Err("an export is already running".into());
     }
@@ -86,14 +86,14 @@ pub fn start(app: &mut LightcraftApp, items: Vec<PreparedExport>, opts: ExportOp
 }
 
 /// Export a single paginated PDF with the same activity row and cancellation as image exports.
-pub fn start_contact_sheet(app: &mut LightcraftApp, params: &Value) -> Result<Value, String> {
+pub fn start_contact_sheet(app: &mut HazavanaApp, params: &Value) -> Result<Value, String> {
     if app.export.is_some() {
         return Err("an export is already running".into());
     }
     let path = params.get("path").and_then(Value::as_str).filter(|s| !s.trim().is_empty()).ok_or("missing path")?.to_string();
     app.session.check_write_target(&path)?;
     let guard = app.session.original_guard();
-    let prepared = lightcraft_engine::contact_sheet::prepare(&mut app.session, params)?;
+    let prepared = hazavana_engine::contact_sheet::prepare(&mut app.session, params)?;
     let total = prepared.len();
     let write = app.services.write_shared.clone();
     let progress = Arc::new(Mutex::new((0, String::new())));
@@ -115,7 +115,7 @@ pub fn start_contact_sheet(app: &mut LightcraftApp, params: &Value) -> Result<Va
                 guard.check(std::path::Path::new(&path))?;
                 match write {
                     Some(write) => write(&path, &doc.bytes)?,
-                    None => lightcraft_engine::export::write_file(&path, &doc.bytes)?,
+                    None => hazavana_engine::export::write_file(&path, &doc.bytes)?,
                 }
                 Ok(vec![json!({"path": path, "pages": doc.pages, "photos": doc.photos, "bytes": doc.bytes.len(), "contactSheet": true})])
             });
@@ -134,8 +134,8 @@ pub fn start_contact_sheet(app: &mut LightcraftApp, params: &Value) -> Result<Va
 
 /// Print the session's current print (`print.get`) to a PDF in the background, with the same
 /// activity row and cancellation as the other exports.
-pub fn start_print(app: &mut LightcraftApp, params: &Value) -> Result<Value, String> {
-    use lightcraft_engine::print::{compose, output};
+pub fn start_print(app: &mut HazavanaApp, params: &Value) -> Result<Value, String> {
+    use hazavana_engine::print::{compose, output};
     if app.export.is_some() {
         return Err("an export is already running".into());
     }
@@ -169,7 +169,7 @@ pub fn start_print(app: &mut LightcraftApp, params: &Value) -> Result<Value, Str
                 guard.check(std::path::Path::new(&path))?;
                 match write {
                     Some(write) => write(&path, &bytes)?,
-                    None => lightcraft_engine::export::write_file(&path, &bytes)?,
+                    None => hazavana_engine::export::write_file(&path, &bytes)?,
                 }
                 Ok(vec![json!({"path": path, "pages": pages.len(), "photos": photos, "bytes": bytes.len(), "print": true})])
             });
@@ -210,7 +210,7 @@ pub fn apple_photos_note(outcome: &Value) -> String {
 /// Per frame: when an Apple Photos import that no export task reports finishes (`app.export`
 /// without `background`, `export.addToPhotos`), say how it went.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn poll_photos(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn poll_photos(app: &mut HazavanaApp, ctx: &egui::Context) {
     let jobs = app.session.apple_photos_imports.all();
     if jobs.iter().any(|j| !j.finished()) {
         ctx.request_repaint_after(std::time::Duration::from_millis(250));
@@ -230,10 +230,10 @@ pub fn poll_photos(app: &mut LightcraftApp, ctx: &egui::Context) {
 
 /// No Apple Photos on the web.
 #[cfg(target_arch = "wasm32")]
-pub fn poll_photos(_: &mut LightcraftApp, _: &egui::Context) {}
+pub fn poll_photos(_: &mut HazavanaApp, _: &egui::Context) {}
 
 /// Per frame: keep the activity row up to date; when the batch finishes, report it.
-pub fn poll(app: &mut LightcraftApp, ctx: &egui::Context) {
+pub fn poll(app: &mut HazavanaApp, ctx: &egui::Context) {
     let Some(task) = &app.export else { return };
     match task.rx.try_recv() {
         Ok(r) => {
@@ -321,15 +321,15 @@ mod contact_sheet_tests {
         };
         // Exercise the menu/picker/background PDF workflow with a small procedural original.
         // A full-size demo makes this test's deadline depend on unrelated concurrent renders.
-        let demo = lightcraft_engine::Session::with_demo();
+        let demo = hazavana_engine::Session::with_demo();
         let id = demo.active().unwrap();
         let mut photo = (**demo.catalog.photo(id).unwrap()).clone();
         photo.width = 96;
         photo.height = 64;
-        let mut session = lightcraft_engine::Session::new();
-        session.catalog.apply(lightcraft_catalog::Op::AddPhoto { photo: Box::new(photo) }).unwrap();
+        let mut session = hazavana_engine::Session::new();
+        session.catalog.apply(hazavana_catalog::Op::AddPhoto { photo: Box::new(photo) }).unwrap();
         session.execute("library.select", &json!({"ids": [id.0], "active": id.0})).unwrap();
-        let mut app = LightcraftApp::new(session, services);
+        let mut app = HazavanaApp::new(session, services);
         app.run("dialog.contactSheet", json!({})).unwrap();
         let Some(Dialog::ContactSheet { options }) = app.ui.dialog.as_mut() else { panic!("no contact sheet settings") };
         options.paper = "letter".into();
@@ -366,8 +366,8 @@ mod contact_sheet_tests {
 
     #[test]
     fn contact_sheet_export_shows_a_row_and_its_cross_stops_it() {
-        let mut app = LightcraftApp::new(
-            lightcraft_engine::Session::with_demo(),
+        let mut app = HazavanaApp::new(
+            hazavana_engine::Session::with_demo(),
             crate::Services { write_shared: Some(Arc::new(|_, _| Ok(()))), ..Default::default() },
         );
         let ids: Vec<_> = app.session.catalog.photos().take(24).map(|p| p.id.0).collect();
@@ -386,8 +386,8 @@ mod contact_sheet_tests {
 
     #[test]
     fn cancelled_contact_sheet_never_calls_writer() {
-        let mut app = LightcraftApp::new(
-            lightcraft_engine::Session::with_demo(),
+        let mut app = HazavanaApp::new(
+            hazavana_engine::Session::with_demo(),
             crate::Services { write_shared: Some(Arc::new(|_, _| panic!("cancelled export wrote a file"))), ..Default::default() },
         );
         let ids: Vec<_> = app.session.catalog.photos().take(24).map(|p| p.id.0).collect();
@@ -411,7 +411,7 @@ mod tests {
         let partial = apple_photos_note(&json!({"imported": 1, "requested": 2, "warning": "Photos added 1 of 2 files"}));
         assert_eq!(partial, "1 added to Apple Photos (Photos added 1 of 2 files)");
         let denied = apple_photos_note(
-            &json!({"error": "LightCraft isn't allowed to control Photos. Allow it in System Settings › Privacy & Security › Automation"}),
+            &json!({"error": "Hazavana isn't allowed to control Photos. Allow it in System Settings › Privacy & Security › Automation"}),
         );
         assert!(denied.starts_with("not added to Apple Photos: ") && denied.contains("Automation"), "{denied}");
         assert_eq!(apple_photos_note(&json!({"skipped": "the export was cancelled", "cancelled": true})), "not added to Apple Photos (cancelled)");

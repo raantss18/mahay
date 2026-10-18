@@ -1,15 +1,15 @@
-//! `.vectorcraft` format: round trips, robustness against garbage, versioning, unknown fields.
+//! `.tsipika` format: round trips, robustness against garbage, versioning, unknown fields.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use proptest::prelude::*;
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeId, NodeKind};
-use vectorcraft_format::{SaveOptions, base64_decode, base64_encode, load, load_file, pdf_content, preview, save, save_with, sniff};
-use vectorcraft_geom::Affine;
-use vectorcraft_testkit::fixtures;
-use vectorcraft_testkit::invariants::{check_document, check_native_roundtrip, check_native_roundtrip_exact, doc_json, json_approx_eq};
-use vectorcraft_testkit::strategies::arb_ops;
+use tsipika_doc::{Document, ImageBlob, ImageObject, Node, NodeId, NodeKind};
+use tsipika_format::{SaveOptions, base64_decode, base64_encode, load, load_file, pdf_content, preview, save, save_with, sniff};
+use tsipika_geom::Affine;
+use tsipika_testkit::fixtures;
+use tsipika_testkit::invariants::{check_document, check_native_roundtrip, check_native_roundtrip_exact, doc_json, json_approx_eq};
+use tsipika_testkit::strategies::arb_ops;
 
 fn rich_doc() -> Document {
     (*fixtures::rich_session().doc().unwrap().doc).clone()
@@ -87,8 +87,8 @@ proptest! {
     /// and what loads saves and loads again unchanged.
     #[test]
     fn area_type_rows_and_columns_read_as_1_to_100(rows in prop_oneof![0u64..=200, any::<u64>()], columns in prop_oneof![0u64..=200, any::<u64>()]) {
-        use vectorcraft_doc::{AreaOptions, TextKind, TextObject};
-        use vectorcraft_geom::{Point, Rect, shapes};
+        use tsipika_doc::{AreaOptions, TextKind, TextObject};
+        use tsipika_geom::{Point, Rect, shapes};
         let count = |n: u64| usize::try_from(n).unwrap_or(usize::MAX);
         let mut t = TextObject::point(Point::ZERO, "Rows and columns", Default::default());
         t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 300.0, 120.0)) };
@@ -167,8 +167,8 @@ fn rich_document_roundtrips() {
     let bytes = save(&d, true);
     assert!(sniff(&bytes));
     let v: Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(v["format"], "vectorcraft");
-    assert_eq!(v["version"], vectorcraft_format::VERSION);
+    assert_eq!(v["format"], "tsipika");
+    assert_eq!(v["version"], tsipika_format::VERSION);
 }
 
 #[test]
@@ -183,14 +183,14 @@ fn sniff_distinguishes_formats() {
 #[test]
 fn rejects_newer_versions_and_other_formats() {
     let mut v: Value = serde_json::from_slice(&save(&Document::new(1.0, 1.0), false)).unwrap();
-    v["version"] = json!(vectorcraft_format::VERSION + 1);
-    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(vectorcraft_format::FormatError::TooNew(_))));
-    v["version"] = json!(vectorcraft_format::VERSION);
+    v["version"] = json!(tsipika_format::VERSION + 1);
+    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(tsipika_format::FormatError::TooNew(_))));
+    v["version"] = json!(tsipika_format::VERSION);
     v["format"] = json!("other");
-    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(vectorcraft_format::FormatError::NotVectorcraft(_))));
-    v["format"] = json!("vectorcraft");
+    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(tsipika_format::FormatError::NotTsipika(_))));
+    v["format"] = json!("tsipika");
     v["images"] = json!({"x": {"mime": "image/png", "data": "not base64!"}});
-    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(vectorcraft_format::FormatError::BadImage(_))));
+    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(tsipika_format::FormatError::BadImage(_))));
 }
 
 #[test]
@@ -249,8 +249,8 @@ fn saved_selections_from_a_file_are_tidied() {
     v["document"]["saved_selections"] = json!(list);
     let back = load(&serde_json::to_vec(&v).unwrap()).unwrap();
     let saved = &back.saved_selections;
-    assert_eq!(saved.len(), vectorcraft_doc::SavedSelection::MAX);
-    assert_eq!(saved[0].name, "x".repeat(vectorcraft_doc::SavedSelection::MAX_NAME));
+    assert_eq!(saved.len(), tsipika_doc::SavedSelection::MAX);
+    assert_eq!(saved[0].name, "x".repeat(tsipika_doc::SavedSelection::MAX_NAME));
     assert_eq!(saved[0].objects, vec![id], "a missing id is dropped, a repeated one kept once");
     assert_eq!((saved[1].name.as_str(), saved[1].objects.len()), ("Dup", 0), "blank names go, the first of a name stays");
     assert_eq!(saved[2].name, "S0");

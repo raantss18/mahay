@@ -5,8 +5,8 @@
 use std::sync::Arc;
 
 use super::*;
-use figcraft_color::{ImageScaleMode, Paint};
-use figcraft_doc::{Effect, EffectKind, ImageData, Shadow};
+use endrika_color::{ImageScaleMode, Paint};
+use endrika_doc::{Effect, EffectKind, ImageData, Shadow};
 
 fn inner_shadow(offset: (f64, f64), radius: f64, spread: f64) -> Effect {
     Effect {
@@ -47,7 +47,7 @@ fn scene(shadows: bool, glass: bool) -> (Document, NodeId) {
         let g = d.create(p, NodeKind::Rectangle, "Glass", 40.0, 60.0, 320.0, 120.0).unwrap();
         let n = d.get_mut(g).unwrap();
         n.fills = vec![Paint::solid(Color::from_hex("FFFFFF33").unwrap())];
-        n.effects = vec![Effect { kind: EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(12.0)), visible: true }];
+        n.effects = vec![Effect { kind: EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(12.0)), visible: true }];
     }
     (d, p)
 }
@@ -121,7 +121,7 @@ fn inner_shadow_leaves_the_interior_alone() {
 fn huge_backdrop_blur_renders_in_one_piece() {
     let (mut d, p) = scene(true, true);
     let g = d.find_by_name("Glass", None)[0];
-    d.get_mut(g).unwrap().effects = vec![Effect { kind: EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(1e6)), visible: true }];
+    d.get_mut(g).unwrap().effects = vec![Effect { kind: EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(1e6)), visible: true }];
     assert!(render_bands(&d, p, &view(1.0), &Options::default(), 4).is_none());
     assert!(render_view(&d, p, &view(1.0), &Options::default()).is_some());
 }

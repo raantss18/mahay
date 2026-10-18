@@ -13,7 +13,7 @@
 //!   `K = 1 − max(R, G, B)`, `C = (1 − R − K) / (1 − K)` (likewise M and Y), so the same file
 //!   always converts the same way; images and rasterised effects are converted pixel by pixel.
 //!   The colours are DeviceCMYK with no output intent: embedding one needs a CMYK ICC profile,
-//!   and none ships with FigCraft (third-party profiles aren't allowed in the repository). Print
+//!   and none ships with Endrika (third-party profiles aren't allowed in the repository). Print
 //!   shops should proof against their own profile. Soft masks stay greyscale/RGB (they're never
 //!   printed), and transparency groups (blend modes, soft masks) blend in RGB as the PDF writer
 //!   declares them.
@@ -21,9 +21,9 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use figcraft_color::Color;
-use figcraft_doc::PrintSettings;
-use figcraft_geom::{BezPath, Rect, Shape};
+use endrika_color::Color;
+use endrika_doc::PrintSettings;
+use endrika_geom::{BezPath, Rect, Shape};
 use krilla::color::{cmyk, rgb};
 use krilla::image::{BitsPerComponent, CustomImage, Image, ImageColorspace};
 use krilla::paint::{FillRule, LineCap, Stroke};

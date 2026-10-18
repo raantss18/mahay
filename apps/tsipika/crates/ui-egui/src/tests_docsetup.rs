@@ -3,14 +3,14 @@
 //! the grid and Simulate Colored Paper tints the artboard.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, canvas};
+use crate::{TsipikaApp, canvas};
 
 /// One headless canvas frame: its shapes, the transparency grid tile uploaded in it (2 × 2
 /// pixels: the grid colours) and the grid mesh, if any.
-fn frame(app: &mut VectorcraftApp) -> (Vec<egui::Shape>, Option<Vec<egui::Color32>>, Option<egui::Mesh>) {
+fn frame(app: &mut TsipikaApp) -> (Vec<egui::Shape>, Option<Vec<egui::Color32>>, Option<egui::Mesh>) {
     let ctx = egui::Context::default();
     let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))), ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| canvas::show(app, ui));
@@ -50,8 +50,8 @@ fn outlines(shapes: &[egui::Shape], color: egui::Color32) -> Vec<Vec<egui::Pos2>
         .collect()
 }
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
     app
 }

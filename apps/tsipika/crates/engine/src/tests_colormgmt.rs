@@ -4,12 +4,12 @@
 use std::sync::Mutex;
 
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Intent, Lab, delta_e2000};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{ColorMode, Document};
-use vectorcraft_geom::Affine;
-use vectorcraft_render::proof::{ProofSetup, ProofTarget};
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_color::cms::{self, Intent, Lab, delta_e2000};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{ColorMode, Document};
+use tsipika_geom::Affine;
+use tsipika_render::proof::{ProofSetup, ProofTarget};
+use tsipika_render::{RenderOptions, Renderer};
 
 use super::*;
 
@@ -40,7 +40,7 @@ fn lab_of_rgb(rgb: [f32; 3]) -> Lab {
     cms::lab::srgb_to_lab(rgb)
 }
 
-fn render(doc: &Document, opts: RenderOptions) -> vectorcraft_render::Rendered {
+fn render(doc: &Document, opts: RenderOptions) -> tsipika_render::Rendered {
     let mut r = Renderer::new();
     r.threads = 0;
     r.render(doc, 100, 100, Affine::IDENTITY, &RenderOptions { background: Some([255, 255, 255, 255]), ..opts })
@@ -261,11 +261,11 @@ fn spot_colours_get_their_own_plate() {
     assert_eq!(vis, [false, false, false, false, true]);
     let r = s.execute("view.separationsPreview", &json!({"toggle": "Cyan"})).unwrap();
     assert_eq!(r["plates"][0]["visible"], true);
-    assert_eq!(vectorcraft_render::proof::active_proof().unwrap().separations.unwrap().len(), 2);
-    assert!(vectorcraft_render::proof::overprint_preview_on(), "separations imply overprint preview");
+    assert_eq!(tsipika_render::proof::active_proof().unwrap().separations.unwrap().len(), 2);
+    assert!(tsipika_render::proof::overprint_preview_on(), "separations imply overprint preview");
     assert!(s.execute("view.separationsPreview", &json!({"only": "Mauve"})).is_err());
     s.execute("view.separationsPreview", &json!({"on": false})).unwrap();
-    assert!(vectorcraft_render::proof::active_proof().is_none_or(|p| p.separations.is_none()));
+    assert!(tsipika_render::proof::active_proof().is_none_or(|p| p.separations.is_none()));
 }
 
 #[test]
@@ -299,7 +299,7 @@ fn view_toggles_redraw_without_dirtying() {
     assert!(!s.doc().unwrap().is_dirty(), "not marked modified");
     let r = s.execute("view.proofSetup", &json!({"target": "deuteranopia", "intent": "perceptual"})).unwrap();
     assert_eq!(r["target"], "deuteranopia");
-    assert_eq!(vectorcraft_render::proof::active_proof().unwrap().target, ProofTarget::Deuteranopia);
+    assert_eq!(tsipika_render::proof::active_proof().unwrap().target, ProofTarget::Deuteranopia);
     assert!(s.execute("view.proofSetup", &json!({"target": "cmyk:Nope"})).is_err());
     assert!(s.execute("view.proofSetup", &json!({"target": format!("cmyk:{}", cms::WIDE_GAMUT_RGB)})).is_err(), "an RGB profile");
     s.execute("view.proofSetup", &json!({"target": format!("cmyk:{}", cms::DEVICE_CMYK)})).unwrap();
@@ -318,7 +318,7 @@ fn proof_setup_simulates_tritanopia() {
     rect(&mut s, 0.0, 0.0, 100.0, 100.0, json!("#0000ff"));
     let r = s.execute("view.proofSetup", &json!({"target": "tritanopia", "proof": true})).unwrap();
     assert_eq!(r["target"], "tritanopia");
-    let setup = vectorcraft_render::proof::active_proof().unwrap();
+    let setup = tsipika_render::proof::active_proof().unwrap();
     assert_eq!(setup.target, ProofTarget::Tritanopia);
     let doc = s.doc().unwrap().doc.clone();
     let px = render(&doc, RenderOptions { proof: Some(setup), ..Default::default() }).pixel(50, 50);
@@ -335,7 +335,7 @@ fn has_cmyk_op(pdf: &str) -> bool {
 
 fn pdf_text(doc: &Document) -> String {
     let bytes =
-        vectorcraft_pdf::export(doc, &vectorcraft_pdf::PdfOptions { created: Some(0), ..vectorcraft_pdf::PdfOptions::uncompressed() }).unwrap();
+        tsipika_pdf::export(doc, &tsipika_pdf::PdfOptions { created: Some(0), ..tsipika_pdf::PdfOptions::uncompressed() }).unwrap();
     String::from_utf8_lossy(&bytes).into_owned()
 }
 

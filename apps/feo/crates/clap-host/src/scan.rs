@@ -1,6 +1,6 @@
 //! Finding CLAP plugins on disk (safe, pure `std::fs`) and mapping CLAP features to categories.
 
-use soundcraft_dsp::Category;
+use feo_dsp::Category;
 use std::path::{Path, PathBuf};
 
 /// Directory recursion limit while scanning (CLAP folders may be nested, never deeply).
@@ -114,7 +114,7 @@ pub fn bundle_executable(path: &Path) -> Option<PathBuf> {
     files.into_iter().next()
 }
 
-/// Maps CLAP feature strings to a SoundCraft insert-menu category.
+/// Maps CLAP feature strings to a Feo insert-menu category.
 pub fn category_from_features<S: AsRef<str>>(features: &[S]) -> Category {
     let has = |names: &[&str]| features.iter().any(|f| names.iter().any(|n| f.as_ref().eq_ignore_ascii_case(n)));
     if has(&["instrument", "synthesizer", "sampler", "drum", "drum-machine"]) {
@@ -148,7 +148,7 @@ mod tests {
     use super::*;
 
     fn tmp(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("soundcraft-clap-scan-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("feo-clap-scan-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d

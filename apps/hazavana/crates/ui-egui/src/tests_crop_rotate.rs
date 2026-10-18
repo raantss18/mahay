@@ -6,13 +6,13 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn crop_tool() -> Headless {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = Headless::new(app, [1200.0, 800.0], 1.0);
     for (method, params) in [("ui.set", json!({"view": "detail"})), ("engine.execute", json!({"command": "panel.crop"}))] {
         let r = h.request(method, params, T);
@@ -39,7 +39,7 @@ fn crop_fits(h: &Headless) -> bool {
     let (w, h) = (p.width as f64, p.height as f64);
     let (w, h) = if p.develop.orientation.swaps_axes() { (h, w) } else { (w, h) };
     let g = p.develop.crop.geometry;
-    g.rect != lightcraft_geom::Rect::UNIT && g.is_within_image(w, h)
+    g.rect != hazavana_geom::Rect::UNIT && g.is_within_image(w, h)
 }
 
 fn hover(h: &mut Headless, p: egui::Pos2) {
@@ -416,7 +416,7 @@ fn rotating_the_crop_dims_nothing_inside_the_box() {
     assert!(lum(pixel(&rotated, corner_px)) < lum(pixel(&plain, corner_px)), "the photo's corner, outside the box, is dimmed");
 }
 
-fn crop_rect(h: &Headless) -> lightcraft_geom::Rect {
+fn crop_rect(h: &Headless) -> hazavana_geom::Rect {
     let id = h.app.session.active().expect("a photo");
     h.app.session.catalog.photo(id).expect("the photo").develop.crop.geometry.rect
 }

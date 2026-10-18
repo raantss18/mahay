@@ -6,10 +6,10 @@ use std::io::Cursor;
 use std::sync::Arc;
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Document, Effect, ImageBlob, ImageObject, Node, NodeKind, Symbol, TextObject};
-use vectorcraft_geom::{Affine, Point, Rect, shapes};
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, CharStyle, Document, Effect, ImageBlob, ImageObject, Node, NodeKind, Symbol, TextObject};
+use tsipika_geom::{Affine, Point, Rect, shapes};
+use tsipika_render::{Rendered, Renderer};
 
 use super::*;
 
@@ -59,7 +59,7 @@ fn assert_written(what: &str, d: &Document) {
     assert!(r.warnings.is_empty(), "{what}: {:?}", r.warnings);
     assert!(String::from_utf8_lossy(&r.bytes).contains("/Subtype/Image"), "{what}: an image XObject");
     let canvas = render(d);
-    let diff = mean_diff(&canvas, &render(&vectorcraft_pdf::import(&r.bytes).unwrap()));
+    let diff = mean_diff(&canvas, &render(&tsipika_pdf::import(&r.bytes).unwrap()));
     let mut plain = d.clone();
     for l in &mut plain.layers {
         crate::cmd::rasterfx::strip_raster(Arc::make_mut(l), true);
@@ -166,7 +166,7 @@ fn shadows_and_glows_keep_their_blend_modes() {
     add(&mut d, with(dot, glow.clone()));
     assert_written("screen glow", &d);
     let r = crate::cmd::rasterfx::export_pdf_with_report(&d, &Default::default()).unwrap();
-    let back = render(&vectorcraft_pdf::import(&r.bytes).unwrap());
+    let back = render(&tsipika_pdf::import(&r.bytes).unwrap());
     for x in [133, 138, 145] {
         let i = (100 * back.width as usize + x) * 4;
         let (red, green, blue) = (back.pixels[i], back.pixels[i + 1], back.pixels[i + 2]);
@@ -180,7 +180,7 @@ fn shadows_and_glows_keep_their_blend_modes() {
     let flat = crate::flatten_raster_effects(&d).unwrap();
     let modes: Vec<_> =
         flat.layers[0].children().unwrap()[0].children().unwrap().iter().filter(|c| matches!(c.kind, NodeKind::Image(_))).map(|c| c.blend).collect();
-    assert_eq!(modes, [vectorcraft_color::BlendMode::Multiply, vectorcraft_color::BlendMode::Screen]);
+    assert_eq!(modes, [tsipika_color::BlendMode::Multiply, tsipika_color::BlendMode::Screen]);
 }
 
 #[test]

@@ -3,8 +3,8 @@
 
 use egui::accesskit::{Node, Role};
 use egui::{Event, Key, Modifiers};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::icons::Icon;
@@ -68,7 +68,7 @@ fn arc_fields_show_and_set_the_ellipse_arc() {
     press(&mut u, Key::Enter);
     u.frame(vec![]);
     let sweep = match u.app.session.doc().unwrap().node(e).unwrap().kind {
-        figcraft_doc::NodeKind::Ellipse { sweep, .. } => sweep,
+        endrika_doc::NodeKind::Ellipse { sweep, .. } => sweep,
         _ => 0.0,
     };
     assert!((sweep - std::f64::consts::PI).abs() < 1e-9, "{sweep}");

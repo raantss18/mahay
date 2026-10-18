@@ -1,7 +1,7 @@
 //! Library linetypes load scaled for the drawing's units (issue #294): a metric drawing gets the
 //! patterns in millimetres (inch lengths × 25.4), an imperial one keeps the inch lengths.
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 use serde_json::json;
 
 /// Dash and gap lengths of a linetype loaded with the LINETYPE command.

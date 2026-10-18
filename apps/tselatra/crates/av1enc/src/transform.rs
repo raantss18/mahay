@@ -1,5 +1,5 @@
 //! Transforms. The inverse transforms are the normative ones of spec 7.13 (mirrored from
-//! filmcraft-av1, so that the encoder reconstructs exactly like a decoder); the forward
+//! hetsika-av1, so that the encoder reconstructs exactly like a decoder); the forward
 //! transforms are floating-point matrices scaled to match them (not normative).
 
 use std::sync::OnceLock;

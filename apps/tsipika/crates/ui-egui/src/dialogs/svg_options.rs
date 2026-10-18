@@ -10,7 +10,7 @@ use serde_json::{Map, Value, json};
 use super::DialogSpec;
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 pub(super) const SPEC: DialogSpec = DialogSpec {
     heading: |_| tl!("SVG Options").into(),
@@ -71,7 +71,7 @@ const UI_KEYS: [&str; 5] = ["mode", "path", "showCode", "allArtboards", "range"]
 /// and Responsive on (as the reference app's Export As starts). Hidden layers are left to the
 /// command (Save keeps them, Export leaves them out).
 pub(super) fn first_use() -> Map<String, Value> {
-    let mut m = serde_json::to_value(vectorcraft_svg::ExportOptions::default()).ok().and_then(|v| v.as_object().cloned()).unwrap_or_default();
+    let mut m = serde_json::to_value(tsipika_svg::ExportOptions::default()).ok().and_then(|v| v.as_object().cloned()).unwrap_or_default();
     m.remove("hiddenLayers");
     m.insert("styling".into(), json!("css"));
     m.insert("responsive".into(), json!(true));
@@ -81,10 +81,10 @@ pub(super) fn first_use() -> Map<String, Value> {
 
 /// Open SVG Options for `mode`, filled with the options used last (a save starts from the ones
 /// the document was last saved with). `path`: where a save goes.
-pub fn open(app: &mut VectorcraftApp, mode: Mode, path: Option<&str>) {
+pub fn open(app: &mut TsipikaApp, mode: Mode, path: Option<&str>) {
     let mut fields = first_use();
     // Fonts start from Document Setup → Type → Export.
-    if app.session.active().is_some_and(|st| st.doc.setup.export_text == vectorcraft_doc::ExportText::Appearance) {
+    if app.session.active().is_some_and(|st| st.doc.setup.export_text == tsipika_doc::ExportText::Appearance) {
         fields.insert("outlineText".into(), json!(true));
     }
     // Only options saved with an SVG format are SVG options.
@@ -125,11 +125,11 @@ fn options(d: &Dialog) -> Value {
     Value::Object(o)
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let opts = options(d);
     if Mode::of(d) == Mode::Export && d.bool("useArtboards") {
         let n = app.session.active().map_or(0, |st| st.doc.artboards.len());
-        let pick: vectorcraft_engine::cmd::fileio::ArtboardPick = serde_json::from_value(opts.clone()).map_err(|e| e.to_string())?;
+        let pick: tsipika_engine::cmd::fileio::ArtboardPick = serde_json::from_value(opts.clone()).map_err(|e| e.to_string())?;
         pick.resolve(n)?;
     }
     // Remembered for next time, without the document's artboard range.
@@ -173,7 +173,7 @@ fn check(ui: &mut egui::Ui, d: &mut Dialog, key: &str, label: &str, enabled: boo
     }
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     option_fields(ui, d, false);
     if Mode::of(d) == Mode::Export {
         artboards(app, ui, d);
@@ -210,7 +210,7 @@ pub(super) fn option_fields(ui: &mut egui::Ui, d: &mut Dialog, screens: bool) {
         widgets::field_label(ui, egui::RichText::new(tl!("Decimal:")).color(t.text_dim));
         let decimals = d.f64("decimals", 3.0);
         if let Some(v) = widgets::spin_plain(ui, "svg-decimals", decimals, "", 0, 70.0, 1.0, 1.0, &[]) {
-            let (lo, hi) = (*vectorcraft_svg::DECIMALS.start() as f64, *vectorcraft_svg::DECIMALS.end() as f64);
+            let (lo, hi) = (*tsipika_svg::DECIMALS.start() as f64, *tsipika_svg::DECIMALS.end() as f64);
             d.fields.insert("decimals".into(), json!(v.round().clamp(lo, hi) as u8));
         }
         ui.end_row();
@@ -228,7 +228,7 @@ pub(super) fn option_fields(ui: &mut egui::Ui, d: &mut Dialog, screens: bool) {
 }
 
 /// Use Artboards: all of them or a range; off = the bounds of all art.
-fn artboards(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn artboards(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let count = app.session.active().map_or(0, |st| st.doc.artboards.len());
     ui.add_space(4.0);
     check(ui, d, "useArtboards", tl!("Use Artboards"), count > 0);
@@ -254,7 +254,7 @@ fn artboards(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 
 /// The SVG the current options write for the first chosen artboard (read-only, selectable),
 /// encoded again only when the options or the document change.
-fn code_view(app: &VectorcraftApp, ui: &mut egui::Ui, d: &Dialog) {
+fn code_view(app: &TsipikaApp, ui: &mut egui::Ui, d: &Dialog) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else { return };
     let mut opts = options(d);
@@ -272,13 +272,13 @@ fn code_view(app: &VectorcraftApp, ui: &mut egui::Ui, d: &Dialog) {
         Some((_, c)) => c,
         None => {
             const MAX: usize = 200_000;
-            let mut text = match vectorcraft_engine::cmd::fileio::encode_all(&st.doc, "svg", &json!({ "svg": opts })) {
+            let mut text = match tsipika_engine::cmd::fileio::encode_all(&st.doc, "svg", &json!({ "svg": opts })) {
                 // Shown as text whatever the file's encoding.
                 Ok(enc) => enc
                     .files
                     .into_iter()
                     .next()
-                    .map(|(_, b)| vectorcraft_svg::text_of(&b).map_or_else(|_| String::from_utf8_lossy(&b).into_owned(), |t| t.into_owned()))
+                    .map(|(_, b)| tsipika_svg::text_of(&b).map_or_else(|_| String::from_utf8_lossy(&b).into_owned(), |t| t.into_owned()))
                     .unwrap_or_default(),
                 Err(e) => e.to_string(),
             };
@@ -311,7 +311,7 @@ mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::Services;
@@ -320,7 +320,7 @@ mod tests {
 
     /// An app with two artboards and a rectangle whose save dialog answers `picked` and whose
     /// writer records what it is given.
-    fn app(picked: &str) -> (VectorcraftApp, Written) {
+    fn app(picked: &str) -> (TsipikaApp, Written) {
         let written = Written::default();
         let w = written.clone();
         let picked = picked.to_string();
@@ -332,14 +332,14 @@ mod tests {
             pick_save: Some(Box::new(move |_: &crate::FilePick| Some(picked.clone()))),
             ..Default::default()
         };
-        let mut app = VectorcraftApp::new(Session::new(), services);
+        let mut app = TsipikaApp::new(Session::new(), services);
         app.run("file.new", json!({"width": 120, "height": 80, "artboards": 2})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 30})).unwrap();
         (app, written)
     }
 
     /// One headless frame of the dialog layer.
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(Default::default(), |ui| super::super::show(app, ui.ctx()));
@@ -412,8 +412,8 @@ mod tests {
         assert!(!text(&written, 2).trim_end().contains('\n') && !text(&written, 2).contains("<?xml"), "minified");
         assert_eq!(app.session.active().unwrap().path.as_deref(), Some("/tmp/doc.svg"));
         // A native Save As needs no options.
-        app.run("file.saveAs", json!({"path": "/tmp/doc.vectorcraft"})).unwrap();
-        assert!(vectorcraft_format::sniff(&written.borrow()[3].1));
+        app.run("file.saveAs", json!({"path": "/tmp/doc.tsipika"})).unwrap();
+        assert!(tsipika_format::sniff(&written.borrow()[3].1));
     }
 
     #[test]
@@ -433,7 +433,7 @@ mod tests {
         super::super::confirm(&mut app).unwrap();
         let bytes = written.borrow()[0].1.clone();
         assert!(bytes.starts_with(b"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"));
-        let svg = vectorcraft_svg::text_of(&bytes).unwrap();
+        let svg = tsipika_svg::text_of(&bytes).unwrap();
         assert!(svg.contains("baseProfile=\"tiny\"") && !svg.contains("<style>") && svg.contains("&#x20AC;"), "{svg}");
         // SVG 1.1 with embedded fonts: an @font-face rule for the type.
         app.run("file.export.svg", Value::Null).unwrap();

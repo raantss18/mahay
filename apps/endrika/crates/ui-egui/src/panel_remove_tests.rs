@@ -3,8 +3,8 @@
 //! and go when their item goes.
 
 use egui::{Event, Id, Pos2};
-use figcraft_doc::NodeId;
-use figcraft_engine::Session;
+use endrika_doc::NodeId;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::colorpicker::PickerTarget;

@@ -30,8 +30,8 @@ mod import;
 mod scene;
 mod wmf;
 
-use vectorcraft_doc::Document;
-use vectorcraft_geom::Rect;
+use tsipika_doc::Document;
+use tsipika_geom::Rect;
 
 /// A Windows metafile format.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -80,7 +80,7 @@ pub fn export(doc: &Document, region: Rect, kind: Kind) -> Result<Output, String
     if ![r.x0, r.y0, r.x1, r.y1].iter().all(|v| v.is_finite()) || r.width() <= 0.0 || r.height() <= 0.0 {
         return Err("the export region is empty".into());
     }
-    let baked = vectorcraft_effects::bake_document(doc);
+    let baked = tsipika_effects::bake_document(doc);
     let doc = baked.as_ref().unwrap_or(doc);
     let (ops, mut warnings) = scene::Scene::new(doc, r, kind == Kind::Emf).run();
     let bytes = match kind {

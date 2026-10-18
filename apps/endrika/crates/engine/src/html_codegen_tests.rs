@@ -7,7 +7,7 @@ use crate::Session;
 use crate::codegen::{CodeLang, code_for};
 use crate::params::id_of;
 
-fn id(v: Value) -> figcraft_doc::NodeId {
+fn id(v: Value) -> endrika_doc::NodeId {
     id_of(&v["id"]).unwrap()
 }
 
@@ -78,7 +78,7 @@ fn leptos_wraps_the_markup_in_a_component_with_text_as_string_literals() {
     assert!(out["code"].as_str().unwrap().contains("width: 12.5rem;"), "{}", out["code"]);
 }
 
-fn web_code(s: &mut Session, id: figcraft_doc::NodeId, language: &str, unit: &str) -> String {
+fn web_code(s: &mut Session, id: endrika_doc::NodeId, language: &str, unit: &str) -> String {
     let out = s.execute("inspect.code", &json!({"id": id, "language": language, "unit": unit})).unwrap();
     out["code"].as_str().unwrap().to_string()
 }

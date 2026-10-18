@@ -33,7 +33,7 @@ fn document(extra: &str, tail: &[(u32, u16, String)]) -> Vec<u8> {
 fn a_nonzero_generation_scalar_keeps_the_drawing_opacity() {
     let doc = parse(&document("", &[])).unwrap();
     assert!(doc.skipped.is_empty(), "{:?}", doc.skipped);
-    let pixel = effectcraft_svg::rasterize(&doc, 20, 10, 1.0).get(10, 5);
+    let pixel = tselatra_svg::rasterize(&doc, 20, 10, 1.0).get(10, 5);
     assert!((pixel[0] - 0.25).abs() < 0.001 && (pixel[3] - 0.25).abs() < 0.001, "{pixel:?}");
 }
 

@@ -1,11 +1,11 @@
 //! Imported colours keep their model: CMYK, Gray, spot inks (Separation, DeviceN) at a tint, in
 //! solid paints and shading stops; a CMYK file opens as a CMYK document.
 
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint, Swatch};
-use vectorcraft_doc::{Appearance, AppearanceItem, ColorMode, Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Rect, shapes};
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with};
+use tsipika_color::swatch::REGISTRATION;
+use tsipika_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint, Swatch};
+use tsipika_doc::{Appearance, AppearanceItem, ColorMode, Document, Node, NodeId, NodeKind};
+use tsipika_geom::{Rect, shapes};
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with};
 
 use crate::import_color::{Colors, Space};
 use crate::*;
@@ -377,7 +377,7 @@ fn ink_names_never_clash_with_the_document_swatches() {
 
 #[test]
 fn colour_spaces_are_read_from_the_interpreters_debug_form() {
-    let pdf = craft_pdf::syntax::Pdf::new(pdf(&[PdfPage::new(10.0, 10.0, "")], None)).unwrap();
+    let pdf = mahay_pdf::syntax::Pdf::new(pdf(&[PdfPage::new(10.0, 10.0, "")], None)).unwrap();
     let mut c = Colors::new(&pdf, vec![]);
     for (text, n, want) in [
         ("ColorSpace(DeviceCmyk)", 4, Space::Cmyk),
@@ -402,14 +402,14 @@ fn colour_spaces_are_read_from_the_interpreters_debug_form() {
 /// stray `-`) is left out when the file's ink spaces are looked for, and the inks after it are found.
 #[test]
 fn inks_are_found_past_dictionary_values_the_reader_cannot_parse() {
-    use craft_pdf::interpret::Function;
-    use craft_pdf::syntax::object::{FromBytes, Object};
+    use mahay_pdf::interpret::Function;
+    use mahay_pdf::syntax::object::{FromBytes, Object};
     let tint = "<< /FunctionType 2 /Domain [0 1] /C0 [0 0 0 0] /C1 [0 0 1 0] /N 1 >>";
     let key = format!("{:?}", Function::new(&Object::from_bytes(tint.as_bytes()).unwrap()).unwrap());
     for junk in ["/#zz", "12-.5"] {
         let page = page_with(&format!("/A {junk} /CS0 [/Separation /Gold /DeviceCMYK {tint}]"), &[("CS0", "1")]);
         // Opened by the reader alone, without the checks of `pages::open`.
-        let pdf = craft_pdf::syntax::Pdf::new(pdf(&[page], None)).unwrap();
+        let pdf = mahay_pdf::syntax::Pdf::new(pdf(&[page], None)).unwrap();
         let mut c = Colors::new(&pdf, vec![]);
         let space = c.space_of(&format!("ColorSpace(Separation(Separation {{ tint_transform: {key} }}))"), 1, None);
         assert_eq!(space, Space::Inks(0), "{junk}");
@@ -453,7 +453,7 @@ fn spot_colours_with_an_icc_lab_alternate_keep_their_lab_values() {
 fn rgb_numbers_stand_in_editor_documents_only() {
     // GUARDS: an editor's document keeps its `ICCBased` RGB numbers; a PDF's profile stands.
     let f = first_extra(1);
-    let icc = vectorcraft_color::cms::icc_bytes(vectorcraft_color::cms::PROPHOTO_RGB).unwrap();
+    let icc = tsipika_color::cms::icc_bytes(tsipika_color::cms::PROPHOTO_RGB).unwrap();
     let hex: String = icc.iter().map(|b| format!("{b:02x}")).collect();
     let profile = format!("<< /N 3 /Filter /ASCIIHexDecode /Length {} >>\nstream\n{hex}>\nendstream", hex.len() + 1);
     let mut page = page_with(&format!("/CS0 [/ICCBased {f} 0 R]"), &[("CS0", "0.2 0.6 0.4")]);

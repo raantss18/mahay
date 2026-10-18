@@ -13,12 +13,12 @@ use std::collections::HashMap;
 
 use egui::{Rect, Sense, Stroke, StrokeKind, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_engine::cmd::library::{ItemKind, LIBRARY_EXT, LIBRARY_EXTS, Library, LibraryGraphic};
+use tsipika_color::Paint;
+use tsipika_engine::cmd::library::{ItemKind, LIBRARY_EXT, LIBRARY_EXTS, Library, LibraryGraphic};
 
 use crate::theme::Tokens;
 use crate::widgets::{self, PanelDrag, menu_item, menu_item_name};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 /// The size of a graphic's tile.
 const TILE: f32 = 56.0;
@@ -26,14 +26,14 @@ const TILE: f32 = 56.0;
 const CHIP: f32 = 22.0;
 
 /// The current library: its id and a copy of it (the panel menu acts on it after reading).
-fn current(app: &VectorcraftApp) -> Option<(String, Library)> {
+fn current(app: &TsipikaApp) -> Option<(String, Library)> {
     let libs = &app.session.libraries;
     let id = libs.current()?;
     Some((id.to_string(), libs.get(id)?.clone()))
 }
 
 /// Report a failure in the status bar (a file dialog closed or still open says nothing).
-fn report<T>(app: &mut VectorcraftApp, r: Result<T, String>) {
+fn report<T>(app: &mut TsipikaApp, r: Result<T, String>) {
     if let Err(e) = r
         && e != "cancelled"
     {
@@ -42,13 +42,13 @@ fn report<T>(app: &mut VectorcraftApp, r: Result<T, String>) {
 }
 
 /// Run `cmd`, reporting a failure in the status bar.
-fn run(app: &mut VectorcraftApp, cmd: &str, p: Value) {
+fn run(app: &mut TsipikaApp, cmd: &str, p: Value) {
     let r = app.run(cmd, p);
     report(app, r);
 }
 
 /// The name dialog for a new library, or for renaming the current one.
-fn ask_name(app: &mut VectorcraftApp, rename: Option<&str>) {
+fn ask_name(app: &mut TsipikaApp, rename: Option<&str>) {
     let (cmd, label, name) = match rename {
         Some(n) => ("library.rename", "Rename Library", n.to_string()),
         None => ("library.create", "Create New Library", "My Library".to_string()),
@@ -58,7 +58,7 @@ fn ask_name(app: &mut VectorcraftApp, rename: Option<&str>) {
 
 /// The name dialog for a new group of `library` (`items`: `[{kind, item}]` moved into it), or for
 /// renaming group `rename`.
-fn ask_group_name(app: &mut VectorcraftApp, library: &str, rename: Option<&str>, items: Value) {
+fn ask_group_name(app: &mut TsipikaApp, library: &str, rename: Option<&str>, items: Value) {
     let (cmd, label, name, fixed) = match rename {
         Some(g) => ("library.renameGroup", "Rename Library Group", g, json!({ "library": library, "group": g })),
         None => ("library.createGroup", "New Library Group", "Group", json!({ "library": library, "items": items })),
@@ -90,7 +90,7 @@ impl Items<'_> {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let fill_active = app.session.fill_active;
     let has_doc = app.session.active().is_some();
@@ -398,7 +398,7 @@ fn thumbnail(ctx: &egui::Context, library: &str, g: &LibraryGraphic) -> Option<e
     if let Some(t) = CACHE.with(|c| c.borrow().get(&key).cloned()) {
         return t;
     }
-    let tex = vectorcraft_format::base64_decode(&g.thumbnail)
+    let tex = tsipika_format::base64_decode(&g.thumbnail)
         .and_then(|png| image::load_from_memory_with_format(&png, image::ImageFormat::Png).ok())
         .map(|img| {
             let rgba = img.to_rgba8();
@@ -416,14 +416,14 @@ fn thumbnail(ctx: &egui::Context, library: &str, g: &LibraryGraphic) -> Option<e
 }
 
 /// Graphic `item` of `library`'s thumbnail in `r` (the chip a dragged graphic shows at the pointer).
-pub(crate) fn chip(app: &VectorcraftApp, ui: &Ui, r: Rect, library: &str, item: &str) {
+pub(crate) fn chip(app: &TsipikaApp, ui: &Ui, r: Rect, library: &str, item: &str) {
     if let Some(g) = app.session.libraries.get(library).and_then(|l| l.graphics.iter().find(|g| g.id == item)) {
         tile(ui, r, library, g);
     }
 }
 
 /// Import a library file (`library.import`'s params), saying so in the status bar.
-pub(crate) fn import(app: &mut VectorcraftApp, p: Value) -> Result<Value, String> {
+pub(crate) fn import(app: &mut TsipikaApp, p: Value) -> Result<Value, String> {
     let r = app.run("library.import", p)?;
     let name = r["name"].as_str().unwrap_or_default().to_string();
     app.status(format!("Imported library {name}"));
@@ -432,7 +432,7 @@ pub(crate) fn import(app: &mut VectorcraftApp, p: Value) -> Result<Value, String
 
 /// Import Library…: a picked `.vclibrary` file becomes a new library (on the web the picked file
 /// arrives later through [`crate::io::open_bytes`]).
-fn import_picked(app: &mut VectorcraftApp) {
+fn import_picked(app: &mut TsipikaApp) {
     if let Some(f) = app.services.open_async.as_mut() {
         f();
         return;
@@ -445,15 +445,15 @@ fn import_picked(app: &mut VectorcraftApp) {
 }
 
 /// Export Library…: library `id` written to a picked file named after it (the web downloads it).
-fn export_picked(app: &mut VectorcraftApp, id: &str, name: &str) {
-    let file = format!("{}.{LIBRARY_EXT}", vectorcraft_engine::cmd::library::file_stem_for(name));
+fn export_picked(app: &mut TsipikaApp, id: &str, name: &str) {
+    let file = format!("{}.{LIBRARY_EXT}", tsipika_engine::cmd::library::file_stem_for(name));
     let r = crate::io::save_command_output_named(app, "library.export", &file, json!({ "library": id }));
     report(app, r);
 }
 
 /// The panel's ≡ menu: Create New Library, Rename Library…, Delete Library, New Group…, Import
 /// Library…, Export Library….
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let cur = current(app);
     if menu_item(ui, "Create New Library…", true, false) {
         ask_name(app, None);
@@ -501,11 +501,11 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut TsipikaApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
@@ -518,7 +518,7 @@ mod tests {
     /// The panel draws with no library, an empty one and one holding every kind of item (#745).
     #[test]
     fn the_panel_draws_its_libraries() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         frame(&mut app);
         app.run("library.create", json!({"name": "Brand"})).unwrap();
@@ -540,7 +540,7 @@ mod tests {
     }
 
     /// The panel's text: every label it shows in one frame (`query` typed in the search field).
-    fn texts(app: &mut VectorcraftApp, query: &str) -> Vec<String> {
+    fn texts(app: &mut TsipikaApp, query: &str) -> Vec<String> {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         ctx.data_mut(|d| d.insert_temp(egui::Id::new("library-search"), query.to_string()));
@@ -561,7 +561,7 @@ mod tests {
     /// items, and a search nothing matches says so (#926).
     #[test]
     fn the_panel_searches_and_shows_groups() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("library.create", json!({"name": "Brand"})).unwrap();
         for (name, color) in [("Ocean Blue", "#0044aa"), ("Sun Yellow", "#ffcc00")] {
@@ -588,7 +588,7 @@ mod tests {
     /// from; the dialog shows only the name.
     #[test]
     fn group_dialogs_run_with_their_library_and_group() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let lib = app.run("library.create", json!({"name": "Brand"})).unwrap()["id"].as_str().unwrap().to_string();
         app.run("library.add", json!({"kind": "fillColor", "color": "#0044aa", "name": "Blue"})).unwrap();
@@ -606,9 +606,9 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn libraries_are_exported_and_imported_from_the_panel_menu() {
-        let dir = vectorcraft_testkit::temp_dir("libraries-panel");
+        let dir = tsipika_testkit::temp_dir("libraries-panel");
         let path = dir.join("Brand.vclibrary").to_string_lossy().to_string();
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("library.create", json!({"name": "Brand"})).unwrap();
         app.run("library.add", json!({"kind": "fillColor", "color": "#0044aa", "name": "Blue"})).unwrap();

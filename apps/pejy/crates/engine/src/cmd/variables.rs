@@ -1,6 +1,6 @@
 //! Type → Text Variables: define, list, delete and insert variables.
 
-use designcraft_doc::vars::{TextVariable, VarKind, var_char};
+use pejy_doc::vars::{TextVariable, VarKind, var_char};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, str_param};
@@ -51,7 +51,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         if !d.story(sid).is_some_and(|st| needs_unvar(st, i, 0)) {
                             continue;
                         }
-                        let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+                        let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
                         unvar(st, i, n, &value, 0);
                     }
                     d.text_variables.remove(i);
@@ -81,11 +81,11 @@ const MAX_DEPTH: usize = 32;
 
 /// Whether `st` or a table cell or foot/endnote nested in it holds an instance of variable `i`
 /// or a later variable.
-fn needs_unvar(st: &designcraft_doc::Story, i: usize, depth: usize) -> bool {
+fn needs_unvar(st: &pejy_doc::Story, i: usize, depth: usize) -> bool {
     if depth > MAX_DEPTH {
         return false;
     }
-    st.text.chars().any(|c| designcraft_doc::vars::var_index(c).is_some_and(|k| k >= i))
+    st.text.chars().any(|c| pejy_doc::vars::var_index(c).is_some_and(|k| k >= i))
         || st.tables.values().any(|t| t.cells.iter().any(|c| needs_unvar(&c.text, i, depth + 1)))
         || st.notes.iter().chain(st.endnotes.iter()).any(|n| needs_unvar(&n.text, i, depth + 1))
 }
@@ -94,11 +94,11 @@ fn needs_unvar(st: &designcraft_doc::Story, i: usize, depth: usize) -> bool {
 /// `i + 1..n` down by one, including table cells and foot/endnotes nested in the story. Only
 /// touches (and unshares) the parts that hold such instances; a story whose nested text changed
 /// gets a new revision.
-fn unvar(st: &mut designcraft_doc::Story, i: usize, n: usize, value: &str, depth: usize) {
+fn unvar(st: &mut pejy_doc::Story, i: usize, n: usize, value: &str, depth: usize) {
     if depth > MAX_DEPTH {
         return;
     }
-    if st.text.chars().any(|c| designcraft_doc::vars::var_index(c).is_some_and(|k| k >= i)) {
+    if st.text.chars().any(|c| pejy_doc::vars::var_index(c).is_some_and(|k| k >= i)) {
         let target = var_char(i).unwrap_or(' ').to_string();
         while let Some(pos) = st.text.find(&target) {
             st.replace(pos..pos + target.len(), value);
@@ -146,7 +146,7 @@ fn define(s: &mut Session, p: &Value) -> Result<Value> {
         "outputDate" => VarKind::OutputDate { format: fmt() },
         "runningHeader" => VarKind::RunningHeader {
             style: str_param(p, "style").ok_or_else(|| bad("variables.define", "runningHeader needs `style`"))?.into(),
-            use_: if str_param(p, "use") == Some("lastOnPage") { designcraft_doc::vars::Use::LastOnPage } else { Default::default() },
+            use_: if str_param(p, "use") == Some("lastOnPage") { pejy_doc::vars::Use::LastOnPage } else { Default::default() },
             character: p.get("character").and_then(Value::as_bool).unwrap_or(false),
         },
         t => return Err(bad("variables.define", format!("unknown type `{t}`"))),
@@ -161,7 +161,7 @@ fn define(s: &mut Session, p: &Value) -> Result<Value> {
                 i
             }
             None => {
-                if d.text_variables.len() >= designcraft_doc::vars::VAR_MAX {
+                if d.text_variables.len() >= pejy_doc::vars::VAR_MAX {
                     return Err(bad("variables.define", "too many variables"));
                 }
                 d.text_variables.push(v.clone());
@@ -183,11 +183,11 @@ mod tests {
     fn parent_page_number_follows_section_renumbering() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"pages": 3, "facingPages": false})).unwrap();
-        let marker = designcraft_doc::story::PAGE_NUMBER.to_string();
+        let marker = pejy_doc::story::PAGE_NUMBER.to_string();
         let r = s
             .execute("frame.create", &json!({"spread": {"kind": "parent", "index": 0}, "rect": [72, 30, 500, 60], "content": "text", "text": marker}))
             .unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().text, marker);
         let shown = |s: &Session, page: usize| -> usize {
             let d = s.doc().unwrap().doc.clone();
@@ -208,14 +208,14 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"pages": 4, "facingPages": false})).unwrap();
         s.execute("layout.section", &json!({"page": 3, "startNumber": 1, "marker": "Intro"})).unwrap();
-        let marker = designcraft_doc::story::SECTION_MARKER.to_string();
+        let marker = pejy_doc::story::SECTION_MARKER.to_string();
         let r = s
             .execute("frame.create", &json!({"spread": {"kind": "parent", "index": 0}, "rect": [72, 30, 500, 60], "content": "text", "text": marker}))
             .unwrap();
-        let parent = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let parent = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         let sp = s.doc().unwrap().doc.page_loc(3).unwrap().0;
         let r = s.execute("frame.create", &json!({"spread": sp, "rect": [72, 200, 400, 260], "content": "text", "text": marker})).unwrap();
-        let own = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let own = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         let shown = |s: &Session, sid, page: Option<usize>| -> usize {
             let d = s.doc().unwrap().doc.clone();
             let cs = s.cache.get(&d, sid, page);
@@ -245,14 +245,14 @@ mod tests {
         // The only heading is on the third page (the second section's page 1).
         let sp = s.doc().unwrap().doc.page_loc(2).unwrap().0;
         let r = s.execute("frame.create", &json!({"spread": sp, "rect": [72, 200, 400, 260], "content": "text", "text": "Epsilon"})).unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 1})).unwrap();
         s.execute("style.paragraph.apply", &json!({"name": "Heading"})).unwrap();
         s.execute("variables.define", &json!({"name": "Chapter Head", "type": "runningHeader", "style": "Heading"})).unwrap();
         let r = s
             .execute("frame.create", &json!({"spread": {"kind": "parent", "index": 0}, "rect": [72, 30, 500, 60], "content": "text", "text": ""}))
             .unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 0})).unwrap();
         s.execute("variables.insert", &json!({"name": "Chapter Head"})).unwrap();
         let d = s.doc().unwrap().doc.clone();
@@ -275,7 +275,7 @@ mod tests {
         let b = s.execute("variables.define", &json!({"name": "B", "type": "custom", "text": "Beta"})).unwrap()["index"].as_u64().unwrap() as usize;
         let a = s.doc().unwrap().doc.variable("A").unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": ""})).unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 0})).unwrap();
         s.execute("table.insert", &json!({"rows": 1, "cols": 2})).unwrap();
         let text = format!("{}|{}", var_char(a).unwrap(), var_char(b).unwrap());
@@ -297,7 +297,7 @@ mod tests {
         let b = s.execute("variables.define", &json!({"name": "B", "type": "custom", "text": "Beta"})).unwrap()["index"].as_u64().unwrap() as usize;
         let a = s.doc().unwrap().doc.variable("A").unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "x"})).unwrap();
-        let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         let text = format!("{}|{}", var_char(a).unwrap(), var_char(b).unwrap());
         s.execute("text.select", &json!({"story": sid.0, "anchor": 1, "focus": 1})).unwrap();
         s.execute("footnote.insert", &json!({"text": text})).unwrap();
@@ -320,7 +320,7 @@ mod tests {
         for (page, text) in [(0, "Alpha"), (2, "Epsilon")] {
             let sp = s.doc().unwrap().doc.page_loc(page).unwrap().0;
             let r = s.execute("frame.create", &json!({"spread": sp, "rect": [72, 200, 400, 260], "content": "text", "text": text})).unwrap();
-            let sid = s.doc().unwrap().doc.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+            let sid = s.doc().unwrap().doc.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
             s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 1})).unwrap();
             s.execute("style.paragraph.apply", &json!({"name": "Heading"})).unwrap();
         }
@@ -330,14 +330,14 @@ mod tests {
         let r = s
             .execute("frame.create", &json!({"spread": {"kind": "parent", "index": 0}, "rect": [72, 30, 500, 60], "content": "text", "text": ""}))
             .unwrap();
-        let fid = designcraft_doc::ItemId(r["id"].as_u64().unwrap());
+        let fid = pejy_doc::ItemId(r["id"].as_u64().unwrap());
         let sid = s.doc().unwrap().doc.item(fid).unwrap().text_frame().unwrap().story;
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 0})).unwrap();
         s.execute("variables.insert", &json!({"name": "Chapter Head"})).unwrap();
         s.execute("text.insert", &json!({"text": " · "})).unwrap();
         s.execute("variables.insert", &json!({"name": "Last Page Number"})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        assert!(matches!(d.find(fid).unwrap().spread, designcraft_doc::SpreadRef::Parent(0)));
+        assert!(matches!(d.find(fid).unwrap().spread, pejy_doc::SpreadRef::Parent(0)));
         // Visible glyphs of the header composed for each page: "Alpha · 3" vs "Epsilon · 3".
         let shown = |page: usize| -> usize {
             let cs = s.cache.get(&d, sid, Some(page));

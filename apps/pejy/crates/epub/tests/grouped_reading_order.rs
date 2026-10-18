@@ -1,10 +1,10 @@
 use std::io::{Cursor, Read};
 use std::sync::Arc;
 
-use designcraft_doc::build::NewDocument;
-use designcraft_doc::geom::{Affine, PathData, Rect, shapes};
-use designcraft_doc::{Article, Asset, AssetId, Content, Document, Graphic, Item, ItemId, ParaFormat, Shape, SpreadRef, StoryId};
-use designcraft_epub::{Block, EpubOptions, HtmlOptions, export_epub, export_html, reading_order};
+use pejy_doc::build::NewDocument;
+use pejy_doc::geom::{Affine, PathData, Rect, shapes};
+use pejy_doc::{Article, Asset, AssetId, Content, Document, Graphic, Item, ItemId, ParaFormat, Shape, SpreadRef, StoryId};
+use pejy_epub::{Block, EpubOptions, HtmlOptions, export_epub, export_html, reading_order};
 
 fn text(doc: &mut Document, spread: usize, x: f64, y: f64, value: &str) -> (ItemId, StoryId) {
     doc.add_text_frame(SpreadRef::Doc(spread), Rect::new(x, y, x + 100.0, y + 10.0), doc.default_layer(), value, ParaFormat::default()).unwrap()

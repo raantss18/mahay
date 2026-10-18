@@ -2,9 +2,9 @@
 //! plane (5), Transform Again and arrow nudges in perspective.
 
 use serde_json::json;
-use vectorcraft_geom::{Point, Rect, Vec2};
-use vectorcraft_tools::distort::perspective::{self as persp, PerspectiveGrid, Plane};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_geom::{Point, Rect, Vec2};
+use tsipika_tools::distort::perspective::{self as persp, PerspectiveGrid, Plane};
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 use super::*;
 
@@ -71,7 +71,7 @@ fn handles_scale_in_perspective_about_the_opposite_handle() {
     // The box's handles are drawn in perspective: the far corner of the plane-space box.
     let h = g.homography(Plane::Right).unwrap();
     let corner = h.apply(Point::new(before.x1, before.y1)).unwrap();
-    let anchors = s.overlays(ViewInfo::default()).into_iter().filter(|o| matches!(o, vectorcraft_tools::Overlay::Anchor { .. })).count();
+    let anchors = s.overlays(ViewInfo::default()).into_iter().filter(|o| matches!(o, tsipika_tools::Overlay::Anchor { .. })).count();
     assert!(anchors >= 8, "{anchors} handles");
     // Drag that handle to twice the size in plane space.
     let target = h.apply(Point::new(before.x0 + 2.0 * before.width(), before.y0 + 2.0 * before.height())).unwrap();
@@ -247,10 +247,10 @@ fn selecting_an_attached_object_switches_to_its_plane() {
 fn attachments_round_trip_through_native_files() {
     let (mut s, id) = persp_session();
     s.execute("perspective.transform", &json!({"matrix": [1, 0, 0, 1, 0, 0], "depth": 12.5})).unwrap();
-    let doc = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let doc = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(persp::attachment(doc.node(id).unwrap()), Some((Plane::Right, 12.5)));
     assert_eq!(*doc.node(id).unwrap(), *s.doc().unwrap().doc.node(id).unwrap());
     // Objects outside perspective write nothing for it.
-    let v = serde_json::to_value(vectorcraft_doc::Node::new(NodeId(1), vectorcraft_doc::NodeKind::Group { children: vec![], clip: false })).unwrap();
+    let v = serde_json::to_value(tsipika_doc::Node::new(NodeId(1), tsipika_doc::NodeKind::Group { children: vec![], clip: false })).unwrap();
     assert!(v.get("perspective").is_none());
 }

@@ -1,0 +1,8 @@
+asset:        tselatra.svg
+title:        Tselatra app icon, master vector
+author:       Tselatra contributors (drawing by the project owner in Mahay)
+source:       original work
+license:      MIT OR Apache-2.0
+license-file: assets/app-icon/LICENSE.txt
+added:        2026-10-02 by Tselatra contributors (Claude agent, app icon)
+notes:        The owner's Mahay drawing of an engraved unicorn bust, vectorised at 2048 px with mahay-rules assets/logo-options/_tools/vectorize_tile.py (potrace; three colours). Canonical artwork; the other icon files derive from it.

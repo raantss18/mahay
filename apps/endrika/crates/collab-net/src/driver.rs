@@ -10,8 +10,8 @@
 //! connection of its own, then joins that file as with a link; a server that doesn't know the
 //! code (or can't be reached) ends the join with the reason.
 
-use figcraft_collab::message::{self, ClientMsg, PROTOCOL, Presence, Resolve, ServerMsg};
-use figcraft_engine::live::{Event, Status};
+use endrika_collab::message::{self, ClientMsg, PROTOCOL, Presence, Resolve, ServerMsg};
+use endrika_engine::live::{Event, Status};
 // `std::time::Instant` on native builds; the browser's clock in the web build.
 use web_time::Instant;
 

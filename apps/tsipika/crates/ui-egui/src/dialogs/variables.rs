@@ -8,10 +8,10 @@
 //! already says.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{DataValue, VariableKind, Variables};
+use tsipika_doc::{DataValue, VariableKind, Variables};
 
 use super::{DialogSpec, run_and_close};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::state::Dialog;
 use crate::theme::Tokens;
 use crate::widgets;
@@ -57,7 +57,7 @@ fn rename_of(id: &str) -> Option<&'static str> {
 /// Open `id`'s dialog: OK runs the command with the fields below. `preselect` names the row
 /// a rename starts on (the panel's highlighted variable, the active dataset); without it, or
 /// when it no longer exists, the first row — the dialog still offers the dropdown.
-pub fn open(app: &mut VectorcraftApp, id: &str, preselect: Option<&str>) -> bool {
+pub fn open(app: &mut TsipikaApp, id: &str, preselect: Option<&str>) -> bool {
     let Some(label) = opened(id) else { return false };
     let Some(st) = app.session.active() else {
         app.status(tl!("no document").to_string());
@@ -142,7 +142,7 @@ fn value_key(name: &str) -> String {
     format!("value:{name}")
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
         widgets::dim_label(ui, tl!("No document"));
@@ -286,7 +286,7 @@ fn text_area(ui: &mut egui::Ui, d: &mut Dialog, key: &str, width: f32) {
     }
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let cmd = d.str("__command");
     let name = d.str("name");
     let p = match cmd.as_str() {
@@ -307,12 +307,12 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
 
-    fn app_with_variables() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app_with_variables() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("variable.define", json!({"name": "Title", "kind": "text"})).unwrap();
         app.run("variable.define", json!({"name": "Badge", "kind": "visibility"})).unwrap();

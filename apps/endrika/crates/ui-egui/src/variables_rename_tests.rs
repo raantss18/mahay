@@ -4,7 +4,7 @@
 //! aborts the app when it isn't (#224).
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2};
-use figcraft_engine::Session;
+use endrika_engine::Session;
 
 use crate::layers_drag_tests::Ui;
 use crate::live_tests::{flat, text_center};

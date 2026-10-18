@@ -3,8 +3,8 @@
 //! commands of the Edit menu (Find and Replace, Find Next, Paste without Formatting).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{CharStyle, Document, Justify, NodeId, NodeKind, Quotes, TextKind, TextObject, TextRun};
-use vectorcraft_geom::{Affine, Rect, shapes};
+use tsipika_doc::{CharStyle, Document, Justify, NodeId, NodeKind, Quotes, TextKind, TextObject, TextRun};
+use tsipika_geom::{Affine, Rect, shapes};
 
 use super::typecmd::refresh_bounds;
 use super::*;
@@ -283,7 +283,7 @@ fn to_area(s: &mut Session, p: &Value) -> Result<Value> {
             if !matches!(t.kind, TextKind::Point) {
                 continue;
             }
-            let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
             let b = if lay.bounds.area() > 0.0 { lay.bounds } else { t.estimate_bounds() };
             let size = t.first_style().size;
             // A little slack on the right so the text doesn't rewrap.
@@ -329,7 +329,7 @@ fn to_point(s: &mut Session, p: &Value) -> Result<Value> {
             let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else { continue };
             let TextKind::Area { frame } = &t.kind else { continue };
             let fb = frame.bounds().unwrap_or_default();
-            let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            let lay = tsipika_text::layout(tsipika_text::FontDb::global(), t);
             let plain = t.plain_text();
             let baseline = lay.lines.first().map(|l| l.baseline).unwrap_or(fb.y0 + t.first_style().size * 0.8);
             // Soft wraps → explicit breaks (replace the space before the wrap when there is one).
@@ -383,7 +383,7 @@ fn to_point(s: &mut Session, p: &Value) -> Result<Value> {
 const PATH_OPTIONS: [&str; 6] = ["start", "end", "flip", "effect", "alignToPath", "spacing"];
 
 /// Type on a path's text, if `n` is type on a path.
-fn path_text(n: Option<&vectorcraft_doc::Node>) -> Option<&TextObject> {
+fn path_text(n: Option<&tsipika_doc::Node>) -> Option<&TextObject> {
     match n.map(|n| &n.kind) {
         Some(NodeKind::Text(t)) if matches!(t.kind, TextKind::OnPath { .. }) => Some(t),
         _ => None,
@@ -432,11 +432,11 @@ fn path_options(s: &mut Session, p: &Value) -> Result<Value> {
     let end = p.get("end").map(|_| fraction("end")).transpose()?;
     let flip = bool_or(p, "flip", false);
     let effect = match str_param(p, "effect") {
-        Some(e) => Some(vectorcraft_doc::PathEffect::parse(e).ok_or_else(|| bad(C, format!("unknown effect `{e}`")))?),
+        Some(e) => Some(tsipika_doc::PathEffect::parse(e).ok_or_else(|| bad(C, format!("unknown effect `{e}`")))?),
         None => None,
     };
     let align = match str_param(p, "alignToPath") {
-        Some(a) => Some(vectorcraft_doc::PathAlign::parse(a).ok_or_else(|| bad(C, format!("unknown alignToPath `{a}`")))?),
+        Some(a) => Some(tsipika_doc::PathAlign::parse(a).ok_or_else(|| bad(C, format!("unknown alignToPath `{a}`")))?),
         None => None,
     };
     let spacing = p.get("spacing").and_then(Value::as_f64).filter(|x| x.is_finite()).map(|x| x.clamp(-1000.0, 1000.0));
@@ -488,7 +488,7 @@ fn path_options(s: &mut Session, p: &Value) -> Result<Value> {
 
 // ---------- placeholder / insert ----------
 
-/// VectorCraft's own placeholder copy (not the classical Latin text).
+/// Tsipika's own placeholder copy (not the classical Latin text).
 pub(crate) const PLACEHOLDER: &str = "Sample copy flows here while the layout takes shape. Swap these words for real text once the \
 design is settled. Every line is only a stand-in that shows size, rhythm and colour. Headlines, captions and body text all \
 start as rough drafts like this one. Keep going until the frame is full and the page feels balanced.";
@@ -737,7 +737,7 @@ fn find_next(s: &mut Session, p: &Value) -> Result<Value> {
 
 // ---------- Paste without Formatting ----------
 
-fn strip_formatting(n: &mut vectorcraft_doc::Node) {
+fn strip_formatting(n: &mut tsipika_doc::Node) {
     if let NodeKind::Text(t) = &mut n.kind {
         let text = t.plain_text();
         t.runs = vec![TextRun { text, style: CharStyle::default(), inline: None }];

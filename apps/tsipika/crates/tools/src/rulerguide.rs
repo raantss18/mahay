@@ -10,7 +10,7 @@
 //! or locked layer, can't be picked.
 
 use serde_json::json;
-use vectorcraft_geom::{Point, Rect};
+use tsipika_geom::{Point, Rect};
 
 use crate::guides::Targets;
 use crate::{Action, Cursor, Overlay, PointerEvent, PointerKind, ToolContext};
@@ -69,7 +69,7 @@ fn guides_in_rect(cx: &ToolContext, r: Rect) -> Vec<usize> {
 /// Does ruler guide `g`, crossed by marquee `r`, run along its line within the marquee? An artboard
 /// guide does when the marquee spans its artboard; a canvas guide runs across the whole canvas and
 /// never does.
-fn guide_inside(cx: &ToolContext, r: Rect, g: &vectorcraft_doc::Guide) -> bool {
+fn guide_inside(cx: &ToolContext, r: Rect, g: &tsipika_doc::Guide) -> bool {
     let Some((a, b)) = cx.doc.guide_span(g) else { return false };
     let (lo, hi) = if g.vertical { (r.min_y(), r.max_y()) } else { (r.min_x(), r.max_x()) };
     lo <= a.min(b) && a.max(b) <= hi
@@ -133,7 +133,7 @@ impl GuideSnap {
             return v.round();
         }
         if cx.snap_to_grid {
-            return vectorcraft_geom::snap::snap_to_grid(v, cx.grid_step(), 0.0);
+            return tsipika_geom::snap::snap_to_grid(v, cx.grid_step(), 0.0);
         }
         let Some((t, tol)) = &self.targets else { return v };
         let (at, snapped) = t.snap_guide(vertical, v, cx.tol(*tol));
@@ -336,14 +336,14 @@ mod tests {
     use super::*;
     use crate::testutil::*;
     use crate::{Mods, ScreenFrame};
-    use vectorcraft_doc::{Guide, Selection};
-    use vectorcraft_geom::Vec2;
+    use tsipika_doc::{Guide, Selection};
+    use tsipika_geom::Vec2;
 
     fn ev(kind: PointerKind, x: f64, y: f64, mods: Mods) -> PointerEvent {
         PointerEvent::new(kind, x, y).with_mods(mods)
     }
 
-    fn guides_doc() -> vectorcraft_doc::Document {
+    fn guides_doc() -> tsipika_doc::Document {
         let (mut d, _) = doc_with_rect();
         d.guides = vec![Guide::new(true, 300.0), Guide::new(false, 400.0)];
         d
@@ -584,10 +584,10 @@ mod tests {
     fn an_artboard_guide_is_picked_and_snapped_to_across_its_artboard_only() {
         let (mut d, _) = doc_with_rect();
         let id = d.next_artboard_id();
-        d.artboards.push(vectorcraft_doc::Artboard {
+        d.artboards.push(tsipika_doc::Artboard {
             id,
             name: "B".into(),
-            rect: vectorcraft_geom::Rect::new(600.0, 0.0, 900.0, 300.0),
+            rect: tsipika_geom::Rect::new(600.0, 0.0, 900.0, 300.0),
             show_center_mark: false,
             show_cross_hairs: false,
         });
@@ -649,8 +649,8 @@ mod tests {
     }
 
     // Tick positions are explicit fixtures in each unit, independent of the snap implementation.
-    fn origin_tick_cases() -> Vec<(vectorcraft_doc::Unit, f64, Point, Point, Point, f64)> {
-        use vectorcraft_doc::Unit;
+    fn origin_tick_cases() -> Vec<(tsipika_doc::Unit, f64, Point, Point, Point, f64)> {
+        use tsipika_doc::Unit;
         let mm = |v| Unit::Millimeters.to_pt(v);
         let inch = |v| Unit::Inches.to_pt(v);
         vec![
@@ -688,7 +688,7 @@ mod tests {
         for (unit, zoom, origin, pointer, expected, tick) in origin_tick_cases() {
             let (mut doc, _) = doc_with_rect();
             doc.ruler_origin = origin;
-            doc.rulers = vectorcraft_doc::RulerMode::Global;
+            doc.rulers = tsipika_doc::RulerMode::Global;
             let (selection, paint) = (Selection::default(), paint());
             let c = ToolContext { unit, zoom, smart_guides: false, snap_to_point: false, ..cx(&doc, &selection, &paint) };
             for vertical in [false, true] {
@@ -714,7 +714,7 @@ mod tests {
         for (unit, zoom, origin, pointer, expected, _) in origin_tick_cases() {
             let mut doc = guides_doc();
             doc.ruler_origin = origin;
-            doc.rulers = vectorcraft_doc::RulerMode::Global;
+            doc.rulers = tsipika_doc::RulerMode::Global;
             let paint = paint();
             for (index, vertical, from) in [(0, true, 300.0), (1, false, 400.0)] {
                 let mut selection = Selection::default();
@@ -755,7 +755,7 @@ mod tests {
         ] {
             let mut doc = guides_doc();
             doc.ruler_origin = origin;
-            doc.rulers = vectorcraft_doc::RulerMode::Global;
+            doc.rulers = tsipika_doc::RulerMode::Global;
             let paint = paint();
             for (index, vertical, from, want) in [(0, true, 300.0, 225.0), (1, false, 400.0, 235.0)] {
                 let mut selection = Selection::default();
@@ -779,7 +779,7 @@ mod tests {
         for origin in [Point::ZERO, Point::new(17.0, 23.0), Point::new(-17.0, -23.0)] {
             let mut doc = guides_doc();
             doc.ruler_origin = origin;
-            doc.rulers = vectorcraft_doc::RulerMode::Global;
+            doc.rulers = tsipika_doc::RulerMode::Global;
             let paint = paint();
             for (index, vertical, from) in [(0, true, 300.0), (1, false, 400.0)] {
                 let mut selection = Selection::default();
@@ -818,9 +818,9 @@ mod tests {
         ] {
             let mut doc = guides_doc();
             doc.ruler_origin = origin;
-            doc.rulers = vectorcraft_doc::RulerMode::Global;
+            doc.rulers = tsipika_doc::RulerMode::Global;
             let paint = paint();
-            for unit in [vectorcraft_doc::Unit::Points, vectorcraft_doc::Unit::Millimeters] {
+            for unit in [tsipika_doc::Unit::Points, tsipika_doc::Unit::Millimeters] {
                 for (index, vertical, from) in [(0, true, 300.0), (1, false, 400.0)] {
                     let mut selection = Selection::default();
                     selection.set_guides([index]);
@@ -857,7 +857,7 @@ mod tests {
     #[test]
     fn ruler_guide_readouts_count_from_the_active_artboard_with_artboard_rulers() {
         let mut doc = guides_doc();
-        doc.artboards.push(vectorcraft_doc::Artboard {
+        doc.artboards.push(tsipika_doc::Artboard {
             id: 2,
             name: "Artboard 2".into(),
             rect: Rect::new(150.0, 200.0, 350.0, 400.0),
@@ -867,9 +867,9 @@ mod tests {
         doc.ruler_origin = Point::new(5.0, 5.0);
         let (paint, selection) = (paint(), Selection::default());
         for (rulers, active, zero) in [
-            (vectorcraft_doc::RulerMode::Artboard, 1, Point::new(150.0, 200.0)),
-            (vectorcraft_doc::RulerMode::Artboard, 0, Point::new(doc.artboards[0].rect.x0, doc.artboards[0].rect.y0)),
-            (vectorcraft_doc::RulerMode::Global, 1, Point::new(5.0, 5.0)),
+            (tsipika_doc::RulerMode::Artboard, 1, Point::new(150.0, 200.0)),
+            (tsipika_doc::RulerMode::Artboard, 0, Point::new(doc.artboards[0].rect.x0, doc.artboards[0].rect.y0)),
+            (tsipika_doc::RulerMode::Global, 1, Point::new(5.0, 5.0)),
         ] {
             doc.rulers = rulers;
             let c =

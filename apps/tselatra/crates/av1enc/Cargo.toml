@@ -1,5 +1,5 @@
 [package]
-name = "effectcraft-av1enc"
+name = "tselatra-av1enc"
 description = "Clean-room pure-Rust AV1 encoder (Main profile, key and inter frames) for MP4/WebM export, from the AV1 Bitstream & Decoding Process Specification"
 version.workspace = true
 edition.workspace = true
@@ -12,4 +12,4 @@ workspace = true
 [dependencies]
 
 [dev-dependencies]
-filmcraft-av1 = { workspace = true }
+hetsika-av1 = { workspace = true }

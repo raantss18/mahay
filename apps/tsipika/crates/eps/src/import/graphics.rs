@@ -7,12 +7,12 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use kurbo::{PathEl, Shape};
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_color::{Color, Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::clipnest::{Clip, Drawn, MAX_NEST, deep_clips};
-use vectorcraft_doc::pattern::PatternDef;
-use vectorcraft_doc::{Appearance, AppearanceItem, Dash, Document, FillLayer, LineCap, LineJoin, Node, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, Vec2};
+use tsipika_color::swatch::REGISTRATION;
+use tsipika_color::{Color, Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
+use tsipika_doc::clipnest::{Clip, Drawn, MAX_NEST, deep_clips};
+use tsipika_doc::pattern::PatternDef;
+use tsipika_doc::{Appearance, AppearanceItem, Dash, Document, FillLayer, LineCap, LineJoin, Node, NodeId, NodeKind, StrokeLayer};
+use tsipika_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, Vec2};
 
 use super::interp::{Interp, MAX_GSAVE, matrix_obj};
 use super::obj::{DictRef, Key, Obj, Op, PsError, Res, Shared, ps_err};
@@ -55,7 +55,7 @@ const MAX_FUNCTION_VISITS: usize = 1 + MAX_INKS * 8;
 const FUNCTION_OPS: u64 = 8;
 
 pub(super) const FAR_AWAY: &str = "objects far outside the page were left out";
-pub(super) const TOO_MUCH: &str = "the file draws more than VectorCraft reads: the rest was left out";
+pub(super) const TOO_MUCH: &str = "the file draws more than Tsipika reads: the rest was left out";
 const NESTED_PATTERNS: &str = "patterns nested too deeply are filled with mid-grey";
 /// Deepest patterns and glyph procedures drawn inside each other's art.
 pub(crate) const MAX_APART: u32 = 8;
@@ -369,7 +369,7 @@ impl Out {
     fn clip(&mut self, path: BezPath, rule: FillRule) -> Option<Arc<Clip>> {
         // Only a polygon that really covers the page: a diamond touching its edges has the page as
         // its bounding box but cuts its corners away (#1542).
-        if path.elements().len() <= 6 && vectorcraft_geom::hit::polygon_covers_rect(&path, self.frame, 0.5) {
+        if path.elements().len() <= 6 && tsipika_geom::hit::polygon_covers_rect(&path, self.frame, 0.5) {
             return None;
         }
         self.next_clip += 1;
@@ -1073,7 +1073,7 @@ impl Interp<'_> {
         (self.out.groups, self.out.too_deep) = (groups, too_deep);
         (self.g, self.saved) = (g, saved);
         r?;
-        let mut nodes = vectorcraft_doc::clipnest::nest(&mut self.out.doc, art);
+        let mut nodes = tsipika_doc::clipnest::nest(&mut self.out.doc, art);
         if !self.out.shadings.is_empty() {
             collapse(&mut nodes, &self.out.shadings);
         }
@@ -1264,7 +1264,7 @@ impl Interp<'_> {
                     st.dash = None;
                 }
                 let tol = (0.01 / self.scale().max(1e-9)).clamp(1e-4, 1.0);
-                let outline = vectorcraft_effects::stroke::line_outline(&bp, &st, st.width, tol);
+                let outline = tsipika_effects::stroke::line_outline(&bp, &st, st.width, tol);
                 // The path, each entry of the dash pattern in each period, and the outline count
                 // as elements.
                 let dashes = st.dash.as_ref().map_or(0.0, |d| periods * d.pattern.len() as f64) as usize;

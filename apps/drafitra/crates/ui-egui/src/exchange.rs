@@ -81,14 +81,14 @@ pub(crate) fn preview_plot(app: &mut CadApp, ctx: &egui::Context, params: Value,
 fn render(app: &mut CadApp, ctx: &egui::Context) -> Result<(TextureHandle, String), String> {
     if let Some(f) = ctx.data(|d| d.get_temp::<FromPlot>(egui::Id::new(FROM_PLOT))) {
         let r = app.session.execute("plot", &f.params).map_err(|e| e.to_string())?;
-        let png = r["data"].as_str().and_then(cadcraft_engine::cmd::file::base64_decode).ok_or("the preview has no image")?;
+        let png = r["data"].as_str().and_then(drafitra_engine::cmd::file::base64_decode).ok_or("the preview has no image")?;
         let img = image::load_from_memory_with_format(&png, image::ImageFormat::Png).map_err(|e| e.to_string())?.to_rgba8();
         let size = [img.width() as usize, img.height() as usize];
         let tex = ctx.load_texture("plot-preview", egui::ColorImage::from_rgba_unmultiplied(size, img.as_raw()), egui::TextureOptions::LINEAR);
         return Ok((tex, f.info));
     }
     let r = app.session.execute("preview", &json!({ "width": 1600 })).map_err(|e| e.to_string())?;
-    let png = r["data"].as_str().and_then(cadcraft_engine::cmd::file::base64_decode).ok_or("the preview has no image")?;
+    let png = r["data"].as_str().and_then(drafitra_engine::cmd::file::base64_decode).ok_or("the preview has no image")?;
     let img = image::load_from_memory_with_format(&png, image::ImageFormat::Png).map_err(|e| e.to_string())?.to_rgba8();
     let size = [img.width() as usize, img.height() as usize];
     let tex = ctx.load_texture("plot-preview", egui::ColorImage::from_rgba_unmultiplied(size, img.as_raw()), egui::TextureOptions::LINEAR);
@@ -158,7 +158,7 @@ mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use cadcraft_engine::Session;
+    use drafitra_engine::Session;
     use serde_json::json;
 
     use crate::{CadApp, Services};

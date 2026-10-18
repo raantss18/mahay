@@ -5,15 +5,15 @@
 
 use std::sync::Arc;
 
-use effectcraft_engine::Session;
+use tselatra_engine::Session;
 use serde_json::{Value, json};
 
 use crate::run_code;
 
 fn session() -> Session {
-    let mut s = Session { expr: Some(Arc::new(effectcraft_expr::Expressions)), ..Default::default() };
+    let mut s = Session { expr: Some(Arc::new(tselatra_expr::Expressions)), ..Default::default() };
     crate::install(&mut s);
-    s.config = Some(Arc::new(effectcraft_engine::config::MemoryConfig::default()));
+    s.config = Some(Arc::new(tselatra_engine::config::MemoryConfig::default()));
     s
 }
 

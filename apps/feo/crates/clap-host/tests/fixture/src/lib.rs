@@ -1,8 +1,8 @@
-//! Test-only CLAP plugins for soundcraft-clap-host: a gain effect and a "DC synth".
+//! Test-only CLAP plugins for feo-clap-host: a gain effect and a "DC synth".
 //!
-//! - `org.soundcraft.test.gain`: stereo in/out, param 7 "Gain" (0..2, default 1), param 3 "Mode"
+//! - `org.feo.test.gain`: stereo in/out, param 7 "Gain" (0..2, default 1), param 3 "Mode"
 //!   (stepped enum A/B/C), hidden param 9, latency 3 samples.
-//! - `org.soundcraft.test.synth`: instrument, stereo out, CLAP note port; outputs a constant equal
+//! - `org.feo.test.synth`: instrument, stereo out, CLAP note port; outputs a constant equal
 //!   to the velocity of the held note (0 when none), switching at the event's sample offset. A
 //!   MIDI CC 7 (volume) sets the constant to its value / 127.
 //!
@@ -38,9 +38,9 @@ static SYNTH_FEATURES: Features<3> = Features([c"instrument".as_ptr(), c"synthes
 
 static GAIN_DESC: clap_plugin_descriptor = clap_plugin_descriptor {
     clap_version: CLAP_VERSION,
-    id: c"org.soundcraft.test.gain".as_ptr(),
+    id: c"org.feo.test.gain".as_ptr(),
     name: c"Fixture Gain".as_ptr(),
-    vendor: c"SoundCraft tests".as_ptr(),
+    vendor: c"Feo tests".as_ptr(),
     url: c"".as_ptr(),
     manual_url: c"".as_ptr(),
     support_url: c"".as_ptr(),
@@ -51,9 +51,9 @@ static GAIN_DESC: clap_plugin_descriptor = clap_plugin_descriptor {
 
 static SYNTH_DESC: clap_plugin_descriptor = clap_plugin_descriptor {
     clap_version: CLAP_VERSION,
-    id: c"org.soundcraft.test.synth".as_ptr(),
+    id: c"org.feo.test.synth".as_ptr(),
     name: c"Fixture Synth".as_ptr(),
-    vendor: c"SoundCraft tests".as_ptr(),
+    vendor: c"Feo tests".as_ptr(),
     url: std::ptr::null(),
     manual_url: std::ptr::null(),
     support_url: std::ptr::null(),
@@ -511,9 +511,9 @@ unsafe extern "C" fn factory_desc(_f: *const clap_plugin_factory, i: u32) -> *co
 
 unsafe extern "C" fn factory_create(_f: *const clap_plugin_factory, host: *const clap_host, id: *const c_char) -> *const clap_plugin {
     let id = unsafe { CStr::from_ptr(id) };
-    let (desc, synth) = if id == c"org.soundcraft.test.gain" {
+    let (desc, synth) = if id == c"org.feo.test.gain" {
         (&GAIN_DESC as *const _, false)
-    } else if id == c"org.soundcraft.test.synth" {
+    } else if id == c"org.feo.test.synth" {
         (&SYNTH_DESC as *const _, true)
     } else {
         return std::ptr::null();

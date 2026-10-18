@@ -16,7 +16,7 @@
 
 use std::collections::HashMap;
 
-use designcraft_doc::{ListType, NumberStyle, ParaAttrs};
+use pejy_doc::{ListType, NumberStyle, ParaAttrs};
 
 use crate::docx::El;
 

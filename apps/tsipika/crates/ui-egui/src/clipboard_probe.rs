@@ -7,7 +7,7 @@
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, TryRecvError};
 use std::time::{Duration, Instant};
 
-use vectorcraft_engine::cmd::clipboard::PASTE_ORDER;
+use tsipika_engine::cmd::clipboard::PASTE_ORDER;
 
 use crate::sysclip::ClipboardProbeFactory;
 
@@ -17,7 +17,7 @@ const PROBE_INTERVAL: Duration = Duration::from_millis(250);
 /// How long dropping the probe waits for the worker to let go of its clipboard handle.
 const STOP_WAIT: Duration = Duration::from_millis(250);
 
-/// The background clipboard check ([`crate::VectorcraftApp`]'s `clipboard_probe`).
+/// The background clipboard check ([`crate::TsipikaApp`]'s `clipboard_probe`).
 pub(crate) struct Probe {
     /// Tells the worker whether Paste depends on the system clipboard; dropped to stop it.
     wants: Option<Sender<bool>>,
@@ -37,7 +37,7 @@ impl Probe {
         let (wants, wanted_rx) = std::sync::mpsc::channel();
         let (tx, verdicts) = std::sync::mpsc::channel();
         std::thread::Builder::new()
-            .name("vectorcraft-clip".into())
+            .name("tsipika-clip".into())
             .spawn(move || {
                 let mut clipboard = make();
                 let (mut wanted, mut sent) = (false, None);

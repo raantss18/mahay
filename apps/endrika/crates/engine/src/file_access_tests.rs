@@ -9,13 +9,13 @@ use serde_json::json;
 use super::{Access, Roots, allow, confined, current};
 use crate::Session;
 
-/// A fresh folder for one test: `<tmp>/figcraft-roots-<name>-<pid>`, holding `root/`, `root2/`
+/// A fresh folder for one test: `<tmp>/endrika-roots-<name>-<pid>`, holding `root/`, `root2/`
 /// (a sibling whose name starts like the root's) and `outside/`.
 struct Fixture(PathBuf);
 
 impl Fixture {
     fn new(name: &str) -> Self {
-        let d = std::env::temp_dir().join(format!("figcraft-roots-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("endrika-roots-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         for sub in ["root/sub", "root2", "outside"] {
             std::fs::create_dir_all(d.join(sub)).unwrap();
@@ -223,11 +223,11 @@ fn commands_run_confined_read_and_write_only_inside() {
     std::fs::create_dir_all(f.0.join("outside/readable")).unwrap();
     let roots = Arc::new(Roots::new(&[f.p("outside/readable")], &[f.p("root")]).unwrap());
     // Unconfined, the outside is writable: the bait files a confined command must not reach.
-    let bait = f.p("outside/bait.figcraft");
+    let bait = f.p("outside/bait.endrika");
     let mut s = Session::new();
     s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 20, "height": 10})).unwrap();
     s.execute("file.saveAs", &json!({"path": bait})).unwrap();
-    std::fs::copy(&bait, f.0.join("outside/readable/ok.figcraft")).unwrap();
+    std::fs::copy(&bait, f.0.join("outside/readable/ok.endrika")).unwrap();
     let mut s = Session::new();
     s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 20, "height": 10})).unwrap();
     s.prefs.recent_files = vec![bait.clone(), f.p("root/in.txt")];
@@ -239,9 +239,9 @@ fn commands_run_confined_read_and_write_only_inside() {
         assert!(s.execute("file.open", &json!({"path": bait})).is_err());
         assert!(s.execute("file.import", &json!({"path": bait})).is_err());
         assert!(s.execute("file.placeImage", &json!({"path": f.p("outside/secret.txt")})).is_err());
-        assert!(s.execute("file.open", &json!({"path": f.p("outside/readable/ok.figcraft")})).is_ok(), "read roots may be read");
+        assert!(s.execute("file.open", &json!({"path": f.p("outside/readable/ok.endrika")})).is_ok(), "read roots may be read");
         assert!(s.execute("file.save", &json!({})).is_err(), "but not written");
-        assert!(s.execute("file.saveAs", &json!({"path": f.p("root/ok.figcraft")})).is_ok());
+        assert!(s.execute("file.saveAs", &json!({"path": f.p("root/ok.endrika")})).is_ok());
         // Recent files outside the roots aren't listed.
         let recent = s.execute("file.openRecent", &json!({})).unwrap().to_string();
         assert!(!recent.contains("bait") && recent.contains("in.txt"), "{recent}");
@@ -261,7 +261,7 @@ fn no_command_reaches_outside_the_roots() {
     // name that must never show up in a document or a result.
     let mut s = Session::new();
     s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 20, "height": 10, "name": "BAIT-LAYER"})).unwrap();
-    s.execute("file.saveAs", &json!({"path": f.p("outside/bait.figcraft")})).unwrap();
+    s.execute("file.saveAs", &json!({"path": f.p("outside/bait.endrika")})).unwrap();
     s.execute("file.export", &json!({"format": "png", "path": f.p("outside/bait.png")})).unwrap();
     std::fs::write(
         outside.join("bait.svg"),
@@ -270,7 +270,7 @@ fn no_command_reaches_outside_the_roots() {
     .unwrap();
     let before: Vec<_> = std::fs::read_dir(&outside).unwrap().flatten().map(|e| e.file_name()).collect();
     // The bait is what an unconfined command finds.
-    for (cmd, bait) in [("file.open", "bait.figcraft"), ("file.import", "bait.svg")] {
+    for (cmd, bait) in [("file.open", "bait.endrika"), ("file.import", "bait.svg")] {
         let mut s = Session::new();
         s.execute(cmd, &json!({"path": f.p(&format!("outside/{bait}"))})).unwrap();
         assert!(crate::inspect::document(&s, 64, true).to_string().contains("BAIT-LAYER"), "{cmd} {bait}");
@@ -278,7 +278,7 @@ fn no_command_reaches_outside_the_roots() {
     let mut s = Session::new();
     s.execute("file.placeImage", &json!({"path": f.p("outside/bait.png")})).unwrap();
     assert!(!s.doc().unwrap().images.is_empty());
-    for bait in ["bait.figcraft", "bait.svg", "bait.png", "new.figcraft", "new.png"] {
+    for bait in ["bait.endrika", "bait.svg", "bait.png", "new.endrika", "new.png"] {
         let path = f.p(&format!("outside/{bait}"));
         let params = json!({"path": path, "dir": f.p("outside"), "file": path, "variables": path, "folder": f.p("outside"), "confirm": true});
         for c in crate::all_commands() {
@@ -299,7 +299,7 @@ fn no_command_reaches_outside_the_roots() {
 fn recent_files_outside_the_roots_are_never_opened_removed_or_named() {
     let f = Fixture::new("recents");
     let roots = Arc::new(f.rw());
-    let (bait, gone, ok) = (f.p("outside/bait.figcraft"), f.p("outside/gone.figcraft"), f.p("root/ok.figcraft"));
+    let (bait, gone, ok) = (f.p("outside/bait.endrika"), f.p("outside/gone.endrika"), f.p("root/ok.endrika"));
     let mut s = Session::new();
     s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 20, "height": 10})).unwrap();
     s.execute("file.saveAs", &json!({"path": bait})).unwrap();

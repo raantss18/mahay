@@ -9,7 +9,7 @@ mod support {
     pub mod text_fixture;
 }
 use support::text_fixture::*;
-use vectorcraft_affinity::{
+use tsipika_affinity::{
     Document, Limits,
     model::{Align, Kind, Text},
     paint::{Color, Paint},
@@ -17,7 +17,7 @@ use vectorcraft_affinity::{
 };
 
 fn read(blocks: Vec<F>) -> Document {
-    vectorcraft_affinity::read(&document(blocks, false, 96.0, IDENTITY), Limits::default()).unwrap()
+    tsipika_affinity::read(&document(blocks, false, 96.0, IDENTITY), Limits::default()).unwrap()
 }
 fn text(d: &Document) -> &Text {
     match &d.spreads[0].nodes[0].kind {
@@ -182,7 +182,7 @@ fn real_affinity3_text_fixtures_confirm_unicode_and_caps_fields() {
     let Some(corpus) = support::corpus::pinned() else { return };
     // Files fetched at the commit and sha256 in xtask/affinity-corpus.sha256. No Patchy parser
     // source was read; assertions describe this crate's parsing of its published MIT documents.
-    let load = |name: &str| vectorcraft_affinity::read(&std::fs::read(corpus.join(name)).unwrap(), Limits::default()).unwrap();
+    let load = |name: &str| tsipika_affinity::read(&std::fs::read(corpus.join(name)).unwrap(), Limits::default()).unwrap();
     let d = load("patchy-text-runs.af");
     let t = text(&d);
     assert_eq!(t.runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>(), ["AB", "cd", "É", "😀", "X"]);
@@ -313,7 +313,7 @@ fn shared_gradient_attributes_are_bounded_without_losing_characters() {
         })
         .sum();
     assert!(stop_count > 0);
-    assert!(stop_count * std::mem::size_of::<vectorcraft_affinity::paint::Stop>() <= 16 << 20);
+    assert!(stop_count * std::mem::size_of::<tsipika_affinity::paint::Stop>() <= 16 << 20);
     let Paint::Gradient(first) = &t.runs[0].fill else { panic!("first gradient must fit") };
     assert_eq!(first.stops.len(), 1024);
     assert!(matches!(t.runs.last().unwrap().fill, Paint::Solid(_)));

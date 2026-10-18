@@ -1,5 +1,5 @@
 {
-  "format": "lightcraft.slideshowTemplate",
+  "format": "hazavana.slideshowTemplate",
   "version": 1,
   "name": "Gallery Wall",
   "description": "A light grey wall with a white mat and a soft shadow; the caption and the rating under the photo.",

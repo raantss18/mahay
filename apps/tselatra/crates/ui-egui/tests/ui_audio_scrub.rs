@@ -4,11 +4,11 @@
 
 use std::sync::{Arc, Mutex};
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::ItemId;
-use effectcraft_engine::time::Tick;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::audio::{AudioDevice, AudioFeed};
+use tselatra_engine::Session;
+use tselatra_engine::project::ItemId;
+use tselatra_engine::time::Tick;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::audio::{AudioDevice, AudioFeed};
 use egui::{Event, Modifiers, pos2};
 use egui_kittest::Harness;
 use serde_json::json;
@@ -31,12 +31,12 @@ impl AudioDevice for Fake {
 }
 
 /// A 2 s, 30 fps comp whose solid sounds a tone (Audio switch on).
-fn setup(audible: bool, fake: &Fake) -> (EffectcraftApp, ItemId) {
+fn setup(audible: bool, fake: &Fake) -> (TselatraApp, ItemId) {
     setup_long(audible, fake, 2.0)
 }
 
 /// A `duration`-second, 30 fps comp whose solid sounds a tone (Audio switch on).
-fn setup_long(audible: bool, fake: &Fake, duration: f64) -> (EffectcraftApp, ItemId) {
+fn setup_long(audible: bool, fake: &Fake, duration: f64) -> (TselatraApp, ItemId) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "A", "width": 64, "height": 36, "frameRate": 30, "duration": duration})).unwrap();
     let cid = s.active_comp_id().unwrap();
@@ -45,7 +45,7 @@ fn setup_long(audible: bool, fake: &Fake, duration: f64) -> (EffectcraftApp, Ite
         s.execute("effect.apply", json!({"layers": [l], "effect": "ec.audio.tone"})).unwrap();
         s.execute("layer.setSwitch", json!({"layers": [l], "switch": "audio", "value": true})).unwrap();
     }
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     let f = fake.clone();
     app.hooks.audio_device = Some(Box::new(move |_| Some(Box::new(f.clone()) as Box<dyn AudioDevice>)));
     (app, cid)
@@ -129,7 +129,7 @@ fn preview_with_audio_shows_every_frame_and_sounds_once_cached() {
     // A little under one frame of input time per step.
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(1.0 / 31.0).build_eframe(|_| app);
     h.run_steps(2);
-    let frame = |h: &Harness<'_, EffectcraftApp>| {
+    let frame = |h: &Harness<'_, TselatraApp>| {
         let app = h.state();
         app.session.project.comp(cid).unwrap().frame_rate.frame_at(app.session.time())
     };
@@ -171,7 +171,7 @@ fn preview_with_audio_sounds_once_rendering_keeps_up() {
     let (app, cid) = setup_long(true, &fake, 30.0);
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(1.0 / 30.0).build_eframe(|_| app);
     h.run_steps(2);
-    let frame = |h: &Harness<'_, EffectcraftApp>| {
+    let frame = |h: &Harness<'_, TselatraApp>| {
         let app = h.state();
         app.session.project.comp(cid).unwrap().frame_rate.frame_at(app.session.time())
     };

@@ -2,14 +2,14 @@
 //! drawing keeps its name and its unsaved changes, so closing still asks and QSAVE doesn't write
 //! the image again.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
 use serde_json::json;
 
 #[test]
 fn saveas_to_an_image_keeps_the_drawing_unsaved_under_its_name() {
     set_io(IoHooks { read: |_, _| Err("no reader in this test".into()), write: |_, _| Ok(b"0\nEOF\n".to_vec()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-saveas-export-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-saveas-export-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = Session::new();
     s.cmdline("circle 0,0 5").unwrap();

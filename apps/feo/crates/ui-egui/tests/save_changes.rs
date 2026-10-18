@@ -1,11 +1,11 @@
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
-use soundcraft_ui_egui::dialogs::Dialog;
-use soundcraft_ui_egui::{Services, SoundApp, menus};
+use feo_ui_egui::dialogs::Dialog;
+use feo_ui_egui::{Services, SoundApp, menus};
 
 fn harness() -> Harness<'static, SoundApp> {
-    let app = SoundApp::new(soundcraft_engine::demo::demo_engine(), None, Services::default());
+    let app = SoundApp::new(feo_engine::demo::demo_engine(), None, Services::default());
     Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_ui_state(
         |ui, app: &mut SoundApp| {
             let ctx = ui.ctx().clone();
@@ -68,7 +68,7 @@ fn closing_a_modified_session_asks_first() {
 
 #[test]
 fn save_in_the_question_saves_before_closing() {
-    let dir = std::env::temp_dir().join(format!("soundcraft-save-changes-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("feo-save-changes-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let path = dir.join("Song.scraft").to_string_lossy().into_owned();
 

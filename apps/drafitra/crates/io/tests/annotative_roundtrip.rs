@@ -1,12 +1,12 @@
 //! Annotative scaling survives DXF (#468): the scale list (ACAD_SCALELIST of SCALE objects), the
-//! multileader style's annotative flag (group 296), and CADCraft's own record of CANNOSCALE,
+//! multileader style's annotative flag (group 296), and Drafitra's own record of CANNOSCALE,
 //! ANNOALLVISIBLE, annotative blocks and each object's scales.
 
 use std::sync::Arc;
 
-use cadcraft_doc::{AnnoScale, Block, Common, Drawing, EntityKind, Insert, MLeaderStyle, Space, Text};
-use cadcraft_geom::Vec3;
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_doc::{AnnoScale, Block, Common, Drawing, EntityKind, Insert, MLeaderStyle, Space, Text};
+use drafitra_geom::Vec3;
+use drafitra_io::{read_dxf, write_dxf};
 
 fn text(value: &str) -> EntityKind {
     EntityKind::Text(Text {
@@ -33,7 +33,7 @@ fn drawing() -> Drawing {
     d.add(&Space::Model, Common::default(), text("PLAIN")).unwrap();
     let mut b = Block::new("TAG");
     b.annotative = true;
-    b.entities.push(cadcraft_doc::Entity::new(cadcraft_doc::Handle(0x9000), text("T")));
+    b.entities.push(drafitra_doc::Entity::new(drafitra_doc::Handle(0x9000), text("T")));
     d.blocks.insert("TAG".into(), Arc::new(b));
     let ins = Insert {
         block: "TAG".into(),
@@ -61,7 +61,7 @@ fn scales_of(d: &Drawing, value: &str) -> Vec<String> {
 fn annotative_scaling_round_trips() {
     let d = drawing();
     let text = write_dxf(&d);
-    assert!(text.contains("ACAD_SCALELIST") && text.contains("AcDbScale") && text.contains("CADCRAFT_ANNOTATION"));
+    assert!(text.contains("ACAD_SCALELIST") && text.contains("AcDbScale") && text.contains("DRAFITRA_ANNOTATION"));
     let r = read_dxf(text.as_bytes()).unwrap();
     assert_eq!(r.scales, d.scales);
     assert_eq!(r.header.str("CANNOSCALE", ""), "1:50");
@@ -79,10 +79,10 @@ fn annotative_scaling_round_trips() {
 fn plain_drawings_write_no_annotation_record_and_keep_their_default_list() {
     let d = Drawing::new_metric();
     let text = write_dxf(&d);
-    assert!(!text.contains("CADCRAFT_ANNOTATION"));
+    assert!(!text.contains("DRAFITRA_ANNOTATION"));
     let r = read_dxf(text.as_bytes()).unwrap();
-    assert_eq!(r.scales, cadcraft_doc::metric_scales());
-    assert_eq!(read_dxf(write_dxf(&Drawing::new_imperial()).as_bytes()).unwrap().scales, cadcraft_doc::imperial_scales());
+    assert_eq!(r.scales, drafitra_doc::metric_scales());
+    assert_eq!(read_dxf(write_dxf(&Drawing::new_imperial()).as_bytes()).unwrap().scales, drafitra_doc::imperial_scales());
 }
 
 #[test]

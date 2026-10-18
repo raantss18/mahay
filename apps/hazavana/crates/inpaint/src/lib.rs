@@ -12,7 +12,7 @@
 //! Correspondence Algorithm for Structural Image Editing*, SIGGRAPH 2009; Y. Wexler, E. Shechtman,
 //! M. Irani, *Space-Time Completion of Video*, PAMI 2007.
 //!
-//! Ported from PhotoCraft (`crates/algo/src/inpaint.rs`, `poisson.rs`, MIT OR Apache-2.0, same
+//! Ported from Sary (`crates/algo/src/inpaint.rs`, `poisson.rs`, MIT OR Apache-2.0, same
 //! organisation; see `NOTICE`).
 
 #![forbid(unsafe_code)]

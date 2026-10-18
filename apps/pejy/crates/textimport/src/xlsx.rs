@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use designcraft_doc::{CharFormat, ParaFormat, Story, StoryId, Table};
+use pejy_doc::{CharFormat, ParaFormat, Story, StoryId, Table};
 
 use crate::docx::{El, parse, part};
 use crate::{ImportError, Imported};

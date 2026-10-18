@@ -1,7 +1,7 @@
 //! Content-Aware Fill (Window ▸ Content-Aware Fill, Layer ▸ New ▸ Content-Aware Fill Layer):
 //! fill the transparent area of a layer (what its masks cut away) across the work area or the
 //! whole layer, render the result as a PNG sequence and add it as a "Fill" layer above the
-//! source, like After Effects. The algorithms are `effectcraft_raster::inpaint` (Object:
+//! source, like After Effects. The algorithms are `tselatra_raster::inpaint` (Object:
 //! flow-guided propagation + PatchMatch; Surface: propagation + one synthesised fill carried by
 //! the flow; Edge Blend: membrane fill). It runs as a background job (Window ▸ Progress); in
 //! the browser the job goes to a job worker ([`FillPlan`], `offload::WorkerJob::ContentFill`),
@@ -10,12 +10,12 @@
 
 use std::sync::Arc;
 
-use effectcraft_color::Label;
-use effectcraft_project::{Footage, FootageKind, ItemId, ItemKind, LayerId, LayerSource, build};
-use effectcraft_raster::Image;
-use effectcraft_raster::inpaint::{FillInput, FillMethod, FillOpts, dilate, fill_sequence};
-use effectcraft_render::{Accelerator, EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
-use effectcraft_time::Tick;
+use tselatra_color::Label;
+use tselatra_project::{Footage, FootageKind, ItemId, ItemKind, LayerId, LayerSource, build};
+use tselatra_raster::Image;
+use tselatra_raster::inpaint::{FillInput, FillMethod, FillOpts, dilate, fill_sequence};
+use tselatra_render::{Accelerator, EvalCtx, ExprHost, FootageSource, LayerCache, Renderer};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -103,7 +103,7 @@ fn set(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// A layer's masked source at comp time `t` on a `w × h` canvas in layer pixels (straight colour
 /// with alpha 1 where kept), and the hole (`true` where the alpha is under one half).
-fn masked_frame(r: &Renderer, ctx: &EvalCtx, layer: &effectcraft_project::Layer, w: u32, h: u32) -> (Image, Vec<bool>) {
+fn masked_frame(r: &Renderer, ctx: &EvalCtx, layer: &tselatra_project::Layer, w: u32, h: u32) -> (Image, Vec<bool>) {
     let mut img = Image::new(w, h);
     let mut hole = vec![true; (w * h) as usize];
     if let Some(buf) = r.layer_input(ctx, layer, 0) {
@@ -132,7 +132,7 @@ fn png(img: &Image) -> std::result::Result<Vec<u8>, String> {
 fn default_dir(s: &Session, name: &str) -> String {
     let base = s.path.as_deref().and_then(|p| std::path::Path::new(p).parent().map(|d| d.join("Fill"))).unwrap_or_else(|| {
         // (the browser has no temporary folder: its storage)
-        if cfg!(target_arch = "wasm32") { std::path::PathBuf::from("/Fill") } else { std::env::temp_dir().join("effectcraft-fill") }
+        if cfg!(target_arch = "wasm32") { std::path::PathBuf::from("/Fill") } else { std::env::temp_dir().join("tselatra-fill") }
     });
     let safe: String = name.chars().map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
     let mut k = 1;
@@ -175,7 +175,7 @@ pub struct FillPlan {
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn run_plan(
     plan: &FillPlan,
-    project: &effectcraft_project::Project,
+    project: &tselatra_project::Project,
     footage: &dyn FootageSource,
     expr: Option<&dyn ExprHost>,
     cache: &LayerCache,
@@ -262,7 +262,7 @@ fn generate(s: &mut Session, p: &Value) -> Result<Value> {
     if !layer.source.is_av() || layer.source.item().is_none() {
         return Err(bad(c, "Content-Aware Fill needs a footage, solid or precomp layer"));
     }
-    let (w, h) = effectcraft_render::source_size(&s.project, &layer);
+    let (w, h) = tselatra_render::source_size(&s.project, &layer);
     if w == 0 || h == 0 {
         return Err(bad(c, "the layer has no pixels"));
     }
@@ -307,7 +307,7 @@ fn generate(s: &mut Session, p: &Value) -> Result<Value> {
     let importer = s.importer.clone();
     let name = layer.name.clone();
     s.spawn_task("contentFill", format!("Content-Aware Fill: {name}"), wait, move |ctl| {
-        let paths = effectcraft_render::passes::block_on(run_plan(
+        let paths = tselatra_render::passes::block_on(run_plan(
             &plan,
             &lf.project,
             lf.footage.as_ref(),

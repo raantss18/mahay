@@ -8,8 +8,8 @@
 //! plane passes. Key Light with an Inside / Outside mask, or Hard Colour replacement after
 //! Screen Softness, and Colorama with Interpolate Palette off run on the CPU.
 
-use effectcraft_color::{luminance, rgb_to_hsl};
-use effectcraft_effects::EffectCtx;
+use tselatra_color::{luminance, rgb_to_hsl};
+use tselatra_effects::EffectCtx;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -199,8 +199,8 @@ fn lumetri(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     debug_assert_eq!(d.len(), 50);
     // Input LUT and Look (data[50..53]: look, input LUT offset, look LUT offset; tables after).
     let look = pr.e("creative/look");
-    let input_lut = if pr.e("basicCorrection/inputLut") == 1 { effectcraft_effects::load_lut(pr.s("basicCorrection/inputLutFile")) } else { None };
-    let look_lut = if look == 1 { effectcraft_effects::load_lut(pr.s("creative/lookFile")) } else { None };
+    let input_lut = if pr.e("basicCorrection/inputLut") == 1 { tselatra_effects::load_lut(pr.s("basicCorrection/inputLutFile")) } else { None };
+    let look_lut = if look == 1 { tselatra_effects::load_lut(pr.s("creative/lookFile")) } else { None };
     d.extend([look as f32, -1.0, -1.0]);
     if let Some(l) = &input_lut {
         d[51] = crate::fx_lut::push_lut(&mut d, l);

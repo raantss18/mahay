@@ -89,7 +89,7 @@ impl OutlinePen for Pen {
 
 /// A bundled stand-in for a font that is not embedded, by its PostScript name.
 fn fallback(base: &str) -> &'static [u8] {
-    use effectcraft_text::fonts::*;
+    use tselatra_text::fonts::*;
     let b = base.to_ascii_lowercase();
     if b.contains("courier") || b.contains("mono") || b.contains("consol") {
         return JETBRAINS_MONO_REGULAR;

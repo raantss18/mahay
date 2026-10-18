@@ -13,8 +13,8 @@
 //! `X!`/`X#` aren't publicly documented (the AI7 specification predates meshes).
 
 use kurbo::{Affine, Point, Vec2};
-use vectorcraft_color::Color;
-use vectorcraft_doc::live::{GradientMesh, H_DOWN, H_LEFT, H_RIGHT, H_UP, MeshPoint};
+use tsipika_color::Color;
+use tsipika_doc::live::{GradientMesh, H_DOWN, H_LEFT, H_RIGHT, H_UP, MeshPoint};
 
 use super::obj::V;
 

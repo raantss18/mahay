@@ -5,17 +5,17 @@
 //! Every edit is an engine command (`mask.*`, `path.freeTransform`, `keys.set`,
 //! `keys.setSpatialTangents`, `prop.set`).
 
-use effectcraft_engine::geom::{Mat3, vec2 as gv2};
-use effectcraft_engine::keyframe::ShapePath;
-use effectcraft_engine::project::{GroupKind, Layer, LayerId};
-use effectcraft_engine::render::EvalCtx;
-use effectcraft_engine::time::Tick;
-use effectcraft_engine::{KeyRef, VertexRef};
+use tselatra_engine::geom::{Mat3, vec2 as gv2};
+use tselatra_engine::keyframe::ShapePath;
+use tselatra_engine::project::{GroupKind, Layer, LayerId};
+use tselatra_engine::render::EvalCtx;
+use tselatra_engine::time::Tick;
+use tselatra_engine::{KeyRef, VertexRef};
 use egui::{Color32, Pos2, Rect, Stroke, StrokeKind, vec2};
 use serde_json::json;
 
 use super::viewer::ViewerMap;
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 
 /// A vertex or tangent handle drawn this frame (masks and shape paths alike; `mask` is the path
 /// group's uid).
@@ -125,14 +125,14 @@ pub(crate) fn path_of(ectx: &EvalCtx, layer: LayerId, uid: u64) -> Option<PathIn
     let sp = g.get("path").map(|pr| ectx.value(l, pr)).and_then(|v| v.as_path().cloned())?;
     let (m, _) = super::viewer::l2c(ectx, l);
     let is_mask = matches!(g.kind, GroupKind::Mask { .. });
-    let m = if is_mask { m } else { m * effectcraft_engine::render::shapes::item_matrix(ectx, l, uid).unwrap_or(Mat3::IDENTITY) };
+    let m = if is_mask { m } else { m * tselatra_engine::render::shapes::item_matrix(ectx, l, uid).unwrap_or(Mat3::IDENTITY) };
     Some(PathInfo { layer, uid, m, sp, is_mask, feather: Vec::new() })
 }
 
 /// The path on screen: `sp` through `m` and the viewer map, flattened, with the closing point
 /// repeated for a closed path.
 pub(crate) fn flatten(sp: &ShapePath, m: &Mat3, map: &ViewerMap) -> Vec<Pos2> {
-    let k = effectcraft_engine::render::kurbo_path(sp);
+    let k = tselatra_engine::render::kurbo_path(sp);
     let mut pts: Vec<Pos2> = vec![];
     kurbo::flatten(k.iter(), 0.5, |el| match el {
         kurbo::PathEl::MoveTo(q) | kurbo::PathEl::LineTo(q) => {
@@ -151,7 +151,7 @@ pub(crate) fn flatten(sp: &ShapePath, m: &Mat3, map: &ViewerMap) -> Vec<Pos2> {
 /// selected vertices show their tangent handles. Collects vertex hits and paths.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_paths(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     painter: &egui::Painter,
     map: &ViewerMap,
     ectx: &EvalCtx,
@@ -176,8 +176,8 @@ pub(crate) fn draw_paths(
             list.push((g.uid, g.name.clone(), sp, m, Color32::from_rgb(color[0], color[1], color[2]), true));
         }
     }
-    for (uid, sp) in effectcraft_engine::viewer::shape_paths(ectx, l) {
-        let im = effectcraft_engine::render::shapes::item_matrix(ectx, l, uid).unwrap_or(Mat3::IDENTITY);
+    for (uid, sp) in tselatra_engine::viewer::shape_paths(ectx, l) {
+        let im = tselatra_engine::render::shapes::item_matrix(ectx, l, uid).unwrap_or(Mat3::IDENTITY);
         let name = l.props.find_group(uid).map(|g| g.name.clone()).unwrap_or_default();
         list.push((uid, name, sp, m * im, label_col, false));
     }
@@ -317,7 +317,7 @@ pub(crate) fn parent_to_comp(ectx: &EvalCtx, l: &Layer) -> Mat3 {
 /// squares (filled when selected) and spatial Bezier tangent handles. Works through parents.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn motion_path(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     painter: &egui::Painter,
     map: &ViewerMap,
     ectx: &EvalCtx,
@@ -363,9 +363,9 @@ pub(crate) fn motion_path(
         // Auto-Bezier keys show handles on a side the path leaves straight too (a two-key path's
         // ends), to drag it into a curve; Linear keys (no tangents) show none.
         let (tin, tout) = if k.spatial_auto {
-            effectcraft_engine::keyframe::spatial_handles(&pos.keys, i)
+            tselatra_engine::keyframe::spatial_handles(&pos.keys, i)
         } else {
-            effectcraft_engine::keyframe::spatial_tangents(&pos.keys, i)
+            tselatra_engine::keyframe::spatial_tangents(&pos.keys, i)
         };
         for (out, tg) in [(false, tin), (true, tout)] {
             let has = (out && i + 1 < pos.keys.len()) || (!out && i > 0);
@@ -435,7 +435,7 @@ impl FtBox {
 
 /// Draw the free-transform box of the target path (if any) and return it for hit tests.
 pub(crate) fn draw_free_transform(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ctx: &egui::Context,
     painter: &egui::Painter,
     map: &ViewerMap,
@@ -517,7 +517,7 @@ pub(crate) enum Drag {
 }
 
 /// Start a motion-path drag at `press` (keys before tangents), selecting the key.
-pub(crate) fn begin_key_drag(app: &mut EffectcraftApp, hits: &[KeyHit], press: Pos2, cpt: [f64; 2], shift: bool) -> Option<Drag> {
+pub(crate) fn begin_key_drag(app: &mut TselatraApp, hits: &[KeyHit], press: Pos2, cpt: [f64; 2], shift: bool) -> Option<Drag> {
     let h = hits
         .iter()
         .rev()
@@ -564,7 +564,7 @@ pub(crate) fn begin_ft_drag(f: &FtBox, press: Pos2, map: &ViewerMap) -> Option<D
 
 /// Mask Feather tool: press on a feather point's handle to drag it, or on a mask path to add a
 /// feather point there and drag its radius out.
-pub(crate) fn begin_feather(app: &mut EffectcraftApp, ectx: &EvalCtx, paths: &[PathInfo], map: &ViewerMap, press: Pos2) -> Option<Drag> {
+pub(crate) fn begin_feather(app: &mut TselatraApp, ectx: &EvalCtx, paths: &[PathInfo], map: &ViewerMap, press: Pos2) -> Option<Drag> {
     let _ = ectx;
     for p in paths.iter().filter(|p| p.is_mask) {
         if let Some((i, _)) = p.feather.iter().find(|(_, h)| h.distance(press) < 7.0) {
@@ -588,14 +588,14 @@ pub(crate) fn begin_feather(app: &mut EffectcraftApp, ectx: &EvalCtx, paths: &[P
 /// point for snapping. Returns the replacement drag state.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn update(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     d: &Drag,
     cpt: [f64; 2],
     pos: Pos2,
     mods: egui::Modifiers,
     merge: &str,
     zoom: f32,
-    snap: &mut dyn FnMut(&EffectcraftApp, [f64; 2], LayerId) -> [f64; 2],
+    snap: &mut dyn FnMut(&TselatraApp, [f64; 2], LayerId) -> [f64; 2],
 ) -> Option<Drag> {
     match d.clone() {
         Drag::Key { layer, prop, time, start, press, inv } => {

@@ -1,5 +1,5 @@
 [package]
-name = "vectorcraft-affinity-fuzz"
+name = "tsipika-affinity-fuzz"
 version = "0.0.0"
 edition = "2024"
 publish = false
@@ -9,7 +9,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-vectorcraft-affinity = { path = "..", features = ["synth"] }
+tsipika-affinity = { path = "..", features = ["synth"] }
 
 [[bin]]
 name = "container"

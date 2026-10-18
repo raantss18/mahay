@@ -1,5 +1,5 @@
 [package]
-name = "filmcraft-edit"
+name = "hetsika-edit"
 description = "Pure timeline edit algebra: insert, overwrite, razor, ripple, roll, slip, slide, rate stretch, lift, extract"
 version.workspace = true
 edition.workspace = true
@@ -10,12 +10,12 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-filmcraft-time = { workspace = true }
-filmcraft-project = { workspace = true }
+hetsika-time = { workspace = true }
+hetsika-project = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
-filmcraft-geom = { workspace = true }
-filmcraft-media = { workspace = true }
+hetsika-geom = { workspace = true }
+hetsika-media = { workspace = true }
 serde_json = { workspace = true }

@@ -7,8 +7,8 @@
 //! `frost` blurs the backdrop first. Distances to the outline come from an exact Euclidean
 //! distance transform of the shape's coverage.
 
-use figcraft_doc::Glass;
-use figcraft_geom::Affine;
+use endrika_doc::Glass;
+use endrika_geom::Affine;
 use tiny_skia::Pixmap;
 
 use crate::fx;

@@ -1,7 +1,7 @@
 //! Duplicating a page copies its prototype connections: navigation between two frames that are both
 //! on the page leads between the copies, while a destination outside the copied contents is kept.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use crate::Session;

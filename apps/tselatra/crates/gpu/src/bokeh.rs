@@ -1,10 +1,10 @@
 //! Classic 3D depth of field on the GPU (`bokeh_*` kernels): the plane buffer padded, its
 //! highlights boosted, row prefix sums, then one span gather per blur level
-//! ([`effectcraft_render::three_d::bokeh::kernel_spans`]) accumulated with each pixel's level
+//! ([`tselatra_render::three_d::bokeh::kernel_spans`]) accumulated with each pixel's level
 //! weight — the CPU's `progressive_blur` step for step.
 
-use effectcraft_render::three_d::PlaneDof;
-use effectcraft_render::three_d::bokeh::kernel_spans;
+use tselatra_render::three_d::PlaneDof;
+use tselatra_render::three_d::bokeh::kernel_spans;
 
 use crate::context::{Enc, GpuImage, Params};
 

@@ -8,7 +8,7 @@
 //! applied by id (`effect.apply {"effect": "org.example.posterize"}`) like a built-in.
 //!
 //! Plug-ins come from Rust code (implement the trait and register it at start-up) or from
-//! sandboxed WebAssembly modules (`effectcraft-plugin`, see `docs/plugins.md`), which implement
+//! sandboxed WebAssembly modules (`tselatra-plugin`, see `docs/plugins.md`), which implement
 //! the same contract through a small C-like ABI.
 //!
 //! The contract (stable within an API version):
@@ -24,8 +24,8 @@
 
 use std::sync::{Arc, OnceLock, RwLock};
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
 use serde::{Deserialize, Serialize};
 
 use crate::{Buf, EffectCtx, EffectSpec, ParamSpec, RenderFn};

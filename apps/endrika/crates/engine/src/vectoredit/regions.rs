@@ -12,9 +12,9 @@
 //! step. Rounded
 //! points are drawn in, as the fill shows them.
 
-use figcraft_doc::{Document, VectorNetwork, WindingRule};
-use figcraft_geom::kurbo::{self, ParamCurveNearest, PathEl};
-use figcraft_geom::{Affine, Point, Rect, Shape, Vec2};
+use endrika_doc::{Document, VectorNetwork, WindingRule};
+use endrika_geom::kurbo::{self, ParamCurveNearest, PathEl};
+use endrika_geom::{Affine, Point, Rect, Shape, Vec2};
 
 use super::{VectorEdit, network};
 
@@ -53,7 +53,7 @@ pub fn hatch_spacing(zoom: f64) -> Option<f64> {
 }
 
 /// Whether vector `n` shows a fill (only filled areas are regions).
-fn filled(n: &figcraft_doc::Node) -> bool {
+fn filled(n: &endrika_doc::Node) -> bool {
     n.fills.iter().any(|f| f.visible)
 }
 

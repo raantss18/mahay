@@ -1,4 +1,4 @@
-//! SoundCraft video: open a movie (MP4 / QuickTime MOV) from bytes, report its picture format, and
+//! Feo video: open a movie (MP4 / QuickTime MOV) from bytes, report its picture format, and
 //! decode the frame at a time to RGBA for the Video window and the Video track's thumbnails.
 //!
 //! - [`Movie::open`] (bytes) / [`Movie::open_source`] (any random-access [`ByteSource`]).
@@ -15,12 +15,12 @@
 //! ## Origin
 //!
 //! The container, H.264 and ProRes code is a copy of the clean-room crates of our sibling app
-//! FilmCraft (`storytold/filmcraft`, same organisation, MIT OR Apache-2.0): `filmcraft-bitstream`
-//! → [`bitstream`], `filmcraft-isobmff` → [`isobmff`], `filmcraft-h264` → [`h264`] (without its
-//! test-only synthetic stream module), `filmcraft-prores` → [`prores`]. The crafting apps share no
+//! Hetsika (`raantss18/hetsika`, same organisation, MIT OR Apache-2.0): `hetsika-bitstream`
+//! → [`bitstream`], `hetsika-isobmff` → [`isobmff`], `hetsika-h264` → [`h264`] (without its
+//! test-only synthetic stream module), `hetsika-prores` → [`prores`]. The crafting apps share no
 //! code as dependencies; each keeps its own copy. Only the module paths were changed; fixes found
 //! here should be offered back upstream. [`Movie`], the pixel conversion and the frame caches are
-//! SoundCraft's own.
+//! Feo's own.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 // Codec code indexes fixed-size blocks; index loops read more clearly than iterator chains there.
 #![allow(clippy::needless_range_loop, clippy::too_many_arguments)]

@@ -5,7 +5,7 @@ use std::fmt::Write;
 use std::io::{Read, Write as _};
 
 use kurbo::PathEl;
-use vectorcraft_geom::{Affine, BezPath, FillRule};
+use tsipika_geom::{Affine, BezPath, FillRule};
 
 /// The procedures the page uses, in `VCdict`.
 pub(crate) const PROLOG: &str = "/VCdict 64 dict def
@@ -261,7 +261,7 @@ fn value85(digits: &[u8]) -> Option<u32> {
 }
 
 /// Run-length encoding (PackBits: what PostScript's `RunLengthDecode` reads), shared with TIFF.
-pub(crate) use vectorcraft_render::encode::tiff::packbits;
+pub(crate) use tsipika_render::encode::tiff::packbits;
 
 /// `data` compressed for `FlateDecode` (zlib).
 pub(crate) fn deflate(data: &[u8]) -> Vec<u8> {

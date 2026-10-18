@@ -157,7 +157,7 @@ def write(path, text):
 
 
 # Apps with an Android flavour (android/app/build.gradle).
-ANDROID = {"trano", "sary", "taratasy", "soratra", "tabilao", "seho"}
+ANDROID = {"trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsipika", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"}
 
 
 # The wordmark: the mark, then MAHAY drawn with the same line weight (no font needed).

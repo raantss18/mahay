@@ -1,9 +1,9 @@
 //! Gradients along and across strokes: positions along the path and across the stroke, no seams
 //! between the slices, translucent stops painted once.
 
-use vectorcraft_color::{Gradient, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Node, StrokeGradientMode, StrokeLayer};
-use vectorcraft_geom::PathData;
+use tsipika_color::{Gradient, GradientPaint, Paint};
+use tsipika_doc::{Appearance, AppearanceItem, Node, StrokeGradientMode, StrokeLayer};
+use tsipika_geom::PathData;
 
 use super::*;
 

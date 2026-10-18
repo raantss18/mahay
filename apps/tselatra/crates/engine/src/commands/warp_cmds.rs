@@ -1,7 +1,7 @@
 //! Warp Stabilizer commands (Effect ▸ Distort ▸ Warp Stabilizer's Analyze / Cancel, Animation ▸
 //! Warp Stabilizer VFX, the Tracker panel button) and its status query.
 
-use effectcraft_project::{GroupKind, ItemId, Layer, LayerId, PropGroup, Uid};
+use tselatra_project::{GroupKind, ItemId, Layer, LayerId, PropGroup, Uid};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, b_p, bad, has_comp, layer_p};
@@ -34,7 +34,7 @@ fn is_analyzing(s: &Session) -> std::result::Result<(), String> {
 }
 
 fn is_warp(g: &PropGroup) -> bool {
-    matches!(&g.kind, GroupKind::Effect { effect } if effect == effectcraft_effects::warp_stab::ID)
+    matches!(&g.kind, GroupKind::Effect { effect } if effect == tselatra_effects::warp_stab::ID)
 }
 
 /// (comp, layer, effect uid) of a Warp Stabilizer: `layer` / `effect` (uid, name or 1-based
@@ -91,7 +91,7 @@ fn warp_analyze(s: &mut Session, p: &Value) -> Result<Value> {
 /// layer and start analysing it.
 fn warp_apply(s: &mut Session, p: &Value) -> Result<Value> {
     let (cid, lid) = layer_p(s, p, "track.warpStabilizer")?;
-    let r = s.execute("effect.apply", json!({"effect": effectcraft_effects::warp_stab::ID, "layers": [lid.0], "comp": cid.0}))?;
+    let r = s.execute("effect.apply", json!({"effect": tselatra_effects::warp_stab::ID, "layers": [lid.0], "comp": cid.0}))?;
     let uid = r["effects"].get(0).and_then(Value::as_u64).ok_or_else(|| EngineError::Other("the effect could not be applied".into()))?;
     let wait = b_p(p, "wait").unwrap_or(false);
     let n = s.start_warp(cid, lid, uid, wait).map_err(EngineError::Other)?;
@@ -107,9 +107,9 @@ fn warp_status(s: &mut Session, p: &Value) -> Result<Value> {
     let comp = project.comp(cid).ok_or(EngineError::NoComp)?;
     let layer = comp.layer(lid).ok_or(EngineError::NoComp)?;
     let g = layer.props.find_group(uid).ok_or(EngineError::NoComp)?;
-    let ctx = effectcraft_render::EvalCtx::new(&project, cid, comp, s.time_of(cid));
-    let params = effectcraft_effects::flatten_params(g, &mut |pr| ctx.value(layer, pr));
-    let analysis = effectcraft_effects::warp_stab::analysis(&params);
+    let ctx = tselatra_render::EvalCtx::new(&project, cid, comp, s.time_of(cid));
+    let params = tselatra_effects::flatten_params(g, &mut |pr| ctx.value(layer, pr));
+    let analysis = tselatra_effects::warp_stab::analysis(&params);
     out["layer"] = json!(lid.0);
     out["effect"] = json!(uid);
     out["analyzed"] = json!(analysis.is_some());
@@ -122,7 +122,7 @@ fn warp_status(s: &mut Session, p: &Value) -> Result<Value> {
         // elsewhere (the browser) it is never solved here but in a job worker, and the status
         // says "stabilizing" until the summary arrives (`WorkerReply::WarpPlan`).
         let plan = if s.offloads() {
-            let cached = effectcraft_effects::warp_stab::cached_summary_at(&params, lt);
+            let cached = tselatra_effects::warp_stab::cached_summary_at(&params, lt);
             if cached.is_none() {
                 out["stabilizing"] = json!(true);
                 if s.offloaded(JobKind::Warp).is_none() && s.offloaded(JobKind::WarpPlan).is_none() {
@@ -134,7 +134,7 @@ fn warp_status(s: &mut Session, p: &Value) -> Result<Value> {
             }
             cached
         } else {
-            effectcraft_effects::warp_stab::summary_at(&params, lt)
+            tselatra_effects::warp_stab::summary_at(&params, lt)
         };
         if let Some((k, plan)) = plan {
             out["frame"] = json!(k);

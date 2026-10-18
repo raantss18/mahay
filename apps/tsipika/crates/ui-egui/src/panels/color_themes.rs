@@ -6,12 +6,12 @@
 
 use egui::{Rect, Sense, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_color::harmony::{Harmony, THEME_SIZE, move_on_wheel};
-use vectorcraft_engine::cmd::colortheme::ColorTheme;
+use tsipika_color::Color;
+use tsipika_color::harmony::{Harmony, THEME_SIZE, move_on_wheel};
+use tsipika_engine::cmd::colortheme::ColorTheme;
 
 use super::{active_paint, c32, color_json, empty_state, pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::{self, Tokens};
 use crate::widgets::{self, menu_item};
 
@@ -77,7 +77,7 @@ fn colors_json(colors: &[Color]) -> Vec<Value> {
 }
 
 /// The theme being made: from the current colour when the panel first shows.
-fn draft(app: &VectorcraftApp, ctx: &egui::Context) -> Draft {
+fn draft(app: &TsipikaApp, ctx: &egui::Context) -> Draft {
     if let Some(d) = pstate::<Option<Draft>>(ctx, "ct-draft") {
         return d;
     }
@@ -91,7 +91,7 @@ fn set_draft(ctx: &egui::Context, d: Draft) {
 }
 
 /// The saved theme picked on the My Themes tab.
-fn picked(app: &VectorcraftApp, ctx: &egui::Context) -> Option<String> {
+fn picked(app: &TsipikaApp, ctx: &egui::Context) -> Option<String> {
     pstate::<Option<String>>(ctx, "ct-picked").filter(|n| app.session.prefs.color_themes.iter().any(|t| t.name == *n))
 }
 
@@ -101,7 +101,7 @@ fn tab(ctx: &egui::Context) -> usize {
 }
 
 /// Save the theme being made (overwriting the theme it edits); it then edits the saved theme.
-fn save(app: &mut VectorcraftApp, ctx: &egui::Context) {
+fn save(app: &mut TsipikaApp, ctx: &egui::Context) {
     let mut d = draft(app, ctx);
     if let Ok(r) = app.run("colorTheme.save", d.save_params()) {
         let name = r["name"].as_str().unwrap_or_default().to_string();
@@ -120,13 +120,13 @@ fn edit(ctx: &egui::Context, t: &ColorTheme) {
 }
 
 /// Add the theme being made to Swatches as a colour group (one undo step).
-fn add_draft_to_swatches(app: &mut VectorcraftApp, ctx: &egui::Context) {
+fn add_draft_to_swatches(app: &mut TsipikaApp, ctx: &egui::Context) {
     let d = draft(app, ctx);
     let name = if d.name.trim().is_empty() { "Color Theme" } else { d.name.trim() };
     app.run("swatch.newGroup", json!({ "name": name, "colors": colors_json(&d.colors), "keepModel": true })).ok();
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
     ui.horizontal(|ui| {
         let cur = tab(&ctx);
@@ -141,7 +141,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     if tab(&ctx) == 1 { my_themes(app, ui) } else { create(app, ui) }
 }
 
-fn create(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn create(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let ctx = ui.ctx().clone();
     let mut d = draft(app, &ctx);
@@ -238,7 +238,7 @@ enum Action {
     Edit(String),
 }
 
-fn my_themes(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn my_themes(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let ctx = ui.ctx().clone();
     let pick = picked(app, &ctx);
@@ -303,14 +303,14 @@ fn my_themes(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Edit saved theme `name` on the Create tab.
-fn edit_saved(app: &VectorcraftApp, ctx: &egui::Context, name: &str) {
+fn edit_saved(app: &TsipikaApp, ctx: &egui::Context, name: &str) {
     if let Some(th) = app.session.prefs.color_themes.iter().find(|t| t.name == name) {
         edit(ctx, th);
     }
 }
 
 /// Delete saved theme `name`; the theme being made no longer edits it.
-fn delete(app: &mut VectorcraftApp, ctx: &egui::Context, name: &str) {
+fn delete(app: &mut TsipikaApp, ctx: &egui::Context, name: &str) {
     if app.run("colorTheme.delete", json!({ "name": name })).is_ok() {
         let mut d = draft(app, ctx);
         if d.editing.as_deref() == Some(name) {
@@ -320,7 +320,7 @@ fn delete(app: &mut VectorcraftApp, ctx: &egui::Context, name: &str) {
     }
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
     let doc = app.session.active().is_some();
     if tab(&ctx) == 1 {
@@ -353,15 +353,15 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app
     }
 
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context) {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context) {
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
             show(app, ui);
             menu(app, ui);
@@ -369,7 +369,7 @@ mod tests {
         out.textures_delta.clear();
     }
 
-    fn themes(app: &VectorcraftApp) -> &[ColorTheme] {
+    fn themes(app: &TsipikaApp) -> &[ColorTheme] {
         &app.session.prefs.color_themes
     }
 

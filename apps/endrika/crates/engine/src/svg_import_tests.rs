@@ -41,7 +41,7 @@ fn imported_svg_is_editable_centred_and_reports_what_it_left_out() {
 
 #[test]
 fn opened_svg_lists_its_warnings() {
-    let dir = std::env::temp_dir().join(format!("figcraft-svg-open-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-svg-open-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("icon.svg");
     std::fs::write(&path, SVG).unwrap();

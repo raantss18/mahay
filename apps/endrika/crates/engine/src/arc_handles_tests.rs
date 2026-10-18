@@ -10,8 +10,8 @@ use crate::Session;
 use crate::arc_handles::{Arc, ArcHandle, MIN_PX, arc_of, drag, handles, hit};
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::NodeId;
-use figcraft_geom::Point;
+use endrika_doc::NodeId;
+use endrika_geom::Point;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))

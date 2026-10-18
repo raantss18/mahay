@@ -50,7 +50,7 @@ fn locate(e: &mut Engine, at: i64) -> Result<Value> {
     let s = e.session_mut();
     s.edit.playhead = at;
     if s.edit.selection.is_empty() || !s.edit.selection.contains(at) {
-        s.edit.selection = soundcraft_time::Range::point(at);
+        s.edit.selection = feo_time::Range::point(at);
     }
     e.transport_requests.push(TransportRequest::Locate(at));
     Ok(json!({"at": at}))

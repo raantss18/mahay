@@ -6,10 +6,10 @@
 
 use egui::{Rect, Sense, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::harmony::{GuideOptions, variation};
+use tsipika_color::harmony::{GuideOptions, variation};
 
 use super::{DialogSpec, form};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::panels::{c32, color_guide::base_color};
 use crate::state::Dialog;
 use crate::theme::Tokens;
@@ -21,18 +21,18 @@ pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Color Guide Options").into(), body, confirm, min_width: 320.0, ..DialogSpec::FORM };
 
 /// Open the dialog with the panel's current options.
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     let o = app.ui.color_guide;
     app.ui.dialog = Some(Dialog::new(KIND, json!({"steps": o.steps, "amount": o.amount})));
 }
 
 /// The panel's options with the dialog's steps and amount.
-fn options(app: &VectorcraftApp, d: &Dialog) -> GuideOptions {
+fn options(app: &TsipikaApp, d: &Dialog) -> GuideOptions {
     let o = app.ui.color_guide;
     GuideOptions { steps: d.f64("steps", o.steps as f64).round().max(1.0) as u32, amount: d.f64("amount", o.amount as f64) as f32, ..o }.clamped()
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let max = GuideOptions::MAX_STEPS as f64;
     let ramp = |x: f32| {
@@ -57,7 +57,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     app.ui.color_guide = options(app, d);
     app.ui.dialog = None;
     Ok(json!(app.ui.color_guide))
@@ -66,11 +66,11 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     #[test]
     fn ok_sets_the_panel_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("ui.colorGuideOptions", json!({})).unwrap();
         assert_eq!(app.ui.dialog.as_ref().map(|d| d.kind.as_str()), Some(KIND));
         let ctx = egui::Context::default();

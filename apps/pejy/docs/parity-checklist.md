@@ -2,7 +2,7 @@
 
 > **Generated:** summary by `cargo xtask parity` from the rows below; rows last re-scored 2026-10-04, summary unchanged since (checked 2026-10-10) · **Target:** Adobe InDesign 2026
 
-This is the **presence** checklist: does each InDesign feature exist in DesignCraft? It answers
+This is the **presence** checklist: does each InDesign feature exist in Pejy? It answers
 the feature-breadth question only. Depth, fidelity and readiness for real work are assessed in
 [target-app-parity.md](target-app-parity.md); individual shortfalls are in [gaps.md](gaps.md).
 Formerly `docs/parity.md`.
@@ -11,7 +11,7 @@ Edit a row's status, then run `cargo xtask parity` to regenerate the summary; do
 summary by hand. Each row of the InDesign feature catalogue is scored **D** (done), **P** (partial: works but lacks options or UI) or **M** (missing), weighted by priority (**P0** core = 3, **P1** = 2, **P2** = 1). Out-of-scope rows (Adobe cloud services, plug-ins, Typekit, Flash) are excluded.
 
 Caveat (2026-10-10 review): rows were graded by the agents that built the features, at a coarse
-grain. A measured match of InDesign 21.6's own menu dump against DesignCraft's labels finds 69%
+grain. A measured match of InDesign 21.6's own menu dump against Pejy's labels finds 69%
 of in-scope menu items (75% against the documented menu tree) (see [target-app-parity.md](target-app-parity.md)), so read 99% as an upper
 bound.
 

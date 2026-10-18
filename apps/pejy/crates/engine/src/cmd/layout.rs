@@ -1,21 +1,21 @@
 //! Layout menu and Pages/Layers panels: pages, spreads, parents, margins & columns, layers.
 
-use designcraft_doc::{LAYER_COLORS, Layer, LayerId, Margins, SpreadId};
+use pejy_doc::{LAYER_COLORS, Layer, LayerId, Margins, SpreadId};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, ok, str_param};
 use crate::{Result, Session};
 
-/// A start page number parameter: a whole number in 1..=[`designcraft_doc::MAX_PAGE_NUMBER`].
+/// A start page number parameter: a whole number in 1..=[`pejy_doc::MAX_PAGE_NUMBER`].
 fn start_number(cmd: &str, key: &str, v: &Value) -> Result<u32> {
     v.as_u64()
         .and_then(|n| u32::try_from(n).ok())
-        .filter(|n| (1..=designcraft_doc::MAX_PAGE_NUMBER).contains(n))
-        .ok_or_else(|| bad(cmd, format!("`{key}` must be a whole number from 1 to {}", designcraft_doc::MAX_PAGE_NUMBER)))
+        .filter(|n| (1..=pejy_doc::MAX_PAGE_NUMBER).contains(n))
+        .ok_or_else(|| bad(cmd, format!("`{key}` must be a whole number from 1 to {}", pejy_doc::MAX_PAGE_NUMBER)))
 }
 
 /// Each page's margin box, by spread and page id.
-fn margin_boxes(d: &designcraft_doc::Document) -> Vec<(designcraft_doc::SpreadRef, designcraft_doc::PageId, designcraft_geom::Rect)> {
+fn margin_boxes(d: &pejy_doc::Document) -> Vec<(pejy_doc::SpreadRef, pejy_doc::PageId, pejy_geom::Rect)> {
     d.spread_refs()
         .filter_map(|r| d.spread(r).map(|sp| (r, sp)))
         .flat_map(|(r, sp)| sp.pages.iter().map(move |pg| (r, pg.id, pg.margin_rect())))
@@ -24,8 +24,8 @@ fn margin_boxes(d: &designcraft_doc::Document) -> Vec<(designcraft_doc::SpreadRe
 
 /// Layout Adjustment: objects on each page move and resize from its old margin box to its new
 /// one (content keeps its size; frames that auto-fit refit).
-fn adjust_layout(d: &mut designcraft_doc::Document, before: &[(designcraft_doc::SpreadRef, designcraft_doc::PageId, designcraft_geom::Rect)]) {
-    use designcraft_geom::Affine;
+fn adjust_layout(d: &mut pejy_doc::Document, before: &[(pejy_doc::SpreadRef, pejy_doc::PageId, pejy_geom::Rect)]) {
+    use pejy_geom::Affine;
     let after = margin_boxes(d);
     for (r, pid, old) in before {
         let Some((_, _, new)) = after.iter().find(|(r2, p2, _)| r2 == r && p2 == pid) else { continue };
@@ -37,7 +37,7 @@ fn adjust_layout(d: &mut designcraft_doc::Document, before: &[(designcraft_doc::
             * Affine::translate((-old.x0, -old.y0));
         let Some(sp) = d.spread(*r) else { continue };
         // The page's objects (by centre, measured against the old boxes).
-        let ids: Vec<designcraft_doc::ItemId> = sp
+        let ids: Vec<pejy_doc::ItemId> = sp
             .items
             .iter()
             .filter(|it| {
@@ -53,7 +53,7 @@ fn adjust_layout(d: &mut designcraft_doc::Document, before: &[(designcraft_doc::
             .collect();
         for id in ids {
             let Some(it) = d.item_mut(id) else { continue };
-            if matches!(it.content, designcraft_doc::Content::Group { .. }) {
+            if matches!(it.content, pejy_doc::Content::Group { .. }) {
                 it.xf = m * it.xf;
             } else {
                 let inner = it.xf.inverse() * m * it.xf;
@@ -62,9 +62,9 @@ fn adjust_layout(d: &mut designcraft_doc::Document, before: &[(designcraft_doc::
                     w.transform(inner);
                 }
                 let ib = it.inner_bounds();
-                if let designcraft_doc::Content::Graphic(g) = &mut it.content {
+                if let pejy_doc::Content::Graphic(g) = &mut it.content {
                     // Content keeps its size but moves with the frame; auto-fit refits.
-                    let o = inner * designcraft_geom::Point::ZERO;
+                    let o = inner * pejy_geom::Point::ZERO;
                     g.xf = Affine::translate(o.to_vec2()) * g.xf;
                     if let Some(xf) = g.fitted(ib, g.auto_fit) {
                         g.xf = xf;
@@ -76,7 +76,7 @@ fn adjust_layout(d: &mut designcraft_doc::Document, before: &[(designcraft_doc::
 }
 
 /// Horizontal distance from `x` to a margin box (0 inside).
-fn dist(r: designcraft_geom::Rect, x: f64) -> f64 {
+fn dist(r: pejy_geom::Rect, x: f64) -> f64 {
     if x < r.x0 {
         r.x0 - x
     } else if x > r.x1 {
@@ -87,7 +87,7 @@ fn dist(r: designcraft_geom::Rect, x: f64) -> f64 {
 }
 
 /// Apply the `margins`, `columns` and `gutter` params of `layout.marginsAndColumns` to one page.
-fn set_margins_columns(pg: &mut designcraft_doc::Page, p: &Value) {
+fn set_margins_columns(pg: &mut pejy_doc::Page, p: &Value) {
     match p.get("margins") {
         Some(Value::Number(n)) => pg.margins = Margins::uniform(n.as_f64().unwrap_or(36.0)),
         Some(v @ Value::Object(_)) => {
@@ -200,7 +200,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         (pg.width, pg.height, pg.margins, pg.columns, pg.liquid) =
                             (src.width, src.height, src.margins, src.columns.clone(), src.liquid);
                         pg.guides = src.guides.clone();
-                        for g in pg.guides.iter_mut().filter(|g| g.orientation == designcraft_doc::Orientation::Vertical) {
+                        for g in pg.guides.iter_mut().filter(|g| g.orientation == pejy_doc::Orientation::Vertical) {
                             g.position += dx;
                         }
                         nsp.relayout();
@@ -209,7 +209,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     let src = d.clone();
                     let ids: Vec<_> = sp.items.iter().map(|i| i.id).collect();
                     let (nsi, _) = d.page_loc(after + 1).ok_or_else(|| bad("layout.pages.duplicateSpread", "insert failed"))?;
-                    super::object::duplicate_from(d, &src, &ids, designcraft_doc::SpreadRef::Doc(nsi), designcraft_geom::Vec2::ZERO)?;
+                    super::object::duplicate_from(d, &src, &ids, pejy_doc::SpreadRef::Doc(nsi), pejy_geom::Vec2::ZERO)?;
                     let first = after + 1;
                     let Some(to) = to else { return Ok(json!({"page": first})) };
                     // Moving a page shifts the ones between; order the moves so each copy keeps
@@ -288,7 +288,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 };
                 let shown = index.filter(|_| on);
                 if let Some(i) = shown {
-                    s.ui_requests.push(crate::UiRequest::View { params: json!({"showSpread": designcraft_doc::SpreadRef::Parent(i)}) });
+                    s.ui_requests.push(crate::UiRequest::View { params: json!({"showSpread": pejy_doc::SpreadRef::Parent(i)}) });
                 }
                 Ok(json!({"on": on, "parent": shown.and_then(|i| doc.parents.get(i)).map(|x| x.id.0)}))
             }
@@ -387,7 +387,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 if p.get("margins").is_some() && margins.is_none() {
                     return Err(bad("layout.documentSetup", "margins: a number or {top, bottom, inside, outside}"));
                 }
-                let intent: Option<designcraft_doc::Intent> = p.get("intent").and_then(|v| serde_json::from_value(v.clone()).ok());
+                let intent: Option<pejy_doc::Intent> = p.get("intent").and_then(|v| serde_json::from_value(v.clone()).ok());
                 let pages = p.get("pages").and_then(Value::as_u64).map(|n| n.clamp(1, 9999) as usize);
                 let adjust = p.get("adjustLayout").and_then(Value::as_bool).unwrap_or(false);
                 s.edit(|d, _| {
@@ -412,7 +412,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         if !d.sections.iter().any(|x| x.start == 0) {
                             d.sections.insert(
                                 0,
-                                designcraft_doc::Section {
+                                pejy_doc::Section {
                                     start: 0,
                                     start_number: None,
                                     style: Default::default(),
@@ -439,7 +439,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     let w = p.get("width").and_then(Value::as_f64);
                     let h = p.get("height").and_then(Value::as_f64);
                     // Pages with a liquid rule re-flow their objects (Adjust Layout aside).
-                    let liquid_before: Vec<(usize, usize, designcraft_geom::Rect)> = if adjust {
+                    let liquid_before: Vec<(usize, usize, pejy_geom::Rect)> = if adjust {
                         vec![]
                     } else {
                         d.spreads
@@ -478,7 +478,7 @@ pub fn specs() -> Vec<CommandSpec> {
                         adjust_layout(d, &b);
                     }
                     for (si, pi, old) in liquid_before {
-                        super::liquid::apply(d, designcraft_doc::SpreadRef::Doc(si), pi, old);
+                        super::liquid::apply(d, pejy_doc::SpreadRef::Doc(si), pi, old);
                     }
                     Ok(document_setup(d))
                 })
@@ -552,16 +552,16 @@ pub fn specs() -> Vec<CommandSpec> {
                 None | Some(Value::Null) => None,
                 Some(v) => Some(v.as_u64().filter(|v| *v >= 1 && *v as usize <= n).ok_or_else(|| bad("layout.selectPage", format!("`page`: 1–{n}")))? as usize - 1),
             };
-            let ids: Vec<designcraft_doc::ItemId> = {
+            let ids: Vec<pejy_doc::ItemId> = {
                 let d = &s.doc()?.doc;
                 p.get("ids")
                     .and_then(Value::as_array)
-                    .map(|a| a.iter().filter_map(Value::as_u64).map(designcraft_doc::ItemId).filter(|id| d.item(*id).is_some()).collect())
+                    .map(|a| a.iter().filter_map(Value::as_u64).map(pejy_doc::ItemId).filter(|id| d.item(*id).is_some()).collect())
                     .unwrap_or_default()
             };
             let st = s.doc_mut()?;
             if page.is_some() {
-                st.selection = designcraft_doc::Selection::items(ids);
+                st.selection = pejy_doc::Selection::items(ids);
             }
             st.selection.page = page;
             st.bump_revision();
@@ -639,7 +639,7 @@ pub fn specs() -> Vec<CommandSpec> {
             let id = LayerId(p.get("id").and_then(Value::as_u64).unwrap_or(0));
             let st = s.doc_mut()?;
             let ids: Vec<_> = st.doc.spreads.iter().flat_map(|sp| sp.items.iter().filter(|i| i.layer == id && !i.locked).map(|i| i.id)).collect();
-            st.selection = designcraft_doc::Selection::items(ids);
+            st.selection = pejy_doc::Selection::items(ids);
             st.bump_revision();
             ok()
         }),
@@ -788,7 +788,7 @@ pub fn specs() -> Vec<CommandSpec> {
 }
 
 /// A parent spread named by prefix, label (`A-Parent`) or index.
-fn parent_spread_index(d: &designcraft_doc::Document, v: &Value) -> Option<usize> {
+fn parent_spread_index(d: &pejy_doc::Document, v: &Value) -> Option<usize> {
     match v {
         Value::Number(n) => n.as_u64().and_then(|i| usize::try_from(i).ok()).filter(|i| *i < d.parents.len()),
         Value::String(s) => d.parents.iter().position(|p| p.parent.as_ref().is_some_and(|i| i.prefix == *s || i.label() == *s)),
@@ -800,7 +800,7 @@ fn parent_spread_index(d: &designcraft_doc::Document, v: &Value) -> Option<usize
 /// its prefix (`"A"`) when only one parent has it. `null` or `"[None]"` → `Some(None)` (no parent);
 /// missing → `None` (the command's default). Unknown or ambiguous names are errors, so a typo never
 /// clears a page's parent.
-fn parent_ref(cmd: &str, d: &designcraft_doc::Document, v: Option<&Value>) -> Result<Option<Option<SpreadId>>> {
+fn parent_ref(cmd: &str, d: &pejy_doc::Document, v: Option<&Value>) -> Result<Option<Option<SpreadId>>> {
     let Some(v) = v else { return Ok(None) };
     match v {
         Value::Null => Ok(Some(None)),
@@ -810,7 +810,7 @@ fn parent_ref(cmd: &str, d: &designcraft_doc::Document, v: Option<&Value>) -> Re
             d.parents.iter().find(|p| p.id.0 == id).map(|p| Some(Some(p.id))).ok_or_else(|| bad(cmd, format!("no parent with id {id}")))
         }
         Value::String(s) => {
-            let by = |f: &dyn Fn(&designcraft_doc::ParentInfo) -> bool| -> Vec<SpreadId> {
+            let by = |f: &dyn Fn(&pejy_doc::ParentInfo) -> bool| -> Vec<SpreadId> {
                 d.parents.iter().filter(|p| p.parent.as_ref().is_some_and(f)).map(|p| p.id).collect()
             };
             let mut hits = by(&|i| i.label() == *s);
@@ -834,7 +834,7 @@ fn parent_options(s: &mut crate::Session, p: &Value) -> Result<Value> {
     let Some(Some(id)) = parent_ref(CMD, d, p.get("parent"))? else { return Err(bad(CMD, "`parent` names the parent to change")) };
     let pi = d.parent_index(id).ok_or_else(|| bad(CMD, format!("no parent with id {}", id.0)))?;
     let base = parent_ref(CMD, d, p.get("basedOn"))?.ok_or_else(|| bad(CMD, "missing `basedOn` (a parent, or null for [None])"))?;
-    let label = |d: &designcraft_doc::Document, i: usize| d.parents.get(i).and_then(|x| x.parent.as_ref()).map(|i| i.label());
+    let label = |d: &pejy_doc::Document, i: usize| d.parents.get(i).and_then(|x| x.parent.as_ref()).map(|i| i.label());
     if let Some(b) = base
         && d.parent_base_cycles(pi, b)
     {
@@ -866,7 +866,7 @@ fn page_size(s: &mut crate::Session, p: &Value) -> Result<Value> {
     }
     let (mut w, mut h) = (p.get("width").and_then(Value::as_f64), p.get("height").and_then(Value::as_f64));
     if let Some(name) = str_param(p, "preset") {
-        let pr = designcraft_doc::build::PRESETS
+        let pr = pejy_doc::build::PRESETS
             .iter()
             .find(|x| x.name.eq_ignore_ascii_case(name))
             .ok_or_else(|| bad("layout.pageSize", format!("no preset `{name}`")))?;
@@ -905,13 +905,13 @@ fn page_options(s: &mut crate::Session, p: &Value) -> Result<Value> {
 
 /// Give `pages` (1-based) their own size. Objects stay on their page; pages with a liquid rule
 /// re-flow their objects by it.
-pub(crate) fn resize_pages(d: &mut designcraft_doc::Document, pages: &[usize], w: Option<f64>, h: Option<f64>) {
+pub(crate) fn resize_pages(d: &mut pejy_doc::Document, pages: &[usize], w: Option<f64>, h: Option<f64>) {
     resize_pages_from(d, pages, w, h, 0);
 }
 
 /// [`resize_pages`] keeping reference point `anchor` (0–8, row-major from the top-left) in place:
 /// the page grows away from it, so objects keep their place relative to it.
-pub(crate) fn resize_pages_from(d: &mut designcraft_doc::Document, pages: &[usize], w: Option<f64>, h: Option<f64>, anchor: usize) {
+pub(crate) fn resize_pages_from(d: &mut pejy_doc::Document, pages: &[usize], w: Option<f64>, h: Option<f64>, anchor: usize) {
     let (fx, fy) = ((anchor % 3) as f64 / 2.0, (anchor / 3).min(2) as f64 / 2.0);
     {
         for page in pages {
@@ -941,7 +941,7 @@ pub(crate) fn resize_pages_from(d: &mut designcraft_doc::Document, pages: &[usiz
             if let Some(h) = h {
                 pg.height = h.max(1.0);
             }
-            let left = pg.side == designcraft_doc::PageSide::Left;
+            let left = pg.side == pejy_doc::PageSide::Left;
             sp.relayout();
             // Keep the spine: shift the whole spread back when a left page grows.
             if left && dw != 0.0 {
@@ -959,41 +959,41 @@ pub(crate) fn resize_pages_from(d: &mut designcraft_doc::Document, pages: &[usiz
                     && *dx != 0.0
                 {
                     let it = std::sync::Arc::make_mut(it);
-                    it.xf = designcraft_geom::Affine::translate((*dx, 0.0)) * it.xf;
+                    it.xf = pejy_geom::Affine::translate((*dx, 0.0)) * it.xf;
                 }
             }
             // Page guides move with their page.
             for (k, q) in sp.pages.iter_mut().enumerate() {
                 let dx = new[k] - old[k];
                 if dx != 0.0 {
-                    for g in q.guides.iter_mut().filter(|g| g.orientation == designcraft_doc::Orientation::Vertical) {
+                    for g in q.guides.iter_mut().filter(|g| g.orientation == pejy_doc::Orientation::Vertical) {
                         g.position += dx;
                     }
                 }
             }
             // Growing away from the anchor: the page's objects and guides keep their place
             // relative to it.
-            let shift = designcraft_geom::Vec2::new(fx * dw, fy * dh);
-            if shift != designcraft_geom::Vec2::ZERO {
+            let shift = pejy_geom::Vec2::new(fx * dw, fy * dh);
+            if shift != pejy_geom::Vec2::ZERO {
                 for i in &own {
                     if let Some(it) = sp.items.get_mut(*i) {
                         let it = std::sync::Arc::make_mut(it);
-                        it.xf = designcraft_geom::Affine::translate(shift) * it.xf;
+                        it.xf = pejy_geom::Affine::translate(shift) * it.xf;
                     }
                 }
                 for g in &mut sp.pages[pi].guides {
-                    g.position += if g.orientation == designcraft_doc::Orientation::Vertical { shift.x } else { shift.y };
+                    g.position += if g.orientation == pejy_doc::Orientation::Vertical { shift.x } else { shift.y };
                 }
             }
             // Liquid rules: objects were carried along with the page's left edge (and the anchor).
-            let moved = old_bounds + designcraft_geom::Vec2::new(new[pi] - old[pi], 0.0) + shift;
-            super::liquid::apply(d, designcraft_doc::SpreadRef::Doc(si), pi, moved);
+            let moved = old_bounds + pejy_geom::Vec2::new(new[pi] - old[pi], 0.0) + shift;
+            super::liquid::apply(d, pejy_doc::SpreadRef::Doc(si), pi, moved);
         }
     }
 }
 
 /// File › Document Setup values.
-fn document_setup(d: &designcraft_doc::Document) -> Value {
+fn document_setup(d: &pejy_doc::Document) -> Value {
     let st = &d.settings;
     let start = d.sections.iter().find(|x| x.start == 0).and_then(|x| x.start_number).unwrap_or(1);
     json!({"width": st.page_width, "height": st.page_height, "pages": d.page_count(), "startPage": start, "facingPages": st.facing_pages,
@@ -1002,7 +1002,7 @@ fn document_setup(d: &designcraft_doc::Document) -> Value {
 }
 
 /// The largest chapter number (as for page numbers).
-const MAX_CHAPTER: u64 = designcraft_doc::MAX_PAGE_NUMBER as u64;
+const MAX_CHAPTER: u64 = pejy_doc::MAX_PAGE_NUMBER as u64;
 
 /// A `layout.section` edit, checked before the document changes.
 struct SectionEdit {
@@ -1011,7 +1011,7 @@ struct SectionEdit {
     remove: bool,
     /// Some(None): continue from the previous section.
     start_number: Option<Option<u32>>,
-    style: Option<designcraft_doc::NumberStyle>,
+    style: Option<pejy_doc::NumberStyle>,
     prefix: Option<String>,
     include_prefix: Option<bool>,
     marker: Option<String>,
@@ -1036,7 +1036,7 @@ impl SectionEdit {
         let style = match p.get("style") {
             None => None,
             Some(v) => match serde_json::from_value(v.clone()) {
-                Ok(designcraft_doc::NumberStyle::Symbols) => return Err(bad(cmd, "symbols don't number pages")),
+                Ok(pejy_doc::NumberStyle::Symbols) => return Err(bad(cmd, "symbols don't number pages")),
                 Ok(style) => Some(style),
                 Err(e) => return Err(bad(cmd, e.to_string())),
             },
@@ -1052,7 +1052,7 @@ impl SectionEdit {
         })
     }
 
-    fn apply(&self, d: &mut designcraft_doc::Document) {
+    fn apply(&self, d: &mut pejy_doc::Document) {
         let start = self.start;
         // Page 1 always starts a section.
         if self.remove && start != 0 {
@@ -1061,7 +1061,7 @@ impl SectionEdit {
             d.repaginate();
             return;
         }
-        let mut sec = d.sections.iter().find(|x| x.start == start).cloned().unwrap_or(designcraft_doc::Section {
+        let mut sec = d.sections.iter().find(|x| x.start == start).cloned().unwrap_or(pejy_doc::Section {
             start,
             start_number: None,
             style: Default::default(),
@@ -1094,23 +1094,23 @@ impl SectionEdit {
 
 /// A `layout.chapterNumbering` edit, checked before the document changes.
 struct ChapterEdit {
-    style: Option<designcraft_doc::NumberStyle>,
-    source: Option<designcraft_doc::ChapterSource>,
+    style: Option<pejy_doc::NumberStyle>,
+    source: Option<pejy_doc::ChapterSource>,
     start: Option<u32>,
 }
 
 impl ChapterEdit {
     fn parse(cmd: &str, p: &Value) -> Result<Self> {
         let style = match p.get("style") {
-            Some(v) => match serde_json::from_value::<designcraft_doc::NumberStyle>(v.clone()) {
-                Ok(designcraft_doc::NumberStyle::Symbols) | Err(_) => return Err(bad(cmd, format!("unknown chapter style {v}"))),
+            Some(v) => match serde_json::from_value::<pejy_doc::NumberStyle>(v.clone()) {
+                Ok(pejy_doc::NumberStyle::Symbols) | Err(_) => return Err(bad(cmd, format!("unknown chapter style {v}"))),
                 Ok(style) => Some(style),
             },
             None => None,
         };
         let mut source = match p.get("source") {
             Some(v) => Some(
-                serde_json::from_value::<designcraft_doc::ChapterSource>(v.clone())
+                serde_json::from_value::<pejy_doc::ChapterSource>(v.clone())
                     .map_err(|_| bad(cmd, format!("unknown chapter number source {v}")))?,
             ),
             None => None,
@@ -1124,12 +1124,12 @@ impl ChapterEdit {
         };
         // A start number alone means Start Chapter Numbering at.
         if start.is_some() && source.is_none() {
-            source = Some(designcraft_doc::ChapterSource::UserDefined);
+            source = Some(pejy_doc::ChapterSource::UserDefined);
         }
         Ok(ChapterEdit { style, source, start })
     }
 
-    fn apply(&self, d: &mut designcraft_doc::Document) {
+    fn apply(&self, d: &mut pejy_doc::Document) {
         if let Some(style) = self.style {
             d.settings.chapter_style = style;
         }
@@ -1249,7 +1249,7 @@ mod setup_tests {
             d.spreads.iter().chain(&d.parents).flat_map(|sp| &sp.pages).all(|pg| pg.margins.top == 72.0 && pg.margins.bottom == 54.0),
             "every page and parent page"
         );
-        let b = d.item(designcraft_doc::ItemId(f["id"].as_u64().unwrap())).unwrap().bounds();
+        let b = d.item(pejy_doc::ItemId(f["id"].as_u64().unwrap())).unwrap().bounds();
         assert!((b.y0 - 72.0).abs() < 1e-6, "Adjust Layout: the frame follows the margins ({b:?})");
         // One step: undo brings back the margins and the bleed.
         s.execute("edit.undo", &json!({})).unwrap();
@@ -1283,7 +1283,7 @@ mod setup_tests {
         assert_eq!(r["intent"], "web");
         let d = &s.doc().unwrap().doc;
         assert_eq!(d.page_name(0), "2");
-        assert_eq!(d.page(0).unwrap().side, designcraft_doc::PageSide::Left);
+        assert_eq!(d.page(0).unwrap().side, pejy_doc::PageSide::Left);
         assert_eq!(d.spreads[0].pages.len(), 2, "pages 2–3 form the first spread");
         let r = s.execute("layout.documentSetup", &json!({"pages": 3})).unwrap();
         assert_eq!(r["pages"], 3);
@@ -1292,7 +1292,7 @@ mod setup_tests {
 
     #[test]
     fn right_to_left_binding_reverses_spreads() {
-        use designcraft_doc::PageSide::{Left, Right};
+        use pejy_doc::PageSide::{Left, Right};
         let mut s = crate::Session::new();
         s.execute("file.new", &json!({"pages": 4})).unwrap();
         // A frame on page 2 stays on page 2.
@@ -1301,12 +1301,12 @@ mod setup_tests {
         let r = s.execute("layout.documentSetup", &json!({"binding": "rightToLeft"})).unwrap();
         assert_eq!(r["binding"], "rightToLeft");
         let d = &s.doc().unwrap().doc;
-        let shape: Vec<Vec<(designcraft_doc::PageSide, f64)>> = d.spreads.iter().map(|sp| sp.pages.iter().map(|p| (p.side, p.x)).collect()).collect();
+        let shape: Vec<Vec<(pejy_doc::PageSide, f64)>> = d.spreads.iter().map(|sp| sp.pages.iter().map(|p| (p.side, p.x)).collect()).collect();
         // Page 1 alone on the left; pages 2–3 with 2 on the right; page 4 alone on the right.
         assert_eq!(shape, vec![vec![(Left, 0.0)], vec![(Right, w), (Left, 0.0)], vec![(Right, 0.0)]]);
         let (si, _) = d.page_loc(1).unwrap();
         assert_eq!(si, 1);
-        let it = d.item(designcraft_doc::ItemId(f["id"].as_u64().unwrap())).unwrap();
+        let it = d.item(pejy_doc::ItemId(f["id"].as_u64().unwrap())).unwrap();
         assert_eq!(d.spreads[si].page_at_x(it.bounds().center().x), Some(0), "the frame is still on page 2");
         assert!(it.bounds().x0 >= w, "page 2 is the right page now");
         d.check().unwrap();
@@ -1320,7 +1320,7 @@ mod setup_tests {
     /// shows the parent page on its own side, at its own position, also after an IDML round trip.
     #[test]
     fn right_to_left_binding_shows_the_parent_page_of_the_same_side() {
-        use designcraft_doc::PageSide::{Left, Right};
+        use pejy_doc::PageSide::{Left, Right};
         let mut s = crate::Session::new();
         s.execute("file.new", &json!({"pages": 4})).unwrap();
         s.execute("layout.documentSetup", &json!({"binding": "rightToLeft"})).unwrap();
@@ -1331,7 +1331,7 @@ mod setup_tests {
         }
         let d = s.doc().unwrap().doc.clone();
         assert_eq!(d.parents[0].pages.iter().map(|p| (p.side, p.x)).collect::<Vec<_>>(), vec![(Right, w), (Left, 0.0)]);
-        let docs = [(*d).clone(), designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap()];
+        let docs = [(*d).clone(), pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap()];
         for d in docs {
             let mut s = crate::Session::new();
             s.add_document(crate::DocState::new(d, None));
@@ -1340,7 +1340,7 @@ mod setup_tests {
                 let d = &s.doc().unwrap().doc;
                 let ids = r["ids"].as_array().unwrap();
                 assert_eq!(ids.len(), 1, "page {}", page + 1);
-                let it = d.item(designcraft_doc::ItemId(ids[0].as_u64().unwrap())).unwrap();
+                let it = d.item(pejy_doc::ItemId(ids[0].as_u64().unwrap())).unwrap();
                 let story = d.story(it.text_frame().unwrap().story).unwrap();
                 assert_eq!((d.page(page).unwrap().side, story.text.trim_end()), (side, text), "page {}", page + 1);
                 assert_eq!(d.page_of_item(it.id), Some(page), "page {}", page + 1);
@@ -1352,7 +1352,7 @@ mod setup_tests {
     /// stories made in a right-to-left-bound document start their columns on the right.
     #[test]
     fn new_stories_follow_the_binding_direction() {
-        use designcraft_doc::TextDirection::{LeftToRight, RightToLeft};
+        use pejy_doc::TextDirection::{LeftToRight, RightToLeft};
         let text = (1..=12).map(|i| format!("الفقرة {i}")).collect::<Vec<_>>().join("\n");
         for (binding, expected) in [("rightToLeft", RightToLeft), ("leftToRight", LeftToRight)] {
             let mut s = crate::Session::new();
@@ -1360,7 +1360,7 @@ mod setup_tests {
             s.execute("layout.documentSetup", &json!({"binding": binding})).unwrap();
             let f = s.execute("frame.create", &json!({"rect": [40, 170, 555, 260], "content": "text", "text": text})).unwrap();
             s.execute("object.textFrameOptions", &json!({"ids": [f["id"]], "columns": 2, "gutter": 20})).unwrap();
-            let sid = designcraft_doc::StoryId(f["story"].as_u64().unwrap());
+            let sid = pejy_doc::StoryId(f["story"].as_u64().unwrap());
             let st = s.doc().unwrap();
             assert_eq!(st.doc.story(sid).unwrap().direction, expected, "{binding}");
             let cs = s.cache.get(&st.doc, sid, None);
@@ -1372,7 +1372,7 @@ mod setup_tests {
             let g = s.execute("frame.create", &json!({"rect": [40, 400, 555, 500]})).unwrap();
             s.execute("object.content", &json!({"ids": [g["id"]], "type": "text"})).unwrap();
             let d = &s.doc().unwrap().doc;
-            let tf = d.item(designcraft_doc::ItemId(g["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+            let tf = d.item(pejy_doc::ItemId(g["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
             assert_eq!(d.story(tf).unwrap().direction, expected, "{binding}: object.content");
         }
     }
@@ -1419,7 +1419,7 @@ mod layer_tests {
         s.execute("layer.merge", &json!({"ids": [l4, l2]})).unwrap();
         let d = &s.doc().unwrap().doc;
         assert_eq!(d.layers.len(), 1);
-        assert_eq!(d.item(designcraft_doc::ItemId(f)).unwrap().layer.0, l4);
+        assert_eq!(d.item(pejy_doc::ItemId(f)).unwrap().layer.0, l4);
     }
 }
 
@@ -1441,7 +1441,7 @@ mod page_size_tests {
         let left = &d.spreads[si].pages[0];
         assert_eq!((left.width, left.height), (300.0, 500.0));
         assert_eq!(d.spreads[si].pages[1].x, x0, "the spine stays");
-        let it = d.item(designcraft_doc::ItemId(id)).unwrap();
+        let it = d.item(pejy_doc::ItemId(id)).unwrap();
         assert_eq!(it.bounds().x0, x0 + 100.0);
         assert_eq!(d.page_of_item(it.id), Some(2));
         s.execute("layout.pageSize", &json!({"pages": [3], "preset": "A4"})).unwrap();
@@ -1468,7 +1468,7 @@ mod spread_tests {
         let d = s.doc().unwrap().doc.clone();
         assert_eq!(d.spreads[1].pages.len(), 3);
         assert!(!d.spreads[1].allow_shuffle);
-        assert_eq!(d.page_of_item(designcraft_doc::ItemId(id)), Some(3), "the object went with its page");
+        assert_eq!(d.page_of_item(pejy_doc::ItemId(id)), Some(3), "the object went with its page");
         // Adding a page at the start reshuffles the others but keeps the 3-page spread.
         s.execute("layout.pages.insert", &json!({"after": 0, "count": 1})).unwrap();
         let d = s.doc().unwrap().doc.clone();
@@ -1538,7 +1538,7 @@ mod page_numbering_view_tests {
         ] {
             assert!(s.execute("layout.numberingOptions", &bad).is_err(), "{bad}");
             assert_eq!(names(&s), ["1", "2", "3", "4"], "{bad}");
-            assert_eq!(s.doc().unwrap().doc.settings.chapter_source, designcraft_doc::ChapterSource::Automatic, "{bad}");
+            assert_eq!(s.doc().unwrap().doc.settings.chapter_source, pejy_doc::ChapterSource::Automatic, "{bad}");
         }
         // Removing a section keeps the chapter part.
         s.execute("layout.section", &json!({"page": 3, "startNumber": 1})).unwrap();
@@ -1577,7 +1577,7 @@ mod page_numbering_view_tests {
         let sec = d.sections.iter().find(|x| x.start == 1).expect("the page-2 section is still the only one there");
         assert_eq!(sec.marker, "Second");
         assert_eq!(sec.start_number, Some(1), "startNumber is kept");
-        assert_eq!(sec.style, designcraft_doc::NumberStyle::LowerRoman, "style is kept");
+        assert_eq!(sec.style, pejy_doc::NumberStyle::LowerRoman, "style is kept");
         assert_eq!(sec.prefix, "A-", "prefix is kept");
         assert!(sec.include_prefix, "includePrefix is kept");
         assert_eq!(s.page_label(1), "A-i");
@@ -1586,7 +1586,7 @@ mod page_numbering_view_tests {
 
 #[cfg(test)]
 mod adjust_tests {
-    use designcraft_doc::Margins;
+    use pejy_doc::Margins;
     use serde_json::json;
 
     use crate::Session;
@@ -1598,14 +1598,14 @@ mod adjust_tests {
         // Letter, 36 pt margins: a frame filling the left half of the margin box.
         let id = s.execute("frame.create", &json!({"rect": [36, 36, 306, 756]})).unwrap()["id"].as_u64().unwrap();
         s.execute("layout.documentSetup", &json!({"width": 1224, "adjustLayout": true})).unwrap();
-        let b = s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().bounds();
+        let b = s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().bounds();
         assert!((b.x0 - 36.0).abs() < 1e-6 && (b.x1 - 612.0).abs() < 1e-6, "half of the wider margin box: {b:?}");
         s.execute("layout.marginsAndColumns", &json!({"margins": 72, "adjustLayout": true})).unwrap();
-        let b = s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().bounds();
+        let b = s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().bounds();
         assert!((b.x0 - 72.0).abs() < 1e-6 && (b.y0 - 72.0).abs() < 1e-6 && (b.y1 - 720.0).abs() < 1e-6, "{b:?}");
         // Without the option objects stay put.
         s.execute("layout.marginsAndColumns", &json!({"margins": 36})).unwrap();
-        let b2 = s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().bounds();
+        let b2 = s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().bounds();
         assert_eq!(b, b2);
     }
 
@@ -1648,9 +1648,9 @@ mod section_side_tests {
                     .iter()
                     .map(|p| {
                         let side = match p.side {
-                            designcraft_doc::PageSide::Left => 'L',
-                            designcraft_doc::PageSide::Right => 'R',
-                            designcraft_doc::PageSide::Single => 'S',
+                            pejy_doc::PageSide::Left => 'L',
+                            pejy_doc::PageSide::Right => 'R',
+                            pejy_doc::PageSide::Single => 'S',
                         };
                         abs += 1;
                         (d.page_name(abs - 1), side)
@@ -1676,7 +1676,7 @@ mod section_side_tests {
             .unwrap();
         let page_of = |s: &Session| {
             let d = &s.doc().unwrap().doc;
-            d.page_of_item(designcraft_doc::ItemId(id)).unwrap()
+            d.page_of_item(pejy_doc::ItemId(id)).unwrap()
         };
         assert_eq!(page_of(&s), 8, "page 9, the right page of the spread 8–9");
         let before = spreads(&s);
@@ -1754,12 +1754,12 @@ mod layer_options_tests {
         let all = json!({"id": id, "name": "  Artwork ", "color": "Gold", "visible": false, "locked": true, "printable": false,
             "showGuides": false, "suppressWrapWhenHidden": true});
         s.execute("layer.set", &all).unwrap();
-        let l = s.doc().unwrap().doc.layer(designcraft_doc::LayerId(id)).cloned().unwrap();
+        let l = s.doc().unwrap().doc.layer(pejy_doc::LayerId(id)).cloned().unwrap();
         assert_eq!(l.name, "Artwork");
         assert_eq!(l.color, [255, 153, 0]);
         assert!(!l.visible && l.locked && !l.printable && !l.show_guides && l.suppress_wrap_when_hidden);
         s.execute("edit.undo", &json!({})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.layer(designcraft_doc::LayerId(id)).unwrap().name, "Art", "one undo step");
+        assert_eq!(s.doc().unwrap().doc.layer(pejy_doc::LayerId(id)).unwrap().name, "Art", "one undo step");
         let first_name = s.doc().unwrap().doc.layers.iter().find(|l| l.id.0 == first).unwrap().name.clone();
         let before = s.doc().unwrap().doc.layers.clone();
         for p in [
@@ -1781,7 +1781,7 @@ mod layer_options_tests {
 
 #[cfg(test)]
 mod parent_margin_tests {
-    use designcraft_doc::{Document, Margins};
+    use pejy_doc::{Document, Margins};
     use serde_json::json;
 
     use crate::Session;
@@ -1910,7 +1910,7 @@ mod parent_tests {
         let r = s.execute("layout.parents.edit", &json!({"parent": ids[2]})).unwrap();
         assert_eq!(r, json!({"on": true, "parent": ids[2]}));
         assert!(s.doc().unwrap().editing_parents);
-        let n = s.doc().unwrap().doc.parent_index(designcraft_doc::SpreadId(ids[2])).unwrap();
+        let n = s.doc().unwrap().doc.parent_index(pejy_doc::SpreadId(ids[2])).unwrap();
         let shown: Vec<_> = s
             .ui_requests
             .iter()
@@ -1939,8 +1939,8 @@ mod parent_base_tests {
         id
     }
 
-    fn page(s: &crate::Session, abs: usize) -> designcraft_render::Rendered {
-        let mut rr = designcraft_render::Renderer::new();
+    fn page(s: &crate::Session, abs: usize) -> pejy_render::Rendered {
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
         rr.render_page(&s.doc().unwrap().doc, &s.cache, abs, 1.0, false, &Default::default()).unwrap()
     }
@@ -1969,11 +1969,11 @@ mod parent_base_tests {
         assert!(paper(img.pixel(170, 20)), "the page's item over B's: {:?}", img.pixel(170, 20));
         assert!(black(page(&s, 0).pixel(50, 100)) && !cyan(page(&s, 0).pixel(250, 100)), "page 1 uses A only");
         // Parent B itself shows A's items under its own.
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         rr.threads = 0;
-        let placed = [designcraft_render::Placed { spread: designcraft_doc::SpreadRef::Parent(1), xf: designcraft_geom::Affine::IDENTITY }];
-        let opts = designcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
-        let img = rr.render(&s.doc().unwrap().doc, &s.cache, &placed, 400, 400, designcraft_geom::Affine::IDENTITY, &opts);
+        let placed = [pejy_render::Placed { spread: pejy_doc::SpreadRef::Parent(1), xf: pejy_geom::Affine::IDENTITY }];
+        let opts = pejy_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+        let img = rr.render(&s.doc().unwrap().doc, &s.cache, &placed, 400, 400, pejy_geom::Affine::IDENTITY, &opts);
         assert!(black(img.pixel(50, 100)) && cyan(img.pixel(150, 150)), "{:?} {:?}", img.pixel(50, 100), img.pixel(150, 150));
         let inspect = s.execute("document.inspect", &json!({})).unwrap();
         assert_eq!(inspect["parents"][1]["basedOn"], "A-Parent");
@@ -1998,18 +1998,18 @@ mod parent_base_tests {
         s.execute("file.new", &json!({"pages": 1, "facingPages": false})).unwrap();
         s.execute("layout.parents.new", &json!({"prefix": "XYZ"})).unwrap();
         s.execute("layout.parents.options", &json!({"parent": "XYZ", "basedOn": "A"})).unwrap();
-        let marker = designcraft_doc::story::PAGE_NUMBER.to_string();
+        let marker = pejy_doc::story::PAGE_NUMBER.to_string();
         let r = s
             .execute("frame.create", &json!({"spread": {"kind": "parent", "index": 0}, "rect": [72, 30, 500, 60], "content": "text", "text": marker}))
             .unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let sid = d.item(designcraft_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
+        let sid = d.item(pejy_doc::ItemId(r["id"].as_u64().unwrap())).unwrap().text_frame().unwrap().story;
         let glyphs = |on| -> usize {
             let cs = s.cache.get_on(&d, sid, on);
             cs.frames.iter().flat_map(|f| f.lines.iter()).map(|l| l.glyphs.iter().filter(|g| g.visible && g.adv > 0.0).count()).sum()
         };
-        assert_eq!(glyphs(designcraft_compose::ShownOn::Own), 1, "A");
-        assert_eq!(glyphs(designcraft_compose::ShownOn::Parent(1)), 3, "XYZ");
+        assert_eq!(glyphs(pejy_compose::ShownOn::Own), 1, "A");
+        assert_eq!(glyphs(pejy_compose::ShownOn::Parent(1)), 3, "XYZ");
     }
 
     /// A file whose parents are based on each other opens, with the cycle broken and reported.

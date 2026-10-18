@@ -1,4 +1,4 @@
-//! Paint and effects behaviour through commands (the rules of `figcraft_render`'s paint and
+//! Paint and effects behaviour through commands (the rules of `endrika_render`'s paint and
 //! effects suites that involve edits or exports): the eyedropper, blend modes and effects set
 //! through commands, and how the SVG and PDF exports carry isolating groups and shadows that hide
 //! behind their layer.
@@ -8,8 +8,8 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind, ToolId};
-use figcraft_color::BlendMode;
-use figcraft_doc::{EffectKind, NodeId};
+use endrika_color::BlendMode;
+use endrika_doc::{EffectKind, NodeId};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -28,7 +28,7 @@ fn set(s: &mut Session, node: NodeId, props: Value) {
 }
 
 fn svg(s: &Session, ids: &[NodeId]) -> String {
-    figcraft_svg::export_svg(s.doc().unwrap(), ids, &figcraft_svg::SvgOptions::default()).unwrap()
+    endrika_svg::export_svg(s.doc().unwrap(), ids, &endrika_svg::SvgOptions::default()).unwrap()
 }
 
 #[test]
@@ -94,7 +94,7 @@ fn exports_isolate_normal_groups_and_hide_shadows_behind_their_layer() {
     assert!(!out.contains("<g clip-path") && out.contains("mix-blend-mode:multiply\" clip-path=\"url(#"), "{out}");
     set(&mut s, g, json!({"blend": "normal"}));
     assert!(svg(&s, &[g]).contains("isolation:isolate"));
-    assert!(figcraft_pdf::export_nodes_pdf(s.doc().unwrap(), &[g]).is_ok());
+    assert!(endrika_pdf::export_nodes_pdf(s.doc().unwrap(), &[g]).is_ok());
     // A translucent layer's drop shadow is cut out by what the layer covers: the shadow's
     // filter composites it "out" of an image of the layer's outline.
     let r = rect(&mut s, None, (200.0, 0.0, 40.0, 40.0), "#FF0000");
@@ -113,7 +113,7 @@ fn exports_isolate_normal_groups_and_hide_shadows_behind_their_layer() {
     set(&mut s, r, json!({"effects": []}));
     set(&mut s, grp, json!({"effects": [{"type": "dropShadow", "offset": [10, 0], "radius": 0, "spread": 0}]}));
     assert!(svg(&s, &[grp]).contains("in2=\"SourceAlpha\" operator=\"out\""));
-    assert!(figcraft_pdf::export_nodes_pdf(s.doc().unwrap(), &[grp]).is_ok());
+    assert!(endrika_pdf::export_nodes_pdf(s.doc().unwrap(), &[grp]).is_ok());
     // The shadow's filter region reaches as far as the shadow (a share of a small layer's box
     // would cut it off).
     let small = rect(&mut s, None, (400.0, 0.0, 10.0, 10.0), "#000000");

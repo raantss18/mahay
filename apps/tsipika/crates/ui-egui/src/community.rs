@@ -5,7 +5,7 @@
 use egui::{Color32, CornerRadius, Sense, Ui, vec2};
 
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 /// Discord's brand colour (a colour, not a logo).
 const DISCORD: Color32 = Color32::from_rgb(0x58, 0x65, 0xF2);
@@ -13,7 +13,7 @@ const DISCORD: Color32 = Color32::from_rgb(0x58, 0x65, 0xF2);
 /// The Discord button's label, height and width.
 fn discord_layout(ui: &Ui, large: bool) -> (std::sync::Arc<egui::Galley>, f32, f32) {
     let (h, font, label) =
-        if large { (36.0, theme::semibold(14.0), tl!("Join our Discord")) } else { (24.0, egui::FontId::proportional(12.0), "Discord") };
+        if large { (36.0, theme::semibold(14.0), tl!("Join the discussions")) } else { (24.0, egui::FontId::proportional(12.0), "Discord") };
     let galley = ui.painter().layout_no_wrap(label.to_string(), font, Color32::PLACEHOLDER);
     let w = galley.size().x + h * 0.55 + h * 0.9;
     (galley, h, w)
@@ -25,7 +25,7 @@ pub fn discord_width(ui: &Ui, large: bool) -> f32 {
 }
 
 /// The Discord button: compact and quiet for the app bar, large for About / Home.
-pub fn discord_button(app: &mut VectorcraftApp, ui: &mut Ui, large: bool) -> egui::Response {
+pub fn discord_button(app: &mut TsipikaApp, ui: &mut Ui, large: bool) -> egui::Response {
     let (galley, h, w) = discord_layout(ui, large);
     let icon = h * 0.55;
     let (r, resp) = ui.allocate_exact_size(vec2(w, h), Sense::click());
@@ -43,7 +43,7 @@ pub fn discord_button(app: &mut VectorcraftApp, ui: &mut Ui, large: bool) -> egu
         icons::paint(ui, "message-circle", ir, DISCORD);
         ui.painter().galley(egui::pos2(ir.right() + h * 0.2, at.y), galley, if resp.hovered() { t.text_strong } else { t.text });
     }
-    let resp = resp.on_hover_text(tl!("Join the ArtCraft community on Discord (discord.gg/artcraft)"));
+    let resp = resp.on_hover_text(tl!("Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)"));
     if resp.clicked() {
         app.open_link("help.discord");
     }
@@ -51,7 +51,7 @@ pub fn discord_button(app: &mut VectorcraftApp, ui: &mut Ui, large: bool) -> egu
 }
 
 /// One link row: icon, label, opens the command's URL.
-fn link(app: &mut VectorcraftApp, ui: &mut Ui, icon: &str, label: &str, cmd: &str, url: &str) {
+fn link(app: &mut TsipikaApp, ui: &mut Ui, icon: &str, label: &str, cmd: &str, url: &str) {
     let t = Tokens::get(ui.ctx());
     ui.horizontal(|ui| {
         icons::icon(ui, icon, 16.0, t.icon);
@@ -63,13 +63,13 @@ fn link(app: &mut VectorcraftApp, ui: &mut Ui, icon: &str, label: &str, cmd: &st
 }
 
 /// The Discord button and the website / app page / GitHub links.
-pub fn links(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn links(app: &mut TsipikaApp, ui: &mut Ui) {
     discord_button(app, ui, true);
     ui.add_space(8.0);
     let l = app.session.execute("help.links", &serde_json::json!({})).unwrap_or_default();
     let s = |k: &str| l[k].as_str().unwrap_or("").to_string();
-    link(app, ui, "globe", tl!("ArtCraft website"), "help.website", &s("website"));
-    link(app, ui, "external-link", tl!("VectorCraft on getartcraft.com"), "help.appPage", &s("appPage"));
+    link(app, ui, "globe", tl!("Mahay website"), "help.website", &s("website"));
+    link(app, ui, "external-link", tl!("Tsipika on mahay.com"), "help.appPage", &s("appPage"));
     link(app, ui, "git-branch", tl!("Source code on GitHub"), "help.github", &s("github"));
 }
 
@@ -83,22 +83,22 @@ mod tests {
         let opened = Arc::new(Mutex::new(vec![]));
         let o = opened.clone();
         let services = crate::Services { open_url: Some(Box::new(move |u: &str| o.lock().unwrap().push(u.to_string()))), ..Default::default() };
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), services);
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), services);
         for id in ["help.discord", "help.website", "help.appPage", "help.github"] {
             crate::menus::invoke(&mut app, id, serde_json::json!({}));
         }
         assert_eq!(
             *opened.lock().unwrap(),
             [
-                "https://discord.gg/artcraft",
-                "https://getartcraft.com",
-                "https://getartcraft.com/apps/vectorcraft",
-                "https://github.com/storytold/vectorcraft"
+                "https://github.com/raantss18/mahay/discussions",
+                "https://github.com/raantss18/mahay",
+                "https://github.com/raantss18/mahay",
+                "https://github.com/raantss18/mahay"
             ]
         );
         // The control channel / MCP path returns the URL without opening a browser.
         let v = app.run("help.discord", serde_json::json!({})).unwrap();
-        assert_eq!(v["url"], "https://discord.gg/artcraft");
+        assert_eq!(v["url"], "https://github.com/raantss18/mahay/discussions");
         assert_eq!(opened.lock().unwrap().len(), 4);
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);

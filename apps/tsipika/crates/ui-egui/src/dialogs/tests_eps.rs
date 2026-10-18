@@ -7,7 +7,7 @@ use super::*;
 
 /// The PostScript of an EPS file.
 fn ps(bytes: &[u8]) -> String {
-    String::from_utf8(vectorcraft_eps::sections(bytes).unwrap().0.to_vec()).unwrap()
+    String::from_utf8(tsipika_eps::sections(bytes).unwrap().0.to_vec()).unwrap()
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn export_as_eps_shows_eps_options_then_writes_and_remembers_them() {
     assert_eq!(names(&written), ["/out/Untitled-1_Artboard-1.eps", "/out/Untitled-1_Artboard-2.eps"]);
     assert_eq!(r["files"].as_array().map(Vec::len), Some(2));
     let bytes = &written.borrow()[0].1;
-    let (text, tiff) = vectorcraft_eps::sections(bytes).unwrap();
+    let (text, tiff) = tsipika_eps::sections(bytes).unwrap();
     assert!(tiff.is_some() && String::from_utf8_lossy(text).contains("%%LanguageLevel: 2"));
     assert!(ps(bytes).contains(" rg\n"), "RGB PostScript");
     // The next EPS Options start from these choices, but not from this export's path.
@@ -69,7 +69,7 @@ fn eps_options_take_saved_flattener_presets_and_refuse_bad_ones() {
 
 #[test]
 fn the_eps_options_dialog_needs_a_document() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     assert!(app.run("ui.epsOptionsDialog", json!({})).is_err());
     assert!(!crate::menus::enabled(&app, "ui.epsOptionsDialog"));
 }
@@ -84,7 +84,7 @@ fn opening_an_eps_that_reads_partly_says_why() {
     let path = dir.join("partial.eps");
     std::fs::write(&path, "%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 100 100\n%%EndComments\n0 0 10 10 rectfill /p { frobnicate } def p\n%%EOF\n")
         .unwrap();
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
     app.services.read = Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string())));
     let r = app.run("file.open", json!({"path": path.to_string_lossy()})).unwrap();
     let w = r["warnings"][0].as_str().unwrap();

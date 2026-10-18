@@ -3,16 +3,16 @@
 //! Effects: Enter keeps the typed name, Escape the default one. `engine.execute` (agents, MCP,
 //! scripts) keeps the headless default and only creates the folder.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::ItemId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::control::{self, ControlRequest};
+use tselatra_engine::Session;
+use tselatra_engine::project::ItemId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::control::{self, ControlRequest};
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Rect, pos2};
 use egui_kittest::Harness;
 use serde_json::json;
 
 /// A comp and an open folder holding a solid, nothing selected.
-fn harness(comps: usize) -> (Harness<'static, EffectcraftApp>, ItemId) {
+fn harness(comps: usize) -> (Harness<'static, TselatraApp>, ItemId) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "duration": 4})).unwrap();
     for i in 0..comps {
@@ -20,18 +20,18 @@ fn harness(comps: usize) -> (Harness<'static, EffectcraftApp>, ItemId) {
     }
     let folder = ItemId(s.execute("project.newFolder", json!({"name": "Bin"})).unwrap()["item"].as_u64().unwrap());
     s.execute("project.select", json!({"items": []})).unwrap();
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.state_mut().ui.project_open_folders.insert(folder.0);
     h.run_steps(3);
     (h, folder)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     Rect::from_min_size(pos2(e.rect[0], e.rect[1]), egui::vec2(e.rect[2], e.rect[3]))
 }
 
-fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, button: PointerButton) {
+fn click_at(h: &mut Harness<'_, TselatraApp>, p: Pos2, button: PointerButton) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.step();
     h.input_mut().events.push(Event::PointerButton { pos: p, button, pressed: true, modifiers: Modifiers::NONE });
@@ -40,32 +40,32 @@ fn click_at(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, button: PointerButton)
     h.run_steps(3);
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(2);
 }
 
-fn type_text(h: &mut Harness<'_, EffectcraftApp>, text: &str) {
+fn type_text(h: &mut Harness<'_, TselatraApp>, text: &str) {
     assert!(h.ctx.egui_wants_keyboard_input(), "the name field has the keyboard");
     h.input_mut().events.push(Event::Text(text.into()));
     h.step();
 }
 
 /// The folders not in `before`.
-fn new_folders(h: &Harness<'_, EffectcraftApp>, before: &[ItemId]) -> Vec<ItemId> {
+fn new_folders(h: &Harness<'_, TselatraApp>, before: &[ItemId]) -> Vec<ItemId> {
     h.state().session.project.items.values().filter(|i| i.is_folder() && !before.contains(&i.id)).map(|i| i.id).collect()
 }
 
-fn folders(h: &Harness<'_, EffectcraftApp>) -> Vec<ItemId> {
+fn folders(h: &Harness<'_, TselatraApp>) -> Vec<ItemId> {
     new_folders(h, &[])
 }
 
-fn name(h: &Harness<'_, EffectcraftApp>, id: ItemId) -> Option<String> {
+fn name(h: &Harness<'_, TselatraApp>, id: ItemId) -> Option<String> {
     h.state().session.project.item(id).map(|i| i.name.clone())
 }
 
-fn renaming(h: &Harness<'_, EffectcraftApp>, id: ItemId) -> bool {
+fn renaming(h: &Harness<'_, TselatraApp>, id: ItemId) -> bool {
     let edit = format!("project.item.{}.nameEdit", id.0);
     h.state().auto.elements.iter().any(|e| e.id == edit)
 }
@@ -132,7 +132,7 @@ fn the_file_menu_opens_the_name_in_view() {
     let list = rect(&h, "project.empty");
     let before = folders(&h);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "project.newFolder", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "project.newFolder", json!({})).unwrap();
     h.run_steps(3);
     let [folder] = new_folders(&h, &before)[..] else { panic!("one new folder") };
     assert!(renaming(&h, folder), "File ▸ New ▸ New Folder opens the name");

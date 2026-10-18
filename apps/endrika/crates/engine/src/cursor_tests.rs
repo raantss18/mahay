@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{Cursor, PenCursor, PointerEvent, PointerKind, ToolId};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd} {p}: {e}"))
@@ -58,9 +58,9 @@ fn close(a: f64, b: f64) -> bool {
 
 /// A square (100,100)–(200,200), selected, and the text "Hello" at (400, 100), not selected.
 fn scene() -> (Session, NodeId, NodeId) {
-    // The text is measured with a font: without craft-fonts that is a system one, scanned here
+    // The text is measured with a font: without mahay-fonts that is a system one, scanned here
     // rather than by whichever test happens to run first (#333).
-    figcraft_text::scan_system_fonts();
+    endrika_text::scan_system_fonts();
     let mut s = Session::new();
     let r = id(&ex(&mut s, "shape.rectangle", json!({"x": 100, "y": 100, "width": 100, "height": 100})));
     let t = id(&ex(&mut s, "text.create", json!({"text": "Hello", "x": 400, "y": 100, "props": {"fontSize": 40}})));

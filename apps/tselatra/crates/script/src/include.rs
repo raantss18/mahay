@@ -11,7 +11,7 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use effectcraft_engine::Session;
+use tselatra_engine::Session;
 
 use crate::runtime::ScriptError;
 use crate::scriptfile::{self, MAX_DEPTH, MAX_FILE_BYTES};

@@ -1,4 +1,4 @@
-use designcraft_color::cms::{self, Cms, ColorSettings};
+use pejy_color::cms::{self, Cms, ColorSettings};
 use image::{ImageEncoder, Rgba};
 
 use super::*;
@@ -217,7 +217,7 @@ fn rgb_with_an_embedded_profile_is_converted_to_srgb() {
 #[test]
 fn gray_with_an_embedded_profile_is_converted() {
     let img = image::RgbaImage::from_pixel(1, 1, Rgba([128, 128, 128, 255]));
-    let icc = craft_cms::builtin::linear_gray().to_bytes().to_vec();
+    let icc = mahay_cms::builtin::linear_gray().to_bytes().to_vec();
     let p = to_display_rgba(Pixels::Gray(img), Some(&icc), &DisplayColour::active()).unwrap().get_pixel(0, 0).0;
     // Linear 50 % grey is sRGB 188.
     assert!(p[0].abs_diff(188) <= 2 && p[0] == p[1] && p[1] == p[2], "{p:?}");

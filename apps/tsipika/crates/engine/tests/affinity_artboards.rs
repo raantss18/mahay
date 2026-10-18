@@ -3,10 +3,10 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use kurbo::Rect;
-use vectorcraft_affinity::synth::{self, F, Method, tag};
-use vectorcraft_doc::{Document, Node, NodeKind};
+use tsipika_affinity::synth::{self, F, Method, tag};
+use tsipika_doc::{Document, Node, NodeKind};
 
-fn field(t: &[u8; 4], f: F) -> (vectorcraft_affinity::stream::Tag, F) {
+fn field(t: &[u8; 4], f: F) -> (tsipika_affinity::stream::Tag, F) {
     (tag(t), f)
 }
 
@@ -81,21 +81,21 @@ fn nested_boards_keep_order_and_negative_origins_at_document_resolution() {
     let outer = shape(10, "Outer", true, false, [0.0, 0.0, 100.0, 60.0], [1.0, 0.0, -40.0, 0.0, 1.0, -20.0], vec![inner]);
     let last = shape(30, "Last", true, false, [0.0, 0.0, 40.0, 80.0], [1.0, 0.0, 150.0, 0.0, 1.0, 0.0], vec![]);
     for method in [Method::Stored, Method::Zlib, Method::Zstd] {
-        let loaded = vectorcraft_engine::cmd::fileio::load("boards.af", &document(vec![vec![outer.clone(), last.clone()]], 144.0, method)).unwrap();
+        let loaded = tsipika_engine::cmd::fileio::load("boards.af", &document(vec![vec![outer.clone(), last.clone()]], 144.0, method)).unwrap();
         let boards = &loaded.doc.artboards;
         assert_eq!(boards.iter().map(|b| b.name.as_str()).collect::<Vec<_>>(), ["Outer", "Inner", "Last"]);
         assert_eq!(boards.iter().map(|b| b.id).collect::<Vec<_>>(), [1, 2, 3]);
         assert_eq!(boards[0].rect, Rect::new(-20.0, -10.0, 30.0, 20.0));
         assert_eq!(boards[1].rect, Rect::new(-15.0, -7.5, -5.0, -2.5));
         assert_eq!(boards[2].rect, Rect::new(75.0, 0.0, 95.0, 40.0));
-        let reopened = vectorcraft_format::load_file(&vectorcraft_format::save_file(&loaded.doc)).unwrap();
+        let reopened = tsipika_format::load_file(&tsipika_format::save_file(&loaded.doc)).unwrap();
         assert_eq!(reopened.doc.artboards, loaded.doc.artboards);
         assert_eq!(reopened.doc.layers, loaded.doc.layers);
     }
 }
 
 fn pixel(d: &Document, x: usize, y: usize) -> [u8; 4] {
-    let img = vectorcraft_render::Renderer::new().render_region(d, d.artboards[0].rect, 1.0, false);
+    let img = tsipika_render::Renderer::new().render_region(d, d.artboards[0].rect, 1.0, false);
     img.to_straight()[(y * img.width as usize + x) * 4..][..4].try_into().unwrap()
 }
 
@@ -104,7 +104,7 @@ fn rotated_board_clips_to_its_outline_instead_of_its_export_rectangle() {
     let child = shape(20, "Oversized", false, false, [-100.0, -100.0, 200.0, 200.0], IDENTITY, vec![]);
     let c = std::f64::consts::FRAC_1_SQRT_2;
     let board = shape(10, "Diamond", true, false, [0.0, 0.0, 80.0, 80.0], [c, -c, 60.0, c, c, 0.0], vec![child]);
-    let loaded = vectorcraft_engine::cmd::fileio::load("rotated.af", &document(vec![vec![board]], 72.0, Method::Zstd)).unwrap();
+    let loaded = tsipika_engine::cmd::fileio::load("rotated.af", &document(vec![vec![board]], 72.0, Method::Zstd)).unwrap();
     let d = &loaded.doc;
     let g = find(&d.layers, "Diamond").unwrap();
     let NodeKind::Path { path, clipping: true, .. } = &g.children().unwrap()[0].kind else { panic!() };
@@ -119,7 +119,7 @@ fn rotated_board_clips_to_its_outline_instead_of_its_export_rectangle() {
 fn converted_ellipse_artboard_keeps_curved_clipping() {
     let child = shape(20, "Oversized", false, false, [-20.0, -20.0, 120.0, 120.0], IDENTITY, vec![]);
     let board = shape(10, "Ellipse", true, true, [0.0, 0.0, 100.0, 100.0], IDENTITY, vec![child]);
-    let loaded = vectorcraft_engine::cmd::fileio::load("ellipse.af", &document(vec![vec![board]], 72.0, Method::Stored)).unwrap();
+    let loaded = tsipika_engine::cmd::fileio::load("ellipse.af", &document(vec![vec![board]], 72.0, Method::Stored)).unwrap();
     assert_eq!(pixel(&loaded.doc, 2, 2), [0, 0, 0, 0]);
     assert_eq!(pixel(&loaded.doc, 50, 50), [255, 0, 0, 255]);
 }
@@ -128,7 +128,7 @@ fn converted_ellipse_artboard_keeps_curved_clipping() {
 fn invalid_board_keeps_children_and_reports_the_loss() {
     let child = shape(20, "Retained", false, false, [1.0, 2.0, 10.0, 20.0], IDENTITY, vec![]);
     let board = shape(10, "Invalid", true, false, [0.0, 0.0, 0.0, 100.0], IDENTITY, vec![child]);
-    let loaded = vectorcraft_engine::cmd::fileio::load("invalid.af", &document(vec![vec![board]], 72.0, Method::Stored)).unwrap();
+    let loaded = tsipika_engine::cmd::fileio::load("invalid.af", &document(vec![vec![board]], 72.0, Method::Stored)).unwrap();
     assert!(loaded.warnings.iter().any(|w| w.contains("artboard without valid bounds")));
     assert!(!loaded.preview_only);
     assert_eq!(loaded.doc.artboards[0].rect, Rect::new(0.0, 0.0, 200.0, 100.0));
@@ -140,7 +140,7 @@ fn invalid_board_keeps_children_and_reports_the_loss() {
 fn several_spreads_preserve_each_board_and_leave_room_between_spreads() {
     let a = shape(10, "First", true, false, [0.0, 0.0, 100.0, 60.0], IDENTITY, vec![]);
     let b = shape(20, "Second", true, false, [0.0, 0.0, 100.0, 60.0], IDENTITY, vec![]);
-    let loaded = vectorcraft_engine::cmd::fileio::load("spreads.af", &document(vec![vec![a], vec![b]], 72.0, Method::Stored)).unwrap();
+    let loaded = tsipika_engine::cmd::fileio::load("spreads.af", &document(vec![vec![a], vec![b]], 72.0, Method::Stored)).unwrap();
     assert_eq!(loaded.doc.artboards.len(), 2);
     assert_eq!(loaded.doc.artboards[0].rect, Rect::new(0.0, 0.0, 100.0, 60.0));
     assert_eq!(loaded.doc.artboards[1].rect, Rect::new(136.0, 0.0, 236.0, 60.0));
@@ -150,8 +150,8 @@ fn several_spreads_preserve_each_board_and_leave_room_between_spreads() {
 #[test]
 fn coordinate_edits_move_imported_clipping_groups_and_undo_together() {
     use serde_json::json;
-    use vectorcraft_engine::Session;
-    use vectorcraft_geom::Vec2;
+    use tsipika_engine::Session;
+    use tsipika_geom::Vec2;
 
     for current in [false, true] {
         let child = shape(20, "Oversized", false, false, [-10.0, -10.0, 110.0, 70.0], IDENTITY, vec![]);
@@ -162,7 +162,7 @@ fn coordinate_edits_move_imported_clipping_groups_and_undo_together() {
             fields.push(field(b"phrp", F::Def(18, vec![tag(b"aprp")], vec![])));
         }
         let second = shape(30, "Second", true, false, [0.0, 0.0, 40.0, 60.0], [1.0, 0.0, 200.0, 0.0, 1.0, 0.0], vec![]);
-        let loaded = vectorcraft_engine::cmd::fileio::load("synthetic.af", &document(vec![vec![first, second]], 72.0, Method::Zstd)).unwrap();
+        let loaded = tsipika_engine::cmd::fileio::load("synthetic.af", &document(vec![vec![first, second]], 72.0, Method::Zstd)).unwrap();
         let mut s = Session::new();
         s.add_document(loaded.doc, None);
         let before = s.doc().unwrap().doc.clone();

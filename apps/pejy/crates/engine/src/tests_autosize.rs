@@ -1,7 +1,7 @@
 //! Text frame auto-size: frames fit their text after edits, in the same undo step, and on import.
 
-use designcraft_doc::{AutoSize, ItemId, StoryId};
-use designcraft_geom::{Point, Rect};
+use pejy_doc::{AutoSize, ItemId, StoryId};
+use pejy_geom::{Point, Rect};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -31,7 +31,7 @@ fn bounds(s: &Session, id: ItemId) -> Rect {
 }
 
 fn overset(s: &Session, sid: StoryId) -> bool {
-    designcraft_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default()).is_overset()
+    pejy_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default()).is_overset()
 }
 
 fn clear(s: &mut Session, sid: StoryId) {
@@ -52,7 +52,7 @@ fn height_only_grows_and_shrinks_from_the_top() {
     assert!((full.y0 - 36.0).abs() < 1e-6 && (full.x0 - 36.0).abs() < 1e-6 && (full.width() - 150.0).abs() < 1e-6);
     assert!(!overset(&s, sid));
     // Exact fit: a hair shorter and the last line no longer fits.
-    let cs = designcraft_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default());
+    let cs = pejy_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default());
     let ft = cs.frame(id).unwrap();
     assert!((ft.content_height - full.height()).abs() < 0.05, "{} vs {}", ft.content_height, full.height());
     clear(&mut s, sid);
@@ -79,7 +79,7 @@ fn width_only_with_no_line_breaks_widens_to_the_longest_line() {
     s.execute("text.insert", &json!({"text": "Short\nA much longer second line"})).unwrap();
     let b = bounds(&s, id);
     assert!(b.width() > 100.0 && (b.x0 - 36.0).abs() < 1e-6 && (b.height() - 84.0).abs() < 1e-6, "{b:?}");
-    let cs = designcraft_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default());
+    let cs = pejy_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default());
     assert_eq!(cs.line_count(), 2, "each paragraph stays on one line");
     assert!(!cs.is_overset());
 }
@@ -149,7 +149,7 @@ fn opening_leaves_auto_size_frames_as_they_are() {
     s.execute("type.char", &json!({"attrs": {"size": 36}})).unwrap();
     // Set the option without running a command, as a file written elsewhere would have it.
     s.edit(|d, _| {
-        if let Some(tf) = d.item_mut(id).and_then(designcraft_doc::Item::text_frame_mut) {
+        if let Some(tf) = d.item_mut(id).and_then(pejy_doc::Item::text_frame_mut) {
             tf.options.auto_size = AutoSize::HeightOnly;
             tf.options.auto_size_ref = 1;
         }
@@ -179,8 +179,8 @@ fn idml_keeps_the_auto_size_options() {
         "useMinimumWidth": true, "minimumWidth": 40, "noLineBreaks": true});
     let (id, _) = frame(&mut s, [36.0, 36.0, 186.0, 56.0], opts);
     let d = &s.doc().unwrap().doc;
-    let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(d)).unwrap();
-    let options = |d: &designcraft_doc::Document, id: ItemId| d.item(id).and_then(|i| i.text_frame()).map(|t| t.options.clone());
+    let back = pejy_idml::import_idml(&pejy_idml::export_idml(d)).unwrap();
+    let options = |d: &pejy_doc::Document, id: ItemId| d.item(id).and_then(|i| i.text_frame()).map(|t| t.options.clone());
     let a = options(d, id).unwrap();
     let b = back.stories.values().next().and_then(|st| options(&back, st.frames[0])).unwrap();
     assert_eq!(a.auto_size_ref, 8);

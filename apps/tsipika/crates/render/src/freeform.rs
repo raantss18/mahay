@@ -1,6 +1,6 @@
 //! Freeform gradients in the renderer.
 //!
-//! vello has no freeform shading, so the colour field ([`vectorcraft_color::freeform`]) is
+//! vello has no freeform shading, so the colour field ([`tsipika_color::freeform`]) is
 //! sampled on a grid of cells over the painted box and drawn as an image paint (bilinear, edges
 //! padded): the fill or stroke being painted clips it. The grid is sized from the box's size on
 //! screen (a cell per few device pixels, in power-of-two steps so zooming reuses it) and cached by
@@ -10,9 +10,9 @@ use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use vectorcraft_color::freeform::{grid_size, painted_box, spread_scale};
-use vectorcraft_color::{Color, Freeform, GradientPaint};
-use vectorcraft_geom::{Affine, Rect};
+use tsipika_color::freeform::{grid_size, painted_box, spread_scale};
+use tsipika_color::{Color, Freeform, GradientPaint};
+use tsipika_geom::{Affine, Rect};
 use vello_cpu::peniko::{Extend, ImageQuality, ImageSampler};
 use vello_cpu::{Pixmap, RenderContext};
 
@@ -43,7 +43,7 @@ fn key(f: &Freeform, b: Rect, cols: u16, rows: u16, ink: Ink) -> u64 {
     }
     f.lines.hash(&mut h);
     (b.x0.to_bits(), b.y0.to_bits(), b.x1.to_bits(), b.y1.to_bits(), cols, rows).hash(&mut h);
-    (Arc::as_ptr(&vectorcraft_color::cms::active()) as usize, ink).hash(&mut h);
+    (Arc::as_ptr(&tsipika_color::cms::active()) as usize, ink).hash(&mut h);
     h.finish()
 }
 

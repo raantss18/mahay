@@ -2,8 +2,8 @@
 //! selected, New Art Has Basic Appearance and `paint.default`.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::{Appearance, Dash, LineCap, Node};
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::{Appearance, Dash, LineCap, Node};
 
 use super::*;
 
@@ -44,7 +44,7 @@ fn stroke_options_set_with_nothing_selected_carry_to_the_next_object() {
     let st = node(&s, id).appearance.stroke().unwrap().clone();
     assert_eq!((st.cap, st.width, st.end_arrow.is_some()), (LineCap::Round, 3.0, true));
     assert_eq!(st.dash, Some(Dash { pattern: vec![4.0, 2.0], ..Default::default() }));
-    assert_eq!(node(&s, id).appearance.fill_paint(), Paint::solid(vectorcraft_color::Color::WHITE), "the fill stays the proxy's");
+    assert_eq!(node(&s, id).appearance.fill_paint(), Paint::solid(tsipika_color::Color::WHITE), "the fill stays the proxy's");
     assert_eq!(node(&s, before).appearance.stroke().unwrap().cap, LineCap::Butt, "art drawn before keeps its stroke");
     // Editing a selected object's stroke leaves the template alone.
     run(&mut s, "stroke.set", json!({"cap": "square"}));

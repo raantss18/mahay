@@ -2,9 +2,9 @@
 //! Recent Input, the prompt's options, Snap Overrides, Pan/Zoom), the selection menu with the
 //! selected object type's edit commands, Recent Commands, and time-sensitive right-click.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::menus::Entry;
-use cadcraft_ui_egui::{CadApp, Services, cmdline, context_menu};
+use drafitra_engine::Session;
+use drafitra_ui_egui::menus::Entry;
+use drafitra_ui_egui::{CadApp, Services, cmdline, context_menu};
 use serde_json::json;
 
 /// (label, id, enabled) of the items, with submenu items prefixed by "Sub/".
@@ -83,7 +83,7 @@ fn command_menu_offers_enter_cancel_options_snaps_and_views() {
     // A snap override is typed at the point prompt; Cancel is Escape.
     type_line(&mut app, "CIRCLE");
     context_menu::choose(&mut app, "snap:_endp");
-    assert_eq!(app.session.snap_override(), Some(cadcraft_engine::snap::mode::END));
+    assert_eq!(app.session.snap_override(), Some(drafitra_engine::snap::mode::END));
     context_menu::choose(&mut app, context_menu::CANCEL);
     assert!(app.session.running.is_none());
 }
@@ -121,7 +121,7 @@ fn idle_menu_lists_recent_commands_and_selection_commands() {
     }
     // Items for commands that don't exist are left out, not stubbed.
     for id in ids.iter().filter(|i| !i.contains(':')) {
-        assert!(cadcraft_engine::find_command(id).is_some() || cadcraft_ui_egui::menus::is_ui_command(id), "{id} isn't a command");
+        assert!(drafitra_engine::find_command(id).is_some() || drafitra_ui_egui::menus::is_ui_command(id), "{id} isn't a command");
     }
     // A line and a circle: no object-specific commands for a mixed selection.
     assert!(context_menu::object_entries(&app).is_empty());
@@ -161,11 +161,11 @@ fn a_selected_block_reference_offers_the_block_editor() {
     let g = vec![context_menu::object_entries(&app)];
     assert_eq!(labels(&g), ["Block Editor", "Edit Reference In-Place"]);
     // Choosing it opens the Block Editor on that block; its own menu then saves and closes it.
-    cadcraft_ui_egui::menus::activate(&mut app, "bedit");
+    drafitra_ui_egui::menus::activate(&mut app, "bedit");
     assert_eq!(app.session.state().unwrap().block_editor(), Some("Door"));
     let menu = ids(&context_menu::entries(&app));
     assert!(["bsave", "bsaveas", "bclose"].iter().all(|id| menu.iter().any(|i| i == id)), "{menu:?}");
-    cadcraft_ui_egui::menus::activate(&mut app, "bclose");
+    drafitra_ui_egui::menus::activate(&mut app, "bclose");
     assert_eq!(app.session.state().unwrap().block_editor(), None);
 }
 
@@ -192,7 +192,7 @@ fn every_menu_label_has_a_ukrainian_translation() {
         let n = segments.len() - usize::from(user_text);
         for s in &segments[..n] {
             // Point filters (.X) and "Repeat LINE" (a template) aren't catalog keys.
-            if !s.starts_with('.') && !s.starts_with("Repeat ") && cadcraft_ui_egui::i18n::tr("uk", s) == *s {
+            if !s.starts_with('.') && !s.starts_with("Repeat ") && drafitra_ui_egui::i18n::tr("uk", s) == *s {
                 missing.push(s.to_string());
             }
         }

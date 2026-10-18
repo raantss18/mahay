@@ -2,8 +2,8 @@
 //! `press_key` reaches the selected stop.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::color::{GradientPaint, Paint};
-use vectorcraft_geom::Point;
+use tsipika_doc::color::{GradientPaint, Paint};
+use tsipika_geom::Point;
 
 use crate::{Backend, Headless, call_tool};
 

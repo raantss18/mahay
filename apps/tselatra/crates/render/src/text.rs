@@ -6,16 +6,16 @@
 
 use std::borrow::Cow;
 
-use effectcraft_color::BlendMode;
-use effectcraft_effects::Buf;
-use effectcraft_geom::{Mat3, Mat4, Vec3, vec2, vec3};
-use effectcraft_keyframe::{Justify, TextDoc, Value};
-use effectcraft_path::{BezPath, FillRule, StrokeStyle};
-use effectcraft_project::{Layer, PropGroup};
-use effectcraft_raster::Image;
-use effectcraft_text::path_text::{self, PathMeasure};
-use effectcraft_text::selectors::{self, BasedOn, Mode, Range, Shape, Wiggly};
-use effectcraft_text::{CharGlyph, TextLayout, char_glyph_style, layout_doc};
+use tselatra_color::BlendMode;
+use tselatra_effects::Buf;
+use tselatra_geom::{Mat3, Mat4, Vec3, vec2, vec3};
+use tselatra_keyframe::{Justify, TextDoc, Value};
+use tselatra_path::{BezPath, FillRule, StrokeStyle};
+use tselatra_project::{Layer, PropGroup};
+use tselatra_raster::Image;
+use tselatra_text::path_text::{self, PathMeasure};
+use tselatra_text::selectors::{self, BasedOn, Mode, Range, Shape, Wiggly};
+use tselatra_text::{CharGlyph, TextLayout, char_glyph_style, layout_doc};
 
 use crate::eval::EvalCtx;
 
@@ -59,7 +59,7 @@ pub struct CharXf {
     pub axes: [([u8; 4], f64); 4],
     pub n_axes: u8,
     /// Front / Bevel / Side / Back Color of the extruded character (Advanced 3D), by
-    /// `effectcraft_model::extrude::Surface` index, and the selection each was set with.
+    /// `tselatra_model::extrude::Surface` index, and the selection each was set with.
     pub surface: [Option<[f32; 4]>; 4],
     pub surface_k: [f32; 4],
 }
@@ -92,7 +92,7 @@ impl CharXf {
 }
 
 /// Animator property match ids of Front / Bevel / Side / Back Color, in
-/// `effectcraft_model::extrude::Surface::ALL` order.
+/// `tselatra_model::extrude::Surface::ALL` order.
 pub const SURFACE_ANIM_PROPS: [&str; 4] = ["frontColor", "bevelColor", "sideColor", "backColor"];
 
 /// Animator property match id of a Variable Font Axes property (`axis_wght`).
@@ -496,7 +496,7 @@ impl PlacedGlyph {
     }
     /// Outline in layer space (2D).
     pub fn path(&self) -> BezPath {
-        effectcraft_path::transform(std::slice::from_ref(&self.local), &self.m2()).remove(0)
+        tselatra_path::transform(std::slice::from_ref(&self.local), &self.m2()).remove(0)
     }
 }
 
@@ -516,11 +516,11 @@ fn adjust_color(base: [f32; 4], rgb: Option<[f32; 4]>, k: f32, hsb: [f64; 3], op
         None => base,
     };
     if hsb != [0.0; 3] {
-        let (h, s, v) = effectcraft_color::rgb_to_hsv(c[0], c[1], c[2]);
+        let (h, s, v) = tselatra_color::rgb_to_hsv(c[0], c[1], c[2]);
         let h = h + (hsb[0] / 360.0) as f32;
         let s = (s + (hsb[1] / 100.0) as f32).clamp(0.0, 1.0);
         let v = (v + (hsb[2] / 100.0) as f32).clamp(0.0, 1.0);
-        let (r, g, b) = effectcraft_color::hsv_to_rgb(h, s, v);
+        let (r, g, b) = tselatra_color::hsv_to_rgb(h, s, v);
         c = [r, g, b, c[3]];
     }
     c[3] *= (opacity / 100.0).clamp(0.0, 1.0) as f32;
@@ -536,7 +536,7 @@ fn text_path(ctx: &EvalCtx, layer: &Layer, text: &PropGroup) -> Option<(PathMeas
     }
     let mask = layer.masks()?.groups().nth(k - 1)?;
     let Some(Value::Path(sp)) = ctx.group_value(layer, mask, "path") else { return None };
-    let bp = effectcraft_path::to_kurbo(&sp);
+    let bp = tselatra_path::to_kurbo(&sp);
     let pm = PathMeasure::new(&bp, ctx.b(layer, po, "reversePath"));
     if pm.is_empty() {
         return None;
@@ -553,7 +553,7 @@ pub fn caret_maps(ctx: &EvalCtx, layer: &Layer, chars: usize) -> Vec<Mat3> {
     let mut by_char: Vec<Option<Mat3>> = vec![None; chars + 1];
     for g in &geom.glyphs {
         if let Some(slot) = by_char.get_mut(g.char_index) {
-            *slot = Some(g.m2() * Mat3::translate(effectcraft_geom::vec2(-g.rest[0], -g.rest[1])));
+            *slot = Some(g.m2() * Mat3::translate(tselatra_geom::vec2(-g.rest[0], -g.rest[1])));
         }
     }
     let first = by_char.iter().flatten().next().copied().unwrap_or(Mat3::IDENTITY);
@@ -590,7 +590,7 @@ pub fn text_geom(ctx: &EvalCtx, layer: &Layer) -> Option<TextGeom> {
     let galign = more.map(|m| ctx.v2(layer, m, "groupingAlignment", [0.0; 2])).unwrap_or([0.0; 2]);
     let fill_stroke = more.map(|m| ctx.e(layer, m, "fillStroke")).unwrap_or(0);
     let blend_idx = more.map(|m| ctx.e(layer, m, "interCharBlend")).unwrap_or(0) as usize;
-    let blend = effectcraft_project::build::INTER_CHAR_BLEND_MODES.get(blend_idx).and_then(|n| BlendMode::from_name(n)).unwrap_or_default();
+    let blend = tselatra_project::build::INTER_CHAR_BLEND_MODES.get(blend_idx).and_then(|n| BlendMode::from_name(n)).unwrap_or_default();
 
     // Character substitutions (Character Offset / Value). Adjust Kerning re-lays out the text.
     let mut subs: Vec<Option<char>> = lay.glyphs.iter().zip(&xfs).map(|(g, x)| substitute(g.ch, x)).collect();
@@ -618,7 +618,7 @@ pub fn text_geom(ctx: &EvalCtx, layer: &Layer) -> Option<TextGeom> {
     let n = lay.glyphs.len();
     let vadv: Vec<f64> = (0..n)
         .map(|gi| match (subs[gi], xfs[gi].axis_deltas()) {
-            (None, d) if !d.is_empty() => effectcraft_text::variable::char_advance_delta(&lay.glyphs[gi], &d).unwrap_or(0.0),
+            (None, d) if !d.is_empty() => tselatra_text::variable::char_advance_delta(&lay.glyphs[gi], &d).unwrap_or(0.0),
             _ => 0.0,
         })
         .collect();
@@ -737,7 +737,7 @@ pub fn text_geom(ctx: &EvalCtx, layer: &Layer) -> Option<TextGeom> {
             }
             // Variable Font Axes: the outline redrawn at the animated design-space position.
             None => match x.axis_deltas() {
-                d if !d.is_empty() => (effectcraft_text::variable::char_outline_varied(g, &d).unwrap_or_else(|| g.path.clone()), advance(gi)),
+                d if !d.is_empty() => (tselatra_text::variable::char_outline_varied(g, &d).unwrap_or_else(|| g.path.clone()), advance(gi)),
                 _ => (g.path.clone(), g.advance),
             },
         };
@@ -833,10 +833,10 @@ fn raster_pass(g: &PlacedGlyph, stroke: bool, paths: &[BezPath], m: &Mat3, rect:
     let (w, h) = ((rect[2] - rect[0]) as u32, (rect[3] - rect[1]) as u32);
     let mm = Mat3::translate(vec2(-rect[0] as f64, -rect[1] as f64)) * *m;
     let cov = if stroke {
-        let st = StrokeStyle { width: g.stroke_width, join: effectcraft_path::Join::Round, ..Default::default() };
-        effectcraft_path::stroke_coverage(paths, &st, &mm, w, h)
+        let st = StrokeStyle { width: g.stroke_width, join: tselatra_path::Join::Round, ..Default::default() };
+        tselatra_path::stroke_coverage(paths, &st, &mm, w, h)
     } else {
-        effectcraft_path::fill_coverage(paths, &mm, w, h, FillRule::NonZero)
+        tselatra_path::fill_coverage(paths, &mm, w, h, FillRule::NonZero)
     };
     let col = if stroke { g.stroke } else { g.fill };
     let op = (g.xf.opacity / 100.0).clamp(0.0, 1.0) as f32;
@@ -849,7 +849,7 @@ fn raster_pass(g: &PlacedGlyph, stroke: bool, paths: &[BezPath], m: &Mat3, rect:
         }
     }
     if blur_px[0] > 0.05 || blur_px[1] > 0.05 {
-        img = effectcraft_raster::gaussian_blur(&img, blur_px[0] / 2.0, blur_px[1] / 2.0, false);
+        img = tselatra_raster::gaussian_blur(&img, blur_px[0] / 2.0, blur_px[1] / 2.0, false);
     }
     img
 }
@@ -870,7 +870,7 @@ fn blit(dst: &mut Image, src: &Image, at: [i64; 2], mode: BlendMode) {
                 continue;
             }
             let d = &mut dst.data[(ty * dst.width as i64 + tx) as usize];
-            *d = effectcraft_color::blend_pixel(mode, *d, s, 0.5);
+            *d = tselatra_color::blend_pixel(mode, *d, s, 0.5);
         }
     }
 }
@@ -925,10 +925,10 @@ fn draw_glyphs(geom: &TextGeom, img: &mut Image, to_px: &Mat3, s: f64, only: Opt
                 (Cow::Owned(run.iter().map(|&gi| wound(geom.glyphs[gi].path())).collect()), *to_px)
             }
         };
-        let Some(b) = effectcraft_path::bounds(&paths) else { continue };
+        let Some(b) = tselatra_path::bounds(&paths) else { continue };
         let blur = [g.xf.blur[0] * s, g.xf.blur[1] * s];
         let pad = g.stroke_width * m.mean_scale() + 2.0 + blur[0].max(blur[1]) * 1.5;
-        let r = m.map_rect(&effectcraft_geom::Rect::new(b.x0, b.y0, b.x1, b.y1));
+        let r = m.map_rect(&tselatra_geom::Rect::new(b.x0, b.y0, b.x1, b.y1));
         let rect = [
             ((r.x0 - pad).floor() as i64).max(0),
             ((r.y0 - pad).floor() as i64).max(0),
@@ -949,7 +949,7 @@ pub fn render(ctx: &EvalCtx, layer: &Layer, s: f64) -> Buf {
     let Some(geom) = text_geom(ctx, layer) else { return empty() };
     let mut bounds: Option<kurbo::Rect> = None;
     for g in &geom.glyphs {
-        if let Some(b) = effectcraft_path::bounds(&[g.path()]) {
+        if let Some(b) = tselatra_path::bounds(&[g.path()]) {
             let pad = g.stroke_width + 2.0 + g.xf.blur[0].max(g.xf.blur[1]) * 1.5;
             let b = b.inflate(pad, pad);
             bounds = Some(bounds.map_or(b, |a| a.union(b)));
@@ -975,7 +975,7 @@ pub fn per_char_planes(ctx: &EvalCtx, layer: &Layer, s: f64) -> Vec<(Buf, Mat4)>
         if g.xf.opacity <= 0.0 {
             continue;
         }
-        let Some(b) = effectcraft_path::bounds(std::slice::from_ref(&g.local)) else { continue };
+        let Some(b) = tselatra_path::bounds(std::slice::from_ref(&g.local)) else { continue };
         let pad = g.stroke_width + 2.0 + g.xf.blur[0].max(g.xf.blur[1]) * 1.5;
         let b = b.inflate(pad, pad);
         let w = ((b.width() * s).ceil() as u32 + 4).clamp(1, 4096);

@@ -5,7 +5,7 @@
 //! `$n` a number counting up and `$N` one counting down (`$nnn` pads it to three digits), `$$` a
 //! dollar sign.
 
-use figcraft_doc::{Document, NodeId};
+use endrika_doc::{Document, NodeId};
 
 /// Longest match pattern accepted (characters).
 const MAX_FIND: usize = 1_000;

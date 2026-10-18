@@ -1,10 +1,10 @@
 //! GPU keying, matte and channel family effects vs the CPU effects (the oracle): direct on a
 //! buffer at full and half resolution, as adjustment, and composited at 8 and 32 bpc.
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::BitDepth;
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_keyframe::Value;
+use tselatra_project::BitDepth;
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
 
 use crate::tests::{Scene, c, check, compare_at, effect_case, n, opts, set};
 
@@ -232,20 +232,20 @@ fn layer_inputs() {
 #[test]
 fn arithmetic_preserves_positive_subepsilon_alpha() {
     let Some(g) = crate::tests::gpu() else { return };
-    let spec = effectcraft_effects::find("ec.channel.arithmetic").unwrap();
+    let spec = tselatra_effects::find("ec.channel.arithmetic").unwrap();
     let size = [1.0, 1.0];
     let mut params =
-        effectcraft_effects::Params { values: spec.params.iter().map(|p| (p.id.to_string(), effectcraft_effects::default_value(p, size))).collect() };
+        tselatra_effects::Params { values: spec.params.iter().map(|p| (p.id.to_string(), tselatra_effects::default_value(p, size))).collect() };
     params.values.insert("operator".into(), Value::Enum(3));
     for key in ["redValue", "greenValue", "blueValue"] {
         params.values.insert(key.into(), n(0.0));
     }
     params.values.insert("clip".into(), Value::Bool(false));
-    let ctx = || effectcraft_effects::EffectCtx { params: &params, time: 0.0, layer_size: size, seed: 0, adjustment: false, env: Default::default() };
-    let img = effectcraft_raster::Image::filled(1, 1, [1.0, 0.0, 0.0, 5e-7]);
-    let buf = effectcraft_effects::Buf { img, offset: [0.0; 2], scale: 1.0 };
+    let ctx = || tselatra_effects::EffectCtx { params: &params, time: 0.0, layer_size: size, seed: 0, adjustment: false, env: Default::default() };
+    let img = tselatra_raster::Image::filled(1, 1, [1.0, 0.0, 0.0, 5e-7]);
+    let buf = tselatra_effects::Buf { img, offset: [0.0; 2], scale: 1.0 };
     let cpu = (spec.render)(&ctx(), buf.clone());
-    let out = effectcraft_render::Accelerator::effects(g, &[effectcraft_render::FxStep { spec, ctx: ctx() }], &buf, None).unwrap();
+    let out = tselatra_render::Accelerator::effects(g, &[tselatra_render::FxStep { spec, ctx: ctx() }], &buf, None).unwrap();
     assert_eq!(cpu.img.get(0, 0), [1.0, 0.0, 0.0, 5e-7]);
     assert_eq!(out.img.get(0, 0), cpu.img.get(0, 0));
 }

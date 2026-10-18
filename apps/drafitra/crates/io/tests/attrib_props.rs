@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_geom::Vec3;
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::*;
+use drafitra_geom::Vec3;
+use drafitra_io::{read_dxf, write_dxf};
 
 fn text(x: f64, value: &str) -> Text {
     Text {

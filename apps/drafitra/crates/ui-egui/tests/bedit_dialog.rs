@@ -1,8 +1,8 @@
 //! The Edit Block Definition dialog: BEDIT typed or from a menu with no block reference selected
 //! opens it; OK opens the Block Editor on the block named, or on a new block for a new name.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services, bedit};
+use drafitra_engine::Session;
+use drafitra_ui_egui::{CadApp, Services, bedit};
 use serde_json::json;
 
 fn app_with_blocks() -> CadApp {
@@ -108,11 +108,11 @@ fn a_selected_reference_and_json_calls_skip_the_dialog() {
 /// What the stand-in reader opens: for a file saying "authoring", a dynamic block's own drawing
 /// as AutoCAD saves one (model space's block record has an extension dictionary holding an
 /// `ACAD_ENHANCEDBLOCK` evaluation graph); otherwise a plain drawing. Both have one line.
-fn read(bytes: &[u8], _name: &str) -> Result<cadcraft_engine::doc::Drawing, String> {
-    use cadcraft_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
-    use cadcraft_engine::doc::{Common, EntityKind, Handle, Line, RawTag, Space};
-    use cadcraft_engine::geom::Vec3;
-    let mut d = cadcraft_engine::doc::Drawing::new_imperial();
+fn read(bytes: &[u8], _name: &str) -> Result<drafitra_engine::doc::Drawing, String> {
+    use drafitra_engine::doc::foreign::{Foreign, ForeignExtra, ForeignObject};
+    use drafitra_engine::doc::{Common, EntityKind, Handle, Line, RawTag, Space};
+    use drafitra_engine::geom::Vec3;
+    let mut d = drafitra_engine::doc::Drawing::new_imperial();
     d.add(&Space::Model, Common::default(), EntityKind::Line(Line { a: Vec3::ZERO, b: Vec3::new(10.0, 0.0, 0.0) })).map_err(|e| e.to_string())?;
     if bytes == b"authoring" {
         let mut f = Foreign::default();
@@ -126,9 +126,9 @@ fn read(bytes: &[u8], _name: &str) -> Result<cadcraft_engine::doc::Drawing, Stri
 
 #[test]
 fn opening_a_drawing_with_authoring_elements_offers_the_block_editor() {
-    use cadcraft_engine::cmd::file::{IoHooks, set_io};
+    use drafitra_engine::cmd::file::{IoHooks, set_io};
     set_io(IoHooks { read, write: |_, _| Ok(Vec::new()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-authoring-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-authoring-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let symbol = dir.join("Symbol.dxf");
     std::fs::write(&symbol, "authoring").unwrap();

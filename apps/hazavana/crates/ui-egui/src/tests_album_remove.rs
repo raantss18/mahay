@@ -4,19 +4,19 @@
 
 use std::time::Duration;
 
-use lightcraft_catalog::PhotoId;
+use hazavana_catalog::PhotoId;
 use serde_json::json;
 
 use crate::headless::Headless;
 use crate::menubar::MenuNode;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn demo() -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let r = h.request("ui.set", json!({"view": "photoGrid"}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -50,7 +50,7 @@ fn garden(h: &Headless) -> u64 {
 }
 
 fn in_album(h: &Headless, album: u64, photo: PhotoId) -> bool {
-    h.app.session.catalog.album(lightcraft_catalog::AlbumId(album)).is_some_and(|a| a.photos.contains(&photo))
+    h.app.session.catalog.album(hazavana_catalog::AlbumId(album)).is_some_and(|a| a.photos.contains(&photo))
 }
 
 /// Given an album, when a photo is selected in it and Delete is pressed, then the photo leaves the

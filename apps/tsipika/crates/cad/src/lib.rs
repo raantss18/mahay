@@ -22,8 +22,8 @@ pub mod import;
 mod scene;
 mod writer;
 
-use vectorcraft_doc::{Document, Unit};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{Document, Unit};
+use tsipika_geom::Rect;
 
 pub use aci::{aci_rgb, nearest_aci};
 pub use import::{DxfInfo, ImportOptions, Imported, import, info, is_dxf};
@@ -335,7 +335,7 @@ pub fn export(doc: &Document, opts: &DxfOptions) -> Result<DxfOutput, String> {
     if ![r.x0, r.y0, r.x1, r.y1].iter().all(|v| v.is_finite()) {
         return Err("the export region is not finite".into());
     }
-    let baked = vectorcraft_effects::bake_document(doc);
+    let baked = tsipika_effects::bake_document(doc);
     let doc = baked.as_ref().unwrap_or(doc);
     Ok(scene::Scene::new(doc, opts).run())
 }

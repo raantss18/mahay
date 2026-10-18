@@ -6,8 +6,8 @@
 
 use super::tests::FakeMeasure;
 use super::*;
-use figcraft_doc::color::{Color, Paint};
-use figcraft_doc::{Constraints, GridTrack, Node, TextData};
+use endrika_doc::color::{Color, Paint};
+use endrika_doc::{Constraints, GridTrack, Node, TextData};
 use std::collections::HashMap;
 
 use CellAlign as CA;
@@ -775,8 +775,8 @@ fn canvas_stacking_rule() {
     let (mut d, f, ids, m) = build(&case);
     layout_frame(&mut d, f, &m);
     let page = d.first_page().unwrap();
-    let overlap = figcraft_geom::Point::new(40.0, 10.0);
-    let hit = |d: &Document| d.hit_test(page, overlap, 0.0, figcraft_doc::geometry::BoolResult::default());
+    let overlap = endrika_geom::Point::new(40.0, 10.0);
+    let hit = |d: &Document| d.hit_test(page, overlap, 0.0, endrika_doc::geometry::BoolResult::default());
     // Last on top by default: the right-most child.
     assert_eq!(hit(&d), Some(ids[1]));
     assert_eq!(d.node(f).unwrap().paint_order().collect::<Vec<_>>(), ids);

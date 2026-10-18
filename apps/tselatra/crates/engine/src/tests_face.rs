@@ -1,8 +1,8 @@
 //! Face tracking end to end through the commands, on synthetic face footage generated in-test
 //! (a moving, rotating face that opens its mouth and blinks).
 
-use effectcraft_keyframe::{ShapePath, Value as KV};
-use effectcraft_track::face::{FaceParams, LANDMARKS, MEASUREMENTS, render_synthetic, synth_landmarks};
+use tselatra_keyframe::{ShapePath, Value as KV};
+use tselatra_track::face::{FaceParams, LANDMARKS, MEASUREMENTS, render_synthetic, synth_landmarks};
 use serde_json::json;
 
 use crate::mask_track::MaskMethod;
@@ -52,7 +52,7 @@ fn face_tracking_keys_outline_points_and_measurements() {
     }
     // Face Track Points: one keyed point per landmark, on the face.
     let fx = layer.effects().unwrap();
-    let pts = fx.groups().find(|g| g.match_id == effectcraft_effects::face_track::POINTS_ID).expect("Face Track Points");
+    let pts = fx.groups().find(|g| g.match_id == tselatra_effects::face_track::POINTS_ID).expect("Face Track Points");
     let mut worst: f64 = 0.0;
     for f in [0, 6, 12, 18, 24] {
         let truth = synth_landmarks(&face(f));
@@ -72,7 +72,7 @@ fn face_tracking_keys_outline_points_and_measurements() {
     assert_eq!(s.state.key_clipboard.len(), MEASUREMENTS.len());
     assert!(s.state.clip_is_keys);
     let layer = s.active_comp().unwrap().layer(clip).unwrap();
-    let m = layer.effects().unwrap().groups().find(|g| g.match_id == effectcraft_effects::face_track::MEASUREMENTS_ID).expect("Face Measurements");
+    let m = layer.effects().unwrap().groups().find(|g| g.match_id == tselatra_effects::face_track::MEASUREMENTS_ID).expect("Face Measurements");
     let mo = m.get("mouthOpenness").unwrap();
     assert_eq!(mo.keys.len(), 25);
     // Mouth openness follows the footage: widest open where the generator opens it most.
@@ -88,7 +88,7 @@ fn face_tracking_keys_outline_points_and_measurements() {
     }
     // One undo step for the extraction.
     assert!(s.undo());
-    assert!(!s.active_comp().unwrap().layer(clip).unwrap().effects().unwrap().groups().any(|g| g.match_id == effectcraft_effects::face_track::MEASUREMENTS_ID));
+    assert!(!s.active_comp().unwrap().layer(clip).unwrap().effects().unwrap().groups().any(|g| g.match_id == tselatra_effects::face_track::MEASUREMENTS_ID));
     // Outline Only keys just the mask.
     let r = s.execute("mask.new", json!({"layer": clip.0, "vertices": ShapePath::rect(c, 120.0, 160.0).vertices, "closed": true})).unwrap();
     let m2 = r["mask"].as_u64().unwrap();
@@ -105,12 +105,12 @@ fn face_tracking_keys_outline_points_and_measurements() {
     assert!(layer.props.find_group(m3).unwrap().get("path").unwrap().keys.is_empty());
 }
 
-/// With MediaPipe Face Landmarker installed (`EFFECTCRAFT_FACE_LANDMARKER` = path to
+/// With MediaPipe Face Landmarker installed (`TSELATRA_FACE_LANDMARKER` = path to
 /// `face_landmarker.task`, else skipped): Track Mask ▸ Face Tracking uses it, and the pupils and
 /// eye corners it keys sit on the synthetic face's.
 #[test]
 fn face_tracking_uses_the_chosen_model() {
-    let Ok(model) = std::env::var("EFFECTCRAFT_FACE_LANDMARKER") else { return };
+    let Ok(model) = std::env::var("TSELATRA_FACE_LANDMARKER") else { return };
     let (mut s, clip, _) = setup(|f| render_synthetic(W, H, &face(f), 5));
     let dir = std::env::temp_dir().join(format!("ec-face-model-{}", std::process::id()));
     s.models_dir = Some(dir.clone());
@@ -125,12 +125,12 @@ fn face_tracking_uses_the_chosen_model() {
     let r = s.execute_checked("track.mask", json!({"layer": clip.0, "mask": mask, "method": "faceDetailed", "direction": "forward", "wait": true})).unwrap();
     assert_eq!((r["frames"].as_u64(), r["faceModel"].as_str()), (Some(24), Some("mediapipe-face")), "{r}");
     let layer = s.active_comp().unwrap().layer(clip).unwrap().clone();
-    let pts = layer.effects().unwrap().groups().find(|g| g.match_id == effectcraft_effects::face_track::POINTS_ID).expect("Face Track Points");
+    let pts = layer.effects().unwrap().groups().find(|g| g.match_id == tselatra_effects::face_track::POINTS_ID).expect("Face Track Points");
     let mut worst: f64 = 0.0;
     for f in [0, 8, 16, 24] {
         let truth = synth_landmarks(&face(f));
         for id in ["leftPupil", "rightPupil", "leftEyeOuter", "rightEyeOuter"] {
-            let i = effectcraft_track::face::landmark(id).unwrap();
+            let i = tselatra_track::face::landmark(id).unwrap();
             let KV::Vec2(v) = pts.get(id).unwrap().value_at(frame_time(f)) else { panic!() };
             worst = worst.max((v[0] - truth[i][0]).hypot(v[1] - truth[i][1]) / face(f).height);
         }

@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use super::tests_export::{frame, kind, set};
 use super::*;
@@ -14,7 +14,7 @@ type Log = Rc<RefCell<Vec<String>>>;
 
 /// An app with a 60×40 pt document (an ellipse), whose save panel answers inside `dir`; `web`
 /// downloads instead (into the log).
-fn app(dir: &std::path::Path, web: bool) -> (VectorcraftApp, Log) {
+fn app(dir: &std::path::Path, web: bool) -> (TsipikaApp, Log) {
     let log = Log::default();
     let (l1, l2) = (log.clone(), log.clone());
     let dir = dir.to_string_lossy().replace('\\', "/");
@@ -29,7 +29,7 @@ fn app(dir: &std::path::Path, web: bool) -> (VectorcraftApp, Log) {
             Ok(())
         }));
     }
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 60, "height": 40})).unwrap();
     app.run("paint.setStroke", json!({"none": true})).unwrap();
     app.run("shape.ellipse", json!({"x": 5, "y": 4, "width": 30, "height": 20})).unwrap();
@@ -39,7 +39,7 @@ fn app(dir: &std::path::Path, web: bool) -> (VectorcraftApp, Log) {
 
 #[test]
 fn every_view_and_format_draws() {
-    let dir = vectorcraft_testkit::temp_dir("sfw-views");
+    let dir = tsipika_testkit::temp_dir("sfw-views");
     let (mut app, _) = app(&dir, false);
     assert_eq!(crate::menus::shortcut_of("file.saveForWeb"), Some("Cmd+Alt+Shift+S"));
     assert!(crate::menus::enabled(&app, "file.saveForWeb"));
@@ -69,7 +69,7 @@ fn every_view_and_format_draws() {
 
 #[test]
 fn save_remembers_and_writes_and_done_only_remembers() {
-    let dir = vectorcraft_testkit::temp_dir("sfw-save");
+    let dir = tsipika_testkit::temp_dir("sfw-save");
     let (mut app, _) = app(&dir, false);
     app.run("file.saveForWeb", json!({})).unwrap();
     // A preset field loads the preset; the keys set after it win.
@@ -92,7 +92,7 @@ fn save_remembers_and_writes_and_done_only_remembers() {
     set(&mut app, "discard", json!(true));
     assert_eq!(confirm(&mut app).unwrap()["remembered"], true);
     assert!(app.ui.dialog.is_none());
-    assert_eq!(app.session.last_web_settings().format, vectorcraft_engine::cmd::webexport::WebFormat::Png24);
+    assert_eq!(app.session.last_web_settings().format, tsipika_engine::cmd::webexport::WebFormat::Png24);
     assert!(!dir.join("Untitled-1.png").exists());
     // Bad settings keep the dialog open, with nothing written.
     app.run("file.saveForWeb", json!({})).unwrap();
@@ -103,7 +103,7 @@ fn save_remembers_and_writes_and_done_only_remembers() {
 
 #[test]
 fn html_output_with_slices_saves_the_page_and_images() {
-    let dir = vectorcraft_testkit::temp_dir("sfw-html");
+    let dir = tsipika_testkit::temp_dir("sfw-html");
     let (mut app, _) = app(&dir, false);
     app.run("object.slice.create", json!({"x": 0, "y": 0, "width": 30, "height": 20})).unwrap();
     app.run("file.saveForWeb", json!({})).unwrap();
@@ -119,7 +119,7 @@ fn html_output_with_slices_saves_the_page_and_images() {
 
 #[test]
 fn the_web_downloads_and_has_no_browser_preview() {
-    let dir = vectorcraft_testkit::temp_dir("sfw-web");
+    let dir = tsipika_testkit::temp_dir("sfw-web");
     let (mut app, log) = app(&dir, true);
     assert_eq!((spec(save_for_web::KIND).ok_label.unwrap())(&app), "Download");
     let r = app.run("file.saveForWeb", json!({"format": "png8", "output": "html"})).unwrap();
@@ -131,7 +131,7 @@ fn the_web_downloads_and_has_no_browser_preview() {
 
 #[test]
 fn preview_in_browser_opens_the_page() {
-    let dir = vectorcraft_testkit::temp_dir("sfw-browser");
+    let dir = tsipika_testkit::temp_dir("sfw-browser");
     let (mut app, log) = app(&dir, false);
     let r = app.run("file.saveForWeb.browser", json!({"format": "jpg"})).unwrap();
     let page = r["path"].as_str().unwrap().to_string();
@@ -145,7 +145,7 @@ fn preview_in_browser_opens_the_page() {
 /// first page and its image as they were.
 #[test]
 fn a_later_browser_preview_leaves_an_earlier_one_alone() {
-    let dir = vectorcraft_testkit::temp_dir("sfw-browser-two");
+    let dir = tsipika_testkit::temp_dir("sfw-browser-two");
     let (mut first, _) = app(&dir, false);
     let (mut second, _) = app(&dir, false);
     let page = |r: serde_json::Value| r["path"].as_str().unwrap().to_string();
@@ -153,7 +153,7 @@ fn a_later_browser_preview_leaves_an_earlier_one_alone() {
     let gif = page(second.run("file.saveForWeb.browser", json!({"format": "gif"})).unwrap());
     let png = page(first.run("file.saveForWeb.browser", json!({"format": "png24"})).unwrap());
     assert!(jpg != gif && jpg != png && gif != png, "{jpg} {gif} {png}");
-    let root = std::env::temp_dir().join("VectorCraft Save for Web").to_string_lossy().replace('\\', "/");
+    let root = std::env::temp_dir().join("Tsipika Save for Web").to_string_lossy().replace('\\', "/");
     for (page, image) in [(&jpg, "images/Untitled-1.jpg"), (&gif, "images/Untitled-1.gif"), (&png, "images/Untitled-1.png")] {
         assert!(page.starts_with(&root) && page.ends_with("/Untitled-1.html"), "{page}");
         assert!(std::fs::read_to_string(page).unwrap().contains(image), "{page}");
@@ -166,7 +166,7 @@ fn a_later_browser_preview_leaves_an_earlier_one_alone() {
 /// older, and keeps younger ones.
 #[test]
 fn a_browser_preview_removes_old_previews() {
-    let root = vectorcraft_testkit::temp_dir("sfw-browser-old").join("previews");
+    let root = tsipika_testkit::temp_dir("sfw-browser-old").join("previews");
     let _ = std::fs::remove_dir_all(&root);
     let earlier = save_for_web::preview_folder(&root, std::time::Duration::from_secs(3600)).unwrap();
     std::fs::create_dir_all(format!("{earlier}/images")).unwrap();
@@ -186,7 +186,7 @@ fn a_browser_preview_removes_old_previews() {
 /// the preview makes a new, empty one.
 #[test]
 fn a_browser_preview_skips_a_folder_an_earlier_process_left() {
-    let root = vectorcraft_testkit::temp_dir("sfw-browser-reused").join("previews");
+    let root = tsipika_testkit::temp_dir("sfw-browser-reused").join("previews");
     let _ = std::fs::remove_dir_all(&root);
     let keep = std::time::Duration::from_secs(3600);
     let earlier = save_for_web::preview_folder(&root, keep).unwrap();
@@ -213,10 +213,10 @@ fn saving_says_in_the_status_bar_when_an_image_could_not_be_decoded() {
         .unwrap();
     let idat = png.windows(4).position(|w| w == b"IDAT").unwrap();
     png.truncate(idat + 8);
-    let place = |app: &mut VectorcraftApp| {
-        app.run("file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&png), "at": [30, 20]})).unwrap()
+    let place = |app: &mut TsipikaApp| {
+        app.run("file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&png), "at": [30, 20]})).unwrap()
     };
-    let dir = vectorcraft_testkit::temp_dir("sfw-undecoded");
+    let dir = tsipika_testkit::temp_dir("sfw-undecoded");
     let (mut desktop, _) = app(&dir, false);
     desktop.run("file.saveForWeb", json!({"format": "png24"})).unwrap();
     assert!(!desktop.ui.status.contains("note"), "{}", desktop.ui.status);

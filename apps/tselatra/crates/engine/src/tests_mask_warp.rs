@@ -1,13 +1,13 @@
 //! Mask tracking, Mask Interpolation and the Warp Stabilizer end to end through the commands, on
 //! synthetic footage generated in-test (a rotating/scaling textured patch, a shaky camera).
 
-use effectcraft_keyframe::{Keyframe, ShapePath, Value as KV};
-use effectcraft_path::interp::paths_cross;
-use effectcraft_project::{LayerId, Uid};
-use effectcraft_raster::Image;
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
-use effectcraft_track::Homography;
+use tselatra_keyframe::{Keyframe, ShapePath, Value as KV};
+use tselatra_path::interp::paths_cross;
+use tselatra_project::{LayerId, Uid};
+use tselatra_raster::Image;
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
+use tselatra_track::Homography;
 use serde_json::json;
 
 use crate::Session;
@@ -19,7 +19,7 @@ fn pose_h(f: u32) -> Homography {
     Homography([[sc * cs, -sc * sn, c[0]], [sc * sn, sc * cs, c[1]], [0.0, 0.0, 1.0]])
 }
 
-fn mask_path(s: &Session, layer: LayerId, mask: Uid) -> effectcraft_project::Property {
+fn mask_path(s: &Session, layer: LayerId, mask: Uid) -> tselatra_project::Property {
     let l = s.active_comp().unwrap().layer(layer).unwrap();
     l.props.find_group(mask).unwrap().get("path").unwrap().clone()
 }
@@ -74,7 +74,7 @@ fn track_mask_follows_a_rotating_patch() {
     assert_eq!(r["frames"], 1);
     assert_eq!(s.state.mask_track_method, crate::mask_track::MaskMethod::Position);
     // Serde keeps the keys.
-    let back = effectcraft_project::Project::from_json(&s.project.to_json()).unwrap();
+    let back = tselatra_project::Project::from_json(&s.project.to_json()).unwrap();
     let l = back.comp(s.active_comp_id().unwrap()).unwrap().layer(clip).unwrap();
     assert_eq!(l.props.find_group(uid).unwrap().get("path").unwrap().keys.len(), 25);
     // Bad parameters are reported.
@@ -319,7 +319,7 @@ fn warp_stabilizer_analyzes_and_stabilizes() {
     assert_ne!(render(&s, 5).data, plain.data);
 
     // Serde keeps the analysis; undo / redo of the analysis.
-    let back = effectcraft_project::Project::from_json(&s.project.to_json()).unwrap();
+    let back = tselatra_project::Project::from_json(&s.project.to_json()).unwrap();
     let bg = back.comp(s.active_comp_id().unwrap()).unwrap().layer(clip).unwrap().props.find_group(fx).unwrap().clone();
     assert_eq!(bg, s.active_comp().unwrap().layer(clip).unwrap().props.find_group(fx).unwrap().clone());
     while s.history.undo.last().is_some_and(|(l, _)| l != "Warp Stabilizer Analysis") {
@@ -401,7 +401,7 @@ impl Deferred {
         self.0.lock().unwrap().iter().map(|(r, _)| r.job.kind()).collect()
     }
     /// Run the recorded jobs in a worker session (sharing `footage`).
-    fn run(&self, footage: std::sync::Arc<dyn effectcraft_render::FootageSource>) {
+    fn run(&self, footage: std::sync::Arc<dyn tselatra_render::FootageSource>) {
         let jobs = std::mem::take(&mut *self.0.lock().unwrap());
         for (req, inbox) in jobs {
             let req: crate::offload::WorkerRequest = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
@@ -473,7 +473,7 @@ fn offloaded_conflict_preserves_state_and_reports_completion_failure() {
     let state = serde_json::to_value(&s.state).unwrap();
     let steps = |s: &Session| {
         let entries =
-            |v: &[(String, std::sync::Arc<effectcraft_project::Project>)]| v.iter().map(|(label, p)| (label.clone(), p.to_json())).collect::<Vec<_>>();
+            |v: &[(String, std::sync::Arc<tselatra_project::Project>)]| v.iter().map(|(label, p)| (label.clone(), p.to_json())).collect::<Vec<_>>();
         (
             entries(&s.history.undo),
             entries(&s.history.redo),

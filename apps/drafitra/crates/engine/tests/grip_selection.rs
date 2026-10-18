@@ -2,10 +2,10 @@
 //! coincident grips of the other selected objects with it, and Move/Rotate/Scale/Mirror
 //! transform every selected object.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle};
-use cadcraft_engine::geom::Vec2;
-use cadcraft_engine::grips::GripMode;
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle};
+use drafitra_engine::geom::Vec2;
+use drafitra_engine::grips::GripMode;
 use serde_json::json;
 
 fn line(s: &mut Session, a: [f64; 2], b: [f64; 2]) -> Handle {

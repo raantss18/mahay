@@ -1,6 +1,6 @@
 //! Trained face models for face tracking, behind one swappable interface.
 //!
-//! - [`FaceModel`]: what the face tracker (`effectcraft-track`) asks of a model: find a face in a
+//! - [`FaceModel`]: what the face tracker (`tselatra-track`) asks of a model: find a face in a
 //!   region of a frame, then follow it from frame to frame. A model reports its own points (a
 //!   mesh, for MediaPipe) plus a [`Topology`] saying which of them are the tracker's named
 //!   landmarks and which trace the face outline, so the tracker never depends on one model's

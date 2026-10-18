@@ -3,7 +3,7 @@
 //! stay linked.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, NodeKind};
+use tsipika_doc::{Document, NodeKind};
 
 use super::tests_svg::{image_session, svg};
 use super::*;
@@ -42,7 +42,7 @@ pub(super) fn rich() -> Session {
 }
 
 fn open(s: &mut Session, name: &str, text: &str) -> Value {
-    s.execute("document.open", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(text.as_bytes())})).unwrap()
+    s.execute("document.open", &json!({"name": name, "dataBase64": tsipika_format::base64_encode(text.as_bytes())})).unwrap()
 }
 
 /// `d` without what opening a file sets anew.
@@ -100,11 +100,11 @@ fn save_keeps_hidden_layers_and_export_leaves_them_out() {
     let exported = svg(&mut s, json!({}));
     assert!(!exported.contains("Notes"), "{exported}");
     let saved = s.execute("document.save", &json!({"format": "svg"})).unwrap();
-    let saved = String::from_utf8(vectorcraft_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap()).unwrap();
+    let saved = String::from_utf8(tsipika_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap()).unwrap();
     assert!(saved.contains("id=\"Notes\"") && saved.contains("display=\"none\""), "{saved}");
     // Asked not to, Save leaves them out too.
     let r = s.execute("document.save", &json!({"format": "svg", "svg": {"hiddenLayers": false}})).unwrap();
-    assert!(!String::from_utf8(vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()).unwrap().contains("Notes"));
+    assert!(!String::from_utf8(tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()).unwrap().contains("Notes"));
 
     open(&mut s, "saved.svg", &saved);
     let d = &s.doc().unwrap().doc;

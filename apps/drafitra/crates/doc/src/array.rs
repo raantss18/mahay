@@ -3,14 +3,14 @@
 //! An associative array is a block reference to an anonymous block (`*U…`, the *array block*)
 //! that holds one block reference per item. Each item refers to the array's *source block*
 //! (another anonymous block holding the source objects) or, for items replaced with ARRAYEDIT,
-//! to another block. Other programs see an ordinary block reference; CADCraft keeps the
+//! to another block. Other programs see an ordinary block reference; Drafitra keeps the
 //! parameters below on the array block ([`Block::array`](crate::Block)) so the items can be
 //! regenerated when the array is edited.
 //!
 //! All positions are in the array block's coordinates: its origin is the array's base point,
 //! which is where the array's block reference is inserted.
 
-use cadcraft_geom::{Vec2, Vec3};
+use drafitra_geom::{Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
 use crate::{Common, Drawing, Entity, EntityKind, Insert, Lineweight};
@@ -211,7 +211,7 @@ impl ArrayParams {
         let items = self.items()?;
         let common = Common {
             layer: "0".into(),
-            color: cadcraft_color::Color::ByBlock,
+            color: drafitra_color::Color::ByBlock,
             linetype: "ByBlock".into(),
             lineweight: Lineweight::ByBlock,
             ..Common::default()

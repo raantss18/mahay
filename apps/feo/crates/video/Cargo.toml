@@ -1,6 +1,6 @@
 [package]
-name = "soundcraft-video"
-description = "SoundCraft video: MP4/MOV demux, H.264 / ProRes / Motion JPEG decoding to RGBA, timeline thumbnails"
+name = "feo-video"
+description = "Feo video: MP4/MOV demux, H.264 / ProRes / Motion JPEG decoding to RGBA, timeline thumbnails"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,7 +9,7 @@ repository.workspace = true
 
 [features]
 default = []
-# Frame-parallel H.264 and slice-parallel ProRes decoding (rayon). Off by default: SoundCraft
+# Frame-parallel H.264 and slice-parallel ProRes decoding (rayon). Off by default: Feo
 # decodes on its own background thread and only needs one picture at a time.
 threads = ["dep:rayon"]
 

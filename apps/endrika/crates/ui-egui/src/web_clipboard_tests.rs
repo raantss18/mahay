@@ -4,8 +4,8 @@
 //! was there before as a text layer instead of the copied layers.
 
 use egui::{Event, Key, Modifiers, OutputCommand, Pos2, RawInput, Rect, vec2};
-use figcraft_doc::NodeKind;
-use figcraft_engine::Session;
+use endrika_doc::NodeKind;
+use endrika_engine::Session;
 use serde_json::json;
 
 use crate::{FigApp, Services, egui_copy_png, egui_copy_text};
@@ -97,13 +97,13 @@ impl Page {
     }
 
     /// Copy the selected rectangle A (made red) and its properties, then select a new rectangle B.
-    fn copy_a_select_b(&mut self) -> figcraft_doc::NodeId {
+    fn copy_a_select_b(&mut self) -> endrika_doc::NodeId {
         self.app.session.execute("fill.set", &json!({"color": "#e53935"})).unwrap();
         self.copy();
         self.app.session.execute("edit.copyProperties", &json!({})).unwrap();
         let b = self.app.session.execute("shape.rectangle", &json!({"x": 400, "y": 250, "width": 100, "height": 50})).unwrap();
         self.app.session.execute("select.set", &json!({"ids": [b["id"]]})).unwrap();
-        figcraft_doc::NodeId(b["id"].as_u64().unwrap())
+        endrika_doc::NodeId(b["id"].as_u64().unwrap())
     }
 
     fn count(&self, kind: fn(&NodeKind) -> bool) -> usize {
@@ -169,7 +169,7 @@ fn alt_cmd_v_pastes_properties_once_and_no_text() {
         p.chord(Modifiers::ALT);
         assert_eq!(p.count(rect), 2, "foreign text {foreign}: no layer pasted");
         assert_eq!(p.count(text), 0, "foreign text {foreign}: the paste event pasted nothing");
-        let fill = figcraft_engine::inspect::node_json(p.app.session.doc().unwrap(), b, 0)["fills"][0]["color"].clone();
+        let fill = endrika_engine::inspect::node_json(p.app.session.doc().unwrap(), b, 0)["fills"][0]["color"].clone();
         assert_eq!(fill, "#E53935", "foreign text {foreign}: B took A's fill");
     }
 }

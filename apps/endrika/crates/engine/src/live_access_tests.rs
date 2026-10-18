@@ -6,8 +6,8 @@
 
 use std::sync::{Arc, Mutex};
 
-use figcraft_collab::message::{ClientMsg, ServerMsg};
-use figcraft_collab::{Client, NoRecompute, Outgoing};
+use endrika_collab::message::{ClientMsg, ServerMsg};
+use endrika_collab::{Client, NoRecompute, Outgoing};
 use serde_json::json;
 
 use crate::live::{Access, Event, PUBLISHING, Published, Role, Status, VIEW_ONLY};
@@ -70,14 +70,14 @@ fn publishing_makes_the_open_tab_the_server_file() {
     // Edits sync through the server.
     let rect = s.execute("shape.rectangle", &json!({"x": 100, "y": 0, "width": 20, "height": 20})).unwrap()["id"].as_u64().unwrap();
     let answers = relay(&script, &mut server, id);
-    assert!(server.document().contains(figcraft_doc::NodeId(rect)));
+    assert!(server.document().contains(endrika_doc::NodeId(rect)));
     push(&script, answers);
     s.live_poll();
     assert_eq!(s.undo_depth(), (1, 0));
     // Leaving keeps the file open, yours to edit.
     s.execute("collab.leave", &json!({})).unwrap();
     assert_eq!(s.docs.len(), 1);
-    assert!(s.doc().unwrap().contains(figcraft_doc::NodeId(rect)));
+    assert!(s.doc().unwrap().contains(endrika_doc::NodeId(rect)));
     assert_eq!(s.message.as_deref(), Some("You left the session; your copy stays open here"));
     assert!(s.execute("shape.ellipse", &json!({"x": 0, "y": 0, "width": 5, "height": 5})).is_ok());
 }
@@ -86,10 +86,10 @@ fn publishing_makes_the_open_tab_the_server_file() {
 fn a_view_link_makes_the_file_read_only() {
     let (mut s, script) = session();
     s.execute("tool.set", &json!({"tool": "rectangle"})).unwrap();
-    s.execute("collab.join", &json!({"link": "figcraft://join?host=a:1&file=f&token=t"})).unwrap();
-    let mut doc = figcraft_doc::Document::new("Shared");
+    s.execute("collab.join", &json!({"link": "endrika://join?host=a:1&file=f&token=t"})).unwrap();
+    let mut doc = endrika_doc::Document::new("Shared");
     let page = doc.first_page().unwrap();
-    let card = doc.create(page, figcraft_doc::NodeKind::Rectangle, "Card", 0.0, 0.0, 10.0, 10.0).unwrap();
+    let card = doc.create(page, endrika_doc::NodeKind::Rectangle, "Card", 0.0, 0.0, 10.0, 10.0).unwrap();
     let (mut server, id, welcome) = serve_as(&doc, Access::View);
     let mut me = info(Role::Guest, id);
     me.access = Access::View;
@@ -137,7 +137,7 @@ fn a_view_link_makes_the_file_read_only() {
 }
 
 fn saved_file(s: &mut Session) -> std::path::PathBuf {
-    let path = std::env::temp_dir().join(format!("figcraft-live-revert-{}-{}.figcraft", std::process::id(), s.ds().unwrap().uid));
+    let path = std::env::temp_dir().join(format!("endrika-live-revert-{}-{}.endrika", std::process::id(), s.ds().unwrap().uid));
     s.execute("file.saveVersion", &json!({"name": "Saved"})).unwrap();
     s.execute("file.save", &json!({"path": path})).unwrap();
     s.execute("file.rename", &json!({"name": "Unsaved"})).unwrap();

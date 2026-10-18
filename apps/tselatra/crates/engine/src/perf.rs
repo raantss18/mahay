@@ -1,18 +1,18 @@
 //! Everyday-operation performance: a large generated project and the engine-side measurements
-//! behind `effectcraft-cli bench --ops` (open, save, auto-save, large edits with undo/redo, first
+//! behind `tselatra-cli bench --ops` (open, save, auto-save, large edits with undo/redo, first
 //! frame). The UI-side numbers (first UI frame, timeline and Project panel draw) live in
-//! `effectcraft-ui-egui`'s `bench` module. See `docs/architecture.md` ▸ Performance.
+//! `tselatra-ui-egui`'s `bench` module. See `docs/architecture.md` ▸ Performance.
 
-// A benchmark harness (`effectcraft-cli bench --ops`, tests): a failed step should fail loudly,
+// A benchmark harness (`tselatra-cli bench --ops`, tests): a failed step should fail loudly,
 // as in tests and benches (AGENTS.md, "Never crash"). Nothing here runs in the app.
 #![allow(clippy::expect_used)]
 
 use std::sync::Arc;
 
-use effectcraft_keyframe::Value as KValue;
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{AlphaMode, Comp, Expression, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, Project, Solid};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_keyframe::Value as KValue;
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{AlphaMode, Comp, Expression, Footage, FootageKind, ItemId, ItemKind, Layer, LayerSource, Project, Solid};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -51,7 +51,7 @@ impl Default for LargeSpec {
             sequence_frames: 240,
             nest_depth: 20,
             expression_every: 4,
-            media_dir: "/nonexistent/effectcraft-bench-media".into(),
+            media_dir: "/nonexistent/tselatra-bench-media".into(),
         }
     }
 }
@@ -224,8 +224,8 @@ pub fn large_project(spec: &LargeSpec) -> Project {
         let item = p.items.remove(&main_id).expect("main");
         let other = p.items.remove(&first).expect("first");
         // Swap ids: references to `first` (the Media folder) are the footage/solid parents.
-        p.items.insert(first, effectcraft_project::Item { id: first, ..item });
-        p.items.insert(main_id, effectcraft_project::Item { id: main_id, ..other });
+        p.items.insert(first, tselatra_project::Item { id: first, ..item });
+        p.items.insert(main_id, tselatra_project::Item { id: main_id, ..other });
         for it in p.items.values_mut() {
             if it.parent == Some(first) {
                 it.parent = Some(main_id);

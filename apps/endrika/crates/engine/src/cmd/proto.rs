@@ -1,7 +1,7 @@
 //! Prototype commands: interactions, flows, settings, presenting.
 
-use figcraft_doc::proto::*;
-use figcraft_doc::*;
+use endrika_doc::proto::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, ok};
@@ -284,7 +284,7 @@ fn check_dests(cmd: &str, s: &Session, it: &Interaction) -> Result<()> {
 
 /// Every node `actions` (and what they nest) point at must exist in `doc`.
 pub(crate) fn check_action_dests(cmd: &str, doc: &Document, actions: &[Action]) -> Result<()> {
-    for a in figcraft_doc::proto::walk(actions) {
+    for a in endrika_doc::proto::walk(actions) {
         if let Some(d) = a.dest()
             && !doc.contains(d)
         {

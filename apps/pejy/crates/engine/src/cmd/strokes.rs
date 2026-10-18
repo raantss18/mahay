@@ -1,6 +1,6 @@
 //! Object › Stroke Styles: named custom dash, dot and stripe styles.
 
-use designcraft_doc::{StrokeStyleDef, StrokeType};
+use pejy_doc::{StrokeStyleDef, StrokeType};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, ok, str_param};
@@ -86,7 +86,7 @@ mod tests {
             s.execute("frame.create", &json!({"rect": [100, 100, 300, 300], "shape": "rectangle", "content": "unassigned"})).unwrap()["id"].clone();
         s.execute("object.stroke", &json!({"ids": [id], "weight": 20, "swatch": "[Black]", "type": {"kind": "style", "name": "Rails"}})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let mut r = designcraft_render::Renderer::new();
+        let mut r = pejy_render::Renderer::new();
         r.threads = 0;
         let img = r.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
         // The left edge at x = 100: rails at 90–96 and 104–110, a gap in between.
@@ -95,10 +95,10 @@ mod tests {
         assert!(!dark(100), "the gap");
         let pdf = s.execute("file.exportPdf", &json!({})).unwrap();
         assert!(pdf["warnings"].as_array().is_none_or(|w| w.iter().all(|x| !x.as_str().unwrap_or("").contains("striped"))));
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&d)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&d)).unwrap();
         assert_eq!(back.stroke_styles.len(), 1, "IDML StripedStrokeStyle");
         let it = back.spreads[0].items.iter().find(|i| i.stroke.weight == 20.0).unwrap();
-        assert_eq!(it.stroke.kind, designcraft_doc::StrokeType::Style { name: "Rails".into() });
+        assert_eq!(it.stroke.kind, pejy_doc::StrokeType::Style { name: "Rails".into() });
         s.execute("strokeStyle.delete", &json!({"name": "Rails"})).unwrap();
         assert!(s.execute("strokeStyle.new", &json!({"name": "Bad", "bands": [[0.5, 0.7]]})).is_err());
     }

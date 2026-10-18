@@ -6,14 +6,14 @@
 
 mod support;
 
-use filmcraft_interchange::{ExportOptions, Format};
-use filmcraft_project::{Label, Marker, MarkerId, MarkerKind, TrackKind};
-use filmcraft_time::{FrameRate, Tick};
+use hetsika_interchange::{ExportOptions, Format};
+use hetsika_project::{Label, Marker, MarkerId, MarkerKind, TrackKind};
+use hetsika_time::{FrameRate, Tick};
 use support::*;
 
-fn nest_project(clip_has_marker: bool) -> (filmcraft_project::Project, filmcraft_project::ItemId, filmcraft_project::ItemId) {
+fn nest_project(clip_has_marker: bool) -> (hetsika_project::Project, hetsika_project::ItemId, hetsika_project::ItemId) {
     let r = FrameRate::FPS_24;
-    let mut p = filmcraft_project::Project::new("P");
+    let mut p = hetsika_project::Project::new("P");
     let a = media(&mut p, "/m/a.mov", true, true, r);
     let nest = sequence(&mut p, "Inner", r, false);
     clip(&mut p, nest, TrackKind::Video, 0, a, 0, 48, 0);

@@ -8,7 +8,7 @@ use serde_json::{Map, Value, json};
 
 use super::{DialogResult, DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of the Symbolism Tools Options.
 pub const KIND: &str = "symbolismOptions";
@@ -22,9 +22,9 @@ const KEYS: [&str; 3] = ["diameter", "intensity", "density"];
 /// Width of the label column.
 const LABEL_W: f32 = 130.0;
 
-/// Open the options of Symbolism tool `tool` (one of `vectorcraft_tools::settings::SYMBOLISM`)
+/// Open the options of Symbolism tool `tool` (one of `tsipika_tools::settings::SYMBOLISM`)
 /// with their current values.
-pub fn open(app: &mut VectorcraftApp, tool: &str) -> Value {
+pub fn open(app: &mut TsipikaApp, tool: &str) -> Value {
     let o = app.session.tool_options_of(tool);
     let mut fields: Map<String, Value> = KEYS.iter().filter_map(|key| Some((key.to_string(), o.get(*key)?.clone()))).collect();
     fields.insert("tool".into(), json!(tool));
@@ -32,7 +32,7 @@ pub fn open(app: &mut VectorcraftApp, tool: &str) -> Value {
     json!({ "dialog": KIND })
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.general_unit();
     widgets::label_row(ui, tl!("Diameter:"), LABEL_W, |ui| {
         form::length(ui, d, "diameter", unit, 100.0);
@@ -48,7 +48,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// OK: set the brush the Symbolism tools share (the tool keeps it within its ranges).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> DialogResult {
     let values: Map<String, Value> = KEYS.iter().filter(|k| d.fields.contains_key(**k)).map(|k| (k.to_string(), json!(d.f64(k, 0.0)))).collect();
     run_and_close(app, "tool.setOption", json!({ "tool": d.str("tool"), "values": values }))
 }
@@ -56,11 +56,11 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     #[test]
     fn the_symbolism_tools_share_the_options_ok_sets() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("tool.options", json!({"tool": "symbolSizer"})).unwrap();
         let text = crate::tests_labels::painted_text(&mut app, |app, ui| super::super::show(app, ui.ctx()));

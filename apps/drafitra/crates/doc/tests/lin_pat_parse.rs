@@ -1,7 +1,7 @@
 //! Reading the user's own `.lin` and `.pat` files (#552). Every file here is a tiny synthetic one
 //! written for these tests, with our own names.
 
-use cadcraft_doc::library::files::{MAX_LINETYPE_ELEMENTS, MAX_PATTERN_DASHES, MAX_PATTERN_FAMILIES, parse_lin, parse_pat};
+use drafitra_doc::library::files::{MAX_LINETYPE_ELEMENTS, MAX_PATTERN_DASHES, MAX_PATTERN_FAMILIES, parse_lin, parse_pat};
 
 const LIN: &str = "\
 ;; my own linetypes

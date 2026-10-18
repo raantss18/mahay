@@ -2,9 +2,9 @@
 //! over its bounds and the room around them, on white or on nothing, its paths left as they are.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Effect, Node};
-use vectorcraft_geom::{Anchor, PathData, Point, SubPath, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Effect, Node};
+use tsipika_geom::{Anchor, PathData, Point, SubPath, shapes};
 
 use super::*;
 
@@ -102,13 +102,13 @@ fn art_that_paints_nothing_takes_no_room_in_the_image() {
     let l = d.layers[0].id;
     let n = Arc::make_mut(&mut d.children_mut(Some(l)).unwrap()[0]);
     let mut hidden = n.appearance.items[0].clone();
-    if let vectorcraft_doc::AppearanceItem::Fill(f) = &mut hidden {
+    if let tsipika_doc::AppearanceItem::Fill(f) = &mut hidden {
         f.visible = false;
         f.effects.push(Effect { id: "blur.gaussian".into(), params: json!({"radius": 10}), visible: true });
     }
     n.appearance.items.push(hidden.clone());
     // A third, hidden too, offset 5 pt outward.
-    if let vectorcraft_doc::AppearanceItem::Fill(f) = &mut hidden {
+    if let tsipika_doc::AppearanceItem::Fill(f) = &mut hidden {
         f.effects = vec![Effect { id: "path.offsetPath".into(), params: json!({"offset": 5}), visible: true }];
     }
     n.appearance.items.push(hidden);
@@ -133,7 +133,7 @@ fn art_that_paints_nothing_takes_no_room_in_the_image() {
     let mut members = d.children_mut(Some(l)).map(std::mem::take).unwrap();
     members.insert(0, Arc::new(source));
     let mut group = Node::group(d.alloc_id(), members);
-    group.extras_mut().shaper = Some(Box::new(vectorcraft_doc::shaper::ShaperSpec { faces: vec![], edges: vec![] }));
+    group.extras_mut().shaper = Some(Box::new(tsipika_doc::shaper::ShaperSpec { faces: vec![], edges: vec![] }));
     group.appearance.effects.push(Effect { id: "rasterize".into(), params: json!({"background": "white"}), visible: true });
     d.insert(Some(l), 0, group).unwrap();
     assert_eq!(pixel(&draw(&d, 10.0, 400), 350, 200)[3], 0);
@@ -141,7 +141,7 @@ fn art_that_paints_nothing_takes_no_room_in_the_image() {
     let mut d = doc(shapes::rectangle(Rect::new(10.0, 10.0, 30.0, 30.0)), &[("rasterize", json!({"background": "white"}))], 72.0);
     let l = d.layers[0].id;
     let n = Arc::make_mut(&mut d.children_mut(Some(l)).unwrap()[0]);
-    if let vectorcraft_doc::AppearanceItem::Fill(f) = &mut n.appearance.items[0] {
+    if let tsipika_doc::AppearanceItem::Fill(f) = &mut n.appearance.items[0] {
         f.effects.push(Effect { id: "distort.transform".into(), params: json!({"moveH": 40}), visible: true });
     }
     let r = draw(&d, 10.0, 800);
@@ -261,7 +261,7 @@ fn rasterize_keeps_what_an_earlier_effect_spreads_beyond_the_bounds() {
     let l = d.layers[0].id;
     let n = Arc::make_mut(&mut d.children_mut(Some(l)).unwrap()[0]);
     n.appearance.items[0].effects_mut().push(Effect { id: "rasterize".into(), params: json!({"addAround": 10}), visible: true });
-    n.appearance.items[1] = vectorcraft_doc::AppearanceItem::Stroke(vectorcraft_doc::StrokeLayer::new(Paint::solid(Color::BLACK), 40.0));
+    n.appearance.items[1] = tsipika_doc::AppearanceItem::Stroke(tsipika_doc::StrokeLayer::new(Paint::solid(Color::BLACK), 40.0));
     let r = draw(&d, 2.0, 200);
     assert_eq!((pixel(&r, 156, 100)[3], pixel(&r, 170, 100)[3]), (255, 0));
 }
@@ -310,7 +310,7 @@ fn rasterize_and_shadows_paint_in_stack_order() {
         Appearance::basic(Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::None, 0.0),
     );
     art.appearance.effects.push(Effect { id: shadow.0.into(), params: shadow.1.clone(), visible: true });
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Shadowed".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Shadowed".into(), art: Arc::new(art) });
     let mut instance = Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Shadowed".into(), xf: Affine::translate((20.0, 20.0)) });
     instance.appearance.effects.push(Effect { id: "rasterize".into(), params: json!({}), visible: true });
     let l = d.layers[0].id;
@@ -353,12 +353,12 @@ fn rasterize_takes_in_type_that_its_own_fills_effects_move() {
     // Transform effect on that fill moves it 100 pt to the right.
     let typed = |fx: &[Effect]| {
         let mut d = Document::new(200.0, 100.0);
-        let style = vectorcraft_doc::text::CharStyle { size: 40.0, fill: Paint::solid(Color::BLACK), ..Default::default() };
-        let text = vectorcraft_doc::text::TextObject::point(Point::new(5.0, 60.0), "IIII", style);
-        let mut n = Node::new(d.alloc_id(), vectorcraft_doc::NodeKind::Text(Box::new(text)));
-        let mut fill = vectorcraft_doc::FillLayer::new(Paint::solid(Color::rgb(1.0, 0.0, 0.0)));
+        let style = tsipika_doc::text::CharStyle { size: 40.0, fill: Paint::solid(Color::BLACK), ..Default::default() };
+        let text = tsipika_doc::text::TextObject::point(Point::new(5.0, 60.0), "IIII", style);
+        let mut n = Node::new(d.alloc_id(), tsipika_doc::NodeKind::Text(Box::new(text)));
+        let mut fill = tsipika_doc::FillLayer::new(Paint::solid(Color::rgb(1.0, 0.0, 0.0)));
         fill.effects.push(Effect { id: "distort.transform".into(), params: json!({"moveH": 100}), visible: true });
-        n.appearance.items.push(vectorcraft_doc::AppearanceItem::Fill(fill));
+        n.appearance.items.push(tsipika_doc::AppearanceItem::Fill(fill));
         n.appearance.set_contents_at(1);
         n.appearance.effects = fx.to_vec();
         let l = d.layers[0].id;

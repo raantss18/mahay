@@ -3,12 +3,12 @@
 
 use egui::{Color32, Event, Modifiers, PointerButton, Pos2, Rect, Shape, vec2};
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, chrome, panels, shortcut_editor, shortcuts, toolbar};
+use crate::{TsipikaApp, chrome, panels, shortcut_editor, shortcuts, toolbar};
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
     app
 }
@@ -21,11 +21,11 @@ fn context() -> egui::Context {
 
 /// One headless frame of `draw` with `events` (and `modifiers` held); returns the painted shapes.
 fn frame(
-    app: &mut VectorcraftApp,
+    app: &mut TsipikaApp,
     ctx: &egui::Context,
     events: Vec<Event>,
     modifiers: Modifiers,
-    draw: fn(&mut VectorcraftApp, &mut egui::Ui),
+    draw: fn(&mut TsipikaApp, &mut egui::Ui),
 ) -> Vec<Shape> {
     let events = std::iter::once(Event::ModifiersChanged(modifiers)).chain(events).collect();
     let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, vec2(1400.0, 1000.0)));
@@ -35,7 +35,7 @@ fn frame(
 }
 
 /// Click at `at` with `modifiers` held (press and release in two frames), then settle a frame.
-fn click(app: &mut VectorcraftApp, ctx: &egui::Context, at: Pos2, modifiers: Modifiers, draw: fn(&mut VectorcraftApp, &mut egui::Ui)) {
+fn click(app: &mut TsipikaApp, ctx: &egui::Context, at: Pos2, modifiers: Modifiers, draw: fn(&mut TsipikaApp, &mut egui::Ui)) {
     let button = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers };
     frame(app, ctx, vec![Event::PointerMoved(at), button(true)], modifiers, draw);
     frame(app, ctx, vec![button(false)], modifiers, draw);
@@ -61,11 +61,11 @@ fn chips(ctx: &egui::Context) -> (Rect, Rect) {
     (r[0], r[1])
 }
 
-fn control_bar(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+fn control_bar(app: &mut TsipikaApp, ui: &mut egui::Ui) {
     chrome::control_bar(app, ui);
 }
 
-fn fill_hex(app: &VectorcraftApp) -> String {
+fn fill_hex(app: &TsipikaApp) -> String {
     panels::current_paints(app).0.color().map(|c| c.to_hex()).unwrap_or_default()
 }
 
@@ -87,7 +87,7 @@ fn the_chips_show_a_question_mark_for_mixed_fills() {
     app.run("paint.setFill", json!({"color": "#ff0000"})).unwrap();
     let b = app.run("shape.rectangle", json!({"x": 100, "y": 10, "width": 50, "height": 50})).unwrap()["id"].clone();
     app.run("paint.setFill", json!({"color": "#00ff00"})).unwrap();
-    let text = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, control_bar);
+    let text = |app: &mut TsipikaApp| crate::tests_labels::painted_text(app, control_bar);
     assert!(!text(&mut app).lines().any(|l| l == "?"));
     app.run("select.set", json!({"ids": [a, b]})).unwrap();
     assert!(text(&mut app).lines().any(|l| l == "?"), "the Fill chip shows ?");
@@ -163,7 +163,7 @@ fn recolor_is_a_quick_action_for_multicolour_selections() {
     let mut app = app();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
     app.run("paint.setStroke", json!({"none": true})).unwrap();
-    let text = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, panels::properties::show);
+    let text = |app: &mut TsipikaApp| crate::tests_labels::painted_text(app, panels::properties::show);
     assert!(!text(&mut app).contains("Recolor"), "one colour");
     app.run("paint.setStroke", json!({"color": "#ff0000"})).unwrap();
     assert!(text(&mut app).contains("Recolor"), "white and red");
@@ -181,7 +181,7 @@ fn the_shortcut_table_maps_f6_to_color() {
     let ctx = context();
     let key =
         |key, modifiers| vec![Event::ModifiersChanged(modifiers), Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }];
-    let press = |app: &mut VectorcraftApp, k, m| {
+    let press = |app: &mut TsipikaApp, k, m| {
         let mut out = ctx.run_ui(egui::RawInput { events: key(k, m), ..Default::default() }, |ui| shortcuts::handle(app, ui.ctx()));
         out.textures_delta.clear();
     };
@@ -203,7 +203,7 @@ fn the_shortcut_table_maps_f6_to_color() {
 fn the_window_menu_panel_keys() {
     let mut app = app();
     let ctx = context();
-    let press = |app: &mut VectorcraftApp, key, modifiers| {
+    let press = |app: &mut TsipikaApp, key, modifiers| {
         let events = vec![Event::ModifiersChanged(modifiers), Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }];
         ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| shortcuts::handle(app, ui.ctx())).textures_delta.clear();
     };

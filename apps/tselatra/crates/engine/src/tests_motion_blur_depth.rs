@@ -1,8 +1,8 @@
 //! Motion blur of collapsed precomps (the precomp layer's own motion; the containing comp's
 //! shutter) and of animated shape content, rendered through the commands.
 
-use effectcraft_raster::Image;
-use effectcraft_time::Tick;
+use tselatra_raster::Image;
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -16,7 +16,7 @@ fn id(v: &Value, k: &str) -> u64 {
 }
 
 fn render(s: &Session, comp: u64) -> Image {
-    s.render(effectcraft_project::ItemId(comp), Tick::from_seconds_f64(0.5), RenderOpts::default())
+    s.render(tselatra_project::ItemId(comp), Tick::from_seconds_f64(0.5), RenderOpts::default())
 }
 
 /// Pixels with partial alpha (motion-blur smear).
@@ -67,7 +67,7 @@ fn a_collapsed_precomp_layer_blurs_with_its_own_motion() {
     let flat = render(&s, main);
     assert!(max_diff(&collapsed, &flat) < 0.08, "{}", max_diff(&collapsed, &flat));
     // Motion blur off for the render: sharp.
-    let sharp = s.render(effectcraft_project::ItemId(main), Tick::from_seconds_f64(0.5), RenderOpts { motion_blur: false, ..Default::default() });
+    let sharp = s.render(tselatra_project::ItemId(main), Tick::from_seconds_f64(0.5), RenderOpts { motion_blur: false, ..Default::default() });
     assert!(partial(&sharp) < 10, "{}", partial(&sharp));
 }
 
@@ -92,7 +92,7 @@ fn animated_shape_content_is_motion_blurred() {
         let l = id(&s.execute("layer.newShape", json!({"kind": "rect", "size": [20, 20], "fill": "#ffffff", "position": [80, 45]})).unwrap(), "layer");
         s.execute("layer.setSwitch", json!({"layers": [l], "switch": "motionBlur", "value": blur})).unwrap();
         let (target, base) = if content {
-            let layer = s.active_comp().unwrap().layer(effectcraft_project::LayerId(l)).unwrap().clone();
+            let layer = s.active_comp().unwrap().layer(tselatra_project::LayerId(l)).unwrap().clone();
             let mut found = None;
             layer.props.group("contents").unwrap().walk("contents", &mut |_, p| {
                 if found.is_none() && p.match_id == "position" {

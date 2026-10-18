@@ -3,8 +3,8 @@
 
 use std::io::Read;
 
-use designcraft_doc::IndexRef;
-use designcraft_doc::index::{self, IndexRange, IndexSpec, Resolved};
+use pejy_doc::IndexRef;
+use pejy_doc::index::{self, IndexRange, IndexSpec, Resolved};
 
 use super::*;
 use crate::xml::El;
@@ -119,7 +119,7 @@ fn imports_synthetic_sort_keys_for_nested_topics_and_cross_references() {
         assert!(refs.contains(&r), "missing {r:?} in {refs:?}");
     }
     let story = doc.stories.values().next().unwrap();
-    assert_eq!(story.text.replace(designcraft_doc::INDEX_MARK, ""), "Source");
+    assert_eq!(story.text.replace(pejy_doc::INDEX_MARK, ""), "Source");
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn round_trip_preserves_generated_index_order_and_headings() {
     let back = import_idml(&export_idml(&doc)).unwrap();
     back.check().unwrap();
     assert_eq!(generated_index(&back), before);
-    assert_eq!(back.stories.values().next().unwrap().text.replace(designcraft_doc::INDEX_MARK, ""), "Source");
+    assert_eq!(back.stories.values().next().unwrap().text.replace(pejy_doc::INDEX_MARK, ""), "Source");
 }
 
 #[test]

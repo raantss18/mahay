@@ -2,10 +2,10 @@
 //! (see [`tolerance`]), whether it is an object's blend mode, a fill's or a group's.
 
 use super::*;
-use vectorcraft_color::blend::blend_rgb;
-use vectorcraft_color::{BlendMode as Blend, Color, Paint};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::shapes;
+use tsipika_color::blend::blend_rgb;
+use tsipika_color::{BlendMode as Blend, Color, Paint};
+use tsipika_doc::{Appearance, Node};
+use tsipika_geom::shapes;
 
 /// Backdrop / source pairs (8-bit, so the expected values carry no input rounding) that take every
 /// branch of the formulas: dark and light backdrops, sources on both sides of ½, greys, extremes.
@@ -38,7 +38,7 @@ fn doc(mode: Blend, level: Level, backdrop: [u8; 3], source: [u8; 3]) -> Documen
     match level {
         Level::Object => top.blend = mode,
         Level::Fill => {
-            if let Some(vectorcraft_doc::AppearanceItem::Fill(f)) = top.appearance.items.first_mut() {
+            if let Some(tsipika_doc::AppearanceItem::Fill(f)) = top.appearance.items.first_mut() {
                 f.blend = mode;
             }
         }
@@ -101,7 +101,7 @@ fn a_translucent_source_mixes_the_blend_by_its_opacity() {
         d.node_mut(top).unwrap().opacity = 0.6;
         let px = r.render(&d, 20, 20, Affine::IDENTITY, &RenderOptions::default()).pixel(10, 10);
         let f = |c: [u8; 3], a: f32| [c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, a];
-        let o = vectorcraft_color::blend::composite(mode, f(b, 1.0), f(s, 0.6));
+        let o = tsipika_color::blend::composite(mode, f(b, 1.0), f(s, 0.6));
         let want = [o[0], o[1], o[2]].map(|v| (v * 255.0).round() as u8);
         // The opacity is one more 8-bit step.
         assert!(within([px[0], px[1], px[2]], want, tolerance(mode) + 1), "{mode:?}: {px:?}, want {want:?}");

@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
 use super::*;
 
@@ -13,7 +13,7 @@ struct Folder(std::path::PathBuf);
 
 impl Folder {
     fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("vectorcraft-ui-package-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tsipika-ui-package-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -29,13 +29,13 @@ impl Drop for Folder {
     }
 }
 
-fn frame(app: &mut VectorcraftApp) -> String {
+fn frame(app: &mut TsipikaApp) -> String {
     crate::tests_labels::painted_text(app, |app, ui| show(app, ui.ctx()))
 }
 
 /// An app writing through `std::fs`, with a saved document holding a placed linked image.
-fn saved(dir: &Folder) -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn saved(dir: &Folder) -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.services.write = Some(Box::new(|p: &str, b: &[u8]| std::fs::write(p, b).map_err(|e| e.to_string())));
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
     let mut png = vec![];
@@ -44,13 +44,13 @@ fn saved(dir: &Folder) -> VectorcraftApp {
         .unwrap();
     std::fs::write(dir.path("pic.png"), &png).unwrap();
     app.run("file.place", json!({"path": dir.path("pic.png")})).unwrap();
-    app.run("document.save", json!({"path": dir.path("card.vectorcraft")})).unwrap();
+    app.run("document.save", json!({"path": dir.path("card.tsipika")})).unwrap();
     app
 }
 
 #[test]
 fn an_unsaved_document_is_offered_save_as_first() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     assert!(!crate::menus::enabled(&app, "ui.packageDialog"), "no document");
     app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.run("ui.packageDialog", json!({})).unwrap();
@@ -76,7 +76,7 @@ fn package_writes_the_folder_then_offers_to_show_it() {
     let r = confirm(&mut app).unwrap();
     assert!(!app.session.active().unwrap().is_dirty());
     let root = std::path::Path::new(&out).join("card Folder");
-    assert!(root.join("card.vectorcraft").is_file() && root.join("Links/pic.png").is_file(), "{r}");
+    assert!(root.join("card.tsipika").is_file() && root.join("Links/pic.png").is_file(), "{r}");
     let d = app.ui.dialog.as_ref().unwrap();
     assert_eq!((d.kind.as_str(), d.str("__command")), (confirm::KIND, "file.showPackage".to_string()));
     let opened: Rc<RefCell<Vec<String>>> = Rc::default();

@@ -1,5 +1,5 @@
-use cadcraft_doc::{AssocSnap, DimKind, Dimension, EntityKind, Handle};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{AssocSnap, DimKind, Dimension, EntityKind, Handle};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 use crate::{Input, Session};
@@ -39,7 +39,7 @@ fn linear_dimension_follows_line_endpoint() {
     assert!(near(dm.p13.xy(), Vec2::ZERO));
     // The dimension line stays where it was.
     assert!(near(dm.defpt.xy(), Vec2::new(5.0, -2.0)));
-    let g = cadcraft_render::dimension_in(s.doc().unwrap(), &dm);
+    let g = drafitra_render::dimension_in(s.doc().unwrap(), &dm);
     assert_eq!(g.value, "12.0000");
     // Undo restores both in one step.
     s.undo().unwrap();
@@ -71,7 +71,7 @@ fn moving_the_object_keeps_the_ordinate_datum() {
     let dm = dim(&s, d);
     assert!(near(dm.p13.xy(), Vec2::new(8.0, 5.0)) && near(dm.p14.xy(), Vec2::new(8.0, 8.0)), "{dm:?}");
     assert!(near(dm.defpt.xy(), Vec2::ZERO), "datum must stay at the origin: {:?}", dm.defpt);
-    let g = cadcraft_render::dimension_in(s.doc().unwrap(), &dm);
+    let g = drafitra_render::dimension_in(s.doc().unwrap(), &dm);
     assert_eq!(g.value, "8.0000");
 }
 
@@ -86,11 +86,11 @@ fn moving_the_line_keeps_a_free_continued_origin() {
     let dm = dim(&s, d);
     assert!(near(dm.p13.xy(), Vec2::new(13.0, 0.0)), "attached origin follows: {dm:?}");
     assert!(near(dm.p14.xy(), Vec2::new(25.0, 0.0)), "free origin stays: {dm:?}");
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dm).value, "12.0000");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dm).value, "12.0000");
     s.execute("move", &json!({ "handles": [l.hex()], "delta": [3, 0] })).unwrap();
     let dm = dim(&s, d);
     assert!(near(dm.p13.xy(), Vec2::new(16.0, 0.0)) && near(dm.p14.xy(), Vec2::new(25.0, 0.0)), "{dm:?}");
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dm).value, "9.0000");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dm).value, "9.0000");
 }
 
 #[test]
@@ -121,9 +121,9 @@ fn radius_and_diameter_follow_circle() {
     assert_eq!(dim(&s, r).assoc.len(), 2);
     assert_eq!(dim(&s, dd).assoc.len(), 2);
     s.execute("properties.set", &json!({ "handles": [c.hex()], "radius": 3 })).unwrap();
-    let g = cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, r));
+    let g = drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, r));
     assert_eq!(g.value, "R3.0000");
-    let g = cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, dd));
+    let g = drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, dd));
     assert_eq!(g.value, "⌀6.0000");
     s.execute("move", &json!({ "handles": [c.hex()], "from": [0, 0], "to": [10, 0] })).unwrap();
     assert!(near(dim(&s, r).defpt.xy(), Vec2::new(10.0, 0.0)));
@@ -137,10 +137,10 @@ fn angular_between_lines_follows_rotation() {
     let d = h(&s.execute("dimangular", &json!({ "lines": [a.hex(), b.hex()], "at": [3, 3] })).unwrap());
     let dm = dim(&s, d);
     assert!(dm.assoc.iter().any(|x| matches!(x.snap, AssocSnap::Intersection { .. })));
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dm).value, "90°");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dm).value, "90°");
     // Swing the second line to 45°.
     s.execute("properties.set", &json!({ "handles": [b.hex()], "end": [10, 10] })).unwrap();
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "45°");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "45°");
 }
 
 #[test]
@@ -154,7 +154,7 @@ fn interactive_angular_picks_polyline_segments() {
     s.cmdline("2,2").unwrap();
     assert!(s.running.is_none());
     let d = s.last_dim.unwrap();
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "90°");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "90°");
     // A polyline arc segment works like an arc.
     s.cmdline("pline 20,0 30,0 a 30,10").unwrap();
     s.cmdline("").unwrap();
@@ -165,7 +165,7 @@ fn interactive_angular_picks_polyline_segments() {
     assert!(s.running.is_none());
     let d2 = s.last_dim.unwrap();
     assert_ne!(d, d2);
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, d2)).value, "180°");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, d2)).value, "180°");
 }
 
 #[test]
@@ -181,7 +181,7 @@ fn interactive_angular_picks_circle() {
     assert!(s.running.is_none());
     let dm = dim(&s, s.last_dim.unwrap());
     assert!(near(dm.p15.xy(), Vec2::ZERO), "vertex at the center");
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dm).value, "90°");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dm).value, "90°");
 }
 
 #[test]
@@ -228,7 +228,7 @@ fn dimstyle_commands() {
     assert_eq!(l["variables"]["DIMTSZ"], json!(0.1));
     assert_eq!(l["current"], "Arch");
     let d = h(&s.execute("dimlinear", &json!({ "p1": [0, 0], "p2": [18.5, 0], "at": [5, 2] })).unwrap());
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "1'-6 1/2\"");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "1'-6 1/2\"");
     // In use: cannot delete; rename follows into dimensions.
     s.execute("dimstyle.current", &json!({ "name": "Standard" })).unwrap();
     assert!(s.execute("dimstyle.delete", &json!({ "name": "Arch" })).is_err());
@@ -264,7 +264,7 @@ fn dimension_overrides() {
     s.execute("dimoverride", &json!({ "handles": [d.hex()], "DIMDEC": 1, "DIMPOST": "<> mm" })).unwrap();
     let dm = dim(&s, d);
     assert_eq!(dm.overrides.get("decimals"), Some(&json!(1)));
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dm).value, "10.0 mm");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dm).value, "10.0 mm");
     // The interactive form.
     s.cmdline("dimoverride").unwrap();
     s.cmdline("DIMDEC").unwrap();
@@ -273,7 +273,7 @@ fn dimension_overrides() {
     s.input(crate::Input::Pick(vec![d])).unwrap();
     s.cmdline("").unwrap();
     assert!(s.running.is_none());
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "10.00 mm");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, d)).value, "10.00 mm");
     s.execute("dimstyle.override", &json!({ "handles": [d.hex()], "clear": true })).unwrap();
     assert!(dim(&s, d).overrides.is_empty());
     assert!(s.execute("dimoverride", &json!({ "handles": [d.hex()], "nope": 1 })).is_err());
@@ -305,10 +305,10 @@ fn dimtedit_and_dimspace() {
     let a = h(&s.execute("dimlinear", &json!({ "p1": [0, 0], "p2": [10, 0], "at": [5, 1] })).unwrap());
     let b = h(&s.execute("dimlinear", &json!({ "p1": [0, 0], "p2": [6, 0], "at": [3, 1.3] })).unwrap());
     s.execute("dimtedit.left", &json!({ "handles": [a.hex()] })).unwrap();
-    let g = cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, a));
+    let g = drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, a));
     assert!(g.text_pos.x < 5.0);
     s.execute("dimtedit.angle", &json!({ "handles": [a.hex()], "angle": 30 })).unwrap();
-    let g = cadcraft_render::dimension_in(s.doc().unwrap(), &dim(&s, a));
+    let g = drafitra_render::dimension_in(s.doc().unwrap(), &dim(&s, a));
     assert!((g.text_angle - 30f64.to_radians()).abs() < 1e-9);
     s.execute("dimtedit.home", &json!({ "handles": [a.hex()] })).unwrap();
     assert!(dim(&s, a).overrides.is_empty() && dim(&s, a).text_rotation == 0.0);
@@ -434,7 +434,7 @@ fn table_create_edit_merge() {
     assert!(s.execute("table.set", &json!({ "handle": t.hex(), "row": 99, "col": 0, "text": "x" })).is_err());
     assert!(s.execute("table", &json!({ "at": [0, 0], "rows": 1_000_000, "cols": 3 })).is_err());
     // It renders: grid lines plus text.
-    let dl = cadcraft_render::build(s.doc().unwrap(), &cadcraft_doc::Space::Model, &cadcraft_render::Options::default());
+    let dl = drafitra_render::build(s.doc().unwrap(), &drafitra_doc::Space::Model, &drafitra_render::Options::default());
     assert!(dl.prims.len() > 10);
 }
 
@@ -475,7 +475,7 @@ fn hostile_annotation_params_never_panic() {
     }
     let d = h(&s.execute("dimlinear", &json!({ "p1": [0, 0], "p2": [1, 0], "at": [0, 1] })).unwrap());
     let _ = s.execute("dimoverride", &json!({ "handles": [d.hex()], "DIMTXT": -1, "DIMSCALE": 0, "DIMLUNIT": 99 }));
-    let _ = cadcraft_render::build(s.doc().unwrap(), &cadcraft_doc::Space::Model, &cadcraft_render::Options::default());
+    let _ = drafitra_render::build(s.doc().unwrap(), &drafitra_doc::Space::Model, &drafitra_render::Options::default());
     assert!(matches!(dim(&s, d).kind, DimKind::Linear { .. }));
 }
 
@@ -499,7 +499,7 @@ fn setvar_dim_variables_apply_to_new_dimensions() {
         let d = s.doc().unwrap();
         let dm = dim(s, hd);
         let st = d.dim_style(&dm.style).cloned().unwrap();
-        cadcraft_render::dimension_geometry(&dm, &st, d.header.f64("DIMSCALE", 1.0)).text_height
+        drafitra_render::dimension_geometry(&dm, &st, d.header.f64("DIMSCALE", 1.0)).text_height
     };
     let first = linear(&mut s, -20.0);
     let base = text_height(&s, first);
@@ -511,7 +511,7 @@ fn setvar_dim_variables_apply_to_new_dimensions() {
     assert!((text_height(&s, first) - base).abs() < 1e-12);
     // Extents use the same scale as the geometry: room for 2.5 text heights beyond the points.
     let d = s.doc().unwrap();
-    let margin = |hd: Handle, span: f64| (cadcraft_doc::entity_bounds(d, d.entity(hd).unwrap(), 0).height() - span) / 2.0;
+    let margin = |hd: Handle, span: f64| (drafitra_doc::entity_bounds(d, d.entity(hd).unwrap(), 0).height() - span) / 2.0;
     assert!((margin(first, 20.0) - 2.5 * base).abs() < 1e-9);
     assert!((margin(scaled, 40.0) - 2.5 * text_height(&s, scaled)).abs() < 1e-9);
 
@@ -535,7 +535,7 @@ fn setvar_dim_variables_apply_to_new_dimensions() {
     let one = linear(&mut s, -100.0);
     let one = dim(&s, one);
     assert_eq!(one.overrides.get("decimals"), Some(&json!(1)));
-    assert_eq!(cadcraft_render::dimension_in(s.doc().unwrap(), &one).value, "100.0");
+    assert_eq!(drafitra_render::dimension_in(s.doc().unwrap(), &one).value, "100.0");
 
     // DIMSCALE 0 (AutoCAD: scale to the layout viewport) never shrinks a dimension to nothing.
     s.execute("setvar", &json!({ "name": "DIMSCALE", "value": 0 })).unwrap();

@@ -5,8 +5,8 @@
 use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, ImageMap, Node, NodeKind, ObjectAttributes};
-use vectorcraft_geom::FillRule;
+use tsipika_doc::{Document, ImageMap, Node, NodeKind, ObjectAttributes};
+use tsipika_geom::FillRule;
 
 use super::overprint::{AttributesInfo, apply_overprint, edit_counted, overprint_jobs};
 use super::path::paths_in;

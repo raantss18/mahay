@@ -1,11 +1,11 @@
 //! The per-pixel stage: everything after the spatial planes are ready, in one parallel pass.
 
-use lightcraft_color::luminance_2020;
-use lightcraft_color::spline::{Lut1, MonotoneCurve};
-use lightcraft_color::transfer::linear_to_srgb;
-use lightcraft_develop::{DevelopSettings, LocalAdjustments, Process, ToneCurve, VignetteStyle};
-use lightcraft_geom::Point;
-use lightcraft_raster::Rgba8;
+use hazavana_color::luminance_2020;
+use hazavana_color::spline::{Lut1, MonotoneCurve};
+use hazavana_color::transfer::linear_to_srgb;
+use hazavana_develop::{DevelopSettings, LocalAdjustments, Process, ToneCurve, VignetteStyle};
+use hazavana_geom::Point;
+use hazavana_raster::Rgba8;
 
 use crate::colorops::ColorOps;
 use crate::geometry::Frame;
@@ -148,7 +148,7 @@ pub fn mask_terms(j: &LocalAdjustments) -> [f32; MASK_TERMS] {
 }
 
 /// Everything the per-pixel stage computes once per render: the CPU loop below and the GPU kernel
-/// (`lightcraft-gpu`) both read their parameters from here, so the two cannot drift apart.
+/// (`hazavana-gpu`) both read their parameters from here, so the two cannot drift apart.
 pub struct FinishParams {
     /// A LUT profile and its amount (0..2), applied to the display-encoded colour.
     pub lut: Option<(std::sync::Arc<crate::lut::Lut3d>, f32)>,
@@ -184,7 +184,7 @@ pub struct FinishParams {
     /// Grain: amount, cell size (px), roughness, seed.
     pub grain: Option<(f32, f32, f32, u32)>,
     /// Output px → normalized oriented coordinates.
-    pub out_to_norm: lightcraft_geom::Affine,
+    pub out_to_norm: hazavana_geom::Affine,
     pub ow: f64,
     pub oh: f64,
     pub w: usize,
@@ -274,7 +274,7 @@ impl FinishParams {
 /// rendering process. This is where a new tone model branches: a retuned default tone curve (issue
 /// #146) is a new [`Process`] with its own arm here, and V1's arm stays as it is, so photos edited
 /// under V1 keep their look (`docs/process-versions.md`). CPU and GPU both take it from here.
-/// `peak` is the HDR render's peak relative to SDR white ([`lightcraft_develop::Hdr::peak`]); at 1.0 (SDR)
+/// `peak` is the HDR render's peak relative to SDR white ([`hazavana_develop::Hdr::peak`]); at 1.0 (SDR)
 /// every arm is the SDR tone map. An HDR render keeps the camera's look through the midtones and
 /// lifts its highlights past white ([`ToneMap::camera_hdr`]), so it matches the SDR render below them.
 pub fn base_tone(s: &DevelopSettings, info: &SourceInfo, peak: f32) -> ToneMap {
@@ -308,7 +308,7 @@ pub(crate) fn finish(
     let data = finish_with(p, &fp, false, |e| match trc {
         OutputTrc::Srgb => [enc(e[0]), enc(e[1]), enc(e[2]), 255],
         t => {
-            let x = e.map(|v| enc(t.encode(lightcraft_color::transfer::srgb_to_linear(v.clamp(0.0, 1.0)))));
+            let x = e.map(|v| enc(t.encode(hazavana_color::transfer::srgb_to_linear(v.clamp(0.0, 1.0)))));
             [x[0], x[1], x[2], 255]
         }
     });
@@ -326,7 +326,7 @@ pub(crate) fn finish_deep(
     depth: OutputDepth,
     proof: Option<crate::Proof>,
 ) -> DeepImage {
-    use lightcraft_color::transfer::srgb_to_linear;
+    use hazavana_color::transfer::srgb_to_linear;
     let (w, h) = (p.img.width, p.img.height);
     let mut fp = FinishParams::new(s, frame, info, w, h, p.px_per_long, p.air, space);
     fp.proof = proof.map(|pr| pr.params(space));
@@ -547,8 +547,8 @@ pub(crate) fn finish_with<T: Copy + Default + Send>(
             // --- colour
             d = ops.apply(d, l_sat, l_hue);
             if let Some((dir, amt)) = tint_col {
-                let lab = lightcraft_color::perceptual::oklab_from_2020(d);
-                d = lightcraft_color::perceptual::oklab_to_2020([lab[0], lab[1] + dir[0] * 0.08 * amt, lab[2] + dir[1] * 0.08 * amt]);
+                let lab = hazavana_color::perceptual::oklab_from_2020(d);
+                d = hazavana_color::perceptual::oklab_to_2020([lab[0], lab[1] + dir[0] * 0.08 * amt, lab[2] + dir[1] * 0.08 * amt]);
             }
 
             // --- vignette (display linear, post-crop)

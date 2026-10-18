@@ -8,8 +8,8 @@
 //! undoable and the same over MCP.
 
 use egui::{Align2, Context, CornerRadius, Id, Rect, Sense, Stroke, StrokeKind, Ui, UiBuilder, pos2, vec2};
-use figcraft_doc::{Collection, Document, PublishedLibrary, Variable, VariableType, VariableValue, Variables, scopes_for};
-use figcraft_engine::library;
+use endrika_doc::{Collection, Document, PublishedLibrary, Variable, VariableType, VariableValue, Variables, scopes_for};
+use endrika_engine::library;
 use serde_json::{Value, json};
 
 use crate::FigApp;
@@ -737,7 +737,7 @@ fn kind_glyph(ui: &Ui, vars: &Variables, v: &Variable, coll: &Collection, rect: 
         VariableType::Color => {
             let modes = coll.modes.first().map(|m| [(coll.id.clone(), m.id.clone())].into_iter().collect()).unwrap_or_default();
             if let Some(VariableValue::Color(c)) = vars.resolve(&v.id, &modes) {
-                widgets::paint_swatch(p, rect, &figcraft_color::Paint::solid(c));
+                widgets::paint_swatch(p, rect, &endrika_color::Paint::solid(c));
             }
         }
         VariableType::Number => {
@@ -828,13 +828,13 @@ fn value_cell(app: &mut FigApp, ui: &mut Ui, view: &View, v: &Variable, coll: &C
         VariableValue::Color(c) => {
             ui.painter().rect_filled(body, CornerRadius::same(5), t.field);
             let sw = Rect::from_center_size(pos2(body.min.x + 13.0, body.center().y), vec2(14.0, 14.0));
-            widgets::paint_swatch(ui.painter(), sw, &figcraft_color::Paint::solid(*c));
+            widgets::paint_swatch(ui.painter(), sw, &endrika_color::Paint::solid(*c));
             if ui.interact(sw.expand(3.0), id.with("swatch"), Sense::click()).tip(tr("Edit colour")).clicked() {
                 app.ui.picker = Some(PickerTarget::Variable { id: v.id.clone(), mode: mode.to_string() });
             }
             let hex_r = Rect::from_min_max(pos2(sw.max.x + 8.0, body.min.y + 4.0), pos2(body.max.x - 44.0, body.max.y - 4.0));
             if let Some(h) = widgets::text_field_inline(ui, id.with("hex"), &c.to_hex(), hex_r, regular(11.0))
-                && let Some(nc) = figcraft_color::Color::from_hex_or_name(&h)
+                && let Some(nc) = endrika_color::Color::from_hex_or_name(&h)
             {
                 // Six digits (or a colour name) keep the alpha; eight digits set it.
                 let digits = h.trim().trim_start_matches('#');
@@ -873,7 +873,7 @@ fn value_cell(app: &mut FigApp, ui: &mut Ui, view: &View, v: &Variable, coll: &C
 }
 
 /// A colour's alpha as a percentage at the right end of `body`.
-fn alpha_text(ui: &Ui, c: &figcraft_color::Color, body: Rect) {
+fn alpha_text(ui: &Ui, c: &endrika_color::Color, body: Rect) {
     let t = Tokens::get(ui.ctx());
     let pct = format!("{}%", (c.a * 100.0).round());
     ui.painter().text(pos2(body.max.x - 8.0, body.center().y), Align2::RIGHT_CENTER, pct, regular(11.0), t.text_secondary);
@@ -886,7 +886,7 @@ fn read_only_value(ui: &Ui, val: &VariableValue, body: Rect) {
     let mut x = body.min.x + 8.0;
     if let VariableValue::Color(c) = val {
         let sw = Rect::from_center_size(pos2(body.min.x + 13.0, body.center().y), vec2(14.0, 14.0));
-        widgets::paint_swatch(ui.painter(), sw, &figcraft_color::Paint::solid(*c));
+        widgets::paint_swatch(ui.painter(), sw, &endrika_color::Paint::solid(*c));
         x = sw.max.x + 8.0;
         alpha_text(ui, c, body);
     }

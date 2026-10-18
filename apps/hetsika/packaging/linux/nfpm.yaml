@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: filmcraft
+name: hetsika
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -12,16 +12,16 @@ version_schema: semver
 release: 1
 section: video
 priority: optional
-maintainer: ${FILMCRAFT_MAINTAINER}
+maintainer: ${HETSIKA_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/filmcraft
+homepage: https://github.com/raantss18/mahay
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native video editor: edit video, color and sound.
   Timeline editing with source and program monitors, color grading and scopes,
   effects and keyframes, titles and captions, audio mixing with loudness meters,
   and export; GPU compositing (wgpu).
-  Includes filmcraft-cli, a headless command runner, MCP server and exporter.
+  Includes hetsika-cli, a headless command runner, MCP server and exporter.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
@@ -61,11 +61,11 @@ overrides:
       - xdg-desktop-portal
 
 contents:
-  - src: ${STAGE}/usr/bin/filmcraft
-    dst: /usr/bin/filmcraft
+  - src: ${STAGE}/usr/bin/hetsika
+    dst: /usr/bin/hetsika
     file_info: { mode: 0755 }
-  - src: ${STAGE}/usr/bin/filmcraft-cli
-    dst: /usr/bin/filmcraft-cli
+  - src: ${STAGE}/usr/bin/hetsika-cli
+    dst: /usr/bin/hetsika-cli
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/

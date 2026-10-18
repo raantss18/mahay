@@ -4,17 +4,17 @@
 //! pointer, outlined while it is dragged (#88). Agents do the same with `layer.addItem {position}`,
 //! `mediaBrowser.import {position}`, `effect.apply {layers}` and the preset commands.
 
-use effectcraft_engine::project::{ItemId, ItemKind};
-use effectcraft_engine::render::EvalCtx;
+use tselatra_engine::project::{ItemId, ItemKind};
+use tselatra_engine::render::EvalCtx;
 use egui::{Rect, Stroke, StrokeKind, vec2};
 use serde_json::{Value, json};
 
 use super::DragPayload;
 use super::viewer::{ViewerMap, layer_at, layer_quad};
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 
 /// While something is dragged over the viewer, show where it goes; drop it on release.
-pub(crate) fn show(app: &mut EffectcraftApp, ui: &egui::Ui, painter: &egui::Painter, map: &ViewerMap, ectx: &EvalCtx) {
+pub(crate) fn show(app: &mut TselatraApp, ui: &egui::Ui, painter: &egui::Painter, map: &ViewerMap, ectx: &EvalCtx) {
     let ctx = ui.ctx().clone();
     let Some(payload) = egui::DragAndDrop::payload::<DragPayload>(&ctx) else { return };
     if matches!(*payload, DragPayload::Property { .. }) {

@@ -4,12 +4,12 @@
 //! the pointer is the default one.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 
 /// One headless frame of the whole window with `events`.
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> egui::FullOutput {
+fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> egui::FullOutput {
     let raw =
         egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))), events, ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| {
@@ -32,7 +32,7 @@ fn key(key: egui::Key) -> Vec<egui::Event> {
 }
 
 /// A click of the primary button at `pos`, one event a frame.
-fn click(app: &mut VectorcraftApp, ctx: &egui::Context, pos: egui::Pos2) {
+fn click(app: &mut TsipikaApp, ctx: &egui::Context, pos: egui::Pos2) {
     let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
     for e in [egui::Event::PointerMoved(pos), button(true), button(false)] {
         frame(app, ctx, vec![e]);
@@ -41,8 +41,8 @@ fn click(app: &mut VectorcraftApp, ctx: &egui::Context, pos: egui::Pos2) {
 
 /// A document with three 200 × 100 artboards and a rectangle in the middle of the first, in
 /// Presentation Mode with the Selection tool, after a frame laid the window out.
-fn presenting(ctx: &egui::Context) -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+fn presenting(ctx: &egui::Context) -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
     app.run("shape.rectangle", json!({"x": 90, "y": 40, "width": 20, "height": 20})).unwrap();
     app.select_tool("selection");
@@ -53,13 +53,13 @@ fn presenting(ctx: &egui::Context) -> VectorcraftApp {
 }
 
 /// The artboard the view is on, its zoom and the document point at its center.
-fn view(app: &VectorcraftApp) -> (usize, f64, vectorcraft_geom::Point) {
+fn view(app: &TsipikaApp) -> (usize, f64, tsipika_geom::Point) {
     let v = app.view().unwrap();
     (v.artboard, v.zoom, v.center)
 }
 
 /// A check that the document, the selection and the undo steps are still as they are now.
-fn snapshot(app: &VectorcraftApp) -> impl Fn(&VectorcraftApp) -> bool + use<> {
+fn snapshot(app: &TsipikaApp) -> impl Fn(&TsipikaApp) -> bool + use<> {
     let st = app.session.active().unwrap();
     let (doc, selection, undo) = (st.doc.clone(), st.selection.clone(), st.history.undo.len());
     move |app| {
@@ -70,7 +70,7 @@ fn snapshot(app: &VectorcraftApp) -> impl Fn(&VectorcraftApp) -> bool + use<> {
 
 #[test]
 fn escape_leaves_presentation_mode() {
-    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut app = TsipikaApp::new(Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     let ctx = egui::Context::default();
     frame(&mut app, &ctx, vec![]);
@@ -177,12 +177,12 @@ fn a_click_goes_to_the_next_artboard_in_presentation_mode() {
 fn a_tap_goes_to_the_next_artboard_in_presentation_mode() {
     let ctx = egui::Context::default();
     let mut app = presenting(&ctx);
-    let objects = |app: &VectorcraftApp| app.session.active().unwrap().doc.layers[0].children().unwrap().len();
+    let objects = |app: &TsipikaApp| app.session.active().unwrap().doc.layers[0].children().unwrap().len();
     let c = app.canvas_rect.unwrap().center();
     let touch = |n: u64, phase, pos| egui::Event::Touch { device_id: egui::TouchDeviceId(1), id: egui::TouchId(n), phase, pos, force: None };
     let button = |pressed| egui::Event::PointerButton { pos: c, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
     // `fingers` fingers tap 50 points apart, the first also pressing and releasing as the pointer.
-    let tap = |app: &mut VectorcraftApp, fingers: u64| {
+    let tap = |app: &mut TsipikaApp, fingers: u64| {
         let at = |n: u64| c + egui::vec2(n as f32 * 50.0, 0.0);
         frame(app, &ctx, vec![touch(0, egui::TouchPhase::Start, c), egui::Event::PointerMoved(c), button(true)]);
         frame(app, &ctx, (1..fingers).map(|n| touch(n, egui::TouchPhase::Start, at(n))).collect());
@@ -256,7 +256,7 @@ fn the_pointer_is_the_default_one_in_presentation_mode() {
 
 #[test]
 fn f_cycles_the_screen_modes_and_the_command_leaves_presentation_mode() {
-    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut app = TsipikaApp::new(Session::new(), crate::Services::default());
     let modes: Vec<u64> = (0..4).map(|_| app.run("view.screenMode", json!({})).unwrap().as_u64().unwrap()).collect();
     assert_eq!(modes, [1, 2, 0, 1]);
     app.run("view.presentation", json!({})).unwrap();
@@ -265,7 +265,7 @@ fn f_cycles_the_screen_modes_and_the_command_leaves_presentation_mode() {
 
 #[test]
 fn the_screen_mode_is_not_saved() {
-    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut app = TsipikaApp::new(Session::new(), crate::Services::default());
     app.run("view.presentation", json!({})).unwrap();
     let saved = serde_json::to_value(&app.ui).unwrap();
     assert!(saved.get("screen_mode").is_none(), "{saved}");

@@ -3,13 +3,13 @@
 //! and a drawing `document.export` wrote opened again.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Node, NodeKind};
-use vectorcraft_geom::Rect;
+use tsipika_doc::{Node, NodeKind};
+use tsipika_geom::Rect;
 
 use super::*;
 
 fn b64(bytes: &[u8]) -> String {
-    vectorcraft_format::base64_encode(bytes)
+    tsipika_format::base64_encode(bytes)
 }
 
 /// A millimetre drawing: a 200 × 100 rectangle on layer Walls, a circle on layer Notes, a block
@@ -126,7 +126,7 @@ fn document_open_reads_a_dxf_drawing() {
     // Millimetres at 1:1, the artboard the art's size.
     let board = st.doc.artboards[0].rect;
     assert!((board.width() - 200.0 * MM).abs() < 1e-6 && (board.height() - 100.0 * MM).abs() < 1e-6, "{board:?}");
-    assert_eq!(st.doc.units, vectorcraft_doc::Unit::Millimeters);
+    assert_eq!(st.doc.units, tsipika_doc::Unit::Millimeters);
     assert_eq!(st.doc.symbols.len(), 1, "the block is a symbol");
     assert_eq!(leaves(&s).iter().filter(|n| matches!(n.kind, NodeKind::SymbolInstance { .. })).count(), 2);
     assert!(st.doc.layers[1].locked, "Notes is locked");
@@ -165,7 +165,7 @@ fn dxf_info_lists_layouts_layers_and_units() {
 #[test]
 fn binary_dxf_says_to_save_it_as_ascii() {
     let mut s = Session::new();
-    let mut bytes = vectorcraft_cad::import::BINARY_SENTINEL.to_vec();
+    let mut bytes = tsipika_cad::import::BINARY_SENTINEL.to_vec();
     bytes.extend([0u8; 64]);
     let e = open(&mut s, &bytes, json!({})).unwrap_err().to_string();
     assert!(e.contains("binary DXF") && e.contains("ASCII"), "{e}");
@@ -199,7 +199,7 @@ fn placed(s: &mut Session, dxf: Value) -> (Value, Rect) {
     let undo = s.doc().unwrap().history.undo.len();
     let r = s.execute("file.place", &p).unwrap();
     assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1, "one undo step");
-    let id = vectorcraft_doc::NodeId(r["ids"][0].as_u64().unwrap());
+    let id = tsipika_doc::NodeId(r["ids"][0].as_u64().unwrap());
     let b = s.doc().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
     (r, b)
 }
@@ -210,7 +210,7 @@ fn file_place_puts_a_drawing_in_as_one_group() {
     let (r, b) = placed(&mut s, Value::Null);
     assert_eq!(r["format"], "dxf");
     let st = s.doc().unwrap();
-    let id = vectorcraft_doc::NodeId(r["ids"][0].as_u64().unwrap());
+    let id = tsipika_doc::NodeId(r["ids"][0].as_u64().unwrap());
     assert!(matches!(st.doc.node(id).unwrap().kind, NodeKind::Group { clip: false, .. }));
     assert_eq!(st.doc.symbols.len(), 1, "its symbol joins the document");
     // Centred on the artboard at 1:1.
@@ -231,7 +231,7 @@ fn a_drawing_export_writes_opens_again() {
     s.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 200, "height": 100})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 350, "y": 100, "width": 100, "height": 100})).unwrap();
     let r = s.execute("document.export", &json!({"format": "dxf", "unit": "pt"})).unwrap();
-    let bytes = vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
     let r = open(&mut s, &bytes, json!({"dxf": {"unit": "pt", "scale": 1, "center": false}})).unwrap();
     assert_eq!(r["format"], "dxf");
     let all: Vec<Rect> = leaves(&s).iter().filter_map(|n| n.geometric_bounds()).collect();

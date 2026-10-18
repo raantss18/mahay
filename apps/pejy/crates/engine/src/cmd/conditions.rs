@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::{Condition, Document, Story};
+use pejy_doc::{Condition, Document, Story};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, has_text, ok, str_param};
@@ -162,7 +162,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Price: $10 / €9"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("condition.new", &json!({"name": "EU"})).unwrap();
         let eu = "Price: $10 / ".len();
         s.execute("text.select", &json!({"story": r["story"], "anchor": eu, "focus": "Price: $10 / €9".len()})).unwrap();
@@ -177,7 +177,7 @@ mod tests {
         assert!(cs.frames[0].lines[0].glyphs.iter().any(|g| g.byte >= eu && !g.visible));
         let html = s.execute("file.exportHtml", &json!({})).unwrap()["text"].as_str().unwrap().to_string();
         assert!(html.contains("$10") && !html.contains("€9"), "hidden text isn't exported");
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
         assert_eq!(back.conditions, s.doc().unwrap().doc.conditions, "IDML Condition");
         let bs = back.stories.values().find(|st| st.text.contains("€9")).unwrap();
         assert!(bs.chars.iter().any(|r| r.format.over.conditions.as_deref() == Some(&["EU".to_string()][..])), "AppliedConditions");

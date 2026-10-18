@@ -13,12 +13,12 @@ function run(command, args) {
   if (result.status !== 0) throw new Error(result.stderr || result.stdout || 'Process failed');
   return JSON.parse(result.stdout.replace(/^\uFEFF/, '').trim());
 }
-const ec = run('cargo', ['run', '--quiet', '-p', 'effectcraft-keyframe', '--example', 'ae_ease_samples']);
+const ec = run('cargo', ['run', '--quiet', '-p', 'tselatra-keyframe', '--example', 'ae_ease_samples']);
 const ae = run(process.execPath, [cli, 'run', '-f', path.join(root, 'examples', 'ae-ease-oracle.jsx'), '--raw']);
 const local = path.join(root, 'plan', 'aftereffects', 'ref', 'ease');
 fs.mkdirSync(local, { recursive: true });
 fs.writeFileSync(path.join(local, 'ae-observations.json'), JSON.stringify(ae, null, 2) + '\n');
-fs.writeFileSync(path.join(local, 'effectcraft-samples.json'), JSON.stringify(ec, null, 2) + '\n');
+fs.writeFileSync(path.join(local, 'tselatra-samples.json'), JSON.stringify(ec, null, 2) + '\n');
 if (ae.cases.length !== ec.cases.length) throw new Error('Case count mismatch');
 const scores = ae.cases.map(reference => {
   const candidate = ec.cases.find(c => c.name === reference.name);

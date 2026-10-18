@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 use super::DialogSpec;
 use crate::state::Dialog;
 use crate::theme::{self, Tokens};
-use crate::{FilePick, VectorcraftApp, io, widgets};
+use crate::{FilePick, TsipikaApp, io, widgets};
 
 /// The dialog kind of a script's report.
 pub const KIND: &str = "scriptCheck";
@@ -34,13 +34,13 @@ pub(super) const SPEC: DialogSpec = DialogSpec {
 /// `ui.checkScript`: check the script at `path` (and the files it includes) or given as `data` or
 /// `dataBase64`, and show the report; without any of them, pick a `.jsx`, `.jsxinc` or `.jsxbin`
 /// file (the web opens File › Open's picker, and [`io::open_bytes`] shows the report).
-pub(crate) fn command(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn command(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let mut params = p.clone();
     if ["path", "data", "dataBase64"].iter().all(|k| p.get(k).is_none()) {
         if app.services.open_async.is_some() {
             return io::open_dialog(app).map(|_| Value::Null);
         }
-        let pick = FilePick { filters: vec![("Scripts", vectorcraft_engine::cmd::scripts::EXTS)], ..Default::default() };
+        let pick = FilePick { filters: vec![("Scripts", tsipika_engine::cmd::scripts::EXTS)], ..Default::default() };
         params = json!({ "path": crate::picks::open(app, &pick).ok_or("cancelled")? });
     }
     if params.get("path").is_some()
@@ -54,7 +54,7 @@ pub(crate) fn command(app: &mut VectorcraftApp, p: &Value) -> Result<Value, Stri
 }
 
 /// Copy Report: the report as JSON on the clipboard. The dialog stays open.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let report = d.fields.get("report").cloned().unwrap_or(Value::Null);
     app.clipboard_out = Some(serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?);
     if let Some(open) = app.ui.dialog.as_mut().filter(|open| open.kind == KIND) {
@@ -143,7 +143,7 @@ fn lines(item: &Value) -> String {
     }
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let Some(r) = d.fields.get("report") else { return true };
     let t = Tokens::get(ui.ctx());
     ui.label(egui::RichText::new(r["name"].as_str().unwrap_or_default()).font(theme::semibold(12.5)).color(t.text_strong));
@@ -194,7 +194,7 @@ fn list<'r>(r: &'r Value, key: &str) -> &'r [Value] {
 }
 
 fn report(ui: &mut egui::Ui, r: &Value, t: &Tokens) {
-    widgets::dim_label(ui, tl!("VectorCraft read this script without running it."));
+    widgets::dim_label(ui, tl!("Tsipika read this script without running it."));
     let needs: Vec<&str> = list(r, "needs").iter().filter_map(Value::as_str).filter_map(need_label).collect();
     if needs.is_empty() {
         row(ui, t, tl!("Needs nothing beyond plain JavaScript"), false, "");

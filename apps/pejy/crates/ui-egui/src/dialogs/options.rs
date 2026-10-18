@@ -1,6 +1,6 @@
 //! Swatch Options, Color Group Options and Layer Options.
 
-use designcraft_color::{Color, ColorType, SwatchValue};
+use pejy_color::{Color, ColorType, SwatchValue};
 use serde_json::{Map, Value, json};
 
 use super::{Dialog, check, text_field};
@@ -108,7 +108,7 @@ pub fn swatch_options(app: &DesignApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let kind = d.s("kind");
     let auto = kind == "color" && d.b("nameWithValue");
     if auto && let Some(c) = dialog_color(&d.fields) {
-        d.fields.insert("swatchName".into(), json!(designcraft_color::swatch::value_name(c)));
+        d.fields.insert("swatchName".into(), json!(pejy_color::swatch::value_name(c)));
     }
     egui::Grid::new("swatch_options").num_columns(2).spacing([8.0, 6.0]).show(ui, |ui| {
         caption(ui, lang, "Swatch Name:");
@@ -255,7 +255,7 @@ pub fn confirm_color_group_options(app: &mut DesignApp, d: &Dialog) -> Result<Va
 /// Layer Options for layer `id` (default: the active layer).
 pub fn open_layer_options(app: &mut DesignApp, id: Option<u64>) -> Result<(), String> {
     let st = app.session.active().ok_or("no document open")?;
-    let id = id.map_or(st.active_layer, designcraft_doc::LayerId);
+    let id = id.map_or(st.active_layer, pejy_doc::LayerId);
     let l = st.doc.layer(id).ok_or("no such layer")?;
     let f = json!({"id": l.id.0, "name": l.name, "rgb": l.color, "visible": l.visible, "locked": l.locked, "printable": l.printable,
         "showGuides": l.show_guides, "suppressWrapWhenHidden": l.suppress_wrap_when_hidden});
@@ -266,7 +266,7 @@ pub fn open_layer_options(app: &mut DesignApp, id: Option<u64>) -> Result<(), St
 pub fn layer_options(app: &DesignApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let lang = app.ui.language.as_str();
     let rgb: [u8; 3] = d.fields.get("rgb").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or([0, 0, 0]);
-    let named = designcraft_doc::LAYER_COLORS.iter().find(|(_, c)| *c == rgb).map(|(n, _)| *n);
+    let named = pejy_doc::LAYER_COLORS.iter().find(|(_, c)| *c == rgb).map(|(n, _)| *n);
     egui::Grid::new("layer_options").num_columns(2).spacing([8.0, 6.0]).show(ui, |ui| {
         caption(ui, lang, "Name:");
         text_field(ui, d, "name", 220.0);
@@ -277,7 +277,7 @@ pub fn layer_options(app: &DesignApp, ui: &mut egui::Ui, d: &mut Dialog) {
                 .selected_text(crate::rtl::widget(ui, tr(lang, named.unwrap_or("Custom"))))
                 .width(140.0)
                 .show_ui(ui, |ui| {
-                    for (n, c) in designcraft_doc::LAYER_COLORS {
+                    for (n, c) in pejy_doc::LAYER_COLORS {
                         let swatch = egui::RichText::new("■ ").color(egui::Color32::from_rgb(c[0], c[1], c[2]));
                         let mut job = egui::text::LayoutJob::default();
                         swatch.append_to(&mut job, ui.style(), egui::FontSelection::Default, egui::Align::Center);
@@ -364,7 +364,7 @@ mod tests {
     }
 
     fn app() -> DesignApp {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app
     }
@@ -386,7 +386,7 @@ mod tests {
         assert!(h.state().ui.dialog.is_none(), "{:?}", h.state().ui.dialog);
         let doc = &h.state().session.active().unwrap().doc;
         assert!(doc.swatch("Signal Orange").is_some() && doc.swatch("Brand").is_none());
-        assert_eq!(doc.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch, "Signal Orange");
+        assert_eq!(doc.item(pejy_doc::ItemId(id)).unwrap().fill.swatch, "Signal Orange");
     }
 
     #[test]

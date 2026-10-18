@@ -2,7 +2,7 @@
 //! (CIRCLERAD, OFFSETDIST, POLYSIDES, HPNAME…), TRANSPARENCYDISPLAY and the dimension variables in
 //! `SETVAR ?`; values are checked; unknown variables still give an error.
 
-use cadcraft_engine::Session;
+use drafitra_engine::Session;
 use serde_json::{Value, json};
 
 fn getvar(s: &mut Session, name: &str) -> Value {
@@ -38,7 +38,7 @@ fn defaults_are_the_ones_the_commands_use() {
     }
     // Lowercase names work; the list shows the new variables and the dimension variables.
     assert_eq!(getvar(&mut s, "circlerad"), json!(0.0));
-    let all = cadcraft_engine::sysvars::list(&s);
+    let all = drafitra_engine::sysvars::list(&s);
     for n in ["POLYSIDES", "SPLINESEGS", "CHAMFERD", "TRANSPARENCYDISPLAY", "DIMASZ", "OSMODE", "CLAYER"] {
         assert!(all.get(n).is_some(), "{n} listed");
     }
@@ -91,7 +91,7 @@ fn bad_values_and_unknown_names_are_refused() {
         assert!(!setvar(&mut s, name, v.clone()), "{name} = {v} refused");
     }
     assert_eq!(getvar(&mut s, "POLYSIDES"), json!(4), "unchanged");
-    assert!(cadcraft_engine::sysvars::is_read_only("cplotstyle"));
+    assert!(drafitra_engine::sysvars::is_read_only("cplotstyle"));
     assert!(s.execute("getvar", &json!({ "name": "NOSUCHVAR" })).is_err());
     s.cmdline("setvar nosuchvar").unwrap();
     assert!(s.log.iter().any(|l| l.contains("Unknown variable NOSUCHVAR")), "{:?}", s.log);

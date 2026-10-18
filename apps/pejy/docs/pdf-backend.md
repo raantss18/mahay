@@ -1,12 +1,12 @@
 # PDF writing boundary
 
-DesignCraft pins `craft-pdf` and its patched Krilla 0.8.2 backend to craft-libs revision
+Pejy pins `mahay-pdf` and its patched Krilla 0.8.2 backend to mahay-libs revision
 `c3487320b2d1de657b860b3c8abb44e1f2b32bd8`. The `write-pdf` capability is required for
-placed PDF pages and book merging. The ordinary reader dependencies, `craft-ui` and
-`craft-print` revisions remain unchanged by this writer migration.
+placed PDF pages and book merging. The ordinary reader dependencies, `mahay-ui` and
+`mahay-print` revisions remain unchanged by this writer migration.
 
 The shared library supplies fallible font copying/preparation, metadata setup, version and
-archival configuration, final serialization and a native unwind guard. DesignCraft retains
+archival configuration, final serialization and a native unwind guard. Pejy retains
 layout, shaping, font choice/licensing, fallback warnings, image caches, links, tagging,
 bleed/marks, PDF/X postprocessing and export presets. A shared writer does not improve the
 format-conformance or product-parity claims by itself.
@@ -25,8 +25,8 @@ facade at the same full immutable commit, including Krilla reached through `kril
 Local path replacements are suitable only for development and should not be committed.
 
 The vendored Krilla patch ledger, per-file hashes, licence texts and four unchanged CC0
-Compact ICC profiles live in craft-libs (`vendor/krilla`, `licenses/pdf-writer`, and
-`ATTRIBUTION.md`). No fonts or binary PDF fixtures are added to DesignCraft by this migration.
+Compact ICC profiles live in mahay-libs (`vendor/krilla`, `licenses/pdf-writer`, and
+`ATTRIBUTION.md`). No fonts or binary PDF fixtures are added to Pejy by this migration.
 
 Tests cover metadata key presence, hostile page selection, successful PDF export and native
 subprocess recovery for all three export entry points. Native/WASM export comparisons and

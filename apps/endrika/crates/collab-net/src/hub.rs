@@ -1,4 +1,4 @@
-//! The hub every host runs, for one file (a session the app hosts) or many (`figcraft-server`):
+//! The hub every host runs, for one file (a session the app hosts) or many (`endrika-server`):
 //! a WebSocket listener, a reader and a writer thread per connection, and one hub thread that owns
 //! a collaboration core [`Server`] per open file and routes its messages.
 //!
@@ -30,12 +30,12 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use figcraft_collab::message::{
+use endrika_collab::message::{
     self, Access, Admin, AdminReply, ClientMsg, Hello, HostInfo, LibraryReply, LibraryReq, Manage, OpenHosting, OpenLibrary, OpenPlugins, PROTOCOL,
     PluginReply, PluginReq, Presence, Resolve, ServerMsg, reads_hosting,
 };
-use figcraft_collab::{Outgoing, Server};
-use figcraft_engine::live::{Event, MAX_NAME, PEOPLE, sanitize};
+use endrika_collab::{Outgoing, Server};
+use endrika_engine::live::{Event, MAX_NAME, PEOPLE, sanitize};
 use tungstenite::handshake::server::{ErrorResponse, Request, Response};
 use tungstenite::protocol::frame::coding::CloseCode;
 use tungstenite::protocol::{CloseFrame, Role, WebSocket};
@@ -162,13 +162,13 @@ pub trait Backend: Send + 'static {
     /// A request on a library connection to `file`, opened with a link of `access` (checked by
     /// [`admit`](Self::admit)).
     fn library(&mut self, _ip: IpAddr, _file: &str, _access: Access, _req: LibraryReq) -> LibraryReply {
-        LibraryReply::Failed { reason: "this session is hosted by an app: team libraries live on a figcraft-server".into() }
+        LibraryReply::Failed { reason: "this session is hosted by an app: team libraries live on a endrika-server".into() }
     }
 
     /// A request on a plugin directory connection; `publisher`: it was opened with the right key
     /// (checked by [`manage`](Self::manage)).
     fn plugins(&mut self, _ip: IpAddr, _publisher: bool, _req: PluginReq) -> PluginReply {
-        PluginReply::Failed { reason: "this session is hosted by an app: plugin directories live on a figcraft-server".into() }
+        PluginReply::Failed { reason: "this session is hosted by an app: plugin directories live on a endrika-server".into() }
     }
 
     /// A new connection from `ip` ([`ip_key`]): whether it may go on (why not is shown to the

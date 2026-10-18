@@ -13,7 +13,7 @@ use egui::{Color32, vec2};
 use serde_json::{Value, json};
 
 use crate::theme::Tokens;
-use crate::{Dialog, EffectcraftApp};
+use crate::{Dialog, TselatraApp};
 
 /// Commands that replace or close the open project (Quit is asked when the window closes).
 const CLOSING: &[&str] = &["file.newProject", "file.open", "file.openRecent", "file.closeProject", "file.revert", "file.openDemoProject", "templates.create"];
@@ -30,14 +30,14 @@ pub struct Pending {
 
 /// Whether `id` needs the prompt first. When it does, the prompt opens holding the command and
 /// the caller must not run it (it runs once the user answers).
-pub fn guard(app: &mut EffectcraftApp, id: &str, params: &Value) -> bool {
+pub fn guard(app: &mut TselatraApp, id: &str, params: &Value) -> bool {
     if !CLOSING.contains(&id) || std::mem::take(&mut app.dialog_state.unsaved.answered) {
         return false;
     }
     ask(app, id, params)
 }
 
-fn ask(app: &mut EffectcraftApp, id: &str, params: &Value) -> bool {
+fn ask(app: &mut TselatraApp, id: &str, params: &Value) -> bool {
     if !app.session.is_dirty() {
         return false;
     }
@@ -47,7 +47,7 @@ fn ask(app: &mut EffectcraftApp, id: &str, params: &Value) -> bool {
 }
 
 /// The window's close button (and Quit, which closes it): keep the window open and ask.
-pub fn on_close_requested(app: &mut EffectcraftApp, ctx: &egui::Context) {
+pub fn on_close_requested(app: &mut TselatraApp, ctx: &egui::Context) {
     if !ctx.input(|i| i.viewport().close_requested()) || app.dialog_state.unsaved.quitting {
         return;
     }
@@ -59,7 +59,7 @@ pub fn on_close_requested(app: &mut EffectcraftApp, ctx: &egui::Context) {
 }
 
 /// The project's display name: its file name, or `Untitled Project.ecproj`.
-pub fn project_name(app: &EffectcraftApp) -> String {
+pub fn project_name(app: &TselatraApp) -> String {
     app.session
         .path
         .as_deref()
@@ -69,13 +69,13 @@ pub fn project_name(app: &EffectcraftApp) -> String {
 }
 
 /// The window title: the project's path (or name) and `*` while it has unsaved changes.
-pub fn window_title(app: &EffectcraftApp) -> String {
+pub fn window_title(app: &TselatraApp) -> String {
     let doc = app.session.path.clone().unwrap_or_else(|| project_name(app));
-    format!("EffectCraft - {doc}{}", if app.session.is_dirty() { " *" } else { "" })
+    format!("Tselatra - {doc}{}", if app.session.is_dirty() { " *" } else { "" })
 }
 
 /// Whether the prompt is Revert Project (Revert / Cancel) instead of Unsaved Changes.
-pub(crate) fn is_revert(app: &EffectcraftApp) -> bool {
+pub(crate) fn is_revert(app: &TselatraApp) -> bool {
     app.dialog_state.unsaved.command.as_ref().is_some_and(|(id, _)| id == "file.revert")
 }
 
@@ -85,7 +85,7 @@ enum Answer {
     Cancel,
 }
 
-pub fn show(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
+pub fn show(app: &mut TselatraApp, ctx: &egui::Context, t: &Tokens) {
     if app.dialog_state.unsaved.command.is_none() {
         app.dialog = None;
         return;
@@ -147,7 +147,7 @@ pub fn show(app: &mut EffectcraftApp, ctx: &egui::Context, t: &Tokens) {
     }
 }
 
-fn answer_with(app: &mut EffectcraftApp, ctx: &egui::Context, a: Answer) {
+fn answer_with(app: &mut TselatraApp, ctx: &egui::Context, a: Answer) {
     app.dialog = None;
     let Some((id, params)) = app.dialog_state.unsaved.command.take() else { return };
     match a {
@@ -184,16 +184,16 @@ fn answer_with(app: &mut EffectcraftApp, ctx: &egui::Context, a: Answer) {
 mod tests {
     use super::*;
 
-    fn app() -> (EffectcraftApp, egui::Context) {
+    fn app() -> (TselatraApp, egui::Context) {
         let ctx = egui::Context::default();
-        let app = EffectcraftApp::new(effectcraft_engine::Session::default());
+        let app = TselatraApp::new(tselatra_engine::Session::default());
         crate::theme::install(&ctx, &app.tokens, crate::i18n::language(&app));
         (app, ctx)
     }
 
     /// One frame of the dialogs, with `close` = the window's close button pressed; returns
     /// whether the frame asked the window to stay open.
-    fn frame(app: &mut EffectcraftApp, ctx: &egui::Context, close: bool) -> bool {
+    fn frame(app: &mut TselatraApp, ctx: &egui::Context, close: bool) -> bool {
         let mut raw = egui::RawInput::default();
         if close {
             raw.viewports.entry(egui::ViewportId::ROOT).or_default().events.push(egui::ViewportEvent::Close);
@@ -207,7 +207,7 @@ mod tests {
         out.viewport_output.get(&egui::ViewportId::ROOT).is_some_and(|v| v.commands.contains(&egui::ViewportCommand::CancelClose))
     }
 
-    fn modified(app: &mut EffectcraftApp) {
+    fn modified(app: &mut TselatraApp) {
         app.session.execute("comp.new", json!({"name": "Main", "width": 64, "height": 64})).unwrap();
         assert!(app.session.is_dirty());
     }
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn cmd_backspace_is_dont_save_but_not_revert() {
-        let press = |app: &mut EffectcraftApp, ctx: &egui::Context| crate::panels::dialogs::press_key(app, ctx, egui::Key::Backspace, egui::Modifiers::COMMAND);
+        let press = |app: &mut TselatraApp, ctx: &egui::Context| crate::panels::dialogs::press_key(app, ctx, egui::Key::Backspace, egui::Modifiers::COMMAND);
         let (mut app, ctx) = app();
         modified(&mut app);
         crate::menus::invoke(&mut app, &ctx, "file.newProject", json!({})).unwrap();
@@ -268,7 +268,7 @@ mod tests {
 
     #[test]
     fn enter_is_save_and_cmd_r_is_revert() {
-        let press = |app: &mut EffectcraftApp, ctx: &egui::Context| crate::panels::dialogs::press_key(app, ctx, egui::Key::Enter, egui::Modifiers::NONE);
+        let press = |app: &mut TselatraApp, ctx: &egui::Context| crate::panels::dialogs::press_key(app, ctx, egui::Key::Enter, egui::Modifiers::NONE);
         let (mut app, ctx) = app();
         let dir = std::env::temp_dir().join(format!("ec-unsaved-enter-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();

@@ -4,9 +4,9 @@
 //! selection's bounding box.
 
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, menus};
+use crate::{TsipikaApp, menus};
 
 /// These are the status bar's angles and their labels, in the status bar's order.
 const ANGLES: [(&str, f64); 12] = [
@@ -24,14 +24,14 @@ const ANGLES: [(&str, f64); 12] = [
     ("-90°", -90.0),
 ];
 
-fn with_document() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+fn with_document() -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app
 }
 
 /// Returns the labels of the View › Rotate View items that are checked.
-fn checked(app: &VectorcraftApp) -> Vec<&'static str> {
+fn checked(app: &TsipikaApp) -> Vec<&'static str> {
     ANGLES.iter().filter(|(_, a)| menus::checked(app, "view.rotate", &json!({ "angle": a })) == Some(true)).map(|(l, _)| *l).collect()
 }
 
@@ -51,7 +51,7 @@ fn view_rotate_turns_the_view_to_any_angle() {
         assert_eq!(app.run("view.rotate", p.clone()).unwrap_err(), "`angle` must be a number", "{p}");
     }
     assert_eq!(app.view().unwrap().rotation, 12.5, "an error leaves the view as it was");
-    let mut empty = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut empty = TsipikaApp::new(Session::new(), crate::Services::default());
     assert_eq!(empty.run("view.rotate", json!({"angle": 30})).unwrap_err(), "no document");
 }
 
@@ -102,7 +102,7 @@ fn rotate_view_without_an_angle_asks_for_one() {
     assert!(app.ui.dialog.is_none());
     assert_eq!(app.view().unwrap().rotation, -45.0);
     // Without a document no dialog opens, and the status bar shows "no document".
-    let mut empty = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut empty = TsipikaApp::new(Session::new(), crate::Services::default());
     menus::invoke(&mut empty, "view.rotate", json!({}));
     assert!(empty.ui.dialog.is_none());
     assert_eq!(empty.ui.status, "no document");
@@ -110,26 +110,26 @@ fn rotate_view_without_an_angle_asks_for_one() {
 
 #[test]
 fn rotate_view_needs_a_document() {
-    let empty = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let empty = TsipikaApp::new(Session::new(), crate::Services::default());
     assert!(!menus::enabled(&empty, "view.rotate"));
     assert_eq!(menus::checked(&empty, "view.rotate", &json!({"angle": 0})), Some(false), "a check item without a document");
     assert!(menus::enabled(&with_document(), "view.rotate"));
 }
 
 /// Selects the object `id` alone and turns it by `angle` degrees.
-fn turn(app: &mut VectorcraftApp, id: &Value, angle: f64) {
+fn turn(app: &mut TsipikaApp, id: &Value, angle: f64) {
     app.run("select.set", json!({ "ids": [id] })).unwrap();
     app.run("object.rotate", json!({ "angle": angle })).unwrap();
 }
 
 /// Draws a 120 × 60 pt rectangle at `x` and returns its id.
-fn rectangle(app: &mut VectorcraftApp, x: f64) -> Value {
+fn rectangle(app: &mut TsipikaApp, x: f64) -> Value {
     app.run("shape.rectangle", json!({"x": x, "y": 80, "width": 120, "height": 60})).unwrap()["id"].clone()
 }
 
 /// Says whether the sides of the selection's bounding box run across and down the window, as the
 /// canvas draws the box in the active view.
-fn square_on_screen(app: &VectorcraftApp) -> bool {
+fn square_on_screen(app: &TsipikaApp) -> bool {
     let st = app.session.active().unwrap();
     let corners = st.doc.oriented_bounds(&st.selection.objects, false).unwrap().corners();
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -141,7 +141,7 @@ fn square_on_screen(app: &VectorcraftApp) -> bool {
 
 /// Runs Rotate View to Selection and returns the angle it reports, after checking that the view is
 /// turned to that angle and that it is the selection's angle `document.inspect` reports.
-fn rotate_to_selection(app: &mut VectorcraftApp) -> f64 {
+fn rotate_to_selection(app: &mut TsipikaApp) -> f64 {
     let shared = app.run("document.inspect", json!({})).unwrap()["selectionRotation"].as_f64().unwrap();
     let angle = app.run("view.rotateToSelection", json!({})).unwrap()["angle"].as_f64().unwrap();
     assert_eq!((angle, app.view().unwrap().rotation), (shared, shared));
@@ -189,7 +189,7 @@ fn rotate_view_to_selection_needs_a_selected_object() {
     assert_eq!(app.run("view.rotateToSelection", json!({})).unwrap_err(), "nothing selected");
     assert_eq!(app.view().unwrap().rotation, 15.0, "an error leaves the view as it was");
 
-    let mut empty = VectorcraftApp::new(Session::new(), crate::Services::default());
+    let mut empty = TsipikaApp::new(Session::new(), crate::Services::default());
     assert!(!menus::enabled(&empty, "view.rotateToSelection"));
     assert_eq!(empty.run("view.rotateToSelection", json!({})).unwrap_err(), "no document");
     // The command palette lists it.
@@ -211,7 +211,7 @@ fn only_the_submenu_name_needs_translating() {
 /// The window, with a 400 × 300 document whose view is turned to 30°, and the Selection tool. Each
 /// frame comes the given number of seconds, zero or more, after the one before it.
 struct Window {
-    app: VectorcraftApp,
+    app: TsipikaApp,
     ctx: egui::Context,
     time: f64,
 }

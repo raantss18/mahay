@@ -4,7 +4,7 @@
 //! and in the SVG and PDF output.
 
 use serde_json::{Value, json};
-use vectorcraft_render::Rendered;
+use tsipika_render::Rendered;
 
 use super::tests_clip::{hit, id_of, render, select, session};
 use super::*;
@@ -46,7 +46,7 @@ fn arrange(s: &mut Session, p: Value) -> Value {
     s.execute("object.intertwine.arrange", &p).unwrap()
 }
 
-fn area(s: &Session, id: NodeId) -> Option<vectorcraft_geom::PathData> {
+fn area(s: &Session, id: NodeId) -> Option<tsipika_geom::PathData> {
     s.doc().unwrap().doc.node(id).unwrap().extras().intertwine.as_deref().cloned()
 }
 
@@ -228,7 +228,7 @@ fn the_woven_rings_survive_save_and_export() {
     let mut s = session();
     intertwined(&mut s);
     arrange(&mut s, json!({"at": [50, 30]}));
-    for format in ["vectorcraft", "svg", "pdf"] {
+    for format in ["tsipika", "svg", "pdf"] {
         let data = s.execute("document.export", &json!({"format": format})).unwrap()["dataBase64"].clone();
         let mut o = Session::new();
         o.execute("document.open", &json!({"name": format!("rings.{format}"), "dataBase64": data})).unwrap();
@@ -267,7 +267,7 @@ fn what_cannot_be_intertwined_is_refused_with_a_reason() {
 // ---------- on the canvas ----------
 
 fn press(s: &mut Session, pts: &[(f64, f64)], shift: bool) -> Vec<UiRequest> {
-    use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+    use tsipika_tools::{Mods, PointerEvent, PointerKind};
     let view = ViewInfo::default();
     let ev = |kind, (x, y): (f64, f64)| {
         let mut e = PointerEvent::new(kind, x, y);
@@ -291,7 +291,7 @@ fn make_chooses_the_intertwine_tool_and_a_click_on_an_overlap_arranges_it() {
     intertwined(&mut s);
     assert_eq!(s.tool_id(), "intertwine");
     // Hovering the overlap highlights it.
-    s.pointer(&vectorcraft_tools::PointerEvent::new(vectorcraft_tools::PointerKind::Move, 50.0, 30.0), view).unwrap();
+    s.pointer(&tsipika_tools::PointerEvent::new(tsipika_tools::PointerKind::Move, 50.0, 30.0), view).unwrap();
     assert_eq!(s.overlays(view).len(), 1);
     press(&mut s, &[(50.0, 30.0)], false);
     let r = render(&s);
@@ -300,7 +300,7 @@ fn make_chooses_the_intertwine_tool_and_a_click_on_an_overlap_arranges_it() {
     press(&mut s, &[(5.0, 5.0)], false);
     assert!(red(&render(&s), 50, 30));
     // Esc goes back to the tool chosen before Make.
-    let back = s.tool_key(vectorcraft_tools::ToolKey::Escape, Default::default(), view).unwrap();
+    let back = s.tool_key(tsipika_tools::ToolKey::Escape, Default::default(), view).unwrap();
     assert_eq!(back, [UiRequest::SwitchTool("ellipse".into())]);
 }
 

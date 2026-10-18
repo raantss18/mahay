@@ -26,11 +26,11 @@
 //! Source & Paint"), only earlier paint ("Paint Only"), or only the previous stroke ("Last
 //! Stroke Only").
 
-use effectcraft_color::{BlendMode, blend_pixel, luminance};
-use effectcraft_keyframe::{ShapePath, Value};
-use effectcraft_project::build::Ids;
-use effectcraft_project::{GroupKind, Node, ParamUi, PropGroup, Property};
-use effectcraft_raster::{Image, Px};
+use tselatra_color::{BlendMode, blend_pixel, luminance};
+use tselatra_keyframe::{ShapePath, Value};
+use tselatra_project::build::Ids;
+use tselatra_project::{GroupKind, Node, ParamUi, PropGroup, Property};
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
 use crate::{Buf, EffectCtx, EffectSpec, Params, p, popup, slider};
@@ -118,7 +118,7 @@ pub struct BrushTip {
     pub spacing: f64,
 }
 
-/// The Brushes panel's preset tips: original EffectCraft data (a size ladder of hard and soft
+/// The Brushes panel's preset tips: original Tselatra data (a size ladder of hard and soft
 /// round tips plus a few flat calligraphic tips).
 pub const BRUSH_PRESETS: &[BrushTip] = &[
     BrushTip { name: "Hard Round 1 px", diameter: 1.0, angle: 0.0, roundness: 100.0, hardness: 100.0, spacing: 25.0 },

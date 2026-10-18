@@ -3,9 +3,9 @@
 //! item in order, with the stroke's opacity and blend mode moved to the new fill.
 
 use serde_json::{Value, json};
-use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{AppearanceItem, Node, NodeKind};
-use vectorcraft_geom::{FillRule, PathData, Rect};
+use tsipika_color::BlendMode;
+use tsipika_doc::{AppearanceItem, Node, NodeKind};
+use tsipika_geom::{FillRule, PathData, Rect};
 
 use super::*;
 
@@ -38,7 +38,7 @@ pub(super) fn path_of(n: &Node) -> PathData {
 }
 
 fn area(n: &Node) -> f64 {
-    vectorcraft_pathops::area(&path_of(n), FillRule::NonZero)
+    tsipika_pathops::area(&path_of(n), FillRule::NonZero)
 }
 
 fn near(a: f64, b: f64, tol: f64) -> bool {
@@ -135,7 +135,7 @@ fn the_live_effect_outlines_the_stroke_it_sits_on() {
     let doc = &s.doc().unwrap().doc;
     let n = doc.node(id).unwrap();
     assert!(matches!(&n.appearance.items[1], AppearanceItem::Stroke(st) if st.width == 20.0 && st.effects.len() == 1), "{:?}", n.appearance.items);
-    let baked = vectorcraft_render::effects::bake_document(doc).unwrap();
+    let baked = tsipika_render::effects::bake_document(doc).unwrap();
     let parts = baked.node(id).unwrap().children().unwrap().to_vec();
     assert!(near(parts[1].geometric_bounds().unwrap().height(), 20.0, 0.01), "{:?}", parts[1].geometric_bounds());
     assert!(near(parts[2].geometric_bounds().unwrap().height(), 0.0, 1e-9), "the top stroke keeps the line");
@@ -143,8 +143,8 @@ fn the_live_effect_outlines_the_stroke_it_sits_on() {
     s.execute("effect.apply", &json!({"effect": "path.outlineStroke", "item": null})).unwrap();
     let doc = &s.doc().unwrap().doc;
     let n = doc.node(id).unwrap();
-    let ctx = vectorcraft_render::effects::GeomContext::of(n);
-    let g = vectorcraft_render::effects::apply_geometry_with(&n.appearance.effects, n.path_data().unwrap(), Rect::new(0.0, 50.0, 100.0, 50.0), &ctx);
+    let ctx = tsipika_render::effects::GeomContext::of(n);
+    let g = tsipika_render::effects::apply_geometry_with(&n.appearance.effects, n.path_data().unwrap(), Rect::new(0.0, 50.0, 100.0, 50.0), &ctx);
     assert!(close(g.bounds().unwrap(), Rect::new(0.0, 49.0, 100.0, 51.0), 0.01), "{:?}", g.bounds());
 }
 
@@ -160,7 +160,7 @@ fn brushed_strokes_outline_to_their_brush_art() {
     n.walk(&mut |m| fills += m.appearance.items.iter().filter(|i| i.is_fill()).count());
     assert!(fills > 0 && n.appearance.stroke().is_none(), "brush art: {n:?}");
     assert!(near(n.opacity as f64, 0.5, 1e-6), "the stroke opacity stays on the art");
-    assert!(!doc.layers[0].children().unwrap().iter().any(|c| vectorcraft_brush::has_brush(c)));
+    assert!(!doc.layers[0].children().unwrap().iter().any(|c| tsipika_brush::has_brush(c)));
 }
 
 #[test]

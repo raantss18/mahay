@@ -15,10 +15,10 @@
 //!
 //! - GPU frames: a worker with its own WebGPU device ([`FrameServer::accel`]) renders through
 //!   the GPU compositor and GPU effects. Its readbacks can't be waited for, so a frame renders
-//!   in passes ([`effectcraft_render::Accelerator::frame_begin`]): [`FrameServer::handle`]
+//!   in passes ([`tselatra_render::Accelerator::frame_begin`]): [`FrameServer::handle`]
 //!   runs the first, and while [`FrameServer::waiting`] the transport awaits the device and
 //!   calls [`FrameServer::resume`] for the next. Backend Auto picks CPU or GPU per comp from
-//!   the frames' total times ([`effectcraft_render::AutoPick`]).
+//!   the frames' total times ([`tselatra_render::AutoPick`]).
 //! - Disk cache: a render request may carry the frame's disk-cache key ([`FrameMsg::Render`]
 //!   `disk`); the transport stores the finished frame under it (the browser: in the Origin
 //!   Private File System) and reports [`FrameReply::Stored`].
@@ -36,9 +36,9 @@
 
 use std::sync::Arc;
 
-use effectcraft_project::{ItemId, Project};
-use effectcraft_render::{Accelerator, AutoKey, Backend, ExprHost, FootageSource, Image, LayerCache, LayerStore, PrefetchStore, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_project::{ItemId, Project};
+use tselatra_render::{Accelerator, AutoKey, Backend, ExprHost, FootageSource, Image, LayerCache, LayerStore, PrefetchStore, RenderOpts, Renderer};
+use tselatra_time::Tick;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -338,7 +338,7 @@ impl FrameServer {
 
     fn load(&mut self, revision: u64) -> Result<(), String> {
         let p = Project::from_json(&self.doc.to_string()).map_err(|e| e.to_string())?;
-        self.salt = effectcraft_render::disk_cache::footage_salt(&p);
+        self.salt = tselatra_render::disk_cache::footage_salt(&p);
         self.cache.set_store_salt(self.salt);
         self.project = Some(Arc::new(p));
         self.revision = Some(revision);
@@ -510,7 +510,7 @@ mod tests {
     /// worker's mid-render lookups find them and the pixels match.
     #[test]
     fn layer_buffers_go_through_the_disk_store() {
-        use effectcraft_render::disk_cache::{DiskIndex, Kind, LayerPrefetch};
+        use tselatra_render::disk_cache::{DiskIndex, Kind, LayerPrefetch};
         let mut s = Session::default();
         s.execute("file.openDemoProject", json!({})).unwrap();
         let comp = s.active_comp_id().unwrap();
@@ -658,7 +658,7 @@ mod tests {
         asked: std::sync::Mutex<std::collections::HashSet<u64>>,
         gate: Arc<std::sync::atomic::AtomicBool>,
         chains: std::sync::atomic::AtomicUsize,
-        auto: effectcraft_render::AutoPick,
+        auto: tselatra_render::AutoPick,
     }
 
     impl Deferred {
@@ -676,9 +676,9 @@ mod tests {
             None
         }
         fn supports_effect(&self, id: &str) -> bool {
-            effectcraft_effects::GPU_EFFECTS.contains(&id)
+            tselatra_effects::GPU_EFFECTS.contains(&id)
         }
-        fn effects(&self, chain: &[effectcraft_render::FxStep], buf: &effectcraft_effects::Buf, levels: Option<f32>) -> Option<effectcraft_effects::Buf> {
+        fn effects(&self, chain: &[tselatra_render::FxStep], buf: &tselatra_effects::Buf, levels: Option<f32>) -> Option<tselatra_effects::Buf> {
             use std::hash::{Hash, Hasher};
             let mut h = std::collections::hash_map::DefaultHasher::new();
             for s in chain {
@@ -700,14 +700,14 @@ mod tests {
             self.chains.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             let mut b = buf.clone();
             for s in chain {
-                b = effectcraft_effects::apply(s.spec, &s.ctx, b);
+                b = tselatra_effects::apply(s.spec, &s.ctx, b);
                 if let Some(l) = levels {
-                    effectcraft_render::color::quantize(&mut b.img, l);
+                    tselatra_render::color::quantize(&mut b.img, l);
                 }
             }
             Some(b)
         }
-        fn auto_pick(&self) -> Option<&effectcraft_render::AutoPick> {
+        fn auto_pick(&self) -> Option<&tselatra_render::AutoPick> {
             Some(&self.auto)
         }
         fn frame_begin(&self) {
@@ -787,7 +787,7 @@ mod tests {
             }
             assert_eq!(out[0].1.as_deref(), Some(&px[..]), "frame {id}");
         }
-        let st = acc.auto.stats(effectcraft_render::AutoKey::new(comp, opts.scale, false)).unwrap();
+        let st = acc.auto.stats(tselatra_render::AutoKey::new(comp, opts.scale, false)).unwrap();
         assert!(st.cpu_frames > 0 && st.gpu_frames > 0, "{st:?}");
     }
 }

@@ -9,11 +9,11 @@
 //! frame and a span of 20 frames each side. Strokes on a frozen effect are refused (Unfreeze
 //! first). Every edit is one undo step.
 
-use effectcraft_effects::roto::{self as fx, FROZEN, Stroke, StrokeKind};
-use effectcraft_keyframe::Value as KV;
-use effectcraft_project::build::Ids;
-use effectcraft_project::{ItemId, Layer, LayerId, PropGroup, Uid};
-use effectcraft_track::roto::{RotoData, iou, rle};
+use tselatra_effects::roto::{self as fx, FROZEN, Stroke, StrokeKind};
+use tselatra_keyframe::Value as KV;
+use tselatra_project::build::Ids;
+use tselatra_project::{ItemId, Layer, LayerId, PropGroup, Uid};
+use tselatra_track::roto::{RotoData, iou, rle};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, always, b_p, bad, f_p, has_comp, layer_mut, layer_p, str_p};
@@ -239,10 +239,10 @@ fn stroke(s: &mut Session, p: &Value) -> Result<Value> {
         let uid = match existing {
             Some(u) => u,
             None => {
-                let spec = effectcraft_effects::find(fx::ID).ok_or_else(|| EngineError::Other("Roto Brush effect missing".into()))?;
+                let spec = tselatra_effects::find(fx::ID).ok_or_else(|| EngineError::Other("Roto Brush effect missing".into()))?;
                 let n = fxg.groups().filter(|g| is_roto(g)).count();
                 let name = if n == 0 { spec.name.to_string() } else { format!("{} {}", spec.name, n + 1) };
-                let g = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), &name, size);
+                let g = tselatra_effects::instantiate(spec, &mut Ids(&mut next), &name, size);
                 let u = g.uid;
                 fxg.children.push(g.into());
                 u
@@ -480,7 +480,7 @@ fn xy_p(p: &Value, k: &str, n: usize, cmd: &str) -> Result<Option<Vec<f64>>> {
 }
 
 fn object_matte_apply(s: &mut Session, p: &Value) -> Result<Value> {
-    use effectcraft_effects::object_matte as om;
+    use tselatra_effects::object_matte as om;
     let cmd = "objectMatte.apply";
     let (cid, lid) = layer_p(s, p, cmd)?;
     let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
@@ -529,7 +529,7 @@ fn object_matte_apply(s: &mut Session, p: &Value) -> Result<Value> {
         v.map(|v| v.round().clamp(0.0, om::MAX_REACH))
     };
     let (before, after) = (reach("before"), reach("after"));
-    let spec = effectcraft_effects::find(om::ID).ok_or_else(|| EngineError::Other("Object Matte effect missing".into()))?;
+    let spec = tselatra_effects::find(om::ID).ok_or_else(|| EngineError::Other("Object Matte effect missing".into()))?;
     let label = if existing.is_some() { "Object Matte Prompt" } else { "Object Matte" };
     let uid = s.edit(label, None, |proj, _| {
         let mut next = proj.next_id;
@@ -541,7 +541,7 @@ fn object_matte_apply(s: &mut Session, p: &Value) -> Result<Value> {
             None => {
                 let n = fxg.groups().filter(|g| rt::is_object_matte(g)).count();
                 let name = if n == 0 { spec.name.to_string() } else { format!("{} {}", spec.name, n + 1) };
-                fresh.insert(effectcraft_effects::instantiate(spec, &mut Ids(&mut next), &name, size))
+                fresh.insert(tselatra_effects::instantiate(spec, &mut Ids(&mut next), &name, size))
             }
         };
         let mut set = |path: &str, v: KV| {
@@ -586,7 +586,7 @@ fn object_matte_apply(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Track Object and Frames Before / After of an Object Matte instance (static values).
 fn object_matte_reach(s: &Session, cid: ItemId, lid: LayerId, uid: Uid) -> (bool, i64, i64) {
-    use effectcraft_effects::object_matte as om;
+    use tselatra_effects::object_matte as om;
     let Ok((_, g)) = group(s, cid, lid, uid) else { return (true, 0, 0) };
     let ps = params_static(g);
     let [before, after] = om::reach(&ps);

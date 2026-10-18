@@ -3,10 +3,10 @@
 //! both read back looking like the canvas (within 2% at 150 ppi), with nothing to report.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, Document, Node};
-use vectorcraft_geom::Rect;
-use vectorcraft_render::{Rendered, Renderer};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{AppearanceItem, Document, Node};
+use tsipika_geom::Rect;
+use tsipika_render::{Rendered, Renderer};
 
 use super::*;
 
@@ -49,7 +49,7 @@ fn assert_faithful(what: &str, s: &Session, image: bool, rough: &Document) {
     assert!(r.warnings.is_empty(), "{what}: {:?}", r.warnings);
     assert_eq!(String::from_utf8_lossy(&r.bytes).contains("/Subtype/Image"), image, "{what}: image XObject");
     let canvas = render(d);
-    let diff = mean_diff(&canvas, &render(&vectorcraft_pdf::import(&r.bytes).unwrap()));
+    let diff = mean_diff(&canvas, &render(&tsipika_pdf::import(&r.bytes).unwrap()));
     let before = mean_diff(&canvas, &render(rough));
     assert!(diff < 0.02 && diff < before / 4.0, "{what}: read back {:.2}% off (the old way {:.2}%)", diff * 100.0, before * 100.0);
 }

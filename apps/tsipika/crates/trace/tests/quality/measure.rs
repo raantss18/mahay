@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 
 use kurbo::{BezPath, ParamCurveArclen, Point, Shape, Stroke, StrokeOpts};
-use vectorcraft_geom::SubPath;
-use vectorcraft_trace::{Method, Mode, Raster, TraceParams, TraceResult, TracedGradient, TracedPath};
+use tsipika_geom::SubPath;
+use tsipika_trace::{Method, Mode, Raster, TraceParams, TraceResult, TracedGradient, TracedPath};
 
 use crate::inputs::{Class, Input, Variant};
 use crate::raster::{coverage_into, polylines, render_painted};

@@ -4,8 +4,8 @@
 use super::*;
 use crate::print::{MARK_GAP, MARK_LENGTH, cmyk_of};
 use crate::tests::{inflated, sample_doc};
-use figcraft_color::{Color, ColorStop, Gradient, GradientKind, Paint};
-use figcraft_doc::{Effect, EffectKind, NodeKind};
+use endrika_color::{Color, ColorStop, Gradient, GradientKind, Paint};
+use endrika_doc::{Effect, EffectKind, NodeKind};
 
 fn text(pdf: &[u8]) -> String {
     String::from_utf8_lossy(pdf).into_owned()
@@ -190,7 +190,7 @@ fn soft_masks_stay_rgb_while_what_they_mask_prints_in_cmyk() {
     {
         let n = d.get_mut(m).unwrap();
         n.is_mask = true;
-        n.mask_type = figcraft_doc::MaskType::Luminance;
+        n.mask_type = endrika_doc::MaskType::Luminance;
         n.fills = vec![Paint::solid(Color::from_hex("808080").unwrap())];
     }
     let c = d.create(g, NodeKind::Rectangle, "Content", 0.0, 0.0, 100.0, 100.0).unwrap();

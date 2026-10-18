@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure LightCraft's raw camera coverage against Adobe's supported-camera list.
+"""Measure Hazavana's raw camera coverage against Adobe's supported-camera list.
 
     python3 docs/raw/coverage.py            # print the summary, rewrite docs/raw/coverage.tsv
     python3 docs/raw/coverage.py --check    # exit 1 if coverage.tsv is stale

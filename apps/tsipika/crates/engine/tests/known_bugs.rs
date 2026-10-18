@@ -4,9 +4,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_testkit::fixtures::{exec, rect, select, session};
-use vectorcraft_testkit::invariants::{check_native_roundtrip_exact, check_session, doc_json, first_diff};
+use tsipika_engine::Session;
+use tsipika_testkit::fixtures::{exec, rect, select, session};
+use tsipika_testkit::invariants::{check_native_roundtrip_exact, check_session, doc_json, first_diff};
 
 #[test]
 fn bug_group_inside_compound() {
@@ -52,7 +52,7 @@ fn bug_bring_to_front_across_layers_underflows() {
     let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
     for cmd in ["object.arrange.bringToFront", "object.arrange.bringForward"] {
         select(&mut s, &[a, b]);
-        let r = vectorcraft_testkit::catch_quiet(|| s.execute(cmd, &json!({})));
+        let r = tsipika_testkit::catch_quiet(|| s.execute(cmd, &json!({})));
         assert!(r.is_ok(), "{cmd} panicked: {:?}", r.err());
         check_session(&s).unwrap();
     }

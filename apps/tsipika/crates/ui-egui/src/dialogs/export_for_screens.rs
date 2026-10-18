@@ -24,14 +24,14 @@
 
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
-use vectorcraft_engine::cmd::fileio::{self, ArtboardPick, SCREEN_PRESETS, ScreenSize, pdf};
+use tsipika_engine::cmd::fileio::{self, ArtboardPick, SCREEN_PRESETS, ScreenSize, pdf};
 
-use vectorcraft_doc::{ExportAsset, NodeId};
+use tsipika_doc::{ExportAsset, NodeId};
 
 use super::{DialogSpec, form, png_options, svg_options};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, io, widgets};
+use crate::{TsipikaApp, io, widgets};
 
 pub(super) const SPEC: DialogSpec = DialogSpec {
     heading: |_| tl!("Export for Screens").into(),
@@ -67,10 +67,10 @@ const FORMATS: [(&str, &str, Option<u8>, bool); 14] = [
     ("PDF Print", "pdf", None, true),
     ("EPS", "eps", None, false),
     ("AI", "ai", None, false),
-    ("VectorCraft", "vectorcraft", None, false),
+    ("Tsipika", "tsipika", None, false),
 ];
 const FORMAT_LABELS: [&str; 14] =
-    ["PNG", "PNG 8", "JPG 100", "JPG 80", "JPG 50", "WebP", "GIF", "TIFF", "SVG", "PDF", "PDF Print", "EPS", "AI", "VectorCraft"];
+    ["PNG", "PNG 8", "JPG 100", "JPG 80", "JPG 50", "WebP", "GIF", "TIFF", "SVG", "PDF", "PDF Print", "EPS", "AI", "Tsipika"];
 
 /// The printer's marks a PDF Print row writes: trim marks, registration targets, colour bars and
 /// page information.
@@ -127,7 +127,7 @@ pub(crate) fn saved_rows(saved: &Map<String, Value>) -> (Vec<Value>, Option<&str
 }
 
 /// Open the dialog on its Assets tab with `checked` assets checked (every asset when `None`).
-pub(crate) fn open_assets(app: &mut VectorcraftApp, checked: Option<&[u64]>) {
+pub(crate) fn open_assets(app: &mut TsipikaApp, checked: Option<&[u64]>) {
     open(app);
     if let Some(d) = app.ui.dialog.as_mut() {
         d.fields.insert("tab".into(), json!("assets"));
@@ -140,7 +140,7 @@ pub(crate) fn open_assets(app: &mut VectorcraftApp, checked: Option<&[u64]>) {
 /// Open the dialog on the settings the active document last exported with (else one PNG row at
 /// 1x, into the Desktop), every asset checked. While the Artboard tool is in use, the artboards it
 /// has selected (the rows the Artboards panel highlights) are the ones chosen instead.
-pub fn open(app: &mut VectorcraftApp) {
+pub fn open(app: &mut TsipikaApp) {
     let (n, saved, assets) = app
         .session
         .active()
@@ -203,7 +203,7 @@ pub fn open(app: &mut VectorcraftApp) {
 /// (without quality and image maps: the rows choose quality, a map is another file), the SVG
 /// Options' first-use ones (without artboards and images: a linked image is another file), or the
 /// default PDF preset.
-fn defaults(app: &VectorcraftApp, id: &str) -> Map<String, Value> {
+fn defaults(app: &TsipikaApp, id: &str) -> Map<String, Value> {
     let mut o = match (id, fileio::format(id)) {
         ("svg", _) => svg_options::first_use(),
         ("pdf", _) => Map::from_iter([("preset".to_string(), json!(pdf::DEFAULT_PRESET))]),
@@ -217,7 +217,7 @@ fn defaults(app: &VectorcraftApp, id: &str) -> Map<String, Value> {
 }
 
 /// The format's defaults with the document's saved choices overlaid.
-pub(crate) fn saved_options(app: &VectorcraftApp, saved: &Map<String, Value>, id: &str) -> Map<String, Value> {
+pub(crate) fn saved_options(app: &TsipikaApp, saved: &Map<String, Value>, id: &str) -> Map<String, Value> {
     let mut options = defaults(app, id);
     // TIFF's new defaults must not mask an existing shared anti-aliasing choice.
     if id == "tiff"
@@ -271,12 +271,12 @@ pub(super) fn range_text(boards: &[bool]) -> String {
 }
 
 /// The export presets: `[{name, builtIn, settings}]` (built-in first).
-pub(super) fn export_presets(app: &mut VectorcraftApp) -> Value {
+pub(super) fn export_presets(app: &mut TsipikaApp) -> Value {
     app.run("document.exportPresets.list", json!({})).ok().and_then(|r| r.get("presets").cloned()).unwrap_or_else(|| json!([]))
 }
 
 /// The art of layer `id` (sublayers unfolded), back to front: what its file holds.
-fn layer_art(doc: &vectorcraft_doc::Document, id: NodeId, out: &mut Vec<NodeId>) {
+fn layer_art(doc: &tsipika_doc::Document, id: NodeId, out: &mut Vec<NodeId>) {
     let Some(n) = doc.node(id) else { return };
     if n.is_layer() {
         for c in n.children().into_iter().flatten() {
@@ -288,14 +288,14 @@ fn layer_art(doc: &vectorcraft_doc::Document, id: NodeId, out: &mut Vec<NodeId>)
 }
 
 /// The checked layers that are still in the document, in stacking order.
-fn checked_layers(app: &VectorcraftApp, d: &Dialog) -> Vec<u64> {
+fn checked_layers(app: &TsipikaApp, d: &Dialog) -> Vec<u64> {
     let on: Vec<u64> = d.fields.get("layers").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_u64).collect()).unwrap_or_default();
     app.session.active().map(|st| st.doc.layers.iter().map(|l| l.id.0).filter(|id| on.contains(id)).collect()).unwrap_or_default()
 }
 
 /// The `document.exportForScreens` params the dialog describes (the web: no folder, one ZIP for
 /// several files).
-fn params(app: &VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn params(app: &TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let (mut p, files) = settings_params(app, d)?;
     if io::is_web(app) {
         p.insert("zip".into(), json!(files > 1));
@@ -317,7 +317,7 @@ fn counter_start(d: &Dialog) -> u64 {
 
 /// The params of [`params`] without the destination (what is exported, at which sizes, and how the
 /// files are named and sorted), and how many files that is.
-fn settings_params(app: &VectorcraftApp, d: &Dialog) -> Result<(Map<String, Value>, usize), String> {
+fn settings_params(app: &TsipikaApp, d: &Dialog) -> Result<(Map<String, Value>, usize), String> {
     let n = app.session.active().map_or(0, |st| st.doc.artboards.len());
     let rows = d.fields.get("formats").and_then(Value::as_array).cloned().unwrap_or_default();
     if rows.is_empty() {
@@ -392,7 +392,7 @@ fn settings_params(app: &VectorcraftApp, d: &Dialog) -> Result<(Map<String, Valu
 }
 
 /// Export; the dialog stays open when the export fails.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let p = params(app, d)?;
     let r = io::export_for_screens(app, p);
     if r.is_ok() {
@@ -401,7 +401,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     r
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let tab = TABS.iter().position(|k| *k == d.str("tab")).unwrap_or(0);
     if let Some(i) = widgets::tab_bar(ui, &[tl!("Artboards"), tl!("Assets"), tl!("Layers"), tl!("Selection")], tab) {
@@ -444,7 +444,7 @@ fn set_select(d: &mut Dialog, select: &str) {
 }
 
 /// Select (All, Range, Full Document), Include Bleed, and the artboards' thumbnails and checkboxes.
-fn artboards(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn artboards(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let n = app.session.active().map_or(0, |st| st.doc.artboards.len());
     let mut boards: Vec<bool> =
         d.fields.get("boards").and_then(Value::as_array).map(|a| a.iter().map(|b| b.as_bool().unwrap_or(false)).collect()).unwrap_or_default();
@@ -521,13 +521,13 @@ fn artboards(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 }
 
 /// The checked assets that are still in the document, in panel order.
-fn checked_assets(app: &VectorcraftApp, d: &Dialog) -> Vec<u64> {
+fn checked_assets(app: &TsipikaApp, d: &Dialog) -> Vec<u64> {
     let on: Vec<u64> = d.fields.get("assets").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_u64).collect()).unwrap_or_default();
     app.session.active().map(|st| st.doc.assets.iter().map(|a| a.id).filter(|id| on.contains(id)).collect()).unwrap_or_default()
 }
 
 /// The Assets tab: each asset's thumbnail and checkbox, Select All and Clear.
-fn assets(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn assets(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let Some(st) = app.session.active() else { return };
     if st.doc.assets.is_empty() {
         ui.add_space(24.0);
@@ -566,7 +566,7 @@ fn assets(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 
 /// Export to: the folder (typed or picked), Open Location after Export and Create Sub-folders; the
 /// web downloads instead.
-fn destination(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn destination(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     widgets::dim_label(ui, tl!("Export to:"));
     if io::is_web(app) {
         widgets::dim_label(ui, tl!("Your browser downloads the files (several as one .zip)."));
@@ -593,7 +593,7 @@ fn destination(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 
 /// Export Preset: apply a built-in or saved preset (its formats, settings, naming and folders),
 /// save the dialog's settings as one (Save…, then a name), or delete a saved one.
-fn presets(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn presets(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let list: Vec<Value> = d.fields.get("__exportPresets").and_then(Value::as_array).cloned().unwrap_or_default();
     let names: Vec<&str> = list.iter().filter_map(|p| p["name"].as_str()).collect();
     let current = d.str("exportPreset");
@@ -679,7 +679,7 @@ pub(super) fn apply_preset(d: &mut Dialog, preset: &Value) {
 
 /// File Name: the pattern (with Insert for its tokens), the counter's start, the prefix and an
 /// example of the first file's name.
-fn naming(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn naming(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     ui.horizontal(|ui| {
         widgets::dim_label(ui, tl!("File Name:"));
         // A pattern typed by hand is no longer the preset's.
@@ -708,13 +708,13 @@ fn naming(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 /// The first file the export writes, relative to the export folder, as `document.exportForScreens`
 /// names it ([`fileio::screen_first_file`]); empty while the dialog's settings choose nothing to
 /// export (no format, nothing checked or selected, a bad range).
-pub(super) fn example_name(app: &VectorcraftApp, d: &Dialog) -> String {
+pub(super) fn example_name(app: &TsipikaApp, d: &Dialog) -> String {
     settings_params(app, d).ok().and_then(|(p, _)| fileio::screen_first_file(&app.session, &Value::Object(p)).ok()).unwrap_or_default()
 }
 
 /// The Layers tab: each top-level layer's thumbnail and checkbox (a file of its art alone),
 /// Select All and Clear.
-fn layers(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn layers(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let Some(st) = app.session.active() else { return };
     let mut on = checked_layers(app, d);
     let before = on.clone();
@@ -752,7 +752,7 @@ fn layers(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
 
 /// The Selection tab: what is selected (a thumbnail and the count), as one file or a file per
 /// object.
-fn selection(app: &VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn selection(app: &TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) {
     let Some(st) = app.session.active() else { return };
     let ids = st.selection.objects.clone();
     if ids.is_empty() {
@@ -937,7 +937,7 @@ fn format_settings(ui: &mut egui::Ui, d: &mut Dialog, id: &str) {
 }
 
 /// A small cached rendering of artboard `i` (keyed by document revision).
-pub(super) fn artboard_thumb(app: &mut VectorcraftApp, ctx: &egui::Context, i: usize) -> Option<egui::TextureHandle> {
+pub(super) fn artboard_thumb(app: &mut TsipikaApp, ctx: &egui::Context, i: usize) -> Option<egui::TextureHandle> {
     let st = app.session.active()?;
     let key = egui::Id::new(("ab-thumb", i, st.revision));
     if let Some(t) = ctx.data(|d| d.get_temp::<egui::TextureHandle>(key)) {

@@ -1,9 +1,9 @@
 //! Matte effects: chokers (grey-scale morphology and blur/threshold stages) and edge-aware matte
 //! refinement (guided filter, He et al. 2010).
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::gaussian_blur;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::gaussian_blur;
 use rayon::prelude::*;
 
 use crate::util::{Plane, gauss_plane, guided_filter, morph_frac, morph_plane, premul, set_alpha, unpremul};
@@ -94,13 +94,13 @@ fn refine(ctx: &EffectCtx, mut b: Buf, hard: bool) -> Buf {
     let lo = morph_plane(&a, r, r, false);
     let band = |i: usize| hi.data[i] - lo.data[i] > 1e-3;
     // The refined matte of a frame.
-    let refine_alpha = |img: &effectcraft_raster::Image| -> Plane {
+    let refine_alpha = |img: &tselatra_raster::Image| -> Plane {
         let a = Plane::alpha(img);
         let hi = morph_plane(&a, r, r, true);
         let lo = morph_plane(&a, r, r, false);
         let mut na = Plane::new(a.w, a.h);
         if edge_details {
-            let guide = Plane::from_image(img, |px| effectcraft_color::luminance(px[0], px[1], px[2]));
+            let guide = Plane::from_image(img, |px| tselatra_color::luminance(px[0], px[1], px[2]));
             let eps = 1e-4 + smooth * smooth * 0.05;
             let filtered = guided_filter(&guide, &a, r, eps);
             na.data.par_iter_mut().enumerate().for_each(|(i, v)| {
@@ -322,7 +322,7 @@ pub fn specs() -> Vec<EffectSpec> {
 mod tests {
     use super::*;
     use crate::{Params, apply, find};
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
 
     fn square() -> Image {
         let mut img = Image::new(24, 24);

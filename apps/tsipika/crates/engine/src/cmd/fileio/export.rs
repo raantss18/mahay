@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind, SymbolBoxes};
+use tsipika_doc::{Document, Node, NodeId, NodeKind, SymbolBoxes};
 
 use crate::DocState;
 
@@ -16,7 +16,7 @@ use super::{
 };
 
 pub(super) fn serialize(s: &mut Session, p: &Value) -> Result<Value> {
-    let f = writable("document.serialize", Some(str_param(p, "format").unwrap_or("vectorcraft")), None)?;
+    let f = writable("document.serialize", Some(str_param(p, "format").unwrap_or("tsipika")), None)?;
     let expanded = expand_presets(s, "document.serialize", p)?;
     let p = with_black_output(s, &expanded);
     let doc = &*source(s, f, &p, "document.serialize")?;
@@ -26,21 +26,21 @@ pub(super) fn serialize(s: &mut Session, p: &Value) -> Result<Value> {
     // Text formats come back as text; an SVG in UTF-16 or ISO 8859-1 also as its bytes.
     let data = |bytes: &[u8]| match f.id {
         "svg" => {
-            let text = vectorcraft_svg::text_of(bytes).unwrap_or_else(|_| String::from_utf8_lossy(bytes));
+            let text = tsipika_svg::text_of(bytes).unwrap_or_else(|_| String::from_utf8_lossy(bytes));
             let mut v = json!({ "text": text });
             if text.as_bytes() != bytes {
-                v["dataBase64"] = json!(vectorcraft_format::base64_encode(bytes));
+                v["dataBase64"] = json!(tsipika_format::base64_encode(bytes));
             }
             v
         }
-        _ => json!({ "dataBase64": vectorcraft_format::base64_encode(bytes) }),
+        _ => json!({ "dataBase64": tsipika_format::base64_encode(bytes) }),
     };
     let mut out = merge(data(main.first().map_or(&[][..], |m| &m.1)), json!({ "warnings": enc.warnings }));
     if main.len() > 1 {
         out["files"] = main.iter().map(|(name, bytes)| merge(json!({ "name": name }), data(bytes))).collect();
     }
     if !linked.is_empty() {
-        out["linked"] = linked.iter().map(|(name, bytes)| json!({ "name": name, "dataBase64": vectorcraft_format::base64_encode(bytes) })).collect();
+        out["linked"] = linked.iter().map(|(name, bytes)| json!({ "name": name, "dataBase64": tsipika_format::base64_encode(bytes) })).collect();
     }
     Ok(out)
 }
@@ -94,16 +94,16 @@ fn selected_part(n: &Node, keep: &HashSet<NodeId>) -> Option<Node> {
 
 /// `doc` with only the art over `rect` (an artboard): objects whose visual bounds miss it are left
 /// out, at any depth of layers, sublayers and groups that don't clip, unless what the renderer
-/// draws for them, their effects included ([`vectorcraft_render::effect_bounds`]), reaches it.
+/// draws for them, their effects included ([`tsipika_render::effect_bounds`]), reaches it.
 /// Objects that reach it stay whole (the file's bounds clip them), as DXF's crop leaves them.
 /// Symbol instances are measured by their art, and the box of one whose art holds brushed strokes
 /// grows by as far as their brush art can paint ([`SymbolBoxes::with_brush_art`]). An object that
 /// holds a symbol instance also stays when what the canvas paints for it reaches `rect`
-/// ([`vectorcraft_render::painted_bounds`]: the effects in the symbols' art and its own effects). A
+/// ([`tsipika_render::painted_bounds`]: the effects in the symbols' art and its own effects). A
 /// clipping layer keeps every object, its clipping path among them. An artboard's file then holds
 /// its own art, not a whole document of artboards.
-pub(super) fn art_over(doc: &Document, rect: vectorcraft_geom::Rect) -> Document {
-    fn kept(n: &Arc<Node>, doc: &Document, symbols: &SymbolBoxes, rect: vectorcraft_geom::Rect) -> Option<Arc<Node>> {
+pub(super) fn art_over(doc: &Document, rect: tsipika_geom::Rect) -> Document {
+    fn kept(n: &Arc<Node>, doc: &Document, symbols: &SymbolBoxes, rect: tsipika_geom::Rect) -> Option<Arc<Node>> {
         if matches!(n.kind, NodeKind::Layer { clip: false, .. }) {
             let mut layer = Node::clone(n);
             let children = layer.children_mut()?;
@@ -119,11 +119,11 @@ pub(super) fn art_over(doc: &Document, rect: vectorcraft_geom::Rect) -> Document
             *children = children.iter().filter_map(|c| kept(c, doc, symbols, rect)).collect();
             return (!children.is_empty()).then(|| Arc::new(group));
         }
-        let over = |b: vectorcraft_geom::Rect| b.x0 <= rect.x1 && rect.x0 <= b.x1 && b.y0 <= rect.y1 && rect.y0 <= b.y1;
+        let over = |b: tsipika_geom::Rect| b.x0 <= rect.x1 && rect.x0 <= b.x1 && b.y0 <= rect.y1 && rect.y0 <= b.y1;
         let mut holds_instance = false;
         n.walk(&mut |c| holds_instance |= matches!(c.kind, NodeKind::SymbolInstance { .. }));
-        let drawn = || vectorcraft_render::effect_bounds(symbols, n).is_some_and(over);
-        let painted = || holds_instance && vectorcraft_render::painted_bounds(doc, n).is_some_and(over);
+        let drawn = || tsipika_render::effect_bounds(symbols, n).is_some_and(over);
+        let painted = || holds_instance && tsipika_render::painted_bounds(doc, n).is_some_and(over);
         (n.visual_bounds_with(symbols).is_none_or(over) || drawn() || painted()).then(|| n.clone())
     }
     let symbols = doc.symbol_boxes().with_brush_art();
@@ -165,7 +165,7 @@ fn source<'a>(s: &'a mut Session, f: &Format, p: &Value, cmd: &str) -> Result<Co
 
 /// The selected objects (not on template layers) alone on one layer, with one artboard: their
 /// visual bounds.
-fn selection(s: &mut Session, cmd: &str) -> Result<(Document, vectorcraft_geom::Rect)> {
+fn selection(s: &mut Session, cmd: &str) -> Result<(Document, tsipika_geom::Rect)> {
     let ids = selected_artwork(s)?;
     isolated(&s.doc()?.doc, &ids, "Selection").ok_or_else(|| bad(cmd, "select something to export"))
 }
@@ -182,20 +182,20 @@ pub(crate) fn selected_artwork(s: &Session) -> Result<Vec<NodeId>> {
 }
 
 /// The crop of an export of objects `ids` of `doc` alone: the bounds the renderer measures for what
-/// it draws for them, their effects included ([`vectorcraft_render::effect_bounds`]; symbol
+/// it draws for them, their effects included ([`tsipika_render::effect_bounds`]; symbol
 /// instances are measured by their art), `None` when they have none.
-pub(crate) fn export_crop(doc: &Document, ids: &[NodeId]) -> Option<vectorcraft_geom::Rect> {
+pub(crate) fn export_crop(doc: &Document, ids: &[NodeId]) -> Option<tsipika_geom::Rect> {
     let symbols = doc.symbol_boxes();
-    ids.iter().filter_map(|id| vectorcraft_render::effect_bounds(&symbols, doc.node(*id)?)).reduce(|a, b| a.union(b))
+    ids.iter().filter_map(|id| tsipika_render::effect_bounds(&symbols, doc.node(*id)?)).reduce(|a, b| a.union(b))
 }
 
 /// Objects `ids` of `doc` alone on one layer (in that order, back to front), with one artboard
 /// named `name`: their [`export_crop`] (`None` when they have none).
-pub(crate) fn isolated(doc: &Document, ids: &[NodeId], name: &str) -> Option<(Document, vectorcraft_geom::Rect)> {
+pub(crate) fn isolated(doc: &Document, ids: &[NodeId], name: &str) -> Option<(Document, tsipika_geom::Rect)> {
     let bounds = export_crop(doc, ids)?;
     let nodes: Vec<Arc<Node>> = ids.iter().filter_map(|id| doc.node(*id).cloned().map(Arc::new)).collect();
     let mut d = single_artboard(doc, bounds, name);
-    let mut layer = Node::layer(d.alloc_id(), name, vectorcraft_doc::LayerColor::Preset(0));
+    let mut layer = Node::layer(d.alloc_id(), name, tsipika_doc::LayerColor::Preset(0));
     if let Some(ch) = layer.children_mut() {
         *ch = nodes;
     }

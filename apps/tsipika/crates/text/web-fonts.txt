@@ -1,5 +1,5 @@
-# Craft-fonts faces the web (wasm32) build fetches from beside the wasm instead of embedding.
-# One face per line: when | family | style (family and style as in craft-fonts' fonts/manifest.txt).
+# Mahay-fonts faces the web (wasm32) build fetches from beside the wasm instead of embedding.
+# One face per line: when | family | style (family and style as in mahay-fonts' fonts/manifest.txt).
 #   startup    = fetched before the app starts (fallbacks the first frame needs)
 #   background = fetched after the app starts (fonts users pick by name)
 # Read by build.rs (the WEB_FONTS table) and `cargo xtask web-fonts` (copies the files, a Trunk hook).

@@ -1,6 +1,6 @@
 ---
 title: Export a PDF
-description: Export your DesignCraft document as a PDF for desktop printing, a print shop, screen or archive.
+description: Export your Pejy document as a PDF for desktop printing, a print shop, screen or archive.
 order: 40
 verified: 0.7.1
 ---
@@ -31,7 +31,7 @@ Picking a preset fills in the other settings. Changing any setting by hand switc
 | PDF/X-4             | PDF/X-4  | off             | on         | on          |
 | PDF/A-2b            | PDF/A-2b | off             | off        | off         |
 
-**Screen and Email** also sets the transparency flattener to low resolution, which draws pages with transparency at 72 ppi. DesignCraft remembers your last settings for next time.
+**Screen and Email** also sets the transparency flattener to low resolution, which draws pages with transparency at 72 ppi. Pejy remembers your last settings for next time.
 
 ## Other exports
 

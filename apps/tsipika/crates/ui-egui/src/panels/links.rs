@@ -12,12 +12,12 @@
 
 use egui::{Sense, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
+use tsipika_doc::NodeId;
 
 use super::{pstate, set_pstate};
 use crate::theme::{self, Tokens};
 use crate::widgets::{self, menu_item};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 pub const ID: &str = "links";
 /// Seconds between two looks at the linked files (they change outside the app).
@@ -65,7 +65,7 @@ fn set_options(ctx: &egui::Context, f: impl FnOnce(&mut Options)) {
 
 /// The rows to show (cached per document revision, the files looked at again every [`RECHECK`]
 /// seconds) and the Link Info of the first selected image when the section is open.
-fn cached(app: &mut VectorcraftApp, ctx: &egui::Context, o: &Options) -> Option<Cache> {
+fn cached(app: &mut TsipikaApp, ctx: &egui::Context, o: &Options) -> Option<Cache> {
     let st = app.session.active()?;
     let key = Some((st.uid, st.revision, o.show, o.sort));
     let first = selected_images(app).first().copied();
@@ -87,10 +87,10 @@ fn cached(app: &mut VectorcraftApp, ctx: &egui::Context, o: &Options) -> Option<
 }
 
 /// The ids of the selected image objects and placed documents.
-fn selected_images(app: &VectorcraftApp) -> Vec<u64> {
+fn selected_images(app: &TsipikaApp) -> Vec<u64> {
     let Some(st) = app.session.active() else { return vec![] };
     let image = |id: &NodeId| {
-        st.doc.node(*id).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Image(_) | vectorcraft_doc::NodeKind::PlacedDocument(_)))
+        st.doc.node(*id).is_some_and(|n| matches!(n.kind, tsipika_doc::NodeKind::Image(_) | tsipika_doc::NodeKind::PlacedDocument(_)))
     };
     st.selection.objects.iter().filter(|id| image(id)).map(|id| id.0).collect()
 }
@@ -109,7 +109,7 @@ fn status_is(r: &Value, status: &str) -> bool {
     r["status"].as_str() == Some(status)
 }
 
-fn report(app: &mut VectorcraftApp, r: Result<Value, String>, done: impl FnOnce(&Value) -> String) {
+fn report(app: &mut TsipikaApp, r: Result<Value, String>, done: impl FnOnce(&Value) -> String) {
     let msg = match r {
         Ok(v) => done(&v),
         Err(e) => e,
@@ -118,12 +118,12 @@ fn report(app: &mut VectorcraftApp, r: Result<Value, String>, done: impl FnOnce(
 }
 
 /// Relink images `ids` to a picked file.
-pub(crate) fn relink(app: &mut VectorcraftApp, ids: Vec<u64>) {
+pub(crate) fn relink(app: &mut TsipikaApp, ids: Vec<u64>) {
     crate::picks::button(app, move |app| relink_picked(app, ids.clone()));
 }
 
-fn relink_picked(app: &mut VectorcraftApp, ids: Vec<u64>) {
-    let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
+fn relink_picked(app: &mut TsipikaApp, ids: Vec<u64>) {
+    let pick = crate::FilePick { filters: tsipika_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
     let Some(path) = crate::picks::open(app, &pick) else { return };
     let r = app.run("links.relink", json!({ "ids": ids, "path": path }));
     report(app, r, |v| format!("Relinked {} image(s)", v["relinked"].as_array().map_or(0, Vec::len)));
@@ -132,9 +132,9 @@ fn relink_picked(app: &mut VectorcraftApp, ids: Vec<u64>) {
 /// Replace images `ids` with a picked file (Control bar, Properties): it keeps its own aspect
 /// ratio, fitted inside the old bounds (Placement Options: Fit), whatever their Placement Options
 /// say.
-pub(crate) fn replace(app: &mut VectorcraftApp, ids: Vec<u64>) {
+pub(crate) fn replace(app: &mut TsipikaApp, ids: Vec<u64>) {
     crate::picks::button(app, move |app| {
-        let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
+        let pick = crate::FilePick { filters: tsipika_engine::cmd::fileio::place_filters().collect(), ..Default::default() };
         let Some(path) = crate::picks::open(app, &pick) else { return };
         let r = app.run("links.relink", json!({ "ids": ids.clone(), "path": path, "preserve": "fit" }));
         report(app, r, |v| format!("Replaced {} image(s)", v["relinked"].as_array().map_or(0, Vec::len)));
@@ -142,11 +142,11 @@ pub(crate) fn replace(app: &mut VectorcraftApp, ids: Vec<u64>) {
 }
 
 /// Relink images `ids` (none: every missing one) to the files of their names in a picked folder.
-fn relink_to_folder(app: &mut VectorcraftApp, ids: Vec<u64>) {
+fn relink_to_folder(app: &mut TsipikaApp, ids: Vec<u64>) {
     crate::picks::button(app, move |app| relink_to_picked_folder(app, ids.clone()));
 }
 
-fn relink_to_picked_folder(app: &mut VectorcraftApp, ids: Vec<u64>) {
+fn relink_to_picked_folder(app: &mut TsipikaApp, ids: Vec<u64>) {
     let Some(folder) = crate::picks::folder(app) else { return };
     let ids = Some(ids).filter(|i| !i.is_empty());
     let r = app.run("links.relink", json!({ "ids": ids, "folder": folder }));
@@ -158,20 +158,20 @@ fn relink_to_picked_folder(app: &mut VectorcraftApp, ids: Vec<u64>) {
 }
 
 /// Select image `id` and scroll it into view.
-pub(crate) fn go_to(app: &mut VectorcraftApp, id: u64) {
+pub(crate) fn go_to(app: &mut TsipikaApp, id: u64) {
     let Ok(r) = app.run("links.goTo", json!({ "id": id })) else { return };
     let b: Vec<f64> = r["bounds"].as_array().into_iter().flatten().filter_map(Value::as_f64).collect();
     if let (&[x0, y0, x1, y1], Some(v)) = (&b[..], app.view_mut()) {
-        v.center = vectorcraft_geom::Point::new((x0 + x1) / 2.0, (y0 + y1) / 2.0);
+        v.center = tsipika_geom::Point::new((x0 + x1) / 2.0, (y0 + y1) / 2.0);
         v.fitted = true;
     }
 }
 
 /// Write embedded image `id` to a picked file (the web downloads it) and link it there.
-pub(crate) fn unembed(app: &mut VectorcraftApp, id: u64, name: &str) {
+pub(crate) fn unembed(app: &mut TsipikaApp, id: u64, name: &str) {
     if app.services.download.is_some() {
         if let Ok(v) = app.session.execute("links.unembed", &json!({ "id": id }))
-            && let (Some(name), Some(bytes)) = (v["name"].as_str(), v["dataBase64"].as_str().and_then(vectorcraft_format::base64_decode))
+            && let (Some(name), Some(bytes)) = (v["name"].as_str(), v["dataBase64"].as_str().and_then(tsipika_format::base64_decode))
         {
             // A download that can't start is said like any file that can't be written.
             let _ = crate::io::write_reporting(app, name, &bytes);
@@ -188,7 +188,7 @@ pub(crate) fn unembed(app: &mut VectorcraftApp, id: u64, name: &str) {
 
 /// The UI commands `links.editOriginal` (open the linked file in its app) and `links.reveal`
 /// (show it in its folder) for image `id` (default: the selected linked image) → `{path}`.
-pub(crate) fn open_file(app: &mut VectorcraftApp, p: &Value, reveal: bool) -> Result<Value, String> {
+pub(crate) fn open_file(app: &mut TsipikaApp, p: &Value, reveal: bool) -> Result<Value, String> {
     let id = p.get("id").and_then(Value::as_u64).or_else(|| {
         let list = app.session.execute("links.list", &json!({})).ok()?;
         let sel = selected_images(app);
@@ -219,11 +219,11 @@ pub(crate) fn open_file(app: &mut VectorcraftApp, p: &Value, reveal: bool) -> Re
 
 /// Whether Edit Original may hand `path` to the system's default app: a regular file (after
 /// following links) whose name, and the name it links to, have the extension of a format
-/// VectorCraft reads. Anything else (a folder or app bundle, a script, a shortcut) is refused.
+/// Tsipika reads. Anything else (a folder or app bundle, a script, a shortcut) is refused.
 pub(crate) fn openable_original(path: &str) -> Result<(), String> {
     let readable = |p: &std::path::Path| {
         let ext = p.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
-        !ext.is_empty() && vectorcraft_engine::cmd::fileio::FORMATS.iter().any(|f| f.read && f.extensions.contains(&ext.as_str()))
+        !ext.is_empty() && tsipika_engine::cmd::fileio::FORMATS.iter().any(|f| f.read && f.extensions.contains(&ext.as_str()))
     };
     let name = std::path::Path::new(path).file_name().map_or_else(|| path.to_string(), |n| n.to_string_lossy().into_owned());
     let real = std::fs::canonicalize(path).map_err(|e| format!("can't open “{name}”: {e}"))?;
@@ -277,7 +277,7 @@ fn status_tip(r: &Value) -> String {
 /// without Shift in this document to it, or with Ctrl/Cmd adds them to the selection. A
 /// Shift-click while that row is not shown, or after the last click was in another document, acts
 /// as a click without Shift.
-fn click(app: &mut VectorcraftApp, ctx: &egui::Context, rows: &[Value], id: u64, m: egui::Modifiers) {
+fn click(app: &mut TsipikaApp, ctx: &egui::Context, rows: &[Value], id: u64, m: egui::Modifiers) {
     let Some(uid) = app.session.active().map(|st| st.uid) else { return };
     let anchor: Option<(u64, u64)> = pstate(ctx, "links-anchor");
     let at = |id: u64| rows.iter().position(|r| r["id"].as_u64() == Some(id));
@@ -297,7 +297,7 @@ fn click(app: &mut VectorcraftApp, ctx: &egui::Context, rows: &[Value], id: u64,
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let o = options(ui.ctx());
     let Some(cache) = cached(app, ui.ctx(), &o) else {
@@ -419,7 +419,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// Break Link (`links.embed`) of `ids`: images keep their files' pixels, placed documents become
 /// editable copies of their art.
-fn break_link(app: &mut VectorcraftApp, ids: Vec<u64>) {
+fn break_link(app: &mut TsipikaApp, ids: Vec<u64>) {
     let r = app.run("links.embed", json!({ "ids": ids }));
     report(app, r, |v| {
         let missing = v["missing"].as_array().map_or(0, Vec::len);
@@ -429,7 +429,7 @@ fn break_link(app: &mut VectorcraftApp, ids: Vec<u64>) {
 }
 
 /// Pick-a-file actions need a file dialog (the desktop app).
-fn can_pick(app: &VectorcraftApp) -> bool {
+fn can_pick(app: &TsipikaApp) -> bool {
     app.services.pick_open.is_some()
 }
 
@@ -444,12 +444,12 @@ fn size_label(bytes: u64) -> String {
 
 /// Milliseconds since the Unix epoch as a UTC date and time.
 pub(crate) fn date_label(ms: u64) -> String {
-    let [y, mo, d, h, mi, _] = vectorcraft_doc::metadata::civil(i64::try_from(ms / 1000).unwrap_or(i64::MAX));
+    let [y, mo, d, h, mi, _] = tsipika_doc::metadata::civil(i64::try_from(ms / 1000).unwrap_or(i64::MAX));
     format!("{y:04}-{mo:02}-{d:02} {h:02}:{mi:02} UTC")
 }
 
 /// The Link Info section: the details of `info` (`links.info`), or a hint.
-fn link_info(ui: &mut Ui, info: Option<&Value>, units: vectorcraft_doc::Unit) {
+fn link_info(ui: &mut Ui, info: Option<&Value>, units: tsipika_doc::Unit) {
     widgets::divider(ui);
     let Some(i) = info else {
         widgets::dim_label(ui, tl!("Select an image to see its Link Info."));
@@ -508,7 +508,7 @@ fn link_info(ui: &mut Ui, info: Option<&Value>, units: vectorcraft_doc::Unit) {
     row(ui, tl!("Status"), status.into());
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let o = options(ui.ctx());
     // The rows the panel shows (the menu opens from it).
     let list = pstate::<Cache>(ui.ctx(), "links-cache").list;

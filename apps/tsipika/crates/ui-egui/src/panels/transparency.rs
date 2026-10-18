@@ -6,22 +6,22 @@
 
 use egui::{Sense, Stroke, StrokeKind, Ui, vec2};
 use serde_json::json;
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::{Knockout, Node, NodeId, OpacityMask};
-use vectorcraft_engine::cmd::TransparencyInfo;
+use tsipika_color::{BlendMode, Paint};
+use tsipika_doc::{Knockout, Node, NodeId, OpacityMask};
+use tsipika_engine::cmd::TransparencyInfo;
 
 use super::{current_paints, current_transparency, live_run, pstate, selection_len, set_pstate};
 use crate::theme::Tokens;
 use crate::widgets::{self, TransparencyEdit, menu_item};
-use crate::{VectorcraftApp, icons};
+use crate::{TsipikaApp, icons};
 
 /// Interaction id of the mask thumbnail.
 pub(super) const MASK_THUMB: &str = "tr-mask-thumb";
 
-/// The panel's values ([`vectorcraft_engine::Session::transparency_info`]) and its first target
+/// The panel's values ([`tsipika_engine::Session::transparency_info`]) and its first target
 /// (the selection, or the object whose mask is being edited), recomputed only when the document
 /// or the selection changes.
-fn state(app: &VectorcraftApp, ctx: &egui::Context) -> (TransparencyInfo, Option<Node>) {
+fn state(app: &TsipikaApp, ctx: &egui::Context) -> (TransparencyInfo, Option<Node>) {
     type Key = (u64, u64, usize, Option<NodeId>, Option<NodeId>);
     let Some(st) = app.session.active() else { return Default::default() };
     let sel = &st.selection.objects;
@@ -39,7 +39,7 @@ fn state(app: &VectorcraftApp, ctx: &egui::Context) -> (TransparencyInfo, Option
     v
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     // While editing a mask the panel shows the masked object (the selection is its mask art).
     let editing = app.session.active().and_then(|d| d.doc.mask_edit);
@@ -182,7 +182,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let hide_thumbs: bool = pstate(ui.ctx(), "tr-hide-thumbs");
     let hide_opts: bool = pstate(ui.ctx(), "tr-hide-options");
     if menu_item(ui, if hide_thumbs { tl!("Show Thumbnails") } else { tl!("Hide Thumbnails") }, true, false) {
@@ -250,10 +250,10 @@ fn mask_items(mask: Option<&OpacityMask>, can_make: bool) -> [(&'static str, &'s
 /// A rendered thumbnail of `n` (which may live outside the tree, like mask art). One texture per
 /// slot, re-rendered only when the document revision, object or size changes, and not during a
 /// drag (every pointer move is a new revision): the last one stays until it ends.
-fn node_thumb(app: &VectorcraftApp, ui: &Ui, slot: &str, n: &vectorcraft_doc::Node, r: egui::Rect, bg: Option<[u8; 4]>) -> bool {
+fn node_thumb(app: &TsipikaApp, ui: &Ui, slot: &str, n: &tsipika_doc::Node, r: egui::Rect, bg: Option<[u8; 4]>) -> bool {
     use std::cell::RefCell;
     thread_local! {
-        static RENDERER: RefCell<vectorcraft_render::Renderer> = RefCell::new(vectorcraft_render::Renderer::new());
+        static RENDERER: RefCell<tsipika_render::Renderer> = RefCell::new(tsipika_render::Renderer::new());
     }
     let Some(st) = app.session.active() else { return false };
     let px = (r.width().min(r.height()) * ui.ctx().pixels_per_point()).round().max(8.0) as u32;
@@ -279,10 +279,10 @@ fn node_thumb(app: &VectorcraftApp, ui: &Ui, slot: &str, n: &vectorcraft_doc::No
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// Run the panel and its menu for one headless frame: the texts drawn.
-    fn frame(app: &mut VectorcraftApp) -> Vec<String> {
+    fn frame(app: &mut TsipikaApp) -> Vec<String> {
         fn texts(s: &egui::Shape, out: &mut Vec<String>) {
             match s {
                 egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
@@ -301,13 +301,13 @@ mod tests {
         v
     }
 
-    fn run(app: &mut VectorcraftApp, id: &str, p: serde_json::Value) -> serde_json::Value {
+    fn run(app: &mut TsipikaApp, id: &str, p: serde_json::Value) -> serde_json::Value {
         app.session.execute(id, &p).unwrap()
     }
 
     #[test]
     fn panel_in_mask_editing_mode_shows_and_edits_the_masked_object() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         run(&mut app, "file.new", json!({"width": 100, "height": 100}));
         let a = run(&mut app, "shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50}))["id"].as_u64().unwrap();
         run(&mut app, "transparency.set", json!({"opacity": 60}));
@@ -318,7 +318,7 @@ mod tests {
         assert!(texts.iter().any(|t| t == "60%"), "the masked object's opacity, not the mask art's: {texts:?}");
         assert!(texts.iter().any(|t| t == "Release"));
         let (info, n) = state(&app, &egui::Context::default());
-        assert_eq!((info.ids, n.as_ref().map(|n| n.id.0)), (vec![vectorcraft_doc::NodeId(a)], Some(a)));
+        assert_eq!((info.ids, n.as_ref().map(|n| n.id.0)), (vec![tsipika_doc::NodeId(a)], Some(a)));
         // The menu is enabled for the masked object while editing (Make is not).
         let items = mask_items(n.as_ref().and_then(|n| n.extras().mask.as_deref()), false);
         assert_eq!(items.map(|(_, _, on)| on), [false, true, true, true]);
@@ -328,7 +328,7 @@ mod tests {
         run(&mut app, "transparency.set", json!({"blend": "Multiply"}));
         frame(&mut app);
         let st = app.session.active().unwrap();
-        let obj = st.doc.node(vectorcraft_doc::NodeId(a)).unwrap();
+        let obj = st.doc.node(tsipika_doc::NodeId(a)).unwrap();
         let m = obj.extras().mask.as_ref().unwrap();
         assert!(!m.clip && !m.linked && obj.blend == BlendMode::Multiply);
         assert!(st.doc.mask_edit.is_some());
@@ -340,7 +340,7 @@ mod tests {
 
     #[test]
     fn mixed_values_show_blank() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         run(&mut app, "file.new", json!({"width": 100, "height": 100}));
         let a = run(&mut app, "shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50}))["id"].clone();
         run(&mut app, "transparency.set", json!({"opacity": 50, "blend": "Screen"}));
@@ -359,8 +359,8 @@ mod tests {
 
     #[test]
     fn panel_draws_with_and_without_a_mask() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
-        let r = |app: &mut VectorcraftApp, id: &str, p: serde_json::Value| app.session.execute(id, &p).unwrap();
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
+        let r = |app: &mut TsipikaApp, id: &str, p: serde_json::Value| app.session.execute(id, &p).unwrap();
         r(&mut app, "file.new", json!({"width": 100, "height": 100}));
         frame(&mut app);
         let a = r(&mut app, "shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50}))["id"].clone();
@@ -377,7 +377,7 @@ mod tests {
 
     #[test]
     fn knockout_states_and_page_group_items() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         run(&mut app, "file.new", json!({"width": 100, "height": 100}));
         run(&mut app, "shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50}));
         for k in ["on", "off", "neutral"] {

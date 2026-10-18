@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use vectorcraft_doc::Node;
-use vectorcraft_doc::marks::{MarkStyle, TrimMarks};
+use tsipika_doc::Node;
+use tsipika_doc::marks::{MarkStyle, TrimMarks};
 
 /// The effect id.
 pub const CROP_MARKS: &str = "cropMarks";
@@ -44,8 +44,8 @@ pub fn crop_marks_art(n: &Node) -> Option<Node> {
 mod tests {
     use super::*;
     use serde_json::json;
-    use vectorcraft_doc::{Appearance, Effect, NodeId};
-    use vectorcraft_geom::{Rect, shapes};
+    use tsipika_doc::{Appearance, Effect, NodeId};
+    use tsipika_geom::{Rect, shapes};
 
     #[test]
     fn the_marks_surround_the_object_and_follow_it() {
@@ -63,7 +63,7 @@ mod tests {
         let b = art.visual_bounds().unwrap();
         assert!((b.x0 + reach).abs() < 2.0 && (b.x1 - 100.0 - reach).abs() < 2.0, "{b:?}");
         // Moved, the marks move along.
-        n.transform(vectorcraft_geom::Affine::translate((40.0, 0.0)), false);
+        n.transform(tsipika_geom::Affine::translate((40.0, 0.0)), false);
         let b2 = crop_marks_art(&n).unwrap().visual_bounds().unwrap();
         assert!((b2.x0 - b.x0 - 40.0).abs() < 1e-6);
     }

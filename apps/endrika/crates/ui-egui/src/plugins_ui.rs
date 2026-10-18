@@ -5,8 +5,8 @@
 //! `plugin.directory.*` and `widget.*` commands.
 
 use egui::{Align2, Context, Id, RichText, Ui};
-use figcraft_engine::plugin_directory::{PluginEntry, installed_version, newer_version};
-use figcraft_engine::plugins::{Access, InstalledPlugin, Param, ParamKind};
+use endrika_engine::plugin_directory::{PluginEntry, installed_version, newer_version};
+use endrika_engine::plugins::{Access, InstalledPlugin, Param, ParamKind};
 use serde_json::{Map, Value, json};
 
 use crate::FigApp;
@@ -122,7 +122,7 @@ fn run(app: &mut FigApp, cmd: &str, params: Value) {
     }
 }
 
-/// Plugins ▸ Development ▸ Import plugin from manifest…: pick a `figcraft-plugin.json`.
+/// Plugins ▸ Development ▸ Import plugin from manifest…: pick a `endrika-plugin.json`.
 pub fn import_dialog(app: &mut FigApp) {
     app.pick_open(tr("Import plugin from manifest"), &["json"], |app, p| {
         if let Some(v) = app.run("plugin.import", json!({"path": p.to_string_lossy()})) {
@@ -290,7 +290,7 @@ fn installed_tab(app: &FigApp, ui: &mut Ui, t: &Tokens) -> Option<Manage> {
     let mut asked = None;
     let plugins = &app.session.prefs.plugins;
     if plugins.is_empty() {
-        widgets::label(ui, tr("No plugins yet. Import a development plugin from its figcraft-plugin.json."), t.text_secondary);
+        widgets::label(ui, tr("No plugins yet. Import a development plugin from its endrika-plugin.json."), t.text_secondary);
     }
     for (i, p) in plugins.iter().enumerate() {
         if i > 0 {
@@ -347,7 +347,7 @@ fn browse_tab(app: &mut FigApp, ui: &mut Ui, t: &Tokens) -> Option<Manage> {
     }
     let Some(listing) = app.session.plugins.directory.as_ref() else {
         ui.add_space(8.0);
-        widgets::label(ui, tr("Enter the address of a figcraft-server and press Browse to see the plugins it offers."), t.text_secondary);
+        widgets::label(ui, tr("Enter the address of a endrika-server and press Browse to see the plugins it offers."), t.text_secondary);
         return asked;
     };
     ui.add_space(8.0);
@@ -453,7 +453,7 @@ fn confirm_window(app: &mut FigApp, ctx: &Context, t: &Tokens) {
         ui.add_space(8.0);
         widgets::label(
             ui,
-            tr("Plugins run in FigCraft's sandbox, without files, network or clock. Install only plugins you trust."),
+            tr("Plugins run in Endrika's sandbox, without files, network or clock. Install only plugins you trust."),
             t.text_secondary,
         );
         ui.add_space(4.0);
@@ -642,8 +642,8 @@ fn field(ui: &mut Ui, id: Id, p: &Param, current: &Value) -> Option<Used> {
             let hex = current.as_str().unwrap_or_default();
             let (picked, typed) = ui
                 .horizontal(|ui| {
-                    let color = figcraft_color::Color::from_hex(hex).unwrap_or(figcraft_color::Color::BLACK);
-                    let picked = widgets::swatch(ui, &figcraft_color::Paint::solid(color), widgets::FIELD_H).clicked();
+                    let color = endrika_color::Color::from_hex(hex).unwrap_or(endrika_color::Color::BLACK);
+                    let picked = widgets::swatch(ui, &endrika_color::Paint::solid(color), widgets::FIELD_H).clicked();
                     (picked, widgets::text_field_named(ui, id, hex, FIELD_W - widgets::FIELD_H - 8.0, name).and_then(|s| p.coerce(&json!(s)).ok()))
                 })
                 .inner;

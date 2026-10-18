@@ -1,9 +1,9 @@
 //! The PDF export draws background blur and glass from what lies under the layer on the page, the
 //! way the PNG export does: the images it places match the PNG's pixels.
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, Effect, EffectKind, Glass, NodeId, NodeKind};
-use figcraft_geom::{Affine, Rect};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, Effect, EffectKind, Glass, NodeId, NodeKind};
+use endrika_geom::{Affine, Rect};
 
 use crate::PdfOptions;
 use crate::draw::Exporter;
@@ -35,12 +35,12 @@ pub(crate) fn scene(effect: EffectKind) -> (Document, NodeId, NodeId) {
 pub(crate) fn pdf_vs_png(d: &Document, frame: NodeId, pane: NodeId) -> u8 {
     let opts = PdfOptions::default();
     let mut ex = Exporter::new(d, &opts);
-    let b = figcraft_render::export_bounds(d, frame).unwrap();
+    let b = endrika_render::export_bounds(d, frame).unwrap();
     ex.page_origin = Affine::translate((-b.x0, -b.y0));
     ex.page_rect = b;
     ex.page_ids = vec![frame];
     let (pix, view) = ex.backdrop_pixels(pane).unwrap();
-    let png = figcraft_render::render_node(d, frame, view.scale).unwrap();
+    let png = endrika_render::render_node(d, frame, view.scale).unwrap();
     let k = view.scale;
     let inside = Rect::new(82.0, 42.0, 198.0, 118.0);
     let mut worst = 0;
@@ -60,7 +60,7 @@ pub(crate) fn pdf_vs_png(d: &Document, frame: NodeId, pane: NodeId) -> u8 {
 
 #[test]
 fn pdf_background_blur_matches_the_png() {
-    let (d, f, pane) = scene(EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(12.0)));
+    let (d, f, pane) = scene(EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(12.0)));
     let diff = pdf_vs_png(&d, f, pane);
     assert!(diff <= 3, "{diff}");
 }
@@ -78,7 +78,7 @@ fn pdf_places_the_backdrop_image() {
         let pdf = crate::export_pdf(d, &[f], &PdfOptions::default()).unwrap();
         String::from_utf8_lossy(&pdf).matches("/Subtype/Image").count()
     };
-    let (mut d, f, pane) = scene(EffectKind::BackgroundBlur(figcraft_doc::Blur::uniform(12.0)));
+    let (mut d, f, pane) = scene(EffectKind::BackgroundBlur(endrika_doc::Blur::uniform(12.0)));
     let with = images(&d, f);
     d.get_mut(pane).unwrap().effects.clear();
     let without = images(&d, f);

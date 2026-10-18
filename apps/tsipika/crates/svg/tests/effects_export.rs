@@ -4,10 +4,10 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Document, Effect, Node, NodeId, NodeKind, TextObject};
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, export};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, CharStyle, Document, Effect, Node, NodeId, NodeKind, TextObject};
+use tsipika_geom::{Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, export};
 
 fn doc_with(mut n: Node) -> Document {
     let mut d = Document::new(200.0, 200.0);
@@ -23,7 +23,7 @@ fn fx(id: &str) -> Effect {
 
 #[test]
 fn revolve_caps_export_as_additional_vector_faces_and_leave_source_editable() {
-    let path = vectorcraft_geom::PathData::from_bezpath(&vectorcraft_geom::BezPath::from_svg("M100 30 L100 160").unwrap());
+    let path = tsipika_geom::PathData::from_bezpath(&tsipika_geom::BezPath::from_svg("M100 30 L100 160").unwrap());
     let mut n = Node::path(NodeId(0), path, Appearance::basic(Paint::solid(Color::rgb(0.8, 0.2, 0.1)), Paint::None, 0.0));
     n.appearance.effects.push(Effect { params: json!({"offset":30,"rotationX":-35,"segments":16,"cap":false}), ..fx("threeD.revolve") });
     let mut d = doc_with(n);
@@ -39,10 +39,10 @@ fn revolve_caps_export_as_additional_vector_faces_and_leave_source_editable() {
 
 #[test]
 fn revolve_exports_shaded_vector_faces_and_keeps_the_source_live() {
-    let bp = vectorcraft_geom::BezPath::from_svg("M100 30 L130 50 L130 140 L100 160").unwrap();
+    let bp = tsipika_geom::BezPath::from_svg("M100 30 L130 50 L130 140 L100 160").unwrap();
     let mut n = Node::path(
         NodeId(0),
-        vectorcraft_geom::PathData::from_bezpath(&bp),
+        tsipika_geom::PathData::from_bezpath(&bp),
         Appearance::basic(Paint::solid(Color::rgb(0.8, 0.2, 0.1)), Paint::None, 0.0),
     );
     n.appearance.effects.push(fx("threeD.revolve"));
@@ -56,10 +56,10 @@ fn revolve_exports_shaded_vector_faces_and_keeps_the_source_live() {
 
 #[test]
 fn smooth_revolve_exports_vector_gradients_without_rasterizing_or_editing_the_source() {
-    let bp = vectorcraft_geom::BezPath::from_svg("M100 30 C140 50 140 120 100 160").unwrap();
+    let bp = tsipika_geom::BezPath::from_svg("M100 30 C140 50 140 120 100 160").unwrap();
     let mut n = Node::path(
         NodeId(0),
-        vectorcraft_geom::PathData::from_bezpath(&bp),
+        tsipika_geom::PathData::from_bezpath(&bp),
         Appearance::basic(Paint::solid(Color::rgb(0.2, 0.55, 0.9)), Paint::None, 0.0),
     );
     n.appearance.effects.push(Effect { params: json!({"offset":20,"rotationX":-25,"cap":true,"segments":16}), ..fx("threeD.revolve") });

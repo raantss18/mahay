@@ -4,10 +4,10 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint, Swatch};
-use vectorcraft_doc::{Appearance, Artboard, Document, LayerColor, Node, NodeKind};
-use vectorcraft_geom::{Rect, shapes};
-use vectorcraft_testkit::raster::render_region;
+use tsipika_color::{Color, Paint, Swatch};
+use tsipika_doc::{Appearance, Artboard, Document, LayerColor, Node, NodeKind};
+use tsipika_geom::{Rect, shapes};
+use tsipika_testkit::raster::render_region;
 
 use crate::*;
 
@@ -186,9 +186,9 @@ fn a_symbol_instance_prints_by_its_art() {
     let mut d = doc(100.0, 100.0, &[]);
     let red = Appearance::basic(rgb(1.0, 0.0, 0.0), Paint::None, 0.0);
     let art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(100.0, 100.0, 140.0, 140.0)), red);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
     let (layer, id) = (d.default_layer().unwrap(), d.alloc_id());
-    let xf = vectorcraft_geom::Affine::translate((-50.0, -50.0));
+    let xf = tsipika_geom::Affine::translate((-50.0, -50.0));
     d.insert(Some(layer), 0, Node::new(id, NodeKind::SymbolInstance { symbol: "Far".into(), xf })).unwrap();
     // Skip Blank Artboards keeps the artboard.
     assert_eq!(preview(&d, &settings(json!({"skipBlank": true}))).unwrap().sheets.len(), 1);
@@ -205,18 +205,18 @@ fn a_symbol_instances_brush_art_keeps_its_artboard_printed() {
     // round nib. Drawn from (-5, 0), the line lies left of the artboard, and the nib paints 10 pt
     // either side of it, onto the artboard.
     let mut d = doc(100.0, 100.0, &[]);
-    let mut lib = vectorcraft_brush::library(&d);
-    let Some(vectorcraft_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
+    let mut lib = tsipika_brush::library(&d);
+    let Some(tsipika_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
         panic!("the 3 pt. Round brush")
     };
     c.size = 20.0;
-    vectorcraft_brush::store(&mut d, &lib);
+    tsipika_brush::store(&mut d, &lib);
     let mut stroke = Appearance::basic(Paint::None, rgb(1.0, 0.0, 0.0), 1.0);
     stroke.stroke_mut().unwrap().brush = Some("3 pt. Round".into());
     let art = Node::path(d.alloc_id(), shapes::line((0.0, 40.0).into(), (0.0, 60.0).into()), stroke);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Nib".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Nib".into(), art: Arc::new(art) });
     let (layer, id) = (d.default_layer().unwrap(), d.alloc_id());
-    let xf = vectorcraft_geom::Affine::translate((-5.0, 0.0));
+    let xf = tsipika_geom::Affine::translate((-5.0, 0.0));
     d.insert(Some(layer), 0, Node::new(id, NodeKind::SymbolInstance { symbol: "Nib".into(), xf })).unwrap();
     // Skip Blank Artboards keeps the artboard, and its page holds the nib's art.
     let p = pages(&job(&d, json!({"skipBlank": true})).bytes);
@@ -263,7 +263,7 @@ fn print_layers_and_template_layers() {
 #[test]
 fn cmyk_and_a_spot_separate_into_five_plates() {
     let mut d = doc(200.0, 100.0, &[]);
-    d.color_mode = vectorcraft_doc::ColorMode::Cmyk;
+    d.color_mode = tsipika_doc::ColorMode::Cmyk;
     d.swatches.push(Swatch { name: "Gold".into(), paint: Paint::solid(Color::cmyk(0.0, 0.2, 0.8, 0.1)), global: true, spot: true });
     let layer = d.default_layer().unwrap();
     let cyan = Paint::solid(Color::cmyk(1.0, 0.0, 0.0, 0.0));
@@ -403,7 +403,7 @@ fn golden_page_one() {
 #[test]
 fn separations_use_the_cmyk_profile_assigned_to_the_document() {
     let mut d = doc(100.0, 100.0, &[(Rect::new(0.0, 0.0, 50.0, 50.0), rgb(0.5, 0.5, 0.5))]);
-    d.color_mode = vectorcraft_doc::ColorMode::Cmyk;
+    d.color_mode = tsipika_doc::ColorMode::Cmyk;
     // The cyan of the grey square, in percent.
     let cyan = |d: &Document| -> f32 {
         let p = pages(&job(d, json!({"output": {"mode": "separations"}})).bytes);
@@ -414,6 +414,6 @@ fn separations_use_the_cmyk_profile_assigned_to_the_document() {
     };
     let working = cyan(&d);
     assert!(working > 0.0, "the working CMYK profile separates grey into four inks: cyan {working}");
-    d.color_profiles.cmyk = Some(vectorcraft_color::cms::DEVICE_CMYK.into());
+    d.color_profiles.cmyk = Some(tsipika_color::cms::DEVICE_CMYK.into());
     assert_eq!(cyan(&d), 0.0, "Device CMYK puts a neutral grey on the black plate only");
 }

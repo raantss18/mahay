@@ -1,4 +1,4 @@
-//! DesignCraft tools: pointer events in → commands and overlays out.
+//! Pejy tools: pointer events in → commands and overlays out.
 //!
 //! Tools never mutate the document. They emit [`Action`]s the engine executes: `Begin` snapshots
 //! the document, each `Preview` re-applies one command on top of the snapshot, `Commit` records
@@ -25,9 +25,9 @@ mod text;
 pub mod thread;
 mod xform;
 
-use designcraft_compose::Cache;
-use designcraft_doc::{Document, Item, ItemId, Selection, SpreadRef};
-use designcraft_geom::{Affine, BezPath, Point, Rect, Unit, Vec2};
+use pejy_compose::Cache;
+use pejy_doc::{Document, Item, ItemId, Selection, SpreadRef};
+use pejy_geom::{Affine, BezPath, Point, Rect, Unit, Vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -215,7 +215,7 @@ pub struct ToolContext<'a> {
     /// Screen pixels per point.
     pub zoom: f64,
     /// Layer new items go on.
-    pub layer: designcraft_doc::LayerId,
+    pub layer: pejy_doc::LayerId,
     pub snap: SnapView,
     pub unit: Unit,
     /// The toolbox's Stroke box is in front: sampled colours go to strokes (the Eyedropper).
@@ -246,7 +246,7 @@ impl ToolContext<'_> {
             return Some((sr, id));
         }
         let (_, sp) = self.layout.spread_at(p)?;
-        designcraft_doc::hit_descendant(it, sp, self.tol(4.0), &|c| c.is_text_frame()).map(|f| (sr, f))
+        pejy_doc::hit_descendant(it, sp, self.tol(4.0), &|c| c.is_text_frame()).map(|f| (sr, f))
     }
 
     /// The parent item showing (not yet overridden) on the document page under `p`:
@@ -266,7 +266,7 @@ impl ToolContext<'_> {
         for (ppi, ppg) in self.doc.shown_parent_pages(SpreadRef::Doc(si), pi) {
             let Some(parent) = self.doc.parents.get(ppi) else { continue };
             let Some(parent_page) = parent.pages.get(ppg) else { continue };
-            let off = designcraft_geom::Vec2::new(pg.x - parent_page.x, 0.0);
+            let off = pejy_geom::Vec2::new(pg.x - parent_page.x, 0.0);
             for it in &parent.items {
                 if pg.overridden.contains(&it.id) || parent.pages.len() > 1 && parent.page_at_x(it.bounds().center().x) != Some(ppg) {
                     continue;
@@ -280,14 +280,14 @@ impl ToolContext<'_> {
             .rev()
             .find(|(it, off)| {
                 let layer = self.doc.layer(it.layer);
-                !it.locked && !it.hidden && !layer.is_some_and(|l| !l.visible || l.locked) && designcraft_doc::edit_hit(it, sp - *off, self.tol(4.0))
+                !it.locked && !it.hidden && !layer.is_some_and(|l| !l.visible || l.locked) && pejy_doc::edit_hit(it, sp - *off, self.tol(4.0))
             })
             .map(|(it, _)| (page, it.id))
     }
 
     fn hit_parent(&self, sr: SpreadRef, sp: Point) -> Option<(SpreadRef, ItemId)> {
         let s = self.doc.spread(sr)?;
-        s.items.iter().rev().find(|it| !it.locked && designcraft_doc::edit_hit(it, sp, self.tol(4.0))).map(|it| (sr, it.id))
+        s.items.iter().rev().find(|it| !it.locked && pejy_doc::edit_hit(it, sp, self.tol(4.0))).map(|it| (sr, it.id))
     }
 
     /// Spread-space → canvas transform of the spread holding item `id`.

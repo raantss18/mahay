@@ -7,7 +7,7 @@ use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
 use crate::{EngineError, Session};
 
-fn rect(s: &mut Session, x: f64) -> figcraft_doc::NodeId {
+fn rect(s: &mut Session, x: f64) -> endrika_doc::NodeId {
     id_of(&s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap()["id"]).unwrap()
 }
 
@@ -16,7 +16,7 @@ fn count(s: &Session) -> usize {
 }
 
 /// A session with versions "One" (one box) and "Two" (two), then a third box and a selection.
-fn setup() -> (Session, figcraft_doc::NodeId) {
+fn setup() -> (Session, endrika_doc::NodeId) {
     let mut s = Session::new();
     rect(&mut s, 0.0);
     s.execute("file.saveVersion", &json!({"name": "One"})).unwrap();
@@ -76,9 +76,9 @@ fn restore_from_a_preview_is_one_undo_step() {
 
 #[test]
 fn preview_keeps_the_unsaved_state_and_saving_saves_the_document() {
-    let dir = std::env::temp_dir().join(format!("figcraft-vpreview-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-vpreview-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("preview.figcraft").to_string_lossy().to_string();
+    let path = dir.join("preview.endrika").to_string_lossy().to_string();
     let (mut s, _) = setup();
     let three = count(&s);
     s.execute("file.save", &json!({"path": path})).unwrap();

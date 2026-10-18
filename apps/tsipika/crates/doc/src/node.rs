@@ -3,10 +3,10 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_geom::corners::cut_corners;
-use vectorcraft_geom::shapes::{self, CornerKind};
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, Point, Rect};
+use tsipika_color::{BlendMode, Color, Paint};
+use tsipika_geom::corners::cut_corners;
+use tsipika_geom::shapes::{self, CornerKind};
+use tsipika_geom::{Affine, BezPath, FillRule, PathData, Point, Rect};
 
 use crate::appearance::Appearance;
 use crate::live::{BlendSpec, EnvelopeKind, GradientMesh, Outliner};
@@ -483,7 +483,7 @@ pub enum NodeKind {
     Mesh(GradientMesh),
     /// Live Repeat (radial / grid / mirror) of source art.
     Repeat(RepeatSpec),
-    /// A placed document: an artboard of another VectorCraft file, linked and locked (see
+    /// A placed document: an artboard of another Tsipika file, linked and locked (see
     /// [`crate::placed_document`]).
     PlacedDocument(Box<crate::placed_document::PlacedDocument>),
     /// Object › Intertwine: the objects keep their own stacking order, except where one of them
@@ -1074,11 +1074,11 @@ impl Node {
         }
     }
     /// The path a path's or compound path's own strokes follow (a compound's members' together).
-    pub fn stroke_path(&self) -> Option<vectorcraft_geom::BezPath> {
+    pub fn stroke_path(&self) -> Option<tsipika_geom::BezPath> {
         match &self.kind {
             NodeKind::Path { path, .. } => Some(path.to_bezpath()),
             NodeKind::Compound { children, .. } => {
-                let mut bp = vectorcraft_geom::BezPath::new();
+                let mut bp = tsipika_geom::BezPath::new();
                 children.iter().filter_map(|c| c.path_data()).for_each(|pd| bp.extend(pd.to_bezpath()));
                 Some(bp)
             }
@@ -1126,7 +1126,7 @@ impl Node {
     /// The box of [`Node::geometric_bounds`], or of [`Node::geometric_bounds_with`] when `symbols`
     /// is given.
     pub(crate) fn geometric(&self, symbols: Option<&SymbolBoxes>) -> Option<Rect> {
-        let union = |nodes: &[Arc<Node>]| nodes.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, c.geometric(symbols)));
+        let union = |nodes: &[Arc<Node>]| nodes.iter().fold(None, |acc, c| tsipika_geom::union_opt(acc, c.geometric(symbols)));
         match &self.kind {
             NodeKind::Path { path, .. } => path.bounds(),
             NodeKind::Group { children, clip: true } | NodeKind::Layer { children, clip: true, .. } => {
@@ -1136,14 +1136,14 @@ impl Node {
                 .iter()
                 .skip(usize::from(self.extras().shaper.is_some()))
                 .filter(|c| c.visible || !matches!(self.kind, NodeKind::Layer { .. }))
-                .fold(None, |acc, c| vectorcraft_geom::union_opt(acc, c.geometric(symbols))),
+                .fold(None, |acc, c| tsipika_geom::union_opt(acc, c.geometric(symbols))),
             NodeKind::Text(t) => self.projected(t.bounds()),
             NodeKind::Image(im) => Some(im.xf.transform_rect_bbox(Rect::new(0.0, 0.0, im.width as f64, im.height as f64))),
             NodeKind::SymbolInstance { symbol, xf } => {
                 let art = symbols.and_then(|s| s.art(symbol)).map_or(SYMBOL_SQUARE, |a| a.geometric);
                 self.projected(Some(xf.transform_rect_bbox(art)))
             }
-            NodeKind::Blend { children, spec } => vectorcraft_geom::union_opt(union(children), spec.spine.as_ref().and_then(|s| s.bounds())),
+            NodeKind::Blend { children, spec } => tsipika_geom::union_opt(union(children), spec.spine.as_ref().and_then(|s| s.bounds())),
             NodeKind::Envelope { content, kind, frame, .. } => crate::live::envelope_bounds(content, kind, **frame),
             NodeKind::Mesh(m) => m.bounds(),
             // Each copy is measured where the repeat draws it: `RepeatSpec::transforms` lays the
@@ -1186,20 +1186,20 @@ impl Node {
                     clip.geometric(symbols)
                 }
             }
-            NodeKind::Intertwine { children } => children.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, c.visual(symbols))),
+            NodeKind::Intertwine { children } => children.iter().fold(None, |acc, c| tsipika_geom::union_opt(acc, c.visual(symbols))),
             NodeKind::Layer { children, .. } | NodeKind::Group { children, .. } => {
                 // The container's own strokes paint around its members.
                 let o = self.appearance.outset();
                 children
                     .iter()
                     .skip(usize::from(self.extras().shaper.is_some()))
-                    .fold(None, |acc, c| vectorcraft_geom::union_opt(acc, c.visual(symbols)))
+                    .fold(None, |acc, c| tsipika_geom::union_opt(acc, c.visual(symbols)))
                     .map(|b| b.inflate(o, o))
             }
             NodeKind::Blend { children, spec } => {
-                let b = children.iter().fold(None, |acc, c| vectorcraft_geom::union_opt(acc, c.visual(symbols)));
+                let b = children.iter().fold(None, |acc, c| tsipika_geom::union_opt(acc, c.visual(symbols)));
                 let o = crate::live::max_outset(children, symbols);
-                vectorcraft_geom::union_opt(b, spec.spine.as_ref().and_then(|s| s.bounds()).map(|r| r.inflate(o, o)))
+                tsipika_geom::union_opt(b, spec.spine.as_ref().and_then(|s| s.bounds()).map(|r| r.inflate(o, o)))
             }
             NodeKind::Envelope { content, .. } | NodeKind::Repeat(RepeatSpec { source: content, .. }) => {
                 let o = crate::live::max_outset(content, symbols);
@@ -1381,7 +1381,7 @@ impl Node {
     /// type objects paint their runs (the first run speaks for all) in text space, fitted to the
     /// layout bounds; everything else paints its fill or stroke in the document, fitted to the
     /// geometric bounds. Strokes fit the box grown by half their weight.
-    pub fn proxy_paint(&self, stroke: bool, item: Option<usize>) -> Option<(&vectorcraft_color::Paint, Affine, Rect)> {
+    pub fn proxy_paint(&self, stroke: bool, item: Option<usize>) -> Option<(&tsipika_color::Paint, Affine, Rect)> {
         let item = self.appearance.item_of_kind(item, !stroke);
         if item.is_none()
             && let NodeKind::Text(t) = &self.kind
@@ -1400,9 +1400,9 @@ impl Node {
     }
     /// The gradient behind the Fill (or Stroke) proxy and its placement in document coordinates
     /// (see [`Node::proxy_paint`]): what the gradient annotator shows and edits.
-    pub fn proxy_gradient(&self, stroke: bool, item: Option<usize>) -> Option<(&vectorcraft_color::GradientPaint, vectorcraft_color::GradientGeom)> {
+    pub fn proxy_gradient(&self, stroke: bool, item: Option<usize>) -> Option<(&tsipika_color::GradientPaint, tsipika_color::GradientGeom)> {
         let (paint, to_doc, b) = self.proxy_paint(stroke, item)?;
-        let vectorcraft_color::Paint::Gradient(g) = paint else { return None };
+        let tsipika_color::Paint::Gradient(g) = paint else { return None };
         let mut geom = g.resolve(b);
         if to_doc != Affine::IDENTITY {
             geom.transform(to_doc, g.gradient.kind);
@@ -1412,14 +1412,14 @@ impl Node {
     /// The freeform gradient behind the Fill (or Stroke) proxy, its points in document coordinates
     /// (the automatic ones while unplaced), and the length its spreads are fractions of there
     /// (see [`Node::proxy_paint`]): what the Gradient tool's freeform annotator shows and edits.
-    pub fn proxy_freeform(&self, stroke: bool, item: Option<usize>) -> Option<(vectorcraft_color::Freeform, f64)> {
+    pub fn proxy_freeform(&self, stroke: bool, item: Option<usize>) -> Option<(tsipika_color::Freeform, f64)> {
         let (paint, to_doc, b) = self.proxy_paint(stroke, item)?;
-        let vectorcraft_color::Paint::Gradient(g) = paint else { return None };
-        if g.gradient.kind != vectorcraft_color::GradientKind::Freeform {
+        let tsipika_color::Paint::Gradient(g) = paint else { return None };
+        if g.gradient.kind != tsipika_color::GradientKind::Freeform {
             return None;
         }
         let mut f = g.freeform_on(b).into_owned();
-        let mut scale = vectorcraft_color::freeform::spread_scale(b);
+        let mut scale = tsipika_color::freeform::spread_scale(b);
         if to_doc != Affine::IDENTITY {
             f.transform(to_doc);
             scale *= to_doc.determinant().abs().sqrt();
@@ -1429,7 +1429,7 @@ impl Node {
 }
 
 /// Unites filled regions (each under its own fill rule) into one path filled non-zero. Booleans
-/// live above this crate (`vectorcraft-pathops`), so callers supply it.
+/// live above this crate (`tsipika-pathops`), so callers supply it.
 pub type Uniter<'a> = &'a dyn Fn(&[(BezPath, FillRule)]) -> BezPath;
 
 impl Node {
@@ -1527,7 +1527,7 @@ impl Node {
                 }
                 if let NodeKind::Text(t) = &mut n.kind {
                     for r in &mut t.runs {
-                        *(if fill { &mut r.style.stroke } else { &mut r.style.fill }) = vectorcraft_color::Paint::None;
+                        *(if fill { &mut r.style.stroke } else { &mut r.style.fill }) = tsipika_color::Paint::None;
                     }
                 }
                 n
@@ -1716,7 +1716,7 @@ pub struct ObjectAttributes {
     pub data: Vec<(String, String)>,
     /// Window › SVG Interactivity: the JavaScript each event runs, in the panel's order
     /// (`("onclick", "alert(1)")`, one entry per event of [`SVG_EVENTS`]). SVG export writes them as
-    /// the element's event attributes; nothing in VectorCraft runs them.
+    /// the element's event attributes; nothing in Tsipika runs them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<(String, String)>,
 }
@@ -1807,7 +1807,7 @@ impl Node {
     /// stroke opacity below 100%, a blend mode, an opacity mask, effects or transparent gradient
     /// stops. Hidden objects show none.
     pub fn shows_transparency(&self) -> bool {
-        use vectorcraft_color::Paint;
+        use tsipika_color::Paint;
         let see_through = |p: &Paint| matches!(p, Paint::Gradient(g) if g.gradient.stops.iter().any(|s| s.opacity < 1.0));
         let effects = |fx: &[crate::Effect]| fx.iter().any(|e| e.visible);
         self.visible
@@ -1836,7 +1836,7 @@ impl Node {
     /// everywhere for objects without them, such as type, whose boxes stand in).
     pub fn contains_fn(&self) -> impl Fn(Point) -> bool + use<> {
         let shapes = self.clip_shapes(None);
-        move |p| shapes.is_empty() || shapes.iter().any(|(bp, rule)| vectorcraft_geom::hit::fill_contains(bp, *rule, p))
+        move |p| shapes.is_empty() || shapes.iter().any(|(bp, rule)| tsipika_geom::hit::fill_contains(bp, *rule, p))
     }
 }
 
@@ -1852,7 +1852,7 @@ mod kind_de {
     use serde::de::value::{MapAccessDeserializer, StringDeserializer};
     use serde::de::{self, DeserializeSeed, Deserializer, EnumAccess, IntoDeserializer, MapAccess, VariantAccess, Visitor};
     use serde::{Deserialize, forward_to_deserialize_any};
-    use vectorcraft_geom::{Affine, FillRule, PathData};
+    use tsipika_geom::{Affine, FillRule, PathData};
 
     use super::{LayerColor, LiveShape, Node, NodeKind, yes};
     use crate::live::{BlendSpec, EnvelopeKind, GradientMesh};
@@ -2350,7 +2350,7 @@ mod tests {
 
     #[test]
     fn unplaced_gradients_pin_only_when_a_refit_would_differ() {
-        use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
+        use tsipika_color::{Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
         let grad = || Paint::Gradient(Box::new(GradientPaint::new(Gradient::default())));
         let fresh = || Node::path(NodeId(2), shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 50.0)), Appearance::basic(grad(), grad(), 2.0));
         let geoms = |n: &Node| match (n.appearance.fill_paint(), n.appearance.stroke_paint()) {
@@ -2392,8 +2392,8 @@ mod tests {
     fn type_visual_bounds_grow_with_the_character_stroke() {
         use crate::appearance::StrokeAlign;
         use crate::text::{CharStyle, TextObject};
-        let style = CharStyle { stroke: vectorcraft_color::Paint::solid(vectorcraft_color::Color::BLACK), stroke_width: 4.0, ..Default::default() };
-        let mut t = TextObject::point(vectorcraft_geom::Point::new(0.0, 0.0), "Ab", style);
+        let style = CharStyle { stroke: tsipika_color::Paint::solid(tsipika_color::Color::BLACK), stroke_width: 4.0, ..Default::default() };
+        let mut t = TextObject::point(tsipika_geom::Point::new(0.0, 0.0), "Ab", style);
         t.xf = Affine::scale(2.0) * t.xf;
         let node = |t: &TextObject| Node::new(NodeId(1), NodeKind::Text(Box::new(t.clone())));
         let g = node(&t).geometric_bounds().unwrap();
@@ -2401,7 +2401,7 @@ mod tests {
             t.runs[0].style.stroke_align = align;
             assert_eq!(node(&t).visual_bounds(), Some(g.inflate(grow, grow)), "{align:?}");
         }
-        t.runs[0].style.stroke = vectorcraft_color::Paint::None;
+        t.runs[0].style.stroke = tsipika_color::Paint::None;
         assert_eq!(node(&t).visual_bounds(), Some(g), "no stroke, no growth");
     }
 

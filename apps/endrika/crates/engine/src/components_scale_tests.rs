@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -24,7 +24,7 @@ fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
 
 fn session() -> (Session, DesignSystem, Vec<NodeId>) {
     // Other tests scan the system fonts; text measured before and after that scan would differ.
-    figcraft_text::scan_system_fonts();
+    endrika_text::scan_system_fonts();
     let (doc, ds, inst) = design_system_with_instances(&DsSpec::SMALL, COUNT).unwrap();
     (Session::with_document(doc), ds, inst)
 }
@@ -437,7 +437,7 @@ fn switching_a_screen_theme_records_no_overrides() {
 
 /// A scratch directory for one test.
 fn scratch(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("figcraft-scale-{}-{name}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("endrika-scale-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d
 }
@@ -468,7 +468,7 @@ fn library_setup(path: &str) -> (Session, DesignSystem, Session, DesignSystem, V
 #[test]
 fn library_updates_reach_consumers_with_every_override_kept() {
     let dir = scratch("updates");
-    let path = dir.join("ds.figcraft").to_string_lossy().into_owned();
+    let path = dir.join("ds.endrika").to_string_lossy().into_owned();
     let (mut lib_s, ds, mut s, local, _) = library_setup(&path);
     let before = overrides(s.doc().unwrap());
     assert!(before.len() > 50);
@@ -519,7 +519,7 @@ fn library_updates_reach_consumers_with_every_override_kept() {
 #[test]
 fn pasting_instances_into_other_files_follows_their_mains() {
     let dir = scratch("paste");
-    let path = dir.join("ds.figcraft").to_string_lossy().into_owned();
+    let path = dir.join("ds.endrika").to_string_lossy().into_owned();
     let (mut lib_s, ds, mut s, local, inst) = library_setup(&path);
     // From the consumer (library mains) into a new file: the library copies come along.
     let doc = s.doc().unwrap();
@@ -690,7 +690,7 @@ fn alt_dropping_a_component_onto_an_instance_swaps_it() {
     let label = chars(doc, find_path(doc, button, &["Label"]).unwrap());
     let other = doc.node(ds.button).unwrap().children.iter().copied().find(|v| *v != main_of(doc, button)).unwrap();
     let (x, y) = centre(doc, glyph);
-    assert_eq!(crate::drop::swap_target(doc, s.page().unwrap(), figcraft_geom::Point::new(x, y), Some("Button"), Some(other)), Some(button));
+    assert_eq!(crate::drop::swap_target(doc, s.page().unwrap(), endrika_geom::Point::new(x, y), Some("Button"), Some(other)), Some(button));
     let r = ex(&mut s, "instance.swapAt", json!({"component": other, "x": x, "y": y}));
     assert_eq!(r["id"], json!(button.0));
     let doc = s.doc().unwrap();
@@ -730,7 +730,7 @@ fn alt_dropping_a_component_onto_an_instance_swaps_it() {
 #[test]
 fn alt_dropping_a_library_component_swaps_to_it() {
     let dir = scratch("swap");
-    let path = dir.join("ds.figcraft").to_string_lossy().into_owned();
+    let path = dir.join("ds.endrika").to_string_lossy().into_owned();
     let (_lib, ds, mut s, local, inst) = library_setup(&path);
     let doc = &s.doc().unwrap().clone();
     let (top, glyph) =

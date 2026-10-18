@@ -16,9 +16,9 @@ use std::hash::{Hash, Hasher};
 
 use egui::{Color32, Sense, Stroke, pos2, vec2};
 use serde_json::{Map, Value, json};
-use vectorcraft_brush::{ArtBrush, ArtScale, Brush, BrushKind, Colorization, Direction, PatternBrush, PatternFit, Scatter, Variation};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Document, Node};
+use tsipika_brush::{ArtBrush, ArtScale, Brush, BrushKind, Colorization, Direction, PatternBrush, PatternFit, Scatter, Variation};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Document, Node};
 
 use super::brush_options::{clamped, mode_key, stroke_preview};
 use crate::state::Dialog;
@@ -117,7 +117,7 @@ pub(super) fn fields(b: &Brush, def: Value, f: &mut Map<String, Value>) {
         }
         BrushKind::Calligraphic(_) | BrushKind::Bristle(_) => {}
     }
-    let colors = vectorcraft_brush::art_colors(b.art());
+    let colors = tsipika_brush::art_colors(b.art());
     let colorization = b.kind.colorization();
     let key = match colorization {
         Colorization::HueShift { key } => key,
@@ -373,9 +373,9 @@ fn tile_doc(art: &Node, w: f64, h: f64) -> Option<Document> {
     }
     let mut doc = Document::new(w, h);
     let mut n = doc.reid(art);
-    let xf = vectorcraft_geom::Affine::translate((w / 2.0, h / 2.0))
-        * vectorcraft_geom::Affine::scale(k)
-        * vectorcraft_geom::Affine::translate(-b.center().to_vec2());
+    let xf = tsipika_geom::Affine::translate((w / 2.0, h / 2.0))
+        * tsipika_geom::Affine::scale(k)
+        * tsipika_geom::Affine::translate(-b.center().to_vec2());
     n.transform(xf, true);
     let l = doc.layers.first()?.id;
     doc.insert(Some(l), 0, n).ok()?;

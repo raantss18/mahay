@@ -9,7 +9,7 @@ use super::*;
 
 fn export(s: &mut Session, p: Value) -> (Vec<u8>, Vec<Value>) {
     let v = s.execute("document.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (bytes, v["warnings"].as_array().unwrap().clone())
 }
 
@@ -60,7 +60,7 @@ fn thumbnails_show_the_pages() {
     let thumbs = thumbnails(&pdf);
     assert_eq!(thumbs.len(), 2, "one a page");
     for ((w, h, rgb), colour) in thumbs.iter().zip([[255, 0, 0], [0, 255, 0]]) {
-        assert_eq!((*w, *h), (vectorcraft_pdf::THUMBNAIL_SIZE, 53), "the page's shape, 106 px long");
+        assert_eq!((*w, *h), (tsipika_pdf::THUMBNAIL_SIZE, 53), "the page's shape, 106 px long");
         // The middle of the left half: the page's colour (the non-printing layer is left out).
         let at = ((*h / 2 * w + w / 4) * 3) as usize;
         assert_eq!(rgb[at..at + 3], colour);
@@ -87,12 +87,12 @@ fn fast_web_view_through_every_pdf_path() {
     assert!(linearised(&pdf) && warnings.is_empty(), "{warnings:?}");
     // Reopened: the pages, and the document the editing data carries.
     s.execute("document.close", &json!({"force": true})).ok();
-    let v = s.execute("document.open", &json!({"dataBase64": vectorcraft_format::base64_encode(&pdf), "name": "web.pdf"})).unwrap();
+    let v = s.execute("document.open", &json!({"dataBase64": tsipika_format::base64_encode(&pdf), "name": "web.pdf"})).unwrap();
     assert!(v.is_object());
     assert_eq!(s.doc().unwrap().doc.artboards.len(), 3);
     assert!(s.doc().unwrap().doc.layers[0].children().unwrap().iter().any(|n| n.path_data().is_some()), "the ellipse is back");
     // document.export takes the same options; without them the file isn't linearised.
     let v = s.execute("document.export", &json!({"format": "pdf", "fastWebView": true, "range": "2"})).unwrap();
-    assert!(linearised(&vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()));
+    assert!(linearised(&tsipika_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()));
     assert!(!linearised(&export(&mut s, json!({})).0));
 }

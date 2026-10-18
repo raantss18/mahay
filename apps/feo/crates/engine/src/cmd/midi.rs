@@ -3,9 +3,9 @@
 use super::*;
 use crate::cmd;
 use serde_json::json;
-use soundcraft_midi::{Note, Sequence};
-use soundcraft_model::{Clip, ClipContent, ClipId};
-use soundcraft_time::TICKS_PER_QUARTER;
+use feo_midi::{Note, Sequence};
+use feo_model::{Clip, ClipContent, ClipId};
+use feo_time::TICKS_PER_QUARTER;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -50,9 +50,9 @@ fn new_clip(e: &mut Engine, p: &Value) -> Result<Value> {
     let mut r = range_param(e, "midi.new_clip", p)?;
     if r.is_empty() {
         let s = e.session();
-        let bar = soundcraft_time::GridValue::Note { value: soundcraft_time::NoteValue::Bar, dotted: false, triplet: false };
+        let bar = feo_time::GridValue::Note { value: feo_time::NoteValue::Bar, dotted: false, triplet: false };
         let start = bar.line_at_or_before(r.start, s.sample_rate, &s.tempo, s.frame_rate);
-        r = soundcraft_time::Range::new(start, bar.next_line(start, s.sample_rate, &s.tempo, s.frame_rate));
+        r = feo_time::Range::new(start, bar.next_line(start, s.sample_rate, &s.tempo, s.frame_rate));
     }
     let s = e.session_mut();
     let id = s.new_clip_id();
@@ -137,7 +137,7 @@ fn notes_move(e: &mut Engine, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soundcraft_model::{ChannelFormat, TrackKind};
+    use feo_model::{ChannelFormat, TrackKind};
 
     #[test]
     fn create_clip_add_edit_move_delete() {

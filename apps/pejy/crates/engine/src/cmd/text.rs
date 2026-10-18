@@ -1,9 +1,9 @@
 //! Text editing (Type tool) and character/paragraph formatting.
 
-use designcraft_compose as compose;
-use designcraft_doc::story::floor_char_boundary;
-use designcraft_doc::{CellAddr, CharAttrs, Content, ItemId, ParaAttrs, Selection, StoryId, TextSel};
-use designcraft_geom::Point;
+use pejy_compose as compose;
+use pejy_doc::story::floor_char_boundary;
+use pejy_doc::{CellAddr, CharAttrs, Content, ItemId, ParaAttrs, Selection, StoryId, TextSel};
+use pejy_geom::Point;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, bool_or, cmd, has_doc, has_text, has_text_or_frames, id_param, ok, point_param, str_param};
@@ -93,11 +93,11 @@ pub fn specs() -> Vec<CommandSpec> {
             has_doc,
             |s, p| {
                 let sid = story_of(s, p).ok_or_else(|| bad("story.setDirection", "no story"))?;
-                let direction: designcraft_doc::TextDirection =
+                let direction: pejy_doc::TextDirection =
                     serde_json::from_value(p.get("direction").cloned().ok_or_else(|| bad("story.setDirection", "missing direction"))?)
                         .map_err(|e| bad("story.setDirection", e.to_string()))?;
                 s.edit(|d, _| {
-                    let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+                    let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
                     st.direction = direction;
                     st.rev = st.rev.wrapping_add(1);
                     ok()
@@ -129,7 +129,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 let b = p.get("end").and_then(Value::as_u64).map(|v| v as usize).unwrap_or(a);
                 let text = super::text_param(p, "text");
                 s.edit(|d, sel| {
-                    let st = d.story_mut(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+                    let st = d.story_mut(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
                     let (a, b) = (a.min(st.len()), b.min(st.len()).max(a.min(st.len())));
                     st.replace(a..b, &text);
                     let len = st.len();
@@ -144,7 +144,7 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!(query "story.get", "Get Story", [], None, "{story? | frame?} → text, frames, paragraphs, vertical, overset", has_doc, |s, p| {
             let st = s.doc()?;
             let sid = story_of(s, p).ok_or_else(|| bad("story.get", "no story"))?;
-            let mut v = st.doc.story_summary(sid).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+            let mut v = st.doc.story_summary(sid).ok_or(pejy_doc::DocError::NoStory(sid))?;
             let cs = s.cache.get(&st.doc, sid, None);
             v["overset"] = json!(cs.overset_at);
             v["lines"] = json!(cs.line_count());
@@ -438,17 +438,17 @@ fn pick_up_format(s: &mut Session, p: &Value) -> Result<Value> {
     let (sid, b, cell) = hit_byte_with(s, frame, pt, compose::hit_char).ok_or_else(|| bad(ID, "not a text frame"))?;
     let st = s.doc()?;
     let sel = st.selection.text.ok_or_else(|| bad(ID, "select the text to format"))?;
-    let src = st.doc.text_story(sid, cell).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+    let src = st.doc.text_story(sid, cell).ok_or(pejy_doc::DocError::NoStory(sid))?;
     let b = floor_char_boundary(&src.text, b);
     // The character under the pointer (at the end of a line, the one before it).
     let at = if b >= src.text.len() || src.text[b..].starts_with('\n') { b.saturating_sub(1) } else { b };
     let at = floor_char_boundary(&src.text, at);
     let chars = src.char_format_at(at).clone();
-    let para = src.paras.get(src.para_at(at)).cloned().ok_or(designcraft_doc::DocError::NoStory(sid))?;
+    let para = src.paras.get(src.para_at(at)).cloned().ok_or(pejy_doc::DocError::NoStory(sid))?;
     let (a, e) = (sel.anchor.min(sel.focus), sel.anchor.max(sel.focus));
     s.typing_format = None;
     s.edit(|d, _| {
-        let story = d.text_story_mut(sel.story, sel.cell).ok_or(designcraft_doc::DocError::NoStory(sel.story))?;
+        let story = d.text_story_mut(sel.story, sel.cell).ok_or(pejy_doc::DocError::NoStory(sel.story))?;
         if e > a {
             story.format_chars(a..e, |f| *f = chars.clone());
         }
@@ -482,7 +482,7 @@ fn select_at(s: &mut Session, p: &Value, unit: &str) -> Result<Value> {
 /// with `cell`), as the multiple clicks select it.
 fn unit_at(s: &Session, sid: StoryId, cell: Option<CellAddr>, b: usize, unit: &str, cmd: &str) -> Result<(usize, usize)> {
     let st = s.doc()?;
-    let story = st.doc.text_story(sid, cell).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+    let story = st.doc.text_story(sid, cell).ok_or(pejy_doc::DocError::NoStory(sid))?;
     let text = story.text.as_str();
     let b = floor_char_boundary(text, b);
     Ok(match unit {
@@ -594,8 +594,8 @@ fn place(s: &mut Session, p: &Value, extend: bool) -> Result<Value> {
         && a.table == c.table
         && (a.row, a.col) != (c.row, c.col)
     {
-        let range = designcraft_doc::CellRange::new(a.row, a.col, c.row, c.col);
-        st.selection.cells = Some(designcraft_doc::TableSel { story: sid, table: c.table, range });
+        let range = pejy_doc::CellRange::new(a.row, a.col, c.row, c.col);
+        st.selection.cells = Some(pejy_doc::TableSel { story: sid, table: c.table, range });
         st.bump_revision();
         return Ok(json!({"story": sid.0, "cells": range}));
     }
@@ -627,7 +627,7 @@ fn release(s: &mut Session, p: &Value) -> Result<Value> {
         return ok();
     }
     s.edit(|d, sel| {
-        let st = d.text_story_mut(sid, cell).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+        let st = d.text_story_mut(sid, cell).ok_or(pejy_doc::DocError::NoStory(sid))?;
         let piece = st.extract(r.clone());
         let mut at = b;
         if !copy {
@@ -645,7 +645,7 @@ fn release(s: &mut Session, p: &Value) -> Result<Value> {
 // Each command edits a copy-on-write Story snapshot. Reserving its known final text growth
 // avoids retaining geometric String spare capacity in every independent undo snapshot.
 // General Story insertion keeps its existing amortized-growth policy for mutable builders.
-fn reserve_command_text(st: &mut designcraft_doc::Story, additional: usize) -> Result<()> {
+fn reserve_command_text(st: &mut pejy_doc::Story, additional: usize) -> Result<()> {
     st.text.try_reserve_exact(additional).map_err(|e| crate::EngineError::Other(format!("could not reserve text insertion: {e}")))
 }
 
@@ -662,14 +662,14 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
     let typing = typing_format(s).cloned();
     let result = s.edit(|d, sel| {
         let t = sel.text.ok_or_else(|| bad("text.insert", "no insertion point"))?;
-        let st = d.text_story_mut(t.story, t.cell).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+        let st = d.text_story_mut(t.story, t.cell).ok_or(pejy_doc::DocError::NoStory(t.story))?;
         let r = t.range();
         let mut r = r.start.min(st.len())..r.end.min(st.len());
         // Between a break character and its return is the end of that paragraph: typing there goes
         // to the start of the next one.
         if r.is_empty()
             && st.text.get(r.start..).is_some_and(|t| t.starts_with('\n'))
-            && st.text.get(..r.start).and_then(|t| t.chars().next_back()).is_some_and(designcraft_doc::is_break_char)
+            && st.text.get(..r.start).and_then(|t| t.chars().next_back()).is_some_and(pejy_doc::is_break_char)
         {
             r = r.start + 1..r.start + 1;
         }
@@ -696,8 +696,8 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
             }
         }
         // A column, frame or page break ends its paragraph.
-        let mut text = if text.contains(designcraft_doc::is_break_char) {
-            designcraft_doc::end_paragraphs_at_breaks(&text, st.text.get(r.end..).and_then(|t| t.chars().next()))
+        let mut text = if text.contains(pejy_doc::is_break_char) {
+            pejy_doc::end_paragraphs_at_breaks(&text, st.text.get(r.end..).and_then(|t| t.chars().next()))
         } else {
             text.clone()
         };
@@ -706,7 +706,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
         if t.cell.is_none() && !text.is_empty() && st.table_at(r.start).is_some() {
             let pi = st.para_at(r.start);
             let pr = st.para_ranges()[pi].clone();
-            let anchor_at = pr.start + st.text[pr.clone()].find(designcraft_doc::TABLE_ANCHOR).unwrap_or(0);
+            let anchor_at = pr.start + st.text[pr.clone()].find(pejy_doc::TABLE_ANCHOR).unwrap_or(0);
             if r.start <= anchor_at {
                 if !text.ends_with('\n') {
                     text.push('\n');
@@ -724,7 +724,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
             if let Some(f) = &typing {
                 apply_typing_format(&mut fmt, f);
             }
-            fmt.over.change = Some(designcraft_doc::ChangeMark::Inserted);
+            fmt.over.change = Some(pejy_doc::ChangeMark::Inserted);
             st.insert_with(at, &text, fmt);
             let pos = at + text.len() - trail;
             sel.text = Some(TextSel { anchor: pos, focus: pos, ..t });
@@ -804,10 +804,10 @@ fn smart_quotes(s: &Session, text: &str) -> String {
 }
 
 /// Typographer's quotes of a language (a name or locale code, see
-/// [`designcraft_doc::language_tag`]): [double open, double close, single open, single close].
+/// [`pejy_doc::language_tag`]): [double open, double close, single open, single close].
 pub fn quote_marks(language: &str) -> [char; 4] {
     const ENGLISH: [char; 4] = ['\u{201C}', '\u{201D}', '\u{2018}', '\u{2019}'];
-    let Some(tag) = designcraft_doc::language_tag(language) else { return ENGLISH };
+    let Some(tag) = pejy_doc::language_tag(language) else { return ENGLISH };
     // Swiss German, French and Italian use guillemets.
     if tag.ends_with("-CH") {
         return ['\u{00AB}', '\u{00BB}', '\u{2039}', '\u{203A}'];
@@ -817,7 +817,7 @@ pub fn quote_marks(language: &str) -> [char; 4] {
         "zh" | "zh-Hant" => return ['\u{300C}', '\u{300D}', '\u{300E}', '\u{300F}'],
         _ => {}
     }
-    match designcraft_doc::language_subtag(tag) {
+    match pejy_doc::language_subtag(tag) {
         "de" | "cs" | "sk" | "bg" | "lt" => ['\u{201E}', '\u{201C}', '\u{201A}', '\u{2018}'],
         "fr" | "ru" | "uk" | "no" | "nb" | "nn" | "el" => ['\u{00AB}', '\u{00BB}', '\u{2039}', '\u{203A}'],
         "es" | "it" | "pt" | "ca" => ['\u{00AB}', '\u{00BB}', '\u{201C}', '\u{201D}'],
@@ -852,7 +852,7 @@ fn delete(s: &mut Session, p: &Value) -> Result<Value> {
     let tracking = s.doc()?.doc.settings.track_changes;
     s.edit(|d, sel| {
         let t = sel.text.ok_or_else(|| bad("text.delete", "no text"))?;
-        let st = d.text_story_mut(t.story, t.cell).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+        let st = d.text_story_mut(t.story, t.cell).ok_or(pejy_doc::DocError::NoStory(t.story))?;
         let r = t.range();
         let r = if !r.is_empty() {
             r
@@ -883,10 +883,10 @@ fn with_break_pair(text: &str, r: std::ops::Range<usize>) -> std::ops::Range<usi
     let mut chars = del.chars();
     match (chars.next(), chars.next()) {
         (Some('\n'), None) => match text.get(..r.start).and_then(|t| t.chars().next_back()) {
-            Some(b) if designcraft_doc::is_break_char(b) => r.start.saturating_sub(b.len_utf8())..r.end,
+            Some(b) if pejy_doc::is_break_char(b) => r.start.saturating_sub(b.len_utf8())..r.end,
             _ => r,
         },
-        (Some(b), None) if designcraft_doc::is_break_char(b) && text.get(r.end..).is_some_and(|t| t.starts_with('\n')) => r.start..r.end + 1,
+        (Some(b), None) if pejy_doc::is_break_char(b) && text.get(r.end..).is_some_and(|t| t.starts_with('\n')) => r.start..r.end + 1,
         _ => r,
     }
 }
@@ -1002,7 +1002,7 @@ fn story_direction(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// Set the direction of `stories` (all their frames turn together).
-pub(crate) fn set_story_direction(d: &mut designcraft_doc::Document, stories: &[StoryId], vertical: bool) {
+pub(crate) fn set_story_direction(d: &mut pejy_doc::Document, stories: &[StoryId], vertical: bool) {
     for sid in stories {
         if let Some(st) = d.story_mut(*sid)
             && st.vertical != vertical
@@ -1019,7 +1019,7 @@ fn move_caret(s: &mut Session, p: &Value) -> Result<Value> {
     let word = bool_or(p, "word", false);
     let st = s.doc()?;
     let t = st.selection.text.ok_or_else(|| bad("text.move", "no caret"))?;
-    let story = st.doc.text_story(t.story, t.cell).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+    let story = st.doc.text_story(t.story, t.cell).ok_or(pejy_doc::DocError::NoStory(t.story))?;
     let text = story.text.clone();
     // In a cell, lines come from the cell's own composition.
     let cs = text_composition(s.cache.get(&st.doc, t.story, None), t.cell);
@@ -1256,7 +1256,7 @@ fn char_flag_on(s: &Session, flag: impl Fn(&CharAttrs) -> Option<bool>) -> bool 
 }
 
 fn kenten_cmd(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_doc::cjk_settings::{AdornmentOverprint, KENTEN_MARK_MAX_CHARS, KentenAlignment, KentenKind, KentenPosition};
+    use pejy_doc::cjk_settings::{AdornmentOverprint, KENTEN_MARK_MAX_CHARS, KentenAlignment, KentenKind, KentenPosition};
     const CMD: &str = "type.kenten";
     let mut body = serde_json::Map::new();
     let mut set = |k: &str, v: Value| {
@@ -1355,7 +1355,7 @@ fn auto_tcy_cmd(s: &mut Session, p: &Value) -> Result<Value> {
     const CMD: &str = "type.autoTateChuYoko";
     let mut body = serde_json::Map::new();
     if let Some(v) = finite_param(p, "digits", CMD)? {
-        let max = f64::from(designcraft_compose::shape::AUTO_TCY_MAX);
+        let max = f64::from(pejy_compose::shape::AUTO_TCY_MAX);
         body.insert("autoTcy".into(), json!(v.round().clamp(0.0, max) as u32));
     }
     if let Some(v) = bool_param(p, "includeRoman", CMD)? {
@@ -1368,7 +1368,7 @@ fn auto_tcy_cmd(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn grid_settings_cmd(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_doc::cjk::CharacterAlignment as R;
+    use pejy_doc::cjk::CharacterAlignment as R;
     const CMD: &str = "type.gridSettings";
     let mut body = serde_json::Map::new();
     let first_only = bool_param(p, "firstLineOnly", CMD)?;
@@ -1410,7 +1410,7 @@ fn grid_settings_cmd(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Switch a paragraph attribute of the selected paragraphs: `on`, else the opposite of the
 /// first one's.
-fn para_toggle(s: &mut Session, p: &Value, cmd: &str, attr: &str, get: impl Fn(&designcraft_doc::ParaProps) -> bool) -> Result<Value> {
+fn para_toggle(s: &mut Session, p: &Value, cmd: &str, attr: &str, get: impl Fn(&pejy_doc::ParaProps) -> bool) -> Result<Value> {
     let on = match bool_param(p, "on", cmd)? {
         Some(v) => v,
         None => !format_targets(s).first().is_some_and(|t| {
@@ -1430,15 +1430,15 @@ fn para_toggle(s: &mut Session, p: &Value, cmd: &str, attr: &str, get: impl Fn(&
 fn ruby_text<'a>(p: &'a Value, key: &str) -> Result<Option<&'a str>> {
     let Some(v) = p.get(key) else { return Ok(None) };
     let t = v.as_str().ok_or_else(|| bad("type.ruby", format!("{key}: expected a string")))?;
-    if t.chars().count() > designcraft_doc::ruby::MAX_RUBY_CHARS {
-        return Err(bad("type.ruby", format!("{key}: longer than {} characters", designcraft_doc::ruby::MAX_RUBY_CHARS)));
+    if t.chars().count() > pejy_doc::ruby::MAX_RUBY_CHARS {
+        return Err(bad("type.ruby", format!("{key}: longer than {} characters", pejy_doc::ruby::MAX_RUBY_CHARS)));
     }
     Ok(Some(t))
 }
 
 fn ruby_cmd(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_doc::cjk_settings::AdornmentOverprint;
-    use designcraft_doc::ruby::{RubyAlignment, RubyOverhang, RubyParentSpacing, RubyPosition, RubyType};
+    use pejy_doc::cjk_settings::AdornmentOverprint;
+    use pejy_doc::ruby::{RubyAlignment, RubyOverhang, RubyParentSpacing, RubyPosition, RubyType};
     let mut body = serde_json::Map::new();
     let mut put = |attr: &str, v: Option<Value>| {
         if let Some(v) = v {
@@ -1482,7 +1482,7 @@ fn ruby_cmd(s: &mut Session, p: &Value) -> Result<Value> {
     put("rubyFontStyle", ruby_text(p, "fontStyle")?.map(|t| json!(t)));
     for (key, attr) in [("fill", "rubyFill"), ("stroke", "rubyStroke")] {
         if let Some(name) = ruby_text(p, key)? {
-            let known = name.is_empty() || name == designcraft_doc::color::swatch::NONE || s.doc()?.doc.swatch(name).is_some();
+            let known = name.is_empty() || name == pejy_doc::color::swatch::NONE || s.doc()?.doc.swatch(name).is_some();
             if !known {
                 return Err(bad("type.ruby", format!("{key}: no swatch `{name}`")));
             }
@@ -1493,7 +1493,7 @@ fn ruby_cmd(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// A character fill must name a swatch of the document.
-pub(crate) fn validate_char_fill(document: &designcraft_doc::Document, attrs: &CharAttrs, command_id: &str) -> Result<()> {
+pub(crate) fn validate_char_fill(document: &pejy_doc::Document, attrs: &CharAttrs, command_id: &str) -> Result<()> {
     match &attrs.fill {
         Some(fill) => super::object::known_swatch(document, fill, command_id, "fill"),
         None => Ok(()),
@@ -1503,7 +1503,7 @@ pub(crate) fn validate_char_fill(document: &designcraft_doc::Document, attrs: &C
 /// Byte `pos` is the hidden paragraph mark of an *empty* paragraph: the only character on that
 /// line, and so the one a line-affecting attribute like leading can land on right away instead of
 /// waiting for the next typed character (otherwise an empty line could never get its own leading).
-fn empty_para_mark(story: &designcraft_doc::Story, pos: usize) -> bool {
+fn empty_para_mark(story: &pejy_doc::Story, pos: usize) -> bool {
     let ranges = story.para_ranges();
     ranges.get(story.para_at(pos)).is_some_and(|r| r.start == pos && r.end == pos) && story.text.as_bytes().get(pos) == Some(&b'\n')
 }
@@ -1581,14 +1581,14 @@ fn kern_pair(s: &mut Session, p: &Value) -> Result<Value> {
 /// Byte offset of the character before `pos` when it starts a kerning pair with the character at
 /// `pos`: both exist and neither is a paragraph or line break.
 fn pair_start(text: &str, pos: usize) -> Option<usize> {
-    let is_text = |c: &char| !matches!(*c, '\n' | designcraft_doc::story::FORCED_LINE_BREAK);
+    let is_text = |c: &char| !matches!(*c, '\n' | pejy_doc::story::FORCED_LINE_BREAK);
     text.get(pos..)?.chars().next().filter(is_text)?;
     let c = text.get(..pos)?.chars().next_back().filter(is_text)?;
     pos.checked_sub(c.len_utf8())
 }
 
 /// Character attributes `a` (and the overrides `cleared` removed) over each target's text.
-pub(crate) fn apply_char_attrs(d: &mut designcraft_doc::Document, targets: &[Target], a: &CharAttrs, cleared: &[String]) {
+pub(crate) fn apply_char_attrs(d: &mut pejy_doc::Document, targets: &[Target], a: &CharAttrs, cleared: &[String]) {
     for t in targets {
         let r = &t.range;
         let Some(st) = d.text_story_mut(t.story, t.cell) else { continue };
@@ -1627,7 +1627,7 @@ pub(crate) fn format_paras(s: &mut Session, attrs: &Value) -> Result<Value> {
     // over its resolved rule; this pass validates them.
     let mut a = ParaAttrs::default();
     for (k, v) in obj {
-        a.set_json_over(k, v, &designcraft_doc::ParaProps::default()).map_err(|e| bad("type.para", e))?;
+        a.set_json_over(k, v, &pejy_doc::ParaProps::default()).map_err(|e| bad("type.para", e))?;
     }
     super::style::check_grep_styles("type.para", &a)?;
     // `null` removes the override (back to the style's value).
@@ -1657,7 +1657,7 @@ pub(crate) fn format_paras(s: &mut Session, attrs: &Value) -> Result<Value> {
 /// Alt+Left/Right in text: kerning at a caret, tracking of a selection, by the Kerning/Tracking
 /// increment.
 fn kern_step(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_doc::Kerning;
+    use pejy_doc::Kerning;
     let inc = s.doc()?.doc.settings.kerning_increment;
     let inc = if inc.is_finite() { inc.clamp(1.0, 1000.0) } else { 20.0 };
     let amount = match p.get("amount").and_then(Value::as_f64) {
@@ -1714,7 +1714,7 @@ fn step_size(s: &mut Session, delta: f64) -> Result<Value> {
 }
 
 fn break_link(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_doc::{CharFormat, CharProps, ParaProps};
+    use pejy_doc::{CharFormat, CharProps, ParaProps};
     let para = match p.get("kind").and_then(Value::as_str).unwrap_or("paragraph") {
         "paragraph" => true,
         "character" => false,
@@ -1729,7 +1729,7 @@ fn break_link(s: &mut Session, p: &Value) -> Result<Value> {
             if para {
                 st.format_paras(r, |pf| {
                     let (pp, pc) = styles.resolve_para(pf);
-                    pf.style = designcraft_doc::styles::NO_PARA_STYLE.into();
+                    pf.style = pejy_doc::styles::NO_PARA_STYLE.into();
                     pf.para = ParaProps::default().delta(&pp);
                     pf.chars = CharProps::default().delta(&pc);
                 });
@@ -1743,7 +1743,7 @@ fn break_link(s: &mut Session, p: &Value) -> Result<Value> {
                     let (_, pc) = styles.resolve_para(&st.paras[pi]);
                     st.format_chars(a..b, |f| {
                         let cp = styles.resolve_char(&pc, f);
-                        *f = CharFormat { style: designcraft_doc::story::NO_CHAR_STYLE.into(), over: pc.delta(&cp) };
+                        *f = CharFormat { style: pejy_doc::story::NO_CHAR_STYLE.into(), over: pc.delta(&cp) };
                     });
                 }
             }
@@ -1753,7 +1753,7 @@ fn break_link(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn open_type(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_doc::otf;
+    use pejy_doc::otf;
     let cur = selection_attrs(s, &json!({}))?;
     let mut list: Vec<String> =
         cur["chars"]["otfFeatures"].as_array().map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
@@ -1782,7 +1782,7 @@ const SELECTED_TEXT_CHARS: usize = 60;
 
 fn selected_text_preview(chars: impl Iterator<Item = char>) -> String {
     chars
-        .map(|c| if c.is_control() || c == designcraft_doc::OBJECT_MARK { ' ' } else { c })
+        .map(|c| if c.is_control() || c == pejy_doc::OBJECT_MARK { ' ' } else { c })
         .skip_while(|c| c.is_whitespace())
         .take(SELECTED_TEXT_CHARS)
         .collect()
@@ -1792,7 +1792,7 @@ fn selection_attrs(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
     let targets = format_targets(s);
     let Some(Target { story: sid, cell, range: r }) = targets.first().cloned() else { return Ok(Value::Null) };
-    let story = st.doc.text_story(sid, cell).ok_or(designcraft_doc::DocError::NoStory(sid))?;
+    let story = st.doc.text_story(sid, cell).ok_or(pejy_doc::DocError::NoStory(sid))?;
     let pi = story.para_at(r.start);
     let pf = &story.paras[pi];
     let (pp, base) = st.doc.styles.resolve_para(pf);
@@ -1818,7 +1818,7 @@ fn selection_attrs(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// The paragraph attributes whose resolved values differ across the paragraphs of `targets`.
-fn mixed_para_attrs(doc: &designcraft_doc::Document, targets: &[Target]) -> Vec<String> {
+fn mixed_para_attrs(doc: &pejy_doc::Document, targets: &[Target]) -> Vec<String> {
     let mut first: Option<serde_json::Map<String, Value>> = None;
     let mut mixed = std::collections::BTreeSet::new();
     for t in targets {
@@ -1838,8 +1838,8 @@ fn mixed_para_attrs(doc: &designcraft_doc::Document, targets: &[Target]) -> Vec<
 
 /// The first target character, with any pending caret overrides. Keep character-style
 /// inheritance separate from paragraph defaults for style creation from the selection.
-pub(crate) fn effective_char_format(s: &Session, target: &Target) -> Result<designcraft_doc::CharFormat> {
-    let story = s.doc()?.doc.text_story(target.story, target.cell).ok_or(designcraft_doc::DocError::NoStory(target.story))?;
+pub(crate) fn effective_char_format(s: &Session, target: &Target) -> Result<pejy_doc::CharFormat> {
+    let story = s.doc()?.doc.text_story(target.story, target.cell).ok_or(pejy_doc::DocError::NoStory(target.story))?;
     let mut format =
         if target.range.is_empty() { story.insert_format_at(target.range.start) } else { story.format_after(target.range.start) }.clone();
     if let Some(pending) = typing_format(s)
@@ -1869,7 +1869,7 @@ pub(crate) fn rename_typing_swatch(s: &mut Session, from: &str, to: &str) {
     }
 }
 
-fn swapped_colors(cp: &designcraft_doc::CharProps) -> CharAttrs {
+fn swapped_colors(cp: &pejy_doc::CharProps) -> CharAttrs {
     CharAttrs {
         fill: Some(cp.stroke.clone()),
         fill_tint: Some(cp.stroke_tint),
@@ -1888,7 +1888,7 @@ fn swap_fill_stroke(s: &mut Session, _p: &Value) -> Result<Value> {
         && s.doc()?.selection.text.is_some()
     {
         let st = s.doc()?;
-        let story = st.doc.text_story(target.story, target.cell).ok_or(designcraft_doc::DocError::NoStory(target.story))?;
+        let story = st.doc.text_story(target.story, target.cell).ok_or(pejy_doc::DocError::NoStory(target.story))?;
         let pf = story.paras.get(story.para_at(target.range.start)).ok_or_else(|| bad(ID, "missing paragraph"))?;
         let (_, base) = st.doc.styles.resolve_para(pf);
         let cp = st.doc.styles.resolve_char(&base, &effective_char_format(s, target)?);
@@ -1897,7 +1897,7 @@ fn swap_fill_stroke(s: &mut Session, _p: &Value) -> Result<Value> {
     let mut edits = Vec::new();
     let d = &s.doc()?.doc;
     for target in targets {
-        let story = d.text_story(target.story, target.cell).ok_or(designcraft_doc::DocError::NoStory(target.story))?;
+        let story = d.text_story(target.story, target.cell).ok_or(pejy_doc::DocError::NoStory(target.story))?;
         if story.is_empty() {
             let pf = story.paras.first().ok_or_else(|| bad(ID, "missing paragraph"))?;
             let (_, base) = d.styles.resolve_para(pf);
@@ -1941,7 +1941,7 @@ fn swap_fill_stroke(s: &mut Session, _p: &Value) -> Result<Value> {
     })
 }
 
-fn apply_typing_format(cf: &mut designcraft_doc::CharFormat, f: &TypingFormat) {
+fn apply_typing_format(cf: &mut pejy_doc::CharFormat, f: &TypingFormat) {
     cf.over.merge(&f.attrs);
     for k in &f.cleared {
         let _ = cf.over.set_json(k, &Value::Null);
@@ -1956,7 +1956,7 @@ fn link_style(s: &mut Session, p: &Value, bold: bool) -> Result<Value> {
     let family = cur["chars"]["fontFamily"].as_str().unwrap_or_default().to_string();
     let style = cur["chars"]["fontStyle"].as_str().unwrap_or_default().to_string();
     // The document's own fonts count too.
-    let db = designcraft_fonts::FontDb::global().scoped(s.doc()?.doc.font_scope);
+    let db = pejy_fonts::FontDb::global().scoped(s.doc()?.doc.font_scope);
     let (weight, italic) = db.traits_of(&family, &style);
     let on = p.get("on").and_then(Value::as_bool).unwrap_or(if bold { weight < 650.0 } else { !italic });
     let (want_bold, want_italic) = if bold { (Some(on), None) } else { (None, Some(on)) };
@@ -2018,7 +2018,7 @@ fn open_type_features(s: &mut Session, _p: &Value) -> Result<Value> {
     let mut segments: Vec<FeatureSegment> = Vec::new();
     for Target { story: sid, cell, range: r } in format_targets(s) {
         let Some(story) = st.doc.text_story(sid, cell) else { continue };
-        let covered: Vec<(usize, usize, designcraft_doc::story::CharFormat)> = if r.is_empty() {
+        let covered: Vec<(usize, usize, pejy_doc::story::CharFormat)> = if r.is_empty() {
             vec![(r.start, 1, story.format_after(r.start).clone())]
         } else {
             story
@@ -2035,14 +2035,14 @@ fn open_type_features(s: &mut Session, _p: &Value) -> Result<Value> {
         }
     }
     if segments.is_empty() {
-        let (_, base) = st.doc.styles.resolve_para_style(designcraft_doc::story::BASIC_PARAGRAPH);
-        let cp = st.doc.styles.resolve_char(&base, &designcraft_doc::story::CharFormat::default());
+        let (_, base) = st.doc.styles.resolve_para_style(pejy_doc::story::BASIC_PARAGRAPH);
+        let cp = st.doc.styles.resolve_char(&base, &pejy_doc::story::CharFormat::default());
         segments.push(FeatureSegment { len: 1, font: (cp.font_family, cp.font_style), applied: cp.otf_features, ligatures: cp.ligatures });
     }
-    let db = designcraft_fonts::FontDb::global();
-    let mut fonts: std::collections::BTreeMap<(String, String), designcraft_fonts::FontFeatures> = std::collections::BTreeMap::new();
+    let db = pejy_fonts::FontDb::global();
+    let mut fonts: std::collections::BTreeMap<(String, String), pejy_fonts::FontFeatures> = std::collections::BTreeMap::new();
     for seg in &segments {
-        fonts.entry(seg.font.clone()).or_insert_with(|| designcraft_fonts::font_features(&db.face(&seg.font.0, &seg.font.1)));
+        fonts.entry(seg.font.clone()).or_insert_with(|| pejy_fonts::font_features(&db.face(&seg.font.0, &seg.font.1)));
     }
     let total: usize = segments.iter().map(|seg| seg.len).sum::<usize>().max(1);
     let state = |covered: usize| match covered {
@@ -2056,7 +2056,7 @@ fn open_type_features(s: &mut Session, _p: &Value) -> Result<Value> {
         for seg in &segments {
             // Standard ligatures are the `ligatures` attribute, which shaping reads, unless the
             // feature list turns `liga` off.
-            let on = designcraft_doc::otf::is_on(&seg.applied, tag) && (tag != "liga" || seg.ligatures);
+            let on = pejy_doc::otf::is_on(&seg.applied, tag) && (tag != "liga" || seg.ligatures);
             if on {
                 applied += seg.len;
             }
@@ -2108,14 +2108,14 @@ fn set_features(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit(|d, _| {
         for t in &targets {
             let Some(st) = d.text_story_mut(t.story, t.cell) else { continue };
-            let runs: Vec<(std::ops::Range<usize>, designcraft_doc::story::CharFormat)> =
+            let runs: Vec<(std::ops::Range<usize>, pejy_doc::story::CharFormat)> =
                 st.runs().filter(|(run, _)| run.start < t.range.end && run.end > t.range.start).map(|(run, f)| (run.clone(), f.clone())).collect();
             for (run, format) in runs {
                 let Some(para) = st.paras.get(st.para_at(run.start)).cloned() else { continue };
                 let (_, base) = styles.resolve_para(&para);
                 let mut list = styles.resolve_char(&base, &format).otf_features;
                 for (tag, on) in &changes {
-                    designcraft_doc::otf::set(&mut list, tag, *on);
+                    pejy_doc::otf::set(&mut list, tag, *on);
                 }
                 let range = run.start.max(t.range.start)..run.end.min(t.range.end);
                 st.format_chars(range, |f| f.over.otf_features = Some(list.clone()));
@@ -2193,7 +2193,7 @@ pub(crate) fn case_map(src: &str, case: &str) -> Vec<String> {
         let up = |c: char| c.to_uppercase().collect::<String>();
         let low = |c: char| c.to_lowercase().collect::<String>();
         // Title and sentence case capitalize only scripts with initial capitals (not Georgian).
-        let cap = |c: char| if designcraft_doc::capitalizes(c) { up(c) } else { low(c) };
+        let cap = |c: char| if pejy_doc::capitalizes(c) { up(c) } else { low(c) };
         let m = match case {
             "upper" => up(c),
             "lower" => low(c),
@@ -2294,7 +2294,7 @@ mod open_type_tests {
         let sid = r["story"].clone();
         // Offsets inside 漢 (2..5) and 🙂 (5..9) snap back to the character starts: 漢 is replaced.
         s.execute("story.replaceRange", &json!({"story": sid, "start": 3, "end": 6, "text": "字"})).unwrap();
-        let story = designcraft_doc::StoryId(sid.as_u64().unwrap());
+        let story = pejy_doc::StoryId(sid.as_u64().unwrap());
         assert_eq!(s.doc().unwrap().doc.story(story).unwrap().text, "é字🙂x");
         // A caret before 🙂 (byte 5) would land inside it once é (2 bytes) is gone.
         s.execute("text.select", &json!({"story": sid, "anchor": 5})).unwrap();
@@ -2310,7 +2310,7 @@ mod open_type_tests {
     #[test]
     fn selected_text_preview_stops_at_its_character_budget() {
         let read = std::cell::Cell::new(0usize);
-        let prefix = ['\t', '\u{2003}', designcraft_doc::OBJECT_MARK];
+        let prefix = ['\t', '\u{2003}', pejy_doc::OBJECT_MARK];
         let chars = prefix.into_iter().chain(std::iter::repeat_n('字', 100_000)).inspect(|_| read.set(read.get() + 1));
         let preview = super::selected_text_preview(chars);
         assert_eq!(preview, "字".repeat(super::SELECTED_TEXT_CHARS));
@@ -2386,10 +2386,10 @@ What's new in typography this season, and why it matters to every designer"}),
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": "2024"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let gids = |s: &Session| {
             let d = &s.doc().unwrap().doc;
-            let cs = designcraft_compose::compose_story(d, sid, &Default::default());
+            let cs = pejy_compose::compose_story(d, sid, &Default::default());
             cs.frames[0].lines[0].glyphs.iter().map(|g| g.gid).collect::<Vec<_>>()
         };
         let lining = gids(&s);
@@ -2407,7 +2407,7 @@ What's new in typography this season, and why it matters to every designer"}),
         s.execute("file.new", &json!({})).unwrap();
         let text = "Para one\n\nPara two";
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": text})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         // The blank line between the two paragraphs: a collapsed caret, since it has no text.
         let blank = text.find("\n\n").unwrap() + 1;
         s.execute("text.select", &json!({"story": sid.0, "anchor": blank})).unwrap();
@@ -2415,9 +2415,9 @@ What's new in typography this season, and why it matters to every designer"}),
         let st = s.doc().unwrap().doc.story(sid).unwrap();
         // `char_format_at` resolves a boundary to the *preceding* run (new typing's format), so
         // check just past the mark's own one-byte run, which the mark alone occupies.
-        assert_eq!(st.char_format_at(blank + 1).over.leading, Some(designcraft_doc::Leading::Points(40.0)));
+        assert_eq!(st.char_format_at(blank + 1).over.leading, Some(pejy_doc::Leading::Points(40.0)));
         let d = s.doc().unwrap().doc.clone();
-        let cs = designcraft_compose::compose_story(&d, sid, &Default::default());
+        let cs = pejy_compose::compose_story(&d, sid, &Default::default());
         let blank_line = cs.frames[0].lines.iter().find(|l| l.range == (blank..blank)).unwrap();
         assert_eq!(blank_line.leading, 40.0, "the blank line's own height changed");
     }
@@ -2430,7 +2430,7 @@ What's new in typography this season, and why it matters to every designer"}),
         s.execute("file.new", &json!({})).unwrap();
         let text = "Para one\n\nPara two";
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": text})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let blank = text.find("\n\n").unwrap() + 1;
         s.execute("text.select", &json!({"story": sid.0, "anchor": blank})).unwrap();
         s.execute("type.char", &json!({"attrs": {"size": 30}})).unwrap();
@@ -2451,7 +2451,7 @@ What's new in typography this season, and why it matters to every designer"}),
         s.execute("file.new", &json!({})).unwrap();
         let text = "Para one\n\nPara two";
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": text})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let blank = text.find("\n\n").unwrap() + 1;
         s.execute("text.select", &json!({"story": sid.0, "anchor": blank})).unwrap();
         s.execute("type.char", &json!({"attrs": {"size": 30}})).unwrap();
@@ -2491,8 +2491,8 @@ mod nested_style_tests {
         )
         .unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let cs = designcraft_compose::compose_story(&d, designcraft_doc::StoryId(sid), &Default::default());
-        let text = &d.story(designcraft_doc::StoryId(sid)).unwrap().text;
+        let cs = pejy_compose::compose_story(&d, pejy_doc::StoryId(sid), &Default::default());
+        let text = &d.story(pejy_doc::StoryId(sid)).unwrap().text;
         let fill_at = |byte: usize| {
             let g = cs.frames[0].lines.iter().flat_map(|l| &l.glyphs).find(|g| g.byte == byte).unwrap();
             cs.styles[g.style as usize].fill.clone()
@@ -2516,7 +2516,7 @@ mod multi_click_tests {
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 500, 200], "content": "text", "text": "Hello world"})).unwrap();
         let (fid, sid) = (r["id"].as_u64().unwrap(), r["story"].as_u64().unwrap());
-        let size_at = |s: &Session, b: usize| s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().char_format_at(b).over.size;
+        let size_at = |s: &Session, b: usize| s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().char_format_at(b).over.size;
         let pending = |s: &mut Session| {
             s.execute("text.select", &json!({"story": sid, "anchor": 5})).unwrap();
             s.execute("type.char", &json!({"attrs": {"size": 30}})).unwrap();
@@ -2591,7 +2591,7 @@ mod multi_click_tests {
         let (fid, sid) = (r["id"].as_u64().unwrap(), r["story"].as_u64().unwrap());
         let at = |s: &Session, b: usize| {
             let d = &s.doc().unwrap().doc;
-            let cs = designcraft_compose::compose_story(d, designcraft_doc::StoryId(sid), &Default::default());
+            let cs = pejy_compose::compose_story(d, pejy_doc::StoryId(sid), &Default::default());
             let (l, g) = cs.frames[0].lines.iter().find_map(|l| l.glyphs.iter().find(|g| g.byte == b && g.len > 0).map(|g| (l, g))).unwrap();
             json!([g.x + g.adv * 0.75, l.baseline - 3.0])
         };
@@ -2635,7 +2635,7 @@ mod multi_click_tests {
         // Spread point over the right half of the glyph at byte `b`.
         let at = |s: &Session, b: usize| {
             let d = &s.doc().unwrap().doc;
-            let cs = designcraft_compose::compose_story(d, designcraft_doc::StoryId(sid), &Default::default());
+            let cs = pejy_compose::compose_story(d, pejy_doc::StoryId(sid), &Default::default());
             let (l, g) = cs.frames[0].lines.iter().find_map(|l| l.glyphs.iter().find(|g| g.byte == b && g.len > 0).map(|g| (l, g))).unwrap();
             json!([g.x + g.adv * 0.75, l.baseline - 3.0])
         };
@@ -2736,17 +2736,17 @@ mod text_color_tests {
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": "colour me", "caret": false})).unwrap();
         let (fid, sid) = (r["id"].as_u64().unwrap(), r["story"].as_u64().unwrap());
         s.execute("selection.set", &json!({"ids": [fid]})).unwrap();
-        let fill_of_frame = |s: &Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(fid)).unwrap().fill.swatch.clone();
+        let fill_of_frame = |s: &Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(fid)).unwrap().fill.swatch.clone();
         let before = fill_of_frame(&s);
         let r = s.execute("object.color", &json!({"color": "#ff0000", "text": true})).unwrap();
         let red = r["swatch"].as_str().unwrap().to_string();
         assert_eq!(fill_of_frame(&s), before, "the frame keeps its fill");
-        let story = s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().clone();
+        let story = s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().clone();
         assert_eq!(story.char_format_at(3).over.fill.as_deref(), Some(red.as_str()));
         // A text selection takes it without asking.
         s.execute("text.select", &json!({"story": sid, "anchor": 0, "focus": 3})).unwrap();
         let r = s.execute("object.color", &json!({"color": "#00ff00", "target": "stroke"})).unwrap();
-        let story = s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().clone();
+        let story = s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().clone();
         assert_eq!(story.format_after(0).over.stroke.as_deref(), r["swatch"].as_str());
         assert_eq!(s.doc().unwrap().history.undo.len(), 3, "the frame, then one undo step per colour");
     }
@@ -2767,14 +2767,14 @@ mod drag_text_tests {
         // Spread point of the glyph at byte `b`.
         let at = |s: &Session, b: usize| {
             let d = &s.doc().unwrap().doc;
-            let cs = designcraft_compose::compose_story(d, designcraft_doc::StoryId(sid), &Default::default());
+            let cs = pejy_compose::compose_story(d, pejy_doc::StoryId(sid), &Default::default());
             let l = &cs.frames[0].lines[0];
             let g = l.glyphs.iter().find(|g| g.byte == b).unwrap();
             json!([g.x + g.adv * 0.25, l.baseline - 3.0])
         };
         let end = |s: &Session| {
             let d = &s.doc().unwrap().doc;
-            let cs = designcraft_compose::compose_story(d, designcraft_doc::StoryId(sid), &Default::default());
+            let cs = pejy_compose::compose_story(d, pejy_doc::StoryId(sid), &Default::default());
             let l = &cs.frames[0].lines[0];
             json!([l.end_x + 2.0, l.baseline - 3.0])
         };
@@ -2783,7 +2783,7 @@ mod drag_text_tests {
         assert_eq!(r["dragging"], true);
         s.execute("text.extendTo", &json!({"frame": fid, "point": end(&s)})).unwrap();
         s.execute("text.release", &json!({"frame": fid, "point": end(&s), "moved": true})).unwrap();
-        let text = |s: &Session| s.doc().unwrap().doc.story(designcraft_doc::StoryId(sid)).unwrap().text.clone();
+        let text = |s: &Session| s.doc().unwrap().doc.story(pejy_doc::StoryId(sid)).unwrap().text.clone();
         assert_eq!(text(&s), "Hello worldbrave ");
         // Alt-drag copies (the moved text is still selected).
         s.execute("text.placeCaret", &json!({"frame": fid, "point": at(&s, 12)})).unwrap();
@@ -2812,7 +2812,7 @@ mod nested_line_style_tests {
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 400], "content": "text", "text": text})).unwrap();
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 0})).unwrap();
         s.execute("type.para", &json!({"nestedLineStyles": [{"style": "Lead", "lines": 1}]})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let cs = s.cache.get(&s.doc().unwrap().doc, sid, None);
         let lines = &cs.frames[0].lines;
         assert!(lines.len() >= 3);
@@ -2823,7 +2823,7 @@ mod nested_line_style_tests {
             "the whole first line"
         );
         assert_eq!(size_of(1), 12.0, "the next lines");
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
         let st = back.stories.values().find(|st| st.text.starts_with("The opening")).unwrap();
         let nl = st.paras[0].para.nested_line_styles.clone().unwrap_or_default();
         assert_eq!((nl.len(), nl.first().map(|n| n.lines)), (1, Some(1)), "IDML AllNestedLineStyles");
@@ -2869,7 +2869,7 @@ mod rule_tests {
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 400], "content": "text", "text": "Short"})).unwrap();
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 0})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let mut widths = vec![];
         for column in [true, false] {
             s.execute("type.para", &json!({"ruleAbove": {"on": true, "columnWidth": column}})).unwrap();
@@ -2896,7 +2896,7 @@ mod border_tests {
         s.execute("object.textFrameOptions", &json!({"ids": [r["id"]], "columns": 2})).unwrap();
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 0})).unwrap();
         s.execute("type.para", &json!({"borderOn": true, "borderWeights": [2, 1, 2, 1], "borderOffsets": [4, 4, 4, 4], "borderColor": "[Black]", "shadingOn": true, "shadingOffsets": [4, 4, 4, 4]})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let cs = s.cache.get(&s.doc().unwrap().doc, sid, None);
         let decos = &cs.frames[0].decos;
         let shading: Vec<_> = decos.iter().filter(|d| d.tint < 0.5).collect();
@@ -2906,7 +2906,7 @@ mod border_tests {
         let top = decos.iter().filter(|d| d.tint >= 0.5).map(|d| d.rect).fold(f64::MAX, |a, r| a.min(r.y0));
         let first_line = &cs.frames[0].lines[0];
         assert!((top - (first_line.baseline - first_line.ascent - 4.0 - 2.0)).abs() < 1e-6, "offset 4 + weight 2 above the text");
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
         let p = &back.stories.values().find(|st| st.text.starts_with("word")).unwrap().paras[0].para;
         assert_eq!(
             (p.border_on, p.border_weights, p.shading_offsets),
@@ -2927,7 +2927,7 @@ mod autocorrect_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 200], "content": "text", "text": ""})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 0})).unwrap();
         let text = |s: &Session| s.doc().unwrap().doc.stories[&sid].text.clone();
         // Off by default.
@@ -2957,7 +2957,7 @@ mod break_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 200], "content": "text", "text": "OneTwo\nThree"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let story = |s: &Session| s.doc().unwrap().doc.stories[&sid].clone();
         s.execute("text.select", &json!({"story": sid.0, "anchor": 3, "focus": 3})).unwrap();
         s.execute("text.insert", &json!({"text": "\u{e011}", "raw": true})).unwrap();
@@ -3000,7 +3000,7 @@ mod language_tests {
         let sid = r["story"].as_u64().unwrap();
         s.execute("type.char", &json!({"attrs": {"language": "German: 2006 Reform"}})).unwrap();
         s.execute("text.insert", &json!({"text": "\"Wort\" ist's"})).unwrap();
-        let text = s.doc().unwrap().doc.stories[&designcraft_doc::StoryId(sid)].text.clone();
+        let text = s.doc().unwrap().doc.stories[&pejy_doc::StoryId(sid)].text.clone();
         assert_eq!(text, "\u{201E}Wort\u{201C} ist\u{2019}s");
         // German words aren't English misspellings.
         let st = s.execute("spelling.check", &json!({"story": sid})).unwrap();
@@ -3021,7 +3021,7 @@ mod language_tests {
         assert_eq!(quote_marks("zh-TW"), ['\u{300C}', '\u{300D}', '\u{300E}', '\u{300F}']);
         assert_eq!(quote_marks("ja_JP"), ['\u{300C}', '\u{300D}', '\u{300E}', '\u{300F}']);
         for l in ["Japanese", "Korean", "Chinese", "Chinese: Simplified", "Chinese: Traditional"] {
-            assert!(!designcraft_compose::is_english(l), "{l}: no English hyphenation or spelling");
+            assert!(!pejy_compose::is_english(l), "{l}: no English hyphenation or spelling");
         }
     }
 
@@ -3053,7 +3053,7 @@ mod language_tests {
             ("[No Language]", ENGLISH, false),
         ] {
             assert_eq!(quote_marks(language), quotes, "{language}");
-            assert_eq!(designcraft_compose::is_english(language), english, "{language}");
+            assert_eq!(pejy_compose::is_english(language), english, "{language}");
         }
     }
 
@@ -3061,13 +3061,13 @@ mod language_tests {
     fn idml_language_names_keep_their_spelling_and_pick_the_language() {
         use std::io::Read;
         // A stand-in for Songti SC (first in the Simplified Chinese chain; the real one when installed).
-        designcraft_fonts::FontDb::global().add_font(designcraft_fonts::testing::font_with("Songti SC", &['直']).unwrap());
+        pejy_fonts::FontDb::global().add_font(pejy_fonts::testing::font_with("Songti SC", &['直']).unwrap());
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 300, 200], "content": "text", "text": "直"})).unwrap();
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 3})).unwrap();
         s.execute("type.char", &json!({"attrs": {"language": "Simplified Chinese"}})).unwrap();
-        let idml = designcraft_idml::export_idml(&s.doc().unwrap().doc);
+        let idml = pejy_idml::export_idml(&s.doc().unwrap().doc);
         let mut z = zip::ZipArchive::new(std::io::Cursor::new(idml.clone())).unwrap();
         let stories: String = (0..z.len())
             .map(|i| {
@@ -3081,12 +3081,12 @@ mod language_tests {
             .collect();
         assert!(stories.contains(r#"AppliedLanguage="$ID/Simplified Chinese""#), "{stories}");
         // The name comes back as written and sets the text as Simplified Chinese.
-        let mut back = designcraft_idml::import_idml(&idml).unwrap();
+        let mut back = pejy_idml::import_idml(&idml).unwrap();
         back.settings.glyph_fallback = true;
         let st = back.stories.values().find(|st| st.text.contains('直')).unwrap();
         let (_, base) = back.styles.resolve_para(&st.paras[0]);
         assert_eq!(back.styles.resolve_char(&base, st.char_format_at(0)).language, "Simplified Chinese");
-        let cs = designcraft_compose::compose_story(&back, st.id, &Default::default());
+        let cs = pejy_compose::compose_story(&back, st.id, &Default::default());
         let face = cs.frames[0].lines[0].glyphs.iter().find(|g| g.byte == 0).unwrap().face;
         assert_eq!(face.family, "Songti SC");
     }
@@ -3106,7 +3106,7 @@ mod tcy_tests {
         let sid = r["story"].as_u64().unwrap();
         let at = "令和".len();
         s.execute("text.select", &json!({"story": sid, "anchor": at, "focus": at + 2})).unwrap();
-        let get = |s: &Session| s.doc().unwrap().doc.stories[&designcraft_doc::StoryId(sid)].char_format_at(at + 1).over.tate_chu_yoko;
+        let get = |s: &Session| s.doc().unwrap().doc.stories[&pejy_doc::StoryId(sid)].char_format_at(at + 1).over.tate_chu_yoko;
         s.execute("type.tateChuYoko", &json!({})).unwrap();
         assert_eq!(get(&s), Some(true));
         s.execute("type.tateChuYoko", &json!({})).unwrap();
@@ -3124,7 +3124,7 @@ mod tcy_tests {
         s.execute("text.select", &json!({"story": sid, "anchor": 0, "focus": "漢字".len()})).unwrap();
         s.execute("type.ruby", &json!({"text": "かんじ"})).unwrap();
         s.execute("type.kenten", &json!({})).unwrap();
-        let f = |s: &Session| s.doc().unwrap().doc.stories[&designcraft_doc::StoryId(sid)].char_format_at(1).over.clone();
+        let f = |s: &Session| s.doc().unwrap().doc.stories[&pejy_doc::StoryId(sid)].char_format_at(1).over.clone();
         assert_eq!(f(&s).ruby.as_deref(), Some("かんじ"));
         assert_eq!(f(&s).kenten, Some(true));
         s.execute("type.kenten", &json!({})).unwrap();
@@ -3135,13 +3135,13 @@ mod tcy_tests {
 
     #[test]
     fn ruby_options_are_checked_and_clamped() {
-        use designcraft_doc::ruby::{RubyAlignment, RubyPosition, RubyType};
+        use pejy_doc::ruby::{RubyAlignment, RubyPosition, RubyType};
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 200], "content": "text", "text": "漢字です"})).unwrap();
         let sid = r["story"].as_u64().unwrap();
         s.execute("text.select", &json!({"story": sid, "anchor": 0, "focus": "漢字".len()})).unwrap();
-        let f = |s: &Session| s.doc().unwrap().doc.stories[&designcraft_doc::StoryId(sid)].char_format_at(1).over.clone();
+        let f = |s: &Session| s.doc().unwrap().doc.stories[&pejy_doc::StoryId(sid)].char_format_at(1).over.clone();
         s.execute(
             "type.ruby",
             &json!({"text": "かん\u{3000}じ", "type": "perCharacter", "alignment": "oneAki", "position": "belowLeft", "size": 1e9, "xScale": -50, "scalingPercent": 5, "autoTcyDigits": 99, "fillTint": 250, "yOffset": -1e12, "fill": "[Black]"}),
@@ -3162,7 +3162,7 @@ mod tcy_tests {
         s.execute("type.ruby", &json!({"alignment": "center"})).unwrap();
         assert_eq!((f(&s).ruby, f(&s).ruby_alignment), (a.ruby.clone(), Some(RubyAlignment::Center)));
         // Refused, and nothing changes: unknown names, non-numbers, overlong text, unknown swatches.
-        let long = "あ".repeat(designcraft_doc::ruby::MAX_RUBY_CHARS + 1);
+        let long = "あ".repeat(pejy_doc::ruby::MAX_RUBY_CHARS + 1);
         for p in [
             json!({"alignment": "sideways"}),
             json!({"size": "big"}),
@@ -3187,17 +3187,17 @@ mod tcy_tests {
         s.execute("text.select", &json!({"story": sid, "anchor": 0, "focus": n})).unwrap();
         s.execute("type.warichu", &json!({"lines": 2, "size": 40, "align": "left", "lineSpacing": 1, "charsBeforeBreak": 2, "charsAfterBreak": 2}))
             .unwrap();
-        let f = |s: &Session| s.doc().unwrap().doc.stories[&designcraft_doc::StoryId(sid)].char_format_at(1).over.clone();
+        let f = |s: &Session| s.doc().unwrap().doc.stories[&pejy_doc::StoryId(sid)].char_format_at(1).over.clone();
         let a = f(&s);
         assert_eq!(a.warichu, Some(true));
         assert_eq!(a.warichu_lines, Some(2));
         assert_eq!(a.warichu_size, Some(40.0));
         assert_eq!(a.warichu_line_spacing, Some(1.0));
-        assert_eq!(a.warichu_alignment, Some(designcraft_doc::cjk::WarichuAlignment::Left));
+        assert_eq!(a.warichu_alignment, Some(pejy_doc::cjk::WarichuAlignment::Left));
         assert_eq!(a.warichu_chars_before_break, Some(2));
         assert_eq!(a.warichu_chars_after_break, Some(2));
         // The characters after the selection are not part of the note.
-        assert_eq!(s.doc().unwrap().doc.stories[&designcraft_doc::StoryId(sid)].char_format_at(n + 1).over.warichu, None);
+        assert_eq!(s.doc().unwrap().doc.stories[&pejy_doc::StoryId(sid)].char_format_at(n + 1).over.warichu, None);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(f(&s).warichu, None);
         s.execute("edit.redo", &json!({})).unwrap();
@@ -3261,12 +3261,12 @@ mod arabic_tests {
         let sid = StoryId(r["story"].as_u64().unwrap());
         let before = s.cache.get(&s.doc().unwrap().doc, sid, None);
         s.execute("story.setDirection", &json!({"story": sid.0, "direction": "rightToLeft"})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().direction, designcraft_doc::TextDirection::RightToLeft);
+        assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().direction, pejy_doc::TextDirection::RightToLeft);
         let after = s.cache.get(&s.doc().unwrap().doc, sid, None);
         assert!(!std::sync::Arc::ptr_eq(&before, &after));
         assert!(s.execute("story.setDirection", &json!({"story": sid.0, "direction": "unknown"})).is_err());
         s.execute("edit.undo", &json!({})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().direction, designcraft_doc::TextDirection::LeftToRight);
+        assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().direction, pejy_doc::TextDirection::LeftToRight);
     }
 }
 
@@ -3281,7 +3281,7 @@ mod korean_breaks_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 200], "content": "text", "text": "한국어 문장"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("type.para", &json!({"attrs": {"koreanCharBreaks": true}})).unwrap();
         assert_eq!(s.doc().unwrap().doc.story(sid).unwrap().paras[0].para.korean_char_breaks, Some(true));
         s.execute("style.paragraph.create", &json!({"name": "Korean", "para": {"koreanCharBreaks": true}})).unwrap();
@@ -3291,7 +3291,7 @@ mod korean_breaks_tests {
 
 #[cfg(test)]
 mod story_direction_tests {
-    use designcraft_doc::{ItemId, StoryId};
+    use pejy_doc::{ItemId, StoryId};
     use serde_json::json;
 
     use crate::Session;
@@ -3349,7 +3349,7 @@ mod story_direction_tests {
 
 #[cfg(test)]
 mod vertical_caret_tests {
-    use designcraft_doc::StoryId;
+    use pejy_doc::StoryId;
     use serde_json::json;
 
     use crate::Session;
@@ -3442,12 +3442,12 @@ mod story_query_contract_tests {
 
     #[test]
     fn kenten_shatai_auto_tcy_and_grid_settings_take_checked_values() {
-        use designcraft_doc::cjk::CharacterAlignment;
-        use designcraft_doc::cjk_settings::{KentenKind, KentenPosition};
+        use pejy_doc::cjk::CharacterAlignment;
+        use pejy_doc::cjk_settings::{KentenKind, KentenPosition};
         let mut s = crate::Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 200, 400], "content": "text", "text": "縦書き12年", "vertical": true})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": "縦書き".len()})).unwrap();
         let chars = |s: &crate::Session| s.doc().unwrap().doc.stories[&sid].char_format_at(1).over.clone();
         let para = |s: &crate::Session| s.doc().unwrap().doc.stories[&sid].paras[0].para.clone();
@@ -3460,7 +3460,7 @@ mod story_query_contract_tests {
         .unwrap();
         let a = chars(&s);
         assert_eq!((a.kenten, a.kenten_kind, a.kenten_position), (Some(true), Some(KentenKind::Custom), Some(KentenPosition::BelowLeft)));
-        assert_eq!(a.kenten_character.as_ref().map(|c| c.chars().count()), Some(designcraft_doc::cjk_settings::KENTEN_MARK_MAX_CHARS));
+        assert_eq!(a.kenten_character.as_ref().map(|c| c.chars().count()), Some(pejy_doc::cjk_settings::KENTEN_MARK_MAX_CHARS));
         assert_eq!(
             (a.kenten_size, a.kenten_distance, a.kenten_x_scale, a.kenten_fill_tint),
             (Some(Some(1296.0)), Some(-1296.0), Some(0.01), Some(Some(1.0)))
@@ -3480,15 +3480,15 @@ mod story_query_contract_tests {
         assert!(s.execute("type.shatai", &json!({"angle": [45]})).is_err());
         // Paragraph settings.
         s.execute("type.autoTateChuYoko", &json!({"digits": 1e12, "includeRoman": true})).unwrap();
-        assert_eq!((para(&s).auto_tcy, para(&s).auto_tcy_include_roman), (Some(designcraft_compose::shape::AUTO_TCY_MAX), Some(true)));
+        assert_eq!((para(&s).auto_tcy, para(&s).auto_tcy_include_roman), (Some(pejy_compose::shape::AUTO_TCY_MAX), Some(true)));
         s.execute("type.gridSettings", &json!({"alignment": "emCenter", "firstLineOnly": true, "gyoudori": 1e12, "paragraphGyoudori": true}))
             .unwrap();
         let p = para(&s);
-        assert_eq!((p.grid_align, p.grid_reference), (Some(designcraft_doc::GridAlign::FirstLineOnly), Some(CharacterAlignment::EmCenter)));
+        assert_eq!((p.grid_align, p.grid_reference), (Some(pejy_doc::GridAlign::FirstLineOnly), Some(CharacterAlignment::EmCenter)));
         assert_eq!((p.grid_gyoudori, p.paragraph_gyoudori), (Some(100), Some(true)));
         assert!(s.execute("type.gridSettings", &json!({"alignment": "middle"})).is_err());
         s.execute("type.gridSettings", &json!({"alignment": "none"})).unwrap();
-        assert_eq!(para(&s).grid_align, Some(designcraft_doc::GridAlign::None));
+        assert_eq!(para(&s).grid_align, Some(pejy_doc::GridAlign::None));
         s.execute("type.rotateRoman", &json!({})).unwrap();
         assert_eq!(para(&s).rotate_roman, Some(true));
         s.execute("type.rotateRoman", &json!({})).unwrap();
@@ -3496,7 +3496,7 @@ mod story_query_contract_tests {
         s.execute("type.romanWordBreak", &json!({"on": true})).unwrap();
         assert_eq!(para(&s).roman_word_break, Some(true));
         // The story still composes with every setting at its limit.
-        let cs = designcraft_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default());
+        let cs = pejy_compose::compose_story(&s.doc().unwrap().doc, sid, &Default::default());
         assert!(!cs.frames.is_empty());
     }
 }
@@ -3559,11 +3559,11 @@ mod reserve_tests {
         let error = s
             .edit(|d, sel| {
                 let st = d.story_mut(sid).unwrap();
-                st.format_chars(5..9, |f| f.over.change = Some(designcraft_doc::ChangeMark::Inserted));
+                st.format_chars(5..9, |f| f.over.change = Some(pejy_doc::ChangeMark::Inserted));
                 let at = super::super::changes::mark_deleted(st, 0..9);
                 assert_eq!(at, 5);
                 assert_eq!(st.text, "Keep  text.");
-                assert_eq!(st.format_after(0).over.change, Some(designcraft_doc::ChangeMark::Deleted));
+                assert_eq!(st.format_after(0).over.change, Some(pejy_doc::ChangeMark::Deleted));
                 sel.text = None;
                 reserve_command_text(st, usize::MAX)?;
                 ok()
@@ -3646,7 +3646,7 @@ mod gradient_text_tests {
 
     /// Mean red and blue of the ink (pixels whose green is low: red → blue has none) in columns
     /// `x0..x1`.
-    fn ink(img: &designcraft_render::Rendered, x0: u32, x1: u32) -> (f64, f64) {
+    fn ink(img: &pejy_render::Rendered, x0: u32, x1: u32) -> (f64, f64) {
         let (mut r, mut b, mut n) = (0.0, 0.0, 0.0);
         for x in x0..x1 {
             for y in 0..img.height {
@@ -3661,7 +3661,7 @@ mod gradient_text_tests {
     }
 
     /// Red ink at the frame's left, blue at its right.
-    fn check(img: &designcraft_render::Rendered, what: &str) {
+    fn check(img: &pejy_render::Rendered, what: &str) {
         let (lr, lb) = ink(img, 0, 60);
         let (rr, rb) = ink(img, 200, 300);
         assert!(lr > lb + 80.0, "{what}: the left ink is red ({lr:.0}, {lb:.0})");
@@ -3676,16 +3676,16 @@ mod gradient_text_tests {
         let shape = s.execute("frame.create", &json!({"rect": [-60, 0, -50, 10], "content": "unassigned"})).unwrap()["id"].clone();
         s.execute("object.gradient", &json!({"ids": [shape], "stops": [{"location": 0, "color": "#ff0000"}, {"location": 100, "color": "#0000ff"}]}))
             .unwrap();
-        let id = designcraft_doc::ItemId(shape.as_u64().unwrap());
+        let id = pejy_doc::ItemId(shape.as_u64().unwrap());
         let swatch = s.doc().unwrap().doc.item(id).unwrap().fill.swatch.clone();
         let r = s.execute("frame.create", &json!({"rect": [0, 0, 300, 120], "content": "text", "text": "IIIIIIIIIIIIIIIIIIIIIIIIIIIIII"})).unwrap();
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 30})).unwrap();
         s.execute("type.char", &json!({"size": 60, "tracking": 0, "fill": swatch})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         check(&rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap(), "screen");
         // The PDF, placed back and drawn: the same gradient.
-        let pdf = designcraft_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
         let mut p = crate::Session::new();
         p.execute("file.new", &json!({"width": 300, "height": 120, "facingPages": false})).unwrap();
         p.execute("file.place", &json!({"base64": super::super::file::base64_encode(&pdf), "name": "text.pdf", "x": 0, "y": 0, "width": 300}))
@@ -3695,7 +3695,7 @@ mod gradient_text_tests {
     }
 
     /// The columns the red → blue ink spans (black table edges left out).
-    fn ink_span(img: &designcraft_render::Rendered) -> (u32, u32) {
+    fn ink_span(img: &pejy_render::Rendered) -> (u32, u32) {
         let cols: Vec<u32> = (0..img.width)
             .filter(|&x| {
                 (0..img.height).any(|y| {
@@ -3708,7 +3708,7 @@ mod gradient_text_tests {
     }
 
     /// Mean red and blue of the red → blue ink in columns `x0..x1`.
-    fn coloured_ink(img: &designcraft_render::Rendered, x0: u32, x1: u32) -> (f64, f64) {
+    fn coloured_ink(img: &pejy_render::Rendered, x0: u32, x1: u32) -> (f64, f64) {
         let (mut r, mut b, mut n) = (0.0, 0.0, 0.0);
         for x in x0..x1 {
             for y in 0..img.height {
@@ -3736,7 +3736,7 @@ mod gradient_text_tests {
         s.execute("text.select", &json!({"story": r["story"], "anchor": 0, "focus": 0})).unwrap();
         s.execute("table.insert", &json!({"rows": 1, "cols": 3})).unwrap();
         // A third of the frame's width: the cell's text, red → blue.
-        let mut d: designcraft_doc::Document = (*s.doc().unwrap().doc).clone();
+        let mut d: pejy_doc::Document = (*s.doc().unwrap().doc).clone();
         let sid = d.stories.values().find(|st| !st.tables.is_empty()).unwrap().id;
         let t = std::sync::Arc::make_mut(d.story_mut(sid).unwrap().tables.values_mut().next().unwrap());
         let text = &mut t.cell_mut(0, 0).unwrap().text;
@@ -3745,10 +3745,10 @@ mod gradient_text_tests {
             f.over.fill = Some(g.clone());
             f.over.size = Some(24.0);
         });
-        let mut rr = designcraft_render::Renderer::new();
-        let cache = designcraft_compose::Cache::new();
+        let mut rr = pejy_render::Renderer::new();
+        let cache = pejy_compose::Cache::new();
         let screen = rr.render_page(&d, &cache, 0, 1.0, false, &Default::default()).unwrap();
-        let pdf = designcraft_pdf::export_pdf(&d, &cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &cache, &Default::default()).unwrap();
         let mut p = crate::Session::new();
         p.execute("file.new", &json!({"width": 300, "height": 120, "facingPages": false})).unwrap();
         p.execute("file.place", &json!({"base64": super::super::file::base64_encode(&pdf), "name": "cell.pdf", "x": 0, "y": 0, "width": 300}))
@@ -3795,7 +3795,7 @@ mod placeholder_tests {
 
 #[cfg(test)]
 mod kern_pair_tests {
-    use designcraft_doc::{Kerning, StoryId};
+    use pejy_doc::{Kerning, StoryId};
     use serde_json::json;
 
     use crate::Session;
@@ -3862,13 +3862,13 @@ mod kern_pair_tests {
 
 #[cfg(test)]
 mod pick_up_format_tests {
-    use designcraft_doc::ItemId;
+    use pejy_doc::ItemId;
     use serde_json::json;
 
     use crate::Session;
 
     /// Typefool's video (12:04): select body text, Eyedropper, click the third header: the body
-    /// text takes the header's font, size and paragraph settings. DesignCraft copied the frame's
+    /// text takes the header's font, size and paragraph settings. Pejy copied the frame's
     /// fill and stroke instead.
     #[test]
     fn the_eyedropper_copies_text_formatting_to_selected_text() {

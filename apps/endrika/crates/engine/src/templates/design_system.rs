@@ -3,7 +3,7 @@
 //! input component sets and a card, all bound to the variables, used in one form shown in both
 //! modes.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use super::kit::*;

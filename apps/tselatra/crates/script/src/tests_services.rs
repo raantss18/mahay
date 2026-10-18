@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, PoisonError};
 
-use effectcraft_engine::{Services, Session};
+use tselatra_engine::{Services, Session};
 
 use crate::run_code;
 

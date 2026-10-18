@@ -1,6 +1,6 @@
 //! Built-in animation presets (Effects & Presets ▸ * Animation Presets ▸ Transitions).
 
-use effectcraft_time::Tick;
+use tselatra_time::Tick;
 use serde_json::json;
 
 use crate::Session;
@@ -123,6 +123,6 @@ fn preset_expressions_and_point_fractions() {
     // A point written as a fraction of the layer: Sunrise-style presets keep their defaults at 160x90.
     s.execute("anim.applyBuiltinPreset", json!({"layers": [solid], "preset": "dawnSky"})).unwrap();
     let ramp = s.active_comp().unwrap().layers[0].effects().unwrap().groups().nth(2).unwrap().clone();
-    assert_eq!(ramp.prop("end").unwrap().value, effectcraft_keyframe::Value::Vec2([80.0, 90.0]));
+    assert_eq!(ramp.prop("end").unwrap().value, tselatra_keyframe::Value::Vec2([80.0, 90.0]));
     assert_eq!(ramp.prop("startColor").unwrap().keys.len(), 2);
 }

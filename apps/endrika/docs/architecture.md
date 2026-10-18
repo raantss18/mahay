@@ -1,8 +1,8 @@
-# FigCraft architecture
+# Endrika architecture
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (the shared hub in `collab-net` and the `figcraft-server` app) · **Target:** Figma Design
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (the shared hub in `collab-net` and the `endrika-server` app) · **Target:** Figma Design
 
-How FigCraft is built today. Engine first, a thin swappable UI, everything a command; a Figma-shaped
+How Endrika is built today. Engine first, a thin swappable UI, everything a command; a Figma-shaped
 data model (a scene graph of frames with auto layout, components and variables). ~108,800 lines of
 Rust (2026-10-10).
 
@@ -14,23 +14,23 @@ replaced.
 
 | Layer | Crate | Lines | Role |
 |---|---|---|---|
-| L0 | `figcraft-geom` | ~0.5k | Affine transforms, shape path builders (rounded and smoothed corners, polygons, stars, arcs) on kurbo |
-| L0 | `figcraft-color` | ~1.3k | Colours (HSB/HSL, hex/CSS, Display P3), paints (solid, gradients, image), blend modes |
-| L1 | `figcraft-doc` | ~8.5k | Document model: pages, node tree in a persistent map (`imbl`, stable ids), properties, components, styles, variables, prototype data, comments, versions. Serde everywhere |
-| L2 | `figcraft-layout` | ~1.8k | Auto layout (horizontal, vertical, wrap, grid; hug/fill/fixed; min/max), constraints, layout grid geometry |
-| L2 | `figcraft-text` | ~3.1k | Font database (optional embedded craft-fonts + system scan), shaping (harfrust), bidi, line layout, glyph outlines (skrifa), variable fonts |
-| L2 | `figcraft-collab` | ~3.4k | Real-time collaboration core (no networking): synced object/property model, change sets, fractional positions, server ordering and validation, client reconciliation, wire messages |
-| L2 | `figcraft-plugin` | ~1.0k | Plugin manifest and the WebAssembly sandbox (wasmi, metered, memory cap, no file system, network or clock) |
-| L2 | `figcraft-pathops` | ~1.1k | Booleans (linesweeper), outline stroke with alignment, arrowheads |
-| L3 | `figcraft-render` | ~5.4k | Scene → pixels on tiny-skia (CPU): isolated layers for opacity/blend/effects, clips, masks, shadows, blurs (uniform, progressive, background), noise, texture, glass, text; banded in parallel; retained rendering of only what changed; levels of detail when zoomed out |
-| L3 | `figcraft-format` | ~5.2k | Native `.figcraft` (zip of `document.json` + images; streamed JSON), local library files, versions, REST API file JSON import (`rest/`) |
-| L4 | `figcraft-svg` | ~3.7k | SVG export and import (usvg) |
-| L4 | `figcraft-pdf` | ~2.3k | PDF export (krilla) with print options |
-| L5 | `figcraft-engine` | ~39.3k | Sessions, undo history (`Arc` snapshots), the command registry (`cmd/*`, `spec!`), pointer tools and vector edit mode, snapping and measuring, components sync, libraries, prototype runtime, Dev Mode code generation, the menu catalog (`catalog.rs`) and the keymap (`keymap.rs`), a panic guard |
-| L6 | `figcraft-ui-egui` | ~31.9k | The UI3-style frontend: canvas (render worker), toolbar, layers, Design/Prototype/Inspect panels, colour picker, menus, dialogs, presenter, comments, accessibility (AccessKit), the control channel server |
-| L6 | `figcraft-mcp` | ~2.4k | MCP server (JSON-RPC over stdio), headless or bridged to a running app |
-| L6 | `figcraft-collab-net` | ~3.0k | Live sessions over the network: the WebSocket transport (tungstenite, a reader and a writer thread per connection), the hub that runs a collaboration core server per open file for the session host the app embeds and for `figcraft-server` (behind a `Backend`), the joining and managing clients (publishing), invite links, presence relay and limits; the browser client; the only crate allowed networking dependencies |
-| apps | `figcraft`, `figcraft-cli`, `figcraft-web`, `figcraft-server` | ~3.2k | Desktop app (eframe + wgpu), command line, browser build (WASM, WebGPU/WebGL2), collaboration server (files, share links, persistence; [`server.md`](server.md)) |
+| L0 | `endrika-geom` | ~0.5k | Affine transforms, shape path builders (rounded and smoothed corners, polygons, stars, arcs) on kurbo |
+| L0 | `endrika-color` | ~1.3k | Colours (HSB/HSL, hex/CSS, Display P3), paints (solid, gradients, image), blend modes |
+| L1 | `endrika-doc` | ~8.5k | Document model: pages, node tree in a persistent map (`imbl`, stable ids), properties, components, styles, variables, prototype data, comments, versions. Serde everywhere |
+| L2 | `endrika-layout` | ~1.8k | Auto layout (horizontal, vertical, wrap, grid; hug/fill/fixed; min/max), constraints, layout grid geometry |
+| L2 | `endrika-text` | ~3.1k | Font database (optional embedded mahay-fonts + system scan), shaping (harfrust), bidi, line layout, glyph outlines (skrifa), variable fonts |
+| L2 | `endrika-collab` | ~3.4k | Real-time collaboration core (no networking): synced object/property model, change sets, fractional positions, server ordering and validation, client reconciliation, wire messages |
+| L2 | `endrika-plugin` | ~1.0k | Plugin manifest and the WebAssembly sandbox (wasmi, metered, memory cap, no file system, network or clock) |
+| L2 | `endrika-pathops` | ~1.1k | Booleans (linesweeper), outline stroke with alignment, arrowheads |
+| L3 | `endrika-render` | ~5.4k | Scene → pixels on tiny-skia (CPU): isolated layers for opacity/blend/effects, clips, masks, shadows, blurs (uniform, progressive, background), noise, texture, glass, text; banded in parallel; retained rendering of only what changed; levels of detail when zoomed out |
+| L3 | `endrika-format` | ~5.2k | Native `.endrika` (zip of `document.json` + images; streamed JSON), local library files, versions, REST API file JSON import (`rest/`) |
+| L4 | `endrika-svg` | ~3.7k | SVG export and import (usvg) |
+| L4 | `endrika-pdf` | ~2.3k | PDF export (krilla) with print options |
+| L5 | `endrika-engine` | ~39.3k | Sessions, undo history (`Arc` snapshots), the command registry (`cmd/*`, `spec!`), pointer tools and vector edit mode, snapping and measuring, components sync, libraries, prototype runtime, Dev Mode code generation, the menu catalog (`catalog.rs`) and the keymap (`keymap.rs`), a panic guard |
+| L6 | `endrika-ui-egui` | ~31.9k | The UI3-style frontend: canvas (render worker), toolbar, layers, Design/Prototype/Inspect panels, colour picker, menus, dialogs, presenter, comments, accessibility (AccessKit), the control channel server |
+| L6 | `endrika-mcp` | ~2.4k | MCP server (JSON-RPC over stdio), headless or bridged to a running app |
+| L6 | `endrika-collab-net` | ~3.0k | Live sessions over the network: the WebSocket transport (tungstenite, a reader and a writer thread per connection), the hub that runs a collaboration core server per open file for the session host the app embeds and for `endrika-server` (behind a `Backend`), the joining and managing clients (publishing), invite links, presence relay and limits; the browser client; the only crate allowed networking dependencies |
+| apps | `endrika`, `endrika-cli`, `endrika-web`, `endrika-server` | ~3.2k | Desktop app (eframe + wgpu), command line, browser build (WASM, WebGPU/WebGL2), collaboration server (files, share links, persistence; [`server.md`](server.md)) |
 | plugins | `plugins/` (own workspace) | | Rust plugin SDK and two example plugins, built for wasm32 by `cargo xtask plugins` ([`plugins.md`](plugins.md)) |
 | tools | `xtask` | | `ci`, `layers`, `assets`, `parity`, `version`, `icon`, `wasm`, `plugins`, `bench` |
 
@@ -48,7 +48,7 @@ undo with one step per gesture.
 
 Every user-visible behaviour is a command in `crates/engine/src/cmd/*` (455 ids after #101)
 with an id, label, parameter docs and undo flag. The menus (generated from the catalog), keyboard
-shortcuts, Actions palette, CLI (`figcraft-cli run`), JSON control channel (`--control <port>`) and
+shortcuts, Actions palette, CLI (`endrika-cli run`), JSON control channel (`--control <port>`) and
 MCP server all dispatch the same ids, so agents can do anything a person can; WebAssembly plugins call them too, within their manifest's permissions. Commands never open
 dialogs themselves; they request UI, and programmatic callers drop those requests.
 `cargo xtask parity` measures the catalog's coverage ([`parity-checklist.md`](parity-checklist.md)).
@@ -64,7 +64,7 @@ express an effect.
 
 ## File I/O
 
-`.figcraft` is the native format (atomic saves, autosave checkpoints; the desktop app keeps
+`.endrika` is the native format (atomic saves, autosave checkpoints; the desktop app keeps
 recovery copies of unsaved documents that reopen after a crash or a forced quit). Imports: REST API
 file JSON with variables and images, SVG, raster images, clipboard
 content. Exports: PNG, JPG, WebP, SVG, PDF, code. There is no `.fig` reader yet
@@ -73,7 +73,7 @@ content. Exports: PNG, JPG, WebP, SVG, PDF, code. There is no `.fig` reader yet
 ## Robustness
 
 Workspace lints deny `unwrap`, `expect`, `panic!` and friends in shipped code; `unsafe_code` is
-forbidden. `figcraft_engine::guard` turns a panicking command into an error and rolls the document
+forbidden. `endrika_engine::guard` turns a panicking command into an error and rolls the document
 back; the desktop app also guards each UI frame. Junk-parameter sweeps run every command with bad
 input.
 
@@ -81,6 +81,6 @@ input.
 
 | Date | Change | Summary |
 |---|---|---|
-| 2026-10-11 | minor | `collab-net` hosts through one hub for the app's sessions and the standalone server; added the `figcraft-server` app |
+| 2026-10-11 | minor | `collab-net` hosts through one hub for the app's sessions and the standalone server; added the `endrika-server` app |
 | 2026-10-10 | minor | Merged main after #101–#103: WASM plugins (plugins area 0% → 35% breadth, 20% ready; ecosystem 5% → 20%) and the multiplayer core without networking (multiplayer 5% → 15% breadth, 5% ready; collaboration 8% → 12%); menu breadth 97.5% → 98.5% (200/203); ready for real work ~46% → ~47%; full parity 420–790 h → 390–745 h; beta 210–380 h → 200–365 h. Fixed the stated weight sums (areas 1–16 sum to 94, total 113; percentages were already computed with those) |
 | 2026-10-10 | major | Created from the code as of PR #99 |

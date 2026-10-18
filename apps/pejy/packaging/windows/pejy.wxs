@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pejy MSI (WiX Toolset v5: `dotnet tool install -g wix`). Built by package.ps1:
+
+    wix build pejy.wxs installer-ui.wxs -arch x64 -d Version=1.2.3 -d BinDir=... -d IconPath=... -o out.msi
+
+  Per-machine install into Program Files, a Start Menu shortcut, `.pejy` owned by
+  Pejy, and Pejy offered under "Open with" for IDML (without taking over the user's
+  default app for it).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Pejy"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="49E87D30-BB68-4896-AA1D-F45C833CFC3C"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Pejy page layout and publishing" Manufacturer="Learning Machines LLC" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Pejy is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="PejyIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="PejyIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/raantss18/mahay/discussions" />
+
+    <!-- Shared native setup UI, including install/uninstall completion. -->
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Pejy" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="Pejy" Level="1">
+      <ComponentGroupRef Id="PejyFiles" />
+      <ComponentGroupRef Id="MahayInstallerSettings" />
+    </Feature>
+    <!-- Shared full UI; app installation policy remains below. -->
+    <UIRef Id="MahayInstallerUI" />
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="PejyFiles" Directory="INSTALLFOLDER">
+      <Component Id="PejyApp" Guid="DE018EF3-EE87-4E36-9F76-0B7B060A195E">
+        <File Id="PejyExe" Source="$(var.BinDir)\pejy.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Pejy"
+              Description="Pejy page layout and publishing" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
+              Icon="PejyIcon.ico" IconIndex="0" />
+        </File>
+
+        <!-- .pejy: Pejy's own format; Pejy is its default app. -->
+        <ProgId Id="Pejy.Document" Description="Pejy Document" Icon="PejyExe" IconIndex="0">
+          <Extension Id="pejy" ContentType="application/x-pejy">
+            <Verb Id="open" Command="Open" TargetFile="PejyExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <!-- IDML: offered under "Open with", never forced as the default. -->
+        <ProgId Id="Pejy.Idml" Description="IDML Document" Icon="PejyExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Pejy.Idml\shell\open\command" Value="&quot;[#PejyExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.idml\OpenWithProgids" Name="Pejy.Idml" Value="" Type="string" />
+
+        <!-- "Open with" app list and the Run dialog (Win+R "pejy"). -->
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\pejy.exe" Name="FriendlyAppName" Value="Pejy" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\pejy.exe\shell\open\command" Value="&quot;[#PejyExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\pejy.exe\SupportedTypes" Name=".pejy" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\pejy.exe\SupportedTypes" Name=".idml" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\pejy.exe" Value="[#PejyExe]" Type="string" />
+      </Component>
+
+      <Component Id="PejyCli">
+        <File Id="PejyCliExe" Source="$(var.BinDir)\pejy-cli.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

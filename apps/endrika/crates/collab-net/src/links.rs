@@ -1,9 +1,9 @@
-//! Making the desktop app the opener of `figcraft://` invite links (the engine's
+//! Making the desktop app the opener of `endrika://` invite links (the engine's
 //! [`LinkRegistrar`]). On Windows that's a per-user URL scheme under
-//! `HKEY_CURRENT_USER\Software\Classes\figcraft` (no administrator rights; uninstalling the user's
-//! registration removes nothing else); the shell then starts `figcraft.exe "<link>"`, and the app
+//! `HKEY_CURRENT_USER\Software\Classes\endrika` (no administrator rights; uninstalling the user's
+//! registration removes nothing else); the shell then starts `endrika.exe "<link>"`, and the app
 //! joins the session it names. macOS and Linux declare the scheme in their packages
-//! (`CFBundleURLTypes`, the desktop entry's `x-scheme-handler/figcraft`), so there is nothing to
+//! (`CFBundleURLTypes`, the desktop entry's `x-scheme-handler/endrika`), so there is nothing to
 //! register at run time.
 //!
 //! The registry sits behind [`Registry`] so tests use a fake: nothing here touches the real
@@ -12,10 +12,10 @@
 
 use std::path::{Path, PathBuf};
 
-use figcraft_engine::invite_links::LinkRegistrar;
+use endrika_engine::invite_links::LinkRegistrar;
 
 /// The scheme's key under the current user's hive.
-pub const KEY: &str = r"Software\Classes\figcraft";
+pub const KEY: &str = r"Software\Classes\endrika";
 
 /// String values in a registry hive (the current user's).
 pub trait Registry: Send {
@@ -27,7 +27,7 @@ pub trait Registry: Send {
     fn remove_tree(&mut self, key: &str) -> Result<(), String>;
 }
 
-/// The app's registration as the opener of `figcraft://` links.
+/// The app's registration as the opener of `endrika://` links.
 pub struct UrlScheme<R> {
     reg: R,
     exe: PathBuf,
@@ -47,7 +47,7 @@ impl<R: Registry> UrlScheme<R> {
 
     fn values(&self) -> [(String, &'static str, String); 4] {
         [
-            (KEY.into(), "", "URL:FigCraft invite link".into()),
+            (KEY.into(), "", "URL:Endrika invite link".into()),
             (KEY.into(), "URL Protocol", String::new()),
             (format!(r"{KEY}\DefaultIcon"), "", format!("\"{}\",0", self.exe.display())),
             (format!(r"{KEY}\shell\open\command"), "", self.command()),

@@ -11,8 +11,8 @@ pub(crate) mod load;
 
 use std::sync::Arc;
 
-use cadcraft_doc::{Block, Drawing, EntityKind, EntityStore, XrefStatus};
-use cadcraft_geom::Vec2;
+use drafitra_doc::{Block, Drawing, EntityKind, EntityStore, XrefStatus};
+use drafitra_geom::Vec2;
 use serde_json::{Value, json};
 
 use self::load::{Outcome, Sym};
@@ -60,7 +60,7 @@ pub(crate) fn after_open(s: &mut Session, i: usize) {
     let path = st.path.clone();
     let out = load::load_all(Arc::make_mut(&mut st.doc), path.as_deref());
     st.saved = st.doc.clone();
-    let ext = st.doc.extents(&cadcraft_doc::Space::Model);
+    let ext = st.doc.extents(&drafitra_doc::Space::Model);
     if !ext.is_empty() {
         st.set_view_quiet(crate::View { center: ext.center(), height: (ext.height().max(ext.width() * px.1 / px.0.max(1.0)) * 1.1).max(1e-6) });
     }

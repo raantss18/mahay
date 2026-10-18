@@ -1,9 +1,9 @@
 //! Angle fields must cancel on Escape and reject non-finite numeric input.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::PanelKind;
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::PanelKind;
 use egui::{Event, Key, Modifiers, Pos2, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
@@ -33,7 +33,7 @@ impl Panel {
     }
 }
 
-fn harness(panel: Panel, angle: f64) -> (Harness<'static, EffectcraftApp>, u64, u64) {
+fn harness(panel: Panel, angle: f64) -> (Harness<'static, TselatraApp>, u64, u64) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Angles", "width": 320, "height": 180, "duration": 4})).unwrap();
     let layer = s.execute("layer.newSolid", json!({"name": "Plate", "color": "#40b080"})).unwrap()["layer"].as_u64().unwrap();
@@ -44,7 +44,7 @@ fn harness(panel: Panel, angle: f64) -> (Harness<'static, EffectcraftApp>, u64, 
         s.active_comp().unwrap().layer(LayerId(layer)).unwrap().props.prop("transform/rotation").unwrap().uid
     };
     s.execute("prop.set", json!({"layer": layer, "prop": uid, "value": angle})).unwrap();
-    let mut app = EffectcraftApp::new(s);
+    let mut app = TselatraApp::new(s);
     app.show_panel(panel.kind());
     app.toggle_maximize(panel.kind());
     app.ui.timeline.layer_reveal.insert(layer, vec!["rotation".into()]);
@@ -54,12 +54,12 @@ fn harness(panel: Panel, angle: f64) -> (Harness<'static, EffectcraftApp>, u64, 
     (h, layer, uid)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> egui::Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> egui::Rect {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     egui::Rect::from_min_size(pos2(e.rect[0], e.rect[1]), vec2(e.rect[2], e.rect[3]))
 }
 
-fn component(h: &Harness<'_, EffectcraftApp>, panel: Panel, uid: u64, revolutions: bool) -> Pos2 {
+fn component(h: &Harness<'_, TselatraApp>, panel: Panel, uid: u64, revolutions: bool) -> Pos2 {
     let base = format!("{}.prop.{uid}", panel.prefix());
     if revolutions {
         return rect(h, &format!("{base}.revolutions")).center();
@@ -73,7 +73,7 @@ fn component(h: &Harness<'_, EffectcraftApp>, panel: Panel, uid: u64, revolution
     }
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
+fn click(h: &mut Harness<'_, TselatraApp>, p: Pos2) {
     h.input_mut().events.push(Event::PointerMoved(p));
     h.input_mut().events.push(Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
     h.step();
@@ -81,13 +81,13 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, p: Pos2) {
     h.run_steps(3);
 }
 
-fn key(h: &mut Harness<'_, EffectcraftApp>, key: Key, modifiers: Modifiers) {
+fn key(h: &mut Harness<'_, TselatraApp>, key: Key, modifiers: Modifiers) {
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers });
     h.input_mut().events.push(Event::Key { key, physical_key: None, pressed: false, repeat: false, modifiers });
     h.run_steps(2);
 }
 
-fn begin_edit(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, text: &str) {
+fn begin_edit(h: &mut Harness<'_, TselatraApp>, p: Pos2, text: &str) {
     click(h, p);
     assert!(h.ctx.egui_wants_keyboard_input(), "the numeric editor has focus");
     key(h, Key::A, Modifiers::COMMAND);
@@ -95,7 +95,7 @@ fn begin_edit(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, text: &str) {
     h.step();
 }
 
-fn angle(h: &Harness<'_, EffectcraftApp>, layer: u64, uid: u64) -> f64 {
+fn angle(h: &Harness<'_, TselatraApp>, layer: u64, uid: u64) -> f64 {
     h.state().session.active_comp().unwrap().layer(LayerId(layer)).unwrap().props.find(uid).unwrap().value.as_f64()
 }
 

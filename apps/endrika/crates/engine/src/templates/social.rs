@@ -2,7 +2,7 @@
 //! sizes by the same code. Wide sizes put the words beside the picture, tall ones above it; type
 //! and spacing scale with the frame.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::json;
 
 use super::glyphs;

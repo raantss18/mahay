@@ -2,8 +2,8 @@
 
 use crate::Engine;
 use serde_json::{Value, json};
-use soundcraft_model::{Clip, ClipContent, ClipId, Track, TrackId};
-use soundcraft_time::TimeFormat;
+use feo_model::{Clip, ClipContent, ClipId, Track, TrackId};
+use feo_time::TimeFormat;
 
 fn clip_json(e: &Engine, c: &Clip) -> Value {
     let s = e.session();
@@ -114,7 +114,7 @@ pub fn session_text(e: &Engine) -> String {
     let mut out = String::new();
     out.push_str(&format!("SESSION NAME:\t{}\nSAMPLE RATE:\t{}\nBIT DEPTH:\t{:?}\nTIMECODE FORMAT:\t{}\n# OF AUDIO TRACKS:\t{}\n# OF AUDIO CLIPS:\t{}\n# OF AUDIO FILES:\t{}\n\n",
         s.name, s.sample_rate.hz(), s.bit_depth, s.frame_rate.label(),
-        s.tracks.iter().filter(|t| t.kind == soundcraft_model::TrackKind::Audio).count(),
+        s.tracks.iter().filter(|t| t.kind == feo_model::TrackKind::Audio).count(),
         s.tracks.iter().map(|t| t.clips().len()).sum::<usize>(), s.sources.len()));
     out.push_str("F I L E S  I N  S E S S I O N\nFilename\tLocation\n");
     for src in &s.sources {

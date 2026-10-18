@@ -6,14 +6,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use tsipika_engine::Session;
 
-use crate::{FilePick, Services, VectorcraftApp, dialogs, io};
+use crate::{FilePick, Services, TsipikaApp, dialogs, io};
 
 type Written = Rc<RefCell<Vec<String>>>;
 
 /// An app with a document whose save panel answers `typed` and whose writer records the paths.
-fn saving_app(typed: &'static str) -> (VectorcraftApp, Written) {
+fn saving_app(typed: &'static str) -> (TsipikaApp, Written) {
     let written = Written::default();
     let w = written.clone();
     let services = Services {
@@ -24,7 +24,7 @@ fn saving_app(typed: &'static str) -> (VectorcraftApp, Written) {
         pick_save: Some(Box::new(move |_: &FilePick| Some(typed.to_string()))),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
     (app, written)
@@ -39,7 +39,7 @@ type Shown = Rc<RefCell<Vec<Vec<(&'static str, &'static [&'static str])>>>>;
 
 /// An app with a document whose save panel records the file types it shows and answers the
 /// suggested name in `/tmp`.
-fn panel_app() -> (VectorcraftApp, Shown) {
+fn panel_app() -> (TsipikaApp, Shown) {
     let shown = Shown::default();
     let s = shown.clone();
     let services = Services {
@@ -50,7 +50,7 @@ fn panel_app() -> (VectorcraftApp, Shown) {
         })),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
     (app, shown)
@@ -65,7 +65,7 @@ fn last_shown(s: &Shown) -> Vec<(&'static str, &'static [&'static str])> {
 /// show the one file type they write in the save panel, as Save and Export show theirs.
 #[test]
 fn save_panels_show_the_file_type_they_write() {
-    use vectorcraft_engine::cmd::{flatten, pdfcmds, perspgrid, printpresets};
+    use tsipika_engine::cmd::{flatten, pdfcmds, perspgrid, printpresets};
     let (mut app, shown) = panel_app();
     app.run("docInfo.save", json!({})).unwrap();
     assert_eq!(last_shown(&shown), [("Text", &["txt"][..])], "Document Info › Save");
@@ -105,8 +105,8 @@ fn save_panels_show_the_file_type_they_write() {
 fn saves_add_the_format_extension_to_a_bare_name() {
     let (mut app, w) = saving_app("/tmp/Untitled-1");
     app.run("file.save", json!({})).unwrap();
-    assert_eq!(last(&w), "/tmp/Untitled-1.vectorcraft");
-    assert_eq!(app.session.active().unwrap().path.as_deref(), Some("/tmp/Untitled-1.vectorcraft"));
+    assert_eq!(last(&w), "/tmp/Untitled-1.tsipika");
+    assert_eq!(app.session.active().unwrap().path.as_deref(), Some("/tmp/Untitled-1.tsipika"));
     let (mut app, w) = saving_app("/tmp/copy");
     app.run("file.saveCopy", json!({"format": "svg", "svg": {}})).unwrap();
     assert_eq!(last(&w), "/tmp/copy.svg");
@@ -116,10 +116,10 @@ fn saves_add_the_format_extension_to_a_bare_name() {
 }
 
 /// An app with a document whose save dialogs show off the UI thread, as on Linux.
-fn portal_app() -> (VectorcraftApp, crate::tests_picks::Shown, crate::tests_picks::Written) {
+fn portal_app() -> (TsipikaApp, crate::tests_picks::Shown, crate::tests_picks::Written) {
     let mut services = Services::default();
     let (shown, written) = crate::tests_picks::off_the_ui_thread(&mut services);
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
     (app, shown, written)
@@ -129,7 +129,7 @@ fn portal_app() -> (VectorcraftApp, crate::tests_picks::Shown, crate::tests_pick
 /// picked, as the Linux portal's dialog answers) → the path the save goes on with: the one written,
 /// or the one the dialog that opens next holds (the options of SVG, PDF, and of native and .ai
 /// files on Save As; the question whether to replace a file).
-fn saved_from(app: &mut VectorcraftApp, shown: &crate::tests_picks::Shown, written: &Written, cmd: &str, answer: &[&str]) -> String {
+fn saved_from(app: &mut TsipikaApp, shown: &crate::tests_picks::Shown, written: &Written, cmd: &str, answer: &[&str]) -> String {
     written.borrow_mut().clear();
     assert!(app.run(cmd, json!({})).is_err(), "{cmd} waits for its dialog");
     shown.answer(answer);
@@ -147,13 +147,13 @@ fn saved_from(app: &mut VectorcraftApp, shown: &crate::tests_picks::Shown, writt
 fn the_file_type_picked_in_the_save_dialog_decides_the_format() {
     for (answer, expected) in [
         (&["/art/poster", "ai"][..], "/art/poster.ai"),
-        (&["/art/Untitled-1.vectorcraft", "ai"], "/art/Untitled-1.ai"),
+        (&["/art/Untitled-1.tsipika", "ai"], "/art/Untitled-1.ai"),
         (&["/art/poster.SVG", "ai"], "/art/poster.SVG"),
         (&["/art/poster.foo", "ai"], "/art/poster.foo.ai"),
-        (&["/art/poster.ai", "vectorcraft"], "/art/poster.ai"),
+        (&["/art/poster.ai", "tsipika"], "/art/poster.ai"),
         (&["/art/poster", "svg"], "/art/poster.svg"),
         // A dialog that doesn't say, as on Windows and macOS: the default format's extension.
-        (&["/art/poster"], "/art/poster.vectorcraft"),
+        (&["/art/poster"], "/art/poster.tsipika"),
     ] {
         let (mut app, shown, written) = portal_app();
         assert_eq!(saved_from(&mut app, &shown, &written, "file.save", answer), expected, "{answer:?}");
@@ -161,7 +161,7 @@ fn the_file_type_picked_in_the_save_dialog_decides_the_format() {
 }
 
 /// Save As to the type picked asks for that format's options: the .ai options (Version first),
-/// not VectorCraft's.
+/// not Tsipika's.
 #[test]
 fn save_as_asks_for_the_options_of_the_file_type_picked() {
     let (mut app, shown, written) = portal_app();
@@ -170,16 +170,16 @@ fn save_as_asks_for_the_options_of_the_file_type_picked() {
     assert_eq!((d.kind.as_str(), d.str("format")), (dialogs::save_options::KIND, "ai".to_string()));
 }
 
-/// A document saved as .ai lists .ai first: VectorCraft picked with a bare name or with the
+/// A document saved as .ai lists .ai first: Tsipika picked with a bare name or with the
 /// suggested name saves a native file. Save a Copy and Save as Template follow the type picked too.
 #[test]
 fn a_document_in_another_format_saves_as_the_type_picked() {
     let (mut app, shown, written) = portal_app();
     app.run("file.saveAs", json!({"path": "/art/a.ai", "options": {}})).unwrap();
     assert_eq!(*written.borrow(), ["/art/a.ai"]);
-    assert_eq!(saved_from(&mut app, &shown, &written, "file.saveAs", &["/art/poster", "vectorcraft"]), "/art/poster.vectorcraft");
+    assert_eq!(saved_from(&mut app, &shown, &written, "file.saveAs", &["/art/poster", "tsipika"]), "/art/poster.tsipika");
     dialogs::cancel(&mut app);
-    assert_eq!(saved_from(&mut app, &shown, &written, "file.saveAs", &["/art/a.ai", "vectorcraft"]), "/art/a.vectorcraft");
+    assert_eq!(saved_from(&mut app, &shown, &written, "file.saveAs", &["/art/a.ai", "tsipika"]), "/art/a.tsipika");
     dialogs::cancel(&mut app);
     assert_eq!(saved_from(&mut app, &shown, &written, "file.saveCopy", &["/art/copy", "svg"]), "/art/copy.svg");
     dialogs::cancel(&mut app);
@@ -214,7 +214,7 @@ fn exports_add_the_format_extension_to_a_bare_name() {
 
 /// An app with a document whose save panel answers `typed` in a folder of its own named after
 /// `tag`, where files are written and found → (the app, the folder).
-fn on_disk(tag: &str, typed: &str) -> (VectorcraftApp, std::path::PathBuf) {
+fn on_disk(tag: &str, typed: &str) -> (TsipikaApp, std::path::PathBuf) {
     let dir = std::env::temp_dir().join(format!("vc-saveext-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
@@ -225,24 +225,24 @@ fn on_disk(tag: &str, typed: &str) -> (VectorcraftApp, std::path::PathBuf) {
         pick_save: Some(Box::new(move |_: &FilePick| Some(picked.clone()))),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
     (app, dir)
 }
 
-/// `card` typed in the save panel becomes `card.vectorcraft`, a file the panel did not ask about:
+/// `card` typed in the save panel becomes `card.tsipika`, a file the panel did not ask about:
 /// Save asks before replacing it, Cancel leaves it as it was, and OK replaces it.
 #[test]
 fn a_name_given_its_extension_asks_before_replacing_a_file_there() {
     let (mut app, dir) = on_disk("ask", "card");
-    let card = dir.join("card.vectorcraft");
+    let card = dir.join("card.tsipika");
     let path = card.to_string_lossy().into_owned();
     std::fs::write(&card, b"the old card").unwrap();
     assert!(app.run("file.save", json!({})).is_err(), "nothing is saved while it asks");
-    let d = app.ui.dialog.clone().expect("Save asks before replacing card.vectorcraft");
+    let d = app.ui.dialog.clone().expect("Save asks before replacing card.tsipika");
     assert_eq!((d.kind.as_str(), d.str("path")), (dialogs::confirm::REPLACE, path.clone()));
-    assert!(d.str("message").contains("card.vectorcraft") && d.str("detail").contains("card"), "{d:?}");
+    assert!(d.str("message").contains("card.tsipika") && d.str("detail").contains("card"), "{d:?}");
     dialogs::cancel(&mut app);
     assert!(app.ui.dialog.is_none());
     assert_eq!(std::fs::read(&card).unwrap(), b"the old card", "Cancel leaves the file as it was");
@@ -260,13 +260,13 @@ fn a_name_given_its_extension_asks_before_replacing_a_file_there() {
 #[test]
 fn the_enter_that_closed_the_save_panel_does_not_replace_the_file() {
     let (mut app, dir) = on_disk("enter", "card");
-    let card = dir.join("card.vectorcraft");
+    let card = dir.join("card.tsipika");
     std::fs::write(&card, b"the old card").unwrap();
     assert!(app.run("file.save", json!({})).is_err());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let enter = |pressed| egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed, repeat: false, modifiers: Default::default() };
-    let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut TsipikaApp, events: Vec<egui::Event>| {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| dialogs::show(app, ui.ctx()));
         out.textures_delta.clear();
     };
@@ -287,13 +287,13 @@ fn a_name_given_its_extension_writes_at_once_when_no_file_is_there() {
     let (mut app, dir) = on_disk("fresh", "fresh");
     app.run("file.save", json!({})).unwrap();
     assert!(app.ui.dialog.is_none());
-    assert!(dir.join("fresh.vectorcraft").exists());
+    assert!(dir.join("fresh.tsipika").exists());
     let _ = std::fs::remove_dir_all(&dir);
-    let (mut app, dir) = on_disk("typed", "card.vectorcraft");
-    std::fs::write(dir.join("card.vectorcraft"), b"the old card").unwrap();
+    let (mut app, dir) = on_disk("typed", "card.tsipika");
+    std::fs::write(dir.join("card.tsipika"), b"the old card").unwrap();
     app.run("file.save", json!({})).unwrap();
     assert!(app.ui.dialog.is_none());
-    assert_ne!(std::fs::read(dir.join("card.vectorcraft")).unwrap(), b"the old card");
+    assert_ne!(std::fs::read(dir.join("card.tsipika")).unwrap(), b"the old card");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -322,7 +322,7 @@ fn every_write_through_a_save_panel_asks_before_replacing() {
     app.services.exists = Some(Box::new(|_: &str| true));
     app.run("file.exportAs", json!({"format": "png"})).unwrap();
     assert!(dialogs::confirm(&mut app).is_err());
-    let open = |app: &VectorcraftApp| app.ui.dialog.as_ref().map(|d| (d.kind.clone(), d.str("path")));
+    let open = |app: &TsipikaApp| app.ui.dialog.as_ref().map(|d| (d.kind.clone(), d.str("path")));
     assert_eq!(open(&app), Some((dialogs::confirm::REPLACE.to_string(), "/tmp/out.png".to_string())));
     dialogs::confirm(&mut app).unwrap();
     assert_eq!(open(&app), Some(("pngOptions".to_string(), "/tmp/out.png".to_string())));

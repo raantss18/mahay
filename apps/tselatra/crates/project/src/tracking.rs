@@ -9,9 +9,9 @@
 //! ```
 //!
 //! Feature Center, Confidence and Attach Point get one keyframe per analysed frame (layer time).
-//! The tracking algorithms live in `effectcraft-track`; applying tracks lives in the engine.
+//! The tracking algorithms live in `tselatra-track`; applying tracks lives in the engine.
 
-use effectcraft_keyframe::Value;
+use tselatra_keyframe::Value;
 use serde::{Deserialize, Serialize};
 
 use crate::build::Ids;
@@ -114,7 +114,7 @@ pub struct TrackerOptions {
     /// Confidence threshold, percent.
     pub threshold: f64,
     pub action: LowConfidence,
-    /// Follow each feature's rotation and scale while matching (EffectCraft extension).
+    /// Follow each feature's rotation and scale while matching (Tselatra extension).
     pub track_shape: bool,
 }
 

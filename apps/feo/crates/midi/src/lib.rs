@@ -1,4 +1,4 @@
-//! SoundCraft MIDI.
+//! Feo MIDI.
 //!
 //! - [`Note`], [`CtrlEvent`] and [`Sequence`]: the MIDI content of a region / track, in ticks at
 //!   [`PPQ`] (960) ticks per quarter note.

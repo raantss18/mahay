@@ -43,7 +43,7 @@ fn group_bounds(group: &Group, transform: Affine, depth: usize, page: Rect) -> O
                     let scale = m.determinant().abs().sqrt();
                     if scale.is_finite()
                         && path.is_finite()
-                        && let Some(outline) = effectcraft_path::stroke_outline(std::slice::from_ref(&path), &stroke.style(), scale)
+                        && let Some(outline) = tselatra_path::stroke_outline(std::slice::from_ref(&path), &stroke.style(), scale)
                         && let Some(r) = path_bounds(m * outline)
                     {
                         rect = Some(rect.map_or(r, |b| b.union(r)));

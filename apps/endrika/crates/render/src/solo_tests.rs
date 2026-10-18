@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use figcraft_color::{Color, Paint};
-use figcraft_doc::{Document, NodeKind};
+use endrika_color::{Color, Paint};
+use endrika_doc::{Document, NodeKind};
 
 use crate::{Options, Retained, View, render_view};
 
@@ -34,7 +34,7 @@ fn solo_draws_one_layer_in_place() {
     assert_eq!(pixel(&one, 250, 50), bg, "B left out");
     assert_eq!(pixel(&one, 10, 10), bg, "the section around A left out");
     // A layer of another page (or the page itself) draws the page as usual.
-    for other in [page, figcraft_doc::NodeId(999)] {
+    for other in [page, endrika_doc::NodeId(999)] {
         let p = render_view(&d, page, &view, &Options { solo: Some(other), ..Default::default() }).unwrap();
         assert_eq!(pixel(&p, 250, 50)[2], 255);
     }

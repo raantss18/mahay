@@ -20,7 +20,7 @@ mod tests_lighting;
 #[cfg(test)]
 mod tests_multiple_lights;
 
-use vectorcraft_geom::{BezPath, ParamCurve, PathData, Point, Rect, Vec2, kurbo::ParamCurveDeriv};
+use tsipika_geom::{BezPath, ParamCurve, PathData, Point, Rect, Vec2, kurbo::ParamCurveDeriv};
 
 /// Resource limits shared by desktop, CLI and browser evaluation.
 const MAX_PROFILE_POINTS: usize = 1024;

@@ -1,7 +1,7 @@
 //! `fill.set` / `stroke.set` reject a negative, fractional or non-finite `index` instead of
 //! clamping or truncating it onto another paint (like `fill.remove` / `stroke.remove`).
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use crate::Session;

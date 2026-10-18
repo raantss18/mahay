@@ -1,10 +1,10 @@
 // Ease Presets: easing curves kept by name and applied to the sides of selected keyframes.
 //
-// A ScriptUI panel that ships with EffectCraft as an optional extension (Window ▸ Ease
+// A ScriptUI panel that ships with Tselatra as an optional extension (Window ▸ Ease
 // Presets.jsx). It uses only After Effects' documented scripting API: comp.selectedProperties,
 // Property.selectedKeys, keyInTemporalEase / keyOutTemporalEase, setTemporalEaseAtKey with
 // KeyframeEase, setInterpolationTypeAtKey, app.settings and ScriptUI. Original work by the
-// EffectCraft contributors, MIT OR Apache-2.0.
+// Tselatra contributors, MIT OR Apache-2.0.
 //
 // A curve is the out side of a segment's first key and the in side of its second, in the
 // Keyframe Velocity dialog's terms: influence in percent of the segment, and speed relative to the

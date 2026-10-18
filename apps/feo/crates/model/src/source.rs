@@ -2,7 +2,7 @@
 //! movies video clips reference.
 
 use crate::SourceId;
-use soundcraft_audio_io::{AudioBuffer, FileFormat, peaks::Peaks};
+use feo_audio_io::{AudioBuffer, FileFormat, peaks::Peaks};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 

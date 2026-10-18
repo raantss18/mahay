@@ -1,7 +1,7 @@
 //! Keyframe color labels: Label a keyframe (Keyframe ▸ Label ▸ colour) and Edit ▸ Select Keyframe
 //! Label Group (On Selected Layers / On All Layers / Visible Keyframes on …).
 
-use effectcraft_color::Label;
+use tselatra_color::Label;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, has_comp, has_keys, str_p};

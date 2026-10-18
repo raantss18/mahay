@@ -4,9 +4,9 @@
 use std::sync::Arc;
 
 use egui::{Id, Ui};
-use figcraft_color::Color;
-use figcraft_doc::{Document, NodeId, StyleKind};
-use figcraft_engine::selection_colors::{PaintTarget, SelectionColor, collect};
+use endrika_color::Color;
+use endrika_doc::{Document, NodeId, StyleKind};
+use endrika_engine::selection_colors::{PaintTarget, SelectionColor, collect};
 use serde_json::json;
 
 use crate::a11y::Tip;
@@ -82,7 +82,7 @@ pub fn section(app: &mut FigApp, ui: &mut Ui, doc: &Arc<Document>, ids: &[NodeId
                             if let Some(hex) = widgets::text_field_named(ui, ui.id().with("hex"), &color.to_hex(), width, tr("Color")) {
                                 if let Some(color) = Color::from_hex(&hex) {
                                     let mut paint = group.paint.clone();
-                                    paint.kind = figcraft_color::PaintKind::Solid { color: color.with_alpha(1.0) };
+                                    paint.kind = endrika_color::PaintKind::Solid { color: color.with_alpha(1.0) };
                                     if color.a < 1.0 {
                                         paint.opacity = color.a;
                                     }
@@ -97,7 +97,7 @@ pub fn section(app: &mut FigApp, ui: &mut Ui, doc: &Arc<Document>, ids: &[NodeId
                                 open_picker(app, group.targets.clone());
                             }
                         }
-                        let alpha = format!("{}%", figcraft_doc::trim_num(f64::from(group.paint.opacity) * 100.0));
+                        let alpha = format!("{}%", endrika_doc::trim_num(f64::from(group.paint.opacity) * 100.0));
                         if let Some(value) = widgets::text_field_named(ui, ui.id().with("opacity"), &alpha, 44.0, tr("Opacity"))
                             && let Ok(value) = value.trim().trim_end_matches('%').parse::<f32>()
                             && value.is_finite()
@@ -141,7 +141,7 @@ mod tests {
     use super::*;
     use crate::NoServices;
     use egui::{Event, Pos2, RawInput, Rect, Shape, vec2};
-    use figcraft_engine::Session;
+    use endrika_engine::Session;
 
     struct Panel {
         ctx: egui::Context,

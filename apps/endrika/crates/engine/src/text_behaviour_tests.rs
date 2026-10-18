@@ -1,4 +1,4 @@
-//! Text behaviour through commands (the rules of `figcraft_text`'s behaviour suite that involve
+//! Text behaviour through commands (the rules of `endrika_text`'s behaviour suite that involve
 //! editing or settings): caret moves, deletes and word selection by grapheme cluster and by script,
 //! vertical trim and paragraph indent through `node.set`, and renders and exports from one layout.
 
@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use crate::Session;
 use crate::params::id_of;
 use crate::textedit::{begin, key, select_word};
-use figcraft_doc::{LeadingTrim, NodeId, NodeKind};
+use endrika_doc::{LeadingTrim, NodeId, NodeKind};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -125,7 +125,7 @@ fn ime_composition_with_cjk() {
     assert_eq!((range, cursor), ((0, 10), 10));
     assert_eq!(chars(&s, t), "", "the document waits for the commit");
     let shown = doc.node(t).unwrap();
-    if let Some((l, _)) = figcraft_text::layout_node(shown).filter(|(l, _)| !l.glyphs.is_empty()) {
+    if let Some((l, _)) = endrika_text::layout_node(shown).filter(|(l, _)| !l.glyphs.is_empty()) {
         assert!(l.lines.len() > 1, "a long composition wraps in the 60 px box");
         assert!((shown.height - l.height).abs() < 1e-6, "the box grows with it");
     }
@@ -138,7 +138,7 @@ fn ime_composition_with_cjk() {
 fn vertical_trim_through_node_set() {
     let mut s = Session::new();
     let t = text(&mut s, "Hello\nworld", json!({"fontSize": 40, "lineHeight": 60}));
-    let Some((l, _)) = figcraft_text::layout_node(s.doc().unwrap().node(t).unwrap()) else { return };
+    let Some((l, _)) = endrika_text::layout_node(s.doc().unwrap().node(t).unwrap()) else { return };
     if l.glyphs.is_empty() {
         return;
     }
@@ -147,22 +147,22 @@ fn vertical_trim_through_node_set() {
     s.execute("node.set", &json!({"id": t, "props": {"leadingTrim": "capHeight"}})).unwrap();
     let n = s.doc().unwrap().node(t).unwrap();
     assert_eq!(n.kind.text().unwrap().leading_trim, LeadingTrim::CapHeight);
-    let (l, _) = figcraft_text::layout_node(n).unwrap();
+    let (l, _) = endrika_text::layout_node(n).unwrap();
     let cap = l.lines[0].baseline;
     // The auto-size box now runs from the first cap height to the last baseline: cap + 60.
     assert!((n.height - (cap + 60.0)).abs() < 1e-6 && cap > 10.0 && cap < 40.0, "{} vs {cap}", n.height);
     assert_eq!(n.width, w, "the width doesn't change");
     // Descenders hang below the trimmed box: exports reach past it to keep them.
-    let eb = figcraft_render::export_bounds(s.doc().unwrap(), t).unwrap();
+    let eb = endrika_render::export_bounds(s.doc().unwrap(), t).unwrap();
     assert!(eb.y1 > n.height + 10.0, "{eb:?}");
     // The PNG's ink starts at the box's top (cap height at y = 0; ascenders like "l" may poke a few
     // px above it, by how much depends on the font); SVG and PDF use the same layout.
-    let pix = figcraft_render::render_node(s.doc().unwrap(), t, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), t, 1.0).unwrap();
     let first_ink = (0..pix.height()).find(|y| (0..pix.width()).any(|x| pix.pixel(x, *y).is_some_and(|p| p.alpha() > 64)));
     assert!(first_ink.is_some_and(|y| (-8.0..=2.0).contains(&(f64::from(y) + eb.y0))), "{first_ink:?} {eb:?}");
-    let svg = figcraft_svg::export_svg(s.doc().unwrap(), &[t], &figcraft_svg::SvgOptions::default()).unwrap();
+    let svg = endrika_svg::export_svg(s.doc().unwrap(), &[t], &endrika_svg::SvgOptions::default()).unwrap();
     assert!(!svg.contains("NaN"));
-    assert!(figcraft_pdf::export_nodes_pdf(s.doc().unwrap(), &[t]).is_ok());
+    assert!(endrika_pdf::export_nodes_pdf(s.doc().unwrap(), &[t]).is_ok());
     // Inspect and code say so; one undo step back; junk is refused.
     let css = crate::codegen::css_decls(s.doc().unwrap(), s.doc().unwrap().node(t).unwrap(), &mut Default::default(), (true, true));
     assert!(css.contains("text-box: trim-both cap alphabetic"), "{css}");
@@ -180,7 +180,7 @@ fn paragraph_indent_only_moves_left_aligned_text() {
     let mut s = Session::new();
     let t = text(&mut s, "Indented paragraph", json!({"fontSize": 20, "paragraphIndent": 30}));
     let first_x = |s: &Session| {
-        let (l, _) = figcraft_text::layout_node(s.doc().unwrap().node(t).unwrap()).unwrap();
+        let (l, _) = endrika_text::layout_node(s.doc().unwrap().node(t).unwrap()).unwrap();
         (l.glyphs.first().map_or(0.0, |g| g.x), l.width)
     };
     let (x, w) = first_x(&s);
@@ -195,7 +195,7 @@ fn paragraph_indent_only_moves_left_aligned_text() {
 
 /// A new text made with the Text tool by a press at `from`, a drag to `to` and a release, holding
 /// `chars`: its box and resize mode.
-fn text_tool(from: (f64, f64), to: (f64, f64), chars: &str) -> (figcraft_geom::Rect, figcraft_doc::TextAutoResize) {
+fn text_tool(from: (f64, f64), to: (f64, f64), chars: &str) -> (endrika_geom::Rect, endrika_doc::TextAutoResize) {
     use crate::tools::{PointerEvent, PointerKind, ToolId};
     let mut s = Session::new();
     s.set_tool(ToolId::Text);
@@ -213,8 +213,8 @@ fn text_tool(from: (f64, f64), to: (f64, f64), chars: &str) -> (figcraft_geom::R
 fn a_drag_with_the_text_tool_makes_a_fixed_size_box() {
     // #360: the drag's size, its top-left where the drag started, and its text wraps in it; a
     // click, or a drag within a few pixels, still makes auto-width text.
-    use figcraft_doc::TextAutoResize;
-    figcraft_text::scan_system_fonts();
+    use endrika_doc::TextAutoResize;
+    endrika_text::scan_system_fonts();
     let long = "A sentence much longer than eighty pixels";
     let (line, auto) = text_tool((100.0, 100.0), (100.0, 100.0), long);
     assert_eq!(auto, TextAutoResize::WidthAndHeight);

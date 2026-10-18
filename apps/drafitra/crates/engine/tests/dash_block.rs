@@ -1,8 +1,8 @@
 //! -BLOCK erases the selected objects, and asks before redefining a block (issue #307). BLOCK
 //! (the menu's Make...) and the JSON form still convert the selection to a block reference.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::EntityKind;
+use drafitra_engine::Session;
+use drafitra_engine::doc::EntityKind;
 use serde_json::json;
 
 fn prompt(s: &Session) -> String {

@@ -5,9 +5,9 @@
 //! `slideshow.overlays` command; [`SlideOverlays`] is those settings resolved for one photo (its
 //! texts expanded, its rating) and drawn onto the composed slide.
 //!
-//! **Where the drawing lives:** text needs the fonts (Inter plus the craft-fonts CJK fallbacks,
+//! **Where the drawing lives:** text needs the fonts (Inter plus the mahay-fonts CJK fallbacks,
 //! [`crate::text`]) and tokens need the catalog's photo, both in the engine, so overlays are a
-//! second pass in the engine over `lightcraft_slideshow::compose_with`'s slide (its `behind` hook
+//! second pass in the engine over `hazavana_slideshow::compose_with`'s slide (its `behind` hook
 //! draws an identity plate set to "render behind image" before the photo). The composer stays a
 //! layout-and-pixels crate with no fonts and no catalog.
 //!
@@ -23,9 +23,9 @@
 
 use std::sync::Arc;
 
-use lightcraft_catalog::Photo;
-use lightcraft_raster::{Image, Plane, Rgba8};
-use lightcraft_slideshow::{Layout, Rect, hex, parse_color};
+use hazavana_catalog::Photo;
+use hazavana_raster::{Image, Plane, Rgba8};
+use hazavana_slideshow::{Layout, Rect, hex, parse_color};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
@@ -216,7 +216,7 @@ impl Default for IdentityPlate {
     fn default() -> Self {
         IdentityPlate {
             enabled: false,
-            text: "LightCraft".into(),
+            text: "Hazavana".into(),
             image: String::new(),
             size: 0.05,
             color: [255, 255, 255],
@@ -752,7 +752,7 @@ impl SlideOverlays {
             return Some(PlateContent::Image(img, w as usize, h as usize));
         }
         let text = p.text.trim();
-        crate::text::TextLayout::new(text, px as f32, false, crate::fonts::CRAFT_FONTS).map(PlateContent::Text)
+        crate::text::TextLayout::new(text, px as f32, false, crate::fonts::MAHAY_FONTS).map(PlateContent::Text)
     }
 
     fn text_layout(&self, i: usize, l: &Layout) -> Option<crate::text::TextLayout> {
@@ -761,7 +761,7 @@ impl SlideOverlays {
         if t.opacity <= 0.0 {
             return None;
         }
-        crate::text::TextLayout::new(text, (t.size * Self::short(l)).max(1.0) as f32, false, crate::fonts::CRAFT_FONTS)
+        crate::text::TextLayout::new(text, (t.size * Self::short(l)).max(1.0) as f32, false, crate::fonts::MAHAY_FONTS)
     }
 
     fn stars_size(&self, l: &Layout) -> Option<(usize, f64)> {
@@ -918,7 +918,7 @@ fn shadow(img: &mut Rgba8, tl: &crate::text::TextLayout, x: f64, y: f64, sigma: 
             *m = (*m + cov).min(1.0);
         }
     });
-    let mask = if sigma > 0.3 { lightcraft_raster::blur::gaussian(&mask, sigma as f32) } else { mask };
+    let mask = if sigma > 0.3 { hazavana_raster::blur::gaussian(&mask, sigma as f32) } else { mask };
     let (ox, oy) = (mx0 as i64, my0 as i64);
     for (i, k) in mask.data.iter().enumerate() {
         if *k > 1e-3 {
@@ -949,7 +949,7 @@ fn scaled_graphic(path: &str, src: &Arc<Rgba8>, w: usize, h: usize) -> Option<Ar
         let a = p[3] as f32 / 255.0;
         [p[0] as f32 * a, p[1] as f32 * a, p[2] as f32 * a, a]
     });
-    let scaled = Arc::new(lightcraft_raster::resample::resize(&pre, w, h, lightcraft_raster::resample::Filter::Mitchell));
+    let scaled = Arc::new(hazavana_raster::resample::resize(&pre, w, h, hazavana_raster::resample::Filter::Mitchell));
     *cache = Some((path.to_string(), id, w, h, scaled.clone()));
     Some(scaled)
 }
@@ -1030,7 +1030,7 @@ mod tests {
     use super::*;
 
     fn layout(w: usize, h: usize) -> Layout {
-        lightcraft_slideshow::layout(&lightcraft_slideshow::SlideSettings::default().merged(&json!({"margins": 0.1})).unwrap(), 1.5, w, h)
+        hazavana_slideshow::layout(&hazavana_slideshow::SlideSettings::default().merged(&json!({"margins": 0.1})).unwrap(), 1.5, w, h)
     }
 
     fn photo() -> Photo {
@@ -1175,7 +1175,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("plate.png");
         let red = Image::filled(40, 20, [255u8, 0, 0, 255]);
-        let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&red), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+        let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&red), &hazavana_codecs::EncodeMeta::default()).unwrap();
         std::fs::write(&path, png).unwrap();
         let l = layout(800, 500);
         let s = OverlaySettings::default()
@@ -1195,7 +1195,7 @@ mod tests {
         let photo_img = Image::filled(30, 20, [0u8, 0, 255, 255]);
         let ob = SlideOverlays::resolve(&behind, None);
         let (img, l2) =
-            lightcraft_slideshow::compose_with(&photo_img, None, &lightcraft_slideshow::SlideSettings::default(), 800, 500, &mut |i, l| {
+            hazavana_slideshow::compose_with(&photo_img, None, &hazavana_slideshow::SlideSettings::default(), 800, 500, &mut |i, l| {
                 ob.draw_behind(i, l)
             });
         let _ = l2;
@@ -1293,7 +1293,7 @@ mod tests {
             let mut bare = photo();
             bare.meta = Default::default();
             for (w, h) in [(1, 1), (17, 9), (320, 200)] {
-                let l = lightcraft_slideshow::layout(&lightcraft_slideshow::SlideSettings::default(), f64::NAN, w, h);
+                let l = hazavana_slideshow::layout(&hazavana_slideshow::SlideSettings::default(), f64::NAN, w, h);
                 let o = SlideOverlays::resolve(&s, Some(&bare));
                 let mut img = blank(l.slide.width() as usize, l.slide.height() as usize);
                 o.draw_behind(&mut img, &l);
@@ -1317,7 +1317,7 @@ mod tests {
             .unwrap();
         let mut p = photo();
         p.rating = 5;
-        let l = lightcraft_slideshow::layout(&lightcraft_slideshow::SlideSettings::default(), 1.5, 4000, 2500);
+        let l = hazavana_slideshow::layout(&hazavana_slideshow::SlideSettings::default(), 1.5, 4000, 2500);
         let mut img = blank(4000, 2500);
         let t = std::time::Instant::now();
         SlideOverlays::resolve(&s, Some(&p)).draw_front(&mut img, &l);
@@ -1325,14 +1325,14 @@ mod tests {
         assert!(img.get(100, 300)[0] > 0, "the text's start shows");
     }
 
-    /// CJK text draws with the craft-fonts faces (skips without them).
+    /// CJK text draws with the mahay-fonts faces (skips without them).
     #[test]
-    fn cjk_text_uses_the_craft_fonts() {
-        if crate::fonts::cjk(crate::fonts::CRAFT_FONTS).next().is_none() {
-            eprintln!("skipped: built without craft-fonts (CRAFT_FONTS_DIR)");
+    fn cjk_text_uses_the_mahay_fonts() {
+        if crate::fonts::cjk(crate::fonts::MAHAY_FONTS).next().is_none() {
+            eprintln!("skipped: built without mahay-fonts (MAHAY_FONTS_DIR)");
             return;
         }
-        let cjk = crate::text::TextLayout::new("日本語", 40.0, false, crate::fonts::CRAFT_FONTS).unwrap();
+        let cjk = crate::text::TextLayout::new("日本語", 40.0, false, crate::fonts::MAHAY_FONTS).unwrap();
         let tofu = crate::text::TextLayout::new("日本語", 40.0, false, &[]).unwrap();
         let count = |t: &crate::text::TextLayout| {
             let mut n = 0usize;

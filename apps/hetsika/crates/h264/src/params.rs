@@ -2,7 +2,7 @@
 
 use crate::error::{Result, ensure, unsupported};
 use crate::tables::*;
-use filmcraft_bitstream::BitReader;
+use hetsika_bitstream::BitReader;
 
 /// Scaling matrices after applying fall-back rules, stored in raster order (weightScale).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -676,7 +676,7 @@ impl Pps {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use filmcraft_bitstream::BitWriter;
+    use hetsika_bitstream::BitWriter;
 
     #[test]
     fn scaling_list_default_signal() {

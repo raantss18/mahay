@@ -5,7 +5,7 @@
 //! commands.
 
 use egui::{Align2, CornerRadius, Id, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::json;
 
 use crate::FigApp;
@@ -31,8 +31,8 @@ pub fn layout_section(app: &mut FigApp, ui: &mut Ui, doc: &Document, sel: &[Node
     let title = if has_al { tr("Auto layout") } else { tr("Layout") };
     // An instance's auto layout is its main's (only padding, gap and alignment are its own); the
     // layers inside it override their size and resizing, not their place in the layout.
-    let in_instance = sel.iter().any(|i| figcraft_engine::components::owning_instance(doc, *i).is_some());
-    let nested = sel.iter().any(|i| figcraft_engine::components::inside_instance(doc, *i));
+    let in_instance = sel.iter().any(|i| endrika_engine::components::owning_instance(doc, *i).is_some());
+    let nested = sel.iter().any(|i| endrika_engine::components::inside_instance(doc, *i));
     let btns: Vec<(Icon, &str)> = if in_instance {
         vec![]
     } else if frames && !has_al {
@@ -518,7 +518,7 @@ fn advanced(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], l: &AutoLayout) {
 fn tracks(app: &mut FigApp, ui: &mut Ui, doc: &Document, ids: &[NodeId]) {
     let Some(id) = ids.first().copied() else { return };
     let Some(l) = doc.node(id).and_then(|n| n.layout.clone()) else { return };
-    let Some(g) = figcraft_layout::grid_geometry(doc, id) else { return };
+    let Some(g) = endrika_layout::grid_geometry(doc, id) else { return };
     let col = widgets::col_width(ui.available_width());
     for (axis, specs, ranges) in [("columns", &l.column_tracks, &g.columns), ("rows", &l.row_tracks, &g.rows)] {
         widgets::sublabels(ui, if axis == "columns" { tr("Column sizes") } else { tr("Row sizes") }, None);
@@ -575,7 +575,7 @@ fn grid_cell(app: &mut FigApp, ui: &mut Ui, doc: &Document, sel: &[NodeId]) {
     let col = widgets::col_width(ui.available_width());
     if let [id] = sel
         && let Some(cell) =
-            parent_of(doc, *id).and_then(|p| figcraft_layout::grid_geometry(doc, p.id)).and_then(|g| g.cells.into_iter().find(|c| c.id == *id))
+            parent_of(doc, *id).and_then(|p| endrika_layout::grid_geometry(doc, p.id)).and_then(|g| g.cells.into_iter().find(|c| c.id == *id))
     {
         let anchored = doc.node(*id).is_some_and(|n| n.child_layout.grid_column.is_some() || n.child_layout.grid_row.is_some());
         widgets::sublabels(ui, tr("Column"), Some(tr("Row")));

@@ -6,9 +6,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::fileio;
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use tsipika_engine::Session;
+use tsipika_engine::cmd::fileio;
+use tsipika_tools::{Mods, PointerEvent, PointerKind};
 
 use super::tests_export::{frame, kind, set};
 use super::*;
@@ -18,7 +18,7 @@ type Log = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
 /// An app with `artboards` 60×40 pt artboards and an ellipse on the first; `web` gives it a
 /// download service (recorded in the log) instead of a file manager (whose reveals are recorded).
-fn app(artboards: usize, web: bool) -> (VectorcraftApp, Log) {
+fn app(artboards: usize, web: bool) -> (TsipikaApp, Log) {
     let log = Log::default();
     let l = log.clone();
     let mut services = Services::default();
@@ -34,17 +34,17 @@ fn app(artboards: usize, web: bool) -> (VectorcraftApp, Log) {
         }));
         services.pick_folder = Some(Box::new(|| None));
     }
-    let mut app = VectorcraftApp::new(Session::new(), services);
+    let mut app = TsipikaApp::new(Session::new(), services);
     app.run("file.new", json!({"width": 60, "height": 40, "artboards": artboards})).unwrap();
     app.run("shape.ellipse", json!({"x": 5, "y": 4, "width": 30, "height": 20})).unwrap();
     (app, log)
 }
 
-fn field(app: &VectorcraftApp, k: &str) -> Value {
+fn field(app: &TsipikaApp, k: &str) -> Value {
     app.ui.dialog.as_ref().expect("a dialog is open").fields.get(k).cloned().unwrap_or(Value::Null)
 }
 
-fn open(app: &mut VectorcraftApp) {
+fn open(app: &mut TsipikaApp) {
     app.run("file.exportForScreens", json!({})).unwrap();
     assert_eq!(kind(app), Some(export_for_screens::KIND));
 }
@@ -107,7 +107,7 @@ fn opens_with_the_artboards_the_artboard_tool_selected_and_exports_only_them() {
     app.run("tool.select", json!({"tool": "artboard"})).unwrap();
     let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
     let view = app.view_info();
-    let click = |app: &mut VectorcraftApp, i: usize, shift: bool| {
+    let click = |app: &mut TsipikaApp, i: usize, shift: bool| {
         let mods = Mods { shift, ..Default::default() };
         for kind in [PointerKind::Down, PointerKind::Up] {
             crate::canvas::dispatch(app, &PointerEvent { kind, pos: boards[i].center(), mods, pressure: 1.0 }, view);
@@ -143,7 +143,7 @@ fn opens_with_the_rows_selected_in_the_artboards_panel_else_on_the_saved_choice(
     app.run("tool.select", json!({"tool": "artboard"})).unwrap();
     let ctx = egui::Context::default();
     let screen = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(240.0, 400.0)));
-    let panel = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+    let panel = |app: &mut TsipikaApp, time: f64, events: Vec<egui::Event>| {
         let raw = egui::RawInput { events, time: Some(time), screen_rect: screen, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| crate::panels::artboards::show(app, ui));
         out.textures_delta.clear();
@@ -232,7 +232,7 @@ fn the_web_downloads_one_zip_or_the_file() {
         let log = log.borrow();
         let [(name, zip)] = log.as_slice() else { panic!("one download: {:?}", log.iter().map(|(n, _)| n).collect::<Vec<_>>()) };
         assert_eq!(name, "Untitled-1.zip");
-        assert_eq!(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap(), zip);
+        assert_eq!(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap(), zip);
     }
     assert_eq!(r["files"], json!(["Artboard-1.png", "Artboard-1@2x.jpg", "Artboard-2.png", "Artboard-2@2x.jpg"]));
     // One file downloads as itself, with the format's settings.
@@ -259,8 +259,8 @@ fn the_status_bar_says_when_an_image_could_not_be_decoded() {
         .unwrap();
     let idat = png.windows(4).position(|w| w == b"IDAT").unwrap();
     png.truncate(idat + 8);
-    let place = |app: &mut VectorcraftApp| {
-        app.run("file.place", json!({"name": "cut.png", "dataBase64": vectorcraft_format::base64_encode(&png), "at": [10, 10]})).unwrap()
+    let place = |app: &mut TsipikaApp| {
+        app.run("file.place", json!({"name": "cut.png", "dataBase64": tsipika_format::base64_encode(&png), "at": [10, 10]})).unwrap()
     };
     let rows = json!([{"format": "png", "scale": "1x", "suffix": ""}, {"format": "jpg", "scale": "2x", "suffix": "@2x"}]);
     let dir = temp_folder("undecoded");
@@ -322,7 +322,7 @@ impl ScreensFrame {
         Self { ctx, time: 0.0 }
     }
 
-    fn frame(&mut self, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> egui::FullOutput {
+    fn frame(&mut self, app: &mut TsipikaApp, events: Vec<egui::Event>) -> egui::FullOutput {
         self.time += 0.1;
         let input = egui::RawInput {
             events,
@@ -335,12 +335,12 @@ impl ScreensFrame {
         out
     }
 
-    fn settle(&mut self, app: &mut VectorcraftApp) -> egui::FullOutput {
+    fn settle(&mut self, app: &mut TsipikaApp) -> egui::FullOutput {
         self.frame(app, vec![]);
         self.frame(app, vec![])
     }
 
-    fn asset_panel(&mut self, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> egui::FullOutput {
+    fn asset_panel(&mut self, app: &mut TsipikaApp, events: Vec<egui::Event>) -> egui::FullOutput {
         self.time += 0.1;
         let input = egui::RawInput {
             events,
@@ -353,7 +353,7 @@ impl ScreensFrame {
         out
     }
 
-    fn click(&mut self, app: &mut VectorcraftApp, at: egui::Pos2) -> egui::FullOutput {
+    fn click(&mut self, app: &mut TsipikaApp, at: egui::Pos2) -> egui::FullOutput {
         let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
         self.frame(app, vec![egui::Event::PointerMoved(at)]);
         self.frame(app, vec![button(true)]);
@@ -361,12 +361,12 @@ impl ScreensFrame {
         self.settle(app)
     }
 
-    fn click_label(&mut self, app: &mut VectorcraftApp, label: &str) -> egui::FullOutput {
+    fn click_label(&mut self, app: &mut TsipikaApp, label: &str) -> egui::FullOutput {
         let out = self.settle(app);
         self.click(app, screen_text_at(&out, label))
     }
 
-    fn choose(&mut self, app: &mut VectorcraftApp, current: &str, next: &str) {
+    fn choose(&mut self, app: &mut TsipikaApp, current: &str, next: &str) {
         let out = self.click_label(app, current);
         self.click(app, screen_text_at(&out, next));
     }
@@ -435,7 +435,7 @@ fn saved_tiff_alias_gear(alias: &str, asset_panel: bool) {
         open(&mut app);
     }
     let mut h = ScreensFrame::new();
-    let draw = |h: &mut ScreensFrame, app: &mut VectorcraftApp, events| {
+    let draw = |h: &mut ScreensFrame, app: &mut TsipikaApp, events| {
         if asset_panel { h.asset_panel(app, events) } else { h.frame(app, events) }
     };
     draw(&mut h, &mut app, vec![]);

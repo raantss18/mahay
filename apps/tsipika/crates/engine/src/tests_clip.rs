@@ -3,7 +3,7 @@
 //! multi-shape clip paths clip on screen, and the SVG and PDF output clip the same way.
 
 use serde_json::{Value, json};
-use vectorcraft_render::Rendered;
+use tsipika_render::Rendered;
 
 use super::*;
 
@@ -27,7 +27,7 @@ pub(crate) fn select(s: &mut Session, ids: &[NodeId]) {
 
 /// The active document's 100×100 artboard, rendered transparent.
 pub(crate) fn render(s: &Session) -> Rendered {
-    vectorcraft_render::Renderer::new().render(&s.doc().unwrap().doc, 100, 100, Affine::IDENTITY, &Default::default())
+    tsipika_render::Renderer::new().render(&s.doc().unwrap().doc, 100, 100, Affine::IDENTITY, &Default::default())
 }
 
 pub(crate) fn opaque(r: &Rendered, x: u32, y: u32) -> bool {
@@ -55,7 +55,7 @@ pub(crate) fn assert_outputs_agree(s: &mut Session, probes: &[(u32, u32)]) {
 
 /// The leaf a click at (`x`, `y`) hits.
 pub(crate) fn hit(s: &Session, x: f64, y: f64) -> Option<NodeId> {
-    vectorcraft_doc::hit::hit_test(&s.doc().unwrap().doc, vectorcraft_geom::Point::new(x, y), Default::default()).map(|h| h.leaf)
+    tsipika_doc::hit::hit_test(&s.doc().unwrap().doc, tsipika_geom::Point::new(x, y), Default::default()).map(|h| h.leaf)
 }
 
 /// Art under the whole artboard, then a donut (compound path with a real hole) on top.
@@ -152,7 +152,7 @@ const SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height
 #[test]
 fn imported_multi_shape_and_even_odd_clip_paths_clip() {
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "clips.svg", "dataBase64": vectorcraft_format::base64_encode(SVG.as_bytes())})).unwrap();
+    s.execute("document.open", &json!({"name": "clips.svg", "dataBase64": tsipika_format::base64_encode(SVG.as_bytes())})).unwrap();
     let d = &s.doc().unwrap().doc;
     let mut kinds = vec![];
     d.walk(|n| {

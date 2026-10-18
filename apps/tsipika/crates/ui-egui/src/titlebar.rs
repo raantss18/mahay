@@ -1,5 +1,5 @@
 //! The window's own title bar on Windows and Linux, where the window has no OS decorations
-//! ([`VectorcraftApp::custom_titlebar`]): empty space in the app bar drags the window and a
+//! ([`TsipikaApp::custom_titlebar`]): empty space in the app bar drags the window and a
 //! double-click there maximizes it, caption buttons at the far right minimize, maximize/restore and
 //! close, and thin invisible zones along the window's edges resize it. On macOS the app bar sits
 //! under the system's transparent title bar and only its [`drag_area`] is used.
@@ -7,7 +7,7 @@
 use egui::{CursorIcon, Id, LayerId, Order, PointerButton, Rect, ResizeDirection, Sense, Stroke, Ui, ViewportCommand, pos2, vec2};
 use serde_json::json;
 
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 
 /// One caption button: as wide as the native Windows ones.
@@ -72,7 +72,7 @@ fn handed_to_os(ctx: &egui::Context) {
 /// Minimize, Maximize/Restore and Close at the right end of `bar` (the app bar's outer rect), full
 /// bar height down to its bottom border, flush with the window's edge so a maximized window's
 /// corner hits Close. Close runs `app.quit`, which asks about unsaved documents first.
-pub fn caption_buttons(app: &mut VectorcraftApp, ui: &mut Ui, bar: Rect) {
+pub fn caption_buttons(app: &mut TsipikaApp, ui: &mut Ui, bar: Rect) {
     let t = Tokens::get(ui.ctx());
     let max = maximized(ui.ctx());
     let mut clicked = None;
@@ -174,12 +174,12 @@ pub fn resize_zones(ui: &mut Ui) {
 mod tests {
     use super::*;
     use egui::{Event, Pos2, RawInput, ViewportId};
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// A headless window `width` pt wide showing the app bar (as the title bar) and the resize zones.
     struct Win {
         ctx: egui::Context,
-        app: VectorcraftApp,
+        app: TsipikaApp,
         width: f32,
         time: f64,
         maximized: bool,
@@ -190,7 +190,7 @@ mod tests {
             let ctx = egui::Context::default();
             crate::theme::install_fonts(&ctx);
             crate::theme::apply(&ctx, Default::default());
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+            let mut app = TsipikaApp::new(Session::new(), Default::default());
             app.custom_titlebar = true;
             Self { ctx, app, width, time: 0.0, maximized: false }
         }
@@ -289,7 +289,7 @@ mod tests {
             let texts: Vec<String> = texts(&out).into_iter().map(|(t, _)| t).collect();
             let has = |s: &str| texts.iter().any(|t| t == s);
             assert_eq!(has("Discord"), width > 1000.0, "{width}: {texts:?}");
-            // Search is an icon only (as in PhotoCraft): its label lives in the tooltip.
+            // Search is an icon only (as in Sary): its label lives in the tooltip.
             assert!(!has("Search commands and tools"), "{width}: {texts:?}");
         }
     }

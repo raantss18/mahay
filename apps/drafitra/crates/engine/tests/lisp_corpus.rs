@@ -1,33 +1,33 @@
 //! The AutoLISP conformance corpus (#648): each case's routine runs in a new drawing and must
 //! leave exactly the expected entities, layers and printed text. The corpus lives in its own
-//! repository; point `CADCRAFT_LISP_CORPUS` at its `cases` directory (or the repository) to run
+//! repository; point `DRAFITRA_LISP_CORPUS` at its `cases` directory (or the repository) to run
 //! it. Without it the test only says so.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use std::path::{Path, PathBuf};
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{EntityCodec, set_entity_codec};
-use cadcraft_engine::doc::Entity;
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{EntityCodec, set_entity_codec};
+use drafitra_engine::doc::Entity;
 use serde_json::{Value, json};
 
 fn cases_dir() -> Option<PathBuf> {
-    let root = PathBuf::from(std::env::var_os("CADCRAFT_LISP_CORPUS")?);
+    let root = PathBuf::from(std::env::var_os("DRAFITRA_LISP_CORPUS")?);
     let cases = root.join("cases");
     Some(if cases.is_dir() { cases } else { root })
 }
 
 /// An entity's DXF groups as (code, value) pairs.
-fn groups(d: &cadcraft_engine::doc::Drawing, e: &Entity) -> (String, Vec<(i32, Value)>) {
-    let (kind, tags) = cadcraft_io::entity_groups(d, e);
+fn groups(d: &drafitra_engine::doc::Drawing, e: &Entity) -> (String, Vec<(i32, Value)>) {
+    let (kind, tags) = drafitra_io::entity_groups(d, e);
     let v = tags
         .into_iter()
         .map(|t| {
             let v = match t.value {
-                cadcraft_dxf::Value::Str(s) | cadcraft_dxf::Value::Hex(s) => json!(s),
-                cadcraft_dxf::Value::Real(r) => json!(r),
-                cadcraft_dxf::Value::Int(i) => json!(i),
-                cadcraft_dxf::Value::Bool(b) => json!(i32::from(b)),
+                drafitra_dxf::Value::Str(s) | drafitra_dxf::Value::Hex(s) => json!(s),
+                drafitra_dxf::Value::Real(r) => json!(r),
+                drafitra_dxf::Value::Int(i) => json!(i),
+                drafitra_dxf::Value::Bool(b) => json!(i32::from(b)),
             };
             (t.code, v)
         })
@@ -44,7 +44,7 @@ fn point(g: &[(i32, Value)], code: i32) -> Value {
 }
 
 /// The fields the corpus checks, read from an entity's groups.
-fn actual(d: &cadcraft_engine::doc::Drawing, e: &Entity) -> Value {
+fn actual(d: &drafitra_engine::doc::Drawing, e: &Entity) -> Value {
     let (kind, g) = groups(d, e);
     let s = |code: i32| g.iter().find(|(c, _)| *c == code).and_then(|(_, v)| v.as_str().map(str::to_string)).unwrap_or_default();
     let mut o = json!({ "type": kind, "layer": s(8) });
@@ -163,7 +163,7 @@ fn run_case(dir: &Path) -> Result<(), String> {
     let mut s = Session::new();
     if let Some(vars) = expected["preconditions"]["sysvars"].as_object() {
         for (k, v) in vars {
-            cadcraft_engine::sysvars::set(&mut s, k, v).map_err(|e| format!("setvar {k}: {e}"))?;
+            drafitra_engine::sysvars::set(&mut s, k, v).map_err(|e| format!("setvar {k}: {e}"))?;
         }
     }
     let from = s.log.len();
@@ -201,7 +201,7 @@ fn run_case(dir: &Path) -> Result<(), String> {
         let layer = d.layer(name).ok_or_else(|| format!("layer {name} missing"))?;
         if let Some(c) = l["color"].as_i64() {
             let have = match layer.color {
-                cadcraft_color::Color::Index(i) => i64::from(i),
+                drafitra_color::Color::Index(i) => i64::from(i),
                 _ => -1,
             };
             if have != c {
@@ -220,9 +220,9 @@ fn run_case(dir: &Path) -> Result<(), String> {
 
 #[test]
 fn autolisp_corpus() {
-    set_entity_codec(EntityCodec { groups: cadcraft_io::entity_groups, entity: cadcraft_io::entity_from_groups });
+    set_entity_codec(EntityCodec { groups: drafitra_io::entity_groups, entity: drafitra_io::entity_from_groups });
     let Some(dir) = cases_dir() else {
-        eprintln!("CADCRAFT_LISP_CORPUS is not set: the AutoLISP corpus is skipped");
+        eprintln!("DRAFITRA_LISP_CORPUS is not set: the AutoLISP corpus is skipped");
         return;
     };
     let mut cases: Vec<PathBuf> =

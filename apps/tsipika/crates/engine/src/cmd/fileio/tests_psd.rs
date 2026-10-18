@@ -17,7 +17,7 @@ fn session() -> Session {
 
 fn export(s: &mut Session, p: Value) -> Vec<u8> {
     let r = s.execute("document.export", &merge(json!({"format": "psd"}), p)).unwrap();
-    vectorcraft_format::base64_decode(r["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(r["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 /// The colour mode, the layer count and the layers' names, bottom first.
@@ -87,7 +87,7 @@ fn psd_is_listed_with_its_options_and_writes_one_file_per_artboard() {
     assert_eq!(files, ["Untitled-1-Artboard-1.psd", "Untitled-1-Artboard-2.psd"]);
     // One artboard, as bytes.
     let r = s.execute("document.serialize", &json!({"format": "psd", "artboard": 1})).unwrap();
-    assert_eq!(&vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()[..4], b"8BPS");
+    assert_eq!(&tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()[..4], b"8BPS");
     // 32000 pixels a side: within raster exports' limits, beyond the format's.
     s.execute("file.new", &json!({"width": 500, "height": 10})).unwrap();
     let err = s.execute("document.export", &json!({"format": "psd", "scale": 64})).unwrap_err().to_string();

@@ -1,18 +1,18 @@
 {
-  description = "LightCraft — photo library and non-destructive raw developer, in pure Rust";
+  description = "Hazavana — photo library and non-destructive raw developer, in pure Rust";
 
   inputs = {
-    # LightCraft needs edition 2024 and rustc ≥ 1.90, so the flake tracks unstable. Consumers on a
-    # release channel can retarget it: `inputs.lightcraft.inputs.nixpkgs.follows = "nixpkgs";`
+    # Hazavana needs edition 2024 and rustc ≥ 1.90, so the flake tracks unstable. Consumers on a
+    # release channel can retarget it: `inputs.hazavana.inputs.nixpkgs.follows = "nixpkgs";`
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Optional build input of the repository: the CJK fonts (BIZ UDPGothic, BIZ UDMincho, Noto Sans CJK SC,
-    # Shippori Mincho) that `crates/engine/build.rs` embeds when `CRAFT_FONTS_DIR` is set. Official
+    # Shippori Mincho) that `crates/engine/build.rs` embeds when `MAHAY_FONTS_DIR` is set. Official
     # releases always build with them; without them everything works but Japanese text has no
     # glyphs. Pinned to the revision the release workflow uses — bump deliberately
-    # (`nix flake update craft-fonts`); craftrules standards/fonts.md.
-    craft-fonts = {
-      url = "github:storytold/craft-fonts/3d9ab3a132ed0eff457e424226a435a901da30d3";
+    # (`nix flake update mahay-fonts`); mahay-rules standards/fonts.md.
+    mahay-fonts = {
+      url = "github:raantss18/mahay-fonts/3d9ab3a132ed0eff457e424226a435a901da30d3";
       flake = false;
     };
   };
@@ -21,7 +21,7 @@
     {
       self,
       nixpkgs,
-      craft-fonts,
+      mahay-fonts,
     }:
     let
       inherit (nixpkgs) lib;
@@ -47,7 +47,7 @@
           "1970-01-01";
 
       packageArgs = {
-        inherit craft-fonts buildDate;
+        inherit mahay-fonts buildDate;
       };
 
       forAllSystems = f: lib.genAttrs systems (system: f (import nixpkgs { inherit system; }) system);
@@ -56,29 +56,29 @@
       packages = forAllSystems (
         pkgs: _:
         let
-          lightcraft = pkgs.callPackage ./nix/package.nix packageArgs;
+          hazavana = pkgs.callPackage ./nix/package.nix packageArgs;
         in
         {
-          inherit lightcraft;
-          default = lightcraft;
+          inherit hazavana;
+          default = hazavana;
         }
       );
 
-      # `nixpkgs.overlays = [ inputs.lightcraft.overlays.default ]` → `pkgs.lightcraft` everywhere.
+      # `nixpkgs.overlays = [ inputs.hazavana.overlays.default ]` → `pkgs.hazavana` everywhere.
       overlays.default = final: _prev: {
-        lightcraft = final.callPackage ./nix/package.nix packageArgs;
+        hazavana = final.callPackage ./nix/package.nix packageArgs;
       };
 
       devShells = forAllSystems (
         pkgs: system:
         let
-          lightcraft = self.packages.${system}.lightcraft;
+          hazavana = self.packages.${system}.hazavana;
         in
         {
           default = pkgs.mkShell (
             {
               # The package's own native inputs, so `cargo build` in the shell needs no extra setup.
-              inputsFrom = [ lightcraft ];
+              inputsFrom = [ hazavana ];
               packages = with pkgs; [
                 cargo
                 rustc
@@ -87,12 +87,12 @@
                 rust-analyzer
               ];
               # `cargo run` dlopens the Vulkan loader and libxkbcommon like the packaged binary.
-              LD_LIBRARY_PATH = lib.makeLibraryPath lightcraft.passthru.runtimeLibs;
+              LD_LIBRARY_PATH = lib.makeLibraryPath hazavana.passthru.runtimeLibs;
               RUST_BACKTRACE = "1";
             }
-            // lib.optionalAttrs (craft-fonts != null) {
-              # CJK glyphs in `cargo run` too; build.rs reads this as CRAFT_FONTS_DIR.
-              CRAFT_FONTS_DIR = toString craft-fonts;
+            // lib.optionalAttrs (mahay-fonts != null) {
+              # CJK glyphs in `cargo run` too; build.rs reads this as MAHAY_FONTS_DIR.
+              MAHAY_FONTS_DIR = toString mahay-fonts;
             }
           );
         }
@@ -100,10 +100,10 @@
 
       checks = forAllSystems (
         pkgs: system: {
-          lightcraft = self.packages.${system}.lightcraft;
+          hazavana = self.packages.${system}.hazavana;
 
           # `nix fmt` formats the flake; this keeps it formatted.
-          formatting = pkgs.runCommand "lightcraft-nix-formatting" { nativeBuildInputs = [ pkgs.nixfmt ]; } ''
+          formatting = pkgs.runCommand "hazavana-nix-formatting" { nativeBuildInputs = [ pkgs.nixfmt ]; } ''
             nixfmt --check ${./flake.nix} ${./nix}
             touch $out
           '';

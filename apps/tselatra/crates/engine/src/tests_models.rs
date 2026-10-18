@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use effectcraft_segment::Task;
+use tselatra_segment::Task;
 use serde_json::json;
 
 use crate::Session;
@@ -58,20 +58,20 @@ fn models_are_listed_chosen_and_verified() {
     }
     assert!(s.models.face().is_none());
     assert_eq!(crate::prefs::page_id("Face Tracking"), Some("face"));
-    // With the real weights (EFFECTCRAFT_MOBILESAM=path/to/mobile_sam.pt): install, load, use.
-    if let Ok(path) = std::env::var("EFFECTCRAFT_MOBILESAM") {
+    // With the real weights (TSELATRA_MOBILESAM=path/to/mobile_sam.pt): install, load, use.
+    if let Ok(path) = std::env::var("TSELATRA_MOBILESAM") {
         s.execute_checked("roto.model.install", json!({"path": path})).unwrap();
         wait_loaded(&mut s, Task::Mask);
         assert_eq!(s.models.status(Task::Mask).active.as_deref(), Some("mobilesam"));
         // Roto Brush 3.0 (the default version) now segments with it.
-        let params = crate::effects::Params { values: [("version".to_string(), effectcraft_keyframe::Value::Enum(2))].into_iter().collect() };
+        let params = crate::effects::Params { values: [("version".to_string(), tselatra_keyframe::Value::Enum(2))].into_iter().collect() };
         assert_eq!(crate::effects::roto::model_for(&params).map(|m| m.info().id), Some("mobilesam"));
         s.execute_checked("roto.model.select", json!({"id": "classical"})).unwrap();
         assert!(crate::effects::roto::model_for(&params).is_none());
     }
-    // EFFECTCRAFT_FACE_LANDMARKER=path/to/face_landmarker.task: installed with its notice,
+    // TSELATRA_FACE_LANDMARKER=path/to/face_landmarker.task: installed with its notice,
     // loaded for face tracking, dropped when the classic tracker is chosen, removed.
-    if let Ok(path) = std::env::var("EFFECTCRAFT_FACE_LANDMARKER") {
+    if let Ok(path) = std::env::var("TSELATRA_FACE_LANDMARKER") {
         let r = s.execute_checked("face.model.install", json!({"path": path})).unwrap();
         assert_eq!(r["id"], "mediapipe-face");
         let dir = s.models_dir().unwrap();

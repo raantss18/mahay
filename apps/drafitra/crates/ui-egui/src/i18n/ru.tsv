@@ -1,6 +1,6 @@
-# CADCraft Russian interface catalog — original translations by @pechnikov2026-star.
+# Drafitra Russian interface catalog — original translations by @pechnikov2026-star.
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # UTF-8: context<TAB>English source<TAB>Russian translation.
 # Empty context = ordinary label; @plural = one|few|many forms with {n}.
 # Command IDs, typed keywords, technology/product names and user data stay unchanged.
@@ -28,7 +28,7 @@
 	= Equals	= Равно
 	> Greater than	> Больше чем
 	About	О программе
-	About CADCraft	О CADCraft
+	About Drafitra	О Drafitra
 	Absolute	Абсолютные
 	Add Leader	Добавить выноску
 	Align	Выровнять
@@ -83,7 +83,7 @@
 	ByBlock	Поблоку
 	ByColor	ПоЦвету
 	ByLayer	Послою
-	CADCraft Help	Справка CADCraft
+	Drafitra Help	Справка Drafitra
 	Cancel	Отмена
 	Cartesian (x, y)	Декартовы (x, y)
 	Center	Центр
@@ -356,7 +356,7 @@
 	Isolate Layer	Изолировать слой
 	Isometric Drafting	Изометрическое черчение
 	Join	Объединить
-	Join the ArtCraft Discord…	Присоединяйтесь к Discord ArtCraft…
+	Join the Mahay Discord…	Присоединяйтесь к Discord Mahay…
 	Join us on Discord	Присоединяйтесь к нам в Discord
 	Language	Язык
 	Last	Последний
@@ -485,7 +485,7 @@
 	Offset	Смещение
 	On	Включено
 	On/Off	Включить/выключить
-	One of the Crafting Apps by the ArtCraft team and community.	Одна из программ Crafting Apps от команды и сообщества ArtCraft.
+	One of the Mahay apps by the Mahay team and community.	Одна из программ Mahay apps от команды и сообщества Mahay.
 	Open (⌘O)	Открыть (⌘O)
 	Open Sample Drawing	Открыть образец чертежа
 	Open sample drawing	Открыть образец чертежа
@@ -585,7 +585,7 @@
 	Quick Select Properties	Свойства быстрого выбора
 	Quick Select...	Быстрый выбор...
 	QuickCalc	Быстрокалькулятор
-	Quit CADCraft	Выйти из CADCraft
+	Quit Drafitra	Выйти из Drafitra
 	Radius	Радиус
 	Raster Image	Растровое изображение
 	Ray	Луч
@@ -994,7 +994,7 @@
 @plural	{n} contributor	{n} участник|{n} участника|{n} участников
 	Drawing as bytes	Чертеж как байты
 	Services	Службы
-	Hide CADCraft	Скрыть CADCraft
+	Hide Drafitra	Скрыть Drafitra
 	Hide Others	Скрыть остальные
 	Accessibility	Специальные возможности
 	Show System Cursor	Показывать системный курсор

@@ -2,28 +2,28 @@
 //! its Composition panel even when it was closed (#90); adding an effect, or double-clicking one
 //! in the Timeline, brings up Effect Controls (#87).
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::ItemId;
-use effectcraft_ui_egui::EffectcraftApp;
-use effectcraft_ui_egui::dock::{DockNode, PanelKind};
+use tselatra_engine::Session;
+use tselatra_engine::project::ItemId;
+use tselatra_ui_egui::TselatraApp;
+use tselatra_ui_egui::dock::{DockNode, PanelKind};
 use egui::{Event, Pos2, pos2};
 use egui_kittest::Harness;
 use serde_json::json;
 
 /// Comp "Main" (open) holding a solid, and comp "Other" (not open).
-fn harness() -> (Harness<'static, EffectcraftApp>, u64, u64) {
+fn harness() -> (Harness<'static, TselatraApp>, u64, u64) {
     let mut s = Session::default();
     let other = s.execute("comp.new", json!({"name": "Other", "width": 320, "height": 180, "duration": 4})).unwrap()["comp"].as_u64().unwrap();
     let main = s.execute("comp.new", json!({"name": "Main", "width": 320, "height": 180, "duration": 4})).unwrap()["comp"].as_u64().unwrap();
     s.execute("layer.newSolid", json!({"name": "Red", "color": [1.0, 0.0, 0.0, 1.0]})).unwrap();
     s.state.open_comps = vec![ItemId(main)];
     s.state.active_comp = Some(ItemId(main));
-    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(egui::vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     (h, other, main)
 }
 
-fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> egui::Rect {
+fn rect(h: &Harness<'_, TselatraApp>, id: &str) -> egui::Rect {
     let e = h.state().auto.previous.iter().chain(h.state().auto.elements.iter()).find(|e| e.id == id).cloned().unwrap_or_else(|| {
         let have: Vec<&String> = h.state().auto.elements.iter().map(|e| &e.id).collect();
         panic!("no element {id}; have {have:?}")
@@ -31,7 +31,7 @@ fn rect(h: &Harness<'_, EffectcraftApp>, id: &str) -> egui::Rect {
     egui::Rect::from_min_size(pos2(e.rect[0], e.rect[1]), egui::vec2(e.rect[2], e.rect[3]))
 }
 
-fn click_n(h: &mut Harness<'_, EffectcraftApp>, p: Pos2, n: u32) {
+fn click_n(h: &mut Harness<'_, TselatraApp>, p: Pos2, n: u32) {
     h.event(Event::PointerMoved(p));
     h.step();
     for _ in 0..n {
@@ -51,9 +51,9 @@ fn group_of(n: &DockNode, p: PanelKind) -> Option<Vec<PanelKind>> {
     }
 }
 
-fn invoke(h: &mut Harness<'_, EffectcraftApp>, id: &str, params: serde_json::Value) {
+fn invoke(h: &mut Harness<'_, TselatraApp>, id: &str, params: serde_json::Value) {
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, id, params).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, id, params).unwrap();
     h.run_steps(2);
 }
 
@@ -111,18 +111,18 @@ fn opening_a_comp_in_the_minimal_workspace_docks_the_viewer_above_the_timeline()
 }
 
 /// The id of layer `name` in the active comp.
-fn layer_id(h: &Harness<'_, EffectcraftApp>, name: &str) -> u64 {
+fn layer_id(h: &Harness<'_, TselatraApp>, name: &str) -> u64 {
     h.state().session.active_comp().unwrap().layers.iter().find(|l| l.name == name).unwrap().id.0
 }
 
-fn try_invoke(h: &mut Harness<'_, EffectcraftApp>, id: &str, params: serde_json::Value) -> serde_json::Value {
+fn try_invoke(h: &mut Harness<'_, TselatraApp>, id: &str, params: serde_json::Value) -> serde_json::Value {
     let ctx = h.ctx.clone();
-    let r = effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, id, params).unwrap();
+    let r = tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, id, params).unwrap();
     h.run_steps(2);
     r
 }
 
-fn ec_up(h: &Harness<'_, EffectcraftApp>) -> bool {
+fn ec_up(h: &Harness<'_, TselatraApp>) -> bool {
     h.state().ui.dock.is_visible(PanelKind::EffectControls) && h.state().auto.elements.iter().any(|e| e.id == "panel.EffectControls")
 }
 

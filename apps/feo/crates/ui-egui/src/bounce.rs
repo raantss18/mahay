@@ -13,7 +13,7 @@ pub fn start(app: &mut SoundApp, params: &Value) {
     }
     // Third-party plugins keep state the session can't see: store it first.
     app.capture_plugin_states();
-    match soundcraft_engine::cmd::bounce_job(&app.engine, params) {
+    match feo_engine::cmd::bounce_job(&app.engine, params) {
         Ok(job) => app.bounce = Some(job),
         Err(e) => app.ui.status = e.to_string(),
     }

@@ -7,8 +7,8 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::NodeId;
-use figcraft_geom::Point;
+use endrika_doc::NodeId;
+use endrika_geom::Point;
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -24,7 +24,7 @@ fn get(s: &mut Session, node: NodeId) -> Value {
 
 /// The RGBA of `node` rendered at 1x, at (`x`, `y`) of its box.
 fn pixel(s: &Session, node: NodeId, x: u32, y: u32) -> [u8; 4] {
-    let pix = figcraft_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
     let i = ((y * pix.width() + x) * 4) as usize;
     let d = pix.data();
     [d[i], d[i + 1], d[i + 2], d[i + 3]]
@@ -68,7 +68,7 @@ fn wrap_in_new_section() {
     let before = (s.doc().unwrap().world_bounds(a).unwrap(), s.doc().unwrap().world_bounds(b).unwrap());
     let sec = id(s.execute("object.wrapInSection", &json!({"ids": [a, b]})).unwrap());
     let doc = s.doc().unwrap();
-    assert!(doc.node(sec).unwrap().kind == figcraft_doc::NodeKind::Section { contents_hidden: false });
+    assert!(doc.node(sec).unwrap().kind == endrika_doc::NodeKind::Section { contents_hidden: false });
     assert_eq!(doc.node(sec).unwrap().children, vec![a, b]);
     let sb = doc.world_bounds(sec).unwrap();
     assert_eq!((sb.x0, sb.y0, sb.x1, sb.y1), (-40.0, -40.0, 340.0, 190.0), "some room around");

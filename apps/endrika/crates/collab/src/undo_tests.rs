@@ -2,8 +2,8 @@
 //! and deletes invert, rejected work leaves the history, and random sessions with undo converge
 //! without ever reverting someone else's change.
 
-use figcraft_doc::{Document, NodeId, NodeKind};
-use figcraft_geom::Affine;
+use endrika_doc::{Document, NodeId, NodeKind};
+use endrika_geom::Affine;
 
 use crate::sim::{Rng, Sim};
 use crate::sim_tests::{Width, base, random_edit};
@@ -208,7 +208,7 @@ fn random_sessions_with_undo_converge_and_never_revert_others() {
 }
 
 #[test]
-#[ignore = "longer run for development: cargo test -p figcraft-collab -- --ignored"]
+#[ignore = "longer run for development: cargo test -p endrika-collab -- --ignored"]
 fn many_seeds_with_undo_converge() {
     for seed in 2000..2600 {
         // 2 to 5 people, short and long delays, drops, and logs short enough to need snapshots.

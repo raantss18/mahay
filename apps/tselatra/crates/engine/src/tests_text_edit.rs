@@ -2,7 +2,7 @@
 //! `layer.setText`, text.insert / delete / setSelection / moveCaret, the text clipboard and the
 //! paste-formatting commands, with undo / redo.
 
-use effectcraft_keyframe::{BaselineOption, Justify, Kerning, TextDoc};
+use tselatra_keyframe::{BaselineOption, Justify, Kerning, TextDoc};
 use serde_json::json;
 
 use crate::Session;
@@ -16,7 +16,7 @@ fn session(text: &str) -> (Session, u64) {
 }
 
 fn doc(s: &Session, t: u64) -> TextDoc {
-    layer_doc(s, effectcraft_project::LayerId(t)).unwrap()
+    layer_doc(s, tselatra_project::LayerId(t)).unwrap()
 }
 
 fn sel(s: &Session) -> (usize, usize) {
@@ -211,9 +211,9 @@ fn opentype_features_per_range_render_and_query() {
     assert!(!d.style_at(0).opentype.fractions);
     assert!(d.style_at(8).opentype.fractions && d.style_at(8).opentype.stylistic_set(1));
     // The laid-out glyphs change (frac turns 1/2 into a fraction).
-    let plain = effectcraft_text::layout_doc(&TextDoc { text: "1/2".into(), ..Default::default() });
-    let frac = effectcraft_text::layout_doc(&d.slice(7..10));
-    let ids = |l: &effectcraft_text::TextLayout| l.glyphs.iter().map(|g| g.gid).collect::<Vec<_>>();
+    let plain = tselatra_text::layout_doc(&TextDoc { text: "1/2".into(), ..Default::default() });
+    let frac = tselatra_text::layout_doc(&d.slice(7..10));
+    let ids = |l: &tselatra_text::TextLayout| l.glyphs.iter().map(|g| g.gid).collect::<Vec<_>>();
     assert_ne!(ids(&plain), ids(&frac));
     // Undo restores the uniform style.
     s.execute("edit.undo", json!({})).unwrap();
@@ -238,8 +238,8 @@ fn fonts_lists_bundled_and_installed_families() {
     assert_eq!(inter["origin"], "bundled");
     assert!(inter["styles"].as_array().unwrap().contains(&json!("Bold")));
     // Installed fonts are listed without any layer having asked for one.
-    use effectcraft_text::fonts::FontSource as _;
-    let installed = effectcraft_text::fonts::DirectorySource::system().faces();
+    use tselatra_text::fonts::FontSource as _;
+    let installed = tselatra_text::fonts::DirectorySource::system().faces();
     for face in &installed {
         assert!(fams.iter().any(|f| f["family"].as_str().unwrap().eq_ignore_ascii_case(&face.family)), "{} not listed", face.family);
     }
@@ -292,8 +292,8 @@ fn pinned_variable_font(family: &str) -> Vec<u8> {
 /// the font menu's rows carry the flag the filter uses.
 #[test]
 fn fonts_filter_variable_families() {
-    const FAMILY: &str = "EffectCraft Variable Filter Test";
-    assert_eq!(effectcraft_text::fonts::add_font_data(pinned_variable_font(FAMILY)).len(), 1);
+    const FAMILY: &str = "Tselatra Variable Filter Test";
+    assert_eq!(tselatra_text::fonts::add_font_data(pinned_variable_font(FAMILY)).len(), 1);
     let mut s = Session::default();
     let all = s.execute("text.fonts", json!({})).unwrap();
     let fams = all["families"].as_array().unwrap();
@@ -360,17 +360,17 @@ fn instanced_variable_font(family: &str, instances: &[(&str, f32)]) -> Vec<u8> {
 /// do) is laid out at the instance's axis values; an axis set on the text still wins.
 #[test]
 fn variable_font_named_instances_are_styles() {
-    const FAMILY: &str = "EffectCraft Named Instance Test";
-    assert_eq!(effectcraft_text::fonts::add_font_data(instanced_variable_font(FAMILY, &[("Light", 300.0), ("Regular", 400.0), ("Black", 900.0)])).len(), 1);
+    const FAMILY: &str = "Tselatra Named Instance Test";
+    assert_eq!(tselatra_text::fonts::add_font_data(instanced_variable_font(FAMILY, &[("Light", 300.0), ("Regular", 400.0), ("Black", 900.0)])).len(), 1);
     let (mut s, t) = session("Hi");
     let fonts = s.execute("text.fonts", json!({"query": FAMILY})).unwrap();
     assert_eq!(fonts["families"][0]["styles"], json!(["Light", "Regular", "Black"]), "{fonts}");
-    let wght = |s: &Session| -> Vec<Vec<(String, f32)>> { effectcraft_text::layout_doc(&doc(s, t)).glyphs.iter().map(|g| g.variations.clone()).collect() };
+    let wght = |s: &Session| -> Vec<Vec<(String, f32)>> { tselatra_text::layout_doc(&doc(s, t)).glyphs.iter().map(|g| g.variations.clone()).collect() };
     let black = vec![("wght".to_string(), 900.0)];
     s.execute("layer.setText", json!({"layer": t, "font": FAMILY, "style": "Black"})).unwrap();
     let by_style = wght(&s);
     assert!(!by_style.is_empty() && by_style.iter().all(|v| v == &black), "{by_style:?}");
-    s.execute("layer.setText", json!({"layer": t, "font": "EffectCraftNamedInstanceTest-Black", "style": "Regular"})).unwrap();
+    s.execute("layer.setText", json!({"layer": t, "font": "TselatraNamedInstanceTest-Black", "style": "Regular"})).unwrap();
     let by_ps = wght(&s);
     assert!(!by_ps.is_empty() && by_ps.iter().all(|v| v == &black), "{by_ps:?}");
     s.execute("layer.setText", json!({"layer": t, "variations": {"wght": 650}})).unwrap();

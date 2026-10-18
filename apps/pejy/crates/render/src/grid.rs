@@ -5,8 +5,8 @@
 //! owns that x (`Spread::page_at_x`: a page owns its own width, the outer pages also own the
 //! pasteboard beside them).
 
-use designcraft_doc::{DocumentGrid, Spread};
-use designcraft_geom::Rect;
+use pejy_doc::{DocumentGrid, Spread};
+use pejy_geom::Rect;
 use vello_cpu::{RenderContext, peniko};
 
 use crate::Frame;

@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (animation effects follow the operating system's setting) · **Target:** Autodesk AutoCAD 2027 for Mac (26.0)
 
-How CADCraft's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
+How Drafitra's interaction compares with AutoCAD's: point entry, object snaps, tracking, dynamic
 input, grips, selection, the command line, chrome and navigation. A drafter's speed in AutoCAD
 comes from these, so "the command exists" isn't enough: it has to accept the same input, snap to
 the same points and respond to the same keys. Work items: [gaps.md](gaps.md#uiux).
@@ -15,7 +15,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## How this was measured
 
-- CADCraft: read from the source on 2026-10-10 (main at bd2412f): `crates/engine/src/{prompt,
+- Drafitra: read from the source on 2026-10-10 (main at bd2412f): `crates/engine/src/{prompt,
   snap, select, grips, lib, units}.rs`, `cmd/*`, `crates/ui-egui/src/*`. Not run in this pass.
 - AutoCAD: behaviour observed black-box in the running AutoCAD 2027 for Mac
   (`plan/autocad/01-observed-ui.md`, local only, with reference screenshots that are never
@@ -24,7 +24,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
   polar 10%, dynamic input 10%, grips 10%, selection 10%, command line 10%, chrome and palettes
   10%, navigation 5%, keyboard and context menus 5%.
 
-| Area | Weight | CADCraft | Weighted |
+| Area | Weight | Drafitra | Weighted |
 |---|---:|---:|---:|
 | Point entry | 15% | 45% | 6.8 |
 | Object snaps | 15% | 45% | 6.8 |
@@ -40,7 +40,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Point entry (≈ 45%)
 
-| Input | AutoCAD | CADCraft | Evidence |
+| Input | AutoCAD | Drafitra | Evidence |
 |---|---|---|---|
 | `x,y[,z]`, `@dx,dy`, `@d<a`, `d<a`, `#x,y`, bare `@` | yes | yes; `#` equals absolute because there is no UCS; Z parsed then discarded | `prompt.rs:147-180` |
 | `*x,y` (WCS override) | yes | yes (`*x,y`, `*@dx,dy`, `@*dx,dy`); the same as the plain forms because there is no UCS | `prompt.rs` |
@@ -57,7 +57,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Object snaps (≈ 45%)
 
-| Mode | AutoCAD | CADCraft (`snap.rs:135-334`) |
+| Mode | AutoCAD | Drafitra (`snap.rs:135-334`) |
 |---|---|---|
 | Endpoint | every curve, solid/3D vertices, dimension ends | lines, arcs, polyline segments, open ellipses and splines, ray base, solid/trace corners |
 | Midpoint | every curve incl. ellipse/spline arcs, polyline segments | segments only; **none on circles, ellipses, splines** |
@@ -81,7 +81,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 
 ## Tracking, polar, ortho, grid and snap (≈ 70%)
 
-| Feature | AutoCAD | CADCraft |
+| Feature | AutoCAD | Drafitra |
 |---|---|---|
 | Ortho (F8) | yes | yes (`snap.rs:503`) |
 | Polar tracking increment | yes | yes, measured from ANGBASE; dotted path and "Polar: d < a°" tooltip (`snap/tracking.rs`, `canvas.rs` `draw_tracking`) |
@@ -99,7 +99,7 @@ ignored; there are no context menus. Remaining: **≈ 110–170 Opus 5.5 hours**
 AutoCAD's heads-up input (F12) has editable pointer-input fields (x, y), dimensional input
 fields (length and angle) with Tab between them and lock icons, relative-by-default second
 points, dimensional input on grips, a prompt with clickable options and a down-arrow menu.
-CADCraft has pointer input boxes since #60 (`crates/ui-egui/src/dyninput.rs`): value boxes
+Drafitra has pointer input boxes since #60 (`crates/ui-egui/src/dyninput.rs`): value boxes
 beside the cursor while a command asks for a point; second and later points default to polar
 distance and angle (DYNPIFORMAT = 1 for Cartesian); `,` and `<` lock a value and move to the next
 box; Tab types the separator; Enter sends a relative entry (DYNPICOORDS = 1 for absolute) and
@@ -109,7 +109,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 ## Grips (≈ 40%)
 
-| Feature | AutoCAD | CADCraft |
+| Feature | AutoCAD | Drafitra |
 |---|---|---|
 | Stretch grips per object type | yes | lines (midpoint moves), arcs (start/mid/end), ellipses (axes), polylines (vertices; segment midpoints move or reshape the bulge), dimensions (text and definition points), MLEADER, viewport, wipeout, spline (`grips.rs:79-270`) |
 | Text/MText grips | position, width, column grips | move the whole object |
@@ -123,7 +123,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 ## Selection (≈ 40%)
 
-| Feature | AutoCAD | CADCraft |
+| Feature | AutoCAD | Drafitra |
 |---|---|---|
 | Pick, implied window (left→right) and crossing (right→left) | yes | yes, coloured and dashed rectangles (`lib.rs:576-589`, `canvas.rs:823-836`), filled as SELECTIONAREA, WINDOWAREACOLOR, CROSSINGAREACOLOR and SELECTIONAREAOPACITY say (Visual Effect Settings) |
 | Keywords W, C, WP, CP, F, BOX, AU, SI, M, G (group), CL (class) | yes | yes except CLass: W, C, F, WP, CP (#226); BOX, AUto, SIngle, Multiple, Group, Add, Remove, Undo (#428); ALL, Last, Previous |
@@ -138,7 +138,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 ## Command line (≈ 60%)
 
-| Feature | AutoCAD | CADCraft |
+| Feature | AutoCAD | Drafitra |
 |---|---|---|
 | AutoComplete (commands, sysvars, mid-string, synonyms) | yes | command list with Tab to accept (`cmdline.rs:30,176,317`); no sysvar or mid-string search confirmed |
 | Aliases | about 250 in `acad.pgp` | 144 aliases across the commands (counted from source) |
@@ -153,7 +153,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 ## Chrome and palettes (≈ 45%)
 
-| Feature | AutoCAD for Mac | CADCraft |
+| Feature | AutoCAD for Mac | Drafitra |
 |---|---|---|
 | Menu bar | 11 menus, 491 leaf items | same 11 menus; 245/491 items covered (233 by `cargo xtask parity`, which counts engine commands only, plus 12 UI-only items: see [parity-checklist.md](parity-checklist.md)) |
 | Tool Bar, File tabs, Start tab, layout tabs | yes | yes |
@@ -172,7 +172,7 @@ down-arrow options menu (DYNPROMPT), and DYNDIM.
 
 ## Navigation (≈ 55%)
 
-| Feature | AutoCAD | CADCraft |
+| Feature | AutoCAD | Drafitra |
 |---|---|---|
 | ZOOM Extents, All, Window, Previous, In/Out, Center, Scale, Object | yes | yes, 50-entry history (`cmd/view.rs:107-149`) |
 | ZOOM Realtime (drag), Dynamic | yes | **no** |

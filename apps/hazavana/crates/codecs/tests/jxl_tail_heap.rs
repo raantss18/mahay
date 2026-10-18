@@ -1,7 +1,7 @@
 #![cfg(all(feature = "jxl", not(target_arch = "wasm32")))]
 
-use lightcraft_codecs::*;
-use lightcraft_raster::Rgba8;
+use hazavana_codecs::*;
+use hazavana_raster::Rgba8;
 
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;

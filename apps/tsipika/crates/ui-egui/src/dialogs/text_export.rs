@@ -7,7 +7,7 @@ use super::png_options::choice;
 use super::{DialogSpec, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, io};
+use crate::{TsipikaApp, io};
 
 pub(crate) const KIND: &str = "txtOptions";
 
@@ -20,14 +20,14 @@ const LINE_ENDINGS: [&str; 2] = ["lf", "crlf"];
 const LINE_ENDING_LABELS: [&str; 2] = ["LF (macOS, Linux)", "CRLF (Windows)"];
 
 /// Open the options for exporting the document's text to `path`.
-pub fn open(app: &mut VectorcraftApp, path: &str) {
+pub fn open(app: &mut TsipikaApp, path: &str) {
     // The platform's own line endings by default.
     let eol = if cfg!(windows) { LINE_ENDINGS[1] } else { LINE_ENDINGS[0] };
     let fields = json!({"format": "txt", "path": path, "encoding": ENCODINGS[0], "lineEndings": eol, "selectionOnly": false});
     app.ui.dialog = Some(Dialog::new(KIND, fields));
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let label = |ui: &mut egui::Ui, text: &str| ui.label(egui::RichText::new(text).color(t.text_dim));
     egui::Grid::new("text-export").num_columns(2).spacing([10.0, 8.0]).show(ui, |ui| {
@@ -45,7 +45,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// Write the text file (the command runs first, so a bad option keeps the dialog open).
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     let path = io::save_command_output(app, "document.export", "txt", form::params(d))?;
     app.ui.dialog = None;
     Ok(json!({ "path": path }))

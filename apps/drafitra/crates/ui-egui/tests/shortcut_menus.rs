@@ -1,9 +1,9 @@
 //! Right-click menus outside the drawing area (#512): the command line, drawing tabs, layout
 //! tabs, and the Layers and Properties palettes.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::menus::Entry;
-use cadcraft_ui_egui::{CadApp, Services, shortcut_menus as sm};
+use drafitra_engine::Session;
+use drafitra_ui_egui::menus::Entry;
+use drafitra_ui_egui::{CadApp, Services, shortcut_menus as sm};
 use serde_json::json;
 
 /// (label, id, enabled) of the items, with submenu items prefixed by "Sub/".
@@ -108,7 +108,7 @@ fn layout_tab_menu() {
     let n = layout_names(&app).len();
     choose(&mut app, &model, "New Layout");
     assert_eq!(layout_names(&app).len(), n + 1);
-    assert!(matches!(app.session.state().unwrap().space, cadcraft_doc::Space::Paper(_)), "the new layout is current");
+    assert!(matches!(app.session.state().unwrap().space, drafitra_doc::Space::Paper(_)), "the new layout is current");
 
     // Page Setup acts on the right-clicked tab.
     let g = sm::layout_tab_entries(&app, "Sheet A");
@@ -152,14 +152,14 @@ fn every_label_has_a_ukrainian_translation_and_every_id_a_command() {
         // Command names (Recent Commands) and line counts aren't translated.
         let n = segments.len() - usize::from(segments.len() > 1);
         for s in &segments[..n] {
-            if cadcraft_ui_egui::i18n::tr("uk", s) == *s {
+            if drafitra_ui_egui::i18n::tr("uk", s) == *s {
                 missing.push(s.to_string());
             }
         }
         let command = id.strip_prefix("run:").and_then(|r| r.split_once(':')).map_or(id.as_str(), |(c, _)| c);
         let special = ["drawing:", "layout:", "cmdline:"].iter().any(|p| id.starts_with(p));
         assert!(
-            special || cadcraft_engine::find_command(command).is_some() || cadcraft_ui_egui::menus::is_ui_command(command),
+            special || drafitra_engine::find_command(command).is_some() || drafitra_ui_egui::menus::is_ui_command(command),
             "{label}: {id} isn't a command"
         );
     }

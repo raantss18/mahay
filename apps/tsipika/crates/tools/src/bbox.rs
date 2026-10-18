@@ -1,6 +1,6 @@
 //! Bounding-box handle geometry shared by the Selection tool and the UI.
 
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use tsipika_geom::{Affine, Point, Rect, Vec2};
 
 /// The 8 handles, clockwise from top-left.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -106,7 +106,7 @@ pub fn rotate_for_drag(center: Point, from: Point, to: Point, snap: bool) -> (Af
 /// Move constrained to 45° multiples when `shift`.
 pub fn move_delta(from: Point, to: Point, shift: bool) -> Vec2 {
     let d = to - from;
-    if shift { vectorcraft_geom::constrain_angle(d, 45.0) } else { d }
+    if shift { tsipika_geom::constrain_angle(d, 45.0) } else { d }
 }
 
 #[cfg(test)]

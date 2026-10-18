@@ -36,7 +36,7 @@ fn healthy(s: &Session) {
 
 /// A scratch directory for one test.
 fn dir(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("figcraft-lib-{}-{name}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("endrika-lib-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d
 }
@@ -117,7 +117,7 @@ fn publish_manifest_roundtrip() {
     let doc = s.doc().unwrap();
     let lib = doc.published.clone().unwrap();
     let m = &lib.manifest;
-    assert!(figcraft_format::is_valid_library_id(&m.id));
+    assert!(endrika_format::is_valid_library_id(&m.id));
     assert_eq!(m.description, "Our kit");
     assert!(m.component(k.button).is_some_and(|a| a.published && a.version == 1));
     assert!(m.component(k.card).is_some_and(|a| a.published));
@@ -127,18 +127,18 @@ fn publish_manifest_roundtrip() {
     assert!(lib.doc.validate().is_empty());
     assert_eq!(lib.doc.styles.len(), 1);
     // Saved and read back: the author's file and a reader of the library see the same manifest.
-    let bytes = figcraft_format::save_bytes(doc, None).unwrap();
-    let (back, issues) = figcraft_format::load_bytes(&bytes).unwrap();
+    let bytes = endrika_format::save_bytes(doc, None).unwrap();
+    let (back, issues) = endrika_format::load_bytes(&bytes).unwrap();
     assert!(issues.is_empty(), "{issues:?}");
     assert_eq!(back.published.as_ref().map(|p| &p.manifest), Some(m));
-    let read = figcraft_format::read_library(std::io::Cursor::new(&bytes)).unwrap().unwrap();
+    let read = endrika_format::read_library(std::io::Cursor::new(&bytes)).unwrap().unwrap();
     assert_eq!(read.manifest, *m);
     assert_eq!(read.doc.node_count(), lib.doc.node_count());
     // Older files and files never published have no library; readers that don't know libraries
     // are unaffected (the entries are extra archive members).
-    let plain = figcraft_format::save_bytes(&Document::new("x"), None).unwrap();
-    assert!(figcraft_format::read_library(std::io::Cursor::new(&plain)).unwrap().is_none());
-    assert!(figcraft_format::load_bytes(&plain).unwrap().0.published.is_none());
+    let plain = endrika_format::save_bytes(&Document::new("x"), None).unwrap();
+    assert!(endrika_format::read_library(std::io::Cursor::new(&plain)).unwrap().is_none());
+    assert!(endrika_format::load_bytes(&plain).unwrap().0.published.is_none());
 
     // Nothing changed: refused. A change bumps only what it touches (and what uses it).
     let e = s.execute("library.publish", &json!({})).unwrap_err();
@@ -166,7 +166,7 @@ fn publish_manifest_roundtrip() {
 #[test]
 fn add_place_and_update_keep_overrides() {
     let d = dir("flow");
-    let lib_path = path_str(&d.join("kit.figcraft"));
+    let lib_path = path_str(&d.join("kit.endrika"));
     let mut lib = Session::new();
     let k = kit(&mut lib);
     let lid = publish_to(&mut lib, &lib_path);
@@ -270,7 +270,7 @@ fn add_place_and_update_keep_overrides() {
     assert_eq!(chars(&s, node(&s, b).children[0]), "Go");
 
     // Saved and reopened, the document keeps its links, copies and records.
-    let user_path = path_str(&d.join("app.figcraft"));
+    let user_path = path_str(&d.join("app.endrika"));
     ex(&mut s, "file.saveAs", json!({"path": user_path}));
     let mut t = Session::empty();
     ex(&mut t, "file.open", json!({"path": user_path}));
@@ -291,7 +291,7 @@ fn add_place_and_update_keep_overrides() {
 #[test]
 fn library_styles_apply_and_import_with_pages() {
     let d = dir("styles");
-    let lib_path = path_str(&d.join("kit.figcraft"));
+    let lib_path = path_str(&d.join("kit.endrika"));
     let mut lib = Session::new();
     kit(&mut lib);
     let lid = publish_to(&mut lib, &lib_path);
@@ -308,7 +308,7 @@ fn library_styles_apply_and_import_with_pages() {
     assert_eq!(s.doc().unwrap().styles.len(), 1);
     assert!(s.execute("library.applyStyle", &json!({"library": lid, "style": "Nope", "ids": [r]})).is_err());
     let inst = idv(&ex(&mut s, "library.place", json!({"library": lid, "component": "Card", "x": 0, "y": 100})));
-    let path = path_str(&d.join("user.figcraft"));
+    let path = path_str(&d.join("user.endrika"));
     ex(&mut s, "file.saveAs", json!({"path": path}));
 
     // Importing that file's pages into another document brings the copies along.
@@ -338,35 +338,35 @@ fn library_styles_apply_and_import_with_pages() {
 fn bad_library_files_are_errors() {
     let d = dir("bad");
     let mut s = Session::new();
-    let missing = path_str(&d.join("missing.figcraft"));
+    let missing = path_str(&d.join("missing.endrika"));
     assert!(matches!(s.execute("library.add", &json!({"path": missing})), Err(EngineError::Other(_))));
-    let junk = d.join("junk.figcraft");
+    let junk = d.join("junk.endrika");
     std::fs::write(&junk, b"not a zip at all").unwrap();
     assert!(s.execute("library.add", &json!({"path": path_str(&junk)})).is_err());
     std::fs::write(&junk, b"{\"name\": \"json\"}").unwrap();
     assert!(s.execute("library.add", &json!({"path": path_str(&junk)})).is_err());
-    // A FigCraft file that was never published.
-    let plain = d.join("plain.figcraft");
-    std::fs::write(&plain, figcraft_format::save_bytes(&Document::new("Plain"), None).unwrap()).unwrap();
+    // A Endrika file that was never published.
+    let plain = d.join("plain.endrika");
+    std::fs::write(&plain, endrika_format::save_bytes(&Document::new("Plain"), None).unwrap()).unwrap();
     let e = s.execute("library.add", &json!({"path": path_str(&plain)})).unwrap_err();
     assert!(e.to_string().contains("no published library"), "{e}");
     // A truncated library (damaged entries are covered by the format crate's tests).
     let mut lib = Session::new();
     kit(&mut lib);
     ex(&mut lib, "library.publish", json!({}));
-    let good = figcraft_format::save_bytes(lib.doc().unwrap(), None).unwrap();
-    let cut = d.join("cut.figcraft");
+    let good = endrika_format::save_bytes(lib.doc().unwrap(), None).unwrap();
+    let cut = d.join("cut.endrika");
     std::fs::write(&cut, &good[..good.len() / 2]).unwrap();
     assert!(s.execute("library.add", &json!({"path": path_str(&cut)})).is_err());
     // Oversized files are refused before they are read.
-    let ok = d.join("ok.figcraft");
+    let ok = d.join("ok.endrika");
     std::fs::write(&ok, &good).unwrap();
     let mut cache = Cache::default();
     let e = cache.load_limited(&path_str(&ok), 16).unwrap_err();
     assert!(e.to_string().contains("too large"), "{e}");
     assert!(cache.load(&path_str(&ok)).is_ok());
     // Its own library can't be added to a file.
-    let own = d.join("own.figcraft");
+    let own = d.join("own.endrika");
     ex(&mut lib, "file.saveAs", json!({"path": path_str(&own)}));
     assert!(lib.execute("library.add", &json!({"path": path_str(&own)})).is_err());
     // Commands naming no library fail cleanly, and nothing was enabled.
@@ -380,7 +380,7 @@ fn bad_library_files_are_errors() {
 #[test]
 fn library_variants_swaps_and_undo() {
     let d = dir("variants");
-    let lib_path = path_str(&d.join("chips.figcraft"));
+    let lib_path = path_str(&d.join("chips.endrika"));
     let mut lib = Session::new();
     let mut variants = Vec::new();
     for (i, color) in ["#ff0000", "#00ff00"].iter().enumerate() {
@@ -423,7 +423,7 @@ fn library_variants_swaps_and_undo() {
 #[test]
 fn library_survives_saving_with_versions() {
     let d = dir("versions");
-    let path = path_str(&d.join("kit.figcraft"));
+    let path = path_str(&d.join("kit.endrika"));
     let mut lib = Session::new();
     kit(&mut lib);
     let r = ex(&mut lib, "library.publish", json!({}));

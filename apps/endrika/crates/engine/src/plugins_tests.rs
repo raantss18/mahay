@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 
 use crate::components::tests::{ex, idv, node};
 use crate::{EngineError, Session};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 /// What a test plugin does when a call is refused: fail the run (status 1), or carry on and report
 /// the refusal as its output.
@@ -46,15 +46,15 @@ pub(crate) fn script(calls: &[(&str, Value)], on_refusal: OnRefusal, tail: &str)
     assert!(at < 40000);
     let wat = format!(
         r#"(module
-          (import "figcraft" "call" (func $call (param i32 i32 i32 i32) (result i32)))
-          (import "figcraft" "selection" (func $selection (result i32)))
-          (import "figcraft" "reply_read" (func $reply_read (param i32 i32) (result i32)))
-          (import "figcraft" "set_output" (func $set_output (param i32 i32)))
-          (import "figcraft" "notify" (func $notify (param i32 i32)))
-          (import "figcraft" "log" (func $log (param i32 i32)))
+          (import "endrika" "call" (func $call (param i32 i32 i32 i32) (result i32)))
+          (import "endrika" "selection" (func $selection (result i32)))
+          (import "endrika" "reply_read" (func $reply_read (param i32 i32) (result i32)))
+          (import "endrika" "set_output" (func $set_output (param i32 i32)))
+          (import "endrika" "notify" (func $notify (param i32 i32)))
+          (import "endrika" "log" (func $log (param i32 i32)))
           (memory (export "memory") 2)
           {data}
-          (func (export "figcraft_run") (param $n i32) (result i32) (local $sel i32)
+          (func (export "endrika_run") (param $n i32) (result i32) (local $sel i32)
             {body}
             {tail}
             (call $set_output (i32.const 60000) (local.get $sel))
@@ -158,13 +158,13 @@ fn files_dialogs_history_and_plugins_are_off_limits() {
     let mut s = Session::new();
     let a = rect(&mut s, 0.0);
     ex(&mut s, "select.set", json!({"ids": [a]}));
-    let dir = std::env::temp_dir().join(format!("figcraft-plugin-deny-{}", std::process::id()));
-    let target = dir.join("stolen.figcraft").to_string_lossy().into_owned();
+    let dir = std::env::temp_dir().join(format!("endrika-plugin-deny-{}", std::process::id()));
+    let target = dir.join("stolen.endrika").to_string_lossy().into_owned();
     let refused = [
         ("file.saveAs", json!({"path": target})),
         ("file.open", json!({"path": "C:/Windows/win.ini"})),
         ("image.place", json!({"path": "secret.png"})),
-        ("library.add", json!({"path": "lib.figcraft"})),
+        ("library.add", json!({"path": "lib.endrika"})),
         ("plugin.run", json!({"id": "org.test.deny"})),
         ("plugin.remove", json!({"id": "org.test.deny"})),
         ("edit.undo", json!({})),
@@ -174,7 +174,7 @@ fn files_dialogs_history_and_plugins_are_off_limits() {
         ("codeConnect.import", json!({"path": "/etc/passwd"})),
         ("component.playground", json!({"id": a, "path": target})),
         ("variable.import", json!({"variables": "/etc/passwd"})),
-        ("collab.recoverFile", json!({"path": "copy.figcraft", "file": "x", "session": 1, "client": 1, "seq": 0})),
+        ("collab.recoverFile", json!({"path": "copy.endrika", "file": "x", "session": 1, "client": 1, "seq": 0})),
         ("window.new", json!({"path": "C:/Windows/win.ini"})),
         ("doc.switch", json!({"index": 0})),
         ("pref.keepTool", json!({})),
@@ -223,7 +223,7 @@ fn traps_endless_loops_and_memory_hogs_roll_back() {
     }
     // A module that asks for more memory than the cap up front never starts.
     let hog =
-        wat::parse_str(r#"(module (memory (export "memory") 3000) (func (export "figcraft_run") (param i32) (result i32) (i32.const 0)))"#).unwrap();
+        wat::parse_str(r#"(module (memory (export "memory") 3000) (func (export "endrika_run") (param i32) (result i32) (i32.const 0)))"#).unwrap();
     install(&mut s, manifest("org.test.hog", "write", &[]), &hog);
     assert!(run_err(&mut s, "org.test.hog").contains("memory limit"));
 }
@@ -253,12 +253,12 @@ fn parameters_defaults_and_notifications_reach_the_plugin() {
     let mut s = Session::new();
     let echo = wat::parse_str(
         r#"(module
-          (import "figcraft" "reply_read" (func $reply_read (param i32 i32) (result i32)))
-          (import "figcraft" "set_output" (func $set_output (param i32 i32)))
-          (import "figcraft" "notify" (func $notify (param i32 i32)))
+          (import "endrika" "reply_read" (func $reply_read (param i32 i32) (result i32)))
+          (import "endrika" "set_output" (func $set_output (param i32 i32)))
+          (import "endrika" "notify" (func $notify (param i32 i32)))
           (memory (export "memory") 1)
           (data (i32.const 0) "Done!")
-          (func (export "figcraft_run") (param $n i32) (result i32)
+          (func (export "endrika_run") (param $n i32) (result i32)
             (call $set_output (i32.const 100) (call $reply_read (i32.const 100) (local.get $n)))
             (call $notify (i32.const 0) (i32.const 5))
             (i32.const 0)))"#,
@@ -303,7 +303,7 @@ fn junk_manifests_and_modules_are_refused() {
         json!({"manifest": "{ not json", "wasm": b64(&ok)}),
         json!({"manifest": 7, "wasm": b64(&ok)}),
         json!({"manifest": manifest("org.test.x", "write", &[])}),
-        json!({"path": "Z:/definitely/not/here/figcraft-plugin.json"}),
+        json!({"path": "Z:/definitely/not/here/endrika-plugin.json"}),
         json!({"path": 5}),
         json!({"manifest": manifest("org.test.x", "write", &[]), "wasm": "A".repeat(23_000_000)}),
     ];
@@ -342,17 +342,17 @@ impl Drop for TempDir {
 
 #[test]
 fn development_plugins_load_from_a_manifest_and_reload_their_module() {
-    let dir = TempDir(std::env::temp_dir().join(format!("figcraft-plugin-dev-{}", std::process::id())));
+    let dir = TempDir(std::env::temp_dir().join(format!("endrika-plugin-dev-{}", std::process::id())));
     std::fs::create_dir_all(&dir.0).unwrap();
     let write_module = |calls: &[(&str, Value)]| std::fs::write(dir.0.join("plugin.wasm"), script(calls, OnRefusal::Fail, "")).unwrap();
-    std::fs::write(dir.0.join("figcraft-plugin.json"), manifest("org.test.dev", "write", &[]).to_string()).unwrap();
+    std::fs::write(dir.0.join("endrika-plugin.json"), manifest("org.test.dev", "write", &[]).to_string()).unwrap();
     write_module(&[("shape.rectangle", json!({"x": 0, "y": 0, "width": 5, "height": 5}))]);
     let mut s = Session::new();
     // The folder or the manifest file itself.
     let out = ex(&mut s, "plugin.import", json!({"path": dir.0.to_string_lossy()}));
     assert_eq!(out["id"], "org.test.dev");
     assert_eq!(out["replaced"], false);
-    let manifest_path = dir.0.join("figcraft-plugin.json").to_string_lossy().into_owned();
+    let manifest_path = dir.0.join("endrika-plugin.json").to_string_lossy().into_owned();
     assert_eq!(ex(&mut s, "plugin.import", json!({"path": manifest_path}))["replaced"], true);
     ex(&mut s, "plugin.run", json!({"id": "org.test.dev"}));
     assert_eq!(layer_count(&s), 1);

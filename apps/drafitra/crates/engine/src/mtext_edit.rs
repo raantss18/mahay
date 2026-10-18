@@ -7,8 +7,8 @@
 //! the text ([`ATOM_BASE`] + n) that [`Formatted::to_contents`] writes back as the original
 //! code, so opening and closing the editor never loses them.
 
-use cadcraft_fonts::ParaProps;
-pub use cadcraft_fonts::{ListStyle, MTextColor, ParaAlign, TabKind};
+use drafitra_fonts::ParaProps;
+pub use drafitra_fonts::{ListStyle, MTextColor, ParaAlign, TabKind};
 
 /// Largest paragraph indent or tab stop, in drawing units.
 const MAX_INDENT: f64 = 1e6;

@@ -1,15 +1,15 @@
 //! Footage at a reduced resolution: a source that resamples frames itself
-//! ([`FootageSource::frame_at_size`], movies in `effectcraft-media`) renders what resampling the
+//! ([`FootageSource::frame_at_size`], movies in `tselatra-media`) renders what resampling the
 //! full frame renders.
 
 use std::sync::{Arc, Mutex};
 
 use rayon::prelude::*;
 
-use effectcraft_color::Label;
-use effectcraft_project::build;
-use effectcraft_project::{AlphaMode, BitDepth, Comp, Footage, FootageKind, ItemId, ItemKind, LayerSource, Project};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_project::build;
+use tselatra_project::{AlphaMode, BitDepth, Comp, Footage, FootageKind, ItemId, ItemKind, LayerSource, Project};
+use tselatra_time::{FrameRate, Tick};
 
 use crate::{FootageSource, Image, RenderOpts, Renderer};
 
@@ -33,7 +33,7 @@ impl FootageSource for Clip {
     fn frame_at_size(&self, item: ItemId, f: &Footage, t: Tick, w: u32, h: u32) -> Option<Arc<Image>> {
         let Some(sizes) = &self.sizes else { return self.frame(item, f, t) };
         sizes.lock().unwrap().push((w, h));
-        Some(Arc::new(effectcraft_raster::resample(&*self.frame(item, f, t)?, w, h)))
+        Some(Arc::new(tselatra_raster::resample(&*self.frame(item, f, t)?, w, h)))
     }
 }
 

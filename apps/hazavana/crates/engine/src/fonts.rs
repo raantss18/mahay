@@ -1,12 +1,12 @@
-//! Fonts from the optional craft-fonts build input (storytold/craft-fonts).
+//! Fonts from the optional mahay-fonts build input (raantss18/mahay-fonts).
 //!
-//! Built with `CRAFT_FONTS_DIR=<craft-fonts checkout>`, [`CRAFT_FONTS`] holds every font in its
+//! Built with `MAHAY_FONTS_DIR=<mahay-fonts checkout>`, [`MAHAY_FONTS`] holds every font in its
 //! manifest (today: the Japanese and Simplified-Chinese UI and document fonts); otherwise it is
-//! empty and LightCraft uses only its own bundled fonts (Inter). Both the egui UI and the export
-//! watermark renderer read it from here. See craftrules `standards/fonts.md`.
+//! empty and Hazavana uses only its own bundled fonts (Inter). Both the egui UI and the export
+//! watermark renderer read it from here. See mahay-rules `standards/fonts.md`.
 
-/// A font from the optional craft-fonts build input (empty unless built with `CRAFT_FONTS_DIR`).
-pub struct CraftFont {
+/// A font from the optional mahay-fonts build input (empty unless built with `MAHAY_FONTS_DIR`).
+pub struct MahayFont {
     pub family: &'static str,
     pub style: &'static str,
     /// ISO 15924 scripts the font is for, e.g. `"Jpan"`.
@@ -14,9 +14,9 @@ pub struct CraftFont {
     pub bytes: &'static [u8],
 }
 
-include!(concat!(env!("OUT_DIR"), "/craft_fonts.rs"));
+include!(concat!(env!("OUT_DIR"), "/mahay_fonts.rs"));
 
-impl CraftFont {
+impl MahayFont {
     /// Whether the font is meant for `script` (ISO 15924, e.g. `"Jpan"`).
     pub fn covers(&self, script: &str) -> bool {
         self.scripts.contains(&script)
@@ -27,7 +27,7 @@ impl CraftFont {
         self.family.contains("Mincho")
     }
 
-    /// Whether the font can stand in for `script`: it is meant for it, or — until craft-fonts has a
+    /// Whether the font can stand in for `script`: it is meant for it, or — until mahay-fonts has a
     /// Traditional Chinese face — it is a Simplified Chinese face, which carries the Traditional
     /// characters too (with mainland glyph forms; still closer than the Japanese faces).
     pub fn serves(&self, script: &str) -> bool {
@@ -35,13 +35,13 @@ impl CraftFont {
     }
 }
 
-/// The craft-fonts faces for Japanese, in `fonts`' order (empty without craft-fonts).
-pub fn japanese(fonts: &'static [CraftFont]) -> impl Iterator<Item = &'static CraftFont> {
+/// The mahay-fonts faces for Japanese, in `fonts`' order (empty without mahay-fonts).
+pub fn japanese(fonts: &'static [MahayFont]) -> impl Iterator<Item = &'static MahayFont> {
     fonts.iter().filter(|f| f.covers("Jpan"))
 }
 
-/// The craft-fonts faces for any CJK script: what any CJK text needs, regardless of language.
-pub fn cjk(fonts: &'static [CraftFont]) -> impl Iterator<Item = &'static CraftFont> {
+/// The mahay-fonts faces for any CJK script: what any CJK text needs, regardless of language.
+pub fn cjk(fonts: &'static [MahayFont]) -> impl Iterator<Item = &'static MahayFont> {
     fonts.iter().filter(|f| f.scripts.iter().any(|script| is_cjk_script(script)))
 }
 
@@ -51,24 +51,24 @@ pub fn is_cjk_script(script: &str) -> bool {
     matches!(script, "Hans" | "Hant" | "Jpan" | "Kore" | "Hang" | "Hani" | "Bopo" | "Yiii" | "Nshu" | "Tang")
 }
 
-/// The craft-fonts faces to fall back on for `script`, in preference order: the CJK faces, those of
+/// The mahay-fonts faces to fall back on for `script`, in preference order: the CJK faces, those of
 /// that script first (for `style` when asked), then the faces of every other non-Latin script
 /// (Thai, Arabic, ...), which file and folder names can contain whatever the interface language.
 /// One CJK face list serves every language, but Han characters are shared between them: a Chinese
 /// reader must get the Chinese forms and a Japanese reader the Japanese ones, so the active
 /// language's own script comes first. The other scripts share no characters, so their order only
-/// prefers `style`. Empty without craft-fonts.
-pub fn ui_fallback<'a>(fonts: &'a [CraftFont], script: &str, style: &str) -> Vec<&'a CraftFont> {
+/// prefers `style`. Empty without mahay-fonts.
+pub fn ui_fallback<'a>(fonts: &'a [MahayFont], script: &str, style: &str) -> Vec<&'a MahayFont> {
     let mut faces = cjk_fallback(fonts, script, style);
-    let mut others: Vec<&CraftFont> = fonts.iter().filter(|font| !covers_cjk(font) && font.scripts.iter().any(|s| *s != "Latn")).collect();
+    let mut others: Vec<&MahayFont> = fonts.iter().filter(|font| !covers_cjk(font) && font.scripts.iter().any(|s| *s != "Latn")).collect();
     others.sort_by_key(|font| font.style != style);
     faces.extend(others);
     faces
 }
 
 /// The CJK part of [`ui_fallback`], in the same preference order.
-pub fn cjk_fallback<'a>(fonts: &'a [CraftFont], script: &str, style: &str) -> Vec<&'a CraftFont> {
-    let mut faces: Vec<&CraftFont> = fonts.iter().filter(|font| covers_cjk(font)).collect();
+pub fn cjk_fallback<'a>(fonts: &'a [MahayFont], script: &str, style: &str) -> Vec<&'a MahayFont> {
+    let mut faces: Vec<&MahayFont> = fonts.iter().filter(|font| covers_cjk(font)).collect();
     faces.sort_by_key(|font| {
         (
             // The language's own script first. A face dedicated to the script is preferred over a
@@ -84,7 +84,7 @@ pub fn cjk_fallback<'a>(fonts: &'a [CraftFont], script: &str, style: &str) -> Ve
 }
 
 /// Whether the font is for any CJK script.
-fn covers_cjk(font: &CraftFont) -> bool {
+fn covers_cjk(font: &MahayFont) -> bool {
     font.scripts.iter().any(|script| is_cjk_script(script))
 }
 
@@ -93,20 +93,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn craft_fonts_are_well_formed_or_absent() {
-        if CRAFT_FONTS.is_empty() {
-            eprintln!("built without CRAFT_FONTS_DIR: no craft-fonts to check");
+    fn mahay_fonts_are_well_formed_or_absent() {
+        if MAHAY_FONTS.is_empty() {
+            eprintln!("built without MAHAY_FONTS_DIR: no mahay-fonts to check");
             return;
         }
-        for f in CRAFT_FONTS {
+        for f in MAHAY_FONTS {
             assert!(!f.family.is_empty() && !f.style.is_empty() && !f.scripts.is_empty(), "{}", f.family);
             assert!(ab_glyph::FontRef::try_from_slice(f.bytes).is_ok(), "{} {} parses", f.family, f.style);
         }
-        assert!(japanese(CRAFT_FONTS).next().is_some(), "craft-fonts carries Japanese faces");
+        assert!(japanese(MAHAY_FONTS).next().is_some(), "mahay-fonts carries Japanese faces");
         // Every script face that ships is a UI fallback, and has the glyphs of its script (#736).
         use ab_glyph::Font;
         for (script, text) in [("Thai", "ภาพถ่ายสวัสดี๑๒๓"), ("Arab", "صورة")] {
-            let Some(face) = ui_fallback(CRAFT_FONTS, "Latn", "Regular").into_iter().find(|f| f.covers(script)) else { continue };
+            let Some(face) = ui_fallback(MAHAY_FONTS, "Latn", "Regular").into_iter().find(|f| f.covers(script)) else { continue };
             let font = ab_glyph::FontRef::try_from_slice(face.bytes).expect("parses");
             assert!(text.chars().all(|c| font.glyph_id(c).0 != 0), "{} draws {script}", face.family);
         }
@@ -116,10 +116,10 @@ mod tests {
     /// text still reaches Inter before any CJK fallback.
     #[test]
     fn a_language_gets_its_own_script_first() {
-        static FACES: &[CraftFont] = &[
-            CraftFont { family: "BIZ UDPGothic", style: "Regular", scripts: &["Jpan", "Latn"], bytes: &[] },
-            CraftFont { family: "Noto Sans CJK SC", style: "Regular", scripts: &["Hans", "Latn"], bytes: &[] },
-            CraftFont { family: "BIZ UDMincho", style: "Regular", scripts: &["Jpan", "Latn"], bytes: &[] },
+        static FACES: &[MahayFont] = &[
+            MahayFont { family: "BIZ UDPGothic", style: "Regular", scripts: &["Jpan", "Latn"], bytes: &[] },
+            MahayFont { family: "Noto Sans CJK SC", style: "Regular", scripts: &["Hans", "Latn"], bytes: &[] },
+            MahayFont { family: "BIZ UDMincho", style: "Regular", scripts: &["Jpan", "Latn"], bytes: &[] },
         ];
         let first = |script: &str| cjk_fallback(FACES, script, "Regular").first().map(|f| f.family);
         assert_eq!(first("Hans"), Some("Noto Sans CJK SC"));
@@ -135,12 +135,12 @@ mod tests {
     /// UI fallback whatever the language; a Latin-only face is not a fallback (Inter covers Latin).
     #[test]
     fn other_scripts_follow_the_cjk_faces() {
-        static FACES: &[CraftFont] = &[
-            CraftFont { family: "Noto Sans Thai", style: "Regular", scripts: &["Thai", "Latn"], bytes: &[] },
-            CraftFont { family: "Latin Only Sans", style: "Regular", scripts: &["Latn"], bytes: &[] },
-            CraftFont { family: "Noto Sans CJK SC", style: "Regular", scripts: &["Hans", "Latn"], bytes: &[] },
-            CraftFont { family: "Noto Sans Arabic", style: "Bold", scripts: &["Arab"], bytes: &[] },
-            CraftFont { family: "Noto Sans Arabic", style: "Regular", scripts: &["Arab"], bytes: &[] },
+        static FACES: &[MahayFont] = &[
+            MahayFont { family: "Noto Sans Thai", style: "Regular", scripts: &["Thai", "Latn"], bytes: &[] },
+            MahayFont { family: "Latin Only Sans", style: "Regular", scripts: &["Latn"], bytes: &[] },
+            MahayFont { family: "Noto Sans CJK SC", style: "Regular", scripts: &["Hans", "Latn"], bytes: &[] },
+            MahayFont { family: "Noto Sans Arabic", style: "Bold", scripts: &["Arab"], bytes: &[] },
+            MahayFont { family: "Noto Sans Arabic", style: "Regular", scripts: &["Arab"], bytes: &[] },
         ];
         let families = |script: &str, style: &str| ui_fallback(FACES, script, style).iter().map(|f| (f.family, f.style)).collect::<Vec<_>>();
         assert_eq!(

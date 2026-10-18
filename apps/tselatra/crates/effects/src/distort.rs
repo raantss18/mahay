@@ -1,9 +1,9 @@
 //! Distort effects: inverse-mapped warps (each output pixel samples the source).
 
-use effectcraft_geom::{Mat3, vec2};
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::Image;
+use tselatra_geom::{Mat3, vec2};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::Image;
 use rayon::prelude::*;
 
 use crate::util::layer_rect;
@@ -297,7 +297,7 @@ fn transform(ctx: &EffectCtx, mut b: Buf) -> Buf {
     let skew_axis = ctx.params.f("skewAxis");
     let rot = ctx.params.f("rotation");
     let opacity = ctx.params.f("opacity") as f32 / 100.0;
-    let sampling = if ctx.params.e("sampling") == 1 { effectcraft_raster::Sampling::Bicubic } else { effectcraft_raster::Sampling::Bilinear };
+    let sampling = if ctx.params.e("sampling") == 1 { tselatra_raster::Sampling::Bicubic } else { tselatra_raster::Sampling::Bilinear };
     // Motion blur: the transform at Samples instants across the shutter, averaged (the
     // transform at other times comes from the host; without one the frame renders sharp).
     if let Some((angle, phase, n)) = transform_shutter(ctx)
@@ -311,11 +311,11 @@ fn transform(ctx: &EffectCtx, mut b: Buf) -> Buf {
             let Some(pr) = host.params_at(t) else { continue };
             let mut one = Image::new(b.img.width, b.img.height);
             let op = pr.f("opacity") as f32 / 100.0;
-            effectcraft_raster::composite_warp(
+            tselatra_raster::composite_warp(
                 &mut one,
                 &b.img,
                 &transform_matrix(&pr, &b),
-                &effectcraft_raster::WarpOpts { opacity: op, sampling, ..Default::default() },
+                &tselatra_raster::WarpOpts { opacity: op, sampling, ..Default::default() },
             );
             acc.data.iter_mut().zip(&one.data).for_each(|(a, o)| (0..4).for_each(|c| a[c] += o[c]));
             count += 1.0;
@@ -332,7 +332,7 @@ fn transform(ctx: &EffectCtx, mut b: Buf) -> Buf {
         * Mat3::scale(vec2(sw / 100.0, sh / 100.0))
         * Mat3::translate(vec2(-anchor.0, -anchor.1));
     let mut out = Image::new(b.img.width, b.img.height);
-    effectcraft_raster::composite_warp(&mut out, &b.img, &m, &effectcraft_raster::WarpOpts { opacity, sampling, ..Default::default() });
+    tselatra_raster::composite_warp(&mut out, &b.img, &m, &tselatra_raster::WarpOpts { opacity, sampling, ..Default::default() });
     b.img = out;
     b
 }
@@ -347,7 +347,7 @@ fn corner_pin(ctx: &EffectCtx, mut b: Buf) -> Buf {
     let o = b.to_px([0.0, 0.0]);
     let m = quad * Mat3::scale(vec2(1.0 / (w * b.scale), 1.0 / (h * b.scale))) * Mat3::translate(vec2(-o.0, -o.1));
     let mut out = Image::new(b.img.width, b.img.height);
-    effectcraft_raster::composite_warp(&mut out, &b.img, &m, &Default::default());
+    tselatra_raster::composite_warp(&mut out, &b.img, &m, &Default::default());
     b.img = out;
     b
 }

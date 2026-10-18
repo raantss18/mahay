@@ -2,7 +2,7 @@
 //! prefixed `fxd_`): 3D Channel Extract, Cryptomatte, Depth Matte, Depth of Field, EXtractoR,
 //! Fog 3D, ID Matte and IDentifier.
 //!
-//! The layer's auxiliary channels ([`effectcraft_raster::AuxChannels`]) go to the GPU as an
+//! The layer's auxiliary channels ([`tselatra_raster::AuxChannels`]) go to the GPU as an
 //! extra texture at the aux resolution: the planes an effect reads are packed into its four
 //! channels (alpha = 1 marks "inside the aux image"). `fxd_lookup` resamples it nearest-neighbour
 //! onto the buffer grid with the CPU's exact index arithmetic (layer position × aux scale,
@@ -11,10 +11,10 @@
 //! colours, measured on the CPU) instead of the raw ranks. Fog 3D's Gradient Layer is rendered
 //! by the host on the CPU (it is another layer) and uploaded.
 
-use effectcraft_effects::{Buf, EffectCtx};
-use effectcraft_keyframe::Value;
-use effectcraft_raster::channels3d::BACKGROUND_DEPTH;
-use effectcraft_raster::{AuxChannels, Image};
+use tselatra_effects::{Buf, EffectCtx};
+use tselatra_keyframe::Value;
+use tselatra_raster::channels3d::BACKGROUND_DEPTH;
+use tselatra_raster::{AuxChannels, Image};
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -164,7 +164,7 @@ fn fog(e: &mut Enc, ctx: &EffectCtx, b: GBuf, a: &AuxChannels) -> Option<GBuf> {
     let grad = if contrib > 0.0 && matches!(pr.get("gradientLayer"), Some(Value::Layer(Some(_)))) {
         ctx.layer_param("gradientLayer", true).map(|o| {
             let cpu = Buf { img: Image::new(b.img.width, b.img.height), offset: b.offset, scale: b.scale };
-            effectcraft_effects::util::fit_layer(ctx, &cpu, &o, true)
+            tselatra_effects::util::fit_layer(ctx, &cpu, &o, true)
         })
     } else {
         None
@@ -272,13 +272,13 @@ fn cryptomatte(e: &mut Enc, ctx: &EffectCtx, b: GBuf, a: &AuxChannels) -> Option
     if layers.is_empty() {
         return Some(b);
     }
-    let want = effectcraft_effects::CRYPTO_LAYERS[(pr.e("layer") as usize).min(2)];
+    let want = tselatra_effects::CRYPTO_LAYERS[(pr.e("layer") as usize).min(2)];
     let layer = layers.iter().find(|l| l.as_str() == want || l.ends_with(want)).unwrap_or(&layers[0]).clone();
     let manifest = a.manifests.iter().find(|(l, _)| *l == layer).map(|(_, m)| m.as_slice());
-    let sel = effectcraft_effects::selection_hashes(pr.s("selection"), manifest);
+    let sel = tselatra_effects::selection_hashes(pr.s("selection"), manifest);
     // Per aux pixel: coverage-weighted ID colours (RGB) and the selection's coverage (A), on all
     // cores with the rank planes resolved once.
-    let img = effectcraft_effects::crypto_aux_image(a, &layer, &sel);
+    let img = tselatra_effects::crypto_aux_image(a, &layer, &sel);
     let tex = e.g.upload_image(&img)?;
     let plane = lookup(e, &b, a, &tex, [0.5, 0.5], [0.0; 4]);
     let mut p = op(7);

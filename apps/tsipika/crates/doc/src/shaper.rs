@@ -3,7 +3,7 @@
 //! so the intended face or stroke follows source art when it moves or resizes.
 use crate::Appearance;
 use serde::{Deserialize, Serialize};
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 pub const SOURCES: &str = "Shaper Sources";
 pub const FILL_PREFIX: &str = "Shaper Fill ";

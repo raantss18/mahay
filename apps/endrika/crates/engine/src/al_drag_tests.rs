@@ -5,7 +5,7 @@ use serde_json::json;
 use crate::Session;
 use crate::params::id_of;
 use crate::tools::{PointerEvent, PointerKind};
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 
 fn id(v: serde_json::Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -57,9 +57,9 @@ fn wrap_drag_reorders_by_row_and_position() {
 fn grid_drag_takes_the_cell_under_the_pointer() {
     let mut s = Session::new();
     let (f, kids) = frame_with_kids(&mut s, json!({"layoutMode": "grid", "gridColumns": 3, "gridRows": 2}));
-    let geometry = figcraft_layout::grid_geometry(s.doc().unwrap(), f).unwrap();
+    let geometry = endrika_layout::grid_geometry(s.doc().unwrap(), f).unwrap();
     let (c2, r1) = (geometry.columns[2], geometry.rows[1]);
-    let to = s.doc().unwrap().world_transform(f) * figcraft_geom::Point::new((c2.0 + c2.1) / 2.0, (r1.0 + r1.1) / 2.0);
+    let to = s.doc().unwrap().world_transform(f) * endrika_geom::Point::new((c2.0 + c2.1) / 2.0, (r1.0 + r1.1) / 2.0);
     let from = s.doc().unwrap().world_bounds(kids[0]).unwrap().center();
     drag(&mut s, (from.x, from.y), (to.x, to.y));
     let cl = s.doc().unwrap().node(kids[0]).unwrap().child_layout.clone();

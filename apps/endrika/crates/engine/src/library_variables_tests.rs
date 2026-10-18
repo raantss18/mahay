@@ -2,7 +2,7 @@
 //! explicit modes from a library, read-only copies, updates, components that bind variables, and
 //! files that bring copies along.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::Session;
@@ -31,7 +31,7 @@ fn healthy(s: &Session) {
 
 /// A scratch directory for one test.
 fn dir(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("figcraft-libvars-{}-{name}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("endrika-libvars-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d
 }
@@ -88,8 +88,8 @@ fn publishing_collections_hides_and_versions_variables() {
     assert!(var("tmp").is_none());
     assert_eq!(lib.doc.variables.variables.len(), 4);
     // Saved and read back, the manifest and snapshot are the same.
-    let bytes = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    let read = figcraft_format::read_library(std::io::Cursor::new(&bytes)).unwrap().unwrap();
+    let bytes = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    let read = endrika_format::read_library(std::io::Cursor::new(&bytes)).unwrap().unwrap();
     assert_eq!(read.manifest, *m);
     assert_eq!(read.doc.variables, lib.doc.variables);
 
@@ -125,7 +125,7 @@ fn publishing_collections_hides_and_versions_variables() {
 #[test]
 fn bind_alias_mode_read_only_and_updates() {
     let d = dir("flow");
-    let lib_path = path_str(&d.join("theme.figcraft"));
+    let lib_path = path_str(&d.join("theme.endrika"));
     let mut lib = Session::new();
     theme(&mut lib);
     let lid = publish_to(&mut lib, &lib_path);
@@ -223,7 +223,7 @@ fn bind_alias_mode_read_only_and_updates() {
     healthy(&s);
 
     // Saved and reopened, the copies, records and bindings stay; the file renders without the library.
-    let user_path = path_str(&d.join("app.figcraft"));
+    let user_path = path_str(&d.join("app.endrika"));
     ex(&mut s, "file.saveAs", json!({"path": user_path}));
     std::fs::remove_file(&lib_path).unwrap();
     let mut t = Session::empty();
@@ -247,7 +247,7 @@ fn bind_alias_mode_read_only_and_updates() {
 #[test]
 fn library_components_keep_their_variable_bindings() {
     let d = dir("components");
-    let lib_path = path_str(&d.join("kit.figcraft"));
+    let lib_path = path_str(&d.join("kit.endrika"));
     let mut lib = Session::new();
     theme(&mut lib);
     let f = idv(&ex(&mut lib, "frame.create", json!({"x": 0, "y": 0, "width": 100, "height": 40, "name": "Chip"})));
@@ -292,7 +292,7 @@ fn library_components_keep_their_variable_bindings() {
     healthy(&s);
 
     // Another file importing these pages brings the copies and their records along.
-    let user_path = path_str(&d.join("user.figcraft"));
+    let user_path = path_str(&d.join("user.endrika"));
     ex(&mut s, "file.saveAs", json!({"path": user_path}));
     let mut t = Session::new();
     ex(&mut t, "file.import", json!({"path": user_path}));
@@ -318,7 +318,7 @@ fn library_variable_commands_fail_cleanly() {
 #[test]
 fn library_style_bindings_ignore_unrelated_local_variables() {
     let d = dir("style-bound");
-    let path = path_str(&d.join("lib.figcraft"));
+    let path = path_str(&d.join("lib.endrika"));
     let mut lib = Session::new();
     ex(&mut lib, "variable.createCollection", json!({"name": "Tokens"}));
     let var = ex(&mut lib, "variable.create", json!({"collection": "Tokens", "name": "Brand", "type": "color", "value": "#0000ff"}))["id"].clone();

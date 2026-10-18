@@ -1,6 +1,6 @@
-# LightCraft em português do Brasil
+# Hazavana em português do Brasil
 
-O LightCraft pode ser exibido em inglês, chinês simplificado, chinês tradicional (Taiwan), japonês e
+O Hazavana pode ser exibido em inglês, chinês simplificado, chinês tradicional (Taiwan), japonês e
 português do Brasil. A preferência de idioma é gravada em `language` no `ui.json`.
 
 - Troque em **Editar → Idioma** ou em **Configurações → Geral → Idioma**. A escolha é mantida nas
@@ -9,7 +9,7 @@ português do Brasil. A preferência de idioma é gravada em `language` no `ui.j
   principais mensagens de progresso.
 - Menus, telas e o texto com valores variáveis usam as fontes Inter (regular e semibold). Texto em
   chinês e japonês exibido nos nomes de idioma (por exemplo, 日本語) continua dependendo do repositório
-  de fontes [storytold/craft-fonts](https://github.com/storytold/craft-fonts).
+  de fontes [raantss18/mahay-fonts](https://github.com/raantss18/mahay).
 - A tradução fica na camada de apresentação. IDs de comandos, nomes de arquivos de fotos e metadados
   digitados pelo usuário nunca são alterados.
 - Erros técnicos, informações complementares e notas de versão não traduzidos aparecem em inglês.
@@ -28,9 +28,9 @@ Toda tradução de formato é verificada por `format!` do Rust no build. Referen
 consuma o argumento correspondente com `{:.0}` — um texto com precisão 0 não imprime nada.
 
 Aparência, fontes, troca de idioma, persistência da preferência e estabilidade dos IDs de comando são
-verificadas por `cargo test -p lightcraft-ui-egui i18n::tests` (a checagem de glifos só roda com
-`CRAFT_FONTS_DIR`). Para visualizar o idioma, renderize sem interface gráfica:
+verificadas por `cargo test -p hazavana-ui-egui i18n::tests` (a checagem de glifos só roda com
+`MAHAY_FONTS_DIR`). Para visualizar o idioma, renderize sem interface gráfica:
 
 ```sh
-LIGHTCRAFT_LANGUAGE=pt-br lightcraft-cli snapshot --demo --script tour.jsonl -o out.png --size 1600x1000
+HAZAVANA_LANGUAGE=pt-br hazavana-cli snapshot --demo --script tour.jsonl -o out.png --size 1600x1000
 ```

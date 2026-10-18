@@ -9,13 +9,13 @@
 //! mapped back through the current deformation to the rest mesh (its hidden rest position), and
 //! Position / Advanced pins get a Position keyframe at the current time, as in After Effects.
 
-use effectcraft_effects::puppet::{self, MeshOpts, PinKind};
-use effectcraft_effects::{Buf, Params};
-use effectcraft_keyframe::{Keyframe, Value as KV};
-use effectcraft_project::build::Ids;
-use effectcraft_project::{ItemId, Layer, LayerId, Node, PropGroup, Uid};
-use effectcraft_render::{EvalCtx, RenderOpts, Renderer};
-use effectcraft_time::Tick;
+use tselatra_effects::puppet::{self, MeshOpts, PinKind};
+use tselatra_effects::{Buf, Params};
+use tselatra_keyframe::{Keyframe, Value as KV};
+use tselatra_project::build::Ids;
+use tselatra_project::{ItemId, Layer, LayerId, Node, PropGroup, Uid};
+use tselatra_render::{EvalCtx, RenderOpts, Renderer};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, f_p, has_comp, layer_mut, layer_p, merge_p, str_p};
@@ -43,7 +43,7 @@ pub fn puppet_eval(s: &Session, cid: ItemId, lid: LayerId, fx_uid: Uid, t: Tick)
     r.expr = s.expr.as_deref();
     r.cache = Some(&s.layer_cache);
     let buf = r.layer_input(&ctx, layer, index)?;
-    let params = effectcraft_effects::flatten_params(g, &mut |p| ctx.value(layer, p));
+    let params = tselatra_effects::flatten_params(g, &mut |p| ctx.value(layer, p));
     Some((buf, params))
 }
 
@@ -128,7 +128,7 @@ fn add_pin(s: &mut Session, p: &Value) -> Result<Value> {
     let size = {
         let comp = s.project.comp(cid).ok_or(EngineError::NoComp)?;
         let l = comp.layer(lid).ok_or(EngineError::NoComp)?;
-        effectcraft_render::effect_bounds(&s.project, comp, l).0
+        tselatra_render::effect_bounds(&s.project, comp, l).0
     };
     let label = match kind {
         PinKind::Starch => "Add Starch Pin",
@@ -143,8 +143,8 @@ fn add_pin(s: &mut Session, p: &Value) -> Result<Value> {
         let fx_uid = match fx_uid {
             Some(u) => u,
             None => {
-                let spec = effectcraft_effects::find(puppet::ID).ok_or_else(|| EngineError::Other("Puppet effect missing".into()))?;
-                let g = effectcraft_effects::instantiate(spec, &mut ids, "Puppet", size);
+                let spec = tselatra_effects::find(puppet::ID).ok_or_else(|| EngineError::Other("Puppet effect missing".into()))?;
+                let g = tselatra_effects::instantiate(spec, &mut ids, "Puppet", size);
                 let u = g.uid;
                 fxg.children.push(g.into());
                 u

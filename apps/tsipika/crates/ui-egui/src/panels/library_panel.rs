@@ -16,11 +16,11 @@ use std::sync::{Mutex, PoisonError};
 use egui::{Rect, Sense, Ui};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::swatchlib::LibraryInfo;
+use tsipika_engine::cmd::swatchlib::LibraryInfo;
 
 use super::swatches::{View, click_selection, folder_tile, list_row, list_row_name, tile_grid};
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::state::UiState;
 use crate::widgets::{self, menu_item};
 
@@ -93,29 +93,29 @@ pub(crate) trait LibraryKind {
     type Lib;
     type Item;
     /// Every library, in menu order.
-    fn list(app: &VectorcraftApp) -> Vec<LibraryRef>;
+    fn list(app: &TsipikaApp) -> Vec<LibraryRef>;
     /// Library `id`: its name and contents.
-    fn get(app: &VectorcraftApp, id: &str) -> Option<(String, Self::Lib)>;
+    fn get(app: &TsipikaApp, id: &str) -> Option<(String, Self::Lib)>;
     /// Library `key` (an id or a name).
-    fn find(app: &VectorcraftApp, key: &str) -> Found;
+    fn find(app: &TsipikaApp, key: &str) -> Found;
     /// The file library `id` was read from, if any.
-    fn path(app: &VectorcraftApp, id: &str) -> Option<String>;
+    fn path(app: &TsipikaApp, id: &str) -> Option<String>;
     /// The rows matching the find field's `query` (lower case; empty: all).
     fn rows<'a>(lib: &'a Self::Lib, query: &str) -> Vec<Row<'a, Self::Item>>;
     /// An item's thumbnail in `r`.
-    fn draw(app: &VectorcraftApp, ui: &Ui, r: Rect, item: &Self::Item, selected: bool, hovered: bool);
+    fn draw(app: &TsipikaApp, ui: &Ui, r: Rect, item: &Self::Item, selected: bool, hovered: bool);
     /// The icons at the right of list row `r`.
     fn row_icons(ui: &Ui, r: Rect, item: &Self::Item);
     /// An item described in words, for list tooltips.
     fn describe(item: &Self::Item) -> String;
     /// A plain click on item `name` of library `id`: add it to the document and apply it.
-    fn click(app: &mut VectorcraftApp, ui: &Ui, id: &str, name: &str);
+    fn click(app: &mut TsipikaApp, ui: &Ui, id: &str, name: &str);
     /// Add the items and folders `names` of library `id` to the document.
-    fn add(app: &mut VectorcraftApp, id: &str, names: Vec<String>);
+    fn add(app: &mut TsipikaApp, id: &str, names: Vec<String>);
     /// Items heading the libraries menu.
-    fn menu_head(_app: &mut VectorcraftApp, _ui: &mut Ui) {}
+    fn menu_head(_app: &mut TsipikaApp, _ui: &mut Ui) {}
     /// Items closing the libraries menu.
-    fn menu_tail(_app: &mut VectorcraftApp, _ui: &mut Ui) {}
+    fn menu_tail(_app: &mut TsipikaApp, _ui: &mut Ui) {}
 }
 
 /// A library looked up by its id or name: its id, name and item count.
@@ -128,11 +128,11 @@ pub(crate) struct Kind {
     list: &'static str,
     load: &'static str,
     view: View,
-    name: fn(&VectorcraftApp, &str) -> Option<String>,
-    find: fn(&VectorcraftApp, &str) -> Found,
-    path: fn(&VectorcraftApp, &str) -> Option<String>,
-    body: fn(&mut VectorcraftApp, &mut Ui, &str),
-    menu: fn(&mut VectorcraftApp, &mut Ui, &str),
+    name: fn(&TsipikaApp, &str) -> Option<String>,
+    find: fn(&TsipikaApp, &str) -> Found,
+    path: fn(&TsipikaApp, &str) -> Option<String>,
+    body: fn(&mut TsipikaApp, &mut Ui, &str),
+    menu: fn(&mut TsipikaApp, &mut Ui, &str),
 }
 
 fn kind_of<K: LibraryKind>() -> Kind {
@@ -225,7 +225,7 @@ fn settings<'a>(ui: &'a UiState, kind: &str, id: &str) -> Option<&'a LibraryPane
 }
 
 /// The settings of library `id`'s panel, made when it has none.
-fn settings_mut<'a>(app: &'a mut VectorcraftApp, k: Kind, id: &str) -> Option<&'a mut LibraryPanel> {
+fn settings_mut<'a>(app: &'a mut TsipikaApp, k: Kind, id: &str) -> Option<&'a mut LibraryPanel> {
     if settings(&app.ui, k.kind, id).is_none() {
         let path = if id.starts_with("loaded/") { (k.path)(app, id) } else { None };
         app.ui.library_panels.push(LibraryPanel { kind: k.kind.into(), id: id.into(), path, view: None, hide_find: false, persistent: false });
@@ -234,20 +234,20 @@ fn settings_mut<'a>(app: &'a mut VectorcraftApp, k: Kind, id: &str) -> Option<&'
 }
 
 /// Library panel `panel`'s tab label: its library's name (a built-in one's in the UI language).
-pub(crate) fn tab_label(app: &VectorcraftApp, panel: &str) -> Option<String> {
+pub(crate) fn tab_label(app: &TsipikaApp, panel: &str) -> Option<String> {
     let (k, id) = parse(panel)?;
     (k.name)(app, id).map(|name| library_name(id, &name).to_string())
 }
 
 /// Library panel `panel`'s contents (the dock or its floating group draws its tab and menu button).
-pub(crate) fn show(app: &mut VectorcraftApp, ui: &mut Ui, panel: &str) {
+pub(crate) fn show(app: &mut TsipikaApp, ui: &mut Ui, panel: &str) {
     if let Some((k, id)) = parse(panel) {
         (k.body)(app, ui, id);
     }
 }
 
 /// Library panel `panel`'s (≡) menu items.
-pub(crate) fn menu(app: &mut VectorcraftApp, ui: &mut Ui, panel: &str) {
+pub(crate) fn menu(app: &mut TsipikaApp, ui: &mut Ui, panel: &str) {
     if let Some((k, id)) = parse(panel) {
         (k.menu)(app, ui, id);
     }
@@ -255,7 +255,7 @@ pub(crate) fn menu(app: &mut VectorcraftApp, ui: &mut Ui, panel: &str) {
 
 /// Per frame, before the panels are drawn: close the panels of libraries that are gone (a User
 /// Defined library whose file was deleted).
-pub fn tidy(app: &mut VectorcraftApp) {
+pub fn tidy(app: &mut TsipikaApp) {
     for panel in open_panels(&app.ui) {
         if parse(&panel).is_some_and(|(k, id)| (k.name)(app, id).is_none()) {
             close(app, &panel);
@@ -263,7 +263,7 @@ pub fn tidy(app: &mut VectorcraftApp) {
     }
 }
 
-fn close(app: &mut VectorcraftApp, panel: &str) {
+fn close(app: &mut TsipikaApp, panel: &str) {
     if let Err(e) = app.run("window.panel.close", json!({ "panel": panel })) {
         app.status(e);
     }
@@ -272,7 +272,7 @@ fn close(app: &mut VectorcraftApp, panel: &str) {
 /// At startup, after the preferences are restored: the persistent library panels reopen, where the
 /// saved layout has them or floating, their libraries read again (a loaded one from its file; one
 /// that can't be found is left out with a note in the status bar); the others closed with the app.
-pub fn restore(app: &mut VectorcraftApp) {
+pub fn restore(app: &mut TsipikaApp) {
     let saved = std::mem::take(&mut app.ui.library_panels);
     let mut missing = vec![];
     for mut p in saved.into_iter().filter(|p| p.persistent).take(MAX_PANELS) {
@@ -372,7 +372,7 @@ pub(crate) fn library_name<'a>(id: &str, name: &'a str) -> &'a str {
 /// The opener of library `K`'s libraries (`window.swatchLibrary {library}`): open library `library`
 /// (an id or a name) in its own panel, floating, or bring its panel forward when it is open;
 /// `null` closes every panel of `K`'s libraries. → {open, panel, name, count}
-pub(crate) fn open_command<K: LibraryKind>(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn open_command<K: LibraryKind>(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let Some(key) = p.get("library").filter(|v| !v.is_null()) else {
         for panel in open_panels(&app.ui).into_iter().filter(|p| parse(p).is_some_and(|(k, _)| k.kind == K::KIND)) {
             app.run("window.panel.close", json!({ "panel": panel }))?;
@@ -399,7 +399,7 @@ pub(crate) fn open_command<K: LibraryKind>(app: &mut VectorcraftApp, p: &Value) 
 }
 
 /// Float library panel `panel`, as tall as its body in the kind's view.
-pub(crate) fn float(app: &mut VectorcraftApp, panel: &str) -> Result<Value, String> {
+pub(crate) fn float(app: &mut TsipikaApp, panel: &str) -> Result<Value, String> {
     let large = parse(panel).is_some_and(|(k, _)| k.view == View::LargeThumb);
     app.run("window.panel.float", json!({ "panel": panel, "height": if large { 400 } else { 340 } }))
 }
@@ -408,7 +408,7 @@ pub(crate) fn float(app: &mut VectorcraftApp, panel: &str) -> Result<Value, Stri
 /// open library panel (Previous / Next Library; one open in a panel of its own is brought forward
 /// instead), and set a panel's view, Show Find Field and Persistent (also a closed persistent one's).
 /// → its settings
-pub(crate) fn command(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn command(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let given = p.get("panel").and_then(Value::as_str).unwrap_or_default();
     let (k, id) = parse(given).ok_or_else(|| format!("`{given}` isn't a library panel (see window.swatchLibrary)"))?;
     let mut id = id.to_string();
@@ -464,7 +464,7 @@ pub(crate) fn command(app: &mut VectorcraftApp, p: &Value) -> Result<Value, Stri
 }
 
 /// Run `ui.libraryPanel` on panel `panel` with `params`.
-fn set(app: &mut VectorcraftApp, panel: &str, mut params: Value) {
+fn set(app: &mut TsipikaApp, panel: &str, mut params: Value) {
     params["panel"] = json!(panel);
     if let Err(e) = app.run("ui.libraryPanel", params) {
         app.status(e);
@@ -473,7 +473,7 @@ fn set(app: &mut VectorcraftApp, panel: &str, mut params: Value) {
 
 /// Other Library…: the library file at `path`, else one picked in an open dialog; `None` when the
 /// pick is asynchronous (on the web the picked file arrives later through [`crate::io::open_bytes`]).
-pub(crate) fn pick_library_file(app: &mut VectorcraftApp, path: Option<String>) -> Result<Option<String>, String> {
+pub(crate) fn pick_library_file(app: &mut TsipikaApp, path: Option<String>) -> Result<Option<String>, String> {
     if path.is_none()
         && let Some(f) = app.services.open_async.as_mut()
     {
@@ -481,7 +481,7 @@ pub(crate) fn pick_library_file(app: &mut VectorcraftApp, path: Option<String>) 
         return Ok(None);
     }
     path.or_else(|| {
-        let pick = crate::FilePick { filters: vectorcraft_engine::cmd::fileio::open_filters().collect(), ..Default::default() };
+        let pick = crate::FilePick { filters: tsipika_engine::cmd::fileio::open_filters().collect(), ..Default::default() };
         crate::picks::open(app, &pick)
     })
     .map(Some)
@@ -497,7 +497,7 @@ pub(crate) fn user_slot(id: &str, prefix: &str, libraries: Vec<LibraryInfo>) -> 
 
 /// Test frames: the panel opened last, as the dock or a floating group draws its body.
 #[cfg(test)]
-pub(crate) fn show_window(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub(crate) fn show_window(app: &mut TsipikaApp, ctx: &egui::Context) {
     let Some(panel) = last_open(&app.ui).map(LibraryPanel::panel) else { return };
     let area = egui::Area::new(egui::Id::new("test-library-panel")).fixed_pos(egui::pos2(20.0, 20.0));
     area.show(ctx, |ui| crate::dock::panel_body(app, ui, &panel, 256.0, 400.0));
@@ -509,7 +509,7 @@ fn selection(ctx: &egui::Context, panel: &str) -> Vec<String> {
 }
 
 /// Find field, thumbnails or list rows, and the bottom bar of library `id`'s panel.
-fn body<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
+fn body<K: LibraryKind>(app: &mut TsipikaApp, ui: &mut Ui, id: &str) {
     let Some((_, lib)) = K::get(app, id) else { return };
     let panel = panel_id(K::KIND, id);
     let (view, hide_find) = settings(&app.ui, K::KIND, id).map_or((K::VIEW, false), |s| (s.view.unwrap_or(K::VIEW), s.hide_find));
@@ -570,7 +570,7 @@ fn body<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
 }
 
 /// The library `step` places after (or before, when negative) `id` in menu order, wrapping.
-fn neighbour<K: LibraryKind>(app: &VectorcraftApp, id: &str, step: isize) -> Option<String> {
+fn neighbour<K: LibraryKind>(app: &TsipikaApp, id: &str, step: isize) -> Option<String> {
     let all = K::list(app);
     let i = all.iter().position(|l| l.id == id)? as isize;
     let n = all.len() as isize;
@@ -578,21 +578,21 @@ fn neighbour<K: LibraryKind>(app: &VectorcraftApp, id: &str, step: isize) -> Opt
 }
 
 /// Show the library `step` places after (or before) `id` in its panel.
-fn step<K: LibraryKind>(app: &mut VectorcraftApp, id: &str, step: isize) {
+fn step<K: LibraryKind>(app: &mut TsipikaApp, id: &str, step: isize) {
     if let Some(next) = neighbour::<K>(app, id, step) {
         set(app, &panel_id(K::KIND, id), json!({ "library": next }));
     }
 }
 
 /// Open library `id` in its panel.
-fn open<K: LibraryKind>(app: &mut VectorcraftApp, id: &str) {
+fn open<K: LibraryKind>(app: &mut TsipikaApp, id: &str) {
     if let Err(e) = app.run(K::OPEN, json!({ "library": id })) {
         app.status(e);
     }
 }
 
 /// Libraries menu, previous / next library, and Add to … for the selection.
-fn bottom<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
+fn bottom<K: LibraryKind>(app: &mut TsipikaApp, ui: &mut Ui, id: &str) {
     let selected = selection(ui.ctx(), &panel_id(K::KIND, id));
     widgets::bottom_bar(ui, |ui| {
         let r = widgets::icon_button(ui, "library", K::MENU, false, 24.0);
@@ -613,7 +613,7 @@ fn bottom<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
 }
 
 /// A library panel's (≡) menu.
-fn panel_menu<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
+fn panel_menu<K: LibraryKind>(app: &mut TsipikaApp, ui: &mut Ui, id: &str) {
     let panel = panel_id(K::KIND, id);
     let selected = selection(ui.ctx(), &panel);
     if menu_item(ui, K::ADD, !selected.is_empty(), false) {
@@ -647,7 +647,7 @@ fn panel_menu<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui, id: &str) {
 
 /// The libraries menu (a library panel's library button, the Swatches panel's): every library by
 /// submenu, the open ones checked, between `K`'s head and tail items.
-pub(crate) fn library_menu<K: LibraryKind>(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub(crate) fn library_menu<K: LibraryKind>(app: &mut TsipikaApp, ui: &mut Ui) {
     K::menu_head(app, ui);
     let shown = open_panels(&app.ui);
     if let Some(id) = library_items(ui, &K::list(app), &|id| shown.contains(&panel_id(K::KIND, id))) {
@@ -690,14 +690,14 @@ pub(crate) fn library_items(ui: &mut Ui, libs: &[LibraryRef], checked: &dyn Fn(&
 mod tests {
     use egui::{Event, Modifiers, PointerButton, Pos2, vec2};
     use serde_json::Value;
-    use vectorcraft_color::Paint;
-    use vectorcraft_engine::Session;
+    use tsipika_color::Paint;
+    use tsipika_engine::Session;
 
     use super::*;
     use crate::panels::swatches::SwatchLibraries;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app
     }
@@ -709,7 +709,7 @@ mod tests {
     }
 
     /// One frame of the library panel with `events` and `modifiers` held.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, modifiers: Modifiers, time: f64) {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<Event>, modifiers: Modifiers, time: f64) {
         let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, vec2(1200.0, 800.0)));
         let events = std::iter::once(Event::ModifiersChanged(modifiers)).chain(events).collect();
         let input = egui::RawInput { events, time: Some(time), screen_rect, ..Default::default() };
@@ -718,13 +718,13 @@ mod tests {
     }
 
     /// The panel opened last.
-    fn shown(app: &VectorcraftApp) -> String {
+    fn shown(app: &TsipikaApp) -> String {
         last_open(&app.ui).expect("a library panel is open").panel()
     }
 
     /// Click the tile or row of `name` in the panel opened last with `modifiers` (frames from
     /// `time` to `time + 0.5`; a new window takes a sizing frame first).
-    fn click(app: &mut VectorcraftApp, ctx: &egui::Context, name: &str, modifiers: Modifiers, time: f64) {
+    fn click(app: &mut TsipikaApp, ctx: &egui::Context, name: &str, modifiers: Modifiers, time: f64) {
         frame(app, ctx, vec![], Modifiers::NONE, time);
         frame(app, ctx, vec![], Modifiers::NONE, time + 0.25);
         let at = ctx.read_response(tile_id(&shown(app), name)).unwrap_or_else(|| panic!("no tile for {name}")).rect.center();
@@ -732,7 +732,7 @@ mod tests {
         frame(app, ctx, vec![Event::PointerMoved(at), button(true), button(false)], modifiers, time + 0.5);
     }
 
-    fn undo_len(app: &VectorcraftApp) -> usize {
+    fn undo_len(app: &TsipikaApp) -> usize {
         app.session.doc().unwrap().history.undo.len()
     }
 
@@ -839,7 +839,7 @@ mod tests {
             .filter(|e| e.path == ["Window", "Swatch Libraries"] && e.command.as_deref() == Some("window.swatchLibrary"))
             .map(|e| e.params["library"].clone())
             .collect();
-        let all = vectorcraft_engine::cmd::swatchlib::libraries(&app.session);
+        let all = tsipika_engine::cmd::swatchlib::libraries(&app.session);
         let listed = |category: &str| all.iter().filter(|l| l.category == category).map(|l| json!(l.id)).collect::<Vec<_>>();
         assert_eq!(ids, listed("builtIn"));
         assert_eq!(ids, SWATCH_IDS.map(|i| json!(i)));
@@ -860,7 +860,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         let mut app = app();
         app.session.swatch_libraries.set_user_dir(Some(dir.to_string_lossy().to_string()));
-        let user_items = |app: &VectorcraftApp| -> Vec<(String, String)> {
+        let user_items = |app: &TsipikaApp| -> Vec<(String, String)> {
             crate::menus::menu_entries(app)
                 .into_iter()
                 .filter(|e| e.path == ["Window", "Swatch Libraries", "User Defined"])
@@ -899,7 +899,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut app = VectorcraftApp::new(Session::new(), services);
+        let mut app = TsipikaApp::new(Session::new(), services);
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app.run("ui.saveSwatchLibrary", json!({})).unwrap();
         let d = app.ui.dialog.as_mut().unwrap();
@@ -930,7 +930,7 @@ mod tests {
         for l in SwatchLibraries::list(&app) {
             assert_eq!(builtin_library(&l.id), !matches!(l.submenu, Some("User Defined" | "Other Libraries")), "{}", l.id);
         }
-        assert!(!builtin_library(&open.id) && builtin_library(vectorcraft_engine::cmd::swatchlib::DOCUMENT_SWATCHES));
+        assert!(!builtin_library(&open.id) && builtin_library(tsipika_engine::cmd::swatchlib::DOCUMENT_SWATCHES));
     }
 
     #[test]
@@ -945,7 +945,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut app = VectorcraftApp::new(Session::new(), services);
+        let mut app = TsipikaApp::new(Session::new(), services);
         app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         app.run("ui.saveSwatchLibrary", json!({})).unwrap();
         let d = app.ui.dialog.as_mut().unwrap();
@@ -956,7 +956,7 @@ mod tests {
         crate::dialogs::confirm(&mut app).unwrap();
         let (path, bytes) = written.borrow()[0].clone();
         assert_eq!(path, "/tmp/Brand Kit.ase", "the save panel suggests the name");
-        let lib = vectorcraft_color::palette_io::read_bytes(&bytes, "x").unwrap();
+        let lib = tsipika_color::palette_io::read_bytes(&bytes, "x").unwrap();
         let solid = app.session.doc().unwrap().doc.swatches_iter().filter(|w| w.paint.color().is_some()).count();
         assert_eq!(lib.len(), solid, "every solid color of the document");
         // The web downloads the file under that name.
@@ -969,7 +969,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut web = VectorcraftApp::new(Session::new(), services);
+        let mut web = TsipikaApp::new(Session::new(), services);
         web.run("file.new", json!({"width": 100, "height": 100})).unwrap();
         web.run("ui.saveSwatchLibrary", json!({})).unwrap();
         let d = web.ui.dialog.as_mut().unwrap();
@@ -983,7 +983,7 @@ mod tests {
     fn swatch_exchange_files_without_a_path_open_in_the_library_panel() {
         // A file opened on the web has no path; open_bytes passes its bytes as dataBase64.
         let mut app = app();
-        crate::io::open_bytes(&mut app, "Brand.ase", &vectorcraft_testkit::ase::sample(), None).unwrap();
+        crate::io::open_bytes(&mut app, "Brand.ase", &tsipika_testkit::ase::sample(), None).unwrap();
         let open = last_open(&app.ui).cloned().unwrap();
         assert_eq!(open.id, "loaded/Brand.ase");
         let (_, lib) = SwatchLibraries::get(&app, &open.id).unwrap();
@@ -991,7 +991,7 @@ mod tests {
         assert_eq!(app.session.documents().len(), 1, "not opened as a document");
     }
 
-    fn docking(app: &VectorcraftApp) -> &craft_ui::docking::Layout<String> {
+    fn docking(app: &TsipikaApp) -> &mahay_ui::docking::Layout<String> {
         app.ui.docking.as_ref().expect("library panels live in the shared layout")
     }
 
@@ -999,7 +999,7 @@ mod tests {
         reply["panel"].as_str().expect("the reply names the panel").to_string()
     }
 
-    fn groups(app: &VectorcraftApp) -> Vec<Vec<String>> {
+    fn groups(app: &TsipikaApp) -> Vec<Vec<String>> {
         docking(app).floating.iter().map(|g| g.panels.clone()).collect()
     }
 
@@ -1025,7 +1025,7 @@ mod tests {
         app.run("window.panel.float", json!({"panel": brights, "onto": pastels})).unwrap();
         assert!(groups(&app).contains(&vec![pastels.clone(), brights.clone()]), "{:?}", groups(&app));
         app.run("window.panel.dock", json!({"panel": styles})).unwrap();
-        assert!(craft_ui::docking::Layout { root: docking(&app).root.clone(), floating: vec![] }.contains(&styles));
+        assert!(mahay_ui::docking::Layout { root: docking(&app).root.clone(), floating: vec![] }.contains(&styles));
         app.run("window.panel.close", json!({"panel": brights})).unwrap();
         assert!(!is_open(&app.ui, &brights) && is_open(&app.ui, &pastels));
         app.run("window.panel", json!({"panel": brights})).unwrap();
@@ -1044,9 +1044,9 @@ mod tests {
     }
 
     /// The app restarted with the preferences `app` saves.
-    fn restarted(app: &VectorcraftApp) -> VectorcraftApp {
+    fn restarted(app: &TsipikaApp) -> TsipikaApp {
         let saved: crate::UiState = serde_json::from_slice(&serde_json::to_vec(&app.ui).unwrap()).unwrap();
-        let mut next = VectorcraftApp::new(Session::new(), Default::default());
+        let mut next = TsipikaApp::new(Session::new(), Default::default());
         next.ui = saved.sanitized();
         restore(&mut next);
         next

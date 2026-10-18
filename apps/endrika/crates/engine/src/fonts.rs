@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use figcraft_doc::{Document, NodeKind, StyleKind, VariableValue, Variables};
+use endrika_doc::{Document, NodeKind, StyleKind, VariableValue, Variables};
 use serde_json::{Value, json};
 
 use crate::cmd::CommandSpec;
@@ -21,7 +21,7 @@ pub struct Missing {
 
 /// The families `doc` names that the font database doesn't have, by name. On the desktop the
 /// installed fonts are indexed in the background: ask once that's done
-/// (`figcraft_text::installed_fonts_known`), or every installed family counts as missing.
+/// (`endrika_text::installed_fonts_known`), or every installed family counts as missing.
 pub fn missing(doc: &Document) -> Vec<Missing> {
     // Lower-case family → (spelling, layers).
     let mut used: BTreeMap<String, (String, usize)> = BTreeMap::new();
@@ -59,7 +59,7 @@ pub fn missing(doc: &Document) -> Vec<Missing> {
             }
         }
     }
-    used.into_values().filter(|(family, _)| !figcraft_text::has_family(family)).map(|(family, layers)| Missing { family, layers }).collect()
+    used.into_values().filter(|(family, _)| !endrika_text::has_family(family)).map(|(family, layers)| Missing { family, layers }).collect()
 }
 
 /// Every string value of variable `id` in any mode, following aliases (at most 32 deep).

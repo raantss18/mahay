@@ -15,13 +15,13 @@
 use std::io::Cursor;
 use std::sync::Arc;
 
-use craft_pdf::write::backend as krilla;
+use mahay_pdf::write::backend as krilla;
 use image::imageops::FilterType;
 use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageFormat, ImageReader};
 use krilla::image::{BitsPerComponent, CustomImage, Image, ImageColorspace};
 
-use vectorcraft_doc::ImageBlob;
-use vectorcraft_doc::cmyk::jpeg_components;
+use tsipika_doc::ImageBlob;
+use tsipika_doc::cmyk::jpeg_components;
 
 use crate::output::{CmykPixels, Pixels};
 use crate::{CompressionSettings, Downsample, ImageCodec, JpegQuality, MonoCodec};

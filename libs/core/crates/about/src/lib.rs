@@ -6,16 +6,100 @@
 //! - [`UpdateBanner`]: a small bar at the bottom of the window when an update has been
 //!   downloaded and verified: "Mahay 0.3.0 is ready · What's new · Install · Later".
 //!
-//! Installing is the platform's: the app passes an `install` function (Android's package
-//! installer, or replacing the AppImage and restarting).
+//! Installing is the platform's: the app registers an `install` function (Android's package
+//! installer, or replacing the AppImage and restarting) with [`register`], once at start-up.
+//! Then any screen calls [`page`] and the frame loop calls [`banner`]; no updater has to be
+//! passed through the app's own structures.
 
 mod text;
 
 pub use text::Lang;
 
 use egui::{Color32, RichText, Ui, vec2};
-use mahay_update::{Checker, Downloaded, State, SUITE_VERSION};
+#[cfg(not(target_arch = "wasm32"))]
+use mahay_update::{Checker, Downloaded, State};
 use text::t;
+
+/// The suite's version (the repository's `VERSION` file).
+pub const SUITE_VERSION: &str = env!("MAHAY_VERSION");
+
+/// Installs a verified update. `Err` carries a message for the user.
+#[cfg(not(target_arch = "wasm32"))]
+pub type InstallFn = Box<dyn Fn(&Downloaded) -> Result<(), String> + Send + Sync>;
+
+#[cfg(not(target_arch = "wasm32"))]
+struct Registered {
+    app: AppInfo,
+    lang: Lang,
+    checker: Checker,
+    install: InstallFn,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static REGISTERED: std::sync::OnceLock<Registered> = std::sync::OnceLock::new();
+#[cfg(not(target_arch = "wasm32"))]
+static BANNER: std::sync::Mutex<Option<UpdateBanner>> = std::sync::Mutex::new(None);
+
+/// Register this app's updater (once, at start-up) and start the automatic checks.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register(app: AppInfo, lang: Lang, checker: Checker, install: InstallFn) {
+    checker.start_auto();
+    let _ = REGISTERED.set(Registered { app, lang, checker, install });
+}
+
+/// Desktop start-up: register `app`'s updater. From an AppImage, updates install themselves
+/// (the AppImage is replaced, then the app restarts); from a distribution package they are only
+/// reported. Keeps its files in `$XDG_DATA_HOME/mahay/<app>` (or `~/.local/share/...`).
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
+pub fn register_desktop(app: AppInfo, ctx: &egui::Context) {
+    let base = std::env::var_os("XDG_DATA_HOME")
+        .map(std::path::PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".local/share")))
+        .unwrap_or_else(std::env::temp_dir);
+    let dir = base.join("mahay").join(app.id);
+    let ctx = ctx.clone();
+    let can_install = mahay_update::running_appimage().is_some();
+    let checker = Checker::new(app.id, dir, can_install, move || ctx.request_repaint());
+    register(app, Lang::from_env(), checker, Box::new(mahay_update::install_appimage));
+}
+
+/// The registered updater, for screens that show its state (Trano).
+#[cfg(not(target_arch = "wasm32"))]
+pub fn updater() -> Option<&'static Checker> {
+    REGISTERED.get().map(|r| &r.checker)
+}
+
+/// The language the app registered (else the environment's).
+pub fn lang() -> Lang {
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(r) = REGISTERED.get() {
+        return r.lang;
+    }
+    Lang::from_env()
+}
+
+/// The About page for `app`, with the registered updater if there is one.
+pub fn page(ui: &mut Ui, app: AppInfo) {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let r = REGISTERED.get();
+        let install = r.map(|r| &r.install as &dyn Fn(&Downloaded) -> Result<(), String>);
+        about_ui(ui, app, lang(), r.map(|r| &r.checker), install);
+    }
+    #[cfg(target_arch = "wasm32")]
+    about_ui(ui, app, lang());
+}
+
+/// The update bar; call at the end of every frame. Does nothing until an update is ready.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn banner(ctx: &egui::Context) {
+    let Some(r) = REGISTERED.get() else { return };
+    let mut slot = BANNER.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    slot.get_or_insert_with(UpdateBanner::default).show(ctx, r.app, r.lang, &r.checker, &r.install);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn banner(_ctx: &egui::Context) {}
 
 /// The repository, its release page and the licences, as shown to users.
 pub const SOURCE_URL: &str = "https://github.com/raantss18/mahay";
@@ -52,10 +136,28 @@ pub struct AppInfo {
 }
 
 /// How the app installs a verified update. `Err` carries a message for the user.
+#[cfg(not(target_arch = "wasm32"))]
 pub type Install<'a> = &'a dyn Fn(&Downloaded) -> Result<(), String>;
 
-/// The About page. `updater` is `None` where the app can't update itself (web builds).
+/// The About page. `updater` is `None` where the app can't update itself.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn about_ui(ui: &mut Ui, app: AppInfo, lang: Lang, updater: Option<&Checker>, install: Option<Install<'_>>) {
+    about_body(ui, app, lang, |ui| {
+        if let Some(checker) = updater {
+            ui.label(RichText::new(t(lang, "updates")).strong());
+            updates_section(ui, lang, checker, install);
+            ui.separator();
+        }
+    });
+}
+
+/// The About page (web: no updater).
+#[cfg(target_arch = "wasm32")]
+pub fn about_ui(ui: &mut Ui, app: AppInfo, lang: Lang) {
+    about_body(ui, app, lang, |_| {});
+}
+
+fn about_body(ui: &mut Ui, app: AppInfo, lang: Lang, updates: impl FnOnce(&mut Ui)) {
     egui::ScrollArea::vertical().id_salt("mahay-about").show(ui, |ui| {
         ui.vertical_centered(|ui| {
             if let Some(tex) = icon(ui.ctx(), app.id) {
@@ -67,12 +169,7 @@ pub fn about_ui(ui: &mut Ui, app: AppInfo, lang: Lang, updater: Option<&Checker>
             ui.hyperlink_to("github.com/raantss18/mahay", SOURCE_URL);
         });
         ui.separator();
-
-        if let Some(checker) = updater {
-            ui.label(RichText::new(t(lang, "updates")).strong());
-            updates_section(ui, lang, checker, install);
-            ui.separator();
-        }
+        updates(ui);
 
         ui.vertical_centered(|ui| {
             qr_code(ui, 4.0);
@@ -103,6 +200,7 @@ pub fn about_ui(ui: &mut Ui, app: AppInfo, lang: Lang, updater: Option<&Checker>
     });
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn updates_section(ui: &mut Ui, lang: Lang, checker: &Checker, install: Option<Install<'_>>) {
     let mut auto = checker.auto();
     if ui.checkbox(&mut auto, t(lang, "auto")).changed() {
@@ -153,6 +251,7 @@ fn updates_section(ui: &mut Ui, lang: Lang, checker: &Checker, install: Option<I
 }
 
 /// The bar shown over the app when an update is ready. Call after the app's `ui`.
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Debug, Default)]
 pub struct UpdateBanner {
     /// The version the user put off ("Later"): not shown again this session.
@@ -161,6 +260,7 @@ pub struct UpdateBanner {
     error: Option<String>,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl UpdateBanner {
     pub fn show(&mut self, ctx: &egui::Context, app: AppInfo, lang: Lang, checker: &Checker, install: Install<'_>) {
         let State::Ready { update, notes } = checker.state() else { return };
@@ -206,6 +306,7 @@ impl UpdateBanner {
 }
 
 /// Release notes (Markdown from the CHANGELOG), shown plainly.
+#[cfg(not(target_arch = "wasm32"))]
 fn notes_ui(ui: &mut Ui, notes: &str) {
     for line in notes.lines() {
         let line = line.trim_end();
@@ -228,6 +329,14 @@ fn tagline_key(id: &str) -> &'static str {
         "soratra" => "tag_soratra",
         "tabilao" => "tag_tabilao",
         "seho" => "tag_seho",
+        "tsipika" => "tag_tsipika",
+        "endrika" => "tag_endrika",
+        "pejy" => "tag_pejy",
+        "hazavana" => "tag_hazavana",
+        "feo" => "tag_feo",
+        "hetsika" => "tag_hetsika",
+        "tselatra" => "tag_tselatra",
+        "drafitra" => "tag_drafitra",
         _ => "tag_trano",
     }
 }
@@ -241,6 +350,14 @@ pub fn icon(ctx: &egui::Context, id: &str) -> Option<egui::TextureHandle> {
         "tabilao" => include_bytes!("../assets/tabilao.rgba"),
         "seho" => include_bytes!("../assets/seho.rgba"),
         "trano" => include_bytes!("../assets/trano.rgba"),
+        "tsipika" => include_bytes!("../assets/tsipika.rgba"),
+        "endrika" => include_bytes!("../assets/endrika.rgba"),
+        "pejy" => include_bytes!("../assets/pejy.rgba"),
+        "hazavana" => include_bytes!("../assets/hazavana.rgba"),
+        "feo" => include_bytes!("../assets/feo.rgba"),
+        "hetsika" => include_bytes!("../assets/hetsika.rgba"),
+        "tselatra" => include_bytes!("../assets/tselatra.rgba"),
+        "drafitra" => include_bytes!("../assets/drafitra.rgba"),
         _ => include_bytes!("../assets/mahay.rgba"),
     };
     const SIDE: usize = 96;

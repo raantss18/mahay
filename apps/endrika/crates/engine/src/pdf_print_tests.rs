@@ -2,7 +2,7 @@
 //! (stored, edited, undone), the frames PDF, and bad values refused.
 
 use base64::Engine as _;
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use crate::Session;

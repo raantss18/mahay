@@ -1,0 +1,8 @@
+asset:        mahay-mark-black.svg
+title:        Mahay symbol ("A" mark), black
+author:       Mahay Team
+source:       original work (first-party Mahay brand asset supplied by the Mahay Team)
+license:      LicenseRef-Mahay-Trademark — Mahay name, wordmark and logos are trademarks of the Mahay Team, not open source; usable only unmodified and only in the context of Hetsika, under docs/brand/LICENSE-brand.txt. Not covered by the project's MIT OR Apache-2.0 license.
+license-file: docs/brand/LICENSE-brand.txt
+added:        2026-10-01 by Claude (agent) for Brandon Thomas
+notes:        SVG. Kept for brand use (README, docs). First-party brand mark: the one exception to the open-licence rule (AGENTS.md §1.8). Forks and modified versions must remove it (docs/brand/LICENSE-brand.txt).

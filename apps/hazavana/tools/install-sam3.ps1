@@ -1,11 +1,11 @@
-# Install the SAM 3 model for LightCraft's Object and Describe masks on Windows
+# Install the SAM 3 model for Hazavana's Object and Describe masks on Windows
 # (see docs/ai-masks.md; tools/install-sam3.sh is the macOS/Linux version). The desktop app
 # offers to download the model itself when an AI mask first needs it; this is for developers.
 #
 # facebook/sam3 is gated: accept the SAM License at https://huggingface.co/facebook/sam3, wait
 # for approval, then:   $env:HF_TOKEN = "hf_..." ; .\tools\install-sam3.ps1
 param(
-    [string]$Dir = $(if ($env:LIGHTCRAFT_SAM3_DIR) { $env:LIGHTCRAFT_SAM3_DIR } else { Join-Path $env:APPDATA "LightCraft\models\sam3" }),
+    [string]$Dir = $(if ($env:HAZAVANA_SAM3_DIR) { $env:HAZAVANA_SAM3_DIR } else { Join-Path $env:APPDATA "Hazavana\models\sam3" }),
     [string]$Repo = "facebook/sam3",
     [switch]$Check
 )
@@ -57,4 +57,4 @@ foreach ($f in $Files + "model.safetensors") {
     Move-Item -Force $part $final
 }
 Test-Install
-Write-Host "Restart LightCraft; Object and Describe in the Masking panel now use it."
+Write-Host "Restart Hazavana; Object and Describe in the Masking panel now use it."

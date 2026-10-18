@@ -1,6 +1,6 @@
 # AutoLISP
 
-CADCraft runs AutoLISP routines (`.lsp` files). What is here and what is not yet:
+Drafitra runs AutoLISP routines (`.lsp` files). What is here and what is not yet:
 [gaps.md](gaps.md) (E1).
 
 ## Loading and running
@@ -21,9 +21,9 @@ CADCraft runs AutoLISP routines (`.lsp` files). What is here and what is not yet
 
 ### At startup
 
-CADCraft loads LISP from its **support folder**, `support` in the settings folder (on Windows
-`%APPDATA%\CADCraft\support`, on macOS `~/Library/Application Support/CADCraft/support`, on
-Linux `~/.config/cadcraft/support`; created at first start):
+Drafitra loads LISP from its **support folder**, `support` in the settings folder (on Windows
+`%APPDATA%\Drafitra\support`, on macOS `~/Library/Application Support/Drafitra/support`, on
+Linux `~/.config/drafitra/support`; created at first start):
 
 - `acad.lsp` once per session, into the first drawing; with `ACADLSPASDOC` set to 1, into every
   drawing;
@@ -77,11 +77,11 @@ reached", malformed source is a reader error, and every built-in checks its argu
 - **Units:** `rtos angtos distof angtof`
 - **No-ops:** `vl-load-com gc redraw`; `ver`
 
-Entity lists use the DXF group codes of CADCraft's DXF files: what `entget` returns is what a
+Entity lists use the DXF group codes of Drafitra's DXF files: what `entget` returns is what a
 DXF file holds for the object, plus `-1` (its name) and `410` (its layout).
 
 ## Testing against the corpus
 
-The AutoLISP conformance corpus (#648) lives in its own repository. Point `CADCRAFT_LISP_CORPUS`
-at it and run `cargo test -p cadcraft-engine --test lisp_corpus`; without the variable the test
+The AutoLISP conformance corpus (#648) lives in its own repository. Point `DRAFITRA_LISP_CORPUS`
+at it and run `cargo test -p drafitra-engine --test lisp_corpus`; without the variable the test
 says it was skipped.

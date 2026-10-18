@@ -10,7 +10,7 @@ use egui::Ui;
 use serde_json::{Value, json};
 
 use super::selection_len;
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::dialogs::blend_options::{SPACING, orientation_button};
 use crate::widgets;
 
@@ -24,7 +24,7 @@ const FIELD_W: f32 = 72.0;
 
 /// A row of flat buttons sharing the row's width, each (label, command): a click runs the command,
 /// and a button whose command is unavailable is dimmed.
-fn buttons(app: &mut VectorcraftApp, ui: &mut Ui, row: &[(&str, &str)]) {
+fn buttons(app: &mut TsipikaApp, ui: &mut Ui, row: &[(&str, &str)]) {
     let gap = ui.spacing().item_spacing.x;
     let n = row.len() as f32;
     let width = ((ui.available_width() - gap * (n - 1.0)) / n).max(48.0);
@@ -40,7 +40,7 @@ fn buttons(app: &mut VectorcraftApp, ui: &mut Ui, row: &[(&str, &str)]) {
 
 /// Can `cmd` run on the selection? Make needs two or more objects, and the other commands need a
 /// selected blend.
-fn available(app: &VectorcraftApp, cmd: &str) -> bool {
+fn available(app: &TsipikaApp, cmd: &str) -> bool {
     crate::menus::enabled(app, cmd) && (cmd != "object.blend.make" || selection_len(app) >= 2)
 }
 
@@ -56,7 +56,7 @@ fn spacing_params(mode: &str, steps: f64, distance: f64) -> Value {
 
 /// Spacing and Orientation, as `object.blend.info` reports them; a change runs
 /// `object.blend.options`.
-fn settings(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn settings(app: &mut TsipikaApp, ui: &mut Ui) {
     let info = app.session.execute("object.blend.info", &json!({})).unwrap_or_default();
     let unit = app.session.general_unit();
     let mode = info["spacing"].as_str().unwrap_or("smooth");
@@ -99,7 +99,7 @@ fn settings(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let blend = crate::menus::enabled(app, "object.blend.release");
     buttons(app, ui, &[(tl!("Make"), "object.blend.make")]);
     widgets::divider(ui);

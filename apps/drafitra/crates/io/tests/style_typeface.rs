@@ -19,7 +19,7 @@ fn style_without_a_font_file_uses_the_xdata_typeface() {
         style("File", "arial.ttf", &[("1000", "Other"), ("1071", "2")]),
         style("Empty", "", &[]),
     );
-    let d = cadcraft_io::read_dxf(dxf.as_bytes()).unwrap();
+    let d = drafitra_io::read_dxf(dxf.as_bytes()).unwrap();
     let font = |n: &str| d.text_styles.iter().find(|s| s.name == n).map(|s| s.font.clone());
     assert_eq!(font("TT").as_deref(), Some("GOST type A"));
     assert_eq!(font("File").as_deref(), Some("arial.ttf"), "a font file wins over the typeface");

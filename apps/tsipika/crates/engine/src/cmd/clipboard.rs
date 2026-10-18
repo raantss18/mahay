@@ -5,7 +5,7 @@
 //!
 //! System clipboard: the copied objects as SVG markup (what other apps paste), and SVG markup from
 //! other apps turned into clipboard objects (pasted with the Paste commands). The UI owns the
-//! platform clipboard; these commands only convert. Within VectorCraft the internal clipboard stays
+//! platform clipboard; these commands only convert. Within Tsipika the internal clipboard stays
 //! lossless (live effects, masks, symbols); SVG is the outside format, with PNG, PDF and plain
 //! text besides it (see `flavours`).
 
@@ -16,10 +16,10 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_brush::Brush;
-use vectorcraft_color::Swatch;
-use vectorcraft_doc::{Document, GraphicStyle, ImageBlob, Node, NodeId, PatternDef, Symbol, TextStyleDef};
-use vectorcraft_geom::Rect;
+use tsipika_brush::Brush;
+use tsipika_color::Swatch;
+use tsipika_doc::{Document, GraphicStyle, ImageBlob, Node, NodeId, PatternDef, Symbol, TextStyleDef};
+use tsipika_geom::Rect;
 
 pub use flavours::{BITMAP, EMF, EPS, FILE_HEAD, Flavour, PASTE_ORDER, PDF, PNG, SVG, TEXT, file_flavour, is_address, names_a_picture};
 pub(crate) use resources::SwatchChoices;
@@ -90,7 +90,7 @@ pub struct Clipboard {
     pub source_doc: Option<u64>,
     /// The artboards copied with the Artboard tool (`artboard.copy`); `nodes` are then their art.
     /// Pasting adds a copy of each with the art.
-    pub artboards: Vec<vectorcraft_doc::Artboard>,
+    pub artboards: Vec<tsipika_doc::Artboard>,
 }
 
 impl Clipboard {
@@ -158,14 +158,14 @@ impl Clipboard {
         d.char_styles = self.char_styles.clone().into();
         d.para_styles = self.para_styles.clone().into();
         if !self.brushes.is_empty() {
-            let mut lib = vectorcraft_brush::library(&d);
+            let mut lib = tsipika_brush::library(&d);
             for b in &self.brushes {
                 match lib.iter_mut().find(|x| x.name == b.name) {
                     Some(x) => *x = b.clone(),
                     None => lib.push(b.clone()),
                 }
             }
-            vectorcraft_brush::store(&mut d, &lib);
+            tsipika_brush::store(&mut d, &lib);
         }
         // The layer's id is above every copied object's, so the document saves and reopens as
         // a native file.
@@ -173,7 +173,7 @@ impl Clipboard {
         for n in &self.nodes {
             n.walk(&mut |c| top = top.max(c.id.0));
         }
-        let mut layer = Node::layer(NodeId(top.saturating_add(1)), "Clipboard", vectorcraft_doc::LayerColor::Preset(0));
+        let mut layer = Node::layer(NodeId(top.saturating_add(1)), "Clipboard", tsipika_doc::LayerColor::Preset(0));
         if let Some(ch) = layer.children_mut() {
             *ch = self.nodes.iter().cloned().map(Arc::new).collect();
         }
@@ -190,9 +190,9 @@ impl Clipboard {
         let d = self.to_document();
         // SVG has no filters for the Photoshop-style effects: their objects go in as images.
         let flat = super::rasterfx::flatten_pixel_effects(&d);
-        Some(vectorcraft_svg::export(
+        Some(tsipika_svg::export(
             flat.as_ref().unwrap_or(&d),
-            &vectorcraft_svg::ExportOptions { artboard: None, object_ids: vectorcraft_svg::ObjectIds::Minimal, ..Default::default() },
+            &tsipika_svg::ExportOptions { artboard: None, object_ids: tsipika_svg::ObjectIds::Minimal, ..Default::default() },
         ))
     }
 }
@@ -213,8 +213,8 @@ fn import_svg(s: &mut Session, p: &Value) -> Result<Value> {
     let svg = match (str_param(p, "svg"), str_param(p, "dataBase64")) {
         (Some(svg), _) => std::borrow::Cow::Borrowed(svg),
         (None, Some(b64)) => {
-            let bytes = vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(C, "bad base64"))?;
-            vectorcraft_svg::text_of(&bytes).map_err(|e| bad(C, e.to_string()))?.into_owned().into()
+            let bytes = tsipika_format::base64_decode(b64).ok_or_else(|| bad(C, "bad base64"))?;
+            tsipika_svg::text_of(&bytes).map_err(|e| bad(C, e.to_string()))?.into_owned().into()
         }
         (None, None) => return Err(bad(C, "give svg, or dataBase64 of an SVG or SVGZ file")),
     };
@@ -294,7 +294,7 @@ mod tests {
         s.execute("edit.copy", &json!({})).unwrap();
         let svg = s.execute("clipboard.exportSvg", &json!({})).unwrap()["svg"].as_str().unwrap().to_string();
         assert!(looks_like_svg(&svg) && svg.contains("#12ab34"), "{svg}");
-        // As if pasted into another VectorCraft window.
+        // As if pasted into another Tsipika window.
         let mut t = session();
         assert_eq!(t.execute("clipboard.importSvg", &json!({"svg": svg, "center": [200, 150]})).unwrap()["count"], 1);
         t.execute("edit.pasteInPlace", &json!({})).unwrap();
@@ -314,9 +314,9 @@ mod tests {
         s.execute("edit.paste", &json!({})).unwrap();
         let mut checked = 0;
         s.doc().unwrap().doc.walk(|n| {
-            let vectorcraft_doc::NodeKind::Text(t) = &n.kind else { return };
+            let tsipika_doc::NodeKind::Text(t) = &n.kind else { return };
             let cached = t.cached_bounds.expect("pasted type computed its bounds");
-            let real = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).bounds;
+            let real = tsipika_text::layout(tsipika_text::FontDb::global(), t).bounds;
             assert!((cached.width() - real.width()).abs() < 1e-6, "{cached:?} {real:?}");
             assert!(cached.width() > t.estimate_bounds().width() + 1.0, "{cached:?} is just the estimate");
             checked += 1;
@@ -340,7 +340,7 @@ mod tests {
         s.execute("edit.paste", &json!({})).unwrap();
         let d = &s.doc().unwrap().doc;
         let compound = d.node(NodeId(c)).unwrap();
-        assert!(compound.children().unwrap().iter().all(|ch| matches!(ch.kind, vectorcraft_doc::NodeKind::Path { .. })));
+        assert!(compound.children().unwrap().iter().all(|ch| matches!(ch.kind, tsipika_doc::NodeKind::Path { .. })));
     }
 
     #[test]

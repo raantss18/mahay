@@ -22,7 +22,7 @@ pub enum DxfError {
     Eof,
     /// More group codes than [`MAX_TAGS`]: `tags` is the count found (or the count read when the
     /// limit was reached), `limit` the maximum.
-    #[error("drawing too large: {tags} DXF group codes, more than the {limit} CADCraft reads")]
+    #[error("drawing too large: {tags} DXF group codes, more than the {limit} Drafitra reads")]
     TooLarge { tags: usize, limit: usize },
 }
 

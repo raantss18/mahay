@@ -1,4 +1,4 @@
-//! Auto layout behaviour through commands (the rules of `figcraft_layout`'s behaviour suite that
+//! Auto layout behaviour through commands (the rules of `endrika_layout`'s behaviour suite that
 //! involve edits): what sizing a layer may take, how a hugging frame follows its children, the
 //! settings' defaults, canvas stacking in renders and exports, and one undo step per edit.
 
@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::params::id_of;
-use figcraft_doc::{CellAlign, MainAlign, NodeId, Sizing};
+use endrika_doc::{CellAlign, MainAlign, NodeId, Sizing};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -48,7 +48,7 @@ fn sizing(s: &Session, node: NodeId) -> (Sizing, Sizing) {
 
 /// The RGBA of `node` rendered at 1x, at (`x`, `y`) of its box.
 fn pixel(s: &Session, node: NodeId, x: u32, y: u32) -> [u8; 4] {
-    let pix = figcraft_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), node, 1.0).unwrap();
     let i = ((y * pix.width() + x) * 4) as usize;
     let d = pix.data();
     [d[i], d[i + 1], d[i + 2], d[i + 3]]
@@ -175,7 +175,7 @@ fn vertical_wrap_columns_take_arrows_and_drops() {
     s.execute("transform.nudge", &json!({"ids": [k[1]], "dx": 0, "dy": 1})).unwrap();
     assert_eq!(kids(&s), vec![k[0], k[2], k[3], k[4], k[5], k[1]]);
     // A drop between two items of a column: before the lower one, a horizontal insertion line.
-    let (index, line) = crate::drop::auto_layout_slot(s.doc().unwrap(), f, figcraft_geom::Point::new(35.0, 45.0), &[]).unwrap();
+    let (index, line) = crate::drop::auto_layout_slot(s.doc().unwrap(), f, endrika_geom::Point::new(35.0, 45.0), &[]).unwrap();
     assert_eq!(index, 4);
     assert_eq!(line, Some([30.0, 48.0, 50.0, 48.0]));
 }
@@ -206,7 +206,7 @@ fn canvas_stacking_paints_and_exports_the_first_child_on_top() {
     let a = rect(&mut s, f, 50.0, 20.0, "#FF0000");
     let b = rect(&mut s, f, 50.0, 20.0, "#0000FF");
     let order = s.doc().unwrap().node(f).unwrap().children.clone();
-    let svg = |s: &Session| figcraft_svg::export_svg(s.doc().unwrap(), &[f], &figcraft_svg::SvgOptions::default()).unwrap().to_lowercase();
+    let svg = |s: &Session| endrika_svg::export_svg(s.doc().unwrap(), &[f], &endrika_svg::SvgOptions::default()).unwrap().to_lowercase();
     let red_first = |svg: &str| svg.find("ff0000").unwrap() < svg.find("0000ff").unwrap();
     // The overlap is x 30..50.
     assert_eq!(pixel(&s, f, 40, 10), [0, 0, 255, 255]);
@@ -214,7 +214,7 @@ fn canvas_stacking_paints_and_exports_the_first_child_on_top() {
     set(&mut s, f, json!({"reverseZ": true}));
     assert_eq!(pixel(&s, f, 40, 10), [255, 0, 0, 255]);
     assert!(!red_first(&svg(&s)));
-    assert!(figcraft_pdf::export_nodes_pdf(s.doc().unwrap(), &[f]).is_ok());
+    assert!(endrika_pdf::export_nodes_pdf(s.doc().unwrap(), &[f]).is_ok());
     // Places and layers stay; one undo step puts the last child back on top.
     assert_eq!(s.doc().unwrap().node(f).unwrap().children, order);
     assert_eq!((pos(&s, a), pos(&s, b)), ((0.0, 0.0), (30.0, 0.0)));

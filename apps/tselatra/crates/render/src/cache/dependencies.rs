@@ -3,7 +3,7 @@
 //! cyclic/over-budget graphs or expressions sampled at unknown times.
 use super::{KeyHasher, hash_debug, hash_values};
 use crate::EvalCtx;
-use effectcraft_project::{ItemId, ItemKind, Layer, LayerId, LayerSource, Node, PropGroup};
+use tselatra_project::{ItemId, ItemKind, Layer, LayerId, LayerSource, Node, PropGroup};
 use std::hash::Hash;
 
 pub(super) fn hash(h: &mut KeyHasher, ctx: &EvalCtx, layer: &Layer, effects: Option<usize>) -> Option<()> {

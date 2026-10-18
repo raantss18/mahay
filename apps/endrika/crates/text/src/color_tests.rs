@@ -8,7 +8,7 @@
 use super::*;
 use crate::fontdb::{db, no_coords, scan_system_fonts};
 use crate::layout::layout;
-use figcraft_doc::TextData;
+use endrika_doc::TextData;
 use skrifa::bitmap::{BitmapData, BitmapGlyph, MaskData, Origin};
 
 /// A strike glyph described by hand, for the placement cases.
@@ -209,7 +209,7 @@ fn glyphs_place_their_ink_at_a_scale() {
     };
     // Some emoji faces draw wider than the em (Noto Color Emoji's strikes are about 1.25 em).
     assert!(bitmap.width >= 32 && bitmap.width <= 96, "{} px at 2:1", bitmap.width);
-    let corner = place * figcraft_geom::Point::new(0.0, 0.0);
+    let corner = place * endrika_geom::Point::new(0.0, 0.0);
     assert!(corner.x >= g.x - g.size && corner.x <= g.x + g.size, "x {} vs pen {}", corner.x, g.x);
     assert!(corner.y >= g.y - g.size && corner.y <= g.y + g.size, "y {} vs baseline {}", corner.y, g.y);
     // Past the raster cap the image stops growing (a canvas zoomed far in).

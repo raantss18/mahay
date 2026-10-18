@@ -12,10 +12,10 @@
 # Clean-room: every entry was written from the plain meaning of the English label using the
 # vector-drawing vocabulary in everyday use in Taiwan (錨點, 路徑, 筆畫, 填色, 工作區域, 路徑管理員 ...).
 # No proprietary localisation resource, string table or product UI was consulted or copied; add
-# entries the same way. Product and technology names (VectorCraft, ArtCraft, SVG, OpenType, CMYK,
+# entries the same way. Product and technology names (Tsipika, Mahay, SVG, OpenType, CMYK,
 # Lab ...) and paper sizes (Letter, Tabloid) stay in Latin letters; the trailing "…" of dialog
 # commands is kept. Full-width punctuation (，。：) inside sentences; half-width parentheses and
-# the " · " separators as in the English. Terms shared with PhotoCraft use the same words as its
+# the " · " separators as in the English. Terms shared with Sary use the same words as its
 # zh-hant catalog (圖層, 選取, 偏好設定, 混合模式 ...), so the two apps read alike.
 	Glowing Edges…	發光邊緣…
 	Glowing Edges	發光邊緣
@@ -56,7 +56,7 @@
 	A lower value follows the stroke closely; a higher one gives fewer points and smoother curves.	數值較小時會貼近筆畫，較大時則錨點較少、曲線較平滑。
 	A new preset starting from the selected one	以所選預設集為基礎建立新預設集
 	A saved copy of the selected preset	所選預設集的已儲存拷貝
-	About VectorCraft	關於 VectorCraft
+	About Tsipika	關於 Tsipika
 	above	以上
 	Absolute Position	絕對位置
 	Accurate	精確
@@ -159,7 +159,7 @@
 	Appearance Panel	外觀面板
 	Appearance panel	外觀面板
 	Applies when the linked file is relinked or updated.	重新連結或更新連結檔案時套用。
-	Applies the next time VectorCraft starts.	下次啟動 VectorCraft 時生效。
+	Applies the next time Tsipika starts.	下次啟動 Tsipika 時生效。
 	Apply	套用
 	Apply Brush	套用筆刷
 	Apply Character Style	套用字元樣式
@@ -196,8 +196,8 @@
 	Artboard {number}	工作區域 {number}
 	Artboard:	工作區域：
 	Artboards	工作區域
-	ArtCraft Website	ArtCraft 網站
-	ArtCraft website	ArtCraft 網站
+	Mahay Website	Mahay 網站
+	Mahay website	Mahay 網站
 	Artwork Colors	圖稿顏色
 	As Multiple Assets	作為多個資產
 	As Single Asset	作為單一資產
@@ -346,7 +346,7 @@
 	Check Script	檢查指令碼
 	Check Script…	檢查指令碼…
 	Copy Report	複製報告
-	VectorCraft read this script without running it.	VectorCraft 已讀取此指令碼，但沒有執行。
+	Tsipika read this script without running it.	Tsipika 已讀取此指令碼，但沒有執行。
 	Needs nothing beyond plain JavaScript	只需要一般的 JavaScript
 	Needs the script language's own objects or directives	需要指令碼語言本身的物件或指示詞
 	Needs the document model	需要文件模型
@@ -1119,7 +1119,7 @@ file-filter	PDF presets	PDF 預設集
 file-filter	Print presets	列印預設集
 file-filter	SVG Compressed	壓縮 SVG
 file-filter	PDF-compatible .ai	PDF 相容 .ai
-file-filter	VectorCraft Template	VectorCraft 範本
+file-filter	Tsipika Template	Tsipika 範本
 file-filter	Templates	範本
 	Flattener Preview	平面化預視
 	Flip Across	跨軸翻轉
@@ -1527,7 +1527,7 @@ file-filter	Templates	範本
 	Join	連接
 	Join Our Discord	加入我們的 Discord
 	Join our Discord	加入我們的 Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	加入 Discord 上的 ArtCraft 社群 (discord.gg/artcraft)
+	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	加入 Discord 上的 Mahay 社群 (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	合併每個段落的各行
 	Join Tool	連接工具
 	Justification…	對齊設定…
@@ -1571,15 +1571,15 @@ file-filter	Templates	範本
 @msg	its type is to come in as outlines, which only its page has	其文字需以外框匯入，而只有其頁面含有外框
 @msg	{_1} files	{_1} 檔案
 @msg	A browser with WebGPU or WebGL2 is required.	需要支援 WebGPU 或 WebGL2 的瀏覽器。
-@msg	Loading VectorCraft…	正在載入 VectorCraft…
+@msg	Loading Tsipika…	正在載入 Tsipika…
 @msg	Reload the page to go on (changes not saved yet may be lost).	請重新載入頁面以繼續 (尚未儲存的變更可能會遺失)。
 @msg	The graphics were lost and couldn't be restarted.	圖形已遺失，且無法重新啟動。
 @msg	The graphics were lost and have been restarted	圖形已遺失，現已重新啟動
-@msg	VectorCraft failed to start: {e}	VectorCraft 無法啟動：{e}
+@msg	Tsipika failed to start: {e}	Tsipika 無法啟動：{e}
 @msg	Your unsaved changes are kept in this browser: reload the page to get them back.	您未儲存的變更保留在此瀏覽器中：重新載入頁面即可取回。
-@msg	The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}	最先嘗試的圖形處理器無法顯示視窗，因此 VectorCraft 已改在 {summary} 上重新啟動
-@msg	The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	VectorCraft 上次啟動時在 {name} 上於視窗出現前結束，因此這次在 {summary} 上啟動。若要再次嘗試該圖形處理器，請變更「偏好設定 › 效能 › 圖形處理器」，或設定 WGPU_BACKEND 後再啟動
-@msg	The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	VectorCraft 上次啟動時在列出圖形處理器期間結束，因此這次只以 OpenGL 在 {summary} 上啟動。若要再次嘗試其他圖形後端，請變更「偏好設定 › 效能 › 圖形處理器」，或設定 WGPU_BACKEND 後再啟動
+@msg	The graphics processor tried first couldn't show the window, so Tsipika started again on {summary}	最先嘗試的圖形處理器無法顯示視窗，因此 Tsipika 已改在 {summary} 上重新啟動
+@msg	The last start of Tsipika ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Tsipika 上次啟動時在 {name} 上於視窗出現前結束，因此這次在 {summary} 上啟動。若要再次嘗試該圖形處理器，請變更「偏好設定 › 效能 › 圖形處理器」，或設定 WGPU_BACKEND 後再啟動
+@msg	The last start of Tsipika ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set	Tsipika 上次啟動時在列出圖形處理器期間結束，因此這次只以 OpenGL 在 {summary} 上啟動。若要再次嘗試其他圖形後端，請變更「偏好設定 › 效能 › 圖形處理器」，或設定 WGPU_BACKEND 後再啟動
 @msg	not a DXF drawing	不是 DXF 圖面
 @msg	scale must be a number from {_1} to {_2}, not {s}	比例必須是 {_1} 到 {_2} 之間的數字，而非 {s}
 @msg	the artboard to fit must be a positive size up to {_1} pt	要符合的工作區域尺寸必須為正數，且不超過 {_1} pt
@@ -1854,10 +1854,10 @@ file-filter	Templates	範本
 @msg	it has more than {MAX_NODES} objects	它有超過 {MAX_NODES} 個物件
 @msg	it has no layers	它沒有圖層
 @msg	it has too many values in a row	它連續的值過多
-@msg	it has {_1}, which VectorCraft doesn't read from it yet	它含有 {_1}，VectorCraft 目前尚無法從中讀取
+@msg	it has {_1}, which Tsipika doesn't read from it yet	它含有 {_1}，Tsipika 目前尚無法從中讀取
 @msg	its objects are nested too deeply	其物件巢狀層級過深
 @msg	its section ending with `%{end}` doesn't end	其以 `%{end}` 結尾的區段沒有結束
-@msg	an image VectorCraft can't read was left out	已略過 VectorCraft 無法讀取的影像
+@msg	an image Tsipika can't read was left out	已略過 Tsipika 無法讀取的影像
 @msg	an image whose data is cut short was left out	已略過資料不完整的影像
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	檔案中未定義漸層「{name}」：已改用單色替代
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	具有多個填色或筆畫、效果或筆刷的物件已依其繪製外觀匯入 ({_1})：其外觀目前尚無法編輯
@@ -1872,7 +1872,7 @@ file-filter	Templates	範本
 @msg	a PostScript error ({name} in `{op}`: {at})	PostScript 錯誤 ({name}，位於 `{op}`：{at})
 @msg	a PostScript error ({name} in `{op}`: {at}), in {procs}	PostScript 錯誤 ({name}，位於 `{op}`：{at})，在 {procs} 中
 @msg	a PostScript error ({name})	PostScript 錯誤 ({name})
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know	它使用了 `{at}`，VectorCraft 的 PostScript 讀取器無法辨識
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know	它使用了 `{at}`，Tsipika 的 PostScript 讀取器無法辨識
 @msg	the file was read up to an error ({why}): what follows it was left out	檔案已讀取到發生錯誤處 ({why})：之後的內容已略過
 @msg	this file's PostScript couldn't be read ({why}): {what}	無法讀取此檔案的 PostScript ({why})：{what}
 @msg	it has no page	它沒有頁面
@@ -1891,7 +1891,7 @@ file-filter	Templates	範本
 @msg	its Windows metafile preview was opened instead, which may simplify the art	已改為開啟其 Windows 中繼檔預覽，圖稿可能因此簡化
 @msg	its preview was placed instead, at screen resolution	已改為以螢幕解析度置入其預覽
 @msg	shadings of more than 4096 patches or triangles were left out	已略過超過 4096 個面片或三角形的著色
-@msg	it uses `{at}`, which VectorCraft's PostScript reader doesn't know, in {procs}	它在 {procs} 中使用了 `{at}`，VectorCraft 的 PostScript 讀取器無法辨識
+@msg	it uses `{at}`, which Tsipika's PostScript reader doesn't know, in {procs}	它在 {procs} 中使用了 `{at}`，Tsipika 的 PostScript 讀取器無法辨識
 @msg	the export region is not finite	匯出區域不是有限值
 @msg	a page out of range	頁面超出範圍
 @msg	a page's placement is not finite	頁面的位置不是有限值
@@ -1900,10 +1900,10 @@ file-filter	Templates	範本
 @msg	the preview image is empty	預覽影像是空的
 @msg	the thumbnail image is malformed	縮圖影像格式錯誤
 @msg	can't encode the document: {0}	無法編碼文件：{0}
-@msg	can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}	無法儲存版本 {0}：VectorCraft 寫入的版本為 {MIN_VERSION} 到 {VERSION}
-@msg	file version {0} is newer than this VectorCraft supports ({VERSION})	檔案版本 {0} 比此 VectorCraft 支援的版本 ({VERSION}) 更新
+@msg	can't save version {0}: Tsipika writes versions {MIN_VERSION} to {VERSION}	無法儲存版本 {0}：Tsipika 寫入的版本為 {MIN_VERSION} 到 {VERSION}
+@msg	file version {0} is newer than this Tsipika supports ({VERSION})	檔案版本 {0} 比此 Tsipika 支援的版本 ({VERSION}) 更新
 @msg	invalid image data for `{0}`	`{0}` 的影像資料無效
-@msg	not a VectorCraft file: {0}	不是 VectorCraft 檔案：{0}
+@msg	not a Tsipika file: {0}	不是 Tsipika 檔案：{0}
 @msg	the compressed file unpacks to more than {_1} MB	壓縮檔解壓縮後超過 {_1} MB
 @msg	version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files	版本 {0} 的檔案無法壓縮：只有版本 {COMPRESSED_SINCE} 及更新版本才能開啟壓縮檔
 @msg	a bitmap is empty	有一個點陣圖是空的
@@ -1950,7 +1950,7 @@ file-filter	Templates	範本
 @msg	plug-in output: {0}	增效模組輸出：{0}
 @msg	plug-in parameters: {0}	增效模組參數：{0}
 @msg	plug-in trapped: {0}	增效模組執行時發生錯誤 (trap)：{0}
-@msg	is not an image VectorCraft reads	不是 VectorCraft 可讀取的影像
+@msg	is not an image Tsipika reads	不是 Tsipika 可讀取的影像
 @msg	not found	找不到
 @msg	SVG parse error: {0}	SVG 剖析錯誤：{0}
 @msg	decimals must be {_1}–{_2} (got {_3})	小數位數必須為 {_1}–{_2} (收到 {_3})
@@ -2125,14 +2125,14 @@ file-filter	Templates	範本
 @msg	Discarded {_1} recovered document(s)	已捨棄 {_1} 份復原的文件
 @msg	Restored {_1} recovered document(s): save them to keep them	已還原 {_1} 份復原的文件：請儲存以保留
 @msg	Saving recovery data for {_1}	正在儲存 {_1} 的復原資料
-@msg	This shortcut file is in a form VectorCraft can't read.	VectorCraft 無法讀取此快速鍵檔案的格式。
+@msg	This shortcut file is in a form Tsipika can't read.	Tsipika 無法讀取此快速鍵檔案的格式。
 @msg	bad shortcut	快速鍵無效
 @msg	can't parse shortcut `{c}`	無法剖析快速鍵 `{c}`
 @msg	can't parse shortcut `{s}` for `{k}`	無法剖析 `{k}` 的快速鍵 `{s}`
 @msg	no dialog open	沒有開啟的對話框
 @msg	no file reader	沒有檔案讀取器
 @msg	no file writer	沒有檔案寫入器
-@msg	not a VectorCraft shortcut set (missing `overrides`)	不是 VectorCraft 快速鍵組 (沒有 `overrides`)
+@msg	not a Tsipika shortcut set (missing `overrides`)	不是 Tsipika 快速鍵組 (沒有 `overrides`)
 @msg	not a shortcut set: the text doesn't start with a slash name and an opening brace	不是快速鍵組：文字開頭不是斜線名稱和左大括號
 @msg	shortcut for `{k}` must be a string	`{k}` 的快速鍵必須是字串
 @msg	tool shortcuts must be a single key (optionally with Shift)	工具快速鍵必須是單一按鍵 (可搭配 Shift)
@@ -2153,13 +2153,13 @@ file-filter	Templates	範本
 @msg	unknown workspace (one of {_1})	未知的工作區 (應為 {_1} 其中之一)
 @msg	workspace name can't be empty	工作區名稱不能是空的
 @msg	No fonts are missing in this document	此文件中沒有遺失的字體
-@msg	VectorCraft doesn't search other apps' or the system's folders: {path}	VectorCraft 不會搜尋其他應用程式或系統的資料夾：{path}
-@msg	VectorCraft doesn't search the Shared or Public folder in Users: {path}	VectorCraft 不會搜尋「使用者」中的 Shared 或 Public 資料夾：{path}
+@msg	Tsipika doesn't search other apps' or the system's folders: {path}	Tsipika 不會搜尋其他應用程式或系統的資料夾：{path}
+@msg	Tsipika doesn't search the Shared or Public folder in Users: {path}	Tsipika 不會搜尋「使用者」中的 Shared 或 Public 資料夾：{path}
 @msg	{path} is not a folder	{path} 不是資料夾
 @msg	the search couldn't start: try again in a moment	無法開始搜尋：請稍後再試
 @msg	searching a folder isn't available on the web	網頁版無法搜尋資料夾
 @msg	every search thread stopped on an internal error (please report this bug)	所有搜尋執行緒都因內部錯誤而停止 (請回報此錯誤)
-@msg	VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it	此處未設定 VectorCraft 的字體資料夾：桌面應用程式和 vectorcraft-cli 會設定它
+@msg	Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it	此處未設定 Tsipika 的字體資料夾：桌面應用程式和 tsipika-cli 會設定它
 @msg	choose the font files to add	請選擇要加入的字體檔案
 @msg	{n} font file(s) are now in {folder}	{n} 個字體檔案現已位於 {folder}
 @msg	{n} font file(s) are now in {folder}; {failed} couldn't be added: {reason}	{n} 個字體檔案現已位於 {folder}；有 {failed} 個無法加入：{reason}
@@ -2219,7 +2219,7 @@ file-filter	Templates	範本
 @msg	invalid native panel set	原生面板組無效
 @msg	missing panel layout	沒有面板配置
 @msg	unsupported native docking operation	不支援的原生停駐操作
-@msg	the compressed file unpacks to more than VectorCraft reads ({_1} MB of document, {_2} MB per image)	壓縮檔解壓縮後超過 VectorCraft 的讀取上限 (文件 {_1} MB，每個影像 {_2} MB)
+@msg	the compressed file unpacks to more than Tsipika reads ({_1} MB of document, {_2} MB per image)	壓縮檔解壓縮後超過 Tsipika 的讀取上限 (文件 {_1} MB，每個影像 {_2} MB)
 @msg	the document is too large to save compressed ({0}): save it with Use Compression off	文件過大，無法壓縮儲存 ({0})：請關閉「使用壓縮」後儲存
 @msg	the file stopped being read (please report this bug)	檔案讀取已中斷 (請回報此錯誤)
 @msg	the image can't be read as a texture	無法將影像當作紋理讀取
@@ -2280,7 +2280,7 @@ file-filter	Templates	範本
 # Import Shortcut Set (Keyboard Shortcuts › Import…, File › Open of a .kys file) and its commands.
 	Import Shortcut Set	匯入快速鍵組
 	Import Shortcut Set…	匯入快速鍵組…
-	Each entry of the file is matched to a VectorCraft tool, command or panel. Check the matches and answer what is left.	檔案中的每個項目都會對應到 VectorCraft 的工具、指令或面板。請檢查對應結果，並回答其餘項目。
+	Each entry of the file is matched to a Tsipika tool, command or panel. Check the matches and answer what is left.	檔案中的每個項目都會對應到 Tsipika 的工具、指令或面板。請檢查對應結果，並回答其餘項目。
 	Keys	按鍵
 	The file writes keys and modifiers as codes. Check the proposed meanings and answer the codes that are not known yet.	檔案以代碼記錄按鍵與輔助鍵。請檢查建議的意義，並回答尚未得知的代碼。
 	Click, then press the key this code stands for (Esc cancels)	按一下，然後按下此代碼代表的按鍵 (Esc 取消)
@@ -2291,7 +2291,7 @@ file-filter	Templates	範本
 	Shortcuts	快速鍵
 	Shortcut	快速鍵
 	In the File	檔案中的名稱
-	In VectorCraft	VectorCraft 中的對應
+	In Tsipika	Tsipika 中的對應
 	Needs Attention Only	僅顯示需要處理的項目
 	Ready	就緒
 	Needs a choice	需要選擇
@@ -2300,7 +2300,7 @@ file-filter	Templates	範本
 	Tools take a single key (optionally with Shift)	工具只能指定單一按鍵 (可搭配 Shift)
 	A later row takes this shortcut	後面的列會使用此快速鍵
 	Same item as a later row	與後面某一列的項目相同
-	Start from VectorCraft Defaults	從 VectorCraft 預設值開始
+	Start from Tsipika Defaults	從 Tsipika 預設值開始
 	Add to the Current Shortcuts	加入目前的快速鍵
 	Remember My Choices	記住我的選擇
 	{ready} of {total} ready	{total} 個中有 {ready} 個就緒
@@ -2922,7 +2922,7 @@ file-filter	Templates	範本
 	Paragraph Style Options	段落樣式選項
 	Paragraph Styles	段落樣式
 	Paragraph Symbol	段落符號
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	ArtCraft 的一部分。MIT OR Apache-2.0。字體：Source Sans 3、Inter、JetBrains Mono (OFL)。圖示：Lucide (ISC) + VectorCraft。
+	Part of Mahay. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Tsipika.	Mahay 的一部分。MIT OR Apache-2.0。字體：Source Sans 3、Inter、JetBrains Mono (OFL)。圖示：Lucide (ISC) + Tsipika。
 	Password	密碼
 	Paste	貼上
 	Paste in Back	貼至後方
@@ -3106,7 +3106,7 @@ mark-style	Japanese	日式
 	Quarter Space	四分之一空格
 	Quick Actions	快速動作
 	Quickly start a new file	快速開始新檔案
-	Quit VectorCraft	結束 VectorCraft
+	Quit Tsipika	結束 Tsipika
 	Radar Graph Tool	雷達圖工具
 	Radial	放射狀
 	Radial Glows	放射狀光暈
@@ -3232,7 +3232,7 @@ mark-style	Japanese	日式
 	{count} folder(s) or file(s) couldn't be read	有 {count} 個資料夾或檔案無法讀取
 	The search stopped at its limit: search a smaller folder.	搜尋已達上限而停止：請搜尋較小的資料夾。
 	Copy only fonts you own or are licensed to install.	只複製您擁有或已取得安裝授權的字體。
-	VectorCraft copies the fonts to {folder}.	VectorCraft 會將字體複製到 {folder}。
+	Tsipika copies the fonts to {folder}.	Tsipika 會將字體複製到 {folder}。
 	Registered Trademark Symbol	註冊商標符號
 	Registration marks	對位標記
 	Registry name:	登錄名稱：
@@ -3341,9 +3341,9 @@ mark-style	Japanese	日式
 	Revert	回復
 	Revert to the saved version of “{name}”?	要回復為「{name}」已儲存的版本嗎？
 	Replace “{name}”, the file this document was opened from?	要取代「{name}」（開啟此文件的來源檔案）嗎？
-	Opening it left out what VectorCraft can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	開啟時略過了 VectorCraft 尚無法讀取的內容（{what}），取代該檔案會永久遺失這些內容。若要保留，請以其他名稱儲存。
+	Opening it left out what Tsipika can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.	開啟時略過了 Tsipika 尚無法讀取的內容（{what}），取代該檔案會永久遺失這些內容。若要保留，請以其他名稱儲存。
 	“{name}” already exists. Replace it?	「{name}」已存在。要取代它嗎？
-	The name in the save panel was “{typed}”; VectorCraft added the file type's extension. Replacing the file overwrites its contents.	儲存面板中的名稱是「{typed}」，VectorCraft 隨後加上了檔案類型的副檔名。取代該檔案會覆寫其內容。
+	The name in the save panel was “{typed}”; Tsipika added the file type's extension. Replacing the file overwrites its contents.	儲存面板中的名稱是「{typed}」，Tsipika 隨後加上了檔案類型的副檔名。取代該檔案會覆寫其內容。
 	Revolve…	迴轉…
 	RGB Color	RGB 色彩
 	Right	右
@@ -3486,7 +3486,7 @@ mark-style	Japanese	日式
 	Saves the current bars, toolbar and panel layout.	儲存目前的列、工具列與面板配置。
 	Save…	儲存…
 	Saving	正在儲存
-	Saving Poster.vectorcraft	正在儲存 Poster.vectorcraft
+	Saving Poster.tsipika	正在儲存 Poster.tsipika
 	Saving recovery data for {}	正在儲存 {} 的復原資料
 	Saving {}	正在儲存 {}
 	Scale	縮放
@@ -4199,11 +4199,11 @@ mark-style	Japanese	日式
 	Vector Halftone	向量半色調
 	Vector Halftone…	向量半色調…
 	Vector illustration — fast, open, scriptable.	向量插圖：快速、開放、可用指令碼操控。
-	VectorCraft	VectorCraft
-	VectorCraft didn't quit normally last time. These documents had unsaved changes:	VectorCraft 上次未正常結束。下列文件有未儲存的變更：
-	VectorCraft Help…	VectorCraft 說明…
-	VectorCraft on getartcraft.com	getartcraft.com 上的 VectorCraft
-	VectorCraft on GitHub	GitHub 上的 VectorCraft
+	Tsipika	Tsipika
+	Tsipika didn't quit normally last time. These documents had unsaved changes:	Tsipika 上次未正常結束。下列文件有未儲存的變更：
+	Tsipika Help…	Tsipika 說明…
+	Tsipika on mahay.com	mahay.com 上的 Tsipika
+	Tsipika on GitHub	GitHub 上的 Tsipika
 	Vectors	向量
 	Version {version} — open-source vector illustration in pure Rust.	版本 {version} — 以純 Rust 打造的開放原始碼向量插畫軟體。
 	Version:	版本：
@@ -4244,7 +4244,7 @@ mark-style	Japanese	日式
 	Web Snap:	網頁靠齊：
 	Weight	寬度
 	Weight:	寬度：
-	Welcome to VectorCraft	歡迎使用 VectorCraft
+	Welcome to Tsipika	歡迎使用 Tsipika
 	When pasting text	貼上文字時
 	White	白色
 	Widget Position:	Widget 位置：
@@ -4439,7 +4439,7 @@ axis	Both	兩者
 
 # The macOS menu bar (native_menu): the app and Window menus' system items, Settings pages.
 	Services	服務
-	Hide VectorCraft	隱藏 VectorCraft
+	Hide Tsipika	隱藏 Tsipika
 	Zoom	縮放
 	Bring All to Front	將全部移至最前
 	Settings	設定
@@ -4447,7 +4447,7 @@ axis	Both	兩者
 	On: one locked object showing the document, updated when it changes.	開啟：以單一鎖定物件顯示文件，文件變更時隨之更新。
 	Off: an editable copy of its art, embedded in this document.	關閉：將其圖稿的可編輯副本內嵌在此文件中。
 	Images: link to the file instead of only embedding it.	影像：連結至檔案，而不只是嵌入。
-	VectorCraft documents: one locked object, updated when the file changes.	VectorCraft 文件：單一鎖定物件，檔案變更時隨之更新。
+	Tsipika documents: one locked object, updated when the file changes.	Tsipika 文件：單一鎖定物件，檔案變更時隨之更新。
 	A file dialog is open: choose there first	檔案對話方塊已開啟：請先在其中選擇
 	The document was closed while its file dialog was open	檔案對話方塊開啟期間，文件已關閉
 	The dialog was closed before its file dialog answered	檔案對話方塊回應之前，對話方塊已關閉

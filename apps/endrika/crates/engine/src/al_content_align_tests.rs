@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 
 use crate::params::id_of;
 use crate::{EngineError, Session};
-use figcraft_doc::{ContentAlign, NodeId};
+use endrika_doc::{ContentAlign, NodeId};
 
 fn id(v: Value) -> NodeId {
     id_of(&v["id"]).unwrap()
@@ -81,18 +81,18 @@ fn rest_and_fig_carry_the_setting() {
         json!({"name": "File", "document": {"id": "0:0", "type": "DOCUMENT", "children": [{"id": "0:1", "name": "Page", "type": "CANVAS", "children": [f]}]}})
     };
     let read = |file: &Value| {
-        let (doc, _) = figcraft_format::rest::import(file, &figcraft_format::rest::no_images).unwrap();
+        let (doc, _) = endrika_format::rest::import(file, &endrika_format::rest::no_images).unwrap();
         doc
     };
-    let of = |doc: &figcraft_doc::Document| doc.nodes().find(|n| n.name == "Wrap").unwrap().layout.as_ref().unwrap().content_align;
+    let of = |doc: &endrika_doc::Document| doc.nodes().find(|n| n.name == "Wrap").unwrap().layout.as_ref().unwrap().content_align;
     assert_eq!(of(&read(&frame(json!({})))), ContentAlign::Auto);
     assert_eq!(of(&read(&frame(json!({"counterAxisAlignContent": "AUTO"})))), ContentAlign::Auto);
     let spread = read(&frame(json!({"counterAxisAlignContent": "SPACE_BETWEEN"})));
     assert_eq!(of(&spread), ContentAlign::SpaceBetween);
     // Written to `.fig` and read back, both values survive.
     for doc in [spread, read(&frame(json!({})))] {
-        let (bytes, _) = figcraft_format::fig::export(&doc, None).unwrap();
-        let (back, _) = figcraft_format::fig::import(&bytes, "x").unwrap();
+        let (bytes, _) = endrika_format::fig::export(&doc, None).unwrap();
+        let (back, _) = endrika_format::fig::import(&bytes, "x").unwrap();
         assert_eq!(of(&back), of(&doc));
     }
 }

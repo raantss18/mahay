@@ -3,8 +3,8 @@
 //! canvas measurement labels follow them.
 
 use serde_json::json;
-use vectorcraft_doc::Unit;
-use vectorcraft_tools::{Mods, Overlay, PointerEvent, PointerKind};
+use tsipika_doc::Unit;
+use tsipika_tools::{Mods, Overlay, PointerEvent, PointerKind};
 
 use super::*;
 use crate::cmd::prefscmds::{PREF_SPECS, PrefKind, UNITS};
@@ -117,7 +117,7 @@ fn canvas_measurement_labels_follow_the_units() {
 fn units_survive_a_native_round_trip() {
     let mut s = session();
     s.execute("document.setUnits", &json!({"units": "Feet & Inches"})).unwrap();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(back.units, Unit::FeetInches);
 }
 

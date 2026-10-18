@@ -131,7 +131,7 @@ fn packbits_zip_and_psb_files_read() {
     let big = psd(2, 4, (3, 1), 8, 3, &[], &[], &layer_count(-1, true), &rle);
     assert_eq!(pixels(&big), [[200, 100, 50, 255]; 3]);
     let mut s = Session::new();
-    let r = s.execute("document.open", &json!({"name": "big.psb", "dataBase64": vectorcraft_format::base64_encode(&big)})).unwrap();
+    let r = s.execute("document.open", &json!({"name": "big.psb", "dataBase64": tsipika_format::base64_encode(&big)})).unwrap();
     assert_eq!(r["format"], "psb");
     // Zipped with prediction, 16 bits: each sample is the difference from the one before.
     let deltas: Vec<u8> = [0x1000u16, 0x1000, 0x1000].iter().flat_map(|d| d.to_be_bytes()).collect();
@@ -159,7 +159,7 @@ fn the_resolution_resource_sizes_the_placed_image() {
     assert!((x - 300.0).abs() < 1e-9 && (y - 300.0).abs() < 0.01, "{x} {y}");
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
-    let r = s.execute("file.place", &json!({"name": "photo.psd", "dataBase64": vectorcraft_format::base64_encode(&f)})).unwrap();
+    let r = s.execute("file.place", &json!({"name": "photo.psd", "dataBase64": tsipika_format::base64_encode(&f)})).unwrap();
     assert!(
         (r["width"].as_f64().unwrap() - 72.0).abs() < 0.01 && (r["height"].as_f64().unwrap() - 36.0).abs() < 0.01,
         "an inch by half an inch: {r}"
@@ -182,7 +182,7 @@ fn art() -> Session {
 
 fn exported(s: &mut Session, p: Value) -> Vec<u8> {
     let r = s.execute("document.export", &p).unwrap();
-    vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
+    tsipika_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
 }
 
 #[test]
@@ -203,7 +203,7 @@ fn psd_exports_open_and_place_again() {
             assert!(red[0] == red[1] && red[3] == 255, "{what}: {red:?}");
         }
         // Open and Place take it by its content, whatever its name.
-        let r = s.execute("document.open", &json!({"name": "back.bin", "dataBase64": vectorcraft_format::base64_encode(&f)})).unwrap();
+        let r = s.execute("document.open", &json!({"name": "back.bin", "dataBase64": tsipika_format::base64_encode(&f)})).unwrap();
         assert_eq!(r["format"], "psd", "{what}");
         let d = &s.doc().unwrap().doc;
         assert!((d.artboards[0].rect.width() - 60.0).abs() < 1e-6, "{what}");
@@ -240,5 +240,5 @@ fn damaged_and_unsupported_files_are_refused_without_a_panic() {
     let mut s = Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let cut = &good[..good.len() - 3];
-    assert!(s.execute("file.place", &json!({"name": "cut.psd", "dataBase64": vectorcraft_format::base64_encode(cut)})).is_err());
+    assert!(s.execute("file.place", &json!({"name": "cut.psd", "dataBase64": tsipika_format::base64_encode(cut)})).is_err());
 }

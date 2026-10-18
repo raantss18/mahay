@@ -1,11 +1,11 @@
-//! `cargo run --release -p vectorcraft-render --example bench` — render timing on synthetic documents.
+//! `cargo run --release -p tsipika-render --example bench` — render timing on synthetic documents.
 // Example (dev tool): unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_geom::{Affine, Point, Rect, shapes};
-use vectorcraft_render::{RenderOptions, Renderer};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_geom::{Affine, Point, Rect, shapes};
+use tsipika_render::{RenderOptions, Renderer};
 
 fn rng(seed: &mut u64) -> f64 {
     *seed ^= *seed << 13;
@@ -44,12 +44,12 @@ fn main() {
         let x = rng(&mut seed) * 1500.0;
         let y = rng(&mut seed) * 1150.0 + 20.0;
         let id = d.alloc_id();
-        let t = vectorcraft_doc::TextObject::point(
+        let t = tsipika_doc::TextObject::point(
             Point::new(x, y),
-            &format!("Label {i} — VectorCraft"),
-            vectorcraft_doc::CharStyle { size: 10.0 + (i % 5) as f64 * 4.0, ..Default::default() },
+            &format!("Label {i} — Tsipika"),
+            tsipika_doc::CharStyle { size: 10.0 + (i % 5) as f64 * 4.0, ..Default::default() },
         );
-        d.insert(Some(l), usize::MAX, Node::new(id, vectorcraft_doc::NodeKind::Text(Box::new(t)))).unwrap();
+        d.insert(Some(l), usize::MAX, Node::new(id, tsipika_doc::NodeKind::Text(Box::new(t)))).unwrap();
     }
     let mut r = Renderer::new();
     if let Ok(t) = std::env::var("THREADS") {

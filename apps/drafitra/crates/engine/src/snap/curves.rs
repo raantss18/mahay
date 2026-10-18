@@ -3,7 +3,7 @@
 //! ellipses) are solved numerically: the parameter range is sampled, each sign change of the
 //! condition is narrowed by bisection, and every loop has a fixed bound.
 
-use cadcraft_geom::{Circle, Ellipse, Spline, Vec2, angle_in_sweep};
+use drafitra_geom::{Circle, Ellipse, Spline, Vec2, angle_in_sweep};
 
 /// Parameter samples along a curve (sign changes and length).
 const SAMPLES: usize = 512;
@@ -176,7 +176,7 @@ pub(super) fn spline_tangents(s: &Spline, base: Vec2) -> Vec<Vec2> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cadcraft_geom::PI;
+    use drafitra_geom::PI;
 
     fn length(f: impl Fn(f64) -> Vec2, lo: f64, hi: f64) -> f64 {
         let n = 20_000;

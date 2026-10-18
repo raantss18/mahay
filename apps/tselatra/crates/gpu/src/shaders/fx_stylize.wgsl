@@ -1,5 +1,5 @@
 // GPU effects (stylize and distort family): see src/fx_stylize.rs. Each entry point mirrors the CPU effect in
-// effectcraft-effects operation for operation. Every name here is prefixed `fxs_` (the
+// tselatra-effects operation for operation. Every name here is prefixed `fxs_` (the
 // family files share one module). Coordinates are pixel centres (x + 0.5, y + 0.5) in buffer
 // pixels, as in util::remap. Per-column / per-row tables in `data` hold coordinates the CPU
 // computes in f64 (anything with a floor or a wrap), so tile and wrap boundaries match exactly.

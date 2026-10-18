@@ -3,10 +3,10 @@
 //! commands here set several of them in one undo step and add the groups to strokes saved before
 //! they existed. Also the toolbar's Fill / Stroke options on selected shape layers.
 
-use effectcraft_keyframe::{Gradient, Value as KV};
-use effectcraft_project::build::{self, EXTRA_DASHES, Ids};
-use effectcraft_project::{ItemId, Layer, LayerId, LayerSource, Node, PropGroup, Uid};
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Gradient, Value as KV};
+use tselatra_project::build::{self, EXTRA_DASHES, Ids};
+use tselatra_project::{ItemId, Layer, LayerId, LayerSource, Node, PropGroup, Uid};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::layer::color_p;
@@ -94,8 +94,8 @@ fn dashes_add(s: &mut Session, p: &Value) -> Result<Value> {
             let at = d.children.iter().position(|n| n.match_id() == "offset").unwrap_or(d.children.len());
             let dv = d.get("dash").map(|p| p.value.as_f64()).unwrap_or(10.0);
             let gv = d.get("gap").map(|p| p.value.as_f64()).filter(|g| *g > 0.0).unwrap_or(dv);
-            d.children.insert(at, ids.prop(gm, &format!("Gap {k}"), KV::Scalar(gv)).with_ui(effectcraft_project::ParamUi::Pixels).into());
-            d.children.insert(at, ids.prop(dm, &format!("Dash {k}"), KV::Scalar(dv)).with_ui(effectcraft_project::ParamUi::Pixels).into());
+            d.children.insert(at, ids.prop(gm, &format!("Gap {k}"), KV::Scalar(gv)).with_ui(tselatra_project::ParamUi::Pixels).into());
+            d.children.insert(at, ids.prop(dm, &format!("Dash {k}"), KV::Scalar(dv)).with_ui(tselatra_project::ParamUi::Pixels).into());
             dm
         };
         proj.next_id = next;
@@ -160,7 +160,7 @@ fn set_group(s: &mut Session, p: &Value, c: &str, group: &str, fields: &[(&str, 
                 KV::Enum(i)
             } else {
                 let x = v.as_f64().ok_or_else(|| bad(c, format!("`{param}` must be a number")))?;
-                let x = if let effectcraft_project::ParamUi::Slider { min, max, .. } = pr.ui { x.clamp(min, max) } else { x.max(0.0) };
+                let x = if let tselatra_project::ParamUi::Slider { min, max, .. } = pr.ui { x.clamp(min, max) } else { x.max(0.0) };
                 KV::Scalar(x)
             };
             pr.set_value_at(lt, nv.clone());
@@ -276,8 +276,8 @@ fn path_bounds(c: &PropGroup, lt: Tick) -> [f64; 4] {
             }
             "path" => {
                 let v = at("path");
-                let bez = v.as_ref().and_then(|v| v.as_path()).map(effectcraft_path::to_kurbo);
-                bez.and_then(|b| effectcraft_path::bounds(&[b])).map(|r| [r.x0, r.y0, r.x1, r.y1])
+                let bez = v.as_ref().and_then(|v| v.as_path()).map(tselatra_path::to_kurbo);
+                bez.and_then(|b| tselatra_path::bounds(&[b])).map(|r| [r.x0, r.y0, r.x1, r.y1])
             }
             _ => None,
         };

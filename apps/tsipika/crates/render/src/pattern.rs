@@ -19,10 +19,10 @@ use std::cell::RefCell;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Weak};
 
-use vectorcraft_color::cms::Cms;
-use vectorcraft_doc::pattern::{Overlap, PatternDef, TileType};
-use vectorcraft_doc::{Document, Node};
-use vectorcraft_geom::{Affine, Rect, Shape};
+use tsipika_color::cms::Cms;
+use tsipika_doc::pattern::{Overlap, PatternDef, TileType};
+use tsipika_doc::{Document, Node};
+use tsipika_geom::{Affine, Rect, Shape};
 use vello_cpu::peniko::{Extend, ImageQuality, ImageSampler};
 use vello_cpu::{Pixmap, RenderContext};
 
@@ -48,7 +48,7 @@ struct Deps {
     pixels: Vec<Weak<Vec<u8>>>,
     /// shortcut: any change to the document's other data draws the tile again, not only a brush
     /// edit; compare the brush library alone if that ever costs a frame.
-    unknown: Weak<vectorcraft_brush::serde_json::Map<String, vectorcraft_brush::serde_json::Value>>,
+    unknown: Weak<tsipika_brush::serde_json::Map<String, tsipika_brush::serde_json::Value>>,
     fonts: u64,
 }
 
@@ -65,14 +65,14 @@ impl Deps {
         Self {
             art: Self::art(doc).map(Arc::downgrade).collect(),
             pixels: Self::pixels(doc).map(Arc::downgrade).collect(),
-            unknown: vectorcraft_doc::Shared::downgrade(&doc.unknown),
-            fonts: vectorcraft_text::FontDb::global().generation(),
+            unknown: tsipika_doc::Shared::downgrade(&doc.unknown),
+            fonts: tsipika_text::FontDb::global().generation(),
         }
     }
 
     /// Does `doc` hold what the tile was drawn from?
     fn current(&self, doc: &Document) -> bool {
-        self.fonts == vectorcraft_text::FontDb::global().generation()
+        self.fonts == tsipika_text::FontDb::global().generation()
             && std::ptr::eq(self.unknown.as_ptr(), &*doc.unknown)
             && self.art.iter().map(Weak::as_ptr).eq(Self::art(doc).map(Arc::as_ptr))
             && self.pixels.iter().map(Weak::as_ptr).eq(Self::pixels(doc).map(Arc::as_ptr))
@@ -234,7 +234,7 @@ pub(crate) fn set_pattern_paint(ctx: &mut RenderContext, name: &str, xf: Affine,
     let scale = raster_scale(s, (pw, ph));
     let params = (def.tile, def.tile_type, def.overlap);
     let key = (name.to_string(), scale.to_bits());
-    let cms = vectorcraft_color::cms::active();
+    let cms = tsipika_color::cms::active();
     let hit = CACHE.with(|c| {
         let mut c = c.borrow_mut();
         c.check_plugins();
@@ -269,7 +269,7 @@ pub(crate) fn set_pattern_paint(ctx: &mut RenderContext, name: &str, xf: Affine,
             let deps = crate::fx::Reads::of_all(def.art.iter().map(|a| &**a)).any().then(|| Deps::of(doc));
             // A cancelled export drew part of the tile: it isn't kept for later frames.
             CACHE.with(|c| {
-                if vectorcraft_doc::cancel::is_cancelled() {
+                if tsipika_doc::cancel::is_cancelled() {
                     return;
                 }
                 let mut c = c.borrow_mut();
@@ -338,10 +338,10 @@ impl Renderer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_color::{Color, Paint};
-    use vectorcraft_doc::pattern::{PatternEdit, RepeatSpec, pattern_paint};
-    use vectorcraft_doc::{Appearance, NodeId, NodeKind};
-    use vectorcraft_geom::shapes;
+    use tsipika_color::{Color, Paint};
+    use tsipika_doc::pattern::{PatternEdit, RepeatSpec, pattern_paint};
+    use tsipika_doc::{Appearance, NodeId, NodeKind};
+    use tsipika_geom::shapes;
 
     /// A 20×20 tile with a red 10×10 square in its top-left corner.
     fn doc_with_pattern(tt: TileType) -> Document {
@@ -378,7 +378,7 @@ mod tests {
     /// pattern's paint transform must not resample the effect's raster).
     #[test]
     fn effects_after_a_pattern_fill_keep_their_place_and_size() {
-        let fx = |id: &str, params: serde_json::Value| vectorcraft_doc::Effect { id: id.into(), params, visible: true };
+        let fx = |id: &str, params: serde_json::Value| tsipika_doc::Effect { id: id.into(), params, visible: true };
         for effect in [
             fx("blur.gaussian", serde_json::json!({"radius": 4.0})),
             fx("stylize.dropShadow", serde_json::json!({"x": 6, "y": 6, "blur": 3, "opacity": 100})),
@@ -474,7 +474,7 @@ mod tests {
         assert!(is_red(r.pixel(10, 10)) && is_white(r.pixel(30, 10)) && is_red(r.pixel(50, 10)));
         let mut d2 = d.clone();
         let id = d2.layers[0].children().unwrap()[0].id;
-        vectorcraft_doc::pattern::transform_pattern_paints(d2.node_mut(id).unwrap(), Affine::translate((10.0, 0.0)));
+        tsipika_doc::pattern::transform_pattern_paints(d2.node_mut(id).unwrap(), Affine::translate((10.0, 0.0)));
         let r = render(&d2, 1.0);
         assert!(is_white(r.pixel(5, 5)) && is_red(r.pixel(15, 5)));
     }
@@ -485,7 +485,7 @@ mod tests {
         let mut d = doc_with_pattern(TileType::Grid);
         let square = shapes::rectangle(Rect::new(120.0, 120.0, 160.0, 160.0));
         let mut n = Node::path(d.alloc_id(), square, Appearance::basic(pattern_paint("Checks"), Paint::None, 0.0));
-        vectorcraft_doc::pattern::transform_pattern_paints(&mut n, Affine::scale(s));
+        tsipika_doc::pattern::transform_pattern_paints(&mut n, Affine::scale(s));
         let l = d.layers[0].id;
         d.insert(Some(l), 1, n).unwrap();
         d
@@ -592,7 +592,7 @@ mod tests {
     /// tile kept.
     #[test]
     fn kept_tiles_count_the_images_they_could_not_decode() {
-        use vectorcraft_doc::{ImageBlob, ImageObject};
+        use tsipika_doc::{ImageBlob, ImageObject};
         let mut d = doc_with_pattern(TileType::Grid);
         // A PNG signature with nothing after it.
         d.images.insert("cut".into(), ImageBlob::new("image/png", b"\x89PNG\r\n\x1a\n".to_vec()));

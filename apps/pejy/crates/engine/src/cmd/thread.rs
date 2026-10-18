@@ -1,8 +1,8 @@
 //! Threading text frames: thread a frame after another (their stories merge), break a thread,
 //! take a frame out of its thread. The Selection tool's loaded text cursor runs these.
 
-use designcraft_doc::{Document, ItemId, ParaFormat, Selection, StoryId};
-use designcraft_geom::Rect;
+use pejy_doc::{Document, ItemId, ParaFormat, Selection, StoryId};
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, bool_or, cmd, has_doc, id_param, rect_param, spread_param, str_param};
@@ -57,7 +57,7 @@ fn frame_param(s: &Session, p: &Value, cmd: &str) -> Result<ItemId> {
 }
 
 fn check_editable(d: &Document, id: ItemId, cmd: &str) -> Result<()> {
-    let it = d.item(id).ok_or(designcraft_doc::DocError::NoItem(id))?;
+    let it = d.item(id).ok_or(pejy_doc::DocError::NoItem(id))?;
     if it.locked || d.layer(it.layer).is_some_and(|l| l.locked) {
         return Err(bad(cmd, format!("{id} is locked or on a locked layer")));
     }
@@ -111,7 +111,7 @@ fn thread(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn overset(d: &Document, sid: StoryId) -> bool {
-    designcraft_compose::compose_story(d, sid, &Default::default()).overset_at.is_some()
+    pejy_compose::compose_story(d, sid, &Default::default()).overset_at.is_some()
 }
 
 fn unthread(s: &mut Session, p: &Value) -> Result<Value> {
@@ -183,15 +183,15 @@ mod tests {
         assert_eq!(r["story"].as_u64(), Some(sid));
         assert_eq!(frames(&mut s, a), [a, b]);
         let d = &s.doc().unwrap().doc;
-        assert!(d.item(designcraft_doc::ItemId(b)).unwrap().is_text_frame());
-        assert_eq!(s.doc().unwrap().selection.items, [designcraft_doc::ItemId(b)]);
+        assert!(d.item(pejy_doc::ItemId(b)).unwrap().is_text_frame());
+        assert_eq!(s.doc().unwrap().selection.items, [pejy_doc::ItemId(b)]);
         // The text now reaches the second frame.
-        let cs = designcraft_compose::compose_story(&s.doc().unwrap().doc, designcraft_doc::StoryId(sid), &Default::default());
+        let cs = pejy_compose::compose_story(&s.doc().unwrap().doc, pejy_doc::StoryId(sid), &Default::default());
         assert!(cs.frames.iter().any(|f| f.frame.0 == b && !f.range.is_empty()), "text flows into the new frame");
         s.doc().unwrap().doc.check().unwrap();
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(frames(&mut s, a), [a]);
-        assert!(!s.doc().unwrap().doc.item(designcraft_doc::ItemId(b)).unwrap().is_text_frame());
+        assert!(!s.doc().unwrap().doc.item(pejy_doc::ItemId(b)).unwrap().is_text_frame());
     }
 
     #[test]
@@ -203,7 +203,7 @@ mod tests {
         let st = story(&mut s, b);
         assert_eq!(st["id"].as_u64(), Some(sa));
         assert_eq!(st["text"], "First\nSecond");
-        assert!(s.doc().unwrap().doc.story(designcraft_doc::StoryId(sb)).is_none());
+        assert!(s.doc().unwrap().doc.story(pejy_doc::StoryId(sb)).is_none());
         s.doc().unwrap().doc.check().unwrap();
     }
 
@@ -291,8 +291,8 @@ mod tests {
         let r = s.execute("text.thread", &json!({"from": a, "rect": [72, 300, 200, 400]})).unwrap();
         let n = r["to"].as_u64().unwrap();
         assert_eq!(frames(&mut s, a), [a, n]);
-        assert_eq!(s.doc().unwrap().selection.items, [designcraft_doc::ItemId(n)]);
-        let b = s.doc().unwrap().doc.item(designcraft_doc::ItemId(n)).unwrap().bounds();
+        assert_eq!(s.doc().unwrap().selection.items, [pejy_doc::ItemId(n)]);
+        let b = s.doc().unwrap().doc.item(pejy_doc::ItemId(n)).unwrap().bounds();
         assert_eq!(b, Rect::new(72.0, 300.0, 200.0, 400.0));
         // In front of the first frame: the story keeps its id and text.
         let r = s.execute("text.thread", &json!({"rect": [300, 72, 400, 120], "to": a})).unwrap();
@@ -306,7 +306,7 @@ mod tests {
         assert_eq!(frames(&mut s, a), [a, n]);
     }
 
-    use designcraft_geom::Rect;
+    use pejy_geom::Rect;
 
     #[test]
     fn thread_with_autoflow_adds_pages_until_the_text_fits() {

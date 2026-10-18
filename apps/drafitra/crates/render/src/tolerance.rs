@@ -1,10 +1,10 @@
-//! TOLERANCE: feature control frames. The layout lives in `cadcraft_doc::gdt`; here the text is
+//! TOLERANCE: feature control frames. The layout lives in `drafitra_doc::gdt`; here the text is
 //! measured with the dimension style's font and everything is drawn: the boxes with DIMCLRD,
 //! symbols and text with DIMCLRT (ByBlock = the entity's own colour, as for dimensions).
 
-use cadcraft_color::Color;
-use cadcraft_doc::{Drawing, Entity, GdtLayout, GdtPrim, Tolerance};
-use cadcraft_geom::{Arc as GArc, Circle as GCircle, Segment, Vec2};
+use drafitra_color::Color;
+use drafitra_doc::{Drawing, Entity, GdtLayout, GdtPrim, Tolerance};
+use drafitra_geom::{Arc as GArc, Circle as GCircle, Segment, Vec2};
 
 use crate::{Builder, Ctx, Ink, ink};
 
@@ -12,7 +12,7 @@ use crate::{Builder, Ctx, Ink, ink};
 pub fn tolerance_in(d: &Drawing, t: &Tolerance) -> GdtLayout {
     let st = d.dim_style(&t.style).cloned().unwrap_or_default();
     let dt = crate::dim_text(d, &st);
-    t.layout(d, &|s, h| cadcraft_fonts::text_width(&dt.font, s, h, dt.width_factor))
+    t.layout(d, &|s, h| drafitra_fonts::text_width(&dt.font, s, h, dt.width_factor))
 }
 
 /// Points of a frame primitive, tessellated at `tol` (a fill's triangle as is).
@@ -58,13 +58,13 @@ pub(crate) fn draw(b: &mut Builder, ctx: &Ctx, e: &Entity, t: &Tolerance, lw: f3
     }
     let dt = crate::dim_text(d, &st);
     for tx in &g.texts {
-        let p = cadcraft_fonts::TextParams {
+        let p = drafitra_fonts::TextParams {
             rotation: tx.rotation,
             width_factor: dt.width_factor,
             oblique: dt.oblique,
-            ..cadcraft_fonts::TextParams::new(tx.pos, tx.height)
+            ..drafitra_fonts::TextParams::new(tx.pos, tx.height)
         };
-        let (sh, _) = cadcraft_fonts::place(&dt.font, &tx.value, &p);
+        let (sh, _) = drafitra_fonts::place(&dt.font, &tx.value, &p);
         b.shaped(ctx, text_rgb, lw, &sh);
     }
 }

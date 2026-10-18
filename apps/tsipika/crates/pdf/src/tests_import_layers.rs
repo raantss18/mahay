@@ -2,9 +2,9 @@
 //! view state's), print state, lock and nesting; art that is off comes in as a hidden layer, and
 //! art past what is read of a huge page never shows or prints a hidden layer.
 
-use vectorcraft_color::Color;
-use vectorcraft_doc::{Document, Node, NodeKind};
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf_with_catalog};
+use tsipika_color::Color;
+use tsipika_doc::{Document, Node, NodeKind};
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf_with_catalog};
 
 use crate::tests_import_fidelity::stream;
 use crate::*;

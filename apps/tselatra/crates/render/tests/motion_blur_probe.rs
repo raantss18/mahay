@@ -2,12 +2,12 @@
 //! (#535). Two bars move in opposite directions between discrete source frames; the gap
 //! pixels between their old and new positions must fill in, and Vector Detail must matter.
 
-use effectcraft_color::Label;
-use effectcraft_keyframe::Value;
-use effectcraft_project::build::{self, Ids};
-use effectcraft_project::{AlphaMode, BitDepth, Comp, Footage, FootageKind, FrameBlend, ItemId, ItemKind, LayerSource, Project};
-use effectcraft_render::{FootageSource, Image, RenderOpts, Renderer};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_color::Label;
+use tselatra_keyframe::Value;
+use tselatra_project::build::{self, Ids};
+use tselatra_project::{AlphaMode, BitDepth, Comp, Footage, FootageKind, FrameBlend, ItemId, ItemKind, LayerSource, Project};
+use tselatra_render::{FootageSource, Image, RenderOpts, Renderer};
+use tselatra_time::{FrameRate, Tick};
 use std::sync::Arc;
 
 // A 12×8 block with a horizontal brightness gradient slides right by 12 px between source
@@ -56,9 +56,9 @@ fn scene(detail: Option<f64>) -> (Project, ItemId) {
     layer.switches.frame_blend = FrameBlend::Off;
     layer.switches.motion_blur = false;
     if let Some(detail) = detail {
-        let spec = effectcraft_effects::find("ec.time.pixelmotionblur").unwrap();
+        let spec = tselatra_effects::find("ec.time.pixelmotionblur").unwrap();
         let mut next = p.next_id;
-        let mut effect = effectcraft_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [64.0, 48.0]);
+        let mut effect = tselatra_effects::instantiate(spec, &mut Ids(&mut next), spec.name, [64.0, 48.0]);
         for (name, value) in [
             ("shutterControl", Value::Enum(1)),
             ("shutterAngle", Value::Scalar(180.0)),

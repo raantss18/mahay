@@ -1,6 +1,6 @@
-# CADCraft Simplified Chinese interface catalog — original translations.
+# Drafitra Simplified Chinese interface catalog — original translations.
 # License: MIT OR Apache-2.0 (the repository LICENSE-MIT and LICENSE-APACHE).
-# Written from CADCraft's English strings; no proprietary translations were copied.
+# Written from Drafitra's English strings; no proprietary translations were copied.
 # UTF-8: context<TAB>English source<TAB>Chinese translation.
 # Empty context = ordinary label; @plural = one|other forms with {n}.
 # Command IDs, typed keywords, technology/product names and user data stay unchanged.
@@ -28,7 +28,7 @@
 	= Equals	= 等于
 	> Greater than	> 大于
 	About	关于
-	About CADCraft	关于 CADCraft
+	About Drafitra	关于 Drafitra
 	Absolute	绝对
 	Add Leader	添加引线
 	Align	对齐
@@ -83,7 +83,7 @@
 	ByBlock	ByBlock
 	ByColor	ByColor
 	ByLayer	ByLayer
-	CADCraft Help	CADCraft 帮助
+	Drafitra Help	Drafitra 帮助
 	Cancel	取消
 	Cartesian (x, y)	笛卡尔坐标 (x, y)
 	Center	中心
@@ -357,7 +357,7 @@
 	Isolate Layer	隔离图层
 	Isometric Drafting	等轴测制图
 	Join	合并
-	Join the ArtCraft Discord…	加入 ArtCraft Discord…
+	Join the Mahay Discord…	加入 Mahay Discord…
 	Join us on Discord	在 Discord 上加入我们
 	Language	语言
 	Last	最后
@@ -486,7 +486,7 @@
 	Offset	偏移
 	On	开启
 	On/Off	开/关
-	One of the Crafting Apps by the ArtCraft team and community.	由 ArtCraft 团队和社区打造的 Crafting 系列应用之一。
+	One of the Mahay apps by the Mahay team and community.	由 Mahay 团队和社区打造的 Crafting 系列应用之一。
 	Open (⌘O)	打开 (⌘O)
 	Open Sample Drawing	打开示例图形
 	Open sample drawing	打开示例图形
@@ -586,7 +586,7 @@
 	Quick Select Properties	快速选择特性
 	Quick Select...	快速选择...
 	QuickCalc	快速计算器
-	Quit CADCraft	退出 CADCraft
+	Quit Drafitra	退出 Drafitra
 	Radius	半径
 	Raster Image	光栅图像
 	Ray	射线
@@ -995,7 +995,7 @@
 @plural	{n} contributor	{n} 位贡献者|{n} 位贡献者
 	Drawing as bytes	字节形式的图形
 	Services	服务
-	Hide CADCraft	隐藏 CADCraft
+	Hide Drafitra	隐藏 Drafitra
 	Hide Others	隐藏其他人
 	Accessibility	辅助功能
 	Show System Cursor	显示系统光标
@@ -1099,7 +1099,7 @@
 	An array that would create more objects than this is refused.	将拒绝创建超出此对象数量的阵列。
 	Time-sensitive right-click: a quick click is Enter, holding opens the menu	时间敏感右键：快速点击相当于回车，按住不放打开菜单
 	Turned off, a right-click while a command runs always opens the shortcut menu.	关闭后，在命令运行期间右键单击总是打开快捷菜单。
-	CADCraft keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	CADCraft 会为你的用户账号保留这些偏好设置、对象捕捉模式和绘图切换开关，并在启动时恢复它们。
+	Drafitra keeps these preferences, object snap modes and drafting toggles for your user account and restores them when it starts.	Drafitra 会为你的用户账号保留这些偏好设置、对象捕捉模式和绘图切换开关，并在启动时恢复它们。
 	Reset to Defaults	恢复默认设置
 	Copy as JSON	复制为 JSON
 	Reset keeps the interface language.	重置时会保留界面语言。

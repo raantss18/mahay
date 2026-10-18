@@ -1,7 +1,7 @@
 //! Pages.
 
-use figcraft_doc::proto::Flow;
-use figcraft_doc::*;
+use endrika_doc::proto::Flow;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, ok};

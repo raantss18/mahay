@@ -1,8 +1,8 @@
 //! Edit menu.
 
-use effectcraft_color::Label;
-use effectcraft_project::{Comp, Expression, ItemKind, Layer, LayerId, LayerSource, TrackMatte};
-use effectcraft_time::Tick;
+use tselatra_color::Label;
+use tselatra_project::{Comp, Expression, ItemKind, Layer, LayerId, LayerSource, TrackMatte};
+use tselatra_time::Tick;
 use serde_json::{Value, json};
 
 use super::{CommandSpec, has_comp, has_layers, layers_p, match_path_of, selected_leaf_props, str_p};
@@ -358,7 +358,7 @@ fn paste_properties(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// The expression accessor for a property, e.g. `comp("Main").layer("Solid").transform("Position")`.
-pub(crate) fn link_expression(s: &Session, lid: LayerId, uid: effectcraft_project::Uid, relative: bool) -> Option<String> {
+pub(crate) fn link_expression(s: &Session, lid: LayerId, uid: tselatra_project::Uid, relative: bool) -> Option<String> {
     let cid = s.active_comp_id()?;
     let comp = s.project.comp(cid)?;
     let l = comp.layer(lid)?;
@@ -504,7 +504,7 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
         return paste_links(s, clip);
     }
     // A copied Mask Path / shape Path pasted onto Position becomes a motion path (#1425).
-    if let [(_, effectcraft_keyframe::Value::Path(path))] = s.state.value_clipboard.as_slice()
+    if let [(_, tselatra_keyframe::Value::Path(path))] = s.state.value_clipboard.as_slice()
         && let Some(target) = super::anim::path_target(s, p)?
     {
         let path = path.clone();
@@ -562,7 +562,7 @@ fn paste_svg(s: &mut Session, p: &Value) -> Result<Value> {
     if !crate::vector::is_svg_text(text) {
         return Err(super::bad(c, "the text is not SVG markup"));
     }
-    let doc = effectcraft_svg::parse(text.as_bytes()).map_err(|e| super::bad(c, format!("cannot read the SVG: {e}")))?;
+    let doc = tselatra_svg::parse(text.as_bytes()).map_err(|e| super::bad(c, format!("cannot read the SVG: {e}")))?;
     if doc.flatten().is_empty() {
         return Err(super::bad(c, "the SVG has no shapes"));
     }
@@ -774,7 +774,7 @@ fn purge_caches(s: &mut Session, p: &Value) -> Result<Value> {
         disk_entries = h.clear("diskCache").ok().and_then(|r| r["entries"].as_u64()).unwrap_or(0) as usize;
     }
     if matches!(what.as_str(), "all" | "image" | "memory" | "memoryAndDisk") {
-        effectcraft_effects::roto::purge();
+        tselatra_effects::roto::purge();
     }
     // The viewers' RAM preview goes with the memory purges (and the 3D one, whose renders it
     // holds); purging the disk cache or the snapshot leaves it.
@@ -797,8 +797,8 @@ pub(crate) fn disk_stats(s: &mut Session, _: &Value) -> Result<Value> {
         "enabled": true,
         "folder": dc.folder().to_string_lossy(),
         "entries": st.entries,
-        "frames": dc.keys(effectcraft_render::disk_cache::Kind::Frame).len(),
-        "layers": dc.keys(effectcraft_render::disk_cache::Kind::Layer).len(),
+        "frames": dc.keys(tselatra_render::disk_cache::Kind::Frame).len(),
+        "layers": dc.keys(tselatra_render::disk_cache::Kind::Layer).len(),
         "bytes": st.bytes,
         "maxBytes": st.max_bytes,
         "hits": st.hits,
@@ -1006,8 +1006,8 @@ mod tests {
         let mut s = crate::Session::default();
         let id = s
             .edit("add", None, |p, _| {
-                let f = effectcraft_project::Footage { path: clip.clone(), ..Default::default() };
-                Ok(p.add_item("take", effectcraft_color::Label::Lavender, None, effectcraft_project::ItemKind::Footage(f)))
+                let f = tselatra_project::Footage { path: clip.clone(), ..Default::default() };
+                Ok(p.add_item("take", tselatra_color::Label::Lavender, None, tselatra_project::ItemKind::Footage(f)))
             })
             .unwrap();
         s.state.project_selection = vec![id];
@@ -1042,8 +1042,8 @@ mod tests {
         let path = d.join("run.bat").to_string_lossy().into_owned();
         let id = s
             .edit("add", None, |p, _| {
-                let f = effectcraft_project::Footage { path, ..Default::default() };
-                Ok(p.add_item("bat", effectcraft_color::Label::Lavender, None, effectcraft_project::ItemKind::Footage(f)))
+                let f = tselatra_project::Footage { path, ..Default::default() };
+                Ok(p.add_item("bat", tselatra_color::Label::Lavender, None, tselatra_project::ItemKind::Footage(f)))
             })
             .unwrap();
         s.state.project_selection = vec![id];

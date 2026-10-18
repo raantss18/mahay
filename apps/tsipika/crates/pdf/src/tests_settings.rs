@@ -1,9 +1,9 @@
 //! Save PDF settings: JSON shape, checks and the warnings for options not applied yet.
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_geom::{Rect, shapes};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_geom::{Rect, shapes};
 
 use crate::*;
 
@@ -90,9 +90,9 @@ fn options_not_applied_yet_come_back_as_warnings() {
     // too: a codec the writer lacks is reported when an image needs it; colour output; real text)
     // warn about nothing.
     for v in [
-        json!({"output": {"conversion": "destination", "destination": vectorcraft_color::cms::GENERIC_CMYK, "profiles": "all"}}),
+        json!({"output": {"conversion": "destination", "destination": tsipika_color::cms::GENERIC_CMYK, "profiles": "all"}}),
         json!({"output": {"conversion": "preserveNumbers", "profiles": "taggedSource"}}),
-        json!({"output": {"outputIntent": vectorcraft_color::cms::GENERIC_CMYK, "outputCondition": "Press", "registry": "r", "trapped": true}}),
+        json!({"output": {"outputIntent": tsipika_color::cms::GENERIC_CMYK, "outputCondition": "Press", "registry": "r", "trapped": true}}),
         json!({"output": {"outputConditionId": "CGATS TR 001"}}),
         json!({"advanced": {"outlineText": false}}),
         json!({"advanced": {"outlineText": true, "fontSubsetPercent": 35}}),

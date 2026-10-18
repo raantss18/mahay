@@ -1,9 +1,9 @@
 //! OPTIONS: the dialog opens only when typed or chosen from the menu; the JSON form reads and sets
 //! the preferences; the user profile survives a restart (`profile_json` → `load_profile`).
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::theme::Tokens;
-use cadcraft_ui_egui::{CadApp, Services, menus, options};
+use drafitra_engine::Session;
+use drafitra_ui_egui::theme::Tokens;
+use drafitra_ui_egui::{CadApp, Services, menus, options};
 use egui::Color32;
 use serde_json::{Value, json};
 
@@ -157,7 +157,7 @@ fn model_background_reaches_the_drawing_area_tokens() {
     let t = Tokens::get();
     assert_eq!(t.canvas, Color32::WHITE);
     assert_eq!(t.paper, Color32::from_gray(0x20));
-    assert!(cadcraft_ui_egui::theme::luminance(t.crosshair) < 0.5, "a dark crosshair on a white background");
+    assert!(drafitra_ui_egui::theme::luminance(t.crosshair) < 0.5, "a dark crosshair on a white background");
     assert_ne!(t.grid_minor, Tokens::DARK.grid_minor);
     assert_eq!(t.chrome, Tokens::DARK.chrome, "the interface keeps its theme");
     a.run("options", json!({"reset": true})).unwrap();
@@ -185,7 +185,7 @@ fn every_tab_renders() {
     // Unknown tabs show the first one.
     a.ui.dialog = Some("options:nope".into());
     assert!(render(&mut a, &ctx).contains("Crosshair size"));
-    assert_eq!(options::PROFILE_KEY, "cadcraft.profile");
+    assert_eq!(options::PROFILE_KEY, "drafitra.profile");
     let _: Value = serde_json::from_str(&a.profile_json()).unwrap();
 }
 
@@ -195,7 +195,7 @@ fn selection_highlight_settings_set_save_and_show_in_the_selection_tab() {
     let r = a.run("options", json!({"selectionColor": "#FF8000", "SELECTIONEFFECT": 0, "SELECTIONPREVIEW": 1, "PREVIEWEFFECT": 1})).unwrap();
     assert_eq!((r["selectionColor"].clone(), r["SELECTIONEFFECT"].clone(), r["PREVIEWEFFECT"].clone()), (json!("#ff8000"), json!(0), json!(1)));
     // The colour reaches the drawing area's palette.
-    cadcraft_ui_egui::theme::set_canvas(a.options.canvas());
+    drafitra_ui_egui::theme::set_canvas(a.options.canvas());
     assert_eq!(Tokens::get().selection, Color32::from_rgb(0xff, 0x80, 0x00));
     for bad in [json!({"selectionColor": "orange"}), json!({"SELECTIONEFFECT": 3}), json!({"SELECTIONPREVIEW": 9})] {
         assert!(a.run("options", bad.clone()).is_err(), "{bad}");
@@ -207,7 +207,7 @@ fn selection_highlight_settings_set_save_and_show_in_the_selection_tab() {
     assert_eq!((b.session.settings.selectioneffect, b.session.settings.selectionpreview, b.session.settings.previeweffect), (0, 1, 1));
     a.run("options", json!({"selectionColor": null})).unwrap();
     assert_eq!(a.options.selection_color, None);
-    cadcraft_ui_egui::theme::set_canvas(cadcraft_ui_egui::theme::Canvas::default());
+    drafitra_ui_egui::theme::set_canvas(drafitra_ui_egui::theme::Canvas::default());
 
     // The Selection tab is laid out as AutoCAD's.
     let ctx = egui::Context::default();

@@ -8,7 +8,7 @@
 
 use std::sync::Arc;
 
-use vectorcraft_geom::{BezPath, FillRule, PathData};
+use tsipika_geom::{BezPath, FillRule, PathData};
 
 use crate::appearance::Appearance;
 use crate::{Document, Node, NodeKind};

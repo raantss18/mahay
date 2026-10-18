@@ -15,7 +15,7 @@ overall animation, rendering, spatial-path or application-parity score.
 ## Reproduce
 
 With Node.js, Rust and an installed AEsync CLI, open a scratch After Effects project and run from
-the EffectCraft checkout:
+the Tselatra checkout:
 
 ```sh
 node examples/check-ae-ease.mjs /path/to/aesync/server/dist/cli.js
@@ -26,19 +26,19 @@ The script creates a temporary comp with an original text layer, samples its Rot
 removes the comp on success or failure. It does not save, close or replace the current project.
 Run in a scratch project: creating/removing the comp still changes the dirty flag and undo history.
 
-`crates/keyframe/examples/ae_ease_samples.rs` evaluates the corresponding EffectCraft keys.
+`crates/keyframe/examples/ae_ease_samples.rs` evaluates the corresponding Tselatra keys.
 `examples/ae-ease-oracle.jsx` records live property samples and actual ease settings after the setters.
 `examples/check-ae-ease.mjs` checks case metadata, applied AE settings, finite values and sample times,
 then compares every value with an absolute tolerance of `1e-7` degrees. A failing score exits nonzero.
 
-Raw host observations and EffectCraft samples stay in gitignored `plan/aftereffects/ref/ease/`.
+Raw host observations and Tselatra samples stay in gitignored `plan/aftereffects/ref/ease/`.
 Only the original harness and aggregate scores in `keyframe-ease.json` are tracked. No Adobe artwork,
 presets, screenshots, frames or implementation code are included.
 
 ## Finding and validation
 
 Measured on 5 October 2026 with After Effects `26.3x87` and AEsync 2.0.4. Before the fix,
-EffectCraft normalized outgoing/incoming influence when their sum exceeded 100%. AE retains each
+Tselatra normalized outgoing/incoming influence when their sum exceeded 100%. AE retains each
 influence. That normalization caused maximum errors of 12.4581 degrees for 80%/80%, 8.8909 degrees
 for the asymmetric case and 5.5636 degrees for the descending case. Removing normalization in both
 scalar evaluation and the shared progress helper makes all eight cases pass; the largest difference
@@ -56,13 +56,13 @@ the 168 live AE samples.
 ## Auto-Bezier spatial tangents
 
 Measured on 10 October 2026 with After Effects 2026 (26.3) by running the original
-`examples/ae-spatial-tangents.jsx` in both hosts (`AfterFX.exe -r` and `effectcraft-cli script`):
+`examples/ae-spatial-tangents.jsx` in both hosts (`AfterFX.exe -r` and `tselatra-cli script`):
 three original Position paths, ten keys, with even and uneven key timing. The script pins spatial
 interpolation to auto-Bezier, since an AE preference can default new keys to linear.
 
 AE gives each auto-Bezier key an out tangent of (next key − previous key) / 6 and the mirrored in
 tangent, whatever the key times; an end key uses its one neighbour, (neighbour − key) / 6. That is a
-Catmull-Rom spline. EffectCraft gave end keys no tangent and scaled middle keys' tangents by the
+Catmull-Rom spline. Tselatra gave end keys no tangent and scaled middle keys' tangents by the
 lengths of their segments, so all ten tangents differed. Sampled Position along an auto-Bezier path
 with Easy Ease was up to 25.1 px off, and a roving path up to 27.7 px.
 
@@ -73,7 +73,7 @@ including a timing change. AE's output stays local; only the script and these sc
 
 ## Still unmeasured
 
-Rendered frame comparisons now have a deterministic `effectcraft_effects::fidelity::compare_frames`
+Rendered frame comparisons now have a deterministic `tselatra_effects::fidelity::compare_frames`
 helper. Corpus runners can use it with locally generated host/reference frames and fail on either a
 mean or maximum channel error without committing proprietary renders.
 

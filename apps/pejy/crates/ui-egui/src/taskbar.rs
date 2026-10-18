@@ -301,7 +301,7 @@ mod tests {
 
     /// A selected frame, with the task bar under it.
     fn window() -> (Harness<'static, Window>, u64) {
-        let app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let mut h = test_window::open(app, vec2(1440.0, 900.0));
         let app = &mut h.state_mut().app;
         let id = app.run("frame.create", json!({"rect": [72, 72, 300, 200], "content": "text", "text": "Hello"})).unwrap()["id"].as_u64().unwrap();
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn pinning_is_a_command() {
-        let mut app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         let run = |app: &mut crate::DesignApp, id: &str, p| crate::menus::run_ui(app, id, &p).unwrap();
         assert!(run(&mut app, "window.taskBarPin", json!({})).is_err(), "nowhere to pin a bar that isn't showing");
         assert!(run(&mut app, "window.taskBarPin", json!({"at": [1, "x"]})).is_err());

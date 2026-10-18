@@ -1,6 +1,6 @@
 //! The fonts a document uses that aren't available (`text.missingFonts`), the files that provide
 //! them in a folder the user picks (`text.findFontFiles`, searched on separate threads:
-//! [`super::findfiles`]), and copying the files the user chooses into VectorCraft's own Fonts
+//! [`super::findfiles`]), and copying the files the user chooses into Tsipika's own Fonts
 //! folder, which the font scan reads (`text.addFontFiles`).
 
 use std::path::{Path, PathBuf};
@@ -8,8 +8,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Document;
-use vectorcraft_text::{FontDb, FontMatch, WantedFont, WantedFonts};
+use tsipika_doc::Document;
+use tsipika_text::{FontDb, FontMatch, WantedFont, WantedFonts};
 
 use super::findfiles::{self, Limits, Visitor};
 use super::*;
@@ -85,7 +85,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Add Font Files",
             [],
             None,
-            "{files: [paths the last text.findFontFiles search found] (1 to 1000)} copy the font files into VectorCraft's own Fonts folder (next to the preferences; the desktop app and vectorcraft-cli read it), never replacing a file there: the names Name.otf, Name 2.otf … Name 99.otf are tried in turn until one is free, which gets the copy, or is a file with the same contents, which is kept; then scan the fonts again, as text.rescanFonts does, and type set in them redraws. Only regular .ttf, .otf, .ttc, .otc, .woff and .woff2 files and suitcase fonts (with their resource fork) are copied, at most 256 MB a file and 1 GB in all; any other file is skipped. Add only fonts you own or are licensed to install; none on the web → {folder, copied: [{from, to}], kept: [{from, to}], skipped: [{file, reason}], families?, faces?}",
+            "{files: [paths the last text.findFontFiles search found] (1 to 1000)} copy the font files into Tsipika's own Fonts folder (next to the preferences; the desktop app and tsipika-cli read it), never replacing a file there: the names Name.otf, Name 2.otf … Name 99.otf are tried in turn until one is free, which gets the copy, or is a file with the same contents, which is kept; then scan the fonts again, as text.rescanFonts does, and type set in them redraws. Only regular .ttf, .otf, .ttc, .otc, .woff and .woff2 files and suitcase fonts (with their resource fork) are copied, at most 256 MB a file and 1 GB in all; any other file is skipped. Add only fonts you own or are licensed to install; none on the web → {folder, copied: [{from, to}], kept: [{from, to}], skipped: [{file, reason}], families?, faces?}",
             always,
             add
         ),
@@ -190,12 +190,12 @@ impl Visitor for FontFiles {
     fn wants(&self, name: &str) -> bool {
         let path = Path::new(name);
         // A suitcase font (macOS) has no extension, or `.suit`.
-        vectorcraft_text::is_font_file(path) || cfg!(target_os = "macos") && path.extension().is_none_or(|e| e.eq_ignore_ascii_case("suit"))
+        tsipika_text::is_font_file(path) || cfg!(target_os = "macos") && path.extension().is_none_or(|e| e.eq_ignore_ascii_case("suit"))
     }
     fn worth_reading(&self, path: &Path) -> bool {
         // A search reads font files and suitcase fonts of at most [`MAX_FONT_FILE`] bytes, the files
         // `text.addFontFiles` copies.
-        (vectorcraft_text::is_font_file(path) || vectorcraft_text::is_suitcase(path))
+        (tsipika_text::is_font_file(path) || tsipika_text::is_suitcase(path))
             && std::fs::metadata(path).is_ok_and(|m| m.len() <= MAX_FONT_FILE)
     }
     fn items(&self, path: &Path) -> Vec<usize> {
@@ -335,8 +335,8 @@ fn add(s: &mut Session, p: &Value) -> Result<Value> {
         .ok_or_else(|| bad(C, "`files` must be 1 to 1000 paths of font files the last text.findFontFiles search found"))?;
     files.sort();
     files.dedup();
-    let dir = vectorcraft_text::app_font_dir()
-        .ok_or_else(|| EngineError::Other("VectorCraft's Fonts folder isn't set here: the desktop app and vectorcraft-cli set it".into()))?;
+    let dir = tsipika_text::app_font_dir()
+        .ok_or_else(|| EngineError::Other("Tsipika's Fonts folder isn't set here: the desktop app and tsipika-cli set it".into()))?;
     let found: Vec<PathBuf> =
         s.font_search.as_ref().map(|f| f.search.progress().hits.into_iter().map(|(path, _)| path).collect()).unwrap_or_default();
     if let Some(f) = files.iter().find(|f| !found.contains(f)) {
@@ -345,7 +345,7 @@ fn add(s: &mut Session, p: &Value) -> Result<Value> {
     for f in &files {
         crate::file_access::check_read(&f.to_string_lossy()).map_err(EngineError::Other)?;
     }
-    // VectorCraft's own Fonts folder: no automation root applies to it.
+    // Tsipika's own Fonts folder: no automation root applies to it.
     crate::file_access::unconfined(|| super::fileio::create_dir(&dir.to_string_lossy()))?;
     let report = copy_into(&files, dir);
     let pairs = |v: &[(PathBuf, PathBuf)]| {
@@ -398,7 +398,7 @@ fn copy_one(from: &Path, dir: &Path, total: &mut u64) -> std::result::Result<sup
     }
     let font = from.extension().and_then(|e| e.to_str()).is_some_and(|e| FONT_EXTENSIONS.iter().any(|x| e.eq_ignore_ascii_case(x)));
     // A suitcase font's fonts are in its resource fork, which is copied with it, whatever its name.
-    let fork = match (vectorcraft_text::is_suitcase(from), font) {
+    let fork = match (tsipika_text::is_suitcase(from), font) {
         (true, _) => Some(read_fork(from)?),
         (false, true) => None,
         (false, false) => return Err(NOT_A_FONT.into()),
@@ -426,8 +426,8 @@ fn copy_one(from: &Path, dir: &Path, total: &mut u64) -> std::result::Result<sup
 /// resource fork is `fork`; never in place of a file.
 #[cfg(not(target_arch = "wasm32"))]
 fn create_copy(from: &Path, to: &Path, fork: Option<&[u8]>) -> std::io::Result<()> {
-    let Some(fork) = fork else { return vectorcraft_format::write_new_with(to, |f| copy_capped(from, f)) };
-    vectorcraft_format::write_new_with(to, |_| Ok(()))?;
+    let Some(fork) = fork else { return tsipika_format::write_new_with(to, |f| copy_capped(from, f)) };
+    tsipika_format::write_new_with(to, |_| Ok(()))?;
     std::fs::write(fork_path(to), fork).inspect_err(|_| {
         // Best effort: the empty file just made is all there is to clean up.
         let _ = std::fs::remove_file(to);

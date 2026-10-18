@@ -7,7 +7,7 @@
 //! change grid columns / radial dividers.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 use crate::guides::{DrawSnap, Leave, square};
 use crate::shape::drag_rect;
@@ -242,7 +242,7 @@ impl Tool for FamilyTool {
 
 /// A grid divider skew from option value `v`: a finite number within the range, else `current`.
 fn grid_skew(v: &Value, current: f64) -> f64 {
-    let max = vectorcraft_geom::shapes::GRID_SKEW_MAX;
+    let max = tsipika_geom::shapes::GRID_SKEW_MAX;
     v.as_f64().filter(|s| s.is_finite()).map_or(current, |s| s.clamp(-max, max))
 }
 
@@ -250,7 +250,7 @@ fn grid_skew(v: &Value, current: f64) -> f64 {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use tsipika_doc::Selection;
 
     #[test]
     fn grid_drag_and_arrows() {

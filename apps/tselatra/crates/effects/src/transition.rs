@@ -3,10 +3,10 @@
 //!
 //! Every transition is the identity at 0 % completion. Angles are clockwise from "up".
 
-use effectcraft_color::luminance;
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::Px;
+use tselatra_color::luminance;
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::Px;
 use rayon::prelude::*;
 
 use crate::sim2::{Piece, PiecePlan, PieceTex, rot_axis, sort_far_first};
@@ -31,7 +31,7 @@ fn scale_px(px: &mut Px, k: f32) {
 /// Resample `other` into `b`'s pixel grid with placement `mode` (Gradient Wipe's Gradient
 /// Placement, Texturize's Texture Placement): 0 tile from the top-left, 1 centre once,
 /// 2 stretch to fit.
-pub fn place_layer(ctx: &EffectCtx, b: &Buf, other: &crate::LayerPixels, mode: u32) -> effectcraft_raster::Image {
+pub fn place_layer(ctx: &EffectCtx, b: &Buf, other: &crate::LayerPixels, mode: u32) -> tselatra_raster::Image {
     let (ls, os) = (ctx.layer_size, other.size);
     let inv = 1.0 / b.scale.max(1e-9);
     crate::util::gen_image(b.img.width, b.img.height, |x, y| {
@@ -612,7 +612,7 @@ pub fn specs() -> Vec<EffectSpec> {
 mod tests {
     use super::*;
     use crate::{Params, find};
-    use effectcraft_raster::Image;
+    use tselatra_raster::Image;
 
     fn run(id: &str, img: &Image, set: &[(&str, Value)]) -> Image {
         let s = find(id).unwrap();

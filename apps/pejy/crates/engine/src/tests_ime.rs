@@ -1,7 +1,7 @@
 //! Input method (IME) composition in the Type tool: marked text previews in place, a commit is
 //! one `text.insert`, a cancel leaves nothing behind, and keys wait for the IME.
 
-use designcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use pejy_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 use serde_json::json;
 
 use super::*;
@@ -127,7 +127,7 @@ fn keys_belong_to_the_ime_while_it_composes() {
     assert_eq!(text(&mut s, sid), "しょうこ");
     // A click keeps the marked text as typed.
     s.tool_preedit("ひちりき", Some(4..4), v).unwrap();
-    let at = s.layout().to_canvas(designcraft_doc::SpreadRef::Doc(0), designcraft_geom::Point::new(100.0, 150.0));
+    let at = s.layout().to_canvas(pejy_doc::SpreadRef::Doc(0), pejy_geom::Point::new(100.0, 150.0));
     s.pointer(&PointerEvent::new(PointerKind::Down, at.x, at.y), v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Up, at.x, at.y), v).unwrap();
     assert!(!s.tool_composing());
@@ -165,10 +165,10 @@ fn a_cancelled_gesture_puts_back_the_revision_and_leaves_a_saved_document_saved(
     assert_eq!(s.doc().unwrap().revision, before);
     assert!(!s.doc().unwrap().is_dirty());
     // …and any other cancelled gesture.
-    let preview = |t: &str| designcraft_tools::Action::Preview("text.insert".into(), json!({"text": t, "raw": true}));
-    s.run_actions(vec![designcraft_tools::Action::Begin("Type".into()), preview("x")]).unwrap();
+    let preview = |t: &str| pejy_tools::Action::Preview("text.insert".into(), json!({"text": t, "raw": true}));
+    s.run_actions(vec![pejy_tools::Action::Begin("Type".into()), preview("x")]).unwrap();
     seen.push(s.doc().unwrap().revision);
-    s.run_actions(vec![preview("xy"), designcraft_tools::Action::Cancel]).unwrap();
+    s.run_actions(vec![preview("xy"), pejy_tools::Action::Cancel]).unwrap();
     assert_eq!(s.doc().unwrap().revision, before);
     assert!(!s.doc().unwrap().is_dirty());
     assert_eq!(text(&mut s, sid), "雅");

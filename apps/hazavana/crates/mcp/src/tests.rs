@@ -27,7 +27,7 @@ fn initialize_negotiates_version() {
     let mut s = server();
     let r = rpc(&mut s, 1, "initialize", json!({"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}));
     assert_eq!(r["result"]["protocolVersion"], "2025-03-26");
-    assert_eq!(r["result"]["serverInfo"]["name"], "lightcraft");
+    assert_eq!(r["result"]["serverInfo"]["name"], "hazavana");
     assert!(r["result"]["capabilities"]["tools"].is_object());
     let r = rpc(&mut s, 2, "initialize", json!({"protocolVersion": "1999-01-01"}));
     assert_eq!(r["result"]["protocolVersion"], PROTOCOL_VERSION);
@@ -86,8 +86,8 @@ fn import_tool_copies_with_a_folder_template() {
     let _ = std::fs::remove_dir_all(&base);
     let (src, dest) = (base.join("card"), base.join("out"));
     std::fs::create_dir_all(&src).unwrap();
-    let img = lightcraft_raster::Rgba8 { width: 8, height: 8, data: vec![[20, 3, 9, 255]; 64] };
-    let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&img), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+    let img = hazavana_raster::Rgba8 { width: 8, height: 8, data: vec![[20, 3, 9, 255]; 64] };
+    let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&img), &hazavana_codecs::EncodeMeta::default()).unwrap();
     std::fs::write(src.join("a.png"), png).unwrap();
     file_dated_2026_01_14(&src.join("a.png"));
     let mut b = Headless::demo();
@@ -107,8 +107,8 @@ fn path_writes_never_replace_an_original() {
     let base = std::env::temp_dir().join(format!("lc-mcp-guard-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
     std::fs::create_dir_all(&base).unwrap();
-    let img = lightcraft_raster::Rgba8 { width: 8, height: 8, data: vec![[90, 30, 9, 255]; 64] };
-    let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&img), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+    let img = hazavana_raster::Rgba8 { width: 8, height: 8, data: vec![[90, 30, 9, 255]; 64] };
+    let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&img), &hazavana_codecs::EncodeMeta::default()).unwrap();
     let orig = base.join("a.png");
     std::fs::write(&orig, &png).unwrap();
     let mut b = Headless::demo();
@@ -129,7 +129,7 @@ fn path_writes_never_replace_an_original() {
 }
 
 /// Issue #181: a misspelled or unreadable `app.export` param is an error through the headless
-/// backend (what `lightcraft-cli run` and the MCP `export` tool use), not a silent default.
+/// backend (what `hazavana-cli run` and the MCP `export` tool use), not a silent default.
 #[test]
 fn export_refuses_unknown_params_and_bad_values() {
     let mut b = Headless::demo();
@@ -161,7 +161,7 @@ fn export_tool_forwards_its_advertised_options() {
 }
 
 /// Issue #236: `app.export {addToPhotos, photosAlbum}` through the headless backend (the MCP
-/// `export` tool, `lightcraft-cli run`): the files written go to Photos and the result says how
+/// `export` tool, `hazavana-cli run`): the files written go to Photos and the result says how
 /// it went; where Photos isn't (not macOS), it is refused before anything is written. A fake
 /// runner replaces the real one first: tests never start osascript or Photos.
 #[test]
@@ -172,7 +172,7 @@ fn export_adds_to_apple_photos_where_there_is_photos() {
     let c = calls.clone();
     b.session.apple_photos = Some(Arc::new(move |args: &[String], _| {
         c.lock().unwrap().push(args.to_vec());
-        Ok(lightcraft_engine::apple_photos::Output { status: Some(0), stdout: "ID-1/L0/001\n".into(), stderr: String::new() })
+        Ok(hazavana_engine::apple_photos::Output { status: Some(0), stdout: "ID-1/L0/001\n".into(), stderr: String::new() })
     }));
     let base = std::env::temp_dir().join(format!("lc-mcp-export-photos-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
@@ -195,7 +195,7 @@ fn export_adds_to_apple_photos_where_there_is_photos() {
     let _ = std::fs::remove_dir_all(&base);
 }
 
-/// Review of #236: a one-shot process (`lightcraft-cli run`, an MCP server reaching EOF) must not
+/// Review of #236: a one-shot process (`hazavana-cli run`, an MCP server reaching EOF) must not
 /// end in the middle of an Apple Photos import, abandoning osascript and the result. The test runs
 /// itself as a child process (`LC_PHOTOS_CHILD`): the child adds a file with a fake runner that
 /// takes a while and then leaves a marker, prints the reply and ends as the CLI does (dropping
@@ -210,11 +210,11 @@ fn a_one_shot_process_never_ends_during_a_photos_import() {
         let dir = std::path::PathBuf::from(dir);
         let file = dir.join("a.jpg");
         let marker = dir.join("imported");
-        let mut h = Headless::new(lightcraft_engine::Session::with_demo());
+        let mut h = Headless::new(hazavana_engine::Session::with_demo());
         h.session.apple_photos = Some(Arc::new(move |args: &[String], _| {
             std::thread::sleep(Duration::from_millis(400));
             std::fs::write(&marker, args.last().cloned().unwrap_or_default()).unwrap();
-            Ok(lightcraft_engine::apple_photos::Output { status: Some(0), stdout: "ID-1\n".into(), stderr: String::new() })
+            Ok(hazavana_engine::apple_photos::Output { status: Some(0), stdout: "ID-1\n".into(), stderr: String::new() })
         }));
         let mut p = json!({"paths": [file.to_string_lossy()]});
         if mode == "nowait" {
@@ -222,7 +222,7 @@ fn a_one_shot_process_never_ends_during_a_photos_import() {
         }
         let r = h.call("engine.execute", json!({"command": "export.addToPhotos", "params": p})).unwrap();
         println!("CHILD-REPLY {r}");
-        drop(h); // what lightcraft-cli does before it exits
+        drop(h); // what hazavana-cli does before it exits
         return;
     }
     for mode in ["default", "nowait"] {
@@ -260,8 +260,8 @@ fn import_tool_moves_with_a_folder_template() {
     let _ = std::fs::remove_dir_all(&base);
     let (src, dest) = (base.join("card"), base.join("out"));
     std::fs::create_dir_all(&src).unwrap();
-    let img = lightcraft_raster::Rgba8 { width: 8, height: 8, data: vec![[21, 3, 9, 255]; 64] };
-    let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&img), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+    let img = hazavana_raster::Rgba8 { width: 8, height: 8, data: vec![[21, 3, 9, 255]; 64] };
+    let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&img), &hazavana_codecs::EncodeMeta::default()).unwrap();
     std::fs::write(src.join("sample.png"), png).unwrap();
     file_dated_2026_01_14(&src.join("sample.png"));
     let mut b = Headless::demo();
@@ -337,7 +337,7 @@ fn resources() {
         let text = r["result"]["contents"][0]["text"].as_str().unwrap_or_else(|| panic!("{uri}: {r}"));
         serde_json::from_str::<Value>(text).unwrap();
     }
-    assert_eq!(rpc(&mut s, 99, "resources/read", json!({"uri": "lightcraft://nope"}))["error"]["code"], -32002);
+    assert_eq!(rpc(&mut s, 99, "resources/read", json!({"uri": "hazavana://nope"}))["error"]["code"], -32002);
 }
 
 /// `select_photos` with an id that is not in the library is a tool error, and the photo that was
@@ -388,14 +388,14 @@ fn core_tools_have_hints_and_reject_unknown_keys() {
         let writer = tools.iter().find(|t| t["name"] == "render_photo").unwrap();
         assert_eq!(writer["annotations"]["readOnlyHint"], false);
         let export = tools.iter().find(|t| t["name"] == "export").unwrap();
-        for key in lightcraft_engine::export::OPTION_PARAMS.iter().chain(lightcraft_engine::export::TARGET_PARAMS) {
+        for key in hazavana_engine::export::OPTION_PARAMS.iter().chain(hazavana_engine::export::TARGET_PARAMS) {
             assert!(export["inputSchema"]["properties"].get(*key).is_some(), "missing export argument {key}");
         }
-        let before = rpc(&mut s, 2, "resources/read", json!({"uri":"lightcraft://library"}));
+        let before = rpc(&mut s, 2, "resources/read", json!({"uri":"hazavana://library"}));
         let image = rpc(&mut s, 2, "tools/call", json!({"name":"render_preview","arguments":{"max_side":64}}));
         assert_eq!(image["result"]["isError"], false, "{image}");
         assert!(image["result"]["content"].as_array().unwrap().iter().any(|c| c["type"] == "image"));
-        assert_eq!(before, rpc(&mut s, 2, "resources/read", json!({"uri":"lightcraft://library"})));
+        assert_eq!(before, rpc(&mut s, 2, "resources/read", json!({"uri":"hazavana://library"})));
         let batch = json!({"steps":[{"id":"catalog.stats"},{"id":"no.such"},{"id":"catalog.stats"}],"stop_on_error":false});
         let r = rpc(&mut s, 3, "tools/call", json!({"name":"command_batch","arguments":batch}));
         assert_eq!(r["result"]["isError"], true);
@@ -414,7 +414,7 @@ fn core_resources_match_tools_after_parse_error() {
     assert_eq!(bad["error"]["code"], -32700);
     assert!(bad["id"].is_null());
     let list = rpc(&mut s, 1, "resources/list", json!({}));
-    for (uri, tool) in [("lightcraft://document", "doc_inspect"), ("lightcraft://commands", "command_list")] {
+    for (uri, tool) in [("hazavana://document", "doc_inspect"), ("hazavana://commands", "command_list")] {
         assert!(list["result"]["resources"].as_array().unwrap().iter().any(|r| r["uri"] == uri));
         let resource = rpc(&mut s, 2, "resources/read", json!({"uri":uri}));
         let call = rpc(&mut s, 3, "tools/call", json!({"name":tool,"arguments":{}}));
@@ -422,7 +422,7 @@ fn core_resources_match_tools_after_parse_error() {
         let b: Value = serde_json::from_str(call["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
         assert_eq!(a, b);
     }
-    let old = rpc(&mut s, 4, "resources/read", json!({"uri":"lightcraft://library"}));
+    let old = rpc(&mut s, 4, "resources/read", json!({"uri":"hazavana://library"}));
     assert!(old["result"]["contents"].is_array(), "{old}");
 }
 
@@ -463,7 +463,7 @@ fn modern_requests_receive_result_and_cache_fields() {
         ("tools/list", json!({})),
         ("resources/list", json!({})),
         ("resources/templates/list", json!({})),
-        ("resources/read", json!({"uri":"lightcraft://library"})),
+        ("resources/read", json!({"uri":"hazavana://library"})),
     ] {
         params["_meta"] = meta.clone();
         let r = rpc(&mut s, 1, method, params);

@@ -3083,6 +3083,9 @@ impl eframe::App for TaratasyApp {
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        // Mahay's update bar (an overlay; Android's shell draws its own).
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        mahay_about::banner(&ctx);
         i18n::set_current(i18n::Lang::from_pref(&self.language));
         // Fonts registered via set_fonts only take effect next frame; named families would panic now.
         if !self.fonts_ready {

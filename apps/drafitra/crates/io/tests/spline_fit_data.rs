@@ -1,14 +1,14 @@
 //! SPLINE fit data in DXF: fit tolerance (group 44) and end tangents (12/13) are written and read
 //! back; the knot parametrisation, which DXF does not store, is recovered from the knots (#408).
 
-use cadcraft_doc::{Common, Drawing, EntityKind, Space};
-use cadcraft_geom::{FitOptions, KnotParam, Spline, Vec2};
+use drafitra_doc::{Common, Drawing, EntityKind, Space};
+use drafitra_geom::{FitOptions, KnotParam, Spline, Vec2};
 
 fn roundtrip(sp: &Spline) -> Spline {
     let mut d = Drawing::new_metric();
     d.add(&Space::Model, Common::default(), EntityKind::Spline(sp.clone())).unwrap();
-    let bytes = cadcraft_io::write(&d, "a.dxf").unwrap();
-    let back = cadcraft_io::read(&bytes, "a.dxf").unwrap();
+    let bytes = drafitra_io::write(&d, "a.dxf").unwrap();
+    let back = drafitra_io::read(&bytes, "a.dxf").unwrap();
     let Some(EntityKind::Spline(r)) = back.model.iter().map(|e| e.kind.clone()).next() else { panic!("no spline") };
     r
 }
@@ -49,7 +49,7 @@ fn fit_data_is_written_with_the_documented_groups() {
     );
     let mut d = Drawing::new_metric();
     d.add(&Space::Model, Common::default(), EntityKind::Spline(sp)).unwrap();
-    let text = String::from_utf8(cadcraft_io::write(&d, "a.dxf").unwrap()).unwrap();
+    let text = String::from_utf8(drafitra_io::write(&d, "a.dxf").unwrap()).unwrap();
     let spline = &text[text.find("AcDbSpline").unwrap()..];
     let spline = &spline[..spline.find("\r\n  0\r\n").unwrap()];
     assert!(spline.contains(" 44\r\n0.25\r\n"), "fit tolerance");
@@ -58,7 +58,7 @@ fn fit_data_is_written_with_the_documented_groups() {
     // A fit spline whose stored knots don't match its control points is rebuilt from the fit
     // data, tangents included.
     let dxf = "0\r\nSECTION\r\n2\r\nENTITIES\r\n0\r\nSPLINE\r\n8\r\n0\r\n100\r\nAcDbSpline\r\n70\r\n8\r\n71\r\n3\r\n74\r\n3\r\n12\r\n0.0\r\n22\r\n1.0\r\n32\r\n0.0\r\n11\r\n0.0\r\n21\r\n0.0\r\n31\r\n0.0\r\n11\r\n4.0\r\n21\r\n0.0\r\n31\r\n0.0\r\n11\r\n8.0\r\n21\r\n2.0\r\n31\r\n0.0\r\n0\r\nENDSEC\r\n0\r\nEOF\r\n";
-    let back = cadcraft_io::read(dxf.as_bytes(), "b.dxf").unwrap();
+    let back = drafitra_io::read(dxf.as_bytes(), "b.dxf").unwrap();
     let Some(EntityKind::Spline(r)) = back.model.iter().map(|e| e.kind.clone()).next() else { panic!("no spline") };
     assert!(r.is_valid() && r.fit_opts.start_tangent == Some(Vec2::Y) && r.control.len() == 4);
 }

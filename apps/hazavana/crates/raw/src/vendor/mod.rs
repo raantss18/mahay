@@ -28,7 +28,7 @@ mod sr2;
 pub mod srw;
 
 use crate::{BlackLevel, Cfa, Rect};
-use lightcraft_tiff::Tiff;
+use hazavana_tiff::Tiff;
 use std::ops::Range;
 
 /// Exif `CFAPattern`.

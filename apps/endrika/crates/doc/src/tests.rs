@@ -1,5 +1,5 @@
 use super::*;
-use figcraft_geom::Point;
+use endrika_geom::Point;
 
 fn page(doc: &Document) -> NodeId {
     doc.first_page().unwrap()
@@ -200,13 +200,13 @@ fn text_case() {
 #[test]
 fn vector_network_paths() {
     let net = VectorNetwork::from_points(&[Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(10.0, 10.0)], true);
-    use figcraft_geom::Shape;
+    use endrika_geom::Shape;
     assert!((net.fill_path().area().abs() - 50.0).abs() < 1e-9);
     let open = VectorNetwork::from_points(&[Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(10.0, 10.0)], false);
     assert!(open.fill_path().elements().is_empty());
     assert_eq!(open.stroke_path().segments().count(), 2);
     // Round-trip a bezier path.
-    let rr = figcraft_geom::rounded_rect(40.0, 20.0, [5.0; 4], 0.0);
+    let rr = endrika_geom::rounded_rect(40.0, 20.0, [5.0; 4], 0.0);
     let n2 = VectorNetwork::from_path(&rr);
     assert!((n2.fill_path().area() - rr.area()).abs() < 1e-6);
     let mut bad = VectorNetwork {

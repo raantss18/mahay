@@ -2,7 +2,7 @@
 //! prefixed `fxl_`): Apply Color LUT, OCIO CDL / Color Space / Display / File / Look Transform
 //! and Color Profile Converter; Lumetri Color's Input LUT and Look also use the LUT helpers.
 //!
-//! Each effect compiles to a colour program ([`effectcraft_effects::color_program`]: transfer
+//! Each effect compiles to a colour program ([`tselatra_effects::color_program`]: transfer
 //! functions, matrices, ASC CDLs, tone mapping, gamut compression, LUTs) built next to the CPU
 //! effect, which `fxl_point` interprets per pixel. LUTs (1D tables and 3D lattices, with a
 //! cineSpace shaper) travel in the kernel's storage buffer and are interpolated in the kernel
@@ -15,7 +15,7 @@
 //! LUTs and matrices, built-in curves, with colour space / look / display-view transforms
 //! resolved) to the same program; one longer than the kernel's 255 ops renders on the CPU.
 
-use effectcraft_effects::{ColorOp, EffectCtx, Lut, Straight, Tf};
+use tselatra_effects::{ColorOp, EffectCtx, Lut, Straight, Tf};
 
 use crate::context::{Enc, Params};
 use crate::effects::GBuf;
@@ -39,7 +39,7 @@ const MAX_FLOATS: usize = 1 << 24;
 
 /// Run effect `id` (one of [`IDS`]); `None` = this parameter combination runs on the CPU.
 pub(crate) fn apply(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
-    let (ops, straight) = effectcraft_effects::color_program(id, ctx)?;
+    let (ops, straight) = tselatra_effects::color_program(id, ctx)?;
     if ops.is_empty() {
         return Some(b);
     }

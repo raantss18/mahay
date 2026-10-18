@@ -11,7 +11,7 @@ use std::hash::{Hash, Hasher};
 use std::sync::Mutex;
 
 use serde_json::{Value, json};
-use vectorcraft_geom::{FillRule, PathData, Rect};
+use tsipika_geom::{FillRule, PathData, Rect};
 
 use crate::objects::{decode, output_geometry};
 use crate::{Error, Kind, Limits, Result, registry};

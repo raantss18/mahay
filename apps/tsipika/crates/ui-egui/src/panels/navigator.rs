@@ -7,10 +7,10 @@ use std::sync::Arc;
 
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::json;
-use vectorcraft_geom::{Point, Rect as DRect};
+use tsipika_geom::{Point, Rect as DRect};
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::TsipikaApp;
 use crate::theme::Tokens;
 use crate::thumb_worker::{Settle, ThumbWorker};
 use crate::widgets::{self, menu_item};
@@ -53,7 +53,7 @@ thread_local! {
 
 impl Cache {
     /// Upload image `r` showing `key` over `region`.
-    fn upload(&mut self, ctx: &egui::Context, key: ImageKey, region: DRect, r: &vectorcraft_render::Rendered, ms: f64) {
+    fn upload(&mut self, ctx: &egui::Context, key: ImageKey, region: DRect, r: &tsipika_render::Rendered, ms: f64) {
         let img = egui::ColorImage::from_rgba_premultiplied([r.width as usize, r.height as usize], &r.pixels);
         match &mut self.tex {
             Some(tx) => tx.set(img, egui::TextureOptions::LINEAR),
@@ -67,7 +67,7 @@ impl Cache {
     /// The region (artboards, and the art unless `artboard_only`, with a margin) to show
     /// `doc` (`uid` at `revision`) in. While `busy` (a drag) the last one of the document stays,
     /// rather than walking the whole document every frame.
-    fn region(&mut self, doc: &vectorcraft_doc::Document, uid: u64, revision: u64, artboard_only: bool, busy: bool) -> DRect {
+    fn region(&mut self, doc: &tsipika_doc::Document, uid: u64, revision: u64, artboard_only: bool, busy: bool) -> DRect {
         let key = (uid, revision, artboard_only);
         if let Some((k, r)) = self.region
             && (k == key || (busy && k.0 == uid && k.2 == artboard_only))
@@ -86,7 +86,7 @@ impl Cache {
     /// Bring the image up to `key` (`doc` over `region`): heavy documents render on the worker
     /// while the last image stays, and nothing renders during a drag (`busy`) or before the
     /// document has settled, unless there's no image of it yet.
-    fn update(&mut self, ctx: &egui::Context, doc: &Arc<vectorcraft_doc::Document>, key: ImageKey, region: DRect, busy: bool) {
+    fn update(&mut self, ctx: &egui::Context, doc: &Arc<tsipika_doc::Document>, key: ImageKey, region: DRect, busy: bool) {
         if !self.worker_started {
             self.worker_started = true;
             self.worker = ThumbWorker::spawn(ctx, "navigator");
@@ -120,7 +120,7 @@ impl Cache {
         let s = (key.w as f64 / region.width()).min(key.h as f64 / region.height());
         // As exported (template layers and guides left out), transparent; images far smaller than
         // they are sample their mip levels.
-        let opts = vectorcraft_render::RenderOptions { skip_templates: true, image_mips: true, ..Default::default() };
+        let opts = tsipika_render::RenderOptions { skip_templates: true, image_mips: true, ..Default::default() };
         let heavy = self.last_ms > HEAVY_MS && have;
         if heavy && let Some(w) = &self.worker {
             let (doc, opts) = (doc.clone(), opts.clone());
@@ -138,7 +138,7 @@ impl Cache {
 
 thread_local! {
     /// Renders light documents' images on the UI thread.
-    static NAV_RENDERER: std::cell::RefCell<vectorcraft_render::Renderer> = std::cell::RefCell::new(vectorcraft_render::Renderer::new());
+    static NAV_RENDERER: std::cell::RefCell<tsipika_render::Renderer> = std::cell::RefCell::new(tsipika_render::Renderer::new());
 }
 
 /// Map a document point into the thumbnail rect (region → rect, aspect preserved).
@@ -197,7 +197,7 @@ pub fn slider_to_zoom(t: f64) -> f64 {
     (3.13f64.ln() + t.clamp(0.0, 1.0) * (64000f64.ln() - 3.13f64.ln())).exp()
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
         super::empty_state(ui, "map", tl!("No document"), tl!("Open a document to navigate it."));
@@ -278,7 +278,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(_app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(_app: &mut TsipikaApp, ui: &mut Ui) {
     let ab: bool = pstate(ui.ctx(), "nav-ab-only");
     if menu_item(ui, tl!("View Artboard Only"), true, ab) {
         set_pstate(ui.ctx(), "nav-ab-only", !ab);
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn screen_readers_get_the_zoom_the_field_shows() {
         use crate::widgets::accessibility_tests::{slider_value, tree};
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = TsipikaApp::new(tsipika_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("view.setZoom", json!({"zoom": 250})).unwrap();
         let shown = tree(|ui| show(&mut app, ui));
@@ -316,8 +316,8 @@ mod tests {
     /// mapped into the document and then into the thumbnail.
     #[test]
     fn the_view_box_turns_with_the_view() {
-        use vectorcraft_engine::Session;
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        use tsipika_engine::Session;
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
         let canvas = Rect::from_min_size(pos2(0.0, 0.0), vec2(600.0, 400.0));
         app.canvas_rect = Some(canvas);
@@ -368,13 +368,13 @@ mod tests {
 
     #[test]
     fn no_image_is_rendered_during_a_drag_and_one_is_after_it() {
-        use vectorcraft_engine::Session;
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        use tsipika_engine::Session;
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
         app.session.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
         // One context, so its clock runs on (1/60 s a pass) and the document can settle.
         let ctx = egui::Context::default();
-        let frame = |app: &mut VectorcraftApp| {
+        let frame = |app: &mut TsipikaApp| {
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| show(app, ui));
             out.textures_delta.clear();
         };

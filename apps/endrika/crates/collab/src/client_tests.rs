@@ -1,7 +1,7 @@
 //! A client's handling of the host's messages: sequence numbers and batch ids come from the host,
 //! so they are treated as hostile input (they must never overflow).
 
-use figcraft_doc::NodeKind;
+use endrika_doc::NodeKind;
 
 use crate::message::{Accepted, ClientMsg, Hello, ServerMsg};
 use crate::sim_tests::base;

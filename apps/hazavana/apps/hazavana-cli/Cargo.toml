@@ -1,0 +1,39 @@
+[package]
+name = "hazavana-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Hazavana command-line tool: headless render, command listing and the MCP server"
+
+[[bin]]
+name = "hazavana-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+hazavana-engine = { workspace = true }
+hazavana-denoise = { workspace = true }
+hazavana-sysmem = { workspace = true }
+hazavana-mcp = { workspace = true }
+hazavana-ui-egui = { workspace = true }
+hazavana-codecs = { workspace = true }
+hazavana-raster = { workspace = true }
+hazavana-merge = { workspace = true }
+serde_json = { workspace = true }
+dhat = { workspace = true, optional = true }
+
+[features]
+default = ["denoise"]
+denoise = ["hazavana-engine/denoise"]
+rawnind-model = ["denoise", "hazavana-engine/rawnind-model"]
+# Heap profiling: `cargo run --release -p hazavana-cli --features dhat-heap -- snapshot …` counts
+# every allocation (live/peak bytes in `library.memory` / `ui.inspect`) and writes dhat-heap.json
+# (open it in DHAT's viewer: allocation sites by bytes at the peak). Slows allocation-heavy work.
+dhat-heap = ["dep:dhat"]
+
+# Open HEIC/HEIF photos (the optional hazavana-heif crate). Not default so distributors choose
+# it (HEVC patents); build with `--features heif` to include it.
+heif = ["hazavana-codecs/heif"]

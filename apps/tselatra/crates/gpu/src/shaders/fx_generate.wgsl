@@ -1,5 +1,5 @@
 // GPU effects (generate family): see src/fx_generate.rs. Each entry point mirrors the CPU effect in
-// effectcraft-effects operation for operation; parameter layouts are documented per entry.
+// tselatra-effects operation for operation; parameter layouts are documented per entry.
 //
 // Hard edges (wipes) take per-column and per-row terms computed in f64 on the CPU and uploaded
 // as (hi, lo) f32 pairs in `data`: near an edge the hi parts cancel exactly, so the edge sits

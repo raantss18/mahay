@@ -2,7 +2,7 @@
 //! width. Sections fill the frame and hold a container with a maximum width, so the desktop frame
 //! can be resized; the phone frame is the same page built with its rows stacked.
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::{Value, json};
 
 use super::glyphs::{self, Glyph};

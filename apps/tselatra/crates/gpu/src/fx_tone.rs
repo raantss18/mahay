@@ -9,8 +9,8 @@
 //! Levels / Contrast / Color and Equalize measure the frame's histograms on the CPU (the image
 //! is read back for that) and apply the correction on the GPU.
 
-use effectcraft_color::rgb_to_hsl;
-use effectcraft_effects::EffectCtx;
+use tselatra_color::rgb_to_hsl;
+use tselatra_effects::EffectCtx;
 
 use crate::context::{Enc, Params};
 use crate::effects::{GBuf, gaussian_blur};
@@ -63,9 +63,9 @@ pub(crate) fn invert(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 fn shadow_highlight(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let pr = ctx.params;
     let src = e.download(&b.img)?;
-    let (s_amt, h_amt) = effectcraft_effects::shadow_highlight_amounts(ctx, &src);
+    let (s_amt, h_amt) = tselatra_effects::shadow_highlight_amounts(ctx, &src);
     let (bc, wc) = (pr.f("moreOptions/blackClip").clamp(0.0, 49.0) / 100.0, pr.f("moreOptions/whiteClip").clamp(0.0, 49.0) / 100.0);
-    let clip0 = (bc > 0.0 || wc > 0.0).then(|| effectcraft_effects::luma_clip_points(&src, bc, wc));
+    let clip0 = (bc > 0.0 || wc > 0.0).then(|| tselatra_effects::luma_clip_points(&src, bc, wc));
     let s_r = pr.f("moreOptions/shadowRadius").max(0.0) * b.scale / 2.0;
     let h_r = pr.f("moreOptions/highlightRadius").max(0.0) * b.scale / 2.0;
     let (w, h) = (b.img.width, b.img.height);
@@ -88,7 +88,7 @@ fn shadow_highlight(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     e.pixels("fxt_point", &p, &b.img, Some(&bases), &out, None);
     let Some((lo0, hi0)) = clip0 else { return Some(GBuf { img: out, ..b }) };
     let adjusted = e.download(&out)?;
-    let (lo1, hi1) = effectcraft_effects::luma_clip_points(&adjusted, bc, wc);
+    let (lo1, hi1) = tselatra_effects::luma_clip_points(&adjusted, bc, wc);
     if (lo0, hi0) == (lo1, hi1) || hi1 - lo1 <= 1e-3 {
         return Some(GBuf { img: out, ..b });
     }
@@ -107,7 +107,7 @@ pub(crate) fn hue_saturation(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GB
     let pr = ctx.params;
     let f = |id: String, d: f64| pr.get(&id).map(|v| v.as_f64()).unwrap_or(d) as f32;
     let mut data = vec![];
-    for (r, _, c) in effectcraft_effects::HUESAT_RANGES {
+    for (r, _, c) in tselatra_effects::HUESAT_RANGES {
         let range = [
             f(format!("{r}RangeStart"), c - 15.0),
             f(format!("{r}RangeEnd"), c + 15.0),
@@ -133,7 +133,7 @@ pub(crate) fn hue_saturation(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GB
 /// `pointwise` kernel).
 pub(crate) fn levels(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let pr = ctx.params;
-    let (cb, cw) = effectcraft_effects::levels_clip(ctx);
+    let (cb, cw) = tselatra_effects::levels_clip(ctx);
     let mut data = vec![
         pr.f("inBlack") as f32,
         pr.f("inWhite") as f32,
@@ -143,7 +143,7 @@ pub(crate) fn levels(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         cb as u32 as f32,
         cw as u32 as f32,
     ];
-    for (v, (cb, cw)) in effectcraft_effects::levels_channel_settings(ctx) {
+    for (v, (cb, cw)) in tselatra_effects::levels_channel_settings(ctx) {
         data.extend(v);
         data.extend([cb as u32 as f32, cw as u32 as f32]);
     }
@@ -193,7 +193,7 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
             if lv.iter().all(ident) {
                 return Some(b);
             }
-            let (cb, cw) = effectcraft_effects::levels_clip(ctx);
+            let (cb, cw) = tselatra_effects::levels_clip(ctx);
             let mut d = vec![];
             for l in &lv {
                 d.extend(l);
@@ -212,8 +212,8 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
         }
         "ec.color.photofilter" => {
             let fi = pr.e("filter");
-            let c = match effectcraft_effects::PHOTO_FILTERS.get(fi as usize) {
-                Some((_, rgb)) if fi != effectcraft_effects::PHOTO_FILTER_CUSTOM => rgb.map(|v| v as f32 / 255.0),
+            let c = match tselatra_effects::PHOTO_FILTERS.get(fi as usize) {
+                Some((_, rgb)) if fi != tselatra_effects::PHOTO_FILTER_CUSTOM => rgb.map(|v| v as f32 / 255.0),
                 _ => {
                     let c = pr.color("color");
                     [c[0], c[1], c[2]]
@@ -326,8 +326,8 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
                 return Some(b);
             }
             let img = e.download(&b.img)?;
-            let cpu = effectcraft_effects::Buf { img, offset: b.offset, scale: b.scale };
-            let Some(maps) = effectcraft_effects::color_stabilizer_maps(ctx, &cpu) else { return Some(b) };
+            let cpu = tselatra_effects::Buf { img, offset: b.offset, scale: b.scale };
+            let Some(maps) = tselatra_effects::color_stabilizer_maps(ctx, &cpu) else { return Some(b) };
             let mut d = vec![];
             for m in &maps {
                 d.push(m.len() as f32);
@@ -358,7 +358,7 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
                     return Some(b);
                 }
                 let style = pr.e("style");
-                let tables = effectcraft_effects::equalize_tables(&img, style);
+                let tables = tselatra_effects::equalize_tables(&img, style);
                 p.u[0] = [17, style, tables.first().map_or(0, |t| t.len()) as u32, 0];
                 p.f[0][0] = amt;
                 data = Some(tables.concat());
@@ -368,7 +368,7 @@ fn point(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
                     "ec.color.autocontrast" => 1,
                     _ => 2,
                 };
-                let (ranges, gam) = effectcraft_effects::auto_correct_settings(ctx, &img, kind);
+                let (ranges, gam) = tselatra_effects::auto_correct_settings(ctx, &img, kind);
                 p.u[0][0] = 16;
                 p.f[0] = [ranges[0].0, ranges[1].0, ranges[2].0, 0.0];
                 p.f[1] = [ranges[0].1, ranges[1].1, ranges[2].1, 0.0];

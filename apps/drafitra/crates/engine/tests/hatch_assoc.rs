@@ -2,9 +2,9 @@
 //! boundary fill the hatch again; erasing an island lets the hatch fill it; erasing or opening
 //! the outer boundary, or moving the hatch on its own, ends the link.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::doc::{EntityKind, Handle, Hatch, HatchLoop};
-use cadcraft_engine::geom::{Bounds2, PolyVertex, Polyline, Vec2, shoelace};
+use drafitra_engine::Session;
+use drafitra_engine::doc::{EntityKind, Handle, Hatch, HatchLoop};
+use drafitra_engine::geom::{Bounds2, PolyVertex, Polyline, Vec2, shoelace};
 use serde_json::{Value, json};
 
 fn hatch(s: &Session, h: &str) -> Hatch {

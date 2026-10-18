@@ -6,14 +6,14 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::headless::Headless;
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn demo() -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, [1400.0, 2400.0], 1.0);
     let r = h.request("ui.set", json!({"view": "detail", "right": "edit"}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -85,7 +85,7 @@ fn the_eye_hides_a_wheel_for_viewing_only_and_resets_on_another_photo() {
     assert_eq!(h.app.ui.grading_hidden_for(id), [false; 3]);
     // hidden state belongs to one photo
     h.app.ui.set_grading_hidden(id, 0, true);
-    let other = lightcraft_catalog::PhotoId(id.0 + 1);
+    let other = hazavana_catalog::PhotoId(id.0 + 1);
     assert_eq!(h.app.ui.grading_hidden_for(other), [false; 3]);
 }
 

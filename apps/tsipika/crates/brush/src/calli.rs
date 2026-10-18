@@ -9,9 +9,9 @@
 //! pressure recorded on it (`StrokeLayer::pressure`): the sweep is sampled densely and each
 //! sample takes the nib for the pressure there.
 
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{Node, PressureProfile, StrokeLayer};
-use vectorcraft_geom::{BezPath, PathData, Point, SubPath, Vec2};
+use tsipika_color::Paint;
+use tsipika_doc::{Node, PressureProfile, StrokeLayer};
+use tsipika_geom::{BezPath, PathData, Point, SubPath, Vec2};
 
 use crate::track::{Rng, Track, normal, seed_of, tracks};
 use crate::{Bristle, BristleShape, Calligraphic, Variation, filled, tolerance};

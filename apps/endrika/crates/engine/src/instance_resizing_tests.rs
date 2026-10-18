@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 
 use crate::Session;
 use crate::components::tests::{copy_of, ex, healthy, idv, node};
-use figcraft_doc::*;
+use endrika_doc::*;
 
 /// A "Field" component: a 240×40 fixed horizontal auto layout frame (no padding or gap) holding
 /// "Atom", an auto layout frame hugging its 20×20 "Dot" with a min width of 100; and an instance of
@@ -136,9 +136,9 @@ fn resizing_overrides_survive_save_and_reopen() {
     let (ia, idot) = (copy_of(&s, i, atom), copy_of(&s, i, dot));
     ex(&mut s, "node.set", json!({"id": ia, "props": {"sizingH": "fill"}}));
     ex(&mut s, "node.set", json!({"id": idot, "props": {"width": 40}}));
-    let native = figcraft_format::save_bytes(s.doc().unwrap(), None).unwrap();
-    let (fig, _) = figcraft_format::fig::export(s.doc().unwrap(), None).unwrap();
-    for (bytes, name) in [(native, "field.figcraft"), (fig, "field.fig")] {
+    let native = endrika_format::save_bytes(s.doc().unwrap(), None).unwrap();
+    let (fig, _) = endrika_format::fig::export(s.doc().unwrap(), None).unwrap();
+    for (bytes, name) in [(native, "field.endrika"), (fig, "field.fig")] {
         let mut s = Session::new();
         open(&mut s, &bytes, name);
         let i = instance(&s);

@@ -3,12 +3,12 @@
 //! Keyframe times are stored in **layer time** (they move with the layer), so evaluating a
 //! property at comp time `t` first maps `t` through the layer's start time and stretch.
 
-use effectcraft_geom::{Mat3, Mat4, Vec3, vec2, vec3};
-use effectcraft_keyframe::Value;
-use effectcraft_project::{Comp, ItemId, Layer, LayerId, LayerSource, Project, PropGroup, Property};
-use effectcraft_time::Tick;
+use tselatra_geom::{Mat3, Mat4, Vec3, vec2, vec3};
+use tselatra_keyframe::Value;
+use tselatra_project::{Comp, ItemId, Layer, LayerId, LayerSource, Project, PropGroup, Property};
+use tselatra_time::Tick;
 
-/// Expression evaluation hook (implemented by `effectcraft-expr`).
+/// Expression evaluation hook (implemented by `tselatra-expr`).
 pub trait ExprHost: Send + Sync {
     /// Evaluate the expression of `prop` (on `layer`, comp time `t`), given the keyframed value.
     fn eval(&self, ctx: &EvalCtx, layer: &Layer, prop: &Property, value: &Value) -> Result<Value, String>;
@@ -141,9 +141,9 @@ impl<'a> EvalCtx<'a> {
     pub fn par_ratio(&self, layer: &Layer) -> f64 {
         let par = match &layer.source {
             LayerSource::Footage { item } | LayerSource::Solid { item } | LayerSource::Comp { item } => match self.project.item(*item).map(|i| &i.kind) {
-                Some(effectcraft_project::ItemKind::Footage(f)) => f.pixel_aspect,
-                Some(effectcraft_project::ItemKind::Solid(s)) => s.pixel_aspect,
-                Some(effectcraft_project::ItemKind::Comp(c)) => c.pixel_aspect,
+                Some(tselatra_project::ItemKind::Footage(f)) => f.pixel_aspect,
+                Some(tselatra_project::ItemKind::Solid(s)) => s.pixel_aspect,
+                Some(tselatra_project::ItemKind::Comp(c)) => c.pixel_aspect,
                 _ => 1.0,
             },
             _ => 1.0,
@@ -309,7 +309,7 @@ pub fn responsive_source_time(comp: &Comp, stretch: f64, elapsed: f64) -> Option
     Some(Tick::from_seconds_f64(d + (elapsed - pos) / k))
 }
 
-/// A layer's effect bounds ([`effectcraft_effects::EffectCtx::layer_size`]) and their top-left
+/// A layer's effect bounds ([`tselatra_effects::EffectCtx::layer_size`]) and their top-left
 /// corner in layer coordinates: the source rectangle at (0, 0), or for layers without one
 /// (shape, text) a comp-sized rectangle centred on the layer's origin, which their content
 /// surrounds. Effects work in **effect space**, measured from that corner (After Effects' layer

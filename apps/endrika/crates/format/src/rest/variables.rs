@@ -5,8 +5,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_doc::color::PaintKind;
-use figcraft_doc::{
+use endrika_doc::color::PaintKind;
+use endrika_doc::{
     ALL_SCOPES, CODE_PLATFORMS, Collection, Mode, Node, NodeKind, Variable, VariableType, VariableValue, Variables, normalize_scopes,
 };
 use serde_json::{Map, Value, json};

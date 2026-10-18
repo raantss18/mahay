@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** major (full re-measure against Premiere Pro 2026 26.5.2; replaces the scorecard and estimate that lived in ROADMAP.md) · **Target:** Adobe Premiere Pro 2026 (26.5.2, macOS)
 
-The authoritative assessment of how close FilmCraft is to Premiere Pro, and how much work is left.
+The authoritative assessment of how close Hetsika is to Premiere Pro, and how much work is left.
 [ROADMAP.md](../ROADMAP.md) summarizes it; [gaps.md](gaps.md) lists every shortfall one at a time.
 The deep checklists are [file-format-parity.md](file-format-parity.md),
 [codec-parity.md](codec-parity.md), [hardware-parity.md](hardware-parity.md),
@@ -232,7 +232,7 @@ Discounts for what still stops real work:
   projects, not XML); AAF / OMF never validated in Avid / Pro Tools; FCP7 XML / OTIO do work.
 
 74.8 × 0.90 × 0.92 × 0.88 = **54.5% ≈ ~55%.** It is not higher than the full number, unlike most
-Craft apps: the parts the mainstream number leaves out (plugins, AI, localization) weigh only
+Mahay apps: the parts the mainstream number leaves out (plugins, AI, localization) weigh only
 ~12% in the full number, while the three discounts hit exactly what a working editor meets every
 week. Raising it means fixing [G2](gaps.md#g2-premieres-prproj-cannot-be-opened),
 [G3](gaps.md#g3-10-bit-and-422-camera-media-needs-hardware),
@@ -283,7 +283,7 @@ from" phrases, then read by hand):
   on it" (#227), "impressive otherwise" (#208), "Great project guys" (#451). Several of them pair
   the praise with a bug ("great project although it obviously has a lot of bugs", #455).
 - **Switched from Premiere:** **0** reports of having switched. Two people describe testing it as
-  an alternative or hoping to leave Adobe (#411 "testing FilmCraft as an alternative workflow to
+  an alternative or hoping to leave Adobe (#411 "testing Hetsika as an alternative workflow to
   Adobe Premiere", #325 "finally moving away from adobe would be a god send").
 - **Open issues:** 202 open from non-maintainers; by title, ~93 are bug reports, of which **~64
   are core-path** (launch, import, playback, timeline, audio, export) and ~29 niche; ~109 are
@@ -298,7 +298,7 @@ niche requests among the bug reports about two to one, and nobody reports having
 **Alpha.** It passes the core-workflow gate ([roadmap.md](roadmap.md#alpha-gate): all six of Premiere's core daily workflows work end to end on macOS and the project saves and reopens). Core workflows run end to end (import, edit, trim, colour, mix, caption, deliver,
 round-trip through XML / AAF), but ready-for-real-work is ~56%, below the ~75% beta bar, and the
 standard's beta condition "opens and saves the target's main format reliably" fails outright:
-FilmCraft cannot open a `.prproj` (it reads Premiere's FCP7 XML / AAF / OTIO exports instead).
+Hetsika cannot open a `.prproj` (it reads Premiere's FCP7 XML / AAF / OTIO exports instead).
 Distance to beta: ~19 points of ready-for-real-work plus `.prproj` import, ~400–700 agent-hours:
 
 | To reach beta | Hours |

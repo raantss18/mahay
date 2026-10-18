@@ -16,7 +16,7 @@ fn caps(faces: &[Face]) -> impl Iterator<Item = &Face> {
 }
 
 fn area(face: &Face) -> f64 {
-    use vectorcraft_geom::Shape;
+    use tsipika_geom::Shape;
     face.path().to_bezpath().area().abs()
 }
 
@@ -108,7 +108,7 @@ fn caps_share_surface_limits_and_malformed_inputs_stay_bounded() {
 
 #[test]
 fn caps_are_single_curved_paths_and_body_rims_share_their_exact_curves() {
-    use vectorcraft_geom::PathSeg;
+    use tsipika_geom::PathSeg;
     let (path, bounds) = cylinder();
     for smooth_shading in [false, true] {
         for angle in [90.0, 270.0, 360.0] {
@@ -173,7 +173,7 @@ fn cap_centers_follow_the_projected_axis_at_wide_perspective_angles() {
 
 #[test]
 fn capped_visibility_matches_painted_surfaces_above_below_and_for_major_sectors() {
-    use vectorcraft_geom::Shape;
+    use tsipika_geom::Shape;
     let (path, bounds) = cylinder();
     for edge in [Edge::Left, Edge::Right] {
         for (angle, rotation_x, perspective, smooth_shading) in

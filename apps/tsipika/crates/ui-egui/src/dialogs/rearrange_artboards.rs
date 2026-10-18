@@ -8,11 +8,11 @@
 //! `rightToLeft`), `columns` (the rows of a grid by column), `spacing` (pt) and `moveArtwork`.
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::newdoc::ArtboardLayout;
+use tsipika_engine::cmd::newdoc::ArtboardLayout;
 
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{TsipikaApp, widgets};
 
 /// The dialog kind of Rearrange All Artboards.
 pub const KIND: &str = "rearrangeArtboards";
@@ -55,7 +55,7 @@ fn params(d: &Dialog) -> Value {
     })
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut TsipikaApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.general_unit();
     let n = app.session.active().map_or(0, |doc| doc.doc.artboards.len());
     let layout = ArtboardLayout::parse(&d.str("layout")).unwrap_or_default();
@@ -109,18 +109,18 @@ fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     false
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut TsipikaApp, d: &Dialog) -> Result<Value, String> {
     run_and_close(app, CMD, params(d))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     /// A frame of the open dialog with `events` → the texts painted. The dialog measures itself on
     /// its first frame, so a fresh context needs two.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<String> {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<String> {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
         out.shapes.iter().filter_map(|s| if let egui::epaint::Shape::Text(t) = &s.shape { Some(t.galley.text().to_string()) } else { None }).collect()
@@ -132,7 +132,7 @@ mod tests {
         ctx
     }
 
-    fn origins(app: &VectorcraftApp) -> Vec<(f64, f64)> {
+    fn origins(app: &TsipikaApp) -> Vec<(f64, f64)> {
         app.session.active().unwrap().doc.artboards.iter().map(|a| (a.rect.x0, a.rect.y0)).collect()
     }
 
@@ -140,7 +140,7 @@ mod tests {
     /// by column; OK lays the artboards out right to left, as one undo step.
     #[test]
     fn opens_from_the_menu_and_rearranges_by_layout_and_order() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 50, "artboards": 3})).unwrap();
         // The menu item has no params of its own: it opens this dialog, not the generic one.
         let (id, p) = crate::menus::click_target("Rearrange All Artboards…", CMD, &Value::Null);
@@ -172,7 +172,7 @@ mod tests {
     /// Clicking the layout and order toggles sets the fields (the toggles' rects from the frame).
     #[test]
     fn the_toggles_set_layout_and_order() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 50, "artboards": 4})).unwrap();
         app.run("ui.menuDialog", json!({ "command": CMD })).unwrap();
         let ctx = context();

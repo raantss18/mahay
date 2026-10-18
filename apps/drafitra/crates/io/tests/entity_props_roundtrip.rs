@@ -2,10 +2,10 @@
 //! hatch origin/background/elevation, xref blocks, the built-in font name, and polyface /
 //! polygon mesh POLYLINEs from other programs.
 
-use cadcraft_color::{Color, Rgb};
-use cadcraft_doc::*;
-use cadcraft_geom::{PolyVertex, Vec2, Vec3};
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_color::{Color, Rgb};
+use drafitra_doc::*;
+use drafitra_geom::{PolyVertex, Vec2, Vec3};
+use drafitra_io::{read_dxf, write_dxf};
 
 fn roundtrip(d: &Drawing) -> Drawing {
     read_dxf(write_dxf(d).as_bytes()).expect("reopen")
@@ -167,7 +167,7 @@ fn builtin_font_name_roundtrips_and_other_readers_get_txt() {
     assert_eq!(file, Some("txt"), "font file group stays a file other readers have");
     let r = read_dxf(text.as_bytes()).expect("reopen");
     let font = |n: &str| r.text_styles.iter().find(|s| s.name == n).map(|s| s.font.clone());
-    assert_eq!(font("Standard").as_deref(), Some("CADCraft Stroke"));
+    assert_eq!(font("Standard").as_deref(), Some("Drafitra Stroke"));
     assert_eq!(font("Notes").as_deref(), Some("romans.shx"));
 
     // Another program that changed the font file wins over the stale xdata.

@@ -3,8 +3,8 @@
 
 use crate::io::{Recording, open_session_linked, sanitize_name};
 use crate::{Engine, EngineError, Result};
-use soundcraft_audio_io::{BitDepth, EncodeOptions, FileFormat};
-use soundcraft_model::{Session, SourceAudio, SourceId};
+use feo_audio_io::{BitDepth, EncodeOptions, FileFormat};
+use feo_model::{Session, SourceAudio, SourceId};
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -41,7 +41,7 @@ impl Autosaver {
         let (tx, rx) = channel();
         let failure = Arc::new(Mutex::new(None));
         let writer = Writer { root, failure: Arc::clone(&failure), folder: None, pending: None, last: None, written: Ok(()) };
-        let thread = std::thread::Builder::new().name("soundcraft-autosave".into()).spawn(move || writer.run(&rx));
+        let thread = std::thread::Builder::new().name("feo-autosave".into()).spawn(move || writer.run(&rx));
         if let Err(e) = &thread {
             report(&failure, format!("{STOPPED}: {e}"));
         }
@@ -209,7 +209,7 @@ impl Autosave {
                     let name = format!("{} {}.wav", sanitize_name(&src.name), self.next);
                     self.next += 1;
                     let opts = EncodeOptions { format: FileFormat::Wav, bit_depth: BitDepth::Float32, dither: false, bwf: None };
-                    let bytes = soundcraft_audio_io::encode(&audio.buffer, &opts).map_err(|err| EngineError::Io(err.to_string()))?;
+                    let bytes = feo_audio_io::encode(&audio.buffer, &opts).map_err(|err| EngineError::Io(err.to_string()))?;
                     std::fs::create_dir_all(&audio_dir)
                         .and_then(|()| write_synced(&audio_dir.join(&name), &bytes))
                         .map_err(|err| io_error(&audio_dir, err))?;
@@ -313,9 +313,9 @@ pub fn recover(e: &mut Engine, left: &Leftover) -> Result<Vec<String>> {
 }
 
 /// The takes of the recording `left` holds the plan of, repaired, minus those already in `s`.
-/// A take the plan names that isn't a take file SoundCraft recorded, in a folder it records into,
+/// A take the plan names that isn't a take file Feo recorded, in a folder it records into,
 /// is left untouched and added to `skipped`.
-fn unfinished_takes(left: &Leftover, s: &Session, skipped: &mut Vec<String>) -> Option<(Recording, Vec<(soundcraft_model::TrackId, PathBuf)>)> {
+fn unfinished_takes(left: &Leftover, s: &Session, skipped: &mut Vec<String>) -> Option<(Recording, Vec<(feo_model::TrackId, PathBuf)>)> {
     let plan: Recording = serde_json::from_str(&std::fs::read_to_string(left.dir.join(RECORDING)).ok()?).ok()?;
     let known: Vec<PathBuf> =
         s.sources.iter().filter(|src| s.pool.get(src.id).is_some()).filter_map(|src| std::fs::canonicalize(&src.path).ok()).collect();
@@ -355,14 +355,14 @@ fn repair_take(path: &Path, folders: &[PathBuf], channels: usize, rate: u32) -> 
     }
     let folder = path.parent().and_then(|d| std::fs::canonicalize(d).ok());
     if !folder.is_some_and(|d| folders.contains(&d)) {
-        return Err(refuse("not in a folder SoundCraft records into"));
+        return Err(refuse("not in a folder Feo records into"));
     }
-    let header = |frames| soundcraft_audio_io::wav_float_header(channels, rate, frames).map_err(std::io::Error::other);
+    let header = |frames| feo_audio_io::wav_float_header(channels, rate, frames).map_err(std::io::Error::other);
     let expected = header(0)?;
     let mut f = std::fs::OpenOptions::new().read(true).write(true).open(path)?;
     let mut head = vec![0u8; expected.len()];
     if std::io::Read::read_exact(&mut f, &mut head).is_err() || !is_take_header(&head, &expected) {
-        return Err(refuse("not a take SoundCraft recorded"));
+        return Err(refuse("not a take Feo recorded"));
     }
     let audio = f.metadata()?.len().saturating_sub(expected.len() as u64);
     let frames = audio / (channels.max(1) as u64 * 4);
@@ -418,11 +418,11 @@ mod tests {
     use super::*;
     use crate::io::open_session;
     use serde_json::json;
-    use soundcraft_audio_io::AudioBuffer;
-    use soundcraft_model::{ChannelFormat, Clip, TrackKind};
+    use feo_audio_io::AudioBuffer;
+    use feo_model::{ChannelFormat, Clip, TrackKind};
 
     fn folder(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("soundcraft-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("feo-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir
     }
@@ -518,11 +518,11 @@ mod tests {
         let root = dir.join("Autosave");
         let mut e = Engine::default();
         let track =
-            soundcraft_model::TrackId(e.execute("track.new", &json!({"name": "Vox", "format": "mono"})).unwrap()["tracks"][0].as_u64().unwrap());
+            feo_model::TrackId(e.execute("track.new", &json!({"name": "Vox", "format": "mono"})).unwrap()["tracks"][0].as_u64().unwrap());
         let take = root.join(sanitize_name(&e.session().name)).join("Audio Files/Vox_01.wav");
         std::fs::create_dir_all(take.parent().unwrap()).unwrap();
         let audio: Vec<u8> = (0..480).flat_map(|i| (i as f32 / 1000.0).to_le_bytes()).collect();
-        std::fs::write(&take, [soundcraft_audio_io::wav_float_header(1, 48_000, 100).unwrap(), audio].concat()).unwrap();
+        std::fs::write(&take, [feo_audio_io::wav_float_header(1, 48_000, 100).unwrap(), audio].concat()).unwrap();
         let plan = Recording { start: 48_000, pass: None, punch: None, rate: 48_000, takes: vec![Take { track, path: take, channels: 1 }] };
         let clips = |e: &Engine| e.session().track(track).unwrap().clips().iter().map(|c| (c.start, c.length)).collect::<Vec<_>>();
         let w = Autosaver::new(root.clone());
@@ -550,10 +550,10 @@ mod tests {
         let root = dir.join("Autosave");
         let mut e = Engine::default();
         let track =
-            soundcraft_model::TrackId(e.execute("track.new", &json!({"name": "Vox", "format": "mono"})).unwrap()["tracks"][0].as_u64().unwrap());
+            feo_model::TrackId(e.execute("track.new", &json!({"name": "Vox", "format": "mono"})).unwrap()["tracks"][0].as_u64().unwrap());
         let takes = root.join(sanitize_name(&e.session().name)).join("Audio Files");
         std::fs::create_dir_all(&takes).unwrap();
-        let wav = [soundcraft_audio_io::wav_float_header(1, 48_000, 0).unwrap(), vec![0; 4_000]].concat();
+        let wav = [feo_audio_io::wav_float_header(1, 48_000, 0).unwrap(), vec![0; 4_000]].concat();
         let text = b"not audio at all, but long enough to be mistaken for a header if nobody looked at it ......".repeat(4);
         let files =
             [(takes.join("notes.wav"), text.clone()), (dir.join("Elsewhere/Vox_01.wav"), wav.clone()), (takes.join("../Vox_02.wav"), wav.clone())];

@@ -3,8 +3,8 @@
 //! Effect › Rasterize's image.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::rastersettings::MAX_ADD_AROUND;
-use vectorcraft_doc::{Background, Document, NodeId, NodeKind, RasterColorModel, RasterEffectsSettings};
+use tsipika_doc::rastersettings::MAX_ADD_AROUND;
+use tsipika_doc::{Background, Document, NodeId, NodeKind, RasterColorModel, RasterEffectsSettings};
 
 use super::*;
 
@@ -117,14 +117,14 @@ fn a_file_with_add_around_out_of_range_opens_with_it_in_range() {
     shadowed(&mut s);
     let mut d = (*s.doc().unwrap().doc).clone();
     d.raster_effects.add_around = 1e300;
-    let back = vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save_file(&d)).unwrap();
     assert_eq!(back.raster_effects.add_around, MAX_ADD_AROUND);
     let xfs = image_transforms(&back);
     assert!(!xfs.is_empty() && xfs.iter().flatten().all(|c| c.is_finite()), "{xfs:?}");
     // 1,000 pt on every side at 72 ppi.
     assert_eq!(effect_image(&back).width() - effect_image(&s.doc().unwrap().doc).width(), 2000);
     d.raster_effects.add_around = -5.0;
-    assert_eq!(vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap().raster_effects.add_around, 0.0);
+    assert_eq!(tsipika_format::load(&tsipika_format::save_file(&d)).unwrap().raster_effects.add_around, 0.0);
 }
 
 #[test]
@@ -137,7 +137,7 @@ fn art_too_large_for_f64_gets_no_effect_image() {
     assert_eq!(image_transforms(&d), Vec::<[f64; 6]>::new());
     let mut d = (*s.doc().unwrap().doc).clone();
     let NodeKind::Path { path, live, .. } = &mut d.node_mut(r).unwrap().kind else { panic!("a path") };
-    (*path, *live) = (vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(-1e300, -1e300, 1e300, 1e300)), None);
+    (*path, *live) = (tsipika_geom::shapes::rectangle(tsipika_geom::Rect::new(-1e300, -1e300, 1e300, 1e300)), None);
     assert_eq!(image_transforms(&d), Vec::<[f64; 6]>::new());
     // Expand Appearance of it by id, with nothing selected, puts no image into the document (the
     // rectangle at its own size gets one).
@@ -202,7 +202,7 @@ fn rasterize_takes_the_document_settings_as_defaults() {
 
 /// An image Object › Rasterize or Expand Appearance made, `n` or the image in its clip group:
 /// (width, height, where its pixels lie, its PNG, the clipping path's geometry).
-fn rasterized(d: &Document, n: &vectorcraft_doc::Node) -> (u32, u32, vectorcraft_geom::Affine, Vec<u8>, Option<vectorcraft_geom::PathData>) {
+fn rasterized(d: &Document, n: &tsipika_doc::Node) -> (u32, u32, tsipika_geom::Affine, Vec<u8>, Option<tsipika_geom::PathData>) {
     let (image, clip) = match &n.kind {
         NodeKind::Group { children, clip: true } => (&*children[1], children[0].path_data().cloned()),
         _ => (n, None),
@@ -242,7 +242,7 @@ fn the_rasterize_effect_keeps_the_path_and_expands_to_the_image_object_rasterize
         let n = d.node(r).unwrap();
         assert_eq!((n.path_data().cloned(), n.appearance.effects[0].id.as_str()), (before, "rasterize"), "the path stays as it was");
         // Saved and read back.
-        let back = vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap();
+        let back = tsipika_format::load(&tsipika_format::save_file(&d)).unwrap();
         assert_eq!(back.node(r).unwrap().appearance.effects, n.appearance.effects);
         // Object › Rasterize of the same rectangle.
         let mut o = session();
@@ -355,13 +355,13 @@ fn raster_settings_round_trip_and_old_files_load() {
     let mut d = Document::new(10.0, 10.0);
     d.raster_effects =
         RasterEffectsSettings { color_model: RasterColorModel::Bitmap, background: Background::White, add_around: 12.0, ..Default::default() };
-    let back = vectorcraft_format::load(&vectorcraft_format::save_file(&d)).unwrap();
+    let back = tsipika_format::load(&tsipika_format::save_file(&d)).unwrap();
     assert_eq!(back.raster_effects, d.raster_effects);
     // Saved before the settings existed: only the resolution.
     let old = Document::new(10.0, 10.0);
-    let bytes = vectorcraft_format::save_file(&old);
+    let bytes = tsipika_format::save_file(&old);
     assert!(!String::from_utf8_lossy(&bytes).contains("raster_effects\""), "default settings aren't written");
-    let back = vectorcraft_format::load(&bytes).unwrap();
+    let back = tsipika_format::load(&bytes).unwrap();
     assert_eq!((back.raster_effects_ppi, back.raster_effects), (72.0, RasterEffectsSettings::default()));
 }
 
@@ -369,8 +369,8 @@ fn raster_settings_round_trip_and_old_files_load() {
 fn reopen_with_ppi(s: &mut Session, ppi: f64) {
     let mut d = (*s.doc().unwrap().doc).clone();
     d.raster_effects_ppi = ppi;
-    let data = vectorcraft_format::base64_encode(&vectorcraft_format::save_file(&d));
-    s.execute("document.open", &json!({"name": "ppi.vectorcraft", "dataBase64": data})).unwrap();
+    let data = tsipika_format::base64_encode(&tsipika_format::save_file(&d));
+    s.execute("document.open", &json!({"name": "ppi.tsipika", "dataBase64": data})).unwrap();
 }
 
 #[test]
@@ -398,10 +398,10 @@ fn a_gradient_exports_at_the_resolution_the_file_opens_with() {
         s.execute("paint.setFill", &json!({"gradient": {"kind": "linear"}, "ids": [r.0]})).unwrap();
         reopen_with_ppi(&mut s, saved);
         // EMF writes the gradient as an image at the raster effects resolution: 720 pt at 1 ppi.
-        let region = vectorcraft_geom::Rect::new(0.0, 0.0, 720.0, 720.0);
-        let out = vectorcraft_metafile::export(&s.doc().unwrap().doc, region, vectorcraft_metafile::Kind::Emf).unwrap();
+        let region = tsipika_geom::Rect::new(0.0, 0.0, 720.0, 720.0);
+        let out = tsipika_metafile::export(&s.doc().unwrap().doc, region, tsipika_metafile::Kind::Emf).unwrap();
         let mut sizes = vec![];
-        vectorcraft_metafile::import(&out.bytes).unwrap().document.walk(|n| {
+        tsipika_metafile::import(&out.bytes).unwrap().document.walk(|n| {
             if let NodeKind::Image(im) = &n.kind {
                 sizes.push((im.width, im.height));
             }

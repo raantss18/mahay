@@ -3,9 +3,9 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint, Swatch};
-use vectorcraft_doc::{Appearance, AppearanceItem, Dash, Document, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeKind};
-use vectorcraft_geom::{Affine, PathData, Point, Rect, shapes};
+use tsipika_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint, Swatch};
+use tsipika_doc::{Appearance, AppearanceItem, Dash, Document, ImageBlob, ImageObject, LineCap, LineJoin, Node, NodeKind};
+use tsipika_geom::{Affine, PathData, Point, Rect, shapes};
 
 use crate::*;
 
@@ -107,7 +107,7 @@ fn the_header_follows_dsc_and_the_file_ends_with_eof() {
     let out = export(&d, &EpsOptions { title: "Poster (draft)".into(), created: Some(0), ..opts(&d) }, None, None).unwrap();
     let ps = text(&out);
     assert!(ps.starts_with("%!PS-Adobe-3.0 EPSF-3.0\n"), "{ps}");
-    assert!(dsc(&ps, "Creator").unwrap().starts_with("VectorCraft"));
+    assert!(dsc(&ps, "Creator").unwrap().starts_with("Tsipika"));
     assert_eq!(dsc(&ps, "Title").as_deref(), Some("(Poster \\(draft\\))"));
     assert_eq!(dsc(&ps, "CreationDate").as_deref(), Some("(1970-01-01 00:00:00 UTC)"));
     assert_eq!(dsc(&ps, "LanguageLevel").as_deref(), Some("3"));
@@ -247,7 +247,7 @@ fn rgb_is_written_as_cmyk_when_asked_and_in_cmyk_documents() {
     let cmyk = page_of(&d, &EpsOptions { cmyk: true, ..opts(&d) });
     assert!(!cmyk.contains(" rg\n") && cmyk.lines().any(|l| l.ends_with(" k") && l.split(' ').count() == 5), "{cmyk}");
     let mut c = d.clone();
-    c.color_mode = vectorcraft_doc::ColorMode::Cmyk;
+    c.color_mode = tsipika_doc::ColorMode::Cmyk;
     assert!(!page_of(&c, &opts(&c)).contains(" rg\n"));
 }
 
@@ -409,14 +409,14 @@ fn the_native_document_and_thumbnail_come_back() {
         assert_eq!(image::load_from_memory(&png).unwrap().to_rgba8().dimensions(), (3, 2));
         let ps = text(&out);
         checked_page(&ps);
-        assert!(ps.find("%VectorCraft_BeginData: thumbnail").unwrap() < ps.find("%%BeginProlog").unwrap());
-        assert!(ps.find("%VectorCraft_BeginData: native").unwrap() > ps.find("%%Trailer").unwrap());
+        assert!(ps.find("%Tsipika_BeginData: thumbnail").unwrap() < ps.find("%%BeginProlog").unwrap());
+        assert!(ps.find("%Tsipika_BeginData: native").unwrap() > ps.find("%%Trailer").unwrap());
         assert!(ps.lines().all(|l| l.len() <= 255));
     }
     let plain = export(&d, &opts(&d), None, None).unwrap();
     assert_eq!((super::native(&plain.bytes), super::thumbnail(&plain.bytes)), (None, None));
     // Damaged files give nothing back.
-    assert_eq!(super::native(b"%VectorCraft_BeginData: native\n% 9jqo^\n%VectorCraft_EndData\n"), None);
+    assert_eq!(super::native(b"%Tsipika_BeginData: native\n% 9jqo^\n%Tsipika_EndData\n"), None);
     let mut bad = vec![0xC5, 0xD0, 0xD3, 0xC6];
     bad.extend([0xFF; 26]);
     assert_eq!(sections(&bad), None);
@@ -432,7 +432,7 @@ fn clipping_groups_clip_and_hidden_or_template_art_is_left_out() {
         let id = d.alloc_id();
         vec![Node::new(id, NodeKind::Group { children: vec![Arc::new(clip), Arc::new(inside)], clip: true }), hidden]
     });
-    let mut t = Node::layer(d.alloc_id(), "Template", vectorcraft_doc::LayerColor::Preset(0));
+    let mut t = Node::layer(d.alloc_id(), "Template", tsipika_doc::LayerColor::Preset(0));
     if let NodeKind::Layer { template, .. } = &mut t.kind {
         *template = true;
     }
@@ -451,7 +451,7 @@ fn an_instance_whose_art_reaches_the_region_is_written() {
     // while the 20 × 20 square around the origin, moved to (-60, -60) to (-40, -40), is off it.
     let mut d = doc_with(|d| vec![Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Far".into(), xf: Affine::translate((-50.0, -50.0)) })]);
     let art = path(&mut d, shapes::rectangle(Rect::new(100.0, 100.0, 140.0, 140.0)), Paint::solid(Color::rgb(1.0, 0.0, 0.0)), Paint::None, 0.0);
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Far".into(), art: Arc::new(art) });
     let page = page_of(&d, &opts(&d));
     assert!(page.contains("1 0 0 rg"), "{page}");
 }
@@ -462,15 +462,15 @@ fn an_instance_whose_brush_art_reaches_the_region_is_written() {
     // round nib. Drawn from (-5, 0), the line lies left of the artboard, and the nib paints 10 pt
     // either side of it, onto the artboard.
     let mut d = doc_with(|d| vec![Node::new(d.alloc_id(), NodeKind::SymbolInstance { symbol: "Nib".into(), xf: Affine::translate((-5.0, 0.0)) })]);
-    let mut lib = vectorcraft_brush::library(&d);
-    let Some(vectorcraft_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
+    let mut lib = tsipika_brush::library(&d);
+    let Some(tsipika_brush::BrushKind::Calligraphic(c)) = lib.iter_mut().find(|b| b.name == "3 pt. Round").map(|b| &mut b.kind) else {
         panic!("the 3 pt. Round brush")
     };
     c.size = 20.0;
-    vectorcraft_brush::store(&mut d, &lib);
+    tsipika_brush::store(&mut d, &lib);
     let mut art = path(&mut d, shapes::line((0.0, 40.0).into(), (0.0, 60.0).into()), Paint::None, Paint::solid(Color::rgb(1.0, 0.0, 0.0)), 1.0);
     art.appearance.stroke_mut().unwrap().brush = Some("3 pt. Round".into());
-    d.symbols.push(vectorcraft_doc::Symbol { name: "Nib".into(), art: Arc::new(art) });
+    d.symbols.push(tsipika_doc::Symbol { name: "Nib".into(), art: Arc::new(art) });
     let page = page_of(&d, &opts(&d));
     assert!(page.contains("1 0 0 rg"), "{page}");
 }
@@ -490,7 +490,7 @@ fn level_preview_and_overprint_ids_read_back() {
 
 #[test]
 fn a_rich_document_is_well_formed_at_both_levels() {
-    let d = (*vectorcraft_testkit::fixtures::rich_session().doc().unwrap().doc).clone();
+    let d = (*tsipika_testkit::fixtures::rich_session().doc().unwrap().doc).clone();
     for level in Level::ALL {
         for cmyk in [false, true] {
             let out = export(&d, &EpsOptions { level, cmyk, ..opts(&d) }, None, None).unwrap();

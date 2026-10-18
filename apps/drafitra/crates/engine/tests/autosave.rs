@@ -3,9 +3,9 @@
 
 use std::time::{Duration, SystemTime};
 
-use cadcraft_engine::Session;
-use cadcraft_engine::autosave::{self, Autosaver, Job};
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::Session;
+use drafitra_engine::autosave::{self, Autosaver, Job};
+use drafitra_engine::cmd::file::{IoHooks, set_io};
 use serde_json::json;
 
 fn writes(jobs: &[Job]) -> Vec<String> {
@@ -105,7 +105,7 @@ fn file_names_round_trip() {
 
 #[test]
 fn files_of_other_programs_in_the_autosave_folder_are_never_deleted() {
-    // SAVEFILEPATH may point at a project folder: only CADCraft's own lock and autosave names
+    // SAVEFILEPATH may point at a project folder: only Drafitra's own lock and autosave names
     // (built from an instance id) are ever pruned or discarded.
     let dir = temp_dir("foreign");
     let old = SystemTime::now() - Duration::from_secs(3600);
@@ -129,7 +129,7 @@ fn files_of_other_programs_in_the_autosave_folder_are_never_deleted() {
 }
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("cadcraft-autosave-{tag}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("drafitra-autosave-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -187,13 +187,13 @@ fn autosave_files_are_written_in_the_background_and_removed_on_exit() {
     assert!(std::fs::read(&path).unwrap().ends_with(b"EOF\n"));
     // While the app runs, its lock keeps its files out of recovery. SAVETIME and SAVEFILEPATH
     // are system variables (process-wide, so set in this test only).
-    assert_eq!(cadcraft_engine::sysvars::get(&s, "SAVETIME"), Some(json!(10)));
+    assert_eq!(drafitra_engine::sysvars::get(&s, "SAVETIME"), Some(json!(10)));
     s.execute("setvar", &json!({"name": "SAVETIME", "value": 3})).unwrap();
     assert_eq!(autosave::savetime(), 3);
     assert!(s.execute("setvar", &json!({"name": "SAVETIME", "value": -1})).is_err());
     assert!(s.execute("setvar", &json!({"name": "SAVETIME", "value": 601})).is_err());
     s.execute("setvar", &json!({"name": "SAVEFILEPATH", "value": format!(" {} ", dir.display())})).unwrap();
-    assert_eq!(cadcraft_engine::sysvars::get(&s, "SAVEFILEPATH"), Some(json!(dir.to_string_lossy())));
+    assert_eq!(drafitra_engine::sysvars::get(&s, "SAVEFILEPATH"), Some(json!(dir.to_string_lossy())));
     a.tick(&s);
     assert!(dir.join(format!("{}.lock", a.instance)).exists());
     assert!(autosave::recoverable(&dir, "someone-else").is_empty());
@@ -281,7 +281,7 @@ fn recover_as_copy_opens_an_unsaved_untitled_drawing() {
 /// File hooks for every test in this file (the first call installs them).
 fn hooks() {
     set_io(IoHooks {
-        read: |_, _| Ok(cadcraft_engine::doc::Drawing::new_metric()),
+        read: |_, _| Ok(drafitra_engine::doc::Drawing::new_metric()),
         write: |_, _| Ok(b"0\nSECTION\n0\nENDSEC\n0\nEOF\n".to_vec()),
         plot: None,
     });

@@ -1,10 +1,10 @@
 //! GPU stylize and distort family effects vs the CPU effects (the oracle): direct on a buffer at full and half
 //! resolution, as adjustment, and composited at 8 and 32 bpc.
 
-use effectcraft_keyframe::{Keyframe, Value};
-use effectcraft_project::BitDepth;
-use effectcraft_render::RenderOpts;
-use effectcraft_time::Tick;
+use tselatra_keyframe::{Keyframe, Value};
+use tselatra_project::BitDepth;
+use tselatra_render::RenderOpts;
+use tselatra_time::Tick;
 
 use crate::tests::{Scene, c, check, compare_at, effect_case, n, opts, set};
 

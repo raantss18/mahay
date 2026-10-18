@@ -1,14 +1,14 @@
 //! Edit → Edit Colors → Overprint Black… opens its parameter dialog, which applies the command.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::Session;
+use tsipika_doc::NodeId;
+use tsipika_engine::Session;
 
-use crate::{VectorcraftApp, dialogs, menus};
+use crate::{TsipikaApp, dialogs, menus};
 
 #[test]
 fn overprint_black_menu_opens_the_dialog() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     let id = NodeId(app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap()["id"].as_u64().unwrap());
     let rich = json!({"c": 60, "m": 40, "y": 40, "k": 100});

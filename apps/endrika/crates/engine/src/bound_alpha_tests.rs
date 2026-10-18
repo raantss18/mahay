@@ -2,7 +2,7 @@
 //! its alpha in the paint opacity, and binding a variable with alpha hands the variable the whole
 //! colour, so the two alphas don't multiply (canvas, SVG, `.fig` round trips, mode switches).
 
-use figcraft_doc::NodeId;
+use endrika_doc::NodeId;
 use serde_json::json;
 
 use crate::Session;
@@ -33,7 +33,7 @@ fn alpha(s: &Session, r: NodeId) -> f32 {
 
 /// The alpha byte of the rectangle rendered on its own (transparent backdrop).
 fn pixel_alpha(s: &Session, r: NodeId) -> u8 {
-    let pix = figcraft_render::render_node(s.doc().unwrap(), r, 1.0).unwrap();
+    let pix = endrika_render::render_node(s.doc().unwrap(), r, 1.0).unwrap();
     let i = ((5 * pix.width() + 5) * 4 + 3) as usize;
     pix.data()[i]
 }
@@ -46,7 +46,7 @@ fn near(a: f32, b: f32) -> bool {
 fn a_hex_with_alpha_keeps_its_alpha_in_the_opacity() {
     let (s, r) = setup("#0D6EFD80", "#0D6EFD40");
     let p = &s.doc().unwrap().node(r).unwrap().fills[0];
-    assert_eq!(p.kind, figcraft_color::PaintKind::Solid { color: figcraft_color::Color::from_rgb8_const(0x0D, 0x6E, 0xFD) });
+    assert_eq!(p.kind, endrika_color::PaintKind::Solid { color: endrika_color::Color::from_rgb8_const(0x0D, 0x6E, 0xFD) });
     assert!(near(p.opacity, HALF));
     assert_eq!(pixel_alpha(&s, r), 128);
 }
@@ -58,7 +58,7 @@ fn a_bound_variable_alpha_applies_once() {
     ex(&mut s, "variable.bind", json!({"ids": [r.0], "field": "fill", "variable": "tint"}));
     assert!(near(alpha(&s, r), HALF), "{}", alpha(&s, r));
     assert_eq!(pixel_alpha(&s, r), 128);
-    let svg = figcraft_svg::export_svg(s.doc().unwrap(), &[r], &figcraft_svg::SvgOptions::default()).unwrap();
+    let svg = endrika_svg::export_svg(s.doc().unwrap(), &[r], &endrika_svg::SvgOptions::default()).unwrap();
     assert!(svg.contains("fill=\"#0D6EFD\" fill-opacity=\"0.502\""), "{svg}");
     // Binding the same variable again changes nothing.
     ex(&mut s, "variable.bind", json!({"ids": [r.0], "field": "fill", "variable": "tint"}));
@@ -72,7 +72,7 @@ fn unbinding_keeps_the_colour_with_its_alpha_in_the_opacity() {
     assert_eq!(pixel_alpha(&s, r), 64);
     ex(&mut s, "variable.bind", json!({"ids": [r.0], "field": "fill", "variable": null}));
     let p = &s.doc().unwrap().node(r).unwrap().fills[0];
-    assert_eq!(p.kind, figcraft_color::PaintKind::Solid { color: figcraft_color::Color::from_rgb8_const(0x0D, 0x6E, 0xFD) });
+    assert_eq!(p.kind, endrika_color::PaintKind::Solid { color: endrika_color::Color::from_rgb8_const(0x0D, 0x6E, 0xFD) });
     assert!(near(p.opacity, QUARTER), "{}", p.opacity);
     assert_eq!(pixel_alpha(&s, r), 64);
     // Undo restores the binding and its paint.
@@ -115,7 +115,7 @@ fn a_fig_round_trip_keeps_the_alpha_once() {
     let (mut s, r) = setup("#0D6EFD80", "#0D6EFD40");
     ex(&mut s, "variable.bind", json!({"ids": [r.0], "field": "fill", "variable": "tint"}));
     ex(&mut s, "fill.set", json!({"ids": [r.0], "index": 0, "opacity": 0.5}));
-    let (bytes, _) = figcraft_format::fig::export(s.doc().unwrap(), None).unwrap();
+    let (bytes, _) = endrika_format::fig::export(s.doc().unwrap(), None).unwrap();
     let back = crate::cmd::file::load_fig(&bytes, "x").unwrap().unwrap().doc;
     let n = back.nodes().find(|n| !n.bound.is_empty()).unwrap();
     let a = n.fills[0].solid_color().unwrap().a;

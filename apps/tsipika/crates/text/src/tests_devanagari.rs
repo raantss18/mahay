@@ -6,8 +6,8 @@
 use super::*;
 use kurbo::{BezPath, Point};
 use std::sync::Arc;
-use vectorcraft_doc::{CharStyle, TextKind};
-use vectorcraft_geom::PathData;
+use tsipika_doc::{CharStyle, TextKind};
+use tsipika_geom::PathData;
 
 fn devanagari_test_face(test: &str) -> Option<Arc<FontFace>> {
     let db = FontDb::global();

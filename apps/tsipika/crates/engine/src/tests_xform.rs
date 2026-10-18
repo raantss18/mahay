@@ -1,11 +1,11 @@
 //! Transform & utility tools driven through `Session::pointer`, and their commands.
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::{Point, Rect, Vec2, shapes};
-use vectorcraft_tools::distort::perspective::{self as persp, Plane};
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind, ToolKey};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, Node};
+use tsipika_geom::{Point, Rect, Vec2, shapes};
+use tsipika_tools::distort::perspective::{self as persp, Plane};
+use tsipika_tools::{Mods, PointerEvent, PointerKind, ToolKey};
 
 use super::tests_large_edits::{soon, undo_gives_back};
 use super::tests_persp_select::{bounds_of, grid, persp_session, plane_pts};
@@ -1057,7 +1057,7 @@ fn several_artboards_move_and_delete_together() {
     assert_eq!(d.artboards[0].rect, before[0]);
     assert_eq!(
         (d.artboards[1].rect, d.artboards[2].rect),
-        (before[1] + vectorcraft_geom::Vec2::new(10.0, 20.0), before[2] + vectorcraft_geom::Vec2::new(10.0, 20.0))
+        (before[1] + tsipika_geom::Vec2::new(10.0, 20.0), before[2] + tsipika_geom::Vec2::new(10.0, 20.0))
     );
     assert_eq!(d.node(r).unwrap().geometric_bounds().unwrap().x0, 1060.0, "the art on artboard 2 moved with it");
     s.execute("edit.undo", &json!({})).unwrap();

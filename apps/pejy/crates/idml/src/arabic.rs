@@ -1,4 +1,4 @@
-use designcraft_doc::arabic::{CharacterDirection as D, DiacriticPosition as P};
+use pejy_doc::arabic::{CharacterDirection as D, DiacriticPosition as P};
 
 pub fn direction_in(s: &str) -> Option<D> {
     match s.trim() {

@@ -3,8 +3,8 @@
 //! Positions are points from the left edge of the text column, as composition measures them.
 //! The list operations are public so the style dialog can edit a list before it applies it.
 
-use designcraft_doc::{ItemId, TabAlign, TabStop};
-use designcraft_geom::Rect;
+use pejy_doc::{ItemId, TabAlign, TabStop};
+use pejy_geom::Rect;
 use serde_json::{Value, json};
 
 use super::text::{format_paras, format_targets};
@@ -12,13 +12,13 @@ use super::{CommandSpec, bad, cmd, has_doc, str_param};
 use crate::{Result, Session};
 
 /// Most stops a paragraph holds.
-pub const MAX_TABS: usize = designcraft_doc::MAX_TAB_STOPS;
+pub const MAX_TABS: usize = pejy_doc::MAX_TAB_STOPS;
 /// Furthest stop position: 216 in, the largest page.
-pub const MAX_POSITION: f64 = designcraft_doc::MAX_TAB_POSITION;
+pub const MAX_POSITION: f64 = pejy_doc::MAX_TAB_POSITION;
 /// Longest leader, in characters.
-pub const MAX_LEADER: usize = designcraft_doc::MAX_TAB_LEADER;
+pub const MAX_LEADER: usize = pejy_doc::MAX_TAB_LEADER;
 /// Stops closer than this share a position.
-const SAME: f64 = designcraft_doc::SAME_TAB_POSITION;
+const SAME: f64 = pejy_doc::SAME_TAB_POSITION;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -258,7 +258,7 @@ fn current(s: &Session, style: Option<&str>, c: &str) -> Result<(Vec<TabStop>, M
         }
         None => {
             let t = format_targets(s).into_iter().next().ok_or_else(|| bad(c, "select text or a text frame, or name a `style`"))?;
-            let story = st.doc.text_story(t.story, t.cell).ok_or(designcraft_doc::DocError::NoStory(t.story))?;
+            let story = st.doc.text_story(t.story, t.cell).ok_or(pejy_doc::DocError::NoStory(t.story))?;
             let pf = story.paras.get(story.para_at(t.range.start)).ok_or_else(|| bad(c, "no paragraph at the selection"))?;
             st.doc.styles.resolve_para(pf).0
         }
@@ -331,7 +331,7 @@ fn edit(
     match style {
         Some(name) => s.edit(|d, _| {
             let st = d.styles_mut().para_mut(&name).ok_or_else(|| bad(c, format!("no paragraph style `{name}`")))?;
-            st.para.set_json_over("tabs", &list, &designcraft_doc::ParaProps::default()).map_err(|e| bad(c, e))
+            st.para.set_json_over("tabs", &list, &pejy_doc::ParaProps::default()).map_err(|e| bad(c, e))
         })?,
         None => {
             format_paras(s, &json!({ "tabs": list }))?;
@@ -342,7 +342,7 @@ fn edit(
 
 #[cfg(test)]
 mod tests {
-    use designcraft_doc::{TabAlign, TabStop};
+    use pejy_doc::{TabAlign, TabStop};
     use serde_json::{Value, json};
 
     use crate::Session;
@@ -410,7 +410,7 @@ mod tests {
         let (mut s, sid) = session("Item\tEnd");
         s.execute("type.tabs.add", &json!({"position": 200, "align": "right"})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let cs = designcraft_compose::compose_story(&d, designcraft_doc::StoryId(sid), &Default::default());
+        let cs = pejy_compose::compose_story(&d, pejy_doc::StoryId(sid), &Default::default());
         let ft = &cs.frames[0];
         let line = &ft.lines[0];
         let last = line.glyphs.iter().rfind(|g| g.visible).unwrap();
@@ -428,7 +428,7 @@ mod tests {
         let get = s.execute("type.tabs.get", &json!({"style": "Price List"})).unwrap();
         assert_eq!(get["tabs"][0]["align"], "right");
         let d = s.doc().unwrap().doc.clone();
-        let story = d.story(designcraft_doc::StoryId(sid)).unwrap();
+        let story = d.story(pejy_doc::StoryId(sid)).unwrap();
         assert_eq!(story.paras[0].para.tabs, None, "no paragraph override");
         assert!(s.execute("type.tabs.add", &json!({"style": "Nope", "position": 1})).is_err());
     }
@@ -496,7 +496,7 @@ mod tests {
         let tabs = json!([{"position": 200, "align": "char"}, {"position": 1e300}, {"position": -5, "leader": ". "}, {"position": 72}]);
         s.execute("type.para", &json!({"attrs": {"tabs": tabs}})).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let stored = d.story(designcraft_doc::StoryId(sid)).unwrap().paras[0].para.tabs.clone().unwrap();
+        let stored = d.story(pejy_doc::StoryId(sid)).unwrap().paras[0].para.tabs.clone().unwrap();
         let at: Vec<f64> = stored.iter().map(|t| t.position).collect();
         assert_eq!(at, [0.0, 72.0, 200.0, super::MAX_POSITION], "clamped and sorted");
         assert_eq!((stored[0].leader.as_str(), stored[2].align_on.as_str()), (". ", "."), "a char stop aligns on a point");

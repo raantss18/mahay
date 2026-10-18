@@ -169,7 +169,7 @@ mod application_inheritance_tests {
         s.execute("style.character.edit", &json!({"name": "Emphasis", "chars": {"underline": false}})).unwrap();
         assert_eq!(attrs(&mut s)["chars"]["underline"], false);
         assert!(s.doc().unwrap().doc.styles.char_style("Emphasis").unwrap().chars.size.is_none());
-        s.execute("style.paragraph.edit", &json!({"name": designcraft_doc::BASIC_PARAGRAPH, "chars": {"size": 20}})).unwrap();
+        s.execute("style.paragraph.edit", &json!({"name": pejy_doc::BASIC_PARAGRAPH, "chars": {"size": 20}})).unwrap();
         assert_eq!(attrs(&mut s)["chars"]["size"], 20.0);
     }
 
@@ -180,7 +180,7 @@ mod application_inheritance_tests {
         s.execute("style.paragraph.create", &json!({"name": "Header"})).unwrap();
         s.execute("style.paragraph.apply", &json!({"name": "Header", "clearOverrides": true})).unwrap();
         select(&mut s, &story, 3, 4);
-        assert_eq!(attrs(&mut s)["paragraphStyle"], designcraft_doc::BASIC_PARAGRAPH);
+        assert_eq!(attrs(&mut s)["paragraphStyle"], pejy_doc::BASIC_PARAGRAPH);
         select(&mut s, &story, 0, 2);
         assert_eq!(attrs(&mut s)["paragraphStyle"], "Header");
     }
@@ -191,15 +191,15 @@ mod application_inheritance_tests {
         select(&mut s, &story, 0, 12);
         s.execute("type.char", &json!({"size": 18})).unwrap();
         select(&mut s, &story, 0, 5);
-        s.execute("style.paragraph.apply", &json!({"name": designcraft_doc::BASIC_PARAGRAPH, "clearOverrides": true})).unwrap();
+        s.execute("style.paragraph.apply", &json!({"name": pejy_doc::BASIC_PARAGRAPH, "clearOverrides": true})).unwrap();
         assert_ne!(attrs(&mut s)["chars"]["size"], 18.0);
         select(&mut s, &story, 6, 12);
         assert_eq!(attrs(&mut s)["chars"]["size"], 18.0);
     }
 }
 
-use designcraft_color::{Swatch, SwatchValue};
-use designcraft_doc::{CharAttrs, CharacterStyle, Effects, Item, ObjectStyle, ParaAttrs, ParagraphStyle, Styles};
+use pejy_color::{Swatch, SwatchValue};
+use pejy_doc::{CharAttrs, CharacterStyle, Effects, Item, ObjectStyle, ParaAttrs, ParagraphStyle, Styles};
 use serde_json::{Value, json};
 
 use super::{CommandSpec, bad, cmd, has_doc, has_text_or_frames, ok, str_param};
@@ -218,7 +218,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "{name, entries: [{name?, characters?, family, style?, relativeSize?, horizontalScale?, verticalScale?, baselineShift?, scaleOption?}]} — replaces a composite font definition; empty characters selects the base entry",
             has_doc,
             |s, p| {
-                let f: designcraft_doc::cjk::CompositeFont =
+                let f: pejy_doc::cjk::CompositeFont =
                     serde_json::from_value(p.clone()).map_err(|e| bad("style.compositeFont.set", e.to_string()))?;
                 if f.name.trim().is_empty()
                     || f.entries.is_empty()
@@ -501,7 +501,7 @@ pub fn specs() -> Vec<CommandSpec> {
             let inks: Vec<Value> = d
                 .swatches
                 .iter()
-                .filter(|w| matches!(w.value, designcraft_color::swatch::SwatchValue::Color { color_type: designcraft_color::swatch::ColorType::Spot, .. }))
+                .filter(|w| matches!(w.value, pejy_color::swatch::SwatchValue::Color { color_type: pejy_color::swatch::ColorType::Spot, .. }))
                 .map(|w| {
                     let alias = d.inks.aliases.iter().find(|(a, _)| *a == w.name).map(|(_, t)| t.clone());
                     json!({"name": w.name, "process": d.inks.resolve(&w.name).1, "alias": alias})
@@ -530,7 +530,7 @@ pub fn specs() -> Vec<CommandSpec> {
                             d.swatch(n).is_some_and(|w| {
                                 matches!(
                                     w.value,
-                                    designcraft_color::swatch::SwatchValue::Color { color_type: designcraft_color::swatch::ColorType::Spot, .. }
+                                    pejy_color::swatch::SwatchValue::Color { color_type: pejy_color::swatch::ColorType::Spot, .. }
                                 )
                             })
                         };
@@ -593,7 +593,7 @@ pub fn specs() -> Vec<CommandSpec> {
                     for g in &mut d.color_groups {
                         g.swatches.retain(|w| !names.contains(w));
                     }
-                    d.color_groups.push(designcraft_doc::ColorGroup { name: name.clone(), swatches: names });
+                    d.color_groups.push(pejy_doc::ColorGroup { name: name.clone(), swatches: names });
                     Ok(json!({"name": name}))
                 })
             }
@@ -670,12 +670,12 @@ fn redefine(s: &mut Session, p: &Value, paragraph: bool) -> Result<Value> {
     let targets = super::text::format_targets_pub(s);
     let target = targets.first().ok_or_else(|| bad(command, "select text using the style to redefine"))?;
     let state = s.doc()?;
-    let story = state.doc.text_story(target.story, target.cell).ok_or(designcraft_doc::DocError::NoStory(target.story))?;
+    let story = state.doc.text_story(target.story, target.cell).ok_or(pejy_doc::DocError::NoStory(target.story))?;
     let pf = story.paras.get(story.para_at(target.range.start)).ok_or_else(|| bad(command, "no paragraph at the selection"))?;
     let cf = super::text::effective_char_format(s, target)?;
     let selected = if paragraph { &pf.style } else { &cf.style };
     let name = str_param(p, "name").unwrap_or(selected).to_string();
-    if name != *selected || name == if paragraph { designcraft_doc::NO_PARA_STYLE } else { designcraft_doc::NO_CHAR_STYLE } {
+    if name != *selected || name == if paragraph { pejy_doc::NO_PARA_STYLE } else { pejy_doc::NO_CHAR_STYLE } {
         return Err(bad(command, "select text using the named style; the no-style entry cannot be redefined"));
     }
     let (base_para, base_chars) = state.doc.styles.resolve_para_style(&pf.style);
@@ -684,7 +684,7 @@ fn redefine(s: &mut Session, p: &Value, paragraph: bool) -> Result<Value> {
     let mut current = if paragraph {
         paragraph_chars.clone()
     } else {
-        state.doc.styles.resolve_char(&paragraph_chars, &designcraft_doc::CharFormat { style: name.clone(), over: CharAttrs::default() })
+        state.doc.styles.resolve_char(&paragraph_chars, &pejy_doc::CharFormat { style: name.clone(), over: CharAttrs::default() })
     };
     let inherited = if paragraph { base_chars } else { current.clone() };
     // A named character style is an intentional layer, not a paragraph override to absorb.
@@ -844,7 +844,7 @@ fn continue_numbering(p: Option<&Value>, para: &mut ParaAttrs) {
 fn create_para(s: &mut Session, p: &Value) -> Result<Value> {
     let base = str_param(p, "name").unwrap_or("Paragraph Style 1").to_string();
     let mut para: ParaAttrs =
-        attrs("style.paragraph.create", "para", p, |a: &mut ParaAttrs, k, v| a.set_json_over(k, v, &designcraft_doc::ParaProps::default()))?;
+        attrs("style.paragraph.create", "para", p, |a: &mut ParaAttrs, k, v| a.set_json_over(k, v, &pejy_doc::ParaProps::default()))?;
     continue_numbering(p.get("para"), &mut para);
     explicit_default_kinsoku(&mut para, p.get("para"));
     check_grep_styles("style.paragraph.create", &para)?;
@@ -855,12 +855,12 @@ fn create_para(s: &mut Session, p: &Value) -> Result<Value> {
         && let Ok(cur) = s.execute("type.selectionAttrs", &json!({}))
         && !cur.is_null()
     {
-        if let Ok(pp) = serde_json::from_value::<designcraft_doc::ParaProps>(cur["para"].clone()) {
+        if let Ok(pp) = serde_json::from_value::<pejy_doc::ParaProps>(cur["para"].clone()) {
             let mut full = ParaProps_to_attrs(&pp);
             full.merge(&para);
             para = full;
         }
-        if let Ok(cp) = serde_json::from_value::<designcraft_doc::CharProps>(cur["chars"].clone()) {
+        if let Ok(cp) = serde_json::from_value::<pejy_doc::CharProps>(cur["chars"].clone()) {
             let mut full = CharProps_to_attrs(&cp);
             full.merge(&chars);
             chars = full;
@@ -894,7 +894,7 @@ pub(crate) fn grep_style_error(a: &ParaAttrs) -> Option<String> {
         .iter()
         .flatten()
         .filter(|g| !g.pattern.is_empty())
-        .find_map(|g| designcraft_compose::grep::Grep::new(&g.pattern, Default::default()).err().map(|e| format!("{e} (pattern {:?})", g.pattern)))
+        .find_map(|g| pejy_compose::grep::Grep::new(&g.pattern, Default::default()).err().map(|e| format!("{e} (pattern {:?})", g.pattern)))
 }
 
 /// Rejects GREP styles a command would set with a pattern that can't compile.
@@ -904,7 +904,7 @@ pub(crate) fn check_grep_styles(cmd: &str, a: &ParaAttrs) -> Result<()> {
 
 /// One warning for each paragraph style or paragraph whose GREP style pattern can't compile.
 /// Such a GREP style stays in the document and composition skips it.
-pub(crate) fn grep_style_warnings(d: &designcraft_doc::Document) -> Vec<String> {
+pub(crate) fn grep_style_warnings(d: &pejy_doc::Document) -> Vec<String> {
     let mut out: Vec<String> = d
         .styles
         .paragraph
@@ -922,12 +922,12 @@ pub(crate) fn grep_style_warnings(d: &designcraft_doc::Document) -> Vec<String> 
 }
 
 #[allow(non_snake_case)]
-fn ParaProps_to_attrs(p: &designcraft_doc::ParaProps) -> ParaAttrs {
-    designcraft_doc::ParaProps::common([p])
+fn ParaProps_to_attrs(p: &pejy_doc::ParaProps) -> ParaAttrs {
+    pejy_doc::ParaProps::common([p])
 }
 #[allow(non_snake_case)]
-fn CharProps_to_attrs(p: &designcraft_doc::CharProps) -> CharAttrs {
-    designcraft_doc::CharProps::common([p])
+fn CharProps_to_attrs(p: &pejy_doc::CharProps) -> CharAttrs {
+    pejy_doc::CharProps::common([p])
 }
 
 fn edit_para(s: &mut Session, p: &Value) -> Result<Value> {
@@ -965,7 +965,7 @@ fn edit_para(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// Rename a paragraph or character style everywhere it's used.
-fn rename_style(d: &mut designcraft_doc::Document, para: bool, from: &str, to: &str) {
+fn rename_style(d: &mut pejy_doc::Document, para: bool, from: &str, to: &str) {
     if para {
         for s in &mut d.styles_mut().paragraph {
             if s.name == from {
@@ -985,7 +985,7 @@ fn rename_style(d: &mut designcraft_doc::Document, para: bool, from: &str, to: &
 /// Point every reference to style `from` at `to`, except the style's own registry entry (its
 /// `name` field) — shared by renaming (which also updates the entry's name) and deletion (which
 /// instead removes the entry, after its former uses point at the replacement).
-fn redirect_style_refs(d: &mut designcraft_doc::Document, para: bool, from: &str, to: &str) {
+fn redirect_style_refs(d: &mut pejy_doc::Document, para: bool, from: &str, to: &str) {
     let rename = |r: &mut String| {
         if r == from {
             *r = to.to_string();
@@ -1038,7 +1038,7 @@ fn redirect_style_refs(d: &mut designcraft_doc::Document, para: bool, from: &str
         for e in &mut toc.entries {
             for n in [&mut e.page_number_style, &mut e.separator_style] {
                 if n.as_deref() == Some(from) {
-                    *n = Some(to.to_string()).filter(|t| t != designcraft_doc::NO_CHAR_STYLE);
+                    *n = Some(to.to_string()).filter(|t| t != pejy_doc::NO_CHAR_STYLE);
                 }
             }
         }
@@ -1097,7 +1097,7 @@ fn group_styles(s: &mut Session, p: &Value) -> Result<Value> {
             }
             let base = n.rsplit('/').next().unwrap_or(n);
             let mut to = if group.is_empty() { base.to_string() } else { format!("{group}/{base}") };
-            let taken = |d: &designcraft_doc::Document, x: &str| {
+            let taken = |d: &pejy_doc::Document, x: &str| {
                 if para { d.styles.para(x).is_some() } else { d.styles.character.iter().any(|c| c.name == x) }
             };
             if to != *n {
@@ -1122,7 +1122,7 @@ fn delete_char(s: &mut Session, p: &Value) -> Result<Value> {
 /// (default [Basic Paragraph] or [None]) instead, in one undo step.
 fn delete_style(s: &mut Session, p: &Value, para: bool) -> Result<Value> {
     let (id, default) =
-        if para { ("style.paragraph.delete", designcraft_doc::BASIC_PARAGRAPH) } else { ("style.character.delete", designcraft_doc::NO_CHAR_STYLE) };
+        if para { ("style.paragraph.delete", pejy_doc::BASIC_PARAGRAPH) } else { ("style.character.delete", pejy_doc::NO_CHAR_STYLE) };
     let name = str_param(p, "name").filter(|n| !n.is_empty()).ok_or_else(|| bad(id, "missing name"))?.to_string();
     let repl = str_param(p, "replaceWith").unwrap_or(default).to_string();
     if name.starts_with('[') {
@@ -1133,7 +1133,7 @@ fn delete_style(s: &mut Session, p: &Value, para: bool) -> Result<Value> {
     }
     s.edit(|d, _| {
         let st = &d.styles;
-        let exists = |n: &str| if para { st.para(n).is_some() } else { n == designcraft_doc::NO_CHAR_STYLE || st.char_style(n).is_some() };
+        let exists = |n: &str| if para { st.para(n).is_some() } else { n == pejy_doc::NO_CHAR_STYLE || st.char_style(n).is_some() };
         if !exists(&name) {
             return Err(bad(id, format!("no style `{name}`")));
         }
@@ -1149,7 +1149,7 @@ fn delete_style(s: &mut Session, p: &Value, para: bool) -> Result<Value> {
         };
         let parent = if descends {
             own_parent.filter(|b| *b != name)
-        } else if repl == designcraft_doc::NO_CHAR_STYLE || repl == designcraft_doc::NO_PARA_STYLE {
+        } else if repl == pejy_doc::NO_CHAR_STYLE || repl == pejy_doc::NO_PARA_STYLE {
             None
         } else {
             Some(repl.clone())
@@ -1194,7 +1194,7 @@ fn create_char(s: &mut Session, p: &Value) -> Result<Value> {
         chars = captured;
     }
     // Based on [None] is based on nothing.
-    let based_on = str_param(p, "basedOn").filter(|b| *b != designcraft_doc::NO_CHAR_STYLE).map(str::to_string);
+    let based_on = str_param(p, "basedOn").filter(|b| *b != pejy_doc::NO_CHAR_STYLE).map(str::to_string);
     s.edit(|d, _| {
         if let Some(b) = &based_on
             && d.styles.char_style(b).is_none()
@@ -1209,7 +1209,7 @@ fn create_char(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn edit_char(s: &mut Session, p: &Value) -> Result<Value> {
     let name = str_param(p, "name").ok_or_else(|| bad("style.character.edit", "missing name"))?.to_string();
-    if name == designcraft_doc::NO_CHAR_STYLE {
+    if name == pejy_doc::NO_CHAR_STYLE {
         return Err(bad("style.character.edit", "[None] can't be edited"));
     }
     let chars: CharAttrs = attrs("style.character.edit", "chars", p, |a: &mut CharAttrs, k, v| a.set_json(k, v))?;
@@ -1224,7 +1224,7 @@ fn edit_char(s: &mut Session, p: &Value) -> Result<Value> {
     let based: Option<Option<String>> = match p.get("basedOn") {
         None => None,
         Some(Value::Null) => Some(None),
-        Some(Value::String(b)) if b == designcraft_doc::NO_CHAR_STYLE => Some(None),
+        Some(Value::String(b)) if b == pejy_doc::NO_CHAR_STYLE => Some(None),
         Some(Value::String(b)) => Some(Some(b.clone())),
         Some(_) => return Err(bad("style.character.edit", "`basedOn` is a style name or null")),
     };
@@ -1272,7 +1272,7 @@ fn create_swatch(s: &mut Session, p: &Value) -> Result<Value> {
             name: name.clone(),
             value: SwatchValue::Color {
                 color,
-                color_type: if spot { designcraft_color::ColorType::Spot } else { designcraft_color::ColorType::Process },
+                color_type: if spot { pejy_color::ColorType::Spot } else { pejy_color::ColorType::Process },
             },
             locked: false,
             named: true,
@@ -1285,7 +1285,7 @@ fn create_swatch(s: &mut Session, p: &Value) -> Result<Value> {
 /// `swatch.create {gradient}`: a named gradient swatch. Stops take a colour swatch by name (as a
 /// swatch dragged onto the Gradient panel's stop) or a colour.
 fn create_gradient_swatch(s: &mut Session, p: &Value, g: &Value) -> Result<Value> {
-    use designcraft_color::{Gradient, GradientKind, GradientStop};
+    use pejy_color::{Gradient, GradientKind, GradientStop};
     const ID: &str = "swatch.create";
     let kind = match g.get("kind").and_then(Value::as_str) {
         None | Some("linear") => GradientKind::Linear,
@@ -1361,8 +1361,8 @@ fn new_swatch(s: &mut Session, p: &Value) -> Result<Value> {
     })
 }
 
-pub fn parse_color(v: &Value) -> Option<designcraft_color::Color> {
-    use designcraft_color::Color;
+pub fn parse_color(v: &Value) -> Option<pejy_color::Color> {
+    use pejy_color::Color;
     match v {
         Value::String(s) => Color::from_hex(s),
         // `{model, …}` is the colour's own form (as `color.convert` takes it): fractions, never guessed.
@@ -1389,8 +1389,8 @@ pub fn parse_color(v: &Value) -> Option<designcraft_color::Color> {
 }
 
 /// `{model: rgb|cmyk|gray, …}` with every component in 0..=1; anything else is not a colour.
-fn model_color(v: &Value) -> Option<designcraft_color::Color> {
-    use designcraft_color::Color;
+fn model_color(v: &Value) -> Option<pejy_color::Color> {
+    use pejy_color::Color;
     let color: Color = serde_json::from_value(v.clone()).ok()?;
     // A float's last bit (100.0 / 100.0 ≠ 1.0 after an f32 round trip) is not out of range.
     let unit = |x: f32| x.is_finite() && (-1e-4..=1.0 + 1e-4).contains(&x);
@@ -1511,7 +1511,7 @@ fn create_object(s: &mut Session, p: &Value) -> Result<Value> {
         os.effects = Some(it.effects.clone());
     }
     if let Some(sw) = str_param(p, "fill") {
-        os.fill = Some(designcraft_doc::Fill::swatch(sw));
+        os.fill = Some(pejy_doc::Fill::swatch(sw));
     }
     if let Some(ps) = str_param(p, "paragraphStyle") {
         os.paragraph_style = Some(ps.to_string());
@@ -1530,7 +1530,7 @@ fn create_object(s: &mut Session, p: &Value) -> Result<Value> {
 fn edit_object(s: &mut Session, p: &Value) -> Result<Value> {
     const CMD: &str = "style.object.edit";
     let name = str_param(p, "name").ok_or_else(|| bad(CMD, "missing name"))?.to_string();
-    if name == designcraft_doc::NO_OBJECT_STYLE {
+    if name == pejy_doc::NO_OBJECT_STYLE {
         return Err(bad(CMD, format!("`{name}` can't be edited")));
     }
     let old = s.doc()?.doc.styles.object_style(&name).cloned().ok_or_else(|| bad(CMD, format!("no object style `{name}`")))?;
@@ -1566,8 +1566,8 @@ fn edit_object(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// The swatch name of a colour value ("C=… M=… Y=… K=…" / "R=… G=… B=…").
-fn value_name(color: designcraft_color::Color) -> String {
-    designcraft_color::swatch::value_name(color)
+fn value_name(color: pejy_color::Color) -> String {
+    pejy_color::swatch::value_name(color)
 }
 
 fn load_swatches(s: &mut Session, p: &Value) -> Result<Value> {
@@ -1576,7 +1576,7 @@ fn load_swatches(s: &mut Session, p: &Value) -> Result<Value> {
         (Some(path), None) => crate::io::read_file(path).map_err(|e| bad("swatch.load", e))?,
         _ => return Err(bad("swatch.load", "give `path` or `base64`")),
     };
-    let incoming = designcraft_color::ase::read(&bytes).map_err(|e| bad("swatch.load", e.to_string()))?;
+    let incoming = pejy_color::ase::read(&bytes).map_err(|e| bad("swatch.load", e.to_string()))?;
     let replace = p.get("replace").and_then(Value::as_bool).unwrap_or(false);
     s.edit(|d, _| {
         // The position of the first swatch with each name, kept up to date as the file's colors are added.
@@ -1646,7 +1646,7 @@ fn save_swatches(s: &mut Session, p: &Value) -> Result<Value> {
     let names: Option<Vec<String>> =
         p.get("names").and_then(Value::as_array).map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect());
     let chosen: Vec<Swatch> = d.swatches.iter().filter(|w| names.as_ref().is_none_or(|n| n.contains(&w.name))).cloned().collect();
-    let bytes = designcraft_color::ase::write(&chosen);
+    let bytes = pejy_color::ase::write(&chosen);
     match str_param(p, "path") {
         Some(path) => {
             crate::io::write_file(path, &bytes).map_err(|e| bad("swatch.save", e))?;
@@ -1656,17 +1656,17 @@ fn save_swatches(s: &mut Session, p: &Value) -> Result<Value> {
     }
 }
 
-fn gradient_json(name: &str, g: &designcraft_color::Gradient) -> Value {
+fn gradient_json(name: &str, g: &pejy_color::Gradient) -> Value {
     let stops: Vec<Value> = g
         .stops
         .iter()
         .map(|s| json!({"location": (s.offset as f64 * 1000.0).round() / 10.0, "color": s.color.to_hex(), "opacity": (s.opacity * 100.0).round(), "midpoint": (s.midpoint * 100.0).round()}))
         .collect();
-    json!({"swatch": name, "kind": if g.kind == designcraft_color::GradientKind::Radial { "radial" } else { "linear" }, "stops": stops})
+    json!({"swatch": name, "kind": if g.kind == pejy_color::GradientKind::Radial { "radial" } else { "linear" }, "stops": stops})
 }
 
 fn apply_gradient(s: &mut Session, p: &Value) -> Result<Value> {
-    use designcraft_color::{GradientKind, GradientStop};
+    use pejy_color::{GradientKind, GradientStop};
     let kind = match str_param(p, "kind") {
         Some("radial") => Some(GradientKind::Radial),
         Some("linear") => Some(GradientKind::Linear),
@@ -1682,7 +1682,7 @@ fn apply_gradient(s: &mut Session, p: &Value) -> Result<Value> {
                 let color = match st.get("swatch").and_then(Value::as_str) {
                     Some(name) => doc
                         .resolve_color(name, 1.0)
-                        .filter(|_| designcraft_color::swatch::resolve_gradient(&doc.swatches, name).is_none())
+                        .filter(|_| pejy_color::swatch::resolve_gradient(&doc.swatches, name).is_none())
                         .ok_or_else(|| bad("object.gradient", format!("`{name}` isn't a colour swatch")))?,
                     None => st.get("color").and_then(parse_color).ok_or_else(|| bad("object.gradient", "a stop needs a color or a swatch"))?,
                 };
@@ -1715,7 +1715,7 @@ fn apply_gradient(s: &mut Session, p: &Value) -> Result<Value> {
         for id in &ids {
             let Some(it) = d.item(*id) else { continue };
             let cur_name = if stroke { it.stroke.swatch.clone() } else { it.fill.swatch.clone() };
-            let cur = designcraft_color::swatch::resolve_gradient(&d.swatches, &cur_name).cloned();
+            let cur = pejy_color::swatch::resolve_gradient(&d.swatches, &cur_name).cloned();
             let mut g = cur.clone().unwrap_or_default();
             if let Some(k) = kind {
                 g.kind = k;
@@ -1820,10 +1820,10 @@ fn apply_color(s: &mut Session, p: &Value) -> Result<Value> {
 /// A process swatch holding this colour to the precision its name shows (whole CMYK percents,
 /// 0-255 RGB), else a new unnamed one (hidden from the Swatches panel until Add to Swatches):
 /// values a fraction of a percent apart would otherwise add hidden "C=0 M=50 Y=100 K=0 2" twins.
-fn color_swatch(d: &mut designcraft_doc::Document, color: designcraft_color::Color) -> String {
+fn color_swatch(d: &mut pejy_doc::Document, color: pejy_color::Color) -> String {
     let shown = value_name(color);
     let process = |w: &&Swatch| match &w.value {
-        SwatchValue::Color { color: c, color_type: designcraft_color::ColorType::Process } => Some(*c),
+        SwatchValue::Color { color: c, color_type: pejy_color::ColorType::Process } => Some(*c),
         _ => None,
     };
     let existing = d
@@ -1842,7 +1842,7 @@ fn color_swatch(d: &mut designcraft_doc::Document, color: designcraft_color::Col
     let name = Styles::unique_name(|n| d.swatch(n).is_some(), &shown);
     d.swatches.push(Swatch {
         name: name.clone(),
-        value: SwatchValue::Color { color, color_type: designcraft_color::ColorType::Process },
+        value: SwatchValue::Color { color, color_type: pejy_color::ColorType::Process },
         locked: false,
         named: false,
         hidden: true,
@@ -1850,7 +1850,7 @@ fn color_swatch(d: &mut designcraft_doc::Document, color: designcraft_color::Col
     name
 }
 
-fn color_items(d: &mut designcraft_doc::Document, ids: &[designcraft_doc::ItemId], name: &str, stroke: bool) {
+fn color_items(d: &mut pejy_doc::Document, ids: &[pejy_doc::ItemId], name: &str, stroke: bool) {
     for id in ids {
         if let Some(it) = d.item_mut(*id) {
             if stroke {
@@ -1901,28 +1901,28 @@ fn sample_color(s: &mut Session, p: &Value) -> Result<Value> {
 /// frame shows that point (locked ones too, as sampling changes nothing). (image frame, colour);
 /// None over no image, a transparent pixel, or a graphic that is not a raster (PDF, EPS).
 pub(crate) fn image_color_at(
-    d: &designcraft_doc::Document,
-    sr: designcraft_doc::SpreadRef,
-    at: designcraft_geom::Point,
-) -> Option<(designcraft_doc::ItemId, designcraft_color::Color)> {
+    d: &pejy_doc::Document,
+    sr: pejy_doc::SpreadRef,
+    at: pejy_geom::Point,
+) -> Option<(pejy_doc::ItemId, pejy_color::Color)> {
     let sp = d.spread(sr)?;
-    let mut items: Vec<&designcraft_doc::Item> = sp.items.iter().map(|i| &**i).collect();
+    let mut items: Vec<&pejy_doc::Item> = sp.items.iter().map(|i| &**i).collect();
     items.sort_by_key(|i| d.layer_rank(i.layer));
     items
         .into_iter()
         .rev()
         .filter(|it| d.layer(it.layer).is_none_or(|l| l.visible))
-        .find_map(|it| sample_item(d, it, designcraft_geom::Affine::IDENTITY, at, 0))
+        .find_map(|it| sample_item(d, it, pejy_geom::Affine::IDENTITY, at, 0))
 }
 
 fn sample_item(
-    d: &designcraft_doc::Document,
-    it: &designcraft_doc::Item,
-    outer: designcraft_geom::Affine,
-    at: designcraft_geom::Point,
+    d: &pejy_doc::Document,
+    it: &pejy_doc::Item,
+    outer: pejy_geom::Affine,
+    at: pejy_geom::Point,
     depth: usize,
-) -> Option<(designcraft_doc::ItemId, designcraft_color::Color)> {
-    use designcraft_doc::Content;
+) -> Option<(pejy_doc::ItemId, pejy_color::Color)> {
+    use pejy_doc::Content;
     if it.hidden || depth > 64 {
         return None;
     }
@@ -1935,13 +1935,13 @@ fn sample_item(
         }
         Content::Graphic(g) => {
             let inner = xf.inverse() * at;
-            if !designcraft_geom::hit::fill_contains(&it.path.to_bezpath(), designcraft_geom::FillRule::NonZero, inner) {
+            if !pejy_geom::hit::fill_contains(&it.path.to_bezpath(), pejy_geom::FillRule::NonZero, inner) {
                 return None;
             }
             // A clipping path hides the image outside it.
             if let Some((region, even_odd)) = g.clip_region() {
-                let rule = if even_odd { designcraft_geom::FillRule::EvenOdd } else { designcraft_geom::FillRule::NonZero };
-                if !designcraft_geom::hit::fill_contains(&region, rule, inner) {
+                let rule = if even_odd { pejy_geom::FillRule::EvenOdd } else { pejy_geom::FillRule::NonZero };
+                if !pejy_geom::hit::fill_contains(&region, rule, inner) {
                     return None;
                 }
             }
@@ -1952,12 +1952,12 @@ fn sample_item(
                 return None;
             }
             let asset = d.assets.get(&g.asset).filter(|a| a.is_raster())?;
-            let img = designcraft_images::decode_rgba(&asset.data)?;
+            let img = pejy_images::decode_rgba(&asset.data)?;
             let (pw, ph) = img.dimensions();
             let px = ((gp.x / w * f64::from(pw)) as u32).min(pw.checked_sub(1)?);
             let py = ((gp.y / h * f64::from(ph)) as u32).min(ph.checked_sub(1)?);
             let [r, gr, b, a] = img.get_pixel_checked(px, py)?.0;
-            (a > 0).then(|| (it.id, designcraft_color::Color::rgb8(r, gr, b)))
+            (a > 0).then(|| (it.id, pejy_color::Color::rgb8(r, gr, b)))
         }
         _ => None,
     }
@@ -1999,8 +1999,8 @@ fn add_to_swatches(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Renaming a swatch walks every text inside a story (table cells, notes): refuse the whole edit
 /// for nesting deeper than 32 levels rather than leave deeper references at a removed name.
-fn check_text_nesting(d: &designcraft_doc::Document, id: &str) -> Result<()> {
-    fn within(st: &designcraft_doc::Story, depth: usize) -> bool {
+fn check_text_nesting(d: &pejy_doc::Document, id: &str) -> Result<()> {
+    fn within(st: &pejy_doc::Story, depth: usize) -> bool {
         depth <= 32
             && st.tables.values().all(|t| t.cells.iter().all(|c| within(&c.text, depth + 1)))
             && st.notes.iter().chain(&st.endnotes).all(|n| within(&n.text, depth + 1))
@@ -2047,7 +2047,7 @@ fn swatch_options(s: &mut Session, p: &Value) -> Result<Value> {
                         *c = new;
                     }
                     if let Some(sp) = spot {
-                        *color_type = if sp { designcraft_color::ColorType::Spot } else { designcraft_color::ColorType::Process };
+                        *color_type = if sp { pejy_color::ColorType::Spot } else { pejy_color::ColorType::Process };
                     }
                     if tint.is_some() || base.is_some() {
                         return Err(bad(ID, "only tint swatches have a tint"));
@@ -2337,7 +2337,7 @@ mod color_tests {
 
     #[test]
     fn percent_components_at_most_one_stay_percent() {
-        use designcraft_color::Color;
+        use pejy_color::Color;
         // {"c": 0.7, ..., "y": 12.2} is a pale cream (C 0.7 %, Y 12.2 %), not C 70 %.
         let Some(Color::Cmyk { c, m, y, k }) = parse_color(&json!({"c": 0.7, "m": 0, "y": 12.2, "k": 0})) else { panic!("not CMYK") };
         assert!((c - 0.007).abs() < 1e-6 && m == 0.0 && (y - 0.122).abs() < 1e-6 && k == 0.0, "got {c} {m} {y} {k}");
@@ -2352,7 +2352,7 @@ mod color_tests {
     /// #910: `{c: 1, m: 0, y: 0, k: 0}` is a 1 % cyan tint, not solid cyan, though every component is within 0..1.
     #[test]
     fn cmyk_percentages_of_one_or_less_stay_percent() {
-        use designcraft_color::Color;
+        use pejy_color::Color;
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let id = s.execute("frame.create", &json!({"rect": [0, 0, 50, 50]})).unwrap()["id"].as_u64().unwrap();
@@ -2361,7 +2361,7 @@ mod color_tests {
         let d = &s.doc().unwrap().doc;
         let Some(Color::Cmyk { c, m, y, k }) = d.resolve_color("Tint1", 1.0) else { panic!("not CMYK") };
         assert!((c - 0.01).abs() < 1e-6 && m == 0.0 && y == 0.0 && k == 0.0, "got {c} {m} {y} {k}");
-        let pdf = designcraft_pdf::export_pdf(d, &s.cache, &designcraft_pdf::PdfOptions { compress: false, ..Default::default() }).unwrap();
+        let pdf = pejy_pdf::export_pdf(d, &s.cache, &pejy_pdf::PdfOptions { compress: false, ..Default::default() }).unwrap();
         let text = String::from_utf8_lossy(&pdf);
         // Operands of every `k` (DeviceCMYK fill), last first: [k, y, m, c]. Inks are written in 1/255 steps (C 1 % is 3/255).
         let fills: Vec<Vec<f32>> =
@@ -2373,21 +2373,21 @@ mod color_tests {
         s.execute("selection.set", &json!({"ids": [id]})).unwrap();
         s.execute("object.color", &json!({"color": {"c": 0.5, "m": 0.5, "y": 0, "k": 0}})).unwrap();
         let d = &s.doc().unwrap().doc;
-        let fill = &d.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch;
+        let fill = &d.item(pejy_doc::ItemId(id)).unwrap().fill.swatch;
         let Some(Color::Cmyk { c, m, .. }) = d.resolve_color(fill, 1.0) else { panic!("not CMYK") };
         assert!((c - 0.005).abs() < 1e-6 && (m - 0.005).abs() < 1e-6, "got {c} {m}");
     }
 
     #[test]
     fn a_colour_with_a_model_is_read_as_fractions_without_guessing() {
-        use designcraft_color::Color;
+        use pejy_color::Color;
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let id = s.execute("frame.create", &json!({"rect": [0, 0, 50, 50]})).unwrap()["id"].as_u64().unwrap();
         s.execute("selection.set", &json!({"ids": [id]})).unwrap();
         let fill = |s: &Session| {
             let d = &s.doc().unwrap().doc;
-            d.resolve_color(&d.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch, 1.0).unwrap()
+            d.resolve_color(&d.item(pejy_doc::ItemId(id)).unwrap().fill.swatch, 1.0).unwrap()
         };
         // M 1 % from the Color panel: not M 100 % (magenta), though every component is within 0..1.
         s.execute("object.color", &json!({"color": {"model": "cmyk", "c": 0, "m": 0.01, "y": 0, "k": 0}})).unwrap();
@@ -2436,7 +2436,7 @@ mod color_tests {
         let r = s.execute("style.group", &json!({"kind": "paragraph", "names": ["Head", "Sub"], "group": "Titles"})).unwrap();
         assert_eq!(r["renamed"]["Head"], "Titles/Head");
         let d = s.doc().unwrap().doc.clone();
-        assert_eq!(d.story(designcraft_doc::StoryId(sid)).unwrap().paras[0].style, "Titles/Head");
+        assert_eq!(d.story(pejy_doc::StoryId(sid)).unwrap().paras[0].style, "Titles/Head");
         assert_eq!(d.styles.para("Titles/Sub").unwrap().based_on.as_deref(), Some("Titles/Head"));
         // Out of the group again.
         s.execute("style.group", &json!({"kind": "paragraph", "names": ["Titles/Head"], "group": ""})).unwrap();
@@ -2475,7 +2475,7 @@ mod color_tests {
         assert_eq!(st.based_on.as_deref(), Some("Base"));
         // Exactly the attributes set: `null` unset the font style, the rest stayed unset.
         assert_eq!(st.chars, CharAttrs { size: Some(14.0), fill: Some("[Paper]".into()), tracking: Some(20.0), ..Default::default() });
-        let story = d.story(designcraft_doc::StoryId(sid)).unwrap();
+        let story = d.story(pejy_doc::StoryId(sid)).unwrap();
         assert!(story.chars.iter().any(|r| r.format.style == "Strong"));
         assert!(story.chars.iter().all(|r| r.format.style != "Emphasis"));
         let lead = d.styles.para("Lead").unwrap();
@@ -2523,7 +2523,7 @@ mod color_tests {
     fn null_kinsoku_sets_the_default_rules_over_a_based_on_set() {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
-        let hard = serde_json::to_value(designcraft_doc::cjk::Kinsoku::named("HardKinsoku").unwrap()).unwrap();
+        let hard = serde_json::to_value(pejy_doc::cjk::Kinsoku::named("HardKinsoku").unwrap()).unwrap();
         s.execute("style.paragraph.create", &json!({"name": "Base", "para": {"kinsoku": hard}})).unwrap();
         s.execute("style.paragraph.create", &json!({"name": "Body", "basedOn": "Base", "para": {"kinsoku": hard}})).unwrap();
         s.execute("style.paragraph.edit", &json!({"name": "Body", "para": {"kinsoku": null}})).unwrap();
@@ -2562,7 +2562,7 @@ mod color_tests {
 
     #[test]
     fn loading_swatches_matches_the_first_swatch_of_each_name() {
-        use designcraft_color::{Color, ColorType};
+        use pejy_color::{Color, ColorType};
         let ink = |k: f32| SwatchValue::Color { color: Color::cmyk(0.0, 0.0, 0.0, k), color_type: ColorType::Process };
         let sw = |name: &str, k: f32| Swatch { name: name.into(), value: ink(k), locked: false, named: true, hidden: false };
         let mut s = Session::new();
@@ -2573,7 +2573,7 @@ mod color_tests {
             Ok(())
         })
         .unwrap();
-        let file = designcraft_color::ase::write(&[sw("New", 0.4), sw("New", 0.5), sw("Twin", 0.6), sw("Unnamed", 0.7), sw("[Black]", 0.8)]);
+        let file = pejy_color::ase::write(&[sw("New", 0.4), sw("New", 0.5), sw("Twin", 0.6), sw("Unnamed", 0.7), sw("[Black]", 0.8)]);
         let b64 = crate::cmd::base64_encode(&file);
         let named = |s: &Session, name: &str| -> Vec<(SwatchValue, bool)> {
             s.doc().unwrap().doc.swatches.iter().filter(|w| w.name == name).map(|w| (w.value.clone(), w.hidden)).collect()
@@ -2596,7 +2596,7 @@ mod color_tests {
 
     #[test]
     fn loading_swatches_numbers_repeated_names_and_names_unnamed_colors() {
-        use designcraft_color::{Color, ColorType};
+        use pejy_color::{Color, ColorType};
         let ink = |k: f32| SwatchValue::Color { color: Color::cmyk(0.0, 0.0, 0.0, k), color_type: ColorType::Process };
         let sw = |name: &str, k: f32| Swatch { name: name.into(), value: ink(k), locked: false, named: true, hidden: false };
         let mut s = Session::new();
@@ -2607,7 +2607,7 @@ mod color_tests {
         })
         .unwrap();
         // "Red 2" comes before the second "Red", which takes "Red 3". Two unnamed colors share a value.
-        let file = designcraft_color::ase::write(&[
+        let file = pejy_color::ase::write(&[
             sw("Red", 0.2),
             sw("Red 2", 0.3),
             sw("Red", 0.4),
@@ -2655,16 +2655,16 @@ mod color_tests {
         s.execute("object.color", &json!({"color": {"c": 10, "m": 20, "y": 30, "k": 0}, "target": "stroke"})).unwrap();
         assert_eq!(s.doc().unwrap().doc.swatches.len(), n);
         let d = &s.doc().unwrap().doc;
-        let it = d.item(designcraft_doc::ItemId(id)).unwrap();
+        let it = d.item(pejy_doc::ItemId(id)).unwrap();
         assert_eq!(it.fill.swatch, it.stroke.swatch);
         // Add to Swatches with a name: listed, and the object follows the rename.
         s.execute("swatch.addToSwatches", &json!({"name": "Sand"})).unwrap();
         assert_eq!(listed(&s), before + 1);
         let d = &s.doc().unwrap().doc;
-        assert_eq!(d.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch, "Sand");
+        assert_eq!(d.item(pejy_doc::ItemId(id)).unwrap().fill.swatch, "Sand");
         // A colour equal to an existing swatch applies that swatch.
         s.execute("object.color", &json!({"color": {"c": 10, "m": 20, "y": 30, "k": 0}})).unwrap();
-        assert_eq!(s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch, "Sand");
+        assert_eq!(s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().fill.swatch, "Sand");
     }
 
     #[test]
@@ -2673,7 +2673,7 @@ mod color_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [72, 72, 400, 300], "content": "text", "text": "Hello world"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         s.execute("text.select", &json!({"story": sid.0, "anchor": 11})).unwrap();
         s.execute("endnote.insert", &json!({"text": "end"})).unwrap();
         s.execute("text.select", &json!({"story": sid.0, "anchor": 11})).unwrap();
@@ -2748,8 +2748,8 @@ mod color_group_tests {
         s.execute("swatch.moveToGroup", &json!({"swatches": [b], "group": "Brand"})).unwrap();
         let groups = |s: &Session| s.doc().unwrap().doc.color_groups.clone();
         assert_eq!(groups(&s)[0].swatches, [a.clone(), b.clone()]);
-        let bytes = designcraft_idml::export_idml(&s.doc().unwrap().doc);
-        let back = designcraft_idml::import_idml(&bytes).unwrap();
+        let bytes = pejy_idml::export_idml(&s.doc().unwrap().doc);
+        let back = pejy_idml::import_idml(&bytes).unwrap();
         assert_eq!(back.color_groups, groups(&s), "IDML ColorGroup");
         s.execute("swatch.delete", &json!({"name": b})).unwrap();
         assert_eq!(groups(&s)[0].swatches, [a.as_str()]);
@@ -2788,7 +2788,7 @@ mod ink_tests {
         assert!(!pdf(&mut s).contains("Pantone"), "all spots to process");
         let l = s.execute("ink.list", &json!({})).unwrap();
         assert_eq!(l["inks"][0]["alias"], "Pantone B");
-        let back = designcraft_idml::import_idml(&designcraft_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
+        let back = pejy_idml::import_idml(&pejy_idml::export_idml(&s.doc().unwrap().doc)).unwrap();
         assert!(back.inks.resolve("Pantone A").1, "IDML ConvertToProcess");
         assert!(back.inks.aliases.iter().any(|(a, b)| a == "Pantone A" && b == "Pantone B"), "IDML AliasInkName");
         assert!(s.execute("ink.options", &json!({"ink": "[Black]", "toProcess": true})).is_err());
@@ -2824,7 +2824,7 @@ mod export_tag_tests {
         let pdf = super::super::file::base64_decode(r["base64"].as_str().unwrap());
         let text = String::from_utf8_lossy(&pdf);
         assert!(text.contains("/S/H1") && text.contains("/S/P"), "structure elements");
-        assert!(designcraft_render::pdf_page_count(&pdf) == Some(1));
+        assert!(pejy_render::pdf_page_count(&pdf) == Some(1));
     }
 }
 
@@ -2836,7 +2836,7 @@ mod cjk_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let r = s.execute("frame.create", &json!({"rect": [0, 0, 300, 150], "content": "text", "text": "AB"})).unwrap();
-        let sid = designcraft_doc::StoryId(r["story"].as_u64().unwrap());
+        let sid = pejy_doc::StoryId(r["story"].as_u64().unwrap());
         let definition = |scale| json!({"name": "Mixed", "entries": [{"family": "Source Serif 4", "relativeSize": scale}]});
         s.execute("style.compositeFont.set", &definition(1.0)).unwrap();
         s.execute("text.select", &json!({"story": sid.0, "anchor": 0, "focus": 2})).unwrap();
@@ -2855,7 +2855,7 @@ mod cjk_tests {
 
 #[cfg(test)]
 mod delete_tests {
-    use designcraft_doc::{CellStyle, ObjectStyle, StoryId, Toc, TocEntry};
+    use pejy_doc::{CellStyle, ObjectStyle, StoryId, Toc, TocEntry};
     use serde_json::json;
 
     use crate::Session;
@@ -2925,7 +2925,7 @@ mod delete_tests {
         assert!(!named(&s, "Emphasis"), "no dangling reference");
         let d = s.doc().unwrap().doc.clone();
         assert_eq!(d.styles.char_style("Child").unwrap().based_on, None);
-        assert_eq!(d.footnote_options.ref_char_style, designcraft_doc::NO_CHAR_STYLE);
+        assert_eq!(d.footnote_options.ref_char_style, pejy_doc::NO_CHAR_STYLE);
     }
 
     /// Replacing a style with its own descendant rebases the deleted style's children on its
@@ -3006,8 +3006,8 @@ mod delete_tests {
 
 #[cfg(test)]
 mod swatch_options_tests {
-    use designcraft_color::SwatchValue;
-    use designcraft_doc::{ItemId, StoryId};
+    use pejy_color::SwatchValue;
+    use pejy_doc::{ItemId, StoryId};
     use serde_json::json;
 
     use crate::Session;
@@ -3031,7 +3031,7 @@ mod swatch_options_tests {
         s.execute("swatch.newColorGroup", &json!({"name": "Brand Colors", "swatches": ["Brand"]})).unwrap();
         s.execute("style.character.create", &json!({"name": "Accent"})).unwrap();
         s.edit(|d, _| {
-            d.swatches.push(designcraft_color::Swatch {
+            d.swatches.push(pejy_color::Swatch {
                 name: "Brand 50%".into(),
                 value: SwatchValue::Tint { base: "Brand".into(), tint: 0.5 },
                 locked: false,
@@ -3039,7 +3039,7 @@ mod swatch_options_tests {
                 hidden: false,
             });
             let st = d.styles_mut();
-            if let Some(p) = st.para_mut(designcraft_doc::BASIC_PARAGRAPH) {
+            if let Some(p) = st.para_mut(pejy_doc::BASIC_PARAGRAPH) {
                 p.chars.underline_color = Some("Brand".into());
                 p.para.shading_color = Some("Brand".into());
                 p.para.border_gap_color = Some("Brand".into());
@@ -3059,7 +3059,7 @@ mod swatch_options_tests {
         let d = &s.doc().unwrap().doc;
         let it = d.item(ItemId(id)).unwrap();
         let story = d.story(StoryId(sid)).unwrap();
-        let basic = d.styles.para(designcraft_doc::BASIC_PARAGRAPH).unwrap();
+        let basic = d.styles.para(pejy_doc::BASIC_PARAGRAPH).unwrap();
         vec![
             it.fill.swatch == name,
             it.stroke.swatch == name,
@@ -3084,7 +3084,7 @@ mod swatch_options_tests {
         assert_eq!(r["name"], "Signal Orange");
         let d = &s.doc().unwrap().doc;
         assert!(d.swatch("Brand").is_none());
-        assert!(matches!(d.swatch("Signal Orange").unwrap().value, SwatchValue::Color { color_type: designcraft_color::ColorType::Spot, .. }));
+        assert!(matches!(d.swatch("Signal Orange").unwrap().value, SwatchValue::Color { color_type: pejy_color::ColorType::Spot, .. }));
         assert_eq!(uses(&s, id, sid, "Signal Orange"), vec![true; 12]);
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(s.doc().unwrap().doc.swatch("Brand").is_some());
@@ -3170,7 +3170,7 @@ mod grep_style_tests {
         // Written past the command, as another application could.
         s.edit(|d, _| {
             if let Some(st) = d.styles_mut().para_mut("Broken") {
-                st.para.grep_styles = Some(vec![designcraft_doc::GrepStyle { style: "Keep".into(), pattern: "[a-".into() }]);
+                st.para.grep_styles = Some(vec![pejy_doc::GrepStyle { style: "Keep".into(), pattern: "[a-".into() }]);
             }
             Ok(())
         })
@@ -3186,15 +3186,15 @@ mod grep_style_tests {
 
 #[cfg(test)]
 mod sample_color_tests {
-    use designcraft_color::{Color, SwatchValue};
-    use designcraft_doc::ItemId;
+    use pejy_color::{Color, SwatchValue};
+    use pejy_doc::ItemId;
     use serde_json::json;
 
     use crate::Session;
 
     /// A 2×1 image, red then blue, placed 144 pt wide at (72, 72): each pixel is 72 pt.
     fn session_with_image() -> (Session, u64) {
-        let png = designcraft_render::Rendered { width: 2, height: 1, pixels: vec![255, 0, 0, 255, 0, 0, 255, 255] }.to_png();
+        let png = pejy_render::Rendered { width: 2, height: 1, pixels: vec![255, 0, 0, 255, 0, 0, 255, 255] }.to_png();
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let b64 = super::super::file::base64_encode(&png);
@@ -3280,10 +3280,10 @@ mod sample_color_tests {
         s.edit(|d, _| {
             let it = d.item_mut(ItemId(image)).ok_or(crate::EngineError::NoDocument)?;
             let b = it.inner_bounds();
-            it.path = designcraft_geom::shapes::rectangle(designcraft_geom::Rect::new(b.x0, b.y0, b.x1, b.y1 + 72.0));
-            let designcraft_doc::Content::Graphic(g) = &mut it.content else { return Err(crate::EngineError::NoDocument) };
-            let left = designcraft_geom::shapes::rectangle(designcraft_geom::Rect::new(0.0, 0.0, g.size.0 / 2.0, g.size.1));
-            g.clip = Some(std::sync::Arc::new(designcraft_doc::ClippingPath::new(designcraft_doc::ClippingKind::PhotoshopPath, left)));
+            it.path = pejy_geom::shapes::rectangle(pejy_geom::Rect::new(b.x0, b.y0, b.x1, b.y1 + 72.0));
+            let pejy_doc::Content::Graphic(g) = &mut it.content else { return Err(crate::EngineError::NoDocument) };
+            let left = pejy_geom::shapes::rectangle(pejy_geom::Rect::new(0.0, 0.0, g.size.0 / 2.0, g.size.1));
+            g.clip = Some(std::sync::Arc::new(pejy_doc::ClippingPath::new(pejy_doc::ClippingKind::PhotoshopPath, left)));
             Ok(())
         })
         .unwrap();
@@ -3313,7 +3313,7 @@ mod sample_color_tests {
             };
             let (mut s, _) = session_with_image();
             let f = s.execute("frame.create", &json!({"rect": [300, 300, 500, 360], "content": "text"})).unwrap();
-            let story = designcraft_doc::StoryId(f["story"].as_u64().unwrap());
+            let story = pejy_doc::StoryId(f["story"].as_u64().unwrap());
             s.execute("text.select", &json!({"story": story.0, "anchor": 0})).unwrap();
             let undo = s.doc().unwrap().history.undo.len();
             let r = s.execute(command, &params([100.0, 100.0], "#ff0000", json!({}))).unwrap();
@@ -3352,7 +3352,7 @@ mod radial_gradient_tests {
 
     /// White at the side and the top of a 100×200 radial (black → white) rectangle at (50, 20) on
     /// a 200×240 page, rendered at 1 px/pt.
-    fn sides(img: &designcraft_render::Rendered) -> (u8, u8, u8) {
+    fn sides(img: &pejy_render::Rendered) -> (u8, u8, u8) {
         (img.pixel(100, 120)[0], img.pixel(52, 120)[0], img.pixel(100, 22)[0])
     }
 
@@ -3368,11 +3368,11 @@ mod radial_gradient_tests {
         )
         .unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let mut r = designcraft_render::Renderer::new();
+        let mut r = pejy_render::Renderer::new();
         let (c, side, top) = sides(&r.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap());
         assert!(c < 30 && side > 220 && top > 220, "screen: centre {c}, side {side}, top {top}");
         // The PDF, placed back and drawn: the same ellipse.
-        let pdf = designcraft_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
         let mut p = crate::Session::new();
         p.execute("file.new", &json!({"width": 200, "height": 240, "facingPages": false})).unwrap();
         p.execute("file.place", &json!({"base64": crate::cmd::file::base64_encode(&pdf), "name": "radial.pdf", "x": 0, "y": 0, "width": 200}))
@@ -3384,24 +3384,24 @@ mod radial_gradient_tests {
 
     #[test]
     fn a_box_with_no_height_or_width_has_a_circle_across_its_length() {
-        let f = designcraft_doc::Fill::swatch("g");
-        let line = designcraft_geom::Rect::new(20.0, 60.0, 180.0, 60.0);
+        let f = pejy_doc::Fill::swatch("g");
+        let line = pejy_geom::Rect::new(20.0, 60.0, 180.0, 60.0);
         let (c, rx, ry) = f.radial_ellipse(line);
         assert_eq!((c.x, c.y, rx, ry), (100.0, 60.0, 80.0, 80.0));
-        let (_, rx, ry) = f.radial_ellipse(designcraft_geom::Rect::new(10.0, 0.0, 10.0, 50.0));
+        let (_, rx, ry) = f.radial_ellipse(pejy_geom::Rect::new(10.0, 0.0, 10.0, 50.0));
         assert_eq!((rx, ry), (25.0, 25.0));
         // A point: a tiny circle, never a zero radius.
-        let (_, rx, ry) = f.radial_ellipse(designcraft_geom::Rect::new(5.0, 5.0, 5.0, 5.0));
+        let (_, rx, ry) = f.radial_ellipse(pejy_geom::Rect::new(5.0, 5.0, 5.0, 5.0));
         assert!(rx > 0.0 && rx == ry);
         // A box keeps its ellipse.
-        let (_, rx, ry) = f.radial_ellipse(designcraft_geom::Rect::new(0.0, 0.0, 100.0, 200.0));
+        let (_, rx, ry) = f.radial_ellipse(pejy_geom::Rect::new(0.0, 0.0, 100.0, 200.0));
         assert_eq!((rx, ry), (50.0, 100.0));
     }
 }
 
 #[cfg(test)]
 mod gradient_swatch_tests {
-    use designcraft_color::SwatchValue;
+    use pejy_color::SwatchValue;
     use serde_json::json;
 
     fn doc() -> crate::Session {
@@ -3451,7 +3451,7 @@ mod gradient_swatch_tests {
         let id = s.execute("frame.create", &json!({"rect": [0, 0, 100, 100], "content": "unassigned"})).unwrap()["id"].as_u64().unwrap();
         // A gradient made in the Gradient panel is unnamed (and not listed) …
         s.execute("object.gradient", &json!({"ids": [id], "stops": [{"location": 0, "color": {"c": 0, "m": 100, "y": 0, "k": 0}}, {"location": 100, "color": {"c": 100, "m": 0, "y": 0, "k": 0}}]})).unwrap();
-        let fill = |s: &crate::Session| s.doc().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().fill.swatch.clone();
+        let fill = |s: &crate::Session| s.doc().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().fill.swatch.clone();
         assert!(s.doc().unwrap().doc.swatch(&fill(&s)).unwrap().hidden);
         // … until New Swatch: "New Gradient Swatch", listed, still the object's fill.
         s.execute("selection.set", &json!({"ids": [id]})).unwrap();
@@ -3479,7 +3479,7 @@ mod gradient_stroke_tests {
     use serde_json::json;
 
     /// Grey along a 20 pt line from (20, 60) to (180, 60): near its start, middle and end.
-    fn along(img: &designcraft_render::Rendered) -> (u8, u8, u8) {
+    fn along(img: &pejy_render::Rendered) -> (u8, u8, u8) {
         (img.pixel(26, 60)[0], img.pixel(100, 60)[0], img.pixel(174, 60)[0])
     }
 
@@ -3496,14 +3496,14 @@ mod gradient_stroke_tests {
             )
             .unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let it = d.item(designcraft_doc::ItemId(id)).unwrap();
+        let it = d.item(pejy_doc::ItemId(id)).unwrap();
         assert_eq!(it.stroke.swatch, r["swatch"].as_str().unwrap());
-        assert_eq!(it.fill.swatch, designcraft_color::swatch::NONE, "the fill is left alone");
-        let mut rr = designcraft_render::Renderer::new();
+        assert_eq!(it.fill.swatch, pejy_color::swatch::NONE, "the fill is left alone");
+        let mut rr = pejy_render::Renderer::new();
         let (a, m, b) = along(&rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap());
         assert!(a < 40 && (90..170).contains(&m) && b > 215, "screen: {a} {m} {b}");
         // The PDF, placed back and drawn: the same.
-        let pdf = designcraft_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
         let mut p = crate::Session::new();
         p.execute("file.new", &json!({"width": 200, "height": 120, "facingPages": false})).unwrap();
         p.execute("file.place", &json!({"base64": crate::cmd::file::base64_encode(&pdf), "name": "stroke.pdf", "x": 0, "y": 0, "width": 200}))
@@ -3520,7 +3520,7 @@ mod gradient_stroke_tests {
     }
 
     /// A 20 pt horizontal line with a gradient on its stroke, drawn on screen and from its PDF.
-    fn line_with_stroke_gradient(g: serde_json::Value) -> (designcraft_render::Rendered, designcraft_render::Rendered) {
+    fn line_with_stroke_gradient(g: serde_json::Value) -> (pejy_render::Rendered, pejy_render::Rendered) {
         let mut s = crate::Session::new();
         s.execute("file.new", &json!({"width": 200, "height": 120, "facingPages": false})).unwrap();
         let id = s.execute("line.create", &json!({"a": [20, 60], "b": [180, 60]})).unwrap()["id"].as_u64().unwrap();
@@ -3530,9 +3530,9 @@ mod gradient_stroke_tests {
         g["target"] = json!("stroke");
         s.execute("object.gradient", &g).unwrap();
         let d = s.doc().unwrap().doc.clone();
-        let mut rr = designcraft_render::Renderer::new();
+        let mut rr = pejy_render::Renderer::new();
         let screen = rr.render_page(&d, &s.cache, 0, 1.0, false, &Default::default()).unwrap();
-        let pdf = designcraft_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
+        let pdf = pejy_pdf::export_pdf(&d, &s.cache, &Default::default()).unwrap();
         let mut p = crate::Session::new();
         p.execute("file.new", &json!({"width": 200, "height": 120, "facingPages": false})).unwrap();
         p.execute("file.place", &json!({"base64": crate::cmd::file::base64_encode(&pdf), "name": "line.pdf", "x": 0, "y": 0, "width": 200})).unwrap();

@@ -1,9 +1,9 @@
 //! SAVEAS at a chosen version and as binary DXF (#421): the options reach the host's writer, the
 //! drawing keeps them for later saves, and bad values are errors.
 
-use cadcraft_doc::{Drawing, HVal};
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, SaveAs, base64_decode, base64_encode, set_io, set_write_as};
+use drafitra_doc::{Drawing, HVal};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, SaveAs, base64_decode, base64_encode, set_io, set_write_as};
 use serde_json::json;
 
 /// The plain writer (no options).
@@ -28,7 +28,7 @@ fn acadver(s: &Session) -> Option<String> {
 #[test]
 fn saveas_version_and_binary_reach_the_writer_and_stay_with_the_drawing() {
     install();
-    let dir = std::env::temp_dir().join(format!("cadcraft-save-version-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-save-version-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |name: &str| dir.join(name).to_string_lossy().to_string();
     let read = |name: &str| String::from_utf8(std::fs::read(dir.join(name)).unwrap()).unwrap();
@@ -64,7 +64,7 @@ fn saveas_version_and_binary_reach_the_writer_and_stay_with_the_drawing() {
 #[test]
 fn bad_save_options_are_errors() {
     install();
-    let dir = std::env::temp_dir().join(format!("cadcraft-save-version-bad-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-save-version-bad-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = |name: &str| dir.join(name).to_string_lossy().to_string();
     let mut s = Session::new();
@@ -82,7 +82,7 @@ fn bad_save_options_are_errors() {
 #[test]
 fn opening_binary_dxf_keeps_it_binary() {
     install();
-    let dir = std::env::temp_dir().join(format!("cadcraft-save-version-open-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-save-version-open-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = Session::new();
     let binary = b"AutoCAD Binary DXF\r\n\x1a\0\0\0EOF\0";

@@ -296,7 +296,7 @@ fn rescanning_retries_missing_glyphs_and_absent_fallback_families() {
     use crate::testing::font_with;
     let dir = font_dir("rescan-fallback-ttf");
     // Only synthetic TTF files in this folder are scanned. Keep the loaded Latin fallback
-    // alone so optional craft-fonts cannot provide the characters used by this fixture.
+    // alone so optional mahay-fonts cannot provide the characters used by this fixture.
     let db = FontDb::with_font_dirs(vec![dir.clone()]);
     db.faces.write().unwrap().retain(|f| f.family == FALLBACK_FAMILY);
     let c = '\u{1e900}';
@@ -328,7 +328,7 @@ fn a_rescan_does_not_cache_an_older_in_flight_glyph_miss() {
 
     let dir = font_dir("rescan-in-flight-ttf");
     let db = Arc::new(FontDb::with_font_dirs(vec![dir.clone()]));
-    // Optional craft-fonts must not supply the test glyph from an already loaded face.
+    // Optional mahay-fonts must not supply the test glyph from an already loaded face.
     db.faces.write().unwrap().retain(|f| f.family == FALLBACK_FAMILY);
     let c = '\u{1e900}';
     let family = "Installed During Glyph Lookup";

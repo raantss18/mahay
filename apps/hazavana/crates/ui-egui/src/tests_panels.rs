@@ -7,14 +7,14 @@ use serde_json::json;
 
 use crate::headless::Headless;
 use crate::state::{LEFT_WIDTH, MIN_PHOTO_WIDTH, RIGHT_WIDTH};
-use crate::{LightcraftApp, Services};
+use crate::{HazavanaApp, Services};
 
 const T: Duration = Duration::from_secs(20);
 const SETTLE: Duration = Duration::from_secs(120);
 
 fn demo(size: [f32; 2], ui: serde_json::Value) -> Headless {
     let services = Services { png: None, ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), services);
     let mut h = Headless::new(app, size, 1.0);
     let r = h.request("ui.set", ui, T);
     assert_eq!(r["ok"], true, "{r}");
@@ -752,7 +752,7 @@ fn a_drop_on_the_pinned_header_is_not_a_drop_on_the_row_beneath_it() {
     let best = make(&mut h, json!({"name": "Best", "parent": last}));
     h.step();
     h.step();
-    let parent = |h: &Headless| h.app.session.catalog.album(lightcraft_catalog::AlbumId(best)).unwrap().parent.map(|p| p.0);
+    let parent = |h: &Headless| h.app.session.catalog.album(hazavana_catalog::AlbumId(best)).unwrap().parent.map(|p| p.0);
     let row = |h: &Headless| widget(h, &format!("source:album:{best}"));
     // far enough that Best is in view and Albums' own header is not
     for _ in 0..8 {
@@ -1093,7 +1093,7 @@ fn albums_are_created_inside_the_chosen_folder() {
         assert_eq!(new.len(), 1, "{command} made exactly one album: {new:?}");
         new[0]
     };
-    let parent_of = |h: &Headless, id: u64| h.app.session.catalog.album(lightcraft_catalog::AlbumId(id)).unwrap().parent.map(|p| p.0);
+    let parent_of = |h: &Headless, id: u64| h.app.session.catalog.album(hazavana_catalog::AlbumId(id)).unwrap().parent.map(|p| p.0);
     // fold both folders: the new rows must still be visible afterwards
     for f in [europe, trips] {
         let r = h.request("ui.clickWidget", json!({"id": format!("albumToggle:{f}")}), T);
@@ -1107,10 +1107,10 @@ fn albums_are_created_inside_the_chosen_folder() {
     assert!(has(&h, &format!("source:album:{album}")), "the new album is shown, its folders opened to it");
     let folder = create(&mut h, "dialog.newFolder", "Italy", Some(europe));
     assert_eq!(parent_of(&h, folder), Some(europe));
-    assert!(h.app.session.catalog.album(lightcraft_catalog::AlbumId(folder)).unwrap().folder);
+    assert!(h.app.session.catalog.album(hazavana_catalog::AlbumId(folder)).unwrap().folder);
     let smart = create(&mut h, "dialog.smartAlbum", "Rated", Some(folder));
     assert_eq!(parent_of(&h, smart), Some(folder));
-    assert!(h.app.session.catalog.album(lightcraft_catalog::AlbumId(smart)).unwrap().is_smart());
+    assert!(h.app.session.catalog.album(hazavana_catalog::AlbumId(smart)).unwrap().is_smart());
     let from_view = create(&mut h, "dialog.newSmartAlbum", "From view", Some(trips));
     assert_eq!(parent_of(&h, from_view), Some(trips));
     // without a folder they are still made at the top level
@@ -1167,7 +1167,7 @@ impl AlbumTree {
         widget(&self.h, "sidebarSection:albums").center()
     }
     fn parent(&self, id: u64) -> Option<u64> {
-        self.h.app.session.catalog.album(lightcraft_catalog::AlbumId(id)).unwrap().parent.map(|p| p.0)
+        self.h.app.session.catalog.album(hazavana_catalog::AlbumId(id)).unwrap().parent.map(|p| p.0)
     }
     /// Press at `from`, move through each `(point, frames held there)`, release at the last one.
     fn drag(&mut self, from: egui::Pos2, path: &[(egui::Pos2, usize)]) {
@@ -1213,7 +1213,7 @@ impl AlbumTree {
     /// The names inside `parent`, folders or albums only.
     fn kids(&self, parent: Option<u64>, folders: bool) -> Vec<String> {
         let cat = &self.h.app.session.catalog;
-        cat.album_children(parent.map(lightcraft_catalog::AlbumId)).iter().filter(|a| a.folder == folders).map(|a| a.name.clone()).collect()
+        cat.album_children(parent.map(hazavana_catalog::AlbumId)).iter().filter(|a| a.folder == folders).map(|a| a.name.clone()).collect()
     }
     fn drag_row(&mut self, id: u64, onto: u64) {
         let (from, to) = (self.row(id).center(), self.row(onto).center());
@@ -1247,7 +1247,7 @@ fn dragging_an_album_onto_a_folder_moves_it() {
     // a plain click still only opens the album
     let c = t.row(t.best).center();
     t.drag(c, &[(c, 0)]);
-    assert_eq!(t.h.app.session.source, lightcraft_engine::LibrarySource::Album(lightcraft_catalog::AlbumId(t.best)));
+    assert_eq!(t.h.app.session.source, hazavana_engine::LibrarySource::Album(hazavana_catalog::AlbumId(t.best)));
 }
 
 /// A drag ends only with the main button, and Esc abandons it: a release of another button over a
@@ -1495,14 +1495,14 @@ fn folders_app_sized(paths: &[&str], size: [f32; 2]) -> Headless {
 }
 
 fn folders_app_with_services(paths: &[&str], size: [f32; 2], services: Services) -> Headless {
-    use lightcraft_catalog::{Op, Photo, Source};
-    let mut session = lightcraft_engine::Session::new();
+    use hazavana_catalog::{Op, Photo, Source};
+    let mut session = hazavana_engine::Session::new();
     for path in paths {
         let id = session.catalog.alloc_photo_id();
         let p = Photo::new(id, Source::File { path: (*path).into() }, "x.jpg", "JPEG", 60, 40, "2026-01-01T10:00:00");
         session.catalog.apply(Op::AddPhoto { photo: Box::new(p) }).unwrap();
     }
-    let app = LightcraftApp::new(session, services);
+    let app = HazavanaApp::new(session, services);
     let mut h = Headless::new(app, size, 1.0);
     let r = h.request("ui.set", json!({"view": "photoGrid", "leftPanel": true}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -1534,9 +1534,9 @@ fn folders_section_lists_where_photos_were_imported_from_and_fills_the_grid() {
     assert_eq!(h.app.session.visible().len(), 3);
     click(&mut h, "source:libfolder:/pics/trip");
     assert_eq!(h.app.session.visible().len(), 2, "only the photos imported from that folder");
-    assert_eq!(h.app.session.source, lightcraft_engine::LibrarySource::LibraryFolder);
+    assert_eq!(h.app.session.source, hazavana_engine::LibrarySource::LibraryFolder);
     assert_eq!(h.app.session.library_folder.as_deref(), Some("/pics/trip"));
-    assert_eq!(h.app.session.filter, lightcraft_catalog::Filter::default(), "a source, not a filter");
+    assert_eq!(h.app.session.filter, hazavana_catalog::Filter::default(), "a source, not a filter");
     click(&mut h, "source:all");
     assert_eq!(h.app.session.visible().len(), 3, "All Photos shows everything again");
     // the section folds like the others
@@ -1566,7 +1566,7 @@ fn disks_are_rows_of_their_own() {
 /// shown before is replaced, and the folder's own row is highlighted.
 #[test]
 fn choosing_a_library_folder_replaces_whatever_was_shown() {
-    use lightcraft_engine::LibrarySource;
+    use hazavana_engine::LibrarySource;
     let mut h = folders_app(&["/pics/trip/a.jpg", "/pics/home/b.jpg"]);
     click(&mut h, "libraryFolderToggle:/pics");
     for before in [LibrarySource::Picks, LibrarySource::Folder, LibrarySource::RecentlyDeleted, LibrarySource::Missing] {
@@ -1584,10 +1584,10 @@ fn choosing_a_library_folder_replaces_whatever_was_shown() {
 #[test]
 fn the_grid_is_titled_after_the_folder() {
     let mut h = folders_app(&["/Volumes/tokyo/photos/travel/a.jpg"]);
-    h.app.session.source = lightcraft_engine::LibrarySource::LibraryFolder;
+    h.app.session.source = hazavana_engine::LibrarySource::LibraryFolder;
     h.app.session.library_folder = Some("/Volumes/tokyo/photos/travel".into());
     assert_eq!(crate::i18n::source_title(&h.app.session), "photos/travel");
-    h.app.session.source = lightcraft_engine::LibrarySource::All;
+    h.app.session.source = hazavana_engine::LibrarySource::All;
     assert_eq!(crate::i18n::source_title(&h.app.session), "All Photos");
 }
 
@@ -1642,7 +1642,7 @@ fn a_folder_that_holds_other_disks_only_opens() {
 fn the_chosen_folder_is_always_in_view() {
     let mut h = folders_app(&["/pics/trip/day1/a.jpg", "/pics/trip/b.jpg", "/pics/home/c.jpg"]);
     assert!(!has(&h, "source:libfolder:/pics/trip/day1"), "folded to begin with");
-    h.app.session.source = lightcraft_engine::LibrarySource::LibraryFolder;
+    h.app.session.source = hazavana_engine::LibrarySource::LibraryFolder;
     h.app.session.library_folder = Some("/pics/trip/day1".into());
     h.step();
     h.step();
@@ -1669,7 +1669,7 @@ fn a_renamed_folder_keeps_its_place_in_the_tree() {
     // the folder tree writes paths with forward slashes, and its widget ids carry them
     let b = base.to_string_lossy().replace('\\', "/");
     let mut h = folders_app(&[&format!("{b}/pics/trip/a.jpg"), &format!("{b}/pics/home/b.jpg")]);
-    h.app.session.source = lightcraft_engine::LibrarySource::LibraryFolder;
+    h.app.session.source = hazavana_engine::LibrarySource::LibraryFolder;
     h.app.session.library_folder = Some(format!("{b}/pics/trip"));
     h.step();
     h.step();
@@ -1751,7 +1751,7 @@ fn a_folder_menu_locates_its_missing_tree_only() {
         .catalog
         .photos()
         .filter_map(|photo| match &photo.source {
-            lightcraft_catalog::Source::File { path } => Some(path.clone()),
+            hazavana_catalog::Source::File { path } => Some(path.clone()),
             _ => None,
         })
         .collect();
@@ -1770,7 +1770,7 @@ fn a_folder_takes_a_colour_label_from_its_menu() {
     right_click(&mut h, "source:libfolder:/pics/trip");
     click(&mut h, "folderLabelMenu");
     click(&mut h, "folderLabel:red");
-    assert_eq!(h.app.session.catalog.folder_color_label("/pics/trip"), Some(lightcraft_catalog::ColorLabel::Red));
+    assert_eq!(h.app.session.catalog.folder_color_label("/pics/trip"), Some(hazavana_catalog::ColorLabel::Red));
     assert!(!popup_open(&h), "choosing closes the menu");
     h.step();
     assert!(has(&h, "labelMark:libfolder:/pics/trip"), "the row shows its label");
@@ -1839,7 +1839,7 @@ fn a_sidebar_that_fits_does_not_scroll_sideways() {
 fn a_long_folder_name_never_runs_under_the_photo_count() {
     let long = "/very/long/2024-06-12 Tripping Through The Extremely Long Named Mountains Of Somewhere";
     let mut h = folders_app_sized(&[&format!("{long}/a.jpg")], [900.0, 700.0]);
-    h.app.session.source = lightcraft_engine::LibrarySource::LibraryFolder;
+    h.app.session.source = hazavana_engine::LibrarySource::LibraryFolder;
     h.app.session.library_folder = Some(long.into());
     h.step();
     h.step();
@@ -1949,13 +1949,13 @@ fn date_and_keyword_rows_show_their_photos_from_any_source() {
     let r = h.request("ui.clickWidget", json!({"id": row}), T);
     assert_eq!(r["ok"], true, "{r}");
     h.step();
-    assert_eq!(h.app.session.source, lightcraft_engine::LibrarySource::All, "{key}");
+    assert_eq!(h.app.session.source, hazavana_engine::LibrarySource::All, "{key}");
     assert!(!h.app.session.visible().is_empty(), "{key}: its photos are shown");
     // choosing the row again clears it, and stays in All Photos
     let r = h.request("ui.clickWidget", json!({"id": row}), T);
     assert_eq!(r["ok"], true, "{r}");
     h.step();
-    assert_eq!(h.app.session.filter, lightcraft_catalog::Filter::default(), "{key}");
+    assert_eq!(h.app.session.filter, hazavana_catalog::Filter::default(), "{key}");
 }
 
 /// Issue #501: use the actual context-menu button on the populated demo folder.
@@ -1983,7 +1983,7 @@ fn deleting_a_populated_album_folder_from_its_menu_is_undoable() {
 /// (Auto Advance On, Imported presets, …).
 #[test]
 fn a_menu_commands_toast_shows_after_a_while() {
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = crate::headless::Headless::new(app, [1000.0, 700.0], 1.0);
     for _ in 0..600 {
         h.step();
@@ -2007,7 +2007,7 @@ fn the_tracklog_toast_shows_after_a_while() {
         r#"<?xml version="1.0"?><gpx version="1.1" creator="test" xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg><trkpt lat="46.0" lon="7.0"><time>2026-05-01T10:00:00Z</time></trkpt></trkseg></trk></gpx>"#,
     )
     .unwrap();
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo(), Services { png: None, ..Default::default() });
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo(), Services { png: None, ..Default::default() });
     let mut h = crate::headless::Headless::new(app, [1000.0, 700.0], 1.0);
     for _ in 0..600 {
         h.step();
@@ -2055,7 +2055,7 @@ fn recognise_faces_stays_off_until_a_model_is_chosen() {
     }
     // a model: installing it chooses it and switches recognition on; the box then works both ways
     let f = dir.join("m.onnx");
-    std::fs::write(&f, lightcraft_faces::synthetic::tiny_embedder_model(64)).unwrap();
+    std::fs::write(&f, hazavana_faces::synthetic::tiny_embedder_model(64)).unwrap();
     h.app.session.execute("faces.models.install", &json!({"path": f.to_string_lossy(), "acknowledged": true})).unwrap();
     h.app.caches.faces_epoch += 1;
     h.step();
@@ -2075,13 +2075,13 @@ fn recognise_faces_stays_off_until_a_model_is_chosen() {
 fn local_photos_cannot_be_added_to_albums_until_they_join_my_photos() {
     let mut h = demo([1400.0, 900.0], json!({"view": "photoGrid", "leftPanel": true}));
     let album = h.app.session.execute("album.create", &json!({"name": "Trip", "addSelected": false})).unwrap()["id"].as_u64().unwrap();
-    let album_id = lightcraft_catalog::AlbumId(album);
+    let album_id = hazavana_catalog::AlbumId(album);
     let dir = std::env::temp_dir().join(format!("lc-ui-albums-local-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let img = lightcraft_raster::Rgba8::from_fn(24, 16, |x, y| [(x * 9) as u8, (y * 12) as u8, 80, 255]);
-    let o = lightcraft_engine::export::ExportOptions { format: lightcraft_engine::export::ExportFormat::Png, ..Default::default() };
-    std::fs::write(dir.join("a.png"), lightcraft_engine::export::encode_image(&img, &o).unwrap()).unwrap();
+    let img = hazavana_raster::Rgba8::from_fn(24, 16, |x, y| [(x * 9) as u8, (y * 12) as u8, 80, 255]);
+    let o = hazavana_engine::export::ExportOptions { format: hazavana_engine::export::ExportFormat::Png, ..Default::default() };
+    std::fs::write(dir.join("a.png"), hazavana_engine::export::encode_image(&img, &o).unwrap()).unwrap();
     let r = h.request("engine.execute", json!({"command": "library.browse", "params": {"path": dir.to_string_lossy()}}), T);
     assert_eq!(r["ok"], true, "{r}");
     h.settle(SETTLE);
@@ -2107,7 +2107,7 @@ fn local_photos_cannot_be_added_to_albums_until_they_join_my_photos() {
     h.step();
 
     // Photo ▸ Add to Album: the hint item first (off), the album and New Album… off
-    let add_to_album = |app: &LightcraftApp| -> Vec<crate::menubar::MenuNode> {
+    let add_to_album = |app: &HazavanaApp| -> Vec<crate::menubar::MenuNode> {
         let bar = crate::menubar::menu_bar(app);
         let photo = &bar.iter().find(|(t, _)| t == "Photo").expect("Photo menu").1;
         photo
@@ -2173,7 +2173,7 @@ fn right_click_add_to_album_offers_a_new_album_when_there_is_none() {
         h.app.session.execute("album.delete", &json!({"id": id})).unwrap();
     }
     assert!(h.app.session.catalog.albums().all(|a| a.folder || a.is_smart()), "no plain album is left");
-    let photo = lightcraft_catalog::PhotoId(h.app.session.visible_cloned()[1].0);
+    let photo = hazavana_catalog::PhotoId(h.app.session.visible_cloned()[1].0);
     h.step();
     let thumb = widget(&h, &format!("thumb:{}", photo.0));
     let r = h.request("ui.click", json!({"x": thumb.center().x, "y": thumb.center().y, "button": "right"}), T);
@@ -2214,13 +2214,13 @@ fn an_album_menu_imports_into_that_album() {
     for i in 0..2u8 {
         let (w, h) = (40usize, 30usize);
         let data: Vec<[u8; 4]> = (0..w * h).map(|k| [(k % w * 6) as u8, i * 90, (k / w * 8) as u8, 255]).collect();
-        let img = lightcraft_raster::Rgba8 { width: w, height: h, data };
-        let png = lightcraft_codecs::encode_png(&lightcraft_codecs::EncodeImage::rgba8(&img), &lightcraft_codecs::EncodeMeta::default()).unwrap();
+        let img = hazavana_raster::Rgba8 { width: w, height: h, data };
+        let png = hazavana_codecs::encode_png(&hazavana_codecs::EncodeImage::rgba8(&img), &hazavana_codecs::EncodeMeta::default()).unwrap();
         std::fs::write(dir.join(format!("card{i}.png")), png).unwrap();
     }
     let picked = dir.to_string_lossy().to_string();
     let services = Services { png: None, pick_folder: Some(Box::new(move || Some(picked.clone()))), ..Default::default() };
-    let app = LightcraftApp::new(lightcraft_engine::Session::with_demo().with_fs(), services);
+    let app = HazavanaApp::new(hazavana_engine::Session::with_demo().with_fs(), services);
     let mut h = Headless::new(app, [1400.0, 900.0], 1.0);
     let r = h.request("ui.set", json!({"view": "photoGrid", "leftPanel": true}), T);
     assert_eq!(r["ok"], true, "{r}");
@@ -2323,7 +2323,7 @@ fn deleting_a_photo_asks_first_from_the_key_the_menu_and_the_right_click_menu() 
 fn new_album_can_leave_the_selected_photos_out() {
     let mut h = demo([1400.0, 900.0], json!({"view": "photoGrid", "leftPanel": true}));
     let has = |h: &Headless, id: &str| h.app.widgets.iter().any(|(w, _)| w == id);
-    let photo = lightcraft_catalog::PhotoId(h.app.session.visible_cloned()[1].0);
+    let photo = hazavana_catalog::PhotoId(h.app.session.visible_cloned()[1].0);
     h.app.session.execute("library.select", &json!({"ids": [photo.0]})).unwrap();
     let create = |h: &mut Headless, command: &str, name: &str| {
         h.app.run(command, json!({"name": name})).unwrap();
@@ -2359,7 +2359,7 @@ fn new_album_can_leave_the_selected_photos_out() {
     confirm(&mut h);
 
     // nothing selected: no option, an empty album
-    h.app.session.selection = lightcraft_engine::Selection { ids: vec![], active: None };
+    h.app.session.selection = hazavana_engine::Selection { ids: vec![], active: None };
     create(&mut h, "dialog.newAlbum", "Nothing");
     assert!(!has(&h, "check:albumIncludeSelected"), "no selection, no option");
     confirm(&mut h);

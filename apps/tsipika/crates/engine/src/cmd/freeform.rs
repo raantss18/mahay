@@ -3,10 +3,10 @@
 //! these). Points are given in document coordinates; type runs keep them in text space.
 
 use serde_json::{Value, json};
-use vectorcraft_color::freeform::spread_scale;
-use vectorcraft_color::{Freeform, FreeformMode, FreeformPoint, GradientKind, Paint};
-use vectorcraft_doc::NodeKind;
-use vectorcraft_geom::{Affine, Rect};
+use tsipika_color::freeform::spread_scale;
+use tsipika_color::{Freeform, FreeformMode, FreeformPoint, GradientKind, Paint};
+use tsipika_doc::NodeKind;
+use tsipika_geom::{Affine, Rect};
 
 use super::appearance::{edit_items, edits_stroke, index_param, item_target};
 use super::gradient::{StopOwner, item_paint_bounds, run_paint_mut};
@@ -136,13 +136,13 @@ fn point_fields(v: &Value, pt: &mut FreeformPoint, to_paint: Affine) -> std::res
 
 /// The `color` of `p` as the document stores it: an RGB color in a CMYK document becomes CMYK
 /// through the color settings ([`super::paint::new_color`]). `None` without a valid one.
-fn given_color(s: &Session, p: &Value) -> Option<vectorcraft_color::Color> {
+fn given_color(s: &Session, p: &Value) -> Option<tsipika_color::Color> {
     p.get("color").and_then(color_value).map(|c| super::paint::new_color(s, p, c))
 }
 
 /// Parse the `freeform` param of a gradient paint (`{points: [{at, color, opacity?, spread?}],
 /// lines?: [[index, …]], mode?}`; points in the paint's space). Lossless for
-/// `vectorcraft_tools::params::freeform_json`.
+/// `tsipika_tools::params::freeform_json`.
 pub(crate) fn parse_freeform(v: &Value) -> std::result::Result<Freeform, String> {
     let points = v.get("points").and_then(Value::as_array).ok_or("`freeform.points` must be an array")?;
     let mut f = Freeform::default();
@@ -333,7 +333,7 @@ fn get(s: &mut Session, p: &Value) -> Result<Value> {
     let stroke = bool_or(p, "stroke", !s.fill_active);
     let (f, _) = s.proxy_freeform(stroke).ok_or_else(|| bad(C, NOT_FREEFORM))?;
     let selected = if stroke != s.fill_active { s.selected_freeform_point().filter(|i| *i < f.points.len()) } else { None };
-    let mut v = vectorcraft_tools::params::freeform_json(&f);
+    let mut v = tsipika_tools::params::freeform_json(&f);
     v["selected"] = json!(selected);
     Ok(v)
 }

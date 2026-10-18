@@ -2,8 +2,8 @@
 //! redoing, some dropping their connection now and then, all end up with the server's document,
 //! and no undo or redo ever reverts a change by someone else that its author had seen.
 
-use figcraft_collab::sim::{Rng, Sim};
-use figcraft_collab::{Limits, Recompute};
+use endrika_collab::sim::{Rng, Sim};
+use endrika_collab::{Limits, Recompute};
 
 use crate::Session;
 use crate::collab::EngineRecompute;
@@ -66,7 +66,7 @@ fn people_undoing_real_commands_converge_without_reverting_others() {
 }
 
 #[test]
-#[ignore = "longer run for development: cargo test -p figcraft-engine collab -- --ignored"]
+#[ignore = "longer run for development: cargo test -p endrika-engine collab -- --ignored"]
 fn many_people_undoing_real_commands_converge() {
     for seed in 100..160 {
         let limits = Limits { max_log_batches: if seed % 2 == 0 { 5 } else { 10_000 }, ..Limits::default() };

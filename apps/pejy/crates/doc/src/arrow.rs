@@ -2,8 +2,8 @@
 //! drawn in the stroke colour, sized by the stroke weight; the path is shortened under heads that
 //! end in a point so the stroke doesn't show past the tip.
 
-use designcraft_geom::kurbo::{self, ParamCurve, ParamCurveArclen, ParamCurveDeriv};
-use designcraft_geom::{Affine, BezPath, PathSeg, Point, Vec2};
+use pejy_geom::kurbo::{self, ParamCurve, ParamCurveArclen, ParamCurveDeriv};
+use pejy_geom::{Affine, BezPath, PathSeg, Point, Vec2};
 
 use crate::item::{Arrowhead, Stroke};
 

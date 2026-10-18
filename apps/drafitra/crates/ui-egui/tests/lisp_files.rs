@@ -1,8 +1,8 @@
 //! AutoLISP in the app (#758): a dropped `.lsp` file loads (its `c:` functions become
 //! commands), and a long routine runs a slice per frame so the window stays live.
 
-use cadcraft_engine::Session;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_ui_egui::{CadApp, Services};
 
 #[test]
 fn a_dropped_lisp_file_loads_and_defines_its_commands() {
@@ -36,7 +36,7 @@ fn a_long_routine_runs_across_frames() {
 /// and clicks used to go to object selection instead (found running the app by hand).
 #[test]
 fn a_canvas_click_answers_a_routine_waiting_for_a_point() {
-    use cadcraft_engine::geom::Vec2;
+    use drafitra_engine::geom::Vec2;
     use egui::{Event, Modifiers, PointerButton, vec2};
     let mut app = CadApp::new(Session::new(), Services::default());
     app.canvas.zoom_pending = false;

@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Value, json};
 
 use super::edit::{roots, z_sorted};
@@ -265,7 +265,7 @@ pub fn specs() -> Vec<CommandSpec> {
 pub(crate) fn place(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "instance.place";
     let c = req_id(cmd, p, "component")?;
-    let pt = figcraft_geom::Point::new(req_num(cmd, p, "x")?, req_num(cmd, p, "y")?);
+    let pt = endrika_geom::Point::new(req_num(cmd, p, "x")?, req_num(cmd, p, "y")?);
     let page = s.page()?;
     let doc = s.doc_mut()?;
     let c = main_of(doc, c).ok_or_else(|| bad(cmd, "`component` must be a component or component set"))?;
@@ -275,7 +275,7 @@ pub(crate) fn place(s: &mut Session, p: &Value) -> Result<Value> {
         slot = crate::drop::DropSlot { parent: page, index: None, line: None };
     }
     let (w, h) = doc.node(c).map(|n| (n.width, n.height)).unwrap_or((0.0, 0.0));
-    let local = doc.world_transform(slot.parent).inverse() * figcraft_geom::Point::new(pt.x - w / 2.0, pt.y - h / 2.0);
+    let local = doc.world_transform(slot.parent).inverse() * endrika_geom::Point::new(pt.x - w / 2.0, pt.y - h / 2.0);
     let i = crate::components::create_instance_at(doc, c, slot.parent, local.x, local.y, slot.index)?;
     s.set_selection(vec![i]);
     Ok(json!({"id": i, "parent": slot.parent}))
@@ -324,7 +324,7 @@ fn create(s: &mut Session, p: &Value) -> Result<Value> {
     if was_group {
         n.fills.clear();
         n.clip = false;
-        n.blend = figcraft_color::BlendMode::PassThrough;
+        n.blend = endrika_color::BlendMode::PassThrough;
     }
     s.set_selection(vec![target]);
     Ok(json!({"id": target}))
@@ -340,7 +340,7 @@ fn wrap_in_set(doc: &mut Document, ids: &[NodeId]) -> Result<NodeId> {
     }
     let bounds = doc.bounds_of(ids).unwrap_or_default();
     let pw = doc.world_transform(parent);
-    let local = figcraft_geom::transform_rect_bbox(pw.inverse(), bounds.inflate(20.0, 20.0));
+    let local = endrika_geom::transform_rect_bbox(pw.inverse(), bounds.inflate(20.0, 20.0));
     let base = ids
         .first()
         .and_then(|i| doc.node(*i))
@@ -349,7 +349,7 @@ fn wrap_in_set(doc: &mut Document, ids: &[NodeId]) -> Result<NodeId> {
         .unwrap_or_else(|| "Component".into());
     let set = doc.alloc_id();
     let mut n = Node::new(set, NodeKind::ComponentSet { description: String::new() }, base, local.width(), local.height());
-    n.transform = figcraft_geom::Affine::translate((local.x0, local.y0));
+    n.transform = endrika_geom::Affine::translate((local.x0, local.y0));
     n.fills.clear();
     doc.insert(n, parent, doc.index_in_parent(top).map(|i| i + 1))?;
     for i in ids {
@@ -384,7 +384,7 @@ fn fit_set(doc: &mut Document, set: NodeId) {
     let (mut w, mut h) = (0.0f64, 0.0f64);
     for c in kids {
         if let Some(n) = doc.node(c) {
-            let b = figcraft_geom::transform_rect_bbox(n.transform, n.local_rect());
+            let b = endrika_geom::transform_rect_bbox(n.transform, n.local_rect());
             w = w.max(b.x1 + 20.0);
             h = h.max(b.y1 + 20.0);
         }
@@ -445,13 +445,13 @@ fn add_variant(s: &mut Session, p: &Value) -> Result<Value> {
         .children
         .iter()
         .filter_map(|c| doc.node(*c))
-        .map(|n| figcraft_geom::transform_rect_bbox(n.transform, n.local_rect()).y1)
+        .map(|n| endrika_geom::transform_rect_bbox(n.transform, n.local_rect()).y1)
         .fold(0.0f64, f64::max);
     let dup = doc.duplicate_into(base, set, None)?;
     let n = doc.get_mut(dup)?;
     n.name = name;
     let c = n.transform.as_coeffs();
-    n.transform = figcraft_geom::Affine::new([c[0], c[1], c[2], c[3], c[4], bottom + 20.0]);
+    n.transform = endrika_geom::Affine::new([c[0], c[1], c[2], c[3], c[4], bottom + 20.0]);
     fit_set(doc, set);
     s.set_selection(vec![dup]);
     Ok(json!({"id": dup}))
@@ -822,7 +822,7 @@ pub(crate) fn swap_instance(doc: &mut Document, i: NodeId, c: NodeId) -> std::re
 pub(crate) fn swap_at(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "instance.swapAt";
     let c = req_id(cmd, p, "component")?;
-    let pt = figcraft_geom::Point::new(req_num(cmd, p, "x")?, req_num(cmd, p, "y")?);
+    let pt = endrika_geom::Point::new(req_num(cmd, p, "x")?, req_num(cmd, p, "y")?);
     let page = s.page()?;
     let doc = s.doc()?;
     let c = main_of(doc, c).ok_or_else(|| bad(cmd, "`component` must be a component or component set"))?;
@@ -1288,7 +1288,7 @@ fn edit_prop(s: &mut Session, p: &Value) -> Result<Value> {
                 for (c, (x, y)) in [(f, dp), (d, fp)] {
                     let n = doc.get_mut(c)?;
                     let [a, b, cc, dd, ..] = n.transform.as_coeffs();
-                    n.transform = figcraft_geom::Affine::new([a, b, cc, dd, x, y]);
+                    n.transform = endrika_geom::Affine::new([a, b, cc, dd, x, y]);
                 }
                 fit_set(doc, set);
             }

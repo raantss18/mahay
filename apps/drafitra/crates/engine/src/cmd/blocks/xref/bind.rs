@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 use std::sync::Arc;
 
-use cadcraft_doc::{Drawing, EntityStore, MAX_BLOCK_DEPTH, XrefStatus};
+use drafitra_doc::{Drawing, EntityStore, MAX_BLOCK_DEPTH, XrefStatus};
 
 use super::load::{Sym, has_prefix, rename_refs};
 
@@ -220,7 +220,7 @@ fn xbind_in(d: &mut Drawing, sym: Sym, name: &str, depth: usize) -> Result<Strin
                 map.insert((s, n.to_ascii_uppercase()), to);
             }
             let get = |s: Sym, n: &str| map.get(&(s, n.to_ascii_uppercase())).cloned();
-            let mut nb = cadcraft_doc::Block::new(&new);
+            let mut nb = drafitra_doc::Block::new(&new);
             nb.base = b.base;
             nb.description = b.description.clone();
             nb.explodable = b.explodable;

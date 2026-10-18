@@ -1442,8 +1442,8 @@ const TABLE: &[(&str, [&str; 5])] = &[
         ["Spreads of up to 10 pages", "Planches de 10 pages maximum", "Spreads of up to 10 pages", "Spreads of up to 10 pages", "最多10页的跨页"],
     ),
     ("for", ["for", "pour", "por", "に対して", "行"]),
-    ("About DesignCraft", ["About DesignCraft", "À propos de DesignCraft", "About DesignCraft", "About DesignCraft", "关于 DesignCraft"]),
-    ("Quit DesignCraft", ["DesignCraft beenden", "Quitter DesignCraft", "Salir de DesignCraft", "DesignCraft を終了", "退出 DesignCraft"]),
+    ("About Pejy", ["About Pejy", "À propos de Pejy", "About Pejy", "About Pejy", "关于 Pejy"]),
+    ("Quit Pejy", ["Pejy beenden", "Quitter Pejy", "Salir de Pejy", "Pejy を終了", "退出 Pejy"]),
     ("Accept All Changes", ["Accept All Changes", "Accepter toutes les modifications", "Accept All Changes", "Accept All Changes", "接受所有更改"]),
     ("Activate Document", ["Activate Document", "Activer le document", "Activate Document", "Activate Document", "激活文档"]),
     ("Add Anchor Point", ["Add Anchor Point", "Ajouter un point d'ancrage", "Add Anchor Point", "Add Anchor Point", "添加锚点"]),
@@ -1504,10 +1504,10 @@ const TABLE: &[(&str, [&str; 5])] = &[
         ["Apply Parent to Pages…", "Appliquer le gabarit aux pages…", "Apply Parent to Pages…", "Apply Parent to Pages…", "将主页应用于页面…"],
     ),
     (
-        "ArtCraft App Page…",
-        ["ArtCraft App Page…", "Page de l'application ArtCraft…", "ArtCraft App Page…", "ArtCraft App Page…", "ArtCraft 应用页面…"],
+        "Mahay App Page…",
+        ["Mahay App Page…", "Page de l'application Mahay…", "Mahay App Page…", "Mahay App Page…", "Mahay 应用页面…"],
     ),
-    ("ArtCraft Website…", ["ArtCraft Website…", "Site web d'ArtCraft…", "ArtCraft Website…", "ArtCraft Website…", "ArtCraft 网站…"]),
+    ("Mahay Website…", ["Mahay Website…", "Site web d'Mahay…", "Mahay Website…", "Mahay Website…", "Mahay 网站…"]),
     ("Attributes", ["Attributes", "Attributs", "Attributes", "Attributes", "属性"]),
     ("Bevel and Emboss", ["Bevel and Emboss", "Biseautage et estampage", "Bevel and Emboss", "Bevel and Emboss", "斜面和浮雕"]),
     ("Buttons", ["Buttons", "Boutons", "Buttons", "Buttons", "按钮"]),
@@ -1655,12 +1655,12 @@ const TABLE: &[(&str, [&str; 5])] = &[
     ),
     ("Delete Workspace…", ["Delete Workspace…", "Supprimer l'espace de travail…", "Delete Workspace…", "Delete Workspace…", "删除工作区…"]),
     (
-        "DesignCraft Website…",
-        ["DesignCraft Website…", "Site web de DesignCraft…", "DesignCraft Website…", "DesignCraft Website…", "DesignCraft 网站…"],
+        "Pejy Website…",
+        ["Pejy Website…", "Site web de Pejy…", "Pejy Website…", "Pejy Website…", "Pejy 网站…"],
     ),
     (
-        "DesignCraft on GitHub…",
-        ["DesignCraft on GitHub…", "DesignCraft sur GitHub…", "DesignCraft on GitHub…", "DesignCraft on GitHub…", "DesignCraft 在 GitHub 上…"],
+        "Pejy on GitHub…",
+        ["Pejy on GitHub…", "Pejy sur GitHub…", "Pejy on GitHub…", "Pejy on GitHub…", "Pejy 在 GitHub 上…"],
     ),
     (
         "Detach All Objects from Parent",
@@ -1853,13 +1853,13 @@ const TABLE: &[(&str, [&str; 5])] = &[
         ["Interface Color Theme", "Thème de couleur de l'interface", "Interface Color Theme", "Interface Color Theme", "界面颜色主题"],
     ),
     (
-        "Join the ArtCraft Discord…",
+        "Join the Mahay discussions…",
         [
-            "Join the ArtCraft Discord…",
-            "Rejoindre le Discord d'ArtCraft…",
-            "Join the ArtCraft Discord…",
-            "Join the ArtCraft Discord…",
-            "加入 ArtCraft Discord…",
+            "Join the Mahay discussions…",
+            "Rejoindre le Discord d'Mahay…",
+            "Join the Mahay discussions…",
+            "Join the Mahay discussions…",
+            "加入 Mahay Discord…",
         ],
     ),
     ("Last Object Below", ["Last Object Below", "Dernier objet en dessous", "Last Object Below", "Last Object Below", "下方最后一个对象"]),
@@ -2447,7 +2447,7 @@ const TABLE: &[(&str, [&str; 5])] = &[
         ["Cross-Reference Format", "Format de référence croisée", "Cross-Reference Format", "Cross-Reference Format", "交叉引用格式"],
     ),
     ("Delete Workspace", ["Delete Workspace", "Supprimer l'espace de travail", "Delete Workspace", "Delete Workspace", "删除工作区"]),
-    ("DesignCraft", ["DesignCraft", "DesignCraft", "DesignCraft", "DesignCraft", "DesignCraft"]),
+    ("Pejy", ["Pejy", "Pejy", "Pejy", "Pejy", "Pejy"]),
     ("Display Performance", ["Display Performance", "Performances d'affichage", "Display Performance", "Display Performance", "显示性能"]),
     ("Document Grid", ["Document Grid", "Grille du document", "Document Grid", "Document Grid", "文档网格"]),
     (
@@ -2497,19 +2497,19 @@ const TABLE: &[(&str, [&str; 5])] = &[
     ("Interactive", ["Interactive", "Interactif", "Interactive", "Interactive", "交互式"]),
     ("Invert", ["Invert", "Inverser", "Invert", "Invert", "反相"]),
     (
-        "Join the ArtCraft community",
+        "Join the Mahay community",
         [
-            "Join the ArtCraft community",
-            "Rejoindre la communauté ArtCraft",
-            "Join the ArtCraft community",
-            "Join the ArtCraft community",
-            "加入 ArtCraft 社区",
+            "Join the Mahay community",
+            "Rejoindre la communauté Mahay",
+            "Join the Mahay community",
+            "Join the Mahay community",
+            "加入 Mahay 社区",
         ],
     ),
     ("Keyboard Increments", ["Keyboard Increments", "Incréments au clavier", "Keyboard Increments", "Keyboard Increments", "键盘增量"]),
     ("Liquid guides", ["Liquid guides", "Repères liquides", "Liquid guides", "Liquid guides", "自适应参考线"]),
     ("Markers", ["Markers", "Marqueurs", "Markers", "Markers", "标记"]),
-    ("More ArtCraft apps", ["More ArtCraft apps", "Autres applications ArtCraft", "More ArtCraft apps", "More ArtCraft apps", "更多 ArtCraft 应用"]),
+    ("More Mahay apps", ["More Mahay apps", "Autres applications Mahay", "More Mahay apps", "More Mahay apps", "更多 Mahay 应用"]),
     ("Nested Line Styles", ["Nested Line Styles", "Styles de ligne imbriqués", "Nested Line Styles", "Nested Line Styles", "嵌套行样式"]),
     ("Nested Styles", ["Nested Styles", "Styles imbriqués", "Nested Styles", "Nested Styles", "嵌套样式"]),
     (
@@ -2635,13 +2635,13 @@ const TABLE: &[(&str, [&str; 5])] = &[
     ),
     ("Page · PPI", ["Page · PPI", "Page · PPP", "Page · PPI", "Page · PPI", "页面 · PPI"]),
     (
-        "Part of the ArtCraft suite of open creative tools.",
+        "Part of the Mahay suite of open creative tools.",
         [
-            "Part of the ArtCraft suite of open creative tools.",
-            "Fait partie de la suite ArtCraft d'outils créatifs ouverts.",
-            "Part of the ArtCraft suite of open creative tools.",
-            "Part of the ArtCraft suite of open creative tools.",
-            "ArtCraft 开源创意工具套件的一部分。",
+            "Part of the Mahay suite of open creative tools.",
+            "Fait partie de la suite Mahay d'outils créatifs ouverts.",
+            "Part of the Mahay suite of open creative tools.",
+            "Part of the Mahay suite of open creative tools.",
+            "Mahay 开源创意工具套件的一部分。",
         ],
     ),
     ("Pasteboard Options", ["Pasteboard Options", "Options de la table de montage", "Pasteboard Options", "Pasteboard Options", "粘贴板选项"]),
@@ -2807,8 +2807,8 @@ const TABLE: &[(&str, [&str; 5])] = &[
     ("Utilities", ["Utilities", "Utilitaires", "Utilities", "Utilities", "实用程序"]),
     ("Variable Font", ["Variable Font", "Police variable", "Variable Font", "Variable Font", "可变字体"]),
     (
-        "Welcome to DesignCraft",
-        ["Welcome to DesignCraft", "Bienvenue dans DesignCraft", "Welcome to DesignCraft", "Welcome to DesignCraft", "欢迎使用 DesignCraft"],
+        "Welcome to Pejy",
+        ["Welcome to Pejy", "Bienvenue dans Pejy", "Welcome to Pejy", "Welcome to Pejy", "欢迎使用 Pejy"],
     ),
     ("When Scaling", ["When Scaling", "Lors du redimensionnement", "When Scaling", "When Scaling", "缩放时"]),
     ("[Basic] (working) ▾", ["[Basic] (working) ▾", "[De base] (de travail) ▾", "[Basic] (working) ▾", "[Basic] (working) ▾", "[基本] (工作区) ▾"]),
@@ -2826,13 +2826,13 @@ const TABLE: &[(&str, [&str; 5])] = &[
         ],
     ),
     (
-        "discord.gg/artcraft — help, feedback and show-and-tell",
+        "github.com/raantss18/mahay/discussions — help, feedback and show-and-tell",
         [
-            "discord.gg/artcraft — help, feedback and show-and-tell",
-            "discord.gg/artcraft : aide, retours et présentation de vos créations",
-            "discord.gg/artcraft — help, feedback and show-and-tell",
-            "discord.gg/artcraft — help, feedback and show-and-tell",
-            "discord.gg/artcraft — 帮助、反馈和展示",
+            "github.com/raantss18/mahay/discussions — help, feedback and show-and-tell",
+            "github.com/raantss18/mahay/discussions : aide, retours et présentation de vos créations",
+            "github.com/raantss18/mahay/discussions — help, feedback and show-and-tell",
+            "github.com/raantss18/mahay/discussions — help, feedback and show-and-tell",
+            "github.com/raantss18/mahay/discussions — 帮助、反馈和展示",
         ],
     ),
     (
@@ -3744,7 +3744,7 @@ const TABLE: &[(&str, [&str; 5])] = &[
         "Include Stroke Weight",
         ["Include Stroke Weight", "Inclure l'épaisseur du contour", "Include Stroke Weight", "Include Stroke Weight", "包含描边粗细"],
     ),
-    ("Join our Discord", ["Join our Discord", "Rejoindre notre Discord", "Join our Discord", "Join our Discord", "加入我们的 Discord 社区"]),
+    ("Join the discussions", ["Join the discussions", "Rejoindre notre Discord", "Join the discussions", "Join the discussions", "加入我们的 Discord 社区"]),
     ("Keep Violations", ["Keep Violations", "Infractions d'enchaînement", "Keep Violations", "Keep Violations", "保持选项违规"]),
     (
         "Overprint [Black] Swatch at 100%",
@@ -4560,7 +4560,7 @@ pub fn count_label(lang: &str, noun: &str, count: usize) -> String {
 /// Localize reserved built-in style names only; user-defined names are document data.
 pub fn style_name<'a>(lang: &str, name: &'a str) -> &'a str {
     match name {
-        designcraft_doc::NO_PARA_STYLE | designcraft_doc::BASIC_PARAGRAPH | designcraft_doc::NO_CHAR_STYLE => tr(lang, name),
+        pejy_doc::NO_PARA_STYLE | pejy_doc::BASIC_PARAGRAPH | pejy_doc::NO_CHAR_STYLE => tr(lang, name),
         _ => name,
     }
 }
@@ -4938,13 +4938,13 @@ mod tests {
             keys.extend(table.iter().map(|(key, _)| *key));
         }
         // Command labels and menu names reach `tr` from the engine and the UI command table.
-        for spec in designcraft_engine::command_specs() {
+        for spec in pejy_engine::command_specs() {
             keys.insert(spec.label);
             keys.extend(spec.menu.iter().copied());
         }
         keys.extend(crate::menus::UI_COMMANDS.iter().map(|(_, label, _, _)| *label));
         // Tool names reach `tr` from the Tools panel.
-        keys.extend(designcraft_tools::TOOL_GROUPS.iter().flat_map(|group| group.iter()).map(|tool| tool.label));
+        keys.extend(pejy_tools::TOOL_GROUPS.iter().flat_map(|group| group.iter()).map(|tool| tool.label));
         // So do the About window's tab names, app descriptions and the credits' column and sort labels.
         keys.extend(crate::about::ABOUT_TABS);
         keys.extend(crate::about::SIBLINGS.iter().map(|(_, _, what)| *what));
@@ -4986,7 +4986,7 @@ mod tests {
             "Auto Rename",
             "Character Style",
             "Company",
-            "DesignCraft page",
+            "Pejy page",
             "Equal fixed heights for the selected rows; cell text may become overset.",
             "Found",
             "Grab bag",
@@ -5088,7 +5088,7 @@ mod tests {
 
     #[test]
     fn czech_translates_every_tool_name() {
-        for tool in designcraft_tools::TOOL_GROUPS.iter().flat_map(|group| group.iter()) {
+        for tool in pejy_tools::TOOL_GROUPS.iter().flat_map(|group| group.iter()) {
             assert_ne!(tr("cs", tool.label), tool.label, "{}", tool.id);
             assert_eq!(tr("", tool.label), tool.label);
         }

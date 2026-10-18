@@ -5,15 +5,15 @@
 
 use std::sync::Arc;
 
-use effectcraft_engine::effects::puppet::{self, Mesh, Pin, PinKind};
-use effectcraft_engine::geom::vec2 as gv2;
-use effectcraft_engine::project::{ItemId, Layer, LayerId};
-use effectcraft_engine::render::EvalCtx;
-use effectcraft_engine::time::Tick;
+use tselatra_engine::effects::puppet::{self, Mesh, Pin, PinKind};
+use tselatra_engine::geom::vec2 as gv2;
+use tselatra_engine::project::{ItemId, Layer, LayerId};
+use tselatra_engine::render::EvalCtx;
+use tselatra_engine::time::Tick;
 use egui::{Color32, Pos2, Stroke};
 
 use super::viewer::{ViewerMap, fx2c};
-use crate::EffectcraftApp;
+use crate::TselatraApp;
 
 /// Deformed meshes of a layer's Puppet effect: (mesh uid, mesh, deformed vertices, pins).
 pub type Overlay = Arc<Vec<(u64, Arc<Mesh>, Vec<[f64; 2]>, Vec<Pin>)>>;
@@ -67,7 +67,7 @@ struct Cached {
 }
 
 /// The deformed mesh of `layer`'s Puppet effect at comp time `t` (cached per project revision).
-pub fn overlay(app: &EffectcraftApp, ctx: &egui::Context, cid: ItemId, layer: &Layer, t: Tick) -> Option<Overlay> {
+pub fn overlay(app: &TselatraApp, ctx: &egui::Context, cid: ItemId, layer: &Layer, t: Tick) -> Option<Overlay> {
     let fx = layer.effects()?.groups().find(|g| puppet::is_puppet(g))?;
     let key = (app.session.revision, cid.0, layer.id.0, t.0);
     let id = egui::Id::new(("puppet-overlay", layer.id.0));
@@ -76,7 +76,7 @@ pub fn overlay(app: &EffectcraftApp, ctx: &egui::Context, cid: ItemId, layer: &L
     {
         return Some(c.overlay);
     }
-    let (buf, params) = effectcraft_engine::commands::puppet::puppet_eval(&app.session, cid, layer.id, fx.uid, t)?;
+    let (buf, params) = tselatra_engine::commands::puppet::puppet_eval(&app.session, cid, layer.id, fx.uid, t)?;
     let overlay: Overlay = Arc::new(puppet::overlay(&buf, &params));
     ctx.data_mut(|d| d.insert_temp(id, Cached { key, overlay: overlay.clone() }));
     Some(overlay)
@@ -98,7 +98,7 @@ pub fn target(ectx: &EvalCtx, layers: &[(&Layer, Overlay)], cpt: [f64; 2], on_ar
 
 /// Keep a pin's keyframed Position in view in the Timeline after placing, moving or recording the
 /// pin in the viewer (#273).
-pub fn reveal_pin(app: &mut EffectcraftApp, layer: LayerId, pin: u64) {
+pub fn reveal_pin(app: &mut TselatraApp, layer: LayerId, pin: u64) {
     let comp = app.session.active_comp();
     let pos = comp.and_then(|c| c.layer(layer)?.props.find_group(pin)?.get("position")).filter(|p| p.is_animated()).map(|p| p.uid);
     if let Some(pos) = pos {

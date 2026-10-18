@@ -8,15 +8,15 @@ use std::rc::Rc;
 
 use egui::{Event, Key, KeyboardShortcut, Modifiers, PointerButton, Pos2, Rect, vec2};
 use serde_json::{Value, json};
-use vectorcraft_engine::Session;
-use vectorcraft_engine::cmd::prefscmds::PREF_CATEGORIES;
+use tsipika_engine::Session;
+use tsipika_engine::cmd::prefscmds::PREF_CATEGORIES;
 
 use crate::i18n::Lang;
 use crate::native_menu::{self, Backend, MenuBar, MenuRole, NativeMenu, Node, Standard};
-use crate::{VectorcraftApp, menus};
+use crate::{TsipikaApp, menus};
 
-fn app(doc: bool) -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app(doc: bool) -> TsipikaApp {
+    let mut app = TsipikaApp::new(Session::new(), Default::default());
     if doc {
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("shape.rectangle", json!({"x": 20, "y": 20, "width": 37, "height": 40})).unwrap();
@@ -24,7 +24,7 @@ fn app(doc: bool) -> VectorcraftApp {
     app
 }
 
-fn bar(app: &VectorcraftApp) -> MenuBar {
+fn bar(app: &TsipikaApp) -> MenuBar {
     native_menu::mac_layout(app, &native_menu::from_tree(app, &menus::menu_tree()), Lang::EN).bar
 }
 
@@ -66,10 +66,10 @@ fn find<'a>(bar: &'a MenuBar, command: &str) -> &'a native_menu::Item {
 }
 
 #[test]
-fn vectorcraft_gets_a_mac_app_menu() {
+fn tsipika_gets_a_mac_app_menu() {
     let bar = bar(&app(true));
     let titles: Vec<&str> = bar.menus.iter().map(|m| m.title.as_str()).collect();
-    assert_eq!(titles, ["VectorCraft", "File", "Edit", "Object", "Type", "Select", "Effect", "View", "Window", "Help"]);
+    assert_eq!(titles, ["Tsipika", "File", "Edit", "Object", "Type", "Select", "Effect", "View", "Window", "Help"]);
     let app_menu = &bar.menus[0];
     assert_eq!(app_menu.role, MenuRole::App);
     assert_eq!(
@@ -94,10 +94,10 @@ fn vectorcraft_gets_a_mac_app_menu() {
         let it = find(&bar, command);
         (it.label.as_str(), it.shortcut)
     };
-    assert_eq!(shown("help.about"), ("About VectorCraft", None));
-    assert_eq!(shown("app.quit"), ("Quit VectorCraft", Some("Cmd+Q")), "Quit is the app's own, so unsaved documents are asked about");
+    assert_eq!(shown("help.about"), ("About Tsipika", None));
+    assert_eq!(shown("app.quit"), ("Quit Tsipika", Some("Cmd+Q")), "Quit is the app's own, so unsaved documents are asked about");
     // ⌘H stays View › Hide Edges (Illustrator's); Hide takes ⌃⌘H.
-    assert_eq!(shown(native_menu::HIDE), ("Hide VectorCraft", Some("Ctrl+Cmd+H")));
+    assert_eq!(shown(native_menu::HIDE), ("Hide Tsipika", Some("Ctrl+Cmd+H")));
     assert_eq!(shown(native_menu::HIDE_OTHERS), ("Hide Others", Some("Cmd+Alt+H")));
     assert_eq!(find(&bar, "view.edges").shortcut, Some("Cmd+H"));
     assert_eq!(bar.menu(MenuRole::Help).map(|m| m.title.as_str()), Some("Help"));
@@ -182,7 +182,7 @@ fn every_in_window_item_is_in_the_mac_menu_bar_once() {
         assert_eq!(m, want, "{key:?} is listed {m} times on the Mac, {n} in the window");
     }
     let system = [native_menu::HIDE, native_menu::HIDE_OTHERS, native_menu::MINIMIZE];
-    // Language and Appearance have no in-window menu (synthesized in the App menu, as in PhotoCraft).
+    // Language and Appearance have no in-window menu (synthesized in the App menu, as in Sary).
     let synthesized = ["app.language", "window.brightness"];
     for key in b.keys() {
         assert!(a.contains_key(key) || system.contains(&key.0.as_str()) || synthesized.contains(&key.0.as_str()), "{key:?} isn't an in-window item");
@@ -200,7 +200,7 @@ fn the_window_menu_has_the_system_items() {
     let window = ids(&bar.menu(MenuRole::Window).unwrap().children);
     assert_eq!(window[..3], [native_menu::MINIMIZE.to_string(), "<Zoom>".into(), "---".into()]);
     assert_eq!(window[window.len() - 2..], ["---".to_string(), "<BringAllToFront>".into()]);
-    assert_eq!(window[3], "window.newWindow", "then VectorCraft's own items");
+    assert_eq!(window[3], "window.newWindow", "then Tsipika's own items");
     assert_eq!(find(&bar, native_menu::MINIMIZE).shortcut, Some("Ctrl+Cmd+M"));
     assert!(!window.iter().any(|i| i == "window.brightness"), "the theme is only in the app menu");
     assert_eq!(Standard::Zoom.label(), "Zoom");
@@ -285,7 +285,7 @@ impl Fake {
 /// The app with the fake native menu (or none), driven a whole frame at a time like the desktop
 /// app.
 struct Mac {
-    app: VectorcraftApp,
+    app: TsipikaApp,
     fake: Fake,
     ctx: egui::Context,
     time: f64,
@@ -337,7 +337,7 @@ impl Mac {
 
     /// Where the document's point (`x`, `y`) is on the screen.
     fn on_canvas(&self, x: f64, y: f64) -> Pos2 {
-        crate::canvas::Xf::new(self.app.canvas_rect.unwrap(), self.app.view().unwrap()).to_screen(vectorcraft_geom::Point::new(x, y))
+        crate::canvas::Xf::new(self.app.canvas_rect.unwrap(), self.app.view().unwrap()).to_screen(tsipika_geom::Point::new(x, y))
     }
 
     /// Run `n` frames, each with the events that `step` returns (`step` may act on the app first),

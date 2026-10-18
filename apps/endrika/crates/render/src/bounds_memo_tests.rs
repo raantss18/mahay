@@ -2,7 +2,7 @@
 //! without keeping any, and the largest background blur follows the document's edits.
 
 use super::*;
-use figcraft_doc::{Effect, EffectKind};
+use endrika_doc::{Effect, EffectKind};
 
 #[test]
 fn kept_paint_bounds_are_the_bounds_worked_out_afresh() {
@@ -59,7 +59,7 @@ fn the_largest_background_blur_follows_edits() {
 
 #[test]
 fn kept_splat_answers_are_the_answers_worked_out_afresh() {
-    use figcraft_color::{ImageScaleMode, Paint};
+    use endrika_color::{ImageScaleMode, Paint};
     // Groups nested past the 64-level walk, with an image-filled rectangle at the bottom of one
     // branch and a plain one at the bottom of the other: answers asked for deep-first and
     // top-first, at depths 0 and 20, are those worked out alone.

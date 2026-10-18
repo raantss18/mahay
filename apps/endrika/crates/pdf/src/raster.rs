@@ -1,7 +1,7 @@
 //! Rasterised parts: effects (shadows, blurs, noise, texture) drawn by the tiny-skia renderer
 //! and placed as images in page space.
 //!
-//! - Nodes with a layer blur, noise or texture are rendered whole (`figcraft_render`) and placed
+//! - Nodes with a layer blur, noise or texture are rendered whole (`endrika_render`) and placed
 //!   as one image.
 //! - Drop and inner shadows are computed from a render of the node without its effects (the
 //!   renderer's own shadows: spread offsets the outline, blur, tint, offset, knock-out), so the
@@ -10,10 +10,10 @@
 //! - Background blur and glass are drawn by the renderer from a render of what lies under the
 //!   node on the page, and placed under its content.
 
-use figcraft_color::BlendMode;
-use figcraft_doc::{EffectKind, NodeId, NodeKind};
-use figcraft_geom::{Affine, Rect};
-use figcraft_render::{Alone, Pixmap, View, backdrop, shadow};
+use endrika_color::BlendMode;
+use endrika_doc::{EffectKind, NodeId, NodeKind};
+use endrika_geom::{Affine, Rect};
+use endrika_render::{Alone, Pixmap, View, backdrop, shadow};
 use krilla::geom::Size;
 use krilla::image::Image;
 
@@ -37,7 +37,7 @@ pub(crate) struct Shadows {
 
 impl Raster {
     fn new(p: &Pixmap, rect: Rect, ink: Ink) -> Raster {
-        Raster { image: ink.bitmap(figcraft_render::to_rgba8(p), p.width(), p.height()), rect, px: (p.width(), p.height()) }
+        Raster { image: ink.bitmap(endrika_render::to_rgba8(p), p.width(), p.height()), rect, px: (p.width(), p.height()) }
     }
 }
 
@@ -103,9 +103,9 @@ impl Exporter<'_> {
         let doc = self.doc;
         let Some(n) = doc.node(id) else { return };
         // Blurs, shadows and texture reach beyond the painted bounds.
-        let Some(view) = figcraft_render::raster_bounds(doc, id).and_then(|b| self.raster_view(b)) else { return };
+        let Some(view) = endrika_render::raster_bounds(doc, id).and_then(|b| self.raster_view(b)) else { return };
         // Its backdrop effects are placed separately (see `backdrop`).
-        let Some(pix) = figcraft_render::render_alone(doc, id, &view, Alone::WithEffects) else { return };
+        let Some(pix) = endrika_render::render_alone(doc, id, &view, Alone::WithEffects) else { return };
         // The renderer applied opacity; the blend mode applies against the PDF backdrop.
         self.place_raster(s, &Raster::new(&pix, Self::view_rect(&view), self.ink()), 1.0, n.blend);
     }
@@ -140,7 +140,7 @@ impl Exporter<'_> {
             .map(|e| match &e.kind {
                 // Inner shadows need room outside the shape: everything outside casts them.
                 EffectKind::DropShadow(sh) | EffectKind::InnerShadow(sh) => {
-                    sh.radius.abs() * 2.0 + sh.spread.abs() * figcraft_doc::SPREAD_MITER_LIMIT + sh.offset.0.abs() + sh.offset.1.abs()
+                    sh.radius.abs() * 2.0 + sh.spread.abs() * endrika_doc::SPREAD_MITER_LIMIT + sh.offset.0.abs() + sh.offset.1.abs()
                 }
                 _ => 0.0,
             })
@@ -151,10 +151,10 @@ impl Exporter<'_> {
         let view = self.raster_view(b)?;
         let rect = Self::view_rect(&view);
         let (w, h) = (view.width, view.height);
-        let layer = figcraft_render::render_alone(doc, id, &view, Alone::Plain)?;
+        let layer = endrika_render::render_alone(doc, id, &view, Alone::Plain)?;
         let xf = view.transform() * world;
         let caster = shadow::Caster::new(doc, n, &layer, xf, view.scale);
-        let shape = figcraft_render::node_outline(doc, n);
+        let shape = endrika_render::node_outline(doc, n);
         let mut out = Shadows::default();
         for e in n.effects.iter().filter(|e| e.visible) {
             match &e.kind {

@@ -3,7 +3,7 @@
 mod common;
 
 use common::*;
-use filmcraft_aac::{BitrateMode, EncoderConfig, WindowShape};
+use hetsika_aac::{BitrateMode, EncoderConfig, WindowShape};
 
 struct Case {
     name: &'static str,

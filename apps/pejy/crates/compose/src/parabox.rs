@@ -1,9 +1,9 @@
 //! Paragraph border and shading: one box per column a paragraph (or a run of consecutive
 //! paragraphs with the same settings) sits in, drawn once the lines are in place.
 
-use designcraft_doc::{BoxBottom, BoxTop, BoxWidth, Cap, Document, Join, ParaProps, StrokeType};
-use designcraft_geom::corners::{Corner, box_outline};
-use designcraft_geom::{BezPath, Rect, Shape, kurbo};
+use pejy_doc::{BoxBottom, BoxTop, BoxWidth, Cap, Document, Join, ParaProps, StrokeType};
+use pejy_geom::corners::{Corner, box_outline};
+use pejy_geom::{BezPath, Rect, Shape, kurbo};
 
 use crate::{ComposedStory, Deco, FrameSpec, Line};
 

@@ -18,11 +18,11 @@ use std::sync::OnceLock;
 
 use egui::{DragAndDrop, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use vectorcraft_tools::{TOOL_GROUPS, ToolInfo, tool_info};
+use tsipika_tools::{TOOL_GROUPS, ToolInfo, tool_info};
 
 use crate::state::{ToolbarCategory, ToolbarEdits};
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, icons, widgets};
+use crate::{TsipikaApp, icons, widgets};
 
 /// A tool's row in the drawer: its icon, name and shortcut.
 const ROW: f32 = 26.0;
@@ -104,7 +104,7 @@ fn category(name: &str) -> Option<&'static str> {
 
 /// The current toolbar's slots as Edit Toolbar left them, laid out as `toolbar::slots` lays them
 /// out (the category name on each category's first slot); `None` while it is as it ships.
-pub(crate) fn edited_slots(app: &VectorcraftApp) -> Option<Vec<(Option<&'static str>, Vec<&'static str>)>> {
+pub(crate) fn edited_slots(app: &TsipikaApp) -> Option<Vec<(Option<&'static str>, Vec<&'static str>)>> {
     let edits = &app.ui.toolbar_edits;
     let cats = if app.ui.toolbar_advanced { &edits.advanced } else { &edits.basic };
     let mut out = vec![];
@@ -144,7 +144,7 @@ pub(crate) fn sanitize(edits: &mut ToolbarEdits) {
 
 /// Change the current toolbar with `f`: an edit that gives back the toolbar as it ships forgets
 /// the edits. Returns the toolbar's slots.
-fn edit(app: &mut VectorcraftApp, f: impl FnOnce(&mut Vec<ToolbarCategory>) -> Result<(), String>) -> Result<Value, String> {
+fn edit(app: &mut TsipikaApp, f: impl FnOnce(&mut Vec<ToolbarCategory>) -> Result<(), String>) -> Result<Value, String> {
     let advanced = app.ui.toolbar_advanced;
     let slot = current(&mut app.ui.toolbar_edits, advanced);
     let mut cats = slot.clone().unwrap_or_else(|| shipped(advanced));
@@ -155,7 +155,7 @@ fn edit(app: &mut VectorcraftApp, f: impl FnOnce(&mut Vec<ToolbarCategory>) -> R
 }
 
 /// The current toolbar's slots, each a list of tool ids (`toolbar.*` commands return it).
-fn slots_json(app: &VectorcraftApp) -> Value {
+fn slots_json(app: &TsipikaApp) -> Value {
     json!(crate::toolbar::slots(app).into_iter().map(|(_, s)| s).collect::<Vec<_>>())
 }
 
@@ -220,7 +220,7 @@ fn tool_param(p: &Value) -> Result<&'static str, String> {
 }
 
 /// The Edit Toolbar commands; `None` for other ids.
-pub(crate) fn command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
+pub(crate) fn command(app: &mut TsipikaApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
     Some(match id {
         "window.editToolbar" => crate::menus::opt_bool(p, "open").map(|open| {
             let open = open.unwrap_or(!app.ui.tools_drawer);
@@ -292,7 +292,7 @@ pub(crate) fn drop_target(slots: &[(usize, Rect)], at: Pos2, cols: usize) -> (Op
 
 /// While a tool is dragged over the toolbar (`bounds`): mark where it would go, and on the release
 /// put it there (`toolbar.addTool`).
-pub(crate) fn toolbar_drop(app: &mut VectorcraftApp, ui: &Ui, slots: &[(usize, Rect)], cols: usize, bounds: Rect) {
+pub(crate) fn toolbar_drop(app: &mut TsipikaApp, ui: &Ui, slots: &[(usize, Rect)], cols: usize, bounds: Rect) {
     let Some(drag) = DragAndDrop::payload::<ToolDrag>(ui.ctx()) else { return };
     let Some(at) = ui.ctx().pointer_interact_pos().filter(|p| bounds.contains(*p)) else { return };
     let t = Tokens::get(ui.ctx());
@@ -401,7 +401,7 @@ fn groups() -> &'static [Heading] {
 
 /// The All Tools drawer beside the toolbar, its top by the ••• button (higher when that would put
 /// it past the window's bottom), while `tools_drawer` is on.
-pub(crate) fn drawer(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub(crate) fn drawer(app: &mut TsipikaApp, ctx: &egui::Context) {
     if !app.ui.tools_drawer {
         return;
     }
@@ -637,7 +637,7 @@ fn ghost(ctx: &egui::Context, t: &Tokens) {
 #[cfg(test)]
 mod tests {
     use egui::{Color32, Event, PointerButton, RawInput};
-    use vectorcraft_engine::Session;
+    use tsipika_engine::Session;
 
     use super::*;
 
@@ -646,24 +646,24 @@ mod tests {
     /// A toolbar tool button.
     const BUTTON: egui::Vec2 = vec2(36.0, 29.0);
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> TsipikaApp {
+        let mut app = TsipikaApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         app
     }
 
-    fn slots(app: &VectorcraftApp) -> Vec<Vec<&'static str>> {
+    fn slots(app: &TsipikaApp) -> Vec<Vec<&'static str>> {
         crate::toolbar::slots(app).into_iter().map(|(_, s)| s).collect()
     }
 
     /// The slot holding `tool`.
-    fn slot_of(app: &VectorcraftApp, tool: &str) -> Option<usize> {
+    fn slot_of(app: &TsipikaApp, tool: &str) -> Option<usize> {
         slots(app).iter().position(|s| s.contains(&tool))
     }
 
     /// One headless frame of the toolbar, its keys handled first as in the app; returns the texts
     /// painted: (text, a point inside it, colour).
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<(String, Pos2, Color32)> {
+    fn frame(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<(String, Pos2, Color32)> {
         fn texts(s: &egui::Shape, out: &mut Vec<(String, Pos2, Color32)>) {
             match s {
                 egui::Shape::Text(t) => {
@@ -696,14 +696,14 @@ mod tests {
         Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Default::default() }
     }
 
-    fn click(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, at: Pos2) {
+    fn click(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, at: Pos2) {
         frame(app, ctx, time, vec![Event::PointerMoved(at), button(at, true)]);
         frame(app, ctx, time + 0.05, vec![button(at, false)]);
         frame(app, ctx, time + 0.1, vec![]);
     }
 
     /// A press at `from` dragged to `to` in steps, one frame each, then released there.
-    fn drag(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, from: Pos2, to: Pos2) {
+    fn drag(app: &mut TsipikaApp, ctx: &egui::Context, time: f64, from: Pos2, to: Pos2) {
         frame(app, ctx, time, vec![Event::PointerMoved(from), button(from, true)]);
         for k in 1..=6 {
             frame(app, ctx, time + 0.05 * f64::from(k), vec![Event::PointerMoved(from + (to - from) * (k as f32 / 6.0))]);

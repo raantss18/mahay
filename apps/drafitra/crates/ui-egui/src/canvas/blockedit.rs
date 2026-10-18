@@ -2,7 +2,7 @@
 //! mistaken for the drawing, the block's base point marked at the origin, and a bar with the
 //! block's name and Save Block, Save Block As and Close Block Editor.
 
-use cadcraft_engine::geom::Vec2;
+use drafitra_engine::geom::Vec2;
 use egui::{Rect, RichText, Stroke, vec2};
 use serde_json::json;
 
@@ -11,7 +11,7 @@ use crate::CadApp;
 use crate::theme::Tokens;
 
 fn id() -> egui::Id {
-    egui::Id::new("cadcraft-block-editor-bar")
+    egui::Id::new("drafitra-block-editor-bar")
 }
 
 /// The block the Block Editor is editing in the drawing shown, and whether it has unsaved changes.
@@ -55,7 +55,7 @@ pub(super) fn paint(app: &mut CadApp, ctx: &egui::Context, p: &egui::Painter, xf
                         action = Some(("bsave", false));
                     }
                     // The drawing itself has no block to save under another name.
-                    let current = name == cadcraft_engine::blockedit::CURRENT_DRAWING;
+                    let current = name == drafitra_engine::blockedit::CURRENT_DRAWING;
                     if ui.add_enabled(!current, egui::Button::new(crate::tl!("Save Block As"))).clicked() {
                         action = Some(("bsaveas", true));
                     }

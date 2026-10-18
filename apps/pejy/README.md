@@ -1,14 +1,14 @@
 <p align="center">
-  <a href="https://getartcraft.com/">
+  <a href="https://github.com/raantss18/mahay">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
+      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/mahay-logo-white.svg">
+      <img alt="Mahay" src="docs/brand/mahay-logo.svg" width="200">
     </picture>
   </a>
 </p>
 
 
-<h1 align="center">DesignCraft</h1>
+<h1 align="center">Pejy</h1>
 
 <p align="center">
   <b>Page layout and publishing; an open-source, modern desktop publishing and page layout studio, built in pure Rust.</b>
@@ -17,7 +17,7 @@
 <p align="center">
   A fast, open-source desktop publishing and page layout workflow. It runs natively on macOS,
   Windows and Linux, and in the browser via WebAssembly.<br>
-  <i>By the ArtCraft team.</i>
+  <i>By the Mahay team.</i>
 </p>
 
 <p align="center">
@@ -28,40 +28,40 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://github.com/raantss18/mahay/discussions"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/designcraft"><b>DesignCraft on getartcraft.com</b></a> ·
-  <a href="https://getartcraft.com/">ArtCraft</a> ·
-  <a href="https://getartcraft.com/apps">All Crafting Apps</a>
+  <a href="https://github.com/raantss18/mahay"><b>Pejy on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay</a> ·
+  <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
 
 <br>
 
 <p align="center">
-  <img src="docs/images/ui-spread.png" alt="DesignCraft showing a magazine spread: a threaded three-column story is selected with its in/out ports and thread line, the Control panel shows its position in picas and the Properties panel its text frame options" width="100%">
-  <br><sub><b>Quarterly, Spring Issue</b>: threaded three-column body text, a wrapped pull quote and parent-page folios, all set by DesignCraft's own paragraph composer.</sub>
+  <img src="docs/images/ui-spread.png" alt="Pejy showing a magazine spread: a threaded three-column story is selected with its in/out ports and thread line, the Control panel shows its position in picas and the Properties panel its text frame options" width="100%">
+  <br><sub><b>Quarterly, Spring Issue</b>: threaded three-column body text, a wrapped pull quote and parent-page folios, all set by Pejy's own paragraph composer.</sub>
 </p>
 
 > [!NOTE]
-> **ArtCraft is a community of artists from all walks of life.** Digital, generative, music,
-> games &mdash; if you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/artcraft).**
+> **Mahay is a community of artists from all walks of life.** Digital, generative, music,
+> games &mdash; if you make things, you're one of us. **[Come say hi on Discord](https://github.com/raantss18/mahay/discussions).**
 
 <p align="center">
   <a href="#the-sample-magazine">The sample magazine</a> ·
-  <a href="#why-designcraft">Why DesignCraft</a> ·
+  <a href="#why-pejy">Why Pejy</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#web">Web</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#downloads">Downloads</a> ·
-  <a href="#the-crafting-apps">The Crafting Apps</a> ·
+  <a href="#the-crafting-apps">The Mahay apps</a> ·
   <a href="#license-and-credits">License and credits</a>
 </p>
 
 ## The sample magazine
 
-Every page below was laid out by DesignCraft from code (`crates/engine/src/sample.rs`) and exported
+Every page below was laid out by Pejy from code (`crates/engine/src/sample.rs`) and exported
 by its own renderer. Try it yourself with `File → New → Sample Document`, or start the app with
 `--sample`.
 
@@ -76,7 +76,7 @@ by its own renderer. Try it yourself with `File → New → Sample Document`, or
 </tr>
 </table>
 
-## Why DesignCraft
+## Why Pejy
 
 - **Familiar.** A familiar layout, tools, menus, panels and shortcuts: spreads and parent pages,
   master pages, text frames, threaded text, paragraph and character styles, tables, text wrap and
@@ -88,7 +88,7 @@ by its own renderer. Try it yourself with `File → New → Sample Document`, or
 - **Fast.** Multithreaded SIMD rendering (vello_cpu), copy-on-write documents with O(1) undo
   snapshots, and cached composition.
 - **Open.** A documented native format, IDML import and export, INDD import (through
-  [indd-utils](https://github.com/storytold/indd-utils)), editable .pptx export, and PNG, PDF
+  [indd-utils](https://github.com/raantss18/indd-utils)), editable .pptx export, and PNG, PDF
   (PDF/X-4, PDF/A-2b) and EPUB export.
 
   No subscription, no licence server, no telemetry.
@@ -100,29 +100,29 @@ by its own renderer. Try it yourself with `File → New → Sample Document`, or
 
 ## Quick start
 
-The egui frontend requires Rust 1.95 or newer (including its shared `craft-ui` components).
+The egui frontend requires Rust 1.95 or newer (including its shared `mahay-ui` components).
 
 ```sh
-cargo run --release -p designcraft                         # desktop app (start screen)
-cargo run --release -p designcraft -- --sample             # open the sample magazine
-cargo run --release -p designcraft -- --sample --control 7979   # + JSON control channel
-cargo run --release -p designcraft-cli -- run --sample --all-pages out/       # headless: render every page to PNG
-cargo run --release -p designcraft-cli -- commands         # list every command
-cargo run --release -p designcraft-cli -- script --help    # command script syntax (docs/agents.md)
+cargo run --release -p pejy                         # desktop app (start screen)
+cargo run --release -p pejy -- --sample             # open the sample magazine
+cargo run --release -p pejy -- --sample --control 7979   # + JSON control channel
+cargo run --release -p pejy-cli -- run --sample --all-pages out/       # headless: render every page to PNG
+cargo run --release -p pejy-cli -- commands         # list every command
+cargo run --release -p pejy-cli -- script --help    # command script syntax (docs/agents.md)
 cargo xtask ci                                             # fmt, clippy, tests, assets, layering, wasm
 ```
 
 Japanese text (UI and documents) uses fonts from
-[storytold/craft-fonts](https://github.com/storytold/craft-fonts), an optional build input (font
+[raantss18/mahay-fonts](https://github.com/raantss18/mahay), an optional build input (font
 files are never committed here; see the public
-[craft-fonts integration guide](https://github.com/storytold/craft-fonts/blob/main/docs/integration.md)
-for build instructions and craftrules
-[`standards/fonts.md`](https://github.com/storytold/craftrules/blob/main/standards/fonts.md)
+[mahay-fonts integration guide](https://github.com/raantss18/mahay/blob/main/docs/integration.md)
+for build instructions and mahay-rules
+[`standards/fonts.md`](https://github.com/raantss18/mahay-rules/blob/main/standards/fonts.md)
 for the shared standard):
 
 ```sh
-git clone https://github.com/storytold/craft-fonts ../craft-fonts
-CRAFT_FONTS_DIR="$PWD/../craft-fonts" cargo run --release -p designcraft   # absolute path
+git clone https://github.com/raantss18/mahay ../mahay-fonts
+MAHAY_FONTS_DIR="$PWD/../mahay-fonts" cargo run --release -p pejy   # absolute path
 ```
 
 Without it, Japanese falls back to the system's fonts (none on the web). Release builds always
@@ -133,40 +133,40 @@ To drive a running app, send JSON lines to `127.0.0.1:7979`. The protocol is des
 
 ### Logs
 
-The desktop app writes its `log` records to standard error and to `logs/designcraft.log` in the
-settings directory, beside `ui.json` and `prefs.json` (Linux `~/.config/designcraft/logs/`, or
-`$XDG_CONFIG_HOME/designcraft/logs/`; macOS `~/Library/Application Support/DesignCraft/logs/`;
-Windows `%APPDATA%\DesignCraft\logs\`). A start launched from a desktop menu or the Dock has no
+The desktop app writes its `log` records to standard error and to `logs/pejy.log` in the
+settings directory, beside `ui.json` and `prefs.json` (Linux `~/.config/pejy/logs/`, or
+`$XDG_CONFIG_HOME/pejy/logs/`; macOS `~/Library/Application Support/Pejy/logs/`;
+Windows `%APPDATA%\Pejy\logs\`). A start launched from a desktop menu or the Dock has no
 terminal, so this file is what to attach to a bug report: the graphics adapters found and the
 one drawing, why the app stopped (also when its window never opened), the crash guard's panic
-report and a failed crash-recovery save land there. Each launch moves the previous log to `designcraft.1.log`
-(and that one to `designcraft.2.log`), so the log of a run that crashed survives the next start.
+report and a failed crash-recovery save land there. Each launch moves the previous log to `pejy.1.log`
+(and that one to `pejy.2.log`), so the log of a run that crashed survives the next start.
 The file stops growing at 16 MiB. `--version` writes no file.
 
 | Variable | Effect |
 |---|---|
-| `RUST_LOG` | Log levels for standard error and the log file. Default: `info` for DesignCraft's own crates, `warn` for everything else. env_logger-style directives replace that, e.g. `RUST_LOG=debug`, `RUST_LOG=warn,designcraft_render=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*` covers every target starting with it (`designcraft*=debug`). |
+| `RUST_LOG` | Log levels for standard error and the log file. Default: `info` for Pejy's own crates, `warn` for everything else. env_logger-style directives replace that, e.g. `RUST_LOG=debug`, `RUST_LOG=warn,pejy_render=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*` covers every target starting with it (`pejy*=debug`). |
 | `WGPU_BACKEND` | The graphics backend that composites the window: `dx12`, `vulkan`, `gl` or `metal` (a comma-separated list lets wgpu choose among them). Default: DirectX 12 on Windows, Vulkan on Linux, Metal on macOS, with OpenGL as the fallback. Setting it also turns off the start-up fallback described below. |
 | `WGPU_POWER_PREF` | The kind of GPU that draws the window: `low` (integrated), `high` (discrete) or `none` (the system's order). Default: the GPU that drives the primary display, then `low` on Windows and macOS and `none` elsewhere. |
 | `WGPU_ADAPTER_NAME` | The graphics adapter by (part of) its name, any case (`nvidia`, `radv`, `intel`); the log lists the names. |
-| `WGPU_VALIDATION_INDIRECT_CALL` | `1` turns wgpu's check of indirect draw arguments back on. DesignCraft draws nothing indirectly and turns it off: the compute shader it needs failed to compile on an Intel Mac and lost the graphics device (#334). |
+| `WGPU_VALIDATION_INDIRECT_CALL` | `1` turns wgpu's check of indirect draw arguments back on. Pejy draws nothing indirectly and turns it off: the compute shader it needs failed to compile on an Intel Mac and lost the graphics device (#334). |
 
-The logger is `apps/designcraft/src/logging.rs`; the web build logs to the browser console instead.
+The logger is `apps/pejy/src/logging.rs`; the web build logs to the browser console instead.
 
 ### Portable mode
 
-A file named `portable.txt` next to the executable (on macOS, next to `DesignCraft.app`) makes the install portable: settings, logs and
-crash recovery are kept in a `DesignCraftData` folder beside it instead of the per-user folders
-above. The Windows portable zip ships with one; delete it to go back to `%APPDATA%\DesignCraft`.
-If `DesignCraftData` cannot be written (a copy unzipped into Program Files), the per-user folders
+A file named `portable.txt` next to the executable (on macOS, next to `Pejy.app`) makes the install portable: settings, logs and
+crash recovery are kept in a `PejyData` folder beside it instead of the per-user folders
+above. The Windows portable zip ships with one; delete it to go back to `%APPDATA%\Pejy`.
+If `PejyData` cannot be written (a copy unzipped into Program Files), the per-user folders
 are used instead and the log and the status bar say so.
-`DESIGNCRAFT_CONFIG_DIR` still takes precedence. The code is `apps/designcraft/src/profile.rs`.
+`PEJY_CONFIG_DIR` still takes precedence. The code is `apps/pejy/src/profile.rs`.
 
 ### Graphics backend and processor
 
 The canvas is rendered on the CPU; the GPU only composites the interface, through wgpu, so any
-adapter that can show the window will do. The code is `apps/designcraft/src/gpu.rs` (the adapter)
-and `apps/designcraft/src/gpu/backend.rs` (the backend).
+adapter that can show the window will do. The code is `apps/pejy/src/gpu.rs` (the adapter)
+and `apps/pejy/src/gpu/backend.rs` (the backend).
 
 - **Backend.** A graphics driver that faults takes the process down before any Rust code can
   catch it, so each start creates its wgpu instance with one backend, chosen before the window
@@ -180,7 +180,7 @@ and `apps/designcraft/src/gpu/backend.rs` (the backend).
   records the backend being tried until the first frame has been presented. A record left behind
   means that backend crashed (or the app was killed) at start-up, so the next start tries the next
   backend and says so in the status bar. The list starts over once every backend has failed, or
-  with a new DesignCraft version; delete the file or set `WGPU_BACKEND` to start afresh.
+  with a new Pejy version; delete the file or set `WGPU_BACKEND` to start afresh.
 - **Adapter.** Among the adapters of those backends, the app picks the one that draws the window
   (eframe's `native_adapter_selector`): adapters that report they can't present to the window are
   never tried; then the one `WGPU_ADAPTER_NAME` names; hardware before software (llvmpipe, WARP);
@@ -197,7 +197,7 @@ and `apps/designcraft/src/gpu/backend.rs` (the backend).
 - **If the window fails on its adapter while starting up** (an error from wgpu, such as a lost
   device, or a panic inside wgpu, egui-wgpu or naga during the first frames), the app starts
   again without that adapter and tries the next one, telling which in the status bar; the run that
-  failed keeps its log as `designcraft.1.log`. When no adapter of the start's backends is left, it
+  failed keeps its log as `pejy.1.log`. When no adapter of the start's backends is left, it
   starts again with the next backend. Software renderers (WARP, llvmpipe) come last: they are
   passed over while another backend is left to try, and allowed once no graphics processor could
   show the window. On Unix the new app replaces the process (an AppImage stays mounted); on
@@ -211,7 +211,7 @@ and `apps/designcraft/src/gpu/backend.rs` (the backend).
 - **If the window's first frame is late** (20 seconds after the app was created and the files
   named at the start opened), the log and the status bar say so. The adapter counts as hanging,
   and the app starts again without it, only when the UI thread has been stuck in the graphics
-  stack, outside DesignCraft's own code, for 60 seconds while the window wasn't known to be
+  stack, outside Pejy's own code, for 60 seconds while the window wasn't known to be
   minimized, covered or in the background. A large document composing on a slow machine never
   counts.
 - **The log** lists the GPUs that drive a display (`display GPUs (PCI vendor:device): 10de:2204
@@ -225,8 +225,8 @@ and `apps/designcraft/src/gpu/backend.rs` (the backend).
 ### Web
 
 ```sh
-cd apps/designcraft-web && trunk build --release          # → dist/web (serve it with any static server)
-cd apps/designcraft-web && trunk serve --release          # http://127.0.0.1:8767
+cd apps/pejy-web && trunk build --release          # → dist/web (serve it with any static server)
+cd apps/pejy-web && trunk serve --release          # http://127.0.0.1:8767
 ```
 
 You need [trunk](https://trunkrs.dev) and the `wasm32-unknown-unknown` target. The same app runs
@@ -236,7 +236,7 @@ Save and Export download the file. The web build has no control channel.
 
 ## Architecture
 
-DesignCraft is an engine-first Cargo workspace with enforced layering (`cargo xtask layers`). The
+Pejy is an engine-first Cargo workspace with enforced layering (`cargo xtask layers`). The
 egui frontend is a separate crate, so the UI can be swapped without touching the engine.
 
 | Layer | Crates |
@@ -248,26 +248,26 @@ egui frontend is a separate crate, so the UI can be swapped without touching the
 | L4 | `tools` (pointer events → commands + overlays) |
 | L5 | `engine` (session, history, command registry) |
 | L6 | `ui-egui` (publishing UI, control channel) |
-| L7 | `apps/designcraft`, `apps/designcraft-cli`, `apps/designcraft-web` |
+| L7 | `apps/pejy`, `apps/pejy-cli`, `apps/pejy-web` |
 
 - **Status and milestones:** [ROADMAP.md](ROADMAP.md) (stage: pre-alpha); feature assessment: [`docs/target-app-parity.md`](docs/target-app-parity.md); known gaps: [`docs/gaps.md`](docs/gaps.md)
 - **Contributor and agent rules** (clean-room, asset policy, quality gates): [`AGENTS.md`](AGENTS.md)
 - **Bundled assets:** every one is listed with its licence in [`ASSETS.md`](ASSETS.md)
-- **App icon and colour:** a calico cat in a polka-dot scarf on DesignCraft green `#7bb51c`; see [`assets/app-icon/`](assets/app-icon/README.md)
+- **App icon and colour:** a calico cat in a polka-dot scarf on Pejy green `#7bb51c`; see [`assets/app-icon/`](assets/app-icon/README.md)
 
 ## Downloads
 
-**New to DesignCraft?** Download it from the [DesignCraft page on getartcraft.com](https://getartcraft.com/apps/designcraft). That's the easiest way to install it.
+**New to Pejy?** Download it from the [Pejy page on mahay.com](https://github.com/raantss18/mahay). That's the easiest way to install it.
 
-**Want a specific build or format?** On GitHub, the [latest release](https://github.com/storytold/designcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/designcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
+**Want a specific build or format?** On GitHub, the [latest release](https://github.com/raantss18/mahay/releases/latest) has every build listed below, and [all releases](https://github.com/raantss18/mahay/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
 ### Windows
 
 | Build | Installer | Portable |
 |---|---|---|
-| x64 (64-bit Intel/AMD) | `designcraft-<ver>-windows-x64.msi` | `designcraft-<ver>-windows-x64-portable.zip` |
-| arm64 (Snapdragon and other ARM PCs) | `designcraft-<ver>-windows-arm64.msi` | `designcraft-<ver>-windows-arm64-portable.zip` |
-| x86 (32-bit) | `designcraft-<ver>-windows-x86.msi` | `designcraft-<ver>-windows-x86-portable.zip` |
+| x64 (64-bit Intel/AMD) | `pejy-<ver>-windows-x64.msi` | `pejy-<ver>-windows-x64-portable.zip` |
+| arm64 (Snapdragon and other ARM PCs) | `pejy-<ver>-windows-arm64.msi` | `pejy-<ver>-windows-arm64-portable.zip` |
+| x86 (32-bit) | `pejy-<ver>-windows-x86.msi` | `pejy-<ver>-windows-x86-portable.zip` |
 
 Installers and executables are code-signed.
 
@@ -275,70 +275,70 @@ Installers and executables are code-signed.
 
 | Build | File | Notes |
 |---|---|---|
-| App, universal (Apple silicon + Intel) | `designcraft-<ver>-macos-universal.dmg` | Signed and notarized |
-| Command-line tool, universal | `designcraft-cli-<ver>-macos-universal.zip` | Signed and notarized |
+| App, universal (Apple silicon + Intel) | `pejy-<ver>-macos-universal.dmg` | Signed and notarized |
+| Command-line tool, universal | `pejy-cli-<ver>-macos-universal.zip` | Signed and notarized |
 
 ### Linux
 
 | Format | x86_64 | aarch64 (ARM64) | Notes |
 |---|---|---|---|
-| AppImage | `designcraft-<ver>-linux-x86_64.AppImage` | `designcraft-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
-| Flatpak | `designcraft-<ver>-linux-x86_64.flatpak` | `designcraft-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
-| Debian/Ubuntu | `designcraft-<ver>-linux-x86_64.deb` | `designcraft-<ver>-linux-aarch64.deb` | |
-| Fedora/RHEL/openSUSE | `designcraft-<ver>-linux-x86_64.rpm` | `designcraft-<ver>-linux-aarch64.rpm` | |
-| Arch Linux/Manjaro | `designcraft-<ver>-linux-x86_64.pkg.tar.zst` | `designcraft-<ver>-linux-aarch64.pkg.tar.zst` | `sudo pacman -U <file>`; installs as `ai.storyteller.designcraft`, replacing an AUR package |
-| Tarball | `designcraft-<ver>-linux-x86_64.tar.gz` | `designcraft-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
+| AppImage | `pejy-<ver>-linux-x86_64.AppImage` | `pejy-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
+| Flatpak | `pejy-<ver>-linux-x86_64.flatpak` | `pejy-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
+| Debian/Ubuntu | `pejy-<ver>-linux-x86_64.deb` | `pejy-<ver>-linux-aarch64.deb` | |
+| Fedora/RHEL/openSUSE | `pejy-<ver>-linux-x86_64.rpm` | `pejy-<ver>-linux-aarch64.rpm` | |
+| Arch Linux/Manjaro | `pejy-<ver>-linux-x86_64.pkg.tar.zst` | `pejy-<ver>-linux-aarch64.pkg.tar.zst` | `sudo pacman -U <file>`; installs as `org.mahay.pejy`, replacing an AUR package |
+| Tarball | `pejy-<ver>-linux-x86_64.tar.gz` | `pejy-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
 
-RISC-V (riscv64): `designcraft-<ver>-linux-riscv64.tar.gz` only, cross-compiled; needs glibc 2.39+ (Ubuntu 24.04 or newer).
+RISC-V (riscv64): `pejy-<ver>-linux-riscv64.tar.gz` only, cross-compiled; needs glibc 2.39+ (Ubuntu 24.04 or newer).
 
 #### Community packages
 
-These packages are maintained by community members, not by the DesignCraft team.
+These packages are maintained by community members, not by the Pejy team.
 
 On Gentoo, the [::snakebyte overlay](https://github.com/switch87/snakebyte-overlay) packages the
-Linux release as `media-gfx/designcraft-bin` (prebuilt) and `media-gfx/designcraft` (built from source):
+Linux release as `media-gfx/pejy-bin` (prebuilt) and `media-gfx/pejy` (built from source):
 
 ```sh
 eselect repository add snakebyte git https://github.com/switch87/snakebyte-overlay.git
 emaint sync -r snakebyte
-echo 'media-gfx/designcraft-bin ~amd64' >> /etc/portage/package.accept_keywords/designcraft
-emerge --ask media-gfx/designcraft-bin
+echo 'media-gfx/pejy-bin ~amd64' >> /etc/portage/package.accept_keywords/pejy
+emerge --ask media-gfx/pejy-bin
 ```
 
 ### FreeBSD
 
 | Build | File |
 |---|---|
-| x86_64 | `designcraft-<ver>-freebsd-x86_64.tar.gz` |
+| x86_64 | `pejy-<ver>-freebsd-x86_64.tar.gz` |
 
 ### Web (WebAssembly)
 
 | Build | File | Notes |
 |---|---|---|
-| Static site | `designcraft-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
+| Static site | `pejy-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
 
-## The Crafting Apps
+## The Mahay apps
 
-DesignCraft is one of the **Crafting Apps**: free, open-source creative tools from the
-[ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
+Pejy is one of the **Mahay apps**: free, open-source creative tools from the
+[Mahay](https://github.com/raantss18/mahay) team, each written from scratch in Rust and each able to
 stand on its own.
 
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.photocraft.png" alt="" width="32" height="32"> | **PhotoCraft** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/storytold/photocraft) | [Website](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.vectorcraft.png" alt="" width="32" height="32"> | **VectorCraft** | Vector illustration | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://getartcraft.com/apps/vectorcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.filmcraft.png" alt="" width="32" height="32"> | **FilmCraft** | Video editing, color and sound | [GitHub](https://github.com/storytold/filmcraft) | [Website](https://getartcraft.com/apps/filmcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.lightcraft.png" alt="" width="32" height="32"> | **LightCraft** | Photo library and raw development | [GitHub](https://github.com/storytold/lightcraft) | [Website](https://getartcraft.com/apps/lightcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | **Page layout and publishing · you are here** | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
+| <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/org.mahay.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tselatra/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tselatra.png" alt="" width="32" height="32"> | **Tselatra** | Motion graphics and visual effects | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/pejy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.pejy.png" alt="" width="32" height="32"> | **Pejy** | **Page layout and publishing · you are here** | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 
-And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
+And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and video studio for artists who want real control.
 
 <br>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://github.com/raantss18/mahay/discussions"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <h3 align="center">Come make things with us</h3>
@@ -351,31 +351,31 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
-  <a href="https://getartcraft.com/">getartcraft.com</a> ·
-  <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/designcraft">DesignCraft</a>
+  <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
+  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
+  <a href="https://github.com/raantss18/mahay">Pejy</a>
 </p>
 
 ## License and credits
 
-DesignCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the DesignCraft contributors. Required notices are in [NOTICE](NOTICE).
+Pejy is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+Copyright (c) 2026 Mahay Team and the Pejy contributors. Required notices are in [NOTICE](NOTICE).
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
 with its author, source and license in [ASSETS.md](ASSETS.md).
 
-The bundled fonts, and the craft-fonts fonts embedded by release builds, are under the SIL Open
+The bundled fonts, and the mahay-fonts fonts embedded by release builds, are under the SIL Open
 Font License; all UI icons are drawn in code and are original.
 
-The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
-ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and DesignCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+The Mahay name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
+Mahay Team and are not covered by this license. They may be used only unmodified, and only as
+part of this repository and Pejy, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 Forks and modified versions must remove them.
 
 <br>
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
-  <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
+  <a href="https://github.com/raantss18/mahay"><img alt="Mahay" src="docs/brand/mahay-mark.svg" width="28"></a><br>
+  <sub>Made by the <a href="https://github.com/raantss18/mahay">Mahay</a> team and community.</sub>
 </p>

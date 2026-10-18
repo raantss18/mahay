@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use effectcraft_automation::{Backend, McpServer, base64};
+use tselatra_automation::{Backend, McpServer, base64};
 use serde_json::{Value, json};
 
 pub struct Qa {
@@ -18,12 +18,12 @@ pub type Img = image::RgbaImage;
 impl Qa {
     /// A fresh headless MCP session and an empty scratch folder for its files.
     pub fn new(name: &str) -> Qa {
-        let dir = std::env::temp_dir().join(format!("effectcraft-qa-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tselatra-qa-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let mut qa = Qa { mcp: McpServer::new(Backend::headless(effectcraft_host::session())), next_id: 0, dir };
+        let mut qa = Qa { mcp: McpServer::new(Backend::headless(tselatra_host::session())), next_id: 0, dir };
         let init = qa.rpc("initialize", json!({"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "qa", "version": "0"}}));
-        assert_eq!(init["serverInfo"]["name"], "effectcraft");
+        assert_eq!(init["serverInfo"]["name"], "tselatra");
         qa
     }
 

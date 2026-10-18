@@ -3,12 +3,12 @@
 
 use std::collections::HashMap;
 
-use effectcraft_keyframe::{Interp, Value};
-use effectcraft_project::{Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Project, Property};
-use effectcraft_time::{FrameRate, Tick};
-use filmcraft_geom::Vec2;
-use filmcraft_media::{AudioStreamInfo, Generator, MediaInfo, MediaKind, VideoStreamInfo};
-use filmcraft_project as fp;
+use tselatra_keyframe::{Interp, Value};
+use tselatra_project::{Comp, Footage, FootageKind, ItemId, ItemKind, Layer, LayerId, LayerSource, Project, Property};
+use tselatra_time::{FrameRate, Tick};
+use hetsika_geom::Vec2;
+use hetsika_media::{AudioStreamInfo, Generator, MediaInfo, MediaKind, VideoStreamInfo};
+use hetsika_project as fp;
 use serde::{Deserialize, Serialize};
 
 use crate::{Error, Result, TimelineFormat, par_fraction, rate_out, tick_out};
@@ -17,7 +17,7 @@ use crate::{Error, Result, TimelineFormat, par_fraction, rate_out, tick_out};
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PrerenderMode {
-    /// Nothing is rendered: layers only EffectCraft can draw are left out (with a warning), and
+    /// Nothing is rendered: layers only Tselatra can draw are left out (with a warning), and
     /// effects, masks, parenting… of footage layers are dropped.
     None,
     /// Layers a timeline cannot represent (text, shapes, effects, masks, 3D, parenting, track
@@ -151,7 +151,7 @@ fn unsupported(project: &Project, comp: &Comp, l: &Layer, format: TimelineFormat
     if expr {
         return Some("expressions".into());
     }
-    if l.blend_mode != effectcraft_color::BlendMode::Normal && !fp::effect::BLEND_MODES.iter().any(|m| m.eq_ignore_ascii_case(l.blend_mode.label())) {
+    if l.blend_mode != tselatra_color::BlendMode::Normal && !fp::effect::BLEND_MODES.iter().any(|m| m.eq_ignore_ascii_case(l.blend_mode.label())) {
         return Some(format!("blend mode {}", l.blend_mode.label()));
     }
     // Premiere's Basic Motion in the interchange formats has one (uniform) scale.
@@ -255,8 +255,8 @@ pub fn export(project: &Project, comp: ItemId, opts: &ExportOptions, prerendered
         stack: vec![],
     };
     let seq = ex.sequence(comp).ok_or(Error::NoComp(comp.0))?;
-    let fc_opts = filmcraft_interchange::ExportOptions { relative_to: opts.relative_to.clone(), name: Some(name), ..Default::default() };
-    let (bytes, report) = filmcraft_interchange::export(&ex.fp, seq, opts.format.fc(), &fc_opts)?;
+    let fc_opts = hetsika_interchange::ExportOptions { relative_to: opts.relative_to.clone(), name: Some(name), ..Default::default() };
+    let (bytes, report) = hetsika_interchange::export(&ex.fp, seq, opts.format.fc(), &fc_opts)?;
     for e in report.entries {
         let m = if e.count > 1 { format!("{} (×{})", e.message, e.count) } else { e.message };
         ex.warn(m);
@@ -339,7 +339,7 @@ impl Exporter<'_> {
             &name,
             kind,
             duration,
-            f.has_video.then(|| (f.width, f.height, f.frame_rate, f.pixel_aspect, f.codec.clone(), f.alpha != effectcraft_project::AlphaMode::Ignore)),
+            f.has_video.then(|| (f.width, f.height, f.frame_rate, f.pixel_aspect, f.codec.clone(), f.alpha != tselatra_project::AlphaMode::Ignore)),
             f.has_audio,
         );
         let mut clip = media_clip(fp::MediaRef::File { path: path.clone() }, info);
@@ -431,7 +431,7 @@ impl Exporter<'_> {
                     Some(r) => {
                         let item = self.prerendered_item(&format!("{} (pre-rendered)", l.name), &r);
                         self.track_item(item, &l.name, fp::TrackKind::Video, &tm, rate).map(|mut ti| {
-                            ti.source_in = filmcraft_time::Tick::ZERO;
+                            ti.source_in = hetsika_time::Tick::ZERO;
                             ti.speed = 1.0;
                             ti.reverse = false;
                             self.out.prerendered += 1;
@@ -534,7 +534,7 @@ impl Exporter<'_> {
     }
 
     fn track_item(&mut self, item: fp::ItemId, name: &str, kind: fp::TrackKind, tm: &Timing, rate: FrameRate) -> Option<fp::TrackItem> {
-        let range = filmcraft_time::TimeRange::new(tick_out(tm.source_in), tick_out(Tick((tm.duration.0 as f64 * tm.speed).round() as i64)));
+        let range = hetsika_time::TimeRange::new(tick_out(tm.source_in), tick_out(Tick((tm.duration.0 as f64 * tm.speed).round() as i64)));
         let mut ti = self.fp.make_track_item(item, kind, tick_out(tm.start), range, rate_out(rate))?;
         ti.name = name.to_string();
         ti.duration = tick_out(tm.duration);
@@ -599,7 +599,7 @@ impl Exporter<'_> {
             && let Some(mut o) = effect_or_new(ti, "opacity")
         {
             o.params.insert("opacity".into(), param_out(p, &to_clip, |v| fp::ParamValue::Float(v.as_f64())));
-            if l.blend_mode != effectcraft_color::BlendMode::Normal
+            if l.blend_mode != tselatra_color::BlendMode::Normal
                 && let Some(i) = fp::effect::BLEND_MODES.iter().position(|m| m.eq_ignore_ascii_case(l.blend_mode.label()))
             {
                 o.params.insert("blend".into(), fp::Param::new(fp::ParamValue::Choice(i as u32)));
@@ -648,8 +648,8 @@ fn set_effect(ti: &mut fp::TrackItem, e: fp::EffectInstance) {
     }
 }
 
-/// A property → a FilmCraft parameter (layer-time keys → clip-time keys).
-fn param_out(p: &Property, to_clip: &impl Fn(Tick) -> filmcraft_time::Tick, conv: impl Fn(&Value) -> fp::ParamValue) -> fp::Param {
+/// A property → a Hetsika parameter (layer-time keys → clip-time keys).
+fn param_out(p: &Property, to_clip: &impl Fn(Tick) -> hetsika_time::Tick, conv: impl Fn(&Value) -> fp::ParamValue) -> fp::Param {
     let mut out = fp::Param::new(conv(&p.value));
     for k in &p.keys {
         let mut fk = fp::Keyframe::new(to_clip(k.time), conv(&k.value));

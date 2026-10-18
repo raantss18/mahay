@@ -4,19 +4,19 @@
 //! 3D views (Active Camera / Front / … / Custom View 3), camera tools (orbit, pan, dolly) and
 //! camera/light wireframes.
 
-use effectcraft_engine::commands::shape_tool::PaintKind;
-use effectcraft_engine::effects::puppet::PinKind;
-use effectcraft_engine::geom::{Mat3, vec2 as gv2};
-use effectcraft_engine::project::{Comp, Layer, LayerId, LayerSource};
-use effectcraft_engine::render::EvalCtx;
-use effectcraft_engine::render::three_d::{self, CameraState, View3D};
-use effectcraft_engine::time::Tick;
+use tselatra_engine::commands::shape_tool::PaintKind;
+use tselatra_engine::effects::puppet::PinKind;
+use tselatra_engine::geom::{Mat3, vec2 as gv2};
+use tselatra_engine::project::{Comp, Layer, LayerId, LayerSource};
+use tselatra_engine::render::EvalCtx;
+use tselatra_engine::render::three_d::{self, CameraState, View3D};
+use tselatra_engine::time::Tick;
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::json;
 
 use crate::state::Tool;
 use crate::theme::Tokens;
-use crate::{EffectcraftApp, widgets};
+use crate::{TselatraApp, widgets};
 
 /// Viewer mapping published each frame (for the control channel and other panels).
 #[derive(Clone, Copy, Debug)]
@@ -108,7 +108,7 @@ enum Gesture {
         inv: Mat3,
         l2p: Mat3,
         /// The layer's own snap targets as the drag began (its box and path vertices).
-        own: Vec<effectcraft_engine::viewer::SnapTarget>,
+        own: Vec<tselatra_engine::viewer::SnapTarget>,
         /// Alt held as the drag began: the anchor point moves alone, so the layer shifts.
         anchor_only: bool,
     },
@@ -240,7 +240,7 @@ fn roi_handles(r: Rect) -> [Pos2; 8] {
 
 /// A drag starting on a region of interest handle: the ROI redrawn from the opposite corner (or
 /// edge, with the other axis kept).
-fn roi_drag(app: &EffectcraftApp, map: &ViewerMap, comp_rect: Rect, zoom: f32, press: Pos2) -> Option<ov::Drag> {
+fn roi_drag(app: &TselatraApp, map: &ViewerMap, comp_rect: Rect, zoom: f32, press: Pos2) -> Option<ov::Drag> {
     let [rx, ry, rw, rh] = app.session.state.region_of_interest?;
     let r = Rect::from_min_size(comp_rect.min + vec2(rx as f32 * zoom, ry as f32 * zoom), vec2(rw as f32 * zoom, rh as f32 * zoom));
     let i = roi_handles(r).iter().position(|h| h.distance(press) < 6.0)?;
@@ -285,7 +285,7 @@ pub(crate) fn fx2c(ctx: &EvalCtx, layer: &Layer) -> Mat3 {
 
 /// The selected, unlocked layers of `comp` other than `layer` (when `layer` is one of them): a
 /// handle or Rotation tool drag on one changes them all.
-fn selected_others<'a>(app: &EffectcraftApp, comp: &'a Comp, layer: LayerId) -> Vec<&'a Layer> {
+fn selected_others<'a>(app: &TselatraApp, comp: &'a Comp, layer: LayerId) -> Vec<&'a Layer> {
     let sel = &app.session.state.selected_layers;
     if !sel.contains(&layer) {
         return vec![];
@@ -324,8 +324,8 @@ fn project_clipped(m: &Mat3, poly: &[[f64; 2]]) -> Vec<[f64; 2]> {
 }
 
 /// The segment a → b (world space) through the projection `pc`, clipped at the near plane.
-fn project_segment(pc: &effectcraft_engine::geom::Mat4, a: effectcraft_engine::geom::Vec3, b: effectcraft_engine::geom::Vec3) -> Option<[[f64; 2]; 2]> {
-    let h = |p: effectcraft_engine::geom::Vec3| {
+fn project_segment(pc: &tselatra_engine::geom::Mat4, a: tselatra_engine::geom::Vec3, b: tselatra_engine::geom::Vec3) -> Option<[[f64; 2]; 2]> {
+    let h = |p: tselatra_engine::geom::Vec3| {
         let r = |i: usize| pc.0.get(i).map_or(0.0, |row| row[0] * p.x + row[1] * p.y + row[2] * p.z + row[3]);
         [r(0), r(1), r(3)]
     };
@@ -355,7 +355,7 @@ fn box_corners(b: [f64; 4]) -> [[f64; 2]; 4] {
 /// Layer → comp matrix and its bounds quad (in comp pixels). None for a 3D layer reaching to or
 /// behind the camera (its quad would flip; [`layer_outline`] draws the part in front).
 pub(crate) fn layer_quad(ctx: &EvalCtx, layer: &Layer) -> Option<(Mat3, [[f64; 2]; 4], [f64; 4])> {
-    let b = effectcraft_engine::render::content_bounds(ctx, layer)?;
+    let b = tselatra_engine::render::content_bounds(ctx, layer)?;
     let (m, _) = l2c(ctx, layer);
     let corners = box_corners(b);
     if corners.iter().any(|p| homogeneous(&m, *p)[2] < NEAR_W) {
@@ -370,7 +370,7 @@ pub(crate) fn layer_quad(ctx: &EvalCtx, layer: &Layer) -> Option<(Mat3, [[f64; 2
 
 /// The outline of a layer's content box in comp pixels, clipped at the camera's near plane.
 pub(crate) fn layer_outline(ctx: &EvalCtx, layer: &Layer) -> Vec<[f64; 2]> {
-    let Some(b) = effectcraft_engine::render::content_bounds(ctx, layer) else { return vec![] };
+    let Some(b) = tselatra_engine::render::content_bounds(ctx, layer) else { return vec![] };
     project_clipped(&l2c(ctx, layer).0, &box_corners(b))
 }
 
@@ -551,10 +551,10 @@ fn parent_inverse(ctx: &EvalCtx, layer: &Layer) -> Mat3 {
 
 /// Draw the extra views of a 2- or 4-view layout and return the main view's rectangle.
 fn aux_views(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
-    comp: &effectcraft_engine::project::Comp,
-    cid: effectcraft_engine::project::ItemId,
+    comp: &tselatra_engine::project::Comp,
+    cid: tselatra_engine::project::ItemId,
     full: Rect,
     bg: Color32,
 ) -> Rect {
@@ -615,7 +615,7 @@ fn aux_views(
         let tex = match cached {
             Some((k, tex)) if k == key => tex,
             _ => {
-                let opts = effectcraft_engine::render::RenderOpts {
+                let opts = tselatra_engine::render::RenderOpts {
                     scale,
                     view: (comp.has_3d() && !through_active).then_some(cam),
                     draft: true,
@@ -659,7 +659,7 @@ fn aux_views(
 
 /// The view selector in the top-left corner of pane `pane` (1 to 3) of a multi-view layout, a
 /// popup of every 3D view like the toolbar's 3D View menu. Returns the view chosen this frame.
-fn pane_selector(app: &mut EffectcraftApp, ui: &mut egui::Ui, pane: usize, area: Rect, current: View3D) -> Option<View3D> {
+fn pane_selector(app: &mut TselatraApp, ui: &mut egui::Ui, pane: usize, area: Rect, current: View3D) -> Option<View3D> {
     let t = app.tokens;
     let r = Rect::from_min_size(area.min + vec2(6.0, 6.0), vec2(124.0, 20.0));
     let pid = egui::Id::new(("viewer-pane-view", pane));
@@ -689,7 +689,7 @@ fn pane_selector(app: &mut EffectcraftApp, ui: &mut egui::Ui, pane: usize, area:
 
 /// View ▸ Split with New Locked Viewer: the locked viewer on the left of the Composition panel
 /// (its comp and 3D view stay put whatever comp is active). Returns the main viewer's rectangle.
-fn locked_pane(app: &mut EffectcraftApp, ui: &mut egui::Ui, full: Rect, bg: Color32) -> Rect {
+fn locked_pane(app: &mut TselatraApp, ui: &mut egui::Ui, full: Rect, bg: Color32) -> Rect {
     let Some(lv) = app.session.state.locked_viewer else { return full };
     let Some(comp) = app.session.project.comp_arc(lv.comp) else { return full };
     let name = app.session.project.item(lv.comp).map(|i| i.name.clone()).unwrap_or_default();
@@ -708,7 +708,7 @@ fn locked_pane(app: &mut EffectcraftApp, ui: &mut egui::Ui, full: Rect, bg: Colo
     let t = app.session.time_of(lv.comp);
     let cam = (lv.view != View3D::ActiveCamera && comp.has_3d())
         .then(|| app.session.state.views3d.get(&lv.comp).cloned().unwrap_or_default().cam(lv.view, comp.width as f64, comp.height as f64).state());
-    let dc = effectcraft_engine::viewer::DisplayColor::of(&app.session);
+    let dc = tselatra_engine::viewer::DisplayColor::of(&app.session);
     // The display conversion's inputs, keyed as in the main viewer's texture caches.
     let dc_key = format!("{cam:?}{}", super::viewer_tools::display_key(app, dc.is_some()));
     let key = {
@@ -722,7 +722,7 @@ fn locked_pane(app: &mut EffectcraftApp, ui: &mut egui::Ui, full: Rect, bg: Colo
     let tex = match cached {
         Some((k, tex)) if k == key => tex,
         _ => {
-            let opts = effectcraft_engine::render::RenderOpts { scale, view: cam, ..Default::default() };
+            let opts = tselatra_engine::render::RenderOpts { scale, view: cam, ..Default::default() };
             let img = app.session.render(lv.comp, t, opts);
             let mut ci = crate::frames::to_color_image(&img);
             if let Some(dc) = dc {
@@ -769,14 +769,14 @@ pub(crate) fn checker(p: &egui::Painter, r: Rect) {
     }
 }
 
-pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+pub fn show(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let ctx = ui.ctx().clone();
     let Some(cid) = app.session.active_comp_id() else {
         empty_state(app, ui, rect);
         return;
     };
-    let comp = app.session.project.comp_arc(cid).unwrap_or_else(|| effectcraft_engine::project::Comp::new(1920, 1080, Default::default(), Tick::ZERO).into());
+    let comp = app.session.project.comp_arc(cid).unwrap_or_else(|| tselatra_engine::project::Comp::new(1920, 1080, Default::default(), Tick::ZERO).into());
     let comp_name = app.session.project.item(cid).map(|i| i.name.clone()).unwrap_or_default();
     let p = ui.painter().clone();
     VIEW_CAM.with(|c| c.set(app.session.view_camera(cid)));
@@ -1027,7 +1027,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
             // selected collapsed precomp.
             if app.session.prefs.previews.show_internal_wireframes
                 && l.switches.collapse
-                && let effectcraft_engine::project::LayerSource::Comp { item } = &l.source
+                && let tselatra_engine::project::LayerSource::Comp { item } = &l.source
                 && let Some(nc) = app.session.project.comp(*item)
             {
                 let (outer, _) = l2c(&ectx, l);
@@ -1091,13 +1091,13 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                 if l.is_3d() {
                     let w = ectx.world_matrix(l);
                     let pc = cam_state(&ectx).projection(cw as f64, ch as f64) * w;
-                    let a3 = effectcraft_engine::geom::vec3(a[0], a[1], a[2]);
+                    let a3 = tselatra_engine::geom::vec3(a[0], a[1], a[2]);
                     let len = 60.0 / zoom as f64;
                     let pinv = parent_world_inverse(&ectx, l);
                     for (axis, col, name) in [
-                        (effectcraft_engine::geom::vec3(len, 0.0, 0.0), Color32::from_rgb(0xe0, 0x50, 0x50), "x"),
-                        (effectcraft_engine::geom::vec3(0.0, len, 0.0), Color32::from_rgb(0x60, 0xd0, 0x60), "y"),
-                        (effectcraft_engine::geom::vec3(0.0, 0.0, len), Color32::from_rgb(0x50, 0x8c, 0xf0), "z"),
+                        (tselatra_engine::geom::vec3(len, 0.0, 0.0), Color32::from_rgb(0xe0, 0x50, 0x50), "x"),
+                        (tselatra_engine::geom::vec3(0.0, len, 0.0), Color32::from_rgb(0x60, 0xd0, 0x60), "y"),
+                        (tselatra_engine::geom::vec3(0.0, 0.0, len), Color32::from_rgb(0x50, 0x8c, 0xf0), "z"),
                     ] {
                         // (clipped at the camera's near plane, #572)
                         let Some([o, e]) = project_segment(&pc, a3, a3 + axis) else { continue };
@@ -1143,13 +1143,13 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     }
     if has_3d && app.session.prefs.three_d.show_reference_axes {
         let pc = cam_state(&ectx).projection(cw as f64, ch as f64);
-        let o3 = effectcraft_engine::geom::vec3(cw as f64 / 2.0, ch as f64 / 2.0, 0.0);
+        let o3 = tselatra_engine::geom::vec3(cw as f64 / 2.0, ch as f64 / 2.0, 0.0);
         let o = pc.apply(o3);
         let corner = pos2(area.min.x + 34.0, area.max.y - 34.0);
         for (axis, col, name) in [
-            (effectcraft_engine::geom::vec3(1.0, 0.0, 0.0), Color32::from_rgb(0xe0, 0x50, 0x50), "X"),
-            (effectcraft_engine::geom::vec3(0.0, 1.0, 0.0), Color32::from_rgb(0x60, 0xd0, 0x60), "Y"),
-            (effectcraft_engine::geom::vec3(0.0, 0.0, 1.0), Color32::from_rgb(0x50, 0x8c, 0xf0), "Z"),
+            (tselatra_engine::geom::vec3(1.0, 0.0, 0.0), Color32::from_rgb(0xe0, 0x50, 0x50), "X"),
+            (tselatra_engine::geom::vec3(0.0, 1.0, 0.0), Color32::from_rgb(0x60, 0xd0, 0x60), "Y"),
+            (tselatra_engine::geom::vec3(0.0, 0.0, 1.0), Color32::from_rgb(0x50, 0x8c, 0xf0), "Z"),
         ] {
             let e = pc.apply(o3 + axis * 10.0);
             let d = vec2((e.x - o.x) as f32, (e.y - o.y) as f32);
@@ -1182,8 +1182,8 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         && layer.is_active_at(time)
     {
         let (m, _) = l2c(&ectx, layer);
-        let (w, h) = effectcraft_engine::render::source_size(&app.session.project, layer);
-        let c = m.apply(effectcraft_engine::geom::vec2(w as f64 / 2.0, h as f64 / 2.0));
+        let (w, h) = tselatra_engine::render::source_size(&app.session.project, layer);
+        let c = m.apply(tselatra_engine::geom::vec2(w as f64 / 2.0, h as f64 / 2.0));
         let at = map.to_screen([c.x, c.y]);
         let text = pr.banner();
         let galley = painter.layout_no_wrap(text.clone(), Tokens::medium(13.0), Color32::WHITE);
@@ -1197,15 +1197,15 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     // instead of leaving a black picture.
     let mut notices = 0;
     for layer in comp.layers.iter().filter(|l| l.is_active_at(time) && l.switches.video) {
-        let effectcraft_engine::project::LayerSource::Footage { item } = &layer.source else { continue };
-        let Some(effectcraft_engine::project::ItemKind::Footage(f)) = app.session.project.item(*item).map(|i| &i.kind) else { continue };
+        let tselatra_engine::project::LayerSource::Footage { item } = &layer.source else { continue };
+        let Some(tselatra_engine::project::ItemKind::Footage(f)) = app.session.project.item(*item).map(|i| &i.kind) else { continue };
         let Some(why) = app.session.footage.problem(f) else { continue };
         if notices >= 3 {
             break;
         }
         let (m, _) = l2c(&ectx, layer);
-        let (w, h) = effectcraft_engine::render::source_size(&app.session.project, layer);
-        let c = m.apply(effectcraft_engine::geom::vec2(w as f64 / 2.0, h as f64 / 2.0));
+        let (w, h) = tselatra_engine::render::source_size(&app.session.project, layer);
+        let c = m.apply(tselatra_engine::geom::vec2(w as f64 / 2.0, h as f64 / 2.0));
         let at = map.to_screen([c.x, c.y]);
         let text = format!("{}: {}", layer.name, why);
         let galley = painter.layout(text.clone(), Tokens::medium(12.0), Color32::WHITE, (map.area.width() - 40.0).clamp(80.0, 420.0));
@@ -1260,7 +1260,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     }
     // The layer a Puppet tool press works on: while selected layers are rigged, only those
     // ([`super::puppet_tool::target`]); otherwise the layer under the pointer, selected.
-    let puppet_layer = |app: &mut EffectcraftApp, cpt: [f64; 2]| -> Option<LayerId> {
+    let puppet_layer = |app: &mut TselatraApp, cpt: [f64; 2]| -> Option<LayerId> {
         if puppet_layers.is_empty() {
             return pick(app, &ectx, cpt, false);
         }
@@ -1305,7 +1305,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         if context_layers.is_empty() {
             ui.label(crate::i18n::tr("No unlocked layer selected"));
         } else {
-            let caps = context_layers.iter().filter_map(|id| comp.layer(effectcraft_engine::project::LayerId(*id))).fold(
+            let caps = context_layers.iter().filter_map(|id| comp.layer(tselatra_engine::project::LayerId(*id))).fold(
                 super::timeline::LayerMenuCaps::default(),
                 |mut caps, layer| {
                     let c = super::timeline::LayerMenuCaps::of(&app.session.project, layer);
@@ -1497,7 +1497,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                     start: map.to_comp(press),
                     inv: l2c.inverse().unwrap_or(Mat3::IDENTITY),
                     l2p,
-                    own: effectcraft_engine::viewer::layer_targets(&ectx, layer, false, app.session.state.snap_features),
+                    own: tselatra_engine::viewer::layer_targets(&ectx, layer, false, app.session.state.snap_features),
                     anchor_only: mods.alt,
                 })
             }),
@@ -1587,7 +1587,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                         let inv = l2c.inverse()?;
                         let a = ectx.v3(&layer, tr, "anchor", [0.0; 3]);
                         let lp = inv.apply(gv2(cpt[0], cpt[1]));
-                        let hp = handle_point(effectcraft_engine::render::content_bounds(&ectx, &layer)?, hi);
+                        let hp = handle_point(tselatra_engine::render::content_bounds(&ectx, &layer)?, hi);
                         Some(Gesture::Scale {
                             layer: lid,
                             start_scale: ectx.v3(&layer, tr, "scale", [100.0; 3]),
@@ -1618,7 +1618,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                         })
                         .collect();
                     // Snap the grabbed layer's feature nearest the pointer (AE's snap handle).
-                    let snap_src = comp.layer(l).map(|layer| effectcraft_engine::viewer::layer_features(&ectx, layer)).and_then(|f| {
+                    let snap_src = comp.layer(l).map(|layer| tselatra_engine::viewer::layer_features(&ectx, layer)).and_then(|f| {
                         let c = map.to_comp(press);
                         f.into_iter().min_by(|a, b| {
                             let da = (a[0] - c[0]).powi(2) + (a[1] - c[1]).powi(2);
@@ -1760,7 +1760,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
                     painter.rect_stroke(r, 0.0, Stroke::new(1.0, Color32::WHITE), StrokeKind::Middle);
                 }
                 d => {
-                    let mut snapper = |a: &EffectcraftApp, p: [f64; 2], l: LayerId| vt::snap(a, &ctx, &ectx, &map, &[l], &[p], mods);
+                    let mut snapper = |a: &TselatraApp, p: [f64; 2], l: LayerId| vt::snap(a, &ctx, &ectx, &map, &[l], &[p], mods);
                     if let Some(nd) = ov::update(app, &d, cpt, pos, mods, &merge, zoom, &mut snapper) {
                         ui.data_mut(|dd| dd.insert_temp(gid, Gesture::Overlay(nd)));
                     }
@@ -2044,7 +2044,7 @@ pub fn show(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
         let roto = app.ui.tool.roto_kind(false).is_some();
         if let Some(l) = pick(app, &ectx, cpt, false).and_then(|l| comp.layer(l)) {
             match &l.source {
-                effectcraft_engine::project::LayerSource::Comp { item } => app.session.open_comp(*item),
+                tselatra_engine::project::LayerSource::Comp { item } => app.session.open_comp(*item),
                 // With a Roto Brush tool, double-clicking a layer opens it in the Layer panel,
                 // where the brush works (After Effects).
                 _ if roto => {
@@ -2107,10 +2107,10 @@ fn axis_at(hits: &[(LayerId, [Pos2; 2], [f64; 3], [f64; 3])], p: Pos2) -> Option
 }
 
 /// World to parent space for a 3D layer (identity without a parent).
-fn parent_world_inverse(ctx: &EvalCtx, l: &Layer) -> effectcraft_engine::geom::Mat4 {
+fn parent_world_inverse(ctx: &EvalCtx, l: &Layer) -> tselatra_engine::geom::Mat4 {
     match l.parent.and_then(|p| ctx.comp.layer(p)) {
         Some(p) => ctx.world_matrix(p).inverse().unwrap_or_default(),
-        None => effectcraft_engine::geom::Mat4::IDENTITY,
+        None => tselatra_engine::geom::Mat4::IDENTITY,
     }
 }
 
@@ -2141,7 +2141,7 @@ fn drag_axes(ctx: &EvalCtx, l: &Layer) -> ([f64; 3], [f64; 3]) {
 /// (`viewer.view.<view>.camera.<id>`).
 #[allow(clippy::too_many_arguments)]
 fn draw_rigs(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     painter: &egui::Painter,
     map: &ViewerMap,
     ectx: &EvalCtx,
@@ -2150,8 +2150,8 @@ fn draw_rigs(
     through_active: bool,
     pane: Option<&str>,
 ) {
-    use effectcraft_engine::geom::Vec3;
-    use effectcraft_engine::project::{LayerSource, LightKind};
+    use tselatra_engine::geom::Vec3;
+    use tselatra_engine::project::{LayerSource, LightKind};
     let (w, h) = (ectx.comp.width as f64, ectx.comp.height as f64);
     let active = ectx.comp.active_camera(ectx.time).map(|c| c.id);
     let prefix = pane.map(|v| format!("viewer.view.{v}.")).unwrap_or_else(|| "viewer.".to_string());
@@ -2223,14 +2223,14 @@ fn draw_rigs(
 /// Mask), a shape path (Shape n group with the Tools bar's Fill and Stroke) on the selected shape
 /// layer, or a new shape layer when nothing is selected. The placed point snaps.
 /// Add a Position keyframe at a motion path's frame, keeping the path where it is.
-fn add_motion_key(app: &mut EffectcraftApp, f: ov::PathFrame) {
+fn add_motion_key(app: &mut TselatraApp, f: ov::PathFrame) {
     if let Err(e) = app.session.execute("prop.addKey", json!({"layer": f.layer.0, "prop": f.prop, "time": f.time.seconds()})) {
         app.ui.status = e.to_string();
     }
 }
 
 /// Select only the motion path's keyframe `k` (what the vertex tools act on).
-fn select_motion_key(app: &mut EffectcraftApp, k: &ov::KeyHit) -> bool {
+fn select_motion_key(app: &mut TselatraApp, k: &ov::KeyHit) -> bool {
     app.session.execute("keys.select", json!({"keys": [{"layer": k.layer.0, "prop": k.prop, "time": k.time.seconds()}]})).is_ok()
 }
 
@@ -2267,7 +2267,7 @@ fn pen_cursor(ctx: &egui::Context, at: Pos2, icon: crate::icons::Icon) {
 
 #[allow(clippy::too_many_arguments)]
 fn pen_press(
-    app: &mut EffectcraftApp,
+    app: &mut TselatraApp,
     ui: &mut egui::Ui,
     ectx: &EvalCtx,
     map: &ViewerMap,
@@ -2276,7 +2276,7 @@ fn pen_press(
     pos: Pos2,
     mods: egui::Modifiers,
 ) {
-    use effectcraft_engine::project::LayerSource;
+    use tselatra_engine::project::LayerSource;
     let gid = egui::Id::new("viewer-gesture");
     let current: Option<(LayerId, u64)> = ui.data(|d| d.get_temp(pen_id()));
     let c0 = map.to_comp(pos);
@@ -2403,7 +2403,7 @@ pub(crate) fn layer_at<'a>(ectx: &EvalCtx<'a>, cpt: [f64; 2]) -> Option<&'a Laye
 /// The layer a press at a comp point acts on, selected (Shift toggles the topmost layer). As in
 /// After Effects, a selected layer under the point comes before the layers in front of it, so it
 /// can be dragged where they cover it; otherwise the topmost layer (#230).
-pub(crate) fn pick(app: &mut EffectcraftApp, ectx: &EvalCtx, cpt: [f64; 2], toggle: bool) -> Option<LayerId> {
+pub(crate) fn pick(app: &mut TselatraApp, ectx: &EvalCtx, cpt: [f64; 2], toggle: bool) -> Option<LayerId> {
     if toggle {
         let hit = layer_at(ectx, cpt)?.id;
         let _ = app.session.execute("layer.select", json!({"layers": [hit.0], "toggle": true}));
@@ -2467,7 +2467,7 @@ fn shape_kind(tool: Tool) -> &'static str {
 /// What a shape tool drag from `start` to `end` makes, or `None` while it is too small to make
 /// anything. Alt (Option) draws from the press point and Shift squares the box; the live ghost and
 /// [`create_shape`] both go through this, so the drag always shows what it will commit.
-fn shape_drag(app: &EffectcraftApp, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) -> Option<ShapeDrag> {
+fn shape_drag(app: &TselatraApp, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) -> Option<ShapeDrag> {
     let comp = app.session.active_comp()?;
     let selected = app.session.state.selected_layers.first().copied();
     let sel = selected.and_then(|id| comp.layer(id));
@@ -2476,7 +2476,7 @@ fn shape_drag(app: &EffectcraftApp, tool: Tool, start: [f64; 2], end: [f64; 2], 
     // shape layer, else a new one.
     let target = match sel {
         Some(l) if l.source.is_av() && (app.session.state.shape_tool.creates_mask || !matches!(l.source, LayerSource::Shape)) => (ShapeTarget::Mask, Some(l)),
-        _ => match effectcraft_engine::commands::shape_tool::selected_shape_target(&app.session, comp).and_then(|id| comp.layer(id)) {
+        _ => match tselatra_engine::commands::shape_tool::selected_shape_target(&app.session, comp).and_then(|id| comp.layer(id)) {
             Some(l) => (ShapeTarget::IntoLayer, Some(l)),
             None => (ShapeTarget::NewLayer, None),
         },
@@ -2515,9 +2515,9 @@ fn paint_rgb(c: [f32; 3], opacity: f64, alpha: f32) -> Color32 {
 
 /// Draw a shape drag as it will land: the tool's own path, filled with the Tools bar's Fill and
 /// outlined in its Stroke (or the mask colour, for a mask), captioned with where it goes.
-fn draw_shape_ghost(painter: &egui::Painter, map: &ViewerMap, app: &EffectcraftApp, d: &ShapeDrag, t: &Tokens) {
+fn draw_shape_ghost(painter: &egui::Painter, map: &ViewerMap, app: &TselatraApp, d: &ShapeDrag, t: &Tokens) {
     // The engine's own geometry for the kind, so the ghost is the shape and not a stand-in for it.
-    let Some(sp) = effectcraft_engine::commands::shape_tool::mask_path(d.kind, d.centre, d.size) else { return };
+    let Some(sp) = tselatra_engine::commands::shape_tool::mask_path(d.kind, d.centre, d.size) else { return };
     let mut pts = ov::flatten(&sp, &Mat3::IDENTITY, map);
     if pts.first() == pts.last() {
         pts.pop();
@@ -2528,7 +2528,7 @@ fn draw_shape_ghost(painter: &egui::Painter, map: &ViewerMap, app: &EffectcraftA
     let tool = &app.session.state.shape_tool;
     let (fill, line) = match d.target {
         ShapeTarget::Mask => {
-            let [r, g, b] = effectcraft_engine::prefs::mask_color(app.session.prefs.appearance.cycle_mask_colors, d.mask_index);
+            let [r, g, b] = tselatra_engine::prefs::mask_color(app.session.prefs.appearance.cycle_mask_colors, d.mask_index);
             (Color32::from_rgb(r, g, b).gamma_multiply(0.25), Color32::from_rgb(r, g, b))
         }
         _ => {
@@ -2561,7 +2561,7 @@ fn bounds_of(pts: &[Pos2]) -> Option<Rect> {
     Some(r)
 }
 
-fn create_shape(app: &mut EffectcraftApp, tool: Tool, a: [f64; 2], b: [f64; 2], mods: egui::Modifiers) {
+fn create_shape(app: &mut TselatraApp, tool: Tool, a: [f64; 2], b: [f64; 2], mods: egui::Modifiers) {
     let Some(d) = shape_drag(app, tool, a, b, mods) else { return };
     let (kind, (w, h), (cx, cy)) = (d.kind, (d.size[0], d.size[1]), (d.centre[0], d.centre[1]));
     // A mask on the selected layer, as the ghost showed.
@@ -2596,7 +2596,7 @@ fn create_shape(app: &mut EffectcraftApp, tool: Tool, a: [f64; 2], b: [f64; 2], 
     }
 }
 
-fn empty_state(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
+fn empty_state(app: &mut TselatraApp, ui: &mut egui::Ui, rect: Rect) {
     let t = app.tokens;
     let p = ui.painter().clone();
     p.rect_filled(rect, 0.0, t.pasteboard);
@@ -2619,13 +2619,13 @@ fn empty_state(app: &mut EffectcraftApp, ui: &mut egui::Ui, rect: Rect) {
     if let Some(crate::panels::DragPayload::Item(dragged)) = egui::DragAndDrop::payload::<crate::panels::DragPayload>(&ctx).as_deref()
         && ui.rect_contains_pointer(rect)
     {
-        let items: Vec<effectcraft_engine::project::ItemId> = crate::panels::project_drop_items(app, *dragged)
+        let items: Vec<tselatra_engine::project::ItemId> = crate::panels::project_drop_items(app, *dragged)
             .into_iter()
-            .map(effectcraft_engine::project::ItemId)
+            .map(tselatra_engine::project::ItemId)
             .filter(|id| {
                 app.session.project.item(*id).is_some_and(|item| match &item.kind {
-                    effectcraft_engine::project::ItemKind::Footage(f) => f.kind != effectcraft_engine::project::FootageKind::Data,
-                    effectcraft_engine::project::ItemKind::Solid(_) | effectcraft_engine::project::ItemKind::Comp(_) => true,
+                    tselatra_engine::project::ItemKind::Footage(f) => f.kind != tselatra_engine::project::FootageKind::Data,
+                    tselatra_engine::project::ItemKind::Solid(_) | tselatra_engine::project::ItemKind::Comp(_) => true,
                     _ => false,
                 })
             })
@@ -2712,9 +2712,9 @@ pub(crate) use crate::widgets::hex_rgb;
 ///
 /// [`ViewerState::extended`]: crate::state::ViewerState::extended
 pub(crate) fn extended_region(
-    app: &EffectcraftApp,
-    comp: &effectcraft_engine::project::Comp,
-    cid: effectcraft_engine::project::ItemId,
+    app: &TselatraApp,
+    comp: &tselatra_engine::project::Comp,
+    cid: tselatra_engine::project::ItemId,
     map: ViewerMap,
 ) -> Option<[f64; 4]> {
     if !app.session.prefs.three_d.extended_viewer || !comp.has_3d() || app.session.state.region_of_interest.is_some() {
@@ -2726,7 +2726,7 @@ pub(crate) fn extended_region(
     }
     let a = map.to_comp(map.area.min);
     let b = map.to_comp(map.area.max);
-    effectcraft_engine::render::extended_region(comp.width, comp.height, [a[0], a[1], b[0], b[1]], 1.0)
+    tselatra_engine::render::extended_region(comp.width, comp.height, [a[0], a[1], b[0], b[1]], 1.0)
 }
 
 fn rect_of(map: &ViewerMap, r: Option<[f64; 4]>) -> Rect {
@@ -2737,7 +2737,7 @@ fn rect_of(map: &ViewerMap, r: Option<[f64; 4]>) -> Rect {
 /// Put a rendered frame on screen: CPU pixels go into an egui texture, averaged down by `minify`
 /// (see [`minify_factor`]); GPU frames are drawn straight from their wgpu texture (registered with
 /// egui-wgpu, no readback).
-fn show_frame(app: &mut EffectcraftApp, ctx: &egui::Context, key: crate::frames::FrameKey, img: crate::frames::FrameImage, minify: usize) {
+fn show_frame(app: &mut TselatraApp, ctx: &egui::Context, key: crate::frames::FrameKey, img: crate::frames::FrameImage, minify: usize) {
     use crate::frames::FrameImage;
     // Settings ▸ Previews ▸ Viewer Zoom Quality.
     let smooth = app.session.prefs.viewer_zoom_smooth();
@@ -2781,7 +2781,7 @@ fn show_frame(app: &mut EffectcraftApp, ctx: &egui::Context, key: crate::frames:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use effectcraft_engine::geom::{Mat4, vec3};
+    use tselatra_engine::geom::{Mat4, vec3};
 
     /// #1544: Shift-clicking with the Pen keeps the new segment horizontal, vertical or diagonal.
     #[test]

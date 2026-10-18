@@ -2,11 +2,11 @@
 //! are autosaved at once instead of SAVETIME minutes later, and a notice says what happened.
 //! SAVEFILEPATH is process-wide, so everything runs in one test.
 
-use cadcraft_engine::Session;
-use cadcraft_engine::cmd::file::{IoHooks, set_io};
-use cadcraft_engine::doc::Drawing;
-use cadcraft_ui_egui::gpu::GpuFaults;
-use cadcraft_ui_egui::{CadApp, Services};
+use drafitra_engine::Session;
+use drafitra_engine::cmd::file::{IoHooks, set_io};
+use drafitra_engine::doc::Drawing;
+use drafitra_ui_egui::gpu::GpuFaults;
+use drafitra_ui_egui::{CadApp, Services};
 use egui_wgpu::wgpu::DeviceLostReason;
 
 /// The text the notice paints (the second frame: a new window sizes itself in the first).
@@ -23,7 +23,7 @@ fn painted_text(app: &mut CadApp, ctx: &egui::Context) -> String {
     }
     let mut text = String::new();
     for _ in 0..2 {
-        let mut out = ctx.run_ui(egui::RawInput::default(), |ui| cadcraft_ui_egui::autosave::gpu_notice(app, ui.ctx()));
+        let mut out = ctx.run_ui(egui::RawInput::default(), |ui| drafitra_ui_egui::autosave::gpu_notice(app, ui.ctx()));
         out.textures_delta.clear(); // no renderer here
         text.clear();
         out.shapes.iter().for_each(|s| collect(&s.shape, &mut text));
@@ -47,7 +47,7 @@ fn faults_are_recorded_autosaved_and_shown() {
     assert!(f.take().is_some_and(|g| g.lost && g.message == "driver reset"));
 
     set_io(IoHooks { read: |_, _| Ok(Drawing::new_metric()), write: |_, _| Ok(b"0\nEOF\n".to_vec()), plot: None });
-    let dir = std::env::temp_dir().join(format!("cadcraft-gpu-faults-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("drafitra-gpu-faults-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let mut app = CadApp::new(Session::new(), Services::default());
     app.enable_autosave(&dir);

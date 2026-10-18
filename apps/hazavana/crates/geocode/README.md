@@ -1,4 +1,4 @@
-# lightcraft-geocode (L1)
+# hazavana-geocode (L1)
 
 Offline reverse geocoding: a GPS position becomes Sublocation / City / State / Country.
 

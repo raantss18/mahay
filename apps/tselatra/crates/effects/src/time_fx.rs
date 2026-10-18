@@ -8,16 +8,16 @@
 //! thumbnails) they pass their input through.
 //!
 //! Timewarp's Pixel Motion estimates block-matching optical flow between neighbouring frames
-//! ([`effectcraft_raster::flow`]); Pixel Motion Blur averages sub-frame samples.
+//! ([`tselatra_raster::flow`]); Pixel Motion Blur averages sub-frame samples.
 //!
 //! [`EffectHost::self_at`]: crate::EffectHost::self_at
 
-use effectcraft_keyframe::Value;
-use effectcraft_project::ParamUi;
-use effectcraft_raster::{Image, Px};
+use tselatra_keyframe::Value;
+use tselatra_project::ParamUi;
+use tselatra_raster::{Image, Px};
 use rayon::prelude::*;
 
-use effectcraft_raster::flow::Flow;
+use tselatra_raster::flow::Flow;
 
 use crate::util::{fit_layer, unpremul};
 use crate::{Buf, EffectCtx, EffectSpec, num, p, popup, slider};
@@ -222,7 +222,7 @@ fn fetch(ctx: &EffectCtx, times: &[f64]) -> Option<Frames> {
 }
 
 /// The layer's frames at layer times `times` placed on one grid (the GPU Echo / Posterize Time,
-/// effectcraft-gpu `fx_noise`): (grid buffer, one image per time). `None` without a host.
+/// tselatra-gpu `fx_noise`): (grid buffer, one image per time). `None` without a host.
 pub fn time_frames(ctx: &EffectCtx, times: &[f64]) -> Option<(Buf, Vec<Image>)> {
     fetch(ctx, times).map(|f| (f.grid, f.imgs))
 }
@@ -421,7 +421,7 @@ fn time_displacement(ctx: &EffectCtx, b: Buf) -> Buf {
         .par_iter()
         .map(|p| {
             let (c, a) = unpremul(*p);
-            let l = if a > 0.0 { effectcraft_color::luminance(c[0], c[1], c[2]) } else { 0.5 };
+            let l = if a > 0.0 { tselatra_color::luminance(c[0], c[1], c[2]) } else { 0.5 };
             let off = (l as f64 - 0.5) * 2.0 * max;
             (off / step).round() as i32
         })
@@ -600,7 +600,7 @@ fn timewarp_flow_search(a: &Image, b: &Image, pm: &PixelMotion, radius: i32) -> 
         1.0
     };
     let gb = motion_grey(&crop_edges(b, pm.crops), pm.weights, gain);
-    let mut flow = effectcraft_raster::flow::block_flow_window(&ga, &gb, pm.tile, pm.window, radius);
+    let mut flow = tselatra_raster::flow::block_flow_window(&ga, &gb, pm.tile, pm.window, radius);
     smooth_flow(&mut flow, pm);
     flow
 }
@@ -701,7 +701,7 @@ pub enum TwStep {
     Layered { fg: [usize; 3], bg: [usize; 3], w: f32, show: u32 },
 }
 
-/// Timewarp prepared for the GPU compositor (effectcraft-gpu `fx_time`): the fetched frames on
+/// Timewarp prepared for the GPU compositor (tselatra-gpu `fx_time`): the fetched frames on
 /// one grid (plus the matte-masked ones a Matte Layer needs), the instants across the shutter
 /// (with their weights) and the motion fields (block matching on the CPU).
 /// [`TimewarpPlan::render_cpu`] is the CPU effect.
@@ -721,7 +721,7 @@ impl TimewarpPlan {
             .iter()
             .map(|(s, _)| match *s {
                 TwStep::Whole(i) => f[i].clone(),
-                TwStep::Mix(i, j, w) => effectcraft_raster::flow::mix(&f[i], &f[j], w),
+                TwStep::Mix(i, j, w) => tselatra_raster::flow::mix(&f[i], &f[j], w),
                 TwStep::Motion { a, b, w, flow } => timewarp_interpolate(&f[a], &f[b], w, &self.flows[flow], &self.pm),
                 TwStep::Layered { fg, bg, w, show } => {
                     let fgi = timewarp_interpolate(&f[fg[0]], &f[fg[1]], w, &self.flows[fg[2]], &self.pm);
@@ -876,7 +876,7 @@ pub fn timewarp_plan(ctx: &EffectCtx) -> Option<TimewarpPlan> {
 
 /// Timewarp. Whole Frames shows the nearest source frame, Frame Mix cross-fades the two
 /// neighbouring frames and Pixel Motion builds the in-between frame along estimated motion
-/// vectors (block-matching optical flow, [`effectcraft_raster::flow`]) tuned by the Tuning
+/// vectors (block-matching optical flow, [`tselatra_raster::flow`]) tuned by the Tuning
 /// group. A Matte Layer splits foreground and background so each moves on its own vectors; a
 /// Warp Layer supplies the motion instead of the layer itself. Motion Blur averages Shutter
 /// Samples instants across the shutter.

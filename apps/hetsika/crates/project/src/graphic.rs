@@ -11,8 +11,8 @@
 //! [`eval_layer`] evaluates a layer at a clip time into a plain [`LayerSpec`] that renderers and
 //! editors use.
 
-use filmcraft_geom::Vec2;
-use filmcraft_time::Tick;
+use hetsika_geom::Vec2;
+use hetsika_time::Tick;
 
 use crate::effect::{EffectDef, EffectInstance, EffectKind, ParamDef, ParamKind};
 use crate::keyframe::{Param, ParamValue};

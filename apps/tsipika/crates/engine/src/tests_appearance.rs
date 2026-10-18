@@ -2,8 +2,8 @@
 //! (`appearance.setActiveItem`, the `item` param).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Color, GradientKind, Paint};
-use vectorcraft_doc::{AppearanceItem, Node};
+use tsipika_color::{BlendMode, Color, GradientKind, Paint};
+use tsipika_doc::{AppearanceItem, Node};
 
 use super::*;
 
@@ -29,7 +29,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     s.execute(id, &p).unwrap_or_else(|e| panic!("{id} {p}: {e}"))
 }
 
-fn stroke(n: &Node, i: usize) -> &vectorcraft_doc::StrokeLayer {
+fn stroke(n: &Node, i: usize) -> &tsipika_doc::StrokeLayer {
     n.appearance.stroke_at(Some(i)).unwrap_or_else(|| panic!("item {i} is not a stroke"))
 }
 
@@ -194,7 +194,7 @@ fn text_items_take_item_paint() {
     run(&mut s, "paint.setFill", json!({"item": 0, "color": "#ff0000"}));
     let n = node(&s, t);
     assert_eq!(fill_paint(&n, 0).color().unwrap().to_hex(), "#ff0000");
-    let vectorcraft_doc::NodeKind::Text(tx) = &n.kind else { panic!() };
+    let tsipika_doc::NodeKind::Text(tx) = &n.kind else { panic!() };
     assert_ne!(tx.first_style().fill, Paint::solid(Color::from_hex("#ff0000").unwrap()));
 }
 
@@ -240,7 +240,7 @@ fn per_fill_offset_path_renders() {
     run(&mut s, "paint.setFill", json!({"color": "#ff0000"}));
     run(&mut s, "paint.setStroke", json!({"none": true}));
     let render = |s: &Session| {
-        vectorcraft_render::Renderer::new().render(&s.doc().unwrap().doc, 400, 400, vectorcraft_geom::Affine::IDENTITY, &Default::default())
+        tsipika_render::Renderer::new().render(&s.doc().unwrap().doc, 400, 400, tsipika_geom::Affine::IDENTITY, &Default::default())
     };
     assert_eq!(render(&s).pixel(90, 150)[3], 0);
     run(&mut s, "effect.apply", json!({"effect": "path.offsetPath", "params": {"offset": 20}, "item": 0}));
@@ -257,7 +257,7 @@ fn text_fill_items_composite_with_their_opacity() {
     run(&mut s, "appearance.addFill", json!({}));
     run(&mut s, "appearance.setItem", json!({"index": 0, "color": "#ff0000"}));
     let render = |s: &Session| {
-        vectorcraft_render::Renderer::new().render(&s.doc().unwrap().doc, 400, 400, vectorcraft_geom::Affine::IDENTITY, &Default::default())
+        tsipika_render::Renderer::new().render(&s.doc().unwrap().doc, 400, 400, tsipika_geom::Affine::IDENTITY, &Default::default())
     };
     let opaque = render(&s);
     // A pixel the red fill covers fully (over the black character fill).
@@ -326,7 +326,7 @@ fn clear_and_reduce_to_basic() {
     // Clear leaves one None fill and stroke, and resets the object's Opacity row.
     run(&mut s, "appearance.clear", json!({}));
     let n = node(&s, id);
-    assert_eq!(n.appearance, vectorcraft_doc::Appearance::basic(Paint::None, Paint::None, 1.0));
+    assert_eq!(n.appearance, tsipika_doc::Appearance::basic(Paint::None, Paint::None, 1.0));
     assert_eq!((n.opacity, n.blend), (1.0, BlendMode::Normal));
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(node(&s, id).opacity, 0.4);
@@ -472,7 +472,7 @@ fn item_transparency_is_one_step_and_checks_the_blend_mode() {
     let before = steps(&s);
     run(&mut s, "transparency.set", json!({"knockout": true}));
     assert_eq!(steps(&s), before + 1, "isolate/knockout alone do not touch the item");
-    assert_eq!(node(&s, id).knockout, vectorcraft_doc::Knockout::On);
+    assert_eq!(node(&s, id).knockout, tsipika_doc::Knockout::On);
     assert!(s.execute("transparency.set", &json!({"blend": "nope"})).is_err());
     assert_eq!(stroke(&node(&s, id), 1).blend, BlendMode::Normal);
 }

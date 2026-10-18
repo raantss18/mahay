@@ -2,7 +2,7 @@
 //! Align Stroke), Units > Stroke, and the stroke options `document.inspect` reports.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, NodeKind, Unit};
+use tsipika_doc::{NodeId, NodeKind, Unit};
 
 use super::*;
 

@@ -2,9 +2,9 @@
 //! twist and the layer snapshot, and the VPORT table's tiled model viewports and saved viewport
 //! configurations (#463).
 
-use cadcraft_doc::geom::Vec2;
-use cadcraft_doc::{Drawing, NamedView, VportConfig, VportTile};
-use cadcraft_io::{read_dxf, write_dxf};
+use drafitra_doc::geom::Vec2;
+use drafitra_doc::{Drawing, NamedView, VportConfig, VportTile};
+use drafitra_io::{read_dxf, write_dxf};
 
 fn round_trip(d: &Drawing) -> Drawing {
     read_dxf(write_dxf(d).as_bytes()).expect("reopen")
@@ -37,7 +37,7 @@ fn model_and_paper_views_round_trip() {
     }
 }
 
-/// Another program's paper space view (flag 70 = 1, no CADCraft xdata) and a hostile twist.
+/// Another program's paper space view (flag 70 = 1, no Drafitra xdata) and a hostile twist.
 #[test]
 fn foreign_paper_view_and_hostile_twist() {
     let tags: &[(i32, &str)] = &[
@@ -81,7 +81,7 @@ fn tile(min: (f64, f64), max: (f64, f64), center: (f64, f64), height: f64) -> Vp
 #[test]
 fn tiled_viewports_and_saved_configurations_round_trip() {
     let mut d = Drawing::new_imperial();
-    d.header.set("SNAPBASE", cadcraft_doc::HVal::Point(cadcraft_doc::geom::Vec3::new(1.0, 2.0, 0.0)));
+    d.header.set("SNAPBASE", drafitra_doc::HVal::Point(drafitra_doc::geom::Vec3::new(1.0, 2.0, 0.0)));
     let active = VportConfig {
         name: VportConfig::ACTIVE.into(),
         tiles: vec![tile((0.5, 0.0), (1.0, 1.0), (5.0, 5.0), 10.0), tile((0.0, 0.0), (0.5, 1.0), (-3.0, 4.0), 2.5)],

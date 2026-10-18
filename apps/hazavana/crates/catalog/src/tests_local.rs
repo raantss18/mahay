@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use lightcraft_develop::DevelopSettings;
+use hazavana_develop::DevelopSettings;
 
 use crate::*;
 

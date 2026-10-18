@@ -2,9 +2,9 @@
 //! M4.23).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Document, Node, NodeKind};
-use vectorcraft_geom::{Point, Rect};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Document, Node, NodeKind};
+use tsipika_geom::{Point, Rect};
 
 use super::*;
 
@@ -65,7 +65,7 @@ fn hex(h: &str) -> Color {
 }
 
 fn render(s: &Session) -> Vec<u8> {
-    vectorcraft_render::Renderer::new().render_region(doc(s), Rect::new(0.0, 0.0, 400.0, 300.0), 1.0, true).pixels
+    tsipika_render::Renderer::new().render_region(doc(s), Rect::new(0.0, 0.0, 400.0, 300.0), 1.0, true).pixels
 }
 
 /// A global swatch `name` of `hex` and a rectangle filled with it.
@@ -131,7 +131,7 @@ fn a_spot_swatch_brings_its_plate() {
     s.execute("swatch.setSpot", &json!({"name": "Spot Teal"})).unwrap();
     copy(&mut s, &[r]);
     new_doc(&mut s);
-    let plates = |s: &Session| vectorcraft_render::proof::plates(doc(s)).iter().filter(|p| p.spot).map(|p| p.name.clone()).collect::<Vec<_>>();
+    let plates = |s: &Session| tsipika_render::proof::plates(doc(s)).iter().filter(|p| p.spot).map(|p| p.name.clone()).collect::<Vec<_>>();
     assert!(plates(&s).is_empty());
     s.execute("edit.paste", &json!({})).unwrap();
     assert_eq!(plates(&s), ["Spot Teal"]);
@@ -430,9 +430,9 @@ fn brushes_travel_with_their_strokes() {
     copy(&mut s, &[r]);
     assert_eq!(s.clipboard.brushes.len(), 1);
     new_doc(&mut s);
-    assert!(vectorcraft_brush::find(doc(&s), &name).is_none());
+    assert!(tsipika_brush::find(doc(&s), &name).is_none());
     s.execute("edit.paste", &json!({})).unwrap();
-    assert!(vectorcraft_brush::find(doc(&s), &name).is_some());
+    assert!(tsipika_brush::find(doc(&s), &name).is_some());
 }
 
 #[test]
@@ -643,9 +643,9 @@ fn paste_remembers_layers_restores_the_source_layers() {
 fn paste_remembers_layers_survives_save_and_old_files_load_without_it() {
     let mut s = session();
     s.execute("layer.pasteRemembersLayers", &json!({"on": true})).unwrap();
-    let bytes = vectorcraft_format::save(doc(&s), false);
-    assert!(vectorcraft_format::load(&bytes).unwrap().paste_remembers_layers);
-    let v: Value = serde_json::from_slice(&vectorcraft_format::save(&Document::new(10.0, 10.0), false)).unwrap();
+    let bytes = tsipika_format::save(doc(&s), false);
+    assert!(tsipika_format::load(&bytes).unwrap().paste_remembers_layers);
+    let v: Value = serde_json::from_slice(&tsipika_format::save(&Document::new(10.0, 10.0), false)).unwrap();
     assert!(v.get("paste_remembers_layers").is_none(), "off is not written");
-    assert!(!vectorcraft_format::load(v.to_string().as_bytes()).unwrap().paste_remembers_layers);
+    assert!(!tsipika_format::load(v.to_string().as_bytes()).unwrap().paste_remembers_layers);
 }

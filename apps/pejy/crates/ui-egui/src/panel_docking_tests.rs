@@ -3,7 +3,7 @@ use egui::{Event, Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 
 fn app() -> DesignApp {
-    DesignApp::new(designcraft_engine::Session::new(), Default::default())
+    DesignApp::new(pejy_engine::Session::new(), Default::default())
 }
 
 #[test]
@@ -88,8 +88,8 @@ fn ordinary_panel_tab_drag_enters_shared_docking_and_can_redock_into_another_tab
     drag(&mut h, source, egui::pos2(160.0, 140.0));
     let layout = h.state().ui.docking.as_ref().expect("ordinary tab drag starts shared docking");
     assert!(layout.floating.iter().any(|g| g.panels.contains(&"layers".into())), "{layout:?}");
-    let source = h.ctx.read_response(egui::Id::new("designcraft-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
-    let destination = h.ctx.read_response(egui::Id::new("designcraft-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
+    let source = h.ctx.read_response(egui::Id::new("pejy-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
+    let destination = h.ctx.read_response(egui::Id::new("pejy-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
     drag(&mut h, source, destination);
     let layout = h.state().ui.docking.as_ref().unwrap();
     assert!(!layout.floating.iter().any(|g| g.panels.contains(&"layers".into())));
@@ -116,7 +116,7 @@ fn saved_workspace_restores_the_custom_tree_and_hidden_panel_placement() {
 /// Explicit offscreen evidence; this creates no native windows.
 #[test]
 fn capture_custom_panel_docking_visual_fixtures() {
-    let Some(directory) = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
+    let Some(directory) = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
     std::fs::create_dir_all(&directory).unwrap();
     for theme in crate::theme::Brightness::ALL {
         for width in [800.0, 1280.0] {
@@ -156,10 +156,10 @@ fn capture_custom_panel_docking_visual_fixtures() {
                 harness
                     .render()
                     .unwrap()
-                    .save(directory.join(format!("designcraft-shared-docking-{}-{language}-{width}-{scale}x.png", theme.id())))
+                    .save(directory.join(format!("pejy-shared-docking-{}-{language}-{width}-{scale}x.png", theme.id())))
                     .unwrap();
                 if language == "ar" {
-                    let tab = egui::Id::new("designcraft-panel-docking").with(("tab", &"swatches".to_string()));
+                    let tab = egui::Id::new("pejy-panel-docking").with(("tab", &"swatches".to_string()));
                     let at = harness.ctx.read_response(tab).unwrap().rect.center();
                     harness.input_mut().events.extend([
                         Event::PointerMoved(at),
@@ -180,7 +180,7 @@ fn capture_custom_panel_docking_visual_fixtures() {
                             "both logical reference and actual menu label must exist"
                         );
                     }
-                    harness.render().unwrap().save(directory.join(format!("designcraft-dock-context-{}-ar.png", theme.id()))).unwrap();
+                    harness.render().unwrap().save(directory.join(format!("pejy-dock-context-{}-ar.png", theme.id()))).unwrap();
                 }
             }
         }
@@ -212,7 +212,7 @@ fn serialized_layout_actions_cover_geometry_reorder_accordion_and_atomic_rejecti
     app.run("window.panel.move", json!({"panel":"swatches","anchor":"layers","zone":"top"})).unwrap();
     app.run("window.panel.layout", json!({"action":{"ResizeSplit":{"path":[],"size":{"Ratio":0.35}}}})).unwrap();
     assert!(
-        matches!(app.ui.docking.as_ref().unwrap().root, Some(Node::Split { size: craft_ui::layout::SplitSize::Ratio(value), .. }) if (value - 0.35).abs() < 0.001)
+        matches!(app.ui.docking.as_ref().unwrap().root, Some(Node::Split { size: mahay_ui::layout::SplitSize::Ratio(value), .. }) if (value - 0.35).abs() < 0.001)
     );
     app.run("window.panel.float", json!({"panel":"properties"})).unwrap();
     app.run("window.panel.layout", json!({"action":{"MoveFloating":{"panel":"properties","rect":[44,66,360,450]}}})).unwrap();
@@ -236,7 +236,7 @@ fn serialized_layout_actions_cover_geometry_reorder_accordion_and_atomic_rejecti
         assert_eq!(app.ui.docking_hidden, hidden);
     }
     app.ui.docking = Some(Layout {
-        root: Some(Node::Stack { entries: vec![craft_ui::docking::StackEntry { panel: "layers".into(), open: true, height: Some(100.0) }] }),
+        root: Some(Node::Stack { entries: vec![mahay_ui::docking::StackEntry { panel: "layers".into(), open: true, height: Some(100.0) }] }),
         floating: Vec::new(),
     });
     app.run("window.panel.layout", json!({"action":{"SetStackOpen":{"panel":"layers","open":false}}})).unwrap();
@@ -266,7 +266,7 @@ fn populated_canvas_keeps_a_real_stroke_edit_after_floating_and_redocking() {
     app.run("object.fill", json!({"swatch":"C=100 M=0 Y=0 K=0"})).unwrap();
     app.run("object.stroke", json!({"weight":8})).unwrap();
     app.run("window.panel.float", json!({"panel":"stroke","x":40,"y":140,"width":310,"height":490})).unwrap();
-    let directory = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from);
+    let directory = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from);
     let builder = Harness::builder().with_size(vec2(1280.0, 800.0));
     let builder = if directory.is_some() { builder.wgpu() } else { builder };
     let mut h = builder.build_ui_state(
@@ -286,18 +286,18 @@ fn populated_canvas_keeps_a_real_stroke_edit_after_floating_and_redocking() {
         h.run_steps(1);
     }
     h.run_steps(2);
-    assert_eq!(h.state().session.active().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().stroke.join, designcraft_doc::Join::Bevel);
+    assert_eq!(h.state().session.active().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().stroke.join, pejy_doc::Join::Bevel);
     if let Some(directory) = &directory {
         std::fs::create_dir_all(directory).unwrap();
-        h.render().unwrap().save(directory.join("designcraft-populated-stroke-floating.png")).unwrap();
+        h.render().unwrap().save(directory.join("pejy-populated-stroke-floating.png")).unwrap();
     }
-    let from = h.ctx.read_response(egui::Id::new("designcraft-panel-docking").with(("tab", &"stroke".to_string()))).unwrap().rect.center();
-    let to = h.ctx.read_response(egui::Id::new("designcraft-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
+    let from = h.ctx.read_response(egui::Id::new("pejy-panel-docking").with(("tab", &"stroke".to_string()))).unwrap().rect.center();
+    let to = h.ctx.read_response(egui::Id::new("pejy-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
     drag(&mut h, from, to);
     assert!(h.state().ui.docking.as_ref().unwrap().floating.is_empty());
-    assert_eq!(h.state().session.active().unwrap().doc.item(designcraft_doc::ItemId(id)).unwrap().stroke.join, designcraft_doc::Join::Bevel);
+    assert_eq!(h.state().session.active().unwrap().doc.item(pejy_doc::ItemId(id)).unwrap().stroke.join, pejy_doc::Join::Bevel);
     if let Some(directory) = &directory {
-        h.render().unwrap().save(directory.join("designcraft-populated-stroke-redocked.png")).unwrap();
+        h.render().unwrap().save(directory.join("pejy-populated-stroke-redocked.png")).unwrap();
     }
 }
 
@@ -448,7 +448,7 @@ fn modal_overlay_blocks_a_real_tab_drag_release() {
     let mut app = app();
     app.run("window.panel.float", json!({"panel":"layers"})).unwrap();
     let mut h = harness(app, vec2(1280.0, 800.0));
-    let area = egui::Id::new("designcraft-panel-docking");
+    let area = egui::Id::new("pejy-panel-docking");
     let source = h.ctx.read_response(area.with(("tab", &"properties".to_string()))).unwrap().rect.center();
     h.event(Event::PointerMoved(source));
     h.run_steps(1);
@@ -498,7 +498,7 @@ fn first_story_editor_frame_conservatively_blocks_owned_tab_release() {
     app.run("window.panel.float", json!({"panel":"layers"})).unwrap();
     let doc = serde_json::to_value(&app.session.active().unwrap().doc).unwrap();
     let mut h = crate::test_window::open(app, vec2(1440.0, 900.0));
-    let tab = egui::Id::new("designcraft-panel-docking").with(("tab", &"properties".to_string()));
+    let tab = egui::Id::new("pejy-panel-docking").with(("tab", &"properties".to_string()));
     let from = h.ctx.read_response(tab).unwrap().rect.center();
     h.event(Event::PointerMoved(from));
     h.run_steps(1);
@@ -531,7 +531,7 @@ fn first_story_editor_frame_conservatively_blocks_owned_tab_release() {
         .find(|p| !editor.contains(*p))
         .expect("fixture has space outside editor");
     let before_outside = h.state().app.ui.docking.clone();
-    let tab = egui::Id::new("designcraft-panel-docking").with(("tab", &"layers".to_string()));
+    let tab = egui::Id::new("pejy-panel-docking").with(("tab", &"layers".to_string()));
     let from = h.ctx.read_response(tab).unwrap().rect.center();
     h.event(Event::PointerMoved(from));
     h.run_steps(1);
@@ -553,7 +553,7 @@ fn first_story_editor_frame_conservatively_blocks_owned_tab_release() {
 
 #[test]
 fn capture_legacy_panel_menu_visual_fixture() {
-    let Some(directory) = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
+    let Some(directory) = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
     std::fs::create_dir_all(&directory).unwrap();
     let mut app = app();
     app.run("file.new", json!({})).unwrap();
@@ -592,12 +592,12 @@ fn capture_legacy_panel_menu_visual_fixture() {
     h.run_steps(2);
     assert!(egui::Popup::is_any_open(&h.ctx));
     assert_eq!(h.query_all_by_label(crate::i18n::tr("ar", "Float Panel")).count(), 2, "reference and actual logical action must be accessible");
-    h.render().unwrap().save(directory.join("designcraft-legacy-context-dark-ar.png")).unwrap();
+    h.render().unwrap().save(directory.join("pejy-legacy-context-dark-ar.png")).unwrap();
     let group = h.get_by_label_contains(crate::i18n::tr("ar", "Group with")).rect().center();
     h.hover_at(group);
     h.run_steps(4);
     assert_eq!(h.query_all_by_label(crate::i18n::tr("ar", "Layers")).count(), 2, "reference and actual target must be accessible");
-    h.render().unwrap().save(directory.join("designcraft-legacy-targets-dark-ar.png")).unwrap();
+    h.render().unwrap().save(directory.join("pejy-legacy-targets-dark-ar.png")).unwrap();
     assert!(h.state().ui.docking.is_none());
     let (last, last_label, _) = crate::dock::ICON_PANELS.last().unwrap();
     let logical = crate::i18n::tr("ar", last_label);
@@ -614,7 +614,7 @@ fn capture_legacy_panel_menu_visual_fixture() {
     let target = h.query_all_by_label(logical).find(|node| submenu.x_range().contains(node.rect().center().x)).unwrap().rect();
     assert!(submenu.contains_rect(target), "last target must be inside the actual submenu after scrolling");
     assert!(h.ctx.content_rect().contains_rect(target), "last target must be physically visible after wheel scrolling");
-    h.render().unwrap().save(directory.join("designcraft-legacy-targets-scrolled-dark-ar.png")).unwrap();
+    h.render().unwrap().save(directory.join("pejy-legacy-targets-scrolled-dark-ar.png")).unwrap();
     h.query_all_by_label(logical).find(|node| submenu.contains_rect(node.rect())).unwrap().click();
     h.run_steps(4);
     let layout = h.state().ui.docking.as_ref().unwrap();
@@ -624,7 +624,7 @@ fn capture_legacy_panel_menu_visual_fixture() {
     assert!(group.iter().any(|panel| panel == "properties"));
     assert_eq!(group.last().map(String::as_str), Some("properties"), "clicked destination must receive the original panel after it");
     assert_eq!(serde_json::to_value(&h.state().session.active().unwrap().doc).unwrap(), doc);
-    h.render().unwrap().save(directory.join("designcraft-legacy-last-target-selected-dark-ar.png")).unwrap();
+    h.render().unwrap().save(directory.join("pejy-legacy-last-target-selected-dark-ar.png")).unwrap();
 }
 
 #[test]
@@ -716,7 +716,7 @@ fn paragraph_styles_open_floating_with_character_styles() {
     assert_eq!(group.panels, ["characterStyles", "paragraphStyles"]);
     assert_eq!(group.panels[group.active], "paragraphStyles", "the one chosen is in front");
     // The dock still shows Properties in front.
-    assert!(matches!(&layout.root, Some(craft_ui::docking::Node::Tabs { panels, active }) if panels[*active] == "properties"), "{:?}", layout.root);
+    assert!(matches!(&layout.root, Some(mahay_ui::docking::Node::Tabs { panels, active }) if panels[*active] == "properties"), "{:?}", layout.root);
     // Other panels from Window leave it open.
     app.run("window.panel", json!({"panel":"color"})).unwrap();
     app.run("window.panel", json!({"panel":"links"})).unwrap();

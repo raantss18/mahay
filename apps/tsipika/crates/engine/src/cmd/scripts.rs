@@ -1,15 +1,15 @@
 //! `script.check`: a script written for the reference app (`.jsx`, `.jsxinc`, `.js`, or a compiled
-//! `.jsxbin`) checked without running any of it, by `vectorcraft-scriptcheck`: what kind of file it
+//! `.jsxbin`) checked without running any of it, by `tsipika-scriptcheck`: what kind of file it
 //! is, what it needs, its directives and includes, the platform features and document-model member
 //! chains it uses, the menu commands it runs, what it does outside the document, and its problems.
 //! With a path and `includes`, the files its `#include` lines name are read from inside its folder,
 //! each through the same checks as every other file a command reads.
 
 use serde_json::{Value, json};
-use vectorcraft_scriptcheck::{Limits, Loaded, Loader, Report};
+use tsipika_scriptcheck::{Limits, Loaded, Loader, Report};
 
 /// The ids a reply can hold, for the windows that show it.
-pub use vectorcraft_scriptcheck::{IncludeStatus, Need, OUTSIDE, PROBLEMS};
+pub use tsipika_scriptcheck::{IncludeStatus, Need, OUTSIDE, PROBLEMS};
 
 use super::*;
 
@@ -72,7 +72,7 @@ fn decode_head(b64: &str, max: usize) -> Option<Vec<u8>> {
             kept > chars
         })
         .unwrap_or(b64.len());
-    vectorcraft_format::base64_decode(b64.get(..end)?)
+    tsipika_format::base64_decode(b64.get(..end)?)
 }
 
 fn check(_: &mut Session, p: &Value) -> Result<Value> {
@@ -92,7 +92,7 @@ fn check(_: &mut Session, p: &Value) -> Result<Value> {
     // `name` names the reply.
     let file = path.map(super::fileio::file_name).unwrap_or_else(|| name.clone());
     let mut folder = path.filter(|_| bool_or(p, "includes", false)).map(Folder::of);
-    let report = vectorcraft_scriptcheck::check(&file, &bytes, folder.as_mut().map(|f| f as &mut dyn Loader), &limits);
+    let report = tsipika_scriptcheck::check(&file, &bytes, folder.as_mut().map(|f| f as &mut dyn Loader), &limits);
     Ok(report_json(&name, &report))
 }
 

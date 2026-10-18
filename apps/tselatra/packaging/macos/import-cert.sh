@@ -18,8 +18,8 @@ if [ -z "${APPLE_CERTIFICATE:-}" ]; then
 fi
 
 TMP="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
-KEYCHAIN="$TMP/effectcraft-signing.keychain-db"
-CERT="$TMP/effectcraft-signing.p12"
+KEYCHAIN="$TMP/tselatra-signing.keychain-db"
+CERT="$TMP/tselatra-signing.p12"
 KC_PASS="${KEYCHAIN_PASSWORD:-$(openssl rand -hex 24)}"
 
 trap 'rm -f "$CERT"' EXIT

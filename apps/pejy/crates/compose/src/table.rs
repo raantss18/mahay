@@ -7,8 +7,8 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::{Align, Cell, CellStroke, Document, ItemId, ParaProps, RowHeightMode, Table, TextFrameOptions, VerticalJustification};
-use designcraft_geom::{Point, Rect};
+use pejy_doc::{Align, Cell, CellStroke, Document, ItemId, ParaProps, RowHeightMode, Table, TextFrameOptions, VerticalJustification};
+use pejy_geom::{Point, Rect};
 
 use crate::{ComposeOptions, ComposedStory, Cursor, FrameSpec, Line};
 
@@ -32,7 +32,7 @@ pub struct PlacedCell {
     /// A header/footer row repeated in a continuation fragment.
     pub repeated: bool,
     /// Graphic cell content (drawn at `clip`'s top left, clipped to it).
-    pub graphic: Option<designcraft_doc::Graphic>,
+    pub graphic: Option<pejy_doc::Graphic>,
 }
 
 /// One cell edge (or the table border) to stroke.
@@ -81,7 +81,7 @@ impl TableFrag {
         if dy == 0.0 {
             return;
         }
-        let v = designcraft_geom::Vec2::new(0.0, dy);
+        let v = pejy_geom::Vec2::new(0.0, dy);
         self.rect = self.rect + v;
         for c in &mut self.cells {
             c.rect = c.rect + v;
@@ -145,7 +145,7 @@ fn compose_cell(doc: &Document, cell: &Cell, w: f64, opts: &ComposeOptions, left
             // Line metrics include baseline shifts and super/subscript. Include the final
             // geometry of in-flow objects too, but leave custom anchors out of text flow.
             for object in &f.objects {
-                if cell.text.objects.get(object.index).is_some_and(|o| !matches!(o.position, designcraft_doc::AnchorPosition::Custom { .. }))
+                if cell.text.objects.get(object.index).is_some_and(|o| !matches!(o.position, pejy_doc::AnchorPosition::Custom { .. }))
                     && let Some(extent) = extents.get_mut(object.line)
                 {
                     extent.bottom = extent.bottom.max(object.origin.y + object.size.1);
@@ -380,7 +380,7 @@ fn emit(
             let rs = (cell.row_span.max(1) as usize).min(table.nrows() - r);
             let last_row = r + rs - 1;
             let y1 = ry(last_row).map_or(y + heights[r], |ly| ly + heights[last_row]);
-            let rect = if table.options.direction == designcraft_doc::TextDirection::RightToLeft {
+            let rect = if table.options.direction == pejy_doc::TextDirection::RightToLeft {
                 Rect::new(right - colx[c + cs], y, right - colx[c], y1)
             } else {
                 Rect::new(x0 + colx[c], y, x0 + colx[c + cs], y1)
@@ -451,7 +451,7 @@ fn emit(
         ascent: h,
         descent: 0.0,
         leading: h,
-        range: anchor..anchor + designcraft_doc::TABLE_ANCHOR.len_utf8(),
+        range: anchor..anchor + pejy_doc::TABLE_ANCHOR.len_utf8(),
         para: pi,
         glyphs: vec![],
         hyphenated: false,
@@ -528,7 +528,7 @@ fn boundary_stroke<'a>(
 /// Uniform active groups do not depend on which shared edge starts the pattern. Nonuniform
 /// and skipped patterns stay intact in the model until their phase is verified.
 fn table_patterns(table: &Table) -> (Option<&CellStroke>, Option<&CellStroke>) {
-    fn uniform(p: &Option<designcraft_doc::AltStrokes>) -> Option<&CellStroke> {
+    fn uniform(p: &Option<pejy_doc::AltStrokes>) -> Option<&CellStroke> {
         p.as_ref().filter(|p| p.skip_first == 0 && p.skip_last == 0).and_then(|p| p.uniform_stroke())
     }
     (uniform(&table.options.row_strokes), uniform(&table.options.column_strokes))
@@ -553,7 +553,7 @@ pub struct SideStroke<'a> {
 pub fn cell_side_strokes<'a>(table: &'a Table, owners: &[(usize, usize)], (r, c): (usize, usize), side: usize) -> Vec<SideStroke<'a>> {
     let Some(cell) = table.cell(r, c) else { return Vec::new() };
     let (nr, nc) = (table.nrows(), table.ncols());
-    let rtl = table.options.direction == designcraft_doc::TextDirection::RightToLeft;
+    let rtl = table.options.direction == pejy_doc::TextDirection::RightToLeft;
     let end_row = r.saturating_add(cell.row_span.max(1) as usize).min(nr);
     let end_col = c.saturating_add(cell.col_span.max(1) as usize).min(nc);
     let owner = |rr: usize, cc: usize| {
@@ -637,7 +637,7 @@ fn fragment_strokes(
 ) -> Vec<StrokeSeg> {
     let nc = table.ncols();
     let right = x0 + colx.last().copied().unwrap_or(0.0);
-    let rtl = table.options.direction == designcraft_doc::TextDirection::RightToLeft;
+    let rtl = table.options.direction == pejy_doc::TextDirection::RightToLeft;
     let owner = |r: usize, c: usize| {
         let &(r, c) = owners.get(r.checked_mul(nc)?.checked_add(c)?)?;
         Some(((r, c), table.cell(r, c)?))
@@ -753,7 +753,7 @@ pub fn hit_border(cs: &ComposedStory, fi: usize, tables: &std::collections::BTre
             continue;
         }
         let Some(table) = tables.get(&t.table) else { continue };
-        let rtl = table.options.direction == designcraft_doc::TextDirection::RightToLeft;
+        let rtl = table.options.direction == pejy_doc::TextDirection::RightToLeft;
         for c in &t.cells {
             let Some(cell) = table.cell(c.row, c.col) else { continue };
             let last_col = c.col.saturating_add((cell.col_span.max(1) - 1) as usize);
@@ -799,7 +799,7 @@ pub fn cell_caret(cs: &ComposedStory, table: u64, row: usize, col: usize, pos: u
 #[cfg(test)]
 mod height_tests {
     use super::*;
-    use designcraft_doc::{AnchorPosition, AnchoredObject, CellRange, LayerId, ParaFormat, Position, SpreadRef, build::NewDocument};
+    use pejy_doc::{AnchorPosition, AnchoredObject, CellRange, LayerId, ParaFormat, Position, SpreadRef, build::NewDocument};
 
     fn text_cell(text: &str, bottom: f64) -> Cell {
         let mut cell = Cell::with_text(text, ParaFormat::default());
@@ -831,8 +831,8 @@ mod height_tests {
     }
 
     fn object(position: AnchorPosition) -> AnchoredObject {
-        let path = designcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 12.0, 30.0));
-        AnchoredObject::new(designcraft_doc::Item::new(ItemId(0), LayerId(0), designcraft_doc::Shape::Rectangle, path), position)
+        let path = pejy_geom::shapes::rectangle(Rect::new(0.0, 0.0, 12.0, 30.0));
+        AnchoredObject::new(pejy_doc::Item::new(ItemId(0), LayerId(0), pejy_doc::Shape::Rectangle, path), position)
     }
 
     #[test]
@@ -944,7 +944,7 @@ mod height_tests {
     #[test]
     fn earlier_lowered_line_controls_height_and_cannot_be_skipped_on_overset() {
         let mut cell = text_cell("gyp\njqp", 8.5);
-        cell.text.format_chars(0..cell.text.len(), |f| f.over.leading = Some(designcraft_doc::Leading::Points(6.0)));
+        cell.text.format_chars(0..cell.text.len(), |f| f.over.leading = Some(pejy_doc::Leading::Points(6.0)));
         cell.text.format_chars(0..3, |f| f.over.baseline_shift = Some(-30.0));
         let layout = measure(&cell, 92.0);
         let lines = &layout.text.frames[0].lines;
@@ -1076,7 +1076,7 @@ mod height_tests {
 #[cfg(test)]
 mod border_tests {
     use super::*;
-    use designcraft_doc::{CellRange, ParaFormat, SpreadRef, build::NewDocument};
+    use pejy_doc::{CellRange, ParaFormat, SpreadRef, build::NewDocument};
 
     fn compose_table(table: Table) -> ComposedStory {
         let mut doc = Document::new(&NewDocument::default());
@@ -1225,7 +1225,7 @@ mod border_tests {
 
     #[test]
     fn higher_priority_zero_or_none_suppresses_a_visible_shared_rule() {
-        for invisible in [CellStroke::none(), CellStroke { color: designcraft_color::swatch::NONE.into(), ..Default::default() }] {
+        for invisible in [CellStroke::none(), CellStroke { color: pejy_color::swatch::NONE.into(), ..Default::default() }] {
             let mut table = rule_table(2, 2, 0, 0);
             set_rule(&mut table, 0, 0, 2, 3.0, 7);
             set_rule(&mut table, 1, 0, 0, 0.0, 8);
@@ -1254,7 +1254,7 @@ mod border_tests {
 
     #[test]
     fn specified_zero_priority_outer_edges_keep_per_side_table_borders() {
-        for direction in [designcraft_doc::TextDirection::LeftToRight, designcraft_doc::TextDirection::RightToLeft] {
+        for direction in [pejy_doc::TextDirection::LeftToRight, pejy_doc::TextDirection::RightToLeft] {
             let mut table = rule_table(1, 1, 0, 0);
             table.options.direction = direction;
             table.options.borders = std::array::from_fn(|i| Some(CellStroke { weight: (i + 1) as f64, ..Default::default() }));
@@ -1276,9 +1276,9 @@ mod border_tests {
         }
     }
 
-    fn uniform_pattern(weight: f64) -> designcraft_doc::AltStrokes {
+    fn uniform_pattern(weight: f64) -> pejy_doc::AltStrokes {
         let stroke = CellStroke { weight, ..Default::default() };
-        designcraft_doc::AltStrokes { first: 1, next: 1, first_stroke: stroke.clone(), next_stroke: stroke, skip_first: 0, skip_last: 0 }
+        pejy_doc::AltStrokes { first: 1, next: 1, first_stroke: stroke.clone(), next_stroke: stroke, skip_first: 0, skip_last: 0 }
     }
 
     #[test]
@@ -1373,7 +1373,7 @@ mod border_tests {
         // The metadata arrays also default to zero/false when reading legacy JSON. Older
         // native table.setCell code changed these strokes without setting any metadata.
         table.cell_mut(1, 0).unwrap().strokes[0] = CellStroke::none();
-        table.cell_mut(0, 1).unwrap().strokes[1].color = designcraft_color::swatch::NONE.into();
+        table.cell_mut(0, 1).unwrap().strokes[1].color = pejy_color::swatch::NONE.into();
         let composed = compose_table(table);
         let fragment = &composed.frames[0].tables[0];
         assert_eq!(fragment.strokes.len(), 2);
@@ -1444,7 +1444,7 @@ mod border_tests {
         table.columns.iter_mut().for_each(|column| column.width = 45.0);
         table.merge(CellRange::new(1, 0, 1, 1)).unwrap();
         set_rule(&mut table, 1, 0, 0, 1.0, 1);
-        table.cell_mut(1, 0).unwrap().strokes[0].kind = designcraft_doc::StrokeType::Dashed { pattern: vec![6.0, 4.0] };
+        table.cell_mut(1, 0).unwrap().strokes[0].kind = pejy_doc::StrokeType::Dashed { pattern: vec![6.0, 4.0] };
         let composed = compose_table(table);
         let fragment = &composed.frames[0].tables[0];
         assert_eq!(fragment.strokes.len(), 1, "one winning source edge must retain one dash phase");
@@ -1472,7 +1472,7 @@ mod border_tests {
     #[test]
     fn rtl_shared_rules_use_physical_edges_and_outer_borders() {
         let mut table = rule_table(1, 2, 0, 0);
-        table.options.direction = designcraft_doc::TextDirection::RightToLeft;
+        table.options.direction = pejy_doc::TextDirection::RightToLeft;
         table.columns[0].width = 30.0;
         table.columns[1].width = 70.0;
         set_rule(&mut table, 0, 0, 1, 2.0, 9);

@@ -1,13 +1,13 @@
 //! Targa import through the same host and commands used by the desktop and CLI.
 
-use effectcraft_engine::render::RenderOpts;
-use effectcraft_project::{FootageKind, ItemId, ItemKind};
-use effectcraft_time::{FrameRate, Tick};
+use tselatra_engine::render::RenderOpts;
+use tselatra_project::{FootageKind, ItemId, ItemKind};
+use tselatra_time::{FrameRate, Tick};
 use serde_json::json;
 
 #[test]
 fn tga_stills_and_numbered_sequences_import_and_render() {
-    let dir = std::env::temp_dir().join(format!("effectcraft-tga-import-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tselatra-tga-import-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     // A generated 4×4, 24-bit, top-origin TGA. No binary fixtures are retained.
     let write = |name: &str, bgr: [u8; 3]| {
@@ -26,7 +26,7 @@ fn tga_stills_and_numbered_sequences_import_and_render() {
     let first = write("shot_0001.tga", [0, 0, 255]);
     write("shot_0002.tga", [255, 0, 0]);
     for (path, sequence) in [(still, false), (first, true)] {
-        let mut session = effectcraft_host::session();
+        let mut session = tselatra_host::session();
         let imported = session.execute_checked("file.import", json!({"paths": [path], "sequence": sequence})).unwrap();
         assert_eq!(imported["errors"], json!([]), "{imported}");
         assert_eq!(imported["items"].as_array().unwrap().len(), 1);

@@ -3,12 +3,12 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::io::Write;
 
-use designcraft_color::{Color, ColorType, GradientKind, SwatchValue, swatch};
-use designcraft_doc::{
+use pejy_color::{Color, ColorType, GradientKind, SwatchValue, swatch};
+use pejy_doc::{
     CharAttrs, CharFormat, ColumnsKind, Content, Document, Item, ListType, PageSide, ParaAttrs, ParaFormat, Rule, Shape, SpanColumns, Spread, Story,
     TextFrameOptions, story as st,
 };
-use designcraft_geom::{Affine, PathData, Rect};
+use pejy_geom::{Affine, PathData, Rect};
 
 use crate::names::{self, CHAR_BUILTINS, OBJECT_BUILTINS, PARA_BUILTINS, escape_id, num, pt};
 use crate::xml::{El, Node, document, document_with_pi};
@@ -399,7 +399,7 @@ impl<'a> Ex<'a> {
         if secs.is_empty() || secs[0].start != 0 {
             secs.insert(
                 0,
-                designcraft_doc::Section {
+                pejy_doc::Section {
                     start: 0,
                     start_number: Some(1),
                     style: Default::default(),
@@ -651,14 +651,14 @@ impl<'a> Ex<'a> {
             let id = format!("CustomStrokeStyle/{}", st.name);
             let pcts = |v: &[f64]| v.iter().map(|x| num(x * 100.0)).collect::<Vec<_>>().join(" ");
             let el = match &st.kind {
-                designcraft_doc::StrokeType::Stripes { bands } => {
+                pejy_doc::StrokeType::Stripes { bands } => {
                     let flat: Vec<f64> = bands.iter().flat_map(|(a, w)| [*a, a + w]).collect();
                     Some(El::new("StripedStrokeStyle").attr("StripeArray", pcts(&flat)))
                 }
-                designcraft_doc::StrokeType::Dashed { pattern } => {
+                pejy_doc::StrokeType::Dashed { pattern } => {
                     Some(El::new("DashedStrokeStyle").attr("DashArray", pattern.iter().map(|x| num(*x)).collect::<Vec<_>>().join(" ")))
                 }
-                designcraft_doc::StrokeType::Dotted => Some(El::new("DottedStrokeStyle").attr("DotArray", "0 200")),
+                pejy_doc::StrokeType::Dotted => Some(El::new("DottedStrokeStyle").attr("DotArray", "0 200")),
                 _ => None,
             };
             if let Some(el) = el {
@@ -763,9 +763,9 @@ impl<'a> Ex<'a> {
                 .attr(
                     "Intent",
                     match s.intent {
-                        designcraft_doc::Intent::Print => "PrintIntent",
-                        designcraft_doc::Intent::Web => "WebIntent",
-                        designcraft_doc::Intent::Mobile => "MobileIntent",
+                        pejy_doc::Intent::Print => "PrintIntent",
+                        pejy_doc::Intent::Web => "WebIntent",
+                        pejy_doc::Intent::Mobile => "MobileIntent",
                     },
                 )
                 .attr("CreatePrimaryTextFrame", bool_s(s.primary_text_frame))
@@ -784,9 +784,9 @@ impl<'a> Ex<'a> {
                 .attr(
                     "RulerOrigin",
                     match s.ruler_origin {
-                        designcraft_doc::RulerOrigin::Spread => "SpreadOrigin",
-                        designcraft_doc::RulerOrigin::Page => "PageOrigin",
-                        designcraft_doc::RulerOrigin::Spine => "SpineOrigin",
+                        pejy_doc::RulerOrigin::Spread => "SpreadOrigin",
+                        pejy_doc::RulerOrigin::Page => "PageOrigin",
+                        pejy_doc::RulerOrigin::Spine => "SpineOrigin",
                     },
                 )
                 .attr("CursorKeyIncrement", num(s.keyboard_increment))
@@ -806,8 +806,8 @@ impl<'a> Ex<'a> {
                 .attr(
                     "BaselineGridRelativeOption",
                     match bg.relative_to {
-                        designcraft_doc::GridRelative::TopOfPage => "TopOfPageOfBaselineGridRelativeOption",
-                        designcraft_doc::GridRelative::TopMargin => "TopOfMarginOfBaselineGridRelativeOption",
+                        pejy_doc::GridRelative::TopOfPage => "TopOfPageOfBaselineGridRelativeOption",
+                        pejy_doc::GridRelative::TopMargin => "TopOfMarginOfBaselineGridRelativeOption",
                     },
                 ),
         );
@@ -816,8 +816,8 @@ impl<'a> Ex<'a> {
         root.push(El::new("TransparencyPreference").attr(
             "BlendingSpace",
             match s.blend_space {
-                designcraft_doc::BlendSpace::Cmyk => "CMYK",
-                designcraft_doc::BlendSpace::Rgb => "RGB",
+                pejy_doc::BlendSpace::Cmyk => "CMYK",
+                pejy_doc::BlendSpace::Rgb => "RGB",
             },
         ));
         let a = &s.advanced_type;
@@ -866,26 +866,26 @@ impl<'a> Ex<'a> {
             let mut el =
                 El::new("ParagraphStyle").attr("Self", &id).attr("Name", names::style_name_out(PARA_BUILTINS, &ps.name)).attr("Imported", "false");
             let mut props = Vec::new();
-            let (pa, ca) = if ps.name == designcraft_doc::NO_PARA_STYLE {
+            let (pa, ca) = if ps.name == pejy_doc::NO_PARA_STYLE {
                 // The root style carries the complete attribute set.
-                let mut pa = designcraft_doc::ParaProps::common([&designcraft_doc::ParaProps::default()]);
+                let mut pa = pejy_doc::ParaProps::common([&pejy_doc::ParaProps::default()]);
                 pa.merge(&ps.para);
-                let mut ca = designcraft_doc::CharProps::common([&designcraft_doc::CharProps::default()]);
+                let mut ca = pejy_doc::CharProps::common([&pejy_doc::CharProps::default()]);
                 ca.merge(&ps.chars);
                 (pa, ca)
             } else {
                 let next = ps.next_style.as_deref().unwrap_or(&ps.name);
                 el.set("NextStyle", names::style_self("ParagraphStyle", PARA_BUILTINS, next));
-                match ps.based_on.as_deref().filter(|b| *b != designcraft_doc::NO_PARA_STYLE) {
+                match ps.based_on.as_deref().filter(|b| *b != pejy_doc::NO_PARA_STYLE) {
                     Some(b) => props.push(p("BasedOn", "object", names::style_self("ParagraphStyle", PARA_BUILTINS, b))),
                     None => props.push(p("BasedOn", "string", "$ID/[No paragraph style]")),
                 }
                 (ps.para.clone(), ps.chars.clone())
             };
-            let parent = (ps.name != designcraft_doc::NO_PARA_STYLE).then(|| ps.based_on.as_deref().unwrap_or(designcraft_doc::NO_PARA_STYLE));
+            let parent = (ps.name != pejy_doc::NO_PARA_STYLE).then(|| ps.based_on.as_deref().unwrap_or(pejy_doc::NO_PARA_STYLE));
             let parent_props = match ps.based_on.as_deref() {
-                Some(b) if ps.name != designcraft_doc::NO_PARA_STYLE => styles.resolve_para_style(b).0,
-                _ => designcraft_doc::ParaProps::default(),
+                Some(b) if ps.name != pejy_doc::NO_PARA_STYLE => styles.resolve_para_style(b).0,
+                _ => pejy_doc::ParaProps::default(),
             };
             let pa = with_list_tab(pa, || (styles.resolve_para_style(&ps.name).0, parent_props));
             self.para_attrs(&mut el, &mut props, &pa, parent);
@@ -900,7 +900,7 @@ impl<'a> Ex<'a> {
         let mut cells = El::new("RootCellStyleGroup")
             .attr("Self", self.fresh())
             .child(El::new("CellStyle").attr("Self", "CellStyle/$ID/[None]").attr("AppliedParagraphStyle", NO_PARA_ID).attr("Name", "$ID/[None]"));
-        for cs in styles.cell.iter().filter(|c| c.name != designcraft_doc::NO_CELL_STYLE) {
+        for cs in styles.cell.iter().filter(|c| c.name != pejy_doc::NO_CELL_STYLE) {
             let mut el = El::new("CellStyle")
                 .attr("Self", names::style_self("CellStyle", names::CELL_BUILTINS, &cs.name))
                 .attr("Name", names::style_name_out(names::CELL_BUILTINS, &cs.name));
@@ -934,8 +934,8 @@ impl<'a> Ex<'a> {
             if let Some(ps) = &cs.paragraph_style {
                 el.set("AppliedParagraphStyle", names::style_self("ParagraphStyle", PARA_BUILTINS, ps));
             }
-            let base = cs.based_on.as_deref().unwrap_or(designcraft_doc::NO_CELL_STYLE);
-            let based_on = if base == designcraft_doc::NO_CELL_STYLE {
+            let base = cs.based_on.as_deref().unwrap_or(pejy_doc::NO_CELL_STYLE);
+            let based_on = if base == pejy_doc::NO_CELL_STYLE {
                 p("BasedOn", "string", "$ID/[None]")
             } else {
                 p("BasedOn", "object", names::style_self("CellStyle", names::CELL_BUILTINS, base))
@@ -944,10 +944,10 @@ impl<'a> Ex<'a> {
         }
         root.push(cells);
         let mut tables = El::new("RootTableStyleGroup").attr("Self", self.fresh());
-        if !styles.table.iter().any(|s| s.name == designcraft_doc::NO_TABLE_STYLE) {
+        if !styles.table.iter().any(|s| s.name == pejy_doc::NO_TABLE_STYLE) {
             tables.push(El::new("TableStyle").attr("Self", "TableStyle/$ID/[No table style]").attr("Name", "$ID/[No table style]"));
         }
-        if !styles.table.iter().any(|s| s.name == designcraft_doc::BASIC_TABLE) {
+        if !styles.table.iter().any(|s| s.name == pejy_doc::BASIC_TABLE) {
             tables.push(with_props(
                 El::new("TableStyle").attr("Self", "TableStyle/$ID/[Basic Table]").attr("Name", "$ID/[Basic Table]"),
                 vec![p("BasedOn", "string", "$ID/[No table style]")],
@@ -1005,9 +1005,9 @@ impl<'a> Ex<'a> {
                 el.set("SpaceAfter", num(v));
             }
             let mut props = Vec::new();
-            if ts.name != designcraft_doc::NO_TABLE_STYLE {
-                let base = ts.based_on.as_deref().unwrap_or(designcraft_doc::NO_TABLE_STYLE);
-                props.push(if base == designcraft_doc::NO_TABLE_STYLE {
+            if ts.name != pejy_doc::NO_TABLE_STYLE {
+                let base = ts.based_on.as_deref().unwrap_or(pejy_doc::NO_TABLE_STYLE);
+                props.push(if base == pejy_doc::NO_TABLE_STYLE {
                     p("BasedOn", "string", "$ID/[No table style]")
                 } else {
                     p("BasedOn", "object", names::style_self("TableStyle", names::TABLE_BUILTINS, base))
@@ -1030,8 +1030,8 @@ impl<'a> Ex<'a> {
         // Object styles.
         let mut og = Group::default();
         let mut have: Vec<&str> = styles.object.iter().map(|o| o.name.as_str()).collect();
-        let defaults = designcraft_doc::Styles::default();
-        let mut all: Vec<designcraft_doc::ObjectStyle> = styles.object.clone();
+        let defaults = pejy_doc::Styles::default();
+        let mut all: Vec<pejy_doc::ObjectStyle> = styles.object.clone();
         for b in &defaults.object {
             if !have.contains(&b.name.as_str()) {
                 all.push(b.clone());
@@ -1042,8 +1042,8 @@ impl<'a> Ex<'a> {
             let id = names::style_self("ObjectStyle", OBJECT_BUILTINS, &os.name);
             let mut el = El::new("ObjectStyle").attr("Self", &id).attr("Name", names::style_name_out(OBJECT_BUILTINS, &os.name));
             let mut props = Vec::new();
-            if os.name != designcraft_doc::NO_OBJECT_STYLE {
-                match os.based_on.as_deref().filter(|b| *b != designcraft_doc::NO_OBJECT_STYLE) {
+            if os.name != pejy_doc::NO_OBJECT_STYLE {
+                match os.based_on.as_deref().filter(|b| *b != pejy_doc::NO_OBJECT_STYLE) {
                     Some(b) => props.push(p("BasedOn", "object", names::style_self("ObjectStyle", OBJECT_BUILTINS, b))),
                     None => props.push(p("BasedOn", "string", "$ID/[None]")),
                 }
@@ -1100,9 +1100,9 @@ impl<'a> Ex<'a> {
     }
 
     /// The document's table of contents as a TOC style; its story names it in `AppliedTOCStyle`.
-    fn toc_style_el(&mut self, toc: &designcraft_doc::Toc) -> El {
+    fn toc_style_el(&mut self, toc: &pejy_doc::Toc) -> El {
         let para = |n: &str| names::style_self("ParagraphStyle", PARA_BUILTINS, n);
-        let chars = |n: Option<&str>| names::style_self("CharacterStyle", CHAR_BUILTINS, n.unwrap_or(designcraft_doc::NO_CHAR_STYLE));
+        let chars = |n: Option<&str>| names::style_self("CharacterStyle", CHAR_BUILTINS, n.unwrap_or(pejy_doc::NO_CHAR_STYLE));
         let mut el = El::new("TOCStyle")
             .attr("Self", TOC_STYLE_ID)
             .attr("Name", TOC_STYLE_NAME)
@@ -1116,9 +1116,9 @@ impl<'a> Ex<'a> {
             let format = e.entry_style.clone().unwrap_or_else(|| format!("TOC Level {}", e.level));
             let position = match e.page_number {
                 _ if !toc.page_numbers => "NoPageNumber",
-                designcraft_doc::TocPageNumber::After => "AfterEntry",
-                designcraft_doc::TocPageNumber::Before => "BeforeEntry",
-                designcraft_doc::TocPageNumber::None => "NoPageNumber",
+                pejy_doc::TocPageNumber::After => "AfterEntry",
+                pejy_doc::TocPageNumber::Before => "BeforeEntry",
+                pejy_doc::TocPageNumber::None => "NoPageNumber",
             };
             el.push(
                 El::new("TOCStyleEntry")
@@ -1176,10 +1176,10 @@ impl<'a> Ex<'a> {
         }
         if let Some(k) = a.kerning {
             match k {
-                designcraft_doc::Kerning::Metrics => el.set("KerningMethod", "$ID/Metrics"),
-                designcraft_doc::Kerning::Optical => el.set("KerningMethod", "$ID/Optical"),
-                designcraft_doc::Kerning::None => el.set("KerningMethod", "None"),
-                designcraft_doc::Kerning::Manual(v) => el.set("KerningValue", num(v)),
+                pejy_doc::Kerning::Metrics => el.set("KerningMethod", "$ID/Metrics"),
+                pejy_doc::Kerning::Optical => el.set("KerningMethod", "$ID/Optical"),
+                pejy_doc::Kerning::None => el.set("KerningMethod", "None"),
+                pejy_doc::Kerning::Manual(v) => el.set("KerningValue", num(v)),
             }
         }
         if let Some(v) = a.tracking {
@@ -1248,14 +1248,14 @@ impl<'a> Ex<'a> {
             }
         }
         if let Some(list) = &a.otf_features {
-            for (tag, _, attr) in designcraft_doc::otf::TOGGLES {
-                el.set(attr, bool_s(designcraft_doc::otf::is_on(list, tag)));
+            for (tag, _, attr) in pejy_doc::otf::TOGGLES {
+                el.set(attr, bool_s(pejy_doc::otf::is_on(list, tag)));
             }
-            let fig = designcraft_doc::otf::figures(list);
-            if let Some(f) = designcraft_doc::otf::FIGURES.iter().find(|f| f.0 == fig) {
+            let fig = pejy_doc::otf::figures(list);
+            if let Some(f) = pejy_doc::otf::FIGURES.iter().find(|f| f.0 == fig) {
                 el.set("OTFFigureStyle", f.3);
             }
-            el.set("OTFStylisticSets", designcraft_doc::otf::stylistic_sets(list).to_string());
+            el.set("OTFStylisticSets", pejy_doc::otf::stylistic_sets(list).to_string());
         }
         if let Some(v) = &a.glyph_form {
             el.set("GlyphForm", v);
@@ -1352,9 +1352,9 @@ impl<'a> Ex<'a> {
             el.set(
                 "KinsokuHangType",
                 match v {
-                    designcraft_doc::cjk::KinsokuHang::None => "None",
-                    designcraft_doc::cjk::KinsokuHang::Regular => "KinsokuHangRegular",
-                    designcraft_doc::cjk::KinsokuHang::Force => "KinsokuHangForce",
+                    pejy_doc::cjk::KinsokuHang::None => "None",
+                    pejy_doc::cjk::KinsokuHang::Regular => "KinsokuHangRegular",
+                    pejy_doc::cjk::KinsokuHang::Force => "KinsokuHangForce",
                 },
             );
         }
@@ -1410,7 +1410,7 @@ impl<'a> Ex<'a> {
         if let (Some(cap), Some(list)) = (cap, list.as_mut()) {
             match list.first_mut() {
                 Some(ns) if ns.is_drop_cap() => ns.style = cap.to_string(),
-                _ if real(cap) => list.insert(0, designcraft_doc::NestedStyle::drop_cap(cap)),
+                _ if real(cap) => list.insert(0, pejy_doc::NestedStyle::drop_cap(cap)),
                 _ => {}
             }
         }
@@ -1478,7 +1478,7 @@ impl<'a> Ex<'a> {
         if let Some(v) = a.direction {
             el.set(
                 "ParagraphDirection",
-                if v == designcraft_doc::TextDirection::RightToLeft { "RightToLeftDirection" } else { "LeftToRightDirection" },
+                if v == pejy_doc::TextDirection::RightToLeft { "RightToLeftDirection" } else { "LeftToRightDirection" },
             );
         }
         if let Some(v) = a.kashidas {
@@ -1515,12 +1515,12 @@ impl<'a> Ex<'a> {
             // `grid_align` isn't written.
             let reference = crate::cjk::grid_reference_out(a.grid_reference.unwrap_or_default());
             match g {
-                designcraft_doc::GridAlign::None => el.set("GridAlignment", "None"),
-                designcraft_doc::GridAlign::AllLines => {
+                pejy_doc::GridAlign::None => el.set("GridAlignment", "None"),
+                pejy_doc::GridAlign::AllLines => {
                     el.set("GridAlignment", reference);
                     el.set("GridAlignFirstLineOnly", "false");
                 }
-                designcraft_doc::GridAlign::FirstLineOnly => {
+                pejy_doc::GridAlign::FirstLineOnly => {
                     el.set("GridAlignment", reference);
                     el.set("GridAlignFirstLineOnly", "true");
                 }
@@ -1530,10 +1530,10 @@ impl<'a> Ex<'a> {
             el.set(
                 "Composer",
                 match c {
-                    designcraft_doc::Composer::Paragraph => "HL Composer",
-                    designcraft_doc::Composer::SingleLine => "HL Single",
-                    designcraft_doc::Composer::Japanese => "HL Composer J",
-                    designcraft_doc::Composer::JapaneseSingleLine => "HL Single J",
+                    pejy_doc::Composer::Paragraph => "HL Composer",
+                    pejy_doc::Composer::SingleLine => "HL Single",
+                    pejy_doc::Composer::Japanese => "HL Composer J",
+                    pejy_doc::Composer::JapaneseSingleLine => "HL Single J",
                 },
             );
         }
@@ -1740,14 +1740,14 @@ impl<'a> Ex<'a> {
         el.set(&format!("{k}Offset"), num(r.offset));
         el.set(&format!("{k}LeftIndent"), num(r.left_indent));
         el.set(&format!("{k}RightIndent"), num(r.right_indent));
-        props.push(if r.color == designcraft_doc::TEXT_COLOR {
-            p(&format!("{k}Color"), "string", designcraft_doc::TEXT_COLOR)
+        props.push(if r.color == pejy_doc::TEXT_COLOR {
+            p(&format!("{k}Color"), "string", pejy_doc::TEXT_COLOR)
         } else {
             p(&format!("{k}Color"), "object", self.sw(&r.color))
         });
     }
 
-    fn stroke_attrs(&self, el: &mut El, s: &designcraft_doc::Stroke) {
+    fn stroke_attrs(&self, el: &mut El, s: &pejy_doc::Stroke) {
         el.set("StrokeColor", self.sw(&s.swatch));
         el.set("StrokeWeight", num(if s.is_none() { 0.0 } else { s.weight }));
         el.set("StrokeTint", pct(s.tint as f64));
@@ -1829,12 +1829,12 @@ impl<'a> Ex<'a> {
             let spine = sp.pages.iter().map(|p| p.x - left).filter(|x| *x > 1e-6).fold(f64::INFINITY, f64::min);
             let spine = if spine.is_finite() && facing { spine } else { 0.0 };
             let origin_x = match d.settings.ruler_origin {
-                designcraft_doc::RulerOrigin::Spread => left,
-                designcraft_doc::RulerOrigin::Page => pg.x,
-                designcraft_doc::RulerOrigin::Spine => left + spine,
+                pejy_doc::RulerOrigin::Spread => left,
+                pejy_doc::RulerOrigin::Page => pg.x,
+                pejy_doc::RulerOrigin::Spine => left + spine,
             };
             for g in &pg.guides {
-                let vertical = g.orientation == designcraft_doc::Orientation::Vertical;
+                let vertical = g.orientation == pejy_doc::Orientation::Vertical;
                 let mut ge = El::new("Guide")
                     .attr("Self", format!("{}g{}", uid(pg.id.0), pe.elements().count()))
                     .attr("Orientation", if vertical { "Vertical" } else { "Horizontal" })
@@ -1884,7 +1884,7 @@ impl<'a> Ex<'a> {
             && let Some(pt) = &t.options.path
         {
             // Type on a path: a TextPath child holds the story.
-            let len = designcraft_geom::warp::PathWarp::new(&it.path.to_bezpath(), false).length();
+            let len = pejy_geom::warp::PathWarp::new(&it.path.to_bezpath(), false).length();
             el.push(
                 El::new("TextPath")
                     .attr("Self", format!("{}tp", uid(it.id.0)))
@@ -1919,7 +1919,7 @@ impl<'a> Ex<'a> {
         el.set("Visible", bool_s(!it.hidden));
         el.set("Locked", bool_s(it.locked));
         el.set("Nonprinting", bool_s(it.nonprinting));
-        let os = if it.object_style.is_empty() { designcraft_doc::NO_OBJECT_STYLE } else { &it.object_style };
+        let os = if it.object_style.is_empty() { pejy_doc::NO_OBJECT_STYLE } else { &it.object_style };
         el.set("AppliedObjectStyle", names::style_self("ObjectStyle", OBJECT_BUILTINS, os));
         el.set("ItemTransform", affine_s(xf));
         el.set("FillColor", self.sw(&it.fill.swatch));
@@ -1962,7 +1962,7 @@ impl<'a> Ex<'a> {
         let styled = self.d.styles.object_effects(os).is_some();
         let ds = &it.effects.drop_shadow;
         let (gf, df) = (&it.effects.gradient_feather, &it.effects.directional_feather);
-        if it.opacity < 1.0 || it.blend != designcraft_color::BlendMode::Normal || ds.on || it.effects.feather > 0.0 || gf.on || df.on || styled {
+        if it.opacity < 1.0 || it.blend != pejy_color::BlendMode::Normal || ds.on || it.effects.feather > 0.0 || gf.on || df.on || styled {
             let mut t = El::new("TransparencySetting");
             t.push(El::new("BlendingSetting").attr("BlendMode", names::blend_out(it.blend)).attr("Opacity", pct(it.opacity as f64)));
             for c in self.effect_els(&it.effects, styled) {
@@ -2024,10 +2024,10 @@ impl<'a> Ex<'a> {
                 }
             }
             Content::Graphic(g) => {
-                if g.auto_fit != designcraft_doc::Fitting::None || g.fit_align != 4 || g.crop != [0.0; 4] {
+                if g.auto_fit != pejy_doc::Fitting::None || g.fit_align != 4 || g.crop != [0.0; 4] {
                     el.push(
                         El::new("FrameFittingOption")
-                            .attr("AutoFit", bool_s(g.auto_fit != designcraft_doc::Fitting::None))
+                            .attr("AutoFit", bool_s(g.auto_fit != pejy_doc::Fitting::None))
                             .attr("TopCrop", num(g.crop[0]))
                             .attr("LeftCrop", num(g.crop[1]))
                             .attr("BottomCrop", num(g.crop[2]))
@@ -2048,7 +2048,7 @@ impl<'a> Ex<'a> {
 
     /// The `TransparencySetting` children for `e`'s drop shadow and feather; `all` also writes the
     /// effects that are off (`Mode="None"`), as an object style that sets effects does.
-    fn effect_els(&self, e: &designcraft_doc::Effects, all: bool) -> Vec<El> {
+    fn effect_els(&self, e: &pejy_doc::Effects, all: bool) -> Vec<El> {
         let mut out = Vec::new();
         let ds = &e.drop_shadow;
         if ds.on || all {
@@ -2066,9 +2066,9 @@ impl<'a> Ex<'a> {
         }
         if e.feather > 0.0 || all {
             let corners = match e.feather_options.corners {
-                designcraft_doc::FeatherCorners::Sharp => "Sharp",
-                designcraft_doc::FeatherCorners::Rounded => "Rounded",
-                designcraft_doc::FeatherCorners::Diffused => "Diffusion",
+                pejy_doc::FeatherCorners::Sharp => "Sharp",
+                pejy_doc::FeatherCorners::Rounded => "Rounded",
+                pejy_doc::FeatherCorners::Diffused => "Diffusion",
             };
             out.push(
                 El::new("FeatherSetting")
@@ -2081,9 +2081,9 @@ impl<'a> Ex<'a> {
         out
     }
 
-    fn image_el(&mut self, asset: &designcraft_doc::Asset, g: &designcraft_doc::Graphic) -> El {
+    fn image_el(&mut self, asset: &pejy_doc::Asset, g: &pejy_doc::Graphic) -> El {
         let is_pdf = asset.mime == "application/pdf";
-        let is_eps = asset.mime == "application/postscript" || designcraft_images::is_eps(&asset.data);
+        let is_eps = asset.mime == "application/postscript" || pejy_images::is_eps(&asset.data);
         let mut el = El::new(if is_eps {
             "EPS"
         } else if is_pdf {
@@ -2285,7 +2285,7 @@ impl<'a> Ex<'a> {
                 .attr("StoryOrientation", if s.vertical { "Vertical" } else { "Horizontal" })
                 .attr(
                     "StoryDirection",
-                    if s.direction == designcraft_doc::TextDirection::RightToLeft { "RightToLeftDirection" } else { "LeftToRightDirection" },
+                    if s.direction == pejy_doc::TextDirection::RightToLeft { "RightToLeftDirection" } else { "LeftToRightDirection" },
                 ),
         );
         for psr in self.story_paras(s) {
@@ -2363,10 +2363,10 @@ impl<'a> Ex<'a> {
                         if let Some(t) = s.para_table(pi) {
                             out.push(Node::El(self.table_el(t)));
                         }
-                    } else if ch == designcraft_doc::ANCHOR_MARK {
+                    } else if ch == pejy_doc::ANCHOR_MARK {
                         flush_text(&mut cur, &mut pending);
                         flush_content(&mut pending, &mut out);
-                        let k = s.text[..seg_start + ci].matches(designcraft_doc::ANCHOR_MARK).count();
+                        let k = s.text[..seg_start + ci].matches(pejy_doc::ANCHOR_MARK).count();
                         if let Some(a) = s.anchors.get(k) {
                             out.push(Node::El(
                                 El::new("HyperlinkTextDestination")
@@ -2376,19 +2376,19 @@ impl<'a> Ex<'a> {
                                     .attr("DestinationUniqueKey", a.id & 0xFFFF_FFFF),
                             ));
                         }
-                    } else if ch == designcraft_doc::OBJECT_MARK {
+                    } else if ch == pejy_doc::OBJECT_MARK {
                         // An anchored object: the item inside the range with its anchoring settings.
                         flush_text(&mut cur, &mut pending);
                         flush_content(&mut pending, &mut out);
-                        let k = s.text[..seg_start + ci].matches(designcraft_doc::OBJECT_MARK).count();
+                        let k = s.text[..seg_start + ci].matches(pejy_doc::OBJECT_MARK).count();
                         if let Some(o) = s.objects.get(k) {
                             let mut e = self.item_el(&o.item, o.item.xf);
-                            use designcraft_doc::anchored::AnchorAlign as A;
+                            use pejy_doc::anchored::AnchorAlign as A;
                             let setting = match &o.position {
-                                designcraft_doc::AnchorPosition::Inline { y_offset } => {
+                                pejy_doc::AnchorPosition::Inline { y_offset } => {
                                     El::new("AnchoredObjectSetting").attr("AnchoredPosition", "InlinePosition").attr("AnchorYoffset", num(*y_offset))
                                 }
-                                designcraft_doc::AnchorPosition::AboveLine { align, space_before, space_after } => El::new("AnchoredObjectSetting")
+                                pejy_doc::AnchorPosition::AboveLine { align, space_before, space_after } => El::new("AnchoredObjectSetting")
                                     .attr("AnchoredPosition", "AboveLine")
                                     .attr(
                                         "HorizontalAlignment",
@@ -2400,7 +2400,7 @@ impl<'a> Ex<'a> {
                                     )
                                     .attr("AnchorSpaceAbove", num(*space_before))
                                     .attr("AnchorYoffset", num(*space_after)),
-                                designcraft_doc::AnchorPosition::Custom {
+                                pejy_doc::AnchorPosition::Custom {
                                     x_relative,
                                     y_relative,
                                     x_offset,
@@ -2423,12 +2423,12 @@ impl<'a> Ex<'a> {
                             e.push(setting);
                             out.push(Node::El(e));
                         }
-                    } else if ch == designcraft_doc::INDEX_MARK {
+                    } else if ch == pejy_doc::INDEX_MARK {
                         flush_text(&mut cur, &mut pending);
                         flush_content(&mut pending, &mut out);
-                        let k = s.text[..seg_start + ci].matches(designcraft_doc::INDEX_MARK).count();
+                        let k = s.text[..seg_start + ci].matches(pejy_doc::INDEX_MARK).count();
                         if let Some(r) = s.index_refs.get(k).filter(|r| !r.topics.is_empty()) {
-                            use designcraft_doc::index::IndexRange as R;
+                            use pejy_doc::index::IndexRange as R;
                             for n in 1..=r.topics.len() {
                                 // A shared topic has one key: keep the first reference's
                                 // value (even empty), rather than inventing a merged key.
@@ -2460,7 +2460,7 @@ impl<'a> Ex<'a> {
                                 out.push(Node::El(el));
                             }
                         }
-                    } else if ch == designcraft_doc::XREF_MARK {
+                    } else if ch == pejy_doc::XREF_MARK {
                         // A source wrapping its current text (InDesign regenerates it on update).
                         flush_text(&mut cur, &mut pending);
                         flush_content(&mut pending, &mut out);
@@ -2469,13 +2469,13 @@ impl<'a> Ex<'a> {
                             c.children.append(&mut out);
                             csrs.push(c);
                         }
-                        let k = s.text[..seg_start + ci].matches(designcraft_doc::XREF_MARK).count();
+                        let k = s.text[..seg_start + ci].matches(pejy_doc::XREF_MARK).count();
                         if let Some(x) = s.xrefs.get(k) {
                             let me = self.fresh();
                             let fmt = self.d.xref_formats.iter().position(|ff| ff.name == x.format).map_or("n".to_string(), xref_format_self);
                             let text = self.d.xref_values(x.target).map_or("??".into(), |mut v| {
                                 v.page = "?".into();
-                                designcraft_doc::xref::expand(self.d.xref_format(&x.format).map_or("<fullPara />", |ff| ff.definition.as_str()), &v)
+                                pejy_doc::xref::expand(self.d.xref_format(&x.format).map_or("<fullPara />", |ff| ff.definition.as_str()), &v)
                             });
                             let mut c = self.csr_el(&f);
                             let mut content = El::new("Content");
@@ -2490,7 +2490,7 @@ impl<'a> Ex<'a> {
                             csrs.push(src);
                             self.xref_sources.push((me, x.target));
                         }
-                    } else if let Some(vi) = designcraft_doc::vars::var_index(ch) {
+                    } else if let Some(vi) = pejy_doc::vars::var_index(ch) {
                         flush_text(&mut cur, &mut pending);
                         flush_content(&mut pending, &mut out);
                         if let Some(v) = self.d.text_variables.get(vi) {
@@ -2503,12 +2503,12 @@ impl<'a> Ex<'a> {
                                     .attr("AssociatedTextVariable", format!("dTextVariablen{}", v.name)),
                             ));
                         }
-                    } else if ch == designcraft_doc::NOTE_MARK {
+                    } else if ch == pejy_doc::NOTE_MARK {
                         // Editorial notes aren't written to IDML yet.
-                    } else if ch == designcraft_doc::ENDNOTE_REF {
+                    } else if ch == pejy_doc::ENDNOTE_REF {
                         // Endnotes aren't written to IDML yet: the endnote frame keeps their text
                         // (numbers included) and the references are left out.
-                    } else if ch == designcraft_doc::FOOTNOTE_REF {
+                    } else if ch == pejy_doc::FOOTNOTE_REF {
                         // The reference: its own range carrying the reference position.
                         flush_text(&mut cur, &mut pending);
                         flush_content(&mut pending, &mut out);
@@ -2520,7 +2520,7 @@ impl<'a> Ex<'a> {
                         if let Some(n) = s.notes.get(s.notes_before(seg_start + ci)) {
                             let mut c = self.csr_el(&f);
                             let pos = self.d.footnote_options.ref_position;
-                            if pos != designcraft_doc::Position::Normal {
+                            if pos != pejy_doc::Position::Normal {
                                 c.set("Position", names::position_out(pos));
                             }
                             c.push(self.footnote_el(&n.text));
@@ -2583,18 +2583,18 @@ impl<'a> Ex<'a> {
         paras
     }
 
-    fn cell_stroke_attrs(&self, el: &mut El, prefix: &str, s: &designcraft_doc::CellStroke) {
+    fn cell_stroke_attrs(&self, el: &mut El, prefix: &str, s: &pejy_doc::CellStroke) {
         el.set(&format!("{prefix}StrokeWeight"), num(s.weight));
         el.set(&format!("{prefix}StrokeColor"), self.sw(&s.color));
         el.set(&format!("{prefix}StrokeTint"), pct(s.tint as f64));
         el.set(&format!("{prefix}StrokeType"), names::stroke_type_out(&s.kind));
-        if s.gap_color != designcraft_color::swatch::NONE || s.gap_tint != 1.0 {
+        if s.gap_color != pejy_color::swatch::NONE || s.gap_tint != 1.0 {
             el.set(&format!("{prefix}StrokeGapColor"), self.sw(&s.gap_color));
             el.set(&format!("{prefix}StrokeGapTint"), pct(s.gap_tint as f64));
         }
     }
 
-    fn partial_cell_stroke_attrs(&self, el: &mut El, prefix: &str, attrs: &designcraft_doc::CellStrokeAttrs) {
+    fn partial_cell_stroke_attrs(&self, el: &mut El, prefix: &str, attrs: &pejy_doc::CellStrokeAttrs) {
         if let Some(value) = attrs.weight {
             el.set(&format!("{prefix}StrokeWeight"), num(value));
         }
@@ -2615,7 +2615,7 @@ impl<'a> Ex<'a> {
         }
     }
 
-    fn partial_alt_fill_attrs(&self, el: &mut El, kind: &str, attrs: &designcraft_doc::AltFillsAttrs) {
+    fn partial_alt_fill_attrs(&self, el: &mut El, kind: &str, attrs: &pejy_doc::AltFillsAttrs) {
         if let Some(value) = attrs.first {
             el.set(&format!("Start{kind}FillCount"), value);
         }
@@ -2642,7 +2642,7 @@ impl<'a> Ex<'a> {
         }
     }
 
-    fn partial_alt_stroke_attrs(&self, el: &mut El, kind: &str, attrs: &designcraft_doc::AltStrokesAttrs) {
+    fn partial_alt_stroke_attrs(&self, el: &mut El, kind: &str, attrs: &pejy_doc::AltStrokesAttrs) {
         if let Some(value) = attrs.first {
             el.set(&format!("Start{kind}StrokeCount"), value);
         }
@@ -2666,7 +2666,7 @@ impl<'a> Ex<'a> {
     }
 
     /// `<Table>` with rows, columns and cells (cell names are `column:row`).
-    fn table_el(&mut self, t: &designcraft_doc::Table) -> El {
+    fn table_el(&mut self, t: &pejy_doc::Table) -> El {
         let id = uid(t.id);
         let (h, f) = (t.header_rows(), t.footer_rows());
         let mut el = El::new("Table")
@@ -2677,11 +2677,11 @@ impl<'a> Ex<'a> {
             .attr("ColumnCount", t.ncols())
             .attr(
                 "AppliedTableStyle",
-                names::style_self("TableStyle", names::TABLE_BUILTINS, if t.style.is_empty() { designcraft_doc::BASIC_TABLE } else { &t.style }),
+                names::style_self("TableStyle", names::TABLE_BUILTINS, if t.style.is_empty() { pejy_doc::BASIC_TABLE } else { &t.style }),
             )
             .attr(
                 "TableDirection",
-                if t.options.direction == designcraft_doc::TextDirection::RightToLeft { "RightToLeftDirection" } else { "LeftToRightDirection" },
+                if t.options.direction == pejy_doc::TextDirection::RightToLeft { "RightToLeftDirection" } else { "LeftToRightDirection" },
             )
             .attr("SpaceBefore", num(t.options.space_before))
             .attr("SpaceAfter", num(t.options.space_after))
@@ -2724,7 +2724,7 @@ impl<'a> Ex<'a> {
             }
         }
         for (r, row) in t.rows.iter().enumerate() {
-            let exact = row.mode == designcraft_doc::RowHeightMode::Exactly;
+            let exact = row.mode == pejy_doc::RowHeightMode::Exactly;
             el.push(
                 El::new("Row")
                     .attr("Self", format!("{id}Row{r}"))
@@ -2745,10 +2745,10 @@ impl<'a> Ex<'a> {
                 }
                 let Some(cell) = t.cell(r, c) else { continue };
                 let vj = match cell.vj {
-                    designcraft_doc::VerticalJustification::Top => "TopAlign",
-                    designcraft_doc::VerticalJustification::Center => "CenterAlign",
-                    designcraft_doc::VerticalJustification::Bottom => "BottomAlign",
-                    designcraft_doc::VerticalJustification::Justify => "JustifyAlign",
+                    pejy_doc::VerticalJustification::Top => "TopAlign",
+                    pejy_doc::VerticalJustification::Center => "CenterAlign",
+                    pejy_doc::VerticalJustification::Bottom => "BottomAlign",
+                    pejy_doc::VerticalJustification::Justify => "JustifyAlign",
                 };
                 let mut ce = El::new("Cell")
                     .attr("Self", format!("{id}i{}", r * t.ncols() + c))
@@ -2760,7 +2760,7 @@ impl<'a> Ex<'a> {
                         names::style_self(
                             "CellStyle",
                             names::CELL_BUILTINS,
-                            if cell.style.is_empty() { designcraft_doc::NO_CELL_STYLE } else { &cell.style },
+                            if cell.style.is_empty() { pejy_doc::NO_CELL_STYLE } else { &cell.style },
                         ),
                     )
                     .attr("FillColor", self.sw(&cell.fill))
@@ -2776,7 +2776,7 @@ impl<'a> Ex<'a> {
                     if cell.stroke_defined[i]
                         || cell.border_overrides[i]
                         || cell.stroke_priorities[i] != 0
-                        || cell.strokes[i] != designcraft_doc::CellStroke::default()
+                        || cell.strokes[i] != pejy_doc::CellStroke::default()
                     {
                         self.cell_stroke_attrs(&mut ce, side, &cell.strokes[i]);
                     }
@@ -2822,7 +2822,7 @@ impl<'a> Ex<'a> {
 }
 
 /// The left stop the composer adds for a list's Tab Position, if it adds one.
-fn list_tab_stop(pp: &designcraft_doc::ParaProps) -> Option<f64> {
+fn list_tab_stop(pp: &pejy_doc::ParaProps) -> Option<f64> {
     if !matches!(pp.list_type, ListType::Bullets | ListType::Numbers) {
         return None;
     }
@@ -2833,7 +2833,7 @@ fn list_tab_stop(pp: &designcraft_doc::ParaProps) -> Option<f64> {
 /// stop the composer adds for it, in the TabList of each level (style or paragraph) that sets the
 /// list type, the tab position or the tabs. `resolved` gives this level's resolved attributes and
 /// those it inherits; the stop comes back on import as an ordinary tab stop.
-fn with_list_tab(mut a: ParaAttrs, resolved: impl FnOnce() -> (designcraft_doc::ParaProps, designcraft_doc::ParaProps)) -> ParaAttrs {
+fn with_list_tab(mut a: ParaAttrs, resolved: impl FnOnce() -> (pejy_doc::ParaProps, pejy_doc::ParaProps)) -> ParaAttrs {
     if a.list_tab.is_none() && a.tabs.is_none() && a.list_type.is_none() {
         return a;
     }
@@ -2845,7 +2845,7 @@ fn with_list_tab(mut a: ParaAttrs, resolved: impl FnOnce() -> (designcraft_doc::
     }
     let mut tabs = here.tabs;
     if let Some(t) = stop {
-        tabs.push(designcraft_doc::TabStop { position: t, align: designcraft_doc::TabAlign::Left, leader: String::new(), align_on: String::new() });
+        tabs.push(pejy_doc::TabStop { position: t, align: pejy_doc::TabAlign::Left, leader: String::new(), align_on: String::new() });
         tabs.sort_by(|a, b| a.position.total_cmp(&b.position));
     }
     a.tabs = Some(tabs);
@@ -2891,9 +2891,9 @@ impl Group {
     }
 }
 
-fn margin_el(pg: &designcraft_doc::Page) -> El {
+fn margin_el(pg: &pejy_doc::Page) -> El {
     let m = pg.margin_rect();
-    let cols = designcraft_doc::column_rects(Rect::new(0.0, 0.0, m.width(), m.height()), pg.columns.count.max(1), pg.columns.gutter);
+    let cols = pejy_doc::column_rects(Rect::new(0.0, 0.0, m.width(), m.height()), pg.columns.count.max(1), pg.columns.gutter);
     let pos: Vec<String> = cols.iter().flat_map(|c| [num(c.x0), num(c.x1)]).collect();
     El::new("MarginPreference")
         .attr("ColumnCount", pg.columns.count.max(1))
@@ -2908,7 +2908,7 @@ fn margin_el(pg: &designcraft_doc::Page) -> El {
 
 /// `rule_color` is the IDML reference of the column rule's swatch.
 /// `TextWrapPreference` of a page item or a placed graphic.
-fn text_wrap_pref(w: &designcraft_doc::TextWrap) -> El {
+fn text_wrap_pref(w: &pejy_doc::TextWrap) -> El {
     with_props(
         El::new("TextWrapPreference")
             .attr("Inverse", bool_s(w.invert))
@@ -2968,7 +2968,7 @@ fn text_frame_pref(o: &TextFrameOptions, rule_color: &str) -> El {
 
 /// `<ClippingPathSettings>` with the outline (graphic space is the image's inner space, whose
 /// `GraphicBounds` start at 0,0).
-fn clipping_settings(c: &designcraft_doc::ClippingPath) -> El {
+fn clipping_settings(c: &pejy_doc::ClippingPath) -> El {
     let mut geometry = path_geometry(&c.path);
     geometry.name = "ClippingPathGeometry".into();
     let el = El::new("ClippingPathSettings")
@@ -3090,7 +3090,7 @@ fn xref_format_self(i: usize) -> String {
 }
 
 /// A cross-reference format as InDesign building blocks.
-fn xref_format_el(i: usize, f: &designcraft_doc::XrefFormat) -> El {
+fn xref_format_el(i: usize, f: &pejy_doc::XrefFormat) -> El {
     let me = xref_format_self(i);
     let mut el = El::new("CrossReferenceFormat").attr("Self", &me).attr("Name", &f.name).attr("AppliedCharacterStyle", "n");
     let mut k = 0;
@@ -3144,7 +3144,7 @@ fn topic_self(path: &[String]) -> String {
 
 /// Package metadata: the creation and modification times that date variables show.
 fn metadata_xmp(d: &Document) -> String {
-    use designcraft_doc::vars::format_date;
+    use pejy_doc::vars::format_date;
     let iso = |t: i64| format!("{}:{:02}Z", format_date(t, "yyyy-MM-ddTHH:mm"), t.rem_euclid(60));
     let modified = if d.modified > 0 { d.modified } else { d.created };
     format!(
@@ -3155,8 +3155,8 @@ fn metadata_xmp(d: &Document) -> String {
 }
 
 /// A text variable definition with its type's settings element.
-fn text_variable_el(v: &designcraft_doc::vars::TextVariable) -> El {
-    use designcraft_doc::vars::{Use, VarKind};
+fn text_variable_el(v: &pejy_doc::vars::TextVariable) -> El {
+    use pejy_doc::vars::{Use, VarKind};
     let pref = |name: &str| El::new(name).attr("TextBefore", &v.before);
     let (ty, settings) = match &v.kind {
         VarKind::Custom { text } => ("CustomTextType", Some(pref("CustomTextVariablePreference").attr("Contents", text))),
@@ -3235,7 +3235,7 @@ fn cjk_settings_para(el: &mut El, a: &ParaAttrs) {
 impl Ex<'_> {
     /// Kenten Settings, Kenten Color and Shatai of a character range or style.
     fn cjk_settings_chars(&self, el: &mut El, props: &mut Vec<El>, a: &CharAttrs) {
-        use designcraft_doc::cjk_settings::KentenKind;
+        use pejy_doc::cjk_settings::KentenKind;
         if let Some(k) = a.kenten_kind
             && a.kenten != Some(false)
         {
@@ -3311,10 +3311,10 @@ impl Ex<'_> {
 }
 
 /// The IDML `ChangeType` of a tracked change.
-fn change_type(mark: Option<designcraft_doc::ChangeMark>) -> Option<&'static str> {
+fn change_type(mark: Option<pejy_doc::ChangeMark>) -> Option<&'static str> {
     match mark {
-        Some(designcraft_doc::ChangeMark::Deleted) => Some("DeletedText"),
-        Some(designcraft_doc::ChangeMark::Inserted) => Some("InsertedText"),
+        Some(pejy_doc::ChangeMark::Deleted) => Some("DeletedText"),
+        Some(pejy_doc::ChangeMark::Inserted) => Some("InsertedText"),
         _ => None,
     }
 }

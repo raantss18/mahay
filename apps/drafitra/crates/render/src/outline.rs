@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_geom::{Bounds2, Vec2};
 
 /// Triangle vertices beyond which the outline is the bounding box (a hatch or wide polyline
 /// covering the screen does not need its exact boundary to show it is selected).

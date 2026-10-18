@@ -4,13 +4,13 @@
 use std::io::Cursor;
 use std::sync::Arc;
 
-use craft_pdf::syntax::Pdf;
-use craft_pdf::syntax::object::{Array, Dict, Name, ObjectIdentifier, Stream};
+use mahay_pdf::syntax::Pdf;
+use mahay_pdf::syntax::object::{Array, Dict, Name, ObjectIdentifier, Stream};
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Cms, ColorSettings, DEVICE_CMYK, GENERIC_CMYK, SRGB};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, ColorMode, Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::{Affine, Rect, shapes};
+use tsipika_color::cms::{self, Cms, ColorSettings, DEVICE_CMYK, GENERIC_CMYK, SRGB};
+use tsipika_color::{Color, Paint};
+use tsipika_doc::{Appearance, ColorMode, Document, ImageBlob, ImageObject, Node, NodeKind};
+use tsipika_geom::{Affine, Rect, shapes};
 
 use crate::*;
 
@@ -266,7 +266,7 @@ fn the_output_intent_embeds_its_profile_and_trapped_is_written() {
         assert!(r.warnings.is_empty(), "{:?}", r.warnings);
         output_intent(&r.bytes, password, |oi| {
             assert_eq!(oi.get::<Name<'_>>(b"S").unwrap().as_ref(), b"GTS_PDFX");
-            let text = |k: &[u8]| oi.get::<craft_pdf::syntax::object::String<'_>>(k).map(|s| s.as_bytes().to_vec());
+            let text = |k: &[u8]| oi.get::<mahay_pdf::syntax::object::String<'_>>(k).map(|s| s.as_bytes().to_vec());
             assert_eq!(text(b"OutputCondition").unwrap(), b"Coated (press)");
             assert_eq!(text(b"RegistryName").unwrap(), b"http://example.com");
             // Non-ASCII text is UTF-16 with its byte order mark.

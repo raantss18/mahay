@@ -65,8 +65,8 @@ mod variables;
 mod xml;
 mod xref;
 
-use designcraft_doc::{ItemId, SpreadRef};
-use designcraft_geom::{Point, Rect};
+use pejy_doc::{ItemId, SpreadRef};
+use pejy_geom::{Point, Rect};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -332,10 +332,10 @@ pub(crate) fn ok() -> Result<Value> {
     Ok(Value::Null)
 }
 
-pub fn file_bytes(d: &designcraft_doc::Document) -> Result<Vec<u8>> {
+pub fn file_bytes(d: &pejy_doc::Document) -> Result<Vec<u8>> {
     file::to_bytes(d)
 }
-pub fn file_from(b: &[u8]) -> Result<designcraft_doc::Document> {
+pub fn file_from(b: &[u8]) -> Result<pejy_doc::Document> {
     file::from_bytes(b)
 }
 pub(crate) use datamerge::sync_placeholders;

@@ -1,4 +1,4 @@
-//! Local libraries (the data model is in [`figcraft_doc::library`]).
+//! Local libraries (the data model is in [`endrika_doc::library`]).
 //!
 //! - **Publish** ([`publish`]): the chosen components, component sets, styles and variable
 //!   collections, and every asset, style and variable they use, are copied into a snapshot. Each
@@ -14,8 +14,8 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
 
-use figcraft_doc::proto::Action;
-use figcraft_doc::*;
+use endrika_doc::proto::Action;
+use endrika_doc::*;
 use serde_json::Value;
 
 use crate::components::inside_instance;
@@ -289,7 +289,7 @@ fn same_asset(a: &Document, b: &Document, root: NodeId) -> bool {
 /// A new, unique library id.
 fn new_library_id(doc: &Document, seed: u64) -> String {
     let now = web_time::SystemTime::now().duration_since(web_time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
-    let h = figcraft_format::image_hash(format!("{}|{now}|{seed}|{}", doc.name, doc.node_count()).as_bytes());
+    let h = endrika_format::image_hash(format!("{}|{now}|{seed}|{}", doc.name, doc.node_count()).as_bytes());
     h.get(..16).map(str::to_string).unwrap_or(h)
 }
 
@@ -556,7 +556,7 @@ fn stat(_path: &str) -> std::result::Result<Stamp, String> {
 #[cfg(not(target_arch = "wasm32"))]
 fn read_file(path: &str) -> std::result::Result<PublishedLibrary, String> {
     let f = crate::file_access::open(path).map_err(|e| e.to_string())?;
-    match figcraft_format::read_library(std::io::BufReader::new(f)) {
+    match endrika_format::read_library(std::io::BufReader::new(f)) {
         Ok(Some(lib)) => Ok(lib),
         Ok(None) => Err(format!("{path} has no published library: open it and publish it first (Libraries ▸ Publish library…)")),
         Err(e) => Err(format!("{path}: {e}")),
@@ -817,10 +817,10 @@ fn localize(n: &mut Node, src: &Document, map: &BTreeMap<NodeId, NodeId>, styles
         n.bound = std::mem::take(&mut n.bound).into_iter().filter_map(|(f, v)| vars.variables.get(&v).map(|l| (f, l.clone()))).collect();
         n.var_modes = std::mem::take(&mut n.var_modes).into_iter().filter_map(|(c, m)| vars.collections.get(&c).map(|l| (l.clone(), m))).collect();
     }
-    n.plugin_data.remove("figcraft.thumbnail");
+    n.plugin_data.remove("endrika.thumbnail");
     for it in &mut n.interactions {
         // Variable actions stay with the library's file.
-        figcraft_doc::proto::retain_deep(&mut it.actions, &mut |a| {
+        endrika_doc::proto::retain_deep(&mut it.actions, &mut |a| {
             !matches!(a, Action::SetVariable { .. } | Action::SetVariableMode { .. } | Action::Conditional { .. })
                 && a.dest().is_none_or(|d| map.contains_key(&d))
         });
@@ -1039,7 +1039,7 @@ pub fn prune(doc: &mut Document, library: &str) -> Result<()> {
     }
     // Collections the remaining variables are in, or layers (and their prototype actions) choose a
     // mode of.
-    let action_modes = doc.nodes().flat_map(|n| &n.interactions).flat_map(|it| figcraft_doc::proto::walk(&it.actions)).filter_map(|a| match a {
+    let action_modes = doc.nodes().flat_map(|n| &n.interactions).flat_map(|it| endrika_doc::proto::walk(&it.actions)).filter_map(|a| match a {
         Action::SetVariableMode { collection, .. } => Some(collection),
         _ => None,
     });

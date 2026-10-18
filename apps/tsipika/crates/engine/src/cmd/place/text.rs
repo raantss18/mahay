@@ -194,15 +194,15 @@ fn tabs_for_spaces(s: &str, n: usize) -> String {
 /// The text placed type gets from a text file, an RTF file or a Word document.
 pub(super) struct Story {
     /// The text in runs of one character formatting; paragraphs are separated by `\n`.
-    pub(super) runs: Vec<vectorcraft_doc::TextRun>,
+    pub(super) runs: Vec<tsipika_doc::TextRun>,
     /// Each paragraph's attributes; empty: the defaults.
-    pub(super) paras: Vec<vectorcraft_doc::ParaStyle>,
+    pub(super) paras: Vec<tsipika_doc::ParaStyle>,
 }
 
 impl Story {
     /// `text` in the default character and paragraph attributes.
     pub(super) fn plain(text: String) -> Self {
-        Self { runs: vec![vectorcraft_doc::TextRun::new(text, vectorcraft_doc::CharStyle::default())], paras: vec![] }
+        Self { runs: vec![tsipika_doc::TextRun::new(text, tsipika_doc::CharStyle::default())], paras: vec![] }
     }
 
     /// The text without its formatting.
@@ -213,8 +213,8 @@ impl Story {
 
 /// The area type of `story` filling `frame` (at the origin; placing moves it), its superscripts,
 /// subscripts and small caps in the proportions of `setup` (Document Setup).
-pub(super) fn area_text(story: Story, frame: Rect, setup: &vectorcraft_doc::DocSetup) -> vectorcraft_doc::TextObject {
-    let mut t = vectorcraft_doc::TextObject::point(Point::ORIGIN, "", vectorcraft_doc::CharStyle::default());
+pub(super) fn area_text(story: Story, frame: Rect, setup: &tsipika_doc::DocSetup) -> tsipika_doc::TextObject {
+    let mut t = tsipika_doc::TextObject::point(Point::ORIGIN, "", tsipika_doc::CharStyle::default());
     if !story.runs.is_empty() {
         t.runs = story.runs;
     }
@@ -227,7 +227,7 @@ pub(super) fn area_text(story: Story, frame: Rect, setup: &vectorcraft_doc::DocS
     if !story.paras.is_empty() {
         t.set_paragraph_styles(story.paras);
     }
-    t.kind = vectorcraft_doc::TextKind::Area { frame: shapes::rectangle(Rect::from_origin_size(Point::ORIGIN, frame.size())) };
+    t.kind = tsipika_doc::TextKind::Area { frame: shapes::rectangle(Rect::from_origin_size(Point::ORIGIN, frame.size())) };
     crate::cmd::typecmd::refresh_bounds(&mut t);
     t
 }

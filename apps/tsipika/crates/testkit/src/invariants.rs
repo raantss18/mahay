@@ -3,8 +3,8 @@
 use std::collections::HashSet;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, NodeKind};
-use vectorcraft_engine::Session;
+use tsipika_doc::{Document, NodeKind};
+use tsipika_engine::Session;
 
 /// Serialize a document to JSON (the canonical form for equality checks).
 pub fn doc_json(doc: &Document) -> Value {
@@ -88,11 +88,11 @@ pub fn check_session(s: &Session) -> Result<(), String> {
     Ok(())
 }
 
-/// `.vectorcraft` save → load → the JSON of the document and of what loaded, without `images`: a
+/// `.tsipika` save → load → the JSON of the document and of what loaded, without `images`: a
 /// save keeps only the images in use, which must come back byte for byte.
 fn native_roundtrip(doc: &Document) -> Result<(Value, Value), String> {
-    let bytes = vectorcraft_format::save(doc, false);
-    let back = vectorcraft_format::load(&bytes).map_err(|e| format!("load: {e}"))?;
+    let bytes = tsipika_format::save(doc, false);
+    let back = tsipika_format::load(&bytes).map_err(|e| format!("load: {e}"))?;
     if let Some(k) = back.images.iter().find(|(k, b)| doc.images.get(*k).map(|d| &d.bytes) != Some(&b.bytes)).map(|(k, _)| k) {
         return Err(format!("native round trip changed image `{k}`"));
     }
@@ -122,7 +122,7 @@ fn native_roundtrip(doc: &Document) -> Result<(Value, Value), String> {
     Ok((strip(doc_json(doc)), strip(doc_json(&back))))
 }
 
-/// `.vectorcraft` save → load must reproduce the document (numbers compared to 1e-12 relative —
+/// `.tsipika` save → load must reproduce the document (numbers compared to 1e-12 relative —
 /// see [`check_native_roundtrip_exact`] for the bit-exact version).
 pub fn check_native_roundtrip(doc: &Document) -> Result<(), String> {
     let (a, b) = native_roundtrip(doc)?;
@@ -132,7 +132,7 @@ pub fn check_native_roundtrip(doc: &Document) -> Result<(), String> {
     Ok(())
 }
 
-/// Bit-exact `.vectorcraft` round trip (every f64 must survive).
+/// Bit-exact `.tsipika` round trip (every f64 must survive).
 pub fn check_native_roundtrip_exact(doc: &Document) -> Result<(), String> {
     let (a, b) = native_roundtrip(doc)?;
     if a != b {
@@ -156,8 +156,8 @@ pub fn json_approx_eq(a: &Value, b: &Value, rel: f64) -> bool {
 
 /// SVG export must not panic and must re-import.
 pub fn check_svg_roundtrip(doc: &Document) -> Result<Document, String> {
-    let svg = vectorcraft_svg::export(doc, &vectorcraft_svg::ExportOptions::default());
-    vectorcraft_svg::import(&svg).map_err(|e| format!("svg re-import: {e}\n{svg}"))
+    let svg = tsipika_svg::export(doc, &tsipika_svg::ExportOptions::default());
+    tsipika_svg::import(&svg).map_err(|e| format!("svg re-import: {e}\n{svg}"))
 }
 
 /// `document.inspect` must succeed and serialize.

@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use crate::Session;
 
 fn tmp(name: &str) -> String {
-    let d = std::env::temp_dir().join(format!("effectcraft-lottie-tests-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("tselatra-lottie-tests-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d.join(name).to_string_lossy().to_string()
 }
@@ -33,7 +33,7 @@ fn export_and_import_lottie_commands() {
     // Import as a new comp (undoable).
     let before = s.project.items.len();
     let r = s.execute_checked("file.importLottie", json!({"path": path})).unwrap();
-    let cid = effectcraft_project::ItemId(r["comp"].as_u64().unwrap());
+    let cid = tselatra_project::ItemId(r["comp"].as_u64().unwrap());
     assert_eq!(s.state.active_comp, Some(cid));
     let c = s.project.comp(cid).unwrap();
     assert_eq!(c.layers.len(), n_layers);

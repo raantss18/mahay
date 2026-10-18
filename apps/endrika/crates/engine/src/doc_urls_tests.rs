@@ -45,7 +45,7 @@ fn script_and_handler_schemes_are_refused() {
         "sms:+1234",
         "ssh://host",
         "ftp://host/x",
-        "figcraft://join?host=127.0.0.1",
+        "endrika://join?host=127.0.0.1",
         "zoommtg://zoom.us/join?x",
         "view-source:https://example.com",
         "jar:https://example.com/x!/y",

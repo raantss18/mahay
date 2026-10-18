@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use designcraft_doc::{ClippingKind, ClippingPath, Content, Graphic};
-use designcraft_geom::Point;
+use pejy_doc::{ClippingKind, ClippingPath, Content, Graphic};
+use pejy_geom::Point;
 
 use super::*;
 
@@ -73,7 +73,7 @@ fn imports_the_saved_clipping_path_in_graphic_space() {
     // In the frame: the image fills it, so the apex is at the top middle.
     let (region, even_odd) = g.clip_region().unwrap();
     assert!(!even_odd);
-    let b = designcraft_geom::Shape::bounding_box(&region);
+    let b = pejy_geom::Shape::bounding_box(&region);
     assert!((b.x0 - 0.0).abs() < 1e-9 && (b.x1 - 40.0).abs() < 1e-9 && b.y0.abs() < 1e-9 && (b.y1 - 30.0).abs() < 1e-9, "{b:?}");
 
     // Type None, or no geometry: no clipping path.

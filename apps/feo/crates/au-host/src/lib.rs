@@ -1,15 +1,15 @@
-//! SoundCraft's Audio Unit (AUv2, macOS) plugin host.
+//! Feo's Audio Unit (AUv2, macOS) plugin host.
 //!
 //! Lists the effect (`aufx`), music effect (`aumf`) and instrument (`aumu`) Audio Units
 //! registered with the system's component manager and exposes each one as a
-//! [`soundcraft_dsp::Plugin`], so the mix engine treats them exactly like the built-in plugins.
+//! [`feo_dsp::Plugin`], so the mix engine treats them exactly like the built-in plugins.
 //! Plugin ids are `au:<type>:<subtype>:<manufacturer>` with the three four-char codes written out
 //! (`au:aufx:dely:appl`); a code with bytes outside printable ASCII is written `#` + 8 upper-case
 //! hex digits instead. Parameter ids are global-scope `AudioUnitParameterID`s as decimal strings;
 //! values are the Audio Unit's own (plain) values, ranges and units, so no mapping is needed.
 //! Boolean parameters become toggles, indexed ones starting at 0 become choices.
 //!
-//! Like `soundcraft-vst3-host`, this is an isolated `unsafe` crate (craftrules never-crash):
+//! Like `feo-vst3-host`, this is an isolated `unsafe` crate (mahay-rules never-crash):
 //! `unsafe` is denied crate-wide and allowed only in the private `ffi` module (hand-written
 //! AudioToolbox / CoreFoundation declarations). The public API is safe, returns
 //! `Result`/`Option` and never panics. Limits of in-process hosting: an Audio Unit that itself
@@ -44,7 +44,7 @@ mod registry;
 #[cfg(target_os = "macos")]
 pub use plugin::AuPlugin;
 
-use soundcraft_dsp::{Category, Plugin, PluginInfo};
+use feo_dsp::{Category, Plugin, PluginInfo};
 
 /// Prefix of every hosted-Audio-Unit plugin id.
 pub const ID_PREFIX: &str = "au:";
@@ -55,10 +55,10 @@ pub const TYPE_EFFECT: u32 = u32::from_be_bytes(*b"aufx");
 pub const TYPE_MUSIC_EFFECT: u32 = u32::from_be_bytes(*b"aumf");
 /// `aumu`: a music device (instrument).
 pub const TYPE_INSTRUMENT: u32 = u32::from_be_bytes(*b"aumu");
-/// The component types SoundCraft hosts.
+/// The component types Feo hosts.
 pub const SUPPORTED_TYPES: [u32; 3] = [TYPE_EFFECT, TYPE_MUSIC_EFFECT, TYPE_INSTRUMENT];
 
-/// True when a component type is one SoundCraft hosts (effects, music effects, instruments).
+/// True when a component type is one Feo hosts (effects, music effects, instruments).
 pub fn is_supported_type(ty: u32) -> bool {
     SUPPORTED_TYPES.contains(&ty)
 }
@@ -99,13 +99,13 @@ fn parse_field(s: &str) -> Option<(u32, &str)> {
     Some((code, s.get(4..)?))
 }
 
-/// The SoundCraft id of a component: `au:<type>:<subtype>:<manufacturer>`.
+/// The Feo id of a component: `au:<type>:<subtype>:<manufacturer>`.
 pub fn format_id(ty: u32, subtype: u32, manufacturer: u32) -> String {
     format!("{ID_PREFIX}{}:{}:{}", fourcc_string(ty), fourcc_string(subtype), fourcc_string(manufacturer))
 }
 
 /// The `(type, subtype, manufacturer)` codes of an `au:…` id (`None` for other ids or a
-/// component type SoundCraft does not host).
+/// component type Feo does not host).
 pub fn parse_id(id: &str) -> Option<(u32, u32, u32)> {
     let rest = id.strip_prefix(ID_PREFIX)?;
     let (ty, rest) = parse_field(rest)?;
@@ -163,7 +163,7 @@ pub fn split_component_name(full: &str) -> (String, String) {
 /// One Audio Unit found by a scan.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct AuDescriptor {
-    /// SoundCraft id: `au:<type>:<subtype>:<manufacturer>`.
+    /// Feo id: `au:<type>:<subtype>:<manufacturer>`.
     pub id: String,
     pub name: String,
     pub vendor: String,
@@ -238,7 +238,7 @@ pub fn rescan() -> Vec<AuDescriptor> {
 }
 
 /// Creates a plugin by `au:<type>:<subtype>:<manufacturer>`, prepared for 48 kHz stereo with
-/// 1024-frame blocks (like `soundcraft_dsp::create`), with the reason when it fails.
+/// 1024-frame blocks (like `feo_dsp::create`), with the reason when it fails.
 pub fn instantiate(id: &str) -> Result<Box<dyn Plugin>, AuError> {
     api::instantiate(id)
 }

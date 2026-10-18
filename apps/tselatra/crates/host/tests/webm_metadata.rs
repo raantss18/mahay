@@ -1,11 +1,11 @@
-//! A WebM rendered by EffectCraft and imported back reports its real frame count (#1429). Matroska
+//! A WebM rendered by Tselatra and imported back reports its real frame count (#1429). Matroska
 //! stores the duration in whole milliseconds, so at 30 fps a 1-frame file lasts 33 ms, just short
 //! of one 33.33 ms frame.
 
 use serde_json::json;
 
 fn tmp(name: &str) -> String {
-    let d = std::env::temp_dir().join(format!("effectcraft-host-webm-meta-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("tselatra-host-webm-meta-{}", std::process::id()));
     std::fs::create_dir_all(&d).unwrap();
     d.join(name).to_string_lossy().to_string()
 }
@@ -13,7 +13,7 @@ fn tmp(name: &str) -> String {
 #[test]
 fn a_webm_at_30_fps_reports_every_frame() {
     for n in [1u32, 4] {
-        let mut s = effectcraft_host::session();
+        let mut s = tselatra_host::session();
         let out = tmp(&format!("frames-{n}.webm"));
         s.execute("comp.new", json!({"name": "Main", "width": 64, "height": 36, "frameRate": 30, "duration": 1})).unwrap();
         s.execute("layer.newSolid", json!({"name": "BG", "color": "#142850"})).unwrap();

@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, PoisonError, RwLock};
 
-use cadcraft_fonts::{TextGlyph, ttf};
-use cadcraft_geom::{Bounds2, Mat3, Vec2};
+use drafitra_fonts::{TextGlyph, ttf};
+use drafitra_geom::{Bounds2, Mat3, Vec2};
 use lyon_tessellation::geometry_builder::{BuffersBuilder, VertexBuffers};
 use lyon_tessellation::math::point;
 use lyon_tessellation::path::Path;

@@ -4,7 +4,7 @@
 //! along the line). The run gets shorter and the rest of the line closes up. Characters that did
 //! not fit the line stay on the next line. Right-to-left and tate-chu-yoko runs are left alone.
 
-use designcraft_doc::cjk::WarichuAlignment;
+use pejy_doc::cjk::WarichuAlignment;
 
 use crate::{PlacedGlyph, RunStyle};
 

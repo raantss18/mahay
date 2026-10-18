@@ -1,5 +1,5 @@
-use figcraft_engine::Session;
-use figcraft_engine::cmd::edit::{CLIP_CLOSE, CLIP_OPEN};
+use endrika_engine::Session;
+use endrika_engine::cmd::edit::{CLIP_CLOSE, CLIP_OPEN};
 use serde_json::json;
 
 use crate::{FigApp, Services};

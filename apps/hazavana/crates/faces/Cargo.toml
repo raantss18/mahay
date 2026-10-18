@@ -1,9 +1,9 @@
 [package]
-name = "lightcraft-faces"
+name = "hazavana-faces"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LightCraft faces (L1): bounded ONNX CPU inference, face-model manifests, validation and detection"
+description = "Hazavana faces (L1): bounded ONNX CPU inference, face-model manifests, validation and detection"
 
 [lints]
 workspace = true
@@ -23,5 +23,5 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 # tests record why they skip (`cargo xtask ci` lists the skips)
-lightcraft-testkit = { workspace = true }
+hazavana-testkit = { workspace = true }
 proptest = { workspace = true }

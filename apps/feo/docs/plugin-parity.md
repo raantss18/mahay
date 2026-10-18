@@ -11,7 +11,7 @@ scratch (clean-room rule): Avid plugin names are not used here, only categories.
 
 ## Built-in processors (measured from `crates/dsp/src/plugins`)
 
-| Category | Pro Tools bundles (approx., by category) | SoundCraft (ids) | Gap |
+| Category | Pro Tools bundles (approx., by category) | Feo (ids) | Gap |
 |---|---|---|---|
 | EQ | 1-band and 7-band EQ, channel strip, vintage EQ models | `eq_1band`, `eq_7band`, `channel_strip` | Vintage models, linear phase, dynamic EQ; parametric UI (#139) |
 | Dynamics | compressor/limiter, expander/gate, de-esser, maximizer, vintage compressors, multiband | `compressor`, `expander_gate`, `de_esser`, `maximizer` | Vintage/opto models, multiband, sidechain input (no key input anywhere) |
@@ -29,13 +29,13 @@ AudioSuite: every catalog AudioSuite leaf maps to one of our processes (`AUDIOSU
 handles, "clip by clip / entire selection" and multi-input modes beyond the basics; hosted
 plugins can't be used offline as AudioSuite yet.
 
-Fidelity: **unmeasured.** Nothing compares a SoundCraft processor's frequency response, gain
+Fidelity: **unmeasured.** Nothing compares a Feo processor's frequency response, gain
 reduction curve or reverb tail with the Pro Tools equivalent (G-07 in [`gaps.md`](gaps.md)).
 User report #152: a saved instrument level does not reach the bounce.
 
 ## Third-party plugin hosting
 
-| Feature | Pro Tools | SoundCraft | Notes |
+| Feature | Pro Tools | Feo | Notes |
 |---|---|---|---|
 | Plugin format | AAX only (Native and DSP) | CLAP, VST3, Audio Units (macOS) | Users' libraries mostly ship VST3/AU too. AAX (#109) needs Avid's SDK licence and PACE signing: owner decision, likely never |
 | VST2, LV2, LADSPA | — | ❌ (#30) | Beyond Pro Tools; VST2 SDK is no longer licensable |

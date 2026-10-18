@@ -7,13 +7,13 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>CADCraft</string>
+  <string>Drafitra</string>
   <key>CFBundleName</key>
-  <string>CADCraft</string>
+  <string>Drafitra</string>
   <key>CFBundleExecutable</key>
-  <string>CADCraft</string>
+  <string>Drafitra</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.cadcraft</string>
+  <string>org.mahay.drafitra</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -24,12 +24,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>CADCraftVersion</key>
+  <key>DrafitraVersion</key>
   <string>@VERSION@</string>
-  <key>CADCraftBuildCommit</key>
+  <key>DrafitraBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>CADCraft</string>
+  <string>Drafitra</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.graphics-design</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
@@ -43,14 +43,14 @@
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © the CADCraft authors. MIT OR Apache-2.0.</string>
+  <string>Copyright © the Drafitra authors. MIT OR Apache-2.0.</string>
 
-  <!-- Drawing files CADCraft opens (declared here in case macOS has no type for them). -->
+  <!-- Drawing files Drafitra opens (declared here in case macOS has no type for them). -->
   <key>UTImportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.cadcraft.dxf</string>
+      <string>org.mahay.drafitra.dxf</string>
       <key>UTTypeDescription</key>
       <string>Drawing Exchange Format</string>
       <key>UTTypeConformsTo</key>
@@ -65,7 +65,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.cadcraft.dwg</string>
+      <string>org.mahay.drafitra.dwg</string>
       <key>UTTypeDescription</key>
       <string>Drawing</string>
       <key>UTTypeConformsTo</key>
@@ -89,9 +89,9 @@
       <key>LSHandlerRank</key>
       <string>Alternate</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.cadcraft.dxf</string></array>
+      <array><string>org.mahay.drafitra.dxf</string></array>
       <key>CFBundleTypeIconFile</key>
-      <string>CADCraft</string>
+      <string>Drafitra</string>
     </dict>
     <dict>
       <key>CFBundleTypeName</key>
@@ -101,9 +101,9 @@
       <key>LSHandlerRank</key>
       <string>Alternate</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.cadcraft.dwg</string></array>
+      <array><string>org.mahay.drafitra.dwg</string></array>
       <key>CFBundleTypeIconFile</key>
-      <string>CADCraft</string>
+      <string>Drafitra</string>
     </dict>
   </array>
 

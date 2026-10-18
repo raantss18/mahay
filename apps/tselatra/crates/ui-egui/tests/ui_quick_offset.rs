@@ -2,10 +2,10 @@
 //! staggers the layers in selection order, onto subframes, as one undo step; a plain drag still
 //! moves them together and Alt alone still scales a key group.
 
-use effectcraft_engine::Session;
-use effectcraft_engine::project::LayerId;
-use effectcraft_engine::time::Tick;
-use effectcraft_ui_egui::EffectcraftApp;
+use tselatra_engine::Session;
+use tselatra_engine::project::LayerId;
+use tselatra_engine::time::Tick;
+use tselatra_ui_egui::TselatraApp;
 use egui::{Event, Modifiers, Pos2, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
@@ -14,7 +14,7 @@ use serde_json::json;
 const F: i64 = 8_467_200_000;
 
 /// A 4 s, 30 fps comp with three solids, each with Opacity keys at 0 s and 1 s, revealed.
-fn harness() -> (Harness<'static, EffectcraftApp>, Vec<u64>) {
+fn harness() -> (Harness<'static, TselatraApp>, Vec<u64>) {
     let mut s = Session::default();
     s.execute("comp.new", json!({"name": "Stagger", "width": 320, "height": 180, "frameRate": 30, "duration": 4})).unwrap();
     let mut ids = vec![];
@@ -27,21 +27,21 @@ fn harness() -> (Harness<'static, EffectcraftApp>, Vec<u64>) {
         ids.push(id);
     }
     s.execute("layer.select", json!({"layers": ids})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     let ctx = h.ctx.clone();
-    effectcraft_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.opacity", json!({})).unwrap();
+    tselatra_ui_egui::menus::invoke(h.state_mut(), &ctx, "timeline.reveal.opacity", json!({})).unwrap();
     h.run_steps(4);
     (h, ids)
 }
 
-fn center(h: &Harness<'_, EffectcraftApp>, id: &str) -> Pos2 {
+fn center(h: &Harness<'_, TselatraApp>, id: &str) -> Pos2 {
     let e = h.state().auto.find(id).unwrap_or_else(|| panic!("no {id}"));
     pos2(e.rect[0] + e.rect[2] / 2.0, e.rect[1] + e.rect[3] / 2.0)
 }
 
 /// Press at `from`, move to `to` in small steps with `modifiers` held (a real drag), release.
-fn drag(h: &mut Harness<'_, EffectcraftApp>, from: Pos2, to: Pos2, modifiers: Modifiers) {
+fn drag(h: &mut Harness<'_, TselatraApp>, from: Pos2, to: Pos2, modifiers: Modifiers) {
     h.input_mut().events.push(Event::PointerMoved(from));
     h.step();
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
@@ -61,17 +61,17 @@ fn ctrl_alt() -> Modifiers {
     Modifiers { alt: true, ..Modifiers::COMMAND }
 }
 
-fn start(h: &Harness<'_, EffectcraftApp>, id: u64) -> i64 {
+fn start(h: &Harness<'_, TselatraApp>, id: u64) -> i64 {
     h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().start_time.0
 }
 
 /// The comp times (ticks) of a layer's Opacity keys.
-fn key_times(h: &Harness<'_, EffectcraftApp>, id: u64) -> Vec<i64> {
+fn key_times(h: &Harness<'_, TselatraApp>, id: u64) -> Vec<i64> {
     let l = h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().clone();
     l.props.prop("transform/opacity").unwrap().keys.iter().map(|k| l.comp_time(k.time).0).collect()
 }
 
-fn opacity_uid(h: &Harness<'_, EffectcraftApp>, id: u64) -> u64 {
+fn opacity_uid(h: &Harness<'_, TselatraApp>, id: u64) -> u64 {
     h.state().session.active_comp().unwrap().layer(LayerId(id)).unwrap().props.prop("transform/opacity").unwrap().uid
 }
 
@@ -161,7 +161,7 @@ fn a_quick_offset_drag_shows_the_total_and_per_layer_offset() {
     assert!(text.iter().any(|t| t.starts_with("Total Offset: +") && t.contains("Per Layer: +")), "{text:?}");
 }
 
-fn click(h: &mut Harness<'_, EffectcraftApp>, at: Pos2, modifiers: Modifiers) {
+fn click(h: &mut Harness<'_, TselatraApp>, at: Pos2, modifiers: Modifiers) {
     h.input_mut().events.push(Event::PointerMoved(at));
     h.step();
     h.input_mut().events.push(Event::ModifiersChanged(modifiers));
@@ -179,7 +179,7 @@ fn click(h: &mut Harness<'_, EffectcraftApp>, at: Pos2, modifiers: Modifiers) {
 fn shift_ranges_and_key_boxes_stagger_in_comp_order() {
     let (mut h, ids) = harness();
     // ids[2] is the top layer, ids[0] the bottom one. Click the bottom bar, Shift-click the top.
-    let bar = |h: &Harness<'_, EffectcraftApp>, id: u64| center(h, &format!("timeline.layer.{id}.bar"));
+    let bar = |h: &Harness<'_, TselatraApp>, id: u64| center(h, &format!("timeline.layer.{id}.bar"));
     let (bottom, top) = (bar(&h, ids[0]), bar(&h, ids[2]));
     click(&mut h, bottom, Modifiers::default());
     click(&mut h, top, Modifiers::SHIFT);
@@ -191,7 +191,7 @@ fn shift_ranges_and_key_boxes_stagger_in_comp_order() {
     h.run_steps(2);
     // A box around the 1 s keys, drawn upwards and to the left.
     let one = Tick::from_seconds_f64(1.0).0;
-    let key = |h: &Harness<'_, EffectcraftApp>, id: u64| center(h, &format!("timeline.keyAt.{}.{one}", opacity_uid(h, id)));
+    let key = |h: &Harness<'_, TselatraApp>, id: u64| center(h, &format!("timeline.keyAt.{}.{one}", opacity_uid(h, id)));
     let (low, high) = (key(&h, ids[0]), key(&h, ids[2]));
     drag(&mut h, low + vec2(30.0, 5.0), high - vec2(30.0, 5.0), Modifiers::default());
     let order: Vec<u64> = h.state().session.state.selected_keys.iter().map(|k| k.layer.0).collect();
@@ -210,7 +210,7 @@ fn a_quick_offset_released_off_screen_ends() {
         (0..40).map(|i| s.execute("layer.newSolid", json!({"name": format!("L{i}"), "color": "#e04020"})).unwrap()["layer"].as_u64().unwrap()).collect();
     let (top, next) = (ids[39], ids[38]);
     s.execute("layer.select", json!({"layers": [top, next]})).unwrap();
-    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| EffectcraftApp::new(s));
+    let mut h = Harness::builder().with_size(vec2(1600.0, 1000.0)).build_eframe(|_| TselatraApp::new(s));
     h.run_steps(3);
     let from = center(&h, &format!("timeline.layer.{top}.bar"));
     h.input_mut().events.push(Event::PointerMoved(from));

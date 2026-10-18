@@ -5,7 +5,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use vectorcraft_geom::Point;
+use tsipika_geom::Point;
 
 /// The most group-code pairs a drawing may hold (about 300 MB of DXF).
 const MAX_PAIRS: usize = 20_000_000;

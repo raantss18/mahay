@@ -56,7 +56,7 @@ impl Session {
         if self.config.is_none() || cfg!(target_arch = "wasm32") {
             return None;
         }
-        let base = effectcraft_render::disk_cache::default_folder();
+        let base = tselatra_render::disk_cache::default_folder();
         Some(base.parent().map(|p| p.join(name)).unwrap_or_else(|| base.join(name)))
     }
 
@@ -102,7 +102,7 @@ impl Session {
     /// and attach it to the layer cache. Without a folder setting the platform cache folder is
     /// used, but only by frontends with a settings store (headless sessions stay off disk).
     pub fn configure_disk_cache(&mut self) {
-        use effectcraft_render::disk_cache::{DiskCache, default_folder, footage_salt};
+        use tselatra_render::disk_cache::{DiskCache, default_folder, footage_salt};
         let d = &self.prefs.disk;
         let folder = if d.disk_cache_folder.trim().is_empty() {
             (self.config.is_some() && !cfg!(target_arch = "wasm32")).then(default_folder)
@@ -134,8 +134,8 @@ impl Session {
         self.layer_cache.set_disk(Some((dc.clone(), footage_salt(&self.project))));
         // Roto Brush / Object Matte segmentations persist there too (held weakly: switching the
         // disk cache off drops it).
-        let store: std::sync::Arc<dyn effectcraft_effects::roto::SegStore> = dc.clone();
-        effectcraft_effects::roto::set_seg_store(Some(std::sync::Arc::downgrade(&store)));
+        let store: std::sync::Arc<dyn tselatra_effects::roto::SegStore> = dc.clone();
+        tselatra_effects::roto::set_seg_store(Some(std::sync::Arc::downgrade(&store)));
         self.disk_cache = Some(dc);
     }
 

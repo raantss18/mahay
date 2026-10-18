@@ -15,7 +15,7 @@ fail() { printf 'FAIL: %s\n' "$*" >&2; FAILED=1; }
 
 # Missing: ours.
 main "$WORK/none" >"$WORK/out"
-grep -qx 'import figcraft-server.caddy' "$WORK/out" || fail "a new Caddyfile imports our site"
+grep -qx 'import endrika-server.caddy' "$WORK/out" || fail "a new Caddyfile imports our site"
 grep -q 'email ops@example.com' "$WORK/out" || fail "a new Caddyfile has the certificate email"
 
 # The example site the package ships: replaced by ours.
@@ -28,7 +28,7 @@ printf 'shop.example.com {\n\treverse_proxy 127.0.0.1:8080\n}\n' >"$WORK/theirs"
 cp "$WORK/theirs" "$WORK/run1"
 main "$WORK/run1" >"$WORK/run2"
 grep -q 'shop.example.com' "$WORK/run2" || fail "the operator's site is kept"
-[ "$(grep -c 'import figcraft-server.caddy' "$WORK/run2")" = 1 ] || fail "one import line is added"
+[ "$(grep -c 'import endrika-server.caddy' "$WORK/run2")" = 1 ] || fail "one import line is added"
 main "$WORK/run2" >"$WORK/run3"
 cmp -s "$WORK/run2" "$WORK/run3" || fail "running again leaves a Caddyfile with other sites as it is"
 main "$WORK/run3" >"$WORK/run4"

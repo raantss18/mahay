@@ -1,6 +1,6 @@
 //! Text menu and text editing commands.
 
-use figcraft_doc::*;
+use endrika_doc::*;
 use serde_json::{Map, Value, json};
 
 use super::props::{styled_name, weight_name};
@@ -135,7 +135,7 @@ fn on_path(s: &mut Session, p: &Value) -> Result<Value> {
         .or_else(|| sel.iter().copied().find(|i| *i != text && !is_text(i)))
         .ok_or_else(|| bad(CMD, "select a path or shape too (or pass `path`)"))?;
     let pn = doc.get(path)?;
-    let geom = figcraft_doc::geometry::stroke_geometry(pn).filter(|g| !g.elements().is_empty()).ok_or_else(|| bad(CMD, "that layer has no path"))?;
+    let geom = endrika_doc::geometry::stroke_geometry(pn).filter(|g| !g.elements().is_empty()).ok_or_else(|| bad(CMD, "that layer has no path"))?;
     if !is_text(&text) || doc.is_ancestor(path, text) {
         return Err(bad(CMD, "`text` must be a text layer outside the path layer"));
     }
@@ -453,7 +453,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "{family? (list its styles), style?, features? (the face's OpenType features), axes? (the face's variation axes and named instances)}",
             false,
             |_, p| {
-                let face = |f: &str| figcraft_text::find_face(f, &string(p, "style").unwrap_or_else(|| "Regular".into()));
+                let face = |f: &str| endrika_text::find_face(f, &string(p, "style").unwrap_or_else(|| "Regular".into()));
                 Ok(match string(p, "family") {
                     Some(f) if boolean(p, "features").unwrap_or(false) => json!(face(&f).map(|face| face.feature_tags()).unwrap_or_default()),
                     Some(f) if boolean(p, "axes").unwrap_or(false) => match face(&f) {
@@ -469,8 +469,8 @@ pub fn specs() -> Vec<CommandSpec> {
                         }),
                         None => Value::Null,
                     },
-                    Some(f) => json!(figcraft_text::family_styles(&f)),
-                    None => json!(figcraft_text::family_names()),
+                    Some(f) => json!(endrika_text::family_styles(&f)),
+                    None => json!(endrika_text::family_names()),
                 })
             }
         ),

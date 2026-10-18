@@ -55,9 +55,9 @@ fn oldest_autosaves_make_room_and_user_versions_stay() {
 
 #[test]
 fn autosaves_keep_their_flag_in_the_file() {
-    let dir = std::env::temp_dir().join(format!("figcraft-autosave-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-autosave-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("auto.figcraft").to_string_lossy().to_string();
+    let path = dir.join("auto.endrika").to_string_lossy().to_string();
     let mut s = Session::new();
     rect(&mut s, 0.0);
     assert!(autosave(&mut s));
@@ -76,9 +76,9 @@ fn autosaves_keep_their_flag_in_the_file() {
 
 #[test]
 fn files_that_save_themselves_still_get_checkpoints() {
-    let dir = std::env::temp_dir().join(format!("figcraft-autosave-on-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-autosave-on-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("auto.figcraft").to_string_lossy().to_string();
+    let path = dir.join("auto.endrika").to_string_lossy().to_string();
     let mut s = Session::new();
     s.execute("pref.autoSave", &json!({"on": true})).unwrap();
     rect(&mut s, 0.0);
@@ -96,9 +96,9 @@ fn files_that_save_themselves_still_get_checkpoints() {
 #[test]
 fn a_file_encoded_elsewhere_is_saved_as_of_its_snapshot() {
     use crate::cmd::file::FileSnapshot;
-    let dir = std::env::temp_dir().join(format!("figcraft-snapshot-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-snapshot-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("snap.figcraft").to_string_lossy().to_string();
+    let path = dir.join("snap.endrika").to_string_lossy().to_string();
     let mut s = Session::new();
     s.execute("file.save", &json!({"path": path})).unwrap();
     rect(&mut s, 0.0);

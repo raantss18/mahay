@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use figcraft_format::Version;
+use endrika_format::Version;
 use serde_json::{Value, json};
 
 use crate::{DocState, EngineError, Session};
@@ -16,7 +16,7 @@ struct SaveFiles {
 impl SaveFiles {
     fn new() -> Self {
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let dir = std::env::temp_dir().join(format!("figcraft-save-formats-{}-{stamp}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("endrika-save-formats-{}-{stamp}", std::process::id()));
         std::fs::create_dir(&dir).unwrap();
         Self { dir, files: Vec::new() }
     }
@@ -89,19 +89,19 @@ fn assert_save_state_unchanged(s: &Session, before: &DocState, recent: &[String]
     assert_eq!(s.prefs.recent_files, recent);
 }
 
-fn read_fig(path: &std::path::Path, result: &Value) -> figcraft_doc::Document {
+fn read_fig(path: &std::path::Path, result: &Value) -> endrika_doc::Document {
     let bytes = std::fs::read(path).unwrap();
     assert_eq!(result["format"], "fig");
     assert_eq!(result["bytes"], bytes.len());
     assert!(result["warnings"].is_array());
-    assert!(figcraft_format::load_bytes(&bytes).is_err(), "a .fig copy must not contain native FigCraft data");
-    figcraft_format::fig::import(&bytes, "Copy").unwrap().0
+    assert!(endrika_format::load_bytes(&bytes).is_err(), "a .fig copy must not contain native Endrika data");
+    endrika_format::fig::import(&bytes, "Copy").unwrap().0
 }
 
 #[test]
 fn fig_save_as_keeps_native_path_dirty_state_and_history() {
     let mut files = SaveFiles::new();
-    let native = files.path("design.figcraft");
+    let native = files.path("design.endrika");
     let copy = files.path("copy.fig");
     let mut s = Session::new();
     rect(&mut s, "Saved rectangle");
@@ -128,7 +128,7 @@ fn fig_save_as_keeps_native_path_dirty_state_and_history() {
     s.execute("file.save", &json!({})).unwrap();
     assert!(!s.ds().unwrap().is_dirty());
     assert_eq!(s.ds().unwrap().path.as_deref(), native.to_str());
-    let persisted = figcraft_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
+    let persisted = endrika_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
     assert!(persisted.doc.nodes().any(|n| n.name == "New rectangle"));
     assert_eq!(persisted.versions[0].name, "Before copy");
     assert_eq!(std::fs::read(&copy).unwrap().len(), result["bytes"].as_u64().unwrap() as usize);
@@ -180,7 +180,7 @@ fn fig_save_commands_accept_uppercase_extension() {
 #[test]
 fn fig_copy_from_branch_exports_active_document_without_saving_main() {
     let mut files = SaveFiles::new();
-    let native = files.path("main.figcraft");
+    let native = files.path("main.endrika");
     let copy = files.path("branch.fig");
     let mut s = Session::new();
     rect(&mut s, "Main rectangle");
@@ -205,7 +205,7 @@ fn fig_copy_from_branch_exports_active_document_without_saving_main() {
     assert_eq!(std::fs::read(&native).unwrap(), saved);
 
     s.execute("file.save", &json!({})).unwrap();
-    let persisted = figcraft_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
+    let persisted = endrika_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
     assert!(!persisted.doc.nodes().any(|n| n.name == "Branch rectangle"));
     assert!(persisted.branches[0].head.nodes().any(|n| n.name == "Branch rectangle"));
     assert_eq!(persisted.branches[0].versions[0].name, "Branch version");
@@ -229,7 +229,7 @@ fn fig_copy_write_failure_keeps_save_state() {
         for path in [&blocked, &missing] {
             assert!(s.execute(command, &json!({"path": path.to_string_lossy()})).is_err());
             assert_save_state_unchanged(&s, &before, &[]);
-            assert!(!PathBuf::from(format!("{}.tmp-figcraft", path.display())).exists());
+            assert!(!PathBuf::from(format!("{}.tmp-endrika", path.display())).exists());
         }
     }
 }
@@ -238,7 +238,7 @@ fn fig_copy_write_failure_keeps_save_state() {
 fn save_as_without_extension_stays_native() {
     let mut files = SaveFiles::new();
     let requested = files.dir.join("native");
-    let native = files.path("native.figcraft");
+    let native = files.path("native.endrika");
     let mut s = Session::new();
     rect(&mut s, "Native rectangle");
     let result = s.execute("file.saveAs", &json!({"path": requested.to_string_lossy()})).unwrap();
@@ -246,7 +246,7 @@ fn save_as_without_extension_stays_native() {
     assert_eq!(s.ds().unwrap().path.as_deref(), native.to_str());
     assert!(!s.ds().unwrap().is_dirty());
     assert!(!requested.exists());
-    let loaded = figcraft_format::load_bytes(&std::fs::read(native).unwrap()).unwrap();
+    let loaded = endrika_format::load_bytes(&std::fs::read(native).unwrap()).unwrap();
     assert!(loaded.0.nodes().any(|n| n.name == "Native rectangle"));
 }
 
@@ -254,7 +254,7 @@ fn save_as_without_extension_stays_native() {
 fn fig_copy_of_version_preview_keeps_visible_version_and_save_state() {
     let mut files = SaveFiles::new();
     for (index, command) in ["file.save", "file.saveAs"].into_iter().enumerate() {
-        let native = files.path(&format!("current-{index}.figcraft"));
+        let native = files.path(&format!("current-{index}.endrika"));
         let copy = files.path(&format!("version-{index}.FIG"));
         let mut s = Session::new();
         rect(&mut s, "A");
@@ -287,7 +287,7 @@ fn pending_save_choice_keeps_version_preview() {
         rect(&mut s, "A");
         s.execute("file.saveVersion", &json!({"name": "A only"})).unwrap();
         if native_path {
-            let native = files.path(&format!("saved-{index}.figcraft"));
+            let native = files.path(&format!("saved-{index}.endrika"));
             s.execute("file.save", &json!({"path": native.to_string_lossy()})).unwrap();
         }
         rect(&mut s, "B");
@@ -304,7 +304,7 @@ fn pending_save_choice_keeps_version_preview() {
 fn native_save_from_version_preview_writes_current_document() {
     let mut files = SaveFiles::new();
     for (index, (command, explicit)) in [("file.save", false), ("file.save", true), ("file.saveAs", true)].into_iter().enumerate() {
-        let native = files.path(&format!("native-version-{index}.figcraft"));
+        let native = files.path(&format!("native-version-{index}.endrika"));
         let mut s = Session::new();
         rect(&mut s, "A");
         s.execute("file.saveVersion", &json!({"name": "A only"})).unwrap();
@@ -318,7 +318,7 @@ fn native_save_from_version_preview_writes_current_document() {
         assert!(!s.ds().unwrap().is_dirty());
         assert_eq!(s.ds().unwrap().history.undo.len(), undo);
         assert_eq!(s.ds().unwrap().path.as_deref(), native.to_str());
-        let loaded = figcraft_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
+        let loaded = endrika_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
         assert!(loaded.doc.nodes().any(|n| n.name == "A"));
         assert!(loaded.doc.nodes().any(|n| n.name == "B"));
         assert!(!loaded.versions[0].document().unwrap().nodes().any(|n| n.name == "B"));
@@ -330,7 +330,7 @@ fn implicit_save_protects_legacy_fig_destination() {
     let mut files = SaveFiles::new();
     for (index, command) in ["file.save", "file.saveAs"].into_iter().enumerate() {
         let legacy = files.path(&format!("legacy-{index}.FIG"));
-        let native = files.path(&format!("corrected-{index}.figcraft"));
+        let native = files.path(&format!("corrected-{index}.endrika"));
         let mut s = Session::new();
         rect(&mut s, "A");
         s.execute("file.saveVersion", &json!({"name": "A only"})).unwrap();
@@ -353,13 +353,13 @@ fn implicit_save_protects_legacy_fig_destination() {
         assert!(s.ds().unwrap().preview.is_none());
         assert!(!s.ds().unwrap().is_dirty());
         assert_eq!(s.ds().unwrap().path.as_deref(), native.to_str());
-        let loaded = figcraft_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
+        let loaded = endrika_format::load_bytes_with_versions(&std::fs::read(&native).unwrap()).unwrap();
         assert!(loaded.doc.nodes().any(|n| n.name == "A"));
         assert!(loaded.doc.nodes().any(|n| n.name == "B"));
         assert_eq!(loaded.versions[0].name, "A only");
         rect(&mut s, "C");
         s.execute("file.save", &json!({})).unwrap();
-        let loaded = figcraft_format::load_bytes(&std::fs::read(&native).unwrap()).unwrap();
+        let loaded = endrika_format::load_bytes(&std::fs::read(&native).unwrap()).unwrap();
         assert!(loaded.0.nodes().any(|n| n.name == "C"));
         assert_eq!(std::fs::read(&legacy).unwrap(), sentinel);
     }

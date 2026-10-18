@@ -2,10 +2,10 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, Document, Node};
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, export, import};
+use tsipika_color::{Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
+use tsipika_doc::{Appearance, Document, Node};
+use tsipika_geom::{Point, Rect, shapes};
+use tsipika_svg::{ExportOptions, export, import};
 
 /// One square filled with a radial on `start`→`end` at `aspect`, its focal point at `focal`.
 fn doc(start: Point, end: Point, aspect: f64, focal: Point) -> Document {

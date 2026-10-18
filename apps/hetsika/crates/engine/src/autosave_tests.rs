@@ -184,7 +184,7 @@ fn scan_keeps_snapshot_when_session_metadata_is_unreadable() {
     let root = autosave::recovery_root(&d);
     let sess = root.join("123-1");
     std::fs::create_dir_all(&sess).unwrap();
-    let snap = filmcraft_format::encode(&filmcraft_project::Project::default(), false);
+    let snap = hetsika_format::encode(&hetsika_project::Project::default(), false);
     std::fs::write(sess.join("snapshot.fcproj"), snap).unwrap();
     std::fs::write(sess.join("session.json"), b"not json {").unwrap();
     let found = autosave::scan_candidates(&d, None);
@@ -258,7 +258,7 @@ fn project_scratch_folders_outside_the_project_are_not_used() {
         s.drain_events().iter().any(|e| matches!(e, crate::Event::Toast { message, .. } if message.contains(&named))),
         "the user is told the folder is not used"
     );
-    assert_eq!(crate::project_tools::previews_dir(&s), Some(show.join("FilmCraft Previews").join("cut")));
+    assert_eq!(crate::project_tools::previews_dir(&s), Some(show.join("Hetsika Previews").join("cut")));
     s.execute("sequence.addEdit", json!({"seconds": 1.0})).unwrap();
     let r = s.execute("file.autoSaveNow", json!({})).unwrap();
     let written = std::path::PathBuf::from(r["path"].as_str().unwrap());

@@ -56,9 +56,9 @@ fn macos_keeps_alt_by_word_and_cmd_to_the_line_end() {
 
 #[test]
 fn a_recovered_copy_opens_unsaved_without_a_path() {
-    let dir = std::env::temp_dir().join(format!("figcraft-recover-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("endrika-recover-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("1.figcraft");
+    let path = dir.join("1.endrika");
     let mut s = Session::new();
     s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
     s.execute("file.save", &json!({"path": path.to_string_lossy()})).unwrap();
@@ -67,6 +67,6 @@ fn a_recovered_copy_opens_unsaved_without_a_path() {
     assert!(ds.path.is_none(), "saving asks where: the copy isn't the file");
     assert!(ds.is_dirty(), "a closed window or tab asks before dropping it");
     assert_eq!(s.doc().unwrap().pages.len(), 1);
-    assert!(s.execute("file.recover", &json!({"path": dir.join("missing.figcraft").to_string_lossy()})).is_err());
+    assert!(s.execute("file.recover", &json!({"path": dir.join("missing.endrika").to_string_lossy()})).is_err());
     let _ = std::fs::remove_dir_all(&dir);
 }

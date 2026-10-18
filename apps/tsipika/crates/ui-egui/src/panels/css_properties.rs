@@ -10,12 +10,12 @@ use std::sync::Arc;
 use egui::text::{LayoutJob, TextFormat};
 use egui::{FontId, Ui};
 use serde_json::{Value, json};
-use vectorcraft_svg::{CssOptions, CssUnits};
+use tsipika_svg::{CssOptions, CssUnits};
 
 use super::{pstate, set_pstate};
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
-use crate::{VectorcraftApp, io};
+use crate::{TsipikaApp, io};
 
 pub const ID: &str = "cssProperties";
 /// Panel state: the export options.
@@ -77,7 +77,7 @@ fn highlight(rules: &[&str], t: &Tokens, font: FontId) -> LayoutJob {
 }
 
 /// The CSS for the panel, made again only when the document, the scope or the options change.
-fn shown(app: &mut VectorcraftApp, ui: &Ui, opts: &CssOptions, all: bool) -> Option<Arc<Shown>> {
+fn shown(app: &mut TsipikaApp, ui: &Ui, opts: &CssOptions, all: bool) -> Option<Arc<Shown>> {
     let st = app.session.active()?;
     let t = Tokens::get(ui.ctx());
     let key = Some((st.uid, st.revision, all, opts.clone(), t.dark));
@@ -102,7 +102,7 @@ fn sentence(w: &str) -> String {
     c.next().map(|f| f.to_uppercase().chain(c).chain(['.']).collect()).unwrap_or_default()
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut TsipikaApp, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
     let Some(selected) = app.session.active().map(|st| !st.selection.is_empty()) else {
         widgets::dim_label(ui, tl!("No document"));
@@ -175,7 +175,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// `css.copy {scope?, …css.selection options}`: copy the CSS of the selection (or with scope
 /// `all` the document's) → `{css, rules}`.
-pub(crate) fn copy(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn copy(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let id = if p.get("scope").and_then(Value::as_str) == Some("all") { "css.generate" } else { "css.selection" };
     let r = app.session.execute(id, p).map_err(|e| e.to_string())?;
     let css = r["css"].as_str().filter(|c| !c.is_empty()).ok_or("no CSS to copy: select objects with CSS of their own")?.to_string();
@@ -188,7 +188,7 @@ pub(crate) fn copy(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String>
 /// `css.exportFile {path?, scope?, …css.selection options}`: `css.export` written to `path`, else
 /// a picked file (the web downloads it), its pictures next to it → `{path, rules, images,
 /// warnings}`.
-pub(crate) fn export_file(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub(crate) fn export_file(app: &mut TsipikaApp, p: &Value) -> Result<Value, String> {
     let mut q = p.clone();
     let path = q.as_object_mut().and_then(|o| o.remove("path")).and_then(|v| v.as_str().map(str::to_string));
     let r = app.session.execute("css.export", &q).map_err(|e| e.to_string())?;
@@ -198,7 +198,7 @@ pub(crate) fn export_file(app: &mut VectorcraftApp, p: &Value) -> Result<Value, 
     let mut images = Vec::new();
     for im in r["images"].as_array().into_iter().flatten() {
         let (Some(name), Some(data)) = (im["name"].as_str(), im["dataBase64"].as_str()) else { continue };
-        let bytes = vectorcraft_format::base64_decode(data).ok_or("the export returned unreadable data")?;
+        let bytes = tsipika_format::base64_decode(data).ok_or("the export returned unreadable data")?;
         let at = folder.as_ref().map_or_else(|| name.to_string(), |f| f.join(name).to_string_lossy().into_owned());
         io::write_to(&mut app.services, &at, &bytes)?;
         images.push(at);
@@ -214,7 +214,7 @@ pub(crate) fn export_file(app: &mut VectorcraftApp, p: &Value) -> Result<Value, 
 }
 
 /// The panel (≡) menu: copy and export, Generate CSS and the export options.
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut TsipikaApp, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
     let Some(selected) = app.session.active().map(|st| !st.selection.is_empty()) else { return };
     let mut opts: CssOptions = pstate(&ctx, OPTIONS);

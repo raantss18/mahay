@@ -1,15 +1,15 @@
-//! Headless UI screenshots: renders the whole DesignCraft window offscreen (wgpu) — works with a
+//! Headless UI screenshots: renders the whole Pejy window offscreen (wgpu) — works with a
 //! locked screen or a hidden window, unlike `ui.screenshot`.
 //!
-//! `cargo run -p designcraft-ui-egui --example ui_shot -- script.jsonl`
+//! `cargo run -p pejy-ui-egui --example ui_shot -- script.jsonl`
 //!
 //! The script is JSON lines. Each line is a control-channel request (`{"method": …, "params": …}`,
 //! see `docs/control-protocol.md`), or `{"shot": "/abs/out.png"}` to save the window as PNG, or
 //! `{"steps": n}` to run extra frames. The window is 1440×900 pt at 2× and opens `file.newSample`
 //! (unless the first line is `{"empty": true}`).
 
-use designcraft_engine::Session;
-use designcraft_ui_egui::{ControlRequest, DesignApp, Services};
+use pejy_engine::Session;
+use pejy_ui_egui::{ControlRequest, DesignApp, Services};
 
 static READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 

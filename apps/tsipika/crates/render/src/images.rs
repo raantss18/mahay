@@ -13,7 +13,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard, Weak};
 
-use vectorcraft_doc::ImageBlob;
+use tsipika_doc::ImageBlob;
 use vello_cpu::Pixmap;
 use vello_cpu::color::PremulRgba8;
 
@@ -220,7 +220,7 @@ pub(crate) fn half(pm: &Pixmap) -> Pixmap {
 
 /// How many times to halve an image drawn with `m` (image pixels → device pixels): while a pixel
 /// of the halved image still covers at most one device pixel each way, at most down to one pixel.
-pub(crate) fn mip_level(m: vectorcraft_geom::Affine, w: u16, h: u16) -> u8 {
+pub(crate) fn mip_level(m: tsipika_geom::Affine, w: u16, h: u16) -> u8 {
     let [a, b, c, d, _, _] = m.as_coeffs();
     // The largest stretch of the linear part (its greater singular value).
     let (p, q) = (a * a + b * b + c * c + d * d, a * d - b * c);
@@ -271,7 +271,7 @@ mod tests {
 
     #[test]
     fn mip_level_follows_the_largest_stretch() {
-        use vectorcraft_geom::Affine;
+        use tsipika_geom::Affine;
         assert_eq!(mip_level(Affine::scale(1.0), 1000, 1000), 0);
         assert_eq!(mip_level(Affine::scale(0.6), 1000, 1000), 0);
         assert_eq!(mip_level(Affine::scale(0.5), 1000, 1000), 1);

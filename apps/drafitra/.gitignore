@@ -7,5 +7,5 @@
 /temp/
 .DS_Store
 *.swp
-/apps/cadcraft-web/dist/
+/apps/drafitra-web/dist/
 /.claude/worktrees/

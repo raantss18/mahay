@@ -1,4 +1,4 @@
-//! The plugin manifest, `figcraft-plugin.json`: who the plugin is, which module to run, the menu
+//! The plugin manifest, `endrika-plugin.json`: who the plugin is, which module to run, the menu
 //! commands it adds (with their parameters) and the permissions it asks for. Also the panel a
 //! plugin shows while it runs (ABI v2), whose controls are parameters too.
 
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// The manifest's file name.
-pub const MANIFEST_FILE: &str = "figcraft-plugin.json";
+pub const MANIFEST_FILE: &str = "endrika-plugin.json";
 /// The plugin API version this build implements (`api` in the manifest).
 pub const API_VERSION: u32 = 3;
 /// Largest manifest read.
@@ -200,7 +200,7 @@ impl Param {
             ParamKind::Color => v
                 .as_str()
                 .filter(|s| s.len() <= 9)
-                .and_then(figcraft_color::Color::from_hex)
+                .and_then(endrika_color::Color::from_hex)
                 .map(|c| Value::String(c.to_css_hex()))
                 .ok_or_else(|| format!("`{name}` must be a hex colour like #FF5A5F")),
             ParamKind::Button | ParamKind::Note => Ok(Value::Null),
@@ -300,7 +300,7 @@ impl Manifest {
         self.author = clean("author", &self.author, MAX_NAME)?;
         check_main(&self.main)?;
         if self.api == 0 || self.api > API_VERSION {
-            return Err(format!("plugin API {} isn't supported (this FigCraft runs API {API_VERSION})", self.api));
+            return Err(format!("plugin API {} isn't supported (this Endrika runs API {API_VERSION})", self.api));
         }
         if self.permissions.commands.len() > MAX_ALLOW {
             return Err(format!("more than {MAX_ALLOW} entries in `permissions.commands`"));
@@ -346,7 +346,7 @@ impl Manifest {
     }
 }
 
-/// A panel a plugin shows while it runs (ABI v2): a title and controls drawn with FigCraft's own
+/// A panel a plugin shows while it runs (ABI v2): a title and controls drawn with Endrika's own
 /// widgets. Fields hold values; a button press or a changed value calls the plugin back.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Panel {

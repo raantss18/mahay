@@ -1,23 +1,23 @@
 [package]
-name = "figcraft-ui-egui"
+name = "endrika-ui-egui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "FigCraft egui frontend (the Figma-style UI: canvas, toolbar, layers, design and prototype panels, menus); swappable: nothing below depends on it"
+description = "Endrika egui frontend (the Figma-style UI: canvas, toolbar, layers, design and prototype panels, menus); swappable: nothing below depends on it"
 
 [lints]
 workspace = true
 
 [dependencies]
-figcraft-geom = { workspace = true }
-figcraft-color = { workspace = true }
-figcraft-doc = { workspace = true }
-figcraft-text = { workspace = true }
-figcraft-layout = { workspace = true }
-figcraft-render = { workspace = true }
-figcraft-pathops = { workspace = true }
-figcraft-engine = { workspace = true }
-figcraft-format = { workspace = true }
+endrika-geom = { workspace = true }
+endrika-color = { workspace = true }
+endrika-doc = { workspace = true }
+endrika-text = { workspace = true }
+endrika-layout = { workspace = true }
+endrika-render = { workspace = true }
+endrika-pathops = { workspace = true }
+endrika-engine = { workspace = true }
+endrika-format = { workspace = true }
 egui = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

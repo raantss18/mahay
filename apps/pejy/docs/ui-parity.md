@@ -24,7 +24,7 @@ basics of editing fail for too many users on Windows and Linux.
 
 **✓** like InDesign · **~** present, differs or unreliable · **✗** missing.
 
-| Area | InDesign 2026 | DesignCraft | Status | Evidence |
+| Area | InDesign 2026 | Pejy | Status | Evidence |
 |---|---|---|---|---|
 | Chrome: app bar, Control panel, Tools panel, dock, doc tabs, status bar | Medium Dark, measured sizes | measured look | ✓ | 11-observed-ui.md |
 | Properties panel and Contextual Task Bar | per selection | ✓, task bar movable (#143) | ✓ | |

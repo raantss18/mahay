@@ -12,7 +12,7 @@
 
 use std::f64::consts::{FRAC_1_SQRT_2, TAU};
 
-use vectorcraft_geom::{Point, Vec2};
+use tsipika_geom::{Point, Vec2};
 
 use super::distort::displace;
 use super::edges::sobel;

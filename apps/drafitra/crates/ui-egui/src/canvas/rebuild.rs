@@ -7,7 +7,7 @@
 //! hatch patterns are limited to its area, and curves and dashes are a band coarser or finer than
 //! ideal), so the canvas keeps drawing it, scaled and moved by the view uniform, while the worker
 //! builds the new one. A view that needs a different list cancels the build in flight (dropping
-//! its [`Job`] sets the build's cancel flag, see `cadcraft_render::Options::cancel`) and starts
+//! its [`Job`] sets the build's cancel flag, see `drafitra_render::Options::cancel`) and starts
 //! one for itself, so a long scroll through many zoom bands builds only for where it stops.
 //! Edits still rebuild at once, so a change is never drawn late. The web build has no threads and
 //! rebuilds synchronously.
@@ -16,10 +16,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, TryRecvError};
 
-use cadcraft_color::Rgb;
-use cadcraft_doc::{Drawing, Space};
-use cadcraft_geom::{Bounds2, Vec2};
-use cadcraft_render::{DisplayList, Kind, Options};
+use drafitra_color::Rgb;
+use drafitra_doc::{Drawing, Space};
+use drafitra_geom::{Bounds2, Vec2};
+use drafitra_render::{DisplayList, Kind, Options};
 
 /// What a build needs: the drawing (shared, never copied), the space and the options.
 pub(super) struct Request {
@@ -102,7 +102,7 @@ impl Job {
 /// thrown away, and no vertex data is made for it).
 fn run(req: Request) -> Option<Built> {
     let t0 = crate::now_ms();
-    let list = cadcraft_render::build(&req.doc, &req.space, &req.opts);
+    let list = drafitra_render::build(&req.doc, &req.space, &req.opts);
     if req.opts.cancelled() {
         return None;
     }
@@ -136,7 +136,7 @@ pub(super) fn spawn(mut req: Request, key: super::ListKey, window: Option<Bounds
     let cancel = Arc::new(AtomicBool::new(false));
     req.opts.cancel = Some(cancel.clone());
     let ctx = ctx.clone();
-    let spawned = std::thread::Builder::new().name("cadcraft-regen".into()).spawn(move || {
+    let spawned = std::thread::Builder::new().name("drafitra-regen".into()).spawn(move || {
         // A panic drops `tx` unsent: the canvas sees the job as lost and builds on its own. A
         // cancelled build sends nothing either, but its job is gone and nobody is listening.
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(req))) {
@@ -171,13 +171,13 @@ mod tests {
 
     #[test]
     fn worker_build_matches_a_synchronous_one() {
-        use cadcraft_geom::Vec3;
+        use drafitra_geom::Vec3;
         let mut d = Drawing::new_imperial();
-        let line = cadcraft_doc::Line { a: Vec3::new(0.0, 0.0, 0.0), b: Vec3::new(10.0, 5.0, 0.0) };
-        let Ok(_) = d.add(&Space::Model, cadcraft_doc::Common::default(), cadcraft_doc::EntityKind::Line(line)) else { panic!("add") };
+        let line = drafitra_doc::Line { a: Vec3::new(0.0, 0.0, 0.0), b: Vec3::new(10.0, 5.0, 0.0) };
+        let Ok(_) = d.add(&Space::Model, drafitra_doc::Common::default(), drafitra_doc::EntityKind::Line(line)) else { panic!("add") };
         let doc = Arc::new(d);
         let opts = Options::default();
-        let sync = cadcraft_render::build(&doc, &Space::Model, &opts);
+        let sync = drafitra_render::build(&doc, &Space::Model, &opts);
         let req = Request {
             doc: doc.clone(),
             space: Space::Model,

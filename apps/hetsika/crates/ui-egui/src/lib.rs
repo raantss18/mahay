@@ -1,6 +1,6 @@
-//! The FilmCraft egui frontend.
+//! The Hetsika egui frontend.
 //!
-//! Thin by design: all project changes go through `filmcraft_engine::Session::execute`; this crate
+//! Thin by design: all project changes go through `hetsika_engine::Session::execute`; this crate
 //! owns only presentation state ([`state::UiState`]), GPU textures, the playback clock and the
 //! control-channel handlers. Swap it for another toolkit without touching the engine.
 
@@ -65,8 +65,8 @@ use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender};
 
 use egui::{TextureHandle, TextureOptions};
-use filmcraft_engine::{Services, Session};
-use filmcraft_time::Tick;
+use hetsika_engine::{Services, Session};
+use hetsika_time::Tick;
 use serde_json::{Value, json};
 
 pub use control::ControlRequest;
@@ -100,7 +100,7 @@ pub trait AudioOut {
     /// Apply Settings ▸ Audio Hardware (device class/output, buffer size, sample rate). Takes
     /// effect at the next `start`; `document_rate` is the sequence sample rate for "Attempt to
     /// force hardware to document sample rate".
-    fn configure(&mut self, _hw: &filmcraft_engine::settings::AudioHardwarePrefs, _document_rate: Option<u32>) {}
+    fn configure(&mut self, _hw: &hetsika_engine::settings::AudioHardwarePrefs, _document_rate: Option<u32>) {}
     /// A hardware note for the status bar — e.g. the default output device could not be opened
     /// and a fallback device is in use, or no output device was found — or None.
     fn note(&self) -> Option<String> {
@@ -155,7 +155,7 @@ pub struct HostHooks {
     /// Edit Original, Help ▸ Reveal Log Files).
     pub open_path: Option<Box<dyn FnMut(&str, bool) -> Result<(), String>>>,
     /// Show a file dialog without blocking the UI thread and answer on the returned channel with
-    /// the chosen paths (none: cancelled). With it, [`FilmcraftApp::pick`] keeps the frame loop
+    /// the chosen paths (none: cancelled). With it, [`HetsikaApp::pick`] keeps the frame loop
     /// running while the dialog is open (the desktop app on Linux, #260); without it the
     /// synchronous pickers above are used.
     pub run_dialog: Option<Box<dyn FnMut(native_dialogs::FileDialog) -> Receiver<Vec<String>>>>,
@@ -168,7 +168,7 @@ pub struct HostHooks {
     /// uses `egui::Context::system_theme`.
     pub system_theme: Option<SystemThemeFn>,
     /// Files or an image on the system clipboard, for Paste in the Timeline and the Project panel
-    /// (#611). Without it Paste only pastes clips copied in FilmCraft.
+    /// (#611). Without it Paste only pastes clips copied in Hetsika.
     pub clipboard_media: Option<Box<dyn FnMut() -> Option<ClipboardMedia>>>,
 }
 
@@ -268,10 +268,10 @@ pub(crate) const EXPORT_SAVE_DIALOGS: [(&str, &str, &str); 7] = [
     ("file.exportFcpxml", "FCPXML", "fcpxml"),
     ("file.exportOtio", "OpenTimelineIO", "otio"),
     ("file.exportAle", "Avid Log Exchange", "ale"),
-    ("file.exportSelectionProject", "FilmCraft Project", "fcproj"),
+    ("file.exportSelectionProject", "Hetsika Project", "fcproj"),
 ];
 
-pub struct FilmcraftApp {
+pub struct HetsikaApp {
     pub session: Session,
     pub ui: UiState,
     pub tokens: Tokens,
@@ -310,9 +310,9 @@ pub struct FilmcraftApp {
     mac_ctrl_click_armed: bool,
     /// The mouse press in progress (its start time) and the undo history when it began, for Escape
     /// to take back what the press changed (#580).
-    value_press: Option<(f64, filmcraft_engine::UndoMark)>,
+    value_press: Option<(f64, hetsika_engine::UndoMark)>,
     /// BS.1770 loudness of the programme as it plays, and the next sample position to feed.
-    pub(crate) loudness: Option<(filmcraft_audio_dsp::LoudnessMeter, i64)>,
+    pub(crate) loudness: Option<(hetsika_audio_dsp::LoudnessMeter, i64)>,
     /// Status message last shown and when it first appeared (messages expire after a few seconds).
     status_seen: (String, f64),
     /// Screenshots waiting for their frame: (token, path, crop, reply, give-up time).
@@ -348,12 +348,12 @@ pub struct FilmcraftApp {
     pub last_timeline_width: f32,
     /// The sequence whose view `ui.timeline` holds, and that view as it was last exchanged with
     /// `session.state.timeline_views` (see `sync_timeline_view`).
-    timeline_view_of: Option<filmcraft_engine::project::ItemId>,
+    timeline_view_of: Option<hetsika_engine::project::ItemId>,
     /// Items imported by an OS file drop, to place on the Timeline at the drop point this frame.
-    pending_timeline_drop: Option<(Vec<filmcraft_engine::project::ItemId>, egui::Pos2)>,
+    pending_timeline_drop: Option<(Vec<hetsika_engine::project::ItemId>, egui::Pos2)>,
     /// Files being dragged over the window from the OS (count, pointer): the Timeline previews where they would land.
     file_drag_hover: Option<(usize, egui::Pos2)>,
-    timeline_view_last: Option<filmcraft_engine::project::SequenceView>,
+    timeline_view_last: Option<hetsika_engine::project::SequenceView>,
     pub fps: f32,
     last_time: f64,
     bindings: Vec<menus::KeyBinding>,
@@ -378,7 +378,7 @@ pub struct FilmcraftApp {
     /// Preview render job being watched (job id, where to start playing when it completes).
     watched_render: Option<(u64, Tick)>,
     /// Settings last applied to the UI (theme, tooltips, frame cache, audio device).
-    applied_prefs: Option<filmcraft_engine::autosave::Preferences>,
+    applied_prefs: Option<hetsika_engine::autosave::Preferences>,
     /// Settings ▸ Appearance ▸ UI Scale last applied, with the system scale it was applied for.
     applied_ui_scale: Option<(Option<f32>, f32)>,
     workspace_restored: bool,
@@ -390,7 +390,7 @@ pub struct FilmcraftApp {
 
 pub struct GpuState {
     pub render_state: eframe::egui_wgpu::RenderState,
-    pub compositor: filmcraft_gpu::GpuCompositor,
+    pub compositor: hetsika_gpu::GpuCompositor,
     pub texture: Option<egui::TextureId>,
     pub last_key: Option<FrameKey>,
     pub size: (u32, u32),
@@ -404,7 +404,7 @@ pub struct GpuState {
 }
 
 /// Largest texture side a plan needs on the GPU (output and every layer).
-fn plan_side(plan: &filmcraft_render::plan::FramePlan) -> usize {
+fn plan_side(plan: &hetsika_render::plan::FramePlan) -> usize {
     plan.max_side()
 }
 
@@ -447,7 +447,7 @@ pub fn gpu_compositor_unsupported(adapter: &eframe::wgpu::Adapter) -> Option<Str
     None
 }
 
-impl FilmcraftApp {
+impl HetsikaApp {
     /// Enable the GPU compositor on the eframe wgpu device.
     pub fn set_wgpu(&mut self, rs: eframe::egui_wgpu::RenderState) {
         if let Some(why) = gpu_compositor_unsupported(&rs.adapter) {
@@ -466,7 +466,7 @@ impl FilmcraftApp {
             log::error!("GPU error, switching to the CPU compositor: {e}");
             flag.store(true, std::sync::atomic::Ordering::Relaxed);
         }));
-        let made = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| filmcraft_gpu::GpuCompositor::new(&rs.device, &rs.queue)));
+        let made = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| hetsika_gpu::GpuCompositor::new(&rs.device, &rs.queue)));
         match made {
             Ok(compositor) if !broken.load(std::sync::atomic::Ordering::Relaxed) => {
                 let max_texture = rs.device.limits().max_texture_dimension_2d;
@@ -529,7 +529,7 @@ impl FilmcraftApp {
     }
 }
 
-impl FilmcraftApp {
+impl HetsikaApp {
     pub fn new(mut session: Session) -> Self {
         session.shortcuts.register_external(menus::external_commands());
         let recovery = !session.recovery_candidates().is_empty();
@@ -642,7 +642,7 @@ impl FilmcraftApp {
     /// Show theme `k` with the Settings ▸ Appearance highlight colour and contrast.
     pub fn set_theme(&mut self, ctx: &egui::Context, k: ThemeKind) {
         let a = &self.session.prefs.appearance;
-        let highlight = filmcraft_engine::settings::parse_hex(&a.highlight_color);
+        let highlight = hetsika_engine::settings::parse_hex(&a.highlight_color);
         self.tokens = Tokens::for_kind(k).with_appearance(highlight, a.accessible_contrast);
         theme::apply_visuals(ctx, &self.tokens);
         self.apply_tooltips(ctx);
@@ -777,7 +777,7 @@ impl FilmcraftApp {
         };
         let stored = self.session.state.timeline_views.get(&active).copied();
         let v = &mut self.ui.timeline;
-        let shown = filmcraft_engine::project::SequenceView {
+        let shown = hetsika_engine::project::SequenceView {
             pps: v.target_pps,
             scroll: v.target_scroll,
             v_scroll: v.v_scroll,
@@ -785,7 +785,7 @@ impl FilmcraftApp {
             video_track_h: v.video_track_h,
             audio_track_h: v.audio_track_h,
         };
-        let show = |v: &mut state::TimelineView, s: filmcraft_engine::project::SequenceView| {
+        let show = |v: &mut state::TimelineView, s: hetsika_engine::project::SequenceView| {
             (v.pps, v.target_pps, v.scroll, v.target_scroll) = (s.pps, s.pps, s.scroll, s.scroll);
             (v.v_scroll, v.a_scroll, v.video_track_h, v.audio_track_h) = (s.v_scroll, s.a_scroll, s.video_track_h, s.audio_track_h);
             (v.fit_pending, v.fit_empty) = (false, None);
@@ -873,22 +873,22 @@ impl FilmcraftApp {
             };
             self.ui.dock.open_near(p, near);
         }
-        let _ = self.apply_dock(craft_ui::docking::Action::Activate { panel: p });
+        let _ = self.apply_dock(mahay_ui::docking::Action::Activate { panel: p });
         self.ui.focused = p;
     }
 
     /// Reveal in Project: bring the Project panel forward, showing the bin that holds `item` with
     /// the search cleared, so the (already selected) item is on show.
-    fn reveal_in_project(&mut self, item: filmcraft_project::ItemId) {
+    fn reveal_in_project(&mut self, item: hetsika_project::ItemId) {
         // the bins on the way down to the item (bounded: a project file can nest bins arbitrarily deep)
-        fn path(b: &filmcraft_project::Bin, item: filmcraft_project::ItemId, depth: usize, out: &mut Vec<u64>) -> bool {
+        fn path(b: &hetsika_project::Bin, item: hetsika_project::ItemId, depth: usize, out: &mut Vec<u64>) -> bool {
             if depth > 256 {
                 return false;
             }
             for c in &b.children {
                 match c {
-                    filmcraft_project::BinEntry::Item(i) if *i == item => return true,
-                    filmcraft_project::BinEntry::Bin(inner) => {
+                    hetsika_project::BinEntry::Item(i) if *i == item => return true,
+                    hetsika_project::BinEntry::Bin(inner) => {
                         out.push(inner.id.0);
                         if path(inner, item, depth + 1, out) {
                             return true;
@@ -904,7 +904,7 @@ impl FilmcraftApp {
         let found = path(&self.session.project.root, item, 0, &mut bins);
         // the list shows the whole tree: open the bins on the way. Icons and freeform show one bin
         // at a time: go into the one that holds the item.
-        let list = self.session.prefs.project_panel.view.mode == filmcraft_engine::project_panel::ViewMode::List;
+        let list = self.session.prefs.project_panel.view.mode == hetsika_engine::project_panel::ViewMode::List;
         self.ui.project_panel.bin = if list || !found { None } else { bins.last().copied() };
         if list {
             for b in bins {
@@ -1219,17 +1219,17 @@ impl FilmcraftApp {
     /// Cache revision of a project item's own frames: media changes only when its file does
     /// (relink, Make Offline, proxies on/off), so its frames survive unrelated edits; other items
     /// (sequences) follow the project revision.
-    pub fn item_revision(&self, item: filmcraft_project::ItemId) -> u64 {
+    pub fn item_revision(&self, item: hetsika_project::ItemId) -> u64 {
         let p = &self.session.project;
         let target = match p.item(item).map(|i| &i.kind) {
-            Some(filmcraft_project::ItemKind::Subclip { parent, .. }) => *parent,
+            Some(hetsika_project::ItemKind::Subclip { parent, .. }) => *parent,
             _ => item,
         };
         match p.item(target).map(|i| &i.kind) {
-            Some(filmcraft_project::ItemKind::Media(m)) => {
+            Some(hetsika_project::ItemKind::Media(m)) => {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
-                filmcraft_engine::media_pool::media_key(m).hash(&mut h);
+                hetsika_engine::media_pool::media_key(m).hash(&mut h);
                 (m.proxy.is_some() && self.session.media.use_proxies()).hash(&mut h);
                 h.finish()
             }
@@ -1237,11 +1237,11 @@ impl FilmcraftApp {
         }
     }
 
-    pub fn thumbnail(&mut self, ctx: &egui::Context, item: filmcraft_project::ItemId, t: Tick, width: u32) -> Option<(egui::TextureId, egui::Vec2)> {
+    pub fn thumbnail(&mut self, ctx: &egui::Context, item: hetsika_project::ItemId, t: Tick, width: u32) -> Option<(egui::TextureId, egui::Vec2)> {
         let pi = self.session.project.item(item)?;
         let src_w = match &pi.kind {
-            filmcraft_project::ItemKind::Media(m) => m.info.video.as_ref()?.width,
-            filmcraft_project::ItemKind::Sequence(s) => s.settings.width,
+            hetsika_project::ItemKind::Media(m) => m.info.video.as_ref()?.width,
+            hetsika_project::ItemKind::Sequence(s) => s.settings.width,
             _ => return None,
         };
         let rate = pi.frame_rate();
@@ -1262,17 +1262,17 @@ impl FilmcraftApp {
     // ---------------------------------------------------------------- files
 
     /// Destination of imports started from the currently shown Project panel view.
-    pub fn import_bin(&self) -> filmcraft_project::BinId {
+    pub fn import_bin(&self) -> hetsika_project::BinId {
         panels::project::view_of(self, panels::project::shown_inst(self)).bin
     }
 
     pub fn file_dialog(&mut self, id: &str, params: &Value) -> Result<Value, String> {
         match id {
             "file.import" => {
-                let exts: Vec<&str> = filmcraft_media::VIDEO_EXTENSIONS
+                let exts: Vec<&str> = hetsika_media::VIDEO_EXTENSIONS
                     .iter()
-                    .chain(filmcraft_media::AUDIO_EXTENSIONS)
-                    .chain(filmcraft_media::STILL_EXTENSIONS)
+                    .chain(hetsika_media::AUDIO_EXTENSIONS)
+                    .chain(hetsika_media::STILL_EXTENSIONS)
                     .chain(&["srt", "vtt", "scc", "edl", "xml", "fcpxml", "otio", "aaf", "omf"])
                     .copied()
                     .collect();
@@ -1293,7 +1293,7 @@ impl FilmcraftApp {
                 })
             }
             // File ▸ Import with Image Sequence: choose the first numbered still
-            "file.importImageSequence" => self.pick(FileDialog::open_files(filmcraft_media::STILL_EXTENSIONS), |app, paths| {
+            "file.importImageSequence" => self.pick(FileDialog::open_files(hetsika_media::STILL_EXTENSIONS), |app, paths| {
                 let Some(path) = paths.into_iter().next() else { return Ok(Value::Null) };
                 let r = app.session.execute("file.importImageSequence", json!({"path": path})).map_err(|e| e.to_string());
                 if let Err(e) = &r {
@@ -1315,7 +1315,7 @@ impl FilmcraftApp {
                 app.session.execute("file.open", json!({"path": path})).map_err(|e| e.to_string())
             }),
             "graphics.newFromFile" => {
-                let exts: Vec<&str> = filmcraft_media::STILL_EXTENSIONS.iter().chain(filmcraft_media::VIDEO_EXTENSIONS).copied().collect();
+                let exts: Vec<&str> = hetsika_media::STILL_EXTENSIONS.iter().chain(hetsika_media::VIDEO_EXTENSIONS).copied().collect();
                 self.pick(FileDialog::open_files(&exts), |app, paths| {
                     let Some(path) = paths.into_iter().next() else { return Ok(Value::Null) };
                     app.session.execute("graphics.newFromFile", json!({"path": path})).map_err(|e| e.to_string())
@@ -1350,7 +1350,7 @@ impl FilmcraftApp {
     /// File ▸ Export ▸ EDL…, Final Cut Pro XML… etc. from the menus (#382): ask where to save, then
     /// run the command with that `path` and the rest of `params`.
     fn export_save_dialog(&mut self, id: &str, filter: &str, ext: &str, params: &Value) -> Result<Value, String> {
-        filmcraft_engine::find_command(id).map_or(Ok(()), |c| (c.enabled)(&self.session))?;
+        hetsika_engine::find_command(id).map_or(Ok(()), |c| (c.enabled)(&self.session))?;
         if !FileDialog::save_as(filter, &[ext], "").available(&self.hooks) {
             return Err("no save dialog available: run the command with a `path`".into());
         }
@@ -1403,8 +1403,8 @@ impl FilmcraftApp {
                 && let Some(pos) = pointer
                 && self.session.prefs.timeline.drop_import_to_timeline
             {
-                let items: Vec<filmcraft_engine::project::ItemId> =
-                    v["items"].as_array().map(|a| a.iter().filter_map(|i| i.as_u64()).map(filmcraft_engine::project::ItemId).collect()).unwrap_or_default();
+                let items: Vec<hetsika_engine::project::ItemId> =
+                    v["items"].as_array().map(|a| a.iter().filter_map(|i| i.as_u64()).map(hetsika_engine::project::ItemId).collect()).unwrap_or_default();
                 if !items.is_empty() {
                     self.pending_timeline_drop = Some((items, pos));
                 }
@@ -1681,7 +1681,7 @@ impl FilmcraftApp {
     /// Settings ▸ Media ▸ Automatically refresh growing files: every *Refresh growing files every*
     /// seconds, and as soon as the window comes back to the front (after a render in another app),
     /// stamp the project's media files on a worker thread and read the changed ones again
-    /// ([`filmcraft_engine::media_watch`]).
+    /// ([`hetsika_engine::media_watch`]).
     #[cfg(not(target_arch = "wasm32"))]
     fn tick_media_refresh(&mut self, ctx: &egui::Context) {
         if let Some(r) = self.session.poll_media_scan() {
@@ -1701,7 +1701,7 @@ impl FilmcraftApp {
         let focused = ctx.input(|i| i.focused);
         let was_focused: bool = ctx.data(|d| d.get_temp(focus_key)).unwrap_or(focused);
         ctx.data_mut(|d| d.insert_temp(focus_key, focused));
-        if !on || filmcraft_engine::media_watch::media_files(&self.session.project, &self.session.media).is_empty() {
+        if !on || hetsika_engine::media_watch::media_files(&self.session.project, &self.session.media).is_empty() {
             return;
         }
         let last: f64 = ctx.data(|d| d.get_temp(last_key)).unwrap_or(f64::NEG_INFINITY);
@@ -1734,20 +1734,20 @@ impl FilmcraftApp {
         self.tick_media_refresh(&ctx);
         for ev in self.session.drain_events() {
             match ev {
-                filmcraft_engine::Event::OpenSequence(_) => {
+                hetsika_engine::Event::OpenSequence(_) => {
                     // show the sequence with its own view (or fitted, the first time)
                     self.timeline_view_of = None;
                     if !self.ui.floating.iter().any(|group| group.panels.contains(&PanelKind::Timeline)) {
                         self.ui.dock.restore_timeline();
                     }
-                    let _ = self.apply_dock(craft_ui::docking::Action::Activate { panel: PanelKind::Timeline });
+                    let _ = self.apply_dock(mahay_ui::docking::Action::Activate { panel: PanelKind::Timeline });
                 }
-                filmcraft_engine::Event::OpenSource(_) => {
-                    let _ = self.apply_dock(craft_ui::docking::Action::Activate { panel: PanelKind::Source });
+                hetsika_engine::Event::OpenSource(_) => {
+                    let _ = self.apply_dock(mahay_ui::docking::Action::Activate { panel: PanelKind::Source });
                 }
-                filmcraft_engine::Event::RevealInProject(item) => self.reveal_in_project(item),
-                filmcraft_engine::Event::Toast { message, .. } => self.toast = Some((message, ctx.input(|i| i.time))),
-                filmcraft_engine::Event::ProjectChanged { .. } => {}
+                hetsika_engine::Event::RevealInProject(item) => self.reveal_in_project(item),
+                hetsika_engine::Event::Toast { message, .. } => self.toast = Some((message, ctx.input(|i| i.time))),
+                hetsika_engine::Event::ProjectChanged { .. } => {}
             }
         }
         self.sync_timeline_view();
@@ -1821,7 +1821,7 @@ impl FilmcraftApp {
 
     /// The running job (export / render previews), if any; plays the rendered range when a preview
     /// render completes. Runs every frame, with or without the status bar.
-    fn watch_jobs(&mut self, ctx: &egui::Context) -> Option<filmcraft_engine::Job> {
+    fn watch_jobs(&mut self, ctx: &egui::Context) -> Option<hetsika_engine::Job> {
         use std::sync::atomic::Ordering;
         let running = self.session.jobs.iter().rev().find(|j| !j.progress.finished.load(Ordering::Relaxed)).cloned();
         // Play after rendering previews.
@@ -1927,14 +1927,14 @@ impl FilmcraftApp {
     }
 }
 
-impl FilmcraftApp {
-    /// The "FilmCraft hit an error" window after a caught UI panic. Automation ids:
+impl HetsikaApp {
+    /// The "Hetsika hit an error" window after a caught UI panic. Automation ids:
     /// `error.dismiss`, `error.save`.
     fn error_window(&mut self, ctx: &egui::Context) {
         let Some(msg) = self.ui_error.clone() else { return };
         let mut close = false;
-        egui::Window::new(tl!("FilmCraft hit an error"))
-            .id(egui::Id::new("FilmCraft hit an error"))
+        egui::Window::new(tl!("Hetsika hit an error"))
+            .id(egui::Id::new("Hetsika hit an error"))
             .collapsible(false)
             .resizable(false)
             .pivot(egui::Align2::CENTER_CENTER)
@@ -1996,7 +1996,7 @@ fn synthesize_mac_ctrl_click(armed: &mut bool, raw_input: &mut egui::RawInput) {
     }
 }
 
-impl eframe::App for FilmcraftApp {
+impl eframe::App for HetsikaApp {
     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw_input: &mut egui::RawInput) {
         self.native_window_focused = Some(raw_input.focused);
         #[cfg(target_os = "macos")]
@@ -2150,14 +2150,14 @@ fn shuttle_mix_rate(device_rate: u32, speed: f64) -> Option<u32> {
 /// The program mix that playback plays: `mix(device_frame, interleaved, channels)` renders the
 /// active sequence at device rate `sr` from `device_frame`, with the live project snapshot (edits
 /// made while playing are heard), Output Mapping, the 5.1 mixdown and voice-over cues.
-pub fn playback_mix(session: &Session, seq_id: filmcraft_project::ItemId, sr: u32) -> impl FnMut(i64, &mut [f32], usize) + Send + 'static {
+pub fn playback_mix(session: &Session, seq_id: hetsika_project::ItemId, sr: u32) -> impl FnMut(i64, &mut [f32], usize) + Send + 'static {
     let project = session.project.clone();
     let provider = session.media.provider(project.clone(), session.services.clone());
     let previews = session.previews.clone();
     // Settings ▸ Audio Hardware ▸ Output Mapping
     let map = [session.prefs.audio_hardware.map_left, session.prefs.audio_hardware.map_right];
     // Preferences ▸ Audio ▸ 5.1 Mixdown Type: how a 5.1 Mix plays on a stereo device
-    let mixdown = filmcraft_audio_dsp::channels::Mixdown::from_id(&session.prefs.audio.mixdown_type).unwrap_or_default();
+    let mixdown = hetsika_audio_dsp::channels::Mixdown::from_id(&session.prefs.audio.mixdown_type).unwrap_or_default();
     let cues = panels::voiceover::cues(session, sr);
     previews.live.publish_project(project.clone());
     let mut resampler = None;
@@ -2171,8 +2171,8 @@ pub fn playback_mix(session: &Session, seq_id: filmcraft_project::ItemId, sr: u3
         let n = buf.len() / ch.max(1);
         let seq_sr = seq.settings.sample_rate;
         // a 5.1 Mix plays as six channels (L, R, C, LFE, Ls, Rs) on a device with at least six
-        use filmcraft_audio_dsp::channels::Layout;
-        let layout = if ch >= 6 && seq.settings.audio_master == filmcraft_project::AudioChannels::Surround51 { Layout::Surround51 } else { Layout::Stereo };
+        use hetsika_audio_dsp::channels::Layout;
+        let layout = if ch >= 6 && seq.settings.audio_master == hetsika_project::AudioChannels::Surround51 { Layout::Surround51 } else { Layout::Stereo };
         let mix = if seq_sr == sr {
             previews.mix_layout(&project, seq_id, cursor, n, &provider, layout, mixdown)
         } else {
@@ -2180,14 +2180,14 @@ pub fn playback_mix(session: &Session, seq_id: filmcraft_project::ItemId, sr: u3
             // (started afresh when the rate or the channel layout changes while playing).
             let key = (seq_sr, layout);
             if resampler.as_ref().is_none_or(|(k, _)| *k != key) {
-                resampler = Some((key, filmcraft_audio_dsp::resample::StreamResampler::new(seq_sr, sr)));
+                resampler = Some((key, hetsika_audio_dsp::resample::StreamResampler::new(seq_sr, sr)));
             }
             let Some((_, r)) = resampler.as_mut() else {
                 buf.fill(0.0);
                 return;
             };
             let channels = r.process(cursor, n, |s0, m| previews.mix_layout(&project, seq_id, s0, m, &provider, layout, mixdown).channels);
-            filmcraft_frame::AudioBuffer { sample_rate: sr, channels }
+            hetsika_frame::AudioBuffer { sample_rate: sr, channels }
         };
         if layout == Layout::Surround51 {
             buf.fill(0.0);
@@ -2197,7 +2197,7 @@ pub fn playback_mix(session: &Session, seq_id: filmcraft_project::ItemId, sr: u3
                 }
             }
         } else {
-            filmcraft_engine::settings::map_output(&mix.channels[0], &mix.channels[1.min(mix.channels.len() - 1)], buf, ch, map);
+            hetsika_engine::settings::map_output(&mix.channels[0], &mix.channels[1.min(mix.channels.len() - 1)], buf, ch, map);
         }
         panels::voiceover::mix_cues(buf, ch, cursor, &cues);
     }
@@ -2368,7 +2368,7 @@ mod mac_ctrl_click_tests {
 
 #[cfg(test)]
 mod gpu_fallback_tests {
-    use filmcraft_render::plan::{FramePlan, PlanLayer};
+    use hetsika_render::plan::{FramePlan, PlanLayer};
 
     /// Software rasterizers must not be treated as a GPU compositor: the preview crawled while
     /// "GPU" usage read 0 % because wgpu had silently fallen back to llvmpipe.
@@ -2386,12 +2386,12 @@ mod gpu_fallback_tests {
 
     #[test]
     fn plan_side_covers_output_and_every_layer() {
-        let frame = |w: u32, h: u32| std::sync::Arc::new(filmcraft_frame::VideoFrame::rgba_f32(w, h, vec![0.0; (w * h * 4) as usize]));
+        let frame = |w: u32, h: u32| std::sync::Arc::new(hetsika_frame::VideoFrame::rgba_f32(w, h, vec![0.0; (w * h * 4) as usize]));
         let layer = |w, h| PlanLayer {
             frame: frame(w, h),
-            matrix: filmcraft_geom::Affine::IDENTITY,
+            matrix: hetsika_geom::Affine::IDENTITY,
             opacity: 1.0,
-            blend: filmcraft_render::Blend::Normal,
+            blend: hetsika_render::Blend::Normal,
             fx: None,
             input: None,
         };
@@ -2400,7 +2400,7 @@ mod gpu_fallback_tests {
         assert_eq!(super::plan_side(&p), 3840);
         let p = FramePlan::Layers { width: 1920, height: 1080, layers: vec![] };
         assert_eq!(super::plan_side(&p), 1920);
-        let p = FramePlan::Image(filmcraft_render::Image::new(800, 4000));
+        let p = FramePlan::Image(hetsika_render::Image::new(800, 4000));
         assert_eq!(super::plan_side(&p), 4000);
     }
 }
@@ -2426,7 +2426,7 @@ mod audio_recovery_tests {
         fn channels(&self) -> usize {
             2
         }
-        fn configure(&mut self, hardware: &filmcraft_engine::settings::AudioHardwarePrefs, _: Option<u32>) {
+        fn configure(&mut self, hardware: &hetsika_engine::settings::AudioHardwarePrefs, _: Option<u32>) {
             self.ready = hardware.default_output == "available";
         }
         fn start(&mut self, _: Box<dyn FnMut(&mut [f32], usize) + Send>) -> Result<u32, String> {
@@ -2450,7 +2450,7 @@ mod audio_recovery_tests {
 
         let mut session = Session::default();
         session.execute("file.newSequence", json!({"width":16,"height":16})).unwrap();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         let starts = Arc::new(AtomicUsize::new(0));
         app.audio = Some(Box::new(Device { ready: true, starts: starts.clone(), reading: Some(0) }));
         app.play(2.0);
@@ -2494,10 +2494,10 @@ mod audio_recovery_tests {
         session.execute("file.newSequence", json!({"width":16,"height":16})).unwrap();
         let inter: Vec<f32> =
             (0..48_000 * 8).flat_map(|i| [440.0, 660.0].map(|hz| (0.2 * (std::f64::consts::TAU * hz * i as f64 / 48_000.0).sin()) as f32)).collect();
-        let bytes: Arc<[u8]> = filmcraft_engine::previews::write_wav_f32(&inter, 48_000).into();
-        let item = filmcraft_engine::commands::import_bytes(&mut session, "/shuttle-tone.wav", bytes, None).unwrap();
+        let bytes: Arc<[u8]> = hetsika_engine::previews::write_wav_f32(&inter, 48_000).into();
+        let item = hetsika_engine::commands::import_bytes(&mut session, "/shuttle-tone.wav", bytes, None).unwrap();
         session.execute("timeline.place", json!({"item":item.0,"audioTrack":"A1","seconds":0.0})).unwrap();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         let samples = Arc::new(Mutex::new(Vec::new()));
         app.audio = Some(Box::new(Capture(samples.clone())));
         let mut normal = None;
@@ -2539,7 +2539,7 @@ mod audio_recovery_tests {
         let mut session = Session::default();
         session.execute("file.newSequence", json!({"width":16,"height":16})).unwrap();
         let ctx = egui::Context::default();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         let starts = Arc::new(AtomicUsize::new(0));
         app.audio = Some(Box::new(Device { ready: true, starts: starts.clone(), reading: Some(0) }));
         app.session.prefs.audio_hardware.default_output = "available".into();
@@ -2574,7 +2574,7 @@ mod audio_recovery_tests {
         let mut session = Session::default();
         session.execute("file.newSequence", json!({"width":16,"height":16})).unwrap();
         let ctx = egui::Context::default();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         let starts = Arc::new(AtomicUsize::new(0));
         app.audio = Some(Box::new(Device { ready: false, starts: starts.clone(), reading: Some(0) }));
         app.apply_prefs(&ctx);
@@ -2595,7 +2595,7 @@ mod audio_recovery_tests {
         let mut session = Session::default();
         session.execute("file.openDemoProject", json!({})).unwrap();
         let ctx = egui::Context::default();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         app.audio = Some(Box::new(Device { ready: true, starts: Arc::new(AtomicUsize::new(0)), reading: None }));
         let displayed = app.session.sequence_rate().tick_of(48);
         app.session.set_playhead(displayed);
@@ -2638,7 +2638,7 @@ mod audio_recovery_tests {
         let mut session = Session::default();
         session.execute("file.openDemoProject", json!({})).unwrap();
         let ctx = egui::Context::default();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         app.audio = Some(Box::new(Restartable { reading: None }));
         app.playback.playing = true;
         app.playback.audio_clock = true;
@@ -2724,7 +2724,7 @@ mod voiceover_playback_tests {
         session.execute("audio.voiceover.settings", json!({"prerollSeconds": 0.0})).unwrap();
         session.prefs.timeline.return_to_beginning = true;
         let ctx = egui::Context::default();
-        let mut app = FilmcraftApp::new(session);
+        let mut app = HetsikaApp::new(session);
         app.audio = None;
         let dur = app.session.active_sequence().map(|q| q.duration()).unwrap();
         let from = app.session.sequence_rate().snap(dur + Tick::from_seconds_f64(60.0));
@@ -2788,7 +2788,7 @@ mod native_menu_tests {
     #[test]
     fn native_menu_follows_undo_and_redo_availability() {
         let sent: Rc<RefCell<Vec<Vec<menus::MenuItem>>>> = Rc::default();
-        let mut app = FilmcraftApp::new(Session::default());
+        let mut app = HetsikaApp::new(Session::default());
         let sink = sent.clone();
         app.hooks.menu_changed = Some(Box::new(move |items: &[menus::MenuItem]| sink.borrow_mut().push(items.to_vec())));
 

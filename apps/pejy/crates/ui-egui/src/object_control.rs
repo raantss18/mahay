@@ -1,6 +1,6 @@
 //! The object Control panel: fixed, compact two-row groups, independent of widget layout growth.
 
-use designcraft_geom::{Unit, corners::CornerShape};
+use pejy_geom::{Unit, corners::CornerShape};
 use egui::{Color32, Rect, Sense, Ui, vec2};
 use serde_json::{Value, json};
 
@@ -260,7 +260,7 @@ pub(crate) fn show(app: &mut DesignApp, ui: &mut Ui) {
             .active()
             .and_then(|st| st.selection.items.first().and_then(|id| st.doc.item(*id)))
             .and_then(|it| it.graphic())
-            .is_some_and(|g| g.auto_fit != designcraft_doc::Fitting::None);
+            .is_some_and(|g| g.auto_fit != pejy_doc::Fitting::None);
         if cell(ui, rect, 0.0, 1, 116.0, graphic, |ui| widgets::checkbox(ui, &mut auto, crate::i18n::tr(&app.ui.language, "Auto-Fit"))).changed() {
             let _ = app.run("object.fittingOptions", json!({"autoFit": auto}));
         }
@@ -322,7 +322,7 @@ mod tests {
     }
 
     fn fixture(selected: bool) -> (egui::Context, DesignApp) {
-        let mut app = DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        let mut app = DesignApp::new(pejy_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({})).unwrap();
         app.run("window.workspace", json!({"name": "Advanced"})).unwrap();
         assert!(app.ui.control_bar);

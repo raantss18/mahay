@@ -1,8 +1,8 @@
 //! Frame and shape tools (Rectangle/Ellipse/Polygon Frame, Rectangle/Ellipse/Polygon, Line).
 //! Drag to draw (Shift = square/45°, Alt = from centre); click opens the size dialog.
 
-use designcraft_doc::SpreadRef;
-use designcraft_geom::{Point, Rect};
+use pejy_doc::SpreadRef;
+use pejy_geom::{Point, Rect};
 use serde_json::json;
 
 use crate::{Action, Cursor, Gesture, Mods, Overlay, PointerEvent, PointerKind, Snap, SnapRequest, Tool, ToolContext, rect_json, spread_json};
@@ -394,7 +394,7 @@ impl Tool for FrameTool {
                     let mut b = cx.layout.to_spread(sr, ev.pos);
                     if ev.mods.shift {
                         let v = b - sa;
-                        b = sa + designcraft_geom::constrain_angle(v, 45.0);
+                        b = sa + pejy_geom::constrain_angle(v, 45.0);
                     }
                     if cx.snap.any() {
                         b = if ev.mods.shift {

@@ -33,7 +33,7 @@ struct Cache {
     /// Assets that failed to decode (don't retry every frame).
     /// Value: (insertion stamp, the encoded bytes keeping the address reserved).
     bad: HashMap<(usize, u32), (u64, Arc<Vec<u8>>)>,
-    /// The colour settings the pixels were converted with ([`designcraft_color::cms::generation`]).
+    /// The colour settings the pixels were converted with ([`pejy_color::cms::generation`]).
     colour: u64,
 }
 
@@ -59,7 +59,7 @@ fn with<R>(f: impl FnOnce(&mut Cache) -> R) -> R {
     let mut g = CACHE.lock().unwrap_or_else(|e| e.into_inner());
     let c = g.get_or_insert_with(Cache::default);
     // Decoding converts CMYK through the working space: new colour settings, new pixels.
-    let colour = designcraft_color::cms::generation();
+    let colour = pejy_color::cms::generation();
     if c.colour != colour {
         *c = Cache { clock: c.clock, colour, ..Cache::default() };
     }

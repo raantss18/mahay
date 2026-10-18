@@ -1,7 +1,7 @@
 //! CPU rasteriser: draws a display list with tiny-skia (PNG export, plot preview, tests).
 
-use cadcraft_color::Rgb;
-use cadcraft_geom::{Bounds2, Vec2};
+use drafitra_color::Rgb;
+use drafitra_geom::{Bounds2, Vec2};
 use tiny_skia::{FillRule, LineCap, LineJoin, Paint, PathBuilder, Pixmap, Stroke, Transform};
 
 use crate::{DisplayList, Kind};

@@ -1,8 +1,8 @@
 //! Text embedded in complex linetypes is drawn along the line (issue #312).
 
-use cadcraft_doc::{Common, DashElement, Drawing, EntityKind, Line, Linetype, Space, library};
-use cadcraft_geom::{Bounds2, Vec2, Vec3};
-use cadcraft_render::{Kind, Options, build};
+use drafitra_doc::{Common, DashElement, Drawing, EntityKind, Line, Linetype, Space, library};
+use drafitra_geom::{Bounds2, Vec2, Vec3};
+use drafitra_render::{Kind, Options, build};
 
 fn drawing(lt: Linetype, a: Vec2, b: Vec2) -> Drawing {
     let mut d = Drawing::new_imperial();

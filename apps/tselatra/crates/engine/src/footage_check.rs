@@ -12,7 +12,7 @@
 //! starts it after every open ([`Session::check_footage_on_open`]); agents and the CLI run it
 //! with `wait: true`.
 
-use effectcraft_project::{Footage, FootageKind, ItemId, ItemKind};
+use tselatra_project::{Footage, FootageKind, ItemId, ItemKind};
 use serde_json::{Value, json};
 
 use crate::Session;

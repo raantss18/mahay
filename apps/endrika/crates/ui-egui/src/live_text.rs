@@ -6,7 +6,7 @@
 //! idle session asks for no frames.
 
 use egui::{Align2, Shape, Stroke, vec2};
-use figcraft_engine::live::editing_hint;
+use endrika_engine::live::editing_hint;
 
 use crate::FigApp;
 use crate::canvas::TextOnScreen;

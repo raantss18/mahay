@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use super::*;
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 fn text(s: &mut Session, x: f64, y: f64, t: &str) -> u64 {

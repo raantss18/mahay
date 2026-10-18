@@ -9,10 +9,10 @@ fn demo() -> Session {
 #[test]
 fn nested_catalog_operations_invalidate_sources_after_success_and_on_undo_redo() {
     use crate::media::SourceLevel;
-    use lightcraft_catalog::{Op, PhotoId};
+    use hazavana_catalog::{Op, PhotoId};
     let mut s = demo();
     let id = s.active().unwrap();
-    let image = std::sync::Arc::new(lightcraft_raster::Rgb32f::new(1, 1));
+    let image = std::sync::Arc::new(hazavana_raster::Rgb32f::new(1, 1));
     let cache = |s: &mut Session| {
         for level in [SourceLevel::Thumb, SourceLevel::Preview, SourceLevel::Full] {
             s.media.insert(id, level, image.clone());
@@ -39,14 +39,14 @@ fn nested_catalog_operations_invalidate_sources_after_success_and_on_undo_redo()
     assert!(!s.media.has_source(id, SourceLevel::Full));
 }
 
-fn active_dev(s: &Session) -> lightcraft_develop::DevelopSettings {
+fn active_dev(s: &Session) -> hazavana_develop::DevelopSettings {
     (*s.develop_of(s.active().unwrap()).unwrap()).clone()
 }
 
 #[test]
 fn changing_one_wb_control_resolves_as_shot_without_stale_tint() {
-    use lightcraft_catalog::{Photo, PhotoId, Source};
-    use lightcraft_develop::{DevelopSettings, WbMode};
+    use hazavana_catalog::{Photo, PhotoId, Source};
+    use hazavana_develop::{DevelopSettings, WbMode};
     for format in ["ARW", "NEF", "NRW", "RAF", "CR2", "PEF", "ORF"] {
         let mut s = demo();
         let id = PhotoId(100);
@@ -55,7 +55,7 @@ fn changing_one_wb_control_resolves_as_shot_without_stale_tint() {
         // A catalog made by the old generic-matrix Kelvin inference.
         p.as_shot_wb = Some((6829.0, -127.0));
         p.develop = std::sync::Arc::new(DevelopSettings::for_raw(6829.0, -127.0));
-        s.catalog.apply(lightcraft_catalog::Op::AddPhoto { photo: Box::new(p) }).unwrap();
+        s.catalog.apply(hazavana_catalog::Op::AddPhoto { photo: Box::new(p) }).unwrap();
         s.execute("library.select", &json!({"ids": [100], "active": 100})).unwrap();
         s.execute("develop.set", &json!({"control": "wb.temp", "value": 8000})).unwrap();
         let d = active_dev(&s);
@@ -75,8 +75,8 @@ fn changing_one_wb_control_resolves_as_shot_without_stale_tint() {
 /// keeps none.
 #[test]
 fn reset_edits_restores_a_raws_import_defaults() {
-    use lightcraft_catalog::{Photo, PhotoId, Source};
-    use lightcraft_develop::DevelopSettings;
+    use hazavana_catalog::{Photo, PhotoId, Source};
+    use hazavana_develop::DevelopSettings;
     let mut s = demo();
     for (id, format, raw) in [(200u64, "NEF", true), (201, "JPG", false)] {
         let name = format!("p{id}.{format}");
@@ -85,7 +85,7 @@ fn reset_edits_restores_a_raws_import_defaults() {
             p.as_shot_wb = Some((5200.0, 4.0));
             p.develop = std::sync::Arc::new(DevelopSettings::for_raw(5200.0, 4.0));
         }
-        s.catalog.apply(lightcraft_catalog::Op::AddPhoto { photo: Box::new(p) }).unwrap();
+        s.catalog.apply(hazavana_catalog::Op::AddPhoto { photo: Box::new(p) }).unwrap();
     }
     for (id, want) in [(200, (40.0, 25.0)), (201, (0.0, 0.0))] {
         s.execute("library.select", &json!({"ids": [id], "active": id})).unwrap();
@@ -116,9 +116,9 @@ fn rating_flag_undo_redo() {
     s.execute("photo.flag", &json!({"flag": "reject"})).unwrap();
     assert_eq!(s.catalog.photo(id).unwrap().rating, 5);
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_ne!(s.catalog.photo(id).unwrap().flag, lightcraft_catalog::Flag::Reject);
+    assert_ne!(s.catalog.photo(id).unwrap().flag, hazavana_catalog::Flag::Reject);
     s.execute("edit.redo", &json!({})).unwrap();
-    assert_eq!(s.catalog.photo(id).unwrap().flag, lightcraft_catalog::Flag::Reject);
+    assert_eq!(s.catalog.photo(id).unwrap().flag, hazavana_catalog::Flag::Reject);
     assert!(s.execute("photo.rate", &json!({"rating": 7})).is_err());
 }
 
@@ -155,7 +155,7 @@ fn copy_paste_sync_presets() {
     s.execute("develop.paste", &json!({})).unwrap();
     assert_eq!(s.develop_of(vis[2]).unwrap().effects.clarity, 30.0);
     s.execute("preset.apply", &json!({"id": "lc.bw-high-contrast", "amount": 100})).unwrap();
-    assert_eq!(s.develop_of(vis[1]).unwrap().treatment, lightcraft_develop::Treatment::Bw);
+    assert_eq!(s.develop_of(vis[1]).unwrap().treatment, hazavana_develop::Treatment::Bw);
     let r = s.execute("preset.create", &json!({"name": "Mine", "groups": ["light", "effects"]})).unwrap();
     assert!(r["id"].as_str().unwrap().starts_with("user."));
     assert!(s.execute("preset.delete", &json!({"id": "lc.moody"})).is_err());
@@ -172,10 +172,10 @@ fn albums_crud() {
     s.execute("library.source", &json!({"kind": "all"})).unwrap();
     s.execute("library.selectAll", &json!({})).unwrap();
     s.execute("album.addPhotos", &json!({"id": a})).unwrap();
-    assert_eq!(s.catalog.album(lightcraft_catalog::AlbumId(a)).unwrap().photos.len(), 24);
+    assert_eq!(s.catalog.album(hazavana_catalog::AlbumId(a)).unwrap().photos.len(), 24);
     s.execute("album.delete", &json!({"id": f})).unwrap();
-    assert!(s.catalog.album(lightcraft_catalog::AlbumId(a)).is_none());
-    assert!(s.catalog.album(lightcraft_catalog::AlbumId(f)).is_none());
+    assert!(s.catalog.album(hazavana_catalog::AlbumId(a)).is_none());
+    assert!(s.catalog.album(hazavana_catalog::AlbumId(f)).is_none());
     assert_eq!(s.catalog.photos().count(), 24, "album deletion keeps the photos");
 }
 
@@ -199,7 +199,7 @@ fn albums_and_smart_albums_are_created_only_inside_folders() {
     let sub = s.execute("album.create", &json!({"name": "Sub", "folder": true, "parent": folder})).unwrap()["id"].as_u64().unwrap();
     let smart = s.execute("album.createSmart", &json!({"name": "Rated", "parent": sub})).unwrap()["id"].as_u64().unwrap();
     assert_eq!(s.catalog.albums().count(), n + 2);
-    assert_eq!(s.catalog.album(lightcraft_catalog::AlbumId(smart)).unwrap().parent, Some(lightcraft_catalog::AlbumId(sub)));
+    assert_eq!(s.catalog.album(hazavana_catalog::AlbumId(smart)).unwrap().parent, Some(hazavana_catalog::AlbumId(sub)));
 }
 
 #[test]
@@ -318,8 +318,8 @@ fn permanently_deleting_explicit_targets_keeps_the_surviving_selection() {
 /// values when it changed, and a plain dab when there is nothing to connect to.
 #[test]
 fn connected_brush_strokes_start_where_the_last_one_ended() {
-    use lightcraft_develop::MaskShape;
-    use lightcraft_geom::Point;
+    use hazavana_develop::MaskShape;
+    use hazavana_geom::Point;
     let mut s = demo();
     let id = s.active().unwrap();
     let r = s.execute("mask.brushStroke", &json!({"points": [[0.2, 0.5]], "size": 0.02, "connect": true})).unwrap();
@@ -356,13 +356,13 @@ fn brush_strokes_keep_pen_pressure_and_refuse_bad_lists() {
     let mut s = demo();
     s.execute("mask.add", &json!({"kind": "brush"})).unwrap();
     s.execute("mask.brushStroke", &json!({"points": [[0.2, 0.2], [0.3, 0.3]], "pressure": [0.25, 7.0]})).unwrap();
-    let lightcraft_develop::MaskShape::Brush { strokes } = &active_dev(&s).masks[0].components[0].shape else { panic!("a brush") };
+    let hazavana_develop::MaskShape::Brush { strokes } = &active_dev(&s).masks[0].components[0].shape else { panic!("a brush") };
     assert_eq!(strokes[0].pressure, vec![0.25, 1.0], "kept, clamped to 0..1");
     for bad in [json!([0.5, 0.5, 0.5]), json!("hard"), json!([0.5, "x"])] {
         assert!(s.execute("mask.brushStroke", &json!({"points": [[0.2, 0.2], [0.3, 0.3]], "pressure": bad})).is_err(), "{bad}");
     }
     s.execute("mask.brushStroke", &json!({"points": [[0.4, 0.4]]})).unwrap();
-    let lightcraft_develop::MaskShape::Brush { strokes } = &active_dev(&s).masks[0].components[0].shape else { panic!("a brush") };
+    let hazavana_develop::MaskShape::Brush { strokes } = &active_dev(&s).masks[0].components[0].shape else { panic!("a brush") };
     assert!(strokes[1].pressure.is_empty(), "a mouse stroke has no pressure data");
     let json = serde_json::to_string(&strokes[1]).unwrap();
     assert!(!json.contains("pressure"), "and stores none: {json}");
@@ -372,7 +372,7 @@ fn brush_strokes_keep_pen_pressure_and_refuse_bad_lists() {
 /// tapered line; with no pressure on either side there is none.
 #[test]
 fn connected_brush_strokes_carry_pen_pressure() {
-    use lightcraft_develop::MaskShape;
+    use hazavana_develop::MaskShape;
     let mut s = demo();
     let id = s.active().unwrap();
     let strokes = |s: &Session| {
@@ -438,8 +438,8 @@ fn op_log_replay_reproduces_catalog() {
     s.execute("develop.set", &json!({"control": "effects.dehaze", "value": 40})).unwrap();
     s.execute("album.create", &json!({"name": "X"})).unwrap();
     s.execute("edit.undo", &json!({})).unwrap();
-    let log: String = s.drain_log().iter().map(lightcraft_catalog::Catalog::op_to_log_line).collect();
-    let mut c = lightcraft_catalog::Catalog::from_snapshot(&snap).unwrap();
+    let log: String = s.drain_log().iter().map(hazavana_catalog::Catalog::op_to_log_line).collect();
+    let mut c = hazavana_catalog::Catalog::from_snapshot(&snap).unwrap();
     c.replay(&log).unwrap();
     assert_eq!(c.to_snapshot(), s.catalog.to_snapshot());
 }
@@ -463,7 +463,7 @@ fn upright_and_guides_commands() {
     let r = s.execute("geometry.upright", &json!({"mode": "level"})).unwrap();
     assert_eq!(r["mode"], "level");
     let d = active_dev(&s);
-    assert_eq!(d.geometry.upright, lightcraft_develop::Upright::Level);
+    assert_eq!(d.geometry.upright, hazavana_develop::Upright::Level);
     assert!(d.geometry.upright_transform.is_some(), "analysis result is stored");
     s.execute("geometry.upright", &json!({"mode": "off"})).unwrap();
     assert!(active_dev(&s).geometry.upright_transform.is_none());
@@ -472,7 +472,7 @@ fn upright_and_guides_commands() {
         s.execute("geometry.guides", &json!({"guides": [[x, 0.2, x + 0.02, 0.8]], "add": true})).unwrap();
     }
     let d = active_dev(&s);
-    assert_eq!(d.geometry.upright, lightcraft_develop::Upright::Guided);
+    assert_eq!(d.geometry.upright, hazavana_develop::Upright::Guided);
     assert_eq!(d.geometry.guides.len(), 4, "at most four guides");
     assert!((d.geometry.guides[0].0.x - 0.25).abs() < 1e-9, "oldest dropped");
     let id = s.active().unwrap();
@@ -510,7 +510,7 @@ fn paste_selected_settings_pastes_only_chosen_copied_groups() {
     // `detail` was not copied: asking for it pastes nothing for it
     s.execute("develop.paste", &json!({"ids": [ids[1].0], "groups": ["light", "detail"]})).unwrap();
     let d = s.develop_of(ids[1]).unwrap();
-    let base = lightcraft_develop::DevelopSettings::default();
+    let base = hazavana_develop::DevelopSettings::default();
     assert_eq!(d.light.exposure, 1.0);
     assert_eq!(d.color.vibrance, base.color.vibrance);
     assert_ne!(d.detail.sharpen_amount, 90.0);
@@ -686,7 +686,7 @@ fn presets_versions_history_and_select_by() {
     assert!(s.catalog.photo(s.active().unwrap()).unwrap().history.len() > 1, "undoable");
     // select by: the demo has rated and picked photos
     let vis = s.visible_cloned();
-    let picks = vis.iter().filter(|id| s.catalog.photo(**id).unwrap().flag == lightcraft_catalog::Flag::Pick).count();
+    let picks = vis.iter().filter(|id| s.catalog.photo(**id).unwrap().flag == hazavana_catalog::Flag::Pick).count();
     let r = s.execute("library.selectBy", &json!({"flag": "pick"})).unwrap();
     assert_eq!(r["selected"].as_u64(), Some(picks as u64));
     assert!(picks > 0);
@@ -870,17 +870,17 @@ fn auto_bw_mix_separates_colours() {
     let mut s = demo();
     s.execute("develop.autoBwMix", &json!({})).unwrap();
     let d = active_dev(&s);
-    assert_eq!(d.treatment, lightcraft_develop::Treatment::Bw);
+    assert_eq!(d.treatment, hazavana_develop::Treatment::Bw);
     let m = d.bw_mix.bands();
     assert!(m.iter().any(|v| *v != 0.0), "some band moved: {m:?}");
     assert!(m.iter().all(|v| v.abs() <= 60.0));
     s.execute("edit.undo", &json!({})).unwrap();
-    assert_ne!(active_dev(&s).treatment, lightcraft_develop::Treatment::Bw, "one undo step");
+    assert_ne!(active_dev(&s).treatment, hazavana_develop::Treatment::Bw, "one undo step");
 }
 
 #[test]
 fn auto_sync_carries_only_the_changed_settings() {
-    use lightcraft_catalog::PhotoId;
+    use hazavana_catalog::PhotoId;
     let mut s = demo();
     let ids: Vec<u64> = s.catalog.photos().take(3).map(|p| p.id.0).collect();
     // the second photo has its own contrast, which must survive
@@ -908,7 +908,7 @@ fn auto_sync_carries_only_the_changed_settings() {
     assert_eq!(ids.iter().map(|id| s.develop_of(PhotoId(*id)).unwrap().light.shadows).collect::<Vec<_>>(), shadows);
     // spot removal belongs to one photo
     let mut d = (*s.develop_of(PhotoId(ids[0])).unwrap()).clone();
-    d.spots.push(lightcraft_develop::Spot::default());
+    d.spots.push(hazavana_develop::Spot::default());
     s.set_develop(PhotoId(ids[0]), d, "Remove").unwrap();
     assert!(s.develop_of(PhotoId(ids[1])).unwrap().spots.is_empty());
     // off: only the active photo
@@ -927,7 +927,7 @@ fn json_delta_keeps_only_changes() {
 
 #[test]
 fn build_previews_fills_the_cache() {
-    use lightcraft_catalog::PhotoId;
+    use hazavana_catalog::PhotoId;
     let mut s = demo();
     let ids: Vec<u64> = s.catalog.photos().take(3).map(|p| p.id.0).collect();
     let cached = |s: &mut Session, id: u64| {
@@ -1003,7 +1003,7 @@ fn activity_cancel_stops_a_preview_build() {
 /// in the mask view) and not a different one; ⇧ adds samples, up to five.
 #[test]
 fn color_range_sampling_selects_the_clicked_colour() {
-    use lightcraft_pipeline::{MaskView, Overlay};
+    use hazavana_pipeline::{MaskView, Overlay};
     let mut s = demo();
     // a flower: magenta petals at the centre, green around them
     let id = s.catalog.photos().find(|p| p.meta.keywords.iter().any(|k| k == "flower")).unwrap().id;
@@ -1020,7 +1020,7 @@ fn color_range_sampling_selects_the_clicked_colour() {
         job.run().rendered.unwrap().image
     };
     let at =
-        |img: &lightcraft_raster::Rgba8, x: f64, y: f64| img.data[(y * img.height as f64) as usize * img.width + (x * img.width as f64) as usize][0];
+        |img: &hazavana_raster::Rgba8, x: f64, y: f64| img.data[(y * img.height as f64) as usize * img.width + (x * img.width as f64) as usize][0];
     let r = s.execute("mask.sampleColor", &json!({"x": 0.5, "y": 0.5})).unwrap();
     assert_eq!(r["samples"].as_array().unwrap().len(), 1);
     let img = mask(&mut s);
@@ -1040,7 +1040,7 @@ fn color_range_sampling_selects_the_clicked_colour() {
 
 #[test]
 fn leaving_an_edited_photo_keeps_an_auto_version() {
-    use lightcraft_catalog::PhotoId;
+    use hazavana_catalog::PhotoId;
     let mut s = demo();
     let ids: Vec<u64> = s.catalog.photos().take(2).map(|p| p.id.0).collect();
     s.execute("library.select", &json!({"ids": [ids[0]]})).unwrap();
@@ -1068,7 +1068,7 @@ fn leaving_an_edited_photo_keeps_an_auto_version() {
 
 #[test]
 fn match_total_exposures() {
-    use lightcraft_catalog::PhotoId;
+    use hazavana_catalog::PhotoId;
     let mut s = demo();
     let ids: Vec<u64> = s.catalog.photos().take(3).map(|p| p.id.0).collect();
     // reference 1/100 f/4 ISO 100, slider +0.5; other 1/50 f/4 ISO 100 (one stop more light)
@@ -1077,7 +1077,7 @@ fn match_total_exposures() {
         m.shutter = sh.to_string();
         m.aperture = Some(*ap);
         m.iso = Some(*iso);
-        s.commit("t", lightcraft_catalog::Op::SetMeta { id: PhotoId(ids[i]), meta: Box::new(m) }).unwrap();
+        s.commit("t", hazavana_catalog::Op::SetMeta { id: PhotoId(ids[i]), meta: Box::new(m) }).unwrap();
     }
     s.execute("library.select", &json!({"ids": ids})).unwrap();
     s.selection.active = Some(PhotoId(ids[0]));
@@ -1104,7 +1104,7 @@ fn find_similar_filters_to_look_alikes() {
 
 #[test]
 fn quick_develop_adds_to_each_photo() {
-    use lightcraft_catalog::PhotoId;
+    use hazavana_catalog::PhotoId;
     let mut s = demo();
     let ids: Vec<u64> = s.catalog.photos().take(2).map(|p| p.id.0).collect();
     s.execute("develop.set", &json!({"control": "light.exposure", "value": 0.5, "ids": [ids[0]]})).unwrap();
@@ -1121,7 +1121,7 @@ fn quick_develop_adds_to_each_photo() {
 
 #[test]
 fn mask_components_invert_duplicate_rename_change_mode_and_delete() {
-    use lightcraft_develop::MaskOp;
+    use hazavana_develop::MaskOp;
     let mut s = demo();
     s.execute("mask.add", &json!({"kind": "radial"})).unwrap();
     s.execute("mask.addComponent", &json!({"op": "subtract", "kind": "linear"})).unwrap();
@@ -1179,7 +1179,7 @@ fn curve_reset_by_channel_and_whole() {
     assert_eq!(active_dev(&s).curve.master.len(), 4);
     // everything (the default)
     s.execute("curve.reset", &json!({})).unwrap();
-    assert_eq!(active_dev(&s).curve, lightcraft_develop::ToneCurve::default());
+    assert_eq!(active_dev(&s).curve, hazavana_develop::ToneCurve::default());
     assert!(s.execute("curve.reset", &json!({"channel": "alpha"})).is_err());
 }
 
@@ -1193,11 +1193,11 @@ fn ai_masks_without_the_model_explain_themselves() {
     assert!(!e.contains("invalid parameters"), "shown as is: {e}");
     assert!(s.develop_of(id).unwrap().masks.is_empty());
     // an empty Object component (as an older document may hold) still takes clicks
-    let shape = lightcraft_develop::MaskShape::Object { hint: vec![], exclude: vec![], seg: None, detail: vec![], edge: 0.0 };
+    let shape = hazavana_develop::MaskShape::Object { hint: vec![], exclude: vec![], seg: None, detail: vec![], edge: 0.0 };
     let mut d = (*s.develop_of(id).unwrap()).clone();
-    d.masks.push(lightcraft_develop::Mask {
+    d.masks.push(hazavana_develop::Mask {
         id: 1,
-        components: vec![lightcraft_develop::MaskComponent { name: None, op: lightcraft_develop::MaskOp::Add, invert: false, shape }],
+        components: vec![hazavana_develop::MaskComponent { name: None, op: hazavana_develop::MaskOp::Add, invert: false, shape }],
         ..Default::default()
     });
     s.set_develop(id, d, "test").unwrap();
@@ -1221,7 +1221,7 @@ fn ai_masks_without_the_model_explain_themselves() {
 /// face rectangle says: corners, oversized and degenerate rectangles never leave the frame or panic.
 #[test]
 fn face_job_crops_a_square_inside_the_photo() {
-    use lightcraft_geom::Rect;
+    use hazavana_geom::Rect;
     let mut s = demo();
     let id = s.active().unwrap();
     let (w, h) = {
@@ -1248,14 +1248,14 @@ fn face_job_crops_a_square_inside_the_photo() {
     // a face around (0.45, 0.375) is centred in its crop (room to spare on every side)
     let r = s.face_job(id, faces[0], 256).unwrap().settings.crop.geometry.rect;
     assert!((((r.x0 + r.x1) / 2.0) - 0.45).abs() < 1e-9 && (((r.y0 + r.y1) / 2.0) - 0.375).abs() < 1e-9, "{r:?}");
-    assert!(s.face_job(lightcraft_catalog::PhotoId(u64::MAX), faces[0], 256).is_none());
+    assert!(s.face_job(hazavana_catalog::PhotoId(u64::MAX), faces[0], 256).is_none());
 }
 
 /// Regions are on the upright photo; after Rotate Right the close-up still frames the face: the box
 /// is carried into the rotated frame the crop lives in, and the crop stays square in rotated pixels.
 #[test]
 fn face_job_follows_rotate_right() {
-    use lightcraft_geom::Rect;
+    use hazavana_geom::Rect;
     let mut s = demo();
     let id = s.active().unwrap();
     let (w, h) = {
@@ -1359,7 +1359,7 @@ fn hdr_edits_render_with_their_hdr_histogram() {
     s.execute("develop.set", &json!({"control": "light.exposure", "value": 1.0})).unwrap();
     let r = s.loupe_job(id, 200, 200, true).unwrap().run().rendered.unwrap();
     let bins = r.histogram.hdr.expect("an HDR edit's histogram");
-    assert_eq!(bins.stops, lightcraft_develop::Hdr::MAX_EV_LIMIT as f32, "a fixed scale");
+    assert_eq!(bins.stops, hazavana_develop::Hdr::MAX_EV_LIMIT as f32, "a fixed scale");
     assert!(r.histogram.above_sdr() > 0.0);
     assert!(r.deep.is_none(), "the preview itself stays the 8-bit SDR rendition");
 }
@@ -1614,13 +1614,13 @@ fn presets_validate_groups_on_create_and_update() {
 /// radii and the bilinear sampler (issue #1519). Such spots render, quickly, as a spot over the whole frame.
 #[test]
 fn oversized_spots_render() {
-    use lightcraft_develop::{Spot, SpotMode};
+    use hazavana_develop::{Spot, SpotMode};
     for size in [10.0, 1e30, f64::MAX, f64::INFINITY, f64::NAN] {
         for mode in [SpotMode::Heal, SpotMode::Remove, SpotMode::Clone] {
             let mut s = demo();
             let id = s.active().unwrap();
             let mut dd = (*s.develop_of(id).unwrap_or_default()).clone();
-            dd.spots.push(Spot { mode, points: vec![lightcraft_geom::Point::new(0.5, 0.5)], size, ..Default::default() });
+            dd.spots.push(Spot { mode, points: vec![hazavana_geom::Point::new(0.5, 0.5)], size, ..Default::default() });
             s.set_develop(id, dd, "Remove").unwrap();
             let t = std::time::Instant::now();
             let r = s.render_now(id, 300, 200).unwrap();
@@ -1633,7 +1633,7 @@ fn oversized_spots_render() {
 /// Rotate turns the crop with the image: a crop of the left half becomes the top half, and turning back restores it.
 #[test]
 fn rotate_carries_the_crop_with_the_image() {
-    use lightcraft_geom::Rect;
+    use hazavana_geom::Rect;
     let mut s = demo();
     let id = s.active().unwrap();
     let mut d = active_dev(&s);
@@ -1656,7 +1656,7 @@ fn rotate_carries_the_crop_with_the_image() {
 /// out still means the selection.
 #[test]
 fn malformed_photo_targets_are_refused_not_widened() {
-    use lightcraft_catalog::PhotoId;
+    use hazavana_catalog::PhotoId;
     let mut s = Session::with_demo();
     let ids: Vec<u64> = s.catalog.photos().take(3).map(|p| p.id.0).collect();
     s.execute("library.select", &json!({"ids": [ids[0], ids[1]]})).unwrap();

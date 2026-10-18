@@ -18,8 +18,8 @@
 //! Curl Noise runs fully here: the fBm potential, its curl (central differences, edges
 //! clamped) and the backwards streamline trace, each a kernel mirroring the CPU's passes.
 
-use effectcraft_effects::{Buf, EffectCtx, PixelPlan};
-use effectcraft_raster::Image;
+use tselatra_effects::{Buf, EffectCtx, PixelPlan};
+use tselatra_raster::Image;
 
 use crate::context::{Enc, GpuImage, Params};
 use crate::effects::GBuf;
@@ -43,7 +43,7 @@ pub(crate) const IDS: &[&str] = &[
 pub(crate) fn apply(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let geo = Buf { img: Image::new(0, 0), offset: b.offset, scale: b.scale };
     match id {
-        "ec.sim.ccparticleworld" | "ec.sim.ccparticlesystems2" => match effectcraft_effects::sprite_plan(id, ctx, &geo) {
+        "ec.sim.ccparticleworld" | "ec.sim.ccparticlesystems2" => match tselatra_effects::sprite_plan(id, ctx, &geo) {
             Some(plan) => sprites(e, b, &plan),
             None => Some(b),
         },
@@ -53,7 +53,7 @@ pub(crate) fn apply(e: &mut Enc, id: &str, ctx: &EffectCtx, b: GBuf) -> Option<G
             // The plan reads the layer's pixels.
             let img = e.download(&b.img)?;
             let cpu = Buf { img, offset: b.offset, scale: b.scale };
-            match effectcraft_effects::pixel_plan(id, ctx, &cpu) {
+            match tselatra_effects::pixel_plan(id, ctx, &cpu) {
                 Some(PixelPlan::Sprites(plan)) => sprites(e, b, &plan),
                 Some(PixelPlan::Pieces(plan)) => piece_pass(e, b, &plan),
                 None => Some(b),
@@ -148,7 +148,7 @@ pub(crate) fn foam(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
     let (w, h) = (b.img.width, b.img.height);
     // The plan fits other layers to the buffer: it needs the buffer's size (not its pixels).
     let geo = Buf { img: Image::new(w, h), offset: b.offset, scale: b.scale };
-    let plan = effectcraft_effects::foam_full_plan(ctx, &geo);
+    let plan = tselatra_effects::foam_full_plan(ctx, &geo);
     let mut fx = sprite_layer(e, &b.img, &plan.sprites)?;
     if let Some((tex, discs)) = &plan.user {
         let t = e.g.upload_image(&tex.buf.img)?;
@@ -182,7 +182,7 @@ pub(crate) fn foam(e: &mut Enc, ctx: &EffectCtx, b: GBuf) -> Option<GBuf> {
 // ---------------------------------------------------------------- Particle Playground
 
 fn playground(e: &mut Enc, ctx: &EffectCtx, b: GBuf, geo: &Buf) -> Option<GBuf> {
-    let plan = effectcraft_effects::playground_plan(ctx, geo);
+    let plan = tselatra_effects::playground_plan(ctx, geo);
     let (w, h) = (b.img.width, b.img.height);
     let mut fx = sprite_layer(e, &b.img, &plan.sprites)?;
     if !plan.blits.is_empty() {

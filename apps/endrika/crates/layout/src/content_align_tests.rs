@@ -3,7 +3,7 @@
 //! between them. Each case's comment is the hand-computed derivation.
 
 use super::*;
-use figcraft_doc::{Document, NodeKind};
+use endrika_doc::{Document, NodeKind};
 
 use ContentAlign::{Auto, SpaceBetween as Between};
 use CrossAlign::{Center, Max, Min};

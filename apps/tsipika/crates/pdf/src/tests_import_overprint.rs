@@ -2,8 +2,8 @@
 //! absent) and `/OPM` (ISO 32000-1 §8.6.7, Table 58) become the fills' and strokes' overprint.
 //! Every file here is written by hand from the specification.
 
-use vectorcraft_doc::{Document, Node, NodeKind};
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf_with};
+use tsipika_doc::{Document, Node, NodeKind};
+use tsipika_testkit::pdf::{PdfPage, first_extra, pdf_with};
 
 use crate::tests_import_fidelity::stream;
 use crate::*;
@@ -126,7 +126,7 @@ fn hidden_optional_content_and_pattern_cells_dont_shift_the_count() {
         )
     };
     let catalog = format!("/OCProperties << /OCGs [{x} 0 R] /D << /OFF [{x} 0 R] >> >>");
-    let bytes = vectorcraft_testkit::pdf::pdf_with_catalog(&[page], &[ocg, &cell], &catalog, None);
+    let bytes = tsipika_testkit::pdf::pdf_with_catalog(&[page], &[ocg, &cell], &catalog, None);
     for layers in [false, true] {
         let r = import_with_report(&bytes, &ImportOptions { layers, ..Default::default() }).unwrap();
         let on: Vec<_> = overprints(&r.document).into_iter().filter(|o| o.0 == Some(true)).collect();

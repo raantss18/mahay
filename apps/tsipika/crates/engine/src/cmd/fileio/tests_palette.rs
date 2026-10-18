@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use super::*;
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    tsipika_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 /// A 40×30 pt document with a red rectangle and a blue ellipse, no strokes.
@@ -67,6 +67,6 @@ fn palette_formats_reach_export_as_and_screens() {
     let r = s.execute("document.exportForScreens", &json!({"formats": [{"format": "gif", "scale": 2}, {"format": "png8"}]})).unwrap();
     let names: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f["name"].as_str().unwrap()).collect();
     assert_eq!(names, ["Artboard-1@2x.gif", "Artboard-1.png"]);
-    let gif = vectorcraft_format::base64_decode(r["files"][0]["dataBase64"].as_str().unwrap()).unwrap();
+    let gif = tsipika_format::base64_decode(r["files"][0]["dataBase64"].as_str().unwrap()).unwrap();
     assert_eq!(image::load_from_memory(&gif).unwrap().width(), 80);
 }

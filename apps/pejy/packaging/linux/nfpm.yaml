@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: designcraft
+name: pejy
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -12,15 +12,15 @@ version_schema: semver
 release: 1
 section: graphics
 priority: optional
-maintainer: ${DESIGNCRAFT_MAINTAINER}
+maintainer: ${PEJY_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/designcraft
+homepage: https://github.com/raantss18/mahay
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native page layout and publishing that works the way InDesign users expect.
   Spreads and parent pages, threaded text frames, paragraph and character styles, swatches,
   text wrap and a Knuth-Plass paragraph composer; IDML import and export.
-  Includes designcraft-cli, a headless renderer and command runner.
+  Includes pejy-cli, a headless renderer and command runner.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
@@ -60,9 +60,9 @@ overrides:
       - libXrandr
       - mesa-vulkan-drivers
       - xdg-desktop-portal
-  # Named ai.storyteller.designcraft, not designcraft: the AUR already has designcraft, designcraft-bin and
-  # designcraft-git, and an AUR helper treats any installed package with an AUR name as its own and
-  # rebuilds it on the next update. ArtCraft Launcher also uses the bundle id to tell this package
+  # Named org.mahay.pejy, not pejy: the AUR already has pejy, pejy-bin and
+  # pejy-git, and an AUR helper treats any installed package with an AUR name as its own and
+  # rebuilds it on the next update. Mahay Trano also uses the bundle id to tell this package
   # (which it updates with `pacman -U`) from an AUR build (which it leaves to the AUR helper).
   # nfpm has no optdepends for Arch, so the recommends above have no equivalent here.
   archlinux:
@@ -73,18 +73,18 @@ overrides:
       - libxkbcommon
       - vulkan-icd-loader
     provides:
-      - designcraft
+      - pejy
     conflicts:
-      - designcraft
-      - designcraft-bin
-      - designcraft-git
+      - pejy
+      - pejy-bin
+      - pejy-git
 
 contents:
-  - src: ${STAGE}/usr/bin/designcraft
-    dst: /usr/bin/designcraft
+  - src: ${STAGE}/usr/bin/pejy
+    dst: /usr/bin/pejy
     file_info: { mode: 0755 }
-  - src: ${STAGE}/usr/bin/designcraft-cli
-    dst: /usr/bin/designcraft-cli
+  - src: ${STAGE}/usr/bin/pejy-cli
+    dst: /usr/bin/pejy-cli
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/

@@ -1,4 +1,4 @@
-//! Lens-correction data a raw file records, kept with where it came from and separately from what LightCraft
+//! Lens-correction data a raw file records, kept with where it came from and separately from what Hazavana
 //! applies.
 //!
 //! A readable table is not a correction. Each component carries a [`SonyLensStatus`]: only
@@ -42,7 +42,7 @@ pub struct SonyLensCorrections {
     pub geometry: SonyLensGeometry,
 }
 
-/// One correction component: the camera's setting, its table, and whether LightCraft applies it.
+/// One correction component: the camera's setting, its table, and whether Hazavana applies it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SonyComponent<T> {
     pub setting: SonyField<SonySetting>,

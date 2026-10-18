@@ -176,7 +176,7 @@ mod tests {
     use super::*;
     use crate::range::dec::RangeDecoder;
 
-    /// Laplace decoder of RFC 6716 §4.3.2.1 (as in FilmCraft's decoder).
+    /// Laplace decoder of RFC 6716 §4.3.2.1 (as in Hetsika's decoder).
     fn laplace_decode(dec: &mut RangeDecoder, mut fs: u32, decay: u32) -> i32 {
         let mut val = 0i32;
         let fm = dec.decode(32768);
