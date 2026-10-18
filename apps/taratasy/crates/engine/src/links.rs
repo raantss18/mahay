@@ -24,7 +24,7 @@ pub struct Link {
 
 /// In the order they are shown. Discord comes first: it is where people get help fastest.
 pub const LINKS: &[Link] = &[
-    Link { command: "help.discord", label: "Join the Mahay Discord", url: DISCORD, icon: "messages-square" },
+    Link { command: "help.discord", label: "Join the Mahay discussions", url: DISCORD, icon: "messages-square" },
     Link { command: "help.app_page", label: "Taratasy web page", url: APP_PAGE, icon: "globe" },
     Link { command: "help.github", label: "Taratasy on GitHub", url: GITHUB, icon: "code-xml" },
     Link { command: "help.website", label: "Mahay website", url: WEBSITE, icon: "external-link" },

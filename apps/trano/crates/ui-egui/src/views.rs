@@ -92,7 +92,7 @@ impl LauncherUi {
                     self.check_now();
                 }
                 ui.add_space(6.0);
-                if widgets::nav_link(ui, tl!("Discord"), tl!("Join the Mahay community on Discord"), h, false).clicked() {
+                if widgets::nav_link(ui, tl!("Discussions"), tl!("Join the Mahay community on GitHub"), h, false).clicked() {
                     ui.ctx().open_url(egui::OpenUrl::new_tab(self.discord_url));
                 }
                 ui.add_space(6.0);
@@ -320,7 +320,7 @@ impl LauncherUi {
             None => tl!("No downloads for this system").into(),
         };
         use trano_core::catalog::{GITHUB_URL, SOCIAL, WEBSITE_URL};
-        let links = [(tl!("Discord"), self.discord_url), (tl!("GitHub"), GITHUB_URL), (tl!("Website"), WEBSITE_URL)];
+        let links = [(tl!("Discussions"), self.discord_url), (tl!("GitHub"), GITHUB_URL), (tl!("Website"), WEBSITE_URL)];
         let (icon, link_gap) = (13.0, 16.0);
         // The links and icons on the right keep their size; the status on the left gets what is
         // left and is cut short with "…", never drawn under them. A narrow window drops the

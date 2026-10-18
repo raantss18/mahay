@@ -158,7 +158,7 @@ fn stdout_line(line: std::fmt::Arguments<'_>) -> Result<(), CliError> {
 
 fn version() -> Result<(), CliError> {
     stdout_line(format_args!("taratasy-cli {}", taratasy_engine::build_info::version()))?;
-    stdout_line(format_args!("Discord: {}  (help and feedback)", taratasy_engine::links::DISCORD))?;
+    stdout_line(format_args!("Discussions: {}  (help and feedback)", taratasy_engine::links::DISCORD))?;
     stdout_line(format_args!("Web:     {}", taratasy_engine::links::APP_PAGE))?;
     stdout_line(format_args!("Source:  {}", taratasy_engine::links::GITHUB))?;
     Ok(())

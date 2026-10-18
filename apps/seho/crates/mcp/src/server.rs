@@ -138,7 +138,7 @@ impl Server {
                     "capabilities": {"tools": {}, "resources": {}},
                     "serverInfo": {"name": "seho", "title": "Seho", "version": env!("CARGO_PKG_VERSION"), "websiteUrl": seho_engine::links::APP_PAGE},
                     "instructions": format!(
-                        "{INSTRUCTIONS} Backend: {}. Community: {} (Discord), {} (app page), {} (source). The `app.links` command returns these links.",
+                        "{INSTRUCTIONS} Backend: {}. Community: {} (discussions), {} (app page), {} (source). The `app.links` command returns these links.",
                         self.backend.describe(),
                         seho_engine::links::DISCORD,
                         seho_engine::links::APP_PAGE,

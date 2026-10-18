@@ -40,7 +40,7 @@ pub fn show(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                         widgets::mahay_mark(ui, 28.0);
                         ui.vertical(|ui| {
                             ui.label(egui::RichText::new(tl!("Join the Mahay community")).font(theme::semibold(15.0)));
-                            ui.label(egui::RichText::new(tl!("Get help, share feedback and follow development on Discord.")).color(t.text_muted));
+                            ui.label(egui::RichText::new(tl!("Get help, share feedback and follow development on GitHub.")).color(t.text_muted));
                         });
                     });
                     ui.add_space(8.0);

@@ -106,3 +106,51 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   `MAHAY_KEYSTORE_B64`, `MAHAY_KEYSTORE_PASSWORD`, `MAHAY_KEY_ALIAS` and
   `MAHAY_KEY_PASSWORD` secrets. Without those secrets, CI builds debug-signed APKs.
 - **Why:** the user chose signed APKs. Secrets never go into git.
+
+## D9 — GameActivity, not NativeActivity
+
+- **Decision:** the Java shell extends `com.google.androidgamesdk.GameActivity`
+  (androidx.games 4.4.0, the version android-activity 0.6 requires).
+- **Alternatives:** NativeActivity (smaller, no AndroidX).
+- **Why:** eframe's accessibility (accesskit, TalkBack) only builds with GameActivity, and
+  NativeActivity has no input method: no accents, no suggestions, no non-Latin keyboards. For a
+  word processor and a spreadsheet that isn't optional. Cost: about 1–2 MB of AndroidX per APK.
+- **Gap found:** winit 0.30 drops GameActivity's text events. `EguiBridge` reads the
+  GameTextInput buffer and diffs it into egui events (D-level detail in PORTING_AUDIT #3).
+
+## D10 — Documents on Android: local copy + write-back
+
+- **Decision:** a picked document (`ACTION_OPEN_DOCUMENT`, persistable read/write grant) is
+  copied into the app's private storage; the app edits that path with its normal desktop code;
+  every save is copied back to the original URI. Save As writes locally first, then asks where
+  to put it (`ACTION_CREATE_DOCUMENT`) and keeps that URI for later saves.
+- **Alternatives:** read/write through file descriptors from `ContentResolver` inside every
+  app's I/O code (invasive in five large codebases); a private library folder only (users
+  couldn't reach their files).
+- **Why:** zero change to the apps' file code, works with any provider (local storage, Drive,
+  USB), and a crash never leaves a half-written original (the copy-back happens after a
+  complete save).
+
+## D11 — No upstream services
+
+- **Decision:** nothing calls upstream's servers. Trano's release feed
+  (`api.storyteller.ai`) is disabled; it reads the GitHub releases of `raantss18/mahay`.
+  Upstream social accounts and Discord links point to the repo and its Discussions instead.
+- **Why:** the prompt forbids depending on upstream's backend, and links to accounts that
+  aren't the project's would mislead users.
+
+## D12 — Brand artwork is Mahay's own and openly licensed
+
+- **Decision:** a new icon family (`docs/BRAND.md`) replaces every upstream icon, logo and
+  screenshot. The marks are MIT OR Apache-2.0.
+- **Alternatives:** keep a trademark-only license for the marks (as upstream did).
+- **Why:** upstream's marks are trademarks Mahay can't use. A permissive license is simpler for
+  a community project; misuse is covered by the "don't imply endorsement" note.
+
+## D13 — Lightness measures
+
+- **Decision:** `android` Cargo profile (fat LTO, one codegen unit, stripped), compressed
+  `.so` in APKs, R8 for the Java side, one APK per app and ABI, Android adaptive icons as
+  vector drawables (no PNG mipmaps), and no WebView.
+- **Measured:** Tabilao x86_64 APK 11.5 MB. Taratasy 25.7 MB (it carries OCR, a JavaScript
+  engine for PDF forms and signature crypto); trimming it is tracked in STATUS.

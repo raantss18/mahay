@@ -734,7 +734,7 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome) 
         });
     }
     ui.add_space(30.0);
-    ui.hyperlink_to("Join the Mahay community on Discord", seho_engine::links::DISCORD);
+    ui.hyperlink_to("Join the Mahay community on GitHub", seho_engine::links::DISCORD);
 }
 
 /// New: a blank presentation, then every theme and starter template, with a search box.
@@ -1371,7 +1371,7 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
             ) {
                 let _ = app.run("app.about", json!({}));
             }
-            ui.hyperlink_to("Join our community on Discord", seho_engine::links::DISCORD);
+            ui.hyperlink_to("Join the community on GitHub", seho_engine::links::DISCORD);
             ui.hyperlink_to("Source on GitHub", seho_engine::links::GITHUB);
         });
     });

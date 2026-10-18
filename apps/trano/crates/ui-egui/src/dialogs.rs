@@ -458,7 +458,7 @@ impl LauncherUi {
         ui.add_space(6.0);
         ui.horizontal_wrapped(|ui| {
             use trano_core::catalog::{GITHUB_URL, WEBSITE_URL};
-            if widgets::button(ui, tl!("Join the Discord"), Kind::Primary, 0.0).on_hover_text(self.discord_url).clicked() {
+            if widgets::button(ui, tl!("Join the discussions"), Kind::Primary, 0.0).on_hover_text(self.discord_url).clicked() {
                 ui.ctx().open_url(egui::OpenUrl::new_tab(self.discord_url));
             }
             if widgets::button(ui, tl!("Website"), Kind::Secondary, 0.0).on_hover_text(WEBSITE_URL).clicked() {

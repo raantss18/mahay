@@ -1488,7 +1488,7 @@ fn about(ui: &mut egui::Ui, d: &mut Dialog) {
             ui.add_space(4.0);
             ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of Mahay.");
             ui.hyperlink_to("mahay.com/apps/tabilao", "https://github.com/raantss18/mahay");
-            ui.hyperlink_to("Join the Mahay Discord", "https://github.com/raantss18/mahay/discussions");
+            ui.hyperlink_to("Join the Mahay discussions", "https://github.com/raantss18/mahay/discussions");
         }
     }
 }

@@ -41,6 +41,9 @@ for app in "${apps[@]}"; do
   rm -rf "$jni"
   (cd "apps/$app" && cargo ndk "${ndk_args[@]}" -P 26 -o "$jni" \
      build -p "$app-android" --profile "$profile" --target-dir "$ROOT/target/android")
+  # cargo-ndk also copies dylibs some dependencies build on the side (boa, ocrs, rten): they are
+  # already linked into the app's library, so only lib<app>_android.so ships.
+  find "$jni" -name '*.so' ! -name "lib${app}_android.so" -delete
   flavour="$(tr '[:lower:]' '[:upper:]' <<< "${app:0:1}")${app:1}"
   echo "==> $app: Gradle"
   (cd android && ./gradlew --quiet "assemble$flavour$gradle_type")

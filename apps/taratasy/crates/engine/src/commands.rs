@@ -371,7 +371,7 @@ pub const COMMANDS: &[CommandSpec] = &[
     c("page.split", "Split document…", PAGES, None, Assembly, "scissors"),
     c("page.number", "Number pages…", PAGES, None, Assembly, "hash"),
     c("help.shortcuts", "Keyboard shortcuts", HELP, None, Nothing, "circle-help"),
-    c("help.discord", "Join the Mahay Discord", HELP, None, Nothing, "messages-square"),
+    c("help.discord", "Join the Mahay discussions", HELP, None, Nothing, "messages-square"),
     c("help.app_page", "Taratasy web page", HELP, None, Nothing, "globe"),
     c("help.github", "Taratasy on GitHub", HELP, None, Nothing, "code-xml"),
     c("help.website", "Mahay website", HELP, None, Nothing, "external-link"),

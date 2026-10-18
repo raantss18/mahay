@@ -29,7 +29,7 @@ fn discord_button_in_the_top_bar_opens_discord() {
 #[test]
 fn home_screen_links() {
     for (label, url) in [
-        ("Join our Discord", links::DISCORD),
+        ("Join the discussions", links::DISCORD),
         ("Taratasy web page", "https://github.com/raantss18/mahay"),
         ("Taratasy on GitHub", "https://github.com/raantss18/mahay"),
         ("Mahay website", "https://github.com/raantss18/mahay"),
@@ -51,7 +51,7 @@ fn about_dialog_shows_the_brand_and_links() {
         app.dialog = Some(Dialog::About);
     });
     assert!(h.query_all_by_label("Mahay").count() >= 2, "the mark and the wordmark (alt text)");
-    h.get_by_label("Join our Discord").click();
+    h.get_by_label("Join the discussions").click();
     h.run_steps(2);
     assert_eq!(h.state().last_opened_url.as_deref(), Some(links::DISCORD));
 }

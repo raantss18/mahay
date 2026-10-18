@@ -1,0 +1,106 @@
+name: Release
+
+# Builds every app for Linux and Android from a tag (v0.1.0) and attaches the files to the
+# GitHub release: <app>-<version>-linux-x86_64.AppImage/.deb and
+# <app>-<version>-android-<abi>.apk, plus SHA256SUMS.txt (the names Trano looks for).
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [trano, sary, taratasy, soratra, tabilao, seho]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/${{ matrix.app }}
+          key: release-linux
+      - name: System libraries and packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev \
+            libxrandr-dev libxi-dev libgtk-3-dev libasound2-dev libdbus-1-dev pkg-config \
+            libfontconfig1-dev libssl-dev desktop-file-utils zsync libfuse2
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt-get update && sudo apt-get install -y nfpm
+      - name: Package
+        run: apps/${{ matrix.app }}/packaging/linux/package.sh --formats "appimage deb"
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.app }}
+          path: |
+            apps/${{ matrix.app }}/dist/*.AppImage
+            apps/${{ matrix.app }}/dist/*.deb
+
+  android:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [trano, sary, taratasy, soratra, tabilao, seho]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager "ndk;28.2.13676358" "platforms;android-36" "build-tools;36.0.0"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/${{ matrix.app }} -> ../../target/android
+          key: release-android
+      - run: cargo install cargo-ndk --locked
+      - name: Build signed APKs and AAB
+        env:
+          MAHAY_KEYSTORE_B64: ${{ secrets.MAHAY_KEYSTORE_B64 }}
+          MAHAY_KEYSTORE_PASSWORD: ${{ secrets.MAHAY_KEYSTORE_PASSWORD }}
+          MAHAY_KEY_ALIAS: ${{ secrets.MAHAY_KEY_ALIAS }}
+          MAHAY_KEY_PASSWORD: ${{ secrets.MAHAY_KEY_PASSWORD }}
+        run: |
+          test -n "$MAHAY_KEYSTORE_B64" || { echo "release key not configured" >&2; exit 1; }
+          echo "$MAHAY_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          export MAHAY_KEYSTORE="$RUNNER_TEMP/release.jks"
+          scripts/android-build.sh --abi all --aab ${{ matrix.app }}
+          scripts/release-names.sh "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.app }}
+          path: dist/release/*
+
+  publish:
+    needs: [linux, android]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Checksums and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          find . -type f -exec mv {} . \; 2>/dev/null || true
+          sha256sum -- *.apk *.aab *.AppImage *.deb 2>/dev/null > SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --prerelease \
+            --title "Mahay $GITHUB_REF_NAME" --notes-file ../CHANGELOG.md -- *

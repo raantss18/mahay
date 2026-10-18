@@ -1,0 +1,10 @@
+# Licenses accepted in Mahay's dependency tree (permissive or weak-copyleft file-level).
+accepted = [
+    "MIT", "MIT-0", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause",
+    "ISC", "Zlib", "Unicode-3.0", "Unicode-DFS-2016", "CC0-1.0", "BSL-1.0", "MPL-2.0",
+    "OFL-1.1", "Unlicense", "0BSD", "CDLA-Permissive-2.0", "OpenSSL", "NCSA", "bzip2-1.0.6",
+    # Free licenses for bundled data: egui's default Ubuntu font, the IJG JPEG notice.
+    "Ubuntu-font-1.0", "IJG",
+]
+ignore-build-dependencies = false
+ignore-dev-dependencies = true

@@ -58,7 +58,7 @@ impl Tray {
         use trano_core::catalog::{GITHUB_URL, WEBSITE_URL};
         let website = MenuItem::new(i18n::t("Visit mahay.com"), true, None);
         let github = MenuItem::new(i18n::t("Mahay on GitHub"), true, None);
-        let discord = MenuItem::new(i18n::t("Join the Mahay Discord"), true, None);
+        let discord = MenuItem::new(i18n::t("Join the Mahay discussions"), true, None);
         let quit = MenuItem::new(i18n::t("Quit Mahay Trano"), true, None);
         let menu = Menu::new();
         menu.append_items(&[&show, &check, &PredefinedMenuItem::separator(), &website, &github, &discord, &PredefinedMenuItem::separator(), &quit])
@@ -111,7 +111,7 @@ impl Tray {
             (check, "Check for Updates"),
             (website, "Visit mahay.com"),
             (github, "Mahay on GitHub"),
-            (discord, "Join the Mahay Discord"),
+            (discord, "Join the Mahay discussions"),
             (quit, "Quit Mahay Trano"),
         ];
         Ok(Self { icon, show: show_id, check: check_id, quit: quit_id, rx, tooltip: String::new(), language: String::new(), labels })

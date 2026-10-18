@@ -661,7 +661,7 @@ pub(super) fn translate(text: &str) -> Option<&'static str> {
         "Contributors" => "Colaboradores",
         "Models" => "Modelos",
         "Version {version}" => "Versão {version}",
-        "Join the Mahay Discord" => "Participe do Discord da Mahay",
+        "Join the Mahay discussions" => "Participe do Discord da Mahay",
         "This workbook has no scripts or macros." => "Esta pasta de trabalho não tem scripts nem macros.",
         "(unnamed)" => "(sem nome)",
         "— VBA project (preserved, not run)" => "— Projeto VBA (preservado, não executado)",

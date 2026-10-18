@@ -67,7 +67,7 @@ pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                     app.combine_tab.focused = false;
                 }
                 // Keep the two icon buttons, Discord's text/padding and three gaps outside the scrolling tabs.
-                let controls_width = ui.fonts_mut(|f| f.layout_no_wrap("Discord".into(), theme::medium(13.0), t.text).size().x)
+                let controls_width = ui.fonts_mut(|f| f.layout_no_wrap("Discussions".into(), theme::medium(13.0), t.text).size().x)
                     + 2.0 * button
                     + 50.0
                     + window_controls::width(&controls.right);
@@ -300,7 +300,7 @@ pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                         app.dialog = Some(Dialog::Shortcuts);
                     }
                     // One click to the community, from anywhere in the app.
-                    if widgets::ghost_button_sized(ui, "messages-square", "Discord", tab_h).on_hover_text(taratasy_engine::links::DISCORD).clicked() {
+                    if widgets::ghost_button_sized(ui, "messages-square", "Discussions", tab_h).on_hover_text(taratasy_engine::links::DISCORD).clicked() {
                         app.execute("help.discord");
                     }
                 });

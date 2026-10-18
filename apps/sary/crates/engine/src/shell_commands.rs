@@ -83,7 +83,7 @@ pub const SHELL_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("window.theme.softDark", "Soft Dark Theme", &["Window", "Theme"], None),
     ("window.theme.system", "Sync with system", &["Window", "Theme"], None),
     ("edit.search", "Search…", &["Edit"], Some("Cmd+F")),
-    ("help.discord", "Join the Mahay Discord…", &["Help"], None),
+    ("help.discord", "Join the Mahay discussions…", &["Help"], None),
     ("help.website", "Sary Website", &["Help"], None),
     ("help.mahayWebsite", "Mahay Website", &["Help"], None),
     ("help.github", "Sary on GitHub", &["Help"], None),

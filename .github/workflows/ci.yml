@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  checks:
+    name: Glue checks (fmt, clippy, tests)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: libs/core
+      - name: Brand files are up to date
+        run: |
+          sudo apt-get update && sudo apt-get install -y librsvg2-bin imagemagick
+          python3 -I brand/generate.py
+          git diff --exit-code -- brand android/app/src
+      - name: Shared crates
+        working-directory: libs/core
+        run: |
+          cargo fmt --all --check
+          cargo test -p mahay-docpath -p mahay-atomic
+
+  linux:
+    name: Linux (${{ matrix.app }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [trano, sary, taratasy, soratra, tabilao, seho]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/${{ matrix.app }}
+          key: linux
+      - name: System libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev \
+            libxrandr-dev libxi-dev libgtk-3-dev libasound2-dev libdbus-1-dev pkg-config \
+            libfontconfig1-dev libssl-dev
+      - name: Build
+        working-directory: apps/${{ matrix.app }}
+        run: cargo build --release --locked -p ${{ matrix.app }} -j 4
+      - name: Version check
+        working-directory: apps/${{ matrix.app }}
+        run: ./target/release/${{ matrix.app }} --version || true
+
+  android:
+    name: Android (${{ matrix.app }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [trano, sary, taratasy, soratra, tabilao, seho]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: NDK
+        run: sdkmanager "ndk;28.2.13676358" "platforms;android-36" "build-tools;36.0.0"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/${{ matrix.app }} -> ../../target/android
+          key: android
+      - run: cargo install cargo-ndk --locked
+      - name: Build APKs (debug-signed unless the release key is configured)
+        env:
+          MAHAY_KEYSTORE_B64: ${{ secrets.MAHAY_KEYSTORE_B64 }}
+          MAHAY_KEYSTORE_PASSWORD: ${{ secrets.MAHAY_KEYSTORE_PASSWORD }}
+          MAHAY_KEY_ALIAS: ${{ secrets.MAHAY_KEY_ALIAS }}
+          MAHAY_KEY_PASSWORD: ${{ secrets.MAHAY_KEY_PASSWORD }}
+        run: |
+          if [ -n "$MAHAY_KEYSTORE_B64" ]; then
+            echo "$MAHAY_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export MAHAY_KEYSTORE="$RUNNER_TEMP/release.jks"
+          fi
+          scripts/android-build.sh --abi all ${{ matrix.app }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ matrix.app }}
+          path: dist/android/*.apk
+          retention-days: 7
