@@ -1,0 +1,41 @@
+[package]
+name = "lightcraft-ui-egui"
+version.workspace = true
+edition.workspace = true
+rust-version = "1.95"
+license.workspace = true
+description = "LightCraft egui frontend (Lightroom-style UI); swappable — nothing below depends on it (L5)"
+
+[lints]
+workspace = true
+
+[dependencies]
+craft-ui = { workspace = true }
+lightcraft-geom = { workspace = true }
+lightcraft-meta = { workspace = true }
+lightcraft-color = { workspace = true }
+lightcraft-raster = { workspace = true }
+lightcraft-develop = { workspace = true }
+lightcraft-pipeline = { workspace = true }
+lightcraft-catalog = { workspace = true }
+web-time = { workspace = true }
+lightcraft-engine = { workspace = true }
+lightcraft-slideshow = { workspace = true }
+lightcraft-preview = { workspace = true }
+egui = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+# tests record why they skip (`cargo xtask ci` lists the skips)
+lightcraft-testkit = { workspace = true }
+egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+lightcraft-denoise = { workspace = true, features = ["runtime"] }
+lightcraft-codecs = { workspace = true }
+lightcraft-faces = { workspace = true }
+lightcraft-merge = { workspace = true }
+
+[build-dependencies]
+serde_json = { workspace = true }
+toml = "1"

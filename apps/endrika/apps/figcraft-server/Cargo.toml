@@ -1,0 +1,46 @@
+[package]
+name = "figcraft-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "FigCraft's standalone collaboration server: keeps many files with share links (edit or view), persists them as snapshots plus a log, and serves live sessions (headless, native only)"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "figcraft-server"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-collab = { workspace = true }
+figcraft-collab-net = { workspace = true }
+# Checking a team library before keeping it (read as files using it read it).
+figcraft-format = { workspace = true }
+# Checking plugin bundles before the plugin directory keeps them (never run here).
+figcraft-plugin = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+crc32fast = { workspace = true }
+toml = "1"
+env_logger = { version = "0.11", default-features = false, features = ["humantime"] }
+# Stopping gracefully on SIGTERM/SIGINT/SIGHUP (systemd, Docker, Ctrl+C) and Ctrl+C/close on Windows.
+ctrlc = { version = "3", features = ["termination"] }
+
+# Free space on the data directory's disk (statvfs, without unsafe code of our own).
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", default-features = false, features = ["std", "fs"] }
+
+[dev-dependencies]
+# Crafting hostile archives (zip bombs) in tests.
+zip = { workspace = true }
+wat = { workspace = true }
+figcraft-engine = { workspace = true }
+figcraft-doc = { workspace = true }
+tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }

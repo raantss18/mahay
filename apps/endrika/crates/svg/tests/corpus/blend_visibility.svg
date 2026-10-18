@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+  <!-- mix-blend-mode on shapes and groups; display:none, visibility hidden and a visible child. -->
+  <rect width="100" height="100" fill="#ffff00"/>
+  <rect id="multiplied" x="10" y="10" width="30" height="30" fill="#00ffff" style="mix-blend-mode:multiply"/>
+  <g id="screened" style="mix-blend-mode:screen"><rect x="50" y="10" width="30" height="30" fill="#0000ff"/></g>
+  <rect id="gone" x="110" y="10" width="30" height="30" fill="#ff0000" style="display:none"/>
+  <g visibility="hidden">
+    <rect id="hidden" x="150" y="10" width="30" height="30" fill="#ff0000"/>
+    <rect id="shown" x="150" y="50" width="30" height="30" fill="#00ff00" visibility="visible"/>
+  </g>
+  <g display="none"><rect x="110" y="50" width="30" height="30" fill="#ff0000"/></g>
+  <!-- probe 25 25 #00ff00ff -->
+  <!-- probe 65 25 #ffffffff -->
+  <!-- probe 125 25 #00000000 -->
+  <!-- probe 165 25 #00000000 -->
+  <!-- probe 165 65 #00ff00ff -->
+  <!-- probe 125 65 #00000000 -->
+</svg>

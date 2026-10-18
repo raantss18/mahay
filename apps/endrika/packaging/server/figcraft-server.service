@@ -1,0 +1,64 @@
+# systemd unit for figcraft-server; setup in docs/server.md ("Deploy on a Linux server").
+# Install: sudo cp figcraft-server.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#          sudo systemctl enable --now figcraft-server
+# Logs:    journalctl -u figcraft-server
+
+[Unit]
+Description=FigCraft collaboration server
+Documentation=https://github.com/storytold/figcraft/blob/main/docs/server.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=figcraft
+Group=figcraft
+ExecStart=/usr/local/bin/figcraft-server --config /etc/figcraft-server/server.toml
+# SIGTERM (systemctl stop/restart) stops it gracefully: open files are saved and compacted, and
+# apps are told the server is restarting (they reconnect when it is back).
+KillSignal=SIGTERM
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=2
+# max_connections (512 by default) plus the files kept open.
+LimitNOFILE=4096
+UMask=0077
+# Under memory pressure this service slows down, then it alone is stopped (and restarted), not the
+# rest of the machine.
+MemoryHigh=60%
+MemoryMax=75%
+# It talks only to the proxy on this machine (listen = "127.0.0.1:47900"). Listening on a network
+# address without a proxy in front needs these two lines removed.
+IPAddressAllow=localhost
+IPAddressDeny=any
+
+# Hardening: the only writable place is the data directory.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/figcraft-server
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

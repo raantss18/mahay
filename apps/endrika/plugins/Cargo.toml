@@ -1,0 +1,33 @@
+# FigCraft plugins written in Rust: the SDK and example plugins. A workspace of its own (not part of
+# the app's): it builds for wasm32-unknown-unknown with `cargo xtask plugins` (from the repository
+# root), which puts each example's .wasm next to its figcraft-plugin.json under target/plugins/.
+[workspace]
+resolver = "3"
+members = ["sdk", "examples/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+repository = "https://github.com/storytold/figcraft"
+
+[workspace.dependencies]
+figcraft-plugin-sdk = { path = "sdk" }
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+
+# Small modules: a plugin is loaded on every run.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

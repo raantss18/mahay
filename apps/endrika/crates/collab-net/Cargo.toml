@@ -1,0 +1,43 @@
+[package]
+name = "figcraft-collab-net"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft live sessions over the network: the WebSocket transport, the session host the app embeds, invite links and presence relay (carries figcraft-collab's messages)"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-engine = { workspace = true }
+figcraft-collab = { workspace = true }
+figcraft-doc = { workspace = true }
+log = { workspace = true }
+# `std::time::Instant` natively, the browser's clock in the web build.
+web-time = "1"
+
+# Native transport: blocking tungstenite with a reader and a writer thread per connection.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
+# `wss://`: TLS with ring as the crypto provider and Mozilla's root certificates compiled in (no
+# OS certificate store, no OpenSSL). Over our own split reader/writer stream (`tls.rs`), so not
+# tungstenite's single-owner TLS stream.
+rustls = { version = "0.23", default-features = false, features = ["std", "ring", "tls12", "logging"] }
+rustls-pki-types = { version = "1", features = ["std"] }
+webpki-roots = "1"
+getrandom = "0.4"
+base64 = { workspace = true }
+
+# The browser client: the page's WebSocket API.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window", "Location", "WebSocket", "BinaryType", "MessageEvent", "CloseEvent"] }
+
+# Opening invite links: the per-user URL handler registration on Windows.
+[target.'cfg(windows)'.dependencies]
+windows-registry = "0.6"
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json = { workspace = true }

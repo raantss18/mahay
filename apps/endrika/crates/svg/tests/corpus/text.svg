@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200">
+  <!-- Text: font props, letter spacing, anchors, tspan lines and a styled tspan run. -->
+  <text id="title" x="10" y="40" font-family="Inter, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#ff0000">Hello</text>
+  <text x="150" y="80" text-anchor="middle" font-size="16" letter-spacing="2" fill="#0000ff">Centered</text>
+  <text x="290" y="120" text-anchor="end" font-size="12" font-style="italic">End</text>
+  <text font-size="14"><tspan x="10" y="150">Line one</tspan><tspan x="10" y="170">Line two</tspan></text>
+  <text x="150" y="190" font-size="14">Plain <tspan font-weight="bold" fill="#00ff00">bold</tspan> run</text>
+</svg>

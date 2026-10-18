@@ -1,0 +1,9 @@
+# The build context is the repository root: send only what the build needs.
+.git
+target
+target-*
+dist
+plan
+plans
+corpus
+log

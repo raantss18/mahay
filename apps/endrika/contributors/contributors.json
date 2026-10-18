@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "repo": "storytold/figcraft",
+  "branch": "main",
+  "head": "0638c98564052c1be729405862b5b0b6d946d902",
+  "head_date": "2026-10-10T01:04:13Z",
+  "commits": 82,
+  "unattributed_commits": 0,
+  "contributors": [
+    {
+      "login": "echelon",
+      "people_entry": false,
+      "github_name": null,
+      "prs": 0,
+      "commits": 25,
+      "lines_added": 52057,
+      "lines_deleted": 2673,
+      "binary_added": 20,
+      "binary_deleted": 0,
+      "first_commit": "2026-10-09T15:38:50Z",
+      "last_commit": "2026-10-09T18:17:22Z"
+    },
+    {
+      "login": "bflatastic",
+      "people_entry": false,
+      "github_name": null,
+      "prs": 57,
+      "commits": 57,
+      "lines_added": 31774,
+      "lines_deleted": 3537,
+      "binary_added": 0,
+      "binary_deleted": 0,
+      "first_commit": "2026-10-09T19:05:58Z",
+      "last_commit": "2026-10-10T01:04:13Z"
+    }
+  ],
+  "models": [
+    {
+      "id": "anthropic/claude-opus/5.5",
+      "company": "Anthropic",
+      "model": "Claude Opus",
+      "version": "5.5",
+      "commits": 81,
+      "lines_added": 83824,
+      "lines_deleted": 6210
+    }
+  ]
+}

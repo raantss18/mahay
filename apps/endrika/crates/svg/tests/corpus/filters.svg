@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120">
+  <defs>
+    <filter id="blur"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="drop" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="4" dy="6" stdDeviation="2" flood-color="#000000" flood-opacity="0.5"/></filter>
+    <filter id="classic" x="-50%" y="-50%" width="200%" height="200%">
+      <feOffset in="SourceAlpha" dx="0" dy="4"/>
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feFlood flood-color="#ff0000" flood-opacity="0.25"/>
+      <feComposite in2="b" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="matrix" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="bg"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hard"/>
+      <feOffset dx="2" dy="2"/>
+      <feGaussianBlur stdDeviation="1"/>
+      <feComposite in2="hard" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0.4 0"/>
+      <feBlend mode="normal" in2="bg" result="shadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="shadow" result="shape"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hard2"/>
+      <feOffset dy="-3"/>
+      <feGaussianBlur stdDeviation="1.5"/>
+      <feComposite in2="hard2" operator="arithmetic" k2="-1" k3="1"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0"/>
+      <feBlend mode="normal" in2="shape" result="inner"/>
+    </filter>
+    <filter id="noise"><feTurbulence baseFrequency="0.05"/></filter>
+  </defs>
+  <!-- Layer blur, feDropShadow, the offset/blur/flood/composite/merge shadow, matrix shadows. -->
+  <rect id="blurred" x="10" y="10" width="60" height="60" fill="#ff0000" filter="url(#blur)"/>
+  <rect id="dropped" x="100" y="10" width="60" height="60" fill="#0000ff" filter="url(#drop)"/>
+  <rect id="classic-shadow" x="200" y="10" width="60" height="60" fill="#00ff00" filter="url(#classic)"/>
+  <rect id="matrixed" x="300" y="10" width="60" height="60" fill="#ffff00" filter="url(#matrix)"/>
+  <rect id="unsupported" x="10" y="90" width="20" height="20" fill="#000000" filter="url(#noise)"/>
+  <!-- probe 40 40 #ff0000ff ~6 -->
+  <!-- probe 10 40 #ff000080 ~40 -->
+  <!-- probe 130 40 #0000ffff -->
+  <!-- probe 162 40 #00000062 ~45 -->
+  <!-- probe 230 40 #00ff00ff -->
+  <!-- probe 230 74 #ff000030 ~30 -->
+  <!-- probe 330 40 #ffff00ff -->
+  <!-- probe 330 69 #ffff49ff ~30 -->
+  <!-- probe 20 100 #000000ff -->
+</svg>

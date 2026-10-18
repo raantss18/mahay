@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template: packaging/macos/package.sh substitutes @VERSION@ (full, e.g. 0.2.0-rc.1),
+     @SHORT_VERSION@ (numeric X.Y.Z) and @BUILD_SHA@. -->
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDisplayName</key>
+  <string>DesignCraft</string>
+  <key>CFBundleName</key>
+  <string>DesignCraft</string>
+  <key>CFBundleExecutable</key>
+  <string>DesignCraft</string>
+  <key>CFBundleIdentifier</key>
+  <string>ai.storyteller.designcraft</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleSignature</key>
+  <string>????</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@SHORT_VERSION@</string>
+  <key>CFBundleVersion</key>
+  <string>@SHORT_VERSION@</string>
+  <key>DesignCraftVersion</key>
+  <string>@VERSION@</string>
+  <key>DesignCraftBuildCommit</key>
+  <string>@BUILD_SHA@</string>
+  <key>CFBundleIconFile</key>
+  <string>DesignCraft</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.graphics-design</string>
+  <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
+       Apple silicon and has the Metal feature set wgpu targets. -->
+  <key>LSMinimumSystemVersion</key>
+  <string>11.0</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>NSSupportsAutomaticGraphicsSwitching</key>
+  <true/>
+  <key>NSRequiresAquaSystemAppearance</key>
+  <false/>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © the DesignCraft authors. MIT OR Apache-2.0.</string>
+
+  <!-- The documents Finder, the Dock and Open With hand to the app (an Apple event; see
+       apps/designcraft/src/apple_events.rs). -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>DesignCraft Document</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>DesignCraft</string>
+      <key>LSItemContentTypes</key>
+      <array><string>ai.storyteller.designcraft.document</string></array>
+    </dict>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>IDML Document</string>
+      <!-- Opens as a new, unsaved document; saving writes a .designcraft file. -->
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array><string>ai.storyteller.designcraft.idml</string></array>
+    </dict>
+  </array>
+
+  <!-- DesignCraft's own format: a zip package, declared as a document rather than an archive so
+       Finder doesn't offer to expand it. -->
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>ai.storyteller.designcraft.document</string>
+      <key>UTTypeDescription</key>
+      <string>DesignCraft Document</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+        <string>public.composite-content</string>
+      </array>
+      <key>UTTypeIconFile</key>
+      <string>DesignCraft</string>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array><string>designcraft</string></array>
+        <key>public.mime-type</key>
+        <array><string>application/x-designcraft</string></array>
+      </dict>
+    </dict>
+  </array>
+  <!-- A type macOS may not know; the system's own declaration wins when it has one. -->
+  <key>UTImportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>ai.storyteller.designcraft.idml</string>
+      <key>UTTypeDescription</key>
+      <string>IDML Document</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+        <string>public.zip-archive</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array><string>idml</string></array>
+        <key>public.mime-type</key>
+        <array><string>application/vnd.adobe.indesign-idml-package</string></array>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>

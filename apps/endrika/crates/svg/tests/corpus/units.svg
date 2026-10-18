@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="75pt" height="1in" font-size="10">
+  <!-- 75pt = 100 px wide, 1in = 96 px tall; lengths in mm, pt, em and %. -->
+  <rect x="0" y="0" width="10mm" height="10mm" fill="#ff0000"/>
+  <rect x="45pt" y="0" width="2em" height="2em" fill="#0000ff"/>
+  <rect x="0" y="50%" width="50%" height="25%" fill="#00ff00"/>
+  <!-- probe 20 20 #ff0000ff -->
+  <!-- probe 38 20 #00000000 -->
+  <!-- probe 70 10 #0000ffff -->
+  <!-- probe 85 10 #00000000 -->
+  <!-- probe 25 55 #00ff00ff -->
+  <!-- probe 25 75 #00000000 -->
+  <!-- probe 55 55 #00000000 -->
+</svg>

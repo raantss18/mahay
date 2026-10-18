@@ -1,0 +1,20 @@
+[package]
+name = "soundcraft-dsp"
+description = "SoundCraft DSP: realtime plugins (EQ, dynamics, reverb, delay, modulation, instruments), meters, loudness, and offline AudioSuite-style processing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+log.workspace = true
+rustfft.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

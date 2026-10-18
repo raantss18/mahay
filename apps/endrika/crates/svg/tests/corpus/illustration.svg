@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generator: a synthetic illustration in the style vector tools write. -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+     viewBox="0 0 120 80" style="enable-background:new 0 0 120 80;" xml:space="preserve">
+<style type="text/css">
+  .st0{fill:#2B6CB0;}
+  .st1{fill:#FFFFFF;stroke:#1A202C;stroke-width:2;stroke-miterlimit:10;}
+  .st2{opacity:0.5;fill:#F6AD55;}
+</style>
+<g id="Background">
+  <rect class="st0" width="120" height="80"/>
+</g>
+<g id="Sun">
+  <circle class="st2" cx="95" cy="20" r="12"/>
+</g>
+<g id="House">
+  <g id="Walls" transform="translate(20 30)">
+    <rect class="st1" width="40" height="30"/>
+  </g>
+  <polygon class="st1" points="16,30 40,12 64,30"/>
+</g>
+<!-- probe 5 5 #2b6cb0ff -->
+<!-- probe 95 20 #918d83ff ~6 -->
+<!-- probe 40 45 #ffffffff -->
+<!-- probe 20 45 #1a202cff ~40 -->
+</svg>

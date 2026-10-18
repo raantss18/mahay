@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+  <!-- Nested group transforms: translate, rotate about a point, matrix, skew. -->
+  <g id="moved" transform="translate(20 20)">
+    <rect id="a" width="40" height="40" fill="#ff0000"/>
+    <g id="turned" transform="translate(100 0) rotate(45 20 20)">
+      <rect id="b" width="40" height="40" fill="#00ff00"/>
+    </g>
+  </g>
+  <g id="scaled" transform="matrix(2 0 0 1.5 10 100)">
+    <rect id="c" width="20" height="20" fill="#0000ff"/>
+  </g>
+  <g id="skewed" transform="translate(120 120) skewX(30)">
+    <rect id="d" width="40" height="40" fill="#ffff00"/>
+  </g>
+  <!-- probe 40 40 #ff0000ff -->
+  <!-- probe 140 40 #00ff00ff -->
+  <!-- probe 160 40 #00ff00ff -->
+  <!-- probe 125 15 #00000000 -->
+  <!-- probe 30 115 #0000ffff -->
+  <!-- probe 45 125 #0000ffff -->
+  <!-- probe 55 115 #00000000 -->
+  <!-- probe 150 140 #ffff00ff -->
+  <!-- probe 125 158 #00000000 -->
+  <!-- probe 180 158 #ffff00ff -->
+</svg>

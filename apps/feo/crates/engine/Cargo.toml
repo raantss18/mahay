@@ -1,0 +1,32 @@
+[package]
+name = "soundcraft-engine"
+description = "SoundCraft command engine: commands, undo, editing operations, import/export, bounce, parity catalog"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+soundcraft-time.workspace = true
+soundcraft-audio-io.workspace = true
+soundcraft-midi.workspace = true
+soundcraft-dsp.workspace = true
+soundcraft-clap-host.workspace = true
+soundcraft-vst3-host.workspace = true
+soundcraft-au-host.workspace = true
+soundcraft-model.workspace = true
+soundcraft-mix.workspace = true
+soundcraft-video.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+log.workspace = true
+zip.workspace = true
+craft-docpath.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true

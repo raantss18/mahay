@@ -1,0 +1,512 @@
+File > New...
+File > Open > Session...
+File > Open > Project...
+File > Open > Sketch...
+File > Dashboard...
+File > Close Session
+File > Save Session
+File > Save Session As...
+File > Save Session Copy In...
+File > Save As Template...
+File > Revert Session to Saved...
+File > Start Collaboration...
+File > Send To... > Sibelius
+File > Bounce Mix...
+File > Import > Session Data...
+File > Import > Audio...
+File > Import > MIDI...
+File > Import > Video...
+File > Import > Clip Groups...
+File > Import > VENUE Channel Names as Track Names
+File > Export > Selected Tracks as New AAF/OMF...
+File > Export > Selected Tracks as New Session...
+File > Export > Selected Tracks as New Media Composer Compatible Session...
+File > Export > MIDI...
+File > Export > Sibelius...
+File > Export > Session Info as Text...
+File > Get Info...
+File > Score Setup...
+File > Print Score...
+File > Sign In
+Edit > Can't Undo
+Edit > Can't Redo
+Edit > Restore Last Selection
+Edit > Cut
+Edit > Copy
+Edit > Paste
+Edit > Clear
+Edit > Cut Special > Clip Gain
+Edit > Cut Special > Clip Effects
+Edit > Cut Special > All Automation
+Edit > Cut Special > Pan Automation
+Edit > Cut Special > Plugin Automation
+Edit > Copy Special > Clip Gain
+Edit > Copy Special > Clip Effects
+Edit > Copy Special > All Automation
+Edit > Copy Special > Pan Automation
+Edit > Copy Special > Plugin Automation
+Edit > Copy Special > Audio as MIDI
+Edit > Paste Special > Merge MIDI
+Edit > Paste Special > Merge Markers
+Edit > Paste Special > Repeat to Fill Selection
+Edit > Paste Special > To Current Automation Type
+Edit > Clear Special > Clip Gain
+Edit > Clear Special > Clip Effects
+Edit > Clear Special > All Automation
+Edit > Clear Special > Pan Automation
+Edit > Clear Special > Plugin Automation
+Edit > Select All
+Edit > Selection > Change Timeline to Match Edit
+Edit > Selection > Change Edit to Match Timeline
+Edit > Selection > Play Edit
+Edit > Selection > Play Timeline
+Edit > Selection > Move Edit Left
+Edit > Selection > Move Edit Right
+Edit > Selection > Halve Edit
+Edit > Selection > Double Edit
+Edit > Selection > Duplicate and Extend Edit
+Edit > Selection > Extend Edit Up
+Edit > Selection > Extend Edit Down
+Edit > Selection > Extend Edit Up to Members
+Edit > Selection > Extend Edit Down to Members
+Edit > Selection > Remove Edit from Top
+Edit > Selection > Remove Edit from Bottom
+Edit > Selection > Move Edit Selection To Marker Lane Above
+Edit > Selection > Move Edit Selection To Marker Lane Below
+Edit > Selection > Extend Edit Selection To Marker Lane Above
+Edit > Selection > Extend Edit Selection To Marker Lane Below
+Edit > Duplicate
+Edit > Repeat...
+Edit > Shift...
+Edit > Space Clips…
+Edit > Insert Silence
+Edit > Snap to > Next
+Edit > Snap to > Previous
+Edit > Trim > To Selection
+Edit > Trim > Start to Insertion
+Edit > Trim > End to Insertion
+Edit > Trim > Start to Fill Selection
+Edit > Trim > End to Fill Selection
+Edit > Trim > To Fill Selection
+Edit > Trim > To File Start
+Edit > Trim > To File End
+Edit > Trim > To File Boundaries
+Edit > Separate > At Selection
+Edit > Separate > On Grid
+Edit > Separate > At Transients
+Edit > Heal Separation
+Edit > Consolidate
+Edit > Mute
+Edit > Copy Selection to... > Target Playlist
+Edit > Copy Selection to... > New Playlist
+Edit > Copy Selection to... > Duplicate of Main Playlist
+Edit > Move Selection to... > Target Playlist
+Edit > Move Selection to... > New Playlist
+Edit > Move Selection to... > Duplicate of Main Playlist
+Edit > Strip Silence
+Edit > TCE Edit to Timeline Selection
+Edit > Automation > Copy to Send...
+Edit > Automation > Thin
+Edit > Automation > Thin All
+Edit > Automation > Convert Volume Automation to Clip Gain
+Edit > Automation > Convert Clip Gain to Volume Automation
+Edit > Automation > Coalesce Volume Automation to Clip Gain
+Edit > Automation > Coalesce Clip Gain to Volume Automation
+Edit > Automation > Write to Current
+Edit > Automation > Write to All Enabled
+Edit > Automation > Trim to Current
+Edit > Automation > Trim to All Enabled
+Edit > Automation > Glide to Current
+Edit > Automation > Glide to All Enabled
+Edit > Automation > Glide Pan Only
+Edit > Automation > Duplicate Dolby Atmos Plugin Automation to Pan Automation
+Edit > Automation > Duplicate Pan Automation to Dolby Atmos Plugin Automation
+Edit > Automation > Coalesce Pan Guide Automation
+Edit > Fades > Create...
+Edit > Fades > Delete
+Edit > Fades > Fade to Start
+Edit > Fades > Fade to End
+View > Mix Window Views > Mic Preamps
+View > Mix Window Views > Instruments
+View > Mix Window Views > HEAT
+View > Mix Window Views > Inserts A-E
+View > Mix Window Views > Inserts F-J
+View > Mix Window Views > Sends A-E
+View > Mix Window Views > Sends F-J
+View > Mix Window Views > EQ Curve
+View > Mix Window Views > I/O
+View > Mix Window Views > Object
+View > Mix Window Views > Meters and Faders
+View > Mix Window Views > Delay Compensation
+View > Mix Window Views > Track Color
+View > Mix Window Views > Comments
+View > Mix Window Views > All
+View > Mix Window Views > Minimal
+View > Narrow Mix
+View > Edit Window Views > Comments
+View > Edit Window Views > Mic Preamps
+View > Edit Window Views > Instruments
+View > Edit Window Views > Inserts A-E
+View > Edit Window Views > Inserts F-J
+View > Edit Window Views > Sends A-E
+View > Edit Window Views > Sends F-J
+View > Edit Window Views > I/O
+View > Edit Window Views > Object
+View > Edit Window Views > Real-Time Properties
+View > Edit Window Views > Track Color
+View > Edit Window Views > Marker Controls
+View > Edit Window Views > All
+View > Edit Window Views > Minimal
+View > Edit Window Views > Pinned Tracks
+View > Rulers > Bars|Beats
+View > Rulers > Min:Secs
+View > Rulers > Timecode
+View > Rulers > Timecode 2
+View > Rulers > Feet+Frames
+View > Rulers > Samples
+View > Rulers > Tempo > Tempo Editor
+View > Rulers > Meter
+View > Rulers > Key Signature > Key Signature Staff
+View > Rulers > Chord Symbols
+View > Rulers > Markers
+View > Rulers > Markers 2
+View > Rulers > Markers 3
+View > Rulers > Markers 4
+View > Rulers > Markers 5
+View > Rulers > All Marker Rulers
+View > Rulers > All
+View > Rulers > Minimal
+View > Marker Displays > Track Lane
+View > Marker Displays > Ruler Lines
+View > Marker Displays > Folder Lines
+View > Marker Displays > Ruler Lane Color
+View > Marker Displays > Track Lane Color
+View > Other Displays > Universe
+View > Other Displays > Track List
+View > Other Displays > Clip List
+View > Other Displays > MIDI Input Display
+View > Other Displays > Lower Dock > MIDI Editor > Clip Effects
+View > Clip > Sync Point
+View > Clip > Processing State
+View > Clip > Name
+View > Clip > Channel Name
+View > Clip > Scene And Take
+View > Clip > Rating
+View > Clip > Overlap Shadows
+View > Clip > Transparency
+View > Clip > Overwrite Indicator
+View > Clip > Copy/Move Indicators
+View > Clip > Clip Gain Line
+View > Clip > Clip Gain Info
+View > Clip > Clip Effects Status
+View > Clip > ARA Note Overlay
+View > Clip > Current Time
+View > Clip > Original Time Stamp
+View > Clip > User Time Stamp
+View > Clip > No Time
+View > Clip > Display on All Channels
+View > Waveforms > Peak
+View > Waveforms > Power
+View > Waveforms > Rectified
+View > Waveforms > Outlines
+View > Waveforms > Overlapped Crossfades
+View > Automation > Trim Playlist
+View > Automation > Composite Playlist
+View > Expanded Sends > All
+View > Expanded Sends > None
+View > Expanded Sends > Send A
+View > Expanded Sends > Send B
+View > Expanded Sends > Send C
+View > Expanded Sends > Send D
+View > Expanded Sends > Send E
+View > Expanded Sends > Send F
+View > Expanded Sends > Send G
+View > Expanded Sends > Send H
+View > Expanded Sends > Send I
+View > Expanded Sends > Send J
+View > Track Number
+View > Track Transcription Lane
+View > Dropped Video Frame Indicator
+View > Transport > Counters
+View > Transport > MIDI Controls
+View > Transport > Synchronization
+View > Transport > Ableton Link
+View > Transport > Output Meters
+View > Transport > Expanded
+View > Main Counter > Bars|Beats
+View > Main Counter > Min:Secs
+View > Main Counter > Timecode
+View > Main Counter > Feet+Frames
+View > Main Counter > Samples
+Track > New...
+Track > Group...
+Track > Duplicate...
+Track > Split into Mono
+Track > Make Inactive
+Track > Move to New Folder...
+Track > Convert Aux to Routing Folder
+Track > Change Track Width > Mono
+Track > Change Track Width > Stereo
+Track > Change Track Width > LCR
+Track > Change Track Width > Quad
+Track > Change Track Width > LCRS
+Track > Change Track Width > 5.0
+Track > Change Track Width > 5.1
+Track > Change Track Width > 6.0
+Track > Change Track Width > 6.1
+Track > Change Track Width > 7.0 SDDS
+Track > Change Track Width > 7.1 SDDS
+Track > Change Track Width > 7.0
+Track > Change Track Width > 7.1
+Track > Change Track Width > 7.0.2
+Track > Change Track Width > 7.1.2
+Track > Change Track Width > 1st Order Ambisonics
+Track > Change Track Width > 2nd Order Ambisonics
+Track > Change Track Width > 3rd Order Ambisonics
+Track > Change Track Width > 4th Order Ambisonics
+Track > Change Track Width > 5th Order Ambisonics
+Track > Change Track Width > 6th Order Ambisonics
+Track > Change Track Width > 7th Order Ambisonics
+Track > Change Track Width > 5.0.2
+Track > Change Track Width > 5.1.2
+Track > Change Track Width > 5.0.4
+Track > Change Track Width > 5.1.4
+Track > Change Track Width > 7.0.4
+Track > Change Track Width > 7.1.4
+Track > Change Track Width > 7.0.6
+Track > Change Track Width > 7.1.6
+Track > Change Track Width > 9.0.4
+Track > Change Track Width > 9.1.4
+Track > Change Track Width > 9.0.6
+Track > Change Track Width > 9.1.6
+Track > Change Track Width > Show / Hide...
+Track > Delete
+Track > Freeze
+Track > Commit...
+Track > Bounce...
+Track > Extract MIDI to New Track
+Track > ARA Plugins > Melodyne
+Track > Save Track Preset...
+Track > Bypass Inserts > All
+Track > Bypass Inserts > Inserts A-E
+Track > Bypass Inserts > Inserts F-J
+Track > Bypass Inserts > EQ
+Track > Bypass Inserts > Dynamics
+Track > Bypass Inserts > Reverb
+Track > Bypass Inserts > Delay
+Track > Bypass Inserts > Modulation
+Track > Mute Sends > All
+Track > Mute Sends > Sends A-E
+Track > Mute Sends > Sends F-J
+Track > Write MIDI Real-Time Properties
+Track > Set Record Tracks to Input Only
+Track > Scroll to Track...
+Track > Clear All Clip Indicators
+Track > Coalesce VCA Controller Automation
+Track > Coalesce Trim Automation
+Track > Clear Trim Automation
+Track > Designate as Target Playlist
+Track > Show Target Playlist
+Track > Toggle Recent Playlist
+Track > Create Click Track
+Clip > Edit Lock/Unlock
+Clip > Time Lock/Unlock
+Clip > Send to Back
+Clip > Bring to Front
+Clip > Rating > none
+Clip > Rating > 1
+Clip > Rating > 2
+Clip > Rating > 3
+Clip > Rating > 4
+Clip > Rating > 5
+Clip > Group
+Clip > Ungroup
+Clip > Ungroup All
+Clip > Regroup
+Clip > Loop...
+Clip > Unloop...
+Clip > Capture...
+Clip > Rename...
+Clip > Identify Sync Point
+Clip > Quantize to Grid
+Clip > Clip Gain > Bypass
+Clip > Clip Gain > Render
+Clip > Clip Effects > Bypass
+Clip > Clip Effects > Render
+Clip > ARA Plugins > Melodyne
+Clip > Elastic Properties
+Clip > Conform to Tempo
+Clip > Remove Warp
+Clip > Remove Pitch Shift
+Event > Time Operations > Time Operations Window
+Event > Time Operations > Change Meter...
+Event > Time Operations > Insert Time...
+Event > Time Operations > Cut Time...
+Event > Time Operations > Move Song Start...
+Event > Tempo Operations > Tempo Operations Window
+Event > Tempo Operations > Constant...
+Event > Tempo Operations > Linear...
+Event > Tempo Operations > Parabolic...
+Event > Tempo Operations > S-Curve...
+Event > Tempo Operations > Scale...
+Event > Tempo Operations > Stretch...
+Event > MIDI Operations > MIDI Operations Window
+Event > MIDI Operations > Quantize...
+Event > MIDI Operations > Change Velocity...
+Event > MIDI Operations > Change Duration...
+Event > MIDI Operations > Transpose...
+Event > MIDI Operations > Select/Split Notes...
+Event > MIDI Operations > Input Quantize...
+Event > MIDI Operations > Step Input...
+Event > MIDI Operations > Restore Performance...
+Event > MIDI Operations > Flatten Performance...
+Event > MIDI Track Offsets
+Event > MIDI Real-Time Properties
+Event > Remove Duplicate Notes
+Event > Add Key Change...
+Event > Extract Chords from Selection
+Event > Beat Detective
+Event > Identify Beat...
+Event > Renumber Bars...
+Event > All MIDI Notes Off
+Event > Retrospective Record
+AudioSuite > EQ > Channel Strip
+AudioSuite > EQ > EQ3 1-Band
+AudioSuite > EQ > EQ3 7-Band
+AudioSuite > Dynamics > BF-76
+AudioSuite > Dynamics > Channel Strip
+AudioSuite > Dynamics > Dyn3 Compressor/Limiter
+AudioSuite > Dynamics > Dyn3 De-Esser
+AudioSuite > Dynamics > Dyn3 Expander/Gate
+AudioSuite > Dynamics > Maxim
+AudioSuite > Pitch Shift > Pitch II
+AudioSuite > Pitch Shift > Pitch Shift Legacy
+AudioSuite > Pitch Shift > Time Shift
+AudioSuite > Pitch Shift > Vari-Fi
+AudioSuite > Reverb > D-Verb
+AudioSuite > Delay > Mod Delay III
+AudioSuite > Modulation > Sci-Fi
+AudioSuite > Harmonic > Eleven Lite
+AudioSuite > Harmonic > Lo-Fi
+AudioSuite > Harmonic > Recti-Fi
+AudioSuite > Harmonic > SansAmp PSA-1
+AudioSuite > Other > DC Offset Removal
+AudioSuite > Other > Duplicate
+AudioSuite > Other > Gain
+AudioSuite > Other > Invert
+AudioSuite > Other > Normalize
+AudioSuite > Other > Reverse
+AudioSuite > Other > Signal Generator
+AudioSuite > Other > Time Compression Expansion
+Options > Destructive Record
+Options > Loop Record
+Options > QuickPunch
+Options > TrackPunch
+Options > DestructivePunch
+Options > Prepare DPE Tracks
+Options > Transport Online
+Options > Video Track Online
+Options > Pre/Post-Roll
+Options > Loop Playback
+Options > Dynamic Transport
+Options > Edit Window Scrolling > No Scrolling
+Options > Edit Window Scrolling > After Playback
+Options > Edit Window Scrolling > Page
+Options > Edit Window Scrolling > Continuous
+Options > Edit Window Scrolling > Center Playhead
+Options > Link Timeline and Edit Selection
+Options > Link Track and Edit Selection
+Options > Insertion Follows Playback
+Options > Tab to Transient
+Options > Mirrored MIDI Editing
+Options > Automation Follows Edit
+Options > Markers Follow Edit
+Options > Marker Target Follows First Selected Track
+Options > Layered Editing
+Options > Click
+Options > MIDI Thru
+Options > Auto-Spot Clips
+Options > Pre-Fader Metering
+Options > Solo Mode > SIP (Solo In Place)
+Options > Solo Mode > AFL (After Fader Listen)
+Options > Solo Mode > PFL (Pre Fader Listen)
+Options > Solo Mode > Latch
+Options > Solo Mode > X-OR (Cancels Previous Solo)
+Options > Solo Mode > Momentary
+Options > Edit/Tool Mode Keyboard Lock
+Options > Calibration Mode
+Options > Delay Compensation
+Options > MIDI Live Mode
+Options > Activate HEAT
+Options > Low Latency Monitoring
+Setup > Hardware...
+Setup > Playback Engine...
+Setup > Disk Allocation...
+Setup > Peripherals...
+Setup > I/O...
+Setup > Machine Track Arming Profiles...
+Setup > Video Sync Offset...
+Setup > Session
+Setup > Current Feet+Frames Position...
+Setup > Current Timecode Position...
+Setup > External Timecode Offset...
+Setup > Transcription Settings...
+Setup > MIDI > MIDI Studio...
+Setup > MIDI > MIDI Beat Clock...
+Setup > MIDI > MIDI Input Filter...
+Setup > MIDI > MIDI Input Devices...
+Setup > Click/Countoff...
+Setup > Keyboard Shortcuts...
+Setup > Preferences...
+Window > Configurations > Window Configuration List
+Window > Configurations > New Configuration...
+Window > Configurations > Update Active Configuration
+Window > Configurations > Auto-Update Active Configuration
+Window > Arrange > Tile
+Window > Arrange > Tile Horizontal
+Window > Arrange > Tile Vertical
+Window > Arrange > Cascade
+Window > Hide All Floating Windows
+Window > Close Window
+Window > Mix
+Window > Edit
+Window > Sketch to Front
+Window > MIDI Editor
+Window > Score Editor
+Window > MIDI Event List
+Window > MIDI Editors > Bring to Front
+Window > MIDI Editors > Send to Back
+Window > MIDI Keyboard
+Window > Clip List
+Window > Clip Effects
+Window > ARA Plugins
+Window > Splice
+Window > Learn
+Window > SoundFlow
+Window > Task Manager
+Window > New Workspace > Default
+Window > New Workspace > Soundbase
+Window > New Workspace > Track Presets
+Window > Workspaces > Bring to Front
+Window > Workspaces > Send to Back
+Window > Workspaces > Close All Workspaces
+Window > Transport
+Window > Big Counter
+Window > Automation
+Window > Memory Locations
+Window > Machine Track Arming
+Window > Video Universe
+Window > Video
+Window > Color Palette
+Window > UI Customization
+Window > Metadata Inspector
+Window > Undo History
+Window > Transcript
+Window > Pro Tools Search
+Window > Renderer
+Window > Trim and Downmix
+Window > Collaboration > Pro Tools Projects
+Window > Collaboration > Find Talent
+Window > Collaboration > Messages
+Window > Disk Usage
+Window > System Usage

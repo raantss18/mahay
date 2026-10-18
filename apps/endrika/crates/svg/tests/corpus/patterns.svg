@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100">
+  <defs>
+    <pattern id="checks" patternUnits="userSpaceOnUse" width="20" height="20"><rect width="10" height="10" fill="#0000ff"/></pattern>
+    <pattern id="spot" patternContentUnits="objectBoundingBox" width="1" height="1"><circle cx="0.5" cy="0.5" r="0.25" fill="#ff0000"/></pattern>
+    <pattern id="photo" patternContentUnits="objectBoundingBox" width="1" height="1"><use href="#img" transform="scale(0.25 0.5)"/></pattern>
+    <image id="img" width="4" height="2" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAIAAADwyuo0AAAAE0lEQVR4nGP4z8AARGDiPwMyBwBnsgf5Q2OaZwAAAABJRU5ErkJggg=="/>
+  </defs>
+  <!-- A repeating vector tile, bounding-box content units, an image fill written as a pattern. -->
+  <rect id="tiled" width="100" height="100" fill="url(#checks)"/>
+  <rect id="spotted" x="100" width="100" height="100" fill="url(#spot)"/>
+  <rect id="pictured" x="200" y="20" width="80" height="40" fill="url(#photo)"/>
+  <!-- probe 5 5 #0000ffff -->
+  <!-- probe 15 5 #00000000 -->
+  <!-- probe 25 25 #0000ffff -->
+  <!-- probe 35 45 #00000000 -->
+  <!-- probe 95 95 #00000000 -->
+  <!-- probe 85 85 #0000ffff -->
+  <!-- probe 150 50 #ff0000ff -->
+  <!-- probe 110 10 #00000000 -->
+  <!-- probe 172 50 #ff0000ff -->
+  <!-- probe 178 50 #00000000 -->
+  <!-- probe 210 40 #ff0000ff -->
+  <!-- probe 270 40 #0000ffff -->
+</svg>

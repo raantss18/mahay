@@ -1,0 +1,373 @@
+//! Extended variable collections (overrides, library updates, reset), variables import and
+//! export (JSON round trip, merging by name, CSS, junk), gradient stops bound to variables and
+//! variant properties driven by string variables.
+
+use figcraft_color::{Color, ColorStop, Gradient, GradientKind, Paint, PaintKind};
+use figcraft_doc::*;
+use serde_json::{Value, json};
+
+use crate::Session;
+use crate::params::id_of;
+
+fn ex(s: &mut Session, cmd: &str, p: Value) -> Value {
+    match s.execute(cmd, &p) {
+        Ok(v) => v,
+        Err(e) => panic!("{cmd} {p}: {e}"),
+    }
+}
+
+fn idv(v: &Value) -> NodeId {
+    id_of(&v["id"]).unwrap()
+}
+
+fn var<'a>(s: &'a Session, collection: &str, name: &str) -> &'a Variable {
+    let doc = s.doc().unwrap();
+    doc.variables.variables.iter().find(|v| v.collection == collection && v.name == name).unwrap()
+}
+
+fn hex(v: Option<&VariableValue>) -> String {
+    match v {
+        Some(VariableValue::Color(c)) => c.to_hex(),
+        other => format!("{other:?}"),
+    }
+}
+
+fn fill_hex(s: &Session, id: NodeId) -> String {
+    s.doc().unwrap().node(id).unwrap().fills.first().and_then(|p| p.solid_color()).map(|c| c.to_hex()).unwrap_or_default()
+}
+
+fn healthy(s: &Session) {
+    let doc = s.doc().unwrap();
+    assert!(doc.validate().is_empty(), "{:?}", doc.validate());
+}
+
+#[test]
+fn extended_collections_override_follow_updates_and_reset() {
+    let d = std::env::temp_dir().join(format!("figcraft-extvars-{}", std::process::id()));
+    std::fs::create_dir_all(&d).unwrap();
+    let lib_path = d.join("theme.figcraft").to_string_lossy().into_owned();
+    let mut lib = Session::new();
+    ex(&mut lib, "variable.createCollection", json!({"name": "Theme", "modes": ["Light", "Dark"]}));
+    ex(
+        &mut lib,
+        "variable.create",
+        json!({"collection": "Theme", "name": "primary", "type": "color", "values": {"Light": "#0000ff", "Dark": "#ffffff"}}),
+    );
+    ex(&mut lib, "variable.create", json!({"collection": "Theme", "name": "radius", "type": "number", "value": 4}));
+    let lid = ex(&mut lib, "library.publish", json!({}))["id"].as_str().unwrap().to_string();
+    ex(&mut lib, "file.saveAs", json!({"path": lib_path}));
+
+    let mut s = Session::new();
+    ex(&mut s, "library.add", json!({"path": lib_path}));
+    let ext = ex(&mut s, "library.extendCollection", json!({"library": lid, "collection": "Theme"}))["id"].as_str().unwrap().to_string();
+    let (coll, parent) = {
+        let doc = s.doc().unwrap();
+        let c = doc.variables.collections.iter().find(|c| c.id == ext).unwrap().clone();
+        let p = doc.variables.collections.iter().find(|p| Some(&p.id) == c.extends.as_ref()).unwrap().clone();
+        assert!(crate::library::is_remote_collection(doc, &p.id), "it extends the library's copy");
+        (c, p)
+    };
+    assert_eq!(coll.name, "Theme (extended)");
+    assert_eq!(coll.modes, parent.modes, "the same modes");
+    let (light, dark) = (coll.modes[0].id.clone(), coll.modes[1].id.clone());
+    let primary = var(&s, &ext, "primary").clone();
+    assert!(primary.extends.is_some() && primary.overrides.is_empty());
+    assert_eq!(hex(primary.values.get(&dark)), "FFFFFF");
+    assert_eq!(var(&s, &ext, "radius").values.get(&light), Some(&VariableValue::Number(4.0)));
+
+    // An override in one mode; bound layers see it in that mode.
+    ex(&mut s, "variable.set", json!({"variable": primary.id, "mode": "Dark", "value": "#ff0000"}));
+    assert_eq!(var(&s, &ext, "primary").overrides.iter().collect::<Vec<_>>(), [&dark]);
+    let r = idv(&ex(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})));
+    ex(&mut s, "variable.bind", json!({"ids": [r], "field": "fill", "variable": primary.id}));
+    ex(&mut s, "variable.setMode", json!({"ids": [r], "collection": ext, "mode": "Dark"}));
+    assert_eq!(fill_hex(&s, r), "FF0000");
+    // Variables of its own are fine; modes and inherited names and variables aren't its to change.
+    ex(&mut s, "variable.create", json!({"collection": ext, "name": "extra", "type": "number", "value": 1}));
+    for (cmd, p) in [
+        ("variable.addMode", json!({"collection": ext, "name": "Dim"})),
+        ("variable.renameMode", json!({"collection": ext, "mode": "Dark", "name": "Night"})),
+        ("variable.removeMode", json!({"collection": ext, "mode": "Dark"})),
+        ("variable.update", json!({"variable": primary.id, "name": "mine"})),
+        ("variable.delete", json!({"variable": primary.id})),
+        ("variable.resetOverride", json!({"variable": "extra"})),
+    ] {
+        assert!(s.execute(cmd, &p).is_err(), "{cmd}");
+    }
+    let dup = ex(&mut s, "variable.duplicate", json!({"variable": primary.id}))["id"].as_str().unwrap().to_string();
+    assert!(s.doc().unwrap().variables.get(&dup).is_some_and(|v| v.extends.is_none() && v.overrides.is_empty()), "a copy is its own");
+
+    // The library changes a value and gains a variable: inherited values follow, overrides stay.
+    ex(&mut lib, "variable.set", json!({"variable": "primary", "mode": "Light", "value": "#00ff00"}));
+    ex(&mut lib, "variable.set", json!({"variable": "primary", "mode": "Dark", "value": "#222222"}));
+    ex(&mut lib, "variable.create", json!({"collection": "Theme", "name": "gap", "type": "number", "value": 8}));
+    ex(&mut lib, "library.publish", json!({}));
+    ex(&mut lib, "file.save", json!({}));
+    ex(&mut s, "library.acceptUpdates", json!({}));
+    let p = var(&s, &ext, "primary");
+    assert_eq!((hex(p.values.get(&light)), hex(p.values.get(&dark))), ("00FF00".into(), "FF0000".into()));
+    assert!(var(&s, &ext, "gap").extends.is_some(), "the new library variable is inherited");
+    assert_eq!(fill_hex(&s, r), "FF0000");
+    // Reset: the inherited value again.
+    ex(&mut s, "variable.resetOverride", json!({"variable": primary.id, "mode": "Dark"}));
+    assert!(var(&s, &ext, "primary").overrides.is_empty());
+    assert_eq!(fill_hex(&s, r), "222222");
+    healthy(&s);
+
+    // Saved and reopened, it is the same; removing the library keeps what it extends.
+    let user = d.join("app.figcraft").to_string_lossy().into_owned();
+    ex(&mut s, "file.saveAs", json!({"path": user}));
+    let mut t = Session::empty();
+    ex(&mut t, "file.open", json!({"path": user}));
+    assert_eq!(t.doc().unwrap().variables, s.doc().unwrap().variables);
+    ex(&mut s, "library.remove", json!({"id": lid}));
+    assert!(s.doc().unwrap().variables.collections.iter().any(|c| c.id == parent.id));
+    healthy(&s);
+    assert!(s.execute("library.extendCollection", &json!({"library": lid, "collection": "Theme"})).is_err());
+    let _ = std::fs::remove_dir_all(&d);
+}
+
+/// A "Theme" collection (Light/Dark) with one variable of each type and an alias.
+fn theme(s: &mut Session) {
+    ex(s, "variable.createCollection", json!({"name": "Theme", "modes": ["Light", "Dark"]}));
+    ex(
+        s,
+        "variable.create",
+        json!({"collection": "Theme", "name": "color/primary", "type": "color", "values": {"Light": "#0000ff80", "Dark": "#ffffff"}}),
+    );
+    ex(s, "variable.create", json!({"collection": "Theme", "name": "radius", "type": "number", "values": {"Light": 4, "Dark": 6.5}}));
+    ex(s, "variable.create", json!({"collection": "Theme", "name": "label", "type": "string", "value": "Say \"hi\""}));
+    ex(s, "variable.create", json!({"collection": "Theme", "name": "on", "type": "boolean", "value": false}));
+    ex(s, "variable.create", json!({"collection": "Theme", "name": "accent", "type": "color", "value": "#000000"}));
+    ex(s, "variable.set", json!({"variable": "accent", "mode": "Dark", "value": {"alias": "color/primary"}}));
+    ex(s, "variable.update", json!({"variable": "radius", "scopes": ["CORNER_RADIUS"], "description": "Corners"}));
+}
+
+/// (collection, variable, [(mode, value)], scopes), all by name.
+type Row = (String, String, Vec<(String, String)>, Option<Vec<String>>);
+
+/// Collections and variables by name with their values by mode name (aliases by target name).
+fn by_name(s: &Session) -> Vec<Row> {
+    let vars = &s.doc().unwrap().variables;
+    let mut out: Vec<_> = vars
+        .variables
+        .iter()
+        .map(|v| {
+            let c = vars.collection(&v.collection).unwrap();
+            let values = c
+                .modes
+                .iter()
+                .map(|m| {
+                    let val = match v.values.get(&m.id) {
+                        Some(VariableValue::Alias(a)) => format!("→ {}", vars.get(a).unwrap().name),
+                        Some(x) => format!("{x:?}"),
+                        None => "-".into(),
+                    };
+                    (m.name.clone(), val)
+                })
+                .collect();
+            (c.name.clone(), v.name.clone(), values, v.scopes.clone())
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+#[test]
+fn variables_export_and_import_round_trip() {
+    let mut s = Session::new();
+    theme(&mut s);
+    let text = ex(&mut s, "variable.export", json!({}))["text"].as_str().unwrap().to_string();
+    let parsed: Value = serde_json::from_str(&text).unwrap();
+    assert!(figcraft_format::rest::is_variables_json(&parsed));
+
+    // Into another file: the same collections, variables, values, aliases and scopes.
+    let mut t = Session::new();
+    let r = ex(&mut t, "variable.import", json!({"variables": text}));
+    assert_eq!((r["collections"].as_u64(), r["variables"].as_u64()), (Some(1), Some(5)), "{r}");
+    assert_eq!(by_name(&t), by_name(&s));
+    assert_eq!(t.doc().unwrap().variables.get("radius").unwrap().description, "Corners");
+
+    // Back into the same file: nothing new, nothing changed; edited values update in place.
+    let before = s.doc().unwrap().variables.clone();
+    let r = ex(&mut s, "variable.import", json!({"variables": parsed}));
+    assert_eq!((r["collections"].as_u64(), r["variables"].as_u64(), r["updated"].as_u64()), (Some(0), Some(0), Some(5)), "{r}");
+    assert_eq!(s.doc().unwrap().variables, before);
+    let mut edited = parsed.clone();
+    let rid = before.get("radius").unwrap().id.clone();
+    let light = before.collections[0].modes[0].id.clone();
+    edited["meta"]["variables"][&rid]["valuesByMode"][&light] = json!(12);
+    edited["meta"]["variableCollections"][&before.collections[0].id]["modes"].as_array_mut().unwrap().push(json!({"modeId": "x", "name": "Dim"}));
+    edited["meta"]["variables"][&rid]["valuesByMode"]["x"] = json!(1);
+    ex(&mut s, "variable.import", json!({"variables": edited}));
+    let radius = s.doc().unwrap().variables.get("radius").unwrap().clone();
+    assert_eq!(radius.id, rid, "the same variable (bindings keep working)");
+    assert_eq!(radius.values.get(&light), Some(&VariableValue::Number(12.0)));
+    let coll = s.doc().unwrap().variables.collections[0].clone();
+    assert_eq!(coll.modes.len(), 3, "the new mode is added");
+    assert_eq!(radius.values.get(&coll.modes[2].id), Some(&VariableValue::Number(1.0)));
+    assert_eq!(s.doc().unwrap().variables.get("on").unwrap().values.len(), 3, "the others get a value in it too");
+    ex(&mut s, "edit.undo", json!({}));
+    assert_eq!(s.doc().unwrap().variables, before, "one undo step");
+
+    // CSS: the default mode on :root, the others by attribute; aliases refer to their target.
+    let css = ex(&mut s, "variable.export", json!({"format": "css", "collections": ["Theme"]}))["text"].as_str().unwrap().to_string();
+    for want in [
+        ":root {\n",
+        "  --radius: 4;\n",
+        "[data-theme=\"Dark\"] {\n",
+        "  --radius: 6.5;\n",
+        "  --accent: var(--color-primary);\n",
+        "  --label: \"Say  hi \";\n",
+    ] {
+        assert!(css.contains(want), "{want:?} in\n{css}");
+    }
+    // Written to a file and read back from it.
+    let path = std::env::temp_dir().join(format!("figcraft-vars-io-{}.json", std::process::id())).to_string_lossy().into_owned();
+    ex(&mut s, "variable.export", json!({"path": path}));
+    let mut u = Session::new();
+    ex(&mut u, "variable.import", json!({"variables": path}));
+    assert_eq!(by_name(&u), by_name(&s));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn variables_import_checks_what_it_reads() {
+    let mut s = Session::new();
+    ex(&mut s, "variable.createCollection", json!({"name": "Theme"}));
+    ex(&mut s, "variable.create", json!({"collection": "Theme", "name": "size", "type": "color", "value": "#000000"}));
+    let before = s.doc().unwrap().variables.clone();
+    for p in
+        [json!({}), json!({"variables": 3}), json!({"variables": "{"}), json!({"variables": {"nope": 1}}), json!({"variables": "/no/such/file.json"})]
+    {
+        assert!(s.execute("variable.import", &p).is_err(), "{p}");
+    }
+    for p in [json!({"collections": "x"}), json!({"collections": ["nope"]}), json!({"format": "xml"}), json!({"collections": [3]})] {
+        assert!(s.execute("variable.export", &p).is_err(), "{p}");
+    }
+    assert_eq!(s.doc().unwrap().variables, before);
+    // Junk entries are skipped with warnings; a type clash and an alias loop don't get in.
+    let mode = json!([{"modeId": "m", "name": "Mode 1"}]);
+    let alias = |id: &str| json!({"type": "VARIABLE_ALIAS", "id": id});
+    let junk = json!({"meta": {
+    "variableCollections": {"c": {"id": "c", "name": "Theme", "modes": mode}, "bad": {"name": "x", "modes": "no"}},
+    "variables": {
+        "size": {"id": "size", "name": "size", "variableCollectionId": "c", "resolvedType": "FLOAT", "valuesByMode": {"m": 3}},
+        "a": {"id": "a", "name": "a", "variableCollectionId": "c", "resolvedType": "FLOAT", "valuesByMode": {"m": alias("b")}},
+        "b": {"id": "b", "name": "b", "variableCollectionId": "c", "resolvedType": "FLOAT", "valuesByMode": {"m": alias("a")}},
+        "w": {"id": "w", "name": "w", "variableCollectionId": "c", "resolvedType": "WEIRD", "valuesByMode": {"m": 1}},
+        "n": {"id": "n", "name": "n", "variableCollectionId": "c", "resolvedType": "FLOAT", "valuesByMode": {"m": "NaN"}}
+    }}});
+    let r = ex(&mut s, "variable.import", json!({"variables": junk}));
+    let warnings = r["warnings"].to_string();
+    assert!(warnings.contains("`size` is a color variable"), "{r}");
+    assert!(warnings.contains("refer back to itself"), "{r}");
+    let vars = &s.doc().unwrap().variables;
+    assert!(matches!(vars.get("size").unwrap().values.values().next(), Some(VariableValue::Color(_))), "the clash left it alone");
+    assert_eq!(vars.collections.len(), 1);
+    let (a, b) = (vars.get("a").unwrap(), vars.get("b").unwrap());
+    assert!(!a.values.values().chain(b.values.values()).all(|v| matches!(v, VariableValue::Alias(_))), "no loop");
+    healthy(&s);
+}
+
+/// A rectangle filled with a three-stop linear gradient, and colour variables `brand` and `ink`.
+fn gradient_rect(s: &mut Session) -> NodeId {
+    let r = idv(&ex(s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 40, "height": 40})));
+    let mut g = Gradient::default_for(GradientKind::Linear, Color::BLACK);
+    g.stops = vec![
+        ColorStop { position: 0.0, color: Color::BLACK },
+        ColorStop { position: 0.5, color: Color::WHITE },
+        ColorStop { position: 1.0, color: Color::BLACK },
+    ];
+    ex(s, "fill.set", json!({"ids": [r], "index": 0, "paint": Paint::gradient(g)}));
+    ex(s, "variable.createCollection", json!({"name": "T"}));
+    ex(s, "variable.create", json!({"collection": "T", "name": "brand", "type": "color", "value": "#ff0000"}));
+    ex(s, "variable.create", json!({"collection": "T", "name": "ink", "type": "color", "value": "#00ff00"}));
+    r
+}
+
+fn stops(s: &Session, r: NodeId) -> Vec<String> {
+    match &s.doc().unwrap().node(r).unwrap().fills[0].kind {
+        PaintKind::Gradient(g) => g.stops.iter().map(|st| st.color.to_hex()).collect(),
+        k => panic!("{k:?}"),
+    }
+}
+
+fn bound_keys(s: &Session, r: NodeId) -> Vec<String> {
+    s.doc().unwrap().node(r).unwrap().bound.keys().cloned().collect()
+}
+
+#[test]
+fn gradient_stops_bind_to_variables_and_follow_their_stops() {
+    let mut s = Session::new();
+    let r = gradient_rect(&mut s);
+    ex(&mut s, "variable.bind", json!({"ids": [r], "field": "fills/0/stops/2/color", "variable": "brand"}));
+    ex(&mut s, "variable.bind", json!({"ids": [r], "field": "fills/0/stops/1/color", "variable": "ink"}));
+    assert_eq!(stops(&s, r), ["000000", "00FF00", "FF0000"]);
+    ex(&mut s, "variable.set", json!({"variable": "brand", "value": "#0000ff"}));
+    assert_eq!(stops(&s, r), ["000000", "00FF00", "0000FF"]);
+    // Removing the first stop moves the bindings down with their stops.
+    let cur = |s: &Session| s.doc().unwrap().node(r).unwrap().fills[0].clone();
+    let mut p = cur(&s);
+    if let PaintKind::Gradient(g) = &mut p.kind {
+        g.stops.remove(0);
+    }
+    ex(&mut s, "fill.set", json!({"ids": [r], "index": 0, "paint": p}));
+    assert_eq!(bound_keys(&s, r), ["fills/0/stops/0/color", "fills/0/stops/1/color"]);
+    assert_eq!(stops(&s, r), ["00FF00", "0000FF"]);
+    // Moving a stop (or recolouring another paint) keeps them; removing a bound stop drops its binding.
+    let mut p = cur(&s);
+    if let PaintKind::Gradient(g) = &mut p.kind {
+        g.stops[0].position = 0.9;
+        g.stops.push(ColorStop { position: 0.1, color: Color::WHITE });
+    }
+    ex(&mut s, "fill.set", json!({"ids": [r], "index": 0, "paint": p}));
+    assert_eq!(bound_keys(&s, r).len(), 2);
+    let mut p = cur(&s);
+    if let PaintKind::Gradient(g) = &mut p.kind {
+        g.stops.remove(1);
+    }
+    ex(&mut s, "fill.set", json!({"ids": [r], "index": 0, "paint": p}));
+    assert_eq!(bound_keys(&s, r), ["fills/0/stops/0/color"]);
+    // The paint moves up the list with its binding; a solid paint has no stops to bind.
+    ex(&mut s, "fill.add", json!({"ids": [r], "color": "#cccccc"}));
+    ex(&mut s, "fill.move", json!({"ids": [r], "from": 0, "to": 1}));
+    assert_eq!(bound_keys(&s, r), ["fills/1/stops/0/color"]);
+    ex(&mut s, "fill.set", json!({"ids": [r], "index": 1, "color": "#123456"}));
+    assert!(bound_keys(&s, r).is_empty());
+    // Only colour variables, and junk stop keys bind nothing.
+    assert!(crate::cmd::lists::stop_binding("stops/-1/color").is_none() && crate::cmd::lists::stop_binding("stops/1/color") == Some(1));
+    healthy(&s);
+}
+
+#[test]
+fn variant_properties_follow_string_variables() {
+    let mut s = Session::new();
+    let mut variants = Vec::new();
+    for (k, (state, color)) in [("Default", "#ff0000"), ("Hover", "#0000ff")].iter().enumerate() {
+        let f =
+            idv(&ex(&mut s, "frame.create", json!({"x": k as f64 * 150.0, "y": 0, "width": 100, "height": 40, "name": format!("State={state}")})));
+        ex(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 100, "height": 40, "parent": f, "props": {"name": "Bg", "fill": color}}));
+        variants.push(idv(&ex(&mut s, "component.create", json!({"ids": [f]}))));
+    }
+    let set = idv(&ex(&mut s, "component.combineVariants", json!({"ids": variants.clone()})));
+    let i = idv(&ex(&mut s, "instance.create", json!({"component": set, "x": 0, "y": 200})));
+    ex(&mut s, "variable.createCollection", json!({"name": "UI", "modes": ["Calm", "Busy"]}));
+    ex(&mut s, "variable.create", json!({"collection": "UI", "name": "state", "type": "string", "values": {"Calm": "Default", "Busy": "Hover"}}));
+    ex(&mut s, "variable.create", json!({"collection": "UI", "name": "count", "type": "number", "value": 1}));
+    let main = |s: &Session| match s.doc().unwrap().node(i).unwrap().kind {
+        NodeKind::Instance { component, .. } => component,
+        _ => panic!(),
+    };
+    assert!(s.execute("variable.bind", &json!({"ids": [i], "field": "componentProperties/State", "variable": "count"})).is_err());
+    ex(&mut s, "variable.bind", json!({"ids": [i], "field": "componentProperties/State", "variable": "state"}));
+    assert_eq!(main(&s), variants[0]);
+    ex(&mut s, "variable.setMode", json!({"ids": [i], "collection": "UI", "mode": "Busy"}));
+    assert_eq!(main(&s), variants[1]);
+    let bg = s.doc().unwrap().node(i).unwrap().children[0];
+    assert_eq!(fill_hex(&s, bg), "0000FF", "the instance shows the variant");
+    // A value naming no variant changes nothing.
+    ex(&mut s, "variable.set", json!({"variable": "state", "mode": "Busy", "value": "Pressed"}));
+    assert_eq!(main(&s), variants[1]);
+    healthy(&s);
+}

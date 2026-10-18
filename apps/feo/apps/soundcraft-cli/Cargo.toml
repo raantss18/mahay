@@ -1,0 +1,21 @@
+[package]
+name = "soundcraft-cli"
+description = "SoundCraft command line: headless editing, conversion, bounce, MCP server, app control"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "soundcraft-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+soundcraft-engine.workspace = true
+soundcraft-automation.workspace = true
+soundcraft-audio-io.workspace = true
+soundcraft-dsp.workspace = true
+serde_json.workspace = true

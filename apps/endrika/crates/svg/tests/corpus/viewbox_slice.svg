@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice">
+  <!-- Slice: scale 2 to cover, pinned top-left; the right half falls outside. -->
+  <rect width="50" height="50" fill="#ff0000"/>
+  <rect y="50" width="50" height="50" fill="#00ff00"/>
+  <rect x="50" y="50" width="50" height="50" fill="#0000ff"/>
+  <!-- probe 50 50 #ff0000ff -->
+  <!-- probe 50 150 #00ff00ff -->
+  <!-- probe 99 150 #00ff00ff -->
+</svg>

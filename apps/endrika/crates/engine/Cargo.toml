@@ -1,0 +1,35 @@
+[package]
+name = "figcraft-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft engine: sessions, undo history, the command registry every surface (UI, CLI, control channel, MCP) dispatches through, pointer tools, components and the Figma menu catalog"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-geom = { workspace = true }
+figcraft-color = { workspace = true }
+figcraft-doc = { workspace = true }
+figcraft-collab = { workspace = true }
+figcraft-layout = { workspace = true }
+figcraft-text = { workspace = true }
+figcraft-pathops = { workspace = true }
+figcraft-render = { workspace = true }
+figcraft-format = { workspace = true }
+figcraft-svg = { workspace = true }
+figcraft-pdf = { workspace = true }
+craft-docpath = { workspace = true }
+figcraft-plugin = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+base64 = { workspace = true }
+regex = { workspace = true }
+web-time = "1.1.0"
+
+[dev-dependencies]
+wat = { workspace = true }
+image = { workspace = true }

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">
+  <defs>
+    <linearGradient id="lin"><stop offset="0" stop-color="#ff0000"/><stop offset="1" stop-color="#0000ff"/></linearGradient>
+    <linearGradient id="us" gradientUnits="userSpaceOnUse" x1="50" y1="0" x2="100" y2="0">
+      <stop offset="0" stop-color="#00ff00"/><stop offset="1" stop-color="#0000ff"/>
+    </linearGradient>
+    <linearGradient id="refl" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="25" y2="0" spreadMethod="reflect">
+      <stop offset="0" stop-color="#ff0000"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="rep" href="#refl" spreadMethod="repeat"/>
+    <linearGradient id="rot" gradientTransform="rotate(90 0.5 0.5)">
+      <stop offset="0" stop-color="#ff0000"/><stop offset="1" stop-color="#0000ff"/>
+    </linearGradient>
+    <linearGradient id="base"><stop offset="0" stop-color="#ffff00"/><stop offset="1" stop-color="#000000"/></linearGradient>
+    <linearGradient id="child" xlink:href="#base" x1="0" y1="0" x2="0" y2="1"/>
+    <radialGradient id="rad"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ff0000"/></radialGradient>
+    <radialGradient id="foc" fx="0.25" fy="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ff0000"/></radialGradient>
+    <linearGradient id="fade"><stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000"/></linearGradient>
+  </defs>
+  <rect id="bbox-units" width="100" height="20" fill="url(#lin)"/>
+  <rect id="user-space" y="30" width="100" height="20" fill="url(#us)"/>
+  <rect id="reflect" y="60" width="100" height="20" fill="url(#refl)"/>
+  <rect id="repeat" y="90" width="100" height="20" fill="url(#rep)"/>
+  <rect id="rotated" x="110" width="80" height="80" fill="url(#rot)"/>
+  <rect id="href-chain" x="110" y="90" width="80" height="40" fill="url(#child)"/>
+  <circle id="radial" cx="50" cy="160" r="30" fill="url(#rad)"/>
+  <circle id="focal" cx="150" cy="170" r="25" fill="url(#foc)"/>
+  <rect id="stop-opacity" x="110" y="132" width="80" height="10" fill="url(#fade)"/>
+  <!-- probe 0 10 #ff0000ff ~10 -->
+  <!-- probe 50 10 #7e0081ff -->
+  <!-- probe 10 40 #00ff00ff -->
+  <!-- probe 75 40 #007f80ff -->
+  <!-- probe 12 70 #ff8080ff -->
+  <!-- probe 37 70 #ff8080ff -->
+  <!-- probe 49 70 #ff0505ff ~12 -->
+  <!-- probe 24 70 #fffafaff ~12 -->
+  <!-- probe 37 100 #ff8080ff -->
+  <!-- probe 49 100 #fffafaff ~12 -->
+  <!-- probe 26 100 #ff0f0fff ~12 -->
+  <!-- probe 150 1 #fc0003ff ~10 -->
+  <!-- probe 150 78 #0300fcff ~10 -->
+  <!-- probe 112 40 #7e0081ff -->
+  <!-- probe 188 40 #7e0081ff -->
+  <!-- probe 150 91 #f9f900ff ~10 -->
+  <!-- probe 150 110 #7c7c00ff -->
+  <!-- probe 50 160 #ffffffff ~12 -->
+  <!-- probe 50 145 #ff8484ff ~12 -->
+  <!-- probe 75 160 #ff2626ff ~12 -->
+  <!-- probe 137 170 #fff0f0ff ~24 -->
+  <!-- probe 172 170 #ff0000ff ~24 -->
+  <!-- probe 111 137 #00000003 ~6 -->
+  <!-- probe 150 137 #00000080 ~8 -->
+  <!-- probe 189 137 #000000fc ~6 -->
+</svg>

@@ -1,0 +1,18 @@
+# A tiny CLAP plugin used only by soundcraft-clap-host's integration tests. Not part of the
+# SoundCraft workspace (the empty [workspace] table makes it its own root); the test builds it
+# with `cargo build` and loads the resulting library. Never shipped.
+[package]
+name = "clap-fixture"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+clap-sys = "0.5"
+
+[workspace]

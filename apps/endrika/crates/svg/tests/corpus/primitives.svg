@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+  <!-- Basic shapes: a rounded rect, elliptical corners, circle, ellipse, lines, polyline, polygon. -->
+  <rect id="card" x="10" y="10" width="50" height="30" rx="8" fill="#ff0000"/>
+  <rect x="70" y="10" width="50" height="30" rx="10" ry="5" fill="#ff8000"/>
+  <circle cx="40" cy="80" r="20" fill="#008000"/>
+  <ellipse cx="100" cy="80" rx="30" ry="15" fill="#0000ff"/>
+  <line x1="10" y1="120" x2="190" y2="120" stroke="#000000" stroke-width="2"/>
+  <line x1="10" y1="130" x2="60" y2="180" stroke="#000000" stroke-width="4"/>
+  <polyline points="80,180 100,140 120,180" fill="none" stroke="#800080" stroke-width="4"/>
+  <polygon points="140,180 160,140 180,180" fill="#008080"/>
+  <!-- probe 35 25 #ff0000ff -->
+  <!-- probe 11 11 #00000000 -->
+  <!-- probe 71 11 #00000000 -->
+  <!-- probe 75 13 #ff8000ff ~40 -->
+  <!-- probe 40 80 #008000ff -->
+  <!-- probe 100 80 #0000ffff -->
+  <!-- probe 128 80 #0000ffff -->
+  <!-- probe 100 96 #00000000 ~40 -->
+  <!-- probe 100 120 #000000ff -->
+  <!-- probe 35 155 #000000ff -->
+  <!-- probe 90 160 #800080ff ~40 -->
+  <!-- probe 160 170 #008080ff -->
+</svg>

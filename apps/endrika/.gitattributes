@@ -1,0 +1,4 @@
+# Scripts and server files run on Linux: keep their line endings LF in every checkout and archive
+# (a copy of a Windows checkout must still run packaging/server/install.sh).
+*.sh text eol=lf
+packaging/server/* text eol=lf

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <style>
+    rect { fill: #808080; }
+    .red { fill: red; }
+    #special { fill: #00ff00; }
+    [data-kind="stroke"] { stroke: #0000ff; stroke-width: 4px; }
+  </style>
+  <!-- Element, class, id and attribute selectors; an inline style wins over them all. -->
+  <rect x="0" y="0" width="40" height="40"/>
+  <rect class="red" x="50" y="0" width="40" height="40"/>
+  <rect id="special" class="red" x="0" y="50" width="40" height="40"/>
+  <rect class="red" style="fill:#ffff00" data-kind="stroke" x="50" y="50" width="40" height="40"/>
+  <!-- probe 20 20 #808080ff -->
+  <!-- probe 70 20 #ff0000ff -->
+  <!-- probe 20 70 #00ff00ff -->
+  <!-- probe 70 70 #ffff00ff -->
+  <!-- probe 49 70 #0000ffff -->
+</svg>

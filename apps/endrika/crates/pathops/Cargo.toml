@@ -1,0 +1,14 @@
+[package]
+name = "figcraft-pathops"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft path operations: booleans (union, subtract, intersect, exclude), outline stroke with inside/center/outside alignment, arrowheads"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-geom = { workspace = true }
+figcraft-doc = { workspace = true }
+linesweeper = { workspace = true }

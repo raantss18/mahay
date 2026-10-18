@@ -1,0 +1,92 @@
+//! PDF print options through the export commands: one-off exports, layers' own export settings
+//! (stored, edited, undone), the frames PDF, and bad values refused.
+
+use base64::Engine as _;
+use figcraft_doc::*;
+use serde_json::{Value, json};
+
+use crate::Session;
+use crate::params::id_of;
+
+/// A session with a 200 × 100 frame (selected).
+fn session() -> (Session, NodeId) {
+    let mut s = Session::new();
+    let r = s.execute("frame.create", &json!({"x": 0, "y": 0, "width": 200, "height": 100, "name": "Poster"})).unwrap();
+    let f = id_of(&r["id"]).unwrap();
+    s.set_selection(vec![f]);
+    (s, f)
+}
+
+fn pdf_text(r: &Value) -> String {
+    let bytes = base64::engine::general_purpose::STANDARD.decode(r["data"].as_str().unwrap()).unwrap();
+    assert!(bytes.starts_with(b"%PDF"));
+    String::from_utf8_lossy(&bytes).into_owned()
+}
+
+#[test]
+fn one_off_pdf_exports_take_print_options() {
+    let (mut s, f) = session();
+    let plain = pdf_text(&s.execute("file.export", &json!({"ids": [f], "format": "pdf"})).unwrap());
+    assert!(plain.contains("/MediaBox[0 0 200 100]") && !plain.contains("/TrimBox"), "{plain}");
+    // 0.125 in = 9 pt of bleed and crop marks.
+    let r = s.execute("file.export", &json!({"ids": [f], "format": "pdf", "bleed": "0.125in", "cropMarks": true, "cmyk": true})).unwrap();
+    let t = pdf_text(&r);
+    assert!(t.contains("/TrimBox[33 33 233 133]") && t.contains("/BleedBox[24 24 242 142]"), "{t}");
+    // Numbers are points; other formats ignore the options.
+    let t = pdf_text(&s.execute("file.export", &json!({"ids": [f], "format": "pdf", "bleed": 9})).unwrap());
+    assert!(t.contains("/TrimBox[9 9 209 109]"), "{t}");
+    assert!(s.execute("file.export", &json!({"ids": [f], "format": "png", "bleed": "3mm"})).is_ok());
+}
+
+#[test]
+fn bad_print_options_are_refused() {
+    let (mut s, f) = session();
+    for bad in [
+        json!({"bleed": "3 furlongs"}),
+        json!({"bleed": -1}),
+        json!({"bleed": "3in"}),
+        json!({"bleed": true}),
+        json!({"cropMarks": "maybe"}),
+        json!({"cmyk": [1]}),
+    ] {
+        let mut p = bad.clone();
+        p["ids"] = json!([f]);
+        p["format"] = json!("pdf");
+        assert!(s.execute("file.export", &p).is_err(), "{bad}");
+        assert!(s.execute("export.add", &json!({"ids": [f], "setting": bad})).is_err(), "{bad}");
+    }
+    assert!(s.doc().unwrap().node(f).unwrap().exports.is_empty(), "nothing added by a refused setting");
+}
+
+#[test]
+fn export_settings_keep_print_options() {
+    let (mut s, f) = session();
+    s.execute("export.add", &json!({"ids": [f], "setting": {"format": "pdf", "bleed": "3mm", "cmyk": true}})).unwrap();
+    let print = |s: &Session| s.doc().unwrap().node(f).unwrap().exports[0].print;
+    assert!((print(&s).bleed - 72.0 / 25.4 * 3.0).abs() < 1e-9 && print(&s).cmyk && !print(&s).crop_marks);
+    s.execute("export.update", &json!({"ids": [f], "index": 0, "cropMarks": true})).unwrap();
+    assert!(print(&s).crop_marks && print(&s).cmyk, "the rest stays");
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert!(!print(&s).crop_marks);
+    // "Export layers" uses each setting's own options ...
+    let r = s.execute("file.exportLayers", &json!({"ids": [f]})).unwrap();
+    let t = pdf_text(&r["files"][0]);
+    assert!(t.contains("/TrimBox[") && !t.contains("0 0 0 RG"), "a bleed, no marks: {t}");
+    // ... unless options are passed for all of them.
+    let r = s.execute("file.exportLayers", &json!({"ids": [f], "bleed": 0})).unwrap();
+    assert!(!pdf_text(&r["files"][0]).contains("/TrimBox["));
+    // Saved with the file and read back.
+    let json = serde_json::to_value(&s.doc().unwrap().node(f).unwrap().exports).unwrap();
+    assert_eq!(json[0]["print"]["cmyk"], json!(true));
+}
+
+#[test]
+fn the_frames_pdf_takes_print_options() {
+    let (mut s, _) = session();
+    s.execute("frame.create", &json!({"x": 300, "y": 0, "width": 50, "height": 50, "name": "Card"})).unwrap();
+    let r = s.execute("file.exportFramesPdf", &json!({"bleed": "3mm", "bleedMarks": true})).unwrap();
+    assert_eq!(r["pages"], json!(2));
+    let t = pdf_text(&r);
+    assert_eq!(t.matches("/TrimBox[").count(), 2, "{t}");
+    assert_eq!(t.matches("/BleedBox[").count(), 2, "{t}");
+}

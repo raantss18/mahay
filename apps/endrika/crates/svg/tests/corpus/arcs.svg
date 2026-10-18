@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+  <!-- Arcs (sweep flags, relative), H/V and smooth curves in path data. -->
+  <path d="M10 50 A40 40 0 0 1 90 50 Z" fill="#ff0000"/>
+  <path d="m110 50 a40 40 0 0 0 80 0 z" fill="#0000ff"/>
+  <path d="M10 90 H50 V96 H10 Z" fill="#000000"/>
+  <path d="M60 96 Q70 86 80 96 T100 96 S120 86 130 96 Z" fill="#00ff00"/>
+  <!-- probe 50 20 #ff0000ff -->
+  <!-- probe 50 70 #00000000 -->
+  <!-- probe 150 80 #0000ffff -->
+  <!-- probe 150 20 #00000000 -->
+  <!-- probe 30 92 #000000ff -->
+  <!-- probe 70 94 #00ff00ff ~40 -->
+</svg>

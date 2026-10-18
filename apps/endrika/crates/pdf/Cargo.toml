@@ -1,0 +1,24 @@
+[package]
+name = "figcraft-pdf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft PDF export (krilla): vector shapes, gradients, embedded images, aligned strokes as outlines, clips, masks, blend modes, real selectable text, effects as rasters, print options (bleed, marks, page boxes, CMYK)"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-geom = { workspace = true }
+figcraft-color = { workspace = true }
+figcraft-doc = { workspace = true }
+figcraft-text = { workspace = true }
+figcraft-render = { workspace = true }
+figcraft-pathops = { workspace = true }
+krilla = { workspace = true }
+tiny-skia = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+flate2 = "1"

@@ -1,0 +1,13 @@
+[package]
+name = "figcraft-geom"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft geometry: affine transforms, shape path builders (rounded/smoothed corners, polygons, stars, arcs)"
+
+[lints]
+workspace = true
+
+[dependencies]
+kurbo = { workspace = true }
+serde = { workspace = true }

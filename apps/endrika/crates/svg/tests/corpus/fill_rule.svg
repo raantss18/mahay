@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+  <!-- Two squares, one inside the other, both clockwise: evenodd makes a hole, nonzero doesn't. -->
+  <path id="evenodd" fill-rule="evenodd" fill="#000000" d="M10 10 H90 V90 H10 Z M30 30 H70 V70 H30 Z"/>
+  <path id="nonzero" fill="#000000" d="M110 10 H190 V90 H110 Z M130 30 H170 V70 H130 Z"/>
+  <!-- probe 20 50 #000000ff -->
+  <!-- probe 50 50 #00000000 -->
+  <!-- probe 150 50 #000000ff -->
+</svg>

@@ -1,0 +1,544 @@
+//! DesignCraft tools: pointer events in → commands and overlays out.
+//!
+//! Tools never mutate the document. They emit [`Action`]s the engine executes: `Begin` snapshots
+//! the document, each `Preview` re-applies one command on top of the snapshot, `Commit` records
+//! the last preview as one undo step. `Exec` runs a command immediately. Every gesture is therefore
+//! replayable by the control channel and MCP, and tools are testable without a UI.
+//!
+//! Pointer positions are **canvas** coordinates (see [`layout::CanvasLayout`]).
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+#![forbid(unsafe_code)]
+
+mod anchors;
+pub mod catalog;
+mod corners;
+mod frame;
+mod gradient;
+pub mod layout;
+mod nav;
+pub use nav::{LOCK_OFFSET_PX, PIN_OFFSET_PX};
+mod pen;
+mod pencil;
+pub mod select;
+pub mod snap;
+mod text;
+pub mod thread;
+mod xform;
+
+use designcraft_compose::Cache;
+use designcraft_doc::{Document, Item, ItemId, Selection, SpreadRef};
+use designcraft_geom::{Affine, BezPath, Point, Rect, Unit, Vec2};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+pub use catalog::{SPLIT_IN_TWO_COLUMNS, TOOL_GROUPS, ToolInfo, tool_for_shortcut, tool_info};
+pub use layout::CanvasLayout;
+pub use nav::ZoomTool;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Mods {
+    #[serde(default)]
+    pub shift: bool,
+    #[serde(default)]
+    pub alt: bool,
+    /// Command on macOS, Ctrl elsewhere.
+    #[serde(default)]
+    pub cmd: bool,
+    #[serde(default)]
+    pub ctrl: bool,
+    #[serde(default)]
+    pub space: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PointerKind {
+    Down,
+    Drag,
+    Up,
+    Move,
+    DoubleClick,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PointerEvent {
+    pub kind: PointerKind,
+    /// Canvas coordinates.
+    pub pos: Point,
+    #[serde(default)]
+    pub mods: Mods,
+    /// On a press: how many presses in quick succession at this spot it completes (2 = the
+    /// second of a double click, 3 = a triple click…). 0 counts as 1.
+    #[serde(default)]
+    pub clicks: u8,
+}
+
+impl PointerEvent {
+    pub fn new(kind: PointerKind, x: f64, y: f64) -> Self {
+        Self { kind, pos: Point::new(x, y), mods: Mods::default(), clicks: 1 }
+    }
+    pub fn with_mods(mut self, m: Mods) -> Self {
+        self.mods = m;
+        self
+    }
+    pub fn with_clicks(mut self, n: u8) -> Self {
+        self.clicks = n;
+        self
+    }
+    /// Presses in a row: at least 2 for [`PointerKind::DoubleClick`], at least 1 otherwise.
+    pub fn click_count(&self) -> u8 {
+        if self.kind == PointerKind::DoubleClick { self.clicks.max(2) } else { self.clicks.max(1) }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ToolKey {
+    Enter,
+    Escape,
+    Backspace,
+    Delete,
+    Up,
+    Down,
+    Left,
+    Right,
+    Home,
+    End,
+    Tab,
+    PageUp,
+    PageDown,
+}
+
+/// What a tool asks the engine to do.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Action {
+    Begin(String),
+    Preview(String, Value),
+    Commit,
+    Cancel,
+    Exec(String, Value),
+    /// Ask the UI to open a dialog.
+    Dialog(String, Value),
+    SwitchTool(String),
+    /// Ask the UI to pan/zoom: `{"pan":[dx,dy]}` (screen px) or `{"zoomAt":[x,y], "factor":f}` (canvas).
+    View(Value),
+    /// The tool used the event for its own state; the engine has nothing to do.
+    Handled,
+}
+
+/// Which snap categories are on, and the snap zone in screen pixels.
+///
+/// Each flag is its own view switch, not one combined mode.
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SnapView {
+    pub snap_to_guides: bool,
+    pub snap_to_document_grid: bool,
+    pub show_guides: bool,
+    pub smart_guides: bool,
+    pub align_edges: bool,
+    pub align_centers: bool,
+    pub smart_dimensions: bool,
+    pub smart_spacing: bool,
+    pub zone_px: f64,
+}
+
+impl SnapView {
+    pub const FACTORY: Self = Self {
+        snap_to_guides: true,
+        snap_to_document_grid: false,
+        show_guides: true,
+        smart_guides: true,
+        align_edges: true,
+        align_centers: true,
+        smart_dimensions: true,
+        smart_spacing: true,
+        zone_px: 4.0,
+    };
+    pub const OFF: Self = Self {
+        snap_to_guides: false,
+        snap_to_document_grid: false,
+        show_guides: true,
+        smart_guides: false,
+        align_edges: false,
+        align_centers: false,
+        smart_dimensions: false,
+        smart_spacing: false,
+        zone_px: 4.0,
+    };
+
+    /// Guides, the document grid, or smart guides are on.
+    pub fn any(self) -> bool {
+        self.snap_to_guides || self.snap_to_document_grid || self.smart_guides
+    }
+}
+
+impl Default for SnapView {
+    fn default() -> Self {
+        Self::FACTORY
+    }
+}
+
+/// The gesture asking for a snap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Gesture {
+    Move,
+    Resize,
+    Create,
+    Rotate,
+    Point,
+}
+
+pub struct SnapRequest<'a> {
+    pub spread: SpreadRef,
+    pub gesture: Gesture,
+    pub rect: Rect,
+    /// Left, center, right. All false means the axis is locked.
+    pub x_edges: [bool; 3],
+    /// Top, center, bottom.
+    pub y_edges: [bool; 3],
+    pub exclude: &'a [ItemId],
+    pub copying: bool,
+    /// Proposed width and height for the dimensions pass. None when that length is not being set.
+    pub lengths: [Option<f64>; 2],
+    /// Proposed rotation in the same degrees `transform.rotate` already receives. None unless rotating.
+    pub angle: Option<f64>,
+    pub radius: f64,
+    pub pointer: Point,
+}
+
+/// Read-only context a tool sees.
+pub struct ToolContext<'a> {
+    pub doc: &'a Document,
+    pub selection: &'a Selection,
+    pub cache: &'a Cache,
+    pub layout: &'a CanvasLayout,
+    /// Screen pixels per point.
+    pub zoom: f64,
+    /// Layer new items go on.
+    pub layer: designcraft_doc::LayerId,
+    pub snap: SnapView,
+    pub unit: Unit,
+    /// The toolbox's Stroke box is in front: sampled colours go to strokes (the Eyedropper).
+    pub stroke_in_front: bool,
+}
+
+impl ToolContext<'_> {
+    pub fn tol(&self, px: f64) -> f64 {
+        px / self.zoom.max(1e-9)
+    }
+
+    /// Frontmost unlocked item under a canvas point.
+    pub fn hit(&self, p: Point) -> Option<(SpreadRef, ItemId)> {
+        let (sr, sp) = self.layout.spread_at(p)?;
+        let SpreadRef::Doc(si) = sr else {
+            return self.hit_parent(sr, sp);
+        };
+        self.doc.hit_item(si, sp, self.tol(4.0)).map(|id| (sr, id))
+    }
+
+    /// The frontmost text frame under `p`, looking inside groups. [`Self::hit`] stops at the
+    /// group, so a loaded text cursor over a text frame in a group found nothing to thread into
+    /// (gaps 27); InDesign threads into it.
+    pub fn hit_text_frame(&self, p: Point) -> Option<(SpreadRef, ItemId)> {
+        let (sr, id) = self.hit(p)?;
+        let it = self.doc.item(id)?;
+        if it.is_text_frame() {
+            return Some((sr, id));
+        }
+        let (_, sp) = self.layout.spread_at(p)?;
+        designcraft_doc::hit_descendant(it, sp, self.tol(4.0), &|c| c.is_text_frame()).map(|f| (sr, f))
+    }
+
+    /// The parent item showing (not yet overridden) on the document page under `p`:
+    /// (absolute page, parent item).
+    pub fn hit_parent_on_page(&self, p: Point) -> Option<(usize, ItemId)> {
+        let (SpreadRef::Doc(si), sp) = self.layout.spread_at(p)? else { return None };
+        let spread = self.doc.spreads.get(si)?;
+        let pi = spread.page_at_x(sp.x)?;
+        let page = self.doc.first_page_of_spread(si) + pi;
+        let pg = spread.pages.get(pi)?;
+        if !pg.show_parent_items {
+            return None;
+        }
+        // What the renderer draws on this page, in its order: by layer, then the parent's bases
+        // before the parent. The last hit is the topmost.
+        let mut shown = Vec::new();
+        for (ppi, ppg) in self.doc.shown_parent_pages(SpreadRef::Doc(si), pi) {
+            let Some(parent) = self.doc.parents.get(ppi) else { continue };
+            let Some(parent_page) = parent.pages.get(ppg) else { continue };
+            let off = designcraft_geom::Vec2::new(pg.x - parent_page.x, 0.0);
+            for it in &parent.items {
+                if pg.overridden.contains(&it.id) || parent.pages.len() > 1 && parent.page_at_x(it.bounds().center().x) != Some(ppg) {
+                    continue;
+                }
+                shown.push((it, off));
+            }
+        }
+        shown.sort_by_key(|(it, _)| self.doc.layer_rank(it.layer));
+        shown
+            .into_iter()
+            .rev()
+            .find(|(it, off)| {
+                let layer = self.doc.layer(it.layer);
+                !it.locked && !it.hidden && !layer.is_some_and(|l| !l.visible || l.locked) && designcraft_doc::edit_hit(it, sp - *off, self.tol(4.0))
+            })
+            .map(|(it, _)| (page, it.id))
+    }
+
+    fn hit_parent(&self, sr: SpreadRef, sp: Point) -> Option<(SpreadRef, ItemId)> {
+        let s = self.doc.spread(sr)?;
+        s.items.iter().rev().find(|it| !it.locked && designcraft_doc::edit_hit(it, sp, self.tol(4.0))).map(|it| (sr, it.id))
+    }
+
+    /// Spread-space → canvas transform of the spread holding item `id`.
+    pub fn item_canvas_xf(&self, id: ItemId) -> Option<Affine> {
+        let loc = self.doc.find(id)?;
+        Some(self.layout.xf(loc.spread) * self.doc.parent_xf(&loc))
+    }
+
+    pub fn item(&self, id: ItemId) -> Option<&Item> {
+        self.doc.item(id)
+    }
+
+    /// Canvas bounds of the selected items' paths. Handles and resize use this geometric box.
+    pub fn selection_bounds(&self) -> Option<Rect> {
+        let mut r: Option<Rect> = None;
+        for id in &self.selection.items {
+            let (Some(it), Some(xf)) = (self.doc.item(*id), self.item_canvas_xf(*id)) else { continue };
+            let b = xf.transform_rect_bbox(it.bounds());
+            r = Some(r.map_or(b, |r| r.union(b)));
+        }
+        r
+    }
+
+    /// Canvas union of the selection's visible bounds. A group uses the alignment box.
+    pub fn selection_visible_bounds(&self) -> Option<Rect> {
+        let mut acc: Option<Rect> = None;
+        for id in &self.selection.items {
+            let (Some(it), Some(xf)) = (self.doc.item(*id), self.item_canvas_xf(*id)) else { continue };
+            let Some(local) = crate::snap::moving_bounds(it) else { continue };
+            let b = xf.transform_rect_bbox(local);
+            if !(b.x0.is_finite() && b.y0.is_finite() && b.x1.is_finite() && b.y1.is_finite()) {
+                continue;
+            }
+            acc = Some(acc.map_or(b, |have| have.union(b)));
+        }
+        acc
+    }
+}
+
+/// Visual feedback (canvas coordinates) drawn by the UI.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Overlay {
+    Marquee(Rect),
+    /// Preview outline of a frame being drawn.
+    Path {
+        path: BezPath,
+        color: [u8; 3],
+        dashed: bool,
+    },
+    Line {
+        a: Point,
+        b: Point,
+        color: [u8; 3],
+        dashed: bool,
+    },
+    /// Measurement pill near the cursor.
+    Measure {
+        p: Point,
+        text: String,
+    },
+    /// Smart guide line in the smart-guide colour.
+    Guide {
+        a: Point,
+        b: Point,
+    },
+    /// Spacing segment in canvas coordinates, with a measurement label.
+    Gap {
+        a: Point,
+        b: Point,
+        label: String,
+    },
+    /// The whole content of this frame drawn faintly, the part outside the frame included (while
+    /// the content moves inside it).
+    ContentGhost(ItemId),
+    /// The live-corner widget (yellow square): clicking it starts corner editing.
+    LiveCornerWidget(Point),
+    /// A live-corner diamond: dragging it sets the corner size.
+    LiveCornerDiamond(Point),
+    /// A page selected with the Page tool (canvas rect): its outline and eight handles.
+    PageHandles(Rect),
+    /// A small tag whose bottom-left is at `p` (the Page tool's liquid page rule; English, the UI
+    /// translates it).
+    Tag {
+        p: Point,
+        text: String,
+    },
+    /// A tooltip near the pointer (English; the UI translates it).
+    Tip {
+        p: Point,
+        text: String,
+    },
+    /// An object's liquid pins and resize locks on an object-based page (Page tool), canvas
+    /// coordinates: pinned sides (top, right, bottom, left) and whether width and height follow the
+    /// page.
+    LiquidPins {
+        object: Rect,
+        page: Rect,
+        pins: [bool; 4],
+        resize: [bool; 2],
+    },
+}
+
+/// Correction from a snap, in spread coordinates for `delta`.
+#[derive(Clone, Debug, Default)]
+pub struct Snap {
+    pub delta: Vec2,
+    pub angle: Option<f64>,
+    pub guides: Vec<Overlay>,
+    /// Set when the dimensions pass won that axis. The value is the matched length minus the
+    /// proposed length (positive grows the size). `delta` on that axis is the moving edge's shift.
+    pub length_delta: [Option<f64>; 2],
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Cursor {
+    #[default]
+    Arrow,
+    ArrowHollow,
+    Move,
+    Crosshair,
+    ResizeH,
+    ResizeV,
+    ResizeNwSe,
+    ResizeNeSw,
+    Rotate,
+    Pen,
+    /// The pen over a segment of a selected path: a click adds an anchor there.
+    PenAdd,
+    /// The pen over an anchor of a selected path: a click deletes it.
+    PenDelete,
+    /// The pen over the first anchor of the path it is drawing: a click closes it.
+    PenClose,
+    /// The Pen over an open path's end point: a click continues the path.
+    PenContinue,
+    /// Convert Direction Point.
+    PenConvert,
+    /// Over a type-on-a-path bracket: dragging it moves where the text starts or ends.
+    PathBracket,
+    Text,
+    Hand,
+    HandGrab,
+    ZoomIn,
+    ZoomOut,
+    Eyedropper,
+    LoadedText,
+    /// Loaded text over a frame a click threads to.
+    ThreadLink,
+    /// Loaded text over the frame a click unthreads from.
+    Unthread,
+    LoadedGraphic,
+    NotAllowed,
+}
+
+pub trait Tool: Send {
+    fn id(&self) -> &'static str;
+    fn pointer(&mut self, cx: &ToolContext, ev: &PointerEvent) -> Vec<Action>;
+    fn key(&mut self, _cx: &ToolContext, _key: ToolKey, _mods: Mods) -> Vec<Action> {
+        vec![]
+    }
+    fn overlays(&self, _cx: &ToolContext) -> Vec<Overlay> {
+        vec![]
+    }
+    fn cursor(&self, _cx: &ToolContext, _p: Point, _mods: Mods) -> Cursor {
+        Cursor::Arrow
+    }
+    fn busy(&self) -> bool {
+        false
+    }
+    /// The tool takes typed text (Type tool with a caret): single-key shortcuts are suppressed.
+    fn wants_text(&self, _cx: &ToolContext) -> bool {
+        false
+    }
+    /// IME composition (marked text) at the text caret: `text` replaces the previous marked text
+    /// (or the selected text when a composition starts); an empty `text` ends the composition with
+    /// nothing typed. `active_chars` is the clause being converted (empty: the IME's cursor), in
+    /// characters of `text`. The result arrives through [`Tool::ime_commit`].
+    fn ime_preedit(&mut self, _cx: &ToolContext, _text: &str, _active_chars: Option<std::ops::Range<usize>>) -> Vec<Action> {
+        vec![]
+    }
+    /// The IME committed `text`: it replaces the marked text and is typed as one step.
+    fn ime_commit(&mut self, _cx: &ToolContext, _text: &str) -> Vec<Action> {
+        vec![]
+    }
+    /// End a composition from outside the IME (a click, another command): the marked text stays
+    /// as typed.
+    fn ime_end(&mut self, _cx: &ToolContext) -> Vec<Action> {
+        vec![]
+    }
+    /// Is uncommitted IME text being shown? Keys, shortcuts and Undo wait while it is.
+    fn composing(&self) -> bool {
+        false
+    }
+    /// Where the IME candidate window goes: a caret line (top, bottom) in canvas space.
+    fn ime_caret(&self, _cx: &ToolContext) -> Option<(Point, Point)> {
+        None
+    }
+}
+
+pub fn create(id: &str) -> Box<dyn Tool> {
+    match id {
+        "selection" => Box::new(select::SelectionTool::new(false)),
+        "directSelection" => Box::new(select::SelectionTool::new(true)),
+        "rectangleFrame" | "ellipseFrame" | "polygonFrame" | "rectangle" | "ellipse" | "polygon" | "line" => Box::new(frame::FrameTool::new(id)),
+        "type" => Box::new(text::TypeTool::default()),
+        "verticalType" => Box::new(text::TypeTool::vertical()),
+        "pen" => Box::new(pen::PenTool::default()),
+        "gradientSwatch" => Box::new(gradient::GradientTool::default()),
+        "gradientFeather" => Box::new(gradient::GradientTool::feather()),
+        "pencil" => Box::new(pencil::PencilTool::default()),
+        "smooth" => Box::new(pencil::PathDragTool::new(false)),
+        "erase" => Box::new(pencil::PathDragTool::new(true)),
+        "addAnchor" => Box::new(anchors::AnchorTool::new(anchors::Kind::Add)),
+        "deleteAnchor" => Box::new(anchors::AnchorTool::new(anchors::Kind::Delete)),
+        "convertDirection" => Box::new(anchors::AnchorTool::new(anchors::Kind::Convert)),
+        "scissors" => Box::new(anchors::AnchorTool::new(anchors::Kind::Scissors)),
+        "rotate" => Box::new(xform::XformTool::new("rotate")),
+        "scale" => Box::new(xform::XformTool::new("scale")),
+        "shear" => Box::new(xform::XformTool::new("shear")),
+        "eyedropper" => Box::new(xform::EyedropperTool),
+        "colorTheme" => Box::new(xform::ColorThemeTool),
+        "hand" => Box::new(nav::HandTool::default()),
+        "placeGun" => Box::new(nav::PlaceGun::default()),
+        "zoom" => Box::new(nav::ZoomTool::default()),
+        "page" => Box::new(nav::PageTool::default()),
+        "typeOnPath" => Box::new(nav::PathTypeTool),
+        "gap" => Box::new(nav::GapTool::default()),
+        "contentCollector" => Box::new(nav::ConveyorTool::new(false)),
+        "contentPlacer" => Box::new(nav::ConveyorTool::new(true)),
+        other => Box::new(NoopTool(tool_info(other).map(|t| t.id).unwrap_or("selection"))),
+    }
+}
+
+/// Placeholder for tools whose behaviour hasn't landed yet.
+pub struct NoopTool(&'static str);
+
+impl Tool for NoopTool {
+    fn id(&self) -> &'static str {
+        self.0
+    }
+    fn pointer(&mut self, _cx: &ToolContext, _ev: &PointerEvent) -> Vec<Action> {
+        vec![]
+    }
+}
+
+pub(crate) fn rect_json(r: Rect) -> Value {
+    serde_json::json!([r.x0, r.y0, r.x1, r.y1])
+}
+
+pub(crate) fn spread_json(r: SpreadRef) -> Value {
+    serde_json::to_value(r).unwrap_or(Value::Null)
+}
+
+#[cfg(test)]
+mod tests;

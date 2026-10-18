@@ -1,0 +1,13 @@
+[package]
+name = "figcraft-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft layout: auto layout (horizontal, vertical, wrap, grid; hug/fill/fixed), constraints, layout grid geometry"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-geom = { workspace = true }
+figcraft-doc = { workspace = true }

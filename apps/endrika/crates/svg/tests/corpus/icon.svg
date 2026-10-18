@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#333333">
+  <!-- A typical outline icon: a 24 grid scaled to 48 px, inherited stroke, currentColor. -->
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M12 7v5l3 3"/>
+  <!-- probe 24 6 #333333ff ~30 -->
+  <!-- probe 24 18 #333333ff ~30 -->
+  <!-- probe 16 16 #00000000 -->
+  <!-- probe 2 24 #00000000 -->
+</svg>

@@ -1,0 +1,18 @@
+# Caddy in front of figcraft-server; setup in docs/server.md ("Deploy on a Linux server").
+# Replace the host name with yours (its DNS must point at this machine). Caddy obtains and renews
+# the certificate and passes WebSocket upgrades through by itself. Put this in /etc/caddy/Caddyfile
+# and run `sudo systemctl reload caddy` (install.sh does all this for you).
+# Caddy tells the server who each client is (X-Forwarded-For): set trusted_proxy = "127.0.0.1" in
+# server.toml so per-address limits and blocks count clients, not Caddy.
+
+figcraft.example.com {
+	reverse_proxy 127.0.0.1:47900
+}
+
+# Under a path of an existing site instead (then public_url = "wss://example.com/figcraft/"):
+#
+# example.com {
+# 	handle /figcraft/* {
+# 		reverse_proxy 127.0.0.1:47900
+# 	}
+# }

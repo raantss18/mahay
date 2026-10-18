@@ -1,0 +1,716 @@
+# FigCraft parity with Figma
+
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-17 · **Change:** minor (rows for the community batches: Selection colors, smart-selection spacing and a Present tab (#753), `.fig` import fidelity, paste from another design app, a `.fig` copy from Save as; control requests while the window is minimised (#720); catalog counts re-measured; automation roots (#715); number variables in the text content picker (#629); frames and sections convert into each other (#719); reviewed Russian catalog and integer plurals; vector edit mode regions: hover hatch, selection and drag; plugin log byte/count limits (#191); core editor leftovers: component playground, auto gap handles, variables inside styles, inner shadows and background blur on groups, command-made text readable on dark pages, a one-step frame/group convert, delays on mouse triggers and manual overlay offsets, wrapped-line alignment; starter templates, a Templates tab and Getting started tips on the home screen: essentials ~57% → ~59%; everyday editing partials: number fields, outline options, Hide when publishing, cursors, panel widths, dark pages, numbers unchanged but menu breadth 211/211; text box sizes measured against documents re-saved by other software: whole-pixel line heights, advances on a 1024-per-em grid, letter spacing between glyphs only, numbers unchanged; .fig export checked by opening written files in other software, numbers unchanged; a public figcraft-server: open hosting, owner tokens, per-address limits, idle expiry, moderation, install.sh; experimental .fig export; keyboard shortcut parity suite and bindings; Simplified Chinese draft catalog; Latin American Spanish overlay; prototyping tail: gamepad triggers, widgets in prototypes, mode lookups; plugin directory on figcraft-server; Japanese and Korean draft catalogs and CJK UI fonts; plugin widgets and the plugin panel tail; French, German and Brazilian Portuguese draft catalogs; cursor chat and spotlight in live sessions; layers and assets panels behaviour suite and fixes; vector multi-edit and edit tail; dev resources links; extended collections tail; branch version history and finer list merges; headline percentages recomputed from the area table: feature breadth ~84%, core ~94%, mainstream ~50%; text lists, hanging punctuation and decoration styles; comments and version history behaviour suite and fixes; canvas navigation, guides and grids behaviour suite and fixes; export and inspect behaviour suite and fixes; .fig import: editable vector networks and more layer kinds; shapes and vector behaviour suite and fixes; paint and effects behaviour suite and fixes; frames, groups, sections and masks behaviour suite and fixes; styles and variables behaviour suite and fixes; prototyping behaviour suite and fixes; components behaviour suite and fixes; embedded image colour profiles; layers panel keyboard: F2 rename, Shift+F10 context menu, keyboard box selection, 10k-layer QA; per-side stroke weight variables; text behaviour suite: CJK line breaking, metrics, vertical trim; selection and transform behaviour suite and fixes; `.fig` import, best effort; auto layout behaviour suite and fixes; Display P3: gamut warning and soft-proof (true P3 blocked upstream); several windows; localization layer with a draft Spanish catalog; hosting figcraft-server: wss in the desktop app, server releases, deployment guide; plugin panels and settings; canvas fixes: boolean hit testing on the result, group drags, frame outlines and slices; code connect; stretch and scatter brushes, pen pressure; text on a path and pattern fills; team libraries on the server and swap library; branches: create, update from main, review and merge; animated GIF fills and TIFF images; Open recent, outlines for the selection and mask outlines: menu breadth 100%; extended collections, variables import/export, gradient stop and variant bindings; feature breadth ~80%; ready ~49%; last major: full re-measure against Figma desktop 126.10.7) · **Target:** Figma Design (desktop app 126.10.7, macOS)
+
+The authoritative assessment of how close FigCraft is to Figma Design. [`ROADMAP.md`](../ROADMAP.md)
+summarizes it; [`gaps.md`](gaps.md) is the ranked work list; the measured menu checklist is
+[`parity-checklist.md`](parity-checklist.md). Deeper checklists:
+[`ui-parity.md`](ui-parity.md), [`file-format-parity.md`](file-format-parity.md),
+[`hardware-parity.md`](hardware-parity.md), [`localization-parity.md`](localization-parity.md),
+[`auto-layout-parity.md`](auto-layout-parity.md), [`components-parity.md`](components-parity.md),
+[`prototyping-parity.md`](prototyping-parity.md), [`dev-mode-parity.md`](dev-mode-parity.md),
+[`collaboration-parity.md`](collaboration-parity.md).
+
+## Headline
+
+| Number | Value | Kind |
+|---|---|---|
+| Menu/command breadth | **100%** (212 / 212 catalogued menu items have a live command) | **measured** (`cargo xtask parity`, 2026-10-17) |
+| Feature breadth (does each Figma Design feature exist, weighted) | **~85%** (core editor areas 1–16: ~94%) | estimated from the area table below |
+| Ready for real work | **~53%** | estimated (dimension table below: written weights × written per-dimension scores) |
+| Essentials user | **~59%** | estimated ([below](#essentials-user): core features 77.8% × discounts 0.92 × 0.94 × 0.88) |
+| Mainstream practitioner | **~50%** | estimated ([below](#mainstream-practitioner): weekly areas 72.7% × discounts 0.9 × 0.9 × 0.85) |
+| Remaining to beta | **~155–280 h** one Opus 5.5 agent (~32–64 h wall-clock with 5 parallel agents) | estimated |
+| Remaining to full parity | **~262–519 h** one agent (~83–145 h wall-clock with 5 parallel agents) | estimated |
+| Stage | **alpha**: the alpha gate passes ([roadmap](roadmap.md#alpha-gate)); multiplayer and checking the best-effort `.fig` import on real files are beta gaps (see [ROADMAP](../ROADMAP.md#stage)) | |
+
+The previous figures (ROADMAP of 2026-10-10, "feature depth ~79%", "full parity 115–195 h") were
+self-graded against a 16-area rubric that left out, by design, multiplayer, plugins, cloud
+libraries and AI features, and that counted no file-format blocker. Figma users rely on all of
+those every day, so this re-measure weights them in. The core-editor depth figure drops from ~79%
+to ~67% because nothing has yet been checked against real Figma files or side by side tool by
+tool; presence was being graded as behaviour in places.
+
+## Readiness by audience
+
+| Audience | Ready % | Opus 5.5 agent wall-clock hours to ~95% | Work that dominates |
+|---|---|---|---|
+| Full target (ready for real work) | ~53% | ~268–522 h | multiplayer (42–84), localization (29–51), plugins (8–26), the interaction pass (40–60), GPU canvas (30–60), AI (30–60), the `.fig` import's tail (5–10) |
+| Mainstream practitioner | ~50% | ~120–229 h | core editor depth incl. the `.fig` import's tail (49–98), the interaction pass (40–60), real-file corpus and platform QA (25–50), checking the experimental `.fig` export opens elsewhere (5–15) |
+| Essentials user | ~59% | ~55–100 h | the `.fig` import's tail so the files people send open well (5–10), core tool polish (25–45), interaction pass on the core tools (15–25), stability QA (10–20) |
+
+Hours are one agent working sequentially, calibrated from this repo's history (about 1 agent-hour
+per 1,000 added lines, 1–2.5 h per feature PR, ~7 h per honest depth point in the polish tail; see
+[how the hours are calibrated](#how-the-hours-are-calibrated)). Each audience's work is a subset of
+the next. About 70–80% parallelizes across 4–6 agents on disjoint crates (roughly ÷4 in
+wall-clock); the `.fig` reader, the multiplayer core and a plugin runtime each need one owner, and
+native-speaker review, real-file licensing and screen-reader QA need people.
+
+The full number is an additive weighted sum over the dimension table; mainstream and essentials use
+multiplicative discounts, as the standard says.
+
+## What was measured, and how
+
+- **Target and version.** Figma desktop for macOS, `CFBundleShortVersionString` 126.10.7,
+  installed at `/Applications/Figma.app`. FigCraft is measured as of `origin/main` d452da3
+  (2026-10-10, PR #99).
+- **The installed app, names and public listings only.** FigCraft is clean-room
+  ([`AGENTS.md`](../AGENTS.md)): nothing inside the bundle's code or web assets was read. From
+  `Info.plist`: one document type, `com.figma.document`, extensions `fig`, `jam`, `deck`
+  (MIME `application/x-figma`), and the `figma://` URL scheme. The `.lproj` folders are
+  Electron/Chromium locale packs (60+), not Figma's UI languages; the UI languages come from
+  Figma's help center (see [`localization-parity.md`](localization-parity.md)). The bundle ships
+  GPU, Plugin and Renderer helper processes (GPU rendering; a sandboxed plugin runtime).
+- **The menu catalog.** `crates/engine/src/catalog.rs` holds Figma's main menu tree (202 items in
+  File, Edit, View, Object, Text, Arrange, Vector, Plugins, Preferences, Libraries, Help), written
+  from public documentation and black-box observation (local notes in the gitignored
+  `plan/figma/03-menu-tree.md`). It leaves out the Widgets menu and dynamic plugin lists, so the
+  100% overstates breadth against the full menu a little.
+- **From source** (no build; 2026-10-10): 449 command ids registered with `spec!`, 963 `#[test]`
+  functions in 177 files, ~108,800 lines of Rust in 13 crates + 3 apps + xtask (before #101–#103, which added the `plugin` and `collab` crates and ~7k lines), 140 key bindings
+  and 13 gesture rows in `figcraft_engine::keymap`, 21 files in the SVG import corpus, 0
+  translated UI strings (no localization layer exists).
+- **Figma's feature set**: help center, release notes and Config 2025 announcements (Figma Draw,
+  grid auto layout, slots, glass/noise/texture effects, progressive blur), known to the assessor up
+  to mid-2026, plus web checks on 2026-10-10 (supported image/video types, UI languages, pen
+  pressure in Figma Draw).
+- **Side by side.** Look & feel was compared with Figma UI3 on the owner's Mac (screenshots kept
+  local, never committed). No real Figma file has been opened in FigCraft (no `.fig` reader), and
+  no rendered frame has been compared pixel for pixel against Figma's own export.
+
+## Weights
+
+Weights are the share of a typical product designer's working time in Figma Design, written down
+so they can be argued with. Areas 1–16 keep the original rubric's weights (they sum to 94, not the 100 the rubric claimed);
+areas 17–21 are added (sum 19) because Figma users depend on them. Percentages below divide by the
+total, 113.
+Out of scope as separate products: FigJam, Figma Slides, Sites, Make, Buzz, Weave (the `.jam` and
+`.deck` document kinds belong to them).
+
+## By feature area
+
+Breadth: does it exist. Ready: depth, correctness and fidelity for real projects. Hours: one Opus
+5.5 agent, sequential, tests included.
+
+| # | Area | Weight | Breadth | Ready | Remaining | Hours |
+|---|---|---|---|---|---|---|
+| 1 | Canvas & navigation | 6 | 98% | 74% | Outline mode's Include hidden layers and Include object bounds, Display P3 on screen, QA at extreme zooms (behaviour suite for navigation, rulers, guides, layout grids and outline mode landed: guide selection, Auto grid counts, outline-mode clicks) | 1–4 |
+| 2 | Selection & transform | 8 | 97% | 72% | Handles, measuring and snapping checked tool by tool against Figma and real files (snap distance, handle reach, cursors); children turned off a right angle scale without skew, approximately (behaviour suite from the documentation, rotated groups and mixed selections, equal spacing snapping, Cmd/Ctrl to ignore constraints and marquees inside frames landed) | 3–5 |
+| 3 | Layers panel | 5 | 99% | 85% | QA with long real files (behaviour suite from the documentation, Rename layers dialog, sweeping eyes and padlocks, page dragging and dividers, several layers dropped together, keyboard box selection, F2 rename, Shift+F10 context menu and 10k-layer timings landed) | 1–2 |
+| 4 | Shapes & vector | 8 | 99% | 73% | Corner smoothing on polygons, stars and vectors; the transform box around points of several layers; per-point caps and joins on dashed, variable-width and brush strokes; vector QA with real files (behaviour suites from the documentation, corner radius and star ratio handles, rounded vector points drawn, also beside curved segments, a cap and join per point, several handles dragged together, cut and paint bucket drags, delete and heal along the curve, a boolean group's look by operation and the miter angle landed) | 1–3 |
+| 5 | Paint | 7 | 90% | 71% | Video fills, wide-gamut canvas, HEIC images; plus darker in PDF (behaviour suite from the documentation, pass-through and isolating groups, clipping frames that don't isolate, plus darker, animated GIF fills, TIFF images and embedded image colour profiles landed) | 2–5 |
+| 6 | Strokes | 3 | 95% | 75% | Stroke QA with real files (colour styles on strokes, stroke weight and per-side weight variables, brush strokes landed, see 20) | 1–2 |
+| 7 | Effects | 4 | 100% | 75% | Glass and progressive blur tuned side by side (behaviour suite from the documentation, inner shadows and background blur on groups, shadows hidden behind translucent layers on the canvas and in every export landed) | 2–5 |
+| 8 | Frames, groups, sections, masks | 5 | 97% | 80% | Visual QA with real files (a one-step frame/group convert, and a behaviour suite from the documentation landed: masked-out areas don't take clicks, mask group bounds and exports follow the mask, sections kept out of frames and groups, frames and sections drawn around layers take them, section resizing leaves contents in place, X/Y measured in the frame) | 1–3 |
+| 9 | Auto layout & constraints | 9 | 98% | 74% | Behaviour against real Figma files (behaviour suite from the documentation, `fr` tracks like CSS, vertical wrap, auto gaps evenly/around, cell alignment and wrapped-line alignment landed) ([auto-layout-parity](auto-layout-parity.md)) | 3–6 |
+| 10 | Text | 8 | 90% | 70% | Spell check, text metrics on real files and in other fonts (text box sizes measured against documents re-saved by other software: all 230 self-sizing boxes in 7 documents come out to the pixel, one font family; behaviour suite with CJK line breaking, vertical trim and carets by grapheme cluster landed; lists per paragraph with nesting and list spacing, hanging punctuation and lists, decoration style, thickness, offset, skip ink and colour landed) | 3–7 |
+| 11 | Components & variants | 9 | 96% | 72% | Real (not synthetic) libraries, `.fig` libraries (a component playground for variant, boolean and text properties, a behaviour suite from the documentation, overrides of padding, gap, grids, exports and interactions, refused geometry overrides, variant-switch and Assets-swap override rules, top-left default variant landed) ([components-parity](components-parity.md)) | 4–9 |
+| 12 | Styles & variables | 5 | 95% | 76% | Real-library QA (variables inside styles, behaviour suite from the documentation, style folders and order, mode order, code syntax, extended collections with their tail (new library variables as updates, chains through libraries) and variables import/export landed) ([components-parity](components-parity.md)) | 2–4 |
+| 13 | Prototyping | 6 | 92% | 74% | Video triggers and media actions, controllers on macOS, Linux and FreeBSD, real prototype QA (behaviour suite from the documentation, delays on mouse triggers, manual overlay offsets, key combinations, controller buttons on key/gamepad triggers (Windows and the browser), widgets reacting in prototypes, interactive components playing their variants, drag-driven animations, physical springs landed) ([prototyping-parity](prototyping-parity.md)) | 2–5 |
+| 14 | Import/export | 6 | 86% | 58% | `.fig` import's tail (best-effort import, editable vector networks, stand-ins for non-design layers and variable prototype actions landed, then (2026-10-17) grid tracks, slots, labels of connectors saved with their path, per-point joins, text on a path, image adjustments, budgets for large files, an import report and paste from another design app; all on synthetic files, no real-file checks yet), checking the rest of the experimental `.fig` export (landed; written files open and draw in other software) on effects, images, prototypes and real files, HEIC/video import, CMYK output intent ([file-format-parity](file-format-parity.md)) | 5–10 |
+| 15 | Dev Mode / inspect | 2 | 96% | 72% | Import lines for connected instances inside generated layer trees; an editor extension is left to the MCP server (inspect behaviour suite with colour formats, rem and icon and image assets, code connect, plugins in Dev Mode and dev resources links landed) ([dev-mode-parity](dev-mode-parity.md)) | 0–1 |
+| 16 | Comments, versions, find, misc | 3 | 87% | 63% | Comments are local only; comparing two versions; branches in live sessions; text runs and other lists besides fills, strokes and effects merge whole (branches with review and merge, their own version history and per-item list merges, and a comments and version history behaviour suite from the documentation landed) | 1–3 |
+| 17 | Multiplayer & sharing | 8 | 17% | 5% | Core landed (`crates/collab`: ids, change sets, server ordering, convergence tested); live sessions (preview): WebSocket transport, hosting from the desktop app, joining from the app or the browser, invite links that open the app, cursors, selections and follow, cursor chat and spotlight, per-person undo, offline resume; a self-hosted `figcraft-server` with persistence and share links to edit or view, which can be open to the public (owner tokens, limits per address, expiry, moderation). Left: accounts and teams, audio ([collaboration-parity](collaboration-parity.md)) | 42–84 |
+| 18 | Plugins & widgets | 4 | 60% | 35% | Own sandboxed WASM plugins landed (#101: manifest, permissions, menu, Run last, Manage, SDK), with log byte/count limits checked before allocation and host forwarding ([logging limits](plugins.md#logging-limits)), plugin panels called back per button or changed value and per-plugin settings (ABI v2), then widgets (API 3: plugin-drawn layers on the canvas with state kept in the document, redrawn on clicks; a Counter example), panels side by side and a colour picker for plugin colour fields, then a plugin directory on `figcraft-server` (publish with the server key, browse, install after a permissions confirmation, hash-checked downloads, updates by version). Left: a public catalogue, publisher accounts and signatures, ratings, background update checks, the directory in the browser; widgets take clicks only (no text input, property menus, hover or timers) and draw frames, text, shapes and images only; Figma's plugins are JavaScript and don't run (a JS engine would be an owner decision) ([plugins.md](plugins.md)) | 8–26 |
+| 19 | Team libraries & organization | 2 | 70% | 40% | Libraries kept on `figcraft-server` under their file and enabled by a share link (per-asset versions, background update checks, overrides kept), usage counts per component and file, swapping a library by names. Left: team-wide library lists, accounts and permissions, analytics over time, pushed update notices | 4–8 |
+| 20 | Figma Draw extras | 2 | 88% | 60% | Have: variable width, lasso, shape builder, noise/texture, text on a path, pattern fills, stretch and scatter brushes, pen pressure (Windows pens, browser styluses), multi-edit (several vector layers in edit mode at once). Missing: pressure from macOS/Linux tablets | 1–3 |
+| 21 | AI features | 3 | 0% | 0% | First draft, rename layers, image edit/remove background, visual search, Make: needs local models (owner decision) | 30–60 |
+| | **Weighted (÷113)** | 113 | **~85%** | **~63%** | | **117–255** |
+| | Core editor only (1–16, ÷94) | 94 | ~94% | ~72% | | 32–74 |
+
+## By dimension (ready for real work)
+
+| Dimension | Weight | Ready | Hours | Evidence | Doc |
+|---|---|---|---|---|---|
+| Features (depth) | 35 | 63% | 28–67 (areas 1–13, 15, 16, 20) | The table above; core editor ~72% | this file |
+| UI/UX fidelity | 15 | 58% | 40–60 | Look & feel compared side by side with UI3 (~65% by the builders); tool-by-tool interaction (modifiers while dragging, hover states, popovers) not yet compared (a cursor for every tool and modifier, number fields and panel widths built from the documentation, not compared); accessibility names and keyboard navigation landed | [ui-parity](ui-parity.md) |
+| File formats | 12 | 60% | 5–10 | `.fig` read, best effort, with editable vector networks and (2026-10-17) more fidelity, budgets for large files and an import report (tested on generated fixtures, not real files); layers copied from another design app paste the same way (tested only with clipboard HTML made from our own export), `.fig` write experimental (round trips through our own importer; written files open and draw in other software); REST JSON import, SVG in/out, PNG/JPG/WebP/PDF export solid, with a behaviour suite from the documentation | [file-format-parity](file-format-parity.md) |
+| Collaboration | 10 | 13% | 52–104 | Local comments, version history and branches with review and merge; the multiplayer core (sync model, server ordering, client reconciliation, convergence tests) landed in #103, and live sessions (preview) co-edit a file hosted by a desktop app or kept on a self-hosted `figcraft-server` with edit and view links, joined from the app or the browser, with cursor chat and spotlight (`docs/collab-protocol.md`) | [collaboration-parity](collaboration-parity.md) |
+| Stability | 8 | 55% | 20–40 | Never-crash lints, command guard with rollback, recovery copies, 963 tests incl. junk-parameter sweeps and a seeded retained-render walk; but two days old, one release (v0.2.0), no field reports, QA mostly on macOS | [gaps](gaps.md) |
+| Performance | 6 | 60% | 30–60 | `cargo xtask bench`: 50k-layer page ~8 ms zoomed out, 10k-layer edits ~0.2 ms, 2,000-instance design system edits 4–64 ms; CPU (tiny-skia) canvas where Figma renders on the GPU; nothing timed against Figma on the same file | [hardware-parity](hardware-parity.md) |
+| Hardware | 3 | 60% | 10–21 | Trackpad pinch and HiDPI yes; pen pressure on Windows and from browser styluses (none from macOS/Linux tablets); several windows (screen-reader tree in the main one only); no GPU canvas, no P3 on screen | [hardware-parity](hardware-parity.md) |
+| Localization | 3 | 39% | 29–51 | The layer, English, Russian reviewed by VanTan, and machine drafts of Spanish (with a Latin American overlay), French, German, Brazilian Portuguese, Japanese, Korean, Simplified Chinese, Indonesian and Czech (none reviewed by a native speaker; measured 2026-10-17, the drafts cover 95–99% of the 2,272 current strings), Swedish and Turkish catalogs, CJK UI text in installed faces loaded on demand (web: only the craft-fonts CJK build); engine messages stay English | [localization-parity](localization-parity.md) |
+| Platforms | 3 | 75% | 10–20 | macOS, Windows (x64/x86/arm64), Linux, FreeBSD, web all packaged (v0.2.0); Figma also has iOS/Android apps; non-macOS QA thin | [hardware-parity](hardware-parity.md) |
+| Ecosystem/plugins | 3 | 38% | 8–26 | Own WASM plugins with a Rust SDK and three examples (#101), plugin panels and settings (ABI v2), widgets that take clicks (API 3), a self-hosted plugin directory on `figcraft-server`; no Figma plugin compatibility, no public catalogue or community files; the CLI, control channel and MCP server are ahead of Figma for agents | [gaps](gaps.md) |
+| AI features | 2 | 0% | 30–60 | None | [gaps](gaps.md) |
+| **Ready for real work** | 100 | **~53%** | **~262–519** | | |
+
+Dimension hours add up to the full-parity total without double counting: the feature-area rows
+for import/export (14), multiplayer and team libraries (17, 19), plugins (18) and AI (21) are
+counted under their dimensions.
+
+## Essentials user
+
+Someone who uses only the core of Figma: a casual or beginner user making a few screens, a social
+graphic or a simple mockup. Same method, with the core features a casual user touches.
+
+**1. Core features, weights and depth** (depth from the area table and checklists above):
+
+| Feature | Weight | Depth | Notes |
+|---|---|---|---|
+| Create, open, save and reopen a file; pages | 10 | 85% | home screen, `.figcraft` round trips, Open recent |
+| Pan and zoom | 10 | 80% | wheel, pinch, Space-drag, zoom shortcuts |
+| Select, move, resize, rotate, align, group, duplicate | 15 | 75% | not yet compared tool by tool |
+| Frames with device presets | 8 | 80% | |
+| Rectangle, ellipse, line, arrow, corner radius | 8 | 80% | |
+| Text: type, font, size, weight, colour, alignment | 12 | 70% | no spell check |
+| Colour picker, fills and strokes; place and crop images | 10 | 72% | no HEIC images |
+| Layers panel: rename, hide, lock, reorder | 7 | 80% | |
+| Basic auto layout (add, gap, padding) | 6 | 70% | |
+| Undo / redo | 5 | 90% | unlimited, one step per gesture |
+| Export PNG, JPG, SVG, PDF | 6 | 85% | |
+| Copy and paste, incl. images from other apps | 3 | 75% | |
+| **Weighted** | 100 | **77.8%** | |
+
+Left out: components and variables beyond using one, prototyping, Dev Mode, advanced vector and
+type, and everything the mainstream number leaves out.
+
+**2. Discounts a casual user actually hits:**
+
+| Discount | Factor | Evidence |
+|---|---|---|
+| Launch and stability | ×0.92 | signed and notarized macOS build, installers for every platform (v0.2.0), never-crash rules and recovery copies; no field record yet |
+| Discoverability and UI clarity | ×0.94 | the UI3 layout Figma users know, Actions palette, keyboard shortcuts panel; a first run opens on the home screen with a Getting started card (six tips with their shortcuts, closable, back from the Help menu) and eight starter templates to open (also File ▸ New from template…); no Community files, no guided tour, and nobody new to the app has been watched using it |
+| Opening files people send them | ×0.88 | what people send a Figma user is a Figma link or a `.fig`; a `.fig` opens (best effort, not yet checked on real files), a link doesn't. Images and SVG do |
+
+77.8% × 0.92 × 0.94 × 0.88 = **~59%** (estimated). User evidence: none yet (see above).
+
+## Mainstream practitioner
+
+The same question for the typical professional Figma Design user: a product designer who designs
+screens, maintains or uses a design system, prototypes and hands off to developers every week.
+Computed per craftrules `standards/progress-docs.md`.
+
+**1. Areas used weekly, with weights.** Feature areas 1–16 of the table above, with their weights
+(sum 94). Left out as the standard says: plugins and widgets (18), AI (21), team and organization
+libraries (19, cloud/team admin), Figma Draw extras (20, not weekly for a product designer),
+localization beyond English, specialist hardware. Real-time multiplayer (17) is cloud collaboration
+and is left out as an area, but its effect on working with Figma users is counted in discount 3.
+
+**2. Average depth** ("Ready" column, weighted): **72.7%**.
+
+**3. Discounts for what still stops real work:**
+
+| Discount | Factor | Evidence |
+|---|---|---|
+| Interaction fidelity | ×0.90 | UI3 look compared side by side (~65% by the builders); no tool-by-tool comparison of cursors, modifier keys while dragging, snapping thresholds or popovers yet; Ctrl to suspend snapping on macOS missing ([ui-parity](ui-parity.md)) |
+| Stability on real machines | ×0.90 | Never-crash lints, command guard with rollback, recovery copies and 963 tests, but no field record at all: the repository is private, v0.2.0 has had no outside users or issue reports, CI tests run on Linux only and hands-on QA is on macOS. Harsher than VectorCraft's ×0.92 because there is no outside evidence either way |
+| File exchange with Figma users | ×0.85 | A Figma designer's work lives in shared Figma files. FigCraft opens a `.fig` (best effort, not yet checked on real files) and writes an experimental one (written files open and draw in other software; effects, images and prototypes unchecked there); incoming work can come through the REST API JSON (one way, needs an access token), outgoing only as SVG, PDF, PNG or code. Teammates, reviewers and developers would all need FigCraft ([file-format-parity](file-format-parity.md), [collaboration-parity](collaboration-parity.md)) |
+
+72.7% × 0.90 × 0.90 × 0.85 = **~50%** (estimated; 50.03%, rounded down).
+
+**4. User evidence (2026-10-10):** 0 issues, 0 praise or "switched from Figma" reports, 0 comments
+from anyone but the maintainers (`gh issue list`, `gh api .../issues/comments`; the repository is
+private, 1 star, PRs only from maintainers). No outside evidence either way; nothing raises the
+number.
+
+**Why it is lower than ready for real work (~53%), unusually.** The full number averages
+dimensions additively, so the missing `.fig` exchange costs only the file-format dimension's 12%
+weight, and FigCraft earns points the mainstream number doesn't count (platforms 75%: Linux,
+FreeBSD and the web, where Figma has no desktop app). The mainstream number applies file exchange
+as a multiplier on everything, because a Figma practitioner's whole working week is shared through
+Figma files. Both are computed from written weights; neither was moved to match the other. The
+mainstream number rises fastest with `.fig` import and the experimental `.fig` export checked on real files (the ×0.85 toward ×0.95: ~53%) and the
+interaction pass.
+
+## How the hours are calibrated
+
+From this repository's own history (`git log`, `gh pr list`):
+
+- The whole app was built in ~25 wall-clock hours: first commit 2026-10-09 15:38 UTC, PR #99
+  merged 2026-10-10 16:53 UTC; ~49k lines on day 1 before PRs, then 99 PRs adding ~81k lines. The
+  ROADMAP of that period records 4–6 agents in parallel, so ~110–150 agent-hours in all: about
+  **1 agent-hour per ~1,000 added lines**, and a typical feature PR (1,000–2,500 lines, e.g.
+  #84 arc handles, #92 PDF print options, #96 accessibility) took **1–2.5 agent-hours**.
+- Between the ROADMAP revisions of 2026-10-09 22:19 UTC and 2026-10-10 16:53 UTC (~18.5 h wall,
+  78 PRs, ~75–110 agent-hours) the self-graded depth went 58% → 79%: **~4–5 agent-hours per
+  self-graded point**. This re-measure grades about 0.6 points for each of those, which puts an
+  honest point nearer 7 agent-hours in the polish tail; new subsystems (a `.fig` reader,
+  multiplayer, a plugin runtime) are estimated bottom-up instead, since nothing comparable has been
+  built here yet.
+- Parallelism: most of the work splits across 4–6 agents on disjoint crates (the history shows it
+  working); multiplayer, `.fig` import and the plugin runtime each need one owner for their core.
+  Needs a human: native-speaker review for every language, the plugin-runtime and AI-model
+  decisions, real-world Figma files to test with (licensing), Windows/Linux/screen-reader QA.
+
+## Area detail: what has landed and what is left
+
+Carried over from the ROADMAP's "Where we're lacking" list (2026-10-10, before this re-measure).
+Hours in this narrative are the builders' estimates; the tables above supersede them.
+
+1. **Vector edit mode**: *landed:* edit-mode toolbar (move, pen, bend, paint bucket, lasso, cut),
+   pen that extends, branches and closes paths (vector networks), paint bucket fill/unfill of any
+   closed area (faces with holes), point/segment selection, handle mirroring (none/angle/angle and
+   length) with a Point panel (position, corner radius, mirroring), smooth/sharp points, join and
+   merge, delete vs delete-and-heal, nudging, one undo step per gesture, eraser (⇧E), shape builder
+   (⇧M: the regions of overlapping shapes, click or drag to merge, Alt to remove, curves kept),
+   variable width strokes (width profile presets with previews in the stroke settings, the Variable
+   width tool ⇧W: drag the path to add a width point, slide points, drag their handles, Delete;
+   smooth interpolation per subpath, dashes, caps and joins, canvas/PNG/SVG/PDF and outline stroke),
+   a transform box around several selected points (corners and edges scale them, Shift keeps
+   proportions, Alt from the centre; just outside a corner rotates, Shift in 15° steps; drag inside
+   to move; the Design panel's X/Y/W/H and flip/rotate act on the points), point snapping while
+   dragging points or handles and with both pens (to the points and segment midpoints of this and
+   other vectors, the usual layer targets and the pixel grid, with guides and a marker on the point
+   landed on; Ctrl/Cmd turns it off), arc handles on the canvas (sweep, start and ratio with a
+   live readout, Shift snapping, closing at the start, the other part from the gap; rotated and
+   flipped ellipses, any zoom), Design panel Arc fields (Start, Sweep, Ratio; bindable), live
+   boolean editing (operands selected by double-click or Cmd/Ctrl-click; moving, resizing or
+   editing an operand's points redraws the result during the drag with every operand outlined;
+   per-operand operations from the boolean controls; only the operands from the edited one up are
+   recombined; clicks hit a boolean group where its result is), the shape builder on strokes and open paths (strokes as their outlined areas), and
+   one-sided variable widths (Alt-drag a width handle; canvas, exports and outline stroke), and
+   filled regions with the Move tool (the area under the pointer hatched, clear of points and
+   segments, its spacing by octave folding fitted to measurements at several zoom levels and fixed
+   to the shape; click, Shift-click and drag to select and move areas with their points).
+   *Left:* vector QA with real files. 1–2 h.
+2. **Text editing depth**: *landed:* OpenType features panel, small caps, lists, title case,
+   truncation/max lines, font picker with previews and recents, word/line selection, IME commit,
+   inline IME composition (underlined at the caret, reflowing, candidate window at the caret; the
+   document only gets the committed text), variable fonts (axes and named instances read from the
+   font, named instances as styles, Type settings ▸ Variable sliders, per-range axis values applied
+   to shaping, outlines and PDF), range-aware Typography panel with "Mixed". Range fills in the Fill
+   section. Right-to-left and mixed-direction text (Unicode bidi: Arabic shaping, mirrored brackets,
+   caret, clicks and selection follow the runs; arrow keys move visually). Right-to-left and
+   mixed-direction names in the panels (layers, pages, Assets, tabs, the file header, canvas frame
+   titles: visual order, joined Arabic, the ellipsis at a right-to-left name's left end; rename fields
+   whose caret, clicks, drags and arrow keys follow the shown text; system fonts for scripts the UI
+   fonts lack). The text style browser in the Typography section (list and grid views in each
+   style's own font, search, folders, this file's and enabled libraries' styles, apply, detach, edit
+   the typography, create from the selected chars, hover to preview on the canvas, "Mixed" when the
+   chars use several styles); text styles link chars, not just layers (editing what a style sets
+   unlinks the chars edited). Live previews of a hovered named instance or font style and of a
+   dragged axis slider (one undo step on release, Escape cancels). Visual QA: list markers keep the
+   paragraph's font, renames start with the name selected and centred, Max lines shows while
+   truncating. Right-to-left paragraphs mirror lists and indents: bullets and numbers (".1") on
+   the right, wrapped lines hanging from the right, the paragraph indent on the right, trailing
+   spaces hanging outside the line (canvas, PNG, PDF and SVG). A behaviour suite from the public
+   documentation (`crates/text/src/behaviour_tests.rs`, `crates/engine/src/text_behaviour_tests.rs`):
+   Auto / % / px line heights with the leading split above and below every line, letter spacing in
+   % and px, paragraph spacing and indent (start-aligned text only), resizing and truncation,
+   decorations from the font's metrics; CJK line breaking (between ideographs, kana and Hangul, no
+   break inside Latin words, kinsoku for closing and opening punctuation, small kana and the
+   prolonged sound mark); a style's metrics from its own font, not a fallback; carets, Delete and
+   Backspace by grapheme cluster; double-click and word moves by script run; IME composition with
+   CJK; vertical trim (cap height to baseline). The tail suite (`crates/text/src/tail_tests.rs`,
+   `crates/engine/src/text_tail_tests.rs`): lists per paragraph, nested up to 8 levels with Tab and
+   Shift+Tab (1. a. i. and • ◦ ▪ per level, counts restarting after plain paragraphs), Enter on an
+   empty item and Backspace at an item's start stepping out, `- `/`* `/`1. ` starting a list; list
+   spacing between items; hanging lists and hanging punctuation; decoration style (solid, dotted,
+   wavy), thickness, underline offset, skip ink and colour, with inspect, CSS and the REST import.
+   *Left:* visual QA; hanging punctuation in right-to-left paragraphs and centred text, list
+   numbering that continues across a plain paragraph and a list's own start number (documentation
+   silent); decoration colour in SVG exports (drawn with the text's fill, like run fills); Korean
+   keeps breaking by syllable and Han runs aren't split by a dictionary (documentation silent). 0.5 h.
+3. **Auto layout and sections depth**: *landed:* on-canvas padding/gap handles (also wrapped-row
+   and grid column/row gaps, grid tracks outlined), min/max width/height (UI, Hug/Fill/Fixed,
+   hugging text wraps at its max), ignore auto layout (absolute position) with constraints, text
+   baseline alignment, grid tracks (fixed/hug/`fr`), grid cells and spans, wrap row gap UI,
+   wrap-aware drag-reorder (by row) and dragging into a grid cell, nested hug/fill settling in one
+   pass (wrapping fill text, three levels deep, grid rows), min/max redistribution, coherent
+   Fill/Hug rules, drag across nested auto layout frames (deepest one wins, insertion line, out to
+   the canvas or a plain frame). Arrow keys move auto layout children one place (along the flow
+   past hidden and absolute siblings, Up/Down between wrapped rows, to the neighbouring grid cell
+   (automatically placed children swap, anchored ones take or swap cells), and at the end of a
+   flow or across a row's axis into the neighbouring nested auto layout frame when the frame
+   around flows that way; one undo step, none when nothing can move). Visual QA of nested
+   hug/fill/fixed/min/max/wrap/grid samples against the documented rules (Fill turns a hugging
+   parent Fixed, min/max redistribution, wrap inside fill, absolute children following
+   constraints as hug frames grow). Sections: hide contents (name, outline and "Contents hidden"
+   on the canvas; contents skipped by rendering, hit testing and labels; dimmed in the layers
+   panel; Design panel checkbox and context menu), Wrap in new section, frames in sections get
+   canvas labels and are top-level frames (flows start there, navigation, Export frames to PDF),
+   "Navigate to" a section shows its frame shown last, else its first; ready for dev turns
+   "Changed" when the contents are edited, resolved with a reason; Compare changes shows what a
+   changed frame or section looked like when it was marked next to how it is now, with the
+   changed layers and their property changes. *Left:* whether `fr` rows of a fixed-height grid
+   should make room for fixed-size children (now `minmax(0, 1fr)`-like). 1–2 h.
+4. **Components depth**: *landed:* component properties (edit/delete/bind) with the properties
+   panel, add variant, instance swap UI, per-layer overrides with reset, restore main, instance
+   structure protection; Assets panel with live thumbnails, search and drag-to-canvas (drops into
+   the frame or auto layout slot under the pointer); exposed nested instances (their properties
+   show on the main's instances); component descriptions (edited on the main, shown on
+   instances); local libraries (publish a file's components, sets and styles with per-asset
+   versions, enable library files, place library components and apply library styles as
+   read-only linked copies, "Library updates available" with overrides kept on update); slots
+   (a frame of a main made a slot property with preferred components; instances fill it with any
+   content of their own, kept across main updates, variant switches, copy/paste and detach, with
+   the main's default content until edited; reset slot; slot badges in the layers panel and on the
+   canvas; fill menu in the properties panel; drops from the Assets panel and the canvas land in
+   slots); nested overrides kept when the main moves or swaps a nested instance, and on nested
+   instances copied out of an instance (re-linked to their own main); canvas drags can no longer
+   pull layers out of an instance; library variables (publishing includes the file's variable
+   collections with their modes, aliases and scopes, versioned per variable and collection, without
+   variables hidden from publishing; files using the library see its collections read-only under
+   the library's name in the Variables editor and the variable pickers; binding, aliasing or setting
+   a library collection's mode on a frame copies the variables in as read-only linked copies, so the
+   file renders without the library; library components keep their variable bindings and modes;
+   "Library updates available" covers changed variables and bound layers follow). Explicit variable
+   modes in the Design panel: a frame's mode per collection, Auto (inherited) or its own, with
+   enabled libraries' collections listed under the library's name (picking a mode copies the
+   collection in). Instance boolean and text properties bound to boolean and string variables
+   (following modes, renames, reset and detach); layout grid settings in the Design panel whose
+   count, size, margin/offset and gutter bind to number variables; fills, strokes, effects and
+   layout grids reordered by dragging their rows, their variable bindings following. Components at
+   scale, QA'd with a synthetic design system (about 300 components: buttons, inputs, cards, navs
+   and badges as sets of size × state × type × theme variants, boolean/text/instance swap/slot
+   properties, instances nested four deep, text and paint styles, light/dark variables bound across
+   it) used 2,000 times with overrides at every level: main edits keep every override and match a
+   full rebuild exactly; values from variables (a theme switch, a bound corner radius) are no longer
+   recorded as overrides; detaching a variable on an instance layer is an override that survives main
+   edits; exposed nested instances stay exposed and swapped nested instances keep their layer names
+   through main edits; layers a swapped nested instance's main adds keep their ids and overrides.
+   Instance swap properties have preferred values (offered first). Alt-drop from the Assets panel
+   onto an instance swaps it (same-set instance preferred, highlighted while dragging); instances
+   pasted into other files follow their mains (library copies shared, published components used
+   from their library, other mains left behind as a restorable missing main). The Assets panel lays
+   out only the tiles in view and renders thumbnails as they show (cached, re-rendered only for
+   changed components). A behaviour suite from the public documentation checks overrides (what an
+   instance takes, what it refuses: geometry, constraints and resizing of its layers, its auto
+   layout direction), variant switches (overrides stay where both variants agreed; text layers keep
+   theirs), swaps (by layer name; from the Assets panel only text overrides), the top-left default
+   variant, detach, reset and push. *Left:* QA with real-world (not synthetic) libraries. 1 h.
+5. **Prototyping depth**: *landed:* on-canvas connections with drag-to-connect, interaction editor,
+   flows, smart animate, overlays, scroll/fixed/sticky, change-to and set-variable in the presenter.
+   Custom bezier and custom spring easings with editor fields; device frames (phone, tablet,
+   laptop, desktop bodies drawn in code) around the presented frame; overlays animate out with
+   their opening transition reversed; several selected layers edit their interactions together
+   (or replace mixed ones); scrolling inside device frames (the frame sized to the device's screen,
+   clipped or scrolling by wheel and drag, fixed layers pinned to the screen by their constraints,
+   nested "Scroll to", preserve scroll position); a resizable preview pane over the canvas that
+   plays the selected frame and follows edits live; device rotation (phones and tablets turn to
+   landscape: saved in the file, imported from REST files, drawn turned in the presenter and the
+   pane); presentation options (fit, fit width, fill, 100%, with Z to cycle them and R to
+   restart, the device frame shown or hidden, kept between presentations; what overflows the
+   window pans); scroll momentum (drags fling and slow down the same at any frame rate, the wheel
+   coasts, a drag past the ends stretches and springs back); responsive presentation (the presented
+   frame resized to the device's screen, or the window without a device, its constraints and auto
+   layout responding live; in the Options menu and the Prototype panel, saved in the file); device
+   colours (each model's colour variants, bodies drawn in code) and custom device sizes (a bare
+   screen with width and height fields, imported from REST files); flow descriptions in the
+   presenter's flow picker and under each flow; conditional actions (if / else if / else over
+   variable expressions) and set-variable-mode actions run in the presenter (from REST files or
+   commands). Conditionals are built in the interaction editor: an interaction's actions are a list
+   (add, reorder by dragging a row's grip, also inside conditional blocks, or from its menu, remove,
+   open one to edit it; one undo step per move), "Add action ▸ Conditional" adds an if whose
+   condition comes from a builder (a variable from the variable picker, an operator, a value or
+   another variable) or is typed as an expression (`count >= 3 and not done`, checked when entered,
+   what's wrong shown under the field), each block with its own actions (the same editors,
+   nested), plus "Else if" and "Else"; set variable values can be expressions (`count + 1`,
+   `"Hi " + name`); expressions read a variable's value in a given mode of its collection
+   (`accent[Dark]`, also from REST files' variable mode lookups) and the mode a collection is in
+   where the interaction runs (`mode(Theme) == "Dark"`, following set variable mode actions); every
+   edit is an undo step (`proto.action.*`, `proto.conditional.*`). Hotspot hints: a click where
+   nothing reacts flashes the screen's hotspots (an Options menu toggle, on by default); the
+   presenter's Inspect panel shows the hovered layer's properties. Overlays opened through commands
+   close on a click outside unless told not to, as in the editor. A behaviour suite written from
+   the public documentation covers triggers, actions, overlays, animations, easing, scrolling and
+   interactive components ([prototyping-parity](prototyping-parity.md)); its fixes: drag-driven
+   animations go their way and follow the pointer, key combinations, overlay timers from when they
+   open, instances play their variant's interactions, physical springs, smart animate overshoot,
+   fixed layers on top; scroll to takes an offset. *Left:* QA against larger real-world
+   prototypes. 1–2 h.
+6. **Interop**: *landed:* image crop handles; REST API file JSON import (`file.open` / `file.import`
+   / CLI: pages, layer tree, geometry, paints, strokes, effects, text runs, vectors from geometry
+   paths, auto layout, constraints, grids, components, sets, instances with overrides, component
+   properties, styles; image fills from an `images` folder or placeholders; warnings for the rest),
+   now with prototyping (interactions with their triggers, actions, transitions and easing, flows,
+   scrolling, the prototype device; conditional actions (if / else if / else over expressions),
+   set variable with variable references and expressions, set variable mode, all run by the
+   presenter) and variables (the local variables JSON passed along, next to the file or embedded:
+   collections, modes, aliases, scopes, layer bindings and explicit modes).
+   Export panel: a row per export setting (typed or preset sizes like `2x` / `512w` / `512h`, PNG,
+   JPG, WebP, SVG and PDF, suffix, advanced options: contents only, include bounding box, and for
+   SVG outline text, id attributes and simplified strokes), a preview, and "Export N layers" (`file.exportLayers`) in the
+   panel and the Export dialog. Paste from other apps: images, SVG and text (the newest clipboard
+   content wins over our own copy; pasted SVG lands centred in the view), and layers copied from
+   another design app (`edit.pasteDesignLayers`: the `.fig` canvas in the clipboard's HTML read
+   like a `.fig` file, best effort; tested with clipboard HTML made from our own export only).
+   File ▸ Save as… to a `.fig` name writes an experimental export copy and the document keeps its
+   `.figcraft` path. SVG import is editable and
+   checked against a corpus of synthetic files (expected pixels worked out by hand, layer structure,
+   export and re-import): groups named from their ids with transforms baked into the layers;
+   rectangles (corner radius), ellipses and lines kept as those shapes; gradients with exact
+   handles, `reflect`/`repeat` and focal points; patterns as image fills; clip paths and masks as
+   vector, luminance and alpha masks; shadow and blur filter chains as drop shadows, inner shadows
+   and layer blurs; blend modes; text as text layers with runs, anchors and stacked lines; images
+   and nested SVG images; import warnings for what's left out; linked files never read; hostile
+   input fuzzed. SVG export keeps alpha and luminance masks. PDF export: one page per frame in points (Export frames to
+   PDF, the Export panel, `figcraft-cli export -o x.pdf`), vectors, gradients and strokes as
+   vectors, real selectable text in subset fonts with clickable hyperlinks, images embedded once,
+   opacity and blend modes, clip content, alpha/luminance/vector masks, shadows and layer and
+   background blurs as images; checked by rendering the PDFs back against PNG exports. PDF print
+   options in the Export panel (per PDF export setting), the Export dialog, `file.export`,
+   `file.exportLayers`, `file.exportFramesPdf` and `figcraft-cli export`: a bleed showing what lies
+   past the frame (its fills reach out, its children are clipped at the bleed), crop and bleed
+   marks outside it, MediaBox / BleedBox / TrimBox, and CMYK colour (a documented, deterministic
+   naive conversion; images and rasterised effects too).
+   *Left:* .fig import (best effort), a CMYK output intent (no CMYK ICC profile can ship in the
+   repository), SVG filters other than shadows and blurs (left out with a warning). 8–16 h.
+7. **Look & feel and interaction-fidelity pass**: *landed:* keyboard shortcuts audited against the
+   public shortcut reference: one keymap (`figcraft_engine::keymap`) drives the menus, the canvas,
+   the control channel and MCP, with macOS and Windows/Linux keys where they differ (mask, bring to
+   front/back, distribute, tidy up, layout grids, pixel preview), Text-only and canvas-only bindings
+   (Cmd/Ctrl+K: link while typing, Actions on the canvas), Cmd/Ctrl+/ for Actions, `+`/`-` zoom,
+   Shift+0/1/2 from any layout, Cmd/Ctrl+0, hold Z for the zoom tool (Alt zooms out, drag an area),
+   two quick digits for an exact opacity, boolean keys (Alt+Shift+U/S/I/E), remove fill/stroke
+   (Alt+/, Shift+/), outlines on Shift+Cmd+O, pixel grid on Shift+' (and Cmd+'), Shift+E / Shift+D and the other panel keys, Ctrl+Tab between files, Shift+B (and B) for the paint bucket in vector edit mode; the Keyboard
+   shortcuts panel docks at the bottom with a tab per group and search, keycaps per platform.
+   A shortcut parity suite (`shortcut_parity_tests.rs`) checks every documented shortcut on both
+   platforms (129 rows: 128 bound, including moving the rotation origin with Alt+R and placing an
+   object with Enter from the toolbar; 1 moved off a documented conflict) and pins the 48 undocumented
+   bindings; others' cursors (`Alt+Cmd+\`), list levels while editing (Cmd/Ctrl+] and [), the
+   keyboard box selection on Alt+Space / Ctrl+Space, arrows that pan with nothing selected,
+   Control to suspend snapping on macOS and Space/N/C/F while presenting landed with it
+   ([ui-parity](ui-parity.md#keyboard-shortcuts)).
+   *Left:* tool by tool, panel by panel against the incumbent (cursors, modifier keys while
+   dragging, hover states, menus, popovers); per-keyboard-layout shortcut tables. 40–60 h.
+8. **Collaboration (local):** comments landed: pins pinned to frames and layers that move with them
+   (to other pages too) and stay where they were when the layer is deleted, your pins dragged onto
+   another frame, crowded pins clustered when zoomed out (a click zooms them apart), Shift+C to show
+   or hide them; threads where you edit and delete your own messages, emoji reactions, @mentions
+   with a picker of the names used in the file (your name from Preferences), read and unread state,
+   resolve, and "Copy link" (`figcraft://comment/<id>`: pasting or `comment.open` goes to the page,
+   zooms to the frame and opens the thread); the Comments panel with search (text, names, frame),
+   filters (open, resolved, yours, unread), sorting by date or page, each thread's frame and page,
+   and Up/Down to step through threads; comments on the presented frame (Comments button or
+   Shift+C: read and reply). All of it through `comment.*` commands. Version history
+   landed (named versions saved in the `.figcraft` file; restore, rename, duplicate, delete; panel;
+   view a version on the canvas read-only before restoring it; autosave checkpoints every 30
+   minutes, folded in the panel). A behaviour suite written from the public documentation covers
+   both: restoring keeps the comments and first keeps the replaced design as an autosave, a titled
+   autosave becomes a named version, merging a branch records the main file before and after, and
+   threads made in a live session can be replied to and resolved. Real-time collaboration is designed (`docs/collab-protocol.md`:
+   WebSocket sessions the app can host itself, server-ordered per-property changes, live cursors)
+   and its core landed (`crates/collab`, no networking yet): client-scoped node ids, every saved
+   layer field and the document-level data (styles, variables, comments, images…) as synced
+   properties, diffs after a command that cost the size of the edit, fractional sibling positions,
+   a session server that orders and validates batches (cycles, deleted layers, id spaces, sizes)
+   and a client that shows its own edits at once and replays them over others'; derived data
+   (auto layout, instances, bindings) is repaired by the author after concurrent edits; binary
+   messages (a moved layer is 43 bytes, a cursor 23) with a JSON form; a randomized multi-client
+   test over real commands converges. Live sessions run over the network (hosting from the app,
+   invite links, document sync, live cursors, selections, avatars, follow). Undo is per person in
+   a session (`edit.undo` takes back only your own steps, leaving what others changed since;
+   creations and deletions invert; a gesture or command group stays one step); refused edits roll
+   back with a toast; a dropped connection keeps editing and resumes as the same client with what
+   it missed (or a snapshot), then sends what was made offline. Randomized sessions with undo,
+   redo and dropped connections converge, and a checker confirms no undo reverts someone else's
+   change.
+   Plugins landed: sandboxed WebAssembly plugins (a metered wasmi
+   interpreter with a memory cap and no WASI, also in the browser) whose API is the command
+   registry; each run is one undo step and is rolled back when it fails (error, trap, endless loop,
+   memory); a `figcraft-plugin.json` manifest declares menu commands with parameters and read or
+   write access with an optional command allowlist, and files, other documents, the undo history,
+   dialogs and other plugins are always off limits. Plugins ▸ Development ▸ Import plugin from
+   manifest… (kept in the preferences, the module re-read on every run), the installed plugins in
+   the Plugins menu with a parameters form drawn from the manifest, Run last plugin (⌥⌘P), Manage
+   plugins, and `plugin.*` commands for scripts, the CLI and MCP; a Rust SDK and two example
+   plugins (Tidy names, Swatch grid) in `plugins/`, built by `cargo xtask plugins`. Then plugin
+   panels (ABI v2: fields and buttons drawn with FigCraft's widgets, the plugin called back for
+   each button or changed value as one undo step, `plugin.ui` / `plugin.event` / `plugin.close`
+   for scripts and MCP) and per-plugin settings kept with the preferences. Then widgets (API 3:
+   a plugin describes a layer of its own, validated and built as a frame with locked layers; clicks
+   on its named parts call the plugin back in a fresh sandbox with the state kept in the layer, one
+   undo step each; `widget.insert` / `widget.click` / `widget.list`; a Counter example), panels of
+   several plugins side by side and the colour picker on plugin colour fields. Then a plugin
+   directory on `figcraft-server`: bundles published with the server key and checked in full,
+   browsed and installed from Plugins ▸ Manage plugins after a permissions confirmation, downloads
+   checked against their SHA-256, updates by version. *Left:* a public catalogue, publisher
+   accounts and signatures; richer widget events; the directory in the browser. 8–26 h.
+9. **Hardening and performance**: *landed:* `cargo xtask bench` (synthetic 1k/10k/50k-layer
+   pages: engine, render and headless UI-frame timings). The canvas keeps its last image and
+   re-renders only what a pan uncovers or an edit touches: moving one layer at 10k layers re-renders
+   in ~0.2 ms instead of ~8 ms (0.8 vs 24 ms at 50k zoomed out), a 40 px pan in ~0.7 ms instead of
+   ~7.5 ms. The layers panel lays out only the rows in view (every screen expanded at 50k: 39 →
+   0.6 ms a frame); text layouts are shared instead of re-formatted per lookup; overflowing text is
+   culled by its glyphs. At 10k: full 1440×900 renders 7–15 ms, single-layer edits ~10 µs, hit
+   tests ~26 µs. Zoomed out (50% and below) the canvas draws levels of detail: layers under 2 px
+   land as their averaged colour, text under 4 px is greeked into bars, small rectangles and clip
+   layers skip the path pipeline (exports and closer zooms stay exact): a whole 50k-layer page
+   renders in ~8 ms instead of ~50 ms. `.figcraft` at 50k layers saves in ~0.09 s instead of ~1 s
+   and loads in ~0.16 s instead of ~0.86 s (JSON streamed to and from the document without a
+   value tree, layer fields at their defaults left out: 63 → 22 MB of JSON, old files still
+   open). The retained canvas is held to a full render: a seeded random walk (edits, undo/redo,
+   pans and zooms over nested, rotated and clipping frames, groups, masks, booleans, auto layout,
+   effects, text, instances, variables and styles) checks every step, and found clip edges on a
+   pixel boundary letting a column through in some renders. Drags show live on the canvas (every
+   finished render is shown, not only the newest one asked for), and a button held still no
+   longer rebuilds the preview and re-renders every frame.
+   Components at scale (`cargo xtask bench`, synthetic design system of about 300
+   components used by 2,000 instances): edits of mains reach their copies directly instead of
+   rebuilding every instance (value, size and layer added/removed edits; other edits rebuild each
+   affected instance once, inner mains first), bound variables no longer touch unchanged layers on
+   every edit, auto layout re-flows only where sizes or places changed: recolouring or resizing a
+   main's layer used ~900 times 188/226 → 4/18 ms, adding a layer to it 430 → 21 ms, a label style
+   in all 72 button variants (1,800 copies) 450 → 57 ms, switching a variant, reset, detach, push
+   and paste ~450 → under 3 ms, accepting a library update 460 → 64 ms; the Assets panel with 2,000
+   assets 3.4 → 1.3 ms a frame. Accessibility: the custom-painted
+   controls name themselves for screen readers (AccessKit on desktop: role, name, value and state
+   for tools, layer rows with their type, level, selection and hidden/locked state, fields,
+   dropdowns, tabs, menu items, and the canvas, which describes the selection); keyboard navigation:
+   F6 / Shift+F6 move between the toolbar, layers, canvas and properties, Tab / Shift+Tab move
+   within a region with a focus ring, Enter or Space activate, the arrows go along the toolbar and
+   through the layer rows, menus and tool flyouts opened from the keyboard take it and give it back,
+   Escape returns to the canvas (where Tab selects the next layer again instead of wandering into
+   the tab strip); reduced motion follows the system's setting or a preference; secondary and
+   accent text meet WCAG AA in both themes.
+   An idle window draws no frames: it redrew ~240 times a second
+   (the window title was re-sent every frame, and each viewport command asks for another), ~33% of
+   a core in a debug build, and now sits at 0 frames and ~0% CPU; the toast, the autosave
+   checkpoint and the presenter's "after delay" timers wake it at their deadline, the interaction
+   editor's curve preview plays when it shows, changes or is hovered, and a screenshot keeps frames
+   coming only until it arrives (`ui.inspect` `framesDrawn` and `repaintCauses` show what asked for
+   frames; headless tests hold it). *Left:* a real-world file corpus, Windows/Linux/browser
+   QA, runs with real screen readers (NVDA, Narrator, VoiceOver, Orca), the AccessKit tree in the
+   browser (eframe's web backend doesn't send it yet). Landed since: F2 rename from the keyboard,
+   Shift+F10 context menus at the focused layer row or the canvas selection, keyboard box selection
+   (F8). 27–44 h.
+
+## Inventory: what exists today
+
+Carried over from the ROADMAP's "Shipped so far" (2026-10-10). The test count there was stale: 963 `#[test]` functions as of this re-measure.
+
+- **Architecture:** 15 crates with enforced layering (`cargo xtask layers`): geom, color, doc,
+  layout, text, pathops, plugin, collab, render, format, svg, engine, ui-egui (+ mcp, pdf). Every action
+  is a command (449 command ids); undo is unlimited via structural sharing (`Arc` node snapshots); gestures are
+  one undo step; `command.batch` runs several commands as one step.
+- **Document model:** pages, frames, groups, sections, rectangles, ellipses (arcs/rings), polygons,
+  stars, lines/arrows, vector networks, text with styled runs, boolean groups, components, component
+  sets (variants), instances with per-layer overrides, slices; fills (solid, linear/radial/angular/
+  diamond gradients, images with fill/fit/crop/tile + adjustments), multiple strokes with
+  inside/center/outside alignment, per-side weights, dashes, caps/arrowheads, joins; effects (drop
+  and inner shadow with spread that offsets the outline exactly: ellipses, stars, vectors, text;
+  inner shadows over the fills and under the children and strokes; drop shadows hidden behind what
+  the layer covers, translucent fills included, unless shown behind transparent areas; layer blur; background blur
+  that sees the whole backdrop, inside clipping frames, faded groups and masks too; both blurs
+  uniform or progressive (the radius ramps between two points, dragged on the canvas); noise in
+  mono, duo and multi colour with grain size, density and blend mode; texture with clip to shape;
+  glass with light angle and intensity, refraction, depth, dispersion, frost and splay; the same in
+  PNG, PDF and SVG exports, SVG embedding renders of noise grains, texture, progressive and
+  background blur and glass); corner radii with
+  smoothing; constraints; auto layout (horizontal, vertical, wrap, grid; hug/fill/fixed; min/max;
+  absolute children); layout grids; export settings; prototype interactions, flows and transitions;
+  paint/text/effect/grid styles; variables with collections, modes and aliases.
+- **Renderer:** CPU (tiny-skia) scene renderer used for canvas, export and the web: isolated layers
+  for opacity/blend/effects, clip content, masks, booleans (linesweeper), text (harfrust shaping,
+  skrifa outlines, font fallback), aligned strokes with caching.
+- **Engine:** pointer tools (move/marquee/deep select/resize/rotate/Alt-duplicate with smart-guide
+  snapping, frame/section/slice/shapes/line/arrow with Shift/Alt, text, pen, pencil, hand,
+  eyedropper), Cmd/Ctrl-click and Cmd/Ctrl-marquee into nested layers, Shift-marquee toggling,
+  Select layer (every layer under the click), measuring (Alt-hover distances from the selection to
+  layers, parents and ruler guides, Cmd+Alt for nested layers, from a guide being dragged to the layers of its frame, extension lines, one box inside the
+  other, overlaps, live distances to the neighbours while Alt-dragging, Shift+Alt for auto layout
+  padding and gaps; labels that never overlap at any zoom), text editing (caret, selection, words,
+  lines), auto layout reorder by dragging, drop into frames, align/distribute/tidy, z-order,
+  flip/rotate, the scale tool (panel, and canvas handles that scale everything about its anchor
+  point or from the centre with Alt, with a live factor, one undo step per drag), booleans, flatten,
+  outline stroke, components (create, instances, sync with overrides, reset, detach, push changes,
+  variants, properties, slots), styles and variables, prototype commands, find/replace, batch rename,
+  copy/paste (internal + SVG/text), file new/open/save/import/export (native `.figcraft`, SVG
+  in/out, PNG/JPG/WebP), version snapshots.
+- **UI (egui, swappable):** the incumbent's 2026 layout: tab strip that is also the window's title
+  bar (frameless on Windows/Linux with drawn window buttons, drag, double-click maximise and edge
+  resizing; macOS window buttons inset into it), icon rail, file header, pages and
+  layers tree (rename, visibility/lock, drag to reorder/reparent), Assets panel, floating bottom
+  toolbar with flyouts and mode switcher, Design / Prototype / Inspect panels (Dev Mode: properties with their styles and variables, annotations
+  with pinned properties and categories drawn as coloured callouts on the canvas (filtered by category),
+  a ready-for-dev list, a focus view on one frame with previous / next, Compare changes since a frame
+  was marked ready (before / after side by side or overlaid, property-level diffs), CSS/HTML/React/SwiftUI/Compose
+  code where components take their properties as parameters and instances are calls, components
+  connected to their code components showing the real snippet, read-only plugins), colour picker
+  (HSB square, hue/alpha, hex, gradient stops, image fills), main menu generated from the catalog,
+  context menu, Actions palette (⌘K), keyboard shortcuts from one keymap per platform (a tabbed,
+  searchable Keyboard shortcuts panel), keyboard navigation (F6 between regions, Tab within them, a
+  focus ring) and screen-reader names for the custom controls (AccessKit), presentation player with
+  transitions, light and dark themes, home screen, About/Preferences/shortcuts/variables dialogs.
+- **Automation:** desktop control channel (`--control <port>`: execute commands, inspect document/UI,
+  synthetic pointer/keys/typing, menu invocation, screenshots, renders). What agents read and write
+  on disk can be confined to chosen folders (`--automation-read-root` / `--automation-write-root` on
+  `figcraft-cli mcp` and the desktop app, #715). A minimised or covered window answers every
+  request that acts on the app's state without drawing (about 100 ms each on Windows), and the
+  ones that need a drawn frame (`ui.screenshot`, `ui.input`, `window.new`) fail at once instead of
+  waiting 60 s (#720; not tested on macOS, and under Wayland a minimised window can't be told
+  apart).
+- **Tests:** 963 `#[test]` functions (2026-10-10) including junk-parameter sweeps over every command (and every vector-edit command while editing), importer fuzzing and render regressions.
+
+## Revision history
+
+| Date | Change | Summary |
+|---|---|---|
+| 2026-10-17 | minor | Menu breadth re-run with `cargo xtask parity`: 212 / 212 (100%; the catalog gained View ▸ Full screen with #227 on 2026-10-14), 561 commands. Rows for the 2026-10-17 landings: import/export (area 14) and the file formats dimension name the `.fig` import's new fidelity (instance identity, overrides by key, text style precedence, grid tracks, slots, connector labels, per-point joins, text on a path, image adjustments, list start numbers, vertical trim), budgets from the file's size, the import report, a `.fig` copy from Save as and paste from another design app; the localization evidence takes the re-measured catalog counts (2,272 entries, drafts at 95–99%, Indonesian and Czech drafts, Swedish and Turkish catalogs); the Automation line adds control requests answered while the window is minimised (#720); batch #753's Selection colors, smart-selection spacing, Present tab and auto layout on empty frames are in ui-parity, prototyping-parity and auto-layout-parity. Numbers unchanged: every `.fig` and paste change is checked on synthetic files or clipboard HTML made from our own export, and real files are what gap 1's blocker and the file-exchange discounts wait for; the UI changes (menus, the Actions palette, editor fixes) are not compared side by side, so UI/UX stays at 58%; the localization grade and hours stay (Indonesian's draft is offset by the drafts' new gaps) |
+| 2026-10-17 | minor | Automation roots (M8, #715, #481): `figcraft-cli mcp --automation-read-root DIR --automation-write-root DIR` (each repeatable, existing folders) and the desktop app with the same flags confine every file a command reads to the read and write roots and every file it writes to the write roots; paths are resolved (links followed, `..`, Windows `\\?\` and UNC paths, case) and compared by whole folder names, anything else is an ordinary error. The engine reaches the file system through one module (enforced by `crates/engine/clippy.toml`), and a sweep runs every command with paths outside the roots. `--attach` refuses the flags (the app confines itself); `ui.screenshot` and `ui.render` return PNG data without a `path`, so the attached MCP server writes no temporary files. Numbers unchanged. |
+| 2026-10-17 | minor | Number variables on text content (M3, #629): the Typography section's variable picker also lists number variables for a text layer's content, as the engine already accepted (the text shows the number, e.g. 42.5, and follows the variable). Other text fields keep their own types. Numbers unchanged. |
+| 2026-10-17 | minor | Frames and sections convert into each other (M1, #719): `object.convertToSection` turns a frame on the page or in a section into a section in place (same box, name, fill and layers, which stay where they are; what only a frame has goes: auto layout, clipping, layout grids, guides, scrolling), and `object.convertToFrame` now also turns a section into a frame that keeps its fill and doesn't clip, so the look stays. Nested frames, instances, main components and sections holding sections are refused with the reason; one undo step each. Both are in the canvas context menu (Convert to section / Convert to frame) and in Spanish. Numbers unchanged. |
+| 2026-10-14 | minor | Russian catalog (M9), reviewed and approved by VanTan: all 2,165 current entries, Русский in Preferences and regional ru tags. Russian integer plurals use one/few/many; contributor display name VanTan added. Existing estimates unchanged. |
+| 2026-10-13 | minor | Vector edit mode regions: the filled area under the pointer is hatched (clear of points and segments, holes left out, spacing by octave folding fitted to measurements at several zoom levels, fixed to the shape); click, Shift-click and drag select and move areas with their points (drawn unselected); a click on an empty spot clears them and stays in edit mode (see [ui-parity](ui-parity.md)) |
+| 2026-10-13 | minor | Plugin log limits (#191): cap each UTF-8 line at 8 KiB, total log bytes at 1 MiB and lines at 1,000 per run/callback before copying guest memory or forwarding to the host. Over-budget runs fail and roll back document edits; callbacks get fresh budgets. Added sandbox boundary/forwarding tests and an engine rollback regression. Percentages and hours unchanged. |
+| 2026-10-13 | minor | Component playground (M3): with an instance, a component or a component set selected, the Inspect tab shows a Playground: a preview of the component and a control for each variant, boolean and text property. What is tried there changes the preview and the code in the Code section, never the file (no undo step, the canvas instance stays as it is); Reset goes back to the component's or the instance's own values. `component.playground {id?, properties?, language?, path?}` gives the same to scripts: the properties with their values, the code, and a PNG on request (`playground_tests`). Left: instance-swap and slot properties in the playground (the command takes an instance swap; the panel has no control for it), a code connect template's snippet with the tried values. Numbers unchanged. |
+| 2026-10-13 | minor | Auto layout, on-canvas handles of automatic gaps (M2): the handle between spread rows or columns (and between items with an auto gap) shows the distance the layout gives the gap instead of the stored value, and dragging it makes the gap a fixed one from there, as typing a gap in the panel does; one undo step (`gap_handle_tests`). Before, the drag changed a value that had no effect. The documentation is silent on dragging an automatic gap. Numbers unchanged. |
+| 2026-10-13 | minor | Variables inside styles (M3): a shared style can bind variables to fields of its value (`style.bind {style, field, variable?}`: a paint style's colours and gradient stops, an effect style's colour, radius, spread and offsets, a grid style's size, count, gutter and offset, a text style's font size, line height, letter spacing, family and style). Every layer using the style shows those fields resolved in its own modes and stays linked when a variable or a mode changes; the style keeps them resolved in the default modes. A style made from a layer keeps that layer's bindings; a new value drops bindings to what is gone. The style editor binds from its property rows (paint colour, shadow colour, blur radius, grid size) and detaches from the variable's chip; the style picker marks styles that use variables. `.fig` export and import carry the bindings on the style, REST layers hand theirs to the style they use. Left: binding text style fields and the other effect and grid fields from the editor (commands only), library variables in the picker, a style's library copy. Numbers unchanged. |
+| 2026-10-13 | minor | Effects on groups, inner shadows and background blur (M3): a group is no outline of its own, so its inner shadows are cast inwards from around what its layers draw together (their pixels, over them: no shade at a seam between two layers) and its background blur and glass show the backdrop through the outlines of its layers (under them). Canvas and PNG; SVG embeds a group with an inner shadow as a render and its background blur as an image under the layers; PDF places both as images, the blur matching the PNG. Where the group holds one shape the pixels match that shape, or a frame filled like it, carrying the effect (`group_effects_tests` in render, svg and pdf). Offsets and spreads of a group's inner shadow go by whole pixels. Numbers unchanged. |
+| 2026-10-13 | minor | Text made by commands on a dark page (M1): in the app, `text.create` and `node.create {type: text}` that name no fill give white text on a dark page, by the same rule as the Text tool (the page's colour decides, also inside a frame); a named `fill`, `fills` or `fillStyle` is kept. Sessions without an interface (CLI, MCP, exports) still make black text everywhere. Numbers unchanged. |
+| 2026-10-13 | minor | Frames and groups, a one-step convert (M1): `object.convertToGroup` and `object.convertToFrame` (the Design panel's type menu on a frame or a group) change the layer in place, its layers staying where they are on the page. A frame turned into a group loses what only a frame has (auto layout, with the positions it gave kept and fill children fixed; fills, strokes, corner radius, clipping, layout grids, guides, scrolling) and takes its layers' box; a group turned into a frame keeps its box, with no fill and no clipping. Instances, main components, layers inside instances and empty frames are refused with the reason, all or nothing; one undo step. Numbers unchanged. |
+| 2026-10-13 | minor | Prototyping, delays on mouse triggers and manual overlay offsets (M5): mouse enter, leave, down and up wait `delayMs` before their actions run (once while waiting; dropped when the screen or overlay they were on goes away; a pointer that leaves early doesn't cancel, the documentation is silent), and a manual overlay sits at `offset: [x, y]` from the top-left of the layer that opens it (without one, right below it, as before). Delay and X/Y fields in the interaction editor, the player on its own clock, REST import (`delay`, `overlayRelativePosition`), `.fig` import and export (the export's field for mouse delays is unchecked against other software). Numbers unchanged. |
+| 2026-10-13 | minor | Auto layout, wrapped-line alignment (M2): a wrapping layout's lines (rows of a horizontal one, columns of a vertical one) are packed where the cross alignment says (start, centre, end; before, they always sat at the start), stretch when every child fills across the flow, or take the free space between them (`contentAlign: spaceBetween`, the Design panel's Row/Column gap mode, the alignment pad lighting the whole cross axis). Read from REST JSON and `.fig`, written to `.fig`, `align-content` in CSS, an instance override with the other alignment settings. 13 hand-computed layout cases and command tests. Numbers unchanged. |
+| 2026-10-13 | minor | Starter templates and a first run that explains itself: eight templates built in code through the command layer (mobile app, landing page, dashboard, design system starter, wireframe kit, social post sizes, presentation slides, icon set starter; original and synthetic, deterministic, about 10–190 ms each to build), `template.list` and `file.newFromTemplate` for the app, CLI and MCP, File ▸ New from template…, a Templates tab on the home screen (cards with thumbnails rendered from the documents, search, kind filter, keyboard and screen-reader names) in place of the Community placeholder, a row of templates on Recents while there are no recent files, a Getting started card that can be closed and comes back from Help ▸ Getting started (`help.gettingStarted`), and a first run that opens on the home screen. The Drafts placeholder is gone (the app has no drafts folder). Essentials: discoverability ×0.92 → ×0.94 (templates and first-run tips exist; no Community files, no tour, no user evidence), 77.8% × 0.92 × 0.94 × 0.88 = 59.2%, ~57% → ~59%; essentials hours ~60–110 h → ~55–100 h (the onboarding and templates item is done); menu breadth stays 211/211 (the two new menu items are FigCraft's own and not counted); every other number unchanged |
+| 2026-10-12 | minor | Everyday editing partials closed (gap 4): number fields scrub a step a point (×10 with Shift, ×0.1 with Alt, on past the screen edge where the platform reports it), step with the arrow keys by the nudge preferences, take brackets, units and relative edits (`+10`, `*2`, `50%`), commit on Tab and nothing when left untouched, and on Mixed apply relative edits to each layer in one undo step; outline mode's Include hidden layers and Include object bounds (`view.outlinesHiddenLayers`, `view.outlinesObjectBounds`), drawn and clickable; Hide when publishing from the Assets panel (`component.hideWhenPublishing`); a cursor for every tool, modifier and hover target (rotate turned to its corner, pen states, eyedropper, comment, copy, not-allowed), with guides and handles keeping theirs; panel widths with limits, double-click reset and the preferences (`view.panelWidths`); a file or page made in the dark theme has a #1E1E1E page (sessions without an interface keep #F5F5F5) and text drawn on a dark page is white. Menu breadth 211/211. UI/UX fidelity 58% and the interaction pass 40–60 h unchanged at this rounding: the side-by-side comparison is what remains |
+| 2026-10-12 | minor | Text metrics, first measured fidelity data (gap 3): our example documents, exported and re-saved by other software, were read back and every text layer's stored box, line heights, baselines and glyph positions compared with ours. Three rules explained every row and were applied: a line's height is rounded to whole pixels (halves up; Auto, % and px alike; the baseline keeps its fraction inside the rounded line); glyph advances and kerning are each rounded to 1/1024 em before scaling by the font size; letter spacing is not added after a line's last visible glyph. Before: 24 of 131 text boxes of the design-system example matched (118 in width, 24 in height); after: 131 of 131, and all 230 self-sizing text boxes across the 7 documents (Inter only, 11–120 px, letter spacing −6% to 8%, one wrapped paragraph). Glyph positions within 0.001 px: 223 of 1,832 → 1,781; the rest are kerning pairs at weights where the installed font files differ slightly, at most 0.05 px. Frames and other layers matching in size and position: 115 of 231 → 208; the other 23 hang on one grid frame whose row positions came back as written. Not measured: other font families, fractional px line heights, centred or right-aligned text with letter spacing, lists, mixed sizes on a line. Wording only; no number moves |
+| 2026-10-12 | minor | `.fig` export (gap 1): written files were checked by opening them in other software: layers, fills, gradients, strokes, shadows, vectors, components and text draw as in FigCraft; effects such as glass and noise, images and prototype interactions are still unchecked there, and variables are not written. Wording only; no number moves |
+| 2026-10-12 | minor | A public `figcraft-server` (open hosting): with `open_publish = true` anyone publishes a file without the server key and gets its edit and view links plus an owner token (128 bits, shown once, stored hashed) that lists, makes and revokes its links, renames it or removes it (`collab.manageFile`); limits per address (connections at once and a minute, messages a second, publishes an hour, files and MiB kept; IPv6 by /64; `X-Forwarded-For` believed only from `trusted_proxy`; tables capped at 10,000 addresses) and for everyone (`max_total_mb`), each refusal saying why; files published without the key expire after `idle_days` unopened (the date shown to everyone in the file); moderation (`files list --sort size|age|idle`, `block-ip`, `reports`, a Report button and `collab.report`); the operator's contact and terms shown in the Share dialog; `GET /healthz` on the same port; `packaging/server/install.sh` for a Debian/Ubuntu machine behind Caddy and a nightly backup timer. Protocol additions within version 2, gated like signals (older apps get clear refusals). Hosting infrastructure rather than a Figma feature: percentages and hours unchanged |
+| 2026-10-12 | minor | Experimental `.fig` export (gap 1): the whole document written from the same public format notes as the import, verified only by round trips through our own importer. Import/export breadth 84% → 86%, ready 57% → 58%; file formats 59% → 60%; file exchange with Figma users stays ×0.85 (nothing shows another app opens the files); mainstream hours ~130–244 h → ~120–229 h (`.fig` export 15–30 h → checking it elsewhere 5–15 h); feature breadth (~84%), ready for real work (~53%), essentials (~57%), mainstream (~49%), beta and full parity hours unchanged at this rounding |
+| 2026-10-12 | minor | Keyboard shortcut parity suite and bindings (gap 4): a table test with one row per shortcut in the public documentation, macOS and Windows/Linux keys each (129 rows: 126 bound, 110 before; 1 moved off a documented conflict; 2 missing; 2 kept by a platform), plus 48 pinned undocumented bindings so every default binding is in the table; newly bound: A (Frame), Shift+' (pixel grid), Alt+Cmd+\ (others' cursors, new `view.multiplayerCursors`), Ctrl+F6, Shift+Cmd+U (link), Cmd/Ctrl+] and [ (list levels while editing, new `text.listIndent` / `text.listOutdent`), Cmd/Ctrl+Backspace (ungroup), Alt+Space / Ctrl+Space (keyboard box selection, Cmd/Ctrl+arrows draw it out), suggest auto layout, go to main component, arrows that pan with nothing selected (new `view.pan`), Control suspending snapping on macOS, Space/N/C/F while presenting; symbols another layout types with Shift count without it; no default binding uses a system-reserved chord (tested). Menu breadth 207/207 (View ▸ Multiplayer cursors). UI/UX fidelity 58% and the interaction pass 40–60 h unchanged at this rounding |
+| 2026-10-12 | minor | Simplified Chinese draft catalog (gap 5): `zh-Hans.toml` translates every UI string (1,371 keys; plurals give only `other`, and `plural_one` never picks "one"), command label (524) and menu wording (29), machine-drafted in a concise UI style with full-width punctuation and marked as a draft awaiting native review; Preferences ▸ Language lists 简体中文, System maps zh, zh-CN, zh-SG and zh-Hans to it, and Traditional Chinese (zh-Hant, zh-TW, zh-HK, zh-MO) has no catalog and stays English (or the next OS language), never Simplified. A Chinese UI draws Han in a Chinese face first (Microsoft YaHei, PingFang SC, Noto Sans CJK SC), ahead of the craft-fonts build's Japanese BIZ UDPGothic, and changing the UI language lays the CJK faces out again (switching from Japanese to Chinese no longer keeps the Japanese face in front). String counts re-measured: 1,371 UI keys, 524 command labels and 29 menu wordings (1,924 entries); the French, German, Brazilian Portuguese, Japanese and Korean drafts have 1,899 of them (the 25 newer strings read English). Localization 36% → 39%, 31–54 h → 29–51 h; ready for real work unchanged (~53%); full parity ~267–527 h → ~265–524 h |
+| 2026-10-12 | minor | Latin American Spanish overlay (gap 5): `es-419.toml` lists only the 87 entries (61 UI strings, 26 command labels) whose wording differs in Latin American usage (agregar for añadir, presionar for pulsar, configuración for settings, Enter for the Intro key, control for a gamepad, resorte for a spring) and reads `es.toml`, then English, for the rest (a regional catalog overlays its language's); same tú register as Spanish; a draft awaiting native review. Preferences ▸ Language lists Español (Latinoamérica); System maps es-419, es-MX, es-AR, es-CO and the other Latin American and US Spanish tags to it, es-ES and es to Spanish. Localization 35% → 36%, 32–55 h → 31–54 h; ready for real work unchanged (~53%); full parity ~268–528 h → ~267–527 h |
+| 2026-10-12 | minor | Prototyping tail (gap 15, the part that doesn't need video): key/gamepad triggers take controller buttons (`Gamepad A` … `Gamepad Home`, the standard layout's 17 buttons, from a Controller menu beside the key field; the REST import maps controller triggers instead of skipping them); the player reads controllers on Windows (Windows.Gaming.Input through the `windows` crate the app already used; no new dependency) and in the browser (the Gamepad API), polling only while the prototype has such a trigger and the window has the focus, and the control channel presses buttons (`ui.input {gamepad}`); macOS, Linux and FreeBSD read no controllers yet. Widgets react to clicks in a presented prototype (the canvas's callback and sandbox limits, on the prototype's copy: the file and its history don't change, restarting starts over). `proto.evaluate` computes an expression where a layer's interaction would run (MCP); the mode lookup and set-variable-mode rules are cases in a behaviour suite (they already held). Prototyping breadth 90% → 92%, ready unchanged at 74%, 3–6 h → 2–5 h; area hours 120–260 → 119–259 (core 33–75 → 32–74), Features (depth) 29–68 h → 28–67 h; percentages unchanged at this rounding; full parity ~276–538 h → ~275–537 h |
+| 2026-10-12 | minor | Plugin directory on `figcraft-server` (gap 6): the server keeps plugin bundles (manifest, module, up to 32 assets; an uncompressed length-prefixed format named by its SHA-256) published with the server key (`figcraft-cli plugin publish`, `plugin.directory.publish`), checked in full before they are kept (size cap, manifest and plugin API version, a version newer than the one kept, the module compiled but never run, plain asset names) and capped (`max_plugins`, `max_plugin_mb`, `max_plugins_mb`); anyone who reaches the server lists, searches and fetches them (hash-checked again on read, a shared download budget); the operator moderates with `figcraft-server plugins [remove]`. The app's Plugins ▸ Manage plugins gains a Browse tab: a server's plugins with Install / Update / Remove, an install confirmation that shows the permissions asked for, the source and the SHA-256, the download checked against the listed hash before anything is read, plugins kept per user in hash-named folders; `plugin.directory.list` / `install` (needs `confirm: true`) / `publish` / `unpublish` for scripts and MCP. Not in the browser build yet; no public catalogue, publisher accounts, signatures, ratings or background update checks. Plugins & widgets 55%/32% → 60%/35%, 10–30 h → 8–26 h; Ecosystem dimension 34% → 38%; weighted totals unchanged at this rounding; full parity ~281–548 h → ~279–544 h |
+| 2026-10-12 | minor | Japanese and Korean draft catalogs and CJK UI fonts (gap 5): `ja.toml` and `ko.toml` translate every UI string (1,351 keys; plurals give only `other`, and `plural_one` never picks "one" in either), command label (519) and menu wording (29), machine-drafted and marked as drafts awaiting native review; Preferences ▸ Language lists 日本語 and 한국어, System picks ja* and ko*. CJK UI text renders: once the UI language, the open file's names or comments, typed text or the language picker needs Japanese kana, Hangul or Han, the desktop app appends one installed face per script to egui's fallbacks (Windows Yu Gothic UI / Meiryo / Malgun Gothic / Microsoft YaHei, macOS Hiragino Sans / Apple SD Gothic Neo / PingFang SC, Linux Noto Sans CJK; the craft-fonts build's BIZ UDPGothic first), reading only that face's file and sharing its bytes with egui (English users load none: startup and memory unchanged); the web shows Japanese and Korean only when built with craft-fonts' Noto Sans CJK (`FIGCRAFT_EMBED_CJK`), else it keeps them out of the picker and System. Localization 30% → 35% (drafts, not reviewed: graded low), 40–65 h → 32–55 h; ready for real work ~52% → ~53% (52.9 → 53.1 by the dimension table); full parity ~284–554 h → ~276–544 h; beta ~162–292 h → ~155–280 h (Japanese and Korean leave the beta list; their native reviews need people) |
+| 2026-10-12 | minor | Plugin widgets and the panel tail (gap 6, plugin API 3; v1 and v2 plugins unchanged): a plugin marked as a widget puts a layer of its own on the canvas from Plugins ▸ Widgets or `widget.insert`: it describes the layer (frames with auto layout, text, rectangles, ellipses, images it carries) and FigCraft validates the description (size, layer count, depth, numbers, colours, text and image sizes) and builds it as a frame with locked layers inside; a click on a part the plugin named (on the canvas with the Move tool, a pointing hand over it, or `widget.click`) calls the plugin back in a fresh, metered sandbox with the widget's state, as one undo step, and the widget is redrawn; the state lives in the widget's own layer data, so widgets survive save and reload, copying, undo, export and live sessions; no plugin can write that data or call `widget.*`. `widget.list` lists them. A Counter example widget. Plugin panels of different plugins open side by side, and a colour field's swatch opens the colour picker (the plugin hears of the colour when a drag ends). Plugins & widgets 45%/28% → 55%/32%, 15–40 h → 10–30 h; Ecosystem dimension 28% → 34%; weighted totals unchanged at this rounding; full parity ~286–558 h → ~281–548 h |
+| 2026-10-12 | minor | French, German and Brazilian Portuguese draft catalogs (gap 5): every UI string, command label and menu wording (1,899 entries) machine-drafted in each and marked as drafts awaiting native review, falling back to English per key (new strings need only English and Spanish); 0 counts as singular in French and Brazilian Portuguese; System picks the first OS language with a catalog (pt-PT and pt read pt-BR); long translations elide with a tooltip in dropdowns, two-column labels and the home cards. Localization 20% → 30%, 45–75 h → 40–65 h; ready for real work unchanged (~52%; 52.6 → 52.9); full parity ~289–564 h → ~284–554 h; beta ~170–305 h → ~162–292 h (Figma's languages left on the way to beta: Japanese and Korean, 7–12 h) |
+| 2026-10-12 | minor | Cursor chat and spotlight in live sessions: `/` opens a chat bubble at your pointer that everyone sees as you type and that fades a few seconds after the last change; a spotlight (your avatar's menu, `collab.spotlight`) makes everyone follow your view and page, latecomers included, until they move their own. Both are ephemeral presence the host validates and rate-limits, passed only to clients that read them. Multiplayer & sharing breadth 15% → 17%, ready unchanged (5%), 45–90 h → 42–84 h; the Collaboration dimension's hours 55–110 → 52–104 h (the dimension hours still add up to the total); feature breadth (~84%) and ready for real work (~51%) unchanged at this rounding; full parity ~301–587 h → ~298–581 h |
+| 2026-10-12 | minor | Layers and Assets panels behaviour suite written from the public documentation (6 engine tests with about 50 table rows and 5 panel tests driven through the UI; about 30 rows that the code before the fixes contradicts) and its fixes: several layers dropped together in the layers panel land together (layers from apart split around the drop point); Collapse layers keeps the selection's rows open (it closed everything); the eye and padlock stay under the pointer (they vanished as it reached them, so clicks could miss) and dragging across them sets several layers in one undo step; several layers selected open a Rename layers dialog (match as text or a regular expression, Rename to, current name and number buttons, a start value, preview) instead of renaming the top one; `object.batchRename` counts `$n` up and `$N` down (they were swapped), pads with `$nnn`, takes `start`, regular expressions with `$1`…`$9`, `` $` `` / `$'` and codes in the replacement; pages are dragged to reorder, a blank page named with a hyphen is a divider (never opened, holds no layers), duplicates are named "Copy of …", the last page that isn't a divider can't be deleted; the Assets panel files components by page, frame and slash names in folders that fold away (`component.list` gives each `folder`); a leading `.` or `_` now keeps a component out of the library even after it was published, and removing it brings the component back. Pinned where the documentation is silent: Alt-click on an arrow, numbering in stacking order, hidden layers and locked frames taking drops, locking deselects. Layers panel 98%/82% → 99%/85%; percentages and full parity hours unchanged at this rounding |
+| 2026-10-12 | minor | Vector multi-edit and the vector edit tail, with a behaviour suite written from the public documentation (5 tests, about 30 table rows and steps, and a junk-parameter sweep of every vector command in multi-edit mode): several vector layers are edited at once (Enter, double-click or `vector.edit.begin {ids}`; a press on another layer's point, handle or segment makes it the active layer; Shift-click, marquee and lasso select across layers; dragging, the arrows, Delete, delete and heal, mirroring, smoothing, corner radius and point caps and joins reach every layer's selected points in one undo step; the pen, bend, paint bucket, cut and eraser work in the active layer); several Bezier handles are selected with Shift-click and dragged together (`vector.edit.moveHandles`); a sharp point next to a curved segment rounds (the curve is cut where the arc meets it and keeps its shape); a point can have its own stroke cap and join (`vector.edit.strokeCap`, `vector.edit.strokeJoin`, the Point section of the Design panel; canvas, PNG, SVG and PDF, outline stroke); the Pen outside edit mode connects to one of its own points and ends the path, and continues a selected open path from an end point. Left: corner smoothing beyond rectangles, the transform box around points of several layers, per-point caps and joins on dashed, variable-width and brush strokes. Shapes & vector 98%/72% → 99%/73%, 2–4 h → 1–3 h; Figma Draw extras 80%/55% → 88%/60%, 2–5 h → 1–3 h (gap 9: pen pressure on macOS and Linux tablets left). Totals recomputed by the doc's method, which rows since the last recompute had left stale: the area table's weighted breadth is 83.7% (~83%; core 94.1%, ~94%) and ready 63.1% (~63%; core 72.1%, ~72%), hours 133–284 (core 38–83); Features (depth) 61% → 63%, 46–94 h → 34–76 h; ready for real work 52.6% (~52%); mainstream weekly areas 71.0% → 72.1% (× 0.9 × 0.9 × 0.85 = 49.7%, ~49%, rounded down); essentials unchanged (~57%); full parity ~306–595 h → ~294–572 h (on top of the rows merged since: ~301–587 h → ~289–564 h; area-table totals recomputed on the merged table and rounded down: breadth ~84%, ready ~63%, core ~94%/~72%, mainstream weekly areas 72.4%, ~49%) |
+| 2026-10-12 | minor | Dev resources (gap 16): links for developers (a URL and a name) on any layer: `devResource.add` / `edit` / `remove` / `list`, undoable, saved and synced; an instance also lists its main component's (and that component's set's) links read-only with where they come from, and layers inside an instance show their main layer's; URLs are checked as web links (http or https, a host, no spaces, at most 2,048 characters) and never fetched (a link added without a name is named after its URL), opened only when clicked; the Inspect tab lists, adds, edits and removes them; `get_node` and `inspect_document` return them as `devResources`. The editor extension stays out of scope (the MCP server serves agents and editors). Dev Mode breadth 93% → 96%, ready 70% → 72%, 1–3 h → 0–1 h; feature breadth (~82%) and ready for real work (~51%) unchanged at this rounding; full parity ~304–593 h → ~303–591 h |
+| 2026-10-12 | minor | Extended collections' tail (gap 14): variables a library adds to a collection this file extends now count as a library update of their own (listed by name without a copy yet) and arrive inheriting when accepted, instead of waiting for the library's next other update; a library collection that is itself an extended collection can be extended again, values flowing down the chain as each file accepts updates with every level's overrides kept (checked end to end). Styles & variables breadth 94% → 95%, ready unchanged (76%), 3–5 h → 2–4 h; gap 14 1–2 h → 0–1 h (real-library checks left); feature breadth (~82%) and ready for real work (~51%) unchanged at this rounding; full parity ~305–594 h → ~304–593 h |
+| 2026-10-12 | minor | A branch's own version history and finer list merges (gap 17): versions saved or autosaved on a branch tab go into the branch (viewed, restored, renamed, deleted and duplicated there, saved in the file with it); merging adds a version to the main file's history and the merged or archived branch keeps its own; fills, strokes and effects merge item by item, conflicting only when the same item changed both ways, an item was removed on one side or both sides added different items. Comments, versions, find, misc breadth 85% → 87%, ready 60% → 61%, 2–5 h → 1–4 h; gap 17 1–3 h → 1–2 h; feature breadth (~82%) and ready for real work (~51%) unchanged at this rounding; full parity ~306–595 h → ~305–594 h |
+| 2026-10-12 | minor | Headline percentages recomputed from the area table by its own method (weights × written scores): feature breadth ~82% → ~84% (core editor ~93% → ~94%), weighted ready ~61% → ~63%, core ready ~70% → ~72%, mainstream weekly areas 71.3% → 72.3% and mainstream ~49% → ~50%; several earlier rows had moved the area scores without carrying them into the totals. Hours are unchanged (left for the next full re-measure) |
+| 2026-10-12 | minor | Text lists, hanging punctuation and decoration styles, with a behaviour suite written from the public documentation (7 layout tests and 7 command tests, about 60 table rows): lists are set per paragraph (the list buttons, shortcuts and Type settings act on the paragraphs the selection touches, the whole layer when it isn't being edited), nest up to 8 levels (Tab and Shift+Tab; numbers go 1. a. i., bullets • ◦ ▪, counted per level), Enter on an empty item and Backspace at an item's start step out a level and then out of the list, typing `- `, `* ` or `1. ` at a paragraph's start starts one; list spacing (between items, in place of paragraph spacing), hanging lists (markers outside the box) and hanging punctuation (opening punctuation outside a start-aligned edge, closing punctuation outside an end-aligned one, taking no room when lines wrap); underline and strikethrough style (solid, dotted, wavy), thickness, underline offset, skip ink and colour. Canvas, PNG, SVG and PDF; `node.set` keys (`indentation`, `listSpacing`, `hangingPunctuation`, `hangingList`, `textDecorationStyle`/`Thickness`/`Offset`/`SkipInk`/`Color`), inspect (`lineTypes`, `lineIndentations`), CSS (`text-decoration-style`/`-thickness`/`-color`, `text-underline-offset`, `text-decoration-skip-ink`) and the REST import (`lineTypes` with `lineIndentations` per paragraph, which collapsed to one list style before). Text 87%/68% → 90%/70%, 5–10 h → 3–7 h; mainstream weekly areas 71.0% → 71.2%; other percentages unchanged at this rounding; full parity ~306–595 h → ~304–592 h |
+| 2026-10-12 | minor | Comments and version history behaviour suite written from the public documentation (15 tests, about 80 table rows plus stepwise checks; 4 tests failed before the fixes) and its fixes: in a live session, threads made in the session couldn't be replied to, edited, reacted to, resolved, moved, deleted or opened (their ids, from their creator's id space, were refused as out of range); restoring a version brought back that version's comments, losing newer threads and replies (comments now stay, those on layers the version lacks staying where they were); restoring now keeps the replaced design in the history as an autosave first, unless a version of it was just saved or restored; giving an autosave a title makes it a named version (it could be dropped to make room); merging a branch adds the main file as it was and then a `Merged “<branch>”` version to its history. Pinned where the documentation is silent: pins go to the innermost frame under them, copies, duplicates and duplicated pages come without comments, replying reopens a resolved thread, versions stay with whoever saved them in a live session (a shared history needs accounts). Left: a branch's own version history, comparing two versions. Comments, versions, find, misc 85%/60% → 85%/62%, 2–5 h → 2–4 h; mainstream weekly areas 71.0% → 71.1%; percentages unchanged at this rounding; full parity ~306–595 h → ~306–594 h |
+| 2026-10-11 | minor | Canvas navigation, rulers, guides, layout grids, outline mode and measuring behaviour suite written from the public documentation (18 tests, about 120 table rows and checks) and its fixes: the pixel grid shows from 400% (it waited for 800%); guides belong to the page or a top-level frame (a guide dropped over a nested frame goes to the frame holding it, and a frame moved into another keeps its guides but they stop showing, snapping and measuring); a guide can be selected, deleted with Delete, nudged with the arrows and removed from the context menu (`guide.select`, `guide.remove` without an index); Alt-dragging a guide drops a copy and holding Alt while dragging one measures to the nearest edges in the frame it crosses; columns and rows count Auto (as many fixed-size ones as fit); layout grids don't show or snap on a rotated frame; in outline mode shapes are clicked on their outlines, reaching layers behind. Left: outline mode's Include hidden layers and Include object bounds. Canvas & navigation 97%/72% → 98%/74%, 2–5 h → 1–4 h; feature breadth (~80%), ready for real work (~49%), core editor (~68%), essentials (~57%) and mainstream (~46%) unchanged at this rounding; full parity ~320–615 h → ~319–614 h |
+| 2026-10-11 | minor | Export and inspect behaviour suite written from the public documentation (139 cases in 19 tests; 47 failed before the fixes) and its fixes: an export covers what the layer paints, so a drop shadow adds room only where it falls, strokes on boxes and ellipses reach their real width (they added up to four times as much), hidden layers take no room and a mask group exports the mask's area; a slice exports everything under it; slashes in layer names export into folders; Copy as PNG copies the whole selection. Added: the export settings' contents only and include bounding box, and for SVG outline text (off writes `<text>`), unique id attributes and simplified strokes (stroke attributes where exact); Inspect colour formats (hex, RGB, CSS, HSL, HSB), CSS in rem, a Blend row, positions measured from the frame around a layer (groups aren't frames), CSS for rotation, blend modes, gradient directions and kinds, text alignment, case and decoration; icons and images in the asset list (`file.exportLayers {assets}`). Import/export 80%/50% → 82%/53%; Dev Mode 90%/64% → 93%/70%; file formats 55% → 56%; mainstream weekly areas 68.1% → 68.4%; feature breadth (~80%), ready for real work (~49%), essentials (~57%), mainstream (~46%) and full parity hours unchanged at this rounding |
+| 2026-10-11 | minor | `.fig` import's tail (gap 1): vectors open as editable vector networks (points, curved segments, filled areas with their winding, per-point corner radius and handle mirroring, end caps from the end points), falling back to outlines when the network is missing or damaged; sticky notes, shapes with text, connectors, tables, code blocks, slides and similar layers import as the closest frames, text layers and vectors with a warning instead of being dropped; set-variable, set-variable-mode and conditional prototype actions come across. New parsers fuzzed on fixtures generated in code. File formats 55% → 58%, 8–15 h → 5–10 h; import/export breadth 80% → 82%, ready 50% → 54%; feature and area totals and ready for real work (~49%) unchanged; beta ~173–310 h → ~170–305 h; full parity ~321–618 h → ~318–613 h |
+| 2026-10-11 | minor | Shapes and vector behaviour suite written from the public documentation (10 shape tests, 6 vector tests and 3 handle tests: about 70 table rows plus stepwise checks) and its fixes: rounded vector points are drawn and exported (the radius was stored only; a vector's corner radius now rounds every point); a boolean group looks like its top layer, a subtraction like the bottom one (always the bottom); Alt draws a line from its centre; stars keep to 3–60 points; delete and heal fits the curve through the deleted point; Shift-clicking a selected point at a corner of the points' box takes it out (it scaled); outline stroke turns the stroke's colour style into the fill's and keeps opacity and effects; the miter field shows the miter angle (it showed the ratio under that name); individual corners only for rectangles and frames; Option/Alt+Shift+F flattens; edit-mode keys reach the edit tools through MCP `key` (Delete removed the layer). Added: corner radius and star ratio handles on the canvas, Count and Ratio fields for polygons and stars, cut tool drags that divide a shape into layers, paint bucket drags across areas. Shapes & vector 97%/68% → 98%/72%, 1–2 h → 2–4 h (the suite found gaps the estimate didn't count: corner smoothing beyond rectangles, a join or cap per point). Totals recomputed by the doc's method, which earlier rows had left stale: the area table's weighted figures are breadth ~82% (core ~93%) and ready ~61% (core ~69%), not the ~80%/~58% (~91%/~68%) carried since #130; Features (depth) follows the weighted ready, 57% → 61%; ready for real work ~49% → ~51%; mainstream ~46% → ~48% (weekly areas 67.8% → 69.4%); the selection suite's area 2 hours (−3/−5) hadn't reached the totals, and neither it nor the text suite had reached the Features (depth) row: Features 60–115 h → 56–109 h, full parity ~321–618 h → ~319–615 h (−3/−5 for area 2, +1/+2 for area 4) |
+| 2026-10-11 | minor | Paint and effects behaviour suite written from the public documentation (14 paint and 9 effects tests with table rows for fills, opacity, every blend mode by its formula, pass-through and Normal containers, gradient handles and stops, image scale modes and adjustments, colour models, the colour profile, shadows, blurs, effect order and exports; 3 command tests) and its fixes: groups and frames set to Normal blend their children among themselves first, and clipping frames no longer isolate their children (blend modes inside a clipping frame met only the frame's children, not its fill or what is behind it) — canvas, SVG (`isolation`; clips put on what blends, since a clipped group isolates) and PDF (isolated groups); plus darker is drawn (it was multiply) on the canvas and in PNG exports; drop shadows hide behind what the layer covers, translucent fills included, unless shown behind transparent areas, in SVG too (it never cut them out) and the SVG filter region reaches as far as the effects; Fill images cover the box to its edges (upscaled ones faded out at the edge); "Normal" names Normal, not pass-through, in commands and the blend menu (the menu's Normal set pass-through). Added: a blend menu for each paint in the colour picker. Paint 66% → 70%, 4–7 h → 3–6 h; effects 72% → 75%, 3–6 h → 2–5 h; percentages unchanged at this rounding; full parity ~321–618 h → ~319–616 h |
+| 2026-10-11 | minor | Frames, groups, sections and masks behaviour suite written from the public documentation (15 frame, group and section tests, 6 mask tests) and its fixes: a layer a mask hides can't be clicked there (clicks reach what's behind; Select layer agrees), a mask group's box and exports are the mask's (plus any layers under it), sections stay on the page or in sections (moves, drags, pastes, grouping and new sections in frames refused or kept on the page), drawing a frame or section around layers puts those fully inside it in it, resizing a section leaves its contents where they are (and a frame resized with Cmd/Ctrl held keeps its layers' sizes too), and X/Y of layers in groups are measured in the frame (groups have no coordinate space). Frames, groups, sections, masks 95%/75% → 97%/80%, 2–4 h → 1–3 h; percentages unchanged at this rounding; full parity ~323–621 h → ~322–620 h |
+| 2026-10-11 | minor | Styles and variables behaviour suite written from the public documentation (18 command-level tests) and its fixes: editing a styled fill, stroke, effect or layout grid list (directly, a paint row, an added fill or a bound variable) unlinks that style instead of being overwritten by the next style edit; applying a style replaces variables bound to what it sets; text styles go on text layers only; deleting a variable (or its collection) unbinds the layers using it, which keep their last value, and aliases to it take its values; bindings are type-checked (a colour variable can't drive a width) and number variables fill text content; aliases are checked when a variable is created. Added: duplicate, move (reorder, into a folder) and rename folder for styles, with a Local styles list grouped by type and folder (click to edit, right-click, drag to reorder); duplicate mode, set as default and move column for modes; per-platform code syntax (Web, iOS, Android) used by generated CSS and the variables JSON; font weight, paragraph spacing/indent and text content scopes for number variables. Found missing: variables inside styles. Styles & variables 92%/72% → 94%/76%, 1–2 h → 3–5 h; percentages unchanged at this rounding; full parity ~323–621 h → ~325–624 h |
+| 2026-10-11 | minor | Prototyping behaviour suite written from the public documentation (7 model tests, 12 player tests with 21 gestures) and its fixes: on drag starts only for a drag its animation's way and the animation follows the pointer, key combinations (`Shift+K`) fire (and are recorded and imported), an overlay's after-delay timer starts when it opens, instances of interactive components play their variant's interactions and "Change to" changes the right instance, spring presets are physical springs that play until they settle, smart animate overshoots with spring and back easings, fixed layers draw above scrolling content; added scroll to offsets. Prototyping 88%/70% → 90%/74%, 5–9 h → 3–6 h; mainstream weekly areas 68.1% → 68.4%, mainstream ~46% → ~47%; other percentages unchanged at this rounding; full parity ~320–615 h → ~318–612 h |
+| 2026-10-11 | minor | Components behaviour suite written from the public documentation (10 tests, 45 table cases) and its fixes: instances now keep overrides of auto layout padding, gap and alignment, layout grids, export settings, prototype interactions and every text property (resizing, paragraph spacing, lists…; these were lost when the main changed); moving, rotating, resizing or re-constraining layers inside an instance, and its auto layout direction, are refused (the instance itself resizes); switching variants keeps an override only where both variants had the same value (text layers keep theirs); swapping from the Assets panel keeps only text overrides; the default variant is the top-left one (instances, Assets thumbnails, code); hidden exposed instances hide their properties; pushing changes from a nested layer goes to the outer main. Added: variant property reordering and duplicate combination warnings. Components 95%/68% → 96%/72%, 6–12 h → 4–9 h; with #133's selection and transform change, core editor ready ~68% → ~69% and mainstream ~46% → ~47% (weekly areas 68.1% → 68.8%); full parity ~320–615 h → ~315–607 h (the totals now also carry #133's area 2 hours) |
+| 2026-10-11 | minor | Embedded image colour profiles: placed and opened images are converted once, when decoded, from their own colour space into the file's (sRGB or Display P3): ICC profiles in PNG (`iCCP`), JPG (APP2), WebP and TIFF, matrix/curve and table profiles in RGB or grey (moxcms, already built for the `image` crate), and a PNG's `sRGB`, `gAMA` and `cHRM` chunks; images without a profile, or with one that can't be used (CMYK, damaged, over 4 MB), are taken as sRGB as before. The original file is kept (PDF exports still embed it); pixel exports carry the converted pixels with the file's profile. The image fill's details show the source profile (Unknown — treated as sRGB when there's none) and `image.place` reports it as `imageProfile`. Paint breadth 87% → 90%, ready 66% → 67%, 4–7 h → 3–6 h; feature breadth (~80%), ready for real work (~49%) and full parity hours unchanged at this rounding |
+| 2026-10-11 | minor | Layers panel keyboard and stroke variables: F2 renames the selected layer (also from a layer row with the keyboard, which gets it back; Escape there cancels), Shift+F10 (`view.contextMenu`) opens the context menu at the focused row or below the canvas selection and the menu takes the keyboard, F8 (`select.area`) draws a selection box for keyboard-only users (arrows move it, Shift+arrows size it, Enter selects like a marquee; agents pass a box), long lists checked at 10k layers (revealing a layer, expanding or collapsing everything and arrow keys take at most 1.3 ms a frame in the release UI bench; the revealed row takes the keyboard); colour styles on strokes were already complete, and each side's stroke weight now binds to a number variable (`strokeTopWeight`…, bindable fields in the Design panel and REST import). Layers panel 95%/78% → 98%/82%, 2–4 h → 1–2 h; Strokes 90%/72% → 95%/75%, 1–3 h → 1–2 h; mainstream depth 67.8% → 68.1%; feature breadth (~80%), ready for real work (~49%), essentials (~57%) and mainstream (~46%) unchanged at this rounding; full parity ~321–618 h → ~320–615 h |
+| 2026-10-11 | minor | Text behaviour suite written from the public documentation (13 text cases, 5 command tests) and its fixes: CJK lines break between ideographs, kana and Hangul and before and after Latin words without breaking inside them, with the line-start and line-end rules (closing punctuation, small kana and the prolonged sound mark never start a line, opening brackets never end one); a style's line height, baseline and decoration come from its own font, so lines with CJK or emoji drawn by fallback fonts keep the spacing of the others; paragraph indent applies to start-aligned text only; carets, Delete and Backspace step over whole grapheme clusters (emoji sequences, flags, combining marks), which also shape with one font; double-click and word moves take one script's run in text without spaces. Added: vertical trim (cap height to baseline; `leadingTrim`, Type settings, REST import, inspect, CSS `text-box`). Text 85%/64% → 87%/68%, 7–13 h → 5–10 h; percentages unchanged at this rounding; full parity ~323–621 h → ~321–618 h |
+| 2026-10-11 | minor | Selection and transform behaviour suite written from the public documentation (5 selection tests with 38 table rows, 11 transform tests) and its fixes: Alt-resizing shrinks about the centre too (it could only grow); groups, frames with Scale or stretch constraints and several layers with different rotations scale each layer along its own axes, keeping its rotation and flip (children turned 90° grew along the wrong axis, nested turned groups too); several layers dragged past an edge mirror and flip; a flipped layer reads back the rotation typed; resizes land on whole pixels with the pixel grid on; a press inside a layer smaller than its handles moves it and the nearest handle wins (the first in reach did), with its handles hidden under 16 px; locked layers selected in the layers panel get no handles and aren't dragged with the rest; the background of a top-level frame with layers starts a marquee inside it (it moved the frame); Select inverse skips hidden layers like Select all. Added: equal spacing snapping with labelled gaps, Cmd/Ctrl while resizing a frame ignores its constraints. Selection & transform 95%/68% → 97%/72%, 6–10 h → 3–5 h; core editor ready ~67% → ~68%; feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~345–666 h → ~342–661 h |
+| 2026-10-11 | minor | `.fig` import, best effort (gap 1): `.fig` files open (best effort): the zip, its deflate/zstd chunks and the kiwi schema are decoded generically and mapped by field name onto the REST importer, so pages, the layer tree, geometry, paints (styles resolved), strokes, effects, text with styled runs, vectors (as outlines), auto layout (grid included), constraints, components, sets, instances (expanded from their main with overrides, derived layout and property values), styles, variables with modes and bindings, prototyping and image fills from the archive come across; anything else is a warning. Import/export breadth 65% → 80%, ready 35% → 50%, 30–60 h → 8–15 h; file formats 40% → 55%, 30–60 h → 8–15 h; feature breadth ~79% → ~80% (core ~90% → ~91%), areas ready ~57% → ~58% (core ~67% → ~68%); ready for real work ~47% → ~49%; essentials ~53% → ~57% (opening files people send ×0.80 → ×0.88); mainstream ~43% → ~46% (weekly areas 66.8% → 67.8%, file exchange ×0.80 → ×0.85); beta ~195–355 h → ~173–310 h; full parity ~345–666 h → ~322–620 h |
+| 2026-10-11 | minor | Auto layout behaviour suite written from the public documentation (64 layout cases, 8 command tests) and its fixes: a frame is never smaller than its padding, only the frame's inside stroke counts when strokes are included (and new auto layout includes them), auto gaps stop at 0, grid `fr` tracks behave like the CSS `fr` unit (a track never gets less than its content), canvas stacking is drawn, exported and hit (it was stored only). Added: auto gaps evenly and around, vertical wrap, grid cell alignment, strokes and canvas stacking controls. Auto layout 95%/68% → 98%/74%, 6–12 h → 3–6 h; percentages unchanged at this rounding; full parity ~348–672 h → ~345–666 h |
+| 2026-10-11 | minor | Display P3 honest minimum (gap 18): the colour picker of a Display P3 file warns when a colour is outside sRGB (Outside sRGB, with what the canvas and exports do), and View ▸ Soft-proof sRGB (`view.proofSrgb`) stripes the canvas pixels sRGB can't show. Why the canvas still shows sRGB: wgpu 30 can present Display P3 or extended-range sRGB surfaces (Metal, DX12, Vulkan, WebGPU canvases), but eframe/egui-wgpu 0.36 configure an 8-bit sRGB surface with no option for the format or colour space, and egui's renderer writes sRGB-encoded UI colours; showing P3 needs those two upstream (or a patched egui-wgpu). Hardware 13–27 h → 12–26 h; gap 18 6–12 h → 5–11 h; percentages, feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~363–697 h → ~362–696 h |
+| 2026-10-11 | minor | Several windows (gap 18): File ▸ New window, a tab's Open in new window or a tab dragged off the tab strip opens files in another window with its own tabs, panels and canvas, sharing the files, preferences, libraries and clipboard; each window draws only when it needs to (idle: ~0% CPU), closing one closes its files after asking about unsaved changes (the main window too, which takes over another window instead of quitting; the last window quits), and the control channel and MCP open, list, focus and capture windows (`window.new`, `window.list`, `window.focus`, `window` on any request); the screen-reader tree covers the main window only (eframe 0.36), so with a screen reader running files stay tabs; one window in the browser. Hardware 55% → 60%, 13–27 h → 10–21 h; gap 18 6–12 h → 4–8 h (P3 on screen left); feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~363–697 h → ~360–691 h |
+| 2026-10-11 | minor | Localization layer landed (gap 5): per-language catalogs baked in at build time with English text as keys and fallback, placeholders and plurals, command labels by id, Preferences ▸ Language (System follows the OS or the browser) applied live and `pref.language`; English catalog and a complete Spanish draft awaiting native review. Localization 10% → 20%, 60–100 h → 45–75 h; ready for real work unchanged (~47%); full parity ~363–697 h → ~348–672 h; beta ~200–365 h → ~195–355 h |
+| 2026-10-11 | minor | Hosting `figcraft-server`: the desktop app and `figcraft-cli` open `wss://` links (rustls with Mozilla's root certificates, always verified; `FIGCRAFT_CA_FILE` adds a private authority), releases ship the server for Linux x86_64 and aarch64, it stops gracefully on SIGTERM or Ctrl+C, and `docs/server.md` has a deployment guide (systemd unit, Caddy, nginx, Docker); percentages and hours unchanged until the next re-measure |
+| 2026-10-11 | minor | Plugin panels and settings landed (gap 6, ABI v2; v1 plugins unchanged): a plugin shows a panel of notes, fields (text, number, checkbox, menu, list, colour) and buttons drawn with FigCraft's widgets; a button or a changed value calls it back with every value (same limits per callback, one undo step per callback that edits, rolled back on failure), its module staying loaded while the panel is open; `plugin.ui` / `plugin.event` / `plugin.close` drive panels headless; per-plugin settings (64 KB) kept with the preferences; the Swatch grid example gained a palette panel that remembers the last palette. Plugins & widgets breadth 35% → 45%, ready 20% → 28%, 25–55 h → 15–40 h; ecosystem 20% → 28%; feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~373–712 h → ~363–697 h |
+| 2026-10-11 | minor | Canvas fixes (gap 13 closed): boolean groups are clicked where their result is (a click in a subtracted hole reaches what's behind; with the group or an operand selected its operands are hit, so each can still be picked), a layer dragged inside a group stays in the group (frames and auto layout still take other drops), View ▸ Frame outlines and View ▸ Slices draw on the canvas, and the idle tests wait for the render thread instead of counting frames. Shapes & vector 1–3 h → 1–2 h (vector QA with real files left); percentages, feature breadth (~79%), ready for real work (~47%) and full parity hours unchanged at this rounding |
+| 2026-10-11 | minor | Code connect and Dev Mode plugins (gap 16): a component or set links to its code component per language (import path, name, a template with `{property}` and `{property ? "a" : "b"}` placeholders); `inspect.code`, `inspect.componentCode` and the Inspect panel show that snippet with the instance's values (also inside generated layer trees), edited in Connect to code with a live preview; links are saved, synced and undoable, and travel as `figcraft.connect.json` (`codeConnect.export` / `codeConnect.import`). Plugins that only read run from the Inspect tab. Dev Mode breadth 80% → 90%, ready 62% → 64%, 4–8 h → 1–3 h; feature breadth (~79%) and ready for real work (~47%) unchanged; full parity ~378–722 h → ~375–717 h |
+| 2026-10-11 | minor | Stretch and scatter brushes and pen pressure landed (gap 9): eight brushes drawn in code (four stretched along the path, four scattered with spacing, size, rotation and scatter jitter from a seed) in the stroke settings, drawn everywhere strokes are and flattened by outline stroke; the Pencil records pen pressure as the stroke's width profile (Windows pens, browser styluses; macOS and Linux tablets report none) and can draw with a brush; Figma Draw extras breadth 45% → 65%, ready 30% → 45%, 10–18 h → 5–9 h; Strokes 2–4 h → 1–3 h; Hardware 50% → 55%, 15–30 h → 13–27 h; feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~378–722 h → ~358–687 h |
+| 2026-10-11 | minor | Text on a path and pattern fills landed (gap 9): text follows a path or shape (start, side, alignment; edited in place; canvas, PNG, SVG and PDF; SVG `<textPath>` imports as text on a path) and pattern fills tile a layer (grid or half-shifted rows or columns, scale, spacing, alignment; live as the source changes; SVG `<pattern>`, PDF tiling patterns); Figma Draw extras breadth 45% → 65%, ready 30% → 45%, 10–18 h → 5–10 h; Text 8–14 h → 7–13 h; feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~380–725 h → ~375–715 h |
+| 2026-10-11 | minor | Team libraries on `figcraft-server` landed (gap 10): a file's library is published to the server under the file and enabled in other files by a share link (per-asset versions; updates noticed in the background and accepted with overrides kept), the server counts which files use which components, and a whole library can be swapped for another by names; Team libraries breadth 40% → 70%, ready 25% → 40%, 10–20 h → 4–8 h; collaboration 12% → 13%, 55–110 h → 49–98 h; feature breadth (~79%) and ready for real work (~47%) unchanged; full parity ~380–725 h → ~375–715 h |
+| 2026-10-11 | minor | Branches landed (gap 17): File ▸ Create branch… copies the file into a branch tab that remembers its base; Review and merge shows both sides' changes (layers with Inspect-style property changes, styles, variables, comments) and the conflicts (the same property changed on both sides, or a layer deleted on one side and edited on the other), each resolved for the branch or main; merging is one undo step and archives the branch; Update from main; branches are saved in the `.figcraft` file. Comments, versions, find, misc breadth 80% → 85%, ready 58% → 60%, 4–8 h → 2–5 h; collaboration 12% → 13%; menu breadth 204/204 (the catalog gained File ▸ Create branch…); feature breadth (~79%) and ready for real work (~47%) unchanged at this rounding; full parity ~380–725 h → ~378–722 h |
+| 2026-10-11 | minor | Animated GIF fills and TIFF images (gap 12, without video and HEIC): GIF fills keep the original file, show the first frame on the canvas and in exports and play in the presenter and the preview (frames decoded on first play, at most 500 frames and 128 MB; always looping; the window wakes only for a GIF's next frame); TIFF images open, import, place and paste. Paint breadth 85% → 87%, 5–9 h → 4–7 h; gap 12 6–12 h → 5–10 h (video playback and HEIC left, both needing non-Rust decoders); feature breadth (~79%), ready for real work (~47%) and full parity hours unchanged at this rounding |
+| 2026-10-11 | minor | The last three catalogued menu items got commands (gap 21): File ▸ Open recent (recent files kept in the preferences, at most 20, a file that's gone greyed in the menu and dropped when picked, Clear recent), View ▸ Outlines ▸ Show outlines for selection and View ▸ Mask outlines: menu breadth 98.5% → 100% (203/203); Canvas & navigation breadth 95% → 97%, 3–6 h → 2–5 h; feature breadth (~79%), ready for real work (~47%) and full parity hours unchanged at this rounding |
+| 2026-10-11 | minor | Extended collections, variables import/export and gradient stop and variant property bindings landed (gap 14): Styles & variables breadth 85% → 92%, ready 70% → 72%, 4–8 h → 1–2 h; feature breadth unchanged (~79%); ready for real work unchanged (~47%); full parity ~385–730 h → ~380–725 h |
+| 2026-10-11 | minor | Collaboration wording after the standalone server: `figcraft-server` keeps many files, persisted as a snapshot plus a log of what changed (compacted, checksummed, damaged files skipped and reported), restarts lose nothing confirmed and apps resume where they were; the app publishes its file to it; share links per file let people edit or only view (the server refuses a viewer's edits), are revocable and stored as hashes; TLS comes from a reverse proxy (the desktop app has none of its own yet); percentages and hours unchanged until the next re-measure |
+| 2026-10-11 | minor | Live boolean editing, Design panel arc fields, the shape builder on strokes and open paths and one-sided variable widths landed (gap 13): Shapes & vector breadth 92% → 97%, ready 66% → 68%, 8–14 h → 1–3 h; feature breadth ~78% → ~79%; ready for real work unchanged (~47%); full parity ~390–745 h → ~385–730 h |
+| 2026-10-11 | minor | Wording only: live sessions (#104), then the browser joining them and `figcraft://` invite links opening the desktop app; percentages and hours unchanged until the next re-measure |
+| 2026-10-10 | minor | Merged main after #101–#103: WASM plugins (plugins area 0% → 35% breadth, 20% ready; ecosystem 5% → 20%) and the multiplayer core without networking (multiplayer 5% → 15% breadth, 5% ready; collaboration 8% → 12%); menu breadth 97.5% → 98.5% (200/203); ready for real work ~46% → ~47%; full parity 420–790 h → 390–745 h; beta 210–380 h → 200–365 h. Fixed the stated weight sums (areas 1–16 sum to 94, total 113; percentages were already computed with those) |
+| 2026-10-10 | minor | Readiness-by-audience table: hours to ~95% for full (~400–750 h), mainstream (~180–330 h) and essentials (~85–160 h). Full number confirmed as an additive weighted sum; unchanged |
+| 2026-10-10 | minor | Added the essentials user number (~53%: core features 77.8% × 0.92 launch/stability × 0.92 discoverability × 0.8 opening files people send) |
+| 2026-10-10 | minor | Added the mainstream practitioner number (~43%: weekly areas 66.5% × 0.9 interaction × 0.9 stability × 0.8 file exchange) and user-evidence count (none). Checked that ready for real work (~46%) is built from the written dimension weights and scores; unchanged |
+| 2026-10-10 | minor | Stage checked against the alpha gate: stays alpha |
+| 2026-10-10 | major | Created from the ROADMAP's parity rubric, honest assessment and area narrative. Full re-measure against Figma desktop 126.10.7: added multiplayer, plugins, team libraries, Figma Draw extras and AI as weighted areas; split breadth from ready-for-real-work; core depth re-graded ~79% → ~67%; hours calibrated from git history; full parity 115–195 h → 420–790 h |

@@ -1,0 +1,23 @@
+{
+  "id": "org.figcraft.examples.tidy-names",
+  "name": "Tidy names",
+  "version": "1.0.0",
+  "description": "Cleans up layer names: extra spaces, the \"copy\" left by duplicating, and letter case.",
+  "main": "tidy_names.wasm",
+  "api": 1,
+  "permissions": {
+    "access": "write",
+    "commands": ["node.get", "object.rename"]
+  },
+  "commands": [
+    {
+      "id": "tidy",
+      "label": "Tidy names…",
+      "params": [
+        { "name": "case", "label": "Case", "type": "select", "options": ["Keep", "Title Case", "lower case", "UPPER CASE"], "default": "Keep" },
+        { "name": "children", "label": "Include layers inside", "type": "boolean", "default": true }
+      ]
+    },
+    { "id": "quick", "label": "Quick tidy" }
+  ]
+}

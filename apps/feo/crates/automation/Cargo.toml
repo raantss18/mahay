@@ -1,0 +1,17 @@
+[package]
+name = "soundcraft-automation"
+description = "SoundCraft agent control: MCP server (stdio JSON-RPC), headless engine backend and control-channel client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+soundcraft-engine.workspace = true
+soundcraft-time.workspace = true
+serde_json.workspace = true
+log.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+  <defs>
+    <symbol id="dot" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#ff0000"/></symbol>
+    <rect id="sq" width="10" height="10" fill="#0000ff"/>
+    <use id="sq2" href="#sq" x="5"/>
+  </defs>
+  <!-- A symbol scaled into the use box, an xlink:href use, and a use of a use. -->
+  <use href="#dot" width="40" height="40"/>
+  <use xlink:href="#sq" x="60"/>
+  <use href="#sq2" x="20" y="30" transform="scale(2)"/>
+  <!-- probe 20 20 #ff0000ff -->
+  <!-- probe 3 3 #00000000 -->
+  <!-- probe 65 5 #0000ffff -->
+  <!-- probe 60 70 #0000ffff -->
+  <!-- probe 45 70 #00000000 -->
+</svg>

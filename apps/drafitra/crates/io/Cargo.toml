@@ -1,0 +1,26 @@
+[package]
+name = "cadcraft-io"
+description = "CADCraft file formats: DXF read/write mapping, SVG, PNG and PDF export"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+cadcraft-geom = { workspace = true }
+cadcraft-color = { workspace = true }
+cadcraft-doc = { workspace = true }
+cadcraft-dxf = { workspace = true }
+cadcraft-dwg = { workspace = true }
+cadcraft-render = { workspace = true }
+cadcraft-fonts = { workspace = true }
+thiserror = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+miniz_oxide = "0.8"
+quick-xml = { workspace = true }
+
+[dev-dependencies]
+tiny-skia = { workspace = true }

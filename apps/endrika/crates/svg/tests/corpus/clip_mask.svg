@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200">
+  <defs>
+    <clipPath id="c1"><circle cx="50" cy="50" r="30"/></clipPath>
+    <clipPath id="c2" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+    <mask id="m1">
+      <rect y="100" width="50" height="100" fill="#ffffff"/>
+      <rect x="50" y="100" width="50" height="100" fill="#000000"/>
+    </mask>
+    <linearGradient id="mg"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#000000"/></linearGradient>
+    <mask id="m2"><rect x="100" y="100" width="100" height="100" fill="url(#mg)"/></mask>
+    <mask id="m3" style="mask-type:alpha"><rect x="200" width="100" height="100" fill="#000000" fill-opacity="0.5"/></mask>
+  </defs>
+  <!-- A clip path on a shape, an objectBoundingBox clip path on a group. -->
+  <rect id="clipped" width="100" height="100" fill="#ff0000" clip-path="url(#c1)"/>
+  <g id="clipped-group" clip-path="url(#c2)">
+    <rect x="100" width="100" height="50" fill="#0000ff"/>
+    <rect x="100" y="50" width="100" height="50" fill="#00ff00"/>
+  </g>
+  <!-- Luminance masks (hard and a gradient), an alpha mask. -->
+  <rect id="masked" y="100" width="100" height="100" fill="#0000ff" mask="url(#m1)"/>
+  <rect id="faded" x="100" y="100" width="100" height="100" fill="#ff0000" mask="url(#m2)"/>
+  <rect id="alpha-masked" x="200" width="100" height="100" fill="#00ff00" mask="url(#m3)"/>
+  <!-- probe 50 50 #ff0000ff -->
+  <!-- probe 25 25 #00000000 -->
+  <!-- probe 85 50 #00000000 -->
+  <!-- probe 120 25 #0000ffff -->
+  <!-- probe 170 25 #00000000 -->
+  <!-- probe 120 75 #00ff00ff -->
+  <!-- probe 170 75 #00000000 -->
+  <!-- probe 25 150 #0000ffff -->
+  <!-- probe 75 150 #00000000 -->
+  <!-- probe 101 150 #ff0000fc ~10 -->
+  <!-- probe 150 150 #ff00007f ~14 -->
+  <!-- probe 250 50 #00ff0080 ~6 -->
+</svg>

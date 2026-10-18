@@ -1,0 +1,19 @@
+[package]
+name = "designcraft-color"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "DesignCraft color"
+
+[lints]
+workspace = true
+
+[dependencies]
+kurbo = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+craft-cms = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json = { workspace = true }

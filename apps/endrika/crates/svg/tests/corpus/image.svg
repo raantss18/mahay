@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+  <!-- A 4x2 PNG (left half red, right half blue) as a data URI: exact fit, then letterboxed. -->
+  <image id="photo" x="10" y="10" width="40" height="20" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAIAAADwyuo0AAAAE0lEQVR4nGP4z8AARGDiPwMyBwBnsgf5Q2OaZwAAAABJRU5ErkJggg=="/>
+  <image x="10" y="50" width="80" height="20" preserveAspectRatio="xMidYMid meet" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAIAAADwyuo0AAAAE0lEQVR4nGP4z8AARGDiPwMyBwBnsgf5Q2OaZwAAAABJRU5ErkJggg=="/>
+  <!-- probe 15 20 #ff0000ff -->
+  <!-- probe 45 20 #0000ffff -->
+  <!-- probe 20 60 #00000000 -->
+  <!-- probe 35 60 #ff0000ff -->
+  <!-- probe 65 60 #0000ffff -->
+  <!-- probe 80 60 #00000000 -->
+</svg>

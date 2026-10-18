@@ -1,0 +1,20 @@
+# Nightly backup of figcraft-server's data directory (an example; docs/server.md, "Backups").
+# install.sh installs it with figcraft-backup.timer; turn it on with
+#   sudo systemctl enable --now figcraft-backup.timer
+# It checks there is room for the copy (twice the data directory's size free), stops the server
+# for the few seconds the copy takes (apps reconnect on their own), writes
+# /var/backups/figcraft-server/figcraft-YYYY-MM-DD.tar.gz (readable by root only) and keeps the last
+# 7 days. The archives hold every file, the addresses files came from, the reports and the server
+# key: keep them, and any copy off the machine, as private as the server itself.
+
+[Unit]
+Description=Back up figcraft-server's data directory
+After=figcraft-server.service
+
+[Service]
+Type=oneshot
+Nice=10
+IOSchedulingClass=idle
+UMask=0077
+# `$$` and `%%` are a literal `$` and `%` for the shell (systemd expands the single ones).
+ExecStart=/bin/sh -ec 'dir=/var/backups/figcraft-server; install -d -m 700 "$$dir"; need=$$(du -sk /var/lib/figcraft-server | cut -f1); free=$$(df -k --output=avail "$$dir" | tail -n 1); if [ "$$free" -lt $$((need * 2)) ]; then echo "not enough free space for a backup ($$free KiB free, $$need KiB of data)" >&2; exit 1; fi; systemctl stop figcraft-server; trap "systemctl start figcraft-server" EXIT; tar -C /var/lib -czf "$$dir/figcraft-$$(date +%%F).tar.gz" figcraft-server; find "$$dir" -name "figcraft-*.tar.gz" -mtime +7 -delete'

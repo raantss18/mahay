@@ -1,0 +1,26 @@
+[package]
+name = "soundcraft-au-host"
+description = "SoundCraft Audio Unit (AUv2, macOS) plugin host: lists, loads and runs system-registered Audio Units behind the safe soundcraft-dsp Plugin trait (an isolated unsafe FFI crate)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+soundcraft-dsp.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+log.workspace = true
+
+# An isolated unsafe helper crate (craftrules never-crash), like soundcraft-vst3-host: this crate
+# opts out of the workspace `unsafe_code = "forbid"` for itself only. It denies unsafe everywhere
+# and allows it solely on the FFI module (`src/ffi.rs`). The rest mirrors `[workspace.lints]`.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"

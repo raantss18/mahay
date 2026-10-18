@@ -1,0 +1,24 @@
+[package]
+name = "figcraft-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "FigCraft command line: info, export, convert, render, scripted commands, MCP server, perf"
+
+[[bin]]
+name = "figcraft-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-engine = { workspace = true }
+figcraft-doc = { workspace = true }
+figcraft-render = { workspace = true }
+figcraft-text = { workspace = true }
+figcraft-svg = { workspace = true }
+figcraft-format = { workspace = true }
+figcraft-mcp = { workspace = true }
+serde_json = { workspace = true }

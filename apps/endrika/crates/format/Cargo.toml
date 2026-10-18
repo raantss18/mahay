@@ -1,0 +1,20 @@
+[package]
+name = "figcraft-format"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FigCraft native file format (.figcraft: zip of document.json + images), image import helpers, REST API file JSON import and .fig import"
+
+[lints]
+workspace = true
+
+[dependencies]
+figcraft-doc = { workspace = true }
+figcraft-pathops = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+zip = { workspace = true }
+flate2 = { workspace = true }
+ruzstd = { workspace = true }
+sha2 = { workspace = true }
+image = { workspace = true }
