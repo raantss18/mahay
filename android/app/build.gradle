@@ -1,0 +1,92 @@
+// One APK per Mahay app: each product flavour is one app, with its own id, name, icon and
+// Rust library (built by `scripts/android-build.sh` into src/<flavour>/jniLibs).
+plugins {
+    id "com.android.application"
+}
+
+def mahayVersion = file("../../VERSION").exists() ? file("../../VERSION").text.trim() : "0.1.0"
+def parts = mahayVersion.tokenize(".-")
+def versionNumber = parts[0].toInteger() * 1000000 + parts[1].toInteger() * 1000 + parts[2].toInteger()
+
+// Release signing: a keystore outside the repo, from keystore.properties or the environment
+// (CI). Without one, release builds are signed with the debug key.
+def ks = new Properties()
+def ksFile = rootProject.file("keystore.properties")
+if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
+def ksPath = ks.getProperty("storeFile") ?: System.getenv("MAHAY_KEYSTORE")
+def haveKey = ksPath != null && file(ksPath).exists()
+
+android {
+    namespace "org.mahay.shell"
+    compileSdk 36
+    ndkVersion "28.2.13676358"
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 36
+        versionCode versionNumber
+        versionName mahayVersion
+    }
+
+    signingConfigs {
+        if (haveKey) {
+            release {
+                storeFile file(ksPath)
+                storePassword ks.getProperty("storePassword") ?: System.getenv("MAHAY_KEYSTORE_PASSWORD")
+                keyAlias ks.getProperty("keyAlias") ?: System.getenv("MAHAY_KEY_ALIAS")
+                keyPassword ks.getProperty("keyPassword") ?: System.getenv("MAHAY_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            signingConfig haveKey ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    flavorDimensions = ["app"]
+    productFlavors {
+        trano    { dimension "app"; applicationId "org.mahay.trano";    manifestPlaceholders = [label: "Mahay", lib: "trano_android"] }
+        sary     { dimension "app"; applicationId "org.mahay.sary";     manifestPlaceholders = [label: "Sary", lib: "sary_android"] }
+        taratasy { dimension "app"; applicationId "org.mahay.taratasy"; manifestPlaceholders = [label: "Taratasy", lib: "taratasy_android"] }
+        soratra  { dimension "app"; applicationId "org.mahay.soratra";  manifestPlaceholders = [label: "Soratra", lib: "soratra_android"] }
+        tabilao  { dimension "app"; applicationId "org.mahay.tabilao";  manifestPlaceholders = [label: "Tabilao", lib: "tabilao_android"] }
+        seho     { dimension "app"; applicationId "org.mahay.seho";     manifestPlaceholders = [label: "Seho", lib: "seho_android"] }
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include "arm64-v8a", "x86_64"
+            universalApk false
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += "../shell/src/main/java"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        // Compressed .so in the APK: about a third of the download, extracted once at install.
+        jniLibs.useLegacyPackaging true
+    }
+}
+
+dependencies {
+    // The Java half of android-activity's GameActivity glue (text input through GameTextInput).
+    // Version required by android-activity 0.6; no prefab (android-activity has its own C glue).
+    implementation "androidx.games:games-activity:4.4.0"
+    // GameActivity extends AppCompatActivity and its API mentions androidx.core types.
+    implementation "androidx.appcompat:appcompat:1.7.1"
+    implementation "androidx.core:core:1.16.0"
+}

@@ -1,0 +1,23 @@
+[package]
+name = "mahay-android"
+description = "Android glue shared by every Mahay app: logging, data folders, document pickers and app launch through the MahayActivity Java shell."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+# No `[lints] workspace = true`: the JNI entry points need `#[unsafe(no_mangle)]`, which the
+# workspace's `unsafe_code = "forbid"` would refuse. The unsafe here is limited to those exports
+# and to `set_var` before any thread starts.
+
+[features]
+# `EguiBridge`: soft keyboard and clipboard for an eframe app.
+egui = ["dep:egui"]
+
+[target.'cfg(target_os = "android")'.dependencies]
+egui = { workspace = true, optional = true }
+android-activity = { version = "0.6", features = ["game-activity"] }
+android_logger = { version = "0.15", default-features = false }
+jni = "0.21"
+log = "0.4"
