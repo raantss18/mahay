@@ -27,6 +27,8 @@ mahay-print = { path = "crates/print" }
 mahay-quit = { path = "crates/quit" }
 mahay-settings = { path = "crates/settings" }
 mahay-ui = { path = "crates/ui" }
+mahay-update = { path = "crates/update" }
+mahay-about = { path = "crates/about" }
 egui = { version = "0.36", default-features = false }
 rayon = "1"
 serde = { version = "1", features = ["derive"] }

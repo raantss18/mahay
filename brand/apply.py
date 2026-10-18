@@ -11,7 +11,7 @@ open source) and screenshots of its apps. None of that may stay in Mahay. This s
   - deletes upstream screenshots (docs/images, docs/screenshots) and the launcher's
     social-network logos.
 
-Needs rsvg-convert and ImageMagick. Run after brand/generate.py:
+Needs rsvg-convert, ImageMagick and qrencode. Run after brand/generate.py:
     python3 -I brand/apply.py
 """
 import os
@@ -154,6 +154,22 @@ def main():
             render_png(svg, size[0] if size else 256, os.path.join(launcher_icons, name))
     # Upstream's social accounts aren't Mahay's (catalog::SOCIAL is empty).
     shutil.rmtree(os.path.join(ROOT, "apps", "trano", "assets", "social"), ignore_errors=True)
+    # The About page's icons (raw 96x96 RGBA, no image decoder needed) and the QR code to the
+    # latest release (a 0/1 module grid drawn as vector squares).
+    about = os.path.join(ROOT, "libs", "core", "crates", "about", "assets")
+    os.makedirs(about, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        for app in ["mahay"] + APPS:
+            png = os.path.join(tmp, f"{app}.png")
+            render_png(os.path.join(SVG, f"{app}.svg"), 96, png)
+            subprocess.run(["magick", png, "-depth", "8", f"rgba:{os.path.join(about, app + '.rgba')}"], check=True)
+    qr = subprocess.run(["qrencode", "-t", "ASCII", "-m", "0", "https://github.com/raantss18/mahay/releases/latest"],
+                        check=True, capture_output=True, text=True).stdout
+    rows = [line for line in qr.split("\n") if line]
+    grid = ["".join("1" if line[i:i + 2] == "##" else "0" for i in range(0, len(line), 2)) for line in rows]
+    width = max(map(len, grid))
+    with open(os.path.join(about, "qr-latest.txt"), "w") as f:
+        f.write("\n".join(r.ljust(width, "0") for r in grid) + "\n")
     print("brand applied")
 
 

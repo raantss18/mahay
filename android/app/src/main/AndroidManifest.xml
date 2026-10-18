@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Automatic updates (Tontolo's model): download verified releases from GitHub. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Install the downloaded update (and, from Trano, the other Mahay apps) through Android's
+         installer; the user confirms every install. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />

@@ -331,6 +331,55 @@ pub fn locale() -> String {
     .unwrap_or_else(|| "en".into())
 }
 
+/// Hand a verified APK to Android's installer (the user confirms). `Err` explains why not:
+/// the user must first allow installs from this app (the settings page has been opened), or
+/// the file isn't one this app downloaded.
+pub fn install_apk(path: &Path) -> Result<(), String> {
+    let p = path.to_string_lossy().into_owned();
+    let code = with_activity(|env, act| {
+        let p = env.new_string(&p)?;
+        env.call_method(act, "installApk", "(Ljava/lang/String;)I", &[JValue::Object(&p)])?.i()
+    });
+    match code {
+        Some(0) => Ok(()),
+        Some(1) => Err("Allow Mahay to install apps in the settings page that just opened, then press Install again.".into()),
+        _ => Err("This update couldn't be handed to Android's installer.".into()),
+    }
+}
+
+/// The installed version of another app (`org.mahay.sary`), or `None` when it isn't installed.
+pub fn installed_version(package: &str) -> Option<String> {
+    with_activity(|env, act| {
+        let pkg = env.new_string(package)?;
+        let obj = env.call_method(act, "installedVersion", "(Ljava/lang/String;)Ljava/lang/String;", &[JValue::Object(&pkg)])?.l()?;
+        if obj.is_null() {
+            return Ok(None);
+        }
+        Ok(Some(String::from(env.get_string(&JString::from(obj))?)))
+    })
+    .flatten()
+}
+
+/// `MahayActivity.nativeOnInstalled(String path, boolean ok, String message)`: an install ended.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnInstalled(
+    mut env: JNIEnv,
+    _class: JClass,
+    path: JString,
+    ok: jni::sys::jboolean,
+    message: JString,
+) {
+    let path = jstring(&mut env, &path).unwrap_or_default();
+    let message = jstring(&mut env, &message).unwrap_or_default();
+    if ok != 0 {
+        log::info!("installed {path}");
+    } else {
+        log::warn!("install of {path} failed: {message}");
+        with_state(|s| s.notices.push(format!("The installation didn't finish: {message}")));
+    }
+    wake();
+}
+
 /// Text on the Android clipboard.
 pub fn clipboard_text() -> Option<String> {
     with_activity(|env, act| {

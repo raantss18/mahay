@@ -1,0 +1,20 @@
+[package]
+name = "mahay-update"
+description = "Automatic updates for the Mahay suite from GitHub releases: signed SHA256SUMS (Ed25519), SHA-256 checked downloads, never a downgrade."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+build = "build.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ureq = { version = "3.4", default-features = false, features = ["rustls"] }
+sha2 = "0.10"
+ed25519-dalek = { version = "3.0", default-features = false, features = ["fast"] }
+base64 = "0.22"
+serde_json = "1"
+log = "0.4"

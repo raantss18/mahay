@@ -5,7 +5,12 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageInstaller;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayDeque;
 
 /**
  * The activity every Mahay app runs in. The app itself is Rust (eframe on android-activity's
@@ -43,11 +49,40 @@ public class MahayActivity extends GameActivity {
 
     private static native void nativeOnOpened(int request, String path, String name, String uri);
     private static native void nativeOnExported(String path, String uri);
+    private static native void nativeOnInstalled(String path, boolean ok, String message);
+
+    private static final String INSTALL_ACTION = "org.mahay.shell.INSTALL_STATUS";
+    /** APKs waiting to be installed, one confirmation at a time. */
+    private final ArrayDeque<String> installQueue = new ArrayDeque<>();
+    private String installing;
+
+    private final BroadcastReceiver installReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
+            if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+                // Android asks the user to confirm: show its dialog.
+                Intent confirm = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+                if (confirm != null) {
+                    confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(confirm);
+                }
+                return;
+            }
+            String path = installing;
+            installing = null;
+            String msg = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
+            if (path != null) nativeOnInstalled(path, status == PackageInstaller.STATUS_SUCCESS, msg == null ? "" : msg);
+            installNext();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         launchIntent = getIntent();
         super.onCreate(savedInstanceState);
+        androidx.core.content.ContextCompat.registerReceiver(this, installReceiver,
+                new IntentFilter(INSTALL_ACTION), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     @Override
@@ -190,6 +225,79 @@ public class MahayActivity extends GameActivity {
                     | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
             c.setSystemBarsAppearance(dark ? 0 : light, light);
         });
+    }
+
+    // ---- Installing apps and updates --------------------------------------------------------
+
+    /**
+     * Queue an APK (already verified by Rust: signed checksum list, SHA-256) for installation
+     * through PackageInstaller. Returns 0 when queued, 1 when Android first needs the user to
+     * allow this app to install apps (the settings page is opened), 2 on error.
+     */
+    public int installApk(final String path) {
+        if (android.os.Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:" + getPackageName())));
+                } catch (Exception e) {
+                    Log.w(TAG, "no install-permission settings page", e);
+                }
+            });
+            return 1;
+        }
+        // Only files this app downloaded itself, under its own storage.
+        try {
+            String own = getFilesDir().getParentFile().getCanonicalPath() + File.separator;
+            String real = new File(path).getCanonicalPath();
+            if (!real.startsWith(own) || !real.endsWith(".apk")) return 2;
+        } catch (java.io.IOException e) {
+            return 2;
+        }
+        runOnUiThread(() -> {
+            installQueue.add(path);
+            if (installing == null) installNext();
+        });
+        return 0;
+    }
+
+    private void installNext() {
+        String path = installQueue.poll();
+        if (path == null) return;
+        installing = path;
+        try {
+            PackageInstaller pi = getPackageManager().getPackageInstaller();
+            PackageInstaller.SessionParams params =
+                    new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            File apk = new File(path);
+            int id = pi.createSession(params);
+            try (PackageInstaller.Session session = pi.openSession(id)) {
+                try (InputStream in = new FileInputStream(apk);
+                     OutputStream out = session.openWrite("mahay.apk", 0, apk.length())) {
+                    copy(in, out);
+                    session.fsync(out);
+                }
+                Intent cb = new Intent(INSTALL_ACTION).setPackage(getPackageName());
+                int flags = PendingIntent.FLAG_UPDATE_CURRENT
+                        | (android.os.Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
+                session.commit(PendingIntent.getBroadcast(this, id, cb, flags).getIntentSender());
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "install failed: " + path, e);
+            installing = null;
+            nativeOnInstalled(path, false, String.valueOf(e.getMessage()));
+            installNext();
+        }
+    }
+
+    /** The installed version of a package ("0.2.0"), or null when it isn't installed. */
+    public String installedVersion(String pkg) {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(pkg, 0);
+            return info.versionName;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String localeTag() {

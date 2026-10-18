@@ -1,0 +1,15 @@
+[package]
+name = "mahay-about"
+description = "The Mahay About page (Tontolo style: version, updates, QR code, author, licences) and the update banner, shared by every app on desktop and Android."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+egui = { workspace = true }
+mahay-update = { workspace = true }
