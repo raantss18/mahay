@@ -23,7 +23,9 @@ use crate::time::parse_rfc3339;
 use crate::version;
 
 /// Where the feed lives.
-pub const FEED_URL: &str = "https://api.storyteller.ai/v1/mahay_apps/release_info";
+/// Mahay has no release-feed server: upstream's was a company backend Mahay doesn't use. The
+/// launcher asks GitHub's releases API directly; `TRANO_FEED_URL` can still point at a feed.
+pub const FEED_URL: Option<&str> = None;
 
 /// An app's entry is trusted for this long after storyteller-web fetched it.
 pub const MAX_AGE: i64 = 24 * 3600;

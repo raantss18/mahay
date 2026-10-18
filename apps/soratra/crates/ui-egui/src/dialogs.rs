@@ -2417,7 +2417,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                     ));
                     ui.add_space(6.0);
                     ui.hyperlink_to(tl!("mahay.com/apps/soratra"), "https://github.com/raantss18/mahay");
-                    ui.hyperlink_to(tl!("Join us on Discord: discord.gg/mahay"), "https://discord.gg/mahay");
+                    ui.hyperlink_to(tl!("Join us on Discord: discord.gg/mahay"), "https://github.com/raantss18/mahay/discussions");
                     ui.hyperlink_to(tl!("Source code: github.com/raantss18/soratra"), "https://github.com/raantss18/mahay");
                     ui.add_space(6.0);
                     ui.label(

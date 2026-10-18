@@ -12,7 +12,7 @@ set -euo pipefail
 # shellcheck source=../common.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
 LINUX="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.seho
+APP_ID=org.mahay.seho
 
 if [ "${1:-}" != "--skip-build" ]; then
   (cd "$ROOT" && cargo build --release --locked -p seho -p seho-cli)

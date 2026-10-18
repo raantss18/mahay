@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 /// The app's name in Mahay URLs (`mahay.com/apps/{APP}`, `github.com/raantss18/{APP}`).
 pub const APP: &str = "taratasy";
 
-pub const DISCORD: &str = "https://discord.gg/mahay";
+pub const DISCORD: &str = "https://github.com/raantss18/mahay/discussions";
 pub const WEBSITE: &str = "https://github.com/raantss18/mahay";
 pub const APP_PAGE: &str = "https://github.com/raantss18/mahay";
 pub const GITHUB: &str = "https://github.com/raantss18/mahay";

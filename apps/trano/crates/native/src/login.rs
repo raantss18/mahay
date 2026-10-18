@@ -9,7 +9,7 @@
 use std::path::PathBuf;
 
 #[cfg_attr(windows, allow(dead_code))]
-const ID: &str = "ai.storyteller.trano";
+const ID: &str = "org.mahay.trano";
 /// The command-line flag a login start passes.
 pub const HIDDEN_FLAG: &str = "--hidden";
 

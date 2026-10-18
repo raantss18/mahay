@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Taratasy
+GenericName=PDF Editor
+Comment=Read, organize, combine, split and secure PDFs
+Exec=taratasy %U
+TryExec=taratasy
+Icon=org.mahay.taratasy
+Terminal=false
+StartupNotify=true
+StartupWMClass=org.mahay.taratasy
+Categories=Office;Viewer;
+Keywords=pdf;viewer;editor;annotate;sign;forms;merge;split;
+MimeType=application/pdf;

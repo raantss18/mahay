@@ -883,7 +883,7 @@ fn all_opened(h: &mut Harness<'_, Option<LauncherUi>>, label: &str) -> Vec<Strin
 fn links_open_the_right_pages() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
-    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://discord.gg/mahay"));
+    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://github.com/raantss18/mahay/discussions"));
     // The footer's Mahay links and each card's own pages.
     let github = all_opened(&mut h, "GitHub");
     assert!(github.contains(&"https://github.com/raantss18".to_string()), "{github:?}");
@@ -892,11 +892,11 @@ fn links_open_the_right_pages() {
     assert!(sites.contains(&"https://github.com/raantss18/mahay".to_string()), "{sites:?}");
     assert!(sites.contains(&"https://github.com/raantss18/mahay".to_string()), "{sites:?}");
     // Social icons in the footer.
-    assert_eq!(click_opens(&mut h, "X").as_deref(), Some("https://x.com/get_mahay"));
-    assert_eq!(click_opens(&mut h, "YouTube").as_deref(), Some("https://www.youtube.com/@OfficialMahayStudios"));
-    assert_eq!(click_opens(&mut h, "TikTok").as_deref(), Some("https://www.tiktok.com/@mahay.studios"));
-    assert_eq!(click_opens(&mut h, "Instagram").as_deref(), Some("https://www.instagram.com/officialmahaystudios"));
-    assert_eq!(click_opens(&mut h, "LinkedIn").as_deref(), Some("https://www.linkedin.com/company/mahay-ai"));
+    assert_eq!(click_opens(&mut h, "X").as_deref(), Some("https://github.com/raantss18/mahay"));
+    assert_eq!(click_opens(&mut h, "YouTube").as_deref(), Some("https://github.com/raantss18/mahay"));
+    assert_eq!(click_opens(&mut h, "TikTok").as_deref(), Some("https://github.com/raantss18/mahay"));
+    assert_eq!(click_opens(&mut h, "Instagram").as_deref(), Some("https://github.com/raantss18/mahay"));
+    assert_eq!(click_opens(&mut h, "LinkedIn").as_deref(), Some("https://github.com/raantss18/mahay"));
     // The … menu.
     h.get_all_by_label("…").next().unwrap().click();
     h.run_steps(3);
@@ -907,7 +907,7 @@ fn links_open_the_right_pages() {
 fn discord_link_opens_app_when_discord_is_installed() {
     let (mut h, _) = harness_with_discord(Some(trano_core::catalog::DISCORD_APP_URL));
     h.run_steps(6);
-    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("discord://-/invite/mahay"));
+    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://github.com/raantss18/mahay/discussions"));
 }
 
 #[test]

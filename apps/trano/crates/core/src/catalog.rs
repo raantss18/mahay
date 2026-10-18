@@ -29,9 +29,9 @@ pub struct MahayApp {
 }
 
 impl MahayApp {
-    /// `ai.storyteller.<id>`: macOS bundle id, Flatpak id and Linux desktop-file id.
+    /// `org.mahay.<id>`: macOS bundle id, Flatpak id and Linux desktop-file id.
     pub fn bundle_id(&self) -> String {
-        format!("ai.storyteller.{}", self.id)
+        format!("org.mahay.{}", self.id)
     }
 
     pub fn releases_url(&self) -> String {
@@ -44,7 +44,7 @@ impl MahayApp {
 
     /// The app's page on mahay.com.
     pub fn website(&self) -> String {
-        format!("https://github.com/raantss18/mahay", self.id)
+        format!("https://github.com/raantss18/mahay/tree/main/apps/{}", self.id)
     }
 
     /// Asset stems this app's releases may use, current first.
@@ -74,21 +74,21 @@ const fn app(
 
 /// The Mahay App Suite, in display order matching mahay.com:
 pub const SUITE: [MahayApp; 13] = [
-    app("sary", "Sary", "Image editing", [[0x2f, 0x7b, 0xf5], [0x1a, 0x5b, 0xc4], [0x7f, 0xb0, 0xff]], "raantss18/sary"),
-    app("tsipika", "Tsipika", "Vector illustration", [[0xe8, 0x57, 0x3f], [0xb8, 0x3a, 0x24], [0xff, 0x8a, 0x70]], "raantss18/tsipika"),
+    app("sary", "Sary", "Image editing", [[0x2f, 0x7b, 0xf5], [0x1a, 0x5b, 0xc4], [0x7f, 0xb0, 0xff]], "raantss18/mahay"),
+    app("tsipika", "Tsipika", "Vector illustration", [[0xe8, 0x57, 0x3f], [0xb8, 0x3a, 0x24], [0xff, 0x8a, 0x70]], "raantss18/mahay"),
     app(
         "hetsika",
         "Hetsika",
         "Video editing, color and sound",
         [[0x8b, 0x5c, 0xf6], [0x6a, 0x3f, 0xd6], [0xb6, 0x9c, 0xff]],
-        "raantss18/hetsika",
+        "raantss18/mahay",
     ),
     app(
         "hazavana",
         "Hazavana",
         "Photo library and raw development",
         [[0xf2, 0xa5, 0x16], [0x8a, 0x58, 0x00], [0xff, 0xc1, 0x4d]],
-        "raantss18/hazavana",
+        "raantss18/mahay",
     ),
     MahayApp {
         former_ids: &["printcraft"],
@@ -98,7 +98,7 @@ pub const SUITE: [MahayApp; 13] = [
             "Taratasy",
             "Reading, organizing and protecting PDFs",
             [[0x12, 0xa5, 0x8a], [0x0a, 0x75, 0x63], [0x3f, 0xd6, 0xb8]],
-            "raantss18/taratasy",
+            "raantss18/mahay",
         )
     },
     app(
@@ -106,45 +106,45 @@ pub const SUITE: [MahayApp; 13] = [
         "Tselatra",
         "Motion graphics and visual effects",
         [[0xe0, 0x36, 0x8f], [0xb0, 0x20, 0x6c], [0xff, 0x7a, 0xb8]],
-        "raantss18/tselatra",
+        "raantss18/mahay",
     ),
     app(
         "pejy",
         "Pejy",
         "Page layout and publishing",
         [[0x7b, 0xb5, 0x1c], [0x45, 0x70, 0x08], [0xa6, 0xe0, 0x4a]],
-        "raantss18/pejy",
+        "raantss18/mahay",
     ),
     app(
         "endrika",
         "Endrika",
         "Interface design and prototyping",
         [[0x02, 0xda, 0x96], [0x04, 0x7a, 0x56], [0x4f, 0xe8, 0xb6]],
-        "raantss18/endrika",
+        "raantss18/mahay",
     ),
-    app("soratra", "Soratra", "Writing and document design", [[0x3f, 0x5f, 0xe0], [0x2a, 0x44, 0xb8], [0x8e, 0xa2, 0xff]], "raantss18/soratra"),
+    app("soratra", "Soratra", "Writing and document design", [[0x3f, 0x5f, 0xe0], [0x2a, 0x44, 0xb8], [0x8e, 0xa2, 0xff]], "raantss18/mahay"),
     app(
         "feo",
         "Feo",
         "Recording, editing and mixing audio",
         [[0x1f, 0xa5, 0xc9], [0x0e, 0x72, 0x90], [0x5f, 0xd0, 0xee]],
-        "raantss18/feo",
+        "raantss18/mahay",
     ),
     app(
         "seho",
         "Seho",
         "Presentations and slide shows",
         [[0xf0, 0x7a, 0x1e], [0xa8, 0x4f, 0x0a], [0xff, 0xa0, 0x60]],
-        "raantss18/seho",
+        "raantss18/mahay",
     ),
     app(
         "drafitra",
         "Drafitra",
         "Computer-aided design and drafting",
         [[0x3e, 0xa6, 0xe8], [0x1a, 0x6f, 0xa8], [0x7c, 0xc8, 0xff]],
-        "raantss18/drafitra",
+        "raantss18/mahay",
     ),
-    app("tabilao", "Tabilao", "Spreadsheets and data", [[0x1f, 0x9d, 0x55], [0x12, 0x70, 0x3a], [0x4f, 0xd6, 0x8a]], "raantss18/tabilao"),
+    app("tabilao", "Tabilao", "Spreadsheets and data", [[0x1f, 0x9d, 0x55], [0x12, 0x70, 0x3a], [0x4f, 0xd6, 0x8a]], "raantss18/mahay"),
 ];
 
 /// Mahay's website.
@@ -155,32 +155,27 @@ pub const GITHUB_OWNER: &str = "raantss18";
 /// Mahay on GitHub: every Mahay App's source.
 pub const GITHUB_URL: &str = "https://github.com/raantss18";
 /// Mahay's social accounts: (service, URL). Shown as small icons, less prominent than Discord.
-pub const SOCIAL: [(&str, &str); 5] = [
-    ("X", "https://x.com/get_mahay"),
-    ("Instagram", "https://www.instagram.com/officialmahaystudios"),
-    ("LinkedIn", "https://www.linkedin.com/company/mahay-ai"),
-    ("YouTube", "https://www.youtube.com/@OfficialMahayStudios"),
-    ("TikTok", "https://www.tiktok.com/@mahay.studios"),
-];
+/// Mahay's social accounts: (service, URL). None yet; upstream's accounts are not Mahay's.
+pub const SOCIAL: &[(&str, &str)] = &[];
 
-/// The Mahay community on Discord.
-pub const DISCORD_URL: &str = "https://discord.gg/mahay";
-/// Deep link into the Discord application for the Mahay server invite.
-pub const DISCORD_APP_URL: &str = "discord://-/invite/mahay";
+/// Where the Mahay community talks: GitHub Discussions (Mahay has no Discord server).
+pub const DISCORD_URL: &str = "https://github.com/raantss18/mahay/discussions";
+/// The same place; kept for the "open in the app" path, which falls back to the URL.
+pub const DISCORD_APP_URL: &str = "https://github.com/raantss18/mahay/discussions";
 
 /// Mahay Trano itself, described like a Mahay App so it can update itself with the same
-/// machinery (asset names `trano-<ver>-…`, bundle id `ai.storyteller.trano`,
+/// machinery (asset names `trano-<ver>-…`, bundle id `org.mahay.trano`,
 /// `Mahay Trano.app`). Not part of [`SUITE`].
 pub const LAUNCHER: MahayApp = app(
     "trano",
     "Mahay Trano",
     "Installs and updates the Mahay App Suite",
     [[0x0b, 0x0b, 0x0c], [0x0b, 0x0b, 0x0c], [0xf2, 0xf1, 0xee]],
-    "raantss18/mahay-launcher",
+    "raantss18/mahay",
 );
 
 /// The launcher's own repo, checked so it can say when a newer launcher is out.
-pub const LAUNCHER_REPO: &str = "raantss18/mahay-launcher";
+pub const LAUNCHER_REPO: &str = "raantss18/mahay";
 /// The launcher's own asset stem.
 pub const LAUNCHER_ID: &str = "trano";
 
@@ -196,7 +191,7 @@ mod tests {
         ids.dedup();
         assert_eq!(ids.len(), SUITE.len());
         for a in &SUITE {
-            assert_eq!(a.repo, format!("raantss18/{}", a.id));
+            assert_eq!(a.repo, "raantss18/mahay");
             assert_eq!(a.name.to_lowercase(), a.id);
         }
     }

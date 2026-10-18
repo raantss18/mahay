@@ -81,7 +81,7 @@ use sary_engine::Session;
 use sary_ui_egui::SaryApp;
 
 /// Matches the `.desktop` file and hicolor icon name, so Wayland docks pick up the icon.
-const APP_ID: &str = "ai.storyteller.sary";
+const APP_ID: &str = "org.mahay.sary";
 
 /// Windows and Linux: no OS title bar; the app's top bar is the title bar, with its own caption
 /// buttons and edge resizing (`sary_ui_egui::titlebar`), as Photoshop does on Windows. macOS
@@ -879,7 +879,7 @@ mod tests {
     /// so it has to be the class the window carries: the app id, on Wayland and X11 alike.
     #[test]
     fn the_desktop_entry_names_the_window_class() {
-        let entry = include_str!("../../../packaging/linux/ai.storyteller.sary.desktop");
+        let entry = include_str!("../../../packaging/linux/org.mahay.sary.desktop");
         let class = entry.lines().find_map(|line| line.strip_prefix("StartupWMClass="));
         assert_eq!(class, Some(super::APP_ID));
     }

@@ -12,7 +12,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/assets/app-icon"
-ID="ai.storyteller.seho"
+ID="org.mahay.seho"
 SRC="$DIR/seho-1024.png"
 WANT="${*:-ico icns}"
 TMP="$(mktemp -d)"

@@ -35,7 +35,7 @@
     <Property Id="ARPPRODUCTICON" Value="SoratraIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/raantss18/mahay/discussions" />
 
     <!-- Installer UI (#198): WixUI_Minimal is welcome + license, progress, then a finish page so
          people can see the install worked. Its dialogs and bitmaps are WiX's own

@@ -17,7 +17,7 @@ set -euo pipefail
 # shellcheck source=../common.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.seho
+APP_ID=org.mahay.seho
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"

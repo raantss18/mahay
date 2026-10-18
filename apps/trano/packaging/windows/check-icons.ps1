@@ -13,7 +13,7 @@ param(
   [string] $WxsPath = (Join-Path $PSScriptRoot 'trano.wxs')
 )
 $ErrorActionPreference = 'Stop'
-$AppId = 'ai.storyteller.trano'
+$AppId = 'org.mahay.trano'
 [xml] $Wxs = Get-Content -LiteralPath $WxsPath -Raw
 $Ns = [Xml.XmlNamespaceManager]::new($Wxs.NameTable)
 $Ns.AddNamespace('w', 'http://wixtoolset.org/schemas/v4/wxs')

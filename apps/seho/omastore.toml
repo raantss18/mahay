@@ -1,6 +1,6 @@
 kind = "app"
 categories = ["Office"]
-icon = "assets/app-icon/hicolor/256x256/apps/ai.storyteller.seho.png"
+icon = "assets/app-icon/hicolor/256x256/apps/org.mahay.seho.png"
 
 [linux.x86_64]
 asset = "seho-{version}-linux-x86_64.tar.gz"

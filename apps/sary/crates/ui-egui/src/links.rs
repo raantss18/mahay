@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 use crate::SaryApp;
 
-pub const DISCORD: &str = "https://discord.gg/mahay";
+pub const DISCORD: &str = "https://github.com/raantss18/mahay/discussions";
 pub const MAHAY_WEBSITE: &str = "https://github.com/raantss18/mahay";
 pub const APP_PAGE: &str = "https://github.com/raantss18/mahay";
 pub const GITHUB: &str = "https://github.com/raantss18/mahay";
@@ -113,7 +113,7 @@ mod tests {
         let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         for (id, url) in [
-            ("help.discord", "https://discord.gg/mahay"),
+            ("help.discord", "https://github.com/raantss18/mahay/discussions"),
             ("help.website", "https://github.com/raantss18/mahay"),
             ("help.github", "https://github.com/raantss18/mahay"),
         ] {

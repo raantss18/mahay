@@ -2,7 +2,7 @@
 # Sary AppImage entry point (packaging/linux/AppRun; installed by package.sh).
 #
 # On Wayland the compositor resolves a window's dock icon by taking the window's
-# app_id (ai.storyteller.sary) and looking up an installed .desktop file.
+# app_id (org.mahay.sary) and looking up an installed .desktop file.
 # An AppImage installs nothing, so every AppImage run would otherwise show the
 # generic "Wayland" icon (#593). Best-effort desktop integration: on first run
 # (and whenever the AppImage's path changes) install the .desktop entry and the
@@ -12,7 +12,7 @@
 set -u
 
 APPDIR="$(dirname "$(readlink -f "$0")")"
-DESK_ID=ai.storyteller.sary
+DESK_ID=org.mahay.sary
 
 integrate() {
   case "${SARY_NO_DESKTOP_INTEGRATION:-}" in

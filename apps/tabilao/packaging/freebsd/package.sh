@@ -12,7 +12,7 @@
 set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
-APP_ID=ai.storyteller.tabilao
+APP_ID=org.mahay.tabilao
 LINUX="$ROOT/packaging/linux"
 
 SKIP_BUILD=0

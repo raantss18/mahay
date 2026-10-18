@@ -79,7 +79,7 @@ taratasy-cli run    --script steps.json [--root DIR] [--report]
     "\
 taratasy-cli ui     --control FILE <method> [key=value …] [--out shot.png]
                                                            drive a running app started with --control FILE
-help and feedback: https://discord.gg/mahay"
+help and feedback: https://github.com/raantss18/mahay/discussions"
 );
 
 fn main() -> ExitCode {

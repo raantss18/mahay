@@ -16,7 +16,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/assets/app-icon"
 BRAND="$ROOT/docs/brand"
 SVG="$BRAND/mahay-mark.svg"
-ID="ai.storyteller.trano"
+ID="org.mahay.trano"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 

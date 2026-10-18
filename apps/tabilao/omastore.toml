@@ -1,6 +1,6 @@
 kind = "app"
 categories = ["Office"]
-icon = "assets/app-icon/hicolor/256x256/apps/ai.storyteller.tabilao.png"
+icon = "assets/app-icon/hicolor/256x256/apps/org.mahay.tabilao.png"
 
 [linux.x86_64]
 asset = "tabilao-{version}-linux-x86_64.tar.gz"

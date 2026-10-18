@@ -17,7 +17,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.tabilao
+APP_ID=org.mahay.tabilao
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"

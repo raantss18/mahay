@@ -9,7 +9,7 @@ wasm-bindgen). **No Tauri, Electron or webview shells**, ever.
 The product name is always **Mahay Trano** in user-facing text: UI, window titles, About,
 tray menu, notifications, installers, release names, docs prose. The suite is the **Mahay App
 Suite**. Machine names stay lowercase: crates and binaries (`trano`,
-`trano-*`), file names, and the app id `ai.storyteller.trano`. Note the
+`trano-*`), file names, and the app id `org.mahay.trano`. Note the
 GitHub repo is `raantss18/mahay-launcher`, while every file and package is `trano-*`.
 
 Standards and learnings shared across the Mahay apps live in `../mahay-rules` (read its
@@ -105,7 +105,7 @@ only; English where there is none): never bundle a CJK font, they are 10 MB and 
    (`docs/brand/LICENSE-brand.txt`): use them exactly as supplied, never redraw or recolor them.
 2. **Icons are generated.** The app icon and the tray icon are the supplied Mahay "A" mark from
    `docs/brand/` (a trademark, not MIT/Apache); never edit the renders by hand. Run `packaging/icons.sh` (needs `resvg`; runs on any OS) and commit the outputs.
-   `assets/app-icons/` is copied verbatim from each app's repo (`assets/app-icon/hicolor/128x128/apps/ai.storyteller.<app>.png`);
+   `assets/app-icons/` is copied verbatim from each app's repo (`assets/app-icon/hicolor/128x128/apps/org.mahay.<app>.png`);
    refresh it from there, never redraw.
 3. **Never break wasm.** `cargo xtask wasm` must pass. File-system, process and OS code is
    `cfg(not(target_arch = "wasm32"))`.
@@ -152,7 +152,7 @@ Packaging facts the code relies on:
   `HKCU\Software\Learning Machines LLC\Mahay Trano` (`InstallDir`,
   `DesktopShortcutChoice`) and reused by the next version, and `self_update.rs` reads `InstallDir`
   to know the running copy came from the MSI. Its shortcuts set AppUserModelID
-  `ai.storyteller.trano`, which toast notifications need. `portable.txt` beside the exe switches on portable mode
+  `org.mahay.trano`, which toast notifications need. `portable.txt` beside the exe switches on portable mode
   (`MahayLauncherData\` next to the exe).
 - The macOS bundle is `Mahay Trano.app` (executable `Contents/MacOS/Mahay Trano`), a
   normal Dock app that can also sit in the menu bar: `LSUIElement` must never be set.

@@ -686,7 +686,11 @@ fn feed_and_fallback(http: &Http, paths: &Paths, shared: &Shared) -> (Option<Fee
     let loaded = shared.loaded.load(Ordering::SeqCst);
     let first_time = !loaded && saved.is_none();
     let attempts = if first_time { 1 } else { FEED_ATTEMPTS };
-    let fetched = fetch_feed(http, paths, &feed_url(), &shared.feed_throttle, attempts);
+    let fetched = match feed_url() {
+        Some(url) => fetch_feed(http, paths, &url, &shared.feed_throttle, attempts),
+        // No feed configured: GitHub answers for every app.
+        None => FeedFetch::Failed,
+    };
     let now = crate::now();
     let (fresh, answered, failures) = {
         let mut failures = shared.feed_failures.lock().unwrap_or_else(PoisonError::into_inner);
@@ -833,11 +837,11 @@ fn fetch_feed(http: &Http, paths: &Paths, url: &str, throttle: &Mutex<FeedThrott
 
 /// The feed's address. `TRANO_FEED_URL` points at a staging server or a local copy
 /// (only `https://`, or plain `http://` on localhost).
-fn feed_url() -> String {
+fn feed_url() -> Option<String> {
     std::env::var("TRANO_FEED_URL")
         .ok()
         .filter(|u| u.starts_with("https://") || is_loopback(u))
-        .unwrap_or_else(|| trano_core::feed::FEED_URL.to_string())
+        .or_else(|| trano_core::feed::FEED_URL.map(str::to_string))
 }
 
 /// `http://<loopback host>:<port>` and an optional path: the host must be exactly 127.0.0.1,

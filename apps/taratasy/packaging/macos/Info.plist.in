@@ -13,7 +13,7 @@
   <key>CFBundleExecutable</key>
   <string>Taratasy</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.taratasy</string>
+  <string>org.mahay.taratasy</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>

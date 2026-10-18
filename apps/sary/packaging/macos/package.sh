@@ -162,7 +162,7 @@ cp "$WORK/bin/sary-cli" "$CLI_DIR/"
 copy_docs "$CLI_DIR"
 # Same Developer ID and hardened runtime as the app, with an explicit reverse-DNS identifier
 # (codesign would otherwise use the bare file name).
-sign --options runtime --identifier ai.storyteller.sary-cli "$CLI_DIR/sary-cli"
+sign --options runtime --identifier org.mahay.sary-cli "$CLI_DIR/sary-cli"
 codesign --verify --strict --verbose=2 "$CLI_DIR/sary-cli"
 rm -f "$CLI_ZIP"
 ditto -c -k --keepParent "$CLI_DIR" "$CLI_ZIP"

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Seho
+GenericName=Presentation
+Comment=Create and present slide decks
+Exec=seho %F
+TryExec=seho
+Icon=org.mahay.seho
+Terminal=false
+StartupNotify=true
+StartupWMClass=org.mahay.seho
+Categories=Office;Presentation;
+MimeType=application/x-seho;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.openxmlformats-officedocument.presentationml.template;application/vnd.openxmlformats-officedocument.presentationml.slideshow;
+Keywords=presentation;slides;slide show;deck;pptx;keynote;powerpoint;

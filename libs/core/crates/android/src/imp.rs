@@ -321,6 +321,15 @@ pub fn set_dark_bars(dark: bool) {
     });
 }
 
+/// The user's language as a BCP 47 tag (`fr-FR`, `mg`, `en-US`).
+pub fn locale() -> String {
+    with_activity(|env, act| {
+        let obj = env.call_method(act, "localeTag", "()Ljava/lang/String;", &[])?.l()?;
+        Ok(String::from(env.get_string(&JString::from(obj))?))
+    })
+    .unwrap_or_else(|| "en".into())
+}
+
 /// Text on the Android clipboard.
 pub fn clipboard_text() -> Option<String> {
     with_activity(|env, act| {

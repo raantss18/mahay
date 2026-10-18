@@ -59,6 +59,48 @@ APPS = {
         ("s", "M54,69 V82 M42,82 H66"),
         ("f", "M48,39 L64,49 L48,59 Z"),
     ]),
+    # Later apps (no Android build in release 1 yet), same grid and line weight.
+    # Tsipika, vector illustration: a curve between two anchors, with a handle.
+    "tsipika": ("#8E44AD", [
+        ("s", "M30,76 C36,40 72,40 78,76"),
+        ("s", "M54,46 L72,30"),
+        ("f", "M25,71 h10 v10 h-10 Z M73,71 h10 v10 h-10 Z M68,26 h8 v8 h-8 Z"),
+    ]),
+    # Endrika, interface design: a screen holding a header and two blocks.
+    "endrika": ("#0097A7", [
+        ("s", "M33,24 H75 V84 H33 Z"),
+        ("f", "M40,32 H68 V40 H40 Z M40,48 H52 V76 H40 Z M57,48 H68 V60 H57 Z"),
+    ]),
+    # Pejy, page layout: a page set in two columns under a title.
+    "pejy": ("#795548", [
+        ("s", "M30,24 H78 V84 H30 Z"),
+        ("f", "M38,32 H70 V40 H38 Z"),
+        ("s", "M39,52 H49 M39,62 H49 M39,72 H49 M59,52 H69 M59,62 H69 M59,72 H69"),
+    ]),
+    # Hazavana, photo library and raw: the sun's disc and rays.
+    "hazavana": ("#E09F00", [
+        ("f", "M54,40 a14,14 0 1,0 0.01,0 Z"),
+        ("s", "M54,24 V30 M54,78 V84 M24,54 H30 M78,54 H84 M33,33 L37,37 M71,71 L75,75 M33,75 L37,71 M71,37 L75,33"),
+    ]),
+    # Feo, audio: a waveform.
+    "feo": ("#D81B60", [
+        ("s", "M28,48 V60 M38,38 V70 M48,28 V80 M58,42 V66 M68,32 V76 M78,46 V62"),
+    ]),
+    # Hetsika, video: a strip of film.
+    "hetsika": ("#37474F", [
+        ("s", "M30,26 H78 V82 H30 Z M41,26 V82 M67,26 V82"),
+        ("f", "M33,32 h5 v6 h-5 Z M33,51 h5 v6 h-5 Z M33,70 h5 v6 h-5 Z M70,32 h5 v6 h-5 Z M70,51 h5 v6 h-5 Z M70,70 h5 v6 h-5 Z"),
+    ]),
+    # Tselatra, motion graphics and effects: a lightning bolt.
+    "tselatra": ("#7CB342", [
+        ("f", "M60,22 L34,60 H52 L46,86 L74,46 H56 Z"),
+    ]),
+    # Drafitra, CAD: a set square and a dimension line.
+    "drafitra": ("#0D47A1", [
+        ("s", "M30,78 V30 L78,78 Z"),
+        ("s", "M40,66 V56 L50,66 Z"),
+        ("s", "M30,86 H78"),
+    ]),
 }
 
 
@@ -114,11 +156,32 @@ def write(path, text):
         f.write(text)
 
 
+# Apps with an Android flavour (android/app/build.gradle).
+ANDROID = {"trano", "sary", "taratasy", "soratra", "tabilao", "seho"}
+
+
+# The wordmark: the mark, then MAHAY drawn with the same line weight (no font needed).
+LETTERS = "M130,78 V30 L152,60 L174,30 V78 M190,78 L210,30 L230,78 M197,62 H223 M247,30 V78 M281,30 V78 M247,54 H281 M298,78 L318,30 L338,78 M305,62 H331 M352,30 L371,56 L390,30 M371,56 V78"
+
+
+def wordmark(ink):
+    tile = svg("mahay").split("\n", 1)[1].rsplit("</svg>", 1)[0]
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 108" width="400" height="108">\n'
+        f"  {tile.strip()}\n"
+        f'  <path d="{LETTERS}" fill="none" stroke="{ink}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>\n'
+        "</svg>\n"
+    )
+
+
 def main():
+    write(os.path.join(ROOT, "brand/svg/mahay-logo.svg"), wordmark("#1F2328"))
+    write(os.path.join(ROOT, "brand/svg/mahay-logo-white.svg"), wordmark("#FFFFFF"))
+    write(os.path.join(ROOT, "brand/svg/mahay-mark-black.svg"), svg("mahay", mono=True).replace("currentColor", "#1F2328"))
     for app in APPS:
         write(os.path.join(ROOT, "brand/svg", f"{app}.svg"), svg(app))
         write(os.path.join(ROOT, "brand/svg", f"{app}-mono.svg"), svg(app, mono=True))
-        if app == "mahay":
+        if app == "mahay" or app not in ANDROID:
             continue
         res = os.path.join(ROOT, "android/app/src", app, "res")
         color = APPS[app][0]
@@ -128,9 +191,6 @@ def main():
             os.path.join(res, "values/ic_launcher.xml"),
             f'<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#FF{color[1:]}</color>\n</resources>\n',
         )
-        app_dir = os.path.join(ROOT, "apps", app)
-        if os.path.isdir(app_dir):
-            write(os.path.join(app_dir, "assets/mahay-icon.svg"), svg(app))
     print("icons written for", ", ".join(APPS))
 
 

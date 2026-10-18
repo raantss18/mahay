@@ -514,7 +514,7 @@ mod tests {
                 contents.join("Info.plist"),
                 format!(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>\
-                     <key>CFBundleIdentifier</key><string>ai.storyteller.trano</string>\
+                     <key>CFBundleIdentifier</key><string>org.mahay.trano</string>\
                      <key>CFBundleShortVersionString</key><string>{version}</string></dict></plist>"
                 ),
             )
@@ -623,11 +623,11 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn parses_flatpak_metadata_for_restart() {
-        let info = "[Application]\nname=ai.storyteller.trano\n\n[Instance]\ninstance-id=155661136\n";
+        let info = "[Application]\nname=org.mahay.trano\n\n[Instance]\ninstance-id=155661136\n";
         assert_eq!(parse_flatpak_instance_id(info), Some("155661136".to_string()));
         assert_eq!(parse_flatpak_instance_id("no instance id here"), None);
 
-        let ps = "Instance   PID    Application\n155661136  842791 ai.storyteller.trano\n";
+        let ps = "Instance   PID    Application\n155661136  842791 org.mahay.trano\n";
         assert_eq!(parse_flatpak_host_pid(ps, "155661136"), Some(842791));
         assert_eq!(parse_flatpak_host_pid(ps, "999999999"), None);
     }
@@ -636,9 +636,9 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn only_a_per_user_install_updates_itself() {
-        let info = |path: &str| format!("[Application]\nname=ai.storyteller.trano\n\n[Instance]\ninstance-id=1\napp-path={path}\n");
-        assert!(parse_is_user_install(&info("/home/alice/.local/share/flatpak/app/ai.storyteller.trano/x86_64/stable/0a3de1c/files")));
-        assert!(!parse_is_user_install(&info("/var/lib/flatpak/app/ai.storyteller.trano/x86_64/stable/0a3de1c/files")));
+        let info = |path: &str| format!("[Application]\nname=org.mahay.trano\n\n[Instance]\ninstance-id=1\napp-path={path}\n");
+        assert!(parse_is_user_install(&info("/home/alice/.local/share/flatpak/app/org.mahay.trano/x86_64/stable/0a3de1c/files")));
+        assert!(!parse_is_user_install(&info("/var/lib/flatpak/app/org.mahay.trano/x86_64/stable/0a3de1c/files")));
         // `flatpak run --app-path=` mounts an empty /app.
         assert!(!parse_is_user_install(&info("")));
         // The key belongs to [Instance] only.

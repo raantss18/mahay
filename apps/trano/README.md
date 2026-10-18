@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/mahay"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://github.com/raantss18/mahay/discussions"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <p align="center">
@@ -35,7 +35,7 @@
 > [!NOTE]
 > **Mahay is a community of artists from all walks of life.** Painters, photographers,
 > filmmakers, illustrators, designers, animators, hobbyists, and people who picked up a pencil
-> last week. If you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/mahay).**
+> last week. If you make things, you're one of us. **[Come say hi on Discord](https://github.com/raantss18/mahay/discussions).**
 
 <p align="center">
   <a href="#what-it-does">What it does</a> ·
@@ -43,7 +43,7 @@
   <a href="#downloads">Downloads</a> ·
   <a href="#build-from-source">Build from source</a> ·
   <a href="#the-mahay-app-suite">Mahay App Suite</a> ·
-  <a href="https://discord.gg/mahay">Discord</a>
+  <a href="https://github.com/raantss18/mahay/discussions">Discord</a>
 </p>
 
 <p align="center">
@@ -114,7 +114,7 @@ installed by hand (and the launcher finds apps you installed yourself):
 | macOS | `/Applications/<App>.app` | Copied from the signed, notarized release DMG |
 | Windows | `C:\Program Files\<App>` | The release MSI, through Windows Installer (with Start menu entry and Apps & features entry) |
 | Linux | `/usr/bin`, `/usr/share/applications` | The release `.deb` (apt) or `.rpm` (dnf, zypper), with your system's password prompt. Without those, a Flatpak, or an AppImage in `~/Applications` |
-| Linux, inside the launcher's Flatpak, with no Flatpak on the host | `~/.var/app/ai.storyteller.trano/data/trano/apps/<app>` | The release tarball, unpacked into the launcher's own folder and run inside the same sandbox, with its settings in a `home/` folder beside it. Nothing is installed on the host, and each app's configuration stays in the sandbox |
+| Linux, inside the launcher's Flatpak, with no Flatpak on the host | `~/.var/app/org.mahay.trano/data/trano/apps/<app>` | The release tarball, unpacked into the launcher's own folder and run inside the same sandbox, with its settings in a `home/` folder beside it. Nothing is installed on the host, and each app's configuration stays in the sandbox |
 | FreeBSD | `/usr/local` | The release tree, with a password prompt (polkit); `~/.local` when polkit isn't installed |
 
 Mahay Trano keeps itself current too: when a new version is out, **Update and restart**
@@ -225,7 +225,7 @@ New contributors and AI agents: start with [`AGENTS.md`](AGENTS.md). Release pac
 > [!IMPORTANT]
 > **Status:** Mahay Trano is new and in early alpha. Expect rough edges, and please file
 > issues (include your OS, which app you were installing and the launcher's log file) or tell us on
-> [Discord](https://discord.gg/mahay).
+> [Discord](https://github.com/raantss18/mahay/discussions).
 
 ## The Mahay App Suite
 
@@ -235,26 +235,26 @@ stand on its own.
 
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/tselatra/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tselatra.png" alt="" width="32" height="32"> | **Tselatra** | Motion graphics and visual effects | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/pejy/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pejy.png" alt="" width="32" height="32"> | **Pejy** | Page layout and publishing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/endrika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.endrika.png" alt="" width="32" height="32"> | **Endrika** | Interface design and prototyping | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/soratra/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.soratra.png" alt="" width="32" height="32"> | **Soratra** | Word processing and documents | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/feo/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.feo.png" alt="" width="32" height="32"> | **Feo** | Audio recording and editing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/seho/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.seho.png" alt="" width="32" height="32"> | **Seho** | Presentations and slide decks | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/drafitra/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.drafitra.png" alt="" width="32" height="32"> | **Drafitra** | Computer-aided design | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/tabilao/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tabilao.png" alt="" width="32" height="32"> | **Tabilao** | Spreadsheets and data | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/org.mahay.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tselatra/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tselatra.png" alt="" width="32" height="32"> | **Tselatra** | Motion graphics and visual effects | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/pejy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.pejy.png" alt="" width="32" height="32"> | **Pejy** | Page layout and publishing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/endrika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.endrika.png" alt="" width="32" height="32"> | **Endrika** | Interface design and prototyping | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/soratra/main/assets/app-icon/hicolor/64x64/apps/org.mahay.soratra.png" alt="" width="32" height="32"> | **Soratra** | Word processing and documents | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/feo/main/assets/app-icon/hicolor/64x64/apps/org.mahay.feo.png" alt="" width="32" height="32"> | **Feo** | Audio recording and editing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/seho/main/assets/app-icon/hicolor/64x64/apps/org.mahay.seho.png" alt="" width="32" height="32"> | **Seho** | Presentations and slide decks | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/drafitra/main/assets/app-icon/hicolor/64x64/apps/org.mahay.drafitra.png" alt="" width="32" height="32"> | **Drafitra** | Computer-aided design | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tabilao/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tabilao.png" alt="" width="32" height="32"> | **Tabilao** | Spreadsheets and data | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 
 And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and video studio for artists who want real control.
 
 <br>
 
 <p align="center">
-  <a href="https://discord.gg/mahay"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://github.com/raantss18/mahay/discussions"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <h3 align="center">Come make things with us</h3>
@@ -267,7 +267,7 @@ And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and vid
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/mahay"><b>discord.gg/mahay</b></a> ·
+  <a href="https://github.com/raantss18/mahay/discussions"><b>discord.gg/mahay</b></a> ·
   <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay App Suite</a> ·
   <a href="https://github.com/raantss18/mahay">Mahay Trano</a>

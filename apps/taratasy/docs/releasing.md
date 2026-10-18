@@ -6,7 +6,7 @@ updates a **draft** GitHub Release named `Taratasy v<version>`. Nobody sees a dr
 maintainer publishes it.
 
 The pipeline was ported from Sary's. User-facing names say **Taratasy**; files, binaries and
-ids stay lowercase (`taratasy-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.taratasy`).
+ids stay lowercase (`taratasy-<version>-<platform>-<arch>.<ext>`, `org.mahay.taratasy`).
 
 ## Cutting a release
 
@@ -80,7 +80,7 @@ and an `ATTRIBUTION.txt`, straight into the package, so packaging needs the netw
 ### macOS
 
 `packaging/macos/package.sh` builds both architectures, joins them with `lipo`, and assembles
-`Taratasy.app` from `Info.plist.in` (bundle id `ai.storyteller.taratasy`, macOS 11+, PDF declared
+`Taratasy.app` from `Info.plist.in` (bundle id `org.mahay.taratasy`, macOS 11+, PDF declared
 as a document type with rank Alternate, so Taratasy is offered under Open With without taking over
 from Preview). Files opened from Finder arrive as Apple events, which
 `apps/taratasy/src/apple_events.rs` receives.
@@ -177,9 +177,9 @@ downloading only the changed blocks. `latest` is the newest published, non-pre-r
 otherwise; the release job checks both.
 
 **Flatpak:** the `flatpak` job turns each arch's tarball into a single-file bundle with
-`packaging/linux/flatpak-bundle.sh` and `flatpak/ai.storyteller.taratasy.bundle.yml` (no Rust build;
+`packaging/linux/flatpak-bundle.sh` and `flatpak/org.mahay.taratasy.bundle.yml` (no Rust build;
 the same binaries), then installs it and runs `taratasy-cli --version` in the sandbox.
-`flatpak/ai.storyteller.taratasy.yml` is the from-source manifest for a later Flathub submission;
+`flatpak/org.mahay.taratasy.yml` is the from-source manifest for a later Flathub submission;
 packaging-lint keeps the runtime and sandbox permissions (`finish-args`) of the two identical.
 Printing is not available in the Flatpak yet: it runs `lp`, which the freedesktop runtime lacks
 (the job logs a note); it needs the print portal. Users install the bundle with `flatpak install --user taratasy-<v>-linux-<arch>.flatpak`; the

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata (software centres, Flathub). Template: package.sh and the Flatpak
+     manifest substitute @VERSION@ and @DATE@ from Cargo.toml and the build date. -->
+<component type="desktop-application">
+  <id>org.mahay.taratasy</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>Taratasy</name>
+  <summary>Read, organize, combine, split and secure PDFs</summary>
+  <developer id="ai.storyteller">
+    <name>Learning Machines LLC</name>
+  </developer>
+  <description>
+    <p>
+      Taratasy is an open-source PDF workbench. Read, comment on, fill in and sign PDFs;
+      organize, combine and split pages; edit, redact, protect and export documents.
+    </p>
+  </description>
+  <launchable type="desktop-id">org.mahay.taratasy.desktop</launchable>
+  <icon type="stock">org.mahay.taratasy</icon>
+  <!-- Only url types known to appstream 0.15 (Ubuntu 22.04, where CI validates): no vcs-browser. -->
+  <url type="homepage">https://github.com/raantss18/mahay>
+  <url type="bugtracker">https://github.com/raantss18/mahay/issues</url>
+  <url type="help">https://github.com/raantss18/mahay</url>
+  <url type="contact">https://github.com/raantss18/mahay/discussions</url>
+  <categories>
+    <category>Office</category>
+    <category>Viewer</category>
+  </categories>
+  <keywords>
+    <keyword>pdf</keyword>
+    <keyword>viewer</keyword>
+    <keyword>annotate</keyword>
+    <keyword>forms</keyword>
+  </keywords>
+  <screenshots>
+    <screenshot type="default">
+      <caption>A PDF open with its threaded comments</caption>
+      <image>https://raw.githubusercontent.com/raantss18/taratasy/main/docs/images/taratasy-viewer.png</image>
+    </screenshot>
+  </screenshots>
+  <branding>
+    <color type="primary" scheme_preference="light">#9fd0ff</color>
+    <color type="primary" scheme_preference="dark">#1f64ba</color>
+  </branding>
+  <requires>
+    <display_length compare="ge">760</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>tablet</control>
+  </supports>
+  <provides>
+    <binary>taratasy</binary>
+    <mediatype>application/pdf</mediatype>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

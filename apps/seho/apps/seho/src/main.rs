@@ -124,7 +124,7 @@ fn services() -> Services {
     }
 }
 
-const APP_ID: &str = "ai.storyteller.seho";
+const APP_ID: &str = "org.mahay.seho";
 
 const USAGE: &str = "\
 Usage: seho [--control PORT] [--sample] [--show] [FILE...]
@@ -162,7 +162,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
 }
 
 fn app_icon() -> Option<egui::IconData> {
-    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.seho.png");
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/org.mahay.seho.png");
     eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
 }
 

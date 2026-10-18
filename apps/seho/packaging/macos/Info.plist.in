@@ -13,7 +13,7 @@
   <key>CFBundleExecutable</key>
   <string>Seho</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.seho</string>
+  <string>org.mahay.seho</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -50,7 +50,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.seho.presentation</string>
+      <string>org.mahay.seho.presentation</string>
       <key>UTTypeDescription</key>
       <string>Seho Presentation</string>
       <key>UTTypeConformsTo</key>

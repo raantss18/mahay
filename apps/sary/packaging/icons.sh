@@ -30,11 +30,11 @@ render "$MAC" 1024 "$DIR/sary-1024.png"
 # Linux hicolor theme.
 for s in 16 24 32 48 64 128 256 512; do
   mkdir -p "$DIR/hicolor/${s}x${s}/apps"
-  render "$TIGHT" "$s" "$DIR/hicolor/${s}x${s}/apps/ai.storyteller.sary.png"
+  render "$TIGHT" "$s" "$DIR/hicolor/${s}x${s}/apps/org.mahay.sary.png"
 done
 mkdir -p "$DIR/hicolor/scalable/apps"
 # The lighter trace (sary-small.svg) keeps the scalable theme icon cheap to render.
-cp "$DIR/sary-small.svg" "$DIR/hicolor/scalable/apps/ai.storyteller.sary.svg"
+cp "$DIR/sary-small.svg" "$DIR/hicolor/scalable/apps/org.mahay.sary.svg"
 
 # Windows .ico.
 ICO_PNGS=()

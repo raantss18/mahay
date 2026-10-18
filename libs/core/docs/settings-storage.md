@@ -42,7 +42,7 @@ settings work in memory and nothing touches the disk.
 
 `<app>` is the app's lowercase id (`sary`, `pejy`, …) on every platform, macOS
 included (decided in #12). Existing Linux folder names do not change; the Launcher moves from
-`ai.storyteller.trano` to `trano`.
+`org.mahay.trano` to `trano`.
 
 If the folder cannot be created or written (a portable marker in `/Applications`, an AppImage
 mount), the store opens read-only and says so at startup.
@@ -90,7 +90,7 @@ files there too.
 | Tabilao | `~/.config/tabilao/prefs.json` + `ui.json`; saves on exit, ignores failures | Same as Pejy |
 | Hazavana | global `ui.json`; library `prefs.json`, `presets.json`, `view.json`; atomic, backups, overwrite protection | Global settings via `open`; library settings via `open_at(library_dir)` |
 | Tsipika | `~/.config/tsipika/ui.json` with engine preferences inside; atomic, ignores failures | Split engine preferences out into `config.toml`; keep UI state in `ui.json` |
-| Mahay Trano | `~/.local/share/ai.storyteller.trano/app.ron` (eframe) | Import from `app.ron`; needs its own tick timer while in the tray |
+| Mahay Trano | `~/.local/share/org.mahay.trano/app.ron` (eframe) | Import from `app.ron`; needs its own tick timer while in the tray |
 
 Adoption order: Sary and Pejy first (closest to and furthest from the target
 behaviour), then the rest.

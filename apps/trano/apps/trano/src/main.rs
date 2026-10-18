@@ -28,7 +28,7 @@ use trano_ui_egui::theme::Tokens;
 use trano_ui_egui::{Host, LauncherUi, Settings, TitleBar};
 use eframe::wgpu::rwh::{HasDisplayHandle, RawDisplayHandle};
 
-const APP_ID: &str = "ai.storyteller.trano";
+const APP_ID: &str = "org.mahay.trano";
 const SETTINGS_KEY: &str = "settings";
 
 type Wake = Arc<OnceLock<Box<dyn Fn() + Send + Sync>>>;
@@ -133,7 +133,7 @@ fn main() -> ExitCode {
 
 fn native_options(hidden: bool) -> eframe::NativeOptions {
     let icon =
-        eframe::icon_data::from_png_bytes(include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.trano.png")).ok();
+        eframe::icon_data::from_png_bytes(include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/org.mahay.trano.png")).ok();
     let mut viewport = egui::ViewportBuilder::default()
         .with_title("Mahay Trano")
         .with_app_id(APP_ID)

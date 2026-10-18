@@ -329,7 +329,7 @@ mod tests {
     #[test]
     fn reads_pdf_bundle_values_without_invoking_macos_tools() {
         let plist = r#"
-            <key>CFBundleIdentifier</key><string>ai.storyteller.taratasy</string>
+            <key>CFBundleIdentifier</key><string>org.mahay.taratasy</string>
             <key>LSMinimumSystemVersion</key><string>11.0</string>
             <key>CFBundleDocumentTypes</key><array><dict>
               <key>CFBundleTypeRole</key><string>Editor</string>
@@ -337,7 +337,7 @@ mod tests {
               <key>LSItemContentTypes</key><array><string>com.adobe.pdf</string></array>
             </dict></array>
         "#;
-        assert_eq!(plist_value(plist, "CFBundleIdentifier").as_deref(), Some("ai.storyteller.taratasy"));
+        assert_eq!(plist_value(plist, "CFBundleIdentifier").as_deref(), Some("org.mahay.taratasy"));
         assert_eq!(plist_value(plist, "LSMinimumSystemVersion").as_deref(), Some("11.0"));
         assert_eq!(pdf_registration(plist), "com.adobe.pdf (role=Editor, rank=Alternate)");
     }

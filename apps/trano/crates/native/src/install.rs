@@ -1827,7 +1827,7 @@ mod tests {
         let tree_style = dir.path().join("tree.tar.gz");
         tarball(
             &tree_style,
-            &["soratra-0.3.0-freebsd-x86_64/bin/soratra", "soratra-0.3.0-freebsd-x86_64/share/applications/ai.storyteller.soratra.desktop"],
+            &["soratra-0.3.0-freebsd-x86_64/bin/soratra", "soratra-0.3.0-freebsd-x86_64/share/applications/org.mahay.soratra.desktop"],
         );
         let flat_style = dir.path().join("flat.tar.gz");
         tarball(
@@ -1836,15 +1836,15 @@ mod tests {
                 "soratra-0.3.0-freebsd-x86_64/soratra",
                 "soratra-0.3.0-freebsd-x86_64/soratra-cli",
                 "soratra-0.3.0-freebsd-x86_64/README.md",
-                "soratra-0.3.0-freebsd-x86_64/ai.storyteller.soratra.desktop",
-                "soratra-0.3.0-freebsd-x86_64/ai.storyteller.soratra.png",
+                "soratra-0.3.0-freebsd-x86_64/org.mahay.soratra.desktop",
+                "soratra-0.3.0-freebsd-x86_64/org.mahay.soratra.png",
             ],
         );
         for file in [tree_style, flat_style] {
             let root = tree::unpack(app, &file, &dir.path().join("staging")).unwrap();
             let files = tree::files(&root);
             assert!(files.contains(&PathBuf::from("bin/soratra")), "{files:?}");
-            assert!(files.contains(&PathBuf::from("share/applications/ai.storyteller.soratra.desktop")), "{files:?}");
+            assert!(files.contains(&PathBuf::from("share/applications/org.mahay.soratra.desktop")), "{files:?}");
             assert!(!files.iter().any(|f| f.ends_with("README.md")), "{files:?}");
         }
         let bad = dir.path().join("bad.tar.gz");
@@ -1864,7 +1864,7 @@ mod tests {
             &[
                 "soratra-0.3.0-linux-x86_64/bin/soratra",
                 "soratra-0.3.0-linux-x86_64/bin/soratra-cli",
-                "soratra-0.3.0-linux-x86_64/share/applications/ai.storyteller.soratra.desktop",
+                "soratra-0.3.0-linux-x86_64/share/applications/org.mahay.soratra.desktop",
             ],
         );
 
@@ -1872,7 +1872,7 @@ mod tests {
         let root = paths.apps().join("soratra");
         assert_eq!(bin, root.join("bin").join("soratra"));
         assert!(bin.is_file(), "the app's binary wasn't unpacked");
-        assert!(root.join("share/applications/ai.storyteller.soratra.desktop").is_file(), "share/ wasn't unpacked");
+        assert!(root.join("share/applications/org.mahay.soratra.desktop").is_file(), "share/ wasn't unpacked");
         assert!(!paths.cache.join("soratra.new").exists(), "the staging folder was left behind");
 
         // The app's own home sits beside the tree, and an update keeps it.
@@ -2011,8 +2011,8 @@ mod tests {
         let app = MahayApp::by_id("soratra").unwrap();
         let root = tempfile::tempdir().unwrap();
         let data = root.path().join("share");
-        let desktop = data.join("applications/ai.storyteller.soratra.desktop");
-        let icon = data.join("icons/hicolor/128x128/apps/ai.storyteller.soratra.png");
+        let desktop = data.join("applications/org.mahay.soratra.desktop");
+        let icon = data.join("icons/hicolor/128x128/apps/org.mahay.soratra.png");
         let old = root.path().join("My Apps/soratra-0.2.0-linux-x86_64.AppImage");
         let new = root.path().join("My Apps/soratra-0.3.0-linux-x86_64.AppImage");
         std::fs::create_dir_all(new.parent().unwrap()).unwrap();
@@ -2023,7 +2023,7 @@ mod tests {
         assert_eq!(files, [icon.clone(), desktop.clone()]);
         let text = std::fs::read_to_string(&desktop).unwrap();
         assert!(text.contains("Exec=\"") && text.contains("My Apps/soratra-0.3.0-linux-x86_64.AppImage\" %F\n"), "{text}");
-        assert!(text.contains("Icon=ai.storyteller.soratra\n"));
+        assert!(text.contains("Icon=org.mahay.soratra\n"));
         assert!(std::fs::read(&icon).unwrap().starts_with(b"\x89PNG"));
         let rec = record("0.3.0", PackageKind::AppImage, new.clone(), files, false);
 
@@ -2180,7 +2180,7 @@ mod tests {
                 contents.join("Info.plist"),
                 format!(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>\
-                     <key>CFBundleIdentifier</key><string>ai.storyteller.sary</string>\
+                     <key>CFBundleIdentifier</key><string>org.mahay.sary</string>\
                      <key>CFBundleExecutable</key><string>Sary</string>\
                      <key>CFBundleShortVersionString</key><string>{version}</string></dict></plist>"
                 ),
@@ -2243,7 +2243,7 @@ mod tests {
             let dir = tempfile::tempdir().unwrap();
             let placed = bundle(dir.path(), "0.5.0");
             let plist = placed.join("Contents/Info.plist");
-            let unrelated = std::fs::read_to_string(&plist).unwrap().replace("ai.storyteller.sary", "com.example.other");
+            let unrelated = std::fs::read_to_string(&plist).unwrap().replace("org.mahay.sary", "com.example.other");
             std::fs::write(&plist, &unrelated).unwrap();
             let image = dmg(dir.path(), "0.6.0");
             let result =

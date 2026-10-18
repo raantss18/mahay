@@ -8,14 +8,14 @@ publishes it.
 This is Tabilao's implementation of the shared [release playbook](release-playbook.md)
 (mahay-rules `release/playbook.md`), copied from Pejy and renamed. User-facing names say
 **Tabilao**. Files, binaries and ids stay lowercase
-(`tabilao-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.tabilao`).
+(`tabilao-<version>-<platform>-<arch>.<ext>`, `org.mahay.tabilao`).
 
 | App-specific value | Where |
 |---|---|
 | Display name `Tabilao`, binaries `tabilao` + `tabilao-cli` | every script and workflow |
-| Bundle / app id `ai.storyteller.tabilao` | `packaging/macos/Info.plist.in`, `packaging/linux/*`, flatpak manifest |
+| Bundle / app id `org.mahay.tabilao` | `packaging/macos/Info.plist.in`, `packaging/linux/*`, flatpak manifest |
 | WiX UpgradeCode `5511327B-F305-41BE-92D0-EB84944E7C4D` (fixed forever) | `packaging/windows/tabilao.wxs` |
-| File types `.xlsx` `.xlsm` `.xlsb` `.ods` `.csv` `.tsv` | Info.plist (`CFBundleDocumentTypes`), WiX (ProgIds/OpenWithProgids), `.desktop` `MimeType=`, `ai.storyteller.tabilao.mime.xml`, metainfo |
+| File types `.xlsx` `.xlsm` `.xlsb` `.ods` `.csv` `.tsv` | Info.plist (`CFBundleDocumentTypes`), WiX (ProgIds/OpenWithProgids), `.desktop` `MimeType=`, `org.mahay.tabilao.mime.xml`, metainfo |
 | Web app dir `apps/tabilao-web` | `packaging/web/package.sh` |
 | App colour `#1f9d55` (ink `#147a40`), **proposed** | `assets/app-icon/README.md`, metainfo `<branding>` |
 
@@ -33,8 +33,8 @@ The pipeline references crates that don't exist yet; the first release run fails
 - **Build info:** CI exports `TABILAO_BUILD_SHA` and `TABILAO_BUILD_DATE`; read them
   with `option_env!` (fallback: "dev build") for `--version` and *Help › About Tabilao*.
 - **Runtime icon:** embed `assets/app-icon/tabilao-macos-512.png` (macOS Dock) and
-  `hicolor/256x256/apps/ai.storyteller.tabilao.png` (Windows/Linux) as the window icon, and
-  use `ai.storyteller.tabilao` as the Wayland app id / `StartupWMClass`.
+  `hicolor/256x256/apps/org.mahay.tabilao.png` (Windows/Linux) as the window icon, and
+  use `org.mahay.tabilao` as the Wayland app id / `StartupWMClass`.
 - **`cargo xtask` alias:** the docs use `cargo xtask …`, which needs
   `.cargo/config.toml` with `[alias] xtask = "run --package xtask --"`. Until it exists, use
   `cargo run -p xtask -- …`. The workflows already call `cargo run -p xtask` directly.
@@ -92,7 +92,7 @@ and upload their artifacts, the environment refuses macOS and Windows, and no re
 `packaging/macos/package.sh` builds `aarch64-apple-darwin` and `x86_64-apple-darwin` with
 `MACOSX_DEPLOYMENT_TARGET=11.0`, joins them with `lipo`, and assembles `Tabilao.app`:
 
-- `Info.plist` comes from `Info.plist.in`: bundle id `ai.storyteller.tabilao`,
+- `Info.plist` comes from `Info.plist.in`: bundle id `org.mahay.tabilao`,
   `LSMinimumSystemVersion` 11.0, `NSHighResolutionCapable`, category productivity, and
   `CFBundleDocumentTypes` for `.xlsx`, `.xlsm`, `.xlsb`, `.ods`, `.csv` and `.tsv` with rank
   **Alternate**, so Tabilao is offered in *Open With* without taking over Numbers' (or another
@@ -160,7 +160,7 @@ Locally on Windows: `dotnet tool install -g wix --version 5.0.2`, then
 ### Linux
 
 `packaging/linux/package.sh` stages one FHS tree (both binaries,
-`ai.storyteller.tabilao.desktop` with `MimeType=` for the four types, hicolor icons 16–512 px
+`org.mahay.tabilao.desktop` with `MimeType=` for the four types, hicolor icons 16–512 px
 + scalable SVG, AppStream metainfo, shared-mime-info) and builds the AppImage (appimagetool),
 `.deb` and `.rpm` (nfpm, `nfpm.yaml`) and `.tar.gz` from it. Built on Ubuntu 22.04, so the
 binaries need glibc ≥ 2.35. X11/Wayland/xkbcommon/Vulkan/EGL are loaded at runtime; the
@@ -172,11 +172,11 @@ matching `.zsync` is published beside it, so AppImageUpdate and AppImageLauncher
 changed blocks of the newest published release. appimagetool writes the `.zsync` when
 `zsyncmake` (the `zsync` package) is installed; without it the script warns and skips it.
 
-Flatpak: `packaging/linux/flatpak/ai.storyteller.tabilao.yml` builds from source and is ready
+Flatpak: `packaging/linux/flatpak/org.mahay.tabilao.yml` builds from source and is ready
 for a Flathub submission (freedesktop 25.08; Wayland + X11 fallback, `dri`, IPC; Documents and
 Downloads; everything else through portals); build it by hand with the commands in its header.
 The single-file `.flatpak` on each release comes from `packaging/linux/flatpak-bundle.sh` and
-`ai.storyteller.tabilao.bundle.yml`, which repackage the release's Linux tarball (no Rust
+`org.mahay.tabilao.bundle.yml`, which repackage the release's Linux tarball (no Rust
 build) and smoke-test the result in the sandbox. packaging-lint checks that both manifests
 agree on runtime and finish-args.
 

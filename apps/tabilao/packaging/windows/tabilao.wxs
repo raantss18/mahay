@@ -32,7 +32,7 @@
     <Property Id="ARPPRODUCTICON" Value="TabilaoIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/raantss18/mahay/discussions" />
 
     <!-- An explicit command-line value wins. Otherwise retain the previous installation's
          choice, defaulting to off for a fresh install. Run only in the first sequence so the

@@ -23,7 +23,7 @@ set -euo pipefail
 HERE="$ROOT/packaging/linux"
 # shellcheck source=verified-download.sh
 . "$HERE/verified-download.sh"
-APP_ID=ai.storyteller.sary
+APP_ID=org.mahay.sary
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"

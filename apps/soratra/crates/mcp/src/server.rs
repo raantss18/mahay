@@ -135,7 +135,7 @@ impl Server {
                     "capabilities": {"tools": {}, "resources": {}},
                     "serverInfo": {"name": "soratra", "title": "Soratra", "version": env!("CARGO_PKG_VERSION"), "websiteUrl": "https://github.com/raantss18/mahay"},
                     "instructions": format!(
-                        "{INSTRUCTIONS} Backend: {}. Community: https://discord.gg/mahay · https://github.com/raantss18/mahay · https://github.com/raantss18/mahay",
+                        "{INSTRUCTIONS} Backend: {}. Community: https://github.com/raantss18/mahay/discussions · https://github.com/raantss18/mahay · https://github.com/raantss18/mahay",
                         self.backend.describe()
                     ),
                 }))

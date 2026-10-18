@@ -39,7 +39,7 @@
   <key>CFBundleExecutable</key>
   <string>Sary</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.sary</string>
+  <string>org.mahay.sary</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -76,7 +76,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.sary.document</string>
+      <string>org.mahay.sary.document</string>
       <key>UTTypeDescription</key>
       <string>Sary Document</string>
       <key>UTTypeConformsTo</key>
@@ -100,7 +100,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.sary.ora</string>
+      <string>org.mahay.sary.ora</string>
       <key>UTTypeDescription</key>
       <string>OpenRaster Image</string>
       <key>UTTypeConformsTo</key>
@@ -115,7 +115,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.sary.kra</string>
+      <string>org.mahay.sary.kra</string>
       <key>UTTypeDescription</key>
       <string>Krita Document</string>
       <key>UTTypeConformsTo</key>
@@ -130,7 +130,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.sary.pdn</string>
+      <string>org.mahay.sary.pdn</string>
       <key>UTTypeDescription</key>
       <string>Paint.NET Document</string>
       <key>UTTypeConformsTo</key>
@@ -161,7 +161,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.sary.qoi</string>
+      <string>org.mahay.sary.qoi</string>
       <key>UTTypeDescription</key>
       <string>QOI Image</string>
       <key>UTTypeConformsTo</key>
@@ -189,7 +189,7 @@
       <key>CFBundleTypeIconFile</key>
       <string>Sary</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.sary.document</string></array>
+      <array><string>org.mahay.sary.document</string></array>
     </dict>
     <dict>
       <key>CFBundleTypeName</key>
@@ -225,10 +225,10 @@
         <string>com.ilm.openexr-image</string>
         <string>public.radiance</string>
         <string>public.avif</string>
-        <string>ai.storyteller.sary.qoi</string>
-        <string>ai.storyteller.sary.pdn</string>
-        <string>ai.storyteller.sary.ora</string>
-        <string>ai.storyteller.sary.kra</string>
+        <string>org.mahay.sary.qoi</string>
+        <string>org.mahay.sary.pdn</string>
+        <string>org.mahay.sary.ora</string>
+        <string>org.mahay.sary.kra</string>
       </array>
     </dict>
   </array>

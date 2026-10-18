@@ -56,6 +56,11 @@ def build_rules():
         (r"https?://github\.com/storytold/artcraft[\w.-]*", OUR_REPO),
         (r"https?://github\.com/storytold/(\w+?)craft\b", OUR_REPO),
         (r"storytold", "raantss18"),
+        # Upstream social accounts and chat: never point users at accounts that aren't ours.
+        (r"https?://(?:www\.)?(?:x|twitter|instagram|linkedin|youtube|tiktok)\.com/[^\s)\]\"'>`]*(?:artcraft|storyteller|getartcraft)[^\s)\]\"'>`]*", OUR_REPO),
+        (r"https?://discord\.gg/(?:artcraft|storyteller)\w*", OUR_REPO + "/discussions"),
+        (r"discord://-/invite/(?:artcraft|storyteller)\w*", OUR_REPO + "/discussions"),
+        (r"ai\.storyteller\.", "org.mahay."),
     ]
     for up, ours in APPS.items():
         rules.append((up.upper(), ours.upper()))

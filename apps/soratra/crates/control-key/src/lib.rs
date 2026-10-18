@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(parse_instance_id("instance-id=a b\n"), None);
         assert_eq!(parse_instance_id("instance-id=..\n"), None);
         assert_eq!(parse_instance_id("instance-id=\n"), None);
-        assert_eq!(parse_instance_id("app=ai.storyteller.soratra\n"), None);
+        assert_eq!(parse_instance_id("app=org.mahay.soratra\n"), None);
     }
 
     #[test]

@@ -112,7 +112,7 @@ function New-InstallerArt([string] $BannerOut, [string] $DialogOut) {
   # The Mahay App Suite, in the launcher's order (crates/core/src/catalog.rs).
   $apps = 'sary', 'tsipika', 'hetsika', 'hazavana', 'taratasy', 'tselatra',
     'pejy', 'endrika', 'soratra', 'feo', 'seho', 'drafitra', 'tabilao'
-  $mark = [System.Drawing.Image]::FromFile((Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\ai.storyteller.trano.png'))
+  $mark = [System.Drawing.Image]::FromFile((Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\org.mahay.trano.png'))
   $wordmark = [System.Drawing.Image]::FromFile((Join-Path $Root 'docs\brand\mahay-logo-white.png'))
   $icons = $apps | ForEach-Object { [System.Drawing.Image]::FromFile((Join-Path $Root "assets\app-icons\$_.png")) }
   # The site's label face; GDI+ draws a variable font at its default instance (Regular).

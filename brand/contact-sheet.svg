@@ -1,42 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 275" style="background:#fff"><g transform="translate(10,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#E4572E"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 310" style="background:#fff"><g transform="translate(10,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#E4572E"/>
   <path d="M27,76 L44,44 L54,60 L64,44 L81,76" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M54,25 a7,7 0 1,0 0.01,0 Z" fill="#FFFFFF"/>
-</g><g transform="translate(10,130)" color="#222">  <path d="M27,76 L44,44 L54,60 L64,44 L81,76" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M54,25 a7,7 0 1,0 0.01,0 Z" fill="currentColor"/>
-</g><text x="64" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">mahay</text><g transform="translate(140,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#E4572E"/>
+</g><text x="64" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">mahay</text><g transform="translate(140,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#E4572E"/>
   <path d="M28,50 L54,28 L80,50 L80,80 L28,80 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M41,55 h10 v9 h-10 Z M57,55 h10 v9 h-10 Z M41,68 h10 v8 h-10 Z M57,68 h10 v8 h-10 Z" fill="#FFFFFF"/>
-</g><g transform="translate(140,130)" color="#222">  <path d="M28,50 L54,28 L80,50 L80,80 L28,80 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M41,55 h10 v9 h-10 Z M57,55 h10 v9 h-10 Z M41,68 h10 v8 h-10 Z M57,68 h10 v8 h-10 Z" fill="currentColor"/>
-</g><text x="194" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">trano</text><g transform="translate(270,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#2E86DE"/>
+</g><text x="194" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">trano</text><g transform="translate(270,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#2E86DE"/>
   <path d="M27,31 H81 V77 H27 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M30,74 L48,52 L60,66 L67,58 L78,72" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M66,40 a5,5 0 1,0 0.01,0 Z" fill="#FFFFFF"/>
-</g><g transform="translate(270,130)" color="#222">  <path d="M27,31 H81 V77 H27 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M30,74 L48,52 L60,66 L67,58 L78,72" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M66,40 a5,5 0 1,0 0.01,0 Z" fill="currentColor"/>
-</g><text x="324" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">sary</text><g transform="translate(400,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#D7263D"/>
+</g><text x="324" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">sary</text><g transform="translate(400,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#D7263D"/>
   <path d="M33,25 H63 L77,39 V83 H33 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M63,25 V39 H77" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M42,56 H68 M42,68 H60" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-</g><g transform="translate(400,130)" color="#222">  <path d="M33,25 H63 L77,39 V83 H33 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M63,25 V39 H77" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M42,56 H68 M42,68 H60" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-</g><text x="454" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">taratasy</text><g transform="translate(530,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#3F51B5"/>
+</g><text x="454" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">taratasy</text><g transform="translate(530,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#3F51B5"/>
   <path d="M27,34 H81 M27,48 H81 M27,62 H62 M27,76 H50" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M72,57 V81" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-</g><g transform="translate(530,130)" color="#222">  <path d="M27,34 H81 M27,48 H81 M27,62 H62 M27,76 H50" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M72,57 V81" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-</g><text x="584" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">soratra</text><g transform="translate(660,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#1B998B"/>
+</g><text x="584" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">soratra</text><g transform="translate(660,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#1B998B"/>
   <path d="M27,27 H81 V81 H27 Z M27,45 H81 M27,63 H81 M45,27 V81 M63,27 V81" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M45,45 H63 V63 H45 Z" fill="#FFFFFF"/>
-</g><g transform="translate(660,130)" color="#222">  <path d="M27,27 H81 V81 H27 Z M27,45 H81 M27,63 H81 M45,27 V81 M63,27 V81" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M45,45 H63 V63 H45 Z" fill="currentColor"/>
-</g><text x="714" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">tabilao</text><g transform="translate(790,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#F28F3B"/>
+</g><text x="714" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">tabilao</text><g transform="translate(790,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#F28F3B"/>
   <path d="M25,29 H83 V69 H25 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M54,69 V82 M42,82 H66" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M48,39 L64,49 L48,59 Z" fill="#FFFFFF"/>
-</g><g transform="translate(790,130)" color="#222">  <path d="M25,29 H83 V69 H25 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M54,69 V82 M42,82 H66" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M48,39 L64,49 L48,59 Z" fill="currentColor"/>
-</g><text x="844" y="262" font-family="sans-serif" font-size="14" text-anchor="middle">seho</text></svg>
+</g><text x="844" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">seho</text><g transform="translate(920,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#8E44AD"/>
+  <path d="M30,76 C36,40 72,40 78,76" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M54,46 L72,30" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25,71 h10 v10 h-10 Z M73,71 h10 v10 h-10 Z M68,26 h8 v8 h-8 Z" fill="#FFFFFF"/>
+</g><text x="974" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">tsipika</text><g transform="translate(10,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#0097A7"/>
+  <path d="M33,24 H75 V84 H33 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40,32 H68 V40 H40 Z M40,48 H52 V76 H40 Z M57,48 H68 V60 H57 Z" fill="#FFFFFF"/>
+</g><text x="64" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">endrika</text><g transform="translate(140,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#795548"/>
+  <path d="M30,24 H78 V84 H30 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38,32 H70 V40 H38 Z" fill="#FFFFFF"/>
+  <path d="M39,52 H51 M39,62 H51 M39,72 H51 M57,52 H69 M57,62 H69 M57,72 H69" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</g><text x="194" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">pejy</text><g transform="translate(270,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#E09F00"/>
+  <path d="M54,40 a14,14 0 1,0 0.01,0 Z" fill="#FFFFFF"/>
+  <path d="M54,24 V30 M54,78 V84 M24,54 H30 M78,54 H84 M33,33 L37,37 M71,71 L75,75 M33,75 L37,71 M71,37 L75,33" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</g><text x="324" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">hazavana</text><g transform="translate(400,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#D81B60"/>
+  <path d="M28,48 V60 M38,38 V70 M48,28 V80 M58,42 V66 M68,32 V76 M78,46 V62" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</g><text x="454" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">feo</text><g transform="translate(530,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#37474F"/>
+  <path d="M30,26 H78 V82 H30 Z M41,26 V82 M67,26 V82" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M33,32 h5 v6 h-5 Z M33,51 h5 v6 h-5 Z M33,70 h5 v6 h-5 Z M70,32 h5 v6 h-5 Z M70,51 h5 v6 h-5 Z M70,70 h5 v6 h-5 Z" fill="#FFFFFF"/>
+</g><text x="584" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">hetsika</text><g transform="translate(660,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#7CB342"/>
+  <path d="M60,22 L34,60 H52 L46,86 L74,46 H56 Z" fill="#FFFFFF"/>
+</g><text x="714" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">tselatra</text><g transform="translate(790,160)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#0D47A1"/>
+  <path d="M30,78 V30 L78,78 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40,66 V56 L50,66 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30,86 H78" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</g><text x="844" y="288" font-family="sans-serif" font-size="14" text-anchor="middle">drafitra</text></svg>

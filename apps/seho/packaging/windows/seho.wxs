@@ -30,7 +30,7 @@
     <Property Id="ARPPRODUCTICON" Value="SehoIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/raantss18/mahay/discussions" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="Seho" />

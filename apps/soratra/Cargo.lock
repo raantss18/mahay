@@ -1003,9 +1003,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "craft-winprint-gdi"
+name = "mahay-winprint-gdi"
 version = "0.1.0"
-source = "git+https://github.com/storytold/winprint.rs?rev=417ac3c4d14d3da5485a99c7d5ce8f05664ec312#417ac3c4d14d3da5485a99c7d5ce8f05664ec312"
+source = "git+https://github.com/raantss18/winprint.rs?rev=417ac3c4d14d3da5485a99c7d5ce8f05664ec312#417ac3c4d14d3da5485a99c7d5ce8f05664ec312"
 dependencies = [
  "windows-sys 0.61.2",
 ]
@@ -2820,7 +2820,7 @@ dependencies = [
 name = "mahay-print"
 version = "0.1.0"
 dependencies = [
- "craft-winprint-gdi",
+ "mahay-winprint-gdi",
  "miniz_oxide 0.8.9",
  "roxmltree",
  "tempfile",
@@ -6740,7 +6740,7 @@ dependencies = [
 [[package]]
 name = "winprint"
 version = "0.2.1"
-source = "git+https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9baf6b58937c401656634e42d33f00ddf49"
+source = "git+https://github.com/raantss18/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9baf6b58937c401656634e42d33f00ddf49"
 dependencies = [
  "flate2",
  "fmt-derive",

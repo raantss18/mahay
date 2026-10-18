@@ -66,7 +66,7 @@ pub fn parse_flatpak_info(text: &str) -> Option<String> {
 /// The package names a Mahay App may be installed under with `manager`. On Arch the AUR carries
 /// each app three ways: built from source (`sary`), the release binary (`sary-bin`)
 /// and the latest commit (`sary-git`). Debian and RPM packages may use either the short stem
-/// (`sary`) or the reverse-DNS bundle id (`ai.storyteller.sary`).
+/// (`sary`) or the reverse-DNS bundle id (`org.mahay.sary`).
 pub fn candidate_names(app: &MahayApp, manager: InstallSource) -> Vec<String> {
     match manager {
         InstallSource::Flatpak => vec![app.bundle_id()],
@@ -108,10 +108,10 @@ mod tests {
         assert_eq!(parse_rpm("tabilao|0.3.0\n"), [("tabilao".into(), "0.3.0".into())]);
         assert_eq!(parse_pacman("sary-bin 0.5.0-1\nlinux 6.11.1.arch1-1\n").len(), 2);
         assert_eq!(
-            parse_flatpak_list("ai.storyteller.soratra\t\nai.storyteller.drafitra\t0.3.0\n"),
-            [("ai.storyteller.soratra".into(), String::new()), ("ai.storyteller.drafitra".into(), "0.3.0".into())]
+            parse_flatpak_list("org.mahay.soratra\t\norg.mahay.drafitra\t0.3.0\n"),
+            [("org.mahay.soratra".into(), String::new()), ("org.mahay.drafitra".into(), "0.3.0".into())]
         );
-        let info = "\nSoratra - Word processor\n\n          ID: ai.storyteller.soratra\n     Version: 0.3.0\n      Branch: master\n";
+        let info = "\nSoratra - Word processor\n\n          ID: org.mahay.soratra\n     Version: 0.3.0\n      Branch: master\n";
         assert_eq!(parse_flatpak_info(info).as_deref(), Some("0.3.0"));
         assert_eq!(parse_flatpak_info("Version: \n"), None);
     }
@@ -121,16 +121,16 @@ mod tests {
         let photo = MahayApp::by_id("sary").unwrap();
         let deb_names = candidate_names(photo, InstallSource::Deb);
         assert!(deb_names.contains(&"sary".to_string()));
-        assert!(deb_names.contains(&"ai.storyteller.sary".to_string()));
+        assert!(deb_names.contains(&"org.mahay.sary".to_string()));
 
         let rpm_names = candidate_names(photo, InstallSource::Rpm);
         assert!(rpm_names.contains(&"sary".to_string()));
-        assert!(rpm_names.contains(&"ai.storyteller.sary".to_string()));
+        assert!(rpm_names.contains(&"org.mahay.sary".to_string()));
 
         let pacman_names = candidate_names(photo, InstallSource::Pacman);
         assert!(pacman_names.contains(&"sary".to_string()));
         assert!(pacman_names.contains(&"sary-bin".to_string()));
-        assert!(pacman_names.contains(&"ai.storyteller.sary".to_string()));
+        assert!(pacman_names.contains(&"org.mahay.sary".to_string()));
     }
 
     #[test]
@@ -151,7 +151,7 @@ mod tests {
     fn prefers_managers_in_order_and_reads_revisions() {
         let photo = MahayApp::by_id("sary").unwrap();
         let mut installed = pkgs(InstallSource::Deb, parse_dpkg("sary|installed|0.5.0-1\n"));
-        installed.extend(pkgs(InstallSource::Flatpak, parse_flatpak_list("ai.storyteller.sary\t0.4.0\n")));
+        installed.extend(pkgs(InstallSource::Flatpak, parse_flatpak_list("org.mahay.sary\t0.4.0\n")));
         let hit = find(photo, &installed, &[InstallSource::Deb, InstallSource::Flatpak]).unwrap();
         assert_eq!(hit.manager, InstallSource::Deb);
         // 0.5.0-1 is the 0.5.0 release, not a pre-release of it.

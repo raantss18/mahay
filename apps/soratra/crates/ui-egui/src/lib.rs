@@ -1594,7 +1594,7 @@ impl WordApp {
                 ));
             }
             "ui.discord" => {
-                self.canvas.open_url = Some("https://discord.gg/mahay".into());
+                self.canvas.open_url = Some("https://github.com/raantss18/mahay/discussions".into());
                 json!({})
             }
             "ui.caretAnimation" => {

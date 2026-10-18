@@ -184,6 +184,10 @@ public class MahayActivity extends GameActivity {
         });
     }
 
+    public String localeTag() {
+        return java.util.Locale.getDefault().toLanguageTag();
+    }
+
     public String clipboardText() {
         final String[] out = {null};
         final Object lock = new Object();

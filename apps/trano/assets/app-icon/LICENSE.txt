@@ -1,8 +1,9 @@
-ArtCraft Launcher app icon (every file in this directory)
+Mahay Trano app icon (every file in this directory).
 
-These files are the ArtCraft "A" mark (docs/brand/artcraft-mark-black.svg), rendered unmodified by
-packaging/icons.sh. The mark is a trademark of the ArtCraft Team. It is NOT open source and is NOT
-covered by ArtCraft Launcher's MIT or Apache-2.0 license.
+Original artwork for Mahay, generated from brand/svg/trano.svg by brand/generate.py and
+brand/apply.py. No third-party material. Licensed like the rest of Mahay, under either of
 
-Its terms are in docs/brand/LICENSE-brand.txt. In short: it may be used only unmodified, only as
-part of this repository and ArtCraft Launcher, and forks and modified versions must remove it.
+  * Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+  * MIT license (https://opensource.org/licenses/MIT)
+
+at your option. See docs/BRAND.md for how to use the Mahay marks.
