@@ -462,7 +462,7 @@ enum Verdict {
     Hung,
 }
 
-/// The first-frame watch. Tsipika gives up on an adapter once the first frame is
+/// The first-frame watch. Tsilo gives up on an adapter once the first frame is
 /// [`FIRST_FRAME_TIMEOUT`] late. That also fired on healthy starts: a window on a locked screen or
 /// another workspace whose compositor holds its frames back, or a large document composing on a
 /// slow machine. So here a late frame is only reported; the adapter counts as hanging only when the

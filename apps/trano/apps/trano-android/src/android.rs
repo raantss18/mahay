@@ -33,7 +33,7 @@ fn icon_of(id: &str) -> Option<egui::ImageSource<'static>> {
         icon!("soratra"),
         icon!("tabilao"),
         icon!("seho"),
-        icon!("tsipika"),
+        icon!("tsilo"),
         icon!("endrika"),
         icon!("pejy"),
         icon!("hazavana"),

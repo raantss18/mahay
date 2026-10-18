@@ -1,0 +1,27 @@
+[package]
+name = "tsilo-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo MCP server: JSON-RPC 2.0 over stdio, driving a running app or a headless session"
+
+[lints]
+workspace = true
+
+[dependencies]
+tsilo-engine = { workspace = true }
+tsilo-render = { workspace = true }
+tsilo-svg = { workspace = true }
+tsilo-format = { workspace = true }
+tsilo-tools = { workspace = true }
+tsilo-geom = { workspace = true }
+tsilo-doc = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+image = { workspace = true }
+
+[dev-dependencies]
+tsilo-testkit = { workspace = true }
+proptest = { workspace = true }
+socket2 = { workspace = true }

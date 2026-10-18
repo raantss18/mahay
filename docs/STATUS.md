@@ -33,7 +33,7 @@ verified; everything else says how far it was checked.
 ## Not built here
 
 - Windows and macOS: code paths untouched, no toolchains in this environment.
-- The eight later apps (Tsipika, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra):
+- The eight later apps (Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra):
   inventoried (`docs/APPS_INVENTORY.md`), not imported yet.
 - The ArtCraft AI app (Tauri + React), sync (phase C) and the model hub (phase D).
 
@@ -58,4 +58,4 @@ verified; everything else says how far it was checked.
 1. Run the arm64 APKs on a real Android phone and tablet; fix what breaks.
 2. Compact (phone) layouts for the ribbon apps.
 3. Shrink Taratasy and Soratra.
-4. Import the next apps (Tsipika, Endrika, Pejy).
+4. Import the next apps (Tsilo, Endrika, Pejy).

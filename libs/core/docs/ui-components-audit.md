@@ -1,6 +1,6 @@
 # Shared UI component audit
 
-The best first extraction is the embedded SVG icon catalog used by Sary, Tsipika and Taratasy. It has a small boundary, real consumers and little dependence on application behavior. The pilot puts that machinery in `mahay-ui::icons` and adopts it in all three apps. A second component, `mahay-ui::buttons::IconButton`, is adopted by Sary and Taratasy. The pane extension adds tab fitting and interaction in Sary/Tsipika, split geometry in Pejy/Sary, and split geometry plus resize handles in Hetsika/Tselatra.
+The best first extraction is the embedded SVG icon catalog used by Sary, Tsilo and Taratasy. It has a small boundary, real consumers and little dependence on application behavior. The pilot puts that machinery in `mahay-ui::icons` and adopts it in all three apps. A second component, `mahay-ui::buttons::IconButton`, is adopted by Sary and Taratasy. The pane extension adds tab fitting and interaction in Sary/Tsilo, split geometry in Pejy/Sary, and split geometry plus resize handles in Hetsika/Tselatra.
 
 The broader opportunity is a collection of reusable UI components. All twelve Rust Mahay apps use egui 0.36, but their themes, document models, numeric fields and docking behavior have evolved differently. Shared components should accept small style values and return interactions; each app should continue to choose its layout, command, localization and document semantics.
 
@@ -8,12 +8,12 @@ This covers item 3 of [mahay-libs issue 2](https://github.com/storytold/craft-li
 
 ## Scope and current libraries
 
-The inventory covers the twelve Rust editor apps. The current docking migration covers nine creative editors: Sary, Tsipika, Pejy, Hazavana, Hetsika, Tselatra, Feo, Drafitra and Taratasy. The Soratra, Tabilao and Seho pilots remain supporting evidence for earlier component reuse and are outside that migration. Service repositories, fonts, test corpora, archived predecessors and unrelated organization repositories are outside the UI scope.
+The inventory covers the twelve Rust editor apps. The current docking migration covers nine creative editors: Sary, Tsilo, Pejy, Hazavana, Hetsika, Tselatra, Feo, Drafitra and Taratasy. The Soratra, Tabilao and Seho pilots remain supporting evidence for earlier component reuse and are outside that migration. Service repositories, fonts, test corpora, archived predecessors and unrelated organization repositories are outside the UI scope.
 
 | App | Current UI and useful source | Behavior a shared component must preserve |
 | --- | --- | --- |
 | Sary | egui/eframe 0.36; [tokens][pc-theme], [widgets][pc-widgets], [SVG icons][pc-icons], [dock][pc-dock], [rulers][pc-rulers] | Five themes, raster units and resolution, foreground/background colors, grouped panels, tool cursors and command coalescing. |
-| Tsipika | egui/eframe 0.36; [tokens][vc-theme], [widgets][vc-widgets], [SVG icons][vc-icons], [dock][vc-dock], [canvas rulers][vc-canvas] | Four brightness levels, point-based units, icon rails and flyouts, named/spot/gradient swatches, tool-name aliases. |
+| Tsilo | egui/eframe 0.36; [tokens][vc-theme], [widgets][vc-widgets], [SVG icons][vc-icons], [dock][vc-dock], [canvas rulers][vc-canvas] | Four brightness levels, point-based units, icon rails and flyouts, named/spot/gradient swatches, tool-name aliases. |
 | Pejy | egui/eframe 0.36; [tokens][dc-theme], [widgets][dc-widgets], [painter icons][dc-icons], [dock][dc-dock], [canvas][dc-canvas] | Four brightness levels plus high contrast, page/spread coordinates, mixed measurements, numeric spinners, floating panels and RTL text. |
 | Taratasy | egui/eframe 0.36; [tokens][pdf-theme], [widgets][pdf-widgets], [SVG icons][pdf-icons], [dialogs][pdf-dialogs] | System/light/dark preferences, tool catalog, accessible button labels, PDF page coordinates and progress cancellation. |
 | Hazavana | egui/eframe 0.36; [tokens][lc-theme], [widgets][lc-widgets], [menus][lc-menu] | Develop control specifications, reset/fine-adjust gestures, catalog selection and label colors, preview-only explanations. |
@@ -25,7 +25,7 @@ The inventory covers the twelve Rust editor apps. The current docking migration 
 | Drafitra | egui/eframe 0.36; [tokens][cad-theme], [chrome][cad-chrome], [palettes][cad-palettes], [dialogs][cad-dialogs] | Drafting toggles, command-line state, model/layout tabs, CAD property types and multicolor painter icons. |
 | Feo | egui/eframe 0.36; [tokens][sc-theme], [widgets][sc-widgets], [toolbar][sc-toolbar], [edit window][sc-edit] | Edit/mix controls, nonlinear dB meters, pan/fader interaction, record state and selectable audio rulers. |
 
-The Rust applications keep egui at the frontend layer. The pilot follows that rule: only their UI crates depend on `mahay-ui`; engine, document and rendering crates do not. Their layer checkers reject a direct dependency on the shared crate below the UI layer: L6 in Sary/Tsipika/Pejy/Soratra/Tabilao/Seho/Feo, L5 in Hetsika/Tselatra/Hazavana/Drafitra and L7 in Taratasy. The crate depends on egui without enabling its default features. Apps retain their existing `egui_extras` SVG loader and renderer setup.
+The Rust applications keep egui at the frontend layer. The pilot follows that rule: only their UI crates depend on `mahay-ui`; engine, document and rendering crates do not. Their layer checkers reject a direct dependency on the shared crate below the UI layer: L6 in Sary/Tsilo/Pejy/Soratra/Tabilao/Seho/Feo, L5 in Hetsika/Tselatra/Hazavana/Drafitra and L7 in Taratasy. The crate depends on egui without enabling its default features. Apps retain their existing `egui_extras` SVG loader and renderer setup.
 
 ## Extraction priorities
 
@@ -33,23 +33,23 @@ These are proposed boundaries and adoption pairs, not a commitment to build a fr
 
 | Order | Component | Type of sharing | Initial consumers | Reference and reason |
 | --- | --- | --- | --- | --- |
-| 1 | Embedded SVG catalog | Extract with two small style policies | Sary, Tsipika, Taratasy | Sary's owned `Arc` bytes avoid leaked allocations; the existing loaders already have almost the same responsibilities. Implemented in the pilot. |
+| 1 | Embedded SVG catalog | Extract with two small style policies | Sary, Tsilo, Taratasy | Sary's owned `Arc` bytes avoid leaked allocations; the existing loaders already have almost the same responsibilities. Implemented in the pilot. |
 | 2 | Small controls and component styles | Share components | Taratasy and Sary for buttons; Tabilao and Seho for ribbon pieces | Taratasy exposes accessibility metadata on its painted controls. Keep the caller's label, geometry, colors, enabled state and command handling. Icon buttons and ribbon-tab interaction are implemented; split buttons and galleries remain proposed. |
 | 3 | Numeric editing state | Consolidate selected behavior | Hetsika and Tselatra, then Hazavana | Tselatra adds finite-value checks and panel-local Tab behavior; Hazavana has explicit cancel/reset and step semantics. These are useful references, not interchangeable implementations. |
-| 4 | Swatch grid and color-field painting | Share components | Soratra/Tabilao/Seho for grids; Sary/Tsipika for fields | The visual primitives overlap, while the values returned and color-management requirements differ. |
-| 5 | Menu viewport and navigation helpers | Consolidate selected behavior | Sary, Hazavana, Tsipika | Scrolling, overflow and focus are reusable. Menu catalogs, native menus, shortcut resolution and dispatch remain app-owned. |
-| 6 | Ruler tick layout and painting | Standardize a primitive API | Tsipika and Pejy, then Sary/Soratra/Seho | Share bounded tick placement and painting with caller-supplied labels and coordinates. Keep units, guide commands and paragraph markers outside. |
-| 7 | Pane controls | Share geometry and interactions; keep application policy in apps | Sary, Tsipika, Pejy, Hetsika, Tselatra | Tabs, bounded splits and resize handles are implemented. The subsequent optional [docking model and renderer](ui-docking.md) have separate consumer migration and acceptance requirements. |
+| 4 | Swatch grid and color-field painting | Share components | Soratra/Tabilao/Seho for grids; Sary/Tsilo for fields | The visual primitives overlap, while the values returned and color-management requirements differ. |
+| 5 | Menu viewport and navigation helpers | Consolidate selected behavior | Sary, Hazavana, Tsilo | Scrolling, overflow and focus are reusable. Menu catalogs, native menus, shortcut resolution and dispatch remain app-owned. |
+| 6 | Ruler tick layout and painting | Standardize a primitive API | Tsilo and Pejy, then Sary/Soratra/Seho | Share bounded tick placement and painting with caller-supplied labels and coordinates. Keep units, guide commands and paragraph markers outside. |
+| 7 | Pane controls | Share geometry and interactions; keep application policy in apps | Sary, Tsilo, Pejy, Hetsika, Tselatra | Tabs, bounded splits and resize handles are implemented. The subsequent optional [docking model and renderer](ui-docking.md) have separate consumer migration and acceptance requirements. |
 
-The [theme comparison](theme-infrastructure.md) verifies all eight principal theme modules and extracts their first common mechanism: `theme::WidgetPalette`, used by Tsipika, Pejy and Hazavana to style egui widget states while retaining their full palettes.
+The [theme comparison](theme-infrastructure.md) verifies all eight principal theme modules and extracts their first common mechanism: `theme::WidgetPalette`, used by Tsilo, Pejy and Hazavana to style egui widget states while retaining their full palettes.
 
 Theme roles belong beside the components that consume them. `IconButtonStyle` contains fills, borders, icon and focus colors for the implemented button. That does not require all apps to replace their `Tokens` structs or serialize the same theme enum. Panels, inspectors and dialogs can then reuse those controls while retaining their application-specific contents.
 
 ## Icons and the first extraction
 
-Sary embeds 118 SVGs, Tsipika 259, and Taratasy 184 through their `icon_data.rs` catalogs. Sary and Taratasy have identical `white_icons` preparation functions at these revisions. Tsipika uses the same replacement approach but leaks each prepared buffer to obtain a static slice. The pilot takes the owned-byte approach from Sary.
+Sary embeds 118 SVGs, Tsilo 259, and Taratasy 184 through their `icon_data.rs` catalogs. Sary and Taratasy have identical `white_icons` preparation functions at these revisions. Tsilo uses the same replacement approach but leaks each prepared buffer to obtain a static slice. The pilot takes the owned-byte approach from Sary.
 
-| Policy | Sary | Tsipika | Taratasy |
+| Policy | Sary | Tsilo | Taratasy |
 | --- | --- | --- | --- |
 | `currentColor` replacement | `#ffffff` | `white` | `#ffffff` |
 | Exact two-unit stroke replacement | `1.75` | `1.6` | `1.75` |
@@ -80,7 +80,7 @@ Inspectors remain app-owned. A layer inspector, a CAD property palette, a spread
 
 ## Numeric controls
 
-[Tsipika's fields][vc-widgets] parse document units and expressions, scrub labels, select text on focus and handle wheel/key steps with modifier policies. [Pejy's `NumField`][dc-widgets] carries measure/number kinds, optional mixed values and spinner controls. Both need their own unit conversion and commit rules.
+[Tsilo's fields][vc-widgets] parse document units and expressions, scrub labels, select text on focus and handle wheel/key steps with modifier policies. [Pejy's `NumField`][dc-widgets] carries measure/number kinds, optional mixed values and spinner controls. Both need their own unit conversion and commit rules.
 
 [Hetsika's `hot_number`][fc-widgets] and [Tselatra's `hot_number_at`][ec-widgets] are a more focused comparison. Tselatra supports panel-local Tab order, decimal commas, cancellation and finite-value validation, and returns drag-completion information. Hetsika's simpler helper does not expose the same completion contract. [Hazavana's slider][lc-widgets] uses `ControlSpec`, stepped/clamped parsing, Shift for fine adjustment and double-click reset. Shift multiplies the film/effect scrub step instead. Sharing those gestures without a policy would change behavior.
 
@@ -90,13 +90,13 @@ A useful shared layer would manage the edit buffer, focus transitions and commit
 
 Soratra's [color grid][wc-widgets] returns a hex string from RGB colors. Tabilao's [palette][gc-widgets] applies the spreadsheet model's tint function and also returns hex strings. Seho's [grid][deck-widgets] returns `ColorRef`, preserving theme-slot references; it distinguishes no selection from an explicit no-color result. A shared grid should receive already-resolved display colors plus opaque IDs and return an ID. It must not flatten Seho's theme reference into RGB or impose one tint formula on the three apps.
 
-Sary's [picker][pc-picker] has component fields, Lab/CMYK/hex inputs, gamut/web warnings and canvas sampling, with foreground/background and command-backed commit behavior. Tsipika's [picker][vc-picker] has a related field/slider model and feeds its own paint and swatch types. These are good sources for a shared 2D color-field painter and hit testing. Color conversions, profile choice, original/new color, sampling and dialog acceptance should remain injected or app-owned. An sRGB preview chip is not a document color model.
+Sary's [picker][pc-picker] has component fields, Lab/CMYK/hex inputs, gamut/web warnings and canvas sampling, with foreground/background and command-backed commit behavior. Tsilo's [picker][vc-picker] has a related field/slider model and feeds its own paint and swatch types. These are good sources for a shared 2D color-field painter and hit testing. Color conversions, profile choice, original/new color, sampling and dialog acceptance should remain injected or app-owned. An sRGB preview chip is not a document color model.
 
 egui's built-in color widgets are worth using for simple sRGB controls. They do not replace these complete document-aware dialogs. Before sharing a custom field, test hue retention at zero saturation, field/slider round trips, out-of-range input, alpha previews and the app's existing color-profile behavior.
 
 ## Menus and dialogs
 
-[Sary's menu navigation][pc-menu-nav] has scrolling and keyboard behavior with a [dedicated test module][pc-menu-tests]; `widgets::menu_scroll` also serves context menus. Hazavana separates a [menu level][lc-menu-level] from its menu definitions. Tsipika's [menus][vc-menus] add dynamic labels, command availability, swatches, fonts and native-menu integration. Those are different layers.
+[Sary's menu navigation][pc-menu-nav] has scrolling and keyboard behavior with a [dedicated test module][pc-menu-tests]; `widgets::menu_scroll` also serves context menus. Hazavana separates a [menu level][lc-menu-level] from its menu definitions. Tsilo's [menus][vc-menus] add dynamic labels, command availability, swatches, fonts and native-menu integration. Those are different layers.
 
 Share viewport-constrained popup geometry, scrolling, hover delays and focus/navigation state before sharing a menu tree. Inputs should be display labels, stable IDs, checked/enabled state and callbacks or returned selections. The app resolves shortcuts, localizes labels and runs commands. Native menu services belong to issue 2's platform workstream, so this audit does not propose a second OS integration abstraction.
 
@@ -104,15 +104,15 @@ Dialog shells need explicit modality, Escape/default-button policy, focus restor
 
 ## Rulers and docking
 
-[Sary's rulers][pc-rulers] use pixels and document resolution, have unit-menu/guide-drag tests and normalize flipped ranges. [Tsipika][vc-canvas] and [Pejy][dc-canvas] use document units and their own tick/label painting; Pejy also has page/spread origins and stacked vertical labels. [Soratra][wc-canvas] adds paragraph indent and tab-stop interaction. [Seho][deck-canvas] paints slide rulers. Feo's [ruler area][sc-edit] is based on audio time formats. A generic list of ticks can serve these consumers; a shared unit enum or guide controller cannot yet.
+[Sary's rulers][pc-rulers] use pixels and document resolution, have unit-menu/guide-drag tests and normalize flipped ranges. [Tsilo][vc-canvas] and [Pejy][dc-canvas] use document units and their own tick/label painting; Pejy also has page/spread origins and stacked vertical labels. [Soratra][wc-canvas] adds paragraph indent and tab-stop interaction. [Seho][deck-canvas] paints slide rulers. Feo's [ruler area][sc-edit] is based on audio time formats. A generic list of ticks can serve these consumers; a shared unit enum or guide controller cannot yet.
 
 Start with an axis range, screen transform, tick budget and caller-produced labels. Tick generation must terminate for tiny zoom, non-finite values and enormous ranges. Guides, indent markers, unit menus and time conversion stay in adapters. Reuse the existing ruler tests as characterization and add bounded-work tests before extracting loops.
 
-Hetsika's [dock tree][fc-dock] has splits, fixed/relative sizes and tab groups. Tselatra's [dock tree][ec-dock] adds stacks, floating layouts and additional panel/viewer identities. Sary's [dock][pc-dock] allocates vertical groups with preferred/minimum/fill heights and has [interaction/persistence tests][pc-dock-tests]. Tsipika and Pejy also have icon rails and flyouts. These are related capabilities, not a single interchangeable serialized model.
+Hetsika's [dock tree][fc-dock] has splits, fixed/relative sizes and tab groups. Tselatra's [dock tree][ec-dock] adds stacks, floating layouts and additional panel/viewer identities. Sary's [dock][pc-dock] allocates vertical groups with preferred/minimum/fill heights and has [interaction/persistence tests][pc-dock-tests]. Tsilo and Pejy also have icon rails and flyouts. These are related capabilities, not a single interchangeable serialized model.
 
 The pane extraction compared [egui_dock 0.21.1](https://docs.rs/egui_dock/0.21.1/egui_dock/) and [egui_tiles 0.17.1](https://docs.rs/egui_tiles/0.17.1/egui_tiles/) at their egui 0.36 APIs. `egui_dock` offers binary fraction splits and floating egui windows within one OS window. `egui_tiles` offers tab, linear and grid containers with relative shares. Neither directly represents Tselatra's accordion stack plus Hetsika/Tselatra's fixed-first/fixed-second sizing. Migrating either would require adapters for saved layouts, panel IDs and commands, as well as bounds on untrusted layout traversal. This source comparison does not establish runtime acceptance of either library.
 
-The initial extraction kept a small boundary: `mahay-ui::tabs` fits labels and registers accessible tab interactions; `mahay-ui::layout` computes one bounded split and reports resize movement. At that stage, apps retained dock trees, panel contents, stacks, floating state and serialization. Sary and Tsipika retained their existing overflow/drag policies in adapters; Tsipika gained fitted tabs and an overflow menu. Hetsika and Tselatra retained fixed and relative sizing, with focusable resize handles. Pejy and Sary reused geometry for their existing split document views.
+The initial extraction kept a small boundary: `mahay-ui::tabs` fits labels and registers accessible tab interactions; `mahay-ui::layout` computes one bounded split and reports resize movement. At that stage, apps retained dock trees, panel contents, stacks, floating state and serialization. Sary and Tsilo retained their existing overflow/drag policies in adapters; Tsilo gained fitted tabs and an overflow menu. Hetsika and Tselatra retained fixed and relative sizing, with focusable resize handles. Pejy and Sary reused geometry for their existing split document views.
 
 The subsequent optional `mahay-ui::docking` module adds validated layout transactions, saved locations and an optional customizable renderer. Its [contract and host boundary](ui-docking.md) supersede the primitive-only boundary for consumers that adopt it. Panel registries, document state, commands, application menus and native window ownership remain in each app. Primitive-adapter checks do not establish acceptance of a later docking migration.
 
@@ -125,7 +125,7 @@ The shared geometry relaxes minima in tiny areas and rejects non-finite or inver
 | App | Shared mechanisms | Preserved application responsibilities |
 | --- | --- | --- |
 | Sary | SVG catalogs, icon buttons, tabs, split geometry | Five themes, Classic bevels, dock groups, canvas state and commands |
-| Tsipika | SVG catalogs, tabs, widget-state theme application | Theme presets, dock/floating models and tool aliases |
+| Tsilo | SVG catalogs, tabs, widget-state theme application | Theme presets, dock/floating models and tool aliases |
 | Pejy | Split geometry, widget-state theme application | High Contrast, input exceptions, taskbars and document focus |
 | Taratasy | SVG catalogs, icon buttons, document/Combine tab interaction | Horizontal scrolling, stable document IDs, dirty/RTL labels and close requests |
 | Hetsika | Split geometry and resize handles | Fixed/relative pane sizing, workspace state and timeline focus |
@@ -182,7 +182,7 @@ Snapshot date: 2026-10-09. The source-audit links throughout this report resolve
 | `raantss18/taratasy` | [`f626db25cca2`](https://github.com/raantss18/mahay/tree/f626db25cca2c89f8fa3f7e30d22bf59faea65ec) |
 | `raantss18/sary` | [`e7a83ca342cd`](https://github.com/raantss18/mahay/tree/e7a83ca342cdff568254f85f442b9cc8afb08066) |
 | `raantss18/feo` | [`eac0edd896cd`](https://github.com/raantss18/mahay/tree/eac0edd896cd6bdf27c0cdd0f9f9158c8956248a) |
-| `raantss18/tsipika` | [`825d4fdb8b52`](https://github.com/raantss18/mahay/tree/825d4fdb8b527c597855d273fb4bcc1971855b6a) |
+| `raantss18/tsilo` | [`825d4fdb8b52`](https://github.com/raantss18/mahay/tree/825d4fdb8b527c597855d273fb4bcc1971855b6a) |
 | `raantss18/soratra` | [`d7d9702bda1f`](https://github.com/raantss18/mahay/tree/d7d9702bda1fe626952024dc37fd2624323dad0f) |
 
 [pc-theme]: https://github.com/raantss18/mahay/blob/e7a83ca342cdff568254f85f442b9cc8afb08066/crates/ui-egui/src/theme.rs

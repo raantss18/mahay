@@ -20,7 +20,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// Every Mahay App: (id = folder name, display name). Keep in step with `catalog::SUITE`.
 const APPS: &[(&str, &str)] = &[
     ("sary", "Sary"),
-    ("tsipika", "Tsipika"),
+    ("tsilo", "Tsilo"),
     ("hetsika", "Hetsika"),
     ("hazavana", "Hazavana"),
     ("taratasy", "Taratasy"),

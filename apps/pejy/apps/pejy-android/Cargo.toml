@@ -1,0 +1,23 @@
+[package]
+name = "pejy-android"
+description = "Pejy on Android (phone and tablet): the eframe app inside MahayActivity."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+# No `[lints] workspace = true`: `android_main` must be `#[unsafe(no_mangle)]`.
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[target.'cfg(target_os = "android")'.dependencies]
+pejy-engine = { workspace = true }
+pejy-ui-egui = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "android-game-activity"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }

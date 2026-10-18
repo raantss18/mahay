@@ -1,6 +1,6 @@
 # Soratra — instructions for agents
 
-Soratra is a clean-room, open-source, Rust-native word processor targeting Microsoft Word parity — and going further on speed, openness and agent control. It runs natively on macOS, Windows, Linux and BSD, and on the web via WASM. Siblings with the same conventions: `../sary` (Photoshop), `../tsipika` (Illustrator), `../hetsika` (Premiere), `../hazavana` (Lightroom), `../taratasy` (Acrobat), `../tselatra` (After Effects), `../pejy` (InDesign). Shared rules and learnings: [`raantss18/mahay-rules`](https://github.com/raantss18/mahay-rules) (`../../mahay-rules`) — read its `AGENTS.md`.
+Soratra is a clean-room, open-source, Rust-native word processor targeting Microsoft Word parity — and going further on speed, openness and agent control. It runs natively on macOS, Windows, Linux and BSD, and on the web via WASM. Siblings with the same conventions: `../sary` (Photoshop), `../tsilo` (Illustrator), `../hetsika` (Premiere), `../hazavana` (Lightroom), `../taratasy` (Acrobat), `../tselatra` (After Effects), `../pejy` (InDesign). Shared rules and learnings: [`raantss18/mahay-rules`](https://github.com/raantss18/mahay-rules) (`../../mahay-rules`) — read its `AGENTS.md`.
 
 ## Start every session here
 1. Read `plan/STATUS.md` (current milestone, next task), then the task in `plan/execution-plan.md` and the relevant `plan/architecture.md` section. `plan/` is gitignored (local only); if it's missing, start from `ROADMAP.md`, `docs/gaps.md` and `docs/roadmap.md` (Current focus).

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata (software centres, Flathub). Template: package.sh and the Flatpak
+     manifest substitute @VERSION@ and @DATE@ from Cargo.toml and the build date. -->
+<component type="desktop-application">
+  <id>org.mahay.tsilo</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>Tsilo</name>
+  <summary>Draw and edit vector illustrations, SVG and PDF</summary>
+  <developer id="ai.storyteller">
+    <name>Learning Machines LLC</name>
+  </developer>
+  <description>
+    <p>
+      Tsilo is an open-source vector illustration app. Draw with pen, shape and brush tools,
+      style art with fills, strokes, gradients and live effects, lay out artboards and type, and
+      open and save SVG and PDF.
+    </p>
+  </description>
+  <launchable type="desktop-id">org.mahay.tsilo.desktop</launchable>
+  <icon type="stock">org.mahay.tsilo</icon>
+  <!-- Only url types known to appstream 0.15 (Ubuntu 22.04, where CI validates): no vcs-browser. -->
+  <url type="homepage">https://github.com/raantss18/mahay</url>
+  <url type="bugtracker">https://github.com/raantss18/mahay/issues</url>
+  <url type="help">https://github.com/raantss18/mahay</url>
+  <url type="contact">https://github.com/raantss18/mahay/discussions</url>
+  <categories>
+    <category>Graphics</category>
+    <category>2DGraphics</category>
+    <category>VectorGraphics</category>
+  </categories>
+  <keywords>
+    <keyword>vector</keyword>
+    <keyword>illustration</keyword>
+    <keyword>svg</keyword>
+    <keyword>pdf</keyword>
+    <keyword>drawing</keyword>
+    <keyword>bezier</keyword>
+  </keywords>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Editing the Neon Drive poster with a live glow effect in the Appearance panel</caption>
+      <image>https://raw.githubusercontent.com/raantss18/tsilo/main/docs/images/shot-1-neon.png</image>
+    </screenshot>
+  </screenshots>
+  <branding>
+    <color type="primary" scheme_preference="light">#9fd0ff</color>
+    <color type="primary" scheme_preference="dark">#1f64ba</color>
+  </branding>
+  <requires>
+    <display_length compare="ge">760</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>tablet</control>
+  </supports>
+  <provides>
+    <binary>tsilo</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

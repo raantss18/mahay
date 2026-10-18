@@ -24,7 +24,7 @@ pub fn meta(app: &MahayApp) -> (&'static str, Option<&'static str>) {
         "hazavana" => ("Graphics;2DGraphics;RasterGraphics;Photography;", None),
         "hetsika" => ("AudioVideo;Video;AudioVideoEditing;", None),
         "pejy" => ("Graphics;Publishing;", None),
-        "tsipika" => ("Graphics;2DGraphics;VectorGraphics;", None),
+        "tsilo" => ("Graphics;2DGraphics;VectorGraphics;", None),
         "tselatra" => ("AudioVideo;Video;Graphics;2DGraphics;", None),
         "soratra" => ("Office;WordProcessor;", None),
         "seho" => ("Office;Presentation;", None),

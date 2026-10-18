@@ -1,6 +1,6 @@
 # Hetsika — instructions for agents
 
-Hetsika is a clean-room, open-source, pure-Rust non-linear video editor targeting Adobe Premiere Pro parity (and beyond). Native on macOS, Windows, Linux; web via WASM. Sibling of `../sary` (Photoshop), `../taratasy` (Acrobat) and `../tsipika` (Illustrator; formerly DrawCraft), with the same conventions.
+Hetsika is a clean-room, open-source, pure-Rust non-linear video editor targeting Adobe Premiere Pro parity (and beyond). Native on macOS, Windows, Linux; web via WASM. Sibling of `../sary` (Photoshop), `../taratasy` (Acrobat) and `../tsilo` (Illustrator; formerly DrawCraft), with the same conventions.
 
 ## Start every session here
 `plan/` is maintainer-local (gitignored, not in the repo). Each step names the public equivalent to use if you don't have it.

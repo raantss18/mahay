@@ -52,37 +52,37 @@
       "path": "crates/ui-egui/src/dialogs.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/icons.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/dock.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/canvas.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/dialogs/color_picker.rs"
     },
     {
-      "repository": "raantss18/tsipika",
+      "repository": "raantss18/tsilo",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/menus.rs"
     },

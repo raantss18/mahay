@@ -3,7 +3,7 @@
 Endrika is a clean-room, open-source, pure-Rust (egui) reimplementation of the Figma design workflow:
 interface design, auto layout, components and variants, styles and variables, prototyping and
 inspection. It runs natively on macOS, Windows, Linux and FreeBSD, and in the browser via WASM.
-Siblings: `../tsipika` (Illustrator-class), `../sary` (Photoshop-class), `../pejy`
+Siblings: `../tsilo` (Illustrator-class), `../sary` (Photoshop-class), `../pejy`
 (InDesign-class) and the other Mahay apps; same conventions.
 
 Standards and learnings shared across the crafting apps live in `../../mahay-rules` (checked out

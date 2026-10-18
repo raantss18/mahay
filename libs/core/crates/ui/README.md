@@ -5,7 +5,7 @@ embedded SVG catalogs; `buttons` paints accessible icon buttons; `tabs` handles 
 interaction; `layout` provides toolbar fitting, split geometry and resize handles; `theme` shares widget-state styling.
 `docking` supplies transactional panel moves and an optional docking surface.
 `printing` supplies printer/job controls and asynchronous feedback used by Soratra and Tabilao.
-The current delivery covers nine creative apps (Pejy, Tsipika, Sary, Hetsika, Tselatra, Drafitra, PDFCraft, Hazavana and Feo); prior basic and office adapters are separate. The [suite audit](../../docs/ui-components-audit.md#adoption-and-acceptance)
+The current delivery covers nine creative apps (Pejy, Tsilo, Sary, Hetsika, Tselatra, Drafitra, PDFCraft, Hazavana and Feo); prior basic and office adapters are separate. The [suite audit](../../docs/ui-components-audit.md#adoption-and-acceptance)
 records their scope and acceptance limits. Assets, complete themes, localization and command handling
 remain in each application. No icons, fonts or application engines are bundled.
 
@@ -38,7 +38,7 @@ It sets tint and size on the returned image.
 The library does not install loaders or an egui theme.
 
 The catalog is immutable. SVGs are prepared once and held in `Arc<[u8]>`; lookups share those bytes.
-The fallback uses the requested name in its URI, matching Sary and Tsipika. Missing both
+The fallback uses the requested name in its URI, matching Sary and Tsilo. Missing both
 the requested name and fallback produces empty bytes for the loader to report as an error, without
 indexed lookups or a panic. `contains` and `canonical_name` inspect only actual catalog entries. Taratasy resolves an unknown
 name to `square` before calling `source`, preserving its fallback cache key.
@@ -192,7 +192,7 @@ into silently missing commands. See the API documentation for the accepted numer
 ## Theme mechanisms
 
 `theme::WidgetPalette` applies background colors to egui's five widget states, with a supplied
-corner radius and foreground stroke. Tsipika, Pejy and Hazavana construct it from their existing
+corner radius and foreground stroke. Tsilo, Pejy and Hazavana construct it from their existing
 local tokens. It updates each state's strong/weak background fill, radius and foreground; borders,
 expansion and all other visual settings are retained.
 

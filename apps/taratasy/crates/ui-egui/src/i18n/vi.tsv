@@ -1,7 +1,7 @@
 # Vietnamese (vi) catalog. Columns, separated by a TAB: context <TAB> source <TAB> translation
 #
 # Clean-room translations from Taratasy's English UI labels. Reviewed by a native
-# Vietnamese-speaking contributor for the original catalog; later additions are marked below. Sary/Tsipika Vietnamese catalogs were used only as
+# Vietnamese-speaking contributor for the original catalog; later additions are marked below. Sary/Tsilo Vietnamese catalogs were used only as
 # translation memory when the English source and its meaning in context matched. Product and
 # format names (Taratasy, PDF, PDF/A, OCR, XFA, Word…) remain names where appropriate.
 # Plural rule: `plural_none` — every @plural row lists exactly one form.

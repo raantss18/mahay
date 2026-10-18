@@ -1,0 +1,15 @@
+Tsilo portable mode
+
+While this file sits next to tsilo.exe, Tsilo keeps its preferences, swatch and
+graphic style libraries, added fonts, crash-recovery files and logs in the TsiloData folder
+beside it, and writes nothing to %APPDATA%. Copy the whole folder to move Tsilo with its
+settings. The first time TsiloData is created, any settings already in
+%APPDATA%\Tsilo are copied into it; the originals are left where they were.
+
+Keep this folder somewhere only you can write to: whoever can write here decides your settings,
+including the plug-ins and fonts folders Tsilo loads from, and the Data Recovery copies of
+your unsaved documents are kept here too.
+
+Delete this file to use the normal per-user settings folder (%APPDATA%\Tsilo) instead.
+If TsiloData can't be written (for example on a read-only drive), Tsilo logs a
+warning and uses %APPDATA%\Tsilo instead.

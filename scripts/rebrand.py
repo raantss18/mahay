@@ -19,7 +19,7 @@ APPS = {
     "wordcraft": "soratra",
     "gridcraft": "tabilao",
     "deckcraft": "seho",
-    "vectorcraft": "tsipika",
+    "vectorcraft": "tsilo",
     "figcraft": "endrika",
     "designcraft": "pejy",
     "lightcraft": "hazavana",
@@ -31,7 +31,7 @@ APPS = {
 }
 DISPLAY = {
     "PhotoCraft": "Sary", "PdfCraft": "Taratasy", "WordCraft": "Soratra",
-    "GridCraft": "Tabilao", "DeckCraft": "Seho", "VectorCraft": "Tsipika",
+    "GridCraft": "Tabilao", "DeckCraft": "Seho", "VectorCraft": "Tsilo",
     "FigCraft": "Endrika", "DesignCraft": "Pejy", "LightCraft": "Hazavana",
     "SoundCraft": "Feo", "FilmCraft": "Hetsika", "EffectCraft": "Tselatra",
     "CADCraft": "Drafitra", "CadCraft": "Drafitra", "AniCraft": "Sarimiaina",

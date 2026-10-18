@@ -83,7 +83,7 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
   AMD OpenGL driver crash on Windows (#167), launch failures (#273, #220, #192, #166), blank or
   frozen canvas after graphics loss (#90).
 - **Evidence:** a backend fallback landed 2026-10-10 (#297: DirectX 12 on Windows, `gpu.json`
-  skip list); then Tsipika's adapter choice (the GPU that drives the display), restart on the
+  skip list); then Tsilo's adapter choice (the GPU that drives the display), restart on the
   next adapter or backend when one fails or hangs at start-up, the indirect-call check off (the
   first Metal error of #334) and a logged reason when the app stops (#273). Not yet confirmed by
   the reporters. Still open for #334: wgpu asks an old macOS's Metal compiler for a language
@@ -98,7 +98,7 @@ Kind: **F** feature · **U** UI/UX · **T** typography · **FF** file format · 
   Adobe Fonts and font managers activate are listed (#261, #327, 2026-10-11); not yet confirmed
   by the reporters.
 - **Impact:** documents set in the client's fonts render in Source Sans 3: wrong everywhere.
-- **Estimate:** 10–20 h (Tsipika has a port, #261).
+- **Estimate:** 10–20 h (Tsilo has a port, #261).
 - **Doc:** [typography-parity.md](typography-parity.md)
 
 ### 7. No CI runs the tests on pull requests (S)

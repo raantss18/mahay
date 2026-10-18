@@ -75,7 +75,7 @@ const fn app(
 /// The Mahay App Suite, in display order matching mahay.com:
 pub const SUITE: [MahayApp; 13] = [
     app("sary", "Sary", "Image editing", [[0x2f, 0x7b, 0xf5], [0x1a, 0x5b, 0xc4], [0x7f, 0xb0, 0xff]], "raantss18/mahay"),
-    app("tsipika", "Tsipika", "Vector illustration", [[0xe8, 0x57, 0x3f], [0xb8, 0x3a, 0x24], [0xff, 0x8a, 0x70]], "raantss18/mahay"),
+    app("tsilo", "Tsilo", "Vector illustration", [[0xe8, 0x57, 0x3f], [0xb8, 0x3a, 0x24], [0xff, 0x8a, 0x70]], "raantss18/mahay"),
     app(
         "hetsika",
         "Hetsika",

@@ -89,7 +89,7 @@ files there too.
 | Hetsika | `~/.local/share/hetsika/preferences.json`; atomic | Import from the data folder; settings move to the config folder |
 | Tabilao | `~/.config/tabilao/prefs.json` + `ui.json`; saves on exit, ignores failures | Same as Pejy |
 | Hazavana | global `ui.json`; library `prefs.json`, `presets.json`, `view.json`; atomic, backups, overwrite protection | Global settings via `open`; library settings via `open_at(library_dir)` |
-| Tsipika | `~/.config/tsipika/ui.json` with engine preferences inside; atomic, ignores failures | Split engine preferences out into `config.toml`; keep UI state in `ui.json` |
+| Tsilo | `~/.config/tsilo/ui.json` with engine preferences inside; atomic, ignores failures | Split engine preferences out into `config.toml`; keep UI state in `ui.json` |
 | Mahay Trano | `~/.local/share/org.mahay.trano/app.ron` (eframe) | Import from `app.ron`; needs its own tick timer while in the tray |
 
 Adoption order: Sary and Pejy first (closest to and furthest from the target

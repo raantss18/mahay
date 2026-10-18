@@ -1,6 +1,6 @@
 # Drafitra — instructions for agents
 
-Drafitra is a clean-room, open-source, pure-Rust computer-aided design and drafting application targeting Autodesk AutoCAD parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows, Linux and FreeBSD, and on the web via WASM. Siblings with the same conventions: `../sary` (Photoshop-class), `../tsipika` (Illustrator), `../hetsika` (Premiere), `../hazavana` (Lightroom), `../taratasy` (Acrobat), `../tselatra` (After Effects), `../pejy` (InDesign).
+Drafitra is a clean-room, open-source, pure-Rust computer-aided design and drafting application targeting Autodesk AutoCAD parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows, Linux and FreeBSD, and on the web via WASM. Siblings with the same conventions: `../sary` (Photoshop-class), `../tsilo` (Illustrator), `../hetsika` (Premiere), `../hazavana` (Lightroom), `../taratasy` (Acrobat), `../tselatra` (After Effects), `../pejy` (InDesign).
 
 Standards and learnings shared across the crafting apps live in `../../mahay-rules` (or `raantss18/mahay-rules`). Read its `AGENTS.md` at the start of a session, follow its standards, and contribute reusable learnings back there. Never code: repos don't share code.
 

@@ -118,7 +118,7 @@ PowerPoint is taken out of the areas and charged once, as a discount.
 |---|---:|---|
 | Interaction fidelity | ×0.92 | No native macOS menu bar, thinner Format Shape pane, Tab ends text entry (#78), font faces (#69), window chrome (#71) |
 | Stability on real machines | ×0.92 | Startup crashes on some Windows GPUs (#40, #59); Close discards edits (#60, fix in PR #75); video stalls in the editor on Ubuntu (#91); arrows reported dead in the show on Linux Mint (#17) |
-| File exchange with PowerPoint users | ×0.88 | Harsher than Tsipika's ×0.92 because swapping `.pptx` is daily work for this user: never tested on real decks, EMF pictures blank, icons from PowerPoint don't come through (#56), comment threads, media options and rewind lost on save (#70, #74, #77) |
+| File exchange with PowerPoint users | ×0.88 | Harsher than Tsilo's ×0.92 because swapping `.pptx` is daily work for this user: never tested on real decks, EMF pictures blank, icons from PowerPoint don't come through (#56), comment threads, media options and rewind lost on save (#70, #74, #77) |
 
 71.3 × 0.92 × 0.92 × 0.88 = **53.1 → ~53%**. This is about the same as the full number, unlike
 apps where mainstream comes out well above it. The dimensions mainstream leaves out

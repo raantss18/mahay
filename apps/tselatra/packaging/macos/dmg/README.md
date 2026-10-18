@@ -41,4 +41,4 @@ The DMG file name (`tselatra-<version>-macos-<arch>.dmg`) still carries the vers
   alias holds only the volume name and `/.background/background.tiff`, nothing from the machine that
   ran it. The window is 660 × 432 with Finder's 32 pt title bar; the content area is 660 × 400.
 
-This follows Tsipika's `packaging/macos/dmg/` (raantss18/tsipika#493).
+This follows Tsilo's `packaging/macos/dmg/` (raantss18/tsilo#493).

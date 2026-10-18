@@ -1259,7 +1259,7 @@ impl Exporter<'_> {
 
     /// A placed PDF as krilla embeds it. krilla refuses a PDF newer than the file it writes (the
     /// export fails at the end with `VersionMismatch(Pdf17)`), and PDF/X-4 is PDF 1.6 while
-    /// Tsipika and most tools write 1.7. PDF 1.7 changed nothing in how a page draws, so a 1.7
+    /// Tsilo and most tools write 1.7. PDF 1.7 changed nothing in how a page draws, so a 1.7
     /// file goes in as 1.6 (its header and catalog `/Version` relabelled, as
     /// `qpdf --force-version=1.6` does). A newer
     /// file is left out and the export fails naming it ([`Exporter::check_placed_versions`]).

@@ -1149,7 +1149,7 @@ mod placed_pdf_print_tests {
     use crate::Session;
     use crate::cmd::{base64_decode, base64_encode};
 
-    /// A one-page PDF 1.7 with a black box, as Tsipika writes a logo.
+    /// A one-page PDF 1.7 with a black box, as Tsilo writes a logo.
     fn logo() -> Vec<u8> {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 100, "height": 50})).unwrap();
@@ -1231,7 +1231,7 @@ mod print_group_tests {
     use crate::Session;
     use crate::cmd::{base64_decode, base64_encode};
 
-    /// A one-page PDF 1.7 with a black box, as Tsipika writes a logo.
+    /// A one-page PDF 1.7 with a black box, as Tsilo writes a logo.
     fn logo() -> Vec<u8> {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 100, "height": 50})).unwrap();

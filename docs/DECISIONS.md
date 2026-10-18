@@ -35,7 +35,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 | WordCraft   | **Soratra**    | writing              | word processor             |
 | GridCraft   | **Tabilao**    | table                | spreadsheet                |
 | DeckCraft   | **Seho**       | show, display        | presentations              |
-| VectorCraft | **Tsipika**    | line                 | vector illustration        |
+| VectorCraft | **Tsilo**      | lamp, torch          | vector illustration        |
 | FigCraft    | **Endrika**    | shape, form          | UI design / prototyping    |
 | DesignCraft | **Pejy**       | page                 | page layout                |
 | LightCraft  | **Hazavana**   | light                | photo library + raw        |

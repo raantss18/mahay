@@ -61,7 +61,7 @@ pub fn t(lang: Lang, key: &str) -> &'static str {
         "tag_soratra" => Some(("Word processor", "Traitement de texte", "Fanoratana lahatsoratra")),
         "tag_tabilao" => Some(("Spreadsheet", "Tableur", "Tabilao kajy")),
         "tag_seho" => Some(("Presentations", "Présentations", "Fampisehoana")),
-        "tag_tsipika" => Some(("Vector illustration", "Illustration vectorielle", "Sary vektoraly")),
+        "tag_tsilo" => Some(("Vector illustration", "Illustration vectorielle", "Sary vektoraly")),
         "tag_endrika" => Some(("Interface design and prototyping", "Design d'interfaces et prototypes", "Famolavolana endrika sy modely")),
         "tag_pejy" => Some(("Page layout and publishing", "Mise en page et publication", "Fandaminana pejy sy famoahana")),
         "tag_hazavana" => Some(("Photo library and raw development", "Photothèque et développement RAW", "Tahirin-tsary sy RAW")),

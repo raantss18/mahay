@@ -1,7 +1,7 @@
 //! The folders automation may read and write.
 //!
 //! `taratasy-cli mcp --automation-read-root <dir> --automation-write-root <dir>` confines the
-//! files an agent's tools reach, with the names and wording Tsipika uses. [`AutomationRoots`]
+//! files an agent's tools reach, with the names and wording Tsilo uses. [`AutomationRoots`]
 //! holds the two folders. Every path a tool reads is checked with [`Access::Read`] and every path
 //! it writes with [`Access::Write`], in `Automation::resolve`, which all of them go through:
 //!

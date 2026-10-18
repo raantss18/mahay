@@ -1,0 +1,19 @@
+[package]
+name = "tsilo-geom"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo geom"
+
+[lints]
+workspace = true
+
+[dependencies]
+kurbo = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tsilo-testkit = { workspace = true }
+proptest = { workspace = true }
+serde_json = { workspace = true }

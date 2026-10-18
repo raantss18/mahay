@@ -6,7 +6,7 @@
 //! AMD's Vulkan driver faulted with an access violation at the first swapchain present; creating
 //! an OpenGL instance crashed inside AMD's `atio6axx.dll` (#167); and creating a Vulkan instance
 //! loads every installed Vulkan driver into the process, of which a faulty one (Intel's
-//! `igvk64.dll`, Tsipika #806) crashed before the window appeared. So each start creates the
+//! `igvk64.dll`, Tsilo #806) crashed before the window appeared. So each start creates the
 //! instance with one backend, chosen before the window exists: on Windows DirectX 12 first, then
 //! OpenGL, then Vulkan, each on its own; on Linux Vulkan, with OpenGL beside it as the in-process
 //! fallback, then OpenGL alone; on macOS Metal. `WGPU_BACKEND` — wgpu's own variable: `dx12`,
@@ -91,7 +91,7 @@ impl Backend {
 }
 
 /// The backends to try on this platform, best first. Windows reaches Vulkan last: creating its
-/// instance loads every installed Vulkan driver (Tsipika #806).
+/// instance loads every installed Vulkan driver (Tsilo #806).
 pub fn candidates() -> &'static [Backend] {
     if cfg!(windows) {
         &[Backend::Dx12, Backend::Gl, Backend::Vulkan]

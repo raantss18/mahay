@@ -11,7 +11,7 @@
 #
 # Coverage: the whole interface: every menu string and tl! literal (complete_menus = true).
 # Left in English on purpose: product name "Mahay Trano" (and its "Launcher" tag), suite
-# name "Mahay App Suite", app names (Sary, Hazavana, Hetsika, Pejy, Tsipika,
+# name "Mahay App Suite", app names (Sary, Hazavana, Hetsika, Pejy, Tsilo,
 # Taratasy, Tselatra, Soratra, Seho, Tabilao, Drafitra, Feo, Endrika), "GitHub",
 # "Discord".
 # Trailing "…" (U+2026) must be preserved. Placeholders {name}, {n}, {version}, {count}, {v},
@@ -159,7 +159,7 @@
 
 # Contextual: each app's tagline, keyed by app id
 sary	Image editing	Retouche d'images
-tsipika	Vector illustration	Illustration vectorielle
+tsilo	Vector illustration	Illustration vectorielle
 hetsika	Video editing, color and sound	Montage vidéo, étalonnage et son
 hazavana	Photo library and raw development	Photothèque et développement RAW
 taratasy	Reading, organizing and protecting PDFs	Lecture, organisation et protection de PDF

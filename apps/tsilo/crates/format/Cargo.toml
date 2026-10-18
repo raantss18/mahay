@@ -1,0 +1,26 @@
+[package]
+name = "tsilo-format"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo native .tsilo format (versioned JSON, embedded images)"
+
+[lints]
+workspace = true
+
+[dependencies]
+tsilo-doc = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+flate2 = { workspace = true }
+
+# A plain fsync where a volume refuses the full flush (`sync_file`, atomic.rs). Already in
+# Cargo.lock (tempfile), so this adds no new crate.
+[target.'cfg(target_vendor = "apple")'.dependencies]
+rustix = { workspace = true, features = ["std", "fs"] }
+
+[dev-dependencies]
+tsilo-testkit = { workspace = true }
+proptest = { workspace = true }
+tsilo-geom = { workspace = true }

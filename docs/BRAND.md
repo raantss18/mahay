@@ -28,7 +28,7 @@ One design language for the suite:
 | Soratra    | `#3F51B5` | lines of text and the cursor            |
 | Tabilao    | `#1B998B` | a 3×3 grid with the selected cell       |
 | Seho       | `#F28F3B` | a screen on a stand, play mark          |
-| Tsipika    | `#8E44AD` | a curve between two anchors             |
+| Tsilo      | `#8E44AD` | a curve between two anchors             |
 | Endrika    | `#0097A7` | a screen with a layout                  |
 | Pejy       | `#795548` | a page in two columns                   |
 | Hazavana   | `#E09F00` | the sun                                 |

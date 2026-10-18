@@ -28,7 +28,7 @@ sur Android. Voir [NOTICE](NOTICE).
 | **Tabilao**  | tableur (XLSX, ODS, CSV)                        | oui   | alpha   |
 | **Seho**     | présentations (PPTX)                            | oui   | alpha   |
 
-Huit autres arrivent : Tsipika (vectoriel), Endrika (design d'interfaces), Pejy (mise en page),
+Huit autres arrivent : Tsilo (vectoriel), Endrika (design d'interfaces), Pejy (mise en page),
 Hazavana (photothèque), Feo (audio), Hetsika (vidéo), Tselatra (animation), Drafitra (CAO).
 
 ## Installer

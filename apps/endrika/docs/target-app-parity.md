@@ -194,7 +194,7 @@ and is left out as an area, but its effect on working with Figma users is counte
 | Discount | Factor | Evidence |
 |---|---|---|
 | Interaction fidelity | ×0.90 | UI3 look compared side by side (~65% by the builders); no tool-by-tool comparison of cursors, modifier keys while dragging, snapping thresholds or popovers yet; Ctrl to suspend snapping on macOS missing ([ui-parity](ui-parity.md)) |
-| Stability on real machines | ×0.90 | Never-crash lints, command guard with rollback, recovery copies and 963 tests, but no field record at all: the repository is private, v0.2.0 has had no outside users or issue reports, CI tests run on Linux only and hands-on QA is on macOS. Harsher than Tsipika's ×0.92 because there is no outside evidence either way |
+| Stability on real machines | ×0.90 | Never-crash lints, command guard with rollback, recovery copies and 963 tests, but no field record at all: the repository is private, v0.2.0 has had no outside users or issue reports, CI tests run on Linux only and hands-on QA is on macOS. Harsher than Tsilo's ×0.92 because there is no outside evidence either way |
 | File exchange with Figma users | ×0.85 | A Figma designer's work lives in shared Figma files. Endrika opens a `.fig` (best effort, not yet checked on real files) and writes an experimental one (written files open and draw in other software; effects, images and prototypes unchecked there); incoming work can come through the REST API JSON (one way, needs an access token), outgoing only as SVG, PDF, PNG or code. Teammates, reviewers and developers would all need Endrika ([file-format-parity](file-format-parity.md), [collaboration-parity](collaboration-parity.md)) |
 
 72.7% × 0.90 × 0.90 × 0.85 = **~50%** (estimated; 50.03%, rounded down).

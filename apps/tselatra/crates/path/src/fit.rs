@@ -1,4 +1,4 @@
-//! Adapted from Tsipika's `tsipika-pathops` (`crates/pathops/src/fit.rs`; our own code,
+//! Adapted from Tsilo's `tsilo-pathops` (`crates/pathops/src/fit.rs`; our own code,
 //! MIT OR Apache-2.0).
 //!
 //! Least-squares cubic Bézier fitting of point sequences (the classic "fit a cubic with fixed end

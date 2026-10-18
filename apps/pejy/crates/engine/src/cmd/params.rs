@@ -13,7 +13,7 @@
 //! command with its default. [`Session::execute`](crate::Session::execute) itself takes what it is
 //! given, so the journal of an older version still replays.
 //!
-//! Ported from Tsipika (raantss18/tsipika#1442).
+//! Ported from Tsilo (raantss18/tsilo#1442).
 
 use serde_json::Value;
 

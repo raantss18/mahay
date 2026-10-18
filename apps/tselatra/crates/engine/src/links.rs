@@ -12,7 +12,7 @@ pub const ISSUES: &str = "https://github.com/raantss18/mahay/issues";
 /// Sibling apps of the Mahay family: (name, what it is, GitHub repo, app page).
 pub const SIBLINGS: &[(&str, &str)] = &[
     ("Sary", "sary"),
-    ("Tsipika", "tsipika"),
+    ("Tsilo", "tsilo"),
     ("Hetsika", "hetsika"),
     ("Hazavana", "hazavana"),
     ("Taratasy", "taratasy"),

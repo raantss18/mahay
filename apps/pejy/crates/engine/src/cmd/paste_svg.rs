@@ -1,4 +1,4 @@
-//! Paste vector art copied in another app (Illustrator, Tsipika, Figma, Inkscape) as editable
+//! Paste vector art copied in another app (Illustrator, Tsilo, Figma, Inkscape) as editable
 //! paths, as InDesign pastes Illustrator art. Those apps put the copied objects on the system
 //! clipboard as SVG markup; each path becomes a Pejy path with its fill and stroke, groups
 //! stay groups, and text comes in as outlines.
@@ -16,7 +16,7 @@ pub fn specs() -> Vec<CommandSpec> {
         "Paste Vector Art",
         [],
         None,
-        "{svg: markup (what Illustrator, Tsipika or Figma put on the clipboard), spread?, at?: [x, y] (spread coords of the art's centre; default the first page's centre)} → {ids, warnings} — paths with their fills and strokes, groups as groups, text as outlines",
+        "{svg: markup (what Illustrator, Tsilo or Figma put on the clipboard), spread?, at?: [x, y] (spread coords of the art's centre; default the first page's centre)} → {ids, warnings} — paths with their fills and strokes, groups as groups, text as outlines",
         has_doc,
         paste_svg
     )]

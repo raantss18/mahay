@@ -47,7 +47,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Other Mahay Apps",
             [],
             None,
-            "{app: sary|tsipika|hetsika|hazavana|taratasy|pejy, kind?: page|github}",
+            "{app: sary|tsilo|hetsika|hazavana|taratasy|pejy, kind?: page|github}",
             always,
             sibling
         ),

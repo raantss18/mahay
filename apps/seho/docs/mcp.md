@@ -36,7 +36,7 @@ seho-cli mcp --automation-read-root /work/project --automation-write-root /work/
   "args": ["mcp", "--automation-read-root", "/work/project", "--automation-write-root", "/work/project/out"]}}}
 ```
 
-The two flags (Tsipika, Sary and the other Mahay apps take the same ones, so one client
+The two flags (Tsilo, Sary and the other Mahay apps take the same ones, so one client
 config works across the suite) keep the agent to the folders you give it:
 
 - Every file a command reads must lie inside the **read root**: `open_presentation` and

@@ -20,7 +20,7 @@ const MARK_PATH: &str = "M104.28,49.49L81.55,0h-31.23l-3.17,4.76L14.75,53.63,0,7
 /// The other Mahay apps (app-page slug, name, what it is) — same list as the README.
 pub const SIBLINGS: &[(&str, &str, &str)] = &[
     ("sary", "Sary", "image editing"),
-    ("tsipika", "Tsipika", "vector illustration"),
+    ("tsilo", "Tsilo", "vector illustration"),
     ("hetsika", "Hetsika", "video editing, color and sound"),
     ("hazavana", "Hazavana", "photo library and raw development"),
     ("taratasy", "Taratasy", "reading, organizing and protecting PDFs"),

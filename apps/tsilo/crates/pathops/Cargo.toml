@@ -1,0 +1,19 @@
+[package]
+name = "tsilo-pathops"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo path operations: booleans (Pathfinder), shape builder regions, offset, outline stroke, simplify"
+
+[lints]
+workspace = true
+
+[dependencies]
+tsilo-geom = { workspace = true }
+kurbo = { workspace = true }
+thiserror = { workspace = true }
+linesweeper = { workspace = true }
+
+[dev-dependencies]
+tsilo-testkit = { workspace = true }
+proptest = { workspace = true }

@@ -6,7 +6,7 @@
 -->
 <WixLocalization Culture="en-US" xmlns="http://wixtoolset.org/schemas/v4/wxl">
   <String Id="WelcomeDlgTitle" Value="{\WixUI_Font_Bigger}Welcome to [ProductName] [MahayLauncherVersion]" />
-  <String Id="WelcomeDlgDescription" Value="Mahay Trano installs, updates and opens the Mahay App Suite: Sary, Tsipika, Hetsika and the rest of the open-source Mahay apps.&#13;&#10;&#13;&#10;It installs for you only, so no administrator rights are needed. Click Next to continue." />
+  <String Id="WelcomeDlgDescription" Value="Mahay Trano installs, updates and opens the Mahay App Suite: Sary, Tsilo, Hetsika and the rest of the open-source Mahay apps.&#13;&#10;&#13;&#10;It installs for you only, so no administrator rights are needed. Click Next to continue." />
   <!-- The folder page (MahayInstallDirDlg). -->
   <String Id="InstallDirDlgTitle" Value="{\WixUI_Font_Title}Choose where to install" />
   <String Id="InstallDirDlgDescription" Value="Click Next to install to the default folder, or click Change to pick another." />

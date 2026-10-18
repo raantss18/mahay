@@ -28,7 +28,7 @@ nampandehanina tamin'ny Android. Jereo ny [NOTICE](NOTICE).
 | **Tabilao**  | tabilao kajy (XLSX, ODS, CSV)                       | eny   | alpha   |
 | **Seho**     | fampisehoana (PPTX)                                 | eny   | alpha   |
 
-Mbola ho avy ny valo hafa: Tsipika, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra.
+Mbola ho avy ny valo hafa: Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra.
 
 ## Fametrahana
 

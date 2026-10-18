@@ -1,8 +1,8 @@
 <p align="center">
   <a href="https://github.com/raantss18/mahay">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/raantss18/tsipika/main/docs/brand/mahay-logo-white.png">
-      <img alt="Mahay" src="https://raw.githubusercontent.com/raantss18/tsipika/main/docs/brand/mahay-logo.png" width="200">
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/raantss18/tsilo/main/docs/brand/mahay-logo-white.png">
+      <img alt="Mahay" src="https://raw.githubusercontent.com/raantss18/tsilo/main/docs/brand/mahay-logo.png" width="200">
     </picture>
   </a>
 </p>
@@ -299,7 +299,7 @@ stand on its own.
 |:-:|---|---|---|---|
 | <img src="assets/app-icon/hicolor/64x64/apps/org.mahay.endrika.png" alt="" width="32" height="32"> | **Endrika** | **Interface design, components and prototypes · you are here** | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/org.mahay.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsilo/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsilo.png" alt="" width="32" height="32"> | **Tsilo** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
@@ -349,7 +349,7 @@ part of this repository and Endrika, under [`docs/brand/LICENSE-brand.txt`](docs
 Forks and modified versions must remove them.
 
 <p align="center">
-  <a href="https://github.com/raantss18/mahay"><img alt="Mahay" src="https://raw.githubusercontent.com/raantss18/tsipika/main/docs/brand/mahay-mark.png" width="28"></a><br>
+  <a href="https://github.com/raantss18/mahay"><img alt="Mahay" src="https://raw.githubusercontent.com/raantss18/tsilo/main/docs/brand/mahay-mark.png" width="28"></a><br>
   <sub>Made by the <a href="https://github.com/raantss18/mahay">Mahay</a> team and community.</sub>
 </p>
 

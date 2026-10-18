@@ -467,7 +467,7 @@ mod tests {
             "feo": {{ "name": "Feo", "repo": "raantss18/feo", "latest_release": null,
                              "app_last_fetched": "2026-10-09T13:00:00Z" }},
             "hetsika": {{ "name": "Hetsika", "repo": "raantss18/hetsika", "latest_release": null, "app_last_fetched": null }},
-            "tsipika": {{ "repo": "raantss18/tsipika", "app_last_fetched": "2026-10-01T00:00:00Z",
+            "tsilo": {{ "repo": "raantss18/tsilo", "app_last_fetched": "2026-10-01T00:00:00Z",
                               "latest_release": {{ "tag": "v0.7.0" }} }},
             "brandnewcraft": {{ "repo": "raantss18/brandnewcraft", "app_last_fetched": "2026-10-09T13:00:00Z" }}
           }},
@@ -498,7 +498,7 @@ mod tests {
         assert_eq!(feed.answer(app("feo"), NOW), FeedAnswer::Fresh(None));
         // Never fetched, more than a day old, or not listed: ask GitHub.
         assert_eq!(feed.answer(app("hetsika"), NOW), FeedAnswer::AskGitHub);
-        assert_eq!(feed.answer(app("tsipika"), NOW), FeedAnswer::AskGitHub);
+        assert_eq!(feed.answer(app("tsilo"), NOW), FeedAnswer::AskGitHub);
         assert_eq!(feed.answer(app("soratra"), NOW), FeedAnswer::AskGitHub);
         assert_eq!(feed.answer(&LAUNCHER, NOW), FeedAnswer::AskGitHub);
         // An app the launcher doesn't know is simply carried along.

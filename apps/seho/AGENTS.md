@@ -3,7 +3,7 @@
 Seho is a clean-room, open-source, pure-Rust presentation application targeting Microsoft
 PowerPoint parity — and superiority (speed, openness, agent control). It runs natively on macOS,
 Windows, Linux and FreeBSD, and on the web via WASM. Siblings with the same conventions:
-Sary, Tsipika, Hetsika, Hazavana, Taratasy, Tselatra, Pejy
+Sary, Tsilo, Hetsika, Hazavana, Taratasy, Tselatra, Pejy
 (`../<app>`).
 
 Standards and learnings shared across the crafting apps live in `../../mahay-rules` (checked out

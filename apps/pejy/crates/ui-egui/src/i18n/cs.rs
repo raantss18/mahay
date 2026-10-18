@@ -1,7 +1,7 @@
 //! Original Czech interface translations, written from the meaning of the English source
 //! labels using common Czech desktop-publishing and typography vocabulary (clean-room: no other
 //! product's localization was used). Phrases shared with the MIT OR Apache-2.0 Czech catalogs of
-//! the Mahay siblings (Tsipika, Sary) are kept identical; see ASSETS.md for sources.
+//! the Mahay siblings (Tsilo, Sary) are kept identical; see ASSETS.md for sources.
 pub(super) const TABLE: &[(&str, &str)] = &[
     ("File", "Soubor"),
     ("Edit", "Úpravy"),

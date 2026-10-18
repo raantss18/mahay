@@ -72,7 +72,7 @@ polish).
 
 ## Next apps (phase B continued)
 
-- [ ] Import Tsipika (VectorCraft), Endrika (FigCraft), Pejy (DesignCraft) with
+- [ ] Import Tsilo (VectorCraft), Endrika (FigCraft), Pejy (DesignCraft) with
       `scripts/rebrand.py`; add their Android crates.
 - [ ] Then Hazavana, Feo, Hetsika, Tselatra; then Drafitra.
 

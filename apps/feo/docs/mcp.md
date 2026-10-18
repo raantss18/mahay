@@ -28,7 +28,7 @@ feo-cli mcp --automation-read-root /work/project --automation-write-root /work/p
   "args": ["mcp", "--automation-read-root", "/work/project", "--automation-write-root", "/work/project/out"]}}}
 ```
 
-The two flags (Tsipika and the other Mahay apps take the same ones, so one client config
+The two flags (Tsilo and the other Mahay apps take the same ones, so one client config
 works across the suite) keep the agent to the folders you give it:
 
 - Every file a command reads must lie inside the **read root**: `open_session`, `session.open`,

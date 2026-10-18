@@ -142,7 +142,7 @@ fn events() -> Vec<Event> {
     let mut ev = Vec::new();
     let versions = [
         ("sary", "0.5.0"),
-        ("tsipika", "0.7.0"),
+        ("tsilo", "0.7.0"),
         ("hetsika", "0.4.0"),
         ("hazavana", "0.4.0"),
         ("taratasy", "0.4.0"),
@@ -572,11 +572,11 @@ fn a_kept_download_offers_retry_install_and_download_again() {
 fn a_dismissed_install_prompt_is_not_called_a_cancelled_download() {
     let finished = |app: &str, why: &str| Event::JobFinished { app: app.into(), result: Err(why.into()) };
     // The password prompt was dismissed with the download kept (drafitra) and without (taratasy);
-    // a download was cancelled (tsipika).
+    // a download was cancelled (tsilo).
     let mut ev = events();
     ev.push(finished("drafitra", INSTALL_CANCELLED));
     ev.push(finished("taratasy", INSTALL_CANCELLED));
-    ev.push(finished("tsipika", CANCELLED));
+    ev.push(finished("tsilo", CANCELLED));
     let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
     snapshot(&mut h, "grid-install-cancelled-dark");
@@ -782,7 +782,7 @@ fn every_table_column_sorts_both_ways() {
     h.get_by_label("Latest").click();
     h.run_steps(3);
     let o = order(&h);
-    assert_eq!(o.first().map(String::as_str), Some("Tsipika"), "{o:?}"); // 0.7.0
+    assert_eq!(o.first().map(String::as_str), Some("Tsilo"), "{o:?}"); // 0.7.0
     snapshot(&mut h, "table-sorted-latest");
     // App: Z to A on the second click.
     h.get_by_label("App").click();
@@ -1244,7 +1244,7 @@ fn clicking_a_card_opens_its_details_drawer() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
     // Every app has a page: a card of each generation opens one.
-    h.get_by_label("Tsipika details");
+    h.get_by_label("Tsilo details");
     h.get_by_label("Soratra details");
     h.get_by_label("Sary details").click();
     h.run_steps(10);
@@ -1301,9 +1301,9 @@ fn opening_a_page_asks_for_its_pictures_once_and_only_while_it_lacks_some() {
     // Another page asks for its own, and a page without pictures asks for nothing.
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
-    h.get_by_label("Tsipika details").click();
+    h.get_by_label("Tsilo details").click();
     h.run_steps(10);
-    assert_eq!(fetches(&sent, "tsipika"), 1);
+    assert_eq!(fetches(&sent, "tsilo"), 1);
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
     h.get_by_label("Taratasy details").click();

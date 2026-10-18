@@ -1,0 +1,50 @@
+[package]
+name = "tsilo-ui-egui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo egui frontend (menus, panels, tools and canvas); swappable — nothing below depends on it"
+
+[lints]
+workspace = true
+
+[dependencies]
+mahay-ui = { workspace = true }
+tsilo-geom = { workspace = true }
+tsilo-color = { workspace = true }
+tsilo-doc = { workspace = true }
+tsilo-brush = { workspace = true }
+tsilo-render = { workspace = true }
+tsilo-text = { workspace = true }
+tsilo-tools = { workspace = true }
+tsilo-engine = { workspace = true }
+tsilo-svg = { workspace = true }
+tsilo-effects = { workspace = true }
+tsilo-three-d = { workspace = true }
+tsilo-plugins = { workspace = true }
+tsilo-pdf = { workspace = true }
+tsilo-cad = { workspace = true }
+tsilo-eps = { workspace = true }
+tsilo-format = { workspace = true }
+egui = { workspace = true }
+egui_extras = { workspace = true }
+image = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# `now_ms` (src/lib.rs) reads the page's `performance.now()` with this crate in the web build. It is
+# MIT OR Apache-2.0 and already in the build through eframe.
+web-time = "1"
+
+[dev-dependencies]
+egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+tsilo-testkit = { workspace = true }
+# A variable font built in code (no font file is committed).
+tsilo-text = { workspace = true, features = ["test-fonts"] }
+wat = { workspace = true }
+
+[build-dependencies]
+serde_json = { workspace = true }
+toml = "1"

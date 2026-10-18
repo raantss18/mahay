@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Tsilo
+GenericName=Vector Graphics Editor
+Comment=Draw and edit vector illustrations, SVG and PDF
+Exec=tsilo %F
+TryExec=tsilo
+Icon=org.mahay.tsilo
+Terminal=false
+StartupNotify=true
+StartupWMClass=org.mahay.tsilo
+Categories=Graphics;2DGraphics;VectorGraphics;
+Keywords=vector;illustration;svg;pdf;drawing;bezier;
+MimeType=image/svg+xml;application/pdf;

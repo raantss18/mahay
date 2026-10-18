@@ -1,6 +1,6 @@
 # Pejy — instructions for agents
 
-Pejy is a clean-room, open-source, Rust-native page-layout application targeting Adobe InDesign parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows and Linux, and on the web via WASM. Siblings with the same conventions: `../tsipika` (Illustrator-class), `../sary` (Photoshop), `../taratasy` (Acrobat), `../hetsika` (Premiere), `../hazavana` (Lightroom).
+Pejy is a clean-room, open-source, Rust-native page-layout application targeting Adobe InDesign parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows and Linux, and on the web via WASM. Siblings with the same conventions: `../tsilo` (Illustrator-class), `../sary` (Photoshop), `../taratasy` (Acrobat), `../hetsika` (Premiere), `../hazavana` (Lightroom).
 
 ## Start every session here
 1. Read `plan/STATUS.md` (current milestone, next task), then the task in `plan/execution-plan.md` and the relevant `plan/architecture.md` section. Behaviour reference: `plan/indesign/*.md` (`11-observed-ui.md` holds measured observations of the running app).

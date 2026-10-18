@@ -81,7 +81,7 @@ Hangul can't be shown. This change does not fix platform IME issues or localize 
 ## Adding translations
 
 The implementation follows the display-time catalog pattern used by
-[Tsipika #205](https://github.com/storytold/vectorcraft/pull/205),
+[Tsilo #205](https://github.com/storytold/vectorcraft/pull/205),
 [Taratasy #106](https://github.com/storytold/pdfcraft/pull/106), and
 [Hetsika #238](https://github.com/storytold/filmcraft/pull/238). Its code is local to Drafitra.
 

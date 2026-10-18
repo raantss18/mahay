@@ -19,7 +19,7 @@ license: MIT OR Apache-2.0
 description: |-
   Install, update and launch the Mahay App Suite.
   Mahay Trano lists Sary, Hazavana, Hetsika, Pejy,
-  Tsipika, Taratasy, Tselatra, Soratra, Seho, Tabilao, Drafitra,
+  Tsilo, Taratasy, Tselatra, Soratra, Seho, Tabilao, Drafitra,
   Feo and Endrika, installs the right build for this computer and keeps
   them up to date from GitHub releases. It can live in the system tray.
 

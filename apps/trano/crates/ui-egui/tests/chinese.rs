@@ -69,7 +69,7 @@ fn events() -> Vec<Event> {
     let mut ev = Vec::new();
     let versions = [
         ("sary", "0.5.0"),
-        ("tsipika", "0.7.0"),
+        ("tsilo", "0.7.0"),
         ("hetsika", "0.4.0"),
         ("hazavana", "0.4.0"),
         ("taratasy", "0.4.0"),

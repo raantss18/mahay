@@ -27,7 +27,7 @@ ported to Android. See [NOTICE](NOTICE).
 | **Tabilao**  | spreadsheet (XLSX, ODS, CSV)                    | yes   | alpha   |
 | **Seho**     | presentations (PPTX)                            | yes   | alpha   |
 
-Eight more are on the way: Tsipika (vector), Endrika (UI design), Pejy (page layout), Hazavana
+Eight more are on the way: Tsilo (vector), Endrika (UI design), Pejy (page layout), Hazavana
 (photo library), Feo (audio), Hetsika (video), Tselatra (motion graphics), Drafitra (CAD).
 
 ## Install

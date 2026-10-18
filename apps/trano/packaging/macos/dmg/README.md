@@ -44,4 +44,4 @@ outline it (`usvg --skip-system-fonts --use-font-file assets/fonts/Inter-Variabl
 660 × 432 with Finder's 32 pt title bar; the content area is 660 × 400.
 
 This follows the other Mahay apps' `packaging/macos/dmg/` (raantss18/soratra#21,
-raantss18/sary#1201, first in raantss18/tsipika#493).
+raantss18/sary#1201, first in raantss18/tsilo#493).

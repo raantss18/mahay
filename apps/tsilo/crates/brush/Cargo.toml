@@ -1,0 +1,17 @@
+[package]
+name = "tsilo-brush"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo brushes: calligraphic, scatter, art, pattern and bristle brush definitions and stroke geometry"
+
+[lints]
+workspace = true
+
+[dependencies]
+tsilo-geom = { workspace = true }
+tsilo-color = { workspace = true }
+tsilo-doc = { workspace = true }
+kurbo = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

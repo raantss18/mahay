@@ -47,4 +47,4 @@ alias holding only the volume name and `/.background/background.tiff`. If you ad
 outline it (`usvg` from resvg converts text to paths). The window is 660 × 432 with Finder's 32 pt
 title bar; the content area is 660 × 400.
 
-This follows Tsipika's `packaging/macos/dmg/` (raantss18/tsipika#493).
+This follows Tsilo's `packaging/macos/dmg/` (raantss18/tsilo#493).

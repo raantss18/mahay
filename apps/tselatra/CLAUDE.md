@@ -1,6 +1,6 @@
 # Tselatra — instructions for agents
 
-Tselatra is a clean-room, open-source, pure-Rust motion graphics and visual effects compositor targeting Adobe After Effects parity (and beyond). Native on macOS, Windows, Linux; web via WASM. Sibling of `../sary` (Photoshop), `../taratasy` (Acrobat), `../tsipika` (Illustrator), `../hetsika` (Premiere), `../hazavana` (Lightroom) and `../pejy` (InDesign), with the same conventions.
+Tselatra is a clean-room, open-source, pure-Rust motion graphics and visual effects compositor targeting Adobe After Effects parity (and beyond). Native on macOS, Windows, Linux; web via WASM. Sibling of `../sary` (Photoshop), `../taratasy` (Acrobat), `../tsilo` (Illustrator), `../hetsika` (Premiere), `../hazavana` (Lightroom) and `../pejy` (InDesign), with the same conventions.
 
 ## Start every session here
 `plan/` is maintainer-local (gitignored). Public equivalents: [`ROADMAP.md`](ROADMAP.md), [`docs/`](docs/).

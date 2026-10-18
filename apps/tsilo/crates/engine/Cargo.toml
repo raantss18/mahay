@@ -1,0 +1,57 @@
+[package]
+name = "tsilo-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo engine: sessions, history, selection, the command registry"
+
+[lints]
+workspace = true
+
+[features]
+default = ["bundled-fonts"]
+# The fonts tsilo-text bundles (see its `bundled-fonts`). Embedders that supply every font at
+# run time (`tsilo_text::FontDb::add_font`) build with `default-features = false`.
+bundled-fonts = ["tsilo-text/bundled-fonts"]
+
+[dependencies]
+# Which paths stored in documents may be opened.
+mahay-docpath = { workspace = true }
+tsilo-geom = { workspace = true }
+tsilo-color = { workspace = true }
+tsilo-doc = { workspace = true }
+tsilo-tools = { workspace = true }
+tsilo-text = { workspace = true }
+tsilo-render = { workspace = true }
+tsilo-pathops = { workspace = true }
+tsilo-brush = { workspace = true }
+tsilo-trace = { workspace = true }
+tsilo-svg = { workspace = true }
+tsilo-format = { workspace = true }
+tsilo-pdf = { workspace = true }
+tsilo-cad = { workspace = true }
+tsilo-eps = { workspace = true }
+tsilo-metafile = { workspace = true }
+tsilo-plugins = { workspace = true }
+tsilo-affinity = { workspace = true }
+tsilo-scriptcheck = { workspace = true }
+image = { workspace = true }
+flate2 = { workspace = true }
+# The XML parts of Word documents placed as type (place/docx.rs).
+roxmltree = "0.21"
+kurbo = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+tsilo-affinity = { workspace = true, features = ["synth"] }
+crc32fast = { workspace = true }
+tsilo-testkit = { workspace = true }
+proptest = { workspace = true }
+# A variable font built in code (no font file is committed).
+tsilo-text = { workspace = true, features = ["test-fonts"] }
+wat = { workspace = true }
+# Zstandard streams for the Illustrator editing data fuzz tests.
+ruzstd = { workspace = true }

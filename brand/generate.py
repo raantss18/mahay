@@ -60,8 +60,8 @@ APPS = {
         ("f", "M48,39 L64,49 L48,59 Z"),
     ]),
     # Later apps (no Android build in release 1 yet), same grid and line weight.
-    # Tsipika, vector illustration: a curve between two anchors, with a handle.
-    "tsipika": ("#8E44AD", [
+    # Tsilo, vector illustration: a curve between two anchors, with a handle.
+    "tsilo": ("#8E44AD", [
         ("s", "M30,76 C36,40 72,40 78,76"),
         ("s", "M54,46 L72,30"),
         ("f", "M25,71 h10 v10 h-10 Z M73,71 h10 v10 h-10 Z M68,26 h8 v8 h-8 Z"),
@@ -157,7 +157,7 @@ def write(path, text):
 
 
 # Apps with an Android flavour (android/app/build.gradle).
-ANDROID = {"trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsipika", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"}
+ANDROID = {"trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"}
 
 
 # The wordmark: the mark, then MAHAY drawn with the same line weight (no font needed).

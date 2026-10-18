@@ -11,7 +11,7 @@
 
 <p align="center">
   <b>One place to install, update and open every app in the Mahay App Suite, rebuilt in pure Rust.</b><br>
-  Sary, Hazavana, Hetsika, Pejy, Tsipika, Taratasy, Tselatra, Soratra,<br>
+  Sary, Hazavana, Hetsika, Pejy, Tsilo, Taratasy, Tselatra, Soratra,<br>
   Seho, Tabilao, Drafitra, Feo and Endrika: the right build for your computer, kept up to date.
 </p>
 
@@ -236,7 +236,7 @@ stand on its own.
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
 | <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/org.mahay.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
-| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsilo/main/assets/app-icon/hicolor/64x64/apps/org.mahay.tsilo.png" alt="" width="32" height="32"> | **Tsilo** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/org.mahay.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 | <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/org.mahay.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |

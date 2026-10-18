@@ -1,7 +1,7 @@
 //! Linked smart objects follow their files while the document is open, as in Photoshop
 //! ("Linked Smart Objects update automatically when the Photoshop document is open, provided the
 //! source file has changed", <https://helpx.adobe.com/photoshop/desktop/create-manage-layers/smart-objects/update-linked-smart-objects.html>):
-//! a file another app saves (Tsipika, Hazavana, Illustrator) updates its layers without
+//! a file another app saves (Tsilo, Hazavana, Illustrator) updates its layers without
 //! Layer › Smart Objects › Update Modified Content.
 //!
 //! The active document's linked files are compared by size and modification time with what they

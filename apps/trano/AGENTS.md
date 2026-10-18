@@ -1,7 +1,7 @@
 # AGENTS.md: guide for AI agents and contributors
 
 Mahay Trano installs, updates and launches the **Mahay App Suite** (Sary, Hazavana,
-Hetsika, Pejy, Tsipika, Taratasy, Tselatra, Soratra, Seho, Tabilao,
+Hetsika, Pejy, Tsilo, Taratasy, Tselatra, Soratra, Seho, Tabilao,
 Drafitra, Feo, Endrika). It is written in **Rust only** (no JavaScript or TypeScript): the desktop
 app is native egui/eframe, and the web build is the same Rust compiled to WebAssembly (trunk +
 wasm-bindgen). **No Tauri, Electron or webview shells**, ever.

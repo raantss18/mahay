@@ -6,7 +6,7 @@ use egui::ImageSource;
 pub fn app(id: &str) -> Option<ImageSource<'static>> {
     Some(match id {
         "sary" => egui::include_image!("../../../assets/app-icons/sary.png"),
-        "tsipika" => egui::include_image!("../../../assets/app-icons/tsipika.png"),
+        "tsilo" => egui::include_image!("../../../assets/app-icons/tsilo.png"),
         "hetsika" => egui::include_image!("../../../assets/app-icons/hetsika.png"),
         "hazavana" => egui::include_image!("../../../assets/app-icons/hazavana.png"),
         "taratasy" => egui::include_image!("../../../assets/app-icons/taratasy.png"),

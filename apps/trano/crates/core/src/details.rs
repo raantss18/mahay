@@ -91,7 +91,7 @@ pub const DETAILS: [AppDetails; 13] = [
         platforms: PLATFORMS,
     },
     AppDetails {
-        id: "tsipika",
+        id: "tsilo",
         headline: "Vector illustration, reimagined in pure Rust.",
         about: "A native vector illustration app with the pen, panels and shortcuts illustrators expect. \
                 Open source, and it also runs in a browser.",
@@ -450,7 +450,7 @@ mod tests {
             page.screenshot_url("demo").as_deref(),
             Some("https://raw.githubusercontent.com/raantss18/mahay-launcher-assets/v1/sary/demo.jpg")
         );
-        for key in ["", "nope", "../tsipika/neon", "demo/../masks", "demo.jpg", "/etc/passwd", "demo?x=1", "demo#"] {
+        for key in ["", "nope", "../tsilo/neon", "demo/../masks", "demo.jpg", "/etc/passwd", "demo?x=1", "demo#"] {
             assert_eq!(page.screenshot_url(key), None, "{key:?}");
         }
         // Every picture of every page has an address of the one shape, with nothing to escape.

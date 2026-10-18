@@ -22,7 +22,7 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SVG = os.path.join(ROOT, "brand", "svg")
-APPS = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsipika", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
+APPS = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
 
 ICON_LICENSE = """{name} app icon (every file in this directory).
 
@@ -127,7 +127,7 @@ def replace_icon_dir(app, folder, brand=False):
 
 def main():
     names = {"trano": "Mahay Trano", "sary": "Sary", "taratasy": "Taratasy", "soratra": "Soratra", "tabilao": "Tabilao", "seho": "Seho",
-             "tsipika": "Tsipika", "endrika": "Endrika", "pejy": "Pejy", "hazavana": "Hazavana", "feo": "Feo", "hetsika": "Hetsika",
+             "tsilo": "Tsilo", "endrika": "Endrika", "pejy": "Pejy", "hazavana": "Hazavana", "feo": "Feo", "hetsika": "Hetsika",
              "tselatra": "Tselatra", "drafitra": "Drafitra"}
     for app in APPS:
         base = os.path.join(ROOT, "apps", app)

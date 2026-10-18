@@ -110,7 +110,7 @@ function New-InstallerArt([string] $BannerOut, [string] $DialogOut) {
   $muted = [System.Drawing.Color]::FromArgb(153, 242, 241, 238)
   $line = [System.Drawing.Color]::FromArgb(38, 242, 241, 238)
   # The Mahay App Suite, in the launcher's order (crates/core/src/catalog.rs).
-  $apps = 'sary', 'tsipika', 'hetsika', 'hazavana', 'taratasy', 'tselatra',
+  $apps = 'sary', 'tsilo', 'hetsika', 'hazavana', 'taratasy', 'tselatra',
     'pejy', 'endrika', 'soratra', 'feo', 'seho', 'drafitra', 'tabilao'
   $mark = [System.Drawing.Image]::FromFile((Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\org.mahay.trano.png'))
   $wordmark = [System.Drawing.Image]::FromFile((Join-Path $Root 'docs\brand\mahay-logo-white.png'))

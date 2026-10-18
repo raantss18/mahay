@@ -1,0 +1,25 @@
+[package]
+name = "tsilo-testkit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo test helpers: fixtures, generators, render comparison, geometry assertions"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+tsilo-geom = { workspace = true }
+tsilo-color = { workspace = true }
+tsilo-doc = { workspace = true }
+tsilo-engine = { workspace = true }
+tsilo-render = { workspace = true }
+tsilo-format = { workspace = true }
+tsilo-svg = { workspace = true }
+kurbo = { workspace = true }
+serde_json = { workspace = true }
+proptest = { workspace = true }
+image = { workspace = true }
+# A Group 4 encoder and the T.4 run codes, to write CCITT Group 3 TIFFs (`tiff::group3`).
+fax = "0.2"

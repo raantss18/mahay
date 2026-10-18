@@ -1,7 +1,7 @@
 # Shared theme infrastructure
 
 The first shared mechanism is `mahay-ui::theme::WidgetPalette`: it applies colors to egui's five
-widget states, with a supplied foreground stroke and corner radius. Tsipika, Pejy and
+widget states, with a supplied foreground stroke and corner radius. Tsilo, Pejy and
 Hazavana use the same operation. Their complete palettes, theme choices, fonts and preferences
 remain in their frontends.
 
@@ -19,7 +19,7 @@ tests; it is not a count of duplicate theme code. Token-field counts include non
 | App | Source revision | Lines | Token fields | Theme model |
 | --- | --- | ---: | ---: | --- |
 | Sary | [`e7a83ca342cd`](https://github.com/raantss18/mahay/blob/e7a83ca342cdff568254f85f442b9cc8afb08066/crates/ui-egui/src/theme.rs) | 832 | 37 | Five presets; per-preset metrics and Classic bevels |
-| Tsipika | [`825d4fdb8b52`](https://github.com/raantss18/mahay/blob/825d4fdb8b527c597855d273fb4bcc1971855b6a/crates/ui-egui/src/theme.rs) | 345 | 38 | Four brightness presets |
+| Tsilo | [`825d4fdb8b52`](https://github.com/raantss18/mahay/blob/825d4fdb8b527c597855d273fb4bcc1971855b6a/crates/ui-egui/src/theme.rs) | 345 | 38 | Four brightness presets |
 | Pejy | [`66c7ce7e96ec`](https://github.com/raantss18/mahay/blob/66c7ce7e96ec286a091878cc2541ee8369aa79d6/crates/ui-egui/src/theme.rs) | 426 | 33 | Four brightness presets plus High Contrast |
 | Soratra | [`d7d9702bda1f`](https://github.com/raantss18/mahay/blob/d7d9702bda1fe626952024dc37fd2624323dad0f/crates/ui-egui/src/theme.rs) | 231 | 32 | Light/dark, ribbon and page colors |
 | Taratasy | [`f626db25cca2`](https://github.com/raantss18/mahay/blob/f626db25cca2c89f8fa3f7e30d22bf59faea65ec/crates/ui-egui/src/theme.rs) | 314 | 22 | System/light/dark preference |
@@ -27,7 +27,7 @@ tests; it is not a count of duplicate theme code. Token-field counts include non
 | Hetsika | [`7b6c13447228`](https://github.com/raantss18/mahay/blob/7b6c134472287db4367fca80bcb498240ba36567/crates/ui-egui/src/theme.rs) | 447 | 43 | Three presets, custom accent and accessible contrast |
 | Tselatra | [`2a460986ee7a`](https://github.com/raantss18/mahay/blob/2a460986ee7a4b32656a3d434849693904b486bc/crates/ui-egui/src/theme.rs) | 514 | 44 | Three presets, brightness and label colors |
 
-The matching widget-state operation is visible in [Tsipika lines 299–312][vector-loop],
+The matching widget-state operation is visible in [Tsilo lines 299–312][vector-loop],
 [Pejy lines 336–348][design-loop] and [Hazavana lines 235–247][light-loop]. It assigns
 `bg_fill`, `weak_bg_fill`, `corner_radius` and `fg_stroke` across noninteractive, inactive, hovered,
 active and open states. The state colors differ, but the assignments and their meaning agree.
@@ -36,7 +36,7 @@ The surrounding `Visuals` operations differ materially:
 
 | App | Differences that remain local |
 | --- | --- |
-| Tsipika | Selection uses accent at 0.55 gamma with an accent stroke. Popup/window radius is 6; shadows vary with light/dark. Inactive border is absent, hover uses input border and active uses accent. Body/button text is 13 pt. |
+| Tsilo | Selection uses accent at 0.55 gamma with an accent stroke. Popup/window radius is 6; shadows vary with light/dark. Inactive border is absent, hover uses input border and active uses accent. Body/button text is 13 pt. |
 | Pejy | Selection uses strong accent and strong-text stroke. Radius is 4; window shadow stays egui's default. Interactive borders use field border. Inactive buttons get transparent weak fill and input background after the shared operation. Body/button text is 11 pt. High Contrast keeps black/white/yellow colors. |
 | Hazavana | The matching loop uses `text_label`, intentionally dimmer than the app's main text, and a fixed dark palette. Catalog label helpers depend on its own model. |
 | Hetsika | Custom highlight and contrast preferences feed its palette. Widget states use ordinary text for inactive/noninteractive and brighter text for hovered/active; open foreground remains inherited. |
@@ -83,14 +83,14 @@ identifier or global context key is unnecessary. Constructing another large visu
 object would mostly rename `egui::Visuals` fields without simplifying their use. Context lookup
 and storage are already small and retain different fallback themes.
 
-The identical packed-RGB helper in Tsipika and Pejy is only a few casts; it remains
+The identical packed-RGB helper in Tsilo and Pejy is only a few casts; it remains
 local in this extraction. A contrast API also needs a second runtime consumer before extraction.
 
 ## Fonts and styling outside theme modules
 
 Font setup occupies hundreds of the audited lines. It depends on app-specific font catalogs,
-locale handling and fallback order: Sary uses its text and preference crates; Tsipika
-uses `tsipika_text`; Pejy and Soratra use their font crates; Taratasy adds script
+locale handling and fallback order: Sary uses its text and preference crates; Tsilo
+uses `tsilo_text`; Pejy and Soratra use their font crates; Taratasy adds script
 and system fallback; Hazavana uses its engine catalog; Hetsika and Tselatra use their text
 crates and local font discovery. Pejy also configures named Arabic shaping families.
 These dependencies and font assets stay outside `mahay-ui`.
@@ -105,7 +105,7 @@ including tests, containing token/theme references, local visual/spacing mutatio
 | App | Theme references | Local overrides | Literal colors |
 | --- | ---: | ---: | ---: |
 | Sary | 115 | 37 | 59 |
-| Tsipika | 149 | 40 | 41 |
+| Tsilo | 149 | 40 | 41 |
 | Pejy | 26 | 8 | 19 |
 | Soratra | 10 | 4 | 9 |
 | Taratasy | 40 | 11 | 30 |
@@ -117,7 +117,7 @@ Examples worth preserving or reviewing separately:
 
 - Sary's `widgets.rs` draws fixed light/dark Classic bevels and removes field chrome;
   `menus.rs` supplies its own menu styling.
-- Tsipika's `widgets.rs` uses white primary-button labels and contrasting fill/stroke wells.
+- Tsilo's `widgets.rs` uses white primary-button labels and contrasting fill/stroke wells.
 - Pejy's `widgets.rs:147` sets focused numeric-field colors independently of High Contrast;
   fixed dialog warning/error colors also merit a later accessibility review.
 - Soratra's ribbon Share control uses white; Taratasy's notification surfaces and dialog
@@ -132,7 +132,7 @@ consistency, and it does not move font installation into the shared crate.
 
 ## Migration and validation
 
-1. Capture Tsipika's four themes and Pejy's five, including High Contrast, before
+1. Capture Tsilo's four themes and Pejy's five, including High Contrast, before
    replacing either loop. Use synthetic documents, panels/inspectors, menus and preferences at
    1× and 2× scales. Save the complete egui Style and app Tokens for comparison.
 2. Add the shared helper with a test that preserves custom borders and expansion while replacing

@@ -1,0 +1,25 @@
+[package]
+name = "tsilo-tools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tsilo tool state machines: pointer events in, commands and overlays out"
+
+[lints]
+workspace = true
+
+[dependencies]
+tsilo-geom = { workspace = true }
+tsilo-color = { workspace = true }
+tsilo-doc = { workspace = true }
+tsilo-pathops = { workspace = true }
+tsilo-effects = { workspace = true }
+tsilo-text = { workspace = true }
+kurbo = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+image = { workspace = true }
+# The tests lay type out in the bundled fonts (the workspace leaves turning them on to the engine).
+tsilo-text = { workspace = true, features = ["test-fonts", "bundled-fonts"] }

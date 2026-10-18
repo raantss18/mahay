@@ -926,7 +926,7 @@ pub(crate) mod linux {
     fn icon_png(app: &MahayApp) -> Option<&'static [u8]> {
         Some(match app.id {
             "sary" => include_bytes!("../../../assets/app-icons/sary.png"),
-            "tsipika" => include_bytes!("../../../assets/app-icons/tsipika.png"),
+            "tsilo" => include_bytes!("../../../assets/app-icons/tsilo.png"),
             "hetsika" => include_bytes!("../../../assets/app-icons/hetsika.png"),
             "hazavana" => include_bytes!("../../../assets/app-icons/hazavana.png"),
             "taratasy" => include_bytes!("../../../assets/app-icons/taratasy.png"),

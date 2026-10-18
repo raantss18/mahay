@@ -1,6 +1,6 @@
 # Tabilao — instructions for agents
 
-Tabilao is a clean-room, open-source, Rust-native spreadsheet targeting Microsoft Excel parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows, Linux and BSD, and on the web via WASM. Siblings with the same conventions: `../pejy` (InDesign-class, the closest reference), `../sary` (Photoshop), `../tsipika` (Illustrator), `../taratasy` (Acrobat), `../hetsika` (Premiere), `../hazavana` (Lightroom), `../tselatra` (After Effects).
+Tabilao is a clean-room, open-source, Rust-native spreadsheet targeting Microsoft Excel parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows, Linux and BSD, and on the web via WASM. Siblings with the same conventions: `../pejy` (InDesign-class, the closest reference), `../sary` (Photoshop), `../tsilo` (Illustrator), `../taratasy` (Acrobat), `../hetsika` (Premiere), `../hazavana` (Lightroom), `../tselatra` (After Effects).
 
 Standards and learnings shared across the crafting apps live in `../../mahay-rules` (checked out next to the Mahay apps, or `raantss18/mahay-rules`). Read its `AGENTS.md` at the start of a session, follow its standards, and contribute reusable learnings back there. Never code: repos don't share code.
 

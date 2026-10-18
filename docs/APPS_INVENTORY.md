@@ -14,7 +14,7 @@ the website. All the app repos ship `LICENSE-MIT` + `LICENSE-APACHE`, and the wo
 | 9  | wordcraft             | Soratra    | `apps/soratra`  | MIT OR Apache-2.0  | `4a251d4b9c724a5bd3dd75f7c91c6aae77c6650e` | 2026-10-18 | yes          |
 | 13 | gridcraft             | Tabilao    | `apps/tabilao`  | MIT OR Apache-2.0  | `c30fa3f1cf324603f3bfc0171689b1d4083b40e5` | 2026-10-17 | yes          |
 | 11 | deckcraft             | Seho       | `apps/seho`     | MIT OR Apache-2.0  | `22db9261f9d1a214c296fd390173130c45d76d66` | 2026-10-17 | yes          |
-| 2  | vectorcraft           | Tsipika    | –               | MIT OR Apache-2.0  | `2cdb0d2d53a0ff3c4ae994bf4808ae53a5799505` | 2026-10-18 | later        |
+| 2  | vectorcraft           | Tsilo    | –               | MIT OR Apache-2.0  | `2cdb0d2d53a0ff3c4ae994bf4808ae53a5799505` | 2026-10-18 | later        |
 | 8  | figcraft              | Endrika    | –               | MIT OR Apache-2.0  | `d8ff1441b1cd47cb45f1e58b030409ef6f1e24bf` | 2026-10-18 | later        |
 | 7  | designcraft           | Pejy       | –               | MIT OR Apache-2.0  | `7cb8b12507def48fb9346e5004340b5e8e4cfcb7` | 2026-10-17 | later        |
 | 4  | lightcraft            | Hazavana   | –               | MIT OR Apache-2.0  | `4f0b110bcbd2e350c6d97b47f1d824c2222295c4` | 2026-10-17 | later        |
