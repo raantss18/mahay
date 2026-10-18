@@ -203,3 +203,27 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   `hub-<v>-android-<abi>.apk`), at the user's request (2026-10-18), before 0.2.0 shipped.
 - **Why:** it names what it is: the one app to download, which installs and updates the others.
   Release 0.1.0's files keep their old `trano-…` names.
+
+## D20 — Accounts and cloud sync: Supabase sign-in, the user's own storage, end-to-end encryption
+
+- **Decision:** Mahay HUB gets an optional account, "Continue with Google / GitHub", through
+  Supabase Auth with PKCE as in Tontolo. Tokens are kept in the system's secure storage (Android
+  Keystore, libsecret).
+  - **Storage is the user's, never ours.** Documents go to the user's own **Google Drive**, in a
+    "Mahay" folder, under the `drive.file` scope: Mahay sees only the files it created.
+  - **Nextcloud / WebDAV** is an alternative that any user can pick by entering a URL.
+  - The small state (settings, recent files, installed apps) goes to a Supabase table, as
+    Tontolo's `sync_items`.
+  - **Everything is encrypted on the device** before upload: AES-256-GCM with a key derived from a
+    sync passphrase (PBKDF2-HMAC-SHA256), with the item's kind and id as associated data.
+  - Local-first: apps keep working on local files; the hub syncs in the background when the
+    network is there.
+- **Alternatives:**
+  - **A hosted Nextcloud with automatic accounts:** we would pay for disks that grow with every
+    user (creative files are large), run backups, and answer for other people's files.
+  - **Supabase Storage:** 1 GB for the whole project on the free tier.
+  - **Peer-to-peer only (phase C, CRDT + Noise):** stays planned for live collaboration, but does
+    not give a copy reachable when the other devices are off.
+- **Why:** free for the user and for the project, scales without a server bill, and the provider
+  (Google, the Nextcloud host, Supabase) only ever sees encrypted blobs. Same principles as
+  Tontolo (user's choice, 2026-10-18). Protocol: `docs/SYNC.md`.

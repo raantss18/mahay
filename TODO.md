@@ -62,6 +62,30 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 
 ---
 
+## 0.3.0 — Compte et synchronisation en ligne (après la 0.2.0, [D20](docs/DECISIONS.md), [SYNC](docs/SYNC.md))
+
+### Compte (comme Tontolo)
+- [ ] Projet Supabase : fournisseurs Google et GitHub, redirections `org.mahay.hub://login-callback/`
+      et boucle locale Linux ; clés dans `release-keys/` et `docs/BUILDING.md`.
+- [ ] `mahay-account` : « Continuer avec Google / GitHub » (PKCE), jetons dans le stockage sécurisé
+      (Android Keystore, libsecret), déconnexion, suppression des données.
+- [ ] Écran Compte dans Mahay HUB (fr/en/mg), « Bonjour » + prénom.
+
+### Stockage et chiffrement
+- [ ] Phrase secrète de synchronisation : PBKDF2 310 000 itérations, bloc de vérification `meta/check`.
+- [ ] Chiffrement AES-256-GCM par blocs de 1 Mio ; noms et dossiers chiffrés ; manifeste chiffré.
+- [ ] Google Drive (`drive.file`, dossier `Mahay/`) : client OAuth Google, vérification de marque.
+- [ ] Nextcloud / WebDAV : URL + mot de passe d'application.
+- [ ] Table `sync_items` (réglages, fichiers récents, apps installées) avec règles RLS par utilisateur.
+
+### Moteur `mahay-sync`
+- [ ] Analyse, journal hors ligne, envoi et réception en arrière-plan (WorkManager sur Android).
+- [ ] Conflits : garder les deux versions ; corbeille de 30 jours.
+- [ ] État dans Mahay HUB : compte, stockage, dernière synchro, conflits.
+- [ ] Tests : chiffrement (vecteurs), conflits, coupure réseau ; audit de sécurité dédié.
+
+---
+
 ## Android : qualité
 
 - [ ] Tester les APK arm64 sur un vrai téléphone et une vraie tablette (GPU Vulkan, clavier,
@@ -92,7 +116,7 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 
 ## Phases suivantes du cahier des charges
 
-- [ ] C — synchronisation : CRDT (Automerge/Loro), appairage par QR code, chiffrement de bout
+- [ ] C — synchronisation en direct (en plus de la 0.3.0) : CRDT (Automerge/Loro), appairage par QR code, chiffrement de bout
       en bout (Noise), découverte LAN, relais auto-hébergeable, `docs/SYNC.md`.
 - [ ] D — hub de modèles IA : clés BYOK (Android Keystore / libsecret), catalogue versionné,
       file de tâches persistante, mode hors ligne.
