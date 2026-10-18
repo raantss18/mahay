@@ -20,6 +20,16 @@ Tool: `cargo audit` (RustSec advisory database, fetched 2026-10-18) on every `Ca
 | RUSTSEC-2026-0369 | zip                    | same                      | not reachable (same reason)                                                                                                    |
 | RUSTSEC-2023-0071 | rsa 0.10.0-rc          | Taratasy (signatures)     | **accepted, no fix upstream**: the Marvin attack needs an attacker who can time many decryptions on demand. Taratasy uses RSA keys locally to sign PDFs the user chose to sign; no service exposes decryption. Revisit when `rsa` ships constant-time decryption |
 
+### 0.2.0: the eight new apps and Mahay HUB
+
+| Advisory                         | Crate (version)          | Where                      | Status                                                                                      |
+|----------------------------------|--------------------------|----------------------------|---------------------------------------------------------------------------------------------|
+| RUSTSEC-2026-0346..0349          | rustls 0.23.45           | Endrika, Hazavana, Hetsika | **fixed**: 0.23.46                                                                          |
+| RUSTSEC-2026-0049, -0098, -0099, -0104 | rustls-webpki 0.102.8 | Hazavana (model downloads), Hetsika (speech models) | **fixed**: the abandoned `rustls-rustcrypto` alpha provider that pulled it was replaced by rustls's `ring` provider |
+| RUSTSEC-2026-0194, -0195         | quick-xml 0.38.4         | Hazavana (XMP, lens data)  | **open, low**: quadratic time / large allocation on a malicious XML packet (denial of service only). Fix needs quick-xml 0.41's API; tracked in TODO |
+| RUSTSEC-2026-0367..0369          | zip 2.4 / 3.0 / 7.2 / 8.6 | Endrika, Pejy, Hazavana, Hetsika, Mahay HUB | not reachable (no `extract()` call), as above |
+| RUSTSEC-2023-0071                | rsa 0.9                  | Hazavana, Hetsika          | accepted, as above (no decryption oracle)                                                   |
+
 Warnings (no known exploit): unmaintained `proc-macro-error`, `paste`, `rustybuzz`, `ttf-parser`,
 `zbus_names`, `zvariant*` (Linux D-Bus only); unsound `glib 0.18` (Mahay HUB's Linux tray only);
 yanked `yoke-derive 0.8.3` (Sary). None of these is linked into the Android builds except the

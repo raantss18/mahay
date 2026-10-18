@@ -279,7 +279,7 @@ pub fn download_files(dir: &Path, files: &[ModelFile], progress: DownloadProgres
 
 #[cfg(feature = "download")]
 fn agent() -> ureq::Agent {
-    let provider = std::sync::Arc::new(rustls_rustcrypto::provider());
+    let provider = std::sync::Arc::new(rustls::crypto::ring::default_provider());
     ureq::Agent::config_builder()
         .tls_config(
             ureq::tls::TlsConfig::builder()
