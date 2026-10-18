@@ -107,3 +107,20 @@ inherits = "release"
 lto = "fat"
 codegen-units = 1
 strip = true
+# Size first (about a quarter smaller than opt-level 3); hot loops stay at 3 below.
+opt-level = "s"
+
+[profile.android.package.seho-av1]
+opt-level = 3
+
+[profile.android.package.seho-h264]
+opt-level = 3
+
+[profile.android.package.seho-hevc]
+opt-level = 3
+
+[profile.android.package.seho-vp9]
+opt-level = 3
+
+[profile.android.package.seho-render]
+opt-level = 3

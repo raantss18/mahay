@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trano only: Android 11+ hides other apps unless they are declared here. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <package android:name="org.mahay.sary" />
+        <package android:name="org.mahay.taratasy" />
+        <package android:name="org.mahay.soratra" />
+        <package android:name="org.mahay.tabilao" />
+        <package android:name="org.mahay.seho" />
+    </queries>
+</manifest>

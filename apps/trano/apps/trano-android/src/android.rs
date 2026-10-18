@@ -18,7 +18,22 @@ macro_rules! icon {
 }
 
 fn icon_of(id: &str) -> Option<egui::ImageSource<'static>> {
-    [icon!("mahay"), icon!("sary"), icon!("taratasy"), icon!("soratra"), icon!("tabilao"), icon!("seho")]
+    [
+        icon!("mahay"),
+        icon!("sary"),
+        icon!("taratasy"),
+        icon!("soratra"),
+        icon!("tabilao"),
+        icon!("seho"),
+        icon!("tsipika"),
+        icon!("endrika"),
+        icon!("pejy"),
+        icon!("hazavana"),
+        icon!("feo"),
+        icon!("hetsika"),
+        icon!("tselatra"),
+        icon!("drafitra"),
+    ]
         .into_iter()
         .find(|(i, _)| *i == id)
         .map(|(_, src)| src)
@@ -80,7 +95,9 @@ fn tile(ui: &mut egui::Ui, lang: Lang, installed_ids: &[&str], app: &MahayApp, w
                 ui.horizontal(|ui| {
                     match icon_of(app.id) {
                         Some(src) => {
-                            ui.add(egui::Image::new(src).fit_to_exact_size(egui::vec2(52.0, 52.0)));
+                            // Apps not on Android yet are shown faded.
+                            let tint = if available { egui::Color32::WHITE } else { egui::Color32::from_white_alpha(110) };
+                            ui.add(egui::Image::new(src).tint(tint).fit_to_exact_size(egui::vec2(52.0, 52.0)));
                         }
                         None => {
                             let (rect, _) = ui.allocate_exact_size(egui::vec2(52.0, 52.0), egui::Sense::hover());

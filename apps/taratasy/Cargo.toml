@@ -128,3 +128,23 @@ inherits = "release"
 lto = "fat"
 codegen-units = 1
 strip = true
+# Size first (about a quarter smaller than opt-level 3); hot loops stay at 3 below.
+opt-level = "s"
+
+[profile.android.package.taratasy-render]
+opt-level = 3
+
+[profile.android.package.hayro]
+opt-level = 3
+
+[profile.android.package.hayro-interpret]
+opt-level = 3
+
+[profile.android.package.hayro-syntax]
+opt-level = 3
+
+[profile.android.package.hayro-jbig2]
+opt-level = 3
+
+[profile.android.package.taratasy-filters]
+opt-level = 3

@@ -115,3 +115,11 @@ inherits = "release"
 lto = "fat"
 codegen-units = 1
 strip = true
+# Size first (about a quarter smaller than opt-level 3); hot loops stay at 3 below.
+opt-level = "s"
+
+[profile.android.package.soratra-layout]
+opt-level = 3
+
+[profile.android.package.soratra-render]
+opt-level = 3

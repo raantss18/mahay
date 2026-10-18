@@ -12,6 +12,8 @@ pub struct EguiBridge {
     ime_field: Option<egui::Id>,
     /// Whether the system bars were last set for a dark theme.
     dark_bars: Option<bool>,
+    /// When and where (in points) the screen was last touched or clicked.
+    last_tap: Option<(std::time::Instant, egui::Pos2)>,
 }
 
 impl EguiBridge {
@@ -50,7 +52,14 @@ impl EguiBridge {
             self.dark_bars = Some(dark);
             crate::set_dark_bars(dark);
         }
-        let wants = ctx.output(|o| o.ime.is_some());
+        // Only a field the user tapped brings the keyboard up: a dialog that focuses its first
+        // field by itself would otherwise cover half the screen with a keyboard nobody asked for.
+        let ime_rect = ctx.output(|o| o.ime.map(|ime| ime.rect));
+        let tapped_field = match (self.last_tap, ime_rect) {
+            (Some((at, pos)), Some(rect)) => at.elapsed() < std::time::Duration::from_millis(700) && rect.expand(8.0).contains(pos),
+            _ => false,
+        };
+        let wants = ime_rect.is_some() && (self.keyboard || tapped_field);
         let field = ctx.memory(|m| m.focused());
         if wants && self.ime_field.is_some() && field != self.ime_field {
             // Another text field: start from an empty keyboard buffer. (Not on the first one:
@@ -92,6 +101,14 @@ impl EguiBridge {
     /// A paste event with the Android clipboard's text, for a Ctrl+V from a hardware keyboard
     /// (egui-winit can't read the clipboard on Android, so it sends nothing).
     pub fn raw_input_hook(&mut self, raw: &mut egui::RawInput) {
+        let tap = raw.events.iter().rev().find_map(|e| match e {
+            egui::Event::PointerButton { pressed: true, pos, .. } => Some(*pos),
+            egui::Event::Touch { phase: egui::TouchPhase::Start, pos, .. } => Some(*pos),
+            _ => None,
+        });
+        if let Some(pos) = tap {
+            self.last_tap = Some((std::time::Instant::now(), pos));
+        }
         if self.keyboard {
             let now = crate::ime_text();
             if now != self.ime_seen {

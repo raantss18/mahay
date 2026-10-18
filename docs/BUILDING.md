@@ -84,3 +84,17 @@ adb install -r dist/android/app-tabilao-x86_64-release.apk
 ```bash
 python3 -I brand/generate.py && python3 -I brand/apply.py
 ```
+
+### Signing in CI
+
+To let the Release workflow sign, add four repository secrets (Settings ▸ Secrets and
+variables ▸ Actions), from your machine:
+
+```bash
+gh secret set MAHAY_KEYSTORE_B64 --repo raantss18/mahay < <(base64 -w0 ~/.mahay/release.jks)
+gh secret set MAHAY_KEYSTORE_PASSWORD --repo raantss18/mahay   # paste storePassword from ~/.mahay/keystore.properties
+gh secret set MAHAY_KEY_ALIAS --repo raantss18/mahay --body mahay
+gh secret set MAHAY_KEY_PASSWORD --repo raantss18/mahay        # paste keyPassword
+```
+
+Then run Actions ▸ Release ▸ Run workflow with the tag to publish.

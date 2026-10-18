@@ -4,9 +4,15 @@ name: Release
 # GitHub release: <app>-<version>-linux-x86_64.AppImage/.deb and
 # <app>-<version>-android-<abi>.apk, plus SHA256SUMS.txt (the names Trano looks for).
 
+# Started by hand (Actions ▸ Release ▸ Run workflow) once the signing secrets are set:
+# MAHAY_KEYSTORE_B64 (base64 of the .jks), MAHAY_KEYSTORE_PASSWORD, MAHAY_KEY_ALIAS,
+# MAHAY_KEY_PASSWORD. See docs/BUILDING.md. Release 0.1.0 was built and signed locally.
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build and publish (for example v0.2.0)"
+        required: true
 
 permissions:
   contents: write
@@ -23,6 +29,8 @@ jobs:
         app: [trano, sary, taratasy, soratra, tabilao, seho]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -55,6 +63,8 @@ jobs:
         app: [trano, sary, taratasy, soratra, tabilao, seho]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -80,7 +90,7 @@ jobs:
           echo "$MAHAY_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
           export MAHAY_KEYSTORE="$RUNNER_TEMP/release.jks"
           scripts/android-build.sh --abi all --aab ${{ matrix.app }}
-          scripts/release-names.sh "${GITHUB_REF_NAME#v}"
+          TAG="${{ inputs.tag }}" scripts/release-names.sh "${TAG#v}"
       - uses: actions/upload-artifact@v4
         with:
           name: android-${{ matrix.app }}
@@ -102,5 +112,6 @@ jobs:
           cd out
           find . -type f -exec mv {} . \; 2>/dev/null || true
           sha256sum -- *.apk *.aab *.AppImage *.deb 2>/dev/null > SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --prerelease \
-            --title "Mahay $GITHUB_REF_NAME" --notes-file ../CHANGELOG.md -- *
+          TAG="${{ inputs.tag }}"
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease \
+            --title "Mahay $TAG" --notes-file ../CHANGELOG.md -- *

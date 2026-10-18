@@ -82,6 +82,14 @@ inherits = "release"
 lto = "fat"
 codegen-units = 1
 strip = true
+# Size first (about a quarter smaller than opt-level 3); hot loops stay at 3 below.
+opt-level = "s"
+
+[profile.android.package.tabilao-calc]
+opt-level = 3
+
+[profile.android.package.tabilao-formula]
+opt-level = 3
 
 [patch.crates-io]
 # Android backends through mahay-android (system document picker, clipboard); desktop unchanged.
