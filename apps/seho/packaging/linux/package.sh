@@ -37,7 +37,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export SEHO_MAINTAINER="${SEHO_MAINTAINER:-Seho maintainers <seho@storyteller.ai>}"
+export SEHO_MAINTAINER="${SEHO_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
 BASENAME="seho-$VERSION-linux-$ARCH"
 
 echo "==> Seho $VERSION for Linux $ARCH ($FORMATS)"

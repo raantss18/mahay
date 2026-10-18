@@ -50,7 +50,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export TRANO_MAINTAINER="${TRANO_MAINTAINER:-Mahay Trano maintainers <mahay-launcher@storyteller.ai>}"
+export TRANO_MAINTAINER="${TRANO_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
 BASENAME="$PKG-$VERSION-linux-$ARCH"
 
 echo "==> Mahay Trano $VERSION for Linux $ARCH ($FORMATS)"

@@ -40,7 +40,7 @@ DISPLAY = {
 SKIP_NAMES = re.compile(r"^(LICENSE|LICENSE-[A-Z]+|NOTICE|COPYING|ATTRIBUTION\.(md|toml))(\.(md|txt))?$")
 SKIP_DIRS = {"licenses", "contributors", ".git", "target"}
 UPSTREAM_REF = re.compile(
-    r"https?://github\.com/storytold/[\w.-]+/(?:issues|pull|discussions)/\d+[^\s)\]\"'>`]*"
+    r"https?://github\.com/storytold/[\w.-]+/(?:issues|pull|discussions)/\d+[^\s)\]\"'<>`]*"
     # Third-party crates upstream publishes and Mahay still depends on, by their real names.
     r"|https?://github\.com/storytold/winprint\.rs|craft-winprint-gdi"
 )
@@ -54,14 +54,14 @@ def build_rules():
     rules += [
         (r"artcraft[-_]launcher", "trano"),
         (r"ARTCRAFT_LAUNCHER", "TRANO"),
-        (r"https?://(?:app\.)?getartcraft\.com[^\s)\]\"'>`]*", OUR_REPO),
+        (r"https?://(?:app\.)?getartcraft\.com[^\s)\]\"'<>`]*", OUR_REPO),
         (r"getartcraft", "mahay"),
         (r"https?://github\.com/storytold/craft-([\w.-]+)", OUR_REPO),
         (r"https?://github\.com/storytold/artcraft[\w.-]*", OUR_REPO),
         (r"https?://github\.com/storytold/(\w+?)craft\b", OUR_REPO),
         (r"storytold", "raantss18"),
         # Upstream social accounts and chat: never point users at accounts that aren't ours.
-        (r"https?://(?:www\.)?(?:x|twitter|instagram|linkedin|youtube|tiktok)\.com/[^\s)\]\"'>`]*(?:artcraft|storyteller|getartcraft)[^\s)\]\"'>`]*", OUR_REPO),
+        (r"https?://(?:www\.)?(?:x|twitter|instagram|linkedin|youtube|tiktok)\.com/[^\s)\]\"'<>`]*(?:artcraft|storyteller|getartcraft)[^\s)\]\"'<>`]*", OUR_REPO),
         (r"https?://discord\.gg/(?:artcraft|storyteller)\w*", OUR_REPO + "/discussions"),
         (r"discord://-/invite/(?:artcraft|storyteller)\w*", OUR_REPO + "/discussions"),
         (r"ai\.storyteller\.", "org.mahay."),

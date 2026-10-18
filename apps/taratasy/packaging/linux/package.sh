@@ -46,7 +46,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export TARATASY_MAINTAINER="${TARATASY_MAINTAINER:-Taratasy maintainers <taratasy@storyteller.ai>}"
+export TARATASY_MAINTAINER="${TARATASY_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
 LABEL_SUFFIX="${TARATASY_BUILD_LABEL:+-$TARATASY_BUILD_LABEL}"
 BASENAME="taratasy-$VERSION$LABEL_SUFFIX-linux-$ARCH"
 

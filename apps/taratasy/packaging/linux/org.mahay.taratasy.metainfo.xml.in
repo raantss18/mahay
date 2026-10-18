@@ -19,7 +19,7 @@
   <launchable type="desktop-id">org.mahay.taratasy.desktop</launchable>
   <icon type="stock">org.mahay.taratasy</icon>
   <!-- Only url types known to appstream 0.15 (Ubuntu 22.04, where CI validates): no vcs-browser. -->
-  <url type="homepage">https://github.com/raantss18/mahay>
+  <url type="homepage">https://github.com/raantss18/mahay</url>
   <url type="bugtracker">https://github.com/raantss18/mahay/issues</url>
   <url type="help">https://github.com/raantss18/mahay</url>
   <url type="contact">https://github.com/raantss18/mahay/discussions</url>

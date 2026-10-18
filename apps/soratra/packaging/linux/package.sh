@@ -37,7 +37,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export SORATRA_MAINTAINER="${SORATRA_MAINTAINER:-Soratra maintainers <soratra@storyteller.ai>}"
+export SORATRA_MAINTAINER="${SORATRA_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
 BASENAME="soratra-$VERSION-linux-$ARCH"
 
 echo "==> Soratra $VERSION for Linux $ARCH ($FORMATS)"

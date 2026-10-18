@@ -43,7 +43,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export SARY_MAINTAINER="${SARY_MAINTAINER:-Sary maintainers <sary@storyteller.ai>}"
+export SARY_MAINTAINER="${SARY_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
 BASENAME="sary-$VERSION-linux-$ARCH"
 
 echo "==> Sary $VERSION for Linux $ARCH ($FORMATS)"

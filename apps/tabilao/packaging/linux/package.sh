@@ -37,7 +37,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export TABILAO_MAINTAINER="${TABILAO_MAINTAINER:-Tabilao maintainers <tabilao@storyteller.ai>}"
+export TABILAO_MAINTAINER="${TABILAO_MAINTAINER:-Mahay contributors <https://github.com/raantss18/mahay>}"
 BASENAME="tabilao-$VERSION-linux-$ARCH"
 
 echo "==> Tabilao $VERSION for Linux $ARCH ($FORMATS)"
