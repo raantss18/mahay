@@ -42,7 +42,7 @@ SKIP_DIRS = {"licenses", "contributors", ".git", "target"}
 UPSTREAM_REF = re.compile(
     r"https?://github\.com/storytold/[\w.-]+/(?:issues|pull|discussions)/\d+[^\s)\]\"'<>`]*"
     # Third-party crates upstream publishes and Mahay still depends on, by their real names.
-    r"|https?://github\.com/storytold/(?:winprint\.rs|indd-utils)|craft-winprint-gdi"
+    r"|https?://github\.com/storytold/(?:winprint\.rs|indd-utils|filmcraft)\b|craft-winprint-gdi|package = \"filmcraft-[\w-]+\""
 )
 OUR_REPO = "https://github.com/raantss18/mahay"
 

@@ -11,6 +11,8 @@ rust-version = "1.95"
 repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
+# Hetsika's media crates come from upstream FilmCraft at the commit Tselatra was written against
+# (their API moved on since); the names are the published packages' own.
 mahay-pdf = { path = "../../libs/core/crates/pdf", version = "=0.1.0", default-features = false, features = ["read"] }
 mahay-docpath = { path = "../../libs/core/crates/docpath", version = "0.1.0" }
 # internal
@@ -73,26 +75,26 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg"]
 
 # media codecs + containers: Hetsika's pure-Rust crates, pinned to a revision (plan/adr/0001).
 # Only `crates/media`, `crates/export` and `crates/interchange` may depend on these.
-hetsika-codecs = { path = "../hetsika/crates/codecs" }
-hetsika-media = { path = "../hetsika/crates/media" }
-hetsika-frame = { path = "../hetsika/crates/frame" }
-hetsika-color = { path = "../hetsika/crates/color" }
-hetsika-time = { path = "../hetsika/crates/time" }
+hetsika-codecs = { package = "filmcraft-codecs", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-media = { package = "filmcraft-media", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-frame = { package = "filmcraft-frame", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-color = { package = "filmcraft-color", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-time = { package = "filmcraft-time", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
 # encoders + muxer (crates/export)
-hetsika-h264enc = { path = "../hetsika/crates/h264enc" }
-hetsika-prores = { path = "../hetsika/crates/prores" }
-hetsika-aac = { path = "../hetsika/crates/aac" }
-hetsika-isobmff = { path = "../hetsika/crates/isobmff" }
+hetsika-h264enc = { package = "filmcraft-h264enc", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-prores = { package = "filmcraft-prores", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-aac = { package = "filmcraft-aac", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-isobmff = { package = "filmcraft-isobmff", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
 # decoder used as the round-trip oracle of tselatra-opusenc (crates/export dev-dependency)
-hetsika-opus = { path = "../hetsika/crates/opus" }
-hetsika-vp9 = { path = "../hetsika/crates/vp9" }
+hetsika-opus = { package = "filmcraft-opus", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-vp9 = { package = "filmcraft-vp9", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
 # decoders used as the round-trip oracles of tselatra-hevcenc / tselatra-av1enc (dev-dependencies only)
-hetsika-hevc = { path = "../hetsika/crates/hevc" }
-hetsika-av1 = { path = "../hetsika/crates/av1" }
+hetsika-hevc = { package = "filmcraft-hevc", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-av1 = { package = "filmcraft-av1", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
 # timeline interchange (EDL, FCP7 XML, FCPXML, OTIO) for Premiere Pro interop (crates/interchange only)
-hetsika-interchange = { path = "../hetsika/crates/interchange" }
-hetsika-project = { path = "../hetsika/crates/project" }
-hetsika-geom = { path = "../hetsika/crates/geom" }
+hetsika-interchange = { package = "filmcraft-interchange", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-project = { package = "filmcraft-project", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
+hetsika-geom = { package = "filmcraft-geom", git = "https://github.com/storytold/filmcraft", rev = "2c5ba7a72619935f0481f99d59409e0d1844b234" }
 # The symphonia hetsika-codecs already builds, named only to turn on its AIFF reader: the pinned
 # rev enables wav alone (Hetsika main enables aiff too). Drop it when the pin moves past that.
 symphonia = { version = "0.5.5", default-features = false, features = ["aiff"] }
