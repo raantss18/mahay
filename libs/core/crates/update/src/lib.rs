@@ -198,7 +198,8 @@ impl Release {
 }
 
 /// Every app the release carries, for [`Release::from_version`].
-pub const APPS: [&str; 6] = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho"];
+pub const APPS: [&str; 14] =
+    ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"];
 
 fn agent() -> ureq::Agent {
     ureq::Agent::config_builder()

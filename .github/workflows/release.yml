@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [trano, sary, taratasy, soratra, tabilao, seho]
+        app: [trano, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [trano, sary, taratasy, soratra, tabilao, seho]
+        app: [trano, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
     steps:
       - uses: actions/checkout@v4
         with:

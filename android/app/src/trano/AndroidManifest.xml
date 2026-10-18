@@ -7,5 +7,13 @@
         <package android:name="org.mahay.soratra" />
         <package android:name="org.mahay.tabilao" />
         <package android:name="org.mahay.seho" />
+        <package android:name="org.mahay.tsilo" />
+        <package android:name="org.mahay.endrika" />
+        <package android:name="org.mahay.pejy" />
+        <package android:name="org.mahay.hazavana" />
+        <package android:name="org.mahay.feo" />
+        <package android:name="org.mahay.hetsika" />
+        <package android:name="org.mahay.tselatra" />
+        <package android:name="org.mahay.drafitra" />
     </queries>
 </manifest>

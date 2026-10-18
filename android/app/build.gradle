@@ -50,12 +50,20 @@ android {
 
     flavorDimensions = ["app"]
     productFlavors {
-        trano    { dimension "app"; applicationId "org.mahay.trano";    manifestPlaceholders = [label: "Mahay", lib: "trano_android"] }
-        sary     { dimension "app"; applicationId "org.mahay.sary";     manifestPlaceholders = [label: "Sary", lib: "sary_android"] }
+        trano    { dimension "app"; applicationId "org.mahay.trano"; manifestPlaceholders = [label: "Mahay", lib: "trano_android"] }
+        sary     { dimension "app"; applicationId "org.mahay.sary"; manifestPlaceholders = [label: "Sary", lib: "sary_android"] }
         taratasy { dimension "app"; applicationId "org.mahay.taratasy"; manifestPlaceholders = [label: "Taratasy", lib: "taratasy_android"] }
-        soratra  { dimension "app"; applicationId "org.mahay.soratra";  manifestPlaceholders = [label: "Soratra", lib: "soratra_android"] }
-        tabilao  { dimension "app"; applicationId "org.mahay.tabilao";  manifestPlaceholders = [label: "Tabilao", lib: "tabilao_android"] }
-        seho     { dimension "app"; applicationId "org.mahay.seho";     manifestPlaceholders = [label: "Seho", lib: "seho_android"] }
+        soratra  { dimension "app"; applicationId "org.mahay.soratra"; manifestPlaceholders = [label: "Soratra", lib: "soratra_android"] }
+        tabilao  { dimension "app"; applicationId "org.mahay.tabilao"; manifestPlaceholders = [label: "Tabilao", lib: "tabilao_android"] }
+        seho     { dimension "app"; applicationId "org.mahay.seho"; manifestPlaceholders = [label: "Seho", lib: "seho_android"] }
+        tsilo    { dimension "app"; applicationId "org.mahay.tsilo"; manifestPlaceholders = [label: "Tsilo", lib: "tsilo_android"] }
+        endrika  { dimension "app"; applicationId "org.mahay.endrika"; manifestPlaceholders = [label: "Endrika", lib: "endrika_android"] }
+        pejy     { dimension "app"; applicationId "org.mahay.pejy"; manifestPlaceholders = [label: "Pejy", lib: "pejy_android"] }
+        hazavana { dimension "app"; applicationId "org.mahay.hazavana"; manifestPlaceholders = [label: "Hazavana", lib: "hazavana_android"] }
+        feo      { dimension "app"; applicationId "org.mahay.feo"; manifestPlaceholders = [label: "Feo", lib: "feo_android"] }
+        hetsika  { dimension "app"; applicationId "org.mahay.hetsika"; manifestPlaceholders = [label: "Hetsika", lib: "hetsika_android"] }
+        tselatra { dimension "app"; applicationId "org.mahay.tselatra"; manifestPlaceholders = [label: "Tselatra", lib: "tselatra_android"] }
+        drafitra { dimension "app"; applicationId "org.mahay.drafitra"; manifestPlaceholders = [label: "Drafitra", lib: "drafitra_android"] }
     }
 
     splits {

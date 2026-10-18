@@ -16,7 +16,7 @@ use trano_core::{MahayApp, SUITE};
 use crate::text::{Lang, tagline, text};
 
 /// The apps with an Android build, in the order shown.
-const ON_ANDROID: [&str; 5] = ["sary", "taratasy", "soratra", "tabilao", "seho"];
+const ON_ANDROID: [&str; 13] = ["sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"];
 const SOURCE: &str = "https://github.com/raantss18/mahay";
 
 macro_rules! icon {
