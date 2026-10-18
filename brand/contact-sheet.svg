@@ -4,7 +4,7 @@
 </g><text x="64" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">mahay</text><g transform="translate(140,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#E4572E"/>
   <path d="M28,50 L54,28 L80,50 L80,80 L28,80 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M41,55 h10 v9 h-10 Z M57,55 h10 v9 h-10 Z M41,68 h10 v8 h-10 Z M57,68 h10 v8 h-10 Z" fill="#FFFFFF"/>
-</g><text x="194" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">trano</text><g transform="translate(270,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#2E86DE"/>
+</g><text x="194" y="138" font-family="sans-serif" font-size="14" text-anchor="middle">hub</text><g transform="translate(270,10)">  <rect x="4" y="4" width="100" height="100" rx="24" fill="#2E86DE"/>
   <path d="M27,31 H81 V77 H27 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M30,74 L48,52 L60,66 L67,58 L78,72" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M66,40 a5,5 0 1,0 0.01,0 Z" fill="#FFFFFF"/>

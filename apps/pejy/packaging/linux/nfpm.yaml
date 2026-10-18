@@ -62,7 +62,7 @@ overrides:
       - xdg-desktop-portal
   # Named org.mahay.pejy, not pejy: the AUR already has pejy, pejy-bin and
   # pejy-git, and an AUR helper treats any installed package with an AUR name as its own and
-  # rebuilds it on the next update. Mahay Trano also uses the bundle id to tell this package
+  # rebuilds it on the next update. Mahay HUB also uses the bundle id to tell this package
   # (which it updates with `pacman -U`) from an AUR build (which it leaves to the AUR helper).
   # nfpm has no optdepends for Arch, so the recommends above have no equivalent here.
   archlinux:

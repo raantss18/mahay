@@ -2,7 +2,7 @@
 # Build Mahay Android apps: the Rust library with cargo-ndk, then the APK/AAB with Gradle.
 #
 #   scripts/android-build.sh [--debug] [--abi arm64-v8a|x86_64|all] [--aab] app...
-#   apps: trano sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra (default: all)
+#   apps: hub sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra (default: all)
 #
 # Needs ANDROID_HOME (or ~/Android/Sdk), the NDK named in android/app/build.gradle, rustup with
 # the Android targets, and cargo-ndk. Outputs land in dist/android/.
@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ ${#apps[@]} -gt 0 ] || apps=(trano sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra)
+[ ${#apps[@]} -gt 0 ] || apps=(hub sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra)
 
 ndk_args=()
 for a in "${abis[@]}"; do ndk_args+=(-t "$a"); done

@@ -15,7 +15,7 @@ pub enum State {
     Checking,
     UpToDate,
     /// A newer version exists but can't be installed from here (a .deb, a distribution
-    /// package): say so and point to Trano or the package manager.
+    /// package): say so and point to Mahay HUB or the package manager.
     Available { version: String },
     Downloading { version: String, progress: f32 },
     /// Downloaded and verified: offer to install.

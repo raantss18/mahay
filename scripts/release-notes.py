@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Write the GitHub release page for a version, Tontolo-style: Trano first (the one file people
+"""Write the GitHub release page for a version, Tontolo-style: Mahay HUB first (the one file people
 download by hand; it installs and updates every other app), what's new from CHANGELOG.md, then
-the other files Trano fetches by itself, folded away.
+the other files Mahay HUB fetches by itself, folded away.
 
 Usage: python3 -I scripts/release-notes.py 0.2.0 > dist/release/NOTES.md
 Reads the sizes from dist/release/.
@@ -43,34 +43,34 @@ def main():
     out = []
     out.append(f"# Mahay {v}")
     out.append("")
-    out.append("## ⬇️ Télécharger : installez seulement Trano")
+    out.append("## ⬇️ Télécharger : installez seulement Mahay HUB")
     out.append("")
-    out.append("**Trano** est l'accueil de Mahay : il installe, ouvre et met à jour toutes les autres apps, "
+    out.append("**Mahay HUB** est l'accueil de Mahay : il installe, ouvre et met à jour toutes les autres apps, "
                "directement, sans repasser par cette page.")
     out.append("")
     out.append("| Fichier | Pour qui | Taille |")
     out.append("|---|---|---|")
-    apk = f"trano-{v}-android-arm64-v8a.apk"
+    apk = f"hub-{v}-android-arm64-v8a.apk"
     out.append(f"| {link(v, apk, True)} | 📱 **Android : le bon choix dans 95 % des cas** (téléphones et tablettes, Android 8 et plus) | {size(apk)} |")
-    apk86 = f"trano-{v}-android-x86_64.apk"
+    apk86 = f"hub-{v}-android-x86_64.apk"
     out.append(f"| {link(v, apk86)} | 💻 Émulateurs, Chromebooks, Android sur PC | {size(apk86)} |")
-    img = f"trano-{v}-linux-x86_64.AppImage"
+    img = f"hub-{v}-linux-x86_64.AppImage"
     out.append(f"| {link(v, img, True)} | 🐧 **Linux** (Ubuntu, Debian, Fedora, Arch…) : `chmod +x` puis double-clic | {size(img)} |")
     out.append(f"| {link(v, 'SHA256SUMS.txt')} · {link(v, 'SHA256SUMS.txt.sig')} | 🔒 Empreintes signées (Ed25519) | |")
     out.append("")
-    out.append("> Déjà installé ? **Mahay se met à jour tout seul**, dans Trano et dans chaque app "
+    out.append("> Déjà installé ? **Mahay se met à jour tout seul**, dans Mahay HUB et dans chaque app "
                "(vérification au démarrage puis chaque jour, fichiers signés et vérifiés). "
                "Alerte « Play Protect » : normale hors Play Store, touchez « Analyser ».")
     out.append(">")
-    out.append("> 🇬🇧 Download **Trano** only: it installs and updates every other app. "
-               "🇲🇬 **Trano** ihany no alaina: izy no mametraka sy manavao ny rindranasa hafa rehetra.")
+    out.append("> 🇬🇧 Download **Mahay HUB** only: it installs and updates every other app. "
+               "🇲🇬 **Mahay HUB** ihany no alaina: izy no mametraka sy manavao ny rindranasa hafa rehetra.")
     out.append("")
     out.append(f"## ✨ Nouveautés de la version {v}")
     out.append("")
     out.append(changelog_section(v))
     out.append("")
     out.append("<details>")
-    out.append("<summary>📦 Fichiers des autres apps (Trano les télécharge pour vous)</summary>")
+    out.append("<summary>📦 Fichiers des autres apps (Mahay HUB les télécharge pour vous)</summary>")
     out.append("")
     out.append("| App | Android arm64 | Android x86_64 | Linux |")
     out.append("|---|---|---|---|")

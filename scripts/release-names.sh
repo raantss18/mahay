@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copy dist/android/app-<app>-<abi>-release.apk (and the AAB) to dist/release/ under the names
-# Trano and the release page use: <app>-<version>-android-<abi>.apk, <app>-<version>-android.aab.
+# Mahay HUB and the release page use: <app>-<version>-android-<abi>.apk, <app>-<version>-android.aab.
 #
 #   scripts/release-names.sh 0.1.0
 set -euo pipefail

@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [trano, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
+        app: [hub, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [trano, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
+        app: [hub, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

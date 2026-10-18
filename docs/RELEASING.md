@@ -19,7 +19,7 @@ updates by them.
 python3 -I scripts/bump-version.py 0.3.0          # every app, VERSION
 # write the CHANGELOG section "## [0.3.0] — date"
 scripts/android-build.sh --abi all                 # 14 apps × 2 ABIs, signed (release-keys/)
-for a in trano sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra; do
+for a in hub sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra; do
   (cd apps/$a && cargo build --release --locked -p $a && APPIMAGELAUNCHER_DISABLE=1 packaging/linux/package.sh --skip-build --formats "appimage deb")
 done
 scripts/stage-release.sh 0.3.0                     # renames, SHA256SUMS.txt, signature, notes
@@ -35,9 +35,9 @@ pre-releases.
 
 ## The release page
 
-`scripts/release-notes.py` writes it, Tontolo-style: **Trano first** (Android arm64 = the right
+`scripts/release-notes.py` writes it, Tontolo-style: **Mahay HUB first** (Android arm64 = the right
 choice in 95 % of cases; AppImage for Linux), the note that Mahay updates itself, the new
-features from the CHANGELOG, then the other apps' files folded away (Trano downloads them).
+features from the CHANGELOG, then the other apps' files folded away (Mahay HUB downloads them).
 
 ## From CI
 

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Mahay HUB
+GenericName=App Launcher
+Comment=Install, update and launch the Mahay App Suite
+Exec=hub
+TryExec=hub
+Icon=org.mahay.hub
+Terminal=false
+StartupNotify=true
+StartupWMClass=hub
+Categories=Utility;PackageManager;
+Keywords=mahay;craft;launcher;installer;updater;sary;hetsika;apps;

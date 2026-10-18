@@ -29,7 +29,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 
 | Upstream    | Mahay name     | Meaning              | Role                       |
 |-------------|----------------|----------------------|----------------------------|
-| launcher    | **Trano**      | house, home          | hub / launcher             |
+| launcher    | **Mahay HUB**  | the suite's hub      | hub / launcher             |
 | PhotoCraft  | **Sary**       | picture              | image editor               |
 | PdfCraft    | **Taratasy**   | paper, document      | PDF workbench              |
 | WordCraft   | **Soratra**    | writing              | word processor             |
@@ -50,7 +50,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 
 ## D3 — Release 1 scope: hub + five tablet apps
 
-- **Decision:** release 1 ships Trano + Sary, Taratasy, Soratra, Tabilao, Seho on Linux and
+- **Decision:** release 1 ships Mahay HUB + Sary, Taratasy, Soratra, Tabilao, Seho on Linux and
   Android (phone + tablet). The other eight apps follow in later releases. The original
   ArtCraft AI desktop app (Tauri + React) is not in release 1.
 - **Alternatives:** hub + 1–2 apps; fork-only.
@@ -86,7 +86,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   Mahay app (its own applicationId `org.mahay.<app>`, label, icons and `.so`). A small Java
   `MahayActivity extends NativeActivity` handles what Rust can't reach without Java: the
   Storage Access Framework pickers (open/save documents), incoming VIEW/SEND intents, and
-  launching sibling apps from Trano. Java only, no Kotlin, no AndroidX, to keep APKs small.
+  launching sibling apps from Mahay HUB. Java only, no Kotlin, no AndroidX, to keep APKs small.
   The `.so` files are built by `cargo ndk`. There is one APK per app per ABI (arm64-v8a,
   x86_64), plus an AAB.
 - **Alternatives:** cargo-apk (unmaintained); xbuild (no AAB signing flow we trust); one big
@@ -133,7 +133,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 
 ## D11 — No upstream services
 
-- **Decision:** nothing calls upstream's servers. Trano's release feed
+- **Decision:** nothing calls upstream's servers. Mahay HUB's release feed
   (`api.storyteller.ai`) is disabled; it reads the GitHub releases of `raantss18/mahay`.
   Upstream social accounts and Discord links point to the repo and its Discussions instead.
 - **Why:** the prompt forbids depending on upstream's backend, and links to accounts that
@@ -160,7 +160,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 - **Decision:** every app, the hub, the APKs and the Linux packages carry the repository's
   `VERSION` (0.2.0 now); `scripts/bump-version.py` sets it everywhere.
 - **Why:** Tontolo's rule, and what makes automatic updates simple: an app compares its own
-  version with the latest release's, and Trano compares installed versions with it.
+  version with the latest release's, and Mahay HUB compares installed versions with it.
 
 ## D15 — Automatic updates, Tontolo's model
 
@@ -170,7 +170,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   in place then restarted. `SHA256SUMS.txt` must be signed with Mahay's Ed25519 key
   (`.github/update-signing.pub`, private half in `release-keys/`); hosts other than GitHub over
   https, a bad signature, a wrong hash or an older version are refused. File names never change.
-- **Trano is the only download:** the release page puts it first; it installs every other app
+- **Mahay HUB is the only download:** the release page puts it first; it installs every other app
   directly (no browser, no GitHub page), and "Update all" updates them.
 - **Cost:** two Android permissions, `INTERNET` and `REQUEST_INSTALL_PACKAGES`, both declared
   and explained (SECURITY_AUDIT).
@@ -196,3 +196,10 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   updates, QR code to install on another device, author, licences). No upstream names, links or
   contributor lists in the interface; the copyright notices the MIT licence requires stay in
   `LICENSE-*`/`NOTICE` and the upstream contributor files stay in the repository.
+
+## D19 — The hub is "Mahay HUB"
+
+- **Decision:** the hub, first called Trano, is **Mahay HUB** (id `hub`, `org.mahay.hub`,
+  `hub-<v>-android-<abi>.apk`), at the user's request (2026-10-18), before 0.2.0 shipped.
+- **Why:** it names what it is: the one app to download, which installs and updates the others.
+  Release 0.1.0's files keep their old `trano-…` names.

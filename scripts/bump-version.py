@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Give the whole suite one version (Tontolo's rule): VERSION, every app's
-[workspace.package] version, the internal path dependencies that pin it, and Trano's catalog.
+[workspace.package] version, the internal path dependencies that pin it, and Mahay HUB's catalog.
 
 Usage: python3 -I scripts/bump-version.py 0.2.0
 Then build once (cargo updates each Cargo.lock) and add a CHANGELOG section.
@@ -10,7 +10,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APPS = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
+APPS = ["hub", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
 
 
 def workspace_version(text):

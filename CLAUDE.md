@@ -5,9 +5,9 @@ Guidance for Claude Code (and other agents) working in this repository.
 ## What this is
 
 **Mahay**: a fork of the ArtCraft crafting apps, renamed (Malagasy names) and ported to Android
-phones and tablets, plus Linux. Native Rust (egui/eframe + wgpu), no WebView. Trano (hub) + 13 apps; one version for
+phones and tablets, plus Linux. Native Rust (egui/eframe + wgpu), no WebView. Mahay HUB (hub) + 13 apps; one version for
 the suite (`VERSION`), automatic signed updates (`libs/core/crates/update`), shared About page
-and update bar (`libs/core/crates/about`). Trano is the only file users download by hand. Read `docs/DECISIONS.md`,
+and update bar (`libs/core/crates/about`). Mahay HUB is the only file users download by hand. Read `docs/DECISIONS.md`,
 `docs/STATUS.md` and `docs/PORTING_AUDIT.md` before changing anything structural.
 
 ## Layout

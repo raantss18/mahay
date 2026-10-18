@@ -13,7 +13,7 @@
 //!   blocking it would deadlock the activity, whose Java side waits for the native thread
 //!   while the picker covers the window.
 //! - VIEW / SEND intents: the launch document comes out of the first [`poll`].
-//! - [`launch_app`], [`is_installed`], [`open_url`]: what Trano needs to start sibling apps.
+//! - [`launch_app`], [`is_installed`], [`open_url`]: what Mahay HUB needs to start sibling apps.
 //! - [`set_keyboard`], [`clipboard_text`], [`set_clipboard_text`]: soft keyboard and clipboard.
 //!
 //! Answers from Java arrive on the UI thread; [`set_waker`] lets the app ask for a repaint then.

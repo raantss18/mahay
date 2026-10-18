@@ -63,7 +63,7 @@ pub fn register_desktop(app: AppInfo, ctx: &egui::Context) {
     register(app, Lang::from_env(), checker, Box::new(mahay_update::install_appimage));
 }
 
-/// The registered updater, for screens that show its state (Trano).
+/// The registered updater, for screens that show its state (Mahay HUB).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn updater() -> Option<&'static Checker> {
     REGISTERED.get().map(|r| &r.checker)
@@ -337,7 +337,7 @@ fn tagline_key(id: &str) -> &'static str {
         "hetsika" => "tag_hetsika",
         "tselatra" => "tag_tselatra",
         "drafitra" => "tag_drafitra",
-        _ => "tag_trano",
+        _ => "tag_hub",
     }
 }
 
@@ -349,7 +349,7 @@ pub fn icon(ctx: &egui::Context, id: &str) -> Option<egui::TextureHandle> {
         "soratra" => include_bytes!("../assets/soratra.rgba"),
         "tabilao" => include_bytes!("../assets/tabilao.rgba"),
         "seho" => include_bytes!("../assets/seho.rgba"),
-        "trano" => include_bytes!("../assets/trano.rgba"),
+        "hub" => include_bytes!("../assets/hub.rgba"),
         "tsilo" => include_bytes!("../assets/tsilo.rgba"),
         "endrika" => include_bytes!("../assets/endrika.rgba"),
         "pejy" => include_bytes!("../assets/pejy.rgba"),

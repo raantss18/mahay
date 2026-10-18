@@ -3,7 +3,7 @@
 
     <!-- Automatic updates (Tontolo's model): download verified releases from GitHub. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Install the downloaded update (and, from Trano, the other Mahay apps) through Android's
+    <!-- Install the downloaded update (and, from Mahay HUB, the other Mahay apps) through Android's
          installer; the user confirms every install. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 

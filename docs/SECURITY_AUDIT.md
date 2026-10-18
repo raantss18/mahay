@@ -11,17 +11,17 @@ Tool: `cargo audit` (RustSec advisory database, fetched 2026-10-18) on every `Ca
 
 | Advisory          | Crate (version)        | Where                     | Status                                                                                                                         |
 |-------------------|------------------------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| RUSTSEC-2026-0346 | rustls 0.23.45         | libs/core, Trano, Sary    | **fixed**: updated to 0.23.46; Trano and Sary rebuilt for the release                                                          |
-| RUSTSEC-2026-0347 | rustls 0.23.45         | libs/core, Trano, Sary    | **fixed** (same update)                                                                                                        |
-| RUSTSEC-2026-0348 | rustls 0.23.45         | libs/core, Trano, Sary    | **fixed** (same update)                                                                                                        |
-| RUSTSEC-2026-0349 | rustls 0.23.45         | libs/core, Trano, Sary    | **fixed** (same update)                                                                                                        |
-| RUSTSEC-2026-0367 | zip 3.0.0 / 8.6.0      | Soratra, Tabilao, Seho, Trano | **not reachable**: the advisories are in `ZipArchive::extract` / `ZipStreamReader::extract`; no Mahay or upstream code calls them (`grep -rn '\.extract(' apps libs` finds no zip use); entries are read one by one into memory. Fix needs zip 9 (API break): tracked in TODO |
+| RUSTSEC-2026-0346 | rustls 0.23.45         | libs/core, Mahay HUB, Sary    | **fixed**: updated to 0.23.46; Mahay HUB and Sary rebuilt for the release                                                          |
+| RUSTSEC-2026-0347 | rustls 0.23.45         | libs/core, Mahay HUB, Sary    | **fixed** (same update)                                                                                                        |
+| RUSTSEC-2026-0348 | rustls 0.23.45         | libs/core, Mahay HUB, Sary    | **fixed** (same update)                                                                                                        |
+| RUSTSEC-2026-0349 | rustls 0.23.45         | libs/core, Mahay HUB, Sary    | **fixed** (same update)                                                                                                        |
+| RUSTSEC-2026-0367 | zip 3.0.0 / 8.6.0      | Soratra, Tabilao, Seho, Mahay HUB | **not reachable**: the advisories are in `ZipArchive::extract` / `ZipStreamReader::extract`; no Mahay or upstream code calls them (`grep -rn '\.extract(' apps libs` finds no zip use); entries are read one by one into memory. Fix needs zip 9 (API break): tracked in TODO |
 | RUSTSEC-2026-0368 | zip                    | same                      | not reachable (same reason)                                                                                                    |
 | RUSTSEC-2026-0369 | zip                    | same                      | not reachable (same reason)                                                                                                    |
 | RUSTSEC-2023-0071 | rsa 0.10.0-rc          | Taratasy (signatures)     | **accepted, no fix upstream**: the Marvin attack needs an attacker who can time many decryptions on demand. Taratasy uses RSA keys locally to sign PDFs the user chose to sign; no service exposes decryption. Revisit when `rsa` ships constant-time decryption |
 
 Warnings (no known exploit): unmaintained `proc-macro-error`, `paste`, `rustybuzz`, `ttf-parser`,
-`zbus_names`, `zvariant*` (Linux D-Bus only); unsound `glib 0.18` (Trano's Linux tray only);
+`zbus_names`, `zvariant*` (Linux D-Bus only); unsound `glib 0.18` (Mahay HUB's Linux tray only);
 yanked `yoke-derive 0.8.3` (Sary). None of these is linked into the Android builds except the
 font crates, which parse only fonts bundled with the apps.
 

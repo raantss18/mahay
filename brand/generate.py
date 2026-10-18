@@ -26,8 +26,8 @@ APPS = {
         ("s", "M27,76 L44,44 L54,60 L64,44 L81,76"),
         ("f", "M54,25 a7,7 0 1,0 0.01,0 Z"),
     ]),
-    # Trano, the hub: a house holding a 2x2 grid of apps.
-    "trano": ("#E4572E", [
+    # Mahay HUB, the hub: a house holding a 2x2 grid of apps.
+    "hub": ("#E4572E", [
         ("s", "M28,50 L54,28 L80,50 L80,80 L28,80 Z"),
         ("f", "M41,55 h10 v9 h-10 Z M57,55 h10 v9 h-10 Z M41,68 h10 v8 h-10 Z M57,68 h10 v8 h-10 Z"),
     ]),
@@ -157,7 +157,7 @@ def write(path, text):
 
 
 # Apps with an Android flavour (android/app/build.gradle).
-ANDROID = {"trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"}
+ANDROID = {"hub", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"}
 
 
 # The wordmark: the mark, then MAHAY drawn with the same line weight (no font needed).

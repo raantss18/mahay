@@ -1,0 +1,9 @@
+Mahay HUB portable mode
+
+While this file sits next to hub.exe, Mahay HUB keeps its settings, its
+download cache and its record of installed apps in the MahayLauncherData folder beside it, and
+writes nothing to %APPDATA%. Copy the whole folder to move Mahay HUB with its settings.
+
+Delete this file to use the normal per-user settings folder (%APPDATA%\Mahay HUB) instead.
+If MahayLauncherData can't be written (for example on a read-only drive), Mahay HUB says
+so and uses %APPDATA%\Mahay HUB instead.

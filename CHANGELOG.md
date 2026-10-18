@@ -10,9 +10,9 @@ versions follow [SemVer](https://semver.org/).
 - **Eight more apps**, on Linux and Android: Tsilo (vector illustration), Endrika (interface
   design), Pejy (page layout), Hazavana (photo library and raw), Feo (audio), Hetsika (video),
   Tselatra (motion graphics) and Drafitra (CAD). Mahay now has 14 apps.
-- **Trano installs everything**: "Download" fetches an app's APK straight from the release,
+- **Mahay HUB installs everything**: "Download" fetches an app's APK straight from the release,
   checks it and opens Android's installer, without going through GitHub's page. "Update" and
-  "Update all" keep every app current. Trano is the only file to download by hand.
+  "Update all" keep every app current. Mahay HUB is the only file to download by hand.
 - **Automatic updates in every app**: checked at start-up and every day, downloaded in the
   background, then a bar offers "Install" with the release notes. On Linux the AppImage replaces
   itself and restarts.
@@ -39,7 +39,7 @@ First release of Mahay, a fork of the ArtCraft crafting apps.
 ### Added
 
 - **Android (phone and tablet, Android 8+)** for Sary, Taratasy, Soratra, Tabilao and Seho, and
-  a new Android hub, Trano. One APK per app (arm64-v8a, x86_64).
+  a new Android hub, Mahay HUB. One APK per app (arm64-v8a, x86_64).
 - Android glue (`mahay-android`): system document picker with write-back to the original
   document, Save As to any location, soft keyboard with full IME text (accents, suggestions),
   Android clipboard, edge-to-edge layout that avoids the system bars and the keyboard, bar
@@ -47,14 +47,14 @@ First release of Mahay, a fork of the ArtCraft crafting apps.
 - Android backends for `rfd` (file dialogs) and `arboard` (clipboard), vendored in
   `libs/core/vendor`.
 - The Mahay icon family and wordmark (`docs/BRAND.md`), generated from one script.
-- Trilingual README (English, French, Malagasy); Trano's Android hub in the three languages.
+- Trilingual README (English, French, Malagasy); Mahay HUB's Android hub in the three languages.
 - CI for Linux and Android; tagged releases build signed APKs, AppImages and .deb packages.
 
 ### Changed
 
 - Every app renamed: PhotoCraft → Sary, PdfCraft → Taratasy, WordCraft → Soratra,
-  GridCraft → Tabilao, DeckCraft → Seho, the launcher → Trano. Ids are `org.mahay.<app>`.
-- Trano reads GitHub releases of `raantss18/mahay` directly.
+  GridCraft → Tabilao, DeckCraft → Seho, the launcher → Mahay HUB. Ids are `org.mahay.<app>`.
+- Mahay HUB reads GitHub releases of `raantss18/mahay` directly.
 
 ### Removed
 

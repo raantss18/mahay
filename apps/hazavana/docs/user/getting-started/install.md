@@ -39,9 +39,9 @@ The release has these files for `x86_64` and `aarch64` (Arm). Replace `x86_64` w
 
 RISC-V and FreeBSD builds are on the release page too. On a Wayland desktop, Hazavana runs through XWayland when it is available, because only X11 gives it file drag-and-drop.
 
-## Install with Mahay Trano
+## Install with Mahay HUB
 
-[Mahay Trano](https://github.com/raantss18/mahay) lists Hazavana and can install and update it for you. On Windows it installs the release `.msi`.
+[Mahay HUB](https://github.com/raantss18/mahay) lists Hazavana and can install and update it for you. On Windows it installs the release `.msi`.
 
 ## In a web browser
 

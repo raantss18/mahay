@@ -1,6 +1,6 @@
 # Porting audit: Linux and Android
 
-Audit of the upstream stack for the release-1 apps (Trano, Sary, Taratasy, Soratra, Tabilao,
+Audit of the upstream stack for the release-1 apps (Mahay HUB, Sary, Taratasy, Soratra, Tabilao,
 Seho), written before and during the port (2026-10-18). Every row was checked against the code
 and, where marked, against a real build or an emulator run.
 
@@ -43,7 +43,7 @@ and, where marked, against a real build or an emulator run.
 | 14| Ribbon UIs (Soratra, Tabilao, Seho) on phones (compact width)                               | medium | tablets get the full layout; on phones the ribbon scrolls; a dedicated compact mode is planned (STATUS)                                         | tablet emulator              |
 | 15| Memory limits: large images (Sary), long PDFs, video (Seho)                                  | medium | upstream already tiles and streams; no extra cap yet; to measure on a 4 GB device                                                                | —                            |
 | 16| GPU: emulators and old devices only offer software Vulkan (SwiftShader) or GLES 3           | low    | wgpu picks GLES when Vulkan isn't usable; Sary keeps its CPU canvas on software adapters                                                         | emulator (SwiftShader)       |
-| 17| Upstream release feed (`api.storyteller.ai`) and social links                               | high   | removed: Trano reads GitHub releases of `raantss18/mahay` only                                                                                   | code review                  |
+| 17| Upstream release feed (`api.storyteller.ai`) and social links                               | high   | removed: Mahay HUB reads GitHub releases of `raantss18/mahay` only                                                                                   | code review                  |
 | 18| APK size                                                                                    | medium | one APK per app per ABI, fat LTO + strip, compressed `.so`, R8 for Java                                                                          | Tabilao x86_64: 11.5 MB      |
 
 ## Platform notes

@@ -21,7 +21,7 @@ nampandehanina tamin'ny Android. Jereo ny [NOTICE](NOTICE).
 
 | Rindranasa   | Asany                                               | Linux | Android |
 |--------------|-----------------------------------------------------|-------|---------|
-| **Trano**    | ny fandraisana: mampiseho sy manokatra ny rindranasa | eny   | eny     |
+| **Mahay HUB**    | ny fandraisana: mampiseho sy manokatra ny rindranasa | eny   | eny     |
 | **Sary**     | fanamboarana sary (sosona, PSD, RAW)                | eny   | alpha   |
 | **Taratasy** | PDF: vakiana, asiana fanamarihana, fenoina, soniavina | eny | alpha   |
 | **Soratra**  | fanoratana lahatsoratra (DOCX, ODT)                 | eny   | alpha   |
@@ -39,9 +39,9 @@ nampandehanina tamin'ny Android. Jereo ny [NOTICE](NOTICE).
 
 ## Fametrahana
 
-Alaivo ihany i **Trano** ao amin'ny [dikan-teny farany](https://github.com/raantss18/mahay/releases/latest)
-(`trano-…-android-arm64-v8a.apk` ho an'ny Android, `trano-…-linux-x86_64.AppImage` ho an'ny Linux).
-**Trano no mametraka, manokatra ary manavao ny rindranasa hafa rehetra.** Manavao ny tenany koa
+Alaivo ihany i **Mahay HUB** ao amin'ny [dikan-teny farany](https://github.com/raantss18/mahay/releases/latest)
+(`hub-…-android-arm64-v8a.apk` ho an'ny Android, `hub-…-linux-x86_64.AppImage` ho an'ny Linux).
+**Mahay HUB no mametraka, manokatra ary manavao ny rindranasa hafa rehetra.** Manavao ny tenany koa
 ny rindranasa tsirairay.
 
 ## Maivana

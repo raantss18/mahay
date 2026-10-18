@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mahay HUB only: Android 11+ hides other apps unless they are declared here. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <package android:name="org.mahay.sary" />
+        <package android:name="org.mahay.taratasy" />
+        <package android:name="org.mahay.soratra" />
+        <package android:name="org.mahay.tabilao" />
+        <package android:name="org.mahay.seho" />
+        <package android:name="org.mahay.tsilo" />
+        <package android:name="org.mahay.endrika" />
+        <package android:name="org.mahay.pejy" />
+        <package android:name="org.mahay.hazavana" />
+        <package android:name="org.mahay.feo" />
+        <package android:name="org.mahay.hetsika" />
+        <package android:name="org.mahay.tselatra" />
+        <package android:name="org.mahay.drafitra" />
+    </queries>
+</manifest>

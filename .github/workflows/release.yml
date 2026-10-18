@@ -2,7 +2,7 @@ name: Release
 
 # Builds every app for Linux and Android from a tag (v0.1.0) and attaches the files to the
 # GitHub release: <app>-<version>-linux-x86_64.AppImage/.deb and
-# <app>-<version>-android-<abi>.apk, plus SHA256SUMS.txt (the names Trano looks for).
+# <app>-<version>-android-<abi>.apk, plus SHA256SUMS.txt (the names Mahay HUB looks for).
 
 # Started by hand (Actions ▸ Release ▸ Run workflow) once the signing secrets are set:
 # MAHAY_KEYSTORE_B64 (base64 of the .jks), MAHAY_KEYSTORE_PASSWORD, MAHAY_KEY_ALIAS,
@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [trano, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
+        app: [hub, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [trano, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
+        app: [hub, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
     steps:
       - uses: actions/checkout@v4
         with:

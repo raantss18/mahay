@@ -1,6 +1,6 @@
 ---
 title: Install Pejy
-description: Download Pejy 0.7.1 for Windows 11, macOS or Linux, or install it from Mahay Trano.
+description: Download Pejy 0.7.1 for Windows 11, macOS or Linux, or install it from Mahay HUB.
 order: 20
 verified: 0.7.1
 ---
@@ -37,9 +37,9 @@ Pick one file from the release. Replace `x86_64` with `aarch64` on ARM.
 
 For RISC-V there is a `.deb`, an `.rpm` and a tarball, named with `riscv64` in place of `x86_64`. There is no AppImage or Flatpak for RISC-V. The RISC-V build needs glibc 2.39 or newer (Ubuntu 24.04 or newer). A FreeBSD build (`pejy-<version>-freebsd-x86_64.tar.gz`) is on the release page too.
 
-## Install with Mahay Trano
+## Install with Mahay HUB
 
-Mahay Trano lists Pejy and can install and update it for you. See [Mahay Trano](https://github.com/raantss18/mahay) for how it works.
+Mahay HUB lists Pejy and can install and update it for you. See [Mahay HUB](https://github.com/raantss18/mahay) for how it works.
 
 ## First run
 

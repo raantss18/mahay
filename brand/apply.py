@@ -7,7 +7,7 @@ open source) and screenshots of its apps. None of that may stay in Mahay. This s
   - re-renders every file under apps/<app>/assets/app-icon/ (PNG at the file's own size, SVG,
     ICO, ICNS) from brand/svg/<app>.svg, and rewrites that folder's LICENSE.txt and README.md;
   - replaces apps/*/docs/brand/ (upstream marks) with the Mahay mark, and its license;
-  - re-renders the launcher's per-app icons (apps/trano/assets/app-icons/<id>.png);
+  - re-renders the launcher's per-app icons (apps/hub/assets/app-icons/<id>.png);
   - deletes upstream screenshots (docs/images, docs/screenshots) and the launcher's
     social-network logos.
 
@@ -22,7 +22,7 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SVG = os.path.join(ROOT, "brand", "svg")
-APPS = ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
+APPS = ["hub", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"]
 
 ICON_LICENSE = """{name} app icon (every file in this directory).
 
@@ -126,7 +126,7 @@ def replace_icon_dir(app, folder, brand=False):
 
 
 def main():
-    names = {"trano": "Mahay Trano", "sary": "Sary", "taratasy": "Taratasy", "soratra": "Soratra", "tabilao": "Tabilao", "seho": "Seho",
+    names = {"hub": "Mahay HUB", "sary": "Sary", "taratasy": "Taratasy", "soratra": "Soratra", "tabilao": "Tabilao", "seho": "Seho",
              "tsilo": "Tsilo", "endrika": "Endrika", "pejy": "Pejy", "hazavana": "Hazavana", "feo": "Feo", "hetsika": "Hetsika",
              "tselatra": "Tselatra", "drafitra": "Drafitra"}
     for app in APPS:
@@ -147,7 +147,7 @@ def main():
                         f.write(BRAND_LICENSE)
         for shots in ("docs/images", "docs/screenshots"):
             shutil.rmtree(os.path.join(base, shots), ignore_errors=True)
-    launcher_icons = os.path.join(ROOT, "apps", "trano", "assets", "app-icons")
+    launcher_icons = os.path.join(ROOT, "apps", "hub", "assets", "app-icons")
     for name in os.listdir(launcher_icons):
         app, ext = os.path.splitext(name)
         svg = os.path.join(SVG, f"{app}.svg")
@@ -155,7 +155,7 @@ def main():
             size = png_size(os.path.join(launcher_icons, name))
             render_png(svg, size[0] if size else 256, os.path.join(launcher_icons, name))
     # Upstream's social accounts aren't Mahay's (catalog::SOCIAL is empty).
-    shutil.rmtree(os.path.join(ROOT, "apps", "trano", "assets", "social"), ignore_errors=True)
+    shutil.rmtree(os.path.join(ROOT, "apps", "hub", "assets", "social"), ignore_errors=True)
     # The About page's icons (raw 96x96 RGBA, no image decoder needed) and the QR code to the
     # latest release (a 0/1 module grid drawn as vector squares).
     about = os.path.join(ROOT, "libs", "core", "crates", "about", "assets")

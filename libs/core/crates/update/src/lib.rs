@@ -199,7 +199,7 @@ impl Release {
 
 /// Every app the release carries, for [`Release::from_version`].
 pub const APPS: [&str; 14] =
-    ["trano", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"];
+    ["hub", "sary", "taratasy", "soratra", "tabilao", "seho", "tsilo", "endrika", "pejy", "hazavana", "feo", "hetsika", "tselatra", "drafitra"];
 
 fn agent() -> ureq::Agent {
     ureq::Agent::config_builder()
@@ -499,7 +499,7 @@ mod tests {
     #[test]
     fn fallback_release_lists_stable_names() {
         let r = Release::from_version("0.2.0", &APPS);
-        assert!(r.asset("trano-0.2.0-android-arm64-v8a.apk").is_some());
+        assert!(r.asset("hub-0.2.0-android-arm64-v8a.apk").is_some());
         assert!(r.asset(SUMS_SIG).is_some());
         assert!(r.assets.iter().all(|a| trusted_url(&a.url)));
     }

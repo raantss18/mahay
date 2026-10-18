@@ -1,0 +1,23 @@
+[package]
+name = "hub-android"
+description = "Mahay Hub on Android: the hub that opens the installed Mahay apps and points to the others."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+# No `[lints] workspace = true`: `android_main` must be `#[unsafe(no_mangle)]`.
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[target.'cfg(target_os = "android")'.dependencies]
+hub-core = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "android-game-activity"] }
+egui = { workspace = true }
+egui_extras = { workspace = true, features = ["svg"] }
+log = { workspace = true }
+mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-about = { path = "../../../../libs/core/crates/about" }
+mahay-update = { path = "../../../../libs/core/crates/update" }

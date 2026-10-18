@@ -8,7 +8,7 @@ the website. All the app repos ship `LICENSE-MIT` + `LICENSE-APACHE`, and the wo
 | #  | Upstream repo         | Mahay name | Path in Mahay   | License            | Upstream commit                            | Date       | Since        |
 |----|-----------------------|------------|-----------------|--------------------|--------------------------------------------|------------|--------------|
 | –  | craft-libs            | (core)     | `libs/core`     | MIT OR Apache-2.0  | `82a24b006eefa036b43c09a67fb9a3fbd17ffe63` | 2026-10-17 | 0.1.0        |
-| –  | craft-launcher        | Trano      | `apps/trano`    | MIT OR Apache-2.0  | `ad7f24a912d6f6cd586f5306d85ab22ef9bf2cbe` | 2026-10-18 | 0.1.0        |
+| –  | craft-launcher        | Mahay HUB      | `apps/hub`    | MIT OR Apache-2.0  | `ad7f24a912d6f6cd586f5306d85ab22ef9bf2cbe` | 2026-10-18 | 0.1.0        |
 | 1  | photocraft            | Sary       | `apps/sary`     | MIT OR Apache-2.0  | `8d2e615ab93d424c4ec25ab15b4edb5368d1f9a6` | 2026-10-18 | 0.1.0        |
 | 5  | pdfcraft              | Taratasy   | `apps/taratasy` | MIT OR Apache-2.0  | `50f261d70c8e199600a82dbaa6912c6fbc4b4612` | 2026-10-18 | 0.1.0        |
 | 9  | wordcraft             | Soratra    | `apps/soratra`  | MIT OR Apache-2.0  | `4a251d4b9c724a5bd3dd75f7c91c6aae77c6650e` | 2026-10-18 | 0.1.0        |
@@ -40,7 +40,7 @@ Filled in from real runs (2026-10-18); details in `docs/STATUS.md`.
 
 | App      | Linux x86_64 build | Android arm64 / x86_64 APK | Ran on the emulator |
 |----------|--------------------|----------------------------|---------------------|
-| Trano    | CI + local         | 4.8 / 5.3 MB               | tablet              |
+| Mahay HUB    | CI + local         | 4.8 / 5.3 MB               | tablet              |
 | Sary     | CI + local         | 23.2 / 25.1 MB             | tablet              |
 | Taratasy | CI + local         | 17.6 / 19.3 MB             | tablet              |
 | Soratra  | CI + local         | 17.1 / 18.4 MB             | tablet              |

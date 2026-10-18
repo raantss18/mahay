@@ -22,7 +22,7 @@ One design language for the suite:
 | Mark       | Accent    | Glyph                                   |
 |------------|-----------|-----------------------------------------|
 | Mahay      | `#E4572E` | two peaks and the rising sun            |
-| Trano      | `#E4572E` | a house holding a 2×2 grid of apps      |
+| Mahay HUB      | `#E4572E` | a house holding a 2×2 grid of apps      |
 | Sary       | `#2E86DE` | a frame, a peak and the sun             |
 | Taratasy   | `#D7263D` | a page with a folded corner             |
 | Soratra    | `#3F51B5` | lines of text and the cursor            |

@@ -20,7 +20,7 @@ ported to Android. See [NOTICE](NOTICE).
 
 | App          | What it does                                    | Linux | Android |
 |--------------|-------------------------------------------------|-------|---------|
-| **Trano**    | the hub: opens and lists the apps               | yes   | yes     |
+| **Mahay HUB**    | the hub: opens and lists the apps               | yes   | yes     |
 | **Sary**     | image editor (layers, PSD, raw)                 | yes   | alpha   |
 | **Taratasy** | PDF: read, annotate, fill, sign, organise       | yes   | alpha   |
 | **Soratra**  | word processor (DOCX, ODT)                      | yes   | alpha   |
@@ -36,16 +36,16 @@ ported to Android. See [NOTICE](NOTICE).
 | **Drafitra** | technical drawing (CAD)                         | yes   | alpha   |
 
 
-## Install: just Trano
+## Install: just Mahay HUB
 
-Download **Trano**, the Mahay hub, from the [latest release](https://github.com/raantss18/mahay/releases/latest):
-`trano-…-android-arm64-v8a.apk` on Android 8+ (phones and tablets), `trano-…-linux-x86_64.AppImage`
-on Linux. **Trano installs, opens and updates every other app**, straight from the release.
+Download **Mahay HUB**, the Mahay hub, from the [latest release](https://github.com/raantss18/mahay/releases/latest):
+`hub-…-android-arm64-v8a.apk` on Android 8+ (phones and tablets), `hub-…-linux-x86_64.AppImage`
+on Linux. **Mahay HUB installs, opens and updates every other app**, straight from the release.
 Every app also updates itself (checked daily, signed files, you confirm the install).
 
 ## Light by design
 
-- One APK per app: you only download what you use (from about 5 MB for Trano to about 25 MB for the largest apps).
+- One APK per app: you only download what you use (from about 5 MB for Mahay HUB to about 25 MB for the largest apps).
 - Native code with whole-program optimisation, no browser engine inside.
 - Works fully offline. Documents open from, and save back to, wherever you keep them (Files,
   Drive, a USB stick) through Android's own document picker.

@@ -35,7 +35,7 @@ DISPLAY = {
     "FigCraft": "Endrika", "DesignCraft": "Pejy", "LightCraft": "Hazavana",
     "SoundCraft": "Feo", "FilmCraft": "Hetsika", "EffectCraft": "Tselatra",
     "CADCraft": "Drafitra", "CadCraft": "Drafitra", "AniCraft": "Sarimiaina",
-    "ArtCraft Launcher": "Mahay Trano", "ArtCraft": "Mahay",
+    "ArtCraft Launcher": "Mahay HUB", "ArtCraft": "Mahay",
 }
 SKIP_NAMES = re.compile(r"^(LICENSE|LICENSE-[A-Z]+|NOTICE|COPYING|ATTRIBUTION\.(md|toml))(\.(md|txt))?$")
 SKIP_DIRS = {"licenses", "contributors", ".git", "target"}
@@ -52,8 +52,8 @@ def build_rules():
     for up, ours in DISPLAY.items():
         rules.append((re.escape(up), ours))
     rules += [
-        (r"artcraft[-_]launcher", "trano"),
-        (r"ARTCRAFT_LAUNCHER", "TRANO"),
+        (r"artcraft[-_]launcher", "hub"),
+        (r"ARTCRAFT_LAUNCHER", "HUB"),
         (r"https?://(?:app\.)?getartcraft\.com[^\s)\]\"'<>`]*", OUR_REPO),
         (r"getartcraft", "mahay"),
         (r"https?://github\.com/storytold/craft-([\w.-]+)", OUR_REPO),

@@ -21,7 +21,7 @@ sur Android. Voir [NOTICE](NOTICE).
 
 | App          | Rôle                                            | Linux | Android |
 |--------------|-------------------------------------------------|-------|---------|
-| **Trano**    | l'accueil : liste et ouvre les apps             | oui   | oui     |
+| **Mahay HUB**    | l'accueil : liste et ouvre les apps             | oui   | oui     |
 | **Sary**     | retouche d'images (calques, PSD, RAW)           | oui   | alpha   |
 | **Taratasy** | PDF : lire, annoter, remplir, signer, organiser | oui   | alpha   |
 | **Soratra**  | traitement de texte (DOCX, ODT)                 | oui   | alpha   |
@@ -37,16 +37,16 @@ sur Android. Voir [NOTICE](NOTICE).
 | **Drafitra** | dessin technique (CAO)                          | oui   | alpha   |
 
 
-## Installer : seulement Trano
+## Installer : seulement Mahay HUB
 
-Téléchargez **Trano**, l'accueil de Mahay, depuis la [dernière version](https://github.com/raantss18/mahay/releases/latest) :
-`trano-…-android-arm64-v8a.apk` sur Android 8+ (téléphones et tablettes), `trano-…-linux-x86_64.AppImage`
-sous Linux. **Trano installe, ouvre et met à jour toutes les autres apps**, directement.
+Téléchargez **Mahay HUB**, l'accueil de Mahay, depuis la [dernière version](https://github.com/raantss18/mahay/releases/latest) :
+`hub-…-android-arm64-v8a.apk` sur Android 8+ (téléphones et tablettes), `hub-…-linux-x86_64.AppImage`
+sous Linux. **Mahay HUB installe, ouvre et met à jour toutes les autres apps**, directement.
 Chaque app se met aussi à jour toute seule (vérification quotidienne, fichiers signés, vous confirmez l'installation).
 
 ## Léger par conception
 
-- Un APK par app : vous ne téléchargez que ce que vous utilisez (d'environ 5 Mo pour Trano à environ 25 Mo pour les plus grosses apps).
+- Un APK par app : vous ne téléchargez que ce que vous utilisez (d'environ 5 Mo pour Mahay HUB à environ 25 Mo pour les plus grosses apps).
 - Code natif optimisé de bout en bout, aucun moteur de navigateur embarqué.
 - Fonctionne entièrement hors ligne. Les documents s'ouvrent depuis, et s'enregistrent vers,
   l'endroit où vous les rangez (Fichiers, Drive, clé USB) via le sélecteur de documents d'Android.

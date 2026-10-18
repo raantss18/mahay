@@ -50,7 +50,7 @@ android {
 
     flavorDimensions = ["app"]
     productFlavors {
-        trano    { dimension "app"; applicationId "org.mahay.trano"; manifestPlaceholders = [label: "Mahay", lib: "trano_android"] }
+        hub    { dimension "app"; applicationId "org.mahay.hub"; manifestPlaceholders = [label: "Mahay HUB", lib: "hub_android"] }
         sary     { dimension "app"; applicationId "org.mahay.sary"; manifestPlaceholders = [label: "Sary", lib: "sary_android"] }
         taratasy { dimension "app"; applicationId "org.mahay.taratasy"; manifestPlaceholders = [label: "Taratasy", lib: "taratasy_android"] }
         soratra  { dimension "app"; applicationId "org.mahay.soratra"; manifestPlaceholders = [label: "Soratra", lib: "soratra_android"] }
