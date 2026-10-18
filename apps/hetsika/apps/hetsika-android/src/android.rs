@@ -72,7 +72,19 @@ struct Shell {
 
 impl eframe::App for Shell {
     fn logic(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        let _ = mahay_android::poll();
+        // A project opens; video, audio and pictures from another app are imported.
+        let (opened, _notices) = mahay_android::poll();
+        for doc in opened {
+            let path = doc.path.to_string_lossy().into_owned();
+            let (cmd, params) = if path.to_ascii_lowercase().ends_with(".fcproj") {
+                ("file.open", serde_json::json!({"path": path}))
+            } else {
+                ("file.import", serde_json::json!({"paths": [path]}))
+            };
+            if let Err(e) = self.app.session.execute(cmd, params) {
+                log::warn!("{cmd}: {e}");
+            }
+        }
         eframe::App::logic(&mut self.app, ctx, frame);
     }
 

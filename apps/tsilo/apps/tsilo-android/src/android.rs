@@ -84,7 +84,14 @@ struct Shell {
 
 impl eframe::App for Shell {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let _ = mahay_android::poll();
+        // Documents opened or shared from another app.
+        let (opened, _notices) = mahay_android::poll();
+        for doc in opened {
+            let path = doc.path.to_string_lossy().into_owned();
+            if let Err(e) = tsilo_ui_egui::io::open_reporting(&mut self.app, &path) {
+                log::warn!("{path}: {e}");
+            }
+        }
         self.app.logic(ctx);
     }
 

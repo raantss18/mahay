@@ -86,7 +86,15 @@ struct Shell {
 
 impl eframe::App for Shell {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let _ = mahay_android::poll();
+        // Photos shared or opened from another app are imported into the library.
+        let (opened, _notices) = mahay_android::poll();
+        if !opened.is_empty() {
+            let paths: Vec<String> = opened.iter().map(|d| d.path.to_string_lossy().into_owned()).collect();
+            if let Err(e) = hazavana_ui_egui::import::start_paths(&mut self.app, paths) {
+                log::warn!("import: {e}");
+            }
+            self.app.ui.view = hazavana_ui_egui::state::ViewMode::PhotoGrid;
+        }
         self.app.logic(ctx);
     }
 
