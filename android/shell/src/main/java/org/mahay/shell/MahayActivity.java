@@ -109,6 +109,14 @@ public class MahayActivity extends GameActivity {
 
     /** Copy a local file over the document at uri. */
     public boolean writeBack(String src, String uri) {
+        if (!isContentUri(Uri.parse(uri))) return false;
+        // Only files inside this app's own document folder are ever copied out.
+        try {
+            String docs = new File(getFilesDir(), "docs").getCanonicalPath() + File.separator;
+            if (!new File(src).getCanonicalPath().startsWith(docs)) return false;
+        } catch (java.io.IOException e) {
+            return false;
+        }
         try (InputStream in = new FileInputStream(src);
              OutputStream out = getContentResolver().openOutputStream(Uri.parse(uri), "wt")) {
             if (out == null) return false;
@@ -275,8 +283,21 @@ public class MahayActivity extends GameActivity {
         return copyIn(uri, dir, writable);
     }
 
+    /**
+     * Only content:// URIs are accepted. The activity is exported, so another app could send a
+     * file:// URI pointing into this app's private storage; copying it out, or writing edits
+     * back to it, must not be possible.
+     */
+    private static boolean isContentUri(Uri uri) {
+        return uri != null && ContentResolver.SCHEME_CONTENT.equals(uri.getScheme());
+    }
+
     /** Copy uri into dir under its display name: {path, name, uri if writable else ""}. */
     private String[] copyIn(Uri uri, String dir, boolean writable) {
+        if (!isContentUri(uri)) {
+            Log.w(TAG, "ignored a non-content URI");
+            return null;
+        }
         String name = displayName(uri);
         File folder = new File(dir);
         if (!folder.isDirectory() && !folder.mkdirs()) return null;

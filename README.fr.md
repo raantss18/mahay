@@ -43,7 +43,7 @@ dont vous avez besoin ; Trano les ouvre.
 
 ## Léger par conception
 
-- Un APK par app : vous ne téléchargez que ce que vous utilisez (environ 8 à 15 Mo chacun).
+- Un APK par app : vous ne téléchargez que ce que vous utilisez (de 5 à 23 Mo : Trano 4,8, Tabilao 8,5, Seho 12, Soratra 17, Taratasy 18, Sary 23 Mo en arm64).
 - Code natif optimisé de bout en bout, aucun moteur de navigateur embarqué.
 - Fonctionne entièrement hors ligne. Les documents s'ouvrent depuis, et s'enregistrent vers,
   l'endroit où vous les rangez (Fichiers, Drive, clé USB) via le sélecteur de documents d'Android.

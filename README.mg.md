@@ -41,7 +41,7 @@ no manokatra azy ireo.
 
 ## Maivana
 
-- APK iray isaky ny rindranasa: izay ampiasainao ihany no alainao (eo amin'ny 8 hatramin'ny 15 Mo).
+- APK iray isaky ny rindranasa: izay ampiasainao ihany no alainao (5 hatramin'ny 23 Mo).
 - Kaody teratany, tsy misy motera mpitety tranonkala ao anatiny.
 - Mandeha tsy mila aterineto. Misokatra sy voatahiry any amin'ny toerana itahirizanao azy ny
   antontan-taratasy (Fichiers, Drive, kapila USB).

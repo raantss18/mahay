@@ -36,4 +36,13 @@ Other upstream repos, not imported:
 
 ## Build status
 
-Filled in from real runs; see `docs/STATUS.md` for details.
+Filled in from real runs (2026-10-18); details in `docs/STATUS.md`.
+
+| App      | Linux x86_64 build | Android arm64 / x86_64 APK | Ran on the emulator |
+|----------|--------------------|----------------------------|---------------------|
+| Trano    | CI + local         | 4.8 / 5.3 MB               | tablet              |
+| Sary     | CI + local         | 23.2 / 25.1 MB             | tablet              |
+| Taratasy | CI + local         | 17.6 / 19.3 MB             | tablet              |
+| Soratra  | CI + local         | 17.1 / 18.4 MB             | tablet              |
+| Tabilao  | CI + local         | 8.5 / 9.3 MB               | tablet and phone    |
+| Seho     | CI + local         | 12.2 / 13.4 MB             | tablet              |

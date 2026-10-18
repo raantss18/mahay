@@ -41,7 +41,7 @@ in the release too.
 
 ## Light by design
 
-- One APK per app: you only download what you use (about 8–15 MB each, compressed).
+- One APK per app: you only download what you use (5 to 23 MB each: Trano 4.8, Tabilao 8.5, Seho 12, Soratra 17, Taratasy 18, Sary 23 MB on arm64).
 - Native code with whole-program optimisation, no browser engine inside.
 - Works fully offline. Documents open from, and save back to, wherever you keep them (Files,
   Drive, a USB stick) through Android's own document picker.

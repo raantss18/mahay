@@ -36,6 +36,23 @@ jobs:
           cargo fmt -p mahay-android --check
           cargo test -p mahay-docpath -p mahay-atomic
 
+  audit:
+    name: Security audit (cargo audit)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-audit --locked
+      # Ignored with reasons in docs/SECURITY_AUDIT.md: zip extract() isn't called anywhere;
+      # rsa (Marvin) has no fix and no decryption oracle is exposed.
+      - name: Every workspace
+        run: |
+          for w in libs/core apps/*; do
+            echo "== $w"
+            (cd "$w" && cargo audit --ignore RUSTSEC-2026-0367 --ignore RUSTSEC-2026-0368 \
+              --ignore RUSTSEC-2026-0369 --ignore RUSTSEC-2023-0071) || exit 1
+          done
+
   linux:
     name: Linux (${{ matrix.app }})
     runs-on: ubuntu-24.04

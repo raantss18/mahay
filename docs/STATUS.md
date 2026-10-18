@@ -16,12 +16,16 @@ verified; everything else says how far it was checked.
 | Soratra on Android tablet                         | x86_64 emulator: new blank document, typing with the soft keyboard (spell check works), Enter makes a paragraph, the page moves above the keyboard |
 | Save As to shared storage (Soratra)               | File ▸ Save As ▸ Browse opens Android's picker; `Document1.docx` written to Downloads with the typed text |
 | Write-back to the original document               | edit, File ▸ Save: the copy in Downloads gets the new paragraph                            |
-| Release signing                                   | local keystore (`~/.mahay/release.jks`, outside git); Gradle signs release APKs with it    |
+| Release signing                                   | local keystore (`~/.mahay/release.jks`, outside git); `apksigner verify` on the APKs: SHA-256 `1e0abb5d…c777` |
+| Seho on Android tablet                            | x86_64 emulator: Home screen, new presentation from a theme, editor with ribbon and slide panel |
+| Sary on Android tablet                            | launched from Trano; New Document dialog; drawing with touch on the canvas                |
+| Trano on Android tablet                           | lists the suite, sees installed apps (4/5), opens Sary                                    |
+| Linux builds of all six apps                      | GitHub Actions CI on Ubuntu 24.04 (green), and local release builds                       |
+| Linux packages                                    | AppImage and .deb for all six apps; Tabilao's AppImage extracted and `--version` run     |
+| Security audit                                    | `cargo audit` on all workspaces, APK manifests checked: see `docs/SECURITY_AUDIT.md`     |
 
 ## Built, not yet exercised on a device
 
-- Seho, Sary and Trano Android APKs (see the release notes for which ones were run on the
-  emulator before publishing).
 - arm64-v8a APKs: built and signed; the emulator here is x86_64, so they ran on no device.
   **A test on a real phone and tablet is the next step.**
 - Linux AppImage/.deb packaging: upstream scripts, renamed; produced by the release workflow.
@@ -38,7 +42,9 @@ verified; everything else says how far it was checked.
 | Area                     | Gap                                                                                                  | Plan                                                       |
 |--------------------------|------------------------------------------------------------------------------------------------------|------------------------------------------------------------|
 | Phones (compact width)   | Desktop ribbons (Soratra, Tabilao, Seho) are clipped on the right in portrait                         | a compact ribbon/toolbar per app; landscape works better meanwhile |
-| APK size                 | Taratasy 25.7 MB, Soratra 22.4 MB, Tabilao 11.5 MB (x86_64)                                          | `opt-level = "s"` trial, optional OCR/JS features off on Android |
+| APK size (arm64)         | Sary 23.2, Taratasy 17.6, Soratra 17.1, Seho 12.2, Tabilao 8.5, Trano 4.8 MB                         | optional OCR/JS features off on Android, `cargo bloat`     |
+| Touch drawing            | a finger draws with near-zero pressure in Sary (thin lines)                                          | pressure 1.0 for fingers, real pressure for a stylus       |
+| Dialogs and keyboard     | a dialog doesn't move above the soft keyboard                                                        | apply the keyboard inset to egui windows                   |
 | Folders                  | folder pickers (batch export, OCR to a folder, pinned folders) answer "cancelled" on Android         | `ACTION_OPEN_DOCUMENT_TREE` support in `mahay-android`     |
 | Printing                 | no printing on Android                                                                               | Android print framework via the shell                      |
 | Clipboard                | text only on Android (no images or rich text)                                                         | `ClipData` with HTML/URI                                   |
