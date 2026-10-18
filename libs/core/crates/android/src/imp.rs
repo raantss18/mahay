@@ -271,6 +271,15 @@ pub fn open_url(url: &str) {
 pub fn set_keyboard(visible: bool) {
     if let Some(app) = APP.get() {
         if visible {
+            use android_activity::input::{ImeOptions, InputType, TextInputAction};
+            // Multi-line, so Enter arrives as "\n" in the buffer (the bridge turns it into an
+            // Enter key), and never the full-screen editor that hides the app in landscape
+            // (IME_FLAG_NO_EXTRACT_UI | IME_FLAG_NO_FULLSCREEN).
+            app.set_ime_editor_info(
+                InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_FLAG_MULTI_LINE,
+                TextInputAction::None,
+                ImeOptions::from_bits_retain(0x1000_0000 | 0x0200_0000),
+            );
             app.show_soft_input(true);
         } else {
             app.hide_soft_input(true);
@@ -288,6 +297,28 @@ pub fn system_insets() -> [i32; 4] {
         Ok(out)
     })
     .unwrap_or([0; 4])
+}
+
+/// The soft keyboard's text buffer (GameTextInput). winit 0.30 drops GameActivity's text
+/// events, so [`crate::EguiBridge`] reads this buffer and turns its changes into egui events.
+pub fn ime_text() -> String {
+    APP.get().map(|a| a.text_input_state().text).unwrap_or_default()
+}
+
+/// Empty the soft keyboard's buffer, for a new text field.
+pub fn reset_ime() {
+    if let Some(app) = APP.get() {
+        let empty = android_activity::input::TextSpan { start: 0, end: 0 };
+        app.set_text_input_state(android_activity::input::TextInputState { text: String::new(), selection: empty, compose_region: None });
+    }
+}
+
+/// Light icons on the status and navigation bars for a dark theme, dark icons for a light one.
+pub fn set_dark_bars(dark: bool) {
+    with_activity(|env, act| {
+        env.call_method(act, "setDarkBars", "(Z)V", &[JValue::Bool(u8::from(dark))])?;
+        Ok(())
+    });
 }
 
 /// Text on the Android clipboard.

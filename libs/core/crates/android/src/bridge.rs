@@ -7,6 +7,11 @@ pub struct EguiBridge {
     /// Last insets read, in physical pixels, and when.
     insets: [i32; 4],
     insets_read: Option<std::time::Instant>,
+    /// The keyboard buffer as last turned into events, and the field it belongs to.
+    ime_seen: String,
+    ime_field: Option<egui::Id>,
+    /// Whether the system bars were last set for a dark theme.
+    dark_bars: Option<bool>,
 }
 
 impl EguiBridge {
@@ -27,6 +32,8 @@ impl EguiBridge {
         let ppp = ui.ctx().pixels_per_point().max(0.1);
         let [l, t, r, b] = self.insets.map(|v| v.max(0) as f32 / ppp);
         let full = ui.max_rect();
+        // Behind the status and navigation bars: the app's own background, not black.
+        ui.painter().rect_filled(full, 0.0, ui.visuals().panel_fill);
         let rect = egui::Rect::from_min_max(full.min + egui::vec2(l, t), full.max - egui::vec2(r, b));
         if rect.width() < 1.0 || rect.height() < 1.0 {
             add(ui);
@@ -38,9 +45,30 @@ impl EguiBridge {
     /// Show the soft keyboard while a text field has focus, and copy what the app copied to the
     /// Android clipboard (egui-winit has no clipboard on Android).
     pub fn after_ui(&mut self, ctx: &egui::Context) {
+        let dark = ctx.global_style().visuals.dark_mode;
+        if self.dark_bars != Some(dark) {
+            self.dark_bars = Some(dark);
+            crate::set_dark_bars(dark);
+        }
         let wants = ctx.output(|o| o.ime.is_some());
+        let field = ctx.memory(|m| m.focused());
+        if wants && self.ime_field.is_some() && field != self.ime_field {
+            // Another text field: start from an empty keyboard buffer. (Not on the first one:
+            // what was typed to start editing may be in the buffer already.)
+            crate::reset_ime();
+            self.ime_seen.clear();
+        }
+        self.ime_field = if wants { field } else { None };
+        if wants {
+            // Keyboard text arrives without waking eframe; look for it while the keyboard is up.
+            ctx.request_repaint_after(std::time::Duration::from_millis(80));
+        }
         if wants != self.keyboard {
             self.keyboard = wants;
+            if !wants {
+                crate::reset_ime();
+                self.ime_seen.clear();
+            }
             crate::set_keyboard(wants);
             // The keyboard slides in over a few hundred milliseconds: read the insets again then,
             // so the content moves above it. (Rotation and resizes repaint on their own.)
@@ -64,6 +92,13 @@ impl EguiBridge {
     /// A paste event with the Android clipboard's text, for a Ctrl+V from a hardware keyboard
     /// (egui-winit can't read the clipboard on Android, so it sends nothing).
     pub fn raw_input_hook(&mut self, raw: &mut egui::RawInput) {
+        if self.keyboard {
+            let now = crate::ime_text();
+            if now != self.ime_seen {
+                raw.events.extend(ime_events(&self.ime_seen, &now));
+                self.ime_seen = now;
+            }
+        }
         let paste_key = raw.events.iter().any(|e| {
             matches!(e, egui::Event::Key { key: egui::Key::V, pressed: true, modifiers, .. } if modifiers.command)
         });
@@ -73,5 +108,58 @@ impl EguiBridge {
         {
             raw.events.push(egui::Event::Paste(text));
         }
+    }
+}
+
+/// The egui events that turn the keyboard buffer `before` into `after`: one Backspace per
+/// character after their common prefix, then the new text. Word completion and autocorrect
+/// rewrite the buffer this way too.
+fn ime_events(before: &str, after: &str) -> Vec<egui::Event> {
+    let common = before.chars().zip(after.chars()).take_while(|(a, b)| a == b).count();
+    let removed = before.chars().count().saturating_sub(common);
+    let added: String = after.chars().skip(common).collect();
+    let mut events = Vec::new();
+    for _ in 0..removed {
+        for pressed in [true, false] {
+            events.push(egui::Event::Key {
+                key: egui::Key::Backspace,
+                physical_key: None,
+                pressed,
+                repeat: false,
+                modifiers: egui::Modifiers::NONE,
+            });
+        }
+    }
+    // Enter comes through the buffer as a line break: send it as the key.
+    for (i, line) in added.split('\n').enumerate() {
+        if i > 0 {
+            for pressed in [true, false] {
+                events.push(egui::Event::Key { key: egui::Key::Enter, physical_key: None, pressed, repeat: false, modifiers: egui::Modifiers::NONE });
+            }
+        }
+        if !line.is_empty() {
+            events.push(egui::Event::Text(line.to_string()));
+        }
+    }
+    events
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ime_events;
+
+    #[test]
+    fn typing_appends_and_autocorrect_rewrites() {
+        assert!(matches!(ime_events("Ma", "Mah").as_slice(), [egui::Event::Text(t)] if t == "h"));
+        // "teh" corrected to "the": two backspaces, then "he".
+        let ev = ime_events("teh", "the");
+        assert_eq!(ev.len(), 5);
+        assert!(matches!(ev.last(), Some(egui::Event::Text(t)) if t == "he"));
+        assert!(ime_events("abc", "abc").is_empty());
+        assert_eq!(ime_events("é", "").len(), 2);
+        // "ok" then Enter: the text, then Enter pressed and released.
+        let ev = ime_events("", "ok\n");
+        assert_eq!(ev.len(), 3);
+        assert!(matches!(ev[1], egui::Event::Key { key: egui::Key::Enter, pressed: true, .. }));
     }
 }

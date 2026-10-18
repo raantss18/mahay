@@ -200,13 +200,14 @@ dependencies = [
  "android-properties",
  "bitflags 2.13.2",
  "cc",
- "jni",
+ "jni 0.22.4",
  "libc",
  "log",
  "ndk",
  "ndk-context",
  "ndk-sys",
  "num_enum",
+ "simd_cesu8",
  "thiserror 2.0.21",
 ]
 
@@ -215,6 +216,23 @@ name = "android-properties"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
+
+[[package]]
+name = "android_log-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84521a3cf562bc62942e294181d9eef17eb38ceb8c68677bc49f144e4c3d4f8d"
+
+[[package]]
+name = "android_logger"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbb4e440d04be07da1f1bf44fb4495ebd58669372fe0cffa6e48595ac5bd88a3"
+dependencies = [
+ "android_log-sys",
+ "env_filter",
+ "log",
+]
 
 [[package]]
 name = "android_system_properties"
@@ -262,12 +280,11 @@ checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 [[package]]
 name = "arboard"
 version = "3.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
 dependencies = [
  "clipboard-win",
  "image",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -849,7 +866,7 @@ dependencies = [
  "maybe-owned",
  "rustix 1.1.5",
  "rustix-linux-procfs",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
  "winx",
 ]
 
@@ -882,6 +899,12 @@ dependencies = [
  "libc",
  "shlex 2.0.1",
 ]
+
+[[package]]
+name = "cesu8"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d43a04d8753f35258c91f8ec639f792891f748a1edbd759cf1dcea3382ad83c"
 
 [[package]]
 name = "cexpr"
@@ -1223,36 +1246,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "mahay-docpath"
+name = "craft-winprint-gdi"
 version = "0.1.0"
-source = "git+https://github.com/raantss18/mahay?rev=82a24b006eefa036b43c09a67fb9a3fbd17ffe63#82a24b006eefa036b43c09a67fb9a3fbd17ffe63"
-
-[[package]]
-name = "mahay-print"
-version = "0.1.0"
-source = "git+https://github.com/raantss18/mahay?rev=3d37da389a3618ab9b76109da11416e9ca4ea719#3d37da389a3618ab9b76109da11416e9ca4ea719"
-dependencies = [
- "mahay-winprint-gdi",
- "miniz_oxide 0.8.9",
- "roxmltree",
- "tempfile",
- "winprint",
- "winsafe",
-]
-
-[[package]]
-name = "mahay-ui"
-version = "0.1.0"
-source = "git+https://github.com/raantss18/mahay?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51eeb3de70e735c8ce87a59a7dedd47675"
-dependencies = [
- "egui",
- "serde",
-]
-
-[[package]]
-name = "mahay-winprint-gdi"
-version = "0.1.0"
-source = "git+https://github.com/raantss18/winprint.rs?rev=417ac3c4d14d3da5485a99c7d5ce8f05664ec312#417ac3c4d14d3da5485a99c7d5ce8f05664ec312"
+source = "git+https://github.com/storytold/winprint.rs?rev=417ac3c4d14d3da5485a99c7d5ce8f05664ec312#417ac3c4d14d3da5485a99c7d5ce8f05664ec312"
 dependencies = [
  "windows-sys 0.61.2",
 ]
@@ -1832,6 +1828,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_filter"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bf3c259d255ca70051b30e2e95b5446cdb8949ac4cd22c0d7fd634d89f568e2"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "epaint"
 version = "0.36.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1896,7 +1901,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3033,7 +3038,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3078,6 +3083,22 @@ name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+
+[[package]]
+name = "jni"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a87aa2bb7d2af34197c04845522473242e1aa17c12f4935d5856491a7fb8c97"
+dependencies = [
+ "cesu8",
+ "cfg-if",
+ "combine",
+ "jni-sys 0.3.1",
+ "log",
+ "thiserror 1.0.69",
+ "walkdir",
+ "windows-sys 0.45.0",
+]
 
 [[package]]
 name = "jni"
@@ -3579,6 +3600,41 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
+name = "mahay-android"
+version = "0.1.0"
+dependencies = [
+ "android-activity",
+ "android_logger",
+ "egui",
+ "jni 0.21.1",
+ "log",
+]
+
+[[package]]
+name = "mahay-docpath"
+version = "0.1.0"
+
+[[package]]
+name = "mahay-print"
+version = "0.1.0"
+dependencies = [
+ "craft-winprint-gdi",
+ "miniz_oxide 0.8.9",
+ "roxmltree",
+ "tempfile",
+ "winprint",
+ "winsafe",
+]
+
+[[package]]
+name = "mahay-ui"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "serde",
+]
+
+[[package]]
 name = "maybe-owned"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3695,7 +3751,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "png 0.18.1",
  "thiserror 2.0.21",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4441,7 +4497,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4614,487 +4670,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e57fef6bc5981e38c2ce2d63bfa546861309f875b8a75f092d1d54ae2d64f266"
 dependencies = [
  "siphasher",
-]
-
-[[package]]
-name = "sary"
-version = "0.10.0"
-dependencies = [
- "arboard",
- "async-io",
- "core-graphics2",
- "dispatch2",
- "eframe",
- "egui",
- "fmv-macos-events",
- "futures-lite",
- "log",
- "muda",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "open",
- "sary-automation",
- "sary-cms",
- "sary-codecs",
- "sary-color",
- "sary-compose",
- "sary-doc",
- "sary-engine",
- "sary-format",
- "sary-geom",
- "sary-io",
- "sary-raster",
- "sary-tablet",
- "sary-ui-egui",
- "resvg",
- "rfd",
- "ron",
- "serde_json",
- "tempfile",
- "winit",
- "winresource",
- "winsafe",
- "wl-clipboard-rs",
- "x11rb",
- "xcap",
- "zbus",
-]
-
-[[package]]
-name = "sary-affinity"
-version = "0.10.0"
-dependencies = [
- "crc32fast",
- "flate2",
- "proptest",
- "ruzstd",
-]
-
-[[package]]
-name = "sary-algo"
-version = "0.10.0"
-dependencies = [
- "sary-color",
- "sary-geom",
- "sary-raster",
- "rayon",
- "rustfft",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "sary-automation"
-version = "0.10.0"
-dependencies = [
- "base64 0.22.1",
- "cap-std",
- "getrandom 0.3.4",
- "sary-codecs",
- "sary-compose",
- "sary-doc",
- "sary-engine",
- "sary-format",
- "sary-geom",
- "sary-io",
- "rmcp",
- "schemars",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "tokio",
-]
-
-[[package]]
-name = "sary-cli"
-version = "0.10.0"
-dependencies = [
- "sary-automation",
- "sary-codecs",
- "sary-engine",
- "sary-format",
- "sary-io",
- "serde_json",
- "tokio",
- "winresource",
-]
-
-[[package]]
-name = "sary-cms"
-version = "0.10.0"
-dependencies = [
- "moxcms",
- "rayon",
-]
-
-[[package]]
-name = "sary-codecs"
-version = "0.10.0"
-dependencies = [
- "exr",
- "flate2",
- "half",
- "image",
- "image-webp",
- "jpeg-encoder",
- "sary-heif",
- "png 0.18.1",
- "proptest",
- "rayon",
- "serde_json",
- "thiserror 2.0.21",
- "tiff",
- "zune-core 0.5.3",
- "zune-jpeg 0.5.15",
-]
-
-[[package]]
-name = "sary-color"
-version = "0.10.0"
-dependencies = [
- "sary-cms",
- "serde",
-]
-
-[[package]]
-name = "sary-compose"
-version = "0.10.0"
-dependencies = [
- "criterion",
- "sary-color",
- "sary-doc",
- "sary-geom",
- "sary-paint",
- "sary-raster",
- "sary-vector",
- "proptest",
- "rayon",
-]
-
-[[package]]
-name = "sary-doc"
-version = "0.10.0"
-dependencies = [
- "sary-color",
- "sary-geom",
- "sary-raster",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "sary-engine"
-version = "0.10.0"
-dependencies = [
- "blake3",
- "mahay-print",
- "exr",
- "flate2",
- "sary-affinity",
- "sary-algo",
- "sary-cms",
- "sary-codecs",
- "sary-color",
- "sary-compose",
- "sary-doc",
- "sary-format",
- "sary-geom",
- "sary-io",
- "sary-ipp",
- "sary-ops",
- "sary-paint",
- "sary-plugins",
- "sary-psd",
- "sary-raster",
- "sary-raw",
- "sary-text",
- "sary-vector",
- "rayon",
- "roxmltree",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.21",
- "wat",
-]
-
-[[package]]
-name = "sary-format"
-version = "0.10.0"
-dependencies = [
- "blake3",
- "crc32fast",
- "flate2",
- "libc",
- "sary-codecs",
- "sary-color",
- "sary-doc",
- "sary-geom",
- "sary-raster",
- "proptest",
- "rustix 1.1.5",
- "ruzstd",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "sary-geom"
-version = "0.10.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "sary-gpu"
-version = "0.10.0"
-dependencies = [
- "half",
- "log",
- "sary-color",
- "sary-compose",
- "sary-doc",
- "sary-geom",
- "sary-raster",
- "sary-vector",
- "pollster 1.0.1",
- "rayon",
- "wgpu",
-]
-
-[[package]]
-name = "sary-heif"
-version = "0.10.0"
-dependencies = [
- "heic-rs",
-]
-
-[[package]]
-name = "sary-io"
-version = "0.10.0"
-dependencies = [
- "blake3",
- "mahay-docpath",
- "crc32fast",
- "flate2",
- "sary-affinity",
- "sary-algo",
- "sary-cms",
- "sary-codecs",
- "sary-color",
- "sary-compose",
- "sary-doc",
- "sary-format",
- "sary-geom",
- "sary-paint",
- "sary-psd",
- "sary-raster",
- "sary-raw",
- "sary-text",
- "sary-vector",
- "proptest",
- "resvg",
- "roxmltree",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "sary-ipp"
-version = "0.10.0"
-
-[[package]]
-name = "sary-ops"
-version = "0.10.0"
-dependencies = [
- "sary-doc",
-]
-
-[[package]]
-name = "sary-paint"
-version = "0.10.0"
-dependencies = [
- "sary-color",
- "sary-geom",
- "sary-raster",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "sary-plugins"
-version = "0.10.0"
-dependencies = [
- "sary-color",
- "sary-geom",
- "sary-raster",
- "rayon",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "wasmi",
- "wat",
-]
-
-[[package]]
-name = "sary-psd"
-version = "0.10.0"
-dependencies = [
- "flate2",
- "sary-psd",
- "proptest",
- "serde",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "sary-raster"
-version = "0.10.0"
-dependencies = [
- "sary-color",
- "sary-geom",
- "proptest",
- "serde",
-]
-
-[[package]]
-name = "sary-raw"
-version = "0.10.0"
-dependencies = [
- "flate2",
- "image",
- "jxl-oxide",
- "sary-raw",
- "png 0.18.1",
- "rayon",
- "zune-core 0.5.3",
- "zune-jpeg 0.5.15",
- "zune-jpegxl",
-]
-
-[[package]]
-name = "sary-tablet"
-version = "0.10.0"
-dependencies = [
- "block2 0.6.2",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-core-graphics",
- "objc2-foundation 0.3.2",
- "x11rb",
-]
-
-[[package]]
-name = "sary-testkit"
-version = "0.10.0"
-dependencies = [
- "memory-stats",
- "sary-color",
- "sary-geom",
- "sary-raster",
- "serde_json",
-]
-
-[[package]]
-name = "sary-text"
-version = "0.10.0"
-dependencies = [
- "flate2",
- "parley",
- "sary-color",
- "sary-doc",
- "sary-geom",
- "sary-psd",
- "sary-raster",
- "skrifa",
-]
-
-[[package]]
-name = "sary-ui-egui"
-version = "0.10.0"
-dependencies = [
- "base64 0.22.1",
- "mahay-print",
- "mahay-ui",
- "eframe",
- "egui",
- "egui_extras",
- "egui_kittest",
- "epaint_default_fonts",
- "flate2",
- "log",
- "sary-algo",
- "sary-cms",
- "sary-codecs",
- "sary-color",
- "sary-compose",
- "sary-doc",
- "sary-engine",
- "sary-format",
- "sary-geom",
- "sary-gpu",
- "sary-io",
- "sary-paint",
- "sary-plugins",
- "sary-psd",
- "sary-raster",
- "sary-raw",
- "sary-testkit",
- "sary-text",
- "sary-vector",
- "rayon",
- "serde",
- "serde_json",
- "sys-locale",
- "toml",
- "unicode-bidi",
- "winsafe",
-]
-
-[[package]]
-name = "sary-vector"
-version = "0.10.0"
-dependencies = [
- "sary-color",
- "sary-doc",
- "sary-geom",
- "sary-raster",
- "rayon",
-]
-
-[[package]]
-name = "sary-web"
-version = "0.10.0"
-dependencies = [
- "eframe",
- "egui",
- "js-sys",
- "log",
- "sary-codecs",
- "sary-doc",
- "sary-engine",
- "sary-io",
- "sary-paint",
- "sary-psd",
- "sary-ui-egui",
- "rfd",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "sary-web-boot"
-version = "0.10.0"
-dependencies = [
- "flate2",
- "js-sys",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -5481,7 +5056,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5839,14 +5414,13 @@ dependencies = [
 [[package]]
 name = "rfd"
 version = "0.17.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
 dependencies = [
  "block2 0.6.2",
  "dispatch2",
  "js-sys",
  "libc",
  "log",
+ "mahay-android",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -6000,7 +5574,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6057,7 +5631,7 @@ checksum = "1167586491e2b18b8bfbb293e8180ec17c201c4f076d7cb3070ca964e7598f98"
 dependencies = [
  "core-foundation 0.10.1",
  "core-foundation-sys",
- "jni",
+ "jni 0.22.4",
  "log",
  "once_cell",
  "rustls",
@@ -6067,7 +5641,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6152,6 +5726,513 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "sary"
+version = "0.10.0"
+dependencies = [
+ "arboard",
+ "async-io",
+ "core-graphics2",
+ "dispatch2",
+ "eframe",
+ "egui",
+ "fmv-macos-events",
+ "futures-lite",
+ "log",
+ "muda",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "open",
+ "resvg",
+ "rfd",
+ "ron",
+ "sary-automation",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
+ "sary-raster",
+ "sary-tablet",
+ "sary-ui-egui",
+ "serde_json",
+ "tempfile",
+ "winit",
+ "winresource",
+ "winsafe",
+ "wl-clipboard-rs",
+ "x11rb",
+ "xcap",
+ "zbus",
+]
+
+[[package]]
+name = "sary-affinity"
+version = "0.10.0"
+dependencies = [
+ "crc32fast",
+ "flate2",
+ "proptest",
+ "ruzstd",
+]
+
+[[package]]
+name = "sary-algo"
+version = "0.10.0"
+dependencies = [
+ "rayon",
+ "rustfft",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "sary-android"
+version = "0.10.0"
+dependencies = [
+ "arboard",
+ "eframe",
+ "egui",
+ "log",
+ "mahay-android",
+ "open",
+ "rfd",
+ "ron",
+ "sary-automation",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
+ "sary-raster",
+ "sary-ui-egui",
+ "serde_json",
+]
+
+[[package]]
+name = "sary-automation"
+version = "0.10.0"
+dependencies = [
+ "base64 0.22.1",
+ "cap-std",
+ "getrandom 0.3.4",
+ "rmcp",
+ "sary-codecs",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
+name = "sary-cli"
+version = "0.10.0"
+dependencies = [
+ "sary-automation",
+ "sary-codecs",
+ "sary-engine",
+ "sary-format",
+ "sary-io",
+ "serde_json",
+ "tokio",
+ "winresource",
+]
+
+[[package]]
+name = "sary-cms"
+version = "0.10.0"
+dependencies = [
+ "moxcms",
+ "rayon",
+]
+
+[[package]]
+name = "sary-codecs"
+version = "0.10.0"
+dependencies = [
+ "exr",
+ "flate2",
+ "half",
+ "image",
+ "image-webp",
+ "jpeg-encoder",
+ "png 0.18.1",
+ "proptest",
+ "rayon",
+ "sary-heif",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tiff",
+ "zune-core 0.5.3",
+ "zune-jpeg 0.5.15",
+]
+
+[[package]]
+name = "sary-color"
+version = "0.10.0"
+dependencies = [
+ "sary-cms",
+ "serde",
+]
+
+[[package]]
+name = "sary-compose"
+version = "0.10.0"
+dependencies = [
+ "criterion",
+ "proptest",
+ "rayon",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-paint",
+ "sary-raster",
+ "sary-vector",
+]
+
+[[package]]
+name = "sary-doc"
+version = "0.10.0"
+dependencies = [
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "sary-engine"
+version = "0.10.0"
+dependencies = [
+ "blake3",
+ "exr",
+ "flate2",
+ "mahay-print",
+ "rayon",
+ "roxmltree",
+ "sary-affinity",
+ "sary-algo",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
+ "sary-ipp",
+ "sary-ops",
+ "sary-paint",
+ "sary-plugins",
+ "sary-psd",
+ "sary-raster",
+ "sary-raw",
+ "sary-text",
+ "sary-vector",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "wat",
+]
+
+[[package]]
+name = "sary-format"
+version = "0.10.0"
+dependencies = [
+ "blake3",
+ "crc32fast",
+ "flate2",
+ "libc",
+ "proptest",
+ "rustix 1.1.5",
+ "ruzstd",
+ "sary-codecs",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-raster",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "sary-geom"
+version = "0.10.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "sary-gpu"
+version = "0.10.0"
+dependencies = [
+ "half",
+ "log",
+ "pollster 1.0.1",
+ "rayon",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-geom",
+ "sary-raster",
+ "sary-vector",
+ "wgpu",
+]
+
+[[package]]
+name = "sary-heif"
+version = "0.10.0"
+dependencies = [
+ "heic-rs",
+]
+
+[[package]]
+name = "sary-io"
+version = "0.10.0"
+dependencies = [
+ "blake3",
+ "crc32fast",
+ "flate2",
+ "mahay-docpath",
+ "proptest",
+ "resvg",
+ "roxmltree",
+ "sary-affinity",
+ "sary-algo",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-format",
+ "sary-geom",
+ "sary-paint",
+ "sary-psd",
+ "sary-raster",
+ "sary-raw",
+ "sary-text",
+ "sary-vector",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "sary-ipp"
+version = "0.10.0"
+
+[[package]]
+name = "sary-ops"
+version = "0.10.0"
+dependencies = [
+ "sary-doc",
+]
+
+[[package]]
+name = "sary-paint"
+version = "0.10.0"
+dependencies = [
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "sary-plugins"
+version = "0.10.0"
+dependencies = [
+ "rayon",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "wasmi",
+ "wat",
+]
+
+[[package]]
+name = "sary-psd"
+version = "0.10.0"
+dependencies = [
+ "flate2",
+ "proptest",
+ "sary-psd",
+ "serde",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "sary-raster"
+version = "0.10.0"
+dependencies = [
+ "proptest",
+ "sary-color",
+ "sary-geom",
+ "serde",
+]
+
+[[package]]
+name = "sary-raw"
+version = "0.10.0"
+dependencies = [
+ "flate2",
+ "image",
+ "jxl-oxide",
+ "png 0.18.1",
+ "rayon",
+ "sary-raw",
+ "zune-core 0.5.3",
+ "zune-jpeg 0.5.15",
+ "zune-jpegxl",
+]
+
+[[package]]
+name = "sary-tablet"
+version = "0.10.0"
+dependencies = [
+ "block2 0.6.2",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-core-graphics",
+ "objc2-foundation 0.3.2",
+ "x11rb",
+]
+
+[[package]]
+name = "sary-testkit"
+version = "0.10.0"
+dependencies = [
+ "memory-stats",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
+ "serde_json",
+]
+
+[[package]]
+name = "sary-text"
+version = "0.10.0"
+dependencies = [
+ "flate2",
+ "parley",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-psd",
+ "sary-raster",
+ "skrifa",
+]
+
+[[package]]
+name = "sary-ui-egui"
+version = "0.10.0"
+dependencies = [
+ "base64 0.22.1",
+ "eframe",
+ "egui",
+ "egui_extras",
+ "egui_kittest",
+ "epaint_default_fonts",
+ "flate2",
+ "log",
+ "mahay-print",
+ "mahay-ui",
+ "rayon",
+ "sary-algo",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-gpu",
+ "sary-io",
+ "sary-paint",
+ "sary-plugins",
+ "sary-psd",
+ "sary-raster",
+ "sary-raw",
+ "sary-testkit",
+ "sary-text",
+ "sary-vector",
+ "serde",
+ "serde_json",
+ "sys-locale",
+ "toml",
+ "unicode-bidi",
+ "winsafe",
+]
+
+[[package]]
+name = "sary-vector"
+version = "0.10.0"
+dependencies = [
+ "rayon",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-raster",
+]
+
+[[package]]
+name = "sary-web"
+version = "0.10.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "js-sys",
+ "log",
+ "rfd",
+ "sary-codecs",
+ "sary-doc",
+ "sary-engine",
+ "sary-io",
+ "sary-paint",
+ "sary-psd",
+ "sary-ui-egui",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "sary-web-boot"
+version = "0.10.0"
+dependencies = [
+ "flate2",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -6705,7 +6786,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6932,10 +7013,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.5",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7335,7 +7416,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8095,7 +8176,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8212,6 +8293,15 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75283be5efb2831d37ea142365f009c02ec203cd29a3ebecbc093d52315b66d0"
+dependencies = [
+ "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
@@ -8244,6 +8334,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
 dependencies = [
  "windows-link",
+]
+
+[[package]]
+name = "windows-targets"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e5180c00cd44c9b1c88adb3693291f1cd93605ded80c250a75d472756b4d071"
+dependencies = [
+ "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_msvc 0.42.2",
+ "windows_i686_gnu 0.42.2",
+ "windows_i686_msvc 0.42.2",
+ "windows_x86_64_gnu 0.42.2",
+ "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_msvc 0.42.2",
 ]
 
 [[package]]
@@ -8290,6 +8395,12 @@ dependencies = [
 
 [[package]]
 name = "windows_aarch64_gnullvm"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "597a5118570b68bc08d8d59125332c54f1ba9d9adeedeef5b99b02ba2b0698f8"
+
+[[package]]
+name = "windows_aarch64_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
@@ -8302,6 +8413,12 @@ checksum = "a9d8416fa8b42f5c947f8482c43e7d89e73a173cead56d044f6a56104a6d1b53"
 
 [[package]]
 name = "windows_aarch64_msvc"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e08e8864a60f06ef0d0ff4ba04124db8b0fb3be5776a5cd47641e942e58c4d43"
+
+[[package]]
+name = "windows_aarch64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
@@ -8311,6 +8428,12 @@ name = "windows_aarch64_msvc"
 version = "0.53.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9d782e804c2f632e395708e99a94275910eb9100b2114651e04744e9b125006"
+
+[[package]]
+name = "windows_i686_gnu"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c61d927d8da41da96a81f029489353e68739737d3beca43145c8afec9a31a84f"
 
 [[package]]
 name = "windows_i686_gnu"
@@ -8338,6 +8461,12 @@ checksum = "fa7359d10048f68ab8b09fa71c3daccfb0e9b559aed648a8f95469c27057180c"
 
 [[package]]
 name = "windows_i686_msvc"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44d840b6ec649f480a41c8d80f9c65108b92d89345dd94027bfe06ac444d1060"
+
+[[package]]
+name = "windows_i686_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
@@ -8347,6 +8476,12 @@ name = "windows_i686_msvc"
 version = "0.53.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e7ac75179f18232fe9c285163565a57ef8d3c89254a30685b57d83a38d326c2"
+
+[[package]]
+name = "windows_x86_64_gnu"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8de912b8b8feb55c064867cf047dda097f92d51efad5b491dfb98f6bbb70cb36"
 
 [[package]]
 name = "windows_x86_64_gnu"
@@ -8362,6 +8497,12 @@ checksum = "9c3842cdd74a865a8066ab39c8a7a473c0778a3f29370b5fd6b4b9aa7df4a499"
 
 [[package]]
 name = "windows_x86_64_gnullvm"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26d41b46a36d453748aedef1486d5c7a85db22e56aff34643984ea85514e94a3"
+
+[[package]]
+name = "windows_x86_64_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
@@ -8371,6 +8512,12 @@ name = "windows_x86_64_gnullvm"
 version = "0.53.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ffa179e2d07eee8ad8f57493436566c7cc30ac536a3379fdf008f47f6bb7ae1"
+
+[[package]]
+name = "windows_x86_64_msvc"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9aec5da331524158c6d1a4ac0ab1541149c0b9505fde06423b02f5ef0106b9f0"
 
 [[package]]
 name = "windows_x86_64_msvc"
@@ -8447,7 +8594,7 @@ dependencies = [
 [[package]]
 name = "winprint"
 version = "0.2.1"
-source = "git+https://github.com/raantss18/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9baf6b58937c401656634e42d33f00ddf49"
+source = "git+https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9baf6b58937c401656634e42d33f00ddf49"
 dependencies = [
  "flate2",
  "fmt-derive",

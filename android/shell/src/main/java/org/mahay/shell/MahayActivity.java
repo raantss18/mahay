@@ -172,6 +172,18 @@ public class MahayActivity extends GameActivity {
                 wi.getSystemWindowInsetRight(), wi.getSystemWindowInsetBottom()};
     }
 
+    /** Bar icons that stay readable over the app's theme (Android 11+; older keeps the default). */
+    public void setDarkBars(final boolean dark) {
+        if (android.os.Build.VERSION.SDK_INT < 30) return;
+        runOnUiThread(() -> {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c == null) return;
+            int light = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+            c.setSystemBarsAppearance(dark ? 0 : light, light);
+        });
+    }
+
     public String clipboardText() {
         final String[] out = {null};
         final Object lock = new Object();
