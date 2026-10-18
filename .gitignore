@@ -9,3 +9,4 @@ local.properties
 .gradle/
 build/
 .DS_Store
+android/app/src/*/jniLibs/
