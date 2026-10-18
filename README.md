@@ -11,7 +11,7 @@ WebView, no account and no telemetry. Your files stay on your device.
 Mahay is a fork of the [ArtCraft](https://github.com/storytold) crafting apps, renamed and
 ported to Android. See [NOTICE](NOTICE).
 
-> **Status: alpha (0.1).** The apps work, but expect rough edges, especially on phones. See
+> **Status: alpha (0.2).** The apps work, but expect rough edges, especially on phones. See
 > [docs/STATUS.md](docs/STATUS.md) for what works, what doesn't and what was tested.
 
 ## The apps
@@ -20,7 +20,7 @@ ported to Android. See [NOTICE](NOTICE).
 
 | App          | What it does                                    | Linux | Android |
 |--------------|-------------------------------------------------|-------|---------|
-| **Mahay HUB**    | the hub: opens and lists the apps               | yes   | yes     |
+| **Mahay HUB** | the hub: installs, opens and updates every app  | yes   | yes     |
 | **Sary**     | image editor (layers, PSD, raw)                 | yes   | alpha   |
 | **Taratasy** | PDF: read, annotate, fill, sign, organise       | yes   | alpha   |
 | **Soratra**  | word processor (DOCX, ODT)                      | yes   | alpha   |
@@ -38,10 +38,25 @@ ported to Android. See [NOTICE](NOTICE).
 
 ## Install: just Mahay HUB
 
-Download **Mahay HUB**, the Mahay hub, from the [latest release](https://github.com/raantss18/mahay/releases/latest):
+Download **Mahay HUB** from the [latest release](https://github.com/raantss18/mahay/releases/latest):
 `hub-…-android-arm64-v8a.apk` on Android 8+ (phones and tablets), `hub-…-linux-x86_64.AppImage`
 on Linux. **Mahay HUB installs, opens and updates every other app**, straight from the release.
 Every app also updates itself (checked daily, signed files, you confirm the install).
+
+## Works with your files
+
+Every app opens its own kind of file from anywhere on the device: tap a spreadsheet in Files,
+Drive or an e-mail and choose **Tabilao**; a picture opens in **Sary** (or is imported into
+**Hazavana**), a PDF in **Taratasy**, a document in **Soratra**, slides in **Seho**, an SVG in
+**Tsilo**, audio in **Feo**, a video in **Hetsika**, a DXF/DWG drawing in **Drafitra**. "Share"
+works too. Saving writes back to the file you opened.
+
+## Always up to date
+
+Mahay updates itself, like Tontolo: each app (and Mahay HUB for all of them) checks the latest
+release when it starts and once a day, downloads it in the background, checks its signature
+(Ed25519) and SHA-256, then offers **Install**. On Android you confirm with one tap; on Linux the
+AppImage replaces itself and restarts. You can turn it off in **About**.
 
 ## Light by design
 

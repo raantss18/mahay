@@ -1,0 +1,775 @@
+{
+  "theme": "Installez Mahay HUB, il installe le reste",
+  "posters": [
+    {
+      "id": "00-hub",
+      "app": "hub",
+      "fr": {
+        "kicker": "Mahay 0.2",
+        "title": [
+          "Une seule app",
+          "à installer."
+        ],
+        "sub": [
+          "Mahay HUB installe, ouvre et met",
+          "à jour les 13 autres, tout seul."
+        ],
+        "points": [
+          "Image, PDF, texte, tableur, diapos",
+          "Vidéo, audio, plans, mise en page",
+          "Hors ligne, sans compte, gratuit"
+        ],
+        "caption": "Une seule app à installer : Mahay HUB. Elle installe et met à jour les 13 apps de création et de bureautique de Mahay, sur Android et Linux. Gratuit, hors ligne, sans compte."
+      },
+      "en": {
+        "kicker": "Mahay 0.2",
+        "title": [
+          "One app",
+          "to install."
+        ],
+        "sub": [
+          "Mahay HUB installs, opens and",
+          "updates the other 13 by itself."
+        ],
+        "points": [
+          "Pictures, PDF, writing, sheets, slides",
+          "Video, audio, drawings, layout",
+          "Offline, no account, free"
+        ],
+        "caption": "One app to install: Mahay HUB. It installs and updates Mahay's 13 creative and office apps on Android and Linux. Free, offline, no account."
+      },
+      "mg": {
+        "kicker": "Mahay 0.2",
+        "title": [
+          "Rindranasa iray",
+          "ihany no apetraka."
+        ],
+        "sub": [
+          "Mahay HUB no mametraka sy manavao",
+          "ireo 13 hafa ho azy."
+        ],
+        "points": [
+          "Sary, PDF, soratra, tabilao, seho",
+          "Horonantsary, feo, sary teknika",
+          "Tsy mila aterineto, maimaim-poana"
+        ],
+        "caption": "Rindranasa iray ihany no apetraka: Mahay HUB. Izy no mametraka sy manavao ireo rindranasa 13 an'i Mahay, amin'ny Android sy Linux. Maimaim-poana."
+      }
+    },
+    {
+      "id": "01-tabilao",
+      "app": "tabilao",
+      "fr": {
+        "kicker": "Tabilao",
+        "title": [
+          "Vos tableurs,",
+          "sur tablette."
+        ],
+        "sub": [
+          "XLSX, ODS, CSV : ouvrez, calculez,",
+          "enregistrez dans le fichier d'origine."
+        ],
+        "points": [
+          "Touchez un tableur, choisissez Tabilao",
+          "Formules, graphiques, filtres",
+          "Hors ligne"
+        ],
+        "caption": "Tabilao ouvre vos tableurs XLSX, ODS et CSV sur tablette et téléphone, et enregistre dans le fichier d'origine. Installez Mahay HUB pour l'avoir."
+      },
+      "en": {
+        "kicker": "Tabilao",
+        "title": [
+          "Your spreadsheets,",
+          "on a tablet."
+        ],
+        "sub": [
+          "XLSX, ODS, CSV: open, calculate,",
+          "save back to the original file."
+        ],
+        "points": [
+          "Tap a spreadsheet, pick Tabilao",
+          "Formulas, charts, filters",
+          "Offline"
+        ],
+        "caption": "Tabilao opens your XLSX, ODS and CSV spreadsheets on tablets and phones and saves back to the original file. Get it with Mahay HUB."
+      },
+      "mg": {
+        "kicker": "Tabilao",
+        "title": [
+          "Ny tabilaonao,",
+          "amin'ny takelaka."
+        ],
+        "sub": [
+          "XLSX, ODS, CSV: sokafy, kajio,",
+          "tehirizo ao amin'ny rakitra."
+        ],
+        "points": [
+          "Tsindrio ny rakitra, safidio Tabilao",
+          "Fomba kajy, sary, sivana",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Tabilao no manokatra ny tabilaonao XLSX, ODS ary CSV. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "02-sary",
+      "app": "sary",
+      "fr": {
+        "kicker": "Sary",
+        "title": [
+          "Retouchez vos",
+          "photos au doigt."
+        ],
+        "sub": [
+          "Calques, PSD, pinceaux, recadrage :",
+          "un vrai éditeur d'images."
+        ],
+        "points": [
+          "Ouvrez une image depuis la galerie",
+          "Calques et masques",
+          "Hors ligne"
+        ],
+        "caption": "Sary retouche vos images sur tablette : calques, PSD, pinceaux. Ouvrez une photo depuis la galerie et choisissez Sary."
+      },
+      "en": {
+        "kicker": "Sary",
+        "title": [
+          "Edit your photos",
+          "with a finger."
+        ],
+        "sub": [
+          "Layers, PSD, brushes, cropping:",
+          "a real image editor."
+        ],
+        "points": [
+          "Open a picture from the gallery",
+          "Layers and masks",
+          "Offline"
+        ],
+        "caption": "Sary edits your pictures on a tablet: layers, PSD, brushes. Open a photo from the gallery and pick Sary."
+      },
+      "mg": {
+        "kicker": "Sary",
+        "title": [
+          "Amboary ny sarinao",
+          "amin'ny rantsantanana."
+        ],
+        "sub": [
+          "Sosona, PSD, borosy:",
+          "fanamboarana sary tena izy."
+        ],
+        "points": [
+          "Sokafy sary avy amin'ny galerie",
+          "Sosona sy saron-tava",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Sary no manamboatra ny sarinao amin'ny takelaka. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "03-taratasy",
+      "app": "taratasy",
+      "fr": {
+        "kicker": "Taratasy",
+        "title": [
+          "Lire, annoter,",
+          "signer un PDF."
+        ],
+        "sub": [
+          "Remplissez un formulaire, surlignez,",
+          "signez, sans compte en ligne."
+        ],
+        "points": [
+          "Touchez un PDF, choisissez Taratasy",
+          "Formulaires et signatures",
+          "Vos fichiers restent chez vous"
+        ],
+        "caption": "Taratasy lit, annote, remplit et signe vos PDF, sans compte et hors ligne. Installez Mahay HUB pour l'avoir."
+      },
+      "en": {
+        "kicker": "Taratasy",
+        "title": [
+          "Read, mark up,",
+          "sign a PDF."
+        ],
+        "sub": [
+          "Fill in a form, highlight, sign,",
+          "with no online account."
+        ],
+        "points": [
+          "Tap a PDF, pick Taratasy",
+          "Forms and signatures",
+          "Your files stay with you"
+        ],
+        "caption": "Taratasy reads, annotates, fills in and signs your PDFs, offline and with no account. Get it with Mahay HUB."
+      },
+      "mg": {
+        "kicker": "Taratasy",
+        "title": [
+          "Vakio, asio marika,",
+          "soniavo ny PDF."
+        ],
+        "sub": [
+          "Fenoy ny taratasy, soniavo,",
+          "tsy mila kaonty."
+        ],
+        "points": [
+          "Tsindrio ny PDF, safidio Taratasy",
+          "Taratasy fenoina sy sonia",
+          "Aminao ihany ny rakitrao"
+        ],
+        "caption": "Taratasy no mamaky sy manonia ny PDF-nao. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "04-soratra",
+      "app": "soratra",
+      "fr": {
+        "kicker": "Soratra",
+        "title": [
+          "Écrivez partout,",
+          "même hors ligne."
+        ],
+        "sub": [
+          "DOCX et ODT, styles, tableaux,",
+          "correcteur orthographique."
+        ],
+        "points": [
+          "Ouvrez un document, écrivez",
+          "Clavier Android complet",
+          "Enregistre dans le fichier d'origine"
+        ],
+        "caption": "Soratra, le traitement de texte de Mahay : DOCX, ODT, styles et correcteur, sur tablette et téléphone."
+      },
+      "en": {
+        "kicker": "Soratra",
+        "title": [
+          "Write anywhere,",
+          "even offline."
+        ],
+        "sub": [
+          "DOCX and ODT, styles, tables,",
+          "spell check."
+        ],
+        "points": [
+          "Open a document, type",
+          "Full Android keyboard",
+          "Saves back to the original"
+        ],
+        "caption": "Soratra, Mahay's word processor: DOCX, ODT, styles and spell check on tablets and phones."
+      },
+      "mg": {
+        "kicker": "Soratra",
+        "title": [
+          "Manorata na aiza na aiza,",
+          "na tsy misy aterineto."
+        ],
+        "sub": [
+          "DOCX sy ODT, endrika, tabilao,",
+          "fanitsiana tsipelina."
+        ],
+        "points": [
+          "Sokafy ny antontan-taratasy",
+          "Fitendry Android feno",
+          "Voatahiry ao amin'ny rakitra"
+        ],
+        "caption": "Soratra, ny fanoratana lahatsoratra an'i Mahay. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "05-seho",
+      "app": "seho",
+      "fr": {
+        "kicker": "Seho",
+        "title": [
+          "Vos présentations,",
+          "prêtes à projeter."
+        ],
+        "sub": [
+          "PPTX, thèmes, transitions,",
+          "mode présentation."
+        ],
+        "points": [
+          "Ouvrez un PPTX reçu par e-mail",
+          "Thèmes et modèles",
+          "Hors ligne"
+        ],
+        "caption": "Seho crée et présente vos diaporamas PPTX sur tablette. Installez Mahay HUB pour l'avoir."
+      },
+      "en": {
+        "kicker": "Seho",
+        "title": [
+          "Your slides,",
+          "ready to present."
+        ],
+        "sub": [
+          "PPTX, themes, transitions,",
+          "slide show mode."
+        ],
+        "points": [
+          "Open a PPTX from an e-mail",
+          "Themes and templates",
+          "Offline"
+        ],
+        "caption": "Seho makes and presents your PPTX slide decks on a tablet. Get it with Mahay HUB."
+      },
+      "mg": {
+        "kicker": "Seho",
+        "title": [
+          "Ny fampisehoanao,",
+          "vonona aseho."
+        ],
+        "sub": [
+          "PPTX, lohahevitra, fifindrana,",
+          "fampisehoana."
+        ],
+        "points": [
+          "Sokafy ny PPTX avy amin'ny mailaka",
+          "Lohahevitra sy modely",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Seho no manao sy mampiseho ny fampisehoanao. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "06-tsilo",
+      "app": "tsilo",
+      "fr": {
+        "kicker": "Tsilo",
+        "title": [
+          "Dessinez en",
+          "vectoriel."
+        ],
+        "sub": [
+          "Courbes, calques, SVG et PDF :",
+          "logos, affiches, illustrations."
+        ],
+        "points": [
+          "Courbes de Bézier au stylet",
+          "SVG, PDF, EPS",
+          "Hors ligne"
+        ],
+        "caption": "Tsilo, l'illustration vectorielle de Mahay : courbes, calques, SVG et PDF, sur tablette avec un stylet."
+      },
+      "en": {
+        "kicker": "Tsilo",
+        "title": [
+          "Draw in",
+          "vectors."
+        ],
+        "sub": [
+          "Curves, layers, SVG and PDF:",
+          "logos, posters, illustrations."
+        ],
+        "points": [
+          "Bézier curves with a stylus",
+          "SVG, PDF, EPS",
+          "Offline"
+        ],
+        "caption": "Tsilo, Mahay's vector illustration app: curves, layers, SVG and PDF, on a tablet with a stylus."
+      },
+      "mg": {
+        "kicker": "Tsilo",
+        "title": [
+          "Manaova sary",
+          "vektoraly."
+        ],
+        "sub": [
+          "Tsipika miolaka, sosona, SVG sy PDF:",
+          "logo, afisy, sary."
+        ],
+        "points": [
+          "Tsipika amin'ny penina",
+          "SVG, PDF, EPS",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Tsilo, sary vektoraly an'i Mahay. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "07-hazavana",
+      "app": "hazavana",
+      "fr": {
+        "kicker": "Hazavana",
+        "title": [
+          "Vos photos,",
+          "rangées et développées."
+        ],
+        "sub": [
+          "Photothèque, RAW, réglages",
+          "non destructifs."
+        ],
+        "points": [
+          "Partagez une photo vers Hazavana",
+          "RAW et HEIC",
+          "Votre photothèque reste chez vous"
+        ],
+        "caption": "Hazavana range et développe vos photos, RAW compris, sans cloud. Installez Mahay HUB pour l'avoir."
+      },
+      "en": {
+        "kicker": "Hazavana",
+        "title": [
+          "Your photos,",
+          "sorted and developed."
+        ],
+        "sub": [
+          "Photo library, raw, non-destructive",
+          "adjustments."
+        ],
+        "points": [
+          "Share a photo to Hazavana",
+          "Raw and HEIC",
+          "Your library stays with you"
+        ],
+        "caption": "Hazavana sorts and develops your photos, raw included, with no cloud. Get it with Mahay HUB."
+      },
+      "mg": {
+        "kicker": "Hazavana",
+        "title": [
+          "Ny sarinao,",
+          "voalamina."
+        ],
+        "sub": [
+          "Tahirin-tsary, RAW, fanitsiana",
+          "tsy manimba."
+        ],
+        "points": [
+          "Zarao amin'ny Hazavana ny sary",
+          "RAW sy HEIC",
+          "Aminao ihany ny tahirinao"
+        ],
+        "caption": "Hazavana no mandamina ny sarinao. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "08-feo",
+      "app": "feo",
+      "fr": {
+        "kicker": "Feo",
+        "title": [
+          "Enregistrez,",
+          "montez, mixez."
+        ],
+        "sub": [
+          "Pistes audio et MIDI, effets,",
+          "export WAV et FLAC."
+        ],
+        "points": [
+          "Multipiste au doigt",
+          "WAV, FLAC, MP3, MIDI",
+          "Hors ligne"
+        ],
+        "caption": "Feo, le studio audio de Mahay : enregistrez, montez et mixez vos pistes sur tablette."
+      },
+      "en": {
+        "kicker": "Feo",
+        "title": [
+          "Record,",
+          "edit, mix."
+        ],
+        "sub": [
+          "Audio and MIDI tracks, effects,",
+          "WAV and FLAC export."
+        ],
+        "points": [
+          "Multitrack with a finger",
+          "WAV, FLAC, MP3, MIDI",
+          "Offline"
+        ],
+        "caption": "Feo, Mahay's audio studio: record, edit and mix your tracks on a tablet."
+      },
+      "mg": {
+        "kicker": "Feo",
+        "title": [
+          "Raiketo,",
+          "amboary, afangaroy."
+        ],
+        "sub": [
+          "Feo sy MIDI, effets,",
+          "WAV sy FLAC."
+        ],
+        "points": [
+          "Feo maro amin'ny rantsantanana",
+          "WAV, FLAC, MP3, MIDI",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Feo, studio feo an'i Mahay. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "09-hetsika",
+      "app": "hetsika",
+      "fr": {
+        "kicker": "Hetsika",
+        "title": [
+          "Montez vos",
+          "vidéos."
+        ],
+        "sub": [
+          "Timeline, titres, transitions,",
+          "export MP4."
+        ],
+        "points": [
+          "Partagez une vidéo vers Hetsika",
+          "Titres et transitions",
+          "Hors ligne"
+        ],
+        "caption": "Hetsika monte vos vidéos sur tablette : timeline, titres, transitions, export MP4."
+      },
+      "en": {
+        "kicker": "Hetsika",
+        "title": [
+          "Edit your",
+          "videos."
+        ],
+        "sub": [
+          "Timeline, titles, transitions,",
+          "MP4 export."
+        ],
+        "points": [
+          "Share a video to Hetsika",
+          "Titles and transitions",
+          "Offline"
+        ],
+        "caption": "Hetsika edits your videos on a tablet: timeline, titles, transitions, MP4 export."
+      },
+      "mg": {
+        "kicker": "Hetsika",
+        "title": [
+          "Amboary ny",
+          "horonantsarinao."
+        ],
+        "sub": [
+          "Fandaharana, lohateny, fifindrana,",
+          "MP4."
+        ],
+        "points": [
+          "Zarao amin'ny Hetsika ny video",
+          "Lohateny sy fifindrana",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Hetsika no manamboatra ny horonantsarinao. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "10-tselatra",
+      "app": "tselatra",
+      "fr": {
+        "kicker": "Tselatra",
+        "title": [
+          "Animez",
+          "vos idées."
+        ],
+        "sub": [
+          "Animation, effets visuels,",
+          "titres animés."
+        ],
+        "points": [
+          "Images clés",
+          "Effets et calques",
+          "Hors ligne"
+        ],
+        "caption": "Tselatra, l'animation et les effets visuels de Mahay, sur tablette et Linux."
+      },
+      "en": {
+        "kicker": "Tselatra",
+        "title": [
+          "Bring ideas",
+          "to life."
+        ],
+        "sub": [
+          "Motion graphics, visual effects,",
+          "animated titles."
+        ],
+        "points": [
+          "Keyframes",
+          "Effects and layers",
+          "Offline"
+        ],
+        "caption": "Tselatra, Mahay's motion graphics and visual effects app, on tablets and Linux."
+      },
+      "mg": {
+        "kicker": "Tselatra",
+        "title": [
+          "Ampihetsiho",
+          "ny hevitrao."
+        ],
+        "sub": [
+          "Sary mihetsika, effets,",
+          "lohateny mihetsika."
+        ],
+        "points": [
+          "Sary fototra",
+          "Effets sy sosona",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Tselatra, sary mihetsika an'i Mahay. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "11-drafitra",
+      "app": "drafitra",
+      "fr": {
+        "kicker": "Drafitra",
+        "title": [
+          "Vos plans",
+          "DXF et DWG."
+        ],
+        "sub": [
+          "Dessin technique, cotes, calques,",
+          "sur le chantier."
+        ],
+        "points": [
+          "Touchez un DXF, choisissez Drafitra",
+          "Cotes et calques",
+          "Hors ligne"
+        ],
+        "caption": "Drafitra ouvre et dessine vos plans DXF et DWG, même sur le chantier, hors ligne."
+      },
+      "en": {
+        "kicker": "Drafitra",
+        "title": [
+          "Your DXF and",
+          "DWG drawings."
+        ],
+        "sub": [
+          "Technical drawing, dimensions,",
+          "layers, on site."
+        ],
+        "points": [
+          "Tap a DXF, pick Drafitra",
+          "Dimensions and layers",
+          "Offline"
+        ],
+        "caption": "Drafitra opens and draws your DXF and DWG plans, even on site, offline."
+      },
+      "mg": {
+        "kicker": "Drafitra",
+        "title": [
+          "Ny drafitrao",
+          "DXF sy DWG."
+        ],
+        "sub": [
+          "Sary teknika, refy, sosona,",
+          "eny an-toerana."
+        ],
+        "points": [
+          "Tsindrio ny DXF, safidio Drafitra",
+          "Refy sy sosona",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Drafitra no manokatra ny drafitrao DXF sy DWG. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "12-pejy",
+      "app": "pejy",
+      "fr": {
+        "kicker": "Pejy",
+        "title": [
+          "Mettez en page",
+          "vos publications."
+        ],
+        "sub": [
+          "Magazines, affiches, livrets :",
+          "export PDF prêt à imprimer."
+        ],
+        "points": [
+          "Gabarits et styles",
+          "Ouvre l'IDML",
+          "Hors ligne"
+        ],
+        "caption": "Pejy met en page vos affiches, magazines et livrets, avec export PDF prêt à imprimer."
+      },
+      "en": {
+        "kicker": "Pejy",
+        "title": [
+          "Lay out",
+          "your publications."
+        ],
+        "sub": [
+          "Magazines, posters, booklets:",
+          "print-ready PDF export."
+        ],
+        "points": [
+          "Templates and styles",
+          "Opens IDML",
+          "Offline"
+        ],
+        "caption": "Pejy lays out your posters, magazines and booklets, with print-ready PDF export."
+      },
+      "mg": {
+        "kicker": "Pejy",
+        "title": [
+          "Andamino ny",
+          "famoahanao."
+        ],
+        "sub": [
+          "Gazety, afisy, bokikely:",
+          "PDF vonona hatonta."
+        ],
+        "points": [
+          "Modely sy endrika",
+          "Manokatra IDML",
+          "Tsy mila aterineto"
+        ],
+        "caption": "Pejy no mandamina ny afisy sy gazety. Alaivo amin'ny Mahay HUB."
+      }
+    },
+    {
+      "id": "13-endrika",
+      "app": "endrika",
+      "fr": {
+        "kicker": "Endrika",
+        "title": [
+          "Dessinez vos",
+          "interfaces."
+        ],
+        "sub": [
+          "Maquettes, composants,",
+          "prototypes cliquables."
+        ],
+        "points": [
+          "Mise en page automatique",
+          "Composants et variantes",
+          "Export SVG et PNG"
+        ],
+        "caption": "Endrika dessine vos maquettes d'applications et de sites, avec composants et prototypes."
+      },
+      "en": {
+        "kicker": "Endrika",
+        "title": [
+          "Design your",
+          "interfaces."
+        ],
+        "sub": [
+          "Mock-ups, components,",
+          "clickable prototypes."
+        ],
+        "points": [
+          "Auto layout",
+          "Components and variants",
+          "SVG and PNG export"
+        ],
+        "caption": "Endrika designs your app and site mock-ups, with components and prototypes."
+      },
+      "mg": {
+        "kicker": "Endrika",
+        "title": [
+          "Volavolao ny",
+          "endrika."
+        ],
+        "sub": [
+          "Modely, singa,",
+          "prototype azo tsindriana."
+        ],
+        "points": [
+          "Fandaminana ho azy",
+          "Singa sy karazany",
+          "SVG sy PNG"
+        ],
+        "caption": "Endrika no mamolavola ny endrika rindranasa. Alaivo amin'ny Mahay HUB."
+      }
+    }
+  ]
+}

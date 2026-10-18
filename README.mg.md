@@ -12,7 +12,7 @@ amin'ny fitaovanao ny rakitrao.
 Mahay dia fork an'ireo rindranasa [ArtCraft](https://github.com/storytold), novana anarana ary
 nampandehanina tamin'ny Android. Jereo ny [NOTICE](NOTICE).
 
-> **Toerana: alpha (0.1).** Mandeha ireo rindranasa, saingy mbola misy tsy fahatanterahana,
+> **Toerana: alpha (0.2).** Mandeha ireo rindranasa, saingy mbola misy tsy fahatanterahana,
 > indrindra amin'ny finday. Jereo ny [docs/STATUS.md](docs/STATUS.md).
 
 ## Ireo rindranasa
@@ -21,7 +21,7 @@ nampandehanina tamin'ny Android. Jereo ny [NOTICE](NOTICE).
 
 | Rindranasa   | Asany                                               | Linux | Android |
 |--------------|-----------------------------------------------------|-------|---------|
-| **Mahay HUB**    | ny fandraisana: mampiseho sy manokatra ny rindranasa | eny   | eny     |
+| **Mahay HUB** | fandraisana: mametraka, manokatra, manavao     | eny   | eny     |
 | **Sary**     | fanamboarana sary (sosona, PSD, RAW)                | eny   | alpha   |
 | **Taratasy** | PDF: vakiana, asiana fanamarihana, fenoina, soniavina | eny | alpha   |
 | **Soratra**  | fanoratana lahatsoratra (DOCX, ODT)                 | eny   | alpha   |
@@ -43,6 +43,18 @@ Alaivo ihany i **Mahay HUB** ao amin'ny [dikan-teny farany](https://github.com/r
 (`hub-…-android-arm64-v8a.apk` ho an'ny Android, `hub-…-linux-x86_64.AppImage` ho an'ny Linux).
 **Mahay HUB no mametraka, manokatra ary manavao ny rindranasa hafa rehetra.** Manavao ny tenany koa
 ny rindranasa tsirairay.
+
+## Manokatra ny rakitrao
+
+Samy manokatra ny karazana rakitra azy avy ny rindranasa: tsindrio ny tabilao ao amin'ny
+Fichiers na Drive dia safidio i **Tabilao**; ny sary ao amin'ny **Sary**, ny PDF ao amin'ny
+**Taratasy**, ny antontan-taratasy ao amin'ny **Soratra**, ny fampisehoana ao amin'ny **Seho**,
+ny feo ao amin'ny **Feo**, ny horonantsary ao amin'ny **Hetsika**.
+
+## Vaovao foana
+
+Manavao ny tenany i Mahay: mijery ny dikan-teny farany isan'andro ny rindranasa tsirairay (sy i
+Mahay HUB ho an'ny rehetra), maka azy, manamarina ny sonia (Ed25519), dia manolotra **Apetraho**.
 
 ## Maivana
 

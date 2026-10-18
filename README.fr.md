@@ -12,7 +12,7 @@ fichiers restent sur votre appareil.
 Mahay est un fork des applications [ArtCraft](https://github.com/storytold), renommées et portées
 sur Android. Voir [NOTICE](NOTICE).
 
-> **État : alpha (0.1).** Les apps fonctionnent, mais il reste des angles vifs, surtout sur
+> **État : alpha (0.2).** Les apps fonctionnent, mais il reste des angles vifs, surtout sur
 > téléphone. Voir [docs/STATUS.md](docs/STATUS.md) : ce qui marche, ce qui manque, ce qui a été testé.
 
 ## Les apps
@@ -21,7 +21,7 @@ sur Android. Voir [NOTICE](NOTICE).
 
 | App          | Rôle                                            | Linux | Android |
 |--------------|-------------------------------------------------|-------|---------|
-| **Mahay HUB**    | l'accueil : liste et ouvre les apps             | oui   | oui     |
+| **Mahay HUB** | l'accueil : installe, ouvre et met à jour les apps | oui   | oui     |
 | **Sary**     | retouche d'images (calques, PSD, RAW)           | oui   | alpha   |
 | **Taratasy** | PDF : lire, annoter, remplir, signer, organiser | oui   | alpha   |
 | **Soratra**  | traitement de texte (DOCX, ODT)                 | oui   | alpha   |
@@ -43,6 +43,22 @@ Téléchargez **Mahay HUB**, l'accueil de Mahay, depuis la [dernière version](h
 `hub-…-android-arm64-v8a.apk` sur Android 8+ (téléphones et tablettes), `hub-…-linux-x86_64.AppImage`
 sous Linux. **Mahay HUB installe, ouvre et met à jour toutes les autres apps**, directement.
 Chaque app se met aussi à jour toute seule (vérification quotidienne, fichiers signés, vous confirmez l'installation).
+
+## Ouvre vos fichiers
+
+Chaque app ouvre son type de fichier depuis n'importe où sur l'appareil : touchez un tableur
+dans Fichiers, Drive ou un e-mail et choisissez **Tabilao** ; une image s'ouvre dans **Sary** (ou
+s'importe dans **Hazavana**), un PDF dans **Taratasy**, un document dans **Soratra**, des diapos
+dans **Seho**, un SVG dans **Tsilo**, de l'audio dans **Feo**, une vidéo dans **Hetsika**, un
+plan DXF/DWG dans **Drafitra**. « Partager » marche aussi. L'enregistrement réécrit le fichier
+ouvert.
+
+## Toujours à jour
+
+Mahay se met à jour tout seul, comme Tontolo : chaque app (et Mahay HUB pour toutes) vérifie la
+dernière version au démarrage puis chaque jour, la télécharge en arrière-plan, contrôle sa
+signature (Ed25519) et son SHA-256, puis propose **Installer**. Sur Android, un appui suffit ;
+sous Linux, l'AppImage se remplace et redémarre. Désactivable dans **À propos**.
 
 ## Léger par conception
 
